@@ -4,7 +4,7 @@
 %  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2009 Christian Gaser christian.gaser@uni-jena.de
-% $Id$ 
+% $Id: vbm8.man 10 2008-12-10 20:44:53Z gaser $ 
 % 
 % ==========================================================================
 % Description
