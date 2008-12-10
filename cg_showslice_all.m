@@ -5,6 +5,7 @@ function cg_showslice_all(vargin)
 %
 % slice has to be choosen in mm
 %__________________________________________________________________________
+% Christian Gaser
 % $Id$
 
 if nargin == 1

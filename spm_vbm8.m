@@ -1,6 +1,7 @@
 function spm_vbm8
 % VBM5 Toolbox wrapper to call vbm functions
 %_______________________________________________________________________
+% Christian Gaser
 % $Id$
 
 SPMid = spm('FnBanner',mfilename,'v1.01');

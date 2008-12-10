@@ -4,6 +4,7 @@ function cg_vbm8_debug
 % FORMAT cg_vbm8_debug
 %
 %__________________________________________________________________________
+% Christian Gaser
 % $Id$
 
 % print last error
