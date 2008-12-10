@@ -1,0 +1,347 @@
+
+% __________________________________________________________________________
+%  Voxel Based Morphometry Toolbox
+%  http://dbm.neuro.uni-jena.de/vbm/
+% __________________________________________________________________________
+% v1.01 Copyright (C) 2009 Christian Gaser christian.gaser@uni-jena.de
+% 
+% ==========================================================================
+% Description
+% ==========================================================================
+% This toolbox is a collection of extensions to the segmentation algorithm 
+% of SPM8 (Wellcome Department of Cognitive Neurology) to provide voxel-
+% based morphometry (VBM). It is developed by Christian Gaser (University of 
+% Jena, Department of Psychiatry) and is available to the scientific 
+% community under the terms of the GNU General Public License.
+% 
+% The key changes to the SPM8 segmentation algorithm are the application of
+% a Hidden Markov random field (HMRF) model and the opportunity to write
+% segmentations without any use of tissue priors. The HMRF model 
+% provides spatial constraints based on neighbouring voxels of a 3x3x3 cube. 
+% The idea is to remove isolated voxels of one tissue class which are 
+% unlikely to be member of this tissue type. This procedure also closes 
+% holes in a cluster of connected voxels of one tissue type. In the 
+% resulting segmentation the noise level will be minimized.
+% 
+% This function will save the following files:
+%
+% segmented files:
+% -----------------
+% mw[cp][123]*_affine_HMRF 
+% m   - modulated
+% m0  - modulated non-linear only
+% w   - warped
+% c   - segmented (SPM8)
+% p   - segmented without priors
+% 1   - GM
+% 2   - WM
+% 3   - CSF
+% _affine   - affine registered only
+% _HMRF     - Hidden Markov random field (with defined weighting)
+% _aMRF     - adaptive Markov random field
+% 
+% estimated raw volumes:
+% -----------------------
+% [cp]xxx_seg.txt
+% c - segmented (SPM8)
+% p - segmented without priors
+% 
+% ==========================================================================
+% Hidden Markov random fields (HMRF)
+% ----------------------------------------------
+% We can optionally use prior information by applying a Hidden Markov Random 
+% Field (HMRF) model. Using this model we introduce spatial constraints 
+% based on neighbouring voxels of a 3x3x3 cube. The center voxel has 26 
+% neighbours and we can calculate MRF energy by counting the number of 
+% neighbours. Neighboring voxels are expected to have the same class labels. 
+% The prior probability of the class and the likelihood probability of the 
+% observation is combined to estimate the Maximum a posteriori (MAP). Prior 
+% probability can be weighted between 0 (no HMRF) and 1 (maximum HMRF for 
+% very noisy data) to cover different levels of noise. The idea is to remove 
+% isolated voxels of one tissue class which are unlikely to be member of this 
+% tissue type. 
+% This procedure also closes holes in a cluster of connected voxels of one 
+% tissue type. In the resulting segmentation the noise level will be 
+% lowered.
+% Depending on your scanner and the used MR sequence your T1-images will 
+% contain at least 3% noise level. Hence, I would recommend for most images 
+% a small HMRF weighting of 0.15. If your images are affected by more noise 
+% level you can choose a larger HMRF weighting.
+% The resulting files are indicated by the term "_HMRF" at the end of the 
+% filename.
+% 
+% Modulation
+% ----------------------------------------------
+% This step is intended to preserve the total amount of tissue in the 
+% images.
+% Areas that are expanded during warping are correspondingly reduced
+% in intensity. John Ashburner recommends this step if you are more
+% interested in volume changes than differences in concentration
+% (or density). Modulates images will be additionally saved indicated
+% by a leading 'm'. Nevertheless this postprocessing is optional and you can
+% try both, with and without modulation to test your hypothesis. The use of 
+% this step depends on your data and what are you interested in. If you 
+% decide to use modulation both images will be saved: non-modulated and 
+% modulated images (indicated by a leading 'm' or 'm0').
+% The SPM default is to adjust spatially normalised grey matter (or other 
+% tissue class) by using both terms and the resulting modulated images are 
+% preserved for the total amount of grey matter. Thus, modulated images 
+% reflect the grey matter volumes before spatial normalisation. However, 
+% the user is often interested in removing the confound of different brain 
+% sizes and there are many ways to apply this correction. We can use the 
+% total amount of GM, GM+WM, GM+WM+CSF, or manual estimated total 
+% intracranial volume (TIV). Theses parameters can be modeled as nuisance 
+% parameters (additive effects) in an AnCova model or used to globally
+% scale the data (multiplicative effects):
+%
+% Correction    Interpretation
+% ----------    --------------
+% nothing       absolute volume
+% globals       rel. volume after correcting for total GM or TIV (mult. effects)
+% AnCova        rel. volume that can not be explained by total GM or TIV
+%               (add. effects)
+% 
+% I suggest another option to remove the confounding effects of different 
+% brain sizes. Modulated images can be optionally saved by correcting for
+% non-linear warping only. Volume changes due to affine normalisation will be 
+% not considered and this equals the use of default modulation and globally 
+% scaling data according to the inverse scaling factor due to affine 
+% normalisation. I recommend this option if your hypothesis is about effects 
+% of relative volumes which are corrected for different brain sizes. This is 
+% a widely used hypothesis and should fit to most data. The idea behind this 
+% option is that scaling of affine normalisation is indeed a multiplicative 
+% (gain) effect and we rather apply this correction to our data and not to 
+% our statistical model. These modulated images are indicated by 'm0' instead
+% of 'm'.
+% Another issue to consider is that modulation will additionally smooth your 
+% images and the resulting smoothness will be therefore increased. Hence, it 
+% is recommend to use a lower FWHM to smooth your modulated images. As rule 
+% of thumb: if you have used the default cutoff for spatial normalization 
+% (25 mm) you should lower the FWHM to around 80-90%. For example, if you 
+% have smoothed non-modulated images with FWHM of 12 mm you can smooth
+% modulated images with 9-10 mm to obtain approximately the same resulting 
+% smoothness.
+%
+% Clean up segmentations
+% ----------------------------------------------
+% Although prior information is used to restrict segmentation to the cortex 
+% there are still some misclassifications mainly at the border between gray 
+% matter and CSF. These rims can be tried to remove using morphological 
+% operations. Conditional dilations and erosions based on gray and white 
+% matter segmentations are used to create a mask to clean up the 
+% segmentations. It begins by taking the white matter, and eroding it a 
+% couple of times to get rid of any odd voxels.  The algorithm continues on 
+% to do conditional dilations for several iterations, where the condition is 
+% based upon gray or white matter being present. This identified region is 
+% then used to clean up the grey and white matter partitions, and has a 
+% slight influences on the CSF partition.
+%
+% Use of tissue priors
+% ----------------------------------------------
+% SPM8 uses priors with a Bayes rule to combine the likelihood for 
+% belonging to a tissue class and the prior probablity derived from prior 
+% probability maps. However, the use of priors might cause problems for 
+% brains deviating from a healthy, adult control population. The ICBM priors 
+% in SPM8 are based on brains of subjects with an mean age of 25 years. 
+% Thus, brains of children or or elderly subjects will deviate from the 
+% tissue probabilities of the ICBM priors and will bias the segmentation. 
+% This options avoids the dependency on tissue priors and usually increases 
+% classification accuracy. Segmented images show clearer delineation 
+% particularly in the basal ganglia and in the sulci and this is the 
+% prefered option for most images. If no priors are used the segmented 
+% images are indicated by an "p" instead of "c".
+% Keep in mind that even if you are using this option tissue priors are 
+% always used to register your images to MNI space. Only the bayesian 
+% rule to combine priors with tissue type probabilities will be omitted. 
+% Thus, for some cases the use of customized templates might utilize 
+% the spatial registration (e.g. infants).
+% However, there are some cases (e.g. huge atrophy), where this option 
+% fails and gray matter distribution might be underestimated. You will 
+% notice these cases by a very thin gray matter ribbon and overestimated 
+% CSF. For those cases the default SPM8 tissue priors (or own priors) 
+% should be used.
+%
+% Set origin
+% ----------------------------------------------
+% It is often helpful to set the origin (anterior comissure) using the 
+% Display tool before spatial registration. However, the origin can be 
+% roughly approximated by calculating the center-of-mass (COM) of the image 
+% and to shift the image to the COM of the template. This roughly corrects 
+% differences in the position between the image and the template and 
+% utilizes spatial normalisation. In case that spatial registration (and 
+% segmentation) fails with this options the safest way is to define the 
+% anterior comissure before segmentation and to set this option to "use 
+% origin from header".
+%
+% Write affine only
+% ----------------------------------------------
+% To obtain high segmentation accuracy its recommended to use the default 
+% warp frequency cutoff of 25mm. This guarantees sufficient overlap 
+% between tissue priors and data. However, sometimes you would like to 
+% save data using affine registering only while still retain high 
+% segmentation accuracy. In this case you can internally apply warping for 
+% estimating segmentations, but write data using affine registration only.
+%
+% Display and print results
+% ----------------------------------------------
+% The normalized T1 image and the normalized segmentations can be displayed 
+% and printed to a ps-file. This is often helpful to check whether 
+% registration and segmentation were successful.
+%
+% ==========================================================================
+% Statistical analysis
+% ==========================================================================
+% 
+% Smoothing
+% ----------------------------------------------
+% After the segmentation steps you have to smooth your data. For the first 
+% trial I would start with a FWHM of 12 mm. The filter width depends on what 
+% you want to see according to the Matched Filter Theorem. You can increase 
+% signal-to-noise ratio of your signal that is in the order of your filter 
+% size. For more focal effects you can decrease the filter width and if you 
+% expect larger effects try a larger filter size.
+% Keep in mind that modulation will additionally smooth your data and to 
+% obtain approximately the same resulting smoothness you should lower the 
+% FWHM to around 70% if you have applied the default cutoff for spation 
+% normalization (25 mm).
+% 
+% Constraining your analysis to one tissue type
+% ----------------------------------------------
+% You should use an absolute threshold for masking around 0.1..0.15 (and 
+% finally up to 0.2). This prevents that you get (opposite) results in white 
+% matter although you only made an analysis for gray matter. This effect is 
+% due to the negative correlation of gray and white matter intensity values 
+% around the border between gray and white matter. If you choose an absolute 
+% threshold masking you will only compute your statistic in those areas that 
+% are above this threshold. Areas below this threshold will be excluded. Be 
+% careful if you get any result in white matter although you made an 
+% analysis of gray matter. These results are suspected to show an opposite 
+% effect.
+% A nice side-effect of using a higher absolute threshold (if you not cut 
+% off your clusters) is that the search area will be smaller which 
+% positively affects your p-values corrected for multiple comparisons.
+%
+% ==========================================================================
+% Check sample homogeneity using standard deviation across sample
+% ==========================================================================
+%
+% If you have a reasonable sample size artefacts are easily overseen. In 
+% order to identify images with poor image quality or even artefacts you can 
+% use the function "Check sample homogeneity using standard deviation across 
+% sample". 
+% To use this function images have to be in the same orientation with same 
+% voxel size and dimension (e.g. normalized images).
+% The idea of this tool is to check the standard deviation across the 
+% sample. 
+% Standard deviation is caclulated by the sum of the squared distance of 
+% each image from the sample mean. Hence, the squared distance of one image 
+% from the sample mean represents the amount to which this images deviates 
+% from the sample mean.
+% A large distance to mean does not always mean that this image is an 
+% outlier or contains an artefact. Usually images of patients are more 
+% deviant from the sample mean and this is what you try to localize. If 
+% there are no artefacts in the image and if the image quality is reasonable 
+% you don't have to exclude this image from the sample. This tool is 
+% intended to utilitize the process of quality checking and there is no 
+% clear criteria to exclude an images only based on squared distance to 
+% mean.
+% The squared distance to mean is calculated for each image and plotted 
+% using a boxplot and the indicated filenames. The larger the squared 
+% distance the more deviant is this image from the sample mean. In the 
+% "squared distance to mean plot" outliers from the sample are usually 
+% isolated from the majority of images which are clustered around the sample 
+% mean. The squared distance to mean is plotted at the y-axis and the x-axis 
+% reflects the image order. Images are plotted from left to right which is 
+% helpful if you have selected the images in the order of different sub-
+% groups. Furthermore this is also useful for fMRI images which can be also 
+% used with this tool.
+% The "proportional scaling" option should be only used if image intensity 
+% is not scaled (e.g. T1 images) or if images have to be scaled during 
+% statistical analysis (e.g. modulated images).
+% I recommend this tool for any images which are intended for statistical 
+% analysis (segmented images, fMRI images). Hence, I would use the smoothed, 
+% normalized images.
+% Optionally an output image will be save with standard deviation at every 
+% voxel to identify deviant regions.
+% After calculating the squared distance to mean the images with the largest 
+% distance can be displayed with help of the CheckReg function.
+%
+% ==========================================================================
+% Display one slice for all images
+% ==========================================================================
+%
+% This function displays a selected slice for all images and indicates the 
+% respective filenames which is useful to check image quality for a large 
+% number of files in a circumscribed region (slice).
+%
+% ==========================================================================
+% Calculate raw volumes for GM/WM/CSF
+% ==========================================================================
+% 
+% A file "*_seg.txt" for each subject is saved in the actual directory with
+% the absolute volumes of gray/white matter, CSF, and total (in ml).
+% These values can be read with the matlab command: vol = spm_load. The
+% values for GM/WM/CSF/TOTAL are now saved in vol(:,1) vol(:,2) vol(:,3) and
+% vol(:,4).
+% This file can be also opened with Excel (or gnumeric) as text-file with
+% tabs as delimiters.
+% 
+% You can use these variables either as nuisance in an AnCova model or as 
+% user-specified globals with the "global calculation" option. Depending on 
+% your hypothesis and/or your data you can just use gray matter ("gm") or 
+% calculate the sum of gray/white matter with "gm+wm". The use of raw 
+% volumes as nuisance or globals is only recommended for modulated data. 
+% These data are corrected for size changes due to spatial  normalization 
+% and are thought to be in raw (un-normalized) space. In contrast, un-
+% modulated data are yet corrected for differences in size due to spatial 
+% normalization to a reference brain and there is no need to correct for 
+% these differences again.
+% 
+% ==========================================================================
+% Threshold and transform spmT-maps
+% ==========================================================================
+% 
+% This functions enables the transformation of spmT-maps to correlation 
+% coefficient, effect-size, p-value, or log p-value. For the last case of 
+% log transformation this means that a p-value of p=0.99 (0.01) is 
+% transformed to a value of 2.
+%
+% Examples:
+% p-value   -log10(1-P)
+% 0.1        1
+% 0.05       1.3
+% 0.01       2
+% 0.001      3
+% 0.0001     4
+%
+% All maps can be thresholded using height and extent thresholds and you can 
+% also apply corrections for multiple comparisons based on family-wise error 
+% (FWE) or false discovery rate (FDR). You can easily threshold and/or 
+% transform a large number of spmT-maps using the same thresholds.
+%
+% Naming convention of the transformed files:
+%   Type_Contrast_Pheight_Pextent_K_Neg
+%
+%   Type:      P    - p-value
+%              logP - log p-value
+%              R    - correlation coefficient
+%              D    - effect size
+%              T    - t-value
+%
+%   Contrast:  name used in the contrast manager with replaced none valid 
+%              strings
+%    
+%   Pheight:   p    - uncorrected p-value in % (p<0.05 will coded with "p5")
+%              pFWE - p-value with FWE correction in %
+%              pFDR - p-value with FDR correction in %
+%              
+%   Pextent:   pk    - uncorr. extent p-value in % (p<0.05 coded with "p5")
+%              pkFWE - extent p-value with FWE correction in %
+%
+%   K:         extent threshold in voxels
+%
+%   Neg:       image also shows thresholded inverse effects (e.g. neg. 
+%              values) 
+% 
+% __________________________________________________________________________
+%                                                Christian Gaser 2007/07/24
