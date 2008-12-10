@@ -219,7 +219,7 @@ clear q q1
 if do_cls & do_defs,
 
 	% use mask from LPBA40 sample
-	mask = uint8(mask > 0.4);
+	mask = uint8(mask > 0.5);
 
     % use index to speed up and save memory
     sz = size(mask);
