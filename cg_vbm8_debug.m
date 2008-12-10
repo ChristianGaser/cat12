@@ -4,7 +4,7 @@ function cg_vbm8_debug
 % FORMAT cg_vbm8_debug
 %
 %__________________________________________________________________________
-% @(#)cg_vbm8_debug.m    Christian Gaser 1.00 2008/02/20
+% $Id$
 
 % print last error
 fprintf('\nLast error message:\n');

@@ -5,9 +5,9 @@ function cls = cg_vbm8_write(res,tc,bf,df,warp)
 % Copyright (C) 2008 Wellcome Department of Imaging Neuroscience
 
 % based on John Ashburners version of
-% $Id: spm_preproc_write8.m 2531 2008-12-05 18:59:26Z john $
+% spm_preproc_write8.m 2531 2008-12-05 18:59:26Z john $
 %
-% @(#)cg_vbm8_write.m	v1.01 Christian Gaser 2008/12/09
+% $Id$
 
 % Read essentials from tpm (it will be cleared later)
 tpm = res.tpm;

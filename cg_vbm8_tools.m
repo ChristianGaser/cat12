@@ -2,7 +2,7 @@ function tools = cg_vbm8_tools
 % wrapper for calling VBM utilities
 %
 %_______________________________________________________________________
-% @(#)cg_vbm8_tools.m	1.04 Christian Gaser 2008/12/04
+% $Id$
 
 entry = inline(['struct(''type'',''entry'',''name'',name,',...
         '''tag'',tag,''strtype'',strtype,''num'',num,''help'',{{}})'],...

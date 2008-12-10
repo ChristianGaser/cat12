@@ -1,7 +1,7 @@
 function [g,w,c] = cg_cleanup_gwc(g,w,c, level)
 % use morphological operations to cleanup GM/WM/CSF
 %__________________________________________________________________________
-% @(#)cg_cleanup_gwc.m 1.01 2008/04/12 Christian Gaser
+% $Id$
 
 if nargin<4, level = 1; end;
 
