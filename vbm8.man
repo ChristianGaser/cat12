@@ -3,7 +3,8 @@
 %  Voxel Based Morphometry Toolbox
 %  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
-% v1.01 Copyright (C) 2009 Christian Gaser christian.gaser@uni-jena.de
+% Copyright (C) 2009 Christian Gaser christian.gaser@uni-jena.de
+% $Id$ 
 % 
 % ==========================================================================
 % Description
