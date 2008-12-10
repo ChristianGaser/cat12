@@ -4,10 +4,10 @@ function job = cg_config_vbm8
 % Copyright (C) 2008 Wellcome Department of Imaging Neuroscience
 
 % based on John Ashburners version of
-% $Id: cg_config_vbm8.m 2264 2008-09-30 18:48:59Z john $
+% $Id$
 %
 % @(#)cg_config_vbm8.m	v1.01 Christian Gaser 2008/12/04
-% $ID$
+% $Id$
 
 addpath(fullfile(spm('dir'),'toolbox','vbm8'));
 %_______________________________________________________________________
