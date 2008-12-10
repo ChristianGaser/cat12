@@ -1,4 +1,5 @@
 /*
+ * Christian Gaser
  * $Id$ 
  *
  */

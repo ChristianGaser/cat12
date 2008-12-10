@@ -6,6 +6,7 @@ function job = cg_config_vbm8
 % based on John Ashburners version of
 % spm_config_preproc8.m 2264 2008-09-30 18:48:59Z john
 %
+% Christian Gaser
 % $Id$
 
 addpath(fullfile(spm('dir'),'toolbox','vbm8'));

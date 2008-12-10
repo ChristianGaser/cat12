@@ -71,6 +71,7 @@ function cg_spmT2x(vargin)
 %   Neg:       image also shows thresholded inverse effects (e.g. neg. 
 %              values) 
 %_______________________________________________________________________
+% Christian Gaser
 % $Id$
 
 if nargin == 1

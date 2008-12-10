@@ -23,6 +23,7 @@ function varargout = cg_vbm8_run(job,arg)
 % based on John Ashburners version of
 % spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
 %
+% Christian Gaser
 % $Id$
 
 if nargin==1,
