@@ -370,7 +370,7 @@ function y = prctile(x,p);
 %   the ith row of Y is the P(i) percentile of each column of X.
 
 %   Copyright 1993-2002 The MathWorks, Inc. 
-%   $Revision: 2.10 $  $Date: 2002/01/17 21:31:44 $
+%   $Revision$  $Date$
 
 [prows pcols] = size(p);
 if prows ~= 1 & pcols ~= 1
