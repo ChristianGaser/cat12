@@ -7,6 +7,7 @@ function cls = cg_vbm8_write(res,tc,bf,df,warp)
 % based on John Ashburners version of
 % spm_preproc_write8.m 2531 2008-12-05 18:59:26Z john $
 %
+% Christian Gaser
 % $Id$
 
 % Read essentials from tpm (it will be cleared later)

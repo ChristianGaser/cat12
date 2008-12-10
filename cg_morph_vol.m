@@ -1,6 +1,7 @@
 function vol = cg_morph_vol(in,action,n,th);
 % morphological operations to 3D data
 %__________________________________________________________________________
+% Christian Gaser
 % $Id$
 
 if nargin < 4, th = 0.5; end
