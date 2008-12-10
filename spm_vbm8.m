@@ -1,7 +1,7 @@
 function spm_vbm8
 % VBM5 Toolbox wrapper to call vbm functions
 %_______________________________________________________________________
-% @(#)spm_vbm8.m	v1.01 Christian Gaser 2008/12/04
+% $Id$
 
 SPMid = spm('FnBanner',mfilename,'v1.01');
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','VBM8');

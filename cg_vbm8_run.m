@@ -21,9 +21,9 @@ function varargout = cg_vbm8_run(job,arg)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % based on John Ashburners version of
-% $Id: spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
+% spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
 %
-% @(#)cg_vbm8_run.m	v1.01 Christian Gaser 2008/12/09
+% $Id$
 
 if nargin==1,
     varargout{:} = run_job(job);

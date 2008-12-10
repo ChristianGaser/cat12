@@ -5,7 +5,7 @@ function cg_showslice_all(vargin)
 %
 % slice has to be choosen in mm
 %__________________________________________________________________________
-% @(#)cg_showslice_all.m    Christian Gaser 1.03 2007/03/01
+% $Id$
 
 if nargin == 1
 	P = [];
