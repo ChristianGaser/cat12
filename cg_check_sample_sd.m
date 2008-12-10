@@ -5,7 +5,7 @@ function cg_check_sample_sd(vargin)
 % and dimension (e.g. normalized images)
 % An output image will be save with SD at each voxel.
 %_______________________________________________________________________
-% @(#)cg_check_sample_sd.m	1.14 Christian Gaser 2008/12/04
+% $Id$
 
 if nargin == 1
 	P = [];

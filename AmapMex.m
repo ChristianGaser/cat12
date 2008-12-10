@@ -1,4 +1,6 @@
 function prob = AmapMex(src, label, nc, BG, niters, nflips, sub, weight_MRF)
+%
+% $Id$
 
 disp('Compiling AmapMex.c')
 
