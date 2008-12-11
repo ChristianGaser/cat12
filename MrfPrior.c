@@ -101,7 +101,7 @@ void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int BG,
                                                                 YY += L*(fi-fj);
                                                         }
         }
-//        beta[0] = 0.5*YY/XX;
+/*        beta[0] = 0.5*YY/XX; */
         beta[0] = XX/YY;
         printf("\t beta %3.3f\n", beta[0]);
 }
