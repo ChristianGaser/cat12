@@ -6,8 +6,8 @@
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label;
-  unsigned char *mask;
-  double *src, *separations, mx;
+  unsigned char *priors;
+  double *src, *separations;
   const int *dims;
   int niters, niters_nu;
     
@@ -20,7 +20,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	mexErrMsgTxt("Second argument must be uint8.");
 
   src    = (double*)mxGetPr(prhs[0]);
-  mask  = (unsigned char*)mxGetPr(prhs[1]);
+  priors  = (unsigned char*)mxGetPr(prhs[1]);
   separations  = (double*)mxGetPr(prhs[2]);
   niters_nu = (int)mxGetScalar(prhs[3]);
 
@@ -29,7 +29,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   plhs[0] = mxCreateNumericArray(3,dims,mxUINT8_CLASS,mxREAL);
   label  = (unsigned char *)mxGetPr(plhs[0]);
   
-  mx = Kmeans(src, label, mask, 25, 5, 1, separations, dims, 1, 50, 128, niters_nu);
+  Bayes(src, label, priors, separations, dims, niters_nu);
 
 }
 

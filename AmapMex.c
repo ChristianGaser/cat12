@@ -13,7 +13,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label;
   unsigned char *prob;
-  double *src, weight_MRF, mean[100];
+  double *src, weight_MRF, *mean;
   const int *dims;
   int dims2[4];
   int nc;
@@ -21,7 +21,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
   if (nrhs!=8)
     mexErrMsgTxt("8 inputs required.");
-  else if (nlhs>1)
+  else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
   if (!mxIsUint8(prhs[1]))
@@ -40,10 +40,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   dims2[0] = dims[0];
   dims2[1] = dims[1];
   dims2[2] = dims[2];
-  dims2[3] = 3;
+  dims2[3] = nc;
 
   plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
+  plhs[1] = mxCreateNumericMatrix(1,nc,mxDOUBLE_CLASS,mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
+  mean  = (double *)mxGetPr(plhs[1]);
   Amap(src, label, prob, mean, nc, BG, niters, nflips, sub, dims, weight_MRF);
 
 }
