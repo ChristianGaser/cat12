@@ -4,6 +4,8 @@ function [g,w,c] = cg_cleanup_gwc(g,w,c, level)
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 if nargin<4, level = 1; end;
 
 th0 = 0.6;

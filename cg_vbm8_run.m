@@ -26,6 +26,8 @@ function varargout = cg_vbm8_run(job,arg)
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 if nargin==1,
     varargout{:} = run_job(job);
 elseif strcmpi(arg,'check'),

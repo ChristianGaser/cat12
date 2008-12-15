@@ -8,6 +8,8 @@ function cg_check_sample_sd(vargin)
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 if nargin == 1
 	P = [];
 	for i=1:numel(vargin.data)

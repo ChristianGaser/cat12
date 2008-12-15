@@ -8,6 +8,8 @@ function cg_showslice_all(vargin)
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 if nargin == 1
 	P = [];
 	for i=1:numel(vargin.data)
@@ -18,10 +20,10 @@ if nargin == 1
 end
 
 if nargin < 1
-	if strcmp(spm('ver'),'SPM5')
-		P = spm_select(Inf,'image','Select images');
-	else
+	if strcmp(spm('ver'),'SPM2')
 		P = spm_get(Inf,'IMAGE','Select normalized files');
+	else
+		P = spm_select(Inf,'image','Select images');
 	end
 	scaling = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
 	slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
