@@ -9,6 +9,8 @@ function job = cg_config_vbm8
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 addpath(fullfile(spm('dir'),'toolbox','vbm8'));
 %_______________________________________________________________________
 

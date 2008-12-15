@@ -10,6 +10,8 @@ function cls = cg_vbm8_write(res,tc,bf,df,warp)
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 % Read essentials from tpm (it will be cleared later)
 tpm = res.tpm;
 if ~isstruct(tpm) || ~isfield(tpm, 'bg'),

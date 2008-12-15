@@ -74,6 +74,8 @@ function cg_spmT2x(vargin)
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 if nargin == 1
 	P = [];
 	for i=1:numel(vargin.data)
@@ -81,14 +83,14 @@ if nargin == 1
 	end
 end
 
-spm5 = 0;
-if strcmp(spm('ver'),'SPM5'), spm5 = 1; end
+spm2 = 0;
+if strcmp(spm('ver'),'SPM2'), spm2 = 1; end
 
 if nargin < 1
-	if spm5
-		P = spm_select(Inf,'^spmT.*\.img$','Select images');
-	else
+	if spm2
 		P = spm_get(Inf,'spmT*.img','Select normalized files');
+	else
+		P = spm_select(Inf,'^spmT.*\.img$','Select images');
 	end
 end
 
@@ -322,10 +324,10 @@ for i=1:size(P,1)
 
        VO = Vspm;
        VO.fname = out;
-	   if spm5
-			VO.dt = [spm_type('int16') spm_platform('bigend')];
-	   else
+	   if spm2
 			VO.dim(4) = spm_type('int16');
+	   else
+			VO.dt = [spm_type('int16') spm_platform('bigend')];
 	   end
        spm_write_vol(VO,Y);
     

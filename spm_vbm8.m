@@ -4,7 +4,9 @@ function spm_vbm8
 % Christian Gaser
 % $Id$
 
-SPMid = spm('FnBanner',mfilename,'v1.01');
+rev = '$Rev$';
+
+SPMid = spm('FnBanner',mfilename,rev);
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','VBM8');
 spm_help('!ContextHelp',mfilename);
 spm_help('!Disp','vbm8.man','',Fgraph,'Voxel-based morphometry toolbox for SPM8');

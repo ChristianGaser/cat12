@@ -3,6 +3,8 @@ function [prob, mean] = AmapMex(src, label, nc, BG, niters, nflips, sub, weight_
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 disp('Compiling AmapMex.c')
 
 pth = fileparts(which(mfilename));

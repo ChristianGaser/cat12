@@ -4,6 +4,8 @@ function vol = cg_morph_vol(in,action,n,th);
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 if nargin < 4, th = 0.5; end
 if nargin < 3, n = 1; end
 if nargin < 2, action = 'open'; end
