@@ -5,6 +5,8 @@ function tools = cg_vbm8_tools
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 entry = inline(['struct(''type'',''entry'',''name'',name,',...
         '''tag'',tag,''strtype'',strtype,''num'',num,''help'',{{}})'],...
         'name','tag','strtype','num');

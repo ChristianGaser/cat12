@@ -7,6 +7,8 @@ function cg_vbm8_debug
 % Christian Gaser
 % $Id$
 
+rev = '$Rev$';
+
 % print last error
 fprintf('\nLast error message:\n');
 fprintf('-------------------------------------------------------------------------------------\n');
