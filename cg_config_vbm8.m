@@ -374,9 +374,9 @@ cleanup.help = {[...
 'matter partitions, and has a slight influences on the CSF partition.'],'',[...
 'If you find pieces of brain being chopped out in your data, then you ',...
 'may wish to disable or tone down the cleanup procedure.']};
-cleanup.labels = {'Dont do cleanup','Light Clean','Thorough Clean'};
-cleanup.values = {0 1 2};
-cleanup.val    = {0};
+cleanup.labels = {'Dont do cleanup','Light Clean','Thorough Clean','Use LPBA40 sample to create brainmask'};
+cleanup.values = {0 1 2 3};
+cleanup.val    = {3};
 
 %------------------------------------------------------------------------
 
