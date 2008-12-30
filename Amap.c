@@ -76,7 +76,7 @@ static void get_means(double *src, unsigned char *label, int nc, struct point *r
                     if (labval_BG < 0) continue;
                     val = src[zsub2 + ysub2 + xsub];
                     
-                    /* exclude values out of quartile 1/99% */
+                    /* exclude values out of quartile 1-99% */
                     if ((val<mn_thresh) || (val>mx_thresh)) continue;
                     ind = ((labval_BG)*nvol)+yoffset+x;
                     ir[ind].n++;
