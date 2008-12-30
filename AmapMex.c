@@ -17,7 +17,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   const int *dims;
   int dims2[4];
   int nc, pve;
-  int BG, niters, nflips, sub, niters_nu;
+  int niters, nflips, sub, niters_nu;
     
   if (nrhs!=7)
     mexErrMsgTxt("7 inputs required.");
@@ -45,7 +45,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   if(pve) dims2[3] += 2;
 
   plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
-  plhs[1] = mxCreateNumericMatrix(1,nc,mxDOUBLE_CLASS,mxREAL);
+  plhs[1] = mxCreateNumericMatrix(1,nc+2,mxDOUBLE_CLASS,mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
   Amap(src, label, prob, mean, nc, niters, nflips, sub, dims, pve);
