@@ -316,7 +316,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     flips = 0;
     ll = 0.0;
 
-    if(pve && iters == 0) {
+    if(pve && iters == 5) {
   
       /* get means for grid points */
       get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
