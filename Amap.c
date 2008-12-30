@@ -1,6 +1,6 @@
 /*
  * Christian Gaser
- * $Id: Amap.c 19 2008-12-29 23:23:27Z gaser $ 
+ * $Id: Amap.c 22 2008-12-30 15:26:27Z gaser $ 
  *
  */
 
@@ -306,17 +306,29 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
 
   r = (struct point*)malloc(sizeof(struct point)*(nc+2)*nvol);
 
-  MrfPrior(label, nc, alpha, beta, 0, dims);
+  if (pve < 2) {
+    MrfPrior(label, nc, alpha, beta, 0, dims);
     
-  for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
-
+    for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
+  }
+  
   error = 0.0;
   for (iters = 0; iters<=niters; iters++)  {
       
     flips = 0;
     ll = 0.0;
 
-    if(pve && iters == 5) {
+    /* use Kmeans to estimate 5 classes */
+    if(pve == 2 && iters == 0) {
+  
+      nc += 2;
+      MrfPrior(label, nc, alpha, beta, 0, dims);
+    
+      for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
+    }
+    
+    /* Use marginalized likelihood to estimate 5 classes */
+    if(pve == 1 && iters == 0) {
   
       /* get means for grid points */
       get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
