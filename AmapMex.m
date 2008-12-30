@@ -1,4 +1,4 @@
-function [prob, mean] = AmapMex(src, label, nc, BG, niters, nflips, sub, weight_MRF)
+function [prob, mean] = AmapMex(src, label, nc, niters, nflips, sub, pve)
 %
 % Christian Gaser
 % $Id$
@@ -10,9 +10,9 @@ disp('Compiling AmapMex.c')
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O AmapMex.c Amap.c MrfPrior.c
+mex -O AmapMex.c Amap.c MrfPrior.c Pve5.c
 cd(p_path);
 
-[prob, mean] = AmapMex(src, label, nc, BG, niters, nflips, sub, weight_MRF);
+[prob, mean] = AmapMex(src, label, nc, niters, nflips, sub, pve);
 
 return

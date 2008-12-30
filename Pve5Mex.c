@@ -18,8 +18,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   int nc;
   int BG;
     
-  if (nrhs!=5)
-    mexErrMsgTxt("5 inputs required.");
+  if (nrhs!=4)
+    mexErrMsgTxt("4 inputs required.");
   else if (nlhs>0)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -33,11 +33,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   prob  = (unsigned char*)mxGetPr(prhs[1]);
   label = (unsigned char*)mxGetPr(prhs[2]);
   mean  = (double*)mxGetPr(prhs[3]);
-  BG    = (int)mxGetScalar(prhs[4]);
 
   dims = mxGetDimensions(prhs[0]);
 
-  Pve5(src, prob, label, mean, BG, dims);
+  Pve5(src, prob, label, mean, dims);
 
 }
 

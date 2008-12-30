@@ -13,6 +13,6 @@ cd(pth);
 mex -O Pve5Mex.c Pve5.c 
 cd(p_path);
 
-Pve5Mex(src, prob, label, mean, BG);
+Pve5Mex(src, prob, label, mean);
 
 return
