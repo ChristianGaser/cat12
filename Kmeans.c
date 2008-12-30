@@ -9,15 +9,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "Amap.h"
 
-#ifndef SQR
-#define SQR(x) ((x)*(x))
-#endif
-#ifndef MAX
-#define MAX( x, y )  ( ((x) >= (y)) ? (x) : (y) )
-#endif
 
-double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, int nc, double *mean, int ni, int BG, int *dims, int thresh_mask, int thresh_kmeans, double max_src)
+double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, int nc, double *mean, int ni, int *dims, int thresh_mask, int thresh_kmeans, double max_src)
 /* perform k-means algorithm give initial mean estimates */    
 {
   int i, j, j0, x, y, z, v;
@@ -37,7 +32,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
       y_dims = y*dims[0];
       for (x=0;x<dims[0];x++) {
          v = (int)round(255.0*src[z_area + y_dims + x]/max_src);
-         if (v < BG) continue;
+         if (v < 1) continue;
          if ((thresh_mask > 0) && ((int)mask[z_area + y_dims + x] < thresh_kmeans))
            continue;
          if (v < 0) v = 0;
@@ -59,7 +54,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   while (diff > 1.0 && count < ni) {
 
     /* assign class labels */
-    for (i = BG; i < 256; i++) {
+    for (i = 0; i < 256; i++) {
       dmin = 256.0 * 256.0;
       for (j = 0; j < nc; j++) {
 	    dx = (double) i - mean[j];
@@ -75,7 +70,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     diff = 0;
     for (i = 0; i < nc; i++) {
       xnorm = 0.0; sum = 0.0;
-      for (j = BG; j < 256; j++)
+      for (j = 0; j < 256; j++)
 	    if (lut[j] == i) {
 	      xnorm += histo[j];
 	      sum +=  j * histo[j];
@@ -90,7 +85,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   }
 
   /* assign final labels to voxels */
-  for (i=BG; i<256; i++) {
+  for (i=0; i<256; i++) {
     dmin = 1e15;
     j0 = 0;
     for (j = 0; j < nc; j++) {
@@ -102,7 +97,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     lut[i] = j0;
   }
   
-  if (BG == 1) lut[0] = 0;
+  lut[0] = 0;
 
   /* adjust for the background label */
   diff = 0;
@@ -113,10 +108,10 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
       y_dims = y*dims[0];
       for (x=0;x<dims[0];x++) {
          v = (int)round(255.0*src[z_area + y_dims + x]/max_src);
-         if (v >= BG) {
+         if (v >= 1) {
            if (v < 0) v = 0;
            if (v > 255) v = 255;
-           label[z_area + y_dims + x] = (unsigned char)(lut[v] + BG);	
+           label[z_area + y_dims + x] = (unsigned char)(lut[v] + 1);	
            diff += SQR((double)v - mean[lut[v]]);
            if ((thresh_mask > 0) && ((int)mask[z_area + y_dims + x] < thresh_mask))
                label[z_area + y_dims + x] = 0;	
@@ -130,18 +125,18 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   return(diff);
 }
 
-double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int nclusters, int BG, double *separations, int *dims, int labelto3, int thresh_mask, int thresh_kmeans, int iters_nu)
+double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu)
 {
   int i, j, l, k, x, y, z;
   double e, emin, eps, *nu, *src_bak, th_src, val_nu;
   double last_err = 1e10;
   double max_src = -1e10;
   double mean_nu = 0.0;
-  long n[nclusters];
-  double mean[nclusters];
-  double var[nclusters];
-  double mu[nclusters];
-  double Mu[nclusters];
+  long n[MAX_NC];
+  double mean[MAX_NC];
+  double var[MAX_NC];
+  double mu[MAX_NC];
+  double Mu[MAX_NC];
   int val, nc;
   long vol, count, area, z_area, y_dims;
 
@@ -160,13 +155,9 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       max_src = MAX(src[i], max_src);
     }
   }
-  
-  /* for reducing 5 labels to 3 restrict initial segmentation to 3 classes */
-  int nc_initial = nclusters;
-  if (labelto3) nc_initial = 3;
-  
+    
   /* go through all sizes of cluster beginning with two clusters */
-  for (nc=2; nc<=nc_initial; nc++) {
+  for (nc=2; nc<=n_clusters; nc++) {
 
     if (nc == 2) {
       /* initialize for the two cluster case; */
@@ -178,7 +169,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
           y_dims = y*dims[0];
           for (x=0;x<dims[0];x++) {
             val = (int)round(255.0*src[z_area + y_dims + x]/max_src);
-            if (val < BG) continue;
+            if (val < 1) continue;
             n[0]++;
             mean[0] += (double) val;
             var[0] += (double) val*(double) val;
@@ -206,8 +197,8 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     for (k=0; k<nc-1; k++) {
       for (i=nc-1; i>k+1; i--) mean[i] = Mu[i-1];
       mean[k+1] = Mu[k] + eps;  mean[k] = Mu[k] - eps;
-      for (i=BG; i<k; i++) mean[i] = Mu[i];
-      e = EstimateKmeans(src, label, mask, nc, mean, NI, BG, dims, thresh_mask, thresh_kmeans, max_src);
+      for (i=1; i<k; i++) mean[i] = Mu[i];
+      e = EstimateKmeans(src, label, mask, nc, mean, NI, dims, thresh_mask, thresh_kmeans, max_src);
       if (e < emin) {
         emin = e;
         for (i=0; i<nc; i++) 
@@ -220,24 +211,6 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   /* only use values above the mean of the lower two cluster for nu-estimate */
   th_src = max_src*(double)((mu[0]+mu[1])/2.0)/255.0;
 
-  /* extend initial 3 clusters to 5 clusters by averaging clusters */
-  if (labelto3 == 1) {
-    mu[4] = mu[2];
-    mu[2] = mu[1];
-    mu[3] = (mu[4]+mu[2])/2;
-    mu[1] = (mu[0]+mu[2])/2;
-  }
-  
-  /* extend initial 3 clusters to 6 clusters by averaging clusters */
-  if (labelto3 == 2) {
-    mu[5] = mu[2];
-    mu[3] = mu[1];
-    mu[1] = mu[0];
-    mu[4] = (mu[3]+mu[5])/2;
-    mu[2] = (mu[1]+mu[3])/2;
-    mu[0] = mu[1]/2;
-  }
-
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
     int count_err = 0;
@@ -248,7 +221,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         nu[i] = 0.0;
         /* only use values above threshold where mask is defined for nu-estimate */
         if ((src[i] > th_src) && (mask[i] > thresh_kmeans)) {
-          val_nu = src[i]/mu[label[i]-BG];
+          val_nu = src[i]/mu[label[i]-1];
           if ((isfinite(val_nu))) {
             nu[i] = val_nu;
             mean_nu += val_nu;
@@ -273,7 +246,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       }
       
       /* update k-means estimate */
-      e = EstimateKmeans(src, label, mask, nclusters, mu, NI, BG, dims, thresh_mask, thresh_kmeans, max_src);
+      e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
 
       if (e > last_err)  count_err++;
       else count_err = 0;
@@ -291,20 +264,22 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
       last_err = e;
     
-      fprintf(stderr,"iters:%2d error: %6.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e/(nc*dims[0]*dims[1]*dims[2]));
+      printf("iters:%2d error: %6.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e/(nc*dims[0]*dims[1]*dims[2]));
+      fflush(stdout);
     
     }
   } else {
-    e = EstimateKmeans(src, label, mask, nclusters, mu, NI, BG, dims, thresh_mask, thresh_kmeans, max_src);
+    e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
   }
   
   max_src = -1e10;
   for (i = 0; i < vol; i++)
     max_src = MAX(src[i], max_src);
 
-  fprintf(stderr,"\nK-Means: ");
-  for (i=0; i<nclusters; i++) fprintf(stderr,"%3.3f ",max_src*mu[i]/255.0); 
-  fprintf(stderr,"\terror: %3.3f\n",e/(nc*dims[0]*dims[1]*dims[2]));    
+  printf("\nK-Means: ");
+  for (i=0; i<n_clusters; i++) printf("%3.3f ",max_src*mu[i]/255.0); 
+  printf("\terror: %3.3f\n",e/(nc*dims[0]*dims[1]*dims[2]));    
+  fflush(stdout);
 
   free(src_bak);
   
