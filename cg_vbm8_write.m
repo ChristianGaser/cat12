@@ -233,9 +233,9 @@ if do_cls & do_defs,
 
     % calculate label image for GM/WM/CSF 
     label = repmat(uint8(0),size(cls{1}(indx,indy,indz)));
-	label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
+	label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 3;
 	label(find((cls{2}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{2}(indx,indy,indz) >= cls{1}(indx,indy,indz)))) = 2;
-	label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 3;
+	label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
 
 	% use mask from LPBA40 sample
 	label(find(mask(indx,indy,indz) < 1)) = 0;
@@ -246,6 +246,7 @@ if do_cls & do_defs,
 	
 	niters = 200; nflips=50; sub=8; nc=3; pve=1;
 	prob = AmapMex(src, label, nc, niters, nflips, sub, pve);
+	prob = prob(:,:,:,[3 2 1]);
 	clear src label
 	
     if warp.cleanup
