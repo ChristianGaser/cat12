@@ -244,8 +244,8 @@ if do_cls & do_defs,
 	src = chan(1).Nc.dat(indx,indy,indz,1,1);
 	src(find(mask(indx,indy,indz) < 1)) = 0;
 	
-	BG = 1; niters = 200; nflips=50; sub=8; nc=3;
-	prob = AmapMex(src, label, nc, BG, niters, nflips, sub, 1.0);
+	niters = 200; nflips=50; sub=8; nc=3; pve=1;
+	prob = AmapMex(src, label, nc, niters, nflips, sub, 1);
 	clear src label
 	
     if warp.cleanup

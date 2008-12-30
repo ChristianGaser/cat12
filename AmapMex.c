@@ -16,11 +16,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   double *src, weight_MRF, *mean;
   const int *dims;
   int dims2[4];
-  int nc;
+  int nc, pve;
   int BG, niters, nflips, sub, niters_nu;
     
-  if (nrhs!=8)
-    mexErrMsgTxt("8 inputs required.");
+  if (nrhs!=7)
+    mexErrMsgTxt("7 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -30,11 +30,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   src    = (double*)mxGetPr(prhs[0]);
   label  = (unsigned char*)mxGetPr(prhs[1]);
   nc     = (int)mxGetScalar(prhs[2]);
-  BG     = (int)mxGetScalar(prhs[3]);
-  niters = (int)mxGetScalar(prhs[4]);
-  nflips = (int)mxGetScalar(prhs[5]);
-  sub    = (int)mxGetScalar(prhs[6]);
-  weight_MRF = (double)mxGetScalar(prhs[7]);
+  niters = (int)mxGetScalar(prhs[3]);
+  nflips = (int)mxGetScalar(prhs[4]);
+  sub    = (int)mxGetScalar(prhs[5]);
+  pve    = (double)mxGetScalar(prhs[6]);
 
   dims = mxGetDimensions(prhs[0]);
   dims2[0] = dims[0];
@@ -46,7 +45,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   plhs[1] = mxCreateNumericMatrix(1,nc,mxDOUBLE_CLASS,mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
-  Amap(src, label, prob, mean, nc, BG, niters, nflips, sub, dims, weight_MRF);
+  Amap(src, label, prob, mean, nc, niters, nflips, sub, dims, pve);
+  if(pve) Pve5(src, prob, label, mean, dims);
 
 }
 
