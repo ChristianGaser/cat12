@@ -163,14 +163,14 @@ double Compute_marginalized_likelihood(double value, double mean1 , double mean2
 
 /* Find maximum argument out of the n possibilities */
 
-char Maxarg(double *pval, char n)
+unsigned char Maxarg(double *pval, unsigned char n)
 {
-  double maximum,index;
-  char i;
+  double maximum;
+  unsigned char i, index;
   
   maximum = pval[0];
   index = 1;
-  for(i = 1;i < n;i++) {
+  for(i = 1; i < n; i++) {
     if(pval[i] > maximum) {
       index = i + 1;
       maximum = pval[i];
@@ -185,7 +185,7 @@ char Maxarg(double *pval, char n)
 void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *r, int nc, int sub, int *dims)
 {
   
-  int x, y, z, z_area, y_dims, index, labval;
+  int x, y, z, z_area, y_dims, index, labval, xBG;
   int i, ix, iy, iz, ind, ind2, nix, niy, niz, narea, nvol;
   long area, vol;
   double val, dmin, sub_1, mean[MAX_NC], var[MAX_NC], d_pve[MAX_NC];
@@ -229,7 +229,6 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
           }
         }
 
-        dmin = FLT_MAX;
         for(i = 0; i < nc; i++) {
           if (fabs(mean[i]) > 1e-15) {
             d_pve[i] = Compute_Gaussian_likelihood(val, mean[i], var[i]);
@@ -246,7 +245,7 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
                                         var[GMLABEL], var[CSFLABEL], 0, 50 );
         } else d_pve[GMCSFLABEL] = FLT_MAX;
 
-        label[index] = Maxarg(d_pve,5);
+        label[index] = (unsigned char) Maxarg(d_pve, 5);
       }
     }
   }   
@@ -256,14 +255,14 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
 /* perform adaptive MAP on given src and initial segmentation label */
 void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int nflips, int sub, int *dims, int pve)
 {
-  int i, index, flips;
-  int area, narea, nvol, vol, z_area, y_dims;
+  int i, flips;
+  int area, narea, nvol, vol, z_area, y_dims, index, ind;
   int histo[65536];
   double sub_1, beta[1], dmin, val, d_pve[MAX_NC];
   double var[MAX_NC], d[MAX_NC], alpha[MAX_NC], log_alpha[MAX_NC], log_var[MAX_NC];
   double pvalue[MAX_NC], psum, error;
   int nix, niy, niz, iters;
-  int x, y, z, labval, ind, xBG;
+  int x, y, z, labval, xBG;
   int ix, iy, iz, iBG, ind2;
   double first, mn_thresh, mx_thresh, ll;
   double min_src = FLT_MAX, max_src = -FLT_MAX;
@@ -317,7 +316,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     flips = 0;
     ll = 0.0;
 
-    if(pve && iters == 5) {
+    if(pve && iters == 0) {
   
       /* get means for grid points */
       get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
@@ -340,17 +339,19 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
         for (x = 1; x < dims[0]-1; x++)  {
 	  
           index = x + y_dims + z_area;
-          labval = (int)label[index];
+          labval = (int) label[index];
           if (labval < 1) continue;
           val = src[index];
           
           /* find the interpolation factors */
-          ix = (int)(sub_1*x), iy = (int)(sub_1*y), iz = (int)(sub_1*z);
+          ix = (int)(sub_1*x);
+          iy = (int)(sub_1*y);
+          iz = (int)(sub_1*z);
           ind = iz*narea + iy*nix + ix;
           
           for (i=0; i<nc; i++) {
-            ind2 = (i*nvol) + ind;            
-            if (r[ind2].mean > 0.0) {
+            ind2 = (i*nvol) + ind;  
+            if (r[ind2].mean > 1e-15) {
               mean[i] = r[ind2].mean;
               var[i]  = r[ind2].var;
               log_var[i] = log(var[i]);
@@ -364,24 +365,25 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
             if (fabs(mean[i]) > 1e-15) {
               first=0.0;
               iBG = i+1;
-              if ((int)label[index-1] == iBG)       first++;
-              if ((int)label[index+1] == iBG)       first++;
+              if ((int)label[index-1      ] == iBG) first++;
+              if ((int)label[index+1      ] == iBG) first++;
               if ((int)label[index-dims[0]] == iBG) first++;
               if ((int)label[index+dims[0]] == iBG) first++;
-              if ((int)label[index-area] == iBG)    first++;
-              if ((int)label[index+area] == iBG)    first++;
+              if ((int)label[index-area   ] == iBG) first++;
+              if ((int)label[index+area   ] == iBG) first++;
               
               d[i] = 0.5*(SQR(val-mean[i])/var[i]+log_var[i])-log_alpha[i]-beta[0]*first;
               pvalue[i] = exp(-d[i])/SQRT2PI;
               psum += pvalue[i];
             } else d[i] = FLT_MAX;
             if ( d[i] < dmin) {
-              dmin = d[i]; xBG = i;
+              dmin = d[i];
+              xBG = i;
             }
           }
           	  
          /* scale p-values to a sum of 1 */
-         if (psum > 0.0) {
+         if (psum > 1e-15) {
            for (i=0; i<nc; i++) pvalue[i] /= psum;
            ll -= log(psum);
          } else  for (i=0; i<nc; i++) pvalue[i] = 0.0;;
