@@ -40,6 +40,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   dims2[1] = dims[1];
   dims2[2] = dims[2];
   dims2[3] = nc;
+  
+  /* for PVE we need tow more classes */
+  if(pve) dims2[3] += 2;
 
   plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
   plhs[1] = mxCreateNumericMatrix(1,nc,mxDOUBLE_CLASS,mxREAL);
