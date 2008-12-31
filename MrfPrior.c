@@ -1,6 +1,6 @@
 /*
  * Christian Gaser
- * $Id: MrfPrior.c 17 2008-12-11 12:47:45Z gaser $ 
+ * $Id: MrfPrior.c 22 2008-12-30 15:26:27Z gaser $ 
  *
  */
 
@@ -57,7 +57,7 @@ void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int ini
           if ((int)label[((z-1)*area) + y_dims + x] == iBG)    f[i-1]++;
           if ((int)label[((z+1)*area) + y_dims + x] == iBG)    f[i-1]++;
         }
-        for (i=nc; i<=nc+1; i++) f[i-1] = 0;
+//        for (i=nc; i<=nc+1; i++) f[i-1] = 0;
         color[zero-1][f[0]][f[1]][f[2]][f[3]]++;
       }
     }
