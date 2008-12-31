@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 #include "Amap.h"
 
 
@@ -50,7 +51,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   for (i = 0; i < 256; i++) if ((cumsum[i] <= 10) || (cumsum[i] >= 990)) histo[i] = 0;
 
   /* loop through */
-  diff = 1e15;  count = 0;
+  diff = FLT_MAX;  count = 0;
   while (diff > 1.0 && count < ni) {
 
     /* assign class labels */
@@ -86,7 +87,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
 
   /* assign final labels to voxels */
   for (i=0; i<256; i++) {
-    dmin = 1e15;
+    dmin = FLT_MAX;
     j0 = 0;
     for (j = 0; j < nc; j++) {
       if (fabs((double) i - mean[j]) < dmin) {
@@ -125,12 +126,12 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   return(diff);
 }
 
-double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu)
+double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve)
 {
   int i, j, l, k, x, y, z;
   double e, emin, eps, *nu, *src_bak, th_src, val_nu;
-  double last_err = 1e10;
-  double max_src = -1e10;
+  double last_err = FLT_MAX;
+  double max_src = -FLT_MAX;
   double mean_nu = 0.0;
   long n[MAX_NC];
   double mean[MAX_NC];
@@ -156,8 +157,15 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     }
   }
     
+  /* for reducing 5 labels to 3 restrict initial segmentation to 3 classes */
+  int nc_initial = n_clusters;
+  if (pve == 2) {
+    nc_initial = 3;
+    n_clusters += 2;
+  }
+
   /* go through all sizes of cluster beginning with two clusters */
-  for (nc=2; nc<=n_clusters; nc++) {
+  for (nc=2; nc<=nc_initial; nc++) {
 
     if (nc == 2) {
       /* initialize for the two cluster case; */
@@ -193,7 +201,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     }
 
     /* go through low order clustering */
-    emin = 1e15;
+    emin = FLT_MAX;
     for (k=0; k<nc-1; k++) {
       for (i=nc-1; i>k+1; i--) mean[i] = Mu[i-1];
       mean[k+1] = Mu[k] + eps;  mean[k] = Mu[k] - eps;
@@ -210,6 +218,15 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   /* only use values above the mean of the lower two cluster for nu-estimate */
   th_src = max_src*(double)((mu[0]+mu[1])/2.0)/255.0;
+
+  /* extend initial 3 clusters to 5 clusters by averaging clusters */
+  if (pve == 2) {
+    mu[0] = Mu[0];
+    mu[1] = Mu[1];
+    mu[2] = Mu[2];
+    mu[3] = (Mu[0]+Mu[2])/2;
+    mu[4] = (Mu[1]+Mu[2])/2;
+  }
 
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
@@ -272,7 +289,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
   }
   
-  max_src = -1e10;
+  max_src = -FLT_MAX;
   for (i = 0; i < vol; i++)
     max_src = MAX(src[i], max_src);
 
