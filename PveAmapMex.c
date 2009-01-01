@@ -11,7 +11,7 @@
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
-  unsigned char *label, *prob, *mask;
+  unsigned char *label, *prob, *priors, *mask;
   double *src, *mean, *vx;
   const int *dims;
   int dims2[4];
@@ -28,7 +28,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	mexErrMsgTxt("Third argument must be uint8.");
 
   src   = (double*)mxGetPr(prhs[0]);
-  label = (unsigned char*)mxGetPr(prhs[1]);
+  priors = (unsigned char*)mxGetPr(prhs[1]);
   mask  = (unsigned char*)mxGetPr(prhs[2]);
   vx    = (double*)mxGetPr(prhs[3]);
 
@@ -43,7 +43,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
   
-  PveAmap(src, label, mask, prob, mean, vx, dims);
+  PveAmap(src, priors, mask, prob, mean, vx, dims);
 
 }
 
