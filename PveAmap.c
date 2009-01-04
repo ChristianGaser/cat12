@@ -18,7 +18,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   int thresh, thresh_kmeans_int, vol, i;
   int n_loops, update_label, sum_priors;
   unsigned char *label;
-  double max_src, mask_val;
+  double max_src;
   float *flow;
   
   vol = dims[0]*dims[1]*dims[2];
@@ -65,11 +65,11 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
 
-  n_loops = 3;
+  n_loops = 6;
   WarpPriors(prob, priors, mask, flow, dims, n_loops);
   
   for(i=0; i<vol; i++)
-    if(mask[i] < 32) src[i] = 0.0;
+    if(mask[i] < 64) src[i] = 0.0;
   
   Amap( src, label, prob, mean, n_pure_classes, Niters, Nflips, subsample, dims, pve);
 
@@ -83,10 +83,11 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   WarpPriors(prob, priors, mask, flow, dims, n_loops);
 
   for(i=0; i<vol; i++) {
-    mask_val = ((double)mask[i])/255.0;
-    prob[i      ] = (unsigned char)ROUND(((double)prob[i      ])*mask_val);
-    prob[i+vol  ] = (unsigned char)ROUND(((double)prob[i+vol  ])*mask_val);
-    prob[i+vol*2] = (unsigned char)ROUND(((double)prob[i+vol*2])*mask_val);
+    if(mask[i] < 64) {
+      prob[i      ] = 0;
+      prob[i+vol  ] = 0;
+      prob[i+vol*2] = 0;
+    }
   }
   
   free(label);
