@@ -41,7 +41,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   samp = 3;
   
   /* only use gm/wm */
-  ndims4 = 2;
+  ndims4 = 3;
 
   /* define grid dimensions */
   for(j=0; j<3; j++) dims_samp[j] = (int) ceil((dims[j]-1)/((double) samp))+1;
