@@ -15,29 +15,33 @@
 void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims)
 {
 
-  int thresh, thresh_kmeans_int, vol, i, j;
-  int n_loops, update_label;
-  unsigned char *label, *mask_init;
-  double max_src;
+  int thresh, thresh_kmeans_int, vol, i;
+  int n_loops, update_label, sum_priors;
+  unsigned char *label;
+  double max_src, mask_val;
   float *flow;
   
   vol = dims[0]*dims[1]*dims[2];
   label     = (unsigned char*)malloc(sizeof(unsigned char)*vol);
-  mask_init = (unsigned char*)malloc(sizeof(unsigned char)*vol);
   flow  = (float *)malloc(sizeof(float)*vol*3);
   
+  /* initialize flow field with zeros */
+  for (i = 0; i < (vol*3); i++) flow[i] = 0.0;
+  
   /* compute mask based on sum of tissue priors for GM/WM/CSF */
-  for (j=0; j<3; j++)
-    for (i=0; i<vol; i++) 
-      mask_init[i] = priors[i] + priors[i+vol] + priors[i+2*vol];
+  for (i=0; i<vol; i++) {
+    sum_priors = (int)priors[i] + (int)priors[i+vol] + (int)priors[i+2*vol];
+    if(sum_priors > 255) mask[i] = 255;
+    else mask[i] = (unsigned char) sum_priors;
+  }
     
-  Niters = 3;
+  Niters = 10;
   thresh_brainmask = 0.01;
 
   thresh = (int)round(255*thresh_brainmask);
   thresh_kmeans_int = (int)round(255*thresh_kmeans);
 
-  max_src = Kmeans( src, label, mask_init, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
+  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
       
   if (pve) {
     update_label = 0;
@@ -61,8 +65,11 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
 
-  n_loops = 1;
-//  WarpPriors(prob, priors, mask_init, flow, dims, n_loops);
+  n_loops = 3;
+  WarpPriors(prob, priors, mask, flow, dims, n_loops);
+  
+  for(i=0; i<vol; i++)
+    if(mask[i] < 32) src[i] = 0.0;
   
   Amap( src, label, prob, mean, n_pure_classes, Niters, Nflips, subsample, dims, pve);
 
@@ -72,7 +79,16 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     Pve5(src, prob, label, mean, dims, update_label);
   }
 
-  free(mask_init);
+  n_loops = 6;
+  WarpPriors(prob, priors, mask, flow, dims, n_loops);
+
+  for(i=0; i<vol; i++) {
+    mask_val = ((double)mask[i])/255.0;
+    prob[i      ] = (unsigned char)ROUND(((double)prob[i      ])*mask_val);
+    prob[i+vol  ] = (unsigned char)ROUND(((double)prob[i+vol  ])*mask_val);
+    prob[i+vol*2] = (unsigned char)ROUND(((double)prob[i+vol*2])*mask_val);
+  }
+  
   free(label);
   free(flow);
 }
