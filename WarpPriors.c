@@ -25,39 +25,40 @@ struct dartel_prm {
 
 /* First order hold resampling - trilinear interpolation */
 /* modified version from spm_vol_utils.c from John Asburner */
-void resample_trilinear(int m, double *vol, double *out, double *x, double *y, double *z,
-  int dim[3], int offset)
+void resample_trilinear(float *vol, double *out, int dim_samp[3], int dim[3], int offset)
 {
-	int i;
-	double k111,k112,k121,k122,k211,k212,k221,k222;
-	double dx1, dx2, dy1, dy2, dz1, dz2;
-	int off1, off2, xcoord, ycoord, zcoord;
+  int i, x, y, z, samp[3];
+  double k111,k112,k121,k122,k211,k212,k221,k222;
+  double dx1, dx2, dy1, dy2, dz1, dz2, xi, yi, zi;
+  int off1, off2, xcoord, ycoord, zcoord;
 
-	for (i=0; i<m; i++)
-	{
-		if ((z[i]>=1) && (z[i]<dim[0]) &&
-			  (y[i]>=1) && (y[i]<dim[1]) &&
-			  (x[i]>=1) && (x[i]<dim[2]))
-		{
-		
+  for (i=0; i<3; i++) samp[i] = ceil((double)dim[i]/(double)dim_samp[i]);
+  
+  for (z=0; z<dim[2]; z++) {
+    zi = (double)z/(double)samp[2];
+    for (y=0; y<dim[1]; y++) {
+      yi = (double)y/(double)samp[1];
+      for (x=0; x<dim[0]; x++) {
+        xi = (double)x/(double)samp[0];
+  
+        xcoord = (int)floor(xi); dx1=xi-(double)xcoord; dx2=1.0-dx1;
+        ycoord = (int)floor(yi); dy1=yi-(double)ycoord; dy2=1.0-dy1;
+        zcoord = (int)floor(zi); dz1=zi-(double)zcoord; dz2=1.0-dz1;
 
-			xcoord = (int)floor(x[i]); dx1=x[i]-xcoord; dx2=1.0-dx1;
-			ycoord = (int)floor(y[i]); dy1=y[i]-ycoord; dy2=1.0-dy1;
-			zcoord = (int)floor(z[i]); dz1=z[i]-zcoord; dz2=1.0-dz1;
+        off1 = xcoord-1 + dim_samp[0]*(xcoord-1 + dim_samp[1]*(xcoord-1)) + offset;
+        k222 = vol[off1]; k122 = vol[off1+1]; off2 = off1+dim_samp[0];
+        k212 = vol[off2]; k112 = vol[off2+1]; off1+= dim_samp[0]*dim_samp[1];
+        k221 = vol[off1]; k121 = vol[off1+1]; off2 = off1+dim_samp[0];
+        k211 = vol[off2]; k111 = vol[off2+1];
 
-      off1 = xcoord-1 + dim[0]*(xcoord-1 + dim[1]*(xcoord-1)) + offset;
-      k222 = vol[off1]; k122 = vol[off1+1]; off2 = off1+dim[0];
-      k212 = vol[off2]; k112 = vol[off2+1]; off1+= dim[0]*dim[1];
-      k221 = vol[off1]; k121 = vol[off1+1]; off2 = off1+dim[0];
-      k211 = vol[off2]; k111 = vol[off2+1];
-
-			out[i] =  (((k222*dx2 + k122*dx1)*dy2 + (k212*dx2 + k112*dx1)*dy1))*dz2
+        i = z*dim[0]*dim[1] + y*dim[0] + x;
+        out[i] =  (((k222*dx2 + k122*dx1)*dy2 + (k212*dx2 + k112*dx1)*dy1))*dz2
 				+ (((k221*dx2 + k121*dx1)*dy2 + (k211*dx2 + k111*dx1)*dy1))*dz1;
 
-		}
-		else out[i] = 0.0;
-
-	}
+      }
+    }
+    fprintf(stderr,"%d/%g %g %g\n",i, zi, out[i], vol[off1]);
+  }
 }
 
 void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask, float *flow, int *dims, int loop)
@@ -101,12 +102,12 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   g      = (float *)malloc(sizeof(float)*vol_samp3);
   v      = (float *)malloc(sizeof(float)*vol_samp3);
   flow1  = (float *)malloc(sizeof(float)*vol_samp3);
-  flow2x = (double *)malloc(sizeof(float)*vol);
-  flow2y = (double *)malloc(sizeof(float)*vol);
-  flow2z = (double *)malloc(sizeof(float)*vol);
-  xs = (double *)malloc(sizeof(float)*dims[0]);
-  ys = (double *)malloc(sizeof(float)*dims[1]);
-  zs = (double *)malloc(sizeof(float)*dims[2]);
+  flow2x = (double *)malloc(sizeof(double)*vol);
+  flow2y = (double *)malloc(sizeof(double)*vol);
+  flow2z = (double *)malloc(sizeof(double)*vol);
+  xs = (double *)malloc(sizeof(double)*dims[0]);
+  ys = (double *)malloc(sizeof(double)*dims[1]);
+  zs = (double *)malloc(sizeof(double)*dims[2]);
   mask_tmp = (float *)malloc(sizeof(float)*vol);
 
   for (i=0; i<dims[0]; i++) xs[i] = (double)i/(double)samp;
@@ -240,9 +241,9 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
 
     expdef(size_samp, 6, -1, v, flow, flow1, (float *)0, (float *)0); 
 
-    resample_trilinear(vol, (double *)flow, flow2x, xs, ys, zs, dims, 0);    
-    resample_trilinear(vol, (double *)flow, flow2y, xs, ys, zs, dims, vol_samp);
-    resample_trilinear(vol, (double *)flow, flow2z, xs, ys, zs, dims, vol_samp2);
+    resample_trilinear(flow, flow2x, dims_samp, dims, 0);    
+    resample_trilinear(flow, flow2y, dims_samp, dims, vol_samp);    
+    resample_trilinear(flow, flow2z, dims_samp, dims, vol_samp2);    
 
     /* warp mask */
     for (i = 0; i < vol; i++) {
