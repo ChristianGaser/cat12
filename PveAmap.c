@@ -30,7 +30,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   
   /* check maximum of mask to indicate whether it's defined or not */
   max_mask = -1e15;
-  for (i=0; i<vol*3; i++) max_mask = MAX(mask[i], max_mask);
+  for (i=0; i<vol; i++) max_mask = MAX(mask[i], max_mask);
 
   /* compute mask based on sum of tissue priors for GM/WM/CSF if not given */
   if(max_mask == 0) {
@@ -41,7 +41,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
     
-  Niters = 10;
+  Niters = 3;
   thresh_brainmask = 0.01;
 
   thresh = (int)round(255*thresh_brainmask);
@@ -71,7 +71,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
 
-  n_loops = 6;
+  n_loops = 1;
   WarpPriors(prob, priors, mask, flow, dims, n_loops);
   
   for(i=0; i<vol; i++)
@@ -86,7 +86,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 6;
-  WarpPriors(prob, priors, mask, flow, dims, n_loops);
+//  WarpPriors(prob, priors, mask, flow, dims, n_loops);
 
   for(i=0; i<vol; i++) {
     if(mask[i] < 64) {
