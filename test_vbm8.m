@@ -2,6 +2,8 @@ function test_vbm8
 
 if 1
 V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
+V = spm_vol('/Users/gaser/data/loni/brainweb/nii/t1_icbm_normal_1mm_pn3_rf20.img');
+
 vol = spm_read_vols(V);
 
 Vmask = spm_vol('brainmask_LPBA40.nii');
