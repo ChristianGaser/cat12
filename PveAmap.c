@@ -18,7 +18,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   int thresh, thresh_kmeans_int, vol, i;
   int n_loops, update_label, sum_priors;
   unsigned char *label;
-  double max_src;
+  double max_src, max_mask;
   float *flow;
   
   vol = dims[0]*dims[1]*dims[2];
@@ -28,11 +28,17 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   /* initialize flow field with zeros */
   for (i = 0; i < (vol*3); i++) flow[i] = 0.0;
   
-  /* compute mask based on sum of tissue priors for GM/WM/CSF */
-  for (i=0; i<vol; i++) {
-    sum_priors = (int)priors[i] + (int)priors[i+vol] + (int)priors[i+2*vol];
-    if(sum_priors > 255) mask[i] = 255;
-    else mask[i] = (unsigned char) sum_priors;
+  /* check maximum of mask to indicate whether it's defined or not */
+  max_mask = -1e15;
+  for (i=0; i<vol*3; i++) max_mask = MAX(mask[i], max_mask);
+
+  /* compute mask based on sum of tissue priors for GM/WM/CSF if not given */
+  if(max_mask == 0) {
+    for (i=0; i<vol; i++) {
+      sum_priors = (int)priors[i] + (int)priors[i+vol] + (int)priors[i+2*vol];
+      if(sum_priors > 255) mask[i] = 255;
+      else mask[i] = (unsigned char) sum_priors;
+    }
   }
     
   Niters = 10;
