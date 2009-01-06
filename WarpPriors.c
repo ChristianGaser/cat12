@@ -11,8 +11,6 @@
 #include "diffeo3d.h"
 #include "Amap.h"
 
-#define TINY 5e-2
-
 struct dartel_prm {
   int rform;         /* regularization form: 0 - linear elastic energy; 1 - membrane energy; 2 - bending energy */
   double rparam[6];  /* regularization parameters */
@@ -24,8 +22,7 @@ struct dartel_prm {
 };
 
 /* First order hold resampling - trilinear interpolation */
-/* modified version from spm_vol_utils.c from John Asburner */
-void resample_trilinear(float *vol, double *out, int dim_samp[3], int dim[3], int offset)
+void subsample_up(float *vol, double *out, int dim_samp[3], int dim[3])
 {
   int i, x, y, z, samp[3];
   double k111,k112,k121,k122,k211,k212,k221,k222;
@@ -35,43 +32,79 @@ void resample_trilinear(float *vol, double *out, int dim_samp[3], int dim[3], in
   for (i=0; i<3; i++) samp[i] = (int)ceil((double)dim[i]/(double)dim_samp[i]);
   
   for (z=0; z<dim[2]; z++) {
-    zi = (double)z/(double)samp[2];
+    zi = 1.0+(double)z/(double)samp[2];
     for (y=0; y<dim[1]; y++) {
-      yi = (double)y/(double)samp[1];
+      yi = 1.0+(double)y/(double)samp[1];
       for (x=0; x<dim[0]; x++) {
-        xi = (double)x/(double)samp[0];
-  
-        xcoord = (int)floor(xi); dx1=xi-(double)xcoord; dx2=1.0-dx1;
-        ycoord = (int)floor(yi); dy1=yi-(double)ycoord; dy2=1.0-dy1;
-        zcoord = (int)floor(zi); dz1=zi-(double)zcoord; dz2=1.0-dz1;
-
-        off1 = xcoord-1 + dim_samp[0]*(ycoord-1 + dim_samp[1]*(zcoord-1)) + offset;
-        k222 = vol[off1]; k122 = vol[off1+1]; off2 = off1+dim_samp[0];
-        k212 = vol[off2]; k112 = vol[off2+1]; off1+= dim_samp[0]*dim_samp[1];
-        k221 = vol[off1]; k121 = vol[off1+1]; off2 = off1+dim_samp[0];
-        k211 = vol[off2]; k111 = vol[off2+1];
-
+        xi = 1.0+(double)x/(double)samp[0];
         i = z*dim[0]*dim[1] + y*dim[0] + x;
-        out[i] =  (((k222*dx2 + k122*dx1)*dy2 + (k212*dx2 + k112*dx1)*dy1))*dz2
-				+ (((k221*dx2 + k121*dx1)*dy2 + (k211*dx2 + k111*dx1)*dy1))*dz1;
 
+        if (zi>=0 && zi<dim_samp[2] && yi>=0 && yi<dim_samp[1] && xi>=0 && xi<dim_samp[0])  {
+          xcoord = (int)floor(xi); dx1=xi-(double)xcoord; dx2=1.0-dx1;
+          ycoord = (int)floor(yi); dy1=yi-(double)ycoord; dy2=1.0-dy1;
+          zcoord = (int)floor(zi); dz1=zi-(double)zcoord; dz2=1.0-dz1;
+
+          off1 = xcoord-1 + dim_samp[0]*(ycoord-1 + dim_samp[1]*(zcoord-1));
+          k222 = vol[off1]; k122 = vol[off1+1]; off2 = off1+dim_samp[0];
+          k212 = vol[off2]; k112 = vol[off2+1]; off1+= dim_samp[0]*dim_samp[1];
+          k221 = vol[off1]; k121 = vol[off1+1]; off2 = off1+dim_samp[0];
+          k211 = vol[off2]; k111 = vol[off2+1];
+
+          out[i] = (((k222*dx2 + k122*dx1)*dy2 + (k212*dx2 + k112*dx1)*dy1))*dz2
+                 + (((k221*dx2 + k121*dx1)*dy2 + (k211*dx2 + k111*dx1)*dy1))*dz1;
+                 
+        } else out[i] = 0;
       }
     }
-    fprintf(stderr,"%d/%g %g %d %d\n",i, zi, out[i], off1,off2);
+  }
+}
+
+/* First order hold resampling - trilinear interpolation */
+void subsample_down(unsigned char *vol, float *out, int dim_samp[3], int dim[3], int offset, int offset_samp)
+{
+  int i, x, y, z;
+  double k111,k112,k121,k122,k211,k212,k221,k222;
+  double dx1, dx2, dy1, dy2, dz1, dz2, xi, yi, zi, samp[3];
+  int off1, off2, xcoord, ycoord, zcoord;
+
+  for (i=0; i<3; i++) samp[i] = (int)ceil((double)dim_samp[i]/(double)dim[i]);
+  
+  for (z=0; z<dim[2]; z++) {
+    zi = 1.0+(double)z*(double)samp[2];
+    for (y=0; y<dim[1]; y++) {
+      yi = 1.0+(double)y*(double)samp[1];
+      for (x=0; x<dim[0]; x++) {
+        xi = 1.0+(double)x*(double)samp[0];
+        i = z*dim[0]*dim[1] + y*dim[0] + x + offset;
+
+        if (zi>=0 && zi<dim_samp[2] && yi>=0 && yi<dim_samp[1] && xi>=0 && xi<dim_samp[0])  {
+          xcoord = (int)floor(xi); dx1=xi-(double)xcoord; dx2=1.0-dx1;
+          ycoord = (int)floor(yi); dy1=yi-(double)ycoord; dy2=1.0-dy1;
+          zcoord = (int)floor(zi); dz1=zi-(double)zcoord; dz2=1.0-dz1;
+
+          off1 = xcoord-1 + dim_samp[0]*(ycoord-1 + dim_samp[1]*(zcoord-1)) + offset_samp;
+          k222 = (double)vol[off1]; k122 = (double)vol[off1+1]; off2 = off1+dim_samp[0];
+          k212 = (double)vol[off2]; k112 = (double)vol[off2+1]; off1+= dim_samp[0]*dim_samp[1];
+          k221 = (double)vol[off1]; k121 = (double)vol[off1+1]; off2 = off1+dim_samp[0];
+          k211 = (double)vol[off2]; k111 = (double)vol[off2+1];
+
+          out[i] = (float)((((k222*dx2 + k122*dx1)*dy2 + (k212*dx2 + k112*dx1)*dy1))*dz2
+                         + (((k221*dx2 + k121*dx1)*dy2 + (k211*dx2 + k111*dx1)*dy1))*dz1);
+                 
+        } else out[i] = 0;
+      }
+    }
   }
 }
 
 void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask, float *flow, int *dims, int loop)
 {
-  int vol_samp, vol, vol2, vol3, vol_samp2, vol_samp3, i, j, k, l, m;
-  int size_samp[4], samp;
+  int vol_samp, vol, vol2, vol3, vol_samp2, vol_samp3, i, j;
+  int size_samp[4], samp, area;
   double buf[3], ll[3], samp_1; 
-  float *f, *g, *v, *flow1, *scratch, *mask_tmp, max;
-  double *flow2x, *flow2y, *flow2z, *xs, *ys, *zs;
-  int it, it0, it1, it_scratch, ndims4, dims_samp[3]; 
-  int x, y, z, index_samp, xsamp, ysamp, ysamp2, zsamp, zsamp2;
-  int yoffset, area_samp, zoffset, area, index;
-  int z_area, y_dims, ix, iy, iz;
+  float *f, *g, *v, *flow1, *scratch, *mask_samp, *mask_samp2, max;
+  double *mask_double;
+  int it, it0, it1, it_scratch, ndims4, dims_samp[3], area_samp;
    
   int code = 2;    /* multinomial */
   int rform = 0;   /* linear energy */
@@ -79,7 +112,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   static double param[3] = {1.0, 1.0, 1.0};
 
   samp = 4;
-  
+    
   /* only use gm/wm */
   ndims4 = 2;
 
@@ -102,20 +135,13 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   g      = (float *)malloc(sizeof(float)*vol_samp3);
   v      = (float *)malloc(sizeof(float)*vol_samp3);
   flow1  = (float *)malloc(sizeof(float)*vol_samp3);
-  flow2x = (double *)malloc(sizeof(double)*vol);
-  flow2y = (double *)malloc(sizeof(double)*vol);
-  flow2z = (double *)malloc(sizeof(double)*vol);
-  xs = (double *)malloc(sizeof(double)*dims[0]);
-  ys = (double *)malloc(sizeof(double)*dims[1]);
-  zs = (double *)malloc(sizeof(double)*dims[2]);
-  mask_tmp = (float *)malloc(sizeof(float)*vol);
+  mask_double = (double *)malloc(sizeof(double)*vol);
+  mask_samp  = (float *)malloc(sizeof(float)*vol_samp);
+  mask_samp2 = (float *)malloc(sizeof(float)*vol_samp);
 
-  for (i=0; i<dims[0]; i++) xs[i] = (double)i/(double)samp;
-  for (i=0; i<dims[1]; i++) ys[i] = (double)i/(double)samp;
-  for (i=0; i<dims[2]; i++) zs[i] = (double)i/(double)samp;
-
-  /* for warping we need floating values of mask */
-  for (i = 0; i < vol; i++) mask_tmp[i] = (float)mask[i];
+  /* initialize size of subsampled data and add 4th dimension */
+  for(i=0; i < 3; i++) size_samp[i] = dims_samp[i];    
+  size_samp[3] = ndims4;
 
   /* initialize flow field */
   for (i = 0; i < vol_samp3; i++) v[i] = flow[i];
@@ -140,94 +166,34 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   prm[2].rparam[3] = 1.0;   prm[2].rparam[4] = 0.5;    prm[2].rparam[5] = 1e-6; prm[2].k = 1; 
   prm[3].rparam[3] = 0.5;   prm[3].rparam[4] = 0.25;   prm[3].rparam[5] = 1e-6; prm[3].k = 2; 
   prm[4].rparam[3] = 0.25;  prm[4].rparam[4] = 0.125;  prm[4].rparam[5] = 1e-6; prm[4].k = 4; 
-  prm[5].rparam[3] = 0.125; prm[5].rparam[4] = 0.0625; prm[5].rparam[5] = 1e-6; prm[5].k = 6; 
+  prm[5].rparam[3] = 0.125; prm[5].rparam[4] = 0.0625; prm[5].rparam[5] = 1e-6; prm[5].k = 6;
 
-  for (i = 0; i < vol_samp3; i++) f[i] = 0.0;
+  /* subsample priors and mask to lower resolution */
+  subsample_down(mask, mask_samp, dims, dims_samp, 0, 0);    
+  subsample_down(priors, f, dims, dims_samp, 0, 0);    
+  subsample_down(priors, f, dims, dims_samp, vol_samp, vol);    
+  subsample_down(priors, f, dims, dims_samp, vol_samp2, vol2);    
 
-  /* loop over neighborhoods of the grid points */
-  for (k=-samp; k<=samp; k++) {
-    for (l=-samp; l<=samp; l++) {
-      for (m=-samp; m<=samp; m++) {
-        for (z = 0; z < dims_samp[2]; z++) {
-          zsamp = z*samp + k;
-          if ((zsamp>=0) & (zsamp<dims[2])) {
-            zsamp2 = zsamp*area;
-            zoffset = z*area_samp;
-            for (y=0; y<dims_samp[1]; y++) {
-              ysamp = y*samp + l;
-              if ((ysamp>=0) & (ysamp<dims[1])) {
-                ysamp2 = ysamp*dims[0];
-                yoffset = zoffset + y*dims_samp[0];
-                for (x=0; x<dims_samp[0]; x++) {
-                  xsamp = x*samp + m;
-                  if ((xsamp>=0) & (xsamp<dims[0])) {
-                    index_samp = yoffset + x;
-                    index = zsamp2 + ysamp2 + xsamp;
-                    f[index_samp          ] += ((float)priors[index       ]);
-                    f[index_samp+vol_samp ] += ((float)priors[index + vol ]);
-                    f[index_samp+vol_samp2] += ((float)priors[index + vol2]);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-
-
+  /* scale subsampled priors to a maximum of 1 */
   max = -1e15;
   for (i=0; i<vol_samp3; i++) max = MAX(f[i], max);
   for (i=0; i<vol_samp3; i++) f[i] /= max;
 
-  for(i=0; i < 3; i++) size_samp[i] = dims_samp[i];
-    
-  size_samp[3] = ndims4;
+  /* subsample probabilities and reorder from CSF/GM/WM to GM/WM/CSF */
+  subsample_down(prob, g, dims, dims_samp, 0, vol);    
+  subsample_down(prob, g, dims, dims_samp, vol_samp, vol2);    
+  subsample_down(prob, g, dims, dims_samp, vol_samp2, 0);    
+
+  /* scale subsampled probabilities to a maximum of 1 */
+  max = -1e15;
+  for (i=0; i<vol_samp3; i++) max = MAX(g[i], max);
+  for (i=0; i<vol_samp3; i++) g[i] /= max;
+
+  /* iterative warping using dartel approach */
   it = 0;
   for (it0 = 0; it0 < loop; it0++) {
     it_scratch = iteration_scratchsize((int *)size_samp, prm[it0].code, prm[it0].k);
     scratch = (float *)malloc(sizeof(float)*it_scratch);
-
-    for (i = 0; i < vol_samp3; i++) g[i] = 0.0;
-
-    /* load probabilities and use updated mask */
-    /* loop over neighborhoods of the grid points */
-    for (k=-samp; k<=samp; k++) {
-      for (l=-samp; l<=samp; l++) {
-        for (m=-samp; m<=samp; m++) {
-          for (z = 0; z < dims_samp[2]; z++) {
-            zsamp = z*samp + k;
-            if ((zsamp>=0) & (zsamp<dims[2])) {
-              zsamp2 = zsamp*area;
-              zoffset = z*area_samp;
-              for (y=0; y<dims_samp[1]; y++) {
-                ysamp = y*samp + l;
-                if ((ysamp>=0) & (ysamp<dims[1])) {
-                  ysamp2 = ysamp*dims[0];
-                  yoffset = zoffset + y*dims_samp[0];
-                  for (x=0; x<dims_samp[0]; x++) {
-                    xsamp = x*samp + m;
-                    if ((xsamp>=0) & (xsamp<dims[0])) {
-                      index_samp = yoffset + x;
-                      index = zsamp2 + ysamp2 + xsamp;
-                      g[index_samp          ] += ((float)prob[index + vol ])*((float)mask[index]);
-                      g[index_samp+vol_samp ] += ((float)prob[index + vol2])*((float)mask[index]);
-                      g[index_samp+vol_samp2] += ((float)prob[index       ])*((float)mask[index]);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    max = -1e15;
-    for (i=0; i<vol_samp3; i++) max = MAX(g[i], max);
-    for (i=0; i<vol_samp3; i++) g[i] /= max;
 
     for (it1 = 0; it1 < prm[it0].its; it1++) {
       it++;
@@ -238,32 +204,29 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
       for (i = 0; i < vol_samp3; i++) v[i] = flow[i];
     }
     free(scratch);
+  }
+  
+  /* use exponentional flow */
+  expdef(size_samp, 6, -1, v, flow, flow1, (float *)0, (float *)0); 
 
-    expdef(size_samp, 6, -1, v, flow, flow1, (float *)0, (float *)0); 
-
-    resample_trilinear(flow, flow2x, dims_samp, dims, 0);    
-/*    resample_trilinear(flow, flow2y, dims_samp, dims, vol_samp);    
-    resample_trilinear(flow, flow2z, dims_samp, dims, vol_samp2);    
-*/
-    /* warp mask */
-    for (i = 0; i < vol; i++) {
-      sampn(dims, mask_tmp, 1, vol, flow2x[i]*(double)samp-1.0, flow2y[i]*(double)samp-1.0, flow2z[i]*(double)samp-1.0, buf);
-      mask[i] = (unsigned char) ROUND(buf[0]);
-    }
-
+  /* apply deformation field */
+  for (i = 0; i < vol_samp; i++) {
+    sampn(dims_samp, mask_samp, 1, vol_samp, flow[i]+8.0, flow[i+vol_samp]+8.0, flow[i+vol_samp2]+8.0, buf);
+    mask_samp2[i] = (float)buf[0];
   }
 
+  /* resample subsampled mask image to original resolution */
+  subsample_up(mask_samp2, mask_double, dims_samp, dims);    
+  for (i = 0; i < vol; i++) mask[i] = (unsigned char) ROUND(mask_double[i]);
+  
   /* rescue flow field */
   for (i = 0; i < vol_samp3; i++) flow[i] = v[i];
 
+  free(prm);
   free(flow1);
-  free(flow2x);
-  free(flow2y);
-  free(flow2z);
-  free(mask_tmp);
-  free(xs);
-  free(ys);
-  free(zs);
+  free(mask_samp);
+  free(mask_samp2);
+  free(mask_double);
   free(v);
   free(f);
   free(g);
