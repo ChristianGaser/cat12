@@ -43,6 +43,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     
   Niters = 5;
   thresh_brainmask = 0.01;
+  pve = 1;
 
   thresh = (int)round(255*thresh_brainmask);
   thresh_kmeans_int = (int)round(255*thresh_kmeans);
@@ -71,13 +72,13 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
 
-  n_loops = 1;
-  WarpPriors(prob, priors, mask, flow, dims, n_loops);
+  n_loops = 3;
+//  WarpPriors(prob, priors, mask, flow, dims, n_loops);
   
   for(i=0; i<vol; i++)
-    if(mask[i] < 64) src[i] = 0.0;
+    if(mask[i] < 32) src[i] = 0.0;
   
-//  Amap( src, label, prob, mean, n_pure_classes, Niters, Nflips, subsample, dims, pve);
+  Amap( src, label, prob, mean, n_pure_classes, Niters, Nflips, subsample, dims, pve);
 
   if (pve) {
     printf("Calculate Partial Volume Estimate.\n");
@@ -86,10 +87,10 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 6;
-//  WarpPriors(prob, priors, mask, flow, dims, n_loops);
+  WarpPriors(prob, priors, mask, flow, dims, n_loops);
 
   for(i=0; i<vol; i++) {
-    if(mask[i] < 64) {
+    if(mask[i] < 32) {
       prob[i      ] = 0;
       prob[i+vol  ] = 0;
       prob[i+vol*2] = 0;
