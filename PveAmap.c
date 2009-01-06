@@ -41,7 +41,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
     
-  Niters = 3;
+  Niters = 5;
   thresh_brainmask = 0.01;
 
   thresh = (int)round(255*thresh_brainmask);
@@ -77,7 +77,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   for(i=0; i<vol; i++)
     if(mask[i] < 64) src[i] = 0.0;
   
-  Amap( src, label, prob, mean, n_pure_classes, Niters, Nflips, subsample, dims, pve);
+//  Amap( src, label, prob, mean, n_pure_classes, Niters, Nflips, subsample, dims, pve);
 
   if (pve) {
     printf("Calculate Partial Volume Estimate.\n");
