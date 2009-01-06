@@ -1,6 +1,6 @@
 function test_vbm8
 
-if 1
+if 0
 V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
 V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
 
@@ -34,5 +34,7 @@ else
 !rm *.mexmaci
 load all
 tic;prob = PveAmapMex(vol, priors, mask, vx);toc
+figure(1)
+imagesc(mask(:,:,70))
 
 end
