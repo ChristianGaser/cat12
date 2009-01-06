@@ -32,7 +32,7 @@ void resample_trilinear(float *vol, double *out, int dim_samp[3], int dim[3], in
   double dx1, dx2, dy1, dy2, dz1, dz2, xi, yi, zi;
   int off1, off2, xcoord, ycoord, zcoord;
 
-  for (i=0; i<3; i++) samp[i] = ceil((double)dim[i]/(double)dim_samp[i]);
+  for (i=0; i<3; i++) samp[i] = (int)ceil((double)dim[i]/(double)dim_samp[i]);
   
   for (z=0; z<dim[2]; z++) {
     zi = (double)z/(double)samp[2];
@@ -45,7 +45,7 @@ void resample_trilinear(float *vol, double *out, int dim_samp[3], int dim[3], in
         ycoord = (int)floor(yi); dy1=yi-(double)ycoord; dy2=1.0-dy1;
         zcoord = (int)floor(zi); dz1=zi-(double)zcoord; dz2=1.0-dz1;
 
-        off1 = xcoord-1 + dim_samp[0]*(xcoord-1 + dim_samp[1]*(xcoord-1)) + offset;
+        off1 = xcoord-1 + dim_samp[0]*(ycoord-1 + dim_samp[1]*(zcoord-1)) + offset;
         k222 = vol[off1]; k122 = vol[off1+1]; off2 = off1+dim_samp[0];
         k212 = vol[off2]; k112 = vol[off2+1]; off1+= dim_samp[0]*dim_samp[1];
         k221 = vol[off1]; k121 = vol[off1+1]; off2 = off1+dim_samp[0];
@@ -57,7 +57,7 @@ void resample_trilinear(float *vol, double *out, int dim_samp[3], int dim[3], in
 
       }
     }
-    fprintf(stderr,"%d/%g %g %g\n",i, zi, out[i], vol[off1]);
+    fprintf(stderr,"%d/%g %g %d %d\n",i, zi, out[i], off1,off2);
   }
 }
 
@@ -242,9 +242,9 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
     expdef(size_samp, 6, -1, v, flow, flow1, (float *)0, (float *)0); 
 
     resample_trilinear(flow, flow2x, dims_samp, dims, 0);    
-    resample_trilinear(flow, flow2y, dims_samp, dims, vol_samp);    
+/*    resample_trilinear(flow, flow2y, dims_samp, dims, vol_samp);    
     resample_trilinear(flow, flow2z, dims_samp, dims, vol_samp2);    
-
+*/
     /* warp mask */
     for (i = 0; i < vol; i++) {
       sampn(dims, mask_tmp, 1, vol, flow2x[i]*(double)samp-1.0, flow2y[i]*(double)samp-1.0, flow2z[i]*(double)samp-1.0, buf);
