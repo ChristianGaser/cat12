@@ -111,7 +111,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   double lmreg = 0.01;
   static double param[3] = {1.0, 1.0, 1.0};
 
-  samp = 4;
+  samp = 3;
     
   /* only use gm/wm */
   ndims4 = 2;
@@ -174,20 +174,20 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   subsample_down(priors, f, dims, dims_samp, vol_samp, vol);    
   subsample_down(priors, f, dims, dims_samp, vol_samp2, vol2);    
 
-  /* scale subsampled priors to a maximum of 1 */
+  /* scale subsampled priors to a maximum of 0.5 */
   max = -1e15;
   for (i=0; i<vol_samp3; i++) max = MAX(f[i], max);
-  for (i=0; i<vol_samp3; i++) f[i] /= max;
+  for (i=0; i<vol_samp3; i++) f[i] /= max*2.0;
 
   /* subsample probabilities and reorder from CSF/GM/WM to GM/WM/CSF */
   subsample_down(prob, g, dims, dims_samp, 0, vol);    
   subsample_down(prob, g, dims, dims_samp, vol_samp, vol2);    
   subsample_down(prob, g, dims, dims_samp, vol_samp2, 0);    
 
-  /* scale subsampled probabilities to a maximum of 1 */
+  /* scale subsampled probabilities to a maximum of 0.5 */
   max = -1e15;
   for (i=0; i<vol_samp3; i++) max = MAX(g[i], max);
-  for (i=0; i<vol_samp3; i++) g[i] /= max;
+  for (i=0; i<vol_samp3; i++) g[i] /= max*2.0;
 
   /* iterative warping using dartel approach */
   it = 0;
@@ -211,7 +211,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
 
   /* apply deformation field */
   for (i = 0; i < vol_samp; i++) {
-    sampn(dims_samp, mask_samp, 1, vol_samp, flow[i]+8.0, flow[i+vol_samp]+8.0, flow[i+vol_samp2]+8.0, buf);
+    sampn(dims_samp, mask_samp, 1, vol_samp, flow[i]-1.0, flow[i+vol_samp]-1.0, flow[i+vol_samp2]-1.0, buf);
     mask_samp2[i] = (float)buf[0];
   }
 
