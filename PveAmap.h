@@ -13,5 +13,6 @@ int write_fuzzy = FALSE;
 int write_nu = FALSE;
 int write_label = TRUE;
 int warp_priors = TRUE;
+int samp = 3;
 double thresh_brainmask = 0.05;
 double thresh_kmeans = 0.5;
