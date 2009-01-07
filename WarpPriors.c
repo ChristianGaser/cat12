@@ -116,6 +116,8 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   int rform = 0;   /* linear energy */
   double lmreg = 0.01;
   static double param[3] = {1.0, 1.0, 1.0};
+
+fprintf(stderr,"Energy: %d\n",rform);
     
   /* only use gm/wm */
   ndims4 = 2;
@@ -170,6 +172,16 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   prm[4].rparam[3] = 0.25;  prm[4].rparam[4] = 0.125;  prm[4].rparam[5] = 1e-6; prm[4].k = 4; 
   prm[5].rparam[3] = 0.125; prm[5].rparam[4] = 0.0625; prm[5].rparam[5] = 1e-6; prm[5].k = 6;
 
+  /* use different parameters for bending energy */
+  if(rform == 2) {
+    prm[0].rparam[3] = 8.0;   prm[0].rparam[4] = 1e-4*prm[0].rparam[3];    prm[0].rparam[5] = 1e-4; prm[0].k = 0; 
+    prm[1].rparam[3] = 4.0;   prm[1].rparam[4] = 1e-4*prm[1].rparam[3];    prm[1].rparam[5] = 1e-4; prm[1].k = 0; 
+    prm[2].rparam[3] = 2.0;   prm[2].rparam[4] = 1e-4*prm[2].rparam[3];    prm[2].rparam[5] = 1e-5; prm[2].k = 1; 
+    prm[3].rparam[3] = 1.0;   prm[3].rparam[4] = 1e-4*prm[3].rparam[3];    prm[3].rparam[5] = 1e-5; prm[3].k = 2; 
+    prm[4].rparam[3] = 0.5;   prm[4].rparam[4] = 1e-4*prm[4].rparam[3];    prm[4].rparam[5] = 1e-6; prm[4].k = 4; 
+    prm[5].rparam[3] = 0.25;  prm[5].rparam[4] = 1e-4*prm[5].rparam[3];    prm[5].rparam[5] = 1e-6; prm[5].k = 6;
+  }
+  
   /* subsample priors and mask to lower resolution */
   subsample_uint8(mask, mask_samp, dims, dims_samp, 0, 0);    
   subsample_uint8(priors, f, dims, dims_samp, 0, 0);    
