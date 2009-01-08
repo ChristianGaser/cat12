@@ -424,7 +424,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     }
     
     ll /= (double)vol;
-    change_ll = (ll_old - ll)/ll;
+    change_ll = (ll_old - ll)/fabs(ll);
     printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters, ll);
     fflush(stdout);
     ll_old = ll;
