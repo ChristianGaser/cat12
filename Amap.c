@@ -224,15 +224,27 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
         for (i=0; i<nc; i++) {
           ind2 = (i*nvol) + ind;            
           if (r[ind2].mean > 0.0) {
-            mean[i] = r[ind2].mean;
-            var[i]  = r[ind2].var;
+            mean[i*2] = r[ind2].mean;
+            var[i*2]  = r[ind2].var;
           }
         }
 
+        if (fabs(mean[CSFLABEL]) > 1e-15) {
+          d_pve[CSFLABEL] = Compute_Gaussian_likelihood(val, mean[CSFLABEL], var[CSFLABEL]);
+        } else d_pve[CSFLABEL] = FLT_MAX;
+
+        if (fabs(mean[GMLABEL]) > 1e-15) {
+          d_pve[GMLABEL] = Compute_Gaussian_likelihood(val, mean[GMLABEL], var[GMLABEL]);
+        } else d_pve[GMLABEL] = FLT_MAX;
+
+        if (fabs(mean[WMLABEL]) > 1e-15) {
+          d_pve[WMLABEL] = Compute_Gaussian_likelihood(val, mean[WMLABEL], var[WMLABEL]);
+        } else d_pve[WMLABEL] = FLT_MAX;
+
         for(i = 0; i < nc; i++) {
-          if (fabs(mean[i]) > 1e-15) {
-            d_pve[i] = Compute_Gaussian_likelihood(val, mean[i], var[i]);
-          } else d_pve[i] = FLT_MAX;
+          if (fabs(mean[i*2]) > 1e-15) {
+            d_pve[i*2] = Compute_Gaussian_likelihood(val, mean[i*2], var[i*2]);
+          } else d_pve[i*2] = FLT_MAX;
         }
             
         if ((fabs(mean[WMLABEL]) > 1e-15) && (fabs(mean[GMLABEL]) > 1e-15)) {
@@ -253,18 +265,18 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
 
 
 /* perform adaptive MAP on given src and initial segmentation label */
-void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int nflips, int sub, int *dims, int pve)
+void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve)
 {
-  int i, flips;
+  int i;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
   int histo[65536];
   double sub_1, beta[1], dmin, val, d_pve[MAX_NC];
   double var[MAX_NC], d[MAX_NC], alpha[MAX_NC], log_alpha[MAX_NC], log_var[MAX_NC];
-  double pvalue[MAX_NC], psum, error;
-  int nix, niy, niz, iters;
+  double pvalue[MAX_NC], psum;
+  int nix, niy, niz, iters, count_change;
   int x, y, z, labval, xBG;
   int ix, iy, iz, iBG, ind2;
-  double first, mn_thresh, mx_thresh, ll;
+  double first, mn_thresh, mx_thresh, ll, ll_old, change_ll;
   double min_src = FLT_MAX, max_src = -FLT_MAX;
   int cumsum[65536];
   struct point *r;
@@ -312,10 +324,11 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
   }
   
-  error = 0.0;
-  for (iters = 0; iters<=niters; iters++)  {
+  ll_old = FLT_MAX;
+  count_change = 0;
+  
+  for (iters = 0; iters<niters; iters++)  {
       
-    flips = 0;
     ll = 0.0;
 
     /* use Kmeans to estimate 5 classes */
@@ -339,7 +352,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     
       for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
     }
-    
+
     /* get means for grid points */
     get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
 
@@ -394,26 +407,31 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
             }
           }
           	  
-         /* scale p-values to a sum of 1 */
-         if (psum > 1e-15) {
-           for (i=0; i<nc; i++) pvalue[i] /= psum;
-           ll -= log(psum);
-         } else  for (i=0; i<nc; i++) pvalue[i] = 0.0;;
+          /* scale p-values to a sum of 1 */
+          if (psum > 1e-15) {
+            for (i=0; i<nc; i++) pvalue[i] /= psum;
+            ll -= log(psum);
+          } else  for (i=0; i<nc; i++) pvalue[i] = 0.0;;
          
-         for (i=0; i<nc; i++)
-           prob[(vol*i) + index] = (unsigned char)ROUND(255*pvalue[i]);
+          for (i=0; i<nc; i++)
+            prob[(vol*i) + index] = (unsigned char)ROUND(255*pvalue[i]);
          
-         /* if the class has changed increment flips and change the label */
-         if (xBG + 1 != labval) {flips++; label[index] = (unsigned char) (xBG + 1); }
+          /* if the class has changed modify the label */
+          if (xBG + 1 != labval) label[index] = (unsigned char) (xBG + 1); 
          
-       }
-     }
-   }
+        }
+      }
+    }
     
-    printf("iters:%3d ll: %7.5f flips:%6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters, ll/(double)vol, flips);
+    ll /= (double)vol;
+    change_ll = (ll_old - ll)/ll;
+    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters, ll);
     fflush(stdout);
+    ll_old = ll;
     
-    if (flips <= nflips) break;    
+    /* break if log-likelihood has not changed significantly two iterations */
+    if (change_ll < TH_CHANGE) count_change++;
+    if (count_change > 1) break;    
   }
 
   printf("\nFinal Mean*Std: "); 
