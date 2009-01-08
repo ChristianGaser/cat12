@@ -139,7 +139,7 @@ M = M1\res.Affine*res.image(1).mat;
 
 % load brainmask from LPBA40
 if do_cls & do_defs,
-	Vmask = spm_vol(fullfile(fileparts(which(mfilename)),'brainmask_LPBA40.nii'));
+	Vmask = spm_vol(warp.brainmask{1});
 	mask = zeros(res.image(1).dim(1:3),'single');
 end
 
@@ -221,7 +221,7 @@ clear q q1
 
 if do_cls & do_defs,
 
-	% use mask from LPBA40 sample
+	% use mask from LPBA40 sample or own mask
 	mask = uint8(mask > 0.5);
 
     % use index to speed up and save memory
@@ -240,18 +240,18 @@ if do_cls & do_defs,
     % mask source image because Amap needs a skull stripped image
 	src = chan(1).Nc.dat(indx,indy,indz,1,1);
 
-	% use mask from LPBA40 sample
-    if (warp.cleanup == 3)
-		label(find(mask(indx,indy,indz) < 1)) = 0;
-		src(find(mask(indx,indy,indz) < 1)) = 0;
-	end
+	% use mask from LPBA40 sample or own mask
+	label(find(mask(indx,indy,indz) < 1)) = 0;
+	src(find(mask(indx,indy,indz) < 1)) = 0;
 	
 	niters = 200; nflips=50; sub=8; nc=3; pve=1;
 	prob = AmapMex(src, label, nc, niters, nflips, sub, pve);
 	prob = prob(:,:,:,[2 3 1]);
 	clear src label
 	
-    if (warp.cleanup > 0 & warp.cleanup < 3)
+	% use cleanup maybe in the future
+	warp.cleanup = 0;
+    if (warp.cleanup > 0)
         % get sure that all regions outside mask are zero
         for i=1:3
             cls{i}(:) = 0;
