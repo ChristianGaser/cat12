@@ -21,12 +21,13 @@
 
 #define MAX_NC 5
 #define TH_COLOR 1
+#define TH_CHANGE 0.0001
 
 #define CSFLABEL   0
-#define GMLABEL    1
-#define WMLABEL    2
-#define GMCSFLABEL 3
-#define WMGMLABEL  4
+#define GMCSFLABEL 1
+#define GMLABEL    2
+#define WMGMLABEL  3
+#define WMLABEL    4
 
 #ifndef ROUND
 #define ROUND( x ) ((int) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))

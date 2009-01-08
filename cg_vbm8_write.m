@@ -137,7 +137,7 @@ end
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
 
-% load brainmask from LPBA40
+% load brainmask
 if do_cls & do_defs,
 	Vmask = spm_vol(warp.brainmask{1});
 	mask = zeros(res.image(1).dim(1:3),'single');
@@ -244,8 +244,8 @@ if do_cls & do_defs,
 	label(find(mask(indx,indy,indz) < 1)) = 0;
 	src(find(mask(indx,indy,indz) < 1)) = 0;
 	
-	niters = 200; nflips=50; sub=8; nc=3; pve=1;
-	prob = AmapMex(src, label, nc, niters, nflips, sub, pve);
+	niters = 200; sub=8; nc=3; pve=1;
+	prob = AmapMex(src, label, nc, niters, sub, pve);
 	prob = prob(:,:,:,[2 3 1]);
 	clear src label
 	
