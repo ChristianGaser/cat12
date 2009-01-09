@@ -21,7 +21,7 @@
 
 #define MAX_NC 5
 #define TH_COLOR 1
-#define TH_CHANGE 0.00005
+#define TH_CHANGE 0.00001
 
 #define CSFLABEL   0
 #define GMCSFLABEL 1
