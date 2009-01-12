@@ -229,30 +229,30 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
           }
         }
 
-        if (fabs(mean[CSFLABEL]) > 1e-15) {
+        if (fabs(mean[CSFLABEL]) > TINY) {
           d_pve[CSFLABEL] = Compute_Gaussian_likelihood(val, mean[CSFLABEL], var[CSFLABEL]);
         } else d_pve[CSFLABEL] = FLT_MAX;
 
-        if (fabs(mean[GMLABEL]) > 1e-15) {
+        if (fabs(mean[GMLABEL]) > TINY) {
           d_pve[GMLABEL] = Compute_Gaussian_likelihood(val, mean[GMLABEL], var[GMLABEL]);
         } else d_pve[GMLABEL] = FLT_MAX;
 
-        if (fabs(mean[WMLABEL]) > 1e-15) {
+        if (fabs(mean[WMLABEL]) > TINY) {
           d_pve[WMLABEL] = Compute_Gaussian_likelihood(val, mean[WMLABEL], var[WMLABEL]);
         } else d_pve[WMLABEL] = FLT_MAX;
 
         for(i = 0; i < nc; i++) {
-          if (fabs(mean[i*2]) > 1e-15) {
+          if (fabs(mean[i*2]) > TINY) {
             d_pve[i*2] = Compute_Gaussian_likelihood(val, mean[i*2], var[i*2]);
           } else d_pve[i*2] = FLT_MAX;
         }
             
-        if ((fabs(mean[WMLABEL]) > 1e-15) && (fabs(mean[GMLABEL]) > 1e-15)) {
+        if ((fabs(mean[WMLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
           d_pve[WMGMLABEL] = Compute_marginalized_likelihood(val, mean[WMLABEL], mean[GMLABEL],
                                         var[WMLABEL], var[GMLABEL], 0, 50 );
         } else d_pve[WMGMLABEL] = FLT_MAX;
             
-        if ((fabs(mean[CSFLABEL]) > 1e-15) && (fabs(mean[GMLABEL]) > 1e-15)) {
+        if ((fabs(mean[CSFLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
           d_pve[GMCSFLABEL] = Compute_marginalized_likelihood(val, mean[GMLABEL], mean[CSFLABEL],
                                         var[GMLABEL], var[CSFLABEL], 0, 50 );
         } else d_pve[GMCSFLABEL] = FLT_MAX;
@@ -318,41 +318,26 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
 
   r = (struct point*)malloc(sizeof(struct point)*(nc+2)*nvol);
 
-  if (pve < 2) {
-    MrfPrior(label, nc, alpha, beta, 0, dims);
-    
-    for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
+  if (pve == 1) {
+  /* Use marginalized likelihood to estimate 5 classes */
+    get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
+    Compute_initial_PVE_label(src, label, r, nc, sub, dims);
+    nc += 2;
+  } else if (pve == 2) {
+  /* use Kmeans to estimate 5 classes */
+    nc += 2;  
   }
   
+  MrfPrior(label, nc, alpha, beta, 0, dims);    
+  for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
+    
   ll_old = FLT_MAX;
   count_change = 0;
   
   for (iters = 0; iters<niters; iters++)  {
       
     ll = 0.0;
-
-    /* use Kmeans to estimate 5 classes */
-    if(pve == 2 && iters == 0) {
-  
-      nc += 2;
-      MrfPrior(label, nc, alpha, beta, 0, dims);
     
-      for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
-    }
-    
-    /* Use marginalized likelihood to estimate 5 classes */
-    if(pve == 1 && iters == 0) {
-  
-      /* get means for grid points */
-      get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
-      
-      Compute_initial_PVE_label(src, label, r, nc, sub, dims);
-      nc += 2;
-      MrfPrior(label, nc, alpha, beta, 0, dims);
-    
-      for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
-    }
-
     /* get means for grid points */
     get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
 
@@ -376,7 +361,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
           
           for (i=0; i<nc; i++) {
             ind2 = (i*nvol) + ind;  
-            if (r[ind2].mean > 1e-15) {
+            if (r[ind2].mean > TINY) {
               mean[i] = r[ind2].mean;
               var[i]  = r[ind2].var;
               log_var[i] = log(var[i]);
@@ -387,7 +372,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
           dmin = FLT_MAX; xBG = 1; 
           psum = 0.0;
           for (i=0; i<nc; i++) {
-            if (fabs(mean[i]) > 1e-15) {
+            if (fabs(mean[i]) > TINY) {
               first=0.0;
               iBG = i+1;
               if ((int)label[index-1      ] == iBG) first++;
@@ -408,7 +393,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
           }
           	  
           /* scale p-values to a sum of 1 */
-          if (psum > 1e-15) {
+          if (psum > TINY) {
             for (i=0; i<nc; i++) pvalue[i] /= psum;
             ll -= log(psum);
           } else  for (i=0; i<nc; i++) pvalue[i] = 0.0;;

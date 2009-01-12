@@ -217,15 +217,15 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   }
 
   /* only use values above the mean of the lower two cluster for nu-estimate */
-  th_src = max_src*(double)((mu[0]+mu[1])/2.0)/255.0;
+  th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
 
   /* extend initial 3 clusters to 5 clusters by averaging clusters */
   if (pve == 2) {
     mu[0] = Mu[0];
-    mu[1] = Mu[1];
-    mu[2] = Mu[2];
-    mu[3] = (Mu[0]+Mu[2])/2;
-    mu[4] = (Mu[1]+Mu[2])/2;
+    mu[2] = Mu[1];
+    mu[4] = Mu[2];
+    mu[1] = (Mu[0]+Mu[1])/2;
+    mu[3] = (Mu[1]+Mu[2])/2;
   }
 
   /* find the final clustering and correct for nu */
@@ -281,7 +281,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
       last_err = e;
     
-      printf("iters:%2d error: %6.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e/(nc*dims[0]*dims[1]*dims[2]));
+      printf("iters:%2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*n_clusters/(dims[0]*dims[1]*dims[2]));
       fflush(stdout);
     
     }
@@ -295,7 +295,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   printf("\nK-Means: ");
   for (i=0; i<n_clusters; i++) printf("%3.3f ",max_src*mu[i]/255.0); 
-  printf("\terror: %3.3f\n",e/(nc*dims[0]*dims[1]*dims[2]));    
+  printf("\terror: %3.3f\n",e*n_clusters/(dims[0]*dims[1]*dims[2]));    
   fflush(stdout);
 
   free(src_bak);
