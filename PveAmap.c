@@ -77,10 +77,10 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 3;
-//  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   
   for(i=0; i<vol; i++)
-    if(mask[i] < 16) src[i] = 0.0;
+    if(mask[i] < 1) src[i] = 0.0;
   
   Amap( src, label, prob, mean, n_pure_classes, Niters, subsample, dims, pve);
 
@@ -91,10 +91,10 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 6;
-//  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
 
   for(i=0; i<vol; i++) {
-    if(mask[i] < 32) {
+    if(mask[i] < 8) {
       prob[i      ] = 0;
       prob[i+vol  ] = 0;
       prob[i+vol*2] = 0;
