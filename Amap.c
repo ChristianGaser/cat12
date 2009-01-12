@@ -318,12 +318,12 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
 
   r = (struct point*)malloc(sizeof(struct point)*(nc+2)*nvol);
 
-  if (pve == 1) {
+  if (pve == MARGINALIZED) {
   /* Use marginalized likelihood to estimate 5 classes */
     get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
     Compute_initial_PVE_label(src, label, r, nc, sub, dims);
     nc += 2;
-  } else if (pve == 2) {
+  } else if (pve == KMEANS) {
   /* use Kmeans to estimate 5 classes */
     nc += 2;  
   }

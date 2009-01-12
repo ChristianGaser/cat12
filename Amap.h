@@ -24,6 +24,10 @@
 #define TH_CHANGE 0.00001
 #define TINY 1e-15 
 
+#define NOPVE 0
+#define MARGINALIZED 1
+#define KMEANS 2
+
 #define CSFLABEL   0
 #define GMCSFLABEL 1
 #define GMLABEL    2
