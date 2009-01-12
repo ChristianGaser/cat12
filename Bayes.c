@@ -2,31 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <float.h>
-#include <mex.h>
-
-#ifndef MAX
-#define MAX(A,B) ((A) > (B) ? (A) : (B))
-#endif
-
-#ifndef MIN
-#define MIN(A,B) ((A) < (B) ? (A) : (B))
-#endif
-
-#ifndef SQR
-#define SQR(x) ((x)*(x))
-#endif
-
-#ifndef SQRT2PI
-#define SQRT2PI 2.506628
-#endif
-
-#ifndef EPSILON
-#define EPSILON 1.0e-9
-#endif
-
-#ifndef ROUND
-#define ROUND( x ) ((int) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
-#endif
+#include "Amap.h"
 
 void Bayes(double *src, unsigned char *label, unsigned char *priors, double *separations, int *dims, int correct_nu)
 {
@@ -71,14 +47,13 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
   ngauss[Kb-2] = 4;
   ngauss[Kb-1] = 2;
 
-  if (correct_nu > 0) 
-    nu = (double *)malloc(sizeof(double)*vol);
+  if (correct_nu) nu = (double *)malloc(sizeof(double)*vol);
 
-  // K = sum(ngauss)
+  /* K = sum(ngauss) */
   for (k1=0; k1<Kb; k1++)   K  += ngauss[k1]; 
   for (k1=0; k1<Kb-1; k1++) K2 += ngauss[k1]; 
 
-  // lkp = [0 1 2 3 4 4 4 4 5 5]
+  /* lkp = [0 1 2 3 4 4 4 4 5 5] */
   int lkp[K];
   int l = 0;
   for (k1=0; k1<Kb; k1++) {
@@ -88,30 +63,30 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
     }
   }
 
-  // initialize mean, var, mg
+  /* initialize mean, var, mg */
   double mn[K], vr[K], mg[K], mn2[K], vr2[K], mg2[K];
   for (k=0; k<K; k++) {
     mn[k] = mx_thresh * drand48();
     mg[k] = 1.0/(double)K;
-    vr[k] = mx_thresh*mx_thresh + EPSILON;
+    vr[k] = mx_thresh*mx_thresh + TINY;
   }
   
   msk = (unsigned char *)malloc(sizeof(unsigned char)*vol);
   
   int nm = 0;
 
-  // mask for nu-correction
+  /* mask for nu-correction */
   for (i=0; i<vol; i++) {
-//    msk[i] = (((priors[i] + priors[i + vol] + priors[i + (2*vol)])> 0) && (src[i] != 0) && (isfinite(src[i]))) ? 1 : 0;
-    msk[i] = (((priors[i] + priors[i + vol] + priors[i + (2*vol)])> 25) && (src[i] != 0) && isfinite(src[i])) ? 1 : 0;
+    msk[i] = (((priors[i] + priors[i + vol] + priors[i + (2*vol)])> 0) && (src[i] != 0) && (isfinite(src[i]))) ? 1 : 0;
+//    msk[i] = (((priors[i] + priors[i + vol] + priors[i + (2*vol)])> 25) && (src[i] != 0) && isfinite(src[i])) ? 1 : 0;
     nm += msk[i];
   }
-  
+    
   double mom0[K], mom1[K], mom2[K], mgm[Kb];
   double q[K], bt[Kb], b[K], qt[Kb];
   double tol1 = 1e-4;
   
-  // start with a few EM iterations and after nu-corection use more iterations
+  /* start with a few EM iterations and after nu-corection use more iterations */
   int iters_EM[3] = {2, 10, 20};
 //  for (j=0; j<3; j++) {
   for (j=0; j<2; j++) {
@@ -133,7 +108,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
       
       for (i=0; i<vol; i++) {
         if((src[i]>mn_thresh) && (src[i]<mx_thresh)) {
-          double s = EPSILON;
+          double s = TINY;
           int k2 = 0;
           for (k1=0; k1<Kb; k1++) {
             bt[k1] = (double) priors[i+(vol*k1)]; 
@@ -146,7 +121,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
             bt[k1] /= s;
             mgm[k1] += bt[k1];
           }
-          double sq = EPSILON;
+          double sq = TINY;
           double qmax = -FLT_MAX;
           int kmax;
           
@@ -170,11 +145,11 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
       }  
           
       for (k=0; k<K; k++) {
-        mg[k] = (mom0[k]+EPSILON)/(mgm[lkp[k]]+EPSILON);
-        mn[k] = mom1[k]/(mom0[k]+EPSILON);
-        vr[k] = (mom2[k]-SQR(mom1[k])/mom0[k]+1e6*EPSILON)/(mom0[k]+EPSILON);
-        vr[k] = MAX(vr[k],EPSILON);
-        // rescue previous values in case of nan
+        mg[k] = (mom0[k]+TINY)/(mgm[lkp[k]]+TINY);
+        mn[k] = mom1[k]/(mom0[k]+TINY);
+        vr[k] = (mom2[k]-SQR(mom1[k])/mom0[k]+1e6*TINY)/(mom0[k]+TINY);
+        vr[k] = MAX(vr[k],TINY);
+        /* rescue previous values in case of nan */
         if ((isnan(mg[k])) || (isnan(mn[k])) || (isnan(vr[k]))) {
           mg[k] = mg2[k];
           mn[k] = mn2[k];
@@ -187,7 +162,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
       printf("%g\n",ll);    
     }
     
-    // only use values above the middle of the lower two cluster (CSF/GM) for nu-estimate
+    /* only use values above the middle of the lower two cluster (CSF/GM) for nu-estimate */
     if((mn[2]>mn[1]) && (mn[2]>mn[0]))
 	  th_src = (double)((mn[0]+mn[1])/2.0);
     else if((mn[1]>mn[0]) && (mn[1]>mn[2]))
@@ -195,10 +170,10 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
     else if((mn[0]>mn[1]) && (mn[0]>mn[2]))
 	  th_src = (double)((mn[2]+mn[1])/2.0);
 	  
-    if(correct_nu>0) {
+    if(correct_nu) {
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
-        // only use values above threshold where mask is defined for nu-estimate
+        /* only use values above threshold where mask is defined for nu-estimate */
         if ((src[i] > th_src) && (msk[i] > 0)) {
           double val_nu = src[i]/mn[label[i]-1];
           if ((isfinite(val_nu) && (val_nu < 10) && (val_nu > 0.1))) {
@@ -207,10 +182,10 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
         }
       }
       printf("Fitting splines ...\n");
-      // spline estimate with increasing spatial resolution
+      /* spline estimate with increasing spatial resolution */
       splineSmooth(nu, 0.01, MAX(500,1500.0/(j+1)), 4, separations, dims);
       
-      // apply nu correction to source image
+      /* apply nu correction to source image */
       for (i=0; i<vol; i++) {
         if (nu[i] != 0.0)
           src[i] /= nu[i];
@@ -225,12 +200,12 @@ if(isfinite(src[i])) {
         bt[k1] = (double) priors[i+(vol*k1)]; 
         qt[k1] = 0.0;
       }
-      double s = EPSILON;
+      double s = TINY;
       for (k=0; k<K; k++) { 
         b[k] = bt[lkp[k]]*mg[k];
         s += b[k];
       }
-      double sq = EPSILON;
+      double sq = TINY;
       for (k=0; k<K; k++) { 
         double p1 = exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
         qt[lkp[k]] += p1*b[k]/s;
@@ -247,7 +222,7 @@ if(isfinite(src[i])) {
           kmax = k1 + 1;
         }   
       }
-      // label only if sum of all probabilities is > 0.1
+      /* label only if sum of all probabilities is > 0.1 */
       if (psum > 0.1)
         label[i] = kmax;
       else
@@ -259,8 +234,7 @@ if(isfinite(src[i])) {
     printf("%g %g\n",mn[k],sqrt(vr[k]));
     
   free(msk);    
-  if (correct_nu > 0) 
-    free(nu);
+  if (correct_nu) free(nu);
     
   return;
 }  
