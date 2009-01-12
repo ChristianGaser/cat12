@@ -2,10 +2,10 @@ function test_vbm8
 
 if 1
 %V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
-%V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
-%V = spm_vol('s07.nii');
+V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
+V = spm_vol('s07.nii');
 %V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
-V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
+%V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
 
 vol = spm_read_vols(V);
 
@@ -37,7 +37,7 @@ else
 	load all
 end
 
-slice = 80;
+slice = 110;
 figure(1)
 colormap(hot)
 
@@ -63,7 +63,7 @@ subplot(2,2,2)
 h2 = hist(vol(ind),x);
 plot([h(2:end);h2(2:end)]')
 subplot(2,2,4)
-imagesc(prob(:,:,slice,3))
+imagesc(prob(:,:,slice,1))
 axis image
 
 end
