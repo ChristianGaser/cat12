@@ -1,9 +1,10 @@
 function test_vbm8
 
-if 0
+if 1
 V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
 %V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
 V = spm_vol('s07.nii');
+V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
 
 vol = spm_read_vols(V);
 
@@ -31,11 +32,37 @@ vx = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 save all
 else
+	clear all
+	load all
+end
+
+slice = 80;
+figure(1)
+colormap(hot)
+
+ind = find(mask > 32);
 
 !rm *.mexmaci
-load all
 tic;prob = PveAmapMex(vol, priors, mask, vx);toc
-figure(1)
-imagesc(mask(:,:,70))
+
+subplot(2,2,3)
+imagesc(vol(:,:,slice))
+axis image
+[h,x] = hist(vol(ind),255);
+
+V.fname = 'amap.nii';
+V.pinfo = [1 0 0]';
+%spm_write_vol(V,prob(:,:,:,2));
+%spm_write_vol(V,label);
+load all
+subplot(2,2,1)
+imagesc(vol(:,:,slice).*double(mask(:,:,slice)>32))
+axis image
+subplot(2,2,2)
+h2 = hist(vol(ind),x);
+plot([h(2:end);h2(2:end)]')
+subplot(2,2,4)
+imagesc(prob(:,:,slice,2))
+axis image
 
 end
