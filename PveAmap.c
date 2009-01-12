@@ -43,14 +43,14 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     
   Niters = 10;
   thresh_brainmask = 0.05;
-  pve = 1;
+  pve = MARGINALIZED;
   subsample_warp = 3;
 
   thresh = (int)round(255*thresh_brainmask);
   thresh_kmeans_int = (int)round(255*thresh_kmeans);
 
   /* nu-correction in Kmeans works best if it is called first with 3 classes */
-  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, 2);
+  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, KMEANS);
   /* followed by a 2nd call with actual parameters */
   max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
       
@@ -77,10 +77,10 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 3;
-  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+//  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   
   for(i=0; i<vol; i++)
-    if(mask[i] < 1) src[i] = 0.0;
+    if(mask[i] < 16) src[i] = 0.0;
   
   Amap( src, label, prob, mean, n_pure_classes, Niters, subsample, dims, pve);
 
@@ -91,7 +91,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 6;
-  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+//  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
 
   for(i=0; i<vol; i++) {
     if(mask[i] < 8) {

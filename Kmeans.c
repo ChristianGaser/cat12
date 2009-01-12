@@ -159,7 +159,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     
   /* for reducing 5 labels to 3 restrict initial segmentation to 3 classes */
   int nc_initial = n_clusters;
-  if (pve == 2) {
+  if (pve == KMEANS) {
     nc_initial = 3;
     n_clusters += 2;
   }
@@ -220,7 +220,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
 
   /* extend initial 3 clusters to 5 clusters by averaging clusters */
-  if (pve == 2) {
+  if (pve == KMEANS) {
     mu[0] = Mu[0];
     mu[2] = Mu[1];
     mu[4] = Mu[2];
