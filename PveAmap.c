@@ -121,7 +121,7 @@ if(DEBUG) Niters = 5;
   }
   
   for(i=0; i<vol; i++) {
-    if(mask[i] < 8) {
+    if(mask[i] < 16) {
       prob[i      ] = 0;
       prob[i+vol  ] = 0;
       prob[i+vol*2] = 0;

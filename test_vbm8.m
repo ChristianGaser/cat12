@@ -3,7 +3,7 @@ function test_vbm8
 if 1
 %V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
 V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
-%V = spm_vol('s07.nii');
+V = spm_vol('s07.nii');
 %V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
 %V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
 
@@ -31,6 +31,10 @@ for j=1:V(1).dim(3),
         priors(:,:,j,i) = uint8(round(255*spm_slice_vol(Vpriors(i),M1,V(1).dim(1:2),[1 0])));
     end
 end
+
+% dilate the mask by convolving
+k = [1 1 1 1 1];
+spm_conv_vol(mask,mask,k,k,k,-[1 1 1]);
 
 vx = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
@@ -66,7 +70,7 @@ subplot(2,2,2)
 h2 = hist(vol(ind),x);
 plot([h(2:end);h2(2:end)]')
 subplot(2,2,4)
-imagesc(prob(:,:,slice,2))
+imagesc(prob(:,:,slice,3))
 axis image
 
 end
