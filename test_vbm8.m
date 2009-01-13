@@ -1,10 +1,10 @@
 function test_vbm8
 
-if 1
+if 0
 %V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
-V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
-V = spm_vol('s07.nii');
-%V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
+%V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
+%V = spm_vol('s07.nii');
+V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
 %V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
 
 vol = spm_read_vols(V);
@@ -14,8 +14,11 @@ mask = zeros(V(1).dim(1:3),'uint8');
 
 Vpriors = spm_vol(str2mat('/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,1',...
     '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,2',...
-    '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,3'));
-priors = zeros([V(1).dim(1:3) 3],'uint8');
+    '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,3',...
+    '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,4',...
+    '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,5',...
+    '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,6'));
+priors = zeros([V(1).dim(1:3) 6],'uint8');
 
 for j=1:V(1).dim(3),
 
@@ -24,7 +27,7 @@ for j=1:V(1).dim(3),
     % Load slice j from all images
     M1  = V(1).mat\Vpriors(1).mat\Mi;
     mask(:,:,j) = uint8(round(255*spm_slice_vol(Vmask,M1,V(1).dim(1:2),[1 0])));
-    for i=1:3
+    for i=1:6
         priors(:,:,j,i) = uint8(round(255*spm_slice_vol(Vpriors(i),M1,V(1).dim(1:2),[1 0])));
     end
 end
@@ -37,7 +40,7 @@ else
 	load all
 end
 
-slice = 110;
+slice = 80;
 figure(1)
 colormap(hot)
 
@@ -63,7 +66,7 @@ subplot(2,2,2)
 h2 = hist(vol(ind),x);
 plot([h(2:end);h2(2:end)]')
 subplot(2,2,4)
-imagesc(prob(:,:,slice,1))
+imagesc(prob(:,:,slice,2))
 axis image
 
 end

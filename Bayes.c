@@ -4,23 +4,25 @@
 #include <float.h>
 #include "Amap.h"
 
-void Bayes(double *src, unsigned char *label, unsigned char *priors, double *separations, int *dims, int correct_nu)
+void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *mask, double *separations, int *dims, int correct_nu)
 {
   int i, j, k, k1, subit;
   int z_area, y_dims;
-  unsigned char *msk;
-  double ll = -FLT_MAX, llr=0.0, *nu, th_src;
+  double ll = -FLT_MAX, llr=0.0, *nu;
   
   int area = dims[0]*dims[1];
   int vol = area*dims[2];
   int K = 0, K2 = 0;
-  int Kb = dims[3];
-  int ngauss[Kb];
+  int Kb = 6; /* use always 6 classes */
+  
+  /* multiple gaussians are not yet working */
+//  int ngauss[6] = {2,2,2,4,2,2};
+  int ngauss[6] = {1,1,1,1,1,1};
 
   int histo[65536];
   double mn_thresh, mx_thresh;
   double min_src = FLT_MAX, max_src = -FLT_MAX;
-  int cumsum[65536];
+  int cumsum[65536], order_priors[6] = {2,0,1,3,4,5};
 
   for (i=0; i<vol; i++) {
     min_src = MIN(src[i], min_src);
@@ -43,17 +45,13 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
   for (i = 65535; i > 0; i--) if (cumsum[i] <= 999) break;
   mx_thresh = (double)i/65535.0*(max_src-min_src);
 
-  for (i=0; i<Kb-2; i++) ngauss[i] = 1;
-  ngauss[Kb-2] = 4;
-  ngauss[Kb-1] = 2;
-
   if (correct_nu) nu = (double *)malloc(sizeof(double)*vol);
 
   /* K = sum(ngauss) */
   for (k1=0; k1<Kb; k1++)   K  += ngauss[k1]; 
   for (k1=0; k1<Kb-1; k1++) K2 += ngauss[k1]; 
 
-  /* lkp = [0 1 2 3 4 4 4 4 5 5] */
+  /* build lkp */
   int lkp[K];
   int l = 0;
   for (k1=0; k1<Kb; k1++) {
@@ -70,26 +68,14 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
     mg[k] = 1.0/(double)K;
     vr[k] = mx_thresh*mx_thresh + TINY;
   }
-  
-  msk = (unsigned char *)malloc(sizeof(unsigned char)*vol);
-  
-  int nm = 0;
-
-  /* mask for nu-correction */
-  for (i=0; i<vol; i++) {
-    msk[i] = (((priors[i] + priors[i + vol] + priors[i + (2*vol)])> 0) && (src[i] != 0) && (isfinite(src[i]))) ? 1 : 0;
-//    msk[i] = (((priors[i] + priors[i + vol] + priors[i + (2*vol)])> 25) && (src[i] != 0) && isfinite(src[i])) ? 1 : 0;
-    nm += msk[i];
-  }
-    
+        
   double mom0[K], mom1[K], mom2[K], mgm[Kb];
   double q[K], bt[Kb], b[K], qt[Kb];
   double tol1 = 1e-4;
   
   /* start with a few EM iterations and after nu-corection use more iterations */
-  int iters_EM[3] = {2, 10, 20};
-//  for (j=0; j<3; j++) {
-  for (j=0; j<2; j++) {
+  int iters_EM[5] = {2, 10, 10, 10, 10};
+  for (j=0; j < 5; j++) {
     for (subit=0; subit<iters_EM[j]; subit++) {
       double oll = ll;
       ll = llr;
@@ -111,12 +97,13 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
           double s = TINY;
           int k2 = 0;
           for (k1=0; k1<Kb; k1++) {
-            bt[k1] = (double) priors[i+(vol*k1)]; 
-            for (l=0; l<ngauss[k1]; l++)      {
+            bt[k1] = (double) priors[i+(vol*k1[order_priors])]; 
+            for (l=0; l<ngauss[k1]; l++) {
               s += bt[k1]*mg[k2];
-              k2 ++;
+              k2++;
             }
           }
+
           for (k1=0; k1<Kb; k1++) {
             bt[k1] /= s;
             mgm[k1] += bt[k1];
@@ -134,7 +121,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
             } 
           }
           
-          label[i] = kmax;
+          if (kmax < 4) label[i] = kmax; else label[i] = 0;
           ll += log10(sq);
           for (k=0; k<K; k++) {
             double p1 = q[k]/sq; mom0[k] += p1;
@@ -158,25 +145,17 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
         }
       }
       
-      if((ll-oll)<tol1*nm) break;
-      printf("%g\n",ll);    
+      if((ll-oll)<tol1*vol) break;
+      printf("%5.4f\n",ll/vol);    
     }
-    
-    /* only use values above the middle of the lower two cluster (CSF/GM) for nu-estimate */
-    if((mn[2]>mn[1]) && (mn[2]>mn[0]))
-	  th_src = (double)((mn[0]+mn[1])/2.0);
-    else if((mn[1]>mn[0]) && (mn[1]>mn[2]))
-	  th_src = (double)((mn[0]+mn[2])/2.0);
-    else if((mn[0]>mn[1]) && (mn[0]>mn[2]))
-	  th_src = (double)((mn[2]+mn[1])/2.0);
-	  
+    	  
     if(correct_nu) {
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
         /* only use values above threshold where mask is defined for nu-estimate */
-        if ((src[i] > th_src) && (msk[i] > 0)) {
+        if ((src[i] > mn_thresh) && (mask[i] > 64)) {
           double val_nu = src[i]/mn[label[i]-1];
-          if ((isfinite(val_nu) && (val_nu < 10) && (val_nu > 0.1))) {
+          if ((isfinite(val_nu))) {
             nu[i] = val_nu;
           }
         }
@@ -187,17 +166,16 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, double *sep
       
       /* apply nu correction to source image */
       for (i=0; i<vol; i++) {
-        if (nu[i] != 0.0)
+        if (nu[i] > 0.0)
           src[i] /= nu[i];
       }
     }    
   }
 
   for (i=0; i<vol; i++) {
-if(isfinite(src[i])) {
     if (src[i] != 0) {
       for (k1=0; k1<Kb; k1++) {
-        bt[k1] = (double) priors[i+(vol*k1)]; 
+        bt[k1] = (double) priors[i+(vol*k1[order_priors])]; 
         qt[k1] = 0.0;
       }
       double s = TINY;
@@ -223,17 +201,16 @@ if(isfinite(src[i])) {
         }   
       }
       /* label only if sum of all probabilities is > 0.1 */
-      if (psum > 0.1)
+      if ((psum > 0) && (kmax < 4))
         label[i] = kmax;
       else
         label[i] = 0;
     } else label[i] = 0;
   }
-}
-  for (k=0; k<3; k++) 
+
+  for (k=0; k<Kb; k++) 
     printf("%g %g\n",mn[k],sqrt(vr[k]));
     
-  free(msk);    
   if (correct_nu) free(nu);
     
   return;
