@@ -13,7 +13,7 @@
 #include "PveAmap.h"
 
 #define DEBUG 1
-void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims)
+int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims)
 {
 
   int thresh, thresh_kmeans_int, vol, i;
@@ -46,18 +46,36 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
 if(DEBUG) Niters = 5;
   thresh_brainmask = 0.05;
   pve = MARGINALIZED;
-  pve = KMEANS;
+//  pve = KMEANS;
+  method = BAYES;
+//  method = KMEANS;
   subsample_warp = 3;
+  
+  if((method == BAYES) && (pve == KMEANS)) {
+    pve = MARGINALIZED;
+    printf("Warning: Bayes estimation cannot be combined with PVE based on Kmeans. PVE was changed to marginalized likelihood method.\n");
+  }
+
+  if((method == BAYES) && (priors == (unsigned char *)0)) {
+    method = KMEANS;
+    printf("Warning: Bayes estimation does need priors. Method was changed to Kmeans.\n");
+  }
+
+  if(priors == (unsigned char *)0) {
+    printf("Warning: Warping is disabled because no priors were defined.\n");
+  }
 
   thresh = (int)round(255*thresh_brainmask);
   thresh_kmeans_int = (int)round(255*thresh_kmeans);
 
-
-  /* nu-correction in Kmeans works best with 5 classes */
+  /* initial nu-correction works best with 5 class Kmeans approach */
   max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, KMEANS);
-  /* followed by a 2nd call with actual parameters */
-//  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
-Bayes(src, label, priors, mask, separations, dims, 1);
+  
+  /* use Kmeans or Bayes for estimate */
+  if(method == BAYES)
+    Bayes(src, label, priors, mask, separations, dims, iters_nu);
+  else
+    max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
       
   if (pve) {
     update_label = 0;
@@ -82,8 +100,10 @@ Bayes(src, label, priors, mask, separations, dims, 1);
   }
 
   n_loops = 3;
-if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
-  
+  if(priors != (unsigned char *)0) {
+    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+  }
+    
   for(i=0; i<vol; i++)
     if(mask[i] < 1) src[i] = 0.0;
   
@@ -96,8 +116,10 @@ if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_war
   }
 
   n_loops = 6;
-if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
-
+  if(priors != (unsigned char *)0) {
+    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+  }
+  
   for(i=0; i<vol; i++) {
     if(mask[i] < 8) {
       prob[i      ] = 0;

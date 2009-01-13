@@ -14,5 +14,6 @@ int write_nu = FALSE;
 int write_label = TRUE;
 int warp_priors = TRUE;
 int subsample_warp = 3;
+int method = 3;
 double thresh_brainmask = 0.05;
 double thresh_kmeans = 0.5;

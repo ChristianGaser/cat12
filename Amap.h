@@ -15,6 +15,7 @@
 #define NOPVE 0
 #define MARGINALIZED 1
 #define KMEANS 2
+#define BAYES 3
 
 #define CSFLABEL   0
 #define GMCSFLABEL 1
