@@ -156,7 +156,8 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       max_src = MAX(src[i], max_src);
     }
   }
-    
+   
+
   /* for reducing 5 labels to 3 restrict initial segmentation to 3 classes */
   int nc_initial = n_clusters;
   if (pve == KMEANS) {

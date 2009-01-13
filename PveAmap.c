@@ -12,6 +12,7 @@
 #include "Amap.h"
 #include "PveAmap.h"
 
+#define DEBUG 1
 void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims)
 {
 
@@ -41,19 +42,22 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     }
   }
     
-  Niters = 10;
+  Niters = 100;
+if(DEBUG) Niters = 5;
   thresh_brainmask = 0.05;
   pve = MARGINALIZED;
+  pve = KMEANS;
   subsample_warp = 3;
 
   thresh = (int)round(255*thresh_brainmask);
   thresh_kmeans_int = (int)round(255*thresh_kmeans);
 
-//Bayes(src, label, priors, separations, dims, 0);
-  /* nu-correction in Kmeans works best if it is called first with 3 classes */
+
+  /* nu-correction in Kmeans works best with 5 classes */
   max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, KMEANS);
   /* followed by a 2nd call with actual parameters */
-  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
+//  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
+Bayes(src, label, priors, mask, separations, dims, 1);
       
   if (pve) {
     update_label = 0;
@@ -78,7 +82,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 3;
-  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   
   for(i=0; i<vol; i++)
     if(mask[i] < 1) src[i] = 0.0;
@@ -92,7 +96,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   }
 
   n_loops = 6;
-  WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
 
   for(i=0; i<vol; i++) {
     if(mask[i] < 8) {
