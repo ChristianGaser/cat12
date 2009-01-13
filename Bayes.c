@@ -75,7 +75,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
   
   /* start with a few EM iterations and after nu-corection use more iterations */
   int iters_EM[5] = {2, 10, 10, 10, 10};
-  for (j=0; j < 5; j++) {
+  for (j=0; j < 3; j++) {
     for (subit=0; subit<iters_EM[j]; subit++) {
       double oll = ll;
       ll = llr;
@@ -145,22 +145,23 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         }
       }
       
+      printf("%7.4f\b\b\b\b\b\b\b",ll/vol);    
+      fflush(stdout);
       if((ll-oll)<tol1*vol) break;
-      printf("%5.4f\n",ll/vol);    
     }
     	  
     if(correct_nu) {
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
         /* only use values above threshold where mask is defined for nu-estimate */
-        if ((src[i] > mn_thresh) && (mask[i] > 64)) {
+        if ((src[i] > mn_thresh) && (mask[i] > 128) && (label[i] < 4)) {
           double val_nu = src[i]/mn[label[i]-1];
           if ((isfinite(val_nu))) {
             nu[i] = val_nu;
           }
         }
       }
-      printf("Fitting splines ...\n");
+
       /* spline estimate with increasing spatial resolution */
       splineSmooth(nu, 0.01, MAX(500,1500.0/(j+1)), 4, separations, dims);
       
@@ -200,7 +201,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
           kmax = k1 + 1;
         }   
       }
-      /* label only if sum of all probabilities is > 0.1 */
+      /* label only if sum of all probabilities is > 0 */
       if ((psum > 0) && (kmax < 4))
         label[i] = kmax;
       else

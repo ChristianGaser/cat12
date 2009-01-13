@@ -116,8 +116,6 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   int rform = 0;   /* linear energy */
   double lmreg = 0.01;
   static double param[3] = {1.0, 1.0, 1.0};
-
-fprintf(stderr,"Energy: %d\n",rform);
     
   /* only use gm/wm */
   ndims4 = 2;
