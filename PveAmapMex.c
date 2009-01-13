@@ -13,7 +13,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *priors, *mask;
   double *src, *mean, *vx;
-  const int *dims;
+  const int *dims, *dims_priors;
   int dims2[4];
     
   if (nrhs!=4)
@@ -33,6 +33,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   vx    = (double*)mxGetPr(prhs[3]);
 
   dims = mxGetDimensions(prhs[0]);
+  dims_priors = mxGetDimensions(prhs[1]);
   dims2[0] = dims[0];
   dims2[1] = dims[1];
   dims2[2] = dims[2];
@@ -43,7 +44,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
   
-  PveAmap(src, priors, mask, prob, mean, vx, dims);
+  /* if priors are set to a scalar we change the argument to a scalar of 0 */
+  if(dims_priors[1] == 1)
+    PveAmap(src, (unsigned char *)0, mask, prob, mean, vx, dims);
+  else
+    PveAmap(src, priors, mask, prob, mean, vx, dims);
 
 }
 
