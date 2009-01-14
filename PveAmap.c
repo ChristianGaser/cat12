@@ -43,7 +43,7 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
   }
     
   Niters = 100;
-if(DEBUG) Niters = 5;
+if(DEBUG) Niters = 500;
   thresh_brainmask = 0.05;
   pve = MARGINALIZED;
 //  pve = KMEANS;
