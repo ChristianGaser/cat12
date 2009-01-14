@@ -13,7 +13,7 @@
 #include "PveAmap.h"
 
 #define DEBUG 1
-int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims)
+int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method)
 {
 
   int thresh, thresh_kmeans_int, vol, i;
@@ -45,10 +45,6 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
   Niters = 100;
 if(DEBUG) Niters = 500;
   thresh_brainmask = 0.05;
-  pve = MARGINALIZED;
-//  pve = KMEANS;
-  method = BAYES;
-//  method = KMEANS;
   subsample_warp = 3;
   
   if((method == BAYES) && (pve == KMEANS)) {
