@@ -14,10 +14,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   unsigned char *label, *prob, *priors, *mask;
   double *src, *mean, *vx;
   const int *dims, *dims_priors;
-  int dims2[4];
+  int dims2[4], pve, method;
     
-  if (nrhs!=4)
-    mexErrMsgTxt("4 inputs required.");
+  if (nrhs!=6)
+    mexErrMsgTxt("6 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -27,10 +27,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   if (!mxIsUint8(prhs[2]))
 	mexErrMsgTxt("Third argument must be uint8.");
 
-  src   = (double*)mxGetPr(prhs[0]);
+  src    = (double*)mxGetPr(prhs[0]);
   priors = (unsigned char*)mxGetPr(prhs[1]);
-  mask  = (unsigned char*)mxGetPr(prhs[2]);
-  vx    = (double*)mxGetPr(prhs[3]);
+  mask   = (unsigned char*)mxGetPr(prhs[2]);
+  vx     = (double*)mxGetPr(prhs[3]);
+  pve    = (int)mxGetScalar(prhs[4]);
+  method = (int)mxGetScalar(prhs[5]);
 
   dims = mxGetDimensions(prhs[0]);
   dims_priors = mxGetDimensions(prhs[1]);
@@ -46,9 +48,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   
   /* if priors are set to a scalar we change the argument to a scalar of 0 */
   if(dims_priors[1] == 1)
-    PveAmap(src, (unsigned char *)0, mask, prob, mean, vx, dims);
+    PveAmap(src, (unsigned char *)0, mask, prob, mean, vx, dims, pve, method);
   else
-    PveAmap(src, priors, mask, prob, mean, vx, dims);
+    PveAmap(src, priors, mask, prob, mean, vx, dims, pve, method);
 
 }
 
