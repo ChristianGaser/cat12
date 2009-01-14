@@ -68,6 +68,10 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         prob[vol +     ind] = new_val[GMLABEL];
         prob[(2*vol) + ind] = new_val[WMLABEL];
         
+        /* set old probabilities for mixed classes to zero */
+        prob[(3*vol) + ind] = 0;
+        prob[(4*vol) + ind] = 0;
+        
         /* get new label */
         if(update_label) {
           mx = -FLT_MAX;
