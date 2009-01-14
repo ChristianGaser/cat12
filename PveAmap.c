@@ -43,7 +43,6 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
   }
     
   Niters = 100;
-if(DEBUG) Niters = 500;
   thresh_brainmask = 0.05;
   subsample_warp = 3;
   
@@ -57,9 +56,8 @@ if(DEBUG) Niters = 500;
     printf("Warning: Bayes estimation does need priors. Method was changed to Kmeans.\n");
   }
 
-  if(priors == (unsigned char *)0) {
+  if(priors == (unsigned char *)0)
     printf("Warning: Warping is disabled because no priors were defined.\n");
-  }
 
   thresh = (int)round(255*thresh_brainmask);
   thresh_kmeans_int = (int)round(255*thresh_kmeans);
