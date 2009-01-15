@@ -5,7 +5,7 @@ if 1
 V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
 V = spm_vol('s07.nii');
 %V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
-%V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
+V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
 
 vol = spm_read_vols(V);
 
@@ -34,7 +34,7 @@ end
 
 % dilate the mask by convolving
 k = [1 1 1 1 1];
-spm_conv_vol(mask,mask,k,k,k,-[1 1 1]);
+%spm_conv_vol(mask,mask,k,k,k,-[1 1 1]);
 
 vx = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
@@ -45,13 +45,13 @@ else
 end
 
 slice = 80;
-figure(1)
+figure(2)
 colormap(hot)
 
 ind = find(mask > 32);
 
 !rm *.mexmaci
-tic;prob = PveAmapMex(vol, priors, mask, vx);toc
+tic;prob = PveAmapMex(vol, priors, mask, vx, 1, 3);toc
 
 subplot(2,2,3)
 imagesc(vol(:,:,slice))
@@ -70,7 +70,7 @@ subplot(2,2,2)
 h2 = hist(vol(ind),x);
 plot([h(2:end);h2(2:end)]')
 subplot(2,2,4)
-imagesc(prob(:,:,slice,3))
+imagesc(prob(:,:,slice,2))
 axis image
 
 end
