@@ -42,7 +42,7 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
     }
   }
     
-  Niters = 100;
+  Niters = 10;
   thresh_brainmask = 0.05;
   subsample_warp = 3;
   
@@ -64,6 +64,7 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
 
   /* initial nu-correction works best with 5 class Kmeans approach */
   max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, KMEANS);
+  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
   
   /* use Kmeans or Bayes for estimate */
   if(method == BAYES)
