@@ -2,10 +2,12 @@ function test_vbm8
 
 if 1
 %V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');
-V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
+%V = spm_vol('data/t1_icbm_normal_1mm_pn3_rf20.img');
 V = spm_vol('s07.nii');
 %V = spm_vol('t1_icbm_normal_1mm_pn3_rf100.nii');
-V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
+%V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
+V = spm_vol('wmA080105_affine.img');
+V = spm_vol('w05.img');
 
 vol = spm_read_vols(V);
 
@@ -45,7 +47,7 @@ else
 end
 
 slice = 80;
-figure(2)
+figure(1)
 colormap(hot)
 
 ind = find(mask > 32);

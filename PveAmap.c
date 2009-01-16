@@ -12,7 +12,7 @@
 #include "Amap.h"
 #include "PveAmap.h"
 
-#define DEBUG 1
+#define DEBUG 0
 int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method)
 {
 
@@ -64,8 +64,30 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
 
   /* initial nu-correction works best with 5 class Kmeans approach */
   max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, KMEANS);
-  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, pve);
+  max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, NOPVE);
   
+  for(i=0; i<vol; i++) {
+    switch(label[i]) {
+    case 0:
+      prob[i] = 0; prob[i+vol] = 0; prob[i+2*vol] = 0;
+      break;
+    case 1:
+      prob[i] = 255; prob[i+vol] = 0; prob[i+2*vol] = 0;
+      break;
+    case 2:
+      prob[i] = 0; prob[i+vol] = 255; prob[i+2*vol] = 0;
+      break;
+    case 3:
+      prob[i] = 0; prob[i+vol] = 0; prob[i+2*vol] = 255;
+      break;
+    }
+  }
+
+  n_loops = 6;
+  if(priors != (unsigned char *)0) {
+    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+  }
+
   /* use Kmeans or Bayes for estimate */
   if(method == BAYES)
     Bayes(src, label, priors, mask, separations, dims, iters_nu);
@@ -93,11 +115,6 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
       }
     }
   }
-
-  n_loops = 3;
-  if(priors != (unsigned char *)0) {
-    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
-  }
     
   for(i=0; i<vol; i++)
     if(mask[i] < 1) src[i] = 0.0;
@@ -112,7 +129,7 @@ int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned ch
 
   n_loops = 6;
   if(priors != (unsigned char *)0) {
-    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+//    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   }
   
   for(i=0; i<vol; i++) {
