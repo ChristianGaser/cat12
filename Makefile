@@ -5,15 +5,15 @@ TARGET=/Users/gaser/spm/spm8b/toolbox/vbm8
 
 STARGET=141.35.200.101:/Applications/xampp/htdocs/
 
-FILES=Contents.m cg_config_vbm8.m Amap.* AmapMex.* MrfPrior.c Pve5.c cg_vbm8_run.m cg_vbm8_write.m cg_check_sample_sd.m cg_showslice_all.m cg_spmT2x.m cg_vbm8_tools.m cg_vbm8_debug.m cg_morph_vol.m cg_cleanup_gwc.m spm_vbm8.m vbm8.man brainmask_LPBA40.nii
+FILES=Contents.m cg_config_vbm8.m Amap.* AmapMex.* MrfPrior.c Pve5.c cg_vbm8_run.m cg_vbm8_write.m cg_check_sample_sd.m cg_showslice_all.m cg_spmT2x.m cg_vbm8_tools.m cg_vbm8_debug.m cg_morph_vol.m cg_cleanup_gwc.m spm_vbm8.m vbm8.man brainmask_LPBA40.nii maci w32 a64 glx EBTKS
 
 ZIPFILE=vbm8_r$(VERSION).zip
 
 install: 
 	-@echo install
-	-@test ! -d ${TARGET} || rm -r ${TARGET}
+	-@test ! -d ${TARGET} || rm -rf ${TARGET}
 	-@mkdir ${TARGET}
-	-@cp -r ${FILES} ${TARGET}
+	-@cp -R ${FILES} ${TARGET}
 
 help:
 	-@echo Available commands:
