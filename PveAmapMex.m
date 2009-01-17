@@ -10,7 +10,10 @@ disp('Compiling PveAmapMex.c')
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O PveAmapMex.c PveAmap.c Amap.c MrfPrior.c Pve5.c Kmeans.c WarpPriors.c Bayes.c optimizer3d.c diffeo3d.c SplineSmooth.cc -lEBTKS
+ext = mexext;
+ext = ext(4:end);
+eval(['mex -O PveAmapMex.c PveAmap.c Amap.c MrfPrior.c Pve5.c Kmeans.c WarpPriors.c Bayes.c optimizer3d.c diffeo3d.c splineSmooth.cc -lEBTKS -I . -L' ext]);
+
 cd(p_path);
 
 [prob, mean] = PveAmapMex(src, priors, mask, vx, pve, method);
