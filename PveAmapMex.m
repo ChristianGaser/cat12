@@ -12,7 +12,12 @@ p_path = pwd;
 cd(pth);
 ext = mexext;
 ext = ext(4:end);
-eval(['mex -O PveAmapMex.c PveAmap.c Amap.c MrfPrior.c Pve5.c Kmeans.c WarpPriors.c Bayes.c optimizer3d.c diffeo3d.c splineSmooth.cc -lEBTKS -L' ext ' -I' matlabroot '/extern/include -I' pwd]);
+try
+    eval(['mex -O PveAmapMex.c PveAmap.c Amap.c MrfPrior.c Pve5.c Kmeans.c WarpPriors.c Bayes.c optimizer3d.c diffeo3d.c splineSmooth.cc -lEBTKS -L' ext ' -I' matlabroot '/extern/include -I' pwd]);
+catch
+    mex -O PveAmapMex.c PveAmap.c Amap.c MrfPrior.c Pve5.c Kmeans.c WarpPriors.c Bayes.c optimizer3d.c diffeo3d.c splineSmooth.cc -lEBTKS
+
+end
 
 cd(p_path);
 
