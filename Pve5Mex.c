@@ -1,6 +1,6 @@
 /*
  * Christian Gaser
- * $Id: PveMex.c 8 2008-12-10 20:21:27Z gaser $ 
+ * $Id$ 
  *
  */
 
