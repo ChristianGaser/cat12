@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <float.h>
 #include "Amap.h"
 
 /* calculate the mean and variance for every class on a grid size SUBxSUBxSUB */
@@ -231,31 +230,31 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
 
         if (fabs(mean[CSFLABEL]) > TINY) {
           d_pve[CSFLABEL] = Compute_Gaussian_likelihood(val, mean[CSFLABEL], var[CSFLABEL]);
-        } else d_pve[CSFLABEL] = FLT_MAX;
+        } else d_pve[CSFLABEL] = HUGE;
 
         if (fabs(mean[GMLABEL]) > TINY) {
           d_pve[GMLABEL] = Compute_Gaussian_likelihood(val, mean[GMLABEL], var[GMLABEL]);
-        } else d_pve[GMLABEL] = FLT_MAX;
+        } else d_pve[GMLABEL] = HUGE;
 
         if (fabs(mean[WMLABEL]) > TINY) {
           d_pve[WMLABEL] = Compute_Gaussian_likelihood(val, mean[WMLABEL], var[WMLABEL]);
-        } else d_pve[WMLABEL] = FLT_MAX;
+        } else d_pve[WMLABEL] = HUGE;
 
         for(i = 0; i < nc; i++) {
           if (fabs(mean[i*2]) > TINY) {
             d_pve[i*2] = Compute_Gaussian_likelihood(val, mean[i*2], var[i*2]);
-          } else d_pve[i*2] = FLT_MAX;
+          } else d_pve[i*2] = HUGE;
         }
             
         if ((fabs(mean[WMLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
           d_pve[WMGMLABEL] = Compute_marginalized_likelihood(val, mean[WMLABEL], mean[GMLABEL],
                                         var[WMLABEL], var[GMLABEL], 0, 50 );
-        } else d_pve[WMGMLABEL] = FLT_MAX;
+        } else d_pve[WMGMLABEL] = HUGE;
             
         if ((fabs(mean[CSFLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
           d_pve[GMCSFLABEL] = Compute_marginalized_likelihood(val, mean[GMLABEL], mean[CSFLABEL],
                                         var[GMLABEL], var[CSFLABEL], 0, 50 );
-        } else d_pve[GMCSFLABEL] = FLT_MAX;
+        } else d_pve[GMCSFLABEL] = HUGE;
 
         label[index] = (unsigned char) Maxarg(d_pve, 5);
       }
@@ -277,7 +276,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   int x, y, z, labval, xBG;
   int ix, iy, iz, iBG, ind2;
   double first, mn_thresh, mx_thresh, ll, ll_old, change_ll;
-  double min_src = FLT_MAX, max_src = -FLT_MAX;
+  double min_src = HUGE, max_src = -HUGE;
   int cumsum[65536];
   struct point *r;
       
@@ -331,7 +330,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   MrfPrior(label, nc, alpha, beta, 0, dims);    
   for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
     
-  ll_old = FLT_MAX;
+  ll_old = HUGE;
   count_change = 0;
   
   for (iters = 0; iters<niters; iters++)  {
@@ -369,7 +368,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
           }
           
           /* compute energy at each point */
-          dmin = FLT_MAX; xBG = 1; 
+          dmin = HUGE; xBG = 1; 
           psum = 0.0;
           for (i=0; i<nc; i++) {
             if (fabs(mean[i]) > TINY) {
@@ -385,7 +384,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
               d[i] = 0.5*(SQR(val-mean[i])/var[i]+log_var[i])-log_alpha[i]-beta[0]*first;
               pvalue[i] = exp(-d[i])/SQRT2PI;
               psum += pvalue[i];
-            } else d[i] = FLT_MAX;
+            } else d[i] = HUGE;
             if ( d[i] < dmin) {
               dmin = d[i];
               xBG = i;

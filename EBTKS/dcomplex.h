@@ -20,7 +20,7 @@ $State: Exp $
 #ifndef _DCOMPLEX_H
 #define _DCOMPLEX_H
 
-#include <complex>		/* (bert) changed from complex.h */
+#include <complex.h>		/* (bert) changed from complex.h */
 typedef std::complex<double> dcomplex;
 
 int operator < (const dcomplex&, const dcomplex&);
