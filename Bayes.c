@@ -30,7 +30,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
   
 
   /* multiple gaussians are not yet working */
-//  int ngauss[6] = {2,2,2,4,2,2};
+/*  int ngauss[6] = {2,2,2,4,2,2}; */
   int ngauss[6] = {1,1,1,1,1,1};
 
   for (i=0; i<vol; i++) {

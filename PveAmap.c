@@ -129,7 +129,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
 
   n_loops = 6;
   if(priors != (unsigned char *)0) {
-//    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+/*    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp); */
   }
   
   for(i=0; i<vol; i++) {
