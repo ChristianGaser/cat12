@@ -1,9 +1,9 @@
 function label = KmeansMex(src, mask, separations, iters_nu)
 %
 % Christian Gaser
-% $Id:$
+% $Id$
 
-rev = '$Rev:$';
+rev = '$Rev$';
 
 disp('Compiling KmeansMex.c')
 
