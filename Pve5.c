@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <float.h>
 #include "Amap.h"
 
 
@@ -74,7 +73,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         
         /* get new label */
         if(update_label) {
-          mx = -FLT_MAX;
+          mx = -HUGE;
           if(label[ind] > 0) {
             for (i = 0; i < 3; i++) {
               if (new_val[i*2] > mx) {
@@ -87,6 +86,5 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         }
       }
     }
-  }
-  
+  }  
 }

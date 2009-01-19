@@ -117,6 +117,8 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   double lmreg = 0.01;
   static double param[3] = {1.0, 1.0, 1.0};
     
+  struct dartel_prm* prm = (struct dartel_prm*)malloc(sizeof(struct dartel_prm)*10);
+
   /* only use gm/wm */
   ndims4 = 2;
 
@@ -151,8 +153,6 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
 
   /* initialize flow field */
   for (i = 0; i < vol_samp3; i++) v[i] = flow[i];
-
-  struct dartel_prm* prm = (struct dartel_prm*)malloc(sizeof(struct dartel_prm)*10);
   
   /* some entries are equal */
   for (j = 0; j < loop; j++) {

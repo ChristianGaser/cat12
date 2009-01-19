@@ -11,6 +11,7 @@
 #define TH_COLOR 1
 #define TH_CHANGE 0.00001
 #define TINY 1e-15 
+#define HUGE 1e15 
 
 #define NOPVE 0
 #define MARGINALIZED 1
