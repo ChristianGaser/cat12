@@ -1,7 +1,7 @@
 /* $Id$ */
 /* (c) John Ashburner (2007) */
 
-//#include<mex.h>
+/* #include<mex.h> */
 #include<math.h>
 extern double log(double x);
 
