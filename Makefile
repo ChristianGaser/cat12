@@ -15,21 +15,20 @@ include Makefile.var
 
 OBS = PveAmap.o Amap.o MrfPrior.o Pve5.o Kmeans.o WarpPriors.o Bayes.o optimizer3d.o diffeo3d.o splineSmooth.o
 
-archive: PveAmap.a
+PveAmapMex.$(SUF): PveAmapMex.c PveAmap.$(SUF).a
+	$(MEX) PveAmapMex.c PveAmap.$(SUF).a -lEBTKS -L$(EXT) -I./include $(MEXEND)
 
-PveAmap.a: $(OBS)
+archive: PveAmap.$(SUF).a
+
+PveAmap.$(SUF).a: $(OBS)
 	$(DEL) $@
 	$(AR) $@ $(OBS)
 
 %.o : %.c %.cc
 	$(MEX) -c $< $(MEXEND)
-#	$(MOVE) %.$(MOSUF) $@
 
 %.$(SUF) : %.c %.cc
 	$(MEX) $< $(MEXEND)
-
-PveAmapMex.$(SUF): PveAmapMex.c PveAmap.a
-	$(MEX) PveAmapMex.c PveAmap.a -lEBTKS -L$(EXT) -I./ $(MEXEND)
 
 install: 
 	-@echo install
