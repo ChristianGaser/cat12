@@ -13,7 +13,7 @@
 #include "PveAmap.h"
 
 #define DEBUG 0
-int PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method)
+void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method)
 {
 
   int thresh, thresh_kmeans_int, vol, i;
