@@ -1,11 +1,11 @@
 /* %Id$ */
 /* (c) John Ashburner (2007) */
 
-//#include <mex.h>
+/* #include <mex.h> */
 #include <math.h>
 #include <stdio.h>
 #include "optimizer3d.h"
-//extern double floor(double x);
+/* extern double floor(double x); */
 extern double   log(double x);
 extern double   exp(double x);
 #define LOG(x) (((x)>0) ? log(x+0.001): -6.9078)
