@@ -59,8 +59,8 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   if(priors == (unsigned char *)0)
     printf("Warning: Warping is disabled because no priors were defined.\n");
 
-  thresh = (int)round(255*thresh_brainmask);
-  thresh_kmeans_int = (int)round(255*thresh_kmeans);
+  thresh = (int)rint(255*thresh_brainmask);
+  thresh_kmeans_int = (int)rint(255*thresh_kmeans);
 
   /* initial nu-correction works best with 5 class Kmeans approach */
   max_src = Kmeans( src, label, mask, 25, n_pure_classes, separations, dims, thresh, thresh_kmeans_int, iters_nu, KMEANS);
