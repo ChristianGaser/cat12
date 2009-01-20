@@ -12,7 +12,7 @@
 #include "Amap.h"
 #include "PveAmap.h"
 
-void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method)
+void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method, int warp)
 {
 
   int thresh, thresh_kmeans_int, vol, vol2, vol3, i;
@@ -22,7 +22,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   float *flow;
   
   /* change some default parameters */
-  Niters = 10;
+//  Niters = 10;
   
   vol   = dims[0]*dims[1]*dims[2];
   vol2  = vol*2;
@@ -52,6 +52,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
       for (i=0; i<vol; i++) {
         if(src > 0) mask[i] = 255;
         else mask[i] = 0;
+      }
     }
   }
     
@@ -65,7 +66,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     printf("Warning: Bayes estimation does need priors. Method was changed to Kmeans.\n");
   }
 
-  if(warp && (priors == (unsigned char *)0))
+  if((warp) && (priors == (unsigned char *)0))
     printf("Warning: Warping is disabled because no priors were defined.\n");
 
   thresh = (int)rint(255*thresh_brainmask);
@@ -80,19 +81,19 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     switch(label[i]) {
     /* background */
     case 0:
-      prob[i] = 0;   prob[i+vol] = 0;   prob[i+2*vol] = 0;
+      prob[i] = 0;   prob[i+vol] = 0;   prob[i+vol2] = 0;
       break;
     /* CSF */
     case 1:
-      prob[i] = 255; prob[i+vol] = 0;   prob[i+2*vol] = 0;
+      prob[i] = 255; prob[i+vol] = 0;   prob[i+vol2] = 0;
       break;
     /* GM */
     case 2:
-      prob[i] = 0;   prob[i+vol] = 255; prob[i+2*vol] = 0;
+      prob[i] = 0;   prob[i+vol] = 255; prob[i+vol2] = 0;
       break;
     /* WM */
     case 3:
-      prob[i] = 0;   prob[i+vol] = 0;   prob[i+2*vol] = 255;
+      prob[i] = 0;   prob[i+vol] = 0;   prob[i+vol2] = 255;
       break;
     }
   }
@@ -100,7 +101,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   /* initial warp */
   n_loops = 6;
   if(priors != (unsigned char *)0) {
-    if(warp)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+    if(warp) WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   }
 
   /* use Kmeans or Bayes for estimate */
@@ -118,19 +119,19 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
       switch(label[i]) {
       /* background */
       case 0:
-        prob[i] = 0;   prob[i+vol] = 0;   prob[i+2*vol] = 0;
+        prob[i] = 0;   prob[i+vol] = 0;   prob[i+vol2] = 0;
         break;
       /* CSF */
       case 1:
-        prob[i] = 255; prob[i+vol] = 0;   prob[i+2*vol] = 0;
+        prob[i] = 255; prob[i+vol] = 0;   prob[i+vol2] = 0;
         break;
       /* GM */
       case 2:
-        prob[i] = 0;   prob[i+vol] = 255; prob[i+2*vol] = 0;
+        prob[i] = 0;   prob[i+vol] = 255; prob[i+vol2] = 0;
         break;
       /* WM */
       case 3:
-        prob[i] = 0;   prob[i+vol] = 0;   prob[i+2*vol] = 255;
+        prob[i] = 0;   prob[i+vol] = 0;   prob[i+vol2] = 255;
         break;
       }
     }

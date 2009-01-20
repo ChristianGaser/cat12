@@ -5,6 +5,8 @@ if 1
 %V = spm_vol('t1_icbm_normal_1mm_pn3_rf20.nii');
 V = spm_vol('s07.nii');
 V = spm_vol('t1_icbm_masked_1mm_pn3_rf20.nii');
+V = spm_vol('Mary_brain.nii');
+%V = spm_vol('t1_icbm_normal_1mm_pn3_rf20.nii');
 %V = spm_vol('/Users/gaser/Desktop/A080105/wmA080105_affine.img');
 %V = spm_vol('wmA080105_affine.img');
 %V = spm_vol('w05.img');
@@ -53,7 +55,12 @@ colormap(hot)
 ind = find(mask > 32);
 
 !rm *.mexmaci
-tic;prob = PveAmapMex(vol, priors, mask, vx, 1, 3);toc
+pve = 1;
+method = 3;
+warp = 0;
+%priors = uint8(0);
+%mask(:) = 0;
+tic;prob = PveAmapMex(vol, priors, mask, vx, pve, method, warp);toc
 
 subplot(2,2,3)
 imagesc(vol(:,:,slice))

@@ -33,7 +33,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   vx     = (double*)mxGetPr(prhs[3]);
   pve    = (int)mxGetScalar(prhs[4]);
   method = (int)mxGetScalar(prhs[5]);
-  warp   = (int)mxGetScalar(prhs[5]);
+  warp   = (int)mxGetScalar(prhs[6]);
 
   dims = mxGetDimensions(prhs[0]);
   dims_priors = mxGetDimensions(prhs[1]);
