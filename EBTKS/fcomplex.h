@@ -20,7 +20,7 @@ $State: Exp $
 #ifndef _FCOMPLEX_H
 #define _FCOMPLEX_H
 
-#include <complex.h>		/* (bert) changed from complex.h */
+#include <complex>		/* (bert) changed from complex.h */
 typedef std::complex<float> fcomplex;
 #if 0				/* (bert) removed code here */
 

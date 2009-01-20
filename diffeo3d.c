@@ -700,7 +700,7 @@ void push(int dm[], int m, int n, float def[], float pf[], float po[], float so[
     {
         double x, y, z;
 
-        if (isfinite(pf[i]))
+        if (finite(pf[i]))
         {
             x    = px[i]-1.0; /* Subtract 1 because of MATLAB indexing */
             y    = py[i]-1.0;
@@ -1274,7 +1274,7 @@ double smalldef_objfun_mn(int dm[], float f[], float g[], float v[], float jd[],
             T[k]   = g[j + k*m];
             sT    -= T[k];
         }
-        if (!isfinite((double)sT))
+        if (!finite((double)sT))
         {
             A[j    ] = 0.0;
             A[j+m  ] = 0.0;
@@ -1634,7 +1634,7 @@ double initialise_objfun_mn(int dm[], float f[], float g[], float t0[], float J0
             T[k]   = g[j + k*m];
             sT    -= T[k];
         }
-        if (!isfinite((double)sT))
+        if (!finite((double)sT))
         {
             A[j    ] = 0.0;
             A[j+m  ] = 0.0;

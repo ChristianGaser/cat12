@@ -27,8 +27,9 @@ $State: Exp $
 // defining the necessary values myself
 #include <limits.h>
 #include <float.h>
-#define MAXSHORT   SHRT_MAX
-#define MAXINT     INT_MAX 
+
+#define MAXSHORT   32767
+#define MAXINT     32767 
 #define MAXDOUBLE  DBL_MAX
 
 #endif // end of values.h hack
@@ -43,8 +44,8 @@ typedef char  Boolean; // In accordance with X's definition
 
 const int BYTE_MIN = 0;
 const int BYTE_MAX = 255;
-const int GREY_MIN = -MAXSHORT;
-const int GREY_MAX = MAXSHORT;
+const int GREY_MIN = -32767;
+const int GREY_MAX = 32767;
 
 inline Byte 
 clipByte(double value) { 
