@@ -12,8 +12,6 @@
 #include "Amap.h"
 #include "PveAmap.h"
 
-#define DEBUG 0
-
 void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method)
 {
 
@@ -67,7 +65,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     printf("Warning: Bayes estimation does need priors. Method was changed to Kmeans.\n");
   }
 
-  if(priors == (unsigned char *)0)
+  if(warp && (priors == (unsigned char *)0))
     printf("Warning: Warping is disabled because no priors were defined.\n");
 
   thresh = (int)rint(255*thresh_brainmask);
@@ -102,7 +100,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   /* initial warp */
   n_loops = 6;
   if(priors != (unsigned char *)0) {
-    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
+    if(warp)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   }
 
   /* use Kmeans or Bayes for estimate */
@@ -155,7 +153,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   /* final warping */
   n_loops = 6;
   if(priors != (unsigned char *)0) {
-/*    if(DEBUG==0)   WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp); */
+    if(warp) WarpPriors(prob, priors, mask, flow, dims, n_loops, subsample_warp);
   }
   
   /* apply warped mask to tissue maps */ 
