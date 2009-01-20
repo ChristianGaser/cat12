@@ -8,22 +8,25 @@ OBS = PveAmap.o Amap.o MrfPrior.o Pve5.o Kmeans.o WarpPriors.o Bayes.o optimizer
 
 PveAmapMex.$(SUF): PveAmapMex.c PveAmap.$(SUF).a
 #	$(MEX) PveAmapMex.c PveAmap.$(SUF).a -lEBTKS -L./$(EXT) -I./ $(MEXEND)
-	$(MEX) PveAmapMex.c PveAmap.$(SUF).a ./$(EXT)/libEBTKS.a -I./ $(MEXEND)
+	$(MEX) PveAmapMex.c PveAmap.$(SUF).a ./$(EXT)/libEBTKS.a $(MEXEND)
 
-archive: PveAmap.$(SUF).a
+#archive: PveAmap.$(SUF).a
 
 PveAmap.$(SUF).a: $(OBS)
 	$(DEL) $@
 	$(AR) $@ $(OBS)
 
-%.o : %.c %.cc
-	$(MEX) -c $< $(MEXEND)
+%.o : %.c
+	$(CC) -c $< $(MEXEND)
+
+%.o : %.cc
+	$(CC) -I./ -c $< $(MEXEND)
 
 %.$(SUF) : %.c %.cc
-	$(MEX) $< $(MEXEND)
+	$(MEX)  $< $(MEXEND)
 
 clean: 
-	$(DEL) $(OBS) PveAmapMex.$(SUF)
+	$(DEL) $(OBS) PveAmapMex.$(SUF) PveAmap.$(SUF).a
 
 -include Makefile.vbm
 

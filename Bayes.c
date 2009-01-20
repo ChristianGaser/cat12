@@ -156,7 +156,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         /* only use values above threshold where mask is defined for nu-estimate */
         if ((src[i] > mn_thresh) && (mask[i] > 128) && (label[i] < 4)) {
           double val_nu = src[i]/mn[label[i]-1];
-          if ((isfinite(val_nu))) {
+          if ((finite(val_nu))) {
             nu[i] = val_nu;
           }
         }

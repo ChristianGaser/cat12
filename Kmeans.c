@@ -238,7 +238,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         /* only use values above threshold where mask is defined for nu-estimate */
         if ((src[i] > th_src) && (mask[i] > thresh_kmeans)) {
           val_nu = src[i]/mu[label[i]-1];
-          if ((isfinite(val_nu))) {
+          if ((finite(val_nu))) {
             nu[i] = val_nu;
             mean_nu += val_nu;
             count++;
