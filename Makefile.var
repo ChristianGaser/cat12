@@ -94,25 +94,22 @@ ifndef SUF
   ifeq (MINGW32,$(word 1,$(subst _, ,$(PLATFORM))))
     SUF        = mexw32
     EXT        = w32
-    MEXBIN     = cmd /c "mex.bat
+    MEXBIN     = cmd /c mex.bat
     MEXOPTS    = -O
-    MEXEND     = "
     MOSUF      = obj
   endif
   ifeq (CYGWIN,$(word 1,$(subst _, ,$(PLATFORM))))
     SUF        = mexw32
     EXT        = w32
-    MEXBIN     = cmd /c "mex.bat
+    MEXBIN     = cmd /c mex.bat
     MEXOPTS    = -O
-    MEXEND     = "
     MOSUF      = obj
   endif
   ifeq (win64,$(PLATFORM))
     SUF        = mexw64
     EXT        = w64
-    MEXBIN     = cmd /c "mex.bat
+    MEXBIN     = cmd /c mex.bat
     MEXOPTS    = -O
-    MEXEND     = "
     MOSUF      = obj
     AR         = lib.exe /out:
   endif
