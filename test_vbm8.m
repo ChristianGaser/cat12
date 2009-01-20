@@ -36,7 +36,7 @@ end
 
 % dilate the mask by convolving
 k = [1 1 1 1 1];
-%spm_conv_vol(mask,mask,k,k,k,-[1 1 1]);
+spm_conv_vol(mask,mask,k,k,k,-[1 1 1]);
 
 vx = sqrt(sum(V(1).mat(1:3,1:3).^2));
 

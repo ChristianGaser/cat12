@@ -1,4 +1,4 @@
-function [prob, mean] = PveAmapMex(src, priors, mask, vx, pve, method)
+function [prob, mean] = PveAmapMex(src, priors, mask, vx, pve, method, warp)
 %
 % Christian Gaser
 % $Id$
@@ -22,6 +22,6 @@ end
 
 cd(p_path);
 
-[prob, mean] = PveAmapMex(src, priors, mask, vx, pve, method);
+[prob, mean] = PveAmapMex(src, priors, mask, vx, pve, method, warp);
 
 return
