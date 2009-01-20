@@ -4,13 +4,13 @@ function PveAmap_ui
 
 pve = 1;		% 0 - No PVE; 1 - marginalized; 2 - Kmeans
 method = 3;	% 2- Kmeans; 3 - Bayes
+warp = 1;
 
 P = spm_select(Inf,'image','Select normalized images to segment');
 n = size(P,1);
 V = spm_vol(P);	
 
 Vmask = spm_vol('brainmask_LPBA40.nii');
-mask = zeros(V(1).dim(1:3),'uint8');
 
 Vpriors = spm_vol(str2mat('/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,1',...
     '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,2',...
@@ -18,10 +18,12 @@ Vpriors = spm_vol(str2mat('/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,1',...
     '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,4',...
     '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,5',...
     '/Users/gaser/spm/spm8b/toolbox/Seg/TPM.nii,6'));
-priors = zeros([V(1).dim(1:3) 6],'uint8');
 
 for i=1:n
 
+    mask = zeros(V(i).dim(1:3),'uint8');
+    priors = zeros([V(i).dim(1:3) 6],'uint8');
+	
 	vol = spm_read_vols(V(i));
 
 
@@ -44,9 +46,9 @@ for i=1:n
 	vx = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
-for pve=0:1
-  for method=2:3
-	tic;prob = PveAmapMex(vol, priors, mask, vx, pve, method);toc
+for pve=1
+  for method=3
+	tic;prob = PveAmapMex(vol, priors, mask, vx, pve, method, warp);toc
 	[maxi,label] = max(prob,[],4);
 	label(find(sum(prob,4)==0)) = 0;
 
