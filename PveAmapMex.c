@@ -41,8 +41,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   dims2[2] = dims[2];
   dims2[3] = 5;
   
-  plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
-  plhs[1] = mxCreateNumericMatrix(1,5,mxDOUBLE_CLASS,mxREAL);
+  plhs[0] = mxCreateNumericArray(4, dims2, mxUINT8_CLASS, mxREAL);
+  plhs[1] = mxCreateNumericMatrix(1, 5, mxDOUBLE_CLASS, mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
   
