@@ -50,16 +50,16 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         case GMCSFLABEL+1: /* GMCSF */
           w = (src[ind] - mean[CSFLABEL])/(mean[GMLABEL]-mean[CSFLABEL]);
           if(w > 1.0) w = 1.0; if(w < 0.0) w = 0.0;
-          new_val[CSFLABEL] = (unsigned char) round(255.0*(1-w));
-          new_val[GMLABEL]  = (unsigned char) round(255.0*w);
+          new_val[CSFLABEL] = (unsigned char) rint(255.0*(1-w));
+          new_val[GMLABEL]  = (unsigned char) rint(255.0*w);
           new_val[WMLABEL]  = 0;
           break;
         case WMGMLABEL+1: /*WMGM */
           w = (src[ind] - mean[GMLABEL])/(mean[WMLABEL]-mean[GMLABEL]);
           if(w > 1.0) w = 1.0; if(w < 0.0) w = 0.0;
           new_val[CSFLABEL] = 0;
-          new_val[GMLABEL]  = (unsigned char) round(255.0*(1-w));
-          new_val[WMLABEL]  = (unsigned char) round(255.0*w);
+          new_val[GMLABEL]  = (unsigned char) rint(255.0*(1-w));
+          new_val[WMLABEL]  = (unsigned char) rint(255.0*w);
           break;
         }
 
