@@ -10,8 +10,6 @@ PveAmapMex.$(SUF): PveAmapMex.c PveAmap.$(SUF).a
 #	$(MEX) PveAmapMex.c PveAmap.$(SUF).a -lEBTKS -L./$(EXT) -I./ $(MEXEND)
 	$(MEX) PveAmapMex.c PveAmap.$(SUF).a ./$(EXT)/libEBTKS.a $(MEXEND)
 
-#archive: PveAmap.$(SUF).a
-
 PveAmap.$(SUF).a: $(OBS)
 	$(DEL) $@
 	$(AR) $@ $(OBS)
@@ -19,14 +17,14 @@ PveAmap.$(SUF).a: $(OBS)
 %.o : %.c
 	$(CC) -c $< $(MEXEND)
 
-%.o : %.cc
-	$(CC) -I./ -c $< $(MEXEND)
+splineSmooth.o : splineSmooth.cc
+	$(CXX) -I./ -c $< $(MEXEND)
 
 %.$(SUF) : %.c %.cc
 	$(MEX)  $< $(MEXEND)
 
 clean: 
-	$(DEL) $(OBS) PveAmapMex.$(SUF) PveAmap.$(SUF).a
+	$(DEL) $(OBS) PveAmap.$(SUF).a
 
 -include Makefile.vbm
 
