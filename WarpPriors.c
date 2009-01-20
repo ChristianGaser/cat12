@@ -193,12 +193,12 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   subsample_uint8(prob, g, dims, dims_samp, 0, vol_samp2);    
 
   /* scale subsampled probabilities to a maximum of 0.5 */
-  max = -1e15;
+  max = -HUGE;
   for (i=0; i < vol_samp3; i++) max = MAX(g[i], max);
   for (i=0; i < vol_samp3; i++) g[i] /= max*2.0;
 
   /* scale subsampled priors to a maximum of 0.5 */
-  max = -1e15;
+  max = -HUGE;
   for (i=0; i < vol_samp3; i++) max = MAX(f[i], max);
   for (i=0; i < vol_samp3; i++) f[i] /= max*2.0;
 
