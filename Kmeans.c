@@ -31,7 +31,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     for (y=0;y<dims[1];y++) {
       y_dims = y*dims[0];
       for (x=0;x<dims[0];x++) {
-         v = (int)rint(255.0*src[z_area + y_dims + x]/max_src);
+         v = (int)ROUND(255.0*src[z_area + y_dims + x]/max_src);
          if (v < 1) continue;
          if ((thresh_mask > 0) && ((int)mask[z_area + y_dims + x] < thresh_kmeans))
            continue;
@@ -45,7 +45,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   /* use only value in histogram where cumsum is between 1..99% */
   cumsum[0] = histo[0];
   for (i = 1; i < 256; i++) cumsum[i] = cumsum[i-1] + histo[i];
-  for (i = 0; i < 256; i++) cumsum[i] = (long) rint(1000.0*(double)cumsum[i]/(double)cumsum[255]);
+  for (i = 0; i < 256; i++) cumsum[i] = (long) ROUND(1000.0*(double)cumsum[i]/(double)cumsum[255]);
   for (i = 0; i < 256; i++) if ((cumsum[i] <= 10) || (cumsum[i] >= 990)) histo[i] = 0;
 
   /* loop through */
@@ -106,7 +106,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     for (y=0;y<dims[1];y++) {
       y_dims = y*dims[0];
       for (x=0;x<dims[0];x++) {
-         v = (int)rint(255.0*src[z_area + y_dims + x]/max_src);
+         v = (int)ROUND(255.0*src[z_area + y_dims + x]/max_src);
          if (v >= 1) {
            if (v < 0) v = 0;
            if (v > 255) v = 255;
@@ -175,7 +175,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         for (y=0;y<dims[1];y++) {
           y_dims = y*dims[0];
           for (x=0;x<dims[0];x++) {
-            val = (int)rint(255.0*src[z_area + y_dims + x]/max_src);
+            val = (int)ROUND(255.0*src[z_area + y_dims + x]/max_src);
             if (val < 1) continue;
             n[0]++;
             mean[0] += (double) val;

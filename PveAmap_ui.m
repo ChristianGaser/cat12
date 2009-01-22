@@ -55,6 +55,10 @@ for pve=1
 	V(i).fname    = fullfile(pth,['p0' nm '_' num2str(pve) '_' num2str(method) '.nii']);
 	V(i).pinfo = [1 0 0]';
 	spm_write_vol(V(i),label);
+
+	V(i).fname    = fullfile(pth,['p1' nm '_' num2str(pve) '_' num2str(method) '.nii']);
+	V(i).pinfo = [1/255 0 0]';
+	spm_write_vol(V(i),prob(:,:,:,2));
 end
 end
 
