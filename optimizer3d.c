@@ -1056,7 +1056,7 @@ void cgs3(int dm[], float A[], float b[], int rtype, double param[], double tol,
 {
     int i, m = dm[0]*dm[1]*dm[2]*3, it;
     double rtr, nb, rtrold, alpha, beta;
-    void (*Atimesp)();
+    void (*Atimesp)(int dm[], float A[], double param[], float p[], float Ap[]);
 
     /* printf("\n **** %dx%d ****\n",dm[0],dm[1]); */
     if (rtype == 0)
@@ -1163,7 +1163,7 @@ static void resized_plane(int na[], float *a, int nc[], float *c, float *b)
     for(j=0; j<nc[1]; j++)
     {
         loc = (j+0.5)*s-0.5;
-        o   = floor(loc+0.5);
+        o   = (int)floor(loc+0.5);
         om  = BOUND(o-1,na[1])*na[0];
         op  = BOUND(o+1,na[1])*na[0];
         w   = wt2( o   -loc);
@@ -1177,7 +1177,7 @@ static void resized_plane(int na[], float *a, int nc[], float *c, float *b)
     for(i=0; i<nc[0]; i++)
     {
         loc = (i+0.5)*s-0.5;
-        o   = floor(loc+0.5);
+        o   = (int)floor(loc+0.5);
         om  = BOUND(o-1,na[0]);
         op  = BOUND(o+1,na[0]);
         w   = wt2( o   -loc);
@@ -1204,7 +1204,7 @@ void resize(int na[], float *a, int nc[], float *c, float *b)
         s      = (double)na[2]/(double)nc[2];
         loc    = (k+0.5)*s-0.5;
         oo     = o;
-        o      = floor(loc+0.5);
+        o      = (int)floor(loc+0.5);
         om     = BOUND(o-1,na[2]);
         op     = BOUND(o+1,na[2]);
 
@@ -1300,9 +1300,9 @@ int fmg3_scratchsize(int n0[])
 
     for(j=1; j<16; j++)
     {
-        n[j][0] = ceil(n[j-1][0]/2.0);
-        n[j][1] = ceil(n[j-1][1]/2.0);
-        n[j][2] = ceil(n[j-1][2]/2.0);
+        n[j][0] = (int)ceil(n[j-1][0]/2.0);
+        n[j][1] = (int)ceil(n[j-1][1]/2.0);
+        n[j][2] = (int)ceil(n[j-1][2]/2.0);
         m[j]    = n[j][0]*n[j][1]*n[j][2];
         bs += m[j];
         if ((n[j][0]<2) && (n[j][1]<2) && (n[j][2]<2))
@@ -1322,8 +1322,8 @@ void fmg3(int n0[], float *a0, float *b0, int rtype, double param0[], int c, int
     int    n[32][3], m[32];
     float *bo[32], *a[32], *b[32], *u[32], *res, *rbuf;
     double param[32][6];
-    void (*relax)(), (*Atimesp)();
-    double (*sumsq)();
+    void (*relax)(int dm[], float a[], float b[], double s[], int nit, float u[]), (*Atimesp)(int dm[], float A[], double param[], float p[], float Ap[]);
+    double (*sumsq)(int dm[], float a[], float b[], double s[], float u[]);
 
     if (rtype == 0)
     {
@@ -1367,9 +1367,9 @@ void fmg3(int n0[], float *a0, float *b0, int rtype, double param0[], int c, int
     bs = 0;
     for(j=1; j<16; j++)
     {
-        n[j][0] = ceil(n[j-1][0]/2.0);
-        n[j][1] = ceil(n[j-1][1]/2.0);
-        n[j][2] = ceil(n[j-1][2]/2.0);
+        n[j][0] = (int)ceil(n[j-1][0]/2.0);
+        n[j][1] = (int)ceil(n[j-1][1]/2.0);
+        n[j][2] = (int)ceil(n[j-1][2]/2.0);
         m[j]    = n[j][0]*n[j][1]*n[j][2];
         ng ++;
         bs += m[j];

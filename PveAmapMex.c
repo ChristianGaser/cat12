@@ -8,6 +8,9 @@
 #include "matrix.h"
 #include "math.h"
 #include "stdio.h"
+#include "Amap.h"
+
+void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned char *prob, double *mean, double *separations, int *dims, int pve, int method, int warp);
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
@@ -51,9 +54,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   
   /* if priors are set to a scalar we change the argument to a scalar of 0 */
   if(dims_priors[1] == 1)
-    PveAmap(src, (unsigned char *)0, mask, prob, mean, vx, dims, pve, method, warp);
+    PveAmap(src, (unsigned char *)0, mask, prob, mean, vx, dims2, pve, method, warp);
   else
-    PveAmap(src, priors, mask, prob, mean, vx, dims, pve, method, warp);
+    PveAmap(src, priors, mask, prob, mean, vx, dims2, pve, method, warp);
 
 }
 

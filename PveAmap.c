@@ -50,7 +50,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
     } else {
     /* or set mask to 255 if src > 0 */
       for (i=0; i<vol; i++) {
-        if(src > 0) mask[i] = 255;
+        if(src[i] > 0) mask[i] = 255;
         else mask[i] = 0;
       }
     }
