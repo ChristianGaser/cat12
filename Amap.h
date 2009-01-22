@@ -42,6 +42,20 @@
 #define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
 #endif
 
+extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve);
+
+extern void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *mask, double *separations, int *dims, int correct_nu);
+
+extern void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask, float *flow, int *dims, int loop, int samp);
+
+extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve);
+
+extern void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
+
+extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int init, int *dims);
+
+extern void sampn(int dm[], float f[], int n, int mm, double x, double y, double z, double v[]);
+
 struct point {
   double mean;
   double var;

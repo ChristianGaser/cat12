@@ -68,7 +68,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
 
   /* initialize mean, var, mg */
   for (k=0; k<K; k++) {
-    mn[k] = mx_thresh * drand48();
+    mn[k] = mx_thresh * 1.0/(double)(k+1);
     mg[k] = 1.0/(double)K;
     vr[k] = mx_thresh*mx_thresh + TINY;
   }
