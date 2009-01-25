@@ -26,6 +26,10 @@
 #define WMGMLABEL  3
 #define WMLABEL    4
 
+#define NOLABEL 0
+#define LABEL 1
+#define PVELABEL 2
+
 #ifndef SQR
 #define SQR(x) ((x)*(x))
 #endif
