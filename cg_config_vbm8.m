@@ -209,14 +209,14 @@ ngaus.help = {[...
 
 %------------------------------------------------------------------------
 native    = mnu('Native space','native',{'no','yes'},{0,1});
-native.val  = {0};
-native.help = {'Write bias corrected image in native space.'};
+native.help = {'Write image in native space.'};
 
-warped    = mnu('Normalized space','warped',{'no','yes'},{0,1});
-warped.val  = {0};
-warped.help = {'Write bias corrected image in normalized space.'};
+warped    = mnu('Unmodulated normalized','warped',{'no','yes'},{0,1});
+warped.help = {'Write image in normalized space.'};
 
-bias      = branch('Bias Corrected','BIAS',{native, warped});
+native.val    = {0};
+warped.val    = {0};
+bias      = branch('Bias Corrected','bias',{native, warped});
 bias.help = {[...
 'This is the option to save a bias corrected version of your image. ',...
 'MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity ',...
@@ -227,16 +227,16 @@ bias.help = {[...
 
 %------------------------------------------------------------------------
 
-native    = mnu('Native space','native',{'no','yes'},{0,1});
-native.val  = {0};
-native.help = {'Write segmented image in native space.'};
+native.val    = {0};
+warped.val    = {0};
+label      = branch('Labeled image','label',{native, warped});
+label.help = {[...
+'This is the option to save a labeled version of your segmentations. ',...
+'Labels are saved as PVE values.']};
 
-warped    = mnu('Unmodulated normalized','warped',{'no','yes'},{0,1});
-warped.val  = {0};
-warped.help = {'Write segmented image in normalized space.'};
+%------------------------------------------------------------------------
 
 modulated    = mnu('Modulated normalized','modulated',{'none','affine + non-linear (SPM8 default)','non-linear only'},{0,1,2});
-modulated.val  = {2};
 modulated.help = {[...
 'Modulation is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
 'causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). ',...
@@ -268,6 +268,9 @@ dartel.help = {['This option is to export data into a form that can be used with
 'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
+native.val    = {0};
+warped.val    = {0};
+modulated.val = {2};
 grey          = branch('Grey matter','GM',{native, warped, modulated, dartel});
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'};
 native.val    = {0};
@@ -280,8 +283,6 @@ warped.val    = {0};
 modulated.val = {0};
 csf         = branch('Cerebro-Spinal Fluid (CSF)','CSF',{native, warped, modulated, dartel});
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'};
-
-%------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
 
