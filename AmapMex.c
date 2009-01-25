@@ -16,7 +16,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   double *src, weight_MRF, *mean;
   const int *dims;
   int dims2[4];
-  int nc, pve;
+  int nc, pve, update_label;
   int niters, sub, niters_nu;
     
   if (nrhs!=6)
@@ -34,6 +34,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   sub    = (int)mxGetScalar(prhs[4]);
   pve    = (double)mxGetScalar(prhs[5]);
 
+  /* output label as PVE label */
+  update_label = 2;
+
   dims = mxGetDimensions(prhs[0]);
   dims2[0] = dims[0];
   dims2[1] = dims[1];
@@ -48,7 +51,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
   Amap(src, label, prob, mean, nc, niters, sub, dims, pve);
-  if(pve) Pve5(src, prob, label, mean, dims);
+  if(pve) Pve5(src, prob, label, mean, dims, update_label);
 
 }
 
