@@ -28,8 +28,56 @@ function varargout = cg_vbm8_run(job,arg)
 
 rev = '$Rev$';
 
+% check whether estimation & write should be done
+estwrite = isfield(job,'opts');
+
+% set some defaults if segmentations are not estimated
+if ~estwrite
+    job.opts = struct('biasreg',0.001,'biasfwhm',60,'warpreg',4,'affreg','mni',...
+                      'affmethod',1,'samp',3,'ngaus',[2 2 2 3 4 2]);
+end
+
+channel = struct('biasreg', job.opts.biasreg,...
+                 'biasfwhm', job.opts.biasfwhm,...
+                 'write', [job.output.bias.native 0],...
+                 'vols',{job.data});
+                 
+warp = struct('affreg', job.opts.affreg,...
+              'affmethod', job.opts.affmethod,...
+              'samp', job.opts.samp,...
+              'bb', job.extopts.bb,...
+              'vox', job.extopts.vox,...
+              'write', job.output.warps,...
+              'brainmask', job.extopts.brainmask);
+
+% prepare tissue priors and number of gaussians for all 6 classes
+for i=1:6
+    tissue(i).ngaus = job.opts.ngaus(i);
+    tissue(i).tpm = fullfile(spm('dir'),'toolbox','Seg',['TPM.nii,' num2str(i)]);
+end
+
+% write tissue class 1-3              
+tissue(1).warped = [job.output.GM.warped (job.output.GM.modulated==1) (job.output.GM.modulated==2)];
+tissue(1).native = [job.output.GM.native (job.output.GM.dartel==1) (job.output.GM.dartel==2)];
+tissue(2).warped = [job.output.WM.warped (job.output.WM.modulated==1) (job.output.WM.modulated==2)];
+tissue(2).native = [job.output.WM.native (job.output.WM.dartel==1) (job.output.WM.dartel==2)];
+tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
+tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1) (job.output.CSF.dartel==2)];
+job.bias  = [job.output.bias.native job.output.bias.warped];
+job.label = [job.output.label.native job.output.label.warped];
+
+% never write class 4-6
+for i=4:6
+    tissue(i).warped = [0 0 0];
+    tissue(i).native = [0 0 0];
+end
+
+job.channel = channel;
+job.warp = warp;
+job.tissue = tissue;
+
 if nargin==1,
-    varargout{:} = run_job(job);
+    varargout{:} = run_job(job, estwrite);
 elseif strcmpi(arg,'check'),
     varargout{:} = check_job(job);
 elseif strcmpi(arg,'vfiles'),
@@ -43,14 +91,11 @@ return
 %_______________________________________________________________________
 
 %_______________________________________________________________________
-function vout = run_job(job)
+function vout = run_job(job, estwrite)
 
 vout   = vout_job(job);
 tpm    = strvcat(cat(1,job.tissue(:).tpm));
 tpm    = spm_load_priors8(tpm);
-
-% check whether estimation & write should be done
-estwrite = isfield(job.warp,'reg');
 
 nit = 1;
 
@@ -159,9 +204,10 @@ for iter=1:nit,
         if iter==nit,
             % Final iteration, so write out the required data.
             tmp1 = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
-            tmp2 =  cat(1,job.channel(:).write);
+            tmp2 =  job.bias;
             tmp3 = job.warp.write;
-            cg_vbm8_write(res,tmp1, tmp2, tmp3, job.warp);
+            tmp4 =  job.label;
+            cg_vbm8_write(res,tmp1, tmp2, tmp3, tmp4, job.warp);
         else
             % Not the final iteration, so compute sufficient statistics for
             % re-estimating the template data.
@@ -234,22 +280,39 @@ function vout = vout_job(job)
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
 
-channel = struct('biasfield',{},'biascorr',{});
-for i=1:numel(job.channel),
-    for j=1:n,
-        [parts{j,:}] = spm_fileparts(job.channel(i).vols{j});
+channel = struct('biascorr',{});
+label = {};
+wlabel = {};
+
+for j=1:n,
+    [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
+end
+
+if job.bias(1),
+    channel(1).biascorr = cell(n,1);
+    for j=1:n
+        channel(1).biascorr{j} = fullfile(parts{j,1},['m',parts{j,2},'.nii']);
     end
-    if job.channel(i).write(1),
-        channel(i).biasfield = cell(n,1);
-        for j=1:n
-            channel(i).biasfield{j} = fullfile(parts{j,1},['BiasField_',parts{j,2},'.nii']);
-        end
+end
+
+if job.bias(2),
+    channel(1).wbiascorr = cell(n,1);
+    for j=1:n
+        channel(1).wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
     end
-    if job.channel(i).write(2),
-        channel(i).biascorr = cell(n,1);
-        for j=1:n
-            channel(i).biascorr{j} = fullfile(parts{j,1},['m',parts{j,2},'.nii']);
-        end
+end
+
+if job.label(1),
+    label = cell(n,1);
+    for j=1:n
+        label{j} = fullfile(parts{j,1},['p0',parts{j,2},'.nii']);
+    end
+end
+
+if job.label(2),
+    wlabel = cell(n,1);
+    for j=1:n
+        wlabel{j} = fullfile(parts{j,1},['wp0',parts{j,2},'.nii']);
     end
 end
 
@@ -261,7 +324,7 @@ for j=1:n
     param{j} = fullfile(parts{j,1},[parts{j,2},'_seg8.mat']);
 end
 
-tiss = struct('c',{},'rc',{},'wc',{},'mwc',{});
+tiss = struct('c',{},'rc',{},'rca',{},'wc',{},'mwc',{},'m0wc',{});
 for i=1:numel(job.tissue),
     if job.tissue(i).native(1),
         tiss(i).c = cell(n,1);
@@ -275,6 +338,12 @@ for i=1:numel(job.tissue),
             tiss(i).rc{j} = fullfile(parts{j,1},['rp',num2str(i),parts{j,2},'.nii']);
         end
     end
+    if job.tissue(i).native(3),
+        tiss(i).rca = cell(n,1);
+        for j=1:n
+            tiss(i).rca{j} = fullfile(parts{j,1},['rp',num2str(i),parts{j,2},'affine_.nii']);
+        end
+    end
     if job.tissue(i).warped(1),
         tiss(i).wc = cell(n,1);
         for j=1:n
@@ -285,6 +354,12 @@ for i=1:numel(job.tissue),
         tiss(i).mwc = cell(n,1);
         for j=1:n
             tiss(i).mwc{j} = fullfile(parts{j,1},['mwp',num2str(i),parts{j,2},'.nii']);
+        end
+    end
+    if job.tissue(i).warped(3),
+        tiss(i).m0wc = cell(n,1);
+        for j=1:n
+            tiss(i).m0wc{j} = fullfile(parts{j,1},['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
@@ -307,7 +382,7 @@ else
     fordef = {};
 end
 
-vout  = struct('channel',channel,'tiss',tiss,'param',{param},'invdef',{invdef},'fordef',{fordef});
+vout  = struct('channel',channel,'tiss',tiss,'label',{label},'wlabel',{wlabel},'param',{param},'invdef',{invdef},'fordef',{fordef});
 %_______________________________________________________________________
 
 %_______________________________________________________________________
@@ -316,16 +391,19 @@ vout = vout_job(job);
 vf   = vout.param;
 if ~isempty(vout.invdef), vf = {vf{:}, vout.invdef{:}}; end
 if ~isempty(vout.fordef), vf = {vf{:}, vout.fordef{:}}; end
-for i=1:numel(vout.channel),
-    if ~isempty(vout.channel(i).biasfield), vf = {vf{:}, vout.channel(i).biasfield{:}}; end
-    if ~isempty(vout.channel(i).biascorr),  vf = {vf{:}, vout.channel(i).biascorr{:}};  end
-end
+
+if ~isempty(vout.channel(1).biascorr),   vf = {vf{:}, vout.channel(1).biascorr{:}};  end
+if ~isempty(vout.channel(1).wbiascorr),  vf = {vf{:}, vout.channel(1).wbiascorr{:}};  end
+if ~isempty(vout.channel(1).label),      vf = {vf{:}, vout.channel(1).label{:}};  end
+if ~isempty(vout.channel(1).wlabel),     vf = {vf{:}, vout.channel(1).wlabel{:}};  end
 
 for i=1:numel(vout.tiss)
     if ~isempty(vout.tiss(i).c),   vf = {vf{:}, vout.tiss(i).c{:}};   end
     if ~isempty(vout.tiss(i).rc),  vf = {vf{:}, vout.tiss(i).rc{:}};  end
+    if ~isempty(vout.tiss(i).rca), vf = {vf{:}, vout.tiss(i).rca{:}}; end
     if ~isempty(vout.tiss(i).wc),  vf = {vf{:}, vout.tiss(i).wc{:}};  end
     if ~isempty(vout.tiss(i).mwc), vf = {vf{:}, vout.tiss(i).mwc{:}}; end
+    if ~isempty(vout.tiss(i).m0wc),vf = {vf{:}, vout.tiss(i).m0wc{:}};end
 end
 vf = reshape(vf,numel(vf),1);
 %_______________________________________________________________________
