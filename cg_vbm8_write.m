@@ -1,4 +1,4 @@
-function cls = cg_vbm8_write(res,tc,bf,df,warp)
+function cls = cg_vbm8_write(res,tc,bf0,df,lb,warp)
 % Write out VBM preprocessed data
 % FORMAT cls = cg_vbm8_write(res,tc,bf,df)
 %____________________________________________________________________________
@@ -30,10 +30,13 @@ else
 end
 
 N   = numel(res.image);
-if nargin<2, tc = true(Kb,4); end % native, import, warped, warped-mod
-if nargin<3, bf = true(N,2);  end % corrected, field
+%if nargin<2, tc = true(Kb,4); end % native, import, warped, warped-mod
+if nargin<2, tc = true(Kb,6); end % native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
+%if nargin<3, bf = true(N,2);  end % corrected, field
+if nargin<3, bf0 = true(N,2);  end % corrected, warp corrected
 if nargin<4, df = true(1,2);  end % inverse, forward
-if nargin < 5
+if nargin<5, lb = true(1,2);  end % label warped label
+if nargin < 6
     vx = NaN;
     bb = ones(2,3)*NaN;
     print = 0;
@@ -61,7 +64,7 @@ for n=1:N,
     [pth1,nam1,ext1] = fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
-    if bf(n,1),
+    if any(bf0(n,:)),
         chan(n).Nc      = nifti;
         chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
                                      res.image(n).dim(1:3),...
@@ -72,18 +75,6 @@ for n=1:N,
         chan(n).Nc.descrip = 'Bias corrected';
         create(chan(n).Nc);
     end
-
-    if bf(n,2),
-        chan(n).Nf      = nifti;
-        chan(n).Nf.dat  = file_array(fullfile(pth1,['BiasField_', nam1, '.nii']),...
-                                     res.image(n).dim(1:3),...
-                                     [spm_type('float32') spm_platform('bigend')],...
-                                     0,1,0);
-        chan(n).Nf.mat  = res.image(n).mat;
-        chan(n).Nf.mat0 = res.image(n).mat;
-        chan(n).Nf.descrip = 'Estimated Bias Field';
-        create(chan(n).Nf);
-    end
 end
 
 do_cls   = any(tc(:)) || nargout>1;
@@ -91,7 +82,7 @@ tiss(Kb) = struct('Nt',[]);
 cls      = cell(1,Kb);
 for k1=1:Kb,
     cls{k1} = zeros(d(1:3),'uint8');
-    if tc(k1,4) || any(tc(:,3)) || tc(k1,2) || nargout>=1,
+    if tc(k1,6) || tc(k1,5) || any(tc(:,4)) || tc(k1,3) || tc(k1,2) || nargout>=1,
         do_cls  = true;
     end
     if tc(k1,1),
@@ -129,7 +120,7 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if df(1) || any(any(tc(:,[2,3,4]))) || nargout>=1,
+    if df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
@@ -138,8 +129,8 @@ spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
 
 % load brainmask
-if do_cls & do_defs,
-	Vmask = spm_vol(warp.brainmask{1});
+if do_defs,
+	Vmask = spm_vol(warp.brainmask);
 	mask = zeros(res.image(1).dim(1:3),'single');
 end
 
@@ -346,16 +337,16 @@ if any(tc(:,2)),
     end
 end
 
-if any(tc(:,3)),
+if any(tc(:,4)),
     C = zeros([d1,Kb],'single');
 end
 
-if any(tc(:,3)) || any(tc(:,4)) || nargout>=1,
+if any(tc(:,4)) || any(tc(:,5)) || nargout>=1,
     spm_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
     for k1 = 1:Kb,
         if ~isempty(cls{k1}),
             c = single(cls{k1})/255;
-            if any(tc(:,3)),
+            if any(tc(:,4)),
                 [c,w]  = dartel3('push',c,y,d1(1:3));
                 C(:,:,:,k1) = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
                 clear w
@@ -365,7 +356,7 @@ if any(tc(:,3)) || any(tc(:,4)) || nargout>=1,
             if nargout>=1,
                 cls{k1} = c;
             end
-            if tc(k1,4),
+            if tc(k1,5),
                 N      = nifti;
                 N.dat  = file_array(fullfile(pth,['mwp', num2str(k1), nam, '.nii']),...
                                     d1,...
@@ -383,12 +374,12 @@ if any(tc(:,3)) || any(tc(:,4)) || nargout>=1,
     spm_progress_bar('Clear');
 end
 
-if any(tc(:,3)),
+if any(tc(:,4)),
     spm_progress_bar('init',Kb,'Writing Warped Tis Cls','Classes completed');
     C = max(C,eps);
     s = sum(C,4);
     for k1=1:Kb,
-        if tc(k1,3),
+        if tc(k1,4),
             N      = nifti;
             N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
                                 d1,'uint8-be',0,1/255,0);
