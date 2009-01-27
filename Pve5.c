@@ -35,19 +35,19 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = 255;
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = 1;
+          if(update_label == PVELABEL) label[ind] = ROUND(255/3);
           break;
         case GMLABEL+1: /* GM */
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = 255;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = 2;
+          if(update_label == PVELABEL) label[ind] = ROUND(2*255/3);
           break;
         case WMLABEL+1: /* WM */
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 255;
-          if(update_label == PVELABEL) label[ind] = 3;
+          if(update_label == PVELABEL) label[ind] = 255;
           break;
         case GMCSFLABEL+1: /* GMCSF */
           w = (src[ind] - mean[CSFLABEL])/(mean[GMLABEL]-mean[CSFLABEL]);
@@ -55,7 +55,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = (unsigned char) ROUND(255.0*(1-w));
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*w);
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = 2 - w;
+          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(2.0 - w));
           break;
         case WMGMLABEL+1: /*WMGM */
           w = (src[ind] - mean[GMLABEL])/(mean[WMLABEL]-mean[GMLABEL]);
@@ -63,7 +63,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*(1-w));
           new_val[WMLABEL]  = (unsigned char) ROUND(255.0*w);
-          if(update_label == PVELABEL) label[ind] = 3 - w;
+          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(3 - w));
           break;
         }
 

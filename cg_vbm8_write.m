@@ -1,4 +1,4 @@
-function cls = cg_vbm8_write(res,tc,bf0,df,lb,warp)
+function cls = cg_vbm8_write(res,tc,bf,df,lb,warp)
 % Write out VBM preprocessed data
 % FORMAT cls = cg_vbm8_write(res,tc,bf,df)
 %____________________________________________________________________________
@@ -33,18 +33,26 @@ N   = numel(res.image);
 %if nargin<2, tc = true(Kb,4); end % native, import, warped, warped-mod
 if nargin<2, tc = true(Kb,6); end % native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 %if nargin<3, bf = true(N,2);  end % corrected, field
-if nargin<3, bf0 = true(N,2);  end % corrected, warp corrected
+if nargin<3, bf = true(N,2);  end % corrected, warp corrected
 if nargin<4, df = true(1,2);  end % inverse, forward
-if nargin<5, lb = true(1,2);  end % label warped label
+if nargin<5, lb = true(1,2);  end % label, warped label
 if nargin < 6
     vx = NaN;
     bb = ones(2,3)*NaN;
     print = 0;
 else
-    vx = warp.vox;
-    bb = warp.bb;
+    vx = NaN;
+    bb = ones(2,3)*NaN;
+%    vx = warp.vox;
+%    bb = warp.bb;
 %    print = warp.print;
 end 
+
+% Sort out bounding box etc
+bb(~isfinite(bb)) = bb1(~isfinite(bb));
+if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end;
+bb(1,:) = vx*round(bb(1,:)/vx);
+bb(2,:) = vx*round(bb(2,:)/vx);
 
 [pth,nam]=fileparts(res.image(1).fname);
 ind  = res.image(1).n;
@@ -64,7 +72,7 @@ for n=1:N,
     [pth1,nam1,ext1] = fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
-    if any(bf0(n,:)),
+    if bf(n,1),
         chan(n).Nc      = nifti;
         chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
                                      res.image(n).dim(1:3),...
@@ -82,13 +90,13 @@ tiss(Kb) = struct('Nt',[]);
 cls      = cell(1,Kb);
 for k1=1:Kb,
     cls{k1} = zeros(d(1:3),'uint8');
-    if tc(k1,6) || tc(k1,5) || any(tc(:,4)) || tc(k1,3) || tc(k1,2) || nargout>=1,
-        do_cls  = true;
-    end
+%    if tc(k1,6) || tc(k1,5) || any(tc(:,4)) || tc(k1,3) || tc(k1,2) || nargout>=1,
+%        do_cls  = true;
+%    end
     if tc(k1,1),
         tiss(k1).Nt      = nifti;
         tiss(k1).Nt.dat  = file_array(fullfile(pth,['p', num2str(k1), nam, '.nii']),...
-                                      res.image(n).dim(1:3),...
+                                      res.image(1).dim(1:3),...
                                       [spm_type('uint8') spm_platform('bigend')],...
                                       0,1/255,0);
         tiss(k1).Nt.mat  = res.image(n).mat;
@@ -140,20 +148,20 @@ for z=1:length(x3),
     cr = cell(1,N);
     for n=1:N,
         f          = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
-        bf         = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
-        cr{n}      = bf.*f;
+        bf1         = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
+        cr{n}      = bf1.*f;
         % Write a plane of bias corrected data
         chan(n).Nc.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = cr{n};
         if ~isempty(chan(n).Nf),
             % Write a plane of bias field
-            chan(n).Nf.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = bf;
+            chan(n).Nf.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = bf1;
         end;
     end
 
 
     if do_defs,
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
-		mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
+        mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
         if exist('Ndef','var'),
             tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
@@ -162,7 +170,7 @@ for z=1:length(x3),
             tmp = M1(3,1)*t1 + M1(3,2)*t2 + M1(3,3)*t3 + M1(3,4);
             Ndef.dat(:,:,z,1,3) = tmp;
         end
-
+        
         if exist('y','var'),
             y(:,:,z,1) = t1;
             y(:,:,z,2) = t2;
@@ -208,12 +216,12 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
-clear q q1
+clear q q1 Coef
 
 if do_cls & do_defs,
 
 	% use mask from LPBA40 sample or own mask
-	mask = uint8(mask > 0.5);
+	mask = uint8(mask > warp.brainmask_th);
 
     % use index to speed up and save memory
     sz = size(mask);
@@ -238,7 +246,7 @@ if do_cls & do_defs,
 	niters = 200; sub=8; nc=3; pve=1;
 	prob = AmapMex(src, label, nc, niters, sub, pve);
 	prob = prob(:,:,:,[2 3 1]);
-	clear src label
+	clear src mask
 	
 	% use cleanup maybe in the future
 	warp.cleanup = 0;
@@ -263,19 +271,13 @@ if do_cls & do_defs,
 		    tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
     	end
     end
-    clear tiss chan
+    clear tiss 
 end
 
 clear tpm
 M0 = res.image(1).mat;
 
 if any(tc(:,2)),
-
-    % Sort out bounding box etc
-    bb(~isfinite(bb)) = bb1(~isfinite(bb));
-    if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end;
-    bb(1,:) = vx*round(bb(1,:)/vx);
-    bb(2,:) = vx*round(bb(2,:)/vx);
 
     % Figure out the mapping from the volumes to create to the original
     mm = [[
@@ -337,11 +339,75 @@ if any(tc(:,2)),
     end
 end
 
+if any(tc(:,3)),
+	disp('Dartel-affine not yet prepared.');
+
+    % Figure out the mapping from the volumes to create to the original
+    mm = [[
+        bb(1,1) bb(1,2) bb(1,3)
+        bb(2,1) bb(1,2) bb(1,3)
+        bb(1,1) bb(2,2) bb(1,3)
+        bb(2,1) bb(2,2) bb(1,3)
+        bb(1,1) bb(1,2) bb(2,3)
+        bb(2,1) bb(1,2) bb(2,3)
+        bb(1,1) bb(2,2) bb(2,3)
+        bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
+
+    vx2  = M1\mm;
+    odim = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
+    vx3  = [[
+        1       1       1
+        odim(1) 1       1
+        1       odim(2) 1
+        odim(1) odim(2) 1
+        1       1       odim(3)
+        odim(1) 1       odim(3)
+        1       odim(2) odim(3)
+        odim(1) odim(2) odim(3)]'; ones(1,8)];
+
+    x      = affind(rgrid(d),M0);
+    y1     = affind(y,M1);
+    ind    = find(tc(:,3));
+    [M,R]  = spm_get_closest_affine(x,y1,single(cls{ind(1)})/255);
+    clear x y1
+
+    M      = M0\M1*vx2/vx3;
+    mat0   =    M1*vx2/vx3;
+    mat    = mm/vx3;
+
+    fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
+    for k1=1:size(tc,1),
+        if tc(k1,2),
+            tmp1     = decimate(single(cls{k1}),fwhm);
+            [pth,nam,ext1]=fileparts(res.image(1).fname);
+            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
+                'dim',  odim,...
+                'dt',   [spm_type('float32') spm_platform('bigend')],...
+                'pinfo',[1.0 0]',...
+                'mat',mat);
+            VT = spm_create_vol(VT);
+
+            Ni             = nifti(VT.fname);
+            Ni.mat0        = mat0;
+            Ni.mat_intent  = 'Aligned';
+            Ni.mat0_intent = 'Aligned';
+            create(Ni);
+
+            for i=1:odim(3),
+                tmp = spm_slice_vol(tmp1,M*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+                VT  = spm_write_plane(VT,tmp,i);
+            end
+            clear tmp1
+        end
+    end
+end
+
 if any(tc(:,4)),
     C = zeros([d1,Kb],'single');
 end
 
-if any(tc(:,4)) || any(tc(:,5)) || nargout>=1,
+if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
+
     spm_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
     for k1 = 1:Kb,
         if ~isempty(cls{k1}),
@@ -368,10 +434,41 @@ if any(tc(:,4)) || any(tc(:,5)) || nargout>=1,
                 create(N);
                 N.dat(:,:,:) = c*abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
             end
+            if tc(k1,6),
+                N      = nifti;
+                N.dat  = file_array(fullfile(pth,['m0wp', num2str(k1), nam, '.nii']),...
+                                    d1,...
+                                    [spm_type('float32') spm_platform('bigend')],...
+                                    0,1,0);
+                N.mat  = M1;
+                N.mat0 = M1;
+                N.descrip = ['Jac. sc. warped tissue class non-lin only' num2str(k1)];
+                create(N);
+
+M2 = M1\res.Affine*res.image(1).mat
+
+                N.dat(:,:,:) = c*abs(det(M2(1:3,1:3)));
+            end
             spm_progress_bar('set',k1);
         end
     end
     spm_progress_bar('Clear');
+end
+
+% save raw tissue class volumes in ml in log-file
+if do_cls
+    volfactor = abs(det(M0(1:3,1:3)))/1000;
+    vol_txt = fullfile(pth,['p', nam1, '_seg8.txt']);
+    fid = fopen(vol_txt, 'w');
+    for i=1:3
+        vol = volfactor*sum(cls{i}(:))/255;	
+        fprintf(fid,'%5.3f\t',vol);
+    end;
+    fclose(fid);
+end
+
+if nargout == 0
+    clear cls
 end
 
 if any(tc(:,4)),
@@ -395,6 +492,54 @@ if any(tc(:,4)),
     clear C s
 end
 
+if lb(1,1),
+    N      = nifti;
+    N.dat  = file_array(fullfile(pth1,['p0', nam, '.nii']),...
+                                res.image(1).dim(1:3),...
+                                'float32',0,3/255,0);
+    N.mat  = res.image(1).mat;
+    N.mat0 = res.image(1).mat;
+    N.descrip = 'PVE label';
+    create(N);
+    N.dat(:,:,:) = 0;
+    N.dat(indx,indy,indz) = single(label);
+end
+
+if bf(1,2),
+    C = zeros(d1,'single');
+    c = single(chan(1).Nc.dat);
+    [c,w]  = dartel3('push',c,y,d1(1:3));
+    C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
+    clear w
+    N      = nifti;
+    N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
+                                d1,'float32',0,1,0)
+    N.mat  = M1;
+    N.mat0 = M1;
+    N.descrip = 'Warped bias corrected image ';
+    create(N);
+    N.dat(:,:,:) = C;
+end
+
+if lb(1,2),
+    C = zeros(d1,'single');
+    c = zeros(res.image(n).dim(1:3),'single');
+    c(indx,indy,indz) = single(label);
+    [c,w]  = dartel3('push',c,y,d1(1:3));
+    C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
+    clear w
+    N      = nifti;
+    N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
+                                d1,'uint8-be',0,1,0);
+    N.mat  = M1;
+    N.mat0 = M1;
+    N.descrip = 'Warped bias corrected image ';
+    create(N);
+    N.dat(:,:,:) = C;
+end
+
+clear chan label C c
+
 if df(1),
     y         = spm_invert_def(y,M1,d1,M0,[1 0]);
     N         = nifti;
@@ -406,19 +551,6 @@ if df(1),
     create(N);
     N.dat(:,:,:,:,:) = reshape(y,[d1,1,3]);
 end
-
-% save raw tissue class volumes in ml in log-file
-if do_cls
-    volfactor = abs(det(M0(1:3,1:3)))/1000;
-    vol_txt = fullfile(pth,['p', nam1, '_seg8.txt']);
-    fid = fopen(vol_txt, 'w');
-    for i=1:3
-        vol = volfactor*sum(cls{i}(:))/255;	
-        fprintf(fid,'%5.3f\t',vol);
-    end;
-    fclose(fid);
-end
-
 
 return;
 %=======================================================================

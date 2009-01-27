@@ -60,6 +60,8 @@ extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, 
 
 extern void sampn(int dm[], float f[], int n, int mm, double x, double y, double z, double v[]);
 
+extern int splineSmooth( double *src, double lambda, double distance, int subsample, double *separations, int *dims);
+
 struct point {
   double mean;
   double var;

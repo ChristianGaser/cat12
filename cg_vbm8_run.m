@@ -37,17 +37,14 @@ if ~estwrite
                       'affmethod',1,'samp',3,'ngaus',[2 2 2 3 4 2]);
 end
 
-channel = struct('biasreg', job.opts.biasreg,...
-                 'biasfwhm', job.opts.biasfwhm,...
-                 'write', [job.output.bias.native 0],...
-                 'vols',{job.data});
+channel = struct('vols',{job.data});
                  
 warp = struct('affreg', job.opts.affreg,...
               'affmethod', job.opts.affmethod,...
               'samp', job.opts.samp,...
               'bb', job.extopts.bb,...
-              'vox', job.extopts.vox,...
               'write', job.output.warps,...
+              'brainmask_th', job.extopts.brainmask_th,...
               'brainmask', job.extopts.brainmask);
 
 % prepare tissue priors and number of gaussians for all 6 classes
@@ -57,14 +54,12 @@ for i=1:6
 end
 
 % write tissue class 1-3              
-tissue(1).warped = [job.output.GM.warped (job.output.GM.modulated==1) (job.output.GM.modulated==2)];
-tissue(1).native = [job.output.GM.native (job.output.GM.dartel==1) (job.output.GM.dartel==2)];
-tissue(2).warped = [job.output.WM.warped (job.output.WM.modulated==1) (job.output.WM.modulated==2)];
-tissue(2).native = [job.output.WM.native (job.output.WM.dartel==1) (job.output.WM.dartel==2)];
+tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
+tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
+tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
+tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
 tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
-tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1) (job.output.CSF.dartel==2)];
-job.bias  = [job.output.bias.native job.output.bias.warped];
-job.label = [job.output.label.native job.output.label.warped];
+tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
 % never write class 4-6
 for i=4:6
@@ -72,8 +67,13 @@ for i=4:6
     tissue(i).native = [0 0 0];
 end
 
-job.channel = channel;
-job.warp = warp;
+job.bias  = [job.output.bias.native  job.output.bias.warped];
+job.label = [job.output.label.native job.output.label.warped];
+
+job.biasreg  = job.opts.biasreg;
+job.biasfwhm = job.opts.biasfwhm;
+job.channel  = channel;
+job.warp   = warp;
 job.tissue = tissue;
 
 if nargin==1,
@@ -115,8 +115,8 @@ for iter=1:nit,
             spm_check_orientations(obj.image);
 
             obj.fudge    = 5;
-            obj.biasreg  = cat(1,job.channel(:).biasreg);
-            obj.biasfwhm = cat(1,job.channel(:).biasfwhm);
+            obj.biasreg  = cat(1,job.biasreg);
+            obj.biasfwhm = cat(1,job.biasfwhm);
             obj.tpm      = tpm;
             obj.lkp      = [];
             if all(isfinite(cat(1,job.tissue.ngaus))),
@@ -204,10 +204,10 @@ for iter=1:nit,
         if iter==nit,
             % Final iteration, so write out the required data.
             tmp1 = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
-            tmp2 =  job.bias;
+            tmp2 = job.bias;
             tmp3 = job.warp.write;
-            tmp4 =  job.label;
-            cg_vbm8_write(res,tmp1, tmp2, tmp3, tmp4, job.warp);
+            tmp4 = job.label;
+            cg_vbm8_write(res, tmp1, tmp2, tmp3, tmp4, job.warp);
         else
             % Not the final iteration, so compute sufficient statistics for
             % re-estimating the template data.
@@ -280,8 +280,9 @@ function vout = vout_job(job)
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
 
-channel = struct('biascorr',{});
-label = {};
+biascorr  = {};
+wbiascorr = {};
+label  = {};
 wlabel = {};
 
 for j=1:n,
@@ -289,16 +290,16 @@ for j=1:n,
 end
 
 if job.bias(1),
-    channel(1).biascorr = cell(n,1);
+    biascorr = cell(n,1);
     for j=1:n
-        channel(1).biascorr{j} = fullfile(parts{j,1},['m',parts{j,2},'.nii']);
+        biascorr{j} = fullfile(parts{j,1},['m',parts{j,2},'.nii']);
     end
 end
 
 if job.bias(2),
-    channel(1).wbiascorr = cell(n,1);
+    wbiascorr = cell(n,1);
     for j=1:n
-        channel(1).wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
+        wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
     end
 end
 
@@ -382,7 +383,9 @@ else
     fordef = {};
 end
 
-vout  = struct('channel',channel,'tiss',tiss,'label',{label},'wlabel',{wlabel},'param',{param},'invdef',{invdef},'fordef',{fordef});
+vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},...
+               'biascorr',{biascorr},'wbiascorr',{wbiascorr},'param',{param},...
+               'invdef',{invdef},'fordef',{fordef});
 %_______________________________________________________________________
 
 %_______________________________________________________________________
@@ -392,10 +395,10 @@ vf   = vout.param;
 if ~isempty(vout.invdef), vf = {vf{:}, vout.invdef{:}}; end
 if ~isempty(vout.fordef), vf = {vf{:}, vout.fordef{:}}; end
 
-if ~isempty(vout.channel(1).biascorr),   vf = {vf{:}, vout.channel(1).biascorr{:}};  end
-if ~isempty(vout.channel(1).wbiascorr),  vf = {vf{:}, vout.channel(1).wbiascorr{:}};  end
-if ~isempty(vout.channel(1).label),      vf = {vf{:}, vout.channel(1).label{:}};  end
-if ~isempty(vout.channel(1).wlabel),     vf = {vf{:}, vout.channel(1).wlabel{:}};  end
+if ~isempty(vout.biascorr),   vf = {vf{:}, vout.biascorr{:}};  end
+if ~isempty(vout.wbiascorr),  vf = {vf{:}, vout.wbiascorr{:}};  end
+if ~isempty(vout.label),      vf = {vf{:}, vout.label{:}};  end
+if ~isempty(vout.wlabel),     vf = {vf{:}, vout.wlabel{:}};  end
 
 for i=1:numel(vout.tiss)
     if ~isempty(vout.tiss(i).c),   vf = {vf{:}, vout.tiss(i).c{:}};   end
