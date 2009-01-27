@@ -30,9 +30,7 @@ else
 end
 
 N   = numel(res.image);
-%if nargin<2, tc = true(Kb,4); end % native, import, warped, warped-mod
 if nargin<2, tc = true(Kb,6); end % native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
-%if nargin<3, bf = true(N,2);  end % corrected, field
 if nargin<3, bf = true(N,2);  end % corrected, warp corrected
 if nargin<4, df = true(1,2);  end % inverse, forward
 if nargin<5, lb = true(1,2);  end % label, warped label
@@ -85,7 +83,7 @@ for n=1:N,
     end
 end
 
-do_cls   = any(tc(:)) || nargout>1;
+do_cls   = any(tc(:)) || any(lb) || nargout>1;
 tiss(Kb) = struct('Nt',[]);
 cls      = cell(1,Kb);
 for k1=1:Kb,
@@ -113,7 +111,7 @@ Coef{1} = spm_bsplinc(res.Twarp(:,:,:,1),prm);
 Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
-do_defs = any(df);
+do_defs = any(df) || bf(1,2) || lb(2);
 do_defs = do_cls | do_defs;
 if do_defs,
     if df(2),
@@ -128,7 +126,7 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
+    if bf(1,2) || lb(2) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
@@ -492,7 +490,7 @@ if any(tc(:,4)),
     clear C s
 end
 
-if lb(1,1),
+if lb(1),
     N      = nifti;
     N.dat  = file_array(fullfile(pth1,['p0', nam, '.nii']),...
                                 res.image(1).dim(1:3),...
@@ -507,13 +505,13 @@ end
 
 if bf(1,2),
     C = zeros(d1,'single');
-    c = single(chan(1).Nc.dat);
+    c = single(chan(1).Nc.dat(:,:,:,1,1));
     [c,w]  = dartel3('push',c,y,d1(1:3));
     C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
-                                d1,'float32',0,1,0)
+                                d1,'float32',0,1,0);
     N.mat  = M1;
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
@@ -521,7 +519,7 @@ if bf(1,2),
     N.dat(:,:,:) = C;
 end
 
-if lb(1,2),
+if lb(2),
     C = zeros(d1,'single');
     c = zeros(res.image(n).dim(1:3),'single');
     c(indx,indy,indz) = single(label);
