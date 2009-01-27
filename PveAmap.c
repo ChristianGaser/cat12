@@ -22,7 +22,7 @@ void PveAmap(double *src, unsigned char *priors, unsigned char *mask, unsigned c
   float *flow;
   
   /* change some default parameters */
-//  Niters = 10;
+/*  Niters = 10; */
   
   vol   = dims[0]*dims[1]*dims[2];
   vol2  = vol*2;
