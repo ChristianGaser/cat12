@@ -7,25 +7,14 @@ function tools = cg_vbm8_tools
 
 rev = '$Rev$';
 
-entry = inline(['struct(''type'',''entry'',''name'',name,',...
-        '''tag'',tag,''strtype'',strtype,''num'',num,''help'',{{}})'],...
-        'name','tag','strtype','num');
-
-files = inline(['struct(''type'',''files'',''name'',name,',...
-        '''tag'',tag,''filter'',fltr,''num'',num,''help'',{{}})'],...
-        'name','tag','fltr','num');
-
-mnu = inline(['struct(''type'',''menu'',''name'',name,',...
-        '''tag'',tag,''labels'',{labels},''values'',{values},''help'',{{}})'],...
-        'name','tag','labels','values');
-
-branch = inline(['struct(''type'',''branch'',''name'',name,',...
-        '''tag'',tag,''val'',{val},''help'',{{}})'],...
-        'name','tag','val');
-
 %_______________________________________________________________________
 
-data = files('Data','data','image',[1 Inf]);
+data = cfg_files;
+data.tag  = 'data';
+data.name = 'Volumes';
+data.filter = 'image';
+data.ufilter = '.*';
+data.num     = [1 Inf];
 data.help = {[...
 'Select raw data (e.g. T1 images) for processing. ',...
 'This assumes that there is one scan for each subject. ',...
@@ -34,33 +23,19 @@ data.help = {[...
 'for this method.']};
 
 %------------------------------------------------------------------------
-%------------------------------------------------------------------------
 
-data_label = files('Data','data','[cp]3.*\.[in][im][gi]$',[1 Inf]);
-data_label.help = {[...
-'Select segmented csf image. The segmented images are used for labeling where CSF is coded with "1", ',...
-'GM with "2", and WM with "3". This numeration differs from that used in SPM, but is in ',...
-'accordance to the commonly used labeling.'],...
-'',[...
-'To compute labeling you have to write all segmented images (csf, gm, and wm) before.']};
-
-th_label    = entry('Threshold for label','th_label','e',[1 1]);
-th_label.val = {0};
-th_label.help = {[...
-'Choose threshold for the sum of probabilities of GM+WM+CSF to mask label.']};
-
-label      = branch('Label segmentations','label',{data_label,th_label});
-label.prog   = @execute_label;
-label.help = {[...
-'Use segmented images to compute a labeled image where the tissue class with the maximal value ',...
-'is used for labeling. The resulting file is indicated by the index 0.']};
-
-%------------------------------------------------------------------------
-
-data_T2x = files('Data','data','^spmT.*\.[in][im][gi]$',[1 Inf]);
+data_T2x = cfg_files;
+data_T2x.tag  = 'data';
+data_T2x.name = 'Volumes';
+data_T2x.filter = 'image';
+data_T2x.ufilter = '^spmT.*\.[in][im][gi]$';
+data_T2x.num     = [1 Inf];
 data_T2x.help = {'Select spmT-images to convert.'};
 
-T2x      = branch('Threshold and transform spmT-maps','T2x',{data_T2x});
+T2x = cfg_exbranch;
+T2x.tag = 'T2x';
+T2x.name = 'Threshold and transform spmT-maps';
+T2x.val = {data_T2x};
 T2x.prog   = @cg_spmT2x;
 
 p0 = '';
@@ -116,32 +91,46 @@ T2x.help = {p1,p0,p2,p0,p3,p4,p3,p0,p5,p6,p7,p8,p9,p0,p3,p10,p3,p11,p12,p13,p0,p
 	p29,p30,p31,p32,p33,p0,p34,p35,p0,p36,p37,p38,p0,p39,p40,p0,p41,p0,p42,p43};
 %------------------------------------------------------------------------
 
-check_sd_files = files('Data','data','image',[1 Inf]);
-check_sd_files.help = {[...
+data.help = {[...
 'Select all images. Images have to be in the same orientation with same voxel size and dimension ',...
 '(e.g. normalized images)']};
 
-check_sd_scale    = mnu('Proportional scaling?','scale',{'no','yes'},{0,1});
-check_sd_scale.val = {0};
-check_sd_scale.help = {[...
+scale = cfg_menu;
+scale.tag = 'scale';
+scale.name = 'Proportional scaling?';
+scale.labels = {'no','yes'};
+scale.values = {0 1};
+scale.val = {0};
+scale.help = {[...
 'This option should be only used if image intensity is not scaled (e.g. T1 images) ',...
 'or if images have to be scaled during statistical analysis (e.g. modulated images).']};
 
-check_sd_sdname      = entry('Output standard deviation file','sd_name','s',[1 Inf]);
+check_sd_sdname = cfg_entry;
+check_sd_sdname.tag = 'sd_name';
+check_sd_sdname.name = 'Output standard deviation file';
+check_sd_sdname.strtype = 's';
+check_sd_sdname.num = [1 Inf];
 check_sd_sdname.val  = {'SD.nii'};
 check_sd_sdname.help  = {[...
 'The output file is written to current working directory ',...
 'unless a valid full pathname is given. If you do not want to write this file ',...
 'leave name empty.']};
 
-check_sd_meanname      = entry('Output mean file','mean_name','s',[1 Inf]);
+check_sd_meanname = cfg_entry;
+check_sd_meanname.tag = 'mean_name';
+check_sd_meanname.name = 'Output mean file';
+check_sd_meanname.strtype = 's';
+check_sd_meanname.num = [1 Inf];
 check_sd_meanname.val  = {'Mean.nii'};
 check_sd_meanname.help  = {[...
 'The output file is written to current working directory ',...
 'unless a valid full pathname is given. If you do not want to write this file ',...
 'leave name empty.']};
 
-check_sd      = branch('Check sample homogeneity across sample','check_sd',{check_sd_files,check_sd_scale,check_sd_meanname,check_sd_sdname});
+check_sd = cfg_exbranch;
+check_sd.tag = 'check_sd';
+check_sd.name = 'Check sample homogeneity across sample';
+check_sd.val = {data,scale,check_sd_meanname,check_sd_sdname};
 check_sd.prog   = @cg_check_sample_sd;
 check_sd.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...
@@ -161,23 +150,23 @@ check_sd.help = {[...
 
 %------------------------------------------------------------------------
 
-showslice_files = files('Data','data','image',[1 Inf]);
-showslice_files.help = {[...
+data.help = {[...
 'Select all images. Images have to be in the same orientation with same voxel size and dimension ',...
 '(e.g. normalized images)']};
 
-showslice_scale    = mnu('Proportional scaling?','scale',{'no','yes'},{0,1});
-showslice_scale.val = {0};
-showslice_scale.help = {[...
-'This option should be only used if image intensity is not scaled (e.g. T1 images) ',...
-'or if images have to be scaled during statistical analysis (e.g. modulated images).']};
-
-showslice_slice    = entry('Slice (in mm)?','slice','e',[1 1]);
-showslice_slice.val = {0};
+showslice_slice = cfg_entry;
+showslice_slice.tag = 'slice';
+showslice_slice.name = 'Slice (in mm)?';
+showslice_slice.strtype = 'e';
+showslice_slice.num = [1 1];
+showslice_slice.val  = {0};
 showslice_slice.help = {[...
 'Choose slice in mm.']};
 
-showslice      = branch('Display one slice for all images','showslice',{showslice_files,showslice_scale,showslice_slice});
+showslice = cfg_exbranch;
+showslice.tag = 'showslice';
+showslice.name = 'Display one slice for all images';
+showslice.val = {data,scale,showslice_slice};
 showslice.prog   = @cg_showslice_all;
 showslice.help = {[...
 'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality ',...
@@ -185,17 +174,29 @@ showslice.help = {[...
 
 %------------------------------------------------------------------------
 
-calcvol_files = files('Data','data','seg8.*\.txt$',[1 Inf]);
+calcvol_files = cfg_files;
+calcvol_files.tag  = 'data';
+calcvol_files.name = 'Volumes';
+calcvol_files.filter = '*';
+calcvol_files.ufilter = 'seg8.*\.txt$';
+calcvol_files.num     = [1 Inf];
 calcvol_files.help = {[...
 'Select all *_seg8.txt files containing raw volumes, which were saved by VBM8 toolbox.']};
 
-calcvol_name      = entry('Output Filename','calcvol_name','s',[1 Inf]);
+calcvol_name = cfg_entry;
+calcvol_name.tag = 'calcvol_name';
+calcvol_name.name = 'Output file';
+calcvol_name.strtype = 's';
+calcvol_name.num = [1 Inf];
 calcvol_name.val  = {'raw_volumes.txt'};
 calcvol_name.help  = {[...
 'The output file is written to current working directory ',...
 'unless a valid full pathname is given']};
 
-calcvol      = branch('Read raw volumes (GM/WM/CSF/Total)','calcvol',{calcvol_files,calcvol_name});
+calcvol = cfg_exbranch;
+calcvol.tag = 'calcvol';
+calcvol.name = 'Read raw volumes (GM/WM/CSF/Total)';
+calcvol.val = {calcvol_files,calcvol_name};
 calcvol.prog   = @execute_calcvol;
 calcvol.help = {[...
 'This function reads raw volumes for GM/WM/CSF/Total and saves values in a txt-file. ',...
@@ -212,10 +213,10 @@ calcvol.help = {[...
 
 %------------------------------------------------------------------------
 
-tools.type = 'repeat';
+tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_sd,showslice,calcvol,T2x,label};
+tools.values = {check_sd,showslice,calcvol,T2x};
 
 return
 
@@ -244,59 +245,4 @@ if fclose(fid)==0
 end
 
 return
-
 %------------------------------------------------------------------------
-%------------------------------------------------------------------------
-function execute_label(p)
-%
-% calculate label of all tissue classes using probalities
-%
-
-spm_progress_bar('init',length(p.data),'Create labeling','completed');
-for i=1:length(p.data)
-    % image containing "p3" is csf
-    csf = char(char(p.data{i}));
-    [pth,nam,ext] = spm_fileparts(csf);
-    % find "p3" or "c3" string
-    ind = strfind(nam,'p3');
-    if isempty(ind)
-	    ind = strfind(nam,'c3');
-    end
-    % and replace it for gm and wm
-    wm = fullfile(pth,[nam(1:ind(1)) '2' nam(ind(1)+2:end) ext]);
-    gm = fullfile(pth,[nam(1:ind(1)) '1' nam(ind(1)+2:end) ext]);
-    
-    if ~exist(wm)
-        error(['File ' wm ' not found']);
-    end
-    if ~exist(gm)
-        error(['File ' gm ' not found']);
-    end
-    % use csf-gm-wm for correct labeling
-    V = spm_vol(str2mat(csf,gm,wm));
-
-    gwc = spm_read_vols(V);
-    
-    % label segmentations
-    % label is only defined if sum of all tissues is > 0.1
-    mask_gwc = (sum(gwc,4) > 0);
-
-    label = zeros(V(1).dim(1:3));
-    label(find((gwc(:,:,:,1) >= gwc(:,:,:,3)) & (gwc(:,:,:,1) >= gwc(:,:,:,2)))) = 1;
-    label(find((gwc(:,:,:,2) >= gwc(:,:,:,3)) & (gwc(:,:,:,2) >= gwc(:,:,:,1)))) = 2;
-    label(find((gwc(:,:,:,3) >= gwc(:,:,:,1)) & (gwc(:,:,:,3) >= gwc(:,:,:,2)))) = 3;
-
-    clear gwc
-    label = label.*mask_gwc;
-    
-    % replace p3 or c3 with pl/cl
-    V(1).fname = fullfile(pth,[nam(1:ind(1)) '0' nam(ind(1)+2:end) ext]);
-    V(1).pinfo = [0 0 1]';
-    spm_write_vol(V(1),label);
-    spm_progress_bar('set',i);
-end
-spm_progress_bar('clear');
-
-return
-%------------------------------------------------------------------------
-

@@ -206,7 +206,7 @@ samp.tag = 'samp';
 samp.name = 'Sampling distance';
 samp.strtype = 'e';
 samp.num = [1 1];
-samp.val  = {3};
+samp.def  = @(val)spm_get_defaults('vbm8.opts.samp', val{:});
 samp.help = {[...
 'The approximate distance between sampled points when estimating the ',...
 'model parameters. Smaller values use more of the data, but the procedure ',...
@@ -627,8 +627,7 @@ tools = cg_vbm8_tools;
 vbm8  = cfg_choice;
 vbm8.name = 'VBM8';
 vbm8.tag  = 'vbm8';
-%vbm8.values = {estwrite,write,tools};
-vbm8.values = {estwrite,write};
+vbm8.values = {estwrite,write,tools};
 %vbm8.vout = @vout;
 %------------------------------------------------------------------------
 
