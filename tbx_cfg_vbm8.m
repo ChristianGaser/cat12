@@ -1,10 +1,10 @@
-function job = cg_config_vbm8
+function vbm8 = tbx_cfg_vbm8
 % Configuration file for Segment jobs
 %_______________________________________________________________________
 % Copyright (C) 2008 Wellcome Department of Imaging Neuroscience
 
 % based on John Ashburners version of
-% spm_config_preproc8.m 2264 2008-09-30 18:48:59Z john
+% tbx_cfg_preproc8.m
 %
 % Christian Gaser
 % $Id$
@@ -13,46 +13,33 @@ rev = '$Rev$';
 
 cg_vbm8_defaults
 
-addpath(fullfile(spm('dir'),'toolbox','vbm8'));
-%_______________________________________________________________________
-
-entry = inline(['struct(''type'',''entry'',''name'',name,'...
-        '''tag'',tag,''strtype'',strtype,''num'',num,''help'',{{}})'],...
-        'name','tag','strtype','num');
-
-files = inline(['struct(''type'',''files'',''name'',name,'...
-        '''tag'',tag,''filter'',fltr,''num'',num,''help'',{{}})'],...
-        'name','tag','fltr','num');
-
-mnu = inline(['struct(''type'',''menu'',''name'',name,'...
-        '''tag'',tag,''labels'',{labels},''values'',{values},''help'',{{}})'],...
-        'name','tag','labels','values');
-
-branch = inline(['struct(''type'',''branch'',''name'',name,'...
-        '''tag'',tag,''val'',{val},''help'',{{}})'],...
-        'name','tag','val');
-
-repeat = inline(['struct(''type'',''repeat'',''name'',name,'...
-        '''tag'',tag,''values'',{values})'],...
-        'name','tag','values');
+addpath(fileparts(which(mfilename)));
 
 %_______________________________________________________________________
 
-data = files('Volumes','data','image',[1 Inf]);
+data = cfg_files;
+data.tag  = 'data';
+data.name = 'Volumes';
 data.help = {[...
 'Select raw data (e.g. T1 images) for processing. ',...
 'This assumes that there is one scan for each subject. ',...
 'Note that multi-spectral (when there are two or more registered ',...
 'images of different contrasts) processing is not yet implemented ',...
 'for this method.']};
+data.filter = 'image';
+data.ufilter = '.*';
+data.num     = [1 Inf];
 
 %------------------------------------------------------------------------
 % various options for estimating the segmentations
 %------------------------------------------------------------------------
 
-ngaus      = entry('Gaussians per class','ngaus','n',[1 6]);
-ngaus.def  = 'vbm8.opts.ngaus';
-%ngaus.val   = {[2 2 2 3 4 2]};
+ngaus      = cfg_entry;
+ngaus.tag  = 'ngaus';
+ngaus.name = 'Gaussians per class';
+ngaus.strtype = 'e';
+ngaus.num = [1 6];
+ngaus.def  = @(val)spm_get_defaults('vbm8.opts.ngaus', val{:});
 ngaus.help = {[...
 'The number of Gaussians used to represent the intensity distribution '...
 'for each tissue class can be greater than one. '...
@@ -85,14 +72,16 @@ ngaus.help = {[...
 
 %------------------------------------------------------------------------
 
-biasreg = mnu('Bias regularisation','biasreg',{...
+biasreg = cfg_menu;
+biasreg.tag  = 'biasreg';
+biasreg.name = 'Bias regularisation';
+biasreg.def  = @(val)spm_get_defaults('vbm8.opts.biasreg', val{:});
+biasreg.labels = {...
 'no regularisation (0)','extremely light regularisation (0.00001)',...
 'very light regularisation (0.0001)','light regularisation (0.001)',...
 'medium regularisation (0.01)','heavy regularisation (0.1)',...
-'very heavy regularisation (1)','extremely heavy regularisation (10)'},...
-{0, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10});
-biasreg.def = 'vbm8.opts.biasreg';
-%biasreg.val  = {0.0001};
+'very heavy regularisation (1)','extremely heavy regularisation (10)'};
+biasreg.values = {0, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10};
 biasreg.help = {[...
 'MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity ',...
 'of the image (bias). ',...
@@ -120,13 +109,15 @@ biasreg.help = {[...
 
 %------------------------------------------------------------------------
 
-biasfwhm    = mnu('Bias FWHM','biasfwhm',{...
+biasfwhm    = cfg_menu;
+biasfwhm.tag = 'biasfwhm';
+biasfwhm.name = 'Bias FWHM';
+biasfwhm.labels = {...
 '30mm cutoff','40mm cutoff','50mm cutoff','60mm cutoff','70mm cutoff',...
 '80mm cutoff','90mm cutoff','100mm cutoff','110mm cutoff','120mm cutoff',...
-'130mm cutoff','140mm cutoff','150mm cutoff','No correction'},...
-{30,40,50,60,70,80,90,100,110,120,130,140,150,Inf});
-biasfwhm.def = 'vbm8.opts.biasfwhm';
-%biasfwhm.val  = {60};
+'130mm cutoff','140mm cutoff','150mm cutoff','No correction'};
+biasfwhm.values = {30,40,50,60,70,80,90,100,110,120,130,140,150,Inf};
+biasfwhm.def  = @(val)spm_get_defaults('vbm8.opts.biasfwhm', val{:});
 biasfwhm.help = {[...
 'FWHM of Gaussian smoothness of bias. ',...
 'If your intensity non-uniformity is very smooth, then choose a large ',...
@@ -139,9 +130,12 @@ biasfwhm.help = {[...
 
 %------------------------------------------------------------------------
 
-warpreg      = entry('Warping Regularisation','reg','e',[1 1]);
-warpreg.def = 'vbm8.opts.warpreg';
-%warpreg.val  = {4};
+warpreg      = cfg_entry;
+warpreg.def  = @(val)spm_get_defaults('vbm8.opts.warpreg', val{:});
+warpreg.tag = 'warpreg';
+warpreg.name = 'Warping Regularisation';
+warpreg.strtype = 'e';
+warpreg.num = [1 1];
 warpreg.help = {[...
 'The objective function for registering the tissue probability maps to the ',...
 'image to process, involves minimising the sum of two terms. ',...
@@ -157,12 +151,13 @@ warpreg.help = {[...
 'where the smoothness measure is determined by the bending energy of the deformations. ']};
 %------------------------------------------------------------------------
 
-affreg = mnu('Affine Regularisation','affreg',...
-   {'No Affine Registration','ICBM space template - European brains',...
-    'ICBM space template - East Asian brains', 'Average sized template','No regularisation'},...
-   {'','mni','eastern','subj','none'});
-affreg.def = 'vbm8.opts.affreg';
-%affreg.val  = {'mni'};
+affreg = cfg_menu;
+affreg.tag = 'affreg';
+affreg.name = 'Affine Regularisation';
+affreg.labels = {'No Affine Registration','ICBM space template - European brains',...
+    'ICBM space template - East Asian brains', 'Average sized template','No regularisation'};
+affreg.values = {'','mni','eastern','subj','none'};
+affreg.def  = @(val)spm_get_defaults('vbm8.opts.affreg', val{:});
 affreg.help = {[...
 'The procedure is a local optimisation, so it needs reasonable initial '...
 'starting estimates. Images should be placed in approximate alignment '...
@@ -189,12 +184,14 @@ affreg.help = {[...
 
 %------------------------------------------------------------------------
 
-affmethod = mnu('Affine Registration Method','affmethod',{...
+affmethod = cfg_menu;
+affmethod.tag = 'affmethod';
+affmethod.name = 'Affine Registration Method';
+affmethod.labels = {...
     'Seg Default (mutual information)',...
-    'Least Squares with masked T1 template'},...
-    {0, 1});
-affmethod.def = 'vbm8.opts.affmethod';
-%affmethod.val  = {1};
+    'Least Squares with masked T1 template'};
+affmethod.values = {0, 1};
+affmethod.def  = @(val)spm_get_defaults('vbm8.opts.affmethod', val{:});
 affmethod.help = {[...
 'An initial affine registration is neccessary to register images ',...
 'to MNI space. As default this registration is based on mutual information and ',...
@@ -204,7 +201,11 @@ affmethod.help = {[...
 
 %------------------------------------------------------------------------
 
-samp      = entry('Sampling distance','samp','e',[1 1]);
+samp      = cfg_entry;
+samp.tag = 'samp';
+samp.name = 'Sampling distance';
+samp.strtype = 'e';
+samp.num = [1 1];
 samp.val  = {3};
 samp.help = {[...
 'The approximate distance between sampled points when estimating the ',...
@@ -213,7 +214,10 @@ samp.help = {[...
 
 %------------------------------------------------------------------------
 
-opts      = branch('Estimation options','opts',{ngaus,biasreg,biasfwhm,affmethod,affreg,warpreg,samp});
+opts      = cfg_branch;
+opts.tag = 'opts';
+opts.name = 'Estimation options';
+opts.val = {ngaus,biasreg,biasfwhm,affmethod,affreg,warpreg,samp};
 opts.help = {[...
 'Various options can be adjusted in order to improve the performance of the ',...
 'algorithm with your data.  Knowing what works best should be a matter ',...
@@ -226,9 +230,12 @@ opts.help = {[...
 % options for output
 %-----------------------------------------------------------------------
 
-bb      = entry('Bounding box','bb','e',[2 3]);
-bb.def = 'vbm8.extopts.bb';
-%bb.val  = {[[-78 78]' [-112 76]' [-70 85]']};
+bb      = cfg_entry;
+bb.tag = 'bb';
+bb.name = 'Bounding box';
+bb.strtype = 'e';
+bb.num = [2 3];
+bb.def  = @(val)spm_get_defaults('vbm8.extopts.bb', val{:});
 bb.help = {[...
 'The bounding box (in mm) of any spatially normalised volumes to be written ',...
 '(relative to the anterior commissure). '...
@@ -237,9 +244,12 @@ bb.help = {[...
 
 %------------------------------------------------------------------------
 
-vox      = entry('Voxel size','vox','e',[1 1]);
-vox.def = 'vbm8.extopts.vox';
-%vox.val  = {1};
+vox      = cfg_entry;
+vox.tag = 'vox';
+vox.name = 'Voxel size';
+vox.strtype = 'e';
+vox.num = [1 1];
+vox.def  = @(val)spm_get_defaults('vbm8.extopts.vox', val{:});
 vox.help = {...
 ['The (isotropic) voxel sizes of any spatially normalised written images. '...
  'A non-finite value will be replaced by the average voxel size of '...
@@ -247,8 +257,8 @@ vox.help = {...
 
 %------------------------------------------------------------------------
 
+cleanup = cfg_menu;
 cleanup.tag  = 'cleanup';
-cleanup.type = 'menu';
 cleanup.name = 'Clean up any partitions';
 cleanup.help = {[...
 'This uses a crude routine for extracting the brain from segmented',...
@@ -262,14 +272,18 @@ cleanup.help = {[...
 'may wish to disable or tone down the cleanup procedure.']};
 cleanup.labels = {'Dont do cleanup','Light Clean','Thorough Clean'};
 cleanup.values = {0 1 2};
-cleanup.def = 'vbm8.extopts.cleanup';
-%cleanup.val    = {0};
+cleanup.def  = @(val)spm_get_defaults('vbm8.extopts.cleanup', val{:});
 
 %------------------------------------------------------------------------
 
-brainmask = files('Brainmask for skull stripping','brainmask','image',[1 1]);
-brainmask.def = 'vbm8.extopts.brainmask';
-%brainmask.val = {{fullfile(fileparts(which(mfilename)),'brainmask_LPBA40.nii')}};
+brainmask = cfg_files;
+brainmask.tag = 'brainmask';
+brainmask.name = 'Brainmask for skull stripping';
+brainmask.dir = fileparts(which(mfilename));
+brainmask.filter = 'image';
+brainmask.ufilter = '.*';
+brainmask.num = [1 1];
+brainmask.def  = @(val)spm_get_defaults('vbm8.extopts.brainmask', val{:});
 brainmask.help = {[...
 'The segmentation should be restricted to intracranial parts of the brain and ',...
 'therefore the skull and scalp have to be removed from the images. In SPM this is ',...
@@ -282,9 +296,12 @@ brainmask.help = {[...
 
 %------------------------------------------------------------------------
 
-brainmask_th      = entry('Threshold for brainmask','brainmask_th','e',[1 1]);
-brainmask_th.def = 'vbm8.extopts.brainmask_th';
-%brainmask_th.val  = {0.5};
+brainmask_th      = cfg_entry;
+brainmask_th.tag = 'brainmask_th';
+brainmask_th.name = 'Threshold for brainmask';
+brainmask_th.strtype = 'e';
+brainmask_th.num = [1 1];
+brainmask_th.def  = @(val)spm_get_defaults('vbm8.extopts.brainmask_th', val{:});
 brainmask_th.help = {...
 ['The default threshold is 0.5, which means that all areas, where the probability '...
  'of the brainmask is > 50% are used as mask. This default threshold works very well '...
@@ -293,32 +310,48 @@ brainmask_th.help = {...
 
 %------------------------------------------------------------------------
 
-print    = mnu('Display and print results','print',{'yes','no'},{1,0});
-print.def = 'vbm8.extopts.print';
-%print.val    = {1};
+print    = cfg_menu;
+print.tag = 'print';
+print.name = 'Display and print results';
+print.labels = {'yes','no'};
+print.values = {0 1};
+print.def  = @(val)spm_get_defaults('vbm8.extopts.print', val{:});
 print.help = {[...
 'The normalized T1 image and the normalized segmentations can be displayed and printed to a ',...
 'ps-file. This is often helpful to check whether registration and segmentation were successful.']};
 
 %------------------------------------------------------------------------
 
-extopts      = branch('Extended options','extopts',{bb,brainmask,brainmask_th});
+extopts      = cfg_branch;
+extopts.tag = 'extopts';
+extopts.name = 'Extended options';
+extopts.val = {bb,brainmask,brainmask_th};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
 % options for data
 %------------------------------------------------------------------------
 
-native    = mnu('Native space','native',{'none','yes'},{0,1});
+native    = cfg_menu;
+native.tag = 'native';
+native.name = 'Native space';
+native.labels = {'none','yes'};
+native.values = {0 1};
 native.help = {'Write image in native space.'};
 
-warped    = mnu('Normalized','warped',{'none','yes'},{0,1});
+warped    = cfg_menu;
+warped.tag = 'warped';
+warped.name = 'Normalized';
+warped.labels = {'none','yes'};
+warped.values = {0 1};
 warped.help = {'Write image in normalized space.'};
 
-%native.def    = 'vbm8.output.bias(1)';
-native.def    = @(val)spm_get_defaults('vbm8.output.bias', val{:});
-warped.def    = 'vbm8.output.bias(2)';
-bias      = branch('Bias Corrected','bias',{native, warped});
+native.def  = @(val)spm_get_defaults('vbm8.output.bias.native', val{:});
+warped.def  = @(val)spm_get_defaults('vbm8.output.bias.warped', val{:});
+bias      = cfg_branch;
+bias.tag = 'bias';
+bias.name = 'Bias Corrected';
+bias.val = {native, warped};
 bias.help = {[...
 'This is the option to save a bias corrected version of your image. ',...
 'MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity ',...
@@ -329,16 +362,23 @@ bias.help = {[...
 
 %------------------------------------------------------------------------
 
-native.def    = 'vbm8.output.label(1)';
-warped.def    = 'vbm8.output.label(2)';
-label      = branch('PVE label image','label',{native, warped});
+native.def  = @(val)spm_get_defaults('vbm8.output.label.native', val{:});
+warped.def  = @(val)spm_get_defaults('vbm8.output.label.warped', val{:});
+label      = cfg_branch;
+label.tag = 'label';
+label.name = 'PVE label image';
+label.val = {native, warped};
 label.help = {[...
 'This is the option to save a labeled version of your segmentations. ',...
 'Labels are saved as PVE values.']};
 
 %------------------------------------------------------------------------
 
-modulated    = mnu('Modulated normalized','modulated',{'none','affine + non-linear (SPM8 default)','non-linear only'},{0,1,2});
+modulated    = cfg_menu;
+modulated.tag = 'modulated';
+modulated.name = 'Modulated normalized';
+modulated.labels = {'none','affine + non-linear (SPM8 default)','non-linear only'};
+modulated.values = {0 1 2};
 modulated.help = {[...
 'Modulation is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
 'causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). ',...
@@ -364,46 +404,65 @@ modulated.help = {[...
 'multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. ',...
 'These modulated images are indicated by "m0" instead of "m". ']};
 
-dartel    = mnu('DARTEL export','dartel',{'none','rigid (SPM8 default)','affine'},{0,1,2});
+dartel    = cfg_menu;
+dartel.tag = 'dartel';
+dartel.name = 'DARTEL export';
+dartel.labels = {'none','rigid (SPM8 default)','affine'};
+dartel.values = {0 1 2};
 dartel.help = {['This option is to export data into a form that can be used with DARTEL.',...
 'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
-native.def    = 'vbm8.output.grey(1)';
-warped.def    = 'vbm8.output.grey(2)';
-modulated.def = 'vbm8.output.grey(3)';
-dartel.def    = 'vbm8.output.grey(4)';
-grey          = branch('Grey matter','GM',{native, warped, modulated, dartel});
+native.def    = @(val)spm_get_defaults('vbm8.output.grey.native', val{:});
+warped.def    = @(val)spm_get_defaults('vbm8.output.grey.warped', val{:});
+modulated.def = @(val)spm_get_defaults('vbm8.output.grey.mod', val{:});
+dartel.def    = @(val)spm_get_defaults('vbm8.output.grey.dartel', val{:});
+grey      = cfg_branch;
+grey.tag = 'GM';
+grey.name = 'Grey matter';
+grey.val = {native, warped, modulated, dartel};
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'};
 
-native.def    = 'vbm8.output.white(1)';
-warped.def    = 'vbm8.output.white(2)';
-modulated.def = 'vbm8.output.white(3)';
-dartel.def    = 'vbm8.output.white(4)';
-white         = branch('White matter','WM',{native, warped, modulated, dartel});
+native.def    = @(val)spm_get_defaults('vbm8.output.white.native', val{:});
+warped.def    = @(val)spm_get_defaults('vbm8.output.white.warped', val{:});
+modulated.def = @(val)spm_get_defaults('vbm8.output.white.mod', val{:});
+dartel.def    = @(val)spm_get_defaults('vbm8.output.white.dartel', val{:});
+white      = cfg_branch;
+white.tag = 'WM';
+white.name = 'White matter';
+white.val = {native, warped, modulated, dartel};
 white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and mwp2*.img.'};
 
-native.def    = 'vbm8.output.csf(1)';
-warped.def    = 'vbm8.output.csf(2)';
-modulated.def = 'vbm8.output.csf(3)';
-dartel.def    = 'vbm8.output.csf(4)';
-csf         = branch('Cerebro-Spinal Fluid (CSF)','CSF',{native, warped, modulated, dartel});
+native.def    = @(val)spm_get_defaults('vbm8.output.csf.native', val{:});
+warped.def    = @(val)spm_get_defaults('vbm8.output.csf.warped', val{:});
+modulated.def = @(val)spm_get_defaults('vbm8.output.csf.mod', val{:});
+dartel.def    = @(val)spm_get_defaults('vbm8.output.csf.dartel', val{:});
+csf      = cfg_branch;
+csf.tag = 'CSF';
+csf.name = 'Cerebro-Spinal Fluid (CSF)';
+csf.val = {native, warped, modulated, dartel};
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'};
 
 %------------------------------------------------------------------------
 
-warps = mnu('Deformation Fields','warps',{...
+warps = cfg_menu;
+warps.tag = 'warps';
+warps.name = 'Deformation Fields';
+warps.labels = {...
     'None',...
     'Inverse',...
     'Forward',...
-    'Inverse + Forward'},...
-    {[0 0],[1 0],[0 1],[1 1]});
-warps.def  = 'vbm8.output.warps';
+    'Inverse + Forward'};
+warps.values = {[0 0],[1 0],[0 1],[1 1]};
+warps.def  = @(val)spm_get_defaults('vbm8.output.warps', val{:});
 warps.help = {'Deformation fields can be written.'};
 
 %------------------------------------------------------------------------
 
-output  = branch('Writing options','output',{grey, white, csf, bias, label, warps});
+output      = cfg_branch;
+output.tag = 'output';
+output.name = 'Writing options';
+output.val = {grey, white, csf, bias, label, warps};
 output.help = {[...
 'This routine produces spatial normalisation parameters (*_seg8_sn.mat files) by default. '],...
 '',...
@@ -496,8 +555,11 @@ output.help = {[...
 
 %------------------------------------------------------------------------
 
-estwrite        = branch('VBM8: Estimate & Write','estwrite',{data,opts,output,extopts});
-estwrite.prog   = @execute;
+estwrite      = cfg_exbranch;
+estwrite.tag = 'estwrite';
+estwrite.name = 'VBM8: Estimate & Write';
+estwrite.val = {data,opts,output,extopts};
+estwrite.prog   = @cg_vbm8_run;
 estwrite.help   = {[...
 'This toolbox is currently only work in progress, and is an extension of the default ',...
 'unified segmentation.  The algorithm is essentially the same as that described in the ',...
@@ -547,8 +609,11 @@ estwrite.help   = {[...
 
 %------------------------------------------------------------------------
 
-write        = branch('VBM8: Write already estimated segmentations','write',{data,output,extopts});
-write.prog   = @execute;
+write      = cfg_exbranch;
+write.tag = 'write';
+write.name = 'VBM8: Write already estimated segmentations';
+write.val = {data,output,extopts};
+write.prog   = @cg_vbm8_run;
 write.help   = {[...
 'Allows previously estimated segmentations (stored in imagename''_seg8.mat'' files) ',...
 'to save the segmented images only without estimating the segmentation again. ',...
@@ -559,21 +624,11 @@ write.help   = {[...
 tools = cg_vbm8_tools;
 %------------------------------------------------------------------------
 
-job.type = 'repeat';
-job.name = 'VBM8';
-job.tag  = 'vbm8';
-job.values = {estwrite,write,tools};
-
-return;
+vbm8  = cfg_choice;
+vbm8.name = 'VBM8';
+vbm8.tag  = 'vbm8';
+%vbm8.values = {estwrite,write,tools};
+vbm8.values = {estwrite,write};
+%vbm8.vout = @vout;
 %------------------------------------------------------------------------
-
-%------------------------------------------------------------------------
-function execute(job)
-cg_vbm8_run(job);
-
-function vf = vfiles(job)
-vf = cg_vbm8_run(job,'vfiles');
-
-function msg = check(job)
-msg = cg_vbm8_run(job,'check');
 
