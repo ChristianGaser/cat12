@@ -214,7 +214,7 @@ for iter=1:nit,
             % re-estimating the template data.
             N    = numel(job.channel);
             K    = numel(job.tissue);
-            cls  = spm_preproc_write8(res,zeros(K,4),zeros(N,2),[0 0]);
+            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0], job.warp);
             for k=1:K,
                 SS(:,:,:,k) = SS(:,:,:,k) + cls{k};
             end
