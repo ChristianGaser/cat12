@@ -46,8 +46,8 @@ defaults.vbm8.output.white.mod    = 2;	% WM
 defaults.vbm8.output.white.dartel = 0;	% WM
 
 defaults.vbm8.output.csf.native = 0;	% CSF
-defaults.vbm8.output.csf.warped = 1;	% CSF
-defaults.vbm8.output.csf.mod    = 2;	% CSF
+defaults.vbm8.output.csf.warped = 0;	% CSF
+defaults.vbm8.output.csf.mod    = 0;	% CSF
 defaults.vbm8.output.csf.dartel = 0;	% CSF
 
 % order is [inverse forward]
