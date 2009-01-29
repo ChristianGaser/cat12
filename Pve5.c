@@ -55,7 +55,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = (unsigned char) ROUND(255.0*(1-w));
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*w);
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(2.0 - w));
+          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(1.0 + w));
           break;
         case WMGMLABEL+1: /*WMGM */
           w = (src[ind] - mean[GMLABEL])/(mean[WMLABEL]-mean[GMLABEL]);
@@ -63,7 +63,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*(1-w));
           new_val[WMLABEL]  = (unsigned char) ROUND(255.0*w);
-          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(3 - w));
+          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(2.0 + w));
           break;
         }
 
