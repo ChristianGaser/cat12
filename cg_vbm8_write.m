@@ -338,7 +338,7 @@ if any(tc(:,2)),
 end
 
 if any(tc(:,3)),
-	disp('Dartel-affine not yet prepared.');
+	disp('Dartel-affine not yet fully prepared.');
 
     % Figure out the mapping from the volumes to create to the original
     mm = [[
@@ -366,16 +366,16 @@ if any(tc(:,3)),
     x      = affind(rgrid(d),M0);
     y1     = affind(y,M1);
     ind    = find(tc(:,3));
-    [M,R]  = spm_get_closest_affine(x,y1,single(cls{ind(1)})/255);
+    [Ma,R]  = spm_get_closest_affine(x,y1,single(cls{ind(1)})/255);
     clear x y1
 
-    M      = M0\M1*vx2/vx3;
-    mat0   =    M1*vx2/vx3;
+    M      = M0\inv(Ma)*M1*vx2/vx3;
+    mat0   =    inv(Ma)*M1*vx2/vx3;
     mat    = mm/vx3;
 
     fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
     for k1=1:size(tc,1),
-        if tc(k1,2),
+        if tc(k1,3),
             tmp1     = decimate(single(cls{k1}),fwhm);
             [pth,nam,ext1]=fileparts(res.image(1).fname);
             VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
@@ -386,7 +386,10 @@ if any(tc(:,3)),
             VT = spm_create_vol(VT);
 
             Ni             = nifti(VT.fname);
+            % get rid of the QFORM0 rounding warning
+            warning off
             Ni.mat0        = mat0;
+            warning on
             Ni.mat_intent  = 'Aligned';
             Ni.mat0_intent = 'Aligned';
             create(Ni);
