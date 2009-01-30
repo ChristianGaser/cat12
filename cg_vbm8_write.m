@@ -14,7 +14,6 @@ rev = '$Rev$';
 
 % Read essentials from tpm (it will be cleared later)
 
-tpm
 if ~isstruct(tpm) || ~isfield(tpm, 'bg'),
     tpm = spm_load_priors8(tpm);
 end
