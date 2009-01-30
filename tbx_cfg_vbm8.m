@@ -346,12 +346,20 @@ warped.labels = {'none','yes'};
 warped.values = {0 1};
 warped.help = {'Write image in normalized space.'};
 
+affine    = cfg_menu;
+affine.tag = 'affine';
+affine.name = 'Affine';
+affine.labels = {'none','yes'};
+affine.values = {0 1};
+affine.help = {'Write image in normalized space, but restricted to afine transformation.'};
+
 native.def  = @(val)spm_get_defaults('vbm8.output.bias.native', val{:});
 warped.def  = @(val)spm_get_defaults('vbm8.output.bias.warped', val{:});
+affine.def  = @(val)spm_get_defaults('vbm8.output.bias.affine', val{:});
 bias      = cfg_branch;
 bias.tag = 'bias';
 bias.name = 'Bias Corrected';
-bias.val = {native, warped};
+bias.val = {native, warped, affine};
 bias.help = {[...
 'This is the option to save a bias corrected version of your image. ',...
 'MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity ',...
