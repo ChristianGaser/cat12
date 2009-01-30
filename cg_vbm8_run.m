@@ -208,13 +208,13 @@ for iter=1:nit,
             tmp2 = job.bias;
             tmp3 = job.warp.write;
             tmp4 = job.label;
-            cg_vbm8_write(res, tmp1, tmp2, tmp3, tmp4, job.warp);
+            cg_vbm8_write(res, tmp1, tmp2, tmp3, tmp4, job.warp, job.tissue);
         else
             % Not the final iteration, so compute sufficient statistics for
             % re-estimating the template data.
             N    = numel(job.channel);
             K    = numel(job.tissue);
-            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0], job.warp);
+            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0], job.warp, job.tissue);
             for k=1:K,
                 SS(:,:,:,k) = SS(:,:,:,k) + cls{k};
             end
