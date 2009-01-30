@@ -31,7 +31,7 @@ end
 
 N   = numel(res.image);
 if nargin<2, tc = true(Kb,6); end % native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
-if nargin<3, bf = true(N,2);  end % corrected, warp corrected
+if nargin<3, bf = true(N,3);  end % corrected, warp corrected, affine corrected
 if nargin<4, df = true(1,2);  end % inverse, forward
 if nargin<5, lb = true(1,2);  end % label, warped label
 if nargin < 6
@@ -88,9 +88,6 @@ tiss(Kb) = struct('Nt',[]);
 cls      = cell(1,Kb);
 for k1=1:Kb,
     cls{k1} = zeros(d(1:3),'uint8');
-%    if tc(k1,6) || tc(k1,5) || any(tc(:,4)) || tc(k1,3) || tc(k1,2) || nargout>=1,
-%        do_cls  = true;
-%    end
     if tc(k1,1),
         tiss(k1).Nt      = nifti;
         tiss(k1).Nt.dat  = file_array(fullfile(pth,['p', num2str(k1), nam, '.nii']),...
@@ -126,7 +123,7 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if bf(1,2) || lb(2) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
+    if bf(1,2) || bf(1,3) ||lb(2) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
@@ -136,8 +133,8 @@ M = M1\res.Affine*res.image(1).mat;
 
 % load brainmask
 if do_defs,
-	Vmask = spm_vol(warp.brainmask);
-	mask = zeros(res.image(1).dim(1:3),'single');
+    Vmask = spm_vol(warp.brainmask);
+    mask = zeros(res.image(1).dim(1:3),'single');
 end
 
 for z=1:length(x3),
@@ -218,36 +215,36 @@ clear q q1 Coef
 
 if do_cls & do_defs,
 
-	% use mask from LPBA40 sample or own mask
-	mask = uint8(mask > warp.brainmask_th);
+    % use mask from LPBA40 sample or own mask
+    mask = uint8(mask > warp.brainmask_th);
 
     % use index to speed up and save memory
     sz = size(mask);
-	[indx, indy, indz] = ind2sub(sz,find(mask>0));
-	indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-	indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-	indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+    [indx, indy, indz] = ind2sub(sz,find(mask>0));
+    indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+    indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+    indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 
     % calculate label image for GM/WM/CSF 
     label = repmat(uint8(0),size(cls{1}(indx,indy,indz)));
-	label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 2;
-	label(find((cls{2}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{2}(indx,indy,indz) >= cls{1}(indx,indy,indz)))) = 3;
-	label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
+    label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 2;
+    label(find((cls{2}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{2}(indx,indy,indz) >= cls{1}(indx,indy,indz)))) = 3;
+    label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
 
     % mask source image because Amap needs a skull stripped image
-	src = chan(1).Nc.dat(indx,indy,indz,1,1);
+    src = chan(1).Nc.dat(indx,indy,indz,1,1);
 
-	% use mask from LPBA40 sample or own mask
-	label(find(mask(indx,indy,indz) < 1)) = 0;
-	src(find(mask(indx,indy,indz) < 1)) = 0;
-	
-	niters = 200; sub=8; nc=3; pve=1;
-	prob = AmapMex(src, label, nc, niters, sub, pve);
-	prob = prob(:,:,:,[2 3 1]);
-	clear src mask
-	
-	% use cleanup maybe in the future
-	warp.cleanup = 0;
+    % use mask from LPBA40 sample or own mask
+    label(find(mask(indx,indy,indz) < 1)) = 0;
+    src(find(mask(indx,indy,indz) < 1)) = 0;
+    
+    niters = 200; sub=8; nc=3; pve=1;
+    prob = AmapMex(src, label, nc, niters, sub, pve);
+    prob = prob(:,:,:,[2 3 1]);
+    clear src mask
+    
+    % use cleanup maybe in the future
+    warp.cleanup = 0;
     if (warp.cleanup > 0)
         % get sure that all regions outside mask are zero
         for i=1:3
@@ -255,19 +252,19 @@ if do_cls & do_defs,
         end
         disp('Clean up...');        
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
-    	   prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
+           prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
     else
         for i=1:3
-	    	cls{i}(:) = 0;
+            cls{i}(:) = 0;
             cls{i}(indx,indy,indz) = prob(:,:,:,i);
         end
     end;
-	clear prob
-	
+    clear prob
+    
     for k1=1:Kb,
-	    if ~isempty(tiss(k1).Nt),
-		    tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
-    	end
+        if ~isempty(tiss(k1).Nt),
+            tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
+        end
     end
     clear tiss 
 end
@@ -275,6 +272,7 @@ end
 clear tpm
 M0 = res.image(1).mat;
 
+% rigidly aligned images
 if any(tc(:,2)),
 
     % Figure out the mapping from the volumes to create to the original
@@ -302,6 +300,7 @@ if any(tc(:,2)),
 
     x      = affind(rgrid(d),M0);
     y1     = affind(y,M1);
+    
     ind    = find(tc(:,2));
     [M,R]  = spm_get_closest_affine(x,y1,single(cls{ind(1)})/255);
     clear x y1
@@ -337,8 +336,8 @@ if any(tc(:,2)),
     end
 end
 
-if any(tc(:,3)),
-	disp('Dartel-affine not yet fully prepared.');
+% affine normalized images
+if any(tc(:,3)) || bf(1,3),
 
     % Figure out the mapping from the volumes to create to the original
     mm = [[
@@ -365,8 +364,9 @@ if any(tc(:,3)),
 
     x      = affind(rgrid(d),M0);
     y1     = affind(y,M1);
-    ind    = find(tc(:,3));
-    [Ma,R]  = spm_get_closest_affine(x,y1,single(cls{ind(1)})/255);
+    
+    [Ma,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
+    
     clear x y1
 
     M      = M0\inv(Ma)*M1*vx2/vx3;
@@ -401,12 +401,40 @@ if any(tc(:,3)),
             clear tmp1
         end
     end
+
+    % write bias corrected affine
+    if bf(1,3),
+        tmp1 = single(chan(1).Nc.dat(:,:,:,1,1));
+        [pth,nam,ext1]=fileparts(res.image(1).fname);
+        VT      = struct('fname',fullfile(pth,['wm', nam, '_affine.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('float32') spm_platform('bigend')],...
+            'pinfo',[1.0 0]',...
+            'mat',mat);
+        VT = spm_create_vol(VT);
+
+        N             = nifti(VT.fname);
+        % get rid of the QFORM0 rounding warning
+        warning off
+        N.mat0        = mat0;
+        warning on
+        N.mat_intent  = 'Aligned';
+        N.mat0_intent = 'Aligned';
+        create(N);
+
+        for i=1:odim(3),
+            tmp = spm_slice_vol(tmp1,M*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            VT  = spm_write_plane(VT,tmp,i);
+        end
+        clear tmp1
+    end
 end
 
 if any(tc(:,4)),
     C = zeros([d1,Kb],'single');
 end
 
+% warped tissue classes
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
     spm_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
@@ -446,7 +474,7 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
                 N.descrip = ['Jac. sc. warped tissue class non-lin only' num2str(k1)];
                 create(N);
 
-M2 = M1\res.Affine*res.image(1).mat
+                M2 = M1\res.Affine*res.image(1).mat;
 
                 N.dat(:,:,:) = c*abs(det(M2(1:3,1:3)));
             end
@@ -462,7 +490,7 @@ if do_cls
     vol_txt = fullfile(pth,['p', nam1, '_seg8.txt']);
     fid = fopen(vol_txt, 'w');
     for i=1:3
-        vol = volfactor*sum(cls{i}(:))/255;	
+        vol = volfactor*sum(cls{i}(:))/255; 
         fprintf(fid,'%5.3f\t',vol);
     end;
     fclose(fid);
@@ -493,6 +521,7 @@ if any(tc(:,4)),
     clear C s
 end
 
+% native label
 if lb(1),
     N      = nifti;
     N.dat  = file_array(fullfile(pth1,['p0', nam, '.nii']),...
@@ -506,6 +535,7 @@ if lb(1),
     N.dat(indx,indy,indz) = single(label);
 end
 
+% native bias-corrected image
 if bf(1,2),
     C = zeros(d1,'single');
     c = single(chan(1).Nc.dat(:,:,:,1,1));
@@ -522,6 +552,7 @@ if bf(1,2),
     N.dat(:,:,:) = C;
 end
 
+% warped label
 if lb(2),
     C = zeros(d1,'single');
     c = zeros(res.image(n).dim(1:3),'single');
@@ -541,6 +572,7 @@ end
 
 clear chan label C c
 
+% deformations
 if df(1),
     y         = spm_invert_def(y,M1,d1,M0,[1 0]);
     N         = nifti;

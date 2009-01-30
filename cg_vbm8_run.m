@@ -68,7 +68,7 @@ for i=4:6
     tissue(i).native = [0 0 0];
 end
 
-job.bias  = [job.output.bias.native  job.output.bias.warped];
+job.bias  = [job.output.bias.native  job.output.bias.warped job.output.bias.affine];
 job.label = [job.output.label.native job.output.label.warped];
 
 job.biasreg  = job.opts.biasreg;
