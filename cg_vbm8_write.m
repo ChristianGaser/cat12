@@ -1,4 +1,4 @@
-function cls = cg_vbm8_write(res,tc,bf,df,lb,warp,tissue)
+function cls = cg_vbm8_write(res,tc,bf,df,lb,warp,tpm)
 % Write out VBM preprocessed data
 % FORMAT cls = cg_vbm8_write(res,tc,bf,df)
 %____________________________________________________________________________
@@ -13,7 +13,8 @@ function cls = cg_vbm8_write(res,tc,bf,df,lb,warp,tissue)
 rev = '$Rev$';
 
 % Read essentials from tpm (it will be cleared later)
-tpm = tissue.tpm;
+
+tpm
 if ~isstruct(tpm) || ~isfield(tpm, 'bg'),
     tpm = spm_load_priors8(tpm);
 end
