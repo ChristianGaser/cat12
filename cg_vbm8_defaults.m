@@ -30,6 +30,7 @@ defaults.vbm8.opts.samp      = 3;			% Sampling distance
 
 defaults.vbm8.output.bias.native  = 0;
 defaults.vbm8.output.bias.warped  = 1;
+defaults.vbm8.output.bias.affine  = 0;
 
 defaults.vbm8.output.label.native = 0;
 defaults.vbm8.output.label.warped = 0;
