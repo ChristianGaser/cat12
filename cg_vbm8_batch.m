@@ -25,13 +25,17 @@ n = length(d);
 
 if n == 0, error(sprintf('No file %s found in %s.\n',pattern,folder)); end
 
+if writeonly
+	matlabbatch{1}.spm.tools.vbm8.write = defaults.vbm8;
+else
+	matlabbatch{1}.spm.tools.vbm8.estwrite = defaults.vbm8;
+end
+
 for i=1:n
 	name = fullfile(folder,d(i).name);
 	if writeonly
-		matlabbatch{1}.spm.tools.vbm8.write = defaults.vbm8;
 		matlabbatch{1}.spm.tools.vbm8.write.data{i} = name;
 	else
-		matlabbatch{1}.spm.tools.vbm8.estwrite = defaults.vbm8;
 		matlabbatch{1}.spm.tools.vbm8.estwrite.data{i} = name;
 	end
 end
