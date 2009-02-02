@@ -157,10 +157,10 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   }
    
 
-  /* for reducing 5 labels to 3 restrict initial segmentation to 3 classes */
+  /* PVE labeling */
   if (pve == KMEANS) {
     nc_initial = 3;
-    n_clusters += 2;
+    n_clusters += 3;
   }
 
   /* go through all sizes of cluster beginning with two clusters */
@@ -218,13 +218,14 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   /* only use values above the mean of the lower two cluster for nu-estimate */
   th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
 
-  /* extend initial 3 clusters to 5 clusters by averaging clusters */
+  /* extend initial 3 clusters to 6 clusters by averaging clusters */
   if (pve == KMEANS) {
-    mu[0] = Mu[0];
-    mu[2] = Mu[1];
-    mu[4] = Mu[2];
-    mu[1] = (Mu[0]+Mu[1])/2;
-    mu[3] = (Mu[1]+Mu[2])/2;
+    mu[0] = Mu[0]/2.0;
+    mu[1] = Mu[0];
+    mu[2] = (Mu[0]+Mu[1])/2.0;
+    mu[3] = Mu[1];
+    mu[4] = (Mu[1]+Mu[2])/2.0;
+    mu[5] = Mu[2];
   }
 
   /* find the final clustering and correct for nu */

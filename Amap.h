@@ -7,7 +7,7 @@
 #define SQRT2PI 2.506628
 #define G 6
 
-#define MAX_NC 5
+#define MAX_NC 6
 #define TH_COLOR 1
 #define TH_CHANGE 0.00001
 #define TINY 1e-15 
@@ -20,11 +20,12 @@
 #define KMEANS 2
 #define BAYES 3
 
-#define CSFLABEL   0
-#define GMCSFLABEL 1
-#define GMLABEL    2
-#define WMGMLABEL  3
-#define WMLABEL    4
+#define BKGCSFLABEL 0
+#define CSFLABEL    1
+#define GMCSFLABEL  2
+#define GMLABEL     3
+#define WMGMLABEL   4
+#define WMLABEL     5
 
 #define NOLABEL 0
 #define LABEL 1
@@ -46,6 +47,10 @@
 #define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
 #endif
 
+#ifndef MIN3
+#define MIN3(a,b,c) (MIN(a,MIN(b,c)))
+#endif
+
 extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve);
 
 extern void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *mask, double *separations, int *dims, int correct_nu);
@@ -54,7 +59,7 @@ extern void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char
 
 extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve);
 
-extern void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
+extern void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
 
 extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int init, int *dims);
 
