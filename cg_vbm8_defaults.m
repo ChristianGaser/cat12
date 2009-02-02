@@ -36,20 +36,20 @@ defaults.vbm8.output.label.native = 0;
 defaults.vbm8.output.label.warped = 0;
 
 % order is [native normalised modulated dartel]
-defaults.vbm8.output.grey.native = 0;	% GM
-defaults.vbm8.output.grey.warped = 1;	% GM
-defaults.vbm8.output.grey.mod    = 2;	% GM
-defaults.vbm8.output.grey.dartel = 0;	% GM
+defaults.vbm8.output.GM.native = 0;	% GM
+defaults.vbm8.output.GM.warped = 1;	% GM
+defaults.vbm8.output.GM.mod    = 2;	% GM
+defaults.vbm8.output.GM.dartel = 0;	% GM
 
-defaults.vbm8.output.white.native = 0;	% WM
-defaults.vbm8.output.white.warped = 1;	% WM
-defaults.vbm8.output.white.mod    = 2;	% WM
-defaults.vbm8.output.white.dartel = 0;	% WM
+defaults.vbm8.output.WM.native = 0;	% WM
+defaults.vbm8.output.WM.warped = 1;	% WM
+defaults.vbm8.output.WM.mod    = 2;	% WM
+defaults.vbm8.output.WM.dartel = 0;	% WM
 
-defaults.vbm8.output.csf.native = 0;	% CSF
-defaults.vbm8.output.csf.warped = 0;	% CSF
-defaults.vbm8.output.csf.mod    = 0;	% CSF
-defaults.vbm8.output.csf.dartel = 0;	% CSF
+defaults.vbm8.output.CSF.native = 0;	% CSF
+defaults.vbm8.output.CSF.warped = 0;	% CSF
+defaults.vbm8.output.CSF.mod    = 0;	% CSF
+defaults.vbm8.output.CSF.dartel = 0;	% CSF
 
 % order is [inverse forward]
 defaults.vbm8.output.warps = [0 0];
