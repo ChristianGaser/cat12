@@ -44,14 +44,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   dims2[3] = nc;
   
   /* for PVE we need tow more classes */
-  if(pve) dims2[3] += 2;
+  if(pve) dims2[3] += 3;
 
   plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
-  plhs[1] = mxCreateNumericMatrix(1,nc+2,mxDOUBLE_CLASS,mxREAL);
+  plhs[1] = mxCreateNumericMatrix(1,nc+3,mxDOUBLE_CLASS,mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
   Amap(src, label, prob, mean, nc, niters, sub, dims, pve);
-  if(pve) Pve5(src, prob, label, mean, dims, update_label);
+  if(pve) Pve6(src, prob, label, mean, dims, update_label);
 
 }
 

@@ -223,8 +223,8 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
         for (i=0; i<nc; i++) {
           ind2 = (i*nvol) + ind;            
           if (r[ind2].mean > 0.0) {
-            mean[i*2] = r[ind2].mean;
-            var[i*2]  = r[ind2].var;
+            mean[1+i*2] = r[ind2].mean;
+            var[1+i*2]  = r[ind2].var;
           }
         }
 
@@ -240,12 +240,11 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
           d_pve[WMLABEL] = Compute_Gaussian_likelihood(val, mean[WMLABEL], var[WMLABEL]);
         } else d_pve[WMLABEL] = HUGE;
 
-        for(i = 0; i < nc; i++) {
-          if (fabs(mean[i*2]) > TINY) {
-            d_pve[i*2] = Compute_Gaussian_likelihood(val, mean[i*2], var[i*2]);
-          } else d_pve[i*2] = HUGE;
-        }
-            
+        if (fabs(mean[CSFLABEL]) > TINY) {
+          d_pve[BKGCSFLABEL] = Compute_marginalized_likelihood(val, 0.0, mean[CSFLABEL],
+                                        0.1*MIN3(var[CSFLABEL],var[GMLABEL],var[WMLABEL]), var[CSFLABEL], 0, 50 );
+        } else d_pve[BKGCSFLABEL] = HUGE;
+
         if ((fabs(mean[WMLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
           d_pve[WMGMLABEL] = Compute_marginalized_likelihood(val, mean[WMLABEL], mean[GMLABEL],
                                         var[WMLABEL], var[GMLABEL], 0, 50 );
@@ -256,7 +255,7 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
                                         var[GMLABEL], var[CSFLABEL], 0, 50 );
         } else d_pve[GMCSFLABEL] = HUGE;
 
-        label[index] = (unsigned char) Maxarg(d_pve, 5);
+        label[index] = (unsigned char) Maxarg(d_pve, MAX_NC);
       }
     }
   }   
@@ -269,7 +268,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   int i;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
   int histo[65536];
-  double sub_1, beta[1], dmin, val, d_pve[MAX_NC];
+  double sub_1, beta[1], dmin, val;
   double var[MAX_NC], d[MAX_NC], alpha[MAX_NC], log_alpha[MAX_NC], log_var[MAX_NC];
   double pvalue[MAX_NC], psum;
   int nix, niy, niz, iters, count_change;
@@ -315,16 +314,16 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   narea = nix*niy;
   nvol = nix*niy*niz;
 
-  r = (struct point*)malloc(sizeof(struct point)*(nc+2)*nvol);
+  r = (struct point*)malloc(sizeof(struct point)*(nc+3)*nvol);
 
   if (pve == MARGINALIZED) {
   /* Use marginalized likelihood to estimate 5 classes */
     get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
     Compute_initial_PVE_label(src, label, r, nc, sub, dims);
-    nc += 2;
+    nc += 3;
   } else if (pve == KMEANS) {
   /* use Kmeans to estimate 5 classes */
-    nc += 2;  
+    nc += 3;  
   }
   
   MrfPrior(label, nc, alpha, beta, 0, dims);    
@@ -406,7 +405,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
         }
       }
     }
-    
+
     ll /= (double)vol;
     change_ll = (ll_old - ll)/fabs(ll);
     printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters, ll);
