@@ -421,30 +421,30 @@ dartel.help = {['This option is to export data into a form that can be used with
 'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
-native.def    = @(val)spm_get_defaults('vbm8.output.grey.native', val{:});
-warped.def    = @(val)spm_get_defaults('vbm8.output.grey.warped', val{:});
-modulated.def = @(val)spm_get_defaults('vbm8.output.grey.mod', val{:});
-dartel.def    = @(val)spm_get_defaults('vbm8.output.grey.dartel', val{:});
+native.def    = @(val)spm_get_defaults('vbm8.output.GM.native', val{:});
+warped.def    = @(val)spm_get_defaults('vbm8.output.GM.warped', val{:});
+modulated.def = @(val)spm_get_defaults('vbm8.output.GM.mod', val{:});
+dartel.def    = @(val)spm_get_defaults('vbm8.output.GM.dartel', val{:});
 grey      = cfg_branch;
 grey.tag = 'GM';
 grey.name = 'Grey matter';
 grey.val = {native, warped, modulated, dartel};
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'};
 
-native.def    = @(val)spm_get_defaults('vbm8.output.white.native', val{:});
-warped.def    = @(val)spm_get_defaults('vbm8.output.white.warped', val{:});
-modulated.def = @(val)spm_get_defaults('vbm8.output.white.mod', val{:});
-dartel.def    = @(val)spm_get_defaults('vbm8.output.white.dartel', val{:});
+native.def    = @(val)spm_get_defaults('vbm8.output.WM.native', val{:});
+warped.def    = @(val)spm_get_defaults('vbm8.output.WM.warped', val{:});
+modulated.def = @(val)spm_get_defaults('vbm8.output.WM.mod', val{:});
+dartel.def    = @(val)spm_get_defaults('vbm8.output.WM.dartel', val{:});
 white      = cfg_branch;
 white.tag = 'WM';
 white.name = 'White matter';
 white.val = {native, warped, modulated, dartel};
 white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and mwp2*.img.'};
 
-native.def    = @(val)spm_get_defaults('vbm8.output.csf.native', val{:});
-warped.def    = @(val)spm_get_defaults('vbm8.output.csf.warped', val{:});
-modulated.def = @(val)spm_get_defaults('vbm8.output.csf.mod', val{:});
-dartel.def    = @(val)spm_get_defaults('vbm8.output.csf.dartel', val{:});
+native.def    = @(val)spm_get_defaults('vbm8.output.CSF.native', val{:});
+warped.def    = @(val)spm_get_defaults('vbm8.output.CSF.warped', val{:});
+modulated.def = @(val)spm_get_defaults('vbm8.output.CSF.mod', val{:});
+dartel.def    = @(val)spm_get_defaults('vbm8.output.CSF.dartel', val{:});
 csf      = cfg_branch;
 csf.tag = 'CSF';
 csf.name = 'Cerebro-Spinal Fluid (CSF)';
