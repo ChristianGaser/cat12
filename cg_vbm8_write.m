@@ -526,13 +526,13 @@ if lb(1),
     N      = nifti;
     N.dat  = file_array(fullfile(pth1,['p0', nam, '.nii']),...
                                 res.image(1).dim(1:3),...
-                                'float32',0,3/255,0);
+                                'float32',0,1,0);
     N.mat  = res.image(1).mat;
     N.mat0 = res.image(1).mat;
     N.descrip = 'PVE label';
     create(N);
     N.dat(:,:,:) = 0;
-    N.dat(indx,indy,indz) = single(label);
+    N.dat(indx,indy,indz) = double(label)*3/255;
 end
 
 % native bias-corrected image
@@ -544,7 +544,7 @@ if bf(1,2),
     clear w
     N      = nifti;
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
-                                d1,'float32',0,1,0);
+                                d1,'int16',0,1,0);
     N.mat  = M1;
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
@@ -562,12 +562,12 @@ if lb(2),
     clear w
     N      = nifti;
     N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
-                                d1,'uint8-be',0,1,0);
+                                d1,'float32',0,1,0);
     N.mat  = M1;
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
     create(N);
-    N.dat(:,:,:) = C;
+    N.dat(:,:,:) = double(C)*3/255;
 end
 
 clear chan label C c
