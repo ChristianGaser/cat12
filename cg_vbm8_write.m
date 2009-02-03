@@ -252,8 +252,8 @@ if do_cls & do_defs,
         disp('Clean up...');        
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
            prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
-        sum_cls = cls{1}+cls{2}+cls{3};
-        label(find(sum_cls<0.25*255)) = 0;
+        sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
+        label(find(sum_cls<0.15*255)) = 0;
     else
         for i=1:3
             cls{i}(:) = 0;
@@ -347,7 +347,7 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
     % write affine label
     if lb(1,4),
         tmp1 = zeros(res.image(1).dim(1:3),'single');
-        tmp1(indx,indy,indz) = double(label)*3/255;
+        tmp1(indx,indy,indz) = double(label)*3;
         [pth,nam,ext1]=fileparts(res.image(1).fname);
         VT      = struct('fname',fullfile(pth,['p0', nam, '_affine.nii']),...
             'dim',  odim,...
@@ -375,7 +375,7 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
     % write rigid aligned label
     if lb(1,3),
         tmp1 = zeros(res.image(1).dim(1:3),'single');
-        tmp1(indx,indy,indz) = double(label)*3/255;
+        tmp1(indx,indy,indz) = double(label)*3;
         [pth,nam,ext1]=fileparts(res.image(1).fname);
         VT      = struct('fname',fullfile(pth,['rp0', nam, '.nii']),...
             'dim',  odim,...
