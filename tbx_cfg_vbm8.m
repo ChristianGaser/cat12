@@ -353,6 +353,15 @@ affine.labels = {'none','yes'};
 affine.values = {0 1};
 affine.help = {'Write image in normalized space, but restricted to afine transformation.'};
 
+dartel    = cfg_menu;
+dartel.tag = 'dartel';
+dartel.name = 'DARTEL export';
+dartel.labels = {'none','rigid (SPM8 default)','affine'};
+dartel.values = {0 1 2};
+dartel.help = {['This option is to export data into a form that can be used with DARTEL.',...
+'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
+'apply affine transformation.']};
+
 native.def  = @(val)spm_get_defaults('vbm8.output.bias.native', val{:});
 warped.def  = @(val)spm_get_defaults('vbm8.output.bias.warped', val{:});
 affine.def  = @(val)spm_get_defaults('vbm8.output.bias.affine', val{:});
@@ -372,10 +381,11 @@ bias.help = {[...
 
 native.def  = @(val)spm_get_defaults('vbm8.output.label.native', val{:});
 warped.def  = @(val)spm_get_defaults('vbm8.output.label.warped', val{:});
+dartel.def  = @(val)spm_get_defaults('vbm8.output.label.dartel', val{:});
 label      = cfg_branch;
 label.tag = 'label';
 label.name = 'PVE label image';
-label.val = {native, warped};
+label.val = {native, warped, dartel};
 label.help = {[...
 'This is the option to save a labeled version of your segmentations. ',...
 'Labels are saved as PVE values.']};
@@ -411,15 +421,6 @@ modulated.help = {[...
 'used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a ',...
 'multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. ',...
 'These modulated images are indicated by "m0" instead of "m". ']};
-
-dartel    = cfg_menu;
-dartel.tag = 'dartel';
-dartel.name = 'DARTEL export';
-dartel.labels = {'none','rigid (SPM8 default)','affine'};
-dartel.values = {0 1 2};
-dartel.help = {['This option is to export data into a form that can be used with DARTEL.',...
-'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
-'apply affine transformation.']};
 
 native.def    = @(val)spm_get_defaults('vbm8.output.GM.native', val{:});
 warped.def    = @(val)spm_get_defaults('vbm8.output.GM.warped', val{:});

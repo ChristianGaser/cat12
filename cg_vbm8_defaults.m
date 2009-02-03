@@ -24,9 +24,10 @@ defaults.vbm8.opts.samp      = 3;			% Sampling distance
 % Writing options
 %=======================================================================
 % segmentations:
-%   native		0/1 (no/yes)
-%   warped		0/1 (no/yes)
+%   native		0/1   (none/yes)
+%   warped		0/1   (none/yes)
 %   modulated	0/1/2 (none/affine+nonlinear/nonlinear only)
+%   dartel    0/1/2 (none/rigid/affine)
 
 defaults.vbm8.output.bias.native  = 0;
 defaults.vbm8.output.bias.warped  = 1;
@@ -34,6 +35,7 @@ defaults.vbm8.output.bias.affine  = 0;
 
 defaults.vbm8.output.label.native = 0;
 defaults.vbm8.output.label.warped = 0;
+defaults.vbm8.output.label.dartel = 0;
 
 % order is [native normalised modulated dartel]
 defaults.vbm8.output.GM.native = 0;	% GM
