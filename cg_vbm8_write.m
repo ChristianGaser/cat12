@@ -33,7 +33,7 @@ N   = numel(res.image);
 if nargin<2, tc = true(Kb,6); end % native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 if nargin<3, bf = true(N,3);  end % corrected, warp corrected, affine corrected
 if nargin<4, df = true(1,2);  end % inverse, forward
-if nargin<5, lb = true(1,2);  end % label, warped label
+if nargin<5, lb = true(1,4);  end % label, warped label, rigid label, affine label
 if nargin < 6
     vx = NaN;
     bb = ones(2,3)*NaN;
@@ -108,7 +108,7 @@ Coef{1} = spm_bsplinc(res.Twarp(:,:,:,1),prm);
 Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
-do_defs = any(df) || bf(1,2) || lb(2);
+do_defs = any(df) || bf(1,2) || any(lb([2,3,4]));
 do_defs = do_cls | do_defs;
 if do_defs,
     if df(2),
@@ -123,7 +123,7 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if bf(1,2) || bf(1,3) ||lb(2) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
+    if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
@@ -272,8 +272,8 @@ end
 clear tpm
 M0 = res.image(1).mat;
 
-% rigidly aligned images
-if any(tc(:,2)),
+% rigidly or afine aligned images
+if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
 
     % Figure out the mapping from the volumes to create to the original
     mm = [[
@@ -301,107 +301,21 @@ if any(tc(:,2)),
     x      = affind(rgrid(d),M0);
     y1     = affind(y,M1);
     
-    ind    = find(tc(:,2));
-    [M,R]  = spm_get_closest_affine(x,y1,single(cls{ind(1)})/255);
+    [M3,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
     clear x y1
 
-    M      = M0\inv(R)*M1*vx2/vx3;
-    mat0   =    inv(R)*M1*vx2/vx3;
-    mat    = mm/vx3;
-
-    fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
-    for k1=1:size(tc,1),
-        if tc(k1,2),
-            tmp1     = decimate(single(cls{k1}),fwhm);
-            [pth,nam,ext1]=fileparts(res.image(1).fname);
-            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '.nii']),...
-                'dim',  odim,...
-                'dt',   [spm_type('float32') spm_platform('bigend')],...
-                'pinfo',[1.0 0]',...
-                'mat',mat);
-            VT = spm_create_vol(VT);
-
-            Ni             = nifti(VT.fname);
-            Ni.mat0        = mat0;
-            Ni.mat_intent  = 'Aligned';
-            Ni.mat0_intent = 'Aligned';
-            create(Ni);
-
-            for i=1:odim(3),
-                tmp = spm_slice_vol(tmp1,M*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-                VT  = spm_write_plane(VT,tmp,i);
-            end
-            clear tmp1
-        end
-    end
-end
-
-% affine normalized images
-if any(tc(:,3)) || bf(1,3),
-
-    % Figure out the mapping from the volumes to create to the original
-    mm = [[
-        bb(1,1) bb(1,2) bb(1,3)
-        bb(2,1) bb(1,2) bb(1,3)
-        bb(1,1) bb(2,2) bb(1,3)
-        bb(2,1) bb(2,2) bb(1,3)
-        bb(1,1) bb(1,2) bb(2,3)
-        bb(2,1) bb(1,2) bb(2,3)
-        bb(1,1) bb(2,2) bb(2,3)
-        bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
-
-    vx2  = M1\mm;
-    odim = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
-    vx3  = [[
-        1       1       1
-        odim(1) 1       1
-        1       odim(2) 1
-        odim(1) odim(2) 1
-        1       1       odim(3)
-        odim(1) 1       odim(3)
-        1       odim(2) odim(3)
-        odim(1) odim(2) odim(3)]'; ones(1,8)];
-
-    x      = affind(rgrid(d),M0);
-    y1     = affind(y,M1);
+    % rigid parameters
+    Mr      = M0\inv(R)*M1*vx2/vx3;
+    mat0r   =    inv(R)*M1*vx2/vx3;
+    matr    = mm/vx3;
     
-    [Ma,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
+    % affine parameters
+    Ma      = M0\inv(M3)*M1*vx2/vx3;
+    mat0a   =    inv(M3)*M1*vx2/vx3;
+    mata    = mm/vx3;
     
-    clear x y1
-
-    M      = M0\inv(Ma)*M1*vx2/vx3;
-    mat0   =    inv(Ma)*M1*vx2/vx3;
-    mat    = mm/vx3;
-
     fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
-    for k1=1:size(tc,1),
-        if tc(k1,3),
-            tmp1     = decimate(single(cls{k1}),fwhm);
-            [pth,nam,ext1]=fileparts(res.image(1).fname);
-            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
-                'dim',  odim,...
-                'dt',   [spm_type('float32') spm_platform('bigend')],...
-                'pinfo',[1.0 0]',...
-                'mat',mat);
-            VT = spm_create_vol(VT);
-
-            Ni             = nifti(VT.fname);
-            % get rid of the QFORM0 rounding warning
-            warning off
-            Ni.mat0        = mat0;
-            warning on
-            Ni.mat_intent  = 'Aligned';
-            Ni.mat0_intent = 'Aligned';
-            create(Ni);
-
-            for i=1:odim(3),
-                tmp = spm_slice_vol(tmp1,M*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-                VT  = spm_write_plane(VT,tmp,i);
-            end
-            clear tmp1
-        end
-    end
-
+    
     % write bias corrected affine
     if bf(1,3),
         tmp1 = single(chan(1).Nc.dat(:,:,:,1,1));
@@ -410,23 +324,129 @@ if any(tc(:,3)) || bf(1,3),
             'dim',  odim,...
             'dt',   [spm_type('float32') spm_platform('bigend')],...
             'pinfo',[1.0 0]',...
-            'mat',mat);
+            'mat',mata);
         VT = spm_create_vol(VT);
 
         N             = nifti(VT.fname);
         % get rid of the QFORM0 rounding warning
         warning off
-        N.mat0        = mat0;
+        N.mat0        = mat0a;
         warning on
         N.mat_intent  = 'Aligned';
         N.mat0_intent = 'Aligned';
         create(N);
 
         for i=1:odim(3),
-            tmp = spm_slice_vol(tmp1,M*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
             VT  = spm_write_plane(VT,tmp,i);
         end
         clear tmp1
+    end
+
+    % write affine label
+    if lb(1,4),
+        tmp1 = zeros(res.image(1).dim(1:3),'single');
+        tmp1(indx,indy,indz) = double(label)*3/255;
+        [pth,nam,ext1]=fileparts(res.image(1).fname);
+        VT      = struct('fname',fullfile(pth,['p0', nam, '_affine.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('float32') spm_platform('bigend')],...
+            'pinfo',[1.0 0]',...
+            'mat',mata);
+        VT = spm_create_vol(VT);
+
+        N             = nifti(VT.fname);
+        % get rid of the QFORM0 rounding warning
+        warning off
+        N.mat0        = mat0a;
+        warning on
+        N.mat_intent  = 'Aligned';
+        N.mat0_intent = 'Aligned';
+        create(N);
+
+        for i=1:odim(3),
+            tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            VT  = spm_write_plane(VT,tmp,i);
+        end
+        clear tmp1
+    end
+
+    % write rigid aligned label
+    if lb(1,3),
+        tmp1 = zeros(res.image(1).dim(1:3),'single');
+        tmp1(indx,indy,indz) = double(label)*3/255;
+        [pth,nam,ext1]=fileparts(res.image(1).fname);
+        VT      = struct('fname',fullfile(pth,['rp0', nam, '.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('float32') spm_platform('bigend')],...
+            'pinfo',[1.0 0]',...
+            'mat',matr);
+        VT = spm_create_vol(VT);
+
+        Ni             = nifti(VT.fname);
+        Ni.mat0        = mat0r;
+        Ni.mat_intent  = 'Aligned';
+        Ni.mat0_intent = 'Aligned';
+        create(Ni);
+
+        for i=1:odim(3),
+            tmp = spm_slice_vol(tmp1,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            VT  = spm_write_plane(VT,tmp,i);
+        end
+        clear tmp1
+    end
+
+    for k1=1:size(tc,1),
+        % write rigid aligned tissues
+        if tc(k1,2),
+            tmp1     = decimate(single(cls{k1}),fwhm);
+            [pth,nam,ext1]=fileparts(res.image(1).fname);
+            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '.nii']),...
+                'dim',  odim,...
+                'dt',   [spm_type('float32') spm_platform('bigend')],...
+                'pinfo',[1.0 0]',...
+                'mat',matr);
+            VT = spm_create_vol(VT);
+
+            Ni             = nifti(VT.fname);
+            Ni.mat0        = mat0r;
+            Ni.mat_intent  = 'Aligned';
+            Ni.mat0_intent = 'Aligned';
+            create(Ni);
+
+            for i=1:odim(3),
+                tmp = spm_slice_vol(tmp1,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+                VT  = spm_write_plane(VT,tmp,i);
+            end
+            clear tmp1
+        end
+        
+        % write affine normalized tissues
+        if tc(k1,3),
+            tmp1     = decimate(single(cls{k1}),fwhm);
+            [pth,nam,ext1]=fileparts(res.image(1).fname);
+            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
+                'dim',  odim,...
+                'dt',   [spm_type('float32') spm_platform('bigend')],...
+                'pinfo',[1.0 0]',...
+                'mat',mata);
+            VT = spm_create_vol(VT);
+
+            Ni             = nifti(VT.fname);
+            % get rid of the QFORM0 rounding warning
+            warning off
+            Ni.mat0        = mat0a;
+            warning on
+            Ni.mat_intent  = 'Aligned';
+            Ni.mat0_intent = 'Aligned';
+            create(Ni);
+
+            for i=1:odim(3),
+                tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+                VT  = spm_write_plane(VT,tmp,i);
+            end
+            clear tmp1
+        end
     end
 end
 
