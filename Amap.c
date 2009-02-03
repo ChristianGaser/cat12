@@ -22,15 +22,15 @@
 #include "Amap.h"
 
 /* calculate the mean and variance for every class on a grid size SUBxSUBxSUB */
-static void get_means(double *src, unsigned char *label, int nc, struct point *r, int sub, int *dims, double mn_thresh, double mx_thresh)
+static void GetMeansVariances(double *src, unsigned char *label, int nc, struct point *r, int sub, int *dims, double mn_thresh, double mx_thresh)
 {
   int i, j, ind;
   int area, narea, nvol, zsub, ysub, xsub, yoffset, zoffset;
   int zsub2, ysub2;
-  int nix, niy, niz, k, l, m, z, y, x, labval;
+  int nix, niy, niz, k, l, m, z, y, x, label_value;
   double val;
   struct ipoint *ir;
-  int labval_BG;
+  int label_value_BG;
 
   area = dims[0]*dims[1];
 
@@ -39,7 +39,7 @@ static void get_means(double *src, unsigned char *label, int nc, struct point *r
   niy = (int) ceil((dims[1]-1)/((double) sub))+1;
   niz = (int) ceil((dims[2]-1)/((double) sub))+1; 
   narea = nix*niy;
-  nvol = nix*niy*niz;
+  nvol  = nix*niy*niz;
   
   ir = (struct ipoint*)malloc(sizeof(struct ipoint)*nc*nvol);
 
@@ -70,14 +70,14 @@ static void get_means(double *src, unsigned char *label, int nc, struct point *r
                 for (x=0; x<nix; x++) {
                   xsub = x*sub + m;
                   if (xsub>=0 & xsub<dims[0]) {
-                    labval = (int)label[zsub2 + ysub2 + xsub];
-                    labval_BG = labval - 1;
-                    if (labval_BG < 0) continue;
+                    label_value = (int)label[zsub2 + ysub2 + xsub];
+                    label_value_BG = label_value - 1;
+                    if (label_value_BG < 0) continue;
                     val = src[zsub2 + ysub2 + xsub];
                     
                     /* exclude values out of quartile 1-99% */
                     if ((val<mn_thresh) || (val>mx_thresh)) continue;
-                    ind = ((labval_BG)*nvol)+yoffset+x;
+                    ind = ((label_value_BG)*nvol)+yoffset+x;
                     ir[ind].n++;
                     ir[ind].s += val; ir[ind].ss += val*val;
                   }
@@ -117,7 +117,7 @@ static void get_means(double *src, unsigned char *label, int nc, struct point *r
 */
 
 /* Computes likelihood of value given parameters mean and variance */ 
-double Compute_Gaussian_likelihood(double value, double mean , double var)
+double ComputeGaussianLikelihood(double value, double mean , double var)
 
 { 
   return(exp(-(SQR(value - mean))/(2 * var))/SQRT2PI/sqrt(var));
@@ -137,7 +137,7 @@ function is primitive , but so is the mankind...
 
 */
 
-double Compute_marginalized_likelihood(double value, double mean1 , double mean2, 
+double ComputeMarginalizedLikelihood(double value, double mean1 , double mean2, 
                                        double var1, double var2, 
                                        double measurement_var, 
                                        unsigned int nof_intervals)
@@ -153,7 +153,7 @@ double Compute_marginalized_likelihood(double value, double mean1 , double mean2
     t = (i + 0.5) * interval_len;
     tmean = t * mean1 + ( 1 - t ) * mean2;
     tvar = SQR(t) * var1 + SQR(1 - t) * var2 + measurement_var;
-    lh += Compute_Gaussian_likelihood(value, tmean, tvar)*interval_len;
+    lh += ComputeGaussianLikelihood(value, tmean, tvar)*interval_len;
   }
   
   return(lh);
@@ -162,7 +162,7 @@ double Compute_marginalized_likelihood(double value, double mean1 , double mean2
 
 /* Find maximum argument out of the n possibilities */
 
-unsigned char Maxarg(double *pval, unsigned char n)
+unsigned char MaxArg(double *pval, unsigned char n)
 {
   double maximum;
   unsigned char i, index;
@@ -181,10 +181,10 @@ unsigned char Maxarg(double *pval, unsigned char n)
 /* 
   Compute initial PVE labeling based on marginalized likelihood
 */
-void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *r, int nc, int sub, int *dims)
+void ComputeInitialPveLabel(double *src, unsigned char *label, struct point *r, int nc, int sub, int *dims)
 {
   
-  int x, y, z, z_area, y_dims, index, labval, xBG;
+  int x, y, z, z_area, y_dims, index, label_value, xBG;
   int i, ix, iy, iz, ind, ind2, nix, niy, niz, narea, nvol;
   long area, vol;
   double val, dmin, sub_1, mean[MAX_NC], var[MAX_NC], d_pve[MAX_NC];
@@ -212,8 +212,8 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
       for (x = 1; x < dims[0]-1; x++)  {
 	  
         index = x + y_dims + z_area;
-        labval = (int)label[index];
-        if (labval < 1) continue;
+        label_value = (int)label[index];
+        if (label_value < 1) continue;
         val = src[index];
           
         /* find the interpolation factors */
@@ -229,33 +229,33 @@ void Compute_initial_PVE_label(double *src, unsigned char *label, struct point *
         }
 
         if (fabs(mean[CSFLABEL]) > TINY) {
-          d_pve[CSFLABEL] = Compute_Gaussian_likelihood(val, mean[CSFLABEL], var[CSFLABEL]);
+          d_pve[CSFLABEL] = ComputeGaussianLikelihood(val, mean[CSFLABEL], var[CSFLABEL]);
         } else d_pve[CSFLABEL] = HUGE;
 
         if (fabs(mean[GMLABEL]) > TINY) {
-          d_pve[GMLABEL] = Compute_Gaussian_likelihood(val, mean[GMLABEL], var[GMLABEL]);
+          d_pve[GMLABEL] = ComputeGaussianLikelihood(val, mean[GMLABEL], var[GMLABEL]);
         } else d_pve[GMLABEL] = HUGE;
 
         if (fabs(mean[WMLABEL]) > TINY) {
-          d_pve[WMLABEL] = Compute_Gaussian_likelihood(val, mean[WMLABEL], var[WMLABEL]);
+          d_pve[WMLABEL] = ComputeGaussianLikelihood(val, mean[WMLABEL], var[WMLABEL]);
         } else d_pve[WMLABEL] = HUGE;
 
         if (fabs(mean[CSFLABEL]) > TINY) {
-          d_pve[BKGCSFLABEL] = Compute_marginalized_likelihood(val, 0.0, mean[CSFLABEL],
+          d_pve[BKGCSFLABEL] = ComputeMarginalizedLikelihood(val, 0.0, mean[CSFLABEL],
                                         0.1*MIN3(var[CSFLABEL],var[GMLABEL],var[WMLABEL]), var[CSFLABEL], 0, 50 );
         } else d_pve[BKGCSFLABEL] = HUGE;
 
         if ((fabs(mean[WMLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
-          d_pve[WMGMLABEL] = Compute_marginalized_likelihood(val, mean[WMLABEL], mean[GMLABEL],
+          d_pve[WMGMLABEL] = ComputeMarginalizedLikelihood(val, mean[WMLABEL], mean[GMLABEL],
                                         var[WMLABEL], var[GMLABEL], 0, 50 );
         } else d_pve[WMGMLABEL] = HUGE;
             
         if ((fabs(mean[CSFLABEL]) > TINY) && (fabs(mean[GMLABEL]) > TINY)) {
-          d_pve[GMCSFLABEL] = Compute_marginalized_likelihood(val, mean[GMLABEL], mean[CSFLABEL],
+          d_pve[GMCSFLABEL] = ComputeMarginalizedLikelihood(val, mean[GMLABEL], mean[CSFLABEL],
                                         var[GMLABEL], var[CSFLABEL], 0, 50 );
         } else d_pve[GMCSFLABEL] = HUGE;
 
-        label[index] = (unsigned char) Maxarg(d_pve, MAX_NC);
+        label[index] = (unsigned char) MaxArg(d_pve, MAX_NC);
       }
     }
   }   
@@ -272,7 +272,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   double var[MAX_NC], d[MAX_NC], alpha[MAX_NC], log_alpha[MAX_NC], log_var[MAX_NC];
   double pvalue[MAX_NC], psum;
   int nix, niy, niz, iters, count_change;
-  int x, y, z, labval, xBG;
+  int x, y, z, label_value, xBG;
   int ix, iy, iz, iBG, ind2;
   double first, mn_thresh, mx_thresh, ll, ll_old, change_ll;
   double min_src = HUGE, max_src = -HUGE;
@@ -317,9 +317,9 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   r = (struct point*)malloc(sizeof(struct point)*(nc+3)*nvol);
 
   if (pve == MARGINALIZED) {
-  /* Use marginalized likelihood to estimate 5 classes */
-    get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
-    Compute_initial_PVE_label(src, label, r, nc, sub, dims);
+  /* Use marginalized likelihood to estimate initial 6 classes */
+    GetMeansVariances(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
+    ComputeInitialPveLabel(src, label, r, nc, sub, dims);
     nc += 3;
   } else if (pve == KMEANS) {
   /* use Kmeans to estimate 5 classes */
@@ -337,7 +337,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     ll = 0.0;
     
     /* get means for grid points */
-    get_means(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
+    GetMeansVariances(src, label, nc, r, sub, dims, mn_thresh, mx_thresh);    
 
     /* loop over image points */
     for (z = 1; z < dims[2]-1; z++) {
@@ -347,8 +347,8 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
         for (x = 1; x < dims[0]-1; x++)  {
 	  
           index = x + y_dims + z_area;
-          labval = (int) label[index];
-          if (labval < 1) continue;
+          label_value = (int) label[index];
+          if (label_value < 1) continue;
           val = src[index];
           
           /* find the interpolation factors */
@@ -400,7 +400,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
             prob[(vol*i) + index] = (unsigned char)ROUND(255*pvalue[i]);
          
           /* if the class has changed modify the label */
-          if (xBG + 1 != labval) label[index] = (unsigned char) (xBG + 1); 
+          if (xBG + 1 != label_value) label[index] = (unsigned char) (xBG + 1); 
          
         }
       }
@@ -420,7 +420,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   printf("\nFinal Mean*Std: "); 
   for (i=0; i<nc; i++) printf("%g*%g  ",mean[i],sqrt(var[i])); 
   printf("\n"); 
-    fflush(stdout);
+  fflush(stdout);
 
   free(r);
 

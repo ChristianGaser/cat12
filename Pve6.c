@@ -97,7 +97,9 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
             label[ind] = mxi + 1;
           }
         }
+        
       }
     }
   }  
+  
 }
