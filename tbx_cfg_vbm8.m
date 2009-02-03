@@ -325,7 +325,7 @@ print.help = {[...
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {bb,brainmask,brainmask_th};
+extopts.val = {bb,brainmask,brainmask_th,cleanup};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
