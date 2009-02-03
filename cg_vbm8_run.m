@@ -69,7 +69,7 @@ for i=4:6
 end
 
 job.bias  = [job.output.bias.native  job.output.bias.warped job.output.bias.affine];
-job.label = [job.output.label.native job.output.label.warped];
+job.label = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
 
 job.biasreg  = job.opts.biasreg;
 job.biasfwhm = job.opts.biasfwhm;
@@ -214,7 +214,7 @@ for iter=1:nit,
             % re-estimating the template data.
             N    = numel(job.channel);
             K    = numel(job.tissue);
-            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0], job.warp, tpm);
+            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0 0 0], job.warp, tpm);
             for k=1:K,
                 SS(:,:,:,k) = SS(:,:,:,k) + cls{k};
             end
