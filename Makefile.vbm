@@ -34,7 +34,8 @@ update:
 zip: update
 	-@echo zip
 	-@test ! -d vbm8 || rm -r vbm8
-	-@cp -rp ${TARGET} .
+	-@mkdir vbm8
+	-@cp -rp ${FILES} vbm8
 	-@zip ${ZIPFILE} -rm vbm8
 
 scp: zip
