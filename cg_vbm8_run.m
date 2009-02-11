@@ -135,7 +135,7 @@ for iter=1:nit,
                 if ~isempty(job.warp.affreg),
                     if job.warp.affmethod == 0
                         Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge*8,tpm,Affine,job.warp.affreg); % Close to rigid
-                        Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg)
+                        Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
                     else
                         VG = spm_vol(fullfile(spm('Dir'),'templates','T1.nii'));
                         VF = spm_vol(obj.image(1));
