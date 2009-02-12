@@ -273,7 +273,7 @@ end
 clear tpm
 M0 = res.image(1).mat;
 
-% rigidly or afine aligned images
+% rigidly or affine aligned images
 if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
 
     % Figure out the mapping from the volumes to create to the original
@@ -311,8 +311,8 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
     matr    = mm/vx3;
     
     % affine parameters
-    Ma      = M0\inv(M3)*M1*vx2/vx3;
-    mat0a   =    inv(M3)*M1*vx2/vx3;
+    Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
+    mat0a   =    inv(res.Affine)*M1*vx2/vx3;
     mata    = mm/vx3;
     
     fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
@@ -400,7 +400,6 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
     for k1=1:size(tc,1),
         % write rigid aligned tissues
         if tc(k1,2),
-            tmp1     = decimate(single(cls{k1}),fwhm);
             [pth,nam,ext1]=fileparts(res.image(1).fname);
             VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '.nii']),...
                 'dim',  odim,...
@@ -416,15 +415,13 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
             create(Ni);
 
             for i=1:odim(3),
-                tmp = spm_slice_vol(tmp1,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+                tmp = spm_slice_vol(single(cls{k1}),Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
                 VT  = spm_write_plane(VT,tmp,i);
             end
-            clear tmp1
         end
         
         % write affine normalized tissues
         if tc(k1,3),
-            tmp1     = decimate(single(cls{k1}),fwhm);
             [pth,nam,ext1]=fileparts(res.image(1).fname);
             VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
                 'dim',  odim,...
@@ -443,10 +440,9 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
             create(Ni);
 
             for i=1:odim(3),
-                tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+                tmp = spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
                 VT  = spm_write_plane(VT,tmp,i);
             end
-            clear tmp1
         end
     end
 end
