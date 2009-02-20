@@ -24,7 +24,7 @@ if nargin < 1
 	P = spm_select(Inf,'image','Select images');
 end
 
-V = spm_vol(P);
+V = spm_vol(deblank(P));
 n = size(P,1);
 
 if length(V)>1 & any(any(diff(cat(1,V.dim),1,1),1))
