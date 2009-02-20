@@ -29,7 +29,7 @@ if nargin < 1
 	slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
 end
 
-V = spm_vol(P);
+V = spm_vol(deblank(P));
 n = size(P,1);
 
 hold = 1;
