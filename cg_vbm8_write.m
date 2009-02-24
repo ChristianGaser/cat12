@@ -235,9 +235,13 @@ if do_cls & do_defs,
     src = chan(1).Nc.dat(indx,indy,indz,1,1);
 
     % use mask from LPBA40 sample or own mask
-    label(find(mask(indx,indy,indz) < 1)) = 0;
-    src(find(mask(indx,indy,indz) < 1)) = 0;
-    
+%    label(find(mask(indx,indy,indz) < 1)) = 0;
+%    src(find(mask(indx,indy,indz) < 1)) = 0;
+		
+    ind_label = find((cls{5}(indx,indy,indz) > 24) | ((single(cls{1}(indx,indy,indz))+single(cls{2}(indx,indy,indz))+single(cls{3}(indx,indy,indz))) < 208));
+   	label(ind_label) = 0;
+   	src(ind_label) = 0;
+
     niters = 200; sub=8; nc=3; pve=1;
     prob = AmapMex(src, label, nc, niters, sub, pve);
     prob = prob(:,:,:,[2 3 1]);
