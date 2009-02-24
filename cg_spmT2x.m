@@ -15,9 +15,9 @@ function cg_spmT2x(vargin)
 % --------------------------------
 % effect-size
 % --------------------------------
-%            2r
+%            2t
 % d = ----------------
-%     sqrt(1-sqr(r))
+%         sqrt(df)
 %
 % --------------------------------
 % p-value
@@ -283,8 +283,7 @@ for i=1:size(P,1)
 	  	  t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
 	  	  t2x_name = 'R_';
 	   case 4
-	      tmp = (df(2)./((Z.*Z)+eps))+1;
-		  t2x = 2./((1-(1./tmp)).*tmp).^0.5;
+		  t2x = 2*Z/sqrt(df(2));
 		  t2x_name = 'D_';
 	   case 5
 		  t2x = Z;
