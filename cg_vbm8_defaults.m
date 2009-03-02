@@ -63,4 +63,5 @@ defaults.vbm8.extopts.vox          = 1;	% Voxel size to write
 defaults.vbm8.extopts.bb           = [[-78 78]' [-112 76]' [-70 85]'];	% bounding box
 defaults.vbm8.extopts.print        = 1;	% Display and print results
 defaults.vbm8.extopts.brainmask_th = 0.25;	% Brainmask threshold
+defaults.vbm8.extopts.brainmask_th = -1;	% Brainmask threshold
 defaults.vbm8.extopts.brainmask    = cellstr(fullfile(fileparts(which(mfilename)),'brainmask_LPBA40.nii'));;	% Brainmask
