@@ -105,6 +105,26 @@ scale.help = {[...
 'This option should be only used if image intensity is not scaled (e.g. T1 images) ',...
 'or if images have to be scaled during statistical analysis (e.g. modulated images).']};
 
+c         = cfg_entry;
+c.tag     = 'c';
+c.name    = 'Vector';
+c.help    = {'Vector of nuisance values'};
+c.strtype = 'e';
+c.num     = [Inf 1];
+
+nuisance       = cfg_branch;
+nuisance.tag   = 'nuisance';
+nuisance.name  = 'Nuisance';
+nuisance.val   = {c};
+nuisance.help  = {'Add a nuisance parameter to be removed from data'};
+
+generic         = cfg_repeat;
+generic.tag     = 'generic';
+generic.name    = 'Nuisance';
+generic.help    = {'This option allows for the specification of nuisance effects to be removed from the data. '};
+generic.values  = {nuisance};
+generic.num     = [0 Inf];
+
 check_sd_sdname = cfg_entry;
 check_sd_sdname.tag = 'sd_name';
 check_sd_sdname.name = 'Output standard deviation file';
@@ -130,7 +150,7 @@ check_sd_meanname.help  = {[...
 check_sd = cfg_exbranch;
 check_sd.tag = 'check_sd';
 check_sd.name = 'Check sample homogeneity across sample';
-check_sd.val = {data,scale,check_sd_meanname,check_sd_sdname};
+check_sd.val = {data,scale,check_sd_meanname,check_sd_sdname,generic};
 check_sd.prog   = @cg_check_sample_sd;
 check_sd.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...
