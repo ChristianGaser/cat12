@@ -132,7 +132,7 @@ spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
 
 % load brainmask
-if do_defs,
+if do_defs & (warp.brainmask_th > 0),
     Vmask = spm_vol(warp.brainmask);
     mask = zeros(res.image(1).dim(1:3),'single');
 end
@@ -156,7 +156,9 @@ for z=1:length(x3),
 
     if do_defs,
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
-        mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
+        if warp.brainmask_th > 0
+            mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
+        end
         if exist('Ndef','var'),
             tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
@@ -215,8 +217,12 @@ clear q q1 Coef
 
 if do_cls & do_defs,
 
-    % use mask from LPBA40 sample or own mask
-    mask = uint8(mask > warp.brainmask_th);
+    % use mask from LPBA40 sample if threshold is > 0
+    if warp.brainmask_th > 0
+        mask = uint8(mask > warp.brainmask_th);
+	else % or empirically estimated thresholds for tissue priors from SPM
+        mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
+    end
 
     % use index to speed up and save memory
     sz = size(mask);
@@ -234,14 +240,10 @@ if do_cls & do_defs,
     % mask source image because Amap needs a skull stripped image
     src = chan(1).Nc.dat(indx,indy,indz,1,1);
 
-    % use mask from LPBA40 sample or own mask
-%    label(find(mask(indx,indy,indz) < 1)) = 0;
-%    src(find(mask(indx,indy,indz) < 1)) = 0;
-		
-    ind_label = find((cls{5}(indx,indy,indz) > 24) | ((single(cls{1}(indx,indy,indz))+single(cls{2}(indx,indy,indz))+single(cls{3}(indx,indy,indz))) < 208));
-   	label(ind_label) = 0;
-   	src(ind_label) = 0;
-
+    % set label and source inside outside mask to 0
+    label(find(mask(indx,indy,indz) < 1)) = 0;
+    src(find(mask(indx,indy,indz) < 1)) = 0;
+    
     niters = 200; sub=8; nc=3; pve=1;
     prob = AmapMex(src, label, nc, niters, sub, pve);
     prob = prob(:,:,:,[2 3 1]);
