@@ -173,7 +173,7 @@ hold off
 
 f = figure(4);
 % allow maximal 50 ticklabels
-step = round(n/50);
+step = max([round(n/50) 1]);
 ws = spm('Winsize','Graphics');
 set(f,'MenuBar','none','Position',[10 10 2*ws(3) 0.9*ws(3)]);
 subplot(1,2,1)
