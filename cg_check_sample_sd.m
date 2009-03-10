@@ -1,4 +1,4 @@
-function cg_check_sample_sd(vargin)
+﻿function cg_check_sample_sd(vargin)
 %cg_check_sample_sd to check standard deviation across sample
 %
 % Images have to be in the same orientation with same voxel size
@@ -44,6 +44,8 @@ if nargin < 1
   def_nuis = spm_input('Variable to covariate out (nuisance parameter)?','+1','yes|no',[1 0],2);
   if def_nuis
     nuisance = spm_input('Nuisance parameter:','+1','r',[],n);
+  else
+    nuisance = [];
   end
 end
 
