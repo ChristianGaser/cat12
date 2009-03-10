@@ -1,5 +1,5 @@
-﻿function cg_check_sample_sd(vargin)
-%cg_check_sample_sd to check standard deviation across sample
+function cg_check_sample_sd(vargin)
+%cg_check_sample_sd	to check standard deviation across sample
 %
 % Images have to be in the same orientation with same voxel size
 % and dimension (e.g. normalized images)
@@ -277,13 +277,13 @@ function s = cg_boxplot (data,notched,symbol,vertical,maxwhisker)
 %
 % The returned matrix s has one column for each dataset as follows:
 %
-%  1  minimum
-%  2  1st quartile
-%  3  2nd quartile (median)
-%  4  3rd quartile
-%  5  maximum
-%  6  lower confidence limit for median
-%  7  upper confidence limit for median
+%    1  minimum
+%    2  1st quartile
+%    3  2nd quartile (median)
+%    4  3rd quartile
+%    5  maximum
+%    6  lower confidence limit for median
+%    7  upper confidence limit for median
 %
 % Example
 %
@@ -339,9 +339,9 @@ end
 
 % compute statistics
 % s will contain
-%  1,5  min and max
-%  2,3,4  1st, 2nd and 3rd quartile
-%  6,7  lower and upper confidence intervals for median
+%    1,5    min and max
+%    2,3,4  1st, 2nd and 3rd quartile
+%    6,7    lower and upper confidence intervals for median
 s = zeros(7,nc);
 box = zeros(1,nc);
 whisker_x = ones(2,1)*[1:nc,1:nc];
@@ -354,9 +354,9 @@ outliers2_y = [];
 for i=1:nc
   % Get the next data set from the array or cell array
   if iscell(data)
-  col = data{i}(:);
+    col = data{i}(:);
   else
-  col = data(:,i);
+    col = data(:,i);
   end
   % Skip missing data
   col(isnan(col)) = [];
@@ -364,38 +364,38 @@ for i=1:nc
   nd = length(col);
   box(i) = nd;
   if (nd > 1)
-  % min,max and quartiles
-  s(1:5,i) = [min(col) prctile(col,[25 50 75]) max(col)]';
-  % confidence interval for the median
-  est = 1.57*(s(4,i)-s(2,i))/sqrt(nd);
-  s(6,i) = max([s(3,i)-est, s(2,i)]);
-  s(7,i) = min([s(3,i)+est, s(4,i)]);
-  % whiskers out to the last point within the desired inter-quartile range
-  IQR = maxwhisker*(s(4,i)-s(2,i));
-  whisker_y(:,i) = [min(col(col >= s(2,i)-IQR)); s(2,i)];
-  whisker_y(:,nc+i) = [max(col(col <= s(4,i)+IQR)); s(4,i)];
-  % outliers beyond 1 and 2 inter-quartile ranges
-  outliers = col((col < s(2,i)-IQR & col >= s(2,i)-2*IQR) | (col > s(4,i)+IQR & col <= s(4,i)+2*IQR));
-  outliers2 = col(col < s(2,i)-2*IQR | col > s(4,i)+2*IQR);
-  outliers_x = [outliers_x; i*ones(size(outliers))];
-  outliers_y = [outliers_y; outliers];
-  outliers2_x = [outliers2_x; i*ones(size(outliers2))];
-  outliers2_y = [outliers2_y; outliers2];
+    % min,max and quartiles
+    s(1:5,i) = [min(col) prctile(col,[25 50 75]) max(col)]';
+    % confidence interval for the median
+    est = 1.57*(s(4,i)-s(2,i))/sqrt(nd);
+    s(6,i) = max([s(3,i)-est, s(2,i)]);
+    s(7,i) = min([s(3,i)+est, s(4,i)]);
+    % whiskers out to the last point within the desired inter-quartile range
+    IQR = maxwhisker*(s(4,i)-s(2,i));
+    whisker_y(:,i) = [min(col(col >= s(2,i)-IQR)); s(2,i)];
+    whisker_y(:,nc+i) = [max(col(col <= s(4,i)+IQR)); s(4,i)];
+    % outliers beyond 1 and 2 inter-quartile ranges
+    outliers = col((col < s(2,i)-IQR & col >= s(2,i)-2*IQR) | (col > s(4,i)+IQR & col <= s(4,i)+2*IQR));
+    outliers2 = col(col < s(2,i)-2*IQR | col > s(4,i)+2*IQR);
+    outliers_x = [outliers_x; i*ones(size(outliers))];
+    outliers_y = [outliers_y; outliers];
+    outliers2_x = [outliers2_x; i*ones(size(outliers2))];
+    outliers2_y = [outliers2_y; outliers2];
   elseif (nd == 1)
-  % all statistics collapse to the value of the point
-  s(:,i) = col;
-  % single point data sets are plotted as outliers.
-  outliers_x = [outliers_x; i];
-  outliers_y = [outliers_y; col];
+    % all statistics collapse to the value of the point
+    s(:,i) = col;
+    % single point data sets are plotted as outliers.
+    outliers_x = [outliers_x; i];
+    outliers_y = [outliers_y; col];
   else
-  % no statistics if no points
-  s(:,i) = NaN;
+    % no statistics if no points
+    s(:,i) = NaN;
   end
 end
 
 % Note which boxes don't have enough stats
 chop = find(box <= 1);
-  
+    
 % Draw a box around the quartiles, with width proportional to the number of
 % items in the box. Draw notches if desired.
 box = box*0.3/max(box);
@@ -422,21 +422,21 @@ cap_y = whisker_y([1,1],:);
 
 % Do the plot
 if vertical
-  plot(quartile_x, quartile_y, 'b-')
-  hold on
-  plot(whisker_x, whisker_y, 'b-')
-  plot(cap_x, cap_y, 'b-')
-  plot(median_x, median_y, 'r-')
-  plot(outliers_x, outliers_y, [symbol(1),'r'])
-    plot(outliers2_x, outliers2_y, [symbol(2),'r']);
+	plot(quartile_x, quartile_y, 'b-')
+	hold on
+	plot(whisker_x, whisker_y, 'b-')
+	plot(cap_x, cap_y, 'b-')
+	plot(median_x, median_y, 'r-')
+	plot(outliers_x, outliers_y, [symbol(1),'r'])
+        plot(outliers2_x, outliers2_y, [symbol(2),'r']);
 else
-  plot(quartile_y, quartile_x, 'b-')
-  hold on
-  plot(whisker_y, whisker_x, 'b-')
-  plot(cap_y, cap_x, 'b-')
-  plot(median_y, median_x, 'r-')
-  plot(outliers_y, outliers_x, [symbol(1),'r'])
-    plot(outliers2_y, outliers2_x, [symbol(2),'r']);
+	plot(quartile_y, quartile_x, 'b-')
+	hold on
+	plot(whisker_y, whisker_x, 'b-')
+	plot(cap_y, cap_x, 'b-')
+	plot(median_y, median_x, 'r-')
+	plot(outliers_y, outliers_x, [symbol(1),'r'])
+        plot(outliers2_y, outliers2_x, [symbol(2),'r']);
 end
 
 hold off
@@ -458,33 +458,33 @@ function y = prctile(x,p);
 
 [prows pcols] = size(p);
 if prows ~= 1 & pcols ~= 1
-  error('P must be a scalar or a vector.');
+    error('P must be a scalar or a vector.');
 end
 if any(p > 100) | any(p < 0)
-  error('P must take values between 0 and 100');
+    error('P must take values between 0 and 100');
 end
 
 if (~any(isnan(x)))
    y = prctilecol(x,p);
-else          % if there are NaNs, process each column
+else                    % if there are NaNs, process each column
    if (size(x,1) == 1)
-    x = x';
+      x = x';
    end
    c = size(x,2);
    np = length(p);
    y = zeros(np,c);
    for j=1:c
-    xx = x(:,j);
-    xx = xx(~isnan(xx));
-    y(:,j) = prctilecol(xx,p)';
+      xx = x(:,j);
+      xx = xx(~isnan(xx));
+      y(:,j) = prctilecol(xx,p)';
    end
    if (min(size(x)) == 1)
-    y = y';
+      y = y';
    end
 end
 
 return
-    
+      
 %-----------------------------------------------------------------------
 function y = prctilecol(x,p);
 %-----------------------------------------------------------------------
@@ -492,17 +492,17 @@ xx = sort(x);
 [m,n] = size(x);
 
 if m==1 | n==1
-  m = max(m,n);
-  if m == 1,
-     y = x*ones(length(p),1);
-     return;
-  end
-  n = 1;
-  q = 100*(0.5:m - 0.5)./m;
-  xx = [min(x); xx(:); max(x)];
+    m = max(m,n);
+	if m == 1,
+	   y = x*ones(length(p),1);
+	   return;
+	end
+    n = 1;
+    q = 100*(0.5:m - 0.5)./m;
+    xx = [min(x); xx(:); max(x)];
 else
-  q = 100*(0.5:m - 0.5)./m;
-  xx = [min(x); xx; max(x)];
+    q = 100*(0.5:m - 0.5)./m;
+    xx = [min(x); xx; max(x)];
 end
 
 q = [0 q 100];
