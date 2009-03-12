@@ -7,7 +7,6 @@
 
 spm8=~/spm/spm8b	# this parameter has to be set to your spm8 directory
 matlab=matlab	# you can use other matlab versions by changing the matlab parameter
-writeonly=0
 
 ########################################################
 # run main
@@ -17,7 +16,7 @@ main ()
 {
   parse_args ${1+"$@"}
   check_matlab
-  run_vbm
+  run_batch
 
   exit 0
 }
@@ -50,9 +49,6 @@ parse_args ()
 			exit_if_empty "$optname" "$optarg"
 			spm8=$optarg
 			shift
-			;;
-		--w* | -w*)
-			writeonly=1
 			;;
 		-h | --help | -v | --version | -V)
 			help
@@ -90,10 +86,10 @@ exit_if_empty ()
 }
 
 ########################################################
-# run vbm tool
+# run batch
 ########################################################
 
-run_vbm ()
+run_batch ()
 {
 	cwd=`dirname $0`
 	pwd=$PWD
@@ -103,7 +99,7 @@ run_vbm ()
 
 	if [ $# -eq 2 ]; then
 		if [ ! -d $spm8 ]; then
-			spm8=${pwd}/$spm8
+			spm8=${pwd}/$spm8_
 	    fi
 		if [ ! -d $spm8 ]; then
 			echo Directory $spm8 does not exist.
@@ -111,23 +107,30 @@ run_vbm ()
 		fi
 	fi
 
-	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8
+	if [ ! -f $file ]; then
+		echo File $file does not exist.
+		exit 0
+	fi
+
+	dname=`dirname $file`
+	file=`basename $file`
+	
+	if [ ! `echo $file | cut -f2 -d'.'` == "m" ]; then
+		echo File $file is not a matlab script.
+		exit 0
+	fi
+
+	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8:$dname
 	
 	time=`date "+%Y%b%d_%H%M"`
-	vbmlog=${pwd}/vbm8_${time}.log
+	vbmlog=${pwd}/spm8_${time}.log
 	echo Check $vbmlog for logging information
 	echo
-	
-	# correct filename
-	for i in $file; do
-		if [ ! -f $i ]; then
-			file=${pwd}/$file
-		fi
-		break
-	done
+		
+	file=`echo $file| sed -e 's/\.m//g'`
 
-	X="cg_vbm8_batch('${file}',${writeonly})"
-	echo Calculate $file
+	X="cg_spm8_batch('${file}')"
+	echo Running $file
 	echo > $vbmlog
 	echo ---------------------------------- >> $vbmlog
 	date >> $vbmlog
@@ -135,7 +138,7 @@ run_vbm ()
 	echo >> $vbmlog
 	echo $0 $file >> $vbmlog
 	echo >> $vbmlog
-	nohup ${matlab} -nodisplay -nojvm -nosplash -r $X >> $vbmlog 2>&1 &
+	echo ${matlab} -nodisplay -nojvm -nosplash -r $X -logfile $vbmlog &
 
 	exit 0
 }
@@ -162,45 +165,29 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_vbm8_batch.sh filename|filepattern [-s spm8-path] [-m matlabcommand] [-w]
+   cg_spm8_batch.sh batchfile.m [-s spm8-path] [-m matlabcommand]
    
    -m   matlab command
    -s   spm8 directory
-   -w
-   Only one filename or pattern is allowed. This can be either a single file or a pattern
-   with wildcards to process multiple files. For the latter case you have to (single) quote
-   the pattern. Optionally you can set the spm8 directory with the "-s" option and the
-   matlab command with the "-m" option and force to write already estimated segmentations with
-   the "-w" option.
+
+   Only one batch filename is allowed. Optionally you can set the spm8 
+   directory with the "-s" option and the matlab command with the "-m" option.
 
 PURPOSE:
-   Command line call of VBM8 segmentation
+   Command line call of SPM8 batch files
 
 EXAMPLE
-   cg_vbm8_batch.sh spm/spm8/canonical/single_subj_T1.nii -s ~/spm/spm8
-   This command will process only the single file single_subj_T1.nii. The spm8 directory
-   is set to ~/spm/spm8.
+   cg_spm8_batch.sh test_batch.m -s ~/spm/spm8 -m /usr/local/bin/matlab7
+   This command will process the batch file test_batch.m. The spm8 directory
+   is set to ~/spm/spm8. As matlab command /usr/local/bin/matlab7 will be used.
    
-   cg_vbm8_batch.sh 'spm/spm8/canonical/*152*.nii'
-   Using the quotes and wildcards all files containing the term "152" will
-   be processed. In this case these are the files avg152PD.nii, avg152T1.nii,
-   and avg152T2.nii.
-
-   cg_vbm8_batch.sh 'spm/spm8/canonical/*152*.nii' -m /usr/local/bin/matlab7
-   Using the quotes and wildcards all files containing the term "152" will
-   be processed. In this case these are the files avg152PD.nii, avg152T1.nii,
-   and avg152T2.nii. As matlab command /usr/local/bin/matlab7 will be used.
-
 INPUT:
-   analyze/nifti files
+   batch file saved as matlab-script or mat-file
 
 OUTPUT:
-   segmented images according to settings in cg_vbm8_defaults.m
-   vbm8_log_$time.txt for log information
+   spm8_log_$time.txt for log information
 
 USED FUNCTIONS:
-   cg_vbm8_batch.m
-   VBM8 toolbox
    SPM8
 
 SETTINGS
