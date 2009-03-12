@@ -1,7 +1,7 @@
 function cg_vbm8_batch(pattern,writeonly)
 % wrapper for using batch mode (see cg_vbm8_batch.sh)
 %_______________________________________________________________________
-% $ID$
+% $Id$
 
 if nargin < 1
 	fprintf('Syntax: cg_vbm8_batch(pattern)\n');
