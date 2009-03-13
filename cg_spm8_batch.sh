@@ -5,8 +5,9 @@
 ########################################################
 # $Id$
 
-spm8=~/spm/spm8b	# this parameter has to be set to your spm8 directory
-matlab=matlab	# you can use other matlab versions by changing the matlab parameter
+spm8=~/spm/spm8b  # this parameter has to be set to your spm8 directory
+matlab=matlab     # you can use other matlab versions by changing the matlab parameter
+display=0         # use nodisplay option for matlab or not
 
 ########################################################
 # run main
@@ -49,6 +50,9 @@ parse_args ()
 			exit_if_empty "$optname" "$optarg"
 			spm8=$optarg
 			shift
+			;;
+		--d* | -d*)
+			display=1
 			;;
 		-h | --help | -v | --version | -V)
 			help
@@ -138,8 +142,11 @@ run_batch ()
 	echo >> $vbmlog
 	echo $0 $file >> $vbmlog
 	echo >> $vbmlog
-	echo ${matlab} -nodisplay -nojvm -nosplash -r $X -logfile $vbmlog &
-
+	if [ $display == 0 ]; then
+		${matlab} -nodisplay -nojvm -nosplash -r $X -logfile $vbmlog &
+	else
+		${matlab} -nojvm -nosplash -r $X -logfile $vbmlog &
+	fi
 	exit 0
 }
 
@@ -165,13 +172,17 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_spm8_batch.sh batchfile.m [-s spm8-path] [-m matlabcommand]
+   cg_spm8_batch.sh batchfile.m [-d] [-s spm8-path] [-m matlabcommand]
    
+   -d   use display option in matlab in case that batch file needs graphical output
    -m   matlab command
    -s   spm8 directory
 
    Only one batch filename is allowed. Optionally you can set the spm8 
    directory with the "-s" option and the matlab command with the "-m" option.
+   As default no display is used (via the -nodisplay option in matlab). However
+   sometimes the batch file needs a graphical output and the display should
+   be enabled with the option "-d".
 
 PURPOSE:
    Command line call of SPM8 batch files
