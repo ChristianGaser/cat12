@@ -310,7 +310,7 @@ for i=1:size(P,1)
             neg_str = '';
        end
        
-       name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str xt vr];
+       name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
        fprintf('Save %s\n', name);
     
 	   out = deblank(fullfile(pth,name));
