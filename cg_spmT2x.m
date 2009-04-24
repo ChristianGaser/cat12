@@ -35,12 +35,12 @@ function cg_spmT2x(vargin)
 % is transformed to a value of 2
 %
 % Examples:
-% p-value	-log10(1-P)
-% 0.1		1
-% 0.05		1.3
-% 0.01		2
-% 0.001		3
-% 0.0001	4
+% p-value   -log10(1-P)
+% 0.1       1
+% 0.05      1.3
+% 0.01      2
+% 0.001     3
+% 0.0001    4
 %
 % All maps can be thresholded using height and extent thresholds and you can 
 % also apply corrections for multiple comparisons based on family-wise error 
@@ -77,25 +77,25 @@ function cg_spmT2x(vargin)
 rev = '$Rev$';
 
 if nargin == 1
-	P = [];
-	for i=1:numel(vargin.data)
-		P = strvcat(P,deblank(vargin.data{i}));
-	end
+    P = [];
+    for i=1:numel(vargin.data)
+        P = strvcat(P,deblank(vargin.data{i}));
+    end
 end
 
 spm2 = 0;
 if strcmp(spm('ver'),'SPM2'), spm2 = 1; end
 
 if nargin < 1
-	if spm2
-		P = spm_get(Inf,'spmT*.img','Select normalized files');
-	else
-		P = spm_select(Inf,'^spmT.*\.img$','Select images');
-	end
+    if spm2
+        P = spm_get(Inf,'spmT*.img','Select normalized files');
+    else
+        P = spm_select(Inf,'^spmT.*\.img$','Select images');
+    end
 end
 
 sel = spm_input('Convert t value to?',1,'m',...
-	'1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
+    '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
 
 %-Get height threshold
 %-------------------------------------------------------------------
@@ -109,14 +109,14 @@ case 'FWE' % family-wise false positive rate
     p_height_str = '_pFWE';
 
 case 'FDR' % False discovery rate
-	%---------------------------------------------------------------	
-	u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
+    %---------------------------------------------------------------    
+    u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
     p_height_str = '_pFDR';
 
 otherwise  %-NB: no adjustment
-	% p for conjunctions is p of the conjunction SPM
-   	%---------------------------------------------------------------
-	u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
+    % p for conjunctions is p of the conjunction SPM
+    %---------------------------------------------------------------
+    u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
     p_height_str = '_p';
 
 end
@@ -133,62 +133,65 @@ else
 end
 
 for i=1:size(P,1)
-	spmT = deblank(P(i,:));
-    Vspm = spm_vol(spmT);	
-	[pth,nm,xt,vr] = fileparts(spmT);
+    spmT = deblank(P(i,:));
+    Vspm = spm_vol(spmT);   
+    [pth,nm,xt,vr] = fileparts(spmT);
 
-	SPM_name = fullfile(pth, ['SPM.mat' vr]);
-	
-	% SPM.mat exist?
-	if ~exist(SPM_name)
-	   error('SPM.mat not found')
-	end
+    SPM_name = fullfile(pth, ['SPM.mat' vr]);
+    
+    % SPM.mat exist?
+    if ~exist(SPM_name)
+       error('SPM.mat not found')
+    end
 
-	if strcmp(nm(1:6),'spmT_0')	
-		Ic = str2num(nm(length(nm)-2:length(nm)));
-	else
-		error('Only spmT_0* files can be used');
-	end
+    if strcmp(nm(1:6),'spmT_0') 
+        Ic = str2num(nm(length(nm)-2:length(nm)));
+    else
+        error('Only spmT_0* files can be used');
+    end
 
     load(SPM_name);
     xCon = SPM.xCon;
     df   = [xCon(Ic).eidf SPM.xX.erdf];
     STAT = xCon(Ic).STAT;
-	R    = SPM.xVol.R;			%-search Volume {resels}
-	S    = SPM.xVol.S;			%-search Volume {voxels}
-	XYZ  = SPM.xVol.XYZ;			%-XYZ coordinates
+    R    = SPM.xVol.R;          %-search Volume {resels}
+    S    = SPM.xVol.S;          %-search Volume {voxels}
+    XYZ  = SPM.xVol.XYZ;            %-XYZ coordinates
     FWHM = SPM.xVol.FWHM;
-    v2r  = 1/prod(FWHM(~isinf(FWHM)));			%-voxels to resels
+    v2r  = 1/prod(FWHM(~isinf(FWHM)));          %-voxels to resels
 
-	if i==1 
-		if isfield(SPM.xVol,'VRpv')
-  			noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
-			SPM.xVol.VRpv.fname = fullfile(pth,SPM.xVol.VRpv.fname);
-		else
-    		noniso = 0;
-		end
-	end
+    if i==1 
+        if isfield(SPM.xVol,'VRpv')
+            noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
+        else
+            noniso = 0;
+        end
+    end
+
+    if isfield(SPM.xVol,'VRpv')
+        SPM.xVol.VRpv = spm_vol(fullfile(pth,SPM.xVol.VRpv.fname));
+    end
 
     switch adjustment
     case 'FWE' % family-wise false positive rate
     %---------------------------------------------------------------
-	   u  = spm_uc(u0,df,STAT,R,1,S);
+       u  = spm_uc(u0,df,STAT,R,1,S);
 
     case 'FDR' % False discovery rate
     %---------------------------------------------------------------
-	   u  = spm_uc_FDR(u0,df,STAT,1,Vspm,0);
+       u  = spm_uc_FDR(u0,df,STAT,1,Vspm,0);
 
     otherwise  %-NB: no adjustment
-	% p for conjunctions is p of the conjunction SPM
-   	%---------------------------------------------------------------
-	   if u0 <= 1
-	       u = spm_u(u0,df,STAT);
-	   else
-	       u = u0;
-	   end
+    % p for conjunctions is p of the conjunction SPM
+    %---------------------------------------------------------------
+       if u0 <= 1
+           u = spm_u(u0,df,STAT);
+       else
+           u = u0;
+       end
     end
 
-	Z = spm_get_data(Vspm,XYZ);
+    Z = spm_get_data(Vspm,XYZ);
 
     %-Calculate height threshold filtering
     %-------------------------------------------------------------------    
@@ -203,7 +206,7 @@ for i=1:size(P,1)
     Z      = Z(:,Q);
     XYZ    = XYZ(:,Q);
     if isempty(Q)
-    	fprintf('No voxels survive height threshold u=%0.2g\n',u);
+        fprintf('No voxels survive height threshold u=%0.2g\n',u);
     end
 
 
@@ -234,26 +237,26 @@ for i=1:size(P,1)
             p_extent_str = '';
         end
         
-    	%-Calculate extent threshold filtering
-    	%-------------------------------------------------------------------
-    	if noniso
-			fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
-	    	A     = spm_clusters(XYZ);
-			[N Z2 XYZ2 A2 V2R] = spm_max_nS(Z,XYZ,SPM.xVol.VRpv);
-			N = V2R/v2r;
-    		Q     = [];
-    		for i = 1:max(A)
-        		j = find(A == i);
-        		if N(min(find(A2 == i))) >= k; Q = [Q j]; end
-    		end
-    	else
-	    	A     = spm_clusters(XYZ);
-    		Q     = [];
-    		for i = 1:max(A)
-        		j = find(A == i);
-        		if length(j) >= k; Q = [Q j]; end
-    		end
-		end
+        %-Calculate extent threshold filtering
+        %-------------------------------------------------------------------
+        if noniso
+            fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
+            A     = spm_clusters(XYZ);
+            [N Z2 XYZ2 A2 V2R] = spm_max_nS(Z,XYZ,SPM.xVol.VRpv);
+            N = V2R/v2r;
+            Q     = [];
+            for i = 1:max(A)
+                j = find(A == i);
+                if N(min(find(A2 == i))) >= k; Q = [Q j]; end
+            end
+        else
+            A     = spm_clusters(XYZ);
+            Q     = [];
+            for i = 1:max(A)
+                j = find(A == i);
+                if length(j) >= k; Q = [Q j]; end
+            end
+        end
 
 
         % ...eliminate voxels
@@ -261,7 +264,7 @@ for i=1:size(P,1)
         Z     = Z(:,Q);
         XYZ   = XYZ(:,Q);
         if isempty(Q)
-    	fprintf('No voxels survived extent threshold k=%0.2g\n',k);
+        fprintf('No voxels survived extent threshold k=%0.2g\n',k);
         end
 
     else
@@ -272,37 +275,37 @@ for i=1:size(P,1)
 
     if ~isempty(Q)
     
-	   switch sel
-	   case 1
-	  	  t2x = 1-spm_Tcdf(Z,df(2));
-		  t2x_name = 'P_';
-	   case 2
-	  	  t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
-		  t2x_name = 'logP_';
-	   case 3
-	  	  t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
-	  	  t2x_name = 'R_';
-	   case 4
-		  t2x = 2*Z/sqrt(df(2));
-		  t2x_name = 'D_';
-	   case 5
-		  t2x = Z;
-		  t2x_name = 'T_';
-	   end
+       switch sel
+       case 1
+          t2x = 1-spm_Tcdf(Z,df(2));
+          t2x_name = 'P_';
+       case 2
+          t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
+          t2x_name = 'logP_';
+       case 3
+          t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
+          t2x_name = 'R_';
+       case 4
+          t2x = 2*Z/sqrt(df(2));
+          t2x_name = 'D_';
+       case 5
+          t2x = Z;
+          t2x_name = 'T_';
+       end
 
-	   str_num = deblank(xCon(Ic).name);
+       str_num = deblank(xCon(Ic).name);
 
-	   % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
-	   str_num(findstr(str_num,' ')) = '_';
-	   strpos = findstr(str_num,' > ');
-	   if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
-	   strpos = findstr(str_num,' < ');
-	   if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
-	   strpos = findstr(str_num,'>');
-	   if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
-	   strpos = findstr(str_num,'<');
-	   if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
-	   str_num = spm_str_manip(str_num,'v');
+       % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
+       str_num(findstr(str_num,' ')) = '_';
+       strpos = findstr(str_num,' > ');
+       if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
+       strpos = findstr(str_num,' < ');
+       if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
+       strpos = findstr(str_num,'>');
+       if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
+       strpos = findstr(str_num,'<');
+       if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
+       str_num = spm_str_manip(str_num,'v');
     
        if neg_results
             neg_str = '_bi'; 
@@ -313,7 +316,7 @@ for i=1:size(P,1)
        name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
        fprintf('Save %s\n', name);
     
-	   out = deblank(fullfile(pth,name));
+       out = deblank(fullfile(pth,name));
 
        %-Reconstruct (filtered) image from XYZ & Z pointlist
        %-----------------------------------------------------------------------
@@ -323,11 +326,11 @@ for i=1:size(P,1)
 
        VO = Vspm;
        VO.fname = out;
-	   if spm2
-			VO.dim(4) = spm_type('int16');
-	   else
-			VO.dt = [spm_type('int16') spm_platform('bigend')];
-	   end
+       if spm2
+            VO.dim(4) = spm_type('int16');
+       else
+            VO.dt = [spm_type('int16') spm_platform('bigend')];
+       end
        spm_write_vol(VO,Y);
     
     end
