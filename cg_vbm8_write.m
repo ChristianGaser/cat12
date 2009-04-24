@@ -70,16 +70,18 @@ for n=1:N,
     [pth1,nam1,ext1] = fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
-    if bf(n,1),
-        chan(n).Nc      = nifti;
-        chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
+    try
+        if bf(n,1),
+            chan(n).Nc      = nifti;
+            chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
                                      res.image(n).dim(1:3),...
                                      [spm_type('float32') spm_platform('bigend')],...
                                      0,1,0);
-        chan(n).Nc.mat  = res.image(n).mat;
-        chan(n).Nc.mat0 = res.image(n).mat;
-        chan(n).Nc.descrip = 'Bias corrected';
-        create(chan(n).Nc);
+            chan(n).Nc.mat  = res.image(n).mat;
+            chan(n).Nc.mat0 = res.image(n).mat;
+            chan(n).Nc.descrip = 'Bias corrected';
+            create(chan(n).Nc);
+        end
     end
 end
 
