@@ -248,6 +248,11 @@ function execute_calcvol(p)
 
 fprintf('%35s\t%5s\t%5s\t%5s\t%5s\n','Name','GM','WM','CSF','Total');
 fid = fopen(p.calcvol_name,'w');
+
+if fid < 0
+	error('No write access: check file permissions or disk space.');
+end
+
 for i=1:length(p.data)
 	tmp = load(deblank(p.data{i}));
     [pth,nam]     = spm_fileparts(p.data{i});
