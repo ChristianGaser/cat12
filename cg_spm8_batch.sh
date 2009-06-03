@@ -5,7 +5,7 @@
 ########################################################
 # $Id$
 
-spm8=~/spm/spm8b  # this parameter has to be set to your spm8 directory
+spm8=~/spm/spm8  # this parameter has to be set to your spm8 directory
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
 
@@ -103,7 +103,7 @@ run_batch ()
 
 	if [ $# -eq 2 ]; then
 		if [ ! -d $spm8 ]; then
-			spm8=${pwd}/$spm8_
+			spm8=${pwd}/$spm8
 	    fi
 		if [ ! -d $spm8 ]; then
 			echo Directory $spm8 does not exist.
