@@ -5,7 +5,7 @@
 ########################################################
 # $Id$
 
-spm8=~/spm/spm8b	# this parameter has to be set to your spm8 directory
+spm8=~/spm/spm8	# this parameter has to be set to your spm8 directory
 matlab=matlab	# you can use other matlab versions by changing the matlab parameter
 writeonly=0
 
