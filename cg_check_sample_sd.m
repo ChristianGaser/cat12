@@ -8,6 +8,7 @@ function cg_check_sample_sd(vargin)
 % Christian Gaser
 % $Id$
 
+global fname jY h1 h2 YpY slice_array
 rev = '$Rev$';
 
 if nargin == 1
@@ -93,6 +94,8 @@ vol = zeros(prod(V(1).dim(1:2)), n);
 YpY = zeros(n);
 
 spm_progress_bar('Init',V(1).dim(3),'Check homogeneity','planes completed')
+slice_array = zeros([V(1).dim(1:2) n]);
+
 for j=1:V(1).dim(3),
 
   dist2_slice = zeros(V(1).dim(1:2));
@@ -102,6 +105,11 @@ for j=1:V(1).dim(3),
     img = spm_slice_vol(V(i),M,V(1).dim(1:2),[1 0]);
     vol(:,i) = img(:);
   end
+
+  if j == round(V(1).dim(3)/2)
+  	slice_array = reshape(vol,[V(1).dim(1:2) n]);
+  end
+
   mean_slice = mean(reshape(vol,[V(i).dim(1:2) n]),3);
   mask = find(mean_slice ~= 0);
   % remove nuisance and calculate again mean
@@ -137,10 +145,10 @@ t = find(abs(YpY) > 1); YpY(t) = YpY(t)./abs(YpY(t));
 YpY(1:n+1:end) = sign(diag(YpY));
 
 YpYsum = sum(YpY,1);
-[i, j] = sort(YpYsum, 2, 'descend');
-YpYsorted = YpY(j,j);
-Nsorted = P(j,:);
-
+[iY, jY] = sort(YpYsum, 2, 'descend');
+YpYsorted = YpY(jY,jY);
+Nsorted = P(jY,:);
+ 
 % sort files
 fprintf('Squared distance to mean:\n');
 [squared_distance_sorted, ind] = sort(squared_distance);
@@ -171,40 +179,43 @@ ylabel('<----- low (good quality) --- squared distance from mean --- large (poor
 xlabel('<----- first --- file order --- last ------>  ','FontSize',FS(10),'FontWeight','Bold');
 hold off
 
+% covariance
 f = figure(4);
-% allow maximal 50 ticklabels
-step = max([round(n/50) 1]);
 ws = spm('Winsize','Graphics');
-set(f,'MenuBar','none','Position',[10 10 2*ws(3) 0.9*ws(3)]);
-subplot(1,2,1)
+
+set(f,'Name','Covariance: Click in image to get file names','NumberTitle','off');
+h = datacursormode(f);
+set(h,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
+set(f,'MenuBar','none','Position',[10 10 ws(3) ws(3)]);
+
 imagesc(YpY)
 a = gca;
-set(a,'YTick',2:step:n,'YTickLabel',fname.m(2:step:n),'TickDir','out','XTick',1:step:n,'XTickLabel','')
-% Xtick rotated by 90 degree
-hxLabel = get(gca,'XLabel');
-set(hxLabel,'Units','data');
-xLabelPosition = get(hxLabel,'Position');
-y = repmat(xLabelPosition(2),length(1:step:n),1);
-text(1:step:n, y, fname.m(1:step:n),'fontsize',get(gca,'fontsize'),'Rotation',90,'HorizontalAlignment','right','Interpreter','none');
+set(a,'XTickLabel','','YTickLabel','');
 axis image
+xlabel('<----- first --- file order --- last ------>  ','FontSize',12,'FontWeight','Bold');
+ylabel('<----- last --- file order --- first ------>  ','FontSize',12,'FontWeight','Bold');
 colormap(hot)
-colorbar
-title('Original order')
 
-subplot(1,2,2)
+% ordered covariance
+f = figure(5);
+set(f,'Name','Covariance: sorted from max to min','NumberTitle','off');
+h = datacursormode(f);
+set(h,'UpdateFcn',@myupdatefcn_ordered,'SnapToDataVertex','on','Enable','on');
+set(f,'MenuBar','none','Position',[11+ws(3) 10 ws(3) ws(3)]);
 imagesc(YpYsorted)
 a = gca;
-set(a,'YTick',2:step:n,'YTickLabel',fname.m(j(2:step:n)),'TickDir','out','XTick',1:step:n,'XTickLabel','')
-% Xtick rotated by 90 degree
-hxLabel = get(gca,'XLabel');
-set(hxLabel,'Units','data');
-xLabelPosition = get(hxLabel,'Position');
-y = repmat(xLabelPosition(2),length(1:step:n),1);
-text(1:step:n, y, fname.m(j(1:step:n)),'fontsize',get(gca,'fontsize'),'Rotation',90,'HorizontalAlignment','right','Interpreter','none');
-colormap(hot)
-colorbar
+set(a,'XTickLabel','','YTickLabel','');
 axis image
-title('Sorted according for covariance')
+xlabel('<----- high --- covariance --- low ------>  ','FontSize',12,'FontWeight','Bold');
+ylabel('<----- low --- covariance --- high ------>  ','FontSize',12,'FontWeight','Bold');
+colormap(hot)
+
+% slice preview
+f = figure(6);
+set(f,'MenuBar','none','Name','Slice preview','Position',[12+2*ws(3) 10 2*V(1).dim(2) 4*V(1).dim(1)]);
+
+% range 0..64
+slice_array = 64*slice_array/max(slice_array(:));
 
 % check for replicates
 for i=1:n
@@ -241,6 +252,56 @@ if show
   list2 = list(1:number,:);
   spm_check_registration(list2)
 end
+return
+
+%-----------------------------------------------------------------------
+function txt = myupdatefcn(obj, event_obj)
+%-----------------------------------------------------------------------
+global fname jY h1 h2 YpY slice_array
+pos = get(event_obj, 'Position');
+h = gca;
+
+x = pos(1);
+y = pos(2);
+
+txt = {sprintf('Covariance: %3.3f',YpY(x,y)),fname.m{x},fname.m{y}};
+
+f = figure(6);
+img = [slice_array(:,:,x); slice_array(:,:,y)];
+image(img)
+p = get(f,'Position');
+p(3:4) = 2*size(img');
+set(f,'Position',p);
+set(f,'MenuBar','none','Colormap',gray);
+set(gca,'XTickLabel','','YTickLabel','');
+xlabel({['Top: ',fname.m{x}],['Bottom: ',fname.m{y}]})
+axis image
+
+return
+
+%-----------------------------------------------------------------------
+function txt = myupdatefcn_ordered(obj, event_obj)
+%-----------------------------------------------------------------------
+global fname jY h1 h2 YpY slice_array
+pos = get(event_obj, 'Position');
+h = gca;
+
+x = jY(pos(1));
+y = jY(pos(2));
+
+txt = {sprintf('Covariance: %3.3f',YpY(x,y)),fname.m{x},fname.m{y}};
+
+f = figure(6);
+img = [slice_array(:,:,x); slice_array(:,:,y)];
+image(img)
+p = get(f,'Position');
+p(3:4) = 2*size(img');
+set(f,'Position',p);
+set(f,'MenuBar','none','Colormap',gray);
+set(gca,'XTickLabel','','YTickLabel','');
+xlabel({['Top: ',fname.m{x}],['Bottom: ',fname.m{y}]})
+axis image
+
 return
 
 %-----------------------------------------------------------------------
@@ -454,7 +515,6 @@ function y = prctile(x,p);
 %   the ith row of Y is the P(i) percentile of each column of X.
 
 %   Copyright 1993-2002 The MathWorks, Inc. 
-%   $Revision$  $Date$
 
 [prows pcols] = size(p);
 if prows ~= 1 & pcols ~= 1
