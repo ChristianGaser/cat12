@@ -121,7 +121,9 @@ nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 generic         = cfg_repeat;
 generic.tag     = 'generic';
 generic.name    = 'Nuisance';
-generic.help    = {'This option allows for the specification of nuisance effects to be removed from the data. '};
+generic.help    = {'This option allows for the specification of nuisance effects to be removed from the data. ',...
+'A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to ',...
+'the calculation of the covariance.'};
 generic.values  = {nuisance};
 generic.num     = [0 Inf];
 
