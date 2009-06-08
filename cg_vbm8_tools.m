@@ -118,6 +118,15 @@ nuisance.name  = 'Nuisance';
 nuisance.val   = {c};
 nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 
+slice = cfg_entry;
+slice.tag = 'slice';
+slice.name = 'Slice (in mm)?';
+slice.strtype = 'e';
+slice.num = [1 1];
+slice.val  = {0};
+slice.help = {[...
+'Choose slice in mm.']};
+
 generic         = cfg_repeat;
 generic.tag     = 'generic';
 generic.name    = 'Nuisance';
@@ -130,7 +139,7 @@ generic.num     = [0 Inf];
 check_cov = cfg_exbranch;
 check_cov.tag = 'check_cov';
 check_cov.name = 'Check sample homogeneity using covariance';
-check_cov.val = {data,scale,generic};
+check_cov.val = {data,scale,slice,generic};
 check_cov.prog   = @cg_check_cov;
 check_cov.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...
@@ -152,19 +161,10 @@ data.help = {[...
 'Select all images. Images have to be in the same orientation with same voxel size and dimension ',...
 '(e.g. normalized images)']};
 
-showslice_slice = cfg_entry;
-showslice_slice.tag = 'slice';
-showslice_slice.name = 'Slice (in mm)?';
-showslice_slice.strtype = 'e';
-showslice_slice.num = [1 1];
-showslice_slice.val  = {0};
-showslice_slice.help = {[...
-'Choose slice in mm.']};
-
 showslice = cfg_exbranch;
 showslice.tag = 'showslice';
 showslice.name = 'Display one slice for all images';
-showslice.val = {data,scale,showslice_slice};
+showslice.val = {data,scale,slice};
 showslice.prog   = @cg_showslice_all;
 showslice.help = {[...
 'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality ',...
