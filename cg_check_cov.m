@@ -16,7 +16,6 @@ if nargin == 1
   for i=1:numel(vargin.data)
     P = strvcat(P,deblank(vargin.data{i}));
   end
-  norm = vargin.scale;
   if isempty(vargin.nuisance)
     nuisance = [];
   else
@@ -38,8 +37,7 @@ if any(any(any(diff(cat(3,V.mat),1,3),3)))
   error('images don''t all have same orientation & voxel size'), end
 
 if nargin < 1
-  norm = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
-  def_nuis = spm_input('Variable to covariate out (nuisance parameter)?','+1','yes|no',[1 0],2);
+  def_nuis = spm_input('Variable to covariate out (nuisance parameter)?',1,'yes|no',[1 0],2);
   if def_nuis
     nuisance = spm_input('Nuisance parameter:','+1','r',[],n);
   else
@@ -54,22 +52,18 @@ if ~isempty(nuisance)
   end
 end
 
+% voxelsize and origin
+vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
+Orig = V(1).mat\[0 0 0 1]';
+
+% range
+range = ([1 V(1).dim(3)] - Orig(3))*vx(3);
+
 % calculate slice from mm to voxel
-sl = slice_mm/vx(3)+Orig(3);
+sl = round(slice_mm/vx(3)+Orig(3));
 while (sl < 1) | (sl > V(1).dim(3))
 	slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
 	sl = round(slice_mm/vx(3)+Orig(3));
-end
-
-% global scaling
-if norm
-  gm=zeros(size(V,1),1);
-  disp('Calculating globals...');
-  for i=1:size(V,1), gm(i) = spm_global(V(i)); end
-  gm_all = mean(gm);
-  for i=1:n
-    V(i).pinfo(1:2,:) = gm_all*V(i).pinfo(1:2,:)/gm(i);
-  end
 end
 
 
@@ -194,7 +188,7 @@ h = datacursormode(f);
 set(h,'UpdateFcn',@myupdatefcn_ordered,'SnapToDataVertex','on','Enable','on');
 set(f,'MenuBar','none','Position',[11+ws(3) 10 ws(3) ws(3)]);
 imagesc(YpYsorted)
-if n_thresholded < n
+if n_thresholded <= n
 	hold on
 	line([n_thresholded-0.5, n_thresholded-0.5], [0.5,n_thresholded-0.5])
 	line([0.5,n_thresholded-0.5],[n_thresholded-0.5, n_thresholded-0.5])
