@@ -22,6 +22,7 @@ if nargin == 1
   else
     nuisance = vargin.nuisance.c;
   end
+  slice_mm = vargin.slice;
 end
 
 if nargin < 1
@@ -44,12 +45,20 @@ if nargin < 1
   else
     nuisance = [];
   end
+	slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
 end
 
 if ~isempty(nuisance)
   if size(nuisance,2) ~= n
     nuisance = nuisance';
   end
+end
+
+% calculate slice from mm to voxel
+sl = slice_mm/vx(3)+Orig(3);
+while (sl < 1) | (sl > V(1).dim(3))
+	slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
+	sl = round(slice_mm/vx(3)+Orig(3));
 end
 
 % global scaling
@@ -81,7 +90,8 @@ for j=1:V(1).dim(3),
     vol(:,i) = img(:);
   end
 
-  if j == round(V(1).dim(3)/2)
+	% get slice data
+  if j == sl
   	slice_array = reshape(vol,[V(1).dim(1:2) n]);
   end
 
