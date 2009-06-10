@@ -16,6 +16,7 @@ if nargin == 1
   for i=1:numel(vargin.data)
     P = strvcat(P,deblank(vargin.data{i}));
   end
+  norm = vargin.scale;
   if isempty(vargin.nuisance)
     nuisance = [];
   else
@@ -37,7 +38,8 @@ if any(any(any(diff(cat(3,V.mat),1,3),3)))
   error('images don''t all have same orientation & voxel size'), end
 
 if nargin < 1
-  def_nuis = spm_input('Variable to covariate out (nuisance parameter)?',1,'yes|no',[1 0],2);
+  norm = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
+  def_nuis = spm_input('Variable to covariate out (nuisance parameter)?','+1','yes|no',[1 0],2);
   if def_nuis
     nuisance = spm_input('Nuisance parameter:','+1','r',[],n);
   else
@@ -66,6 +68,16 @@ while (sl < 1) | (sl > V(1).dim(3))
 	sl = round(slice_mm/vx(3)+Orig(3));
 end
 
+% global scaling
+if norm
+  gm=zeros(size(V,1),1);
+  disp('Calculating globals...');
+  for i=1:size(V,1), gm(i) = spm_global(V(i)); end
+  gm_all = mean(gm);
+  for i=1:n
+    V(i).pinfo(1:2,:) = gm_all*V(i).pinfo(1:2,:)/gm(i);
+  end
+end
 
 %-Start progress plot
 %-----------------------------------------------------------------------
