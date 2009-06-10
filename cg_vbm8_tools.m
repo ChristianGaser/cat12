@@ -117,6 +117,16 @@ slice.val  = {0};
 slice.help = {[...
 'Choose slice in mm.']};
 
+scale = cfg_menu;
+scale.tag = 'scale';
+scale.name = 'Proportional scaling?';
+scale.labels = {'no','yes'};
+scale.values = {0 1};
+scale.val = {0};
+scale.help = {[...
+'This option should be only used if image intensity is not scaled (e.g. T1 images) ',...
+'or if images have to be scaled during statistical analysis (e.g. modulated images).']};
+
 generic         = cfg_repeat;
 generic.tag     = 'generic';
 generic.name    = 'Nuisance';
@@ -129,7 +139,7 @@ generic.num     = [0 Inf];
 check_cov = cfg_exbranch;
 check_cov.tag = 'check_cov';
 check_cov.name = 'Check sample homogeneity using covariance';
-check_cov.val = {data,slice,generic};
+check_cov.val = {data,scale,slice,generic};
 check_cov.prog   = @cg_check_cov;
 check_cov.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...
