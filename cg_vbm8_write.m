@@ -222,7 +222,7 @@ if do_cls & do_defs,
     % use mask from LPBA40 sample if threshold is > 0
     if warp.brainmask_th > 0
         mask = uint8(mask > warp.brainmask_th);
-	else % or empirically estimated thresholds for tissue priors from SPM
+    else % or empirically estimated thresholds for tissue priors from SPM
         mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
     end
 
