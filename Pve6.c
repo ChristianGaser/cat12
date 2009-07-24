@@ -52,7 +52,7 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         case BKGCSFLABEL+1: /* BKGCSF */
           w = src[ind]/mean[CSFLABEL];
           if(w > 1.0) w = 1.0; if(w < 0.0) w = 0.0;
-          new_val[CSFLABEL] = (unsigned char) ROUND(255.0*(1-w));
+          new_val[CSFLABEL] = (unsigned char) ROUND(255.0*w);
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 0;
           if(update_label == PVELABEL) label[ind] = ROUND(255/3*w);
@@ -97,9 +97,7 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
             label[ind] = mxi + 1;
           }
         }
-        
       }
     }
   }  
-  
 }
