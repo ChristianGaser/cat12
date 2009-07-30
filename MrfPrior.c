@@ -99,7 +99,7 @@ void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int ini
   
   /* weighting of beta was empirically estimated using brainweb data with different noise levels
      because old beta estimation was not working */
-  beta[0] = 5.0*XX/(double)n;
+  beta[0] = 4.0*XX/(double)n;
   printf("\t beta %3.3f\n", beta[0]);
   fflush(stdout);
 }
