@@ -70,6 +70,7 @@ void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int ini
   }
 
   /* compute beta */
+  n = 0;
   XX=0.0, YY=0.0;
   for (f[0]=0; f[0]<7; f[0]++)
     for (f[1]=0; f[1]<7; f[1]++)
@@ -77,7 +78,7 @@ void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int ini
         for (f[3]=0; f[3]<7; f[3]++)
           for (i=0; i<nc; i++)
             for (j=0; j<i; j++) {
-
+              n++;
               if (color[i][f[0]][f[1]][f[2]][f[3]] < TH_COLOR ||
                   color[j][f[0]][f[1]][f[2]][f[3]] < TH_COLOR) continue;
 	      
@@ -98,7 +99,7 @@ void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int ini
   
   /* weighting of beta was empirically estimated using brainweb data with different noise levels
      because old beta estimation was not working */
-  beta[0] = 0.2*pow(XX,5)/pow(YY,5);
+  beta[0] = 5.0*XX/(double)n;
   printf("\t beta %3.3f\n", beta[0]);
   fflush(stdout);
 }
