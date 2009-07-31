@@ -59,6 +59,13 @@ d    = res.image(1).dim(1:3);
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
 x3  = 1:d(3);
 
+for i=1:2
+    run2(i).tpm = fullfile(spm('dir'),'toolbox','vbm8',['Template_3.nii,' num2str(i)]);
+end
+tpm2    = strvcat(cat(1,run2(:).tpm));
+tpm2    = spm_load_priors8(tpm2);
+res = warp_dartel(res, warp, tpm2);
+
 chan(N) = struct('B1',[],'B2',[],'B3',[],'T',[],'Nc',[],'Nf',[],'ind',[]);
 for n=1:N,
     d3         = [size(res.Tbias{n}) 1];
@@ -707,3 +714,297 @@ for i=1:d(3),
 end
 %=======================================================================
 
+%=======================================================================
+function [x1,y1,z1] = defs2(Twarp,z,x0,y0,z0,M,msk)
+x1a = x0    + double(Twarp(:,:,z,1));
+y1a = y0    + double(Twarp(:,:,z,2));
+z1a = z0(z) + double(Twarp(:,:,z,3));
+if nargin>=7,
+    x1a = x1a(msk);
+    y1a = y1a(msk);
+    z1a = z1a(msk);
+end
+x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
+y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
+z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
+return;
+%=======================================================================
+
+%=======================================================================
+function res = warp_dartel(res, warp, tpm);
+
+res
+warp
+Affine    = res.Affine;
+V         = res.image;
+M         = tpm.M\Affine*res.image.mat;
+d0        = res.image.dim(1:3);
+vx        = sqrt(sum(res.image.mat(1:3,1:3).^2));
+sk        = max([1 1 1],round(warp.samp*[1 1 1]./vx));
+[x0,y0,o] = ndgrid(1:sk(1):d0(1),1:sk(2):d0(2),1);
+z0        = 1:sk(3):d0(3);
+tiny      = eps*eps;
+
+N = 1;
+K = 3;
+
+% only use GM/WM
+Kb  = 2;
+
+ff     = 5;
+ff     = max(1,ff^3/prod(sk)/abs(det(res.image.mat(1:3,1:3))));
+
+param  = [2 sk.*vx ff*warp.reg*[1 1e-4 0]];
+lam    = [0 0 0 0 0 0.01 1e-4];
+scal   = sk;
+d      = [size(x0) length(z0)];
+
+Twarp = res.Twarp;
+llr   = -0.5*sum(sum(sum(sum(Twarp.*optimNn('vel2mom',Twarp,param,scal)))));
+
+ll     = -Inf;
+tol1   = 1e-4; % Stopping criterion.  For more accuracy, use a smaller value
+
+chan(1).T = res.Tbias{1};
+% Basis functions for bias correction
+d2    = res.image(1).dim(1:3);
+d3         = [size(res.Tbias{1}) 1];
+[x1,x2,o2] = ndgrid(1:d2(1),1:d2(2),1);
+x3  = 1:d(3);
+chan(1).B3 = spm_dctmtx(d2(3),d3(3),x3);
+chan(1).B2 = spm_dctmtx(d2(2),d3(2),x2(1,:)');
+chan(1).B1 = spm_dctmtx(d2(1),d3(1),x1(:,1));
+
+if isfield(res,'msk') && ~isempty(res.msk),
+    VM = spm_vol(res.msk);
+    if sum(sum((VM.mat-V(1).mat).^2)) > 1e-6 || any(VM.dim(1:3) ~= V(1).dim(1:3)),
+        error('Mask must have the same dimensions and orientation as the image.');
+    end
+end
+
+% Load the data
+%-----------------------------------------------------------------------
+nm      = 0; % Number of voxels
+
+scrand = zeros(N,1);
+for n=1:N,
+    if spm_type(V(n).dt(1),'intt'),
+        scrand(n) = V(n).pinfo(1);
+        rand('seed',1);
+    end
+end
+cl  = cell(length(z0),1);
+buf = struct('msk',cl,'nm',cl,'f',cl,'dat',cl,'bf',cl);
+for z=1:length(z0),
+   % Load only those voxels that are more than 5mm up
+   % from the bottom of the tissue probability map.  This
+   % assumes that the affine transformation is pretty close.
+
+    z1  = M(3,1)*x0 + M(3,2)*y0 + (M(3,3)*z0(z) + M(3,4));
+    e   = sqrt(sum(tpm.M(1:3,1:3).^2));
+    e   = 5./e; % mm from edge of TPM
+    buf(z).msk = z1>e(3);
+
+    % Initially load all the data, but prepare to exclude
+    % locations where any of the images is not finite, or
+    % is zero.  We want this to work for skull-stripped
+    % images too.
+    fz = cell(1,N);
+    for n=1:N,
+        fz{n}      = spm_sample_vol(V(n),x0,y0,o*z0(z),0);
+        buf(z).msk = buf(z).msk & isfinite(fz{n}) & (fz{n}~=0);
+    end
+
+    if isfield(res,'msk') && ~isempty(res.msk),
+        % Exclude any voxels to be masked out
+        msk        = spm_sample_vol(VM,x0,y0,o*z0(z),0);
+        buf(z).msk = buf(z).msk & msk;
+    end
+
+    % Eliminate unwanted voxels
+    buf(z).nm  = sum(buf(z).msk(:));
+    nm         = nm + buf(z).nm;
+    for n=1:N,
+        if scrand(n),
+            % Data is an integer type, so to prevent aliasing in the histogram, small
+            % random values are added.  It's not elegant, but the alternative would be
+            % too slow for practical use.
+            buf(z).f{n}  = single(fz{n}(buf(z).msk)+rand(buf(z).nm,1)*scrand(n)-scrand(n)/2);
+        else
+            buf(z).f{n}  = single(fz{n}(buf(z).msk));
+        end
+    end
+
+    % Create a buffer for tissue probability info
+    buf(z).dat = zeros([buf(z).nm,Kb],'single');
+end
+
+maxval = -Inf;
+minval =  Inf;
+for z=1:length(z0),
+    if ~buf(z).nm, continue; end
+    maxval = max(max(buf(z).f{1}),maxval);
+    minval = min(min(buf(z).f{1}),minval);
+end
+maxval = max(maxval*1.5,-minval*0.05); % Account for bias correction effects
+minval = min(minval*1.5,-maxval*0.05);
+chan(1).interscal = [1 minval; 1 maxval]\[1;K];
+
+spm_chi2_plot('Init','Initialising','Log-likelihood','Iteration');
+for iter=1:20,
+
+    % Load the warped prior probability images into the buffer
+    %------------------------------------------------------------
+    for z=1:length(z0),
+        if ~buf(z).nm, continue; end
+        [x1,y1,z1] = defs2(Twarp,z,x0,y0,z0,M,buf(z).msk);
+        b          = spm_sample_priors8(tpm,x1,y1,z1);
+        for k1=1:Kb,
+            buf(z).dat(:,k1) = single(b{k1});
+        end
+    end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Estimate deformations
+    %------------------------------------------------------------
+    ll  = llr;
+
+    % Compute likelihoods, and save them in buf.dat
+    for z=1:length(z0),
+        if ~buf(z).nm, continue; end
+        q = ones(buf(z).nm,Kb);
+        for n=1:N,
+            bf           = transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T);
+            buf(z).bf{n} = single(exp(bf(buf(z).msk)));
+            cr = buf(z).f{n}.*buf(z).bf{n}*chan(n).interscal(2) + chan(n).interscal(1);
+            cr = min(max(round(cr),1),K);
+%            for k1=1:Kb,
+%              q(:,k1) = q(:,k1).*chan(n).lik(cr(:),k1);
+%          end
+        end
+        ll         = ll + sum(log(sum(q.*buf(z).dat,2) + tiny),1);
+        buf(z).dat = q;
+    end
+
+    oll = ll;
+
+    for subit=1:3,
+        Alpha  = zeros([size(x0),numel(z0),6],'single');
+        Beta   = zeros([size(x0),numel(z0),3],'single');
+        for z=1:length(z0),
+            if ~buf(z).nm, continue; end
+
+            % Deformations from parameters
+            [x1,y1,z1]      = defs2(Twarp,z,x0,y0,z0,M,buf(z).msk);
+
+            % Tissue probability map and spatial derivatives
+            [b,db1,db2,db3] = spm_sample_priors8(tpm,x1,y1,z1);
+            clear x1 y1 z1
+
+            % Rotate gradients (according to initial affine registration) and
+            % compute the sums of the tpm and its gradients, times the likelihoods
+            % (from buf.dat).
+            p   = zeros(buf(z).nm,1)+eps;
+            dp1 = zeros(buf(z).nm,1);
+            dp2 = zeros(buf(z).nm,1);
+            dp3 = zeros(buf(z).nm,1);
+            
+            for k1=1:Kb,
+                pp  = double(buf(z).dat(:,k1));
+                p   = p   + pp.*b{k1};
+                dp1 = dp1 + pp.*(M(1,1)*db1{k1} + M(2,1)*db2{k1} + M(3,1)*db3{k1});
+                dp2 = dp2 + pp.*(M(1,2)*db1{k1} + M(2,2)*db2{k1} + M(3,2)*db3{k1});
+                dp3 = dp3 + pp.*(M(1,3)*db1{k1} + M(2,3)*db2{k1} + M(3,3)*db3{k1});
+            end
+            clear b db1 db2 db3
+
+            % Compute first and second derivatives of the matching term.  Note that
+            % these can be represented by a vector and tensor field respectively.
+            tmp             = zeros(d(1:2));
+            tmp(buf(z).msk) = dp1./p; dp1 = tmp;
+            tmp(buf(z).msk) = dp2./p; dp2 = tmp;
+            tmp(buf(z).msk) = dp3./p; dp3 = tmp;
+
+            Beta(:,:,z,1)   = -dp1;     % First derivatives
+            Beta(:,:,z,2)   = -dp2;
+            Beta(:,:,z,3)   = -dp3;
+
+            Alpha(:,:,z,1)  = dp1.*dp1; % Second derivatives
+            Alpha(:,:,z,2)  = dp2.*dp2;
+            Alpha(:,:,z,3)  = dp3.*dp3;
+            Alpha(:,:,z,4)  = dp1.*dp2;
+            Alpha(:,:,z,5)  = dp1.*dp3;
+            Alpha(:,:,z,6)  = dp2.*dp3;
+            clear tmp p dp1 dp2 dp3
+        end
+
+        % Heavy-to-light regularisation
+        if ~isfield(res,'Twarp')
+            switch iter
+            case 1,
+                prm = [param(1:4) 16*param(5:6) param(7:end)];
+            case 2,
+                prm = [param(1:4)  8*param(5:6) param(7:end)];
+            case 3,
+                prm = [param(1:4)  4*param(5:6) param(7:end)];
+            case 4,
+                prm = [param(1:4)  2*param(5:6) param(7:end)];
+            otherwise
+                prm = [param(1:4)    param(5:6) param(7:end)];
+            end
+        else
+            prm = [param(1:4)   param(5:6) param(7:end)];
+        end
+
+        % Add in the first derivatives of the prior term
+        Beta   = Beta  + optimNn('vel2mom',Twarp,prm,scal);
+
+        for lmreg=1:6,
+            % L-M update
+            Twarp1 = Twarp - optimNn('fmg',Alpha,Beta,[prm+lam 1 1],scal);
+
+            llr1   = -0.5*sum(sum(sum(sum(Twarp1.*optimNn('vel2mom',Twarp1,prm,scal)))));
+            ll1    = llr1;
+
+            for z=1:length(z0),
+                if ~buf(z).nm, continue; end
+                [x1,y1,z1] = defs2(Twarp1,z,x0,y0,z0,M,buf(z).msk);
+                b          = spm_sample_priors8(tpm,x1,y1,z1);
+                clear x1 y1 z1
+
+                sq = zeros(buf(z).nm,1) + tiny;
+                for k1=1:Kb,
+                    sq = sq + double(buf(z).dat(:,k1)).*double(b{k1});
+                end
+                clear b
+                ll1 = ll1 + sum(log(sq + tiny));
+                clear sq
+            end
+            if ll1<ll,
+                lam   = lam*8;
+               %fprintf('Warp:\t%g\t%g\t%g :o(\n', ll1, llr1,llrb);
+            else
+                spm_chi2_plot('Set',ll1);
+                lam   = lam*0.5;
+                ll    = ll1;
+                llr   = llr1;
+                Twarp = Twarp1;
+               %fprintf('Warp:\t%g\t%g\t%g :o)\n', ll1, llr1,llrb);
+                break
+            end
+        end
+        clear Alpha Beta
+
+        if ~((ll-oll)>tol1*nm),
+            break
+        end
+        oll = ll;
+    end
+
+end
+
+res.tpm2   = tpm.V;
+res.Twarp  = Twarp;
+res.ll     = ll;
+
+%=======================================================================
