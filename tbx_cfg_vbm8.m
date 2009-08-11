@@ -207,10 +207,7 @@ samp.name = 'Sampling distance';
 samp.strtype = 'e';
 samp.num = [1 1];
 samp.def  = @(val)spm_get_defaults('vbm8.opts.samp', val{:});
-samp.help = {[...
-'The approximate distance between sampled points when estimating the ',...
-'model parameters. Smaller values use more of the data, but the procedure ',...
-'is slower.']};
+samp.help    = {'This encodes the approximate distance between sampled points when estimating the model parameters. Smaller values use more of the data, but the procedure is slower and needs more memory. Determining the ``best'''' setting involves a compromise between speed and accuracy.'};
 
 %------------------------------------------------------------------------
 
@@ -340,7 +337,7 @@ native.tag = 'native';
 native.name = 'Native space';
 native.labels = {'none','yes'};
 native.values = {0 1};
-native.help = {'Write image in native space.'};
+native.help    = {'The native space option allows you to produce a tissue class image (c*) that is in alignment with the original/* (see Figure \ref{seg1})*/. It can also be used for ``importing'''' into a form that can be used with the DARTEL toolbox (rc*).'};
 
 warped    = cfg_menu;
 warped.tag = 'warped';
@@ -354,7 +351,7 @@ affine.tag = 'affine';
 affine.name = 'Affine';
 affine.labels = {'none','yes'};
 affine.values = {0 1};
-affine.help = {'Write image in normalized space, but restricted to afine transformation.'};
+affine.help = {'Write image in normalized space, but restricted to affine transformation.'};
 
 dartel    = cfg_menu;
 dartel.tag = 'dartel';
@@ -401,7 +398,7 @@ modulated.name = 'Modulated normalized';
 modulated.labels = {'none','affine + non-linear (SPM8 default)','non-linear only'};
 modulated.values = {0 1 2};
 modulated.help = {[...
-'Modulation is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
+'``Modulation'''' is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
 'causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). ',...
 'The SPM default is to adjust spatially normalised grey matter (or other tissue class) by using both terms and the ',...
 'resulting modulated images are preserved for the total amount of grey matter. Thus, modulated images reflect the grey matter ',...
@@ -467,7 +464,7 @@ warps.labels = {...
     'inverse + forward'};
 warps.values = {[0 0],[1 0],[0 1],[1 1]};
 warps.def  = @(val)spm_get_defaults('vbm8.output.warps', val{:});
-warps.help = {'Deformation fields can be written.'};
+warps.help    = {'Deformation fields can be saved to disk, and used by the Deformations Utility. For spatially normalising images to MNI space, you will need the forward deformation, whereas for spatially normalising (eg) GIFTI surface files, you''ll need the inverse. It is also possible to transform data in MNI space on to the individual subject, which also requires the inverse transform. Deformations are saved as .nii files, which contain three volumes to encode the x, y and z coordinates.'};
 
 %------------------------------------------------------------------------
 
