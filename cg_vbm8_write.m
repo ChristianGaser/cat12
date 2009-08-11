@@ -59,11 +59,15 @@ d    = res.image(1).dim(1:3);
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
 x3  = 1:d(3);
 
-for i=1:2
-    run2(i).tpm = fullfile(spm('dir'),'toolbox','vbm8',['Template_3.nii,' num2str(i)]);
+% run dartel registration to GM/WM dartel template
+for i=1:6
+%    run2(i).tpm = fullfile(spm('dir'),'toolbox','vbm8',['Template_5_IXI550_MNI152.nii,' num2str(i)]);
+    run2(i).tpm = fullfile(spm('dir'),'toolbox','Seg',['TPM.nii,' num2str(i)]);
 end
 tpm2    = strvcat(cat(1,run2(:).tpm));
+
 tpm2    = spm_load_priors8(tpm2);
+
 res = warp_dartel(res, warp, tpm2);
 
 chan(N) = struct('B1',[],'B2',[],'B3',[],'T',[],'Nc',[],'Nf',[],'ind',[]);
@@ -733,8 +737,10 @@ return;
 %=======================================================================
 function res = warp_dartel(res, warp, tpm);
 
-res
-warp
+if isempty(res.lkp),
+	error('Nonparametric segmentation not yet supported');
+end
+
 Affine    = res.Affine;
 V         = res.image;
 M         = tpm.M\Affine*res.image.mat;
@@ -745,16 +751,14 @@ sk        = max([1 1 1],round(warp.samp*[1 1 1]./vx));
 z0        = 1:sk(3):d0(3);
 tiny      = eps*eps;
 
-N = 1;
-K = 3;
-
-% only use GM/WM
-Kb  = 2;
+lkp = res.lkp;
+K   = numel(lkp);
+Kb  = length(tpm.V)
 
 ff     = 5;
 ff     = max(1,ff^3/prod(sk)/abs(det(res.image.mat(1:3,1:3))));
 
-param  = [2 sk.*vx ff*warp.reg*[1 1e-4 0]];
+param  = [2 sk.*vx ff*warp.reg*[1 1e-4 0]]
 lam    = [0 0 0 0 0 0.01 1e-4];
 scal   = sk;
 d      = [size(x0) length(z0)];
@@ -764,6 +768,13 @@ llr   = -0.5*sum(sum(sum(sum(Twarp.*optimNn('vel2mom',Twarp,param,scal)))));
 
 ll     = -Inf;
 tol1   = 1e-4; % Stopping criterion.  For more accuracy, use a smaller value
+
+% Initialise bias correction
+%-----------------------------------------------------------------------
+N    = numel(V);
+cl   = cell(N,1);
+args = {'C',cl,'B1',cl,'B2',cl,'B3',cl,'T',cl,'ll',cl,'lmreg',cl};
+chan = struct(args{:});
 
 chan(1).T = res.Tbias{1};
 % Basis functions for bias correction
@@ -795,6 +806,7 @@ for n=1:N,
 end
 cl  = cell(length(z0),1);
 buf = struct('msk',cl,'nm',cl,'f',cl,'dat',cl,'bf',cl);
+
 for z=1:length(z0),
    % Load only those voxels that are more than 5mm up
    % from the bottom of the tissue probability map.  This
@@ -872,18 +884,23 @@ for iter=1:20,
     % Compute likelihoods, and save them in buf.dat
     for z=1:length(z0),
         if ~buf(z).nm, continue; end
-        q = ones(buf(z).nm,Kb);
+        cr = cell(1,N);
         for n=1:N,
             bf           = transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T);
             buf(z).bf{n} = single(exp(bf(buf(z).msk)));
-            cr = buf(z).f{n}.*buf(z).bf{n}*chan(n).interscal(2) + chan(n).interscal(1);
-            cr = min(max(round(cr),1),K);
-%            for k1=1:Kb,
-%              q(:,k1) = q(:,k1).*chan(n).lik(cr(:),k1);
-%          end
+            cr{n} = double(buf(z).f{n}.*buf(z).bf{n});
         end
-        ll         = ll + sum(log(sum(q.*buf(z).dat,2) + tiny),1);
-        buf(z).dat = q;
+        q   =  zeros(buf(z).nm,Kb);
+        qt  = likelihoods(buf(z).f,buf(z).bf,res.mg,res.mn,res.vr);
+        for k1=1:Kb,
+            for k=find(lkp==k1),
+                q(:,k1) = q(:,k1) + qt(:,k);
+            end
+            b                = double(buf(z).dat(:,k1));
+            buf(z).dat(:,k1) = single(q(:,k1));
+            q(:,k1)          = q(:,k1).*b;
+        end
+        ll = ll + sum(log(sum(q,2) + tiny));
     end
 
     oll = ll;
@@ -955,7 +972,7 @@ for iter=1:20,
         else
             prm = [param(1:4)   param(5:6) param(7:end)];
         end
-
+prm
         % Add in the first derivatives of the prior term
         Beta   = Beta  + optimNn('vel2mom',Twarp,prm,scal);
 

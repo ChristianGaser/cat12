@@ -1,5 +1,5 @@
 function cg_check_cov(vargin)
-%cg_check_cov	to check standard deviation across sample
+%cg_check_cov	to check covriance across sample
 %
 % Images have to be in the same orientation with same voxel size
 % and dimension (e.g. normalized images)
@@ -217,6 +217,15 @@ colormap(hot)
 % slice preview
 f = figure(6);
 set(f,'MenuBar','none','Name','Slice preview','NumberTitle','off','Position',[12+2*ws(3) 10 2*V(1).dim(2) 4*V(1).dim(1)]);
+
+% Close button
+hCloseButton = uicontrol(f,...
+    		'position',[V(1).dim(2)-40 4*V(1).dim(1)-25 80 20],...
+    		'style','Pushbutton',...
+    		'string','Close',...
+    		'callback','try close(6); end; try close(5); end;try close(4);end;',...
+    		'ToolTipString','Close windows',...
+        'Interruptible','on','Enable','on');
 
 % range 0..64
 slice_array = 64*slice_array/max(slice_array(:));
