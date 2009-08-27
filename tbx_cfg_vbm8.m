@@ -322,10 +322,20 @@ print.help = {[...
 
 %------------------------------------------------------------------------
 
+dartelwarp    = cfg_menu;
+dartelwarp.tag = 'dartelwarp';
+dartelwarp.name = 'Spatial normalization';
+dartelwarp.labels = {'SPM default (low-dimensional)','Dartel (high-dimensional)'};
+dartelwarp.values = {0 1};
+dartelwarp.def  = @(val)spm_get_defaults('vbm8.extopts.dartelwarp', val{:});
+dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization.'};
+
+%------------------------------------------------------------------------
+
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {bb,brainmask,brainmask_th,cleanup};
+extopts.val = {dartelwarp,bb,brainmask,brainmask_th,cleanup};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
@@ -376,6 +386,16 @@ bias.help = {[...
 'These artifacts, although not usually a problem for visual inspection, can impede automated ',...
 'processing of the images. The bias corrected version should have more uniform intensities within ',...
 'the different types of tissues and can be saved in native space and/or normalised.']};
+
+%------------------------------------------------------------------------
+
+warped.def  = @(val)spm_get_defaults('vbm8.output.jacobian.warped', val{:});
+jacobian      = cfg_branch;
+jacobian.tag = 'jacobian';
+jacobian.name = 'Jacobian determinant';
+jacobian.val = {warped};
+label.help = {[...
+'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design.']};
 
 %------------------------------------------------------------------------
 
@@ -471,7 +491,7 @@ warps.help    = {'Deformation fields can be saved to disk, and used by the Defor
 output      = cfg_branch;
 output.tag = 'output';
 output.name = 'Writing options';
-output.val = {grey, white, csf, bias, label, warps};
+output.val = {grey, white, csf, bias, label, jacobian, warps};
 output.help = {[...
 'This routine produces spatial normalisation parameters (*_seg8_sn.mat files) by default. '],...
 '',...

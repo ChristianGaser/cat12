@@ -13,6 +13,8 @@ cd(pth);
 mex -O AmapMex.c Amap.c MrfPrior.c Pve6.c
 cd(p_path);
 
+try 
 [prob, mean] = AmapMex(src, label, nc, niters, sub, pve);
+end
 
 return

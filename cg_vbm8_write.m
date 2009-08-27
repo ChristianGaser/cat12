@@ -1,4 +1,4 @@
-function cls = cg_vbm8_write(res,tc,bf,df,lb,warp,tpm)
+function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm)
 % Write out VBM preprocessed data
 % FORMAT cls = cg_vbm8_write(res,tc,bf,df)
 %____________________________________________________________________________
@@ -30,21 +30,20 @@ else
 end
 
 N   = numel(res.image);
-if nargin<2, tc = true(Kb,6); end % native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
-if nargin<3, bf = true(N,3);  end % corrected, warp corrected, affine corrected
-if nargin<4, df = true(1,2);  end % inverse, forward
-if nargin<5, lb = true(1,4);  end % label, warped label, rigid label, affine label
-if nargin < 6
-    vx = NaN;
-    bb = ones(2,3)*NaN;
-    print = 0;
-else
-    vx = NaN;
-    bb = ones(2,3)*NaN;
+% tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
+% bf - bias field: corrected, warp corrected, affine corrected
+% df - deformations: inverse, forward
+% lb - label: label, warped label, rigid label, affine label
+% jc - jacobian: no, normalized 
+
+do_dartel = warp.dartelwarp;   % apply dartel normalization
+
+vx = NaN;
+bb = ones(2,3)*NaN;
+print = 0;
 %    vx = warp.vox;
 %    bb = warp.bb;
 %    print = warp.print;
-end 
 
 % Sort out bounding box etc
 bb(~isfinite(bb)) = bb1(~isfinite(bb));
@@ -60,15 +59,14 @@ d    = res.image(1).dim(1:3);
 x3  = 1:d(3);
 
 % run dartel registration to GM/WM dartel template
-for i=1:6
-%    run2(i).tpm = fullfile(spm('dir'),'toolbox','vbm8',['Template_5_IXI550_MNI152.nii,' num2str(i)]);
-    run2(i).tpm = fullfile(spm('dir'),'toolbox','Seg',['TPM.nii,' num2str(i)]);
+if do_dartel
+    for j=1:6
+        for i=1:2
+            run2(i).tpm = fullfile(fileparts(which(mfilename)),['Template_IXI550_' num2str(j) '_MNI152.nii,' num2str(i)]);
+        end
+        tpm2{j}    = spm_vol(strvcat(cat(1,run2(:).tpm)));
+    end
 end
-tpm2    = strvcat(cat(1,run2(:).tpm));
-
-tpm2    = spm_load_priors8(tpm2);
-
-res = warp_dartel(res, warp, tpm2);
 
 chan(N) = struct('B1',[],'B2',[],'B3',[],'T',[],'Nc',[],'Nf',[],'ind',[]);
 for n=1:N,
@@ -122,7 +120,7 @@ Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
 do_defs = any(df) || bf(1,2) || any(lb([2,3,4]));
-do_defs = do_cls | do_defs;
+do_defs = do_cls || do_defs;
 if do_defs,
     if df(2),
         [pth,nam,ext1]=fileparts(res.image(1).fname);
@@ -293,7 +291,7 @@ clear tpm
 M0 = res.image(1).mat;
 
 % rigidly or affine aligned images
-if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
+if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
 
     % Figure out the mapping from the volumes to create to the original
     mm = [[
@@ -466,10 +464,146 @@ if any(tc(:,2)) || any(tc(:,3)) || lb(1,3) || lb(1,4) || bf(1,3),
     end
 end
 
+
+% apply dartel
+if do_dartel
+tic
+    % use GM/WM for dartel
+    n1 = 2;
+
+    f = zeros([odim(1:3) 2],'single');
+    g = zeros([odim(1:3) 2],'single');
+    u = zeros([odim(1:3) 3],'single');
+    for k1=1:n1
+        for i=1:odim(3),
+            f(:,:,i,k1) = single(spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255);
+        end
+    end
+
+    rform = 0;
+    code  = 2;
+    lmreg = 0.01;
+    cyc = 3;
+    its = 3;
+
+    for i=1:6
+        param(i).its = 3;
+        param(i).rparam = [4 2 1e-6]/(2^(i-1));
+    end
+    param(1).K = 0;
+    param(2).K = 0;
+    param(3).K = 1;
+    param(4).K = 2;
+    param(5).K = 4;
+    param(6).K = 6;
+
+    it0 = 0;
+    for it = 5:numel(param)
+        prm   = [rform, param(it).rparam, lmreg, cyc, its, param(it).K, code];
+        % load new template for this iteration
+        for k1=1:n1
+            for i=1:odim(3),
+                g(:,:,i,k1) = single(spm_slice_vol(tpm2{it}(k1),spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
+            end
+        end
+        for j = 1:param(it).its,
+            it0 = it0 + 1;
+            figure(11)
+            imagesc(u(:,:,round(size(u,3)/2),1))
+            set(gca,'CLim',[-5 5])
+            drawnow
+            [u,ll] = dartel3(u,g,f,prm);
+            fprintf('%d \t%g\t%g\t%g\t%g\n',...
+                it0,ll(1),ll(2),ll(1)+ll(2),ll(3));
+        end
+    end
+    
+    [pth,nam,ext1]=fileparts(res.image(1).fname);
+
+    if jc || any(tc(:,5)) || any(tc(:,6))
+        [y0,dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
+        dt     = max(dt,eps);
+    else
+        y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
+    end
+    
+    % apply affine transformation to deformations
+
+save all
+
+    [t1,t2,t3] = ndgrid(1:d(1),1:d(2),1:d(3));
+
+    iMa = inv(Ma);
+    t11  = iMa(1,1)*t1 + iMa(1,2)*t2 + iMa(1,3)*t3 + iMa(1,4);
+    t22  = iMa(2,1)*t1 + iMa(2,2)*t2 + iMa(2,3)*t3 + iMa(2,4);
+    t33  = iMa(3,1)*t1 + iMa(3,2)*t2 + iMa(3,3)*t3 + iMa(3,4);
+
+    tmp = spm_bsplinc(y0(:,:,:,1),[3 3 3 0 0 0]);
+    y(:,:,:,1) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
+    tmp = spm_bsplinc(y0(:,:,:,2),[3 3 3 0 0 0]);
+    y(:,:,:,2) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
+    tmp = spm_bsplinc(y0(:,:,:,3),[3 3 3 0 0 0]);
+    y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
+
+%    for i=1:3
+%       y(:,:,:,i)  = Ma(i,1)*y1 + Ma(i,2)*y2 + Ma(i,3)*y3 + Ma(i,4);
+%    end
+    clear y1 y2 y3 tmp
+ 
+%    y1 = double(y0(:,:,:,1));
+%    y2 = double(y0(:,:,:,2));
+%    y3 = double(y0(:,:,:,3));
+toc
+    
+if 0
+    for k1=1:3,
+        if tc(k1,7),
+            N      = nifti;
+            N.dat  = file_array(fullfile(pth,['wmrp', num2str(k1), nam, '_affine.nii']),...
+                                d1,'float32-be',0,1,0);
+            N.mat  = M1;
+            N.mat0 = M1;
+            N.descrip = 'Modulated dartel warped image';
+            create(N);
+
+            dat = zeros(odim(1:3));
+            for i=1:odim(3),
+                dat(:,:,i) = spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            end
+            
+            dat = spm_bsplinc(dat,[3 3 3 0 0 0]);
+            dat = spm_bsplins(dat,y1,y2,y3,[3 3 3 0 0 0]);
+            N.dat(:,:,:) = dat.*dt;
+            
+        end
+    end
+end
+    
+end
+
+if jc
+    if ~do_dartel
+        warning('Jacobian can only be saved if dartel normalization was used.');
+    end
+    N      = nifti;
+    N.dat  = file_array(fullfile(pth,['jac_rp1_', nam, '_affine.nii']),...
+                                    d1,...
+                                    [spm_type('float32') spm_platform('bigend')],...
+                                    0,1,0);
+    N.mat  = M1;
+    N.mat0 = M1;
+    N.descrip = 'Jacobian';
+    create(N);
+
+    N.dat(:,:,:) = dt;
+end
+
 if any(tc(:,4)),
     C = zeros([d1,Kb],'single');
 end
 
+%TODO: check here for the case that only the normalized bias corrected images is saved
+% and tc is not defined
 % warped tissue classes
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
@@ -543,8 +677,13 @@ if any(tc(:,4)),
     for k1=1:Kb,
         if tc(k1,4),
             N      = nifti;
-            N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
+            if do_dartel
+                N.dat  = file_array(fullfile(pth,['wrp', num2str(k1), nam, '.nii']),...
                                 d1,'int16-be',0,1/255,0);
+            else
+                N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
+                                d1,'int16-be',0,1/255,0);
+            end
             N.mat  = M1;
             N.mat0 = M1;
             N.descrip = ['Warped tissue class ' num2str(k1)];
@@ -571,7 +710,7 @@ if lb(1),
     N.dat(indx,indy,indz) = double(label)*3/255;
 end
 
-% native bias-corrected image
+% warped bias-corrected image
 if bf(1,2),
     C = zeros(d1,'single');
     c = single(chan(1).Nc.dat(:,:,:,1,1));
@@ -579,8 +718,13 @@ if bf(1,2),
     C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
-    N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
+    if do_dartel
+        N.dat  = file_array(fullfile(pth,['wrm', nam, '.nii']),...
                                 d1,'int16',0,1,0);
+    else
+        N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
+                                d1,'int16',0,1,0);
+    end
     N.mat  = M1;
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
@@ -597,8 +741,13 @@ if lb(2),
     C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
-    N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
+    if do_dartel
+        N.dat  = file_array(fullfile(pth,['wrp0', nam, '.nii']),...
                                 d1,'float32',0,1,0);
+    else
+        N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
+                                d1,'float32',0,1,0);
+    end
     N.mat  = M1;
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
@@ -716,312 +865,4 @@ for i=1:d(3),
     x(:,:,i,2) = x2;
     x(:,:,i,3) = single(i);
 end
-%=======================================================================
-
-%=======================================================================
-function [x1,y1,z1] = defs2(Twarp,z,x0,y0,z0,M,msk)
-x1a = x0    + double(Twarp(:,:,z,1));
-y1a = y0    + double(Twarp(:,:,z,2));
-z1a = z0(z) + double(Twarp(:,:,z,3));
-if nargin>=7,
-    x1a = x1a(msk);
-    y1a = y1a(msk);
-    z1a = z1a(msk);
-end
-x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
-y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
-z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
-return;
-%=======================================================================
-
-%=======================================================================
-function res = warp_dartel(res, warp, tpm);
-
-if isempty(res.lkp),
-	error('Nonparametric segmentation not yet supported');
-end
-
-Affine    = res.Affine;
-V         = res.image;
-M         = tpm.M\Affine*res.image.mat;
-d0        = res.image.dim(1:3);
-vx        = sqrt(sum(res.image.mat(1:3,1:3).^2));
-sk        = max([1 1 1],round(warp.samp*[1 1 1]./vx));
-[x0,y0,o] = ndgrid(1:sk(1):d0(1),1:sk(2):d0(2),1);
-z0        = 1:sk(3):d0(3);
-tiny      = eps*eps;
-
-lkp = res.lkp;
-K   = numel(lkp);
-Kb  = length(tpm.V)
-
-ff     = 5;
-ff     = max(1,ff^3/prod(sk)/abs(det(res.image.mat(1:3,1:3))));
-
-param  = [2 sk.*vx ff*warp.reg*[1 1e-4 0]]
-lam    = [0 0 0 0 0 0.01 1e-4];
-scal   = sk;
-d      = [size(x0) length(z0)];
-
-Twarp = res.Twarp;
-llr   = -0.5*sum(sum(sum(sum(Twarp.*optimNn('vel2mom',Twarp,param,scal)))));
-
-ll     = -Inf;
-tol1   = 1e-4; % Stopping criterion.  For more accuracy, use a smaller value
-
-% Initialise bias correction
-%-----------------------------------------------------------------------
-N    = numel(V);
-cl   = cell(N,1);
-args = {'C',cl,'B1',cl,'B2',cl,'B3',cl,'T',cl,'ll',cl,'lmreg',cl};
-chan = struct(args{:});
-
-chan(1).T = res.Tbias{1};
-% Basis functions for bias correction
-d2    = res.image(1).dim(1:3);
-d3         = [size(res.Tbias{1}) 1];
-[x1,x2,o2] = ndgrid(1:d2(1),1:d2(2),1);
-x3  = 1:d(3);
-chan(1).B3 = spm_dctmtx(d2(3),d3(3),x3);
-chan(1).B2 = spm_dctmtx(d2(2),d3(2),x2(1,:)');
-chan(1).B1 = spm_dctmtx(d2(1),d3(1),x1(:,1));
-
-if isfield(res,'msk') && ~isempty(res.msk),
-    VM = spm_vol(res.msk);
-    if sum(sum((VM.mat-V(1).mat).^2)) > 1e-6 || any(VM.dim(1:3) ~= V(1).dim(1:3)),
-        error('Mask must have the same dimensions and orientation as the image.');
-    end
-end
-
-% Load the data
-%-----------------------------------------------------------------------
-nm      = 0; % Number of voxels
-
-scrand = zeros(N,1);
-for n=1:N,
-    if spm_type(V(n).dt(1),'intt'),
-        scrand(n) = V(n).pinfo(1);
-        rand('seed',1);
-    end
-end
-cl  = cell(length(z0),1);
-buf = struct('msk',cl,'nm',cl,'f',cl,'dat',cl,'bf',cl);
-
-for z=1:length(z0),
-   % Load only those voxels that are more than 5mm up
-   % from the bottom of the tissue probability map.  This
-   % assumes that the affine transformation is pretty close.
-
-    z1  = M(3,1)*x0 + M(3,2)*y0 + (M(3,3)*z0(z) + M(3,4));
-    e   = sqrt(sum(tpm.M(1:3,1:3).^2));
-    e   = 5./e; % mm from edge of TPM
-    buf(z).msk = z1>e(3);
-
-    % Initially load all the data, but prepare to exclude
-    % locations where any of the images is not finite, or
-    % is zero.  We want this to work for skull-stripped
-    % images too.
-    fz = cell(1,N);
-    for n=1:N,
-        fz{n}      = spm_sample_vol(V(n),x0,y0,o*z0(z),0);
-        buf(z).msk = buf(z).msk & isfinite(fz{n}) & (fz{n}~=0);
-    end
-
-    if isfield(res,'msk') && ~isempty(res.msk),
-        % Exclude any voxels to be masked out
-        msk        = spm_sample_vol(VM,x0,y0,o*z0(z),0);
-        buf(z).msk = buf(z).msk & msk;
-    end
-
-    % Eliminate unwanted voxels
-    buf(z).nm  = sum(buf(z).msk(:));
-    nm         = nm + buf(z).nm;
-    for n=1:N,
-        if scrand(n),
-            % Data is an integer type, so to prevent aliasing in the histogram, small
-            % random values are added.  It's not elegant, but the alternative would be
-            % too slow for practical use.
-            buf(z).f{n}  = single(fz{n}(buf(z).msk)+rand(buf(z).nm,1)*scrand(n)-scrand(n)/2);
-        else
-            buf(z).f{n}  = single(fz{n}(buf(z).msk));
-        end
-    end
-
-    % Create a buffer for tissue probability info
-    buf(z).dat = zeros([buf(z).nm,Kb],'single');
-end
-
-maxval = -Inf;
-minval =  Inf;
-for z=1:length(z0),
-    if ~buf(z).nm, continue; end
-    maxval = max(max(buf(z).f{1}),maxval);
-    minval = min(min(buf(z).f{1}),minval);
-end
-maxval = max(maxval*1.5,-minval*0.05); % Account for bias correction effects
-minval = min(minval*1.5,-maxval*0.05);
-chan(1).interscal = [1 minval; 1 maxval]\[1;K];
-
-spm_chi2_plot('Init','Initialising','Log-likelihood','Iteration');
-for iter=1:20,
-
-    % Load the warped prior probability images into the buffer
-    %------------------------------------------------------------
-    for z=1:length(z0),
-        if ~buf(z).nm, continue; end
-        [x1,y1,z1] = defs2(Twarp,z,x0,y0,z0,M,buf(z).msk);
-        b          = spm_sample_priors8(tpm,x1,y1,z1);
-        for k1=1:Kb,
-            buf(z).dat(:,k1) = single(b{k1});
-        end
-    end
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Estimate deformations
-    %------------------------------------------------------------
-    ll  = llr;
-
-    % Compute likelihoods, and save them in buf.dat
-    for z=1:length(z0),
-        if ~buf(z).nm, continue; end
-        cr = cell(1,N);
-        for n=1:N,
-            bf           = transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T);
-            buf(z).bf{n} = single(exp(bf(buf(z).msk)));
-            cr{n} = double(buf(z).f{n}.*buf(z).bf{n});
-        end
-        q   =  zeros(buf(z).nm,Kb);
-        qt  = likelihoods(buf(z).f,buf(z).bf,res.mg,res.mn,res.vr);
-        for k1=1:Kb,
-            for k=find(lkp==k1),
-                q(:,k1) = q(:,k1) + qt(:,k);
-            end
-            b                = double(buf(z).dat(:,k1));
-            buf(z).dat(:,k1) = single(q(:,k1));
-            q(:,k1)          = q(:,k1).*b;
-        end
-        ll = ll + sum(log(sum(q,2) + tiny));
-    end
-
-    oll = ll;
-
-    for subit=1:3,
-        Alpha  = zeros([size(x0),numel(z0),6],'single');
-        Beta   = zeros([size(x0),numel(z0),3],'single');
-        for z=1:length(z0),
-            if ~buf(z).nm, continue; end
-
-            % Deformations from parameters
-            [x1,y1,z1]      = defs2(Twarp,z,x0,y0,z0,M,buf(z).msk);
-
-            % Tissue probability map and spatial derivatives
-            [b,db1,db2,db3] = spm_sample_priors8(tpm,x1,y1,z1);
-            clear x1 y1 z1
-
-            % Rotate gradients (according to initial affine registration) and
-            % compute the sums of the tpm and its gradients, times the likelihoods
-            % (from buf.dat).
-            p   = zeros(buf(z).nm,1)+eps;
-            dp1 = zeros(buf(z).nm,1);
-            dp2 = zeros(buf(z).nm,1);
-            dp3 = zeros(buf(z).nm,1);
-            
-            for k1=1:Kb,
-                pp  = double(buf(z).dat(:,k1));
-                p   = p   + pp.*b{k1};
-                dp1 = dp1 + pp.*(M(1,1)*db1{k1} + M(2,1)*db2{k1} + M(3,1)*db3{k1});
-                dp2 = dp2 + pp.*(M(1,2)*db1{k1} + M(2,2)*db2{k1} + M(3,2)*db3{k1});
-                dp3 = dp3 + pp.*(M(1,3)*db1{k1} + M(2,3)*db2{k1} + M(3,3)*db3{k1});
-            end
-            clear b db1 db2 db3
-
-            % Compute first and second derivatives of the matching term.  Note that
-            % these can be represented by a vector and tensor field respectively.
-            tmp             = zeros(d(1:2));
-            tmp(buf(z).msk) = dp1./p; dp1 = tmp;
-            tmp(buf(z).msk) = dp2./p; dp2 = tmp;
-            tmp(buf(z).msk) = dp3./p; dp3 = tmp;
-
-            Beta(:,:,z,1)   = -dp1;     % First derivatives
-            Beta(:,:,z,2)   = -dp2;
-            Beta(:,:,z,3)   = -dp3;
-
-            Alpha(:,:,z,1)  = dp1.*dp1; % Second derivatives
-            Alpha(:,:,z,2)  = dp2.*dp2;
-            Alpha(:,:,z,3)  = dp3.*dp3;
-            Alpha(:,:,z,4)  = dp1.*dp2;
-            Alpha(:,:,z,5)  = dp1.*dp3;
-            Alpha(:,:,z,6)  = dp2.*dp3;
-            clear tmp p dp1 dp2 dp3
-        end
-
-        % Heavy-to-light regularisation
-        if ~isfield(res,'Twarp')
-            switch iter
-            case 1,
-                prm = [param(1:4) 16*param(5:6) param(7:end)];
-            case 2,
-                prm = [param(1:4)  8*param(5:6) param(7:end)];
-            case 3,
-                prm = [param(1:4)  4*param(5:6) param(7:end)];
-            case 4,
-                prm = [param(1:4)  2*param(5:6) param(7:end)];
-            otherwise
-                prm = [param(1:4)    param(5:6) param(7:end)];
-            end
-        else
-            prm = [param(1:4)   param(5:6) param(7:end)];
-        end
-prm
-        % Add in the first derivatives of the prior term
-        Beta   = Beta  + optimNn('vel2mom',Twarp,prm,scal);
-
-        for lmreg=1:6,
-            % L-M update
-            Twarp1 = Twarp - optimNn('fmg',Alpha,Beta,[prm+lam 1 1],scal);
-
-            llr1   = -0.5*sum(sum(sum(sum(Twarp1.*optimNn('vel2mom',Twarp1,prm,scal)))));
-            ll1    = llr1;
-
-            for z=1:length(z0),
-                if ~buf(z).nm, continue; end
-                [x1,y1,z1] = defs2(Twarp1,z,x0,y0,z0,M,buf(z).msk);
-                b          = spm_sample_priors8(tpm,x1,y1,z1);
-                clear x1 y1 z1
-
-                sq = zeros(buf(z).nm,1) + tiny;
-                for k1=1:Kb,
-                    sq = sq + double(buf(z).dat(:,k1)).*double(b{k1});
-                end
-                clear b
-                ll1 = ll1 + sum(log(sq + tiny));
-                clear sq
-            end
-            if ll1<ll,
-                lam   = lam*8;
-               %fprintf('Warp:\t%g\t%g\t%g :o(\n', ll1, llr1,llrb);
-            else
-                spm_chi2_plot('Set',ll1);
-                lam   = lam*0.5;
-                ll    = ll1;
-                llr   = llr1;
-                Twarp = Twarp1;
-               %fprintf('Warp:\t%g\t%g\t%g :o)\n', ll1, llr1,llrb);
-                break
-            end
-        end
-        clear Alpha Beta
-
-        if ~((ll-oll)>tol1*nm),
-            break
-        end
-        oll = ll;
-    end
-
-end
-
-res.tpm2   = tpm.V;
-res.Twarp  = Twarp;
-res.ll     = ll;
-
 %=======================================================================
