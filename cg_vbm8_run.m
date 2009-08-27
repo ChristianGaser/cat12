@@ -45,6 +45,7 @@ warp = struct('affreg', job.opts.affreg,...
               'reg', job.opts.warpreg,...
               'bb', job.extopts.bb,...
               'write', job.output.warps,...
+              'dartelwarp', job.extopts.dartelwarp,...
               'cleanup', job.extopts.cleanup,...
               'brainmask_th', job.extopts.brainmask_th,...
               'brainmask', job.extopts.brainmask);
@@ -69,14 +70,15 @@ for i=4:6
     tissue(i).native = [0 0 0];
 end
 
-job.bias  = [job.output.bias.native  job.output.bias.warped job.output.bias.affine];
-job.label = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
+job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.affine];
+job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
+job.jacobian = job.output.jacobian.warped;
 
 job.biasreg  = job.opts.biasreg;
 job.biasfwhm = job.opts.biasfwhm;
 job.channel  = channel;
-job.warp   = warp;
-job.tissue = tissue;
+job.warp     = warp;
+job.tissue   = tissue;
 
 if nargin==1,
     varargout{:} = run_job(job, estwrite);
@@ -194,7 +196,7 @@ for iter=1:nit,
                 res = load(seg8_name);
                 % use path of mat-file in case that image was moved
                 for i=1:numel(res.image)
-					[image_pth,image_nam,image_ext]=fileparts(res.image(i).fname);
+					        [image_pth,image_nam,image_ext]=fileparts(res.image(i).fname);
                 	res.image(i).fname = fullfile(pth,[image_nam,image_ext]);
                 end
             else
@@ -205,17 +207,18 @@ for iter=1:nit,
           
         if iter==nit,
             % Final iteration, so write out the required data.
-            tmp1 = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
-            tmp2 = job.bias;
-            tmp3 = job.warp.write;
-            tmp4 = job.label;
-            cg_vbm8_write(res, tmp1, tmp2, tmp3, tmp4, job.warp, tpm)
+            tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
+            bf = job.bias;
+            df = job.warp.write;
+            lb = job.label;
+            jc = job.jacobian;
+            cg_vbm8_write(res, tc, bf, df, lb, jc, job.warp, tpm)
         else
             % Not the final iteration, so compute sufficient statistics for
             % re-estimating the template data.
             N    = numel(job.channel);
             K    = numel(job.tissue);
-            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0 0 0], job.warp, tpm);
+            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0 0 0], 0, job.warp, tpm);
             for k=1:K,
                 SS(:,:,:,k) = SS(:,:,:,k) + cls{k};
             end
