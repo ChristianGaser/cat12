@@ -94,7 +94,7 @@ for n=1:N,
     end
 end
 
-do_cls   = any(tc(:)) || any(lb) || nargout>1;
+do_cls   = any(tc(:)) || any(lb) || any(df) || nargout>1;
 tiss(Kb) = struct('Nt',[]);
 cls      = cell(1,Kb);
 for k1=1:Kb,
@@ -129,6 +129,9 @@ if do_defs,
                                [res.image(1).dim(1:3),1,3],...
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
+        if do_dartel
+            Ndef.dat.fname = fullfile(pth,['iy_wr', nam1, '.nii']);
+        end
         Ndef.mat  = res.image(1).mat;
         Ndef.mat0 = res.image(1).mat;
         Ndef.descrip = 'Inverse Deformation';
@@ -467,7 +470,6 @@ end
 
 % apply dartel
 if do_dartel
-tic
     % use GM/WM for dartel
     n1 = 2;
 
@@ -498,7 +500,7 @@ tic
     param(6).K = 6;
 
     it0 = 0;
-    for it = 5:numel(param)
+    for it = 1:numel(param)
         prm   = [rform, param(it).rparam, lmreg, cyc, its, param(it).K, code];
         % load new template for this iteration
         for k1=1:n1
@@ -512,7 +514,7 @@ tic
             imagesc(u(:,:,round(size(u,3)/2),1))
             set(gca,'CLim',[-5 5])
             drawnow
-            [u,ll] = dartel3(u,g,f,prm);
+            [u,ll] = dartel3(u,f,g,prm);
             fprintf('%d \t%g\t%g\t%g\t%g\n',...
                 it0,ll(1),ll(2),ll(1)+ll(2),ll(3));
         end
@@ -520,17 +522,9 @@ tic
     
     [pth,nam,ext1]=fileparts(res.image(1).fname);
 
-    if jc || any(tc(:,5)) || any(tc(:,6))
-        [y0,dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
-        dt     = max(dt,eps);
-    else
-        y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
-    end
+    y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
     % apply affine transformation to deformations
-
-save all
-
     [t1,t2,t3] = ndgrid(1:d(1),1:d(2),1:d(3));
 
     iMa = inv(Ma);
@@ -545,57 +539,28 @@ save all
     tmp = spm_bsplinc(y0(:,:,:,3),[3 3 3 0 0 0]);
     y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
 
-%    for i=1:3
-%       y(:,:,:,i)  = Ma(i,1)*y1 + Ma(i,2)*y2 + Ma(i,3)*y3 + Ma(i,4);
-%    end
-    clear y1 y2 y3 tmp
- 
-%    y1 = double(y0(:,:,:,1));
-%    y2 = double(y0(:,:,:,2));
-%    y3 = double(y0(:,:,:,3));
-toc
-    
-if 0
-    for k1=1:3,
-        if tc(k1,7),
-            N      = nifti;
-            N.dat  = file_array(fullfile(pth,['wmrp', num2str(k1), nam, '_affine.nii']),...
-                                d1,'float32-be',0,1,0);
-            N.mat  = M1;
-            N.mat0 = M1;
-            N.descrip = 'Modulated dartel warped image';
-            create(N);
-
-            dat = zeros(odim(1:3));
-            for i=1:odim(3),
-                dat(:,:,i) = spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-            end
-            
-            dat = spm_bsplinc(dat,[3 3 3 0 0 0]);
-            dat = spm_bsplins(dat,y1,y2,y3,[3 3 3 0 0 0]);
-            N.dat(:,:,:) = dat.*dt;
-            
-        end
-    end
-end
+    clear y1 y2 y3 t11 t22 t33 y0 tmp
     
 end
 
 if jc
     if ~do_dartel
         warning('Jacobian can only be saved if dartel normalization was used.');
-    end
-    N      = nifti;
-    N.dat  = file_array(fullfile(pth,['jac_rp1_', nam, '_affine.nii']),...
+    else
+        [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
+        clear y0
+        N      = nifti;
+        N.dat  = file_array(fullfile(pth,['jac_wrp1', nam, '.nii']),...
                                     d1,...
                                     [spm_type('float32') spm_platform('bigend')],...
                                     0,1,0);
-    N.mat  = M1;
-    N.mat0 = M1;
-    N.descrip = 'Jacobian';
-    create(N);
+        N.mat  = M1;
+        N.mat0 = M1;
+        N.descrip = 'Jacobian';
+        create(N);
 
-    N.dat(:,:,:) = dt;
+        N.dat(:,:,:) = dt;
+    end
 end
 
 if any(tc(:,4)),
@@ -627,6 +592,9 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
                                     d1,...
                                     [spm_type('float32') spm_platform('bigend')],...
                                     0,1,0);
+                if do_dartel
+                    N.dat.fname = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']);
+                end
                 N.mat  = M1;
                 N.mat0 = M1;
                 N.descrip = ['Jac. sc. warped tissue class ' num2str(k1)];
@@ -639,6 +607,9 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
                                     d1,...
                                     [spm_type('float32') spm_platform('bigend')],...
                                     0,1,0);
+                if do_dartel
+                    N.dat.fname = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']);
+                end
                 N.mat  = M1;
                 N.mat0 = M1;
                 N.descrip = ['Jac. sc. warped tissue class non-lin only' num2str(k1)];
@@ -677,12 +648,10 @@ if any(tc(:,4)),
     for k1=1:Kb,
         if tc(k1,4),
             N      = nifti;
+            N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
+                            d1,'int16-be',0,1/255,0);
             if do_dartel
-                N.dat  = file_array(fullfile(pth,['wrp', num2str(k1), nam, '.nii']),...
-                                d1,'int16-be',0,1/255,0);
-            else
-                N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
-                                d1,'int16-be',0,1/255,0);
+                N.dat.fname = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
             end
             N.mat  = M1;
             N.mat0 = M1;
@@ -718,12 +687,10 @@ if bf(1,2),
     C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
+    N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
+                            d1,'int16',0,1,0);
     if do_dartel
-        N.dat  = file_array(fullfile(pth,['wrm', nam, '.nii']),...
-                                d1,'int16',0,1,0);
-    else
-        N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
-                                d1,'int16',0,1,0);
+        N.dat.fname = fullfile(pth,['wmr', nam, '.nii']);
     end
     N.mat  = M1;
     N.mat0 = M1;
@@ -741,12 +708,10 @@ if lb(2),
     C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
+    N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
+                            d1,'float32',0,1,0);
     if do_dartel
-        N.dat  = file_array(fullfile(pth,['wrp0', nam, '.nii']),...
-                                d1,'float32',0,1,0);
-    else
-        N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
-                                d1,'float32',0,1,0);
+        N.dat.fname = fullfile(pth,['wrp0', nam, '.nii']);
     end
     N.mat  = M1;
     N.mat0 = M1;
@@ -763,6 +728,9 @@ if df(1),
     N         = nifti;
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
                            [d1,1,3],'float32-be',0,1,0);
+    if do_dartel
+        N.dat.fname = fullfile(pth,['y_wr', nam1, '.nii']);
+    end
     N.mat     = M1;
     N.mat0    = M1;
     N.descrip = 'Deformation';
