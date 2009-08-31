@@ -1,4 +1,4 @@
-function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm)
+function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 % Write out VBM preprocessed data
 % FORMAT cls = cg_vbm8_write(res,tc,bf,df)
 %____________________________________________________________________________
@@ -40,10 +40,6 @@ do_dartel = warp.dartelwarp;   % apply dartel normalization
 
 vx = NaN;
 bb = ones(2,3)*NaN;
-print = 0;
-%    vx = warp.vox;
-%    bb = warp.bb;
-%    print = warp.print;
 
 % Sort out bounding box etc
 bb(~isfinite(bb)) = bb1(~isfinite(bb));
@@ -130,7 +126,7 @@ if do_defs,
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
         if do_dartel
-            Ndef.dat.fname = fullfile(pth,['iy_wr', nam1, '.nii']);
+            Ndef.dat.fname = fullfile(pth,['iy_r', nam1, '.nii']);
         end
         Ndef.mat  = res.image(1).mat;
         Ndef.mat0 = res.image(1).mat;
@@ -520,7 +516,7 @@ if do_dartel
     Vm = spm_vol(fullfile(fileparts(which(mfilename)),['Brainmask_2_IXI550_MNI152.nii']));
     brainmask2 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
     brainmask2 = reshape(brainmask2,d);
-    ind_brainmask = find((brainmask1 < 0.6) | (brainmask2 > 0.025));
+    ind_brainmask = find((brainmask1 < warp.brainmask_th(1)) | (brainmask2 > warp.brainmask_th(2)));
 
     % apply brainmask to segmentations
     for i=1:3
@@ -649,7 +645,6 @@ if any(tc(:,4)),
             N.mat0 = M1;
             N.descrip = ['Warped tissue class ' num2str(k1)];
             create(N);
-%            N.dat(:,:,:) = C(:,:,:,k1)./s;
             N.dat(:,:,:) = C(:,:,:,k1);
         end
         spm_progress_bar('set',k1);
@@ -674,10 +669,10 @@ end
 
 % warped bias-corrected image
 if bf(1,2),
-    C = zeros(d1,'single');
+    Cb = zeros(d1,'single');
     c = single(chan(1).Nc.dat(:,:,:,1,1));
     [c,w]  = dartel3('push',c,y,d1(1:3));
-    C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
+    Cb = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
@@ -689,7 +684,48 @@ if bf(1,2),
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
     create(N);
-    N.dat(:,:,:) = C;
+    N.dat(:,:,:) = Cb;
+end
+
+% display and print result if possible
+try
+  if warp.print
+    str = [];
+    str = [str struct('name', 'Gaussians:','value',sprintf('%d %d %d %d %d %d',job.opts.ngaus))];
+    str = [str struct('name', 'Bias regularisation:','value',sprintf('%g',job.opts.biasreg))];
+    str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
+    str = [str struct('name', 'Dartel normalization:','value',sprintf('%d',warp.dartelwarp))];
+    str = [str struct('name', 'Brainmask thresholds:','value',sprintf('%3.3f %3.3f',warp.brainmask_th(1),warp.brainmask_th(2)))];
+
+    fg = spm_figure('FindWin','Graphics');
+    spm_figure('Clear','Graphics');
+    ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
+    text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
+        'Interpreter','none','Parent',ax);
+    for i=1:size(str,2)
+        text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
+        text(0.35,0.85-(0.075*i), str(i).value ,'FontSize',12, 'Interpreter','none','Parent',ax);
+    end
+    pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
+            0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
+    spm_orthviews('Reset');
+    % first try use the bias corrected image
+    try
+      spm_orthviews('Image',N.dat.fname,pos(1,:));
+    end
+    for k1=1:3,
+        % try to display segmented or modulated segmented image
+        if tc(k2,4) || tc(k1,5) || (tc(k1,6) 
+            cls_name = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
+            if ~exist(cls_name,'file') cls_name = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']); end
+            if ~exist(cls_name,'file') cls_name = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']); end
+            try
+                spm_orthviews('Image',cls_name,pos(1+k1,:));
+            end
+        end
+    end
+    spm_print;
+  end
 end
 
 % warped label
@@ -722,7 +758,7 @@ if df(1),
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
                            [d1,1,3],'float32-be',0,1,0);
     if do_dartel
-        N.dat.fname = fullfile(pth,['y_wr', nam1, '.nii']);
+        N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']);
     end
     N.mat     = M1;
     N.mat0    = M1;
