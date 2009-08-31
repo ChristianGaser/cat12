@@ -145,12 +145,6 @@ end
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
 
-% load brainmask
-if do_defs & (warp.brainmask_th > 0),
-    Vmask = spm_vol(warp.brainmask);
-    mask = zeros(res.image(1).dim(1:3),'single');
-end
-
 for z=1:length(x3),
 
     % Bias corrected image
@@ -170,9 +164,6 @@ for z=1:length(x3),
 
     if do_defs,
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
-        if warp.brainmask_th > 0
-            mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
-        end
         if exist('Ndef','var'),
             tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
@@ -231,13 +222,13 @@ clear q q1 Coef
 
 if do_cls & do_defs,
 
-    % use mask from LPBA40 sample if threshold is > 0
-    if warp.brainmask_th > 0
-        mask = uint8(mask > warp.brainmask_th);
-    else % or empirically estimated thresholds for tissue priors from SPM
-        mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
+    % use empirically estimated thresholds for tissue priors from SPM with different thresholds for dartel warping
+    if do_dartel
+      mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 180));    
+    else
+      mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
     end
-
+    
     % use index to speed up and save memory
     sz = size(mask);
     [indx, indy, indz] = ind2sub(sz,find(mask>0));
@@ -263,26 +254,13 @@ if do_cls & do_defs,
     prob = prob(:,:,:,[2 3 1]);
     clear src mask
     
-    % use cleanup maybe in the future
-    if (warp.cleanup > 0)
-        % get sure that all regions outside mask are zero
-        for i=1:3
-            cls{i}(:) = 0;
-        end
-        disp('Clean up...');        
-        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
-           prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
-        sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
-        label(find(sum_cls<0.15*255)) = 0;
-    else
-        for i=1:3
-            cls{i}(:) = 0;
-            cls{i}(indx,indy,indz) = prob(:,:,:,i);
-        end
-    end;
+    for i=1:3
+        cls{i}(:) = 0;
+        cls{i}(indx,indy,indz) = prob(:,:,:,i);
+    end
     clear prob
     
-    for k1=1:Kb,
+    for k1=1:3,
         if ~isempty(tiss(k1).Nt),
             tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
         end
@@ -510,10 +488,6 @@ if do_dartel
         end
         for j = 1:param(it).its,
             it0 = it0 + 1;
-            figure(11)
-            imagesc(u(:,:,round(size(u,3)/2),1))
-            set(gca,'CLim',[-5 5])
-            drawnow
             [u,ll] = dartel3(u,f,g,prm);
             fprintf('%d \t%g\t%g\t%g\t%g\n',...
                 it0,ll(1),ll(2),ll(1)+ll(2),ll(3));
@@ -524,9 +498,9 @@ if do_dartel
 
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
-    % apply affine transformation to deformations
     [t1,t2,t3] = ndgrid(1:d(1),1:d(2),1:d(3));
 
+    % apply affine transformation to deformations
     iMa = inv(Ma);
     t11  = iMa(1,1)*t1 + iMa(1,2)*t2 + iMa(1,3)*t3 + iMa(1,4);
     t22  = iMa(2,1)*t1 + iMa(2,2)*t2 + iMa(2,3)*t3 + iMa(2,4);
@@ -539,7 +513,22 @@ if do_dartel
     tmp = spm_bsplinc(y0(:,:,:,3),[3 3 3 0 0 0]);
     y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
 
-    clear y1 y2 y3 t11 t22 t33 y0 tmp
+    % get inverse deformations for warping brainmask to raw space
+    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask1_IXI550_MNI152.nii']));
+    brainmask1 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
+    brainmask1 = reshape(brainmask1,d);
+    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask2_IXI550_MNI152.nii']));
+    brainmask2 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
+    brainmask2 = reshape(brainmask2,d);
+    ind_brainmask = find((brainmask1 < 0.6) | (brainmask2 > 0.025));
+
+    % apply brainmask to segmentations
+    for i=1:3
+        cls{i}(ind_brainmask) = 0;
+    end
+
+    clear y1 y2 y3 t11 t22 t33 y0 x1a y1a z1a brainmask1 brainmask2 tmp
+    
     
 end
 
@@ -564,7 +553,7 @@ if jc
 end
 
 if any(tc(:,4)),
-    C = zeros([d1,Kb],'single');
+    C = zeros([d1,3],'single');
 end
 
 %TODO: check here for the case that only the normalized bias corrected images is saved
@@ -572,10 +561,12 @@ end
 % warped tissue classes
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
-    spm_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
-    for k1 = 1:Kb,
+    spm_progress_bar('init',3,'Warped Tissue Classes','Classes completed');
+
+      for k1 = 1:3,
+    
         if ~isempty(cls{k1}),
-            c = single(cls{k1})/255;
+            c = single(cls{k1})/255;           
             if any(tc(:,4)),
                 [c,w]  = dartel3('push',c,y,d1(1:3));
                 C(:,:,:,k1) = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
@@ -642,10 +633,11 @@ if nargout == 0
 end
 
 if any(tc(:,4)),
-    spm_progress_bar('init',Kb,'Writing Warped Tis Cls','Classes completed');
+    spm_progress_bar('init',3,'Writing Warped Tis Cls','Classes completed');
     C = max(C,eps);
     s = sum(C,4);
-    for k1=1:Kb,
+
+    for k1=1:3,
         if tc(k1,4),
             N      = nifti;
             N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
@@ -657,7 +649,8 @@ if any(tc(:,4)),
             N.mat0 = M1;
             N.descrip = ['Warped tissue class ' num2str(k1)];
             create(N);
-            N.dat(:,:,:) = C(:,:,:,k1)./s;
+%            N.dat(:,:,:) = C(:,:,:,k1)./s;
+            N.dat(:,:,:) = C(:,:,:,k1);
         end
         spm_progress_bar('set',k1);
     end
