@@ -254,11 +254,23 @@ vox.help = {...
 
 %------------------------------------------------------------------------
 
+brainmask_th      = cfg_entry;
+brainmask_th.tag = 'brainmask_th';
+brainmask_th.name = 'Brainmask thresholds';
+brainmask_th.strtype = 'e';
+brainmask_th.num = [1 2];
+brainmask_th.def  = @(val)spm_get_defaults('vbm8.extopts.brainmask_th', val{:});
+brainmask_th.help = {...
+['The (isotropic) voxel sizes of any spatially normalised written images. '...
+ 'A non-finite value will be replaced by the average voxel size of '...
+ 'the tissue probability maps used by the segmentation.']};
+
+%------------------------------------------------------------------------
 print    = cfg_menu;
 print.tag = 'print';
 print.name = 'Display and print results';
 print.labels = {'yes','no'};
-print.values = {0 1};
+print.values = {1 0};
 print.def  = @(val)spm_get_defaults('vbm8.extopts.print', val{:});
 print.help = {[...
 'The normalized T1 image and the normalized segmentations can be displayed and printed to a ',...
@@ -279,7 +291,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,bb};
+extopts.val = {dartelwarp,bb,print,brainmask_th};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
