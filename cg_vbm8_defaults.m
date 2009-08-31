@@ -66,3 +66,4 @@ defaults.vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 
 defaults.vbm8.extopts.vox          = NaN;	% Voxel size to write
 defaults.vbm8.extopts.bb           = [[-78 78]' [-112 76]' [-70 85]'];	% bounding box
 defaults.vbm8.extopts.print        = 1;	% Display and print results
+defaults.vbm8.extopts.brainmask_th = [0.7 0.025];	% Thresholds for final dartel brainmask
