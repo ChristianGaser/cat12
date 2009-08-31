@@ -62,7 +62,7 @@ x3  = 1:d(3);
 if do_dartel
     for j=1:6
         for i=1:2
-            run2(i).tpm = fullfile(fileparts(which(mfilename)),['Template_IXI550_' num2str(j) '_MNI152.nii,' num2str(i)]);
+            run2(i).tpm = fullfile(fileparts(which(mfilename)),['Template_' num2str(j) '_IXI550_MNI152.nii,' num2str(i)]);
         end
         tpm2{j}    = spm_vol(strvcat(cat(1,run2(:).tpm)));
     end
@@ -514,10 +514,10 @@ if do_dartel
     y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
 
     % get inverse deformations for warping brainmask to raw space
-    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask1_IXI550_MNI152.nii']));
+    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['Brainmask_1_IXI550_MNI152.nii']));
     brainmask1 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
     brainmask1 = reshape(brainmask1,d);
-    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask2_IXI550_MNI152.nii']));
+    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['Brainmask_2_IXI550_MNI152.nii']));
     brainmask2 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
     brainmask2 = reshape(brainmask2,d);
     ind_brainmask = find((brainmask1 < 0.6) | (brainmask2 > 0.025));
