@@ -63,10 +63,6 @@ defaults.vbm8.output.warps = [0 0];
 % Extended writing options
 %=======================================================================
 defaults.vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
-defaults.vbm8.extopts.cleanup      = 0;	% Cleanup: 1 - light; 2 -thorough
 defaults.vbm8.extopts.vox          = NaN;	% Voxel size to write
 defaults.vbm8.extopts.bb           = [[-78 78]' [-112 76]' [-70 85]'];	% bounding box
 defaults.vbm8.extopts.print        = 1;	% Display and print results
-defaults.vbm8.extopts.brainmask_th = 0.25;	% Brainmask threshold
-defaults.vbm8.extopts.brainmask_th = -1;	% Brainmask threshold
-defaults.vbm8.extopts.brainmask    = cellstr(fullfile(fileparts(which(mfilename)),'brainmask_LPBA40.nii'));;	% Brainmask
