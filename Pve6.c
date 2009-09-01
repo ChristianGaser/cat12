@@ -4,6 +4,14 @@
  *
  */
 
+/* This PVE calculation is a modified version from
+ * the PVE software bundle:
+ * Copyright (C) Jussi Tohka, Institute of Signal Processing, Tampere University of
+ * Technology, 2002 - 2004.
+ * P.O. Box 553, FIN-33101, Finland
+ * E-mail: jussi.tohka@tut.fi
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

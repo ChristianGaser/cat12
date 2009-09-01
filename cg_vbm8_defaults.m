@@ -28,7 +28,7 @@ defaults.vbm8.opts.samp      = 3;			% Sampling distance
 %   native		0/1   (none/yes)
 %   warped		0/1   (none/yes)
 %   modulated	0/1/2 (none/affine+nonlinear/nonlinear only)
-%   dartel    0/1/2 (none/rigid/affine)
+%   dartel      0/1/2 (none/rigid/affine)
 
 defaults.vbm8.output.bias.native  = 0;
 defaults.vbm8.output.bias.warped  = 1;
@@ -63,7 +63,6 @@ defaults.vbm8.output.warps = [0 0];
 % Extended writing options
 %=======================================================================
 defaults.vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
-defaults.vbm8.extopts.vox          = NaN;	% Voxel size to write
 defaults.vbm8.extopts.bb           = [[-78 78]' [-112 76]' [-70 85]'];	% bounding box
 defaults.vbm8.extopts.print        = 1;	% Display and print results
-defaults.vbm8.extopts.brainmask_th = [0.7 0.025];	% Thresholds for final dartel brainmask
+defaults.vbm8.extopts.brainmask_th = 0.5;	% Threshold for final dartel brainmask
