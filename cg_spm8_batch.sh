@@ -127,25 +127,25 @@ run_batch ()
 	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8:$dname
 	
 	time=`date "+%Y%b%d_%H%M"`
-	vbmlog=${pwd}/spm8_${time}.log
-	echo Check $vbmlog for logging information
+	spmlog=${pwd}/spm8_${time}.log
+	echo Check $spmlog for logging information
 	echo
 		
 	file=`echo $file| sed -e 's/\.m//g'`
 
 	X="cg_spm8_batch('${file}')"
 	echo Running $file
-	echo > $vbmlog
-	echo ---------------------------------- >> $vbmlog
-	date >> $vbmlog
-	echo ---------------------------------- >> $vbmlog
-	echo >> $vbmlog
-	echo $0 $file >> $vbmlog
-	echo >> $vbmlog
+	echo > $spmlog
+	echo ---------------------------------- >> $spmlog
+	date >> $spmlog
+	echo ---------------------------------- >> $spmlog
+	echo >> $spmlog
+	echo $0 $file >> $spmlog
+	echo >> $spmlog
 	if [ $display == 0 ]; then
-		${matlab} -nodisplay -nojvm -nosplash -r $X -logfile $vbmlog &
+		nohup ${matlab} -nodisplay -nojvm -nosplash -r $X >> $spmlog 2>&1 &
 	else
-		${matlab} -nojvm -nosplash -r $X -logfile $vbmlog &
+		nohup ${matlab} -nojvm -nosplash -r $X >> $spmlog 2>&1 &
 	fi
 	exit 0
 }
