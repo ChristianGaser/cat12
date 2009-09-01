@@ -4,17 +4,27 @@
  *
  */
 
-/*
- * Amap.C
+/* This code is a substantially modified version of Amap.C 
+ * from Jagath C. Rajapakse
  * 
- * author : Jagath C. Rajapakse
+ * Original author : Jagath C. Rajapakse
  *
+ * See:
  * Statistical approach to single-channel MR brain scans
  * J. C. Rajapakse, J. N. Giedd, and J. L. Rapoport
  * IEEE Transactions on Medical Imaging, Vol 16, No 2, 1997
  *
  * Comments to raja@cns.mpg.de, 15.10.96
  */
+
+/* The likelihood and PVE calculations are a modified version from
+ * the PVE software bundle:
+ * Copyright (C) Jussi Tohka, Institute of Signal Processing, Tampere University of
+ * Technology, 2002 - 2004.
+ * P.O. Box 553, FIN-33101, Finland
+ * E-mail: jussi.tohka@tut.fi
+ */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,13 +119,6 @@ static void GetMeansVariances(double *src, unsigned char *label, int nc, struct 
   return;
 }
 
-/* PVE software bundle:
- Copyright (C) Jussi Tohka, Institute of Signal Processing, Tampere University of
- Technology, 2002 - 2004.
- P.O. Box 553, FIN-33101, Finland
- E-mail: jussi.tohka@tut.fi
-*/
-
 /* Computes likelihood of value given parameters mean and variance */ 
 double ComputeGaussianLikelihood(double value, double mean , double var)
 
@@ -178,9 +181,7 @@ unsigned char MaxArg(double *pval, unsigned char n)
   return(index);
 }
 
-/* 
-  Compute initial PVE labeling based on marginalized likelihood
-*/
+/* Compute initial PVE labeling based on marginalized likelihood */
 void ComputeInitialPveLabel(double *src, unsigned char *label, struct point *r, int nc, int sub, int *dims)
 {
   
