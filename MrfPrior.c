@@ -4,6 +4,19 @@
  *
  */
 
+/* This code is a substantially modified version of MrfPrior.C 
+ * from Jagath C. Rajapakse
+ * 
+ * Original author : Jagath C. Rajapakse
+ *
+ * See:
+ * Statistical approach to single-channel MR brain scans
+ * J. C. Rajapakse, J. N. Giedd, and J. L. Rapoport
+ * IEEE Transactions on Medical Imaging, Vol 16, No 2, 1997
+ *
+ * Comments to raja@cns.mpg.de, 15.10.96
+ */
+
 #include <stdio.h>
 #include <math.h>
 #include "Amap.h"

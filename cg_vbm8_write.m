@@ -12,8 +12,6 @@ function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 
 rev = '$Rev$';
 
-% Read essentials from tpm (it will be cleared later)
-
 if ~isstruct(tpm) || ~isfield(tpm, 'bg'),
     tpm = spm_load_priors8(tpm);
 end
@@ -30,6 +28,10 @@ else
 end
 
 N   = numel(res.image);
+if N > 1
+    warning('VBM8 does not support multiple channels. Only the first channel will be used.');
+end
+
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 % bf - bias field: corrected, warp corrected, affine corrected
 % df - deformations: inverse, forward
@@ -47,7 +49,7 @@ if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end;
 bb(1,:) = vx*round(bb(1,:)/vx);
 bb(2,:) = vx*round(bb(2,:)/vx);
 
-[pth,nam]=fileparts(res.image(1).fname);
+[pth,nam] = fileparts(res.image(1).fname);
 ind  = res.image(1).n;
 d    = res.image(1).dim(1:3);
 
@@ -126,7 +128,7 @@ if do_defs,
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
         if do_dartel
-            Ndef.dat.fname = fullfile(pth,['iy_r', nam1, '.nii']);
+            Ndef.dat.fname = fullfile(pth,['iy_wr', nam1, '.nii']);
         end
         Ndef.mat  = res.image(1).mat;
         Ndef.mat0 = res.image(1).mat;
@@ -140,6 +142,12 @@ end
 
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
+
+% load brainmask
+if do_defs & (warp.brainmask_th > 0)
+    Vmask = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask_LPBA40.nii']));
+    mask = zeros(res.image(1).dim(1:3),'single');
+end
 
 for z=1:length(x3),
 
@@ -160,6 +168,9 @@ for z=1:length(x3),
 
     if do_defs,
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
+        if warp.brainmask_th > 0
+            mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
+        end
         if exist('Ndef','var'),
             tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
@@ -218,11 +229,11 @@ clear q q1 Coef
 
 if do_cls & do_defs,
 
-    % use empirically estimated thresholds for tissue priors from SPM with different thresholds for dartel warping
-    if do_dartel
-      mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 180));    
-    else
-      mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
+    % use mask from LPBA40 sample if threshold is > 0
+    if warp.brainmask_th > 0
+        mask = uint8(mask > 0.25);
+    else % or empirically estimated thresholds for tissue priors from SPM
+        mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
     end
     
     % use index to speed up and save memory
@@ -267,10 +278,10 @@ end
 clear tpm
 M0 = res.image(1).mat;
 
-% rigidly or affine aligned images
+% prepare transformations for rigidly or affine aligned images
 if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
 
-    % Figure out the mapping from the volumes to create to the original
+    % figure out the mapping from the volumes to create to the original
     mm = [[
         bb(1,1) bb(1,2) bb(1,3)
         bb(2,1) bb(1,2) bb(1,3)
@@ -311,134 +322,6 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
     
     fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
     
-    % write bias corrected affine
-    if bf(1,3),
-        tmp1 = single(chan(1).Nc.dat(:,:,:,1,1));
-        [pth,nam,ext1]=fileparts(res.image(1).fname);
-        VT      = struct('fname',fullfile(pth,['wm', nam, '_affine.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('float32') spm_platform('bigend')],...
-            'pinfo',[1.0 0]',...
-            'mat',mata);
-        VT = spm_create_vol(VT);
-
-        N             = nifti(VT.fname);
-        % get rid of the QFORM0 rounding warning
-        warning off
-        N.mat0        = mat0a;
-        warning on
-        N.mat_intent  = 'Aligned';
-        N.mat0_intent = 'Aligned';
-        create(N);
-
-        for i=1:odim(3),
-            tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-            VT  = spm_write_plane(VT,tmp,i);
-        end
-        clear tmp1
-    end
-
-    % write affine label
-    if lb(1,4),
-        tmp1 = zeros(res.image(1).dim(1:3),'single');
-        tmp1(indx,indy,indz) = double(label)*3;
-        [pth,nam,ext1]=fileparts(res.image(1).fname);
-        VT      = struct('fname',fullfile(pth,['p0', nam, '_affine.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('int16') spm_platform('bigend')],...
-            'pinfo',[1/255 0]',...
-            'mat',mata);
-        VT = spm_create_vol(VT);
-
-        N             = nifti(VT.fname);
-        % get rid of the QFORM0 rounding warning
-        warning off
-        N.mat0        = mat0a;
-        warning on
-        N.mat_intent  = 'Aligned';
-        N.mat0_intent = 'Aligned';
-        create(N);
-
-        for i=1:odim(3),
-            tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-            VT  = spm_write_plane(VT,tmp,i);
-        end
-        clear tmp1
-    end
-
-    % write rigid aligned label
-    if lb(1,3),
-        tmp1 = zeros(res.image(1).dim(1:3),'single');
-        tmp1(indx,indy,indz) = double(label)*3;
-        [pth,nam,ext1]=fileparts(res.image(1).fname);
-        VT      = struct('fname',fullfile(pth,['rp0', nam, '.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('int16') spm_platform('bigend')],...
-            'pinfo',[1/255 0]',...
-            'mat',matr);
-        VT = spm_create_vol(VT);
-
-        Ni             = nifti(VT.fname);
-        Ni.mat0        = mat0r;
-        Ni.mat_intent  = 'Aligned';
-        Ni.mat0_intent = 'Aligned';
-        create(Ni);
-
-        for i=1:odim(3),
-            tmp = spm_slice_vol(tmp1,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-            VT  = spm_write_plane(VT,tmp,i);
-        end
-        clear tmp1
-    end
-
-    for k1=1:size(tc,1),
-        % write rigid aligned tissues
-        if tc(k1,2),
-            [pth,nam,ext1]=fileparts(res.image(1).fname);
-            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '.nii']),...
-                'dim',  odim,...
-                'dt',   [spm_type('int16') spm_platform('bigend')],...
-                'pinfo',[1/255 0]',...
-                'mat',matr);
-            VT = spm_create_vol(VT);
-
-            Ni             = nifti(VT.fname);
-            Ni.mat0        = mat0r;
-            Ni.mat_intent  = 'Aligned';
-            Ni.mat0_intent = 'Aligned';
-            create(Ni);
-
-            for i=1:odim(3),
-                tmp = spm_slice_vol(single(cls{k1}),Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-                VT  = spm_write_plane(VT,tmp,i);
-            end
-        end
-        
-        % write affine normalized tissues
-        if tc(k1,3),
-            [pth,nam,ext1]=fileparts(res.image(1).fname);
-            VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
-                'dim',  odim,...
-                'dt',   [spm_type('int16') spm_platform('bigend')],...
-                'pinfo',[1/255 0]',...
-                'mat',mata);
-            VT = spm_create_vol(VT);
-
-            Ni             = nifti(VT.fname);
-            % get rid of the QFORM0 rounding warning
-            warning off
-            Ni.mat0        = mat0a;
-            warning on
-            Ni.mat_intent  = 'Aligned';
-            Ni.mat0_intent = 'Aligned';
-            create(Ni);
-
-            for i=1:odim(3),
-                tmp = spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-                VT  = spm_write_plane(VT,tmp,i);
-            end
-        end
-    end
 end
 
 
@@ -510,22 +393,150 @@ if do_dartel
     y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
 
     % get inverse deformations for warping brainmask to raw space
-    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['Brainmask_1_IXI550_MNI152.nii']));
-    brainmask1 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
-    brainmask1 = reshape(brainmask1,d);
-    Vm = spm_vol(fullfile(fileparts(which(mfilename)),['Brainmask_2_IXI550_MNI152.nii']));
-    brainmask2 = spm_sample_vol(Vm, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
-    brainmask2 = reshape(brainmask2,d);
-    ind_brainmask = find((brainmask1 < warp.brainmask_th(1)) | (brainmask2 > warp.brainmask_th(2)));
+    if (warp.brainmask_th > 0)
+        Vmask2 = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask_LPBA40_dartel.nii']));
+        mask2 = spm_sample_vol(Vmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
+        mask2 = reshape(mask2,d);
+    
+        ind_brainmask = find(mask2 < warp.brainmask_th);
 
-    % apply brainmask to segmentations
-    for i=1:3
-        cls{i}(ind_brainmask) = 0;
+        % apply brainmask to segmentations and label
+        for i=1:3, cls{i}(ind_brainmask) = 0; end
+        label(find(mask2(indx,indy,indz) < warp.brainmask_th)) = 0;
     end
 
-    clear y1 y2 y3 t11 t22 t33 y0 x1a y1a z1a brainmask1 brainmask2 tmp
+    clear y1 y2 y3 t11 t22 t33 y0 x1a y1a z1a mask2 tmp
     
     
+end
+
+% write bias corrected affine
+if bf(1,3),
+    tmp1 = single(chan(1).Nc.dat(:,:,:,1,1));
+    [pth,nam,ext1]=fileparts(res.image(1).fname);
+    VT      = struct('fname',fullfile(pth,['wm', nam, '_affine.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('float32') spm_platform('bigend')],...
+            'pinfo',[1.0 0]',...
+            'mat',mata);
+    VT = spm_create_vol(VT);
+
+    N             = nifti(VT.fname);
+    % get rid of the QFORM0 rounding warning
+    warning off
+    N.mat0        = mat0a;
+    warning on
+    N.mat_intent  = 'Aligned';
+    N.mat0_intent = 'Aligned';
+    create(N);
+
+    for i=1:odim(3),
+        tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+        VT  = spm_write_plane(VT,tmp,i);
+    end
+    clear tmp1
+end
+
+% write affine label
+if lb(1,4),
+    tmp1 = zeros(res.image(1).dim(1:3),'single');
+    tmp1(indx,indy,indz) = single(label)*3;
+    [pth,nam,ext1]=fileparts(res.image(1).fname);
+    VT      = struct('fname',fullfile(pth,['p0', nam, '_affine.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('int16') spm_platform('bigend')],...
+            'pinfo',[1/255 0]',...
+            'mat',mata);
+    VT = spm_create_vol(VT);
+
+    N             = nifti(VT.fname);
+    % get rid of the QFORM0 rounding warning
+    warning off
+    N.mat0        = mat0a;
+    warning on
+    N.mat_intent  = 'Aligned';
+    N.mat0_intent = 'Aligned';
+    create(N);
+
+    for i=1:odim(3),
+        tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+        VT  = spm_write_plane(VT,tmp,i);
+    end
+    clear tmp1
+end
+
+% write rigid aligned label
+if lb(1,3),
+    tmp1 = zeros(res.image(1).dim(1:3),'single');
+    tmp1(indx,indy,indz) = double(label)*3;
+    [pth,nam,ext1]=fileparts(res.image(1).fname);
+    VT      = struct('fname',fullfile(pth,['rp0', nam, '.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('int16') spm_platform('bigend')],...
+            'pinfo',[1/255 0]',...
+            'mat',matr);
+    VT = spm_create_vol(VT);
+
+    Ni             = nifti(VT.fname);
+    Ni.mat0        = mat0r;
+    Ni.mat_intent  = 'Aligned';
+    Ni.mat0_intent = 'Aligned';
+    create(Ni);
+
+    for i=1:odim(3),
+        tmp = spm_slice_vol(tmp1,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+        VT  = spm_write_plane(VT,tmp,i);
+    end
+    clear tmp1
+end
+
+for k1=1:size(tc,1),
+    % write rigid aligned tissues
+    if tc(k1,2),
+        [pth,nam,ext1]=fileparts(res.image(1).fname);
+        VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '.nii']),...
+                'dim',  odim,...
+                'dt',   [spm_type('int16') spm_platform('bigend')],...
+                'pinfo',[1/255 0]',...
+                'mat',matr);
+        VT = spm_create_vol(VT);
+
+        Ni             = nifti(VT.fname);
+        Ni.mat0        = mat0r;
+        Ni.mat_intent  = 'Aligned';
+        Ni.mat0_intent = 'Aligned';
+        create(Ni);
+
+        for i=1:odim(3),
+            tmp = spm_slice_vol(single(cls{k1}),Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            VT  = spm_write_plane(VT,tmp,i);
+        end
+    end
+        
+    % write affine normalized tissues
+    if tc(k1,3),
+        [pth,nam,ext1]=fileparts(res.image(1).fname);
+        VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
+                'dim',  odim,...
+                'dt',   [spm_type('int16') spm_platform('bigend')],...
+                'pinfo',[1/255 0]',...
+                'mat',mata);
+        VT = spm_create_vol(VT);
+
+        Ni             = nifti(VT.fname);
+        % get rid of the QFORM0 rounding warning
+        warning off
+        Ni.mat0        = mat0a;
+        warning on
+        Ni.mat_intent  = 'Aligned';
+        Ni.mat0_intent = 'Aligned';
+        create(Ni);
+
+        for i=1:odim(3),
+            tmp = spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+            VT  = spm_write_plane(VT,tmp,i);
+        end
+    end
 end
 
 if jc
@@ -552,8 +563,6 @@ if any(tc(:,4)),
     C = zeros([d1,3],'single');
 end
 
-%TODO: check here for the case that only the normalized bias corrected images is saved
-% and tc is not defined
 % warped tissue classes
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
@@ -645,6 +654,7 @@ if any(tc(:,4)),
             N.mat0 = M1;
             N.descrip = ['Warped tissue class ' num2str(k1)];
             create(N);
+%            N.dat(:,:,:) = C(:,:,:,k1)./s;
             N.dat(:,:,:) = C(:,:,:,k1);
         end
         spm_progress_bar('set',k1);
@@ -669,10 +679,10 @@ end
 
 % warped bias-corrected image
 if bf(1,2),
-    Cb = zeros(d1,'single');
+    C = zeros(d1,'single');
     c = single(chan(1).Nc.dat(:,:,:,1,1));
     [c,w]  = dartel3('push',c,y,d1(1:3));
-    Cb = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
+    C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
@@ -684,48 +694,7 @@ if bf(1,2),
     N.mat0 = M1;
     N.descrip = 'Warped bias corrected image ';
     create(N);
-    N.dat(:,:,:) = Cb;
-end
-
-% display and print result if possible
-try
-  if warp.print
-    str = [];
-    str = [str struct('name', 'Gaussians:','value',sprintf('%d %d %d %d %d %d',job.opts.ngaus))];
-    str = [str struct('name', 'Bias regularisation:','value',sprintf('%g',job.opts.biasreg))];
-    str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
-    str = [str struct('name', 'Dartel normalization:','value',sprintf('%d',warp.dartelwarp))];
-    str = [str struct('name', 'Brainmask thresholds:','value',sprintf('%3.3f %3.3f',warp.brainmask_th(1),warp.brainmask_th(2)))];
-
-    fg = spm_figure('FindWin','Graphics');
-    spm_figure('Clear','Graphics');
-    ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-    text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
-        'Interpreter','none','Parent',ax);
-    for i=1:size(str,2)
-        text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
-        text(0.35,0.85-(0.075*i), str(i).value ,'FontSize',12, 'Interpreter','none','Parent',ax);
-    end
-    pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
-            0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
-    spm_orthviews('Reset');
-    % first try use the bias corrected image
-    try
-      spm_orthviews('Image',N.dat.fname,pos(1,:));
-    end
-    for k1=1:3,
-        % try to display segmented or modulated segmented image
-        if tc(k2,4) || tc(k1,5) || (tc(k1,6) 
-            cls_name = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
-            if ~exist(cls_name,'file') cls_name = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']); end
-            if ~exist(cls_name,'file') cls_name = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']); end
-            try
-                spm_orthviews('Image',cls_name,pos(1+k1,:));
-            end
-        end
-    end
-    spm_print;
-  end
+    N.dat(:,:,:) = C;
 end
 
 % warped label
@@ -758,7 +727,7 @@ if df(1),
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
                            [d1,1,3],'float32-be',0,1,0);
     if do_dartel
-        N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']);
+        N.dat.fname = fullfile(pth,['y_wr', nam1, '.nii']);
     end
     N.mat     = M1;
     N.mat0    = M1;
