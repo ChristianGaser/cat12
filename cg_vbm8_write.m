@@ -230,9 +230,12 @@ clear q q1 Coef
 if do_cls & do_defs,
 
     % use mask from LPBA40 sample if threshold is > 0
-    if warp.brainmask_th > 0
-        mask = uint8(mask > 0.25);
-    else % or empirically estimated thresholds for tissue priors from SPM
+%    if warp.brainmask_th > 0
+%        mask = uint8(mask > 0.25);
+%    else % or empirically estimated thresholds for tissue priors from SPM
+    if do_dartel
+        mask = uint8((cls{5} < 20) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 176)); 
+    else
         mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
     end
     
