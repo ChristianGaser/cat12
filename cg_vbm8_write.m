@@ -35,7 +35,7 @@ end
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 % bf - bias field: corrected, warp corrected, affine corrected
 % df - deformations: inverse, forward
-% lb - label: label, warped label, rigid label, affine label
+% lb - label: native, warped label, rigid label, affine label
 % jc - jacobian: no, normalized 
 
 do_dartel = warp.dartelwarp;   % apply dartel normalization
@@ -225,20 +225,21 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
-clear q q1 Coef
+clear q q1 Coef b
 
 if do_cls & do_defs,
 
     % use mask from LPBA40 sample if threshold is > 0
-%    if warp.brainmask_th > 0
-%        mask = uint8(mask > 0.25);
-%    else % or empirically estimated thresholds for tissue priors from SPM
-    if do_dartel
-        mask = uint8((cls{5} < 20) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 176)); 
-    else
+if 0
+    if warp.brainmask_th > 0
+        mask = uint8((mask > 0.05) | ((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208)));
+    else % or empirically estimated thresholds for tissue priors from SPM
         mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
     end
+end
     
+    mask = uint8((single(cls{1})+single(cls{2})+single(cls{3})) > 64);    
+
     % use index to speed up and save memory
     sz = size(mask);
     [indx, indy, indz] = ind2sub(sz,find(mask>0));
@@ -246,12 +247,35 @@ if do_cls & do_defs,
     indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
     indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 
-    % calculate label image for GM/WM/CSF 
-    label = repmat(uint8(0),size(cls{1}(indx,indy,indz)));
-    label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 2;
-    label(find((cls{2}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{2}(indx,indy,indz) >= cls{1}(indx,indy,indz)))) = 3;
-    label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
+    warp.cleanup=0;
+    % use cleanup maybe in the future
+    if (warp.cleanup > 0)
+        disp('Clean up...');        
+        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(cls{1}(indx,indy,indz), ...
+                cls{2}(indx,indy,indz), cls{3}(indx,indy,indz), warp.cleanup);
+    end
 
+    % calculate label image for all classes 
+    cls2 = zeros([d(1:2) Kb]);
+    label2 = zeros(d,'uint8');
+    for i=1:d(3)
+      	for k1 = 1:Kb
+      		cls2(:,:,k1)  = cls{k1}(:,:,i);
+      	end
+    	  [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb]),[],3);
+    	  for k1 = 1:Kb
+    		  label2(:,:,i) = label2(:,:,i) + uint8((maxind == k1).*(maxi~=0)*k1);
+    	  end
+    end
+
+    label = zeros(size(cls{1}(indx,indy,indz)),'uint8');
+    label = label2(indx,indy,indz);
+    
+    % only keep label values for GM/WM/CSF
+    label(find(label>3))=0;
+    
+    clear cls2 label2
+    
     % mask source image because Amap needs a skull stripped image
     src = chan(1).Nc.dat(indx,indy,indz,1,1);
 
@@ -261,24 +285,41 @@ if do_cls & do_defs,
     
     niters = 200; sub=8; nc=3; pve=1;
     prob = AmapMex(src, label, nc, niters, sub, pve);
+    
+    % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear src mask
     
-    for i=1:3
-        cls{i}(:) = 0;
-        cls{i}(indx,indy,indz) = prob(:,:,:,i);
-    end
-    clear prob
-    
-    for k1=1:3,
-        if ~isempty(tiss(k1).Nt),
-            tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
+    warp.cleanup=2
+    % use cleanup maybe in the future
+    if (warp.cleanup > 0)
+        disp('Clean up...');        
+        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1),prob(:,:,:,2),prob(:,:,:,3), warp.cleanup);
+        % update label image for GM/WM/CSF 
+        label(:) = 0;
+        label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 2;
+        label(find((cls{2}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{2}(indx,indy,indz) >= cls{1}(indx,indy,indz)))) = 3;
+        label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
+    else
+        for i=1:3
+            cls{i}(:) = 0;
+            cls{i}(indx,indy,indz) = prob(:,:,:,i);
         end
     end
-    clear tiss 
+
+    clear prob
+
+    % clear last 3 tissue classes to save memory
+    for i=4:6
+        cls{i} = [];
+    end
+   
 end
 
-clear tpm
+% rescue first image
+src = single(chan(1).Nc.dat(:,:,:,1,1));
+
+clear tpm chan
 M0 = res.image(1).mat;
 
 % prepare transformations for rigidly or affine aligned images
@@ -306,17 +347,20 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
         odim(1) 1       odim(3)
         1       odim(2) odim(3)
         odim(1) odim(2) odim(3)]'; ones(1,8)];
-
-    x      = affind(rgrid(d),M0);
-    y1     = affind(y,M1);
     
-    [M3,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
-    clear x y1
+    % rigid transformation
+    if (any(tc(:,2)) || lb(1,3))
+        x      = affind(rgrid(d),M0);
+        y1     = affind(y,M1);
+        
+        [M3,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
+        clear x y1
 
-    % rigid parameters
-    Mr      = M0\inv(R)*M1*vx2/vx3;
-    mat0r   =    inv(R)*M1*vx2/vx3;
-    matr    = mm/vx3;
+        % rigid parameters
+        Mr      = M0\inv(R)*M1*vx2/vx3;
+        mat0r   =    inv(R)*M1*vx2/vx3;
+        matr    = mm/vx3;
+    end
     
     % affine parameters
     Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
@@ -387,7 +431,9 @@ if do_dartel
     t11  = iMa(1,1)*t1 + iMa(1,2)*t2 + iMa(1,3)*t3 + iMa(1,4);
     t22  = iMa(2,1)*t1 + iMa(2,2)*t2 + iMa(2,3)*t3 + iMa(2,4);
     t33  = iMa(3,1)*t1 + iMa(3,2)*t2 + iMa(3,3)*t3 + iMa(3,4);
-
+    
+    clear t1 t2 t3
+    
     tmp = spm_bsplinc(y0(:,:,:,1),[3 3 3 0 0 0]);
     y(:,:,:,1) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
     tmp = spm_bsplinc(y0(:,:,:,2),[3 3 3 0 0 0]);
@@ -395,6 +441,8 @@ if do_dartel
     tmp = spm_bsplinc(y0(:,:,:,3),[3 3 3 0 0 0]);
     y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
 
+save([nam '_dartel.mat']);
+disp([nam '_dartel.mat'])
     % get inverse deformations for warping brainmask to raw space
     if (warp.brainmask_th > 0)
         Vmask2 = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask_LPBA40_dartel.nii']));
@@ -413,9 +461,16 @@ if do_dartel
     
 end
 
+% write raw segmented images
+for k1=1:3,
+    if ~isempty(tiss(k1).Nt),
+        tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
+    end
+end
+clear tiss 
+
 % write bias corrected affine
 if bf(1,3),
-    tmp1 = single(chan(1).Nc.dat(:,:,:,1,1));
     [pth,nam,ext1]=fileparts(res.image(1).fname);
     VT      = struct('fname',fullfile(pth,['wm', nam, '_affine.nii']),...
             'dim',  odim,...
@@ -434,10 +489,9 @@ if bf(1,3),
     create(N);
 
     for i=1:odim(3),
-        tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+        tmp = spm_slice_vol(src,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
         VT  = spm_write_plane(VT,tmp,i);
     end
-    clear tmp1
 end
 
 % write affine label
@@ -683,9 +737,8 @@ end
 % warped bias-corrected image
 if bf(1,2),
     C = zeros(d1,'single');
-    c = single(chan(1).Nc.dat(:,:,:,1,1));
-    [c,w]  = dartel3('push',c,y,d1(1:3));
-    C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
+    [src,w]  = dartel3('push',src,y,d1(1:3));
+    C = optimNn(w,src,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
     N      = nifti;
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
@@ -721,7 +774,7 @@ if lb(2),
     N.dat(:,:,:) = double(C)*3/255;
 end
 
-clear chan label C c
+clear label C c
 
 % deformations
 if df(1),
