@@ -229,17 +229,9 @@ clear q q1 Coef b
 
 if do_cls & do_defs,
 
-    % use mask from LPBA40 sample if threshold is > 0
-if 0
-    if warp.brainmask_th > 0
-        mask = uint8((mask > 0.05) | ((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208)));
-    else % or empirically estimated thresholds for tissue priors from SPM
-        mask = uint8((cls{5} < 24) & ((single(cls{1})+single(cls{2})+single(cls{3})) > 208));    
-    end
-end
+    % use empirically estimated thresholds for tissue priors from SPM
+    mask = uint8(((single(cls{1})+single(cls{2})+single(cls{3})) > 64));    
     
-    mask = uint8((single(cls{1})+single(cls{2})+single(cls{3})) > 64);    
-
     % use index to speed up and save memory
     sz = size(mask);
     [indx, indy, indz] = ind2sub(sz,find(mask>0));
@@ -247,8 +239,7 @@ end
     indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
     indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 
-    warp.cleanup=0;
-    % use cleanup maybe in the future
+    % cleanup
     if (warp.cleanup > 0)
         disp('Clean up...');        
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(cls{1}(indx,indy,indz), ...
@@ -268,7 +259,6 @@ end
     	  end
     end
 
-    label = zeros(size(cls{1}(indx,indy,indz)),'uint8');
     label = label2(indx,indy,indz);
     
     % only keep label values for GM/WM/CSF
@@ -277,36 +267,25 @@ end
     clear cls2 label2
     
     % mask source image because Amap needs a skull stripped image
-    src = chan(1).Nc.dat(indx,indy,indz,1,1);
-
     % set label and source inside outside mask to 0
     label(find(mask(indx,indy,indz) < 1)) = 0;
-    src(find(mask(indx,indy,indz) < 1)) = 0;
+    vol = chan(1).Nc.dat(indx,indy,indz,1,1);
+    vol(find(mask(indx,indy,indz) < 1)) = 0;
     
+    % Amap parameters
     niters = 200; sub=8; nc=3; pve=1;
-    prob = AmapMex(src, label, nc, niters, sub, pve);
+    disp('Amap segmentation...');        
+    prob = AmapMex(vol, label, nc, niters, sub, pve);
     
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
-    clear src mask
+    clear vol mask
     
-    warp.cleanup=2
-    % use cleanup maybe in the future
-    if (warp.cleanup > 0)
-        disp('Clean up...');        
-        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1),prob(:,:,:,2),prob(:,:,:,3), warp.cleanup);
-        % update label image for GM/WM/CSF 
-        label(:) = 0;
-        label(find((cls{1}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{1}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 2;
-        label(find((cls{2}(indx,indy,indz) >= cls{3}(indx,indy,indz)) & (cls{2}(indx,indy,indz) >= cls{1}(indx,indy,indz)))) = 3;
-        label(find((cls{3}(indx,indy,indz) >= cls{1}(indx,indy,indz)) & (cls{3}(indx,indy,indz) >= cls{2}(indx,indy,indz)))) = 1;
-    else
-        for i=1:3
-            cls{i}(:) = 0;
-            cls{i}(indx,indy,indz) = prob(:,:,:,i);
-        end
+    % reread segmentations from Amap
+    for i=1:3
+        cls{i}(:) = 0;
+        cls{i}(indx,indy,indz) = prob(:,:,:,i);
     end
-
     clear prob
 
     % clear last 3 tissue classes to save memory
@@ -316,11 +295,12 @@ end
    
 end
 
+M0 = res.image(1).mat;
+
 % rescue first image
 src = single(chan(1).Nc.dat(:,:,:,1,1));
 
 clear tpm chan
-M0 = res.image(1).mat;
 
 % prepare transformations for rigidly or affine aligned images
 if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
@@ -374,6 +354,7 @@ end
 
 % apply dartel
 if do_dartel
+    disp('Dartel normalization...');        
     % use GM/WM for dartel
     n1 = 2;
 
@@ -441,8 +422,6 @@ if do_dartel
     tmp = spm_bsplinc(y0(:,:,:,3),[3 3 3 0 0 0]);
     y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
 
-save([nam '_dartel.mat']);
-disp([nam '_dartel.mat'])
     % get inverse deformations for warping brainmask to raw space
     if (warp.brainmask_th > 0)
         Vmask2 = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask_LPBA40_dartel.nii']));
