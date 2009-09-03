@@ -229,26 +229,29 @@ clear q q1 Coef b
 
 if do_cls & do_defs,
 
-if 0
     % cleanup
     if (warp.cleanup > 0)
         disp('Clean up...');        
         [cls{1}, cls{2}, cls{3}] = cg_cleanup_gwc(cls{1}, cls{2}, cls{3}, warp.cleanup);
+
+    else
+        % use mask of GM and WM
+        mask = single(cls{1});
+        mask = mask + single(cls{2});
+
+        % try to find largest connected component after 2 its of opening
+        mask = cg_morph_vol(mask,'open',2,0.25);
+        mask = mask_largest_cluster(mask,0.5);
+
+        % dilate and close to fill ventricles
+        mask = cg_morph_vol(mask,'dilate',1,0.5);
+        mask = cg_morph_vol(mask,'close',10,0.5);
+        
+        % set segmentations outside mask to zero
+        for i=1:3
+            cls{i}(mask==0) = 0;
+        end
     end
-end
-
-    % use mask of GM and WM
-    mask = single(cls{1});
-    mask = mask + single(cls{2});
-
-    % try to find largest connected component after opening
-    mask = cg_morph_vol(mask,'open',1,0.25);
-%    mask = mask_largest_cluster(mask,0.5);
-
-    % dilate and close to fill ventricles
-    mask = cg_morph_vol(mask,'dilate',1,0.5);
-    mask = cg_morph_vol(mask,'close',10,0.5);
-
 
     % calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);

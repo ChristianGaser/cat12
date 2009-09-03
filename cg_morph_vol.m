@@ -27,15 +27,19 @@ order = sum(kx(:) ~= 0)*sum(ky(:) ~= 0);
 switch lower(action)
 	case 'dilate'
 	%=======================================================================
-	% dilate
+	% enlarge image according to number of dilations
+	sz = size(vol);
+	vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'uint8');
+	vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = vol;
 	for i = 1:n
-		spm_conv_vol(vol,vol,kx,ky,kz,-[1 1 1]);
-		vol = uint8(vol~=0);
+		spm_conv_vol(vol2,vol2,kx,ky,kz,-[1 1 1]);
+		vol2 = uint8(vol2~=0);
 	end
+	vol = vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n);
+	clear vol2
 
 	case 'erode'
 	%=======================================================================
-	% erose
 	for i = 1:n
 		spm_conv_vol(vol,vol,kx,ky,kz,-[1 1 1]);
 		vol = uint8(vol>=order);
@@ -43,14 +47,20 @@ switch lower(action)
 
 	case 'close'
 	%=======================================================================
+	% enlarge image according to number of dilations
+	sz = size(vol);
+	vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'uint8');
+	vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = vol;
 	for i = 1:n
-		spm_conv_vol(vol,vol,kx,ky,kz,-[1 1 1]);
-		vol = uint8(vol~=0);
+		spm_conv_vol(vol2,vol2,kx,ky,kz,-[1 1 1]);
+		vol2 = uint8(vol2~=0);
 	end
 	for i = 1:n
-		spm_conv_vol(vol,vol,kx,ky,kz,-[1 1 1]);
-		vol = uint8(vol>=order);
+		spm_conv_vol(vol2,vol2,kx,ky,kz,-[1 1 1]);
+		vol2 = uint8(vol2>=order);
 	end
+	vol = vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n);
+	clear vol2
 	
 	case 'open'
 	%=======================================================================
