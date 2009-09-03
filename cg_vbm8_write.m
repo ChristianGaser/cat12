@@ -229,22 +229,26 @@ clear q q1 Coef b
 
 if do_cls & do_defs,
 
-    % use empirically estimated thresholds for tissue priors from SPM
-    mask = uint8(((single(cls{1})+single(cls{2})+single(cls{3})) > 64));    
-    
-    % use index to speed up and save memory
-    sz = size(mask);
-    [indx, indy, indz] = ind2sub(sz,find(mask>0));
-    indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-    indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-    indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
-
+if 0
     % cleanup
     if (warp.cleanup > 0)
         disp('Clean up...');        
-        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(cls{1}(indx,indy,indz), ...
-                cls{2}(indx,indy,indz), cls{3}(indx,indy,indz), warp.cleanup);
+        [cls{1}, cls{2}, cls{3}] = cg_cleanup_gwc(cls{1}, cls{2}, cls{3}, warp.cleanup);
     end
+end
+
+    % use mask of GM and WM
+    mask = single(cls{1});
+    mask = mask + single(cls{2});
+
+    % try to find largest connected component after opening
+    mask = cg_morph_vol(mask,'open',1,0.25);
+%    mask = mask_largest_cluster(mask,0.5);
+
+    % dilate and close to fill ventricles
+    mask = cg_morph_vol(mask,'dilate',1,0.5);
+    mask = cg_morph_vol(mask,'close',10,0.5);
+
 
     % calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
@@ -253,30 +257,38 @@ if do_cls & do_defs,
       	for k1 = 1:Kb
       		cls2(:,:,k1)  = cls{k1}(:,:,i);
       	end
+      	% find maximum for reordered segmentations
     	  [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb]),[],3);
     	  for k1 = 1:Kb
     		  label2(:,:,i) = label2(:,:,i) + uint8((maxind == k1).*(maxi~=0)*k1);
     	  end
     end
 
-    label = label2(indx,indy,indz);
-    
     % only keep label values for GM/WM/CSF
-    label(find(label>3))=0;
+    mask = uint8((label2 < 4) & (label2 > 0));
+    label2(find(mask==0)) = 0;
     
+    % use index to speed up and save memory
+    sz = size(mask);
+    [indx, indy, indz] = ind2sub(sz,find(mask>0));
+    indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+    indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+    indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+
+    label = label2(indx,indy,indz);
+        
     clear cls2 label2
     
     % mask source image because Amap needs a skull stripped image
     % set label and source inside outside mask to 0
-    label(find(mask(indx,indy,indz) < 1)) = 0;
     vol = chan(1).Nc.dat(indx,indy,indz,1,1);
-    vol(find(mask(indx,indy,indz) < 1)) = 0;
+    vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
     niters = 200; sub=8; nc=3; pve=1;
     disp('Amap segmentation...');        
     prob = AmapMex(vol, label, nc, niters, sub, pve);
-    
+ 
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
@@ -352,7 +364,7 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
 end
 
 
-% apply dartel
+% dartel spatial normalization to given template
 if do_dartel
     disp('Dartel normalization...');        
     % use GM/WM for dartel
@@ -405,22 +417,24 @@ if do_dartel
 
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
-    [t1,t2,t3] = ndgrid(1:d(1),1:d(2),1:d(3));
+    clear u f g
+    
+    [t1,t2,o] = ndgrid(1:d(1),1:d(2),1);
+    t3 = 1:d(3);
 
-    % apply affine transformation to deformations
-    iMa = inv(Ma);
-    t11  = iMa(1,1)*t1 + iMa(1,2)*t2 + iMa(1,3)*t3 + iMa(1,4);
-    t22  = iMa(2,1)*t1 + iMa(2,2)*t2 + iMa(2,3)*t3 + iMa(2,4);
-    t33  = iMa(3,1)*t1 + iMa(3,2)*t2 + iMa(3,3)*t3 + iMa(3,4);
+    prm     = [3 3 3 0 0 0];
+    Coef    = cell(1,3);
+    Coef{1} = spm_bsplinc(y0(:,:,:,1),prm);
+    Coef{2} = spm_bsplinc(y0(:,:,:,2),prm);
+    Coef{3} = spm_bsplinc(y0(:,:,:,3),prm);
     
-    clear t1 t2 t3
-    
-    tmp = spm_bsplinc(y0(:,:,:,1),[3 3 3 0 0 0]);
-    y(:,:,:,1) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
-    tmp = spm_bsplinc(y0(:,:,:,2),[3 3 3 0 0 0]);
-    y(:,:,:,2) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
-    tmp = spm_bsplinc(y0(:,:,:,3),[3 3 3 0 0 0]);
-    y(:,:,:,3) = spm_bsplins(tmp,t11,t22,t33,[3 3 3 0 0 0]);
+    for z=1:d(3)
+        [t11,t22,t33] = defs2(Coef,z,Ma,prm,t1,t2,t3);
+        y(:,:,z,1) = t11;
+        y(:,:,z,2) = t22;
+        y(:,:,z,3) = t33;
+    end
+    clear Coef y0 t1 t2 t3
 
     % get inverse deformations for warping brainmask to raw space
     if (warp.brainmask_th > 0)
@@ -435,7 +449,7 @@ if do_dartel
         label(find(mask2(indx,indy,indz) < warp.brainmask_th)) = 0;
     end
 
-    clear y1 y2 y3 t11 t22 t33 y0 x1a y1a z1a mask2 tmp
+    clear y1 y2 y3 t11 t22 t33 x1a y1a z1a mask2
     
     
 end
@@ -775,6 +789,22 @@ return;
 %=======================================================================
 
 %=======================================================================
+function [x1,y1,z1] = defs2(sol,z,M,prm,x0,y0,z0)
+iM = inv(M);
+z01 = z0(z)*ones(size(x0));
+
+x1a  = iM(1,1)*x0 + iM(1,2)*y0 + iM(1,3)*z01 + iM(1,4);
+y1a  = iM(2,1)*x0 + iM(2,2)*y0 + iM(2,3)*z01 + iM(2,4);
+z1a  = iM(3,1)*x0 + iM(3,2)*y0 + iM(3,3)*z01 + iM(3,4);
+
+x1 = spm_bsplins(sol{1},x1a,y1a,z1a,prm);
+y1 = spm_bsplins(sol{2},x1a,y1a,z1a,prm);
+z1 = spm_bsplins(sol{3},x1a,y1a,z1a,prm);
+
+return;
+%=======================================================================
+
+%=======================================================================
 function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
 iMT = inv(MT);
 x1  = x0*iMT(1,1)+iMT(1,4);
@@ -867,3 +897,57 @@ for i=1:d(3),
     x(:,:,i,3) = single(i);
 end
 %=======================================================================
+
+%=======================================================================
+function y = mask_largest_cluster(y, th)
+
+if nargin < 2
+	th = 0.5;
+end
+
+sz = size(y);
+
+th = th*max(single(y(:)));
+
+mask = y > th;
+Q = find(mask);
+
+Qth = find(y <= th & y>0);
+yth = y(Qth);
+
+% save memory by using bounding box where y > th
+[indx, indy, indz] = ind2sub(size(mask),Q);
+indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+
+[A,num] = spm_bwlabel(double(mask(indx,indy,indz)),26);
+
+clear mask
+
+% interrupt if cluster was > 7.5% of whole image to save time
+max_A = max(A(:));
+sz_cluster = zeros(max_A,1);
+for i=1:max_A
+	QA = find(A == i);
+	ind = i;
+	if length(QA)/prod(size(A)) > 0.075
+		break
+	end
+	sz_cluster(i) = length(QA);
+end
+
+if length(QA)/prod(size(A)) <= 0.075
+	[mx, ind] = max(sz_cluster);
+	QA = find(A == ind);
+end
+
+QA0 = find(A ~= ind);
+A = y(indx,indy,indz);
+A(QA0) = 0;
+
+y(indx,indy,indz) = A;
+y(Qth) = yth;
+
+return;
+

@@ -25,7 +25,7 @@ order = sum(kx(:) ~= 0)*sum(ky(:) ~= 0);
 
 
 switch lower(action)
-	case 'erode'
+	case 'dilate'
 	%=======================================================================
 	% dilate
 	for i = 1:n
@@ -33,7 +33,7 @@ switch lower(action)
 		vol = uint8(vol~=0);
 	end
 
-	case 'dilate'
+	case 'erode'
 	%=======================================================================
 	% erose
 	for i = 1:n
