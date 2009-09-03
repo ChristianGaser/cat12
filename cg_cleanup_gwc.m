@@ -10,7 +10,7 @@ if nargin<4, level = 1; end;
 
 th0 = 0.6;
 
-mx_w = max(double(w(:)));
+mx_w = max(single(w(:)));
 
 if level==2
 	th1 = 0.2*mx_w/255;
@@ -23,7 +23,7 @@ th0 = th0*mx_w/255;
 % use only largest WM cluster at th0 as seed parameter
 % mask out all voxels where wm is lower than gm or csf
 wmask = w;
-wmask(find((double(w) < double(c)) & (double(w) < double(g)))) = 0;
+wmask(find((w < c) & (w < g))) = 0;
 b = mask_largest_cluster(wmask, th0);
 
 % Build a 3x3x3 seperable smoothing kernel
@@ -43,9 +43,9 @@ spm_progress_bar('Init',niter,'Clean up','Iterations completed');
 for j=1:niter,
         if j>2, th=th1; else th=th0; end; % Dilate after two its of erosion.
         for i=1:size(b,3),
-                gp = double(g(:,:,i));
-                wp = double(w(:,:,i));
-                bp = double(b(:,:,i))/255;
+                gp = single(g(:,:,i));
+                wp = single(w(:,:,i));
+                bp = single(b(:,:,i))/255;
                 bp = (bp>th).*(wp+gp);
                 b(:,:,i) = uint8(round(bp));
         end;
@@ -53,20 +53,27 @@ for j=1:niter,
         spm_progress_bar('Set',j);
 end;
 
+spm_progress_bar('Clear');
+
 th = 0.05;
 
-b2 = double(w);
-b2 = b2 + double(g);
-b2 = b2 + double(c);
-b2 = cg_morph_vol(b2,'open',1,th1);
+% use mask of GM and WM
+b2 = single(w);
+b2 = b2 + single(g);
+
+% try to find largest connected component after opening
+b2 = cg_morph_vol(b2,'open',1,0.25);
 b2 = mask_largest_cluster(b2,0.5);
-b2 = double(cg_morph_vol(b2,'close',2,0.5));
+
+% dilate and close to fill ventricles
+b2 = cg_morph_vol(b2,'dilate',1,0.5);
+b2 = cg_morph_vol(b2,'close',10,0.5);
 
 for i=1:size(b,3),
-        gp       = double(g(:,:,i))/255;
-        wp       = double(w(:,:,i))/255;
-        cp       = double(c(:,:,i))/255;
-        bp       = double(b(:,:,i))/255;
+        gp       = single(g(:,:,i))/255;
+        wp       = single(w(:,:,i))/255;
+        cp       = single(c(:,:,i))/255;
+        bp       = single(b(:,:,i))/255;
         bp       = ((bp>th).*(wp+gp))>th;
         gwc      = gp + wp + cp + eps;
         g(:,:,i) = uint8(round(255*gp.*bp./gwc));
@@ -84,7 +91,7 @@ end
 
 sz = size(y);
 
-th = th*max(double(y(:)));
+th = th*max(single(y(:)));
 
 mask = y > th;
 Q = find(mask);
@@ -126,6 +133,4 @@ A(QA0) = 0;
 y(indx,indy,indz) = A;
 y(Qth) = yth;
 
-
-spm_progress_bar('Clear');
 return;

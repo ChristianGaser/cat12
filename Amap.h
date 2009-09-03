@@ -9,7 +9,7 @@
 
 #define MAX_NC 6
 #define TH_COLOR 1
-#define TH_CHANGE 0.00001
+#define TH_CHANGE 0.00005
 #define TINY 1e-15 
 #ifndef HUGE
 #define HUGE 1e15 
