@@ -63,5 +63,4 @@ defaults.vbm8.output.warps = [0 0];
 % Extended writing options
 %=======================================================================
 defaults.vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
-defaults.vbm8.extopts.bb           = [[-78 78]' [-112 76]' [-70 85]'];	% bounding box
 defaults.vbm8.extopts.print        = 1;	% Display and print results
