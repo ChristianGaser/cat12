@@ -227,20 +227,6 @@ opts.help = {[...
 % options for output
 %-----------------------------------------------------------------------
 
-bb      = cfg_entry;
-bb.tag = 'bb';
-bb.name = 'Bounding box';
-bb.strtype = 'e';
-bb.num = [2 3];
-bb.def  = @(val)spm_get_defaults('vbm8.extopts.bb', val{:});
-bb.help = {[...
-'The bounding box (in mm) of any spatially normalised volumes to be written ',...
-'(relative to the anterior commissure). '...
-'Non-finite values will be replaced by the bounding box of the tissue '...
-'probability maps used in the segmentation.']};
-
-%------------------------------------------------------------------------
-
 vox      = cfg_entry;
 vox.tag = 'vox';
 vox.name = 'Voxel size';
