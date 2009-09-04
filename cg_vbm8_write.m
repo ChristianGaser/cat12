@@ -39,6 +39,7 @@ end
 % jc - jacobian: no, normalized 
 
 do_dartel = warp.dartelwarp;   % apply dartel normalization
+warp.brainmask_th = -1; % don't use brainmask anymore
 
 vx = NaN;
 bb = ones(2,3)*NaN;
@@ -229,28 +230,21 @@ clear q q1 Coef b
 
 if do_cls & do_defs,
 
-    % cleanup
-    if (warp.cleanup > 0)
-        disp('Clean up...');        
-        [cls{1}, cls{2}, cls{3}] = cg_cleanup_gwc(cls{1}, cls{2}, cls{3}, warp.cleanup);
+    % use mask of GM and WM
+    mask = single(cls{1});
+    mask = mask + single(cls{2});
 
-    else
-        % use mask of GM and WM
-        mask = single(cls{1});
-        mask = mask + single(cls{2});
+    % try to find largest connected component after 2 its of opening
+    mask = cg_morph_vol(mask,'open',2,0.25);
+    mask = mask_largest_cluster(mask,0.5);
 
-        % try to find largest connected component after 2 its of opening
-        mask = cg_morph_vol(mask,'open',2,0.25);
-        mask = mask_largest_cluster(mask,0.5);
-
-        % dilate and close to fill ventricles
-        mask = cg_morph_vol(mask,'dilate',1,0.5);
-        mask = cg_morph_vol(mask,'close',10,0.5);
+    % dilate and close to fill ventricles
+    mask = cg_morph_vol(mask,'dilate',1,0.5);
+    mask = cg_morph_vol(mask,'close',10,0.5);
         
-        % set segmentations outside mask to zero
-        for i=1:3
-            cls{i}(mask==0) = 0;
-        end
+    % set segmentations outside mask to zero
+    for i=1:3
+        cls{i}(mask==0) = 0;
     end
 
     % calculate label image for all classes 

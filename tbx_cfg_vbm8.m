@@ -254,38 +254,6 @@ vox.help = {...
 
 %------------------------------------------------------------------------
 
-cleanup = cfg_menu;
-cleanup.tag  = 'cleanup';
-cleanup.name = 'Clean up any partitions';
-cleanup.help = {[...
-'This uses a crude routine for extracting the brain from segmented',...
-'images. It begins by taking the white matter, and eroding it a',...
-'couple of times to get rid of any odd voxels. The algorithm',...
-'continues on to do conditional dilations for several iterations,',...
-'where the condition is based upon gray or white matter being present.',...
-'This identified region is then used to clean up the grey and white',...
-'matter partitions, and has a slight influences on the CSF partition.'],'',[...
-'If you find pieces of brain being chopped out in your data, then you ',...
-'may wish to disable or tone down the cleanup procedure.']};
-cleanup.labels = {'Dont do cleanup','Light Clean','Thorough Clean'};
-cleanup.values = {0 1 2};
-cleanup.def  = @(val)spm_get_defaults('vbm8.extopts.cleanup', val{:});
-
-%------------------------------------------------------------------------
-
-brainmask_th      = cfg_entry;
-brainmask_th.tag = 'brainmask_th';
-brainmask_th.name = 'Brainmask threshold';
-brainmask_th.strtype = 'e';
-brainmask_th.num = [1 1];
-brainmask_th.def  = @(val)spm_get_defaults('vbm8.extopts.brainmask_th', val{:});
-brainmask_th.help = {...
-['Threshold to skull-strip the brain using a brainmask from the LPBA40 sample ',...
-'(http://www.loni.ucla.edu/Atlases/LPBA40). The brainmask is only used if the final ',...
-'dartel registration is selected. Lower values enlarge or dilate the brainmask, ',...
-'while larger values shrink the brainmask.']};
-
-%------------------------------------------------------------------------
 print    = cfg_menu;
 print.tag = 'print';
 print.name = 'Display and print results';
@@ -311,7 +279,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,cleanup,brainmask_th,print};
+extopts.val = {dartelwarp,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
