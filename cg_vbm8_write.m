@@ -414,7 +414,7 @@ if do_dartel
 
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
-    clear u f g
+    clear f g
     
     [t1,t2,o] = ndgrid(1:d(1),1:d(2),1);
     t3 = 1:d(3);
@@ -605,6 +605,8 @@ if jc
         N.dat(:,:,:) = dt;
     end
 end
+
+clear u
 
 if any(tc(:,4)),
     C = zeros([d1,3],'single');
