@@ -10,11 +10,12 @@ function varargout = cg_vbm8_run(job,arg)
 % job.tissue(k).native
 % job.tissue(k).warped
 % job.warp.affreg
+% job.warp.affmethod
 % job.warp.reg
 % job.warp.samp
 % job.warp.write
-% job.warp.bb
-% job.warp.vox
+% job.warp.dartelwarp
+% job.warp.print
 %
 % See the user interface for a description of the fields.
 %_______________________________________________________________________
