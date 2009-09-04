@@ -234,7 +234,7 @@ if do_cls & do_defs,
     mask = single(cls{1});
     mask = mask + single(cls{2});
 
-    % try to find largest connected component after 2 its of opening
+    % keep largest connected component after 2 its of opening
     mask = cg_morph_vol(mask,'open',2,0.25);
     mask = mask_largest_cluster(mask,0.5);
 
@@ -282,7 +282,7 @@ if do_cls & do_defs,
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
-    niters = 200; sub=8; nc=3; pve=1;
+    niters = 200; sub = 16; nc = 3; pve = 1;
     disp('Amap segmentation...');        
     prob = AmapMex(vol, label, nc, niters, sub, pve);
  
