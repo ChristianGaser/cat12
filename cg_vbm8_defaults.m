@@ -25,10 +25,10 @@ defaults.vbm8.opts.samp      = 3;			% Sampling distance
 %=======================================================================
 
 % segmentations:
-%   native		0/1   (none/yes)
-%   warped		0/1   (none/yes)
-%   modulated	0/1/2 (none/affine+nonlinear/nonlinear only)
-%   dartel      0/1/2 (none/rigid/affine)
+%   native    0/1   (none/yes)
+%   warped    0/1   (none/yes)
+%   modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
+%   dartel    0/1/2 (none/rigid/affine)
 
 defaults.vbm8.output.bias.native  = 0;
 defaults.vbm8.output.bias.warped  = 1;
