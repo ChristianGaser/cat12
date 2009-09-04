@@ -65,5 +65,3 @@ defaults.vbm8.output.warps = [0 0];
 defaults.vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
 defaults.vbm8.extopts.bb           = [[-78 78]' [-112 76]' [-70 85]'];	% bounding box
 defaults.vbm8.extopts.print        = 1;	% Display and print results
-defaults.vbm8.extopts.brainmask_th = 0.5;	% Threshold for final dartel brainmask
-defaults.vbm8.extopts.cleanup      = 1;	% cleanup: 1- light; 2 - thourough
