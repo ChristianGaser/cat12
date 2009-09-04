@@ -14,29 +14,29 @@
 % Jena, Department of Psychiatry) and is available to the scientific 
 % community under the terms of the GNU General Public License.
 % 
-% The key changes to the SPM8 segmentation algorithm are the application of
-% a Hidden Markov random field (HMRF) model and the opportunity to write
-% segmentations without any use of tissue priors. The HMRF model 
-% provides spatial constraints based on neighbouring voxels of a 3x3x3 cube. 
-% The idea is to remove isolated voxels of one tissue class which are 
-% unlikely to be member of this tissue type. This procedure also closes 
-% holes in a cluster of connected voxels of one tissue type. In the 
-% resulting segmentation the noise level will be minimized.
-% 
 % This function will save the following files:
 %
-% segmented files:
+% segmented images:
 % -----------------
-% mwp[123]*
+% m[0]w[r]p[0123]*
 % m   - modulated
 % m0  - modulated non-linear only
 % w   - warped
+% r   - dartel warped 
 % p   - segmented
+% 0   - PVE label
 % 1   - GM
 % 2   - WM
 % 3   - CSF
 % _affine   - affine registered only
 % 
+% bias corrected image:
+% -----------------
+% wm[r]*
+% m   - bias corrected
+% w   - warped
+% r   - dartel warped 
+%
 % estimated raw volumes:
 % -----------------------
 % pxxx_seg.txt
