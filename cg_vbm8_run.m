@@ -78,6 +78,7 @@ job.biasreg  = job.opts.biasreg;
 job.biasfwhm = job.opts.biasfwhm;
 job.channel  = channel;
 job.warp     = warp;
+job.warps    = job.output.warps;
 job.tissue   = tissue;
 
 if nargin==1,

@@ -517,8 +517,9 @@ output.help = {[...
 estwrite      = cfg_exbranch;
 estwrite.tag = 'estwrite';
 estwrite.name = 'VBM8: Estimate & Write';
-estwrite.val = {data,opts,output,extopts};
+estwrite.val = {data,extopts,opts,output};
 estwrite.prog   = @cg_vbm8_run;
+estwrite.vout = @vout;
 estwrite.help   = {[...
 'This toolbox is currently only work in progress, and is an extension of the default ',...
 'unified segmentation.  The algorithm is essentially the same as that described in the ',...
@@ -571,8 +572,9 @@ estwrite.help   = {[...
 write      = cfg_exbranch;
 write.tag = 'write';
 write.name = 'VBM8: Write already estimated segmentations';
-write.val = {data,output,extopts};
+write.val = {extopts,data,output};
 write.prog   = @cg_vbm8_run;
+write.vout = @vout;
 write.help   = {[...
 'Allows previously estimated segmentations (stored in imagename''_seg8.mat'' files) ',...
 'to save the segmented images only without estimating the segmentation again. ',...
@@ -587,6 +589,109 @@ vbm8  = cfg_choice;
 vbm8.name = 'VBM8';
 vbm8.tag  = 'vbm8';
 vbm8.values = {estwrite,write,tools};
-%vbm8.vout = @vout;
 %------------------------------------------------------------------------
+
+%------------------------------------------------------------------------
+function dep = vout(job)
+
+opts  = job.output;
+tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
+tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
+tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
+tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
+tissue(3).warped = [opts.CSF.warped (opts.CSF.modulated==1) (opts.CSF.modulated==2)];
+tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
+
+% This depends on job contents, which may not be present when virtual
+% outputs are calculated.
+
+cdep = cfg_dep;
+cdep(end).sname      = 'Seg Params';
+cdep(end).src_output = substruct('.','param','()',{':'});
+cdep(end).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
+if opts.bias.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Bias Corr Images';
+    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.bias.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Bias Corr Images';
+    cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.label.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Label Images';
+    cdep(end).src_output = substruct('()',{1}, '.','label','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.label.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Label Images';
+    cdep(end).src_output = substruct('()',{1}, '.','wlabel','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.jacobian.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Jacobian Determinant Images';
+    cdep(end).src_output = substruct('()',{1}, '.','jacobian','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.warps(1),
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Inverse Deformation Field';
+    cdep(end).src_output = substruct('()',{1}, '.','invdef','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.warps(2),
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Deformation Field';
+    cdep(end).src_output = substruct('()',{1}, '.','fordef','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+
+for i=1:numel(tissue),
+    if tissue(i).native(1),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = sprintf('p%d Images',i);
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','c','()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+    if tissue(i).native(2),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = sprintf('rp%d rigid Images',i);
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','rc','()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+    if tissue(i).native(3),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = sprintf('rp%d affine Images',i);
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','rca','()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+    if tissue(i).warped(1),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = sprintf('wp%d Images',i);
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','wc','()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+    if tissue(i).warped(2),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = sprintf('mwp%d Images',i);
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','mwc','()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+    if tissue(i).warped(3),
+        cdep(end+1)          = cfg_dep;
+        cdep(end).sname      = sprintf('m0wp%d Images',i);
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','m0wc','()',{':'});
+        cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+end
+
+dep = cdep;
+
+
 
