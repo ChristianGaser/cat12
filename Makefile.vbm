@@ -25,7 +25,8 @@ help:
 
 update:
 	-@svn update
-	-@echo '% Voxel Based Morphometry Toolbox' > Contents.m
+	-@echo '% __________________________________________________________________________' > Contents.m
+	-@echo '% Voxel Based Morphometry Toolbox' >> Contents.m
 	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
 
