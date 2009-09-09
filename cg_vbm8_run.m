@@ -426,7 +426,7 @@ if job.jacobian,
         if do_dartel
             jacobian{j} = fullfile(parts{j,1},['jac_wrp1',parts{j,2},'.nii']);
         else
-            jacobian{j} = {};
+            jacobian{j} = '';
         end
     end
 else
