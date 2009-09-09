@@ -359,7 +359,7 @@ for i=1:numel(job.tissue),
     if job.tissue(i).native(3),
         tiss(i).rca = cell(n,1);
         for j=1:n
-            tiss(i).rca{j} = fullfile(parts{j,1},['rp',num2str(i),parts{j,2},'affine_.nii']);
+            tiss(i).rca{j} = fullfile(parts{j,1},['rp',num2str(i),parts{j,2},'_affine.nii']);
         end
     end
     if job.tissue(i).warped(1),
