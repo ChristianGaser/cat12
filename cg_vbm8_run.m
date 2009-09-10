@@ -395,19 +395,6 @@ for i=1:numel(job.tissue),
 end
 
 if job.warp.write(1),
-    invdef = cell(n,1);
-    for j=1:n
-        if do_dartel
-            invdef{j} = fullfile(parts{j,1},['iy_r',parts{j,2},'.nii']);
-        else
-            invdef{j} = fullfile(parts{j,1},['iy_',parts{j,2},'.nii']);
-        end
-    end
-else
-    invdef = {};
-end
-
-if job.warp.write(2),
     fordef = cell(n,1);
     for j=1:n
         if do_dartel
@@ -418,6 +405,19 @@ if job.warp.write(2),
     end
 else
     fordef = {};
+end
+
+if job.warp.write(2),
+    invdef = cell(n,1);
+    for j=1:n
+        if do_dartel
+            invdef{j} = fullfile(parts{j,1},['iy_r',parts{j,2},'.nii']);
+        else
+            invdef{j} = fullfile(parts{j,1},['iy_',parts{j,2},'.nii']);
+        end
+    end
+else
+    invdef = {};
 end
 
 if job.jacobian,

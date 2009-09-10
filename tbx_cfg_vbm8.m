@@ -248,7 +248,8 @@ print.values = {1 0};
 print.def  = @(val)spm_get_defaults('vbm8.extopts.print', val{:});
 print.help = {[...
 'The normalized T1 image and the normalized segmentations can be displayed and printed to a ',...
-'ps-file. This is often helpful to check whether registration and segmentation were successful.']};
+'ps-file. This is often helpful to check whether registration and segmentation were successful. ',...
+'However, this is only working if you write normalized images.']};
 
 %------------------------------------------------------------------------
 
@@ -409,8 +410,8 @@ warps.tag = 'warps';
 warps.name = 'Deformation Fields';
 warps.labels = {...
     'none',...
-    'inverse',...
     'forward',...
+    'inverse',...
     'inverse + forward'};
 warps.values = {[0 0],[1 0],[0 1],[1 1]};
 warps.def  = @(val)spm_get_defaults('vbm8.output.warps', val{:});
@@ -583,12 +584,13 @@ write.help   = {[...
 
 %------------------------------------------------------------------------
 tools = cg_vbm8_tools;
+bias  = cg_vbm8_bias;
 %------------------------------------------------------------------------
 
 vbm8  = cfg_choice;
 vbm8.name = 'VBM8';
 vbm8.tag  = 'vbm8';
-vbm8.values = {estwrite,write,tools};
+vbm8.values = {estwrite,write,tools,bias};
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -641,14 +643,14 @@ if opts.jacobian.warped,
 end;
 if opts.warps(1),
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Inverse Deformation Field';
-    cdep(end).src_output = substruct('()',{1}, '.','invdef','()',{':'});
+    cdep(end).sname      = 'Deformation Field';
+    cdep(end).src_output = substruct('()',{1}, '.','fordef','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 if opts.warps(2),
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Deformation Field';
-    cdep(end).src_output = substruct('()',{1}, '.','fordef','()',{':'});
+    cdep(end).sname      = 'Inverse Deformation Field';
+    cdep(end).src_output = substruct('()',{1}, '.','invdef','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 
