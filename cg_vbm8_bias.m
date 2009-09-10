@@ -4,8 +4,6 @@ function bias = cg_vbm8_bias
 % Christian Gaser
 % $Id: cg_vbm8_bias.m 160 2009-09-09 15:31:37Z gaser $
 
-cg_rSPM_defaults
-
 mov = cfg_files;
 mov.name = 'Longitudinal images for one subject';
 mov.tag  = 'mov';
