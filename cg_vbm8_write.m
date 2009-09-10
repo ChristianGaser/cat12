@@ -34,7 +34,7 @@ end
 
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 % bf - bias field: corrected, warp corrected, affine corrected
-% df - deformations: inverse, forward
+% df - deformations: forward, inverse
 % lb - label: native, warped label, rigid label, affine label
 % jc - jacobian: no, normalized 
 
@@ -129,7 +129,7 @@ if do_defs,
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
         if do_dartel
-            Ndef.dat.fname = fullfile(pth,['iy_wr', nam1, '.nii']);
+            Ndef.dat.fname = fullfile(pth,['iy_r', nam1, '.nii']);
         end
         Ndef.mat  = res.image(1).mat;
         Ndef.mat0 = res.image(1).mat;
@@ -736,6 +736,8 @@ if bf(1,2),
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
                             d1,'int16',0,1,0);
     if do_dartel
+        % skull strip image because of the undefined deformations outside the brain
+        C(~label) = 0;
         N.dat.fname = fullfile(pth,['wmr', nam, '.nii']);
     end
     N.mat  = M1;
@@ -775,7 +777,7 @@ if df(1),
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
                            [d1,1,3],'float32-be',0,1,0);
     if do_dartel
-        N.dat.fname = fullfile(pth,['y_wr', nam1, '.nii']);
+        N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']);
     end
     N.mat     = M1;
     N.mat0    = M1;
