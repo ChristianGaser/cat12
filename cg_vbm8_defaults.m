@@ -57,10 +57,17 @@ defaults.vbm8.output.CSF.dartel = 0;	% CSF
 % jacobian determinant 0/1 (none/yes)
 defaults.vbm8.output.jacobian.warped = 0;
 
-% order is [inverse forward]
+% order is [forward inverse]
 defaults.vbm8.output.warps = [0 0];
 
 % Extended writing options
 %=======================================================================
 defaults.vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
 defaults.vbm8.extopts.print        = 1;	% Display and print results
+
+% bias correction options
+%=======================================================================
+defaults.vbm8.bias.nits_bias    = 8;
+defaults.vbm8.bias.biasfwhm     = 60;
+defaults.vbm8.bias.biasreg      = 1e-6;
+defaults.vbm8.bias.lmreg        = 1e-6;
