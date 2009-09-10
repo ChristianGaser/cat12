@@ -728,6 +728,10 @@ end
 
 % warped bias-corrected image
 if bf(1,2),
+    % skull strip image because of the undefined deformations outside the brain
+    if do_dartel
+        src(~label) = 0;
+    end
     C = zeros(d1,'single');
     [src,w]  = dartel3('push',src,y,d1(1:3));
     C = optimNn(w,src,[1  vx vx vx 1e-4 1e-6 0  3 2]);
@@ -736,8 +740,6 @@ if bf(1,2),
     N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
                             d1,'int16',0,1,0);
     if do_dartel
-        % skull strip image because of the undefined deformations outside the brain
-        C(~label) = 0;
         N.dat.fname = fullfile(pth,['wmr', nam, '.nii']);
     end
     N.mat  = M1;
