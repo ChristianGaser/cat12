@@ -235,11 +235,11 @@ if do_cls & do_defs,
     mask = mask + single(cls{2});
 
     % keep largest connected component after 2 its of opening
-    mask = cg_morph_vol(mask,'open',2,0.25);
+    mask = cg_morph_vol(mask,'open',2,warp.open_th);
     mask = mask_largest_cluster(mask,0.5);
 
     % dilate and close to fill ventricles
-    mask = cg_morph_vol(mask,'dilate',1,0.5);
+    mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
     mask = cg_morph_vol(mask,'close',10,0.5);
         
     % set segmentations outside mask to zero
@@ -728,9 +728,12 @@ end
 
 % warped bias-corrected image
 if bf(1,2),
-    % skull strip image because of the undefined deformations outside the brain
+    % skull strip image because of undefined deformations outside the brain
     if do_dartel
-        src(~label) = 0;
+        src2 = zeros(size(src),'single');
+        src2(indx,indy,indz) = src(indx,indy,indz).*single(label>0); 
+        src = src2;
+        clear src2
     end
     C = zeros(d1,'single');
     [src,w]  = dartel3('push',src,y,d1(1:3));

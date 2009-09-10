@@ -211,12 +211,78 @@ calcvol.help = {[...
 
 %------------------------------------------------------------------------
 
+field = cfg_files;
+field.tag  = 'field';
+field.name = 'Deformation Field';
+field.filter = 'image';
+field.ufilter = '.*y_.*\.nii$';
+field.num     = [1 1];
+field.help = {[...
+'Deformations can be thought of as vector fields. These can be represented ',...
+'by three-volume images.']};
+
+applyto = cfg_files;
+applyto.tag  = 'fnames';
+applyto.name = 'Apply to';
+applyto.filter = 'image';
+applyto.num     = [0 Inf];
+applyto.help = {[...
+'Apply the resulting deformation field to some images. ',...
+'The warped images will be written, and the ',...
+'filenames prepended by "w".  Note that trilinear interpolation is used ',...
+'to resample the data, so the original values in the images will ',...
+'not be preserved.']};
+
+interp      = cfg_menu;
+interp.name = 'Interpolation';
+interp.tag  = 'interp';
+interp.labels = {'Nearest neighbour','Trilinear','2nd Degree B-spline',...
+'3rd Degree B-Spline ','4th Degree B-Spline ','5th Degree B-Spline',...
+'6th Degree B-Spline','7th Degree B-Spline'};
+interp.values = {0,1,2,3,4,5,6,7};
+interp.def  = @(val)spm_get_defaults('normalise.write.interp',val{:});
+interp.help = {...
+['The method by which the images are sampled when being written in a ',...
+'different space.'],...
+['    Nearest Neighbour: ',...
+'    - Fastest, but not normally recommended.'],...
+['    Bilinear Interpolation: ',...
+'    - OK for PET, or realigned fMRI.'],...
+['    B-spline Interpolation: ',...
+'    - Better quality (but slower) interpolation/* \cite{thevenaz00a}*/, especially ',...
+'      with higher degree splines.  Do not use B-splines when ',...
+'      there is any region of NaN or Inf in the images. '],...
+};
+
+defs = cfg_exbranch;
+defs.tag = 'defs';
+defs.name = 'Deformations';
+defs.val = {field,applyto,interp};
+defs.prog    = @cg_vbm8_defs;
+defs.vfiles  = @vfiles_defs;
+defs.help    = {'This is a utility for applying deformation fields to images.'};;
+
+%------------------------------------------------------------------------
+
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_cov,showslice,calcvol,T2x};
+tools.values = {check_cov,showslice,calcvol,T2x,defs};
 
 return
+
+%_______________________________________________________________________
+
+function vf = vfiles_defs(job)
+vf = {};
+
+s  = strvcat(job.fnames);
+for i=1:size(s,1),
+    [pth,nam,ext,num] = spm_fileparts(s(i,:));
+    vf = {vf{:}, fullfile(pth,['w',nam,ext,num])};
+end;
+return;
+%_______________________________________________________________________
 
 %------------------------------------------------------------------------
 function execute_calcvol(p)
