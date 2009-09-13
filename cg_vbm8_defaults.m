@@ -64,8 +64,8 @@ defaults.vbm8.output.warps = [0 0];
 %=======================================================================
 defaults.vbm8.extopts.dartelwarp  = 1;    % dartel normalization: 0 - spm default; 1 - yes
 defaults.vbm8.extopts.print       = 1;	  % Display and print results
-defaults.vbm8.extopts.open_th     = 0.25; % initial threshold for skull-stripping
-defaults.vbm8.extopts.dilate      = 1;    % number of final dilations for skull-stripping
+defaults.vbm8.extopts.open_th     = 0.05; % initial threshold for skull-stripping
+defaults.vbm8.extopts.dilate      = 2;    % number of final dilations for skull-stripping
 
 % bias correction options
 %=======================================================================
