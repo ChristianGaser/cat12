@@ -235,7 +235,7 @@ if do_cls & do_defs,
     mask = mask + single(cls{2});
 
     % keep largest connected component after 2 its of opening
-    mask = cg_morph_vol(mask,'open',2,warp.open_th);
+    mask = cg_morph_vol(mask,'open',1,warp.open_th);
     mask = mask_largest_cluster(mask,0.5);
 
     % dilate and close to fill ventricles
