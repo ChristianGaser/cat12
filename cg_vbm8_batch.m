@@ -13,9 +13,10 @@ if nargin < 2
 end
 
 addpath(fullfile(spm('dir'),'toolbox','vbm8'));
-global defaults
 spm_defaults
 cg_vbm8_defaults
+global defaults
+spm_jobman('initcfg');
 
 warning off
 % extract folder
@@ -40,7 +41,6 @@ for i=1:n
 	end
 end
 
-spm_jobman('initcfg');
 spm_jobman('run_nogui',matlabbatch)
 
 exit
