@@ -13,6 +13,7 @@ global defaults
 
 % Estimation options
 %=======================================================================
+defaults.vbm8.opts.tpm       = {fullfile(spm('dir'),'toolbox','Seg','TPM.nii')};	% TPM.nii
 defaults.vbm8.opts.ngaus     = [2 2 2 3 4 2];	% Gaussians per class
 defaults.vbm8.opts.affreg    = 'mni';		% Affine regularisation
 defaults.vbm8.opts.warpreg   = 4;			% Warping regularisation
