@@ -53,9 +53,12 @@ warp = struct('affreg', job.opts.affreg,...
 do_dartel = warp.dartelwarp;
 
 % prepare tissue priors and number of gaussians for all 6 classes
-for i=1:6
-    tissue(i).ngaus = job.opts.ngaus(i);
-    tissue(i).tpm = fullfile(spm('dir'),'toolbox','Seg',['TPM.nii,' num2str(i)]);
+if estwrite
+    [pth,nam,ext,num] = spm_fileparts(job.opts.tpm{1});
+    for i=1:6
+        tissue(i).ngaus = job.opts.ngaus(i);
+        tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+    end
 end
 
 % write tissue class 1-3              
@@ -101,8 +104,12 @@ return
 function vout = run_job(job, estwrite)
 
 vout   = vout_job(job);
-tpm    = strvcat(cat(1,job.tissue(:).tpm));
-tpm    = spm_load_priors8(tpm);
+
+% load tpm priors only for estimate and write
+if estwrite
+    tpm    = strvcat(cat(1,job.tissue(:).tpm));
+    tpm    = spm_load_priors8(tpm);
+end
 
 nit = 1;
 
@@ -197,6 +204,10 @@ for iter=1:nit,
             seg8_name = fullfile(pth,[nam '_seg8.mat']);
             if exist(seg8_name)
                 res = load(seg8_name);
+                
+                % load original used tpm, which is save in seg8.mat file
+                tpm    = spm_load_priors8(res.tpm);
+                
                 % use path of mat-file in case that image was moved
                 for i=1:numel(res.image)
 					        [image_pth,image_nam,image_ext]=fileparts(res.image(i).fname);
