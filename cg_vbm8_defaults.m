@@ -40,12 +40,12 @@ defaults.vbm8.output.label.dartel = 0;
 
 % order is [native normalised modulated dartel]
 defaults.vbm8.output.GM.native = 0;	% GM
-defaults.vbm8.output.GM.warped = 1;	% GM
+defaults.vbm8.output.GM.warped = 0;	% GM
 defaults.vbm8.output.GM.mod    = 2;	% GM
 defaults.vbm8.output.GM.dartel = 0;	% GM
 
 defaults.vbm8.output.WM.native = 0;	% WM
-defaults.vbm8.output.WM.warped = 1;	% WM
+defaults.vbm8.output.WM.warped = 0;	% WM
 defaults.vbm8.output.WM.mod    = 2;	% WM
 defaults.vbm8.output.WM.dartel = 0;	% WM
 
