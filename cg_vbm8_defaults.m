@@ -73,3 +73,7 @@ defaults.vbm8.bias.nits_bias    = 8;
 defaults.vbm8.bias.biasfwhm     = 60;
 defaults.vbm8.bias.biasreg      = 1e-6;
 defaults.vbm8.bias.lmreg        = 1e-6;
+
+% apply deformations options
+%=======================================================================
+defaults.vbm8.defs.interp    = 5;  % 5th degree B-spline
