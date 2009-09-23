@@ -5,13 +5,25 @@ function cg_vbm8_defs(job)
 % Christian Gaser
 % $Id$
 
-job
-job.tools
-job.tools.defs
-[Def,mat] = get_def(job.tools.defs.fields);
+% remove potential file number at the end
+[pth,nam,ext,num] = spm_fileparts(job.field{1})
+job.field{1} = fullfile(pth,[nam ext]);
+
+[Def,mat] = get_def(job.field);
 apply_def(Def,mat,strvcat(job.fnames),job.interp);
 return
 
+%_______________________________________________________________________
+function [Def,mat] = get_def(job)
+% Load a deformation field saved as an image
+
+P      = [repmat(job{:},3,1), [',1,1';',1,2';',1,3']];
+V      = spm_vol(P);
+Def    = cell(3,1);
+Def{1} = spm_load_float(V(1));
+Def{2} = spm_load_float(V(2));
+Def{3} = spm_load_float(V(3));
+mat    = V(1).mat;
 %_______________________________________________________________________
 function apply_def(Def,mat,fnames,intrp)
 % Warp an image or series of images according to a deformation field
