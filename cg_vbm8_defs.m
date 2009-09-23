@@ -6,7 +6,7 @@ function cg_vbm8_defs(job)
 % $Id$
 
 % remove potential file number at the end
-[pth,nam,ext,num] = spm_fileparts(job.field{1})
+[pth,nam,ext,num] = spm_fileparts(job.field{1});
 job.field{1} = fullfile(pth,[nam ext]);
 
 [Def,mat] = get_def(job.field);
