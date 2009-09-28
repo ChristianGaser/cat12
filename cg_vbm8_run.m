@@ -204,21 +204,28 @@ for iter=1:nit,
             seg8_name = fullfile(pth,[nam '_seg8.mat']);
             if exist(seg8_name)
                 res = load(seg8_name);
-                
+
                 % load original used tpm, which is save in seg8.mat file
-                tpm    = spm_load_priors8(res.tpm);
+                try
+                    tpm    = spm_load_priors8(res.tpm);
+                catch
+                    % or use default TPM
+                    fprintf('Original TPM image %s was not found. use default TPM image instead.\n',res.tpm(1).fname);
+                    for i=1:6
+                      job.tissue(i).tpm = fullfile(spm('dir'),'toolbox','Seg',['TPM.nii,' num2str(i)]);
+                    end
+                    tpm    = strvcat(cat(1,job.tissue(:).tpm));
+                    tpm    = spm_load_priors8(tpm);
+                end
                 
                 % use path of mat-file in case that image was moved
-                for i=1:numel(res.image)
-					        [image_pth,image_nam,image_ext]=fileparts(res.image(i).fname);
-                	res.image(i).fname = fullfile(pth,[image_nam,image_ext]);
-                end
+				        [image_pth,image_nam,image_ext] = spm_fileparts(job.channel(1).vols{subj});
+				        res.image.fname = fullfile(image_pth, [image_nam, image_ext]);
             else
                 error(['Can''t load file ' seg8_name]);  
                 return
             end
         end
-          
         if iter==nit,
             % Final iteration, so write out the required data.
             tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
@@ -251,7 +258,8 @@ for iter=1:nit,
          s = sum(SS,4);
          for k=1:K,
              tmp        = SS(:,:,:,k)./s;
-             tpm.bg(k)  = mean(mean(tmp(:,:,1)));
+             tpm.bg1(k) = mean(mean(tmp(:,:,1)));
+             tpm.bg2(k) = mean(mean(tmp(:,:,2)));
              tpm.dat{k} = spm_bsplinc(log(tmp+tpm.tiny),[ones(1,3)*(tpm.deg-1)  0 0 0]);
          end
     end
