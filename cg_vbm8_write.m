@@ -12,7 +12,7 @@ function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 
 rev = '$Rev$';
 
-if ~isstruct(tpm) || ~isfield(tpm, 'bg'),
+if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
     tpm = spm_load_priors8(tpm);
 end
 d1        = size(tpm.dat{1});
@@ -347,13 +347,13 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
 
         % rigid parameters
         Mr      = M0\inv(R)*M1*vx2/vx3;
-        mat0r   =    inv(R)*M1*vx2/vx3;
+        mat0r   =    R\M1*vx2/vx3;
         matr    = mm/vx3;
     end
     
     % affine parameters
     Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
-    mat0a   =    inv(res.Affine)*M1*vx2/vx3;
+    mat0a   =    res.Affine\M1*vx2/vx3;
     mata    = mm/vx3;
     
     fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
