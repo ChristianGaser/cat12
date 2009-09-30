@@ -29,6 +29,10 @@ update:
 	-@echo '% Voxel Based Morphometry Toolbox' >> Contents.m
 	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
+	-@echo '% __________________________________________________________________________' > vbm8.man
+	-@echo '% Voxel Based Morphometry Toolbox for SPM8' >> vbm8.man
+	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> vbm8.man
+	-@cat vbm8.txt >> vbm8.man
 
 zip: update
 	-@echo zip
