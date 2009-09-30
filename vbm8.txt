@@ -1,6 +1,3 @@
-
-% __________________________________________________________________________
-%  Voxel Based Morphometry Toolbox for SPM8
 %  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2009 Christian Gaser christian.gaser@uni-jena.de
