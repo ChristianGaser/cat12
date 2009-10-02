@@ -171,6 +171,21 @@ run_vbm ()
 	cwd=`dirname $0`
 	pwd=$PWD
 	
+	# we have to go into toolbox folder to find matlab files
+	cd $cwd
+
+	if [ $# -eq 2 ]; then
+		if [ ! -d $spm8 ]; then
+			spm8=${pwd}/$spm8
+	    fi
+		if [ ! -d $spm8 ]; then
+			echo Directory $spm8 does not exist.
+			exit 0
+		fi
+	fi
+
+	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8
+
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
 
@@ -193,21 +208,6 @@ run_vbm ()
         fi
         ((i++))
     done
-
-	# we have to go into toolbox folder to find matlab files
-	cd $cwd
-
-	if [ $# -eq 2 ]; then
-		if [ ! -d $spm8 ]; then
-			spm8=${pwd}/$spm8
-	    fi
-		if [ ! -d $spm8 ]; then
-			echo Directory $spm8 does not exist.
-			exit 0
-		fi
-	fi
-
-	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8
 	
 	time=`date "+%Y%b%d_%H%M"`
 	vbmlog=${pwd}/vbm8_${time}.log
