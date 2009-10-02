@@ -8,6 +8,8 @@
 spm8=~/spm/spm8	# this parameter has to be set to your spm8 directory
 matlab=matlab	# you can use other matlab versions by changing the matlab parameter
 writeonly=0
+CPUINFO=/proc/cpuinfo
+ARCH=`uname`
 
 ########################################################
 # run main
@@ -17,6 +19,8 @@ main ()
 {
   parse_args ${1+"$@"}
   check_matlab
+  check_files
+  get_no_of_cpus
   run_vbm
 
   exit 0
@@ -30,6 +34,7 @@ main ()
 parse_args ()
 {
   local optname optarg
+  count=0
 
   if [ $# -lt 1 ]; then
     help
@@ -51,6 +56,11 @@ parse_args ()
 			spm8=$optarg
 			shift
 			;;
+		--p* | -p*)
+			exit_if_empty "$optname" "$optarg"
+			NUMBER_OF_JOBS=$optarg
+			shift
+			;;
 		--w* | -w*)
 			writeonly=1
 			;;
@@ -62,7 +72,8 @@ parse_args ()
 			echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
 			;;
 		*)
-			file="$1"
+            ARRAY[$count]="$1"
+            ((count++))
 			;;
 	esac
     shift
@@ -90,6 +101,68 @@ exit_if_empty ()
 }
 
 ########################################################
+# check files
+########################################################
+
+check_files ()
+{
+  
+  SIZE_OF_ARRAY="${#ARRAY[@]}"
+  if [ "$SIZE_OF_ARRAY" -eq 0 ]
+  then
+	  echo 'ERROR: No files given!' >&2
+	  help
+	  exit 1
+  fi
+
+  i=0
+  while [ "$i" -lt "$SIZE_OF_ARRAY" ]
+  do
+    if [ ! -f "${ARRAY[$i]}" ]; then
+      echo ERROR: File ${ARRAY[$i]} not found
+  	  help
+      exit 1
+    fi
+    ((i++))
+  done
+
+}
+
+########################################################
+# get # of cpus
+########################################################
+
+get_no_of_cpus () {
+
+  if [ -z "$NUMBER_OF_JOBS" ];
+  then
+    if [ "$ARCH" == "Linux" ]
+    then
+      NUMBER_OF_JOBS=`grep ^processor $CPUINFO | wc -l`
+
+    elif [ "$ARCH" == "Darwin" ]
+    then
+      NUMBER_OF_JOBS=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
+
+    elif [ "$ARCH" == "FreeBSD" ]
+    then
+      NUMBER_OF_JOBS=`sysctl hw.ncpu | awk '{ print $2 }'`
+
+    else
+      NUMBER_OF_JOBS=`grep ^processor $CPUINFO | wc -l`
+
+    fi
+    echo "Found $NUMBER_OF_JOBS processors."
+
+    if [ -z "$NUMBER_OF_JOBS" ]
+    then
+        echo "$FUNCNAME ERROR - number of CPUs not obtained. Use -p to define number of processes."
+        exit 1
+    fi
+  fi
+}
+
+########################################################
 # run vbm tool
 ########################################################
 
@@ -98,6 +171,22 @@ run_vbm ()
 	cwd=`dirname $0`
 	pwd=$PWD
 	
+    SIZE_OF_ARRAY="${#ARRAY[@]}"
+    BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
+
+    # split files
+    i=0
+    while [ "$i" -lt "$SIZE_OF_ARRAY" ]
+    do
+        count=$((10000* $i / $BLOCK ))
+        if [ -z "${ARG_LIST[$count]}" ]; then
+            ARG_LIST[$count]="${ARRAY[$i]}"
+        else
+            ARG_LIST[$count]="${ARG_LIST[$count]} ${ARRAY[$i]}"
+        fi
+        ((i++))
+    done
+
 	# we have to go into toolbox folder to find matlab files
 	cd $cwd
 
@@ -118,24 +207,25 @@ run_vbm ()
 	echo Check $vbmlog for logging information
 	echo
 	
-	# correct filename
-	for i in $file; do
-		if [ ! -f $i ]; then
-			file=${pwd}/$file
-		fi
-		break
-	done
-
-	X="cg_vbm8_batch('${file}',${writeonly})"
-	echo Calculate $file
-	echo > $vbmlog
-	echo ---------------------------------- >> $vbmlog
-	date >> $vbmlog
-	echo ---------------------------------- >> $vbmlog
-	echo >> $vbmlog
-	echo $0 $file >> $vbmlog
-	echo >> $vbmlog
-	nohup ${matlab} -nodisplay -nojvm -nosplash -r $X >> $vbmlog 2>&1 &
+    echo >> $vbmlog
+    i=0
+    while [ "$i" -lt "$NUMBER_OF_JOBS" ]
+    do
+        if [ ! "${ARG_LIST[$i]}" == "" ]; then
+            j=$(($i+1))
+            COMMAND="cg_vbm8_batch('${ARG_LIST[$i]}',${writeonly})"
+            echo Calculate ${ARG_LIST[$i]}
+            echo ---------------------------------- >> $vbmlog
+            date >> $vbmlog
+            echo ---------------------------------- >> $vbmlog
+            echo >> $vbmlog
+            echo $0 $file >> $vbmlog
+            echo >> $vbmlog
+            nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND >> $vbmlog 2>&1 &
+            echo nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND
+        fi
+        ((i++))
+    done
 
 	exit 0
 }
@@ -166,6 +256,7 @@ USAGE:
    
    -m   matlab command
    -s   spm8 directory
+   -p   number of parallel jobs (=number of processors)
    -w
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. For the latter case you have to (single) quote
