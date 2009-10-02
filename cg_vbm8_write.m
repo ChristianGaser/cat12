@@ -12,7 +12,7 @@ function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 
 rev = '$Rev$';
 
-if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
+if ~isstruct(tpm) || (~isfield(tpm, 'bg1') && ~isfield(tpm, 'bg')),
     tpm = spm_load_priors8(tpm);
 end
 d1        = size(tpm.dat{1});
