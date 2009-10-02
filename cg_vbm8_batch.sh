@@ -179,10 +179,17 @@ run_vbm ()
     while [ "$i" -lt "$SIZE_OF_ARRAY" ]
     do
         count=$((10000* $i / $BLOCK ))
-        if [ -z "${ARG_LIST[$count]}" ]; then
-            ARG_LIST[$count]="${ARRAY[$i]}"
+        
+        # check wheter absolute or relative names were given
+        if [ ! -f ${ARRAY[$i]} ];  then
+            FILE=${pwd}/${ARRAY[$i]}
         else
-            ARG_LIST[$count]="${ARG_LIST[$count]} ${ARRAY[$i]}"
+            FILE=${ARRAY[$i]}
+        fi
+        if [ -z "${ARG_LIST[$count]}" ]; then
+            ARG_LIST[$count]="$FILE"
+        else
+            ARG_LIST[$count]="${ARG_LIST[$count]} $FILE"
         fi
         ((i++))
     done
@@ -222,7 +229,6 @@ run_vbm ()
             echo $0 $file >> $vbmlog
             echo >> $vbmlog
             nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND >> $vbmlog 2>&1 &
-            echo nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND
         fi
         ((i++))
     done
