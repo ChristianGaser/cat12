@@ -220,7 +220,7 @@ for iter=1:nit,
                 
                 % use path of mat-file in case that image was moved
 				        [image_pth,image_nam,image_ext] = spm_fileparts(job.channel(1).vols{subj});
-				        res.image.fname = fullfile(image_pth, [image_nam, image_ext]);
+				        res.image(1).fname = fullfile(image_pth, [image_nam, image_ext]);
             else
                 error(['Can''t load file ' seg8_name]);  
                 return

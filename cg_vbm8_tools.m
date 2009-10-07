@@ -256,7 +256,7 @@ interp.help = {...
 
 defs = cfg_exbranch;
 defs.tag = 'defs';
-defs.name = 'Deformations';
+defs.name = 'Apply Deformations';
 defs.val = {field,applyto,interp};
 defs.prog    = @cg_vbm8_defs;
 defs.vfiles  = @vfiles_defs;
