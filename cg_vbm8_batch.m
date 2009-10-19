@@ -1,10 +1,10 @@
-function cg_vbm8_batch(pattern,writeonly)
+function cg_vbm8_batch(namefile,writeonly)
 % wrapper for using batch mode (see cg_vbm8_batch.sh)
 %_______________________________________________________________________
 % $Id$
 
 if nargin < 1
-	fprintf('Syntax: cg_vbm8_batch(pattern)\n');
+	fprintf('Syntax: cg_vbm8_batch(namefile)\n');
 	return
 end
 
@@ -18,13 +18,10 @@ cg_vbm8_defaults
 global defaults
 spm_jobman('initcfg');
 
-warning off
-% extract folder
-folder = fileparts(pattern);
-d = dir(pattern);
-n = length(d);
+names = textread(namefile,'%s');
+n = length(names);
 
-if n == 0, error(sprintf('No file %s found in %s.\n',pattern,folder)); end
+if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
 
 if writeonly
 	matlabbatch{1}.spm.tools.vbm8.write = defaults.vbm8;
@@ -33,14 +30,14 @@ else
 end
 
 for i=1:n
-	name = fullfile(folder,d(i).name);
 	if writeonly
-		matlabbatch{1}.spm.tools.vbm8.write.data{i} = name;
+		matlabbatch{1}.spm.tools.vbm8.write.data{i} = names{i};
 	else
-		matlabbatch{1}.spm.tools.vbm8.estwrite.data{i} = name;
+		matlabbatch{1}.spm.tools.vbm8.estwrite.data{i} = names{i};
 	end
 end
 
 spm_jobman('run_nogui',matlabbatch)
+delete namefile
 
 exit

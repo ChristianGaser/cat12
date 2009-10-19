@@ -5,8 +5,8 @@
 ########################################################
 # $Id$
 
-spm8=~/spm/spm8	# this parameter has to be set to your spm8 directory
-matlab=matlab	# you can use other matlab versions by changing the matlab parameter
+spm8=~/spm/spm8 # this parameter has to be set to your spm8 directory
+matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 writeonly=0
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
@@ -43,39 +43,39 @@ parse_args ()
 
   while [ $# -gt 0 ]
   do
-	optname="`echo $1 | sed 's,=.*,,'`"
-	optarg="`echo $2 | sed 's,^[^=]*=,,'`"
-	case "$1" in
-		--m* | -m*)
-			exit_if_empty "$optname" "$optarg"
-			matlab=$optarg
-			shift
-			;;
-		--s* | -s*)
-			exit_if_empty "$optname" "$optarg"
-			spm8=$optarg
-			shift
-			;;
-		--p* | -p*)
-			exit_if_empty "$optname" "$optarg"
-			NUMBER_OF_JOBS=$optarg
-			shift
-			;;
-		--w* | -w*)
-			writeonly=1
-			;;
-		-h | --help | -v | --version | -V)
-			help
-			exit 1
-			;;
-		-*)
-			echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
-			;;
-		*)
-            ARRAY[$count]="$1"
+    optname="`echo $1 | sed 's,=.*,,'`"
+    optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    case "$1" in
+        --m* | -m*)
+            exit_if_empty "$optname" "$optarg"
+            matlab=$optarg
+            shift
+            ;;
+        --s* | -s*)
+            exit_if_empty "$optname" "$optarg"
+            spm8=$optarg
+            shift
+            ;;
+        --p* | -p*)
+            exit_if_empty "$optname" "$optarg"
+            NUMBER_OF_JOBS=$optarg
+            shift
+            ;;
+        --w* | -w*)
+            writeonly=1
+            ;;
+        -h | --help | -v | --version | -V)
+            help
+            exit 1
+            ;;
+        -*)
+            echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
+            ;;
+        *)
+            ARRAY[$count]=$1
             ((count++))
-			;;
-	esac
+            ;;
+    esac
     shift
   done
 
@@ -95,8 +95,8 @@ exit_if_empty ()
 
   if [ -z "$val" ]
   then
-	echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
-	exit 1
+    echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
+    exit 1
   fi
 }
 
@@ -110,9 +110,9 @@ check_files ()
   SIZE_OF_ARRAY="${#ARRAY[@]}"
   if [ "$SIZE_OF_ARRAY" -eq 0 ]
   then
-	  echo 'ERROR: No files given!' >&2
-	  help
-	  exit 1
+      echo 'ERROR: No files given!' >&2
+      help
+      exit 1
   fi
 
   i=0
@@ -120,7 +120,7 @@ check_files ()
   do
     if [ ! -f "${ARRAY[$i]}" ]; then
       echo ERROR: File ${ARRAY[$i]} not found
-  	  help
+      help
       exit 1
     fi
     ((i++))
@@ -168,34 +168,36 @@ get_no_of_cpus () {
 
 run_vbm ()
 {
-	cwd=`dirname $0`
-	pwd=$PWD
-	
-	# we have to go into toolbox folder to find matlab files
-	cd $cwd
+    cwd=`dirname $0`
+    pwd=$PWD
+    
+    # we have to go into toolbox folder to find matlab files
+    cd $cwd
 
-	if [ $# -eq 2 ]; then
-		if [ ! -d $spm8 ]; then
-			spm8=${pwd}/$spm8
-	    fi
-		if [ ! -d $spm8 ]; then
-			echo Directory $spm8 does not exist.
-			exit 0
-		fi
-	fi
+    if [ $# -eq 2 ]; then
+        if [ ! -d $spm8 ]; then
+            spm8=${pwd}/$spm8
+        fi
+        if [ ! -d $spm8 ]; then
+            echo Directory $spm8 does not exist.
+            exit 0
+        fi
+    fi
 
-	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8
+    export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
 
-    # split files
+    # split files and prepare tmp-file with filenames
+    TMP=/tmp/vbm8_$$
+    echo $TMP
     i=0
     while [ "$i" -lt "$SIZE_OF_ARRAY" ]
     do
         count=$((10000* $i / $BLOCK ))
         
-        # check wheter absolute or relative names were given
+        # check wether absolute or relative names were given
         if [ ! -f ${ARRAY[$i]} ];  then
             FILE=${pwd}/${ARRAY[$i]}
         else
@@ -206,21 +208,21 @@ run_vbm ()
         else
             ARG_LIST[$count]="${ARG_LIST[$count]} $FILE"
         fi
+        echo ${FILE} >> ${TMP}${count}
         ((i++))
     done
-	
-	time=`date "+%Y%b%d_%H%M"`
-	vbmlog=${pwd}/vbm8_${time}.log
-	echo Check $vbmlog for logging information
-	echo
-	
+    time=`date "+%Y%b%d_%H%M"`
+    vbmlog=${pwd}/vbm8_${time}.log
+    echo Check $vbmlog for logging information
+    echo
+    
     echo >> $vbmlog
     i=0
     while [ "$i" -lt "$NUMBER_OF_JOBS" ]
     do
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
             j=$(($i+1))
-            COMMAND="cg_vbm8_batch('${ARG_LIST[$i]}',${writeonly})"
+            COMMAND="cg_vbm8_batch('${TMP}${i}',${writeonly})"
             echo Calculate ${ARG_LIST[$i]}
             echo ---------------------------------- >> $vbmlog
             date >> $vbmlog
@@ -233,7 +235,7 @@ run_vbm ()
         ((i++))
     done
 
-	exit 0
+    exit 0
 }
 
 ########################################################
