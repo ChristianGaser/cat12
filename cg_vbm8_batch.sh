@@ -131,6 +131,11 @@ check_files ()
 ########################################################
 # get # of cpus
 ########################################################
+# modified code from
+# PPSS, the Parallel Processing Shell Script
+# 
+# Copyright (c) 2009, Louwrentius
+# All rights reserved.
 
 get_no_of_cpus () {
 
@@ -267,10 +272,9 @@ USAGE:
    -p   number of parallel jobs (=number of processors)
    -w
    Only one filename or pattern is allowed. This can be either a single file or a pattern
-   with wildcards to process multiple files. For the latter case you have to (single) quote
-   the pattern. Optionally you can set the spm8 directory with the "-s" option and the
-   matlab command with the "-m" option and force to write already estimated segmentations with
-   the "-w" option.
+   with wildcards to process multiple files. Optionally you can set the spm8 directory with 
+   the "-s" option and the matlab command with the "-m" option and force to write already 
+   estimated segmentations with the "-w" option.
 
 PURPOSE:
    Command line call of VBM8 segmentation
@@ -280,18 +284,17 @@ EXAMPLE
    This command will process only the single file single_subj_T1.nii. The spm8 directory
    is set to ~/spm/spm8.
    
-   cg_vbm8_batch.sh 'spm/spm8/canonical/*152*.nii'
-   Using the quotes and wildcards all files containing the term "152" will
-   be processed. In this case these are the files avg152PD.nii, avg152T1.nii,
-   and avg152T2.nii.
+   cg_vbm8_batch.sh spm/spm8/canonical/*152*.nii
+   Using wildcards all files containing the term "152" will be processed. In this case these 
+   are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
 
-   cg_vbm8_batch.sh 'spm/spm8/canonical/*152*.nii' -m /usr/local/bin/matlab7
-   Using the quotes and wildcards all files containing the term "152" will
-   be processed. In this case these are the files avg152PD.nii, avg152T1.nii,
-   and avg152T2.nii. As matlab command /usr/local/bin/matlab7 will be used.
+   cg_vbm8_batch.sh spm/spm8/canonical/*152*.nii -m /usr/local/bin/matlab7
+   Using wildcards all files containing the term "152" will be processed. In this case these 
+   are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
+   As matlab-command /usr/local/bin/matlab7 will be used.
 
 INPUT:
-   analyze/nifti files
+   analyze or nifti files
 
 OUTPUT:
    segmented images according to settings in cg_vbm8_defaults.m
