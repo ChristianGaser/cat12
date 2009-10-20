@@ -196,7 +196,6 @@ run_vbm ()
 
     # split files and prepare tmp-file with filenames
     TMP=/tmp/vbm8_$$
-    echo $TMP
     i=0
     while [ "$i" -lt "$SIZE_OF_ARRAY" ]
     do
