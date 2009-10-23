@@ -29,6 +29,7 @@
 %   cg_showslice_all.m     - show 1 slice of all images
 %   cg_check_cov.m         - check sample homogeneity across sample
 %   cg_spmT2x.m            - transformation of t-maps to P, -log(P), r or d-maps
+%   cg_lat_index.m         - calculate lateralization index
 %   cg_vbm8_debug.m        - print debug information for SPM5 and VBM5
 %
 % Batch functions
