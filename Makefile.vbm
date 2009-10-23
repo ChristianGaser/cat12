@@ -26,8 +26,6 @@ help:
 update:
 	-@svn update
 	-@echo '% __________________________________________________________________________' > Contents.m
-	-@echo '% Voxel Based Morphometry Toolbox' >> Contents.m
-	-@echo '%_______________________________________________________________________' >> Contents.m
 	-@echo '% __  __ ____   __  __' >> Contents.m
 	-@echo '% \ \/ / | - ) (  \/  )  ' >> Contents.m
 	-@echo '%  \  /  |---\  )    (   Voxel Based Morphometry Toolbox' >> Contents.m
