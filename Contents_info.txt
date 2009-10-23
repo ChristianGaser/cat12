@@ -37,9 +37,9 @@
 %   cg_spm8_batch.m        - batch mode wrapper for spm_jobman
 %   cg_spm8_batch.sh       - shell script to call matlab batch files from unix
 %                            without gui
-%
 % Templates
-%   TPM_symmetric.nii            - symmetrical version of TPM.nii for lateralization
-%                                  analysis
-%   Template_?_IXI550_MNI152.nii - Dartel template of 550 subjects from IXI database
-%                                  in MNI152 space for 6 different iteration steps
+%   TPM_symmetric.nii      - symmetrical version of TPM.nii for lateralization
+%                            analysis
+%   Template_?_IXI550_MNI152.nii 
+%                          - Dartel template of 550 subjects from IXI database
+%                            in MNI152 space provided for 6 different iteration steps
