@@ -38,6 +38,6 @@ for i=1:n
 end
 
 spm_jobman('run_nogui',matlabbatch)
-spm_unlink(namefile)
+spm_unlink(char(namefile))
 
 exit

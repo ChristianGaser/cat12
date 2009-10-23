@@ -1,5 +1,3 @@
-%
-%  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2009 Christian Gaser christian.gaser@uni-jena.de
 %
@@ -12,3 +10,36 @@
 % based morphometry (VBM). It is developed by Christian Gaser (University of 
 % Jena, Department of Psychiatry) and is available to the scientific 
 % community under the terms of the GNU General Public License.
+%
+% General files
+%   INSTALL.txt            - installation instructions
+%   vbm8.man               - notes on VBM8 toolbox
+%
+% VBM functions
+%   spm_vbm8.m             - Toolbox wrapper to call functions
+%   tbx_cfg_vbm8.m         - configure VBM
+%   cg_vbm8_write.m        - write out VBM results
+%   cg_vbm8_run.m          - 
+%   cg_morph_vol.m         - morphological operations to 3D data
+%   cg_vbm8_longitudinal.m - sets the defaults for VBM
+%   cg_vbm8_defaults.m     - sets the defaults for VBM
+%
+% Utility functions
+%   cg_vbm8_tools.m        - wrapper for calling VBM utilities
+%   cg_showslice_all.m     - show 1 slice of all images
+%   cg_check_cov.m         - check sample homogeneity across sample
+%   cg_spmT2x.m            - transformation of t-maps to P, -log(P), r or d-maps
+%   cg_vbm8_debug.m        - print debug information for SPM5 and VBM5
+%
+% Batch functions
+%   cg_vbm8_batch.m        - batch mode wrapper for spm_jobman
+%   cg_vbm8_batch.sh       - shell script to use vbm from unix without gui
+%   cg_spm8_batch.m        - batch mode wrapper for spm_jobman
+%   cg_spm8_batch.sh       - shell script to call matlab batch files from unix
+%                            without gui
+%
+% Templates
+%   TPM_symmetric.nii            - symmetrical version of TPM.nii for lateralization
+%                                  analysis
+%   Template_?_IXI550_MNI152.nii - Dartel template of 550 subjects from IXI database
+%                                  in MNI152 space for 6 different iteration steps
