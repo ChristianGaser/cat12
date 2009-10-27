@@ -228,10 +228,11 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     mu[5] = Mu[2];
   }
 
+#ifdef SPLINESMOOTH
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
     int count_err = 0;
-    for (j = 0; j <= iters_nu; j++) {  
+    for (j = 0; j < iters_nu; j++) {  
       count = 0;
       mean_nu = 0.0;
       for (i = 0; i < vol; i++) {
@@ -288,12 +289,16 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   } else {
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
   }
-  
+#else
+  e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
+#endif
+
   max_src = -HUGE;
   for (i = 0; i < vol; i++)
     max_src = MAX(src[i], max_src);
 
-  printf("\nK-Means: ");
+  if (iters_nu > 0) printf("\n");
+  printf("K-Means: ");
   for (i=0; i<n_clusters; i++) printf("%3.3f ",max_src*mu[i]/255.0); 
   printf("\terror: %3.3f\n",e*n_clusters/(dims[0]*dims[1]*dims[2]));    
   fflush(stdout);
