@@ -40,6 +40,8 @@ end
 
 do_dartel = warp.dartelwarp;   % apply dartel normalization
 warp.brainmask_th = -1; % don't use brainmask anymore
+warp.open_th = 0.25; % initial threshold for skull-stripping
+warp.dilate = 1; % number of final dilations for skull-stripping
 
 vx = NaN;
 bb = ones(2,3)*NaN;
@@ -284,7 +286,7 @@ if do_cls & do_defs,
     % Amap parameters
     niters = 200; sub = 16; nc = 3; pve = 1;
     disp('Amap segmentation...');        
-    prob = AmapMex(vol, label, nc, niters, sub, pve);
+    prob = AmapMex(vol, label, nc, niters, sub, pve, warp.kmeans);
  
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
