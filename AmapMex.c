@@ -11,16 +11,16 @@
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
-  unsigned char *label;
-  unsigned char *prob;
-  double *src, weight_MRF, *mean;
+  unsigned char *label, *prob, *mask;
+  double *src, *mean;
+  double weight_MRF, max_vol;
   const int *dims;
   int dims2[4];
-  int nc, pve, update_label;
-  int niters, sub, niters_nu;
+  int i, nc, pve, update_label, nvox;
+  int niters, sub, niters_nu, init;
     
-  if (nrhs!=6)
-    mexErrMsgTxt("6 inputs required.");
+  if (nrhs!=7)
+    mexErrMsgTxt("7 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -33,6 +33,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   niters = (int)mxGetScalar(prhs[3]);
   sub    = (int)mxGetScalar(prhs[4]);
   pve    = (double)mxGetScalar(prhs[5]);
+  init   = (int)mxGetScalar(prhs[6]);
 
   /* output label as PVE label */
   update_label = 2;
@@ -50,6 +51,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   plhs[1] = mxCreateNumericMatrix(1,nc+3,mxDOUBLE_CLASS,mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
+
+  /* initial labeling using Kmeans */
+  if (init) {
+    nvox = dims[0]*dims[1]*dims[2];
+    mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
+    for (i=0; i<nvox; i++)
+      mask[i] = (src[i]>0) ? 255 : 0;
+    max_vol = Kmeans( src, label, mask, 25, nc, NULL, dims, 128, 128, 0, 0);
+    free(mask);
+  }
+  
   Amap(src, label, prob, mean, nc, niters, sub, dims, pve);
   if(pve) Pve6(src, prob, label, mean, dims, update_label);
 
