@@ -279,29 +279,19 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 
 %------------------------------------------------------------------------
 
-dilate      = cfg_entry;
-dilate.tag = 'dilate';
-dilate.name = 'Dilations for skull-stripping';
-dilate.strtype = 'e';
-dilate.num = [1 1];
-dilate.def  = @(val)spm_get_defaults('vbm8.extopts.dilate', val{:});
-dilate.help    = {'This defines the number of final dilations for skull-stripping. If you notice that the skull-stripping also cut parts of the brain you can try to increase this value to a number of 2 or more.'};
-
-%------------------------------------------------------------------------
-
-open_th      = cfg_entry;
-open_th.tag = 'open_th';
-open_th.name = 'Initial threshold for skull-stripping';
-open_th.strtype = 'e';
-open_th.num = [1 1];
-open_th.def  = @(val)spm_get_defaults('vbm8.extopts.open_th', val{:});
-open_th.help    = {'This defines the initial threshold for skull-stripping. If you notice that the skull-stripping also cut parts of the brain you can try to lower the threshold.'};
+kmeans      = cfg_entry;
+kmeans.tag = 'kmeans';
+kmeans.name = 'Use kmeans for initialization.';
+kmeans.strtype = 'e';
+kmeans.num = [1 1];
+kmeans.def  = @(val)spm_get_defaults('vbm8.extopts.kmeans', val{:});
+kmeans.help    = {'This defines that a Kmeans approach is used for init the segmentations. Otherwise the spm8 segmentation is used as initialization.'};
 
 %------------------------------------------------------------------------
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,dilate,open_th,print};
+extopts.val = {dartelwarp,kmeans,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------

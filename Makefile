@@ -5,7 +5,7 @@
 include Makefile.var
 
 OBS = PveAmap.o Amap.o MrfPrior.o Pve5.o Kmeans.o WarpPriors.o Bayes.o optimizer3d.o diffeo3d.o splineSmooth.o
-OBS2 = Amap.o MrfPrior.o Pve6.o
+OBS2 = Amap.o Kmeans.o MrfPrior.o Pve6.o
 
 AmapMex.$(SUF): AmapMex.c $(OBS2)
 	$(MEX) AmapMex.c $(OBS2) $(MEXEND)
