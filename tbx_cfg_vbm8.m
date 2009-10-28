@@ -279,19 +279,10 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 
 %------------------------------------------------------------------------
 
-kmeans      = cfg_entry;
-kmeans.tag = 'kmeans';
-kmeans.name = 'Use kmeans for initialization.';
-kmeans.strtype = 'e';
-kmeans.num = [1 1];
-kmeans.def  = @(val)spm_get_defaults('vbm8.extopts.kmeans', val{:});
-kmeans.help    = {'This defines that a Kmeans approach is used for init the segmentations. Otherwise the spm8 segmentation is used as initialization.'};
-
-%------------------------------------------------------------------------
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,kmeans,print};
+extopts.val = {dartelwarp,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------

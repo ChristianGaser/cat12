@@ -65,7 +65,6 @@ defaults.vbm8.output.warps = [0 0];
 %=======================================================================
 defaults.vbm8.extopts.dartelwarp  = 1;    % dartel normalization: 0 - spm default; 1 - yes
 defaults.vbm8.extopts.print       = 1;	  % Display and print results
-defaults.vbm8.extopts.kmeans      = 1;    % use kmeans for initialization
 
 % bias correction options
 %=======================================================================
