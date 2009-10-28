@@ -264,7 +264,7 @@ void ComputeInitialPveLabel(double *src, unsigned char *label, struct point *r, 
 
 
 /* perform adaptive MAP on given src and initial segmentation label */
-void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve)
+void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF)
 {
   int i;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
@@ -328,6 +328,11 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   }
   
   MrfPrior(label, nc, alpha, beta, 0, dims);    
+
+  /* weight MRF prior */
+  beta[0] *= weight_MRF;
+  if (weight_MRF < 1.0) fprintf(stderr,"weighted MRF prior beta: %g\n",beta[0]);
+
   for (i=0; i<nc; i++) log_alpha[i] = log(alpha[i]);
     
   ll_old = HUGE;
@@ -395,7 +400,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
           if (psum > TINY) {
             for (i=0; i<nc; i++) pvalue[i] /= psum;
             ll -= log(psum);
-          } else  for (i=0; i<nc; i++) pvalue[i] = 0.0;;
+          } else  for (i=0; i<nc; i++) pvalue[i] = 0.0;
          
           for (i=0; i<nc; i++)
             prob[(vol*i) + index] = (unsigned char)ROUND(255*pvalue[i]);
