@@ -286,7 +286,7 @@ if do_cls & do_defs,
     % Amap parameters
     niters = 200; sub = 16; nc = 3; pve = 1; init = 0; mrf = 1;
     disp('Amap segmentation...');        
-    prob = AmapMex(vol, label, nc, niters, sub, pve, kmeans, mrf);
+    prob = AmapMex(vol, label, nc, niters, sub, pve, init, mrf);
  
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
