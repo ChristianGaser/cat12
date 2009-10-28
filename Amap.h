@@ -57,7 +57,7 @@ extern void Bayes(double *src, unsigned char *label, unsigned char *priors, unsi
 
 extern void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask, float *flow, int *dims, int loop, int samp);
 
-extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve);
+extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF);
 
 extern void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
 
