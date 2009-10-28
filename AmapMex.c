@@ -13,14 +13,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
   double *src, *mean;
-  double weight_MRF, max_vol;
+  double weight_MRF, max_vol, mrf;
   const int *dims;
   int dims2[4];
   int i, nc, pve, update_label, nvox;
   int niters, sub, niters_nu, init;
     
-  if (nrhs!=7)
-    mexErrMsgTxt("7 inputs required.");
+  if (nrhs!=8)
+    mexErrMsgTxt("8 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -34,6 +34,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   sub    = (int)mxGetScalar(prhs[4]);
   pve    = (double)mxGetScalar(prhs[5]);
   init   = (int)mxGetScalar(prhs[6]);
+  mrf    = (double)mxGetScalar(prhs[7]);
 
   /* output label as PVE label */
   update_label = 2;
@@ -62,7 +63,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     free(mask);
   }
   
-  Amap(src, label, prob, mean, nc, niters, sub, dims, pve);
+  Amap(src, label, prob, mean, nc, niters, sub, dims, pve, mrf);
   if(pve) Pve6(src, prob, label, mean, dims, update_label);
 
 }

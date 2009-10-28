@@ -1,4 +1,4 @@
-function [prob, mean] = AmapMex(src, label, nc, niters, sub, pve, init)
+function [prob, mean] = AmapMex(src, label, nc, niters, sub, pve, init, mrf)
 %
 % Christian Gaser
 % $Id$
@@ -14,7 +14,7 @@ mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve6.c
 cd(p_path);
 
 try 
-[prob, mean] = AmapMex(src, label, nc, niters, sub, pve, init);
+[prob, mean] = AmapMex(src, label, nc, niters, sub, pve, init, mrf);
 end
 
 return
