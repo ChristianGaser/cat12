@@ -284,9 +284,9 @@ if do_cls & do_defs,
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
-    niters = 200; sub = 16; nc = 3; pve = 1;
+    niters = 200; sub = 16; nc = 3; pve = 1; init = 0; mrf = 1;
     disp('Amap segmentation...');        
-    prob = AmapMex(vol, label, nc, niters, sub, pve, warp.kmeans);
+    prob = AmapMex(vol, label, nc, niters, sub, pve, kmeans, mrf);
  
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
