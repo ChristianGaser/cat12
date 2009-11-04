@@ -4,12 +4,13 @@
  *
  */
 
+#define SPLINESMOOTH 0
 #define SQRT2PI 2.506628
 #define G 6
 
 #define MAX_NC 6
 #define TH_COLOR 1
-#define TH_CHANGE 0.00005
+#define TH_CHANGE 0.00001
 #define TINY 1e-15 
 #ifndef HUGE
 #define HUGE 1e15 
@@ -18,7 +19,6 @@
 #define NOPVE 0
 #define MARGINALIZED 1
 #define KMEANS 2
-#define BAYES 3
 
 #define BKGCSFLABEL 0
 #define CSFLABEL    1
