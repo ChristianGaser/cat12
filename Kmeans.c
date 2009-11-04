@@ -157,10 +157,19 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   vol  = area*dims[2];
 
   src_bak = (double *)malloc(sizeof(double)*vol);
+  if(src_bak == NULL) {
+    fprintf(stderr,"Memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
   
-  if (iters_nu > 0) 
+  if (iters_nu > 0) {
     nu = (double *)malloc(sizeof(double)*vol);
-  
+    if(nu == NULL) {
+      fprintf(stderr,"Memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  }  
   /* find maximum and mean inside mask */
   count = 0;
   for (i = 0; i < vol; i++) {
