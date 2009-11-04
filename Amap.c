@@ -399,11 +399,11 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
   free(prob);
 } 
 
-void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int nc, int niters, int sub, int *dims, double *thresh)
+void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int nc, int niters, int sub, int *dims, double *thresh, double *beta)
 {
   int i;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
-  double sub_1, dmin, val, beta[1];
+  double sub_1, dmin, val;
   double d[nc], alpha[nc], log_alpha[nc], log_var[nc];
   double pvalue[nc], psum;
   int nix, niy, niz, iters, count_change;
@@ -524,7 +524,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   int area, nvol, vol;
   int histo[65536];
   double var[MAX_NC];
-  double thresh[2];
+  double thresh[2], beta[1];
   double min_src = HUGE, max_src = -HUGE;
   int cumsum[65536];
   struct point *r;
@@ -565,20 +565,24 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     exit(EXIT_FAILURE);
   }
     
-  EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh);
+  EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh, beta);
 
   /* Use marginalized likelihood to estimate initial 6 classes */
   if (pve) {
     GetMeansVariances(src, label, nc, r, sub, dims, thresh);    
     ComputeInitialPveLabel(src, label, r, nc, sub, dims);
     nc += 3;
-    EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh);
+    EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh, beta);
   }
 
+  if(weight_MRF < 1.0) {
+    beta[0] *= weight_MRF;
+    fprintf(stdout,"Weighted MRF beta %3.3f\n",beta[0]);
+  }
   /* use much smaller beta for if no pve is selected */
-  if(!pve) weight_MRF /= 20.0;
+  if(!pve) beta[0] /= 20.0;
   
-  ICM(src, label, mean, var, nc, dims, weight_MRF, 50);
+  ICM(src, label, mean, var, nc, dims, beta[0], 50);
 
   free(r);
 
