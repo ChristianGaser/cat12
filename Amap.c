@@ -391,7 +391,7 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
         }
       }
     }
-    printf("ICM: %2d voxels changed: %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter, sum_changed);
+    printf("ICM: %2d voxels changed: %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter+1, sum_changed);
     fflush(stdout);
     if(sum_changed < 10) break;
   }   
@@ -500,7 +500,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 
     ll /= (double)vol;
     change_ll = (ll_old - ll)/fabs(ll);
-    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters, ll);
+    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters+1, ll);
     fflush(stdout);
     ll_old = ll;
     
