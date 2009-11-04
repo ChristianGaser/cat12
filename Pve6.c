@@ -43,13 +43,13 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = 255;
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255/3);
+          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(255.0/3.0);
           break;
         case GMLABEL+1: /* GM */
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = 255;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(2*255/3);
+          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(2.0*255.0/3.0);
           break;
         case WMLABEL+1: /* WM */
           new_val[CSFLABEL] = 0;
@@ -63,7 +63,7 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = (unsigned char) ROUND(255.0*w);
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255/3*w);
+          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*w);
           break;
         case GMCSFLABEL+1: /* GMCSF */
           w = (src[ind] - mean[CSFLABEL])/(mean[GMLABEL]-mean[CSFLABEL]);
@@ -71,15 +71,15 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = (unsigned char) ROUND(255.0*(1-w));
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*w);
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(1.0 + w));
+          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(1.0 + w));
           break;
-        case WMGMLABEL+1: /*WMGM */
+        case WMGMLABEL+1: /* WMGM */
           w = (src[ind] - mean[GMLABEL])/(mean[WMLABEL]-mean[GMLABEL]);
           if(w > 1.0) w = 1.0; if(w < 0.0) w = 0.0;
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*(1-w));
           new_val[WMLABEL]  = (unsigned char) ROUND(255.0*w);
-          if(update_label == PVELABEL) label[ind] = ROUND(255/3*(2.0 + w));
+          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(2.0 + w));
           break;
         }
 
