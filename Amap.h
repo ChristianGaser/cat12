@@ -11,7 +11,9 @@
 #define MAX_NC 6
 #define TH_COLOR 1
 #define TH_CHANGE 0.00001
+#ifndef TINY
 #define TINY 1e-15 
+#endif
 #ifndef HUGE
 #define HUGE 1e15 
 #endif
