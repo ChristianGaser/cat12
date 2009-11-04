@@ -52,6 +52,10 @@ static void GetMeansVariances(double *src, unsigned char *label, int nc, struct 
   nvol  = nix*niy*niz;
   
   ir = (struct ipoint*)malloc(sizeof(struct ipoint)*nc*nvol);
+  if(ir == NULL) {
+    fprintf(stderr,"Memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
 
   for (i=0; i<nc; i++) {
     for (j=0; j<nvol; j++) {
@@ -333,6 +337,10 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
   vol = area*dims[2];
   
   prob = (unsigned char*)malloc(sizeof(unsigned char)*vol*nc);
+  if(prob == NULL) {
+    fprintf(stderr,"Memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* loop over image points */
   for (z = 1; z < dims[2]-1; z++) {
@@ -512,7 +520,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 /* perform adaptive MAP on given src and initial segmentation label */
 void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF)
 {
-  int i;
+  int i, nix, niy, niz;
   int area, nvol, vol;
   int histo[65536];
   double var[MAX_NC];
@@ -545,8 +553,18 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   for (i = 65535; i > 0; i--) if (cumsum[i] <= 990) break;
   thresh[1] = (double)i/65535.0*(max_src-min_src);
  
+  /* define grid dimensions */
+  nix = (int) ceil((dims[0]-1)/((double) sub))+1;
+  niy = (int) ceil((dims[1]-1)/((double) sub))+1;
+  niz = (int) ceil((dims[2]-1)/((double) sub))+1; 
+  nvol  = nix*niy*niz;
+
   r = (struct point*)malloc(sizeof(struct point)*MAX_NC*nvol);
-  
+  if(r == NULL) {
+    fprintf(stderr,"Memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+    
   EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh);
 
   /* Use marginalized likelihood to estimate initial 6 classes */
