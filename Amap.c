@@ -327,9 +327,9 @@ void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned c
 void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, int *dims, double beta, int iterations)
 {
   
-  int i, iter, x, y, z, z_area, y_dims, index, label_value, sum_changed;
+  int i, iter, x, y, z, z_area, y_dims, index, label_value, sum_voxel;
   long area, vol;
-  double val, d_pve[nc], mrf_probability[nc];
+  double val, rel_changed, d_pve[nc], mrf_probability[nc];
   double exponent[nc];
   unsigned char *prob, new_label;
     
@@ -366,8 +366,9 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
     }
   }   
 
+  sum_voxel = 0;
   for(iter=0; iter < iterations; iter++) {
-    sum_changed = 0;
+    rel_changed = 0.0;
     /* loop over image points */
     for (z = 1; z < dims[2]-1; z++) {
       z_area=z*area;
@@ -377,6 +378,7 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
 	  
           index = x + y_dims + z_area;
           if(label[index] > 0) {
+            sum_voxel++;
             ComputeMrfProbability(mrf_probability, exponent, label, x, y, z, dims, nc, beta);
           
             for (i=0; i<nc; i++)
@@ -384,16 +386,17 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
 
             new_label = (unsigned char) MaxArg(mrf_probability, nc);
             if (new_label != label[index]) {
-              sum_changed++;
+              rel_changed += 1.0;
               label[index] = new_label;
             }
           }
         }
       }
     }
-    printf("ICM: %2d voxels changed: %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter+1, sum_changed);
+    rel_changed /= (double)sum_voxel;
+    printf("ICM: %d relative change: %2.4f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter+1, 100.0*rel_changed);
     fflush(stdout);
-    if(sum_changed < 10) break;
+    if(rel_changed < TH_CHANGE) break;
   }   
   printf("\n");
   free(prob);
