@@ -28,31 +28,23 @@
 double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, int nc, double *mean, int ni, int *dims, int thresh_mask, int thresh_kmeans, double max_src)
 /* perform k-means algorithm give initial mean estimates */    
 {
-  int i, j, j0, x, y, z, v;
+  int i, j, j0, v;
   int count;
-  long histo[256], lut[256], cumsum[256], vol, area;
-  long z_area, y_dims;
+  long histo[256], lut[256], cumsum[256], vol;
   double diff, dmin, dx, xnorm, sum;
 
-  area = dims[0]*dims[1];
-  vol  = area*dims[2];
+  vol  = dims[0]*dims[1]*dims[2];
 
   /* build intensity histogram */
   for (i = 0; i < 256; i++) histo[i] = 0;
-  for (z=0;z<dims[2];z++) {
-    z_area = z*area;
-    for (y=0;y<dims[1];y++) {
-      y_dims = y*dims[0];
-      for (x=0;x<dims[0];x++) {
-         v = (int)ROUND(255.0*src[z_area + y_dims + x]/max_src);
-         if (v < 1) continue;
-         if ((thresh_mask > 0) && ((int)mask[z_area + y_dims + x] < thresh_kmeans))
-           continue;
-         if (v < 0) v = 0;
-         if (v > 255) v = 255;	
-         histo[v]++;
-      }
-    }
+  for (i=0; i<vol; i++) {
+    v = (int)ROUND(255.0*src[i]/max_src);
+    if (v < 1) continue;
+    if ((thresh_mask > 0) && ((int)mask[i] < thresh_kmeans))
+      continue;
+    if (v < 0) v = 0;
+    if (v > 255) v = 255;	
+    histo[v]++;  
   }
 
   /* use only value in histogram where cumsum is between 1..99% */
@@ -69,12 +61,12 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     for (i = 0; i < 256; i++) {
       dmin = 256.0 * 256.0;
       for (j = 0; j < nc; j++) {
-	    dx = (double) i - mean[j];
-	    dx *= dx;
-	    if (dx < dmin) {
-	      lut[i] = j;
-	      dmin = dx;
-	    }
+	      dx = (double) i - mean[j];
+	      dx *= dx;
+	      if (dx < dmin) {
+	        lut[i] = j;
+	        dmin = dx;
+	      }
       }
     }
 
@@ -102,8 +94,8 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     j0 = 0;
     for (j = 0; j < nc; j++) {
       if (fabs((double) i - mean[j]) < dmin) {
-	    dmin = fabs((double)i - mean[j]);
-	    j0 = j;
+	      dmin = fabs((double)i - mean[j]);
+	      j0 = j;
       }
     }
     lut[i] = j0;
@@ -111,50 +103,43 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   
   lut[0] = 0;
 
-  /* adjust for the backgrint label */
+  /* adjust for the background label */
   diff = 0;
   
-  for (z=0;z<dims[2];z++) {
-    z_area = z*area;
-    for (y=0;y<dims[1];y++) {
-      y_dims = y*dims[0];
-      for (x=0;x<dims[0];x++) {
-         v = (int)ROUND(255.0*src[z_area + y_dims + x]/max_src);
-         if (v >= 1) {
-           if (v < 0) v = 0;
-           if (v > 255) v = 255;
-           label[z_area + y_dims + x] = (unsigned char)(lut[v] + 1);	
-           diff += SQR((double)v - mean[lut[v]]);
-           if ((thresh_mask > 0) && ((int)mask[z_area + y_dims + x] < thresh_mask))
-               label[z_area + y_dims + x] = 0;	
-         }
-         else label[z_area + y_dims + x] = 0;	
-      }
+  for (i=0; i<vol; i++) {
+    v = (int)ROUND(255.0*src[i]/max_src);
+    if (v >= 1) {
+      if (v < 0) v = 0;
+      if (v > 255) v = 255;
+      label[i] = (unsigned char)(lut[v] + 1);	
+      diff += SQR((double)v - mean[lut[v]]);
+      if ((thresh_mask > 0) && ((int)mask[i] < thresh_mask))
+        label[i] = 0;	
     }
+    else label[i] = 0;	
   }
-
+  
   /* return square error */
   return(diff);
 }
 
-double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve)
+double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm)
 {
-  int i, j, l, k, x, y, z;
-  double e, emin, eps, *nu, *src_bak, th_src, val_nu;
+  int i, j, k;
+  double e, emin, eps, *nu, *src_bak, th_src, val, val_nu;
   double last_err = HUGE;
   double max_src = -HUGE;
-  double mean_nu = 0.0;
+  double fwhm[3];
   long n[MAX_NC];
   double mean[MAX_NC];
   double var[MAX_NC];
   double mu[MAX_NC];
   double Mu[MAX_NC];
-  int val, nc;
-  long vol, count, area, z_area, y_dims;
+  int nc;
+  long vol;
   int nc_initial = n_clusters;
 
-  area = dims[0]*dims[1];
-  vol  = area*dims[2];
+  vol  = dims[0]*dims[1]*dims[2];
 
   src_bak = (double *)malloc(sizeof(double)*vol);
   if(src_bak == NULL) {
@@ -171,7 +156,6 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   }  
   /* find maximum and mean inside mask */
-  count = 0;
   for (i = 0; i < vol; i++) {
     if (mask[i] > 0) {
       max_src = MAX(src[i], max_src);
@@ -192,20 +176,14 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       /* initialize for the two cluster case; */
       n[0]=0; mean[0] = 0.0; var[0] = 0.0;
 
-      for (z=0;z<dims[2];z++) {
-        z_area = z*area;
-        for (y=0;y<dims[1];y++) {
-          y_dims = y*dims[0];
-          for (x=0;x<dims[0];x++) {
-            val = (int)ROUND(255.0*src[z_area + y_dims + x]/max_src);
-            if (val < 1) continue;
-            n[0]++;
-            mean[0] += (double) val;
-            var[0] += (double) val*(double) val;
-          }
-        }
-      } 
-
+      for (i=0; i<vol; i++) {
+        val = 255.0*src[i]/max_src;
+        if (val < 1.0/255.0) continue;
+        n[0]++;
+        mean[0] += val;
+        var[0]  += SQR(val);
+      }
+      
       Mu[0] = n[0] != 0 ? mean[0]/n[0]: 0.0;
       var[0] = n[0] > 1 ? (var[0] - n[0]*Mu[0]*Mu[0])/(n[0] - 1.0) : 1.0;
       eps = 0.5*sqrt(var[0]);
@@ -237,9 +215,6 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     for (i=0; i<nc; i++) Mu[i] = mu[i];     
   }
 
-  /* only use values above the mean of the lower two cluster for nu-estimate */
-  th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
-
   /* extend initial 3 clusters to 6 clusters by averaging clusters */
   if (pve == KMEANS) {
     mu[0] = Mu[0]/2.0;
@@ -250,38 +225,43 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     mu[5] = Mu[2];
   }
 
-#ifdef SPLINESMOOTH
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
+    e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
     int count_err = 0;
     for (j = 0; j < iters_nu; j++) {  
-      count = 0;
-      mean_nu = 0.0;
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
-        /* only use values above threshold where mask is defined for nu-estimate */
-        if ((src[i] > th_src) && (mask[i] > thresh_kmeans)) {
-          val_nu = src[i]/mu[label[i]-1];
-          if ((finite(val_nu))) {
+        /* only use values inside mask for nu-estimate */
+        if (mask[i] > thresh_kmeans) {
+          val_nu = src[i]/(max_src/255.0*mu[label[i]-1]);
+          if (finite(val_nu)) {
             nu[i] = val_nu;
-            mean_nu += val_nu;
-            count++;
           }
         }
-
       }
       
-      /* correct nu input to a mean of 1 to remain original intensity range */
-      mean_nu /= (double)count;
-      for (i=0; i<vol; i++)
-        nu[i] /= mean_nu;
-      
-      /* spline estimate: start with distance of 1500 end end up with 500 */
-      splineSmooth(nu, 0.01, MAX(500,1500.0/(j+1)), 4, separations, dims);
-      
+      /* nu-correction by using the smoothed residuals */      
+      for(i=0; i<3; i++) fwhm[i] = bias_fwhm;
+       smooth_double(nu, dims, separations, fwhm, 1);
+
+      /* estimate variance (not used at the moment) */
+/*      for (k=0; k<n_clusters; k++) {
+        var[k] = 0.0;     
+        n[k] = 0;
+      }
+      for (i=0; i<vol; i++) {
+        if(label[i]>0) {
+          var[label[i]-1] += SQR(src[i]-(max_src/255.0*mu[label[i]-1]));
+          n[label[i]-1]++;
+        }
+      }   
+      for (k=0; k<n_clusters; k++) var[k] /= (double)n[k];     
+*/
+
       /* apply nu correction to source image */
       for (i=0; i<vol; i++) {
-        if (nu[i] > 0)
+        if (nu[i] != 0.0)
           src[i] /= nu[i];
       }
       
@@ -304,16 +284,13 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
       last_err = e;
     
-      printf("iters:%2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*n_clusters/(dims[0]*dims[1]*dims[2]));
+      printf("iters: %2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*(double)n_clusters/(double)vol);
       fflush(stdout);
     
     }
   } else {
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
   }
-#else
-  e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
-#endif
 
   max_src = -HUGE;
   for (i = 0; i < vol; i++)
@@ -322,7 +299,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   if (iters_nu > 0) printf("\n");
   printf("K-Means: ");
   for (i=0; i<n_clusters; i++) printf("%3.3f ",max_src*mu[i]/255.0); 
-  printf("\terror: %3.3f\n",e*n_clusters/(dims[0]*dims[1]*dims[2]));    
+  printf("\terror: %3.3f\n",e*(double)n_clusters/(double)vol);    
   fflush(stdout);
 
   free(src_bak);
