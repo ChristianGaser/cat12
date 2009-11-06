@@ -10,7 +10,7 @@ disp('Compiling AmapMex.c')
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve6.c
+mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve6.c vollib.c
 cd(p_path);
 
 try 

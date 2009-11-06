@@ -12,7 +12,7 @@
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
-  double *src, *mean;
+  double *src, *mean, separations[3];
   double weight_MRF, max_vol, mrf;
   const int *dims;
   int dims2[4];
@@ -59,7 +59,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
     for (i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
-    max_vol = Kmeans( src, label, mask, 25, nc, NULL, dims, 128, 128, 0, 0);
+    separations[0] = 1.0; separations[1] = 1.0; separations[2] = 1.0;
+    max_vol = Kmeans( src, label, mask, 25, nc, separations, dims, 128, 128, 10, 2, 50.0);
+    max_vol = Kmeans( src, label, mask, 25, nc, separations, dims, 0, 128, 10, 0, 50.0);
     free(mask);
   }
   

@@ -4,7 +4,6 @@
  *
  */
 
-#define SPLINESMOOTH 1
 #define SQRT2PI 2.506628
 #define G 6
 
@@ -16,6 +15,9 @@
 #endif
 #ifndef HUGE
 #define HUGE 1e15 
+#endif
+#ifndef NULL
+#define NULL ((void *) 0)
 #endif
 
 #define NOPVE 0
@@ -53,21 +55,11 @@
 #define MIN3(a,b,c) (MIN(a,MIN(b,c)))
 #endif
 
-extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve);
-
-extern void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *mask, double *separations, int *dims, int correct_nu);
-
-extern void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask, float *flow, int *dims, int loop, int samp);
-
+extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm);
 extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF);
-
 extern void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
-
 extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int init, int *dims);
-
-extern void sampn(int dm[], float f[], int n, int mm, double x, double y, double z, double v[]);
-
-extern int splineSmooth( double *src, double lambda, double distance, int subsample, double *separations, int *dims);
+extern void smooth_double(double *vol, int dims[3], double separations[3], double s[3], int use_mask);
 
 struct point {
   double mean;
