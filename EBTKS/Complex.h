@@ -20,7 +20,7 @@ $State: Exp $
 #ifndef _COMPLEX_H
 #define _COMPLEX_H
 
-// A few functions that define (bogus) math ops for complex
+/* A few functions that define (bogus) math ops for complex */
 
 #include <complex.h>
 #ifdef __GNUC__

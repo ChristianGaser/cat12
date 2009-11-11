@@ -52,7 +52,7 @@ const char TRUE  = 1;
 const int SUCCESS = 1;
 const int FAILURE = 0;
 
-//#define NAN -MAXDOUBLE
+/*#define NAN -MAXDOUBLE */
 
 #define toggleOn(value, bit)        ((value) & (1 << (bit)))
 #define setToggle(value, bit)       ((value) = (value) & (1 << (bit)))
