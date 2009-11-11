@@ -23,8 +23,8 @@ $State: Exp $
 #ifdef HAVE_VALUES_H
 #include <values.h>
 #else
-// JPL: values.h does not exist on OS X, so here I'm adding a hack and
-// defining the necessary values myself
+/* JPL: values.h does not exist on OS X, so here I'm adding a hack and
+ defining the necessary values myself */
 #include <limits.h>
 #include <float.h>
 
@@ -32,15 +32,15 @@ $State: Exp $
 #define MAXINT     32767 
 #define MAXDOUBLE  DBL_MAX
 
-#endif // end of values.h hack
+#endif /* end of values.h hack */
 
 typedef unsigned char  Byte;
-//typedef unsigned short Grey;
-//typedef unsigned long  Full;
+/*typedef unsigned short Grey;
+typedef unsigned long  Full; */
 typedef short Grey;
 typedef long  Full;
 
-typedef char  Boolean; // In accordance with X's definition
+typedef char  Boolean; /* In accordance with X's definition */
 
 const int BYTE_MIN = 0;
 const int BYTE_MAX = 255;

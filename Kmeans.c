@@ -135,7 +135,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   double var[MAX_NC];
   double mu[MAX_NC];
   double Mu[MAX_NC];
-  int nc;
+  int nc, count_err;
   long vol;
   int nc_initial = n_clusters;
 
@@ -215,6 +215,9 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     for (i=0; i<nc; i++) Mu[i] = mu[i];     
   }
 
+  /* only use values above the mean of the lower two clusters for nu-estimate */
+  th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
+
   /* extend initial 3 clusters to 6 clusters by averaging clusters */
   if (pve == KMEANS) {
     mu[0] = Mu[0]/2.0;
@@ -228,40 +231,36 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
-    int count_err = 0;
+    count_err = 0;
     for (j = 0; j < iters_nu; j++) {  
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
-        /* only use values inside mask for nu-estimate */
-        if (mask[i] > thresh_kmeans) {
+        /* only use values above threshold where mask is defined for nu-estimate */
+        if ((src[i] > th_src) && (mask[i] > thresh_kmeans)) {
           val_nu = src[i]/(max_src/255.0*mu[label[i]-1]);
           if (finite(val_nu)) {
             nu[i] = val_nu;
           }
         }
       }
-      
+            
+#ifdef SPLINESMOOTH
+      /* spline estimate */
+      splineSmooth(nu, 0.01, bias_fwhm, 4, separations, dims);
+#else
       /* nu-correction by using the smoothed residuals */      
-      for(i=0; i<3; i++) fwhm[i] = bias_fwhm;
-       smooth_double(nu, dims, separations, fwhm, 1);
-
-      /* estimate variance (not used at the moment) */
-/*      for (k=0; k<n_clusters; k++) {
-        var[k] = 0.0;     
-        n[k] = 0;
-      }
       for (i=0; i<vol; i++) {
-        if(label[i]>0) {
-          var[label[i]-1] += SQR(src[i]-(max_src/255.0*mu[label[i]-1]));
-          n[label[i]-1]++;
-        }
-      }   
-      for (k=0; k<n_clusters; k++) var[k] /= (double)n[k];     
-*/
+        if (nu[i] == 0.0)
+          nu[i] = 1.0;
+      }
+
+      for(i=0; i<3; i++) fwhm[i] = bias_fwhm;
+       smooth_double(nu, dims, separations, fwhm, 0);
+#endif
 
       /* apply nu correction to source image */
       for (i=0; i<vol; i++) {
-        if (nu[i] != 0.0)
+        if (nu[i] > 0.0)
           src[i] /= nu[i];
       }
       

@@ -24,8 +24,8 @@ $State: Exp $
 typedef std::complex<float> fcomplex;
 #if 0				/* (bert) removed code here */
 
-//Code written by Georges Aboutanos
-//Based on Rose and Stroustrup and Sun complex.h.
+/* Code written by Georges Aboutanos
+Based on Rose and Stroustrup and Sun complex.h. */
 
 #include <errno.h>
 #include <math.h>
