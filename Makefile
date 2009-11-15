@@ -8,7 +8,7 @@ OBS = Amap.o Kmeans.o MrfPrior.o Pve.o
 OBS2 = PveAmap.o Amap.o MrfPrior.o Pve.o Kmeans.o WarpPriors.o Bayes.o optimizer3d.o diffeo3d.o SplineSmooth.o
 
 AmapMex.$(SUF): AmapMex.c $(OBS)
-	$(MEX) AmapMex.c $(OBS) ./$(EXT)/libEBTKS.a $(MEXEND)
+	$(MEX) AmapMex.c $(OBS) $(MEXEND)
 
 PveAmapMex.$(SUF): PveAmapMex.c $(OBS2)
 #	$(MEX) PveAmapMex.c PveAmap.$(SUF).a -lEBTKS -L./$(EXT) -I./ $(MEXEND)
