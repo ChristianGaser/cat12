@@ -20,7 +20,7 @@
 #define NULL ((void *) 0)
 #endif
 
-#define SPLINESMOOTH 1
+#define SPLINESMOOTH 0
 #define NOPVE 0
 #define MARGINALIZED 1
 #define KMEANS 2
