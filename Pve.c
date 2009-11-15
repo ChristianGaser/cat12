@@ -17,6 +17,90 @@
 #include <math.h>
 #include "Amap.h"
 
+void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label)
+{
+  int x,y,z,i,z_area,y_dims,ind,mxi;
+  double w, mx;
+  unsigned char new_val[MAX_NC];
+  
+  int area = dims[0]*dims[1];
+  int vol = area*dims[2];
+    
+  for (z = 1; z < dims[2]-1; z++) {
+    z_area = z*area;
+    for (y = 1; y < dims[1]-1; y++) {
+      y_dims = y*dims[0];
+      for (x = 1; x < dims[0]-1; x++) {
+        ind = z_area + y_dims + x;
+
+        switch(label[ind]) {
+        case 0: /* BG */
+          new_val[CSFLABEL-1] = 0;
+          new_val[GMLABEL-1]  = 0;
+          new_val[WMLABEL-1]  = 0;
+          break;
+        case CSFLABEL: /* CSF */
+          new_val[CSFLABEL-1] = 255;
+          new_val[GMLABEL-1]  = 0;
+          new_val[WMLABEL-1]  = 0;
+          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(255.0/3.0);
+          break;
+        case GMLABEL: /* GM */
+          new_val[CSFLABEL-1] = 0;
+          new_val[GMLABEL-1]  = 255;
+          new_val[WMLABEL-1]  = 0;
+          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(2.0*255.0/3.0);
+          break;
+        case WMLABEL: /* WM */
+          new_val[CSFLABEL-1] = 0;
+          new_val[GMLABEL-1]  = 0;
+          new_val[WMLABEL-1]  = 255;
+          if(update_label == PVELABEL) label[ind] = 255;
+          break;
+        case GMCSFLABEL: /* GMCSF */
+          w = (src[ind] - mean[CSFLABEL-1])/(mean[GMLABEL-1]-mean[CSFLABEL-1]);
+          if(w > 1.0) w = 1.0; if(w < 0.0) w = 0.0;
+          new_val[CSFLABEL-1] = (unsigned char) ROUND(255.0*(1-w));
+          new_val[GMLABEL-1]  = (unsigned char) ROUND(255.0*w);
+          new_val[WMLABEL-1]  = 0;
+          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(1.0 + w));
+          break;
+        case WMGMLABEL: /* WMGM */
+          w = (src[ind] - mean[GMLABEL-1])/(mean[WMLABEL-1]-mean[GMLABEL-1]);
+          if(w > 1.0) w = 1.0; if(w < 0.0) w = 0.0;
+          new_val[CSFLABEL-1] = 0;
+          new_val[GMLABEL-1]  = (unsigned char) ROUND(255.0*(1-w));
+          new_val[WMLABEL-1]  = (unsigned char) ROUND(255.0*w);
+          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(2.0 + w));
+          break;
+        }
+
+        prob[          ind] = new_val[CSFLABEL-1];
+        prob[vol +     ind] = new_val[GMLABEL-1];
+        prob[(2*vol) + ind] = new_val[WMLABEL-1];
+        
+        /* set old probabilities for mixed classes to zero */
+        prob[(3*vol) + ind] = 0;
+        prob[(4*vol) + ind] = 0;
+        
+        /* get new label */
+        if(update_label == LABEL) {
+          mx = -HUGE;
+          if(label[ind] > 0) {
+            for (i = 0; i < 3; i++) {
+              if (new_val[1+i*2] > mx) {
+                mx = new_val[1+i*2];
+                mxi = i;
+              }
+            }
+            label[ind] = mxi + 1;
+          }
+        }
+      }
+    }
+  }  
+}
+
 void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label)
 {
   int x,y,z,i,z_area,y_dims,ind,mxi;

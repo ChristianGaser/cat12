@@ -24,7 +24,6 @@
 #include <math.h>
 #include "Amap.h"
 
-
 double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, int nc, double *mean, int ni, int *dims, int thresh_mask, int thresh_kmeans, double max_src)
 /* perform k-means algorithm give initial mean estimates */    
 {
@@ -73,13 +72,14 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
     /* find the new cluster centers */
     diff = 0;
     for (i = 0; i < nc; i++) {
-      xnorm = 0.0; sum = 0.0;
+      xnorm = 0.0;
+      sum = 0.0;
       for (j = 0; j < 256; j++)
 	    if (lut[j] == i) {
 	      xnorm += histo[j];
 	      sum +=  j * histo[j];
 	    }
-      sum = xnorm > 0 ? sum /= xnorm: 0.0;
+      sum = xnorm > 0 ? sum /= xnorm : 0.0;
       dx = sum - mean[i];
       mean[i] = sum;
       dx *= dx;
@@ -129,7 +129,6 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   double e, emin, eps, *nu, *src_bak, th_src, val, val_nu;
   double last_err = HUGE;
   double max_src = -HUGE;
-  double fwhm[3];
   long n[MAX_NC];
   double mean[MAX_NC];
   double var[MAX_NC];
@@ -230,6 +229,8 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
+#ifdef SPLINESMOOTH
+    fprintf(stdout,"Nu correction.\n");
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
     count_err = 0;
     for (j = 0; j < iters_nu; j++) {  
@@ -244,20 +245,9 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         }
       }
             
-#ifdef SPLINESMOOTH
       /* spline estimate */
       splineSmooth(nu, 0.01, bias_fwhm, 4, separations, dims);
-#else
-      /* nu-correction by using the smoothed residuals */      
-      for (i=0; i<vol; i++) {
-        if (nu[i] == 0.0)
-          nu[i] = 1.0;
-      }
-
-      for(i=0; i<3; i++) fwhm[i] = bias_fwhm;
-       smooth_double(nu, dims, separations, fwhm, 0);
-#endif
-
+      
       /* apply nu correction to source image */
       for (i=0; i<vol; i++) {
         if (nu[i] > 0.0)
@@ -287,6 +277,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       fflush(stdout);
     
     }
+#endif
   } else {
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
   }
