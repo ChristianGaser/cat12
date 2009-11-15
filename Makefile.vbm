@@ -1,6 +1,6 @@
 # Personal Makefile variables
 #
-# $Id$
+# $Id: Makefile.vbm 195 2009-10-27 23:05:34Z gaser $
 
 VERSION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
