@@ -284,7 +284,8 @@ if do_cls & do_defs,
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
-    niters = 200; sub = 16; nc = 3; pve = 5; init = 0; mrf = 1;
+    niters = 200; sub = 16; nc = 3; pve = 5; mrf = 1;
+    init = spm_get_defaults('vbm8.extopts.kmeans');
     fprintf('\nAmap segmentation of %s\n',res.image(1).fname);        
     prob = AmapMex(vol, label, nc, niters, sub, pve, init, mrf);
  
