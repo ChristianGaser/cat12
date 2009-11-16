@@ -285,7 +285,7 @@ if do_cls & do_defs,
     
     % Amap parameters
     niters = 200; sub = 16; nc = 3; pve = 5; init = 0; mrf = 1;
-    printf('\nAmap segmentation of %s\n',res.image(1).fname);        
+    fprintf('\nAmap segmentation of %s\n',res.image(1).fname);        
     prob = AmapMex(vol, label, nc, niters, sub, pve, init, mrf);
  
     % reorder probability maps to spm order
