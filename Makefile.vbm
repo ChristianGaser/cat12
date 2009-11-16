@@ -14,7 +14,7 @@ EBTKS_FILES=EBTKS w32 maci a64 glx
 C_FILES=Amap.[ch] AmapMex.* MrfPrior.c Pve.c Kmeans.c 
 MISC_FILES=Template_?_IXI550_MNI152.nii
 
-FILES=$MATLAB_FILES $C_FILES $MISC_FILES
+FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
 ZIPFILE=vbm8_r$(VERSION).zip
 
