@@ -46,7 +46,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   dims2[3] = nc;
   
   /* for PVE we need tow more classes */
-  if(pve) dims2[3] += 3;
+  if(pve==6) dims2[3] += 3;
+  if(pve==5) dims2[3] += 2;
 
   plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
   plhs[1] = mxCreateNumericMatrix(1,nc+3,mxDOUBLE_CLASS,mxREAL);
@@ -65,7 +66,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   }
   
   Amap(src, label, prob, mean, nc, niters, sub, dims, pve, mrf);
-  if(pve) Pve6(src, prob, label, mean, dims, update_label);
+  if(pve==6) Pve6(src, prob, label, mean, dims, update_label);
+  if(pve==5) Pve5(src, prob, label, mean, dims, update_label);
 
 }
 
