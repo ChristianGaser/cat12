@@ -285,9 +285,15 @@ if do_cls & do_defs,
     
     % Amap parameters
     niters = 200; sub = 16; nc = 3; pve = 5; mrf = 1;
-    init = spm_get_defaults('vbm8.extopts.kmeans');
-    fprintf('\nAmap segmentation of %s\n',res.image(1).fname);        
-    prob = AmapMex(vol, label, nc, niters, sub, pve, init, mrf);
+    
+    % check for kmeans initialization
+    init_kmeans = spm_get_defaults('vbm8.extopts.kmeans');
+    if init_kmeans
+      fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
+    else
+      fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
+    end
+    prob = AmapMex(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
  
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
