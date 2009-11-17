@@ -102,7 +102,7 @@ for j=1:V(1).dim(3),
   end
 
   mean_slice = mean(reshape(vol,[V(i).dim(1:2) n]),3);
-  mask = find(mean_slice ~= 0);
+  mask = find(mean_slice ~= 0 & ~isnan(mean_slice));
   % remove nuisance and calculate again mean
   if ~isempty(nuisance) 
     vol(mask,:) = vol(mask,:) - vol(mask,:)*pinv(nuisance)*nuisance;
@@ -123,7 +123,8 @@ spm_progress_bar('Clear');
 d = sqrt(diag(YpY)); % sqrt first to avoid under/overflow
 dd = d*d';
 YpY = YpY ./ (dd+eps);
-t = find(abs(YpY) > 1); YpY(t) = YpY(t)./abs(YpY(t));
+t = find(abs(YpY) > 1); 
+YpY(t) = YpY(t)./abs(YpY(t));
 YpY(1:n+1:end) = sign(diag(YpY));
 
 YpYsum = sum(YpY,1);
