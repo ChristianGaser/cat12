@@ -123,7 +123,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
   return(diff);
 }
 
-double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm)
+double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *voxelsize, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm)
 {
   int i, j, k;
   double e, emin, eps, *nu, *src_bak, th_src, val, val_nu;
@@ -246,7 +246,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       }
             
       /* spline estimate */
-      splineSmooth(nu, 0.01, bias_fwhm, 4, separations, dims);
+      splineSmooth(nu, 0.01, bias_fwhm, 4, voxelsize, dims);
       
       /* apply nu correction to source image */
       for (i=0; i<vol; i++) {

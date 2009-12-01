@@ -20,7 +20,7 @@
 #define NULL ((void *) 0)
 #endif
 
-#define SPLINESMOOTH 0
+#define SPLINESMOOTH 1
 #define NOPVE 0
 #define MARGINALIZED 1
 #define KMEANS 2
@@ -56,8 +56,8 @@
 #define MIN3(a,b,c) (MIN(a,MIN(b,c)))
 #endif
 
-extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *separations, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm);
-extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF);
+extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *voxelsize, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm);
+extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize);
 extern void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
 extern void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label);
 extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int init, int *dims);
