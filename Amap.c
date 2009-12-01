@@ -174,8 +174,23 @@ unsigned char MaxArg(double *pval, unsigned char n)
   return(index);
 }
 
+void Normalize(double* pval, char n)
+{
+  double sca = 0.0;
+  int i;
+
+  for(i = 0;i < n;i++) 
+    sca += pval[i];
+ 
+  if(fabs(sca) >  TINY) {       /* To avoid divisions by zero */
+    for(i = 0;i < n;i++) {
+      pval[i] /= sca;
+    }
+  }
+}
+
 /* Compute initial PVE labeling based on marginalized likelihood */
-void ComputeInitialPveLabel(double *src, unsigned char *label, struct point *r, int n_pure_classes, int sub, int *dims, int pve)
+void ComputeInitialPveLabel(double *src, unsigned char *label, unsigned char *prob, struct point *r, int n_pure_classes, int sub, int *dims, int pve)
 {
   int x, y, z, z_area, y_dims, index, label_value, off;
   int i, ix, iy, iz, ind, ind2, nix, niy, niz, narea, nvol;
@@ -254,38 +269,27 @@ void ComputeInitialPveLabel(double *src, unsigned char *label, struct point *r, 
           } else d_pve[BKGCSFLABEL] = HUGE;
         }
 
+        Normalize(d_pve, n_pure_classes+2+off);
+        
+        for(i=0; i<n_pure_classes+2+off; i++) 
+          prob[(vol*i) + index] = (unsigned char)ROUND(255*d_pve[i]);
+
         label[index] = (unsigned char) MaxArg(d_pve, n_pure_classes+2+off);
       }
     }
   }   
 } 
 
-void Normalize(double* pval, char n)
-{
-  double sca = 0.0;
-  int i;
-
-  for(i = 0;i < n;i++) 
-    sca += pval[i];
- 
-  if(fabs(sca) >  TINY) {       /* To avoid divisions by zero */
-    for(i = 0;i < n;i++) {
-      pval[i] /= sca;
-    }
-  }
-}
-
 void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned char *label, int x, int y , int z, int *dims,
-                             int nc, double beta)
+                             int nc, double beta, double *slice_width_sq)
 {
   int i,j,k;
   unsigned char label1, label2;  
   double distance;
-  double slice_width_sq[3] = {1.0, 1.0, 1.0};
   int similarity_value;
-  int same = -5;
+  int same = -2;
   int similar = -1;
-  int different = 5; 
+  int different = 1; 
   
   /* To determine if it's possible to get out of image limits. 
      If not true (as it usually is) this saves the trouble calculating this 27 times */
@@ -306,7 +310,7 @@ void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned c
                         slice_width_sq[1] * abs(j) +
                         slice_width_sq[2] * abs(k));
 
-        exponent[label1-1] += similarity_value/distance;             
+        exponent[label1-1] += (double)similarity_value/distance;             
       }
     }   
 
@@ -315,50 +319,22 @@ void ComputeMrfProbability(double *mrf_probability, double *exponent, unsigned c
   
 } 
 
-
 /* Iterative conditional mode */
-void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, int *dims, double beta, int iterations)
+void ICM(unsigned char *prob, unsigned char *label, int nc, int *dims, double beta, int iterations, double *voxelsize)
 {
   
-  int i, iter, x, y, z, z_area, y_dims, index, label_value, sum_voxel;
+  int i, iter, x, y, z, z_area, y_dims, index, sum_voxel;
   long area, vol;
-  double val, rel_changed, d_pve[nc], mrf_probability[nc];
+  double rel_changed, mrf_probability[nc], slice_width_sq[3];
   double exponent[nc];
-  unsigned char *prob, new_label;
+  unsigned char new_label;
     
   area = dims[0]*dims[1];
   vol = area*dims[2];
   
-  prob = (unsigned char*)malloc(sizeof(unsigned char)*vol*nc);
-  if(prob == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
-    exit(EXIT_FAILURE);
-  }
-
-  /* loop over image points */
-  for(z = 1; z < dims[2]-1; z++) {
-    z_area=z*area;
-    for(y = 1; y < dims[1]-1; y++) {
-      y_dims=y*dims[0];
-      for(x = 1; x < dims[0]-1; x++)  {
-	  
-        index = x + y_dims + z_area;
-        label_value = (int)label[index];
-        if (label_value < 1) continue;
-        val = src[index];
-          
-        for(i=0; i<nc; i++) 
-          d_pve[i] = ComputeGaussianLikelihood(val, mean[i], var[i]);        
-        Normalize(d_pve, nc);
-
-        for(i=0; i<nc; i++)
-          prob[index+i*vol] = (unsigned char)round(255.0*d_pve[i]);
-          
-        label[index] = (unsigned char) MaxArg(d_pve, nc);
-      }
-    }
-  }   
-
+  /* square of slice thickness */
+  for(i=0; i<3; i++) slice_width_sq[i] = SQR(voxelsize[i]);
+  
   sum_voxel = 0;
   for(iter=0; iter < iterations; iter++) {
     rel_changed = 0.0;
@@ -372,7 +348,7 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
           index = x + y_dims + z_area;
           if(label[index] > 0) {
             sum_voxel++;
-            ComputeMrfProbability(mrf_probability, exponent, label, x, y, z, dims, nc, beta);
+            ComputeMrfProbability(mrf_probability, exponent, label, x, y, z, dims, nc, beta, slice_width_sq);
           
             for(i=0; i<nc; i++)
               mrf_probability[i] *= (double)prob[index+i*vol];
@@ -392,7 +368,6 @@ void ICM(double *src, unsigned char *label, double *mean, double *var, int nc, i
     if(rel_changed < TH_CHANGE) break;
   }   
   printf("\n");
-  free(prob);
 } 
 
 void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int nc, int niters, int sub, int *dims, double *thresh, double *beta)
@@ -427,7 +402,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
     
   ll_old = HUGE;
   count_change = 0;
-  
+    
   for(iters = 0; iters<niters; iters++)  {
       
     ll = 0.0;
@@ -465,9 +440,9 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
           /* compute energy at each point */
           dmin = HUGE; xBG = 1; 
           psum = 0.0;
+
           for(i=0; i<nc; i++) {
             if (fabs(mean[i]) > TINY) {
-              
               d[i] = 0.5*(SQR(val-mean[i])/var[i]+log_var[i])-log_alpha[i];
               pvalue[i] = exp(-d[i])/SQRT2PI;
               psum += pvalue[i];
@@ -496,7 +471,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 
     ll /= (double)vol;
     change_ll = (ll_old - ll)/fabs(ll);
-    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters+1, ll);
+    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters+1, ll);
     fflush(stdout);
     ll_old = ll;
     
@@ -514,11 +489,12 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 
 
 /* perform adaptive MAP on given src and initial segmentation label */
-void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF)
+void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize)
 {
   int i, nix, niy, niz;
   int area, nvol, vol;
   int histo[65536];
+  int n[MAX_NC], j;
   double var[MAX_NC];
   double thresh[2], beta[1];
   double min_src = HUGE, max_src = -HUGE;
@@ -536,7 +512,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   /* build histogram */
   for(i = 0; i < 65536; i++) histo[i] = 0;
   for(i=0; i<vol; i++) {
-    if ((int)label[i] < 1) continue;
+    if (label[i] == 0) continue;
     histo[(int)ROUND(65535.0*(src[i]-min_src)/(max_src-min_src))]++;
   }
 
@@ -561,26 +537,38 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     exit(EXIT_FAILURE);
   }
     
+  /* estimate 3 classes before PVE */
   EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh, beta);
-
+  
   /* Use marginalized likelihood to estimate initial 5 or 6 classes */
   if (pve) {
-    GetMeansVariances(src, label, nc, r, sub, dims, thresh);    
-    ComputeInitialPveLabel(src, label, r, nc, sub, dims, pve);
-    nc = pve;
-    EstimateSegmentation(src, label, prob, r, mean, var, nc, niters, sub, dims, thresh, beta);
-  }
 
-  if(weight_MRF < 1.0) {
-    beta[0] *= weight_MRF;
-    fprintf(stdout,"Weighted MRF beta %3.3f\n",beta[0]);
+    ComputeInitialPveLabel(src, label, prob, r, nc, sub, dims, pve);
+    nc = pve;
+    
+    /* recalculate means for pure and mix-classes */
+    for(j=0; j<nc; j++) {
+      n[j] = 0.0;
+      mean[j] = 0.0;
+    }
+    for(i=0; i<vol; i++) {
+      if(label[i] == 0) continue;
+      n[label[i]-1]++;
+      mean[label[i]-1] += src[i];
+    }
+    for(j=0; j<nc; j++) mean[j] /= n[j];
   }
   
   /* use much smaller beta for if no pve is selected */
   if(!pve) beta[0] /= 20.0;
   
+  if(weight_MRF != 1.0) {
+    beta[0] = weight_MRF;
+    fprintf(stdout,"Weighted MRF beta %3.3f\n",beta[0]);
+  }
+  
   /* iterative conditional mode */
-  ICM(src, label, mean, var, nc, dims, beta[0], 50);
+  ICM(prob, label, nc, dims, beta[0], 50, voxelsize);
 
   free(r);
 

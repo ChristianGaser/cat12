@@ -12,7 +12,7 @@
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
-  double *src, *mean, separations[3];
+  double *src, *mean, voxelsize[3];
   double weight_MRF, max_vol, mrf;
   const int *dims;
   int dims2[4];
@@ -54,18 +54,19 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
 
+  voxelsize[0] = 1.0; voxelsize[1] = 1.0; voxelsize[2] = 1.0;
+
   /* initial labeling using Kmeans */
   if (init) {
     nvox = dims[0]*dims[1]*dims[2];
     mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
     for (i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
-    separations[0] = 1.0; separations[1] = 1.0; separations[2] = 1.0;
-    max_vol = Kmeans( src, label, mask, 25, nc, separations, dims, 0, 128, 0, 0, 500.0);
+    max_vol = Kmeans( src, label, mask, 25, nc, voxelsize, dims, 0, 128, 0, 0, 500.0);
     free(mask);
   }
   
-  Amap(src, label, prob, mean, nc, niters, sub, dims, pve, mrf);
+  Amap(src, label, prob, mean, nc, niters, sub, dims, pve, mrf, voxelsize);
   if(pve==6) Pve6(src, prob, label, mean, dims, update_label);
   if(pve==5) Pve5(src, prob, label, mean, dims, update_label);
 
