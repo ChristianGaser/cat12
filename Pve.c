@@ -17,7 +17,7 @@
 #include <math.h>
 #include "Amap.h"
 
-void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label)
+void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims)
 {
   int x,y,z,i,z_area,y_dims,ind,mxi;
   double w, mx;
@@ -43,19 +43,19 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL-1] = 255;
           new_val[GMLABEL-1]  = 0;
           new_val[WMLABEL-1]  = 0;
-          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(255.0/3.0);
+          label[ind] = (unsigned char) ROUND(255.0/3.0);
           break;
         case GMLABEL: /* GM */
           new_val[CSFLABEL-1] = 0;
           new_val[GMLABEL-1]  = 255;
           new_val[WMLABEL-1]  = 0;
-          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(2.0*255.0/3.0);
+          label[ind] = (unsigned char) ROUND(2.0*255.0/3.0);
           break;
         case WMLABEL: /* WM */
           new_val[CSFLABEL-1] = 0;
           new_val[GMLABEL-1]  = 0;
           new_val[WMLABEL-1]  = 255;
-          if(update_label == PVELABEL) label[ind] = 255;
+          label[ind] = 255;
           break;
         case GMCSFLABEL: /* GMCSF */
           w = (src[ind] - mean[CSFLABEL-1])/(mean[GMLABEL-1]-mean[CSFLABEL-1]);
@@ -63,7 +63,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL-1] = (unsigned char) ROUND(255.0*(1-w));
           new_val[GMLABEL-1]  = (unsigned char) ROUND(255.0*w);
           new_val[WMLABEL-1]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(1.0 + w));
+          label[ind] = ROUND(255.0/3.0*(1.0 + w));
           break;
         case WMGMLABEL: /* WMGM */
           w = (src[ind] - mean[GMLABEL-1])/(mean[WMLABEL-1]-mean[GMLABEL-1]);
@@ -71,7 +71,7 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL-1] = 0;
           new_val[GMLABEL-1]  = (unsigned char) ROUND(255.0*(1-w));
           new_val[WMLABEL-1]  = (unsigned char) ROUND(255.0*w);
-          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(2.0 + w));
+          label[ind] = ROUND(255.0/3.0*(2.0 + w));
           break;
         }
 
@@ -83,25 +83,12 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         prob[(3*vol) + ind] = 0;
         prob[(4*vol) + ind] = 0;
         
-        /* get new label */
-        if(update_label == LABEL) {
-          mx = -HUGE;
-          if(label[ind] > 0) {
-            for (i = 0; i < 3; i++) {
-              if (new_val[1+i*2] > mx) {
-                mx = new_val[1+i*2];
-                mxi = i;
-              }
-            }
-            label[ind] = mxi + 1;
-          }
-        }
       }
     }
   }  
 }
 
-void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims, int update_label)
+void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims)
 {
   int x,y,z,i,z_area,y_dims,ind,mxi;
   double w, mx;
@@ -127,19 +114,19 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = 255;
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(255.0/3.0);
+          label[ind] = (unsigned char) ROUND(255.0/3.0);
           break;
         case GMLABEL+1: /* GM */
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = 255;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = (unsigned char) ROUND(2.0*255.0/3.0);
+          label[ind] = (unsigned char) ROUND(2.0*255.0/3.0);
           break;
         case WMLABEL+1: /* WM */
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 255;
-          if(update_label == PVELABEL) label[ind] = 255;
+          label[ind] = 255;
           break;
         case BKGCSFLABEL+1: /* BKGCSF */
           w = src[ind]/mean[CSFLABEL];
@@ -147,7 +134,7 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = (unsigned char) ROUND(255.0*w);
           new_val[GMLABEL]  = 0;
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*w);
+          label[ind] = ROUND(255.0/3.0*w);
           break;
         case GMCSFLABEL+1: /* GMCSF */
           w = (src[ind] - mean[CSFLABEL])/(mean[GMLABEL]-mean[CSFLABEL]);
@@ -155,7 +142,7 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = (unsigned char) ROUND(255.0*(1-w));
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*w);
           new_val[WMLABEL]  = 0;
-          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(1.0 + w));
+          label[ind] = ROUND(255.0/3.0*(1.0 + w));
           break;
         case WMGMLABEL+1: /* WMGM */
           w = (src[ind] - mean[GMLABEL])/(mean[WMLABEL]-mean[GMLABEL]);
@@ -163,7 +150,7 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
           new_val[CSFLABEL] = 0;
           new_val[GMLABEL]  = (unsigned char) ROUND(255.0*(1-w));
           new_val[WMLABEL]  = (unsigned char) ROUND(255.0*w);
-          if(update_label == PVELABEL) label[ind] = ROUND(255.0/3.0*(2.0 + w));
+          label[ind] = ROUND(255.0/3.0*(2.0 + w));
           break;
         }
 
@@ -176,19 +163,6 @@ void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, 
         prob[(4*vol) + ind] = 0;
         prob[(5*vol) + ind] = 0;
         
-        /* get new label */
-        if(update_label == LABEL) {
-          mx = -HUGE;
-          if(label[ind] > 0) {
-            for (i = 0; i < 3; i++) {
-              if (new_val[1+i*2] > mx) {
-                mx = new_val[1+i*2];
-                mxi = i;
-              }
-            }
-            label[ind] = mxi + 1;
-          }
-        }
       }
     }
   }  
