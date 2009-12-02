@@ -4,15 +4,18 @@
 
 include Makefile.var
 
-OBS = Amap.o Kmeans.o MrfPrior.o Pve.o
+OBS = Amap.o KmeansProper.o MrfPrior.o Pve.o
+OBS1 = Amap.o Kmeans.o MrfPrior.o Pve.o SplineSmooth.o
 OBS2 = PveAmap.o Amap.o MrfPrior.o Pve.o Kmeans.o WarpPriors.o Bayes.o optimizer3d.o diffeo3d.o SplineSmooth.o
 
 AmapMex.$(SUF): AmapMex.c $(OBS)
 	$(MEX) AmapMex.c $(OBS) $(MEXEND)
 
+AmapMexNu.$(SUF): AmapMexNu.c $(OBS1)
+	$(MEX) AmapMexNu.c $(OBS1) SplineSmooth.o $(MEXEND) ./$(EXT)/libEBTKS.a $(MEXEND)
+
 PveAmapMex.$(SUF): PveAmapMex.c $(OBS2)
-#	$(MEX) PveAmapMex.c PveAmap.$(SUF).a -lEBTKS -L./$(EXT) -I./ $(MEXEND)
-	$(MEX) PveAmapMex.c $(OBS2) ./$(EXT)/libEBTKS.a $(MEXEND)
+	$(MEX) PveAmapMex.c $(OBS2) -I./ ./$(EXT)/libEBTKS.a $(MEXEND)
 
 %.o : %.c
 	$(CC) -c -O2 $< $(MEXEND)
