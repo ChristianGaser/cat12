@@ -8,53 +8,51 @@
 #include "matrix.h"
 #include "math.h"
 #include "stdio.h"
+#include "Amap.h"
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
-  double *src, *mean, voxelsize[3];
-  double weight_MRF, max_vol, mrf;
+  double *src, *mean, *voxelsize;
+  double max_vol, mrf;
   const int *dims;
   int dims2[4];
-  int i, nc, pve, update_label, nvox;
-  int niters, sub, niters_nu, init;
+  int i, n_classes, pve, nvox;
+  int niters, sub, init;
     
-  if (nrhs!=8)
-    mexErrMsgTxt("8 inputs required.");
+  if (nrhs!=9)
+    mexErrMsgTxt("9 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
   if (!mxIsUint8(prhs[1]))
 	mexErrMsgTxt("Second argument must be uint8.");
 
-  src    = (double*)mxGetPr(prhs[0]);
-  label  = (unsigned char*)mxGetPr(prhs[1]);
-  nc     = (int)mxGetScalar(prhs[2]);
-  niters = (int)mxGetScalar(prhs[3]);
-  sub    = (int)mxGetScalar(prhs[4]);
-  pve    = (double)mxGetScalar(prhs[5]);
-  init   = (int)mxGetScalar(prhs[6]);
-  mrf    = (double)mxGetScalar(prhs[7]);
+  src       = (double*)mxGetPr(prhs[0]);
+  label     = (unsigned char*)mxGetPr(prhs[1]);
+  n_classes = (int)mxGetScalar(prhs[2]);
+  niters    = (int)mxGetScalar(prhs[3]);
+  sub       = (int)mxGetScalar(prhs[4]);
+  pve       = (int)mxGetScalar(prhs[5]);
+  init      = (int)mxGetScalar(prhs[6]);
+  mrf       = (double)mxGetScalar(prhs[7]);
+  voxelsize = (double*)mxGetPr(prhs[8]);
 
-  /* output label as PVE label */
-  update_label = 2;
+  if ( mxGetM(prhs[8])*mxGetN(prhs[8]) != 3) 
+    mexErrMsgTxt("Voxelsize should have 3 values.");
 
   dims = mxGetDimensions(prhs[0]);
-  dims2[0] = dims[0];
-  dims2[1] = dims[1];
-  dims2[2] = dims[2];
-  dims2[3] = nc;
+  dims2[0] = dims[0]; dims2[1] = dims[1]; dims2[2] = dims[2];
+  dims2[3] = n_classes;
   
-  /* for PVE we need tow more classes */
-  if(pve==6) dims2[3] += 3;
-  if(pve==5) dims2[3] += 2;
+  /* for PVE we need more classes */
+  if(pve == 6) dims2[3] += 3;
+  if(pve == 5) dims2[3] += 2;
 
-  plhs[0] = mxCreateNumericArray(4,dims2,mxUINT8_CLASS,mxREAL);
-  plhs[1] = mxCreateNumericMatrix(1,nc+3,mxDOUBLE_CLASS,mxREAL);
+  plhs[0] = mxCreateNumericArray(4, dims2, mxUINT8_CLASS, mxREAL);
+  plhs[1] = mxCreateNumericMatrix(1, n_classes+3, mxDOUBLE_CLASS, mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
-
-  voxelsize[0] = 1.0; voxelsize[1] = 1.0; voxelsize[2] = 1.0;
 
   /* initial labeling using Kmeans */
   if (init) {
@@ -62,13 +60,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
     for (i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
-    max_vol = Kmeans( src, label, mask, 25, nc, voxelsize, dims, 0, 128, 0, 0, 500.0);
+    max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, 0, 128, 0, NOPVE,  500.0);
     free(mask);
   }
   
-  Amap(src, label, prob, mean, nc, niters, sub, dims, pve, mrf, voxelsize);
-  if(pve==6) Pve6(src, prob, label, mean, dims, update_label);
-  if(pve==5) Pve5(src, prob, label, mean, dims, update_label);
+  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, mrf, voxelsize);
+  if(pve==6) Pve6(src, prob, label, mean, dims2);
+  if(pve==5) Pve5(src, prob, label, mean, dims2);
 
 }
 

@@ -293,8 +293,17 @@ if do_cls & do_defs,
     else
       fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
     end
-    prob = AmapMex(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
- 
+    if init_kmeans
+      % check whether Kmeans with splinesmoothing is working
+      try
+        prob = AmapMexNu(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
+      catch
+        prob = AmapMex(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
+      end
+    else
+      prob = AmapMex(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
+    end
+    
     % reorder probability maps to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
