@@ -79,4 +79,5 @@ defaults.vbm8.defs.interp    = 5;  % 5th degree B-spline
 
 % expert options (experimental)
 %=======================================================================
-defaults.vbm8.extopts.kmeans    = 0;  % segmentation initialization: 0 - new segment; 1 - Kmeans
+defaults.vbm8.extopts.kmeans    = 1;  % segmentation initialization: 0 - new segment; 1 - Kmeans
+defaults.vbm8.extopts.mrf       = 0.15;  % MRF weighting

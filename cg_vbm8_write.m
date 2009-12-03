@@ -284,24 +284,27 @@ if do_cls & do_defs,
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
-    niters = 200; sub = 16; nc = 3; pve = 5; mrf = 1;
+    n_iters = 200; sub = 16; n_classes = 3; pve = 5;
     
+    % MRF weighting
+    mrf_weight = spm_get_defaults('vbm8.extopts.mrf');
+
     % check for kmeans initialization
     init_kmeans = spm_get_defaults('vbm8.extopts.kmeans');
+
+    vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
+
     if init_kmeans
       fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
-    else
-      fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
-    end
-    if init_kmeans
       % check whether Kmeans with splinesmoothing is working
       try
-        prob = AmapMexNu(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
+        prob = AmapMexNu(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
       catch
-        prob = AmapMex(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
+        prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
       end
     else
-      prob = AmapMex(vol, label, nc, niters, sub, pve, init_kmeans, mrf);
+      fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
+      prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
     end
     
     % reorder probability maps to spm order
@@ -948,6 +951,11 @@ indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 [A,num] = spm_bwlabel(double(mask(indx,indy,indz)),26);
 
 clear mask
+
+if isempty(A)
+  error('No cluster found!');
+  return
+end
 
 % interrupt if cluster was > 7.5% of whole image to save time
 max_A = max(A(:));

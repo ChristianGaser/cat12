@@ -15,7 +15,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
   double *src, *mean, *voxelsize;
-  double max_vol, mrf;
+  double max_vol, weight_MRF;
   const int *dims;
   int dims2[4];
   int i, n_classes, pve, nvox;
@@ -29,15 +29,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   if (!mxIsUint8(prhs[1]))
 	mexErrMsgTxt("Second argument must be uint8.");
 
-  src       = (double*)mxGetPr(prhs[0]);
-  label     = (unsigned char*)mxGetPr(prhs[1]);
-  n_classes = (int)mxGetScalar(prhs[2]);
-  niters    = (int)mxGetScalar(prhs[3]);
-  sub       = (int)mxGetScalar(prhs[4]);
-  pve       = (int)mxGetScalar(prhs[5]);
-  init      = (int)mxGetScalar(prhs[6]);
-  mrf       = (double)mxGetScalar(prhs[7]);
-  voxelsize = (double*)mxGetPr(prhs[8]);
+  src        = (double*)mxGetPr(prhs[0]);
+  label      = (unsigned char*)mxGetPr(prhs[1]);
+  n_classes  = (int)mxGetScalar(prhs[2]);
+  niters     = (int)mxGetScalar(prhs[3]);
+  sub        = (int)mxGetScalar(prhs[4]);
+  pve        = (int)mxGetScalar(prhs[5]);
+  init       = (int)mxGetScalar(prhs[6]);
+  weight_MRF = (double)mxGetScalar(prhs[7]);
+  voxelsize  = (double*)mxGetPr(prhs[8]);
 
   if ( mxGetM(prhs[8])*mxGetN(prhs[8]) != 3) 
     mexErrMsgTxt("Voxelsize should have 3 values.");
@@ -66,7 +66,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     free(mask);
   }
   
-  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, mrf, voxelsize);
+  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize);
   if(pve==6) Pve6(src, prob, label, mean, dims2);
   if(pve==5) Pve5(src, prob, label, mean, dims2);
 

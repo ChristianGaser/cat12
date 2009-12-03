@@ -265,9 +265,9 @@ void ComputeInitialPveLabel(double *src, unsigned char *label, unsigned char *pr
         /* BKGCSF only for 6 classes */
         if(pve == 6) {
           if (fabs(mean[CSFLABEL+off-1]) > TINY) {
-            d_pve[BKGCSFLABEL] = ComputeMarginalizedLikelihood(val, 0.0, mean[CSFLABEL+off-1],
+            d_pve[BKGCSFLABEL+off-1] = ComputeMarginalizedLikelihood(val, 0.0, mean[CSFLABEL+off-1],
                                         0.1*MIN3(var[CSFLABEL+off-1],var[GMLABEL+off-1],var[WMLABEL+off-1]), var[CSFLABEL+off-1], 100 );
-          } else d_pve[BKGCSFLABEL] = HUGE;
+          } else d_pve[BKGCSFLABEL+off-1] = HUGE;
         }
 
         Normalize(d_pve, n_pure_classes+2+off);
