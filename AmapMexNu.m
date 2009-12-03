@@ -12,7 +12,8 @@ pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
 ext = mexext;
-eval(['mex -O AmapMexNu.c Kmeans.c Amap.c MrfPrior.c Pve.c SplineSmooth.cc -I. ' fullfile('.',ext(4:end),'libEBTKS.a')])
+%  eval(['mex -O AmapMexNu.c Kmeans.c Amap.c MrfPrior.c Pve.c SplineSmooth.cc -I. ' fullfile('.',ext(4:end),'libEBTKS.a')])
+  disp(['mex -O AmapMexNu.c Kmeans.c Amap.c MrfPrior.c Pve.c SplineSmooth.cc -I. ' fullfile('.',ext(4:end),'libEBTKS.a')])
 cd(p_path);
 
 try 

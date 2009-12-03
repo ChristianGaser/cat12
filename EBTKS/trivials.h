@@ -66,7 +66,7 @@ inline int doubleCompareAsc(const void *x, const void *y) {
   double diff = *(double *) x - *(double *) y; return SIGN(diff); }
 
 inline double gauss(double mean, double std) {
-  double v1 = 2.0*drand4() - 1.0;
+  double v1 = 2.0*drand48() - 1.0;
   double v2 = 2.0*drand48() - 1.0;
   double s = v1*v1 + v2*v2;
 
