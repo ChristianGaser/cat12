@@ -295,11 +295,12 @@ if do_cls & do_defs,
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
     if init_kmeans
-      fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
-      % check whether Kmeans with splinesmoothing is working
-      try
+      % check whether Kmeans with splinesmoothing can be used as mex-file
+      if exist(['AmapMexNu'])==3
+        fprintf('\nAmap segmentation of %s with Kmeans initialization and nu-correction.\n',res.image(1).fname);   
         prob = AmapMexNu(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
-      catch
+      else
+        fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
         prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
       end
     else

@@ -17,13 +17,13 @@ AmapMexNu.$(SUF): AmapMexNu.c $(OBS1)
 	$(MEX) AmapMexNu.c $(OBS1) $(MEXEND) ./$(EXT)/libEBTKS.a $(MEXEND)
 
 PveAmapMex.$(SUF): PveAmapMex.c $(OBS2)
-	$(MEX) PveAmapMex.c $(OBS2) -I./ ./$(EXT)/libEBTKS.a $(MEXEND)
+	$(MEX) PveAmapMex.c $(OBS2) -I. ./$(EXT)/libEBTKS.a $(MEXEND)
 
 %.o : %.c
-	$(CC) -c -O2 $< $(MEXEND)
+	$(CXX) -c -O2 $< $(MEXEND)
 
 SplineSmooth.o : SplineSmooth.cc
-	$(CXX) -O2 -I./ -c $< $(MEXEND)
+	$(CXX) -O2 -I. -c $< $(MEXEND)
 
 %.$(SUF) : %.c %.cc
 	$(MEX)  $< $(MEXEND)
