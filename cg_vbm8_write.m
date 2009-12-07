@@ -283,6 +283,9 @@ if do_cls & do_defs,
     vol = chan(1).Nc.dat(indx,indy,indz,1,1);
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
+    % no negative values allowed
+#    vol(find(vol<0)) = 0;
+    
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5;
     

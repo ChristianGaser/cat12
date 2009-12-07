@@ -111,6 +111,11 @@ run_batch ()
 		fi
 	fi
 
+  # add current folder to matlabfile if file was not found
+	if [ ! -f $file ]; then
+	  file=${pwd}/$file
+	fi
+
 	if [ ! -f $file ]; then
 		echo File $file does not exist.
 		exit 0
