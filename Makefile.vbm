@@ -12,7 +12,7 @@ STARGET=141.35.200.101:/Applications/xampp/htdocs/
 MATLAB_FILES=Contents.m cg_vbm8_defaults.m cg_vbm8_run.m cg_vbm8_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_vbm8_tools.m cg_vbm8_debug.m cg_morph_vol.m cg_vbm8_batch.* tbx_cfg_vbm8.m spm_vbm8.m vbm8.man cg_vbm8_bias* cg_spm8_batch.* cg_vbm8_defs.m cg_vbm8_longitudinal.m spm_max_nS.m 
 EBTKS_FILES=EBTKS w32 maci maci64 a64 glx
 C_FILES=Amap.[ch] AmapMexNu.* AmapMex.* MrfPrior.c Pve.c Kmeans.c KmeansProper.c SplineSmooth.cc
-MISC_FILES=Template_?_IXI550_MNI152.nii
+MISC_FILES=Template_?_IXI550_MNI152.nii submask.nii
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
