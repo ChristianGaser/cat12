@@ -283,9 +283,6 @@ if do_cls & do_defs,
     vol = chan(1).Nc.dat(indx,indy,indz,1,1);
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
-    % no negative values allowed
-#    vol(find(vol<0)) = 0;
-    
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5;
     
@@ -337,7 +334,7 @@ src = single(chan(1).Nc.dat(:,:,:,1,1));
 clear tpm chan
 
 % prepare transformations for rigidly or affine aligned images
-if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
+if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || spm_get_defaults('vbm8.output.surf.dartel')
 
     % figure out the mapping from the volumes to create to the original
     mm = [[
@@ -363,7 +360,7 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3),
         odim(1) odim(2) odim(3)]'; ones(1,8)];
     
     % rigid transformation
-    if (any(tc(:,2)) || lb(1,3))
+    if (any(tc(:,2)) || lb(1,3)) || spm_get_defaults('vbm8.output.surf.dartel')
         x      = affind(rgrid(d),M0);
         y1     = affind(y,M1);
         
@@ -456,24 +453,57 @@ if do_dartel
         y(:,:,z,2) = t22;
         y(:,:,z,3) = t33;
     end
-    clear Coef y0 t1 t2 t3
+    clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
+end
 
-    % get inverse deformations for warping brainmask to raw space
-    if (warp.brainmask_th > 0)
-        Vmask2 = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask_LPBA40_dartel.nii']));
-        mask2 = spm_sample_vol(Vmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
-        mask2 = reshape(mask2,d);
-    
-        ind_brainmask = find(mask2 < warp.brainmask_th);
+% get inverse deformations for warping submask to raw space
+if spm_get_defaults('vbm8.output.surf.dartel')
+  Vsubmask = spm_vol(char(spm_get_defaults('vbm8.extopts.mask')));
+  submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
+  submask = reshape(submask,d);
+ 
+  % surfmask = WM label
+  wm_label = uint8(label > 2.5/3.0*255);
+  
+  % fill subcortical areas and ventricle using submask
+  wm_label(find(submask(indx,indy,indz) > 1)) = 1;
+%  wm_label = cg_morph_vol(wm_label,'close',1,0.5);
+       
+  % cut midline and pons
+  wm_label(find((round(double(submask(indx,indy,indz) == 1))))) = 0;
 
-        % apply brainmask to segmentations and label
-        for i=1:3, cls{i}(ind_brainmask) = 0; end
-        label(find(mask2(indx,indy,indz) < warp.brainmask_th)) = 0;
-    end
+  % use only largest WM cluster at th0 as seed parameter
+  % mask out all voxels where wm is lower than gm or csf
+  wm_label = mask_2largest_clusters(wm_label, 0.5);
 
-    clear y1 y2 y3 t11 t22 t33 x1a y1a z1a mask2
-    
-    
+  mid = round(size(submask,1)/2);
+  value_left  = max(max(max(wm_label(1:(mid-30),:,:))));
+  value_right = max(max(max(wm_label((mid+30):end,:,:))));
+
+  wm_label(find(wm_label==value_left))  = 127;
+  wm_label(find(wm_label==value_right)) = 255;
+
+  [pth,nam,ext1]=fileparts(res.image(1).fname);
+  VT      = struct('fname',fullfile(pth,['wmlabel_', nam, '.nii']),...
+            'dim',  odim,...
+            'dt',   [spm_type('int8') spm_platform('bigend')],...
+            'pinfo',[1 0]',...
+            'mat',matr);
+  VT = spm_create_vol(VT);
+
+  Ni             = nifti(VT.fname);
+  Ni.mat0        = mat0r;
+  Ni.mat_intent  = 'Aligned';
+  Ni.mat0_intent = 'Aligned';
+  create(Ni);
+
+  for i=1:odim(3),
+    tmp = spm_slice_vol(wm_label,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
+    tmp = round(tmp);
+    VT  = spm_write_plane(VT,tmp,i);
+  end
+  clear tmp1
+
 end
 
 % write raw segmented images
@@ -562,7 +592,9 @@ if lb(1,3),
     clear tmp1
 end
 
+% write dartel exports
 for k1=1:size(tc,1),
+
     % write rigid aligned tissues
     if tc(k1,2),
         [pth,nam,ext1]=fileparts(res.image(1).fname);
@@ -611,6 +643,7 @@ for k1=1:size(tc,1),
     end
 end
 
+% write jacobian determinant
 if jc
     if ~do_dartel
         warning('Jacobian can only be saved if dartel normalization was used.');
@@ -986,4 +1019,43 @@ y(indx,indy,indz) = A;
 y(Qth) = yth;
 
 return;
+
+%=======================================================================
+function y = mask_2largest_clusters(y, th)
+
+if nargin < 2
+	th = 0.5;
+end
+
+sz = size(y);
+
+th = th*max(double(y(:)));
+
+mask = y > th;
+
+[A,num] = spm_bwlabel(double(mask),26);
+
+clear mask
+
+max_A = max(A(:));
+sz_cluster = zeros(max_A,1);
+for i=1:max_A
+	QA = find(A == i);
+	ind = i;
+	sz_cluster(i) = length(QA);
+end
+
+% sort clusters from largest tp smallest
+[sort_cluster, ind] = sort(sz_cluster,1,'descend');
+
+y(:) = 0;
+if length(ind) < 2
+	error('Hemispheric cut failed: only 1 cluster found');
+end
+for i=1:2
+	QA = find(A == ind(i));
+	y(QA)=i;
+end
+
+return
 
