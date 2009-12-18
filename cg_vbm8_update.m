@@ -26,31 +26,38 @@ url = 'http://dbm.neuro.uni-jena.de/vbm8/';
 % get new release number
 [s,sts] = urlread(url);
 if ~sts, error('Cannot access the SBM server.'); end
-n = regexp(s,'vbm8_r(\d.*?)\.zip','tokens','once');
+n = regexp(s,'vbm8_r(\d.*?)\.zip','tokens');
 if isempty(n)
   fprintf('There are no new releases available yet.\n');
   return;
 else
-  n = str2double(n{1});
+  % get largest release number
+  rnew = [];
+  for i=1:length(n)
+    rnew = [rnew str2double(n{i})];
+  end
+  rnew = max(rnew);
 end
 
-if n > r
+if rnew > r
   fprintf('A new version of VBM8 is available on: %s\n',url);
-  fprintf('Your version: %d - New version: %d\n',r,n);
+  fprintf('Your version: %d - New version: %d\n',r,rnew);
 
-  d = fullfile(spm('Dir'),'toolbox','vbm8'); 
+  d = fullfile(spm('Dir'),'toolbox'); 
   overwrite = spm_input('Update',1,'m','Download zip-file only|Overwrite old VBM8 installation',[0 1],2);
   if overwrite
     try
-      s = unzip([url sprintf('vbm8_r%d.zip',n)], d);
-      fprintf('%d files have been updated.\n',numel(s));
+      s = unzip([url sprintf('vbm8_r%d.zip',rnew)], d);
+      fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
     catch
-      fprintf('Update failed: check file permissions. Download only\n');
-      web([url sprintf('vbm8_r%d.zip',n)],'-browser');
+      fprintf('Update failed: check file permissions. Download zip-file only.\n');
+      web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');
+      fprintf('Unzip file to %s\n',d);
     end
   else
-    web([url sprintf('vbm8_r%d.zip',n)],'-browser');
+    web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');
+    fprintf('Unzip file to %s\n',d);
   end
 else
-  fprintf('You already have the newest version %d\n',r);
+  fprintf('You already have the newest version %d.\n',r);
 end

@@ -47,5 +47,4 @@ zip: update
 
 scp: zip
 	-@echo scp
-	-@cp ${ZIPFILE} vbm8_latest.zip
-	-@scp -pr vbm8_latest.zip ${ZIPFILE} ${STARGET}
+	-@scp -pr ${ZIPFILE} ${STARGET}
