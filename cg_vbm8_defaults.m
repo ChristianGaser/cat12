@@ -82,4 +82,4 @@ defaults.vbm8.defs.interp    = 5;  % 5th degree B-spline
 defaults.vbm8.extopts.kmeans    = 1;  % segmentation initialization: 0 - new segment; 1 - Kmeans
 defaults.vbm8.extopts.mrf       = 0.15;  % MRF weighting
 defaults.vbm8.extopts.mask      = {fullfile(spm('dir'),'toolbox','vbm8','submask.nii')};	% mask for subcortical areas + ventricles
-defaults.vbm8.output.surf.dartel= 1; % WM-surface 
+defaults.vbm8.output.surf.dartel= 0; % WM-surface 
