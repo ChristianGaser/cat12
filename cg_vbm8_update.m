@@ -34,7 +34,7 @@ else
   n = str2double(n{1});
 end
 
-if n >= r
+if n > r
   fprintf('A new version of VBM8 is available on: %s\n',url);
   fprintf('Your version: %d - New version: %d\n',r,n);
 
@@ -51,4 +51,6 @@ if n >= r
   else
     web([url sprintf('vbm8_r%d.zip',n)],'-browser');
   end
+else
+  fprintf('You already have the newest version %d\n',r);
 end
