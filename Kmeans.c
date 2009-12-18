@@ -244,8 +244,8 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         }
       }
             
-      /* spline estimate */
-      splineSmooth(nu, 0.01, bias_fwhm, 4, voxelsize, dims);
+      /* spline estimate: start with distance of 1500 end end up with bias_fwhm */
+      splineSmooth(nu, 0.01, MAX(bias_fwhm, 1500.0/(j+1)), 4, voxelsize, dims);
       
       /* apply nu correction to source image */
       for (i = 0; i < vol; i++) {
