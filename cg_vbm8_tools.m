@@ -91,6 +91,61 @@ T2x.help = {p1,p0,p2,p0,p3,p4,p3,p0,p5,p6,p7,p8,p9,p0,p3,p10,p3,p11,p12,p13,p0,p
 	p29,p30,p31,p32,p33,p0,p34,p35,p0,p36,p37,p38,p0,p39,p40,p0,p41,p0,p42,p43};
 %------------------------------------------------------------------------
 
+data_F2x = cfg_files;
+data_F2x.tag  = 'data';
+data_F2x.name = 'Volumes';
+data_F2x.filter = 'image';
+data_F2x.ufilter = '^spmF.*\.[in][im][gi]$';
+data_F2x.num     = [1 Inf];
+data_F2x.help = {'Select spmF-images to convert.'};
+
+F2x = cfg_exbranch;
+F2x.tag = 'F2x';
+F2x.name = 'Threshold and transform spmF-maps';
+F2x.val = {data_F2x};
+F2x.prog   = @cg_spmF2x;
+
+p0 = '';
+p1 = 'This function transforms F-maps to P, -log(P), or R2-maps.';
+p2 = 'The following formulas are used:';
+p3 = '--------------------------------';
+p4 = 'coefficient of determination R2:';
+p5 = '          F*(n-1)';
+p6 = 'R2 = ------------------';
+p7 = '        n-p + F*(n-1)';
+p8 ='p-value:';
+p9 ='p = 1-spm_Fcdf';
+p10='log p-value:';
+p11='-log10(1-P) = -log(1-spm_Fcdf)';
+p12=['For the last case of log transformation this means that a p-value of p=0.99 (0.01) is ',...
+'transformed to a value of 2.'];
+p13='Examples:';
+p14='p-value  -log10(1-P)';
+p15='0.1      1';
+p16='0.05     1.3';
+p17='0.01     2';
+p18='0.001    3';
+p19='0.0001   4';
+p20=['All maps can be thresholded using height and extent thresholds and you can also apply corrections ',...
+'for multiple comparisons based on family-wise error (FWE) or false discovery rate (FDR). You can easily ',...
+'threshold and/or transform a large number of spmT-maps using the same thresholds.'];
+p21='Naming convention of the transformed files:';
+p22='   Type_Contrast_Pheight_K';
+p23='   Type:      P    - p-value';
+p24='              logP - log p-value';
+p25='              R2   - coefficient of determination';
+p26='   Contrast:  name used in the contrast manager with replaced none valid';
+p27='              strings';
+p28='   Pheight:   p    - uncorrected p-value in % (p<0.05 will coded with "p5")';
+p29='              pFWE - p-value with FWE correction in %';
+p30='              pFDR - p-value with FDR correction in %';
+p31='   K:         extent threshold in voxels';
+
+F2x.help = {p1,p0,p2,p0,p3,p4,p3,p5,p6,p7,p0,p3,p8,p3,p9,p3,p10,p3,p11,p0,p12,p0,...
+	p13,p14,p15,p16,p17,p18,p19,p0,p20,p0,p21,p22,p0,p23,p24,...
+	p25,p0,p26,p27,p0,p28,p29,p30,p0,p31};
+%------------------------------------------------------------------------
+
 data.help = {[...
 'Select all images. Images have to be in the same orientation with same voxel size and dimension ',...
 '(e.g. normalized images)']};
@@ -267,7 +322,7 @@ defs.help    = {'This is a utility for applying deformation fields to images.'};
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_cov,showslice,calcvol,T2x,defs};
+tools.values = {check_cov,showslice,calcvol,T2x,F2x,defs};
 
 return
 
