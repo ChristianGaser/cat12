@@ -14,7 +14,7 @@ spm_progress_bar('Init',n,'Smoothing','Volumes Complete');
 for i = 1:n
 	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
 	in = spm_read_vols(V(i));
-	h = rician_MLestimate(in);
+	h = rician_local_estimate(in);
 	if h==0
 	  fprintf('Image %s has no background noise (probably skull stripped).\n',nm);
 	else
