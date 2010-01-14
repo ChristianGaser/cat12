@@ -1,5 +1,5 @@
-function h = rician_MLestimate(ima)
-% ML estimation of rician noise in the image background
+function h = rician_local_estimate(ima)
+% Local estimation of rician noise in the image background
 %
 % This is a modified version from
 %
@@ -7,9 +7,15 @@ function h = rician_MLestimate(ima)
 %   LOCAL STATISTICS TOOLBOX
 %
 %   Modified: Feb 01 2008
+%
+% Noise and Signal Estimation in Magnitude MRI and Rician Distributed Images: 
+% A LMMSE Approach
+% Aja-Fernandez, S.; Alberola-Lopez, C.; Westin, C.-F.;
+% Image Processing, IEEE Transactions on
+% Volume 17,  Issue 8,  Aug. 2008 Page(s):1383 - 1398 
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: rician_MLestimate.m 115 2009-03-10 10:40:12Z gaser $
+% $Id: rician_local_estimate 115 2009-03-10 10:40:12Z gaser $
 
 % find indexes, where image is > 0
 % to remove slices, where zeros were padded
