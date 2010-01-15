@@ -16,7 +16,7 @@
 %   vbm8.man               - notes on VBM8 toolbox
 %
 % VBM functions
-%   spm_vbm8.m             - Toolbox wrapper to call functions
+%   spm_vbm8.m             - toolbox wrapper to call functions
 %   tbx_cfg_vbm8.m         - configure VBM
 %   cg_vbm8_write.m        - write out VBM results
 %   cg_vbm8_run.m          - 
@@ -31,16 +31,24 @@
 %   cg_spmT2x.m            - transformation of t-maps to P, -log(P), r or d-maps
 %   cg_lat_index.m         - calculate lateralization index
 %   cg_vbm8_debug.m        - print debug information for SPM5 and VBM5
+%   cg_ornlm.m             - Optimized Blockwise Non Local Means Denoising Filter
+%
+% Mex- and c-functions
+%   Amap.c                 - Adaptive Maximum A Posteriori segmentation
+%   AmapMex.c              - Mex-wrapper for Amap 
+%   MrfPrior.c             - estimation of MRF weighting
+%   Pve.c                  - partial volume estimaion (PVE)
+%   KmeansProper.c         - Kmeans
+%   ornlm.c                - Optimized Blockwise Non Local Means Denoising Filter (core functions)
+%   ornlmMex.c             - Mex-wrapper for ornlm.c
 %
 % Batch functions
-%   cg_vbm8_batch.m        - batch mode wrapper for spm_jobman
+%   cg_vbm8_batch.m        - batch mode wrapper for spm_jobman for VBM8
 %   cg_vbm8_batch.sh       - shell script to use vbm from unix without gui
-%   cg_spm8_batch.m        - batch mode wrapper for spm_jobman
+%   cg_spm8_batch.m        - batch mode wrapper for spm_jobman for SPM8
 %   cg_spm8_batch.sh       - shell script to call matlab batch files from unix
 %                            without gui
 % Templates
-%   TPM_symmetric.nii      - symmetrical version of TPM.nii for lateralization
-%                            analysis
 %   Template_?_IXI550_MNI152.nii 
 %                          - Dartel template of 550 subjects from IXI database
 %                            in MNI152 space provided for 6 different iteration steps
