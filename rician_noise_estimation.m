@@ -75,9 +75,8 @@ C2 = u(u<=(M1+2*V1));
 [h,x] = hist(C2,N);
 [M,M2] = max(h);
 
-% if first entry in histogram has maxima it is very likely that images
-% was segmented (skull stripped)
-if M2==1
+% if the maxima is found in the first entry in histogram it is very 
+% likely that image was segmented (skull stripped) and has background zerosif M2==1
   m = 0;
 else
   m = x(M2);
