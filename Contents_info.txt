@@ -32,6 +32,8 @@
 %   cg_lat_index.m         - calculate lateralization index
 %   cg_vbm8_debug.m        - print debug information for SPM5 and VBM5
 %   cg_ornlm.m             - Optimized Blockwise Non Local Means Denoising Filter
+%   rician_noise_estimation.m
+%                          - local estimation of rician noise in the image background
 %
 % Mex- and c-functions
 %   Amap.c                 - Adaptive Maximum A Posteriori segmentation
