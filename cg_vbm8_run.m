@@ -257,7 +257,7 @@ for iter=1:nit,
          for k=1:K,
              tmp        = SS(:,:,:,k)./s;
              tpm.bg1(k) = mean(mean(tmp(:,:,1)));
-             tpm.bg2(k) = mean(mean(tmp(:,:,2)));
+             tpm.bg2(k) = mean(mean(tmp(:,:,end)));
              tpm.dat{k} = spm_bsplinc(log(tmp+tpm.tiny),[ones(1,3)*(tpm.deg-1)  0 0 0]);
          end
     end
