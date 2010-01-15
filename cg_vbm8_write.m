@@ -230,6 +230,24 @@ spm_progress_bar('clear');
 
 clear q q1 Coef b
 
+use_ornlm = spm_get_defaults('vbm8.extopts.ornlm');
+
+% rescue first image and optionally apply optimized blockwise non local means denoising filter
+if use_ornlm
+  	h = rician_noise_estimation(chan(1).Nc.dat(:,:,:,1,1));
+  	if h>0
+  	    fprintf('\nRician noise estimate: %3.2f',h);
+  	else
+  	    h = gaussian_noise_estimation(chan(1).Nc.dat(:,:,:,1,1));
+  	    fprintf('\nGaussian noise estimates: %3.2f',h);
+  	end
+  	h = 0.65*h;
+    src = ornlmMex(chan(1).Nc.dat(:,:,:,1,1),3,1,h);  
+else
+    src = chan(1).Nc.dat(:,:,:,1,1);
+end
+src = single(src);
+
 if do_cls & do_defs,
 
     % use mask of GM and WM
@@ -278,9 +296,11 @@ if do_cls & do_defs,
         
     clear cls2 label2
     
+    % create smaller (indexed) volume    
+    vol = double(src(indx,indy,indz));        
+    
     % mask source image because Amap needs a skull stripped image
     % set label and source inside outside mask to 0
-    vol = chan(1).Nc.dat(indx,indy,indz,1,1);
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
@@ -327,9 +347,6 @@ if do_cls & do_defs,
 end
 
 M0 = res.image(1).mat;
-
-% rescue first image
-src = single(chan(1).Nc.dat(:,:,:,1,1));
 
 clear tpm chan
 
@@ -457,6 +474,7 @@ if do_dartel
 end
 
 % get inverse deformations for warping submask to raw space
+% not yet finished!!!
 if spm_get_defaults('vbm8.output.surf.dartel')
   Vsubmask = spm_vol(char(spm_get_defaults('vbm8.extopts.mask')));
   submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);

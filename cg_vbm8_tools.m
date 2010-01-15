@@ -358,7 +358,7 @@ return;
 function vf = vfiles_ornlm(job)
 vf = {};
 
-s  = strvcat(job.fnames);
+s  = strvcat(job.data);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
     vf = {vf{:}, fullfile(pth,['ornlm_',nam,ext,num])};
