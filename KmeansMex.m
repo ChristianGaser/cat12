@@ -1,19 +1,16 @@
-function label = KmeansMex(src, mask, separations, iters_nu)
+function label = KmeansMex(src, n_classes)
 %
 % Christian Gaser
 % $Id$
-
-rev = '$Rev$';
 
 disp('Compiling KmeansMex.c')
 
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O KmeansMex.c Kmeans.c splineSmooth.cc -lebtks
+mex -O KmeansMex.c KmeansProper.c
 cd(p_path);
 
-% -L/usr/local/lib -I/usr/local/include
-label = KmeansMex(src, mask, separations, iters_nu);
+label = KmeansMex(src, n_classes);
 
 return

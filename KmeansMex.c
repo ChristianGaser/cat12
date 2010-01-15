@@ -7,29 +7,32 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label;
   unsigned char *mask;
-  double *src, *separations, mx;
+  double *src, voxelsize[3], mx;
+  int nvox, i, n_classes;
   const int *dims;
-  int niters, niters_nu;
     
-  if (nrhs!=4)
-    mexErrMsgTxt("4 inputs required.");
+  if (nrhs!=2)
+    mexErrMsgTxt("2 inputs required.");
   else if (nlhs>1)
     mexErrMsgTxt("Too many output arguments.");
   
-  if (!mxIsUint8(prhs[1]))
-	mexErrMsgTxt("Second argument must be uint8.");
+  src = (double*)mxGetPr(prhs[0]);
+  n_classes = (int)mxGetScalar(prhs[1]);
+  
+  for (i=0; i<3; i++)
+    voxelsize[i] = 1.0;
 
-  src    = (double*)mxGetPr(prhs[0]);
-  mask  = (unsigned char*)mxGetPr(prhs[1]);
-  separations  = (double*)mxGetPr(prhs[2]);
-  niters_nu = (int)mxGetScalar(prhs[3]);
-
-  dims = mxGetDimensions(prhs[1]);
+  dims = mxGetDimensions(prhs[0]);
 
   plhs[0] = mxCreateNumericArray(3,dims,mxUINT8_CLASS,mxREAL);
   label  = (unsigned char *)mxGetPr(plhs[0]);
   
-  mx = Kmeans(src, label, mask, 25, 5, 1, separations, dims, 1, 50, 128, niters_nu);
-
+  nvox = dims[0]*dims[1]*dims[2];
+  mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
+  for (i=0; i<nvox; i++)
+    mask[i] = (src[i]>0) ? 255 : 0;
+  mx = Kmeans(src, label, mask, 25, n_classes, voxelsize, dims, 0, 128, 0, 0,  500.0);
+  free(mask);
+  
 }
 

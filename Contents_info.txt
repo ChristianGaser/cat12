@@ -12,45 +12,44 @@
 % community under the terms of the GNU General Public License.
 %
 % General files
-%   INSTALL.txt            - installation instructions
-%   vbm8.man               - notes on VBM8 toolbox
+%   INSTALL.txt                 - installation instructions
+%   vbm8.man                    - notes on VBM8 toolbox
 %
 % VBM functions
-%   spm_vbm8.m             - toolbox wrapper to call functions
-%   tbx_cfg_vbm8.m         - configure VBM
-%   cg_vbm8_write.m        - write out VBM results
-%   cg_vbm8_run.m          - 
-%   cg_morph_vol.m         - morphological operations to 3D data
-%   cg_vbm8_longitudinal.m - sets the defaults for VBM
-%   cg_vbm8_defaults.m     - sets the defaults for VBM
+%   spm_vbm8.m                  - toolbox wrapper to call functions
+%   tbx_cfg_vbm8.m              - configure VBM
+%   cg_vbm8_write.m             - write out VBM results
+%   cg_vbm8_run.m               - runtime funtion for VBM
+%   cg_morph_vol.m              - morphological operations to 3D data
+%   cg_vbm8_longitudinal.m      - VBM for longitudinal data
+%   cg_vbm8_defaults.m          - sets the defaults for VBM
 %
 % Utility functions
-%   cg_vbm8_tools.m        - wrapper for calling VBM utilities
-%   cg_showslice_all.m     - show 1 slice of all images
-%   cg_check_cov.m         - check sample homogeneity across sample
-%   cg_spmT2x.m            - transformation of t-maps to P, -log(P), r or d-maps
-%   cg_lat_index.m         - calculate lateralization index
-%   cg_vbm8_debug.m        - print debug information for SPM5 and VBM5
-%   cg_ornlm.m             - Optimized Blockwise Non Local Means Denoising Filter
-%   rician_noise_estimation.m
-%                          - local estimation of rician noise in the image background
+%   cg_vbm8_tools.m             - wrapper for calling VBM utilities
+%   cg_showslice_all.m          - show 1 slice of all images
+%   cg_check_cov.m              - check sample homogeneity across sample
+%   cg_spmT2x.m                 - transformation of t-maps to P, -log(P), r or d-maps
+%   cg_lat_index.m              - calculate lateralization index
+%   cg_vbm8_debug.m             - print debug information for SPM5 and VBM5
+%   cg_ornlm.m                  - Optimized Blockwise Non Local Means Denoising Filter
+%   rician_noise_estimation.m   - local estimation of rician noise
+%   gaussian_noise_estimation.m - local estimation of gaussian noise
 %
 % Mex- and c-functions
-%   Amap.c                 - Adaptive Maximum A Posteriori segmentation
-%   AmapMex.c              - Mex-wrapper for Amap 
-%   MrfPrior.c             - estimation of MRF weighting
-%   Pve.c                  - partial volume estimaion (PVE)
-%   KmeansProper.c         - Kmeans
-%   ornlm.c                - Optimized Blockwise Non Local Means Denoising Filter (core functions)
-%   ornlmMex.c             - Mex-wrapper for ornlm.c
+%   Amap.c                      - Adaptive Maximum A Posteriori segmentation
+%   AmapMex.c                   - Mex-wrapper for Amap 
+%   MrfPrior.c                  - estimation of MRF weighting
+%   Pve.c                       - partial volume estimaion (PVE)
+%   KmeansProper.c              - Kmeans
+%   ornlm.c                     - Optimized Blockwise Non Local Means Denoising Filter (core functions)
+%   ornlmMex.c                  - Mex-wrapper for ornlm.c
 %
 % Batch functions
-%   cg_vbm8_batch.m        - batch mode wrapper for spm_jobman for VBM8
-%   cg_vbm8_batch.sh       - shell script to use vbm from unix without gui
-%   cg_spm8_batch.m        - batch mode wrapper for spm_jobman for SPM8
-%   cg_spm8_batch.sh       - shell script to call matlab batch files from unix
-%                            without gui
+%   cg_vbm8_batch.m             - batch mode wrapper for spm_jobman for VBM8
+%   cg_vbm8_batch.sh            - shell script to use vbm from unix without gui
+%   cg_spm8_batch.m             - batch mode wrapper for spm_jobman for SPM8
+%   cg_spm8_batch.sh            - shell script to call matlab batch files from unix
+%                                 without gui
 % Templates
-%   Template_?_IXI550_MNI152.nii 
-%                          - Dartel template of 550 subjects from IXI database
-%                            in MNI152 space provided for 6 different iteration steps
+%   Template_?_IXI550_MNI152.nii - Dartel template of 550 subjects from IXI database
+%                                  in MNI152 space provided for 6 different iteration steps

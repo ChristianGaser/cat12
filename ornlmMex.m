@@ -30,8 +30,6 @@ cd(pth);
 mex -O ornlmMex.c ornlm.c 
 cd(p_path);
 
-try 
-  out = ornlmMex(in, v, f, h);
-end
+out = ornlmMex(in, v, f, h);
 
 return
