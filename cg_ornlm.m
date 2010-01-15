@@ -1,4 +1,4 @@
-function cg_ornlm
+function cg_ornlm(vargin)
 % 
 % Optimized Blockwise Non Local Means Denoising Filter
 %
@@ -6,23 +6,34 @@ function cg_ornlm
 % Christian Gaser
 % $Id: cg_ornlm.m 224 2009-12-02 23:39:15Z gaser $
 
-P = spm_select(Inf,'image','Select images to filter');
+if nargin == 1
+	P = [];
+	for i=1:numel(vargin.data)
+		P = strvcat(P,deblank(vargin.data{i}));
+	end
+else
+  P = spm_select(Inf,'image','Select images to filter');
+end
+
 V = spm_vol(P);
 n = size(P,1);
 
-spm_progress_bar('Init',n,'Smoothing','Volumes Complete');
+spm_progress_bar('Init',n,'Filtering','Volumes Complete');
 for i = 1:n
 	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
 	in = spm_read_vols(V(i));
-	h = rician_local_estimate(in);
+	h = rician_noise_estimation(in);
+
 	if h==0
-	  fprintf('Image %s has no background noise (probably skull stripped).\n',nm);
+    h = gaussian_noise_estimation(in);
+	  fprintf('Gaussian noise estimate for %s: %3.2f\n',nm,h);
 	else
 	  fprintf('Rician noise estimate for %s: %3.2f\n',nm,h);
-    out = ornlmMex(in,3,1,h);
-    V(i).fname = fullfile(pth,['ornlm_' nm xt vr]);
-    spm_write_vol(V(i), out);
   end
+
+  out = ornlmMex(in,3,1,h);
+  V(i).fname = fullfile(pth,['ornlm_' nm xt vr]);
+  spm_write_vol(V(i), out);
 	spm_progress_bar('Set',i);
 end
 spm_progress_bar('Clear');

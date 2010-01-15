@@ -227,6 +227,22 @@ showslice.help = {[...
 
 %------------------------------------------------------------------------
 
+data.help = {[...
+'Select images for filtering']};
+
+ornlm = cfg_exbranch;
+ornlm.tag = 'ornlm';
+ornlm.name = 'Optimized blockwise non local means denoising filter';
+ornlm.val = {data};
+ornlm.prog   = @cg_ornlm;
+ornlm.vfiles  = @vfiles_ornlm;
+ornlm.help = {[...
+'This function applies an optimized blockwise non local means denoising filter to the data. This filter will remove noise while ',...
+'preserving edges. The smoothing filter size is automatically estimated based on the standard deviation of the noise. For ',...
+'unsegmented images (background > 0) a rician noise estimate is used, while for images with background zeros a less precise ',...
+'gaussian noise estimator is applied. The resulting images are prepended with the term "ornlm_".']};
+
+%------------------------------------------------------------------------
 calcvol_files = cfg_files;
 calcvol_files.tag  = 'data';
 calcvol_files.name = 'Volumes';
@@ -322,7 +338,7 @@ defs.help    = {'This is a utility for applying deformation fields to images.'};
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_cov,showslice,calcvol,T2x,F2x,defs};
+tools.values = {check_cov,showslice,calcvol,T2x,F2x,ornlm,defs};
 
 return
 
@@ -335,6 +351,17 @@ s  = strvcat(job.fnames);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
     vf = {vf{:}, fullfile(pth,['w',nam,ext,num])};
+end;
+return;
+%_______________________________________________________________________
+
+function vf = vfiles_ornlm(job)
+vf = {};
+
+s  = strvcat(job.fnames);
+for i=1:size(s,1),
+    [pth,nam,ext,num] = spm_fileparts(s(i,:));
+    vf = {vf{:}, fullfile(pth,['ornlm_',nam,ext,num])};
 end;
 return;
 %_______________________________________________________________________
