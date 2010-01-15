@@ -24,15 +24,18 @@ for i = 1:n
 	in = spm_read_vols(V(i));
 	h = rician_noise_estimation(in);
 
-	if h==0
+	if h>0
+	  fprintf('Rician noise estimate for %s: %3.2f\n',nm,h);
+  else
     h = gaussian_noise_estimation(in);
 	  fprintf('Gaussian noise estimate for %s: %3.2f\n',nm,h);
-	else
-	  fprintf('Rician noise estimate for %s: %3.2f\n',nm,h);
   end
 
+  h = 0.65*h;
+  
   out = ornlmMex(in,3,1,h);
   V(i).fname = fullfile(pth,['ornlm_' nm xt vr]);
+  V(i).descrip = sprintf('ORNLM filtered h=%3.2f',h);
   spm_write_vol(V(i), out);
 	spm_progress_bar('Set',i);
 end
