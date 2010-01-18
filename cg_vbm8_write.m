@@ -152,14 +152,37 @@ if do_defs & (warp.brainmask_th > 0)
     mask = zeros(res.image(1).dim(1:3),'single');
 end
 
+src = zeros(res.image(1).dim(1:3));
+for z=1:length(x3),
+    src(:,:,z)  = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
+end
+
+% rescue first image and optionally apply optimized blockwise non local means denoising filter
+use_ornlm = spm_get_defaults('vbm8.extopts.ornlm');
+if use_ornlm
+  	h = rician_noise_estimation(src);
+  	if h>0
+  	    fprintf('\nRician noise estimate: %3.2f',h);
+  	else
+  	    h = gaussian_noise_estimation(src);
+  	    fprintf('\nGaussian noise estimates: %3.2f',h);
+  	end
+  	h = 0.63*h;
+    src = ornlmMex(src,3,1,h);  
+end
+
 for z=1:length(x3),
 
     % Bias corrected image
     cr = cell(1,N);
     for n=1:N,
-        f          = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
-        bf1         = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
-        cr{n}      = bf1.*f;
+        if n==1
+            f = src(:,:,z);
+        else
+            f = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
+        end
+        bf1 = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
+        cr{n} = bf1.*f;
         % Write a plane of bias corrected data
         chan(n).Nc.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = cr{n};
         if ~isempty(chan(n).Nf),
@@ -228,24 +251,8 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
-clear q q1 Coef b
+clear q q1 Coef b cr
 
-use_ornlm = spm_get_defaults('vbm8.extopts.ornlm');
-
-% rescue first image and optionally apply optimized blockwise non local means denoising filter
-if use_ornlm
-  	h = rician_noise_estimation(chan(1).Nc.dat(:,:,:,1,1));
-  	if h>0
-  	    fprintf('\nRician noise estimate: %3.2f',h);
-  	else
-  	    h = gaussian_noise_estimation(chan(1).Nc.dat(:,:,:,1,1));
-  	    fprintf('\nGaussian noise estimates: %3.2f',h);
-  	end
-  	h = 0.65*h;
-    src = ornlmMex(chan(1).Nc.dat(:,:,:,1,1),3,1,h);  
-else
-    src = chan(1).Nc.dat(:,:,:,1,1);
-end
 src = single(src);
 
 if do_cls & do_defs,
