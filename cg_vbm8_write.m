@@ -167,7 +167,9 @@ if use_ornlm
   	    h = gaussian_noise_estimation(src);
   	    fprintf('\nGaussian noise estimates: %3.2f',h);
   	end
-  	h = 0.63*h;
+  	
+  	% correction based on empirical values of brainweb data
+  	h = 0.73*h;
     src = ornlmMex(src,3,1,h);  
 end
 
