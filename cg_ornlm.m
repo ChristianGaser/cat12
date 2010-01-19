@@ -31,7 +31,8 @@ for i = 1:n
 	  fprintf('Gaussian noise estimate for %s: %3.2f\n',nm,h);
   end
 
-  h = 0.65*h;
+  % correction based on empirical values of brainweb data
+  h = 0.73*h;
   
   out = ornlmMex(in,3,1,h);
   V(i).fname = fullfile(pth,['ornlm_' nm xt vr]);
