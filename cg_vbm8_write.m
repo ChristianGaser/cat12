@@ -158,8 +158,8 @@ for z=1:length(x3),
 end
 
 % rescue first image and optionally apply optimized blockwise non local means denoising filter
-use_ornlm = spm_get_defaults('vbm8.extopts.ornlm');
-if use_ornlm
+ornlm_weight = spm_get_defaults('vbm8.extopts.ornlm');
+if ornlm_weight > 0
   	h = rician_noise_estimation(src);
   	if h>0
   	    fprintf('\nRician noise estimate: %3.2f',h);
@@ -168,8 +168,8 @@ if use_ornlm
   	    fprintf('\nGaussian noise estimates: %3.2f',h);
   	end
   	
-  	% correction based on empirical values of brainweb data
-  	h = 0.73*h;
+  	% weight ORNLM
+  	h = ornlm_weight*h;
     src = ornlmMex(src,3,1,h);  
 end
 
@@ -259,17 +259,19 @@ src = single(src);
 
 if do_cls & do_defs,
 
-    % use mask of GM and WM
-    mask = single(cls{1});
-    mask = mask + single(cls{2});
+    if warp.brainmask_th < 0
+        % use mask of GM and WM
+        mask = single(cls{1});
+        mask = mask + single(cls{2});
 
-    % keep largest connected component after 2 its of opening
-    mask = cg_morph_vol(mask,'open',1,warp.open_th);
-    mask = mask_largest_cluster(mask,0.5);
+        % keep largest connected component after 2 its of opening
+        mask = cg_morph_vol(mask,'open',1,warp.open_th);
+        mask = mask_largest_cluster(mask,0.5);
 
-    % dilate and close to fill ventricles
-    mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
-    mask = cg_morph_vol(mask,'close',10,0.5);
+        % dilate and close to fill ventricles
+        mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
+        mask = cg_morph_vol(mask,'close',10,0.5);
+    end
         
     % set segmentations outside mask to zero
     for i=1:3
@@ -291,7 +293,9 @@ if do_cls & do_defs,
     end
 
     % only keep label values for GM/WM/CSF
-    mask = uint8((label2 < 4) & (label2 > 0));
+    if warp.brainmask_th < 0
+        mask = uint8((label2 < 4) & (label2 > 0));
+    end
     label2(find(mask==0)) = 0;
     
     % use index to speed up and save memory
