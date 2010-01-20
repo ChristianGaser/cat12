@@ -1,4 +1,10 @@
 function OV = cg_slover(OV, options);
+% wrapper for slover
+%__________________________________________________________________________
+% Christian Gaser
+% $Id: cg_slover.m 153 2009-09-03 22:49:18Z gaser $
+
+rev = '$Rev: 153 $';
 
 if nargin == 0
     error('Syntax: cg_slover(OV)');
