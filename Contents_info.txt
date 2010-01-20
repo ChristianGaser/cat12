@@ -32,6 +32,8 @@
 %   cg_lat_index.m              - calculate lateralization index
 %   cg_vbm8_debug.m             - print debug information for SPM5 and VBM5
 %   cg_ornlm.m                  - Optimized Blockwise Non Local Means Denoising Filter
+%   cg_slover.m                 - Wrapper for overlay tool slover
+%   cg_slover_ui.m              - Example for user interface for overlay wrapper cg_slover
 %   rician_noise_estimation.m   - local estimation of rician noise
 %   gaussian_noise_estimation.m - local estimation of gaussian noise
 %
