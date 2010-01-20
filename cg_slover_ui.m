@@ -1,4 +1,10 @@
 function cg_slover_ui
+% example for user interface for overlay wrapper cg_slover
+%__________________________________________________________________________
+% Christian Gaser
+% $Id: cg_slover_ui 153 2009-09-03 22:49:18Z gaser $
+
+rev = '$Rev: 153 $';
 
 options.reference_image = fullfile(spm('dir'),'canonical','single_subj_T1.nii'); % (T1) reference image to underlay
 OV = slover(options.reference_image);
