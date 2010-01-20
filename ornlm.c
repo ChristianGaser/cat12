@@ -40,13 +40,12 @@
 
 #include "math.h"
 #include <stdlib.h>
-#include "stdbool.h"
 
 /* Function which compute the weighted average for one block */
 void Average_block(double *ima,int x,int y,int z,int neighborhoodsize,double *average, double weight, const int* vol_size)
 {
 int x_pos,y_pos,z_pos;
-bool is_outside;
+int is_outside;
 
 int a,b,c;
 
@@ -59,14 +58,14 @@ int count = 0;
 			for (a = 0; a<(2*neighborhoodsize+1);a++)
 			{
 	
-				is_outside = false;
+				is_outside = 0;
 				x_pos = x+a-neighborhoodsize;
 				y_pos = y+b-neighborhoodsize;
 				z_pos = z+c-neighborhoodsize;
 	
-				if ((z_pos < 0) || (z_pos > vol_size[2]-1)) is_outside = true;
-				if ((y_pos < 0) || (y_pos > vol_size[0]-1)) is_outside = true;
-				if ((x_pos < 0) || (x_pos > vol_size[1]-1)) is_outside = true;
+				if ((z_pos < 0) || (z_pos > vol_size[2]-1)) is_outside = 1;
+				if ((y_pos < 0) || (y_pos > vol_size[0]-1)) is_outside = 1;
+				if ((x_pos < 0) || (x_pos > vol_size[1]-1)) is_outside = 1;
 		
 				if (is_outside)
 					average[count] += ima[z*(vol_size[0]*vol_size[1])+(x*vol_size[0])+y]*ima[z*(vol_size[0]*vol_size[1])+(x*vol_size[0])+y]*weight;
@@ -83,7 +82,7 @@ int count = 0;
 void Value_block(double *Estimate, unsigned char *Label,int x,int y,int z,int neighborhoodsize,double *average, double global_sum, const int* vol_size, double hh)
 {
 int x_pos,y_pos,z_pos;
-bool is_outside;
+int is_outside;
 double value = 0.0;
 double denoised_value =0.0;
 unsigned char label = 0;
@@ -98,14 +97,14 @@ int a,b,c;
 			{
 	
 	
-				is_outside = false;
+				is_outside = 0;
 				x_pos = x+a-neighborhoodsize;
 				y_pos = y+b-neighborhoodsize;
 				z_pos = z+c-neighborhoodsize;
 	
-				if ((z_pos < 0) || (z_pos > vol_size[2]-1)) is_outside = true;
-				if ((y_pos < 0) || (y_pos > vol_size[0]-1)) is_outside = true;
-				if ((x_pos < 0) || (x_pos > vol_size[1]-1)) is_outside = true;
+				if ((z_pos < 0) || (z_pos > vol_size[2]-1)) is_outside = 1;
+				if ((y_pos < 0) || (y_pos > vol_size[0]-1)) is_outside = 1;
+				if ((x_pos < 0) || (x_pos > vol_size[1]-1)) is_outside = 1;
 				if (!is_outside)
 				{
 		
