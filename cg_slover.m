@@ -7,11 +7,25 @@ function OV = cg_slover(OV, options);
 rev = '$Rev: 153 $';
 
 if nargin == 0
-    error('Syntax: cg_slover(OV)');
+
+    imgs = spm_select(2, 'image', 'Select structural and overlay image');
+    OV = pr_basic_ui(imgs,0);
+
+    % set options
+    options.opacity = 1;
+    options.reference_image = imgs(1,:);
+    options.reference_range = OV.img(1).range';
+    options.name = imgs(2:end,:);
+    options.cmap = OV.img(2).cmap;
+    options.range = OV.img(2).range';
+    options.slices_str = '';
+    options.transform = OV.transform;
 end
 
-% log. scaling used (get info from filename)
-options.logP    = zeros(size(options.name,1));
+spm_input('!SetNextPos', 1);
+
+% check filename whether log. scaling was used
+options.logP = zeros(size(options.name,1));
 for i=1:size(options.name,1)
     if findstr(options.name(i,:),'logP')
         options.logP(i) = 1;
@@ -28,7 +42,7 @@ for i=1:size(fieldnames,1)
     end
 end
 
-cmap_bivariate = [1-(hot); hot];                    % colormap if range(1) < 0 
+cmap_bivariate = [1-(hot); hot]; % colormap if range(1) < 0 
 
 if isfield(options,'labels')
 	OV.labels = options.labels;
@@ -45,15 +59,13 @@ n = size(options.name,1);
 str = deblank(options.name(1,:));
 for i = 2:n, str = [str '|' deblank(options.name(i,:))]; end
 
-sel = spm_input('Select image',1,'m',str);
+if n>1
+  sel = spm_input('Select image','+1','m',str);
+else
+  sel = 1;
+end
 nm = deblank(options.name(sel,:));
 
-% if only one argument is given assume that parameters are the same for all files
-if size(options.range,1) > 1
-    range = options.range(sel,:);
-else
-    range = options.range;
-end
 if size(options.logP,1) > 1
     logP = options.logP(sel);
 else
@@ -64,16 +76,25 @@ end
 img = nm;
 
 n_slice = size(options.slices_str,1);
-for i=1:n_slice, slices{i} = eval(options.slices_str(i,:)); end
+
+if n_slice > 0
+    for i=1:n_slice, slices{i} = eval(options.slices_str(i,:)); end
+else
+    slices{1} = OV.slices;
+end
 
 sl_name = [];
 for i=1:size(options.transform,1)
-    sl_name = strvcat(sl_name,[options.transform(i,:) ': ' options.slices_str(i,:)]);
+    if n_slice > 0
+        sl_name = strvcat(sl_name,[options.transform(i,:) ': ' options.slices_str(i,:)]);
+    else
+        sl_name = strvcat(sl_name,[options.transform(i,:)]);
+    end
 end
 
 str_select = deblank(sl_name(1,:));
 for i = 2:n_slice, str_select = [str_select '|' deblank(sl_name(i,:))]; end
-ind = spm_input('Select slices',1,'m',str_select);
+ind = spm_input('Select slices','+1','m',str_select);
 OV.transform = deblank(options.transform(ind,:));
 slices = slices{ind};
 
@@ -86,13 +107,28 @@ OV.img(2).vol = spm_vol(img);
 
 OV.img(2).prop = options.opacity;   % transparent overlay
 OV.img(2).cmap = options.cmap;	    % colormap
+
+if ~isfield(options,'range')
+	  [mx mn] = volmaxmin(OV.img(2).vol)
+    options.range = spm_input('Intensity range for colormap','+1', 'e', [mn mx], 2)';
+end
+
+% if only one argument is given assume that parameters are the same for all files
+if size(options.range,1) > 1
+    range = options.range(sel,:);
+else
+    range = options.range;
+end
+
 if range(1)==range(2)
-	[mn mx] = cg_max(OV.img(2).vol)
+	[mx mn] = volmaxmin(OV.img(2).vol)
 	OV.img(2).range = [mn mx];
 else OV.img(2).range = range; end
+
+% do not show background zeros
 OV.img(2).func = 'i1(i1==0)=NaN;';
 
-if range(1) > 0
+if range(1) >= 0
 	OV.img(2).outofrange = {0,size(OV.img(2).cmap,1)};
 else
 	OV.img(2).outofrange = {1,1};
@@ -108,7 +144,7 @@ n = size(xy,1);
 xy_name = num2str(xy);
 str = deblank(xy_name(1,:));
 for i = 2:n, str = [str '|' deblank(xy_name(i,:))]; end
-indxy = spm_input('Select xy','+1','m',str);
+indxy = spm_input('Select number of columns/rows','+1','m',str);
 xy = xy(indxy,:);
 
 % prepare overview of slices
@@ -175,7 +211,6 @@ switch lower(OV.transform)
 end
 screensize = get(0,'screensize');
 
-
 scale = screensize(3:4)./dim;
 
 % scale image only if its larger than screensize
@@ -204,19 +239,18 @@ OV.area.halign = 'center';
 
 paint(OV);
 
-% change labels of colorbar
-if OV.cbar == 2
-	H = gca;
-	YTick = get(H,'YTick');
-	mn = floor(min(YTick));
-	mx = ceil(max(YTick));
-	% allow only integer values
-	values = [floor(mn:mx)];
-	pos = get(get(gca,'YLabel'),'position');
-	pos(1) = 2.5;
+% change labels of colorbar for log-scale
+if (OV.cbar == 2) & logP
+  	H = gca;
+	  YTick = get(H,'YTick');
+	  mn = floor(min(YTick));
+	  mx = ceil(max(YTick));
+	  % allow only integer values
+	  values = [floor(mn:mx)];
+	  pos = get(get(gca,'YLabel'),'position');
+	  pos(1) = 2.5;
 
-	set(H,'YTick',values);
-	if logP
+  	set(H,'YTick',values);
 		YTick = get(H,'YTick');
 
 		YTickLabel = [];
@@ -225,10 +259,10 @@ if OV.cbar == 2
 		end
 		set(H,'YTickLabel',YTickLabel)
 		set(get(gca,'YLabel'),'string','p-value','position',pos)
-	else
-		set(get(gca,'YLabel'),'string','t-value','position',pos)
-	end
-		set(H,'FontSize',0.35*get(H,'FontSize'))
+  	set(H,'FontSize',0.35*get(H,'FontSize'))
+else
+  	H = gca;
+  	set(H,'FontSize',0.35*get(H,'FontSize'))
 end
 
 % save image
@@ -238,7 +272,11 @@ if saving
 	imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.png']);
 	print_fig(OV,imaname,'print -r300 -dpng -painters -noui')
 	fprintf('Image %s saved.\n',imaname);
-	imaname = [lower(OV.transform) '_' replace_strings(options.slices_str(ind,:)) '.png'];
+  if n_slice > 0
+      imaname = [lower(OV.transform) '_' replace_strings(options.slices_str(ind,:)) '.png'];
+  else
+      imaname = [lower(OV.transform) '.png'];
+  end
 	saveas(h0,imaname,'png');
 	fprintf('Image %s saved.\n',imaname);
 end
@@ -282,10 +320,163 @@ end
 % --------------------------------------------------------------------------
 function s = replace_strings(s)
 
+s = deblank(s);
 % replace spaces with "_" and characters like "<" or ">"
 s(findstr(s,' ')) = '_';
 s(findstr(s,':')) = '_';
 s = spm_str_manip(s,'v');
 
+return
+
+% --------------------------------------------------------------------------
+function [mx,mn] = volmaxmin(vol)
+mx = -Inf; mn = Inf;
+for i=1:vol.dim(3),
+    tmp = spm_slice_vol(vol,spm_matrix([0 0 i]),vol.dim(1:2),[0 NaN]);
+    tmp = tmp(find(isfinite(tmp(:)) & (tmp(:)~=0)));
+    if ~isempty(tmp)
+        mx = max([mx; tmp]);
+        mn = min([mn; tmp]);
+    end
+end
+return
+
+
+function obj = pr_basic_ui(imgs, dispf)
+% GUI to request parameters for slover routine
+% FORMAT obj = pr_basic_ui(imgs, dispf)
+%
+% GUI requests choices while accepting many defaults
+%
+% imgs  - string or cell array of image names to display
+%         (defaults to GUI select if no arguments passed)
+% dispf - optional flag: if set, displays overlay (default = 1)
+%
+% $Id: pr_basic_ui.m,v 1.1 2005/04/20 15:05:00 matthewbrett Exp $
+ 
+if nargin < 1
+  imgs = '';
+end
+if isempty(imgs)
+  imgs = spm_select(Inf, 'image', 'Image(s) to display');
+end
+if ischar(imgs)
+  imgs = cellstr(imgs);
+end
+if nargin < 2
+  dispf = 1;
+end
+  
+spm_input('!SetNextPos', 1);
+
+% load images
+nimgs = size(imgs);
+
+% process names
+nchars = 20;
+imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
+
+% Get new default object
+obj = slover;
+
+% identify image types
+cscale = [];
+deftype = 1;
+obj.cbar = [];
+for i = 1:nimgs
+  obj.img(i).vol = spm_vol(imgs{i});
+  if i==1
+    itype{1} = 'Structural';
+  else
+    itype{1} = 'Blobs';
+  end
+  imgns(i) = {sprintf('Img %d (%s)',i,itype{1})};
+  [mx mn] = volmaxmin(obj.img(i).vol);
+  if ~isempty(strmatch('Structural', itype))
+    obj.img(i).type = 'truecolour';
+    obj.img(i).cmap = gray;
+    obj.img(i).range = [2*mn mx]; % increase minimum value to enhance contrast
+    deftype = 2;
+    cscale = [cscale i];
+    if strcmp(itype,'Structural with SPM blobs')
+      obj = add_spm(obj);
+    end
+  else
+    cprompt = ['Colormap: ' imgns{i}];
+    switch itype{1}
+     case 'Truecolour'
+      obj.img(i).type = 'truecolour';
+      dcmap = 'flow.lut';
+      drange = [mn mx];
+      cscale = [cscale i];
+      obj.cbar = [obj.cbar i];
+     case 'Blobs'
+      obj.img(i).type = 'split';
+      dcmap = 'jet';
+      drange = [0 mx];
+      obj.img(i).prop = 1;
+      obj.cbar = [obj.cbar i];
+     case 'Negative blobs'
+      obj.img(i).type = 'split';
+      dcmap = 'winter';
+      drange = [0 mn];
+      obj.img(i).prop = 1;
+      obj.cbar = [obj.cbar i];
+     case 'Contours'
+      obj.img(i).type = 'contour';
+      dcmap = 'white';
+      drange = [mn mx];
+      obj.img(i).prop = 1;
+    end
+    obj.img(i).cmap = sf_return_cmap(cprompt, dcmap);
+    obj.img(i).range = spm_input('Img val range for colormap','+1', 'e', drange, 2);
+  end
+end
+ncmaps=length(cscale);
+if ncmaps == 1
+  obj.img(cscale).prop = 1;
+else
+  remcol=1;
+  for i = 1:ncmaps
+    ino = cscale(i);
+    obj.img(ino).prop = spm_input(sprintf('%s intensity',imgns{ino}),...
+                 '+1', 'e', ...
+                 remcol/(ncmaps-i+1),1);
+    remcol = remcol - obj.img(ino).prop;
+  end
+end
+ 
+
+% use SPM figure window
+%obj.figure = spm_figure('GetWin', 'Graphics'); 
+
+obj = fill_defaults(obj);
+
+obj.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
+            ' Coronal|Sagittal'], strvcat('axial','coronal','sagittal'), ...
+            1));
+
+% slices for display
+slices = obj.slices;
+obj.slices = spm_input('Slices to display (mm)', '+1', 'e', ...
+              sprintf('%0.0f:%0.0f:%0.0f',...
+                  slices(1),...
+                  mean(diff(slices)),...
+                  slices(end)));
+
+% and do the display
+if dispf, obj = paint(obj); end
+
+return
+
+
+% Subfunctions 
+% ------------
+function cmap = sf_return_cmap(prompt,defmapn)
+cmap = [];
+while isempty(cmap)
+  [cmap w]= slover('getcmap', spm_input(prompt,'+1','s', defmapn));
+  if isempty(cmap), disp(w);end
+end
 return
 

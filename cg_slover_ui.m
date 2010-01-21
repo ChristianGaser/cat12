@@ -11,11 +11,11 @@ OV = slover(options.reference_image);
 
 options.reference_range = [0.05 0.6];  % intensity range for reference image
 options.opacity = 1;                   % transparence value for overlay (<1)
-options.cmap    = jet;                  d% colormap for overlay
+options.cmap    = jet;                 % colormap for overlay
 
 % name of files
-options.name=str2mat(fullfile(spm('dir'),'toolbox','Seg','TPM.nii,1'),...
-                     fullfile(spm('dir'),'toolbox','Seg','TPM.nii,2'));
+options.name=str2mat(fullfile(spm('dir'),'tpm','grey.nii'),...
+                     fullfile(spm('dir'),'tpm','white.nii'));
                 
 % range for each file
 % use range 0..0 if you want to autoscale range
@@ -37,7 +37,7 @@ options.name=str2mat(fullfile(spm('dir'),'toolbox','Seg','TPM.nii,1'),...
 options.range   =[[0.5 1]; [0.5 1]];
 
 % selection of slices and orientations
-options.slices_str = char('-50:2:70','-60:2:60','-90:2:60','[-10 20 40 60]');
+options.slices_str = char('-52:2:70','-90:2:90','-90:2:60','[-10 20 40 60]');
 options.transform = char('axial','sagittal','coronal','axial');
 OV.labels.format = '%3.1f';
 
