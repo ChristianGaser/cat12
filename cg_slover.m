@@ -1,4 +1,4 @@
-function OV = cg_slover(OV, options);
+function cg_slover(OV, options);
 % wrapper for slover
 %__________________________________________________________________________
 % Christian Gaser
@@ -95,7 +95,7 @@ end
 str_select = deblank(sl_name(1,:));
 for i = 2:n_slice, str_select = [str_select '|' deblank(sl_name(i,:))]; end
 ind = spm_input('Select slices','+1','m',str_select);
-OV.transform = deblank(options.transform(ind,:));
+
 slices = slices{ind};
 
 OV.img(1).vol = spm_vol(options.reference_image);
@@ -112,6 +112,24 @@ if ~isfield(options,'range')
 	  [mx mn] = volmaxmin(OV.img(2).vol)
     options.range = spm_input('Intensity range for colormap','+1', 'e', [mn mx], 2)';
 end
+
+% update slice_def and transform, which was set to default by calling slover
+options.transform = deblank(options.transform(ind,:));
+orientn = find(strcmpi(options.transform, {'axial', ... 
+            'coronal', ...
+            'sagittal'}));
+ts = [0 0 0 0 0 0 1 1 1;...
+      0 0 0 pi/2 0 0 1 -1 1;...
+      0 0 0 pi/2 0 -pi/2 -1 1 1];
+OV.transform = spm_matrix(ts(orientn,:));
+D = OV.img(1).vol.dim(1:3);
+T = OV.transform * OV.img(1).vol.mat;
+vcorners = [1 1 1; D(1) 1 1; 1 D(2) 1; D(1:2) 1; ...
+          1 1 D(3); D(1) 1 D(3); 1 D(2:3) ; D(1:3)]';
+corners = T * [vcorners; ones(1,8)];
+SC = sort(corners');
+vxsz = sqrt(sum(T(1:3,1:3).^2));
+OV.slicedef = [SC(1,1) vxsz(1) SC(8,1);SC(1,2) vxsz(2) SC(8,2)];
 
 % if only one argument is given assume that parameters are the same for all files
 if size(options.range,1) > 1
@@ -153,6 +171,26 @@ ref_vol = spm_read_vols(V);
 ref_vol = 64*(ref_vol-OV.img(1).range(1))/(OV.img(1).range(2)-OV.img(1).range(1));
 vx =  sqrt(sum(V.mat(1:3,1:3).^2));
 Orig = round(V.mat\[0 0 0 1]');
+ 
+OV.xslices = xy(:,1);
+switch lower(options.transform)
+	case 'sagittal'
+		dim = xy.*OV.img(1).vol.dim(2:3);
+	case 'coronal'
+		dim = xy.*OV.img(1).vol.dim([1 3]);
+	case 'axial'
+		dim = xy.*OV.img(1).vol.dim(1:2);
+end
+screensize = get(0,'screensize');
+
+scale = screensize(3:4)./dim;
+
+% scale image only if its larger than screensize
+if min(scale) < 1
+	fig_size = min(scale)*dim*0.975;
+else
+	fig_size = dim;
+end
 
 h0 = figure(11);
 clf
@@ -160,7 +198,7 @@ axes('Position',[0 0 1 1]);
 
 hold on
 dim = OV.img(1).vol.dim(1:3);
-switch lower(OV.transform)
+switch lower(options.transform)
 	case 'sagittal'
 		ref_img = ref_vol(:,:,Orig(3))';
 		slices_vx = slices/vx(1) + Orig(1);
@@ -199,40 +237,25 @@ set(h0,'Position',[0, 0.9*screensize(4),size(ref_img,2),size(ref_img,1)],...
 hold off
 axis off xy image
 colormap(gray)
- 
-OV.xslices = xy(:,1);
-switch lower(OV.transform)
-	case 'sagittal'
-		dim = xy.*OV.img(1).vol.dim(2:3);
-	case 'coronal'
-		dim = xy.*OV.img(1).vol.dim([1 3]);
-	case 'axial'
-		dim = xy.*OV.img(1).vol.dim(1:2);
-end
-screensize = get(0,'screensize');
-
-scale = screensize(3:4)./dim;
-
-% scale image only if its larger than screensize
-if min(scale) < 1
-	fig_size = min(scale)*dim*0.975;
-else
-	fig_size = dim;
-end
 
 h = figure(12);
+
 set(h,...
-	'Position',[1 1 fig_size],...
-	'MenuBar','none',...
-	'Resize','off',...
-	'PaperType','A4',...
-	'PaperUnits','normalized',...
-	'PaperPositionMode','auto',...
-	'Visible','off');
+    'Position',[50 50 fig_size],...
+    'Color','w',...
+    'DefaultUicontrolInterruptible','on',...
+    'PaperType','A4',...
+    'PaperUnits','normalized',...
+    'PaperPosition',[.0726 .0644 .854 .870],...
+    'InvertHardcopy','off',...
+    'Renderer',spm_get_defaults('renderer'),...
+    'Visible','off',...
+    'MenuBar','none',...
+    'Toolbar','none');
 
 OV.figure = h;
 OV.figure_struct.Position = get(h,'Position');
-OV.figure_struct.Units = 'pixels';
+OV.figure_struct.Units = 'Normalized';
 
 OV.area.valign = 'bottom';
 OV.area.halign = 'center';
@@ -266,18 +289,18 @@ else
 end
 
 % save image
-saving = spm_input('Save png images?','+1','yes|no',[1 0],2);
-if saving
+saving = spm_input('Save image file?','+1','no|png|jpg|pdf',str2mat('none','png','jpeg','pdf'),2);
+if ~strcmp(saving,'none')
 	[pt,nm] = fileparts(img);
-	imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.png']);
-	print_fig(OV,imaname,'print -r300 -dpng -painters -noui')
+	imaname = spm_input('Filename','+1','s',[nm '_' lower(options.transform) '.' saving]);
+	print_fig(OV,imaname,['print -r300 -d' saving ' -painters -noui'])
 	fprintf('Image %s saved.\n',imaname);
   if n_slice > 0
-      imaname = [lower(OV.transform) '_' replace_strings(options.slices_str(ind,:)) '.png'];
+      imaname = [lower(options.transform) '_' replace_strings(options.slices_str(ind,:)) '.' saving];
   else
-      imaname = [lower(OV.transform) '.png'];
+      imaname = [lower(options.transform) '.' saving];
   end
-	saveas(h0,imaname,'png');
+	saveas(h0,imaname,saving);
 	fprintf('Image %s saved.\n',imaname);
 end
 
@@ -447,11 +470,7 @@ else
 end
  
 
-% use SPM figure window
-%obj.figure = spm_figure('GetWin', 'Graphics'); 
-
 obj = fill_defaults(obj);
-
 obj.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
             ' Coronal|Sagittal'], strvcat('axial','coronal','sagittal'), ...
             1));
