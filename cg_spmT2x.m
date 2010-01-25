@@ -168,7 +168,7 @@ for i=1:size(P,1)
         end
     end
 
-    if isfield(SPM.xVol,'VRpv')
+    if noniso
         SPM.xVol.VRpv = spm_vol(fullfile(pth,SPM.xVol.VRpv.fname));
     end
 
