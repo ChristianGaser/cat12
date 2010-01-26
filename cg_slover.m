@@ -1,4 +1,4 @@
-function cg_slover(OV, options);
+function OV = cg_slover(OV, options);
 % wrapper for slover
 %__________________________________________________________________________
 % Christian Gaser
@@ -225,7 +225,6 @@ switch lower(options.transform)
 		end
 end 
 
-screensize = get(0,'screensize');
 set(h0,'Position',[0, 0.9*screensize(4),size(ref_img,2),size(ref_img,1)],...
 	'MenuBar','none',...
 	'Resize','off',...
@@ -255,7 +254,7 @@ set(h,...
 
 OV.figure = h;
 OV.figure_struct.Position = get(h,'Position');
-OV.figure_struct.Units = 'Normalized';
+OV.figure_struct.Units = 'Pixel';
 
 OV.area.valign = 'bottom';
 OV.area.halign = 'center';
@@ -289,18 +288,34 @@ else
 end
 
 % save image
-saving = spm_input('Save image file?','+1','no|png|jpg|pdf',str2mat('none','png','jpeg','pdf'),2);
-if ~strcmp(saving,'none')
+image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf',str2mat('none','png','jpeg','pdf'),2);
+if ~strcmp(image_ext,'none')
 	[pt,nm] = fileparts(img);
-	imaname = spm_input('Filename','+1','s',[nm '_' lower(options.transform) '.' saving]);
-	print_fig(OV,imaname,['print -r300 -d' saving ' -painters -noui'])
+	
+	% use shorter ext for jpeg
+	if strcmp(image_ext,'jpeg')
+    imaname = spm_input('Filename','+1','s',[nm '_' lower(options.transform) '.jpg']);
+	else
+	  imaname = spm_input('Filename','+1','s',[nm '_' lower(options.transform) '.' image_ext]);
+	end
+	
+	% prepare print string
+	if ~isfield(options,'printstr')
+	    options.printstr = 'print -r300 -painters -noui';	
+	end
+	if ~isempty(options.printstr)
+	  options.printstr = 'print -r300 -painters -noui';
+	end
+	
+	% and print
+	print_fig(OV,imaname,[options.printstr ' -d' image_ext])
 	fprintf('Image %s saved.\n',imaname);
   if n_slice > 0
-      imaname = [lower(options.transform) '_' replace_strings(options.slices_str(ind,:)) '.' saving];
+      imaname = [lower(options.transform) '_' replace_strings(options.slices_str(ind,:)) '.' image_ext];
   else
-      imaname = [lower(options.transform) '.' saving];
+      imaname = [lower(options.transform) '.' image_ext];
   end
-	saveas(h0,imaname,saving);
+	saveas(h0,imaname,image_ext);
 	fprintf('Image %s saved.\n',imaname);
 end
 
