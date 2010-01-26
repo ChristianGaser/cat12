@@ -325,10 +325,24 @@ interp.help = {...
 '      there is any region of NaN or Inf in the images. '],...
 };
 
+modulate    = cfg_menu;
+modulate.tag = 'modulate';
+modulate.name = 'Modulate image (preserve volume)';
+modulate.labels = {'yes','no'};
+modulate.values = {1 0};
+modulate.def = {1};
+modulate.help = {[...
+'``Modulation'''' is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
+'causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). ',...
+'The SPM default is to adjust spatially normalised grey matter (or other tissue class) by using both terms and the ',...
+'resulting modulated images are preserved for the total amount of grey matter. Thus, modulated images reflect the grey matter ',...
+'volumes before spatial normalisation. However, the user is often interested in removing the confound of different brain sizes ',...
+'and there are many ways to apply this correction.']};
+
 defs = cfg_exbranch;
 defs.tag = 'defs';
 defs.name = 'Apply Deformations';
-defs.val = {field,applyto,interp};
+defs.val = {field,applyto,interp,modulate};
 defs.prog    = @cg_vbm8_defs;
 defs.vfiles  = @vfiles_defs;
 defs.help    = {'This is a utility for applying deformation fields to images.'};;
@@ -350,7 +364,11 @@ vf = {};
 s  = strvcat(job.fnames);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
-    vf = {vf{:}, fullfile(pth,['w',nam,ext,num])};
+    if job.modulate
+        vf = {vf{:}, fullfile(pth,['mw',nam,ext,num])};
+    else
+        vf = {vf{:}, fullfile(pth,['w',nam,ext,num])};
+    end
 end;
 return;
 %_______________________________________________________________________
