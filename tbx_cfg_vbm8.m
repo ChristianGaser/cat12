@@ -607,7 +607,7 @@ bias  = cg_vbm8_bias;
 vbm8  = cfg_choice;
 vbm8.name = 'VBM8';
 vbm8.tag  = 'vbm8';
-vbm8.values = {estwrite,write,tools,bias};
+vbm8.values = {estwrite,write,tools};
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
