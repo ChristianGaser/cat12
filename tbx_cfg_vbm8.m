@@ -341,7 +341,7 @@ jacobian      = cfg_branch;
 jacobian.tag = 'jacobian';
 jacobian.name = 'Jacobian determinant';
 jacobian.val = {warped};
-label.help = {[...
+jacobian.help = {[...
 'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design.']};
 
 %------------------------------------------------------------------------
