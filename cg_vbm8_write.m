@@ -405,7 +405,7 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) ||
     
     % affine parameters
     Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
-    mat0a   =    res.Affine\M1*vx2/vx3;
+    mat0a   = res.Affine\M1*vx2/vx3;
     mata    = mm/vx3;
     
     fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
@@ -749,7 +749,7 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
                 N.descrip = ['Jac. sc. warped tissue class non-lin only' num2str(k1)];
                 create(N);
 
-                M2 = M1\res.Affine*res.image(1).mat;
+                M2 = M1\res.Affine*M0;
 
                 N.dat(:,:,:) = c*abs(det(M2(1:3,1:3)));
             end
