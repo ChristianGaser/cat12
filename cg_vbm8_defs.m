@@ -50,8 +50,25 @@ for i=1:size(fnames,1),
     Vo = spm_create_vol(Vo);
     if modulate
       dt = spm_def2det(Def{1},Def{2},Def{3},V.mat);
-      figure(11)
-      hist(dt(:),1000)
+      abs(det(V.mat(1:3,1:3))/det(Vo.mat(1:3,1:3)))
+      dt = dt*abs(det(V.mat(1:3,1:3))/det(Vo.mat(1:3,1:3)));
+
+if 0
+        x      = affind(rgrid(V.dim(1:3)),V.mat);
+        y = zeros([Vo.dim(1:3) 3]);
+        for i=1:3
+          y(:,:,:,i) = Def{i};
+        end
+        size(y)
+        size(x)
+        whos
+        y1     = affind(y,Vo.mat);
+        
+        [M3,R]  = spm_get_closest_affine(x,y1)
+
+      M2 = Vo.mat\M3*V.mat;
+      abs(det(M2(1:3,1:3)))
+end
     end
     for j=1:size(Def{1},3)
         d0    = {double(Def{1}(:,:,j)), double(Def{2}(:,:,j)),double(Def{3}(:,:,j))};
@@ -66,4 +83,25 @@ for i=1:size(fnames,1),
     end;
 end;
 return;
+
+%=======================================================================
+function y1 = affind(y0,M)
+y1 = zeros(size(y0),'single');
+for d=1:3,
+    y1(:,:,:,d) = y0(:,:,:,1)*M(d,1);
+    y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,2)*M(d,2);
+    y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,3)*M(d,3) + M(d,4);
+end
+%=======================================================================
+
+%=======================================================================
+function x = rgrid(d)
+x = zeros([d(1:3) 3],'single');
+[x1,x2] = ndgrid(single(1:d(1)),single(1:d(2)));
+for i=1:d(3),
+    x(:,:,i,1) = x1;
+    x(:,:,i,2) = x2;
+    x(:,:,i,3) = single(i);
+end
+%=======================================================================
 
