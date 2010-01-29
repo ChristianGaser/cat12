@@ -42,20 +42,20 @@
 #include <stdlib.h>
 
 /* Function which compute the weighted average for one block */
-void Average_block(double *ima,int x,int y,int z,int neighborhoodsize,double *average, double weight, const int* vol_size)
+void Average_block(double *ima, int x, int y, int z, int neighborhoodsize, double *average, double weight, const int* vol_size)
 {
-int x_pos,y_pos,z_pos;
+int x_pos, y_pos, z_pos;
 int is_outside;
 
-int a,b,c;
+int a, b, c;
 
 int count = 0;
 
-	for (c = 0; c<(2*neighborhoodsize+1);c++)
+	for (c = 0; c<(2*neighborhoodsize+1); c++)
 	{
-		for (b = 0; b<(2*neighborhoodsize+1);b++)
+		for (b = 0; b<(2*neighborhoodsize+1); b++)
 		{
-			for (a = 0; a<(2*neighborhoodsize+1);a++)
+			for (a = 0; a<(2*neighborhoodsize+1); a++)
 			{
 	
 				is_outside = 0;
@@ -79,21 +79,21 @@ int count = 0;
 }
 
 /* Function which computes the value assigned to each voxel */
-void Value_block(double *Estimate, unsigned char *Label,int x,int y,int z,int neighborhoodsize,double *average, double global_sum, const int* vol_size, double hh)
+void Value_block(double *Estimate, unsigned char *Label, int x, int y, int z, int neighborhoodsize, double *average, double global_sum, const int* vol_size, double hh)
 {
-int x_pos,y_pos,z_pos;
+int x_pos, y_pos, z_pos;
 int is_outside;
 double value = 0.0;
 double denoised_value =0.0;
 unsigned char label = 0;
 int count=0 ;
-int a,b,c;
+int a, b, c;
 
-	for (c = 0; c<(2*neighborhoodsize+1);c++)
+	for (c = 0; c<(2*neighborhoodsize+1); c++)
 	{
-		for (b = 0; b<(2*neighborhoodsize+1);b++)
+		for (b = 0; b<(2*neighborhoodsize+1); b++)
 		{
-			for (a = 0; a<(2*neighborhoodsize+1);a++)
+			for (a = 0; a<(2*neighborhoodsize+1); a++)
 			{
 	
 	
@@ -129,20 +129,20 @@ int a,b,c;
 }
 
 
-double distance(double* ima,int x,int y,int z,int nx,int ny,int nz,int f,int sx,int sy,int sz)
+double distance(double* ima, int x, int y, int z, int nx, int ny, int nz, int f, int sx, int sy, int sz)
 {
 
-double d,acu,distancetotal;
-int i,j,k,ni1,nj1,ni2,nj2,nk1,nk2;
+double d, acu, distancetotal;
+int i, j, k, ni1, nj1, ni2, nj2, nk1, nk2;
 
 acu=0;
 distancetotal=0;
 	
-for(k=-f;k<=f;k++)
+for(k=-f; k<=f; k++)
 {
-	for(i=-f;i<=f;i++)
+	for(i=-f; i<=f; i++)
 	{
-		for(j=-f;j<=f;j++)
+		for(j=-f; j<=f; j++)
 		{
 			ni1=x+i;
 			nj1=y+j;
@@ -182,10 +182,10 @@ void ornlm(double* ima, double* fima, int v, int f, double h, const int* dims)
 
 double *means, *variances, *Estimate, *average;
 unsigned char *Label;
-double w,totalweight,wmax,d,mean,var,t1,t2,hh;
+double w, totalweight, wmax, d, mean, var, t1, t2, hh;
 
 int Ndims, vol;
-int i,j,k,ii,jj,kk,ni,nj,nk,indice;
+int i, j, k, ii, jj, kk, ni, nj, nk, indice;
 
 double epsilon = 0.00001;
 double mu1 = 0.9;
@@ -196,7 +196,7 @@ unsigned char label = 0;
 double estimate = 0.0;
 
 hh = 2*h*h;
-Ndims = pow((2*f+1),ndim);
+Ndims = pow((2*f+1), ndim);
 vol = dims[0]*dims[1]*dims[2];
 
 average = (double*)malloc(Ndims*sizeof(double));
@@ -205,29 +205,29 @@ variances = (double*)malloc(vol*sizeof(double));
 Estimate = (double*)malloc(vol*sizeof(double));
 Label = (unsigned char*)malloc(vol*sizeof(unsigned char));
 
-for (i = 0; i < dims[2] *dims[1] * dims[0];i++)
+for (i = 0; i < dims[2] *dims[1] * dims[0]; i++)
 {
 	Estimate[i] = 0.0;
 	Label[i] = 0;
 	fima[i] = 0.0;
 }
 
-for(k=0;k<dims[2];k++)
+for(k=0; k<dims[2]; k++)
 {
-	for(i=0;i<dims[1];i++)
+	for(i=0; i<dims[1]; i++)
 	{
-		for(j=0;j<dims[0];j++)
+		for(j=0; j<dims[0]; j++)
 		{
 			mean=0;
 			indice=0;
-			for(ii=-1;ii<=1;ii++)
+			for(ii=-1; ii<=1; ii++)
 			{
-				for(jj=-1;jj<=1;jj++)
+				for(jj=-1; jj<=1; jj++)
 				{
-					for(kk=-1;kk<=1;kk++)
+					for(kk=-1; kk<=1; kk++)
 					{
 						ni=i+ii;
-						nj=j+jj;		   		  
+						nj=j+jj; 		   		  
 						nk=k+kk;
 						
 						if(ni<0) ni=-ni;
@@ -249,23 +249,23 @@ for(k=0;k<dims[2];k++)
 	}
 }
 
-for(k=0;k<dims[2];k++)
+for(k=0; k<dims[2]; k++)
 {
-	for(i=0;i<dims[1];i++)
+	for(i=0; i<dims[1]; i++)
 	{
-		for(j=0;j<dims[0];j++)
+		for(j=0; j<dims[0]; j++)
 		{
 			var=0;
 			indice=0;
-			for(ii=-1;ii<=1;ii++)
+			for(ii=-1; ii<=1; ii++)
 			{
-				for(jj=-1;jj<=1;jj++)
+				for(jj=-1; jj<=1; jj++)
 				{
-					for(kk=-1;kk<=1;kk++)
+					for(kk=-1; kk<=1; kk++)
 					{
 						ni=i+ii;
-						nj=j+jj;		   		  
-						nk=k+kk;		   		  
+						nj=j+jj; 		   		  
+						nk=k+kk; 		   		  
 							if(ni>=0 && nj>=0 && nk>0 && ni<dims[1] && nj<dims[0] && nk<dims[2])
 							{
 							var += (ima[nk*(dims[0]*dims[1])+(ni*dims[0])+nj]-means[k*(dims[0]*dims[1])+(i*dims[0])+j])*(ima[nk*(dims[0]*dims[1])+(ni*dims[0])+nj]-means[k*(dims[0]*dims[1])+(i*dims[0])+j]);
@@ -282,11 +282,11 @@ for(k=0;k<dims[2];k++)
 
 /*filter*/
 
-for(k=0;k<dims[2];k+=2)
+for(k=0; k<dims[2]; k+=2)
 {
-	for(i=0;i<dims[1];i+=2)
+	for(i=0; i<dims[1]; i+=2)
 	{
-		for(j=0;j<dims[0];j+=2)
+		for(j=0; j<dims[0]; j+=2)
 		{
 			for (init=0 ; init < Ndims; init++)
 				average[init]=0.0;
@@ -297,17 +297,17 @@ for(k=0;k<dims[2];k+=2)
 			{
 				wmax=0.0;
 				
-				for(kk=-v;kk<=v;kk++)
+				for(kk=-v; kk<=v; kk++)
 				{
-					for(ii=-v;ii<=v;ii++)
+					for(ii=-v; ii<=v; ii++)
 					{
-						for(jj=-v;jj<=v;jj++)
+						for(jj=-v; jj<=v; jj++)
 						{
 							ni=i+ii;
 							nj=j+jj;
 							nk=k+kk;
 
-							if(ii==0 && jj==0 && kk==0) continue; 
+							if(ii==0 && jj==0 && kk==0) continue;
 				
 							if(ni>=0 && nj>=0 && nk>=0 && ni<dims[1] && nj<dims[0] && nk<dims[2])
 							{
@@ -321,15 +321,15 @@ for(k=0;k<dims[2];k+=2)
 									if(t1>mu1 && t1<(1/mu1) && t2>var1 && t2<(1/var1))
 									{                 
 										
-										d=distance(ima,i,j,k,ni,nj,nk,f,dims[1],dims[0],dims[2]);
+										d=distance(ima, i, j, k, ni, nj, nk, f, dims[1], dims[0], dims[2]);
 	
 										w = exp(-d/(h*h));
 	
 										if(w>wmax) wmax = w;
 										
-										Average_block(ima,ni,nj,nk,f,average,w,dims);
+										Average_block(ima, ni, nj, nk, f, average, w, dims);
 										
-										/*average = average + w*ima[nk*(dims[0]*dims[1])+(ni*dims[0])+nj];*/
+										/*average = average + w*ima[nk*(dims[0]*dims[1])+(ni*dims[0])+nj]; */
 										totalweight += w;
 									}
 								}
@@ -340,24 +340,24 @@ for(k=0;k<dims[2];k+=2)
 				
 				if(wmax==0.0) wmax=1.0;
 		
-				/*average = average + wmax*ima[k*(dims[0]*dims[1])+(i*dims[0])+j];*/
-				Average_block(ima,i,j,k,f,average,wmax,dims);
+				/*average = average + wmax*ima[k*(dims[0]*dims[1])+(i*dims[0])+j]; */
+				Average_block(ima, i, j, k, f, average, wmax, dims);
 					
 				totalweight += wmax;
 	
-				/*fima[k*(dims[0]*dims[1])+(i*dims[0])+j] = average / totalweight;*/ 
+				/*fima[k*(dims[0]*dims[1])+(i*dims[0])+j] = average / totalweight; */ 
 					 
 				if(totalweight != 0.0)
-				Value_block(Estimate,Label,i,j,k,f,average,totalweight,dims,hh);
+				Value_block(Estimate, Label, i, j, k, f, average, totalweight, dims, hh);
 		
 			}
 		
 				else
 				{
 					wmax=1.0;
-					Average_block(ima,i,j,k,f,average,wmax,dims);
+					Average_block(ima, i, j, k, f, average, wmax, dims);
 					totalweight = totalweight + wmax;
-					Value_block(Estimate,Label,i,j,k,f,average,totalweight,dims,hh);
+					Value_block(Estimate, Label, i, j, k, f, average, totalweight, dims, hh);
 				}
 			
 		}
