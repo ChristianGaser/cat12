@@ -29,14 +29,9 @@ spm_progress_bar('Init',n,'Filtering','Volumes Complete');
 for i = 1:n
 	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
 	in = spm_read_vols(V(i));
-	h = rician_noise_estimation(in);
-
-	if h>0
-	  fprintf('Rician noise estimate for %s: %3.2f\n',nm,h);
-  else
-    h = gaussian_noise_estimation(in);
-	  fprintf('Gaussian noise estimate for %s: %3.2f\n',nm,h);
-  end
+	
+	h = cg_noise_estimation(in);
+  fprintf('Noise estimate for %s: %3.2f\n',nm,h);
 
   % ORNLM weighting
   h = ornlm_weight*h;
