@@ -238,9 +238,10 @@ ornlm.prog   = @cg_ornlm;
 ornlm.vfiles  = @vfiles_ornlm;
 ornlm.help = {[...
 'This function applies an optimized blockwise non local means denoising filter to the data. This filter will remove noise while ',...
-'preserving edges. The smoothing filter size is automatically estimated based on the standard deviation of the noise. For ',...
-'unsegmented images (background > 0) a rician noise estimate is used, while for images with background zeros a less precise ',...
-'gaussian noise estimator is applied. The resulting images are prepended with the term "ornlm_".']};
+'preserving edges. The smoothing filter size is automatically estimated based on the standard deviation of the noise. ',...
+'If image has non-zero background (we check that less than 5% of the image are zero) we can assume Rayleigh PDF in the ',...
+'background and noise estimation can be based on mode of local mean. Otherwise mode of local variance is used. ',...
+'The resulting images are prepended with the term "ornlm_".']};
 
 %------------------------------------------------------------------------
 calcvol_files = cfg_files;
@@ -347,11 +348,13 @@ defs.vfiles  = @vfiles_defs;
 defs.help    = {'This is a utility for applying deformation fields to images.'};;
 
 %------------------------------------------------------------------------
+intrabias  = cg_vbm8_bias;
+%------------------------------------------------------------------------
 
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_cov,showslice,calcvol,T2x,F2x,ornlm,defs};
+tools.values = {check_cov,showslice,calcvol,T2x,F2x,ornlm,intrabias,defs};
 
 return
 

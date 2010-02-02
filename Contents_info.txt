@@ -35,8 +35,7 @@
 %   cg_slice_overlay.m          - Wrapper for overlay tool slice_overlay
 %   cg_slice_overlay_ui.m       - Example for user interface for overlay wrapper cg_slice_overlay.m
 %   slice_overlay.m             - old overlay tool
-%   rician_noise_estimation.m   - local estimation of rician noise
-%   gaussian_noise_estimation.m - local estimation of gaussian noise
+%   cg_noise_estimation.m       - local estimation of rician noise
 %
 % Mex- and c-functions
 %   Amap.c                      - Adaptive Maximum A Posteriori segmentation
