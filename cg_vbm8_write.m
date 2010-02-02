@@ -120,7 +120,7 @@ Coef{1} = spm_bsplinc(res.Twarp(:,:,:,1),prm);
 Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
-do_defs = any(df) || bf(1,2) || any(lb([2,3,4]));
+do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || spm_get_defaults('vbm8.output.surf.dartel');
 do_defs = do_cls || do_defs;
 if do_defs,
     if df(2),
@@ -138,7 +138,7 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || nargout>=1,
+    if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || spm_get_defaults('vbm8.output.surf.dartel')|| nargout>=1,
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
