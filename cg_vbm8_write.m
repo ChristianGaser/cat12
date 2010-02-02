@@ -160,8 +160,8 @@ end
 % rescue first image and optionally apply optimized blockwise non local means denoising filter
 ornlm_weight = spm_get_defaults('vbm8.extopts.ornlm');
 if ornlm_weight > 0
-    h = cg_noise_estimation(in);
-    fprintf('Noise estimate for %s: %3.2f\n',nm,h);
+    h = cg_noise_estimation(src);
+    fprintf('\nNoise estimate for %s: %3.2f',h);
   	
   	% weight ORNLM
   	h = ornlm_weight*h;
