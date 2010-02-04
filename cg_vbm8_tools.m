@@ -312,7 +312,7 @@ interp.labels = {'Nearest neighbour','Trilinear','2nd Degree B-spline',...
 '3rd Degree B-Spline ','4th Degree B-Spline ','5th Degree B-Spline',...
 '6th Degree B-Spline','7th Degree B-Spline'};
 interp.values = {0,1,2,3,4,5,6,7};
-interp.def  = @(val)spm_get_defaults('vbm8.defs.interp',val{:});
+interp.def  = @(val)cg_vbm8_get_defaults('defs.interp',val{:});
 interp.help = {...
 ['The method by which the images are sampled when being written in a ',...
 'different space.'],...
@@ -348,13 +348,13 @@ defs.vfiles  = @vfiles_defs;
 defs.help    = {'This is a utility for applying deformation fields to images.'};;
 
 %------------------------------------------------------------------------
-intrabias  = cg_vbm8_bias;
+bias  = cg_vbm8_bias;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_cov,showslice,calcvol,T2x,F2x,ornlm,intrabias,defs};
+tools.values = {check_cov,showslice,calcvol,T2x,F2x,ornlm,bias,defs};
 
 return
 

@@ -37,7 +37,7 @@ nits.name = 'Iterations for bias correction';
 nits.tag  = 'nits';
 nits.strtype = 'n';
 nits.num  = [1 1];
-nits.def     = @(val)spm_get_defaults('vbm8.bias.nits_bias', val{:});
+nits.def     = @(val)cg_vbm8_get_defaults('bias.nits_bias', val{:});
 nits.help = {'Number of iterations for the bias correction.'};
 
 %------------------------------------------------------------------------
@@ -50,7 +50,7 @@ biasfwhm.labels = {...
 '80mm cutoff','90mm cutoff','100mm cutoff','110mm cutoff','120mm cutoff',...
 '130mm cutoff','140mm cutoff','150mm cutoff','No correction'};
 biasfwhm.values = {30,40,50,60,70,80,90,100,110,120,130,140,150,Inf};
-biasfwhm.def     = @(val)spm_get_defaults('vbm8.bias.biasfwhm', val{:});
+biasfwhm.def     = @(val)cg_vbm8_get_defaults('bias.biasfwhm', val{:});
 biasfwhm.help = {[...
 'FWHM of Gaussian smoothness of bias. If your intensity nonuniformity is very smooth, then choose a large FWHM. This will prevent the algorithm from trying to model out intensity variation due to different tissue types. The model for intensity nonuniformity is one of i.i.d. Gaussian noise that has been smoothed by some amount, before taking the exponential. Note also that smoother bias fields need fewer parameters to describe them. This means that the algorithm is faster for smoother intensity nonuniformities.']};
 
@@ -65,7 +65,7 @@ biasreg.labels = {...
 'medium regularisation','heavy regularisation',...
 'very heavy regularisation','extremely heavy regularisation'};
 biasreg.values = {0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3};
-biasreg.def     = @(val)spm_get_defaults('vbm8.bias.biasreg', val{:});
+biasreg.def     = @(val)cg_vbm8_get_defaults('bias.biasreg', val{:});
 biasreg.help = {[...
 'We know a priori that intensity variations due to MR physics tend to be spatially smooth, whereas those due to different tissue types tend to contain more high frequency information. A more accurate estimate of a bias field can be obtained by including prior knowledge about the distribution of the fields likely to be encountered by the correction algorithm. For example, if it is known that there is little or no intensity non-uniformity, then it would be wise to penalise large values for the intensity nonuniformity parameters. This regularisation can be placed within a Bayesian context, whereby the penalty incurred is the negative logarithm of a prior probability for any particular pattern of nonuniformity.']};
 
@@ -80,7 +80,7 @@ lmreg.labels = {...
 'medium regularisation','heavy regularisation',...
 'very heavy regularisation','extremely heavy regularisation'};
 lmreg.values = {0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3};
-lmreg.def     = @(val)spm_get_defaults('vbm8.bias.lmreg', val{:});
+lmreg.def     = @(val)cg_vbm8_get_defaults('bias.lmreg', val{:});
 lmreg.help = {[...
 'Levenberg-Marquardt regularisation keeps the bias correction part stable. Higher values means more stability, but slower convergence.']};
 

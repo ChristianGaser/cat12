@@ -15,22 +15,23 @@
 %   INSTALL.txt                 - installation instructions
 %   vbm8.man                    - notes on VBM8 toolbox
 %
-% VBM functions
+% VBM8 functions
 %   spm_vbm8.m                  - toolbox wrapper to call functions
-%   tbx_cfg_vbm8.m              - configure VBM
-%   cg_vbm8_write.m             - write out VBM results
-%   cg_vbm8_run.m               - runtime funtion for VBM
+%   tbx_cfg_vbm8.m              - configure VBM8
+%   cg_vbm8_write.m             - write out VBM8 results
+%   cg_vbm8_run.m               - runtime funtion for VBM8
 %   cg_morph_vol.m              - morphological operations to 3D data
-%   cg_vbm8_longitudinal.m      - VBM for longitudinal data
-%   cg_vbm8_defaults.m          - sets the defaults for VBM
+%   cg_vbm8_longitudinal.m      - VBM8 for longitudinal data
+%   cg_vbm8_defaults.m          - sets the defaults for VBM8
+%   cg_vbm8_get_defaults.m      - defaults for VBM8
 %
 % Utility functions
-%   cg_vbm8_tools.m             - wrapper for calling VBM utilities
+%   cg_vbm8_tools.m             - wrapper for calling VBM8 utilities
 %   cg_showslice_all.m          - show 1 slice of all images
 %   cg_check_cov.m              - check sample homogeneity across sample
 %   cg_spmT2x.m                 - transformation of t-maps to P, -log(P), r or d-maps
 %   cg_lat_index.m              - calculate lateralization index
-%   cg_vbm8_debug.m             - print debug information for SPM5 and VBM5
+%   cg_vbm8_debug.m             - print debug information for SPM8 and VBM8
 %   cg_ornlm.m                  - Optimized Blockwise Non Local Means Denoising Filter
 %   cg_slice_overlay.m          - Wrapper for overlay tool slice_overlay
 %   cg_slice_overlay_ui.m       - Example for user interface for overlay wrapper cg_slice_overlay.m
