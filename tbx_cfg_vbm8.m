@@ -43,7 +43,7 @@ tpm.help    = {
                }';
 tpm.filter = 'image';
 tpm.ufilter = '.*';
-tpm.def  = @(val)spm_get_defaults('vbm8.opts.tpm', val{:});
+tpm.def  = @(val)cg_vbm8_get_defaults('opts.tpm', val{:});
 tpm.num     = [1 1];
 
 %------------------------------------------------------------------------
@@ -55,7 +55,7 @@ ngaus.tag  = 'ngaus';
 ngaus.name = 'Gaussians per class';
 ngaus.strtype = 'e';
 ngaus.num = [1 6];
-ngaus.def  = @(val)spm_get_defaults('vbm8.opts.ngaus', val{:});
+ngaus.def  = @(val)cg_vbm8_get_defaults('opts.ngaus', val{:});
 ngaus.help = {[...
 'The number of Gaussians used to represent the intensity distribution '...
 'for each tissue class can be greater than one. '...
@@ -91,7 +91,7 @@ ngaus.help = {[...
 biasreg = cfg_menu;
 biasreg.tag  = 'biasreg';
 biasreg.name = 'Bias regularisation';
-biasreg.def  = @(val)spm_get_defaults('vbm8.opts.biasreg', val{:});
+biasreg.def  = @(val)cg_vbm8_get_defaults('opts.biasreg', val{:});
 biasreg.labels = {...
 'no regularisation (0)','extremely light regularisation (0.00001)',...
 'very light regularisation (0.0001)','light regularisation (0.001)',...
@@ -133,7 +133,7 @@ biasfwhm.labels = {...
 '80mm cutoff','90mm cutoff','100mm cutoff','110mm cutoff','120mm cutoff',...
 '130mm cutoff','140mm cutoff','150mm cutoff','No correction'};
 biasfwhm.values = {30,40,50,60,70,80,90,100,110,120,130,140,150,Inf};
-biasfwhm.def  = @(val)spm_get_defaults('vbm8.opts.biasfwhm', val{:});
+biasfwhm.def  = @(val)cg_vbm8_get_defaults('opts.biasfwhm', val{:});
 biasfwhm.help = {[...
 'FWHM of Gaussian smoothness of bias. ',...
 'If your intensity non-uniformity is very smooth, then choose a large ',...
@@ -147,7 +147,7 @@ biasfwhm.help = {[...
 %------------------------------------------------------------------------
 
 warpreg      = cfg_entry;
-warpreg.def  = @(val)spm_get_defaults('vbm8.opts.warpreg', val{:});
+warpreg.def  = @(val)cg_vbm8_get_defaults('opts.warpreg', val{:});
 warpreg.tag = 'warpreg';
 warpreg.name = 'Warping Regularisation';
 warpreg.strtype = 'e';
@@ -173,7 +173,7 @@ affreg.name = 'Affine Regularisation';
 affreg.labels = {'No Affine Registration','ICBM space template - European brains',...
     'ICBM space template - East Asian brains', 'Average sized template','No regularisation'};
 affreg.values = {'','mni','eastern','subj','none'};
-affreg.def  = @(val)spm_get_defaults('vbm8.opts.affreg', val{:});
+affreg.def  = @(val)cg_vbm8_get_defaults('opts.affreg', val{:});
 affreg.help = {[...
 'The procedure is a local optimisation, so it needs reasonable initial '...
 'starting estimates. Images should be placed in approximate alignment '...
@@ -207,7 +207,7 @@ affmethod.labels = {...
     'Seg Default (mutual information)',...
     'Least Squares with masked T1 template'};
 affmethod.values = {0, 1};
-affmethod.def  = @(val)spm_get_defaults('vbm8.opts.affmethod', val{:});
+affmethod.def  = @(val)cg_vbm8_get_defaults('opts.affmethod', val{:});
 affmethod.help = {[...
 'An initial affine registration is neccessary to register images ',...
 'to MNI space. As default this registration is based on mutual information and ',...
@@ -222,7 +222,7 @@ samp.tag = 'samp';
 samp.name = 'Sampling distance';
 samp.strtype = 'e';
 samp.num = [1 1];
-samp.def  = @(val)spm_get_defaults('vbm8.opts.samp', val{:});
+samp.def  = @(val)cg_vbm8_get_defaults('opts.samp', val{:});
 samp.help    = {'This encodes the approximate distance between sampled points when estimating the model parameters. Smaller values use more of the data, but the procedure is slower and needs more memory. Determining the ``best'''' setting involves a compromise between speed and accuracy.'};
 
 %------------------------------------------------------------------------
@@ -248,7 +248,7 @@ vox.tag = 'vox';
 vox.name = 'Voxel size';
 vox.strtype = 'e';
 vox.num = [1 1];
-vox.def  = @(val)spm_get_defaults('vbm8.extopts.vox', val{:});
+vox.def  = @(val)cg_vbm8_get_defaults('extopts.vox', val{:});
 vox.help = {...
 ['The (isotropic) voxel sizes of any spatially normalised written images. '...
  'A non-finite value will be replaced by the average voxel size of '...
@@ -261,7 +261,7 @@ print.tag = 'print';
 print.name = 'Display and print results';
 print.labels = {'yes','no'};
 print.values = {1 0};
-print.def  = @(val)spm_get_defaults('vbm8.extopts.print', val{:});
+print.def  = @(val)cg_vbm8_get_defaults('extopts.print', val{:});
 print.help = {[...
 'The normalized T1 image and the normalized segmentations can be displayed and printed to a ',...
 'ps-file. This is often helpful to check whether registration and segmentation were successful. ',...
@@ -274,7 +274,7 @@ dartelwarp.tag = 'dartelwarp';
 dartelwarp.name = 'Spatial normalization';
 dartelwarp.labels = {'SPM default (low-dimensional)','Dartel (high-dimensional)'};
 dartelwarp.values = {0 1};
-dartelwarp.def  = @(val)spm_get_defaults('vbm8.extopts.dartelwarp', val{:});
+dartelwarp.def  = @(val)cg_vbm8_get_defaults('extopts.dartelwarp', val{:});
 dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization.'};
 
 %------------------------------------------------------------------------
@@ -319,9 +319,9 @@ dartel.help = {['This option is to export data into a form that can be used with
 'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
-native.def  = @(val)spm_get_defaults('vbm8.output.bias.native', val{:});
-warped.def  = @(val)spm_get_defaults('vbm8.output.bias.warped', val{:});
-affine.def  = @(val)spm_get_defaults('vbm8.output.bias.affine', val{:});
+native.def  = @(val)cg_vbm8_get_defaults('output.bias.native', val{:});
+warped.def  = @(val)cg_vbm8_get_defaults('output.bias.warped', val{:});
+affine.def  = @(val)cg_vbm8_get_defaults('output.bias.affine', val{:});
 bias      = cfg_branch;
 bias.tag = 'bias';
 bias.name = 'Bias Corrected';
@@ -336,7 +336,7 @@ bias.help = {[...
 
 %------------------------------------------------------------------------
 
-warped.def  = @(val)spm_get_defaults('vbm8.output.jacobian.warped', val{:});
+warped.def  = @(val)cg_vbm8_get_defaults('output.jacobian.warped', val{:});
 jacobian      = cfg_branch;
 jacobian.tag = 'jacobian';
 jacobian.name = 'Jacobian determinant';
@@ -346,9 +346,9 @@ jacobian.help = {[...
 
 %------------------------------------------------------------------------
 
-native.def  = @(val)spm_get_defaults('vbm8.output.label.native', val{:});
-warped.def  = @(val)spm_get_defaults('vbm8.output.label.warped', val{:});
-dartel.def  = @(val)spm_get_defaults('vbm8.output.label.dartel', val{:});
+native.def  = @(val)cg_vbm8_get_defaults('output.label.native', val{:});
+warped.def  = @(val)cg_vbm8_get_defaults('output.label.warped', val{:});
+dartel.def  = @(val)cg_vbm8_get_defaults('output.label.dartel', val{:});
 
 label      = cfg_branch;
 label.tag = 'label';
@@ -390,30 +390,30 @@ modulated.help = {[...
 'multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. ',...
 'These modulated images are indicated by "m0" instead of "m". ']};
 
-native.def    = @(val)spm_get_defaults('vbm8.output.GM.native', val{:});
-warped.def    = @(val)spm_get_defaults('vbm8.output.GM.warped', val{:});
-modulated.def = @(val)spm_get_defaults('vbm8.output.GM.mod', val{:});
-dartel.def    = @(val)spm_get_defaults('vbm8.output.GM.dartel', val{:});
+native.def    = @(val)cg_vbm8_get_defaults('output.GM.native', val{:});
+warped.def    = @(val)cg_vbm8_get_defaults('output.GM.warped', val{:});
+modulated.def = @(val)cg_vbm8_get_defaults('output.GM.mod', val{:});
+dartel.def    = @(val)cg_vbm8_get_defaults('output.GM.dartel', val{:});
 grey      = cfg_branch;
 grey.tag = 'GM';
 grey.name = 'Grey matter';
 grey.val = {native, warped, modulated, dartel};
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'};
 
-native.def    = @(val)spm_get_defaults('vbm8.output.WM.native', val{:});
-warped.def    = @(val)spm_get_defaults('vbm8.output.WM.warped', val{:});
-modulated.def = @(val)spm_get_defaults('vbm8.output.WM.mod', val{:});
-dartel.def    = @(val)spm_get_defaults('vbm8.output.WM.dartel', val{:});
+native.def    = @(val)cg_vbm8_get_defaults('output.WM.native', val{:});
+warped.def    = @(val)cg_vbm8_get_defaults('output.WM.warped', val{:});
+modulated.def = @(val)cg_vbm8_get_defaults('output.WM.mod', val{:});
+dartel.def    = @(val)cg_vbm8_get_defaults('output.WM.dartel', val{:});
 white      = cfg_branch;
 white.tag = 'WM';
 white.name = 'White matter';
 white.val = {native, warped, modulated, dartel};
 white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and mwp2*.img.'};
 
-native.def    = @(val)spm_get_defaults('vbm8.output.CSF.native', val{:});
-warped.def    = @(val)spm_get_defaults('vbm8.output.CSF.warped', val{:});
-modulated.def = @(val)spm_get_defaults('vbm8.output.CSF.mod', val{:});
-dartel.def    = @(val)spm_get_defaults('vbm8.output.CSF.dartel', val{:});
+native.def    = @(val)cg_vbm8_get_defaults('output.CSF.native', val{:});
+warped.def    = @(val)cg_vbm8_get_defaults('output.CSF.warped', val{:});
+modulated.def = @(val)cg_vbm8_get_defaults('output.CSF.mod', val{:});
+dartel.def    = @(val)cg_vbm8_get_defaults('output.CSF.dartel', val{:});
 csf      = cfg_branch;
 csf.tag = 'CSF';
 csf.name = 'Cerebro-Spinal Fluid (CSF)';
@@ -431,7 +431,7 @@ warps.labels = {...
     'Template->Image (inverse)',...
     'inverse + forward'};
 warps.values = {[0 0],[1 0],[0 1],[1 1]};
-warps.def  = @(val)spm_get_defaults('vbm8.output.warps', val{:});
+warps.def  = @(val)cg_vbm8_get_defaults('output.warps', val{:});
 warps.help    = {'Deformation fields can be saved to disk, and used by the Deformations Utility. For spatially normalising images to MNI space, you will need the forward deformation, whereas for spatially normalising (eg) GIFTI surface files, you''ll need the inverse. It is also possible to transform data in MNI space on to the individual subject, which also requires the inverse transform. Deformations are saved as .nii files, which contain three volumes to encode the x, y and z coordinates.'};
 
 %------------------------------------------------------------------------

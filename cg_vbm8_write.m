@@ -120,7 +120,7 @@ Coef{1} = spm_bsplinc(res.Twarp(:,:,:,1),prm);
 Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
-do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || spm_get_defaults('vbm8.output.surf.dartel');
+do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm8_get_defaults('output.surf.dartel');
 do_defs = do_cls || do_defs;
 if do_defs,
     if df(2),
@@ -138,7 +138,7 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || spm_get_defaults('vbm8.output.surf.dartel')|| nargout>=1,
+    if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm8_get_defaults('output.surf.dartel')|| nargout>=1,
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
@@ -158,7 +158,7 @@ for z=1:length(x3),
 end
 
 % rescue first image and optionally apply optimized blockwise non local means denoising filter
-ornlm_weight = spm_get_defaults('vbm8.extopts.ornlm');
+ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
 if ornlm_weight > 0
     h = cg_noise_estimation(src);
     fprintf('\nNoise estimate: %3.2f',h);
@@ -315,10 +315,10 @@ if do_cls & do_defs,
     n_iters = 200; sub = 16; n_classes = 3; pve = 5;
     
     % MRF weighting
-    mrf_weight = spm_get_defaults('vbm8.extopts.mrf');
+    mrf_weight = cg_vbm8_get_defaults('extopts.mrf');
 
     % check for kmeans initialization
-    init_kmeans = spm_get_defaults('vbm8.extopts.kmeans');
+    init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
 
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
@@ -359,7 +359,7 @@ M0 = res.image(1).mat;
 clear tpm chan
 
 % prepare transformations for rigidly or affine aligned images
-if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || spm_get_defaults('vbm8.output.surf.dartel')
+if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || cg_vbm8_get_defaults('output.surf.dartel')
 
     % figure out the mapping from the volumes to create to the original
     mm = [[
@@ -385,7 +385,7 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) ||
         odim(1) odim(2) odim(3)]'; ones(1,8)];
     
     % rigid transformation
-    if (any(tc(:,2)) || lb(1,3)) || spm_get_defaults('vbm8.output.surf.dartel')
+    if (any(tc(:,2)) || lb(1,3)) || cg_vbm8_get_defaults('output.surf.dartel')
         x      = affind(rgrid(d),M0);
         y1     = affind(y,M1);
         
@@ -483,8 +483,8 @@ end
 
 % get inverse deformations for warping submask to raw space
 % not yet finished!!!
-if spm_get_defaults('vbm8.output.surf.dartel')
-  Vsubmask = spm_vol(char(spm_get_defaults('vbm8.extopts.mask')));
+if cg_vbm8_get_defaults('output.surf.dartel')
+  Vsubmask = spm_vol(char(cg_vbm8_get_defaults('extopts.mask')));
   submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
   submask = reshape(submask,d);
  
@@ -834,6 +834,56 @@ if bf(1,2),
     N.descrip = 'Warped bias corrected image ';
     create(N);
     N.dat(:,:,:) = C;
+end
+
+% display and print result if possible
+try
+  if do_cls & cg_vbm8_get_defaults('extopts.print')
+	str = [];
+	str = [str struct('name', 'Dartel normalization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.dartelwarp')))];
+	str = [str struct('name', 'Gaussians:','value',sprintf('%d %d %d %d %d %d',cg_vbm8_get_defaults('opts.ngaus')))];
+	str = [str struct('name', 'Affine normalization method:','value',sprintf('%d',cg_vbm8_get_defaults('opts.affmethod')))];
+	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',cg_vbm8_get_defaults('opts.affreg')))];
+	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.warpreg')))];
+	str = [str struct('name', 'Bias regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.biasreg')))];
+	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
+	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.kmeans')))];
+	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.ornlm')))];
+	str = [str struct('name', 'MRF weighting:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.mrf')))];
+
+	fg = spm_figure('FindWin','Graphics');
+	spm_figure('Clear','Graphics');
+	ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
+	text(0,0.95,  ['Segmentation: ' spm_str_manip(p.VF.fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
+		'Interpreter','none','Parent',ax);
+	for i=1:size(str,2)
+		text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
+		text(0.35,0.85-(0.075*i), str(i).value ,'FontSize',12, 'Interpreter','none','Parent',ax);
+	end
+	pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
+			0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
+	spm_orthviews('Reset');
+	% first try use the bias corrected image
+	try
+    	Vtmp = spm_vol(N.dat.fname);
+    	hh = spm_orthviews('Image',Vtmp,pos(1,:));
+    	spm_orthviews('AddContext',hh);
+	end
+try
+	for k1=1:size(sopts,1),
+        dim     = [size(dat{k1}) 1];
+        VT      = struct('dim',dim(1:3),...
+                     'dt', [spm_type('uint8') spm_platform('bigend')],...
+                     'pinfo',[1/255 0 0]',...
+                     'mat',p.VF.mat,...
+                     'fname', 'tmp.img',...
+                     'dat',dat{k1});
+        Vtmp = spm_write_sn(VT,p);
+		spm_orthviews('Image',Vtmp,pos(1+k1,:));
+end
+	end
+	spm_print;
+  end
 end
 
 % warped label
