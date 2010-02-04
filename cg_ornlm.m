@@ -16,11 +16,7 @@ else
 end
 
 % get ORNLM weight
-try
-  ornlm_weight = spm_get_defaults('vbm8.extopts.ornlm');
-catch
-  ornlm_weight = spm_input('ORNLM weighting ?',1,'e',0.7);
-end
+ornlm_weight = spm_input('ORNLM weighting (0.7 to segment)?',1,'e',cg_vbm8_get_defaults('extopts.ornlm'));
 
 V = spm_vol(P);
 n = size(P,1);
