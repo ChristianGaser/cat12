@@ -838,22 +838,23 @@ end
 
 % display and print result if possible
 if do_cls & cg_vbm8_get_defaults('extopts.print')
+	tpm_name = spm_str_manip(cg_vbm8_get_defaults('opts.tpm'),'k40d');
 	str = [];
 	str = [str struct('name', 'Dartel normalization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.dartelwarp')))];
-	str = [str struct('name', 'Gaussians:','value',sprintf('%d %d %d %d %d %d',cg_vbm8_get_defaults('opts.ngaus')))];
+	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
 	str = [str struct('name', 'Affine normalization method:','value',sprintf('%d',cg_vbm8_get_defaults('opts.affmethod')))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',cg_vbm8_get_defaults('opts.affreg')))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.warpreg')))];
 	str = [str struct('name', 'Bias regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.biasreg')))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.kmeans')))];
-	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.ornlm')))];
-	str = [str struct('name', 'MRF weighting:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.mrf')))];
+	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.ornlm')))];
+	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.mrf')))];
 
 	fg = spm_figure('FindWin','Graphics');
 	spm_figure('Clear','Graphics');
 	ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-	text(0,0.95,  ['Segmentation: ' spm_str_manip(p.VF.fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
+	text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
 		'Interpreter','none','Parent',ax);
 	for i=1:size(str,2)
 		text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
@@ -877,15 +878,17 @@ if do_cls & cg_vbm8_get_defaults('extopts.print')
 	    name3 = fullfile(pth,['m0wp', num2str(k1), nam, '.nii']);
 	    if exist(name1,'file') 
 	      Vtmp = spm_vol(name1); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+	      spm_orthviews('AddContext',hh);
 	    elseif exist(name2,'file')
 	      Vtmp = spm_vol(name2); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+	      spm_orthviews('AddContext',hh);
 	    elseif exist(name3,'file')
 	      Vtmp = spm_vol(name3);
-	    end
-	    try 
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-        spm_orthviews('AddContext',hh);
-      end
+	      spm_orthviews('AddContext',hh);
+	    end
     end
   end
 	spm_print;
