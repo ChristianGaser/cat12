@@ -161,7 +161,7 @@ end
 ornlm_weight = spm_get_defaults('vbm8.extopts.ornlm');
 if ornlm_weight > 0
     h = cg_noise_estimation(src);
-    fprintf('\nNoise estimate for %s: %3.2f',h);
+    fprintf('\nNoise estimate: %3.2f',h);
   	
   	% weight ORNLM
   	h = ornlm_weight*h;
