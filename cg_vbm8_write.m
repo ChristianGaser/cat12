@@ -837,8 +837,7 @@ if bf(1,2),
 end
 
 % display and print result if possible
-try
-  if do_cls & cg_vbm8_get_defaults('extopts.print')
+if do_cls & cg_vbm8_get_defaults('extopts.print')
 	str = [];
 	str = [str struct('name', 'Dartel normalization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.dartelwarp')))];
 	str = [str struct('name', 'Gaussians:','value',sprintf('%d %d %d %d %d %d',cg_vbm8_get_defaults('opts.ngaus')))];
@@ -863,27 +862,33 @@ try
 	pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
 			0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
 	spm_orthviews('Reset');
+	
 	% first try use the bias corrected image
 	try
-    	Vtmp = spm_vol(N.dat.fname);
+    	Vtmp = spm_vol(fullfile(pth,['wm', nam, '.nii']));
     	hh = spm_orthviews('Image',Vtmp,pos(1,:));
     	spm_orthviews('AddContext',hh);
 	end
-try
-	for k1=1:size(sopts,1),
-        dim     = [size(dat{k1}) 1];
-        VT      = struct('dim',dim(1:3),...
-                     'dt', [spm_type('uint8') spm_platform('bigend')],...
-                     'pinfo',[1/255 0 0]',...
-                     'mat',p.VF.mat,...
-                     'fname', 'tmp.img',...
-                     'dat',dat{k1});
-        Vtmp = spm_write_sn(VT,p);
-		spm_orthviews('Image',Vtmp,pos(1+k1,:));
-end
-	end
-	spm_print;
+  try
+	  for k1=1:3,
+	    % check for all potential warped segmentations
+	    name1 = fullfile(pth,['wp', num2str(k1), nam, '.nii']);
+	    name2 = fullfile(pth,['mwp', num2str(k1), nam, '.nii']);
+	    name3 = fullfile(pth,['m0wp', num2str(k1), nam, '.nii']);
+	    if exist(name1,'file') 
+	      Vtmp = spm_vol(name1); 
+	    elseif exist(name2,'file')
+	      Vtmp = spm_vol(name2); 
+	    elseif exist(name3,'file')
+	      Vtmp = spm_vol(name3);
+	    end
+	    try 
+  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+        spm_orthviews('AddContext',hh);
+      end
+    end
   end
+	spm_print;
 end
 
 % warped label
