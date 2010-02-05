@@ -155,11 +155,7 @@ if nargin < 1
         neg_results = 0;
     end
 
-    if isfield(SPM.xVol,'VRpv')
-        noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
-    else
-        noniso = 0;
-    end
+    noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
 end
 
 switch adjustment
