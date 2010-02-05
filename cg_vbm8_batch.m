@@ -24,9 +24,9 @@ n = length(names);
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
 
 if writeonly
-	matlabbatch{1}.spm.tools.vbm8.write = defaults.vbm8;
+	matlabbatch{1}.spm.tools.vbm8.write = vbm8;
 else
-	matlabbatch{1}.spm.tools.vbm8.estwrite = defaults.vbm8;
+	matlabbatch{1}.spm.tools.vbm8.estwrite = vbm8;
 end
 
 for i=1:n
