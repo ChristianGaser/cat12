@@ -67,6 +67,33 @@ if nargin == 1
     for i=1:numel(vargin.data)
         P = strvcat(P,deblank(vargin.data{i}));
     end
+
+    sel = vargin.conversion.sel;
+
+    if isfield(vargin.conversion.threshdesc,'fwe')
+        adjustment = 1;
+        u0  = vargin.conversion.threshdesc.fwe.thresh;
+    elseif isfield(vargin.conversion.threshdesc,'fdr')
+        adjustment = 2;
+        u0  = vargin.conversion.threshdesc.fdr.thresh;
+    else
+        adjustment = 0;
+        u0  = vargin.conversion.threshdesc.uncorr.thresh;
+    end
+    
+    if isfield(vargin.conversion.cluster,'fwe')
+        extent_FWE = 1;
+        pk  = vargin.conversion.cluster.fwe.thresh;
+    elseif isfield(vargin.conversion.cluster,'uncorr')
+        extent_FWE = 0;
+        pk  = vargin.conversion.cluster.uncorr.thresh;
+    elseif isfield(vargin.conversion.cluster,'k')
+        extent_FWE = 0;
+        pk  = vargin.conversion.cluster.k.kthresh;
+    else
+        extent_FWE = 0;
+        pk=0;
+    end
 end
 
 spm2 = 0;
@@ -74,40 +101,47 @@ if strcmp(spm('ver'),'SPM2'), spm2 = 1; end
 
 if nargin < 1
     if spm2
-        P = spm_get(Inf,'spmF*.img','Select normalized files');
+        P = spm_get(Inf,'spmF*.img','Select F-images');
     else
-        P = spm_select(Inf,'^spmF.*\.img$','Select images');
+        P = spm_select(Inf,'^spmF.*\.img$','Select F-images');
+    end
+
+    sel = spm_input('Convert F value to?',1,'m',...
+    '1-p|-log(1-p)|coefficient of determination R^2',1:3, 2);
+
+    %-Get height threshold
+    %-------------------------------------------------------------------
+    str = 'FWE|FDR|none';
+    adjustment = spm_input('p value adjustment to control','+1','b',str,[],1);
+    
+    switch adjustment
+    case 1 % family-wise false positive rate
+        %---------------------------------------------------------------
+        u0  = spm_input('p value (family-wise error)','+0','r',0.05,1,[0,1]);
+    case 2' % False discovery rate
+        %---------------------------------------------------------------    
+        u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
+    otherwise  %-NB: no adjustment
+        % p for conjunctions is p of the conjunction SPM
+        %---------------------------------------------------------------
+        u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
+    end
+
+    pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1,[0,Inf]);
+    if (pk < 1) & (pk > 0)
+        extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
     end
 end
 
-sel = spm_input('Convert F value to?',1,'m',...
-	'1-p|-log(1-p)|coefficient of determination R^2',[1 2 3], 2);
-
-%-Get height threshold
-%-------------------------------------------------------------------
-str = 'FWE|FDR|none';
-adjustment = spm_input('p value adjustment to control','+1','b',str,[],1);
 
 switch adjustment
-case 'FWE' % family-wise false positive rate
-    %---------------------------------------------------------------
-    u0  = spm_input('p value (family-wise error)','+0','r',0.05,1,[0,1]);
+case 1 % family-wise false positive rate
     p_height_str = '_pFWE';
-
-case 'FDR' % False discovery rate
-    %---------------------------------------------------------------    
-    u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
+case 2' % False discovery rate
     p_height_str = '_pFDR';
-
 otherwise  %-NB: no adjustment
-    % p for conjunctions is p of the conjunction SPM
-    %---------------------------------------------------------------
-    u0  = spm_input(['threshold {F or p value}'],'+0','r',0.001,1);
     p_height_str = '_p';
-
 end
-
-k     = spm_input('extent threshold {k}','+1','r',0,1,[0,Inf]);
 
 for i=1:size(P,1)
     spmF = deblank(P(i,:));
@@ -175,6 +209,29 @@ for i=1:size(P,1)
     %-----------------------------------------------------------------------
     if ~isempty(XYZ)
         
+       if (pk < 1) & (pk > 0)
+            if extent_FWE
+                Pk = 1;
+                k = 0;
+                while (Pk >= pk & k<S)
+                    k = k + 1;
+                    [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
+                end
+                p_extent_str = ['_pkFWE' num2str(pk*100)];
+            else
+                Pn = 1;
+                k = 0;
+                while (Pn >= pk & k<S)
+                    k = k + 1;
+                    [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
+                end
+                p_extent_str = ['_pk' num2str(pk*100)];
+            end
+        else
+            k = pk;
+            p_extent_str = '';
+        end
+
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
         A     = spm_clusters(XYZ);
@@ -190,7 +247,7 @@ for i=1:size(P,1)
         F     = F(:,Q);
         XYZ   = XYZ(:,Q);
         if isempty(Q)
-        fprintf('No voxels survived extent threshold k=%0.2g\n',k);
+            fprintf('No voxels survived extent threshold k=%0.2g\n',k);
         end
 
     else
@@ -227,7 +284,7 @@ for i=1:size(P,1)
        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
        str_num = spm_str_manip(str_num,'v');
            
-       name = [F2x_name str_num p_height_str num2str(u0*100) '_k' num2str(k) '.nii'];
+       name = [F2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) '.nii'];
        fprintf('Save %s\n', name);
     
        out = deblank(fullfile(pth,name));
