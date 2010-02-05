@@ -11,12 +11,12 @@ if nargin == 1
 	for i=1:numel(vargin.data)
 		P = strvcat(P,deblank(vargin.data{i}));
 	end
+	ornlm_weight = vargin.weight;
 else
   P = spm_select(Inf,'image','Select images to filter');
+  % get ORNLM weight
+  ornlm_weight = spm_input('ORNLM weighting (0.7 to segment)?',1,'e',cg_vbm8_get_defaults('extopts.ornlm'));
 end
-
-% get ORNLM weight
-ornlm_weight = spm_input('ORNLM weighting (0.7 to segment)?',1,'e',cg_vbm8_get_defaults('extopts.ornlm'));
 
 V = spm_vol(P);
 n = size(P,1);
