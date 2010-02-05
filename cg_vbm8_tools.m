@@ -30,12 +30,100 @@ data_T2x.name = 'Volumes';
 data_T2x.filter = 'image';
 data_T2x.ufilter = '^spmT.*\.[in][im][gi]$';
 data_T2x.num     = [1 Inf];
-data_T2x.help = {'Select spmT-images to convert.'};
+data_T2x.help = {'Select spmT-images to sel.'};
+
+sel      = cfg_menu;
+sel.name = 'Convert t value to';
+sel.tag  = 'sel';
+sel.labels = {'p','-log(p)','correlation coefficient cc','effect size d','apply thresholds without conversion'};
+sel.values = {1,2,3,4,5};
+sel.val    = {2};
+sel.help = {'Select conversion of t-value'};
+
+thresh         = cfg_entry;
+thresh.tag     = 'thresh';
+thresh.name    = 'Threshold';
+thresh.help    = {''};
+thresh.strtype = 'e';
+thresh.num     = [1 1];
+thresh.def     = @(val)spm_get_defaults('stats.results.thresh', val{:});
+
+kthresh         = cfg_entry;
+kthresh.tag     = 'kthresh';
+kthresh.name    = 'Extent (voxels)';
+kthresh.help    = {'Enter the extent threshold in voxels'};
+kthresh.strtype = 'e';
+kthresh.def     = @(val)spm_get_defaults('stats.results.extent', val{:});
+kthresh.num     = [1 1];
+
+none         = cfg_const;
+none.tag     = 'none';
+none.name    = 'None';
+none.val     = {1};
+none.help    = {'No threshold'};
+
+k         = cfg_branch;
+k.tag     = 'k';
+k.name    = 'k-value';
+k.val     = {kthresh };
+k.help    = {''};
+
+fwe         = cfg_branch;
+fwe.tag     = 'fwe';
+fwe.name    = 'FWE';
+fwe.val     = {thresh };
+fwe.help    = {''};
+
+fdr         = cfg_branch;
+fdr.tag     = 'fdr';
+fdr.name    = 'FDR';
+fdr.val     = {thresh };
+fdr.help    = {''};
+
+uncorr         = cfg_branch;
+uncorr.tag     = 'uncorr';
+uncorr.name    = 'unocrrected';
+uncorr.val     = {thresh };
+uncorr.help    = {''};
+
+inverse      = cfg_menu;
+inverse.name = 'Show also inverse effects (e.g. neg. values)';
+inverse.tag  = 'inverse';
+inverse.labels = {'yes','no'};
+inverse.values = {1,0};
+inverse.val    = {0};
+inverse.help = {'Show also inverse effects (e.g. neg. values). This is not valid if you convert to (log) p-values.'};
+
+noniso      = cfg_menu;
+noniso.name = 'Correct for non-isotropic smoothness';
+noniso.tag  = 'noniso';
+noniso.labels = {'yes','no'};
+noniso.values = {1,0};
+noniso.val    = {0};
+noniso.help = {'Correct for non-isotropic smoothness'};
+
+threshdesc      = cfg_choice;
+threshdesc.name = 'Threshold type';
+threshdesc.tag  = 'threshdesc';
+threshdesc.values = {none uncorr fdr fwe};
+threshdesc.help = {'Select method for voxel threshold'};
+
+cluster      = cfg_choice;
+cluster.name = 'Cluster extent threshold';
+cluster.tag  = 'cluster';
+cluster.values = {none k uncorr fwe};
+cluster.help = {'Select method for extent threshold'};
+
+conversion         = cfg_branch;
+conversion.tag     = 'conversion';
+conversion.name    = 'Conversion';
+conversion.val     = {sel threshdesc inverse cluster noniso};
+conversion.help    = {''};
 
 T2x = cfg_exbranch;
 T2x.tag = 'T2x';
 T2x.name = 'Threshold and transform spmT-maps';
-T2x.val = {data_T2x};
+T2x.val = {data_T2x,conversion};
 T2x.prog   = @cg_spmT2x;
 
 p0 = '';
@@ -97,12 +185,38 @@ data_F2x.name = 'Volumes';
 data_F2x.filter = 'image';
 data_F2x.ufilter = '^spmF.*\.[in][im][gi]$';
 data_F2x.num     = [1 Inf];
-data_F2x.help = {'Select spmF-images to convert.'};
+data_F2x.help = {'Select spmF-images to sel.'};
+
+sel      = cfg_menu;
+sel.name = 'Convert F value to';
+sel.tag  = 'sel';
+sel.labels = {'p','-log(p)','coefficient of determination R^2'};
+sel.values = {1,2,3};
+sel.val    = {2};
+sel.help = {'Select conversion of F-value'};
+
+none         = cfg_const;
+none.tag     = 'none';
+none.name    = 'None';
+none.val     = {1};
+none.help    = {'No threshold'};
+
+cluster      = cfg_choice;
+cluster.name = 'Cluster extent threshold';
+cluster.tag  = 'cluster';
+cluster.values = {none k};
+cluster.help = {'Select method for extent threshold'};
+
+conversion         = cfg_branch;
+conversion.tag     = 'conversion';
+conversion.name    = 'Conversion';
+conversion.val     = {sel threshdesc cluster};
+conversion.help    = {''};
 
 F2x = cfg_exbranch;
 F2x.tag = 'F2x';
 F2x.name = 'Threshold and transform spmF-maps';
-F2x.val = {data_F2x};
+F2x.val = {data_F2x,conversion};
 F2x.prog   = @cg_spmF2x;
 
 p0 = '';
@@ -182,19 +296,19 @@ scale.help = {[...
 'This option should be only used if image intensity is not scaled (e.g. T1 images) ',...
 'or if images have to be scaled during statistical analysis (e.g. modulated images).']};
 
-generic         = cfg_repeat;
-generic.tag     = 'generic';
-generic.name    = 'Nuisance';
-generic.help    = {'This option allows for the specification of nuisance effects to be removed from the data. ',...
+transform         = cfg_repeat;
+transform.tag     = 'transform';
+transform.name    = 'Nuisance';
+transform.help    = {'This option allows for the specification of nuisance effects to be removed from the data. ',...
 'A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to ',...
 'the calculation of the covariance.'};
-generic.values  = {nuisance};
-generic.num     = [0 Inf];
+transform.values  = {nuisance};
+transform.num     = [0 Inf];
 
 check_cov = cfg_exbranch;
 check_cov.tag = 'check_cov';
 check_cov.name = 'Check sample homogeneity using covariance';
-check_cov.val = {data,scale,slice,generic};
+check_cov.val = {data,scale,slice,transform};
 check_cov.prog   = @cg_check_cov;
 check_cov.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...
@@ -230,10 +344,20 @@ showslice.help = {[...
 data.help = {[...
 'Select images for filtering']};
 
+weight = cfg_entry;
+weight.tag = 'weight';
+weight.name = 'ORNLM Filter weighting?';
+weight.strtype = 'e';
+weight.num = [1 1];
+weight.val  = {cg_vbm8_get_defaults('extopts.ornlm')};
+weight.help = {[...
+'To optimally suppress image noise a full weighting of "1" is recommended. However, for image segmentation a weighting ',...
+'of "0.7" achieves best results in terms of segmentation accuracy.']};
+
 ornlm = cfg_exbranch;
 ornlm.tag = 'ornlm';
 ornlm.name = 'Optimized blockwise non local means denoising filter';
-ornlm.val = {data};
+ornlm.val = {data,weight};
 ornlm.prog   = @cg_ornlm;
 ornlm.vfiles  = @vfiles_ornlm;
 ornlm.help = {[...

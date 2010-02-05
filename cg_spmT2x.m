@@ -81,6 +81,37 @@ if nargin == 1
     for i=1:numel(vargin.data)
         P = strvcat(P,deblank(vargin.data{i}));
     end
+    
+    sel = vargin.conversion.sel;
+
+    if isfield(vargin.conversion.threshdesc,'fwe')
+        adjustment = 1;
+        u0  = vargin.conversion.threshdesc.fwe.thresh;
+    elseif isfield(vargin.conversion.threshdesc,'fdr')
+        adjustment = 2;
+        u0  = vargin.conversion.threshdesc.fdr.thresh;
+    else
+        adjustment = 0;
+        u0  = vargin.conversion.threshdesc.uncorr.thresh;
+    end
+    
+    if isfield(vargin.conversion.cluster,'fwe')
+        extent_FWE = 1;
+        pk  = vargin.conversion.cluster.fwe.thresh;
+    elseif isfield(vargin.conversion.cluster,'uncorr')
+        extent_FWE = 0;
+        pk  = vargin.conversion.cluster.uncorr.thresh;
+    elseif isfield(vargin.conversion.cluster,'k')
+        extent_FWE = 0;
+        pk  = vargin.conversion.cluster.k.kthresh;
+    else
+        extent_FWE = 0;
+        pk=0;
+    end
+    
+    neg_results = vargin.conversion.inverse;
+    noniso = vargin.conversion.noniso;
+    
 end
 
 spm2 = 0;
@@ -88,48 +119,56 @@ if strcmp(spm('ver'),'SPM2'), spm2 = 1; end
 
 if nargin < 1
     if spm2
-        P = spm_get(Inf,'spmT*.img','Select normalized files');
+        P = spm_get(Inf,'spmT*.img','Select T-images');
     else
-        P = spm_select(Inf,'^spmT.*\.img$','Select images');
+        P = spm_select(Inf,'^spmT.*\.img$','Select T-images');
+    end
+    sel = spm_input('Convert t value to?',1,'m',...
+    '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
+
+    %-Get height threshold
+    %-------------------------------------------------------------------
+    str = 'FWE|FDR|none';
+    adjustment = spm_input('p value adjustment to control','+1','b',str,[],1);
+    
+    switch adjustment
+    case 1 % family-wise false positive rate
+        %---------------------------------------------------------------
+        u0  = spm_input('p value (family-wise error)','+0','r',0.05,1,[0,1]);
+    case 2' % False discovery rate
+        %---------------------------------------------------------------    
+        u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
+    otherwise  %-NB: no adjustment
+        % p for conjunctions is p of the conjunction SPM
+        %---------------------------------------------------------------
+        u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
+    end
+
+    pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1,[0,Inf]);
+    if (pk < 1) & (pk > 0)
+        extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
+    end
+
+    if sel > 2
+        neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
+    else
+        neg_results = 0;
+    end
+
+    if isfield(SPM.xVol,'VRpv')
+        noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
+    else
+        noniso = 0;
     end
 end
 
-sel = spm_input('Convert t value to?',1,'m',...
-    '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
-
-%-Get height threshold
-%-------------------------------------------------------------------
-str = 'FWE|FDR|none';
-adjustment = spm_input('p value adjustment to control','+1','b',str,[],1);
-
 switch adjustment
-case 'FWE' % family-wise false positive rate
-    %---------------------------------------------------------------
-    u0  = spm_input('p value (family-wise error)','+0','r',0.05,1,[0,1]);
+case 1 % family-wise false positive rate
     p_height_str = '_pFWE';
-
-case 'FDR' % False discovery rate
-    %---------------------------------------------------------------    
-    u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
+case 2' % False discovery rate
     p_height_str = '_pFDR';
-
 otherwise  %-NB: no adjustment
-    % p for conjunctions is p of the conjunction SPM
-    %---------------------------------------------------------------
-    u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
     p_height_str = '_p';
-
-end
-
-pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1,[0,Inf]);
-if (pk < 1) & (pk > 0)
-    extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
-end
-
-if sel > 2
-    neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
-else
-    neg_results = 0;
 end
 
 for i=1:size(P,1)
@@ -160,12 +199,8 @@ for i=1:size(P,1)
     FWHM = SPM.xVol.FWHM;
     v2r  = 1/prod(FWHM(~isinf(FWHM)));          %-voxels to resels
 
-    if i==1 
-        if isfield(SPM.xVol,'VRpv')
-            noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
-        else
-            noniso = 0;
-        end
+    if ~isfield(SPM.xVol,'VRpv')
+        noniso = 0;
     end
 
     if noniso
@@ -264,7 +299,7 @@ for i=1:size(P,1)
         Z     = Z(:,Q);
         XYZ   = XYZ(:,Q);
         if isempty(Q)
-        fprintf('No voxels survived extent threshold k=%0.2g\n',k);
+            fprintf('No voxels survived extent threshold k=%0.2g\n',k);
         end
 
     else
