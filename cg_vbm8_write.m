@@ -851,26 +851,26 @@ if do_cls & cg_vbm8_get_defaults('extopts.print')
 	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.ornlm')))];
 	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.mrf')))];
 
-	fg = spm_figure('FindWin','Graphics');
-	spm_figure('Clear','Graphics');
-	ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-	text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
-		'Interpreter','none','Parent',ax);
-	for i=1:size(str,2)
-		text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
-		text(0.35,0.85-(0.075*i), str(i).value ,'FontSize',12, 'Interpreter','none','Parent',ax);
-	end
-	pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
+  try
+	  fg = spm_figure('FindWin','Graphics');
+	  spm_figure('Clear','Graphics');
+	  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
+	  text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
+		  'Interpreter','none','Parent',ax);
+	  for i=1:size(str,2)
+		  text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
+		  text(0.35,0.85-(0.075*i), str(i).value ,'FontSize',12, 'Interpreter','none','Parent',ax);
+	  end
+	  pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
 			0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
-	spm_orthviews('Reset');
+	  spm_orthviews('Reset');
 	
-	% first try use the bias corrected image
-	try
+	  % first try use the bias corrected image
+	  if exist(fullfile(pth,['wm', nam, '.nii']))
     	Vtmp = spm_vol(fullfile(pth,['wm', nam, '.nii']));
     	hh = spm_orthviews('Image',Vtmp,pos(1,:));
     	spm_orthviews('AddContext',hh);
-	end
-  try
+    end
 	  for k1=1:3,
 	    % check for all potential warped segmentations
 	    name1 = fullfile(pth,['wp', num2str(k1), nam, '.nii']);
@@ -882,7 +882,7 @@ if do_cls & cg_vbm8_get_defaults('extopts.print')
 	      spm_orthviews('AddContext',hh);
 	    elseif exist(name2,'file')
 	      Vtmp = spm_vol(name2); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+  	    hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
 	    elseif exist(name3,'file')
 	      Vtmp = spm_vol(name3);
@@ -890,8 +890,8 @@ if do_cls & cg_vbm8_get_defaults('extopts.print')
 	      spm_orthviews('AddContext',hh);
 	    end
     end
-  end
-	spm_print;
+	  spm_print;
+	end
 end
 
 % warped label
