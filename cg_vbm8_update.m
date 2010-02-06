@@ -49,6 +49,10 @@ if rnew > r
     try
       s = unzip([url sprintf('vbm8_r%d.zip',rnew)], d);
       fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
+      restart = spm_input('Restart SPM',1,'m','no|yes',[0 1],2);
+      if restart
+         eval(['spm fmri']);
+      end
     catch
       fprintf('Update failed: check file permissions. Download zip-file only.\n');
       web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');

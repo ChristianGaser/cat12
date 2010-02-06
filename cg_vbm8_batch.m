@@ -15,7 +15,7 @@ end
 addpath(fullfile(spm('dir'),'toolbox','vbm8'));
 spm_defaults
 cg_vbm8_defaults
-global defaults
+global defaults vbm8
 spm_jobman('initcfg');
 
 names = textread(namefile,'%s');
