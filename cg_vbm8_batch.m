@@ -16,6 +16,10 @@ addpath(fullfile(spm('dir'),'toolbox','vbm8'));
 spm_defaults
 cg_vbm8_defaults
 global defaults vbm8
+
+% deselect print option
+vbm8.extopts.print = 0;
+
 spm_jobman('initcfg');
 
 names = textread(namefile,'%s');
