@@ -62,7 +62,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     for (i=0; i<nvox; i++)
       mask[i] = (src[i] != 0) ? 255 : 0;
     max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, 0, 128, 40, KMEANS, 500.0);
-    max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, 0, 128, 40, NOPVE,  500.0);
+    max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, 0, 128, 10, NOPVE,  500.0);
     free(mask);
   }
   
