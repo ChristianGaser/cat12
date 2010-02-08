@@ -216,11 +216,8 @@ run_vbm ()
         ((i++))
     done
     time=`date "+%Y%b%d_%H%M"`
-    vbmlog=${pwd}/vbm8_${time}.log
-    echo Check $vbmlog for logging information
-    echo
+    vbmlog=${pwd}/vbm8_${time}
     
-    echo >> $vbmlog
     i=0
     while [ "$i" -lt "$NUMBER_OF_JOBS" ]
     do
@@ -228,13 +225,15 @@ run_vbm ()
             j=$(($i+1))
             COMMAND="cg_vbm8_batch('${TMP}${i}',${writeonly})"
             echo Calculate ${ARG_LIST[$i]}
-            echo ---------------------------------- >> $vbmlog
-            date >> $vbmlog
-            echo ---------------------------------- >> $vbmlog
-            echo >> $vbmlog
-            echo $0 $file >> $vbmlog
-            echo >> $vbmlog
-            nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND >> $vbmlog 2>&1 &
+            echo ---------------------------------- >> ${vbmlog}_${j}.log
+            date >> ${vbmlog}_${j}.log
+            echo ---------------------------------- >> ${vbmlog}_${j}.log
+            echo >> ${vbmlog}_${j}.log
+            echo $0 $file >> ${vbmlog}_${j}.log
+            echo >> ${vbmlog}_${j}.log
+            nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND >> ${vbmlog}_${j}.log 2>&1 &
+            echo Check ${vbmlog}_${j}.log for logging information
+            echo
         fi
         ((i++))
     done
