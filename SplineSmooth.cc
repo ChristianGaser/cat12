@@ -12,9 +12,9 @@
               express or implied warranty.
 ---------------------------------------------------------------------------- 
 $RCSfile: splineSmooth.cc,v $
-$Revision: 1 $
-$Author: gaser $
-$Date: 2008-12-10 22:23:10 +0100 (Mi, 10 Dez 2008) $
+$Revision$
+$Author$
+$Date$
 $State: Exp $
 --------------------------------------------------------------------------*/
 /* ----------------------------- MNI Header -----------------------------------
@@ -62,16 +62,17 @@ using namespace std;		// (bert)
 //---------------------------------------------------------------------------------
 // Declarations
 DblMat volume_domain(double *separations, int *dims);
-void fitSplinesToVolumeLookup(TBSplineVolume *spline, double *src, 
+int fitSplinesToVolumeLookup(TBSplineVolume *spline, double *src, 
                               const DblMat &domain,
                               int subsample, double *separations, int *dims);
 void smoothVolumeLookup(TBSplineVolume *spline, double *src, int *dims);
 
 //--------------------------------------------------------------------------------
 // main program
-extern "C" int splineSmooth( double *src, double lambda, double distance, int subsample, double *separations, int *dims)
-     
+extern "C" int splineSmooth( double *src, double lambda, double distance, int subsample, double *separations, int *dims)    
 {
+  int i;
+  
   DblMat domain;   // region in world coordinates on which splines are defined
 
   // domain is whole volume
@@ -85,12 +86,15 @@ extern "C" int splineSmooth( double *src, double lambda, double distance, int su
                                       distance, lambda);
   
   // do least squares fit to data 
-  fitSplinesToVolumeLookup((TBSplineVolume *)theSplines, src,
-                               domain, subsample, separations, dims);
-    
-  // write smooth function to volume
-  smoothVolumeLookup((TBSplineVolume *) theSplines, src, dims);
-  
+  if(fitSplinesToVolumeLookup((TBSplineVolume *)theSplines, src,
+                               domain, subsample, separations, dims) == TRUE) {
+    // write smooth function to volume
+    smoothVolumeLookup((TBSplineVolume *) theSplines, src, dims);
+  } else {                               
+    cerr << "Spline fit failed: No fitting is used.\n";
+    for (i=0; i < dims[0]*dims[1]*dims[2]; i++) src[i] = 0.0;
+  }
+      
   return(0);
 } 
 
@@ -122,7 +126,7 @@ volume_domain(double *separations, int *dims)
 }
 
 
-void
+int
 fitSplinesToVolumeLookup(TBSplineVolume *spline, double* src,
                          const DblMat &domain, int subsample, double* separations, int* dims)
 {
@@ -163,8 +167,8 @@ fitSplinesToVolumeLookup(TBSplineVolume *spline, double* src,
   if(spline->fit() == FALSE) // fit splines to the data
     {
       cerr << "Fatal Error: Spline fit failed.\n";
-      exit(3);
-    }
+      return(FALSE);
+    } else return(TRUE);
 }
 
 void 
