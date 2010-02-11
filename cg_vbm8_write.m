@@ -838,11 +838,29 @@ end
 
 % display and print result if possible
 if do_cls & cg_vbm8_get_defaults('extopts.print')
+  
+  % get current release numbers
+  A = ver;
+  for i=1:length(A)
+    if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
+      r_vbm = str2double(A(i).Version);
+    end
+    if strcmp(A(i).Name,'Statistical Parametric Mapping')
+      r_spm = str2double(A(i).Version);
+    end
+    if strcmp(A(i).Name,'MATLAB')
+      r_matlab = str2double(A(i).Version);
+    end
+  end
+  
 	tpm_name = spm_str_manip(cg_vbm8_get_defaults('opts.tpm'),'k40d');
+	affmethod = str2mat('SPM default (mutual information)','Masked T1-template');
+	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
-	str = [str struct('name', 'Dartel normalization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.dartelwarp')))];
+	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%3.1f / %d / %d',r_matlab,r_spm,r_vbm))];
+	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(cg_vbm8_get_defaults('extopts.dartelwarp')+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
-	str = [str struct('name', 'Affine normalization method:','value',sprintf('%d',cg_vbm8_get_defaults('opts.affmethod')))];
+	str = [str struct('name', 'Affine normalization method:','value',sprintf('%s',affmethod(cg_vbm8_get_defaults('opts.affmethod')+1,:)))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',cg_vbm8_get_defaults('opts.affreg')))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.warpreg')))];
 	str = [str struct('name', 'Bias regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.biasreg')))];
