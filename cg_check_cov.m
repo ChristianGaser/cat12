@@ -33,9 +33,11 @@ V = spm_vol(deblank(P));
 n = size(P,1);
 
 if length(V)>1 & any(any(diff(cat(1,V.dim),1,1),1))
-  error('images don''t all have same dimensions'), end
-if any(any(any(diff(cat(3,V.mat),1,3),3)))
-  error('images don''t all have same orientation & voxel size'), end
+  error('images don''t all have same dimensions')
+end
+if max(max(max(abs(diff(cat(3,V.mat),1,3))))) > 1e-8
+  error('images don''t all have same orientation & voxel size')
+end
 
 if nargin < 1
   norm = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
