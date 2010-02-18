@@ -5,7 +5,6 @@
 ########################################################
 # $Id$
 
-spm8=~/spm/spm8 # this parameter has to be set to your spm8 directory
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 writeonly=0
 CPUINFO=/proc/cpuinfo
@@ -49,11 +48,6 @@ parse_args ()
         --m* | -m*)
             exit_if_empty "$optname" "$optarg"
             matlab=$optarg
-            shift
-            ;;
-        --s* | -s*)
-            exit_if_empty "$optname" "$optarg"
-            spm8=$optarg
             shift
             ;;
         --p* | -p*)
@@ -178,18 +172,11 @@ run_vbm ()
     
     # we have to go into toolbox folder to find matlab files
     cd $cwd
+    
+    spm8=`dirname $cwd`
+    spm8=`dirname $spm8`
 
-    if [ $# -eq 2 ]; then
-        if [ ! -d $spm8 ]; then
-            spm8=${pwd}/$spm8
-        fi
-        if [ ! -d $spm8 ]; then
-            echo Directory $spm8 does not exist.
-            exit 0
-        fi
-    fi
-
-    export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8
+    export MATLABPATH=$spm8
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
@@ -263,24 +250,21 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_vbm8_batch.sh filename|filepattern [-s spm8-path] [-m matlabcommand] [-w]
+   cg_vbm8_batch.sh filename|filepattern [-m matlabcommand] [-w]
    
    -m   matlab command
-   -s   spm8 directory
    -p   number of parallel jobs (=number of processors)
    -w
    Only one filename or pattern is allowed. This can be either a single file or a pattern
-   with wildcards to process multiple files. Optionally you can set the spm8 directory with 
-   the "-s" option and the matlab command with the "-m" option and force to write already 
-   estimated segmentations with the "-w" option.
+   with wildcards to process multiple files. Optionally you can set the matlab command 
+   with the "-m" option and force to write already estimated segmentations with the "-w" option.
 
 PURPOSE:
    Command line call of VBM8 segmentation
 
 EXAMPLE
-   cg_vbm8_batch.sh spm/spm8/canonical/single_subj_T1.nii -s ~/spm/spm8
-   This command will process only the single file single_subj_T1.nii. The spm8 directory
-   is set to ~/spm/spm8.
+   cg_vbm8_batch.sh spm/spm8/canonical/single_subj_T1.nii
+   This command will process only the single file single_subj_T1.nii. 
    
    cg_vbm8_batch.sh spm/spm8/canonical/*152*.nii
    Using wildcards all files containing the term "152" will be processed. In this case these 
@@ -304,7 +288,6 @@ USED FUNCTIONS:
    SPM8
 
 SETTINGS
-   spm8 path: $spm8
    matlab command: $matlab
    
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).

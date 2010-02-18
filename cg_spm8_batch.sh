@@ -5,7 +5,6 @@
 ########################################################
 # $Id$
 
-spm8=~/spm/spm8  # this parameter has to be set to your spm8 directory
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
 
@@ -44,11 +43,6 @@ parse_args ()
 		--m* | -m*)
 			exit_if_empty "$optname" "$optarg"
 			matlab=$optarg
-			shift
-			;;
-		--s* | -s*)
-			exit_if_empty "$optname" "$optarg"
-			spm8=$optarg
 			shift
 			;;
 		--d* | -d*)
@@ -101,15 +95,8 @@ run_batch ()
 	# we have to go into toolbox folder to find matlab files
 	cd $cwd
 
-	if [ $# -eq 2 ]; then
-		if [ ! -d $spm8 ]; then
-			spm8=${pwd}/$spm8
-	    fi
-		if [ ! -d $spm8 ]; then
-			echo Directory $spm8 does not exist.
-			exit 0
-		fi
-	fi
+  spm8=`dirname $cwd`
+  spm8=`dirname $spm8`
 
   # add current folder to matlabfile if file was not found
 	if [ ! -f $file ]; then
@@ -129,7 +116,7 @@ run_batch ()
 		exit 0
 	fi
 
-	export MATLABPATH=$MATLABPATH:${spm8}/toolbox/vbm8:$spm8:$dname
+	export MATLABPATH=$spm8:$dname
 	
 	time=`date "+%Y%b%d_%H%M"`
 	spmlog=${pwd}/spm8_${time}.log
@@ -177,25 +164,23 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_spm8_batch.sh batchfile.m [-d] [-s spm8-path] [-m matlabcommand]
+   cg_spm8_batch.sh batchfile.m [-d] [-m matlabcommand]
    
    -d   use display option in matlab in case that batch file needs graphical output
    -m   matlab command
-   -s   spm8 directory
 
-   Only one batch filename is allowed. Optionally you can set the spm8 
-   directory with the "-s" option and the matlab command with the "-m" option.
-   As default no display is used (via the -nodisplay option in matlab). However
-   sometimes the batch file needs a graphical output and the display should
-   be enabled with the option "-d".
+   Only one batch filename is allowed. Optionally you can set the matlab command 
+   with the "-m" option. As default no display is used (via the -nodisplay option 
+   in matlab). However sometimes the batch file needs a graphical output and the 
+   display should be enabled with the option "-d".
 
 PURPOSE:
    Command line call of SPM8 batch files
 
 EXAMPLE
-   cg_spm8_batch.sh test_batch.m -s ~/spm/spm8 -m /usr/local/bin/matlab7
-   This command will process the batch file test_batch.m. The spm8 directory
-   is set to ~/spm/spm8. As matlab command /usr/local/bin/matlab7 will be used.
+   cg_spm8_batch.sh test_batch.m -m /usr/local/bin/matlab7
+   This command will process the batch file test_batch.m. As matlab command 
+   /usr/local/bin/matlab7 will be used.
    
 INPUT:
    batch file saved as matlab-script or mat-file
@@ -207,7 +192,6 @@ USED FUNCTIONS:
    SPM8
 
 SETTINGS
-   spm8 path: $spm8
    matlab command: $matlab
    
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
