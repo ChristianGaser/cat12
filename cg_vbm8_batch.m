@@ -12,15 +12,12 @@ if nargin < 2
 	writeonly = 0;
 end
 
-addpath(fullfile(spm('dir'),'toolbox','vbm8'));
 spm_defaults
 cg_vbm8_defaults
 global defaults vbm8
 
-% deselect print option
+% always deselect print option
 vbm8.extopts.print = 0;
-
-spm_jobman('initcfg');
 
 names = textread(namefile,'%s');
 n = length(names);
@@ -42,6 +39,7 @@ for i=1:n
 end
 
 try
+  spm_jobman('initcfg');
   spm_jobman('run_nogui',matlabbatch)
 end
 

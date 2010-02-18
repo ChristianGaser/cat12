@@ -157,6 +157,8 @@ for z=1:length(x3),
     src(:,:,z)  = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
 end
 
+fprintf('VBM8 %s\n',rev);
+
 % rescue first image and optionally apply optimized blockwise non local means denoising filter
 ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
 if ornlm_weight > 0
