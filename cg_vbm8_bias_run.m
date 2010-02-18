@@ -21,7 +21,7 @@ bo  = bias_opts;
 dat = bias_correction(VF,VG,bo.nits,bo.fwhm,bo.reg,bo.lmreg);
 
 [pth,nam,ext,num] = spm_fileparts(VF.fname);
-VF.fname = fullfile(pth,['m', nam, ext,num]);
+VF.fname = fullfile(pth,['m', nam, ext, num]);
 VF.descrip = 'Bias corrected image';
 
 spm_write_vol(VF, dat);
@@ -77,6 +77,8 @@ for subit=1:nits,
         M2  = VG.mat\VF.mat*M1;
         f1o = spm_slice_vol(VF,M1,VF.dim(1:2),0);
         f2o = spm_slice_vol(VG,M2,VF.dim(1:2),0);
+        f1o(~isfinite(f1o)) = 0;
+        f2o(~isfinite(f2o)) = 0;
         msk = (f1o==0) & (f2o==0);
         f1o(msk) = 0;
         f2o(msk) = 0;
@@ -134,7 +136,9 @@ dat = zeros(VF.dim(1:3));
 
 for z=1:VF.dim(3),
     M1 = spm_matrix([0 0 z]);
-    dat(:,:,z) = spm_slice_vol(VF,M1,VF.dim(1:2),0);
+    tmp = spm_slice_vol(VF,M1,VF.dim(1:2),0);
+    tmp(~isfinite(tmp)) = 0;
+    dat(:,:,z) = tmp;
     r  = transf(B1bias,B2bias,B3bias(z,:),Tbias);
     dat(:,:,z) = dat(:,:,z)./exp(r);
 end;
