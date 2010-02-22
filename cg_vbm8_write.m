@@ -261,7 +261,7 @@ if do_cls & do_defs,
         mask = single(cls{1});
         mask = mask + single(cls{2});
 
-        % keep largest connected component after 2 its of opening
+        % keep largest connected component after 1 it of opening
         mask = cg_morph_vol(mask,'open',1,warp.open_th);
         mask = mask_largest_cluster(mask,0.5);
 
@@ -325,14 +325,9 @@ if do_cls & do_defs,
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
     if init_kmeans
-      % check whether Kmeans with splinesmoothing can be used as mex-file
-      if exist(['AmapMexNu'])==3
-        fprintf('\nAmap segmentation of %s with Kmeans initialization and nu-correction.\n',res.image(1).fname);   
-        prob = AmapMexNu(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
-      else
-        fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
-        prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
-      end
+      % check whether Kmeans can be used as mex-file
+      fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
+      prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
     else
       fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
       prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);

@@ -14,11 +14,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
   double *src, *mean, *voxelsize;
-  double max_vol, weight_MRF;
+  double max_vol, weight_MRF, bias_fwhm;
   const int *dims;
   int dims2[4];
   int i, n_classes, pve, nvox;
-  int niters, sub, init;
+  int niters, iters_nu, sub, init, thresh, thresh_kmeans_int;
     
   if (nrhs!=9)
     mexErrMsgTxt("9 inputs required.");
@@ -60,7 +60,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
     for (i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
-    max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, 0, 128, 0, NOPVE,  500.0);
+
+    thresh = 0;
+    thresh_kmeans_int = 128;
+    iters_nu = 40;
+    bias_fwhm = 60.0;
+
+    /* initial Kmeans estimation with 6 classes */
+    max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, thresh, thresh_kmeans_int, iters_nu, KMEANS, bias_fwhm);
+    /* final Kmeans estimation with 3 classes */
+    max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, thresh, thresh_kmeans_int, iters_nu, NOPVE, bias_fwhm);
+
     free(mask);
   }
   
