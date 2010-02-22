@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "Changed paths:" > log2
+svn -q status >> log2
+echo  >> log2
+if [ -f log ]; then
+  cat log >> log2
+  echo  >> log2
+  svn ci -F log2
+  svn update
+else
+  echo "Put commit information in log"
+fi
