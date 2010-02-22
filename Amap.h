@@ -55,7 +55,9 @@ extern void Amap(double *src, unsigned char *label, unsigned char *prob, double 
 extern void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims);
 extern void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims);
 extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int init, int *dims);
-extern int splineSmooth( double *src, double lambda, double distance, int subsample, double *separations, int *dims);
+#ifdef SPLINESMOOTH
+  extern int splineSmooth( double *src, double lambda, double distance, int subsample, double *separations, int *dims);
+#endif
 
 struct point {
   double mean;

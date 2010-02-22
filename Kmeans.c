@@ -125,10 +125,11 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
 
 double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *voxelsize, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm)
 {
-  int i, j, k;
-  double e, emin, eps, *nu, *src_bak, th_src, val, val_nu;
+  int i, j, k, subsample, masked_smoothing;
+  double e, emin, eps, *nu, *src_bak, th_src, val, val_nu, nu_bkg;
   double last_err = HUGE;
   double max_src = -HUGE;
+  double mean_nu = 0.0, fwhm[3];
   long n[MAX_NC];
   double mean[MAX_NC];
   double var[MAX_NC];
@@ -136,7 +137,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   double Mu[MAX_NC];
   int n_classes, count_err;
   long vol;
-  int n_classes_initial = n_clusters;
+  int n_classes_initial = n_clusters, count;
 
   vol  = dims[0]*dims[1]*dims[2];
 
@@ -155,6 +156,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   }  
   /* find maximum and mean inside mask */
+  count = 0;
   for (i = 0; i < vol; i++) {
     if (mask[i] > 0) {
       max_src = MAX(src[i], max_src);
@@ -214,9 +216,14 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     for (i = 0; i < n_classes; i++) Mu[i] = mu[i];     
   }
 
-  /* only use values above the mean of the lower two clusters for nu-estimate */
-  th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
-
+#ifdef SPLINESMOOTH
+    /* only use values above the mean of the lower two clusters for nu-estimate */
+    th_src = max_src*(double)((Mu[0]+Mu[1])/2.0)/255.0;
+#else
+    /* do not use any segmentation-based threshold */
+    th_src = 0.0;  
+#endif
+  
   /* extend initial 3 clusters to 6 clusters by averaging clusters */
   if (pve == KMEANS) {
     mu[0] = Mu[0]/2.0;
@@ -229,10 +236,21 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   /* find the final clustering and correct for nu */
   if (iters_nu > 0) {
-    fprintf(stdout,"Nu correction.\n");
+
+#ifdef SPLINESMOOTH
+    fprintf(stdout,"Nu correction using spline smoothing\n");
+#else
+    fprintf(stdout,"Nu correction\n");
+#endif
+
+    /* save values of previous iteration */
+    for (i = 0; i < vol; i++) src_bak[i] = src[i];
+    nu_bkg = 1.0;
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
     count_err = 0;
     for (j = 0; j < iters_nu; j++) {  
+      count = 0;
+      mean_nu = 0.0;
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
         /* only use values above threshold where mask is defined for nu-estimate */
@@ -240,23 +258,48 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
           val_nu = src[i]/(max_src/255.0*mu[label[i]-1]);
           if (finite(val_nu)) {
             nu[i] = val_nu;
+            mean_nu += val_nu;
+            count++;
           }
         }
       }
             
-      /* spline estimate: start with distance of 1500 end end up with bias_fwhm */
-      splineSmooth(nu, 0.01, MAX(bias_fwhm, 1500.0/(j+1)), 4, voxelsize, dims);
+#ifdef SPLINESMOOTH
+        /* spline estimate: start with distance of 1500 end end up with bias_fwhm */
+        splineSmooth(nu, 0.01, MAX(bias_fwhm, 1500.0/(j+1)), 4, voxelsize, dims);
+#else
+        /* correct nu input to a mean of 1 to remain original intensity range */
+        mean_nu /= (double)count;
+        for (i=0; i<vol; i++)
+          if (nu[i] != 0.0) nu[i] /= mean_nu; else nu[i] = nu_bkg;
+      
+        for(i=0; i<3; i++) fwhm[i] = bias_fwhm;
+        subsample = 2;
+        masked_smoothing = 1;
+        smooth_subsample_double(nu, dims, voxelsize, fwhm, masked_smoothing, subsample);
+
+#endif
       
       /* apply nu correction to source image */
       for (i = 0; i < vol; i++) {
-        if (nu[i] > 0.0)
+        if (nu[i] != 0.0)
           src[i] /= nu[i];
       }
       
       /* update k-means estimate */
       e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
 
-      if (e > last_err)  count_err++;
+      if (e >= last_err)  {
+        count_err++;
+        /* if Kmeans fails at first iteration of NU correction change parameters and start again */
+        if (j==1) {
+          /* rescue original value */
+          for (i = 0; i < vol; i++) src[i] = src_bak[i];
+          /* try to use a different bakcground value for nu-correction */
+          nu_bkg = 0.0;
+          count_err = 0;
+        }
+      }  
       else count_err = 0;
 
       /* interrupt if last error was for the last 2 iterations larger 
@@ -267,15 +310,12 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         break;
       }
 
-      /* save old values */
-      for (i = 0; i < vol; i++) src_bak[i] = src[i];
-
       last_err = e;
     
       printf("iters: %2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*(double)n_clusters/(double)vol);
       fflush(stdout);
     
-    }
+    }    
   } else {
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
   }
