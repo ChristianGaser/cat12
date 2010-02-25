@@ -82,5 +82,6 @@ vbm8.defs.interp    = 5;  % 5th degree B-spline
 vbm8.extopts.kmeans    = 1;  % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm8.extopts.mrf       = 0.15;  % MRF weighting
 vbm8.extopts.ornlm     = 0.7;  % use ORNLM filter with weighting: 0 - no ORNLM
+vbm8.extopts.bias_fwhm = 60;  % FWHM of Kmeans internal bias correction
 vbm8.extopts.mask      = {fullfile(spm('dir'),'toolbox','vbm8','submask.nii')};	% mask for subcortical areas + ventricles
 vbm8.output.surf.dartel= 0; % WM-surface 

@@ -12,6 +12,8 @@ function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 
 rev = '$Rev$';
 
+fprintf('VBM8 %s\n',rev);
+
 if ~isstruct(tpm) || (~isfield(tpm, 'bg1') && ~isfield(tpm, 'bg')),
     tpm = spm_load_priors8(tpm);
 end
@@ -152,34 +154,12 @@ if do_defs & (warp.brainmask_th > 0)
     mask = zeros(res.image(1).dim(1:3),'single');
 end
 
-src = zeros(res.image(1).dim(1:3));
-for z=1:length(x3),
-    src(:,:,z)  = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
-end
-
-fprintf('VBM8 %s\n',rev);
-
-% rescue first image and optionally apply optimized blockwise non local means denoising filter
-ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
-if ornlm_weight > 0
-    h = cg_noise_estimation(src);
-    fprintf('\nNoise estimate: %3.2f',h);
-  	
-  	% weight ORNLM
-  	h = ornlm_weight*h;
-    src = ornlmMex(src,3,1,h);  
-end
-
 for z=1:length(x3),
 
     % Bias corrected image
     cr = cell(1,N);
     for n=1:N,
-        if n==1
-            f = src(:,:,z);
-        else
-            f = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
-        end
+        f = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
         bf1 = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
         cr{n} = bf1.*f;
         % Write a plane of bias corrected data
@@ -252,6 +232,25 @@ spm_progress_bar('clear');
 
 clear q q1 Coef b cr
 
+% load bias corrected image
+src = zeros(res.image(1).dim(1:3));
+for z=1:length(x3),
+    f = spm_sample_vol(res.image(1),x1,x2,o*x3(z),0);
+    bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
+    src(:,:,z) = bf1.*f;
+end
+
+% optionally apply optimized blockwise non local means denoising filter
+ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
+if ornlm_weight > 0
+    h = cg_noise_estimation(src);
+    fprintf('\nNoise estimate: %3.2f',h);
+  	
+  	% weight ORNLM
+  	h = ornlm_weight*h;
+    src = ornlmMex(src,3,1,h);  
+end
+
 src = single(src);
 
 if do_cls & do_defs,
@@ -314,26 +313,25 @@ if do_cls & do_defs,
     vol(find(mask(indx,indy,indz)==0)) = 0;
     
     % Amap parameters
-    n_iters = 200; sub = 16; n_classes = 3; pve = 5;
+    n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
+    iters_icm = 0;
     
-    % MRF weighting
-    mrf_weight = cg_vbm8_get_defaults('extopts.mrf');
-
-    % check for kmeans initialization
+    % default parameters
+    mrf_weight  = cg_vbm8_get_defaults('extopts.mrf');
+    bias_fwhm   = cg_vbm8_get_defaults('extopts.bias_fwhm');
     init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
 
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
     if init_kmeans
-      % check whether Kmeans can be used as mex-file
       fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
-      prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
     else
       fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
-      prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol);
     end
     
-    % reorder probability maps to spm order
+    prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol, iters_icm, bias_fwhm);
+
+    % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
     
@@ -834,7 +832,7 @@ if bf(1,2),
 end
 
 % display and print result if possible
-if do_cls & cg_vbm8_get_defaults('extopts.print')
+if do_cls & warp.print
   
   % get current release numbers
   A = ver;
@@ -855,14 +853,14 @@ if do_cls & cg_vbm8_get_defaults('extopts.print')
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%3.1f / %d / %d',r_matlab,r_spm,r_vbm))];
-	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(cg_vbm8_get_defaults('extopts.dartelwarp')+1,:)))];
+	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
-	str = [str struct('name', 'Affine normalization method:','value',sprintf('%s',affmethod(cg_vbm8_get_defaults('opts.affmethod')+1,:)))];
-	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',cg_vbm8_get_defaults('opts.affreg')))];
-	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.warpreg')))];
-	str = [str struct('name', 'Bias regularisation:','value',sprintf('%g',cg_vbm8_get_defaults('opts.biasreg')))];
+	str = [str struct('name', 'Affine normalization method:','value',sprintf('%s',affmethod(warp.affmethod+1,:)))];
+	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
+	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.kmeans')))];
+	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.bias_fwhm')))];
 	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.ornlm')))];
 	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.mrf')))];
 
