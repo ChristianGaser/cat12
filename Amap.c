@@ -494,7 +494,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 
 
 /* perform adaptive MAP on given src and initial segmentation label */
-void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize)
+void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM)
 {
   int i, nix, niy, niz;
   int area, nvol, vol;
@@ -567,14 +567,16 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   /* use much smaller beta for if no pve is selected */
   if(!pve) beta[0] /= 20.0;
   
-  if(weight_MRF != 1.0) {
-    beta[0] *= weight_MRF;
-    fprintf(stdout,"Weighted MRF beta %3.3f\n",beta[0]);
+  /* Iterative Conditional Mode */
+  if(niters_ICM > 0) {
+    if(weight_MRF != 1.0) {
+      beta[0] *= weight_MRF;
+      fprintf(stdout,"Weighted MRF beta %3.3f\n",beta[0]);
+    }
+  
+    ICM(prob, label, n_classes, dims, beta[0], niters_ICM, voxelsize);
   }
   
-  /* iterative conditional mode */
-  ICM(prob, label, n_classes, dims, beta[0], 50, voxelsize);
-
   free(r);
 
   return;    
