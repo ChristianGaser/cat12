@@ -17,11 +17,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   double max_vol, weight_MRF, bias_fwhm;
   const int *dims;
   int dims2[4];
-  int i, n_classes, pve, nvox;
+  int i, n_classes, pve, nvox, iters_icm;
   int niters, iters_nu, sub, init, thresh, thresh_kmeans_int;
     
-  if (nrhs!=9)
-    mexErrMsgTxt("9 inputs required.");
+  if (nrhs!=11)
+    mexErrMsgTxt("11 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -37,6 +37,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   init       = (int)mxGetScalar(prhs[6]);
   weight_MRF = (double)mxGetScalar(prhs[7]);
   voxelsize  = (double*)mxGetPr(prhs[8]);
+  iters_icm  = (int)mxGetScalar(prhs[9]);
+  bias_fwhm  = (double)mxGetScalar(prhs[10]);
 
   if ( mxGetM(prhs[8])*mxGetN(prhs[8]) != 3) 
     mexErrMsgTxt("Voxelsize should have 3 values.");
@@ -64,7 +66,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     thresh = 0;
     thresh_kmeans_int = 128;
     iters_nu = 40;
-    bias_fwhm = 60.0;
 
     /* initial Kmeans estimation with 6 classes */
     max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, thresh, thresh_kmeans_int, iters_nu, KMEANS, bias_fwhm);
@@ -73,8 +74,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     free(mask);
   }
-  
-  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize);
+    
+  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize, iters_icm);
   if(pve==6) Pve6(src, prob, label, mean, dims2);
   if(pve==5) Pve5(src, prob, label, mean, dims2);
 
