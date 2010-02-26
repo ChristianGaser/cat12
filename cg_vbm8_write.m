@@ -314,7 +314,7 @@ if do_cls & do_defs,
     
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
-    iters_icm = 0;
+    iters_icm = 20;
     
     % default parameters
     mrf_weight  = cg_vbm8_get_defaults('extopts.mrf');
