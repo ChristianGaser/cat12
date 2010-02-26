@@ -47,6 +47,14 @@ if rnew > r
   overwrite = spm_input('Update',1,'m','Download zip-file only|Overwrite old VBM8 installation',[0 1],2);
   if overwrite
     try
+      % list mex-files and delete these files to prevent that old
+      % compiled files are used
+      mexfiles = dir(fullfile(d,'vbm8','*.mex*'));
+      for i=1:length(mexfiles)
+        name = fullfile(d,'vbm8',mexfiles(i).name);
+        spm_unlink(name);
+        disp(name)
+      end
       s = unzip([url sprintf('vbm8_r%d.zip',rnew)], d);
       fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
       restart = spm_input('Restart SPM',1,'m','no|yes',[0 1],2);

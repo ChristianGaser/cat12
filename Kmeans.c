@@ -266,7 +266,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       
       /* apply nu correction to source image */
       for (i = 0; i < vol; i++) {
-          if (src[i]>0) src[i] -= nu[i];
+          if (src[i]>0) src[i] -= 0.5*nu[i];
       }
       
       /* update k-means estimate */
