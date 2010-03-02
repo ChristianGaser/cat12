@@ -204,7 +204,7 @@ affmethod = cfg_menu;
 affmethod.tag = 'affmethod';
 affmethod.name = 'Affine Registration Method';
 affmethod.labels = {...
-    'Seg Default (mutual information)',...
+    'New Segment Default (mutual information registration)',...
     'Least Squares with masked T1 template'};
 affmethod.values = {0, 1};
 affmethod.def  = @(val)cg_vbm8_get_defaults('opts.affmethod', val{:});
@@ -275,7 +275,7 @@ dartelwarp.name = 'Spatial normalization';
 dartelwarp.labels = {'Low-dimensional: SPM default','High-dimensional: Dartel'};
 dartelwarp.values = {0 1};
 dartelwarp.def  = @(val)cg_vbm8_get_defaults('extopts.dartelwarp', val{:});
-dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization.'};
+dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization. Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '};
 
 %------------------------------------------------------------------------
 
@@ -294,7 +294,7 @@ native.tag = 'native';
 native.name = 'Native space';
 native.labels = {'none','yes'};
 native.values = {0 1};
-native.help    = {'The native space option allows you to produce a tissue class image (c*) that is in alignment with the original/* (see Figure \ref{seg1})*/. It can also be used for ``importing'''' into a form that can be used with the DARTEL toolbox (rc*).'};
+native.help    = {'The native space option allows you to produce a tissue class image (c*) that is in alignment with the original/* (see Figure \ref{seg1})*/. It can also be used for ''''importing'''' into a form that can be used with the DARTEL toolbox (rc*).'};
 
 warped    = cfg_menu;
 warped.tag = 'warped';
@@ -356,7 +356,7 @@ label.name = 'PVE label image';
 label.val = {native, warped, dartel};
 label.help = {[...
 'This is the option to save a labeled version of your segmentations. ',...
-'Labels are saved as PVE values.']};
+'Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM and GM-CSF.']};
 
 %------------------------------------------------------------------------
 
