@@ -100,7 +100,7 @@ noniso.tag  = 'noniso';
 noniso.labels = {'yes','no'};
 noniso.values = {1,0};
 noniso.val    = {0};
-noniso.help = {'Correct for non-isotropic smoothness'};
+noniso.help = {'Correct for non-isotropic smoothness for cluster extent thresholds.'};
 
 threshdesc      = cfg_choice;
 threshdesc.name = 'Threshold type';
@@ -279,7 +279,7 @@ nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 
 slice = cfg_entry;
 slice.tag = 'slice';
-slice.name = 'Slice (in mm)?';
+slice.name = 'Show slice (in mm)?';
 slice.strtype = 'e';
 slice.num = [1 1];
 slice.val  = {0};
@@ -478,7 +478,7 @@ bias  = cg_vbm8_bias;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {check_cov,showslice,calcvol,T2x,F2x,ornlm,bias,defs};
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,ornlm,bias,defs};
 
 return
 
