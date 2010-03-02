@@ -25,7 +25,11 @@ url = 'http://dbm.neuro.uni-jena.de/vbm8/';
 
 % get new release number
 [s,sts] = urlread(url);
-if ~sts, error('Cannot access the SBM server.'); end
+if ~sts
+  disp('Cannot access the SBM server.'); 
+  return
+end
+
 n = regexp(s,'vbm8_r(\d.*?)\.zip','tokens');
 if isempty(n)
   fprintf('There are no new releases available yet.\n');
