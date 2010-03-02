@@ -2,7 +2,7 @@ function cg_slice_overay_ui
 
 OV.reference_image = fullfile(spm('dir'),'canonical','single_subj_T1.nii');
 OV.reference_range = [0.05 0.6];                         % intensity range for reference image
-OV.opacity = 1;                                      % transparence value for overlay (<1)
+OV.opacity = Inf;                                      % transparence value for overlay (<1)
 OV.cmap    = jet;                                      % colormap for overlay
 
 % name of files
@@ -24,8 +24,7 @@ OV.name=str2mat(fullfile(spm('dir'),'tpm','grey.nii'),...
 %  0.0001        4
 
 % Number of fields in range should be the same as number of files (see above)
-% or give one value, which is valid for all.
-% If lower and upper range are equal, then the range will be automatically estimated.
+% or give one field, which is valid for all.
 % Be carefule: intensities below the lower range are not shown!
 OV.range   =[[0.5 1]; [0.5 1]];
 
