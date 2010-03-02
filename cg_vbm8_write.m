@@ -267,6 +267,9 @@ if do_cls & do_defs,
         % dilate and close to fill ventricles
         mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
         mask = cg_morph_vol(mask,'close',10,0.5);
+        
+        % remove sinus
+        mask = mask & single(cls{5})<16;
     end
         
     % set segmentations outside mask to zero
