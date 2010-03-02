@@ -7,16 +7,16 @@ if nargin == 0
 
     imgs = spm_select(2, 'image', 'Select structural and overlay image');
     OV = pr_basic_ui(imgs,0);
-
+    
     % set options
     OV.opacity = 1;
-    OV.reference_image = imgs(1,:);
-    OV.reference_range = OV.img(1).range';
+    OV.reference_image = deblank(imgs(1,:));
+    OV.reference_range = OV.img(1).range;
     OV.name = imgs(2:end,:);
     OV.cmap = OV.img(2).cmap;
-    OV.range = OV.img(2).range';
+    OV.range = OV.img(2).range;
     OV.slices_str = '';
-    %SO.transform = OV.transform;
+
 end
 
 % check filename whether log. scaling was used
@@ -109,24 +109,14 @@ SO.img(2).vol = spm_vol(img);
 
 SO.img(2).prop = OV.opacity;   % transparent overlay
 SO.img(2).cmap = OV.cmap;	    % colormap
-if range(1)==range(2)
-	[mn mx] = cg_max(SO.img(2).vol);
-	SO.img(2).range = [mn mx];
-else SO.img(2).range = range; end
 SO.img(2).func = 'i1(i1==0)=NaN;';
 
 if ~isfield(OV,'range')
-	  [mx mn] = volmaxmin(OV.img(2).vol)
-    OV.range = spm_input('Intensity range for colormap','+1', 'e', [mn mx], 2)';
+	  [mx mn] = volmaxmin(OV.img(2).vol);
+    SO.img(2).range = spm_input('Intensity range for colormap','+1', 'e', [mn mx], 2)';
 end
 
-if range(1)==range(2)
-	[mx mn] = volmaxmin(OV.img(2).vol)
-	OV.img(2).range = [mn mx];
-else OV.img(2).range = range; end
-
-% do not show background zeros
-SO.img(2).func = 'i1(i1==0)=NaN;';
+SO.img(2).range = range;
 
 if range(1) >= 0
 	SO.img(2).outofrange = {0,size(SO.img(2).cmap,1)};
@@ -405,54 +395,20 @@ imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
 
 % identify image types
 cscale = [];
-deftype = 1;
 SO.cbar = [];
 for i = 1:nimgs
   SO.img(i).vol = spm_vol(imgs{i});
-  if i==1
-    itype{1} = 'Structural';
-  else
-    itype{1} = 'Blobs';
-  end
-  imgns(i) = {sprintf('Img %d (%s)',i,itype{1})};
   [mx mn] = volmaxmin(SO.img(i).vol);
-  if ~isempty(strmatch('Structural', itype))
-    SO.img(i).type = 'truecolour';
+  if i==1
     SO.img(i).cmap = gray;
     SO.img(i).range = [2*mn mx]; % increase minimum value to enhance contrast
-    deftype = 2;
     cscale = [cscale i];
-    if strcmp(itype,'Structural with SPM blobs')
-      SO = add_spm(SO);
-    end
   else
-    cprompt = ['Colormap: ' imgns{i}];
-    switch itype{1}
-     case 'Truecolour'
-      SO.img(i).type = 'truecolour';
-      dcmap = 'flow.lut';
-      drange = [mn mx];
-      cscale = [cscale i];
-      SO.cbar = [SO.cbar i];
-     case 'Blobs'
-      SO.img(i).type = 'split';
-      dcmap = 'jet';
-      drange = [0 mx];
-      SO.img(i).prop = 1;
-      SO.cbar = [SO.cbar i];
-     case 'Negative blobs'
-      SO.img(i).type = 'split';
-      dcmap = 'winter';
-      drange = [0 mn];
-      SO.img(i).prop = 1;
-      SO.cbar = [SO.cbar i];
-     case 'Contours'
-      SO.img(i).type = 'contour';
-      dcmap = 'white';
-      drange = [mn mx];
-      SO.img(i).prop = 1;
-    end
-    SO.img(i).cmap = return_cmap(cprompt, dcmap);
+    dcmap = 'jet';
+    drange = [mn mx];
+    SO.img(i).prop = Inf;
+    SO.cbar = [SO.cbar i];
+    SO.img(i).cmap = return_cmap('Colormap:', dcmap);
     SO.img(i).range = spm_input('Img val range for colormap','+1', 'e', drange, 2);
   end
 end
@@ -466,7 +422,7 @@ else
     SO.img(ino).prop = spm_input(sprintf('%s intensity',imgns{ino}),...
                  '+1', 'e', ...
                  remcol/(ncmaps-i+1),1);
-    remcol = remcol - SO.img(ino).prop;
+    remcol = remcol - SO.img(ino).prop
   end
 end
  
@@ -474,8 +430,6 @@ SO.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
             ' Coronal|Sagittal'], strvcat('axial','coronal','sagittal'), ...
             1));
 tmp = SO.transform;
-
-SO.figure = 12;
 
 % slices for display
 slice_overlay('checkso');
@@ -490,7 +444,6 @@ SO.slices = spm_input('Slices to display (mm)', '+1', 'e', ...
 if dispf, slice_overlay; end
 
 return
-
 
 % Subfunctions 
 % ------------
