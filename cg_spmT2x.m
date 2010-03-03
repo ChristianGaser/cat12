@@ -104,6 +104,9 @@ if nargin == 1
     elseif isfield(vargin.conversion.cluster,'k')
         extent_FWE = 0;
         pk  = vargin.conversion.cluster.k.kthresh;
+    elseif isfield(vargin.conversion.cluster,'En')
+        extent_FWE = 0;
+        pk  = -1;
     else
         extent_FWE = 0;
         pk=0;
@@ -144,7 +147,7 @@ if nargin < 1
         u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
     end
 
-    pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1,[0,Inf]);
+    pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1);
     if (pk < 1) & (pk > 0)
         extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
     end
@@ -263,6 +266,11 @@ for i=1:size(P,1)
                 end
                 p_extent_str = ['_pk' num2str(pk*100)];
             end
+        elseif (pk < 0)
+            k = 0;
+            [P2 Pn2 Em En EN] = spm_P(1,k,u,df,STAT,R,1,S);
+            k = round(En/v2r);
+            p_extent_str = '_En';
         else
             k = pk;
             p_extent_str = '';
