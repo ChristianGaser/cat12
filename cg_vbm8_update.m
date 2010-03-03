@@ -26,7 +26,7 @@ url = 'http://dbm.neuro.uni-jena.de/vbm8/';
 % get new release number
 [s,sts] = urlread(url);
 if ~sts
-  disp('Cannot access the SBM server.'); 
+  fprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\n',url); 
   return
 end
 
