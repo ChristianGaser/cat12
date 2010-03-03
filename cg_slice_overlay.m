@@ -356,6 +356,7 @@ for i=1:vol.dim(3),
 end
 return
 
+% --------------------------------------------------------------------------
 function SO = pr_basic_ui(imgs, dispf)
 % GUI to request parameters for slice_overlay routine
 % FORMAT SO = pr_basic_ui(imgs, dispf)
@@ -394,7 +395,6 @@ nchars = 20;
 imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
 
 % identify image types
-cscale = [];
 SO.cbar = [];
 for i = 1:nimgs
   SO.img(i).vol = spm_vol(imgs{i});
@@ -402,51 +402,47 @@ for i = 1:nimgs
   if i==1
     SO.img(i).cmap = gray;
     SO.img(i).range = [2*mn mx]; % increase minimum value to enhance contrast
-    cscale = [cscale i];
   else
-    dcmap = 'jet';
-    drange = [mn mx];
     SO.img(i).prop = Inf;
     SO.cbar = [SO.cbar i];
-    SO.img(i).cmap = return_cmap('Colormap:', dcmap);
-    SO.img(i).range = spm_input('Img val range for colormap','+1', 'e', drange, 2);
-  end
-end
-ncmaps=length(cscale);
-if ncmaps == 1
-  SO.img(cscale).prop = 1;
-else
-  remcol=1;
-  for i = 1:ncmaps
-    ino = cscale(i);
-    SO.img(ino).prop = spm_input(sprintf('%s intensity',imgns{ino}),...
-                 '+1', 'e', ...
-                 remcol/(ncmaps-i+1),1);
-    remcol = remcol - SO.img(ino).prop
+    SO.img(i).cmap = return_cmap('Colormap:', 'jet');
+    SO.img(i).range = spm_input('Img val range for colormap','+1', 'e', [mn mx], 2);
   end
 end
  
 SO.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
             ' Coronal|Sagittal'], strvcat('axial','coronal','sagittal'), ...
             1));
-tmp = SO.transform;
 
 % slices for display
-slice_overlay('checkso');
-SO.transform = tmp;
+orientn = find(strcmpi(SO.transform, {'axial','coronal','sagittal'}));
+ts = [0 0 0 0 0 0 1 1 1;...
+      0 0 0 pi/2 0 0 1 -1 1;...
+      0 0 0 pi/2 0 -pi/2 -1 1 1];
+
+V = SO.img(2).vol;
+D = V.dim(1:3);
+T = spm_matrix(ts(orientn,:)) * V.mat;
+vcorners = [1 1 1; D(1) 1 1; 1 D(2) 1; D(1:2) 1; ...
+	     1 1 D(3); D(1) 1 D(3); 1 D(2:3) ; D(1:3)]';
+corners = T * [vcorners; ones(1,8)];
+SC = sort(corners');
+vxsz = sqrt(sum(T(1:3,1:3).^2));
+  
 SO.slices = spm_input('Slices to display (mm)', '+1', 'e', ...
               sprintf('%0.0f:%0.0f:%0.0f',...
-                  SO.slices(1),...
-                  mean(diff(SO.slices)),...
-                  SO.slices(end)));
+                  SC(1,3),...
+                  vxsz(3),...
+                  SC(8,3)));
+
+SO.figure = figure(12);
 
 % and do the display
 if dispf, slice_overlay; end
 
 return
 
-% Subfunctions 
-% ------------
+% --------------------------------------------------------------------------
 function cmap = return_cmap(prompt,defmapn)
 cmap = [];
 while isempty(cmap)
