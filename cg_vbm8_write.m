@@ -886,12 +886,19 @@ if do_cls & warp.print
     	Vtmp = spm_vol(fullfile(pth,['wm', nam, '.nii']));
     	hh = spm_orthviews('Image',Vtmp,pos(1,:));
     	spm_orthviews('AddContext',hh);
+    elseif exist(fullfile(pth,['wmr', nam, '.nii']))
+    	Vtmp = spm_vol(fullfile(pth,['wmr', nam, '.nii']));
+    	hh = spm_orthviews('Image',Vtmp,pos(1,:));
+    	spm_orthviews('AddContext',hh);
     end
 	  for k1=1:3,
 	    % check for all potential warped segmentations
 	    name1 = fullfile(pth,['wp', num2str(k1), nam, '.nii']);
 	    name2 = fullfile(pth,['mwp', num2str(k1), nam, '.nii']);
 	    name3 = fullfile(pth,['m0wp', num2str(k1), nam, '.nii']);
+	    name4 = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
+	    name5 = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']);
+	    name6 = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']);
 	    if exist(name1,'file') 
 	      Vtmp = spm_vol(name1); 
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
@@ -902,6 +909,21 @@ if do_cls & warp.print
 	      spm_orthviews('AddContext',hh);
 	    elseif exist(name3,'file')
 	      Vtmp = spm_vol(name3);
+  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+	      spm_orthviews('AddContext',hh);
+	    end
+	    elseif exist(name4,'file')
+	      Vtmp = spm_vol(name4);
+  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+	      spm_orthviews('AddContext',hh);
+	    end
+	    elseif exist(name5,'file')
+	      Vtmp = spm_vol(name5);
+  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
+	      spm_orthviews('AddContext',hh);
+	    end
+	    elseif exist(name6,'file')
+	      Vtmp = spm_vol(name6);
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
 	    end

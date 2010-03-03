@@ -46,7 +46,15 @@ thresh.name    = 'Threshold';
 thresh.help    = {''};
 thresh.strtype = 'e';
 thresh.num     = [1 1];
-thresh.def     = @(val)spm_get_defaults('stats.results.thresh', val{:});
+thresh.val     = {0.05};
+
+thresh2         = cfg_entry;
+thresh2.tag     = 'thresh';
+thresh2.name    = 'Threshold';
+thresh2.help    = {''};
+thresh2.strtype = 'e';
+thresh2.num     = [1 1];
+thresh2.val     = {0.001};
 
 kthresh         = cfg_entry;
 kthresh.tag     = 'kthresh';
@@ -83,8 +91,13 @@ fdr.help    = {''};
 uncorr         = cfg_branch;
 uncorr.tag     = 'uncorr';
 uncorr.name    = 'unocrrected';
-uncorr.val     = {thresh };
+uncorr.val     = {thresh2 };
 uncorr.help    = {''};
+
+En         = cfg_branch;
+En.tag     = 'En';
+En.name    = 'Expected numbers of voxel per cluster';
+En.help    = {''};
 
 inverse      = cfg_menu;
 inverse.name = 'Show also inverse effects (e.g. neg. values)';
@@ -111,7 +124,7 @@ threshdesc.help = {'Select method for voxel threshold'};
 cluster      = cfg_choice;
 cluster.name = 'Cluster extent threshold';
 cluster.tag  = 'cluster';
-cluster.values = {none k uncorr fwe};
+cluster.values = {none k En uncorr fwe};
 cluster.help = {'Select method for extent threshold'};
 
 conversion         = cfg_branch;
