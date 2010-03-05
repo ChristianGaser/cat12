@@ -21,7 +21,7 @@ d1        = size(tpm.dat{1});
 d1        = d1(1:3);
 M1        = tpm.M;
 [bb1,vx1] = bbvox_from_V(tpm.V(1));
-
+         
 if isfield(res,'mg'),
     lkp = res.lkp;
     Kb  = max(lkp);
@@ -45,8 +45,8 @@ warp.brainmask_th = -1; % don't use brainmask anymore
 warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
 
-vx = NaN;
-bb = ones(2,3)*NaN;
+vx = NaN
+bb = nan(2,3);
 
 % Sort out bounding box etc
 bb(~isfinite(bb)) = bb1(~isfinite(bb));
@@ -911,17 +911,14 @@ if do_cls & warp.print
 	      Vtmp = spm_vol(name3);
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    end
 	    elseif exist(name4,'file')
 	      Vtmp = spm_vol(name4);
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    end
 	    elseif exist(name5,'file')
 	      Vtmp = spm_vol(name5);
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    end
 	    elseif exist(name6,'file')
 	      Vtmp = spm_vol(name6);
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
