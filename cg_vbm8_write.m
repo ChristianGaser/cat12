@@ -14,6 +14,9 @@ rev = '$Rev$';
 
 fprintf('VBM8 %s\n',rev);
 
+% we need spm_def2det.m from HDW toolbox
+addpath(fullfile(spm('dir'),'toolbox','HDW'));
+
 if ~isstruct(tpm) || (~isfield(tpm, 'bg1') && ~isfield(tpm, 'bg')),
     tpm = spm_load_priors8(tpm);
 end
@@ -480,7 +483,7 @@ if do_dartel
 end
 
 % get inverse deformations for warping submask to raw space
-% not yet finished!!!
+% experimental: not yet finished!!!
 if cg_vbm8_get_defaults('output.surf.dartel')
   Vsubmask = spm_vol(char(cg_vbm8_get_defaults('extopts.mask')));
   submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
@@ -694,22 +697,26 @@ if any(tc(:,4)),
     C = zeros([d1,3],'single');
 end
 
+clear u
+
 % warped tissue classes
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
     spm_progress_bar('init',3,'Warped Tissue Classes','Classes completed');
 
-      for k1 = 1:3,
-    
+    % estimate a more accurate jacobian determinant 
+    y2 = spm_invert_def(y,M1,d1,M0,[1 0]);
+    dt = spm_def2det(y2(:,:,:,1),y2(:,:,:,2),y2(:,:,:,3),M1);
+    dt = dt./abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
+    clear y2
+      
+    for k1 = 1:3,
         if ~isempty(cls{k1}),
-            c = single(cls{k1})/255;           
-            if any(tc(:,4)),
-                [c,w]  = dartel3('push',c,y,d1(1:3));
-                C(:,:,:,k1) = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
-                clear w
-            else
-                c      = dartel3('push',c,y,d1(1:3));
-            end
+            c = single(cls{k1})/255;
+            [c,w]  = dartel3('push',c,y,d1(1:3));
+            C(:,:,:,k1) = c./(w+eps);
+            clear w
+            c = C(:,:,:,k1).*dt;
             if nargout>=1,
                 cls{k1} = c;
             end
@@ -752,7 +759,6 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
     spm_progress_bar('Clear');
 end
 
-clear u
 % save raw tissue class volumes in ml in log-file
 if do_cls
     volfactor = abs(det(M0(1:3,1:3)))/1000;
