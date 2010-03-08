@@ -45,7 +45,7 @@ warp.brainmask_th = -1; % don't use brainmask anymore
 warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
 
-vx = NaN
+vx = NaN;
 bb = nan(2,3);
 
 % Sort out bounding box etc
@@ -688,7 +688,7 @@ if jc
     end
 end
 
-clear u
+%clear u
 
 if any(tc(:,4)),
     C = zeros([d1,3],'single');
@@ -752,6 +752,7 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
     spm_progress_bar('Clear');
 end
 
+clear u
 % save raw tissue class volumes in ml in log-file
 if do_cls
     volfactor = abs(det(M0(1:3,1:3)))/1000;
@@ -852,13 +853,12 @@ if do_cls & warp.print
   end
   
 	tpm_name = spm_str_manip(cg_vbm8_get_defaults('opts.tpm'),'k40d');
-	affmethod = str2mat('SPM default (mutual information)','Masked T1-template');
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%3.1f / %d / %d',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
-	str = [str struct('name', 'Affine normalization method:','value',sprintf('%s',affmethod(warp.affmethod+1,:)))];
+	str = [str struct('name', 'Use center of mass for origin:','value',sprintf('%d',warp.usecom+1))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
