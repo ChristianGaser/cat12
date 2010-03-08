@@ -1,7 +1,9 @@
 function cg_vbm8_update(update)
 % check for new updates
 %
-% FORMAT cg_vbm8_update
+% FORMAT cg_vbm8_update(update)
+% update - allow installation of update
+% 
 % This function will connect itself to the SBM server, compare the
 % version number of the updates with the one of the VBM8 installation 
 % currently in the MATLAB path and will display the outcome.
