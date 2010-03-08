@@ -85,8 +85,6 @@ if rnew > r
       fprintf('Unzip file to %s\n',d);
     end
   end
-else
-  if ~update
-    fprintf('You already have the newest version %d.\n',r);
-  end
+elseif update
+  fprintf('You already have the newest version %d.\n',r);
 end

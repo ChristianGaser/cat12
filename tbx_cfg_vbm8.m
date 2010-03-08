@@ -15,8 +15,6 @@ cg_vbm8_defaults
 
 addpath(fileparts(which(mfilename)));
 
-cg_vbm8_update(0);
-
 %_______________________________________________________________________
 
 data = cfg_files;
