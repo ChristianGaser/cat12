@@ -62,7 +62,6 @@ u = single(u(:));
 M1 = mean(u);
 V1 = std(u);
 C2 = u(u<=(M1+2*V1));
-whos
 [h,x] = hist(C2,N);
 [M,M2] = max(h);
 
