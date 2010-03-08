@@ -149,6 +149,25 @@ threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 [tmp fname] = spm_str_manip(char(V.fname),'C');
 fprintf('Compressed filenames: %s  \n',tmp);
 
+% print files with cov>0.9
+YpY_tmp = YpY - tril(YpY);
+[indx, indy] = find(YpY_tmp>0.9);
+if ~isempty(indx)
+  fprintf('\nUnusual large covariances (check that subjects are not identical):\n');
+end
+
+for i=1:length(indx)
+  % exclude diagonal
+  if indx(i) ~= indy(i)
+    % report file with lower mean covariance first
+    if mean_cov(indx(i)) < mean_cov(indy(i))
+      fprintf('%s and %s: %3.3f\n',fname.m{indx(i)},fname.m{indy(i)},YpY(indx(i),indy(i)));
+    else
+      fprintf('%s and %s: %3.3f\n',fname.m{indy(i)},fname.m{indx(i)},YpY(indy(i),indx(i)));
+    end
+  end
+end
+
 % sort files
 fprintf('\nMean covariance for data below 2 standard deviations:\n');
 [mean_cov_sorted, ind] = sort(mean_cov,'descend');
@@ -187,7 +206,8 @@ h = datacursormode(f);
 set(h,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
 set(f,'MenuBar','none','Position',[10 10 ws(3) ws(3)]);
 
-imagesc(YpY)
+ima = YpY - 0.5*tril(YpY);
+imagesc(ima)
 a = gca;
 set(a,'XTickLabel','','YTickLabel','');
 axis image
@@ -202,7 +222,9 @@ set(f,'Name','Click in image to get file names','NumberTitle','off');
 h = datacursormode(f);
 set(h,'UpdateFcn',@myupdatefcn_ordered,'SnapToDataVertex','on','Enable','on');
 set(f,'MenuBar','none','Position',[11+ws(3) 10 ws(3) ws(3)]);
-imagesc(YpYsorted)
+
+ima = YpYsorted - 0.5*tril(YpY);
+imagesc(ima)
 if n_thresholded <= n
 	hold on
 	line([n_thresholded-0.5, n_thresholded-0.5], [0.5,n_thresholded-0.5])

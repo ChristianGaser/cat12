@@ -30,7 +30,7 @@ data_T2x.name = 'Volumes';
 data_T2x.filter = 'image';
 data_T2x.ufilter = '^spmT.*\.[in][im][gi]$';
 data_T2x.num     = [1 Inf];
-data_T2x.help = {'Select spmT-images to sel.'};
+data_T2x.help = {'Select spmT-images to transform or convert.'};
 
 sel      = cfg_menu;
 sel.name = 'Convert t value to';
@@ -96,7 +96,7 @@ uncorr.help    = {''};
 
 En         = cfg_branch;
 En.tag     = 'En';
-En.name    = 'Expected numbers of voxel per cluster';
+En.name    = 'Expected voxels per cluster';
 En.help    = {''};
 
 inverse      = cfg_menu;
@@ -116,7 +116,7 @@ noniso.val    = {0};
 noniso.help = {'Correct for non-isotropic smoothness for cluster extent thresholds.'};
 
 threshdesc      = cfg_choice;
-threshdesc.name = 'Threshold type';
+threshdesc.name = 'Threshold type peak-level';
 threshdesc.tag  = 'threshdesc';
 threshdesc.values = {none uncorr fdr fwe};
 threshdesc.help = {'Select method for voxel threshold'};
