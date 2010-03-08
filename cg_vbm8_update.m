@@ -67,7 +67,6 @@ if rnew > r
         for i=1:length(mexfiles)
           name = fullfile(d,'vbm8',mexfiles(i).name);
           spm_unlink(name);
-          disp(name)
         end
         s = unzip([url sprintf('vbm8_r%d.zip',rnew)], d);
         fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
