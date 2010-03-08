@@ -269,7 +269,7 @@ for i=1:size(P,1)
         elseif (pk < 0)
             k = 0;
             [P2 Pn2 Em En EN] = spm_P(1,k,u,df,STAT,R,1,S);
-            k = round(En/v2r);
+            k = ceil(En/v2r);
             p_extent_str = '_En';
         else
             k = pk;
