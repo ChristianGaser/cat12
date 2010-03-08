@@ -10,7 +10,7 @@ function varargout = cg_vbm8_run(job,arg)
 % job.tissue(k).native
 % job.tissue(k).warped
 % job.warp.affreg
-% job.warp.affmethod
+% job.warp.usecom
 % job.warp.reg
 % job.warp.samp
 % job.warp.write
@@ -35,13 +35,13 @@ estwrite = isfield(job,'opts');
 % set some defaults if segmentations are not estimated
 if ~estwrite
     job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
-                      'affmethod',1,'warpreg',4,'samp',3,'ngaus',[2 2 2 3 4 2]);
+                      'usecom',1,'warpreg',4,'samp',3,'ngaus',[2 2 2 3 4 2]);
 end
 
 channel = struct('vols',{job.data});
                  
 warp = struct('affreg', job.opts.affreg,...
-              'affmethod', job.opts.affmethod,...
+              'usecom', job.opts.usecom,...
               'samp', job.opts.samp,...
               'reg', job.opts.warpreg,...
               'write', job.output.warps,...
@@ -143,35 +143,27 @@ for iter=1:nit,
                 % Initial affine registration.
                 Affine  = eye(4);
                 if ~isempty(job.warp.affreg),
-                    if job.warp.affmethod == 0
-                        Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge*8,tpm,Affine,job.warp.affreg); % Close to rigid
-                        Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
-                    else
-                        VG = spm_vol(fullfile(spm('Dir'),'templates','T1.nii'));
-                        VF = spm_vol(obj.image(1));
-                    
-                        % smooth source with 8mm
-                        VF1 = spm_smoothto8bit(VF,8);
+                    if job.warp.usecom
+                        % pre-estimated COM of MNI template
+                        % the z-axis was corrected by -30 mm because the MNI template
+                        % is much more limited at the inferior part than most raw images
+                        % (based on a trial with 20 brains from 4 different scanners)
+                        com_reference = [0 -20 -30];
 
-                        % Rescale images so that globals are better conditioned
-                        VF1.pinfo(1:2,:) = VF1.pinfo(1:2,:)/spm_global(VF1);
-                        VG.pinfo(1:2,:)  = VG.pinfo(1:2,:)/spm_global(VG);
-
-                        fprintf('Coarse Affine Registration..\n');
-                        aflags    = struct('sep',8, 'regtype',job.warp.affreg,...
-                            'WG',[],'WF',[],'globnorm',0);
-                        aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
-                        aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-
-                        M = eye(4);
-                        spm_chi2_plot('Init','Affine Registration','Mean squared difference','Iteration');
-                        [M,scal]  = spm_affreg(VG, VF1, aflags, M);
- 
-                        fprintf('Fine Affine Registration..\n');
-                        aflags.WG  = spm_vol(fullfile(spm('Dir'),'apriori','brainmask.nii'));
-                        aflags.sep = aflags.sep/2;
-                        [Affine,scal]   = spm_affreg(VG, VF1, aflags, M,scal);
+                        fprintf('Correct center-of-mass for %s\n',obj.image(1).fname);
+                        vol = spm_read_vols(obj.image(1));
+                        avg = mean(vol(:));
+                        avg = mean(vol(find(vol>avg)));
+  
+                        % don't use background values
+                        [x,y,z] = ind2sub(size(vol),find(vol>avg));
+                        com = obj.image(1).mat(1:3,:)*[mean(x) mean(y) mean(z) 1]';
+                        com = com';
+                        clear x y z vol
+                        Affine(1:3,4) = (com - com_reference)';                    
                     end
+                    Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge*8,tpm,Affine,job.warp.affreg); % Close to rigid
+                    Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
                 end;
                 obj.Affine = Affine;
             else
