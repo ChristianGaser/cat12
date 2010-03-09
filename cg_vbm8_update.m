@@ -58,8 +58,9 @@ if rnew > r
 
   if update
     d = fullfile(spm('Dir'),'toolbox'); 
-    overwrite = spm_input('Update',1,'m','Download zip-file only|Overwrite old VBM8 installation',[0 1],2);
-    if overwrite
+    overwrite = spm_input('Update',1,'m','Do not update|Download zip-file only|Overwrite old VBM8 installation',[-1 0 1],2);
+    swtich overwrite
+    case 1
       try
         % list mex-files and delete these files to prevent that old
         % compiled files are used
@@ -79,7 +80,7 @@ if rnew > r
         web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');
         fprintf('Unzip file to %s\n',d);
       end
-    else
+    case 0
       web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');
       fprintf('Unzip file to %s\n',d);
     end
