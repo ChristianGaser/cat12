@@ -366,9 +366,9 @@ for i=1:size(P,1)
        VO = Vspm;
        VO.fname = out;
        if spm2
-            VO.dim(4) = spm_type('int16');
+            VO.dim(4) = spm_type('float32');
        else
-            VO.dt = [spm_type('int16') spm_platform('bigend')];
+            VO.dt = [spm_type('float32') spm_platform('bigend')];
        end
        spm_write_vol(VO,Y);
     
