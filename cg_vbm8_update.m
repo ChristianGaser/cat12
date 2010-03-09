@@ -58,8 +58,8 @@ if rnew > r
 
   if update
     d = fullfile(spm('Dir'),'toolbox'); 
-    overwrite = spm_input('Update',1,'m','Do not update|Download zip-file only|Overwrite old VBM8 installation',[-1 0 1],2);
-    swtich overwrite
+    overwrite = spm_input('Update',1,'m','Do not update|Download zip-file only|Overwrite old VBM8 installation',[-1 0 1],3);
+    switch overwrite
     case 1
       try
         % list mex-files and delete these files to prevent that old
