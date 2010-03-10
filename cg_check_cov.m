@@ -124,7 +124,7 @@ spm_progress_bar('Clear');
 % normalize YpY
 d = sqrt(diag(YpY)); % sqrt first to avoid under/overflow
 dd = d*d';
-YpY = YpY ./ (dd+eps);
+YpY = YpY./(dd+eps);
 t = find(abs(YpY) > 1); 
 YpY(t) = YpY(t)./abs(YpY(t));
 YpY(1:n+1:end) = sign(diag(YpY));
@@ -149,7 +149,7 @@ threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 [tmp fname] = spm_str_manip(char(V.fname),'C');
 fprintf('Compressed filenames: %s  \n',tmp);
 
-% print files with cov>0.9
+% print suspecious files with cov>0.9
 YpY_tmp = YpY - tril(YpY);
 [indx, indy] = find(YpY_tmp>0.9);
 if ~isempty(indx)
@@ -223,7 +223,7 @@ h = datacursormode(f);
 set(h,'UpdateFcn',@myupdatefcn_ordered,'SnapToDataVertex','on','Enable','on');
 set(f,'MenuBar','none','Position',[11+ws(3) 10 ws(3) ws(3)]);
 
-ima = YpYsorted - 0.5*tril(YpY);
+ima = YpYsorted - 0.5*tril(YpYsorted);
 imagesc(ima)
 if n_thresholded <= n
 	hold on
@@ -269,6 +269,15 @@ end
 %-----------------------------------------------------------------------
 spm_progress_bar('Clear')
 
+show = spm_input('Show files with poorest cov?','+1','yes|no',[1 0],2);
+if show
+  number = min([n 15]);
+  number = spm_input('How many files ?','+1','e',number);
+  
+  list = str2mat(V(ind(n:-1:1)).fname);
+  list2 = list(1:number,:);
+  spm_check_registration(list2)
+end
 return
 
 %-----------------------------------------------------------------------

@@ -145,10 +145,8 @@ for iter=1:nit,
                 if ~isempty(job.warp.affreg),
                     if job.warp.usecom
                         % pre-estimated COM of MNI template
-                        % the z-axis was corrected by -30 mm because the MNI template
-                        % is much more limited at the inferior part than most raw images
-                        % (based on a trial with 20 brains from 4 different scanners)
-                        com_reference = [0 -20 -30];
+                        % the z-axis was corrected to 10mm to get more stable results
+                        com_reference = [0 -20 10];
 
                         fprintf('Correct center-of-mass for %s\n',obj.image(1).fname);
                         vol = spm_read_vols(obj.image(1));
