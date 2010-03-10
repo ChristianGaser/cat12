@@ -32,7 +32,7 @@ help:
 update:
 	-@svn update
 	-@echo '% Voxel Based Morphometry Toolbox' > Contents.m
-	-@echo '% VBM8 (Release '${VERSION}') ' ${DATE} >> Contents.m
+	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
 	-@echo '% __________________________________________________________________________' > vbm8.man
 	-@echo '% Voxel Based Morphometry Toolbox for SPM8' >> vbm8.man
