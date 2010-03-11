@@ -17,7 +17,6 @@ vbm8.opts.tpm       = {fullfile(spm('dir'),'toolbox','Seg','TPM.nii')};	% TPM.ni
 vbm8.opts.ngaus     = [2 2 2 3 4 2];	% Gaussians per class
 vbm8.opts.affreg    = 'mni';		% Affine regularisation
 vbm8.opts.warpreg   = 4;			% Warping regularisation
-vbm8.opts.usecom = 1;			% Set origin: 0 - use origin from header; 1 - use center-of-mass
 vbm8.opts.biasreg   = 0.0001;	% Bias regularisation
 vbm8.opts.biasfwhm  = 60;		% Bias FWHM
 vbm8.opts.samp      = 3;			% Sampling distance
