@@ -10,7 +10,6 @@ function varargout = cg_vbm8_run(job,arg)
 % job.tissue(k).native
 % job.tissue(k).warped
 % job.warp.affreg
-% job.warp.usecom
 % job.warp.reg
 % job.warp.samp
 % job.warp.write
@@ -35,13 +34,12 @@ estwrite = isfield(job,'opts');
 % set some defaults if segmentations are not estimated
 if ~estwrite
     job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
-                      'usecom',1,'warpreg',4,'samp',3,'ngaus',[2 2 2 3 4 2]);
+                      'warpreg',4,'samp',3,'ngaus',[2 2 2 3 4 2]);
 end
 
 channel = struct('vols',{job.data});
                  
 warp = struct('affreg', job.opts.affreg,...
-              'usecom', job.opts.usecom,...
               'samp', job.opts.samp,...
               'reg', job.opts.warpreg,...
               'write', job.output.warps,...
@@ -143,24 +141,27 @@ for iter=1:nit,
                 % Initial affine registration.
                 Affine  = eye(4);
                 if ~isempty(job.warp.affreg),
-                    if job.warp.usecom
-                        % pre-estimated COM of MNI template
-                        % the z-axis was corrected to 10mm to get more stable results
-                        com_reference = [0 -20 10];
+                    VG = spm_vol(fullfile(spm('Dir'),'templates','T1.nii'));
+                    VF = spm_vol(obj.image(1));
+                    
+                    % smooth source with 8mm
+                    VF1 = spm_smoothto8bit(VF,8);
 
-                        fprintf('Correct center-of-mass for %s\n',obj.image(1).fname);
-                        vol = spm_read_vols(obj.image(1));
-                        avg = mean(vol(:));
-                        avg = mean(vol(find(vol>avg)));
-  
-                        % don't use background values
-                        [x,y,z] = ind2sub(size(vol),find(vol>avg));
-                        com = obj.image(1).mat(1:3,:)*[mean(x) mean(y) mean(z) 1]';
-                        com = com';
-                        clear x y z vol
-                        Affine(1:3,4) = (com - com_reference)';                    
-                    end
-                    Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge*8,tpm,Affine,job.warp.affreg); % Close to rigid
+                    % Rescale images so that globals are better conditioned
+                    VF1.pinfo(1:2,:) = VF1.pinfo(1:2,:)/spm_global(VF1);
+                    VG.pinfo(1:2,:)  = VG.pinfo(1:2,:)/spm_global(VG);
+
+                    fprintf('Initial Coarse Affine Registration..\n');
+                    aflags    = struct('sep',8, 'regtype',job.warp.affreg,...
+                        'WG',[],'WF',[],'globnorm',0);
+                    aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
+                    aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
+
+                    M = eye(4);
+                    spm_chi2_plot('Init','Affine Registration','Mean squared difference','Iteration');
+                    Affine  = spm_affreg(VG, VF1, aflags, M);
+
+                    fprintf('Fine Affine Registration..\n');
                     Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
                 end;
                 obj.Affine = Affine;

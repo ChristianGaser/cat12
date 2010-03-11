@@ -864,7 +864,6 @@ if do_cls & warp.print
 	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%3.1f / %d / %d',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
-	str = [str struct('name', 'Use center of mass for origin:','value',sprintf('%d',warp.usecom+1))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
@@ -887,49 +886,56 @@ if do_cls & warp.print
 			0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
 	  spm_orthviews('Reset');
 	
+    name_warp{1} = fullfile(pth,['m', nam, '.nii']);
+    if do_dartel
+      name_warp{2} = fullfile(pth,['wmr', nam, '.nii']);
+    else
+      name_warp{2} = fullfile(pth,['wm', nam, '.nii']);
+    end
+    name_warp{3} = fullfile(pth,['wm', nam, '_affine.nii']);
+
 	  % first try use the bias corrected image
-	  if exist(fullfile(pth,['wm', nam, '.nii']))
-    	Vtmp = spm_vol(fullfile(pth,['wm', nam, '.nii']));
+	  if bf(1,2)
+    	Vtmp = name_warp{2};
     	hh = spm_orthviews('Image',Vtmp,pos(1,:));
     	spm_orthviews('AddContext',hh);
-    elseif exist(fullfile(pth,['wmr', nam, '.nii']))
-    	Vtmp = spm_vol(fullfile(pth,['wmr', nam, '.nii']));
+    elseif bf(1,3)
+    	Vtmp = name_warp{3};
     	hh = spm_orthviews('Image',Vtmp,pos(1,:));
     	spm_orthviews('AddContext',hh);
     end
+    
 	  for k1=1:3,
 	    % check for all potential warped segmentations
-	    name1 = fullfile(pth,['wp', num2str(k1), nam, '.nii']);
-	    name2 = fullfile(pth,['mwp', num2str(k1), nam, '.nii']);
-	    name3 = fullfile(pth,['m0wp', num2str(k1), nam, '.nii']);
-	    name4 = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
-	    name5 = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']);
-	    name6 = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']);
-	    if exist(name1,'file') 
-	      Vtmp = spm_vol(name1); 
+	    name_seg{1} = fullfile(pth,['p', num2str(k1), nam, '.nii']);
+	    name_seg{2} = fullfile(pth,['rp', num2str(k1), nam, '.nii']);
+	    name_seg{3} = fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']);
+	    if do_dartel
+	      name_seg{4} = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
+	      name_seg{5} = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']);
+	      name_seg{6} = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']);
+	    else
+	      name_seg{4} = fullfile(pth,['wp', num2str(k1), nam, '.nii']);
+	      name_seg{5} = fullfile(pth,['mwp', num2str(k1), nam, '.nii']);
+	      name_seg{6} = fullfile(pth,['m0wp', num2str(k1), nam, '.nii']);
+      end
+      if tc(k1,4)
+	      Vtmp = spm_vol(name_seg{4}); 
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    elseif exist(name2,'file')
-	      Vtmp = spm_vol(name2); 
-  	    hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-	      spm_orthviews('AddContext',hh);
-	    elseif exist(name3,'file')
-	      Vtmp = spm_vol(name3);
+      elseif tc(k1,5)
+	      Vtmp = spm_vol(name_seg{5}); 
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    elseif exist(name4,'file')
-	      Vtmp = spm_vol(name4);
+      elseif tc(k1,6)
+	      Vtmp = spm_vol(name_seg{6}); 
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    elseif exist(name5,'file')
-	      Vtmp = spm_vol(name5);
+      elseif tc(k1,3)
+	      Vtmp = spm_vol(name_seg{3}); 
   		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
 	      spm_orthviews('AddContext',hh);
-	    elseif exist(name6,'file')
-	      Vtmp = spm_vol(name6);
-  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-	      spm_orthviews('AddContext',hh);
-	    end
+      end            
     end
 	  spm_print;
 	end
