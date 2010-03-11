@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <memory.h>
+#include <float.h>
+
 #define RINT(A) floor((A)+0.5)
 
 static void 
@@ -19,7 +21,11 @@ convxy(double out[], int xdim, int ydim, double filtx[], double filty[], int fxd
     for(x=0; x<xdim; x++)
     {
       buff[x] = out[x+y*xdim];
-      if (!finite(buff[x]))
+#ifdef isfinite
+      if (!isfinite(buff[x]))
+#else
+      if (!_finite(buff[x]))
+#endif
         buff[x] = 0.0;
     }
     for(x=0; x<xdim; x++)
@@ -59,7 +65,7 @@ convxyz_double(double *iVol, double filtx[], double filty[], double filtz[],
   int fxdim, int fydim, int fzdim, int xoff, int yoff, int zoff,
   double *oVol, int dims[3])
 {
-  double *tmp, *buff, **sortedv;
+  double *tmp, *buff, **sortedv, *obuf;
   int xy, z, y, x, k, fstart, fend, startz, endz;
   int xdim, ydim, zdim;
 
@@ -104,7 +110,6 @@ convxyz_double(double *iVol, double filtx[], double filty[], double filtz[],
       for(k=fstart, sum2=0.0; k<fend; k++)
         sum2 += filtz[k];
 
-      double *obuf;
       obuf = &oVol[(z-fzdim-zoff+1)*ydim*xdim];
       if (sum2)
       {
@@ -138,6 +143,8 @@ convxyz_uint8(unsigned char *iVol, double filtx[], double filty[], double filtz[
   double *tmp, *buff, **sortedv;
   int xy, z, y, x, k, fstart, fend, startz, endz;
   int xdim, ydim, zdim;
+  double tmp2;
+  unsigned char *obuf;
 
   xdim = dims[0];
   ydim = dims[1];
@@ -180,8 +187,6 @@ convxyz_uint8(unsigned char *iVol, double filtx[], double filty[], double filtz[
       for(k=fstart, sum2=0.0; k<fend; k++)
         sum2 += filtz[k];
 
-      double tmp;
-      unsigned char *obuf;
       obuf = oVol;
       obuf = &obuf[(z-fzdim-zoff+1)*ydim*xdim];
       if (sum2)
@@ -191,10 +196,10 @@ convxyz_uint8(unsigned char *iVol, double filtx[], double filty[], double filtz[
           double sum1=0.0;
           for(k=fstart; k<fend; k++)
             sum1 += filtz[k]*sortedv[k][xy];
-          tmp = sum1/sum2;
-          if (tmp<0) tmp = 0;
-          else if (tmp>255) tmp = 255;
-          obuf[xy] = RINT(tmp);
+          tmp2 = sum1/sum2;
+          if (tmp2<0.0) tmp2 = 0.0;
+          else if (tmp2>255.0) tmp2 = 255.0;
+          obuf[xy] = (unsigned char)RINT(tmp2);
         }
       }
       else
@@ -216,6 +221,8 @@ convxyz_int16(signed short *iVol, double filtx[], double filty[], double filtz[]
   double *tmp, *buff, **sortedv;
   int xy, z, y, x, k, fstart, fend, startz, endz;
   int xdim, ydim, zdim;
+  double tmp2;
+  signed short *obuf;
 
   xdim = dims[0];
   ydim = dims[1];
@@ -258,8 +265,6 @@ convxyz_int16(signed short *iVol, double filtx[], double filty[], double filtz[]
       for(k=fstart, sum2=0.0; k<fend; k++)
         sum2 += filtz[k];
 
-      double tmp;
-      signed short *obuf;
       obuf = oVol;
       obuf = &obuf[(z-fzdim-zoff+1)*ydim*xdim];
       if (sum2)
@@ -269,10 +274,10 @@ convxyz_int16(signed short *iVol, double filtx[], double filty[], double filtz[]
           double sum1=0.0;
           for(k=fstart; k<fend; k++)
             sum1 += filtz[k]*sortedv[k][xy];
-          tmp = sum1/sum2;
-          if (tmp<-32768) tmp = -32768;
-          else if (tmp>32767) tmp = 32767;
-          obuf[xy] = RINT(tmp);
+          tmp2 = sum1/sum2;
+          if (tmp2<-32768.0) tmp2 = -32768.0;
+          else if (tmp2>32767.0) tmp2 = 32767.0;
+          obuf[xy] = (signed short)RINT(tmp2);
         }
       }
       else
@@ -294,6 +299,8 @@ convxyz_int32(signed int *iVol, double filtx[], double filty[], double filtz[],
   double *tmp, *buff, **sortedv;
   int xy, z, y, x, k, fstart, fend, startz, endz;
   int xdim, ydim, zdim;
+  double tmp2;
+  signed int *obuf;
 
   xdim = dims[0];
   ydim = dims[1];
@@ -336,8 +343,6 @@ convxyz_int32(signed int *iVol, double filtx[], double filty[], double filtz[],
       for(k=fstart, sum2=0.0; k<fend; k++)
         sum2 += filtz[k];
 
-      double tmp;
-      signed int *obuf;
       obuf = oVol;
       obuf = &obuf[(z-fzdim-zoff+1)*ydim*xdim];
       if (sum2)
@@ -347,10 +352,10 @@ convxyz_int32(signed int *iVol, double filtx[], double filty[], double filtz[],
           double sum1=0.0;
           for(k=fstart; k<fend; k++)
             sum1 += filtz[k]*sortedv[k][xy];
-          tmp = sum1/sum2;
-          if (tmp<-2147483648.0) tmp = -2147483648.0;
-          else if (tmp>2147483647.0) tmp = 2147483647.0;
-          obuf[xy] = RINT(tmp);
+          tmp2 = sum1/sum2;
+          if (tmp2<-2147483648.0) tmp2 = -2147483648.0;
+          else if (tmp2>2147483647.0) tmp2 = 2147483647.0;
+          obuf[xy] = (signed int)RINT(tmp2);
         }
       }
       else
@@ -537,7 +542,7 @@ smooth_double(double *vol, int dims[3], double separations[3], double s[3], int 
     s[i] /= separations[i];
     if(s[i] < 1.0) s[i] = 1.0;
     s[i] /= sqrt(8.0*log(2.0));
-    xyz[i] = (int) round(6.0*s[i]);
+    xyz[i] = (int) RINT(6.0*s[i]);
   }
   
   x = (double *) malloc(sizeof(double)*((2*xyz[0])+1));
