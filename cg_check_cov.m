@@ -152,18 +152,17 @@ fprintf('Compressed filenames: %s  \n',tmp);
 % print suspecious files with cov>0.9
 YpY_tmp = YpY - tril(YpY);
 [indx, indy] = find(YpY_tmp>0.9);
-if ~isempty(indx)
+if ~isempty(indx) & (sqrt(length(indx)) < 0.5*n)
   fprintf('\nUnusual large covariances (check that subjects are not identical):\n');
-end
-
-for i=1:length(indx)
-  % exclude diagonal
-  if indx(i) ~= indy(i)
-    % report file with lower mean covariance first
-    if mean_cov(indx(i)) < mean_cov(indy(i))
-      fprintf('%s and %s: %3.3f\n',fname.m{indx(i)},fname.m{indy(i)},YpY(indx(i),indy(i)));
-    else
-      fprintf('%s and %s: %3.3f\n',fname.m{indy(i)},fname.m{indx(i)},YpY(indy(i),indx(i)));
+  for i=1:length(indx)
+    % exclude diagonal
+    if indx(i) ~= indy(i)
+      % report file with lower mean covariance first
+      if mean_cov(indx(i)) < mean_cov(indy(i))
+        fprintf('%s and %s: %3.3f\n',fname.m{indx(i)},fname.m{indy(i)},YpY(indx(i),indy(i)));
+      else
+        fprintf('%s and %s: %3.3f\n',fname.m{indy(i)},fname.m{indx(i)},YpY(indy(i),indx(i)));
+      end
     end
   end
 end
@@ -206,15 +205,27 @@ h = datacursormode(f);
 set(h,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
 set(f,'MenuBar','none','Position',[10 10 ws(3) ws(3)]);
 
-ima = YpY - 0.5*tril(YpY);
-imagesc(ima)
+cmap = [gray(64); hot(64)];
+
+% scale YpY to 0..1
+mn = min(YpY(:));
+mx = max(YpY(:));
+YpY_scaled = (YpY - mn)/(mx - mn);
+YpYsorted_scaled = (YpYsorted - mn)/(mx - mn);
+
+% show upper right triangle in gray
+ind_tril = find(tril(ones(size(YpY))));
+ima = YpY_scaled;
+ima(ind_tril) = 0;
+ima(ind_tril) = 1 + 1/64 + YpY_scaled(ind_tril);
+image(64*ima)
 a = gca;
 set(a,'XTickLabel','','YTickLabel','');
 axis image
 xlabel('<----- first --- file order --- last ------>  ','FontSize',10,'FontWeight','Bold');
 ylabel('<----- last --- file order --- first ------>  ','FontSize',10,'FontWeight','Bold');
 title('Covariance','FontSize',12,'FontWeight','Bold');
-colormap(hot)
+colormap(cmap)
 
 % ordered covariance
 f = figure(5);
@@ -223,8 +234,12 @@ h = datacursormode(f);
 set(h,'UpdateFcn',@myupdatefcn_ordered,'SnapToDataVertex','on','Enable','on');
 set(f,'MenuBar','none','Position',[11+ws(3) 10 ws(3) ws(3)]);
 
-ima = YpYsorted - 0.5*tril(YpYsorted);
-imagesc(ima)
+% show upper right triangle in gray
+ind_tril = find(tril(ones(size(YpY))));
+ima = YpYsorted_scaled;
+ima(ind_tril) = 0;
+ima(ind_tril) = 1 + 1/64 + YpYsorted_scaled(ind_tril);
+image(64*ima)
 if n_thresholded <= n
 	hold on
 	line([n_thresholded-0.5, n_thresholded-0.5], [0.5,n_thresholded-0.5])
@@ -234,10 +249,10 @@ end
 a = gca;
 set(a,'XTickLabel','','YTickLabel','');
 axis image
-xlabel('<----- high --- covariance --- low ------>  ','FontSize',10,'FontWeight','Bold');
-ylabel('<----- low --- covariance --- high ------>  ','FontSize',10,'FontWeight','Bold');
-title({'Sorted Covariance','Blue line indicates data > 2 SD'},'FontSize',12,'FontWeight','Bold');
-colormap(hot)
+xlabel('<----- high --- mean covariance --- low ------>  ','FontSize',10,'FontWeight','Bold');
+ylabel('<----- low --- mean covariance --- high ------>  ','FontSize',10,'FontWeight','Bold');
+title({'Sorted Covariance','Blue line indicates 2-SD threshold'},'FontSize',12,'FontWeight','Bold');
+colormap(cmap)
 
 % slice preview
 f = figure(6);
