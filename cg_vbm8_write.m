@@ -341,11 +341,23 @@ if do_cls & do_defs,
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
     
-    % reread segmentations from Amap
-    for i=1:3
-        cls{i}(:) = 0;
-        cls{i}(indx,indy,indz) = prob(:,:,:,i);
-    end
+    % use cleanup maybe in the future
+    if (warp.cleanup > 0)
+        % get sure that all regions outside mask are zero
+        for i=1:3
+            cls{i}(:) = 0;
+        end
+        disp('Clean up...');        
+        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
+           prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
+        sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
+        label(find(sum_cls<0.15*255)) = 0;
+    else
+        for i=1:3
+            cls{i}(:) = 0;
+            cls{i}(indx,indy,indz) = prob(:,:,:,i);
+        end
+    end;
     clear prob
 
     % clear last 3 tissue classes to save memory
