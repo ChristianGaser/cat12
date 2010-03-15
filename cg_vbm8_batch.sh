@@ -254,7 +254,8 @@ USAGE:
    
    -m   matlab command
    -p   number of parallel jobs (=number of processors)
-   -w
+   -w		write already segmented images
+   
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. Optionally you can set the matlab command 
    with the "-m" option and force to write already estimated segmentations with the "-w" option.
