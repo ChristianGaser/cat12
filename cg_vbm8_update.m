@@ -33,11 +33,11 @@ url = 'http://dbm.neuro.uni-jena.de/vbm8/';
 if usejava('jvm')
   [s,sts] = urlread(url);
   if ~sts
-    fprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\n',url); 
+    fprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\n. You can download your update at %s\n',url,url); 
     return
   end
 else
-  fprintf('Please enable Java (JVM) to use update function.\n'); 
+  fprintf('Please enable Java (JVM) to use update function.\n. You can download your update at %s\n',url); 
   return
 end
 
