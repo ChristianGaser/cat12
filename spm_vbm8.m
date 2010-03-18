@@ -6,8 +6,6 @@ function spm_vbm8
 
 rev = '$Rev$';
 
-cg_vbm8_update(0);
-
 SPMid = spm('FnBanner',mfilename,rev);
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','VBM8');
 spm_help('!ContextHelp',mfilename);
