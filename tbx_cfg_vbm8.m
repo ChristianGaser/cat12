@@ -296,7 +296,7 @@ native.tag = 'native';
 native.name = 'Native space';
 native.labels = {'none','yes'};
 native.values = {0 1};
-native.help    = {'The native space option allows you to produce a tissue class image (c*) that is in alignment with the original/* (see Figure \ref{seg1})*/. It can also be used for ''''importing'''' into a form that can be used with the DARTEL toolbox (rc*).'};
+native.help    = {'The native space option allows you to produce a tissue class image (p*) that is in alignment with the original/* (see Figure \ref{seg1})*/. It can also be used for ''''importing'''' into a form that can be used with the DARTEL toolbox (rp*).'};
 
 warped    = cfg_menu;
 warped.tag = 'warped';
@@ -651,6 +651,18 @@ if opts.label.warped,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Warped Label Images';
     cdep(end).src_output = substruct('()',{1}, '.','wlabel','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.label.dartel==1,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Rigid Registered Label Images';
+    cdep(end).src_output = substruct('()',{1}, '.','rlabel','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.label.dartel==2,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Affine Registered Label Images';
+    cdep(end).src_output = substruct('()',{1}, '.','alabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 if opts.jacobian.warped,
