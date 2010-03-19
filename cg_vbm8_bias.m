@@ -104,7 +104,7 @@ bias.val  = {esubjs bias_opts};
 bias.prog = @cg_vbm8_bias_run;
 bias.vout = @vout_bias;
 bias.help = {
-'This option provides an intra-subject bias correction. The first image is used as refernce to correct bias of all subsequent images of the same subject.'};
+'This option provides an intra-subject bias correction. The first image is used as reference to correct bias of all subsequent images of the same subject.'};
 
 %------------------------------------------------------------------------
 
