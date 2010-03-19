@@ -272,14 +272,12 @@ if do_cls & do_defs,
         mask = cg_morph_vol(mask,'close',10,0.5);
         
         % remove sinus
-        mask = mask & single(cls{5})<16;
+        mask = mask & single(cls{5})<16;        
+
+        % and fill holes that can remain
+        mask = cg_morph_vol(mask,'close',2,0.5);
     end
         
-    % set segmentations outside mask to zero
-    for i=1:3
-        cls{i}(mask==0) = 0;
-    end
-
     % calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
     label2 = zeros(d,'uint8');
@@ -293,12 +291,17 @@ if do_cls & do_defs,
     		  label2(:,:,i) = label2(:,:,i) + uint8((maxind == k1).*(maxi~=0)*k1);
     	  end
     end
-
-    % only keep label values for GM/WM/CSF
+    
     if warp.brainmask_th < 0
-        mask = uint8((label2 < 4) & (label2 > 0));
+        % set all non-brain tissue outside mask to 0
+        label2(find((label2 > 3) | (mask == 0))) = 0;
+    
+        % fill remaining holes in label with 1
+        mask = cg_morph_vol(label2,'close',2,0);    
+        label2(find((label2 == 0) & (mask > 0))) = 1;
+    else
+        label2(find(mask==0)) = 0;
     end
-    label2(find(mask==0)) = 0;
     
     % use index to speed up and save memory
     sz = size(mask);
@@ -359,6 +362,23 @@ if do_cls & do_defs,
         end
     end;
     clear prob
+
+    % create final mask
+    mask = single(cls{1});
+    mask = mask + single(cls{2});
+
+    % keep largest connected component after 2 its of opening
+    mask = cg_morph_vol(mask,'open',2,0.5);
+    mask = mask_largest_cluster(mask,0.5);
+
+    % dilate and close to fill ventricles
+    mask = cg_morph_vol(mask,'dilate',2,0.5);
+    mask = cg_morph_vol(mask,'close',10,0.5);
+    ind_mask = find(mask == 0);
+    for i=1:3
+        cls{i}(ind_mask) = 0;
+    end
+
 
     % clear last 3 tissue classes to save memory
     for i=4:6
