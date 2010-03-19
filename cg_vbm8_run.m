@@ -303,6 +303,8 @@ biascorr  = {};
 wbiascorr = {};
 label  = {};
 wlabel = {};
+rlabel = {};
+alabel = {};
 jacobian = {};
 
 for j=1:n,
@@ -342,6 +344,20 @@ if job.label(2),
         else
             wlabel{j} = fullfile(parts{j,1},['wp0',parts{j,2},'.nii']);
         end
+    end
+end
+
+if job.label(3),
+    rlabel = cell(n,1);
+    for j=1:n
+        rlabel{j} = fullfile(parts{j,1},['rp0',parts{j,2},'.nii']);
+    end
+end
+
+if job.label(4),
+    alabel = cell(n,1);
+    for j=1:n
+        alabel{j} = fullfile(parts{j,1},['rp0',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -444,7 +460,7 @@ else
     jacobian = {};
 end
 
-vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},...
+vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'alabel',{alabel},...
                'biascorr',{biascorr},'wbiascorr',{wbiascorr},'param',{param},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian});
 %_______________________________________________________________________
@@ -461,6 +477,8 @@ if ~isempty(vout.biascorr),   vf = {vf{:}, vout.biascorr{:}}; end
 if ~isempty(vout.wbiascorr),  vf = {vf{:}, vout.wbiascorr{:}}; end
 if ~isempty(vout.label),      vf = {vf{:}, vout.label{:}}; end
 if ~isempty(vout.wlabel),     vf = {vf{:}, vout.wlabel{:}}; end
+if ~isempty(vout.rlabel),     vf = {vf{:}, vout.rlabel{:}}; end
+if ~isempty(vout.alabel),     vf = {vf{:}, vout.alabel{:}}; end
 
 for i=1:numel(vout.tiss)
     if ~isempty(vout.tiss(i).c),   vf = {vf{:}, vout.tiss(i).c{:}};   end
