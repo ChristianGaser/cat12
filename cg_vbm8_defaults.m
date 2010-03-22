@@ -78,7 +78,6 @@ vbm8.defs.interp    = 5;  % 5th degree B-spline
 
 % expert options
 %=======================================================================
-vbm8.extopts.cleanup   = 0;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm8.extopts.kmeans    = 1;    % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm8.extopts.mrf       = 0.15; % MRF weighting
 vbm8.extopts.ornlm     = 0.7;  % use ORNLM filter with weighting: 0 - no ORNLM
