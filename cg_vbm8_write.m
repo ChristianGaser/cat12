@@ -44,7 +44,6 @@ end
 % jc - jacobian: no, normalized 
 
 do_dartel = warp.dartelwarp;   % apply dartel normalization
-warp.brainmask_th = -1; % don't use brainmask anymore
 warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
 
@@ -151,12 +150,6 @@ end
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
 
-% load brainmask
-if do_defs & (warp.brainmask_th > 0)
-    Vmask = spm_vol(fullfile(fileparts(which(mfilename)),['brainmask_LPBA40.nii']));
-    mask = zeros(res.image(1).dim(1:3),'single');
-end
-
 for z=1:length(x3),
 
     % Bias corrected image
@@ -176,9 +169,6 @@ for z=1:length(x3),
 
     if do_defs,
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
-        if warp.brainmask_th > 0
-            mask(:,:,z) = spm_sample_vol(Vmask,t1,t2,t3,1);
-        end
         if exist('Ndef','var'),
             tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
@@ -258,25 +248,23 @@ src = single(src);
 
 if do_cls & do_defs,
 
-    if warp.brainmask_th < 0
-        % use mask of GM and WM
-        mask = single(cls{1});
-        mask = mask + single(cls{2});
+    % use mask of GM and WM
+    mask = single(cls{1});
+    mask = mask + single(cls{2});
 
-        % keep largest connected component after 1 it of opening
-        mask = cg_morph_vol(mask,'open',1,warp.open_th);
-        mask = mask_largest_cluster(mask,0.5);
+    % keep largest connected component after 1 it of opening
+    mask = cg_morph_vol(mask,'open',1,warp.open_th);
+    mask = mask_largest_cluster(mask,0.5);
 
-        % dilate and close to fill ventricles
-        mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
-        mask = cg_morph_vol(mask,'close',10,0.5);
+    % dilate and close to fill ventricles
+    mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
+    mask = cg_morph_vol(mask,'close',10,0.5);
         
-        % remove sinus
-        mask = mask & single(cls{5})<16;        
+    % remove sinus
+    mask = mask & single(cls{5})<16;        
 
-        % and fill holes that can remain
-        mask = cg_morph_vol(mask,'close',2,0.5);
-    end
+    % and fill holes that can remain
+    mask = cg_morph_vol(mask,'close',2,0.5);
         
     % calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
@@ -292,16 +280,12 @@ if do_cls & do_defs,
     	  end
     end
     
-    if warp.brainmask_th < 0
-        % set all non-brain tissue outside mask to 0
-        label2(find((label2 > 3) | (mask == 0))) = 0;
+    % set all non-brain tissue outside mask to 0
+    label2(find((label2 > 3) | (mask == 0))) = 0;
     
-        % fill remaining holes in label with 1
-        mask = cg_morph_vol(label2,'close',2,0);    
-        label2(find((label2 == 0) & (mask > 0))) = 1;
-    else
-        label2(find(mask==0)) = 0;
-    end
+    % fill remaining holes in label with 1
+    mask = cg_morph_vol(label2,'close',2,0);    
+    label2(find((label2 == 0) & (mask > 0))) = 1;
     
     % use index to speed up and save memory
     sz = size(mask);
@@ -344,23 +328,10 @@ if do_cls & do_defs,
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
     
-    % use cleanup maybe in the future
-    if (warp.cleanup > 0)
-        % get sure that all regions outside mask are zero
-        for i=1:3
-            cls{i}(:) = 0;
-        end
-        disp('Clean up...');        
-        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
-           prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
-        sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
-        label(find(sum_cls<0.15*255)) = 0;
-    else
-        for i=1:3
-            cls{i}(:) = 0;
-            cls{i}(indx,indy,indz) = prob(:,:,:,i);
-        end
-    end;
+    for i=1:3
+        cls{i}(:) = 0;
+        cls{i}(indx,indy,indz) = prob(:,:,:,i);
+    end
     clear prob
 
     % create final mask
@@ -378,7 +349,6 @@ if do_cls & do_defs,
     for i=1:3
         cls{i}(ind_mask) = 0;
     end
-
 
     % clear last 3 tissue classes to save memory
     for i=4:6
