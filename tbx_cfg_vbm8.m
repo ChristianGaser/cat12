@@ -239,6 +239,17 @@ vox.help = {...
 
 %------------------------------------------------------------------------
 
+finalmask = cfg_menu;
+finalmask.tag  = 'finalmask';
+finalmask.name = 'Apply final mask after segmenting';
+finalmask.help = {[...
+'This uses a crude routine to apply a final masking using morphological operations.']};
+finalmask.labels = {'Dont apply final masking','Apply final masking'};
+finalmask.values = {0 1};
+finalmask.def  = @(val)cg_vbm8_get_defaults('extopts.finalmask', val{:});
+
+%------------------------------------------------------------------------
+
 print    = cfg_menu;
 print.tag = 'print';
 print.name = 'Display and print results';
@@ -265,7 +276,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,print};
+extopts.val = {dartelwarp,finalmask,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
