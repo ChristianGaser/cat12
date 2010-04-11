@@ -263,7 +263,7 @@ if do_cls & do_defs,
     % remove sinus
     mask = mask & single(cls{5})<16;        
 
-    % and fill holes that can remain
+    % and fill holes that may remain
     mask = cg_morph_vol(mask,'close',2,0.5);
         
     % calculate label image for all classes 
@@ -334,22 +334,23 @@ if do_cls & do_defs,
     end
     clear prob
 
-    % create final mask
-    mask = single(cls{1});
-    mask = mask + single(cls{2});
+    if (warp.finalmask > 0)
+        % create final mask
+        mask = single(cls{1});
+        mask = mask + single(cls{2});
 
-    % keep largest connected component after 2 its of opening
-    mask = cg_morph_vol(mask,'open',2,0.5);
-    mask = mask_largest_cluster(mask,0.5);
+        % keep largest connected component after 2 its of opening
+        mask = cg_morph_vol(mask,'open',2,0.5);
+        mask = mask_largest_cluster(mask,0.5);
 
-    % dilate and close to fill ventricles
-    mask = cg_morph_vol(mask,'dilate',2,0.5);
-    mask = cg_morph_vol(mask,'close',10,0.5);
-    ind_mask = find(mask == 0);
-    for i=1:3
-        cls{i}(ind_mask) = 0;
+        % dilate and close to fill ventricles
+        mask = cg_morph_vol(mask,'dilate',2,0.5);
+        mask = cg_morph_vol(mask,'close',10,0.5);
+        ind_mask = find(mask == 0);
+        for i=1:3
+            cls{i}(ind_mask) = 0;
+        end
     end
-
     % clear last 3 tissue classes to save memory
     for i=4:6
         cls{i} = [];
