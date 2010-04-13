@@ -350,6 +350,13 @@ if do_cls & do_defs,
         for i=1:3
             cls{i}(ind_mask) = 0;
         end
+        
+        % mask label
+        label2 = zeros(d,'uint8');
+        label2(indx,indy,indz) = label;
+        label2(ind_mask) = 0;
+        label = label2(indx,indy,indz);
+        clear label2
     end
     % clear last 3 tissue classes to save memory
     for i=4:6
@@ -694,8 +701,6 @@ if jc
     end
 end
 
-%clear u
-
 if any(tc(:,4)),
     C = zeros([d1,3],'single');
 end
@@ -879,11 +884,11 @@ if do_cls & warp.print
 	  fg = spm_figure('FindWin','Graphics');
 	  spm_figure('Clear','Graphics');
 	  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-	  text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',12,'FontWeight','Bold',...
+	  text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',11,'FontWeight','Bold',...
 		  'Interpreter','none','Parent',ax);
 	  for i=1:size(str,2)
-		  text(0.05,0.85-(0.075*i), str(i).name ,'FontSize',12, 'Interpreter','none','Parent',ax);
-		  text(0.35,0.85-(0.075*i), str(i).value ,'FontSize',12, 'Interpreter','none','Parent',ax);
+		  text(0.01,0.85-(0.075*i), str(i).name ,'FontSize',10, 'Interpreter','none','Parent',ax);
+		  text(0.40,0.85-(0.075*i), str(i).value ,'FontSize',10, 'Interpreter','none','Parent',ax);
 	  end
 	  pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
 			0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
