@@ -320,6 +320,9 @@ for i=1:size(P,1)
           t2x_name = 'P_';
        case 2
           t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
+          % find neg. T-values
+          ind_neg = find(Z<0);
+          t2x(ind_neg) = log10(max(eps,spm_Tcdf(Z(ind_neg),df(2))));
           t2x_name = 'logP_';
        case 3
           t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
