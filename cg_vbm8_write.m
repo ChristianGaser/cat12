@@ -24,7 +24,21 @@ d1        = size(tpm.dat{1});
 d1        = d1(1:3);
 M1        = tpm.M;
 [bb1,vx1] = bbvox_from_V(tpm.V(1));
-         
+
+if 0
+% not yet working, do not use...
+vx1 = [-1 1 1]   
+    % Adjust bounding box slightly - so it rounds to closest voxel.
+    bb1(:,1) = round(bb1(:,1)/vx1(1))*vx1(1);
+    bb1(:,2) = round(bb1(:,2)/vx1(2))*vx1(2);
+    bb1(:,3) = round(bb1(:,3)/vx1(3))*vx1(3)
+    dim = round(diff(bb1)./vx1+1);
+    of  = -vx1.*(round(-bb1(1,:)./vx1)+1);
+    mat = [vx1(1) 0 0 of(1) ; 0 vx1(2) 0 of(2) ; 0 0 vx1(3) of(3) ; 0 0 0 1];
+    d1 = dim
+    M1 = mat
+end
+     
 if isfield(res,'mg'),
     lkp = res.lkp;
     Kb  = max(lkp);
@@ -148,7 +162,7 @@ if do_defs,
 end
 
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
-M = M1\res.Affine*res.image(1).mat;
+M = tpm.M\res.Affine*res.image(1).mat;
 
 for z=1:length(x3),
 
@@ -170,11 +184,11 @@ for z=1:length(x3),
     if do_defs,
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
         if exist('Ndef','var'),
-            tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
+            tmp = tpm.M(1,1)*t1 + tpm.M(1,2)*t2 + tpm.M(1,3)*t3 + tpm.M(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
-            tmp = M1(2,1)*t1 + M1(2,2)*t2 + M1(2,3)*t3 + M1(2,4);
+            tmp = tpm.M(2,1)*t1 + tpm.M(2,2)*t2 + tpm.M(2,3)*t3 + tpm.M(2,4);
             Ndef.dat(:,:,z,1,2) = tmp;
-            tmp = M1(3,1)*t1 + M1(3,2)*t2 + M1(3,3)*t3 + M1(3,4);
+            tmp = tpm.M(3,1)*t1 + tpm.M(3,2)*t2 + tpm.M(3,3)*t3 + tpm.M(3,4);
             Ndef.dat(:,:,z,1,3) = tmp;
         end
         
@@ -261,7 +275,9 @@ if do_cls & do_defs,
     mask = cg_morph_vol(mask,'close',10,0.5);
         
     % remove sinus
-    mask = mask & single(cls{5})<16;        
+    mask = mask & ((single(cls{5})<single(cls{1})) | ...
+                   (single(cls{5})<single(cls{2})) | ...
+                   (single(cls{5})<single(cls{3})));        
 
     % and fill holes that may remain
     mask = cg_morph_vol(mask,'close',2,0.5);
