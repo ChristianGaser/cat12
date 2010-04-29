@@ -61,7 +61,7 @@ kthresh.tag     = 'kthresh';
 kthresh.name    = 'Extent (voxels)';
 kthresh.help    = {'Enter the extent threshold in voxels'};
 kthresh.strtype = 'e';
-kthresh.def     = @(val)spm_get_defaults('stats.results.extent', val{:});
+kthresh.def     = {0.05};
 kthresh.num     = [1 1];
 
 none         = cfg_const;
