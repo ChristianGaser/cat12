@@ -25,19 +25,20 @@ d1        = d1(1:3);
 M1        = tpm.M;
 [bb1,vx1] = bbvox_from_V(tpm.V(1));
 
-if 0
-% not yet working, do not use...
-vx1 = [-1 1 1]   
-    % Adjust bounding box slightly - so it rounds to closest voxel.
-    bb1(:,1) = round(bb1(:,1)/vx1(1))*vx1(1);
-    bb1(:,2) = round(bb1(:,2)/vx1(2))*vx1(2);
-    bb1(:,3) = round(bb1(:,3)/vx1(3))*vx1(3)
-    dim = round(diff(bb1)./vx1+1);
-    of  = -vx1.*(round(-bb1(1,:)./vx1)+1);
-    mat = [vx1(1) 0 0 of(1) ; 0 vx1(2) 0 of(2) ; 0 0 vx1(3) of(3) ; 0 0 0 1];
-    d1 = dim
-    M1 = mat
-end
+% prepare parameters for different voxel size
+old_vx1 = vx1;
+vx1 = sign(old_vx1).*[warp.vox warp.vox warp.vox];   
+vx_ratio = abs(old_vx1./vx1);
+
+% Adjust bounding box slightly - so it rounds to closest voxel.
+bb1(:,1) = round(bb1(:,1)/vx1(1))*vx1(1);
+bb1(:,2) = round(bb1(:,2)/vx1(2))*vx1(2);
+bb1(:,3) = round(bb1(:,3)/vx1(3))*vx1(3);
+dim = round(diff(bb1)./vx1+1);
+of  = -vx1.*(round(-bb1(1,:)./vx1)+1);
+mat = [vx1(1) 0 0 of(1) ; 0 vx1(2) 0 of(2) ; 0 0 vx1(3) of(3) ; 0 0 0 1];
+d1 = dim;
+M1 = mat;
      
 if isfield(res,'mg'),
     lkp = res.lkp;
@@ -277,7 +278,7 @@ if do_cls & do_defs,
     % remove sinus
     mask = mask & ((single(cls{5})<single(cls{1})) | ...
                    (single(cls{5})<single(cls{2})) | ...
-                   (single(cls{5})<single(cls{3})));        
+                   (single(cls{5})<single(cls{3})));                
 
     % and fill holes that may remain
     mask = cg_morph_vol(mask,'close',2,0.5);
@@ -344,10 +345,23 @@ if do_cls & do_defs,
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
     
-    for i=1:3
-        cls{i}(:) = 0;
-        cls{i}(indx,indy,indz) = prob(:,:,:,i);
-    end
+    % use cleanup maybe in the future
+    if (warp.cleanup > 0)
+        % get sure that all regions outside mask are zero
+        for i=1:3
+            cls{i}(:) = 0;
+        end
+        disp('Clean up...');        
+        [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
+           prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
+        sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
+        label(find(sum_cls<0.15*255)) = 0;
+    else
+        for i=1:3
+            cls{i}(:) = 0;
+            cls{i}(indx,indy,indz) = prob(:,:,:,i);
+        end
+    end;
     clear prob
 
     if (warp.finalmask > 0)
@@ -728,12 +742,17 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
     spm_progress_bar('init',3,'Warped Tissue Classes','Classes completed');
 
+    % scale deformations according to change of voxel size
+    for i=1:3
+        y(:,:,:,i) = y(:,:,:,i)*vx_ratio(i);
+    end
+
     % estimate a more accurate jacobian determinant 
     y2 = spm_invert_def(y,M1,d1,M0,[1 0]);
     dt = spm_def2det(y2(:,:,:,1),y2(:,:,:,2),y2(:,:,:,3),M1);
-    dt = dt./abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
+    dt = dt./abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));    
     clear y2
-      
+    
     for k1 = 1:3,
         if ~isempty(cls{k1}),
             c = single(cls{k1})/255;
