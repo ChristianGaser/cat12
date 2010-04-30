@@ -228,7 +228,7 @@ opts.help = {[...
 
 vox      = cfg_entry;
 vox.tag = 'vox';
-vox.name = 'Voxel size';
+vox.name = 'Voxel size for normalized images';
 vox.strtype = 'e';
 vox.num = [1 1];
 vox.def  = @(val)cg_vbm8_get_defaults('extopts.vox', val{:});
@@ -236,6 +236,25 @@ vox.help = {...
 ['The (isotropic) voxel sizes of any spatially normalised written images. '...
  'A non-finite value will be replaced by the average voxel size of '...
  'the tissue probability maps used by the segmentation.']};
+
+%------------------------------------------------------------------------
+
+cleanup = cfg_menu;
+cleanup.tag  = 'cleanup';
+cleanup.name = 'Clean up any partitions';
+cleanup.help = {[...
+'This uses a crude routine for extracting the brain from segmented',...
+'images. It begins by taking the white matter, and eroding it a',...
+'couple of times to get rid of any odd voxels. The algorithm',...
+'continues on to do conditional dilations for several iterations,',...
+'where the condition is based upon gray or white matter being present.',...
+'This identified region is then used to clean up the grey and white',...
+'matter partitions, and has a slight influences on the CSF partition.'],'',[...
+'If you find pieces of brain being chopped out in your data, then you ',...
+'may wish to disable or tone down the cleanup procedure.']};
+cleanup.labels = {'Dont do cleanup','Light Clean','Thorough Clean'};
+cleanup.values = {0 1 2};
+cleanup.def  = @(val)cg_vbm8_get_defaults('extopts.cleanup', val{:});
 
 %------------------------------------------------------------------------
 
@@ -276,7 +295,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,finalmask,print};
+extopts.val = {vox,dartelwarp,cleanup,finalmask,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
