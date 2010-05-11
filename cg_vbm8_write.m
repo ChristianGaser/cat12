@@ -252,7 +252,7 @@ end
 ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
 if ornlm_weight > 0
     h = cg_noise_estimation(src);
-    fprintf('\nNoise estimate: %3.2f',h);
+    fprintf('\nNoise estimate: %3.2f\n',h);
   	
   	% weight ORNLM
   	h = ornlm_weight*h;
