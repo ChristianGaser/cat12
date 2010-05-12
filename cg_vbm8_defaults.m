@@ -78,7 +78,7 @@ vbm8.defs.interp    = 5;  % 5th degree B-spline
 
 % expert options
 %=======================================================================
-vbm8.extopts.vox       = 1.5;  % isotropic voxel size for normalized images
+%vbm8.extopts.vox       = 1.5;  % isotropic voxel size for normalized images
 vbm8.extopts.cleanup   = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm8.extopts.finalmask = 1;    % Final masking: 0 - no; 1 - yes
 vbm8.extopts.kmeans    = 1;    % segmentation initialization: 0 - new segment; 1 - Kmeans

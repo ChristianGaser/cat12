@@ -25,6 +25,7 @@ d1        = d1(1:3);
 M1        = tpm.M;
 [bb1,vx1] = bbvox_from_V(tpm.V(1));
 
+if 0
 % prepare parameters for different voxel size
 old_vx1 = vx1;
 vx1 = sign(old_vx1).*[warp.vox warp.vox warp.vox];   
@@ -39,6 +40,7 @@ of  = -vx1.*(round(-bb1(1,:)./vx1)+1);
 mat = [vx1(1) 0 0 of(1) ; 0 vx1(2) 0 of(2) ; 0 0 vx1(3) of(3) ; 0 0 0 1];
 d1 = dim;
 M1 = mat;
+end
      
 if isfield(res,'mg'),
     lkp = res.lkp;
