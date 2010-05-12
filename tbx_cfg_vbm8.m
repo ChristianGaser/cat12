@@ -297,7 +297,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {vox,dartelwarp,cleanup,print};
+extopts.val = {dartelwarp,cleanup,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
