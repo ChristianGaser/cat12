@@ -330,6 +330,7 @@ if do_cls & do_defs,
     mrf_weight  = cg_vbm8_get_defaults('extopts.mrf');
     bias_fwhm   = cg_vbm8_get_defaults('extopts.bias_fwhm');
     init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
+    finalmask   = cg_vbm8_get_defaults('extopts.finalmask');
 
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
@@ -345,7 +346,7 @@ if do_cls & do_defs,
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
     
-    % use cleanup maybe in the future
+    % use cleanup
     if (warp.cleanup > 0)
         % get sure that all regions outside mask are zero
         for i=1:3
@@ -364,7 +365,7 @@ if do_cls & do_defs,
     end;
     clear prob
 
-    if (warp.finalmask > 0)
+    if (finalmask > 0)
         % create final mask
         mask = single(cls{1});
         mask = mask + single(cls{2});
