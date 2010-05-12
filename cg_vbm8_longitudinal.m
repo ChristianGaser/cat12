@@ -52,7 +52,6 @@ matlabbatch{4}.spm.tools.vbm8.estwrite.data(1).src_exbranch = substruct('.','val
 matlabbatch{4}.spm.tools.vbm8.estwrite.data(1).src_output = substruct('.','rmean');
 matlabbatch{4}.spm.tools.vbm8.estwrite.extopts.dartelwarp = 1;
 matlabbatch{4}.spm.tools.vbm8.estwrite.extopts.print = 1;
-matlabbatch{4}.spm.tools.vbm8.estwrite.extopts.vox = 1;
 matlabbatch{4}.spm.tools.vbm8.estwrite.output.GM.native = 1;
 matlabbatch{4}.spm.tools.vbm8.estwrite.output.GM.warped = 0;
 matlabbatch{4}.spm.tools.vbm8.estwrite.output.GM.modulated = 0;
