@@ -40,6 +40,8 @@ of  = -vx1.*(round(-bb1(1,:)./vx1)+1);
 mat = [vx1(1) 0 0 of(1) ; 0 vx1(2) 0 of(2) ; 0 0 vx1(3) of(3) ; 0 0 0 1];
 d1 = dim;
 M1 = mat;
+else
+vx_ratio = [1 1 1];
 end
      
 if isfield(res,'mg'),
@@ -254,7 +256,7 @@ end
 ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
 if ornlm_weight > 0
     h = cg_noise_estimation(src);
-    fprintf('\nNoise estimate: %3.2f\n',h);
+    fprintf('\nNoise estimate: %3.2f',h);
   	
   	% weight ORNLM
   	h = ornlm_weight*h;
@@ -269,8 +271,8 @@ if do_cls & do_defs,
     mask = single(cls{1});
     mask = mask + single(cls{2});
 
-    % keep largest connected component after 1 it of opening
-    mask = cg_morph_vol(mask,'open',1,warp.open_th);
+    % keep largest connected component after 2 its of opening
+    mask = cg_morph_vol(mask,'open',2,warp.open_th);
     mask = mask_largest_cluster(mask,0.5);
 
     % dilate and close to fill ventricles
