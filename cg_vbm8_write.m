@@ -253,13 +253,12 @@ for z=1:length(x3),
 end
 
 % optionally apply optimized blockwise non local means denoising filter
-ornlm_weight = cg_vbm8_get_defaults('extopts.ornlm');
-if ornlm_weight > 0
+if warp.ornlm > 0
     h = cg_noise_estimation(src);
     fprintf('\nNoise estimate: %3.2f',h);
   	
   	% weight ORNLM
-  	h = ornlm_weight*h;
+  	h = warp.ornlm*h;
     src = ornlmMex(src,3,1,h);  
 end
 
@@ -331,7 +330,6 @@ if do_cls & do_defs,
     iters_icm = 20;
     
     % default parameters
-    mrf_weight  = cg_vbm8_get_defaults('extopts.mrf');
     bias_fwhm   = cg_vbm8_get_defaults('extopts.bias_fwhm');
     init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
     finalmask   = cg_vbm8_get_defaults('extopts.finalmask');
@@ -344,7 +342,7 @@ if do_cls & do_defs,
       fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
     end
     
-    prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx_vol, iters_icm, bias_fwhm);
+    prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, warp.mrf, vx_vol, iters_icm, bias_fwhm);
 
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
@@ -917,8 +915,8 @@ if do_cls & warp.print
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.kmeans')))];
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.bias_fwhm')))];
-	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.ornlm')))];
-	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',cg_vbm8_get_defaults('extopts.mrf')))];
+	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%3.2f',warp.ornlm))];
+	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',warp.mrf))];
 
   try
 	  fg = spm_figure('FindWin','Graphics');

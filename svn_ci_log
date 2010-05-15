@@ -2,12 +2,17 @@
 
 echo "Changed paths:" > log2
 svn -q status >> log2
+svn -q status >> CHANGES.txt
 echo  >> log2
+echo  >> CHANGES.txt
 if [ -f log ]; then
   cat log >> log2
   echo  >> log2
+  cat log >> CHANGES.txt
+  echo  >> CHANGES.txt
   svn ci -F log2
   svn update
+  svn log | head -n 3 >> CHANGES.txt
 else
   echo "Put commit information in log"
 fi
