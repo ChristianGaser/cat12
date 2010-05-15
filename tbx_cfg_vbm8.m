@@ -260,6 +260,40 @@ cleanup.def  = @(val)cg_vbm8_get_defaults('extopts.cleanup', val{:});
 
 %------------------------------------------------------------------------
 
+ornlm = cfg_entry;
+ornlm.tag  = 'ornlm';
+ornlm.name = 'ORNLM de-noising filter weighting';
+ornlm.strtype = 'e';
+ornlm.num = [1 1];
+ornlm.help = {[...
+'This function applies an optimized blockwise non local means denoising filter ',...
+'to the data. This filter will remove noise while ',...
+'preserving edges. The smoothing filter size is automatically estimated based on ',...
+'the local variance in the image. '],...
+'',[...
+'For image segmentation a weighting of "0.7" achieves best results in terms of segmentation ',...
+'accuracy. A value of "0" will deselect the filter.']};
+ornlm.def  = @(val)cg_vbm8_get_defaults('extopts.ornlm', val{:});
+
+%------------------------------------------------------------------------
+
+mrf = cfg_entry;
+mrf.tag  = 'mrf';
+mrf.name = 'MRF weighting';
+mrf.strtype = 'e';
+mrf.num = [1 1];
+mrf.help = {[...
+'A Hidden Markov Random Field (HMRF) is used to encode spatial information ',...
+'through spatial constraints of neighboring voxels (Zhang et al. IEEE TMI 2001). ',...
+'Neighboring voxels are expected to have the same class labels. The prior probability ',...
+'of the class and the likelihood probability of the observation is combined to ',...
+'estimate the Maximum a posteriori (MAP). It is not necessary to change the MRF ',...
+'weighting, because the ORNLM filter will have a much larger de-noising effect. ',...
+'A value of "0" will deselect the MRF.']};
+mrf.def  = @(val)cg_vbm8_get_defaults('extopts.mrf', val{:});
+
+%------------------------------------------------------------------------
+
 finalmask = cfg_menu;
 finalmask.tag  = 'finalmask';
 finalmask.name = 'Apply final mask after segmenting';
@@ -297,7 +331,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,cleanup,print};
+extopts.val = {dartelwarp,ornlm,mrf,cleanup,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------

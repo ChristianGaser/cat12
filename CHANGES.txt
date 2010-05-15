@@ -1,0 +1,13 @@
+M       VBM8-Manual.pdf
+M       Makefile.vbm
+A       CHANGES.txt
+M       tbx_cfg_vbm8.m
+M       svn_ci_log
+M       cg_vbm8_write.m
+M       VBM8-Manual.doc
+M       cg_vbm8_run.m
+
+(1) Weighting for MRF and ORNLM can now be selected in the GUI. This will solve
+    some problems with batch files, where changes of these parameters were not 
+    considered.
+(2) VBM8-Manual is also updated to describe the weighting parameters.
