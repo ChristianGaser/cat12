@@ -74,10 +74,13 @@ if rnew > r
           name = fullfile(d,'vbm8',mexfiles(i).name);
           spm_unlink(name);
         end
+        fprintf('Download VBM8\n');
         s = unzip([url sprintf('vbm8_r%d.zip',rnew)], d);
         fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
         restart = spm_input('Restart SPM',1,'m','no|yes',[0 1],2);
         if restart
+          rehash
+          toolbox_path_cache
           eval(['spm fmri']);
         end
       catch
