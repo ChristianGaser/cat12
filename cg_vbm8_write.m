@@ -24,25 +24,6 @@ d1        = size(tpm.dat{1});
 d1        = d1(1:3);
 M1        = tpm.M;
 [bb1,vx1] = bbvox_from_V(tpm.V(1));
-
-if 0
-% prepare parameters for different voxel size
-old_vx1 = vx1;
-vx1 = sign(old_vx1).*[warp.vox warp.vox warp.vox];   
-vx_ratio = abs(old_vx1./vx1);
-
-% Adjust bounding box slightly - so it rounds to closest voxel.
-bb1(:,1) = round(bb1(:,1)/vx1(1))*vx1(1);
-bb1(:,2) = round(bb1(:,2)/vx1(2))*vx1(2);
-bb1(:,3) = round(bb1(:,3)/vx1(3))*vx1(3);
-dim = round(diff(bb1)./vx1+1);
-of  = -vx1.*(round(-bb1(1,:)./vx1)+1);
-mat = [vx1(1) 0 0 of(1) ; 0 vx1(2) 0 of(2) ; 0 0 vx1(3) of(3) ; 0 0 0 1];
-d1 = dim;
-M1 = mat;
-else
-vx_ratio = [1 1 1];
-end
      
 if isfield(res,'mg'),
     lkp = res.lkp;
@@ -161,9 +142,6 @@ if do_defs,
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm8_get_defaults('output.surf.dartel')|| nargout>=1,
-        y = zeros([res.image(1).dim(1:3),3],'single');
-    end
 end
 
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
@@ -197,12 +175,6 @@ for z=1:length(x3),
             Ndef.dat(:,:,z,1,3) = tmp;
         end
         
-        if exist('y','var'),
-            y(:,:,z,1) = t1;
-            y(:,:,z,2) = t2;
-            y(:,:,z,3) = t3;
-        end
-
         if do_cls,
             msk = (f==0) | ~isfinite(f);
 
@@ -237,6 +209,16 @@ for z=1:length(x3),
                 end
             end
         end
+        if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm8_get_defaults('output.surf.dartel')|| nargout>=1,
+            % initialize y only at first slice
+            if z==1
+                y = zeros([res.image(1).dim(1:3),3],'single');
+            end
+            y(:,:,z,1) = t1;
+            y(:,:,z,2) = t2;
+            y(:,:,z,3) = t3;
+        end
+
     end
     spm_progress_bar('set',z);
 end
@@ -744,11 +726,6 @@ clear u
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
     spm_progress_bar('init',3,'Warped Tissue Classes','Classes completed');
-
-    % scale deformations according to change of voxel size
-    for i=1:3
-        y(:,:,:,i) = y(:,:,:,i)*vx_ratio(i);
-    end
 
     % estimate a more accurate jacobian determinant 
     y2 = spm_invert_def(y,M1,d1,M0,[1 0]);

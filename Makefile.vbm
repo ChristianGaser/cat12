@@ -14,7 +14,7 @@ MATLAB_FILES=Contents.m cg_vbm8_defaults.m cg_vbm8_run.m cg_vbm8_write.m cg_chec
 EBTKS_FILES=EBTKS w32 maci maci64 a64 glx
 C_FILES=Amap.[ch] AmapMex.* ornlmMex.* MrfPrior.c Pve.c Kmeans.c vollib.c ornlm.c
 #MISC_FILES=Template_?_IXI550_MNI152.nii submask.nii
-MISC_FILES=Template_?_IXI550_MNI152.nii VBM8-Manual.pdf
+MISC_FILES=Template_?_IXI550_MNI152.nii VBM8-Manual.pdf CHANGES.txt
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
@@ -54,5 +54,6 @@ zip: update
 	-@zip ${ZIPFILE} -rm vbm8
 
 scp: zip
-	-@echo scp to http://dbm.neuro.uni-jena.de/vbm8/${ZIPFILE}
-	-@scp -pr VBM8-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@echo rsync to http://dbm.neuro.uni-jena.de/vbm8/${ZIPFILE}
+	@ln -fs ${ZIPFILE} vbm8_latest.zip
+	-@rsync -l vbm8_latest.zip CHANGES.txt VBM8-Manual.pdf ${ZIPFILE} ${STARGET}
