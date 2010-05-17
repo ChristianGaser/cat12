@@ -1,8 +1,5 @@
 M       VBM8-Manual.pdf
-M       Makefile.vbm
-A       CHANGES.txt
 M       tbx_cfg_vbm8.m
-M       svn_ci_log
 M       cg_vbm8_write.m
 M       VBM8-Manual.doc
 M       cg_vbm8_run.m
@@ -11,3 +8,15 @@ M       cg_vbm8_run.m
     some problems with batch files, where changes of these parameters were not 
     considered.
 (2) VBM8-Manual is also updated to describe the weighting parameters.
+------------------------------------------------------------------------
+r331 | gaser | 2010-05-15 03:00:51
+
+M       cg_vbm8_update.m
+M       cg_vbm8_write.m
+
+(1) Update function now clears the toolbox cache and refreshes function 
+    and file system caches.
+(2) Reordered some parameter initializations in cg_vbm8_write to save 
+    memory.
+------------------------------------------------------------------------
+r332 | gaser | 2010-05-17 22:56:55

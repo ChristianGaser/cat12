@@ -1,5 +1,9 @@
 #!/bin/bash
 
+oldrev=`svn info | grep 'Last Changed Rev'| cut -f2 -d':' | sed 's/[^[:digit:]]//g'`
+newrev=`expr $oldrev + 1`
+date=`date "+%Y-%m-%d %H:%M:%S"`
+
 echo "Changed paths:" > log2
 svn -q status >> log2
 svn -q status >> CHANGES.txt
@@ -10,9 +14,11 @@ if [ -f log ]; then
   echo  >> log2
   cat log >> CHANGES.txt
   echo  >> CHANGES.txt
+  echo '------------------------------------------------------------------------' >> CHANGES.txt
+  echo r$newrev '|' $USER '|' $date >> CHANGES.txt
+  nano CHANGES.txt
   svn ci -F log2
   svn update
-  svn log | head -n 3 >> CHANGES.txt
 else
   echo "Put commit information in log"
 fi
