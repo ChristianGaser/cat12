@@ -64,6 +64,14 @@ kthresh.strtype = 'e';
 kthresh.val     = {0.05};
 kthresh.num     = [1 1];
 
+noniso      = cfg_menu;
+noniso.name = 'Correct for non-isotropic smoothness';
+noniso.tag  = 'noniso';
+noniso.labels = {'yes','no'};
+noniso.values = {1,0};
+noniso.val    = {1};
+noniso.help = {'Correct for non-isotropic smoothness for cluster extent thresholds.'};
+
 none         = cfg_const;
 none.tag     = 'none';
 none.name    = 'None';
@@ -73,7 +81,7 @@ none.help    = {'No threshold'};
 k         = cfg_branch;
 k.tag     = 'k';
 k.name    = 'k-value';
-k.val     = {kthresh };
+k.val     = {kthresh, noniso };
 k.help    = {''};
 
 fwe         = cfg_branch;
@@ -88,15 +96,28 @@ fdr.name    = 'FDR';
 fdr.val     = {thresh };
 fdr.help    = {''};
 
+fwe2         = cfg_branch;
+fwe2.tag     = 'fwe2';
+fwe2.name    = 'FWE';
+fwe2.val     = {thresh, noniso };
+fwe2.help    = {''};
+
 uncorr         = cfg_branch;
 uncorr.tag     = 'uncorr';
 uncorr.name    = 'unocrrected';
 uncorr.val     = {thresh2 };
 uncorr.help    = {''};
 
+uncorr2         = cfg_branch;
+uncorr2.tag     = 'uncorr2';
+uncorr2.name    = 'unocrrected';
+uncorr2.val     = {thresh2, noniso };
+uncorr2.help    = {''};
+
 En         = cfg_branch;
 En.tag     = 'En';
 En.name    = 'Expected voxels per cluster';
+En.val     = {noniso };
 En.help    = {''};
 
 inverse      = cfg_menu;
@@ -107,30 +128,24 @@ inverse.values = {1,0};
 inverse.val    = {0};
 inverse.help = {'Show also inverse effects (e.g. neg. values). This is not valid if you convert to (log) p-values.'};
 
-noniso      = cfg_menu;
-noniso.name = 'Correct for non-isotropic smoothness';
-noniso.tag  = 'noniso';
-noniso.labels = {'yes','no'};
-noniso.values = {1,0};
-noniso.val    = {0};
-noniso.help = {'Correct for non-isotropic smoothness for cluster extent thresholds.'};
-
 threshdesc      = cfg_choice;
 threshdesc.name = 'Threshold type peak-level';
 threshdesc.tag  = 'threshdesc';
 threshdesc.values = {none uncorr fdr fwe};
+threshdesc.val  = {uncorr};
 threshdesc.help = {'Select method for voxel threshold'};
 
 cluster      = cfg_choice;
 cluster.name = 'Cluster extent threshold';
 cluster.tag  = 'cluster';
-cluster.values = {none k En uncorr fwe};
+cluster.values = {none k En uncorr2 fwe2};
+cluster.val  = {none};
 cluster.help = {'Select method for extent threshold'};
 
 conversion         = cfg_branch;
 conversion.tag     = 'conversion';
 conversion.name    = 'Conversion';
-conversion.val     = {sel threshdesc inverse cluster noniso};
+conversion.val     = {sel threshdesc inverse cluster};
 conversion.help    = {''};
 
 T2x = cfg_exbranch;
@@ -218,6 +233,7 @@ cluster      = cfg_choice;
 cluster.name = 'Cluster extent threshold';
 cluster.tag  = 'cluster';
 cluster.values = {none k};
+cluster.val  = {none};
 cluster.help = {'Select method for extent threshold'};
 
 conversion         = cfg_branch;
@@ -470,6 +486,7 @@ modulate.tag = 'modulate';
 modulate.name = 'Modulate image (preserve volume)';
 modulate.labels = {'yes','no'};
 modulate.values = {1 0};
+modulate.val    = {0};
 modulate.help = {[...
 '``Modulation'''' is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
 'causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). ',...
