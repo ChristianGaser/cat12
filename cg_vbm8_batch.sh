@@ -7,6 +7,7 @@
 
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 writeonly=0
+defaults_file=""
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
 
@@ -48,6 +49,11 @@ parse_args ()
         --m* | -m*)
             exit_if_empty "$optname" "$optarg"
             matlab=$optarg
+            shift
+            ;;
+        --d* | -d*)
+            exit_if_empty "$optname" "$optarg"
+            defaults_file=$optarg
             shift
             ;;
         --p* | -p*)
@@ -180,6 +186,19 @@ run_vbm ()
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
+    
+    # argument empty?
+    if [ ! "${defaults_file}" == "" ]; then
+        # check wether absolute or relative names were given
+        if [ ! -f ${defaults_file} ];  then
+            defaults_file=${pwd}/${defaults_file}
+        fi
+    
+        # check whether defaults file exist
+        if [ ! -f ${defaults_file} ];  then
+            echo $defaults_file not found.
+        fi
+    fi
 
     # split files and prepare tmp-file with filenames
     TMP=/tmp/vbm8_$$
@@ -210,7 +229,7 @@ run_vbm ()
     do
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
             j=$(($i+1))
-            COMMAND="cg_vbm8_batch('${TMP}${i}',${writeonly})"
+            COMMAND="cg_vbm8_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
             echo Calculate ${ARG_LIST[$i]}
             echo ---------------------------------- >> ${vbmlog}_${j}.log
             date >> ${vbmlog}_${j}.log
@@ -255,6 +274,7 @@ USAGE:
    -m   matlab command
    -p   number of parallel jobs (=number of processors)
    -w		write already segmented images
+   -d   optional default file
    
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. Optionally you can set the matlab command 
@@ -267,6 +287,10 @@ EXAMPLE
    cg_vbm8_batch.sh spm/spm8/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii. 
    
+   cg_vbm8_batch.sh spm/spm8/canonical/single_subj_T1.nii -d your_vbm8_defaults_file.m
+   This command will process only the single file single_subj_T1.nii. The defaults defined
+   in your_vbm8_defaults_file.m will be used instead of cg_vbm8_defaults.m.
+
    cg_vbm8_batch.sh spm/spm8/canonical/*152*.nii
    Using wildcards all files containing the term "152" will be processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
