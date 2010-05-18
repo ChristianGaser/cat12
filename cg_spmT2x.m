@@ -98,22 +98,26 @@ if nargin == 1
     if isfield(vargin.conversion.cluster,'fwe')
         extent_FWE = 1;
         pk  = vargin.conversion.cluster.fwe.thresh;
+        noniso = vargin.conversion.cluster.fwe.noniso;
     elseif isfield(vargin.conversion.cluster,'uncorr')
         extent_FWE = 0;
         pk  = vargin.conversion.cluster.uncorr.thresh;
+        noniso = vargin.conversion.cluster.uncorr.noniso;
     elseif isfield(vargin.conversion.cluster,'k')
         extent_FWE = 0;
         pk  = vargin.conversion.cluster.k.kthresh;
+        noniso = vargin.conversion.cluster.k.noniso;
     elseif isfield(vargin.conversion.cluster,'En')
         extent_FWE = 0;
         pk  = -1;
+        noniso = vargin.conversion.cluster.En.noniso;
     else
         extent_FWE = 0;
         pk=0;
+        noniso = 0;
     end
     
     neg_results = vargin.conversion.inverse;
-    noniso = vargin.conversion.noniso;
     
 end
 
@@ -158,7 +162,11 @@ if nargin < 1
         neg_results = 0;
     end
 
-    noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
+    if pk ~= 0
+        noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
+    else
+        noniso = 0;
+    end
 end
 
 switch adjustment
@@ -322,7 +330,9 @@ for i=1:size(P,1)
           t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
           % find neg. T-values
           ind_neg = find(Z<0);
-          t2x(ind_neg) = log10(max(eps,spm_Tcdf(Z(ind_neg),df(2))));
+          if ~isempty(ind_neg)
+              t2x(ind_neg) = log10(max(eps,spm_Tcdf(Z(ind_neg),df(2))));
+          end
           t2x_name = 'logP_';
        case 3
           t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;

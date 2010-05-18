@@ -6,7 +6,7 @@ M       cg_vbm8_run.m
 
 (1) Weighting for MRF and ORNLM can now be selected in the GUI. This will solve
     some problems with batch files, where changes of these parameters were not 
-    considered.
+    considered (thanks to Jose Manjon for pointing to that issue).
 (2) VBM8-Manual is also updated to describe the weighting parameters.
 ------------------------------------------------------------------------
 r331 | gaser | 2010-05-15 03:00:51
@@ -20,3 +20,20 @@ M       cg_vbm8_write.m
     memory.
 ------------------------------------------------------------------------
 r332 | gaser | 2010-05-17 22:56:55
+
+M      cg_vbm8_batch.sh
+M      tbx_cfg_vbm8.m
+M      cg_vbm8_batch.m
+M      cg_vbm8_tools.m
+M      cg_vbm8_write.m
+M      cg_spmT2x.m
+M      cg_noise_estimation.m
+
+(1) Added calculation of peak SNR to cg_noise_estimate.m.
+(2) Option for non-stationary cluster extent correction now depends on 
+    selection of cluster threshold.
+(3) Added check for empty indeces to cg_spmT2x.m.
+(4) Added flag "-d" to cg_vbm8_batch.sh to define your own vbm8_defaults
+    file.
+------------------------------------------------------------------------
+r333 | gaser | 2010-05-18 16:10:35

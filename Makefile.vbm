@@ -55,5 +55,4 @@ zip: update
 
 scp: zip
 	-@echo rsync to http://dbm.neuro.uni-jena.de/vbm8/${ZIPFILE}
-	@ln -fs ${ZIPFILE} vbm8_latest.zip
-	-@rsync -l vbm8_latest.zip CHANGES.txt VBM8-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@scp CHANGES.txt VBM8-Manual.pdf ${ZIPFILE} ${STARGET}

@@ -11,8 +11,6 @@ function vbm8 = tbx_cfg_vbm8
 
 rev = '$Rev$';
 
-cg_vbm8_defaults
-
 addpath(fileparts(which(mfilename)));
 
 %_______________________________________________________________________
