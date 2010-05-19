@@ -14,6 +14,7 @@
 % General files
 %   INSTALL.txt                 - installation instructions
 %   vbm8.man                    - notes on VBM8 toolbox
+%   CHANGES.txt                 - changes in revisions
 %
 % VBM8 functions
 %   spm_vbm8.m                  - toolbox wrapper to call functions
@@ -35,8 +36,15 @@
 %   cg_ornlm.m                  - Optimized Blockwise Non Local Means Denoising Filter
 %   cg_slice_overlay.m          - Wrapper for overlay tool slice_overlay
 %   cg_slice_overlay_ui.m       - Example for user interface for overlay wrapper cg_slice_overlay.m
-%   slice_overlay.m             - old overlay tool
-%   cg_noise_estimation.m       - local estimation of rician noise
+%   slice_overlay.m             - overlay tool
+%   cg_noise_estimation.m       - local estimation of Rician noise
+%   kmeans3D.m                  - Kmeans clustering
+%
+% Wavelet functions from http://taco.poly.edu/WaveletSoftware
+%   farras.m                    - Farras nearly symmetric orthogonal wavelet bases
+%   dwt3D.m                     - 3-D Discrete Wavelet Transform
+%   afb3D.m                     - 3D Analysis Filter Bank
+%   cshift3D.m                  - 3D Circular Shift
 %
 % Mex- and c-functions
 %   Amap.c                      - Adaptive Maximum A Posteriori segmentation
@@ -46,6 +54,8 @@
 %   KmeansProper.c              - Kmeans
 %   ornlm.c                     - Optimized Blockwise Non Local Means Denoising Filter (core functions)
 %   ornlmMex.c                  - Mex-wrapper for ornlm.c
+%   upfirdn2dMex.c              - 2D replacement for the function upfirdn.m from the Matlab Signal 
+%                                 Processing Toolbox of Matlab
 %
 % Batch functions
 %   cg_vbm8_batch.m             - batch mode wrapper for spm_jobman for VBM8

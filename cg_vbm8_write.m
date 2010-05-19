@@ -236,8 +236,8 @@ end
 
 % optionally apply optimized blockwise non local means denoising filter
 if warp.ornlm > 0
-    [h, PSNR] = cg_noise_estimation(src);
-    fprintf('\nEstimated noise level: %3.2f\tPeak SNR: %3.2fdB',h,PSNR);
+    h = cg_noise_estimation(src);
+    fprintf('\nEstimated noise level: %3.2f',h);
   	
   	% weight ORNLM
   	h = warp.ornlm*h;
@@ -324,8 +324,17 @@ if do_cls & do_defs,
       fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
     end
     
-    prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, warp.mrf, vx_vol, iters_icm, bias_fwhm);
-
+    [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, warp.mrf, vx_vol, iters_icm, bias_fwhm);
+    
+    % calculate SNR/CNR
+    if warp.ornlm > 0
+        % focus on pure tissues
+        means = means([1 3 5]);
+        SNR = 20*log10(means/h);
+        CNR = 20*log10(diff(means)/h);
+        fprintf('SNR(GM): %3.2fdB\tSNR(WM): %3.2fdB\tCNR(WM/GM): %3.2fdB\n',SNR(2),SNR(3),CNR(2));
+    end
+    
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
