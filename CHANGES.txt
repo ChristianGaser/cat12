@@ -32,8 +32,32 @@ M      cg_noise_estimation.m
 (1) Added calculation of peak SNR to cg_noise_estimate.m.
 (2) Option for non-stationary cluster extent correction now depends on 
     selection of cluster threshold.
-(3) Added check for empty indeces to cg_spmT2x.m.
+(3) Added check for empty indices to cg_spmT2x.m.
 (4) Added flag "-d" to cg_vbm8_batch.sh to define your own vbm8_defaults
     file.
 ------------------------------------------------------------------------
 r333 | gaser | 2010-05-18 16:10:35
+
+A      upfirdn2dMex.c
+A      upfirdn2dMex.m
+A      upfirdn2dMex.mexmaci64
+A      afb3D.m
+A      upfirdn2dMex.mexa64
+A      dwt3D.m
+M      CHANGES.txt
+A      upfirdn2dMex.mexw64
+A      kmeans3D.m
+A      farras.m
+A      upfirdn2dMex.mexw32
+A      cshift3D.m
+A      upfirdn2dMex.mexglx
+A      upfirdn2dMex.mexmaci
+M      cg_vbm8_write.m
+M      cg_noise_estimation.m
+
+(1) Noise estimation is now based on wavelet method of Coupe et al. 
+    Med Image Anal. 2010, that is more robust. Many files were added to
+    provide 3D discrete wavelet transformation.
+(2) Added calculation of SNR and CNR to cg_vbm8_write.m.
+------------------------------------------------------------------------
+r334 | gaser | 2010-05-19 12:55:39
