@@ -6,6 +6,7 @@ date=`date "+%Y-%m-%d %H:%M:%S"`
 
 echo "Changed paths:" > log2
 svn -q status >> log2
+echo >> CHANGES.txt
 svn -q status >> CHANGES.txt
 echo  >> log2
 echo  >> CHANGES.txt

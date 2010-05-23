@@ -61,3 +61,12 @@ M      cg_noise_estimation.m
 (2) Added calculation of SNR and CNR to cg_vbm8_write.m.
 ------------------------------------------------------------------------
 r334 | gaser | 2010-05-19 12:55:39
+
+M      cg_vbm8_write.m
+
+Increased numbers of morphological closing steps to 20 for final
+masking in cg_vbm8_write. This will prevent holes in CSF segmentation.
+Thanks to Paul (dargonchow@HOTMAIL.COM) for pointing to this issue.
+
+------------------------------------------------------------------------
+r335 | gaser | 2010-05-23 11:22:20
