@@ -369,7 +369,7 @@ if do_cls & do_defs,
 
         % dilate and close to fill ventricles
         mask = cg_morph_vol(mask,'dilate',2,0.5);
-        mask = cg_morph_vol(mask,'close',10,0.5);
+        mask = cg_morph_vol(mask,'close',20,0.5);
         ind_mask = find(mask == 0);
         for i=1:3
             cls{i}(ind_mask) = 0;
