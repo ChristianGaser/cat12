@@ -70,3 +70,9 @@ Thanks to Paul (dargonchow@HOTMAIL.COM) for pointing to this issue.
 
 ------------------------------------------------------------------------
 r335 | gaser | 2010-05-23 11:22:20
+
+M       cg_vbm8_write.m
+
+Updated Dartel parameters rparam to actual values of SPM8 version.
+------------------------------------------------------------------------
+r336 | gaser | 2010-05-24 14:53:18
