@@ -458,21 +458,27 @@ if do_dartel
         end
     end
 
-    rform = 0;
-    code  = 2;
-    lmreg = 0.01;
-    cyc = 3;
-    its = 3;
+    rform = 0;    % regularization form: 0 - Linear Elastic Energy
+    code  = 2;    % multinomial
+    lmreg = 0.01; % LM regularization
+    cyc = 3;      % cycles
+    its = 3;      % relaxation iterations
 
     for i=1:6
-        param(i).its = 3;
-        param(i).rparam = [4 2 1e-6]/(2^(i-1));
+        param(i).its = 3;         % inner iterations
     end
-    param(1).K = 0;
+    
+    param(1).rparam = [4 2 1e-6]; % regularization parameters: mu, lambda, id
+    param(1).K = 0;               % time steps
+    param(2).rparam = [2 1 1e-6];
     param(2).K = 0;
+    param(3).rparam = [1 0.5 1e-6];
     param(3).K = 1;
+    param(4).rparam = [0.5 0.25 1e-6];
     param(4).K = 2;
+    param(5).rparam = [0.25 0.125 1e-6];
     param(5).K = 4;
+    param(6).rparam = [0.25 0.125 1e-6];
     param(6).K = 6;
 
     it0 = 0;
