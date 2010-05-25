@@ -76,3 +76,10 @@ M       cg_vbm8_write.m
 Updated Dartel parameters rparam to actual values of SPM8 version.
 ------------------------------------------------------------------------
 r336 | gaser | 2010-05-24 14:53:18
+
+M       upfirdn2dMex.mexw64
+
+Phil Kragel has recompiled upfirdn2dMex.c for Windows 64 bit because of some
+problems with Windows Server 2008 R2.
+------------------------------------------------------------------------
+r337 | gaser | 2010-05-25 20:03:48
