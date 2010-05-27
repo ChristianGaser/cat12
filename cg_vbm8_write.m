@@ -16,6 +16,8 @@ fprintf('VBM8 %s\n',rev);
 
 % we need spm_def2det.m from HDW toolbox
 addpath(fullfile(spm('dir'),'toolbox','HDW'));
+% and spm_load_priors8 from New Segment toolbox
+addpath(fullfile(spm('dir'),'toolbox','Seg'));
 
 if ~isstruct(tpm) || (~isfield(tpm, 'bg1') && ~isfield(tpm, 'bg')),
     tpm = spm_load_priors8(tpm);
