@@ -83,3 +83,9 @@ Phil Kragel has recompiled upfirdn2dMex.c for Windows 64 bit because of some
 problems with Windows Server 2008 R2.
 ------------------------------------------------------------------------
 r337 | gaser | 2010-05-25 20:03:48
+
+M       cg_vbm8_write.m
+
+Added path of New Segment toolbox to cg_vbm8_write.m.
+------------------------------------------------------------------------
+r338 | gaser | 2010-05-27 07:35:45
