@@ -89,3 +89,13 @@ M       cg_vbm8_write.m
 Added path of New Segment toolbox to cg_vbm8_write.m.
 ------------------------------------------------------------------------
 r338 | gaser | 2010-05-27 07:35:45
+
+M       kmeans3D.m
+M       upfirdn2dMex.mexw32
+M       cg_noise_estimation.m
+
+(1) Michael Bodnar has recompiled upfirdn2dMex.c for Windows 32 bit because 
+    of some problems with Windows XP and Vista.
+(2) Changed kmeans3D.m to decrease the large memory demand.
+------------------------------------------------------------------------
+r339 | gaser | 2010-05-28 17:24:47
