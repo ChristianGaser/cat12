@@ -45,7 +45,7 @@ tmp  = tmp(1:round((s(1)-1)/2),1:round((s(2)-1)/2),1:round((s(3)-1)/2));
 tmp2 = tmp2(1:round((s(1)-1)/2),1:round((s(2)-1)/2),1:round((s(3)-1)/2));
 
 % Detection of the object in the LLL subband
-[mu,mask] = kmeans3D(tmp2,2);
+mu = kmeans3D(tmp2,2);
 th = mean(mu);
 map = (tmp2(:,:,:)>th);
 
@@ -63,7 +63,7 @@ Nsig = median(abs(tmp(map)))/0.6745;
 
 % Computation of SNR on object 
 fima = convn(ima,ones(3,3,3),'same');
-[mu,mask] = kmeans3D(fima,2);
+mu = kmeans3D(fima,2);
 th = mean(mu);
 map = find(fima>th);
 SNR = mean(ima(map)) / Nsig;
