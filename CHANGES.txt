@@ -99,3 +99,14 @@ M       cg_noise_estimation.m
 (2) Changed kmeans3D.m to decrease the large memory demand.
 ------------------------------------------------------------------------
 r339 | gaser | 2010-05-28 17:24:47
+
+M       ornlmMex.mexw32
+M       upfirdn2dMex.mexw32
+M       AmapMex.mexw32
+M       cg_noise_estimation.m
+
+(1) Marko Wilke has recompiled the c-code for windows 32bit, which will
+    hopefully solve the problems with the mexw32 files.
+(2) Updated cg_noise_estimation.m to save memory.
+------------------------------------------------------------------------
+r340 | gaser | 2010-05-31 21:03:58
