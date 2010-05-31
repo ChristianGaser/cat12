@@ -32,40 +32,50 @@ p(3) = 2^(ceil(log2(s(3))));
 
 % Zeros Pading
 pad1 = zeros(p(1),p(2),p(3));
-pad1(1:s(1),1:s(2),1:s(3)) = ima(:,:,:);
+pad1(1:s(1),1:s(2),1:s(3)) = ima;
 
 % Wavelet Transform
 [af, sf] = farras;
 w1 = dwt3D(pad1,1,af);
 
+clear pad1
+
 % Removing region corresponding to zeros pading
 tmp  = w1{1}{7};
 tmp2 = w1{2};
+clear w1
+
 tmp  = tmp(1:round((s(1)-1)/2),1:round((s(2)-1)/2),1:round((s(3)-1)/2));
 tmp2 = tmp2(1:round((s(1)-1)/2),1:round((s(2)-1)/2),1:round((s(3)-1)/2));
 
 % Detection of the object in the LLL subband
 mu = kmeans3D(tmp2,2);
 th = mean(mu);
-map = (tmp2(:,:,:)>th);
+map = tmp2 > th;
 
 % Detection of the High gradient area in the LLL subband
 [PX,PY,PZ] = gradient(tmp2);
+clear tmp2
+
 GR = sqrt(PX.^2 + PY.^2 + PZ.^2);
+clear PX PY PZ
+
 m = median(GR(map));
-map2 = (GR(:,:,:)< (m));
+map2 = GR < m;
+clear GR
 
 % Map containing Object without strong edges
 map = map & map2;
 
 % Estimation of the magnitude noise STD in HHH subband
 Nsig = median(abs(tmp(map)))/0.6745;
+clear tmp
 
 % Computation of SNR on object 
 fima = convn(ima,ones(3,3,3),'same');
 mu = kmeans3D(fima,2);
 th = mean(mu);
-map = find(fima>th);
+map = find(fima > th);
 SNR = mean(ima(map)) / Nsig;
 
 % Iterative estimation of truth SNR based on Koay method
