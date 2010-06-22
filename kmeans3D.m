@@ -1,76 +1,41 @@
-function mu = kmeans3D(ima,k)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function mu = kmeans3D(y,k)
+% K-means clustering
+% FORMAT mu = kmeans3D (y,k)
+% 
+% y          data 
+% k          Number of components
 %
-%   kmeans image segmentation
+% mu         vector of class means 
 %
-%   Input:
-%          ima: grey color image
-%          k: Number of classes
-%   Output:
-%          mu: vector of class means 
-%
-%   Author: Jose Vicente Manjon Herrera
-%    Email: jmanjon@fis.upv.es
-%     Date: 27-08-2005
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% modified version of
+% $Id: spm_kmeans1.m 1143 2008-02-07 19:33:33Z spm $
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
 
-scale = 1000;       % scale to that value to have enough values in the histogram
+y=y(:)';
+N=length(y);
 
-% check image
-ima = double(ima);
-ima = ima(:);       % vectorize ima
-mx  = max(ima);
-ima = scale*ima/mx; % scale to have enough values in the histogram
-mi  = min(ima);     % deal with negative 
-ima = ima-mi+1;     % and zero values
-ima = round(ima);
+% Spread seeds evenly according to CDF
+[x,i]=sort(y);
+seeds=[1,2*ones(1,k-1)]*N/(2*k);
+seeds=ceil(cumsum(seeds));
 
-s   = length(ima);
-
-% create image histogram
-
-m  = max(ima)+1;
-h  = zeros(1,m);
-hc = zeros(1,m);
-
-for i = 1:s
-  if(ima(i)>0) h(ima(i)) = h(ima(i))+1;end;
-end
-
-ind = find(h);
-hl  = length(ind);
-
-% initiate centroids
-
-mu = (1:k)*m/(k+1);
-
-% start process
-
-while(true)
-  
-  oldmu = mu;
-  
-  % current classification  
-  for i = 1:hl
-      c = abs(ind(i)-mu);
-      cc = find(c == min(c));
-      hc(ind(i)) = cc(1);
-  end
-  
-  % recalculation of means  
-  for i = 1:k, 
-      a = find(hc == i);
-      mu(i) = sum(a.*h(a))/sum(h(a));
-  end
-  
-  if(mu == oldmu) break; end;
-  
-end
-
-mu = mu+mi-1;   % recover real range
-mu = mx*mu/scale;
-
+last_i=ones(1,N);
+mu=x(seeds);
+for loops=1:100,  
+ for j=1:k,
+   d(j,:)=(y-mu(j)).^2;
+ end
+ [tmp,i]=min(d);
+ if sum(i-last_i)==0
+   % If assignment is unchanged
+   break;
+ else
+   % Recompute centres
+   for j=1:k,
+     mu(j)=mean(y(i==j));
+   end
+   last_i=i;
+ end
+end  
