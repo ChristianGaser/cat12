@@ -110,3 +110,14 @@ M       cg_noise_estimation.m
 (2) Updated cg_noise_estimation.m to save memory.
 ------------------------------------------------------------------------
 r340 | gaser | 2010-05-31 21:03:58
+
+M      ornlmMex.mexw32
+M      AmapMex.mexw32
+M      cg_noise_estimation.m
+
+(1) SNR value should be converted into double to avoid "-inf" value in epsi
+    function in cg_noise_estimatation.m (thanks to Pierrick Coupe for finding
+    this bug).
+(2) Rescued mexw32 files from old revision 339.
+------------------------------------------------------------------------
+r341 | gaser | 2010-06-22 09:13:44
