@@ -10,9 +10,15 @@ function cls = cg_vbm8_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 % Christian Gaser
 % $Id$
 
-rev = '$Rev$';
+% get current release number
+A = ver;
+for i=1:length(A)
+  if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
+    r = str2double(A(i).Version);
+  end
+end
 
-fprintf('VBM8 %s\n',rev);
+fprintf('VBM8 Revision %d\n',r);
 
 % we need spm_def2det.m from HDW toolbox
 addpath(fullfile(spm('dir'),'toolbox','HDW'));
