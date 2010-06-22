@@ -82,7 +82,7 @@ SNR = mean(ima(map)) / Nsig;
 for un = 1:500
     SNR2 = sqrt(epsi(SNR)*(1 + mean(ima(map))^2  / Nsig^2 )-2);
     
-    if abs(SNR-SNR2) < 0.000000001 
+    if abs(SNR-SNR2) < 1e-9 
         break;
     end
     
@@ -105,10 +105,11 @@ function res = epsi(SNR)
 
 % Based on Koay estimation of truth SNR from Magnitude SNR.
 
-if (SNR > 37) res = 1;
+% SNR have to be double format
+SNR = double(SNR);
 
-else
-    
-res = 2 + SNR^2 - pi/8 * exp(-(SNR^2/2))*((2+SNR^2)*besseli(0,(SNR^2/4)) + SNR^2*besseli(1,(SNR^2/4)))^2;
-
+if (SNR > 37)
+    res = 1;
+else    
+    res = 2 + SNR^2 - pi/8 * exp(-(SNR^2/2))*((2+SNR^2)*besseli(0,(SNR^2/4)) + SNR^2*besseli(1,(SNR^2/4)))^2;
 end
