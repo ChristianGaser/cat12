@@ -124,3 +124,9 @@ M       cg_vbm8_write.m
 (2) Get correct revision number in cg_vbm8_write.m.
 ------------------------------------------------------------------------
 r342 | gaser | 2010-06-22 22:57:19
+
+M      cg_spmT2x.m
+
+Voxel values were always thresholded at uncorrected p-values in cg_spmT2x.m.
+------------------------------------------------------------------------
+r343 | gaser | 2010-06-25 09:12:42
