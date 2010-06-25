@@ -136,13 +136,13 @@ if nargin < 1
     %-Get height threshold
     %-------------------------------------------------------------------
     str = 'FWE|FDR|none';
-    adjustment = spm_input('p value adjustment to control','+1','b',str,[],1);
+    adjustment = spm_input('p value adjustment to control','+1','b',str,[1 2 0],1);
     
     switch adjustment
     case 1 % family-wise false positive rate
         %---------------------------------------------------------------
         u0  = spm_input('p value (family-wise error)','+0','r',0.05,1,[0,1]);
-    case 2' % False discovery rate
+    case 2 % False discovery rate
         %---------------------------------------------------------------    
         u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
     otherwise  %-NB: no adjustment
@@ -172,7 +172,7 @@ end
 switch adjustment
 case 1 % family-wise false positive rate
     p_height_str = '_pFWE';
-case 2' % False discovery rate
+case 2 % False discovery rate
     p_height_str = '_pFDR';
 otherwise  %-NB: no adjustment
     p_height_str = '_p';
@@ -215,11 +215,11 @@ for i=1:size(P,1)
     end
 
     switch adjustment
-    case 'FWE' % family-wise false positive rate
+    case 1 % family-wise false positive rate
     %---------------------------------------------------------------
        u  = spm_uc(u0,df,STAT,R,1,S);
 
-    case 'FDR' % False discovery rate
+    case 2 % False discovery rate
     %---------------------------------------------------------------
        u  = spm_uc_FDR(u0,df,STAT,1,Vspm,0);
 
