@@ -17,7 +17,7 @@ if nargin < 2
 	writeonly = 0;
 end
 
-spm_defaults
+spm_get_defaults
 
 if nargin < 3
     cg_vbm8_defaults

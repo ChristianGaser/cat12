@@ -8,8 +8,8 @@ if nargin < 1
 	exit
 end
 
-spm_defaults
-global defaults
+spm_get_defaultsg
+lobal defaults
 
 if ~exist(batchname,'file')
 	fprintf('Batchfile %s not found\n',batchname);

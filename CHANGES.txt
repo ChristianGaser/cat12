@@ -130,3 +130,10 @@ M      cg_spmT2x.m
 Voxel values were always thresholded at uncorrected p-values in cg_spmT2x.m.
 ------------------------------------------------------------------------
 r343 | gaser | 2010-06-25 09:12:42
+
+M      cg_spm8_batch.m
+M      cg_vbm8_batch.m
+
+Modified call to spm defaults in cg_*_batch.m. 
+------------------------------------------------------------------------
+r344 | gaser | 2010-07-26 08:39:17
