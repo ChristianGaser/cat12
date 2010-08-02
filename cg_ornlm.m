@@ -26,7 +26,12 @@ for i = 1:n
 	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
 	in = spm_read_vols(V(i));
 	
-	h = cg_noise_estimation(in);
+  try
+      h = cg_noise_estimation(in);
+  catch
+      fprintf('\nUse local noise estimation.');
+      h = cg_noise_estimation_local(in);
+  end
   fprintf('Noise estimate for %s: %3.2f\n',nm,h);
 
   % ORNLM weighting
