@@ -37,7 +37,8 @@
 %   cg_slice_overlay.m          - Wrapper for overlay tool slice_overlay
 %   cg_slice_overlay_ui.m       - Example for user interface for overlay wrapper cg_slice_overlay.m
 %   slice_overlay.m             - overlay tool
-%   cg_noise_estimation.m       - local estimation of Rician noise
+%   cg_noise_estimation.m       - robust estimation of Rician noise
+%   cg_noise_estimation_local.m - local estimation of Rician noise
 %   kmeans3D.m                  - Kmeans clustering
 %
 % Wavelet functions from http://taco.poly.edu/WaveletSoftware
