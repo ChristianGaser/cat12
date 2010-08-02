@@ -244,7 +244,12 @@ end
 
 % optionally apply optimized blockwise non local means denoising filter
 if warp.ornlm > 0
-    h = cg_noise_estimation(src);
+    try
+        h = cg_noise_estimation(src);
+    catch
+        fprintf('\nUse local noise estimation.');
+        h = cg_noise_estimation_local(src);
+    end
     fprintf('\nEstimated noise level: %3.2f',h);
   	
   	% weight ORNLM

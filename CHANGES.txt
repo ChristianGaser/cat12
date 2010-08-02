@@ -143,3 +143,13 @@ M       tbx_cfg_vbm8.m
 Corrected a typo in tbx_cfg_vbm8.m.
 ------------------------------------------------------------------------
 r345 | gaser | 2010-07-28 18:54:58
+
+M       Contents_info.txt
+M       Makefile.vbm
+M       cg_vbm8_write.m
+M       cg_ornlm.m
+
+Added old noise estimation based on local statistics as alternative if
+robust noise estimation will fail due to memory issues.
+------------------------------------------------------------------------
+r346 | gaser | 2010-08-02 22:41:07
