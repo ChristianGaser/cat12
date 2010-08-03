@@ -1,0 +1,14 @@
+- Register T1_27x to colin27T1_seg
+- VBM8 (with Dartel) of T1_27x, write deformations
+- apply deformations with NN interpolation to AllAreas_v17 + AnatMask
+- remove underlaying brain: i1.*(i1>50): DartelAreas_v17
+- round values + divide hemispheres:
+        V1 = spm_vol('Anatomy_v17/wAnatMask.img');
+        hemi = spm_read_vols(V1);
+        V = spm_vol(DartelAreas_v17.nii');
+        vol = spm_read_vols(V1);
+        vol=round(vol/V.pinfo(1));
+        vol(find(hemi==2 & vol>0)) = vol(find(hemi==2 & vol>0)) + 256;
+        V.pinfo(1) = 1;
+        V.dt(1) = 4;
+        spm_write_vol(V,vol);
