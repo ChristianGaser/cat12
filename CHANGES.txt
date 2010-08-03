@@ -153,3 +153,11 @@ Added old noise estimation based on local statistics as alternative if
 robust noise estimation will fail due to memory issues.
 ------------------------------------------------------------------------
 r346 | gaser | 2010-08-02 22:41:07
+
+A      cg_create_MPM.m
+A      Anatomy2Dartel.txt
+
+Added cg_create_MPM.m and Anatomy2Dartel.txt for creating Dartel atlas of
+Anatomy Toolbox.
+------------------------------------------------------------------------
+r347 | gaser | 2010-08-03 10:21:54
