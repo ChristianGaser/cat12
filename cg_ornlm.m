@@ -27,10 +27,11 @@ for i = 1:n
 	in = spm_read_vols(V(i));
 	
   try
-      h = cg_noise_estimation(in);
+    h = cg_noise_estimation(in);
   catch
-      fprintf('\nUse local noise estimation.');
-      h = cg_noise_estimation_local(in);
+    % use additionally reduced size to prevent memory issues
+    fprintf('\nUse reduced images size for noise estimation.');
+    h = cg_noise_estimation(in(1:rounV(i).dim(V(i).dim(1)/2),1:rounV(i).dim(V(i).dim(2)/2),1:rounV(i).dim(V(i).dim(3)/2)));
   end
   fprintf('Noise estimate for %s: %3.2f\n',nm,h);
 
