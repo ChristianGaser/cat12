@@ -92,18 +92,16 @@ for n=1:N,
     [pth1,nam1,ext1] = fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
-    try
-        if bf(n,1),
-            chan(n).Nc      = nifti;
-            chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
-                                     res.image(n).dim(1:3),...
-                                     [spm_type('float32') spm_platform('bigend')],...
-                                     0,1,0);
-            chan(n).Nc.mat  = res.image(n).mat;
-            chan(n).Nc.mat0 = res.image(n).mat;
-            chan(n).Nc.descrip = 'Bias corrected';
-            create(chan(n).Nc);
-        end
+    if bf(n,1),
+        chan(n).Nc      = nifti;
+        chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
+                                 res.image(n).dim(1:3),...
+                                 [spm_type('float32') spm_platform('bigend')],...
+                                 0,1,0);
+        chan(n).Nc.mat  = res.image(n).mat;
+        chan(n).Nc.mat0 = res.image(n).mat;
+        chan(n).Nc.descrip = 'Bias corrected';
+        create(chan(n).Nc);
     end
 end
 
@@ -163,8 +161,11 @@ for z=1:length(x3),
         f = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
         bf1 = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
         cr{n} = bf1.*f;
+        
         % Write a plane of bias corrected data
-        chan(n).Nc.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = cr{n};
+        if bf(n,1),
+            chan(n).Nc.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = cr{n};
+        end
         if ~isempty(chan(n).Nf),
             % Write a plane of bias field
             chan(n).Nf.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = bf1;
@@ -232,34 +233,36 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
-clear q q1 Coef b cr
+clear q q1 Coef b cr tpm
 
 % load bias corrected image
-src = zeros(res.image(1).dim(1:3));
+src = zeros(res.image(1).dim(1:3),'single');
 for z=1:length(x3),
     f = spm_sample_vol(res.image(1),x1,x2,o*x3(z),0);
     bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
-    src(:,:,z) = bf1.*f;
+    src(:,:,z) = single(bf1.*f);
 end
+
+clear chan
 
 % optionally apply optimized blockwise non local means denoising filter
 if warp.ornlm > 0
     try
-        h = cg_noise_estimation(src);
+        % use maximum size of 256 in each direction
+        h = cg_noise_estimation(src(1:min(256,d(1)),1:min(256,d(2)),1:min(256,d(3))));
     catch
-        fprintf('\nUse local noise estimation.');
-        h = cg_noise_estimation_local(src);
+        % use additionally reduced size to prevent memory issues
+        fprintf('\nUse reduced images size for noise estimation.');
+        h = cg_noise_estimation(src(1:round(d(1)/2),1:round(d(2)/2),1:round(d(3)/2)));
     end
     fprintf('\nEstimated noise level: %3.2f',h);
   	
   	% weight ORNLM
   	h = warp.ornlm*h;
-    src = ornlmMex(src,3,1,h);  
+    src = single(ornlmMex(double(src),3,1,h));  
 end
 
-src = single(src);
-
-if do_cls & do_defs,
+if do_cls && do_defs,
 
     % use mask of GM and WM
     mask = single(cls{1});
@@ -296,11 +299,11 @@ if do_cls & do_defs,
     end
     
     % set all non-brain tissue outside mask to 0
-    label2(find((label2 > 3) | (mask == 0))) = 0;
+    label2((label2 > 3) | (mask == 0)) = 0;
     
     % fill remaining holes in label with 1
     mask = cg_morph_vol(label2,'close',2,0);    
-    label2(find((label2 == 0) & (mask > 0))) = 1;
+    label2((label2 == 0) & (mask > 0)) = 1;
     
     % use index to speed up and save memory
     sz = size(mask);
@@ -318,7 +321,7 @@ if do_cls & do_defs,
     
     % mask source image because Amap needs a skull stripped image
     % set label and source inside outside mask to 0
-    vol(find(mask(indx,indy,indz)==0)) = 0;
+    vol(mask(indx,indy,indz)==0) = 0;
     
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
@@ -362,7 +365,7 @@ if do_cls & do_defs,
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
            prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
         sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
-        label(find(sum_cls<0.15*255)) = 0;
+        label(sum_cls<0.15*255) = 0;
     else
         for i=1:3
             cls{i}(:) = 0;
@@ -403,8 +406,6 @@ if do_cls & do_defs,
 end
 
 M0 = res.image(1).mat;
-
-clear tpm chan
 
 % prepare transformations for rigidly or affine aligned images
 if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || cg_vbm8_get_defaults('output.surf.dartel')
@@ -517,7 +518,7 @@ if do_dartel
     
     clear f g
     
-    [t1,t2,o] = ndgrid(1:d(1),1:d(2),1);
+    [t1,t2] = ndgrid(1:d(1),1:d(2),1);
     t3 = 1:d(3);
 
     prm     = [3 3 3 0 0 0];
@@ -546,11 +547,11 @@ if cg_vbm8_get_defaults('output.surf.dartel')
   wm_label = uint8(label > 2.5/3.0*255);
   
   % fill subcortical areas and ventricle using submask
-  wm_label(find(submask(indx,indy,indz) > 1)) = 1;
+  wm_label(submask(indx,indy,indz) > 1) = 1;
 %  wm_label = cg_morph_vol(wm_label,'close',1,0.5);
        
   % cut midline and pons
-  wm_label(find((round(double(submask(indx,indy,indz) == 1))))) = 0;
+  wm_label((round(double(submask(indx,indy,indz) == 1)))) = 0;
 
   % use only largest WM cluster at th0 as seed parameter
   % mask out all voxels where wm is lower than gm or csf
@@ -560,8 +561,8 @@ if cg_vbm8_get_defaults('output.surf.dartel')
   value_left  = max(max(max(wm_label(1:(mid-30),:,:))));
   value_right = max(max(max(wm_label((mid+30):end,:,:))));
 
-  wm_label(find(wm_label==value_left))  = 127;
-  wm_label(find(wm_label==value_right)) = 255;
+  wm_label(wm_label==value_left)  = 127;
+  wm_label(wm_label==value_right) = 255;
 
   [pth,nam,ext1]=fileparts(res.image(1).fname);
   VT      = struct('fname',fullfile(pth,['wmlabel_', nam, '.nii']),...
@@ -761,6 +762,26 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
     dt = dt./abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));    
     clear y2
     
+    M2 = M1\res.Affine*M0;
+
+    % prepare file for volumes from Anatomy toolbox
+    vol_txt = fullfile(pth,['p', nam1, '_Anatomy_v17_absolute.txt']);
+    fid_abs = fopen(vol_txt, 'w');
+    vol_txt = fullfile(pth,['p', nam1, '_Anatomy_v17_relative.txt']);
+    fid_rel = fopen(vol_txt, 'w');
+    volfactor = abs(det(M0(1:3,1:3)))/1000;
+
+    % load MPM from Anatomy Toolbox
+    atlas_name = fullfile(fileparts(which(mfilename)),'Dartel_v17');
+    VA = spm_vol([atlas_name '.img']);
+    vol_atlas = spm_read_vols(VA);
+    % load IDs and ROIs
+    txt_atlas  = [atlas_name '.txt'];
+    [id region] = textread(txt_atlas,'%d %s');
+    n_regions = length(id);
+    vol_regions_abs = zeros(n_regions,3,2);
+    vol_regions_rel = zeros(n_regions,3,2);
+save all
     for k1 = 1:3,
         if ~isempty(cls{k1}),
             c = single(cls{k1})/255;
@@ -771,6 +792,22 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
             if nargout>=1,
                 cls{k1} = c;
             end
+
+            % save atlas volumes
+            vol_abs = c*abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
+            vol_rel = c*abs(det(M2(1:3,1:3)));            
+            for l = 1:n_regions
+                % right hemisphere
+                ind_atlas = find(round(vol_atlas) == id(l));
+                vol_regions_abs(l,k1,1) = sum(vol_abs(ind_atlas))/255;         
+                vol_regions_rel(l,k1,1) = sum(vol_rel(ind_atlas))/255;      
+                
+                % left hemisphere   
+                ind_atlas = find(round(vol_atlas) == id(l)+1);
+                vol_regions_abs(l,k1,2) = sum(vol_abs(ind_atlas))/255;         
+                vol_regions_rel(l,k1,2) = sum(vol_rel(ind_atlas))/255;         
+            end
+
             if tc(k1,5),
                 N      = nifti;
                 N.dat  = file_array(fullfile(pth,['mwp', num2str(k1), nam, '.nii']),...
@@ -800,13 +837,35 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
                 N.descrip = ['Jac. sc. warped tissue class non-lin only' num2str(k1)];
                 create(N);
 
-                M2 = M1\res.Affine*M0;
-
                 N.dat(:,:,:) = c*abs(det(M2(1:3,1:3)));
             end
             spm_progress_bar('set',k1);
         end
     end
+
+    vol_regions_rel(isnan(vol_regions_rel)) = 0;
+    vol_regions_rel(isnan(vol_regions_rel)) = 0;
+    
+    for l=1:n_regions
+        sum_vol = 0;
+        for k1 = 1:3
+            vol = vol_regions_abs(l,k1,1);
+            sum_vol = sum_vol + vol;
+            fprintf(fid_abs,'%5.3f\t',vol);
+        end
+        fprintf(fid_abs,'%5.3f\t',sum_vol);
+
+        sum_vol = 0;
+        for k1 = 1:3
+            vol = vol_regions_rel(l,k1,1);
+            sum_vol = sum_vol + vol;
+            fprintf(fid_rel,'%5.3f\t',vol);
+        end
+        fprintf(fid_rel,'%5.3f\t',sum_vol);
+    end
+    
+    fclose(fid_abs);
+    fclose(fid_rel);
     spm_progress_bar('Clear');
 end
 
@@ -829,7 +888,7 @@ end
 if any(tc(:,4)),
     spm_progress_bar('init',3,'Writing Warped Tis Cls','Classes completed');
     C = max(C,eps);
-    s = sum(C,4);
+%    s = sum(C,4);
 
     for k1=1:3,
         if tc(k1,4),
@@ -875,7 +934,6 @@ if bf(1,2),
         src = src2;
         clear src2
     end
-    C = zeros(d1,'single');
     [src,w]  = dartel3('push',src,y,d1(1:3));
     C = optimNn(w,src,[1  vx vx vx 1e-4 1e-6 0  3 2]);
     clear w
@@ -893,7 +951,7 @@ if bf(1,2),
 end
 
 % display and print result if possible
-if do_cls & warp.print
+if do_cls && warp.print
   
   % get current release numbers
   A = ver;
@@ -994,7 +1052,6 @@ end
 
 % warped label
 if lb(2),
-    C = zeros(d1,'single');
     c = zeros(res.image(n).dim(1:3),'single');
     c(indx,indy,indz) = single(label);
     [c,w]  = dartel3('push',c,y,d1(1:3));

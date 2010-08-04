@@ -161,3 +161,14 @@ Added cg_create_MPM.m and Anatomy2Dartel.txt for creating Dartel atlas of
 Anatomy Toolbox.
 ------------------------------------------------------------------------
 r347 | gaser | 2010-08-03 10:21:54
+
+M      Makefile.vbm
+M      afb3D.m
+M      cg_vbm8_write.m
+M      cg_ornlm.m
+
+Noise estimation is now based on a maximum bounding box of 256x256x256. This
+will save memory for images with larger dimensions. If this is not successful
+noise is estimated in a even more limited bounding box.
+------------------------------------------------------------------------
+r348 | gaser | 2010-08-04 17:10:12

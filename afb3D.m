@@ -39,11 +39,15 @@ end
 [LL LH] = afb3D_A(L, af2, 2);
 [HL HH] = afb3D_A(H, af2, 2);
 
+clear L H
+
 % filter along dimension 3
 [LLL LLH] = afb3D_A(LL, af3, 3);
 [LHL LHH] = afb3D_A(LH, af3, 3);
 [HLL HLH] = afb3D_A(HL, af3, 3);
 [HHL HHH] = afb3D_A(HH, af3, 3);
+
+clear LL LH HL HH
 
 lo    = LLL;
 hi{1} = LLH;
