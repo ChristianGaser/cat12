@@ -171,8 +171,8 @@ affreg = cfg_menu;
 affreg.tag = 'affreg';
 affreg.name = 'Affine Regularisation';
 affreg.labels = {'No Affine Registration','ICBM space template - European brains',...
-    'ICBM space template - East Asian brains', 'Average sized template','No regularisation'};
-affreg.values = {'','mni','eastern','subj','none'};
+    'Average sized template','No regularisation'};
+affreg.values = {'','mni','subj','none'};
 affreg.def  = @(val)cg_vbm8_get_defaults('opts.affreg', val{:});
 affreg.help = {[...
 'The procedure is a local optimisation, so it needs reasonable initial '...
