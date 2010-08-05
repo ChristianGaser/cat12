@@ -167,3 +167,10 @@ M      cg_vbm8_write.m
 (2) Added *.mexw64 files to vbm8 website for manual download.
 ------------------------------------------------------------------------
 r349 | gaser | 2010-08-05 10:07:24
+
+M      tbx_cfg_vbm8.m
+
+Removed some options for affine regularization to consider newest spm8 update
+r4010.
+------------------------------------------------------------------------
+r350 | gaser | 2010-08-05 12:24:15
