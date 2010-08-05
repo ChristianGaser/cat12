@@ -764,24 +764,6 @@ if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
     
     M2 = M1\res.Affine*M0;
 
-    % prepare file for volumes from Anatomy toolbox
-    vol_txt = fullfile(pth,['p', nam1, '_Anatomy_v17_absolute.txt']);
-    fid_abs = fopen(vol_txt, 'w');
-    vol_txt = fullfile(pth,['p', nam1, '_Anatomy_v17_relative.txt']);
-    fid_rel = fopen(vol_txt, 'w');
-    volfactor = abs(det(M0(1:3,1:3)))/1000;
-
-    % load MPM from Anatomy Toolbox
-    atlas_name = fullfile(fileparts(which(mfilename)),'Dartel_v17');
-    VA = spm_vol([atlas_name '.img']);
-    vol_atlas = spm_read_vols(VA);
-    % load IDs and ROIs
-    txt_atlas  = [atlas_name '.txt'];
-    [id region] = textread(txt_atlas,'%d %s');
-    n_regions = length(id);
-    vol_regions_abs = zeros(n_regions,3,2);
-    vol_regions_rel = zeros(n_regions,3,2);
-save all
     for k1 = 1:3,
         if ~isempty(cls{k1}),
             c = single(cls{k1})/255;
@@ -791,21 +773,6 @@ save all
             c = C(:,:,:,k1).*dt;
             if nargout>=1,
                 cls{k1} = c;
-            end
-
-            % save atlas volumes
-            vol_abs = c*abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
-            vol_rel = c*abs(det(M2(1:3,1:3)));            
-            for l = 1:n_regions
-                % right hemisphere
-                ind_atlas = find(round(vol_atlas) == id(l));
-                vol_regions_abs(l,k1,1) = sum(vol_abs(ind_atlas))/255;         
-                vol_regions_rel(l,k1,1) = sum(vol_rel(ind_atlas))/255;      
-                
-                % left hemisphere   
-                ind_atlas = find(round(vol_atlas) == id(l)+1);
-                vol_regions_abs(l,k1,2) = sum(vol_abs(ind_atlas))/255;         
-                vol_regions_rel(l,k1,2) = sum(vol_rel(ind_atlas))/255;         
             end
 
             if tc(k1,5),
@@ -843,29 +810,6 @@ save all
         end
     end
 
-    vol_regions_rel(isnan(vol_regions_rel)) = 0;
-    vol_regions_rel(isnan(vol_regions_rel)) = 0;
-    
-    for l=1:n_regions
-        sum_vol = 0;
-        for k1 = 1:3
-            vol = vol_regions_abs(l,k1,1);
-            sum_vol = sum_vol + vol;
-            fprintf(fid_abs,'%5.3f\t',vol);
-        end
-        fprintf(fid_abs,'%5.3f\t',sum_vol);
-
-        sum_vol = 0;
-        for k1 = 1:3
-            vol = vol_regions_rel(l,k1,1);
-            sum_vol = sum_vol + vol;
-            fprintf(fid_rel,'%5.3f\t',vol);
-        end
-        fprintf(fid_rel,'%5.3f\t',sum_vol);
-    end
-    
-    fclose(fid_abs);
-    fclose(fid_rel);
     spm_progress_bar('Clear');
 end
 

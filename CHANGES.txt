@@ -44,7 +44,6 @@ A      upfirdn2dMex.mexmaci64
 A      afb3D.m
 A      upfirdn2dMex.mexa64
 A      dwt3D.m
-M      CHANGES.txt
 A      upfirdn2dMex.mexw64
 A      kmeans3D.m
 A      farras.m
@@ -144,25 +143,14 @@ Corrected a typo in tbx_cfg_vbm8.m.
 ------------------------------------------------------------------------
 r345 | gaser | 2010-07-28 18:54:58
 
-M       Contents_info.txt
-M       Makefile.vbm
 M       cg_vbm8_write.m
 M       cg_ornlm.m
 
 Added old noise estimation based on local statistics as alternative if
 robust noise estimation will fail due to memory issues.
 ------------------------------------------------------------------------
-r346 | gaser | 2010-08-02 22:41:07
-
-A      cg_create_MPM.m
-A      Anatomy2Dartel.txt
-
-Added cg_create_MPM.m and Anatomy2Dartel.txt for creating Dartel atlas of
-Anatomy Toolbox.
-------------------------------------------------------------------------
 r347 | gaser | 2010-08-03 10:21:54
 
-M      Makefile.vbm
 M      afb3D.m
 M      cg_vbm8_write.m
 M      cg_ornlm.m
@@ -172,3 +160,10 @@ will save memory for images with larger dimensions. If this is not successful
 noise is estimated in a even more limited bounding box.
 ------------------------------------------------------------------------
 r348 | gaser | 2010-08-04 17:10:12
+
+M      cg_vbm8_write.m
+
+(1) Removed experimental atlas ROI calculation.
+(2) Added *.mexw64 files to vbm8 website for manual download.
+------------------------------------------------------------------------
+r349 | gaser | 2010-08-05 10:07:24
