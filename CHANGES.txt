@@ -174,3 +174,13 @@ Removed some options for affine regularization to consider newest spm8 update
 r4010.
 ------------------------------------------------------------------------
 r350 | gaser | 2010-08-05 12:24:15
+
+M      ornlmMex.mexw64
+M      upfirdn2dMex.mexw64
+M      AmapMex.mexw64
+
+Mex-files for Windows 64-bit are now created with Visual C++ 2005 Professional
+to solve issues with redistributable libraries (thanks to Guillaume Flandin
+for help).
+------------------------------------------------------------------------
+r351 | gaser | 2010-08-09 09:27:40
