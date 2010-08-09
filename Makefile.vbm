@@ -55,4 +55,4 @@ zip: update
 
 scp: zip
 	-@echo scp to http://dbm.neuro.uni-jena.de/vbm8/${ZIPFILE}
-	-@scp -P 2222 CHANGES.txt VBM8-Manual.pdf *.mexw64 ${ZIPFILE} ${STARGET}
+	-@scp -P 2222 CHANGES.txt VBM8-Manual.pdf ${ZIPFILE} ${STARGET}
