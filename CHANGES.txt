@@ -184,3 +184,9 @@ to solve issues with redistributable libraries (thanks to Guillaume Flandin
 for help).
 ------------------------------------------------------------------------
 r351 | gaser | 2010-08-09 09:27:40
+
+A      cg_calculate_volume_ROI.m
+
+Added experimental cg_calculate_volume_ROI.m for Anatomy Toolbox.
+------------------------------------------------------------------------
+r352 | gaser | 2010-08-12 16:17:48
