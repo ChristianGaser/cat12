@@ -90,9 +90,12 @@ if nargin == 1
     elseif isfield(vargin.conversion.threshdesc,'fdr')
         adjustment = 2;
         u0  = vargin.conversion.threshdesc.fdr.thresh;
-    else
+    elseif isfield(vargin.conversion.threshdesc,'uncorr')
         adjustment = 0;
         u0  = vargin.conversion.threshdesc.uncorr.thresh;
+    elseif isfield(vargin.conversion.threshdesc,'none')
+        adjustment = -1;
+        u0  = -Inf;
     end
     
     if isfield(vargin.conversion.cluster,'fwe')
@@ -135,8 +138,8 @@ if nargin < 1
 
     %-Get height threshold
     %-------------------------------------------------------------------
-    str = 'FWE|FDR|none';
-    adjustment = spm_input('p value adjustment to control','+1','b',str,[1 2 0],1);
+    str = 'FWE|FDR|uncorr|none';
+    adjustment = spm_input('p value adjustment to control','+1','b',str,[1 2 0 -1],1);
     
     switch adjustment
     case 1 % family-wise false positive rate
@@ -145,13 +148,21 @@ if nargin < 1
     case 2 % False discovery rate
         %---------------------------------------------------------------    
         u0  = spm_input('p value (false discovery rate)','+0','r',0.05,1,[0,1]);
-    otherwise  %-NB: no adjustment
+    case 0  %-NB: no adjustment
         % p for conjunctions is p of the conjunction SPM
         %---------------------------------------------------------------
         u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
+    otherwise  %-NB: no threshold
+        % p for conjunctions is p of the conjunction SPM
+        %---------------------------------------------------------------
+        u0  = -Inf;
     end
 
-    pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1);
+    if adjustment > -1 
+        pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1);
+    else
+        pk = 0;
+    end
     if (pk < 1) & (pk > 0)
         extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
     end
@@ -174,8 +185,10 @@ case 1 % family-wise false positive rate
     p_height_str = '_pFWE';
 case 2 % False discovery rate
     p_height_str = '_pFDR';
-otherwise  %-NB: no adjustment
+case 0 %-NB: no adjustment
     p_height_str = '_p';
+otherwise  %-NB: no threshold
+    p_height_str = '';
 end
 
 for i=1:size(P,1)
@@ -226,7 +239,7 @@ for i=1:size(P,1)
     otherwise  %-NB: no adjustment
     % p for conjunctions is p of the conjunction SPM
     %---------------------------------------------------------------
-       if u0 <= 1
+       if (u0 <= 1) & (u0 > 0)
            u = spm_u(u0,df,STAT);
        else
            u = u0;
@@ -365,7 +378,11 @@ for i=1:size(P,1)
             neg_str = '';
        end
        
-       name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
+       if u0 > -Inf
+           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
+       else
+           name = [t2x_name str_num '.nii'];
+       end
        fprintf('Save %s\n', name);
     
        out = deblank(fullfile(pth,name));

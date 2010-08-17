@@ -190,3 +190,11 @@ A      cg_calculate_volume_ROI.m
 Added experimental cg_calculate_volume_ROI.m for Anatomy Toolbox.
 ------------------------------------------------------------------------
 r352 | gaser | 2010-08-12 16:17:48
+
+M      cg_spmF2x.m
+M      cg_spmT2x.m
+
+Corrected cg_spmT2x.m and cg_spmF2x.m to allow conversion of maps without
+thresholding.
+------------------------------------------------------------------------
+r353 | gaser | 2010-08-17 16:24:28
