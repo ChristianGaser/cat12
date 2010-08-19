@@ -50,7 +50,7 @@ static void GetMeansVariances(double *src, unsigned char *label, int n_classes, 
   
   ir = (struct ipoint*)malloc(sizeof(struct ipoint)*n_classes*nvol);
   if(ir == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -368,14 +368,16 @@ void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, do
     }
 
     rel_changed /= (double)sum_voxel;
+#if !defined(_WIN32)
     printf("ICM: %d relative change: %2.4f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter+1, 100.0*rel_changed);
     fflush(stdout);
+#endif
     if(rel_changed < TH_CHANGE) break;
   }   
   printf("\n");
 } 
 
-void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int n_classes, int niters, int sub, int *dims, double *thresh, double *beta)
+void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int n_classes, int niters, int sub, int *dims, double *thresh, double *beta, double offset)
 {
   int i;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
@@ -407,7 +409,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
     
   ll_old = HUGE;
   count_change = 0;
-    
+      
   for(iters = 0; iters < niters; iters++)  {
       
     ll = 0.0;
@@ -476,8 +478,10 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 
     ll /= (double)vol;
     change_ll = (ll_old - ll)/fabs(ll);
+#if !defined(_WIN32)
     printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters+1, ll);
     fflush(stdout);
+#endif
     ll_old = ll;
     
     /* break if log-likelihood has not changed significantly two iterations */
@@ -486,15 +490,14 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
   }
 
   printf("\nFinal Mean*Std: "); 
-  for(i = 0; i < n_classes; i++) printf("%.3f*%.3f  ",mean[i],sqrt(var[i])); 
+  for(i = 0; i < n_classes; i++) printf("%.3f*%.3f  ",mean[i]-offset,sqrt(var[i])); 
   printf("\n"); 
-  fflush(stdout);
 
 }
 
 
 /* perform adaptive MAP on given src and initial segmentation label */
-void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM)
+void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM, double offset)
 {
   int i, nix, niy, niz;
   int area, nvol, vol;
@@ -513,7 +516,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
     min_src = MIN(src[i], min_src);
     max_src = MAX(src[i], max_src);
   }
-
+  
   /* build histogram */
   for(i = 0; i < 65536; i++) histo[i] = 0;
   for(i = 0; i < vol; i++) {
@@ -538,12 +541,12 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
 
   r = (struct point*)malloc(sizeof(struct point)*MAX_NC*nvol);
   if(r == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
     
   /* estimate 3 classes before PVE */
-  EstimateSegmentation(src, label, prob, r, mean, var, n_classes, niters, sub, dims, thresh, beta);
+  EstimateSegmentation(src, label, prob, r, mean, var, n_classes, niters, sub, dims, thresh, beta, offset);
   
   /* Use marginalized likelihood to estimate initial 5 or 6 classes */
   if (pve) {
@@ -571,7 +574,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   if(niters_ICM > 0) {
     if(weight_MRF != 1.0) {
       beta[0] *= weight_MRF;
-      fprintf(stdout,"Weighted MRF beta %3.3f\n",beta[0]);
+      printf("Weighted MRF beta %3.3f\n",beta[0]);
     }
   
     ICM(prob, label, n_classes, dims, beta[0], niters_ICM, voxelsize);

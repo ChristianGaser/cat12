@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include "matrix.h"
 
+extern void ornlm(double* ima, double* fima, int v, int f, double h, const int* dims);
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 

@@ -14,7 +14,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
   unsigned char *label, *prob, *mask;
   double *src, *mean, *voxelsize;
-  double max_vol, weight_MRF, bias_fwhm;
+  double max_vol = -1e15, weight_MRF, bias_fwhm, offset;
   const int *dims;
   int dims2[4];
   int i, n_classes, pve, nvox, iters_icm;
@@ -26,7 +26,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexErrMsgTxt("Too many output arguments.");
   
   if (!mxIsUint8(prhs[1]))
-	mexErrMsgTxt("Second argument must be uint8.");
+    mexErrMsgTxt("Second argument must be uint8.");
 
   src        = (double*)mxGetPr(prhs[0]);
   label      = (unsigned char*)mxGetPr(prhs[1]);
@@ -56,9 +56,21 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);
 
+  nvox = dims[0]*dims[1]*dims[2];
+  
+  for(i = 0; i < nvox; i++) {
+    max_vol = MAX(src[i], max_vol);
+  }
+
+  offset = 0.2*max_vol;
+  
+  /* add offset to ensure that CSF values are much larger than background noise */
+  for (i=0; i<nvox; i++) {
+    if (label[i] > 0) src[i] += offset;
+  }
+
   /* initial labeling using Kmeans */
   if (init) {
-    nvox = dims[0]*dims[1]*dims[2];
     mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
     for (i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
@@ -75,7 +87,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     free(mask);
   }
     
-  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize, iters_icm);
+  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize, iters_icm, offset);
   if(pve==6) Pve6(src, prob, label, mean, dims2);
   if(pve==5) Pve5(src, prob, label, mean, dims2);
 

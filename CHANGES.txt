@@ -198,3 +198,44 @@ Corrected cg_spmT2x.m and cg_spmF2x.m to allow conversion of maps without
 thresholding.
 ------------------------------------------------------------------------
 r353 | gaser | 2010-08-17 16:24:28
+
+M      AmapMex.mexmaci64
+M      upfirdn2dMex.c
+M      upfirdn2dMex.mexmaci64
+M      ornlmMex.mexa64
+M      AmapMex.mexmaci
+M      afb3D.m
+M      upfirdn2dMex.mexa64
+M      ornlmMex.mexmaci
+M      ornlmMex.mexw64
+M      AmapMex.mexa64
+M      Kmeans.c
+M      upfirdn2dMex.mexw64
+M      AmapMex.mexw64
+M      ornlmMex.c
+M      ornlmMex.mexw32
+M      upfirdn2dMex.mexw32
+M      ornlmMex.mexmaci64
+M      Amap.c
+M      ornlmMex.mexglx
+M      Amap.h
+M      KmeansMex.c
+M      upfirdn2dMex.mexglx
+M      AmapMex.mexw32
+M      KmeansMex.m
+M      upfirdn2dMex.mexmaci
+M      AmapMex.mexglx
+M      AmapMex.c
+M      cg_noise_estimation.m
+
+(1) Replaced kmeans3d.m by faster mex-code KmeansMex.
+(2) upfirdn2dMex.c is now using floating numbers to save memory.
+(3) Changed cg_noise_estimate.m and afb3D.m to consider changes above.
+(4) Disabled output of Kmeans.c.
+(5) To the source image in AmapMex.c an offset is added for areas above
+    background. This prevents poor CSF segmentations for images, where CSF
+    values are too close to background.
+(6) Changed Amap.h and Amap.c to consider changes above. 
+(7) Re-compiled all c-code.
+------------------------------------------------------------------------
+r354 | gaser | 2010-08-19 16:52:53

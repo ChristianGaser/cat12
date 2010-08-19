@@ -31,8 +31,8 @@ p(2) = 2^(ceil(log2(s(2))));
 p(3) = 2^(ceil(log2(s(3))));
 
 % Zeros Pading
-pad1 = zeros(p(1),p(2),p(3));
-pad1(1:s(1),1:s(2),1:s(3)) = ima;
+pad1 = zeros(p(1),p(2),p(3),'single');
+pad1(1:s(1),1:s(2),1:s(3)) = single(ima);
 
 % Wavelet Transform
 [af, sf] = farras;
@@ -49,7 +49,12 @@ tmp  = tmp(1:round((s(1)-1)/2),1:round((s(2)-1)/2),1:round((s(3)-1)/2));
 tmp2 = tmp2(1:round((s(1)-1)/2),1:round((s(2)-1)/2),1:round((s(3)-1)/2));
 
 % Detection of the object in the LLL subband
-mu = kmeans3D(tmp2,2);
+try
+    [label, mu] = KmeansMex(double(tmp2),2);
+    clear label
+catch
+    mu = kmeans3D(tmp2,2);
+end
 th = mean(mu);
 map = tmp2 > th;
 
@@ -73,7 +78,12 @@ clear tmp
 
 % Computation of SNR on object 
 fima = convn(ima,ones(3,3,3),'same');
-mu = kmeans3D(fima,2);
+try
+    [label, mu] = KmeansMex(double(fima),2);
+    clear label
+catch
+    mu = kmeans3D(fima,2);
+end
 th = mean(mu);
 map = find(fima > th);
 SNR = mean(ima(map)) / Nsig;
