@@ -86,19 +86,19 @@ function [lo, hi] = afb3D_A(x, af, d)
 % err = x - y;
 % max(max(max(abs(err))))
 
-lpf = af(:, 1);     % lowpass filter
-hpf = af(:, 2);     % highpass filter
+lpf = single(af(:, 1));     % lowpass filter
+hpf = single(af(:, 2));     % highpass filter
 
 % permute dimensions of x so that dimension d is first.
 p = mod(d-1+[0:2], 3) + 1;
-x = permute(x, p);
+x = permute(single(x), p);
 
 % filter along dimension 1
 [N1, N2, N3] = size(x);
 L = size(af, 1)/2;
 x = cshift3D(x, -L, 1);
-lo = zeros(L+N1/2, N2, N3);
-hi = zeros(L+N1/2, N2, N3);
+lo = zeros(L+N1/2, N2, N3,'single');
+hi = zeros(L+N1/2, N2, N3,'single');
 
 for k = 1:N3
    lo(:, :, k) = upfirdn2dMex(x(:, :, k), lpf, 1, 2);
@@ -115,4 +115,3 @@ hi = hi(1:N1/2, :, :);
 % permute dimensions of x (inverse permutation)
 lo = ipermute(lo, p);
 hi = ipermute(hi, p);
-

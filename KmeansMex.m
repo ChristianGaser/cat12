@@ -1,4 +1,4 @@
-function label = KmeansMex(src, n_classes)
+function [label, mu] = KmeansMex(src, n_classes)
 %
 % Christian Gaser
 % $Id$
@@ -11,6 +11,6 @@ cd(pth);
 mex -O KmeansMex.c Kmeans.c vollib.c
 cd(p_path);
 
-label = KmeansMex(src, n_classes);
+[label, mu] = KmeansMex(src, n_classes);
 
 return
