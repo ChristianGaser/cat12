@@ -239,3 +239,9 @@ M      cg_noise_estimation.m
 (7) Re-compiled all c-code.
 ------------------------------------------------------------------------
 r354 | gaser | 2010-08-19 16:52:53
+
+M       cg_vbm8_longitudinal.m
+
+Added batch for deleting temporary files in cg_vbm8_longitudinal.m
+------------------------------------------------------------------------
+r355 | gaser | 2010-08-24 13:51:34
