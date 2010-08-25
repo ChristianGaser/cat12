@@ -245,3 +245,15 @@ M       cg_vbm8_longitudinal.m
 Added batch for deleting temporary files in cg_vbm8_longitudinal.m
 ------------------------------------------------------------------------
 r355 | gaser | 2010-08-24 13:51:34
+
+M      Kmeans.c
+M      Amap.h
+M      cg_vbm8_longitudinal.m
+
+(1) Temporary files in longitudinal bacth mode are now removed after the final
+    segmentation.
+(2) Added flag for spline smoothing to Kmeans.c.
+(3) For windows systems mex.h is included in Amap.h to provide correct
+    printout.
+------------------------------------------------------------------------
+r356 | gaser | 2010-08-25 14:27:15
