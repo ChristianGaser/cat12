@@ -4,7 +4,9 @@
  *
  */
 
+#if defined(_WIN32)
 #include "mex.h"
+#endif
 
 #define SQRT2PI 2.506628
 #define G 6

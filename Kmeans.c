@@ -246,7 +246,11 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         nu[i] = 0.0;
         /* only use values above threshold where mask is defined for nu-estimate */
         if ((src[i] > th_src) && (mask[i] > thresh_kmeans)) {
+#ifdef SPLINESMOOTH
+          val_nu = src[i]/(max_src/255.0*mu[label[i]-1]);
+#else
           val_nu = src[i]-(max_src/255.0*mu[label[i]-1]);
+#endif
           nu[i] = val_nu;
         }
       }
@@ -266,7 +270,11 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       
       /* apply nu correction to source image */
       for (i = 0; i < vol; i++) {
+#ifdef SPLINESMOOTH
+          if (src[i]>0) src[i] /= nu[i];
+#else
           if (src[i]>0) src[i] -= 0.5*nu[i];
+#endif
       }
       
       /* update k-means estimate */
@@ -295,6 +303,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       printf("iters: %2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*(double)n_clusters/(double)vol);
       fflush(stdout);
 #endif    
+    
     }    
   } else {
     e = EstimateKmeans(src, label, mask, n_clusters, mu, NI, dims, thresh_mask, thresh_kmeans, max_src);
@@ -306,7 +315,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   if (iters_nu > 0) printf("\n");
 /*  printf("K-Means: ");
-  for (i = 0; i < n_clusters; i++) printf("%3.3f ",(max_src*mu[i]/255.0)-offset); 
+  for (i = 0; i < n_clusters; i++) printf("%3.3f ",max_src*mu[i]/255.0); 
   printf("\terror: %3.3f\n",e*(double)n_clusters/(double)vol);    
 */
   free(src_bak);
