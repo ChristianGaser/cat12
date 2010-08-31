@@ -373,28 +373,16 @@ showslice.help = {[...
 data.help = {[...
 'Select images for filtering']};
 
-weight = cfg_entry;
-weight.tag = 'weight';
-weight.name = 'ORNLM Filter weighting?';
-weight.strtype = 'e';
-weight.num = [1 1];
-weight.val  = {cg_vbm8_get_defaults('extopts.ornlm')};
-weight.help = {[...
-'To optimally suppress image noise a full weighting of "1" is recommended. However, for image segmentation a weighting ',...
-'of "0.7" achieves best results in terms of segmentation accuracy.']};
-
-ornlm = cfg_exbranch;
-ornlm.tag = 'ornlm';
-ornlm.name = 'Optimized blockwise non local means denoising filter';
-ornlm.val = {data,weight};
-ornlm.prog   = @cg_ornlm;
-ornlm.vfiles  = @vfiles_ornlm;
-ornlm.help = {[...
-'This function applies an optimized blockwise non local means denoising filter to the data. This filter will remove noise while ',...
+sanlm = cfg_exbranch;
+sanlm.tag = 'sanlm';
+sanlm.name = 'Optimized blockwise non local means denoising filter';
+sanlm.val = {data};
+sanlm.prog   = @cg_sanlm;
+sanlm.vfiles  = @vfiles_sanlm;
+sanlm.help = {[...
+'This function applies an spatial adaptive non local means denoising filter to the data. This filter will remove noise while ',...
 'preserving edges. The smoothing filter size is automatically estimated based on the standard deviation of the noise. ',...
-'If image has non-zero background (we check that less than 5% of the image are zero) we can assume Rayleigh PDF in the ',...
-'background and noise estimation can be based on mode of local mean. Otherwise mode of local variance is used. ',...
-'The resulting images are prepended with the term "ornlm_".'],...
+'The resulting images are prepended with the term "sanlm_".'],...
 '',[...
 'This filter is internally used in the segmentation procedure anyway. Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.']};
 
@@ -510,7 +498,7 @@ bias  = cg_vbm8_bias;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,ornlm,bias,defs};
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,defs};
 
 return
 
@@ -531,13 +519,13 @@ end;
 return;
 %_______________________________________________________________________
 
-function vf = vfiles_ornlm(job)
+function vf = vfiles_sanlm(job)
 vf = {};
 
 s  = strvcat(job.data);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
-    vf = {vf{:}, fullfile(pth,['ornlm_',nam,ext,num])};
+    vf = {vf{:}, fullfile(pth,['sanlm_',nam,ext,num])};
 end;
 return;
 %_______________________________________________________________________

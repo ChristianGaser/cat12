@@ -258,20 +258,17 @@ cleanup.def  = @(val)cg_vbm8_get_defaults('extopts.cleanup', val{:});
 
 %------------------------------------------------------------------------
 
-ornlm = cfg_entry;
-ornlm.tag  = 'ornlm';
-ornlm.name = 'ORNLM de-noising filter weighting';
-ornlm.strtype = 'e';
-ornlm.num = [1 1];
-ornlm.help = {[...
-'This function applies an optimized blockwise non local means denoising filter ',...
+sanlm = cfg_menu;
+sanlm.tag  = 'sanlm';
+sanlm.name = 'Use SANLM de-noising filter';
+sanlm.help = {[...
+'This function applies an spatial adaptive non local means denoising filter ',...
 'to the data. This filter will remove noise while ',...
 'preserving edges. The smoothing filter size is automatically estimated based on ',...
-'the local variance in the image. '],...
-'',[...
-'For image segmentation a weighting of "0.7" achieves best results in terms of segmentation ',...
-'accuracy. A value of "0" will deselect the filter.']};
-ornlm.def  = @(val)cg_vbm8_get_defaults('extopts.ornlm', val{:});
+'the local variance in the image. ']};
+sanlm.labels = {'No denoisng','Denoising'};
+sanlm.values = {0 1};
+sanlm.def  = @(val)cg_vbm8_get_defaults('extopts.sanlm', val{:});
 
 %------------------------------------------------------------------------
 
@@ -329,7 +326,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,ornlm,mrf,cleanup,print};
+extopts.val = {dartelwarp,sanlm,mrf,cleanup,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------

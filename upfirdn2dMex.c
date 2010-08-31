@@ -74,7 +74,7 @@ if (nrhs!=4)
 else if (nlhs>1)
   mexErrMsgTxt("Too many output arguments.");
   
-if (!mxIsFloat(prhs[0]))
+if (!mxIsSingle(prhs[0]))
 	mexErrMsgTxt("First argument must be float.");
 
 /* get input image */

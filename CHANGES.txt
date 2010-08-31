@@ -250,10 +250,46 @@ M      Kmeans.c
 M      Amap.h
 M      cg_vbm8_longitudinal.m
 
-(1) Temporary files in longitudinal bacth mode are now removed after the final
+(1) Temporary files in longitudinal batch mode are now removed after the final
     segmentation.
 (2) Added flag for spline smoothing to Kmeans.c.
 (3) For windows systems mex.h is included in Amap.h to provide correct
     printout.
 ------------------------------------------------------------------------
 r356 | gaser | 2010-08-25 14:27:15
+
+M      AmapMex.mexmaci64
+M      upfirdn2dMex.c
+A      sanlm.c
+M      Makefile.vbm
+A      cg_vbm8_brainmask_ui.m
+M      cg_vbm8_defaults.m
+M      AmapMex.mexmaci
+M      spm_vbm8.m
+M      CHANGES.txt
+A      avgT1_Dartel_IXI550_MNI152.nii
+M      AmapMex.mexa64
+M      tbx_cfg_vbm8.m
+A      sanlmMex.c
+M      vollib.c
+A      cg_sanlm.m
+M      AmapMex.mexw64
+M      cg_vbm8_tools.m
+M      Amap.h
+A      cg_vbm8_brainmask.m
+M      KmeansMex.c
+M      AmapMex.mexw32
+M      compile.m
+M      cg_vbm8_write.m
+M      AmapMex.mexglx
+M      cg_vbm8_run.m
+
+(1) Replaced Optimized Blockwise Non Local Means (ORNLM) filter by Adaptive 
+    Non-Local Means (SANLM) filter to consider MR images with spatially 
+    varying noise levels (thanks to Jose V. Manj—n for providing the source
+    code). This filter does not need pre-estimation of noise and is much
+    less memory demanding.
+(2) Removed wavelet and ornlm code, that is not necessary anymore.    
+(3) Updated cg_vbm8_write for changes above.
+------------------------------------------------------------------------
+r357 | gaser | 2010-08-31 17:24:36
