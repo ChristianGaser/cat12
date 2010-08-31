@@ -246,20 +246,8 @@ end
 clear chan
 
 % optionally apply optimized blockwise non local means denoising filter
-if warp.ornlm > 0
-    try
-        % use maximum size of 256 in each direction
-        h = cg_noise_estimation(src(1:min(256,d(1)),1:min(256,d(2)),1:min(256,d(3))));
-    catch
-        % use additionally reduced size to prevent memory issues
-        fprintf('\nUse reduced images size for noise estimation.');
-        h = cg_noise_estimation(src(1:round(d(1)/2),1:round(d(2)/2),1:round(d(3)/2)));
-    end
-    fprintf('\nEstimated noise level: %3.2f',h);
-  	
-  	% weight ORNLM
-  	h = warp.ornlm*h;
-    src = single(ornlmMex(double(src),3,1,h));  
+if warp.sanlm > 0
+    sanlmMex(src,3,1);
 end
 
 if do_cls && do_defs,
@@ -341,16 +329,7 @@ if do_cls && do_defs,
     end
     
     [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, warp.mrf, vx_vol, iters_icm, bias_fwhm);
-    
-    % calculate SNR/CNR
-    if warp.ornlm > 0
-        % focus on pure tissues
-        means = means([1 3 5]);
-        SNR = 20*log10(means/h);
-        CNR = 20*log10(diff(means)/h);
-        fprintf('SNR(GM): %3.2fdB\tSNR(WM): %3.2fdB\tCNR(WM/GM): %3.2fdB\n',SNR(2),SNR(3),CNR(2));
-    end
-    
+        
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear vol mask
@@ -922,7 +901,9 @@ if do_cls && warp.print
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.kmeans')))];
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.bias_fwhm')))];
-	str = [str struct('name', 'ORNLM weighting:','value',sprintf('%3.2f',warp.ornlm))];
+	if (warp.sanlm>0) 
+	  str = [str struct('name', 'SANLM:','value',sprintf('yes'))];
+	end
 	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',warp.mrf))];
 
   try
