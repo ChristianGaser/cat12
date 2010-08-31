@@ -4,7 +4,7 @@
  *
  */
 
-#if defined(_WIN32)
+#ifdef MATLAB_MEX
 #include "mex.h"
 #endif
 

@@ -25,6 +25,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
+  if (!mxIsDouble(prhs[0]))
+    mexErrMsgTxt("Image must be double.");
+
   src = (double*)mxGetPr(prhs[0]);
   n_classes = (int)mxGetScalar(prhs[1]);
   
