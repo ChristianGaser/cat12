@@ -293,3 +293,12 @@ M      cg_vbm8_run.m
 (3) Updated cg_vbm8_write for changes above.
 ------------------------------------------------------------------------
 r357 | gaser | 2010-08-31 17:24:36
+
+D       sanlm.c
+M       Makefile.vbm
+A       sanlmMex.m
+A  +    sanlm_float.c
+
+Renamed sanlm.c to sanlm_float.c to indicate the floating version.
+------------------------------------------------------------------------
+r358 | gaser | 2010-08-31 23:35:46
