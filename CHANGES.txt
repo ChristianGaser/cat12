@@ -302,3 +302,13 @@ A  +    sanlm_float.c
 Renamed sanlm.c to sanlm_float.c to indicate the floating version.
 ------------------------------------------------------------------------
 r358 | gaser | 2010-08-31 23:35:46
+
+A      sanlmMex.m
+M      AmapMex.mexw64
+M      AmapMex.mexw32
+M      AmapMex.mexw64
+M      AmapMex.mexw32
+
+Compiled mexw32 and mexw64 with OpenMP support.
+------------------------------------------------------------------------
+r359 | gaser | 2010-09-01 10:30:23
