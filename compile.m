@@ -12,9 +12,9 @@ try % try OpenMP support
     elseif strcmp(mexext,'mexglx')
         mex CFLAGS='-fopenmp -m32 -fPIC -O3' -O -lgomp sanlmMex.c sanlm.c
     elseif strcmp(mexext,'mexw64')
-        mex CFLAGS='-fopenmp m64 -fPIC -O3' -O sanlmMex.c sanlm.c
+        mex -O sanlmMex.c sanlm.c
     elseif strcmp(mexext,'mexw32')
-        mex CFLAGS='-fopenmp m32 -fPIC -O3' -O sanlmMex.c sanlm.c
+        mex -O sanlmMex.c sanlm.c
     end
     disp('Compiling sanlmMex with OpenMP')
 catch 
