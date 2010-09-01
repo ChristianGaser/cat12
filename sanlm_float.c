@@ -22,7 +22,7 @@
  ***************************************************************************
  *  The SANLM filter is described in:                                      *
  *                                                                         *
- *  Jose V. Manjón, Pierrick Coupé, Luis Martí-bonmatí, Montserrat Robles  *
+ *  Jose V. Manjon, Pierrick Coupe, Luis Marti-Bonmati, Montserrat Robles  *
  *  and D. Louis Collins.                                                  *
  *  Adaptive Non-Local Means Denoising of MR Images with Spatially Varying *
  *  Noise Levels. Journal of Magnetic Resonance Imaging, 31,192-203, 2010. *                                                       
@@ -538,11 +538,12 @@ float *means, *variances, *Estimate, *average, *bias;
 unsigned char *Label;
 int ndim = 3;
 double SNR,h,mean,var,estimate,r,d;
-int vol,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin;
+int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin;
 
 myargument *ThreadArgs;  
 
 Ndims = pow((2*f+1),ndim);
+slice = dims[0]*dims[1];
 vol = dims[0]*dims[1]*dims[2];
 
 /*Allocate memory */
@@ -569,7 +570,7 @@ for (k = 0;k<dims[2];k++)
     {
         for (i = 0;i<dims[0];i++)
         {
-            if (ima[k*(dims[0]*dims[1])+(j*dims[0])+i]>max) max = (double)ima[k*(dims[0]*dims[1])+(j*dims[0])+i];
+            if (ima[k*(slice)+(j*dims[0])+i]>max) max = (double)ima[k*(slice)+(j*dims[0])+i];
             
             mean = 0.0;
             indice = 0;
@@ -591,14 +592,14 @@ for (k = 0;k<dims[2];k++)
                         if (nk>= dims[2]) nk = 2*dims[2]-nk-1;
                         
                                 
-                        mean += (double)ima[nk*(dims[0]*dims[1])+(nj*dims[0])+ni];
+                        mean += (double)ima[nk*(slice)+(nj*dims[0])+ni];
                         indice++;                
                     
                     }
                 }
             }
             mean /= (double)indice;
-            means[k*(dims[0]*dims[1])+(j*dims[0])+i] = (float)mean;
+            means[k*(slice)+(j*dims[0])+i] = (float)mean;
         }
     }
 }
@@ -622,7 +623,7 @@ for (k = 0;k<dims[2];k++)
                         nk = k+kk;                
                         if (ni>= 0 && nj>= 0 && nk>0 && ni<dims[0] && nj<dims[1] && nk<dims[2])
                             {
-                            d = (double)ima[nk*(dims[0]*dims[1])+(nj*dims[0])+ni]-(double)means[k*(dims[0]*dims[1])+(j*dims[0])+i];
+                            d = (double)ima[nk*(slice)+(nj*dims[0])+ni]-(double)means[k*(slice)+(j*dims[0])+i];
                             var += d*d;
                             indice++;
                         }
@@ -630,7 +631,7 @@ for (k = 0;k<dims[2];k++)
                 }
             }
             var /= (indice-1);
-            variances[k*(dims[0]*dims[1])+(j*dims[0])+i] = (float)var;
+            variances[k*(slice)+(j*dims[0])+i] = (float)var;
         }
     }
 }
@@ -674,7 +675,7 @@ if (rician)
 {
   r = 5.0;  
   Regularize(bias,variances,r,dims[0],dims[1],dims[2]);
-  for (i = 0;i<dims[0]*dims[1]*dims[2];i++)
+  for (i = 0;i<vol;i++)
   {
      if (variances[i]>0.0) 
      {
@@ -690,22 +691,22 @@ if (rician)
 }
 
 /* Aggregation of the estimators (i.e. means computation) */
-label = 0.0;
+label = 0;
 estimate = 0.0;
-for (i = 0;i<dims[0]*dims[1]*dims[2];i++)
+for (i = 0;i<vol;i++)
 {
     label = Label[i];
     if (label > 0)
     {
       estimate = (double)Estimate[i];
-      estimate = (estimate/label);
+      estimate /= (double)label;
       if (rician)
       {
          estimate = (estimate-(double)bias[i])<0?0:(estimate-(double)bias[i]);                    
          ima[i] = (float)sqrt(estimate);
       }
       else ima[i] = (float)estimate;  
-    }       
+    }
 }
 
 return;
