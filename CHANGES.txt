@@ -312,3 +312,27 @@ M      AmapMex.mexw32
 Compiled mexw32 and mexw64 with OpenMP support.
 ------------------------------------------------------------------------
 r359 | gaser | 2010-09-01 10:30:23
+
+M      CHANGES.txt
+M      sanlm_float.c
+M      AmapMex.mexw64
+M      AmapMex.mexw32
+M      compile.m
+
+Some cosmetic changes in sanlm_float.c.
+------------------------------------------------------------------------
+r360 | gaser | 2010-09-01 14:45:52
+
+A      sanlmMex.mexw32
+A      sanlmMex.mexglx
+A      sanlmMex.mexmaci64
+M      sanlm_float.c
+M      AmapMex.mexw64
+A      sanlmMex.mexmaci
+M      AmapMex.mexw32
+A      sanlmMex.mexa64
+A      sanlmMex.mexw64
+
+Some cosmetic changes in sanlm_float.c.
+------------------------------------------------------------------------
+r360 | gaser | 2010-09-01 14:48:36
