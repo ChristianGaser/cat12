@@ -336,3 +336,19 @@ A      sanlmMex.mexw64
 Some cosmetic changes in sanlm_float.c.
 ------------------------------------------------------------------------
 r360 | gaser | 2010-09-01 14:48:36
+
+M      AmapMex.mexmaci64
+M      Makefile.vbm
+M      sanlmMex.mexw32
+M      AmapMex.mexmaci
+M      AmapMex.mexa64
+M      Kmeans.c
+M      AmapMex.mexw64
+M      AmapMex.mexw32
+M      AmapMex.mexglx
+M      sanlmMex.mexw64
+
+Improved bias correction in Kmeans.c that leads to better segmentation
+esp. of subcortical structures.
+------------------------------------------------------------------------
+r361 | gaser | 2010-09-03 09:12:14

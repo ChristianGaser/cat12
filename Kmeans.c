@@ -126,7 +126,7 @@ double EstimateKmeans(double *src, unsigned char *label, unsigned char *mask, in
 double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *voxelsize, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm)
 {
   int i, j, k, subsample, masked_smoothing;
-  double e, emin, eps, *nu, *src_bak, th_src, val, val_nu;
+  double e, emin, eps, *nu, *src_bak, th_src, val, val_nu, sum;
   double last_err = HUGE;
   double max_src = -HUGE;
   double fwhm[3];
@@ -135,7 +135,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   double var[MAX_NC];
   double mu[MAX_NC];
   double Mu[MAX_NC];
-  int n_classes, count_err;
+  int n_classes, count_err, count;
   long vol;
   int n_classes_initial = n_clusters;
 
@@ -155,6 +155,39 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
     }
   }  
   
+
+#if !defined SPLINESMOOTH
+        /* use larger filter */
+        for(i=0; i<3; i++) fwhm[i] = 2*bias_fwhm;
+        
+        /* estimate mean */
+        count = 0; sum = 0.0;
+        for (i = 0; i < vol; i++) {
+          if(src[i]>0) {
+            sum += src[i];
+            count++;
+          }
+        }
+        sum /= (double)count;
+
+        for (i = 0; i < vol; i++) {
+          if(src[i]>0) {
+            nu[i] = src[i] - sum;
+          } else nu[i] = 0;
+        }
+        
+        /* use subsampling for faster processing */
+        subsample = 2;
+        masked_smoothing = 1;
+        smooth_subsample_double(nu, dims, voxelsize, fwhm, masked_smoothing, subsample);
+        
+        /* and correct bias */
+        for (i = 0; i < vol; i++)
+          if(src[i]>0)
+            src[i] -= nu[i];
+
+#endif
+      
   /* find maximum and mean inside mask */
   for (i = 0; i < vol; i++) {
     if (mask[i] > 0) {
@@ -265,6 +298,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
         /* use subsampling for faster processing */
         subsample = 2;
         masked_smoothing = 0;
+
         smooth_subsample_double(nu, dims, voxelsize, fwhm, masked_smoothing, subsample);
 #endif
       
@@ -273,7 +307,7 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 #ifdef SPLINESMOOTH
           if (src[i]>0) src[i] /= nu[i];
 #else
-          if (src[i]>0) src[i] -= 0.5*nu[i];
+          if (src[i]>0) src[i] -= nu[i];
 #endif
       }
       
