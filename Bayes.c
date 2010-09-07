@@ -7,15 +7,16 @@
 #define Kb 6
 #define MAXK 30
 
-void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *mask, double *separations, int *dims, int correct_nu)
+void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *prob, double *separations, int *dims, int correct_nu)
 {
-  int i, j, k, l, k1, subit;
-  int z_area, y_dims;
-  double ll = -HUGE, llr=0.0, *nu;
+  int i, j, k, l, k1, subit, n_loops, subsample_warp;
+  int z_area, y_dims, count, subsample, masked_smoothing;
+  double ll = -HUGE, llr=0.0, *nu, fwhm[3];
   double mn[MAXK], vr[MAXK], mg[MAXK], mn2[MAXK], vr2[MAXK], mg2[MAXK];
   double mom0[MAXK], mom1[MAXK], mom2[MAXK], mgm[MAXK];
   double q[MAXK], bt[MAXK], b[MAXK], qt[MAXK];
-  double tol1 = 1e-4;
+  double tol1 = 1e-3, bias_fwhm, sum;
+  float *flow;
   
   int area = dims[0]*dims[1];
   int vol = area*dims[2];
@@ -29,6 +30,51 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
   double mn_thresh, mx_thresh;
   double min_src = HUGE, max_src = -HUGE;
   int cumsum[65536], order_priors[6] = {2,0,1,3,4,5};
+
+  subsample_warp = ROUND(9.0/(separations[0]+separations[1]+separations[2]));
+  
+  flow  = (float *)malloc(sizeof(float)*vol*3);
+  /* initialize flow field with zeros */
+  for (i = 0; i < (vol*3); i++) flow[i] = 0.0;
+
+  if (correct_nu) nu = (double *)malloc(sizeof(double)*vol);
+
+  bias_fwhm = 60.0;
+  if (correct_nu) {
+    /* use larger filter */
+    for(i=0; i<3; i++) fwhm[i] = 2*bias_fwhm;
+       
+    /* estimate mean */
+    count = 0; sum = 0.0;
+    for (i = 0; i < vol; i++) {
+      if(src[i]>0) {
+        sum += src[i];
+        count++;
+      }
+    }
+
+    if (count==0) return;
+
+    sum /= (double)count;
+
+
+    for (i = 0; i < vol; i++) {
+      if(src[i]>0)
+        nu[i] = src[i] - sum;
+      else nu[i] = 0;
+    }
+        
+    /* use subsampling for faster processing */
+    subsample = 2;
+    masked_smoothing = 1;
+    smooth_subsample_double(nu, dims, separations, fwhm, masked_smoothing, subsample);
+        
+    /* and correct bias */
+    for (i = 0; i < vol; i++)
+      if(src[i]>0)
+        src[i] -= nu[i];
+
+  }
 
   for (i=0; i<vol; i++) {
     min_src = MIN(src[i], min_src);
@@ -50,8 +96,6 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
   mn_thresh = (double)i/65535.0*(max_src-min_src);
   for (i = 65535; i > 0; i--) if (cumsum[i] <= 999) break;
   mx_thresh = (double)i/65535.0*(max_src-min_src);
-
-  if (correct_nu) nu = (double *)malloc(sizeof(double)*vol);
 
   /* K = sum(ngauss) */
   for (k1=0; k1<Kb; k1++)   K  += ngauss[k1]; 
@@ -112,7 +156,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
           int kmax;
           
           for (k=0; k<K; k++) {
-            q[k] = mg[k]*bt[lkp[k]]*exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));            
+            q[k] = mg[k]*bt[lkp[k]]*exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
             sq += q[k];
             if (q[k] > qmax) {
               qmax = q[k];
@@ -120,15 +164,28 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
             } 
           }
           
-          if (kmax < 4) label[i] = kmax; else label[i] = 0;
+          /* prepare prob for warping */
+          sq = TINY;
+          for (k1=0; k1<Kb; k1++) qt[k1] = 0.0;
+          for (k=0; k<K; k++) { 
+            double p1 = mg[k]*bt[lkp[k]]*exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
+            qt[lkp[k]] += p1;
+            sq += qt[lkp[k]];
+          }
+          for (k1=0; k1<Kb; k1++)
+            prob[i+(vol*k1[order_priors])] = (unsigned char)ROUND(255.0*qt[k1]/sq);
+
+          label[i] = kmax;
           ll += log10(sq);
           for (k=0; k<K; k++) {
             double p1 = q[k]/sq; mom0[k] += p1;
             p1 *= src[i];        mom1[k] += p1;
             p1 *= src[i];        mom2[k] += p1;
           }      
-        } 
-      }  
+        }
+      } 
+
+      if ((subit==1) && (j>0)) WarpPriors(prob, priors, flow, dims, 6, 0, subsample_warp);
           
       for (k=0; k<K; k++) {
         mg[k] = (mom0[k]+TINY)/(mgm[lkp[k]]+TINY);
@@ -145,6 +202,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
       }
       
       printf("%7.4f\b\b\b\b\b\b\b",ll/vol);    
+      printf("\n");
       fflush(stdout);
       if((ll-oll)<tol1*vol) break;
     }
@@ -152,22 +210,27 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
     if(correct_nu) {
       for (i = 0; i < vol; i++) {
         nu[i] = 0.0;
-        /* only use values above threshold where mask is defined for nu-estimate */
-        if ((src[i] > mn_thresh) && (mask[i] > 128) && (label[i] < 4)) {
-          double val_nu = src[i]/mn[label[i]-1];
-          if ((finite(val_nu))) {
+        /* only use values above threshold for nu-estimate */
+        if ((src[i] > mn_thresh) && (label[i] < 4)) {
+          double val_nu = src[i]-mn[label[i]-1];
+          if ((finite(val_nu)))
             nu[i] = val_nu;
-          }
         }
       }
 
-      /* spline estimate with increasing spatial resolution */
-      splineSmooth(nu, 0.01, MAX(500,1500.0/(j+1)), 4, separations, dims);
-      
+      /* smoothing of residuals */
+      for(i=0; i<3; i++) fwhm[i] = bias_fwhm;
+        
+      /* use subsampling for faster processing */
+      subsample = 2;
+      masked_smoothing = 0;
+
+      smooth_subsample_double(nu, dims, separations, fwhm, masked_smoothing, subsample);
+
       /* apply nu correction to source image */
       for (i=0; i<vol; i++) {
         if (nu[i] > 0.0)
-          src[i] /= nu[i];
+          src[i] -= nu[i];
       }
     }    
   }
@@ -194,6 +257,8 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
       double psum = 0.0;
       for (k1=0; k1<Kb; k1++) {
         double p1 = qt[k1]/sq;
+        /* save probabilities */
+        prob[i+(vol*k1[order_priors])] = (unsigned char)ROUND(255.0*p1);
         psum += p1;
         if (p1 > qmax) { 
           qmax = p1;     
@@ -201,16 +266,16 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         }   
       }
       /* label only if sum of all probabilities is > 0 */
-      if ((psum > 0) && (kmax < 4))
+      if (psum > 0)
         label[i] = kmax;
       else
         label[i] = 0;
     } else label[i] = 0;
   }
 
-  for (k=0; k<Kb; k++) 
+/*  for (k=0; k<Kb; k++) 
     printf("%g %g\n",mn[k],sqrt(vr[k]));
-    
+*/    
   if (correct_nu) free(nu);
     
   return;

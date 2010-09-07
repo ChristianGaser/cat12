@@ -352,3 +352,22 @@ Improved bias correction in Kmeans.c that leads to better segmentation
 esp. of subcortical structures.
 ------------------------------------------------------------------------
 r361 | gaser | 2010-09-03 09:12:14
+
+M      Bayes.c
+M      BayesMex.c
+M      cg_vbm8_brainmask_ui.m
+M      BayesMex.m
+M      WarpPriors.c
+M      Kmeans.c
+M      cg_vbm8_brainmask.m
+M      KmeansMex.c
+
+(1) Some cosmetic changes to Kmeans.c
+(2) cg_vbm8_brainmask.m is now based on an initial segmentation 
+    based on a Bayesian approach with warped priors.
+(3) Updated cg_vbm8_brainmask_ui.m to consider changes above.
+(4) Updated WarpPriors.c to allow upsampling of flow field.
+(5) Updated Bayes.c to include warping of priors.
+
+------------------------------------------------------------------------
+r362 | gaser | 2010-09-07 21:59:04

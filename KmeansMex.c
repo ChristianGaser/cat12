@@ -20,8 +20,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   int nvox, i, n_classes, iters_nu;
   const int *dims;
     
-  if (nrhs!=2)
-    mexErrMsgTxt("2 inputs required.");
+  if (nrhs<2)
+    mexErrMsgTxt("At least 2 inputs required.");
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
@@ -30,7 +30,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   src = (double*)mxGetPr(prhs[0]);
   n_classes = (int)mxGetScalar(prhs[1]);
-  
+  if (nrhs>2)
+    iters_nu = (int)mxGetScalar(prhs[2]);
+  else iters_nu = 0;
+        
   for (i=0; i<3; i++)
     voxelsize[i] = 1.0;
 
@@ -43,13 +46,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   
   thresh = 0;
   thresh_kmeans_int = 128;
-  iters_nu = 0;
   bias_fwhm = 60.0;
 
   nvox = dims[0]*dims[1]*dims[2];
   mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
   for (i=0; i<nvox; i++)
     mask[i] = (src[i]>0) ? 255 : 0;
+  
+  /* initial Kmeans estimation with pve classes */
+  if (iters_nu > 0)
+    mx = Kmeans(src, label, mask, 25, n_classes, voxelsize, dims, thresh, thresh_kmeans_int, iters_nu, 1,  bias_fwhm);
+  
   mx = Kmeans(src, label, mask, 25, n_classes, voxelsize, dims, thresh, thresh_kmeans_int, iters_nu, 0,  bias_fwhm);
 
   /* calculate mean */
