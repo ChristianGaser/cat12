@@ -64,7 +64,7 @@ void subsample_uint8(unsigned char *in, float *out, int dim_in[3], int dim_out[3
 }
 
 /* First order hold resampling - trilinear interpolation */
-void subsample_float(float *in, float *out, int dim_in[3], int dim_out[3], int offset_in, int offset_out)
+void subsample_float_offset(float *in, float *out, int dim_in[3], int dim_out[3], int offset_in, int offset_out)
 {
   int i, x, y, z;
   double k111,k112,k121,k122,k211,k212,k221,k222;
@@ -104,12 +104,12 @@ void subsample_float(float *in, float *out, int dim_in[3], int dim_out[3], int o
   }
 }
 
-void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask, float *flow, int *dims, int loop, int samp)
+void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *dims, int loop, int loop_start, int samp)
 {
   int vol_samp, vol, vol2, vol3, vol_samp2, vol_samp3, i, j;
-  int size_samp[4], area;
+  int size_samp[4], size[4], area;
   double buf[3], ll[3], samp_1; 
-  float *f, *g, *v, *flow1, *scratch, *mask_samp, *mask_samp2, max, *mask_float, *priors_float;
+  float *f, *g, *v, *flow1, *flow2, *scratch, max, *priors_float;
   int it, it0, it1, it_scratch, ndims4, dims_samp[3], area_samp;
    
   int code = 2;    /* multinomial */
@@ -141,18 +141,15 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
   f      = (float *)malloc(sizeof(float)*vol_samp3);
   g      = (float *)malloc(sizeof(float)*vol_samp3);
   v      = (float *)malloc(sizeof(float)*vol_samp3);
-  flow1  = (float *)malloc(sizeof(float)*vol_samp3);
   priors_float = (float *)malloc(sizeof(float)*vol3);
-  mask_float = (float *)malloc(sizeof(float)*vol);
-  mask_samp  = (float *)malloc(sizeof(float)*vol_samp);
-  mask_samp2 = (float *)malloc(sizeof(float)*vol_samp);
+  flow1  = (float *)malloc(sizeof(float)*vol3);
+  flow2  = (float *)malloc(sizeof(float)*vol3);
 
   /* initialize size of subsampled data and add 4th dimension */
   for(i=0; i < 3; i++) size_samp[i] = dims_samp[i];    
   size_samp[3] = ndims4;
-
-  /* initialize flow field */
-  for (i = 0; i < vol_samp3; i++) v[i] = flow[i];
+  for(i=0; i < 3; i++) size[i] = dims[i];    
+  size[3] = ndims4;
   
   /* some entries are equal */
   for (j = 0; j < loop; j++) {
@@ -181,16 +178,20 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
     prm[5].rparam[3] = 0.25;  prm[5].rparam[4] = 1e-4*prm[5].rparam[3];    prm[5].rparam[5] = 1e-6; prm[5].k = 6;
   }
   
-  /* subsample priors and mask to lower resolution */
-  subsample_uint8(mask, mask_samp, dims, dims_samp, 0, 0);    
+  /* subsample priors to lower resolution */
   subsample_uint8(priors, f, dims, dims_samp, 0, 0);    
   subsample_uint8(priors, f, dims, dims_samp, vol, vol_samp);    
   subsample_uint8(priors, f, dims, dims_samp, vol2, vol_samp2);    
 
-  /* subsample probabilities and reorder from CSF/GM/WM to GM/WM/CSF */
-  subsample_uint8(prob, g, dims, dims_samp, vol, 0);    
-  subsample_uint8(prob, g, dims, dims_samp, vol2, vol_samp);    
-  subsample_uint8(prob, g, dims, dims_samp, 0, vol_samp2);    
+  /* subsample probabilities to lower resolution */
+  subsample_uint8(prob, g, dims, dims_samp, 0, 0);    
+  subsample_uint8(prob, g, dims, dims_samp, vol, vol_samp);    
+  subsample_uint8(prob, g, dims, dims_samp, vol2, vol_samp2);    
+
+  /* subsample initial flow field to lower resolution */
+  subsample_float(flow, v, dims, dims_samp, 0, 0);    
+  subsample_float(flow, v, dims, dims_samp, vol, vol_samp);    
+  subsample_float(flow, v, dims, dims_samp, vol2, vol_samp2);    
 
   /* scale subsampled probabilities to a maximum of 0.5 */
   max = -HUGE;
@@ -204,7 +205,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
 
   /* iterative warping using dartel approach */
   it = 0;
-  for (it0 = 0; it0 < loop; it0++) {
+  for (it0 = loop_start; it0 < loop; it0++) {
     it_scratch = iteration_scratchsize((int *)size_samp, prm[it0].code, prm[it0].k);
     scratch = (float *)malloc(sizeof(float)*it_scratch);
 
@@ -219,42 +220,36 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, unsigned char *mask,
     free(scratch);
   }
   
-  /* use exponentional flow */
-  expdef(size_samp, 6, -1, v, flow, flow1, (float *)0, (float *)0); 
+  /* upsample flow field */
+  subsample_float_offset(v, flow2, dims_samp, dims, 0, 0);    
+  subsample_float_offset(v, flow2, dims_samp, dims, vol_samp, vol);    
+  subsample_float_offset(v, flow2, dims_samp, dims, vol_samp2, vol2);    
 
-  /* apply deformation field to mask */
-  for (i = 0; i < vol_samp; i++) {
-    sampn(dims_samp, mask_samp, 1, vol_samp, flow[i]-1.0, flow[i+vol_samp]-1.0, flow[i+vol_samp2]-1.0, buf);
-    mask_samp2[i] = (float)buf[0];
+  /* rescale flow field */
+  for (i = 0; i < vol; i++) {
+    flow2[i] /= (double)dims_samp[0]/(double)dims[0]; 
+    flow2[i + vol] /= (double)dims_samp[1]/(double)dims[1]; 
+    flow2[i + vol2] /= (double)dims_samp[2]/(double)dims[2]; 
   }
+  
+  /* use exponentional flow */
+  expdef(size, 6, -1, flow2, flow, flow1, (float *)0, (float *)0); 
 
-  /* resample subsampled mask image to original resolution */
-  subsample_float(mask_samp2, mask_float, dims_samp, dims, 0, 0);    
-  for (i = 0; i < vol; i++) mask[i] = (unsigned char) ROUND(mask_float[i]);
+  /* copy floating priors for sampn */
+  for (i = 0; i < vol3; i++) priors_float[i] = (float)priors[i];
 
   /* apply deformation field to priors */
-  for (i = 0; i < vol_samp; i++) {
-    sampn(dims_samp, f, 3, vol_samp, flow[i]-1.0, flow[i+vol_samp]-1.0, flow[i+vol_samp2]-1.0, buf);
-    /* rescale priors using the previously estimated maximum */
-    for (j = 0; j < 3; j++) g[i+(j*vol_samp)] = (float)(2.0*max*buf[j]);
+  for (i = 0; i < vol; i++) {
+    sampn(dims, priors_float, 3, vol, flow[i]-1.0, flow[i+vol]-1.0, flow[i+vol2]-1.0, buf);
+    for (j = 0; j < 3; j++) priors[i + (j*vol)] = (unsigned char)MIN(255,ROUND(buf[j]));
   }
 
-  /* resample subsampled prior images to original resolution */
-  subsample_float(g, priors_float, dims_samp, dims, 0, 0);    
-  subsample_float(g, priors_float, dims_samp, dims, vol_samp, vol);    
-  subsample_float(g, priors_float, dims_samp, dims, vol_samp2, vol2);    
-  for (i = 0; i < vol; i++)
-    for (j = 0; j < 3; j++)
-      priors[i + (j*vol)] = (unsigned char) ROUND(priors_float[i+(j*vol)]);
-
   /* rescue flow field */
-  for (i = 0; i < vol_samp3; i++) flow[i] = v[i];
+  for (i = 0; i < vol3; i++) flow[i] = flow2[i];
 
   free(prm);
   free(flow1);
-  free(mask_samp);
-  free(mask_samp2);
-  free(mask_float);
+  free(flow2);
   free(priors_float);
   free(v);
   free(f);

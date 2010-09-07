@@ -14,7 +14,7 @@ n     = size(P,1);
 set(spm_figure('FindWin','Interactive'),'Name','executing','Pointer','watch');
 spm_progress_bar('Init',n,'Brainmask','Volumes Complete');
 for i = 1:n
-	mask = cg_vbm8_brainmask(V(i),1);
+	mask = cg_vbm8_brainmask(V(i));
 	[pth,nam,ext] = spm_fileparts(V(i).fname);
 	V(i).fname = fullfile(pth,['brain_' nam ext]);
 	V(i).dt(1) = 2;

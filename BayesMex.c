@@ -5,15 +5,14 @@
 
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
-  unsigned char *label;
-  unsigned char *priors;
+  unsigned char *label, *priors, *prob;
   double *src, *separations;
   const int *dims;
   int niters, niters_nu;
     
   if (nrhs!=4)
     mexErrMsgTxt("4 inputs required.");
-  else if (nlhs>1)
+  else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
   if (!mxIsUint8(prhs[1]))
@@ -28,8 +27,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   plhs[0] = mxCreateNumericArray(3,dims,mxUINT8_CLASS,mxREAL);
   label  = (unsigned char *)mxGetPr(plhs[0]);
+
+  plhs[1] = mxCreateNumericArray(4,dims,mxUINT8_CLASS,mxREAL);
+  prob  = (unsigned char *)mxGetPr(plhs[1]);
   
-  Bayes(src, label, priors, separations, dims, niters_nu);
+  Bayes(src, label, priors, prob, separations, dims, niters_nu);
 
 }
 
