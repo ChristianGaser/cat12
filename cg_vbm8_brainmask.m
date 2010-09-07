@@ -1,6 +1,6 @@
 function mask = cg_vbm8_brainmask(VF)
 
-open_th = 0.25;
+open_th = 0.01;
 
 if ~isstruct(VF)
   VF = spm_vol(VF);
@@ -10,7 +10,6 @@ end
 priors = get_registered_priors(VF);
 
 % get src
-mex -O BayesMex.c Bayes.c vollib.c WarpPriors.c optimizer3d.c diffeo3d.c
 src = spm_read_vols(VF);
 vx = sqrt(sum((VF.mat(1:3,1:3)).^2))';
 
@@ -22,11 +21,13 @@ mask = single(cls(:,:,:,1));
 mask = mask + single(cls(:,:,:,2));
 
 % keep largest connected component after 2 its of opening
-mask = cg_morph_vol(mask,'open',1,open_th);
+mask = cg_morph_vol(mask,'open',2,open_th);
+
 mask = mask_largest_cluster(mask,0.5);
 
 % dilate and close to fill ventricles
-mask = cg_morph_vol(mask,'dilate',1,0.5);
+mask = cg_morph_vol(mask,'dilate',2,0.5);
+
 mask = cg_morph_vol(mask,'close',10,0.5);
 
 % remove sinus
