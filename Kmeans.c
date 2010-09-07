@@ -157,35 +157,38 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   
 
 #if !defined SPLINESMOOTH
-        /* use larger filter */
-        for(i=0; i<3; i++) fwhm[i] = 2*bias_fwhm;
-        
-        /* estimate mean */
-        count = 0; sum = 0.0;
-        for (i = 0; i < vol; i++) {
-          if(src[i]>0) {
-            sum += src[i];
-            count++;
-          }
-        }
-        sum /= (double)count;
+  if (iters_nu > 0) {
+    /* use larger filter */
+    for(i=0; i<3; i++) fwhm[i] = 2*bias_fwhm;
+       
+    /* estimate mean */
+    count = 0; sum = 0.0;
+    for (i = 0; i < vol; i++) {
+      if(src[i]>0) {
+        sum += src[i];
+        count++;
+      }
+    }
 
-        for (i = 0; i < vol; i++) {
-          if(src[i]>0) {
-            nu[i] = src[i] - sum;
-          } else nu[i] = 0;
-        }
-        
-        /* use subsampling for faster processing */
-        subsample = 2;
-        masked_smoothing = 1;
-        smooth_subsample_double(nu, dims, voxelsize, fwhm, masked_smoothing, subsample);
-        
-        /* and correct bias */
-        for (i = 0; i < vol; i++)
-          if(src[i]>0)
-            src[i] -= nu[i];
+    if (count==0) return(0);
+    sum /= (double)count;
 
+    for (i = 0; i < vol; i++) {
+      if(src[i]>0) {
+        nu[i] = src[i] - sum;
+      } else nu[i] = 0;
+    }
+        
+    /* use subsampling for faster processing */
+    subsample = 2;
+    masked_smoothing = 1;
+    smooth_subsample_double(nu, dims, voxelsize, fwhm, masked_smoothing, subsample);
+        
+    /* and correct bias */
+    for (i = 0; i < vol; i++)
+      if(src[i]>0)
+        src[i] -= nu[i];
+  }
 #endif
       
   /* find maximum and mean inside mask */

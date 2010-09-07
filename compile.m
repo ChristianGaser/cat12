@@ -1,6 +1,7 @@
 function compile
 
 mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
+mex -O BayesMex.c Bayes.c vollib.c WarpPriors.c optimizer3d.c diffeo3d.c 
 
 try % try OpenMP support
     if strcmp(mexext,'mexmaci64')
