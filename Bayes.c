@@ -276,6 +276,8 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
 /*  for (k=0; k<Kb; k++) 
     printf("%g %g\n",mn[k],sqrt(vr[k]));
 */    
+
+  free(flow);
   if (correct_nu) free(nu);
     
   return;
