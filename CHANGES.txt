@@ -377,3 +377,14 @@ M       cg_vbm8_brainmask.m
 Modified thresholds for inital opening in cg_vbm8_brainmask.m
 ------------------------------------------------------------------------
 r363 | gaser | 2010-09-07 23:50:06
+
+M      VBM8-Manual.pdf
+M      cg_slice_overlay.m
+M      cg_vbm8_run.m
+
+(1) Added additionally fine affine registration with brainmask to 
+    cg_vbm8_run.m to make registration more stable.
+(2) Corrected overlay of maps with neg. values in cg_slice_overlay.m.
+(3) Updated VBM8 manual.
+------------------------------------------------------------------------
+r364 | gaser | 2010-09-09 13:01:42

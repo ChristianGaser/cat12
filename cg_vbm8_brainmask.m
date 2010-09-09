@@ -17,6 +17,8 @@ vx = sqrt(sum((VF.mat(1:3,1:3)).^2))';
 correct_nu = 1;
 [label, cls] = BayesMex(src, priors, vx, correct_nu);
 
+% create mask of GM/WM
+
 mask = single(cls(:,:,:,1));
 mask = mask + single(cls(:,:,:,2));
 
@@ -26,7 +28,7 @@ mask = cg_morph_vol(mask,'open',2,open_th);
 mask = mask_largest_cluster(mask,0.5);
 
 % dilate and close to fill ventricles
-mask = cg_morph_vol(mask,'dilate',2,0.5);
+mask = cg_morph_vol(mask,'dilate',3,0.5);
 
 mask = cg_morph_vol(mask,'close',10,0.5);
 
@@ -37,6 +39,18 @@ mask = mask & single((cls(:,:,:,5)<cls(:,:,:,1)) | ...
 
 % and fill holes that may remain
 mask = cg_morph_vol(mask,'close',2,0.5);
+
+n_classes = 3; n_iters = 200; sub = 16; pve = 5;
+iters_icm = 20; bias_fwhm = 60; mrf_weight = 0.0;
+init_kmeans = 1
+
+label(mask==0) = 0;
+src(mask==0) = 0;
+prob = AmapMex(src, label, n_classes, n_iters, sub, pve, init_kmeans, mrf_weight, vx, iters_icm, bias_fwhm);
+
+th = 2.5;
+mask = (label<th*255/3 & label>255/3);
+
 
 return
 
@@ -75,6 +89,9 @@ for i=1:6
     tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
 end
 tpm = spm_load_priors8(strvcat(cat(1,tissue(:).tpm)));
+
+M = eye(4);
+[Affine, scale]  = spm_affreg(VG, VF1, aflags, M);
 
 fprintf('Fine Affine Registration..\n');
 Affine  = spm_maff8(VF,samp,fudge,tpm,Affine,affreg);
