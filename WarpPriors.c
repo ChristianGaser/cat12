@@ -141,10 +141,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *di
   f      = (float *)malloc(sizeof(float)*vol_samp3);
   g      = (float *)malloc(sizeof(float)*vol_samp3);
   v      = (float *)malloc(sizeof(float)*vol_samp3);
-  priors_float = (float *)malloc(sizeof(float)*vol3);
-  flow1  = (float *)malloc(sizeof(float)*vol3);
-  flow2  = (float *)malloc(sizeof(float)*vol3);
-
+  
   /* initialize size of subsampled data and add 4th dimension */
   for(i=0; i < 3; i++) size_samp[i] = dims_samp[i];    
   size_samp[3] = ndims4;
@@ -213,18 +210,23 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *di
       it++;
       iteration(size_samp, prm[it0].k, v, f, g, (float *)0, prm[it0].rform, prm[it0].rparam, prm[it0].lmreg, 
         prm[it0].cycles, prm[it0].its, prm[it0].code, flow, ll, scratch);              
-      printf("%02d:\t%.2f\t%6.2f\t%6.2f\t%6.2f\n", it, ll[0], ll[1], ll[0]+ll[1], ll[2]);
+      printf("%02d:\t%.2f\n", it, ll[0]);
       fflush(stdout);
       for (i = 0; i < vol_samp3; i++) v[i] = flow[i];
     }
     free(scratch);
   }
+  free(f);
+  free(g);
   
   /* upsample flow field */
+  flow2  = (float *)malloc(sizeof(float)*vol3);
   subsample_float_offset(v, flow2, dims_samp, dims, 0, 0);    
   subsample_float_offset(v, flow2, dims_samp, dims, vol_samp, vol);    
   subsample_float_offset(v, flow2, dims_samp, dims, vol_samp2, vol2);    
 
+  free(v);
+  
   /* rescale flow field */
   for (i = 0; i < vol; i++) {
     flow2[i] /= (double)dims_samp[0]/(double)dims[0]; 
@@ -233,9 +235,12 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *di
   }
   
   /* use exponentional flow */
+  flow1  = (float *)malloc(sizeof(float)*vol3);
   expdef(size, 6, -1, flow2, flow, flow1, (float *)0, (float *)0); 
-
+  free(flow1);
+  
   /* copy floating priors for sampn */
+  priors_float = (float *)malloc(sizeof(float)*vol3);
   for (i = 0; i < vol3; i++) priors_float[i] = (float)priors[i];
 
   /* apply deformation field to priors */
@@ -248,11 +253,7 @@ void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *di
   for (i = 0; i < vol3; i++) flow[i] = flow2[i];
 
   free(prm);
-  free(flow1);
   free(flow2);
   free(priors_float);
-  free(v);
-  free(f);
-  free(g);
 
 }
