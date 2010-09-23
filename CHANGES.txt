@@ -286,7 +286,7 @@ M      cg_vbm8_run.m
 
 (1) Replaced Optimized Blockwise Non Local Means (ORNLM) filter by Adaptive 
     Non-Local Means (SANLM) filter to consider MR images with spatially 
-    varying noise levels (thanks to Jose V. Manj—n for providing the source
+    varying noise levels (thanks to Jose V. Manjon for providing the source
     code). This filter does not need pre-estimation of noise and is much
     less memory demanding.
 (2) Removed wavelet and ornlm code, that is not necessary anymore.    
@@ -388,3 +388,17 @@ M      cg_vbm8_run.m
 (3) Updated VBM8 manual.
 ------------------------------------------------------------------------
 r364 | gaser | 2010-09-09 13:01:42
+
+!      AmapMex.mexmaci64
+M      CHANGES.txt
+M      cg_spmT2x.m
+
+Added option for overlaying negative effects to interactive mode of cg_spmT2x.m.
+------------------------------------------------------------------------
+r365 | gaser | 2010-09-23 16:53:14
+
+M      cg_spmT2x.m
+
+Added option for overlaying negative effects to interactive mode of cg_spmT2x.m.
+------------------------------------------------------------------------
+r365 | gaser | 2010-09-23 16:53:38

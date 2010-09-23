@@ -167,11 +167,7 @@ if nargin < 1
         extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
     end
 
-    if sel > 2
-        neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
-    else
-        neg_results = 0;
-    end
+    neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
 
     if pk ~= 0
         noniso = spm_input('Correct for non-isotropic smoothness?','+1','b','no|yes',[0 1],2);
