@@ -402,3 +402,23 @@ M      cg_spmT2x.m
 Added option for overlaying negative effects to interactive mode of cg_spmT2x.m.
 ------------------------------------------------------------------------
 r365 | gaser | 2010-09-23 16:53:38
+
+M      sanlmMex.mexw32
+A      sanlmMex_noopenmp.mexmaci
+M      sanlmMex.mexw64
+A      sanlmMex_noopenmp.mexglx
+M      sanlmMex.mexglx
+M      cg_sanlm.m
+A      sanlmMex.m
+M      sanlm_float.c
+M      sanlmMex.mexmaci64
+A      sanlmMex_noopenmp.mexmaci64
+A      sanlmMex_noopenmp.mexa64
+M      sanlmMex.mexmaci
+M      sanlmMex.mexa64
+M      cg_vbm8_write.m
+
+Compiled sanln-code with static gomp library if possible and additionally
+created a version without OpenMP support, that is used in case of trouble.
+------------------------------------------------------------------------
+r366 | gaser | 2010-09-24 09:52:30

@@ -7,15 +7,18 @@
 #define Kb 6
 #define MAXK 30
 
+smooth_subsample_double(double *vol, int dims[3], double separations[3], double s[3], int use_mask, int samp);
+void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *dims, int loop, int loop_start, int samp);
+
 void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned char *prob, double *separations, int *dims, int correct_nu)
 {
-  int i, j, k, l, k1, subit, n_loops, subsample_warp;
+  int i, j, k, l, k1, subit, n_loops, subsample_warp, kmax, k2;
   int z_area, y_dims, count, subsample, masked_smoothing;
   double ll = -HUGE, llr=0.0, *nu, fwhm[3];
   double mn[MAXK], vr[MAXK], mg[MAXK], mn2[MAXK], vr2[MAXK], mg2[MAXK];
   double mom0[MAXK], mom1[MAXK], mom2[MAXK], mgm[MAXK];
   double q[MAXK], bt[MAXK], b[MAXK], qt[MAXK];
-  double tol1 = 1e-3, bias_fwhm, sum;
+  double tol1 = 1e-3, bias_fwhm, sum, sq, qmax, s, psum, p1, oll, val_nu;
   float *flow;
   
   int area = dims[0]*dims[1];
@@ -120,7 +123,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
   /* start with a few EM iterations and after nu-corection use more iterations */
   for (j=0; j < 3; j++) {
     for (subit=0; subit<iters_EM[j]; subit++) {
-      double oll = ll;
+      oll = ll;
       ll = llr;
       for (k=0; k<K; k++) {
         mom0[k] = 0.0;
@@ -137,8 +140,8 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
       
       for (i=0; i<vol; i++) {
         if((src[i]>mn_thresh) && (src[i]<mx_thresh)) {
-          double s = TINY;
-          int k2 = 0;
+          s = TINY;
+          k2 = 0;
           for (k1=0; k1<Kb; k1++) {
             bt[k1] = (double) priors[i+(vol*k1[order_priors])]; 
             for (l=0; l<ngauss[k1]; l++) {
@@ -151,9 +154,8 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
             bt[k1] /= s;
             mgm[k1] += bt[k1];
           }
-          double sq = TINY;
-          double qmax = -HUGE;
-          int kmax;
+          sq = TINY;
+          qmax = -HUGE;
           
           for (k=0; k<K; k++) {
             q[k] = mg[k]*bt[lkp[k]]*exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
@@ -168,7 +170,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
           sq = TINY;
           for (k1=0; k1<Kb; k1++) qt[k1] = 0.0;
           for (k=0; k<K; k++) { 
-            double p1 = mg[k]*bt[lkp[k]]*exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
+            p1 = mg[k]*bt[lkp[k]]*exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
             qt[lkp[k]] += p1;
             sq += qt[lkp[k]];
           }
@@ -178,7 +180,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
           label[i] = kmax;
           ll += log10(sq);
           for (k=0; k<K; k++) {
-            double p1 = q[k]/sq; mom0[k] += p1;
+            p1 = q[k]/sq; mom0[k] += p1;
             p1 *= src[i];        mom1[k] += p1;
             p1 *= src[i];        mom2[k] += p1;
           }      
@@ -193,7 +195,11 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         vr[k] = (mom2[k]-SQR(mom1[k])/mom0[k]+1e6*TINY)/(mom0[k]+TINY);
         vr[k] = MAX(vr[k],TINY);
         /* rescue previous values in case of nan */
+#if defined(_WIN32)
+        if ((_isnan(mg[k])) || (_isnan(mn[k])) || (_isnan(vr[k]))) {
+#else
         if ((isnan(mg[k])) || (isnan(mn[k])) || (isnan(vr[k]))) {
+#endif
           mg[k] = mg2[k];
           mn[k] = mn2[k];
           vr[k] = vr2[k];
@@ -212,8 +218,12 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         nu[i] = 0.0;
         /* only use values above threshold for nu-estimate */
         if ((src[i] > mn_thresh) && (label[i] < 4)) {
-          double val_nu = src[i]-mn[label[i]-1];
-          if ((finite(val_nu)))
+          val_nu = src[i]-mn[label[i]-1];
+#ifdef isfinite
+          if (isfinite(val_nu))
+#else
+          if (_finite(val_nu))
+#endif
             nu[i] = val_nu;
         }
       }
@@ -241,22 +251,22 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         bt[k1] = (double) priors[i+(vol*k1[order_priors])]; 
         qt[k1] = 0.0;
       }
-      double s = TINY;
+      s = TINY;
       for (k=0; k<K; k++) { 
         b[k] = bt[lkp[k]]*mg[k];
         s += b[k];
       }
-      double sq = TINY;
+      sq = TINY;
       for (k=0; k<K; k++) { 
-        double p1 = exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
+        p1 = exp(SQR(src[i]-mn[k])/(-2*vr[k]))/(SQRT2PI*sqrt(vr[k]));
         qt[lkp[k]] += p1*b[k]/s;
         sq += qt[lkp[k]];
       }
-      double qmax = -HUGE;
-      int kmax;
-      double psum = 0.0;
+      qmax = -HUGE;
+      kmax;
+      psum = 0.0;
       for (k1=0; k1<Kb; k1++) {
-        double p1 = qt[k1]/sq;
+        p1 = qt[k1]/sq;
         /* save probabilities */
         prob[i+(vol*k1[order_priors])] = (unsigned char)ROUND(255.0*p1);
         psum += p1;

@@ -537,12 +537,12 @@ void anlm(float* ima, int v, int f, int rician, const int* dims)
 float *means, *variances, *Estimate, *average, *bias;
 unsigned char *Label;
 int ndim = 3;
-double SNR,h,mean,var,estimate,r,d;
-int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin;
+double SNR,h,mean,var,estimate,d;
+int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin,r;
 
 myargument *ThreadArgs;  
 
-Ndims = pow((2*f+1),ndim);
+Ndims = (int)pow((2*f+1),ndim);
 slice = dims[0]*dims[1];
 vol = dims[0]*dims[1]*dims[2];
 
@@ -641,6 +641,7 @@ Nthreads = 1;
 #ifdef _OPENMP
     Nthreads = omp_get_num_procs();
     omp_set_num_threads(Nthreads);
+    printf("Using %d processors\n",Nthreads);fflush(stdout);
 #endif
 
 /* Reserve room for handles of threads in ThreadList */
@@ -673,14 +674,14 @@ for (i = 0; i<Nthreads; i++)
     
 if (rician)
 {
-  r = 5.0;  
+  r = 5;  
   Regularize(bias,variances,r,dims[0],dims[1],dims[2]);
   for (i = 0;i<vol;i++)
   {
      if (variances[i]>0.0) 
      {
        SNR = (double)means[i]/sqrt((double)variances[i]);      
-       bias[i] = 2*(variances[i]/Epsi(SNR));      
+       bias[i] = 2*(variances[i]/(float)Epsi(SNR));      
 #if defined(_WIN32)
        if (_isnan(bias[i])) bias[i] = 0.0;     
 #else

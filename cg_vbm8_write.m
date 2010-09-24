@@ -245,9 +245,13 @@ end
 
 clear chan
 
-% optionally apply optimized blockwise non local means denoising filter
+% optionally apply non local means denoising filter
 if warp.sanlm > 0
-    sanlmMex(src,3,1);
+    try
+        sanlmMex(src,3,1);
+    catch
+        sanlmMex_noopenmp(src,3,1);
+    end
 end
 
 if do_cls && do_defs,
