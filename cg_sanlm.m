@@ -22,12 +22,16 @@ spm_progress_bar('Init',n,'Filtering','Volumes Complete');
 for i = 1:n
 	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
 	
-	in = single(spm_read_vols(V(i)));
-  sanlmMex(in,3,1);
+	src = single(spm_read_vols(V(i)));
+  try
+      sanlmMex(src,3,1);
+  catch
+      sanlmMex_noopenmp(src,3,1);
+  end
   
   V(i).fname = fullfile(pth,['sanlm_' nm xt vr]);
   V(i).descrip = sprintf('SANLM filtered');
-  spm_write_vol(V(i), in);
+  spm_write_vol(V(i), src);
 	spm_progress_bar('Set',i);
 end
 spm_progress_bar('Clear');
