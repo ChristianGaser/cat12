@@ -375,7 +375,7 @@ data.help = {[...
 
 sanlm = cfg_exbranch;
 sanlm.tag = 'sanlm';
-sanlm.name = 'Optimized blockwise non local means denoising filter';
+sanlm.name = 'Spatially adaptive non local means denoising filter';
 sanlm.val = {data};
 sanlm.prog   = @cg_sanlm;
 sanlm.vfiles  = @vfiles_sanlm;
