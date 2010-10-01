@@ -425,7 +425,14 @@ r366 | gaser | 2010-09-24 09:52:30
 
 M      Makefile.vbm
 
-Added sanlm-filter without mult-processor support to distribution.
+Added sanlm-filter without multi-processor support to distribution.
 
 ------------------------------------------------------------------------
 r367 | gaser | 2010-10-01 15:28:43
+
+D      sanlmMex.m
+
+Corrected svn issues with  sanlmMex.m.
+
+------------------------------------------------------------------------
+r368 | gaser | 2010-10-01 16:43:49
