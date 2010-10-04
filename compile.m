@@ -5,24 +5,28 @@ mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
 
 try % try OpenMP support
     if strcmp(mexext,'mexmaci64')
-        mex CC='gcc-4.2' CFLAGS='-m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+        mex CC='gcc-4.2' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
         movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
         mex CC='gcc-4.2' CFLAGS='-fopenmp -m64 -fPIC -O3' -O /usr/local/lib/x86_64/libgomp.a sanlmMex.c sanlm_float.c
     elseif strcmp(mexext,'mexmaci')
-        mex CC='gcc-4.2' CFLAGS='-m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+        mex CC='gcc-4.2' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
         movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
         mex CC='gcc-4.2' CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/local/lib/x86/libgomp.a sanlmMex.c sanlm_float.c
     elseif strcmp(mexext,'mexa64')
-        mex CFLAGS='-m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+        mex CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
         movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
         mex CFLAGS='-fopenmp -m64 -fPIC -O3' -O -lgomp sanlmMex.c sanlm_float.c
     elseif strcmp(mexext,'mexglx')
-        mex CFLAGS='-m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+        mex CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
         movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
         mex CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/lib/gcc/i486-linux-gnu/4.4/libgomp.a sanlmMex.c sanlm_float.c
     elseif strcmp(mexext,'mexw64')
+        mex CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+        movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
         mex -O sanlmMex.c sanlm_float.c
     elseif strcmp(mexext,'mexw32')
+        mex CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+        movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
         mex -O sanlmMex.c sanlm_float.c
     end
     disp('Compiling sanlmMex with OpenMP')
