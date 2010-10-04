@@ -436,3 +436,20 @@ Corrected svn issues with  sanlmMex.m.
 
 ------------------------------------------------------------------------
 r368 | gaser | 2010-10-01 16:43:49
+
+M      sanlmMex.mexw32
+M      sanlmMex_noopenmp.mexmaci
+M      AmapMex.mexw32
+M      sanlmMex.mexw64
+M      sanlmMex_noopenmp.mexglx
+M      sanlmMex.mexglx
+M      sanlmMex.mexmaci64
+M      AmapMex.mexw64
+M      sanlmMex_noopenmp.mexmaci64
+M      sanlmMex_noopenmp.mexa64
+M      sanlmMex.mexmaci
+M      sanlmMex.mexa64
+
+Recompiled sanlm-code without multi-processor support.
+------------------------------------------------------------------------
+r369 | gaser | 2010-10-04 08:41:47
