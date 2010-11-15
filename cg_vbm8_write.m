@@ -256,25 +256,29 @@ end
 
 if do_cls && do_defs,
 
+    vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
+    scale_morph = 1/mean(vx_vol);
+
     % use mask of GM and WM
     mask = single(cls{1});
     mask = mask + single(cls{2});
 
-    % keep largest connected component after 2 its of opening
-    mask = cg_morph_vol(mask,'open',2,warp.open_th);
+    % keep largest connected component after at least 1 iteration of opening
+    n_initial_openings = max(1,round(scale_morph*warp.cleanup));
+    mask = cg_morph_vol(mask,'open',n_initial_openings,warp.open_th);
     mask = mask_largest_cluster(mask,0.5);
 
     % dilate and close to fill ventricles
     mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
-    mask = cg_morph_vol(mask,'close',10,0.5);
+    mask = cg_morph_vol(mask,'close',round(scale_morph*10),0.5);
         
     % remove sinus
     mask = mask & ((single(cls{5})<single(cls{1})) | ...
                    (single(cls{5})<single(cls{2})) | ...
                    (single(cls{5})<single(cls{3})));                
 
-    % and fill holes that may remain
-    mask = cg_morph_vol(mask,'close',2,0.5);
+    % fill holes that may remain
+    mask = cg_morph_vol(mask,'close',round(scale_morph*2),0.5);
         
     % calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
@@ -294,7 +298,7 @@ if do_cls && do_defs,
     label2((label2 > 3) | (mask == 0)) = 0;
     
     % fill remaining holes in label with 1
-    mask = cg_morph_vol(label2,'close',2,0);    
+    mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
     label2((label2 == 0) & (mask > 0)) = 1;
     
     % use index to speed up and save memory
@@ -323,8 +327,6 @@ if do_cls && do_defs,
     bias_fwhm   = cg_vbm8_get_defaults('extopts.bias_fwhm');
     init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
     finalmask   = cg_vbm8_get_defaults('extopts.finalmask');
-
-    vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 
     if init_kmeans
       fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
@@ -362,8 +364,9 @@ if do_cls && do_defs,
         mask = single(cls{1});
         mask = mask + single(cls{2});
 
-        % keep largest connected component after 2 its of opening
-        mask = cg_morph_vol(mask,'open',2,0.5);
+        % keep largest connected component after at least 1 iteration of opening
+        n_initial_openings = max(1,round(scale_morph*2));
+        mask = cg_morph_vol(mask,'open',n_initial_openings,0.5);
         mask = mask_largest_cluster(mask,0.5);
 
         % dilate and close to fill ventricles
@@ -378,6 +381,7 @@ if do_cls && do_defs,
         label2 = zeros(d,'uint8');
         label2(indx,indy,indz) = label;
         label2(ind_mask) = 0;
+        
         label = label2(indx,indy,indz);
         clear label2
     end

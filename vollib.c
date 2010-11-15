@@ -13,6 +13,9 @@
 #include <float.h>
 
 #define RINT(A) floor((A)+0.5)
+#ifndef isfinite
+#define isfinite(x) ((x) * (x) >= 0.) /* check for NaNs */
+#endif
 
 static void 
 convxy(double out[], int xdim, int ydim, double filtx[], double filty[], int fxdim, int fydim, int xoff, int yoff, double buff[])
@@ -23,11 +26,7 @@ convxy(double out[], int xdim, int ydim, double filtx[], double filty[], int fxd
     for(x=0; x<xdim; x++)
     {
       buff[x] = out[x+y*xdim];
-#ifdef isfinite
       if (!isfinite(buff[x]))
-#else
-      if (!_finite(buff[x]))
-#endif
         buff[x] = 0.0;
     }
     for(x=0; x<xdim; x++)
@@ -70,11 +69,7 @@ convxy_float(float out[], int xdim, int ydim, float filtx[], float filty[], int 
     for(x=0; x<xdim; x++)
     {
       buff[x] = out[x+y*xdim];
-#ifdef isfinite
       if (!isfinite(buff[x]))
-#else
-      if (!_finite(buff[x]))
-#endif
         buff[x] = 0.0;
     }
     for(x=0; x<xdim; x++)

@@ -11,6 +11,10 @@ extern double   exp(double x);
 #define LOG(x) (((x)>0) ? log(x+0.001): -6.9078)
 #define WRAP(i,m) (((i)>=0) ? (i)%(m) : ((m)+(i)%(m))%m)
 
+#ifndef isfinite
+#define isfinite(x) ((x) * (x) >= 0.) /* check for NaNs */
+#endif
+
 /*
  * Lie Bracket
  * C = [A,B]
@@ -700,7 +704,7 @@ void push(int dm[], int m, int n, float def[], float pf[], float po[], float so[
     {
         double x, y, z;
 
-        if (finite(pf[i]))
+        if (isfinite(pf[i]))
         {
             x    = px[i]-1.0; /* Subtract 1 because of MATLAB indexing */
             y    = py[i]-1.0;
@@ -1274,7 +1278,7 @@ double smalldef_objfun_mn(int dm[], float f[], float g[], float v[], float jd[],
             T[k]   = g[j + k*m];
             sT    -= T[k];
         }
-        if (!finite((double)sT))
+        if (!isfinite((double)sT))
         {
             A[j    ] = 0.0;
             A[j+m  ] = 0.0;
@@ -1634,7 +1638,7 @@ double initialise_objfun_mn(int dm[], float f[], float g[], float t0[], float J0
             T[k]   = g[j + k*m];
             sT    -= T[k];
         }
-        if (!finite((double)sT))
+        if (!isfinite((double)sT))
         {
             A[j    ] = 0.0;
             A[j+m  ] = 0.0;

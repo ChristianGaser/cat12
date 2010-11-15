@@ -7,6 +7,10 @@
 #define Kb 6
 #define MAXK 30
 
+#ifndef isfinite
+#define isfinite(x) ((x) * (x) >= 0.) /* check for NaNs */
+#endif
+
 smooth_subsample_double(double *vol, int dims[3], double separations[3], double s[3], int use_mask, int samp);
 void WarpPriors(unsigned char *prob, unsigned char *priors, float *flow, int *dims, int loop, int loop_start, int samp);
 
@@ -219,11 +223,7 @@ void Bayes(double *src, unsigned char *label, unsigned char *priors, unsigned ch
         /* only use values above threshold for nu-estimate */
         if ((src[i] > mn_thresh) && (label[i] < 4)) {
           val_nu = src[i]-mn[label[i]-1];
-#ifdef isfinite
           if (isfinite(val_nu))
-#else
-          if (_finite(val_nu))
-#endif
             nu[i] = val_nu;
         }
       }
