@@ -453,3 +453,35 @@ M      sanlmMex.mexa64
 Recompiled sanlm-code without multi-processor support.
 ------------------------------------------------------------------------
 r369 | gaser | 2010-10-04 08:41:47
+
+M      sanlmMex.mexw32
+M      sanlmMex_noopenmp.mexmaci
+M      AmapMex.mexw32
+M      sanlmMex.mexw64
+M      AmapMex.mexmaci64
+M      AmapMex.mexmaci
+M      sanlmMex.mexglx
+M      cg_spm8_batch.m
+M      vollib.c
+M      sanlm_float.c
+M      sanlmMex.mexmaci64
+M      AmapMex.mexw64
+M      sanlmMex_noopenmp.mexmaci64
+M      sanlmMex.mexmaci
+M      sanlmMex.mexa64
+M      cg_vbm8_write.m
+
+(1) Corrected typo in cg_spm8_batch.m (thanks to Douglas Greve for finding
+    this typo).
+(2) Number of morphological closings in cg_vbm8_write.m were to small for 0.5mm
+    resoluted data leading to partially unfilled large ventricles. Now the
+    number is selected according to the spatial resolution of the images.
+(3) Fine-tuning of skullstripping in cg_vbm8_write.m, which is now more
+    depended on cleanup flag.
+(4) Added own definition of isfinite to vollib.c to prevent compilation errors
+    on some windows systems.
+(5) Removed call of omp_set_num_threads in sanlm_float.c to prevent segmentation
+    violations on some systems.
+
+------------------------------------------------------------------------
+r370 | gaser | 2010-11-15 15:31:49
