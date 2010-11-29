@@ -485,3 +485,21 @@ M      cg_vbm8_write.m
 
 ------------------------------------------------------------------------
 r370 | gaser | 2010-11-15 15:31:49
+
+M       cg_vbm8_defaults.m
+M       tbx_cfg_vbm8.m
+M       cg_sanlm.m
+M       cg_vbm8_write.m
+
+(1) In the results print-out the size of bias FWHM was not updated and
+    Matlab version was not always correctly printed (thanks to Darren Gitelman
+    for pointing to this issue).
+(2) Multi-threading for NLM-filter caused many difficulties with some Matlab
+    version. Thus, only single-threading is used as default. For multi-threading
+    the flag "warp.sanlm" in cg_vbm8_defaults should be set to "2".
+(3) Before NLM-filtering all NaN-values are replaced with "0". Furthermore, the
+    output data-type for cg_sanlm is now at least floating precision to prevent
+    rounding issues after filtering (thanks to Robert Dahnke for pointing to
+    this issue). 
+------------------------------------------------------------------------
+r371 | gaser | 2010-11-29 01:40:06

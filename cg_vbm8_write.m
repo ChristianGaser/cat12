@@ -245,12 +245,15 @@ end
 
 clear chan
 
+% prevent NaN
+ src(isnan(src)) = 0;
+
 % optionally apply non local means denoising filter
-if warp.sanlm > 0
-    try
-        sanlmMex(src,3,1);
-    catch
+switch warp.sanlm
+    case 1 % use single-threaded version
         sanlmMex_noopenmp(src,3,1);
+    case 2 % use multi-threaded version
+        sanlmMex(src,3,1);
     end
 end
 
@@ -888,25 +891,25 @@ if do_cls && warp.print
   A = ver;
   for i=1:length(A)
     if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
-      r_vbm = str2double(A(i).Version);
+      r_vbm = A(i).Version;
     end
     if strcmp(A(i).Name,'Statistical Parametric Mapping')
-      r_spm = str2double(A(i).Version);
+      r_spm = A(i).Version;
     end
     if strcmp(A(i).Name,'MATLAB')
-      r_matlab = str2double(A(i).Version);
+      r_matlab = A(i).Version;
     end
   end
   
 	tpm_name = spm_str_manip(cg_vbm8_get_defaults('opts.tpm'),'k40d');
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
-	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%3.1f / %d / %d',r_matlab,r_spm,r_vbm))];
+	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
-	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',cg_vbm8_get_defaults('opts.biasfwhm')))];
+	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.kmeans')))];
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm8_get_defaults('extopts.bias_fwhm')))];
 	if (warp.sanlm>0) 
