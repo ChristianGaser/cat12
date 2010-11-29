@@ -233,7 +233,7 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
-clear q q1 Coef b cr tpm
+clear q q1 Coef b cr
 
 % load bias corrected image
 src = zeros(res.image(1).dim(1:3),'single');
@@ -901,7 +901,7 @@ if do_cls && warp.print
     end
   end
   
-	tpm_name = spm_str_manip(cg_vbm8_get_defaults('opts.tpm'),'k40d');
+	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
