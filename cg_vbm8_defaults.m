@@ -83,7 +83,7 @@ vbm8.extopts.cleanup   = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm8.extopts.finalmask = 1;    % Final masking: 0 - no; 1 - yes
 vbm8.extopts.kmeans    = 1;    % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm8.extopts.mrf       = 0.15; % MRF weighting
-vbm8.extopts.sanlm     = 1;    % use SANLM filter: 0 - no SANLM
+vbm8.extopts.sanlm     = 1;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
 vbm8.extopts.bias_fwhm = 60;   % FWHM of Kmeans internal bias correction
 
 % experimental (not yet working)
