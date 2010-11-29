@@ -503,3 +503,11 @@ M       cg_vbm8_write.m
     this issue). 
 ------------------------------------------------------------------------
 r371 | gaser | 2010-11-29 01:40:06
+
+M       cg_vbm8_write.m
+
+In the results print-out the TPM was not updated (thanks to Alan Huang for
+pointing to this issue).
+
+------------------------------------------------------------------------
+r372 | gaser | 2010-11-30 00:13:53
