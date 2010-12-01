@@ -250,11 +250,12 @@ clear chan
 
 % optionally apply non local means denoising filter
 switch warp.sanlm
+    case 0
+        disp('No NLM-Filter')
     case 1 % use single-threaded version
         sanlmMex_noopenmp(src,3,1);
-    case 2 % use multi-threaded version
+    otherwise % use multi-threaded version
         sanlmMex(src,3,1);
-    end
 end
 
 if do_cls && do_defs,
@@ -906,7 +907,7 @@ if do_cls && warp.print
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM8/VBM8:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
-	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name{1}))];
+	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
