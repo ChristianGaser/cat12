@@ -517,3 +517,26 @@ M      cg_vbm8_write.m
 Corrected some typos in cg_vbm8_write.m
 ------------------------------------------------------------------------
 r373 | gaser | 2010-12-01 16:17:13
+
+M      sanlmMex.mexw32
+M      sanlmMex_noopenmp.mexmaci
+M      AmapMex.mexa64
+M      AmapMex.mexw32
+M      sanlmMex.mexw64
+M      AmapMex.mexmaci64
+M      sanlmMex_noopenmp.mexglx
+M      AmapMex.mexmaci
+M      sanlmMex.mexglx
+M      vollib.c
+M      sanlmMex.mexmaci64
+M      sanlm_float.c
+M      AmapMex.mexw64
+M      sanlmMex_noopenmp.mexmaci64
+M      sanlmMex_noopenmp.mexa64
+M      sanlmMex.mexmaci
+M      sanlmMex.mexa64
+M      AmapMex.mexglx
+
+Removed a memory leak in sanlm_float.c and vollib.c.
+------------------------------------------------------------------------
+r374 | gaser | 2010-12-06 11:50:27
