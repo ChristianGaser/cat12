@@ -528,6 +528,8 @@ for (i = 0;i<cols;i+= 2)
       Value_block(Estimate,Label,i,j,k,f,average,totalweight,cols,rows,slices);
     }
 }
+
+free(average);
 return 0;
 }
 
@@ -708,6 +710,14 @@ for (i = 0;i<vol;i++)
       else ima[i] = (float)estimate;  
     }
 }
+
+free(ThreadArgs);
+free(average);
+free(means);
+free(variances);
+free(Estimate);
+free(Label);
+if (rician) free(bias);
 
 return;
 
