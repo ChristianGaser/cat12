@@ -573,6 +573,8 @@ morph_close_double(double *vol, int dims[3], int niter, double th)
 
   for (i=0;i<dims[2]*dims[1]*dims[0];i++)
     vol[i] = (double)buffer[i];
+    
+  free(buffer);
 }
 
 void
@@ -596,6 +598,8 @@ morph_open_double(double *vol, int dims[3], int niter, double th)
 
   for (i=0;i<dims[2]*dims[1]*dims[0];i++)
     vol[i] = (double)buffer[i];
+    
+  free(buffer);
 }
 
 /* First order hold resampling - trilinear interpolation */
