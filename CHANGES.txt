@@ -540,3 +540,15 @@ M      AmapMex.mexglx
 Removed a memory leak in sanlm_float.c and vollib.c.
 ------------------------------------------------------------------------
 r374 | gaser | 2010-12-06 11:50:27
+
+M       spm_vbm8.m
+M       cg_vbm8_tools.m
+A       cg_vbm8_longitudinal_multi_run.m
+A       cg_vbm8_longitudinal_multi.m
+M       VBM8-Manual.pdf
+M       cg_vbm8_longitudinal.m
+
+(1) Added batch for processing longitudinal data for multiple subjects.
+(2) Updated VBM8 manual
+------------------------------------------------------------------------
+r375 | gaser | 2010-12-15 08:15:41

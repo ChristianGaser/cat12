@@ -493,12 +493,13 @@ defs.help    = {'This is a utility for applying deformation fields to images.'};
 
 %------------------------------------------------------------------------
 bias  = cg_vbm8_bias;
+long  = cg_vbm8_longitudinal_multi;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,defs};
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,long,defs};
 
 return
 
