@@ -10,7 +10,7 @@ TARGET2=/Volumes/UltraMax/spm8/toolbox/vbm8
 
 STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/vbm8
 
-MATLAB_FILES=Contents.m cg_vbm8_defaults.m cg_vbm8_run.m cg_vbm8_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm8_tools.m cg_vbm8_debug.m cg_morph_vol.m cg_vbm8_batch.* tbx_cfg_vbm8.m spm_vbm8.m vbm8.man cg_vbm8_bias* cg_spm8_batch.* cg_vbm8_defs.m cg_vbm8_longitudinal.m cg_vbm8_update.m cg_sanlm.m cg_vbm8_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m spm_max_nS.m slice_overlay.m cg_cleanup_gwc.m
+MATLAB_FILES=Contents.m cg_vbm8_defaults.m cg_vbm8_run.m cg_vbm8_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm8_tools.m cg_vbm8_debug.m cg_morph_vol.m cg_vbm8_batch.* tbx_cfg_vbm8.m spm_vbm8.m vbm8.man cg_vbm8_bias* cg_spm8_batch.* cg_vbm8_defs.m cg_vbm8_longitudinal.m cg_vbm8_update.m cg_sanlm.m cg_vbm8_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m spm_max_nS.m slice_overlay.m cg_cleanup_gwc.m cg_vbm8_longitudinal_multi_run.m cg_vbm8_longitudinal_multi.m
 #C_FILES=Amap.[ch] AmapMex.* sanlmMex.* sanlm_float.c Bayes.c BayesMex.* WarpPriors.c optimizer3d.c diffeo3d.c MrfPrior.c Pve.c Kmeans.c vollib.c
 C_FILES=Amap.[ch] AmapMex.* sanlmMex.* sanlmMex_noopenmp.* sanlm_float.c MrfPrior.c Pve.c Kmeans.c vollib.c
 #MISC_FILES=Template_?_IXI550_MNI152.nii submask.nii
