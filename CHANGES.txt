@@ -552,3 +552,12 @@ M       cg_vbm8_longitudinal.m
 (2) Updated VBM8 manual
 ------------------------------------------------------------------------
 r375 | gaser | 2010-12-15 08:15:41
+
+M      cg_sanlm.m
+M      cg_spmF2x.m
+M      cg_spmT2x.m
+
+Replaced fileparts by spm_fileparts in some files, because the 4th output will
+be removed in the future.
+------------------------------------------------------------------------
+r376 | gaser | 2010-12-15 11:35:34

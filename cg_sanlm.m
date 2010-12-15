@@ -20,7 +20,7 @@ n = size(P,1);
 
 spm_progress_bar('Init',n,'Filtering','Volumes Complete');
 for i = 1:n
-	[pth,nm,xt,vr] = fileparts(deblank(V(i).fname));
+	[pth,nm,xt,vr] = spm_fileparts(deblank(V(i).fname));
 	
 	src = single(spm_read_vols(V(i)));
 	% prevent NaN
