@@ -190,7 +190,7 @@ end
 for i=1:size(P,1)
     spmT = deblank(P(i,:));
     Vspm = spm_vol(spmT);   
-    [pth,nm,xt,vr] = fileparts(spmT);
+    [pth,nm,xt,vr] = spm_fileparts(spmT);
 
     SPM_name = fullfile(pth, ['SPM.mat' vr]);
     
