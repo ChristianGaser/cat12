@@ -63,6 +63,7 @@ vbm8.output.warps = [0 0];
 % Extended writing options
 %=======================================================================
 vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
+vbm8.extopts.darteltpm   = {fullfile(spm('dir'),'toolbox','vbm8','Template_1_IXI550_MNI152.nii')}; % Indicate first Dartel template
 vbm8.extopts.print       = 1; % Display and print results
 
 % bias correction options

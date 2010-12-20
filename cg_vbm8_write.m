@@ -28,6 +28,7 @@ addpath(fullfile(spm('dir'),'toolbox','Seg'));
 if ~isstruct(tpm) || (~isfield(tpm, 'bg1') && ~isfield(tpm, 'bg')),
     tpm = spm_load_priors8(tpm);
 end
+
 d1        = size(tpm.dat{1});
 d1        = d1(1:3);
 M1        = tpm.M;
@@ -73,11 +74,17 @@ x3  = 1:d(3);
 
 % run dartel registration to GM/WM dartel template
 if do_dartel
+    darteltpm = warp.darteltpm;
+    % find position of '_1_'
+    numpos = findstr(darteltpm,'_1_');
+    if isempty(numpos)
+        error('Could not find _1_ that indicates the first Dartel template in cg_vbm8_defaults.');
+    end
     for j=1:6
         for i=1:2
-            run2(i).tpm = fullfile(fileparts(which(mfilename)),['Template_' num2str(j) '_IXI550_MNI152.nii,' num2str(i)]);
+            run2(i).tpm =  [darteltpm(1:numpos) num2str(j) darteltpm(numpos+2:end) ',' num2str(i)];
         end
-        tpm2{j}    = spm_vol(strvcat(cat(1,run2(:).tpm)));
+        tpm2{j} = spm_vol(strvcat(cat(1,run2(:).tpm)));
     end
 end
 
