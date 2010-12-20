@@ -47,7 +47,11 @@ warp = struct('affreg', job.opts.affreg,...
               'mrf', job.extopts.mrf,...
               'print', job.extopts.print,...
               'cleanup', job.extopts.cleanup,...
-              'dartelwarp', job.extopts.dartelwarp);
+              'dartelwarp', isfield(job.extopts.dartelwarp,'normhigh'));
+
+if isfield(job.extopts.dartelwarp,'normhigh')
+    warp.darteltpm = job.extopts.dartelwarp.normhigh.darteltpm{1};
+end
 
 do_dartel = warp.dartelwarp;
 
@@ -301,7 +305,7 @@ return;
 %_______________________________________________________________________
 function vout = vout_job(job)
 
-do_dartel = job.extopts.dartelwarp;
+do_dartel = isfield(job.extopts.dartelwarp,'normhigh');
 
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
