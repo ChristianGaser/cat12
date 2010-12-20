@@ -6,6 +6,8 @@ function out = cg_vbm8_longitudinal_multi_run(job)
 
 global data_long
 
+warning('off','MATLAB:DELETE:FileNotFound');
+
 for i=1:numel(job.subj),
     out(i).files = cell(numel(job.subj(i).mov),1);
     m = numel(job.subj(i).mov);

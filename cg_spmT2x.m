@@ -192,7 +192,7 @@ for i=1:size(P,1)
     Vspm = spm_vol(spmT);   
     [pth,nm,xt,vr] = spm_fileparts(spmT);
 
-    SPM_name = fullfile(pth, ['SPM.mat' vr]);
+    SPM_name = fullfile(pth, 'SPM.mat');
     
     % SPM.mat exist?
     if ~exist(SPM_name)

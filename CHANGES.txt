@@ -561,3 +561,35 @@ Replaced fileparts by spm_fileparts in some files, because the 4th output will
 be removed in the future.
 ------------------------------------------------------------------------
 r376 | gaser | 2010-12-15 11:35:34
+
+M      cg_vbm8_defaults.m
+M      cg_vbm8_run.m
+M      CHANGES.txt
+M      tbx_cfg_vbm8.m
+M      cg_spmF2x.m
+M      cg_vbm8_longitudinal.m
+M      cg_vbm8_write.m
+M      cg_spmT2x.m
+
+Corrected typo in cg_spmT2x.m and cg_spmF2x.m.
+------------------------------------------------------------------------
+r377 | gaser | 2010-12-17 13:33:06
+
+M      cg_vbm8_defaults.m
+M      cg_vbm8_longitudinal_multi_run.m
+M      cg_vbm8_run.m
+M      tbx_cfg_vbm8.m
+M      cg_spmF2x.m
+M      cg_vbm8_longitudinal.m
+M      cg_vbm8_write.m
+M      cg_spmT2x.m
+
+(1) Added option for defining Dartel template.
+(2) Disabled warning for deletion of not found files in 
+    cg_vbm8_longitudinal_multi_run.m.
+(3) Corrected use of spm_fileparts in cg_spmT2x.m and cg_spmF2x.m.
+(4) Refused new longitudinal processing pipeline because no improvement could
+    be obtained.
+
+------------------------------------------------------------------------
+r377 | gaser | 2010-12-20 16:02:09
