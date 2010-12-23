@@ -61,7 +61,7 @@ kthresh.tag     = 'kthresh';
 kthresh.name    = 'Extent (voxels)';
 kthresh.help    = {'Enter the extent threshold in voxels'};
 kthresh.strtype = 'e';
-kthresh.val     = {0.05};
+kthresh.val     = {0};
 kthresh.num     = [1 1];
 
 noniso      = cfg_menu;

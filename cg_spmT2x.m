@@ -98,14 +98,14 @@ if nargin == 1
         u0  = -Inf;
     end
     
-    if isfield(vargin.conversion.cluster,'fwe')
+    if isfield(vargin.conversion.cluster,'fwe2')
         extent_FWE = 1;
-        pk  = vargin.conversion.cluster.fwe.thresh;
-        noniso = vargin.conversion.cluster.fwe.noniso;
-    elseif isfield(vargin.conversion.cluster,'uncorr')
+        pk  = vargin.conversion.cluster.fwe2.thresh;
+        noniso = vargin.conversion.cluster.fwe2.noniso;
+    elseif isfield(vargin.conversion.cluster,'uncorr2')
         extent_FWE = 0;
-        pk  = vargin.conversion.cluster.uncorr.thresh;
-        noniso = vargin.conversion.cluster.uncorr.noniso;
+        pk  = vargin.conversion.cluster.uncorr2.thresh;
+        noniso = vargin.conversion.cluster.uncorr2.noniso;
     elseif isfield(vargin.conversion.cluster,'k')
         extent_FWE = 0;
         pk  = vargin.conversion.cluster.k.kthresh;
@@ -119,7 +119,7 @@ if nargin == 1
         pk=0;
         noniso = 0;
     end
-    
+
     neg_results = vargin.conversion.inverse;
     
 end
