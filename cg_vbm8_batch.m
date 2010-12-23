@@ -17,13 +17,13 @@ if nargin < 2
 	writeonly = 0;
 end
 
-spm_get_defaults
+spm_get_defaults;
 
 if nargin < 3
-    cg_vbm8_defaults
+    cg_vbm8_defaults;
 else
     if isempty(vbm8_defaults)
-        cg_vbm8_defaults
+        cg_vbm8_defaults;
     else
         fprintf('Use defaults in %s.\n',vbm8_defaults);
         [path, name] = fileparts(vbm8_defaults);
