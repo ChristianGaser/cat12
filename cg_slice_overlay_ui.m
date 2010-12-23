@@ -37,6 +37,9 @@ OV.printstr = 'print -r300 -painters -noui';
 OV.labels.format = '%3.1f';
 
 % Comment this out if you don't wish slice labels
-%OV.labels = 'none';
+%OV.labels = [];
+
+% Comment this out if you don't wish colorbar
+%OV.cbar = [];
 
 cg_slice_overlay(OV)

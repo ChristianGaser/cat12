@@ -593,3 +593,13 @@ M      cg_spmT2x.m
 
 ------------------------------------------------------------------------
 r377 | gaser | 2010-12-20 16:02:09
+
+M       cg_vbm8_tools.m
+M       cg_slice_overlay_ui.m
+M       cg_spmT2x.m
+
+(1) Corrected error in cg_spmT2x.m, where sometimes extent thresholds were
+    ignored.
+(2) Added some options to cg_slice_overlay_ui.m.
+------------------------------------------------------------------------
+r378 | gaser | 2010-12-23 22:58:55
