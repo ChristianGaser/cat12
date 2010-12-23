@@ -6,7 +6,7 @@ function out = cg_vbm8_longitudinal_multi_run(job)
 
 global data_long
 
-warning('off','MATLAB:DELETE:FileNotFound');
+warning off;
 
 for i=1:numel(job.subj),
     out(i).files = cell(numel(job.subj(i).mov),1);
@@ -21,3 +21,5 @@ for i=1:numel(job.subj),
     spm_jobman('initcfg');
     spm_jobman('run',matlabbatch);
 end;
+
+warning on;

@@ -603,3 +603,11 @@ M       cg_spmT2x.m
 (2) Added some options to cg_slice_overlay_ui.m.
 ------------------------------------------------------------------------
 r378 | gaser | 2010-12-23 22:58:55
+
+M       cg_vbm8_batch.m
+M       cg_vbm8_longitudinal_multi_run.m
+
+(1) Disabled warning for processing of longitudinal data.
+(2) Corrected typo in cg_vbm8_batch.m.
+------------------------------------------------------------------------
+r379 | gaser | 2010-12-24 00:54:35
