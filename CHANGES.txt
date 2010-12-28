@@ -611,3 +611,10 @@ M       cg_vbm8_longitudinal_multi_run.m
 (2) Corrected typo in cg_vbm8_batch.m.
 ------------------------------------------------------------------------
 r379 | gaser | 2010-12-24 00:54:35
+
+M       cg_vbm8_bias_run.m
+
+Bias correction in longitudinal processing pipeline is disabled if FWHM=0 or
+FWHM=Inf.
+------------------------------------------------------------------------
+r380 | gaser | 2010-12-29 00:26:07

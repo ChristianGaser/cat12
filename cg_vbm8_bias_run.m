@@ -6,7 +6,9 @@ for i=1:numel(job.subj),
     for j=2:numel(job.subj(i).mov)
         [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{j});
         out(i).files{j-1} = fullfile(pth,['m', nam, ext, num]);
-        run_bias_correction(job.subj(i).mov{j},job.subj(i).mov{1},job.bias_opts);
+        if job.bias_opts.fwhm > 0 & isfinite(job.bias_opts.fwhm)
+            run_bias_correction(job.subj(i).mov{j},job.subj(i).mov{1},job.bias_opts);
+        end
     end
 end;
 %_______________________________________________________________________
