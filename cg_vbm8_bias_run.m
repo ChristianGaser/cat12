@@ -20,7 +20,11 @@ VG  = spm_vol(PG);
 VF  = spm_vol(PF);
 
 bo  = bias_opts;
-dat = bias_correction(VF,VG,bo.nits,bo.fwhm,bo.reg,bo.lmreg);
+if isfinite(bo.fwhm) & (bo.fwhm > 0)
+    dat = bias_correction(VF,VG,bo.nits,bo.fwhm,bo.reg,bo.lmreg);
+else
+    dat = spm_read_vols(VF);
+end
 
 [pth,nam,ext,num] = spm_fileparts(VF.fname);
 VF.fname = fullfile(pth,['m', nam, ext, num]);

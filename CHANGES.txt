@@ -612,9 +612,14 @@ M       cg_vbm8_longitudinal_multi_run.m
 ------------------------------------------------------------------------
 r379 | gaser | 2010-12-24 00:54:35
 
+Bias correction in longitudinal processing pipeline is disabled if FWHM=0 or
+FWHM=Inf.
+------------------------------------------------------------------------
+r380 | gaser | 2010-12-29 02:01:45
+
 M       cg_vbm8_bias_run.m
 
 Bias correction in longitudinal processing pipeline is disabled if FWHM=0 or
 FWHM=Inf.
 ------------------------------------------------------------------------
-r380 | gaser | 2010-12-29 00:26:07
+r381 | gaser | 2010-12-29 02:10:12
