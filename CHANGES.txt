@@ -623,3 +623,10 @@ Bias correction in longitudinal processing pipeline is disabled if FWHM=0 or
 FWHM=Inf.
 ------------------------------------------------------------------------
 r381 | gaser | 2010-12-29 02:10:12
+
+M       cg_vbm8_bias_run.m
+
+Bias correction in longitudinal processing pipeline is disabled if FWHM=0 or
+FWHM=Inf.
+------------------------------------------------------------------------
+r382 | gaser | 2010-12-29 02:12:24
