@@ -630,3 +630,12 @@ Bias correction in longitudinal processing pipeline is disabled if FWHM=0 or
 FWHM=Inf.
 ------------------------------------------------------------------------
 r382 | gaser | 2010-12-29 02:12:24
+
+M       Makefile.vbm
+M       cg_vbm8_tools.m
+A       cg_vbm8_halfway_run.m
+A       cg_vbm8_halfway.m
+
+Added batch for halfway registration correction.
+------------------------------------------------------------------------
+r383 | gaser | 2011-01-04 01:52:10
