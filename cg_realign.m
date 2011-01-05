@@ -29,9 +29,8 @@ function P = cg_realign(P,flags)
 %                   images to the mean of the images after the first
 %                   realignment.
 %
-%         PW      - a filename of a weighting image (reciprocal of
-%                   standard deviation).  If field does not exist, then
-%                   no weighting is done.
+%         weight  - weight with reciprocal of standard deviation.  
+%                   If field does not exist, then no weighting is done.
 %
 %         halfway - halfway registration to balance interpolation errors  
 %                   between the images.
@@ -88,7 +87,7 @@ function P = cg_realign(P,flags)
 
 if nargin==0, return; end;
 
-def_flags = struct('quality',1,'fwhm',5,'sep',4,'interp',2,'wrap',[0 0 0],'rtm',0,'PW','',...
+def_flags = struct('quality',1,'fwhm',5,'sep',4,'interp',2,'wrap',[0 0 0],'rtm',0,...
     'weight',1,'halfway',1,'graphics',1,'lkp',1:6);
 if nargin < 2,
     flags = def_flags;
@@ -103,7 +102,6 @@ end;
 
 if ~iscell(P), tmp = cell(1); tmp{1} = P; P = tmp; end;
 for i=1:length(P), if ischar(P{i}), P{i} = spm_vol(P{i}); end; end;
-if ~isempty(flags.PW) && ischar(flags.PW), flags.PW = spm_vol(flags.PW); end;
 
 % Remove empty cells
 PN = {};
@@ -138,12 +136,13 @@ else
     end;
 end;
 
+save all
 if flags.halfway
     M = zeros(1,12);
     n = 0;
     for s=1:numel(P),
         for i=1:numel(P{s}),
-            M = M + spm_imatrix(P0{s}(i).mat/P{s}(1).mat);
+            M = M + spm_imatrix(P0{s}(i).mat/P{s}(i).mat);
             n = n + 1;
         end;
     end;
@@ -205,19 +204,9 @@ x1   = x1(:);
 x2   = x2(:);
 x3   = x3(:);
 
-% Possibly mask an area of the sample volume.
+% no mask...
 %-----------------------------------------------------------------------
-if ~isempty(flags.PW),
-    [y1,y2,y3]=coords([0 0 0  0 0 0],P(1).mat,flags.PW.mat,x1,x2,x3);
-    wt  = spm_sample_vol(flags.PW,y1,y2,y3,1);
-    msk = find(wt>0.01);
-    x1  = x1(msk);
-    x2  = x2(msk);
-    x3  = x3(msk);
-    wt  = wt(msk);
-else
-    wt = [];
-end;
+wt = [];
 
 % Compute rate of change of chi2 w.r.t changes in parameters (matrix A)
 %-----------------------------------------------------------------------
@@ -277,6 +266,11 @@ if flags.rtm,
     grad3 = dG3;
 end;
 
+if flags.weight,
+    vol = zeros([length(b) length(P)]);
+    vol(:,1) = G;
+end;
+
 spm_progress_bar('Init',length(P)-1,'Registering Images');
 % Loop over images
 %-----------------------------------------------------------------------
@@ -327,9 +321,88 @@ for i=2:length(P),
         grad2(msk) = grad2(msk) + dG2*sc;
         grad3(msk) = grad3(msk) + dG3*sc;
     end;
+    if flags.weight,
+        % Generate array of images to calculate std
+        tiny = 5e-2; % From spm_vol_utils.c
+        msk        = find((y1>=(1-tiny) & y1<=(d(1)+tiny) &...
+                           y2>=(1-tiny) & y2<=(d(2)+tiny) &...
+                           y3>=(1-tiny) & y3<=(d(3)+tiny)));
+        vol(msk,i) = sc*spm_bsplins(V,y1(msk),y2(msk),y3(msk),deg);
+    end
     spm_progress_bar('Set',i-1);
 end;
 spm_progress_bar('Clear');
+
+if flags.weight,
+    disp('Weighted realignment...')
+    sd = std(vol,0,2);
+    wt = 1./(sd+eps);
+    wt(find(sd==0)) = 0;
+    wt = wt.^0.25/max(wt(:));
+
+    V   = smooth_vol(P(1),flags.interp,flags.wrap,flags.fwhm);
+    deg = [flags.interp*[1 1 1]' flags.wrap(:)];
+
+    [G,dG1,dG2,dG3] = spm_bsplins(V,x1,x2,x3,deg);
+    clear V
+    A0 = make_A(P(1).mat,x1,x2,x3,dG1,dG2,dG3,wt,lkp);
+
+    b = b.*wt;
+
+    spm_progress_bar('Init',length(P)-1,'Registering Weighted Images');
+    % Loop over images
+    %-----------------------------------------------------------------------
+    for i=2:length(P),
+        V  = smooth_vol(P(i),flags.interp,flags.wrap,flags.fwhm);
+        d  = [size(V) 1 1];
+        d  = d(1:3);
+        ss = Inf;
+        countdown = -1;
+        for iter=1:64,
+            [y1,y2,y3] = coords([0 0 0  0 0 0],P(1).mat,P(i).mat,x1,x2,x3);
+            msk        = find((y1>=1 & y1<=d(1) & y2>=1 & y2<=d(2) & y3>=1 & y3<=d(3)));
+            if length(msk)<32, error_message(P(i)); end;
+
+            F          = spm_bsplins(V, y1(msk),y2(msk),y3(msk),deg);
+            if ~isempty(wt), F = F.*wt(msk); end;
+
+            A          = A0(msk,:);
+            b1         = b(msk);
+            sc         = sum(b1)/sum(F);
+            b1         = b1-F*sc;
+            soln       = (A'*A)\(A'*b1);
+
+            p          = [0 0 0  0 0 0  1 1 1  0 0 0];
+            p(lkp)     = p(lkp) + soln';
+            P(i).mat   = inv(spm_matrix(p))*P(i).mat;
+
+            pss        = ss;
+            ss         = sum(b1.^2)/length(b1);
+            if (pss-ss)/pss < 1e-8 && countdown == -1, % Stopped converging.
+                countdown = 2;
+            end;
+            if countdown ~= -1,
+                if countdown==0, break; end;
+                countdown = countdown -1;
+            end;
+        end;
+        if flags.rtm,
+            % Generate mean and derivatives of mean
+            tiny = 5e-2; % From spm_vol_utils.c
+            msk        = find((y1>=(1-tiny) & y1<=(d(1)+tiny) &...
+                               y2>=(1-tiny) & y2<=(d(2)+tiny) &...
+                               y3>=(1-tiny) & y3<=(d(3)+tiny)));
+            count(msk) = count(msk) + 1;
+            [G,dG1,dG2,dG3] = spm_bsplins(V,y1(msk),y2(msk),y3(msk),deg);
+            ave(msk)   = ave(msk)   +   G*sc;
+            grad1(msk) = grad1(msk) + dG1*sc;
+            grad2(msk) = grad2(msk) + dG2*sc;
+            grad3(msk) = grad3(msk) + dG3*sc;
+        end;
+        spm_progress_bar('Set',i-1);
+    end;
+    spm_progress_bar('Clear');
+end;
 
 if ~flags.rtm, return; end;
 %_______________________________________________________________________

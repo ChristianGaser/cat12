@@ -657,3 +657,18 @@ M       cg_realign.m
 Updated halfway registration based on a modified version of spm_realign.m.
 ------------------------------------------------------------------------
 r385 | gaser | 2011-01-05 09:31:27
+
+M      cg_vbm8_defaults.m
+M      cg_realign.m
+M      VBM8-Manual.pdf
+M      cg_cfg_realign.m
+M      cg_vbm8_longitudinal.m
+M      VBM8-Manual.doc
+
+(1) Updated halfway registration in cg_realign.m to deal with mixed
+    orientations.
+(2) Added option to weight registration with inverse standard deviation to
+    cg_realign.m.
+(3) Updated Manual.
+------------------------------------------------------------------------
+r386 | gaser | 2011-01-05 17:24:52
