@@ -651,3 +651,9 @@ D       cg_vbm8_halfway.m
 Implemented halfway registration based on a modified version of spm_realign.m.
 ------------------------------------------------------------------------
 r384 | gaser | 2011-01-05 01:35:30
+
+M       cg_realign.m
+
+Updated halfway registration based on a modified version of spm_realign.m.
+------------------------------------------------------------------------
+r385 | gaser | 2011-01-05 09:31:27
