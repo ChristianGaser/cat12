@@ -8,7 +8,7 @@ if nargin < 1
 	exit
 end
 
-spm_get_defaults
+spm_get_defaults;
 global defaults
 
 if ~exist(batchname,'file')
@@ -24,6 +24,6 @@ if ~exist('matlabbatch','var')
 end
 
 spm_jobman('initcfg');
-spm_jobman('run_nogui',matlabbatch)
+spm_jobman('run_nogui',matlabbatch);
 
 exit
