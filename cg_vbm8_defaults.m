@@ -73,6 +73,10 @@ vbm8.bias.biasfwhm     = 60;
 vbm8.bias.biasreg      = 1e-6;
 vbm8.bias.lmreg        = 1e-6;
 
+% realign options
+%=======================================================================
+vbm8.realign.halfway   = 1; % use halfway registration: 0 - no; 1 - yes
+
 % apply deformations options
 %=======================================================================
 vbm8.defs.interp    = 5;  % 5th degree B-spline
