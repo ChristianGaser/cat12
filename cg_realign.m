@@ -89,7 +89,7 @@ function P = cg_realign(P,flags)
 if nargin==0, return; end;
 
 def_flags = struct('quality',1,'fwhm',5,'sep',4,'interp',2,'wrap',[0 0 0],'rtm',0,'PW','',...
-    'halfway',1,'graphics',1,'lkp',1:6);
+    'weight',1,'halfway',1,'graphics',1,'lkp',1:6);
 if nargin < 2,
     flags = def_flags;
 else
@@ -115,6 +115,7 @@ P = PN;
 
 if isempty(P), warning('Nothing to do'); return; end;
 
+P0 = P;
 if length(P)==1,
     P{1} = realign_series(P{1},flags);
     if nargout==0, save_parameters(P{1}); end;
@@ -137,22 +138,19 @@ else
     end;
 end;
 
-save all
 if flags.halfway
     M = zeros(1,12);
     n = 0;
     for s=1:numel(P),
         for i=1:numel(P{s}),
-            M = M + spm_imatrix(P{s}(i).mat/P{s}(1).mat);
+            M = M + spm_imatrix(P0{s}(i).mat/P{s}(1).mat);
             n = n + 1;
         end;
     end;
     M = M/n;
     for s=1:numel(P),
         for i=1:numel(P{s}),
-            tmp = P{s}(i).mat
-            P{s}(i).mat = P{s}(i).mat\spm_matrix(M);
-            tmp2 = P{s}(i).mat
+            P{s}(i).mat = inv(spm_matrix(-M(1:6)))*P{s}(i).mat;
         end;
     end;
 end;
@@ -167,7 +165,7 @@ if nargout==0,
     end;
 end;
 
-if flags.graphics, plot_parameters(P); end;
+if flags.graphics, plot_parameters(P0); end;
 
 if length(P)==1, P=P{1}; end;
 
