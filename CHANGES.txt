@@ -631,7 +631,6 @@ FWHM=Inf.
 ------------------------------------------------------------------------
 r382 | gaser | 2010-12-29 02:12:24
 
-M       Makefile.vbm
 M       cg_vbm8_tools.m
 A       cg_vbm8_halfway_run.m
 A       cg_vbm8_halfway.m
@@ -639,3 +638,16 @@ A       cg_vbm8_halfway.m
 Added batch for halfway registration correction.
 ------------------------------------------------------------------------
 r383 | gaser | 2011-01-04 01:52:10
+
+M       cg_vbm8_defaults.m
+A       cg_run_realign_estwrite.m
+M       cg_vbm8_tools.m
+A       cg_realign.m
+A       cg_run_realign_estimate.m
+A       cg_cfg_realign.m
+D       cg_vbm8_halfway_run.m
+D       cg_vbm8_halfway.m
+
+Implemented halfway registration based on a modified version of spm_realign.m.
+------------------------------------------------------------------------
+r384 | gaser | 2011-01-05 01:35:30
