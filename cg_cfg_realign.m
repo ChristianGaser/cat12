@@ -127,21 +127,23 @@ wrap.def    = @(val)spm_get_defaults('realign.estimate.wrap', val{:});
 % ---------------------------------------------------------------------
 % weight Weighting
 % ---------------------------------------------------------------------
-weight         = cfg_files;
+weight         = cfg_menu;
 weight.tag     = 'weight';
-weight.name    = 'Weighting';
-weight.help    = {'The option of providing a weighting image to weight each voxel of the reference image differently when estimating the realignment parameters.  The weights are proportional to the inverses of the standard deviations. This would be used, for example, when there is a lot of extra-brain motion - e.g., during speech, or when there are serious artifacts in a particular region of the images.'};
-weight.filter  = 'image';
-weight.ufilter = '.*';
-weight.num     = [0 1];
-weight.def     = @(val)spm_get_defaults('realign.estimate.weight', val{:});
+weight.name    = 'Weight realignment';
+weight.help    = {'Option to weight each voxel of the reference image differently when estimating the realignment parameters.  The weights are proportional to the inverses of the standard deviations. This would be used, for example, when there is a lot of extra-brain motion - e.g., during speech, or when there are serious artifacts in a particular region of the images.'};
+weight.labels  = {
+              'No weighting'
+              'Use weighting'
+}';
+weight.values  = {0 1};
+weight.def     = @(val)cg_vbm8_get_defaults('realign.weight', val{:});
 % ---------------------------------------------------------------------
 % halfway Halfway
 % ---------------------------------------------------------------------
 halfway         = cfg_menu;
 halfway.tag     = 'halfway';
 halfway.name    = 'Halfway realignment';
-halfway.help    = {'To esure that the realigned images being compared undergo equivalent processing steps, images are transformed to a position that is halfway between the images. This step tries to balance potential interpolation errors between the images, see Smith et al. J. Comput. Assist. Tomography 2001.'};
+halfway.help    = {'To ensure that the realigned images being compared undergo equivalent processing steps, images are transformed to a position that is halfway between the images. This step tries to balance potential interpolation errors between the images, see Smith et al. J. Comput. Assist. Tomography 2001.'};
 halfway.labels  = {
               'No halfway (spm default)'
               'Halfway registration'
