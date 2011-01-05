@@ -681,3 +681,11 @@ M       cg_vbm8_longitudinal.m
     realignment.
 ------------------------------------------------------------------------
 r387 | gaser | 2011-01-05 22:33:29
+
+M       cg_vbm8_batch.m
+M       cg_spm8_batch.m
+
+Corrected call of spm_get_defaults in cg_*_batch.m to prevent output of
+defaults.
+------------------------------------------------------------------------
+r388 | gaser | 2011-01-05 22:40:56
