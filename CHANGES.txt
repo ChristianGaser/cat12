@@ -672,3 +672,12 @@ M      VBM8-Manual.doc
 (3) Updated Manual.
 ------------------------------------------------------------------------
 r386 | gaser | 2011-01-05 17:24:52
+
+M       cg_cfg_realign.m
+M       cg_vbm8_longitudinal.m
+
+(1) Corrected some dependency errors in cg_vbm8_longitudinal.m
+(2) Changed some names in cg_cfg_realign.m to indicate difference to spm
+    realignment.
+------------------------------------------------------------------------
+r387 | gaser | 2011-01-05 22:33:29
