@@ -696,3 +696,10 @@ M       VBM8-Manual.doc
 Updated VBM8-Manual.
 ------------------------------------------------------------------------
 r389 | gaser | 2011-01-24 20:32:47
+
+A       VBM8-Manual_Japanese.doc
+A       VBM8-Manual_Japanese.pdf
+
+Added japanese version of manual.
+------------------------------------------------------------------------
+r390 | gaser | 2011-01-24 20:38:53
