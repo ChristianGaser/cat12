@@ -689,3 +689,10 @@ Corrected call of spm_get_defaults in cg_*_batch.m to prevent output of
 defaults.
 ------------------------------------------------------------------------
 r388 | gaser | 2011-01-05 22:40:56
+
+M       VBM8-Manual.pdf
+M       VBM8-Manual.doc
+
+Updated VBM8-Manual.
+------------------------------------------------------------------------
+r389 | gaser | 2011-01-24 20:32:47
