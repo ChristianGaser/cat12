@@ -15,7 +15,7 @@ if nargin == 1
 else
   P = spm_select(Inf,'image','Select images to filter');
   % get ORNLM weight
-  ornlm_weight = spm_input('ORNLM weighting (0.7 to segment)?',1,'e',cg_vbm8_get_defaults('extopts.ornlm'));
+  ornlm_weight = spm_input('ORNLM weighting (0.7 to segment)?',1,'e',0.7);
 end
 
 V = spm_vol(P);

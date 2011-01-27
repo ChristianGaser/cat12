@@ -136,7 +136,6 @@ else
     end;
 end;
 
-save all
 if flags.halfway
     M = zeros(1,12);
     n = 0;
