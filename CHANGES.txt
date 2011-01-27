@@ -703,3 +703,26 @@ A       VBM8-Manual_Japanese.pdf
 Added japanese version of manual.
 ------------------------------------------------------------------------
 r390 | gaser | 2011-01-24 20:38:53
+
+M      sanlmMex.mexw32
+M      AmapMex.mexa64
+M      AmapMex.mexw32
+M      cg_realign.m
+M      sanlmMex.mexw64
+M      VBM8-Manual.pdf
+M      sanlmMex_noopenmp.mexglx
+M      sanlmMex.mexglx
+M      sanlmMex.mexmaci64
+M      AmapMex.mexw64
+M      sanlmMex_noopenmp.mexmaci64
+M      sanlmMex_noopenmp.mexa64
+M      sanlmMex.mexa64
+M      VBM8-Manual.doc
+M      AmapMex.mexglx
+
+(1) Corrected definition of groups/time points in VBM8 manual 
+    (statistical analysis of longitudinal data). Thanks to Pieter van de 
+    Vijver for finding this error.
+(2) Recompiled all c-files.
+------------------------------------------------------------------------
+r391 | gaser | 2011-01-27 22:59:47
