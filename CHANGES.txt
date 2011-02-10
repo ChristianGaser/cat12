@@ -726,3 +726,9 @@ M      AmapMex.mexglx
 (2) Recompiled all c-files.
 ------------------------------------------------------------------------
 r391 | gaser | 2011-01-27 22:59:47
+
+M      cg_spmT2x.m
+
+Implemented new spm correction for non-stationarity in cg_spmT2x.m.
+------------------------------------------------------------------------
+r392 | gaser | 2011-02-10 17:40:00
