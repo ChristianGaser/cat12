@@ -260,7 +260,6 @@ for i=1:size(P,1)
         fprintf('No voxels survive height threshold u=%0.2g\n',u);
     end
 
-
     %-Extent threshold
     %-----------------------------------------------------------------------
     if ~isempty(XYZ)
@@ -292,18 +291,38 @@ for i=1:size(P,1)
             k = pk;
             p_extent_str = '';
         end
-        
+        noniso
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
-            A     = spm_clusters(XYZ);
-            [N Z2 XYZ2 A2 V2R] = spm_max_nS(Z,XYZ,SPM.xVol.VRpv);
-            N = V2R/v2r;
+%            A     = spm_clusters(XYZ);
+
+    [N Z XYZ A L] = spm_max(Z,XYZ);
+    c       = max(A);                                  %-Number of clusters
             Q     = [];
-            for i = 1:max(A)
-                j = find(A == i);
-                if N(min(find(A2 == i))) >= k; Q = [Q j]; end
+            for i = 1:c
+
+                %-Get LKC for voxels in i-th region
+                %----------------------------------------------------------
+                LKC  = spm_get_data(SPM.xVol.VRpv,L{i});
+                
+                %-Compute average of valid LKC measures for i-th region
+                %----------------------------------------------------------
+                valid = ~isnan(LKC);
+                if any(valid)
+                    LKC = sum(LKC(valid)) / sum(valid);
+                else
+                    LKC = V2R; % fall back to whole-brain resel density
+                end
+                
+                %-Intrinsic volume (with surface correction)
+                %----------------------------------------------------------
+                IV   = spm_resels([1 1 1],L{i},'V');
+                IV   = IV*[1/2 2/3 2/3 1]';
+                j = IV*LKC;
+K
+                if j >= k; Q = [Q j]; end
             end
         else
             A     = spm_clusters(XYZ);
