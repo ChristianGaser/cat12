@@ -732,3 +732,11 @@ M      cg_spmT2x.m
 Implemented new spm correction for non-stationarity in cg_spmT2x.m.
 ------------------------------------------------------------------------
 r392 | gaser | 2011-02-10 17:40:00
+
+M      VBM8-Manual.pdf
+M      VBM8-Manual.doc
+
+Added missing second main effect for statistical analysis of longitudinal data
+in one group.
+------------------------------------------------------------------------
+r393 | gaser | 2011-02-11 10:29:34
