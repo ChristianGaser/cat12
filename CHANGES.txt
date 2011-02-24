@@ -740,3 +740,10 @@ Added missing second main effect for statistical analysis of longitudinal data
 in one group.
 ------------------------------------------------------------------------
 r393 | gaser | 2011-02-11 10:29:34
+
+M       VBM8-Manual_Japanese.doc
+M       VBM8-Manual_Japanese.pdf
+
+Updated japanese version of manual.
+------------------------------------------------------------------------
+r394 | gaser | 2011-02-24 23:22:20
