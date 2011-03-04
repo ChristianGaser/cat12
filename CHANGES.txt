@@ -756,3 +756,10 @@ M      cg_vbm8_write.m
     (thanks to Florian Kurth for adding this).
 ------------------------------------------------------------------------
 r395 | gaser | 2011-03-04 14:14:07
+
+M      VBM8-Manual.pdf
+M      VBM8-Manual.doc
+
+Updated manual to consider changes with Dartel template.
+------------------------------------------------------------------------
+r396 | gaser | 2011-03-04 14:20:09
