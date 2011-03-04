@@ -747,3 +747,12 @@ M       VBM8-Manual_Japanese.pdf
 Updated japanese version of manual.
 ------------------------------------------------------------------------
 r394 | gaser | 2011-02-24 23:22:20
+
+M      cg_morph_vol.m
+M      cg_vbm8_write.m
+
+(1) Added new morphological functions to cg_morph_vol.m.
+(2) Dartel template in cg_vbm8_write.m can be now also selected in batch mode
+    (thanks to Florian Kurth for adding this).
+------------------------------------------------------------------------
+r395 | gaser | 2011-03-04 14:14:07
