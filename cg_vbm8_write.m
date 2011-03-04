@@ -76,9 +76,17 @@ x3  = 1:d(3);
 if do_dartel
     darteltpm = warp.darteltpm;
     % find position of '_1_'
-    numpos = findstr(darteltpm,'_1_');
+    try
+        numpos = findstr(darteltpm,'Template_1.nii');
+        numpos = numpos+8;
+    catch
+        numpos = findstr(darteltpm,'_1_');
+    end
     if isempty(numpos)
         error('Could not find _1_ that indicates the first Dartel template in cg_vbm8_defaults.');
+    end
+    if strcmp(darteltpm(1,end-1:end),',1') >0
+        darteltpm = darteltpm(1,1:end-2);
     end
     for j=1:6
         for i=1:2

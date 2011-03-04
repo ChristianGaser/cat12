@@ -1,4 +1,4 @@
-function vol = cg_morph_vol(in,action,n,th);
+function vol = cg_morph_vol(in,action,n,th,vx_vol);
 % morphological operations to 3D data
 %__________________________________________________________________________
 % Christian Gaser
@@ -6,6 +6,7 @@ function vol = cg_morph_vol(in,action,n,th);
 
 rev = '$Rev$';
 
+if nargin < 5, vx_vol = [1 1 1]; end
 if nargin < 4, th = 0.5; end
 if nargin < 3, n = 1; end
 if nargin < 2, action = 'open'; end
@@ -71,8 +72,32 @@ switch lower(action)
 	for i = 1:n
 		spm_conv_vol(vol,vol,kx,ky,kz,-[1 1 1]);
 		vol = uint8(vol~=0);
-	end
-
+  end
+  
+  case 'labclose'
+	%=======================================================================
+  [ROI,num] = spm_bwlabel(double(~vol),6);
+  num       = hist( ROI( ROI(:)>0 ) , 1:num);
+  [tmp,num]   = max(num(1:end));  
+  vol = uint8(1 - (ROI==num));	
+  
+  case 'labopen'
+	%=======================================================================
+  [ROI,num] = spm_bwlabel(double(vol),6);
+  num       = hist( ROI( ROI(:)>0 ) , 1:num);
+  [tmp,num]   = max(num(1:end));  
+  vol = uint8(ROI==num);
+  
+  case 'distclose'
+  %=======================================================================
+  vol = vbdist(single(vol),true(size(vol)),vx_vol);
+  vol = vbdist(single(vol>n),true(size(vol)),vx_vol)>n;
+  
+  case 'distopen'
+  %=======================================================================
+  vol = vbdist(1-single(vol),true(size(vol)),vx_vol);
+  vol = vbdist(single(vol>n),true(size(vol)),vx_vol)<n;
+  
 	otherwise
 		error('Unknown action');
 end
