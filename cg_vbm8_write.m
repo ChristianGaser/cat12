@@ -878,10 +878,12 @@ end
 if bf(1,2),
     % skull strip image because of undefined deformations outside the brain
     if do_dartel
-        src2 = zeros(size(src),'single');
-        src2(indx,indy,indz) = src(indx,indy,indz).*single(label>0); 
-        src = src2;
-        clear src2
+        try
+            src2 = zeros(size(src),'single');
+            src2(indx,indy,indz) = src(indx,indy,indz).*single(label>0); 
+            src = src2;
+            clear src2
+        end
     end
     [src,w]  = dartel3('push',src,y,d1(1:3));
     C = optimNn(w,src,[1  vx vx vx 1e-4 1e-6 0  3 2]);
