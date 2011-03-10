@@ -76,10 +76,9 @@ x3  = 1:d(3);
 if do_dartel
     darteltpm = warp.darteltpm;
     % find position of '_1_'
-    try
-        numpos = findstr(darteltpm,'Template_1.nii');
-        numpos = numpos+8;
-    catch
+    numpos = findstr(darteltpm,'Template_1.nii');
+    numpos = numpos+8;
+    if isempty(numpos)
         numpos = findstr(darteltpm,'_1_');
     end
     if isempty(numpos)
