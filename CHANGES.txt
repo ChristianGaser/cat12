@@ -769,3 +769,12 @@ M       cg_vbm8_write.m
 Updated selection of Dartel template in cg_vbm8_write.m.
 ------------------------------------------------------------------------
 r397 | gaser | 2011-03-10 09:03:48
+
+M       cg_vbm8_write.m
+
+The exotic combination that only bias-corrected images and no segmentation are
+saved poduced an error if Dartel-normalization was selected. This error was
+corrected (thanks to Marko for finding out this interesting combination).
+
+------------------------------------------------------------------------
+r398 | gaser | 2011-03-10 09:27:50
