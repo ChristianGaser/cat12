@@ -763,3 +763,9 @@ M      VBM8-Manual.doc
 Updated manual to consider changes with Dartel template.
 ------------------------------------------------------------------------
 r396 | gaser | 2011-03-04 14:20:09
+
+M       cg_vbm8_write.m
+
+Updated selection of Dartel template in cg_vbm8_write.m.
+------------------------------------------------------------------------
+r397 | gaser | 2011-03-10 09:03:48
