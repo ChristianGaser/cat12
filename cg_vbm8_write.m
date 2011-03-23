@@ -18,7 +18,9 @@ for i=1:length(A)
   end
 end
 
-fprintf('VBM8 Revision %d\n',r);
+if exist('r','var')
+  fprintf('VBM8 Revision %d\n',r);
+end
 
 % we need spm_def2det.m from HDW toolbox
 addpath(fullfile(spm('dir'),'toolbox','HDW'));
