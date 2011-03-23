@@ -778,3 +778,9 @@ corrected (thanks to Marko for finding out this interesting combination).
 
 ------------------------------------------------------------------------
 r398 | gaser | 2011-03-10 09:27:50
+
+M      cg_vbm8_write.m
+
+Check for toolbox information in cg_vbm8_write.m.
+------------------------------------------------------------------------
+r399 | gaser | 2011-03-23 13:56:49
