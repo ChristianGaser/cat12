@@ -7,10 +7,7 @@ function cg_sanlm(vargin)
 % $Id: cg_sanlm.m 224 2009-12-02 23:39:15Z gaser $
 
 if nargin == 1
-	P = [];
-	for i=1:numel(vargin.data)
-		P = strvcat(P,deblank(vargin.data{i}));
-	end
+	P = char(vargin.data);
 else
   P = spm_select(Inf,'image','Select images to filter');
 end
