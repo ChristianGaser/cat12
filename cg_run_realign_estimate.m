@@ -12,9 +12,9 @@ function out = cg_run_realign_estimate(varargin)
 % $Id: cg_run_realign_estimate.m 1185 2008-03-04 16:31:21Z volkmar $
 
 job           = varargin{1};
-P             = {};
+P             = cell(size(job.data));
 for i=1:length(job.data),
-    P{i}  = strvcat(job.data{i});
+    P{i}  = char(job.data{i});
 end;
 flags.quality = job.eoptions.quality;
 flags.fwhm    = job.eoptions.fwhm;

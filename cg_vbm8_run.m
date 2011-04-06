@@ -89,16 +89,19 @@ job.warp     = warp;
 job.warps    = job.output.warps;
 job.tissue   = tissue;
 
-if nargin==1,
-    varargout{:} = run_job(job, estwrite);
-elseif strcmpi(arg,'check'),
-    varargout{:} = check_job(job);
-elseif strcmpi(arg,'vfiles'),
-    varargout{:} = vfiles_job(job);
-elseif strcmpi(arg,'vout'),
-    varargout{:} = vout_job(job);
-else
-    error('Unknown argument ("%s").', arg);
+if nargin == 1, arg = 'run'; end
+
+switch lower(arg)
+    case 'run'
+        varargout{1} = run_job(job);
+    case 'check'
+        varargout{1} = check_job(job);
+    case 'vfiles'
+        varargout{1} = vfiles_job(job);
+    case 'vout'
+        varargout{1} = vout_job(job);
+    otherwise
+        error('Unknown argument ("%s").', arg);
 end
 return
 %_______________________________________________________________________
@@ -165,12 +168,12 @@ for iter=1:nit,
                     aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
                     M = eye(4);
-                    spm_chi2_plot('Init','Coarse Affine Registration','Mean squared difference','Iteration');
+                    spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
                     [Affine, scale]  = spm_affreg(VG, VF1, aflags, M);
 
                     aflags.WG  = spm_vol(fullfile(spm('Dir'),'apriori','brainmask.nii'));
                     aflags.sep = aflags.sep/2;
-                    spm_chi2_plot('Init','Fine Affine Registration','Mean squared difference','Iteration');
+                    spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
                     Affine  = spm_affreg(VG, VF1, aflags, Affine, scale);
 
                     fprintf('Fine Affine Registration..\n');
@@ -293,7 +296,7 @@ if numel(fn)==0, return; end;
 for i=1:length(fn),
     eval([fn{i} '= p.' fn{i} ';']);
 end;
-if spm_matlab_version_chk('7') >= 0
+if spm_check_version('matlab','7') >= 0
     save(fnam,'-V6',fn{:});
 else
     save(fnam,fn{:});

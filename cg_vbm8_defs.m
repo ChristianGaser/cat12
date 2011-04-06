@@ -10,7 +10,7 @@ function cg_vbm8_defs(job)
 job.field{1} = fullfile(pth,[nam ext]);
 
 [Def,mat] = get_def(job.field);
-apply_def(Def,mat,strvcat(job.fnames),job.interp,job.modulate);
+apply_def(Def,mat,char(job.fnames),job.interp,job.modulate);
 return
 
 %_______________________________________________________________________
@@ -33,7 +33,7 @@ intrp = [intrp*[1 1 1], 0 0 0];
 for i=1:size(fnames,1),
     V = spm_vol(fnames(i,:));
     M = inv(V.mat);
-    [pth,nam,ext] = spm_fileparts(fnames(i,:));
+    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:)));
     if modulate
         ofname = fullfile(pth,['mw',nam,ext]);
     else
@@ -46,6 +46,7 @@ for i=1:size(fnames,1),
                 'mat',mat,...
                 'n',V.n,...
                 'descrip',V.descrip);
+    ofnames{i} = [ofnames{i} num];
     C  = spm_bsplinc(V,intrp);
     Vo = spm_create_vol(Vo);
     if modulate

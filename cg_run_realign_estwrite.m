@@ -12,9 +12,9 @@ function out = cg_run_realign_estwrite(varargin)
 % $Id: cg_run_realign_estwrite.m 1185 2008-03-04 16:31:21Z volkmar $
 
 job           = varargin{1};
-P             = {};
+P             = cell(size(job.data));
 for i=1:length(job.data),
-    P{i} = strvcat(job.data{i});
+    P{i}  = char(job.data{i});
 end;
 flags.quality = job.eoptions.quality;
 flags.fwhm    = job.eoptions.fwhm;
@@ -31,7 +31,7 @@ for i=1:numel(job.data)
     out.sess(i).rpfile{1} =  fullfile(pth, sprintf('rp_%s.txt', nam));
 end;
 
-P            = strvcat(P);
+P            = char(P);
 flags.mask   = job.roptions.mask;
 flags.mean   = job.roptions.which(2);
 flags.interp = job.roptions.interp;

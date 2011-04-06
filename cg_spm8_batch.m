@@ -23,6 +23,7 @@ if ~exist('matlabbatch','var')
 	exit
 end
 
+warning off
 spm_jobman('initcfg');
 spm_jobman('run_nogui',matlabbatch);
 

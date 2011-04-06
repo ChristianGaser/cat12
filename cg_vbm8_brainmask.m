@@ -80,7 +80,7 @@ aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
 aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
 M = eye(4);
-spm_chi2_plot('Init','Affine Registration','Mean squared difference','Iteration');
+spm_plot_convergence('Init','Affine Registration','Mean squared difference','Iteration');
 Affine  = spm_affreg(VG, VF1, aflags, M);
 
 % load TPMs

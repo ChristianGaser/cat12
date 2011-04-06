@@ -67,7 +67,7 @@ globalG = spm_global(VG);
 VF.pinfo(1:2,:) = globalG/globalF*VF.pinfo(1:2);
 
 ll = Inf;
-spm_chi2_plot('Init','Bias Correction','- Log-likelihood','Iteration');
+spm_plot_convergence('Init','Bias Correction','- Log-likelihood','Iteration');
 for subit=1:nits,
 
     % Compute objective function and its 1st and second derivatives
@@ -119,7 +119,7 @@ for subit=1:nits,
         Beta  = Beta  + kron(b3,spm_krutil(wt1,B1bias,B2bias,0));
         Alpha = Alpha + kron(b3*b3',spm_krutil(wt2,B1bias,B2bias,1));
     end;
-    spm_chi2_plot('Set',ll/prod(d));
+    spm_plot_convergence('Set',ll/prod(d));
 
 
     if subit > 1 && ll>oll,
