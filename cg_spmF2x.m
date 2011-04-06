@@ -63,10 +63,7 @@ function cg_spmF2x(vargin)
 rev = '$Rev: 119 $';
 
 if nargin == 1
-    P = [];
-    for i=1:numel(vargin.data)
-        P = strvcat(P,deblank(vargin.data{i}));
-    end
+    P = char(vargin.data);
 
     sel = vargin.conversion.sel;
 

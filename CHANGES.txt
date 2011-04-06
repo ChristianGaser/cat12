@@ -784,3 +784,28 @@ M      cg_vbm8_write.m
 Check for toolbox information in cg_vbm8_write.m.
 ------------------------------------------------------------------------
 r399 | gaser | 2011-03-23 13:56:49
+
+M      cg_vbm8_defs.m
+M      optimizer3d.c
+M      cg_run_realign_estwrite.m
+M      cg_vbm8_bias_run.m
+M      cg_realign.m
+M      cg_ornlm.m
+M      cg_vbm8_run.m
+M      cg_run_realign_estimate.m
+M      cg_spm8_batch.m
+M      cg_check_sample_sd.m
+M      cg_sanlm.m
+M      cg_check_cov.m
+M      cg_showslice_all.m
+M      cg_vbm8_brainmask.m
+M      cg_spmF2x.m
+M      cg_vbm8_write.m
+M      cg_spmT2x.m
+
+(1) Replaced spm_matlab_version_chk by spm_check_version in cg_vbm8_run.m.
+(2) Replaced strvcat by char in most files.
+(3) Added use of spm_get_bbox.
+(4) Replaced spm_chi2_plot by spm_plot_convergence in all files.
+------------------------------------------------------------------------
+r400 | gaser | 2011-04-06 10:18:36

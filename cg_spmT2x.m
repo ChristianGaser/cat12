@@ -77,10 +77,7 @@ function cg_spmT2x(vargin)
 rev = '$Rev$';
 
 if nargin == 1
-    P = [];
-    for i=1:numel(vargin.data)
-        P = strvcat(P,deblank(vargin.data{i}));
-    end
+    P = char(vargin.data);
     
     sel = vargin.conversion.sel;
 

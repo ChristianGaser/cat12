@@ -12,10 +12,7 @@ global fname jY h1 h2 YpY slice_array
 rev = '$Rev$';
 
 if nargin == 1
-  P = [];
-  for i=1:numel(vargin.data)
-    P = strvcat(P,deblank(vargin.data{i}));
-  end
+  P = char(vargin.data);
   norm = vargin.scale;
   sd_name = vargin.sd_name;
   mean_name = vargin.mean_name;
