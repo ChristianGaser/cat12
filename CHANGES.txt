@@ -878,3 +878,10 @@ M      median3.mexglx
 New compilation of median3.c
 ------------------------------------------------------------------------
 r402 | gaser | 2011-04-08 11:49:10
+
+M      cg_vbm8_write.m
+
+Removed use of spm_get_bbox in cg_vbm8_write.m, because this function is only
+available aifter spm8 update 4290.
+------------------------------------------------------------------------
+r403 | gaser | 2011-04-08 15:14:43
