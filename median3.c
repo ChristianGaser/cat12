@@ -32,7 +32,7 @@
 #include "math.h"
 #include "float.h"
 
-// estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
+/* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
   *z = (int)floor( (double)i / (double)sxy ) + 1; 
    i = i % (sxy);
@@ -40,7 +40,7 @@ void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
   *x = i % sy + 1;
 }
 
-// qicksort
+/* qicksort */
 void swap(float *a, float *b)
 {
   float t=*a; *a=*b; *b=t;
@@ -67,7 +67,7 @@ void sort(float arr[], int beg, int end)
 
 float abs2(float n) {	if (n<0) return -n; else return n; }        
 
-// main function
+/* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   if (nrhs<1) mexErrMsgTxt("ERROR:median3: not enought input elements\n");
@@ -75,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nlhs<1) mexErrMsgTxt("ERROR:median3: to less output elements\n");
   if (nlhs>1) mexErrMsgTxt("ERROR:median3: to many output elements\n");
   
-  // main informations about input data (size, dimensions, ...)
+  /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
@@ -87,13 +87,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if ( nrhs>1 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: second input must be 3d - to use a later parameter use ''ones(size( input1 ),'logical')''\n");
   if ( nrhs>2 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: third input must be 3d - to use a later parameter use ''ones(size( input1 ),'logical')'\n");
  
-  // indices of the neighbor Ni (index distance) and euclidean distance NW
+  /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = {0,  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x,  -xy-x-1,-xy-x+1,-xy+x-1,-xy+x+1, xy-x-1,xy-x+1,xy+x-1,xy+x+1};  
   float NV[27], bi, bn, sf, bil, bih, bnl, bnh;
   int u,v,w,nu,nv,nw,ni,i,n; 
   bool *Bi, *Bn;
   
-  // in- and output 
+  /* in- and output */
   float*D = (float *)mxGetPr(prhs[0]);
   if (nrhs>=2) Bi  = (bool *) mxGetPr(prhs[1]); 
   if (nrhs>=3) Bn =  (bool *) mxGetPr(prhs[2]); 
@@ -111,7 +111,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   float *M = (float *)mxGetPr(plhs[0]);
 
-  // filter process
+  /* filter process */
   for (i=0;i<nL;i++) {
     if ((nrhs>=2 && Bi[i]) && D[i]>=bil && D[i]<=bih) {
       ind2sub(i,&u,&v,&w,xy,x);
@@ -135,13 +135,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
   }
 
-  // selective filter settings - only big changes (only change extremly noisy data)
+  /* selective filter settings - only big changes (only change extremly noisy data) */
   if (sf>0) {
     for (i=0;i<nL;i++) {
       if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (abs2(D[i]-M[i])<sf) ) M[i]=D[i];
     }
   }
-  // selective filter settings - only small changes 
+  /* selective filter settings - only small changes */
   if (sf<0) { 
     for (i=0;i<nL;i++) {
       if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (abs2(D[i]-M[i])>-sf) ) M[i]=D[i];
