@@ -34,7 +34,7 @@ end
 d1        = size(tpm.dat{1});
 d1        = d1(1:3);
 M1        = tpm.M;
-[bb1 vx1] = spm_get_bbox(tpm.V(1), 'old');
+[bb1,vx1] = bbvox_from_V(tpm.V(1));
      
 if isfield(res,'mg'),
     lkp = res.lkp;
@@ -1135,6 +1135,17 @@ i  = (length(x) - 1)/2;
 j  = (length(y) - 1)/2;
 k  = (length(z) - 1)/2;
 spm_conv_vol(dat,dat,x,y,z,-[i j k]);
+return;
+%=======================================================================
+
+%=======================================================================
+function [bb,vx] = bbvox_from_V(V)
+vx = sqrt(sum(V(1).mat(1:3,1:3).^2));
+if det(V(1).mat(1:3,1:3))<0, vx(1) = -vx(1); end;
+
+o  = V(1).mat\[0 0 0 1]';
+o  = o(1:3)';
+bb = [-vx.*(o-1) ; vx.*(V(1).dim(1:3)-o)];
 return;
 %=======================================================================
 
