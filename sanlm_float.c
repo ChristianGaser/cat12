@@ -544,7 +544,7 @@ int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin,r;
 
 myargument *ThreadArgs;  
 
-Ndims = (int)pow((2*f+1),ndim);
+Ndims = (int)floor(pow((2.0*f+1.0),ndim));
 slice = dims[0]*dims[1];
 vol = dims[0]*dims[1]*dims[2];
 

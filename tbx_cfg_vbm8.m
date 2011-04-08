@@ -293,13 +293,23 @@ finalmask = cfg_menu;
 finalmask.tag  = 'finalmask';
 finalmask.name = 'Apply final mask after segmenting';
 finalmask.help = {[...
-'This uses a morphological operations to apply a final masking using morphological operations.']};
+'This option uses morphological operations to apply a final masking.']};
 finalmask.labels = {'Dont apply final masking','Apply final masking'};
 finalmask.values = {0 1};
 finalmask.def  = @(val)cg_vbm8_get_defaults('extopts.finalmask', val{:});
 
 %------------------------------------------------------------------------
 
+gcut = cfg_menu;
+gcut.tag  = 'gcut';
+gcut.name = 'Use graph-cut approach for initial skull-stripping';
+gcut.help = {[...
+'This option enables skull-stripping with graph-cut approach.']};
+gcut.labels = {'Dont use graph-cut for skull-stripping','Use graph-cut for skull-stripping'};
+gcut.values = {0 1};
+gcut.def  = @(val)cg_vbm8_get_defaults('extopts.gcut', val{:});
+
+%------------------------------------------------------------------------
 print    = cfg_menu;
 print.tag = 'print';
 print.name = 'Display and print results';

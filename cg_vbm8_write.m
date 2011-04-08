@@ -19,7 +19,7 @@ for i=1:length(A)
 end
 
 if exist('r','var')
-  fprintf('VBM8 Revision %d\n',r);
+  fprintf('VBM8 r%d: %s\n',r,res.image.fname);
 end
 
 % we need spm_def2det.m from HDW toolbox
@@ -264,42 +264,61 @@ clear chan
 % prevent NaN
  src(isnan(src)) = 0;
 
+% for windows disable multi-threading
+if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
+    warp.sanlm = min(1,warp.sanlm);
+end
+
 % optionally apply non local means denoising filter
 switch warp.sanlm
     case 0
-        disp('No NLM-Filter')
     case 1 % use single-threaded version
+        fprintf('NLM-Filter\n')
         sanlmMex_noopenmp(src,3,1);
     otherwise % use multi-threaded version
+        fprintf('NLM-Filter with multi-threading\n')
         sanlmMex(src,3,1);
 end
 
 if do_cls && do_defs,
 
+    % default parameters
+    bias_fwhm   = cg_vbm8_get_defaults('extopts.bias_fwhm');
+    init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
+    finalmask   = cg_vbm8_get_defaults('extopts.finalmask');
+    gcut        = cg_vbm8_get_defaults('extopts.gcut');
+
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
     scale_morph = 1/mean(vx_vol);
+  
+    if gcut
+        % skull-stripping using graph-cut
+        opt.verb = 0; % display process (0=nothing, 1=only points, 2=times)
+        fprintf('Skull-stripping\n');
+        [src,cls,mask] = GBM(src,cls,res,opt);
+    else
+        % use mask of GM and WM
+        mask = single(cls{1});
+        mask = mask + single(cls{2});
+  
+        % keep largest connected component after at least 1 iteration of opening
+        n_initial_openings = max(1,round(scale_morph*warp.cleanup));
+        mask = cg_morph_vol(mask,'open',n_initial_openings,warp.open_th);
+        mask = mask_largest_cluster(mask,0.5);
 
-    % use mask of GM and WM
-    mask = single(cls{1});
-    mask = mask + single(cls{2});
-
-    % keep largest connected component after at least 1 iteration of opening
-    n_initial_openings = max(1,round(scale_morph*warp.cleanup));
-    mask = cg_morph_vol(mask,'open',n_initial_openings,warp.open_th);
-    mask = mask_largest_cluster(mask,0.5);
-
-    % dilate and close to fill ventricles
-    mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
-    mask = cg_morph_vol(mask,'close',round(scale_morph*10),0.5);
+        % dilate and close to fill ventricles
+        mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
+        mask = cg_morph_vol(mask,'close',round(scale_morph*10),0.5);
         
-    % remove sinus
-    mask = mask & ((single(cls{5})<single(cls{1})) | ...
-                   (single(cls{5})<single(cls{2})) | ...
-                   (single(cls{5})<single(cls{3})));                
+        % remove sinus
+        mask = mask & ((single(cls{5})<single(cls{1})) | ...
+                       (single(cls{5})<single(cls{2})) | ...
+                       (single(cls{5})<single(cls{3})));                
 
-    % fill holes that may remain
-    mask = cg_morph_vol(mask,'close',round(scale_morph*2),0.5);
-        
+        % fill holes that may remain
+        mask = cg_morph_vol(mask,'close',round(scale_morph*2),0.5); 
+    end
+  
     % calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
     label2 = zeros(d,'uint8');
@@ -320,7 +339,7 @@ if do_cls && do_defs,
     % fill remaining holes in label with 1
     mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
     label2((label2 == 0) & (mask > 0)) = 1;
-    
+  
     % use index to speed up and save memory
     sz = size(mask);
     [indx, indy, indz] = ind2sub(sz,find(mask>0));
@@ -332,8 +351,7 @@ if do_cls && do_defs,
         
     clear cls2 label2
     
-    % create smaller (indexed) volume    
-    vol = double(src(indx,indy,indz));        
+    vol = double(src(indx,indy,indz));    
     
     % mask source image because Amap needs a skull stripped image
     % set label and source inside outside mask to 0
@@ -343,30 +361,23 @@ if do_cls && do_defs,
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
     iters_icm = 20;
     
-    % default parameters
-    bias_fwhm   = cg_vbm8_get_defaults('extopts.bias_fwhm');
-    init_kmeans = cg_vbm8_get_defaults('extopts.kmeans');
-    finalmask   = cg_vbm8_get_defaults('extopts.finalmask');
-
-    if init_kmeans
-      fprintf('\nAmap segmentation of %s with Kmeans initialization.\n',res.image(1).fname);   
-    else
-      fprintf('\nAmap segmentation of %s.\n',res.image(1).fname);   
+    if init_kmeans, fprintf('Amap with Kmeans\n');   
+    else            fprintf('Amap without Kmeans\n');   
     end
-    
+
     [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, warp.mrf, vx_vol, iters_icm, bias_fwhm);
-        
+    
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
-    clear vol mask
+    clear vol 
     
     % use cleanup
-    if (warp.cleanup > 0)
+    if warp.cleanup
         % get sure that all regions outside mask are zero
         for i=1:3
             cls{i}(:) = 0;
         end
-        disp('Clean up...');        
+       % disp('Clean up...');        
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
            prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
         sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
@@ -378,8 +389,9 @@ if do_cls && do_defs,
         end
     end;
     clear prob
-
-    if (finalmask > 0)
+  
+    if finalmask
+        fprintf('Final masking\n');
         % create final mask
         mask = single(cls{1});
         mask = mask + single(cls{2});
@@ -392,11 +404,12 @@ if do_cls && do_defs,
         % dilate and close to fill ventricles
         mask = cg_morph_vol(mask,'dilate',2,0.5);
         mask = cg_morph_vol(mask,'close',20,0.5);
+      
         ind_mask = find(mask == 0);
         for i=1:3
             cls{i}(ind_mask) = 0;
         end
-        
+       
         % mask label
         label2 = zeros(d,'uint8');
         label2(indx,indy,indz) = label;
@@ -404,6 +417,7 @@ if do_cls && do_defs,
         
         label = label2(indx,indy,indz);
         clear label2
+     
     end
     % clear last 3 tissue classes to save memory
     for i=4:6

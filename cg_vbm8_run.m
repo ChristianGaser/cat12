@@ -93,7 +93,7 @@ if nargin == 1, arg = 'run'; end
 
 switch lower(arg)
     case 'run'
-        varargout{1} = run_job(job);
+        varargout{1} = run_job(job,estwrite);
     case 'check'
         varargout{1} = check_job(job);
     case 'vfiles'
