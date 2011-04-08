@@ -33,7 +33,7 @@ ima = (float*)mxGetPr(prhs[0]);
 
 ndim = mxGetNumberOfDimensions(prhs[0]);
 if (ndim!=3)
-  mxErrMsgTxt("Images does not have 3 dimensions.");
+  mexErrMsgTxt("Images does not have 3 dimensions.");
   
 dims = mxGetDimensions(prhs[0]);
 

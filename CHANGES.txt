@@ -809,3 +809,62 @@ M      cg_spmT2x.m
 (4) Replaced spm_chi2_plot by spm_plot_convergence in all files.
 ------------------------------------------------------------------------
 r400 | gaser | 2011-04-06 10:18:36
+
+A      down_cut01.mexmaci64
+A      vbdist.mexglx
+M      Makefile.vbm
+M      cg_vbm8_defaults.m
+M      sanlmMex.mexw32
+A      down_cut01.mexw64
+A      vbdist.mexmaci
+M      sanlmMex_noopenmp.mexmaci
+A      median3.mexa64
+M      AmapMex.mexa64
+A      eikonal3.mexa64
+A      down_cut01.mexglx
+A      eikonal3.mexmaci
+A      vbdist.mexa64
+M      Amap.h
+A      median3.mexw32
+A      down_cut01.mexmaci
+M      AmapMex.mexw32
+M      compile.m
+A      eikonal3.c
+A      eikonal3.mexw32
+A      eikonal3.mexmaci64
+A      median3.c
+M      cg_vbm8_run.m
+A      median3.mexmaci64
+M      sanlmMex.mexw64
+A      vbdist.mexw32
+M      AmapMex.mexmaci64
+A      down_cut01.mexa64
+M      sanlmMex_noopenmp.mexglx
+A      median3.mexmaci
+M      sanlmMex.mexglx
+A      GBM.m
+M      tbx_cfg_vbm8.m
+M      sanlmMex.c
+A      down_cut01.mexw32
+A      median3.mexw64
+A      vbdist.c
+M      sanlm_float.c
+M      sanlmMex.mexmaci64
+M      AmapMex.mexw64
+A      vbdist.mexmaci64
+M      sanlmMex_noopenmp.mexmaci64
+A      eikonal3.mexw64
+M      sanlmMex_noopenmp.mexa64
+M      sanlmMex.mexmaci
+A      checkinopt.m
+A      median3.mexglx
+A      vbdist.mexw64
+M      sanlmMex.mexa64
+M      cg_vbm8_write.m
+M      AmapMex.mexglx
+A      down_cut01.c
+A      eikonal3.mexglx
+
+Added GBM approach for skull-stripping.
+------------------------------------------------------------------------
+r401 | gaser | 2011-04-08 11:00:56
