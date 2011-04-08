@@ -868,3 +868,13 @@ A      eikonal3.mexglx
 Added GBM approach for skull-stripping.
 ------------------------------------------------------------------------
 r401 | gaser | 2011-04-08 11:00:56
+
+M      median3.mexa64
+M      median3.c
+M      median3.mexmaci64
+M      median3.mexmaci
+M      median3.mexglx
+
+New compilation of median3.c
+------------------------------------------------------------------------
+r402 | gaser | 2011-04-08 11:49:10
