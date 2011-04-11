@@ -2,9 +2,9 @@ function [prob, mean] = AmapMexNu(src, label, n_classes, n_iters, sub, pve, init
 % FORMAT [prob, mean] = AmapMexNu(src, label, n_classes, n_iters, sub, pve, init, mrf_weight, voxelsize)
 %
 % Christian Gaser
-% $Id: AmapMexNu.m 215 2009-11-15 23:01:31Z gaser $
+% $Id$
 
-rev = '$Rev: 215 $';
+rev = '$Rev$';
 
 disp('Compiling AmapMexNu.c')
 

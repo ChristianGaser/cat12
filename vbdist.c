@@ -1,3 +1,9 @@
+/*
+ * Robert Dahnke
+ * $Id$ 
+ *
+ */
+
 /* voxelbased euclidean distance calculation
  * ________________________________________________________________________
  * Calculates the euklidean distance without PVE to an object in P with a 

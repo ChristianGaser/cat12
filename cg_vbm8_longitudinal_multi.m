@@ -2,7 +2,7 @@ function long = cg_vbm8_long
 % Configuration file for long correction between an image pair
 %
 % Christian Gaser
-% $Id: cg_vbm8_long.m $
+% $Id$
 
 mov = cfg_files;
 mov.name = 'Longitudinal data for one subject';

@@ -1,3 +1,9 @@
+/*
+ * Robert Dahnke
+ * $Id$ 
+ *
+ */
+
 /* eikonal distance calculation
  * _____________________________________________________________________________
  * Estimates eikonal distance to an object (negative values) with the speed given

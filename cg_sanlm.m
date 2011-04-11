@@ -4,7 +4,7 @@ function cg_sanlm(vargin)
 %
 %_______________________________________________________________________
 % Christian Gaser/Users/gaser/matlab/vbm8/cg_sanlm.m
-% $Id: cg_sanlm.m 224 2009-12-02 23:39:15Z gaser $
+% $Id$
 
 if nargin == 1
 	P = char(vargin.data);

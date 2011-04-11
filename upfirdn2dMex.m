@@ -12,9 +12,9 @@ function out = upfirdn2dMex(x, h, p, q)
 % Matlab function upfirdn.m from the Signal Processing Toolbox.
 %
 % Christian Gaser
-% $Id: upfirdn2dMex.m 224 2009-12-02 23:39:15Z gaser $
+% $Id$
 
-rev = '$Rev: 224 $';
+rev = '$Rev$';
 
 disp('Compiling upfirdn2dMex.c')
 

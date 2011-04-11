@@ -1,5 +1,5 @@
 /* Christian Gaser
- * $Id: sanlm.c 226 2009-12-03 07:22:53Z gaser $ 
+ * $Id$ 
  *
  *
  * This code is a modified version of MABONLM3D.c 

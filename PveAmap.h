@@ -1,3 +1,8 @@
+/*
+ * Christian Gaser
+ * $Id$ 
+ *
+ */
 
 int n_pure_classes = 3;
 int n_classes = 5;

@@ -18,9 +18,9 @@ function out = ornlmMex(in, v, f, h)
 % ***************************************************************************
 %
 % Christian Gaser
-% $Id: ornlmMex.m 224 2009-12-02 23:39:15Z gaser $
+% $Id$
 
-rev = '$Rev: 224 $';
+rev = '$Rev$';
 
 disp('Compiling ornlmMex.c')
 
