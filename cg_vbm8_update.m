@@ -9,9 +9,9 @@ function cg_vbm8_update(update)
 % currently in the MATLAB path and will display the outcome.
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cg_vbm8_update.m 183 2009-10-07 21:10:26Z gaser $
+% $Id$
 
-rev = '$Rev: 183 $';
+rev = '$Rev$';
 
 if nargin == 0
   update = 0;

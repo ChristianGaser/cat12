@@ -58,9 +58,9 @@ function cg_spmF2x(vargin)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cg_spmF2x.m 119 2009-04-24 13:10:00Z gaser $
+% $Id$
 
-rev = '$Rev: 119 $';
+rev = '$Rev$';
 
 if nargin == 1
     P = char(vargin.data);

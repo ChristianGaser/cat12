@@ -9,7 +9,7 @@ function out = cg_run_realign_estimate(varargin)
 %_______________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
-% $Id: cg_run_realign_estimate.m 1185 2008-03-04 16:31:21Z volkmar $
+% $Id$
 
 job           = varargin{1};
 P             = cell(size(job.data));

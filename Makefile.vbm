@@ -1,6 +1,6 @@
 # Personal Makefile variables
 #
-# $Id: Makefile.vbm 195 2009-10-27 23:05:34Z gaser $
+# $Id$
 
 VERSION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
@@ -35,6 +35,7 @@ help:
 	-@echo install zip scp update
 
 update:
+	-@svn propset svn:keywords "Id Rev Date Author" *.c *.m *.h *.sh 2>/dev/null
 	-@svn update
 	-@echo '% Voxel Based Morphometry Toolbox' > Contents.m
 	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> Contents.m

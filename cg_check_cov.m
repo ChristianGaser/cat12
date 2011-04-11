@@ -6,10 +6,10 @@ function cg_check_cov(vargin)
 % An output image will be save with SD at each voxel.
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cg_check_cov.m 115 2009-03-10 10:40:12Z gaser $
+% $Id$
 
 global fname jY h1 h2 YpY slice_array
-rev = '$Rev: 115 $';
+rev = '$Rev$';
 
 if nargin == 1
   P = char(vargin.data);

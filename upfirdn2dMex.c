@@ -1,6 +1,6 @@
 /*
  * Christian Gaser
- * $Id: upfirdn2dMex.c 226 2009-12-03 07:22:53Z gaser $ 
+ * $Id$ 
  *
  *
  * The core algorithm is based on upfirdn.cc in octave

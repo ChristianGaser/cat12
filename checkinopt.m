@@ -1,5 +1,10 @@
 function res = checkinopt(opt, def, cond)
 % format: res = checkin(opt,def,cond)
+% _________________________________________________________________________
+% Robert Dahnke 2011_01
+% Center of Neuroimaging 
+% University Jena
+% $Id$
 % _________________________________________________________________________  
 
   if ~exist('def','var'),  def=[]; end

@@ -82,7 +82,7 @@ function P = cg_realign(P,flags)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: cg_realign.m 3756 2010-03-05 18:43:37Z guillaume $
+% $Id$
 
 
 if nargin==0, return; end;

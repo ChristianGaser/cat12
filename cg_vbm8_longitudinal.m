@@ -1,5 +1,9 @@
+%__________________________________________________________________________
+% Christian Gaser
+% $Id$
+
 %-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 3944 $)
+% Job configuration created by cfg_util (rev $Rev$)
 %-----------------------------------------------------------------------
 warning('off','MATLAB:DELETE:FileNotFound');
 if exist('data_long','var')

@@ -1,3 +1,9 @@
+/*
+ * Robert Dahnke
+ * $Id$ 
+ *
+ */
+
 /* Median Filter
  * ________________________________________________________________________
  * Median Filter for 3d single image D. Bi is used to mask voxels for the 

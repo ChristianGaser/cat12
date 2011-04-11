@@ -2,7 +2,7 @@ function out = cg_vbm8_longitudinal_multi_run(job)
 % Call cg_vbm8_longitudinal for multiple subjects
 %
 % Christian Gaser
-% $Id: cg_vbm8_longitudinal_multi_run.m $
+% $Id$
 
 global data_long
 
