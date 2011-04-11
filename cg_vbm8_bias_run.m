@@ -1,5 +1,8 @@
 function out = cg_vbm8_bias_run(job)
 % Correct bias between an image pair
+%__________________________________________________________________________
+% Christian Gaser
+% $Id$
 
 for i=1:numel(job.subj),
     out(i).files = cell(numel(job.subj(i).mov)-1,1);

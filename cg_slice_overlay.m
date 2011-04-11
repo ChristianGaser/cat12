@@ -1,4 +1,7 @@
 function cg_slice_overlay(OV);
+%__________________________________________________________________________
+% Christian Gaser
+% $Id$
 
 clear global SO
 global SO
@@ -367,7 +370,7 @@ function SO = pr_basic_ui(imgs, dispf)
 %         (defaults to GUI select if no arguments passed)
 % dispf - optional flag: if set, displays overlay (default = 1)
 %
-% $Id: pr_basic_ui.m,v 1.1 2005/04/20 15:05:00 matthewbrett Exp $
+% $Id$
  
 if nargin < 1
   imgs = '';

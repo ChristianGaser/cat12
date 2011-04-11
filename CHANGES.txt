@@ -885,3 +885,123 @@ Removed use of spm_get_bbox in cg_vbm8_write.m, because this function is only
 available aifter spm8 update 4290.
 ------------------------------------------------------------------------
 r403 | gaser | 2011-04-08 15:14:43
+
+ M     cg_create_MPM.m
+ M     cg_vbm8_defs.m
+MM     AmapMexNu.m
+ M     Contents_info.txt
+ M     optimizer3d.c
+ M     optimizer3d.h
+MM     Makefile.vbm
+ M     cg_vbm8_defaults.m
+ M     PveAmap_ui.m
+ M     stat_thresh.m
+ M     spm_vbm8.m
+ M     slice_overlay.m
+ M     AmapMex.mexa64
+MM     cg_run_realign_estwrite.m
+MM     kmeans3D.m
+ M     Template_3_IXI550_MNI152.nii
+ M     farras.m
+ M     MrfPrior.c
+ M     cg_vbm8_batch.m
+MM     cg_vbm8_update.m
+MM     ornlmMex.c
+MM     cg_cleanup_gwc.m
+MM     ornlmMex.m
+ M     Amap.c
+ M     cg_vbm8_tools.m
+ M     VBM8-Manual_Japanese.doc
+ M     cshift3D.m
+MM     cg_vbm8_bias_run.m
+ M     Anatomy2Dartel.txt
+ M     Amap.h
+ M     diffeo3d.c
+MM     cg_vbm8_get_defaults.m
+ M     diffeo3d.h
+ M     Pve5Mex.c
+ M     AmapMex.mexw32
+ M     compile.m
+ M     Pve5Mex.m
+MM     cg_realign.m
+MM     eikonal3.c
+MM     cg_vbm8_longitudinal_multi_run.m
+MM     cg_ornlm.m
+MM     median3.c
+MM     cg_slice_overlay_ui.m
+ M     cg_calculate_volume_ROI.m
+MM     cg_vbm8_longitudinal_multi.m
+MM     cg_run_realign_estimate.m
+ M     cg_vbm8_run.m
+ M     SplineSmooth.cc
+ M     AmapMex.c
+ M     cg_morph_vol.m
+ M     PveAmap.c
+ M     Template_4_IXI550_MNI152.nii
+ M     cg_spm8_batch.sh
+MM     PveAmap.h
+ M     AmapMex.m
+ M     AmapMex.mexmaci64
+ M     Bayes.c
+MM     upfirdn2dMex.c
+ M     BayesMex.c
+ M     VBM8-Manual.pdf
+MM     upfirdn2dMex.m
+ M     cg_vbm8_brainmask_ui.m
+ M     BayesMex.m
+ M     AmapMex.mexmaci
+ M     afb3D.m
+ M     Makefile
+ M     dwt3D.m
+MM     CHANGES.txt
+MM     KmeansProper.c
+ M     WarpPriors.c
+ M     cg_spm8_batch.m
+A      dp.m
+ M     cg_vbm8_batch.sh
+ M     Kmeans.c
+MM     GBM.m
+ M     tbx_cfg_vbm8.m
+MM     sanlmMex.c
+ M     Template_1_IXI550_MNI152.nii
+ M     cg_check_sample_sd.m
+MM     vollib.c
+MM     ornlm.c
+ M     Template_5_IXI550_MNI152.nii
+MM     vbdist.c
+MM     cg_sanlm.m
+MM     sanlm_float.c
+ M     AmapMex.mexw64
+ M     PveAmapMex.c
+ M     cg_vbm8_debug.m
+MM     cg_check_cov.m
+ M     cg_showslice_all.m
+ M     PveAmapMex.m
+ M     spm_max_nS.m
+MM     cg_cfg_realign.m
+MM     cg_slice_overlay.m
+ M     cg_vbm8_brainmask.m
+ M     KmeansMex.c
+ M     cg_lat_index.m
+MM     cg_vbm8_bias.m
+MM     checkinopt.m
+ M     KmeansMex.m
+MM     cg_spmF2x.m
+MM     cg_vbm8_longitudinal.m
+ M     cg_vbm8_write.m
+ M     VBM8-Manual.doc
+ M     AmapMex.mexglx
+ M     cg_spmT2x.m
+ M     Makefile.var
+MM     down_cut01.c
+ M     VBM8-Manual_Japanese.pdf
+ M     test_vbm8.m
+ M     Template_2_IXI550_MNI152.nii
+ M     Pve.c
+MM     AmapMexNu.c
+ M     Template_6_IXI550_MNI152.nii
+ M     cg_noise_estimation.m
+
+Updated and added svn keywords to all files.
+------------------------------------------------------------------------
+r404 | gaser | 2011-04-11 12:03:10

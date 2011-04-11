@@ -4,7 +4,7 @@ function cg_ornlm(vargin)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cg_ornlm.m 224 2009-12-02 23:39:15Z gaser $
+% $Id$
 
 if nargin == 1
 	P = char(vargin.data);

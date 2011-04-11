@@ -26,6 +26,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % Robert Dahnke 2011_01
 % Center of Neuroimaging 
 % University Jena
+% $Id$
 
 % CHECK INPUT
 % _________________________________________________________________________

@@ -1,6 +1,6 @@
 /*
  * Christian Gaser
- * $Id: AmapMex.c 223 2009-12-01 16:03:56Z gaser $ 
+ * $Id$ 
  *
  */
 

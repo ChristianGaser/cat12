@@ -1,6 +1,6 @@
 /*
  * Christian Gaser
- * $Id: Kmeans.c 112 2009-12-02 07:24:48Z gaser $ 
+ * $Id$ 
  *
  */
 

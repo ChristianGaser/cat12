@@ -1,4 +1,7 @@
 function cg_slice_overay_ui
+%__________________________________________________________________________
+% Christian Gaser
+% $Id$
 
 OV.reference_image = fullfile(spm('dir'),'canonical','single_subj_T1.nii');
 OV.reference_range = [0.05 0.6];                         % intensity range for reference image
