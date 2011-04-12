@@ -1014,3 +1014,12 @@ Call of spm_plot_convergence will be catched, because this function is
 only available since SPM8 release 4290.
 ------------------------------------------------------------------------
 r405 | gaser | 2011-04-12 13:31:08
+
+M       GBM.m
+M       tbx_cfg_vbm8.m
+
+(1) Corrected setting of sanlm-filter in tbx_cfg_vbm8.m to allow values > 1.
+(2) Disabled ventricle filling in GBM if not all output parameters are
+    defined.
+------------------------------------------------------------------------
+r406 | gaser | 2011-04-12 23:48:00

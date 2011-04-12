@@ -6,8 +6,8 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % cls (cell)      6 uint8 tissue class images (GM,WM,CSF,.,.,head)
 % res (struct)    
 % opt (struct)    main parameter
-%  .RSS           remove sinus sagitalis 
-%                 controls the detection has to be greater or equal one 
+%  .RSS           remove sinus sagittalis 
+%                 controls the detection (has to be greater or equal one) 
 %                 (RSS=1 more tissue, RSS=2.0 medium tissue (default), RSS>2 less tissue)  
 %  .BVH           remove high intensity blood vessels
 %  .BVN           remove low  intensity blood vessels
@@ -16,8 +16,8 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 %
 %
 % controll parameter:
-% RSS  = remove sinus sagitalis 
-%        controls the detection has to be greater or equal one 
+% RSS  = remove sinus sagittalis 
+%        controls the detection (has to be greater or equal one)
 %        (RSS=1 more tissue, RSS=1.5 medium tissue (default), RSS>=2 less tissue)
 %
 % RBV  = remove blood vessels
@@ -36,7 +36,11 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   def.RSS    = 2.0; % RSS controls the detection has to be greater or equal one (RSS=1 more tissue, RSS=1.5 medium tissue (default), RSS>=2 less tissue)
   def.BVH    = 1;   % remove high intensity blood vessels
   def.BVN    = 0;   % remove low  intensity blood vessels
-  def.FILL   = 1;   % detect ventricle and deep GM structures
+  if nargout > 3     % detection only if TSEG and SLAB are defined as output
+      def.FILL   = 1;   % detect ventricle and deep GM structures
+  else
+      def.FILL   = 0;   % don't detect ventricle and deep GM structures
+  end
   def.verb   = 1;   % display process 
   
   opt = checkinopt(opt,def);
@@ -79,7 +83,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 
 % REMOVE SINUS SAGITALIS
 % _________________________________________________________________________
-% Remove sinus sagitalis by analysis of the range from 1.25 to 1.75
+% Remove sinus sagittalis by analysis of the range from 1.25 to 1.75
 % between GM and CSF.
   if opt.RSS>0
     M = single(single(cls{1} + cls{2} + cls{3})>single(cls{4} + cls{5} + cls{6})); 
@@ -110,8 +114,8 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % MAJOR ALIGNMENT       
 % _________________________________________________________________________
 % align other voxels and smooth the map (median filter)
-  TSEGC=TSEG; TSEGC(TSEG<1.75)=-inf; SLAB = down_cut01(SLAB,TSEGC,0.1,vx_vol); clear TSEGC;        % alignment without sinus sagitalis
-  M=cg_morph_vol(D2<=inf,'labopen'); SLAB(S>0 & M==1)=11; SLAB(SLAB==11 & M==0)=7;                 % add sinus sagitalis anc other BV
+  TSEGC=TSEG; TSEGC(TSEG<1.75)=-inf; SLAB = down_cut01(SLAB,TSEGC,0.1,vx_vol); clear TSEGC;        % alignment without sinus sagittalis
+  M=cg_morph_vol(D2<=inf,'labopen'); SLAB(S>0 & M==1)=11; SLAB(SLAB==11 & M==0)=7;                 % add sinus sagittalis anc other BV
   SLAB = down_cut01(SLAB,TSEG,0.01,vx_vol);                                                        % align only neighbors with lower tissue intentsity
   SLAB = down_cut01(SLAB,TSEG,4.00,vx_vol);                                                        % align all remaining voxels
   SLAB = median3(SLAB,TSEG>0.5);                                                                   % smoothing
@@ -169,11 +173,11 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   % regions. Growing is regularised by images intensity to avoid
   % overflowing of the small boundaries. Another problems ist that, we
   % have to find a good threshold to calculate the eikonal distance. If
-  % the threshold is to low, we are may not able to get to the ventricle.
-  % If the threshold is to high we remove important boundaries and we get
+  % the threshold is too low, we may not able to get to the ventricle.
+  % If the threshold is too high we remove important boundaries and we get
   % from the wrong side (normaly next to the hindbrain) access to the
-  % ventricle and the values are to low, leading to a lot of errors.
-  % Small ventricle can lead to detection problmes because the are to
+  % ventricle and the values are too low, leading to a lot of errors.
+  % Small ventricle can lead to detection problmes because the are too
   % thin to allow greater depth.
   % TODO: - something to check the result (relation between ventricle and non-ventricle? - no?, to low max depth?)
   %       = growing process looks good, but the detection is horrible
@@ -193,7 +197,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
       foundV=sum(M(:)==1); 
     end
     if foundV>0
-      % find the two greatest objects - you has do do more than that...
+      % find the two greatest objects - you have do do more than that...
       % 1) there are maybe less elements... 
       % 2) may both ventricle are one...
 
@@ -228,7 +232,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
       % region growing (but only near the starting region)
       M(D>dbg(4) | SLAB==15 | TSEG<2.25)=-inf;                            M=down_cut01(M,        TSEG ,0,vx_vol); % growing to the GM
       M(D<dbg(4) & SLAB==1  & TSEG<2.75 & M==-inf)=0;                     M=down_cut01(M,max(0,3-TSEG),0,vx_vol); % growing to the WM
-      M(D<dbg(5) & SLAB==1  & TSEG<2.75 & TSEG>1.00 & M==-inf & DV<10)=0; M=down_cut01(M,        TSEG ,0,vx_vol); % growint to the ventricle
+      M(D<dbg(5) & SLAB==1  & TSEG<2.75 & TSEG>1.00 & M==-inf & DV<10)=0; M=down_cut01(M,        TSEG ,0,vx_vol); % growing to the ventricle
       M=median3(M); M(cg_morph_vol(M==-inf,'erode',2)==0 & M==-inf)=0; M=median3(M);                              % smoothing
       SLAB(SLAB==1 & M==1 & TSEG<=2.75)=5;                                                                        % add ventricle to the atlas 
       opt.time.GBM8BG = dp('|BG',opt,stime); stime = clock;
@@ -236,7 +240,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 
     % CEREBELLUM
     % _____________________________________________________________________
-    % ... find it and than you can deside beween left and right with the BG
+    % ... find it and than you can decide beween left and right with the BG
     % structures
 
 
@@ -249,12 +253,6 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
        if opt.verb>0, fprintf('|VD: failed     '); end
     end
   end
-
-  [home,file]=fileparts(res.image.fname);
-%  SLABh  = res.image; SLABh.fname  = sprintf('%s%sa%s.nii' ,home,filesep,file); spm_write_vol(SLABh,SLAB);
-%  TSEGh  = res.image; TSEGh.fname  = sprintf('%s%st%s.nii' ,home,filesep,file); spm_write_vol(TSEGh,TSEG);
-  % TODO: filled version of SEG -> SEGPF
-  clear home file SLABh TSEGh;
 
 function T=create_TSEG(src,cls,vx_vol)
 % _________________________________________________________________________
