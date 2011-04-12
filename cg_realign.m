@@ -229,14 +229,22 @@ if numel(P) > 2,
     % eliminate a better choice of voxels - but this way will do for
     % now. It basically involves removing the voxels that contribute
     % least to the determinant of the inverse covariance matrix.
-
-    spm_plot_convergence('Init','Eliminating Unimportant Voxels',...
+    try
+        spm_plot_convergence('Init','Eliminating Unimportant Voxels',...
               'Relative quality','Iteration');
+    catch
+        spm_chi2_plot('Init','Eliminating Unimportant Voxels',...
+              'Relative quality','Iteration');
+    end
     Alpha = [A0 b];
     Alpha = Alpha'*Alpha;
     det0  = det(Alpha);
     det1  = det0;
-    spm_plot_convergence('Set',det1/det0);
+    try
+        spm_plot_convergence('Set',det1/det0);
+    catch
+        spm_chi2_plot('Set',det1/det0);
+    end
     while det1/det0 > flags.quality,
         dets  = zeros(size(A0,1),1);
         for i=1:size(A0,1),
@@ -253,9 +261,17 @@ if numel(P) > 2,
         Alpha = [A0 b];
         Alpha = Alpha'*Alpha;
         det1  = det(Alpha);
-        spm_plot_convergence('Set',single(det1/det0));
+        try
+            spm_plot_convergence('Set',single(det1/det0));
+        catch
+            spm_chi2_plot('Set',single(det1/det0));
+        end
     end;
-    spm_plot_convergence('Clear');
+    try
+        spm_plot_convergence('Clear');
+    catch
+        spm_chi2_plot('Clear');
+    end
 end;
 %-----------------------------------------------------------------------
 

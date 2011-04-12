@@ -168,12 +168,20 @@ for iter=1:nit,
                     aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
                     M = eye(4);
-                    spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
+                    try
+                        spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
+                    catch
+                        spm_chi2_plot('Init','Coarse Affine Registration','Mean squared difference','Iteration');
+                    end
                     [Affine, scale]  = spm_affreg(VG, VF1, aflags, M);
 
                     aflags.WG  = spm_vol(fullfile(spm('Dir'),'apriori','brainmask.nii'));
                     aflags.sep = aflags.sep/2;
-                    spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
+                    try
+                        spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
+                    catch
+                        spm_chi2_plot('Init','Fine Affine Registration','Mean squared difference','Iteration');
+                    end
                     Affine  = spm_affreg(VG, VF1, aflags, Affine, scale);
 
                     fprintf('Fine Affine Registration..\n');
