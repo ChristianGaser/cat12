@@ -266,8 +266,8 @@ sanlm.help = {[...
 'to the data. This filter will remove noise while ',...
 'preserving edges. The smoothing filter size is automatically estimated based on ',...
 'the local variance in the image. ']};
-sanlm.labels = {'No denoising','Denoising'};
-sanlm.values = {0 1};
+sanlm.labels = {'No denoising','Denoising','Denoising (multi-threaded)'};
+sanlm.values = {0 1 2};
 sanlm.def  = @(val)cg_vbm8_get_defaults('extopts.sanlm', val{:});
 
 %------------------------------------------------------------------------
