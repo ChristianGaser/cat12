@@ -1005,3 +1005,12 @@ MM     AmapMexNu.c
 Updated and added svn keywords to all files.
 ------------------------------------------------------------------------
 r404 | gaser | 2011-04-11 12:03:10
+
+M      cg_vbm8_bias_run.m
+M      cg_realign.m
+M      cg_vbm8_run.m
+
+Call of spm_plot_convergence will be catched, because this function is
+only available since SPM8 release 4290.
+------------------------------------------------------------------------
+r405 | gaser | 2011-04-12 13:31:08
