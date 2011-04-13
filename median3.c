@@ -122,8 +122,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   float *M = (float *)mxGetPr(plhs[0]);
-
-  printf("%f %f",bil,bih);
   
   /* filter process */
   for (i=0;i<nL;i++) {
