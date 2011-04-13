@@ -1023,3 +1023,34 @@ M       tbx_cfg_vbm8.m
     defined.
 ------------------------------------------------------------------------
 r406 | gaser | 2011-04-12 23:48:00
+
+M      down_cut01.mexmaci64
+M      sanlmMex.mexw32
+M      down_cut01.mexw64
+M      median3.mexa64
+M      down_cut01.mexglx
+M      median3.mexw32
+M      down_cut01.mexmaci
+M      AmapMex.mexw32
+M      eikonal3.mexw32
+M      median3.c
+M      median3.mexmaci64
+M      sanlmMex.mexw64
+M      vbdist.mexw32
+M      down_cut01.mexa64
+M      median3.mexmaci
+M      GBM.m
+M      down_cut01.mexw32
+M      median3.mexw64
+M      AmapMex.mexw64
+M      eikonal3.mexw64
+M      median3.mexglx
+M      vbdist.mexw64
+M      down_cut01.c
+
+(1) Modified check for bllod vessels in GBM.m, that occasionally caused
+    problems.
+(2) Corrected use of FLT_MIN and FLT_MAX in some c-functions.
+(3) Recompiled mex-files.
+------------------------------------------------------------------------
+r407 | gaser | 2011-04-13 16:46:45

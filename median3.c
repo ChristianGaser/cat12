@@ -27,6 +27,8 @@
  *
  * Used slower quicksort for median calculation, because the faster median 
  * of the median application implemenation leads to wrong results. 
+ *
+ * TODO: check all input elements... 
  * ________________________________________________________________________
  * Robert Dahnke 2011_01
  * Center of Neuroimaging 
@@ -89,10 +91,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const int     y  = (int) sL[1];
   const int     xy = x*y;
   
-  if ( dL != 3 || mxIsSingle(prhs[0])==0)                mexErrMsgTxt("ERROR:median3: first input must be an single 3d matrix\n");
-  if ( nrhs>1 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: second input must be 3d - to use a later parameter use ''ones(size( input1 ),'logical')''\n");
-  if ( nrhs>2 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: third input must be 3d - to use a later parameter use ''ones(size( input1 ),'logical')'\n");
- 
+  if ( dL != 3 || mxIsSingle(prhs[0])==0)                mexErrMsgTxt("ERROR:median3: first input must be a single 3d matrix\n");
+  if ( nrhs>1 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
+  if ( nrhs>2 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: third input must be 3d - to use a later parameter use ''true(size( input1 ))'\n");
+  if ( nrhs>1 && mxIsLogical(prhs[1])==0)                mexErrMsgTxt("ERROR:median3: second input must be a logical 3d matrix\n");
+  if ( nrhs>2 && mxIsLogical(prhs[2])==0)                mexErrMsgTxt("ERROR:median3: third input must be a logical 3d matrix\n"); 
+
+  
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = {0,  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x,  -xy-x-1,-xy-x+1,-xy+x-1,-xy+x+1, xy-x-1,xy-x+1,xy+x-1,xy+x+1};  
   float NV[27], bi, bn, sf, bil, bih, bnl, bnh;
@@ -105,31 +110,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nrhs>=3) Bn =  (bool *) mxGetPr(prhs[2]); 
   if (nrhs<4) sf  = 0; 
   else        sf  = (float) *mxGetPr(prhs[3]);
-  if (nrhs<5) bil = FLT_MIN; 
+
+  if (nrhs<5) bil = -FLT_MAX;   
   else        bil = (float) *mxGetPr(prhs[4]);
-  if (nrhs<6) bih =  FLT_MAX; 
+  if (nrhs<6) bih =  FLT_MAX;   
   else        bih = (float) *mxGetPr(prhs[5]);
-  if (nrhs<7) bnl = FLT_MIN; 
+  if (nrhs<7) bnl = -FLT_MAX;   
   else        bnl = (float) *mxGetPr(prhs[6]);  
-  if (nrhs<8) bnh =  FLT_MAX; 
+  if (nrhs<8) bnh =  FLT_MAX;   
   else        bnh = (float) *mxGetPr(prhs[7]);
 
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   float *M = (float *)mxGetPr(plhs[0]);
 
+  printf("%f %f",bil,bih);
+  
   /* filter process */
   for (i=0;i<nL;i++) {
-    if ((nrhs>=2 && Bi[i]) && D[i]>=bil && D[i]<=bih) {
+    if ((nrhs==1 || (nrhs>=2 && Bi[i])) && D[i]>=bil && D[i]<=bih) {
       ind2sub(i,&u,&v,&w,xy,x);
       for (n=0;n<=26;n++) {
         ni = i - NI[n];
         ind2sub(ni,&nu,&nv,&nw,xy,x);
 #if defined(_WIN32)
         if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || 
-              (nrhs>=3 && Bn[ni]==0) || D[ni]<bnl ||  D[ni]>bnh || _isnan(D[ni]) || D[ni]==FLT_MAX || D[i]==FLT_MIN ) ni=i;
+              (nrhs>=3 && Bn[ni]==0) || D[ni]<bnl ||  D[ni]>bnh || _isnan(D[ni]) || D[ni]==FLT_MAX || D[i]==-FLT_MAX ) ni=i;
 #else
         if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || 
-              (nrhs>=3 && Bn[ni]==0) || D[ni]<bnl ||  D[ni]>bnh || isnan(D[ni]) || D[ni]==FLT_MAX || D[i]==FLT_MIN ) ni=i;
+              (nrhs>=3 && Bn[ni]==0) || D[ni]<bnl ||  D[ni]>bnh || isnan(D[ni]) || D[ni]==FLT_MAX || D[i]==-FLT_MAX ) ni=i;
 #endif
         NV[n]=D[ni];  
       }
