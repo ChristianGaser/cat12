@@ -1054,3 +1054,15 @@ M      down_cut01.c
 (3) Recompiled mex-files.
 ------------------------------------------------------------------------
 r407 | gaser | 2011-04-13 16:46:45
+
+M      median3.mexa64
+M      median3.mexw32
+M      median3.c
+M      median3.mexmaci64
+M      median3.mexmaci
+M      median3.mexw64
+M      median3.mexglx
+
+Removed debug output from median3.c.
+------------------------------------------------------------------------
+r408 | gaser | 2011-04-13 17:27:39
