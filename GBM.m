@@ -34,7 +34,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   if ~exist('opt','var'), opt=struct(); end
 
   def.RSS    = 2.0; % RSS controls the detection has to be greater or equal one (RSS=1 more tissue, RSS=1.5 medium tissue (default), RSS>=2 less tissue)
-  def.BVH    = 1;   % remove high intensity blood vessels
+  def.BVH    = 0;   % remove high intensity blood vessels
   def.BVN    = 0;   % remove low  intensity blood vessels
   if nargout > 3     % detection only if TSEG and SLAB are defined as output
       def.FILL   = 1;   % detect ventricle and deep GM structures
@@ -105,17 +105,18 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
     
 % HIGH INTENSITY BLOOD VESSELS 
 % _________________________________________________________________________
-  if opt.BVH
-    SLAB((TSEG>3.25 & SLAB<=1))=7;
-  end
+  BV=(cg_morph_vol(cg_morph_vol(SLAB==11,'open',3),'labopen')==0 & SLAB==11) | (TSEG>3.25 & SLAB<=1); 
 
-  
   
 % MAJOR ALIGNMENT       
 % _________________________________________________________________________
 % align other voxels and smooth the map (median filter)
-  TSEGC=TSEG; TSEGC(TSEG<1.75)=-inf; SLAB = down_cut01(SLAB,TSEGC,0.1,vx_vol); clear TSEGC;        % alignment without sinus sagittalis
-  M=cg_morph_vol(D2<=inf,'labopen'); SLAB(S>0 & M==1)=11; SLAB(SLAB==11 & M==0)=7;                 % add sinus sagittalis anc other BV
+  SLAB2=single(SLAB==1); SLAB2(SLAB==0 & TSEG<2)=-inf; SLAB2 = down_cut01(SLAB2,TSEG,0.0,vx_vol);
+  SLAB2=cg_morph_vol(cg_morph_vol(SLAB==11,'open',1),'labopen'); SLAB(SLAB2==1 & SLAB~=11 & BV==0)=1; clear SLAB2; % if spm find to less
+  SLAB((SLAB==0 & TSEG<1.75) | BV)=-inf; SLAB = down_cut01(SLAB,TSEG,0.0,vx_vol); SLAB(SLAB==-inf)=0; clear TSEGC;        % alignment without sinus sagittalis
+  M=cg_morph_vol(D2<=inf,'labopen'); SLAB(S>0 & M==1 & SLAB~=1)=11; SLAB(SLAB==11 & M==0)=7;                 % add sinus sagittalis anc other BV
+  if opt.BVH, SLAB(BV)=7; else SLAB(BV)=0; end
+  
   SLAB = down_cut01(SLAB,TSEG,0.01,vx_vol);                                                        % align only neighbors with lower tissue intentsity
   SLAB = down_cut01(SLAB,TSEG,4.00,vx_vol);                                                        % align all remaining voxels
   SLAB = median3(SLAB,TSEG>0.5);                                                                   % smoothing
