@@ -99,7 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 #endif
 		if (SLAB[i]==0) 					{DIST[i]= FLT_MAX; } 
 		else {
-			if (SLAB[i]==FLT_MIN) {DIST[i]=FLT_MIN; }
+			if (SLAB[i]==-FLT_MAX) {DIST[i]=-FLT_MAX; }
 			else 										{DIST[i]=0; nCV++;} } 
 	}
 	/* diffusion */
@@ -109,7 +109,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		kll++; nC=0;
 	
 		for (i=0;i<nL;i++) { 
-			if ( (DIST[i]<=0) && (DIST[i]!=FLT_MIN ) ) { 
+			if ( (DIST[i]<=0) && (DIST[i]!=-FLT_MAX ) ) { 
 				if (DIST[i]<0) DIST[i]=-DIST[i]; 
 				nCV--; /* demark points - also the with zero distance */
 				
@@ -121,14 +121,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             if (nrhs==5) DISTN = DIST[i] + dd[0]*ND[n] + dd[1]*max2(0,SEG[ni]);  
             else         DISTN = DIST[i] + dd[0]*ND[n] + dd[1]*max2(0,4-SEG[ni]);
             
-						if (  (DIST[ni]!=FLT_MIN) && (abs2(DIST[ni])>abs2(DISTN)) )  {	
+						if (  (DIST[ni]!=-FLT_MAX) && (abs2(DIST[ni])>abs2(DISTN)) )  {	
 							if (DIST[ni]>0) nCV++; nC++;
 							DIST[ni] = -DISTN;
 							SLAB[ni] = SLAB[i];
 						}
 					}				
 				}
-				if (DIST[i]==0) DIST[i]=FLT_MIN; /* demark start points */
+				if (DIST[i]==0) DIST[i]=-FLT_MAX; /* demark start points */
 				
 			}
 		}		
