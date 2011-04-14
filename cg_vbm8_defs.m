@@ -29,17 +29,18 @@ function apply_def(Def,mat,fnames,intrp,modulate)
 % Warp an image or series of images according to a deformation field
 
 intrp = [intrp*[1 1 1], 0 0 0];
+ofnames = cell(size(fnames,1),1);
 
 for i=1:size(fnames,1),
     V = spm_vol(fnames(i,:));
     M = inv(V.mat);
     [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:)));
     if modulate
-        ofname = fullfile(pth,['mw',nam,ext]);
+        ofnames{i} = fullfile(pth,['mw',nam,ext]);
     else
-        ofname = fullfile(pth,['w',nam,ext]);
+        ofnames{i} = fullfile(pth,['w',nam,ext]);
     end
-    Vo = struct('fname',ofname,...
+    Vo = struct('fname',ofnames{i},...
                 'dim',[size(Def{1},1) size(Def{1},2) size(Def{1},3)],...
                 'dt',V.dt,...
                 'pinfo',V.pinfo,...
