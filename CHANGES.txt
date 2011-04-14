@@ -1066,3 +1066,9 @@ M      median3.mexglx
 Removed debug output from median3.c.
 ------------------------------------------------------------------------
 r408 | gaser | 2011-04-13 17:27:39
+
+M      cg_vbm8_defs.m
+
+Removed bug in cg_vbm8_defs.m, where the output path was not defined.
+------------------------------------------------------------------------
+r409 | gaser | 2011-04-14 08:08:29
