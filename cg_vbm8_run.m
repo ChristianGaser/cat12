@@ -304,7 +304,12 @@ if numel(fn)==0, return; end;
 for i=1:length(fn),
     eval([fn{i} '= p.' fn{i} ';']);
 end;
-if spm_check_version('matlab','7') >= 0
+try 
+    mat_ver = spm_check_version('matlab','7');
+catch
+    mat_ver = spm_matlab_version_chk('7');
+end 
+if mat_ver >= 0
     save(fnam,'-V6',fn{:});
 else
     save(fnam,fn{:});
