@@ -1072,3 +1072,9 @@ M      cg_vbm8_defs.m
 Removed bug in cg_vbm8_defs.m, where the output path was not defined.
 ------------------------------------------------------------------------
 r409 | gaser | 2011-04-14 08:08:29
+
+M      GBM.m
+
+Some changes to GBM.m to better deal with blood vessels.
+------------------------------------------------------------------------
+r410 | gaser | 2011-04-14 13:57:32

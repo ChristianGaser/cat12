@@ -34,7 +34,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   if ~exist('opt','var'), opt=struct(); end
 
   def.RSS    = 2.0; % RSS controls the detection has to be greater or equal one (RSS=1 more tissue, RSS=1.5 medium tissue (default), RSS>=2 less tissue)
-  def.BVH    = 0;   % remove high intensity blood vessels
+  def.BVH    = 1;   % remove high intensity blood vessels
   def.BVN    = 0;   % remove low  intensity blood vessels
   if nargout > 3     % detection only if TSEG and SLAB are defined as output
       def.FILL   = 1;   % detect ventricle and deep GM structures
@@ -71,7 +71,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   clstp=[0 1 0 11 11 11]; clsth=[1 0.9 1 0.9 0.6 0.2]; 
   SLAB = zeros(size(src),'single'); for c=1:6, SLAB(cls{c}>256*clsth(c))=clstp(c); end; 
   mask = cg_morph_vol(cg_morph_vol(cg_morph_vol((cls{1}+cls{2})/255*3>0.5,'open',round(2*scale_morph))==1,'dilate',round(2*scale_morph)),'labopen');
-  SLAB((cls{4}>256*0.5 | cls{5}>256*0.5 | cls{6}>256*0.5) & mask==0)=11; clear mask;
+  SLAB((cls{4}>256*0.8 | cls{5}>256*0.5 | cls{6}>256*0.5) & mask==0)=11; clear mask;
 
   % inital speed map for graph-cut (BG=0, CSF=1, GM=2, WM=3, Other=4) 
   % because we adjust the intensities noise filter can used again 
@@ -85,6 +85,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % _________________________________________________________________________
 % Remove sinus sagittalis by analysis of the range from 1.25 to 1.75
 % between GM and CSF.
+  cls4=0;
   if opt.RSS>0
     M = single(single(cls{1} + cls{2} + cls{3})>single(cls{4} + cls{5} + cls{6})); 
     M( cg_morph_vol( ((cls{1}/3)>cls{3} & cls{3}<64) | cls{2}>0,'open',1)==1 & M==1)=-1; D1=eikonal3(M,vx_vol);
@@ -111,12 +112,9 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % MAJOR ALIGNMENT       
 % _________________________________________________________________________
 % align other voxels and smooth the map (median filter)
-  SLAB2=single(SLAB==1); SLAB2(SLAB==0 & TSEG<2)=-inf; SLAB2 = down_cut01(SLAB2,TSEG,0.0,vx_vol);
-  SLAB2=cg_morph_vol(cg_morph_vol(SLAB==11,'open',1),'labopen'); SLAB(SLAB2==1 & SLAB~=11 & BV==0)=1; clear SLAB2; % if spm find to less
-  SLAB((SLAB==0 & TSEG<1.75) | BV)=-inf; SLAB = down_cut01(SLAB,TSEG,0.0,vx_vol); SLAB(SLAB==-inf)=0; clear TSEGC;        % alignment without sinus sagittalis
+  SLAB((SLAB==0 & TSEG<1.75) | BV)=-inf; SLAB = down_cut01(SLAB,TSEG,0.0,vx_vol); SLAB(SLAB==-inf)=0; clear TSEGC;  % alignment without sinus sagittalis
   M=cg_morph_vol(D2<=inf,'labopen'); SLAB(S>0 & M==1 & SLAB~=1)=11; SLAB(SLAB==11 & M==0)=7;                 % add sinus sagittalis anc other BV
   if opt.BVH, SLAB(BV)=7; else SLAB(BV)=0; end
-  
   SLAB = down_cut01(SLAB,TSEG,0.01,vx_vol);                                                        % align only neighbors with lower tissue intentsity
   SLAB = down_cut01(SLAB,TSEG,4.00,vx_vol);                                                        % align all remaining voxels
   SLAB = median3(SLAB,TSEG>0.5);                                                                   % smoothing
@@ -149,7 +147,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % Use the detected region (SLAB==1), remove holes and islands and add some
 % space around the the major segment.
   dc = 2;
-  mask  = (SLAB==1 | SLAB==7); % | (D2>5);                                 % initial mask, D2 is only available if RSS>0)
+  mask  = (SLAB==1); % | SLAB==7); % | (D2>5);                                 % initial mask, D2 is only available if RSS>0)
   mask  = cg_morph_vol(mask,'close',1);
   mask  = cg_morph_vol(mask,'labclose');                                   % closing holes
   mask  = cg_morph_vol(mask,'labopen');                                    % remove islands
