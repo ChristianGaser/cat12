@@ -1078,3 +1078,9 @@ M      GBM.m
 Some changes to GBM.m to better deal with blood vessels.
 ------------------------------------------------------------------------
 r410 | gaser | 2011-04-14 13:57:32
+
+M      cg_vbm8_run.m
+
+Call of spm_check_version in cg_vbm8_run.m is now applied using "try".
+------------------------------------------------------------------------
+r411 | gaser | 2011-04-14 15:37:57
