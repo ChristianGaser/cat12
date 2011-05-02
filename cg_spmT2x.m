@@ -288,15 +288,14 @@ for i=1:size(P,1)
             k = pk;
             p_extent_str = '';
         end
-        noniso
+        
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
-%            A     = spm_clusters(XYZ);
 
-    [N Z XYZ A L] = spm_max(Z,XYZ);
-    c       = max(A);                                  %-Number of clusters
+            [N Z XYZ A L] = spm_max(Z,XYZ);
+            c     = max(A);                                  %-Number of clusters
             Q     = [];
             for i = 1:c
 
@@ -318,7 +317,7 @@ for i=1:size(P,1)
                 IV   = spm_resels([1 1 1],L{i},'V');
                 IV   = IV*[1/2 2/3 2/3 1]';
                 j = IV*LKC;
-K
+
                 if j >= k; Q = [Q j]; end
             end
         else

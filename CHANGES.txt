@@ -1084,3 +1084,11 @@ M      cg_vbm8_run.m
 Call of spm_check_version in cg_vbm8_run.m is now applied using "try".
 ------------------------------------------------------------------------
 r411 | gaser | 2011-04-14 15:37:57
+
+M      cg_vbm8_write.m
+M      cg_spmT2x.m
+
+(1) Removed debugging code in cg_spmT2x.m.
+(2) Removed changes from r410 in GBM.m.
+------------------------------------------------------------------------
+r412 | gaser | 2011-05-02 17:58:45
