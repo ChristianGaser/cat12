@@ -334,7 +334,13 @@ if do_cls && do_defs,
     end
     
     % set all non-brain tissue outside mask to 0
-    label2((label2 > 3) | (mask == 0)) = 0;
+    label2(mask == 0)  = 0;
+    
+    % and for skull/bkg tissue classes to 0
+    label2(label2 > 3) = 0;
+    % and for skull/bkg tissue classes to 1 (=CSF)
+    % experimental
+%    label2(label2 > 3) = 1;
     
     % fill remaining holes in label with 1
     mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
