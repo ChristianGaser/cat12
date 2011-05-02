@@ -1092,3 +1092,13 @@ M      cg_spmT2x.m
 (2) Removed changes from r410 in GBM.m.
 ------------------------------------------------------------------------
 r412 | gaser | 2011-05-02 17:58:45
+
+M       Contents_info.txt
+M       Makefile.vbm
+A       INSTALL_info.txt
+D       spm_max_nS.m
+
+(1) Updated Contents.m and added missing INSTALL.txt.
+(2) Removed spm_max_nS.m.
+------------------------------------------------------------------------
+r413 | gaser | 2011-05-02 21:34:57
