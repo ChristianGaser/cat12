@@ -51,7 +51,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % first simple correction of classes (not ready!)
 % _________________________________________________________________________
   stime = clock;
-  cls{6}=cls{6} + uint8(256-sum(single(cat(4,cls{1},cls{2},cls{3},cls{4},cls{5},cls{6})),4)); % if the sum of the classe is not 100% add the rest to the background 
+  cls{6}=cls{6} + uint8(255-sum(single(cat(4,cls{1},cls{2},cls{3},cls{4},cls{5},cls{6})),4)); % if the sum of the classe is not 100% add the rest to the background 
   for i=1:6, cls{i}=uint8(median3(single(cls{i}),cls{i}>0,true(size(src)))); end              % noise reduction  
 
   % 2) if the head is to thick, SPM detect GM outside the brain and we have to remove it (only one GM Segment)
@@ -69,9 +69,9 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % Version of the src image (BG=0, CSF=1, GM=2, WM=3, Other=4). 
 % _________________________________________________________________________
   clstp=[0 1 0 11 11 11]; clsth=[1 0.9 1 0.9 0.6 0.2]; 
-  SLAB = zeros(size(src),'single'); for c=1:6, SLAB(cls{c}>256*clsth(c))=clstp(c); end; 
+  SLAB = zeros(size(src),'single'); for c=1:6, SLAB(cls{c}>255*clsth(c))=clstp(c); end; 
   mask = cg_morph_vol(cg_morph_vol(cg_morph_vol((cls{1}+cls{2})/255*3>0.5,'open',round(2*scale_morph))==1,'dilate',round(2*scale_morph)),'labopen');
-  SLAB((cls{4}>256*0.8 | cls{5}>256*0.5 | cls{6}>256*0.5) & mask==0)=11; clear mask;
+  SLAB((cls{4}>255*0.8 | cls{5}>255*0.5 | cls{6}>255*0.5) & mask==0)=11; clear mask;
 
   % inital speed map for graph-cut (BG=0, CSF=1, GM=2, WM=3, Other=4) 
   % because we adjust the intensities noise filter can used again 
@@ -90,13 +90,13 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
     M = single(single(cls{1} + cls{2} + cls{3})>single(cls{4} + cls{5} + cls{6})); 
     M( cg_morph_vol( ((cls{1}/3)>cls{3} & cls{3}<64) | cls{2}>0,'open',1)==1 & M==1)=-1; D1=eikonal3(M,vx_vol);
     M = single(cg_morph_vol(cg_morph_vol(D1/opt.RSS>TSEG,'close'),'erode')); 
-    M(M==0 & cg_morph_vol(cg_morph_vol( (single(cls{1} + cls{2} + cls{3})/256<0.25) | (single(cls{1} + cls{2})/256>0.75) ,'open'),'close')==1)=-inf; 
+    M(M==0 & cg_morph_vol(cg_morph_vol( (single(cls{1} + cls{2} + cls{3})/255<0.25) | (single(cls{1} + cls{2})/255>0.75) ,'open'),'close')==1)=-inf; 
     M = cg_morph_vol(down_cut01(M,TSEG,0.1,vx_vol),'close'); 
 
     % removing of inbrain structures (simple closing will also remove small structure that we are interested in 
     D2 = single(cg_morph_vol(M==1 | SLAB==11,'labclose')); D2(cg_morph_vol(cg_morph_vol(D2,'open',6*scale_morph),'labopen')==1)=-1; 
     D2 = eikonal3(D2,vx_vol); D2=median3(D2,D2>0); 
-    S  = false(size(TSEG)); S((cls{4}<256*0.25 & cls{5}<256*0.25 & cls{6}<256*0.1) & M==1 & D2<10 & D1>TSEG)=1; clear D1 M;
+    S  = false(size(TSEG)); S((cls{4}<255*0.25 & cls{5}<255*0.25 & cls{6}<255*0.1) & M==1 & D2<10 & D1>TSEG)=1; clear D1 M;
   else
     D2 = zeros(size(SLAB),'single');
     S  = zeros(size(SLAB),'single');
