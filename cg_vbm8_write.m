@@ -176,6 +176,7 @@ for z=1:length(x3),
     for n=1:N,
         f = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
         bf1 = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
+        bf1(bf1>100) = 100;
         cr{n} = bf1.*f;
         
         % Write a plane of bias corrected data
@@ -256,6 +257,9 @@ src = zeros(res.image(1).dim(1:3),'single');
 for z=1:length(x3),
     f = spm_sample_vol(res.image(1),x1,x2,o*x3(z),0);
     bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
+    % restrict bias field to maximum of 100 
+    % (sometimes artefacts at the borders can cause huge values in bias field)
+    bf1(bf1>100) = 100;
     src(:,:,z) = single(bf1.*f);
 end
 

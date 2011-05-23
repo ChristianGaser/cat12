@@ -272,9 +272,9 @@ function T=create_TSEG(src,cls,vx_vol)
   srcs=smooth3(src); % smooth the src to get more stable histograms
   % we can't trust the CSF region outside the brainm that why we only want to take values from voxel with a creater distance to the head
   D = vbdist(single(cg_morph_vol((cls{4}+cls{5}+cls{6})>(cls{1}+cls{2}+cls{3}),'close',2)),true(size(src)),vx_vol);
-  [hst,hsti]=hist(srcs(cls{1}(:)/255>th(1) & D(:)>dth(1)),minsrc:1:maxsrc);               [tmp,maxi]=max(hst); t(2)=hsti(maxi); % GM
-  [hst,hsti]=hist(srcs(cls{2}(:)/255>th(2) & D(:)>dth(2) & src(:)>t(2)),minsrc:1:maxsrc); [tmp,maxi]=max(hst); t(1)=hsti(maxi); % WM
-  [hst,hsti]=hist(srcs(cls{3}(:)/255>th(3) & D(:)>dth(3) & src(:)<t(2)),minsrc:1:maxsrc); [tmp,maxi]=max(hst); t(3)=hsti(maxi); % CSF
+  [hst,hsti]=hist(srcs(cls{1}(:)/255>th(1) & D(:)>dth(1)),linspace(minsrc,maxsrc,1000));               [tmp,maxi]=max(hst); t(2)=hsti(maxi); % GM
+  [hst,hsti]=hist(srcs(cls{2}(:)/255>th(2) & D(:)>dth(2) & src(:)>t(2)),linspace(minsrc,maxsrc,1000)); [tmp,maxi]=max(hst); t(1)=hsti(maxi); % WM
+  [hst,hsti]=hist(srcs(cls{3}(:)/255>th(3) & D(:)>dth(3) & src(:)<t(2)),linspace(minsrc,maxsrc,1000)); [tmp,maxi]=max(hst); t(3)=hsti(maxi); % CSF
   clear tmp hst hsti maxi;
   
   T = single(src);
