@@ -309,7 +309,7 @@ for i=1:size(P,1)
                 if any(valid)
                     LKC = sum(LKC(valid)) / sum(valid);
                 else
-                    LKC = V2R; % fall back to whole-brain resel density
+                    LKC = v2r; % fall back to whole-brain resel density
                 end
                 
                 %-Intrinsic volume (with surface correction)

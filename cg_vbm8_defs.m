@@ -6,18 +6,27 @@ function cg_vbm8_defs(job)
 % $Id$
 
 % remove potential file number at the end
-[pth,nam,ext,num] = spm_fileparts(job.field{1});
-job.field{1} = fullfile(pth,[nam ext]);
 
-[Def,mat] = get_def(job.field);
-apply_def(Def,mat,char(job.fnames),job.interp,job.modulate);
+PU = job.field;
+PI = job.images;
+
+for i=1:numel(PU),
+
+  [pth,nam,ext,num] = spm_fileparts(PU{i});
+  PU{i} = fullfile(pth,[nam ext]);
+
+  [Def,mat] = get_def(PU{i});
+  for m=1:numel(PI)
+    apply_def(Def,mat,char(PI{m}{i}),job.interp,job.modulate);
+  end
+end
 return
 
 %_______________________________________________________________________
 function [Def,mat] = get_def(job)
 % Load a deformation field saved as an image
 
-P      = [repmat(job{:},3,1), [',1,1';',1,2';',1,3']];
+P      = [repmat(job,3,1), [',1,1';',1,2';',1,3']];
 V      = spm_vol(P);
 Def    = cell(3,1);
 Def{1} = spm_load_float(V(1));
