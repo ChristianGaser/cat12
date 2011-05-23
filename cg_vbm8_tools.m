@@ -431,22 +431,25 @@ field.tag  = 'field';
 field.name = 'Deformation Field';
 field.filter = 'image';
 field.ufilter = '.*y_.*\.nii$';
-field.num     = [1 1];
+field.num     = [1 Inf];
 field.help = {[...
 'Deformations can be thought of as vector fields. These can be represented ',...
 'by three-volume images.']};
 
-applyto = cfg_files;
-applyto.tag  = 'fnames';
-applyto.name = 'Apply to';
-applyto.filter = 'image';
-applyto.num     = [0 Inf];
-applyto.help = {[...
-'Apply the resulting deformation field to some images. ',...
-'The warped images will be written, and the ',...
-'filenames prepended by "w".  Note that trilinear interpolation is used ',...
-'to resample the data, so the original values in the images will ',...
-'not be preserved.']};
+images1         = cfg_files;
+images1.tag     = 'images';
+images1.name    = 'Images';
+images1.help    = {'Select images to be warped. Note that there should be the same number of images as there are deformation fields, such that each flow field warps one image.'};
+images1.filter = 'nifti';
+images1.ufilter = '.*';
+images1.num     = [1 Inf];
+
+images         = cfg_repeat;
+images.tag     = 'images';
+images.name    = 'Images';
+images.help    = {'The flow field deformations can be applied to multiple images. At this point, you are choosing how many images each flow field should be applied to.'};
+images.values  = {images1 };
+images.num     = [1 Inf];
 
 interp      = cfg_menu;
 interp.name = 'Interpolation';
@@ -486,7 +489,7 @@ modulate.help = {[...
 defs = cfg_exbranch;
 defs.tag = 'defs';
 defs.name = 'Apply Deformations';
-defs.val = {field,applyto,interp,modulate};
+defs.val = {field,images,interp,modulate};
 defs.prog    = @cg_vbm8_defs;
 defs.vfiles  = @vfiles_defs;
 defs.help    = {'This is a utility for applying deformation fields to images.'};;
@@ -507,17 +510,23 @@ return
 %_______________________________________________________________________
 
 function vf = vfiles_defs(job)
-vf = {};
 
-s  = strvcat(job.fnames);
-for i=1:size(s,1),
-    [pth,nam,ext,num] = spm_fileparts(s(i,:));
-    if job.modulate
-        vf = {vf{:}, fullfile(pth,['mw',nam,ext,num])};
-    else
-        vf = {vf{:}, fullfile(pth,['w',nam,ext,num])};
+PU = job.field;
+PI = job.images;
+vf = cell(numel(PU),numel(PI));
+for i=1:numel(PU),
+    [pth,nam] = spm_fileparts(PU{i});
+    for m=1:numel(PI),
+        [pth1,nam,ext,num] = spm_fileparts(PI{m}{i});
+        if job.modulate,
+            fname = fullfile(pth,['mw' nam ext]);
+        else
+            fname = fullfile(pth,['w' nam ext]);
+        end;
+        vf{i,m} = fname;
     end
-end;
+end
+
 return;
 %_______________________________________________________________________
 

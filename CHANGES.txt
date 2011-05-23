@@ -1108,3 +1108,14 @@ M      GBM.m
 Corrected out of range warning in GBM.m.
 ------------------------------------------------------------------------
 r414 | gaser | 2011-05-03 15:21:26
+
+M      cg_vbm8_defs.m
+M      cg_vbm8_tools.m
+M      CHANGES.txt
+M      cg_vbm8_longitudinal.m
+M      cg_spmT2x.m
+
+Do not delete deformation field in longitudinal batch mode in 
+cg_vbm8_longitudinal.m.
+------------------------------------------------------------------------
+r415 | gaser | 2011-05-23 16:37:37
