@@ -1115,7 +1115,19 @@ M      CHANGES.txt
 M      cg_vbm8_longitudinal.m
 M      cg_spmT2x.m
 
-Do not delete deformation field in longitudinal batch mode in 
-cg_vbm8_longitudinal.m.
+(1) Do not delete deformation field in longitudinal batch mode in 
+    cg_vbm8_longitudinal.m.
+(2) Add multi-file option to deformation utility.
 ------------------------------------------------------------------------
 r415 | gaser | 2011-05-23 16:37:37
+
+M       INSTALL_info.txt
+M       GBM.m
+M       cg_vbm8_write.m
+
+(1) Limit values for bias field to 100, because sometimes artefacts at the
+    borders can cause huge values in bias field.
+(2) Limit histograms in GBM.m (function create_TSEG) to 1000 entries 
+    to prevent memory issues.
+------------------------------------------------------------------------
+r416 | gaser | 2011-05-23 22:20:46
