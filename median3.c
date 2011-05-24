@@ -20,10 +20,6 @@
  *                      sf=0: no filter
  *                      sf<0: only smaller changes
  *                      sf>0: only bigger changes
- *  Bi_low  (double)  low  threshold in D for filtering (add to Bi)
- *  Bi_high (double)  high threshold in D for filtering (add to Bi)
- *  Bn_low  (double)  low  threshold in D for neighbors (add to Bn)
- *  Bn_high (double)  high threshold in D for neighbors (add to Bn)
  *
  * Used slower quicksort for median calculation, because the faster median 
  * of the median application implemenation leads to wrong results. 
@@ -40,13 +36,11 @@
 #include "math.h"
 #include "float.h"
 
-/* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
-void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
-  *z = (int)floor( (double)i / (double)sxy ) + 1; 
-   i = i % (sxy);
-  *y = (int)floor( (double)i / (double)sy ) + 1;        
-  *x = i % sy + 1;
-}
+#ifndef isnan
+#define isnan(a) ((a)!=(a)) 
+#endif
+
+#define index(A,B,C,DIM) ((C)*DIM[0]*DIM[1] + (B)*DIM[0] + (A))
 
 /* qicksort */
 void swap(float *a, float *b)
@@ -87,9 +81,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
-  const int     x  = (int) sL[0];
-  const int     y  = (int) sL[1];
-  const int     xy = x*y;
   
   if ( dL != 3 || mxIsSingle(prhs[0])==0)                mexErrMsgTxt("ERROR:median3: first input must be a single 3d matrix\n");
   if ( nrhs>1 && mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
@@ -99,9 +90,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[]  = {0,  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x,  -xy-x-1,-xy-x+1,-xy+x-1,-xy+x+1, xy-x-1,xy-x+1,xy+x-1,xy+x+1};  
-  float NV[27], bi, bn, sf, bil, bih, bnl, bnh;
-  int u,v,w,nu,nv,nw,ni,i,n; 
+  float NV[27], sf, bil, bih, bnl, bnh;
+  int i,j,k,ind,ni,x,y,z,n;
   bool *Bi, *Bn;
   
   /* in- and output */
@@ -124,29 +114,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float *M = (float *)mxGetPr(plhs[0]);
   
   /* filter process */
-  for (i=0;i<nL;i++) {
-    if ((nrhs==1 || (nrhs>=2 && Bi[i])) && D[i]>=bil && D[i]<=bih) {
-      ind2sub(i,&u,&v,&w,xy,x);
-      for (n=0;n<=26;n++) {
-        ni = i - NI[n];
-        ind2sub(ni,&nu,&nv,&nw,xy,x);
-#if defined(_WIN32)
-        if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || 
-              (nrhs>=3 && Bn[ni]==0) || D[ni]<bnl ||  D[ni]>bnh || _isnan(D[ni]) || D[ni]==FLT_MAX || D[i]==-FLT_MAX ) ni=i;
-#else
-        if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || 
-              (nrhs>=3 && Bn[ni]==0) || D[ni]<bnl ||  D[ni]>bnh || isnan(D[ni]) || D[ni]==FLT_MAX || D[i]==-FLT_MAX ) ni=i;
-#endif
-        NV[n]=D[ni];  
+  for (z=0;z<sL[2];z++) {
+    for (y=0;y<sL[1];y++) {
+      for (x=0;x<sL[0];x++) {
+        ind = index(x,y,z,sL);
+        if ((nrhs==1 || (nrhs>=2 && Bi[ind])) && D[ind]>=bil && D[ind]<=bih) {
+          n = 0;
+          /* go through all elements in a 3x3x3 box */
+          for (i=-1;i<=1;i++) {
+            for (j=-1;j<=1;j++) {
+              for (k=-1;k<=1;k++) {
+                ni = index(x+i,y+j,z+k,sL);
+                /* check borders */ 
+                if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2])) {
+                  /* check masks and NaN or Infinities */
+                  if ((nrhs>=3 && Bn[ni]==0) || D[ni]<bnl || D[ni]>bnh || isnan(D[ni]) ||
+                      D[ni]==FLT_MAX || D[i]==-FLT_MAX ) ni = i;
+                  NV[n] = D[ni];
+                  n++;
+                }
+              }
+            }
+          }
+          /* get correct n */
+          n--;
+          /* sort and get the median by finding the element in the middle of the sorting */
+          sort(NV,0,n);
+          M[ind] = NV[(int)(n/2)];
+        }
       }
-      sort(NV,0,26);
-      M[i]=NV[13];
-    }
-    else {
-      M[i]=D[i];
     }
   }
-
+  
   /* selective filter settings - only big changes (only change extremly noisy data) */
   if (sf>0) {
     for (i=0;i<nL;i++) {

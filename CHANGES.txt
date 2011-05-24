@@ -1131,3 +1131,16 @@ M       cg_vbm8_write.m
     to prevent memory issues.
 ------------------------------------------------------------------------
 r416 | gaser | 2011-05-23 22:20:46
+
+M      median3.mexa64
+M      median3.mexw32
+M      median3.c
+M      median3.mexmaci64
+M      median3.mexmaci
+M      CHANGES.txt
+M      median3.mexw64
+M      median3.mexglx
+
+Improved speed of skull-stripping by optimizing median3.c.
+------------------------------------------------------------------------
+r417 | gaser | 2011-05-24 17:05:45
