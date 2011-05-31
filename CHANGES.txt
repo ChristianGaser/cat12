@@ -1144,3 +1144,15 @@ M      median3.mexglx
 Improved speed of skull-stripping by optimizing median3.c.
 ------------------------------------------------------------------------
 r417 | gaser | 2011-05-24 17:05:45
+
+M      cg_vbm8_defs.m
+M      cg_vbm8_tools.m
+M      VBM8-Manual.pdf
+M      cg_vbm8_longitudinal.m
+
+(1) Removed bug in longitudinal batch and deformation utility, where some
+    images were not warped.
+(2) Corrected example for statistical analysis for longitudinal batch in
+    VBM8-Manual.pdf.
+------------------------------------------------------------------------
+r418 | gaser | 2011-05-31 10:56:55
