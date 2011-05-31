@@ -489,7 +489,7 @@ modulate.help = {[...
 defs = cfg_exbranch;
 defs.tag = 'defs';
 defs.name = 'Apply Deformations';
-defs.val = {field,images,interp,modulate};
+defs.val = {field,images1,interp,modulate};
 defs.prog    = @cg_vbm8_defs;
 defs.vfiles  = @vfiles_defs;
 defs.help    = {'This is a utility for applying deformation fields to images.'};;
@@ -513,11 +513,12 @@ function vf = vfiles_defs(job)
 
 PU = job.field;
 PI = job.images;
+
 vf = cell(numel(PU),numel(PI));
 for i=1:numel(PU),
     [pth,nam] = spm_fileparts(PU{i});
     for m=1:numel(PI),
-        [pth1,nam,ext,num] = spm_fileparts(PI{m}{i});
+        [pth1,nam,ext,num] = spm_fileparts(PI{m});
         if job.modulate,
             fname = fullfile(pth,['mw' nam ext]);
         else
