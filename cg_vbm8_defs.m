@@ -17,7 +17,7 @@ for i=1:numel(PU),
 
   [Def,mat] = get_def(PU{i});
   for m=1:numel(PI)
-    apply_def(Def,mat,char(PI{m}{i}),job.interp,job.modulate);
+    apply_def(Def,mat,char(PI{m}),job.interp,job.modulate);
   end
 end
 return
