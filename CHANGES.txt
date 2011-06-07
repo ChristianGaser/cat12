@@ -1156,3 +1156,43 @@ M      cg_vbm8_longitudinal.m
     VBM8-Manual.pdf.
 ------------------------------------------------------------------------
 r418 | gaser | 2011-05-31 10:56:55
+
+D      down_cut01.mexmaci64
+M      sanlmMex.mexw32
+A  +   down_cut.mexw64
+D      down_cut01.mexw64
+M      median3.mexa64
+A  +   down_cut.mexmaci
+M      eikonal3.mexa64
+A  +   down_cut.mexglx
+D      down_cut01.mexglx
+M      eikonal3.mexmaci
+M      median3.mexw32
+D      down_cut01.mexmaci
+M      AmapMex.mexw32
+M      eikonal3.c
+M      eikonal3.mexw32
+M      median3.c
+M      eikonal3.mexmaci64
+M      median3.mexmaci64
+M      sanlmMex.mexw64
+M      vbdist.mexw32
+A  +   down_cut.mexa64
+D      down_cut01.mexa64
+M      median3.mexmaci
+A  +   down_cut.c
+A  +   down_cut.mexmaci64
+M      GBM.m
+A  +   down_cut.mexw32
+D      down_cut01.mexw32
+M      median3.mexw64
+M      AmapMex.mexw64
+M      eikonal3.mexw64
+M      median3.mexglx
+M      vbdist.mexw64
+D      down_cut01.c
+M      eikonal3.mexglx
+
+Improved speed of skull-stripping by updating many mex-functions.
+------------------------------------------------------------------------
+r419 | gaser | 2011-06-07 16:13:14
