@@ -1,10 +1,21 @@
 function compile
 
+rand('state',0);
+d = single(rand(50,50,50));
+
 mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
 mex -O median3.c
+d2 = median3(d);
+disp('Compilation of median3 successful')
 mex -O eikonal3.c
-mex -O down_cut01.c
+d2 = eikonal3(d);
+disp('Compilation of eikonal3 successful')
+mex -O down_cut.c
+d2 = down_cut(d,d.^1.5,1);
+disp('Compilation of down_cut successful')
 mex -O vbdist.c
+d2 = vbdist(d);
+disp('Compilation of vbdist successful')
 
 try % try OpenMP support
     if strcmp(mexext,'mexmaci64')
@@ -38,9 +49,5 @@ catch
     mex CFLAGS='-fPIC -O3' -O sanlmMex.c sanlm_float.c 
 end
 
-try
-    sanlmMex(single(rand(50,50,50)),3,1);
-    disp('Compilation of sanlmMex successful')
-catch
-    disp('Compilation of sanlmMex not successful')
-end
+sanlmMex(d,3,1);
+disp('Compilation of sanlmMex successful')
