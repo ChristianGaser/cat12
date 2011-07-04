@@ -1196,3 +1196,84 @@ M      eikonal3.mexglx
 Improved speed of skull-stripping by updating many mex-functions.
 ------------------------------------------------------------------------
 r419 | gaser | 2011-06-07 16:13:14
+
+MM     Contents_info.txt
+ M     vbdist.mexglx
+MM     Makefile.vbm
+ M     sanlmMex.mexw32
+ M     down_cut.mexw64
+ M     vbdist.mexmaci
+ M     sanlmMex_noopenmp.mexmaci
+ M     median3.mexa64
+ M     ornlmMex.mexmaci
+ M     submask.nii
+ M     vbm8.txt
+ M     ornlmMex.mexw64
+ M     AmapMex.mexa64
+ M     upfirdn2dMex.mexw64
+ M     down_cut.mexmaci
+ M     eikonal3.mexa64
+ M     Template_3_IXI550_MNI152.nii
+ M     down_cut.mexglx
+ M     eikonal3.mexmaci
+ M     ornlmMex.mexmaci64
+ M     vbdist.mexa64
+ M     VBM8-Manual_Japanese.doc
+ M     Anatomy2Dartel.txt
+ M     ornlmMex.mexglx
+ M     median3.mexw32
+ M     upfirdn2dMex.mexglx
+ M     AmapMex.mexw32
+ M     eikonal3.mexw32
+ M     eikonal3.mexmaci64
+ M     SplineSmooth.cc
+ M     Template_4_IXI550_MNI152.nii
+ M     median3.mexmaci64
+ M     sanlmMex.mexw64
+ M     vbdist.mexw32
+ M     brainmask_LPBA40_dartel.nii
+ M     AmapMex.mexmaci64
+ M     down_cut.mexa64
+ M     VBM8-Manual.pdf
+ M     sanlmMex_noopenmp.mexglx
+ M     median3.mexmaci
+ M     upfirdn2dMex.mexmaci64
+ M     ornlmMex.mexa64
+ M     upfirdn2dMex.mexa64
+ M     AmapMex.mexmaci
+ M     Makefile
+ M     down_cut.mexmaci64
+MM     CHANGES.txt
+ M     sanlmMex.mexglx
+ M     avgT1_Dartel_IXI550_MNI152.nii
+ M     INSTALL_info.txt
+ M     down_cut.mexw32
+ M     Template_1_IXI550_MNI152.nii
+ M     median3.mexw64
+ M     Template_5_IXI550_MNI152.nii
+ M     sanlmMex.mexmaci64
+ M     AmapMex.mexw64
+ M     ornlmMex.mexw32
+ M     brainmask_LPBA40.nii
+ M     vbdist.mexmaci64
+ M     upfirdn2dMex.mexw32
+ M     sanlmMex_noopenmp.mexmaci64
+ M     eikonal3.mexw64
+ M     sanlmMex_noopenmp.mexa64
+ M     sanlmMex.mexmaci
+MM     svn_ci_log
+ M     median3.mexglx
+ M     vbdist.mexw64
+ M     sanlmMex.mexa64
+ M     upfirdn2dMex.mexmaci
+ M     VBM8-Manual.doc
+ M     AmapMex.mexglx
+ M     Makefile.var
+ M     VBM8-Manual_Japanese.pdf
+ M     Template_2_IXI550_MNI152.nii
+ M     eikonal3.mexglx
+ M     Template_6_IXI550_MNI152.nii
+
+New mex-file compilation.
+------------------------------------------------------------------------
+r420 | gaser | 2011-07-04 16:26:13
