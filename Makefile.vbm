@@ -35,7 +35,6 @@ help:
 	-@echo install zip scp update
 
 update:
-	-@svn propset svn:keywords "Id Rev Date Author" *.c *.m *.h *.sh 2>/dev/null
 	-@svn update
 	-@echo '% Voxel Based Morphometry Toolbox' > Contents.m
 	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> Contents.m
