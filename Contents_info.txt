@@ -62,7 +62,7 @@
 %   Kmeans.c                     - tree structure k-means algorithm
 %   MrfPrior.c                   - estimation of MRF weighting
 %   Pve.c                        - partial volume estimaion (PVE)
-%   down_cut01.c                 - graph-cut functions
+%   down_cut.c                   - graph-cut functions
 %   eikonal3.c                   - eikonal distance calculation for 3D images
 %   median3.c                    - median filter for 3D images
 %   sanlmMex.c                   - mex-wrapper for sanlm_float.c
