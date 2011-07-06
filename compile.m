@@ -5,15 +5,18 @@ d = single(rand(50,50,50));
 
 mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
 mex -O median3.c
+mex -O eikonal3.c
+mex -O down_cut.c
+mex -O vbdist.c
+
+pause(2)
+
 d2 = median3(d);
 disp('Compilation of median3 successful')
-mex -O eikonal3.c
 d2 = eikonal3(d);
 disp('Compilation of eikonal3 successful')
-mex -O down_cut.c
 d2 = down_cut(d,d.^1.5,1);
 disp('Compilation of down_cut successful')
-mex -O vbdist.c
 d2 = vbdist(d);
 disp('Compilation of vbdist successful')
 
