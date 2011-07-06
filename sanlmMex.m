@@ -1,4 +1,4 @@
-﻿function sanlmMex(in, v, f)
+function sanlmMex(in, v, f)
 % FORMAT sanlmMex(in, v, f)
 % 
 % Spatial Adaptive Non Local Means Denoising Filter
@@ -19,9 +19,9 @@
 %
 %
 % Christian Gaser
-% $Id: sanlmMex.m 224 2009-12-02 23:39:15Z gaser $
+% $Id$
 
-rev = '$Rev: 224 $';
+rev = '$Rev$';
 
 disp('Compiling sanlmMex.c')
 
