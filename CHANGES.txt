@@ -1277,3 +1277,9 @@ MM     svn_ci_log
 New mex-file compilation.
 ------------------------------------------------------------------------
 r420 | gaser | 2011-07-04 16:26:13
+
+M      sanlmMex.m
+
+Removed weird character in sanlmMex.m, that caused errors.
+------------------------------------------------------------------------
+r421 | gaser | 2011-07-06 15:20:39
