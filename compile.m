@@ -9,8 +9,6 @@ mex -O eikonal3.c
 mex -O down_cut.c
 mex -O vbdist.c
 
-pause(2)
-
 d2 = median3(d);
 disp('Compilation of median3 successful')
 d2 = eikonal3(d);

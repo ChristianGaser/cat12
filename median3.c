@@ -131,7 +131,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           ni = index(x+i,y+j,z+k,sL);
           /* check masks and NaN or Infinities */
           if ((nrhs>=3 && Bn[ni]==0) || D[ni]<bnl || D[ni]>bnh || isnan(D[ni]) ||
-              D[ni]==FLT_MAX || D[i]==-FLT_MAX ) ni = i;
+              D[ni]==FLT_MAX || D[ind]==-FLT_MAX ) ni = ind;
           NV[n] = D[ni];
           n++;
         }
