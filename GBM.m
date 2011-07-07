@@ -51,13 +51,16 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % first simple correction of classes (not ready!)
 % _________________________________________________________________________
   stime = clock;
-  cls{6}=cls{6} + uint8(255-sum(single(cat(4,cls{1},cls{2},cls{3},cls{4},cls{5},cls{6})),4)); % if the sum of the classe is not 100% add the rest to the background 
+  tmp = sum(single(cat(4,cls{1},cls{2},cls{3},cls{4},cls{5},cls{6})),4);
+  tmp(tmp>255) = 255;
+  cls{6}=cls{6} + uint8(255-tmp); % if the sum of the classe is not 100% add the rest to the background 
   for i=1:6, cls{i}=uint8(median3(single(cls{i}),cls{i}>0,true(size(src)))); end              % noise reduction  
 
   % 2) if the head is to thick, SPM detect GM outside the brain and we have to remove it (only one GM Segment)
-  M = single(cg_morph_vol(cg_morph_vol((cls{2}+cls{1})>64,'open',3),'labopen')); M((cls{2}+cls{1})<64)=-inf;   
-  M = cg_morph_vol(cg_morph_vol(uint8(down_cut(M,single(cls{1}+cls{2})/255*3,0.1,vx_vol)==1),'labopen'),'dilate'); 
-  M = cg_morph_vol(cg_morph_vol(cg_morph_vol(uint8(((cls{1}.*M)+cls{2})>64),'open',2),'labopen'),'dilate',3); cls{1}=cls{1} .* M; 
+  sum_cls12 = single(cls{1}) + single(cls{2});
+  M = single(cg_morph_vol(cg_morph_vol(sum_cls12>64,'open',3),'labopen')); M(sum_cls12<64)=-inf;   
+  M = cg_morph_vol(cg_morph_vol(uint8(down_cut(M,sum_cls12/255*3,0.1,vx_vol)==1),'labopen'),'dilate'); 
+  M = cg_morph_vol(cg_morph_vol(cg_morph_vol(uint8((single(cls{1}.*M)+single(cls{2}))>64),'open',2),'labopen'),'dilate',3); cls{1}=cls{1} .* M; 
   % 1) there should be only one WM Segment
   M = cg_morph_vol(cg_morph_vol(uint8(cls{2}>64),'labopen'),'dilate'); cls{2}=cls{2} .* M; %cls{1}=cls{1} + cls{2} .* (1-M); % 1.
   % 2) big ventricle can lead to background problems, i.e. IXI175
@@ -69,8 +72,9 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % Version of the src image (BG=0, CSF=1, GM=2, WM=3, Other=4). 
 % _________________________________________________________________________
   clstp=[0 1 0 11 11 11]; clsth=[1 0.9 1 0.9 0.6 0.2]; 
+  sum_cls12 = single(cls{1}) + single(cls{2});
   SLAB = zeros(size(src),'single'); for c=1:6, SLAB(cls{c}>255*clsth(c))=clstp(c); end; 
-  mask = cg_morph_vol(cg_morph_vol(cg_morph_vol((cls{1}+cls{2})/255*3>0.5,'open',round(2*scale_morph))==1,'dilate',round(2*scale_morph)),'labopen');
+  mask = cg_morph_vol(cg_morph_vol(cg_morph_vol(sum_cls12/255*3>0.5,'open',round(2*scale_morph))==1,'dilate',round(2*scale_morph)),'labopen');
   SLAB((cls{4}>255*0.8 | cls{5}>255*0.5 | cls{6}>255*0.5) & mask==0)=11; clear mask;
 
   % inital speed map for graph-cut (BG=0, CSF=1, GM=2, WM=3, Other=4) 
@@ -80,17 +84,20 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   %sanlmMex(TSEG,3,1);
     
   
-
 % REMOVE SINUS SAGITALIS
 % _________________________________________________________________________
 % Remove sinus sagittalis by analysis of the range from 1.25 to 1.75
 % between GM and CSF.
   cls4=0;
   if opt.RSS>0
-    M = single(single(cls{1} + cls{2} + cls{3})>single(cls{4} + cls{5} + cls{6})); 
-    M( cg_morph_vol( ((cls{1}/3)>cls{3} & cls{3}<64) | cls{2}>0,'open',1)==1 & M==1)=-1; D1=eikonal3(M,vx_vol);
+    sum_cls123 = sum_cls12 + single(cls{3});
+    sum_cls456 = single(cls{4}) + single(cls{5}) + single(cls{6});
+    M = single(sum_cls123>sum_cls456); 
+    clear sum_cls456
+    M( cg_morph_vol( ((single(cls{1})/3)>cls{3} & cls{3}<64) | cls{2}>0,'open',1)==1 & M==1)=-1; D1=eikonal3(M,vx_vol);
     M = single(cg_morph_vol(cg_morph_vol(D1/opt.RSS>TSEG,'close'),'erode')); 
-    M(M==0 & cg_morph_vol(cg_morph_vol( (single(cls{1} + cls{2} + cls{3})/255<0.25) | (single(cls{1} + cls{2})/255>0.75) ,'open'),'close')==1)=-inf; 
+    M(M==0 & cg_morph_vol(cg_morph_vol( (sum_cls123/255<0.25) | (sum_cls12/255>0.75) ,'open'),'close')==1)=-inf; 
+    clear sum_cls123
     M = cg_morph_vol(down_cut(M,TSEG,0.1,vx_vol),'close'); 
 
     % removing of inbrain structures (simple closing will also remove small structure that we are interested in 
@@ -129,18 +136,19 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 %       - if you find BVs and want to use them for further analaysis
 %         (to reduce fMRI errors), you need to downcut them
   if opt.BVN
-    T = single( ((cls{2} + cls{1})/255<0.1) | SLAB==11);
+    T = single( (sum_cls12/255<0.1) | SLAB==11);
     D = vbdist(T,true(size(TSEG)),vx_vol);
     T = thickness_V0x59_TIM(T+2,D,zeros(size(D),'single')); 
     T = median3(T,TSEG>0.5); 
-    t = 2; M = (T<=t) & (SLAB==1) & (single(cls{2}+cls{1}+cls{4}+cls{5})/255>0.5); SLAB(cg_morph_vol(M | SLAB==11,'erode',1)==1 & SLAB~=11)=0;
+    t = 2; M = (T<=t) & (SLAB==1) & ((sum_cls12+single(cls{4})+single(cls{5}))/255>0.5); SLAB(cg_morph_vol(M | SLAB==11,'erode',1)==1 & SLAB~=11)=0;
     SLAB = down_cut(SLAB,TSEG,-0.1,vx_vol);
-    SLAB(median3(single(cg_morph_vol(cg_morph_vol(SLAB==1 & T>0 & T<=t/2 & single(cls{2}+cls{1})/255>0.25,'dilate'),'erode',1)))==1)=7;
-    TSEGC=TSEG; TSEGC(single(cls{2}+cls{1})/255<0.1 | T>2*t)=-inf; SLAB(cg_morph_vol(down_cut(single(SLAB==7),TSEGC,0.01,vx_vol),'close')==1 & SLAB==1)=7;
+    SLAB(median3(single(cg_morph_vol(cg_morph_vol(SLAB==1 & T>0 & T<=t/2 & sum_cls12/255>0.25,'dilate'),'erode',1)))==1)=7;
+    TSEGC=TSEG; TSEGC(sum_cls12/255<0.1 | T>2*t)=-inf; SLAB(cg_morph_vol(down_cut(single(SLAB==7),TSEGC,0.01,vx_vol),'close')==1 & SLAB==1)=7;
     clear D T;
     opt.time.GBM8BV = dp('|BV',opt,stime); stime = clock;  
   end
 
+  clear sum_cls12
     
 % BRAINMASK
 % _________________________________________________________________________
@@ -271,7 +279,11 @@ function T=create_TSEG(src,cls,vx_vol)
   th=[0.5 0.5 0.5]; minsrc=min(src(:)); maxsrc=max(src(:)); dth=[1 4 20 0 0 0];
   srcs=smooth3(src); % smooth the src to get more stable histograms
   % we can't trust the CSF region outside the brainm that why we only want to take values from voxel with a creater distance to the head
-  D = vbdist(single(cg_morph_vol((cls{4}+cls{5}+cls{6})>(cls{1}+cls{2}+cls{3}),'close',2)),true(size(src)),vx_vol);
+  sum_cls123 = single(cls{1}) + single(cls{2}) + single(cls{3});
+  sum_cls456 = single(cls{4}) + single(cls{5}) + single(cls{6});
+  D = vbdist(single(cg_morph_vol(sum_cls456>sum_cls123,'close',2)),true(size(src)),vx_vol);
+  clear sum_cls123 sum_cls456
+  
   [hst,hsti]=hist(srcs(cls{1}(:)/255>th(1) & D(:)>dth(1)),linspace(minsrc,maxsrc,1000));               [tmp,maxi]=max(hst); t(2)=hsti(maxi); % GM
   [hst,hsti]=hist(srcs(cls{2}(:)/255>th(2) & D(:)>dth(2) & src(:)>t(2)),linspace(minsrc,maxsrc,1000)); [tmp,maxi]=max(hst); t(1)=hsti(maxi); % WM
   [hst,hsti]=hist(srcs(cls{3}(:)/255>th(3) & D(:)>dth(3) & src(:)<t(2)),linspace(minsrc,maxsrc,1000)); [tmp,maxi]=max(hst); t(3)=hsti(maxi); % CSF
@@ -286,8 +298,8 @@ function T=create_TSEG(src,cls,vx_vol)
   % If someone has thresholded the image and there is no difference between
   % background and CSF. The other threshold (WM) should be no problem.
   if t(3)==minsrc
-    M=T<1 & (cls{3}>0 | cls{2}>0); T(M) = max(single(cls{3}(M) + cls{1}(M))/255*0.75,T(M));          % avoid background in the brain
-    M=T>0 & (cls{6}>(cls{1}+cls{2}+cls{3}+cls{4}+cls{5})); T(M) = min(1-single(cls{6}(M)/255),T(M)); % clear background
+    M=T<1 & (cls{3}>0 | cls{2}>0); T(M) = max((single(cls{3}(M)) + single(cls{1}(M)))/255*0.75,T(M));          % avoid background in the brain
+    M=T>0 & (single(cls{6})>(single(cls{1})+single(cls{2})+single(cls{3})+single(cls{4})+single(cls{5}))); T(M) = min(1-single(cls{6}(M)/255),T(M)); % clear background
     M=smooth3(T);T(T<1)=M(T<1);
   end
   
