@@ -1305,3 +1305,9 @@ M      vbdist.mexw64
 Removed bug in median3d.c and recompiled mex-files.
 ------------------------------------------------------------------------
 r422 | gaser | 2011-07-06 16:35:23
+
+M      GBM.m
+
+Corrected overflow of uint8 values in GBM.m.
+------------------------------------------------------------------------
+r423 | gaser | 2011-07-07 14:15:34
