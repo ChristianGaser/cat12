@@ -1311,3 +1311,9 @@ M      GBM.m
 Corrected overflow of uint8 values in GBM.m.
 ------------------------------------------------------------------------
 r423 | gaser | 2011-07-07 14:15:34
+
+M       VBM8-Manual_Japanese.pdf
+
+Kiyotaka Nemoto updated the VBM8 manual.
+------------------------------------------------------------------------
+r424 | gaser | 2011-07-26 00:56:22
