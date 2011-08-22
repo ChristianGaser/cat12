@@ -1317,3 +1317,17 @@ M       VBM8-Manual_Japanese.pdf
 Kiyotaka Nemoto updated the VBM8 manual.
 ------------------------------------------------------------------------
 r424 | gaser | 2011-07-26 00:56:22
+
+M      cg_vbm8_defs.m
+M      spm_vbm8.m
+M      cg_vbm8_tools.m
+M      cg_check_cov.m
+M      cg_vbm8_longitudinal.m
+M      cg_noise_estimation.m
+
+(1) Allow gap for slices in cg_check_cov.m to speed up.
+(2) Added different GUI to apply deformation to many images as well as many 
+    subjects.
+(3) Some changes in longitudinal batch (interpolation, bias regularization).
+------------------------------------------------------------------------
+r425 | gaser | 2011-08-22 16:39:51
