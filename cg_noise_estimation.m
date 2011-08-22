@@ -1,4 +1,4 @@
-function h = cg_noise_estimation(ima)
+function [h, PSNR] = cg_noise_estimation(ima)
 % FORMAT h = cg_noise_estimation(ima)
 %
 % h    - Noise estimate (SD)

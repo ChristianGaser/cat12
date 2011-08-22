@@ -7,7 +7,15 @@ function cg_vbm8_defs(job)
 
 % remove potential file number at the end
 
-PU = job.field;
+many_images = 0;
+
+try
+  PU = job.field;
+catch
+  PU = job.field1;
+  many_images = 1;
+end
+
 PI = job.images;
 
 for i=1:numel(PU),
@@ -16,8 +24,13 @@ for i=1:numel(PU),
   PU{i} = fullfile(pth,[nam ext]);
 
   [Def,mat] = get_def(PU{i});
+        
   for m=1:numel(PI)
-    apply_def(Def,mat,char(PI{m}),job.interp,job.modulate);
+    if many_images % many images
+      apply_def(Def,mat,char(PI{m}),job.interp,job.modulate);
+    else % many subjects
+      apply_def(Def,mat,char(PI{m}{i}),job.interp,job.modulate);
+    end
   end
 end
 return
