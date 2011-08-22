@@ -315,6 +315,15 @@ slice.val  = {0};
 slice.help = {[...
 'Choose slice in mm.']};
 
+gap = cfg_entry;
+gap.tag = 'gap';
+gap.name = 'Gap to skip slices';
+gap.strtype = 'e';
+gap.num = [1 1];
+gap.val  = {5};
+gap.help = {[...
+'To speed up calculations you can define that only every x slice the covariance is estimated.']};
+
 scale = cfg_menu;
 scale.tag = 'scale';
 scale.name = 'Proportional scaling?';
@@ -337,7 +346,7 @@ transform.num     = [0 Inf];
 check_cov = cfg_exbranch;
 check_cov.tag = 'check_cov';
 check_cov.name = 'Check sample homogeneity using covariance';
-check_cov.val = {data,scale,slice,transform};
+check_cov.val = {data,scale,slice,gap,transform};
 check_cov.prog   = @cg_check_cov;
 check_cov.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...
@@ -436,6 +445,16 @@ field.help = {[...
 'Deformations can be thought of as vector fields. These can be represented ',...
 'by three-volume images.']};
 
+field1 = cfg_files;
+field1.tag  = 'field1';
+field1.name = 'Deformation Field';
+field1.filter = 'image';
+field1.ufilter = '.*y_.*\.nii$';
+field1.num     = [1 1];
+field1.help = {[...
+'Deformations can be thought of as vector fields. These can be represented ',...
+'by three-volume images.']};
+
 images1         = cfg_files;
 images1.tag     = 'images';
 images1.name    = 'Images';
@@ -488,11 +507,19 @@ modulate.help = {[...
 
 defs = cfg_exbranch;
 defs.tag = 'defs';
-defs.name = 'Apply Deformations';
-defs.val = {field,images1,interp,modulate};
+defs.name = 'Apply Deformations (Many images)';
+defs.val = {field1,images1,interp,modulate};
 defs.prog    = @cg_vbm8_defs;
 defs.vfiles  = @vfiles_defs;
-defs.help    = {'This is a utility for applying deformation fields to images.'};;
+defs.help    = {'This is a utility for applying a deformation field of one subject to many images.'};;
+
+defs2 = cfg_exbranch;
+defs2.tag = 'defs2';
+defs2.name = 'Apply Deformations (Many subjects)';
+defs2.val = {field,images,interp,modulate};
+defs2.prog    = @cg_vbm8_defs;
+defs2.vfiles  = @vfiles_defs2;
+defs2.help    = {'This is a utility for applying deformation fields of many subjects to images.'};;
 
 %------------------------------------------------------------------------
 realign = cg_cfg_realign;
@@ -503,13 +530,35 @@ long    = cg_vbm8_longitudinal_multi;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs};
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2};
 
 return
 
 %_______________________________________________________________________
 
 function vf = vfiles_defs(job)
+
+PU = job.field1;
+PI = job.images;
+
+vf = cell(numel(PI),1);
+for i=1:numel(PU),
+    [pth,nam] = spm_fileparts(PU{i});
+    for m=1:numel(PI),
+        [pth1,nam,ext,num] = spm_fileparts(PI{m});
+        if job.modulate,
+            fname = fullfile(pth,['mw' nam ext]);
+        else
+            fname = fullfile(pth,['w' nam ext]);
+        end;
+        vf{m} = fname;
+    end
+end
+
+return;
+%_______________________________________________________________________
+
+function vf = vfiles_defs2(job)
 
 PU = job.field;
 PI = job.images;
@@ -518,7 +567,7 @@ vf = cell(numel(PU),numel(PI));
 for i=1:numel(PU),
     [pth,nam] = spm_fileparts(PU{i});
     for m=1:numel(PI),
-        [pth1,nam,ext,num] = spm_fileparts(PI{m});
+        [pth1,nam,ext,num] = spm_fileparts(PI{m}{i});
         if job.modulate,
             fname = fullfile(pth,['mw' nam ext]);
         else
