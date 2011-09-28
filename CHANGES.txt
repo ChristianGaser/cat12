@@ -882,7 +882,7 @@ r402 | gaser | 2011-04-08 11:49:10
 M      cg_vbm8_write.m
 
 Removed use of spm_get_bbox in cg_vbm8_write.m, because this function is only
-available aifter spm8 update 4290.
+available after spm8 update 4290.
 ------------------------------------------------------------------------
 r403 | gaser | 2011-04-08 15:14:43
 
@@ -1048,7 +1048,7 @@ M      median3.mexglx
 M      vbdist.mexw64
 M      down_cut01.c
 
-(1) Modified check for bllod vessels in GBM.m, that occasionally caused
+(1) Modified check for blood vessels in GBM.m, that occasionally caused
     problems.
 (2) Corrected use of FLT_MIN and FLT_MAX in some c-functions.
 (3) Recompiled mex-files.
@@ -1089,7 +1089,7 @@ M      cg_vbm8_write.m
 M      cg_spmT2x.m
 
 (1) Removed debugging code in cg_spmT2x.m.
-(2) Removed changes from r410 in GBM.m.
+(2) Removed changes from r409 in GBM.m.
 ------------------------------------------------------------------------
 r412 | gaser | 2011-05-02 17:58:45
 
@@ -1331,3 +1331,16 @@ M      cg_noise_estimation.m
 (3) Some changes in longitudinal batch (interpolation, bias regularization).
 ------------------------------------------------------------------------
 r425 | gaser | 2011-08-22 16:39:51
+
+M       spm_vbm8.m
+
+Added menu entry to open VBM8 manual.
+------------------------------------------------------------------------
+r426 | gaser | 2011-09-28 22:40:07
+
+M       spm_vbm8.m
+M       CHANGES.txt
+
+Added menu entry to open VBM8 manual.
+------------------------------------------------------------------------
+r426 | gaser | 2011-09-28 22:42:26
