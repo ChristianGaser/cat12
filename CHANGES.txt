@@ -1339,8 +1339,14 @@ Added menu entry to open VBM8 manual.
 r426 | gaser | 2011-09-28 22:40:07
 
 M       spm_vbm8.m
-M       CHANGES.txt
 
 Added menu entry to open VBM8 manual.
 ------------------------------------------------------------------------
 r426 | gaser | 2011-09-28 22:42:26
+
+M       cg_spmT2x.m
+
+Corrected error in cg_spmT2x.m where incorrect cluster values were estimated
+for correction of non-stationarity.
+------------------------------------------------------------------------
+r427 | gaser | 2011-09-29 02:01:15
