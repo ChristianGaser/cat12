@@ -298,9 +298,19 @@ if do_cls && do_defs,
     if gcut
         % skull-stripping using graph-cut
         opt.verb = 0; % display process (0=nothing, 1=only points, 2=times)
-        fprintf('Skull-stripping\n');
+        fprintf('Skull-stripping using graph-cut\n');
+        cls_old = cls;
         [src,cls,mask] = GBM(src,cls,res,opt);
-    else
+        % check whether graph-cut failed (if GM classification has changed too much)
+        if (sum(cls{1}(:))/sum(cls_old{1}(:))<0.8)
+          fprintf('Graph-cut failed\n');
+          gcut = 0;
+          cls = cls_old;
+        end
+        clear cls_old
+    end
+    if ~gcut
+        fprintf('Skull-stripping using morphological operations\n');
         % use mask of GM and WM
         mask = single(cls{1});
         mask = mask + single(cls{2});

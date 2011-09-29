@@ -1350,3 +1350,20 @@ Corrected error in cg_spmT2x.m where incorrect cluster values were estimated
 for correction of non-stationarity.
 ------------------------------------------------------------------------
 r427 | gaser | 2011-09-29 02:01:15
+
+M      cg_vbm8_defaults.m
+M      spm_vbm8.m
+M      cg_realign.m
+M      cg_cfg_realign.m
+M      cg_vbm8_write.m
+M      cg_spmT2x.m
+
+(1) Corrected typo in cg_spmT2x.m, that caused crash while estimating numbers
+    of voxels per cluster.
+(2) The two different ways to apply deformations are bow better indicated
+    in the GUI.
+(3) Check whether graph-cut based skull-stripping failed in cg_vbm8_write.m.
+(4) Added option to cg_realign.m to skip pre-existing positional information
+    This will utilize halfway registration.
+------------------------------------------------------------------------
+r428 | gaser | 2011-09-29 07:59:11
