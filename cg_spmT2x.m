@@ -109,11 +109,11 @@ if nargin == 1
         noniso = vargin.conversion.cluster.k.noniso;
     elseif isfield(vargin.conversion.cluster,'En')
         extent_FWE = 0;
-        pk  = -1;
+        pk = -1;
         noniso = vargin.conversion.cluster.En.noniso;
     else
         extent_FWE = 0;
-        pk=0;
+        pk = 0;
         noniso = 0;
     end
 
@@ -156,7 +156,7 @@ if nargin < 1
     end
 
     if adjustment > -1 
-        pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1);
+        pk = spm_input('extent threshold {k or p-value}','+1','r',0,1);
     else
         pk = 0;
     end

@@ -76,7 +76,8 @@ vbm8.bias.lmreg        = 1e-6;
 % realign options
 %=======================================================================
 vbm8.realign.halfway   = 1; % use halfway registration: 0 - no; 1 - yes
-vbm8.realign.weight    = 0; % weight registration with inverse std: 0 - no; 1 - yes
+vbm8.realign.weight    = 1; % weight registration with inverse std: 0 - no; 1 - yes
+vbm8.realign.ignore_mat= 1; % ignore exisiting positional information: 0 - no; 1 - yes
 
 % apply deformations options
 %=======================================================================
@@ -84,7 +85,6 @@ vbm8.defs.interp    = 5;  % 5th degree B-spline
 
 % expert options
 %=======================================================================
-%vbm8.extopts.vox       = 1.5;  % isotropic voxel size for normalized images
 vbm8.extopts.cleanup   = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm8.extopts.finalmask = 1;    % Final masking: 0 - no; 1 - yes
 vbm8.extopts.gcut      = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
