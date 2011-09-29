@@ -151,12 +151,25 @@ halfway.labels  = {
 halfway.values  = {0 1};
 halfway.def     = @(val)cg_vbm8_get_defaults('realign.halfway', val{:});
 % ---------------------------------------------------------------------
+% ignore_mat Ignore_mat
+% ---------------------------------------------------------------------
+ignore_mat         = cfg_menu;
+ignore_mat.tag     = 'ignore_mat';
+ignore_mat.name    = 'Ignore pre-existing positional information';
+ignore_mat.help    = {'Halfway registration ensures that all images undergo the same preprocessing. This is achieved by transforming images to a position that is halfway between the images. However, if any pre-existing positional information exist this will decrease accuracy of halfway approach. In this case any pre-existing positional information in the header can be ignored by using this function. After registration the positional information of the first image will be applied to all images.'};
+ignore_mat.labels  = {
+              'Use existing positional information'
+              'Ignore existing positional information'
+}';
+ignore_mat.values  = {0 1};
+ignore_mat.def     = @(val)cg_vbm8_get_defaults('realign.ignore_mat', val{:});
+% ---------------------------------------------------------------------
 % eoptions Estimation Options
 % ---------------------------------------------------------------------
 eoptions         = cfg_branch;
 eoptions.tag     = 'eoptions';
 eoptions.name    = 'Estimation Options';
-eoptions.val     = {quality sep fwhm rtm interp wrap weight halfway};
+eoptions.val     = {quality sep fwhm rtm interp wrap weight halfway ignore_mat};
 eoptions.help    = {'Various registration options. If in doubt, simply keep the default values.'};
 % ---------------------------------------------------------------------
 % estimate Realign: Estimate

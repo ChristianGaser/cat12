@@ -92,6 +92,7 @@ def_flags.PW       = '';
 def_flags.graphics = 1;
 def_flags.halfway  = 1;
 def_flags.lkp      = 1:6;
+def_flags.ignore_mat = 1;
 if nargin < 2,
     flags = def_flags;
 else
@@ -115,6 +116,21 @@ end;
 P = PN;
 
 if isempty(P), warning('Nothing to do'); return; end;
+
+% set pre-existing tranlations and rotations to zero
+if flags.halfway & flag.ignore_mat
+    % rescue positional information of first image
+    iM1 = spm_imatrix(P{1}(1).mat);
+    iM1(7:12) = zeros(6,1);
+    for s=1:numel(P),
+        for i=1:numel(P{s}),
+            M = P{s}(i).mat;
+            iM = spm_imatrix(M);
+            iM(1:6) = zeros(6,1);
+            P{s}(i).mat = spm_matrix(iM);
+        end;
+    end;
+end
 
 P0 = P;
 if length(P)==1,
@@ -151,8 +167,20 @@ if flags.halfway
     M = M/n;
     for s=1:numel(P),
         for i=1:numel(P{s}),
-            P{s}(i).mat = inv(spm_matrix(-M(1:6)))*P{s}(i).mat;
+            if flag.ignore_mat
+                tmp=inv(spm_matrix(-M(1:6)-iM1(1:6)))*P{s}(i).mat;
+            else
+                tmp=inv(spm_matrix(-M(1:6)))*P{s}(i).mat;
+            end
+            P{s}(i).mat = tmp;
         end;
+    end;
+end;
+
+% correct P0 to indicate realignments
+for s=1:numel(P),
+    for i=1:numel(P{s}),
+        P0{s}(i).mat = P0{s}(i).mat/P{s}(i).mat;
     end;
 end;
 
