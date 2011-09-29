@@ -1367,3 +1367,10 @@ M      cg_spmT2x.m
     This will utilize halfway registration.
 ------------------------------------------------------------------------
 r428 | gaser | 2011-09-29 07:59:11
+
+M      tbx_cfg_vbm8.m
+
+Added option for 'ICBM space template - East Asian brains' as affine
+regularization.
+------------------------------------------------------------------------
+r429 | gaser | 2011-09-29 09:47:11
