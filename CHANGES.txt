@@ -1374,3 +1374,26 @@ Added option for 'ICBM space template - East Asian brains' as affine
 regularization.
 ------------------------------------------------------------------------
 r429 | gaser | 2011-09-29 09:47:11
+
+M      sanlmMex.mexw32
+M      down_cut.mexw64
+M      cg_run_realign_estwrite.m
+M      median3.mexw32
+M      AmapMex.mexw32
+M      cg_realign.m
+M      eikonal3.mexw32
+M      cg_run_realign_estimate.m
+M      sanlmMex.mexw64
+M      vbdist.mexw32
+M      down_cut.mexw32
+M      median3.mexw64
+M      AmapMex.mexw64
+M      eikonal3.mexw64
+M      vbdist.mexw64
+
+(1) Recompiled mex-files for windows with static linked libraries. This will
+    solve the issues on some systems where the runtime libraries for 
+    Microsoft Visual C++ are not redistributed with matlab.    
+(2) Removed some typos in new realignment code. 
+------------------------------------------------------------------------
+r430 | gaser | 2011-09-29 16:54:15
