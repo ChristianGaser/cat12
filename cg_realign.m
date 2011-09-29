@@ -118,7 +118,7 @@ P = PN;
 if isempty(P), warning('Nothing to do'); return; end;
 
 % set pre-existing tranlations and rotations to zero
-if flags.halfway & flag.ignore_mat
+if flags.halfway & flags.ignore_mat
     % rescue positional information of first image
     iM1 = spm_imatrix(P{1}(1).mat);
     iM1(7:12) = zeros(6,1);
@@ -167,7 +167,7 @@ if flags.halfway
     M = M/n;
     for s=1:numel(P),
         for i=1:numel(P{s}),
-            if flag.ignore_mat
+            if flags.ignore_mat
                 tmp=inv(spm_matrix(-M(1:6)-iM1(1:6)))*P{s}(i).mat;
             else
                 tmp=inv(spm_matrix(-M(1:6)))*P{s}(i).mat;
@@ -354,7 +354,7 @@ for i=2:length(P),
             countdown = countdown -1;
         end;
     end;
-    if flags.rtm,
+    if flags.rtm && ~flags.weight,
         % Generate mean and derivatives of mean
         tiny = 5e-2; % From spm_vol_utils.c
         msk        = find((y1>=(1-tiny) & y1<=(d(1)+tiny) &...
