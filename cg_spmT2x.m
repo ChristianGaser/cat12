@@ -281,7 +281,7 @@ for i=1:size(P,1)
             end
         elseif (pk < 0)
             k = 0;
-            [P2 Pn2 Em En EN] = spm_P(1,k,u,df,STAT,R,1,S);
+            [P2 Pn2 Em En] = spm_P(1,k,u,df,STAT,R,1,S);
             k = ceil(En/v2r);
             p_extent_str = '_En';
         else
@@ -291,17 +291,20 @@ for i=1:size(P,1)
         
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
+        A     = spm_clusters(XYZ);
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
 
-            [N Z XYZ A L] = spm_max(Z,XYZ);
-            c     = max(A);                                  %-Number of clusters
             Q     = [];
-            for i = 1:c
+            [N2 Z2 XYZ2 A2 L2] = spm_max(Z,XYZ);
+            if max(A) ~= max(A2)
+                 error('Number of clusters does not much in spm_max and spm_clusters!');
+            end
 
+            for i2 = 1:max(A2)
                 %-Get LKC for voxels in i-th region
                 %----------------------------------------------------------
-                LKC  = spm_get_data(SPM.xVol.VRpv,L{i});
+                LKC  = spm_get_data(SPM.xVol.VRpv,L2{i2});
                 
                 %-Compute average of valid LKC measures for i-th region
                 %----------------------------------------------------------
@@ -314,14 +317,26 @@ for i=1:size(P,1)
                 
                 %-Intrinsic volume (with surface correction)
                 %----------------------------------------------------------
-                IV   = spm_resels([1 1 1],L{i},'V');
+                IV   = spm_resels([1 1 1],L2{i2},'V');
                 IV   = IV*[1/2 2/3 2/3 1]';
-                j = IV*LKC;
+                k_noniso = IV*LKC/v2r;
 
-                if j >= k; Q = [Q j]; end
+                % find corresponding cluster in spm_clusters if cluster exceeds threshold
+                if k_noniso >= k
+                    ind2 = find(A2==i2);
+                    for i = 1:max(A)
+                        j = find(A == i);
+                        if length(j)==N2(ind2)
+                            if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
+                                Q = [Q j];
+                                break
+                            end
+                        end
+                    end
+                end
+                
             end
         else
-            A     = spm_clusters(XYZ);
             Q     = [];
             for i = 1:max(A)
                 j = find(A == i);
