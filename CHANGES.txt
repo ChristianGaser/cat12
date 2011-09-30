@@ -1397,3 +1397,12 @@ M      vbdist.mexw64
 (2) Removed some typos in new realignment code. 
 ------------------------------------------------------------------------
 r430 | gaser | 2011-09-29 16:54:15
+
+M      cg_vbm8_longitudinal_multi_run.m
+M      CHANGES.txt
+
+Removed bug in cg_vbm8_longitudinal_multi_run.m that caused incorrect 
+processing of files if number of time points differs between subjects. 
+Thanks to Sonja Faust for finding this weird error.
+------------------------------------------------------------------------
+r431 | gaser | 2011-09-30 16:17:14
