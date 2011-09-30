@@ -11,6 +11,7 @@ warning off;
 for i=1:numel(job.subj),
     out(i).files = cell(numel(job.subj(i).mov),1);
     m = numel(job.subj(i).mov);
+    data = cell(m,1);
     for j=1:m
         [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{j});
         out(i).files{j} = fullfile(pth,['wp1mr', nam, ext, num]);
