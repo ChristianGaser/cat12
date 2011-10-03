@@ -162,14 +162,14 @@ ignore_mat.labels  = {
               'Ignore existing positional information'
 }';
 ignore_mat.values  = {0 1};
-ignore_mat.def     = @(val)cg_vbm8_get_defaults('realign.ignore_mat', val{:});
+ignore_mat.def     = @(val)cg_vbm8_get_defaults('extopts.ignore_mat', val{:});
 % ---------------------------------------------------------------------
 % eoptions Estimation Options
 % ---------------------------------------------------------------------
 eoptions         = cfg_branch;
 eoptions.tag     = 'eoptions';
 eoptions.name    = 'Estimation Options';
-eoptions.val     = {quality sep fwhm rtm interp wrap weight halfway ignore_mat};
+eoptions.val     = {quality sep fwhm rtm interp wrap weight halfway};
 eoptions.help    = {'Various registration options. If in doubt, simply keep the default values.'};
 % ---------------------------------------------------------------------
 % estimate Realign: Estimate
