@@ -77,7 +77,7 @@ vbm8.bias.lmreg        = 1e-6;
 %=======================================================================
 vbm8.realign.halfway   = 1; % use halfway registration: 0 - no; 1 - yes
 vbm8.realign.weight    = 1; % weight registration with inverse std: 0 - no; 1 - yes
-vbm8.realign.ignore_mat= 1; % ignore exisiting positional information: 0 - no; 1 - yes
+vbm8.realign.ignore_mat= 0; % ignore exisiting positional information: 0 - no; 1 - yes
 
 % apply deformations options
 %=======================================================================

@@ -24,7 +24,6 @@ flags.weight  = job.eoptions.weight;
 flags.interp  = job.eoptions.interp;
 flags.wrap    = job.eoptions.wrap;
 flags.halfway = job.eoptions.halfway;
-flags.ignore_mat = job.eoptions.ignore_mat;
 cg_realign(P,flags);
 for i=1:numel(job.data)
     out.sess(i).cfiles = job.data{i};

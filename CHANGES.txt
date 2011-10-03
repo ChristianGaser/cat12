@@ -1406,3 +1406,16 @@ processing of files if number of time points differs between subjects.
 Thanks to Sonja Faust for finding this weird error.
 ------------------------------------------------------------------------
 r431 | gaser | 2011-09-30 16:17:14
+
+M       cg_vbm8_defaults.m
+M       spm_vbm8.m
+M       cg_run_realign_estwrite.m
+A       cg_set_com.m
+M       cg_realign.m
+M       cg_run_realign_estimate.m
+M       cg_cfg_realign.m
+
+(1) Added function to automatically set origin ucenter-of-mass.
+(2) Removed option for ignoring mat-information for realignmnt from GUI.
+------------------------------------------------------------------------
+r432 | gaser | 2011-10-03 23:48:42
