@@ -92,7 +92,8 @@ def_flags.PW       = '';
 def_flags.graphics = 1;
 def_flags.halfway  = 1;
 def_flags.lkp      = 1:6;
-def_flags.ignore_mat = 1;
+
+ignore_mat = cg_vbm8_get_defaults('realign.ignore_mat');
 if nargin < 2,
     flags = def_flags;
 else
@@ -118,7 +119,7 @@ P = PN;
 if isempty(P), warning('Nothing to do'); return; end;
 
 % set pre-existing tranlations and rotations to zero
-if flags.halfway & flags.ignore_mat
+if flags.halfway & ignore_mat
     % rescue positional information of first image
     iM1 = spm_imatrix(P{1}(1).mat);
     iM1(7:12) = zeros(6,1);
@@ -167,7 +168,7 @@ if flags.halfway
     M = M/n;
     for s=1:numel(P),
         for i=1:numel(P{s}),
-            if flags.ignore_mat
+            if ignore_mat
                 tmp=inv(spm_matrix(-M(1:6)-iM1(1:6)))*P{s}(i).mat;
             else
                 tmp=inv(spm_matrix(-M(1:6)))*P{s}(i).mat;
