@@ -1419,3 +1419,11 @@ M       cg_cfg_realign.m
 (2) Removed option for ignoring mat-information for realignmnt from GUI.
 ------------------------------------------------------------------------
 r432 | gaser | 2011-10-03 23:48:42
+
+M      cg_vbm8_defs.m
+
+Corrected erroneous inversion of modulated images while using function 
+"Apply deformations" with modulation. Thanks to Fumio Yamashita for
+finding this error.
+------------------------------------------------------------------------
+r433 | gaser | 2011-10-07 09:41:46

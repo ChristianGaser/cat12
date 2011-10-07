@@ -74,7 +74,7 @@ for i=1:size(fnames,1),
     Vo = spm_create_vol(Vo);
     if modulate
       dt = spm_def2det(Def{1},Def{2},Def{3},V.mat);
-      dt = dt*abs(det(V.mat(1:3,1:3))/det(Vo.mat(1:3,1:3)));
+      dt = dt*(det(V.mat(1:3,1:3))/det(Vo.mat(1:3,1:3)));
 
 if 0
         x      = affind(rgrid(V.dim(1:3)),V.mat);
