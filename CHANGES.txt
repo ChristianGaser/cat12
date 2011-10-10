@@ -1427,3 +1427,13 @@ Corrected erroneous inversion of modulated images while using function
 finding this error.
 ------------------------------------------------------------------------
 r433 | gaser | 2011-10-07 09:41:46
+
+M       VBM8-Manual_Japanese.doc
+M       VBM8-Manual.pdf
+M       VBM8-Manual.doc
+M       VBM8-Manual_Japanese.pdf
+
+Corrected longitudinal design with one group in VBM8-Manual. The first main
+effect "2" was missing.
+------------------------------------------------------------------------
+r434 | gaser | 2011-10-10 22:46:10
