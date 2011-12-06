@@ -300,7 +300,12 @@ if do_cls && do_defs,
         opt.verb = 0; % display process (0=nothing, 1=only points, 2=times)
         fprintf('Skull-stripping using graph-cut\n');
         cls_old = cls;
-        [src,cls,mask] = GBM(src,cls,res,opt);
+        try
+          [src,cls,mask] = GBM(src,cls,res,opt);
+        catch
+          fprintf('Graph-cut failed\n');
+          gcut = 0;
+        end  
         % check whether graph-cut failed (if GM classification has changed too much)
         if (sum(cls{1}(:))/sum(cls_old{1}(:))<0.8)
           fprintf('Graph-cut failed\n');
