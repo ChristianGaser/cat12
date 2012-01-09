@@ -1443,3 +1443,14 @@ M       cg_vbm8_write.m
 Use old skull-stripping approach if graph-cut skull-stripping fails.
 ------------------------------------------------------------------------
 r435 | gaser | 2011-12-06 12:37:54
+
+M       Makefile.vbm
+M       cg_vbm8_defaults.m
+A       deepmask.nii
+M       CHANGES.txt
+M       sanlm_float.c
+M       cg_vbm8_write.m
+
+Preliminary version of local histogram equalization.
+------------------------------------------------------------------------
+r436 | gaser | 2012-01-09 17:59:16

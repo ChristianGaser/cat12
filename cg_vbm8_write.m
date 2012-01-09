@@ -169,6 +169,12 @@ end
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = tpm.M\res.Affine*res.image(1).mat;
 
+if cg_vbm8_get_defaults('extopts.histeq_deep')
+    tmp_deepmask = spm_vol(char(cg_vbm8_get_defaults('extopts.deepmask')));
+    deepmask = zeros(d(1:3),'uint8');
+    M2 = tmp_deepmask.mat\res.Affine*res.image(1).mat;
+end
+
 for z=1:length(x3),
 
     % Bias corrected image
@@ -225,6 +231,11 @@ for z=1:length(x3),
                 end
             end
 
+            if cg_vbm8_get_defaults('extopts.histeq_deep')
+                [t01,t02,t03] = defs(Coef,z,res.MT,prm,x1,x2,x3,M2);
+                deepmask(:,:,z) = spm_sample_vol(tmp_deepmask,t01,t02,t03,0);
+            end
+            
             sq = sum(q,3) + eps^2;
             for k1=1:Kb,
                 tmp            = q(:,:,k1);
@@ -284,6 +295,7 @@ switch warp.sanlm
         sanlmMex(src,3,1);
 end
 
+save all
 if do_cls && do_defs,
 
     % default parameters
@@ -364,7 +376,7 @@ if do_cls && do_defs,
     % fill remaining holes in label with 1
     mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
     label2((label2 == 0) & (mask > 0)) = 1;
-  
+      
     % use index to speed up and save memory
     sz = size(mask);
     [indx, indy, indz] = ind2sub(sz,find(mask>0));
@@ -382,6 +394,39 @@ if do_cls && do_defs,
     % set label and source inside outside mask to 0
     vol(mask(indx,indy,indz)==0) = 0;
     
+    % use local histogram equalization
+    if cg_vbm8_get_defaults('extopts.histeq_deep')
+    
+        clear tmp_deepmask t01 t02 t03
+        mask_fwhm = 0;
+      	deepmask_gt_0 = deepmask(indx,indy,indz)>0;
+      	outermask_gt_0 = (vol > 0 ) & (deepmask(indx,indy,indz) == 0);
+      	clear deepmask
+
+        max_vol = max(vol(outermask_gt_0));
+        vol = vol/max_vol;
+        
+      	if mask_fwhm > 0
+      	    smoothed_deepmask = decimate(single(deepmask_gt_0),[mask_fwhm mask_fwhm mask_fwhm]);
+      	end
+
+      	h1 = hist(vol(outermask_gt_0),512);
+
+      	if mask_fwhm > 0
+        	vol_tmp = vol;
+        end
+      	vol(deepmask_gt_0) = histeq(vol(deepmask_gt_0),h1);
+
+      	% weighted mask to obtain smooth borders
+      	if mask_fwhm > 0
+      	    vol = vol.*smoothed_deepmask + vol_tmp.*(1-smoothed_deepmask);
+      	    clear vol_tmp
+      	end
+      	
+      	vol = vol*max_vol;
+    
+    end
+
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
     iters_icm = 20;
