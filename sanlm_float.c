@@ -642,6 +642,7 @@ Nthreads = 1;
 
 #ifdef _OPENMP
     Nthreads = omp_get_num_procs();
+    omp_set_num_threads(Nthreads);
     printf("Using %d processors\n",Nthreads);fflush(stdout);
 #endif
 

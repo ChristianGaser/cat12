@@ -92,6 +92,8 @@ vbm8.extopts.kmeans    = 1;    % segmentation initialization: 0 - new segment; 1
 vbm8.extopts.mrf       = 0.15; % MRF weighting
 vbm8.extopts.sanlm     = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
 vbm8.extopts.bias_fwhm = 60;   % FWHM of Kmeans internal bias correction
+vbm8.extopts.histeq_deep = 1;    % use local histogram equalization: 0 - no; 1 - yes
+vbm8.extopts.deepmask    = {fullfile(spm('dir'),'toolbox','vbm8','deepmask.nii')};
 
 % experimental (not yet working)
 %=======================================================================
