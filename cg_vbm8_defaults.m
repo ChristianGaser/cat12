@@ -30,23 +30,23 @@ vbm8.opts.samp      = 3;      % Sampling distance
 %   modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
 %   dartel    0/1/2 (none/rigid/affine)
 
-vbm8.output.bias.native  = 0;
-vbm8.output.bias.warped  = 1;
+vbm8.output.bias.native  = 1;
+vbm8.output.bias.warped  = 0;
 vbm8.output.bias.affine  = 0;
 
-vbm8.output.label.native = 0;
+vbm8.output.label.native = 1;
 vbm8.output.label.warped = 0;
 vbm8.output.label.dartel = 0;
 
 % order is [native normalised modulated dartel]
-vbm8.output.GM.native = 0;  % GM
+vbm8.output.GM.native = 1;  % GM
 vbm8.output.GM.warped = 0;  % GM
-vbm8.output.GM.mod    = 2;  % GM
+vbm8.output.GM.mod    = 0;  % GM
 vbm8.output.GM.dartel = 0;  % GM
 
 vbm8.output.WM.native = 0;  % WM
 vbm8.output.WM.warped = 0;  % WM
-vbm8.output.WM.mod    = 2;  % WM
+vbm8.output.WM.mod    = 0;  % WM
 vbm8.output.WM.dartel = 0;  % WM
 
 vbm8.output.CSF.native = 0; % CSF
@@ -62,7 +62,7 @@ vbm8.output.warps = [0 0];
 
 % Extended writing options
 %=======================================================================
-vbm8.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
+vbm8.extopts.dartelwarp  = 0; % dartel normalization: 0 - spm default; 1 - yes
 vbm8.extopts.darteltpm   = {fullfile(spm('dir'),'toolbox','vbm8','Template_1_IXI550_MNI152.nii')}; % Indicate first Dartel template
 vbm8.extopts.print       = 1; % Display and print results
 
@@ -85,15 +85,15 @@ vbm8.defs.interp    = 5;  % 5th degree B-spline
 
 % expert options
 %=======================================================================
-vbm8.extopts.cleanup   = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
-vbm8.extopts.finalmask = 1;    % Final masking: 0 - no; 1 - yes
-vbm8.extopts.gcut      = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
-vbm8.extopts.kmeans    = 1;    % segmentation initialization: 0 - new segment; 1 - Kmeans
-vbm8.extopts.mrf       = 0.15; % MRF weighting
-vbm8.extopts.sanlm     = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
-vbm8.extopts.bias_fwhm = 60;   % FWHM of Kmeans internal bias correction
-vbm8.extopts.histeq_deep = 1;    % use local histogram equalization: 0 - no; 1 - yes
-vbm8.extopts.deepmask    = {fullfile(spm('dir'),'toolbox','vbm8','deepmask.nii')};
+vbm8.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
+vbm8.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
+vbm8.extopts.gcut        = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
+vbm8.extopts.kmeans      = 1;    % segmentation initialization: 0 - new segment; 1 - Kmeans
+vbm8.extopts.mrf         = 0.15; % MRF weighting
+vbm8.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
+vbm8.extopts.bias_fwhm   = 60;   % FWHM of Kmeans internal bias correction
+vbm8.extopts.histeq_deep = 0;    % weighting of local histogram equalization: 0 - no; 1 - full weighting (not recommended)
+vbm8.extopts.histeq_mask = {fullfile(spm('dir'),'toolbox','vbm8','histeq_mask.nii')};
 
 % experimental (not yet working)
 %=======================================================================

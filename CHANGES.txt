@@ -1454,3 +1454,17 @@ M       cg_vbm8_write.m
 Preliminary version of local histogram equalization.
 ------------------------------------------------------------------------
 r436 | gaser | 2012-01-09 17:59:16
+
+M       cg_vbm8_defaults.m
+M       cg_vbm8_batch.m
+A  +    histeq_mask.nii
+D       deepmask.nii
+M       cg_spm8_batch.m
+A       histeq_mask.txt
+M       cg_vbm8_write.m
+
+(1) Deselect local histogram equalization by default.
+(2) Removed call of "run_nogui" for spm_jobman.m in cg_*_batch.m.
+(3) Added histeq_mask.* for local histogram, equalization.
+------------------------------------------------------------------------
+r437 | gaser | 2012-01-13 09:57:40

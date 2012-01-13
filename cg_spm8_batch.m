@@ -25,6 +25,6 @@ end
 
 warning off
 spm_jobman('initcfg');
-spm_jobman('run_nogui',matlabbatch);
+spm_jobman('run',matlabbatch);
 
 exit

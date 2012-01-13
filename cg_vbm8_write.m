@@ -170,9 +170,9 @@ spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = tpm.M\res.Affine*res.image(1).mat;
 
 if cg_vbm8_get_defaults('extopts.histeq_deep')
-    tmp_deepmask = spm_vol(char(cg_vbm8_get_defaults('extopts.deepmask')));
-    deepmask = zeros(d(1:3),'uint8');
-    M2 = tmp_deepmask.mat\res.Affine*res.image(1).mat;
+    tmp_histeq_mask = spm_vol(char(cg_vbm8_get_defaults('extopts.histeq_mask')));
+    histeq_mask = zeros(d(1:3),'uint8');
+    M2 = tmp_histeq_mask.mat\res.Affine*res.image(1).mat;
 end
 
 for z=1:length(x3),
@@ -233,7 +233,7 @@ for z=1:length(x3),
 
             if cg_vbm8_get_defaults('extopts.histeq_deep')
                 [t01,t02,t03] = defs(Coef,z,res.MT,prm,x1,x2,x3,M2);
-                deepmask(:,:,z) = spm_sample_vol(tmp_deepmask,t01,t02,t03,0);
+                histeq_mask(:,:,z) = uint8(round(spm_sample_vol(tmp_histeq_mask,t01,t02,t03,0)));
             end
             
             sq = sum(q,3) + eps^2;
@@ -274,7 +274,7 @@ for z=1:length(x3),
     src(:,:,z) = single(bf1.*f);
 end
 
-clear chan
+%clear chan
 
 % prevent NaN
  src(isnan(src)) = 0;
@@ -295,7 +295,6 @@ switch warp.sanlm
         sanlmMex(src,3,1);
 end
 
-save all
 if do_cls && do_defs,
 
     % default parameters
@@ -393,40 +392,41 @@ if do_cls && do_defs,
     % mask source image because Amap needs a skull stripped image
     % set label and source inside outside mask to 0
     vol(mask(indx,indy,indz)==0) = 0;
-    
+
     % use local histogram equalization
     if cg_vbm8_get_defaults('extopts.histeq_deep')
     
-        clear tmp_deepmask t01 t02 t03
-        mask_fwhm = 0;
-      	deepmask_gt_0 = deepmask(indx,indy,indz)>0;
-      	outermask_gt_0 = (vol > 0 ) & (deepmask(indx,indy,indz) == 0);
-      	clear deepmask
+        weight_histeq = cg_vbm8_get_defaults('extopts.histeq_deep');
 
+        clear tmp_histeq_mask t01 t02 t03
+        
+        histeq_mask_ind = histeq_mask(indx,indy,indz);
+        clear histeq_mask;
+        
+   	    outermask_gt_0 = (vol > 0 ) & (histeq_mask_ind == 0);
         max_vol = max(vol(outermask_gt_0));
         vol = vol/max_vol;
-        
-      	if mask_fwhm > 0
-      	    smoothed_deepmask = decimate(single(deepmask_gt_0),[mask_fwhm mask_fwhm mask_fwhm]);
-      	end
-
       	h1 = hist(vol(outermask_gt_0),512);
 
-      	if mask_fwhm > 0
-        	vol_tmp = vol;
-        end
-      	vol(deepmask_gt_0) = histeq(vol(deepmask_gt_0),h1);
+       	histeq_mask_gt_0 = histeq_mask_ind >0;
+   	    vol(histeq_mask_gt_0) = weight_histeq*histeq(vol(histeq_mask_gt_0),h1) + (1-weight_histeq)*vol(histeq_mask_gt_0);
 
-      	% weighted mask to obtain smooth borders
-      	if mask_fwhm > 0
-      	    vol = vol.*smoothed_deepmask + vol_tmp.*(1-smoothed_deepmask);
-      	    clear vol_tmp
-      	end
-      	
       	vol = vol*max_vol;
-    
+        
+   	    src(:) = 0;
+        src(indx, indy, indz) = vol;
+
+        for z=1:length(x3),
+            % Bias corrected image
+            % Write a plane of bias corrected data
+            if bf(1,1),
+                chan(1).Nc.dat(:,:,z,chan(1).ind(1),chan(1).ind(2)) = src(:,:,z);
+            end
+        end
+
     end
 
+    clear chan
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
     iters_icm = 20;

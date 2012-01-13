@@ -1,0 +1,40 @@
+deepmask.nii
+-----------------------------
+V = spm_vol(str2mat('/Users/gaser/spm/spm8/apriori/brainmask.nii','DGM_prior.nii','ICSF_prior.nii'));
+
+args = {{0,0,1}};
+Vo = V(1);
+Vo.dt = [2 0];
+
+Vo.fname = 'deepmask.nii';
+Vo   = spm_imcalc(V,Vo,'(i2+i3)>0.1',args{:});
+
+close_M1_S1.nii
+-----------------------------
+matlabbatch{1}.spm.util.imcalc.input = {
+                                        '/Users/gaser/spm/spm8/toolbox/aal/ROI_MNI_V4.nii,1'
+                                        };
+matlabbatch{1}.spm.util.imcalc.output = 'M1_S1.nii';
+matlabbatch{1}.spm.util.imcalc.outdir = {''};
+matlabbatch{1}.spm.util.imcalc.expression = 'i1==2001|i1==6001|i1==2002|i1==6002';
+matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+matlabbatch{1}.spm.util.imcalc.options.dtype = 2;
+
+%final closing with 3 its
+
+close_Occipital_Sup_Mid.nii
+-----------------------------
+matlabbatch{1}.spm.util.imcalc.input = {
+                                        '/Users/gaser/spm/spm8/toolbox/aal/ROI_MNI_V4.nii,1'
+                                        };
+matlabbatch{1}.spm.util.imcalc.output = 'Occipital_Sup_Mid.nii';
+matlabbatch{1}.spm.util.imcalc.outdir = {''};
+matlabbatch{1}.spm.util.imcalc.expression = 'i1==5101 | i1==5201|i1==5102|i1==5202';
+matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+matlabbatch{1}.spm.util.imcalc.options.dtype = 2;
+
+%final closing with 3 its
