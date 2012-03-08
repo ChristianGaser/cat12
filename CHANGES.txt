@@ -1468,3 +1468,26 @@ M       cg_vbm8_write.m
 (3) Added histeq_mask.* for local histogram, equalization.
 ------------------------------------------------------------------------
 r437 | gaser | 2012-01-13 09:57:40
+
+M       sanlmMex.mexw32
+M       down_cut.mexw64
+M       cg_vbm8_tools.m
+M       median3.mexw32
+M       AmapMex.mexw32
+M       eikonal3.mexw32
+M       sanlmMex.mexw64
+M       vbdist.mexw32
+M       CHANGES.txt
+M       down_cut.mexw32
+M       median3.mexw64
+M       AmapMex.mexw64
+M       cg_check_cov.m
+M       eikonal3.mexw64
+M       vbdist.mexw64
+M       cg_vbm8_write.m
+
+(1) Allow to deform 4D images with "Apply Deformations" (thanks to Robert
+    Welsh).
+(2) Recompilation for Windows systems.
+------------------------------------------------------------------------
+r438 | gaser | 2012-03-08 09:40:00

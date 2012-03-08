@@ -159,6 +159,8 @@ end
 
 threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 
+fprintf('Mean covariance: %3.2f\n',mean(mean_cov));
+
 [tmp fname] = spm_str_manip(char(V.fname),'C');
 fprintf('Compressed filenames: %s  \n',tmp);
 
