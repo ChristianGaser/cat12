@@ -459,7 +459,7 @@ images1         = cfg_files;
 images1.tag     = 'images';
 images1.name    = 'Images';
 images1.help    = {'Select images to be warped. Note that there should be the same number of images as there are deformation fields, such that each flow field warps one image.'};
-images1.filter = 'nifti';
+images1.filter = 'image';
 images1.ufilter = '.*';
 images1.num     = [1 Inf];
 

@@ -169,7 +169,12 @@ end
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = tpm.M\res.Affine*res.image(1).mat;
 
-if cg_vbm8_get_defaults('extopts.histeq_deep')
+histeq_deep = 0;
+try
+    histeq_deep = cg_vbm8_get_defaults('extopts.histeq_deep');
+end
+
+if histeq_deep
     tmp_histeq_mask = spm_vol(char(cg_vbm8_get_defaults('extopts.histeq_mask')));
     histeq_mask = zeros(d(1:3),'uint8');
     M2 = tmp_histeq_mask.mat\res.Affine*res.image(1).mat;
@@ -231,7 +236,7 @@ for z=1:length(x3),
                 end
             end
 
-            if cg_vbm8_get_defaults('extopts.histeq_deep')
+            if histeq_deep
                 [t01,t02,t03] = defs(Coef,z,res.MT,prm,x1,x2,x3,M2);
                 histeq_mask(:,:,z) = uint8(round(spm_sample_vol(tmp_histeq_mask,t01,t02,t03,0)));
             end
@@ -394,10 +399,8 @@ if do_cls && do_defs,
     vol(mask(indx,indy,indz)==0) = 0;
 
     % use local histogram equalization
-    if cg_vbm8_get_defaults('extopts.histeq_deep')
+    if histeq_deep
     
-        weight_histeq = cg_vbm8_get_defaults('extopts.histeq_deep');
-
         clear tmp_histeq_mask t01 t02 t03
         
         histeq_mask_ind = histeq_mask(indx,indy,indz);
@@ -409,7 +412,7 @@ if do_cls && do_defs,
       	h1 = hist(vol(outermask_gt_0),512);
 
        	histeq_mask_gt_0 = histeq_mask_ind >0;
-   	    vol(histeq_mask_gt_0) = weight_histeq*histeq(vol(histeq_mask_gt_0),h1) + (1-weight_histeq)*vol(histeq_mask_gt_0);
+   	    vol(histeq_mask_gt_0) = histeq_deep*histeq(vol(histeq_mask_gt_0),h1) + (1-histeq_deep)*vol(histeq_mask_gt_0);
 
       	vol = vol*max_vol;
         
