@@ -310,7 +310,7 @@ if do_cls && do_defs,
 
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
     scale_morph = 1/mean(vx_vol);
-  
+
     if gcut
         % skull-stripping using graph-cut
         opt.verb = 0; % display process (0=nothing, 1=only points, 2=times)
@@ -322,8 +322,8 @@ if do_cls && do_defs,
           fprintf('Graph-cut failed\n');
           gcut = 0;
         end  
-        % check whether graph-cut failed (if GM classification has changed too much)
-        if (sum(cls{1}(:))/sum(cls_old{1}(:))<0.8)
+        % check whether graph-cut failed
+        if (sum(mask(:))/sum((single(cls_old{1}(:))+single(cls_old{2}(:))+single(cls_old{3}(:)))/255)<0.8)
           fprintf('Graph-cut failed\n');
           gcut = 0;
           cls = cls_old;

@@ -1491,3 +1491,12 @@ M       cg_vbm8_write.m
 (2) Recompilation for Windows systems.
 ------------------------------------------------------------------------
 r438 | gaser | 2012-03-08 09:40:00
+
+ M      histeq_mask.nii
+M       CHANGES.txt
+ M      histeq_mask.txt
+M       cg_vbm8_write.m
+
+Added additional check whether gcut skull-stripping failed.
+------------------------------------------------------------------------
+r439 | gaser | 2012-03-23 16:46:37
