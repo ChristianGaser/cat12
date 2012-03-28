@@ -1415,7 +1415,7 @@ M       cg_realign.m
 M       cg_run_realign_estimate.m
 M       cg_cfg_realign.m
 
-(1) Added function to automatically set origin ucenter-of-mass.
+(1) Added function to automatically set origin center-of-mass.
 (2) Removed option for ignoring mat-information for realignmnt from GUI.
 ------------------------------------------------------------------------
 r432 | gaser | 2011-10-03 23:48:42
@@ -1500,3 +1500,11 @@ M       cg_vbm8_write.m
 Added additional check whether gcut skull-stripping failed.
 ------------------------------------------------------------------------
 r439 | gaser | 2012-03-23 16:46:37
+
+M       cg_vbm8_defs.m
+M       cg_ornlm.m
+M       CHANGES.txt
+
+Added HDW path to cg_vbm8_defs.m.
+------------------------------------------------------------------------
+r440 | gaser | 2012-03-28 09:50:46
