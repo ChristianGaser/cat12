@@ -28,7 +28,7 @@ for i = 1:n
   catch
     % use additionally reduced size to prevent memory issues
     fprintf('\nUse reduced images size for noise estimation.');
-    h = cg_noise_estimation(in(1:rounV(i).dim(V(i).dim(1)/2),1:rounV(i).dim(V(i).dim(2)/2),1:rounV(i).dim(V(i).dim(3)/2)));
+    h = cg_noise_estimation(in(1:2:V(i).dim(1),1:2:V(i).dim(2)/2,1:2:V(i).dim(3)/2));
   end
   fprintf('Noise estimate for %s: %3.2f\n',nm,h);
 
