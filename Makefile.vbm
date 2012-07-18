@@ -5,18 +5,18 @@
 VERSION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
-TARGET=/Users/gaser/spm/spm8/toolbox/vbm8
-TARGET2=/Volumes/UltraMax/spm8/toolbox/vbm8
+TARGET=/Users/gaser/spm/spm8/toolbox/vbm12
+TARGET2=/Volumes/UltraMax/spm8/toolbox/vbm12
 
-STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/vbm8
+STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/vbm12
 
-MATLAB_FILES=Contents.m cg_vbm8_defaults.m cg_vbm8_run.m cg_vbm8_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm8_tools.m cg_vbm8_debug.m cg_morph_vol.m cg_vbm8_batch.* tbx_cfg_vbm8.m spm_vbm8.m vbm8.man cg_vbm8_bias* cg_spm8_batch.* cg_vbm8_defs.m cg_vbm8_longitudinal.m cg_vbm8_update.m cg_sanlm.m cg_vbm8_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m slice_overlay.m cg_cleanup_gwc.m cg_vbm8_longitudinal_multi_run.m cg_vbm8_longitudinal_multi.m cg_cfg_realign.m cg_realign.m cg_run_realign_estimate.m cg_run_realign_estwrite.m cg_set_com.m GBM.m checkinopt.m dp.m
+MATLAB_FILES=Contents.m cg_vbm12_defaults.m cg_vbm12_run.m cg_vbm12_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm12_tools.m cg_vbm12_debug.m cg_morph_vol.m cg_vbm12_batch.* tbx_cfg_vbm12.m spm_vbm12.m vbm12.man cg_vbm12_bias* cg_spm8_batch.* cg_vbm12_defs.m cg_vbm12_longitudinal.m cg_vbm12_update.m cg_sanlm.m cg_vbm12_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m slice_overlay.m cg_cleanup_gwc.m cg_vbm12_longitudinal_multi_run.m cg_vbm12_longitudinal_multi.m cg_cfg_realign.m cg_realign.m cg_run_realign_estimate.m cg_run_realign_estwrite.m cg_set_com.m GBM.m checkinopt.m dp.m
 C_FILES=Amap.[ch] AmapMex.* sanlmMex.* sanlmMex_noopenmp.* sanlm_float.c MrfPrior.c Pve.c Kmeans.c vollib.c median3.* down_cut.* vbdist.* eikonal3.*
-MISC_FILES=Template_?_IXI550_MNI152.nii avgT1_Dartel_IXI550_MNI152.nii VBM8-Manual.pdf CHANGES.txt INSTALL.txt
+MISC_FILES=Template_?_IXI550_MNI152.nii avgT1_Dartel_IXI550_MNI152.nii VBM12-Manual.pdf CHANGES.txt INSTALL.txt
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=vbm8_r$(VERSION).zip
+ZIPFILE=vbm12_r$(VERSION).zip
 
 install: 
 	-@echo install
@@ -37,23 +37,23 @@ help:
 update:
 	-@svn update
 	-@echo '% Voxel Based Morphometry Toolbox' > Contents.m
-	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> Contents.m
+	-@echo '% Version ' ${VERSION} ' (VBM12) ' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
 	-@echo '% Voxel Based Morphometry Toolbox' > INSTALL.txt
-	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> INSTALL.txt
+	-@echo '% Version ' ${VERSION} ' (VBM12) ' ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
-	-@echo '% __________________________________________________________________________' > vbm8.man
-	-@echo '% Voxel Based Morphometry Toolbox for SPM8' >> vbm8.man
-	-@echo '% Version ' ${VERSION} ' (VBM8) ' ${DATE} >> vbm8.man
-	-@cat vbm8.txt >> vbm8.man
+	-@echo '% __________________________________________________________________________' > vbm12.man
+	-@echo '% Voxel Based Morphometry Toolbox for SPM8' >> vbm12.man
+	-@echo '% Version ' ${VERSION} ' (VBM12) ' ${DATE} >> vbm12.man
+	-@cat vbm12.txt >> vbm12.man
 
 zip: update
 	-@echo zip
-	-@test ! -d vbm8 || rm -r vbm8
-	-@mkdir vbm8
-	-@cp -rp ${FILES} vbm8
-	-@zip ${ZIPFILE} -rm vbm8
+	-@test ! -d vbm12 || rm -r vbm12
+	-@mkdir vbm12
+	-@cp -rp ${FILES} vbm12
+	-@zip ${ZIPFILE} -rm vbm12
 
 scp: zip
-	-@echo scp to http://dbm.neuro.uni-jena.de/vbm8/${ZIPFILE}
-	-@scp -P 2222 CHANGES.txt VBM8-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@echo scp to http://dbm.neuro.uni-jena.de/vbm12/${ZIPFILE}
+	-@scp -P 2222 CHANGES.txt VBM12-Manual.pdf ${ZIPFILE} ${STARGET}

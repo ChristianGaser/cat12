@@ -3,7 +3,7 @@ function cg_sanlm(vargin)
 % Spatial Adaptive Non Local Means Denoising Filter
 %
 %_______________________________________________________________________
-% Christian Gaser/Users/gaser/matlab/vbm8/cg_sanlm.m
+% Christian Gaser/Users/gaser/matlab/vbm12/cg_sanlm.m
 % $Id$
 
 if nargin == 1

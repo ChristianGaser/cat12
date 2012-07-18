@@ -1,5 +1,5 @@
 - Register T1_27x to colin27T1_seg
-- VBM8 (with Dartel) of T1_27x, write deformations
+- VBM12 (with Dartel) of T1_27x, write deformations
 - apply deformations with NN interpolation to AllAreas_v17 + AnatMask
 - remove underlaying brain: i1.*(i1>50): DartelAreas_v17
 - round values + divide hemispheres:
