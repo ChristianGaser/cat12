@@ -148,3 +148,10 @@ D       cg_spm8_batch.m
 Removed some old files and renamed spm8 to spm in filenames.
 ------------------------------------------------------------------------
 r445 | gaser | 2012-07-18 09:32:01
+
+M       Makefile.vbm
+M       CHANGES.txt
+
+Changed filenames in Makefile.vbm.
+------------------------------------------------------------------------
+r446 | gaser | 2012-07-18 10:21:36
