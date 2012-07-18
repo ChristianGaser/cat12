@@ -37,3 +37,59 @@ M       cg_cfg_realign.m
 Renamed all occurance of vbm8 to vbm12.
 ------------------------------------------------------------------------
 r441 | gaser | 2012-07-18 09:02:32
+
+D       cg_vbm8_defs.m
+A  +    cg_vbm12_get_defaults.m
+D       cg_vbm8_defaults.m
+A  +    cg_vbm12_batch.sh
+D       spm_vbm8.m
+D       vbm8.txt
+A  +    cg_vbm12_brainmask_ui.m
+D       cg_vbm8_batch.m
+D       cg_vbm8_update.m
+A  +    cg_vbm12_defaults.m
+A  +    cg_vbm12_batch.m
+D       cg_vbm8_tools.m
+D       VBM8-Manual_Japanese.doc
+D       cg_vbm8_bias_run.m
+D       cg_vbm8_get_defaults.m
+A  +    cg_vbm12_tools.m
+A  +    cg_vbm12_longitudinal_multi.m
+A  +    VBM12-Manual_Japanese.pdf
+A  +    cg_vbm12_brainmask.m
+D       cg_vbm8_longitudinal_multi_run.m
+D       cg_vbm8_longitudinal_multi.m
+D       cg_vbm8_run.m
+A  +    cg_vbm12_bias_run.m
+A  +    test_vbm12.m
+A  +    cg_vbm12_bias.m
+D       VBM8-Manual.pdf
+A  +    cg_vbm12_longitudinal.m
+D       cg_vbm8_brainmask_ui.m
+A  +    vbm12.txt
+A  +    VBM12-Manual.pdf
+M       CHANGES.txt
+A  +    cg_vbm12_defs.m
+A  +    cg_vbm12_update.m
+D       cg_vbm8_batch.sh
+A  +    spm_vbm12.m
+D       tbx_cfg_vbm8.m
+A  +    VBM12-Manual_Japanese.doc
+A  +    cg_vbm12_run.m
+D       cg_vbm8_debug.m
+A  +    cg_vbm12_debug.m
+A  +    cg_vbm12_longitudinal_multi_run.m
+D       cg_vbm8_brainmask.m
+D       cg_vbm8_bias.m
+A  +    tbx_cfg_vbm12.m
+D       cg_vbm8_longitudinal.m
+D       cg_vbm8_write.m
+D       VBM8-Manual.doc
+D       VBM8-Manual_Japanese.pdf
+A  +    cg_vbm12_write.m
+D       test_vbm8.m
+A  +    VBM12-Manual.doc
+
+Renamed all files from vbm8 to vbm12.
+------------------------------------------------------------------------
+r442 | gaser | 2012-07-18 09:09:12
