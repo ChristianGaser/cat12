@@ -155,3 +155,12 @@ M       CHANGES.txt
 Changed filenames in Makefile.vbm.
 ------------------------------------------------------------------------
 r446 | gaser | 2012-07-18 10:21:36
+
+M       Makefile.vbm
+D       spm_vbm.m
+M       CHANGES.txt
+A  +    spm_vbm12.m
+
+Renamed spm_vbm.m to spm_vbm12.m to enable toolbox call.
+------------------------------------------------------------------------
+r447 | gaser | 2012-07-18 10:36:15
