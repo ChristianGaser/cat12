@@ -1,5 +1,5 @@
 function cg_spm8_batch(batchname)
-% wrapper for using spm8 batch mode (see cg_vbm8_batch.sh)
+% wrapper for using spm8 batch mode (see cg_vbm12_batch.sh)
 %_______________________________________________________________________
 % $Id$
 

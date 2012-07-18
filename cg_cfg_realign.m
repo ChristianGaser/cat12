@@ -136,7 +136,7 @@ weight.labels  = {
               'Use weighting'
 }';
 weight.values  = {0 1};
-weight.def     = @(val)cg_vbm8_get_defaults('realign.weight', val{:});
+weight.def     = @(val)cg_vbm12_get_defaults('realign.weight', val{:});
 % ---------------------------------------------------------------------
 % halfway Halfway
 % ---------------------------------------------------------------------
@@ -149,7 +149,7 @@ halfway.labels  = {
               'Halfway registration'
 }';
 halfway.values  = {0 1};
-halfway.def     = @(val)cg_vbm8_get_defaults('realign.halfway', val{:});
+halfway.def     = @(val)cg_vbm12_get_defaults('realign.halfway', val{:});
 % ---------------------------------------------------------------------
 % ignore_mat Ignore_mat
 % ---------------------------------------------------------------------
@@ -162,7 +162,7 @@ ignore_mat.labels  = {
               'Ignore existing positional information'
 }';
 ignore_mat.values  = {0 1};
-ignore_mat.def     = @(val)cg_vbm8_get_defaults('extopts.ignore_mat', val{:});
+ignore_mat.def     = @(val)cg_vbm12_get_defaults('extopts.ignore_mat', val{:});
 % ---------------------------------------------------------------------
 % eoptions Estimation Options
 % ---------------------------------------------------------------------
@@ -176,7 +176,7 @@ eoptions.help    = {'Various registration options. If in doubt, simply keep the 
 % ---------------------------------------------------------------------
 estimate         = cfg_exbranch;
 estimate.tag     = 'estimate';
-estimate.name    = 'VBM8 Realign: Estimate';
+estimate.name    = 'VBM12 Realign: Estimate';
 estimate.val     = {generic eoptions };
 estimate.help    = {
                     'This routine realigns a time-series of images acquired from the same subject using a least squares approach and a 6 parameter (rigid body) spatial transformation/* \cite{friston95a}*/.  The first image in the list specified by the user is used as a reference to which all subsequent scans are realigned. The reference scan does not have to the the first chronologically and it may be wise to chose a "representative scan" in this role.'
@@ -298,7 +298,7 @@ roptions.help    = {'Various reslicing options. If in doubt, simply keep the def
 % ---------------------------------------------------------------------
 write         = cfg_exbranch;
 write.tag     = 'write';
-write.name    = 'VBM8 Realign: Reslice';
+write.name    = 'VBM12 Realign: Reslice';
 write.val     = {data roptions };
 write.help    = {'This function reslices a series of registered images such that they match the first image selected voxel-for-voxel. The resliced images are named the same as the originals, except that they are prefixed by ''r''.'};
 write.prog = @spm_run_realign_reslice;
@@ -327,7 +327,7 @@ generic.num     = [1 Inf];
 % ---------------------------------------------------------------------
 estwrite         = cfg_exbranch;
 estwrite.tag     = 'estwrite';
-estwrite.name    = 'VBM8 Realign: Estimate & Reslice';
+estwrite.name    = 'VBM12 Realign: Estimate & Reslice';
 estwrite.val     = {generic eoptions roptions };
 estwrite.help    = {
                     'This routine realigns a time-series of images acquired from the same subject using a least squares approach and a 6 parameter (rigid body) spatial transformation/* \cite{friston95a}*/.  The first image in the list specified by the user is used as a reference to which all subsequent scans are realigned. The reference scan does not have to be the first chronologically and it may be wise to chose a "representative scan" in this role.'
