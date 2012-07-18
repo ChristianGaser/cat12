@@ -1,11 +1,11 @@
-function cg_vbm8_update(update)
+function cg_vbm12_update(update)
 % check for new updates
 %
-% FORMAT cg_vbm8_update(update)
+% FORMAT cg_vbm12_update(update)
 % update - allow installation of update
 % 
 % This function will connect itself to the SBM server, compare the
-% version number of the updates with the one of the VBM8 installation 
+% version number of the updates with the one of the VBM12 installation 
 % currently in the MATLAB path and will display the outcome.
 %_______________________________________________________________________
 % Christian Gaser
@@ -27,7 +27,7 @@ for i=1:length(A)
   end
 end
 
-url = 'http://dbm.neuro.uni-jena.de/vbm8/';
+url = 'http://dbm.neuro.uni-jena.de/vbm12/';
 
 % get new release number
 if usejava('jvm')
@@ -41,7 +41,7 @@ else
   return
 end
 
-n = regexp(s,'vbm8_r(\d.*?)\.zip','tokens');
+n = regexp(s,'vbm12_r(\d.*?)\.zip','tokens');
 if isempty(n)
   fprintf('There are no new releases available yet.\n');
   return;
@@ -55,27 +55,27 @@ else
 end
 
 if rnew > r
-  fprintf('A new version of VBM8 is available on: %s\n',url);
+  fprintf('A new version of VBM12 is available on: %s\n',url);
   fprintf('Your version: %d - New version: %d\n',r,rnew);
   if ~update
-    fprintf('In order to update use Toolbox|VBM8|Check for updates\n',r,rnew);
+    fprintf('In order to update use Toolbox|VBM12|Check for updates\n',r,rnew);
   end
 
   if update
     d = fullfile(spm('Dir'),'toolbox'); 
-    overwrite = spm_input('Update',1,'m','Do not update|Download zip-file only|Overwrite old VBM8 installation',[-1 0 1],3);
+    overwrite = spm_input('Update',1,'m','Do not update|Download zip-file only|Overwrite old VBM12 installation',[-1 0 1],3);
     switch overwrite
     case 1
       try
         % list mex-files and delete these files to prevent that old
         % compiled files are used
-        mexfiles = dir(fullfile(d,'vbm8','*.mex*'));
+        mexfiles = dir(fullfile(d,'vbm12','*.mex*'));
         for i=1:length(mexfiles)
-          name = fullfile(d,'vbm8',mexfiles(i).name);
+          name = fullfile(d,'vbm12',mexfiles(i).name);
           spm_unlink(name);
         end
-        fprintf('Download VBM8\n');
-        s = unzip([url sprintf('vbm8_r%d.zip',rnew)], d);
+        fprintf('Download VBM12\n');
+        s = unzip([url sprintf('vbm12_r%d.zip',rnew)], d);
         fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
         restart = spm_input('Restart SPM',1,'m','no|yes',[0 1],2);
         if restart
@@ -85,11 +85,11 @@ if rnew > r
         end
       catch
         fprintf('Update failed: check file permissions. Download zip-file only.\n');
-        web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');
+        web([url sprintf('vbm12_r%d.zip',rnew)],'-browser');
         fprintf('Unzip file to %s\n',d);
       end
     case 0
-      web([url sprintf('vbm8_r%d.zip',rnew)],'-browser');
+      web([url sprintf('vbm12_r%d.zip',rnew)],'-browser');
       fprintf('Unzip file to %s\n',d);
     end
   end

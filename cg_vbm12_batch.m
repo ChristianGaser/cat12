@@ -1,15 +1,15 @@
-function cg_vbm8_batch(namefile,writeonly,vbm8_defaults)
-% wrapper for using batch mode (see cg_vbm8_batch.sh)
+function cg_vbm12_batch(namefile,writeonly,vbm12_defaults)
+% wrapper for using batch mode (see cg_vbm12_batch.sh)
 %
 % namefile      - array of file names
 % writeonly     - if "1" do not estimate segmentations
-% vbm8_defaults - use this default file instead of cg_vbm8_defaults.m
+% vbm12_defaults - use this default file instead of cg_vbm12_defaults.m
 %
 %_______________________________________________________________________
 % $Id$
 
 if nargin < 1
-	fprintf('Syntax: cg_vbm8_batch(namefile)\n');
+	fprintf('Syntax: cg_vbm12_batch(namefile)\n');
 	return
 end
 
@@ -20,23 +20,23 @@ end
 spm_get_defaults;
 
 if nargin < 3
-    cg_vbm8_defaults;
+    cg_vbm12_defaults;
 else
-    if isempty(vbm8_defaults)
-        cg_vbm8_defaults;
+    if isempty(vbm12_defaults)
+        cg_vbm12_defaults;
     else
-        fprintf('Use defaults in %s.\n',vbm8_defaults);
-        [path, name] = fileparts(vbm8_defaults);
+        fprintf('Use defaults in %s.\n',vbm12_defaults);
+        [path, name] = fileparts(vbm12_defaults);
         oldpath = pwd;
         eval(['cd ' path])
         eval(name);
         eval(['cd ' oldpath])
     end
 end
-global defaults vbm8
+global defaults vbm12
 
 % always deselect print option
-vbm8.extopts.print = 0;
+vbm12.extopts.print = 0;
 
 names = textread(namefile,'%s');
 n = length(names);
@@ -44,16 +44,16 @@ n = length(names);
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
 
 if writeonly
-	matlabbatch{1}.spm.tools.vbm8.write = vbm8;
+	matlabbatch{1}.spm.tools.vbm12.write = vbm12;
 else
-	matlabbatch{1}.spm.tools.vbm8.estwrite = vbm8;
+	matlabbatch{1}.spm.tools.vbm12.estwrite = vbm12;
 end
 
 for i=1:n
 	if writeonly
-		matlabbatch{1}.spm.tools.vbm8.write.data{i} = names{i};
+		matlabbatch{1}.spm.tools.vbm12.write.data{i} = names{i};
 	else
-		matlabbatch{1}.spm.tools.vbm8.estwrite.data{i} = names{i};
+		matlabbatch{1}.spm.tools.vbm12.estwrite.data{i} = names{i};
 	end
 end
 
