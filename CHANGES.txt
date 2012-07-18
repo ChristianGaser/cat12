@@ -1,43 +1,4 @@
 
-!       cg_vbm8_defs.m
-M       Contents_info.txt
-M       Makefile.vbm
-!       cg_vbm8_defaults.m
-!       spm_vbm8.m
-!       vbm8.txt
-!       cg_vbm8_batch.m
-!       cg_vbm8_update.m
-!       cg_vbm8_tools.m
-!       VBM8-Manual_Japanese.doc
-!       cg_vbm8_bias_run.m
-M       Anatomy2Dartel.txt
-!       cg_vbm8_get_defaults.m
-M       cg_realign.m
-!       cg_vbm8_longitudinal_multi_run.m
-!       cg_vbm8_longitudinal_multi.m
-!       cg_vbm8_run.m
-!       VBM8-Manual.pdf
-!       cg_vbm8_brainmask_ui.m
-M       CHANGES.txt
-M       cg_spm8_batch.m
-!       cg_vbm8_batch.sh
-M       INSTALL_info.txt
-!       tbx_cfg_vbm8.m
-M       cg_sanlm.m
-!       cg_vbm8_debug.m
-M       cg_cfg_realign.m
-!       cg_vbm8_brainmask.m
-!       cg_vbm8_bias.m
-!       cg_vbm8_longitudinal.m
-!       cg_vbm8_write.m
-!       VBM8-Manual.doc
-!       VBM8-Manual_Japanese.pdf
-!       test_vbm8.m
-
-Renamed all occurance of vbm8 to vbm12.
-------------------------------------------------------------------------
-r441 | gaser | 2012-07-18 09:02:32
-
 D       cg_vbm8_defs.m
 A  +    cg_vbm12_get_defaults.m
 D       cg_vbm8_defaults.m
@@ -176,3 +137,14 @@ D       cg_vbm12_write.m
 Changed my mind and renamed all *vbm12* files to *vbm*.
 ------------------------------------------------------------------------
 r444 | gaser | 2012-07-18 09:28:08
+
+A  +    cg_spm_batch.sh
+D       test_vbm.m
+A  +    cg_spm_batch.m
+D       cg_spm8_batch.sh
+M       CHANGES.txt
+D       cg_spm8_batch.m
+
+Removed some old files and renamed spm8 to spm in filenames.
+------------------------------------------------------------------------
+r445 | gaser | 2012-07-18 09:32:01
