@@ -1,6 +1,6 @@
-function varargout = cg_vbm8_run(job,arg)
+function varargout = cg_vbm12_run(job,arg)
 % Segment a bunch of images
-% FORMAT cg_vbm8_run(job)
+% FORMAT cg_vbm12_run(job)
 % job.channel(n).vols{m}
 % job.channel(n).biasreg
 % job.channel(n).biasfwhm
@@ -245,13 +245,13 @@ for iter=1:nit,
             df = job.warp.write;
             lb = job.label;
             jc = job.jacobian;
-            cg_vbm8_write(res, tc, bf, df, lb, jc, job.warp, tpm, job)
+            cg_vbm12_write(res, tc, bf, df, lb, jc, job.warp, tpm, job)
         else
             % Not the final iteration, so compute sufficient statistics for
             % re-estimating the template data.
             N    = numel(job.channel);
             K    = numel(job.tissue);
-            cls  = cg_vbm8_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0 0 0], 0, job.warp, tpm, job);
+            cls  = cg_vbm12_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0 0 0], 0, job.warp, tpm, job);
             for k=1:K,
                 SS(:,:,:,k) = SS(:,:,:,k) + cls{k};
             end

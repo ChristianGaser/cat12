@@ -1,4 +1,4 @@
-function test_vbm8
+function test_vbm12
 
 if 1
 %V = spm_vol('/Users/gaser/Desktop/SVE.LPBA40.testdata/S01.native.mri.nii');

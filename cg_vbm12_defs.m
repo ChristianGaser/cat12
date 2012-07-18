@@ -1,4 +1,4 @@
-function cg_vbm8_defs(job)
+function cg_vbm12_defs(job)
 % Apply deformations to images. In contrast to spm_defs images are saved
 % in the original directory.
 %_______________________________________________________________________

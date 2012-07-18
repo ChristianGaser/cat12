@@ -1,7 +1,7 @@
-function cg_vbm8_debug
-%cg_vbm8_debug	print debug information for SPM8 and VBM8
+function cg_vbm12_debug
+%cg_vbm12_debug	print debug information for SPM8 and VBM12
 %
-% FORMAT cg_vbm8_debug
+% FORMAT cg_vbm12_debug
 %
 %__________________________________________________________________________
 % Christian Gaser
