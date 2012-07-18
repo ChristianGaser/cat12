@@ -13,26 +13,26 @@
 %
 % General files
 %   INSTALL.txt                  - installation instructions
-%   vbm8.man                     - notes on VBM8 toolbox
+%   vbm12.man                     - notes on VBM12 toolbox
 %   CHANGES.txt                  - changes in revisions
 %   Contents.m                   - this file
 %
-% VBM8 functions
-%   cg_vbm8_bias.m               - configuration file for bias correction between an image pair
-%   cg_vbm8_bias_run.m           - correct bias between an image pair
-%   cg_vbm8_debug.m              - print debug information for SPM8 and VBM8
-%   cg_vbm8_defaults.m           - sets the defaults for VBM8
-%   cg_vbm8_defs.m               - apply deformations to images
-%   cg_vbm8_get_defaults.m       - defaults for VBM8
-%   cg_vbm8_longitudinal.m       - VBM8 for longitudinal data
-%   cg_vbm8_longitudinal_multi.m - VBM8 for longitudinal data
-%   cg_vbm8_longitudinal_multi_run.m - VBM8 for longitudinal data
-%   cg_vbm8_run.m                - runtime funtion for VBM8
-%   cg_vbm8_tools.m              - wrapper for calling VBM8 utilities
-%   cg_vbm8_update.m             - check for new updates
-%   cg_vbm8_write.m              - write out VBM8 results
-%   spm_vbm8.m                   - toolbox wrapper to call functions
-%   tbx_cfg_vbm8.m               - configure VBM8
+% VBM12 functions
+%   cg_vbm12_bias.m               - configuration file for bias correction between an image pair
+%   cg_vbm12_bias_run.m           - correct bias between an image pair
+%   cg_vbm12_debug.m              - print debug information for SPM8 and VBM12
+%   cg_vbm12_defaults.m           - sets the defaults for VBM12
+%   cg_vbm12_defs.m               - apply deformations to images
+%   cg_vbm12_get_defaults.m       - defaults for VBM12
+%   cg_vbm12_longitudinal.m       - VBM12 for longitudinal data
+%   cg_vbm12_longitudinal_multi.m - VBM12 for longitudinal data
+%   cg_vbm12_longitudinal_multi_run.m - VBM12 for longitudinal data
+%   cg_vbm12_run.m                - runtime funtion for VBM12
+%   cg_vbm12_tools.m              - wrapper for calling VBM12 utilities
+%   cg_vbm12_update.m             - check for new updates
+%   cg_vbm12_write.m              - write out VBM12 results
+%   spm_vbm12.m                   - toolbox wrapper to call functions
+%   tbx_cfg_vbm12.m               - configure VBM12
 %
 % Utility functions
 %   AmapMex.m                    - compilation wrapper for AmapMex.c
@@ -74,8 +74,8 @@
 %   cg_spm8_batch.m              - batch mode wrapper for spm_jobman for SPM8
 %   cg_spm8_batch.sh             - shell script to call matlab batch files from unix
 %                                  without gui
-%   cg_vbm8_batch.m              - batch mode wrapper for spm_jobman for VBM8
-%   cg_vbm8_batch.sh             - shell script to use vbm from unix without gui
+%   cg_vbm12_batch.m              - batch mode wrapper for spm_jobman for VBM12
+%   cg_vbm12_batch.sh             - shell script to use vbm from unix without gui
 %
 % Templates/Images
 %   Template_?_IXI550_MNI152.nii - Dartel template of 550 subjects from IXI database
