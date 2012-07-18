@@ -1,4 +1,4 @@
-function tools = cg_vbm12_tools
+function tools = cg_vbm_tools
 % wrapper for calling VBM utilities
 %
 %_______________________________________________________________________
@@ -477,7 +477,7 @@ interp.labels = {'Nearest neighbour','Trilinear','2nd Degree B-spline',...
 '3rd Degree B-Spline ','4th Degree B-Spline ','5th Degree B-Spline',...
 '6th Degree B-Spline','7th Degree B-Spline'};
 interp.values = {0,1,2,3,4,5,6,7};
-interp.def  = @(val)cg_vbm12_get_defaults('defs.interp',val{:});
+interp.def  = @(val)cg_vbm_get_defaults('defs.interp',val{:});
 interp.help = {...
 ['The method by which the images are sampled when being written in a ',...
 'different space.'],...
@@ -509,7 +509,7 @@ defs = cfg_exbranch;
 defs.tag = 'defs';
 defs.name = 'Apply Deformations (Many images)';
 defs.val = {field1,images1,interp,modulate};
-defs.prog    = @cg_vbm12_defs;
+defs.prog    = @cg_vbm_defs;
 defs.vfiles  = @vfiles_defs;
 defs.help    = {'This is a utility for applying a deformation field of one subject to many images.'};;
 
@@ -517,14 +517,14 @@ defs2 = cfg_exbranch;
 defs2.tag = 'defs2';
 defs2.name = 'Apply Deformations (Many subjects)';
 defs2.val = {field,images,interp,modulate};
-defs2.prog    = @cg_vbm12_defs;
+defs2.prog    = @cg_vbm_defs;
 defs2.vfiles  = @vfiles_defs2;
 defs2.help    = {'This is a utility for applying deformation fields of many subjects to images.'};;
 
 %------------------------------------------------------------------------
 realign = cg_cfg_realign;
-bias    = cg_vbm12_bias;
-long    = cg_vbm12_longitudinal_multi;
+bias    = cg_vbm_bias;
+long    = cg_vbm_longitudinal_multi;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;

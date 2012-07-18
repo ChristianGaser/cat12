@@ -43,7 +43,7 @@ update:
 	-@echo '% Version ' ${VERSION} ' (VBM12) ' ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@echo '% __________________________________________________________________________' > vbm12.man
-	-@echo '% Voxel Based Morphometry Toolbox for SPM8' >> vbm12.man
+	-@echo '% Voxel Based Morphometry Toolbox for SPM12' >> vbm12.man
 	-@echo '% Version ' ${VERSION} ' (VBM12) ' ${DATE} >> vbm12.man
 	-@cat vbm12.txt >> vbm12.man
 

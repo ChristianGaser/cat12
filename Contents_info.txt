@@ -6,33 +6,33 @@
 % Description
 % ==========================================================================
 % This toolbox is a collection of extensions to the segmentation algorithm 
-% of SPM8 (Wellcome Department of Cognitive Neurology) to provide voxel-
+% of SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-
 % based morphometry (VBM). It is developed by Christian Gaser (University of 
 % Jena, Department of Psychiatry) and is available to the scientific 
 % community under the terms of the GNU General Public License.
 %
 % General files
 %   INSTALL.txt                  - installation instructions
-%   vbm12.man                     - notes on VBM12 toolbox
+%   vbm.man                     - notes on VBM12 toolbox
 %   CHANGES.txt                  - changes in revisions
 %   Contents.m                   - this file
 %
 % VBM12 functions
-%   cg_vbm12_bias.m               - configuration file for bias correction between an image pair
-%   cg_vbm12_bias_run.m           - correct bias between an image pair
-%   cg_vbm12_debug.m              - print debug information for SPM8 and VBM12
-%   cg_vbm12_defaults.m           - sets the defaults for VBM12
-%   cg_vbm12_defs.m               - apply deformations to images
-%   cg_vbm12_get_defaults.m       - defaults for VBM12
-%   cg_vbm12_longitudinal.m       - VBM12 for longitudinal data
-%   cg_vbm12_longitudinal_multi.m - VBM12 for longitudinal data
-%   cg_vbm12_longitudinal_multi_run.m - VBM12 for longitudinal data
-%   cg_vbm12_run.m                - runtime funtion for VBM12
-%   cg_vbm12_tools.m              - wrapper for calling VBM12 utilities
-%   cg_vbm12_update.m             - check for new updates
-%   cg_vbm12_write.m              - write out VBM12 results
-%   spm_vbm12.m                   - toolbox wrapper to call functions
-%   tbx_cfg_vbm12.m               - configure VBM12
+%   cg_vbm_bias.m               - configuration file for bias correction between an image pair
+%   cg_vbm_bias_run.m           - correct bias between an image pair
+%   cg_vbm_debug.m              - print debug information for SPM12 and VBM12
+%   cg_vbm_defaults.m           - sets the defaults for VBM12
+%   cg_vbm_defs.m               - apply deformations to images
+%   cg_vbm_get_defaults.m       - defaults for VBM12
+%   cg_vbm_longitudinal.m       - VBM12 for longitudinal data
+%   cg_vbm_longitudinal_multi.m - VBM12 for longitudinal data
+%   cg_vbm_longitudinal_multi_run.m - VBM12 for longitudinal data
+%   cg_vbm_run.m                - runtime funtion for VBM12
+%   cg_vbm_tools.m              - wrapper for calling VBM12 utilities
+%   cg_vbm_update.m             - check for new updates
+%   cg_vbm_write.m              - write out VBM12 results
+%   spm_vbm.m                   - toolbox wrapper to call functions
+%   tbx_cfg_vbm.m               - configure VBM12
 %
 % Utility functions
 %   AmapMex.m                    - compilation wrapper for AmapMex.c
@@ -71,11 +71,11 @@
 %   vollib.c                     - volume convolving functions
 %
 % Batch functions
-%   cg_spm8_batch.m              - batch mode wrapper for spm_jobman for SPM8
+%   cg_spm8_batch.m              - batch mode wrapper for spm_jobman for SPM12
 %   cg_spm8_batch.sh             - shell script to call matlab batch files from unix
 %                                  without gui
-%   cg_vbm12_batch.m              - batch mode wrapper for spm_jobman for VBM12
-%   cg_vbm12_batch.sh             - shell script to use vbm from unix without gui
+%   cg_vbm_batch.m              - batch mode wrapper for spm_jobman for VBM12
+%   cg_vbm_batch.sh             - shell script to use vbm from unix without gui
 %
 % Templates/Images
 %   Template_?_IXI550_MNI152.nii - Dartel template of 550 subjects from IXI database

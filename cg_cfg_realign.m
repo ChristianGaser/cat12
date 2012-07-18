@@ -136,7 +136,7 @@ weight.labels  = {
               'Use weighting'
 }';
 weight.values  = {0 1};
-weight.def     = @(val)cg_vbm12_get_defaults('realign.weight', val{:});
+weight.def     = @(val)cg_vbm_get_defaults('realign.weight', val{:});
 % ---------------------------------------------------------------------
 % halfway Halfway
 % ---------------------------------------------------------------------
@@ -149,7 +149,7 @@ halfway.labels  = {
               'Halfway registration'
 }';
 halfway.values  = {0 1};
-halfway.def     = @(val)cg_vbm12_get_defaults('realign.halfway', val{:});
+halfway.def     = @(val)cg_vbm_get_defaults('realign.halfway', val{:});
 % ---------------------------------------------------------------------
 % ignore_mat Ignore_mat
 % ---------------------------------------------------------------------
@@ -162,7 +162,7 @@ ignore_mat.labels  = {
               'Ignore existing positional information'
 }';
 ignore_mat.values  = {0 1};
-ignore_mat.def     = @(val)cg_vbm12_get_defaults('extopts.ignore_mat', val{:});
+ignore_mat.def     = @(val)cg_vbm_get_defaults('extopts.ignore_mat', val{:});
 % ---------------------------------------------------------------------
 % eoptions Estimation Options
 % ---------------------------------------------------------------------

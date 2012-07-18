@@ -122,3 +122,57 @@ M       VBM12-Manual.doc
 Renamed all occurances of vbm8 to vbm12.
 ------------------------------------------------------------------------
 r443 | gaser | 2012-07-18 09:10:49
+
+D       cg_vbm12_get_defaults.m
+M       Contents_info.txt
+A  +    cg_vbm_defs.m
+M       Makefile.vbm
+D       cg_vbm12_batch.sh
+A  +    cg_vbm_defaults.m
+A  +    test_vbm.m
+D       cg_vbm12_brainmask_ui.m
+D       cg_vbm12_defaults.m
+A  +    cg_vbm_batch.m
+A  +    cg_vbm_update.m
+D       cg_vbm12_batch.m
+A  +    cg_vbm_tools.m
+A  +    cg_vbm_bias_run.m
+D       cg_vbm12_tools.m
+A  +    tbx_cfg_vbm.m
+D       cg_vbm12_longitudinal_multi.m
+A  +    cg_vbm_get_defaults.m
+D       cg_vbm12_brainmask.m
+M       cg_realign.m
+A  +    spm_vbm.m
+A  +    cg_vbm_longitudinal_multi_run.m
+M       cg_spm8_batch.sh
+A  +    cg_vbm_longitudinal_multi.m
+A  +    cg_vbm_run.m
+D       cg_vbm12_bias_run.m
+D       test_vbm12.m
+D       cg_vbm12_bias.m
+D       cg_vbm12_longitudinal.m
+R       vbm12.txt
+A  +    cg_vbm_brainmask_ui.m
+M       CHANGES.txt
+D       cg_vbm12_defs.m
+M       cg_spm8_batch.m
+D       cg_vbm12_update.m
+D       spm_vbm12.m
+A  +    cg_vbm_batch.sh
+M       cg_sanlm.m
+D       cg_vbm12_run.m
+A  +    cg_vbm_debug.m
+D       cg_vbm12_debug.m
+D       cg_vbm12_longitudinal_multi_run.m
+M       cg_cfg_realign.m
+D       tbx_cfg_vbm12.m
+A  +    cg_vbm_brainmask.m
+A  +    cg_vbm_bias.m
+A  +    cg_vbm_longitudinal.m
+A  +    cg_vbm_write.m
+D       cg_vbm12_write.m
+
+Changed my mind and renamed all *vbm12* files to *vbm*.
+------------------------------------------------------------------------
+r444 | gaser | 2012-07-18 09:28:08

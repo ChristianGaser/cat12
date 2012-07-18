@@ -201,7 +201,7 @@ run_vbm ()
     fi
 
     # split files and prepare tmp-file with filenames
-    TMP=/tmp/vbm12_$$
+    TMP=/tmp/vbm_$$
     i=0
     while [ "$i" -lt "$SIZE_OF_ARRAY" ]
     do
@@ -222,14 +222,14 @@ run_vbm ()
         ((i++))
     done
     time=`date "+%Y%b%d_%H%M"`
-    vbmlog=${pwd}/vbm12_${time}
+    vbmlog=${pwd}/vbm_${time}
     
     i=0
     while [ "$i" -lt "$NUMBER_OF_JOBS" ]
     do
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
             j=$(($i+1))
-            COMMAND="cg_vbm12_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
+            COMMAND="cg_vbm_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
             echo Calculate ${ARG_LIST[$i]}
             echo ---------------------------------- >> ${vbmlog}_${j}.log
             date >> ${vbmlog}_${j}.log
@@ -269,7 +269,7 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_vbm12_batch.sh filename|filepattern [-m matlabcommand] [-w]
+   cg_vbm_batch.sh filename|filepattern [-m matlabcommand] [-w]
    
    -m   matlab command
    -p   number of parallel jobs (=number of processors)
@@ -284,18 +284,18 @@ PURPOSE:
    Command line call of VBM12 segmentation
 
 EXAMPLE
-   cg_vbm12_batch.sh spm/spm8/canonical/single_subj_T1.nii
+   cg_vbm_batch.sh spm/spm8/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii. 
    
-   cg_vbm12_batch.sh spm/spm8/canonical/single_subj_T1.nii -d your_vbm12_defaults_file.m
+   cg_vbm_batch.sh spm/spm8/canonical/single_subj_T1.nii -d your_vbm_defaults_file.m
    This command will process only the single file single_subj_T1.nii. The defaults defined
-   in your_vbm12_defaults_file.m will be used instead of cg_vbm12_defaults.m.
+   in your_vbm_defaults_file.m will be used instead of cg_vbm_defaults.m.
 
-   cg_vbm12_batch.sh spm/spm8/canonical/*152*.nii
+   cg_vbm_batch.sh spm/spm8/canonical/*152*.nii
    Using wildcards all files containing the term "152" will be processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
 
-   cg_vbm12_batch.sh spm/spm8/canonical/*152*.nii -m /usr/local/bin/matlab7
+   cg_vbm_batch.sh spm/spm8/canonical/*152*.nii -m /usr/local/bin/matlab7
    Using wildcards all files containing the term "152" will be processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
    As matlab-command /usr/local/bin/matlab7 will be used.
@@ -304,13 +304,13 @@ INPUT:
    analyze or nifti files
 
 OUTPUT:
-   segmented images according to settings in cg_vbm12_defaults.m
-   vbm12_log_$time.txt for log information
+   segmented images according to settings in cg_vbm_defaults.m
+   vbm_log_$time.txt for log information
 
 USED FUNCTIONS:
-   cg_vbm12_batch.m
+   cg_vbm_batch.m
    VBM12 toolbox
-   SPM8
+   SPM12
 
 SETTINGS
    matlab command: $matlab

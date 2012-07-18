@@ -1,6 +1,6 @@
-function cls = cg_vbm12_write(res,tc,bf,df,lb,jc,warp,tpm,job)
+function cls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 % Write out VBM preprocessed data
-% FORMAT cls = cg_vbm12_write(res,tc,bf,df)
+% FORMAT cls = cg_vbm_write(res,tc,bf,df)
 %____________________________________________________________________________
 % Copyright (C) 2008 Wellcome Department of Imaging Neuroscience
 
@@ -84,7 +84,7 @@ if do_dartel
         numpos = findstr(darteltpm,'_1_');
     end
     if isempty(numpos)
-        error('Could not find _1_ that indicates the first Dartel template in cg_vbm12_defaults.');
+        error('Could not find _1_ that indicates the first Dartel template in cg_vbm_defaults.');
     end
     if strcmp(darteltpm(1,end-1:end),',1') >0
         darteltpm = darteltpm(1,1:end-2);
@@ -146,7 +146,7 @@ Coef{1} = spm_bsplinc(res.Twarp(:,:,:,1),prm);
 Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
-do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm12_get_defaults('output.surf.dartel');
+do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm_get_defaults('output.surf.dartel');
 do_defs = do_cls || do_defs;
 if do_defs,
     if df(2),
@@ -171,11 +171,11 @@ M = tpm.M\res.Affine*res.image(1).mat;
 
 histeq_deep = 0;
 try
-    histeq_deep = cg_vbm12_get_defaults('extopts.histeq_deep');
+    histeq_deep = cg_vbm_get_defaults('extopts.histeq_deep');
 end
 
 if histeq_deep
-    tmp_histeq_mask = spm_vol(char(cg_vbm12_get_defaults('extopts.histeq_mask')));
+    tmp_histeq_mask = spm_vol(char(cg_vbm_get_defaults('extopts.histeq_mask')));
     histeq_mask = zeros(d(1:3),'uint8');
     M2 = tmp_histeq_mask.mat\res.Affine*res.image(1).mat;
 end
@@ -251,7 +251,7 @@ for z=1:length(x3),
                 end
             end
         end
-        if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm12_get_defaults('output.surf.dartel')|| nargout>=1,
+        if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm_get_defaults('output.surf.dartel')|| nargout>=1,
             % initialize y only at first slice
             if z==1
                 y = zeros([res.image(1).dim(1:3),3],'single');
@@ -303,10 +303,10 @@ end
 if do_cls && do_defs,
 
     % default parameters
-    bias_fwhm   = cg_vbm12_get_defaults('extopts.bias_fwhm');
-    init_kmeans = cg_vbm12_get_defaults('extopts.kmeans');
-    finalmask   = cg_vbm12_get_defaults('extopts.finalmask');
-    gcut        = cg_vbm12_get_defaults('extopts.gcut');
+    bias_fwhm   = cg_vbm_get_defaults('extopts.bias_fwhm');
+    init_kmeans = cg_vbm_get_defaults('extopts.kmeans');
+    finalmask   = cg_vbm_get_defaults('extopts.finalmask');
+    gcut        = cg_vbm_get_defaults('extopts.gcut');
 
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
     scale_morph = 1/mean(vx_vol);
@@ -502,7 +502,7 @@ end
 M0 = res.image(1).mat;
 
 % prepare transformations for rigidly or affine aligned images
-if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || cg_vbm12_get_defaults('output.surf.dartel')
+if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || cg_vbm_get_defaults('output.surf.dartel')
 
     % figure out the mapping from the volumes to create to the original
     mm = [[
@@ -528,7 +528,7 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) ||
         odim(1) odim(2) odim(3)]'; ones(1,8)];
     
     % rigid transformation
-    if (any(tc(:,2)) || lb(1,3)) || cg_vbm12_get_defaults('output.surf.dartel')
+    if (any(tc(:,2)) || lb(1,3)) || cg_vbm_get_defaults('output.surf.dartel')
         x      = affind(rgrid(d),M0);
         y1     = affind(y,M1);
         
@@ -632,8 +632,8 @@ end
 
 % get inverse deformations for warping submask to raw space
 % experimental: not yet finished!!!
-if cg_vbm12_get_defaults('output.surf.dartel')
-  Vsubmask = spm_vol(char(cg_vbm12_get_defaults('extopts.mask')));
+if cg_vbm_get_defaults('output.surf.dartel')
+  Vsubmask = spm_vol(char(cg_vbm_get_defaults('extopts.mask')));
   submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
   submask = reshape(submask,d);
  
@@ -1010,14 +1010,14 @@ if do_cls && warp.print
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
-	str = [str struct('name', 'Versions Matlab/SPM8/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
+	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
-	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm12_get_defaults('extopts.kmeans')))];
-	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm12_get_defaults('extopts.bias_fwhm')))];
+	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
+	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
 	if (warp.sanlm>0) 
 	  str = [str struct('name', 'SANLM:','value',sprintf('yes'))];
 	end
