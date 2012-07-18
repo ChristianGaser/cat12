@@ -1,7 +1,7 @@
-function cg_vbm12_update(update)
+function cg_vbm_update(update)
 % check for new updates
 %
-% FORMAT cg_vbm12_update(update)
+% FORMAT cg_vbm_update(update)
 % update - allow installation of update
 % 
 % This function will connect itself to the SBM server, compare the
@@ -27,7 +27,7 @@ for i=1:length(A)
   end
 end
 
-url = 'http://dbm.neuro.uni-jena.de/vbm12/';
+url = 'http://dbm.neuro.uni-jena.de/vbm/';
 
 % get new release number
 if usejava('jvm')
@@ -41,7 +41,7 @@ else
   return
 end
 
-n = regexp(s,'vbm12_r(\d.*?)\.zip','tokens');
+n = regexp(s,'vbm_r(\d.*?)\.zip','tokens');
 if isempty(n)
   fprintf('There are no new releases available yet.\n');
   return;
@@ -69,13 +69,13 @@ if rnew > r
       try
         % list mex-files and delete these files to prevent that old
         % compiled files are used
-        mexfiles = dir(fullfile(d,'vbm12','*.mex*'));
+        mexfiles = dir(fullfile(d,'vbm','*.mex*'));
         for i=1:length(mexfiles)
-          name = fullfile(d,'vbm12',mexfiles(i).name);
+          name = fullfile(d,'vbm',mexfiles(i).name);
           spm_unlink(name);
         end
         fprintf('Download VBM12\n');
-        s = unzip([url sprintf('vbm12_r%d.zip',rnew)], d);
+        s = unzip([url sprintf('vbm_r%d.zip',rnew)], d);
         fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
         restart = spm_input('Restart SPM',1,'m','no|yes',[0 1],2);
         if restart
@@ -85,11 +85,11 @@ if rnew > r
         end
       catch
         fprintf('Update failed: check file permissions. Download zip-file only.\n');
-        web([url sprintf('vbm12_r%d.zip',rnew)],'-browser');
+        web([url sprintf('vbm_r%d.zip',rnew)],'-browser');
         fprintf('Unzip file to %s\n',d);
       end
     case 0
-      web([url sprintf('vbm12_r%d.zip',rnew)],'-browser');
+      web([url sprintf('vbm_r%d.zip',rnew)],'-browser');
       fprintf('Unzip file to %s\n',d);
     end
   end

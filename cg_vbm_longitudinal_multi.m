@@ -1,4 +1,4 @@
-function long = cg_vbm12_long
+function long = cg_vbm_long
 % Configuration file for long correction between an image pair
 %
 % Christian Gaser
@@ -36,7 +36,7 @@ long = cfg_exbranch;
 long.name = 'Process longitudinal data';
 long.tag  = 'long';
 long.val  = {esubjs};
-long.prog = @cg_vbm12_longitudinal_multi_run;
+long.prog = @cg_vbm_longitudinal_multi_run;
 long.vout = @vout_long;
 long.help = {
 'This option provides customized processing of longitudinal data.'};

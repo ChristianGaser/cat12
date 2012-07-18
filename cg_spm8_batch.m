@@ -1,10 +1,10 @@
-function cg_spm8_batch(batchname)
-% wrapper for using spm8 batch mode (see cg_vbm12_batch.sh)
+function cg_spm12_batch(batchname)
+% wrapper for using spm12 batch mode (see cg_vbm_batch.sh)
 %_______________________________________________________________________
 % $Id$
 
 if nargin < 1
-	fprintf('Syntax: cg_spm8_batch(batchname)\n');
+	fprintf('Syntax: cg_spm12_batch(batchname)\n');
 	exit
 end
 

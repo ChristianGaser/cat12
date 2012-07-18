@@ -6,7 +6,7 @@
 % Description
 % ==========================================================================
 % This toolbox is a an extensions of the "New Segment Toolbox" 
-% in SPM8 (Wellcome Department of Cognitive Neurology) to provide voxel-
+% in SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-
 % based morphometry (VBM). It is developed by Christian Gaser (University of 
 % Jena, Department of Psychiatry) and is available to the scientific 
 % community under the terms of the GNU General Public License.
@@ -45,7 +45,7 @@
 % Technical information
 % ==========================================================================
 %
-% This toolbox is an extension of the "New Segment Toolbox" in SPM8, but 
+% This toolbox is an extension of the "New Segment Toolbox" in SPM12, but 
 % uses a completely different segmentation approach.  
 % 
 % 1. The segmentation approach is based on an adaptive Maximum A Posterior 
@@ -77,7 +77,7 @@
 % information of adjacent voxels into the segmentation estimation 
 % (Rajapakse et al. 1997).
 %
-% 4. Another important extension to the SPM8 segmentation is the integration 
+% 4. Another important extension to the SPM12 segmentation is the integration 
 % of the Dartel normalisation (Ashburner 2007) into the toolbox. If 
 % high-dimensional spatial normalisation is chosen, an already existing Dartel 
 % template in MNI space will be used. This template was derived from 550 

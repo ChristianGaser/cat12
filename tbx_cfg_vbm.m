@@ -1,4 +1,4 @@
-function vbm12 = tbx_cfg_vbm12
+function vbm = tbx_cfg_vbm
 % Configuration file for Segment jobs
 %_______________________________________________________________________
 % Copyright (C) 2008 Wellcome Department of Imaging Neuroscience
@@ -43,7 +43,7 @@ tpm.help    = {
                }';
 tpm.filter = 'image';
 tpm.ufilter = '.*';
-tpm.def  = @(val)cg_vbm12_get_defaults('opts.tpm', val{:});
+tpm.def  = @(val)cg_vbm_get_defaults('opts.tpm', val{:});
 tpm.num     = [1 1];
 
 %------------------------------------------------------------------------
@@ -55,7 +55,7 @@ ngaus.tag  = 'ngaus';
 ngaus.name = 'Gaussians per class';
 ngaus.strtype = 'e';
 ngaus.num = [1 6];
-ngaus.def  = @(val)cg_vbm12_get_defaults('opts.ngaus', val{:});
+ngaus.def  = @(val)cg_vbm_get_defaults('opts.ngaus', val{:});
 ngaus.help = {[...
 'The number of Gaussians used to represent the intensity distribution '...
 'for each tissue class can be greater than one. '...
@@ -91,7 +91,7 @@ ngaus.help = {[...
 biasreg = cfg_menu;
 biasreg.tag  = 'biasreg';
 biasreg.name = 'Bias regularisation';
-biasreg.def  = @(val)cg_vbm12_get_defaults('opts.biasreg', val{:});
+biasreg.def  = @(val)cg_vbm_get_defaults('opts.biasreg', val{:});
 biasreg.labels = {...
 'no regularisation (0)','extremely light regularisation (0.00001)',...
 'very light regularisation (0.0001)','light regularisation (0.001)',...
@@ -133,7 +133,7 @@ biasfwhm.labels = {...
 '80mm cutoff','90mm cutoff','100mm cutoff','110mm cutoff','120mm cutoff',...
 '130mm cutoff','140mm cutoff','150mm cutoff','No correction'};
 biasfwhm.values = {30,40,50,60,70,80,90,100,110,120,130,140,150,Inf};
-biasfwhm.def  = @(val)cg_vbm12_get_defaults('opts.biasfwhm', val{:});
+biasfwhm.def  = @(val)cg_vbm_get_defaults('opts.biasfwhm', val{:});
 biasfwhm.help = {[...
 'FWHM of Gaussian smoothness of bias. ',...
 'If your intensity non-uniformity is very smooth, then choose a large ',...
@@ -147,7 +147,7 @@ biasfwhm.help = {[...
 %------------------------------------------------------------------------
 
 warpreg      = cfg_entry;
-warpreg.def  = @(val)cg_vbm12_get_defaults('opts.warpreg', val{:});
+warpreg.def  = @(val)cg_vbm_get_defaults('opts.warpreg', val{:});
 warpreg.tag = 'warpreg';
 warpreg.name = 'Warping Regularisation';
 warpreg.strtype = 'e';
@@ -173,7 +173,7 @@ affreg.name = 'Affine Regularisation';
 affreg.labels = {'No Affine Registration','ICBM space template - European brains',...
     'ICBM space template - East Asian brains','Average sized template','No regularisation'};
 affreg.values = {'','mni','eastern','subj','none'};
-affreg.def  = @(val)cg_vbm12_get_defaults('opts.affreg', val{:});
+affreg.def  = @(val)cg_vbm_get_defaults('opts.affreg', val{:});
 affreg.help = {[...
 'The procedure is a local optimisation, so it needs reasonable initial '...
 'starting estimates. Images should be placed in approximate alignment '...
@@ -205,7 +205,7 @@ samp.tag = 'samp';
 samp.name = 'Sampling distance';
 samp.strtype = 'e';
 samp.num = [1 1];
-samp.def  = @(val)cg_vbm12_get_defaults('opts.samp', val{:});
+samp.def  = @(val)cg_vbm_get_defaults('opts.samp', val{:});
 samp.help    = {'This encodes the approximate distance between sampled points when estimating the model parameters. Smaller values use more of the data, but the procedure is slower and needs more memory. Determining the ''''best'''' setting involves a compromise between speed and accuracy.'};
 
 %------------------------------------------------------------------------
@@ -231,7 +231,7 @@ vox.tag = 'vox';
 vox.name = 'Voxel size for normalized images';
 vox.strtype = 'e';
 vox.num = [1 1];
-vox.def  = @(val)cg_vbm12_get_defaults('extopts.vox', val{:});
+vox.def  = @(val)cg_vbm_get_defaults('extopts.vox', val{:});
 vox.help = {...
 ['The (isotropic) voxel sizes of any spatially normalised written images. '...
  'A non-finite value will be replaced by the average voxel size of '...
@@ -254,7 +254,7 @@ cleanup.help = {[...
 'may wish to disable or tone down the cleanup procedure.']};
 cleanup.labels = {'No Cleanup','Light Cleanup','Thorough Cleanup'};
 cleanup.values = {0 1 2};
-cleanup.def  = @(val)cg_vbm12_get_defaults('extopts.cleanup', val{:});
+cleanup.def  = @(val)cg_vbm_get_defaults('extopts.cleanup', val{:});
 
 %------------------------------------------------------------------------
 
@@ -268,7 +268,7 @@ sanlm.help = {[...
 'the local variance in the image. ']};
 sanlm.labels = {'No denoising','Denoising','Denoising (multi-threaded)'};
 sanlm.values = {0 1 2};
-sanlm.def  = @(val)cg_vbm12_get_defaults('extopts.sanlm', val{:});
+sanlm.def  = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
 
 %------------------------------------------------------------------------
 
@@ -285,7 +285,7 @@ mrf.help = {[...
 'estimate the Maximum a posteriori (MAP). It is not necessary to change the MRF ',...
 'weighting, because the ORNLM filter will have a much larger de-noising effect. ',...
 'A value of "0" will deselect the MRF.']};
-mrf.def  = @(val)cg_vbm12_get_defaults('extopts.mrf', val{:});
+mrf.def  = @(val)cg_vbm_get_defaults('extopts.mrf', val{:});
 
 %------------------------------------------------------------------------
 
@@ -296,7 +296,7 @@ finalmask.help = {[...
 'This option uses morphological operations to apply a final masking.']};
 finalmask.labels = {'Dont apply final masking','Apply final masking'};
 finalmask.values = {0 1};
-finalmask.def  = @(val)cg_vbm12_get_defaults('extopts.finalmask', val{:});
+finalmask.def  = @(val)cg_vbm_get_defaults('extopts.finalmask', val{:});
 
 %------------------------------------------------------------------------
 
@@ -307,7 +307,7 @@ gcut.help = {[...
 'This option enables skull-stripping with graph-cut approach.']};
 gcut.labels = {'Dont use graph-cut for skull-stripping','Use graph-cut for skull-stripping'};
 gcut.values = {0 1};
-gcut.def  = @(val)cg_vbm12_get_defaults('extopts.gcut', val{:});
+gcut.def  = @(val)cg_vbm_get_defaults('extopts.gcut', val{:});
 
 %------------------------------------------------------------------------
 print    = cfg_menu;
@@ -315,7 +315,7 @@ print.tag = 'print';
 print.name = 'Display and print results';
 print.labels = {'yes','no'};
 print.values = {1 0};
-print.def  = @(val)cg_vbm12_get_defaults('extopts.print', val{:});
+print.def  = @(val)cg_vbm_get_defaults('extopts.print', val{:});
 print.help = {[...
 'The normalized T1 image and the normalized segmentations can be displayed and printed to a ',...
 'ps-file. This is often helpful to check whether registration and segmentation were successful. ',...
@@ -329,7 +329,7 @@ dartelwarp.tag = 'dartelwarp';
 dartelwarp.name = 'Spatial normalization';
 dartelwarp.labels = {'Low-dimensional: SPM default','High-dimensional: Dartel'};
 dartelwarp.values = {0 1};
-dartelwarp.def  = @(val)cg_vbm12_get_defaults('extopts.dartelwarp', val{:});
+dartelwarp.def  = @(val)cg_vbm_get_defaults('extopts.dartelwarp', val{:});
 dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization. Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '};
 end
 
@@ -347,7 +347,7 @@ darteltpm.help    = {
                }';
 darteltpm.filter = 'image';
 darteltpm.ufilter = '_1_';
-darteltpm.def  = @(val)cg_vbm12_get_defaults('extopts.darteltpm', val{:});
+darteltpm.def  = @(val)cg_vbm_get_defaults('extopts.darteltpm', val{:});
 darteltpm.num     = [1 1];
 
 normhigh         = cfg_branch;
@@ -372,7 +372,7 @@ normlow.help    = {
 dartelwarp    = cfg_choice;
 dartelwarp.tag = 'dartelwarp';
 dartelwarp.name = 'Spatial normalization';
-if cg_vbm12_get_defaults('extopts.dartelwarp')
+if cg_vbm_get_defaults('extopts.dartelwarp')
     dartelwarp.val = {normhigh};
 else
     dartelwarp.val = {normlow};
@@ -417,15 +417,15 @@ affine.help = {'Write image in normalized space, but restricted to affine transf
 dartel    = cfg_menu;
 dartel.tag = 'dartel';
 dartel.name = 'DARTEL export';
-dartel.labels = {'none','rigid (SPM8 default)','affine'};
+dartel.labels = {'none','rigid (SPM12 default)','affine'};
 dartel.values = {0 1 2};
 dartel.help = {['This option is to export data into a form that can be used with DARTEL.',...
-'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
+'The SPM12 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
-native.def  = @(val)cg_vbm12_get_defaults('output.bias.native', val{:});
-warped.def  = @(val)cg_vbm12_get_defaults('output.bias.warped', val{:});
-affine.def  = @(val)cg_vbm12_get_defaults('output.bias.affine', val{:});
+native.def  = @(val)cg_vbm_get_defaults('output.bias.native', val{:});
+warped.def  = @(val)cg_vbm_get_defaults('output.bias.warped', val{:});
+affine.def  = @(val)cg_vbm_get_defaults('output.bias.affine', val{:});
 bias      = cfg_branch;
 bias.tag = 'bias';
 bias.name = 'Bias Corrected';
@@ -440,7 +440,7 @@ bias.help = {[...
 
 %------------------------------------------------------------------------
 
-warped.def  = @(val)cg_vbm12_get_defaults('output.jacobian.warped', val{:});
+warped.def  = @(val)cg_vbm_get_defaults('output.jacobian.warped', val{:});
 jacobian      = cfg_branch;
 jacobian.tag = 'jacobian';
 jacobian.name = 'Jacobian determinant';
@@ -450,9 +450,9 @@ jacobian.help = {[...
 
 %------------------------------------------------------------------------
 
-native.def  = @(val)cg_vbm12_get_defaults('output.label.native', val{:});
-warped.def  = @(val)cg_vbm12_get_defaults('output.label.warped', val{:});
-dartel.def  = @(val)cg_vbm12_get_defaults('output.label.dartel', val{:});
+native.def  = @(val)cg_vbm_get_defaults('output.label.native', val{:});
+warped.def  = @(val)cg_vbm_get_defaults('output.label.warped', val{:});
+dartel.def  = @(val)cg_vbm_get_defaults('output.label.dartel', val{:});
 
 label      = cfg_branch;
 label.tag = 'label';
@@ -467,7 +467,7 @@ label.help = {[...
 modulated    = cfg_menu;
 modulated.tag = 'modulated';
 modulated.name = 'Modulated normalized';
-modulated.labels = {'none','affine + non-linear (SPM8 default)','non-linear only'};
+modulated.labels = {'none','affine + non-linear (SPM12 default)','non-linear only'};
 modulated.values = {0 1 2};
 modulated.help = {[...
 '''Modulation'''' is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
@@ -494,30 +494,30 @@ modulated.help = {[...
 'multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. ',...
 'These modulated images are indicated by "m0" instead of "m". ']};
 
-native.def    = @(val)cg_vbm12_get_defaults('output.GM.native', val{:});
-warped.def    = @(val)cg_vbm12_get_defaults('output.GM.warped', val{:});
-modulated.def = @(val)cg_vbm12_get_defaults('output.GM.mod', val{:});
-dartel.def    = @(val)cg_vbm12_get_defaults('output.GM.dartel', val{:});
+native.def    = @(val)cg_vbm_get_defaults('output.GM.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.GM.warped', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.GM.mod', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.GM.dartel', val{:});
 grey      = cfg_branch;
 grey.tag = 'GM';
 grey.name = 'Grey matter';
 grey.val = {native, warped, modulated, dartel};
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'};
 
-native.def    = @(val)cg_vbm12_get_defaults('output.WM.native', val{:});
-warped.def    = @(val)cg_vbm12_get_defaults('output.WM.warped', val{:});
-modulated.def = @(val)cg_vbm12_get_defaults('output.WM.mod', val{:});
-dartel.def    = @(val)cg_vbm12_get_defaults('output.WM.dartel', val{:});
+native.def    = @(val)cg_vbm_get_defaults('output.WM.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.WM.warped', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.WM.mod', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.WM.dartel', val{:});
 white      = cfg_branch;
 white.tag = 'WM';
 white.name = 'White matter';
 white.val = {native, warped, modulated, dartel};
 white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and mwp2*.img.'};
 
-native.def    = @(val)cg_vbm12_get_defaults('output.CSF.native', val{:});
-warped.def    = @(val)cg_vbm12_get_defaults('output.CSF.warped', val{:});
-modulated.def = @(val)cg_vbm12_get_defaults('output.CSF.mod', val{:});
-dartel.def    = @(val)cg_vbm12_get_defaults('output.CSF.dartel', val{:});
+native.def    = @(val)cg_vbm_get_defaults('output.CSF.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.CSF.warped', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.CSF.mod', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.CSF.dartel', val{:});
 csf      = cfg_branch;
 csf.tag = 'CSF';
 csf.name = 'Cerebro-Spinal Fluid (CSF)';
@@ -535,7 +535,7 @@ warps.labels = {...
     'Template->Image (inverse)',...
     'inverse + forward'};
 warps.values = {[0 0],[1 0],[0 1],[1 1]};
-warps.def  = @(val)cg_vbm12_get_defaults('output.warps', val{:});
+warps.def  = @(val)cg_vbm_get_defaults('output.warps', val{:});
 warps.help    = {'Deformation fields can be saved to disk, and used by the Deformations Utility. For spatially normalising images to MNI space, you will need the forward deformation, whereas for spatially normalising (eg) GIFTI surface files, you''ll need the inverse. It is also possible to transform data in MNI space on to the individual subject, which also requires the inverse transform. Deformations are saved as .nii files, which contain three volumes to encode the x, y and z coordinates.'};
 
 %------------------------------------------------------------------------
@@ -561,7 +561,7 @@ output.help = {[...
 'The routine can be used for producing images of tissue classes, as well as bias corrected images. ',...
 'The native space option will produce a tissue class image (c*) that is in alignment with ',...
 'the original/* (see Figure \ref{seg1})*/. You can also produce spatially normalised versions - both ',...
-'with (mwc*) and without (wc*) modulation/* (see Figure \ref{seg2})*/. In the vbm12 toolbox, the voxel size ',...
+'with (mwc*) and without (wc*) modulation/* (see Figure \ref{seg2})*/. In the vbm toolbox, the voxel size ',...
 'of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The HMRF (hidden Markov Random Fields), ',...
 'which were optional in the vbm5 toolbox are now calculated by defaults. Their weighting is estimated ',...
 'automatically in dependence of the noise in the data. ',...
@@ -641,7 +641,7 @@ estwrite      = cfg_exbranch;
 estwrite.tag = 'estwrite';
 estwrite.name = 'VBM12: Estimate & Write';
 estwrite.val = {data,opts,extopts,output};
-estwrite.prog   = @cg_vbm12_run;
+estwrite.prog   = @cg_vbm_run;
 estwrite.vout = @vout;
 estwrite.help   = {[...
 'This toolbox is currently only work in progress, and is an extension of the default ',...
@@ -651,7 +651,7 @@ estwrite.help   = {[...
 '(iii) the ability to use multi-spectral data, (iv) an extended set of ',...
 'tissue probability maps, which allows a different treatment of voxels outside the brain. ',...
 'Some of the options in the toolbox do not yet work, and it has not yet been seamlessly integrated ',...
-'into the SPM8 software.  Also, the extended tissue probability maps need further refinement. ',...
+'into the SPM12 software.  Also, the extended tissue probability maps need further refinement. ',...
 'The current versions were crudely generated (by JA) using data that was kindly provided by ',...
 'Cynthia Jongen of the Imaging Sciences Institute at Utrecht, NL.'],...
 '',[...
@@ -696,7 +696,7 @@ write      = cfg_exbranch;
 write.tag = 'write';
 write.name = 'VBM12: Write already estimated segmentations';
 write.val = {data,extopts,output};
-write.prog   = @cg_vbm12_run;
+write.prog   = @cg_vbm_run;
 write.vout = @vout;
 write.help   = {[...
 'Allows previously estimated segmentations (stored in imagename''_seg8.mat'' files) ',...
@@ -705,13 +705,13 @@ write.help   = {[...
 'an additional tissue class, or you want to change voxel size of segmented images,']};
 
 %------------------------------------------------------------------------
-tools = cg_vbm12_tools;
+tools = cg_vbm_tools;
 %------------------------------------------------------------------------
 
-vbm12  = cfg_choice;
-vbm12.name = 'VBM12';
-vbm12.tag  = 'vbm12';
-vbm12.values = {estwrite,write,tools};
+vbm  = cfg_choice;
+vbm.name = 'VBM12';
+vbm.tag  = 'vbm';
+vbm.values = {estwrite,write,tools};
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
