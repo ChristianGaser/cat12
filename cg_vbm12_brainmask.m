@@ -1,4 +1,4 @@
-function mask = cg_vbm8_brainmask(VF)
+function mask = cg_vbm12_brainmask(VF)
 
 open_th = 0.01;
 

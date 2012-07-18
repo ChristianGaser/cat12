@@ -1,5 +1,5 @@
-function out = cg_vbm8_longitudinal_multi_run(job)
-% Call cg_vbm8_longitudinal for multiple subjects
+function out = cg_vbm12_longitudinal_multi_run(job)
+% Call cg_vbm12_longitudinal for multiple subjects
 %
 % Christian Gaser
 % $Id$
@@ -18,7 +18,7 @@ for i=1:numel(job.subj),
         data{j} = job.subj(i).mov{j};
     end
     data_long = {data};
-    cg_vbm8_longitudinal;
+    cg_vbm12_longitudinal;
     spm_jobman('initcfg');
     spm_jobman('run',matlabbatch);
 end;

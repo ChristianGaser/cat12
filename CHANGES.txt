@@ -93,3 +93,32 @@ A  +    VBM12-Manual.doc
 Renamed all files from vbm8 to vbm12.
 ------------------------------------------------------------------------
 r442 | gaser | 2012-07-18 09:09:12
+
+M       cg_vbm12_get_defaults.m
+M       cg_vbm12_batch.sh
+M       cg_vbm12_brainmask_ui.m
+M       cg_vbm12_defaults.m
+M       cg_vbm12_batch.m
+M       cg_vbm12_tools.m
+M       cg_vbm12_longitudinal_multi.m
+M       cg_vbm12_brainmask.m
+M       cg_vbm12_bias_run.m
+M       test_vbm12.m
+M       cg_vbm12_bias.m
+M       cg_vbm12_longitudinal.m
+M       CHANGES.txt
+M       cg_vbm12_defs.m
+M       cg_vbm12_update.m
+M       spm_vbm12.m
+M       cg_vbm12_run.m
+D       a64
+D       a64/libEBTKS.a
+M       cg_vbm12_debug.m
+M       cg_vbm12_longitudinal_multi_run.m
+M       tbx_cfg_vbm12.m
+M       cg_vbm12_write.m
+M       VBM12-Manual.doc
+
+Renamed all occurances of vbm8 to vbm12.
+------------------------------------------------------------------------
+r443 | gaser | 2012-07-18 09:10:49
