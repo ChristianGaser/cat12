@@ -95,8 +95,8 @@ run_batch ()
 	# we have to go into toolbox folder to find matlab files
 	cd $cwd
 
-  spm8=`dirname $cwd`
-  spm8=`dirname $spm8`
+  spm12=`dirname $cwd`
+  spm12=`dirname $spm12`
 
   # add current folder to matlabfile if file was not found
 	if [ ! -f $file ]; then
@@ -116,16 +116,16 @@ run_batch ()
 		exit 0
 	fi
 
-	export MATLABPATH=$spm8:$dname
+	export MATLABPATH=$spm12:$dname
 	
 	time=`date "+%Y%b%d_%H%M"`
-	spmlog=${pwd}/spm8_${time}.log
+	spmlog=${pwd}/spm12_${time}.log
 	echo Check $spmlog for logging information
 	echo
 		
 	file=`echo $file| sed -e 's/\.m//g'`
 
-	X="cg_spm8_batch('${file}')"
+	X="cg_spm12_batch('${file}')"
 	echo Running $file
 	echo > $spmlog
 	echo ---------------------------------- >> $spmlog
@@ -164,7 +164,7 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_spm8_batch.sh batchfile.m [-d] [-m matlabcommand]
+   cg_spm12_batch.sh batchfile.m [-d] [-m matlabcommand]
    
    -d   use display option in matlab in case that batch file needs graphical output
    -m   matlab command
@@ -175,10 +175,10 @@ USAGE:
    display should be enabled with the option "-d".
 
 PURPOSE:
-   Command line call of SPM8 batch files
+   Command line call of SPM12 batch files
 
 EXAMPLE
-   cg_spm8_batch.sh test_batch.m -m /usr/local/bin/matlab7
+   cg_spm12_batch.sh test_batch.m -m /usr/local/bin/matlab7
    This command will process the batch file test_batch.m. As matlab command 
    /usr/local/bin/matlab7 will be used.
    
@@ -186,10 +186,10 @@ INPUT:
    batch file saved as matlab-script or mat-file
 
 OUTPUT:
-   spm8_log_$time.txt for log information
+   spm12_log_$time.txt for log information
 
 USED FUNCTIONS:
-   SPM8
+   SPM12
 
 SETTINGS
    matlab command: $matlab
