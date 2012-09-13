@@ -337,14 +337,9 @@ darteltpm = cfg_files;
 darteltpm.tag  = 'darteltpm';
 darteltpm.name = 'Dartel Template';
 darteltpm.help    = {
-               'Bla'
-               ''
-               'Bla'
-               ''
-               'Bla'
-               ''
                'Selected tissue probability map must be in multi-volume nifti format and contain all six tissue priors.'
                }';
+
 darteltpm.filter = 'image';
 darteltpm.ufilter = '_1_';
 darteltpm.def  = @(val)cg_vbm_get_defaults('extopts.darteltpm', val{:});

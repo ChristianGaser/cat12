@@ -164,3 +164,10 @@ A  +    spm_vbm12.m
 Renamed spm_vbm.m to spm_vbm12.m to enable toolbox call.
 ------------------------------------------------------------------------
 r447 | gaser | 2012-07-18 10:36:15
+
+M       tbx_cfg_vbm.m
+M       CHANGES.txt
+
+Corrected "BlaBlaBla" in tbx_cfg_vbm.m
+------------------------------------------------------------------------
+r449 | gaser | 2012-09-13 12:53:10
