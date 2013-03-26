@@ -13,10 +13,10 @@ global vbm
 
 % Estimation options
 %=======================================================================
-vbm.opts.tpm       = {fullfile(spm('dir'),'toolbox','Seg','TPM.nii')}; % TPM.nii
+vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')}; % TPM.nii
 vbm.opts.ngaus     = [2 2 2 3 4 2];  % Gaussians per class
 vbm.opts.affreg    = 'mni';    % Affine regularisation
-vbm.opts.warpreg   = 4;      % Warping regularisation
+vbm.opts.warpreg   = [0 0.001 0.5 0.025 0.1];      % Warping regularisation
 vbm.opts.biasreg   = 0.0001; % Bias regularisation
 vbm.opts.biasfwhm  = 60;   % Bias FWHM
 vbm.opts.samp      = 3;      % Sampling distance
@@ -30,23 +30,23 @@ vbm.opts.samp      = 3;      % Sampling distance
 %   modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
 %   dartel    0/1/2 (none/rigid/affine)
 
-vbm.output.bias.native  = 1;
-vbm.output.bias.warped  = 0;
+vbm.output.bias.native  = 0;
+vbm.output.bias.warped  = 1;
 vbm.output.bias.affine  = 0;
 
-vbm.output.label.native = 1;
+vbm.output.label.native = 0;
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
 % order is [native normalised modulated dartel]
-vbm.output.GM.native = 1;  % GM
+vbm.output.GM.native = 0;  % GM
 vbm.output.GM.warped = 0;  % GM
-vbm.output.GM.mod    = 0;  % GM
+vbm.output.GM.mod    = 2;  % GM
 vbm.output.GM.dartel = 0;  % GM
 
 vbm.output.WM.native = 0;  % WM
 vbm.output.WM.warped = 0;  % WM
-vbm.output.WM.mod    = 0;  % WM
+vbm.output.WM.mod    = 2;  % WM
 vbm.output.WM.dartel = 0;  % WM
 
 vbm.output.CSF.native = 0; % CSF
@@ -62,7 +62,7 @@ vbm.output.warps = [0 0];
 
 % Extended writing options
 %=======================================================================
-vbm.extopts.dartelwarp  = 0; % dartel normalization: 0 - spm default; 1 - yes
+vbm.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
 vbm.extopts.darteltpm   = {fullfile(spm('dir'),'toolbox','vbm','Template_1_IXI550_MNI152.nii')}; % Indicate first Dartel template
 vbm.extopts.print       = 1; % Display and print results
 
@@ -88,12 +88,12 @@ vbm.defs.interp    = 5;  % 5th degree B-spline
 vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
 vbm.extopts.gcut        = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
-vbm.extopts.kmeans      = 1;    % segmentation initialization: 0 - new segment; 1 - Kmeans
+vbm.extopts.kmeans      = 0;    % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm.extopts.mrf         = 0.15; % MRF weighting
 vbm.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
 vbm.extopts.bias_fwhm   = 60;   % FWHM of Kmeans internal bias correction
-vbm.extopts.histeq_deep = 0;    % weighting of local histogram equalization: 0 - no; 1 - full weighting (not recommended)
-vbm.extopts.histeq_mask = {fullfile(spm('dir'),'toolbox','vbm','histeq_mask.nii')};
+vbm.extopts.vox         = 1.5;  % voxel size for normalized data
+vbm.extopts.bb          = [[-78 -112 -70];[78 76 85]];;   % bounding box for normalized data
 
 % experimental (not yet working)
 %=======================================================================

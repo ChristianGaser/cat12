@@ -183,7 +183,7 @@ estimate.help    = {
                     ''
                     'The aim is primarily to remove movement artefact in fMRI and PET time-series (or more generally longitudinal studies). The headers are modified for each of the input images, such that. they reflect the relative orientations of the data. The details of the transformation are displayed in the results window as plots of translation and rotation. A set of realignment parameters are saved for each session, named rp_*.txt. These can be modelled as confounds within the general linear model/* \cite{friston95a}*/.'
 }';
-estimate.prog = @cg_run_realign_estimate;
+estimate.prog = @cg_run_realign;
 estimate.vout = @vout_estimate;
 % ---------------------------------------------------------------------
 % data Images
@@ -301,7 +301,7 @@ write.tag     = 'write';
 write.name    = 'VBM12 Realign: Reslice';
 write.val     = {data roptions };
 write.help    = {'This function reslices a series of registered images such that they match the first image selected voxel-for-voxel. The resliced images are named the same as the originals, except that they are prefixed by ''r''.'};
-write.prog = @spm_run_realign_reslice;
+write.prog = @spm_run_realign;
 write.vout = @vout_reslice;
 % ---------------------------------------------------------------------
 % data Session
@@ -334,7 +334,7 @@ estwrite.help    = {
                     ''
                     'The aim is primarily to remove movement artefact in fMRI and PET time-series (or more generally longitudinal studies) /* \cite{ashburner97bir}*/. The headers are modified for each of the input images, such that. they reflect the relative orientations of the data. The details of the transformation are displayed in the results window as plots of translation and rotation. A set of realignment parameters are saved for each session, named rp_*.txt. After realignment, the images are resliced such that they match the first image selected voxel-for-voxel. The resliced images are named the same as the originals, except that they are prefixed by ''r''.'
 }';
-estwrite.prog = @cg_run_realign_estwrite;
+estwrite.prog = @cg_run_realign;
 estwrite.vout = @vout_estwrite;
 % ---------------------------------------------------------------------
 % realign Realign

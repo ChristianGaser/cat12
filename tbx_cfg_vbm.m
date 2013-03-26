@@ -151,20 +151,9 @@ warpreg.def  = @(val)cg_vbm_get_defaults('opts.warpreg', val{:});
 warpreg.tag = 'warpreg';
 warpreg.name = 'Warping Regularisation';
 warpreg.strtype = 'e';
-warpreg.num = [1 1];
-warpreg.help = {[...
-'The objective function for registering the tissue probability maps to the ',...
-'image to process, involves minimising the sum of two terms. ',...
-'One term gives a function of how probable the data is given the warping parameters. ',...
-'The other is a function of how probable the parameters are, and provides a ',...
-'penalty for unlikely deformations. ',...
-'Smoother deformations are deemed to be more probable. ',...
-'The amount of regularisation determines the tradeoff between the terms. ',...
-'Pick a value around one.  However, if your normalised images appear ',...
-'distorted, then it may be an idea to increase the amount of ',...
-'regularisation (by an order of magnitude). ',...
-'More regularisation gives smoother deformations, ',...
-'where the smoothness measure is determined by the bending energy of the deformations. ']};
+warpreg.num = [1 5];
+warpreg.help    = {'The objective function for registering the tissue probability maps to the image to process, involves minimising the sum of two terms. One term gives a function of how probable the data is given the warping parameters. The other is a function of how probable the parameters are, and provides a penalty for unlikely deformations. Smoother deformations are deemed to be more probable. The amount of regularisation determines the tradeoff between the terms. Pick a value around one.  However, if your normalised images appear distorted, then it may be an idea to increase the amount of regularisation (by an order of magnitude). More regularisation gives smoother deformations, where the smoothness measure is determined by the bending energy of the deformations. '};
+warpreg.val     = {[0 0.001 0.5 0.025 0.1]};
 %------------------------------------------------------------------------
 
 affreg = cfg_menu;
@@ -239,6 +228,16 @@ vox.help = {...
 
 %------------------------------------------------------------------------
 
+bb         = cfg_entry;
+bb.tag     = 'bb';
+bb.name    = 'Bounding box';
+bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'};
+bb.strtype = 'e';
+bb.num     = [2 3];
+bb.def     = @(val)cg_vbm_get_defaults('extopts.bb', val{:});
+
+%------------------------------------------------------------------------
+
 cleanup = cfg_menu;
 cleanup.tag  = 'cleanup';
 cleanup.name = 'Clean up any partitions';
@@ -272,44 +271,6 @@ sanlm.def  = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
 
 %------------------------------------------------------------------------
 
-mrf = cfg_entry;
-mrf.tag  = 'mrf';
-mrf.name = 'MRF weighting';
-mrf.strtype = 'e';
-mrf.num = [1 1];
-mrf.help = {[...
-'A Hidden Markov Random Field (HMRF) is used to encode spatial information ',...
-'through spatial constraints of neighboring voxels (Zhang et al. IEEE TMI 2001). ',...
-'Neighboring voxels are expected to have the same class labels. The prior probability ',...
-'of the class and the likelihood probability of the observation is combined to ',...
-'estimate the Maximum a posteriori (MAP). It is not necessary to change the MRF ',...
-'weighting, because the ORNLM filter will have a much larger de-noising effect. ',...
-'A value of "0" will deselect the MRF.']};
-mrf.def  = @(val)cg_vbm_get_defaults('extopts.mrf', val{:});
-
-%------------------------------------------------------------------------
-
-finalmask = cfg_menu;
-finalmask.tag  = 'finalmask';
-finalmask.name = 'Apply final mask after segmenting';
-finalmask.help = {[...
-'This option uses morphological operations to apply a final masking.']};
-finalmask.labels = {'Dont apply final masking','Apply final masking'};
-finalmask.values = {0 1};
-finalmask.def  = @(val)cg_vbm_get_defaults('extopts.finalmask', val{:});
-
-%------------------------------------------------------------------------
-
-gcut = cfg_menu;
-gcut.tag  = 'gcut';
-gcut.name = 'Use graph-cut approach for initial skull-stripping';
-gcut.help = {[...
-'This option enables skull-stripping with graph-cut approach.']};
-gcut.labels = {'Dont use graph-cut for skull-stripping','Use graph-cut for skull-stripping'};
-gcut.values = {0 1};
-gcut.def  = @(val)cg_vbm_get_defaults('extopts.gcut', val{:});
-
-%------------------------------------------------------------------------
 print    = cfg_menu;
 print.tag = 'print';
 print.name = 'Display and print results';
@@ -323,23 +284,12 @@ print.help = {[...
 
 %------------------------------------------------------------------------
 
-if 0
-dartelwarp    = cfg_menu;
-dartelwarp.tag = 'dartelwarp';
-dartelwarp.name = 'Spatial normalization';
-dartelwarp.labels = {'Low-dimensional: SPM default','High-dimensional: Dartel'};
-dartelwarp.values = {0 1};
-dartelwarp.def  = @(val)cg_vbm_get_defaults('extopts.dartelwarp', val{:});
-dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization. Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '};
-end
-
 darteltpm = cfg_files;
 darteltpm.tag  = 'darteltpm';
 darteltpm.name = 'Dartel Template';
 darteltpm.help    = {
                'Selected tissue probability map must be in multi-volume nifti format and contain all six tissue priors.'
                }';
-
 darteltpm.filter = 'image';
 darteltpm.ufilter = '_1_';
 darteltpm.def  = @(val)cg_vbm_get_defaults('extopts.darteltpm', val{:});
@@ -381,7 +331,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,sanlm,mrf,cleanup,print};
+extopts.val = {dartelwarp,sanlm,cleanup,vox,bb,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
@@ -412,10 +362,10 @@ affine.help = {'Write image in normalized space, but restricted to affine transf
 dartel    = cfg_menu;
 dartel.tag = 'dartel';
 dartel.name = 'DARTEL export';
-dartel.labels = {'none','rigid (SPM12 default)','affine'};
+dartel.labels = {'none','rigid (SPM8 default)','affine'};
 dartel.values = {0 1 2};
 dartel.help = {['This option is to export data into a form that can be used with DARTEL.',...
-'The SPM12 default is to only apply rigid body transformation. An additional option is to ',...
+'The SPM8 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
 native.def  = @(val)cg_vbm_get_defaults('output.bias.native', val{:});
@@ -462,7 +412,7 @@ label.help = {[...
 modulated    = cfg_menu;
 modulated.tag = 'modulated';
 modulated.name = 'Modulated normalized';
-modulated.labels = {'none','affine + non-linear (SPM12 default)','non-linear only'};
+modulated.labels = {'none','affine + non-linear (SPM8 default)','non-linear only'};
 modulated.values = {0 1 2};
 modulated.help = {[...
 '''Modulation'''' is to compensate for the effect of spatial normalisation. Spatial normalisation ',...
@@ -646,7 +596,7 @@ estwrite.help   = {[...
 '(iii) the ability to use multi-spectral data, (iv) an extended set of ',...
 'tissue probability maps, which allows a different treatment of voxels outside the brain. ',...
 'Some of the options in the toolbox do not yet work, and it has not yet been seamlessly integrated ',...
-'into the SPM12 software.  Also, the extended tissue probability maps need further refinement. ',...
+'into the SPM8 software.  Also, the extended tissue probability maps need further refinement. ',...
 'The current versions were crudely generated (by JA) using data that was kindly provided by ',...
 'Cynthia Jongen of the Imaging Sciences Institute at Utrecht, NL.'],...
 '',[...
