@@ -165,9 +165,9 @@ Renamed spm_vbm.m to spm_vbm12.m to enable toolbox call.
 ------------------------------------------------------------------------
 r447 | gaser | 2012-07-18 10:36:15
 
-M       tbx_cfg_vbm.m
+M       cg_cleanup_gwc.m
 M       CHANGES.txt
 
-Corrected "BlaBlaBla" in tbx_cfg_vbm.m
+Added check whether clustering failed in cg_cleanup_gwc.m.
 ------------------------------------------------------------------------
-r449 | gaser | 2012-09-13 12:53:10
+r450 | gaser | 2013-03-26 14:09:47
