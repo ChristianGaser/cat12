@@ -400,10 +400,10 @@ calcvol_files = cfg_files;
 calcvol_files.tag  = 'data';
 calcvol_files.name = 'Volumes';
 calcvol_files.filter = '*';
-calcvol_files.ufilter = 'seg8.*\.txt$';
+calcvol_files.ufilter = 'seg.*\.txt$';
 calcvol_files.num     = [1 Inf];
 calcvol_files.help = {[...
-'Select all *_seg8.txt files containing raw volumes, which were saved by VBM12 toolbox.']};
+'Select all *_seg.txt files containing raw volumes, which were saved by VBM12 toolbox.']};
 
 calcvol_name = cfg_entry;
 calcvol_name.tag = 'calcvol_name';
