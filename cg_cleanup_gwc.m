@@ -106,7 +106,7 @@ clear mask
 max_A = max(A(:));
 
 if max_A < 1
-  warning("Skull stripping failed.");
+  warning('Skull stripping failed.');
   return;
 end
 

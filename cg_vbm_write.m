@@ -888,7 +888,7 @@ end
 % save raw tissue class volumes in ml in log-file
 if do_cls
     volfactor = abs(det(M0(1:3,1:3)))/1000;
-    vol_txt = fullfile(pth,['p', nam1, '_seg8.txt']);
+    vol_txt = fullfile(pth,['p', nam1, '_seg.txt']);
     fid = fopen(vol_txt, 'w');
     for i=1:3
         vol = volfactor*sum(cls{i}(:))/255; 
