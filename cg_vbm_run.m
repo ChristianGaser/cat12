@@ -34,7 +34,7 @@ estwrite = isfield(job,'opts');
 % set some defaults if segmentations are not estimated
 if ~estwrite
     job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
-                      'warpreg',4,'samp',3,'ngaus',[2 2 2 3 4 2]);
+                      'warpreg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[2 2 2 3 4 2]);
 end
 
 channel = struct('vols',{job.data});
@@ -44,9 +44,10 @@ warp = struct('affreg', job.opts.affreg,...
               'reg', job.opts.warpreg,...
               'write', job.output.warps,...
               'sanlm', job.extopts.sanlm,...
-              'mrf', job.extopts.mrf,...
               'print', job.extopts.print,...
               'cleanup', job.extopts.cleanup,...
+              'bb', job.extopts.bb,...
+              'vox', job.extopts.vox,...
               'dartelwarp', isfield(job.extopts.dartelwarp,'normhigh'));
 
 if isfield(job.extopts.dartelwarp,'normhigh')
@@ -139,6 +140,7 @@ for iter=1:nit,
             obj.biasfwhm = cat(1,job.biasfwhm);
             obj.tpm      = tpm;
             obj.lkp      = [];
+            obj.fwhm     = 8;
             if all(isfinite(cat(1,job.tissue.ngaus))),
                 for k=1:numel(job.tissue),
                     obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
@@ -151,7 +153,7 @@ for iter=1:nit,
                 % Initial affine registration.
                 Affine  = eye(4);
                 if ~isempty(job.warp.affreg),
-                    VG = spm_vol(fullfile(spm('Dir'),'templates','T1.nii'));
+                    VG = spm_vol(fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii'));
                     VF = spm_vol(obj.image(1));
                     
                     % smooth source with 8mm
@@ -175,7 +177,7 @@ for iter=1:nit,
                     end
                     [Affine, scale]  = spm_affreg(VG, VF1, aflags, M);
 
-                    aflags.WG  = spm_vol(fullfile(spm('Dir'),'apriori','brainmask.nii'));
+                    aflags.WG  = spm_vol(fullfile(spm('Dir'),'Toolbox','FieldMap','brainmask.nii'));
                     aflags.sep = aflags.sep/2;
                     try
                         spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
@@ -192,7 +194,7 @@ for iter=1:nit,
                 % Load results from previous iteration for use with next round of
                 % iterations, with the new group-specific tissue probability map.
                 [pth,nam] = fileparts(job.channel(1).vols{subj});
-                res       = load(fullfile(pth,[nam '_seg8.mat']));
+                res       = load(fullfile(pth,[nam '_seg8.mat']));                
                 obj.Affine = res.Affine;
                 obj.Twarp  = res.Twarp;
                 obj.Tbias  = res.Tbias;
@@ -217,6 +219,12 @@ for iter=1:nit,
             if exist(seg8_name)
                 res = load(seg8_name);
 
+                % check for spm version
+                res
+                if ~isfield(res,'wp')
+                  error([fullfile(pth,[nam '_seg8.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
+                end
+
                 % load original used tpm, which is save in seg8.mat file
                 try
                     tpm    = spm_load_priors8(res.tpm);
@@ -224,7 +232,7 @@ for iter=1:nit,
                     % or use default TPM
                     fprintf('Original TPM image %s was not found. use default TPM image instead.\n',res.tpm(1).fname);
                     for i=1:6
-                      job.tissue(i).tpm = fullfile(spm('dir'),'toolbox','Seg',['TPM.nii,' num2str(i)]);
+                      job.tissue(i).tpm = fullfile(spm('dir'),'tpm',['TPM.nii,' num2str(i)]);
                     end
                     tpm    = strvcat(cat(1,job.tissue(:).tpm));
                     tpm    = spm_load_priors8(tpm);
