@@ -104,6 +104,12 @@ clear mask
 
 % interrupt if cluster was > 7.5% of whole image to save time
 max_A = max(A(:));
+
+if max_A < 1
+  warning("Skull stripping failed.");
+  return;
+end
+
 sz_cluster = zeros(max_A,1);
 for i=1:max_A
 	QA = find(A == i);
