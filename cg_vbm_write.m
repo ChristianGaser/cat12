@@ -22,19 +22,23 @@ if exist('r','var')
   fprintf('VBM12 r%d: %s\n',r,res.image.fname);
 end
 
-% we need spm_def2det.m from HDW toolbox
-addpath(fullfile(spm('dir'),'toolbox','HDW'));
-% and spm_load_priors8 from New Segment toolbox
-addpath(fullfile(spm('dir'),'toolbox','Seg'));
-
-if ~isstruct(tpm) || (~isfield(tpm, 'bg1') && ~isfield(tpm, 'bg')),
+if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
     tpm = spm_load_priors8(tpm);
 end
 
 d1        = size(tpm.dat{1});
 d1        = d1(1:3);
 M1        = tpm.M;
-[bb1,vx1] = bbvox_from_V(tpm.V(1));
+
+% Sort out bounding box etc
+[bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
+bb = warp.bb;
+vx = warp.vox;
+bb(~isfinite(bb)) = bb1(~isfinite(bb));
+if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end;
+bb(1,:) = vx*round(bb(1,:)/vx);
+bb(2,:) = vx*round(bb(2,:)/vx);
+odim    = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
      
 if isfield(res,'mg'),
     lkp = res.lkp;
@@ -57,15 +61,6 @@ end
 do_dartel = warp.dartelwarp;   % apply dartel normalization
 warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
-
-vx = NaN;
-bb = nan(2,3);
-
-% Sort out bounding box etc
-bb(~isfinite(bb)) = bb1(~isfinite(bb));
-if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end;
-bb(1,:) = vx*round(bb(1,:)/vx);
-bb(2,:) = vx*round(bb(2,:)/vx);
 
 [pth,nam] = fileparts(res.image(1).fname);
 ind  = res.image(1).n;
@@ -108,7 +103,7 @@ for n=1:N,
     [pth1,nam1,ext1] = fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
-    if bf(n,1),
+    if bf(n,2),
         chan(n).Nc      = nifti;
         chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
                                  res.image(n).dim(1:3),...
@@ -121,11 +116,9 @@ for n=1:N,
     end
 end
 
-do_cls   = any(tc(:)) || any(lb) || any(df) || nargout>1;
+do_cls   = any(tc(:)) || any(lb) || any(df) || nargout>=1;
 tiss(Kb) = struct('Nt',[]);
-cls      = cell(1,Kb);
 for k1=1:Kb,
-    cls{k1} = zeros(d(1:3),'uint8');
     if tc(k1,1),
         tiss(k1).Nt      = nifti;
         tiss(k1).Nt.dat  = file_array(fullfile(pth,['p', num2str(k1), nam, '.nii']),...
@@ -152,7 +145,7 @@ if do_defs,
     if df(2),
         [pth,nam,ext1]=fileparts(res.image(1).fname);
         Ndef      = nifti;
-        Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),...
+        Ndef.dat  = file_array(fullfile(pth,['iy_', nam, '.nii']),...
                                [res.image(1).dim(1:3),1,3],...
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
@@ -167,17 +160,10 @@ if do_defs,
 end
 
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
-M = tpm.M\res.Affine*res.image(1).mat;
+M = M1\res.Affine*res.image(1).mat;
 
-histeq_deep = 0;
-try
-    histeq_deep = cg_vbm_get_defaults('extopts.histeq_deep');
-end
-
-if histeq_deep
-    tmp_histeq_mask = spm_vol(char(cg_vbm_get_defaults('extopts.histeq_mask')));
-    histeq_mask = zeros(d(1:3),'uint8');
-    M2 = tmp_histeq_mask.mat\res.Affine*res.image(1).mat;
+if do_cls
+    Q = zeros([d(1:3),Kb],'single');
 end
 
 for z=1:length(x3),
@@ -202,13 +188,17 @@ for z=1:length(x3),
 
 
     if do_defs,
+        % Compute the deformation (mapping voxels in image to voxels in TPM)
         [t1,t2,t3] = defs(Coef,z,res.MT,prm,x1,x2,x3,M);
+
         if exist('Ndef','var'),
-            tmp = tpm.M(1,1)*t1 + tpm.M(1,2)*t2 + tpm.M(1,3)*t3 + tpm.M(1,4);
+            % Write out the deformation to file, adjusting it so mapping is
+            % to voxels (voxels in image to mm in TPM)
+            tmp = M1(1,1)*t1 + M1(1,2)*t2 + M1(1,3)*t3 + M1(1,4);
             Ndef.dat(:,:,z,1,1) = tmp;
-            tmp = tpm.M(2,1)*t1 + tpm.M(2,2)*t2 + tpm.M(2,3)*t3 + tpm.M(2,4);
+            tmp = M1(2,1)*t1 + M1(2,2)*t2 + M1(2,3)*t3 + M1(2,4);
             Ndef.dat(:,:,z,1,2) = tmp;
-            tmp = tpm.M(3,1)*t1 + tpm.M(3,2)*t2 + tpm.M(3,3)*t3 + tpm.M(3,4);
+            tmp = M1(3,1)*t1 + M1(3,2)*t2 + M1(3,3)*t3 + M1(3,4);
             Ndef.dat(:,:,z,1,3) = tmp;
         end
         
@@ -220,12 +210,29 @@ for z=1:length(x3),
                 q1  = likelihoods(cr,[],res.mg,res.mn,res.vr);
                 q1  = reshape(q1,[d(1:2),numel(res.mg)]);
                 b   = spm_sample_priors8(tpm,t1,t2,t3);
+                wp  = res.wp;
+                s   = zeros(size(b{1}));
+                for k1 = 1:Kb,
+                    b{k1} = wp(k1)*b{k1};
+                    s     = s + b{k1};
+                end
                 for k1=1:Kb,
-                    q(:,:,k1) = sum(q1(:,:,lkp==k1),3).*b{k1};
+                    q(:,:,k1) = sum(q1(:,:,lkp==k1),3).*(b{k1}./s);
                 end
             else
+                % Nonparametric representation of intensity distributions
                 q   = spm_sample_priors8(tpm,t1,t2,t3);
+                wp  = res.wp;
+                s   = zeros(size(q{1}));
+                for k1 = 1:Kb,
+                    q{k1} = wp(k1)*q{k1};
+                    s     = s + q{k1};
+                end
+                for k1 = 1:Kb,
+                    q{k1} = q{k1}./s;
+                end
                 q   = cat(3,q{:});
+
                 for n=1:N,
                     tmp = round(cr{n}*res.intensity(n).interscal(2) + res.intensity(n).interscal(1));
                     tmp = min(max(tmp,1),size(res.intensity(n).lik,1));
@@ -235,22 +242,16 @@ for z=1:length(x3),
                     end
                 end
             end
+            Q(:,:,z,:) = reshape(q,[d(1:2),1,Kb]);
 
-            if histeq_deep
-                [t01,t02,t03] = defs(Coef,z,res.MT,prm,x1,x2,x3,M2);
-                histeq_mask(:,:,z) = uint8(round(spm_sample_vol(tmp_histeq_mask,t01,t02,t03,0)));
+            % Normalise to sum to 1
+            sQ = (sum(Q,4)+eps)/255;
+            for k1=1:size(Q,4)
+                cls{k1} = uint8(round(Q(:,:,:,k1)./sQ));
             end
-            
-            sq = sum(q,3) + eps^2;
-            for k1=1:Kb,
-                tmp            = q(:,:,k1);
-                tmp(msk)       = 0;
-                tmp            = tmp./sq;
-                if ~isempty(cls{k1}),
-                    cls{k1}(:,:,z) = uint8(round(255 * tmp));
-                end
-            end
+
         end
+        
         if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm_get_defaults('output.surf.dartel')|| nargout>=1,
             % initialize y only at first slice
             if z==1
@@ -266,6 +267,10 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
+if do_cls
+  clear Q sQ
+end
+
 clear q q1 Coef b cr
 
 % load bias corrected image
@@ -279,7 +284,7 @@ for z=1:length(x3),
     src(:,:,z) = single(bf1.*f);
 end
 
-%clear chan
+clear chan
 
 % prevent NaN
  src(isnan(src)) = 0;
@@ -307,7 +312,8 @@ if do_cls && do_defs,
     init_kmeans = cg_vbm_get_defaults('extopts.kmeans');
     finalmask   = cg_vbm_get_defaults('extopts.finalmask');
     gcut        = cg_vbm_get_defaults('extopts.gcut');
-
+    mrf         = cg_vbm_get_defaults('extopts.mrf');
+    
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
     scale_morph = 1/mean(vx_vol);
 
@@ -321,13 +327,8 @@ if do_cls && do_defs,
         catch
           fprintf('Graph-cut failed\n');
           gcut = 0;
-        end  
-        % check whether graph-cut failed
-        if (sum(mask(:))/sum((single(cls_old{1}(:))+single(cls_old{2}(:))+single(cls_old{3}(:)))/255)<0.8)
-          fprintf('Graph-cut failed\n');
-          gcut = 0;
           cls = cls_old;
-        end
+        end  
         clear cls_old
     end
     if ~gcut
@@ -373,9 +374,6 @@ if do_cls && do_defs,
     
     % and for skull/bkg tissue classes to 0
     label2(label2 > 3) = 0;
-    % and for skull/bkg tissue classes to 1 (=CSF)
-    % experimental
-%    label2(label2 > 3) = 1;
     
     % fill remaining holes in label with 1
     mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
@@ -398,37 +396,6 @@ if do_cls && do_defs,
     % set label and source inside outside mask to 0
     vol(mask(indx,indy,indz)==0) = 0;
 
-    % use local histogram equalization
-    if histeq_deep
-    
-        clear tmp_histeq_mask t01 t02 t03
-        
-        histeq_mask_ind = histeq_mask(indx,indy,indz);
-        clear histeq_mask;
-        
-   	    outermask_gt_0 = (vol > 0 ) & (histeq_mask_ind == 0);
-        max_vol = max(vol(outermask_gt_0));
-        vol = vol/max_vol;
-      	h1 = hist(vol(outermask_gt_0),512);
-
-       	histeq_mask_gt_0 = histeq_mask_ind >0;
-   	    vol(histeq_mask_gt_0) = histeq_deep*histeq(vol(histeq_mask_gt_0),h1) + (1-histeq_deep)*vol(histeq_mask_gt_0);
-
-      	vol = vol*max_vol;
-        
-   	    src(:) = 0;
-        src(indx, indy, indz) = vol;
-
-        for z=1:length(x3),
-            % Bias corrected image
-            % Write a plane of bias corrected data
-            if bf(1,1),
-                chan(1).Nc.dat(:,:,z,chan(1).ind(1),chan(1).ind(2)) = src(:,:,z);
-            end
-        end
-
-    end
-
     clear chan
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
@@ -438,12 +405,13 @@ if do_cls && do_defs,
     else            fprintf('Amap without Kmeans\n');   
     end
 
-    [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, warp.mrf, vx_vol, iters_icm, bias_fwhm);
+    [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
     
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
     clear vol 
     
+
     % use cleanup
     if warp.cleanup
         % get sure that all regions outside mask are zero
@@ -462,7 +430,7 @@ if do_cls && do_defs,
         end
     end;
     clear prob
-  
+
     if finalmask
         fprintf('Final masking\n');
         % create final mask
@@ -501,12 +469,10 @@ end
 
 M0 = res.image(1).mat;
 
-% prepare transformations for rigidly or affine aligned images
-if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) || cg_vbm_get_defaults('output.surf.dartel')
+% prepare transformations 
 
-    % figure out the mapping from the volumes to create to the original
-    mm = [[
-        bb(1,1) bb(1,2) bb(1,3)
+% figure out the mapping from the volumes to create to the original
+mm  = [[bb(1,1) bb(1,2) bb(1,3)
         bb(2,1) bb(1,2) bb(1,3)
         bb(1,1) bb(2,2) bb(1,3)
         bb(2,1) bb(2,2) bb(1,3)
@@ -515,10 +481,8 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) ||
         bb(1,1) bb(2,2) bb(2,3)
         bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
 
-    vx2  = M1\mm;
-    odim = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
-    vx3  = [[
-        1       1       1
+vx2  = M1\mm;
+vx3 = [[1       1       1
         odim(1) 1       1
         1       odim(2) 1
         odim(1) odim(2) 1
@@ -526,30 +490,28 @@ if any(tc(:,2)) || any(tc(:,3)) || do_dartel || lb(1,3) || lb(1,4) || bf(1,3) ||
         odim(1) 1       odim(3)
         1       odim(2) odim(3)
         odim(1) odim(2) odim(3)]'; ones(1,8)];
+mat    = mm/vx3; 
+
     
-    % rigid transformation
-    if (any(tc(:,2)) || lb(1,3)) || cg_vbm_get_defaults('output.surf.dartel')
-        x      = affind(rgrid(d),M0);
-        y1     = affind(y,M1);
+% rigid transformation
+if (any(tc(:,2)) || lb(1,3)) || cg_vbm_get_defaults('output.surf.dartel')
+    x      = affind(rgrid(d),M0);
+    y1     = affind(y,M1);
         
-        [M3,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
-        clear x y1
+    [M3,R]  = spm_get_closest_affine(x,y1,single(cls{1})/255);
+    clear x y1
 
-        % rigid parameters
-        Mr      = M0\inv(R)*M1*vx2/vx3;
-        mat0r   =    R\M1*vx2/vx3;
-        matr    = mm/vx3;
-    end
-    
-    % affine parameters
-    Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
-    mat0a   = res.Affine\M1*vx2/vx3;
-    mata    = mm/vx3;
-    
-    fwhm = max(vx./sqrt(sum(res.image(1).mat(1:3,1:3).^2))-1,0.01);
-    
+    % rigid parameters
+    Mr      = M0\inv(R)*M1*vx2/vx3;
+    mat0r   =    R\M1*vx2/vx3;
+    matr    = mm/vx3;
 end
-
+    
+% affine parameters
+Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
+mat0a   = res.Affine\M1*vx2/vx3;
+mata    = mm/vx3;
+    
 
 % dartel spatial normalization to given template
 if do_dartel
@@ -628,6 +590,21 @@ if do_dartel
         y(:,:,z,3) = t33;
     end
     clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
+end
+
+if exist('y','var'),
+    M = mat\M1;
+    for i=1:size(y,3),
+        t1         = y(:,:,i,1);
+        t2         = y(:,:,i,2);
+        t3         = y(:,:,i,3);
+        y(:,:,i,1) = M(1,1)*t1 + M(1,2)*t2 + M(1,3)*t3 + M(1,4);
+        y(:,:,i,2) = M(2,1)*t1 + M(2,2)*t2 + M(2,3)*t3 + M(2,4);
+        y(:,:,i,3) = M(3,1)*t1 + M(3,2)*t2 + M(3,3)*t3 + M(3,4);
+    end
+    M1 = mat;
+    d1 = odim;
+
 end
 
 % get inverse deformations for warping submask to raw space
@@ -849,22 +826,23 @@ clear u
 if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
     spm_progress_bar('init',3,'Warped Tissue Classes','Classes completed');
-
-    % estimate a more accurate jacobian determinant 
-    y2 = spm_invert_def(y,M1,d1,M0,[1 0]);
-    dt = spm_def2det(y2(:,:,:,1),y2(:,:,:,2),y2(:,:,:,3),M1);
-    dt = dt./abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));    
-    clear y2
     
     M2 = M1\res.Affine*M0;
 
     for k1 = 1:3,
         if ~isempty(cls{k1}),
             c = single(cls{k1})/255;
-            [c,w]  = dartel3('push',c,y,d1(1:3));
-            C(:,:,:,k1) = c./(w+eps);
-            clear w
-            c = C(:,:,:,k1).*dt;
+
+            if any(tc(:,4)), % without modulation
+                [c,w]       = spm_diffeo('push',c,y,d1(1:3));
+                vx          = sqrt(sum(M1(1:3,1:3).^2));
+                spm_field('bound',1);
+                C(:,:,:,k1) = spm_field(w,c,[vx  1e-6 1e-4 0  3 2]);
+                clear w
+            else
+                c      = spm_diffeo('push',c,y,d1(1:3));
+            end
+
             if nargout>=1,
                 cls{k1} = c;
             end
@@ -1010,18 +988,18 @@ if do_cls && warp.print
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
-	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
+	str = [str struct('name', 'Versions Matlab/SPM8/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
-	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g',warp.reg))];
+	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
 	if (warp.sanlm>0) 
 	  str = [str struct('name', 'SANLM:','value',sprintf('yes'))];
 	end
-	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',warp.mrf))];
+	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',mrf))];
 
   try
 	  fg = spm_figure('FindWin','Graphics');
@@ -1116,7 +1094,7 @@ clear label C c
 
 % deformations
 if df(1),
-    y         = spm_invert_def(y,M1,d1,M0,[1 0]);
+    y         = spm_diffeo('invdef',y,d1,eye(4),M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
                            [d1,1,3],'float32',0,1,0);
@@ -1192,23 +1170,9 @@ end
 p  = ones(numel(f{1}),K);
 for k=1:K,
     amp    = mg(k)/sqrt((2*pi)^N * det(vr(:,:,k)));
-    d      = cr - repmat(mn(:,k)',M,1);
-    p(:,k) = amp * exp(-0.5* sum(d.*(d/vr(:,:,k)),2));
+    d      = bsxfun(@minus,cr,mn(:,k)')*inv(chol(vr(:,:,k)));
+    p(:,k) = amp*exp(-0.5*sum(d.*d,2)) + eps;
 end
-%=======================================================================
-
-%=======================================================================
-function dat = decimate(dat,fwhm)
-% Convolve the volume in memory (fwhm in voxels).
-lim = ceil(2*fwhm);
-x  = -lim(1):lim(1); x = spm_smoothkern(fwhm(1),x); x  = x/sum(x);
-y  = -lim(2):lim(2); y = spm_smoothkern(fwhm(2),y); y  = y/sum(y);
-z  = -lim(3):lim(3); z = spm_smoothkern(fwhm(3),z); z  = z/sum(z);
-i  = (length(x) - 1)/2;
-j  = (length(y) - 1)/2;
-k  = (length(z) - 1)/2;
-spm_conv_vol(dat,dat,x,y,z,-[i j k]);
-return;
 %=======================================================================
 
 %=======================================================================

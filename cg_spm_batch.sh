@@ -125,7 +125,7 @@ run_batch ()
 		
 	file=`echo $file| sed -e 's/\.m//g'`
 
-	X="cg_spm12_batch('${file}')"
+	X="cg_spm_batch('${file}')"
 	echo Running $file
 	echo > $spmlog
 	echo ---------------------------------- >> $spmlog
@@ -164,7 +164,7 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_spm12_batch.sh batchfile.m [-d] [-m matlabcommand]
+   cg_spm_batch.sh batchfile.m [-d] [-m matlabcommand]
    
    -d   use display option in matlab in case that batch file needs graphical output
    -m   matlab command
@@ -178,7 +178,7 @@ PURPOSE:
    Command line call of SPM12 batch files
 
 EXAMPLE
-   cg_spm12_batch.sh test_batch.m -m /usr/local/bin/matlab7
+   cg_spm_batch.sh test_batch.m -m /usr/local/bin/matlab7
    This command will process the batch file test_batch.m. As matlab command 
    /usr/local/bin/matlab7 will be used.
    
