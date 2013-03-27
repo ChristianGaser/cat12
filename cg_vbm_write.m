@@ -11,7 +11,7 @@ function cls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 % $Id$
 
 % get current release number
-A = ver;
+A = ver; r = 0;
 for i=1:length(A)
   if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
     r = str2double(A(i).Version);
@@ -330,8 +330,7 @@ if do_cls && do_defs,
           cls = cls_old;
         end  
         clear cls_old
-    end
-    if ~gcut
+    else
         fprintf('Skull-stripping using morphological operations\n');
         % use mask of GM and WM
         mask = single(cls{1});
@@ -355,7 +354,7 @@ if do_cls && do_defs,
         mask = cg_morph_vol(mask,'close',round(scale_morph*2),0.5); 
     end
   
-    % calculate label image for all classes 
+    %% calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
     label2 = zeros(d,'uint8');
     for i=1:d(3)
@@ -371,12 +370,16 @@ if do_cls && do_defs,
     
     % set all non-brain tissue outside mask to 0
     label2(mask == 0)  = 0;
+    label2(mask == 1 & label2 == 0) = 1; % wrong SPM maps!
     
     % and for skull/bkg tissue classes to 0
     label2(label2 > 3) = 0;
     
-    % fill remaining holes in label with 1
-    mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
+    
+    %% fill remaining holes in label with 1
+  % the next line can cause problems for bad SPM segments 
+  % ie for ADHD/0010001
+  %mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
     label2((label2 == 0) & (mask > 0)) = 1;
       
     % use index to speed up and save memory
@@ -404,7 +407,7 @@ if do_cls && do_defs,
     if init_kmeans, fprintf('Amap with Kmeans\n');   
     else            fprintf('Amap without Kmeans\n');   
     end
-
+% ds('l2','',[1,1,1],src/median(src(cls{2}(:)>128))*0.9,mask,single(cls{1})/255,single(cls{2})/255,150)
     [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
     
     % reorder probability maps according to spm order
@@ -941,6 +944,19 @@ if lb(1),
     N.dat(indx,indy,indz) = double(label)*3/255;
 end
 
+% native bias corrected
+if bf(1,1),
+    N      = nifti;
+    N.dat  = file_array(fullfile(pth1,['m', nam, '.nii']),...
+                                res.image(1).dim(1:3),...
+                                'float32',0,1,0);
+    N.mat  = res.image(1).mat;
+    N.mat0 = res.image(1).mat;
+    N.descrip = 'PVE label';
+    create(N);
+    N.dat(:,:,:) = double(src);
+end
+  
 % warped bias-corrected image
 if bf(1,2),
     % skull strip image because of undefined deformations outside the brain
@@ -972,7 +988,7 @@ end
 if do_cls && warp.print
   
   % get current release numbers
-  A = ver;
+  A = ver;  r_vbm = 0;
   for i=1:length(A)
     if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
       r_vbm = A(i).Version;
