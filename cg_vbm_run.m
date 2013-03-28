@@ -217,7 +217,6 @@ for iter=1:nit,
                 res = load(seg8_name);
 
                 % check for spm version
-                res
                 if ~isfield(res,'wp')
                   error([fullfile(pth,[nam '_seg8.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
                 end
