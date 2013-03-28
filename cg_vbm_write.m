@@ -103,7 +103,7 @@ for n=1:N,
     [pth1,nam1,ext1] = fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
-    if bf(n,2),
+    if bf(n,1),
         chan(n).Nc      = nifti;
         chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
                                  res.image(n).dim(1:3),...
@@ -330,7 +330,8 @@ if do_cls && do_defs,
           cls = cls_old;
         end  
         clear cls_old
-    else
+    end
+    if ~gcut
         fprintf('Skull-stripping using morphological operations\n');
         % use mask of GM and WM
         mask = single(cls{1});
@@ -370,16 +371,13 @@ if do_cls && do_defs,
     
     % set all non-brain tissue outside mask to 0
     label2(mask == 0)  = 0;
-    label2(mask == 1 & label2 == 0) = 1; % wrong SPM maps!
+    label2(mask == 1 & label2 == 0) = 1; % to deal with wrong SPM maps!
     
     % and for skull/bkg tissue classes to 0
     label2(label2 > 3) = 0;
-    
-    
-    %% fill remaining holes in label with 1
-  % the next line can cause problems for bad SPM segments 
-  % ie for ADHD/0010001
-  %mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
+        
+    % fill remaining holes in label with 1
+    mask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
     label2((label2 == 0) & (mask > 0)) = 1;
       
     % use index to speed up and save memory
@@ -407,7 +405,6 @@ if do_cls && do_defs,
     if init_kmeans, fprintf('Amap with Kmeans\n');   
     else            fprintf('Amap without Kmeans\n');   
     end
-% ds('l2','',[1,1,1],src/median(src(cls{2}(:)>128))*0.9,mask,single(cls{1})/255,single(cls{2})/255,150)
     [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
     
     % reorder probability maps according to spm order
@@ -944,19 +941,6 @@ if lb(1),
     N.dat(indx,indy,indz) = double(label)*3/255;
 end
 
-% native bias corrected
-if bf(1,1),
-    N      = nifti;
-    N.dat  = file_array(fullfile(pth1,['m', nam, '.nii']),...
-                                res.image(1).dim(1:3),...
-                                'float32',0,1,0);
-    N.mat  = res.image(1).mat;
-    N.mat0 = res.image(1).mat;
-    N.descrip = 'PVE label';
-    create(N);
-    N.dat(:,:,:) = double(src);
-end
-  
 % warped bias-corrected image
 if bf(1,2),
     % skull strip image because of undefined deformations outside the brain
@@ -1004,7 +988,7 @@ if do_cls && warp.print
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
-	str = [str struct('name', 'Versions Matlab/SPM8/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
+	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
