@@ -1561,3 +1561,11 @@ M       cg_vbm_write.m
 
 ------------------------------------------------------------------------
 r454 | gaser | 2013-03-28 09:18:59
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+
+(1) Corrected wromg fwhm value in cg_vbm_run.m.
+(2) Removed unnecessary code cg_vbm_run.m.
+------------------------------------------------------------------------
+r455 | gaser | 2013-03-28 10:30:05
