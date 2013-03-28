@@ -1569,3 +1569,11 @@ M       CHANGES.txt
 (2) Removed unnecessary code cg_vbm_run.m.
 ------------------------------------------------------------------------
 r455 | gaser | 2013-03-28 10:30:05
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+
+Removed debugging output in cg_vbm_run.m.
+
+------------------------------------------------------------------------
+r456 | gaser | 2013-03-28 10:49:47
