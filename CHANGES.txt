@@ -1548,3 +1548,16 @@ M       cg_vbm_write.m
 (4) Name of volume files is now *seg.txt. 
 ------------------------------------------------------------------------
 r452 | gaser | 2013-03-26 15:09:22
+
+M       cg_vbm_defaults.m
+M       tbx_cfg_vbm.m
+M       CHANGES.txt
+ M      vbm12.man
+M       cg_vbm_write.m
+
+(1) Use now defaults from spm12.
+(2) Corrected saving of native bias corrected image.
+(3) Removed some changes from last release.
+
+------------------------------------------------------------------------
+r454 | gaser | 2013-03-28 09:18:59
