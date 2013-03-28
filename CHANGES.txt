@@ -1577,3 +1577,11 @@ Removed debugging output in cg_vbm_run.m.
 
 ------------------------------------------------------------------------
 r456 | gaser | 2013-03-28 10:49:47
+
+M       cg_vbm_defaults.m
+M       CHANGES.txt
+
+Use old bounding box, because change of it and voxel size does not yer work
+with Dartel.
+------------------------------------------------------------------------
+r457 | gaser | 2013-03-28 12:45:33
