@@ -34,7 +34,7 @@ estwrite = isfield(job,'opts');
 % set some defaults if segmentations are not estimated
 if ~estwrite
     job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
-                      'warpreg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[2 2 2 3 4 2]);
+                      'warpreg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[1 1 2 3 4 2]);
 end
 
 channel = struct('vols',{job.data});
@@ -112,6 +112,8 @@ function vout = run_job(job, estwrite)
 
 vout   = vout_job(job);
 
+if ~isfield(job.warp,'fwhm'),    job.warp.fwhm    =  1; end
+
 % load tpm priors only for estimate and write
 if estwrite
     tpm    = strvcat(cat(1,job.tissue(:).tpm));
@@ -121,11 +123,6 @@ end
 nit = 1;
 
 for iter=1:nit,
-    if nit>1,
-        % Sufficient statistics for possible generation of group-specific
-        % template data.
-        SS = zeros([size(tpm.dat{1}),numel(tpm.dat)],'single');
-    end
     for subj=1:numel(job.channel(1).vols),
         if estwrite % estimate and write segmentations
             images = '';
@@ -135,12 +132,12 @@ for iter=1:nit,
             obj.image    = spm_vol(images);
             spm_check_orientations(obj.image);
 
+            obj.fwhm     = job.warp.fwhm;
             obj.fudge    = 5;
             obj.biasreg  = cat(1,job.biasreg);
             obj.biasfwhm = cat(1,job.biasfwhm);
             obj.tpm      = tpm;
             obj.lkp      = [];
-            obj.fwhm     = 8;
             if all(isfinite(cat(1,job.tissue.ngaus))),
                 for k=1:numel(job.tissue),
                     obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
@@ -209,7 +206,7 @@ for iter=1:nit,
 
             try
                 [pth,nam] = fileparts(job.channel(1).vols{subj});
-                savefields(fullfile(pth,[nam '_seg8.mat']),res);
+                save(fullfile(pth,[nam '_seg8.mat']),'-struct','res', spm_get_defaults('mat.format'));
             catch
             end
 
@@ -246,42 +243,15 @@ for iter=1:nit,
                 return
             end
         end
-        if iter==nit,
-            % Final iteration, so write out the required data.
-            tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
-            bf = job.bias;
-            df = job.warp.write;
-            lb = job.label;
-            jc = job.jacobian;
-            cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job)
-        else
-            % Not the final iteration, so compute sufficient statistics for
-            % re-estimating the template data.
-            N    = numel(job.channel);
-            K    = numel(job.tissue);
-            cls  = cg_vbm_write(res,zeros(K,4),zeros(N,2),[0 0],[0 0 0 0], 0, job.warp, tpm, job);
-            for k=1:K,
-                SS(:,:,:,k) = SS(:,:,:,k) + cls{k};
-            end
-        end
 
-    end
-    if iter<nit && nit>1,
-         % Treat the tissue probability maps as Dirichlet priors, and compute the 
-         % MAP estimate of group tissue probability map using the sufficient
-         % statistics.
-         alpha = 1.0;
-         for k=1:K,
-             SS(:,:,:,k) = SS(:,:,:,k) + spm_bsplinc(tpm.V(k),[0 0 0  0 0 0])*alpha + eps;
-         end
+        % Final iteration, so write out the required data.
+        tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
+        bf = job.bias;
+        df = job.warp.write;
+        lb = job.label;
+        jc = job.jacobian;
+        cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job)
 
-         s = sum(SS,4);
-         for k=1:K,
-             tmp        = SS(:,:,:,k)./s;
-             tpm.bg1(k) = mean(mean(tmp(:,:,1)));
-             tpm.bg2(k) = mean(mean(tmp(:,:,end)));
-             tpm.dat{k} = spm_bsplinc(log(tmp+tpm.tiny),[ones(1,3)*(tpm.deg-1)  0 0 0]);
-         end
     end
 end
 return
@@ -302,28 +272,6 @@ elseif numel(job.channel)==0,
     msg = {'No data'};
 end
 return
-%_______________________________________________________________________
-
-%_______________________________________________________________________
-function savefields(fnam,p)
-if length(p)>1, error('Can''t save fields.'); end;
-fn = fieldnames(p);
-if numel(fn)==0, return; end;
-for i=1:length(fn),
-    eval([fn{i} '= p.' fn{i} ';']);
-end;
-try 
-    mat_ver = spm_check_version('matlab','7');
-catch
-    mat_ver = spm_matlab_version_chk('7');
-end 
-if mat_ver >= 0
-    save(fnam,'-V6',fn{:});
-else
-    save(fnam,fn{:});
-end;
-
-return;
 %_______________________________________________________________________
 
 %_______________________________________________________________________
@@ -526,16 +474,4 @@ end
 vf = reshape(vf,numel(vf),1);
 %_______________________________________________________________________
 
-%_______________________________________________________________________
-
-%=======================================================================
-function t = transf(B1,B2,B3,T)
-if ~isempty(T)
-    d2 = [size(T) 1];
-    t1 = reshape(reshape(T, d2(1)*d2(2),d2(3))*B3', d2(1), d2(2));
-    t  = B1*t1*B2';
-else
-    t = zeros(size(B1,1),size(B2,1),size(B3,1));
-end;
-return;
 %=======================================================================
