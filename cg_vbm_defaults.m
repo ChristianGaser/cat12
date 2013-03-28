@@ -93,7 +93,7 @@ vbm.extopts.mrf         = 0.15; % MRF weighting
 vbm.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
 vbm.extopts.bias_fwhm   = 60;   % FWHM of Kmeans internal bias correction
 vbm.extopts.vox         = 1.5;  % voxel size for normalized data
-vbm.extopts.bb          = [[-78 -112 -70];[78 76 85]];;   % bounding box for normalized data
+vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];;   % bounding box for normalized data
 
 % experimental (not yet working)
 %=======================================================================
