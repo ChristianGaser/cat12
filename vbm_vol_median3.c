@@ -1,17 +1,11 @@
-/*
- * Robert Dahnke
- * $Id$ 
- *
- */
-
 /* Median Filter
- * ________________________________________________________________________
- * Median Filter for 3d single image D. Bi is used to mask voxels for the 
+ * _____________________________________________________________________________
+ * Median Filter for a 3d single image D. Bi is used to mask voxels for the 
  * filter process, whereas Bn is used to mask voxels that are used as 
  * neighbors in the filter process. Both mask can changed by intensity 
  * threshold (Bi_low,Bi_high,Bn_low,Bn_high) for D.
  *
- *  M = median3(D[,Bi,Bn,sf,Bi_low,Bi_high,Bn_low,Bn_high])
+ *  M = vbm_vol_median3(D[,Bi,Bn,sf,Bi_low,Bi_high,Bn_low,Bn_high])
  *
  *  D      (single)   3d matrix for filter process 
  *  Bi     (logical)  3d matrix that mark voxel that should be filtered
@@ -29,10 +23,12 @@
  * of the median application implemenation leads to wrong results. 
  *
  * TODO: check all input elements... 
- * ________________________________________________________________________
- * Robert Dahnke 2011_01
+ * _____________________________________________________________________________
+ * Robert Dahnke 
  * Center of Neuroimaging 
  * University Jena
+ *
+ * $Id: median3.c 75 2013-02-26 13:56:04Z dahnke $ 
  */
 
 #include "mex.h"   
@@ -76,27 +72,39 @@ float abs2(float n) {	if (n<0) return -n; else return n; }
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs<1) mexErrMsgTxt("ERROR:median3: not enough input elements\n");
-  if (nrhs>8) mexErrMsgTxt("ERROR:median3: too many input elements\n");
-  if (nlhs<1) mexErrMsgTxt("ERROR:median3: not enough output elements\n");
-  if (nlhs>1) mexErrMsgTxt("ERROR:median3: too many output elements\n");
+  if (nrhs<1) mexErrMsgTxt("ERROR:vbm_vol_median3: not enough input elements\n");
+  if (nrhs>8) mexErrMsgTxt("ERROR:vbm_vol_median3: too many input elements\n");
+  if (nlhs<1) mexErrMsgTxt("ERROR:vbm_vol_median3: not enough output elements\n");
+  if (nlhs>1) mexErrMsgTxt("ERROR:vbm_vol_median3: too many output elements\n");
 
   /* main informations about input data (size, dimensions, ...) */
-  const mwSize *sL = mxGetDimensions(prhs[0]);
-  const int     dL = mxGetNumberOfDimensions(prhs[0]);
-  const int     nL = (int) mxGetNumberOfElements(prhs[0]);
-
-  if ( dL != 3 || mxIsSingle(prhs[0])==0)        mexErrMsgTxt("ERROR:median3: first input must be a single 3d matrix\n");
+  const mwSize *sL  = mxGetDimensions(prhs[0]);
+  const int     dL  = mxGetNumberOfDimensions(prhs[0]);
+  const int     nL  = (int) mxGetNumberOfElements(prhs[0]);
+  
+  if ( dL  != 3 || mxIsSingle(prhs[0])==0)        mexErrMsgTxt("ERROR:vbm_vol_median3: first input must be a single 3d matrix\n");
   if ( nrhs>1) {
-    if ( mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:median3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
-    if (mxIsLogical(prhs[1])==0)                 mexErrMsgTxt("ERROR:median3: second input must be a logical 3d matrix\n");
-  } else if ( nrhs>2) {
-    if ( mxGetNumberOfDimensions(prhs[2]) != 3 ) mexErrMsgTxt("ERROR:median3: third input must be 3d - to use a later parameter use ''true(size( input1 ))'\n");
-    if ( mxIsLogical(prhs[2])==0)                mexErrMsgTxt("ERROR:median3: third input must be a logical 3d matrix\n"); 
+    const mwSize *sBi = mxGetDimensions(prhs[1]);
+    const int     dBi = mxGetNumberOfDimensions(prhs[1]);
+    const int     nBi = (int) mxGetNumberOfElements(prhs[1]);
+    
+    if ( mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:vbm_vol_median3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
+    if ( mxIsLogical(prhs[1])==0)                mexErrMsgTxt("ERROR:vbm_vol_median3: second input must be a logical 3d matrix\n");
+    if ( nL != nBi)                              mexErrMsgTxt("ERROR:vbm_vol_median3: second input must be a logical 3d matrix with equal size than input 1\n");
+  } 
+  if ( nrhs>2) {
+    const mwSize *sBn = mxGetDimensions(prhs[2]);
+    const int     dBn = mxGetNumberOfDimensions(prhs[2]);
+    const int     nBn = (int) mxGetNumberOfElements(prhs[2]); 
+    
+    if ( mxGetNumberOfDimensions(prhs[2]) != 3 ) mexErrMsgTxt("ERROR:vbm_vol_median3: third input must be 3d - to use a later parameter use ''true(size( input1 ))'\n");
+    if ( mxIsLogical(prhs[2])==0)                mexErrMsgTxt("ERROR:vbm_vol_median3: third input must be a logical 3d matrix\n"); 
+    if ( nL != nBn)                              mexErrMsgTxt("ERROR:vbm_vol_median3: third input must be a logical 3d matrix with equal size than input 1\n");
   }
-
+  
+  
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  float NV[27], sf, bil, bih, bnl, bnh;
+  float NV[27], sf, bil, bih, bnl, bnh; 
   int i,j,k,ind,ni,x,y,z,n;
   bool *Bi, *Bn;
         
@@ -137,10 +145,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
       }
       /* get correct n */
-      n--;
+      /* n--; */
+      
       /* sort and get the median by finding the element in the middle of the sorting */
-      sort(NV,0,n);
-      M[ind] = NV[(int)(n/2)];
+      if (n>1) { if (n==2) {
+          M[ind] = (NV[0] + NV[1]) / 2;  
+        }
+        else {
+          sort(NV,0,n); 
+          M[ind] = NV[(int)(n/2)];
+        }
+      }
+    }
+    else {
+      M[ind] = D[ind];
     }
   }
   
