@@ -1,4 +1,4 @@
-function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
+function [src,cls,mask,TSEG,SLAB,opt] = vbm_vol_GBM(src,cls,res,opt)
 % SKULL-STRIPPING USING GRAPH-CUT
 % _________________________________________________________________________
 %
@@ -54,12 +54,12 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   tmp = sum(single(cat(4,cls{1},cls{2},cls{3},cls{4},cls{5},cls{6})),4);
   tmp(tmp>255) = 255;
   cls{6}=cls{6} + uint8(255-tmp); % if the sum of the classe is not 100% add the rest to the background 
-  for i=1:6, cls{i}=uint8(median3(single(cls{i}),cls{i}>0,true(size(src)))); end              % noise reduction  
+  for i=1:6, cls{i}=uint8(vbm_vol_median3(single(cls{i}),cls{i}>0,true(size(src)))); end              % noise reduction  
 
   % 2) if the head is to thick, SPM detect GM outside the brain and we have to remove it (only one GM Segment)
   sum_cls12 = single(cls{1}) + single(cls{2});
   M = single(cg_morph_vol(cg_morph_vol(sum_cls12>64,'open',3),'labopen')); M(sum_cls12<64)=-inf;   
-  M = cg_morph_vol(cg_morph_vol(uint8(down_cut(M,sum_cls12/255*3,0.1,vx_vol)==1),'labopen'),'dilate'); 
+  M = cg_morph_vol(cg_morph_vol(uint8(vbm_vol_downcut(M,sum_cls12/255*3,0.1,vx_vol)==1),'labopen'),'dilate'); 
   M = cg_morph_vol(cg_morph_vol(cg_morph_vol(uint8((single(cls{1}.*M)+single(cls{2}))>64),'open',2),'labopen'),'dilate',3); cls{1}=cls{1} .* M; 
   % 1) there should be only one WM Segment
   M = cg_morph_vol(cg_morph_vol(uint8(cls{2}>64),'labopen'),'dilate'); cls{2}=cls{2} .* M; %cls{1}=cls{1} + cls{2} .* (1-M); % 1.
@@ -94,15 +94,15 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
     sum_cls456 = single(cls{4}) + single(cls{5}) + single(cls{6});
     M = single(sum_cls123>sum_cls456); 
     clear sum_cls456
-    M( cg_morph_vol( ((single(cls{1})/3)>cls{3} & cls{3}<64) | cls{2}>0,'open',1)==1 & M==1)=-1; D1=eikonal3(M,vx_vol);
+    M( cg_morph_vol( ((single(cls{1})/3)>cls{3} & cls{3}<64) | cls{2}>0,'open',1)==1 & M==1)=-1; D1=vbm_vol_eikonal3(M,vx_vol);
     M = single(cg_morph_vol(cg_morph_vol(D1/opt.RSS>TSEG,'close'),'erode')); 
     M(M==0 & cg_morph_vol(cg_morph_vol( (sum_cls123/255<0.25) | (sum_cls12/255>0.75) ,'open'),'close')==1)=-inf; 
     clear sum_cls123
-    M = cg_morph_vol(down_cut(M,TSEG,0.1,vx_vol),'close'); 
+    M = cg_morph_vol(vbm_vol_downcut(M,TSEG,0.1,vx_vol),'close'); 
 
     % removing of inbrain structures (simple closing will also remove small structure that we are interested in 
     D2 = single(cg_morph_vol(M==1 | SLAB==11,'labclose')); D2(cg_morph_vol(cg_morph_vol(D2,'open',6*scale_morph),'labopen')==1)=-1; 
-    D2 = eikonal3(D2,vx_vol); D2=median3(D2,D2>0); 
+    D2 = vbm_vol_eikonal3(D2,vx_vol); D2=vbm_vol_median3(D2,D2>0); 
     S  = false(size(TSEG)); S((cls{4}<255*0.25 & cls{5}<255*0.25 & cls{6}<255*0.1) & M==1 & D2<10 & D1>TSEG)=1; clear D1 M;
   else
     D2 = zeros(size(SLAB),'single');
@@ -119,12 +119,12 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
 % MAJOR ALIGNMENT       
 % _________________________________________________________________________
 % align other voxels and smooth the map (median filter)
-  SLAB((SLAB==0 & TSEG<1.75) | BV)=-inf; SLAB = down_cut(SLAB,TSEG,0.0,vx_vol); SLAB(SLAB==-inf)=0; clear TSEGC;  % alignment without sinus sagittalis
+  SLAB((SLAB==0 & TSEG<1.75) | BV)=-inf; SLAB = vbm_vol_downcut(SLAB,TSEG,0.0,vx_vol); SLAB(SLAB==-inf)=0; clear TSEGC;  % alignment without sinus sagittalis
   M=cg_morph_vol(D2<=inf,'labopen'); SLAB(S>0 & M==1 & SLAB~=1)=11; SLAB(SLAB==11 & M==0)=7;                 % add sinus sagittalis anc other BV
   if opt.BVH, SLAB(BV)=7; else SLAB(BV)=0; end
-  SLAB = down_cut(SLAB,TSEG,0.01,vx_vol);                                                        % align only neighbors with lower tissue intentsity
-  SLAB = down_cut(SLAB,TSEG,4.00,vx_vol);                                                        % align all remaining voxels
-  SLAB = median3(SLAB,TSEG>0.5);                                                                   % smoothing
+  SLAB = vbm_vol_downcut(SLAB,TSEG,0.01,vx_vol);                                                        % align only neighbors with lower tissue intentsity
+  SLAB = vbm_vol_downcut(SLAB,TSEG,4.00,vx_vol);                                                        % align all remaining voxels
+  SLAB = vbm_vol_median3(SLAB,TSEG>0.5);                                                                   % smoothing
   clear S; opt.time.GBM8GBM = dp('GBM',opt,stime); stime = clock;
 
 
@@ -139,11 +139,11 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
     T = single( (sum_cls12/255<0.1) | SLAB==11);
     D = vbdist(T,true(size(TSEG)),vx_vol);
     T = thickness_V0x59_TIM(T+2,D,zeros(size(D),'single')); 
-    T = median3(T,TSEG>0.5); 
+    T = vbm_vol_median3(T,TSEG>0.5); 
     t = 2; M = (T<=t) & (SLAB==1) & ((sum_cls12+single(cls{4})+single(cls{5}))/255>0.5); SLAB(cg_morph_vol(M | SLAB==11,'erode',1)==1 & SLAB~=11)=0;
-    SLAB = down_cut(SLAB,TSEG,-0.1,vx_vol);
-    SLAB(median3(single(cg_morph_vol(cg_morph_vol(SLAB==1 & T>0 & T<=t/2 & sum_cls12/255>0.25,'dilate'),'erode',1)))==1)=7;
-    TSEGC=TSEG; TSEGC(sum_cls12/255<0.1 | T>2*t)=-inf; SLAB(cg_morph_vol(down_cut(single(SLAB==7),TSEGC,0.01,vx_vol),'close')==1 & SLAB==1)=7;
+    SLAB = vbm_vol_downcut(SLAB,TSEG,-0.1,vx_vol);
+    SLAB(vbm_vol_median3(single(cg_morph_vol(cg_morph_vol(SLAB==1 & T>0 & T<=t/2 & sum_cls12/255>0.25,'dilate'),'erode',1)))==1)=7;
+    TSEGC=TSEG; TSEGC(sum_cls12/255<0.1 | T>2*t)=-inf; SLAB(cg_morph_vol(vbm_vol_downcut(single(SLAB==7),TSEGC,0.01,vx_vol),'close')==1 & SLAB==1)=7;
     clear D T;
     opt.time.GBM8BV = dp('|BV',opt,stime); stime = clock;  
   end
@@ -163,10 +163,10 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
   D = vbdist(single(mask==1),true(size(SLAB)),vx_vol);
   C = vbdist(single(D>dc),true(size(SLAB)),vx_vol);
   SLAB(D>0 & D<=3.0 & SLAB~=7)=0;
-  SLAB  = down_cut(SLAB,TSEG,0.0,vx_vol);                                % align only neighbors with lower tissue intentsity
-  SLAB  = down_cut(SLAB,TSEG,4.0,vx_vol);                                % align all remaining voxels
-  SLAB2 = median3(SLAB); SLAB(SLAB~=7)=SLAB2(SLAB~=7); clear SLAB2;        % don't filter blood vessels!
-  mask  = median3(single(mask | SLAB==1 | (D<=1.5) | C>(dc*1.25)))>0.5;    % final brain mask
+  SLAB  = vbm_vol_downcut(SLAB,TSEG,0.0,vx_vol);                                % align only neighbors with lower tissue intentsity
+  SLAB  = vbm_vol_downcut(SLAB,TSEG,4.0,vx_vol);                                % align all remaining voxels
+  SLAB2 = vbm_vol_median3(SLAB); SLAB(SLAB~=7)=SLAB2(SLAB~=7); clear SLAB2;        % don't filter blood vessels!
+  mask  = vbm_vol_median3(single(mask | SLAB==1 | (D<=1.5) | C>(dc*1.25)))>0.5;    % final brain mask
   clear ROI D clsth clstp dth;
   opt.time.GBM8M = dp('|M',opt,stime); stime = clock;
   
@@ -197,7 +197,7 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
       while allCSF==0 && j<numel(substep)
         j=j+1; TSEGa=substep(j)*(TSEGth(2)-TSEGth(1))/numel(substep);
         M=single(TSEG<TSEGth(i)+TSEGa); M(DM==0)=-1; sumCSF=sum(M(:)==1); 
-        D=eikonal3(M,vx_vol); Dmax=max(D(D<inf)); sumINF=sum(D(M(:)==1)==inf);                            % calculate sulcal depth
+        D=vbm_vol_eikonal3(M,vx_vol); Dmax=max(D(D<inf)); sumINF=sum(D(M(:)==1)==inf);                            % calculate sulcal depth
         allCSF = (sumINF/sumCSF)<0.01;
       end
       M=single(D<inf & (D>(0.9*Dmax) | (D>(0.8*1.5*DMmax))) & TSEG<(TSEGth(i)+TSEGa));                  % set ventricular starting region
@@ -208,9 +208,9 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
       % 1) there are maybe less elements... 
       % 2) may both ventricle are one...
 
-      M(cg_morph_vol(TSEG>=1,'close')==1 & M~=1)=-inf; M=down_cut(M,max(0,3-TSEG),0.25,vx_vol);        % growing only for ventricular region 
+      M(cg_morph_vol(TSEG>=1,'close')==1 & M~=1)=-inf; M=vbm_vol_downcut(M,max(0,3-TSEG),0.25,vx_vol);        % growing only for ventricular region 
       M(cg_morph_vol(SLAB==11 | SLAB==8 | (D>0 & D<(0.1*Dmax)),'labopen')==1)=11;                        % set non-ventricular starting region
-      for ti=1:0.25:2, M(M==-inf & TSEG<=ti)=0; M=down_cut(M,max(0,2-TSEG),0.25,vx_vol); end             % levelwise growing of both regions
+      for ti=1:0.25:2, M(M==-inf & TSEG<=ti)=0; M=vbm_vol_downcut(M,max(0,2-TSEG),0.25,vx_vol); end             % levelwise growing of both regions
       M1=cg_morph_vol(cg_morph_vol(M==1,'open'),'labopen'); M(M1==0 & M==1 )=0; clear M1;                 % only the biggest object
       SLAB(M==1)=15; SLAB(M==11 & SLAB==1)=21;                                                            % add ventricle and non-ventricle to the atlas
       opt.time.GBM8V = dp('|V',opt,stime); stime = clock;
@@ -237,10 +237,10 @@ function [src,cls,mask,TSEG,SLAB,opt] = GBM(src,cls,res,opt)
       M(M==0 & cg_morph_vol(SLAB~=15,'erode',2)==1 & DV<dbg(2) & DNV>dbg(3))=1;                                                % starting region 
       D=vbdist(single(M>0),true(size(SLAB)),vx_vol); % dist from start region (may replace by eikonal distance)
       % region growing (but only near the starting region)
-      M(D>dbg(4) | SLAB==15 | TSEG<2.25)=-inf;                            M=down_cut(M,        TSEG ,0,vx_vol); % growing to the GM
-      M(D<dbg(4) & SLAB==1  & TSEG<2.75 & M==-inf)=0;                     M=down_cut(M,max(0,3-TSEG),0,vx_vol); % growing to the WM
-      M(D<dbg(5) & SLAB==1  & TSEG<2.75 & TSEG>1.00 & M==-inf & DV<10)=0; M=down_cut(M,        TSEG ,0,vx_vol); % growing to the ventricle
-      M=median3(M); M(cg_morph_vol(M==-inf,'erode',2)==0 & M==-inf)=0; M=median3(M);                              % smoothing
+      M(D>dbg(4) | SLAB==15 | TSEG<2.25)=-inf;                            M=vbm_vol_downcut(M,        TSEG ,0,vx_vol); % growing to the GM
+      M(D<dbg(4) & SLAB==1  & TSEG<2.75 & M==-inf)=0;                     M=vbm_vol_downcut(M,max(0,3-TSEG),0,vx_vol); % growing to the WM
+      M(D<dbg(5) & SLAB==1  & TSEG<2.75 & TSEG>1.00 & M==-inf & DV<10)=0; M=vbm_vol_downcut(M,        TSEG ,0,vx_vol); % growing to the ventricle
+      M=vbm_vol_median3(M); M(cg_morph_vol(M==-inf,'erode',2)==0 & M==-inf)=0; M=vbm_vol_median3(M);                              % smoothing
       SLAB(SLAB==1 & M==1 & TSEG<=2.75)=5;                                                                        % add ventricle to the atlas 
       opt.time.GBM8BG = dp('|BG',opt,stime); stime = clock;
 
