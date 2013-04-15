@@ -359,11 +359,11 @@ if do_cls && do_defs,
   
         % keep largest connected component after at least 1 iteration of opening
         n_initial_openings = max(1,round(scale_morph*warp.cleanup));
-        mask = vbm_vol_morph(mask>warp.open_th,'o',n_initial_openings);
+        mask = vbm_vol_morph(mask>warp.open_th,'open',n_initial_openings);
         mask = vbm_vol_morph(mask,'lc');
 
         % dilate and close to fill ventricles
-        mask = vbm_vol_morph(mask,'d',warp.dilate);
+        mask = vbm_vol_morph(mask,'dilate',warp.dilate);
         mask = vbm_vol_morph(mask,'lc',round(scale_morph*10));
         
         % remove sinus
@@ -411,7 +411,7 @@ if do_cls && do_defs,
                      (mask & TI>0.7 & TI<0.9 & cls{2}<255 & cls{3}<8)) & ~WMP & ...
                      (G.*TI)<max(0.04,min(0.1,noise)) & (TI<2/3 | div>-0.02) & HD )>0.5;
       [BGr,resT2] = vbm_vol_resize(single(BG),'reduceV',vx_vol,4,32,'mean');
-      BGr = vbm_vol_morph(vbm_vol_morph(BGr>0.4,'lc',5),'d',1); BGr=vbm_vol_smooth3X(BGr,2);
+      BGr = vbm_vol_morph(vbm_vol_morph(BGr>0.4,'lc',5),'dilate',1); BGr=vbm_vol_smooth3X(BGr,2);
       BGP = vbm_vol_resize(BGr,'dereduceV',resT2)>0.5 & TI>5/12; clear BGr; 
       BG  = smooth3(BGP & TI>5/12 & TI<11/12 & G<(0.95-TI))>0.5; 
       cls{1} = max(cls{1},uint8(255*smooth3(BG)));
@@ -426,7 +426,7 @@ if do_cls && do_defs,
       %      maximum filter!
       TLi   = vbm_vol_localstat(src,(cls{2}>16 | ...
         (cls{3}==0 & mask & TI>2.5/3 & div>-0.02 & TI<7/6)) & ...
-        (~BGP | (vbm_vol_morph(BGP & TI>0.95,'d',2) & TI>0.9)) & G<0.5 & TI<7/6,2,3); 
+        (~BGP | (vbm_vol_morph(BGP & TI>0.95,'dilate',2) & TI>0.9)) & G<0.5 & TI<7/6,2,3); 
       TLi(cls{2}>220 & ~BGP)=src(cls{2}>220 & ~BGP);
       TL{5} = vbm_vol_approx(TLi,'nh',vx_vol,2); TL{5} = vbm_vol_smooth3X(TL{5},4); 
       
@@ -518,13 +518,13 @@ if do_cls && do_defs,
         WM  = single(vbm_vol_morph(TIG>2.1 & TIG<3.5 & mask & cls{2}>64,'lc',1));
         WM(~WM & (TIG<2.25 | ~mask | TIG>3.2))=nan; [WM,D]=vbm_vol_downcut(WM,TIG/3,-0.01); WM  = vbm_vol_morph(WM,'lc');
         %WM(isnan(WM))=0; WM = WM | (D>0 & D<20); WM=single(WM | (smooth3(WM)>0.5 & TIG<2));
-        %WM(~WM & (TIG<1.40 | ~vbm_vol_morph(mask,'d',4) | TIG>3.2))=nan; [WM,D]=vbm_vol_downcut(WM,TIG/3,0.00);
+        %WM(~WM & (TIG<1.40 | ~vbm_vol_morph(mask,'dilate',4) | TIG>3.2))=nan; [WM,D]=vbm_vol_downcut(WM,TIG/3,0.00);
         %WM(isnan(WM))=0; WM = WM | (D>0 & D<10); WM=(smooth3(WM)>0.5 & TIG<2.5) | (WM /TIG>=2.5);
         %WM  = vbm_vol_morph(WM,'lc');
         BV  = ((TIG/3.*mask) - single(cls{2})/128)>1.01 & ~WM; BV=single(BV); 
         BV(WM & (TIG<2 | ~mask))=nan; BV(WM)=2; [BV,D]=vbm_vol_downcut(BV,TIG/3,0.05); BV(BV==2)=0;
         %BV  = mask & ~WM & ((TIG>2.2 & cls{2}<128) | TIG>3.5); 
-        BV  = vbm_vol_morph(BV,'c',2);
+        BV  = vbm_vol_morph(BV,'close',2);
         BV  = vbm_vol_smooth3X(BV.*(TIG-1),0.3).^4;
         TIG = max(mask,TIG - BV); TIG = TIG*1/3 + 2/3*vbm_vol_median3(TIG,BV>0);     
         cls{1} = min(cls{1},uint8(255 - BV*127)); 
@@ -540,14 +540,14 @@ if do_cls && do_defs,
       clear CSFD div2;
       
       %% second sanlm filtering
-      if     warp.sanlm==1, sanlmMex_noopenmp(src,3,1); 
+      if     warp.sanlm==1, sanlmMex_noopenmp(TIG,3,1); 
       elseif warp.sanlm==2, sanlmMex(TIG,3,1);
       end
       noise2 = std(src(cls{2}(:)>128 & G(:)<0.1)/median(src(cls{2}(:)>128  & G(:)<0.1))); 
       src = TIG;
         
       %% adding some CSF around the brain
-      CSFH = vbm_vol_morph(mask,'d',1) & ~mask & TIG<2.5;
+      CSFH = vbm_vol_morph(mask,'dilate',1) & ~mask & TIG<2.5;
       mask = CSFH | mask;
       cls{3}(CSFH) = 255;
       srcm = src;
@@ -670,12 +670,12 @@ if do_cls && do_defs,
       HDr = vbdist(1-HDr); HD = vbm_vol_resize(HDr,'dereduceV',resT2)>4;   
       % and next to a larger CSF volume
       [HDr,resT2] = vbm_vol_resize(single(cls{3})/255 .* HD,'reduceV',vx_vol,2,32,'meanm');
-      HDr =  vbm_vol_morph(vbm_vol_morph(HDr>0.25,'o',1),'d'); 
+      HDr =  vbm_vol_morph(vbm_vol_morph(HDr>0.25,'open',1),'dilate'); 
       HD  = vbm_vol_resize(HDr,'dereduceV',resT2)>0.5;  clear HDr;  
       
       % main conditions for the CSF/WM boundary
-      M = vbm_vol_morph(cls{2}>192,'d',1) & HD & ...
-          vbm_vol_morph(cls{3}>192,'d',1); % & smooth3(cls{1}<16);
+      M = vbm_vol_morph(cls{2}>192,'dilate',1) & HD & ...
+          vbm_vol_morph(cls{3}>192,'dilate',1); % & smooth3(cls{1}<16);
       M = M | smooth3(M)>0.33;
       C = vbm_vol_smooth3X(vbm_vol_median3(TIG,M,TIG<1.5 | TIG>2.5)); 
       
@@ -713,7 +713,7 @@ if do_cls && do_defs,
       Br(~Br & (Tr<1.2/3 | Tr>2.0/3))=-inf; 
       Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.05*mean(resTr.vx_volr))>0,1)>0.5;
       [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
-      Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'lo',2);
+      Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'labopen',2);
       Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
       mask = vbm_vol_resize(vbm_vol_smooth3X(Br,1.2),'dereduceV',resTr)>0.5;
       clear Tr Br Gr BOr resTr; 
@@ -723,38 +723,32 @@ if do_cls && do_defs,
     clear prob
     %% Final brain masking
     if finalmask && ~job.extopts.LAS
-        CSFmask = 0; 
-        fprintf('Final masking\n');
-        % create final mask
-        mask = single(cls{1}) + single(cls{2});
-        if CSFmask % skull-stripping with CSF???
-          mask = mask + single(cls{3}); 
-          mask = smooth3(mask/255,1.2)>0.5;
-        else
-          mask  = vbm_vol_smooth3X(mask/255);
+      fprintf('Final masking\n');
+      % create final mask
+      mask = single(cls{1}) + single(cls{2});
+      mask  = vbm_vol_smooth3X(mask/255);
 
-          % keep largest connected component after at least 1 iteration of opening
-          mask  = vbm_vol_morph(mask>0.5,'lo', max(1,round(scale_morph*2)));
+      % keep largest connected component after at least 1 iteration of opening
+      mask  = vbm_vol_morph(mask>0.5,'lo', max(1,round(scale_morph*2)));
 
-          % dilate and close to fill ventricles
-          mask  = vbm_vol_morph(mask,'d',2,0.5) & (cls{2}>4 | cls{1}>4 | cls{3}>128);
-          [maskr,resT2] = vbm_vol_resize(single(mask),'reduceV',vx_vol,4,16,'mean');
-          maskr = vbm_vol_morph(maskr>0.5,'ldc',8); % major closing for CSF within sulci
-          maskr = vbm_vol_resize(vbm_vol_smooth3X(maskr)>0.5,'dereduceV',resT2);
-          maskr = vbm_vol_morph(maskr & (cls{2}>4 | cls{1}>4 | cls{3}>4),'lc');
-          mask  = vbm_vol_smooth3X(mask | maskr,1.2)>0.5;  
-        end
-        
-        for i=1:3, cls{i}(~mask)=0; end %#ok<AGROW>
-       
-        % mask label
-        label2 = zeros(d,'uint8');
-        label2(indx,indy,indz) = label; 
-        label2(~mask)=0;
-        
-        label = label2(indx,indy,indz);
-                
-        clear label2
+      % dilate and close to fill ventricles
+      mask  = vbm_vol_morph(mask,'dilate',2,0.5) & (cls{2}>4 | cls{1}>4 | cls{3}>128);
+      [maskr,resT2] = vbm_vol_resize(single(mask),'reduceV',vx_vol,4,16,'mean');
+      maskr = vbm_vol_morph(maskr>0.5,'ldc',8); % major closing for CSF within sulci
+      maskr = vbm_vol_resize(vbm_vol_smooth3X(maskr)>0.5,'dereduceV',resT2);
+      maskr = vbm_vol_morph(maskr & (cls{2}>4 | cls{1}>4 | cls{3}>4),'lc');
+      mask  = vbm_vol_smooth3X(mask | maskr,1.2)>0.5;  
+
+      for i=1:3, cls{i}(~mask)=0; end %#ok<AGROW>
+
+      % mask label
+      label2 = zeros(d,'uint8');
+      label2(indx,indy,indz) = label; 
+      label2(~mask)=0;
+
+      label = label2(indx,indy,indz);
+
+      clear label2
     end
 
 
@@ -764,44 +758,6 @@ if do_cls && do_defs,
 
 end
 
-
-
-%% partioning
-% das partioning kann helfen spezielle strukturen wie blutgefäße besser
-% zu erfassen und damit die segmentierung zu verbessern
-if any(struct2array(job.output.l1T));
-%{
-  
-  opt.partvol.Fp0A            = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p0A.nii');
-  opt.partvol.Fp4A            = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p4A.nii');
-  VT = spm_vol(res.image(1).fname);
-  
-  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-  mgV = vbm_vol_write_nii(src/mean(src(cls{2}(:)>240)),VT,'mg','label map','float32',[0,3],[1 0 0 0],0);
-  p0V = vbm_vol_write_nii(label2,VT,'p0','label map','uint8',[0,3/255],[1 0 0 0],0);
-  clear label2;
-  
-  [l1V,pfV] = vbm_pre_partvol( mgV{1} , p0V{1} ,opt.partvol);
-  
-  pfT = spm_read_vols(pfV);
-  l1T = spm_read_vols(l1V);
-  
-  %}
-  pfT = single(label)/255*3;
-  
-  if 0 
-    vbm_vol_write_nii(pfT,VT,'pf', ...
-      'vbm12 - ventrile field label map',...
-      'float32',[0,1],[1 0 0 0],0,trans);
-  end
-  if 0 
-    vbm_vol_write_nii(l1T,VT,'l1', ...
-      'vbm12 - brain atlas map for major structures and sides',...
-      'float32',[0,1],[1 0 0 0],0,trans);
-  end
-else
-  pfT = single(label)/255*3;
-end
 
 
 
@@ -960,10 +916,110 @@ if exist('y','var'),
     trans.warped = struct('y',y,'odim',odim,'M0',M0,'M1',mat,'M2',M1\res.Affine*M0,'dartel',warp.dartelwarp);
 end
 
-%%
+
+%% partioning
+% das partioning kann helfen spezielle strukturen wie blutgefäße besser
+% zu erfassen und damit die segmentierung zu verbessern
+if any(struct2array(job.output.l1T));
+ %%
+  opt.partvol.Fp0A  = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p0A.nii');
+  opt.partvol.Fp4A  = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
+  VT = spm_vol(res.image(1).fname);
+  
+  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
+  mgV = vbm_io_niiwrite(VT,src/mean(src(cls{2}(:)>240)),'mg','label map','float32',[0,3],[1 0 0 0],0);
+  p0V = vbm_io_niiwrite(VT,label2,'p0','label map','uint8',[0,3/255],[1 0 0 0],0);
+  clear label2;
+  
+  [l1V,pfV] = vbm_pre_partvol( mgV(1) , p0V(1) ,opt.partvol);
+  
+  pfT = single(spm_read_vols(pfV));
+  l1T = single(spm_read_vols(l1V));
+  
+  vbm_io_niiwrite(VT,pfT,'pf', ...
+    'vbm12 - ventrile field label map',...
+    'float32',[0,1],min([0 1 1],struct2array(job.output.l1T)),0,trans);
+  vbm_io_niiwrite(VT,l1T,'l1', ...
+    'vbm12 - brain atlas map for major structures and sides',...
+    'uint8',[0,1],min([0 1 1],struct2array(job.output.l1T)),0,trans);
+else
+  pfT = single(label)/255*3;
+end
+
+
+
+%% Testpart for Dartelbased partitioning
 %{
+if 1
+  %% init
+  reso = 2;
+  
+   def.LAB.CT = [ 1  2]; % cortex
+  def.LAB.MB = [13 14]; % MidBrain
+  def.LAB.BS = [13 14]; % BrainStem
+  def.LAB.CB = [ 3  4]; % Cerebellum
+  def.LAB.ON = [11 12]; % Optical Nerv
+  def.LAB.BG = [ 5  6]; % BasalGanglia 
+  def.LAB.TH = [ 9 10]; % Hypothalamus 
+  def.LAB.HC = [19 20]; % Hippocampus 
+  def.LAB.VmxT = [15 16]; % Ventricle
+  def.LAB.NV = [17 18]; % no Ventricle
+  def.LAB.BV = [ 7  8]; % BlodsodVessels
+  def.LAB.NB = [ 0  0]; % no brain 
+  def.LAB.HD = [21 22]; % head
+  
+  opt   = checkinopt(opt,def);
+  
+  
+  Vl1A = spm_vol(fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p4A.nii'));
+  p4A = spm_sample_vol(Vl1A, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 0);
+  p4A = reshape(p4A,d); p4A = uint8(p4A); 
+  
+  mxT = TIG/3;
+  p0T = zeros(d,'single'); p0T(indx,indy,indz) = single(label)*3/255;
+  
+  
+     %% OPTIMIZATION:
+      % ds('l2','',vx_vol,mxT,p4A,mxT,p0T/3,130)
+      [mxT,p0T,p4A,BB] = vbm_vol_resize({mxT,p0T,p4A},'reduceBrain',vx_vol,5,p0T>0);   % removing of background
+      [mxT,p0T,resTr]  = vbm_vol_resize({mxT,p0T},'reduceV',vx_vol,opt.res,64); 
+      p4A              = vbm_vol_resize(p4A   ,'reduceV',vx_vol,opt.res,64,'nearest'); 
+
+      p4ANS = round(p4A/2)*2-1;
+      mi3T  = mxT*3; %vbm_vol_iscale(mxT,'gCGW',resTr.vx_volr,p0T)*3;
+
+      %% alignment of high intensity structures 
+      p4T=zeros(size(mxT),'single'); p4T(vbm_vol_morph(p0T>0 & mi3T<0.3,'ldo',2,resTr.vx_volr)==1)=-1; p4T(p4A>0)=0;       % backgound
+      p4T(vbm_vol_morph(p0T<0.5,'open')==1 & mi3T>2.5) = opt.LAB.HD(1);                                                    % head
+      for s=1:2
+        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.CT(s),'lab')) = opt.LAB.CT(1); % cortex
+        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.BS(s),'lab')) = opt.LAB.BS(1); % brainstem
+        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.MB(s),'lab')) = opt.LAB.MB(1); % midbrain
+        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.CB(s),'lab')) = opt.LAB.CB(1); % cerebellum
+        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.ON(s),'lab')) = opt.LAB.ON(1); % optical nerv
+      end
+      p4T(p4ANS==opt.LAB.BV(1) & mi3T>3 & p0T>0 & vbm_vol_morph(mi3T<2,'labclose',1,resTr.vx_volr) & ...
+        (~vbm_vol_morph(mi3T>2.5,'lab') | mi3T>4.0)) = opt.LAB.BV(1);                                 % blood vessels
+
+     % region-growing for special high intensity regions
+      p4T((mi3T<=2.9 & p4T==0)) = -inf; p4T = vbm_vol_simgrow(p4T,mi3T,1);p4T(isinf(p4T))=0; 
+    %  M = mi3T>2.5 & (p4ANS==opt.LAB.CT(1) | p4ANS==opt.LAB.CB(1) | p4ANS==opt.LAB.BV(1) | p4ANS==opt.LAB.HD(1) | p4ANS==opt.LAB.ON(1));
+    %  p4T(M)=p4ANS(M); p4T(isinf(p4T))=0; 
+
+      % alignment of medium and low intensity structures
+      p4T(p4ANS==opt.LAB.BG(1) & p4T==0 & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.BG(1);          % basal ganglia
+      p4T(p4ANS==opt.LAB.TH(1) & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.TH(1);                   % hypothalamus
+      p4T(p4ANS==opt.LAB.HC(1) & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.HC(1);                   % hippocampus
+      for s=1:2
+        p4T(vbm_vol_morph(p4A==opt.LAB.VmxT(s) & mi3T<1.75,'lab') & mi3T<1.25) = opt.LAB.VmxT(1);     % ventricle
+      end
+
+end
+%}
+
 % get inverse deformations for warping submask to raw space
 % experimental: not yet finished!!!
+%{
 if cg_vbm_get_defaults('output.surf.dartel')
   Vsubmask = spm_vol(char(cg_vbm_get_defaults('extopts.mask')));
   submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
@@ -1050,7 +1106,7 @@ if ~exist('TIQA','var')
   TIQA = vbm_vol_iscale(srcO,'gCGW',vx_vol,T3th); clear srcO; 
 end
 label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)/255; 
-pcT = abs(min(7/6,TIQA) - label2)./label2 .* (label2>0); 
+pcT = abs(min(7/6,TIQA) - label2); %./label2 .* (label2>0); 
 pcT = vbm_vol_smooth3X(pcT,1);
 QAS.RAW.pc = sum(pcT(:));
 clear label2; 
@@ -1073,27 +1129,27 @@ clear pp ff ee volfactor vi;
 VT = spm_vol(res.image(1).fname);
 
 %% bias and noise corrected without/without masking
-vbm_vol_write_nii(srcN,VT,'mn','bias and noise corrected', ...
+vbm_io_niiwrite(VT,srcN,'mn','bias and noise corrected', ...
   'float32',[0,1],min([1 0 2],struct2array(job.output.bias)),0,trans);
-vbm_vol_write_nii(srcN,VT,'mn','bias and noise corrected (masked due to normalization)', ...
+vbm_io_niiwrite(VT,srcN,'mn','bias and noise corrected (masked due to normalization)', ...
   'float32',[0,1],min([0 1 0],struct2array(job.output.bias)),0,trans);
 %clear srcN;
 
 
-
+  
 %% label maps
 label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-vbm_vol_write_nii(label2,VT,'p0','label map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
+vbm_io_niiwrite(label2,VT,'p0','label map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
 clear label2; 
 
 
 %% class maps
 fn = {'GM','WM','CSF'};
 for clsi=1:3
-  vbm_vol_write_nii(single(cls{clsi})/255,VT,sprintf('p%d',clsi),...
+  vbm_io_niiwrite(VT,single(cls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
     min([1 0 0 0],struct2array(job.output.(fn{clsi}))),0,trans);
-  vbm_vol_write_nii(single(cls{clsi})/255,VT,sprintf('p%d',clsi),...
+  vbm_io_niiwrite(VT,single(cls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 1 2 2],struct2array(job.output.(fn{clsi}))),0,trans);
 end
@@ -1103,19 +1159,19 @@ clear clsi fn;
 %% global and local intensity scaled images
 if any(struct2array(job.output.mgT))
   if ~exist('TI','var')
-    T3th = [median(src(cls{3}(:)>240)./TL{5}(cls{3}(:)>240)),...
-            median(src(cls{1}(:)>240)./TL{5}(cls{1}(:)>240)),...
-            median(src(cls{2}(:)>240)./TL{5}(cls{2}(:)>240))];
-    TI   = vbm_vol_iscale(src,'gCGW',vx_vol,T3th); clear srcO; 
+    T3th = [median(src(cls{3}(:)>240)) ...
+            median(src(cls{1}(:)>240)) ...
+            median(src(cls{2}(:)>240))];
+    TI   = vbm_vol_iscale(src,'gCGW',vx_vol,T3th);
   end
 
-  vbm_vol_write_nii(min(1.2,max(0,TI .* mask)),VT,'mg', ...
+  vbm_io_niiwrite(VT,min(1.2,max(0,TI .* mask)),'mg', ...
     'vbm12 - masked, noise corrected, bias corrected, global intensity scaled T1 image',...
     'float32',[0,1],struct2array(job.output.mgT),0,trans);
   clear TI;
 end
 if job.extopts.LAS && any(struct2array(job.output.mlT))
-  vbm_vol_write_nii(min(1.2,max(0,TIG/3 .* mask)),VT,'ml', ...
+  vbm_io_niiwrite(VT,min(1.2,max(0,TIG/3 .* mask)),'ml', ...
     'vbm12 - masked, noise corrected, bias corrected, local intensity scaled T1 image',...
     'float32',[0,1],struct2array(job.output.mlT),0,trans);
   clear TIG;
@@ -1124,7 +1180,7 @@ end
 
 %% preprocessing changes
 if any(struct2array(job.output.pcT))
-  vbm_vol_write_nii(pcT,VT,'pc', ...
+  vbm_io_niiwrite(VT,pcT,'pc', ...
     'vbm12 - preprocessing change/correction map', ...
     'float32',[0,1],struct2array(job.output.pcT),0,trans);
   clear pcT;
@@ -1153,7 +1209,7 @@ if 0 && any(struct2array(job.output.GMT))
 
   % thickness estimation
  %[pfTi,VTi] = vbm_interpV(pfT,min(vx_vol,ones(1,3)*opt.interpV),VT); % interpolate volume
-  t1Ti = vbm_vol_pbt2(pfT,struct('resV',opt.interpV)); 
+  t1Ti = vbm_vol_pbt(pfT,struct('resV',opt.interpV)); 
  %t1T = vbm_interpV(t1Ti,vx_vol,VTi);
   t1Ti = t1Ti .* (pfT>1 & pfT<3);
 

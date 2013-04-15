@@ -1,17 +1,17 @@
-function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,transform)
+function varargout = vbm_io_niiwrite(V,Y,pre,desc,spmtype,range,write,addpre,transform)
 % ______________________________________________________________________
-% Write an image T with the properties described by V with the datatype 
+% Write an image Y with the properties described by V with the datatype 
 % spmtype for a specific range. Add the prefix pre and the description 
 % desc to V. 
 %
-%   VO = vbm_io_write_nii(T,V[,pre,desc,spmtype,range,write])
+%   VO = vbm_io_write_nii(Y,V[,pre,desc,spmtype,range,write])
 %
-%   T       = input volume
+%   Y       = input volume
 %   V       = input volume structure
 %   VO      = ouput volume structure
 %   pre     = prefix for filename (default='')
 %   desc    = description that is added to the origin description (default='')
-%   spmtype = spm image type (default given by the class of T)
+%   spmtype = spm image type (default given by the class of Y)
 %   write   = [native warped modulated dartel]
 %               native    0/1   (none/yes)
 %               warped    0/1   (none/yes)
@@ -40,15 +40,15 @@ function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,t
 
   % image type and convertations
   if ~exist('spmtype','var')
-    switch class(T)
-      case 'logical',           spmtype = 'uint8';   %T=uint8(T);
-      case 'int8',              spmtype = 'int8';    %T=int8(T);
-      case 'int16',             spmtype = 'int16';   %T=int16(T);
-      case 'int32',             spmtype = 'int32';   %T=int32(T);
-      case {'uint8','char'},    spmtype = 'uint8';   %T=uint8(T);
-      case 'uint16',            spmtype = 'uint16';  %T=uint16(T);
-      case 'uint32',            spmtype = 'uint32';  %T=uint32(T);
-      case {'single','double'}, spmtype = 'float32'; %T=single(T);
+    switch class(Y)
+      case 'logical',           spmtype = 'uint8';   
+      case 'int8',              spmtype = 'int8';   
+      case 'int16',             spmtype = 'int16'; 
+      case 'int32',             spmtype = 'int32';  
+      case {'uint8','char'},    spmtype = 'uint8'; 
+      case 'uint16',            spmtype = 'uint16';
+      case 'uint32',            spmtype = 'uint32'; 
+      case {'single','double'}, spmtype = 'float32'; 
       otherwise
     end
   end  
@@ -75,7 +75,7 @@ function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,t
 
     if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc ' < ' V.descrip]; end
     create(N);
-    N.dat(:,:,:) = double(T);
+    N.dat(:,:,:) = double(Y);
     
     if nargout>0, varargout{1}(1) = spm_vol(fname); end
     if nargout>1, varargout{2}{1} = []; end
@@ -95,7 +95,7 @@ function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,t
     
     fname = vbm_io_handle_pre(V.fname,pre2,'',addpre,1);
 
-    [wT,w] = spm_diffeo('push',T,transform.warped.y,transform.warped.odim(1:3));
+    [wT,w] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));
     spm_field('bound',1);
     wT     = spm_field(w,wT,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
     clear w;
@@ -134,11 +134,11 @@ function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,t
     fname = vbm_io_handle_pre(V.fname,pre3,'',addpre,1);
     
     if write(3)==2
-      [wT,wr] = spm_diffeo('push',T,transform.warped.y,transform.warped.odim(1:3));
+      [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));
       w       = vbm_vol_smooth3X(wr,1.0); wT = wT./wr.*w; clear wr w;  % smoother warping
     else
       if ~exist('wT','var')
-        wT = spm_diffeo('push',T,transform.warped.y,transform.warped.odim(1:3));   
+        wT = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));   
       end
     end
     
@@ -195,7 +195,7 @@ function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,t
 
     % get rid of the QFORM0 rounding warning
     warning off
-    N.mat0  = transf.mat0;
+    N.mat0  = transf.mat; % hier stand mit mat0, aber da stimmten die dimensionen nicht!!!
     warning on
 
     N.mat_intent  = 'Aligned';
@@ -204,7 +204,7 @@ function varargout = vbm_vol_write_nii(T,V,pre,desc,spmtype,range,write,addpre,t
     create(N);
 
     for i=1:transf.odim(3),
-      tmp  = spm_slice_vol(double(T),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
+      tmp  = spm_slice_vol(double(Y),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
       VraT = spm_write_plane(VraT,tmp,i);
     end
     
