@@ -17,9 +17,7 @@ function res = checkinopt(opt, def, cond)
   
   % only elments of def will be in res... do not check for subfields!
   %fields = intersect(fieldnames(opt),fieldnames(def)); 
-%  fields = fieldnames(opt); 
-%  for fn = 1:numel(fields), res.(fields{fn}) = opt.(fields{fn}); end
-  res=vbm_io_updateStruct(def,opt);
+  res = vbm_io_updateStruct(def,opt);
   
   for r=1:numel(cond)
     str=cond{r}; str=strrep(str,'opt.','res.');str=strrep(str,'def.','res.');
