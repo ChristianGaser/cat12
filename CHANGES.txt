@@ -1779,3 +1779,31 @@ M       vbm12.man
 Hide warning in cg_vbm_run.m that calls spm_affreg.m.
 ------------------------------------------------------------------------
 r467 | gaser | 2013-04-15 15:41:37
+
+D       ornlmMex.mexmaci
+D       ornlmMex.mexw64
+D       upfirdn2dMex.mexw64
+D       farras.m
+D       ornlmMex.c
+D       ornlmMex.m
+D       ornlmMex.mexmaci64
+D       ornlmMex.mexglx
+D       upfirdn2dMex.mexglx
+D       cg_ornlm.m
+D       upfirdn2dMex.c
+D       upfirdn2dMex.m
+D       upfirdn2dMex.mexmaci64
+D       ornlmMex.mexa64
+D       upfirdn2dMex.mexa64
+D       afb3D.m
+D       dwt3D.m
+M       CHANGES.txt
+D       cg_check_sample_sd.m
+D       ornlm.c
+D       ornlmMex.mexw32
+D       upfirdn2dMex.mexw32
+D       upfirdn2dMex.mexmaci
+
+Removed many functions that are not needed anymore.
+------------------------------------------------------------------------
+r468 | gaser | 2013-04-15 15:52:29
