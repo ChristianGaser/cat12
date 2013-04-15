@@ -1746,3 +1746,28 @@ M       CHANGES.txt
 Corrected typo in tbx_cfg_vbm.m.
 ------------------------------------------------------------------------
 r465 | gaser | 2013-04-15 12:39:31
+
+D       AmapMexNu.m
+M       Makefile.vbm
+D       down_cut.mexw64
+D       PveAmap_ui.m
+D       stat_thresh.m
+D       down_cut.mexmaci
+D       down_cut.mexglx
+D       Pve5Mex.c
+D       Pve5Mex.m
+D       PveAmap.c
+D       PveAmap.h
+D       down_cut.mexa64
+D       down_cut.c
+D       down_cut.mexmaci64
+M       CHANGES.txt
+D       KmeansProper.c
+D       down_cut.mexw32
+D       PveAmapMex.c
+D       PveAmapMex.m
+D       AmapMexNu.c
+
+Deleted som functions that are not necessary anymore.
+------------------------------------------------------------------------
+r466 | gaser | 2013-04-15 14:55:50
