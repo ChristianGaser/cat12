@@ -1,16 +1,19 @@
-function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
-% __________________________________________________________________________________________________
-% Use a segment map p0T, the T1 data (with an intensity scale given by the p0T map) and the atlas 
-% label map p4T to create a individual label map p4T. Furthermore, a map with filled ventricle and
-% subcortical GM structures is generated. The atlas contain main regions like cerebrum, brainstem,
-% midbrain, cerebellum and ventricle. Furthermore, it try to detect blood vessels by a combination
-% of (atlas, thickness,) intensity, and distance information. 
+function [Vp4T,VpfT,VmfT,VepT,time]=vbm_pre_partvol(VmxT,Vp0T,opt)
+% ______________________________________________________________________
+% Use a segment map p0T, the T1 data (with an intensity scale given by 
+% the p0T map) and the atlas label map p4T to create a individual label 
+% map p4T. Furthermore, a map with filled ventricle and subcortical GM 
+% structures is generated. The atlas contain main regions like cerebrum,
+% brainstem, midbrain, cerebellum and ventricle. Furthermore, it try to 
+% detect blood vessels by a combination of atlas, thickness, intensity, 
+% and distance information. 
 %
 % This function try to solve the following problems:
-%  1) Finding of the cerebrum, the cerebellum, the head, blood vessels, brain skin and other mayor
-%     structures based on atlas (p4T) and tissue class information (p0T). 
-%     To do this it is important to use data from the T1-map (mxT) that use the same intensity 
-%     scalling as the segment map p0T. 
+%  1) Finding of the cerebrum, the cerebellum, the head, blood vessels, 
+%     brain skin and other mayor structures based on atlas (p4T) and 
+%     tissue class information (p0T). 
+%     To do this it is important to use data from the T1-map (mxT) that
+%     use the same intensity scalling as the segment map p0T. 
 %  2) Set Partions:
 %     2.1) Find biggest WM part of each region... works
 %     2.2) Align the nearest region class for other voxel
@@ -19,11 +22,12 @@ function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
 %          (set to 1.45 near the GM, else 1.00)
 %     3.2) Removing of head structures (set to 0.00)
 %
-% _________________________________________________________________________
-% ToDo: - use of interpolated data: actual segment maps has to have the original resolution, 
-%         because of the downcut functions allow to get to higher values (based on the tissue class) 
+% ______________________________________________________________________
+% ToDo: - use of interpolated data: actual segment maps has to have the
+%         original resolution, because of the downcut functions allow to 
+%         get to higher values (based on the tissue class) 
 %         => update of downcut functions
-% _________________________________________________________________________
+% ______________________________________________________________________
 %
 %   Was ist neu im Vergleich zu anderen?
 %   - Zuweisung durch Dartel mit hoher Genauigkeit
@@ -34,38 +38,43 @@ function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
 %     Seiteneffekte besser ausblenden zu können.
 %   - Beliebige Atlanten können genutzt werden.
 %
-% _________________________________________________________________________
+% ______________________________________________________________________
 %
 % Structure:
 %
 %   [VpfT,Vp4T,VmfT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
 %
-%   INPUT:  p4T   = 3D-volume with brain regions (altas map)
-%           p0T    = 3D-volume with tissue propability map (CSF=1,GM=2;WM=3)
+%   INPUT:  p4T = 3D-volume with brain regions (altas map)
+%           p0T = 3D-volume with tissue propability map (CSF=1,GM=2;WM=3)
 %           opt
 %            .resV = Voxelsize
 %            .LAB  = Label of p4T map (see def.LAB definition below)
 %            
 %
 %   OUTPUT: PA   = individual label map 
-%           p0PF  = Corrected p0T map based on opt.PF
-%                     without optical nerv   (opt.PF = {...,'-ON')
-%                     without bloodvessels   (opt.PF = {...,'-BV')
-%                     filled ventricle       (opt.PF = {...,'+VmxT')
-%                     filled Basalganglias   (opt.PF = {...,'+BG')
-%                     filled Thalamus        (opt.PF = {...,'+TH')
+%           p0PF = Corrected p0T map based on opt.PF
+%                    without optical nerv   (opt.PF = {...,'-ON')
+%                    without bloodvessels   (opt.PF = {...,'-BV')
+%                    filled ventricle       (opt.PF = {...,'+VmxT')
+%                    filled Basalganglias   (opt.PF = {...,'+BG')
+%                    filled Thalamus        (opt.PF = {...,'+TH')
 %
-% _________________________________________________________________________
+% ______________________________________________________________________
 % Center of Neuroimaging, University Jena, Germany
 % Robert Dahnke, Christian Gaser
 % 2010/09
+%
+% $Id$
 
-  if nargin<3, error('MATLAB:vbm_vol_partvol','ERROR: Need the intensity correctd T1, the p0T segmenation and the template atlas map!\n'); end
+  if nargin<3
+    error('MATLAB:vbm_vol_partvol',['ERROR: Need the intensity correctd '...
+      'T1, the p0T segmenation and the template atlas map!\n']);
+  end
 
   if ~exist('opt','var'), opt=struct(); end
   % Templates
-  def.Fp0A            = fullfile(spm('Dir'),'toolbox','vbm12+','templates_1.50mm','p0A.nii');
-  def.Fp4A            = fullfile(spm('Dir'),'toolbox','vbm12+','templates_1.50mm','p4A.nii');
+  def.Fp0A            = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p0A.nii');
+  def.Fp4A            = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
   def.res             = 2; 
   % Normalization
   def.norm.smoref     = 0;     % no smoothing for template image 
@@ -111,7 +120,8 @@ function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
   stime = clock;
     
 % check if p4T is not only a copy of the p4T file (maybe because the previos partioning was interrupted).
-  if any([~exist(opt.FpfT,'file'),~exist(opt.FmfT,'file'),~exist(opt.Fp4T,'file'),~exist(opt.FepT,'file')]) || opt.recalc==1
+  if any([~exist(opt.FpfT,'file'),~exist(opt.FmfT,'file'), ...
+      ~exist(opt.Fp4T,'file'),~exist(opt.FepT,'file')]) || opt.recalc==1
     
     % map template label map to individual space
     spm_normalise(V.p0T,spm_vol(opt.Fp0A),opt.mat,'','',opt.norm); 
@@ -152,9 +162,7 @@ function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
 
     % region-growing for special high intensity regions
     p4T((mi3T<=2.9 & p4T==0)) = -inf; p4T = vbm_vol_simgrow(p4T,mi3T,1);p4T(isinf(p4T))=0; 
-  %  M = mi3T>2.5 & (p4ANS==opt.LAB.CT(1) | p4ANS==opt.LAB.CB(1) | p4ANS==opt.LAB.BV(1) | p4ANS==opt.LAB.HD(1) | p4ANS==opt.LAB.ON(1));
-  %  p4T(M)=p4ANS(M); p4T(isinf(p4T))=0; 
-
+  
     % alignment of medium and low intensity structures
     p4T(p4ANS==opt.LAB.BG(1) & p4T==0 & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.BG(1);          % basal ganglia
     p4T(p4ANS==opt.LAB.TH(1) & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.TH(1);                   % hypothalamus
@@ -165,39 +173,51 @@ function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
       
     % refinement of WM 
     p4T(p4ANS==opt.LAB.CT(1) & p4T==0 & vbm_vol_morph(mi3T>2 & p4T==1,'labopen',1)) = opt.LAB.CT(1);  
-    p4T(p4ANS==opt.LAB.BG(1) & ~vbm_vol_morph(p4ANS==opt.LAB.BG(1),'erode',1) & p4T==opt.LAB.BG(1) & (mi3T>2.75 & mi3T>2.5)) = opt.LAB.CT(1);                               % basal ganglia
-    p4T=vbm_vol_median3(p4T,p4T>=0,p4T>0);  
+    p4T(p4ANS==opt.LAB.BG(1) & ~vbm_vol_morph(p4ANS==opt.LAB.BG(1),'erode',1) & ...
+      p4T==opt.LAB.BG(1) & (mi3T>2.75 & mi3T>2.5)) = opt.LAB.CT(1);                                % basal ganglia
+    p4T=vbm_vol_median3c(p4T,p4T>=0,p4T>0);  
 
     % regino-growing for all high intensity regions
     p4T((mi3T<=2.25 & p4T==0))=-inf; p4T = vbm_vol_simgrow(p4T,mi3T,0.5); p4T(isinf(p4T))=0; 
-    p4T(p4T==0 & vbm_vol_morph(mi3T>2.75 & p0T,'labopen',1)==0 & mi3T>2.75 & p4T==0 & vbm_vol_morph(mi3T<2,'labclose',1,resTr.vx_volr))=opt.LAB.BV(1);
+    p4T(p4T==0 & vbm_vol_morph(mi3T>2.75 & p0T,'labopen',1)==0 & ...
+      mi3T>2.75 & p4T==0 & vbm_vol_morph(mi3T<2,'labclose',1,resTr.vx_volr))=opt.LAB.BV(1);
 
     % region-growing in GM only for non-blood vessels regions
-    p4T(p4T==opt.LAB.BV(1) | isinf(p4T))=0; p4T((mi3T<=1 | ~p0T) & p4T==0) = -inf;  [p4T,D]=vbm_vol_downcut(p4T,mi3T,0.1,resTr.vx_volr); 
+    p4T(p4T==opt.LAB.BV(1) | isinf(p4T))=0; p4T((mi3T<=1 | ~p0T) & p4T==0) = -inf; 
+    [p4T,D]=vbm_vol_downcut(p4T,mi3T,0.1,resTr.vx_volr); 
     p4T((p4ANS==opt.LAB.BV(1) | D>500) & mi3T>1.5 & ~vbm_vol_morph(mi3T>2.5,'lab') & ...
-      (p4ANS~=opt.LAB.CB(1) | p4ANS~=opt.LAB.HD(1)))=opt.LAB.BV(1);                     % adding blood vessels again
+      (p4ANS~=opt.LAB.CB(1) | p4ANS~=opt.LAB.HD(1)))=opt.LAB.BV(1);                         % adding blood vessels again
     p4T(p4T==opt.LAB.BG(1) & ~(p4ANS==opt.LAB.BG(1)|p4ANS==opt.LAB.VmxT(1)))=opt.LAB.CT(1); % basal ganglia (avoid overgrowing)
     p4T(p4T==0 & mi3T>3.5)=opt.LAB.BV(1); p4T=vbm_vol_downcut(p4T,mi3T,0.2,resTr.vx_volr);
-    p4T(isinf(p4T))=0; p4T=vbm_vol_median3(p4T,p4T>=0 & mi3T<2.5 & ~(p4T==opt.LAB.BV(1) & mi3T>2.25),p4T>=0); p4T(p4T==0 & ~p0T & mi3T<0.75)=-inf;
+    p4T(isinf(p4T))=0; p4T=vbm_vol_median3c(p4T,p4T>=0 & mi3T<2.5 & ...
+      ~(p4T==opt.LAB.BV(1) & mi3T>2.25),p4T>=0); p4T(p4T==0 & ~p0T & mi3T<0.75)=-inf;
 
     % filling of subcortical regions
     M3 = p4ANS==opt.LAB.BG(1)|p4ANS==opt.LAB.VmxT(1)|p4ANS==opt.LAB.TH(1);
     M2 = vbm_vol_morph(M3,'d',2,resTr.vx_volr);
-    M  = 3*vbm_vol_smooth3X(single(vbm_vol_morph(vbm_vol_morph(vbm_vol_morph(M3 | (M2 & mi3T>2.7 & p4T~=7 & p4T~=8),'lc',1),'lo',1),'e',0)),0.5);  
+    M  = 3*vbm_vol_smooth3X(single(vbm_vol_morph(vbm_vol_morph(vbm_vol_morph(M3 | ...
+         (M2 & mi3T>2.7 & p4T~=7 & p4T~=8),'lc',1),'lo',1),'e',0)),0.5);  
     M2 = vbm_vol_morph(M3,'dd',4,resTr.vx_volr);
     MF = M2.*max(mi3T,M); clear M2 M;  
     mf3T = max(mi3T,MF); TI3FS = vbm_vol_smooth3X(mf3T,1.5); mf3T(mf3T>3 & MF>3)=TI3FS(mf3T>3 & MF>3);
     
     % removement of bv & meninges ... NEED MORE WORK
-   % BV = vbm_vol_morph((p4ANS==opt.LAB.HD(1) | p4ANS==opt.LAB.BV(1) | p4T<=0) & ~p0T,'labclose')==1; D=vbdist(single(~BV))*2;
-   % pfT(BV)=max(1.9-D(BV),1); mf3T(BV)=max(min(1.9-D(BV),mf3T(BV)),1);
+    %BV = vbm_vol_morph((p4ANS==opt.LAB.HD(1) | p4ANS==opt.LAB.BV(1) | p4T<=0) & ~p0T,'labclose')==1; D=vbdist(single(~BV))*2;
+    %pfT(BV)=max(1.9-D(BV),1); mf3T(BV)=max(min(1.9-D(BV),mf3T(BV)),1);
 
     % side aligment using laplace to correct for missalignments due to the normalization
-    d = 5; M = vbm_vol_smooth3X(single(vbm_vol_morph(mod(p4A,2)==0,'dd',d,resTr.vx_volr)) & single(vbm_vol_morph(mod(p4A,2)==1,'dd',d,resTr.vx_volr)==1),20);
-    S = 2*single(mod(p4A,2)==0 & mi3T>2.5 & M<max(M(:))*0.9) +single(mod(p4A,2)==1 & mi3T>2.5 &  M<max(M(:))*0.9); S(mf3T<=2.5)=-inf; S(S==0)=1.5;
+    d = 5; M = vbm_vol_smooth3X(single(vbm_vol_morph(mod(p4A,2)==0,'dd',d,resTr.vx_volr)) & ...
+        single(vbm_vol_morph(mod(p4A,2)==1,'dd',d,resTr.vx_volr)==1),20);
+    S = 2*single(mod(p4A,2)==0 & mi3T>2.5 & M<max(M(:))*0.9) +single(mod(p4A,2)==1 & ...
+        mi3T>2.5 &  M<max(M(:))*0.9); S(mf3T<=2.5)=-inf; S(S==0)=1.5;
 
-    rS=vbm_vol_resize(S,'reduce'); rS=round(rS*2)/2; rS=vbm_vol_laplace3R(rS,rS==1.5,0.001); rS=vbm_vol_resize(single(rS),'dereduce',size(mi3T)); S(S==1.5)=round(rS(S==1.5)); 
-    S(isinf(S) & mf3T>2)=0; S=vbm_vol_downcut(S,mf3T,3,resTr.vx_volr); S(isinf(S) & mf3T>0)=0; S=vbm_vol_downcut(S,mf3T,3,resTr.vx_volr); S(S<=0)=2-mod(p4A(S<=0),2);
+    rS=vbm_vol_resize(S,'reduce'); rS=round(rS*2)/2; 
+    rS=vbm_vol_laplace3R(rS,rS==1.5,0.001); 
+    rS=vbm_vol_resize(single(rS),'dereduce',size(mi3T)); 
+    S(S==1.5)=round(rS(S==1.5)); 
+    S(isinf(S) & mf3T>2)=0; S=vbm_vol_downcut(S,mf3T,3,resTr.vx_volr); 
+    S(isinf(S) & mf3T>0)=0; S=vbm_vol_downcut(S,mf3T,3,resTr.vx_volr); 
+    S(S<=0)=2-mod(p4A(S<=0),2);
     S=round(vbm_vol_smooth3X(S,2));
     p4T(p4T>0)=p4T(p4T>0)+(S(p4T>0)==2); 
 
@@ -205,13 +225,20 @@ function [Vp4T,VpfT,VmfT,VepT,time]=vbm_vol_partvol(VmxT,Vp0T,opt)
     p4T      = vbm_vol_resize(p4T,'dereduceV',resTr,'nearest');
     [MF,p4T] = vbm_vol_resize({MF,p4T},'dereduceBrain',BB);
     
+    % blood vessel correction...
+    %....
+    
     p0T = single(spm_read_vols(V.p0T)); pfT = max(p0T,min(3,MF)); 
     mfT = single(spm_read_vols(V.mxT)); mfT = vbm_vol_iscale(mfT,'gCGW',resTr.vx_volr,p0T);
     mfT = max(mfT,min(1,MF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & MF>3)=smfT(mfT>1 & MF>3);
     
-    VpfT = vbm_io_write_nii(pfT,V.mxT,'pf','filled','float32',[0,1]);
-    VmfT = vbm_io_write_nii(mfT,V.mxT,'mf','filled','float32',[0,1]);
-    Vp4T = vbm_io_write_nii(p4T,V.mxT,'p4','atlas' ,'uint8'  ,[0,1]);
+    VpfT = vbm_io_niiwrite(V.mxT,pfT,'pf','ventrile field label map',...
+            'float32',[0,1],[1 0 0 0],0);
+    VmfT = vbm_io_niiwrite(V.mxT,mfT,'mf','ventrile field intensity corrected map',...
+            'float32',[0,1],[1 0 0 0],0);
+    Vp4T = vbm_io_niiwrite(V.mxT,p4T,'l1','atlas map',...
+            'float32',[0,1],[1 0 0 0],0);
+    
     VepT = [];
     
     time = dp('|P',opt,stime);   
