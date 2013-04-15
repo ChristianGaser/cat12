@@ -1807,3 +1807,22 @@ D       upfirdn2dMex.mexmaci
 Removed many functions that are not needed anymore.
 ------------------------------------------------------------------------
 r468 | gaser | 2013-04-15 15:52:29
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_write.m
+A       templates_1.50mm/l1A.nii
+A       templates_1.50mm/p0A.nii
+A       vbm_io_niiwrite.m
+M       vbm_pre_partvol.m
+A       vbm_vol_median3c.c
+A       vbm_vol_median3c.mexmaci64
+D       vbm_vol_write_nii.m
+
+This update include a lot of new methods and function mostly with alpa-status.
+(1) Corrections of vbm_vol_write_nii and renaming to vbm_io_niiwrite
+(2) Updates partitioning map (l1*).
+(3) Adding of atlas map for major regions for l1* map. 
+    Runs with default SPM segmentation.
+------------------------------------------------------------------------
+r469 | dahnke | 2013-04-15 16:51:02
