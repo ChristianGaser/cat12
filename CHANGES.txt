@@ -1713,3 +1713,10 @@ This update include a lot of new methods and function mostly with alpa-status.
 (10) Update of the GUI and variables for the additional functions.
 ------------------------------------------------------------------------
 r458 | dahnke | 2013-04-15 10:39:56
+
+M       cg_vbm_defaults.m
+M       CHANGES.txt
+
+Some editing and reordering in cg_vbm_defaults.
+------------------------------------------------------------------------
+r462 | gaser | 2013-04-15 12:20:28
