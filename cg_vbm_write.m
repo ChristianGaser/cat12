@@ -10,6 +10,18 @@ function cls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 % Christian Gaser
 % $Id$
 
+% complete output structure
+if ~isfield(job.output,'mlT')
+  job.output.mlT = struct('native',cg_vbm_get_defaults('output.mlT.native'), ...
+                          'warped',cg_vbm_get_defaults('output.mlT.warped'), ...
+                          'dartel',cg_vbm_get_defaults('output.mlT.dartel'));
+end
+if ~isfield(job.output,'pcT')
+  job.output.pcT = struct('native',cg_vbm_get_defaults('output.pcT.native'), ...
+                          'warped',cg_vbm_get_defaults('output.pcT.warped'), ...
+                          'dartel',cg_vbm_get_defaults('output.pcT.dartel'));
+end
+
 % get current release number
 A = ver; r = 0;
 for i=1:length(A)
@@ -47,9 +59,10 @@ else
     Kb  = size(res.intensity(1).lik,2);
 end
 
-N   = numel(res.image);
+N = numel(res.image);
 if N > 1
-    warning('VBM12 does not support multiple channels. Only the first channel will be used.');
+  warning('VBM12:noMultiChannel',...
+    'VBM12 does not support multiple channels. Only the first channel will be used.');
 end
 
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
@@ -140,7 +153,9 @@ Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
 do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm_get_defaults('output.surf.dartel');
-do_defs = do_cls || do_defs;
+do_defs = do_defs || any([job.output.th1T.warped,job.output.mgT.warped,...
+                          job.output.mlT.warped,job.output.pcT.warped,job.output.l1T.warped]);
+do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
         [pth,nam,ext1]=fileparts(res.image(1).fname);
@@ -280,7 +295,7 @@ for z=1:length(x3),
     bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
     % restrict bias field to maximum of 100 
     % (sometimes artefacts at the borders can cause huge values in bias field)
-    bf1(bf1>100) = 100;
+    bf1(bf1>10) = 10;
     src(:,:,z) = single(bf1.*f);
 end
 
@@ -294,6 +309,7 @@ if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
     warp.sanlm = min(1,warp.sanlm);
 end
 
+srcO=src+0;
 % optionally apply non local means denoising filter
 switch warp.sanlm
     case 0
@@ -304,6 +320,8 @@ switch warp.sanlm
         fprintf('NLM-Filter with multi-threading\n')
         sanlmMex(src,3,1);
 end
+srcN=src+0;
+
 
 if do_cls && do_defs,
 
@@ -312,6 +330,7 @@ if do_cls && do_defs,
     init_kmeans = cg_vbm_get_defaults('extopts.kmeans');
     finalmask   = cg_vbm_get_defaults('extopts.finalmask');
     gcut        = cg_vbm_get_defaults('extopts.gcut');
+    LAS         = cg_vbm_get_defaults('extopts.LAS');
     mrf         = cg_vbm_get_defaults('extopts.mrf');
     
     vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
@@ -323,7 +342,8 @@ if do_cls && do_defs,
         fprintf('Skull-stripping using graph-cut\n');
         cls_old = cls;
         try
-          [src,cls,mask] = GBM(src,cls,res,opt);
+          [src,cls,mask] = vbm_vol_GBM(src,cls,res,opt);
+          mask=vbm_vol_morph(mask,'lc');
         catch
           fprintf('Graph-cut failed\n');
           gcut = 0;
@@ -339,12 +359,12 @@ if do_cls && do_defs,
   
         % keep largest connected component after at least 1 iteration of opening
         n_initial_openings = max(1,round(scale_morph*warp.cleanup));
-        mask = cg_morph_vol(mask,'open',n_initial_openings,warp.open_th);
-        mask = mask_largest_cluster(mask,0.5);
+        mask = vbm_vol_morph(mask>warp.open_th,'o',n_initial_openings);
+        mask = vbm_vol_morph(mask,'lc');
 
         % dilate and close to fill ventricles
-        mask = cg_morph_vol(mask,'dilate',warp.dilate,0.5);
-        mask = cg_morph_vol(mask,'close',round(scale_morph*10),0.5);
+        mask = vbm_vol_morph(mask,'d',warp.dilate);
+        mask = vbm_vol_morph(mask,'lc',round(scale_morph*10));
         
         % remove sinus
         mask = mask & ((single(cls{5})<single(cls{1})) | ...
@@ -352,9 +372,196 @@ if do_cls && do_defs,
                        (single(cls{5})<single(cls{3})));                
 
         % fill holes that may remain
-        mask = cg_morph_vol(mask,'close',round(scale_morph*2),0.5); 
+        mask = vbm_vol_morph(mask,'lc',round(scale_morph*2)); 
     end
-  
+    
+    %%
+    
+    
+    % Dieser Teil muss demnächst mal in eine Subfunktion, die alldings
+    % in dieser Datei verweilen darf, da sie sonst nicht weiter genutzt
+    % werden kann. 
+    % Das selbe sollte für das GBM passieren.
+    % ==================================================================
+    if job.extopts.LAS 
+      fprintf('Local Adaptive Segmenation\n');
+      % [scr,TI,TIG]=LAS(src,cls,...)
+      
+      
+      %% noise estimation
+      [gx,gy,gz]=vbm_vol_gradient3(src); G=abs(gx)+abs(gy)+abs(gz); G=G./src; clear gx gy gz; 
+      noise  = std(src(cls{2}(:)>128 & G(:)<0.1)/median(src(cls{2}(:)>128  & G(:)<0.1))); 
+
+
+      %% global intensity normalization
+      T3th  =  [median(src(cls{3}(:)>240)),...
+               median(src(cls{1}(:)>240)),...
+               median(src(cls{2}(:)>240))];
+      TI    = vbm_vol_iscale(src,'gCGW',vx_vol,T3th); 
+
+      
+      %% PVE-area correction for Basal structures
+      % diverence helps to identify all gyry that should not be in the
+      % GM, but helps to improve the WM
+      [HDr,resT2] = vbm_vol_resize(single(mask),'reduceV',vx_vol,8,16,'meanm');
+      HDr = vbdist(1-HDr); HD = vbm_vol_resize(smooth3(HDr),'dereduceV',resT2)>2;   
+      WMP    = smooth3(vbm_vol_morph(cls{2}>250,'lc',1))>0.5; 
+      [gx,gy,gz]=vbm_vol_gradient3(max(2/3,TI)); div=smooth3(divergence(gy,gx,gz)); clear gx gy gz;
+      BG  = smooth3( ((cls{1}>8 & cls{3}<8 & TI>0.7) | ...
+                     (mask & TI>0.7 & TI<0.9 & cls{2}<255 & cls{3}<8)) & ~WMP & ...
+                     (G.*TI)<max(0.04,min(0.1,noise)) & (TI<2/3 | div>-0.02) & HD )>0.5;
+      [BGr,resT2] = vbm_vol_resize(single(BG),'reduceV',vx_vol,4,32,'mean');
+      BGr = vbm_vol_morph(vbm_vol_morph(BGr>0.4,'lc',5),'d',1); BGr=vbm_vol_smooth3X(BGr,2);
+      BGP = vbm_vol_resize(BGr,'dereduceV',resT2)>0.5 & TI>5/12; clear BGr; 
+      BG  = smooth3(BGP & TI>5/12 & TI<11/12 & G<(0.95-TI))>0.5; 
+      cls{1} = max(cls{1},uint8(255*smooth3(BG)));
+      cls{2} = min(cls{2},255-cls{1});
+      clear WMP;
+      
+      
+      %% local intensity normalization
+      % WM - this is the second medium frequency bias correction
+      %      we also use the diverence to find gyral structures that have 
+      %      useable information about the WM intensity because we use a
+      %      maximum filter!
+      TLi   = vbm_vol_localstat(src,(cls{2}>16 | ...
+        (cls{3}==0 & mask & TI>2.5/3 & div>-0.02 & TI<7/6)) & ...
+        (~BGP | (vbm_vol_morph(BGP & TI>0.95,'d',2) & TI>0.9)) & G<0.5 & TI<7/6,2,3); 
+      TLi(cls{2}>220 & ~BGP)=src(cls{2}>220 & ~BGP);
+      TL{5} = vbm_vol_approx(TLi,'nh',vx_vol,2); TL{5} = vbm_vol_smooth3X(TL{5},4); 
+      
+      % create a second global intensity scaled map for simple
+      % description of the following tissues
+      T3th2 =  [median(src(cls{3}(:)>240)./TL{5}(cls{3}(:)>240)),...
+                median(src(cls{1}(:)>240)./TL{5}(cls{1}(:)>240)),...
+                median(src(cls{2}(:)>240)./TL{5}(cls{2}(:)>240))];
+      TI2   = vbm_vol_iscale(src./TL{5},'gCGW',vx_vol,T3th2); 
+      TIQA  = vbm_vol_iscale(srcO./TL{5},'gCGW',vx_vol,T3th2); %clear srcO; 
+      
+      % rought GM mean to remove remove outliers depending on the local values 
+      TLi   = src .* ((TI2>1/3 & BGP & TI2<0.9) | ...
+               (cls{1}>64 & G<0.5 & ((TI2<0.9 & cls{2}<192) | BGP) & cls{3}<192 & ...
+               (TI2<2.5/3 | div>-0.01) & (TI2>1.5/3 | div<0.01))); 
+      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,2,32,'meanm');
+      for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,2); TLir = vbm_vol_smooth3X(TLir,2); 
+      TLib  = vbm_vol_resize(TLir,'dereduceV',resT2); clear WIrr;     
+
+      % GM mean - the real GM mean
+      TLi   = TLi .* ((TI>2/3 & BG & TI<0.90) | (cls{1}>64 & G<0.5 & ...
+              (src>(TLib-diff(T3th(2:3))/2) & (src<TLib+diff(T3th(2:3))/2) & ...
+              G<0.5 & ~((src>TL{5}*0.9) & G>noise/2 & (TI<2/3 | div>-0.1))))); 
+      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'meanm');
+      WMr = vbm_vol_resize(single(cls{2}) .* single(~BGP),'reduceV',vx_vol,4,32,'mean');
+      TLir(WMr>240) = T3th(2);
+      for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
+      TL{3} = vbm_vol_resize(TLir,'dereduceV',resT2); clear WIrr;     
+
+      % GM high - same area like the other mean but we use a maximum filter
+      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,2,32,'max');
+      TLir(WMr>240) = T3th(2);
+      for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,4,1); end
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
+      TL{4} = max(min(TL{5}*0.95,TL{3}*1.1),vbm_vol_resize(TLir,'dereduceV',resT2)); clear WIrr;     
+      TL{3} = min(TL{3},TL{4}*0.9);
+
+      % GM low - similar to the maximum, we can do this for the minimum
+      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'min');
+      for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
+      TL{2} = vbm_vol_smooth3X(max(T3th(1)*1.5,max(TL{3} - diff(T3th(1:2)) ,vbm_vol_resize(TLir,'dereduceV',resT2))),8); clear WIrr;     
+
+      %{
+      % CSF - also include a CSF skeleton to be more sensitive to CSF values
+      if T3th(1)~=0
+        TLi   = vbm_vol_localstat(src,(TI<1.5/3 & cls{3}>64) | (mask & div>0.05 & TI2<TL{2}*0.7 & TI<1.5/3),4,1);
+        [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'min');
+        for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
+        TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,8); TLir = vbm_vol_smooth3X(TLir,8); 
+        TLi   = vbm_vol_resize(TLir,'dereduceV',resT2); clear WIrr;     
+        TL{1} = vbm_vol_smooth3X(max(T3th(1),min(TL{2}*0.7,TLi)),8); 
+      else
+        TL{1} = 2*eps*ones(size(TL{2}));
+      end
+      %}
+      TI = TI2;
+      clear TLi TLir resT2 WMr; 
+       
+
+      %% final estimation of the probability and variance map
+      % Full adaption means that the values described by the GM high or
+      % GM low peak were changed to 2. For con=-1 (full adaption) the GM
+      % contrast is reduced, where for con=1 (negative adaption) the
+      % contrast of the GM is increased and most boundary tissues will
+      % be WM or CSF. 
+      % con=1 is maybe helpfull for surface generation.
+      % But for tissue segmentation we want low GM contrast to use a
+      % global tissue segmenation. Zero contrast or full adaption (-1)
+      % is often to much.
+      con = [-0.75 -0.75]; T=src; co = -con/2 + 0.5; 
+      TIG = zeros(size(T));  
+      TIG = TIG + ( (T>=TL{5}             ) .* (3.0     + (T-TL{5})   ./ (TL{5}-TL{4})   * co(2)/2    ));
+      TIG = TIG + ( (T>=TL{4}   & T<TL{5} ) .* (3-co(2) + (T-TL{4})   ./ (TL{5}-TL{4})   * co(2)      ));
+      TIG = TIG + ( (T>=TL{3}   & T<TL{4} ) .* (2	      + (T-TL{3})   ./ (TL{4}-TL{3})   * (1-co(2))  ));
+      TIG = TIG + ( (T>=TL{2}   & T<TL{3} ) .* (1+co(1) + (T-TL{2})   ./ (TL{3}-TL{2})   * (1-co(1))  ));
+      TIG = TIG + ( (T>=T3th(1) & T<TL{2} ) .* (1       + (T-T3th(1)) ./ (TL{2}-T3th(1)) * co(1)      ));
+      %TIG = TIG + ( (T>=TL{1}   & T<TL{2} ) .* (2-co(1) + (T-TL{1})   ./ (TL{2}-TL{1})   * (2*co(1)-1)));
+      %TIG = TIG + ( (T>=T3th(1) & T<TL{1} ) .* (1       + (T-T3th(1)) ./ (TL{1}-T3th(1)) * co(1)      ));
+      TIG = TIG + ( (T< T3th(1)           ) .*             T          ./    max(eps,T3th(1))         );
+      TIG(isnan(TIG) | TIG<0)=0; TIG(TIG>10)=10;
+      TIG(mask>0)=max(TIG(mask>0),1-noise*2);
+      
+      
+      %% Blood Vessel Correction 
+      if 0
+        WM  = single(vbm_vol_morph(TIG>2.1 & TIG<3.5 & mask & cls{2}>64,'lc',1));
+        WM(~WM & (TIG<2.25 | ~mask | TIG>3.2))=nan; [WM,D]=vbm_vol_downcut(WM,TIG/3,-0.01); WM  = vbm_vol_morph(WM,'lc');
+        %WM(isnan(WM))=0; WM = WM | (D>0 & D<20); WM=single(WM | (smooth3(WM)>0.5 & TIG<2));
+        %WM(~WM & (TIG<1.40 | ~vbm_vol_morph(mask,'d',4) | TIG>3.2))=nan; [WM,D]=vbm_vol_downcut(WM,TIG/3,0.00);
+        %WM(isnan(WM))=0; WM = WM | (D>0 & D<10); WM=(smooth3(WM)>0.5 & TIG<2.5) | (WM /TIG>=2.5);
+        %WM  = vbm_vol_morph(WM,'lc');
+        BV  = ((TIG/3.*mask) - single(cls{2})/128)>1.01 & ~WM; BV=single(BV); 
+        BV(WM & (TIG<2 | ~mask))=nan; BV(WM)=2; [BV,D]=vbm_vol_downcut(BV,TIG/3,0.05); BV(BV==2)=0;
+        %BV  = mask & ~WM & ((TIG>2.2 & cls{2}<128) | TIG>3.5); 
+        BV  = vbm_vol_morph(BV,'c',2);
+        BV  = vbm_vol_smooth3X(BV.*(TIG-1),0.3).^4;
+        TIG = max(mask,TIG - BV); TIG = TIG*1/3 + 2/3*vbm_vol_median3(TIG,BV>0);     
+        cls{1} = min(cls{1},uint8(255 - BV*127)); 
+        cls{3} = max(cls{3},uint8(127*BV)); 
+      end
+      
+      %% Refinement of thin WM structures 
+      clear TL
+      CSFD = smooth3(vbdist(single(TIG<2 | ~mask))); 
+      [gx,gy,gz]=vbm_vol_gradient3(CSFD); div2=divergence(gy,gx,gz); clear gx gy gz;
+      TIG  = max(TIG,min(3,(TIG>2.1 & G>0.02 & ~vbm_vol_morph(BGP,'dd',4)) .* ...
+            (TIG - min(0,vbm_vol_smooth3X(div2,0.5)+0.1))));
+      clear CSFD div2;
+      
+      %% second sanlm filtering
+      if     warp.sanlm==1, sanlmMex_noopenmp(src,3,1); 
+      elseif warp.sanlm==2, sanlmMex(TIG,3,1);
+      end
+      noise2 = std(src(cls{2}(:)>128 & G(:)<0.1)/median(src(cls{2}(:)>128  & G(:)<0.1))); 
+      src = TIG;
+        
+      %% adding some CSF around the brain
+      CSFH = vbm_vol_morph(mask,'d',1) & ~mask & TIG<2.5;
+      mask = CSFH | mask;
+      cls{3}(CSFH) = 255;
+      srcm = src;
+      srcm(CSFH) = mean(src(cls{3}(:)>250)); 
+      srcm  = min(srcm .* mask,3.5); 
+      srcms = vbm_vol_smooth3X(srcm,0.5); 
+      srcm(CSFH) = srcms(CSFH); 
+     
+      clear srcms CSFH BG;
+
+      
+    end
+    
+    
     %% calculate label image for all classes 
     cls2 = zeros([d(1:2) Kb]);
     label2 = zeros(d,'uint8');
@@ -368,6 +575,8 @@ if do_cls && do_defs,
     		  label2(:,:,i) = label2(:,:,i) + uint8((maxind == k1).*(maxi~=0)*k1);
     	  end
     end
+   
+    
     
     % set all non-brain tissue outside mask to 0
     label2(mask == 0)  = 0;
@@ -388,10 +597,15 @@ if do_cls && do_defs,
     indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 
     label = label2(indx,indy,indz);
-        
+    
+    
     clear cls2 label2
     
-    vol = double(src(indx,indy,indz));    
+    if job.extopts.LAS 
+      vol = double(srcm(indx,indy,indz));    
+    else
+      vol = double(src(indx,indy,indz));    
+    end
     
     % mask source image because Amap needs a skull stripped image
     % set label and source inside outside mask to 0
@@ -401,11 +615,19 @@ if do_cls && do_defs,
     % Amap parameters
     n_iters = 200; sub = 16; n_classes = 3; pve = 5; 
     iters_icm = 20;
+ 
     
-    if init_kmeans, fprintf('Amap with Kmeans\n');   
-    else            fprintf('Amap without Kmeans\n');   
+    % adaptive mrf noise 
+    if job.extopts.LAS     
+      mrf = min(0.25,max(0.05,noise2*2));
     end
-    [prob, means] = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
+    
+    if init_kmeans, fprintf('Amap with Kmeans with MRF-Filterstrength %0.2f\n',mrf);
+    else            fprintf('Amap without Kmeans with MRF-Filterstrength %0.2f\n',mrf);      
+    end
+
+      
+    prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
     
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
@@ -416,7 +638,7 @@ if do_cls && do_defs,
     if warp.cleanup
         % get sure that all regions outside mask are zero
         for i=1:3
-            cls{i}(:) = 0;
+            cls{i}(:) = 0; %#ok<AGROW>
         end
        % disp('Clean up...');        
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
@@ -425,47 +647,166 @@ if do_cls && do_defs,
         label(sum_cls<0.15*255) = 0;
     else
         for i=1:3
-            cls{i}(:) = 0;
-            cls{i}(indx,indy,indz) = prob(:,:,:,i);
+            cls{i}(:) = 0; cls{i}(indx,indy,indz) = prob(:,:,:,i); %#ok<AGROW>
         end
     end;
-    clear prob
+    
+    
+    %clsO=cls; labelO=label;
+    if job.extopts.LAS 
+      %% setting of GM/WM PVE area to GM for the cls-maps
+      WMP    = vbm_vol_morph(cls{2}>250,'lc',1); 
+      BG2    = smooth3(BGP & TIG>2 & ~WMP &  TIG<2.9 & cls{3}<240 & G<(0.95-TI) &...
+                  (TI<5/6 | div>-0.02) & HD)*1.2; 
+      cls{1} = max(cls{1},uint8(255*BG2));
+      cls{2} = min(cls{2},255-cls{1});
+      clear WMP;
+        
+    
+      %% PVE correction for CSF/WM boundary
+ 
+      % corrections only in the center of the brain ...
+      [HDr,resT2] = vbm_vol_resize(single(mask),'reduceV',vx_vol,8,16,'meanm');
+      HDr = vbdist(1-HDr); HD = vbm_vol_resize(HDr,'dereduceV',resT2)>4;   
+      % and next to a larger CSF volume
+      [HDr,resT2] = vbm_vol_resize(single(cls{3})/255 .* HD,'reduceV',vx_vol,2,32,'meanm');
+      HDr =  vbm_vol_morph(vbm_vol_morph(HDr>0.25,'o',1),'d'); 
+      HD  = vbm_vol_resize(HDr,'dereduceV',resT2)>0.5;  clear HDr;  
+      
+      % main conditions for the CSF/WM boundary
+      M = vbm_vol_morph(cls{2}>192,'d',1) & HD & ...
+          vbm_vol_morph(cls{3}>192,'d',1); % & smooth3(cls{1}<16);
+      M = M | smooth3(M)>0.33;
+      C = vbm_vol_smooth3X(vbm_vol_median3(TIG,M,TIG<1.5 | TIG>2.5)); 
+      
+      % corretion by using PV
+      cls{1}(M) = 0;
+      cls{2}(M & C>1 & C<3) = max(cls{2}(M & C>1 & C<3),uint8(C(M & C>1 & C<3)-1)/3*255);
+      cls{3}(M & C>1 & C<3) = 255 - cls{2}(M & C>1 & C<3);
 
-    if finalmask
+      clear M C HD ;
+   
+      %% correct label image
+      label2 = zeros(d,'uint8');
+      label2(indx,indy,indz) = label; 
+      label2(~mask)=0;
+
+      % correct for area PVE of basal structures in the label map
+      BG2 = smooth3(BG2);
+      M   = BG2>0 & cls{3}==0 & cls{2}<192;
+      label2(M) = max(170,label2(M) - uint8(85*BG2(M)));
+      clear BG2
+
+      label = label2(indx,indy,indz);
+      clear label2;
+      
+      
+      %% final skull-stripping 
+      [gx,gy,gz]=vbm_vol_gradient3(src); G=abs(gx)+abs(gy)+abs(gz); G=G./src; clear gx gy gz; 
+      [Tr,Br,Gr,BOr,resTr] = vbm_vol_resize({TIG/3,single(cls{2})/255,G,mask},'reduceV',vx_vol,1.5,32);
+      Br  = Br>0.5 & Tr>5/6 & Tr<8/6 & Gr<noise*3; 
+      Br  = single(vbm_vol_morph(Br,'l')); 
+      Br(~Br & (Tr<2.5/3 | Tr>3.5/3))=-inf; 
+      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
+      Br(~Br & (Tr<1.8/3 | Tr>2.5/3))=-inf; 
+      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.001/mean(resTr.vx_volr))>0,1)>0.5);
+      Br(~Br & (Tr<1.2/3 | Tr>2.0/3))=-inf; 
+      Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.05*mean(resTr.vx_volr))>0,1)>0.5;
+      [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
+      Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'lo',2);
+      Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
+      mask = vbm_vol_resize(vbm_vol_smooth3X(Br,1.2),'dereduceV',resTr)>0.5;
+      clear Tr Br Gr BOr resTr; 
+    end    
+    
+    
+    clear prob
+    %% Final brain masking
+    if finalmask && ~job.extopts.LAS
+        CSFmask = 0; 
         fprintf('Final masking\n');
         % create final mask
-        mask = single(cls{1});
-        mask = mask + single(cls{2});
+        mask = single(cls{1}) + single(cls{2});
+        if CSFmask % skull-stripping with CSF???
+          mask = mask + single(cls{3}); 
+          mask = smooth3(mask/255,1.2)>0.5;
+        else
+          mask  = vbm_vol_smooth3X(mask/255);
 
-        % keep largest connected component after at least 1 iteration of opening
-        n_initial_openings = max(1,round(scale_morph*2));
-        mask = cg_morph_vol(mask,'open',n_initial_openings,0.5);
-        mask = mask_largest_cluster(mask,0.5);
+          % keep largest connected component after at least 1 iteration of opening
+          mask  = vbm_vol_morph(mask>0.5,'lo', max(1,round(scale_morph*2)));
 
-        % dilate and close to fill ventricles
-        mask = cg_morph_vol(mask,'dilate',2,0.5);
-        mask = cg_morph_vol(mask,'close',20,0.5);
-      
-        ind_mask = find(mask == 0);
-        for i=1:3
-            cls{i}(ind_mask) = 0;
+          % dilate and close to fill ventricles
+          mask  = vbm_vol_morph(mask,'d',2,0.5) & (cls{2}>4 | cls{1}>4 | cls{3}>128);
+          [maskr,resT2] = vbm_vol_resize(single(mask),'reduceV',vx_vol,4,16,'mean');
+          maskr = vbm_vol_morph(maskr>0.5,'ldc',8); % major closing for CSF within sulci
+          maskr = vbm_vol_resize(vbm_vol_smooth3X(maskr)>0.5,'dereduceV',resT2);
+          maskr = vbm_vol_morph(maskr & (cls{2}>4 | cls{1}>4 | cls{3}>4),'lc');
+          mask  = vbm_vol_smooth3X(mask | maskr,1.2)>0.5;  
         end
+        
+        for i=1:3, cls{i}(~mask)=0; end %#ok<AGROW>
        
         % mask label
         label2 = zeros(d,'uint8');
-        label2(indx,indy,indz) = label;
-        label2(ind_mask) = 0;
+        label2(indx,indy,indz) = label; 
+        label2(~mask)=0;
         
         label = label2(indx,indy,indz);
+                
         clear label2
-     
     end
+
+
+  
     % clear last 3 tissue classes to save memory
-    for i=4:6
-        cls{i} = [];
-    end
-   
+    for i=4:6, cls{i}=[]; end %#ok<AGROW>
+
 end
+
+
+
+%% partioning
+% das partioning kann helfen spezielle strukturen wie blutgefäße besser
+% zu erfassen und damit die segmentierung zu verbessern
+if any(struct2array(job.output.l1T));
+%{
+  
+  opt.partvol.Fp0A            = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p0A.nii');
+  opt.partvol.Fp4A            = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p4A.nii');
+  VT = spm_vol(res.image(1).fname);
+  
+  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
+  mgV = vbm_vol_write_nii(src/mean(src(cls{2}(:)>240)),VT,'mg','label map','float32',[0,3],[1 0 0 0],0);
+  p0V = vbm_vol_write_nii(label2,VT,'p0','label map','uint8',[0,3/255],[1 0 0 0],0);
+  clear label2;
+  
+  [l1V,pfV] = vbm_pre_partvol( mgV{1} , p0V{1} ,opt.partvol);
+  
+  pfT = spm_read_vols(pfV);
+  l1T = spm_read_vols(l1V);
+  
+  %}
+  pfT = single(label)/255*3;
+  
+  if 0 
+    vbm_vol_write_nii(pfT,VT,'pf', ...
+      'vbm12 - ventrile field label map',...
+      'float32',[0,1],[1 0 0 0],0,trans);
+  end
+  if 0 
+    vbm_vol_write_nii(l1T,VT,'l1', ...
+      'vbm12 - brain atlas map for major structures and sides',...
+      'float32',[0,1],[1 0 0 0],0,trans);
+  end
+else
+  pfT = single(label)/255*3;
+end
+
+
+
+%%
+trans = struct();
 
 M0 = res.image(1).mat;
 
@@ -505,18 +846,27 @@ if (any(tc(:,2)) || lb(1,3)) || cg_vbm_get_defaults('output.surf.dartel')
     Mr      = M0\inv(R)*M1*vx2/vx3;
     mat0r   =    R\M1*vx2/vx3;
     matr    = mm/vx3;
+    
+    trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
 end
     
 % affine parameters
 Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
 mat0a   = res.Affine\M1*vx2/vx3;
 mata    = mm/vx3;
+trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
     
 
-% dartel spatial normalization to given template
-if do_dartel
+%% dartel spatial normalization to given template
+
+% tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
+% bf - bias field: corrected, warp corrected, affine corrected
+% df - deformations: forward, inverse
+% lb - label: native, warped label, rigid label, affine label
+% jc - jacobian: no, normalized 
+if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     disp('Dartel normalization...');        
-    % use GM/WM for dartel
+    %% use GM/WM for dartel
     n1 = 2;
 
     f = zeros([odim(1:3) 2],'single');
@@ -535,7 +885,7 @@ if do_dartel
     its = 3;      % relaxation iterations
 
     for i=1:6
-        param(i).its = 3;         % inner iterations
+        param(i).its = 3;         %#ok<AGROW> % inner iterations
     end
     
     param(1).rparam = [4 2 1e-6]; % regularization parameters: mu, lambda, id
@@ -568,7 +918,7 @@ if do_dartel
         end
     end
     
-    [pth,nam,ext1]=fileparts(res.image(1).fname);
+    [pth,nam]=fileparts(res.image(1).fname);
 
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
@@ -589,7 +939,9 @@ if do_dartel
         y(:,:,z,2) = t22;
         y(:,:,z,3) = t33;
     end
-    clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
+    %clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
+    
+    trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
 end
 
 if exist('y','var'),
@@ -605,8 +957,11 @@ if exist('y','var'),
     M1 = mat;
     d1 = odim;
 
+    trans.warped = struct('y',y,'odim',odim,'M0',M0,'M1',mat,'M2',M1\res.Affine*M0,'dartel',warp.dartelwarp);
 end
 
+%%
+%{
 % get inverse deformations for warping submask to raw space
 % experimental: not yet finished!!!
 if cg_vbm_get_defaults('output.surf.dartel')
@@ -657,7 +1012,7 @@ if cg_vbm_get_defaults('output.surf.dartel')
   clear tmp1
 
 end
-
+%}
 % write raw segmented images
 for k1=1:3,
     if ~isempty(tiss(k1).Nt),
@@ -666,309 +1021,167 @@ for k1=1:3,
 end
 clear tiss 
 
-% write bias corrected affine
-if bf(1,3),
-    [pth,nam,ext1]=fileparts(res.image(1).fname);
-    VT      = struct('fname',fullfile(pth,['wm', nam, '_affine.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('float32') spm_platform('bigend')],...
-            'pinfo',[1.0 0]',...
-            'mat',mata);
-    VT = spm_create_vol(VT);
 
-    N             = nifti(VT.fname);
-    % get rid of the QFORM0 rounding warning
-    warning off
-    N.mat0        = mat0a;
-    warning on
-    N.mat_intent  = 'Aligned';
-    N.mat0_intent = 'Aligned';
-    create(N);
 
-    for i=1:odim(3),
-        tmp = spm_slice_vol(src,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-        VT  = spm_write_plane(VT,tmp,i);
-    end
+%% XML-report and Quality Assurance
+% ----------------------------------------------------------------------
+% hier muss noch ganz viel passieren, aber erstmal kommt hier blos die 
+% ausgabe von vbm8 als xml rein...
+%
+% die funktion muss noch umgebaut werden, so das die wertebestimmung
+% als extra teilfunktion existiert, die du hier direkt aufrufen kannst
+% in diese teilfunktion müssen dann auch die bewertungskriterien
+% (übergeben werden)
+%
+% das ganze sollte mit dem TIQA (differenzbild des T1 und der segmentierung)
+% verknüpft werden
+%
+% label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
+% [QAS,QAM,QAT,QATm] = vbm_vol_t1qa(srcO,label2,src,...
+%   struct('verb',0,'VT',spm_vol(res.image(1).fname)));
+%
+
+
+% preprocessing change map
+if ~exist('TIQA','var')
+  T3th = [median(src(cls{3}(:)>240)) ...
+          median(src(cls{1}(:)>240)) ...
+          median(src(cls{2}(:)>240))];
+  TIQA = vbm_vol_iscale(srcO,'gCGW',vx_vol,T3th); clear srcO; 
+end
+label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)/255; 
+pcT = abs(min(7/6,TIQA) - label2)./label2 .* (label2>0); 
+pcT = vbm_vol_smooth3X(pcT,1);
+QAS.RAW.pc = sum(pcT(:));
+clear label2; 
+
+
+% global tissue volumes
+volfactor = abs(det(M0(1:3,1:3)))/1000;
+for vi=1:3, QAS.RAW.vol(vi) = volfactor*sum(cls{vi}(:))/255; end
+
+[pp,ff] = spm_fileparts(res.image(1).fname);
+vbm_io_xml(fullfile(pp,['vbm_' ff '.xml']),struct('RAW',QAS),'write+');
+
+clear pp ff ee volfactor vi;
+
+
+
+%% write results
+% ----------------------------------------------------------------------
+
+VT = spm_vol(res.image(1).fname);
+
+%% bias and noise corrected without/without masking
+vbm_vol_write_nii(srcN,VT,'mn','bias and noise corrected', ...
+  'float32',[0,1],min([1 0 2],struct2array(job.output.bias)),0,trans);
+vbm_vol_write_nii(srcN,VT,'mn','bias and noise corrected (masked due to normalization)', ...
+  'float32',[0,1],min([0 1 0],struct2array(job.output.bias)),0,trans);
+%clear srcN;
+
+
+
+%% label maps
+label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
+vbm_vol_write_nii(label2,VT,'p0','label map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
+clear label2; 
+
+
+%% class maps
+fn = {'GM','WM','CSF'};
+for clsi=1:3
+  vbm_vol_write_nii(single(cls{clsi})/255,VT,sprintf('p%d',clsi),...
+    sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
+    min([1 0 0 0],struct2array(job.output.(fn{clsi}))),0,trans);
+  vbm_vol_write_nii(single(cls{clsi})/255,VT,sprintf('p%d',clsi),...
+    sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
+    min([0 1 2 2],struct2array(job.output.(fn{clsi}))),0,trans);
+end
+clear clsi fn; 
+
+
+%% global and local intensity scaled images
+if any(struct2array(job.output.mgT))
+  if ~exist('TI','var')
+    T3th = [median(src(cls{3}(:)>240)./TL{5}(cls{3}(:)>240)),...
+            median(src(cls{1}(:)>240)./TL{5}(cls{1}(:)>240)),...
+            median(src(cls{2}(:)>240)./TL{5}(cls{2}(:)>240))];
+    TI   = vbm_vol_iscale(src,'gCGW',vx_vol,T3th); clear srcO; 
+  end
+
+  vbm_vol_write_nii(min(1.2,max(0,TI .* mask)),VT,'mg', ...
+    'vbm12 - masked, noise corrected, bias corrected, global intensity scaled T1 image',...
+    'float32',[0,1],struct2array(job.output.mgT),0,trans);
+  clear TI;
+end
+if job.extopts.LAS && any(struct2array(job.output.mlT))
+  vbm_vol_write_nii(min(1.2,max(0,TIG/3 .* mask)),VT,'ml', ...
+    'vbm12 - masked, noise corrected, bias corrected, local intensity scaled T1 image',...
+    'float32',[0,1],struct2array(job.output.mlT),0,trans);
+  clear TIG;
 end
 
-% write affine label
-if lb(1,4),
-    tmp1 = zeros(res.image(1).dim(1:3),'single');
-    tmp1(indx,indy,indz) = single(label)*3;
-    [pth,nam,ext1]=fileparts(res.image(1).fname);
-    VT      = struct('fname',fullfile(pth,['rp0', nam, '_affine.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('int16') spm_platform('bigend')],...
-            'pinfo',[1/255 0]',...
-            'mat',mata);
-    VT = spm_create_vol(VT);
 
-    N             = nifti(VT.fname);
-    % get rid of the QFORM0 rounding warning
-    warning off
-    N.mat0        = mat0a;
-    warning on
-    N.mat_intent  = 'Aligned';
-    N.mat0_intent = 'Aligned';
-    create(N);
-
-    for i=1:odim(3),
-        tmp = spm_slice_vol(tmp1,Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-        VT  = spm_write_plane(VT,tmp,i);
-    end
-    clear tmp1
+%% preprocessing changes
+if any(struct2array(job.output.pcT))
+  vbm_vol_write_nii(pcT,VT,'pc', ...
+    'vbm12 - preprocessing change/correction map', ...
+    'float32',[0,1],struct2array(job.output.pcT),0,trans);
+  clear pcT;
 end
 
-% write rigid aligned label
-if lb(1,3),
-    tmp1 = zeros(res.image(1).dim(1:3),'single');
-    tmp1(indx,indy,indz) = double(label)*3;
-    [pth,nam,ext1]=fileparts(res.image(1).fname);
-    VT      = struct('fname',fullfile(pth,['rp0', nam, '.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('int16') spm_platform('bigend')],...
-            'pinfo',[1/255 0]',...
-            'mat',matr);
-    VT = spm_create_vol(VT);
 
-    Ni             = nifti(VT.fname);
-    Ni.mat0        = mat0r;
-    Ni.mat_intent  = 'Aligned';
-    Ni.mat0_intent = 'Aligned';
-    create(Ni);
-
-    for i=1:odim(3),
-        tmp = spm_slice_vol(tmp1,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-        VT  = spm_write_plane(VT,tmp,i);
-    end
-    clear tmp1
-end
-
-% write dartel exports
-for k1=1:size(tc,1),
-
-    % write rigid aligned tissues
-    if tc(k1,2),
-        [pth,nam,ext1]=fileparts(res.image(1).fname);
-        VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '.nii']),...
-                'dim',  odim,...
-                'dt',   [spm_type('int16') spm_platform('bigend')],...
-                'pinfo',[1/255 0]',...
-                'mat',matr);
-        VT = spm_create_vol(VT);
-
-        Ni             = nifti(VT.fname);
-        Ni.mat0        = mat0r;
-        Ni.mat_intent  = 'Aligned';
-        Ni.mat0_intent = 'Aligned';
-        create(Ni);
-
-        for i=1:odim(3),
-            tmp = spm_slice_vol(single(cls{k1}),Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-            VT  = spm_write_plane(VT,tmp,i);
-        end
-    end
-        
-    % write affine normalized tissues
-    if tc(k1,3),
-        [pth,nam,ext1]=fileparts(res.image(1).fname);
-        VT      = struct('fname',fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']),...
-                'dim',  odim,...
-                'dt',   [spm_type('int16') spm_platform('bigend')],...
-                'pinfo',[1/255 0]',...
-                'mat',mata);
-        VT = spm_create_vol(VT);
-
-        Ni             = nifti(VT.fname);
-        % get rid of the QFORM0 rounding warning
-        warning off
-        Ni.mat0        = mat0a;
-        warning on
-        Ni.mat_intent  = 'Aligned';
-        Ni.mat0_intent = 'Aligned';
-        create(Ni);
-
-        for i=1:odim(3),
-            tmp = spm_slice_vol(single(cls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-            VT  = spm_write_plane(VT,tmp,i);
-        end
-    end
-end
-
-% write jacobian determinant
+%% write jacobian determinant
 if jc
-    if ~do_dartel
-        warning('Jacobian can only be saved if dartel normalization was used.');
-    else
-        [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
-        clear y0
-        N      = nifti;
-        N.dat  = file_array(fullfile(pth,['jac_wrp1', nam, '.nii']),...
-                                    d1,...
-                                    [spm_type('float32') spm_platform('bigend')],...
-                                    0,1,0);
-        N.mat  = M1;
-        N.mat0 = M1;
-        N.descrip = 'Jacobian';
-        create(N);
+  if ~do_dartel
+    warning('cg_vbm_write:saveJacobian','Jacobian can only be saved if dartel normalization was used.');
+  else
+    [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
+    clear y0
 
-        N.dat(:,:,:) = dt;
-    end
+    VJT=VT; VJT.mat=M1; VJT.mat0=M0; 
+    vbm_io_write_nii(tmp,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
+  end
 end
 
-if any(tc(:,4)),
-    C = zeros([d1,3],'single');
+
+
+%% tickness maps
+if 0 && any(struct2array(job.output.GMT))
+  VT = res.image;
+  opt.interpV = cg_vbm_get_defaults('extopts.pbt.interpV');
+
+  % thickness estimation
+ %[pfTi,VTi] = vbm_interpV(pfT,min(vx_vol,ones(1,3)*opt.interpV),VT); % interpolate volume
+  t1Ti = vbm_vol_pbt2(pfT,struct('resV',opt.interpV)); 
+ %t1T = vbm_interpV(t1Ti,vx_vol,VTi);
+  t1Ti = t1Ti .* (pfT>1 & pfT<3);
+
+  t1T = zeros(d,'single'); t1T(indx,indy,indz) = t1Ti; 
+
+  % save files any(struct2array(job.output.GMT))
+  vbm_io_write_nii(t1T,VT,'t1','vbm12 - pbt-GM-thickness','float',[0,1],struct2array(job.output.GMT),0,trans);
 end
 
-clear u
 
-% warped tissue classes
-if any(tc(:,4)) || any(tc(:,5)) || any(tc(:,6)) || nargout>=1,
 
-    spm_progress_bar('init',3,'Warped Tissue Classes','Classes completed');
-    
-    M2 = M1\res.Affine*M0;
-
-    for k1 = 1:3,
-        if ~isempty(cls{k1}),
-            c = single(cls{k1})/255;
-
-            if any(tc(:,4)), % without modulation
-                [c,w]       = spm_diffeo('push',c,y,d1(1:3));
-                vx          = sqrt(sum(M1(1:3,1:3).^2));
-                spm_field('bound',1);
-                C(:,:,:,k1) = spm_field(w,c,[vx  1e-6 1e-4 0  3 2]);
-                clear w
-            else
-                c      = spm_diffeo('push',c,y,d1(1:3));
-            end
-
-            if nargout>=1,
-                cls{k1} = c;
-            end
-
-            if tc(k1,5),
-                N      = nifti;
-                N.dat  = file_array(fullfile(pth,['mwp', num2str(k1), nam, '.nii']),...
-                                    d1,...
-                                    [spm_type('float32') spm_platform('bigend')],...
-                                    0,1,0);
-                if do_dartel
-                    N.dat.fname = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']);
-                end
-                N.mat  = M1;
-                N.mat0 = M1;
-                N.descrip = ['Jac. sc. warped tissue class ' num2str(k1)];
-                create(N);
-                N.dat(:,:,:) = c*abs(det(M0(1:3,1:3))/det(M1(1:3,1:3)));
-            end
-            if tc(k1,6),
-                N      = nifti;
-                N.dat  = file_array(fullfile(pth,['m0wp', num2str(k1), nam, '.nii']),...
-                                    d1,...
-                                    [spm_type('float32') spm_platform('bigend')],...
-                                    0,1,0);
-                if do_dartel
-                    N.dat.fname = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']);
-                end
-                N.mat  = M1;
-                N.mat0 = M1;
-                N.descrip = ['Jac. sc. warped tissue class non-lin only' num2str(k1)];
-                create(N);
-
-                N.dat(:,:,:) = c*abs(det(M2(1:3,1:3)));
-            end
-            spm_progress_bar('set',k1);
-        end
-    end
-
-    spm_progress_bar('Clear');
-end
-
-% save raw tissue class volumes in ml in log-file
-if do_cls
-    volfactor = abs(det(M0(1:3,1:3)))/1000;
-    vol_txt = fullfile(pth,['p', nam1, '_seg.txt']);
-    fid = fopen(vol_txt, 'w');
-    for i=1:3
-        vol = volfactor*sum(cls{i}(:))/255; 
-        fprintf(fid,'%5.3f\t',vol);
-    end;
-    fclose(fid);
-end
-
+% ######################################################################
+% das Outputverhalten stimmt nicht mehr, 
+% es gab auch modulierten output!!!
+% ######################################################################
 if nargout == 0
-    clear cls
+  clear cls
 end
 
-if any(tc(:,4)),
-    spm_progress_bar('init',3,'Writing Warped Tis Cls','Classes completed');
-    C = max(C,eps);
-%    s = sum(C,4);
+%    spm_progress_bar('init',3,'Writing Warped Tis Cls','Classes completed');
+%    spm_progress_bar('set',k1);
+%    spm_progress_bar('Clear');
+   
 
-    for k1=1:3,
-        if tc(k1,4),
-            N      = nifti;
-            N.dat  = file_array(fullfile(pth,['wp', num2str(k1), nam, '.nii']),...
-                            d1,'int16',0,1/255,0);
-            if do_dartel
-                N.dat.fname = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
-            end
-            N.mat  = M1;
-            N.mat0 = M1;
-            N.descrip = ['Warped tissue class ' num2str(k1)];
-            create(N);
-%            N.dat(:,:,:) = C(:,:,:,k1)./s;
-            N.dat(:,:,:) = C(:,:,:,k1);
-        end
-        spm_progress_bar('set',k1);
-    end
-    spm_progress_bar('Clear');
-    clear C s
-end
 
-% native label
-if lb(1),
-    N      = nifti;
-    N.dat  = file_array(fullfile(pth1,['p0', nam, '.nii']),...
-                                res.image(1).dim(1:3),...
-                                'float32',0,1,0);
-    N.mat  = res.image(1).mat;
-    N.mat0 = res.image(1).mat;
-    N.descrip = 'PVE label';
-    create(N);
-    N.dat(:,:,:) = 0;
-    N.dat(indx,indy,indz) = double(label)*3/255;
-end
 
-% warped bias-corrected image
-if bf(1,2),
-    % skull strip image because of undefined deformations outside the brain
-    if do_dartel
-        try
-            src2 = zeros(size(src),'single');
-            src2(indx,indy,indz) = src(indx,indy,indz).*single(label>0); 
-            src = src2;
-            clear src2
-        end
-    end
-    [src,w]  = dartel3('push',src,y,d1(1:3));
-    C = optimNn(w,src,[1  vx vx vx 1e-4 1e-6 0  3 2]);
-    clear w
-    N      = nifti;
-    N.dat  = file_array(fullfile(pth,['wm', nam, '.nii']),...
-                            d1,'int16',0,1,0);
-    if do_dartel
-        N.dat.fname = fullfile(pth,['wmr', nam, '.nii']);
-    end
-    N.mat  = M1;
-    N.mat0 = M1;
-    N.descrip = 'Warped bias corrected image ';
-    create(N);
-    N.dat(:,:,:) = C;
-end
 
-% display and print result if possible
+%% display and print result if possible
 if do_cls && warp.print
   
   % get current release numbers
@@ -986,7 +1199,7 @@ if do_cls && warp.print
   end
   
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
-	dartelwarp = str2mat('Low-dimensional (SPM default)','High-dimensional (Dartel)');
+	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
@@ -1034,6 +1247,7 @@ if do_cls && warp.print
     	spm_orthviews('AddContext',hh);
     end
     
+    name_seg=cell(1,6); 
 	  for k1=1:3,
 	    % check for all potential warped segmentations
 	    name_seg{1} = fullfile(pth,['p', num2str(k1), nam, '.nii']);
@@ -1070,25 +1284,6 @@ if do_cls && warp.print
 	end
 end
 
-% warped label
-if lb(2),
-    c = zeros(res.image(n).dim(1:3),'single');
-    c(indx,indy,indz) = single(label);
-    [c,w]  = dartel3('push',c,y,d1(1:3));
-    C = optimNn(w,c,[1  vx vx vx 1e-4 1e-6 0  3 2]);
-    clear w
-    N      = nifti;
-    N.dat  = file_array(fullfile(pth,['wp0', nam, '.nii']),...
-                            d1,'float32',0,1,0);
-    if do_dartel
-        N.dat.fname = fullfile(pth,['wrp0', nam, '.nii']);
-    end
-    N.mat  = M1;
-    N.mat0 = M1;
-    N.descrip = 'Warped bias corrected image ';
-    create(N);
-    N.dat(:,:,:) = double(C)*3/255;
-end
 
 clear label C c
 

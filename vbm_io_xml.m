@@ -34,7 +34,7 @@ function varargout = vbm_io_xml(file,varargin)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 % POSSIBILITY OF SUCH DAMAGE.
 % ______________________________________________________________________
-% $Id: vbm_io_xml.m 75 2013-02-26 13:56:04Z dahnke $
+% $Id$
 
   if ~exist('file','var'),    error('MATLAB:vbm_io_struct','ERROR: Need input file\n'); end
   if exist('varargin','var') 

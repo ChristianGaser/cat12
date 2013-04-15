@@ -28,7 +28,7 @@
  * Center of Neuroimaging 
  * University Jena
  *
- * $Id: median3.c 75 2013-02-26 13:56:04Z dahnke $ 
+ * $Id$ 
  */
 
 #include "mex.h"   

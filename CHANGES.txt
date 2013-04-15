@@ -1585,3 +1585,131 @@ Use old bounding box, because change of it and voxel size does not yer work
 with Dartel.
 ------------------------------------------------------------------------
 r457 | gaser | 2013-03-28 12:45:33
+
+
+This update include a lot of new methods and function mostly with alpa-status.
+(1) Added a global intensity normalisation (mg*.nii) with WM=1, GM=2/3, CSF=1/3.
+(2) Added a new local adaptive segmentation (LAD) pipeline with local corrected, 
+    brain masked version (ml*.nii) of the T1 input with WM=1, GM=2/3, CSF=1/3.
+    The new pipeline include:
+    - local adaptive tissue peak estimation for lower area PVE especially in
+      deep GM structures
+    - local sharpening for thin gyral WM structures
+    - new final skull-stripping
+    - (blood vessel correction)
+(3) Added GM thickness estimation (th1*.nii) for RAW-resolution that still 
+    requires the interpolation for full quality.
+(4) Prepare segmentation for major brain regions and sides (l1*.nii).
+(5) Added a preprocessing change map to map changes in the preprocessing to 
+    identify problematic data and processing. 
+(6) Added XML import/export/update function for MATLAB structures. Replace text
+    by XML export (*_seg8.txt > vbm_*.xml). 
+(7) Added the "vbm_*_" prefix for some function.
+(8) Starts replacement of cg_morph_vol by vbm_vol_morph.
+(9) Preparing a write function to write a image in different spaces.
+(10) Update of the GUI and variables for the additional functions.
+------------------------------------------------------------------------
+r | dahnke | 2013-04-15 10:35:56
+
+
+This update include a lot of new methods and function mostly with alpa-status.
+(1) Added a global intensity normalisation (mg*.nii) with WM=1, GM=2/3, CSF=1/3.
+(2) Added a new local adaptive segmentation (LAD) pipeline with local corrected, 
+    brain masked version (ml*.nii) of the T1 input with WM=1, GM=2/3, CSF=1/3.
+    The new pipeline include:
+    - local adaptive tissue peak estimation for lower area PVE especially in
+      deep GM structures
+    - local sharpening for thin gyral WM structures
+    - new final skull-stripping
+    - (blood vessel correction)
+(3) Added GM thickness estimation (th1*.nii) for RAW-resolution that still 
+    requires the interpolation for full quality.
+(4) Prepare segmentation for major brain regions and sides (l1*.nii).
+(5) Added a preprocessing change map to map changes in the preprocessing to 
+    identify problematic data and processing. 
+(6) Added XML import/export/update function for MATLAB structures. Replace text
+    by XML export (*_seg8.txt > vbm_*.xml). 
+(7) Added the "vbm_*_" prefix for some function.
+(8) Starts replacement of cg_morph_vol by vbm_vol_morph.
+(9) Preparing a write function to write a image in different spaces.
+(10) Update of the GUI and variables for the additional functions.
+------------------------------------------------------------------------
+r | dahnke | 2013-04-15 10:37:31
+
+M       CHANGES.txt
+D       GBM.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       checkinopt.m
+M       compile.m
+A       ds.m
+D       eikonal3.c
+D       eikonal3.mexa64
+D       eikonal3.mexglx
+D       eikonal3.mexmaci
+D       eikonal3.mexmaci64
+D       eikonal3.mexw32
+D       eikonal3.mexw64
+M       tbx_cfg_vbm.m
+A       templates_1.50mm
+M       vbm12.txt
+A       vbm_io_handle_pre.m
+ M      vbm_io_updateStruct.m
+MM      vbm_io_xml.m
+A       vbm_pre_partvol.m
+A       vbm_stat_nanstat1d.m
+A  +    vbm_vol_GBM.m
+A       vbm_vol_approx.m
+A       vbm_vol_downcut.c
+A       vbm_vol_downcut.mexmaci64
+A       vbm_vol_eidist.cpp
+A       vbm_vol_eidist.mexmaci64
+A       vbm_vol_eikonal3.c
+A       vbm_vol_eikonal3.mexmaci64
+A       vbm_vol_gradient3.c
+A       vbm_vol_gradient3.mexmaci64
+A       vbm_vol_interp3f.cpp
+A       vbm_vol_interp3f.mexmaci64
+A       vbm_vol_iscale.m
+A       vbm_vol_laplace3.c
+A       vbm_vol_laplace3.mexmaci64
+A       vbm_vol_laplace3R.c
+A       vbm_vol_laplace3R.mexmaci64
+MM      vbm_vol_localstat.c
+ M      vbm_vol_localstat.mexmaci64
+MM      vbm_vol_median3.c
+ M      vbm_vol_median3.mexmaci64
+A       vbm_vol_morph.m
+A       vbm_vol_nanmean3.m
+A       vbm_vol_pbt.m
+A       vbm_vol_pbtp.cpp
+A       vbm_vol_pbtp.mexmaci64
+A       vbm_vol_resize.m
+A       vbm_vol_simgrow.c
+A       vbm_vol_simgrow.mexmaci64
+A       vbm_vol_smooth3X.m
+A       vbm_vol_write_nii.m
+
+This update include a lot of new methods and function mostly with alpa-status.
+(1) Added a global intensity normalisation (mg*.nii) with WM=1, GM=2/3, CSF=1/3.
+(2) Added a new local adaptive segmentation (LAD) pipeline with local corrected, 
+    brain masked version (ml*.nii) of the T1 input with WM=1, GM=2/3, CSF=1/3.
+    The new pipeline include:
+    - local adaptive tissue peak estimation for lower area PVE especially in
+      deep GM structures
+    - local sharpening for thin gyral WM structures
+    - new final skull-stripping
+    - (blood vessel correction)
+(3) Added GM thickness estimation (th1*.nii) for RAW-resolution that still 
+    requires the interpolation for full quality.
+(4) Prepare segmentation for major brain regions and sides (l1*.nii).
+(5) Added a preprocessing change map to map changes in the preprocessing to 
+    identify problematic data and processing. 
+(6) Added XML import/export/update function for MATLAB structures. Replace text
+    by XML export (*_seg8.txt > vbm_*.xml). 
+(7) Added the "vbm_*_" prefix for some function.
+(8) Starts replacement of cg_morph_vol by vbm_vol_morph.
+(9) Preparing a write function to write a image in different spaces.
+(10) Update of the GUI and variables for the additional functions.
+------------------------------------------------------------------------
+r458 | dahnke | 2013-04-15 10:39:56
