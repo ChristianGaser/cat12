@@ -1,6 +1,6 @@
 %  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
-% Copyright (C) 2010 Christian Gaser christian.gaser@uni-jena.de
+% Copyright (C) 2013 Christian Gaser christian.gaser@uni-jena.de
 % 
 % ==========================================================================
 % Description
@@ -8,37 +8,43 @@
 % This toolbox is a an extensions of the "New Segment Toolbox" 
 % in SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-
 % based morphometry (VBM). It is developed by Christian Gaser (University of 
-% Jena, Department of Psychiatry) and is available to the scientific 
-% community under the terms of the GNU General Public License.
+% Jena, Department of Psychiatry / Department of Neurology) and is available 
+% to the scientific community under the terms of the GNU General Public License.
 % 
 % ==========================================================================
 % Naming convention of output files
 % ==========================================================================
 %
-% segmented images:
-% -----------------
-% m[0]w[r]p[0123]*
-% m   - modulated
-% m0  - modulated non-linear only
-% w   - warped
-% r   - dartel warped 
-% p   - segmented
-% 0   - PVE label
-% 1   - GM
-% 2   - WM
-% 3   - CSF
-% _affine   - affine registered only
-% 
-% bias corrected image:
-% -----------------
-% wm[r]*
-% m   - bias corrected
-% w   - warped
-% r   - dartel warped 
+% output images:
+%   wm[r]m*        bias corrected
+%   wm[r]mn*       bias and noise corrected
+%   wm[r]mg*       bias and noise corrected, global intensity normalized
+%   mw[r]th[1]*    thickness images
+%   mw[r]l[12]*    atlas maps
 %
-% estimated raw volumes:
-% -----------------------
-% pxxx_seg.txt
+% expert output images:
+%   wm[r]ml*       bias and noise corrected, local intensity normalized
+%   mw[r]pc*       preprocessing change map 
+%
+% segmented images:
+%   m[0]w[r]p[0123]*[_affine]   
+%
+%   m         - modulated
+%   m0        - modulated non-linear only
+%   w         - warped
+%   r         - dartel warped 
+%   p         - segmented
+%   th        - thickness
+%   l         - atlas maps
+%   pc        - preprocessing change map
+%   0         - PVE label
+%   1         - GM
+%   2         - WM
+%   3         - CSF
+%   _affine   - affine registered only
+% 
+% Extracted data, global morphological measure and image quality measures: 
+%   vbm_*.xml   
 % 
 %
 % ==========================================================================
@@ -56,8 +62,8 @@
 % sense that local variations of the parameters (i.e., means and variance) 
 % are modelled as slowly varying spatial functions (Rajapakse et al. 1997). 
 % This not only accounts for intensity inhomogeneities but also for other 
-% local variations of intensity. 
-%
+% local variations of intensity.
+% 
 % 2. Additionally, the segmentation approach uses a Partial Volume Estimation 
 % (PVE) with a simplified mixed model of at most two tissue types 
 % (Tohka et al. 2004). We start with an initial segmentation into three pure 
@@ -85,5 +91,20 @@
 % and is provided in MNI space  for six different iteration steps of Dartel 
 % normalisation. Thus, for the majority of studies the creation of 
 % sample-specific Dartel templates is not necessary anymore. 
+%
+% 5. Local Adaptive Segmenation
+% ...
+% 
+% (6. Blood Vessel Correction)
+% ...
+%
+% (7. Preprocessing Change Map)
+% ...
+%
 % __________________________________________________________________________
-%                                                Christian Gaser 2010/10/05
+%
+% Further extensions to SPM12 are the estimation of cortical thickness maps
+% (Dahnke et al. 2012) and of cortical atlas maps with major brain structures.
+%
+% __________________________________________________________________________
+%                                                Christian Gaser 2013/04/01

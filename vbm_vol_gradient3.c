@@ -1,0 +1,82 @@
+/* gradient calculation
+ * ________________________________________________________________________
+ * [gi,gj,gk] = vbm_vol_gradient3(L)
+ *
+ * L          = 3d single input matrix
+ * [gi,gj,gk] = 3d single output matrix
+ *
+ * ________________________________________________________________________
+ * Robert Dahnke 2009_10
+ * Center of Neuroimaging 
+ * University Jena
+ *
+ * $Id$ 
+ */
+
+#include "mex.h"   
+#include "matrix.h"
+#include "math.h"
+
+
+// estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
+void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
+  *z = floor( i / (sxy) ) +1; 
+   i = i % (sxy);
+  *y = floor( i / sy ) +1;        
+  *x = i % sy + 1;
+}
+
+
+// main function
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+  if (nrhs<1)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: not enought input elements\n");
+  if (nrhs>1)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: to many input elements\n");
+  if (nlhs<3)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: to less output elements\n");
+  if (nlhs>3)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: to many output elements\n");
+  if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:vbm_vol_gradient3: input must be an 3d single matrix\n");
+ 
+  
+  // main informations about input data (size, dimensions, ...)
+  const mwSize *sL = mxGetDimensions(prhs[0]);
+  const int     dL = mxGetNumberOfDimensions(prhs[0]);
+  const int     nL = mxGetNumberOfElements(prhs[0]);
+  const int     x  = (int) sL[0];
+  const int     y  = (int) sL[1];
+  const int     xy = x*y;
+  
+  if ( dL != 3 ) mexErrMsgTxt("ERROR:vbm_vol_gradient3: input must be 3d\n");
+ 
+  
+  // in- and output 
+  float*I = (float *)mxGetPr(prhs[0]);
+
+  plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
+  plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
+  plhs[2] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
+
+  float *G1 = (float *)mxGetPr(plhs[0]);
+  float *G2 = (float *)mxGetPr(plhs[1]);
+  float *G3 = (float *)mxGetPr(plhs[2]);
+  
+  int i,u,v,w,ni,nu,nv,nw,n1i,n2i; 
+  for (i=0;i<nL;i++) 
+  {
+    ind2sub(i,&u,&v,&w,xy,x);
+
+    n1i=i-1; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
+    n2i=i+1; ind2sub(n2i,&nu,&nv,&nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n2i=i;
+    G1[i] = ( I[n2i] - I[n1i] ) / 2;
+    
+    n1i=i-x; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
+    n2i=i+x; ind2sub(n2i,&nu,&nv,&nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n2i=i;
+    G2[i] = ( I[n2i] - I[n1i] ) / 2;
+    
+    n1i=i-xy; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
+    n2i=i+xy; ind2sub(n2i,&nu,&nv,&nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n2i=i;
+    G3[i] = ( I[n2i] - I[n1i] ) / 2;
+  }
+
+}
+
+

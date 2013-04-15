@@ -8,7 +8,9 @@ function vbm = tbx_cfg_vbm
 %
 % Christian Gaser
 % $Id$
-
+%
+%#ok<*AGROW>
+ 
 rev = '$Rev$';
 
 addpath(fileparts(which(mfilename)));
@@ -154,6 +156,7 @@ warpreg.strtype = 'e';
 warpreg.num = [1 5];
 warpreg.help    = {'The objective function for registering the tissue probability maps to the image to process, involves minimising the sum of two terms. One term gives a function of how probable the data is given the warping parameters. The other is a function of how probable the parameters are, and provides a penalty for unlikely deformations. Smoother deformations are deemed to be more probable. The amount of regularisation determines the tradeoff between the terms. Pick a value around one.  However, if your normalised images appear distorted, then it may be an idea to increase the amount of regularisation (by an order of magnitude). More regularisation gives smoother deformations, where the smoothness measure is determined by the bending energy of the deformations. '};
 warpreg.val     = {[0 0.001 0.5 0.025 0.1]};
+
 %------------------------------------------------------------------------
 
 affreg = cfg_menu;
@@ -271,6 +274,18 @@ sanlm.def  = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
 
 %------------------------------------------------------------------------
 
+LAS = cfg_menu;
+LAS.tag  = 'LAS';
+LAS.name = 'Local Adaptive Segmentation';
+LAS.help = {[...
+'Adaption for local intensity changes with medium/low spacial frequencys.' ...
+'']};
+LAS.labels = {'no LAS','LAS'};
+LAS.values = {0 1};
+LAS.def  = @(val)cg_vbm_get_defaults('extopts.LAS', val{:});
+
+%------------------------------------------------------------------------
+
 print    = cfg_menu;
 print.tag = 'print';
 print.name = 'Display and print results';
@@ -331,7 +346,7 @@ dartelwarp.help    = {'Choose between standard spatial normalization and high-di
 extopts      = cfg_branch;
 extopts.tag = 'extopts';
 extopts.name = 'Extended options';
-extopts.val = {dartelwarp,sanlm,cleanup,vox,bb,print};
+extopts.val = {dartelwarp,sanlm,LAS,cleanup,vox,bb,print};
 extopts.help = {'Extended options'};
 
 %------------------------------------------------------------------------
@@ -368,6 +383,7 @@ dartel.help = {['This option is to export data into a form that can be used with
 'The SPM12 default is to only apply rigid body transformation. An additional option is to ',...
 'apply affine transformation.']};
 
+
 native.def  = @(val)cg_vbm_get_defaults('output.bias.native', val{:});
 warped.def  = @(val)cg_vbm_get_defaults('output.bias.warped', val{:});
 affine.def  = @(val)cg_vbm_get_defaults('output.bias.affine', val{:});
@@ -382,6 +398,29 @@ bias.help = {[...
 'These artifacts, although not usually a problem for visual inspection, can impede automated ',...
 'processing of the images. The bias corrected version should have more uniform intensities within ',...
 'the different types of tissues and can be saved in native space and/or normalised.']};
+
+%{
+native.def  = @(val)cg_vbm_get_defaults('output.mnT.native', val{:});
+warped.def  = @(val)cg_vbm_get_defaults('output.mnT.warped', val{:});
+affine.def  = @(val)cg_vbm_get_defaults('output.mnT.affine', val{:});
+mnT         = cfg_branch;
+mnT.tag     = 'mnT';
+mnT.name    = 'Bias and Noise Corrected';
+mnT.val     = {native, warped, affine};
+mnT.help    = {[...
+  'This is the option to save a bias and noise corrected version of your image. ' ...
+  'MR images are usually corrupted by a smooth, spatially varying artifact' ...
+  'that modulates the intensity of the image (bias). ' ...
+  'These artifacts, although not usually a problem for visual inspection, ' ...
+  'can impede automated processing of the images. The bias corrected version ' ...
+  'should have more uniform intensities within the different types of tissues ' ...
+  'and can be saved in native space and/or normalised.', ...
+  'Besides the bias, images are affected by random noise which limits the ' ...
+  'the accuracy of any quantitative measurements from the data.' ...
+  ' Noise is corrected by an adaptive non-local mean (NLM) filter ' ...
+  '(Manjón 2008, Medical Image Analysis 12). ' ...
+]};
+%}
 
 %------------------------------------------------------------------------
 
@@ -443,6 +482,7 @@ native.def    = @(val)cg_vbm_get_defaults('output.GM.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.GM.warped', val{:});
 modulated.def = @(val)cg_vbm_get_defaults('output.GM.mod', val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.GM.dartel', val{:});
+
 grey      = cfg_branch;
 grey.tag = 'GM';
 grey.name = 'Grey matter';
@@ -469,7 +509,84 @@ csf.name = 'Cerebro-Spinal Fluid (CSF)';
 csf.val = {native, warped, modulated, dartel};
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'};
 
-%------------------------------------------------------------------------
+%-----------------------------------------------------------------------
+
+% thickness
+native.def    = @(val)cg_vbm_get_defaults('output.th1T.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.th1T.warped', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.th1T.dartel', val{:});
+th1T          = cfg_branch;
+th1T.tag      = 'th1T';
+th1T.name     = 'Grey Matter Thickness (GMT)';
+th1T.val      = {native, warped, dartel};
+th1T.help     = {'Options to produce GM thickness images: th1*.img, wth1*.img and mwth1*.img.'};
+
+% global intensity corrected
+native.def    = @(val)cg_vbm_get_defaults('output.mgT.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.mgT.warped', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.mgT.dartel', val{:});
+mgT           = cfg_branch;
+mgT.tag       = 'mgT';
+mgT.name      = 'Global Intensity Scaled ';
+mgT.val       = {native, warped, dartel};
+mgT.help      = {[ ...
+  'This is the option to save a global intensity scaled version of your ' ...
+  'bias and noise corrected input image. ' ...
+]};
+
+% not yet
+%{
+% local intensity corrected
+native.def    = @(val)cg_vbm_get_defaults('output.mlT.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.mlT.warped', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.mlT.dartel', val{:});
+mlT           = cfg_branch;
+mlT.tag       = 'mlT';
+mlT.name      = 'global intensity scaled image';
+mlT.val       = {native, warped, dartel};
+mlT.help      = {[ ...
+  'This is the option to save a local intensity scaled version of your ' ...
+  'bias and noise corrected input image. ' ...
+]};
+%}
+
+% main structure atlas
+native.def      = @(val)cg_vbm_get_defaults('output.l1T.native', val{:});
+warped.def      = @(val)cg_vbm_get_defaults('output.l1T.warped', val{:});
+dartel.def      = @(val)cg_vbm_get_defaults('output.l1T.dartel', val{:});
+l1T             = cfg_branch;
+l1T.tag         = 'l1T';
+l1T.name        = 'Atlas 1 - Major structures';
+l1T.val         = {native, warped, dartel};
+l1T.help        = {[ ...
+  'This is the option to save an atlas map with sides and major structures.' ...
+  'Odd numbers code the left, even numbers the right side.' ...
+]};
+
+
+% not yet
+%{
+% preprocessing change map
+native.def      = @(val)cg_vbm_get_defaults('output.pcT.native', val{:});
+warped.def      = @(val)cg_vbm_get_defaults('output.pcT.warped', val{:});
+dartel.def      = @(val)cg_vbm_get_defaults('output.pcT.dartel', val{:});
+pcT           = cfg_branch;
+pcT.tag       = 'pcT';
+pcT.name      = 'error map ';
+pcT.val       = {native, warped, dartel};
+pcT.help      = {[ ...
+  'WARNING: The preprocessing documentation map is under development!\n\n' ...
+  'This is the option to save a map that protocol the canges that were ' ...
+  'necessary to segment your image. In example the removement of blood ' ...
+  'vessels or the adaption for local GM intensity will result in strong ' ...
+  'modifications of the orignal image. Although this corrections normaly ' ...
+  'helps to improve segmenation quality they can fail. As a result higher ' ...
+  'values describe regions where error are more likely than in other ' ...
+  'regions. '
+]};
+%}
+
+%-----------------------------------------------------------------------
 
 warps = cfg_menu;
 warps.tag = 'warps';
@@ -488,7 +605,8 @@ warps.help    = {'Deformation fields can be saved to disk, and used by the Defor
 output      = cfg_branch;
 output.tag = 'output';
 output.name = 'Writing options';
-output.val = {grey, white, csf, bias, label, jacobian, warps};
+%output.val = {grey, white, csf, label, bias, mnT, mgT, jacobian, warps, th1T, l1T};
+output.val = {grey, white, csf, label, bias, mgT, jacobian, warps, th1T, l1T};
 output.help = {[...
 'This routine produces spatial normalisation parameters (*_seg8.mat files) by default. '],...
 '',...
@@ -677,6 +795,8 @@ cdep = cfg_dep;
 cdep(end).sname      = 'Seg Params';
 cdep(end).src_output = substruct('.','param','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
+
+% bias corrected
 if opts.bias.native,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Bias Corr Images';
@@ -689,6 +809,77 @@ if opts.bias.warped,
     cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
+
+%{
+% bias corrected
+if opts.mnT.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Bias Noise Corr Images (mn*)';
+    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.mnT.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Bias Noise Corr Images (wmn*)';
+    cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+%}
+%{
+% global intensity normalized
+if opts.mgT.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Intensity Normalized Images (mg*)';
+    cdep(end).src_output = substruct('()',{1}, '.','intcorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.mgT.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Intensity Normalized Images (wmg*)';
+    cdep(end).src_output = substruct('()',{1}, '.','wintcorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.label.dartel==1,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Rigid Registered Intensity Normalized Images';
+    cdep(end).src_output = substruct('()',{1}, '.','rintcorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.label.dartel==2,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Affine Registered Intensity Normalized Images';
+    cdep(end).src_output = substruct('()',{1}, '.','aintcorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+
+% thickness
+if opts.th1T.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Thickness Images';
+    cdep(end).src_output = substruct('()',{1}, '.','thick','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.th1T.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Thickness Images';
+    cdep(end).src_output = substruct('()',{1}, '.','wthick','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.th1T.dartel==1,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Rigid Registered Thickness Images';
+    cdep(end).src_output = substruct('()',{1}, '.','rthick','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.th1T.dartel==2,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Affine Registered Thickness Images';
+    cdep(end).src_output = substruct('()',{1}, '.','athick','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+%}
+
+% label
 if opts.label.native,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Label Images';
@@ -713,12 +904,44 @@ if opts.label.dartel==2,
     cdep(end).src_output = substruct('()',{1}, '.','alabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
+
+% pcT
+%{
+if opts.pcT.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Preprocessing Change Images';
+    cdep(end).src_output = substruct('()',{1}, '.','pcT','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.pcT.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Preprocessing Change Images';
+    cdep(end).src_output = substruct('()',{1}, '.','wpcT','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.pcT.dartel==1,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Rigid Registered Preprocessing Change Images';
+    cdep(end).src_output = substruct('()',{1}, '.','rpcT','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+if opts.pcT.dartel==2,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Affine Registered Preprocessing Change Images';
+    cdep(end).src_output = substruct('()',{1}, '.','apcT','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
+%}
+
+% jacobian
 if opts.jacobian.warped,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Jacobian Determinant Images';
     cdep(end).src_output = substruct('()',{1}, '.','jacobian','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
+
+% warps
 if opts.warps(1),
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Deformation Field';
@@ -732,6 +955,7 @@ if opts.warps(2),
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 
+% tissues
 for i=1:numel(tissue),
     if tissue(i).native(1),
         cdep(end+1)          = cfg_dep;
@@ -770,6 +994,8 @@ for i=1:numel(tissue),
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
 end
+
+
 
 dep = cdep;
 
