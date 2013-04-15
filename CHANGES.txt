@@ -1720,3 +1720,15 @@ M       CHANGES.txt
 Some editing and reordering in cg_vbm_defaults.
 ------------------------------------------------------------------------
 r462 | gaser | 2013-04-15 12:20:28
+
+ M      vbm_stat_nanstat1d.m
+ M      vbm_io_handle_pre.m
+ M      vbm_vol_simgrow.c
+ M      vbm_vol_simgrow.mexmaci64
+M       vbm12.txt
+M       CHANGES.txt
+ M      vbm_pre_partvol.m
+
+Some editing and reordering in vbm12.txt.
+------------------------------------------------------------------------
+r463 | gaser | 2013-04-15 12:25:04
