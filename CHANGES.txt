@@ -1732,3 +1732,10 @@ M       CHANGES.txt
 Some editing and reordering in vbm12.txt.
 ------------------------------------------------------------------------
 r463 | gaser | 2013-04-15 12:25:04
+
+M       CHANGES.txt
+M       checkinopt.m
+
+Some editing in checkinopt.m.
+------------------------------------------------------------------------
+r464 | gaser | 2013-04-15 12:26:53
