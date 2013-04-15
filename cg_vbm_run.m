@@ -172,8 +172,9 @@ for iter=1:nit,
                     catch
                         spm_chi2_plot('Init','Coarse Affine Registration','Mean squared difference','Iteration');
                     end
+                    warning off;
                     [Affine, scale]  = spm_affreg(VG, VF1, aflags, M);
-
+                    warning on;
                     aflags.WG  = spm_vol(fullfile(spm('Dir'),'Toolbox','FieldMap','brainmask.nii'));
                     aflags.sep = aflags.sep/2;
                     try
