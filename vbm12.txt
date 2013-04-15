@@ -15,17 +15,6 @@
 % Naming convention of output files
 % ==========================================================================
 %
-% output images:
-%   wm[r]m*        bias corrected
-%   wm[r]mn*       bias and noise corrected
-%   wm[r]mg*       bias and noise corrected, global intensity normalized
-%   mw[r]th[1]*    thickness images
-%   mw[r]l[12]*    atlas maps
-%
-% expert output images:
-%   wm[r]ml*       bias and noise corrected, local intensity normalized
-%   mw[r]pc*       preprocessing change map 
-%
 % segmented images:
 %   m[0]w[r]p[0123]*[_affine]   
 %
@@ -42,6 +31,17 @@
 %   2         - WM
 %   3         - CSF
 %   _affine   - affine registered only
+%
+% bias corrected images:
+%   wm[r]m*        bias and noise corrected
+%   wm[r]mg*       bias and noise corrected, global intensity normalized
+%   mw[r]th1*      GM thickness map
+%   mw[r]l[12]*    atlas maps
+%
+% expert output images:
+%   wm[r]ml*       bias and noise corrected, local intensity normalized
+%   mw[r]pc*       preprocessing changes map 
+%
 % 
 % Extracted data, global morphological measure and image quality measures: 
 %   vbm_*.xml   
