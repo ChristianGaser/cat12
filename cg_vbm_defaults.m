@@ -31,78 +31,85 @@ vbm.opts.samp      = 3;      % Sampling distance
 %   modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
 %   dartel    0/1/2 (none/rigid/affine)
 
-vbm.output.bias.native  = 0;      % bias corrected
-vbm.output.bias.warped  = 0;      % bias corrected
-vbm.output.bias.affine  = 0;      % bias corrected
+% bias corrected
+vbm.output.bias.native = 0;
+vbm.output.bias.warped = 0;
+vbm.output.bias.affine = 0;
 
-vbm.output.mnT.native   = 0;      % bias and noise corrected 
-vbm.output.mnT.warped   = 0;      % bias and noise corrected
-vbm.output.mnT.affine   = 0;      % bias and noise corrected
+% bias and noise corrected
+vbm.output.mnT.native = 0;
+vbm.output.mnT.warped = 1;
+vbm.output.mnT.affine = 0;
 
-vbm.output.label.native = 0;      % label 
-vbm.output.label.warped = 0;      % label
-vbm.output.label.dartel = 0;      % label
+% global intensity, bias and noise corrected
+vbm.output.mgT.native = 0;
+vbm.output.mgT.warped = 0;
+vbm.output.mgT.mod    = 0;
+vbm.output.mgT.dartel = 0;
 
-vbm.output.mgT.native = 1;        % global intensity, bias and noise corrected
-vbm.output.mgT.warped = 0;        % global intensity, bias and noise corrected
-vbm.output.mgT.mod    = 0;        % global intensity, bias and noise corrected
-vbm.output.mgT.dartel = 0;        % global intensity, bias and noise corrected
+% local intensity, bias and noise corrected
+% WARNING: This is the resulting T1 image for the local adaptive segmentation
+% pipeline (vbm.extopts.LAS == 1). Do not use this map for any statistical analysis!
+vbm.output.mlT.native = 0;
+vbm.output.mlT.warped = 0;
+vbm.output.mlT.mod    = 0;
+vbm.output.mlT.dartel = 0;
 
-% WARNING: This is the result T1 image for the local adaptive segmentation
-% pipeline (vbm.extopts.LAS == 1). Do not use this map for any statistic!
-vbm.output.mlT.native = 0;        % local intensity, bias and noise corrected
-vbm.output.mlT.warped = 0;        % local intensity, bias and noise corrected
-vbm.output.mlT.mod    = 0;        % local intensity, bias and noise corrected
-vbm.output.mlT.dartel = 0;        % local intensity, bias and noise corrected
-
+% preprocessing changes map
 % WARNING: This map describes the changes of the preprocessing and is under development. 
-vbm.output.pcT.native = 1;        % preprocessing changing map
-vbm.output.pcT.warped = 0;        % preprocessing changing map
-vbm.output.pcT.mod    = 0;        % preprocessing changing map
-vbm.output.pcT.dartel = 0;        % preprocessing changing map
+vbm.output.pcT.native = 0;
+vbm.output.pcT.warped = 0;
+vbm.output.pcT.mod    = 0;
+vbm.output.pcT.dartel = 0;
 
-% tissue maps
-vbm.output.GM.native = 0;         % GM
-vbm.output.GM.warped = 0;         % GM
-vbm.output.GM.mod    = 2;         % GM
-vbm.output.GM.dartel = 0;         % GM
+% GM tissue maps
+vbm.output.GM.native = 0;
+vbm.output.GM.warped = 0;
+vbm.output.GM.mod    = 2;
+vbm.output.GM.dartel = 0;
 
-vbm.output.WM.native = 0;         % WM
-vbm.output.WM.warped = 1;         % WM
-vbm.output.WM.mod    = 0;         % WM
-vbm.output.WM.dartel = 0;         % WM
+% WM tissue maps
+vbm.output.WM.native = 0;
+vbm.output.WM.warped = 0;
+vbm.output.WM.mod    = 2;
+vbm.output.WM.dartel = 0;
 
-vbm.output.CSF.native = 0;        % CSF
-vbm.output.CSF.warped = 0;        % CSF
-vbm.output.CSF.mod    = 0;        % CSF
-vbm.output.CSF.dartel = 0;        % CSF
+% CSF tissue maps
+vbm.output.CSF.native = 0;
+vbm.output.CSF.warped = 0;
+vbm.output.CSF.mod    = 0;
+vbm.output.CSF.dartel = 0;
+
+% label
+vbm.output.label.native = 0; 
+vbm.output.label.warped = 0;
+vbm.output.label.dartel = 0;
+
+% GM thickness maps
+vbm.output.th1T.native = 0;
+vbm.output.th1T.warped = 0;
+vbm.output.th1T.dartel = 0;
+
+% WARNING: WM thickness is under development! 
+vbm.output.th2T.native = 0;
+vbm.output.th2T.warped = 0;
+vbm.output.th2T.dartel = 0;
+
+% partitioning atlas maps
+vbm.output.l1T.native = 0; 
+vbm.output.l1T.warped = 0; 
+vbm.output.l1T.dartel = 0; 
+
+vbm.output.l2T.native = 0;
+vbm.output.l2T.warped = 0;
+vbm.output.l2T.dartel = 0;
 
 % jacobian determinant 0/1 (none/yes)
 vbm.output.jacobian.warped = 0;
 
+% deformations
 % order is [forward inverse]
 vbm.output.warps = [0 0];
-
-% thickness maps
-vbm.output.th1T.native = 0;        % GM thickness
-vbm.output.th1T.warped = 0;        % GM thickness
-vbm.output.th1T.dartel = 0;        % GM thickness
-
-% WARNING: WM thickness is under development! 
-vbm.output.th2T.native = 0;        % WM thickness
-vbm.output.th2T.warped = 0;        % WM thickness
-vbm.output.th2T.dartel = 0;        % WM thickness
-
-% partitioning atlas maps
-vbm.output.l1T.native = 0;         % atlas of major structures 
-vbm.output.l1T.warped = 0;         % atlas of major structures 
-vbm.output.l1T.dartel = 0;         % atlas of major structures 
-
-vbm.output.l2T.native = 0;         % atlas for cortical regions
-vbm.output.l2T.warped = 0;         % atlas for cortical regions
-vbm.output.l2T.dartel = 0;         % atlas for cortical regions
-
-
 
 % Extended writing options
 %=======================================================================
@@ -141,7 +148,6 @@ vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for nor
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
 vbm.extopts.pbt.interpV = 1;    % resolution for thickness estimation: 1 - default; 0.5 high res
 vbm.extopts.pbt.atlas   = 0;    % use atlas map (thickness only for cortical regions:  0 - no;  1 - yes (default)
-
 
 % experimental (not yet working)
 %=======================================================================
