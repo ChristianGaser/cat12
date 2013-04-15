@@ -1771,3 +1771,11 @@ D       AmapMexNu.c
 Deleted som functions that are not necessary anymore.
 ------------------------------------------------------------------------
 r466 | gaser | 2013-04-15 14:55:50
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+M       vbm12.man
+
+Hide warning in cg_vbm_run.m that calls spm_affreg.m.
+------------------------------------------------------------------------
+r467 | gaser | 2013-04-15 15:41:37
