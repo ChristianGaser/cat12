@@ -26,7 +26,7 @@ else
         cg_vbm_defaults;
     else
         fprintf('Use defaults in %s.\n',vbm_defaults);
-        [path, name] = fileparts(vbm_defaults);
+        [path, name] = spm_fileparts(vbm_defaults);
         oldpath = pwd;
         eval(['cd ' path])
         eval(name);

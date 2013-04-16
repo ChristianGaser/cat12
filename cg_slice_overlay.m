@@ -77,7 +77,7 @@ else
     logP = OV.logP;
 end
 
-[path tmp ext] = fileparts(nm);
+[path tmp ext] = spm_fileparts(nm);
 img = nm;
 
 n_slice = size(OV.slices_str,1);
@@ -220,7 +220,7 @@ else
 	fig_size = dim;
 end
 
-[pt,nm] = fileparts(img);
+[pt,nm] = spm_fileparts(img);
 
 h = figure(12);
 set(h,...
@@ -269,7 +269,7 @@ end
 % save image
 image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf|tif',str2mat('none','png','jpeg','pdf','tiff'),2);
 if ~strcmp(image_ext,'none')
-	[pt,nm] = fileparts(img);
+	[pt,nm] = spm_fileparts(img);
 	
 	% use shorter ext for jpeg
 	if strcmp(image_ext,'jpeg')
