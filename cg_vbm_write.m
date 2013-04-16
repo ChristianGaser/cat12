@@ -75,7 +75,7 @@ do_dartel = warp.dartelwarp;   % apply dartel normalization
 warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
 
-[pth,nam] = fileparts(res.image(1).fname);
+[pth,nam] = spm_fileparts(res.image(1).fname);
 ind  = res.image(1).n;
 d    = res.image(1).dim(1:3);
 
@@ -113,7 +113,7 @@ for n=1:N,
     chan(n).B1 = spm_dctmtx(d(1),d3(1),x1(:,1));
     chan(n).T  = res.Tbias{n};
 
-    [pth1,nam1,ext1] = fileparts(res.image(n).fname);
+    [pth1,nam1] = spm_fileparts(res.image(n).fname);
     chan(n).ind      = res.image(n).n;
 
     if bf(n,1),
@@ -158,7 +158,7 @@ do_defs = do_defs || any([job.output.th1T.warped,job.output.mgT.warped,...
 do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
-        [pth,nam,ext1]=fileparts(res.image(1).fname);
+        [pth,nam] = spm_fileparts(res.image(1).fname);
         Ndef      = nifti;
         Ndef.dat  = file_array(fullfile(pth,['iy_', nam, '.nii']),...
                                [res.image(1).dim(1:3),1,3],...
@@ -309,7 +309,7 @@ if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
     warp.sanlm = min(1,warp.sanlm);
 end
 
-srcO=src+0;
+srcO = src+0;
 % optionally apply non local means denoising filter
 switch warp.sanlm
     case 0
@@ -320,7 +320,7 @@ switch warp.sanlm
         fprintf('NLM-Filter with multi-threading\n')
         sanlmMex(src,3,1);
 end
-srcN=src+0;
+srcN = src+0;
 
 
 if do_cls && do_defs,
@@ -874,7 +874,7 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
         end
     end
     
-    [pth,nam]=fileparts(res.image(1).fname);
+    [pth,nam] = spm_fileparts(res.image(1).fname);
 
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
@@ -937,7 +937,7 @@ if any(struct2array(job.output.l1T));
   l1T = single(spm_read_vols(l1V));
   
   vbm_io_niiwrite(VT,pfT,'pf', ...
-    'vbm12 - ventrile field label map',...
+    'vbm12 - ventricle field label map',...
     'float32',[0,1],min([0 1 1],struct2array(job.output.l1T)),0,trans);
   vbm_io_niiwrite(VT,l1T,'l1', ...
     'vbm12 - brain atlas map for major structures and sides',...
@@ -1046,7 +1046,7 @@ if cg_vbm_get_defaults('output.surf.dartel')
   wm_label(wm_label==value_left)  = 127;
   wm_label(wm_label==value_right) = 255;
 
-  [pth,nam,ext1]=fileparts(res.image(1).fname);
+  [pth,nam] = spm_fileparts(res.image(1).fname);
   VT      = struct('fname',fullfile(pth,['wmlabel_', nam, '.nii']),...
             'dim',  odim,...
             'dt',   [spm_type('int8') spm_platform('bigend')],...
