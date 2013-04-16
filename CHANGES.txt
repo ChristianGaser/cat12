@@ -1826,3 +1826,12 @@ This update include a lot of new methods and function mostly with alpa-status.
     Runs with default SPM segmentation.
 ------------------------------------------------------------------------
 r469 | dahnke | 2013-04-15 16:51:02
+
+M       cg_vbm_defaults.m
+M       CHANGES.txt
+M       vbm12.man
+
+Changed regularization default to new default of SPM12 r5373.
+
+------------------------------------------------------------------------
+r470 | gaser | 2013-04-16 13:54:00
