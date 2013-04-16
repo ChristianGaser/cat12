@@ -378,10 +378,10 @@ if do_cls && do_defs,
     %%
     
     
-    % Dieser Teil muss demnächst mal in eine Subfunktion, die alldings
+    % Dieser Teil muss demnÃ¤chst mal in eine Subfunktion, die alldings
     % in dieser Datei verweilen darf, da sie sonst nicht weiter genutzt
     % werden kann. 
-    % Das selbe sollte für das GBM passieren.
+    % Das selbe sollte fÃ¼r das GBM passieren.
     % ==================================================================
     if job.extopts.LAS 
       fprintf('Local Adaptive Segmenation\n');
@@ -898,6 +898,7 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     %clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
     
     trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
+    trans.atlas.y = y; 
 end
 
 if exist('y','var'),
@@ -917,156 +918,49 @@ if exist('y','var'),
 end
 
 
-%% partioning
-% das partioning kann helfen spezielle strukturen wie blutgefäße besser
-% zu erfassen und damit die segmentierung zu verbessern
+%% partioning & bloood vessel estimation
 if any(struct2array(job.output.l1T));
- %%
-  opt.partvol.Fp0A  = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p0A.nii');
-  opt.partvol.Fp4A  = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
-  VT = spm_vol(res.image(1).fname);
-  
+  opt.partvol.res    = 1; 
+  opt.partvol.vx_vol = vx_vol; 
+  opt.partvol.l1A    = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
+
+  % map atlas to RAW space
+  Vl1A = spm_vol(opt.partvol.l1A);
+  l1A  = uint8(spm_sample_vol(Vl1A, double(trans.atlas.y(:,:,:,1)), ...
+                                    double(trans.atlas.y(:,:,:,2)), ...
+                                    double(trans.atlas.y(:,:,:,3)), 0));
+  l1A = reshape(l1A,d);
+
   label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-  mgV = vbm_io_niiwrite(VT,src/mean(src(cls{2}(:)>240)),'mg','label map','float32',[0,3],[1 0 0 0],0);
-  p0V = vbm_io_niiwrite(VT,label2,'p0','label map','uint8',[0,3/255],[1 0 0 0],0);
-  clear label2;
-  
-  [l1V,pfV] = vbm_pre_partvol( mgV(1) , p0V(1) ,opt.partvol);
-  
-  pfT = single(spm_read_vols(pfV));
-  l1T = single(spm_read_vols(l1V));
-  
-  vbm_io_niiwrite(VT,pfT,'pf', ...
-    'vbm12 - ventricle field label map',...
-    'float32',[0,1],min([0 1 1],struct2array(job.output.l1T)),0,trans);
-  vbm_io_niiwrite(VT,l1T,'l1', ...
-    'vbm12 - brain atlas map for major structures and sides',...
-    'uint8',[0,1],min([0 1 1],struct2array(job.output.l1T)),0,trans);
-else
-  pfT = single(label)/255*3;
-end
 
+  % individual refinement
+  l1T = vbm_vol_partvol(l1A,label2,TI,opt.partvol);
 
-
-%% Testpart for Dartelbased partitioning
-%{
-if 1
-  %% init
-  reso = 2;
-  
-   def.LAB.CT = [ 1  2]; % cortex
-  def.LAB.MB = [13 14]; % MidBrain
-  def.LAB.BS = [13 14]; % BrainStem
-  def.LAB.CB = [ 3  4]; % Cerebellum
-  def.LAB.ON = [11 12]; % Optical Nerv
-  def.LAB.BG = [ 5  6]; % BasalGanglia 
-  def.LAB.TH = [ 9 10]; % Hypothalamus 
-  def.LAB.HC = [19 20]; % Hippocampus 
-  def.LAB.VmxT = [15 16]; % Ventricle
-  def.LAB.NV = [17 18]; % no Ventricle
-  def.LAB.BV = [ 7  8]; % BlodsodVessels
-  def.LAB.NB = [ 0  0]; % no brain 
-  def.LAB.HD = [21 22]; % head
-  
-  opt   = checkinopt(opt,def);
-  
-  
-  Vl1A = spm_vol(fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','p4A.nii'));
-  p4A = spm_sample_vol(Vl1A, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 0);
-  p4A = reshape(p4A,d); p4A = uint8(p4A); 
-  
-  mxT = TIG/3;
-  p0T = zeros(d,'single'); p0T(indx,indy,indz) = single(label)*3/255;
-  
-  
-     %% OPTIMIZATION:
-      % ds('l2','',vx_vol,mxT,p4A,mxT,p0T/3,130)
-      [mxT,p0T,p4A,BB] = vbm_vol_resize({mxT,p0T,p4A},'reduceBrain',vx_vol,5,p0T>0);   % removing of background
-      [mxT,p0T,resTr]  = vbm_vol_resize({mxT,p0T},'reduceV',vx_vol,opt.res,64); 
-      p4A              = vbm_vol_resize(p4A   ,'reduceV',vx_vol,opt.res,64,'nearest'); 
-
-      p4ANS = round(p4A/2)*2-1;
-      mi3T  = mxT*3; %vbm_vol_iscale(mxT,'gCGW',resTr.vx_volr,p0T)*3;
-
-      %% alignment of high intensity structures 
-      p4T=zeros(size(mxT),'single'); p4T(vbm_vol_morph(p0T>0 & mi3T<0.3,'ldo',2,resTr.vx_volr)==1)=-1; p4T(p4A>0)=0;       % backgound
-      p4T(vbm_vol_morph(p0T<0.5,'open')==1 & mi3T>2.5) = opt.LAB.HD(1);                                                    % head
-      for s=1:2
-        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.CT(s),'lab')) = opt.LAB.CT(1); % cortex
-        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.BS(s),'lab')) = opt.LAB.BS(1); % brainstem
-        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.MB(s),'lab')) = opt.LAB.MB(1); % midbrain
-        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.CB(s),'lab')) = opt.LAB.CB(1); % cerebellum
-        p4T(vbm_vol_morph(mi3T>2.5 & p4A==opt.LAB.ON(s),'lab')) = opt.LAB.ON(1); % optical nerv
-      end
-      p4T(p4ANS==opt.LAB.BV(1) & mi3T>3 & p0T>0 & vbm_vol_morph(mi3T<2,'labclose',1,resTr.vx_volr) & ...
-        (~vbm_vol_morph(mi3T>2.5,'lab') | mi3T>4.0)) = opt.LAB.BV(1);                                 % blood vessels
-
-     % region-growing for special high intensity regions
-      p4T((mi3T<=2.9 & p4T==0)) = -inf; p4T = vbm_vol_simgrow(p4T,mi3T,1);p4T(isinf(p4T))=0; 
-    %  M = mi3T>2.5 & (p4ANS==opt.LAB.CT(1) | p4ANS==opt.LAB.CB(1) | p4ANS==opt.LAB.BV(1) | p4ANS==opt.LAB.HD(1) | p4ANS==opt.LAB.ON(1));
-    %  p4T(M)=p4ANS(M); p4T(isinf(p4T))=0; 
-
-      % alignment of medium and low intensity structures
-      p4T(p4ANS==opt.LAB.BG(1) & p4T==0 & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.BG(1);          % basal ganglia
-      p4T(p4ANS==opt.LAB.TH(1) & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.TH(1);                   % hypothalamus
-      p4T(p4ANS==opt.LAB.HC(1) & mi3T>1.75 & mi3T<2.75 & mi3T<2.9) = opt.LAB.HC(1);                   % hippocampus
-      for s=1:2
-        p4T(vbm_vol_morph(p4A==opt.LAB.VmxT(s) & mi3T<1.75,'lab') & mi3T<1.25) = opt.LAB.VmxT(1);     % ventricle
-      end
-
-end
-%}
-
-% get inverse deformations for warping submask to raw space
-% experimental: not yet finished!!!
-%{
-if cg_vbm_get_defaults('output.surf.dartel')
-  Vsubmask = spm_vol(char(cg_vbm_get_defaults('extopts.mask')));
-  submask = spm_sample_vol(Vsubmask, double(y(:,:,:,1)), double(y(:,:,:,2)), double(y(:,:,:,3)), 1);
-  submask = reshape(submask,d);
+  % save results
+  VT = spm_vol(res.image(1).fname);
+  vbm_io_niiwrite(VT,l1T,'l1','brain atlas map for major structures and sides',...
+    'uint8',[0,1],struct2array(job.output.l1T),0,trans);
  
-  % surfmask = WM label
-  wm_label = uint8(label > 2.5/3.0*255);
   
-  % fill subcortical areas and ventricle using submask
-  wm_label(submask(indx,indy,indz) > 1) = 1;
-%  wm_label = cg_morph_vol(wm_label,'close',1,0.5);
-       
-  % cut midline and pons
-  wm_label((round(double(submask(indx,indy,indz) == 1)))) = 0;
+  % update tissues and classes???
 
-  % use only largest WM cluster at th0 as seed parameter
-  % mask out all voxels where wm is lower than gm or csf
-  wm_label = mask_2largest_clusters(wm_label, 0.5);
+  %{
+  % for external functions ...
 
-  mid = round(size(submask,1)/2);
-  value_left  = max(max(max(wm_label(1:(mid-30),:,:))));
-  value_right = max(max(max(wm_label((mid+30):end,:,:))));
+  % removement of bv & meninges ... NEED MORE WORK
+  %BV = vbm_vol_morph((p4ANS==opt.LAB.HD(1) | p4ANS==opt.LAB.BV(1) | l1T<=0) & ~p0T,'labclose')==1; D=vbdist(single(~BV))*2;
+  %pfT(BV)=max(1.9-D(BV),1); mf3T(BV)=max(min(1.9-D(BV),mf3T(BV)),1);
 
-  wm_label(wm_label==value_left)  = 127;
-  wm_label(wm_label==value_right) = 255;
+  % blood vessel correction...
+  %....
 
-  [pth,nam] = spm_fileparts(res.image(1).fname);
-  VT      = struct('fname',fullfile(pth,['wmlabel_', nam, '.nii']),...
-            'dim',  odim,...
-            'dt',   [spm_type('int8') spm_platform('bigend')],...
-            'pinfo',[1 0]',...
-            'mat',matr);
-  VT = spm_create_vol(VT);
-
-  Ni             = nifti(VT.fname);
-  Ni.mat0        = mat0r;
-  Ni.mat_intent  = 'Aligned';
-  Ni.mat0_intent = 'Aligned';
-  create(Ni);
-
-  for i=1:odim(3),
-    tmp = spm_slice_vol(wm_label,Mr*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255;
-    tmp = round(tmp);
-    VT  = spm_write_plane(VT,tmp,i);
-  end
-  clear tmp1
-
+  pfT = max(pfT,min(3,MF)); 
+  mfT = max(mfT,min(1,MF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & MF>3)=smfT(mfT>1 & MF>3); 
+  %}
+  
+  
+  
+  clear l1A label2 VT Vl1A;
 end
 %}
 % write raw segmented images
@@ -1086,11 +980,11 @@ clear tiss
 %
 % die funktion muss noch umgebaut werden, so das die wertebestimmung
 % als extra teilfunktion existiert, die du hier direkt aufrufen kannst
-% in diese teilfunktion müssen dann auch die bewertungskriterien
-% (übergeben werden)
+% in diese teilfunktion mÃ¼ssen dann auch die bewertungskriterien
+% (Ã¼bergeben werden)
 %
 % das ganze sollte mit dem TIQA (differenzbild des T1 und der segmentierung)
-% verknüpft werden
+% verknÃ¼pft werden
 %
 % label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
 % [QAS,QAM,QAT,QATm] = vbm_vol_t1qa(srcO,label2,src,...
@@ -1098,21 +992,27 @@ clear tiss
 %
 
 
-% preprocessing change map
-if ~exist('TIQA','var')
-  T3th = [median(src(cls{3}(:)>240)) ...
-          median(src(cls{1}(:)>240)) ...
-          median(src(cls{2}(:)>240))];
-  TIQA = vbm_vol_iscale(srcO,'gCGW',vx_vol,T3th); clear srcO; 
+%% preprocessing change map
+if struct2array(job.output.pcT)
+  if ~exist('TIQA','var')
+    T3th = [median(src(cls{3}(:)>240)) ...
+            median(src(cls{1}(:)>240)) ...
+            median(src(cls{2}(:)>240))];
+    TIQA = vbm_vol_iscale(srcO,'gCGW',vx_vol,T3th); clear srcO; 
+  end
+  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)/255; 
+  pcT = abs(min(7/6,TIQA) - label2); %./label2 .* (label2>0); 
+  pcT = vbm_vol_smooth3X(pcT,1);
+  QAS.RAW.pc = sum(pcT(:));
+  
+  vbm_io_niiwrite(VT,pcT,'pc', ...
+    'vbm12 - preprocessing change/correction map', ...
+    'float32',[0,1],struct2array(job.output.pcT),0,trans);
+  clear label2 pcT;
 end
-label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)/255; 
-pcT = abs(min(7/6,TIQA) - label2); %./label2 .* (label2>0); 
-pcT = vbm_vol_smooth3X(pcT,1);
-QAS.RAW.pc = sum(pcT(:));
-clear label2; 
 
 
-% global tissue volumes
+%% global tissue volumes
 volfactor = abs(det(M0(1:3,1:3)))/1000;
 for vi=1:3, QAS.RAW.vol(vi) = volfactor*sum(cls{vi}(:))/255; end
 
@@ -1120,6 +1020,7 @@ for vi=1:3, QAS.RAW.vol(vi) = volfactor*sum(cls{vi}(:))/255; end
 vbm_io_xml(fullfile(pp,['vbm_' ff '.xml']),struct('RAW',QAS),'write+');
 
 clear pp ff ee volfactor vi;
+
 
 
 
@@ -1175,15 +1076,6 @@ if job.extopts.LAS && any(struct2array(job.output.mlT))
     'vbm12 - masked, noise corrected, bias corrected, local intensity scaled T1 image',...
     'float32',[0,1],struct2array(job.output.mlT),0,trans);
   clear TIG;
-end
-
-
-%% preprocessing changes
-if any(struct2array(job.output.pcT))
-  vbm_io_niiwrite(VT,pcT,'pc', ...
-    'vbm12 - preprocessing change/correction map', ...
-    'float32',[0,1],struct2array(job.output.pcT),0,trans);
-  clear pcT;
 end
 
 
