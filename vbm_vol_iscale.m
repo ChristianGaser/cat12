@@ -355,7 +355,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       fprintf('FindBrainTest: \n');
       for subj = 1:numel(V)
         % display subject name and home directory
-        [pp,ff] = fileparts(V(subj).fname); [pp,hh]=fileparts(pp); 
+        [pp,ff] = spm_fileparts(V(subj).fname); [pp,hh]=spm_fileparts(pp); 
         fn = [hh filesep ff]; clear pp ff;
         fprintf(1,'%s',fliplr(sprintf(sprintf('%% %ds',opt.fnamelenght),...
           fliplr(fn(1:min(numel(fn),opt.fnamelenght)))))); clear space fn; 

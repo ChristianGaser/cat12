@@ -214,8 +214,9 @@ function varargout = vbm_io_niiwrite(V,Y,pre,desc,spmtype,range,write,addpre,tra
 
   
 end
+
 function FO = vbm_io_handle_pre(F,pre,post,addpre,existfile)
-% Remove all known vbm prefix typs from a filename (and check if this file exist). 
+% Remove all known vbm prefix types from a filename (and check if this file exist). 
   [pp,ff,ee] = spm_fileparts(F); 
 
   if ~addpre
@@ -231,10 +232,11 @@ function FO = vbm_io_handle_pre(F,pre,post,addpre,existfile)
       if numel(ff)>pf+1 && any(strcmp(ff(1:pf),prefix{pf})) && ...
         (~existfile || exist(fullfile(pp,[ff(pf+1:end) ee]),'file'))
          FN = vbm_io_handle_pre(fullfile(pp,[ff(pf+1:end) ee]),'','',addpre,existfile); 
-         if (~existfile || exist(FN,'file')), [ppn,ffn] = fileparts(FN); ff=ffn; end
+         if (~existfile || exist(FN,'file')), [ppn,ffn] = spm_fileparts(FN); ff=ffn; end
       end
     end
   end
   
-  FO = fullfile(pp,[pre ff post ee]);
+  % always use .nii as extension
+  FO = fullfile(pp,[pre ff post '.nii']);
 end

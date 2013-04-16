@@ -191,7 +191,7 @@ for iter=1:nit,
             else
                 % Load results from previous iteration for use with next round of
                 % iterations, with the new group-specific tissue probability map.
-                [pth,nam] = fileparts(job.channel(1).vols{subj});
+                [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
                 res       = load(fullfile(pth,[nam '_seg8.mat']));                
                 obj.Affine = res.Affine;
                 obj.Twarp  = res.Twarp;
@@ -206,13 +206,13 @@ for iter=1:nit,
             res = spm_preproc8(obj);
 
             try
-                [pth,nam] = fileparts(job.channel(1).vols{subj});
+                [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
                 save(fullfile(pth,[nam '_seg8.mat']),'-struct','res', spm_get_defaults('mat.format'));
             catch
             end
 
         else % only write segmentations
-            [pth,nam] = fileparts(job.channel(1).vols{subj});
+            [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
             seg8_name = fullfile(pth,[nam '_seg8.mat']);
             if exist(seg8_name)
                 res = load(seg8_name);
