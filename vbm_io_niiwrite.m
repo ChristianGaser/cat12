@@ -134,8 +134,8 @@ function varargout = vbm_io_niiwrite(V,Y,pre,desc,spmtype,range,write,addpre,tra
     fname = vbm_io_handle_pre(V.fname,pre3,'',addpre,1);
     
     if write(3)==2
-      [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));
-      w       = vbm_vol_smooth3X(wr,1.0); wT = wT./wr.*w; clear wr w;  % smoother warping
+      [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
+      %w       = vbm_vol_smooth3X(wr,1.0); wT = wT./wr.*w; clear wr w;  % smoother warping
     else
       if ~exist('wT','var')
         wT = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));   
