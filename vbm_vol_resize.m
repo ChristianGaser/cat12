@@ -277,6 +277,83 @@ function varargout=vbm_vol_resize(T,operation,varargin)
         end
       end
     
+    case 'interp'
+      if numel(varargin)>0, hdr = varargin{1}; end
+      if numel(varargin)>1, res = varargin{2}; end
+      if numel(varargin)>2, method = varargin{3}; end
+       
+      if ~exist('hdr','var') || isempty(hdr),
+        hdr.mat=[1 0 0 1;0 1 0 1; 0 0 1 1; 0 0 0 1]; 
+        hdr.dim=size(T); 
+      end
+      if numel(res)==1, res(2:3)=res; end
+      if numel(res)==2, res=[res(1),res]; end
+      if ~exist('method','var'), method='linear'; end
+      
+      T = single(T{1});
+
+      res    = round(res*100)/100;
+      resV   = round(sqrt(sum(hdr.mat(1:3,1:3).^2))*100)/100;
+      hdrO   = hdr; 
+      sizeO  = size(T);
+
+      if all(res>0) && any(resV>res)
+        % final size of the interpolated image
+        [Dx,Dy,Dz]=meshgrid(single(res(2) / resV(2) : res(2)/resV(2) : size(T,2)),...
+                            single(res(1) / resV(1) : res(1)/resV(1) : size(T,1)),...
+                            single(res(3) / resV(3) : res(3)/resV(3) : size(T,3))); 
+        %T = spm_sample_vol(T,Dx,Dy,Dz,method);
+        T = vbm_vol_interp3f(T,Dx,Dy,Dz,method);
+        clear Dx Dy Dz;
+        
+        hdr.dim=size(T);
+        hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
+      elseif all(res>0) && any(resV<=res)
+        d = single(res./resV);
+        [Rx,Ry,Rz]=meshgrid(d(1):d(1):size(T,2),d(2):d(2):size(T,1),d(3):d(3):size(T,3));
+        T = vbm_vol_interp3f(T,Rx,Ry,Rz,method);
+        clear Rx Ry Rz;
+        
+        hdr.dim=size(D);
+        hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
+    %    hdr.mat([1,6,11])  = sign(hdr.mat([1,6,11]))  .* res;
+      end
+
+      varargout{1}       = T;
+      varargout{2}.hdrO  = hdrO;
+      varargout{2}.hdrN  = hdr;
+      varargout{2}.sizeO = sizeO;
+      varargout{2}.sizeN = size(T);
+      varargout{2}.resO  = resV;
+      varargout{2}.resN  = res;
+      
+      
+    case 'deinterp'
+      res   = varargin{1}.resO;
+      resV  = varargin{1}.resN;
+      sizeO = varargin{1}.resO;
+      if numel(varargin)>1, method = varargin{2}; else method=1; end
+      
+      T = single(T{1});
+      
+      if all(res>0) && any(round(abs(res)*100)/100>resV)
+        d = single(res./resV);
+        %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
+        [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
+        T = vbm_vol_interp3f(T,Rx,Ry,Rz,method);
+        clear Rx Ry Rz;
+      end
+      
+      
+      varargout{1} = zeros(varargin{1}.sizeO,'single');
+      varargout{1}(1:min(size(T,1),varargin{1}.sizeO(1)), ...
+                   1:min(size(T,2),varargin{1}.sizeO(2)), ...
+                   1:min(size(T,3),varargin{1}.sizeO(3))) = ...
+                 T(1:min(size(T,1),varargin{1}.sizeO(1)), ...
+                   1:min(size(T,2),varargin{1}.sizeO(2)), ...
+                   1:min(size(T,3),varargin{1}.sizeO(3))); 
+      
+        
     % OTHERWISE
     % __________________________________________________________________
     otherwise

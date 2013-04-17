@@ -146,8 +146,9 @@ vbm.extopts.bias_fwhm   = 60;   % FWHM of Kmeans internal bias correction
 vbm.extopts.vox         = 1.5;  % voxel size for normalized data
 vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
+vbm.extopts.BVC         = 1;    % Blood Vessel Correction: 
 vbm.extopts.pbt.interpV = 1;    % resolution for thickness estimation: 1 - default; 0.5 high res
-vbm.extopts.pbt.atlas   = 0;    % use atlas map (thickness only for cortical regions:  0 - no;  1 - yes (default)
+vbm.extopts.pbt.atlas   = 1;    % use atlas map (thickness only for cortical regions:  0 - no;  1 - yes (default)
 
 % experimental (not yet working)
 %=======================================================================
