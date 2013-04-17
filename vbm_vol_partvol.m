@@ -1,4 +1,4 @@
-function l1T = vbm_vol_partvol(l1A,p0T,mgT,opt)
+function [l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
 % ______________________________________________________________________
 % Use a segment map p0T, the global intensity normalized T1 map mgT and 
 % the atlas label map l1T to create a individual label map l1T. 
@@ -27,6 +27,11 @@ function l1T = vbm_vol_partvol(l1A,p0T,mgT,opt)
 %   - Blutgefäße könnnen als erweitere Masken für fMRI genutzt werden um
 %     Seiteneffekte besser ausblenden zu können.
 %  [- Beliebige Atlanten können genutzt werden.]
+%
+%  Todo:
+%   - Entfernen von unsicheren Regionen
+%   - stärkerer Abgleich mit p0T
+%   - stärkere Einbindung der LAS
 % ______________________________________________________________________
 %
 % Structure:
@@ -108,10 +113,12 @@ function l1T = vbm_vol_partvol(l1A,p0T,mgT,opt)
   
   BV = (l1T==0 & mgT>2.2 & ~WM) | ...
        (l1T==0 & p4ANS==opt.LAB.BV(1) & ((mgT>1.2 & mgT<1.8) | (mgT>2.2)) & ~WM) ; 
-  BV = BV | (vbm_vol_morph(BV,'lc',2) & mgT>1.2 & ~WM); BV=smooth3(BV)>0.5;
+  BV = BV | (vbm_vol_morph(BV,'dilate',1) & mgT>2.1); 
+  BV = BV | (vbm_vol_morph(BV,'labclose',2) & mgT>1.8 & ~WM); BV=smooth3(BV)>0.5;
   l1T(BV) =  opt.LAB.BV(1);  
   
-
+ %BV(WM & (TIG<2 | ~mask))=nan; BV(WM)=2; [BV,D]=vbm_vol_downcut(BV,TIG/3,0.05); BV(BV==2)=0;
+        
   %% region-growing for special high intensity regions
   l1T((mgT<=2.9 & l1T==0)) = -inf; l1T = vbm_vol_simgrow(l1T,mgT,1);l1T(isinf(l1T))=0; 
 
