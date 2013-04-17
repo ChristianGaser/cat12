@@ -41,13 +41,16 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   %cond = {'resV(1)==resV(2)';'resV(1)==resV(3)'}; % only isotropic (see qedist and gbdist)
   opt  = checkinopt(opt,def);%,cond);
   mvxs = mean(opt.resV);
+  SSEG = round(SSEG*10)/10;
   SSEG(SSEG<1.25)=0;
+  
+  [SSEG,BB] = vbm_vol_resize(SSEG,'reduceBrain',repmat(opt.resV,1,3),2,SSEG>0);   % removing of background
   
   % additional re-estimation of the boundarys... in development:
   % funkt nicht ... der einschnitt erzeugt einen fehler der vergleichbar
   % hoch ist - zwar etwas netter (vor allem dünner) - aber nicht sinnvoll
   % begründbar
-  if  0 && strmatch(opt.method,'pbt2x','exact')
+  if  0 && strcmp(opt.method,'pbt2x')
     % Refinement of sulcal areas: Although pbt do not need this to find
     % the sulcus it helps to find the CSF boundary a little bit more exact.
     % It it not usefull for the WM boundary because it may remove the
@@ -60,8 +63,8 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 %     M = SSEG>2 & SSEG<3; SSEG(M) = max(SSEG(M),2.75-0.75*PP(M)); %max(SSEG(M),min(2.75,3-PP(M)));
 %     clear WMD CSFD PP;
 
-    M = max(0,min(1,(SSEG-1.9)*10)); M(SSEG<=1)=-inf; WMD  = eidist_r04(M,ones(size(M),'single')); dp(opt);
-    M = max(0,min(1,(1.1-SSEG)*10)); M(SSEG>=2)=-inf; CSFD = eidist_r04(M,ones(size(M),'single')); dp(opt);
+    M = max(0,min(1,(SSEG-1.9)*10)); M(SSEG<=1)=-inf; WMD  = vbm_vol_eidist(M,ones(size(M),'single')); 
+    M = max(0,min(1,(1.1-SSEG)*10)); M(SSEG>=2)=-inf; CSFD = vbm_vol_eidist(M,ones(size(M),'single')); 
 
     try %#ok<TRYNC>
       [GMT,PP] = vbm_vol_pbtp( (1.1*(SSEG-1.5) ) + 2 , WMD , CSFD );  % 1.25 , 1.1
@@ -75,14 +78,14 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 
   % estimate WM distance WMD and the non-corrected CSF distance CSFD (not correct in sulcal areas)  
   %L = laplace3(single(SSEG==2)*0.5 + single(SSEG>2),0,1,0.01);
-  M = max(0,min(1,(SSEG-2))); M(SSEG<1)=-inf; WMD  = vbm_vol_eidist(M,max(0,( max(0,min(1,SSEG-1))))); dp(opt); % L + min.../2
-  M = max(0,min(1,(SSEG-1))); M(SSEG<1)=-inf; CSFD = vbm_vol_eidist(M,max(0,  max(0,min(1,SSEG-1))));    dp(opt); 
+  M = max(0,min(1,(SSEG-2))); M(SSEG<1)=-inf; WMD  = vbm_vol_eidist(M,max(0,( max(0,min(1,SSEG-1))))); % L + min.../2
+  M = max(0,min(1,(SSEG-1))); M(SSEG<1)=-inf; CSFD = vbm_vol_eidist(M,max(0,  max(0,min(1,SSEG-1))));   
   M = SSEG>1 & SSEG<1.5; WMD(M) = WMD(M) - CSFD(M); clear CSFD;
   WMDM = vbm_vol_median3(WMD,WMD>mvxs & M,WMD>mvxs & M,opt.resV/8); WMD(M) = WMDM(M); clear WMDM;
 
-  if strmatch(opt.method,'pbt2x','exact')  
-    M = max(0,min(1,(2-SSEG))); M(SSEG>=3)=-inf; CSFD = vbm_vol_eidist(M,max(0,(min(1,3-SSEG)))); dp(opt); %(1-L + min(1,3-SSEG))/2))
-    M = max(0,min(1,(3-SSEG))); M(SSEG>=3)=-inf; WMDC = vbm_vol_eidist(M,max(0, min(1,3-SSEG)));    dp(opt); 
+  if strcmp(opt.method,'pbt2x')  
+    M = max(0,min(1,(2-SSEG))); M(SSEG>=3)=-inf; CSFD = vbm_vol_eidist(M,max(0,(min(1,3-SSEG)))); %(1-L + min(1,3-SSEG))/2))
+    M = max(0,min(1,(3-SSEG))); M(SSEG>=3)=-inf; WMDC = vbm_vol_eidist(M,max(0, min(1,3-SSEG)));   
     M = SSEG>2.5 & SSEG<3.0; CSFD(M) = CSFD(M) - WMDC(M); clear WMDC;
     CSFDM = vbm_vol_median3(CSFD,CSFD>mvxs & M,CSFD>mvxs & M,opt.resV/8); CSFD(M) = CSFDM(M); clear CSFDM;
     clear L M; 
@@ -119,4 +122,5 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   GMT(SSEG<1.5 | SSEG>2.5)=nan; GMT=vbm_vol_nanmean3(GMT); GMT(isnan(GMT))=eps; % erweitern
   GMTS = smooth3(GMT,'gaussian',3,0.9); GMT(SSEG>=2 & SSEG<2.5)=GMTS(SSEG>=2 & SSEG<2.5); clear GMTs % smoothen allerdings nur für sicheren bereich
   
+  [GMT,PP] = vbm_vol_resize({GMT,PP},'dereduceBrain',BB);
 end

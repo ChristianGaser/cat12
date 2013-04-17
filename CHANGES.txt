@@ -1864,3 +1864,20 @@ A       vbm_vol_partvol.m
 
 ------------------------------------------------------------------------
 r472 | dahnke | 2013-04-16 14:44:12
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+D       vbm_io_niiwrite.m
+A  +    vbm_io_writenii.m
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+M       vbm_vol_resize.m
+
+(1) Added interpolation and deinterpolation function in vbm_vol_resize for 
+    thickness/surface estimation.
+(2) Added blood vessel correction.
+(3) Correct error in pcT.
+
+------------------------------------------------------------------------
+r473 | dahnke | 2013-04-17 18:12:27
