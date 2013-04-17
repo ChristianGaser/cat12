@@ -937,7 +937,7 @@ if any(struct2array(job.output.l1T))  || job.extopts.BVC || ...
    
   
   %% Blood Vessel Correction 
-  if job.extopts.BVC 
+  if cg_vbm_get_defaults('extopts.pbt.interpV'); 
     fprintf('Blood Vessel Correction: ');
     
     BV   = l1T==7 | l1T==8; 
