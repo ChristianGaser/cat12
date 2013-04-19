@@ -1,5 +1,5 @@
 function cg_check_cov(vargin)
-%cg_check_cov	to check covriance across sample
+%cg_check_cov to check covriance across sample
 %
 % Images have to be in the same orientation with same voxel size
 % and dimension (e.g. normalized images)
@@ -45,8 +45,8 @@ if nargin < 1
   else
     nuisance = [];
   end
-	slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
-	gap = spm_input('Gap for slices to speed up','+1','e',0,1);
+  slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
+  gap = spm_input('Gap for slices to speed up','+1','e',0,1);
 end
 
 if ~isempty(nuisance)
@@ -65,8 +65,8 @@ range = ([1 V(1).dim(3)] - Orig(3))*vx(3);
 % calculate slice from mm to voxel
 sl = round(slice_mm/vx(3)+Orig(3));
 while (sl < 1) | (sl > V(1).dim(3))
-	slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
-	sl = round(slice_mm/vx(3)+Orig(3));
+  slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
+  sl = round(slice_mm/vx(3)+Orig(3));
 end
 
 % global scaling
@@ -111,9 +111,9 @@ for j=slices
     vol(:,i) = img(:);
   end
 
-	% get slice data
+  % get slice data
   if j == sl
-  	slice_array = reshape(vol,[V(1).dim(1:2) n]);
+    slice_array = reshape(vol,[V(1).dim(1:2) n]);
   end
 
   mean_slice = mean(reshape(vol,[V(i).dim(1:2) n]),3);
@@ -127,7 +127,7 @@ for j=slices
     % make sure data is zero mean
     tmp_vol = vol(mask,:);
     tmp_vol = tmp_vol - repmat(mean(tmp_vol,1), [length(mask) 1]);
-	  YpY = YpY + (tmp_vol'*tmp_vol)/n;
+    YpY = YpY + (tmp_vol'*tmp_vol)/n;
   end 
   spm_progress_bar('Set',j);  
 end
@@ -150,11 +150,11 @@ Nsorted = P(jY,:);
 % extract mean covariance
 mean_cov = zeros(n,1);
 for i=1:n
-	% extract row for each subject
-	cov0 = YpY(i,:);
-	% remove cov with its own
-	cov0(i) = [];
-	mean_cov(i) = mean(cov0);
+  % extract row for each subject
+  cov0 = YpY(i,:);
+  % remove cov with its own
+  cov0(i) = [];
+  mean_cov(i) = mean(cov0);
 end
 
 threshold_cov = mean(mean_cov) - 2*std(mean_cov);
@@ -256,10 +256,10 @@ ima(ind_tril) = 0;
 ima(ind_tril) = 1 + 1/64 + YpYsorted_scaled(ind_tril);
 image(64*ima)
 if n_thresholded <= n
-	hold on
-	line([n_thresholded-0.5, n_thresholded-0.5], [0.5,n_thresholded-0.5])
-	line([0.5,n_thresholded-0.5],[n_thresholded-0.5, n_thresholded-0.5])
-	hold off
+  hold on
+  line([n_thresholded-0.5, n_thresholded-0.5], [0.5,n_thresholded-0.5])
+  line([0.5,n_thresholded-0.5],[n_thresholded-0.5, n_thresholded-0.5])
+  hold off
 end
 a = gca;
 set(a,'XTickLabel','','YTickLabel','');
@@ -275,11 +275,11 @@ set(f,'MenuBar','none','Name','Slice preview','NumberTitle','off','Position',[12
 
 % Close button
 hCloseButton = uicontrol(f,...
-    		'position',[V(1).dim(2)-40 4*V(1).dim(1)-25 80 20],...
-    		'style','Pushbutton',...
-    		'string','Close',...
-    		'callback','try close(6); end; try close(5); end;try close(4);end;',...
-    		'ToolTipString','Close windows',...
+        'position',[V(1).dim(2)-40 4*V(1).dim(1)-25 80 20],...
+        'style','Pushbutton',...
+        'string','Close',...
+        'callback','try close(6); end; try close(5); end;try close(4);end;',...
+        'ToolTipString','Close windows',...
         'Interruptible','on','Enable','on');
 
 % range 0..64
@@ -301,7 +301,7 @@ spm_progress_bar('Clear')
 
 show = spm_input('Show files with poorest cov?','+1','yes|no',[1 0],2);
 if show
-  number = min([n 15]);
+  number = min([n 24]);
   number = spm_input('How many files ?','+1','e',number);
   
   list = str2mat(V(ind(n:-1:1)).fname);
@@ -541,20 +541,20 @@ cap_y = whisker_y([1,1],:);
 
 % Do the plot
 if vertical
-	plot(quartile_x, quartile_y, 'b-')
-	hold on
-	plot(whisker_x, whisker_y, 'b-')
-	plot(cap_x, cap_y, 'b-')
-	plot(median_x, median_y, 'r-')
-	plot(outliers_x, outliers_y, [symbol(1),'r'])
+  plot(quartile_x, quartile_y, 'b-')
+  hold on
+  plot(whisker_x, whisker_y, 'b-')
+  plot(cap_x, cap_y, 'b-')
+  plot(median_x, median_y, 'r-')
+  plot(outliers_x, outliers_y, [symbol(1),'r'])
         plot(outliers2_x, outliers2_y, [symbol(2),'r']);
 else
-	plot(quartile_y, quartile_x, 'b-')
-	hold on
-	plot(whisker_y, whisker_x, 'b-')
-	plot(cap_y, cap_x, 'b-')
-	plot(median_y, median_x, 'r-')
-	plot(outliers_y, outliers_x, [symbol(1),'r'])
+  plot(quartile_y, quartile_x, 'b-')
+  hold on
+  plot(whisker_y, whisker_x, 'b-')
+  plot(cap_y, cap_x, 'b-')
+  plot(median_y, median_x, 'r-')
+  plot(outliers_y, outliers_x, [symbol(1),'r'])
         plot(outliers2_y, outliers2_x, [symbol(2),'r']);
 end
 
@@ -611,10 +611,10 @@ xx = sort(x);
 
 if m==1 | n==1
     m = max(m,n);
-	if m == 1,
-	   y = x*ones(length(p),1);
-	   return;
-	end
+  if m == 1,
+     y = x*ones(length(p),1);
+     return;
+  end
     n = 1;
     q = 100*(0.5:m - 0.5)./m;
     xx = [min(x); xx(:); max(x)];
