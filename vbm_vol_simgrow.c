@@ -95,7 +95,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			if (SLAB[i]==-INFINITY) {DIST[i]=-INFINITY; }
 			else 										{DIST[i]=0; nCV++;} } 
 	}
-	// diffusion 
+  
+  // diffusion 
 	int   nC = nCV;
 	kll=0;
 	while ( nCV>0 && kll<kllv && nC>0 ) {
@@ -103,32 +104,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	
 		for (i=0;i<nL;i++) { 
 			if ( (DIST[i]<=0) && (DIST[i]!=-INFINITY ) ) { 
-				if (DIST[i]<0) DIST[i]=-DIST[i]; 
-				nCV--; // demark points - also the with zero distance
+				if ( (DIST[i]<0) && (DIST[i]!=-INFINITY ) ) DIST[i]=-DIST[i]; 
+				nCV--; /* demark points - also the with zero distance */
 				
 				ind2sub(i,&u,&v,&w,xy,x); 
 				for (n=0;n<26;n++) {
 					ni = i+NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
 					
-					if ( ((ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 && (abs2(SEG[i]-SEG[ni])<(dI*SEG[i]*SEG[i])) && ALAB[ni]==0 ) {
+					if ( ((ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 &&
+               (abs2(SEG[i]-SEG[ni])<(dI*SEG[i]*SEG[i])) && ALAB[ni]==0 ) {
             //if (nrhs==5) DISTN = DIST[i] + dd[0]*ND[n] + dd[1]*max2(0,SEG[ni]);  
             //else         DISTN = DIST[i] + dd[0]*ND[n] + dd[1]*max2(0,4-SEG[ni]);
-            DISTN = DIST[i] + abs2(SEG[i]-SEG[ni]);
+            DISTN = DIST[i] + abs2(SEG[i]-SEG[ni]) + 0.001;
             
 						//if ( DISTN>0 && (abs2(DIST[ni])>abs2(DISTN)) &&  (( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0)  )  {
-						if (  (DIST[ni]!=-INFINITY) && (abs2(DIST[ni])>abs2(DISTN)) && DISTN<Dmax)  {	
+						if ( (ALAB[ni]==0) && (DIST[ni]>0) && (DIST[ni]!=-INFINITY) && (abs2(DIST[ni])>abs2(DISTN)) && DISTN<Dmax)  {	
 							if (DIST[ni]>0) nCV++; nC++;
 							DIST[ni] = -DISTN;
 							SLAB[ni] = SLAB[i];
 						}
 					}				
 				}
-				if (DIST[i]==0) DIST[i]=-INFINITY; // demark start points
+				if (DIST[i]==0) DIST[i]=-INFINITY; /* demark start points */
 				
 			}
 		}
 		
 	}
+
 
 	for (i=0;i<nL;i++) { if (DIST[i]==-INFINITY) {DIST[i]=0; } }
 

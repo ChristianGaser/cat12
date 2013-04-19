@@ -304,7 +304,7 @@ src = zeros(res.image(1).dim(1:3),'single');
 for z=1:length(x3),
     f = spm_sample_vol(res.image(1),x1,x2,o*x3(z),0);
     bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
-    % restrict bias field to maximum of 100 
+    % restrict bias field to maximum of 10 
     % (sometimes artefacts at the borders can cause huge values in bias field)
     bf1(bf1>10) = 10;
     src(:,:,z) = single(bf1.*f);
@@ -685,20 +685,24 @@ if do_cls && do_defs,
       Br(~Br & (Tr<2.5/3 | Tr>3.5/3))=-inf; 
       Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
       Br(~Br & (Tr<1.8/3 | Tr>2.5/3))=-inf; 
-      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.001/mean(resTr.vx_volr))>0,1)>0.5);
+      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.002/mean(resTr.vx_volr))>0,1)>0.5);
       Br(~Br & (Tr<1.2/3 | Tr>2.0/3))=-inf; 
-      Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.05*mean(resTr.vx_volr))>0,1)>0.5;
+      Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.02*mean(resTr.vx_volr))>0,1)>0.5;
       [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
       Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'labopen',2);
       Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
-      mask = vbm_vol_resize(vbm_vol_smooth3X(Br,1.2),'dereduceV',resTr)>0.5;
+      B   = vbm_vol_resize(vbm_vol_smooth3X(Br,1.2),'dereduceV',resTr)>0.5;
+      mask = vbm_vol_morph(B,'dilate'); 
       
       % update label map and class image
       label2 = zeros(d,'uint8'); label2(indx,indy,indz) = label; 
-      label2(~mask)=0; label = label2(indx,indy,indz); clear label2
+      label2(~mask)=0; %label2(mask & ~B)=85;
+      label = label2(indx,indy,indz); clear label2
       for i=1:3, cls{i}(~mask)=0; end
+      %cls{1}(mask & ~B) = 0; cls{3}(mask & ~B) = 255;
       
-      clear Tr Br Gr BOr resTr; 
+      
+      clear Tr Br Gr BOr resTr B; 
     end    
     
     
@@ -893,10 +897,12 @@ if exist('y','var'),
     trans.warped = struct('y',y,'odim',odim,'M0',M0,'M1',mat,'M2',M1\res.Affine*M0,'dartel',warp.dartelwarp);
 end
 
+VT = spm_vol(res.image(1).fname);
+
 
 %% partioning & bloood vessel estimation/correction
 if any(struct2array(job.output.l1T))  || job.extopts.BVC || ...
-   any(struct2array(job.output.th1T)) || job.extopts.pbt.atlas
+   any(struct2array(job.output.th1T))
   fprintf('Regional Segmenation (Partitioning): \n');
  
   opt.partvol.res    = 1; 
@@ -923,21 +929,22 @@ if any(struct2array(job.output.l1T))  || job.extopts.BVC || ...
   
   
   %% individual refinement
+  % hmm problem bei TI bei zu schwacher biaskorrektur -> TIG
+  % du must wohl auch noch das rauschen mit berücksichtigen
   if any(struct2array(job.output.th1T))
-    [l1T,MF] = vbm_vol_partvol(l1A,label2,TI,opt.partvol);
+    [l1T,MF] = vbm_vol_partvol(l1A,label2,TIG/3,opt.partvol);
   else
     l1T = vbm_vol_partvol(l1A,label2,TI,opt.partvol);
   end
   
   
   %% save results
-  VT = spm_vol(res.image(1).fname);
   vbm_io_writenii(VT,l1T,'l1','brain atlas map for major structures and sides',...
     'uint8',[0,1],struct2array(job.output.l1T),0,trans);
    
   
   %% Blood Vessel Correction 
-  if cg_vbm_get_defaults('extopts.pbt.interpV'); 
+  if cg_vbm_get_defaults('extopts.BVC'); 
     fprintf('Blood Vessel Correction: ');
     
     BV   = l1T==7 | l1T==8; 
@@ -970,7 +977,7 @@ if any(struct2array(job.output.l1T))  || job.extopts.BVC || ...
     fprintf('done\n');
   end
   
-  clear l1A label2 VT Vl1A;
+  clear l1A label2 Vl1A;
 end
 
 
@@ -994,10 +1001,17 @@ clear tiss
 % die funktion muss noch umgebaut werden, so das die wertebestimmung
 % als extra teilfunktion existiert, die du hier direkt aufrufen kannst
 % in diese teilfunktion mÃ¼ssen dann auch die bewertungskriterien
-% (Ã¼bergeben werden)
+% (Ã¼bergeben werden) ... erledigt
 %
 % das ganze sollte mit dem TIQA (differenzbild des T1 und der segmentierung)
-% verknÃ¼pft werden
+% verknÃ¼pft werden ... erledigt
+%
+% jetzt ist noch die frage inwiefern man das mit 
+%  - der atlas-karte verknüpfen kann
+%  - den templates
+%  - der dicke
+% ... oder anders gesagt, neben den bild QMs müssen halt noch die
+% subject annahmen rein...
 %
 % label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
 % [QAS,QAM,QAT,QATm] = vbm_vol_t1qa(srcO,label2,src,...
@@ -1022,9 +1036,10 @@ if struct2array(job.output.pcT)
   vbm_io_writenii(spm_vol(res.image(1).fname),pcT,'pc', ...
     'vbm12 - preprocessing change/correction map', ...
     'float32',[0,1],struct2array(job.output.pcT),0,trans);
-  clear label2;
+  clear label2 TIQA;
 end
 
+[qa,qas] = vbm_vol_t1qacalc(VT,srcO,TI,label2*3);
 
 %% global tissue volumes
 volfactor = abs(det(M0(1:3,1:3)))/1000;
@@ -1041,15 +1056,20 @@ clear pp ff ee volfactor vi;
 %% write results
 % ----------------------------------------------------------------------
 
-VT = spm_vol(res.image(1).fname);
-
 %% bias and noise corrected without/without masking
-vbm_io_writenii(VT,srcN,'mn','bias and noise corrected', ...
+if ~exist('TI','var')
+  T3th = [median(src(cls{3}(:)>240)) ...
+          median(src(cls{1}(:)>240)) ...
+          median(src(cls{2}(:)>240))];
+  TI   = vbm_vol_iscale(src,'gCGW',vx_vol,T3th);
+end
+vbm_io_writenii(VT,srcN,'m', ...
+  'bias and noise corrected, intensity normalized', ...
   'float32',[0,1],min([1 0 2],struct2array(job.output.bias)),0,trans);
-vbm_io_writenii(VT,srcN,'mn','bias and noise corrected (masked due to normalization)', ...
+vbm_io_writenii(VT,srcN,'m', ...
+  'bias and noise corrected, intensity normalized (masked due to normalization)', ...
   'float32',[0,1],min([0 1 0],struct2array(job.output.bias)),0,trans);
 clear srcN;
-
 
   
 %% label maps
@@ -1071,30 +1091,6 @@ end
 clear clsi fn; 
 
 
-%% global and local intensity scaled images
-if any(struct2array(job.output.mgT))
-  if ~exist('TI','var')
-    T3th = [median(src(cls{3}(:)>240)) ...
-            median(src(cls{1}(:)>240)) ...
-            median(src(cls{2}(:)>240))];
-    TI   = vbm_vol_iscale(src,'gCGW',vx_vol,T3th);
-  end
-
-  vbm_io_writenii(VT,min(1.2,max(0,TI .* mask)),'mg', ...
-    'vbm12 - masked, noise corrected, bias corrected, global intensity scaled T1 image',...
-    'float32',[0,1],struct2array(job.output.mgT),0,trans);
-  clear TI;
-end
-if nargout == 0, clear cls; end
-
-if job.extopts.LAS && any(struct2array(job.output.mlT))
-  vbm_io_writenii(VT,min(1.2,max(0,TIG/3 .* mask)),'ml', ...
-    'vbm12 - masked, noise corrected, bias corrected, local intensity scaled T1 image',...
-    'float32',[0,1],struct2array(job.output.mlT),0,trans);
-  clear TIG;
-end
-
-
 %% write jacobian determinant
 if jc
   if ~do_dartel
@@ -1114,22 +1110,22 @@ end
 if any(struct2array(job.output.th1T))
   VT = res.image;
   
-  opt.interpV = cg_vbm_get_defaults('extopts.pbt.interpV');
+  opt.interpV = cg_vbm_get_defaults('extopts.pbtres');
   opt.interpV = max(0.5,min([min(vx_vol),opt.interpV,1]));
 
   %% prepare thickness estimation
   % Here we used the intensity normalized image rather that the label
   % image, because it has more information about sulci and we need this
   % especial for asysmetrical sulci.
+  % Furthermore, we remove all non-cortical regions and refine the brain
+  % mask to remove meninges and blood vessels.
   if exist('TIG','var')
     mfT = max(TIG/3,min(1,MF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & MF>3)=smfT(mfT>1 & MF>3); 
   else
     mfT = max(TI,min(1,MF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & MF>3)=smfT(mfT>1 & MF>3); 
   end
   mfT(label2<1 | mfT<1.5/3) = 0; 
-  if cg_vbm_get_defaults('extopts.pbt.atlas');
-   mfT(l1T==3 | l1T==4 | l1T==11 | l1T==12 | l1T==13 | l1T==14 | l1T==21)=0; 
-  end
+  mfT(l1T==3 | l1T==4 | l1T==11 | l1T==12 | l1T==13 | l1T==14 | l1T==21)=0; 
   mfT(smooth3(vbm_vol_morph(mfT>0,'open'))<0.5)=0; 
   
   
@@ -1137,14 +1133,14 @@ if any(struct2array(job.output.th1T))
   % die interpolation ist recht speicherintensiv, weshalb es gut wäre
   % möglichst viel vorher rausschmeißen zu können.
   if 0 % surface
-    [mfTi,resI] = vbm_vol_resize(mfT,'interp',VT,opt.interpV);       % interpolate volume
+    [mfTi,resI]  = vbm_vol_resize(mfT,'interp',VT,opt.interpV);      % interpolate volume
     [th1Ti,ppTi] = vbm_vol_pbt(mfTi*3,struct('resV',opt.interpV));   % pbt calculation
     th1T = vbm_vol_resize(th1Ti,'deinterp',resI); clear th1Ti mfTi;  % back to original resolution
     
     % ...
     clear ppTi;
   else
-    [mfT,BB] = vbm_vol_resize(mfT,'reduceBrain',vx_vol,2,mfT>0);     % removing of background
+    [mfT,BB]    = vbm_vol_resize(mfT,'reduceBrain',vx_vol,2,mfT>0);  % removing of background
     [mfTi,resI] = vbm_vol_resize(mfT,'interp',VT,opt.interpV);       % interpolate volume
     th1Ti = vbm_vol_pbt(mfTi*3,struct('resV',opt.interpV));          % pbt calculation
     th1T  = vbm_vol_resize(th1Ti,'deinterp',resI); clear th1Ti mfTi; % back to original resolution

@@ -5,47 +5,47 @@
 % ==========================================================================
 % Description
 % ==========================================================================
-% This toolbox is a an extensions of the "New Segment Toolbox" 
-% in SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-
-% based morphometry (VBM). It is developed by Christian Gaser (University of 
-% Jena, Department of Psychiatry / Department of Neurology) and is available 
-% to the scientific community under the terms of the GNU General Public License.
+% This toolbox is a an extensions of the "New Segment Toolbox" in 
+% SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-based 
+% morphometry (VBM). It is developed by Christian Gaser (University of Jena,
+% Department of Psychiatry / Department of Neurology) and is available to 
+% the scientific community under the terms of the GNU General Public License.
 % 
 % ==========================================================================
 % Naming convention of output files
 % ==========================================================================
 %
-% segmented images:
-%   m[0]w[r]p[0123]*[_affine]   
+% Images:
+%   Segmented Images:               #p[0123]*    [m[0]w[r]]p[0123]*[_affine]   
+%   GM thickness map:               #th1*        [mw[r]]th1*   
+%   Global Intensity Normalized:    #m*          [w[r]]m* 
+%   Preprocessing Changes Map:      #pc*         [mw[r]]pc*       
+%   Atlas Maps:                     #l*          [mw[r]]l1* 
 %
+%   *         - filenname
+%   #         - image space prefix
+% 
+% Image space prefix
 %   m         - modulated
 %   m0        - modulated non-linear only
 %   w         - warped
 %   r         - dartel warped 
+%   _affine   - affine registered only
+%
+% Image data prefix:
 %   p         - segmented
 %   th        - thickness
-%   l         - atlas maps
+%   l1        - atlas maps of major brain structures
 %   pc        - preprocessing change map
 %   0         - PVE label
 %   1         - GM
 %   2         - WM
 %   3         - CSF
-%   _affine   - affine registered only
 %
-% bias corrected images:
-%   wm[r]m*        bias and noise corrected
-%   wm[r]mg*       bias and noise corrected, global intensity normalized
-%   mw[r]th1*      GM thickness map
-%   mw[r]l[12]*    atlas maps
-%
-% expert output images:
-%   wm[r]ml*       bias and noise corrected, local intensity normalized
-%   mw[r]pc*       preprocessing changes map 
-%
-% 
-% Extracted data, global morphological measure and image quality measures: 
-%   vbm_*.xml   
-% 
+% Further data:
+%   Extracted data, global morphological measure and image quality measures
+%   were stored in the vbm_*.xml file. You can use the vbm_io_xml.m function 
+%   to read data from XML-files.
 %
 % ==========================================================================
 % Technical information
@@ -84,10 +84,10 @@
 % (Rajapakse et al. 1997).
 %
 % 4. Another important extension to the SPM12 segmentation is the integration 
-% of the Dartel normalisation (Ashburner 2007) into the toolbox. If 
-% high-dimensional spatial normalisation is chosen, an already existing Dartel 
-% template in MNI space will be used. This template was derived from 550 
-% healthy control subjects of the IXI-database (http://www.brain-development.org) 
+% of the Dartel normalisation (Ashburner 2007) into the toolbox. If high-
+% dimensional spatial normalisation is chosen, an already existing Dartel 
+% template in MNI space will be used. This template was derived from 550 healthy 
+% control subjects of the IXI-database (http://www.brain-development.org) 
 % and is provided in MNI space  for six different iteration steps of Dartel 
 % normalisation. Thus, for the majority of studies the creation of 
 % sample-specific Dartel templates is not necessary anymore. 
