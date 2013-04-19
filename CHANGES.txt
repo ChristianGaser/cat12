@@ -1896,3 +1896,30 @@ M       cg_check_cov.m
 Some minor changes in cg_check_ocv.m.
 ------------------------------------------------------------------------
 r475 | gaser | 2013-04-19 10:32:37
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       vbm12.txt
+MM      vbm_vol_partvol.m
+M       vbm_vol_simgrow.c
+M       vbm_vol_simgrow.mexmaci64
+
+(1) vbm_vol_partvol:
+    Corrected BVC for subjects with thin WM structures (IXI175,OASIS0031). 
+    Full head-labeling after resizing. 
+    Add correction for unsafe atlas regions (Hippocampus).
+    Corrected CSF in subcortical ROI.
+(2) Removed prefix detection in vbm_io_writenii.
+(3) Corrected extopts fields for BVC and pbt in cg_vbm_defaults.
+(4) Update of the skull stipping of VMB12i.
+(5) The only intensity corrected output images (m*.nii) is now the bias and 
+    noise corrected and intensity normalized images. The locally normalized 
+    version is only available for internal operations like the thickness 
+    estimation.
+(6) vbm_vol_t1qacalc:
+    Preprocessing based quality assurance of T1 images. Write image and subject 
+    properties to a QA structure with the original measurements and school marks
+    rating that based on our experience.  
+------------------------------------------------------------------------
+r476 | dahnke | 2013-04-19 17:18:09
