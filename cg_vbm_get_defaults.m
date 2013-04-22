@@ -24,6 +24,11 @@ if isempty(vbm)
     cg_vbm_defaults;
 end
 
+if nargin == 0
+    varargout{1} = vbm;
+    return
+end
+
 % construct subscript reference struct from dot delimited tag string
 tags = textscan(defstr,'%s', 'delimiter','.');
 subs = struct('type','.','subs',tags{1}');
