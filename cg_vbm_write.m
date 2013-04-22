@@ -278,15 +278,13 @@ for z=1:length(x3),
 
         end
         
-        if bf(1,2) || bf(1,3) || any(lb([2,3,4])) || df(1) || any(any(tc(:,[2,3,4,5,6]))) || cg_vbm_get_defaults('output.surf.dartel')|| nargout>=1,
-            % initialize y only at first slice
-            if z==1
-                y = zeros([res.image(1).dim(1:3),3],'single');
-            end
-            y(:,:,z,1) = t1;
-            y(:,:,z,2) = t2;
-            y(:,:,z,3) = t3;
+        % initialize y only at first slice
+        if z==1
+            y = zeros([res.image(1).dim(1:3),3],'single');
         end
+        y(:,:,z,1) = t1;
+        y(:,:,z,2) = t2;
+        y(:,:,z,3) = t3;
 
     end
     spm_progress_bar('set',z);
@@ -875,13 +873,13 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
         y(:,:,z,2) = t22;
         y(:,:,z,3) = t33;
     end
-    %clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
+    clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a
     
-    trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
-    trans.atlas.y = y; 
 end
 
 if exist('y','var'),
+    trans.atlas.y = y; 
+
     M = mat\M1;
     for i=1:size(y,3),
         t1         = y(:,:,i,1);
@@ -1036,10 +1034,10 @@ if struct2array(job.output.pcT)
   vbm_io_writenii(spm_vol(res.image(1).fname),pcT,'pc', ...
     'vbm12 - preprocessing change/correction map', ...
     'float32',[0,1],struct2array(job.output.pcT),0,trans);
+  [qa,qas] = vbm_vol_t1qacalc(VT,srcO,TI,label2*3);
   clear label2 TIQA;
 end
 
-[qa,qas] = vbm_vol_t1qacalc(VT,srcO,TI,label2*3);
 
 %% global tissue volumes
 volfactor = abs(det(M0(1:3,1:3)))/1000;
