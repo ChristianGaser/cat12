@@ -1943,3 +1943,12 @@ M       cg_vbm_write.m
 Changed some handling with deformation field in cg_vbm_write.m.
 ------------------------------------------------------------------------
 r478 | gaser | 2013-04-22 13:25:47
+
+M       cg_vbm_batch.m
+M       cg_vbm_run.m
+M       CHANGES.txt
+M       cg_vbm_batch.sh
+
+Updated batch system.
+------------------------------------------------------------------------
+r479 | gaser | 2013-04-22 17:09:04
