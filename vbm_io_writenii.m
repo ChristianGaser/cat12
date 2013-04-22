@@ -1,4 +1,4 @@
-function varargout = vbm_io_niiwrite(V,Y,pre,desc,spmtype,range,write,addpre,transform)
+function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,write,addpre,transform)
 % ______________________________________________________________________
 % Write an image Y with the properties described by V with the datatype 
 % spmtype for a specific range. Add the prefix pre and the description 
@@ -57,6 +57,8 @@ function varargout = vbm_io_niiwrite(V,Y,pre,desc,spmtype,range,write,addpre,tra
   if size(write,2)==3, write = [write(1:2) 0 write(3)]; end
   if ~exist('addpre','var'), addpre = 0; end
   
+  %if nargout>0, varargout{1}=struct(numel(write),1); end
+  %if nargout>1, varargout{2}=struct(numel(write),1); end
   
   % write native file
   % ____________________________________________________________________

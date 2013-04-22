@@ -1952,3 +1952,23 @@ M       cg_vbm_batch.sh
 Updated batch system.
 ------------------------------------------------------------------------
 r479 | gaser | 2013-04-22 17:09:04
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+A       findfiles.m
+A       vbm_io_cprintf.m
+M       vbm_io_writenii.m
+M       vbm_io_xml.m
+A       vbm_vol_t1qacalc.m
+
+(1) Added group expectation maps - a difference map between tissue probability 
+    map and the final label map. 
+(2) Minor changes and corrections for variable names.
+(3) Added quality assurance routines.
+(4) Update error messages for vbm_io_xml.
+(5) Add vbm_io_cfprintf for colored command line output.
+(6) Update final figure output.
+
+------------------------------------------------------------------------
+r480 | dahnke | 2013-04-22 18:17:05

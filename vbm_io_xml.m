@@ -59,7 +59,9 @@ function varargout = vbm_io_xml(file,varargin)
       try
         xml_write(file,S);
       catch e %#ok<*NASGU> % can write xml file??
-        warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
+        %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
+        vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t write XML-file ''%s''!\n' ...
+            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
       end
       
       
@@ -69,12 +71,19 @@ function varargout = vbm_io_xml(file,varargin)
     % ------------------------------------------------------------------  
       SN = S; 
       if exist(file,'file')
-        S = xml_read(file);
+        try
+          S = xml_read(file);
+        catch e
+          vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t read XML-file ''%s''!\n' ...
+            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
+        end
       else
         try
           xml_write(file,S);
         catch e % can write xml file??
-          warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
+          %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
+          vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t write XML-file ''%s''!\n' ...
+            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
         end
         return
         %error('MATLAB:vbm_io_xml','''%s'' does not exist!\n',file);
@@ -89,7 +98,9 @@ function varargout = vbm_io_xml(file,varargin)
       try
         xml_write(file,S);
       catch e % can write xml file??
-        warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
+        %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
+        vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t write XML-file ''%s''!\n' ...
+          '%4d:%s\n'],file,e.stack(1).line(1),e.message));
       end 
     
       
@@ -97,7 +108,12 @@ function varargout = vbm_io_xml(file,varargin)
     % ------------------------------------------------------------------
     % 
       if exist(file,'file')
-        S = xml_read(file);
+        try 
+          S = xml_read(file);
+        catch e
+          vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t read XML-file ''%s''!\n' ...
+            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
+        end
       else
         error('MATLAB:vbm_io_xml','''%s'' does not exist!\n',file);
       end

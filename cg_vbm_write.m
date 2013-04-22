@@ -12,21 +12,40 @@ function cls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 
 
 % complete output structure
-if ~isfield(job.output,'mlT')
-  job.output.mlT = struct('native',cg_vbm_get_defaults('output.mlT.native'), ...
-                          'warped',cg_vbm_get_defaults('output.mlT.warped'), ...
-                          'dartel',cg_vbm_get_defaults('output.mlT.dartel'));
+if ~isfield(job.output,'ml')
+  try
+    job.output.ml  = struct('native',cg_vbm_get_defaults('output.ml.native'), ...
+                            'warped',cg_vbm_get_defaults('output.ml.warped'), ...
+                            'dartel',cg_vbm_get_defaults('output.ml.dartel'));
+  catch %#ok<CTCH>
+    job.output.ml  = struct('native',0,'warped',0,'dartel',0);
+  end
 end
-if ~isfield(job.output,'pcT')
-  job.output.pcT = struct('native',cg_vbm_get_defaults('output.pcT.native'), ...
-                          'warped',cg_vbm_get_defaults('output.pcT.warped'), ...
-                          'dartel',cg_vbm_get_defaults('output.pcT.dartel'));
+if ~isfield(job.output,'pc')
+  try
+    job.output.pc  = struct('native',cg_vbm_get_defaults('output.pc.native'), ...
+                            'warped',cg_vbm_get_defaults('output.pc.warped'), ...
+                            'mod'   ,cg_vbm_get_defaults('output.pc.mod'), ...
+                            'dartel',cg_vbm_get_defaults('output.pc.dartel'));
+  catch %#ok<CTCH>
+    job.output.pc  = struct('native',0,'warped',0,'mod',0,'dartel',0);
+  end
+end
+if ~isfield(job.output,'te')
+  try
+    job.output.te  = struct('native',cg_vbm_get_defaults('output.te.native'), ...
+                            'warped',cg_vbm_get_defaults('output.te.warped'), ...
+                            'mod'   ,cg_vbm_get_defaults('output.te.mod'), ...
+                            'dartel',cg_vbm_get_defaults('output.te.dartel'));
+  catch %#ok<CTCH>
+    job.output.te  = struct('native',0,'warped',0,'mod',0,'dartel',0);
+  end
 end
 if ~isfield(job.output,'PP')
   try
-    job.output.ppT = struct('native',cg_vbm_get_defaults('output.PP.native'));
+    job.output.pp  = struct('native',cg_vbm_get_defaults('output.pp.native'));
   catch %#ok<CTCH>
-    job.output.ppT = struct('native',0); 
+    job.output.pp  = struct('native',0); 
   end
 end
 
@@ -165,7 +184,7 @@ Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
 do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm_get_defaults('output.surf.dartel');
 do_defs = do_defs || any([job.output.th1T.warped,job.output.mgT.warped,...
-                          job.output.mlT.warped,job.output.pcT.warped,job.output.l1T.warped]);
+                          job.output.pc.warped,job.output.l1T.warped]);
 do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
@@ -386,10 +405,10 @@ if do_cls && do_defs,
     %%
     
     
-    % Dieser Teil muss demnächst mal in eine Subfunktion, die alldings
+    % Dieser Teil muss demnÃ¤chst mal in eine Subfunktion, die alldings
     % in dieser Datei verweilen darf, da sie sonst nicht weiter genutzt
     % werden kann. 
-    % Das selbe sollte für das GBM passieren.
+    % Das selbe sollte fÃ¼r das GBM passieren.
     % ==================================================================
     if job.extopts.LAS 
       fprintf('Local Adaptive Segmenation\n');
@@ -928,7 +947,7 @@ if any(struct2array(job.output.l1T))  || cg_vbm_get_defaults('extopts.BVC') || .
   
   %% individual refinement
   % hmm problem bei TI bei zu schwacher biaskorrektur -> TIG
-  % du must wohl auch noch das rauschen mit ber�cksichtigen
+  % du must wohl auch noch das rauschen mit berücksichtigen
   if any(struct2array(job.output.th1T))
     [l1T,MF] = vbm_vol_partvol(l1A,label2,TIG/3,opt.partvol);
   else
@@ -979,8 +998,8 @@ if any(struct2array(job.output.l1T))  || cg_vbm_get_defaults('extopts.BVC') || .
 end
 
 
-% diese Zeilen versteh ich nicht - die scheinen weg zu k�nnen. 
-% Oder ist das f�r den output wichtig?
+% diese Zeilen versteh ich nicht - die scheinen weg zu können. 
+% Oder ist das für den output wichtig?
 % write raw segmented images
 for k1=1:3,
     if ~isempty(tiss(k1).Nt),
@@ -998,17 +1017,17 @@ clear tiss
 %
 % die funktion muss noch umgebaut werden, so das die wertebestimmung
 % als extra teilfunktion existiert, die du hier direkt aufrufen kannst
-% in diese teilfunktion müssen dann auch die bewertungskriterien
-% (übergeben werden) ... erledigt
+% in diese teilfunktion mÃ¼ssen dann auch die bewertungskriterien
+% (Ã¼bergeben werden) ... erledigt
 %
 % das ganze sollte mit dem TIQA (differenzbild des T1 und der segmentierung)
-% verknüpft werden ... erledigt
+% verknÃ¼pft werden ... erledigt
 %
 % jetzt ist noch die frage inwiefern man das mit 
-%  - der atlas-karte verkn�pfen kann
+%  - der atlas-karte verknüpfen kann
 %  - den templates
 %  - der dicke
-% ... oder anders gesagt, neben den bild QMs m�ssen halt noch die
+% ... oder anders gesagt, neben den bild QMs müssen halt noch die
 % subject annahmen rein...
 %
 % label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
@@ -1016,9 +1035,11 @@ clear tiss
 %   struct('verb',0,'VT',spm_vol(res.image(1).fname)));
 %
 
+fprintf('Regional Segmenation (Partitioning): \n');
 
 %% preprocessing change map
-if struct2array(job.output.pcT)
+% create the map, the global measure was estimated by vbm_vol_t1qacalc.
+if struct2array(job.output.pc)
   if ~exist('TIQA','var')
     T3th = [median(src(cls{3}(:)>240)) ...
             median(src(cls{1}(:)>240)) ...
@@ -1027,26 +1048,70 @@ if struct2array(job.output.pcT)
   end
   label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)/255; 
   
-  pcT = abs(min(7/6,TIQA.*(label2>0)) - label2); 
-  pcT = vbm_vol_smooth3X(pcT,1);
-  QAS.RAW.pc  = sum(pcT(:));
+  Ypc = abs(min(7/6,TIQA.*(label2>0)) - label2); 
+  Ypc = vbm_vol_smooth3X(Ypc,1);
   
-  vbm_io_writenii(spm_vol(res.image(1).fname),pcT,'pc', ...
+  vbm_io_writenii(spm_vol(res.image(1).fname),Ypc,'pc', ...
     'vbm12 - preprocessing change/correction map', ...
-    'float32',[0,1],struct2array(job.output.pcT),0,trans);
-  [qa,qas] = vbm_vol_t1qacalc(VT,srcO,TI,label2*3);
-  clear label2 TIQA;
+    'uint8',[0,1/255],struct2array(job.output.pc),0,trans);
+  clear label2 TIQA Ypc;
 end
 
 
-%% global tissue volumes
-volfactor = abs(det(M0(1:3,1:3)))/1000;
-for vi=1:3, QAS.RAW.vol(vi) = volfactor*sum(cls{vi}(:))/255; end
+%% Tissue Expectation maps (TE)
+% This measure shoold describe the difference between our expectation
+% from the mean group probability map and the subject. Strong variation
+% can represent 
+%   (1) strong anatomical variations of this subject, and 
+%   (2) normalisation error (that are often caused by special anatomies
+%       or be previous preprocessing errors)
+% Stronger changes are expected in with growing distance from the core
+% of the WM. 
+[pp,ff,ee] = fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
+VclsA = spm_vol(fullfile(pp,[strrep(ff,'Template_1','Template_6'),ee]));
+YclsA = cell(1,2);
+for i=1:2
+  YclsA{i} = single(spm_sample_vol(VclsA(i), ...
+                    double(trans.atlas.y(:,:,:,1)), ...
+                    double(trans.atlas.y(:,:,:,2)), ...
+                    double(trans.atlas.y(:,:,:,3)), 1));
+  YclsA{i} = reshape(YclsA{i},d);
+end
+% now we need to create a CSF probability map (for the next correction)
+YclsAbrain = (vbm_vol_smooth3X(vbm_vol_morph((YclsA{1} + YclsA{2})>0.3,'lc',2),2)>0.5);
+for i=1:2, YclsA{i} = YclsA{i} .* smooth3(YclsAbrain); end
+YclsA{3}   = (YclsAbrain & smooth3(YclsA{1} + YclsA{2})<0.6) .* ...
+             smooth3((YclsAbrain - (YclsA{1} + YclsA{2}) ./ ...
+             median(YclsA{1}(YclsAbrain) + YclsA{2}(YclsAbrain)))); 
+% final correction for maximum probability of 1
+YclsAsum   = (YclsA{1} + YclsA{2} + YclsA{3}) .* YclsAbrain;
+for i=1:3, YclsA{i} = YclsA{i}./max(eps,YclsAsum) .* YclsAbrain; end
+Yp0A = YclsA{1}*2 + YclsA{2}*3 + YclsA{3};
 
-[pp,ff] = spm_fileparts(res.image(1).fname);
-vbm_io_xml(fullfile(pp,['vbm_' ff '.xml']),struct('RAW',QAS),'write+');
+%% Now we can estimate the difference maps for each intensity/label map.
+% But finally only our segment/label map is important, because other
+% non-intensity scaled images will have higher errors due to the
+% intensity scaling.
+label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
+Yte = abs(max(1,Yp0A)-max(1,label2)); % we are not interessed in skull-stripping differences... maybe later ;-)
+spm_smooth(Yte,Yte,8);  % we are only interessed on larger changes
 
-clear pp ff ee volfactor vi;
+vbm_io_writenii(VT,Yte,'te', ...
+  'group expectation map (matching of template after normalization)', ...
+  'uint8',[0,1/255],min([1 0 0 0],struct2array(job.output.te)),0,trans);
+vbm_io_writenii(T,Yte,'te', ...
+  'group expectation map (matching of template after normalization)', ...
+  'uint8',[0,1/255],min([0 1 2 2],struct2array(job.output.te)),0,trans);
+qa.te = sum(Yte(:))./sum(label(:)>0);
+
+
+
+%%
+
+[qa,qas] = vbm_vol_t1qacalc(VT,srcO,TI,label2,qa);
+
+
+
 
 
 
@@ -1128,8 +1193,8 @@ if any(struct2array(job.output.th1T))
   
   
   %% thickness estimation
-  % die interpolation ist recht speicherintensiv, weshalb es gut w�re
-  % m�glichst viel vorher rausschmei�en zu k�nnen.
+  % die interpolation ist recht speicherintensiv, weshalb es gut wäre
+  % möglichst viel vorher rausschmeißen zu können.
   if 0 % surface
     [mfTi,resI]  = vbm_vol_resize(mfT,'interp',VT,opt.interpV);      % interpolate volume
     [th1Ti,ppTi] = vbm_vol_pbt(mfTi*3,struct('resV',opt.interpV));   % pbt calculation
@@ -1184,7 +1249,7 @@ if do_cls && warp.print
       r_matlab = A(i).Version;
     end
   end
-  
+  %%
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
@@ -1196,23 +1261,40 @@ if do_cls && warp.print
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
-	if (warp.sanlm>0) 
+  if (warp.sanlm>0) 
 	  str = [str struct('name', 'SANLM:','value',sprintf('yes'))];
 	end
 	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',mrf))];
-
+  
   try
-	  fg = spm_figure('FindWin','Graphics');
+  % QA-measures:
+    str = [str struct('name', 'Noise:','value',sprintf('%0.1f > %0.1f (%0.2f > %0.2f)',qas.noise,qa.noise))];
+    str = [str struct('name', 'Bias:','value',sprintf('%0.1f > %0.1f (%0.2f > %0.2f)',qas.bias_WMstd,qa.bias_WMstd))];
+    str = [str struct('name', 'Contrast:','value',sprintf('%0.1f > %0.1f (%0.2f > %0.2f)',qas.contrast,qa.contrast))];
+    str = [str struct('name', 'Resolution:','value',sprintf('%0.1f %0.1f %0.1f (%0.2f x %0.2f x %0.2f mm3)',...
+      qas.res_vx_vol,qa.res_vx_vol))];
+    str = [str struct('name', ' - Volume:','value',sprintf('%0.1f (%0.2f mm3)',qas.res_vol,qa.res_vol))];  
+    str = [str struct('name', ' - Isotropy:','value',sprintf('%0.1f (%0.2f)',qas.res_isotropy,qa.res_isotropy))];  
+    str = [str struct('name', 'Prepro Change Map:','value',sprintf('%0.1f',qas.prechange(1)))];  
+    str = [str struct('name', 'Tissue Expectation Map:','value',sprintf('%0.1f',qas.te))]; 
+  % Subject Data
+    %str = [str struct('name', 'Absolute Tissue
+    %Volumes:','value',sprintf('%0.1f',qas.te))];  ... morgen...
+  end
+  %%
+  try
+	  fg = spm_figure('FindWin','Graphics'); 
+    %if isempty(fg), spm_figure('Create','Graphics'); end
 	  spm_figure('Clear','Graphics');
 	  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-	  text(0,0.95,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',11,'FontWeight','Bold',...
+	  text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',11,'FontWeight','Bold',...
 		  'Interpreter','none','Parent',ax);
 	  for i=1:size(str,2)
-		  text(0.01,0.85-(0.075*i), str(i).name ,'FontSize',10, 'Interpreter','none','Parent',ax);
-		  text(0.40,0.85-(0.075*i), str(i).value ,'FontSize',10, 'Interpreter','none','Parent',ax);
+		  text(0.01,0.95-(0.05*i), str(i).name ,'FontSize',10, 'Interpreter','non','Parent',ax);
+		  text(0.40,0.95-(0.05*i), str(i).value ,'FontSize',10, 'Interpreter','none','Parent',ax);
 	  end
-	  pos = [0.01 0.3 0.48 0.6; 0.51 0.3 0.48 0.6; ...
-			0.01 -0.1 0.48 0.6; 0.51 -0.1 0.48 0.6];
+	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
+           0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
 	  spm_orthviews('Reset');
 	
     name_warp{1} = fullfile(pth,['m', nam, '.nii']);

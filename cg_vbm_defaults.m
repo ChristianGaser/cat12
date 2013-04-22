@@ -36,27 +36,6 @@ vbm.output.bias.native = 1;
 vbm.output.bias.warped = 0;
 vbm.output.bias.affine = 0;
 
-% global intensity, bias and noise corrected
-vbm.output.mgT.native = 0;
-vbm.output.mgT.warped = 0;
-vbm.output.mgT.mod    = 0;
-vbm.output.mgT.dartel = 0;
-
-% local intensity, bias and noise corrected
-% WARNING: This is the resulting T1 image for the local adaptive segmentation
-% pipeline (vbm.extopts.LAS == 1). Do not use this map for any statistical analysis!
-vbm.output.mlT.native = 0;
-vbm.output.mlT.warped = 0;
-vbm.output.mlT.mod    = 0;
-vbm.output.mlT.dartel = 0;
-
-% preprocessing changes map
-% WARNING: This map describes the changes of the preprocessing and is under development. 
-vbm.output.pcT.native = 0;
-vbm.output.pcT.warped = 0;
-vbm.output.pcT.mod    = 0;
-vbm.output.pcT.dartel = 0;
-
 % GM tissue maps
 vbm.output.GM.native  = 0;
 vbm.output.GM.warped  = 0;
@@ -81,14 +60,14 @@ vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
 % GM thickness maps
-vbm.output.th1T.native  = 0;
-vbm.output.th1T.warped  = 0;
-vbm.output.th1T.dartel  = 0;
+vbm.output.th1.native   = 0;
+vbm.output.th1.warped   = 0;
+vbm.output.th1.dartel   = 0;
 
 % partitioning atlas maps
-vbm.output.l1T.native   = 0; 
-vbm.output.l1T.warped   = 0; 
-vbm.output.l1T.dartel   = 0; 
+vbm.output.l1.native    = 0; 
+vbm.output.l1.warped    = 0; 
+vbm.output.l1.dartel    = 0; 
 
 % jacobian determinant 0/1 (none/yes)
 vbm.output.jacobian.warped = 0;
@@ -96,6 +75,27 @@ vbm.output.jacobian.warped = 0;
 % deformations
 % order is [forward inverse]
 vbm.output.warps        = [0 0];
+
+% experimental maps
+%=======================================================================
+% WARNING: This map describes the changes of the preprocessing and is under development. 
+
+% local intensity normalized map (only for vbm.extopts.LAS=1)
+vbm.output.ml.native = 1;
+vbm.output.ml.warped = 0;
+vbm.output.ml.affine = 0;
+
+% preprocessing changes map
+vbm.output.pc.native = 0;
+vbm.output.pc.warped = 0;
+vbm.output.pc.mod    = 0;
+vbm.output.pc.dartel = 0;
+
+% tissue expectation map
+vbm.output.te.native = 0;
+vbm.output.te.warped = 0;
+vbm.output.te.mod    = 0;
+vbm.output.te.dartel = 0;
 
 % Extended writing options
 %=======================================================================
