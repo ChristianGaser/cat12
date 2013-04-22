@@ -20,10 +20,10 @@ end
 spm_get_defaults;
 
 if nargin < 3
-    cg_vbm_defaults;
+    cg_vbm_get_defaults;
 else
     if isempty(vbm_defaults)
-        cg_vbm_defaults;
+        cg_vbm_get_defaults;
     else
         fprintf('Use defaults in %s.\n',vbm_defaults);
         [path, name] = spm_fileparts(vbm_defaults);

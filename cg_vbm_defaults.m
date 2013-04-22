@@ -36,6 +36,20 @@ vbm.output.bias.native = 1;
 vbm.output.bias.warped = 0;
 vbm.output.bias.affine = 0;
 
+% global intensity, bias and noise corrected
+vbm.output.mgT.native = 0;
+vbm.output.mgT.warped = 0;
+vbm.output.mgT.mod    = 0;
+vbm.output.mgT.dartel = 0;
+
+% local intensity, bias and noise corrected
+% WARNING: This is the resulting T1 image for the local adaptive segmentation
+% pipeline (vbm.extopts.LAS == 1). Do not use this map for any statistical analysis!
+vbm.output.mlT.native = 0;
+vbm.output.mlT.warped = 0;
+vbm.output.mlT.mod    = 0;
+vbm.output.mlT.dartel = 0;
+
 % preprocessing changes map
 % WARNING: This map describes the changes of the preprocessing and is under development. 
 vbm.output.pcT.native = 0;

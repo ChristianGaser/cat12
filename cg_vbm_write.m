@@ -901,7 +901,7 @@ VT = spm_vol(res.image(1).fname);
 
 
 %% partioning & bloood vessel estimation/correction
-if any(struct2array(job.output.l1T))  || job.extopts.BVC || ...
+if any(struct2array(job.output.l1T))  || cg_vbm_get_defaults('extopts.BVC') || ...
    any(struct2array(job.output.th1T))
   fprintf('Regional Segmenation (Partitioning): \n');
  
