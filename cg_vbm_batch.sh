@@ -237,7 +237,7 @@ run_vbm ()
             echo >> ${vbmlog}_${j}.log
             echo $0 $file >> ${vbmlog}_${j}.log
             echo >> ${vbmlog}_${j}.log
-            nohup ${matlab} -nodisplay -nojvm -nosplash -r $COMMAND >> ${vbmlog}_${j}.log 2>&1 &
+            nohup ${matlab} -nodisplay -nosplash -r $COMMAND >> ${vbmlog}_${j}.log 2>&1 &
             echo Check ${vbmlog}_${j}.log for logging information
             echo
         fi

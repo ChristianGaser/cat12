@@ -250,7 +250,7 @@ for iter=1:nit,
         df = job.warp.write;
         lb = job.label;
         jc = job.jacobian;
-        cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job)
+        cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job);
 
     end
 end
