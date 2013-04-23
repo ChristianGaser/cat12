@@ -21,6 +21,16 @@ if ~isfield(job.output,'ml')
     job.output.ml  = struct('native',0,'warped',0,'dartel',0);
   end
 end
+if ~isfield(job.output,'l1')
+  try
+    job.output.l1  = struct('native',cg_vbm_get_defaults('output.l1.native'), ...
+                            'warped',cg_vbm_get_defaults('output.l1.warped'), ...
+                            'mod'   ,cg_vbm_get_defaults('output.l1.mod'), ...
+                            'dartel',cg_vbm_get_defaults('output.l1.dartel'));
+  catch %#ok<CTCH>
+    job.output.l1  = struct('native',0,'warped',0,'dartel',0);
+  end
+end
 if ~isfield(job.output,'pc')
   try
     job.output.pc  = struct('native',cg_vbm_get_defaults('output.pc.native'), ...
@@ -183,8 +193,8 @@ Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
 do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm_get_defaults('output.surf.dartel');
-do_defs = do_defs || any([job.output.th1T.warped,job.output.mgT.warped,...
-                          job.output.pc.warped,job.output.l1T.warped]);
+do_defs = do_defs || any([job.output.th1.warped,job.output.ml.warped,job.output.te.warped, ...
+                          job.output.pc.warped,job.output.l1.warped]);
 do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
@@ -700,11 +710,11 @@ if do_cls && do_defs,
       Br  = Br>0.5 & Tr>5/6 & Tr<8/6 & Gr<noise*3; 
       Br  = single(vbm_vol_morph(Br,'l')); 
       Br(~Br & (Tr<2.5/3 | Tr>3.5/3))=-inf; 
-      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
+      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.02/mean(resTr.vx_volr))>0,1)>0.5);
       Br(~Br & (Tr<1.8/3 | Tr>2.5/3))=-inf; 
-      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.002/mean(resTr.vx_volr))>0,1)>0.5);
+      Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.01/mean(resTr.vx_volr))>0,1)>0.5);
       Br(~Br & (Tr<1.2/3 | Tr>2.0/3))=-inf; 
-      Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.02*mean(resTr.vx_volr))>0,1)>0.5;
+      Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5;
       [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
       Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'labopen',2);
       Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
@@ -918,8 +928,8 @@ VT = spm_vol(res.image(1).fname);
 
 
 %% partioning & bloood vessel estimation/correction
-if any(struct2array(job.output.l1T))  || cg_vbm_get_defaults('extopts.BVC') || ...
-   any(struct2array(job.output.th1T))
+if any(struct2array(job.output.l1))  || cg_vbm_get_defaults('extopts.BVC') || ...
+   any(struct2array(job.output.th1))
   fprintf('Regional Segmenation (Partitioning): \n');
  
   opt.partvol.res    = 1; 
@@ -948,7 +958,7 @@ if any(struct2array(job.output.l1T))  || cg_vbm_get_defaults('extopts.BVC') || .
   %% individual refinement
   % hmm problem bei TI bei zu schwacher biaskorrektur -> TIG
   % du must wohl auch noch das rauschen mit berücksichtigen
-  if any(struct2array(job.output.th1T))
+  if any(struct2array(job.output.th1))
     [l1T,MF] = vbm_vol_partvol(l1A,label2,TIG/3,opt.partvol);
   else
     l1T = vbm_vol_partvol(l1A,label2,TI,opt.partvol);
@@ -957,7 +967,7 @@ if any(struct2array(job.output.l1T))  || cg_vbm_get_defaults('extopts.BVC') || .
   
   %% save results
   vbm_io_writenii(VT,l1T,'l1','brain atlas map for major structures and sides',...
-    'uint8',[0,1],struct2array(job.output.l1T),0,trans);
+    'uint8',[0,1],struct2array(job.output.l1),0,trans);
    
   
   %% Blood Vessel Correction 
@@ -1170,7 +1180,7 @@ end
 
 
 %% tickness maps
-if any(struct2array(job.output.th1T))
+if any(struct2array(job.output.th1))
   VT = res.image;
   
   opt.interpV = cg_vbm_get_defaults('extopts.pbtres');
@@ -1187,6 +1197,7 @@ if any(struct2array(job.output.th1T))
   else
     mfT = max(TI,min(1,MF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & MF>3)=smfT(mfT>1 & MF>3); 
   end
+  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
   mfT(label2<1 | mfT<1.5/3) = 0; 
   mfT(l1T==3 | l1T==4 | l1T==11 | l1T==12 | l1T==13 | l1T==14 | l1T==21)=0; 
   mfT(smooth3(vbm_vol_morph(mfT>0,'open'))<0.5)=0; 
@@ -1215,7 +1226,7 @@ if any(struct2array(job.output.th1T))
 
   % save files 
   vbm_io_writenii(VT,th1T,'th1','pbt GM thickness', ...
-    'uint16',[0,1/1023],struct2array(job.output.th1T),0,trans);
+    'uint16',[0,1/1023],struct2array(job.output.th1),0,trans);
   clear th1T mfT;
 end
 
@@ -1249,7 +1260,9 @@ if do_cls && warp.print
       r_matlab = A(i).Version;
     end
   end
-  %%
+  
+  
+  %% create report text
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
 	str = [];
@@ -1282,9 +1295,9 @@ if do_cls && warp.print
     %Volumes:','value',sprintf('%0.1f',qas.te))];  ... morgen...
   end
   %%
-  try
+  try %#ok<TRYNC>
 	  fg = spm_figure('FindWin','Graphics'); 
-    %if isempty(fg), spm_figure('Create','Graphics'); end
+    if isempty(fg), fg = spm_figure('Create','Graphics'); end
 	  spm_figure('Clear','Graphics');
 	  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
 	  text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',11,'FontWeight','Bold',...
