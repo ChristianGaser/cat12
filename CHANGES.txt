@@ -1972,3 +1972,13 @@ A       vbm_vol_t1qacalc.m
 
 ------------------------------------------------------------------------
 r480 | dahnke | 2013-04-22 18:17:05
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_vol_t1qacalc.m
+
+(1) Minor changes and corrections for variable names.
+(2) Updates for VBM12i skull stripping to get more brain tissue.
+------------------------------------------------------------------------
+r481 | dahnke | 2013-04-23 09:58:22

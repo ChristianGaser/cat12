@@ -512,27 +512,14 @@ csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img
 %-----------------------------------------------------------------------
 
 % thickness
-native.def    = @(val)cg_vbm_get_defaults('output.th1T.native', val{:});
-warped.def    = @(val)cg_vbm_get_defaults('output.th1T.warped', val{:});
-dartel.def    = @(val)cg_vbm_get_defaults('output.th1T.dartel', val{:});
-th1T          = cfg_branch;
-th1T.tag      = 'th1T';
-th1T.name     = 'Grey Matter Thickness (GMT)';
-th1T.val      = {native, warped, dartel};
-th1T.help     = {'Options to produce GM thickness images: th1*.img, wth1*.img and mwth1*.img.'};
-
-% global intensity corrected
-native.def    = @(val)cg_vbm_get_defaults('output.mgT.native', val{:});
-warped.def    = @(val)cg_vbm_get_defaults('output.mgT.warped', val{:});
-dartel.def    = @(val)cg_vbm_get_defaults('output.mgT.dartel', val{:});
-mgT           = cfg_branch;
-mgT.tag       = 'mgT';
-mgT.name      = 'Global Intensity Scaled ';
-mgT.val       = {native, warped, dartel};
-mgT.help      = {[ ...
-  'This is the option to save a global intensity scaled version of your ' ...
-  'bias and noise corrected input image. ' ...
-]};
+native.def    = @(val)cg_vbm_get_defaults('output.th1.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.th1.warped', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.th1.dartel', val{:});
+th1           = cfg_branch;
+th1.tag       = 'th1';
+th1.name      = 'Grey Matter Thickness (GMT)';
+th1.val       = {native, warped, dartel};
+th1.help      = {'Options to produce GM thickness images: th1*.img, wth1*.img and mwth1*.img.'};
 
 % not yet
 %{
@@ -548,21 +535,21 @@ mlT.help      = {[ ...
   'This is the option to save a local intensity scaled version of your ' ...
   'bias and noise corrected input image. ' ...
 ]};
-%}
+
 
 % main structure atlas
-native.def      = @(val)cg_vbm_get_defaults('output.l1T.native', val{:});
-warped.def      = @(val)cg_vbm_get_defaults('output.l1T.warped', val{:});
-dartel.def      = @(val)cg_vbm_get_defaults('output.l1T.dartel', val{:});
-l1T             = cfg_branch;
-l1T.tag         = 'l1T';
-l1T.name        = 'Atlas 1 - Major structures';
-l1T.val         = {native, warped, dartel};
-l1T.help        = {[ ...
+native.def      = @(val)cg_vbm_get_defaults('output.l1.native', val{:});
+warped.def      = @(val)cg_vbm_get_defaults('output.l1.warped', val{:});
+dartel.def      = @(val)cg_vbm_get_defaults('output.l1.dartel', val{:});
+l1              = cfg_branch;
+l1.tag          = 'l1';
+l1.name         = 'Atlas 1 - Major structures';
+l1.val          = {native, warped, dartel};
+l1.help         = {[ ...
   'This is the option to save an atlas map with sides and major structures.' ...
   'Odd numbers code the left, even numbers the right side.' ...
 ]};
-
+%}
 
 % not yet
 %{
@@ -605,8 +592,8 @@ warps.help    = {'Deformation fields can be saved to disk, and used by the Defor
 output      = cfg_branch;
 output.tag = 'output';
 output.name = 'Writing options';
-%output.val = {grey, white, csf, label, bias, mnT, mgT, jacobian, warps, th1T, l1T};
-output.val = {grey, white, csf, label, bias, mgT, jacobian, warps, th1T, l1T};
+%output.val = {grey, white, csf, label, bias, mnT, mgT, jacobian, warps, th1, l1};
+output.val = {grey, white, csf, label, bias, jacobian, warps, th1};
 output.help = {[...
 'This routine produces spatial normalisation parameters (*_seg8.mat files) by default. '],...
 '',...
@@ -853,25 +840,25 @@ if opts.label.dartel==2,
 end;
 
 % thickness
-if opts.th1T.native,
+if opts.th1.native,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Thickness Images';
     cdep(end).src_output = substruct('()',{1}, '.','thick','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
-if opts.th1T.warped,
+if opts.th1.warped,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Warped Thickness Images';
     cdep(end).src_output = substruct('()',{1}, '.','wthick','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
-if opts.th1T.dartel==1,
+if opts.th1.dartel==1,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Rigid Registered Thickness Images';
     cdep(end).src_output = substruct('()',{1}, '.','rthick','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
-if opts.th1T.dartel==2,
+if opts.th1.dartel==2,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Affine Registered Thickness Images';
     cdep(end).src_output = substruct('()',{1}, '.','athick','()',{':'});

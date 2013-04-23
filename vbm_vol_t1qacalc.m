@@ -60,8 +60,11 @@ function varargout = vbm_vol_t1qacalc(V,Y,mY,p0Y,QA,opt)
   
   % measures
   % --------------------------------------------------------------------
-  def.tissue = [1/3 1/6; 2/3 1/6; 1 1/6]; 
-  def.QAM    = {
+  def.tissue  = [ 1/3  1/6;  2/3  1/6;    1  1/6]; % ideal normalized tissue peak values 
+  def.tisvola = [ 300  300;  900  900;  600  600]; % absolute expected tissue volumes 
+  def.tisvolr = [0.15  0.2; 0.45  0.2; 0.35  0.2]; % relative expected tissue volumes
+  def.CHvsCG  = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
+  def.QAM     = {
   % 'sortname'  'fieldname'             'marktpye'  markrange     type  save print help
   % 'sortname'  'fieldname'             'linear'    [best worst]  '[]'  0 0    'use for most qa measures
   % 'sortname'  'fieldname'             'normal'    [mean std]    '[]'  0 0    'use for most subject measures
@@ -93,6 +96,11 @@ function varargout = vbm_vol_t1qacalc(V,Y,mY,p0Y,QA,opt)
     'blurr'     'blurring'              'linearb'   [0.00  1.00]  '[]'  0 1    ''
     'samp'      'sampling'              'linearb'   [0.00  1.00]  '[]'  0 1    ''
     'gradient'  'mgradient'             'linearb'   [0.20  0.10]  '[]'  0 1    ''
+   % --Subjectrelated Data--
+    'TIV'       'vol_TIV'               'normal'    [1500  1000]  '[]'  0 1    'total intracranial volume (GM+WM)'
+    'CHvsCG'    'vol_CHvsGW'            'linear'    def.CHvsCG    '[]'  0 1    'relation between brain and non brain'
+    'absCGW'    'vol_abs_CGW'           'linearb'   def.tisvola   '[]'  0 1    'absolute tissue volume (CSF,GM,WM)'
+    'relCGW'    'vol_rel_CGW'           'linearb'   def.tisvolr   '[]'  0 1    'relative tissue volume (CSF,GM,WM)'
     };
   if ~exist('opt','var'), opt=struct(); end
   opt = checkinopt(opt,def);
@@ -146,6 +154,17 @@ function varargout = vbm_vol_t1qacalc(V,Y,mY,p0Y,QA,opt)
       QAS.scan            = V.fname;
       [QAS.path,QAS.file] = fileparts(V.fname);
 
+      
+      
+      %% software
+      A = ver;
+      for i=1:length(A)
+        if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox'), QAS.SoftwareVersion_vbm    = A(i).Version; end
+        if strcmp(A(i).Name,'Statistical Parametric Mapping'),  QAS.SoftwareVersion_spm    = A(i).Version; end
+        if strcmp(A(i).Name,'MATLAB'),                          QAS.SoftwareVersion_matlab = A(i).Version; end
+      end
+      QAS.SoftwareVersion_OS = computer;
+      clear A;
       
 
       %% resolution
