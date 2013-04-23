@@ -219,6 +219,7 @@ function [l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
   
   %% back to original resolution
   MF  = vbm_vol_resize(MF,'dereduceV',resTr);
+  p0T = vbm_vol_resize(p0T,'dereduceV',resTr);
   l1T = vbm_vol_resize(l1T,'dereduceV',resTr,'nearest');
   [MF,l1T,p0T] = vbm_vol_resize({MF,l1T,p0T},'dereduceBrain',BB);
   mgT = mgTO;
