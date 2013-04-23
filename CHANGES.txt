@@ -1990,3 +1990,15 @@ cg_vbm_batch.sh now allows to define folder for log-files and uses hostname
 for log-file.
 ------------------------------------------------------------------------
 r482 | gaser | 2013-04-23 11:24:12
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_vol_partvol.m
+M       vbm_vol_resize.m
+
+(1) Minor changes and corrections for variable names.
+(2) Updates for VBM12i skull stripping to get more brain tissue.
+(3) Correct BVC error in the non-adaptive pipeline.
+(4) Correct resizing error in vbm_vol_partvol for highres images. 
+------------------------------------------------------------------------
+r483 | dahnke | 2013-04-23 15:23:31
