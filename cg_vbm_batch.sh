@@ -8,8 +8,10 @@
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 writeonly=0
 defaults_file=""
+LOGDIR=""
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
+time=`date "+%Y%b%d_%H%M"`
 
 ########################################################
 # run main
@@ -46,23 +48,28 @@ parse_args ()
     optname="`echo $1 | sed 's,=.*,,'`"
     optarg="`echo $2 | sed 's,^[^=]*=,,'`"
     case "$1" in
-        --m* | -m*)
+        --matlab* | -m*)
             exit_if_empty "$optname" "$optarg"
             matlab=$optarg
             shift
             ;;
-        --d* | -d*)
+        --defaults_file* | -d*)
             exit_if_empty "$optname" "$optarg"
             defaults_file=$optarg
             shift
             ;;
-        --p* | -p*)
+        --processes* | -p*)
             exit_if_empty "$optname" "$optarg"
             NUMBER_OF_JOBS=$optarg
             shift
             ;;
-        --w* | -w*)
+        --writeonly* | -w*)
             writeonly=1
+            ;;
+        --logdir* | -l*)
+            exit_if_empty "$optname" "$optarg"
+            LOGDIR=$optarg
+            shift
             ;;
         -h | --help | -v | --version | -V)
             help
@@ -179,10 +186,14 @@ run_vbm ()
     # we have to go into toolbox folder to find matlab files
     cd $cwd
     
-    spm8=`dirname $cwd`
-    spm8=`dirname $spm8`
+    spm12=`dirname $cwd`
+    spm12=`dirname $spm12`
 
-    export MATLABPATH=$spm8
+    if [ "${LOGDIR}" == "" ]; then
+        LOGDIR=`dirname ${ARRAY[0]}`
+    fi
+    
+    export MATLABPATH=$spm12
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
@@ -221,8 +232,8 @@ run_vbm ()
         echo ${FILE} >> ${TMP}${count}
         ((i++))
     done
-    time=`date "+%Y%b%d_%H%M"`
-    vbmlog=${pwd}/vbm_${time}
+    
+    vbmlog=${LOGDIR}/vbm_${HOSTNAME}_${time}
     
     i=0
     while [ "$i" -lt "$NUMBER_OF_JOBS" ]
@@ -269,12 +280,13 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_vbm_batch.sh filename|filepattern [-m matlabcommand] [-w]
+   cg_vbm_batch.sh filename|filepattern [-m matlab_command] [-w] [-p number_of_processes] [-d default_file] [-l log_folder]
    
    -m   matlab command
    -p   number of parallel jobs (=number of processors)
-   -w		write already segmented images
+   -w   write already segmented images
    -d   optional default file
+   -l   directory for log-file
    
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. Optionally you can set the matlab command 
@@ -284,18 +296,18 @@ PURPOSE:
    Command line call of VBM12 segmentation
 
 EXAMPLE
-   cg_vbm_batch.sh spm/spm8/canonical/single_subj_T1.nii
+   cg_vbm_batch.sh spm/spm12/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii. 
    
-   cg_vbm_batch.sh spm/spm8/canonical/single_subj_T1.nii -d your_vbm_defaults_file.m
+   cg_vbm_batch.sh spm/spm12/canonical/single_subj_T1.nii -d your_vbm_defaults_file.m
    This command will process only the single file single_subj_T1.nii. The defaults defined
    in your_vbm_defaults_file.m will be used instead of cg_vbm_defaults.m.
 
-   cg_vbm_batch.sh spm/spm8/canonical/*152*.nii
+   cg_vbm_batch.sh spm/spm12/canonical/*152*.nii
    Using wildcards all files containing the term "152" will be processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
 
-   cg_vbm_batch.sh spm/spm8/canonical/*152*.nii -m /usr/local/bin/matlab7
+   cg_vbm_batch.sh spm/spm12/canonical/*152*.nii -m /usr/local/bin/matlab7
    Using wildcards all files containing the term "152" will be processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
    As matlab-command /usr/local/bin/matlab7 will be used.
@@ -305,7 +317,7 @@ INPUT:
 
 OUTPUT:
    segmented images according to settings in cg_vbm_defaults.m
-   vbm_log_$time.txt for log information
+   ${LOGDIR}/vbm_${HOSTNAME}_${time}.log for log information
 
 USED FUNCTIONS:
    cg_vbm_batch.m
