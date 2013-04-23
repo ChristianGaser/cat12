@@ -314,7 +314,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
         T = vbm_vol_interp3f(T,Rx,Ry,Rz,method);
         clear Rx Ry Rz;
         
-        hdr.dim=size(D);
+        hdr.dim=size(T);
         hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
     %    hdr.mat([1,6,11])  = sign(hdr.mat([1,6,11]))  .* res;
       end

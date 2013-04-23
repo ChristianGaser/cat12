@@ -16,19 +16,18 @@ if ~isfield(job.output,'ml')
   try
     job.output.ml  = struct('native',cg_vbm_get_defaults('output.ml.native'), ...
                             'warped',cg_vbm_get_defaults('output.ml.warped'), ...
-                            'dartel',cg_vbm_get_defaults('output.ml.dartel'));
+                            'affine',cg_vbm_get_defaults('output.ml.affine'));
   catch %#ok<CTCH>
-    job.output.ml  = struct('native',0,'warped',0,'dartel',0);
+    job.output.ml  = struct('native',0,'warped',0,'affine',0);
   end
 end
 if ~isfield(job.output,'l1')
   try
     job.output.l1  = struct('native',cg_vbm_get_defaults('output.l1.native'), ...
                             'warped',cg_vbm_get_defaults('output.l1.warped'), ...
-                            'mod'   ,cg_vbm_get_defaults('output.l1.mod'), ...
-                            'dartel',cg_vbm_get_defaults('output.l1.dartel'));
+                            'affine',cg_vbm_get_defaults('output.l1.affine'));
   catch %#ok<CTCH>
-    job.output.l1  = struct('native',0,'warped',0,'dartel',0);
+    job.output.l1  = struct('native',0,'warped',0,'affine',0);
   end
 end
 if ~isfield(job.output,'pc')
@@ -975,7 +974,11 @@ if any(struct2array(job.output.l1))  || cg_vbm_get_defaults('extopts.BVC') || ..
     fprintf('Blood Vessel Correction: ');
     
     BV   = l1T==7 | l1T==8; 
-    BV   = vbm_vol_smooth3X(vbm_vol_smooth3X(BV.*(TIG-1),0.3).^4,0.1);
+    if exist('TIG','var')
+      BV   = vbm_vol_smooth3X(vbm_vol_smooth3X(BV.*(TIG-1),0.3).^4,0.1);
+    else
+      BV   = vbm_vol_smooth3X(vbm_vol_smooth3X(BV.*(TI*3-1),0.3).^4,0.1);
+    end
     BVe  = vbm_vol_morph(BV>0,'dilate');
 
     % update TIG and TI
@@ -1281,9 +1284,9 @@ if do_cls && warp.print
   
   try
   % QA-measures:
-    str = [str struct('name', 'Noise:','value',sprintf('%0.1f > %0.1f (%0.2f > %0.2f)',qas.noise,qa.noise))];
-    str = [str struct('name', 'Bias:','value',sprintf('%0.1f > %0.1f (%0.2f > %0.2f)',qas.bias_WMstd,qa.bias_WMstd))];
-    str = [str struct('name', 'Contrast:','value',sprintf('%0.1f > %0.1f (%0.2f > %0.2f)',qas.contrast,qa.contrast))];
+    str = [str struct('name', 'Noise:','value',sprintf('%0.1f > %0.1f',qas.noise))];
+    str = [str struct('name', 'Bias:','value',sprintf('%0.1f > %0.1f',qas.bias_WMstd)];
+    str = [str struct('name', 'Contrast:','value',sprintf('%0.1f > %0.1f',qas.contrast))];
     str = [str struct('name', 'Resolution:','value',sprintf('%0.1f %0.1f %0.1f (%0.2f x %0.2f x %0.2f mm3)',...
       qas.res_vx_vol,qa.res_vx_vol))];
     str = [str struct('name', ' - Volume:','value',sprintf('%0.1f (%0.2f mm3)',qas.res_vol,qa.res_vol))];  
