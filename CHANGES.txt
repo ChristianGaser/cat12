@@ -1982,3 +1982,11 @@ M       vbm_vol_t1qacalc.m
 (2) Updates for VBM12i skull stripping to get more brain tissue.
 ------------------------------------------------------------------------
 r481 | dahnke | 2013-04-23 09:58:22
+
+M       CHANGES.txt
+M       cg_vbm_batch.sh
+
+cg_vbm_batch.sh now allows to define folder for log-files and uses hostname
+for log-file.
+------------------------------------------------------------------------
+r482 | gaser | 2013-04-23 11:24:12
