@@ -1,7 +1,7 @@
 function compile
 
   rand('state',0);
-  d = single(rand(50,50,50));
+  d = single(rand(10,10,10));
   
   mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
   mex -O vbm_vol_median3.c
@@ -14,21 +14,21 @@ function compile
   
   d2 = vbm_vol_median3(d);            disp('Compilation of vbm_vol_median3 successful')
   d2 = vbm_vol_eikonal3(d);           disp('Compilation of vbm_vol_eikonal3 successful')
-  d2 = vbm_vol_laplace3(d);           disp('Compilation of vbm_vol_laplace3 successful')
-  d2 = vbm_vol_laplace3R(d);          disp('Compilation of vbm_vol_laplace3R successful')
-  d2 = vbm_vol_gradient3(d);          disp('Compilation of vbm_vol_gradient3 successful')
-  d2 = vbm_vol_down_cut(d,d.^1.5,1);  disp('Compilation of vbm_vol_down_cut successful')
+  d2 = vbm_vol_laplace3(d,0,0,0.001); disp('Compilation of vbm_vol_laplace3 successful')
+  d2 = vbm_vol_laplace3R(d,d>0.5,0.2);disp('Compilation of vbm_vol_laplace3R successful')
+  [d2,d3,d4] = vbm_vol_gradient3(d);  disp('Compilation of vbm_vol_gradient3 successful')
+  d2 = vbm_vol_downcut(d,d.^1.5,1);  disp('Compilation of vbm_vol_down_cut successful')
   d2 = vbdist(d);                     disp('Compilation of vbdist successful')
   
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')
-          mex CC='gcc-4.2' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex CC='gcc-4.4' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc-4.2' CFLAGS='-fopenmp -m64 -fPIC -O3' -O /usr/local/lib/x86_64/libgomp.a sanlmMex.c sanlm_float.c
+          mex CC='gcc-4.4' CFLAGS='-fopenmp -m64 -fPIC -O3' -O /usr/local/lib/x86_64/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexmaci')
-          mex CC='gcc-4.2' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex CC='gcc-4.0' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc-4.2' CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/local/lib/x86/libgomp.a sanlmMex.c sanlm_float.c
+          mex CC='gcc-4.0' CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/local/lib/x86/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexa64')
           mex CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
