@@ -64,7 +64,7 @@ else
     matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,tmp_fields);
 end
 
-tmp_fields = char('mlT','pcT','surf');
+tmp_fields = char('l1','ml','pc','te','surf');
 try
   if writeonly
     matlabbatch{1}.spm.tools.vbm.write.output = rmfield(matlabbatch{1}.spm.tools.vbm.write.output,tmp_fields);
