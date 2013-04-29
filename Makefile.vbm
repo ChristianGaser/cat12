@@ -6,12 +6,12 @@ VERSION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
 TARGET=/Users/gaser/spm/spm12b/toolbox/vbm12
-TARGET2=/Volumes/UltraMax/spm8/toolbox/vbm12
+TARGET2=/Volumes/UltraMax/spm12b/toolbox/vbm12
 
 STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/vbm12
 
 MATLAB_FILES=Contents.m cg_vbm_defaults.m cg_vbm_run.m cg_vbm_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm_tools.m cg_vbm_debug.m cg_morph_vol.m cg_vbm_batch.* tbx_cfg_vbm.m spm_vbm12.m vbm12.man cg_vbm_bias* cg_spm_batch.* cg_vbm_defs.m cg_vbm_longitudinal.m cg_vbm_update.m cg_sanlm.m cg_vbm_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m slice_overlay.m cg_cleanup_gwc.m cg_vbm_longitudinal_multi_run.m cg_vbm_longitudinal_multi.m cg_cfg_realign.m cg_realign.m cg_run_realign_estimate.m cg_run_realign_estwrite.m cg_set_com.m checkinopt.m dp.m vbm_io*.m
-C_FILES=Amap.[ch] AmapMex.* sanlmMex.* sanlmMex_noopenmp.* sanlm_float.c MrfPrior.c Pve.c Kmeans.c vbdist.* vbm_vol*.*
+C_FILES=Amap.[ch] AmapMex.* sanlmMex.* sanlmMex_noopenmp.* sanlm_float.c MrfPrior.c Pve.c Kmeans.c vbdist.* vbm_vol*.* vollib.c
 MISC_FILES=Template_?_IXI550_MNI152.nii avgT1_Dartel_IXI550_MNI152.nii VBM12-Manual.pdf CHANGES.txt INSTALL.txt templates_1.50mm
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
