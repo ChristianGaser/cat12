@@ -36,6 +36,10 @@ function varargout = vbm_io_xml(file,varargin)
 % ______________________________________________________________________
 % $Id$
 
+  if usejava('jvm')==0
+    warning('MATLAB:SPM:VBM:vbm_io_xml:javaerror', ...
+      'VBM-ERROR: VBM XML-im/export requires JVM!\n');
+  end
   if ~exist('file','var'),    error('MATLAB:vbm_io_struct','ERROR: Need input file\n'); end
   if exist('varargin','var') 
     if numel(varargin)==0
