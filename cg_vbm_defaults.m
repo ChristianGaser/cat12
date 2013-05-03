@@ -126,14 +126,16 @@ vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
 vbm.extopts.gcut        = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
 vbm.extopts.kmeans      = 0;    % segmentation initialization: 0 - new segment; 1 - Kmeans
-vbm.extopts.mrf         = 0.15; % MRF weighting: negative values for noise depending automatic estimation of MRF filterstrength
+vbm.extopts.mrf         = 1;    % MRF weighting: 0-1 - manuell setting; 1 - auto
 vbm.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
 vbm.extopts.bias_fwhm   = 60;   % FWHM of Kmeans internal bias correction
 vbm.extopts.vox         = 1.5;  % voxel size for normalized data
 vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
 vbm.extopts.BVC         = 1;    % Blood Vessel Correction: 
+vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
 vbm.extopts.pbtres      = 1.0;  % resolution for thickness estimation: 1 - normal res; 0.5 high res (default)
+vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 
 % experimental (not yet working)
 %=======================================================================
