@@ -57,6 +57,8 @@ if ~isfield(job.output,'PP')
     job.output.pp  = struct('native',0); 
   end
 end
+opt.color.warning = [0.0 0.0 1.0];
+opt.color.warning = [0.8 0.9 0.3];
 
 
 % get current release number
@@ -113,7 +115,6 @@ warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
 
 [pth,nam] = spm_fileparts(res.image(1).fname);
-ind  = res.image(1).n;
 d    = res.image(1).dim(1:3);
 
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
@@ -346,8 +347,71 @@ if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
     warp.sanlm = min(1,warp.sanlm);
 end
 
+
+%% check main image parameter
+% check resolution properties
+vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
+if any(vx_vol>3.5)  % to high slice thickness (
+  error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
+       ['\nVBM-ERROR:BadImageProperties:\nSorry, but the image \n   %s \n' ...
+        'has with %0.2f mm a to high slice thickness for a meanfull anatomical analysis!\n' ...
+        'Slice thickness has to be below 3.5 mm, but we commend a isotropic resolution \n'...
+        'with 1 mm or better.\n'], ... 
+          res.image.fname,max(vx_vol));
+end
+if prod(vx_vol)>10  % to low voxel volume (smaller than 2x2x2 mm3)
+  error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
+       ['\nVBM-ERROR:BadImageProperties\nSorry, but the image \n   %s \n ' ...
+        'has with %0.2f mm3 a to small volume for a meanfull anatomical analysis!\n'...
+        'Voxel volume has to be smaller than 10 mm3, but we commend an isotropic\n' ...
+        'resolution below or equal 1 mm.\n'], ... 
+          res.image.fname,max(vx_vol));
+end
+if max(vx_vol)/min(vx_vol)>3.5 % isotropy
+  error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
+       ['\nVBM-ERROR:BadImageProperties\nSorry, but the image \n   %s \n' ...
+        'has a to strong unistropic resolution for a meanfull anatomical analysis!\n' ...
+        'Strong isotropy (>3.5) can lead to strong bad detectable problems.\n'...
+        'Isoptropy (max(vx_size)/min(vx_size)) of this image is %0.2f.\n' ...
+        'We commend using of isotropic resolutions.\n'], ... 
+          res.image.fname,max(vx_vol));
+end
+% check modality
+T3th = [median(src(cls{3}(:)>192)) ...
+        median(src(cls{1}(:)>192)) ...
+        median(src(cls{2}(:)>192))];
+T3th = T3th/T3th(3);
+if  T3th(1)>T3th(3) 
+  if cg_vbm_get_defaults('extopts.INV') 
+    %if T3th(1)>T3th(2) && T3th(2)>T3th(3)  
+      %srcO = src+0;
+      % invert image to get t1 modality like relations
+      %mask = vbm_vol_morph(cls{1}>10 | cls{2}>10 | cls{3}>10,'lc',10);
+      T3th = [median(median(src(cls{3}(:)>192))*2 - src(cls{3}(:)>192)) ...
+              median(median(src(cls{3}(:)>192))*2 - src(cls{1}(:)>192)) ...
+              median(median(src(cls{3}(:)>192))*2 - src(cls{2}(:)>192))];
+      src  = vbm_vol_iscale(median(src(cls{3}(:)>192))*2 - src,'gCGW', ...
+             sqrt(sum(res.image(1).mat(1:3,1:3).^2)),T3th);
+      % set 'background' to zero
+      src(src>1.5)=0;
+      % remove outlier
+      src = vbm_vol_median3(src,src>0,src<1.5,0.1);  
+%     else
+%       src = (single(cls{3}) + single(cls{1})*2 + single(cls{2}*3))/255*3;  
+%     end
+  else
+   error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
+       ['\nVBM-ERROR:BadImageProperties:\n' ...
+        'Sorry, but VBM is designed to work only on T1 hihgres images.\n' ...
+        'T2/PD preprocessing can be forced on your own risk by setting \n' ...
+        '''vbm.extopts.INV=1'' in the vbm default file.\n'], ... 
+          res.image.fname,max(vx_vol));   
+  end
+end
+
+
+%% optionally apply non local means denoising filter
 srcO = src+0;
-% optionally apply non local means denoising filter
 switch warp.sanlm
     case 0
     case 1 % use single-threaded version
@@ -360,6 +424,7 @@ end
 srcN = src+0;
 
 
+%% skull-stipping
 if do_cls && do_defs,
 
     % default parameters
@@ -369,7 +434,6 @@ if do_cls && do_defs,
     gcut        = cg_vbm_get_defaults('extopts.gcut');
     mrf         = cg_vbm_get_defaults('extopts.mrf');
     
-    vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
     scale_morph = 1/mean(vx_vol);
 
     if gcut
@@ -545,7 +609,7 @@ if do_cls && do_defs,
       if     warp.sanlm==1, sanlmMex_noopenmp(TIG,3,1); 
       elseif warp.sanlm==2, sanlmMex(TIG,3,1);
       end
-      noise2 = std(src(cls{2}(:)>128 & G(:)<0.1)/median(src(cls{2}(:)>128  & G(:)<0.1))); 
+      noise2 = std(src(cls{2}(:)>128 & G(:)<0.15)/median(src(cls{2}(:)>128  & G(:)<0.15))); 
       src = TIG;
         
       %% adding some CSF around the brain
@@ -620,7 +684,11 @@ if do_cls && do_defs,
  
     
     % adaptive mrf noise 
-    if job.extopts.LAS     
+    if mrf>=1 || mrf<0;
+      if ~exist('noise2','var')
+        [gx,gy,gz]=vbm_vol_gradient3(src); G=abs(gx)+abs(gy)+abs(gz); G=G./src; clear gx gy gz; 
+        noise2 = std(src(cls{2}(:)>128 & G(:)<0.1)/median(src(cls{2}(:)>128  & G(:)<0.1))); clear G;  
+      end
       mrf = min(0.25,max(0.05,noise2*2));
     end
     
@@ -712,10 +780,11 @@ if do_cls && do_defs,
       Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.02/mean(resTr.vx_volr))>0,1)>0.5);
       Br(~Br & (Tr<1.8/3 | Tr>2.5/3))=-inf; 
       Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.01/mean(resTr.vx_volr))>0,1)>0.5);
+      Br = vbm_vol_morph(Br,'labopen',2);
       Br(~Br & (Tr<1.2/3 | Tr>2.0/3))=-inf; 
       Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5;
       [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
-      Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'labopen',2);
+      Brr = vbm_vol_morph(vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'labopen',2),'labclose');
       Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
       B   = vbm_vol_resize(vbm_vol_smooth3X(Br,1.2),'dereduceV',resTr)>0.5;
       mask = vbm_vol_morph(B,'dilate'); 
@@ -926,6 +995,18 @@ end
 VT = spm_vol(res.image(1).fname);
 
 
+%% volumina
+qa.SM.vol_TIV     =  prod(vx_vol)/1000 .* sum(single(cls{1}(:))/255 + ...
+                       single(cls{2}(:))/255 + single(cls{3}(:))/255); 
+qa.SM.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(single(cls{3}(:))/255), ...
+                     prod(vx_vol)/1000 .* sum(single(cls{1}(:))/255), ...
+                     prod(vx_vol)/1000 .* sum(single(cls{2}(:))/255)];
+qa.SM.vol_rel_CGW = [prod(vx_vol)/1000 .* sum(single(cls{3}(:))/255) / qa.SM.vol_TIV, ...
+                     prod(vx_vol)/1000 .* sum(single(cls{1}(:))/255) / qa.SM.vol_TIV, ...
+                     prod(vx_vol)/1000 .* sum(single(cls{2}(:))/255) / qa.SM.vol_TIV];
+
+
+
 %% partioning & bloood vessel estimation/correction
 if any(struct2array(job.output.l1))  || cg_vbm_get_defaults('extopts.BVC') || ...
    any(struct2array(job.output.th1))
@@ -958,10 +1039,13 @@ if any(struct2array(job.output.l1))  || cg_vbm_get_defaults('extopts.BVC') || ..
   % hmm problem bei TI bei zu schwacher biaskorrektur -> TIG
   % du must wohl auch noch das rauschen mit berücksichtigen
   if any(struct2array(job.output.th1))
-    [l1T,MF] = vbm_vol_partvol(l1A,label2,TIG/3,opt.partvol);
+    [subvols,l1T,MF] = vbm_vol_partvol(l1A,label2,TIG/3,opt.partvol);
   else
-    l1T = vbm_vol_partvol(l1A,label2,TI,opt.partvol);
+    [subvols,l1T] = vbm_vol_partvol(l1A,label2,TI,opt.partvol);
   end
+  clear l1A;
+  fn = fieldnames(subvols); 
+  for fni=1:numel(fn), qa.SM.(fn{fni}) = subvols.(fn{fni}); end 
   
   
   %% save results
@@ -1007,48 +1091,27 @@ if any(struct2array(job.output.l1))  || cg_vbm_get_defaults('extopts.BVC') || ..
     fprintf('done\n');
   end
   
-  clear l1A label2 Vl1A;
+  clear label2 Vl1A;
 end
 
 
 % diese Zeilen versteh ich nicht - die scheinen weg zu können. 
 % Oder ist das für den output wichtig?
 % write raw segmented images
+% ... nagut, dann test ich das mal :D
+%{
 for k1=1:3,
     if ~isempty(tiss(k1).Nt),
         tiss(k1).Nt.dat(:,:,:,ind(1),ind(2)) = double(cls{k1})/255;
     end
 end
 clear tiss 
-
+%}
 
 
 %% XML-report and Quality Assurance
 % ----------------------------------------------------------------------
-% hier muss noch ganz viel passieren, aber erstmal kommt hier blos die 
-% ausgabe von vbm8 als xml rein...
-%
-% die funktion muss noch umgebaut werden, so das die wertebestimmung
-% als extra teilfunktion existiert, die du hier direkt aufrufen kannst
-% in diese teilfunktion mÃ¼ssen dann auch die bewertungskriterien
-% (Ã¼bergeben werden) ... erledigt
-%
-% das ganze sollte mit dem TIQA (differenzbild des T1 und der segmentierung)
-% verknÃ¼pft werden ... erledigt
-%
-% jetzt ist noch die frage inwiefern man das mit 
-%  - der atlas-karte verknüpfen kann
-%  - den templates
-%  - der dicke
-% ... oder anders gesagt, neben den bild QMs müssen halt noch die
-% subject annahmen rein...
-%
-% label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-% [QAS,QAM,QAT,QATm] = vbm_vol_t1qa(srcO,label2,src,...
-%   struct('verb',0,'VT',spm_vol(res.image(1).fname)));
-%
-
-fprintf('Regional Segmenation (Partitioning): \n');
+fprintf('Quality Assurance: \n');
 
 %% preprocessing change map
 % create the map, the global measure was estimated by vbm_vol_t1qacalc.
@@ -1101,7 +1164,8 @@ YclsAsum   = (YclsA{1} + YclsA{2} + YclsA{3}) .* YclsAbrain;
 for i=1:3, YclsA{i} = YclsA{i}./max(eps,YclsAsum) .* YclsAbrain; end
 Yp0A = YclsA{1}*2 + YclsA{2}*3 + YclsA{3};
 
-%% Now we can estimate the difference maps for each intensity/label map.
+
+% Now we can estimate the difference maps for each intensity/label map.
 % But finally only our segment/label map is important, because other
 % non-intensity scaled images will have higher errors due to the
 % intensity scaling.
@@ -1115,16 +1179,22 @@ vbm_io_writenii(VT,Yte,'te', ...
 vbm_io_writenii(T,Yte,'te', ...
   'group expectation map (matching of template after normalization)', ...
   'uint8',[0,1/255],min([0 1 2 2],struct2array(job.output.te)),0,trans);
-qa.te = sum(Yte(:))./sum(label(:)>0);
+qa.QM.vbm_expect = sum(Yte(:))./sum(label2(:)>0);
 
 
 
-%%
-
-[qa,qas] = vbm_vol_t1qacalc(VT,srcO,TI,label2,qa);
-
-
-
+%% image quality parameter
+qas = vbm_vol_t1qacalc(VT,srcO,TI,label2);
+fn = fieldnames(qas); 
+for fni=1:numel(fn)
+  fn2 = fieldnames(qas.(fn{fni}));
+  for fn2i=1:numel(fn2), 
+    if ~isempty(qas.(fn{fni}).(fn2{fn2i}))
+      qa.(fn{fni}).(fn2{fn2i}) = qas.(fn{fni}).(fn2{fn2i}); 
+    end;
+  end
+end
+clear qas fn fni;
 
 
 
@@ -1137,12 +1207,12 @@ if ~exist('TI','var')
   T3th = [median(src(cls{3}(:)>240)) ...
           median(src(cls{1}(:)>240)) ...
           median(src(cls{2}(:)>240))];
-  TI   = vbm_vol_iscale(src,'gCGW',vx_vol,T3th);
+  TI   = min(10,max(0,vbm_vol_iscale(src,'gCGW',vx_vol,T3th)));
 end
-vbm_io_writenii(VT,srcN,'m', ...
+vbm_io_writenii(VT,TI,'m', ...
   'bias and noise corrected, intensity normalized', ...
   'float32',[0,1],min([1 0 2],struct2array(job.output.bias)),0,trans);
-vbm_io_writenii(VT,srcN,'m', ...
+vbm_io_writenii(VT,TI,'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
   'float32',[0,1],min([0 1 0],struct2array(job.output.bias)),0,trans);
 clear srcN;
@@ -1227,11 +1297,31 @@ if any(struct2array(job.output.th1))
   
   th1T = th1T .* (label2>1.5 & label2<2.5); % reset GM boundaries
 
+  
+  % metadata
+  qa.SM.dist_thickness{1}  = [mean(th1T(th1T(:)>0)) std(th1T(th1T(:)>0))];
+
+  
   % save files 
   vbm_io_writenii(VT,th1T,'th1','pbt GM thickness', ...
     'uint16',[0,1/1023],struct2array(job.output.th1),0,trans);
   clear th1T mfT;
 end
+
+
+
+
+
+%% evaluate measurements and write XML
+qam = vbm_stat_marks('eval',qa);
+ 
+
+vbm_io_xml(fullfile(qa.FD.path,['vbm_' qa.FD.file '.xml']),...
+  struct('qa',qa,'qam',qam),'write+');
+
+
+
+
 
 
 %%
@@ -1277,100 +1367,208 @@ if do_cls && warp.print
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
 	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
-  if (warp.sanlm>0) 
-	  str = [str struct('name', 'SANLM:','value',sprintf('yes'))];
-	end
-	str = [str struct('name', 'MRF weighting:','value',sprintf('%3.2f',mrf))];
+  str = [str struct('name', 'Noise reduction:','value',...
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(warp.sanlm>0))),' '.*(warp.sanlm>0),mrf))];
   
-  try
-  % QA-measures:
-    str = [str struct('name', 'Noise:','value',sprintf('%0.1f > %0.1f',qas.noise))];
-    str = [str struct('name', 'Bias:','value',sprintf('%0.1f > %0.1f',qas.bias_WMstd)];
-    str = [str struct('name', 'Contrast:','value',sprintf('%0.1f > %0.1f',qas.contrast))];
-    str = [str struct('name', 'Resolution:','value',sprintf('%0.1f %0.1f %0.1f (%0.2f x %0.2f x %0.2f mm3)',...
-      qas.res_vx_vol,qa.res_vx_vol))];
-    str = [str struct('name', ' - Volume:','value',sprintf('%0.1f (%0.2f mm3)',qas.res_vol,qa.res_vol))];  
-    str = [str struct('name', ' - Isotropy:','value',sprintf('%0.1f (%0.2f)',qas.res_isotropy,qa.res_isotropy))];  
-    str = [str struct('name', 'Prepro Change Map:','value',sprintf('%0.1f',qas.prechange(1)))];  
-    str = [str struct('name', 'Tissue Expectation Map:','value',sprintf('%0.1f',qas.te))]; 
-  % Subject Data
-    %str = [str struct('name', 'Absolute Tissue
-    %Volumes:','value',sprintf('%0.1f',qas.te))];  ... morgen...
+  QMC = vbm_io_colormaps('marks+',10);
+  color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*10)+1))),:);
+  mark2str  = @(mark) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%0.1f',color(QMC,mark),mark);
+  mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
+  marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
+% QA-measures:
+  str2 =       struct('name', '\bfImage Quality Measures:','value',''); 
+  str2 = [str2 struct('name', ' Noise:'            ,'value',sprintf('%s',mark2str(qam.QM.noise(1))))];
+  str2 = [str2 struct('name', ' Bias:'             ,'value',sprintf('%s',mark2str(qam.QM.bias_WMstd(1))))];
+  str2 = [str2 struct('name', ' Contrast:'         ,'value',sprintf('%s',mark2str(qam.QM.contrast(1))))];
+  str2 = [str2 struct('name', ' Voxel Volume:'     ,'value', ...
+               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%0.1f (%0.2f mm%s)',qam.QM.res_vol,qa.QM.res_vol,char(179)))))];
+  str2 = [str2 struct('name', ' Voxel Isotropy:'   ,'value',sprintf('%s',mark2str(qam.QM.res_isotropy)))];  
+  str2 = [str2 struct('name', ' Prep. Change Map:' ,'value',sprintf('%s',mark2str(qam.QM.vbm_change(1))))];  
+  str2 = [str2 struct('name', ' Tissue Exp. Map:'  ,'value',sprintf('%s',mark2str(qam.QM.vbm_expect(1))))]; 
+% Subject Data
+  str3 = struct('name', '\bfSubject Measures:','value',''); 
+  str3 = [str3 struct('name', ' CGW-Volumes (abs):','value',sprintf('%s %s %s mm%s', ...
+          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
+          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
+          mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f',qa.SM.vol_abs_CGW(3)),char(179)))];
+  str3 = [str3 struct('name', ' CGW-Volumes (rel):','value',sprintf('%s %s %s %%', ...
+          mark2str2(qam.SM.vol_rel_CGW(1),'%4.1f',qa.SM.vol_rel_CGW(1)*100),...
+          mark2str2(qam.SM.vol_rel_CGW(2),'%4.1f',qa.SM.vol_rel_CGW(2)*100),...
+          mark2str2(qam.SM.vol_rel_CGW(3),'%4.1f',qa.SM.vol_rel_CGW(3)*100)))];
+  str3 = [str3 struct('name', ' TIV:'              ,'value',...
+          sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f mm' char(179)],qa.SM.vol_TIV)))];  
+  if any(struct2array(job.output.th1))
+    str3 = [str3 struct('name', ' Thickness (abs):'  ,'value',sprintf('%s%s%s', ...
+          mark2str2(qam.SM.dist_thickness{1}(1),'%4.2f',qa.SM.dist_thickness{1}(1)),177, ...
+          mark2str2(qam.SM.dist_thickness{1}(2),'%4.2f',qa.SM.dist_thickness{1}(2))))];
   end
-  %%
-  try %#ok<TRYNC>
+  
+ 
+ % try %#ok<TRYNC>
+    %%
+    
 	  fg = spm_figure('FindWin','Graphics'); 
     if isempty(fg), fg = spm_figure('Create','Graphics'); end
-	  spm_figure('Clear','Graphics');
+	  spm_figure('Clear','Graphics'); fontsize = 9.5;
 	  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-	  text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k50d')],'FontSize',11,'FontWeight','Bold',...
-		  'Interpreter','none','Parent',ax);
-	  for i=1:size(str,2)
-		  text(0.01,0.95-(0.05*i), str(i).name ,'FontSize',10, 'Interpreter','non','Parent',ax);
-		  text(0.40,0.95-(0.05*i), str(i).value ,'FontSize',10, 'Interpreter','none','Parent',ax);
+	  
+    text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k60d')],...
+      'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
+    
+    cm = cg_vbm_get_defaults('extopts.colormap'); 
+    switch lower(cm)
+      case {'bcgwhw','bcgwhn'}
+        colormap(vbm_io_colormaps(cm));
+        cmmax = 2;
+      case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
+        colormap(cm);
+        cmmax = 1.1;
+      otherwise
+        vbm_io_cprintf(opt.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
+        cm = 'BCGWHw';
+        colormap(cm);
+        cmmax = 2;
+    end
+    
+    for i=1:size(str,2)   % main parameter
+		  text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
+		  text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
 	  end
+	  for i=1:size(str2,2)  % qa-measurements
+		  text(0.01,0.40-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.25,0.40-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    end
+    for i=1:size(str3,2)  % subject-measurements
+		  text(0.51,0.40-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.80,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+	  end
+	  
 	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
 	  spm_orthviews('Reset');
 	
-    name_warp{1} = fullfile(pth,['m', nam, '.nii']);
-    if do_dartel
-      name_warp{2} = fullfile(pth,['wmr', nam, '.nii']);
-    else
-      name_warp{2} = fullfile(pth,['wm', nam, '.nii']);
-    end
-    name_warp{3} = fullfile(pth,['wm', nam, '_affine.nii']);
 
 	  % first try use the bias corrected image
+    % ------------------------------------------------------------------
 	  if bf(1,2)
-    	Vtmp = name_warp{2};
-    	hh = spm_orthviews('Image',Vtmp,pos(1,:));
-    	spm_orthviews('AddContext',hh);
+      if do_dartel, prefix='wmr'; else prefix='wm'; end
+      hhm = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(1,:));
+    	spm_orthviews('Caption',hhm,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
     elseif bf(1,3)
-    	Vtmp = name_warp{3};
-    	hh = spm_orthviews('Image',Vtmp,pos(1,:));
-    	spm_orthviews('AddContext',hh);
-    end
-    
-    name_seg=cell(1,6); 
-	  for k1=1:3,
-	    % check for all potential warped segmentations
-	    name_seg{1} = fullfile(pth,['p', num2str(k1), nam, '.nii']);
-	    name_seg{2} = fullfile(pth,['rp', num2str(k1), nam, '.nii']);
-	    name_seg{3} = fullfile(pth,['rp', num2str(k1), nam, '_affine.nii']);
-	    if do_dartel
-	      name_seg{4} = fullfile(pth,['wrp', num2str(k1), nam, '.nii']);
-	      name_seg{5} = fullfile(pth,['mwrp', num2str(k1), nam, '.nii']);
-	      name_seg{6} = fullfile(pth,['m0wrp', num2str(k1), nam, '.nii']);
-	    else
-	      name_seg{4} = fullfile(pth,['wp', num2str(k1), nam, '.nii']);
-	      name_seg{5} = fullfile(pth,['mwp', num2str(k1), nam, '.nii']);
-	      name_seg{6} = fullfile(pth,['m0wp', num2str(k1), nam, '.nii']);
+    	hhm = spm_orthviews('Image',fullfile(pth,['wm', nam, '_affine.nii']),pos(1,:));
+    	spm_orthviews('Caption',hhm,'wm*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
+    elseif bf(1,1) % native
+      Vtmp = fullfile(pth,['m', nam, '.nii']); 
+      if ~exist(Vtmp,'file')
+        vbm_io_writenii(VT,TI,'m','label map','single',[0,1],[1 0 0],0,trans);
       end
-      if tc(k1,4)
-	      Vtmp = spm_vol(name_seg{4}); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-	      spm_orthviews('AddContext',hh);
-      elseif tc(k1,5)
-	      Vtmp = spm_vol(name_seg{5}); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-	      spm_orthviews('AddContext',hh);
-      elseif tc(k1,6)
-	      Vtmp = spm_vol(name_seg{6}); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-	      spm_orthviews('AddContext',hh);
-      elseif tc(k1,3)
-	      Vtmp = spm_vol(name_seg{3}); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(1+k1,:));
-	      spm_orthviews('AddContext',hh);
-      end            
+    	hhm = spm_orthviews('Image',Vtmp,pos(1,:));
+    	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
     end
-	  spm_print;
-	end
+    spm_orthviews('BB',bb);
+    if cmmax==2
+      ytick      = ([0.5,10,15.5,21,26.5,32,59]);
+      yticklabel = {' BG',' CSF',' CGM',' GM',' GWM',' WM',' BV/HD'};
+    else
+      ytick      = min(60,max(0.5,round([0.5,22,42,59]/cmmax)));
+      yticklabel = {' BG',' CSF',' GM',' WM'};
+    end
+    spm_orthviews('window',hhm,[0 cmmax]);
+    cc(1) = colorbar('location','west','position',[pos(1,1)+0.30 0.38 0.02 0.15], ...
+      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      
+
+    % if there is still place for a figure add the p0
+    % ------------------------------------------------------------------
+    if lb(1,2)
+      if do_dartel, prefix='mwrp0'; else prefix='wp0'; end
+      hhp0 = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(2,:));
+     spm_orthviews('Caption',hhp0,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
+    elseif lb(1,3)
+      hhp0 = spm_orthviews('Image',fullfile(pth,['wp0', nam, '_affine.nii']),pos(2,:));
+      spm_orthviews('Caption',hhp0,'wp0*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
+    else
+      Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
+      if ~exist(Vtmp2,'file')
+        label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
+        vbm_io_writenii(VT,label2,'p0','label map','uint8',[0,3/255],[1 0 0],0,trans);
+      end
+      hhp0 = spm_orthviews('Image',Vtmp2,pos(2,:));
+      spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
+    end
+    spm_orthviews('window',hhp0,[0 3*cmmax]);
+    cc(2) = colorbar('location','west','position',[pos(2,1)+0.30 0.38 0.02 0.15], ...
+      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+    
+  %spm_orthviews('AddContext',hh); 
+        
+    % segment maps
+    % ------------------------------------------------------------------
+	  for k1=1:2,
+      if tc(k1,4)
+        if do_dartel, prefix='wrp'; else prefix='wp'; end
+	      Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+	      spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
+          prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
+      elseif tc(k1,5)
+        if do_dartel, prefix='mwrp'; else prefix='mwp'; end
+	      Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+	      spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
+          prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
+      elseif tc(k1,6)
+        if do_dartel, prefix='m0wrp'; else prefix='m0wp'; end
+	      Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+	      spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
+          prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
+      elseif tc(k1,3)
+	      Vtmp = spm_vol(fullfile(pth,['rp', num2str(k1), nam, '_affine.nii'])); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+	      spm_orthviews('Caption',hh,sprintf('rp%d*_affine.nii (affine)', ...
+          k1),'FontSize',fontsize,'FontWeight','Bold');
+      elseif tc(k1,2)
+        Vtmp = spm_vol(fullfile(pth,['rp', num2str(k1), nam, '.nii'])); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+	      spm_orthviews('Caption',hh,sprintf('rp%d*_.nii (native)', ...
+          k1),'FontSize',fontsize,'FontWeight','Bold');
+      elseif tc(k1,1)
+        Vtmp = spm_vol(fullfile(pth,['p', num2str(k1), nam, '.nii'])); 
+  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+	      spm_orthviews('Caption',hh,sprintf('p%d*.nii (native)', ...
+          k1),'FontSize',fontsize,'FontWeight','Bold');
+      end   
+      spm_orthviews('window',hh,[0 3]);
+      cc(k1) = colorbar('location','west','position',[pos(2+k1,1)+0.30 0.02 0.02 0.15], ...
+        'YTick',[0.5,10,21,32,41,51,60],'YTickLabel', ...
+        [repmat(' ',7,1) num2str((0:0.5:3)',[' %0.1f mm' char(179)])], ...
+        'FontSize',fontsize,'FontWeight','Bold');
+    end
+  %end
+
+  
+  %% print group and subject file
+  spm_print;
+  
+  %%
+  [pp,ff] = spm_fileparts(res.image.fname); psf=fullfile(pp,['vbm_' ff '.ps']); 
+  if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
+    
+  % remove p0 image, if it was only written for printing
+  if job.output.bias.native==0 && exist(fullfile(pth,['m', nam, '.nii']),'file')
+    delete(fullfile(pth,['m', nam, '.nii']));
+    spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
+  end
+  % remove p0 image, if it was only written for printing
+  if job.output.label.native==0 && exist(fullfile(pth,['p0', nam, '.nii']),'file')
+    delete(fullfile(pth,['p0', nam, '.nii']));
+    spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
+  end
 end
 
 
-clear label C c
+clear C c
 
 % deformations
 if df(1),

@@ -1,4 +1,4 @@
-function [l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
+function [vol,l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
 % ______________________________________________________________________
 % Use a segment map p0T, the global intensity normalized T1 map mgT and 
 % the atlas label map l1T to create a individual label map l1T. 
@@ -233,4 +233,15 @@ function [l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
   [D,I,l1T] = vbdist(single(l1T),HD); clear D I;
   l1T(HD & l1T<=0) = opt.LAB.HD(1); 
   l1T(~HD) = 0;
+
+  
+  %% subvolumes
+  fn = setdiff(fieldnames(opt.LAB),{'NV','HD','NB','ON','HC'}); vol=struct();
+  for fni=1:numel(fn)
+    eval(sprintf(['vol.vol_abs_%s = prod(vx_vol)/1000 .* ' ...
+      '[sum(l1T(:)==%d) sum(l1T(:)==%d)];'],fn{fni},def.LAB.(fn{fni}))); 
+  end 
+  vol.vol_LRP = sum( mod(l1T(:),2)==1 & l1T(:)>0 & l1T(:)<20) ./ ...
+                sum( l1T(:)>0 & l1T(:)<20);
+
 end

@@ -2011,3 +2011,31 @@ M       CHANGES.txt
 Corrected filenames in cg_vbm_batch.m.
 ------------------------------------------------------------------------
 r484 | gaser | 2013-04-29 16:10:44
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       vbm12.txt
+A       vbm_io_colormaps.m
+M       vbm_io_xml.m
+A       vbm_stat_marks.m
+M       vbm_vol_partvol.m
+M       vbm_vol_t1qacalc.m
+
+(1) Modality check to process PD and T2 images, with intensity inversion for 
+    standard preprocessing, if vbm.extopts.INV=1. 
+(2) Resolution check to avoid preprocessing of low resolution images.
+(3) Added JVM error in vbm_io_xml, if JVM is inactive.
+(4) VBM report:
+    - Subject specific measures (global volume and thickness).
+    - Color-coded marks for a faster overview.
+    - Added subject report (vbm_*.ps) file.
+    - Added changeable colormaps and colorbar.
+    - Added image names.
+    - Added vbm-colormaps.
+    - Added more flexible output images (mix of different spaces), all images 
+      were cropped by the default boundary box.    
+(5) Updated MRF-filter setting, where vbm.extopts.mrf=1 will use the adaptive
+    MRF-filter strength (default).
+------------------------------------------------------------------------
+r485 | dahnke | 2013-05-03 18:16:00
