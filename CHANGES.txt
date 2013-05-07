@@ -2039,3 +2039,11 @@ M       vbm_vol_t1qacalc.m
     MRF-filter strength (default).
 ------------------------------------------------------------------------
 r485 | dahnke | 2013-05-03 18:16:00
+
+M       Makefile.vbm
+M       cg_vbm_batch.m
+M       CHANGES.txt
+
+Updated filenames in cg_vbm_batch.m and Makefile.vbm.
+------------------------------------------------------------------------
+r486 | gaser | 2013-05-07 10:55:53

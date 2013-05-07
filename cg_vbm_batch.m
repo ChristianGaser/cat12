@@ -57,7 +57,7 @@ for i=1:n
 	end
 end
 
-tmp_fields = char('darteltpm','finalmask','gcut','kmeans','mrf','bias_fwhm','BVC','pbtres','mask');
+tmp_fields = char('darteltpm','finalmask','gcut','kmeans','mrf','bias_fwhm','BVC','pbtres','mask','INV','colormap');
 if writeonly
     matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,tmp_fields);
 else
