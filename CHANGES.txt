@@ -2047,3 +2047,40 @@ M       CHANGES.txt
 Updated filenames in cg_vbm_batch.m and Makefile.vbm.
 ------------------------------------------------------------------------
 r486 | gaser | 2013-05-07 10:55:53
+
+M       CHANGES.txt
+M       cg_vbm_run.m
+M       cg_vbm_write.m
+M       vbm_stat_marks.m
+M       vbm_vol_partvol.m
+
+(1) Moving of the partitioning routines before the skull-stripping, to use the 
+    atlas map for skull-stripping to allow regional different growing rates.
+    Although, now only SPM standard normalization is used, I expect a similar 
+    accuracy, because the partitioning use the atlas mostly for initialization  
+    followed by a region growing. The partitioning still requires more work to 
+    get smoother segments without removing anatomical details. 
+(2) Maximum-based bias correction and intensity scaling for global and local
+    segmentation.
+(3) Less aggressive local adaption with a stronger relation to SPM classes.
+(4) Correct an SPM label error, where intracranial BG was labeled as CSF that
+    produce CSF mean intensities that were to close to the BG intensity and
+    CSF was detected as low GM. Correct also the other "direction" where CGM
+(5) The partitioning routine allows now a direct mapping of the basal ganglia
+    for maximum-based bias correction and local adaptive segmentation.   
+(6) New skull-stripping routine in the LAS pipeline (alpha status) with a harder
+    brain extraction to reduce meninges and blood vessels that needs to be a 
+    little bit smoother:
+    
+               DICE     FP    FN
+      VBM12i:  0.9632   4437  83478
+      VBM12:   0.9720  21337  46823
+      
+(7) Deactivated BVC for inverse contrast.
+(8) Command window output updates:
+    - Added colored output for the filename output.
+    - Added computation times for preprocessing steps.
+    - Added final output with total computation time and with short QA results.
+    - Final reduction of Dartel command window output.
+------------------------------------------------------------------------
+r487 | dahnke | 2013-05-15 11:20:35

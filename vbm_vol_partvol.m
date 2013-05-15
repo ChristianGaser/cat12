@@ -1,16 +1,16 @@
-function [vol,l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
+function [vol,Yl1,YB,YMF] = vbm_vol_partvol(Yl1A,Yp0,Ym,Yl0,opt)
 % ______________________________________________________________________
-% Use a segment map p0T, the global intensity normalized T1 map mgT and 
-% the atlas label map l1T to create a individual label map l1T. 
+% Use a segment map Yp0, the global intensity normalized T1 map Ym and 
+% the atlas label map Yl1 to create a individual label map Yl1. 
 % The atlas contain main regions like cerebrum, brainstem, midbrain,
 % cerebellum, ventricle, and regions with blood vessels. 
 %
 % This function try to solve the following problems:
 %  1) Finding of the cerebrum, the cerebellum, the head, blood vessels, 
-%     brain skin and other mayor structures based on atlas (l1A) and 
-%     tissue class information (p0T). 
-%     To do this it is important to use data from the T1-map (mgT) that
-%     use the same intensity scalling as the segment map p0T, but have 
+%     brain skin and other mayor structures based on atlas (Yl1A) and 
+%     tissue class information (Yp0). 
+%     To do this it is important to use data from the T1-map (Ym) that
+%     use the same intensity scalling as the segment map Yp0, but have 
 %     more informations about partial volume regions.
 %  2) Set Partions:
 %     2.1) Find biggest WM part of each region.
@@ -30,26 +30,26 @@ function [vol,l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
 %
 %  Todo:
 %   - Entfernen von unsicheren Regionen
-%   - stärkerer Abgleich mit p0T
+%   - stärkerer Abgleich mit Yp0
 %   - stärkere Einbindung der LAS
 % ______________________________________________________________________
 %
 % Structure:
 %
-%   [l1T,pfT,mfT] = vbm_vol_partvol(l1A,p0T,mgT,opt)
+%   [Yl1,pfT,mfT] = vbm_vol_partvol(Yl1A,Yp0,Ym,opt)
 %
-%   INPUT:  l1A = 3D-volume with brain regions (altas map)
-%           p0T = 3D-volume with tissue propability map (CSF=1,GM=2;WM=3)
-%           mgT = intensity normalized T1 image
+%   INPUT:  Yl1A = 3D-volume with brain regions (altas map)
+%           Yp0 = 3D-volume with tissue propability map (CSF=1,GM=2;WM=3)
+%           Ym = intensity normalized T1 image
 %           opt
 %            .res    = resolution for mapping
 %            .vx_vol = Voxelsize
-%            .LAB    = Label of l1T map (see def.LAB definition below)
+%            .LAB    = Label of Yl1 map (see def.LAB definition below)
 %            
 %
-%   OUTPUT: l1T = individual label map 
-%           pfT = Corrected and filled p0T map 
-%           mfT = Corrected and filled mgT map
+%   OUTPUT: Yl1 = individual label map 
+%           pfT = Corrected and filled Yp0 map 
+%           mfT = Corrected and filled Ym map
 %
 % ______________________________________________________________________
 % Structural Brain Mapping Group, University Jena, Germany
@@ -83,165 +83,297 @@ function [vol,l1T,MF] = vbm_vol_partvol(l1A,p0T,mgT,opt)
   vx_vol = opt.vx_vol;
     
   %% OPTIMIZATION:
-  % ds('l2','',vx_vol,mgT,l1A,mgT,p0T/3,130)
-  mgT = mgT*3; mgTO = mgT;
-  [mgT,p0T,l1A,BB] = vbm_vol_resize({mgT,p0T,l1A},'reduceBrain',vx_vol,5,p0T>0);   % removing of background
-  [mgT,p0T,resTr]  = vbm_vol_resize({mgT,p0T},'reduceV',vx_vol,opt.res,64); 
-  l1A              = vbm_vol_resize(l1A   ,'reduceV',vx_vol,opt.res,64,'nearest'); 
+  % ds('l2','',vx_vol,Ym,Yl1A,Ym,Yp0/3,130)
+  Ym = Ym*3; mgTO = Ym;
+  [Ym,Yp0,Yl1A,Yl0,BB] = vbm_vol_resize({Ym,Yp0,Yl1A,Yl0},'reduceBrain',vx_vol,10,Yp0>0);   % removing of background
+  [Ym,Yp0,Yl0,resTr]   = vbm_vol_resize({Ym,Yp0,Yl0},'reduceV',vx_vol,opt.res,64); 
+  Yl1A                 = vbm_vol_resize(Yl1A   ,'reduceV',vx_vol,opt.res,64,'nearest'); 
 
-  l1ANS = round(l1A/2)*2-1;
+  Yl1Ans = round(Yl1A/2)*2-1;
 
+  %% gradients and divergence
+  [gx,gy,gz]=vbm_vol_gradient3(Ym); Yg = abs(gx)+abs(gy)+abs(gz); Yg=Yg./Ym;  clear gx gy gz;
+  [gx,gy,gz]=vbm_vol_gradient3(max(2,Ym)); Ydiv = smooth3(divergence(gy,gx,gz)); clear gx gy gz;
+  %CSFD = smooth3(vbdist(single(Ym<2 | Yp0==0))); 
+  %[gx,gy,gz]=vbm_vol_gradient3(CSFD); div2=divergence(gy,gx,gz); clear gx gy gz;
   
   %% alignment of high intensity structures 
-  l1T=zeros(size(mgT),'single'); l1T(vbm_vol_morph(p0T<0.5 & mgT<0.4,'ldo',2,resTr.vx_volr)==1)=-1; l1T(l1A>0)=0;       % backgound
-  l1T(vbm_vol_morph(p0T<0.5,'open')==1 & mgT>2.5) = opt.LAB.HD(1);                                                    % head
+  Yl1=zeros(size(Ym),'single'); Yl1(vbm_vol_morph(Yp0<0.5 & Ym<0.4,'ldo',2,resTr.vx_volr)==1)=-1; Yl1(Yl1A>0)=0;       % backgound
+  Yl1(Ym>2.25 & (Yl0==2 | Yl0==1) & ~vbm_vol_morph(Yp0>0,'lc')) = opt.LAB.HD(1);                                                           % head
   for s=1:2
-    l1T(vbm_vol_morph(mgT>2.5 & mgT<3.25 & l1A==opt.LAB.CT(s),'lab')) = opt.LAB.CT(1); % cortex
-    l1T(vbm_vol_morph(mgT>2.5 & mgT<3.25 & l1A==opt.LAB.BS(s),'lab')) = opt.LAB.BS(1); % brainstem
-    l1T(vbm_vol_morph(mgT>2.5 & mgT<3.25 & l1A==opt.LAB.MB(s),'lab')) = opt.LAB.MB(1); % midbrain
-    l1T(vbm_vol_morph(mgT>2.5 & mgT<3.25 & l1A==opt.LAB.CB(s),'lab')) = opt.LAB.CB(1); % cerebellum
-    l1T(vbm_vol_morph(mgT>2.5 & mgT<3.25 & l1A==opt.LAB.ON(s),'lab')) = opt.LAB.ON(1); % optical nerv
+    Yl1(vbm_vol_morph((Ym>2.8 & Yp0>2.8) & Ym<3.25 & Yl1A==opt.LAB.CT(s),'lab')) = opt.LAB.CT(1); % cortex
+    Yl1(vbm_vol_morph((Ym>2.5 | Yp0>2.2) & Ym<3.25 & Yl1A==opt.LAB.BS(s),'lab')) = opt.LAB.BS(1); % brainstem
+    Yl1(vbm_vol_morph((Ym>2.5 | Yp0>2.2) & Ym<3.25 & Yl1A==opt.LAB.MB(s),'lab')) = opt.LAB.MB(1); % midbrain
+    Yl1(vbm_vol_morph((Ym>2.5 | Yp0>2.2) & Ym<3.25 & Yl1A==opt.LAB.CB(s),'lab')) = opt.LAB.CB(1); % cerebellum
+    Yl1(vbm_vol_morph((Ym>2.5 | Yp0>2.2) & Ym<3.50 & Yl1A==opt.LAB.ON(s),'lab')) = opt.LAB.ON(1); % optical nerv
+    Yl1(vbm_vol_morph(Yl1A==opt.LAB.HC(s) & Ym>1.75 & Ym<2.25,'lab'))  = opt.LAB.HC(1);           % hippocampus
   end
   
+  % claustrum
+  BGD = vbdist(single(Yl1Ans==opt.LAB.BG(1)),Yp0>0);
+  Yl1(smooth3(BGD<6 & BGD>3 & Ydiv<0.1 & Yg>0.02 & Ym>2.1 & Ym<3.1 & Yl1==0 & Yl1Ans==opt.LAB.CT(1))>0.5)=opt.LAB.CT(1);
   
-  %% region-growing for special high intensity regions
-  l1T((mgT<=2.75 & l1T==0)) = -inf; l1T = vbm_vol_simgrow(l1T,mgT,1);l1T(isinf(l1T))=0; 
-  l1T(vbm_vol_morph(l1T==opt.LAB.CT(1),'labclose')) = opt.LAB.CT(1);
-  l1T((mgT<=2.75 & l1T==0)) = -inf; l1T = vbm_vol_simgrow(l1T,mgT,1);l1T(isinf(l1T))=0; 
+  % region-growing for special high intensity regions
+  Yl1(((Ym<=2.85 | (Yl1Ans~=opt.LAB.CT(1) & Ydiv>0.05 & Ym<=2.9)) & Yl1==0) | Yl0==3)=-inf;
+  [Yl1,D] = vbm_vol_simgrow(Yl1,Ym,0.05); Yl1(isinf(Yl1) | D>0.2)=0; 
   
+  % alignment of medium and low intensity structures
+  for s=1:2
+    Yl1(vbm_vol_morph(Yl1A==opt.LAB.BG(s) & Yl1==0 & Ym>1.75 & Ym<2.75 & Yg<0.1 & Ydiv>0,'lab')) = opt.LAB.BG(1);  % basal ganglia
+    Yl1(vbm_vol_morph(Yl1A==opt.LAB.TH(s) & Yl1==0 & Ym>1.75 & Ym<2.75 & Yg<0.1,'lo',0)) = opt.LAB.TH(1);          % hypothalamus
+    Yl1(vbm_vol_morph(Yl1A==opt.LAB.HC(s) & Yl1==0 & Ym>1.50 & Ym<2.50 & Yg<0.1,'lo',0)) = opt.LAB.HC(1);          % hippocampus
+  end
+  
+  % region growing
+  Yl1(((Ym<=2 | Yl0==3 | Yg>0.15 | (Yl1Ans==opt.LAB.CT(1) & Ydiv<0.05) | ...
+    Yl1Ans==opt.LAB.BG(1) & Ydiv<0.05 & Yg>0.1) & Yl1==0) | Yl0==3) = -inf;
+  [Yl1,D] = vbm_vol_simgrow(Yl1,Ym,0.05); Yl1(isinf(Yl1) | D>0.15)=0;
+  Yl1(((Ym<=2 | Yl0==3 | Yg>0.15 | (Yl1Ans==opt.LAB.CT(1) & Ydiv<0.02) | ...
+    Yl1Ans==opt.LAB.BG(1) & Ydiv<0 & Yg>0.05) & Yl1==0) | Yl0==3) = -inf;
+  [Yl1,D] = vbm_vol_simgrow(Yl1,Ym,0.02); Yl1(isinf(Yl1) | D>0.15)=0;     
+
+  % refinement of brainstem and midbrain
+  Yl1(Yl1==opt.LAB.BS(1) & ~vbm_vol_morph(Yl1==opt.LAB.BS(1),'lo',1))=0;
+  Yl1(Yl1==opt.LAB.MB(1) & ~vbm_vol_morph(Yl1==opt.LAB.MB(1),'lo',1))=0;
+  
+  % refinement of hypothamlamus
+  YM = Yl1==opt.LAB.TH(1) & ~vbm_vol_morph(Yl1==opt.LAB.TH(1),'o',2);
+  Yl1(YM & Ym>2.75)=1;  Yl1(YM & Ym<=2.5)=0;
+  
+  % refinement of hippocampus
+  Yl1((Yl1Ans~=opt.LAB.HC(1) | Ydiv<-0.02 | Ym>2.25) & Yl1==opt.LAB.HC(1)) = 1; 
+  Yl1 = vbm_vol_median3c(Yl1,Yl1==opt.LAB.HC(1));
+  Yl1(vbm_vol_morph(Yl1==opt.LAB.HC(1) & Yl1Ans==opt.LAB.HC(1),'lc',2))=opt.LAB.HC(1);
+  for s=0:1, 
+    Yl1(mod(Yl1A,2)==s & Yl1==opt.LAB.HC(1) & ...
+      ~vbm_vol_morph(mod(Yl1A,2)==s & Yl1==opt.LAB.HC(1),'l')) = 0; 
+  end
+  
+ 
+  
+  %% refinement of the basal ganglia
+  Yl1( ( (Ydiv<0.00 & Yl1Ans~=opt.LAB.BG(1)) | (Ydiv<-0.05 & Yl1Ans==opt.LAB.BG(1)) | Yg>0.1) & ...
+    Yl1==opt.LAB.BG(1) & Ym>1.75 & Ym<2.5) = 0;  % basasl ganglia corr
+  Yl1 = vbm_vol_median3c(Yl1,Ym>2 & Yl1>0,Ym>2 & Yl1>0);                                    % region smoothing
+  for i=1:8, Yl1 = vbm_vol_median3c(Yl1,Yl1>1 & Ym<2.7,Yl1>0 & Ym<2.9); end                 % region smoothing
+  Yl1((Ym<=2.25 | (Yl1Ans~=opt.LAB.CT(1) & Ydiv>-0.1 & Ym<=2.9)) & Yl1==0)=-inf;
+  
+  Yl2 = Yl1; Yl2(Yl2==opt.LAB.BG(1) | (Yl1Ans==opt.LAB.BG(1) & Yl1==0)| Ym<2.1 ) = -inf; 
+  Yl2 = vbm_vol_simgrow(Yl2,Ym,0.1); Yl2 = vbm_vol_simgrow(Yl2,Ym,0.1);  Yl2(isinf(Yl2))=0;
+  Yl1 = max(Yl1,Yl2); clear Yl2;
+  Yl1((Ym<=2.0 | (Ym<1.5 & Yl1Ans==opt.LAB.BG(1))) & Yl1==0) = -inf;
+  [Yl1,D] = vbm_vol_simgrow(Yl1,Ym,0.05); Yl1(isinf(Yl1) | D>0.1)=0;                        % region growing
+  
+  Yl1 = vbm_vol_median3c(Yl1,Ym>2 & Yg>0.05 & Yl1>4);                                       % region smoothing
+  
+  % regino growing (GM)
+  Yl2=Yl1; Yl2( Yl2==0 & ( Ym<2.0 |  Ym>3.0 | Yl2>1))=-inf; 
+  [Yl2,D] = vbm_vol_downcut(Yl2,Ym,0.04); Yl2(Yl2==-inf | D>50)=0;
+
+  Yl2( Yl2==0 & ( Ym<1.7 |  Ym>3.0 | Yl2>1))=-inf; 
+  [Yl2,D] = vbm_vol_downcut(Yl2,Ym,0.02); Yl2(Yl2==-inf | D>50)=0;
+
+  Yl2( Yl2==0 & ( Ym<1.5 |  Ym>3.0 | Yl2>1))=-inf; 
+  [Yl2,D] = vbm_vol_downcut(Yl2,Ym,-0.01); Yl2(Yl2==-inf | D>50)=0;
+
+  Yl1((Yl2==opt.LAB.CT(1))>0.55 & Ym<2.9 & Yl1==0)=opt.LAB.CT(1);
+  Yl1((Yl2==opt.LAB.CB(1))>0.55 & Ym<2.9 & Yl1==0)=opt.LAB.CB(1);
+  %YM = Yl1==opt.LAB.BG(1) & ~vbm_vol_morph(Yl1==opt.LAB.BG(1),'o',1);
+  %Yl1(YM & Ym>2.85 & Yl1Ans~=opt.LAB.BG(1))=1;  Yl1(YM & Ym<=2.5 & Yl1Ans~=opt.LAB.BG(1))=1;
+  
+  Yl1(vbm_vol_morph(Yl1==opt.LAB.BG(1),'lc') & Ym>1.75 & Ym<2.75 & Yg<0.2)=opt.LAB.BG(1);
+  Yl1(vbm_vol_morph(Yl1==opt.LAB.TH(1),'lc') & Ym>1.75 & Ym<2.75 & Yg<0.2)=opt.LAB.TH(1);
+  
+  % head
+  Yl1(Yl0==2 & Yl1==0 & Ym>1 & Yp0==0 & Yl1Ans==opt.LAB.HD(1)) = opt.LAB.HD(1);
+  Yl1(Yl1==0 & Ym>1.2 & Yl0==1 & Yp0==0 &...
+    (Yl1Ans==opt.LAB.HD(1) | Yl1Ans==opt.LAB.BV(1) | Yl1Ans==opt.LAB.NV(1))) = opt.LAB.HD(1);
+  Yl1(Yl1==opt.LAB.HD(1) & smooth3(Yl1==opt.LAB.HD(1))<0.5)=0;
   
   %% blood vessel detection
-  WM = single(smooth3(vbm_vol_morph(mgT>2.5 & mgT<3.5 & p0T>1.5 & l1ANS~=opt.LAB.BV(1),'lo',0))>0.5);
-  WM(WM==0 & (mgT<=2.5 | mgT>=3.5)) = -inf; [WM,D] = vbm_vol_simgrow(WM,mgT,0.1); WM(isinf(WM) | D>50)=0; 
-  WM = vbm_vol_morph(WM,'labclose',1); WM = single(smooth3(WM)>0.5);
-  WM(~WM & (mgT<2.2 | ~p0T>0.5 | mgT>3.5))=nan; WM=vbm_vol_downcut(WM,mgT*0.9,+0.02); WM(isnan(WM))=0;
-  WM = single(smooth3(WM)>0.5); 
-  WM(~WM & (mgT<2.0 | ~p0T>0.5 | mgT>3.5))=nan; WM=vbm_vol_downcut(WM,mgT*0.9,-0.02); WM(isnan(WM))=0;
-  WM = WM | vbm_vol_morph( l1ANS==opt.LAB.HC(1) | l1ANS==opt.LAB.BS(1) | l1ANS==opt.LAB.ON(1) | ...
-         l1ANS==opt.LAB.BG(1) | l1ANS==opt.LAB.TH(1) | l1ANS==opt.LAB.MB(1) | ...
-         l1ANS==opt.LAB.CB(1) | l1ANS==opt.LAB.CB(1) | l1ANS==opt.LAB.VT(1),'dilate',1);
-  WM = vbm_vol_morph(WM,'labclose',0); WM = single(smooth3(WM)>0.5); 
+  YWMF = single(smooth3(vbm_vol_morph(Ym>2.5 & Ym<3.5 & Yp0>1.5 & Yl1Ans~=opt.LAB.BV(1),'lo',0))>0.5);
+  YWMF(YWMF==0 & (Ym<=2.5 | Ym>=3.5)) = -inf; [YWMF,D] = vbm_vol_simgrow(YWMF,Ym,0.1); YWMF(isinf(YWMF) | D>50)=0; 
+  YWMF = vbm_vol_morph(YWMF,'labclose',1); YWMF = single(smooth3(YWMF)>0.5);
+  YWMF(~YWMF & (Ym<2.2 | ~Yp0>0.5 | Ym>3.5))=nan; YWMF=vbm_vol_downcut(YWMF,Ym*0.9,+0.02); YWMF(isnan(YWMF))=0;
+  YWMF = single(smooth3(YWMF)>0.5); 
+  YWMF(~YWMF & (Ym<2.0 | ~Yp0>0.5 | Ym>3.5))=nan; YWMF=vbm_vol_downcut(YWMF,Ym*0.9,-0.02); YWMF(isnan(YWMF))=0;
+  YWMF = YWMF | vbm_vol_morph( Yl1Ans==opt.LAB.HC(1) | Yl1Ans==opt.LAB.BS(1) | Yl1Ans==opt.LAB.ON(1) | ...
+         Yl1Ans==opt.LAB.BG(1) | Yl1Ans==opt.LAB.TH(1) | Yl1Ans==opt.LAB.MB(1) | ...
+         Yl1Ans==opt.LAB.CB(1) | Yl1Ans==opt.LAB.CB(1) | Yl1Ans==opt.LAB.VT(1),'dilate',1);
+  YWMF = vbm_vol_morph(YWMF,'labclose',0); YWMF = single(smooth3(YWMF)>0.5); 
   
-  BV = (l1T==0 & mgT>2.2 & ~WM) | (l1T==0 & l1ANS==opt.LAB.BV(1) & ...
-       ((mgT>1.2 & mgT<1.5) | (mgT>2.2)) & ~WM) ; BV=single(smooth3(BV)>0.3);
-  BV = BV | (vbm_vol_morph(BV,'dilate',1) & mgT>2.2 & ~WM); 
-  BV = BV | (vbm_vol_morph(BV,'labclose',1) & (mgT>2.2 | (mgT>1.2 & mgT<1.6)) & ~WM);
-  BV = BV & p0T>0;
-  l1T(BV) =  opt.LAB.BV(1);  
-  clear WM;
+  % high intensity structures
+  YBV = zeros(size(Ym),'uint8'); 
+  YBV(YBV==0 & Yl1==0 & Ym>2.3 & Yp0>2.2 & ~YWMF & ((Yl1==0 & Yl1Ans==opt.LAB.CT(1)) | ...
+    Yp0==0 | Yl1Ans==opt.LAB.NV(1) | Yl1Ans==opt.LAB.BV(1) )) = 3;
+  YBV(vbm_vol_morph(YBV==3,'d',1) & Ym<2.8 & Ym>2.3) = 3; 
+  YBV(vbm_vol_morph(YBV==3,'d',2) & Yl1==0 & Ym>2.1) = 3; 
+  
+  % low intensity structures
+  YBV(Yl1==0 & smooth3(YBV==0 & Yl1==0 & Ym>1.1 & Yp0<1.2 & ~YWMF & ...
+    (Ym<1.6 | Yp0==0 | Yl1Ans==opt.LAB.BV(1)) & ...
+    (Yp0==0 | Yl1Ans==opt.LAB.BV(1) | Yl1Ans==opt.LAB.NV(1)))>0.55) = 2;
+  YBV(vbm_vol_morph(smooth3(Ym>1.25 & Ym<1.75)>0.5,'o',2)) = 2;
+  
+  Yl1(YBV>0) =  opt.LAB.BV(1);  
   
   
-  %% alignment of medium and low intensity structures
-  l1T(l1ANS==opt.LAB.BG(1) & l1T==0 & mgT>1.75 & mgT<2.75 & mgT<2.9) = opt.LAB.BG(1);          % basal ganglia
-  l1T(l1ANS==opt.LAB.TH(1) & mgT>1.75 & mgT<2.75 & mgT<2.9) = opt.LAB.TH(1);                   % hypothalamus
-  l1T(l1ANS==opt.LAB.HC(1) & mgT>1.75 & mgT<2.75 & mgT<2.9) = opt.LAB.HC(1);                   % hippocampus
-  % alignment of the ventricels
+  %% alignment of the ventricels
   for s=1:2
-    l1T(vbm_vol_morph(l1A==opt.LAB.VT(s) & mgT<1.75,'lab') & p0T<1.75) = opt.LAB.VT(1);        % ventricle
+    Yl1(vbm_vol_morph(Yl1A==opt.LAB.VT(s) & Ym<1.8,'lab') & Yp0<1.8) = opt.LAB.VT(1);        % ventricle
   end
-  VT=single(l1T==opt.LAB.VT(1));
-  VT(l1ANS==opt.LAB.NV(1) & (p0T>=1 & p0T<1.75))=2;
-  VT((p0T>1.5 | p0T<1 | l1T~=0) & ~VT) = -inf; VT = vbm_vol_simgrow(VT,mgT,1); 
-  l1T(smooth3(VT==1)>0.5)=opt.LAB.VT(1);
+  VT=single(Yl1==opt.LAB.VT(1)); VT((Yl1Ans==opt.LAB.NV(1) & Yp0<2) | (Yl1Ans==opt.LAB.BV(1) & Yp0<2))=2;
+  VT((Yp0>2.0 | Yp0<1 | Yl1~=0) & ~VT) = -inf; VT = vbm_vol_simgrow(VT,Ym,1.5); 
+  Yl1(smooth3(VT==1)>0.2 & (Ym<1.75 | Yp0<1.75 | (Yl1==0 & Ym<1.75)))=opt.LAB.VT(1);
+  
   % alignment of HD
-  l1T(p0T==0 & mgT>2) = opt.LAB.HD(1); 
+  Yl1(Yl1==0 & Ym>2.5 & vbm_vol_morph(Yp0==0,'lc')) = opt.LAB.HD(1); 
   
-  
-  %% refinement of WM 
-  l1T(l1ANS==opt.LAB.CT(1) & l1T==0 & vbm_vol_morph(mgT>2 & l1T==1,'labopen',1)) = opt.LAB.CT(1);  
-  l1T(l1ANS==opt.LAB.BG(1) & ~vbm_vol_morph(l1ANS==opt.LAB.BG(1),'erode',1) & ...
-    l1T==opt.LAB.BG(1) & (mgT>2.75 & mgT>2.5)) = opt.LAB.CT(1);                                % basal ganglia
-  l1T=vbm_vol_median3c(l1T,l1T>=0,l1T>0);  
-
-  
-  %% regino-growing for all high intensity regions
-  l1T((mgT<=2.25 & l1T==0))=-inf; l1T = vbm_vol_simgrow(l1T,mgT,0.5); l1T(isinf(l1T))=0; 
-  l1T(l1T==0 & vbm_vol_morph(mgT>2.75 & p0T,'labopen',1)==0 & ...
-    mgT>2.75 & l1T==0 & vbm_vol_morph(mgT<2,'labclose',1,resTr.vx_volr))=opt.LAB.BV(1);
-
-  
+    
   %% region-growing in GM only for non-blood vessels regions
-  l1T(l1T==opt.LAB.BV(1) | isinf(l1T))=0; l1T((mgT<=1.9 | ~p0T) & l1T==0) = -inf; 
-  l1T = vbm_vol_downcut(l1T,mgT,0.02,resTr.vx_volr); 
-  l1T(l1T==opt.LAB.BV(1) | isinf(l1T))=0; l1T((mgT<=1.0 | ~p0T) & l1T==0) = -inf; 
-  l1T = vbm_vol_downcut(l1T,mgT,-0.01,resTr.vx_volr); 
-  %l1T((l1ANS==opt.LAB.BV(1) | D>500) & mgT>1.5 & ~vbm_vol_morph(mgT>2.5,'lab') & ...
-  %  (l1ANS~=opt.LAB.CB(1) | l1ANS~=opt.LAB.HD(1)))=opt.LAB.BV(1);                         % adding blood vessels again
-  l1T(l1T==opt.LAB.BG(1) & ~(l1ANS==opt.LAB.BG(1)|l1ANS==opt.LAB.VT(1)))=opt.LAB.CT(1);   % basal ganglia (avoid overgrowing)
-  l1T(l1T==0 & mgT>3.5)=opt.LAB.BV(1); l1T=vbm_vol_downcut(l1T,mgT,0.2,resTr.vx_volr);
-  l1T(isinf(l1T))=0; l1T=vbm_vol_median3c(l1T,l1T>=0 & mgT<2.5 & ...
-    ~(l1T==opt.LAB.BV(1) & mgT>2.25),l1T>=0); l1T(l1T==0 & ~p0T & mgT<0.75)=-inf;
+  YM = Yl1==0 & Ym>0.9 & Yp0>0.5 & vbm_vol_morph(Yl1>0 & Yl1<20,'lc'); Yl1(YM)=Yl1(YM);
+  Yl2=Yl1; Yl2(Yl2>1 | Ym<1.2 | Yl0==3)=-inf; 
+  Yl2=smooth3(vbm_vol_downcut(Yl2,Ym,-.1,resTr.vx_volr))>0.5;
+  Yl1(Yl1==0 & Yl2 & Ym>0.9)=opt.LAB.CT(1); Yl1(isinf(Yl1))=0;
 
+  Yl1((Yl1==0 | Yl1==opt.LAB.BV(1)) & Yp0<0.5 & vbm_vol_morph(Yl1==opt.LAB.HD(1),'lc',2))=opt.LAB.HD(1);
+  Yl1(Yl1==0 & ~vbm_vol_morph(Yl1>0,'lc',2))=-inf; Yl1=vbm_vol_downcut(Yl1,Ym,-.1,resTr.vx_volr);
+  Yl1=vbm_vol_median3c(Yl1,Yl1==0,Yl1>0);
   
   %% prepare mask for filling of subcortical regions
-  M3 = l1ANS==opt.LAB.BG(1)|l1ANS==opt.LAB.VT(1)|l1ANS==opt.LAB.TH(1);
+  M3 = Yl1Ans==opt.LAB.BG(1)|Yl1Ans==opt.LAB.VT(1)|Yl1Ans==opt.LAB.TH(1);
   M2 = vbm_vol_morph(M3,'dilate',2,resTr.vx_volr);
   M  = 3*vbm_vol_smooth3X(single(vbm_vol_morph(vbm_vol_morph(vbm_vol_morph(M3 | ...
-       (M2 & mgT>2.7 & l1T~=7 & l1T~=8),'labclose',1),'labopen',1),'erode',0)),0.5);  
+       (M2 & Ym>2.7 & Yl1~=7 & Yl1~=8),'labclose',1),'labopen',1),'erode',0)),0.5);  
   M2 = vbm_vol_morph(M3,'distdilate',4,resTr.vx_volr);
-  MF = M2.*max(mgT,M); clear M2 M;  
-  mf3T = max(mgT,MF); TI3FS = vbm_vol_smooth3X(mf3T,1.5); mf3T(mf3T>3 & MF>3)=TI3FS(mf3T>3 & MF>3);
-  l1T(isinf(l1T))=0; l1T=vbm_vol_median3c(l1T,l1T>=0 & mgT<3,l1T>=0); l1T(l1T==0 & ~p0T & mgT<0.75)=-inf;
+  YMF = M2.*max(Ym,M); clear M2 M;  
+  mf3T = max(Ym,YMF); TI3FS = vbm_vol_smooth3X(mf3T,1.5); mf3T(mf3T>3 & YMF>3)=TI3FS(mf3T>3 & YMF>3);
+  %Yl1(isinf(Yl1))=0; Yl1=vbm_vol_median3c(Yl1,Yl1>=0 & Ym<3,Yl1>=0); Yl1(Yl1==0 & ~Yp0 & Ym<0.75)=-inf;
   
   
   %% corrections
   % correct CSF in special brain regions
-  SR = (l1T==opt.LAB.BG(1) | l1T==opt.LAB.TH(1) | l1T==opt.LAB.HC(1));
-  l1T(SR & l1ANS==opt.LAB.CT(1) & p0T<1.5) = opt.LAB.CT(1);    
-  l1T(SR & l1ANS==opt.LAB.VT(1) & p0T<1.5) = opt.LAB.VT(1);
+  SR = (Yl1==opt.LAB.BG(1) | Yl1==opt.LAB.TH(1) | Yl1==opt.LAB.HC(1));
+  Yl1(SR & Yl1Ans==opt.LAB.CT(1) & Yp0<1.5) = opt.LAB.CT(1);    
+  Yl1(SR & Yl1Ans==opt.LAB.VT(1) & Yp0<1.5) = opt.LAB.VT(1);
+  Yl1(Yl1==opt.LAB.BV(1) & Yp0==0) = opt.LAB.HD(1);
   clear SR; 
     
   % corrections for non brain parts
-  l1T(BV) = opt.LAB.BV(1);  
-  l1T(smooth3(p0T<1 & mgT>1.5 & (l1T==0 | l1T==opt.LAB.BV(1)))>0.5) = opt.LAB.HD(1); 
+  Yl1(smooth3(Yp0<1 & Ym>1.5 & (Yl1==0 | Yl1==opt.LAB.BV(1)))>0.5) = opt.LAB.HD(1); 
     
-  % cleanup for labels that are not so excact in this version of l1A
-  l1T(l1T==opt.LAB.HC(1))=opt.LAB.CT(1);
+  % cleanup for labels that are not so excact in this version of Yl1A
+  Yl1(Yl1==opt.LAB.HC(1))=opt.LAB.CT(1);
+  Yl1=vbm_vol_median3c(Yl1,Yl1>=0 & Yl1<5,Yl1>=0 & Yl1<5);
+  Yl1=vbm_vol_median3c(Yl1,Yl1>=0 & Yl1<5,Yl1>=0 & Yl1<5);
+  
+  
+  %% brain mask
+  YB  = Yl1>0 & Yl1<opt.LAB.HD(1) & Yl1~=opt.LAB.BV(1);
+  YB  = vbm_vol_morph(smooth3(YB)>0.5,'o',3);
+  YB  = vbm_vol_morph(smooth3(YB)>0.5,'lc');
+  Yl1B = Yl1>0; 
+  
+  % fine correction based on SPM mask
+  Yl1(~YB & Yl1~=opt.LAB.HD(1) & Yp0>0 ) = 0;
+  Yl1( YB & Yl1==opt.LAB.HD(1) & Yp0>0 ) = 0; 
+  Yl1(~YB & Yl1~=opt.LAB.HD(1) & Yp0==0 & Yl1>0) = opt.LAB.HD(1);   
+  Yl1( YB & Yl1==opt.LAB.HD(1) & Yp0>0  & Yl1>0) = opt.LAB.HD(1);
+  [D,I]=vbdist(Yl1,Yl1B); Yl1=Yl1(I);
   
   
   %% side aligment using laplace to correct for missalignments due to the normalization
-  d = 5; M = vbm_vol_smooth3X(single(vbm_vol_morph(mod(l1A,2)==0,'distdilate',d,resTr.vx_volr)) & ...
-      single(vbm_vol_morph(mod(l1A,2)==1,'distdilate',d,resTr.vx_volr)==1),20);
-  S = 2*single(mod(l1A,2)==0 & mgT>2.5 & M<max(M(:))*0.9) +single(mod(l1A,2)==1 & ...
-      mgT>2.5 &  M<max(M(:))*0.9); S(mf3T<=2.5)=-inf; S(S==0)=1.5;
+  d = 5; M = vbm_vol_smooth3X(single(vbm_vol_morph(mod(Yl1A,2)==0,'distdilate',d,resTr.vx_volr)) & ...
+      single(vbm_vol_morph(mod(Yl1A,2)==1,'distdilate',d,resTr.vx_volr)==1),20);
+  S = 2*single(mod(Yl1A,2)==0 & Ym>2.5 & M<max(M(:))*0.9) +single(mod(Yl1A,2)==1 & ...
+      Ym>2.5 &  M<max(M(:))*0.9); S(mf3T<=2.5)=-inf; S(S==0)=1.5;
 
   rS=vbm_vol_resize(S,'reduce'); rS=round(rS*2)/2; 
   rS=vbm_vol_laplace3R(rS,rS==1.5,0.001); 
-  rS=vbm_vol_resize(single(rS),'dereduce',size(mgT)); 
+  rS=vbm_vol_resize(single(rS),'dereduce',size(Ym)); 
   S(S==1.5)=round(rS(S==1.5)); 
   S(isinf(S) & mf3T>2)=0; S=vbm_vol_downcut(S,mf3T,3,resTr.vx_volr); 
   S(isinf(S) & mf3T>0)=0; S=vbm_vol_downcut(S,mf3T,3,resTr.vx_volr); 
-  S(S<=0)=2-mod(l1A(S<=0),2);
+  S(S<=0)=2-mod(Yl1A(S<=0),2);
   S=round(vbm_vol_smooth3X(S,2));
-  l1T(l1T>0)=l1T(l1T>0)+(S(l1T>0)==2); 
-  l1T(l1T<0.5)=0;
-
+  Yl1(Yl1>0)=Yl1(Yl1>0)+(S(Yl1>0)==2); 
+  Yl1(Yl1<0.5)=0;
   
-  %% back to original resolution
-  MF  = vbm_vol_resize(MF,'dereduceV',resTr);
-  p0T = vbm_vol_resize(p0T,'dereduceV',resTr);
-  l1T = vbm_vol_resize(l1T,'dereduceV',resTr,'nearest');
-  [MF,l1T,p0T] = vbm_vol_resize({MF,l1T,p0T},'dereduceBrain',BB);
-  mgT = mgTO;
+  
+  %% back to original resolution and full size
+  YMF = vbm_vol_resize(YMF,'dereduceV',resTr);
+  Yp0 = vbm_vol_resize(Yp0,'dereduceV',resTr);
+  YB  = vbm_vol_resize(YB ,'dereduceV',resTr);
+  Yl1 = vbm_vol_resize(Yl1,'dereduceV',resTr,'nearest');
+  
+  YMF = vbm_vol_resize(YMF,'dereduceBrain',BB);
+  Yl1 = vbm_vol_resize(Yl1,'dereduceBrain',BB);
+  Yp0 = vbm_vol_resize(Yp0,'dereduceBrain',BB);
+  YB  = vbm_vol_resize(YB ,'dereduceBrain',BB);
+  
+  Ym  = mgTO; clear mgTO;
   
   
   %% setting head label for voxel outside the bounding box
-  l1T(smooth3(p0T<1 & mgT>1.5 & (l1T==0 | l1T==opt.LAB.BV(1)))>0.5) = opt.LAB.HD(1);
-  [HDr,resTr] = vbm_vol_resize(l1T>0,'reduceV',vx_vol,3,64);
+  Yl1(smooth3(Yp0<1 & Ym>1.5 & (Yl1==0 | Yl1==opt.LAB.BV(1)))>0.5) = opt.LAB.HD(1);
+  [HDr,resTr] = vbm_vol_resize(Yl1>0,'reduceV',vx_vol,3,64);
   HDr = smooth3(vbm_vol_morph(HDr>0.1,'lc',2))>0.5;
-  HD  = smooth3(l1T>0 | vbm_vol_resize(HDr,'dereduceV',resTr))>0.5;
-  [D,I,l1T] = vbdist(single(l1T),HD); clear D I;
-  l1T(HD & l1T<=0) = opt.LAB.HD(1); 
-  l1T(~HD) = 0;
+  HD  = smooth3(Yl1>0 | vbm_vol_resize(HDr,'dereduceV',resTr))>0.5;
+  [D,I,Yl1] = vbdist(single(Yl1),HD); clear D I;
+  Yl1(HD & Yl1<=0) = opt.LAB.HD(1); 
+  Yl1(~HD) = 0;
 
   
   %% subvolumes
   fn = setdiff(fieldnames(opt.LAB),{'NV','HD','NB','ON','HC'}); vol=struct();
   for fni=1:numel(fn)
     eval(sprintf(['vol.vol_abs_%s = prod(vx_vol)/1000 .* ' ...
-      '[sum(l1T(:)==%d) sum(l1T(:)==%d)];'],fn{fni},def.LAB.(fn{fni}))); 
+      '[sum(Yl1(:)==%d) sum(Yl1(:)==%d)];'],fn{fni},def.LAB.(fn{fni}))); 
   end 
-  vol.vol_LRP = sum( mod(l1T(:),2)==1 & l1T(:)>0 & l1T(:)<20) ./ ...
-                sum( l1T(:)>0 & l1T(:)<20);
+  vol.vol_LRP = sum( mod(Yl1(:),2)==1 & Yl1(:)>0 & Yl1(:)<20) ./ ...
+                sum( Yl1(:)>0 & Yl1(:)<20);
 
 end
+
+% old code ... delete later
+  %{
+  ( Ym>1.3 & (Yp0==0 | Yl1Ans==opt.LAB.NV(1) | Yl1Ans==opt.LAB.BV(1)))) ; 
+  BV = smooth3(BV)>0.5;
+  %%
+  BV = (Yl1==0 & Ym>2.5 & ~WM & Yl1Ans~=opt.LAB.HD(1) & vbm_vol_morph(Yp0>0,'labclose')) | ...
+       (Yl1==0 & Ym>2.3 & ~WM & Yl1Ans==opt.LAB.BV(1) & vbm_vol_morph(Yp0==0,'labclose')) | ...
+       (Yl1==0 & Ym>2.3 & ~WM & Yl1Ans~=opt.LAB.HD(1))| ...
+        vbm_vol_smooth3X(Ym>1.25 & Ym<1.75 & Yp0<0.1 & ...
+        (Yl1Ans==opt.LAB.HD(1) | Yl1Ans==opt.LAB.BV(1) | Yl1Ans==opt.LAB.NV(1)) )>0.8 | ...
+        vbm_vol_smooth3X((Yl1==0 & (Yl1Ans==opt.LAB.BV(1)) & ...
+       ((Ym>1.25 & Ym<1.75 & Yp0<1.75) | (Ym>2.3)) & ~WM))>0.5; BV=single(smooth3(BV)>0.2);
+  
+  BV = BV | ...
+      (~WM & vbm_vol_morph(Yp0<1.75,'e',2) & Ym>1.25 & (Yl1Ans==opt.LAB.NV(1) | ...
+        Yl1Ans==opt.LAB.BV(1)|  Yl1Ans==opt.LAB.HD(1) | Yl0==1));
+  
+    %% 
+  BV = BV | (vbm_vol_morph(BV,'dilate',1) & Ym>2.3 & ~WM); 
+  BV = BV | (vbm_vol_morph(BV,'labclose',1) & (Ym>2.2 | (Ym>1.2 & Ym<1.6)) & ~WM);
+  %BV = BV & vbm_vol_morph(Yp0>0,'lc');
+  Yl1(BV) =  opt.LAB.BV(1);  
+ % clear WM;
+ %%
+   Yl1(Yl1==0 & Ym<1.5)=-inf; [Yl1,D] = vbm_vol_downcut(Yl1,Ym,-0.01); Yl1(Yl1==-inf | D>100)=0;
+  %}
+
+  
+  %{
+  
+  %[Yl1,D] = vbm_vol_simgrow(Yl1,Ym,0.1); Yl1(D>50)=0; %Yl1 = vbm_vol_median3c(Yl1,Ym>1.5);
+  %Yl1(BV) = opt.LAB.BV(1); Yl1(BG) =  opt.LAB.BG(1);
+  %Yl1((Yl1==0 & Ym>1.3 & ~WM & Yl1Ans==opt.LAB.BV(1) & vbm_vol_morph(Yp0==0,'labclose')))= opt.LAB.BV(1);
+  %%
+  Yl1=vbm_vol_downcut(Yl1,Ym,0.2,resTr.vx_volr);
+%  Yl1(isinf(Yl1))=0; Yl1=vbm_vol_median3c(Yl1,Yl1>=0 & Ym<2.5 & ...
+%    ~(Yl1==opt.LAB.BV(1) & Ym>2.25),Yl1>=0); Yl1(Yl1==0 & ~Yp0 & Ym<0.75)=-inf;
+  Yl1(Yl1==opt.LAB.BV(1) & (Yl1Ans==opt.LAB.HD(1) | Yl1<1.5)) = opt.LAB.HD(1); Yl1(isinf(Yl1))=0;
+  %Yl1((Ym<=1.00) & Yl1==0) = -inf; 
+  %[Yl1,D] = vbm_vol_simgrow(Yl1,Ym,0.1); Yl1(D>50)=0; Yl1 = vbm_vol_median3c(Yl1,Ym>1.5);
+   Yl1(YBV>0) =  opt.LAB.BV(1);  
+  %}
