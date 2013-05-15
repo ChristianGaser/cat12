@@ -35,7 +35,7 @@ function varargout = vbm_stat_marks(action,varargin)
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
   def.tisvolr   = [0.15  0.2; 0.45  0.2; 0.35  0.2]; % relative expected tissue volumes
-  def.thickness = [0.10  0.1; 2.50  0.5; 2.50  1.0]; % absolut  expected tickness
+  def.thickness = [2.50  1.0; 0.75  1.0];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   def.QS        = { 
 % -- structure ---------------------------------------------------------
@@ -58,7 +58,7 @@ function varargout = vbm_stat_marks(action,varargin)
   %'QM' 'noise_WM'              'linear'    [0.015 0.09]   1 0    'local std in WM 
   %'QM' 'noise_BG'              'linear'    [0.01  0.08]   1 0    'local std in BG (problems for skull-striped data and ADNI) 
   %'QM' 'noise_LG'              'linear'    [0.01  0.12]   1 0    'local std in the whole image      
-   'QM' 'bias_WMstd'            'linearb'   [0.02  0.15]   1 1    'global std in the WM'
+   'QM' 'bias_WMstd'            'linearb'   [0.05  0.15]   1 1    'global std in the WM'
   %'QM' 'bias_WMinhomogeneity'  'linear'    [1.00  0.50]   1 0    'WMinhomogeneity
   %'QM' 'bias_WMentropy'      	'linear'    [1.00  0.50]   1 0    'entropy in the WM segment
   %'QM' 'tissue_median'         'normal'    def.tissue     1 1    'median within the tissue classes
@@ -90,11 +90,14 @@ function varargout = vbm_stat_marks(action,varargin)
    'SM' 'vol_rel_BG'            'linearb'   [0.05  0.05]   1 1    'relative tissue volume of basal structures'
    'SM' 'vol_rel_VT'            'linearb'   [0.05  0.05]   1 1    'relative tissue volume of the ventricle'
    'SM' 'vol_rel_BV'            'linearb'   [0.00  0.05]   1 1    'relative blood vessel volume'
-   'SM' 'dist_thickness'        'normalb'   [2.50  0.50]   1 1    'absolut  thickness (CSF,GM,WM)'
+   'SM' 'dist_thickness'        'normalb'   def.thickness  1 1    'absolut  thickness (CSF,GM,WM)'
    'SM' 'dist_abs_depth'        'normalb'   [5.00  2.00]   0 0    'absolut  sulcal depth'
    'SM' 'dist_rel_depth'        'normalb'   [0.50  0.20]   0 0    'relative sulcal depth'
   };
 
+  def.QM.avg = {'noise','bias_WMstd','contrast','res_vol','res_isotropy','vbm_change','vbm_expect'}; 
+  def.SM.avg = {'vol_rel_CGW'};
+  
   % create structure
   for QSi=1:size(def.QS,1)
     if isempty(def.QS{QSi,3})
@@ -177,6 +180,49 @@ function varargout = vbm_stat_marks(action,varargin)
           end  
         end
       end
+      
+      %% average
+      Qavg = {'QM','SM'};
+      for Qavgi=1:2;
+        QAM.(Qavg{Qavgi}).mean = [0 0]; 
+        QAM.(Qavg{Qavgi}).max  = [0 0];
+        QAM.(Qavg{Qavgi}).avg  = [0 0];
+        for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
+          if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
+            if ~iscell(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))
+              if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
+                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
+                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
+                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/numel(def.(Qavg{Qavgi}).avg);
+              else
+                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                  max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
+                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
+              end
+            else
+              if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
+                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                  max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
+                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
+              else
+                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                  max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
+                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
+              end
+            end
+          end
+        end
+        
+        
+        try
+          QAM.(Qavg{Qavgi}).avg = mean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
+        end
+      end
+      
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur
       varargout{1} = QS;
