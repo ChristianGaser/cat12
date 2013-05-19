@@ -2084,3 +2084,22 @@ M       vbm_vol_partvol.m
     - Final reduction of Dartel command window output.
 ------------------------------------------------------------------------
 r487 | dahnke | 2013-05-15 11:20:35
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       vbm12.txt
+ M      vbm_io_colormaps.m
+M       vbm_io_cprintf.m
+MM      vbm_stat_marks.m
+M       vbm_vol_partvol.m
+
+(1) Corrected resolution error in LAS skull-stripping.
+(2) Rewrote parts of the partitioning.
+(3) Corrected figure error, if spm_grafics was not the current figure.
+(4) Prepare preprocessing for thickness phantom and test thickness measure.
+(5) Update partitioning and add error messages for missing structures.
+
+
+------------------------------------------------------------------------
+r488 | dahnke | 2013-05-19 16:11:46

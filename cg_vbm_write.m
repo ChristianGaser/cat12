@@ -11,6 +11,9 @@ function cls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 % $Id$
 
 
+try
+  
+
 % complete output structure
 if ~isfield(job.output,'ml')
   try
@@ -57,6 +60,7 @@ if ~isfield(job.output,'PP')
     job.output.pp  = struct('native',0); 
   end
 end
+opt.color.error     = [0.8 0.0 0.0];
 opt.color.warning   = [0.0 0.0 1.0];
 opt.color.warning   = [0.8 0.9 0.3];
 opt.color.highlight = [0.2 0.2 0.8];
@@ -113,7 +117,7 @@ end
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 % bf - bias field: corrected, warp corrected, affine corrected
 % df - deformations: forward, inverse
-% lb - label: native, warped label, rigid label, affine label
+% lb - Yp0b: native, warped Yp0b, rigid Yp0b, affine Yp0b
 % jc - jacobian: no, normalized 
 
 do_dartel = warp.dartelwarp;   % apply dartel normalization
@@ -429,26 +433,27 @@ switch warp.sanlm
         sanlmMex(Ysrc,3,1);
 end
 fprintf('%3.0fs\n',etime(clock,stime));     
-YsrcN = Ysrc+0;
+%YsrcN = Ysrc+0;
 
 
 
-%% create initial brain Ymask and normalize the intensities
+%% create initial brain YB and normalize the intensities
 % noise estimation
 [gx,gy,gz]=vbm_vol_gradient3(Ysrc); YG=abs(gx)+abs(gy)+abs(gz); YG=YG./Ysrc; clear gx gy gz; 
 noise  = std(Ysrc(cls{2}(:)>128 & YG(:)<0.1)/median(Ysrc(cls{2}(:)>128  & YG(:)<0.1))); 
 
-% brain Ymask
-[Ymask,resT2] = vbm_vol_resize(single(cls{1} + cls{2})/255,'reduceV',vx_vol,3,32);
-Ymask = vbm_vol_morph(Ymask>0.5,'lc',2); Ymask=vbm_vol_smooth3X(Ymask,1);
-Ymask = vbm_vol_resize(Ymask,'dereduceV',resT2)>0.5; 
+% brain YB
+[YB,resT2] = vbm_vol_resize(single(cls{1} + cls{2})/255,'reduceV',vx_vol,3,32);
+YB = vbm_vol_morph(YB>0.5,'lc',2); YB=vbm_vol_smooth3X(YB,1);
+YB = vbm_vol_resize(YB,'dereduceV',resT2)>0.5; 
 
 % global intensity normalization based on edge-free regions
 for i=1:3
-  YM = vbm_vol_morph(cls{i}>64 & Ymask,'e') & (YG<0.3 | YG>0.5); 
+  YM = cls{i}>64 & YB & (YG<0.3 | YG>0.5); 
   T3th(i) = median(Ysrc(YM(:))); 
 end;
 T3th=T3th([3 1 2]);
+T3th(1) = max(0,min(T3th(1),T3th(2) - diff(T3th(2:3)))); % phantom
 Ym = vbm_vol_iscale(Ysrc,'gCGW',vx_vol,T3th); 
 clear YM;
 
@@ -469,17 +474,17 @@ Yl1A = uint8(spm_sample_vol(Vl1A,double(y(:,:,:,1)),double(y(:,:,:,2)),double(y(
 Yl1A = reshape(Yl1A,d);
 
 % segment map 
-Yp0 = (single(cls{1})*2/255 + single(cls{2})*3/255 + single(cls{3})/255) .* Ymask;
+Yp0 = (single(cls{1})*2/255 + single(cls{2})*3/255 + single(cls{3})/255) .* YB; clear YB;
 Yl0 = uint8(cls{4}>127) + 2*uint8(cls{5}>127) + 3*uint8(cls{6}>127);
 
 % individual refinement
 % hmm problem bei Ym bei zu schwacher biaskorrektur -> Yml
 % du must wohl auch noch das rauschen mit berücksichtigen
 [subvols,Yl1,YB,YMF] = vbm_vol_partvol(Yl1A,Yp0,Ym,Yl0,opt.partvol); 
-clear Yl1A Yl0; YMF=YMF>0.5;
+clear Yl1A Yl0; 
 fn = fieldnames(subvols); for fni=1:numel(fn), qa.SM.(fn{fni}) = subvols.(fn{fni}); end 
 
-% label map smoothing for lower resolutions
+% Yp0b map smoothing for lower resolutions
 if opt.partvol.res>1.5, Yl1 = uint8(vbm_vol_median3(single(Yl1),Yl1>0)); end 
 
 fprintf('%3.0fs\n',etime(clock,stime));
@@ -538,8 +543,9 @@ if do_cls && do_defs,
        
       %% init
       [gx,gy,gz]=vbm_vol_gradient3(Ym); YG=abs(gx)+abs(gy)+abs(gz); YG=YG./Ym; clear gx gy gz; 
-      [Tr,YBr,GMr,Gr,BOr,resTr] = vbm_vol_resize({Ym,single(cls{2})/255,single(cls{1})/255,YG,YB},'reduceV',vx_vol,1.5,32);
-      Yl1r = vbm_vol_resize(ceil(Yl1/2)*2-1,'reduceV',vx_vol,1.5,32,'nearest');
+      [Tr,YBr,GMr,Gr,BOr,YMFr,resTr] = ...
+        vbm_vol_resize({Ym,single(cls{2})/255,single(cls{1})/255,YG,YB,YMF},'reduceV',vx_vol,1.5,32);
+      Yl1r = vbm_vol_resize(ceil(Yl1/2)*2-1,'reduceV',vx_vol,1.5,32,'nearest'); 
 
       YBr  = YBr>0.5 & Tr>2.5/3 & Tr<3.5/3 & Yl1r<21; 
       YBr  = single(vbm_vol_morph(YBr,'l')); 
@@ -563,12 +569,13 @@ if do_cls && do_defs,
       YBr(~YBr & (Yl1r>20 | Tr<1/3 | Tr>1 | Yl1r~=1))=-inf; 
       [Br1,Dr] = vbm_vol_downcut(YBr,Tr,-0.02/mean(resTr.vx_volr)); YBr(YBr==-inf | Dr>50)=0; YBr(Br1>0)=1;
       for i=1:3, YBr(smooth3(single(YBr))<0.5)=0; end
-      YBr = YBr | YMF; 
+      YBr = YBr | YMFr; 
       %%
-      YBr   = vbm_vol_morph(YBr,'labclose',1);
-      Ymask = vbm_vol_resize(YBr,'dereduceV',resTr)>0.5;
-      Ymask = vbm_vol_morph(Ymask,'dilate'); 
+      YBr = vbm_vol_morph(YBr,'labclose',1);
+      YB = vbm_vol_resize(YBr,'dereduceV',resTr)>0.5;
+      YB = YB | (vbm_vol_morph(YB,'dilate') & Ym<2.2); 
       
+      clear Tr YBr GMr Gr BOr resTr;
       fprintf('%3.0fs\n',etime(clock,stime));
     else
     	if gcut
@@ -578,8 +585,8 @@ if do_cls && do_defs,
         fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
         cls_old = cls;
         try
-          [Ysrc,cls,Ymask] = vbm_vol_GBM(Ym,cls,res,opt);
-          Ymask=vbm_vol_morph(Ymask,'lc');
+          [Ysrc,cls,YB] = vbm_vol_GBM(Ym,cls,res,opt);
+          YB=vbm_vol_morph(YB,'lc');
           fprintf(' %3.0fs\n',etime(clock,stime));
         catch %#ok<CTCH>
           vbm_io_cprintf(opt.color.warning,'Graph-cut failed\n');
@@ -590,26 +597,26 @@ if do_cls && do_defs,
       end
       if ~gcut
         fprintf('Skull-stripping using morphological operations\n');
-        % use Ymask of GM and WM
-        Ymask = single(cls{1});
-        Ymask = Ymask + single(cls{2});
+        % use YB of GM and WM
+        YB = single(cls{1});
+        YB = YB + single(cls{2});
 
         % keep largest connected component after at least 1 iteration of opening
         n_initial_openings = max(1,round(scale_morph*warp.cleanup));
-        Ymask = vbm_vol_morph(Ymask>warp.open_th,'open',n_initial_openings);
-        Ymask = vbm_vol_morph(Ymask,'lc');
+        YB = vbm_vol_morph(YB>warp.open_th,'open',n_initial_openings);
+        YB = vbm_vol_morph(YB,'lc');
 
         % dilate and close to fill ventricles
-        Ymask = vbm_vol_morph(Ymask,'dilate',warp.dilate);
-        Ymask = vbm_vol_morph(Ymask,'lc',round(scale_morph*10));
+        YB = vbm_vol_morph(YB,'dilate',warp.dilate);
+        YB = vbm_vol_morph(YB,'lc',round(scale_morph*10));
 
         % remove sinus
-        Ymask = Ymask & ((single(cls{5})<single(cls{1})) | ...
-                         (single(cls{5})<single(cls{2})) | ...
-                         (single(cls{5})<single(cls{3})));                
+        YB = YB & ((single(cls{5})<single(cls{1})) | ...
+                   (single(cls{5})<single(cls{2})) | ...
+                   (single(cls{5})<single(cls{3})));                
 
         % fill holes that may remain
-        Ymask = vbm_vol_morph(Ymask,'lc',round(scale_morph*2)); 
+        YB = vbm_vol_morph(YB,'lc',round(scale_morph*2)); 
       end
     end
      
@@ -632,15 +639,16 @@ if do_cls && do_defs,
     %  useable information about the WM intensity, because we use a
     %  maximum filter!
     %  In the save/deep WM the nonfilter data can be used.     
-    TLi   = vbm_vol_localstat(Ysrc, cls{3}==0 & Ymask & Ym>2.2/3 & Ym<7/6 & YG<0.2 & (cls2>220 | (Ym<2.8 & div<-0.02)) & ~YBG,2,3); 
-    TLi(cls2>220 & ~YBG)=Ysrc(cls2>220 & ~YBG);
+    TLi   = vbm_vol_localstat(Ysrc, cls{3}==0 & YB & Ym>2.2/3 & Ym<7/6 & YG<0.2 & (cls2>220 | (Ym<2.8 & div<-0.02)) & ~YBG,2,3); 
+    TLi(cls2>220 & Ym>2.9 & Ym<3.5 & ~YBG)=Ysrc(cls2>220 & Ym>2.9 & Ym<3.5 & ~YBG);
     TL{5} = vbm_vol_approx(TLi,'nh',vx_vol,2); TL{5} = vbm_vol_smooth3X(TL{5},4); 
 
     for i=1:3
-      YM = vbm_vol_morph(cls{i}>64 & Ymask & ~YBG,'e') & (YG<0.3 | YG>0.5); 
-      T3th(i) = median(Ysrc(YM(:)) ./ TL{5}(YM(:)));
+      YM = cls{i}>64 & YB & (YG<0.3 | YG>0.5); 
+      T3th(i) = median(Ysrc(YM(:))./TL{5}(YM(:))); 
     end;
-    T3th = T3th([3 1 2]);
+    T3th=T3th([3 1 2]);
+    T3th(1) = max(0,min(T3th(1),T3th(2) - diff(T3th(2:3)))); % phantom
     Ym   = vbm_vol_iscale(Ysrc ./TL{5},'gCGW',vx_vol,T3th); 
     TIQA = vbm_vol_iscale(YsrcO./TL{5},'gCGW',vx_vol,T3th); %clear YsrcO; 
 
@@ -649,7 +657,7 @@ if do_cls && do_defs,
     if job.extopts.LAS 
       cls{1}=cls1; cls{2}=cls2; clear cls1 cls2; 
       
-      str='Local Adaptive Segmenation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str)));  stime = clock;  
+      str='Local Adaptive Segmentation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str)));  stime = clock;  
       % rought GM mean to remove remove outliers depending on the local values 
       TLi   = Ysrc .* ((Ym>1/3 & YBG & Ym<0.9) | ...
                (cls{1}>64 & YG<0.5 & ((Ym<0.9 & cls{2}<192) | YBG) & cls{3}<192 & ...
@@ -660,22 +668,23 @@ if do_cls && do_defs,
       TLib  = vbm_vol_resize(TLir,'dereduceV',resT2); clear WIrr;     
 
       % GM mean - the real GM mean
+      resi = 2;
       TLi   = TLi .* ((Ym>2/3 & YBG & Ym<0.9) | (cls{1}>64 & YG<0.5 & ...
               (Ysrc>TLib - diff(T3th(2:3))*mean(TL{5}(:))/2 & ...
                Ysrc<TLib + diff(T3th(2:3))*mean(TL{5}(:))/2) & ...
               ~(Ym>0.9 & YG>noise/2 & (Ym<2/3 | div>-0.1)))); 
-      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'meanm'); %2
-      WMr = vbm_vol_resize(single(cls{2}) .* single(~YBG),'reduceV',vx_vol,4,32,'mean');
+      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,resi,32,'meanm'); %2
+      WMr = vbm_vol_resize(single(cls{2}) .* single(~YBG),'reduceV',vx_vol,resi,32,'mean');
       TLir(WMr>240) = T3th(2)*mean(TL{5}(:));
       for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
-      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,8); 
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
       TL{3} = vbm_vol_resize(TLir,'dereduceV',resT2); clear WIrr;     
 
       % GM high - same area like the other mean but we use a maximum filter
-      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'max'); %2
+      [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,resi,32,'max'); %2
       TLir(WMr>240) = T3th(2)*mean(TL{5}(:));
       for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,4,1); end
-      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,8); 
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
       TL{4} = vbm_vol_smooth3X(max( min(TL{5}*0.9,TL{3}*1.1) ,...
                 vbm_vol_resize(TLir,'dereduceV',resT2) ),4); clear WIrr;     
       TL{3} = vbm_vol_smooth3X(min(TL{3},TL{4}*0.9),4);
@@ -683,7 +692,7 @@ if do_cls && do_defs,
       % GM low - similar to the maximum, we can do this for the minimum
       [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'min');
       for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
-      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,8); 
+      TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
       TL{2} = vbm_vol_smooth3X( max(T3th(1)*mean(TL{5}(:)) + 0.3*diff(T3th(1:2)), ...
         (min(T3th(1) + 0.7*diff(T3th(1:2))*mean(TL{5}(:)), ...
          min(TL{3} - diff(T3th(1:2)*mean(TL{5}(:))/2) ,vbm_vol_resize(TLir,'dereduceV',resT2))))),8); clear WIrr;     
@@ -711,12 +720,12 @@ if do_cls && do_defs,
       Yml = Yml + ( (T>=TL{1} & T<TL{2} ) .* (1       + (T-TL{1}) ./ (TL{2}-TL{1}) * co(1)      ));
       Yml = Yml + ( (T< TL{1}           ) .*             T        ./  max(eps,TL{1})         );
       Yml(isnan(Yml) | Yml<0)=0; Yml(Yml>10)=10;
-      Yml=max(Yml,smooth3(Ymask) .* 1-noise*8);
+      Yml=max(Yml,smooth3(YB) .* 1-noise*8);
       
       
       %% Refinement of thin WM structures 
       clear TL
-      CSFD = smooth3(vbdist(single(Yml<2 | ~Ymask))); 
+      CSFD = smooth3(vbdist(single(Yml<2 | ~YB))); 
       [gx,gy,gz]=vbm_vol_gradient3(CSFD); div2=divergence(gy,gx,gz); clear gx gy gz;
       Yml  = max(Yml,min(3,(Yml>2.1 & YG>0.02 & ~vbm_vol_morph(YBG,'dd',4)) .* ...
             (Yml - min(0,vbm_vol_smooth3X(div2,0.5)+0.1))));
@@ -731,16 +740,16 @@ if do_cls && do_defs,
         
       %% adding some CSF around the brain
       %{
-      CSFH = vbm_vol_morph(Ymask,'dilate',1) & ~Ymask & Yml<2.5;
-      Ymask = CSFH | Ymask;
+      CSFH = vbm_vol_morph(YB,'dilate',1) & ~YB & Yml<2.5;
+      YB = CSFH | YB;
       cls{3}(CSFH) = 255;
       srcm = Ysrc;
       srcm(CSFH) = mean(Ysrc(cls{3}(:)>250)); 
-      srcm  = min(srcm .* Ymask,3.5); 
+      srcm  = min(srcm .* YB,3.5); 
       srcms = vbm_vol_smooth3X(srcm,0.5); 
       srcm(CSFH) = srcms(CSFH); 
       %}
-      Ymask = vbm_vol_morph(Ymask & smooth3(Yml>1.25 & Yml<1.75)<0.8,'lc');
+      YB = vbm_vol_morph(YB & smooth3(Yml>1.25 & Yml<1.75)<0.8,'lc');
      
       
       
@@ -752,9 +761,9 @@ if do_cls && do_defs,
     end
     
     
-    %% calculate label image for all classes 
+    %% calculate Yp0b image for all classes 
     cls2 = zeros([d(1:2) Kb]);
-    label2 = zeros(d,'uint8');
+    Yp0 = zeros(d,'uint8');
     for i=1:d(3)
       	for k1 = 1:Kb
       		cls2(:,:,k1)  = cls{k1}(:,:,i);
@@ -762,34 +771,34 @@ if do_cls && do_defs,
       	% find maximum for reordered segmentations
     	  [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb]),[],3);
     	  for k1 = 1:Kb
-    		  label2(:,:,i) = label2(:,:,i) + uint8((maxind == k1).*(maxi~=0)*k1);
+    		  Yp0(:,:,i) = Yp0(:,:,i) + uint8((maxind == k1).*(maxi~=0)*k1);
     	  end
     end
    
     
     
-    % set all non-brain tissue outside Ymask to 0
-    label2(Ymask == 0)  = 0;
-    label2(Ymask == 1 & label2 == 0) = 1; % to deal with wrong SPM maps!
+    % set all non-brain tissue outside YB to 0
+    Yp0(YB == 0)  = 0;
+    Yp0(YB == 1 & Yp0 == 0) = 1; % to deal with wrong SPM maps!
     
     % and for skull/bkg tissue classes to 0
-    label2(label2 > 3) = 0;
+    Yp0(Yp0 > 3) = 0;
         
-    % fill remaining holes in label with 1
-    Ymask = cg_morph_vol(label2,'close',round(scale_morph*2),0);    
-    label2((label2 == 0) & (Ymask > 0)) = 1;
+    % fill remaining holes in Yp0b with 1
+    YB = cg_morph_vol(Yp0,'close',round(scale_morph*2),0);    
+    Yp0((Yp0 == 0) & (YB > 0)) = 1;
       
     % use index to speed up and save memory
-    sz = size(Ymask);
-    [indx, indy, indz] = ind2sub(sz,find(Ymask>0));
+    sz = size(YB);
+    [indx, indy, indz] = ind2sub(sz,find(YB>0));
     indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
     indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
     indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 
-    label = label2(indx,indy,indz);
+    Yp0b = Yp0(indx,indy,indz);
     
     
-    clear cls2 label2
+    clear cls2 Yp0
     
 %     if job.extopts.LAS 
 %       vol = double(srcm(indx,indy,indz));    
@@ -797,9 +806,9 @@ if do_cls && do_defs,
       vol = double(Ysrc(indx,indy,indz));    
   %  end
     
-    % Ymask source image because Amap needs a skull stripped image
-    % set label and source inside outside Ymask to 0
-    vol(Ymask(indx,indy,indz)==0) = 0;
+    % YB source image because Amap needs a skull stripped image
+    % set Yp0b and source inside outside YB to 0
+    vol(YB(indx,indy,indz)==0) = 0;
 
     clear chan
     % Amap parameters
@@ -822,7 +831,7 @@ if do_cls && do_defs,
     fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;  
     
       
-    prob = AmapMex(vol, label, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
+    prob = AmapMex(vol, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
     
     % reorder probability maps according to spm order
     prob = prob(:,:,:,[2 3 1]);
@@ -831,7 +840,7 @@ if do_cls && do_defs,
 
     % use cleanup
     if warp.cleanup
-        % get sure that all regions outside Ymask are zero
+        % get sure that all regions outside YB are zero
         for i=1:3
             cls{i}(:) = 0; 
         end
@@ -839,7 +848,7 @@ if do_cls && do_defs,
         [cls{1}(indx,indy,indz), cls{2}(indx,indy,indz), cls{3}(indx,indy,indz)] = cg_cleanup_gwc(prob(:,:,:,1), ...
            prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
         sum_cls = cls{1}(indx,indy,indz)+cls{2}(indx,indy,indz)+cls{3}(indx,indy,indz);
-        label(sum_cls<0.15*255) = 0;
+        Yp0b(sum_cls<0.15*255) = 0;
     else
         for i=1:3
             cls{i}(:) = 0; cls{i}(indx,indy,indz) = prob(:,:,:,i);
@@ -848,14 +857,14 @@ if do_cls && do_defs,
     fprintf('%3.0fs\n',etime(clock,stime));
     
     
-    %clsO=cls; labelO=label;
+    %clsO=cls; labelO=Yp0b;
     if job.extopts.LAS 
       str='Final Corrections'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
        
       %% setting of GM/WM PVE area to GM for the cls-maps
       WMP    = vbm_vol_morph(cls{2}>250,'lc',1); 
       
-      [HDr,resT2] = vbm_vol_resize(single(Ymask),'reduceV',vx_vol,8,16,'meanm');
+      [HDr,resT2] = vbm_vol_resize(single(YB),'reduceV',vx_vol,8,16,'meanm');
       HDr = vbdist(1-HDr); HD = vbm_vol_resize(smooth3(HDr),'dereduceV',resT2)>2;   
       
       YBG    = smooth3(YBG & Yml>2 & ~WMP &  Yml<2.9 & cls{3}<240 & YG<(0.95-Ym) &...
@@ -868,7 +877,7 @@ if do_cls && do_defs,
       %% PVE correction for CSF/WM boundary
  
       % corrections only in the center of the brain ...
-      [HDr,resT2] = vbm_vol_resize(single(Ymask),'reduceV',vx_vol,8,16,'meanm');
+      [HDr,resT2] = vbm_vol_resize(single(YB),'reduceV',vx_vol,8,16,'meanm');
       HDr = vbdist(1-HDr); HD = vbm_vol_resize(HDr,'dereduceV',resT2)>4;   
       % and next to a larger CSF volume
       [HDr,resT2] = vbm_vol_resize(single(cls{3})/255 .* HD,'reduceV',vx_vol,2,32,'meanm');
@@ -888,25 +897,25 @@ if do_cls && do_defs,
 
       clear YG C HD ;
    
-      %% correct label image
-      label2 = zeros(d,'uint8');
-      label2(indx,indy,indz) = label; 
-      label2(~Ymask)=0;
+      %% correct Yp0b image
+      Yp0 = zeros(d,'uint8');
+      Yp0(indx,indy,indz) = Yp0b; 
+      Yp0(~YB)=0;
 
-      % correct for area PVE of basal structures in the label map
+      % correct for area PVE of basal structures in the Yp0b map
       YBG = smooth3(YBG);
       YG   = YBG>0 & cls{3}==0 & cls{2}<192;
-      label2(YG) = max(170,label2(YG) - uint8(85*YBG(YG)));
+      Yp0(YG) = max(170,Yp0(YG) - uint8(85*YBG(YG)));
       clear YBG
 
-      label = label2(indx,indy,indz);
-      clear label2;
+      Yp0b = Yp0(indx,indy,indz);
+      clear Yp0;
       
       
       %% final skull-stripping 
       %{
       [gx,gy,gz]=vbm_vol_gradient3(Ysrc); YG=abs(gx)+abs(gy)+abs(gz); YG=YG./Ysrc; clear gx gy gz; 
-      [Tr,Br,Gr,BOr,resTr] = vbm_vol_resize({Ym/3,single(cls{2})/255,YG,Ymask},'reduceV',vx_vol,1.5,32);
+      [Tr,Br,Gr,BOr,resTr] = vbm_vol_resize({Ym/3,single(cls{2})/255,YG,YB},'reduceV',vx_vol,1.5,32);
       Br  = Br>0.5 & Tr>5/6 & Tr<8/6 & Gr<noise*3; 
       Br  = single(vbm_vol_morph(Br,'l')); 
       Br(~Br & (Tr<2.5/3 | Tr>3.5/3))=-inf; 
@@ -920,15 +929,15 @@ if do_cls && do_defs,
       Brr = vbm_vol_morph(vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'labopen',2),'labclose');
       Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
       B   = vbm_vol_resize(vbm_vol_smooth3X(Br,1.2),'dereduceV',resTr)>0.5;
-      Ymask = vbm_vol_morph(B,'dilate'); 
+      YB = vbm_vol_morph(B,'dilate'); 
       %}
       
-      % update label map and class image
-      label2 = zeros(d,'uint8'); label2(indx,indy,indz) = label; 
-      label2(~Ymask)=0; %label2(Ymask & ~B)=85;
-      label = label2(indx,indy,indz); clear label2
-      for i=1:3, cls{i}(~Ymask)=0; end
-      %cls{1}(Ymask & ~B) = 0; cls{3}(Ymask & ~B) = 255;
+      % update Yp0b map and class image
+      Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
+      Yp0(~YB)=0; %Yp0(YB & ~B)=85;
+      Yp0b = Yp0(indx,indy,indz); clear Yp0
+      for i=1:3, cls{i}(~YB)=0; end
+      %cls{1}(YB & ~B) = 0; cls{3}(YB & ~B) = 255;
       
       
       clear Tr YBr Gr BOr resTr B; 
@@ -941,31 +950,31 @@ if do_cls && do_defs,
     if finalmask %&& ~job.extopts.LAS
       str='Final Masking'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;  
       
-      % create final Ymask
-      Ymask = single(cls{1}) + single(cls{2});
-      Ymask  = vbm_vol_smooth3X(Ymask/255);
+      % create final YB
+      YB = single(cls{1}) + single(cls{2});
+      YB  = vbm_vol_smooth3X(YB/255);
 
       % keep largest connected component after at least 1 iteration of opening
-      Ymask  = vbm_vol_morph(Ymask>0.5,'lo', max(1,round(scale_morph*2)));
+      YB  = vbm_vol_morph(YB>0.5,'lo', max(1,round(scale_morph*2)));
 
       % dilate and close to fill ventricles
-      Ymask  = vbm_vol_morph(Ymask,'dilate',2,0.5) & (cls{2}>4 | cls{1}>4 | cls{3}>128);
-      [Ymaskr,resT2] = vbm_vol_resize(single(Ymask),'reduceV',vx_vol,4,16,'mean');
+      YB  = vbm_vol_morph(YB,'dilate',2,0.5) & (cls{2}>4 | cls{1}>4 | cls{3}>128);
+      [Ymaskr,resT2] = vbm_vol_resize(single(YB),'reduceV',vx_vol,4,16,'mean');
       Ymaskr = vbm_vol_morph(Ymaskr>0.5,'ldc',8); % major closing for CSF within sulci
       Ymaskr = vbm_vol_resize(vbm_vol_smooth3X(Ymaskr)>0.5,'dereduceV',resT2);
       Ymaskr = vbm_vol_morph(Ymaskr & (cls{2}>4 | cls{1}>4 | cls{3}>4),'lc');
-      Ymask  = vbm_vol_smooth3X(Ymask | Ymaskr,1.2)>0.5; clear Ymaskr 
+      YB  = vbm_vol_smooth3X(YB | Ymaskr,1.2)>0.5; clear Ymaskr 
 
-      for i=1:3, cls{i}(~Ymask)=0; end 
+      for i=1:3, cls{i}(~YB)=0; end 
 
-      % Ymask label
-      label2 = zeros(d,'uint8');
-      label2(indx,indy,indz) = label; 
-      label2(~Ymask)=0;
+      % YB Yp0b
+      Yp0 = zeros(d,'uint8');
+      Yp0(indx,indy,indz) = Yp0b; 
+      Yp0(~YB)=0;
 
-      label = label2(indx,indy,indz);
+      Yp0b = Yp0(indx,indy,indz);
 
-      clear label2
+      clear Yp0
       fprintf('%3.0fs\n',etime(clock,stime));
     end
 
@@ -1139,7 +1148,7 @@ VT = spm_vol(res.image(1).fname);
 
 %% XML-report and Quality Assurance
 % ----------------------------------------------------------------------
-str='Quality Assurance'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
+str='Quality Control'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
 
 
 %% volumina
@@ -1158,20 +1167,20 @@ qa.SM.vol_rel_CGW = [prod(vx_vol)/1000 .* sum(single(cls{3}(:))/255) / qa.SM.vol
 % create the map, the global measure was estimated by vbm_vol_t1qacalc.
 if struct2array(job.output.pc)
   if ~exist('TIQA','var')
-    T3th = [median(Ysrc(cls{3}(:)>240 & Ymask(:))) ...
-            median(Ysrc(cls{1}(:)>240 & Ymask(:))) ...
-            median(Ysrc(cls{2}(:)>240 & Ymask(:)))];
+    T3th = [median(Ysrc(cls{3}(:)>240 & YB(:))) ...
+            median(Ysrc(cls{1}(:)>240 & YB(:))) ...
+            median(Ysrc(cls{2}(:)>240 & YB(:)))];
     TIQA = vbm_vol_iscale(YsrcO,'gCGW',vx_vol,T3th); clear YsrcO; 
   end
-  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)/255; 
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255; 
   
-  Ypc = abs(min(7/6,TIQA.*(label2>0)) - label2); 
+  Ypc = abs(min(7/6,TIQA.*(Yp0>0)) - Yp0); 
   Ypc = vbm_vol_smooth3X(Ypc,1);
   
   vbm_io_writenii(spm_vol(res.image(1).fname),Ypc,'pc', ...
     'vbm12 - preprocessing change/correction map', ...
     'uint8',[0,1/255],struct2array(job.output.pc),0,trans);
-  clear label2 TIQA Ypc;
+  clear Yp0 TIQA Ypc;
 end
 
 
@@ -1206,12 +1215,12 @@ for i=1:3, YclsA{i} = YclsA{i}./max(eps,YclsAsum) .* YclsAbrain; end
 Yp0A = YclsA{1}*2 + YclsA{2}*3 + YclsA{3};
 
 
-% Now we can estimate the difference maps for each intensity/label map.
-% But finally only our segment/label map is important, because other
+% Now we can estimate the difference maps for each intensity/Yp0b map.
+% But finally only our segment/Yp0b map is important, because other
 % non-intensity scaled images will have higher errors due to the
 % intensity scaling.
-label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-Yte = abs(max(1,Yp0A)-max(1,label2)); % we are not interessed in skull-stripping differences... maybe later ;-)
+Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+Yte = abs(max(1,Yp0A)-max(1,Yp0)); % we are not interessed in skull-stripping differences... maybe later ;-)
 spm_smooth(Yte,Yte,8);  % we are only interessed on larger changes
 
 vbm_io_writenii(VT,Yte,'te', ...
@@ -1220,12 +1229,12 @@ vbm_io_writenii(VT,Yte,'te', ...
 vbm_io_writenii(T,Yte,'te', ...
   'group expectation map (matching of template after normalization)', ...
   'uint8',[0,1/255],min([0 1 2 2],struct2array(job.output.te)),0,trans);
-qa.QM.vbm_expect = sum(Yte(:))./sum(label2(:)>0);
+qa.QM.vbm_expect = sum(Yte(:))./sum(Yp0(:)>0);
 
 
 
 %% image quality parameter
-qas = vbm_vol_t1qacalc(VT,YsrcO,Ym,label2);
+qas = vbm_vol_t1qacalc(VT,YsrcO,Ym,Yp0);
 fn = fieldnames(qas); 
 for fni=1:numel(fn)
   fn2 = fieldnames(qas.(fn{fni}));
@@ -1235,7 +1244,7 @@ for fni=1:numel(fn)
     end;
   end
 end
-clear qas fn fni;
+clear qas fn fni YsrcN;
 fprintf('%3.0fs\n',etime(clock,stime));
 
 
@@ -1250,13 +1259,12 @@ vbm_io_writenii(VT,Ym,'m', ...
 vbm_io_writenii(VT,Ym,'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
   'float32',[0,1],min([0 1 0],struct2array(job.output.bias)),0,trans);
-clear YsrcN;
 
   
-%% label maps
-label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-vbm_io_writenii(VT,label2,'p0','label map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
-clear label2; 
+%% Yp0b maps
+Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
+clear Yp0; 
 
 
 %% partitioning
@@ -1282,8 +1290,8 @@ if jc
   if ~do_dartel
     warning('cg_vbm_write:saveJacobian','Jacobian can only be saved if dartel normalization was used.');
   else
-    [y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6);
-    clear y0
+    % h�, wozu ist die n�chste zeile den gut?
+    %[y0, dt] = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[1 0], 6); clear y0
 
     VJT=VT; VJT.mat=M1; VJT.mat0=M0; 
     vbm_io_write_nii(tmp,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
@@ -1298,56 +1306,62 @@ if any(struct2array(job.output.th1))
   
   VT = res.image;
   
-  opt.interpV = cg_vbm_get_defaults('extopts.pbtres');
+  opt.method  = 'pbt2x';
+  opt.interpV = 0.5; %cg_vbm_get_defaults('extopts.pbtres');
   opt.interpV = max(0.5,min([min(vx_vol),opt.interpV,1]));
 
   %% prepare thickness estimation
-  % Here we used the intensity normalized image rather that the label
+  % Here we used the intensity normalized image rather that the Yp0b
   % image, because it has more information about sulci and we need this
   % especial for asysmetrical sulci.
   % Furthermore, we remove all non-cortical regions and refine the brain
-  % Ymask to remove meninges and blood vessels.
-  if exist('Yml','var')
-    mfT = max(Yml/3,min(1,YMF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & YMF>3)=smfT(mfT>1 & YMF>3); 
-  else
-    mfT = max(Ym,min(1,YMF/3)); smfT = vbm_vol_smooth3X(mfT,1.5); mfT(mfT>1 & YMF>3)=smfT(mfT>1 & YMF>3); 
+  % YB to remove meninges and blood vessels.
+  
+  % filling of ventricle and subcortical regions
+  if exist('Yml','var'), Ymf = max(Yml/3,min(1,YMF)); 
+  else                   Ymf = max(Ym,min(1,YMF)); 
   end
-  label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-  mfT(label2<1 | mfT<1.5/3) = 0; 
-  mfT(Yl1==3 | Yl1==4 | Yl1==11 | Yl1==12 | Yl1==13 | Yl1==14 | Yl1==21)=0; 
-  mfT(smooth3(vbm_vol_morph(mfT>0,'open'))<0.5)=0; 
+  Ymf(YMF)=min(1,Ymf(YMF)); Ymfs = vbm_vol_smooth3X(Ymf,1); 
+  YM  = vbm_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
+  Ymf(YM) = max(min(Ym(YM),1),Ymfs(YM)); 
+  
+  % removing blood vessels, and other regions
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  Ymf(Yp0<1 | Ymf<1.5/3) = 1/3; 
+  Ymf(Yl1==3 | Yl1==4 | Yl1==11 | Yl1==12 | Yl1==13 | Yl1==14 | Yl1==21)=0; 
+  Ymf(smooth3(vbm_vol_morph(Ymf>0,'open'))<0.5)=0; 
   clear YMF;
   
   %% thickness estimation
   % die interpolation ist recht speicherintensiv, weshalb es gut wäre
   % möglichst viel vorher rausschmeißen zu können.
   if 0 % surface
-    [mfTi,resI]  = vbm_vol_resize(mfT,'interp',VT,opt.interpV);      % interpolate volume
+    [mfTi,resI]  = vbm_vol_resize(Ymf,'interp',VT,opt.interpV);      % interpolate volume
     [th1Ti,ppTi] = vbm_vol_pbt(mfTi*3,struct('resV',opt.interpV));   % pbt calculation
-    th1T = vbm_vol_resize(th1Ti,'deinterp',resI); clear th1Ti mfTi;  % back to original resolution
+    Yth1 = vbm_vol_resize(th1Ti,'deinterp',resI); clear th1Ti mfTi;  % back to original resolution
     
     % ...
     clear ppTi;
   else
-    [mfT,BB]    = vbm_vol_resize(mfT,'reduceBrain',vx_vol,2,mfT>0);  % removing of background
-    [mfTi,resI] = vbm_vol_resize(mfT,'interp',VT,opt.interpV);       % interpolate volume
+    [Ymf,BB]    = vbm_vol_resize(Ymf,'reduceBrain',vx_vol,2,Ymf>0);  % removing of background
+    [mfTi,resI] = vbm_vol_resize(Ymf,'interp',VT,opt.interpV);       % interpolate volume
     th1Ti = vbm_vol_pbt(mfTi*3,struct('resV',opt.interpV));          % pbt calculation
-    th1T  = vbm_vol_resize(th1Ti,'deinterp',resI); clear th1Ti mfTi; % back to original resolution
-    th1T  = vbm_vol_resize(th1T,'dereduceBrain',BB);                 % adding of background
+    Yth1  = vbm_vol_resize(th1Ti,'deinterp',resI); clear th1Ti mfTi; % back to original resolution
+    Yth1  = vbm_vol_resize(Yth1,'dereduceBrain',BB);                 % adding of background
    
   end  
   
-  th1T = th1T .* (label2>1.5 & label2<2.5); % reset GM boundaries
+  Yth1 = Yth1 .* (Yp0>1.25 & Yp0<2.75) .* (Yl1==1); % reset GM boundaries
 
   
   % metadata
-  qa.SM.dist_thickness{1}  = [mean(th1T(th1T(:)>0)) std(th1T(th1T(:)>0))];
+  qa.SM.dist_thickness{1}  = [mean(Yth1(Yth1(:)>0)) std(Yth1(Yth1(:)>0))];
 
   
   % save files 
-  vbm_io_writenii(VT,th1T,'th1','pbt GM thickness', ...
+  vbm_io_writenii(VT,Yth1,'th1','pbt GM thickness', ...
     'uint16',[0,1/1023],struct2array(job.output.th1),0,trans);
-  clear th1T mfT;
+  clear Ymf;
   
   fprintf('%3.0fs\n',etime(clock,stime));
 end
@@ -1403,6 +1417,7 @@ if do_cls && warp.print
   %% create report text
 	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
 	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
+  
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',r_matlab,r_spm,r_vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
@@ -1420,30 +1435,37 @@ if do_cls && warp.print
   %mark2str  = @(mark) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%0.1f',color(QMC,mark),mark);
   mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-% QA-measures:
-  str2 =       struct('name', '\bfImage Quality Measures:','value',''); 
+  
+% Image Quality measures:
+  str2 =       struct('name', '\bfImage Quality:','value',...
+                 sprintf('%s',marks2str(qam.QM.avg(1),sprintf('%0.1f > %0.1f',qam.QM.avg(1),qam.QM.avg(2))))); 
   str2 = [str2 struct('name', ' Tissue noise:'     ,'value', ... 
                sprintf('%s > %s', ...
                marks2str(qam.QM.noise(1),sprintf('%0.1f (%2.0f%%)',qam.QM.noise(1),qa.QM.noise(1)*100)), ...   
                marks2str(qam.QM.noise(2),sprintf('%0.1f (%2.0f%%)',qam.QM.noise(2),qa.QM.noise(2)*100))))];   
   str2 = [str2 struct('name', ' Inhomogeneity:'    ,'value', ... 
                sprintf('%s > %s', ...
-               marks2str(qam.QM.bias_WMstd(1),sprintf('%0.1f (%2.0f%%)',qam.QM.bias_WMstd(1),qa.QM.bias_WMstd(1)*100)), ...
-               marks2str(qam.QM.bias_WMstd(2),sprintf('%0.1f (%2.0f%%)',qam.QM.bias_WMstd(2),qa.QM.bias_WMstd(2)*100))))]; 
+               marks2str(qam.QM.bias_WMstd(1),sprintf('%0.1f (%2.0f%%)',...
+               qam.QM.bias_WMstd(1),qa.QM.bias_WMstd(1)*100)), ...
+               marks2str(qam.QM.bias_WMstd(2),sprintf('%0.1f (%2.0f%%)',...
+               qam.QM.bias_WMstd(2),qa.QM.bias_WMstd(2)*100))))]; 
   str2 = [str2 struct('name', ' GW-Contrast:'      ,'value', ... 
-               sprintf('%s',marks2str(qam.QM.contrast(1),sprintf('%0.1f (%2.0f %%)',qam.QM.contrast(1),qa.QM.contrast(1)*100))))];   
+               sprintf('%s',marks2str(qam.QM.contrast(1),sprintf('%0.1f (%2.0f %%)',...
+               qam.QM.contrast(1),qa.QM.contrast(1)*100))))];   
   str2 = [str2 struct('name', ' Voxel Volume:'     ,'value', ...
-               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%0.1f (%0.2f mm%s)',qam.QM.res_vol,qa.QM.res_vol,char(179)))))];
+               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%0.1f (%0.2f mm%s)',...
+               qam.QM.res_vol,qa.QM.res_vol,char(179)))))];
   str2 = [str2 struct('name', ' Voxel Isotropy:'   ,'value', ...   
-               sprintf('%s',marks2str(qam.QM.res_isotropy,sprintf('%0.1f (%0.2f)',qam.QM.res_isotropy,qa.QM.res_isotropy))))];   
+               sprintf('%s',marks2str(qam.QM.res_isotropy,sprintf('%0.1f (%0.2f)',...
+               qam.QM.res_isotropy,qa.QM.res_isotropy))))];   
   str2 = [str2 struct('name', ' Prep. Change Map:' ,'value', ... 
-               sprintf('%s',marks2str(qam.QM.vbm_change(1),sprintf('%0.1f (%2.0f %%)',qam.QM.vbm_change(1),qa.QM.vbm_change(1)*100))))];   
-  str2 = [str2 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
-               sprintf('%s',marks2str(qam.QM.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',qam.QM.vbm_expect(1),qa.QM.vbm_expect(1)*100))))];   
-  str2 = [str2 struct('name', ' Overall:'       ,'value', ... 
-               sprintf('%s',marks2str(qam.QM.avg(1),sprintf('%0.1f > %0.1f)',qam.QM.avg(1),qam.QM.avg(1)))))];   
- % Subject Data
-  str3 = struct('name', '\bfSubject Measures (Averageness):','value',''); 
+               sprintf('%s',marks2str(qam.QM.vbm_change(1),sprintf('%0.1f (%2.0f %%)',...
+               qam.QM.vbm_change(1),qa.QM.vbm_change(1)*100))))]; 
+
+      
+% Subject Measures
+  str3 = struct('name', '\bfSubject Averageness:','value',...
+          sprintf('%s',mark2str2(qam.SM.avg(1),'%0.1f',qam.SM.avg(1))));  
   str3 = [str3 struct('name', ' CGW-Volumes (abs):','value',sprintf('%s %s %s mm%s', ...
           mark2str2(qam.SM.vol_rel_CGW(1),'%0.0f ',qa.SM.vol_abs_CGW(1)),...
           mark2str2(qam.SM.vol_rel_CGW(2),'%0.0f ',qa.SM.vol_abs_CGW(2)),...
@@ -1454,13 +1476,18 @@ if do_cls && warp.print
           mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f ',qa.SM.vol_rel_CGW(3)*100)))];
   str3 = [str3 struct('name', ' TIV:'              ,'value',...
           sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f mm' char(179)],qa.SM.vol_TIV)))];  
+  str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
+          sprintf('%s',marks2str(qam.QM.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',...
+          qam.QM.vbm_expect(1),qa.QM.vbm_expect(1)*100))))];   
   if any(struct2array(job.output.th1))
-    str3 = [str3 struct('name', ' Thickness (abs):'  ,'value',sprintf('%s%s%s mm', ...
+    str3 = [str3 struct('name', ' Thickness (abs):','value',sprintf('%s%s%s mm', ...
           mark2str2(qam.SM.dist_thickness{1}(1),'%0.2f',qa.SM.dist_thickness{1}(1)),177, ...
           mark2str2(qam.SM.dist_thickness{1}(2),'%0.2f',qa.SM.dist_thickness{1}(2))))];
   end
-  str3 = [str3 struct('name', ' Overall:'      ,'value',...
-          sprintf('%s',mark2str2(qam.SM.avg(1),'%0.0f',qam.SM.avg(1))))];  
+%   if vbmerr
+%     str2 = [str2 struct('name', ' Missing Structures:' ,'value',...
+%                  sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}',opt.color.error))];
+%       end
   
   
   
@@ -1469,6 +1496,7 @@ if do_cls && warp.print
     %%
     
 	  fg = spm_figure('FindWin','Graphics'); 
+    ofg = gcf; set(0,'CurrentFigure',fg)
     if isempty(fg), fg = spm_figure('Create','Graphics'); end
     set(fg,'windowstyle','normal'); 
 	  spm_figure('Clear','Graphics'); fontsize = 9.5;
@@ -1478,6 +1506,7 @@ if do_cls && warp.print
       'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
     
     cm = cg_vbm_get_defaults('extopts.colormap'); 
+    
     switch lower(cm)
       case {'bcgwhw','bcgwhn'}
         colormap(vbm_io_colormaps(cm));
@@ -1488,9 +1517,10 @@ if do_cls && warp.print
       otherwise
         vbm_io_cprintf(opt.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
         cm = 'BCGWHw';
-        colormap(cm);
+        colormap(vbm_io_colormaps(cm));
         cmmax = 2;
     end
+    spm_orthviews('Redraw');
     
     for i=1:size(str,2)   % main parameter
 		  text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
@@ -1522,7 +1552,7 @@ if do_cls && warp.print
     elseif bf(1,1) % native
       Vtmp = fullfile(pth,['m', nam, '.nii']); 
       if ~exist(Vtmp,'file')
-        vbm_io_writenii(VT,Ym,'m','label map','single',[0,1],[1 0 0],0,trans);
+        vbm_io_writenii(VT,Ym,'m','Yp0b map','single',[0,1],[1 0 0],0,trans);
       end
     	hhm = spm_orthviews('Image',Vtmp,pos(1,:));
     	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -1552,8 +1582,8 @@ if do_cls && warp.print
     else
       Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
       if ~exist(Vtmp2,'file')
-        label2 = zeros(d,'single'); label2(indx,indy,indz) = single(label)*3/255; 
-        vbm_io_writenii(VT,label2,'p0','label map','uint8',[0,3/255],[1 0 0],0,trans);
+        Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+        vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
       end
       hhp0 = spm_orthviews('Image',Vtmp2,pos(2,:));
       spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
@@ -1608,11 +1638,46 @@ if do_cls && warp.print
           [repmat(' ',7,1) num2str((0:0.5:3)',[' %0.1f mm' char(179)])], ...
           'FontSize',fontsize,'FontWeight','Bold'); %#ok<AGROW>
       else
-        % hier kannst du einen alternative ausgabe machen
+        % hier kann eine alternative ausgabe erfolgen
+        %
+        % bei den colorbars gibt es probleme, wenn man im bild rum
+        % klickt - die werden dann einfach mal neu und vor allem nun
+        % falsch skalliert, wobei 6 werte ohne 0 aber mit maximum
+        % genutzt werden.
+        
+        % thickness
+        if k1==1
+          th1 = struct2array(job.output.th1);
+          if th1(2)
+            if do_dartel, prefix='wrth1'; else prefix='wth1'; end
+            hhth1 = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(2+k1,:));
+            spm_orthviews('Caption',hhth1,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
+          elseif th1(3)
+            hhth1 = spm_orthviews('Image',fullfile(pth,['wth1', nam, '_affine.nii']),pos(2+k1,:));
+            spm_orthviews('Caption',hhth1,'wm*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
+          elseif th1(1) % native
+            Vtmpth1 = fullfile(pth,['th1', nam, '.nii']); 
+            if ~exist(Vtmpth1,'file')
+              vbm_io_writenii(VT,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
+            end
+            hhth1 = spm_orthviews('Image',Vtmpth1,pos(2+k1,:));
+            spm_orthviews('Caption',hhth1,{'th1*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+          end  
+          spm_orthviews('window',hhth1,[0 9]);
+          cc(k1) = colorbar('location','west','position',[pos(2+k1,1)+0.30 0.02 0.02 0.15], ...
+            'YTick',10:10:60,'YTickLabel', ...'YTick',0.5:59/9:60,'YTickLabel', ...
+            [repmat(' ',6,1) num2str((1.5:9/6:9)',' %0.1f mm')], ...[repmat(' ',10,1) num2str((0:1:9)',' %0.1f mm')], ...
+            'FontSize',fontsize,'FontWeight','Bold'); %#ok<AGROW>
+          spm_orthviews('window',hhth1,[0 9]);
+        end
+        
       end
       clear hh;
+      
     end
-  %end
+    colormap(vbm_io_colormaps(cm));
+    set(0,'CurrentFigure',ofg)
+    %end
 
   
   %% print group and subject file
@@ -1631,15 +1696,20 @@ if do_cls && warp.print
     delete(fullfile(pth,['p0', nam, '.nii']));
     spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
   end
-  
+  % remove p0 image, if it was only written for printing
+  if exist('th1','var') && exist('Vtmpth1','var') && exist(Vtmpth1,'file')
+    delete(Vtmpth1);
+    spm_orthviews('Delete',hhth1); % we have to remove the figure, otherwise the gui user may get an error
+  end
   
   %% small command window output
   fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  vbm_io_cprintf(color(QMC,qam.QM.avg), ...
-    ' Overall Image Quality:         %0.1f\n',qam.QM.avg);
-  vbm_io_cprintf(color(QMC,qam.SM.avg), ...
-    ' Overall Subject Averageness:   %0.1f\n%s\n\n',qam.SM.avg,repmat('-',1,72));
+  vbm_io_cprintf(color(QMC,qam.QM.avg(1)), ...
+    'Overall Image Quality:         %0.1f\n',qam.QM.avg(1));
+  vbm_io_cprintf(color(QMC,qam.SM.avg(1)), ...
+    'Overall Subject Averageness:   %0.1f',qam.SM.avg(1));
+  fprintf('\n%s\n\n',repmat('-',1,72));
  
   
 else
@@ -1665,6 +1735,12 @@ if df(1),
     N.descrip = 'Deformation';
     create(N);
     N.dat(:,:,:,:,:) = reshape(y,[d1,1,3]);
+end
+
+catch e
+  vbm_io_cprintf(opt.color.error,'\n%s\nVBM Preprocessing error:\n%s\n', ...
+    repmat('-',1,72),repmat('-',1,72));  
+  rethrow(e); 
 end
 
 return;

@@ -24,11 +24,11 @@ function varargout = vbm_stat_marks(action,varargin)
 % Structural Brain Mapping Group
 % University Jena
 %  
-% $Id: vbm_check.m 75 2013-02-26 13:56:04Z dahnke $
+% $Id$
 % ______________________________________________________________________
 %#ok<*NASGU,*STRNU>
 
-  rev = '$Rev: 481 $';
+  rev = '$Rev$';
 
 % used measures and marks:
 % ______________________________________________________________________
