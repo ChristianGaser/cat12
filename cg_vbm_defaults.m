@@ -134,7 +134,7 @@ vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for nor
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
 vbm.extopts.BVC         = 1;    % Blood Vessel Correction: 
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
-vbm.extopts.pbtres      = 1.0;  % resolution for thickness estimation: 1 - normal res; 0.5 high res (default)
+vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res; 0.5 high res (default)
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 
 % experimental (not yet working)
