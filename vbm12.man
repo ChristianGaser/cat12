@@ -1,6 +1,6 @@
 % __________________________________________________________________________
 % Voxel Based Morphometry Toolbox for SPM12
-% Version  469  (VBM12)  2013-04-15
+% Version  487  (VBM12)  2013-05-15
 %  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2013 Christian Gaser christian.gaser@uni-jena.de
@@ -8,51 +8,55 @@
 % ==========================================================================
 % Description
 % ==========================================================================
-% This toolbox is a an extensions of the "New Segment Toolbox" 
-% in SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-
-% based morphometry (VBM). It is developed by Christian Gaser (University of 
-% Jena, Department of Psychiatry / Department of Neurology) and is available 
-% to the scientific community under the terms of the GNU General Public License.
+% This toolbox is a an extensions of the "New Segment Toolbox" in 
+% SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-based 
+% morphometry (VBM). It is developed by Christian Gaser (University of Jena,
+% Department of Psychiatry / Department of Neurology) and is available to 
+% the scientific community under the terms of the GNU General Public License.
 % 
 % ==========================================================================
 % Naming convention of output files
 % ==========================================================================
 %
-% segmented images:
-%   m[0]w[r]p[0123]*[_affine]   
+% Images:
+%   Segmented Images:               #p[0123]*    [m[0]w[r]]p[0123]*[_affine]   
+%   GM thickness map:               #th1*        [mw[r]]th1*   
+%   Global Intensity Normalized:    #m*          [w[r]]m* 
+%   Preprocessing Changes Map:      #pc*         [mw[r]]pc*       
+%   Tissue Expectation Map:         #te*         [mw[r]]te*       
+%   Atlas Maps:                     #l*          [mw[r]]l1* 
 %
+%   *         - filenname
+%   #         - image space prefix
+% 
+% Image space prefix
 %   m         - modulated
 %   m0        - modulated non-linear only
 %   w         - warped
 %   r         - dartel warped 
+%   _affine   - affine registered only
+%
+% Image data prefix:
 %   p         - segmented
-%   th        - thickness
-%   l         - atlas maps
+%   th1       - cortical thickness
+%   l1        - atlas maps of major brain structures
 %   pc        - preprocessing change map
+%   te        - tissue expectation map
 %   0         - PVE label
 %   1         - GM
 %   2         - WM
 %   3         - CSF
-%   _affine   - affine registered only
 %
-% bias corrected images:
-%   wm[r]m*        bias and noise corrected
-%   wm[r]mg*       bias and noise corrected, global intensity normalized
-%   mw[r]th1*      GM thickness map
-%   mw[r]l[12]*    atlas maps
-%
-% expert output images:
-%   wm[r]ml*       bias and noise corrected, local intensity normalized
-%   mw[r]pc*       preprocessing changes map 
-%
-% 
-% Extracted data, global morphological measure and image quality measures: 
-%   vbm_*.xml   
-% 
+% Further data:
+%   Extracted data, global morphological measure and image quality measures
+%   were stored in the vbm_*.xml file. You can use the vbm_io_xml.m function 
+%   to read data from XML-files.
 %
 % ==========================================================================
 % Technical information
 % ==========================================================================
+%
+% Segmentation:
 %
 % This toolbox is an extension of the default segmentation in SPM12, but 
 % uses a completely different segmentation approach.  
@@ -87,27 +91,79 @@
 % (Rajapakse et al. 1997).
 %
 % 4. Another important extension to the SPM12 segmentation is the integration 
-% of the Dartel normalisation (Ashburner 2007) into the toolbox. If 
-% high-dimensional spatial normalisation is chosen, an already existing Dartel 
-% template in MNI space will be used. This template was derived from 550 
-% healthy control subjects of the IXI-database (http://www.brain-development.org) 
+% of the Dartel normalisation (Ashburner 2007) into the toolbox. If high-
+% dimensional spatial normalisation is chosen, an already existing Dartel 
+% template in MNI space will be used. This template was derived from 550 healthy 
+% control subjects of the IXI-database (http://www.brain-development.org) 
 % and is provided in MNI space  for six different iteration steps of Dartel 
 % normalisation. Thus, for the majority of studies the creation of 
 % sample-specific Dartel templates is not necessary anymore. 
 %
-% 5. Local Adaptive Segmenation
+% 5. Local Adaptive Segmentation
 % ...
 % 
 % (6. Blood Vessel Correction)
 % ...
 %
-% (7. Preprocessing Change Map)
-% ...
-%
 % __________________________________________________________________________
+% 
+%
+% Cortical Thickness Estimation:
 %
 % Further extensions to SPM12 are the estimation of cortical thickness maps
-% (Dahnke et al. 2012) and of cortical atlas maps with major brain structures.
+% (Dahnke et al. 2012) and of cortical atlas maps with major brain structures
+% that is used to restrict thickness estimation to cortical areas.
 %
 % __________________________________________________________________________
-%                                                Christian Gaser 2013/04/01
+%
+%
+% VBM Report and Quality Assurance:
+%
+% Besides the used preprocessing parameters VBM now also print image quality
+% measurements and global subject measurements. All measurements were graded
+% (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, 5< - problematic).
+% Measures and/or grading are under development and should help to identify 
+% problematic datasets. 
+% All measurements we done for the original image and the preprocessing 
+% routines try to correct them, but of course stronger aberrations require
+% stronger corrections that reduce spacial resolution or maybe fail.
+% 
+% Noise (tissue noise):
+%  Noise is measured as the local standard deviation in the WM segment and 
+%  scaled by the signal intensity that is in our case given by the GM-WM 
+%  contrast. The WM is used rather than the background, because the back-
+%  ground can be removed or it contains/not contain artifacts outside our
+%  regions of interest. 
+%
+% Bias/Inhomogeneity:
+%  Inhomogeneity is measured as the global standard deviation in the WM 
+%  segment. Only the WM segment is used because the GM is strongly effected 
+%  by the PVE (boundary voxel between tissues) and has varying intensities
+%  like in the basal ganglia, the motor cortex or the occipital lobe. 
+%
+% Contrast (GM-WM contrast):
+%  Most important for the image segmentation is the GM-WM contrast. If the 
+%  contrast is to low initial segmentation/registration/bias correction will 
+%  be difficult. 
+%  ...
+%
+% Voxel Volume & Isotropy:
+%  The image resolution play an important rule, especially if you want to 
+%  measure cortical thickness. 
+%  ...
+%
+% VBM result images depending on the export options. The first row displays
+% the intensity normalized, noise and bias corrected T1 image on the left
+% side and the label map p0 on the right. The second row shows the GM (left)
+% and WM (right) segment. All images where displayed in normalized spaces, 
+% if the were available, otherwise the native space is used. 
+% Therefore, the figure can contain images of different spaces, so don't 
+% wonder, if the crosshair doesn't show the same structures.
+%  
+% (1. VBM Preprocessing Change Map (pc*.nii) )
+% (2. VBM Tissue Expectation Map (te*.nii) )
+%
+%
+%
+% __________________________________________________________________________
+%                                                 Christian Gaser 2013/05/01
