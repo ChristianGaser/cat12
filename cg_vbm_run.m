@@ -124,8 +124,8 @@ nit = 1;
 
 for iter=1:nit,
     for subj=1:numel(job.channel(1).vols),
+        stime = clock;
         if estwrite % estimate and write segmentations
-            stime = clock;
           
             images = '';
             for n=1:numel(job.channel),
@@ -252,7 +252,7 @@ for iter=1:nit,
         df = job.warp.write;
         lb = job.label;
         jc = job.jacobian;
-        res.stime=stime;
+        res.stime = stime;
         cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job);
 
     end
