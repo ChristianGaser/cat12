@@ -2103,3 +2103,13 @@ M       vbm_vol_partvol.m
 
 ------------------------------------------------------------------------
 r488 | dahnke | 2013-05-19 16:11:46
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+M       cg_vbm_batch.sh
+M       vbm12.man
+
+(1) Added missing stime variable in cg_vbm_run.
+(2) Log-file for cg_vbm_batch.sh os now saved as default in current folder.
+------------------------------------------------------------------------
+r489 | gaser | 2013-05-22 10:24:28
