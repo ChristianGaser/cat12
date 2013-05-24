@@ -2113,3 +2113,25 @@ M       vbm12.man
 (2) Log-file for cg_vbm_batch.sh os now saved as default in current folder.
 ------------------------------------------------------------------------
 r489 | gaser | 2013-05-22 10:24:28
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_write.m
+M       vbm_vol_partvol.m
+
+This is just a sub-step with experimental elements that I want to save before
+I change the next things...
+(1) To obtain a better inhomogeneity correction SPM-default Parameter were 
+    changed (biasfwhm=30, samp=2), with better results but higher calculation
+    time. Strong improvements for highres (Magdeburg7T and HR075) and lowres
+    images (NIH1394). This works better than the additional maximum based
+    correction and I will remove/uncomment the maximum correction. :/
+(2) The Partition work not bad, but it is now very slow (>1 minute) and I have
+    optimize many substeps (mostly by resizing to lower resolutions).
+(3) Correction of the tissue peak estimation for the global intensity 
+    normalization for images with WM lessions (OASIS0031) that lead to error in 
+    the skull-stripping.
+(4) Skull-Stripping of this version is still to aggressive.
+------------------------------------------------------------------------
+r490 | dahnke | 2013-05-24 10:02:46

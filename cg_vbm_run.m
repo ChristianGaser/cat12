@@ -127,6 +127,12 @@ for iter=1:nit,
         stime = clock;
         if estwrite % estimate and write segmentations
           
+           % if job.warp.samp == 0
+%               hdr = spm_vol(job.channel(1).vols{subj});
+%               vx_vol = sqrt(sum(hdr.mat(1:3,1:3).^2));
+%               job.warp.samp = min(job.warp.samp,max(2,round(mean(vx_vol))));
+           % end
+            
             images = '';
             for n=1:numel(job.channel),
                 images = strvcat(images,job.channel(n).vols{subj});
@@ -162,7 +168,9 @@ for iter=1:nit,
                     VF1.pinfo(1:2,:) = VF1.pinfo(1:2,:)/spm_global(VF1);
                     VG.pinfo(1:2,:)  = VG.pinfo(1:2,:)/spm_global(VG);
 
-                    fprintf('Initial Coarse Affine Registration..\n');
+                    %fprintf('Initial Coarse Affine Registration..\n');
+                    str='Initial Coarse Affine Registration'; 
+                    fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
                     aflags    = struct('sep',8, 'regtype',job.warp.affreg,...
                         'WG',[],'WF',[],'globnorm',0);
                     aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
@@ -185,9 +193,15 @@ for iter=1:nit,
                         spm_chi2_plot('Init','Fine Affine Registration','Mean squared difference','Iteration');
                     end
                     Affine  = spm_affreg(VG, VF1, aflags, Affine, scale);
+                    fprintf('%3.0fs\n',etime(clock,stime));
 
-                    fprintf('Fine Affine Registration..\n');
-                    Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
+                    
+                    %% Fine Affine Registration
+                    str='Fine Affine Registration'; 
+                    fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+                    %Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
+                    Affine  = spm_maff8(obj.image(1),3,obj.fudge,  tpm,Affine,job.warp.affreg);
+                    fprintf('%3.0fs\n',etime(clock,stime)); 
                 end;
                 obj.Affine = Affine;
             else
@@ -205,7 +219,11 @@ for iter=1:nit,
                 end
             end
 
+            
+            %% SPM Preprocessing
+            str='SPM-Preprocessing 1'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
             res = spm_preproc8(obj);
+            fprintf('%3.0fs\n',etime(clock,stime));   
 
             try
                 [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
