@@ -114,6 +114,9 @@ if N > 1
     'VBM12 does not support multiple channels. Only the first channel will be used.');
 end
 
+
+str='SPM-Preprocessing 2'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 % bf - bias field: corrected, warp corrected, affine corrected
 % df - deformations: forward, inverse
@@ -356,6 +359,8 @@ clear chan
 if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
     warp.sanlm = min(1,warp.sanlm);
 end
+fprintf('%3.0fs\n',etime(clock,stime));
+
 
 
 %% check main image parameter
@@ -442,14 +447,15 @@ fprintf('%3.0fs\n',etime(clock,stime));
 [gx,gy,gz]=vbm_vol_gradient3(Ysrc); YG=abs(gx)+abs(gy)+abs(gz); YG=YG./Ysrc; clear gx gy gz; 
 noise  = std(Ysrc(cls{2}(:)>128 & YG(:)<0.1)/median(Ysrc(cls{2}(:)>128  & YG(:)<0.1))); 
 
-% brain YB
-[YB,resT2] = vbm_vol_resize(single(cls{1} + cls{2})/255,'reduceV',vx_vol,3,32);
-YB = vbm_vol_morph(YB>0.5,'lc',2); YB=vbm_vol_smooth3X(YB,1);
-YB = vbm_vol_resize(YB,'dereduceV',resT2)>0.5; 
+% inital brain mask YB
+YB = vbm_vol_morph((cls{1}>1 & Ysrc<median(Ysrc(cls{1}(:)>128))*1.1) | cls{1}>128| cls{2}>128,'lo',1);
+[YB,resT2] = vbm_vol_resize(YB,'reduceV',vx_vol,2,32); YB = vbm_vol_morph(YB,'lc',2);
+YB = vbm_vol_resize(vbm_vol_smooth3X(YB),'dereduceV',resT2)>0.4; 
 
 % global intensity normalization based on edge-free regions
 for i=1:3
-  YM = cls{i}>64 & YB & (YG<0.3 | YG>0.5); 
+  YM = smooth3(cls{i}>64 & YB & YG<0.3)>0.5; 
+  if i==2, YM = Ysrc>(T3th(1)/2 + median(Ysrc(YM(:)))/2) & vbm_vol_morph(YM,'e'); end
   T3th(i) = median(Ysrc(YM(:))); 
 end;
 T3th=T3th([3 1 2]);
@@ -571,7 +577,7 @@ if do_cls && do_defs,
       for i=1:3, YBr(smooth3(single(YBr))<0.5)=0; end
       YBr = YBr | YMFr; 
       %%
-      YBr = vbm_vol_morph(YBr,'labclose',1);
+      YBr = vbm_vol_morph(YBr,'labclose',3);
       YB = vbm_vol_resize(YBr,'dereduceV',resTr)>0.5;
       YB = YB | (vbm_vol_morph(YB,'dilate') & Ym<2.2); 
       
@@ -644,10 +650,11 @@ if do_cls && do_defs,
     TL{5} = vbm_vol_approx(TLi,'nh',vx_vol,2); TL{5} = vbm_vol_smooth3X(TL{5},4); 
 
     for i=1:3
-      YM = cls{i}>64 & YB & (YG<0.3 | YG>0.5); 
+      YM = smooth3(cls{i}>64 & YB & YG<0.3)>0.5; 
+      if i==2, YM = Ysrc./TL{5}>(T3th(1)/2 + median(Ysrc(YM(:)))/2) & vbm_vol_morph(YM,'e'); end
       T3th(i) = median(Ysrc(YM(:))./TL{5}(YM(:))); 
     end;
-    T3th=T3th([3 1 2]);
+    T3th=T3th([3 1 2]); if isnan(T3th(3)); T3th(3)=1; end
     T3th(1) = max(0,min(T3th(1),T3th(2) - diff(T3th(2:3)))); % phantom
     Ym   = vbm_vol_iscale(Ysrc ./TL{5},'gCGW',vx_vol,T3th); 
     TIQA = vbm_vol_iscale(YsrcO./TL{5},'gCGW',vx_vol,T3th); %clear YsrcO; 
