@@ -18,8 +18,8 @@ vbm.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class
 vbm.opts.affreg    = 'mni';                   % Affine regularisation
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation
 vbm.opts.biasreg   = 0.001;                   % Bias regularisation
-vbm.opts.biasfwhm  = 60;                      % Bias FWHM
-vbm.opts.samp      = 3;                       % Sampling distance
+vbm.opts.biasfwhm  = 30;                      % Bias FWHM
+vbm.opts.samp      = 2;                       % Sampling distance
 
 
 % Writing options
