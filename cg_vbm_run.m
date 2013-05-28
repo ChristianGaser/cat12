@@ -25,6 +25,8 @@ function varargout = cg_vbm_run(job,arg)
 %
 % Christian Gaser
 % $Id$
+%
+%#ok<*AGROW>
 
 rev = '$Rev$';
 
@@ -34,7 +36,7 @@ estwrite = isfield(job,'opts');
 % set some defaults if segmentations are not estimated
 if ~estwrite
     job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
-                      'warpreg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[1 1 2 3 4 2]);
+                      'warpreg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[1 1 2 3 4 2 2]);
 end
 
 channel = struct('vols',{job.data});
@@ -54,12 +56,13 @@ if isfield(job.extopts.dartelwarp,'normhigh')
     warp.darteltpm = job.extopts.dartelwarp.normhigh.darteltpm{1};
 end
 
-do_dartel = warp.dartelwarp;
 
 % prepare tissue priors and number of gaussians for all 6 classes
+clsn=numel(spm_vol(job.opts.tpm{1})); 
 if estwrite
-    [pth,nam,ext,num] = spm_fileparts(job.opts.tpm{1});
-    for i=1:6
+    [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
+    tissue = struct();
+    for i=1:clsn;
         tissue(i).ngaus = job.opts.ngaus(i);
         tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
     end
@@ -74,7 +77,7 @@ tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.out
 tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
 % never write class 4-6
-for i=4:6
+for i=4:numel(spm_vol(job.opts.tpm{1}));
     tissue(i).warped = [0 0 0];
     tissue(i).native = [0 0 0];
 end
@@ -116,7 +119,7 @@ if ~isfield(job.warp,'fwhm'),    job.warp.fwhm    =  1; end
 
 % load tpm priors only for estimate and write
 if estwrite
-    tpm    = strvcat(cat(1,job.tissue(:).tpm));
+    tpm    = char(cat(1,job.tissue(:).tpm));
     tpm    = spm_load_priors8(tpm);
 end
 
@@ -133,10 +136,45 @@ for iter=1:nit,
 %               job.warp.samp = min(job.warp.samp,max(2,round(mean(vx_vol))));
            % end
             
-            images = '';
-            for n=1:numel(job.channel),
-                images = strvcat(images,job.channel(n).vols{subj});
+           
+            %% noise-correction
+            if  job.warp.sanlm
+              % for windows disable multi-threading
+              if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
+                warp.sanlm = min(1,warp.sanlm);
+              end
+              
+              if      job.warp.sanlm==1, str='NLM-Filter';  
+              elseif  job.warp.sanlm>=2, str='NLM-Filter with multi-threading';
+              end
+              fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
+
+              for n=1:numel(job.channel) 
+                V = spm_vol(job.channel(n).vols{subj});
+                Y = single(spm_read_vols(V));
+                Y(isnan(Y)) = 0;
+                switch job.warp.sanlm
+                  case 1      % use single-threaded version
+                    sanlmMex_noopenmp(Y,3,1);
+                  otherwise   % use multi-threaded version
+                    sanlmMex(Y,3,1);
+                end
+                Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
+                job.channel(n).vols{subj} = Vn.fname;
+                Fn{subj}{n} = Vn.fname;  
+                clear Y V Vn;
+              end
+              
+              fprintf('%3.0fs\n',etime(clock,stime));     
             end
+            
+            
+            %%
+            images = job.channel(1).vols{subj};
+            for n=2:numel(job.channel)
+              images = char(images,job.channel(n).vols{subj});
+            end
+            
             obj.image    = spm_vol(images);
             spm_check_orientations(obj.image);
 
@@ -155,6 +193,9 @@ for iter=1:nit,
             obj.samp     = job.warp.samp;
 
             if iter==1,
+                % noise correction
+              
+              
                 % Initial affine registration.
                 Affine  = eye(4);
                 if ~isempty(job.warp.affreg),
@@ -208,7 +249,7 @@ for iter=1:nit,
                 % Load results from previous iteration for use with next round of
                 % iterations, with the new group-specific tissue probability map.
                 [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-                res       = load(fullfile(pth,[nam '_seg8.mat']));                
+                res       = load(fullfile(pth,['vbm12mat_' nam '.mat']));                
                 obj.Affine = res.Affine;
                 obj.Twarp  = res.Twarp;
                 obj.Tbias  = res.Tbias;
@@ -227,22 +268,21 @@ for iter=1:nit,
 
             try
                 [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-                save(fullfile(pth,[nam '_seg8.mat']),'-struct','res', spm_get_defaults('mat.format'));
-            catch
+                save(fullfile(pth,['vbm12mat_' nam '.mat']),'-struct','res', spm_get_defaults('mat.format'));
             end
 
         else % only write segmentations
             [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-            seg8_name = fullfile(pth,[nam '_seg8.mat']);
-            if exist(seg8_name)
-                res = load(seg8_name);
+            seg12_name = fullfile(pth,['vbm12mat_' nam '.mat']);
+            if exist(seg12_name,'file')
+                res = load(seg12_name);
 
                 % check for spm version
                 if ~isfield(res,'wp')
-                  error([fullfile(pth,[nam '_seg8.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
+                  error([fullfile(pth,['vbm12mat_' nam '.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
                 end
 
-                % load original used tpm, which is save in seg8.mat file
+                % load original used tpm, which is save in seg12.mat file
                 try
                     tpm    = spm_load_priors8(res.tpm);
                 catch
@@ -251,7 +291,7 @@ for iter=1:nit,
                     for i=1:6
                       job.tissue(i).tpm = fullfile(spm('dir'),'tpm',['TPM.nii,' num2str(i)]);
                     end
-                    tpm    = strvcat(cat(1,job.tissue(:).tpm));
+                    tpm    = char(cat(1,job.tissue(:).tpm));
                     tpm    = spm_load_priors8(tpm);
                 end
                 
@@ -259,8 +299,7 @@ for iter=1:nit,
 				        [image_pth,image_nam,image_ext] = spm_fileparts(job.channel(1).vols{subj});
 				        res.image(1).fname = fullfile(image_pth, [image_nam, image_ext]);
             else
-                error(['Can''t load file ' seg8_name]);  
-                return
+                error(['Can''t load file ' seg12_name]);  
             end
         end
 
@@ -275,6 +314,12 @@ for iter=1:nit,
 
     end
 end
+for iter=1:nit,
+  for n=1:numel(job.channel) 
+    delete(Fn{subj}{n});
+  end
+end
+
 return
 %_______________________________________________________________________
 
@@ -370,7 +415,7 @@ for j=1:n,
 end
 param = cell(n,1);
 for j=1:n
-    param{j} = fullfile(parts{j,1},[parts{j,2},'_seg8.mat']);
+    param{j} = fullfile(parts{j,1},['vbm12mat_',parts{j,2},'.mat']);
 end
 
 tiss = struct('c',{},'rc',{},'rca',{},'wc',{},'mwc',{},'m0wc',{});
@@ -473,24 +518,24 @@ vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'
 function vf = vfiles_job(job)
 vout = vout_job(job);
 vf   = vout.param;
-if ~isempty(vout.invdef),     vf = {vf{:}, vout.invdef{:}}; end
-if ~isempty(vout.fordef),     vf = {vf{:}, vout.fordef{:}}; end
-if ~isempty(vout.jacobian),   vf = {vf{:}, vout.jacobian{:}}; end
+if ~isempty(vout.invdef),     vf = [vf vout.invdef]; end
+if ~isempty(vout.fordef),     vf = [vf, vout.fordef]; end
+if ~isempty(vout.jacobian),   vf = [vf, vout.jacobian]; end
 
-if ~isempty(vout.biascorr),   vf = {vf{:}, vout.biascorr{:}}; end
-if ~isempty(vout.wbiascorr),  vf = {vf{:}, vout.wbiascorr{:}}; end
-if ~isempty(vout.label),      vf = {vf{:}, vout.label{:}}; end
-if ~isempty(vout.wlabel),     vf = {vf{:}, vout.wlabel{:}}; end
-if ~isempty(vout.rlabel),     vf = {vf{:}, vout.rlabel{:}}; end
-if ~isempty(vout.alabel),     vf = {vf{:}, vout.alabel{:}}; end
+if ~isempty(vout.biascorr),   vf = [vf, vout.biascorr]; end
+if ~isempty(vout.wbiascorr),  vf = [vf, vout.wbiascorr]; end
+if ~isempty(vout.label),      vf = [vf, vout.label]; end
+if ~isempty(vout.wlabel),     vf = [vf, vout.wlabel]; end
+if ~isempty(vout.rlabel),     vf = [vf, vout.rlabel]; end
+if ~isempty(vout.alabel),     vf = [vf, vout.alabel]; end
 
 for i=1:numel(vout.tiss)
-    if ~isempty(vout.tiss(i).c),   vf = {vf{:}, vout.tiss(i).c{:}};   end
-    if ~isempty(vout.tiss(i).rc),  vf = {vf{:}, vout.tiss(i).rc{:}};  end
-    if ~isempty(vout.tiss(i).rca), vf = {vf{:}, vout.tiss(i).rca{:}}; end
-    if ~isempty(vout.tiss(i).wc),  vf = {vf{:}, vout.tiss(i).wc{:}};  end
-    if ~isempty(vout.tiss(i).mwc), vf = {vf{:}, vout.tiss(i).mwc{:}}; end
-    if ~isempty(vout.tiss(i).m0wc),vf = {vf{:}, vout.tiss(i).m0wc{:}};end
+    if ~isempty(vout.tiss(i).c),   vf = [vf vout.tiss(i).c];   end 
+    if ~isempty(vout.tiss(i).rc),  vf = [vf vout.tiss(i).rc];  end 
+    if ~isempty(vout.tiss(i).rca), vf = [vf vout.tiss(i).rca]; end
+    if ~isempty(vout.tiss(i).wc),  vf = [vf vout.tiss(i).wc];  end
+    if ~isempty(vout.tiss(i).mwc), vf = [vf vout.tiss(i).mwc]; end
+    if ~isempty(vout.tiss(i).m0wc),vf = [vf vout.tiss(i).m0wc];end
 end
 vf = reshape(vf,numel(vf),1);
 %_______________________________________________________________________
