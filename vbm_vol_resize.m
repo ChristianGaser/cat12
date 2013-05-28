@@ -163,19 +163,18 @@ function varargout=vbm_vol_resize(T,operation,varargin)
       
     case 'dereducev'
       vx_red = varargin{1}.vx_red;
-      sD     = varargin{1}.sizeT./vx_red+0.5;
+      sD     = varargin{1}.sizeT./vx_red + 0.5;
       if numel(varargin)<2, method='linear'; else method=varargin{2}; end;
 
       [Rx,Ry,Rz]   = meshgrid(single(0.5+0.5/vx_red(2):1/vx_red(2):sD(2)),...
                               single(0.5+0.5/vx_red(1):1/vx_red(1):sD(1)),...
                               single(0.5+0.5/vx_red(3):1/vx_red(3):sD(3)));
-                            
+
       for i=1:numel(T)  
         if islogical(T{i}) && any(vx_red>1), varargout{i} = vbm_vol_smooth3X(vbm_vol_interp3f(single(T{i}),Rx,Ry,Rz,method),mean(vx_red))>0.5;
         else                                 varargout{i} = vbm_vol_interp3f(single(T{i}),Rx,Ry,Rz,method);
         end
       end
-      
       
       
     % ANISO2ISO & ISO2ANISO
