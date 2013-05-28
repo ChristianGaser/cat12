@@ -58,6 +58,7 @@ function varargout = vbm_stat_marks(action,varargin)
   %'QM' 'noise_WM'              'linear'    [0.015 0.09]   1 0    'local std in WM 
   %'QM' 'noise_BG'              'linear'    [0.01  0.08]   1 0    'local std in BG (problems for skull-striped data and ADNI) 
   %'QM' 'noise_LG'              'linear'    [0.01  0.12]   1 0    'local std in the whole image      
+   'QM' 'bias_std'              'linearb'   [0.05  0.15]   1 1    'global std in the bias field'
    'QM' 'bias_WMstd'            'linearb'   [0.05  0.15]   1 1    'global std in the WM'
   %'QM' 'bias_WMinhomogeneity'  'linear'    [1.00  0.50]   1 0    'WMinhomogeneity
   %'QM' 'bias_WMentropy'      	'linear'    [1.00  0.50]   1 0    'entropy in the WM segment
@@ -69,16 +70,16 @@ function varargout = vbm_stat_marks(action,varargin)
    'QM' 'contrast'              'linearb'   [1/3   0.05]   1 1    'contrast between tissue classe'
   %'QM' 'contrastT'             'linearb'   [0.30  0.05]   1 0    'contrast between tissue classes (correced for noise)
 % -- experimental image quality measures -------------------------------
-   'QM' 'art_BGartifacts'       'linearb'   [0.05  0.50]   0 1    'artifacts in the background (experimental)'    
-   'QM' 'art_BGentropy'         'linearb'   [3.00  4.00]   0 1    'artifacts in the background (experimental)'
+  %'QM' 'art_BGartifacts'       'linearb'   [0.05  0.50]   0 1    'artifacts in the background (experimental)'    
+  %'QM' 'art_BGentropy'         'linearb'   [3.00  4.00]   0 1    'artifacts in the background (experimental)'
   %'QM' 'art_comp'              'linearb'   [   0   100]   0 1    'artifacts'
-   'QM' 'art_movesWM'           'linearb'   [0.00  0.10]   0 1    'artifacts in the WM (experimental)'
-   'QM' 'art_movesBG'           'linearb'   [0.05  0.20]   0 1    'artifacts in the background (experimental)'
+  %'QM' 'art_movesWM'           'linearb'   [0.00  0.10]   0 1    'artifacts in the WM (experimental)'
+  %'QM' 'art_movesBG'           'linearb'   [0.05  0.20]   0 1    'artifacts in the background (experimental)'
   %'QM' 'hist_brain'            ''          []             0 0    'histogram brain'     
   %'QM' 'hist_BG'               ''          []             0 0    'histogram background'
    'QM' 'blurring'              'linearb'   [0.00  1.00]   0 1    'edge quality between tissues'
-   'QM' 'sampling'              'linearb'   [0.00  1.00]   0 1    'edge quality between tissues'
-   'QM' 'mgradient'             'linearb'   [0.20  0.10]   0 1    'edge quality between tissues'
+  %'QM' 'sampling'              'linearb'   [0.00  1.00]   0 1    'edge quality between tissues'
+  %'QM' 'mgradient'             'linearb'   [0.20  0.10]   0 1    'edge quality between tissues'
 % -- subject-related data from the preprocessing -----------------------
    'SM' 'vol_TIV'               'normal'    [1500  1000]   1 1    'total intracranial volume (GM+WM+VT)'
    'SM' 'vol_CHvsGW'            'linear'    def.CHvsCG     1 1    'relation between brain and non brain'

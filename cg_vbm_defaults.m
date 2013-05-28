@@ -13,8 +13,8 @@ global vbm
 
 % Estimation options
 %=======================================================================
-vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')}; % TPM.nii
-vbm.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class
+vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TMP7.nii')}; % TPM.nii
+vbm.opts.ngaus     = [1 1 2 3 4 2 2];         % Gaussians per class
 vbm.opts.affreg    = 'mni';                   % Affine regularisation
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation
 vbm.opts.biasreg   = 0.001;                   % Bias regularisation

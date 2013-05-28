@@ -2135,3 +2135,27 @@ I change the next things...
 (4) Skull-Stripping of this version is still to aggressive.
 ------------------------------------------------------------------------
 r490 | dahnke | 2013-05-24 10:02:46
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_io_updateStruct.m
+M       vbm_stat_marks.m
+M       vbm_vol_partvol.m
+M       vbm_vol_resize.m
+M       vbm_vol_t1qacalc.m
+
+(1) Move the noise correction before the SPM preprocessing. 
+    Rename *_seg8.mat to vbm12mat_*.mat to have blocks of image/file-types. 
+(2) Move the partition behind the local adaptive segmentation, because it can 
+    profit from the normalization in all regions and because the local adaptive 
+    segmentation only requires the segmentation of the subcortical structures.
+    The partitioning still requires some work and of course more test.
+(3) Thickness calculation for both sides.
+(4) Reduced the number of quality measures (switch-off the new and untested 
+    measures) for speed-up. Reduced variables to save memory.
+(5) Removed unnecessary variables to save memory. 
+------------------------------------------------------------------------
+r491 | dahnke | 2013-05-28 16:48:20
