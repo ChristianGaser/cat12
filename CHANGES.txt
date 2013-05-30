@@ -2159,3 +2159,29 @@ M       vbm_vol_t1qacalc.m
 (5) Removed unnecessary variables to save memory. 
 ------------------------------------------------------------------------
 r491 | dahnke | 2013-05-28 16:48:20
+
+M       CHANGES.txt
+D       Template_1_IXI550_MNI152.nii
+D       Template_2_IXI550_MNI152.nii
+D       Template_3_IXI550_MNI152.nii
+D       Template_4_IXI550_MNI152.nii
+D       Template_5_IXI550_MNI152.nii
+D       Template_6_IXI550_MNI152.nii
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_write.m
+A       templates_1.50mm/TPM.nii
+A       templates_1.50mm/Template_1_IXI550_MNI152.nii
+A       templates_1.50mm/Template_2_IXI550_MNI152.nii
+A       templates_1.50mm/Template_3_IXI550_MNI152.nii
+A       templates_1.50mm/Template_4_IXI550_MNI152.nii
+A       templates_1.50mm/Template_5_IXI550_MNI152.nii
+A       templates_1.50mm/Template_6_IXI550_MNI152.nii
+M       vbm_stat_marks.m
+M       vbm_vol_partvol.m
+M       vbm_vol_t1qacalc.m
+
+(1) Moved VBM IXI Dartel template to template directory.
+(2) Added VBM 7 class segmentation image TPM.nii to template directory.
+------------------------------------------------------------------------
+r492 | dahnke | 2013-05-30 16:51:45

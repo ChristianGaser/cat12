@@ -53,8 +53,11 @@ function varargout = vbm_stat_marks(action,varargin)
    'QM' 'res_vx_vol'            'linearb'   [0.75  3.00]   1 0    'voxel dimensions'
    'QM' 'res_vol'               'linearb'   [0.50  8.00]   1 1    'voxel volume'
    'QM' 'res_isotropy'          'linearb'   [1.00   7/3]   1 1    'voxel isotropy'
-   'QM' 'noise'                 'linearb'   [0.04  0.20]   1 1    'default noise = noise_WM / GW-contrast'
+   'QM' 'noise'                 'linearb'   [0.04  0.20]   1 1    'noise_WM / GW-contrast'
+   'QM' 'SNR'                   'linearb'   [ 100    20]   1 1    '1 / noise_WM_SNR'
+   'QM' 'CNR'                   'linearb'   [ 100    20]   1 1    'GW-contrast / noise'
   %'QM' 'noise_CG'              'linear'    [0.01  0.12]   1 0    'other noise measure ...
+  %'QM' 'noise_WM_SRN'          'linear'    [0.015 0.09]   1 0    'local std in WM 
   %'QM' 'noise_WM'              'linear'    [0.015 0.09]   1 0    'local std in WM 
   %'QM' 'noise_BG'              'linear'    [0.01  0.08]   1 0    'local std in BG (problems for skull-striped data and ADNI) 
   %'QM' 'noise_LG'              'linear'    [0.01  0.12]   1 0    'local std in the whole image      

@@ -305,25 +305,30 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   % were skull-stripped or special preprocessed like ADNI.
   % For the standard noise variable the signal is given by the
   % GW-contrast that is more important than CG- or BC-Contrast.
-  QAS.QM.noise = [estimateNoiseLevel( Yi,YWM) / QAS.QM.contrast(1), ...
-                  estimateNoiseLevel(Ymi,YWM) / QAS.QM.contrast(2)];   
-  if isfield(QAS.QM,'noise_WM')  % within the YWM - standard noise
-    QAS.QM.noise_WM = [estimateNoiseLevel( Yi,YWM), ...
-                       estimateNoiseLevel(Ymi,YWM)]; 
+  [gx,gy,gz] = vbm_vol_gradient3(Ymi); Yg = abs(gx)+abs(gy)+abs(gz); clear gx gy gz; Yg=Yg./Ymi; 
+  QAS.QM.noise = [estimateNoiseLevel( Yi,YWM,Yg) / QAS.QM.contrast(1), ...
+                  estimateNoiseLevel(Ymi,YWM,Yg) / QAS.QM.contrast(2)];   
+  QAS.QM.CNR  = [QAS.QM.contrast(1) / estimateNoiseLevel( Yi,YWM,Yg), ...
+                 QAS.QM.contrast(2) / estimateNoiseLevel(Ymi,YWM,Yg)];   
+  QAS.QM.SNR  = [1 / estimateNoiseLevel( Yi,YWM,Yg), ...
+                 1 / estimateNoiseLevel(Ymi,YWM,Yg)];   
+  if isfield(QAS.QM,'noise_WM')  % within the YWM 
+    QAS.QM.noise_WM = [estimateNoiseLevel( Yi,YWM,Yg), ...
+                       estimateNoiseLevel(Ymi,YWM,Yg)]; 
   end                
   if isfield(QAS.QM,'noise_BG')  % background
-    QAS.QM.noise_BG = [estimateNoiseLevel(Yi,YBGR), ...
-                       estimateNoiseLevel(Ymi,YBGR)];
+    QAS.QM.noise_BG = [estimateNoiseLevel(Yi,YBGR,Yg), ...
+                       estimateNoiseLevel(Ymi,YBGR,Yg)];
   end  
   if isfield(QAS.QM,'noise_CG')  % full CG approach
     QAS.QM.noise_CG = [cg_noise_estimation(Yi), ...
                        cg_noise_estimation(Ymi)];
   end    
   if isfield(QAS.QM,'noise_LG')  % full in low gradient regions
-    QAS.QM.noise_LG = [estimateNoiseLevel(Yi), ...
-                       estimateNoiseLevel(Ymi)];
+    QAS.QM.noise_LG = [estimateNoiseLevel(Yi,Yg), ...
+                       estimateNoiseLevel(Ymi,Yg)];
   end     
-
+  clear Yg;
 
 
   %% Bias/Inhomogeneity 
@@ -440,11 +445,9 @@ function grad = edge(Ymi,Yp0,res_vol)
   M   = WMP(:) & ~WMS(:) & (gT(:)>0.1) & (gT(:)<0.4) & (Ymi(:)>0.8); 
   grad(2) = res_vol .* (vbm_stat_nanstat1d(gT(M),'mean') - vbm_stat_nanstat1d(gT(M),'std'));
 end
-function noise = estimateNoiseLevel(T,M)
+function noise = estimateNoiseLevel(T,M,G)
   T   = single(T);
   TS  = smooth3(T); 
-  [gx,gy,gz] = vbm_vol_gradient3(TS);
-  G   = abs(gx)+abs(gy)+abs(gz); clear gx gy gz; %G=G./T; 
   Gth = vbm_stat_nanstat1d(G,'mean');
   if ~exist('M','var')
     M   =  TS>0 & (TS<0.3 | G<Gth);

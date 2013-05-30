@@ -13,13 +13,14 @@ global vbm
 
 % Estimation options
 %=======================================================================
-vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TMP7.nii')}; % TPM.nii
+vbm.opts.tpm       = ... % 7 class template with subclass for subcortical structures
+  {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','TPM.nii')};
 vbm.opts.ngaus     = [1 1 2 3 4 2 2];         % Gaussians per class
 vbm.opts.affreg    = 'mni';                   % Affine regularisation
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation
 vbm.opts.biasreg   = 0.001;                   % Bias regularisation
 vbm.opts.biasfwhm  = 30;                      % Bias FWHM
-vbm.opts.samp      = 2;                       % Sampling distance
+vbm.opts.samp      = 3;                       % Sampling distance
 
 
 % Writing options
@@ -99,8 +100,9 @@ vbm.output.te.dartel = 0;
 
 % Extended writing options
 %=======================================================================
-vbm.extopts.dartelwarp  = 1; % dartel normalization: 0 - spm default; 1 - yes
-vbm.extopts.darteltpm   = {fullfile(spm('dir'),'toolbox','vbm12','Template_1_IXI550_MNI152.nii')}; % Indicate first Dartel template
+vbm.extopts.dartelwarp  = 1;  % dartel normalization: 0 - spm default; 1 - yes
+vbm.extopts.darteltpm   = ... % Indicate first Dartel template
+  {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI550_MNI152.nii')}; 
 vbm.extopts.print       = 1; % Display and print results
 
 % bias correction options
