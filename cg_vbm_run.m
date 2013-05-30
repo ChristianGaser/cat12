@@ -128,17 +128,31 @@ nit = 1;
 for iter=1:nit,
     for subj=1:numel(job.channel(1).vols),
         stime = clock;
+        
+        %% print current VBM release number and subject file
+        A = ver; r = 0;
+        for i=1:length(A)
+          if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
+            r = str2double(A(i).Version);
+          end
+        end
+        clear A 
+
+        str  = sprintf('VBM12 r%d',r);
+        str2 = spm_str_manip(job.channel(1).vols{subj},['a' num2str(70 - length(str))]);
+        vbm_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
+          repmat('-',1,72),str,...
+          repmat(' ',1,70 - length(str) - length(str2)),str2,...
+          repmat('-',1,72));
+        clear r str str2
+
+        
         if estwrite % estimate and write segmentations
           
-           % if job.warp.samp == 0
-%               hdr = spm_vol(job.channel(1).vols{subj});
-%               vx_vol = sqrt(sum(hdr.mat(1:3,1:3).^2));
-%               job.warp.samp = min(job.warp.samp,max(2,round(mean(vx_vol))));
-           % end
-            
+    
            
-            %% noise-correction
-            if  job.warp.sanlm
+            % noise-correction
+            if iter==1 && job.warp.sanlm
               % for windows disable multi-threading
               if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
                 warp.sanlm = min(1,warp.sanlm);
@@ -169,7 +183,7 @@ for iter=1:nit,
             end
             
             
-            %%
+            % 
             images = job.channel(1).vols{subj};
             for n=2:numel(job.channel)
               images = char(images,job.channel(n).vols{subj});
@@ -193,7 +207,6 @@ for iter=1:nit,
             obj.samp     = job.warp.samp;
 
             if iter==1,
-                % noise correction
               
               
                 % Initial affine registration.
@@ -237,7 +250,7 @@ for iter=1:nit,
                     fprintf('%3.0fs\n',etime(clock,stime));
 
                     
-                    %% Fine Affine Registration
+                    % Fine Affine Registration with 3 mm sampling distance
                     str='Fine Affine Registration'; 
                     fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
                     %Affine  = spm_maff8(obj.image(1),job.warp.samp,obj.fudge,  tpm,Affine,job.warp.affreg);
@@ -262,6 +275,14 @@ for iter=1:nit,
 
             
             %% SPM Preprocessing
+           
+%            adaptions for refined bias correction for highres data            
+%            if job.warp.samp == 0
+%              hdr = spm_vol(job.channel(1).vols{subj});
+%              vx_vol = sqrt(sum(hdr.mat(1:3,1:3).^2));
+%              job.warp.samp = min(job.warp.samp,max(2,round(mean(vx_vol))));
+%            end
+            
             str='SPM-Preprocessing 1'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
             res = spm_preproc8(obj);
             fprintf('%3.0fs\n',etime(clock,stime));   
