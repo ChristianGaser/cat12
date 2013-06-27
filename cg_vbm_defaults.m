@@ -13,13 +13,12 @@ global vbm
 
 % Estimation options
 %=======================================================================
-vbm.opts.tpm       = ... % 7 class template with subclass for subcortical structures
-  {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','TPM.nii')};
-vbm.opts.ngaus     = [1 1 2 3 4 2 2];         % Gaussians per class
+vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
+vbm.opts.ngaus     = [2 2 2 3 4 2];           % Gaussians per class
 vbm.opts.affreg    = 'mni';                   % Affine regularisation
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation
 vbm.opts.biasreg   = 0.001;                   % Bias regularisation
-vbm.opts.biasfwhm  = 30;                      % Bias FWHM
+vbm.opts.biasfwhm  = 60;                      % Bias FWHM
 vbm.opts.samp      = 3;                       % Sampling distance
 
 
@@ -126,7 +125,7 @@ vbm.defs.interp         = 5;  % 5th degree B-spline
 %=======================================================================
 vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
-vbm.extopts.gcut        = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
+vbm.extopts.gcut        = 2;    % Skull-stripping with graph-cut: 0 - no; 1 - old; 2 - new
 vbm.extopts.kmeans      = 0;    % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm.extopts.mrf         = 1;    % MRF weighting: 0-1 - manuell setting; 1 - auto
 vbm.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading

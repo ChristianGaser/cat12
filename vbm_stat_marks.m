@@ -1,4 +1,4 @@
-function varargout = vbm_stat_marks(action,varargin) 
+function varargout = vbm_stat_marks(action,uselevel,varargin) 
 % ______________________________________________________________________
 % 
 % Meta data management for a scan. 
@@ -30,6 +30,9 @@ function varargout = vbm_stat_marks(action,varargin)
 
   rev = '$Rev$';
 
+  if ~exist('uselevel','var'), uselevel=0; end
+  
+  
 % used measures and marks:
 % ______________________________________________________________________
     
@@ -53,24 +56,26 @@ function varargout = vbm_stat_marks(action,varargin)
    'QM' 'res_vx_vol'            'linearb'   [0.75  3.00]   1 0    'voxel dimensions'
    'QM' 'res_vol'               'linearb'   [0.50  8.00]   1 1    'voxel volume'
    'QM' 'res_isotropy'          'linearb'   [1.00   7/3]   1 1    'voxel isotropy'
-   'QM' 'noise'                 'linearb'   [0.04  0.20]   1 1    'noise_WM / GW-contrast'
+  %'QM' 'noise'                 'linearb'   [0.01  0.10]   1 1    'noise_WM / GW-contrast'
+  %'QM' 'bias'                  'linearb'   [0.01  0.10]   1 1    'noise_WM / GW-contrast'
    'QM' 'SNR'                   'linearb'   [ 100    20]   1 1    '1 / noise_WM_SNR'
-   'QM' 'CNR'                   'linearb'   [ 100    20]   1 1    'GW-contrast / noise'
+   'QM' 'CNR'                   'linearb'   [  33     7]   1 1    'GW-contrast / noise'
+   'QM' 'CIR'                   'linearb'   [  10   0.2]   1 1    'GW_contrast / bias'
   %'QM' 'noise_CG'              'linear'    [0.01  0.12]   1 0    'other noise measure ...
   %'QM' 'noise_WM_SRN'          'linear'    [0.015 0.09]   1 0    'local std in WM 
   %'QM' 'noise_WM'              'linear'    [0.015 0.09]   1 0    'local std in WM 
   %'QM' 'noise_BG'              'linear'    [0.01  0.08]   1 0    'local std in BG (problems for skull-striped data and ADNI) 
   %'QM' 'noise_LG'              'linear'    [0.01  0.12]   1 0    'local std in the whole image      
-   'QM' 'bias_std'              'linearb'   [0.05  0.15]   1 1    'global std in the bias field'
-   'QM' 'bias_WMstd'            'linearb'   [0.05  0.15]   1 1    'global std in the WM'
+  %'QM' 'bias_std'              'linearb'   [0.05  0.15]   1 1    'global std in the bias field'
+  %'QM' 'bias_WMstd'            'linearb'   [0.05  0.15]   1 1    'global std in the WM'
   %'QM' 'bias_WMinhomogeneity'  'linear'    [1.00  0.50]   1 0    'WMinhomogeneity
   %'QM' 'bias_WMentropy'      	'linear'    [1.00  0.50]   1 0    'entropy in the WM segment
   %'QM' 'tissue_median'         'normal'    def.tissue     1 1    'median within the tissue classes
    'QM' 'tissue_mean'           'normalb'   def.tissue     1 1    'mean within the tissue classes'
   %'QM' 'tissue_std'            'linearb'   [1/12   1/6]   1 1    'std within the tissue classes
-   'QM' 'vbm_change'            'linearb'   [0.05  1.00]   1 1    'changes between t1 and label'
-   'QM' 'vbm_expect'            'linearb'   [0.05  1.00]   1 1    'difference between template and label'
-   'QM' 'contrast'              'linearb'   [1/3   0.05]   1 1    'contrast between tissue classe'
+   'QM' 'vbm_change'            'linearb'   [0.05  1.00]   2 1    'changes between t1 and label'
+   'QM' 'vbm_expect'            'linearb'   [0.05  1.00]   2 1    'difference between template and label'
+  %'QM' 'contrast'              'linearb'   [1/3   0.05]   1 1    'contrast between tissue classe'
   %'QM' 'contrastT'             'linearb'   [0.30  0.05]   1 0    'contrast between tissue classes (correced for noise)
 % -- experimental image quality measures -------------------------------
   %'QM' 'art_BGartifacts'       'linearb'   [0.05  0.50]   0 1    'artifacts in the background (experimental)'    
@@ -80,20 +85,20 @@ function varargout = vbm_stat_marks(action,varargin)
   %'QM' 'art_movesBG'           'linearb'   [0.05  0.20]   0 1    'artifacts in the background (experimental)'
   %'QM' 'hist_brain'            ''          []             0 0    'histogram brain'     
   %'QM' 'hist_BG'               ''          []             0 0    'histogram background'
-   'QM' 'blurring'              'linearb'   [0.00  1.00]   0 1    'edge quality between tissues'
+   'QM' 'blurring'              'linearb'   [0.00  1.00]   2 1    'edge quality between tissues'
   %'QM' 'sampling'              'linearb'   [0.00  1.00]   0 1    'edge quality between tissues'
   %'QM' 'mgradient'             'linearb'   [0.20  0.10]   0 1    'edge quality between tissues'
 % -- subject-related data from the preprocessing -----------------------
    'SM' 'vol_TIV'               'normal'    [1500  1000]   1 1    'total intracranial volume (GM+WM+VT)'
-   'SM' 'vol_CHvsGW'            'linear'    def.CHvsCG     1 1    'relation between brain and non brain'
+   'SM' 'vol_CHvsGW'            'linear'    def.CHvsCG     2 1    'relation between brain and non brain'
   %'SM' 'vol_abs_CGW'           'linearb'   def.tisvola    1 1    'absolut  tissue volume (CSF,GM,WM)'
   %'SM' 'vol_abs_BG'            'linearb'   [  10    10]   1 1    'absolut  tissue volume of basal structures'
   %'SM' 'vol_abs_VT'            'linearb'   [  10    10]   1 1    'absolut  tissue volume of the ventricle'
   %'SM' 'vol_abs_BV'            'linearb'   [   0    10]   1 1    'absolut  blood vessel volume'
    'SM' 'vol_rel_CGW'           'linearb'   def.tisvolr    1 1    'relative tissue volume (CSF,GM,WM)'
-   'SM' 'vol_rel_BG'            'linearb'   [0.05  0.05]   1 1    'relative tissue volume of basal structures'
-   'SM' 'vol_rel_VT'            'linearb'   [0.05  0.05]   1 1    'relative tissue volume of the ventricle'
-   'SM' 'vol_rel_BV'            'linearb'   [0.00  0.05]   1 1    'relative blood vessel volume'
+   'SM' 'vol_rel_BG'            'linearb'   [0.05  0.05]   2 1    'relative tissue volume of basal structures'
+   'SM' 'vol_rel_VT'            'linearb'   [0.05  0.05]   2 1    'relative tissue volume of the ventricle'
+   'SM' 'vol_rel_BV'            'linearb'   [0.00  0.05]   2 1    'relative blood vessel volume'
    'SM' 'dist_thickness'        'normalb'   def.thickness  1 1    'absolut  thickness (CSF,GM,WM)'
    'SM' 'dist_abs_depth'        'normalb'   [5.00  2.00]   0 0    'absolut  sulcal depth'
    'SM' 'dist_rel_depth'        'normalb'   [0.50  0.20]   0 0    'relative sulcal depth'
@@ -104,10 +109,12 @@ function varargout = vbm_stat_marks(action,varargin)
   
   % create structure
   for QSi=1:size(def.QS,1)
-    if isempty(def.QS{QSi,3})
-      eval(sprintf('QS.%s.%s = '''';',def.QS{QSi,1},def.QS{QSi,2}));
-    else
-      eval(sprintf('QS.%s.%s = [];',def.QS{QSi,1},def.QS{QSi,2}));
+    if def.QS{QSi,5}>0 && def.QS{QSi,5}<uselevel+2
+      if isempty(def.QS{QSi,3})
+        eval(sprintf('QS.%s.%s = '''';',def.QS{QSi,1},def.QS{QSi,2}));
+      else
+        eval(sprintf('QS.%s.%s = [];',def.QS{QSi,1},def.QS{QSi,2}));
+      end
     end
   end
 
