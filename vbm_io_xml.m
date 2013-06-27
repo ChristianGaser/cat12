@@ -8,6 +8,7 @@ function varargout = vbm_io_xml(file,varargin)
 % 
 %   vbm_io_xml(file,S)      export structure to a xml-file
 %   S = vbm_io_xml(file)    import structure from a xml-file
+%
 % ______________________________________________________________________
 % Copyright (c) 2007, Jaroslaw Tuszynski
 % All rights reserved.
@@ -36,11 +37,12 @@ function varargout = vbm_io_xml(file,varargin)
 % ______________________________________________________________________
 % $Id$
 
+ 
   if usejava('jvm')==0
     warning('MATLAB:SPM:VBM:vbm_io_xml:javaerror', ...
       'VBM-ERROR: VBM XML-im/export requires JVM!\n');
   end
-  if ~exist('file','var'),    error('MATLAB:vbm_io_struct','ERROR: Need input file\n'); end
+  if ~exist('file','var'), error('MATLAB:vbm_io_xml','ERROR: Need input file.\n'); end
   if exist('varargin','var') 
     if numel(varargin)==0
       action='read';
@@ -50,8 +52,41 @@ function varargout = vbm_io_xml(file,varargin)
       end
     elseif numel(varargin)==2
       S=varargin{1}; action=varargin{2};
+      if ~isstruct(S)
+        error('MATLAB:vbm_io_xml','ERROR: Second input should be a structure.\n'); 
+      end
     else  
-      error('MATLAB:vbm_io_xml','To many inputs.\n');
+      error('MATLAB:vbm_io_xml','ERROR: To many inputs.\n');
+    end
+  end
+  
+  % multi-file read 
+  if strcmp(action,'read')
+    varargout{1} = struct();
+    if iscell(file) && numel(file)>1 
+      for fi=1:numel(file)
+        try
+          tmp = vbm_io_xml(file{fi});
+          fn = fieldnames(tmp);
+          for fni = 1:numel(fn)
+            varargout{1}(fi).(fn{fni}) = tmp.(fn{fni});
+          end
+          clear tmp;
+        end
+      end
+      return
+    elseif ischar(file) && size(file,1)>1
+      for fi=1:numel(file)
+        try
+          tmp = vbm_io_xml(file(fi,:) );
+          fn = fieldnames(tmp);
+          for fni = 1:numel(fn)
+            varargout{1}(fi).(fn{fni}) = tmp.(fn{fni});
+          end
+          clear tmp;
+        end
+      end
+      return
     end
   end
   

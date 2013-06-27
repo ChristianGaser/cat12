@@ -1,4 +1,4 @@
-function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
+function QAS = vbm_vol_t1qacalc(V,Y,Ybf,Ym,Yp0,uselevel)
 % VBM Preprocessing T1 Quality Assurance
 % ______________________________________________________________________
 % Noise estimation ...
@@ -33,6 +33,8 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
 % - Um einen RMS test mit dem mT zu machen, könnten man ggf. später mal
 %   soweit korrekte bilder mit einem störbias versehen und dann 
 %   anschließend gucken wie gut man wieder zum original kommt ...
+%
+% - for defaults definitions see vbm_stat_marks.m
 % ______________________________________________________________________
 % Robert Dahnke 
 % Structural Brain Mapping Group
@@ -42,95 +44,13 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
 % ______________________________________________________________________
 
   rev = '$Rev$';
-    
   
-%   % default options:
-%   % --------------------------------------------------------------------
-%   def.verb       = 2;         % verbose level    [ 0=nothing | 1=points | 2*=times ]
-%   def.redres     = 4;         % resolution level for background estimation in mm [ 4* ]
-%   def.write_csv  = 1;         % final cms-file
-%   def.write_xml  = 1;         % images base xml-file
-%   def.sortQATm   = 1;         % sort QATm output
-%   def.recalc     = 1;         % 
-%   def.orgval     = 0;         % original QAM results (no marks)
-%   def.prefix     = 'vbm_';    % intensity scaled  image
-%   
-%   def.avgfactor  = 1.5;       % 
-  
-  %{
-  % measures
-  % --------------------------------------------------------------------
-  def.tissue   = [ 1/3  1/6;  2/3  1/6;    1  1/6]; % ideal normalized tissue peak values 
-  def.tisvola  = [ 300  300;  900  900;  600  600]; % absolut  expected tissue volumes 
-  def.tisvolr  = [0.15  0.2; 0.45  0.2; 0.35  0.2]; % relative expected tissue volumes
-  def.thicknes = [0.10  0.1; 2.50  0.5; 2.50  1.0]; % absolut  expected tickness
-  def.CHvsCG   = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
-  def.QAM      = {
-  % 'sortname'  'fieldname'             'marktpye'  markrange     save print help
-  % 'sortname'  'fieldname'             'linear'    [best worst]    0 0    'use for most qa measures
-  % 'sortname'  'fieldname'             'normal'    [mean std]      0 0    'use for most subject measures
-    'vx_vol'    'res_vx_vol'            'linearb'   [0.75  3.00]    1 0    'voxel dimensions'
-    'vol'       'res_vol'               'linearb'   [0.50  8.00]    1 1    'voxel volume'
-    'isotr'     'res_isotropy'          'linearb'   [1.00   7/3]    1 1    'voxel isotropy'
-    'noise'     'noise'                 'linearb'   [0.04  0.20]    1 1    'default noise = noise_WM / GW-contrast'
-   %'noiseCG'   'noise_CG'              'linear'    [0.01  0.12]    1 0    'other noise measure ...
-   %'noiseWM'   'noise_WM'              'linear'    [0.015 0.09]    1 0    'local std in YWM 
-   %'noiseBG'   'noise_BG'              'linear'    [0.01  0.08]    1 0    'local std in YBG (problems for skull-striped data and ADNI) 
-   %'noiseLG'   'noise_LG'              'linear'    [0.01  0.12]    1 0    'local std in the whole image      
-    'bias'      'bias_WMstd'            'linearb'   [0.02  0.15]    1 1    'global std in the YWM'
-   %'biasInh'   'bias_WMinhomogeneity'  'linear'    [1.00  0.50]    1 0    'WMinhomogeneity
-   %'biasWME'   'bias_WMentropy'      	'linear'    [1.00  0.50]    1 0    'entropy in the YWM segment
-   %'tis_med'   'tissue_median'         'normal'    def.tissue      1 1    'median within the tissue classes
-    'tis_mean'  'tissue_mean'           'normalb'   def.tissue      1 1    'mean within the tissue classes'
-   %'tis_std'   'tissue_std'            'linearb'   [1/12   1/6]    1 1    'std within the tissue classes
-    'pc'        'prechange'             'linearb'   [0.05  1.00]    1 1    'changes between t1 and label'
-    'te'        'te'                    'linearb'   [0.05  1.00]    1 1    'difference between template and label'
-    'GWcon'     'contrast'              'linearb'   [1/3   0.05]    1 1    'contrast between tissue classe'
-   %'Tcon'      'contrastT'             'linearb'   [0.30  0.05]    1 0    'contrast between tissue classes (correced for noise)
-    'BGA'       'art_BGartifacts'       'linearb'   [0.05  0.50]    0 1    ''    
-    'BGE'       'art_BGentropy'         'linearb'   [3.00  4.00]    0 1    ''
-   %'comp'      'art_comp'              'linearb'   [   0   100]    0 1    ''
-    'artWM'     'art_movesWM'           'linearb'   [0.00  0.10]    0 1    ''
-    'artBG'     'art_movesBG'           'linearb'   [0.05  0.20]    0 1    ''
-   %'Hbrain'    'hist_brain'            ''          []              0 0    'histogram brain'     
-   %'HBG'       'hist_BG'               ''          []              0 0    'histogram background'
-    'blurr'     'blurring'              'linearb'   [0.00  1.00]    0 1    ''
-    'samp'      'sampling'              'linearb'   [0.00  1.00]    0 1    ''
-    'gradient'  'mgradient'             'linearb'   [0.20  0.10]    0 1    ''
-   % --Subjectrelated Data--
-    'TIV'       'vol_TIV'               'normal'    [1500  1000]    1 1    'total intracranial volume (GM+YWM)'
-    'CHvsCG'    'vol_CHvsGW'            'linear'    def.CHvsCG      1 1    'relation between brain and non brain'
-    'absCGW'    'vol_abs_CGW'           'linearb'   def.tisvola     1 1    'absolut  tissue volume (CSF,GM,YWM)'
-    'relCGW'    'vol_rel_CGW'           'linearb'   def.tisvolr     1 1    'relative tissue volume (CSF,GM,YWM)'
-    'thick'     'dist_thickness'        'normalb'   def.thickness   1 1    'absolut thickness (CSF,GM,YWM)'
-    'absdepth'  'dist_deptha'           'normalb'   [5.00  2.00]    0 0    'absolut sulcal depth'
-    'reldpeth'  'dist_depthr'           'normalb'   [0.50  0.20]    0 0    'relative sulcal depth'
-    };  
-  if ~exist('opt','var'), opt=struct(); end
-  opt = checkinopt(opt,def);
-        
-  
-  
-  % We comment some measures, because they are less important or overlap
-  % with other measures and only increase runtime
-  QAMs='struct(''scan'','''',''path'','''',''file'',''''';
-  for i=1:size(opt.QAM,1)
-    QAMs = [QAMs sprintf(',''%s'',%s',opt.QAM{i,2},opt.QAM{i,5})];  %#ok<AGROW>
-  end
-  QAS = eval([QAMs ');']);
-  QAS = checkinopt(QA,QAS);
-  QAM = struct();
-  clear i QAMs;
-  
-  evalnormal  = @(x,best,worst,marks) min(9.5-eps,max(0,1 + (abs(best-x)./worst)*(marks-1))); %#ok<NASGU>
-  evalnormalb = @(x,best,worst,marks) min(marks  ,max(1,1 + (abs(best-x)./worst)*(marks-1))); %#ok<NASGU>
-  evallinear  = @(x,best,worst,marks) min(9.5-eps,max(0,1 + ((best-x)./diff([worst,best])*(marks-1)))); %#ok<NASGU>
-  evallinearb = @(x,best,worst,marks) min(marks  ,max(1,1 + ((best-x)./diff([worst,best])*(marks-1)))); %#ok<NASGU>
-  %}
-  
-  QAS = vbm_stat_marks('init');
+  if ~exist('uselevel','var'), uselevel=0; end
+
+  QAS = vbm_stat_marks('init',uselevel);
   
 
+  
   %% scan/file information
   QAS.FD.scan = V.fname;
   [QAS.FD.path,QAS.FD.file] = fileparts(V.fname);
@@ -148,6 +68,7 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   QAS.SW.computer = computer;
   clear A;
 
+  
 
   %% resolution
   if isfield(V,'mat'), vx_vol = sqrt(sum(V.mat(1:3,1:3).^2)); 
@@ -160,32 +81,26 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
 
 
   %% prepare image:
-  % intensity scaling based on the YWM signal for both the original 
-  % and the bias corrected images 
   %   ds('l2','',vx_vol,Ymi,YWM,Yi,Ymi,140)
-  YWM   = vbm_vol_morph(Yp0>2.5,'lo'); 
-  noise = vbm_stat_nanstat1d(Y(YWM),'mean'); 
+  
+  % We need a erode WM segment for noise and bias correction, to avoid
+  % interactions with the PVE.
+  YWM   = vbm_vol_morph(vbm_vol_morph(Yp0>2.75,'lo') | Yp0>2.9,'e'); 
 
-  % intensity scaling for the original image Y
-  Ys    = vbm_vol_smooth3X(single( Y),min(1,max(1/2,noise*20))); 
-  Yi    = (Y   - min(Ys(:)))  / (median( Ys(YWM(:))) - min(Ys(:))); Yi(isnan(Yi(:))) = 0;  
-  %iYs   = (Ys  - min(Ys(:)))  / (median( Ys(YWM(:))) - min(Ys(:))); iYs(isnan(iYs(:))) = 0;  
-  clear Ys Y; 
-
-  % intensity scaling for the corrected image Ym
-  Yms   = vbm_vol_smooth3X(single(Ym),min(1,max(1/2,noise*20)));    
-  Ymi   = (Ym  - min(Yms(:))) / (median(Yms(YWM(:))) - min(Yms(:))); Ymi(isnan(Ymi(:))) = 0; 
-  %imYs  = (Yms - min(Yms(:))) / (median(Yms(YWM(:))) - min(Yms(:))); imYs(isnan(imYs(:))) = 0; 
-  clear Ym Yms;
-  clear noise; 
+  
+  % intensity scaling for the images
+  % We need the noise (but not bias) corrected version Yni for the bias 
+  % estimation, the bias (but not noise) corrected version Ybi for the
+  % noise estimation and the final corrected images.
+  Yni = Ym ./ Ybf; Yni = (Yni - min(Yni(:))) / (median( Yni(YWM(:))) - min(Yni(:))); Yni(isnan(Yni(:))) = 0; 
+  Ybi = Y  .* Ybf; Ybi = (Ybi - min(Ybi(:))) / (median( Ybi(YWM(:))) - min(Ybi(:))); Ybi(isnan(Ybi(:))) = 0;  clear Y Ybf; 
+  Ymi = (Ym - min(Ym(:))) / (median(Ym(YWM(:))) - min(Ym(:))); Ymi(isnan(Ymi(:))) = 0; clear Ym;
 
   % background and hull
-  YHD   = vbm_vol_iscale(Ymi,'findhead')>0.5;
-
-
   % distance base redefinition of the background (relevant background)
   % image background can vary strongly and we are not interessed in
   % artifacts in some edges... our focus is the brain...
+  YHD   = vbm_vol_iscale(Ymi,'findhead')>0.5;
   YBGr  = vbm_vol_resize(Yp0,'reduce'); YBFrsize=size(YBGr); 
   YBGr  = vbm_vol_resize(YBGr,'reduce')>0.5;
   YHDr  = vbm_vol_resize(vbm_vol_resize(YHD,'reduce'),'reduce')>0.5;
@@ -216,13 +131,13 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
 
     for fn=1:3
       if isfield(QAS.QM,(fields{1,fn})) 
-        QAS.QM.(fields{1,fn}){1}(ci) = vbm_stat_nanstat1d( Yi(M),(fields{2,fn}));
+        QAS.QM.(fields{1,fn}){1}(ci) = vbm_stat_nanstat1d(Ybi(M),(fields{2,fn}));
         QAS.QM.(fields{1,fn}){2}(ci) = vbm_stat_nanstat1d(Ymi(M),(fields{2,fn}));
       end
     end
     if isfield(QAS.QM,'tissue_std')
       MPVE = round(Yp0(:))==ci; 
-      QAS.QM.tissue_std{1}(ci)    = vbm_stat_nanstat1d( Yi(MPVE),'std');
+      QAS.QM.tissue_std{1}(ci)    = vbm_stat_nanstat1d(Ybi(MPVE),'std');
       QAS.QM.tissue_std{2}(ci)    = vbm_stat_nanstat1d(Ymi(MPVE),'std');
     end
   end
@@ -251,16 +166,17 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   % important rule to describe the differenciability of the classes,
   % but because this measure is very similar to the noise we do not
   % include it here!
-  if isfield(QAS.QM,'contrast') % tissue contrast for BCGW
+  if isfield(QAS.QM,'contrastT') % tissue contrast for BCGW
     QAS.QM.contrastT = [{diff([0 QAS.QM.tissue{1}])}, ...
                         {diff([0 QAS.QM.tissue{2}])}];
   end
-  if isfield(QAS.QM,'contrastT') % only GW-contrast
+  if isfield(QAS.QM,'contrast') % only GW-contrast
     QAS.QM.contrast  = [diff(QAS.QM.tissue{1}(2:3)), ...
                         diff(QAS.QM.tissue{2}(2:3))];
   end    
-
-
+  contrast  = [diff(QAS.QM.tissue{1}(2:3)), ...
+               diff(QAS.QM.tissue{2}(2:3))];
+  
 
   %% Preprocessing Change map results
   if isfield(QAS.QM,'vbm_change')
@@ -281,20 +197,20 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
 
   %% histograms on low resolution to reduce noise effects
   % Histograms are required later for the entropy
-  Yir  = vbm_vol_resize(Yi    ,'reduce');
-  Ymir = vbm_vol_resize(Ymi   ,'reduce');
-  YHDr = vbm_vol_resize(single(YHD),'reduce')>0.5;
+  Ybir = vbm_vol_resize(Ybi ,'reduce');
+  Ymir = vbm_vol_resize(Ymi ,'reduce');
+  YHDr = vbm_vol_resize(single(YHD) ,'reduce')>0.5;
   YBGr = vbm_vol_resize(single(YBGR),'reduce')>0.5;
   YWMr = vbm_vol_resize(single(Yp0>2.5),'reduce')>0.5;
-  Ytmp =  Yir( YWMr); HN = hist(Ytmp,0:0.01:10); HN_WM{1} = HN/sum(HN); 
-  Ytmp =  Yir( YBGr); HN = hist(Ytmp,0:0.01:10); HN_B{1}  = HN/sum(HN); 
-  Ytmp =  Yir(~YHDr); HN = hist(Ytmp,0:0.01:10); HN_BG{1} = HN/sum(HN); 
+  Ytmp = Ybir( YWMr); HN = hist(Ytmp,0:0.01:10); HN_WM{1} = HN/sum(HN); 
+  Ytmp = Ybir( YBGr); HN = hist(Ytmp,0:0.01:10); HN_B{1}  = HN/sum(HN); 
+  Ytmp = Ybir(~YHDr); HN = hist(Ytmp,0:0.01:10); HN_BG{1} = HN/sum(HN); 
   Ytmp = Ymir( YWMr); HN = hist(Ytmp,0:0.01:10); HN_WM{2} = HN/sum(HN); 
   Ytmp = Ymir( YBGr); HN = hist(Ytmp,0:0.01:10); HN_B{2}  = HN/sum(HN); 
   Ytmp = Ymir(~YHDr); HN = hist(Ytmp,0:0.01:10); HN_BG{2} = HN/sum(HN); 
   if isfield(QAS.QM,'hist_brain'), QAS.QM.hist_brain = HN_B;  end
   if isfield(QAS.QM,'hist_BG'),    QAS.QM.hist_BG    = HN_BG; end
-  clear Ytmp HN Yir Ymir YHDr YWMr;
+  clear Ytmp HN Ybir Ymir YHDr YWMr;
 
 
 
@@ -306,26 +222,25 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   % For the standard noise variable the signal is given by the
   % GW-contrast that is more important than CG- or BC-Contrast.
   [gx,gy,gz] = vbm_vol_gradient3(Ymi); Yg = abs(gx)+abs(gy)+abs(gz); clear gx gy gz; Yg=Yg./Ymi; 
-  QAS.QM.noise = [estimateNoiseLevel( Yi,YWM,Yg) / QAS.QM.contrast(1), ...
-                  estimateNoiseLevel(Ymi,YWM,Yg) / QAS.QM.contrast(2)];   
-  QAS.QM.CNR  = [QAS.QM.contrast(1) / estimateNoiseLevel( Yi,YWM,Yg), ...
-                 QAS.QM.contrast(2) / estimateNoiseLevel(Ymi,YWM,Yg)];   
-  QAS.QM.SNR  = [1 / estimateNoiseLevel( Yi,YWM,Yg), ...
-                 1 / estimateNoiseLevel(Ymi,YWM,Yg)];   
+  noise = [estimateNoiseLevel(Ybi,YWM,Yg), estimateNoiseLevel(Ymi,YWM,Yg)];  
+  QAS.QM.CNR   = contrast ./ noise / 0.655;   
+  QAS.QM.SNR   = 1 ./ noise /0.655;   
+  if isfield(QAS.QM,'noise')  % within the YWM 
+    QAS.QM.noise = noise ./ contrast; 
+  end
   if isfield(QAS.QM,'noise_WM')  % within the YWM 
-    QAS.QM.noise_WM = [estimateNoiseLevel( Yi,YWM,Yg), ...
-                       estimateNoiseLevel(Ymi,YWM,Yg)]; 
+    QAS.QM.noise_WM = noise; 
   end                
   if isfield(QAS.QM,'noise_BG')  % background
-    QAS.QM.noise_BG = [estimateNoiseLevel(Yi,YBGR,Yg), ...
+    QAS.QM.noise_BG = [estimateNoiseLevel(Ybi,YBGR,Yg), ...
                        estimateNoiseLevel(Ymi,YBGR,Yg)];
   end  
   if isfield(QAS.QM,'noise_CG')  % full CG approach
-    QAS.QM.noise_CG = [cg_noise_estimation(Yi), ...
+    QAS.QM.noise_CG = [cg_noise_estimation(Ybi), ...
                        cg_noise_estimation(Ymi)];
   end    
   if isfield(QAS.QM,'noise_LG')  % full in low gradient regions
-    QAS.QM.noise_LG = [estimateNoiseLevel(Yi,Yg), ...
+    QAS.QM.noise_LG = [estimateNoiseLevel(Ybi,Yg), ...
                        estimateNoiseLevel(Ymi,Yg)];
   end     
   clear Yg;
@@ -337,18 +252,21 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   % minimum and maximum. The YWM-Entropy show the right direction but 
   % the values vary strongly for different scans...
   % ############# restbias als QA fürs YWM segment!
-  Yir   = vbm_vol_resize(Yi  ,'reduce');
-  Ymir  = vbm_vol_resize(Ymi ,'reduce');
-  YWMr  = vbm_vol_resize(single(Yp0>2.5),'reduce')>0.5;
-  if isfield(QAS.QM,'bias_WMstd')
-    QAS.QM.bias_WMstd = [max(0,std( Yir(YWMr(:)))),...
-                         max(0,std(Ymir(YWMr(:))))];
+  bias = [max(0,std(Yni(YWM(:)))) max(0,std(Ymi(YWM(:))))];
+  QAS.QM.bias = bias ./ contrast;   
+  if isfield(QAS.QM,'CIR') 
+    QAS.QM.CIR = contrast ./ bias;
   end
-  clear Yir Ymir YWMr;
+  if isfield(QAS.QM,'SIR') 
+    QAS.QM.SIR = 1 ./ bias;
+  end
+  if isfield(QAS.QM,'bias_WMstd')
+    QAS.QM.bias_WMstd = bias;
+  end
   if isfield(QAS.QM,'bias_WMinhomogeneity')
     QAS.QM.bias_WMinhomogeneity = ...
-      [1 - (max( Ytmp) - min( Ytmp)) / (min( Ytmp) + max( Ytmp)), ...
-       1 - (max(imYM) - min(imYM)) / (min(imYM) + max(imYM))];
+      [1 - (max(Yni(YWM(:))) - min(Yni(YWM(:)))) / (min(Yni(YWM(:))) + max(Yni(YWM(:)))), ...
+       1 - (max(Ymi(YWM(:))) - min(Ymi(YWM(:)))) / (min(Ymi(YWM(:))) + max(Ymi(YWM(:))))];
   end
   if isfield(QAS.QM,'bias_WMentropy')
     QAS.QM.bias_WMentropy = ...
@@ -370,7 +288,7 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   % but it also depend on noise and other artifacts - more an overall
   % measure.
   if isfield(QAS.QM,'art_BGartifacts')
-    QAS.QM.art_BGartifacts = [std(Yi(YBGR)) std(Ymi(YBGR))]; 
+    QAS.QM.art_BGartifacts = [std(Ybi(YBGR)) std(Ymi(YBGR))]; 
   end
   if isfield(QAS.QM,'art_BGentropy')
     QAS.QM.art_BGentropy = [ ...
@@ -386,7 +304,7 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
 
   % artifacts in the YWM
   if isfield(QAS.QM,'art_movesWM')
-    WI1=vbm_vol_localstat( Yi,YWM,1,4); WI2=vbm_vol_localstat( Yi,YWM,2,4);
+    WI1=vbm_vol_localstat(Ybi,YWM,1,4); WI2=vbm_vol_localstat(Ybi,YWM,2,4);
     QAS.QM.art_movesWM(1) = nanmean(abs(WI2(YWM(:))-WI1(YWM(:))));
     WI1=vbm_vol_localstat(Ymi,YWM,1,4); WI2=vbm_vol_localstat(Ymi,YWM,2,4);
     QAS.QM.art_movesWM(2) = nanmean(abs(WI2(YWM(:))-WI1(YWM(:))));
@@ -394,7 +312,7 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ym,Yp0)
   end
   % artifacts in the relevant YBG
   if isfield(QAS.QM,'art_movesBG')
-    WI1=vbm_vol_localstat(Yi,YBGR,1,4); WI2=vbm_vol_localstat(Yi,YBGR,2,4); 
+    WI1=vbm_vol_localstat(Ybi,YBGR,1,4); WI2=vbm_vol_localstat(Ybi,YBGR,2,4); 
     QAS.QM.art_movesBG(1) = nanmean(abs(WI2(YBGR(:))-WI1(YBGR(:))));
     WI1=vbm_vol_localstat(Ymi,YBGR,1,4); WI2=vbm_vol_localstat(Ymi,YBGR,2,4); 
     QAS.QM.art_movesBG(2) = nanmean(abs(WI2(YBGR(:))-WI1(YBGR(:))));

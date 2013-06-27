@@ -56,7 +56,7 @@ ngaus      = cfg_entry;
 ngaus.tag  = 'ngaus';
 ngaus.name = 'Gaussians per class';
 ngaus.strtype = 'e';
-ngaus.num = [1 7];
+ngaus.num = [1 6];
 ngaus.def  = @(val)cg_vbm_get_defaults('opts.ngaus', val{:});
 ngaus.help = {[...
 'The number of Gaussians used to represent the intensity distribution '...

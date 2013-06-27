@@ -88,7 +88,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
             for ii=1:ss(1)
               for jj=1:ss(2)
                 for kk=1:ss(3)
-                  varargout{i} = max(varargout{i}, ...
+                  varargout{i} = nanmax(varargout{i}, ...
                     (T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3))>0) .* ...
                      T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3)));
                     
@@ -117,12 +117,32 @@ function varargout=vbm_vol_resize(T,operation,varargin)
             for ii=1:ss(1)
               for jj=1:ss(2)
                 for kk=1:ss(3)
-                  varargout{i} = varargout{i} + T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
-                  counter = counter + (T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3))>0);
+                  Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
+                  Tadd(isnan(Tadd(:))) = 0;
+                  varargout{i} = varargout{i} + Tadd;
+                  counter = counter + (Tadd>0);
+                  clear Tadd;
                 end
               end
             end
-            varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0);     
+            varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0);   
+            varargout{i}(isnan(varargout{i})) = 0;
+         elseif strcmp(method,'nanmean') || strcmp(method,'meannan')
+            varargout{i} = zeros(floor(size(T{i})./ss),'single');
+            counter = varargout{i};
+            nsize = floor(size(T{i})./ss).*ss;
+            for ii=1:ss(1)
+              for jj=1:ss(2)
+                for kk=1:ss(3)
+                  Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
+                  Tadd(isnan(Tadd(:))) = 0;
+                  varargout{i} = varargout{i} + Tadd;
+                  counter = counter + ~isnan(T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3)));
+                  clear Tadd;
+                end
+              end
+            end
+            varargout{i} = varargout{i} ./ counter;       
           elseif strcmp(method,'mean')
             varargout{i} = zeros(floor(size(T{i})./ss),'single');
             nsize = floor(size(T{i})./ss).*ss;
@@ -171,6 +191,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
                               single(0.5+0.5/vx_red(3):1/vx_red(3):sD(3)));
 
       for i=1:numel(T)  
+        T{i}(isnan(T{i})) = 0; 
         if islogical(T{i}) && any(vx_red>1), varargout{i} = vbm_vol_smooth3X(vbm_vol_interp3f(single(T{i}),Rx,Ry,Rz,method),mean(vx_red))>0.5;
         else                                 varargout{i} = vbm_vol_interp3f(single(T{i}),Rx,Ry,Rz,method);
         end

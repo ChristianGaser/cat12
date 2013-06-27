@@ -2185,3 +2185,25 @@ M       vbm_vol_t1qacalc.m
 (2) Added VBM 7 class segmentation image TPM.nii to template directory.
 ------------------------------------------------------------------------
 r492 | dahnke | 2013-05-30 16:51:45
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_io_xml.m
+M       vbm_stat_marks.m
+A       vbm_tst_calc_bias.m
+A       vbm_tst_calc_kappa.m
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+M       vbm_vol_resize.m
+M       vbm_vol_t1qacalc.m
+
+(1) Multiple file input for vbm_io_xml.
+(2) Corrected ventricle closing problems for large ventricle (OASIS21,4397) and
+    small updates of the skull-stripping
+(3) Updates of vbm_vol_resize for better support of NaN's in images.
+(4) Add kappa and bias estimation test skripts.
+
+------------------------------------------------------------------------
+r493 | dahnke | 2013-06-27 10:11:32
