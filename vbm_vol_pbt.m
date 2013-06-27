@@ -42,9 +42,9 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   opt  = checkinopt(opt,def);%,cond);
   mvxs = mean(opt.resV);
   SSEG = round(SSEG*10)/10;
-  SSEG(SSEG<1.25)=0;
+%  SSEG(SSEG<1.25)=0;
   
-  [SSEG,BB] = vbm_vol_resize(SSEG,'reduceBrain',repmat(opt.resV,1,3),2,SSEG>0);   % removing of background
+%  [SSEG,BB] = vbm_vol_resize(SSEG,'reduceBrain',repmat(opt.resV,1,3),2,SSEG>0);   % removing of background
   
   % additional re-estimation of the boundarys... in development:
   % funkt nicht ... der einschnitt erzeugt einen fehler der vergleichbar
@@ -122,5 +122,5 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   GMT(SSEG<1.5 | SSEG>2.5)=nan; GMT=vbm_vol_nanmean3(GMT); GMT(isnan(GMT))=eps; % erweitern
   GMTS = smooth3(GMT,'gaussian',3,0.9); GMT(SSEG>=2 & SSEG<2.5)=GMTS(SSEG>=2 & SSEG<2.5); clear GMTs % smoothen allerdings nur für sicheren bereich
   
-  [GMT,PP] = vbm_vol_resize({GMT,PP},'dereduceBrain',BB);
+ % [GMT,PP] = vbm_vol_resize({GMT,PP},'dereduceBrain',BB);
 end

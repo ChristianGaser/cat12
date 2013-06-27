@@ -64,7 +64,7 @@ end
 
 def.partvol.l1A    = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
 
-
+def.vbmi            = 0;
 def.color.error     = [0.8 0.0 0.0];
 def.color.warning   = [0.0 0.0 1.0];
 def.color.warning   = [0.8 0.9 0.3];
@@ -354,9 +354,9 @@ if warp.sanlm>0
 end
 clear pp ff ee dd;
 
-% inital brain mask Yb
+% inital brain mask Yb (trust SPM)
 vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
-Yb = vbm_vol_morph((Ycls{1}>1 & Ysrc<median(Ysrc(Ycls{1}(:)>128))*1.1) | Ycls{1}>128| Ycls{2}>128,'lo',1);
+Yb = vbm_vol_morph((Ycls{1}>1 & Ysrc<median(Ysrc(Ycls{1}(:)>128))*1.1) | Ycls{1}>128 | Ycls{2}>128,'lo',1);
 [Yb,resT2] = vbm_vol_resize(Yb,'reduceV',vx_vol,2,32); Yb = vbm_vol_morph(Yb,'lc',2);
 Yb = vbm_vol_resize(vbm_vol_smooth3X(Yb),'dereduceV',resT2)>0.4; 
 
@@ -532,7 +532,8 @@ clear YBGs Ysum;
 %% ---------------------------------------------------------------------
 %  WM - this is the second medium frequency bias correction
 %  ---------------------------------------------------------------------
-TLi   = vbm_vol_localstat(Ysrc, Ycls{3}==0 & Yb & Ym>2.2/3 & Ym<7/6 & Yg<0.2 & (Ycls{2}>220 | (Ym<2.8 & Ydiv<-0.02)) & ~YBG,2,3); 
+TLi   = vbm_vol_localstat(Ysrc, Ycls{3}==0 & Yb & Ym>2.2/3 & Ym<3.5/3 & Yg<0.25 & ... 
+  (Ycls{2}>220 | (Ym<2.8 & Ydiv<-0.02) | (Ym>2.2/3 & Ym<3.9/3 & Yg<0.25)) & ~YBG,2,3); 
 TLi(Ycls{2}>220 & Ym>2.9/3 & Ym<3.5/3 & ~YBG)=Ysrc(Ycls{2}>220 & Ym>2.9/3 & Ym<3.5/3 & ~YBG);
 TL{5} = vbm_vol_approx(TLi,'nh',vx_vol,2); TL{5} = vbm_vol_smooth3X(TL{5},4); 
 
@@ -606,7 +607,7 @@ if job.extopts.LAS
   % is often to much.
   con = [0.5 -0.75]; T=Ysrc; co = -con/2 + 0.5; 
   Yml = zeros(size(T));  
-  Yml = Yml + ( (T>=TL{5}           ) .* (3.0     + (T-TL{5}) ./ (TL{5}-TL{4}) * co(2)      ));
+  Yml = Yml + ( (T>=TL{5}           ) .* (3.0     + (T-TL{5}) ./ (TL{5}-TL{3}) * 1          ));
   Yml = Yml + ( (T>=TL{4} & T<TL{5} ) .* (3-co(2) + (T-TL{4}) ./ (TL{5}-TL{4}) * co(2)      ));
   Yml = Yml + ( (T>=TL{3} & T<TL{4} ) .* (2	      + (T-TL{3}) ./ (TL{4}-TL{3}) * (1-co(2))  ));
   Yml = Yml + ( (T>=TL{2} & T<TL{3} ) .* (1+co(1) + (T-TL{2}) ./ (TL{3}-TL{2}) * (1-co(1))  ));
@@ -682,11 +683,7 @@ Yl1A = reshape(Yl1A,d);
 Yl0 = uint8(Ycls{4}>127) + 2*uint8(Ycls{5}>127) + 3*uint8(Ycls{6}>127);
 Yl0 = max(Yl0,Yl1 .* uint8(Yl1>4));
 
-if numel(Ycls)==7
-  Yp0 = (single(Ycls{1}+Ycls{7})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
-else
-  Yp0 = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
-end
+Yp0 = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
 
 
 % individual refinement
@@ -709,7 +706,7 @@ fprintf('%3.0fs\n',etime(clock,stime));
 %% ---------------------------------------------------------------------
 %  Blood Vessel Correction 
 %  ---------------------------------------------------------------------
-if cg_vbm_get_defaults('extopts.BVC') && ~opt.inv_weighting; 
+if opt.vbmi && cg_vbm_get_defaults('extopts.BVC') && ~opt.inv_weighting; 
   str='Blood Vessel Correction';  fprintf('%s:%s',str,repmat(' ',1,67-length(str)));  stime = clock;
 
   BV   = vbm_vol_smooth3X(vbm_vol_smooth3X((Yl1==7 | Yl1==8).*(Ycls{2}==0).*(Ym*3-1),0.3).^4,0.1);
@@ -756,11 +753,11 @@ if do_cls && do_defs,
 
     
     %% skull-stipping
-    if job.extopts.LAS 
+    if gcut==2
       str='Skull-stripping using graph-cut+'; 
       fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
        
-      % init
+      %% init
       [Ymr,Ybr,GMr,BOr,YMFr,resTr] = ...
         vbm_vol_resize({Ysrc,single(Ycls{2})/255,single(Ycls{1})/255,Yb,YMF},'reduceV',vx_vol,1.5,32);
       Yl1r = vbm_vol_resize(ceil(Yl1/2)*2-1,'reduceV',vx_vol,1.5,32,'nearest'); 
@@ -789,55 +786,62 @@ if do_cls && do_defs,
       [Ybr1,YDr] = vbm_vol_downcut(Ybr,Ymr,-0.02/mean(resTr.vx_volr)); Ybr(Ybr==-inf | YDr>50)=0; Ybr(Ybr1>0)=1;
       for i=1:3, Ybr(smooth3(single(Ybr))<0.5)=0; end
       Ybr = Ybr | YMFr; 
-      %
+      %%
       Ybr = vbm_vol_morph(Ybr,'labclose',3);
+      Ybr = Ybr | (vbm_vol_morph(Ybr,'labclose',6) & Ymr>0.25/3 & Ymr<1.25/3);
+      Ybr = vbm_vol_morph(Ybr,'open');
       Yb = vbm_vol_resize(Ybr,'dereduceV',resTr)>0.5;
-      Yb = Yb | (vbm_vol_morph(Yb,'dilate') & Ysrc<2.2/3); 
-      
+      Yb = Yb | (vbm_vol_morph(Yb,'dilate') & Ysrc<2.10/3 & Ysrc>1.75/3); 
+      Yb = Yb | (vbm_vol_morph(Yb,'dilate') & Ysrc<1.75/3 & Ysrc>0.25/3);
+      Yb = vbm_vol_morph(Yb,'open');
+      %%
       clear YHDr YDr Ymr Ybr Ybr1 GMr Gr BOr resTr Yl1r YMFr;
       fprintf('%3.0fs\n',etime(clock,stime));
-    else
-    	if gcut
-        % skull-stripping using graph-cut
-        opt.verb = 0; % display process (0=nothing, 1=only points, 2=times)
-        fprintf('Skull-stripping using graph-cut'); 
-        fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
-        cls_old = Ycls;
-        try
-          [Ysrc,Ycls,Yb] = vbm_vol_GBM(Ysrc,Ycls,res,opt);
-          Yb=vbm_vol_morph(Yb,'lc');
-          fprintf(' %3.0fs\n',etime(clock,stime));
-        catch %#ok<CTCH>
-          vbm_io_cprintf(opt.color.warning,'Graph-cut failed\n');
-          gcut = 0;
-          Ycls = cls_old;
-        end  
-        clear cls_old
-      end
-      if ~gcut
-        fprintf('Skull-stripping using morphological operations\n');
-        % use Yb of GM and WM
-        Yb = single(Ycls{1});
-        Yb = Yb + single(Ycls{2});
-
-        % keep largest connected component after at least 1 iteration of opening
-        n_initial_openings = max(1,round(scale_morph*warp.cleanup));
-        Yb = vbm_vol_morph(Yb>warp.open_th,'open',n_initial_openings);
-        Yb = vbm_vol_morph(Yb,'lc');
-
-        % dilate and close to fill ventricles
-        Yb = vbm_vol_morph(Yb,'dilate',warp.dilate);
-        Yb = vbm_vol_morph(Yb,'lc',round(scale_morph*10));
-
-        % remove sinus
-        Yb = Yb & ((single(Ycls{5})<single(Ycls{1})) | ...
-                   (single(Ycls{5})<single(Ycls{2})) | ...
-                   (single(Ycls{5})<single(Ycls{3})));                
-
-        % fill holes that may remain
-        Yb = vbm_vol_morph(Yb,'lc',round(scale_morph*2)); 
-      end
+    elseif gcut==1
+      % skull-stripping using graph-cut
+      opt.verb = 0; % display process (0=nothing, 1=only points, 2=times)
+      str='Skull-stripping using graph-cut'; 
+      fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+      cls_old = Ycls;
+      try
+        [Ysrc,Ycls,Yb] = vbm_vol_GBM(Ysrc,Ycls,res,opt);
+        Yb=vbm_vol_morph(Yb,'lc');
+        fprintf(' %3.0fs\n',etime(clock,stime));
+      catch %#ok<CTCH>
+        fprintf('\n');
+        gcut = 0;
+        Ycls = cls_old;
+      end  
+      clear cls_old
+      fprintf('%3.0fs\n',etime(clock,stime));
     end
+    if ~gcut
+      str='Skull-stripping using morphological operations'; 
+      fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+      
+      % use Yb of GM and WM
+      Yb = single(Ycls{1});
+      Yb = Yb + single(Ycls{2});
+
+      % keep largest connected component after at least 1 iteration of opening
+      n_initial_openings = max(1,round(scale_morph*warp.cleanup));
+      Yb = vbm_vol_morph(Yb>warp.open_th,'open',n_initial_openings);
+      Yb = vbm_vol_morph(Yb,'lc');
+
+      % dilate and close to fill ventricles
+      Yb = vbm_vol_morph(Yb,'dilate',warp.dilate);
+      Yb = vbm_vol_morph(Yb,'lc',round(scale_morph*10));
+
+      % remove sinus
+      Yb = Yb & ((single(Ycls{5})<single(Ycls{1})) | ...
+                 (single(Ycls{5})<single(Ycls{2})) | ...
+                 (single(Ycls{5})<single(Ycls{3})));                
+
+      % fill holes that may remain
+      Yb = vbm_vol_morph(Yb,'lc',round(scale_morph*2)); 
+      fprintf(' %3.0fs\n',etime(clock,stime));
+    end
+
      
   
     
@@ -937,7 +941,7 @@ if do_cls && do_defs,
     
     %clsO=Ycls; labelO=Yp0b;
     if job.extopts.LAS 
-      str='Final Corrections'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
+      str='Final LAS corrections'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
        
       %% setting of GM/WM PVE area to GM for the Ycls-maps
       WMP    = vbm_vol_morph(Ycls{2}>250,'lc',1); 
@@ -1003,7 +1007,7 @@ if do_cls && do_defs,
     
 
     %% Final brain masking
-    if finalmask %&& ~job.extopts.LAS
+    if 0 && finalmask 
       str='Final Masking'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;  
       
       % create final Yb
@@ -1227,7 +1231,7 @@ qa.SM.vol_rel_CGW = [prod(vx_vol)/1000 .* sum(single(Ycls{3}(:))/255) / qa.SM.vo
 
 
                    
-if 1 %any(struct2array(job.output.pc))
+if any(struct2array(job.output.pc))
 %% preprocessing change map
 %  create the map, the global measure was estimated by vbm_vol_t1qacalc.
 
@@ -1260,7 +1264,7 @@ if 1 %any(struct2array(job.output.pc))
 end
 
 
-if 1 %any(struct2array(job.output.te))
+if any(struct2array(job.output.te))
 %% Tissue Expectation maps (TE)
 % This measure shoold describe the difference between our expectation
 % from the mean group probability map and the subject. Strong variation
@@ -1340,16 +1344,20 @@ end
 [pp,ff,ee] = spm_fileparts(res.image.fname);
 Yo  = single(spm_read_vols(spm_vol(res.image.fname)));
 Ybf = single(spm_read_vols(spm_vol(fullfile(pp,['bf' ff ee])))); 
-Yo  = Yo.*Ybf; clear Ybf;
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 
-qas = vbm_vol_t1qacalc(VT,Yo,Ym,Yp0);
+qas = vbm_vol_t1qacalc(VT,Yo,Ybf,Ym,Yp0,opt.vbmi);
 qa  = vbm_io_updateStruct(qa,qas);
 
+if exist(fullfile(pp,['bf' ff ee]),'file')
+ delete(fullfile(pp,['bf' ff ee]));
+end
+
+clear Yo Ybf Yp0 qas pp ff ee;
 fprintf('%3.0fs\n',etime(clock,stime));
-clear Yo Yp0 qas;
 
 
+ 
 
 
 
@@ -1415,7 +1423,7 @@ if any(struct2array(job.output.th1))
   VT = res.image;
   
   opt.method  = 'pbt2x';
-  opt.interpV = 1; %cg_vbm_get_defaults('extopts.pbtres');
+  opt.interpV = 0.75; %cg_vbm_get_defaults('extopts.pbtres');
   opt.interpV = max(0.5,min([min(vx_vol),opt.interpV,1]));
 
   % prepare thickness estimation
@@ -1453,7 +1461,7 @@ if any(struct2array(job.output.th1))
   else
     Yth1  = vbm_vol_pbt(Ymf,struct('resV',opt.interpV));              % pbt calculation
   end
-  clear Ymf
+  %clear Ymf
 
   Yth1  = vbm_vol_resize(Yth1,'deinterp',resI);                       % back to original resolution
   Yth1  = vbm_vol_resize(Yth1,'dereduceBrain',BB);                    % adding of background
@@ -1491,7 +1499,7 @@ end
 %% ---------------------------------------------------------------------
 %  evaluate measurements and write XML
 %  ---------------------------------------------------------------------
-qam = vbm_stat_marks('eval',qa);
+qam = vbm_stat_marks('eval',opt.vbmi,qa);
  
 vbm_io_xml(fullfile(qa.FD.path,['vbm_' qa.FD.file '.xml']),...
   struct('qa',qa,'qam',qam),'write+');
@@ -1547,7 +1555,9 @@ if do_cls && warp.print
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',warp.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
-	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
+  if job.opts.biasfwhm
+  	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
+  end
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
   str = [str struct('name', 'Noise reduction:','value',...
            sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(warp.sanlm>0))),' '.*(warp.sanlm>0),mrf))];
@@ -1559,52 +1569,47 @@ if do_cls && warp.print
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
   
 % Image Quality measures:
-  str2 =       struct('name', '\bfImage Quality:','value',...
-                 sprintf('%s',marks2str(qam.QM.avg(1),sprintf('%0.1f > %0.1f',qam.QM.avg(1),qam.QM.avg(2))))); 
-  str2 = [str2 struct('name', ' SNR:' ,'value', ... 
-               sprintf('%s > %s', ...
-               marks2str(qam.QM.SNR(1),sprintf('%0.1f (%3.0f)',qam.QM.SNR(1),qa.QM.SNR(1))), ...   
-               marks2str(qam.QM.SNR(2),sprintf('%0.1f (%3.0f)',qam.QM.SNR(2),qa.QM.SNR(2)))))];   
+  str2 =       struct('name', '\bfImage Quality:','value',''); 
+               % sprintf('%s',marks2str(qam.QM.avg(1),sprintf('%0.1f > %0.1f',qam.QM.avg(1),qam.QM.avg(2))))); 
+  str2 = [str2 struct('name', ' SNR (orig > corr):' ,'value', ... 
+               sprintf('%s %s %s', ...
+               marks2str(qam.QM.SNR(1),sprintf('%5.2f',qa.QM.SNR(1))), char(187), ...   
+               marks2str(qam.QM.SNR(2),sprintf('%5.2f',qa.QM.SNR(2)))))];   
   str2 = [str2 struct('name', ' CNR:' ,'value', ... 
-               sprintf('%s > %s', ...
-               marks2str(qam.QM.CNR(1),sprintf('%0.1f (%3.0f)',qam.QM.CNR(1),qa.QM.CNR(1))), ...   
-               marks2str(qam.QM.CNR(2),sprintf('%0.1f (%3.0f)',qam.QM.CNR(2),qa.QM.CNR(2)))))];   
-  str2 = [str2 struct('name', ' Inhomogeneity:'    ,'value', ... 
-               sprintf('%s > %s', ...
-               marks2str(qam.QM.bias_WMstd(1),sprintf('%0.1f (%2.0f%%)',...
-               qam.QM.bias_WMstd(1),qa.QM.bias_WMstd(1)*100)), ...
-               marks2str(qam.QM.bias_WMstd(2),sprintf('%0.1f (%2.0f%%)',...
-               qam.QM.bias_WMstd(2),qa.QM.bias_WMstd(2)*100))))]; 
-  str2 = [str2 struct('name', ' GW-Contrast:'      ,'value', ... 
-               sprintf('%s',marks2str(qam.QM.contrast(1),sprintf('%0.1f (%2.0f %%)',...
-               qam.QM.contrast(1),qa.QM.contrast(1)*100))))];   
-  str2 = [str2 struct('name', ' Voxel Volume:'     ,'value', ...
-               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%0.1f (%0.2f mm%s)',...
-               qam.QM.res_vol,qa.QM.res_vol,char(179)))))];
-  str2 = [str2 struct('name', ' Voxel Isotropy:'   ,'value', ...   
-               sprintf('%s',marks2str(qam.QM.res_isotropy,sprintf('%0.1f (%0.2f)',...
-               qam.QM.res_isotropy,qa.QM.res_isotropy))))];   
-  str2 = [str2 struct('name', ' Prep. Change Map:' ,'value', ... 
-               sprintf('%s',marks2str(qam.QM.vbm_change(1),sprintf('%0.1f (%2.0f %%)',...
-               qam.QM.vbm_change(1),qa.QM.vbm_change(1)*100))))]; 
-
+               sprintf('%s %s %s', ...
+               marks2str(qam.QM.CNR(1),sprintf('%5.2f',qa.QM.CNR(1))), char(187), ...   
+               marks2str(qam.QM.CNR(2),sprintf('%5.2f',qa.QM.CNR(2)))))];   
+  str2 = [str2 struct('name', ' CIR:','value', ... 
+               sprintf('%s %s %s', ...
+               marks2str(qam.QM.CIR(1),sprintf('%5.2f',qa.QM.CIR(1))), char(187), ...
+               marks2str(qam.QM.CIR(2),sprintf('%5.2f',qa.QM.CIR(2)))))]; 
+  str2 = [str2 struct('name', ' Voxel Volume:','value', ...
+               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qa.QM.res_vol,char(179)))))];
+  str2 = [str2 struct('name', ' Voxel Isotropy:','value', ...   
+               sprintf('%s',marks2str(qam.QM.res_isotropy,sprintf('%5.2f',qa.QM.res_isotropy))))];
+  if opt.vbmi
+    str2 = [str2 struct('name', ' Prep. Change Map:','value', ... 
+                 sprintf('%s',marks2str(qam.QM.vbm_change(1),sprintf('%5.2f %%)',qa.QM.vbm_change(1)*100))))]; 
+  end
       
 % Subject Measures
-  str3 = struct('name', '\bfSubject Averageness:','value',...
-          sprintf('%s',mark2str2(qam.SM.avg(1),'%0.1f',qam.SM.avg(1))));  
+  str3 = struct('name', '\bfSubject Averageness:','value',''); 
+         % sprintf('%s',mark2str2(qam.SM.avg(1),'%0.1f',qam.SM.avg(1))));  
   str3 = [str3 struct('name', ' CGW-Volumes (abs):','value',sprintf('%s %s %s mm%s', ...
-          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f ',qa.SM.vol_abs_CGW(1)),...
-          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f ',qa.SM.vol_abs_CGW(2)),...
-          mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f ',qa.SM.vol_abs_CGW(3)),char(179)))];
+          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
+          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
+          mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f',qa.SM.vol_abs_CGW(3)),char(179)))];
   str3 = [str3 struct('name', ' CGW-Volumes (rel):','value',sprintf('%s %s %s %%', ...
-          mark2str2(qam.SM.vol_rel_CGW(1),'%0.1f ',qa.SM.vol_rel_CGW(1)*100),...
-          mark2str2(qam.SM.vol_rel_CGW(2),'%0.1f ',qa.SM.vol_rel_CGW(2)*100),...
-          mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f ',qa.SM.vol_rel_CGW(3)*100)))];
+          mark2str2(qam.SM.vol_rel_CGW(1),'%0.1f',qa.SM.vol_rel_CGW(1)*100),...
+          mark2str2(qam.SM.vol_rel_CGW(2),'%0.1f',qa.SM.vol_rel_CGW(2)*100),...
+          mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f',qa.SM.vol_rel_CGW(3)*100)))];
   str3 = [str3 struct('name', ' TIV:'              ,'value',...
           sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f mm' char(179)],qa.SM.vol_TIV)))];  
-  str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
-          sprintf('%s',marks2str(qam.QM.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',...
-          qam.QM.vbm_expect(1),qa.QM.vbm_expect(1)*100))))];   
+  if opt.vbmi      
+    str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
+            sprintf('%s',marks2str(qam.QM.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',...
+            qam.QM.vbm_expect(1),qa.QM.vbm_expect(1)*100))))]; 
+  end
   if any(struct2array(job.output.th1))
     str3 = [str3 struct('name', ' Thickness (abs):','value',sprintf('%s%s%s mm', ...
           mark2str2(qam.SM.dist_thickness{1}(1),'%0.2f',qa.SM.dist_thickness{1}(1)),177, ...
@@ -1664,26 +1669,7 @@ if do_cls && warp.print
 	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
 	  spm_orthviews('Reset');
-	
 
-	  % first try use the bias corrected image
-    % ------------------------------------------------------------------
-	  if bf(1,2)
-      if do_dartel, prefix='wmr'; else prefix='wm'; end
-      hhm = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(1,:));
-    	spm_orthviews('Caption',hhm,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
-    elseif bf(1,3)
-    	hhm = spm_orthviews('Image',fullfile(pth,['wm', nam, '_affine.nii']),pos(1,:));
-    	spm_orthviews('Caption',hhm,'wm*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
-    elseif bf(1,1) % native
-      Vtmp = fullfile(pth,['m', nam, '.nii']); 
-      if ~exist(Vtmp,'file')
-        vbm_io_writenii(VT,Ym,'m','Yp0b map','single',[0,1],[1 0 0],0,trans);
-      end
-    	hhm = spm_orthviews('Image',Vtmp,pos(1,:));
-    	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
-    end
-    spm_orthviews('BB',bb);
     if cmmax==2
       ytick      = ([0.5,10,15.5,21,26.5,32,59]);
       yticklabel = {' BG',' CSF',' CGM',' GM',' GWM',' WM',' BV/HD'};
@@ -1691,116 +1677,199 @@ if do_cls && warp.print
       ytick      = min(60,max(0.5,round([0.5,22,42,59]/cmmax)));
       yticklabel = {' BG',' CSF',' GM',' WM'};
     end
-    spm_orthviews('window',hhm,[0 cmmax]);
-    cc(1) = colorbar('location','west','position',[pos(1,1)+0.30 0.38 0.02 0.15], ...
-      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+    
+    % BB box is not optimal for all images...
+    % furthermore repositioning the cross to the BG is maybe usefull...
+    spm_orthviews('BB',bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
+    
+    opt.print=1;
+    if opt.print
+      % original image in original space
+      Yo   = single(spm_read_vols(spm_vol(res.image.fname)));
+      Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+      Yo   = max(0,min(2,Yo ./ median(Yo(Yp0(:)>2.9)))); clear Yp0;
       
+      vbm_io_writenii(VT,Yo,'o','intensity scaled original','float32',[0,1],[1 0 0],0,trans);
+      hho = spm_orthviews('Image',fullfile(pth,['o', nam, '.nii']),pos(1,:)); clear Yo;
+    	spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
-    % if there is still place for a figure add the p0
-    % ------------------------------------------------------------------
-    if lb(1,2)
-      if do_dartel, prefix='mwrp0'; else prefix='wp0'; end
-      hhp0 = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(2,:));
-     spm_orthviews('Caption',hhp0,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
-    elseif lb(1,3)
-      hhp0 = spm_orthviews('Image',fullfile(pth,['wp0', nam, '_affine.nii']),pos(2,:));
-      spm_orthviews('Caption',hhp0,'wp0*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
-    else
+      spm_orthviews('window',hho,[0 cmmax]);
+      cc(1) = colorbar('location','west','position',[pos(1,1)+0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      
+      
+      % full corrected images in original space
+      Vtmp = fullfile(pth,['m', nam, '.nii']); 
+      if ~exist(Vtmp,'file')
+        vbm_io_writenii(VT,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
+      end
+    	hhm = spm_orthviews('Image',Vtmp,pos(2,:));
+    	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+
+      spm_orthviews('window',hhm,[0 cmmax]);
+      cc(2) = colorbar('location','west','position',[pos(2,1)+0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+
+      %% p0
       Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
       if ~exist(Vtmp2,'file')
         Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
         vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
       end
-      hhp0 = spm_orthviews('Image',Vtmp2,pos(2,:));
+      hhp0 = spm_orthviews('Image',Vtmp2,pos(3,:));
       spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
-    end
-    spm_orthviews('window',hhp0,[0 3*cmmax]);
-    cc(2) = colorbar('location','west','position',[pos(2,1)+0.30 0.38 0.02 0.15], ...
-      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-    
-  %spm_orthviews('AddContext',hh); 
-        
-    % segment maps
-    % ------------------------------------------------------------------
-	  for k1=1:2,
-      if tc(k1,4)
-        if do_dartel, prefix='wrp'; else prefix='wp'; end
-	      Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
-	      spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
-          prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
-      elseif tc(k1,5)
-        if do_dartel, prefix='mwrp'; else prefix='mwp'; end
-	      Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
-	      spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
-          prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
-      elseif tc(k1,6)
-        if do_dartel, prefix='m0wrp'; else prefix='m0wp'; end
-	      Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
-	      spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
-          prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
-      elseif tc(k1,3)
-	      Vtmp = spm_vol(fullfile(pth,['rp', num2str(k1), nam, '_affine.nii'])); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
-	      spm_orthviews('Caption',hh,sprintf('rp%d*_affine.nii (affine)', ...
-          k1),'FontSize',fontsize,'FontWeight','Bold');
-      elseif tc(k1,2)
-        Vtmp = spm_vol(fullfile(pth,['rp', num2str(k1), nam, '.nii'])); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
-	      spm_orthviews('Caption',hh,sprintf('rp%d*_.nii (native)', ...
-          k1),'FontSize',fontsize,'FontWeight','Bold');
-      elseif tc(k1,1)
-        Vtmp = spm_vol(fullfile(pth,['p', num2str(k1), nam, '.nii'])); 
-  		  hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
-	      spm_orthviews('Caption',hh,sprintf('p%d*.nii (native)', ...
-          k1),'FontSize',fontsize,'FontWeight','Bold');
-      end 
-      if exist('hh','var')
-        spm_orthviews('window',hh,[0 3]);
-        cc(k1) = colorbar('location','west','position',[pos(2+k1,1)+0.30 0.02 0.02 0.15], ...
-          'YTick',[0.5,10,21,32,41,51,60],'YTickLabel', ...
-          [repmat(' ',7,1) num2str((0:0.5:3)',[' %0.1f mm' char(179)])], ...
-          'FontSize',fontsize,'FontWeight','Bold'); %#ok<AGROW>
-      else
-        % hier kann eine alternative ausgabe erfolgen
-        %
-        % bei den colorbars gibt es probleme, wenn man im bild rum
-        % klickt - die werden dann einfach mal neu und vor allem nun
-        % falsch skalliert, wobei 6 werte ohne 0 aber mit maximum
-        % genutzt werden.
-        
-        % thickness
-        if k1==1
-          th1 = struct2array(job.output.th1);
-          if th1(2)
-            if do_dartel, prefix='wrth1'; else prefix='wth1'; end
-            hhth1 = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(2+k1,:));
-            spm_orthviews('Caption',hhth1,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
-          elseif th1(3)
-            hhth1 = spm_orthviews('Image',fullfile(pth,['wth1', nam, '_affine.nii']),pos(2+k1,:));
-            spm_orthviews('Caption',hhth1,'wm*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
-          elseif th1(1) % native
-            Vtmpth1 = fullfile(pth,['th1', nam, '.nii']); 
-            if ~exist(Vtmpth1,'file')
-              vbm_io_writenii(VT,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
-            end
-            hhth1 = spm_orthviews('Image',Vtmpth1,pos(2+k1,:));
-            spm_orthviews('Caption',hhth1,{'th1*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
-          end  
-          spm_orthviews('window',hhth1,[0 9]);
-          cc(k1) = colorbar('location','west','position',[pos(2+k1,1)+0.30 0.02 0.02 0.15], ...
-            'YTick',10:10:60,'YTickLabel', ...'YTick',0.5:59/9:60,'YTickLabel', ...
-            [repmat(' ',6,1) num2str((1.5:9/6:9)',' %0.1f mm')], ...[repmat(' ',10,1) num2str((0:1:9)',' %0.1f mm')], ...
-            'FontSize',fontsize,'FontWeight','Bold'); %#ok<AGROW>
-          spm_orthviews('window',hhth1,[0 9]);
-        end
-        
-      end
-      clear hh;
+      spm_orthviews('window',hhp0,[0 3*cmmax]);
+      cc(3) = colorbar('location','west','position',[pos(3,1)+0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
       
+      %% th1
+      Vtmpth1 = fullfile(pth,['th1', nam, '.nii']); 
+      if ~exist(Vtmpth1,'file')
+        vbm_io_writenii(VT,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
+      end
+      hhth1 = spm_orthviews('Image',Vtmpth1,pos(4,:));
+      spm_orthviews('Caption',hhth1,{'th1*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+    
+      spm_orthviews('window',hhth1,[0 9]);
+      cc(4) = colorbar('location','west','position',[pos(4,1)+0.30 0.02 0.02 0.15], ...
+        'YTick',10:10:60,'YTickLabel', ...'YTick',0.5:59/9:60,'YTickLabel', ...
+        [repmat(' ',6,1) num2str((1.5:9/6:9)',' %0.1f mm')], ...[repmat(' ',10,1) num2str((0:1:9)',' %0.1f mm')], ...
+        'FontSize',fontsize,'FontWeight','Bold');
+      spm_orthviews('window',hhth1,[0 9]);
+      
+      spm_orthviews('reposition',[-20 0 0]);
+    else
+      
+
+      % first try use the bias corrected image
+      % ------------------------------------------------------------------
+      if bf(1,2)
+        if do_dartel, prefix='wmr'; else prefix='wm'; end
+        hhm = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(1,:));
+        spm_orthviews('Caption',hhm,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
+      elseif bf(1,3)
+        hhm = spm_orthviews('Image',fullfile(pth,['wm', nam, '_affine.nii']),pos(1,:));
+        spm_orthviews('Caption',hhm,'wm*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
+      elseif bf(1,1) % native
+        Vtmp = fullfile(pth,['m', nam, '.nii']); 
+        if ~exist(Vtmp,'file')
+          vbm_io_writenii(VT,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
+        end
+        hhm = spm_orthviews('Image',Vtmp,pos(1,:));
+        spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+      end
+      if exist('hhm','var')
+        spm_orthviews('window',hhm,[0 cmmax]);
+        cc(1) = colorbar('location','west','position',[pos(1,1)+0.30 0.38 0.02 0.15], ...
+          'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      end
+
+      % if there is still place for a figure add the p0
+      % ------------------------------------------------------------------
+      if lb(1,2)
+        if do_dartel, prefix='mwrp0'; else prefix='wp0'; end
+        hhp0 = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(2,:));
+        spm_orthviews('Caption',hhp0,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
+      elseif lb(1,3)
+        hhp0 = spm_orthviews('Image',fullfile(pth,['wp0', nam, '_affine.nii']),pos(2,:));
+        spm_orthviews('Caption',hhp0,'wp0*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
+      else
+        Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
+        if ~exist(Vtmp2,'file')
+          Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+          vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
+        end
+        hhp0 = spm_orthviews('Image',Vtmp2,pos(2,:));
+        spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
+      end
+      spm_orthviews('window',hhp0,[0 3*cmmax]);
+      cc(2) = colorbar('location','west','position',[pos(2,1)+0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+
+
+      % segment maps
+      % ------------------------------------------------------------------
+      for k1=1:2,
+        if tc(k1,4)
+          if do_dartel, prefix='wrp'; else prefix='wp'; end
+          Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
+          hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+          spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
+            prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
+        elseif tc(k1,5)
+          if do_dartel, prefix='mwrp'; else prefix='mwp'; end
+          Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
+          hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+          spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
+            prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
+        elseif tc(k1,6)
+          if do_dartel, prefix='m0wrp'; else prefix='m0wp'; end
+          Vtmp = spm_vol(fullfile(pth,[prefix, num2str(k1), nam, '.nii'])); 
+          hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+          spm_orthviews('Caption',hh,sprintf('%s%d*.nii (mni)', ...
+            prefix,k1),'FontSize',fontsize,'FontWeight','Bold');
+        elseif tc(k1,3)
+          Vtmp = spm_vol(fullfile(pth,['rp', num2str(k1), nam, '_affine.nii'])); 
+          hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+          spm_orthviews('Caption',hh,sprintf('rp%d*_affine.nii (affine)', ...
+            k1),'FontSize',fontsize,'FontWeight','Bold');
+        elseif tc(k1,2)
+          Vtmp = spm_vol(fullfile(pth,['rp', num2str(k1), nam, '.nii'])); 
+          hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+          spm_orthviews('Caption',hh,sprintf('rp%d*_.nii (native)', ...
+            k1),'FontSize',fontsize,'FontWeight','Bold');
+        elseif tc(k1,1)
+          Vtmp = spm_vol(fullfile(pth,['p', num2str(k1), nam, '.nii'])); 
+          hh = spm_orthviews('Image',Vtmp,pos(2+k1,:));
+          spm_orthviews('Caption',hh,sprintf('p%d*.nii (native)', ...
+            k1),'FontSize',fontsize,'FontWeight','Bold');
+        end 
+        if exist('hh','var')
+          spm_orthviews('window',hh,[0 2]);
+          cc(k1) = colorbar('location','west','position',[pos(2+k1,1)+0.30 0.02 0.02 0.15], ...
+            'YTick',[15,30,45,60],'YTickLabel', ...
+            [repmat(' ',4,1) num2str((0.5:0.5:2)','%4.1f')], ...
+            'FontSize',fontsize,'FontWeight','Bold'); %#ok<AGROW>
+        else
+          % hier kann eine alternative ausgabe erfolgen
+          %
+          % bei den colorbars gibt es probleme, wenn man im bild rum
+          % klickt - die werden dann einfach mal neu und vor allem nun
+          % falsch skalliert, wobei 6 werte ohne 0 aber mit maximum
+          % genutzt werden.
+
+          % thickness
+          if k1==1
+            th1 = struct2array(job.output.th1);
+            if th1(2)
+              if do_dartel, prefix='wrth1'; else prefix='wth1'; end
+              hhth1 = spm_orthviews('Image',fullfile(pth,[prefix,nam,'.nii']),pos(2+k1,:));
+              spm_orthviews('Caption',hhth1,sprintf('%s*.nii (mni)',prefix),'FontSize',fontsize,'FontWeight','Bold');
+            elseif th1(3)
+              hhth1 = spm_orthviews('Image',fullfile(pth,['wth1', nam, '_affine.nii']),pos(2+k1,:));
+              spm_orthviews('Caption',hhth1,'wm*affine.nii (affine)','FontSize',fontsize,'FontWeight','Bold');
+            elseif th1(1) % native
+              Vtmpth1 = fullfile(pth,['th1', nam, '.nii']); 
+              if ~exist(Vtmpth1,'file')
+                vbm_io_writenii(VT,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
+              end
+              hhth1 = spm_orthviews('Image',Vtmpth1,pos(2+k1,:));
+              spm_orthviews('Caption',hhth1,{'th1*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+            end  
+            spm_orthviews('window',hhth1,[0 9]);
+            cc(k1) = colorbar('location','west','position',[pos(2+k1,1)+0.30 0.02 0.02 0.15], ...
+              'YTick',10:10:60,'YTickLabel', ...'YTick',0.5:59/9:60,'YTickLabel', ...
+              [repmat(' ',6,1) num2str((1.5:9/6:9)',' %0.1f mm')], ...[repmat(' ',10,1) num2str((0:1:9)',' %0.1f mm')], ...
+              'FontSize',fontsize,'FontWeight','Bold'); %#ok<AGROW>
+            spm_orthviews('window',hhth1,[0 9]);
+          end
+
+        end
+        clear hh;
+
+      end
     end
+    
     colormap(vbm_io_colormaps(cm));
     set(0,'CurrentFigure',ofg)
     %end
@@ -1811,7 +1880,12 @@ if do_cls && warp.print
   
   [pp,ff] = spm_fileparts(res.image.fname); psf=fullfile(pp,['vbm_' ff '.ps']); 
   if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
-    
+  
+  % remove p0 image, if it was only written for printing
+  if exist(fullfile(pth,['o', nam, '.nii']),'file')
+    delete(fullfile(pth,['o', nam, '.nii']));
+    spm_orthviews('Delete',hho); % we have to remove the figure, otherwise the gui user may get an error
+  end
   % remove p0 image, if it was only written for printing
   if job.output.bias.native==0 && exist(fullfile(pth,['m', nam, '.nii']),'file')
     delete(fullfile(pth,['m', nam, '.nii']));
@@ -1827,6 +1901,8 @@ if do_cls && warp.print
     delete(Vtmpth1);
     spm_orthviews('Delete',hhth1); % we have to remove the figure, otherwise the gui user may get an error
   end
+  
+  
   
   %% small command window output
   fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
