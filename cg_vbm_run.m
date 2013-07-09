@@ -58,8 +58,8 @@ end
 
 
 % prepare tissue priors and number of gaussians for all 6 classes
-clsn=numel(spm_vol(job.opts.tpm{1})); 
 if estwrite
+    clsn = numel(spm_vol(job.opts.tpm{1})); 
     [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
     tissue = struct();
     for i=1:clsn;
@@ -77,7 +77,7 @@ tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.out
 tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
 % never write class 4-6
-for i=4:numel(spm_vol(job.opts.tpm{1}));
+for i=4:6;
     tissue(i).warped = [0 0 0];
     tissue(i).native = [0 0 0];
 end
@@ -261,8 +261,14 @@ for subj=1:numel(job.channel(1).vols),
         end
 
     else % only write segmentations
+        if job.warp.sanlm
+            [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj});
+            job.channel(1).vols{subj} = fullfile(pth,['n' nam ext]);
+        end
+    
         [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
         seg12_name = fullfile(pth,['vbm12mat_' nam '.mat']);
+
         if exist(seg12_name,'file')
             res = load(seg12_name);
 
