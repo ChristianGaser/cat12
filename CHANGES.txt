@@ -2214,3 +2214,19 @@ M       CHANGES.txt
 Cleaned code in cg_vbm_run.m and removed parts that were not necessary anymore.
 ------------------------------------------------------------------------
 r494 | gaser | 2013-07-09 12:43:19
+
+ M      vbm_tst_calc_bias.m
+ M      templates_1.50mm/Template_1_IXI550_MNI152.nii
+ M      templates_1.50mm/Template_2_IXI550_MNI152.nii
+ M      templates_1.50mm/Template_3_IXI550_MNI152.nii
+ M      templates_1.50mm/Template_4_IXI550_MNI152.nii
+ M      templates_1.50mm/Template_5_IXI550_MNI152.nii
+ M      templates_1.50mm/Template_6_IXI550_MNI152.nii
+ M      templates_1.50mm/TPM.nii
+M       cg_vbm_run.m
+M       CHANGES.txt
+ M      vbm_tst_calc_kappa.m
+
+Corrected errors in cg_vbm_run.m when already estimated segmentations were used.
+------------------------------------------------------------------------
+r495 | gaser | 2013-07-09 13:06:29
