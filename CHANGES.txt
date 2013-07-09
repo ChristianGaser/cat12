@@ -2207,3 +2207,10 @@ M       vbm_vol_t1qacalc.m
 
 ------------------------------------------------------------------------
 r493 | dahnke | 2013-06-27 10:11:32
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+
+Cleaned code in cg_vbm_run.m and removed parts that were not necessary anymore.
+------------------------------------------------------------------------
+r494 | gaser | 2013-07-09 12:43:19
