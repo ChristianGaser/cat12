@@ -83,10 +83,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     LN[i] = M[i];
   }
 
-  int u,v,w,nu,nv,nw,ni,stop=0;
+  int u,v,w,nu,nv,nw,ni,iter=0,stop=0,maxiter=2000;
   float Nn, diff, maxdiffi, maxdiff=1;
-  while ( maxdiff > TH ) {
-    maxdiffi=0;
+  while ( maxdiff > TH && iter < maxiter) {
+    maxdiffi=0; iter++;
     for (i=0;i<nL;i++) {
       if ( M[i] && LN[i] ) { // 
         ind2sub(i,&u,&v,&w,xy,x);
@@ -104,7 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if ( diff>(TH/10) ) { 
           for (n=0;n<sN;n++) {
             ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
-            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || (M[ni]==0))==0 ) LN[ni] = 1; // if i change his neigbors has to be recalculated
+            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || (L1[ni]==-INFINITY) || (L1[ni]==INFINITY) )==0) LN[ni] = 1; // if i change his neigbors has to be recalculated
           }
         }
       
@@ -116,7 +116,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // update of L1
     for (i=0;i<nL;i++) { L1[i]=L2[i]; }
- }
+  }
+  // printf("%d\n",iter);
 }
 
 
