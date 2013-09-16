@@ -1,13 +1,22 @@
 function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
+% ______________________________________________________________________
+% Robert Dahnke 
+% Structural Brain Mapping Group
+% University Jena
+%
+% $Id$
+% ______________________________________________________________________
 %#ok<*AGROW>
 %#ok<*ASGLU>
 
 % set defaults, get files:
   spm_defaults
   if ~exist('P','var')
-    P = spm_select(Inf,'image','Select images to compare'); 
+    P = spm_select(Inf,'image','Select images to compare');
+    manu = 1;
   else
     if isa(P,'cell'), if size(P,1)<size(P,2), P=P'; end; P=char(P); end
+    manu = 0;
   end
   V = spm_vol(P);
   n = numel(V);
@@ -36,11 +45,11 @@ function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
   for nc=1:(ncls>1 && nargout>2)+1  
   % create header  
     switch ncls
-      case 3, tab = {['Name' methodname],'noise','bias','contr','CV(G)','CV(W)','CV(GW)'};  
-              txt{1} = sprintf('\n%30s\t%s\t%s\t%s\t%s\t%s\t%s\n',tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7}); 
+      case 3, tab = {['Name' methodname],'noise','bias','contr','CV(G)','CV(W)','CV(GW)','resgm','resgs'};  
+              txt{1} = sprintf('\n%30s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n',tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7}); 
       otherwise,  error('unallowed number of classes');
     end
-    txt{2} = ''; k = zeros(n,6);
+    txt{2} = ''; k = zeros(n,8);
     if verb, fprintf(txt{1}); end
 
 
@@ -50,6 +59,10 @@ function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
       val(i).fname = V(i).fname;
       val(i).path  = pth;
       val(i).name  = name;
+      vx_vol       = sqrt(sum(V(i).mat(1:3,1:3).^2)); 
+      val(i).vol   = prod(vx_vol);
+      val(i).isotropy = max(vx_vol)/min(vx_vol);
+      
       switch ncls
         case 3
           if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
@@ -108,21 +121,33 @@ function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
           CVG   = std(m0Ts(GM(:)))./mean(m0Ts(GM(:))); 
           CVW   = std(m0Ts(WM(:)))./mean(m0Ts(WM(:))); 
           CVGW  = (CVG + CVW)/2; 
-          
-          txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n',...
-            name(1:min(numel(name),30)),noise,bias,contrast,CVG,CVW,CVGW); 
 
-          k(i,:) = [noise,bias,contrast,CVG,CVW,CVGW];
           
-          val(i).SEG = struct('noise',noise,'bias',bias,'contrast',contrast,'CVG',CVG,'CVW',CVW,'CVGW',CVGW);
+          % resolution
+          [gx,gy,gz] = gradient3(single(m0TO)); 
+          gT  = abs(gx)+abs(gy)+abs(gz); gT=gT./m0TO; 
+          gx = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
+          gTv = abs(gx)+abs(gy)+abs(gz); gTv=gTv./m0TO; clear gx gy gz;
+          M = vbm_vol_morph(p0GT>0.5,'e') & smooth3(gT)>0.05;
+          resgm = nanmean(gT(M(:)));
+          resgs = nanmean(gTv(M(:)));
+          clear M; 
+         
+          txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n',...
+            name(1:min(numel(name),30)),noise,bias,contrast,CVG,CVW,CVGW,resgm,resgs); 
+
+          k(i,:) = [noise,bias,contrast,CVG,CVW,CVGW,resgm,resgs];
+          
+          val(i).SEG = struct('noise',noise,'bias',bias,'contrast',contrast,'CVG',CVG,'CVW',CVW,'CVGW',CVGW, ...
+                              'resgm',resgm,'resgs',resgs);
       end
       if verb, fprintf(txti); end; txt{2}=[txt{2} txti]; tab=[tab;[{name},num2cell(k(i,:))]]; 
     end
   
   % conclustion
     switch ncls
-      case 3, txt{3} = sprintf(['\n%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n' ...
-                                  '%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n\n'],'mean',mean(k,1),'std',std(k,1,1));    
+      case 3, txt{3} = sprintf(['\n%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n' ...
+                                  '%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n\n'],'mean',mean(k,1),'std',std(k,1,1));    
     end
     if verb, fprintf(txt{3}); end; tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   
   
@@ -135,7 +160,11 @@ function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
       if nargout>1, varargout{2}{nc}=tab; end
     end
     if nargout>2, varargout{3}=val; end
-    ncls=1;
+    %ncls=1; ???
+  end
+  
+  if manu
+    load gong.mat; soundsc(y(5000:25000),Fs)
   end
 end
 function noise = estimateNoiseLevel(T,M)
