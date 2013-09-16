@@ -2230,3 +2230,29 @@ M       CHANGES.txt
 Corrected errors in cg_vbm_run.m when already estimated segmentations were used.
 ------------------------------------------------------------------------
 r495 | gaser | 2013-07-09 13:06:29
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+A       vbm_io_cgw2seg.m
+A       vbm_io_csv.m
+A       vbm_io_remat.m
+A       vbm_io_seg2cgw.m
+A       vbm_tst_SRS.m
+M       vbm_tst_calc_bias.m
+M       vbm_tst_calc_kappa.m
+A       vbm_tst_pre.m
+A       vbm_tst_staple_multilabels.m
+A       vbm_vol_average.m
+M       vbm_vol_laplace3R.c
+M       vbm_vol_laplace3R.mexmaci64
+A       vbm_vol_sanlm.m
+
+(1) Add scan-rescan test skripts (vbm_tst_SRS).
+(2) Add function to convert p0 segment maps into c1, c2, c3 probability/PVE maps (vbm_io_seg2cgw).
+(3) Add function to convert c1, c2, c3 probability/PVE maps into p0 segment maps (vbm_io_cgw2seg).
+(4) Add csv-import/export function (vbm_io_csv).
+(5) Add average function for images with similar properties to create a median-, mean-, and std image (vbm_vol_average).
+(6) Add STAPLE segmentation (vbm_tst_staple_multilabels).
+(7) Update quality measures.
+------------------------------------------------------------------------
+r496 | dahnke | 2013-09-16 17:54:33

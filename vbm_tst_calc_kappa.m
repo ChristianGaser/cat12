@@ -1,4 +1,20 @@
-function varargout=vbm_tst_calc_kappa(P,Vref,methodname,verb)
+function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
+% ______________________________________________________________________
+% [txt,val] = vbm_tst_calc_kappa(P,Pref,methodname,verb)
+% 
+% P           .. list of images
+% Pref        .. ground true segmentation
+% methodname  .. just for displaying
+% verb        .. verbose 
+% ______________________________________________________________________
+% based on cg_calc_kappa by Christian Gaser
+%
+% Robert Dahnke 
+% Structural Brain Mapping Group
+% University Jena
+%
+% $Id$
+% ______________________________________________________________________
 %#ok<*AGROW>
 %#ok<*ASGLU>
 
@@ -7,19 +23,24 @@ function varargout=vbm_tst_calc_kappa(P,Vref,methodname,verb)
   
   if ~exist('P','var')
     P = spm_select(Inf,'image','Select images to compare'); 
+    manu = 1;
   else
     if isa(P,'cell'), if size(P,1)<size(P,2), P=P'; end; P=char(P); end
+    manu = 0;
   end
+  
   V = spm_vol(P);
   n = numel(V);
-  if ~exist('Vref','var')
-    Vref = spm_vol(spm_select([1 n],'image','Select reference mask')); 
+  if ~exist('Pref','var')
+    Pref = spm_select([1 n],'image','Select reference mask');
+    Vref = spm_vol(Pref); 
   else
-    Vref=cellstr(Vref);
-    if size(Vref,1)<size(Vref,2), Vref=Vref'; end; 
-    Vref=char(Vref); Vref = spm_vol(char(Vref));
+    Pref = cellstr(Pref);
+    if size(Pref,1)<size(Pref,2), Pref=Pref'; end; 
+    Vref = spm_vol(char(Pref));
   end
   if ~exist('methodname','var'), methodname=''; else methodname=[' (' methodname ')']; end
+  if isempty(methodname), methodname = spm_str_manip(spm_str_manip(P(1,:),'h'),'l20'); end
   if ~exist('verb','var'), verb=1; end
   if isempty(V) || isempty(Vref), return; end 
   
@@ -42,14 +63,17 @@ function varargout=vbm_tst_calc_kappa(P,Vref,methodname,verb)
   elseif ncls==254, ncls=3; % IBSR
   end
 
+  
+  estr=sprintf('%s\n%s\n\n',spm_str_manip(P(1,:),'h'),Vref(1).fname);
+  
   for nc=1:(ncls>1 && nargout>2)+1  
   % create header  
     switch ncls
       case 0, txt{1}='Error ground truth empty!'; continue
       case 1, tab = {['Name' methodname],'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
-              txt{1} = sprintf('\n%30s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\n',tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
-      case 3, tab = {['Name' methodname],'k(C)','k(G)','k(W)','k(GW)','RMS(C)','RMS(G)','RMS(W)','RMS(GW)'};  
-              txt{1} = sprintf('\n%30s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n',tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9}); 
+              txt{1} = sprintf('\n%s%30s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\n',estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
+      case 3, tab = {['Name' methodname],'k(C)','k(G)','k(W)','k(GW)','RMS(C)','RMS(G)','RMS(W)','RMS(p0)'};  
+              txt{1} = sprintf('\n%s%30s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n',estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9}); 
       otherwise, fprintf('Ground truth error');  continue; %error('unallowed number of classes');
     end
     txt{2} = ''; k = zeros(n,8);
@@ -68,11 +92,11 @@ function varargout=vbm_tst_calc_kappa(P,Vref,methodname,verb)
           %else                 vol1 = spm_read_vols(Vref(i));
           %end
           if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
-          vol1 = spm_read_vols(Vref(Vrefi)); maxv=max(round(vol1(:))); if maxv==255, vol1=vol1/maxv; end
-          vol2 = spm_read_vols(V(i));
+          vol1 = single(spm_read_vols(Vref(Vrefi))); maxv=max(round(vol1(:))); if maxv==255, vol1=vol1/maxv; end
+          vol2 = single(spm_read_vols(V(i)));
           
           [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion, dice, jaccard] = ...
-                          cg_confusion_matrix(double(round(vol1(:))>0)+1, double(round(vol2(:))>0)+1, 2);
+                          cg_confusion_matrix(uint8((round(vol1(:))>0)+1), uint8((round(vol2(:))>0)+1), 2);
           %elseif nc==2, [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion, dice, jaccard] = ...
           %                cg_confusion_matrix(round(vol1(:))+1, double(round(vol2(:))>0)+1, 2);
           %end
@@ -85,13 +109,14 @@ function varargout=vbm_tst_calc_kappa(P,Vref,methodname,verb)
                        'sensit_all',sensit_all,'sensit',sensit(1),'specif',specif(1),'dice',dice(1),'jaccard',jaccard(1)); 
         case 3
           if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
-          vol1 = spm_read_vols(Vref(Vrefi)); maxv=max(round(vol1(:))); if maxv==254, vol1=round(vol1); vol1=single(vol1>=128)+single(vol1>=192)+single(vol1>=254); end
-          vol2 = spm_read_vols(V(i));
+          vol1 = single(spm_read_vols(Vref(Vrefi))); 
+          maxv=max(round(vol1(:))); if maxv>3, vol1=round(vol1); vol1=vol1/maxv*3; end
+          vol2 = single(spm_read_vols(V(i)));
 
-          for c=1:3, kappa_all(1,c) = cg_confusion_matrix((round(vol1(:))==c)+1, (round(vol2(:))==c)+1, 2); end
-          bth=1; kappa_all(1,4) = cg_confusion_matrix((vol1(:)>=bth)+1,(vol2(:)>=bth)+1, 2); 
+          for c=1:3, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
+          bth=1;     kappa_all(1,4) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
 
-          rms = calcRMS(vol1,vol2,bth);
+          rms = calcRMS(vol1,vol2);
           k(i,:) = [kappa_all,rms];
           txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n',name(1:min(numel(name),30)),k(i,:)); 
 
@@ -120,21 +145,23 @@ function varargout=vbm_tst_calc_kappa(P,Vref,methodname,verb)
     if nargout>2, varargout{3}=val; end
     ncls=1;
   end
+  
+  if manu
+    load gong.mat; 
+    soundsc(y(5000:25000),Fs)
+  end
 end
-function rms=calcRMS(v1,v2,bthy)
+function rms=calcRMS(v1,v2)
 % boundary box????
   v1(v1>3)=3;
   v2(v2>3)=3;
+ 
+  for ci=1:3
+    c1 = (v1-(ci-1)).* (v1>(ci-1) & v1<ci) + ((ci+1)-v1).*(v1>=ci & v1<(ci+1));
+    c2 = (v2-(ci-1)).* (v2>(ci-1) & v2<ci) + ((ci+1)-v2).*(v2>=ci & v2<(ci+1));
+    rms(1,ci) = sqrt(nanmean((c1(:)-c2(:)).^2));
+  end
   
-  [C1,G1,W1] = vbm_io_seg2cgw(v1);
-  [C2,G2,W2] = vbm_io_seg2cgw(v2);
-  
-  %v1 = v1 - bth; v1(v1<0)=0;
-  %v2 = v2 - bth; v2(v2<0)=0;
-  
-  rms(1,1) = sqrt(nanmean((C1(:)-C2(:)).^2));
-  rms(1,2) = sqrt(nanmean((G1(:)-G2(:)).^2));
-  rms(1,3) = sqrt(nanmean((W1(:)-W2(:)).^2));
   rms(1,4) = sqrt(nanmean((v2(:)-v1(:)).^2));
 end
 function varargout = cg_confusion_matrix(reference, classified, n_class)
@@ -142,9 +169,7 @@ function varargout = cg_confusion_matrix(reference, classified, n_class)
 % [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion] = cg_confusion_matrix(reference, classified, n_class)
 
   % get sure that image is integer
-  reference = round(reference);
-  classified = round(classified);
-
+  
   if nargin < 3
     n_class = max(classified);
   end
@@ -158,10 +183,10 @@ function varargout = cg_confusion_matrix(reference, classified, n_class)
   end
 
   N = sum(confusion(:));
-  kappa    = zeros(size(confusion,1),1);
-  sensit   = zeros(size(confusion,1),1);
-  specif   = zeros(size(confusion,1),1);
-  accuracy = zeros(size(confusion,1),1);
+  kappa    = zeros(size(confusion,1),1,'single');
+  sensit   = zeros(size(confusion,1),1,'single');
+  specif   = zeros(size(confusion,1),1,'single');
+  accuracy = zeros(size(confusion,1),1,'single');
 
   sum_col  = sum(confusion,1);
   sum_row  = sum(confusion,2);
@@ -201,4 +226,5 @@ function varargout = cg_confusion_matrix(reference, classified, n_class)
   varargout{7} = specif;
   varargout{8} = confusion;
   varargout{9} = dice;
-  varargout{10} = jaccard;end
+  varargout{10} = jaccard;
+end

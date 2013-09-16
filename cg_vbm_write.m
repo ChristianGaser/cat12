@@ -402,14 +402,29 @@ if max(vx_vol)/min(vx_vol)>3.5 % isotropy
         'We commend using of isotropic resolutions.\n'], ... 
           res.image.fname,max(vx_vol));
 end
-% check modality
+% intensity checks
 T3th = [median(Ysrc(Ycls{3}(:)>192)) ...
         median(Ysrc(Ycls{1}(:)>192)) ...
         median(Ysrc(Ycls{2}(:)>192))];
 T3th = T3th/T3th(3); opt.inv_weighting = 0;
-if  T3th(1)>T3th(3) 
-  if cg_vbm_get_defaults('extopts.INV') 
-    %if T3th(1)>T3th(2) && T3th(2)>T3th(3)  
+% relation between the GM/WM and CSF/GM and CSF/WM contrast has to be
+% greater that 3 times of the maximum contrast (max-min).
+checkcontrast = @(T3th,minContrast) ...
+   abs(diff(T3th([1,3]))) < (max(T3th(:))-min(T3th(:)))*minContrast || ...
+   abs(diff(T3th(1:2)))   < (max(T3th(:))-min(T3th(:)))*minContrast || ...
+   abs(diff(T3th(2:3)))   < (max(T3th(:))-min(T3th(:)))*minContrast;
+if checkcontrast(T3th,1/9) % contrast relation
+  error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
+        ['\nVBM-ERROR:BadImageProperties:\n' ...
+         'The contrast between the tissues is extremly low!\n' ...
+         '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th(1),T3th(2),T3th(3));
+end
+% check modality
+if  T3th(1)>T3th(3) || T3th(2)>T3th(3) || T3th(1)>T3th(2)
+  % if INV==1 and if there is a good contrast between all tissues we try
+  % an inveration 
+  if cg_vbm_get_defaults('extopts.INV')==1 
+    if T3th(1)>T3th(2) && T3th(2)>T3th(3) 
       %YsrcO = Ysrc+0;
       % invert image to get t1 modality like relations
       T3th = [median(median(Ysrc(Ycls{3}(:)>192))*2 - Ysrc(Ycls{3}(:)>192)) ...
@@ -420,18 +435,26 @@ if  T3th(1)>T3th(3)
       % set 'background' to zero
       Ysrc(Ysrc>1.5)=0;
       % remove outlier
-      Ysrc = vbm_vol_median3(Ysrc,Ysrc>0,Ysrc<1.5,0.1);  
-%     else
-%       Ysrc = (single(Ycls{3}) + single(Ycls{1})*2 + single(Ycls{2}*3))/255*3;  
-%     end
+      Ysrc = vbm_vol_median3(Ysrc,Ysrc>0,Ysrc<1.5,0.1);
+  
+      opt.inv_weighting = 1;
+    else 
+      error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
+       ['\nVBM-ERROR:BadImageProperties:\n' ...
+        'Sorry, but VBM is designed to work only on T1 hihgres images.\n' ...
+        'T2/PD preprocessing only for clear tissue contrasts!\n' ...
+        '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th(1),T3th(2),T3th(3)); 
+    end
+  elseif  cg_vbm_get_defaults('extopts.INV')==2 
+    Ysrc = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255);  
+    
     opt.inv_weighting = 1;
   else
    error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
        ['\nVBM-ERROR:BadImageProperties:\n' ...
         'Sorry, but VBM is designed to work only on T1 hihgres images.\n' ...
         'T2/PD preprocessing can be forced on your own risk by setting \n' ...
-        '''vbm.extopts.INV=1'' in the vbm default file.\n'], ... 
-          res.image.fname,max(vx_vol));   
+        '''vbm.extopts.INV=1'' in the vbm default file.\n']);   
   end
 end
 
@@ -466,11 +489,7 @@ Yl1A = reshape(Yl1A,d);
 Yl1A = round(Yl1A/2)*2-1;
 
 % segment map 
-if numel(Ycls)==7
-  Yp0 = (single(Ycls{1}+Ycls{7})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
-else
-  Yp0 = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
-end
+Yp0 = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
 
 % diverence helps to identify all gyri that should not be in the
 % GM, but helps to improve the WM
