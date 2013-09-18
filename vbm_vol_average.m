@@ -20,7 +20,7 @@ function VO = vbm_vol_average(P,fname,PT,dt,nr)
 % Structural Brain Mapping Group
 % University Jena
 %  
-% $Id: vbm_check.m 75 2013-02-26 13:56:04Z dahnke $
+% $Id$
 % ______________________________________________________________________
   
   if isstruct(P)

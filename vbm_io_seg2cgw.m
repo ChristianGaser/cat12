@@ -11,7 +11,7 @@ function [c,g,w]=vbm_io_seg2cgw(seg)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: vbm_io_writenii.m 480 2013-04-22 16:17:09Z dahnke $
+% $Id$
 
   %if isa(char), fseg=seg; hseg=spm_vol(seg); seg=spm_read_vols(hseg); end
   
