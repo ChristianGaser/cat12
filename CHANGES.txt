@@ -2256,3 +2256,25 @@ A       vbm_vol_sanlm.m
 (7) Update quality measures.
 ------------------------------------------------------------------------
 r496 | dahnke | 2013-09-16 17:54:33
+
+M       CHANGES.txt
+ M      templates_1.50mm
+A       vbm_check.m
+A       vbm_db.m
+A       vbm_db_batch.m
+ M      vbm_io_cgw2seg.m
+MM      vbm_io_csv.m
+A       vbm_io_mysql.m
+ M      vbm_io_remat.m
+MM      vbm_io_seg2cgw.m
+ M      vbm_tst_SRS.m
+MM      vbm_tst_pre.m
+ M      vbm_tst_staple_multilabels.m
+A       vbm_tst_t1qa.m
+MM      vbm_vol_average.m
+MM      vbm_vol_sanlm.m
+
+(1) Add VBM database development files (vbm_db_batch, vbm_db, vbm_io_mysql).
+(2) Add QM estimation (vbm_tst_t1qa).
+------------------------------------------------------------------------
+r497 | dahnke | 2013-09-18 13:06:08
