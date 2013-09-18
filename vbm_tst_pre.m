@@ -10,7 +10,7 @@ function vbm_tst_pre
 % Structural Brain Mapping Group
 % University Jena
 %  
-% $Id: vbm_tst_pre.m 89 2013-03-27 10:23:25Z dahnke $
+% $Id$
 % ______________________________________________________________________
 %#ok<*TRYNC>
 
@@ -736,7 +736,7 @@ function FSL(file,initPATH,p0T)
 end
 function SPM8segment(file,SPM8dir,SPMwkd)
 %-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 89 $)
+% Job configuration created by cfg_util (rev $Rev$)
 %-----------------------------------------------------------------------
 %   matlabbatch{1}.spm.spatial.coreg.estimate.ref     = cellstr(fullfile(spm('Dir'),'templates','T1.nii'));
 %   matlabbatch{1}.spm.spatial.coreg.estimate.source  = cellstr(file);
@@ -791,7 +791,7 @@ function SPM8segment(file,SPM8dir,SPMwkd)
 end
 function SPM8newsegment(file,SPM8dir,SPMwkd)
 %-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 89 $)
+% Job configuration created by cfg_util (rev $Rev$)
 %-----------------------------------------------------------------------
   matlabbatch{1}.spm.tools.preproc8.channel.vols      = cellstr(file);
   matlabbatch{1}.spm.tools.preproc8.channel.biasreg   = 0.0001;
@@ -870,7 +870,7 @@ function SPM12segment(file,SPM12dir,SPMwkd)
 %   for pi=numel(SPM12dirs):-1:1, addpath(SPM12dirs{pi},'-begin'); end
 
 %-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 89 $)
+% Job configuration created by cfg_util (rev $Rev$)
 %-----------------------------------------------------------------------
   mb=1;
   matlabbatch{mb}.spm.spatial.preproc.channel.vols      = cellstr(file);
@@ -947,7 +947,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
 % entries
 
 %-----------------------------------------------------------------------
-% Job saved on 26-Mar-2013 17:27:18 by cfg_util (rev $Rev: 89 $)
+% Job saved on 26-Mar-2013 17:27:18 by cfg_util (rev $Rev$)
 % spm SPM - SPM12b (5298)
 % cfg_basicio BasicIO - Unknown
 %-----------------------------------------------------------------------
@@ -1058,7 +1058,7 @@ function VBM8segment(file,VBM8dir,SPMwkd)
 %   for pi=numel(VBM8dirs):-1:1, addpath(VBM8dirs{pi},'-begin'); end
 
 %---------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 89 $)
+% Job configuration created by cfg_util (rev $Rev$)
 %---------------------------------------------------------------------
 
   pathchanges = replaceSPMpath(SPMwkd,VBM8dir);

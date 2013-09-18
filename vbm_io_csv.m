@@ -29,7 +29,7 @@ function varargout = vbm_io_csv(filename,varargin)
 % Structural Brain Mapping Group
 % University Jena 
 %
-% $Id: vbm_io_csv.m 71 2013-01-28 17:05:35Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
   if nargout>0, action='r'; else action='w'; end

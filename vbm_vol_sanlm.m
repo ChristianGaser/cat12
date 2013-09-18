@@ -4,7 +4,7 @@ function vbm_pre_sanlm(vargin)
 %
 %_______________________________________________________________________
 % Christian Gaser/Users/gaser/matlab/vbm8/cg_sanlm.m
-% $Id: vbm_pre_sanlm.m 63 2013-01-15 15:12:17Z dahnke $
+% $Id$
 
 if nargin == 1
 	P = char(vargin.data);
