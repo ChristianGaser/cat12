@@ -105,8 +105,6 @@ if N > 1
 end
 
 
-str='SPM-Preprocessing 2'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
-
 % tc - tissue classes: native, dartel-rigid, dartel-affine, warped, warped-mod, warped-mod0
 % bf - bias field: corrected, warp corrected, affine corrected
 % df - deformations: forward, inverse
@@ -116,6 +114,18 @@ str='SPM-Preprocessing 2'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); st
 do_dartel = warp.dartelwarp;   % apply dartel normalization
 warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
+
+if do_dartel
+  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || cg_vbm_get_defaults('output.surf.dartel');
+  need_dartel = need_dartel || any([job.output.th1.warped,job.output.ml.warped,job.output.te.warped, ...
+                          job.output.pc.warped,job.output.l1.warped]);
+  if ~need_dartel
+      fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
+  end
+end
+
+str='SPM-Preprocessing 2'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+
 
 [pth,nam] = spm_fileparts(res.image(1).fname);
 d    = res.image(1).dim(1:3);
@@ -221,7 +231,6 @@ end
 
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
 M = M1\res.Affine*res.image(1).mat;
-clear nam nam1 pth pth1;
 
 if do_cls
     Q = zeros([d(1:3),Kb],'single');
