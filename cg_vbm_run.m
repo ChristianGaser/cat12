@@ -309,8 +309,10 @@ for subj=1:numel(job.channel(1).vols),
 
 end
 
-for n=1:numel(job.channel) 
-  delete(Fn{subj}{n});
+if estwrite % estimate and write segmentations
+  for n=1:numel(job.channel) 
+    delete(Fn{subj}{n});
+  end
 end
 
 return

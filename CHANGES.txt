@@ -2278,3 +2278,15 @@ MM      vbm_vol_sanlm.m
 (2) Add QM estimation (vbm_tst_t1qa).
 ------------------------------------------------------------------------
 r497 | dahnke | 2013-09-18 13:06:08
+
+M       Makefile.vbm
+M       cg_vbm_run.m
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+(1) Variable Fn in cg_vbm_run.m was not available if "write only" option 
+    was used.
+(2) Dartel is deselected if nor normalized images need to be saved in 
+    cg_vbm_write.m
+------------------------------------------------------------------------
+r498 | gaser | 2013-09-20 09:40:55
