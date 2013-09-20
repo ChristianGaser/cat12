@@ -1712,6 +1712,8 @@ if do_cls && warp.print
     
     opt.print=1;
     if opt.print
+      [pth,nam] = spm_fileparts(res.image(1).fname);
+      
       % original image in original space
       Yo   = single(spm_read_vols(spm_vol(res.image.fname)));
       Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
