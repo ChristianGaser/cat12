@@ -10,15 +10,17 @@ function compile
   mex -O vbm_vol_laplace3.c
   mex -O vbm_vol_laplace3R.c
   mex -O vbm_vol_gradient3.c
+  mex -O vbm_vol_interp3f.cpp
   mex -O vbdist.c
   
-  d2 = vbm_vol_median3(d);            disp('Compilation of vbm_vol_median3 successful')
-  d2 = vbm_vol_eikonal3(d);           disp('Compilation of vbm_vol_eikonal3 successful')
-  d2 = vbm_vol_laplace3(d,0,0,0.001); disp('Compilation of vbm_vol_laplace3 successful')
-  d2 = vbm_vol_laplace3R(d,d>0.5,0.2);disp('Compilation of vbm_vol_laplace3R successful')
-  [d2,d3,d4] = vbm_vol_gradient3(d);  disp('Compilation of vbm_vol_gradient3 successful')
-  d2 = vbm_vol_downcut(d,d.^1.5,1);  disp('Compilation of vbm_vol_down_cut successful')
-  d2 = vbdist(d);                     disp('Compilation of vbdist successful')
+  d2 = vbm_vol_median3(d);             disp('Compilation of vbm_vol_median3 successful')
+  d2 = vbm_vol_eikonal3(d);            disp('Compilation of vbm_vol_eikonal3 successful')
+  d2 = vbm_vol_laplace3(d,0,0,0.001);  disp('Compilation of vbm_vol_laplace3 successful')
+  d2 = vbm_vol_laplace3R(d,d>0.5,0.2); disp('Compilation of vbm_vol_laplace3R successful')
+  [d2,d3,d4] = vbm_vol_gradient3(d);   disp('Compilation of vbm_vol_gradient3 successful')
+  d2 = vbm_vol_downcut(d,d.^1.5,1);    disp('Compilation of vbm_vol_down_cut successful')
+  d2 = vbdist(d);                      disp('Compilation of vbdist successful')
+  d2 = vbm_vol_interp3f(d,d,d,d);      disp('Compilation of vbm_vol_interp3f successful')
   
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')

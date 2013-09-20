@@ -226,7 +226,7 @@ for subj=1:numel(job.channel(1).vols),
             warning off;
             [Affine, scale]  = spm_affreg(VG, VF1, aflags, M);
             warning on;
-            aflags.WG  = spm_vol(fullfile(spm('Dir'),'Toolbox','FieldMap','brainmask.nii'));
+            aflags.WG  = spm_vol(fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii'));
             aflags.sep = aflags.sep/2;
             spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
             Affine  = spm_affreg(VG, VF1, aflags, Affine, scale);
