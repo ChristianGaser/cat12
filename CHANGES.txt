@@ -2306,3 +2306,12 @@ M       CHANGES.txt
 (2) Cleaned up some variables to save memory in cg_vbm_write.m.
 ------------------------------------------------------------------------
 r500 | gaser | 2013-09-23 13:04:04
+
+M       vbm_vol_resize.m
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+(1) Force to write single typed data in vbm_vol_resize.m for 'dereducebrain'.
+(2) Cleaned up some variables to save memory in cg_vbm_write.m.
+------------------------------------------------------------------------
+r501 | gaser | 2013-09-23 14:56:32
