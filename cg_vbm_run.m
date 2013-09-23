@@ -144,38 +144,38 @@ for subj=1:numel(job.channel(1).vols),
     clear r str str2
 
         
-    if estwrite % estimate and write segmentations
-        % noise-correction
-        if job.warp.sanlm
-            % for windows disable multi-threading
-            if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
-                warp.sanlm = min(1,warp.sanlm);
-            end
-              
-            if      job.warp.sanlm==1, str='NLM-Filter';  
-            elseif  job.warp.sanlm>=2, str='NLM-Filter with multi-threading';
-            end
-            fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
-
-            for n=1:numel(job.channel) 
-                V = spm_vol(job.channel(n).vols{subj});
-                Y = single(spm_read_vols(V));
-                Y(isnan(Y)) = 0;
-                switch job.warp.sanlm
-                    case 1      % use single-threaded version
-                        sanlmMex_noopenmp(Y,3,1);
-                    otherwise   % use multi-threaded version
-                        sanlmMex(Y,3,1);
-                end
-                Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
-                job.channel(n).vols{subj} = Vn.fname;
-                Fn{subj}{n} = Vn.fname;  
-                clear Y V Vn;
-            end
-              
-              fprintf('%3.0fs\n',etime(clock,stime));     
+    % noise-correction
+    if job.warp.sanlm
+        % for windows disable multi-threading
+        if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
+            warp.sanlm = min(1,warp.sanlm);
         end
-            
+          
+        if      job.warp.sanlm==1, str='NLM-Filter';  
+        elseif  job.warp.sanlm>=2, str='NLM-Filter with multi-threading';
+        end
+        fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
+
+        for n=1:numel(job.channel) 
+            V = spm_vol(job.channel(n).vols{subj});
+            Y = single(spm_read_vols(V));
+            Y(isnan(Y)) = 0;
+            switch job.warp.sanlm
+                case 1      % use single-threaded version
+                    sanlmMex_noopenmp(Y,3,1);
+                otherwise   % use multi-threaded version
+                    sanlmMex(Y,3,1);
+            end
+            Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
+            job.channel(n).vols{subj} = Vn.fname;
+            Fn{subj}{n} = Vn.fname;  
+            clear Y V Vn;
+        end
+              
+        fprintf('%3.0fs\n',etime(clock,stime));     
+    end
+
+    if estwrite % estimate and write segmentations            
             
         % 
         images = job.channel(1).vols{subj};
@@ -261,11 +261,7 @@ for subj=1:numel(job.channel(1).vols),
         end
 
     else % only write segmentations
-        if job.warp.sanlm
-            [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj});
-            job.channel(1).vols{subj} = fullfile(pth,['n' nam ext]);
-        end
-    
+
         [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
         seg12_name = fullfile(pth,['vbm12mat_' nam '.mat']);
 
