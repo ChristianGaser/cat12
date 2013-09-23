@@ -2315,3 +2315,10 @@ M       cg_vbm_write.m
 (2) Cleaned up some variables to save memory in cg_vbm_write.m.
 ------------------------------------------------------------------------
 r501 | gaser | 2013-09-23 14:56:32
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+
+Option to write already estimated segmentations can now deal with additional denoising in cg_vbm_run.m. 
+------------------------------------------------------------------------
+r502 | gaser | 2013-09-23 16:41:09
