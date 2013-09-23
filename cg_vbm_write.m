@@ -121,6 +121,7 @@ if do_dartel
                           job.output.pc.warped,job.output.l1.warped]);
   if ~need_dartel
       fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
+      do_dartel = 0;
   end
 end
 
@@ -185,21 +186,6 @@ end
 clear d3
 
 do_cls   = any(tc(:)) || any(lb) || any(df) || nargout>=1;
-tiss(Kb) = struct('Nt',[]);
-for k1=1:Kb,
-    if tc(k1,1),
-        tiss(k1).Nt      = nifti;
-        tiss(k1).Nt.dat  = file_array(fullfile(pth,['p', num2str(k1), nam, '.nii']),...
-                                      res.image(1).dim(1:3),...
-                                      [spm_type('int16') spm_platform('bigend')],...
-                                      0,1/255,0);
-        tiss(k1).Nt.mat  = res.image(n).mat;
-        tiss(k1).Nt.mat0 = res.image(n).mat;
-        tiss(k1).Nt.descrip = ['Tissue class ' num2str(k1)];
-        create(tiss(k1).Nt);
-        do_cls = true;
-    end;
-end
 
 prm     = [3 3 3 0 0 0];
 Coef    = cell(1,3);
@@ -339,7 +325,7 @@ if do_cls
   clear Q sQ
 end
 
-clear q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
+clear tpm q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
 
 
 % load bias corrected image
@@ -1425,7 +1411,7 @@ for clsi=1:3
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 1 2 2],struct2array(job.output.(fn{clsi}))),0,trans);
 end
-clear cls clsi fn; 
+clear cls clsi fn Ycls; 
 
 
 % write jacobian determinant
@@ -1489,7 +1475,7 @@ if any(struct2array(job.output.th1))
   else
     Yth1  = vbm_vol_pbt(Ymf,struct('resV',opt.interpV));              % pbt calculation
   end
-  %clear Ymf
+  clear Ymf
 
   Yth1  = vbm_vol_resize(Yth1,'deinterp',resI);                       % back to original resolution
   Yth1  = vbm_vol_resize(Yth1,'dereduceBrain',BB);                    % adding of background
@@ -1515,7 +1501,7 @@ if any(struct2array(job.output.th1))
   % save files 
   vbm_io_writenii(VT,Yth1,'th1','pbt GM thickness', ...
     'uint16',[0,1/1023],struct2array(job.output.th1),0,trans);
-  clear Ymf;
+  clear Yth1;
   
   fprintf('%3.0fs\n',etime(clock,stime));
 end
@@ -1573,7 +1559,7 @@ if do_cls && warp.print
   
   
   %% create report text
-	tpm_name = spm_str_manip(tpm.V(1).fname,'k40d');
+	tpm_name = spm_str_manip(res.tpm(1).fname,'k40d');
 	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
   
 	str = [];
@@ -1951,7 +1937,7 @@ end
 % command window output
 
  
-clear C c
+clear C c Ym Ymf
 
 % deformations
 if df(1),
