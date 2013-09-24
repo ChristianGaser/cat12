@@ -2322,3 +2322,26 @@ M       CHANGES.txt
 Option to write already estimated segmentations can now deal with additional denoising in cg_vbm_run.m. 
 ------------------------------------------------------------------------
 r502 | gaser | 2013-09-23 16:41:09
+
+M       vbdist.mexglx
+M       vbm_vol_gradient3.c
+M       AmapMex.mexa64
+M       vbdist.mexa64
+M       AmapMex.mexw32
+M       vbdist.mexw32
+M       vbm_vol_downcut.c
+M       sanlmMex_noopenmp.mexglx
+M       vbm_vol_eikonal3.c
+M       CHANGES.txt
+M       sanlmMex.mexglx
+M       vbm_vol_laplace3R.c
+M       vbm_vol_laplace3.c
+M       vbm_vol_interp3f.cpp
+M       sanlmMex_noopenmp.mexa64
+M       sanlmMex.mexa64
+M       AmapMex.mexglx
+
+(1) Modified c/c++ code to allow compiling for linux/windows.
+(2) Re-compiling for linux/windows.
+------------------------------------------------------------------------
+r503 | gaser | 2013-09-24 17:02:27
