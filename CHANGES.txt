@@ -2345,3 +2345,13 @@ M       AmapMex.mexglx
 (2) Re-compiling for linux/windows.
 ------------------------------------------------------------------------
 r503 | gaser | 2013-09-24 17:02:27
+
+M       compile.m
+M       CHANGES.txt
+M       sanlmMex.mexa64
+
+(1) Modified c/c++ code to allow compiling for linux/windows.
+(2) Re-compiling for linux/windows.
+(3) Changed compile.m to consider new paths for libgomp.a.
+------------------------------------------------------------------------
+r504 | gaser | 2013-09-24 17:13:33
