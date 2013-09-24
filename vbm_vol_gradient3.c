@@ -18,16 +18,16 @@
 #include "math.h"
 
 
-// estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
+/* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
-  *z = floor( i / (sxy) ) +1; 
+  *z = (int)floor( i / (double)sxy ) +1; 
    i = i % (sxy);
-  *y = floor( i / sy ) +1;        
+  *y = (int)floor( i / (double)sy ) +1;        
   *x = i % sy + 1;
 }
 
 
-// main function
+/* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   if (nrhs<1)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: not enought input elements\n");
@@ -37,7 +37,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:vbm_vol_gradient3: input must be an 3d single matrix\n");
  
   
-  // main informations about input data (size, dimensions, ...)
+  /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if ( dL != 3 ) mexErrMsgTxt("ERROR:vbm_vol_gradient3: input must be 3d\n");
  
   
-  // in- and output 
+  /* in- and output  */
   float*I = (float *)mxGetPr(prhs[0]);
 
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);

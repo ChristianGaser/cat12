@@ -24,16 +24,16 @@
 #include "math.h"
 
 
-// estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
+/* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
 void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
-  *z = floor( i / (sxy) ) +1; 
+  *z = (int)floor( i / (double)sxy ) +1; 
    i = i % (sxy);
-  *y = floor( i / sy ) +1;        
+  *y = (int)floor( i / (double)sy ) +1;        
   *x = i % sy + 1;
 }
 float abs2(float n) {	if (n<0) return -n; else return n; }
 
-// main function
+/* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   if (nrhs<4)                                       mexErrMsgTxt("ERROR:laplace3: not enought input elements\n");
@@ -43,7 +43,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nrhs==5 && mxIsDouble(prhs[4])==0)            mexErrMsgTxt("ERROR:laplace3: 5th input (voxelsize) must be a double matrix\n");
   if (nrhs==5 && mxGetNumberOfElements(prhs[4])!=3) mexErrMsgTxt("ERROR:laplace3: 5th input (voxelsize) must have 3 Elements");
   
-  // main informations about input data (size, dimensions, ...)
+  /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
@@ -52,7 +52,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const int     xy = x*y;
   const int     nr = nrhs;
   
-  // input data
+  /* input data */
   float*SEG = (float *)mxGetPr(prhs[0]);
   float LB  = (float) mxGetScalar(prhs[1]);
   float HB  = (float) mxGetScalar(prhs[2]);
@@ -63,13 +63,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   double*S = mxGetPr(SS);
   if (nrhs<3) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[2]);}
   
-  // indices of the neighbor Ni (index distance) and euclidean distance NW
+  /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = { -1, 1, -x, x, -xy, xy};  
   const float ND[]  = {1/abs2((float)S[0]),1/abs2((float)S[0]), 1/abs2((float)S[1]),1/abs2((float)S[1]), 1/abs2((float)S[2]),1/abs2((float)S[2])};
   const int   sN = sizeof(NI)/4;    
   unsigned int i, n;
   
-  // output data
+  /* output data */
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
   plhs[2] = mxCreateLogicalArray(dL,sL);
@@ -79,12 +79,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   bool   *LN = (bool  *)mxGetPr(plhs[2]);
   float  *Lt;
   
-  // intitialisiation
+  /* intitialisiation */
   for (i=0;i<nL;i++) 
   {
-    if ( SEG[i]<LB ) L1[i]=0; else {if ( SEG[i]>HB ) L1[i]=1;  else L1[i] = SEG[i]; } //(SEG[i]-LB) / BD;}
+    if ( SEG[i]<LB ) L1[i]=0; else {if ( SEG[i]>HB ) L1[i]=1;  else L1[i] = SEG[i]; } /*(SEG[i]-LB) / BD;} */
     L2[i] = L1[i];
-    if ( SEG[i]>LB & SEG[i]<HB ) LN[i]=1; else LN[i]=0;
+    if ( (SEG[i]>LB) && (SEG[i]<HB) ) LN[i]=1; else LN[i]=0;
   }
 
   int u,v,w,nu,nv,nw,ni,stop=0;
@@ -98,7 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       {
         ind2sub(i,&u,&v,&w,xy,x);
 
-        // read neighbor values
+        /* read neighbor values */
         L2[i]=0; Nn=0;
         for (n=0;n<sN;n++) {
           ni = i + NI[n];
@@ -106,12 +106,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 && SEG[ni]>=LB && SEG[ni]<=HB) {L2[i] = L2[i] + L1[ni]; Nn++;}
         }
         L2[i] /= Nn;
-        diff  = abs2( L1[i] - L2[i] ); //printf("%f %f %f\n",L1[i],L2[i],diff);
+        diff  = abs2( L1[i] - L2[i] ); /*printf("%f %f %f\n",L1[i],L2[i],diff); */
         if ( diff>(TH/10) ) { 
           for (n=0;n<sN;n++) {
             ni = i + NI[n];
             ind2sub(ni,&nu,&nv,&nw,xy,x);
-            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 && SEG[ni]>LB && SEG[ni]<HB) LN[ni] = 1; // if i change his neigbors has to be recalculated
+            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 && SEG[ni]>LB && SEG[ni]<HB) LN[ni] = 1; /* if i change his neigbors has to be recalculated */
           }
         }
         LN[i]=0;
@@ -119,17 +119,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       }
     }
     maxdiff = maxdiffi;
-   // printf("%f",maxdiff);
-    // update of L1
+   /* printf("%f",maxdiff); */
+    /* update of L1 */
     for (i=0;i<nL;i++) 
     {
       L1[i]=L2[i];
     }
     
-    //stop++;
-    //if (stop == 10) continue; 
-    //Lt=L1; L1=L2; L2=Lt;
-    // update L1
+    /* stop++;
+       if (stop == 10) continue; 
+       Lt=L1; L1=L2; L2=Lt;
+       update L1 */
    
  }
 }

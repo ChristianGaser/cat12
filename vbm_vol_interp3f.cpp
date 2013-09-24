@@ -61,6 +61,10 @@
 #include <string.h>
 #include <iostream>
 
+#ifndef ROUND
+#define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
+#endif
+
 inline 
 static
 int access(int M, int N, int O, int x, int y, int z) {
@@ -149,9 +153,9 @@ void interpolate_nearest(float *pO, const float *pF,
     const float &y = pY[i];
     const float &z = pZ[i];
 
-    const int x_round = int(round(s_x*x+o_x))-1;
-    const int y_round = int(round(s_y*y+o_y))-1;
-    const int z_round = int(round(s_z*z+o_z))-1;
+    const int x_round = int(ROUND(s_x*x+o_x))-1;
+    const int y_round = int(ROUND(s_y*y+o_y))-1;
+    const int z_round = int(ROUND(s_z*z+o_z))-1;
 
     const int f00_i = access(M,N,O, x_round,y_round,z_round);
     for (mwSize j=0; j<P; ++j) {
@@ -174,9 +178,9 @@ void interpolate_nearest_unrolled(float *pO, const float *pF,
     const float &y = pY[i];
     const float &z = pZ[i];
 
-    const int x_round = int(round(s_x*x+o_x))-1;
-    const int y_round = int(round(s_y*y+o_y))-1;
-    const int z_round = int(round(s_z*z+o_z))-1;
+    const int x_round = int(ROUND(s_x*x+o_x))-1;
+    const int y_round = int(ROUND(s_y*y+o_y))-1;
+    const int z_round = int(ROUND(s_z*z+o_z))-1;
 
     const int f00_i = access(M,N,O, x_round,y_round,z_round);
     for (mwSize j=0; j<P; ++j) {
@@ -491,11 +495,11 @@ InterpolationMethod parseInterpolationMethod(const mxArray *method_string) {
 
   mxGetString(method_string, method, 9);
 
-  if (std::string(method).substr(0, 7) == "nearest")
+  if (strncmp(method,"nearest",7) == 0)
     return Nearest;
-  else if (std::string(method).substr(0, 6) == "linear")
+  else if (strncmp(method,"linear",6) == 0)
     return Linear;
-  else if (std::string(method).substr(0, 5) == "cubic")
+  else if (strncmp(method,"cubic",5) == 0)
     return Cubic;
   else
     mexErrMsgTxt("Specify one of nearest, linear, cubic as the interpolation method argument.");
