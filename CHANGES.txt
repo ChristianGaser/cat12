@@ -2376,3 +2376,12 @@ M       vbm_vol_interp3f.mexmaci64
 
 ------------------------------------------------------------------------
 r505 | gaser | 2013-09-25 13:04:11
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+Many changes to cg_vbm_write and cg_vbm_run to clean up the mess with the
+filenames.
+------------------------------------------------------------------------
+r506 | gaser | 2013-09-25 16:42:06

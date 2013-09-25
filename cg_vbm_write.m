@@ -128,7 +128,25 @@ end
 str='SPM-Preprocessing 2'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
 
 
-[pth,nam] = spm_fileparts(res.image(1).fname);
+[pth,nam,ext,num] = spm_fileparts(res.image(1).fname);
+ext='.nii'; % force use of nii-extension
+
+VT = spm_vol(res.image(1).fname);
+VT0 = VT;
+
+% remove noise prefix
+if warp.sanlm>0
+  nam = nam(2:end);
+  fname0 = fullfile(pth,[nam ext num]);
+  % check whether nii-image exists, otherwise use '.img' as extension
+  if ~exist(fname0,'file')
+    fname0 = fullfile(pth,[nam '.img' num]);
+  end
+  VT0 = spm_vol(fname0);
+else
+  fname0 = res.image(1).fname;
+end
+
 d    = res.image(1).dim(1:3);
 
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
@@ -169,6 +187,9 @@ for n=1:N,
     chan(n).T  = res.Tbias{n};
 
     [pth1,nam1] = spm_fileparts(res.image(n).fname);
+    if warp.sanlm>0
+      nam1 = nam1(2:end);
+    end
     chan(n).ind      = res.image(n).n;
 
     if bf(n,1),
@@ -199,7 +220,6 @@ do_defs = do_defs || any([job.output.th1.warped,job.output.ml.warped,job.output.
 do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
-        [pth,nam] = spm_fileparts(res.image(1).fname);
         Ndef      = nifti;
         Ndef.dat  = file_array(fullfile(pth,['iy_', nam, '.nii']),...
                                [res.image(1).dim(1:3),1,3],...
@@ -342,17 +362,6 @@ for z=1:length(x3),
 end
 clear chan o x1 x2 x3 bf1 f z
 
-% remove noise prefix
-if warp.sanlm>0
-  [pp,ff,ee,dd] = spm_fileparts(res.image.fname);
-  res.image(1).fname = fullfile(pp,[ff(2:end) ee dd]);
-  % check whether nii-image exists, otherwise use '.img' as extension
-  if ~exist(res.image(1).fname)
-    res.image(1).fname = fullfile(pp,[ff(2:end) '.img' dd]);
-  end
-end
-clear pp ff ee dd;
-
 % inital brain mask Yb (trust SPM)
 vx_vol = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
 Yb = vbm_vol_morph((Ycls{1}>1 & Ysrc<median(Ysrc(Ycls{1}(:)>128))*1.1) | Ycls{1}>128 | Ycls{2}>128,'lo',1);
@@ -362,7 +371,7 @@ Yb = vbm_vol_resize(vbm_vol_smooth3X(Yb),'dereduceV',resT2)>0.4;
 qa.QM.bias = std(Ybf(Yb(:)));
 
 % write bias field in original space for QA
-vbm_io_writenii(spm_vol(res.image(1).fname),Ybf,'bf', ...
+vbm_io_writenii(spm_vol(fname0),Ybf,'bf', ...
   'bias field','float32',[0,1],[1 0 0],0);
 clear Ybf;
 
@@ -382,7 +391,7 @@ if any(vx_vol>3.5)  % to high slice thickness (
         'has with %0.2f mm a to high slice thickness for a meanfull anatomical analysis!\n' ...
         'Slice thickness has to be below 3.5 mm, but we commend a isotropic resolution \n'...
         'with 1 mm or better.\n'], ... 
-          res.image.fname,max(vx_vol));
+          res.image(1).fname,max(vx_vol));
 end
 if prod(vx_vol)>10  % to low voxel volume (smaller than 2x2x2 mm3)
   error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
@@ -390,7 +399,7 @@ if prod(vx_vol)>10  % to low voxel volume (smaller than 2x2x2 mm3)
         'has with %0.2f mm3 a to small volume for a meanfull anatomical analysis!\n'...
         'Voxel volume has to be smaller than 10 mm3, but we commend an isotropic\n' ...
         'resolution below or equal 1 mm.\n'], ... 
-          res.image.fname,max(vx_vol));
+          res.image(1).fname,max(vx_vol));
 end
 if max(vx_vol)/min(vx_vol)>3.5 % isotropy
   error('MATLAB:SPM:VBM:cg_vbm_write:BadImageProperties', ...
@@ -399,7 +408,7 @@ if max(vx_vol)/min(vx_vol)>3.5 % isotropy
         'Strong isotropy (>3.5) can lead to strong bad detectable problems.\n'...
         'Isoptropy (max(vx_size)/min(vx_size)) of this image is %0.2f.\n' ...
         'We commend using of isotropic resolutions.\n'], ... 
-          res.image.fname,max(vx_vol));
+          res.image(1).fname,max(vx_vol));
 end
 % intensity checks
 T3th = [median(Ysrc(Ycls{3}(:)>192)) ...
@@ -1179,8 +1188,6 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
         end
     end
     
-    [pth,nam] = spm_fileparts(res.image(1).fname);
-
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
     clear f g u
@@ -1224,8 +1231,6 @@ if exist('Yy','var'),
 
     clear Yy t1 t2 t3 M;
 end
-VT = spm_vol(res.image(1).fname);
-
 
 
 
@@ -1252,13 +1257,11 @@ qa.SM.vol_rel_CGW = [prod(vx_vol)/1000 .* sum(single(Ycls{3}(:))/255) / qa.SM.vo
 if any(struct2array(job.output.pc))
 %% preprocessing change map
 %  create the map, the global measure was estimated by vbm_vol_t1qacalc.
-
-  [pp,ff,ee] = spm_fileparts(res.image.fname);
   
-  Yo  = single(spm_read_vols(spm_vol(res.image.fname)));
-  Ybf = single(spm_read_vols(spm_vol(fullfile(pp,['bf' ff ee]))));
+  Yo  = single(spm_read_vols(spm_vol(res.image(1).fname)));
+  Ybf = single(spm_read_vols(spm_vol(fullfile(pth,['bf' nam ext]))));
   if warp.sanlm
-    Yn = single(spm_read_vols(spm_vol(fullfile(pp,['n' ff ee]))));
+    Yn = single(spm_read_vols(spm_vol(fullfile(pth,['n' nam ext]))));
   else
     Yn = Yo;
   end  
@@ -1295,8 +1298,8 @@ if any(struct2array(job.output.te))
 
   opt.tpm = 0;
   if opt.tpm % VBM-Dartel template
-    [pp,ff,ee] = fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
-    VclsA = single(spm_vol(fullfile(pp,[strrep(ff,'Template_1','Template_6'),ee])));
+    [pth1,nam1,ext1] = spm_fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
+    VclsA = single(spm_vol(fullfile(pth1,[strrep(nam1,'Template_1','Template_6'),ext1])));
     YclsA = cell(1,3);
     for i=1:2
       YclsA{i} = single(spm_sample_vol(VclsA(i), ...
@@ -1316,7 +1319,7 @@ if any(struct2array(job.output.te))
     YclsAsum   = (YclsA{1} + YclsA{2} + YclsA{3}) .* Yclsb;
     for i=1:3, YclsA{i} = (YclsA{i}./max(eps,YclsAsum)) .* Yclsb; end
     Yp0A = YclsA{1}*2 + YclsA{2}*3 + YclsA{3} .* Yclsb;
-    clear YclsA YclsAsum VclsA Yclsb pp ff ee;
+    clear YclsA YclsAsum VclsA Yclsb;
 
   else % SPM-Tissue template
     VclsB = spm_vol(res.tpm(1).fname);
@@ -1347,10 +1350,10 @@ if any(struct2array(job.output.te))
   Yte = abs(max(1,Yp0A)-max(1,Yp0)); % we are not interessed in skull-stripping differences... maybe later ;-)
   spm_smooth(Yte,Yte,8);  % we are only interessed on larger changes
 
-  vbm_io_writenii(VT,Yte,'te', ...
+  vbm_io_writenii(VT0,Yte,'te', ...
     'group expectation map (matching of template after normalization)', ...
     'uint8',[0,1/255],min([1 0 0 0],struct2array(job.output.te)),0,trans);
-  vbm_io_writenii(VT,Yte,'te', ...
+  vbm_io_writenii(VT0,Yte,'te', ...
     'group expectation map (matching of template after normalization)', ...
     'uint8',[0,1/255],min([0 1 2 2],struct2array(job.output.te)),0,trans);
   qa.QM.vbm_expect = sum(Yte(:))./sum(Yp0(:)>0);
@@ -1359,19 +1362,18 @@ end
 
 
 % image quality parameter
-[pp,ff,ee] = spm_fileparts(res.image.fname);
-Yo  = single(spm_read_vols(spm_vol(res.image.fname)));
-Ybf = single(spm_read_vols(spm_vol(fullfile(pp,['bf' ff ee])))); 
+Yo  = single(spm_read_vols(spm_vol(res.image(1).fname)));
+Ybf = single(spm_read_vols(spm_vol(fullfile(pth,['bf' nam ext])))); 
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 
 qas = vbm_vol_t1qacalc(VT,Yo,Ybf,Ym,Yp0,opt.vbmi);
 qa  = vbm_io_updateStruct(qa,qas);
 
-if exist(fullfile(pp,['bf' ff ee]),'file')
- delete(fullfile(pp,['bf' ff ee]));
+if exist(fullfile(pth,['bf' nam ext]),'file')
+ delete(fullfile(pth,['bf' nam ext]));
 end
 
-clear Yo Ybf Yp0 qas pp ff ee;
+clear Yo Ybf Yp0 qas;
 fprintf('%3.0fs\n',etime(clock,stime));
 
 
@@ -1386,32 +1388,32 @@ fprintf('%3.0fs\n',etime(clock,stime));
 %  ---------------------------------------------------------------------
 
 % bias and noise corrected without/without masking
-vbm_io_writenii(VT,Ym,'m', ...
+vbm_io_writenii(VT0,Ym,'m', ...
   'bias and noise corrected, intensity normalized', ...
   'float32',[0,1],min([1 0 2],struct2array(job.output.bias)),0,trans);
-vbm_io_writenii(VT,Ym,'m', ...
+vbm_io_writenii(VT0,Ym,'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
   'float32',[0,1],min([0 1 0],struct2array(job.output.bias)),0,trans);
 
   
 % Yp0b maps
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
+vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],struct2array(job.output.label),0,trans);
 clear Yp0; 
 
 
 % partitioning
-vbm_io_writenii(VT,Yl1,'l1','brain atlas map for major structures and sides',...
+vbm_io_writenii(VT0,Yl1,'l1','brain atlas map for major structures and sides',...
   'uint8',[0,1],struct2array(job.output.l1),0,trans);
 
 
 % class maps
 fn = {'GM','WM','CSF'};
 for clsi=1:3
-  vbm_io_writenii(VT,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+  vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
     min([1 0 0 0],struct2array(job.output.(fn{clsi}))),0,trans);
-  vbm_io_writenii(VT,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+  vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 1 2 2],struct2array(job.output.(fn{clsi}))),0,trans);
 end
@@ -1424,7 +1426,7 @@ if jc
     warning('cg_vbm_write:saveJacobian','Jacobian can only be saved if dartel normalization was used.');
   else
     VJT=VT; VJT.mat=M1; VJT.mat0=M0; 
-    vbm_io_write_nii(tmp,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
+    vbm_io_write_nii(VT,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
   end
 end
 
@@ -1438,7 +1440,7 @@ end
 if any(struct2array(job.output.th1))
   str='Cortical Thickness'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
   
-  VT = res.image;
+  VT = res.image(1);
   
   opt.method  = 'pbt2x';
   opt.interpV = 0.75; %cg_vbm_get_defaults('extopts.pbtres');
@@ -1503,7 +1505,7 @@ if any(struct2array(job.output.th1))
 
   
   % save files 
-  vbm_io_writenii(VT,Yth1,'th1','pbt GM thickness', ...
+  vbm_io_writenii(VT0,Yth1,'th1','pbt GM thickness', ...
     'uint16',[0,1/1023],struct2array(job.output.th1),0,trans);
   clear Yth1;
   
@@ -1519,7 +1521,7 @@ end
 %  ---------------------------------------------------------------------
 qam = vbm_stat_marks('eval',opt.vbmi,qa);
  
-vbm_io_xml(fullfile(qa.FD.path,['vbm_' qa.FD.file '.xml']),...
+vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
   struct('qa',qa,'qam',qam),'write+');
 
 
@@ -1702,14 +1704,13 @@ if do_cls && warp.print
     
     opt.print=1;
     if opt.print
-      [pth,nam] = spm_fileparts(res.image(1).fname);
       
       % original image in original space
-      Yo   = single(spm_read_vols(spm_vol(res.image.fname)));
+      Yo   = single(spm_read_vols(spm_vol(res.image(1).fname)));
       Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
       Yo   = max(0,min(2,Yo ./ median(Yo(Yp0(:)>2.9)))); clear Yp0;
       
-      vbm_io_writenii(VT,Yo,'o','intensity scaled original','float32',[0,1],[1 0 0],0,trans);
+      vbm_io_writenii(VT0,Yo,'o','intensity scaled original','float32',[0,1],[1 0 0],0,trans);
       hho = spm_orthviews('Image',fullfile(pth,['o', nam, '.nii']),pos(1,:)); clear Yo;
     	spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
@@ -1721,7 +1722,7 @@ if do_cls && warp.print
       % full corrected images in original space
       Vtmp = fullfile(pth,['m', nam, '.nii']); 
       if ~exist(Vtmp,'file')
-        vbm_io_writenii(VT,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
+        vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
       end
     	hhm = spm_orthviews('Image',Vtmp,pos(2,:));
     	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -1734,7 +1735,7 @@ if do_cls && warp.print
       Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
       if ~exist(Vtmp2,'file')
         Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-        vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
+        vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
       end
       hhp0 = spm_orthviews('Image',Vtmp2,pos(3,:));
       spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
@@ -1745,7 +1746,7 @@ if do_cls && warp.print
       %% th1
       Vtmpth1 = fullfile(pth,['th1', nam, '.nii']); 
       if ~exist(Vtmpth1,'file')
-        vbm_io_writenii(VT,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
+        vbm_io_writenii(VT0,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
       end
       hhth1 = spm_orthviews('Image',Vtmpth1,pos(4,:));
       spm_orthviews('Caption',hhth1,{'th1*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -1773,7 +1774,7 @@ if do_cls && warp.print
       elseif bf(1,1) % native
         Vtmp = fullfile(pth,['m', nam, '.nii']); 
         if ~exist(Vtmp,'file')
-          vbm_io_writenii(VT,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
+          vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
         end
         hhm = spm_orthviews('Image',Vtmp,pos(1,:));
         spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -1797,7 +1798,7 @@ if do_cls && warp.print
         Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
         if ~exist(Vtmp2,'file')
           Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-          vbm_io_writenii(VT,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
+          vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
         end
         hhp0 = spm_orthviews('Image',Vtmp2,pos(2,:));
         spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
@@ -1871,7 +1872,7 @@ if do_cls && warp.print
             elseif th1(1) % native
               Vtmpth1 = fullfile(pth,['th1', nam, '.nii']); 
               if ~exist(Vtmpth1,'file')
-                vbm_io_writenii(VT,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
+                vbm_io_writenii(VT0,Ym,'th1','Yp0b map','single',[0,1],[1 0 0],0,trans);
               end
               hhth1 = spm_orthviews('Image',Vtmpth1,pos(2+k1,:));
               spm_orthviews('Caption',hhth1,{'th1*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -1898,7 +1899,7 @@ if do_cls && warp.print
   %% print group and subject file
   fprintf(1,'\n'); spm_print;
   
-  [pp,ff] = spm_fileparts(res.image.fname); psf=fullfile(pp,['vbm_' ff '.ps']); 
+  psf=fullfile(path,['vbm_' nam '.ps']); 
   if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
   
   % remove p0 image, if it was only written for printing
