@@ -148,7 +148,7 @@ for subj=1:numel(job.channel(1).vols),
     if job.warp.sanlm
         % for windows disable multi-threading
         if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
-            warp.sanlm = min(1,warp.sanlm);
+            job.warp.sanlm = min(1,job.warp.sanlm);
         end
           
         if      job.warp.sanlm==1, str='NLM-Filter';  
@@ -257,20 +257,26 @@ for subj=1:numel(job.channel(1).vols),
 
         try
             [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-            save(fullfile(pth,['vbm12mat_' nam '.mat']),'-struct','res', spm_get_defaults('mat.format'));
+            if job.warp.sanlm>0
+              nam = nam(2:end);
+            end
+            save(fullfile(pth,['vbm12_' nam '.mat']),'-struct','res', spm_get_defaults('mat.format'));
         end
 
     else % only write segmentations
 
         [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-        seg12_name = fullfile(pth,['vbm12mat_' nam '.mat']);
+        if job.warp.sanlm>0
+          nam = nam(2:end);
+        end
+        seg12_name = fullfile(pth,['vbm12_' nam '.mat']);
 
         if exist(seg12_name,'file')
             res = load(seg12_name);
 
             % check for spm version
             if ~isfield(res,'wp')
-                error([fullfile(pth,['vbm12mat_' nam '.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
+                error([fullfile(pth,['vbm12_' nam '.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
             end
 
             % load original used tpm, which is save in seg12.mat file
@@ -349,6 +355,9 @@ jacobian = {};
 
 for j=1:n,
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
+    if job.warp.sanlm>0
+      parts{j,2} = parts{j,2}(2:end);
+    end
 end
 
 if job.bias(1),
@@ -401,12 +410,9 @@ if job.label(4),
     end
 end
 
-for j=1:n,
-    [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
-end
 param = cell(n,1);
 for j=1:n
-    param{j} = fullfile(parts{j,1},['vbm12mat_',parts{j,2},'.mat']);
+    param{j} = fullfile(parts{j,1},['vbm12_',parts{j,2},'.mat']);
 end
 
 tiss = struct('c',{},'rc',{},'rca',{},'wc',{},'mwc',{},'m0wc',{});
