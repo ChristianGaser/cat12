@@ -2355,3 +2355,24 @@ M       sanlmMex.mexa64
 (3) Changed compile.m to consider new paths for libgomp.a.
 ------------------------------------------------------------------------
 r504 | gaser | 2013-09-24 17:13:33
+
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_gradient3.mexmaci64
+M       AmapMex.mexmaci64
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_eikonal3.mexmaci64
+M       CHANGES.txt
+M       sanlmMex.mexmaci64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbdist.mexmaci64
+M       sanlmMex_noopenmp.mexmaci64
+M       vbm_vol_laplace3.mexmaci64
+M       cg_vbm_write.m
+M       vbm_vol_interp3f.mexmaci64
+
+(1) Removed bug in cg_vbm_writewhere no img-files could be used if 
+    SANLM-filter was used and nii-extension was forced.
+(2) Re-compiling for macosx.
+
+------------------------------------------------------------------------
+r505 | gaser | 2013-09-25 13:04:11

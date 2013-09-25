@@ -346,6 +346,10 @@ clear chan o x1 x2 x3 bf1 f z
 if warp.sanlm>0
   [pp,ff,ee,dd] = spm_fileparts(res.image.fname);
   res.image(1).fname = fullfile(pp,[ff(2:end) ee dd]);
+  % check whether nii-image exists, otherwise use '.img' as extension
+  if ~exist(res.image(1).fname)
+    res.image(1).fname = fullfile(pp,[ff(2:end) '.img' dd]);
+  end
 end
 clear pp ff ee dd;
 
