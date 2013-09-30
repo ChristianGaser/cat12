@@ -79,6 +79,8 @@ if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
 end
 
 M1        = tpm.M;
+d1        = size(tpm.dat{1});
+d1        = d1(1:3);
 
 % Sort out bounding box etc
 [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
@@ -132,7 +134,6 @@ str='SPM-Preprocessing 2'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); st
 ext='.nii'; % force use of nii-extension
 
 VT = spm_vol(res.image(1).fname);
-VT0 = VT;
 
 % remove noise prefix
 if warp.sanlm>0
@@ -144,7 +145,8 @@ if warp.sanlm>0
   end
   VT0 = spm_vol(fname0);
 else
-  fname0 = res.image(1).fname;
+  % names without denoising
+  VT0 = VT;
 end
 
 d    = res.image(1).dim(1:3);
@@ -371,7 +373,7 @@ Yb = vbm_vol_resize(vbm_vol_smooth3X(Yb),'dereduceV',resT2)>0.4;
 qa.QM.bias = std(Ybf(Yb(:)));
 
 % write bias field in original space for QA
-vbm_io_writenii(spm_vol(fname0),Ybf,'bf', ...
+vbm_io_writenii(VT0,Ybf,'bf', ...
   'bias field','float32',[0,1],[1 0 0],0);
 clear Ybf;
 
@@ -695,7 +697,7 @@ clear Yg;
 %% ---------------------------------------------------------------------
 %  Partitioning
 %  ---------------------------------------------------------------------
-str='Regional Segmenation (Partitioning)'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+str='Regional Segmentation (Partitioning)'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
 
 % for the blood vessel correct, we need the full resolution, otherwise
 % we can use half resolution.
@@ -1362,7 +1364,7 @@ end
 
 
 % image quality parameter
-Yo  = single(spm_read_vols(spm_vol(res.image(1).fname)));
+Yo  = single(spm_read_vols(VT0));
 Ybf = single(spm_read_vols(spm_vol(fullfile(pth,['bf' nam ext])))); 
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 
@@ -1591,7 +1593,7 @@ if do_cls && warp.print
 % Image Quality measures:
   str2 =       struct('name', '\bfImage Quality:','value',''); 
                % sprintf('%s',marks2str(qam.QM.avg(1),sprintf('%0.1f > %0.1f',qam.QM.avg(1),qam.QM.avg(2))))); 
-  str2 = [str2 struct('name', ' SNR (orig > corr):' ,'value', ... 
+  str2 = [str2 struct('name', ' SNR (orig >> corr):' ,'value', ... 
                sprintf('%s %s %s', ...
                marks2str(qam.QM.SNR(1),sprintf('%5.2f',qa.QM.SNR(1))), char(187), ...   
                marks2str(qam.QM.SNR(2),sprintf('%5.2f',qa.QM.SNR(2)))))];   
@@ -1899,7 +1901,7 @@ if do_cls && warp.print
   %% print group and subject file
   fprintf(1,'\n'); spm_print;
   
-  psf=fullfile(path,['vbm_' nam '.ps']); 
+  psf=fullfile(pth,['vbm_' nam '.ps']);
   if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
   
   % remove p0 image, if it was only written for printing
