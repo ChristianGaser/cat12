@@ -168,7 +168,6 @@ for subj=1:numel(job.channel(1).vols),
             end
             Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
             job.channel(n).vols{subj} = Vn.fname;
-            Fn{subj}{n} = Vn.fname;  
             clear Y V Vn;
         end
               
@@ -309,12 +308,6 @@ for subj=1:numel(job.channel(1).vols),
     res.stime = stime;
     cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job);
 
-end
-
-if estwrite % estimate and write segmentations
-  for n=1:numel(job.channel) 
-    delete(Fn{subj}{n});
-  end
 end
 
 return
