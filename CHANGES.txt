@@ -2385,3 +2385,13 @@ Many changes to cg_vbm_write and cg_vbm_run to clean up the mess with the
 filenames.
 ------------------------------------------------------------------------
 r506 | gaser | 2013-09-25 16:42:06
+
+M       cg_vbm_run.m
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+(1) Removed unused paramter Fn from cg_vbm_run.m.
+(2) Again some cleaning of filenames in cg_vbm_write.m and removing some minor
+    typos and bugs.
+------------------------------------------------------------------------
+r507 | gaser | 2013-09-30 12:54:50
