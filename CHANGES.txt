@@ -2475,3 +2475,12 @@ A       vbm_vol_simgrow.mexa64
 Added missing mex-files.
 ------------------------------------------------------------------------
 r509 | gaser | 2013-10-14 16:35:43
+
+M       CHANGES.txt
+M       Kmeans.c
+M       vollib.c
+M       vbm12.man
+
+Replaced fprintf with printf to allow output for windows platforms.
+------------------------------------------------------------------------
+r510 | gaser | 2013-10-14 18:33:37

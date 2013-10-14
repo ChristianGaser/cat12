@@ -143,14 +143,14 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
 
   src_bak = (double *)malloc(sizeof(double)*vol);
   if(src_bak == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
   
   if (iters_nu > 0) {
     nu = (double *)malloc(sizeof(double)*vol);
     if(nu == NULL) {
-      fprintf(stderr,"Memory allocation error\n");
+      printf("Memory allocation error\n");
       exit(EXIT_FAILURE);
     }
   }  
@@ -268,9 +268,9 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
   if (iters_nu > 0) {
 
 #ifdef SPLINESMOOTH
-    fprintf(stdout,"Nu correction using spline smoothing\n");
+    printf("Nu correction using spline smoothing\n");
 #else
-    fprintf(stdout,"Nu correction\n");
+    printf("Nu correction\n");
 #endif
 
     /* save values of previous iteration */
