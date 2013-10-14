@@ -25,11 +25,12 @@
 #include "mex.h"   
 #include "matrix.h"
 #include "math.h"
+#include <stdlib.h>
 
 
 // estimate minimum of A and its index in A    
 void pmin(const float A[], int sA, float & minimum, int & index) {
-  minimum=INFINITY; index=0; 
+  minimum=1e15f; index=0; 
   for(int i=0;i<sA;i++) {
     if ((A[i]>0) && (minimum>A[i])) { 
       minimum = A[i];
@@ -52,13 +53,13 @@ void pmax(const float GMT[],const float RPM[],const float SEG[], const float ND[
   //maximum=WMD; index=0; //printf("%d ",sizeof(A)/8);
   for(int i=0;i<=sA;i++) {
     
-    if (  (GMT[i]<INFINITY) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.65)>WMD) && SEG[i]>1.5 && SEGI>=2)     //work: +-0.4 to +-0.5
+    if (  (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.65)>WMD) && SEG[i]>1.5 && SEGI>=2)     //work: +-0.4 to +-0.5
       {
         n++; 
         maximum = GMT[i]; 
         index = i;
       }
-//    if (  (GMT[i]<INFINITY) && (GMT[i]>WMD) && ((RPM[i]-ND[i]-0.3)<WMD) && ((RPM[i]-ND[i]+0.9)>WMD) && SEG[i]>1.5 && SEGI>=2) 
+//    if (  (GMT[i]<1e15) && (GMT[i]>WMD) && ((RPM[i]-ND[i]-0.3)<WMD) && ((RPM[i]-ND[i]+0.9)>WMD) && SEG[i]>1.5 && SEGI>=2) 
 //      {
 //        maximum2 = (maximum2 + GMT[i])/2; 
 //      } 
@@ -74,13 +75,13 @@ void pmax(const float GMT[],const float RPM[],const float SEG[], const float ND[
   float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0; maximum=WMD; index=0; 
   
   for(int i=0;i<=sA;i++) {
-    if (  (GMT[i]<INFINITY) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1 && SEGI>1.66)  // vorher ohne // 1.15 und 0.6
-    //if (  (GMT[i]<INFINITY) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.65)>WMD) )     
+    if (  (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1 && SEGI>1.66)  // vorher ohne // 1.15 und 0.6
+    //if (  (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.65)>WMD) )     
       { maximum = GMT[i]; index = i; }
   }
   float maximum2=maximum; float m2n=0; 
   for(int i=0;i<=sA;i++) {
-    if (  (GMT[i]<INFINITY) && (GMT[i]>WMD) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1.00 && SEGI>1.66)   // 1.00 0.5 // 1.50 0.75 && SEG[i]>=1.5 && SEGI>1.5
+    if (  (GMT[i]<1e15) && (GMT[i]>WMD) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1.00 && SEGI>1.66)   // 1.00 0.5 // 1.50 0.75 && SEG[i]>=1.5 && SEGI>1.5
       { maximum2 = maximum2 + GMT[i]; m2n++; } 
   }
   if ( m2n > 0 )  maximum = (maximum2 - maximum)/m2n; 
@@ -91,9 +92,9 @@ void pmax(const float GMT[],const float RPM[],const float SEG[], const float ND[
 
 // estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
 void ind2sub(int i,int &x,int &y, int &z, int sxy, int sy) {
-  z = floor( i / (sxy) ) +1; 
+  z = (int)floor( i / (double)sxy ) +1; 
   i = i % (sxy);
-  y = floor( i / sy ) +1;        
+  y = (int)floor( i / (double)sy ) +1;        
   x = i % sy + 1;
 }
 
@@ -129,9 +130,9 @@ float isoval(float*SEG,float x, float y, float z, int sSEG[]){
 
 
 struct opt_type {
-	int   CSFD;													// use CSFD
-	int   PVE;													// 0, 1=fast, 2=exact
-	float LB, HB, LLB, HLB, LHB, HHB;  	// boundary
+	int   CSFD;													/* use CSFD */
+	int   PVE;													/* 0, 1=fast, 2=exact */
+	float LB, HB, LLB, HLB, LHB, HHB;  	/* boundary */
 	int   sL[3];
 	// ...
 	} opt;
@@ -192,7 +193,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float        *RPM  = (float *)mxGetPr(plhs[1]);
   
   // intitialisiation
-  for (unsigned int i=0;i<nL;i++) {
+  for (int i=0;i<nL;i++) {
   	GMT[i] = WMD[i];
     RPM[i] = WMD[i];
 		// proof distance input

@@ -19,9 +19,13 @@
  * $Id$ 
  */
  
- #include "mex.h"   
+#include "mex.h"   
 #include "matrix.h"
 #include "math.h"
+
+#ifndef isnan
+#define isnan(a) ((a)!=(a)) 
+#endif
 
 // HELPFUNCTIONS:
 // estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
@@ -30,10 +34,10 @@ void ind2sub(int i,int &x,int &y, int &z, int sxy, int sy) {
 	  x=0;y=0;z=0; 
 	  }
 	else {
- 	 	z = floor( i / (sxy) ) +1; 
-  	i = i % (sxy);
-  	y = floor( i / sy ) +1;        
-  	x = i % sy + 1;
+      z = (int)floor( i / (double)sxy ) +1; 
+      i = i % (sxy);
+      y = (int)floor( i / (double)sy ) +1;        
+      x = i % sy + 1;
   }
 }
 int sub2ind(int x,int y, int z, const int s[]) {
@@ -86,7 +90,7 @@ float isoval(float SEG[], float x, float y, float z, int s[]){
 
 // MAINFUNCTION [D,I] = ed(L,bd,r,s) = eidist(L,boundary,range,side)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<1) mexErrMsgTxt("ERROR:vbm_vol_eidist:  not enought input elements\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:vbm_vol_eidist:  not enought input elements\n");
   if (nrhs>4) mexErrMsgTxt("ERROR:vbm_vol_eidist: to many input elements.\n");
   if (nlhs>3) mexErrMsgTxt("ERROR:vbm_vol_eidist: to many output elements.\n");
   if (mxIsSingle(prhs[0])==0) mexErrMsgTxt("ERROR:vbm_vol_eidist: first  input must be an 3d single matrix\n");
@@ -100,10 +104,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float*L  = (float *)mxGetPr(prhs[1]);	// label map
   
   //if (nrhs<2) float*bd = (float *)mxGetPr(prhs[1]); else float*bd  = 0; // tissue map
-  //if (nrhs<3) float*r  = (float *)mxGetPr(prhs[2]); else float*r[] = {-INFINITY,0};
+  //if (nrhs<3) float*r  = (float *)mxGetPr(prhs[2]); else float*r[] = {-1e15,0};
   //if (nrhs<4) float*s  = (float *)mxGetPr(prhs[3]); else float*s   = 1; 
   float bd  = 0.5;
-  float r[] = {-INFINITY,0.5};
+  float r[] = {-1e15,0.5};
   float s   = 1;
   
   
@@ -151,26 +155,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   unsigned int*I  = (unsigned int *)mxGetPr(plhs[1]);	// index map
   
 	
-	// check if there is a object and return INFINITY and i=i+1 (for matlab) for all points if there is no object
+	// check if there is a object and return 1e15 and i=i+1 (for matlab) for all points if there is no object
 	int vx=0;	for (i=0;i<nL;i++) { if ( B[i]>=bd ) vx++; }
-	if (vx==0) { for (i=0;i<nL;i++) { D[i]=INFINITY; I[i]=i+1; } return;}
+	if (vx==0) { for (i=0;i<nL;i++) { D[i]=1e15; I[i]=i+1; } return;}
 		
 
 	// initialisation of parameter volumes
 	for (i=0;i<nL;i++) { 
 	// only temporary to avoid unregular voxel
 		ind2sub(i,u,v,w,xy,x); 
-		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>(sL[0]) || v>(sL[1]) || w>(sL[2])  ) D[i] = -INFINITY; 
-//		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>=(sL[0]-1) || v>=(sL[1]-1) || w>=(sL[2]-1)  ) D[i] = -INFINITY; 
+		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>(sL[0]) || v>(sL[1]) || w>(sL[2])  ) D[i] = -1e15; 
+//		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>=(sL[0]-1) || v>=(sL[1]-1) || w>=(sL[2]-1)  ) D[i] = -1e15; 
 
 	// regular part		
 		I[i]=(unsigned int)i; 
-		if ( L[i]<=0 || B[i]==-INFINITY) {
-			D[i] = -INFINITY;
+		if ( L[i]<=0 || B[i]==-1e15) {
+			D[i] = -1e15;
 		} // neg object
-		if ( D[i]!=-INFINITY) {
+		if ( D[i]!=-1e15) {
 		 	if ( B[i]>bd )	{D[i]	 = 0; nCV++;}
-			else       		 	{D[i]	 = INFINITY;}	
+			else       		 	{D[i]	 = 1e15;}	
 		}
 	}
 
@@ -180,7 +184,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		for (i=0;i<nL;i++) { 
 			// only new values (-n), that are not -INF and that are not to far from the actual iteration (kll)
 		try {
-	 		if ( D[i]<=0 && D[i]!=-INFINITY && abs2(D[i])<=(s3*float(kll)+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 ) { // && L[i]<=1 
+	 		if ( D[i]<=0 && D[i]!=-1e15 && abs2(D[i])<=(s3*float(kll)+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 ) { // && L[i]<=1 
 				if (D[i]<0) D[i]=-D[i]; 
 				nCV--;  // demark points - also the with zero distance
 				ii=(int)I[i];
@@ -221,14 +225,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
               DIN=abs2(D[ni]+ND[n]);
             }
 						// use DN?	
-						if ( abs2(D[ni])>DIN && D[ni]!=-INFINITY ) {
+						if ( abs2(D[ni])>DIN && D[ni]!=-1e15 ) {
 							if (D[ni]>0) nCV++; nC++;
 							D[ni] = -DIN; 
 							I[ni] = I[i];
 						}
 					}
 				}
-				if (D[i]==0) D[i]=-INFINITY; // demark start points
+				if (D[i]==0) D[i]=-1e15; // demark start points
 			}
 		}
 		catch (...) {
@@ -241,20 +245,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// correction of non-visited points due to miss-estimations of the exact boundary... use values of our neighbors 
 	kll=0; nCV=0;
 	for (i=0;i<nL;i++) {
-		if (D[i]==INFINITY) nCV++; 
-		if (D[i]<0 && D[i]!=-INFINITY) D[i]=-D[i]; 
+		if (D[i]==1e15) nCV++; 
+		if (D[i]<0 && D[i]!=-1e15) D[i]=-D[i]; 
 	}
 	nC=nCV; 
 	while ( nCV>0 && nC>0 && kll<kllv) {
 		kll++; nC=0;
 		for (i=0;i<nL;i++) { 
-			if ( (D[i]==INFINITY ) || (D[i]<=0 && D[i]!=-INFINITY) && abs2(D[i])<=(s3*float(kll)+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 && L[i]<=1) { 
+			if ( (D[i]==1e15 ) || (D[i]<=0 && D[i]!=-1e15) && abs2(D[i])<=(s3*float(kll)+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 && L[i]<=1) { 
 				if (D[i]<0) D[i]=-D[i]; 
 				nCV--;  // demark points - also the with zero distance
 				ind2sub(i,u,v,w,xy,x); 
 				for (n=0;n<26;n++) {
 					ni=i+NI[n]; ind2sub(ni,nu,nv,nw,xy,x);
-					if ( ( (ni<0) || (ni>=nL) || (abs2(nu-u)>1) || (abs2(nv-v)>1) || (abs2(nw-w)>1) && D[ni]!=INFINITY )==0 ) { 
+					if ( ( (ni<0) || (ni>=nL) || (abs2(nu-u)>1) || (abs2(nv-v)>1) || (abs2(nw-w)>1) && D[ni]!=1e15 )==0 ) { 
 						DN = abs2(D[ni]) + ND[n]; 
 						if ( abs2(D[i])>DN ) { // use DN?
 							if (D[i]>0) nCV++; nC++;
@@ -269,8 +273,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	// last correction
 	for (i=0;i<nL;i++) { 
-		if (D[i]<0 && D[i]!=-INFINITY) D[i]=-D[i]; 
+		if (D[i]<0 && D[i]!=-1e15) D[i]=-D[i]; 
 		if (I[i]>0) I[i]++; else I[i]=1;						// correct for matlab index
-		if (D[i]==-INFINITY || D[i]==NAN) D[i]=0; 	// correction of non-visited or other incorrect voxels
+		if (D[i]==-1e15 || isnan(D[i])) D[i]=0; 	// correction of non-visited or other incorrect voxels
 	} 
 }
