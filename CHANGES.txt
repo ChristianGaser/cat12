@@ -2395,3 +2395,29 @@ M       cg_vbm_write.m
     typos and bugs.
 ------------------------------------------------------------------------
 r507 | gaser | 2013-09-30 12:54:50
+
+M       sanlmMex.mexw32
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_pbtp.cpp
+M       AmapMex.mexw32
+M       compile.m
+M       vbm_vol_simgrow.c
+M       vbm_vol_simgrow.mexmaci64
+M       sanlmMex.mexw64
+M       vbdist.mexw32
+M       CHANGES.txt
+M       sanlmMex.mexglx
+M       AmapMex.mexw64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_localstat.c
+M       vbm12.man
+M       vbm_vol_localstat.mexmaci64
+M       vbdist.mexw64
+M       vbm_vol_eidist.cpp
+M       vbm_vol_median3c.mexmaci64
+
+(1) Added missing files to compile.m.
+(2) Modified c/c++ code to allow compiling for linux/windows.
+(3) Re-compiling for all platforms.
+------------------------------------------------------------------------
+r508 | gaser | 2013-10-14 16:34:09

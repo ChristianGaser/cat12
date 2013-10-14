@@ -5,15 +5,21 @@ function compile
   
   mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
   mex -O vbm_vol_median3.c
+  mex -O vbm_vol_median3c.c
   mex -O vbm_vol_eikonal3.c
   mex -O vbm_vol_downcut.c
   mex -O vbm_vol_laplace3.c
   mex -O vbm_vol_laplace3R.c
   mex -O vbm_vol_gradient3.c
+  mex -O vbm_vol_simgrow.c
+  mex -O vbm_vol_localstat.c
+  mex -O vbm_vol_pbtp.cpp
   mex -O vbm_vol_interp3f.cpp
+  mex -O vbm_vol_eidist.cpp
   mex -O vbdist.c
   
   d2 = vbm_vol_median3(d);             disp('Compilation of vbm_vol_median3 successful')
+  d2 = vbm_vol_median3c(d);            disp('Compilation of vbm_vol_median3c successful')
   d2 = vbm_vol_eikonal3(d);            disp('Compilation of vbm_vol_eikonal3 successful')
   d2 = vbm_vol_laplace3(d,0,0,0.001);  disp('Compilation of vbm_vol_laplace3 successful')
   d2 = vbm_vol_laplace3R(d,d>0.5,0.2); disp('Compilation of vbm_vol_laplace3R successful')
@@ -21,7 +27,11 @@ function compile
   d2 = vbm_vol_downcut(d,d.^1.5,1);    disp('Compilation of vbm_vol_down_cut successful')
   d2 = vbdist(d);                      disp('Compilation of vbdist successful')
   d2 = vbm_vol_interp3f(d,d,d,d);      disp('Compilation of vbm_vol_interp3f successful')
-  
+  d2 = vbm_vol_localstat(d,d>0);       disp('Compilation of vbm_vol_localstat successful')
+  d2 = vbm_vol_simgrow(d,d,0.01);      disp('Compilation of vbm_vol_simgrow successful')
+  d2 = vbm_vol_eidist(d,d);            disp('Compilation of vbm_vol_eidist successful')
+  d2 = vbm_vol_pbtp(3*d,d,d);          disp('Compilation of vbm_vol_pbtp successful')
+
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')
           mex CC='gcc-4.4' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c

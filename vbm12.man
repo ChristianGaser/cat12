@@ -1,6 +1,6 @@
 % __________________________________________________________________________
 % Voxel Based Morphometry Toolbox for SPM12
-% Version  487  (VBM12)  2013-05-15
+% Version  507  (VBM12)  2013-09-30
 %  http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2013 Christian Gaser christian.gaser@uni-jena.de
@@ -113,55 +113,92 @@
 % Further extensions to SPM12 are the estimation of cortical thickness maps
 % (Dahnke et al. 2012) and of cortical atlas maps with major brain structures
 % that is used to restrict thickness estimation to cortical areas.
+% You can use the thickness phantom (http://...)
+% directly in the VBM pipeline, although it was constructed as p0 image. But  
+% be warned, the estimated thickness will vary a little bit from the value 
+% in the paper, because it is now influenced by all preprocessing routines!
 %
 % __________________________________________________________________________
 %
 %
-% VBM Report and Quality Assurance:
+% VBM Report and Quality Control:
 %
 % Besides the used preprocessing parameters VBM now also print image quality
 % measurements and global subject measurements. All measurements were graded
 % (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, 5< - problematic).
 % Measures and/or grading are under development and should help to identify 
 % problematic datasets. 
-% All measurements we done for the original image and the preprocessing 
-% routines try to correct them, but of course stronger aberrations require
-% stronger corrections that reduce spacial resolution or maybe fail.
+% All graded measurements were done for the original image and if useful for  
+% the corrected image (original > corrected). Bracketed values represent the
+% non-graded measurement. 
+% Although, the preprocessing routines try to correct problems like noise or 
+% bias, stronger aberrations require stronger corrections that reduce spacial 
+% resolution or maybe fail.
+% Their are 
+%
+% 1) Image Quality Measures:
+%  Noise (tissue noise):
+%   Noise is measured as the local standard deviation in the WM segment and 
+%   scaled by the signal intensity that is in our case given by the GM-WM 
+%   contrast. The WM is used rather than the background, because the back-
+%   ground can be removed or it contains/not contain artifacts outside our
+%   regions of interest. 
+%
+%  Bias/Inhomogeneity:
+%   Inhomogeneity is measured as the global standard deviation in the WM 
+%   segment. Only the WM segment is used because the GM is strongly effected 
+%   by the PVE (boundary voxel between tissues) and has varying intensities
+%   like in the basal ganglia, the motor cortex or the occipital lobe. 
+%
+%  Contrast (GM-WM contrast):
+%   Most important for the image segmentation is the GM-WM contrast. If the 
+%   contrast is to low initial segmentation/registration/bias correction will 
+%   be difficult. 
+%   ...
+%
+%  Voxel Volume & Isotropy:
+%   The image resolution play an important rule, especially if you want to 
+%   measure cortical thickness. 
+%   ...
+%
+%  Preprocessing Change Map:
+%   ...
+%
+%
+% 2) Subject Averageness:
+%  CGW-Volumes: 
+%   Absolute and relative volume of the major tissue classes for all brain
+%   structures. 
+%
+%  TIV:
+%   Total Intracranial Volume as the sum of all tissue classes within the 
+%   brain mask.
+%
+%  Tissue Expectation Map:
+%   VBM uses prior maps only for initial purposes. This allows to estimate 
+%   a map that describes how well a subject fits to the prior maps. It is #
+%   expected that subject that are close to the average case are easyer to
+%   handle for most preprocessing routines for a similar image quality.
+%
+%  [Cortical thickness:]
+%   Mean cortical thickness and its standard deviation. 
+%   Only available, if cortical thickness is processed.
 % 
-% Noise (tissue noise):
-%  Noise is measured as the local standard deviation in the WM segment and 
-%  scaled by the signal intensity that is in our case given by the GM-WM 
-%  contrast. The WM is used rather than the background, because the back-
-%  ground can be removed or it contains/not contain artifacts outside our
-%  regions of interest. 
 %
-% Bias/Inhomogeneity:
-%  Inhomogeneity is measured as the global standard deviation in the WM 
-%  segment. Only the WM segment is used because the GM is strongly effected 
-%  by the PVE (boundary voxel between tissues) and has varying intensities
-%  like in the basal ganglia, the motor cortex or the occipital lobe. 
-%
-% Contrast (GM-WM contrast):
-%  Most important for the image segmentation is the GM-WM contrast. If the 
-%  contrast is to low initial segmentation/registration/bias correction will 
-%  be difficult. 
-%  ...
-%
-% Voxel Volume & Isotropy:
-%  The image resolution play an important rule, especially if you want to 
-%  measure cortical thickness. 
-%  ...
-%
-% VBM result images depending on the export options. The first row displays
-% the intensity normalized, noise and bias corrected T1 image on the left
-% side and the label map p0 on the right. The second row shows the GM (left)
-% and WM (right) segment. All images where displayed in normalized spaces, 
-% if the were available, otherwise the native space is used. 
-% Therefore, the figure can contain images of different spaces, so don't 
-% wonder, if the crosshair doesn't show the same structures.
+% Result images:
+%  VBM result images depending on the export options. The first row displays
+%  the intensity normalized, noise and bias corrected T1 image on the left
+%  side and the label map p0 on the right. The second row shows the GM (left)
+%  and WM (right) segment. All images where displayed in normalized spaces, 
+%  if the were available, otherwise the native space is used. 
+%  Therefore, the figure can contain images of different spaces, so don't 
+%  wonder, if the crosshair doesn't show the same structures.
 %  
-% (1. VBM Preprocessing Change Map (pc*.nii) )
-% (2. VBM Tissue Expectation Map (te*.nii) )
+%  WARNING: The scaling of the color is normally fixed, but interactive use 
+%           of the result figure can produce errors. 
+%
+%  (1. VBM Preprocessing Change Map (pc*.nii) )
+%  (2. VBM Tissue Expectation Map (te*.nii) )
 %
 %
 %
