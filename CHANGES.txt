@@ -2421,3 +2421,57 @@ M       vbm_vol_median3c.mexmaci64
 (3) Re-compiling for all platforms.
 ------------------------------------------------------------------------
 r508 | gaser | 2013-10-14 16:34:09
+
+A       vbm_vol_pbtp.mexa64
+A       vbm_vol_laplace3.mexw64
+A       vbm_vol_median3.mexglx
+A       vbm_vol_gradient3.mexglx
+A       vbm_vol_eidist.mexa64
+A       vbm_vol_eikonal3.mexw32
+A       vbm_vol_interp3f.mexglx
+A       vbm_vol_median3c.mexw32
+A       vbm_vol_simgrow.mexw32
+A       vbm_vol_downcut.mexw64
+A       vbm_vol_laplace3.mexglx
+A       vbm_vol_pbtp.mexw32
+A       vbm_vol_laplace3R.mexw64
+A       vbm_vol_eidist.mexw32
+A       vbm_vol_localstat.mexw64
+A       vbm_vol_gradient3.mexa64
+A       vbm_vol_median3.mexa64
+A       vbm_vol_downcut.mexglx
+A       vbm_vol_interp3f.mexa64
+A       vbm_vol_laplace3R.mexglx
+A       vbm_vol_laplace3.mexa64
+A       vbm_vol_localstat.mexglx
+A       vbm_vol_eikonal3.mexw64
+A       vbm_vol_gradient3.mexw32
+A       vbm_vol_median3.mexw32
+A       vbm_vol_median3c.mexw64
+A       vbm_vol_interp3f.mexw32
+A       vbm_vol_simgrow.mexw64
+A       vbm_vol_downcut.mexa64
+A       vbm_vol_pbtp.mexw64
+M       CHANGES.txt
+A       vbm_vol_laplace3.mexw32
+A       vbm_vol_eikonal3.mexglx
+A       vbm_vol_laplace3R.mexa64
+A       vbm_vol_eidist.mexw64
+A       vbm_vol_median3c.mexglx
+A       vbm_vol_localstat.mexa64
+A       vbm_vol_simgrow.mexglx
+A       vbm_vol_downcut.mexw32
+A       vbm_vol_pbtp.mexglx
+A       vbm_vol_eidist.mexglx
+A       vbm_vol_laplace3R.mexw32
+A       vbm_vol_eikonal3.mexa64
+A       vbm_vol_gradient3.mexw64
+A       vbm_vol_median3.mexw64
+A       vbm_vol_localstat.mexw32
+A       vbm_vol_interp3f.mexw64
+A       vbm_vol_median3c.mexa64
+A       vbm_vol_simgrow.mexa64
+
+Added missing mex-files.
+------------------------------------------------------------------------
+r509 | gaser | 2013-10-14 16:35:43
