@@ -121,7 +121,7 @@ convxyz_double(double *iVol, double filtx[], double filty[], double filtz[],
   sortedv = (double **)malloc(sizeof(double *)*fzdim);
 
   if((tmp == NULL) || (buff == NULL) || (sortedv == NULL)) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -194,7 +194,7 @@ convxyz_float(float *iVol, float filtx[], float filty[], float filtz[],
   sortedv = (float **)malloc(sizeof(float *)*fzdim);
 
   if((tmp == NULL) || (buff == NULL) || (sortedv == NULL)) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -269,7 +269,7 @@ convxyz_uint8(unsigned char *iVol, double filtx[], double filty[], double filtz[
   sortedv = (double **)malloc(sizeof(double *)*fzdim);
 
   if((tmp == NULL) || (buff == NULL) || (sortedv == NULL)) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -347,7 +347,7 @@ convxyz_int16(signed short *iVol, double filtx[], double filty[], double filtz[]
   sortedv = (double **)malloc(sizeof(double *)*fzdim);
 
   if((tmp == NULL) || (buff == NULL) || (sortedv == NULL)) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -425,7 +425,7 @@ convxyz_int32(signed int *iVol, double filtx[], double filty[], double filtz[],
   sortedv = (double **)malloc(sizeof(double *)*fzdim);
 
   if((tmp == NULL) || (buff == NULL) || (sortedv == NULL)) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -516,7 +516,7 @@ morph_dilate_uint8(unsigned char *vol, int dims[3], int niter, int th)
   buffer = (unsigned char *)malloc(sizeof(unsigned char)*dims2[0]*dims2[1]*dims2[2]);
 
   if(buffer == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
@@ -562,7 +562,7 @@ morph_close_double(double *vol, int dims[3], int niter, double th)
   buffer = (unsigned char *)malloc(sizeof(unsigned char)*dims[0]*dims[1]*dims[2]);
 
   if(buffer == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
   for (i=0;i<dims[2]*dims[1]*dims[0];i++)
@@ -586,7 +586,7 @@ morph_open_double(double *vol, int dims[3], int niter, double th)
   buffer = (unsigned char *)malloc(sizeof(unsigned char)*dims[0]*dims[1]*dims[2]);
 
   if(buffer == NULL) {
-    fprintf(stderr,"Memory allocation error\n");
+    printf("Memory allocation error\n");
     exit(EXIT_FAILURE);
   }
 
