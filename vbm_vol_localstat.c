@@ -20,6 +20,10 @@
 #include "math.h"
 #include "float.h"
 
+#ifndef ROUND
+#define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
+#endif
+
 #ifndef isnan
 #define isnan(a) ((a)!=(a)) 
 #endif
@@ -28,7 +32,7 @@
 
 
 float abs2(float n) {	if (n<0) return -n; else return n; }        
-float pow2(float n) { n * n;}
+float pow2(float n) { return n*n;}
 
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -63,12 +67,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
 const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
-//printf("%d",st);
+/*printf("%d",st); */
 
-  float NVstdth,nx,NVnmax,stdth=0.90; //1-1/nh; 1 - 1/(2*nh+1); //*(2*nh+1));
-  float NV[9261],NVn[9261],GV[9261],DN[9261], NVmn, NVstd; // nmax ==10
+  float NVstdth,nx,NVnmax,stdth=0.90; /*1-1/nh; 1 - 1/(2*nh+1); (2*nh+1)); */
+  float NV[9261],NVn[9261],GV[9261],DN[9261], NVmn, NVstd; /* nmax ==10 */
   
-  int i,j,k,ind,ni,x,y,z,n,nn,HIST[1000]; //,HIST1[1000],HIST2[1000];
+  int i,j,k,ind,ni,x,y,z,n,nn,HIST[1000]; /*,HIST1[1000],HIST2[1000]; */
         
   /* in- and output */
   float *D = (float *) mxGetPr(prhs[0]);
@@ -78,10 +82,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M2  = (float *) mxGetPr(plhs[1]);
   
   int n1i,n2i; 
-  int HISTmax=40; //HISTmax1=40; HISTmax2=40; //(int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; 
-  const int     sx  = (int) sL[0];
-  const int     sy  = (int) sL[1];
-  const int     sxy = x*y;
+  int HISTmax=40; /*HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
  
   /* filter process */
   for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
@@ -96,8 +97,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
           DN[ni] = (float) sqrt( (double) ((i * i) + 
                                  (j * j) + 
                                  (k * k)) );
-          // ( B[ni]==1 && isnan(D[ni])==0 && D[ni]!=FLT_MAX && D[ind]!=-FLT_MAX && (DN[ni]<=(float)nh)
-          if ( D[ni]>0 && (DN[ni]<=(float)nh) ) { //&& (DN[ni]<=(float)nh) ) {
+          if ( D[ni]>0 && (DN[ni]<=(float)nh) ) { /*&& (DN[ni]<=(float)nh) ) { */
             NV[n] = D[ni];
             n++;
           }
@@ -116,21 +116,21 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
       if (st==5) {
         /* max in histogram */
         for (nn=0;nn<200;nn++) {HIST[nn]=0;}
-        for (nn=0;nn<n;nn++) {HIST[(int) round( NV[nn]* (float) HISTmax) ]++;}
+        for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
         M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
         M[ind]=M[ind]/(float) HISTmax;
       };  
       if (st==6) {
         /* max in histogram */
-        NVmn = D[ni]; //= 0.0; for (nn=0;nn<n;nn++) { NVmn  +=  NV[nn];}; NVmn/=n;
+        NVmn = D[ni]; /*= 0.0; for (nn=0;nn<n;nn++) { NVmn  +=  NV[nn];}; NVmn/=n; */
         
         for (nn=0;nn<200;nn++) {HIST[nn]=0;}
-        for (nn=0;nn<n;nn++) {HIST[(int) round( NV[nn]* (float) HISTmax) ]++;}
-        //for (nn=0;nn<n;nn++) if (NV[nn]<MVmn) {HIST1[(int) round( NV[nn]* (float) HISTmax) ]++;}
-        M[ind]=0; for (nn=(int) round( NVmn * (float) HISTmax);nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
-        //M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
+        for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
+        /*for (nn=0;nn<n;nn++) if (NV[nn]<MVmn) {HIST1[(int) ROUND( NV[nn]* (float) HISTmax) ]++;} */
+        M[ind]=0; for (nn=(int) ROUND( NVmn * (float) HISTmax);nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
+        /*M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;} */
         M[ind]=M[ind]/(float) HISTmax;
-        M2[ind]=0; for (nn=0;nn<(int) round( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
+        M2[ind]=0; for (nn=0;nn<(int) ROUND( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
         M2[ind]=M2[ind]/(float) HISTmax;
       };  
       
@@ -153,7 +153,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
         if ( stdth>0 ) {
           NVnmax=0; for (i=0;i<n;i++) {
             NVn[i]=abs2(NVn[i]-NVmn); if (NVnmax<NVn[i]) NVnmax=NVn[i];
-            // NVn[i]=abs2(NVn[i]-NVmn) + GV[i]; if (NVnmax<NVn[i]) NVnmax=NVn[i];
+            /* NVn[i]=abs2(NVn[i]-NVmn) + GV[i]; if (NVnmax<NVn[i]) NVnmax=NVn[i];
           }
           NVstdth=NVnmax*stdth;
           
@@ -184,7 +184,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
     }
     else {
       M[ind] = 0; /*D[ind];*/
-     //SD[ind] = 0;      
+     /*SD[ind] = 0; */      
     }
     
     
