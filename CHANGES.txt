@@ -2484,3 +2484,60 @@ M       vbm12.man
 Replaced fprintf with printf to allow output for windows platforms.
 ------------------------------------------------------------------------
 r510 | gaser | 2013-10-14 18:33:37
+
+ M      vbm_vol_pbtp.mexa64
+ M      vbm_vol_laplace3.mexw64
+ M      vbm_vol_gradient3.mexglx
+ M      vbm_vol_median3.mexglx
+ M      vbm_vol_eidist.mexa64
+ M      vbm_vol_eikonal3.mexw32
+ M      vbm_vol_interp3f.mexglx
+ M      vbm_vol_median3c.mexw32
+ M      vbm_vol_simgrow.mexw32
+ M      vbm_vol_downcut.mexw64
+ M      vbm_vol_laplace3.mexglx
+ M      vbm_vol_pbtp.mexw32
+ M      vbm_vol_laplace3R.mexw64
+ M      vbm_vol_eidist.mexw32
+ M      vbm_vol_localstat.mexw64
+ M      vbm_vol_median3.mexa64
+ M      vbm_vol_gradient3.mexa64
+ M      vbm_vol_downcut.mexglx
+ M      vbm_vol_interp3f.mexa64
+ M      vbm_vol_laplace3R.mexglx
+M       AmapMex.c
+ M      vbm_vol_laplace3.mexa64
+ M      vbm_vol_localstat.mexglx
+ M      vbm_vol_eikonal3.mexw64
+M       AmapMex.mexmaci64
+ M      vbm_vol_median3.mexw32
+ M      vbm_vol_gradient3.mexw32
+ M      vbm_vol_median3c.mexw64
+ M      vbm_vol_interp3f.mexw32
+ M      vbm_vol_simgrow.mexw64
+ M      vbm_vol_downcut.mexa64
+ M      vbm_vol_pbtp.mexw64
+M       CHANGES.txt
+ M      vbm_vol_laplace3.mexw32
+ M      vbm_vol_eikonal3.mexglx
+ M      vbm_vol_laplace3R.mexa64
+ M      vbm_vol_eidist.mexw64
+ M      vbm_vol_median3c.mexglx
+ M      vbm_vol_localstat.mexa64
+ M      vbm_vol_simgrow.mexglx
+ M      vbm_vol_downcut.mexw32
+ M      vbm_vol_pbtp.mexglx
+ M      vbm_vol_eidist.mexglx
+M       KmeansMex.c
+ M      vbm_vol_laplace3R.mexw32
+ M      vbm_vol_eikonal3.mexa64
+ M      vbm_vol_gradient3.mexw64
+ M      vbm_vol_median3.mexw64
+ M      vbm_vol_localstat.mexw32
+ M      vbm_vol_interp3f.mexw64
+ M      vbm_vol_median3c.mexa64
+ M      vbm_vol_simgrow.mexa64
+
+Replaced malloc in AmapMex.c with mxMalloc.
+------------------------------------------------------------------------
+r511 | gaser | 2013-10-15 09:55:27
