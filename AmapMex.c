@@ -71,7 +71,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
   /* initial labeling using Kmeans */
   if (init) {
-    mask = (unsigned char *)malloc(sizeof(unsigned char)*nvox);
+    mask = (unsigned char *)mxMalloc(sizeof(unsigned char)*nvox);
+    if(mask == NULL) {
+      mexErrMsgTxt("Memory allocation error\n");
+      exit(EXIT_FAILURE);
+    }
     for (i=0; i<nvox; i++)
       mask[i] = (src[i]>0) ? 255 : 0;
 
