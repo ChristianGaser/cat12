@@ -2541,3 +2541,12 @@ M       KmeansMex.c
 Replaced malloc in AmapMex.c with mxMalloc.
 ------------------------------------------------------------------------
 r511 | gaser | 2013-10-15 09:55:27
+
+M       AmapMex.c
+M       AmapMex.mexmaci64
+M       CHANGES.txt
+M       KmeansMex.c
+
+Replaced free in AmapMex.c and KmeanMex.c with mxFree.
+------------------------------------------------------------------------
+r512 | gaser | 2013-10-15 10:02:32

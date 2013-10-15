@@ -75,7 +75,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   }
   for(i = 0; i < n_classes; i++) mean[i] /= n[i];
 
-  free(mask);
+  mxFree(mask);
   
 }
 
