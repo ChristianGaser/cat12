@@ -125,7 +125,8 @@ vbm.defs.interp         = 5;  % 5th degree B-spline
 %=======================================================================
 vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
-vbm.extopts.gcut        = 2;    % Skull-stripping with graph-cut: 0 - no; 1 - old; 2 - new
+vbm.extopts.gcut(1)     = 2;    % Skull-stripping with graph-cut: 0 - no; 1 - old; 2 - new
+vbm.extopts.gcut(2)     = 0.5;  % gcut+: strengh of skull-stripping with 0 for softer and wider and 1 for harder and closer (default 0.5)
 vbm.extopts.kmeans      = 0;    % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm.extopts.mrf         = 1;    % MRF weighting: 0-1 - manuell setting; 1 - auto
 vbm.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
@@ -141,4 +142,7 @@ vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {
 % experimental (not yet working)
 %=======================================================================
 vbm.extopts.mask        = {fullfile(spm('dir'),'toolbox','vbm','submask.nii')}; % mask for subcortical areas + ventricles
+vbm.extopts.atlas       = { ... % region image from MRIcron
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.00mm','aal.nii');
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.00mm','brodmann.nii')}; 
 vbm.output.surf.dartel  = 0; % WM-surface 

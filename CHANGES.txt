@@ -2550,3 +2550,152 @@ M       KmeansMex.c
 Replaced free in AmapMex.c and KmeanMex.c with mxFree.
 ------------------------------------------------------------------------
 r512 | gaser | 2013-10-15 10:02:32
+
+
+(1)  Updates of cg_vbm_batch.sh:
+     - add symbolic link detection in subfunction check_files
+     - add checks for subfunction get_no_of_cpus to limit the number of jobs 
+       by the number of processors
+     - add options:
+       -n   nice level
+       -s   shell command
+       -f   file with files to process 
+            got a system error 127 for a large number (>1000) of files for 
+            direct input  
+       -np  set number of free processors/cores, to have always on free 
+            processor/core (-np 1)
+(2)  Update vbm_io_xml write with orderfields function. 
+(3)  Add verbose option for vbm_io_xml to get feedback for reading large number
+     of files (>1000). 
+(4)  Add prefix-variable for vbm_pre_sanlm.
+(5)  Further QMs in vbm_tst_t1qa.
+(6)  Replace struct2array in vbm_vol_partvol and cg_vbm_write, because the 
+     function was remove in newer MATLAB versions.
+(7)  Add parameter to control gcut+ Skull-Stripping.
+(8)  Add some comments.
+(9)  Add vbm_tst_qa_groups[_test] for QA analysis.
+(10) Add vbm_io_img2nii to convert analyse files to nifti.
+(11) Correct error in vbm_io_colormaps (number of colors).
+(12) Add skull-stripping strength variable that controls, different parameter 
+     like intensity-thresholds, region-growing-parameter, closing and smoothness
+     parameter. The parameter should be between 0 and 1, with 0 for wider and  
+     smoother masks and 1 for harder results (default 0.5).
+     
+------------------------------------------------------------------------
+r | dahnke | 2013-10-26 18:31:27
+
+
+(1)  Updates of cg_vbm_batch.sh:
+     - add symbolic link detection in subfunction check_files
+     - add checks for subfunction get_no_of_cpus to limit the number of jobs 
+       by the number of processors
+     - add options:
+       -n   nice level
+       -s   shell command
+       -f   file with files to process 
+            got a system error 127 for a large number (>1000) of files for 
+            direct input  
+       -np  set number of free processors/cores, to have always on free 
+            processor/core (-np 1)
+(2)  Update vbm_io_xml write with orderfields function. 
+(3)  Add verbose option for vbm_io_xml to get feedback for reading large number
+     of files (>1000). 
+(4)  Add prefix-variable for vbm_pre_sanlm.
+(5)  Further QMs in vbm_tst_t1qa.
+(6)  Replace struct2array in vbm_vol_partvol and cg_vbm_write, because the 
+     function was remove in newer MATLAB versions.
+(7)  Add parameter to control gcut+ Skull-Stripping.
+(8)  Add some comments.
+(9)  Add vbm_tst_qa_groups[_test] for QA analysis.
+(10) Add vbm_io_img2nii to convert analyse files to nifti.
+(11) Correct error in vbm_io_colormaps (number of colors).
+(12) Add skull-stripping strength variable that controls, different parameter 
+     like intensity-thresholds, region-growing-parameter, closing and smoothness
+     parameter. The parameter should be between 0 and 1, with 0 for wider and  
+     smoother masks and 1 for harder results (default 0.5).
+     
+------------------------------------------------------------------------
+r | dahnke | 2013-10-26 18:33:44
+
+
+(1)  Updates of cg_vbm_batch.sh:
+     - add symbolic link detection in subfunction check_files
+     - add checks for subfunction get_no_of_cpus to limit the number of jobs 
+       by the number of processors
+     - add options:
+       -n   nice level
+       -s   shell command
+       -f   file with files to process 
+            got a system error 127 for a large number (>1000) of files for 
+            direct input  
+       -np  set number of free processors/cores, to have always on free 
+            processor/core (-np 1)
+(2)  Update vbm_io_xml write with orderfields function. 
+(3)  Add verbose option for vbm_io_xml to get feedback for reading large number
+     of files (>1000). 
+(4)  Add prefix-variable for vbm_pre_sanlm.
+(5)  Further QMs in vbm_tst_t1qa.
+(6)  Replace struct2array in vbm_vol_partvol and cg_vbm_write, because the 
+     function was remove in newer MATLAB versions.
+(7)  Add parameter to control gcut+ Skull-Stripping.
+(8)  Add some comments.
+(9)  Add vbm_tst_qa_groups[_test] for QA analysis.
+(10) Add vbm_io_img2nii to convert analyse files to nifti.
+(11) Correct error in vbm_io_colormaps (number of colors).
+(12) Add skull-stripping strength variable that controls, different parameter 
+     like intensity-thresholds, region-growing-parameter, closing and smoothness
+     parameter. The parameter should be between 0 and 1, with 0 for wider and  
+     smoother masks and 1 for harder results (default 0.5).
+     
+------------------------------------------------------------------------
+r | dahnke | 2013-10-26 18:34:26
+
+M       CHANGES.txt
+M       cg_vbm_batch.sh
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_io_colormaps.m
+A       vbm_io_img2nii.m
+M       vbm_io_updateStruct.m
+M       vbm_io_writenii.m
+M       vbm_io_xml.m
+A       vbm_plot_boxplot.m
+M       vbm_tst_pre.m
+A       vbm_tst_qa_groups.m
+A       vbm_tst_qa_groups_test.m
+M       vbm_tst_t1qa.m
+M       vbm_vol_partvol.m
+M       vbm_vol_sanlm.m
+
+(1)  Updates of cg_vbm_batch.sh:
+     - add symbolic link detection in subfunction check_files
+     - add checks for subfunction get_no_of_cpus to limit the number of jobs 
+       by the number of processors
+     - add options:
+       -n   nice level
+       -s   shell command
+       -f   file with files to process 
+            got a system error 127 for a large number (>1000) of files for 
+            direct input  
+       -np  set number of free processors/cores, to have always on free 
+            processor/core (-np 1)
+(2)  Update vbm_io_xml write with orderfields function. 
+(3)  Add verbose option for vbm_io_xml to get feedback for reading large number
+     of files (>1000). 
+(4)  Add prefix-variable for vbm_pre_sanlm.
+(5)  Further QMs in vbm_tst_t1qa.
+(6)  Replace struct2array in vbm_vol_partvol and cg_vbm_write, because the 
+     function was remove in newer MATLAB versions.
+(7)  Add parameter to control gcut+ Skull-Stripping.
+(8)  Add some comments.
+(9)  Add vbm_tst_qa_groups[_test] for QA analysis.
+(10) Add vbm_io_img2nii to convert analyse files to nifti.
+(11) Correct error in vbm_io_colormaps (number of colors).
+(12) Add skull-stripping strength variable that controls, different parameter 
+     like intensity-thresholds, region-growing-parameter, closing and smoothness
+     parameter. The parameter should be between 0 and 1, with 0 for wider and  
+     smoother masks and 1 for harder results (default 0.5).
+     
+------------------------------------------------------------------------
+r513 | dahnke | 2013-10-26 18:35:36

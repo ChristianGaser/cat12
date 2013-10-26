@@ -1,4 +1,4 @@
-function vbm_pre_sanlm(vargin)
+function vbm_vol_sanlm(varargin)
 % 
 % Spatial Adaptive Non Local Means Denoising Filter
 %
@@ -6,8 +6,14 @@ function vbm_pre_sanlm(vargin)
 % Christian Gaser/Users/gaser/matlab/vbm8/cg_sanlm.m
 % $Id$
 
-if nargin == 1
-	P = char(vargin.data);
+if nargin > 1 && ischar(varargin{2})
+  prefix = varargin{2};
+else
+  prefix = 'sanlm_';
+end
+  
+if nargin > 0 && ~isempty(varargin{1})
+	P = char(varargin{1}.data);
 else
   P = spm_select(Inf,'image','Select images to filter');
 end
@@ -28,7 +34,7 @@ for i = 1:n
       sanlmMex_noopenmp(src,3,1);
   end
   
-  V(i).fname = fullfile(pth,['sanlm_' nm '.nii' vr]);
+  V(i).fname = fullfile(pth,[prefix nm '.nii' vr]);
   V(i).descrip = sprintf('%s SANLM filtered',V(i).descrip);
   % use at least float precision
   if  V(i).dt(1)<16 V(i).dt(1) = 16; end 
