@@ -37,7 +37,7 @@ function varargout = vbm_io_xml(file,varargin)
 % ______________________________________________________________________
 % $Id$
 
- 
+  verbose = 0;
   if usejava('jvm')==0
     warning('MATLAB:SPM:VBM:vbm_io_xml:javaerror', ...
       'VBM-ERROR: VBM XML-im/export requires JVM!\n');
@@ -55,14 +55,22 @@ function varargout = vbm_io_xml(file,varargin)
       if ~isstruct(S)
         error('MATLAB:vbm_io_xml','ERROR: Second input should be a structure.\n'); 
       end
+    elseif numel(varargin)==3
+      S=varargin{1}; action=varargin{2}; verbose=varargin{3};
+      if ~isstruct(S)
+        error('MATLAB:vbm_io_xml','ERROR: Second input should be a structure.\n'); 
+      end
     else  
       error('MATLAB:vbm_io_xml','ERROR: To many inputs.\n');
     end
   end
+  if numel(file)>1000, verbose = 1; end
   
   % multi-file read 
   if strcmp(action,'read')
     varargout{1} = struct();
+    if verbose, fprintf('% 6d/% 6d',0,numel(file)); end
+    
     if iscell(file) && numel(file)>1 
       for fi=1:numel(file)
         try
@@ -73,21 +81,27 @@ function varargout = vbm_io_xml(file,varargin)
           end
           clear tmp;
         end
+        if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b% 6d/% 6d',fi,numel(file)); end
       end
+      if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b             \b\b\b\b\b\b\b\b\b\b\b\b\b'); end
       return
+   
     elseif ischar(file) && size(file,1)>1
       for fi=1:numel(file)
         try
-          tmp = vbm_io_xml(file(fi,:) );
+          tmp = vbm_io_xml(file(fi,:));
           fn = fieldnames(tmp);
           for fni = 1:numel(fn)
             varargout{1}(fi).(fn{fni}) = tmp.(fn{fni});
           end
           clear tmp;
         end
+        if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b% 6d/% 6d',fi,numel(file)); end
       end
+      if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b             \b\b\b\b\b\b\b\b\b\b\b\b\b'); end
       return
     end
+
   end
   
   [pp,ff,ee] = fileparts(file); if ~strcmp(ee,'.xml'), file = [file '.xml']; end
@@ -96,6 +110,7 @@ function varargout = vbm_io_xml(file,varargin)
     case 'write'
     % ------------------------------------------------------------------  
       try
+        S=orderfields(S);
         xml_write(file,S);
       catch e %#ok<*NASGU> % can write xml file??
         %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
@@ -108,7 +123,7 @@ function varargout = vbm_io_xml(file,varargin)
     % ------------------------------------------------------------------  
     % WARNING: THIS ACTION NEED MUCH MORE WORK!!! 
     % ------------------------------------------------------------------  
-      SN = S; 
+      SN = orderfields(S); 
       if exist(file,'file')
         try
           S = xml_read(file);

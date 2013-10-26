@@ -1,4 +1,13 @@
 function [C,XML] = vbm_io_colormaps(Cname,ncolors)
+% _________________________________________________________________________
+% Create VBM Colormaps.
+%
+%   [C,XML] = vbm_io_colormaps(Cname,ncolors)
+%
+%   Cname   = ['marks' | 'marks+' | 'BCGWHw' | 'BGWHn'];
+%   ncolors =
+% _________________________________________________________________________
+% $Id$
   
   % number of colors:
   if ~exist('Cname','var')
@@ -51,7 +60,7 @@ function [C,XML] = vbm_io_colormaps(Cname,ncolors)
   
   % interpolate colormap
   if size(C,1)~=ncolors;
-    ss    = 1/ncolors;
+    ss    = size(C,1)/(ncolors+2);
     [X,Y] = meshgrid(1:ss:size(C,1),1:3);
     C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
     XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...

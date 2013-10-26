@@ -171,7 +171,7 @@ function [vol,Yl1,Yb,YMF] = vbm_vol_partvol(Yl1A,Yp0,Ym,Yl0,Yb,opt)
 
 
   % Error managment, if we miss a major structure
-  if any(struct2array(ER))
+  if any(cell2mat(struct2cell(ER)'))
     sides = {'left' 'right'}; 
     ROI = {'HD','head';'CT','cerebrum';'CB','cerebellum';'MB','midbrain'; ...
            'HC','hippocampus';'BG','basal ganglia';'TH','thalamus'; ...

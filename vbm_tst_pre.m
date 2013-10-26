@@ -14,8 +14,9 @@ function vbm_tst_pre
 % ______________________________________________________________________
 %#ok<*TRYNC>
 
-  clear classes;
+  warning off; clear classes; warning on; 
 
+    
   if ~exist('opt','var'), opt=struct(); end
   
 % TEST PARAMETER
@@ -61,9 +62,9 @@ function vbm_tst_pre
   % 'name'    NC segments t1corr recalc                       % new
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
   % 'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
- %   'VBM12i'  0 {'p0'}      {'m'}       {0.8}       0 % internal noise correction
+    'VBM12i'  0 {'p0'}      {'m'}       {0.8}       1 % internal noise correction
   %  'VBM12'   0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
-    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
 %     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
@@ -80,7 +81,7 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-%     'BO'
+     'BO'
 %     'SVE_LPBA40'
 %   'BWP_Collins_fast'
 %     'ADHD'
@@ -93,7 +94,7 @@ function vbm_tst_pre
 %      'BWP_20N'
 %      'Tumorbase'
 %      'private'
-      'SRS'
+%     'SRS'
 %      'private_full'
 %      'BWP_Collins'
 %      'Apes'
