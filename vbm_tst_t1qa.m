@@ -45,7 +45,23 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
   % check and standardize input
   % --------------------------------------------------------------------
   if nargin == 0 || isempty(XT),
-    XT = spm_select(inf,'image','select original T1 image'); opt.recalc=1; end
+    XT = spm_select(inf,'image','select original T1 image'); opt.recalc=1; 
+  elseif nargin == 1 || strcmpi({'d','dir','dirs'},XT),
+    dirs = cellstr(spm_select(inf,'dir','select directories with images'));
+    opt.recalc=1; 
+    
+    Xp0T={}; 
+    for di=1:numel(dirs),
+      Xp0T = [Xp0T findfiles(dirs{di},'p0*.nii')];  %#ok<AGROW>
+    end
+    XT=Xp0T; XmT=Xp0T;
+    for fi=1:numel(Xp0T)
+      [pp ff ee] = fileparts(Xp0T{fi});
+      XT{fi}  = fullfile(pp,[ff(3:end) ee]);
+      XmT{fi} = fullfile(pp,['m' ff(3:end) ee]);
+    end
+  end
+  
   if nargin == 1 && isstruct(XT)
     % spm batch input structure
     SPMbatch=XT; clear XT;
@@ -65,10 +81,12 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
         Xp0T(fi,:) = fullfile(pp,['p0' ff ee dd]);
         Xp0Texist(fi) = exist(fullfile(pp,['p0' ff ee]),'file');
       end
-      if any(Xp0Texist==0)
-        pp = spm_fileparts(XT(1,:)); 
-        Xp0T = spm_select([0 numel(cellstr(XT))],'image','select tissue segment map p#T or not','',pp,'^p0.*'); 
-      end
+      Xp0T(Xp0Texist==0) = []; XT(Xp0Texist==0) = [];
+      
+%       if any(Xp0Texist==0)
+%         pp = spm_fileparts(XT(1,:)); 
+%         Xp0T = spm_select([0 numel(cellstr(XT))],'image','select tissue segment map p#T or not','',pp,'^p0.*'); 
+%       end
     end
   end
   if ~exist('XmT' ,'var')
@@ -79,10 +97,12 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
         XmT(fi,:) = fullfile(pp,['m' ff ee dd]);
         XmTexist(fi) = exist(fullfile(pp,['m' ff ee]),'file');
       end
-      if any(XmTexist==0)
-        pp = spm_fileparts(Xp0T(1,:));
-        XmT  = spm_select([0 numel(cellstr(XT))],'image','select bias-corrected T1 image or not','',pp,'^m.*'); 
-      end
+      XmT(XmTexist==0) = []; Xp0T(XmTexist==0) = []; XT(XmTexist==0) = [];
+
+%       if any(XmTexist==0)
+%         pp = spm_fileparts(Xp0T(1,:));
+%         XmT  = spm_select([0 numel(cellstr(XT))],'image','select bias-corrected T1 image or not','',pp,'^m.*'); 
+%       end
     end
   end
   if ~exist('opt','var')
@@ -100,7 +120,7 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
   def.write_xml  = 1;         % images base xml-file
   def.sortQATm   = 1;         % sort QATm output
   def.recalc     = 0;         % 
-  def.orgval     = 0;         % original QAM results (no marks)
+  def.orgval     = 1;         % original QAM results (no marks)
   def.avgfactor  = 1.5;       % 
   def.prefix     = 'vbm_';    % intensity scaled  image
   
@@ -114,7 +134,7 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
     'vol'       'res_vol'       '[]'  0  % voxel volume
     'isotr'     'res_isotropy'  '[]'  0  % voxel isotropy
     'noise'     'noise'         '[]'  1  % default noise = noise_WM
-   %'noisec'    'noisec'        '[]'  1  % default noise = noise_WM
+    'noisec'    'noisec'        '[]'  1  % default noise = noise_WM
    %'noiseG'    'noiseG'        '[]'  1  % gradient noise in the WM
    %'noiseGr'   'noiseGr'       '[]'  1  % gradient noise in the WM corrected for resolution
    %'noiseCG'   'noise_CG'      '[]'  0  % other noise measure ...
@@ -124,11 +144,13 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
    %'blurr'     'blurring'      '[]'  1
    %'samp'      'sampling'      '[]'  1
    %'gradient'  'mgradient'     '[]'  1
+    'GER'       'GER'           '[]'  1
    %'NER'       'NER'           '[]'  1 % mean edge gradient / mean tissue gradient (noiseG)
     'NERR'      'NERR'          '[]'  1 % mean edge gradient / mean tissue gradient (noiseG) correctd for resolution
+   %'NERRn'     'NERRn'         '[]'  1 % mean edge gradient / mean tissue gradient (noiseG) correctd for resolution
     'bias'      'bias'          '[]'  1  % global std in the WM 
    %'bias'      'bias_WMstd'    '[]'  1  % global std in the WM 
-   %'biasc'     'bias_WMstdc'   '[]'  1  % bias of the corrected image as further QA
+    'biasc'     'biasc'         '[]'  1  % bias of the corrected image as further QA
    %'biasInh'   'bias_WMinhomogeneity' [] 0  % ...
    %'biasWME'   'bias_WMentropy'       [] 0  % entropy in the WM segment
    %'GWcon'     'contrast'      '[]'  1
@@ -212,8 +234,10 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
     'blurring'              'linearb' [0.00  1.00]
     'sampling'              'linearb' [0.00  1.00]
     'mgradient'             'linearb' [0.20  0.05] 
+    'GER'                   'linearb' [0.50  10.00]
     'NER'                   'linearb' [0.50  0.70] 
     'NERR'                  'linearb' [0.50  0.70]  
+    'NERRn'                 'linearb' [0.50  0.70]  
     'contrast'              'linearb' [0.30  0.05] 
     'contrast2'             'linearb' [0.15  0.05] 
     'contrastT'             'linearb' [0.15  0.05]
@@ -232,7 +256,7 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
   
   % Print options
   % --------------------------------------------------------------------
-  snspace = [50,7,2];
+  snspace = [70,7,2];
   Cheader = {'scan'};
   Theader = sprintf(sprintf('%%%ds:',snspace(1)),'scan');
   Tline   = sprintf('%%4d) %%%ds:',snspace(1)-7);
@@ -506,10 +530,10 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
           % minimum and maximum. The WM-Entropy show the right direction but the
           % values vary strongly for different scans...
           % ############# restbias als QA fürs WM segment!
-          QAS(i).bias = mean([max(0,std(maTr(WMr(:)))),max(0,std(mbTr(WMr(:)))) / (1/3 / QAS(i).contrast)]);
+          QAS(i).bias = mean([max(0,std(maTr(WMr(:)))),max(0,std(mbTr(WMr(:)))) / (QAS(i).contrast*3)]);
           if isfield(QAS,'bias_WMstd'),  QAS(i).bias_WMstd  = max(0,std(maTr(WMr(:)))); end % * ...
     %          (1/3 / QAS(i).contrast); end
-          if isfield(QAS,'bias_WMstdc'), QAS(i).bias_WMstdc = max(0,std(mbTr(WMr(:)))) / (1/3 / QAS(i).contrast); end
+          if isfield(QAS,'biasc'), QAS(i).biasc = max(0,std(mbTr(WMr(:)))) / (QAS(i).contrast*3); end
           if isfield(QAS,'bias_WMinhomogeneity')
             QAS(i).bias_WMinhomogeneity = 1-(max(maTM)-min(maTM))/(min(maTM)+max(maTM)); end
           if isfield(QAS,'bias_WMentropy')
@@ -547,14 +571,44 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
             %QAS(i).comp = getComp(mbT,BGR);
           end
 
-
-
+          
+          if 0
+            %%
+            vx_vol = repmat(1,1,3); con=1/3; noise=0.01;
+            r=20.5; d=round(2*r+1); 
+            A=zeros(d,d,d,'single'); A(round(d/2),round(d/2),round(d/2))=1; D=vbdist(A);
+            
+            p0T = (max(0,min(1,r*0.7-D)) + max(0,min(1,r*0.9-D)) + 1);
+            mbT = p0T/3;
+            mbT = smooth3(p0T/3,'gaussian',5,1);
+            
+            WM  = p0T>2.5; 
+            WMP = vbm_vol_morph(p0T>2.5,'dilate',1); 
+            WMS = vbm_vol_morph(p0T>2.5,'erode',1)==1;
+            WMB = WMP-WMS;
+            
+            [gx,gy,gz] = vbm_vol_gradient3(single(max(2/3,min(3.5/3,mbT)))); 
+            gx  = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
+            gTv = max(cat(4,abs(gx),abs(gy),abs(gz)),[],4)*2*3;
+            gTv = vbm_vol_localstat(gTv,WMB>0,1,3);
+            
+%             [gx,gy,gz] = vbm_vol_gradient3(single(max(2/3,min(3.5/3,p0T/3)))); 
+%             gx  = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
+%             gTv2 = max(cat(4,abs(gx),abs(gy),abs(gz)),[],4)*2*3;
+%             gTv  = vbm_vol_localstat(gTv,WMB>0,1,3);
+%             gTv  = gTv2 - gTv;
+            
+            
+            ds('l2','',[1 1 1],mbT,WMB,mbT,gTv,17)
+            
+            (1/nanmedian(gTv(WMB(:) & gTv(:)>noise/2))) / mean(vx_vol)
+          end
           % sharpness
           % ------------------------------------------------------------
-
+          % NER and NERR only works for noise corrected images!
 
           % older idea of noiseG and NER
-          if isfield(QAS,'mgradient') 
+          if isfield(QAS,'mgradient') || isfield(QAS,'GER')
             [gx,gy,gz] = vbm_vol_gradient3(single(mbT)); gT=abs(gx)+abs(gy)+abs(gz); clear gx gy gz; 
             WMP = vbm_vol_morph(p0T>2.5,'dilate',1); 
             WMS = vbm_vol_morph(p0T>2.5,'erode',1)==1;
@@ -569,7 +623,8 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
             [gx,gy,gz] = vbm_vol_gradient3(single(mbT)); 
             gT  = abs(gx) + abs(gy) + abs(gz);
             gx  = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
-            gTv = abs(gx) + abs(gy) + abs(gz); 
+            %gTv = abs(gx) + abs(gy) + abs(gz); 
+            gTv = max(cat(4,abs(gx),abs(gy),abs(gz)),[],4);
             clear gx gy gz;
           end
           if isfield(QAS,'NER') || isfield(QAS,'NERR')
@@ -578,10 +633,25 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
           if isfield(QAS,'noiseG'),  QAS(i).noiseG  = [nanmean(gT(WM(:))) ,nanstd(gT(WM(:)))]/QAS(i).contrast;  end  
           if isfield(QAS,'noiseGr'), QAS(i).noiseGr = [nanmean(gTv(WM(:))),nanstd(gTv(WM(:)))]/QAS(i).contrast; end  
           if isfield(QAS,'NER'),     QAS(i).NER     = [nanmean(gT(WM(:))) ,nanstd(gT(WM(:)))]  ./ ...
-                                                      [nanmean(gT(M(:))) ,nanstd(gT(M(:)))];  end
+                                                      [nanmean(gT(M(:)))  ,nanstd(gT(M(:)))];  end
           if isfield(QAS,'NERR'),    QAS(i).NERR    = [nanmean(gTv(WM(:))),nanstd(gTv(WM(:)))] ./ ...
-                                                      [nanmean(gTv(M(:))),nanstd(gTv(M(:)))]; end        
-          clear M; 
+                                                      [nanmean(gTv(M(:))) ,nanstd(gTv(M(:)))]; end        
+          if isfield(QAS,'NERRn'),   
+            [gx,gy,gz] = vbm_vol_gradient3(single(maT)); 
+            gT  = abs(gx) + abs(gy) + abs(gz);
+            gx  = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
+            gTv = abs(gx) + abs(gy) + abs(gz); 
+            %clear gx gy gz;
+                                     QAS(i).NERRn   = [nanmean(gTv(WM(:))),nanstd(gTv(WM(:)))] ./ ...
+                                                      [nanmean(gTv(M(:))) ,nanstd(gTv(M(:)))];         
+          end
+          if isfield(QAS,'GER'),     
+%            gTv = max(cat(4,abs(gx),abs(gy),abs(gz)),[],4)*2*3;
+            WMB = WMP & 1-WMS & gT>noise/2 & gT<1;
+            gTv = vbm_vol_localstat(gTv*3,WMB>0,1,3);
+            QAS(i).GER     = 1/nanmedian(gTv(WMB(:)))/QAS(i).contrast * prod(vx_vol); 
+          end
+          clear M gTv; clear gx gy gz;
 
 
           % smooth vs unsmooth & resampling:
@@ -592,7 +662,8 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
             QAS(i).blurring = vbm_stat_nanstat1d(mbT(p0T(:)>0.5)-mbTS(p0T(:)>0.5),'std');
           end
           if isfield(QAS,'sampling') 
-            mbTsr=vbm_vol_resize(mbTs,'reduce'); mbTR=vbm_vol_resize(mbTsr,'dereduce',size(mbTs));
+            mbTsr=vbm_vol_resize(mbT,'reducev'); mbTR=vbm_vol_resize(mbTsr,'dereduce',size(mbTs));
+            %[mbTsr,resTr]=vbm_vol_resize(mbTs,'reducev',vx_vol,max(vx_vol));mbTR=vbm_vol_resize(mbTsr,'dereducev',resTr);
             QAS(i).sampling = vbm_stat_nanstat1d(mbT(p0T(:)>0.5)-mbTR(p0T(:)>0.5),'std');     
           end
 

@@ -54,8 +54,9 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,write,addpre,tra
   end  
   if ~exist('range','var'),  range  = [0 1]; end
   if ~exist('write','var'),  write  = [1 0 0 0]; end 
-  if size(write,2)==3, write = [write(1:2) 0 write(3)]; end
   if ~exist('addpre','var'), addpre = 0; end
+  if isstruct(write), write = cell2mat(struct2cell(write)'); end
+  if numel(write)==3, write = [write(1:2) 0 write(3)]; end
   
   %if nargout>0, varargout{1}=struct(numel(write),1); end
   %if nargout>1, varargout{2}=struct(numel(write),1); end

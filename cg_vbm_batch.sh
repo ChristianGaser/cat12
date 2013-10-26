@@ -42,7 +42,11 @@ parse_args ()
     help
     exit 1
   fi
-
+  
+  NUMBER_OF_JOBS=1;
+  nicelevel=0
+  shellcommand=
+  
   while [ $# -gt 0 ]
   do
     optname="`echo $1 | sed 's,=.*,,'`"
@@ -58,6 +62,11 @@ parse_args ()
             defaults_file=$optarg
             shift
             ;;
+        --nprocesses* | -np*)
+            exit_if_empty "$optname" "$optarg"
+            NUMBER_OF_JOBS="-$optarg"
+            shift
+            ;;    
         --processes* | -p*)
             exit_if_empty "$optname" "$optarg"
             NUMBER_OF_JOBS=$optarg
@@ -69,8 +78,34 @@ parse_args ()
         --logdir* | -l*)
             exit_if_empty "$optname" "$optarg"
             LOGDIR=$optarg
+            if [ ! -d $LOGDIR ] 
+            then
+              mkdir $LOGDIR
+            fi
             shift
             ;;
+        --n* | -n* | "--nice*" | "-nice*")
+            exit_if_empty "$optname" "$optarg"
+            nicelevel=$optarg
+            shift
+            ;;
+        --f* | -f*)
+            exit_if_empty "$optname" "$optarg"
+            listfile=$optarg
+            shift
+            list=$(< $listfile);
+            for F in $list
+            do
+              ARRAY[$count]=$F
+              ((count++))
+              #echo $count
+            done
+            ;;
+        --s* | -s* | --shell* | -shell*)
+            exit_if_empty "$optname" "$optarg"
+            shellcommand=$optarg
+            shift
+            ;;      
         -h | --help | -v | --version | -V)
             help
             exit 1
@@ -85,7 +120,6 @@ parse_args ()
     esac
     shift
   done
-
 }
 
 ########################################################
@@ -126,9 +160,11 @@ check_files ()
   while [ "$i" -lt "$SIZE_OF_ARRAY" ]
   do
     if [ ! -f "${ARRAY[$i]}" ]; then
-      echo ERROR: File ${ARRAY[$i]} not found
-      help
-      exit 1
+      if [ ! -L "${ARRAY[$i]}" ]; then
+        echo ERROR: File ${ARRAY[$i]} not found
+        help
+        exit 1
+      fi
     fi
     ((i++))
   done
@@ -146,32 +182,40 @@ check_files ()
 
 get_no_of_cpus () {
 
-  if [ -z "$NUMBER_OF_JOBS" ];
+  if [ "$ARCH" == "Linux" ]
   then
-    if [ "$ARCH" == "Linux" ]
+    NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
+  elif [ "$ARCH" == "Darwin" ]
+  then
+    NUMBER_OF_PROC=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
+  elif [ "$ARCH" == "FreeBSD" ]
+  then
+    NUMBER_OF_PROC=`sysctl hw.ncpu | awk '{ print $2 }'`
+  else
+    NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
+  fi
+  
+  if [ -z "$NUMBER_OF_PROC" ]
+  then
+      echo "$FUNCNAME ERROR - number of CPUs not obtained. Use -p to define number of processes."
+      exit 1
+  fi
+
+  if [ $NUMBER_OF_JOBS -le -1 ]
+  then
+    NUMBER_OF_JOBS=$(echo "$NUMBER_OF_PROC + $NUMBER_OF_JOBS" | bc)
+    if [ "$NUMBER_OF_JOBS" -lt 1 ]
     then
-      NUMBER_OF_JOBS=`grep ^processor $CPUINFO | wc -l`
-
-    elif [ "$ARCH" == "Darwin" ]
-    then
-      NUMBER_OF_JOBS=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
-
-    elif [ "$ARCH" == "FreeBSD" ]
-    then
-      NUMBER_OF_JOBS=`sysctl hw.ncpu | awk '{ print $2 }'`
-
-    else
-      NUMBER_OF_JOBS=`grep ^processor $CPUINFO | wc -l`
-
-    fi
-    echo "Found $NUMBER_OF_JOBS processors."
-
-    if [ -z "$NUMBER_OF_JOBS" ]
-    then
-        echo "$FUNCNAME ERROR - number of CPUs not obtained. Use -p to define number of processes."
-        exit 1
+        NUMBER_OF_JOBS=1
     fi
   fi
+  if [ "$NUMBER_OF_JOBS" -gt "$NUMBER_OF_PROC" ]
+  then
+      NUMBER_OF_JOBS=$NUMBER_OF_PROC
+  fi
+  echo "Found $NUMBER_OF_PROC processors. Use $NUMBER_OF_JOBS."
+  echo
+
 }
 
 ########################################################
@@ -230,6 +274,7 @@ run_vbm ()
             ARG_LIST[$count]="${ARG_LIST[$count]} $FILE"
         fi
         echo ${FILE} >> ${TMP}${count}
+        FDIR=$(dirname $FILE)
         ((i++))
     done
     
@@ -241,14 +286,22 @@ run_vbm ()
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
             j=$(($i+1))
             COMMAND="cg_vbm_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
-            echo Calculate ${ARG_LIST[$i]}
+            SHCOMMAND="$shellcommand ${ARG_LIST[$i]}"          
+            
+            echo Calculate
+            for F in ${ARG_LIST[$i]}; do echo $F; done
             echo ---------------------------------- >> ${vbmlog}_${j}.log
             date >> ${vbmlog}_${j}.log
             echo ---------------------------------- >> ${vbmlog}_${j}.log
             echo >> ${vbmlog}_${j}.log
             echo $0 $file >> ${vbmlog}_${j}.log
             echo >> ${vbmlog}_${j}.log
-            nohup ${matlab} -nodisplay -nosplash -r $COMMAND >> ${vbmlog}_${j}.log 2>&1 &
+            if [ -z "$shellcommand" ]
+            then
+              nohup nice -n $nicelevel ${matlab} -nodisplay -nosplash -r $COMMAND >> ${vbmlog}_${j}.log 2>&1 &
+            else
+              nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
+            fi
             echo Check ${vbmlog}_${j}.log for logging information
             echo
         fi
@@ -282,8 +335,13 @@ cat <<__EOM__
 USAGE:
    cg_vbm_batch.sh filename|filepattern [-m matlab_command] [-w] [-p number_of_processes] [-d default_file] [-l log_folder]
    
+   -n   nice level
    -m   matlab command
+   -s   shell command
+   -f   file with files to process
    -p   number of parallel jobs (=number of processors)
+   -np  set number of jobs by number_of_processors - number_of_processes
+        (=number of free processors)
    -w   write already segmented images
    -d   optional default file
    -l   directory for log-file
