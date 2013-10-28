@@ -31,7 +31,7 @@ vbm.opts.samp      = 3;                       % Sampling distance
 %   modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
 %   dartel    0/1/2 (none/rigid/affine)
 
-% bias and noise corrected, intensity normalized
+% bias and noise corrected, (localy) intensity normalized
 vbm.output.bias.native = 1;
 vbm.output.bias.warped = 0;
 vbm.output.bias.affine = 0;
@@ -80,11 +80,6 @@ vbm.output.warps        = [0 0];
 %=======================================================================
 % WARNING: This map describes the changes of the preprocessing and is under development. 
 
-% local intensity normalized map (only for vbm.extopts.LAS=1)
-vbm.output.ml.native = 1;
-vbm.output.ml.warped = 0;
-vbm.output.ml.affine = 0;
-
 % preprocessing changes map
 vbm.output.pc.native = 0;
 vbm.output.pc.warped = 0;
@@ -125,14 +120,14 @@ vbm.defs.interp         = 5;  % 5th degree B-spline
 %=======================================================================
 vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
 vbm.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
-vbm.extopts.gcut(1)     = 2;    % Skull-stripping with graph-cut: 0 - no; 1 - old; 2 - new
-vbm.extopts.gcut(2)     = 0.5;  % gcut+: strengh of skull-stripping with 0 for softer and wider and 1 for harder and closer (default 0.5)
+vbm.extopts.gcut        = 2;    % Skull-stripping with graph-cut: 0 - no; 1 - old; 2 - new
+vbm.extopts.gcutstr     = 0.5;  % gcut+: strengh of skull-stripping with 0 for softer and wider and 1 for harder and closer (default 0.5)
 vbm.extopts.kmeans      = 0;    % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm.extopts.mrf         = 1;    % MRF weighting: 0-1 - manuell setting; 1 - auto
 vbm.extopts.sanlm       = 2;    % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading
 vbm.extopts.bias_fwhm   = 60;   % FWHM of Kmeans internal bias correction
 vbm.extopts.vox         = 1.5;  % voxel size for normalized data
-vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data
+vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data; 
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
 vbm.extopts.BVC         = 1;    % Blood Vessel Correction: 
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
@@ -142,7 +137,10 @@ vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {
 % experimental (not yet working)
 %=======================================================================
 vbm.extopts.mask        = {fullfile(spm('dir'),'toolbox','vbm','submask.nii')}; % mask for subcortical areas + ventricles
-vbm.extopts.atlas       = { ... % region image from MRIcron
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.00mm','aal.nii');
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.00mm','brodmann.nii')}; 
+vbm.extopts.atlas       = { ... % region image from MRIcron - filename, maptype, atlas have sides?
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'GM' 1; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brodmann.nii') 'GM' 1; ...
+  }; 
+vbm.extopts.GMmaskth    = 1; % masking paramter for th1, l# maps in percent (1=100%): 
+                             % 0 - hard mask (only 100% GM voxel), 1 - soft mask (voxel with >0% GM)
 vbm.output.surf.dartel  = 0; % WM-surface 
