@@ -956,7 +956,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm          = ...
     {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
     %{'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/TPM.nii'};
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus        = [2 2 2 3 4 2]; %[1 1 2 3 4 2];
+  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus        = [2 2 2 3 4 2]; 
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg      = 0.0001;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasfwhm     = 60;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.affreg       = 'mni';
@@ -966,9 +966,10 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.dartelwarp.normhigh.darteltpm = ...
     {'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/Template_1_IXI550_MNI152.nii'};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm     = 2;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanup   = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanup   = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstr   = 0.5;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.vox       = 1.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.bb        = [-78 -112 -70; 78 76 85];
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.bb        = [[-90 -126 -72];[90 90 108]];
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.print     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS       = LAS;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
@@ -996,17 +997,15 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.native     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.warped     = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.dartel     = 0;
+  
   matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.native       = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.warped       = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.dartel       = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.warped       = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.dartel       = 1;
   
   matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.native        = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.warped        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.dartel        = 0;
   
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.ml.native        = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.ml.warped        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.ml.dartel        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.native        = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.warped        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.modulated     = 0;

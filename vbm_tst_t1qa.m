@@ -39,6 +39,8 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
 % $Id$
 % ______________________________________________________________________
 
+%#ok<*ASGLU>
+
   rev = '$Rev$';
   
   
@@ -46,19 +48,22 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
   % --------------------------------------------------------------------
   if nargin == 0 || isempty(XT),
     XT = spm_select(inf,'image','select original T1 image'); opt.recalc=1; 
-  elseif nargin == 1 || strcmpi({'d','dir','dirs'},XT),
-    dirs = cellstr(spm_select(inf,'dir','select directories with images'));
-    opt.recalc=1; 
-    
-    Xp0T={}; 
-    for di=1:numel(dirs),
-      Xp0T = [Xp0T findfiles(dirs{di},'p0*.nii')];  %#ok<AGROW>
-    end
-    XT=Xp0T; XmT=Xp0T;
-    for fi=1:numel(Xp0T)
-      [pp ff ee] = fileparts(Xp0T{fi});
-      XT{fi}  = fullfile(pp,[ff(3:end) ee]);
-      XmT{fi} = fullfile(pp,['m' ff(3:end) ee]);
+  elseif nargin == 1 
+    if ischar(XT), XT = cellstr(XT); end
+    if iscell(XT) && any(strcmpi({'d','dir','dirs'},XT{1})),
+      dirs = cellstr(spm_select(inf,'dir','select directories with images'));
+      opt.recalc=1; 
+
+      Xp0T={}; 
+      for di=1:numel(dirs),
+        Xp0T = [Xp0T findfiles(dirs{di},'p0*.nii')];  %#ok<AGROW>
+      end
+      XT=Xp0T; XmT=Xp0T;
+      for fi=1:numel(Xp0T)
+        [pp,ff,ee] = fileparts(Xp0T{fi});
+        XT{fi}  = fullfile(pp,[ff(3:end) ee]);
+        XmT{fi} = fullfile(pp,['m' ff(3:end) ee]);
+      end
     end
   end
   
@@ -348,7 +353,7 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
           p0T = single(spm_read_vols(Vp0T(i)));
         else
           clear mT;
-          [maT,BG,WM,H,tmp,mT,p0T] = vbm_vol_iscale(T,'findbrain',vx_vol,opt.redres); 
+          [maT,BG,WM,H,tmp,mT,p0T] = vbm_vol_iscale(T,'findbrain',vx_vol,opt.redres);  
           clear maT BG WM H tmp;
         end
         if max(p0T(:))~=3

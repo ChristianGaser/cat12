@@ -2699,3 +2699,32 @@ M       vbm_vol_sanlm.m
      
 ------------------------------------------------------------------------
 r513 | dahnke | 2013-10-26 18:35:36
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+A       templates_1.50mm/aal.nii
+A       templates_1.50mm/brodmann.nii
+M       vbm_io_writenii.m
+M       vbm_tst_pre.m
+M       vbm_tst_t1qa.m
+M       vbm_vol_eidist.cpp
+M       vbm_vol_eidist.mexmaci64
+
+(1)  Add masked export option for vbm_io_writenii for a correct mapping of local
+     defined maps like the cortical thickness map th1.
+(2)  Add label export option for vbm_io_writenii for a correct mapping of atlas 
+     maps l#.
+(3)  Add 2 atlas maps (aal, brodmann) to template_1.50mm directory and a simple
+     mapping routine without further refinements. (The *.csv Files of both are 
+     still missing, but for a first test its ok). 
+(4)  Simplify m* output, where also the locally intensity corrected image of the 
+     LAS part is saved under this name.
+(5)  Correct segmentation input for the gcut+ path. Previous, old SPM maps lead 
+     to problems with the skull-stripping. 
+(6)  Add a function that estimates the volumes, intensity and thickness values 
+     for each ROI of the atlas maps in subject space and write this data to a 
+     csv-file per atlas and to the vbm_*.xml.
+------------------------------------------------------------------------
+r514 | dahnke | 2013-10-28 18:19:50
