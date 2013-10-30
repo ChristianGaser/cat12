@@ -62,6 +62,7 @@ vbm.output.label.dartel = 0;
 % GM thickness maps
 vbm.output.th1.native   = 0;
 vbm.output.th1.warped   = 0;
+vbm.output.th1.warpedgm = 0;
 vbm.output.th1.dartel   = 0;
 
 % partitioning atlas maps
@@ -133,14 +134,23 @@ vbm.extopts.BVC         = 1;    % Blood Vessel Correction:
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
 vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res; 0.5 high res (default)
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
+% expert options - ROIs
+%=======================================================================
+% ROI maps from different sources mapped to VBM-space [IXI550]
+% {filename , maptype , sidessep , [roi space], fill, maskth}
+% maptype   = [C|G|W|B|N|wG|wW]=[CSF,GM,WM,Brain,None,templateGM|templateGM] - set the tissue classes for volume estimation
+% sidespe   = [0|1] - set 1 for maps with different ROIs pers side, 0 for symetric maps with identical labes on both sides
+% ROI space = estimate values in subject (1) and/or template space (2)
+% fill      = complete ROI by nearest neighbor (only for fully defined atlas maps)
+% maskth    = mask threshold (only for normalized maptype wG and wW)
+vbm.extopts.atlas       = { ... 
+  ... % l1 major regions roi??? '' 'B' 1 1; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','l1a.nii')      'G' 1 [1 1] 1; ... % do not comment/remove this entry
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'G' 1 [1 1] 1; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brodmann.nii') 'G' 1 [1 1] 1; ...
+  }; 
 
 % experimental (not yet working)
 %=======================================================================
 vbm.extopts.mask        = {fullfile(spm('dir'),'toolbox','vbm','submask.nii')}; % mask for subcortical areas + ventricles
-vbm.extopts.atlas       = { ... % region image from MRIcron - filename, maptype, atlas have sides?
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'GM' 1; ...
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brodmann.nii') 'GM' 1; ...
-  }; 
-vbm.extopts.GMmaskth    = 1; % masking paramter for th1, l# maps in percent (1=100%): 
-                             % 0 - hard mask (only 100% GM voxel), 1 - soft mask (voxel with >0% GM)
 vbm.output.surf.dartel  = 0; % WM-surface 

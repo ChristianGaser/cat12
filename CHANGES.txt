@@ -2728,3 +2728,13 @@ M       vbm_vol_eidist.mexmaci64
      csv-file per atlas and to the vbm_*.xml.
 ------------------------------------------------------------------------
 r514 | dahnke | 2013-10-28 18:19:50
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       vbm_io_writenii.m
+
+(1)  Add ROI export for normalized space.
+
+------------------------------------------------------------------------
+r515 | dahnke | 2013-10-30 15:47:09
