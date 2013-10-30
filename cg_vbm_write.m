@@ -1348,9 +1348,10 @@ if any(cell2mat(struct2cell(job.output.te)'))
 % of the WM. 
 
   opt.tpm = 0;
-  if opt.tpm % VBM-Dartel template
+  if opt.tpm 
+    %% VBM-Dartel template
     [pth1,nam1,ext1] = spm_fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
-    VclsA = single(spm_vol(fullfile(pth1,[strrep(nam1,'Template_1','Template_6'),ext1])));
+    VclsA = spm_vol(fullfile(pth1,[strrep(nam1,'Template_1','Template_6'),ext1]));
     YclsA = cell(1,3);
     for i=1:2
       YclsA{i} = single(spm_sample_vol(VclsA(i), ...
@@ -1372,7 +1373,8 @@ if any(cell2mat(struct2cell(job.output.te)'))
     Yp0A = YclsA{1}*2 + YclsA{2}*3 + YclsA{3} .* Yclsb;
     clear YclsA YclsAsum VclsA Yclsb;
 
-  else % SPM-Tissue template
+  else
+    %% SPM-Tissue template
     VclsB = spm_vol(res.tpm(1).fname);
     YclsB = cell(1,7);
     for i=[1:3,7]
@@ -1408,7 +1410,7 @@ if any(cell2mat(struct2cell(job.output.te)'))
     'group expectation map (matching of template after normalization)', ...
     'uint8',[0,1/255],min([0 1 2 2],cell2mat(struct2cell(job.output.te)')),0,trans);
   qa.QM.vbm_expect = sum(Yte(:))./sum(Yp0(:)>0);
-  clear Yte Yp0 Yp0A;
+  clear Yte Yp0 %Yp0A;
 end
 
 
@@ -1469,7 +1471,7 @@ for clsi=1:3
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 1 2 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),0,trans);
 end
-clear cls clsi fn Ycls; 
+%clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
 
 % write jacobian determinant
@@ -1485,11 +1487,10 @@ end
 
 
 
-
+Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
 %% ---------------------------------------------------------------------
 %  tickness maps
 %  ---------------------------------------------------------------------
-GMmaskth = cg_vbm_get_defaults('extopts.GMmaskth');
 if any(cell2mat(struct2cell(job.output.th1)')) 
   str='Cortical Thickness'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
   
@@ -1520,7 +1521,48 @@ if any(cell2mat(struct2cell(job.output.th1)'))
   Ymf(Yp0<1 | Ymf<1.5/3) = 1; 
   Ymf(Yl1==3 | Yl1==4 | Yl1==11 | Yl1==12 | Yl1==13 | Yl1==14 | Yl1==21 | Yl1==22 | Yl1==7 | Yl1==8)=1; 
   Ymf(smooth3(vbm_vol_morph(Ymf>0,'open'))<0.5)=0; 
-  Ymm = (Yp0>(2-GMmaskth) & Yp0<(2+GMmaskth) & Ymf>(2-GMmaskth) & Ymf<(2+GMmaskth));
+  
+  
+  
+  %% update for 
+  FlA = cg_vbm_get_defaults('extopts.atlas');
+  if strcmp(FlA{1,2}(1),'w')
+    [pth1,nam1,ext1] = spm_fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
+    VclsA = spm_vol(fullfile(pth1,[strrep(nam1,'Template_1','Template_6'),ext1]));
+  end 
+  switch FlA{1,2}
+  % subject-based masks
+    case 'W',  Ymm = Yp0toC(Yp0,3); 
+    case 'G',  Ymm = Yp0toC(Ymf,2); 
+    case 'C',  Ymm = Yp0toC(Yp0,1);  
+    case 'B',  Ymm = Yp0>0.5; 
+    case 'N',  Ymm = true(size(Yp0));
+  % group masks - this maybe requires the some code from the TE part
+  % this may do not work because the space of the template is not equal
+  % the space of this analysis!!!!
+  % there is also other code for vbm_io_writenii necessary!!!
+    case 'wW2'
+      Yp0c = spm_read_vols(VclsA(2));
+      Yl1A = uint8(spm_read_vols(spm_vol(opt.partvol.l1A)));
+      Ymm  = Yp0c .* (Yl1A==1 | Yl1A==2); clear Yl1A;
+    case 'wG2'
+      Yp0c = spm_read_vols(VclsA(1));
+      Yl1A = uint8(spm_read_vols(spm_vol(FlA{1,1})));
+      Ymm  = Yp0c .* (Yl1A==1 | Yl1A==2); clear Yl1A;
+  % group masks - this maybe requires the some code from the TE part
+    case 'wW', Ymm = Yp0toC(Yp0A,3);  
+    case 'wG', 
+      Vl1A = spm_vol(opt.partvol.l1A);
+      Yl1A = uint8(spm_sample_vol(Vl1A,double(trans.atlas.Yy(:,:,:,1)),...
+        double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
+      Yl1A = reshape(Yl1A,d);
+      Ymm  = Yp0toC(Yp0A .* (Yl1A==1 | Yl1A==2),2); 
+    case 'wC', Ymm = Yp0toC(Yp0A,1); 
+    case 'wB', Ymm = Yp0A>0.5; 
+    case 'wN',  Ymm = true(size(Yp0A));
+    otherwise, error('MATLAB:cg_vbm_write:atlas','Unknown mask %s',FlA{1,2});
+  end
+  
   clear YMF Yp0;
   
   %% thickness estimation
@@ -1571,7 +1613,340 @@ end
 
 
 %% ---------------------------------------------------------------------
-%  ROI Partitioning
+%  ROI Partitioning 
+%  ---------------------------------------------------------------------
+%  This can maybe moved to a subroutine within this file.
+%  
+%  This function estimated indivudal measurements for different ROIs.
+%  The ROIs are described in the VBM normalized space and there are to 
+%  ways to estimate them - (1) in subject space, and (2) in normalized 
+%  space. Estimation in normalized space is more direct an avoid further
+%  transformations. The way over the subject space have the advantage 
+%  that indivdiual anatomical refinients are possible. Furthermore, 
+%  the subjectspace can be usefull for further operations and measures
+%  like for DTI and allows export to all other spaces. Finaly, some 
+%  atlas datasets (Hammers2002) can be used to validat both ways.
+%  Some measures like GM thickness are only defined for special regions.
+%  ...
+%  Althoug most ROIs are defined only for one tissue class, the ROI can
+%  contrain other classes. Therefore, standard tissue ranges (>50%) where
+%  used. ... 
+%
+%  masking and tissue problem: 
+%   ROIs can be dilated to neigbhor classes, but how we want to deal with
+%   the differnt tissue classes and volumes?
+%  ---------------------------------------------------------------------
+
+if any(cell2mat(struct2cell(job.output.l1)')) 
+  str='Regional Segmentation (Partitioning l#)'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+
+  % for the blood vessel correct, we need the full resolution, otherwise
+  % we can use half resolution.
+  opt.partvol.res    = min([3 3 3],vx_vol*(2-cg_vbm_get_defaults('extopts.BVC')));   
+  opt.partvol.vx_vol = vx_vol; 
+
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  
+  % map atlas to RAW space
+  %FlA = cg_vbm_get_defaults('extopts.atlas');
+  for ai=2:size(FlA,1)
+    for si=1:2 % spaces
+      if FlA{ai,4}(si)
+        if si==1
+        % --------------------------------------------------------------
+        % individual space:  
+        % --------------------------------------------------------------
+          % map atlas to individual space (and complete undefiended parts)
+          VlaiA = spm_vol(FlA{ai,1});
+          YlaiA = uint8(spm_sample_vol(VlaiA,double(trans.atlas.Yy(:,:,:,1)),...
+            double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
+          YlaiA = reshape(YlaiA,d);
+          if FlA{ai,5}, [D,I] = vbdist(single(YlaiA)); YlaiA = YlaiA(I); clear D I;  end
+          
+          % prepare masks from different spaces
+          if strcmp(FlA{1,2}(1),'w')
+            [pth1,nam1,ext1] = spm_fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
+            VclsA = spm_vol(fullfile(pth1,[strrep(nam1,'Template_1','Template_6'),ext1]));
+          end 
+          switch FlA{ai,2}(1:min(size(FlA{ai,2}),2))
+          % subject-based masks
+            case 'W',  Ymm = Yp0toC(Yp0,3); 
+            case 'G',  Ymm = Yp0toC(Yp0,2); 
+            case 'C',  Ymm = Yp0toC(Yp0,1); 
+            case 'B',  Ymm = Yp0>0.5; 
+            case 'N',  Ymm = true(size(Yp0));
+            otherwise, error('MATLAB:cg_vbm_write:atlas','Unknown mask %s',FlA{ai,2});
+          end
+          
+          % masking and refinements
+          % ------------------------------------------------------------
+          Ylai = single(YlaiA) .* (smooth3(single(Ymm))>0.5);
+          Ylai = uint8(vbm_vol_median3(single(Ylai),Ymm>0));
+          
+          % further operations ... 
+          % 1) side alignment
+          % 2) only one structure per side and region-growing in special tissue class
+          % Yside = mod(Yl1,2); 
+
+
+          % write images to any space
+          [pp,ff,ee] = fileparts(FlA{ai,1}); [pp,pph] = fileparts(pp);
+          vbm_io_writenii(VT0,Ylai,sprintf('l%d',ai+1),...
+            sprintf('brain atlas map of %s map',fullfile(pph,ff,ee)),...
+            'uint8',[0,1],job.output.l1,0,trans,Ymm);
+          clear Ymm;
+        else
+        % --------------------------------------------------------------
+        % normalized space:  
+        % --------------------------------------------------------------
+          % load mask (and complete undefiended parts)
+          wVlai = spm_vol(FlA{ai,1});
+          wYlai = spm_read_vols(wVlai);
+          if FlA{ai,5}, [D,I] = vbdist(single(wYlai)); wYlai(:) = wYlai(I(:)); clear D I; end
+
+          vx_volw = sqrt(sum(VlaiA.mat(1:3,1:3).^2));
+
+          % prepare images
+          for c=1:3 % tissues with modulation (set second output)
+            [wYcls{c},wr] = spm_diffeo('push',single(Ycls{c})/255,trans.warped.y,trans.warped.odim(1:3)); 
+          end
+          if exist('Yth1','var') % thickness unmodulated
+            [wYth1,w] = spm_diffeo('push',Yth1,trans.warped.y,trans.warped.odim(1:3)); spm_field('bound',1);
+            wYth1 = spm_field(w,wYth1,[sqrt(sum(trans.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
+          end
+          if exist('wYml','var')
+            [wYm,w] = spm_diffeo('push',Yml,trans.warped.y,trans.warped.odim(1:3)); spm_field('bound',1);
+            wYm = spm_field(w,wYm,[sqrt(sum(trans.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
+          else
+            [wYm,w] = spm_diffeo('push',Ym,trans.warped.y,trans.warped.odim(1:3)); spm_field('bound',1);
+            wYm = spm_field(w,wYm,[sqrt(sum(trans.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
+          end
+          [wYp0,w] = spm_diffeo('push',Yp0,trans.warped.y,trans.warped.odim(1:3)); spm_field('bound',1);
+          wYp0 = spm_field(w,wYp0,[sqrt(sum(trans.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
+          
+          % prepare masks from different spaces
+          switch FlA{ai,2}
+          % subject-based masks
+            case 'W',  Ymm = Yp0toC(wYp0,3); tissue=2;
+            case 'G',  Ymm = Yp0toC(wYp0,2); tissue=1;
+            case 'C',  Ymm = Yp0toC(wYp0,1); tissue=3; 
+            case 'B',  Ymm = wYp0>0.5; 
+            case 'N',  Ymm = true(size(wYp0));
+          % group masks - this maybe requires the some code from the TE part
+          % this may do not work because the space of the template is not equal
+          % the space of this analysis!!!!
+          % there is also other code for vbm_io_writenii necessary!!!
+          %{
+            case 'wW2'
+              Yp0c = spm_read_vols(VclsA(2)); tissue={2};
+              Yl1A = uint8(spm_read_vols(spm_vol(opt.partvol.l1A)));
+              Ymm  = Yp0c .* (Yl1A==1 | Yl1A==2); clear Yl1A;
+            case 'wG2'
+              Yp0c = spm_read_vols(VclsA(1)); tissue={1};
+              Yl1A = uint8(spm_read_vols(spm_vol(FlA{1,1})));
+              Ymm  = Yp0c .* (Yl1A==1 | Yl1A==2); clear Yl1A;
+          % group masks -w this maybe requires the some code from the TE part
+         
+            case 'wW', Ymm = Yp0toC(Yp0A,3); tissue={2}; 
+            case 'wG', Ymm = Yp0toC(Yp0A,2); tissue={1};
+            case 'wC', Ymm = Yp0toC(Yp0A,1); tissue={3}; 
+            case 'wB', Ymm = Yp0A>0.5; 
+            case 'wN', Ymm = true(size(Yp0A));
+          %}
+            otherwise,   error('MATLAB:cg_vbm_write:atlas','Unknown mask %s',FlA{ai,2});
+          end
+          
+          % masking and refinements
+          wYlai = single(wYlai) .* (smooth3(single(Ymm))>0.5);
+          wYlai = uint8(vbm_vol_median3(wYlai,Ymm>0));
+        end
+        
+        
+        %% --------------------------------------------------------------
+        % estimate values
+        % --------------------------------------------------------------
+
+        % first we need to load the name-list of the atlas maps or otherwise simply list them 
+        [pp,ff] = fileparts(FlA{ai,1});
+        csvf = fullfile(pp,[ff '.csv']);
+        if exist(csvf,'file')
+          rois = vbm_io_csv(csvf);
+        else
+          rois = [num2cell((1:max(Ylai(:)))') ...
+            cellstr([repmat('ROI',max(Ylai(:)),1) num2str((1:max(Ylai(:)))','%03d')])];
+        end
+
+        % estimate volume for each ROI and SIDE
+        if FlA{ai,3}==0 % divide between sides by l1 map, because the atlas doesn't do it 
+          %% side alignment
+          if si==1
+            Yside  = uint8(mod(Yl1,2));
+            ffx    = ff;
+          else
+            wYside = uint8(round(spm_diffeo('push',single(mod(Yl1,2)),trans.warped.y,trans.warped.odim(1:3))));
+            ffx    = [ff 'w'];
+          end
+          
+          ROI.(ff).id = rois{:,1:2};
+          roih = {'ROIid' 'ROIname' ['volume(' FlA{ai,2} ')'] '';'' '' 'left' 'right'};
+          for ri=1:max(Ylai(:)) 
+            if si==1
+              rois{ri,3} = prod(vx_vol)/1000 * sum(Ylai(:)==ri & Yside(:)==0); % left
+              rois{ri,4} = prod(vx_vol)/1000 * sum(Ylai(:)==ri & Yside(:)==1); % right
+              ROI.(ffx).vol.(rois{ri,2})(1) = rois{ri,3}; 
+              ROI.(ffx).vol.(rois{ri,2})(2) = rois{ri,4};
+            else
+              rois{ri,3} = sum(wYlai(:)==ri & wYside(:)==0)/1000; % left
+              rois{ri,4} = sum(wYlai(:)==ri & wYside(:)==1)/1000; % right
+              ROI.(ffx).vol.(rois{ri,2})(1) = rois{ri,3}; 
+              ROI.(ffx).vol.(rois{ri,2})(2) = rois{ri,4};
+            end  
+
+          end
+
+          % add intensity values
+          if exist('Yml','var')
+            roih = [roih {'mean-intensity' '' 'std-intensity' '';'left' 'right' 'left' 'right'}];  %#ok<AGROW>
+            for ri=1:max(Ylai(:)) 
+              if si==1
+                rois{ri,5} = nanmean(Yml(Ylai(:)==ri & Yside(:)==0)); % left
+                rois{ri,6} = nanmean(Yml(Ylai(:)==ri & Yside(:)==1)); % right
+                rois{ri,7} = nanstd (Yml(Ylai(:)==ri & Yside(:)==0)); % left
+                rois{ri,8} = nanstd (Yml(Ylai(:)==ri & Yside(:)==1)); % right
+              else
+                rois{ri,5} = nanmean(wYml(wYlai(:)==ri & wYside(:)==0)); % left
+                rois{ri,6} = nanmean(wYml(wYlai(:)==ri & wYside(:)==1)); % right
+                rois{ri,7} = nanstd (wYml(wYlai(:)==ri & wYside(:)==0)); % left
+                rois{ri,8} = nanstd (wYml(wYlai(:)==ri & wYside(:)==1)); % right
+              end
+            end
+          else
+            roih = [roih {'mean-intensity' '' 'std-intensity' '';'left' 'right' 'left' 'right'}];  %#ok<AGROW>
+            for ri=1:max(Ylai(:)) 
+              if si==1
+                rois{ri,5} = nanmean(Ym(Ylai(:)==ri & Yside(:)==0)); % left
+                rois{ri,6} = nanmean(Ym(Ylai(:)==ri & Yside(:)==1)); % right
+                rois{ri,7} = nanstd (Ym(Ylai(:)==ri & Yside(:)==0)); % left
+                rois{ri,8} = nanstd (Ym(Ylai(:)==ri & Yside(:)==1)); % right
+              else
+                rois{ri,5} = nanmean(wYm(wYlai(:)==ri & wYside(:)==0)); % left
+                rois{ri,6} = nanmean(wYm(wYlai(:)==ri & wYside(:)==1)); % right
+                rois{ri,7} = nanstd (wYm(wYlai(:)==ri & wYside(:)==0)); % left
+                rois{ri,8} = nanstd (wYm(wYlai(:)==ri & wYside(:)==1)); % right
+              end    
+            end
+          end
+          for ri=1:max(Ylai(:)) 
+            ROI.(ffx).intmean.(rois{ri,2})(1) = rois{ri,5}; 
+            ROI.(ffx).intmean.(rois{ri,2})(2) = rois{ri,6};
+            ROI.(ffx).intstd.(rois{ri,2})(1)  = rois{ri,7}; 
+            ROI.(ffx).intstd.(rois{ri,2})(2)  = rois{ri,8};
+          end
+
+          % add thickness values
+          if exist('Yth1','var')
+            roih = [roih {'mean-thickness' '' 'std-thickness' '';'left' 'right' 'left' 'right'}];  %#ok<AGROW>
+            for ri=1:max(Ylai(:)) 
+              if si==1
+                rois{ri, 9} = nanmean(Yth1(Ylai(:)==ri & Yside(:)==0)); 
+                rois{ri,10} = nanmean(Yth1(Ylai(:)==ri & Yside(:)==1)); 
+                rois{ri,11} = nanstd (Yth1(Ylai(:)==ri & Yside(:)==0)); 
+                rois{ri,12} = nanstd (Yth1(Ylai(:)==ri & Yside(:)==1)); 
+              else
+                rois{ri, 9} = nanmean(wYth1(Ylai(:)==ri & wYside(:)==0)); 
+                rois{ri,10} = nanmean(wYth1(Ylai(:)==ri & wYside(:)==1)); 
+                rois{ri,11} = nanstd (wYth1(Ylai(:)==ri & wYside(:)==0)); 
+                rois{ri,12} = nanstd (wYth1(Ylai(:)==ri & wYside(:)==1)); 
+              end
+              if rois{ri, 9}==0, rois{ri, 9}=nan; end % left
+              if rois{ri,10}==0, rois{ri,10}=nan; end % right
+              if rois{ri,11}==0, rois{ri,11}=nan; end % left
+              if rois{ri,12}==0, rois{ri,12}=nan; end % right
+              ROI.(ffx).th1mean.(rois{ri,2})(1) = rois{ri, 9}; 
+              ROI.(ffx).th1mean.(rois{ri,2})(2) = rois{ri,10};
+              ROI.(ffx).th1std.(rois{ri,2})(1)  = rois{ri,11}; 
+              ROI.(ffx).th1std.(rois{ri,2})(2)  = rois{ri,12};
+            end
+          end
+        else % divide 
+          %%
+          if si==1, ffx = ff; else ffx = [ff 'w']; end
+          
+          ROI.(ffx).id = rois{:,1:2};
+          roih = {'ROIid' 'ROIname' ['volume(' FlA{ai,2} ')'] };
+          for ri=1:max(Ylai(:)) 
+            if si==01
+              rois{ri,3} = prod(vx_vol)/1000 * sum(Ylai(:)==ri); 
+            else
+              rois{ri,3} = prod(vx_vol)*sum(wYcls{tissue}(wYlai(:)==ri))/1000; 
+            end
+            ROI.(ffx).vol.(rois{ri,2}) = rois{ri,3}; 
+          end
+
+          %% add intensity values
+          if exist('Yml','var')
+            roih = [roih {'mean-intensity' 'std-intensity'}];  %#ok<AGROW>
+            for ri=1:max(Ylai(:)) 
+              if si==1
+                rois{ri,4} = nanmean(Yml(Ylai(:)==ri)); 
+                rois{ri,5} = nanstd (Yml(Ylai(:)==ri)); 
+              else
+                rois{ri,4} = nanmean(wYml(wYlai(:)==ri)); 
+                rois{ri,5} = nanstd (wYml(wYlai(:)==ri)); 
+              end
+            end
+          else
+            roih = [roih {'mean-intensity' 'std-intensity'}];  %#ok<AGROW>
+            for ri=1:max(Ylai(:)) 
+              if si==1
+                rois{ri,4} = nanmean(Ym(Ylai(:)==ri)); 
+                rois{ri,5} = nanstd (Ym(Ylai(:)==ri)); 
+              else
+                rois{ri,4} = nanmean(wYm(wYlai(:)==ri)); 
+                rois{ri,5} = nanstd (wYm(wYlai(:)==ri)); 
+              end
+            end  
+          end
+          for ri=1:max(Ylai(:)) 
+            ROI.(ffx).intmean.(rois{ri,2}) = rois{ri,4};
+            ROI.(ffx).intstd.(rois{ri,2})  = rois{ri,5};
+          end
+
+          % add thickness values
+          if exist('Yth1','var')
+            roih = [roih {'mean-thickness' 'std-thickness'}];  %#ok<AGROW>
+            for ri=1:max(Ylai(:)) 
+              if si==1
+                rois{ri,6} = nanmean(Yth1(Ylai(:)==ri)); 
+                rois{ri,7} = nanstd (Yth1(Ylai(:)==ri)); 
+              else
+                rois{ri,6} = nanmean(wYth1(wYlai(:)==ri)); 
+                rois{ri,7} = nanstd (wYth1(wYlai(:)==ri));
+              end
+              if rois{ri,6}==0, rois{ri,6}=nan; end
+              if rois{ri,7}==0, rois{ri,7}=nan; end 
+              ROI.(ffx).th1mean.(rois{ri,2}) = rois{ri,6}; 
+              ROI.(ffx).th1std.(rois{ri,2})  = rois{ri,7}; 
+            end
+          end
+        end
+
+        % csv-export and xml-export (later) 
+        vbm_io_csv(fullfile(pth,['vbmROI' ffx '_' nam '.csv']),...
+          [roih;rois],'','',struct('delimiter',',','komma','.'));
+        vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),struct('ROI',ROI),'write+');
+      end
+    end
+  end 
+  
+  fprintf('%3.0fs\n',etime(clock,stime));
+end
+
+
+
+
+%% ---------------------------------------------------------------------
+%  ROI Partitioning - Normalized Space
 %  ---------------------------------------------------------------------
 %  We will start with the simplest solution of mapping a common map to 
 %  indivual space. 
@@ -1588,18 +1963,8 @@ if any(cell2mat(struct2cell(job.output.l1)'))
   % map atlas to RAW space
   FlA = cg_vbm_get_defaults('extopts.atlas');
   for ai=1:size(FlA,1)
-    VlaiA = spm_vol(FlA{ai,1});
-    YlaiA = uint8(spm_sample_vol(VlaiA,double(trans.atlas.Yy(:,:,:,1)),double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
-    YlaiA = reshape(YlaiA,d);
-    [D,I] = vbdist(single(YlaiA)); YlaiA(:) = YlaiA(I(:)); 
-
-    switch FlA{ai,2}
-      case 'GM',  Ymm = (Yp0>(2-GMmaskth) & Yp0<(2+GMmaskth)); 
-      otherwise,  Ymm = true(size(Yp0));
-    end
-    Ylai = single(YlaiA) .* Ymm; Ylai = Ylai .* (smooth3(Ylai>0)>0.6); 
-    Ylai = vbm_vol_median3(Ylai,Ymm);
-  
+   
+    
     % further operations ... 
     % 1) side alignment
     % 2) only one structure per side and region-growing in special tissue class
@@ -1612,7 +1977,7 @@ if any(cell2mat(struct2cell(job.output.l1)'))
       'uint8',[0,1],job.output.l1,0,trans,Ymm);
     clear Ymm;
     
-    %% export
+    % export:
     % first we need to load the name-list of the atlas maps or otherwise
     % simply list them 
     % 
