@@ -2745,3 +2745,15 @@ M       tbx_cfg_vbm.m
 Removed some typos.
 ------------------------------------------------------------------------
 r516 | gaser | 2013-11-01 08:12:24
+
+M       CHANGES.txt
+M       cg_cfg_realign.m
+M       cg_vbm_tools.m
+M       tbx_cfg_vbm.m
+ M      templates_1.50mm/aal.nii
+ M      templates_1.50mm/brodmann.nii
+
+Changed strtype-parameters from 'e' to either 'r' (real value) or 'n' (integer)
+according to new spm12b update r5731.
+------------------------------------------------------------------------
+r517 | gaser | 2013-11-06 12:44:00
