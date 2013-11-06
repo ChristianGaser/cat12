@@ -79,7 +79,7 @@ tpm.num     = [1 1];
 ngaus      = cfg_entry;
 ngaus.tag  = 'ngaus';
 ngaus.name = 'Gaussians per class';
-ngaus.strtype = 'e';
+ngaus.strtype = 'n';
 ngaus.num = [1 6];
 ngaus.def  = @(val)cg_vbm_get_defaults('opts.ngaus', val{:});
 ngaus.help = {[...
@@ -176,7 +176,7 @@ warpreg      = cfg_entry;
 warpreg.def  = @(val)cg_vbm_get_defaults('opts.warpreg', val{:});
 warpreg.tag = 'warpreg';
 warpreg.name = 'Warping Regularisation';
-warpreg.strtype = 'e';
+warpreg.strtype = 'r';
 warpreg.num = [1 5];
 warpreg.help    = {[ ...
   'The objective function for registering the tissue probability maps to ' ...
@@ -231,7 +231,7 @@ affreg.help = {[...
 samp      = cfg_entry;
 samp.tag = 'samp';
 samp.name = 'Sampling distance';
-samp.strtype = 'e';
+samp.strtype = 'r';
 samp.num = [1 1];
 samp.def  = @(val)cg_vbm_get_defaults('opts.samp', val{:});
 samp.help  = {[ ...
@@ -261,7 +261,7 @@ opts.help = {[...
 vox      = cfg_entry;
 vox.tag = 'vox';
 vox.name = 'Voxel size for normalized images';
-vox.strtype = 'e';
+vox.strtype = 'r';
 vox.num = [1 1];
 vox.def  = @(val)cg_vbm_get_defaults('extopts.vox', val{:});
 vox.help = {[...
@@ -275,7 +275,7 @@ bb         = cfg_entry;
 bb.tag     = 'bb';
 bb.name    = 'Bounding box';
 bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'};
-bb.strtype = 'e';
+bb.strtype = 'r';
 bb.num     = [2 3];
 bb.def     = @(val)cg_vbm_get_defaults('extopts.bb', val{:});
 
@@ -318,7 +318,7 @@ gcutstr.help = {[...
   'than decrease the strength. If the brain mask of your images contains ' ...
   'parts of the head, than increase the strength. ' ...
   ]};
-gcutstr.strtype = 'e';
+gcutstr.strtype = 'n';
 gcutstr.num = [1 1];
 gcutstr.def = @(val)cg_vbm_get_defaults('extopts.gcutstr', val{:});
 
