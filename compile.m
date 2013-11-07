@@ -15,7 +15,7 @@ function compile
   mex -O vbm_vol_localstat.c
   mex -O vbm_vol_pbtp.cpp
   mex -O vbm_vol_interp3f.cpp
-  mex -O vbm_vol_eidist.cpp
+  mex -O vbm_vol_eidist.c
   mex -O vbdist.c
   
   d2 = vbm_vol_median3(d);             disp('Compilation of vbm_vol_median3 successful')

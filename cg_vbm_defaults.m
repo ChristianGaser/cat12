@@ -62,7 +62,6 @@ vbm.output.label.dartel = 0;
 % GM thickness maps
 vbm.output.th1.native   = 0;
 vbm.output.th1.warped   = 0;
-vbm.output.th1.warpedgm = 0;
 vbm.output.th1.dartel   = 0;
 
 % partitioning atlas maps
@@ -134,20 +133,23 @@ vbm.extopts.BVC         = 1;    % Blood Vessel Correction:
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
 vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res; 0.5 high res (default)
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
+vbm.extopts.ROI         = 3;    % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 1)
 % expert options - ROIs
 %=======================================================================
 % ROI maps from different sources mapped to VBM-space [IXI550]
-% {filename , maptype , sidessep , [roi space], fill, maskth}
-% maptype   = [C|G|W|B|N|wG|wW]=[CSF,GM,WM,Brain,None,templateGM|templateGM] - set the tissue classes for volume estimation
-% sidespe   = [0|1] - set 1 for maps with different ROIs pers side, 0 for symetric maps with identical labes on both sides
-% ROI space = estimate values in subject (1) and/or template space (2)
-% fill      = complete ROI by nearest neighbor (only for fully defined atlas maps)
-% maskth    = mask threshold (only for normalized maptype wG and wW)
+%  { filename , refinement , mask , sidessep , [roi space] }
+%  filename    = path to the ROI-file
+%  refinement  = [B|G|N]=[brain,GM,none - refinemnt of ROIs in subject space
+%  mask        = [C|G|W|B|T|N]=[CSF,GM,WM,Brain,tisue=GM+WM,none] - set the tissue classes for volume estimation
+%  sidesep     = [0|1] - set 1 for maps with different ROIs pers side, 0 for symetric maps with identical labes on both sides
+%  [roi space] = estimate values in subject space (1) and/or in template space (2)
 vbm.extopts.atlas       = { ... 
-  ... % l1 major regions roi??? '' 'B' 1 1; ...
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','l1a.nii')      'G' 1 [1 1] 1; ... % do not comment/remove this entry
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'G' 1 [1 1] 1; ...
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brodmann.nii') 'G' 1 [1 1] 1; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','l1a.nii')      'N' 'G' 1 [1 1]; ... % VBM atlas with major regions for SBM & ROIs
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'G' 'G' 1 [1 1]; ... 
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'N' 'G' 1 [1 1]; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'G' 'G' 1 [1 1]; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','jhu.nii')      'B' 'T' 1 [1 1]; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'B' 'T' 1 [1 1]; ...
   }; 
 
 % experimental (not yet working)
