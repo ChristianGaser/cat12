@@ -63,16 +63,17 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     if isfield(writes,'mod'   ),   write(3) = writes.mod;    end
     if isfield(writes,'affine'),   write(4) = writes.affine; end
     if isfield(writes,'darte' ),   write(4) = writes.dartel; end
-    if isfield(writes,'warpedm')
-      % this is the special case where we want to use the template 
-      % tissue map for masking 
-      % this option is usefull for thickness 
-    end
   elseif isnumeric(writes)
     if numel(writes)==3, write = [writes(1:2) 0 writes(3)]; else write = writes; end
   end
   if ~exist('YMth','var'), YMth = 0.5; end
-  if exist('YM','var'), YM=single(YM); end
+  if exist('YM','var'),
+    if all(size(Y)==size(YM))
+      YM=single(YM);
+    else
+      error('MATLAB:vbm_io_writenii:YM','Y and YM have different size');
+    end
+  end
   
   %{
   if exist('mask','var')
@@ -104,16 +105,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     
     % final masking after transformation
     if exist('YM','var')
-      if all(size(Y)==size(YM)) % YM is in the same space like Y
-        N.dat(:,:,:) = double(Y) .* (smooth3(YM)>YMth); 
-      elseif all(size(transform.atlas.Yy(:,:,:,1))==size(Y))
-        wYM = single(spm_sample_vol(YM,double(transform.atlas.Yy(:,:,:,1)),...
-            double(transform.atlas.Yy(:,:,:,2)),double(transform.atlas.Yy(:,:,:,3)),0));
-        wYM = reshape(wYM,size(Y));
-        N.dat(:,:,:) = double(Y) .* (smooth3(wYM)>YMth); 
-      else
-        error('MATLAB:vbm_io_writenii:YMsize','Error size of YM ~ Y');
-      end
+      N.dat(:,:,:) = double(Y) .* (smooth3(YM)>YMth); 
     else
       N.dat(:,:,:) = double(Y);
     end
@@ -128,7 +120,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
   end
   switch class(Y)
     case {'single','double'}, labelmap=0;
-    otherwise, labelmap=2; Y=single(Y); 
+    otherwise, labelmap=1; Y=single(Y); 
   end
   
   % warped
@@ -152,14 +144,6 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
       wT      = spm_field(w,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
       wT(wT0) = 0; % clear regions that were not defined in the deformation
     elseif labelmap==1
-      [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3)); wT0=wT==0;
-      spm_field('bound',1);
-      wT      = spm_field(w,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
-      wT(wT0) = 0; % clear regions that were not defined in the deformation
-      wT = round(wT*10000)/10000; 
-      wT(round(wT)~=wT | isnan(wT) | wT>max(Y(:))+1)=0;
-      [D,I] = vbdist(wT); wT(:)=wT(I(:)); clear D I; 
-    elseif labelmap==2
       wT = zeros([transform.warped.odim(1:3),max(Y(:))],'uint8'); 
       for yi=1:max(Y(:)); 
         [wTi,w]  = spm_diffeo('push',single(Y==yi),transform.warped.y,transform.warped.odim(1:3));
@@ -173,19 +157,13 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     
     % final masking after transformation
     if exist('YM','var')
-      if all(size(Y)==size(YM)) 
-        [wTM,w] = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); wT0=wT==0;
-        spm_field('bound',1);
-        wTM = spm_field(w,wTM,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
-        wT(wT0)=0; clear wT0; % clear regions that were not defined in the deformation
-        wTM = round(wTM*100)/100; 
-      elseif all(size(wT)==size(YM)) 
-        wTM = YM;
-      else
-        error('MATLAB:vbm_io_writenii:YMsize','Error size of YM ~ Y');
-      end
+      [wTM,w] = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); wT0=wT==0;
+      spm_field('bound',1);
+      wTM = spm_field(w,wTM,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
+      wT(wT0)=0; clear wT0; % clear regions that were not defined in the deformation
+      wTM = round(wTM*100)/100; 
       wT  = wT .* (smooth3(wTM)>YMth);
-      clear w;
+      clear w wTM;
     end
     
     N      = nifti;
@@ -225,16 +203,9 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     if write(3)==2
       [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
       if exist('YM','var') % final masking after transformation
-        if all(size(Y)==size(YM))
-          wTM = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); 
-          wT = wT .* (smooth3(wTM)>YMth);
-        elseif all(size(wT)==size(YM)) 
-          wTM = YM;
-        else
-          error('MATLAB:vbm_io_writenii:YMsize','Error size of YM ~ Y');
-        end  
+        wTM = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); 
+        wT = wT .* (smooth3(wTM)>YMth);
       end
-      %w       = vbm_vol_smooth3X(wr,1.0); wT = wT./wr.*w; clear wr w;  % smoother warping
     else
       if ~exist('wT','var')
         wT = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));   
@@ -326,16 +297,10 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
           tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
         end
         if exist('YM','var')  % final masking after transformation
-          if all(size(Y)==size(YM))
-            if labelmap
-              tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
-            else
-              tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
-            end
-          elseif all(size(wT)==size(YM)) 
-            tmpM = YM(:,:,i);
+          if labelmap
+            tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
           else
-            error('MATLAB:vbm_io_writenii:YMsize','Error size of YM ~ Y');
+            tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
           end
           tmpM = smooth3(repmat(tmpM,1,1,3))>YMth;
           tmp  = tmp .* tmpM(:,:,2); clear tmpM; 
