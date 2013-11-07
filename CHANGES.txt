@@ -2757,3 +2757,49 @@ Changed strtype-parameters from 'e' to either 'r' (real value) or 'n' (integer)
 according to new spm12b update r5731.
 ------------------------------------------------------------------------
 r517 | gaser | 2013-11-06 12:44:00
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_defs.m
+M       cg_vbm_write.m
+M       compile.m
+A       spm_def2det.c
+A       spm_def2det.mexa64
+A       spm_def2det.mexglx
+A       spm_def2det.mexmaci
+A       spm_def2det.mexmaci64
+A       spm_def2det.mexw32
+A       spm_def2det.mexw64
+M       tbx_cfg_vbm.m
+A       templates_1.50mm/aal.csv
+M       templates_1.50mm/aal.nii
+A       templates_1.50mm/anatomy.csv
+A       templates_1.50mm/anatomy.nii
+A       templates_1.50mm/hammers.csv
+A       templates_1.50mm/hammers.nii
+A       templates_1.50mm/ibsr.csv
+A       templates_1.50mm/ibsr.nii
+A       templates_1.50mm/jhu.nii
+M       vbm_io_csv.m
+M       vbm_io_writenii.m
+A       vbm_vol_atlas.m
+A       vbm_vol_eidist.c
+D       vbm_vol_eidist.cpp
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexmaci64
+
+(1)  Add atlas maps for alpha tests.
+     1) IBSR:     label map of 18 subjects (major & subcortical ROIs)
+     2) Hammers:  label map of 20 subjects (major, neocortex & subcortical ROIs) 
+     3) JHU:      label map of  1 subject with complete labeling 
+     4) AAL:      label map of  1 subject with complete labeling (Collins)
+     5) Anatomy:  label map of 10 persons with incomplete labeling
+(2)  Add spm_def2det temporary for cg_vbm_defs, because it was removed in VBM12.
+(3)  Atlas generation scripts.
+(4)  Replace vbm_vol_eidist.cpp by vbm_vol_eidist.c.
+(5)  Update vbm_vol_localstat by median-like filteroption.
+(6)  Update vbm_io_writenii for masking and label mapping.
+(7)  Update ROI options in cg_vbm_defaults. 
+------------------------------------------------------------------------
+r518 | dahnke | 2013-11-07 13:11:52

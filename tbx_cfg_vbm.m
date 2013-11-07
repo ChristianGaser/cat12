@@ -328,10 +328,10 @@ sanlm = cfg_menu;
 sanlm.tag  = 'sanlm';
 sanlm.name = 'Use SANLM de-noising filter';
 sanlm.help = {[...
-'This function applies an spatial adaptive non local means denoising filter ',...
-'to the data. This filter will remove noise while ',...
-'preserving edges. The smoothing filter size is automatically estimated based on ',...
-'the local variance in the image. ']};
+  'This function applies an spatial adaptive non local means denoising filter ',...
+  'to the data. This filter will remove noise while ',...
+  'preserving edges. The smoothing filter size is automatically estimated based on ',...
+  'the local variance in the image. ']};
 sanlm.labels = {'No denoising','Denoising','Denoising (multi-threaded)'};
 sanlm.values = {0 1 2};
 sanlm.def  = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
@@ -347,6 +347,27 @@ LAS.help = {[...
 LAS.labels = {'no LAS','LAS'};
 LAS.values = {0 1};
 LAS.def  = @(val)cg_vbm_get_defaults('extopts.LAS', val{:});
+
+%------------------------------------------------------------------------
+
+ROI = cfg_menu;
+ROI.tag  = 'ROI';
+ROI.name = 'ROI analyis';
+ROI.help = {[...
+  'Export of ROI data of volume, intensity, and thickness to csv-files. ' ...
+  'The values of a ROI can be estimated in subject and/or normalized ' ...
+  'spaced. ' ...
+  '' ...
+  'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] ' ...
+  'is used that estimates cortical thickness for each GM voxel. Although, ' ...
+  'this maps can be mapped to different spaces the analysis is difficult, ' ...
+  'because many statistical asumptions do not fit. Therefore, only ROI-based ' ...
+  'values are available. To overcome this limitation surface-based analysis ' ...
+  'functions for VBM are in development. ' ...
+]};
+ROI.labels = {'no ROI analyis','subject space ROI analysis','template space ROI analyis','both'};
+ROI.values = {0 1 2 3};
+ROI.def  = @(val)cg_vbm_get_defaults('extopts.ROI', val{:});
 
 %------------------------------------------------------------------------
 
@@ -411,11 +432,11 @@ dartelwarp.help   = {[
 
 %------------------------------------------------------------------------
 
-extopts      = cfg_branch;
-extopts.tag = 'extopts';
-extopts.name = 'Extended options';
-extopts.val = {dartelwarp,sanlm,LAS,gcutstr,cleanup,vox,bb,print};
-extopts.help = {'Extended options'};
+extopts       = cfg_branch;
+extopts.tag   = 'extopts';
+extopts.name  = 'Extended options';
+extopts.val   = {dartelwarp,sanlm,LAS,gcutstr,cleanup,vox,bb,ROI,print};
+extopts.help  = {'Extended options'};
 
 %------------------------------------------------------------------------
 % options for data
@@ -558,31 +579,30 @@ native.def    = @(val)cg_vbm_get_defaults('output.GM.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.GM.warped', val{:});
 modulated.def = @(val)cg_vbm_get_defaults('output.GM.mod', val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.GM.dartel', val{:});
-
-grey      = cfg_branch;
-grey.tag = 'GM';
-grey.name = 'Grey matter';
-grey.val = {native, warped, modulated, dartel};
+grey          = cfg_branch;
+grey.tag      = 'GM';
+grey.name     = 'Grey matter';
+grey.val      = {native, warped, modulated, dartel};
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'};
 
 native.def    = @(val)cg_vbm_get_defaults('output.WM.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.WM.warped', val{:});
 modulated.def = @(val)cg_vbm_get_defaults('output.WM.mod', val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.WM.dartel', val{:});
-white      = cfg_branch;
-white.tag = 'WM';
-white.name = 'White matter';
-white.val = {native, warped, modulated, dartel};
+white         = cfg_branch;
+white.tag     = 'WM';
+white.name    = 'White matter';
+white.val     = {native, warped, modulated, dartel};
 white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and mwp2*.img.'};
 
 native.def    = @(val)cg_vbm_get_defaults('output.CSF.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.CSF.warped', val{:});
 modulated.def = @(val)cg_vbm_get_defaults('output.CSF.mod', val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.CSF.dartel', val{:});
-csf      = cfg_branch;
-csf.tag = 'CSF';
-csf.name = 'Cerebro-Spinal Fluid (CSF)';
-csf.val = {native, warped, modulated, dartel};
+csf           = cfg_branch;
+csf.tag       = 'CSF';
+csf.name      = 'Cerebro-Spinal Fluid (CSF)';
+csf.val       = {native, warped, modulated, dartel};
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'};
 
 %-----------------------------------------------------------------------
@@ -597,32 +617,15 @@ th1.name      = 'Grey Matter Thickness (GMT)';
 th1.val       = {native, warped, dartel};
 th1.help      = {'Options to produce GM thickness images: th1*.img, wth1*.img and mwth1*.img.'};
 
-% not yet 
-% the idea is to use the m-image to save this file for the LAD stream
-%{
-% local intensity corrected
-native.def    = @(val)cg_vbm_get_defaults('output.mlT.native', val{:});
-warped.def    = @(val)cg_vbm_get_defaults('output.mlT.warped', val{:});
-dartel.def    = @(val)cg_vbm_get_defaults('output.mlT.dartel', val{:});
-mlT           = cfg_branch;
-mlT.tag       = 'mlT';
-mlT.name      = 'global intensity scaled image';
-mlT.val       = {native, warped, dartel};
-mlT.help      = {[ ...
-  'This is the option to save a local intensity scaled version of your ' ...
-  'bias and noise corrected input image. ' ...
-]};
-%}
-
 % main structure atlas
-native.def      = @(val)cg_vbm_get_defaults('output.l1.native', val{:});
-warped.def      = @(val)cg_vbm_get_defaults('output.l1.warped', val{:});
-dartel.def      = @(val)cg_vbm_get_defaults('output.l1.dartel', val{:});
-l1              = cfg_branch;
-l1.tag          = 'l1';
-l1.name         = 'Atlas label maps';
-l1.val          = {native, warped, dartel};
-l1.help         = {[ ...
+native.def    = @(val)cg_vbm_get_defaults('output.l1.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.l1.warped', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.l1.dartel', val{:});
+l1            = cfg_branch;
+l1.tag        = 'l1';
+l1.name       = 'Atlas label maps';
+l1.val        = {native, warped, dartel};
+l1.help       = {[ ...
   'WARNING: The functions that create this maps are still under development! ' ...
   '' ...
   'This is the option to save an atlas map with major structures (l1). ' ...
@@ -668,16 +671,16 @@ pcT.help      = {[ ...
 %-----------------------------------------------------------------------
 
 warps = cfg_menu;
-warps.tag = 'warps';
-warps.name = 'Deformation Fields';
+warps.tag    = 'warps';
+warps.name   = 'Deformation Fields';
 warps.labels = {...
     'none',...
     'Image->Template (forward)',...
     'Template->Image (inverse)',...
     'inverse + forward'};
 warps.values = {[0 0],[1 0],[0 1],[1 1]};
-warps.def  = @(val)cg_vbm_get_defaults('output.warps', val{:});
-warps.help = {[ ...
+warps.def    = @(val)cg_vbm_get_defaults('output.warps', val{:});
+warps.help   = {[ ...
   'Deformation fields can be saved to disk, and used by the Deformations ' ...
   'Utility. For spatially normalising images to MNI space, you will need ' ...
   'the forward deformation, whereas for spatially normalising (eg) GIFTI ' ...
@@ -689,10 +692,10 @@ warps.help = {[ ...
 %------------------------------------------------------------------------
 
 output      = cfg_branch;
-output.tag = 'output';
+output.tag  = 'output';
 output.name = 'Writing options';
-%output.val = {grey, white, csf, label, bias, mnT, mgT, jacobian, warps, th1, l1};
-output.val = {grey, white, csf, label, bias, jacobian, warps, th1, l1};
+%output.val = {grey, white, csf, label, bias, jacobian, warps, th1, l1};
+output.val = {grey, white, csf, label, bias, jacobian, warps};
 output.help = {...
 'This routine produces spatial normalisation parameters (*_seg8.mat files) by default. ',...
 '',...

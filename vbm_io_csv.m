@@ -36,7 +36,7 @@ function varargout = vbm_io_csv(filename,varargin)
   if ~exist('filename','var'),    
     error('need filename');
   else
-    [pp ff ee] = fileparts(filename);
+    [pp,ff,ee] = fileparts(filename);
     if ~strcmp(ee,'.csv'); ee='.csv'; end
     filename = fullfile(pp,[ff ee]); 
   end     

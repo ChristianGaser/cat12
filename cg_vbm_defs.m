@@ -28,12 +28,21 @@ for i=1:numel(PU),
   PU{i} = fullfile(pth,[nam ext]);
 
   [Def,mat] = get_def(PU{i});
-        
+ 
   for m=1:numel(PI)
+%     if job.interp==0
+%       V      = spm_vol(PI{m});
+%       Y      = spm_read_vols(V(1));
+%       label  = sum((round(Y(:)*100)/100)~=round(Y(:)))<1; % uint8 & job
+%       if label, intp=3; else intp=job.interp; end
+%     end
+    label=0;
+    intp=job.interp;
+    
     if many_images % many images
-      apply_def(Def,mat,char(PI{m}),job.interp,job.modulate);
+      apply_def(Def,mat,char(PI{m}),intp,job.modulate,label);
     else % many subjects
-      apply_def(Def,mat,char(PI{m}{i}),job.interp,job.modulate);
+      apply_def(Def,mat,char(PI{m}{i}),intp,job.modulate,label);
     end
   end
 end
@@ -51,16 +60,14 @@ Def{2} = spm_load_float(V(2));
 Def{3} = spm_load_float(V(3));
 mat    = V(1).mat;
 %_______________________________________________________________________
-function apply_def(Def,mat,fnames,intrp,modulate)
+function apply_def(Def,mat,fnames,intrp,modulate,label)
 % Warp an image or series of images according to a deformation field
-
 intrp = [intrp*[1 1 1], 0 0 0];
 ofnames = cell(size(fnames,1),1);
-
 for i=1:size(fnames,1),
     V = spm_vol(fnames(i,:));
     M = inv(V.mat);
-    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:)));
+    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:))); ext = '.nii'; 
     if modulate
         ofnames{i} = fullfile(pth,['mw',nam,ext]);
     else
@@ -97,7 +104,24 @@ if 0
       abs(det(M2(1:3,1:3)))
 end
     end
-    for j=1:size(Def{1},3)
+    if 0 && label
+      for j=1:size(Def{1},3)
+        dat3 = zeros([size(C,1),size(C,2),255],'single'); 
+        for li=1:255
+          d0    = {double(Def{1}(:,:,j)), double(Def{2}(:,:,j)),double(Def{3}(:,:,j))};
+          d{1}  = M(1,1)*d0{1}+M(1,2)*d0{2}+M(1,3)*d0{3}+M(1,4);
+          d{2}  = M(2,1)*d0{1}+M(2,2)*d0{2}+M(2,3)*d0{3}+M(2,4);
+          d{3}  = M(3,1)*d0{1}+M(3,2)*d0{2}+M(3,3)*d0{3}+M(3,4);
+          dat3(:,:,li) = spm_bsplins(C,d{:},intrp);
+          if modulate
+            dat3(:,:,li) = dat3(:,:,li).*dt(:,:,j);
+          end
+        end
+        [maxi,dat] = max(dat3,[],3);
+        Vo    = spm_write_plane(Vo,dat,j);
+      end;
+    else
+      for j=1:size(Def{1},3)
         d0    = {double(Def{1}(:,:,j)), double(Def{2}(:,:,j)),double(Def{3}(:,:,j))};
         d{1}  = M(1,1)*d0{1}+M(1,2)*d0{2}+M(1,3)*d0{3}+M(1,4);
         d{2}  = M(2,1)*d0{1}+M(2,2)*d0{2}+M(2,3)*d0{3}+M(2,4);
@@ -107,7 +131,8 @@ end
           dat = dat.*dt(:,:,j);
         end
         Vo    = spm_write_plane(Vo,dat,j);
-    end;
+      end;
+    end
 end;
 return;
 

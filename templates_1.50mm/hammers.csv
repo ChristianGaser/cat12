@@ -1,0 +1,68 @@
+ROIid;ROIname;ROIabbr
+1;Right Hippocampus;
+2;Left Hippocampus;Left Hippocampus
+3;Right Amygdala;Right Amygdala
+4;Left Amygdala;Left Amygdala
+5;Right Anterior temporal lobe medial part;Right Anterior temporal lobe medial part
+6;Left Anterior temporal lobe medial part;Left Anterior temporal lobe medial part
+7;Right Anterior temporal lobe lateral part;Right Anterior temporal lobe lateral part
+8;Left Anterior temporal lobe lateral part;Left Anterior temporal lobe lateral part
+9;Right Parahippocampal and ambient gyri;Right Parahippocampal and ambient gyri
+10;Left Parahippocampal and ambient gyri;Left Parahippocampal and ambient gyri
+11;Right Superior temporal gyrus;Right Superior temporal gyrus
+12;Left Superior temporal gyrus;Left Superior temporal gyrus
+13;Right Middle and inferior temporal gyri;Right Middle and inferior temporal gyri
+14;Left Middle and inferior temporal gyri;Left Middle and inferior temporal gyri
+15;Right Fusiform gyrus;Right Fusiform gyrus
+16;Left Fusiform gyrus;Left Fusiform gyrus
+17;Right Cerebellum;Right Cerebellum
+18;Left Cerebellum;Left Cerebellum
+19;Brainstem;Brainstem
+20;Left Insula;Left Insula
+21;Right Insula;Right Insula
+22;Left Lateral remainder of occipital lobe;Left Lateral remainder of occipital lobe
+23;Right Lateral remainder of occipital lobe;Right Lateral remainder of occipital lobe
+24;Left Gyrus cinguli anterior part;Left Gyrus cinguli anterior part
+25;Right Gyrus cinguli anterior part;Right Gyrus cinguli anterior part
+26;Left Gyrus cinguli posterior part;Left Gyrus cinguli posterior part
+27;Right Gyrus cinguli posterior part;Right Gyrus cinguli posterior part
+28;Left Middle frontal gyrus;Left Middle frontal gyrus
+29;Right Middle frontal gyrus;Right Middle frontal gyrus
+30;Left Posterior temporal lobe;Left Posterior temporal lobe
+31;Right Posterior temporal lobe;Right Posterior temporal lobe
+32;Left Inferolateral remainder of parietal lobe;Left Inferolateral remainder of parietal lobe
+33;Right Inferolateral remainder of parietal lobe;Right Inferolateral remainder of parietal lobe
+34;Left Caudate nucleus;Left Caudate nucleus
+35;Right Caudate nucleus;Right Caudate nucleus
+36;Left Nucleus accumbens;Left Nucleus accumbens
+37;Right Nucleus accumbens;Right Nucleus accumbens
+38;Left Putamen;Left Putamen
+39;Right Putamen;Right Putamen
+40;Left Thalamus;Left Thalamus
+41;Right Thalamus;Right Thalamus
+42;Left Pallidum;Left Pallidum
+43;Right Pallidum;Right Pallidum
+44;Corpus callosum;Corpus callosum
+45;Right Lateral ventricle (excluding temporal horn);Right Lateral ventricle (excluding temporal horn)
+46;Left Lateral ventricle (excluding temporal horn);Left Lateral ventricle (excluding temporal horn)
+47;Right Lateral ventricle temporal horn;Right Lateral ventricle temporal horn
+48;Left Lateral ventricle temporal horn;Left Lateral ventricle temporal horn
+49;Third ventricle;Third ventricle
+50;Left Precentral gyrus;Left Precentral gyrus
+51;Right Precentral gyrus;Right Precentral gyrus
+52;Left Gyrus rectus;Left Gyrus rectus
+53;Right Gyrus rectus;Right Gyrus rectus
+54;Left Orbitofrontal gyri;Left Orbitofrontal gyri
+55;Right Orbitofrontal gyri;Right Orbitofrontal gyri
+56;Left Inferior frontal gyrus;Left Inferior frontal gyrus
+57;Right Inferior frontal gyrus;Right Inferior frontal gyrus
+58;Left Superior frontal gyrus;Left Superior frontal gyrus
+59;Right Superior frontal gyrus;Right Superior frontal gyrus
+60;Left Postcentral gyrus;Left Postcentral gyrus
+61;Right Postcentral gyrus;Right Postcentral gyrus
+62;Left Superior parietal gyrus;Left Superior parietal gyrus
+63;Right Superior parietal gyrus;Right Superior parietal gyrus
+64;Left Lingual gyrus;Left Lingual gyrus
+65;Right Lingual gyrus;Right Lingual gyrus
+66;Left Cuneus;Left Cuneus
+67;Right Cuneus;Right Cuneus

@@ -31,6 +31,7 @@
 #define index(A,B,C,DIM) ((C)*DIM[0]*DIM[1] + (B)*DIM[0] + (A))
 
 
+float min(float a, float b) {	if (a<b) return a; else return b; }
 float abs2(float n) {	if (n<0) return -n; else return n; }        
 float pow2(float n) { return n*n;}
 
@@ -56,7 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nrhs<3)  nh = 1; else  nh = (int) *mxGetPr(prhs[2]);
   if ( nh > 10 )                                         mexErrMsgTxt("ERROR:vbm_vol_localstat: number of neighbors is limited to 10. (Use reduce resolution instead.) \n");
   if (nrhs<4)  st = 1; else st = (int) *mxGetPr(prhs[3]);
-  if ( st<1 || st>6 )                                    mexErrMsgTxt("ERROR:vbm_vol_localstat: fourth input has to be 1=mean, 2=min, 3=max, 4=std. \n");
+  if ( st<1 || st>7 )                                    mexErrMsgTxt("ERROR:vbm_vol_localstat: fourth input has to be 1=mean, 2=min, 3=max, 4=std. \n");
   if (nrhs==5 && mxIsDouble(prhs[4])==0)                 mexErrMsgTxt("ERROR:vbm_vol_localstat: fifth input (vx_vol) must be an double matrix\n");
   if (nrhs==5 && mxGetNumberOfElements(prhs[4])!=3)      mexErrMsgTxt("ERROR:vbm_vol_localstat: fifth input (vx_vol) must have 3 Elements"); 
   
@@ -73,7 +74,8 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
   float NV[9261],NVn[9261],GV[9261],DN[9261], NVmn, NVstd; /* nmax ==10 */
   
   int i,j,k,ind,ni,x,y,z,n,nn,HIST[1000]; /*,HIST1[1000],HIST2[1000]; */
-        
+  for (nn=0;nn<1000;nn++) {HIST[nn]=0;}
+  
   /* in- and output */
   float *D = (float *) mxGetPr(prhs[0]);
   bool  *B = (bool  *) mxGetPr(prhs[1]);
@@ -82,8 +84,14 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M2  = (float *) mxGetPr(plhs[1]);
   
   int n1i,n2i; 
-  int HISTmax=40; /*HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
+  int HISTmax=256; /*HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
  
+  if (st==7) {
+    for (i=0;i<nL;i++) {
+      D[i] = ROUND(min(D[i],HISTmax));
+    }
+  }
+  
   /* filter process */
   for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
     ind = index(x,y,z,sL);
@@ -113,11 +121,17 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
         NVstd  = 0.0; for (nn=0;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
         M[ind] = (float)sqrt((double)(NVstd/(nx-1)));
       };
+      if (st==7) {
+        /* max in histogram */
+        for (nn=0;nn<HISTmax;nn++) {HIST[nn]=0;}
+        for (nn=0;nn<n;nn++) {HIST[(int) NV[nn] ]++;}
+        NVmn=0; M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>NVmn) {NVmn=HIST[nn]; M[ind]=(float) nn;}}
+      };  
       if (st==5) {
         /* max in histogram */
         for (nn=0;nn<200;nn++) {HIST[nn]=0;}
         for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
-        M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
+        M[ind]=0; for (nn=0;nn<HISTmax;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) HIST[nn]; }
         M[ind]=M[ind]/(float) HISTmax;
       };  
       if (st==6) {

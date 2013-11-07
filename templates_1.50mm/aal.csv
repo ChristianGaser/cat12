@@ -1,0 +1,117 @@
+ROIid;ROIname;ROIabbr
+1;Left Precentral Gyrus;LPG 
+2;Right Precentral Gyrus;RPG
+3;Left Superior Frontal Gyrus;LSFG
+4;Right Superior Frontal Gyrus;LSFG
+5;Left Superior Orbital Gyrus;LSOrG
+6;Right Superior Orbital Gyrus;RSOrG
+7;Left Middle Frontal Gyrus;LMFG
+8;Right Middle Frontal Gyrus;RMFG
+9;Left Middle Orbital Gyrus;LMOrG
+10;Right Middle Orbital Gyrus;RMOrG
+11;Left Inferior Frontal Gyrus (p. Opercularis);LIFGop
+12;Right Inferior Frontal Gyrus (p. Opercularis);RIFGop
+13;Left Inferior Frontal Gyrus (p. Triangularis);LIFGtr
+14;Right Inferior Frontal Gyrus (p. Triangularis);RFFGtr
+15;Left Inferior Frontal Gyrus (p. Orbitalis);LIFGor
+16;Right Inferior Frontal Gyrus (p. Orbitalis);RIFGor
+17;Left Rolandic Operculum;LRO
+18;Right Rolandic Operculum;RRO
+19;Left SMA;LSMA
+20;Right SMA;RSMA
+21;Left Olfactory cortex;LOC
+22;Right Olfactory cortex;ROC
+23;Left Superior Medial Gyrus;LSMeG
+24;Right Superior Medial Gyrus;RSMeG
+25;Left Mid Orbital Gyrus;LMOrG
+26;Right Mid Orbital Gyrus;LMOrG
+27;Left Rectal Gyrus;LRG
+28;Right Rectal Gyrus;RRG
+29;Left Insula Lobe;LIL
+30;Right Insula Lobe;LIL
+31;Left Anterior Cingulate Cortex;LACC
+32;Right Anterior Cingulate Cortex;RACC
+33;Left Middle Cingulate Cortex;LMCC
+34;Right Middle Cingulate Cortex;RMCC
+35;Left Posterior Cingulate Cortex;LPCC
+36;Right Posterior Cingulate Cortex;RPCC
+37;Left Hippocampus;LH
+38;Right Hippocampus;RH
+39;Left ParaHippocampal Gyrus;LPH
+40;Right ParaHippocampal Gyrus;RPH
+41;Left Amygdala;LA
+42;Right Amygdala;RA
+43;Left Calcarine Gyrus;LCG
+44;Right Calcarine Gyrus;RCG
+45;Left Cuneus;LCu
+46;Right Cuneus;RCu
+47;Left Lingual Gyrus;LLG
+48;Right Lingual Gyrus;RLG
+49;Left Superior Occipital Gyrus;LSOcG
+50;Right Superior Occipital Gyrus;LSOcG
+51;Left Middle Occipital Gyrus;LMOcG
+52;Right Middle Occipital Gyrus;RMOcG
+53;Left Inferior Occipital Gyrus;LIOcG
+54;Right Inferior Occipital Gyrus;RIOcG
+55;Left Fusiform Gyrus;LFuG
+56;Right Fusiform Gyrus;RFuG
+57;Left Postcentral Gyrus;LPCG
+58;Right Postcentral Gyrus;RPCG
+59;Left Superior Parietal Lobule;LSPaL
+60;Right Superior Parietal Lobule;RSPaL 
+61;Left Inferior Parietal Lobule;LIPaL
+62;Right Inferior Parietal Lobule;LIPaL
+63;Left SupraMarginal Gyrus;LSMG
+64;Right SupraMarginal Gyrus;RSMG
+65;Left Angular Gyrus;LAG
+66;Right Angular Gyrus;RAG
+67;Left Precuneus;LPr
+68;Right Precuneus;RPr
+69;Left Paracentral Lobule;LPL
+70;Right Paracentral Lobule;RPL
+71;Left Caudate Nucleus;LCaN
+72;Right Caudate Nucleus;RCaN
+73;Left Putamen;LPu
+74;Right Putamen;RPu
+75;Left Pallidum;LPa
+76;Right Pallidum;RPa
+77;Left Thalamus;LTh
+78;Right Thalamus;RTh
+79;Left Heschls Gyrus;LHG
+80;Right Heschls Gyrus;RHG
+81;Left Superior Temporal Gyrus;LSTG
+82;Right Superior Temporal Gyrus;LSTG
+83;Left Temporal Pole;LTP
+84;Right Temporal Pole;RTP
+85;Left Middle Temporal Gyrus;LMiTG
+86;Right Middle Temporal Gyrus;RMiTG
+87;Left Medial Temporal Pole;LMeTP
+88;Right Medial Temporal Pole;LMeTP
+89;Left Inferior Temporal Gyrus;LITG
+90;Right Inferior Temporal Gyrus;RITG
+91;Left Cerebellum;LCe
+92;Right Cerebellum;RCe
+93;Left Cerebellum;LCe
+94;Right Cerebellum;RCe
+95;Left Cerebellum;LCe
+96;Right Cerebellum;RCe
+97;Left Cerebellum;LCe
+98;Right Cerebellum;RCe
+99;Left Cerebellum;LCe
+100;Right Cerebellum;RCe
+101;Left Cerebellum;LCe
+102;Right Cerebellum;RCe
+103;Left Cerebellum;LCe
+104;Right Cerebellum;RCe
+105;Left Cerebellum;LCe
+106;Right Cerebellum;RCe
+107;Left Cerebellum;LCe
+108;Right Cerebellum;RCe
+109;Cerebellar Vermis;CV
+110;Cerebellar Vermis;CV
+111;Cerebellar Vermis;CV
+112;Cerebellar Vermis;CV
+113;Cerebellar Vermis;CV
+114;Cerebellar Vermis;CV
+115;Cerebellar Vermis;CV
+116;Cerebellar Vermis;CV

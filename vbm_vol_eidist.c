@@ -28,24 +28,15 @@
 #define isnan(a) ((a)!=(a)) 
 #endif
 
-// HELPFUNCTIONS:
-// estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
-void ind2sub(int i,int &x,int &y, int &z, int sxy, int sy) {
-	if (i<0) {
-	  x=0;y=0;z=0; 
-	  }
-	else {
-      z = (int)floor( i / (double)sxy ) +1; 
-      i = i % (sxy);
-      y = (int)floor( i / (double)sy ) +1;        
-      x = i % sy + 1;
-  }
+/* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
+void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
+  *z = (int)floor( i / (double)sxy ) +1; 
+   i = i % (sxy);
+  *y = (int)floor( i / (double)sy ) +1;        
+  *x = i % sy + 1;
 }
-int sub2ind(int x,int y, int z, const int s[]) {
-	if (x<0) x=0; if (x>s[0]) x=s[0];
-	if (y<0) y=0; if (y>s[1]) y=s[1];
-	if (z<0) z=0; if (z>s[2]) z=s[2];
-	
+
+int sub2ind(int x,int y, int z, int s[]) {
   int i=(z-1)*s[0]*s[1] + (y-1)*s[0] + (x-1);
   if (i<0 || i>s[0]*s[1]*s[2]) i=1;
   return i;
@@ -97,18 +88,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (mxIsSingle(prhs[0])==0) mexErrMsgTxt("ERROR:vbm_vol_eidist: first  input must be an 3d single matrix\n");
   if (mxIsSingle(prhs[1])==0) mexErrMsgTxt("ERROR:vbm_vol_eidist: second input must be an 3d single matrix\n");
   if (nrhs==3 && mxIsDouble(prhs[2])==0) mexErrMsgTxt("ERROR:vbm_vol_eidist: third  input must be an double matrix\n");
-  if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3) {printf("ERROR:vbm_vol_eidist: third input must have 3 Elements"); throw 1; };
-  if (nrhs==4 && mxIsDouble(prhs[3])==0 &&  mxGetNumberOfElements(prhs[3])!=1) {printf("ERROR:vbm_vol_eidist: fourth input must be one double value"); throw 1; }; 
+  if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3) {printf("ERROR:vbm_vol_eidist: third input must have 3 Elements"); };
+  if (nrhs==4 && mxIsDouble(prhs[3])==0 &&  mxGetNumberOfElements(prhs[3])!=1) {printf("ERROR:vbm_vol_eidist: fourth input must be one double value"); }; 
   
   // input variables
-  float*B	 = (float *)mxGetPr(prhs[0]);	// label map
+  float*B	 = (float *)mxGetPr(prhs[0]);	// boundary map
   float*L  = (float *)mxGetPr(prhs[1]);	// label map
   
   //if (nrhs<2) float*bd = (float *)mxGetPr(prhs[1]); else float*bd  = 0; // tissue map
-  //if (nrhs<3) float*r  = (float *)mxGetPr(prhs[2]); else float*r[] = {FLT_MIN,0};
+  //if (nrhs<3) float*r  = (float *)mxGetPr(prhs[2]); else float*r[] = {-FLT_MAX,0};
   //if (nrhs<4) float*s  = (float *)mxGetPr(prhs[3]); else float*s   = 1; 
   float bd  = 0.5;
-  float r[] = {FLT_MIN,0.5};
+  float r[] = {-FLT_MAX,0.5};
   float s   = 1;
   
   
@@ -126,11 +117,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs<3) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[2]);}
   bool euklid=true; double*deuklid; if (nrhs==4) {deuklid=mxGetPr(prhs[3]); euklid = (bool) deuklid[0]>0.5;};    
   
-  float s1 = abs2(float(S[0])),s2 = abs2(float(S[1])),s3 = abs2(float(S[2]));
-  const float   s12  = sqrt( s1*s1  + s2*s2); // xy - voxel size
-  const float   s13  = sqrt( s1*s1  + s3*s3); // xz - voxel size
-  const float   s23  = sqrt( s2*s2  + s3*s3); // yz - voxel size
-  const float   s123 = sqrt(s12*s12 + s3*s3); // xyz - voxel size
+  float s1 = abs2((float)S[0]),s2 = abs2((float)S[1]),s3 = abs2((float)S[2]);
+  const float   s12  = sqrt( s1*s1  + s2*s2); /* xy - voxel size */
+  const float   s13  = sqrt( s1*s1  + s3*s3); /* xz - voxel size */
+  const float   s23  = sqrt( s2*s2  + s3*s3); /* yz - voxel size */
+  const float   s123 = sqrt(s12*s12 + s3*s3); /* xyz - voxel size */
   const int     nr = nrhs;
   // printf("%1.2f,%1.2f,%1.2f - %1.2f,%1.2f,%1.2f - %1.2f",s1,s2,s3,s12,s23,s13,s123);
   
@@ -156,64 +147,63 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   unsigned int*I  = (unsigned int *)mxGetPr(plhs[1]);	// index map
   
 	
-	// check if there is a object and return 1e15 and i=i+1 (for matlab) for all points if there is no object
+	// check if there is a object and return FLT_MAX and i=i+1 (for matlab) for all points if there is no object
 	int vx=0;	for (i=0;i<nL;i++) { if ( B[i]>=bd ) vx++; }
-	if (vx==0) { for (i=0;i<nL;i++) { D[i]=1e15; I[i]=i+1; } return;}
+	if (vx==0) { for (i=0;i<nL;i++) { D[i]=FLT_MAX; I[i]=i+1; } return;}
 		
 
 	// initialisation of parameter volumes
 	for (i=0;i<nL;i++) { 
 	// only temporary to avoid unregular voxel
-		ind2sub(i,u,v,w,xy,x); 
-		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>(sL[0]) || v>(sL[1]) || w>(sL[2])  ) D[i] = FLT_MIN; 
-//		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>=(sL[0]-1) || v>=(sL[1]-1) || w>=(sL[2]-1)  ) D[i] = FLT_MIN; 
-
+		ind2sub(ni,&nu,&nv,&nw,xy,x);
+		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>(sL[0]) || v>(sL[1]) || w>(sL[2])  ) D[i] = -FLT_MAX; 
+//		if ( (i<0) || (i>=nL) || u<1 || v<1 || w<1 || u>=(sL[0]-1) || v>=(sL[1]-1) || w>=(sL[2]-1)  ) D[i] = -FLT_MAX; 
 	// regular part		
 		I[i]=(unsigned int)i; 
-		if ( L[i]<=0 || B[i]==FLT_MIN) {
-			D[i] = FLT_MIN;
+		if ( L[i]<=0 || B[i]==-FLT_MAX || mxIsNaN(B[i])==1 || mxIsNaN(L[i])==1 ) {
+			D[i] = -FLT_MAX;
 		} // neg object
-		if ( D[i]!=FLT_MIN) {
+   if ( D[i]!=-FLT_MAX ) {
 		 	if ( B[i]>bd )	{D[i]	 = 0; nCV++;}
-			else       		 	{D[i]	 = 1e15;}	
+			else       		 	{D[i]	 = FLT_MAX;}	
 		}
-	}
-
+ 	}
+  
+  
 	// diffusion 
 	while ( nCV>0 && nC>0 && kll<kllv) {
 		kll++; nC=0;
 		for (i=0;i<nL;i++) { 
 			// only new values (-n), that are not -INF and that are not to far from the actual iteration (kll)
-		try {
-	 		if ( D[i]<=0 && D[i]!=FLT_MIN && abs2(D[i])<=(s3*float(kll)+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 ) { // && L[i]<=1 
+			if ( D[i]<=0 && D[i]!=-FLT_MAX && mxIsNaN(D[i])!=1 && abs2(D[i])<=(s3*(float)kll+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 ) { // && L[i]<=1 
 				if (D[i]<0) D[i]=-D[i]; 
 				nCV--;  // demark points - also the with zero distance
 				ii=(int)I[i];
-				ind2sub(i,u,v,w,xy,x); 
-				ind2sub(ii,iu,iv,iw,xy,x);
+				ind2sub(ni,&nu,&nv,&nw,xy,x);
+				ind2sub(ii,&iu,&iv,&iw,xy,x);
 				for (n=0;n<26;n++) {
-					ni=i+NI[n]; ind2sub(ni,nu,nv,nw,xy,x);
+					ni=i+NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
 					if ( ( ( (ni<0) || (ni>=nL) || (abs2(nu-u)>1) || (abs2(nv-v)>1) || (abs2(nw-w)>1) || (ni==ii) )==0 ) && ( L[ni]<=(L[i]+0.00) ) ) { 
             if (euklid) {
               // standard euclidean distance ... but we want the real boundary
-              dinu = float(nu)-float(iu); dinu *= s1;
-              dinv = float(nv)-float(iv); dinv *= s2;
-              dinw = float(nw)-float(iw); dinw *= s3;
+              dinu = (float)nu-(float)iu; dinu *= s1;
+              dinv = (float)nv-(float)iv; dinv *= s2;
+              dinw = (float)nw-(float)iw; dinw *= s3;
               DIN  = sqrt(pow(dinu,2) + pow(dinv,2) + pow(dinw,2)); 
 
               if ( DIN>0 ) {
                 // difference distance with normaliced vectors
                 dinu /= DIN; dinv /= DIN; dinw /= DIN; // normal vector in normal space
                 dinu /= s1;  dinv /= s2;  dinw /= s3;  // normal vector for anisotropic space
-                WM = isoval(B,float(iu) + dinu,float(iv) + dinv,float(iw) + dinw,sSEG);
+                WM = isoval(B,(float)iu + dinu,(float)iv + dinv,(float)iw + dinw,sSEG);
                 if (B[ii]!=WM && B[ni]!=WM) {
                   // estimate new point bevor border to get the gradient based on this the exact HB
                   dcf = (B[ii] - bd) / ( B[ii] - WM );
-                  WMu = float(iu) + dinu*dcf; WMv = float(iv) + dinv*dcf; WMw = float(iw) + dinw*dcf; 
+                  WMu = (float)iu + dinu*dcf; WMv = (float)iv + dinv*dcf; WMw = (float)iw + dinw*dcf; 
                   WM = isoval(B,WMu,WMv,WMw,sSEG);
                   // new exact distance to interpolatet boundary
                   if ( WM>0.40 && WM<0.60 ) {
-                    dinu = float(nu)-WMu; dinv = float(nv)-WMv; dinw = float(nw)-WMw;
+                    dinu = (float)nu-WMu; dinv = (float)nv-WMv; dinw = (float)nw-WMw;
                     DIN  = sqrt(pow(dinu*s1,2) + pow(dinv*s2,2) + pow(dinw*s3,2));   
                   }
                 }
@@ -226,40 +216,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
               DIN=abs2(D[ni]+ND[n]);
             }
 						// use DN?	
-						if ( abs2(D[ni])>DIN && D[ni]!=FLT_MIN ) {
+						if ( abs2(D[ni])>DIN && D[ni]!=-FLT_MAX ) {
 							if (D[ni]>0) nCV++; nC++;
 							D[ni] = -DIN; 
 							I[ni] = I[i];
 						}
 					}
 				}
-				if (D[i]==0) D[i]=FLT_MIN; // demark start points
+				if (D[i]==0) D[i]=-FLT_MAX; // demark start points
 			}
-		}
-		catch (...) {
-		  printf(":");
-		}
 		
 		}
 	}
-
+   
+   
 	// correction of non-visited points due to miss-estimations of the exact boundary... use values of our neighbors 
 	kll=0; nCV=0;
 	for (i=0;i<nL;i++) {
-		if (D[i]==1e15) nCV++; 
-		if (D[i]<0 && D[i]!=FLT_MIN) D[i]=-D[i]; 
+		if (D[i]==FLT_MAX) nCV++; 
+		if (D[i]<0 && D[i]!=-FLT_MAX) D[i]=-D[i]; 
 	}
 	nC=nCV; 
 	while ( nCV>0 && nC>0 && kll<kllv) {
 		kll++; nC=0;
 		for (i=0;i<nL;i++) { 
-			if ( (D[i]==1e15 ) || (D[i]<=0 && D[i]!=FLT_MIN) && abs2(D[i])<=(s3*float(kll)+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 && L[i]<=1) { 
+			if ( ((D[i]==FLT_MAX ) || (D[i]<=0 && D[i]!=-FLT_MAX)) && abs2(D[i])<=(s3*(float)kll+0.5) && B[i]>=0 && B[i]<=1 && L[i]>0 && L[i]<=1) { 
 				if (D[i]<0) D[i]=-D[i]; 
 				nCV--;  // demark points - also the with zero distance
-				ind2sub(i,u,v,w,xy,x); 
+				ind2sub(i,&u,&v,&w,xy,x); 
 				for (n=0;n<26;n++) {
-					ni=i+NI[n]; ind2sub(ni,nu,nv,nw,xy,x);
-					if ( ( (ni<0) || (ni>=nL) || (abs2(nu-u)>1) || (abs2(nv-v)>1) || (abs2(nw-w)>1) && D[ni]!=1e15 )==0 ) { 
+					ni=i+NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
+					if ( ( (ni<0) || (ni>=nL) || (abs2(nu-u)>1) || (abs2(nv-v)>1) || ((abs2(nw-w)>1) && D[ni]!=FLT_MAX) )==0 ) { 
 						DN = abs2(D[ni]) + ND[n]; 
 						if ( abs2(D[i])>DN ) { // use DN?
 							if (D[i]>0) nCV++; nC++;
@@ -274,8 +261,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	// last correction
 	for (i=0;i<nL;i++) { 
-		if (D[i]<0 && D[i]!=FLT_MIN) D[i]=-D[i]; 
+		if (D[i]<0 && D[i]!=-FLT_MAX) D[i]=-D[i]; 
 		if (I[i]>0) I[i]++; else I[i]=1;						// correct for matlab index
-		if (D[i]==FLT_MIN || isnan(D[i])) D[i]=0; 	// correction of non-visited or other incorrect voxels
+		if (D[i]==-FLT_MAX || mxIsNaN(D[i])) D[i]=0; 	// correction of non-visited or other incorrect voxels
 	} 
+
 }
