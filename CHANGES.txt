@@ -2803,3 +2803,11 @@ M       vbm_vol_localstat.mexmaci64
 (7)  Update ROI options in cg_vbm_defaults. 
 ------------------------------------------------------------------------
 r518 | dahnke | 2013-11-07 13:11:52
+
+M       CHANGES.txt
+M       tbx_cfg_vbm.m
+M       vbm12.man
+
+Corrected wrong datatype for gcut+ strnegth in tbx_cfg_vbm.m
+------------------------------------------------------------------------
+r519 | gaser | 2013-11-13 13:35:35
