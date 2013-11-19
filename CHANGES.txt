@@ -2811,3 +2811,66 @@ M       vbm12.man
 Corrected wrong datatype for gcut+ strnegth in tbx_cfg_vbm.m
 ------------------------------------------------------------------------
 r519 | gaser | 2013-11-13 13:35:35
+
+
+(1)  Update VBM Menu. 
+(2)  Removed thickness maps output.
+(3)  Update vbm_vol_atlas (skript for atlas creation), with merging of different
+     ROIs and final side alignment with left (odd) and right (even) labels.
+(4)  Update all atlas maps. Add a text-file with most important atlas information 
+     and a csv-file for ROI-IDs, ROI-names, and ROI-appresservation. 
+(5)  Create subfunctions for ROI mapping and value estimation.
+(6)  Correct "projection" error in vbm_io_writenii for images without mask.
+------------------------------------------------------------------------
+r | dahnke | 2013-11-19 08:43:54
+
+
+(1)  Update VBM Menu. 
+(2)  Removed thickness maps output.
+(3)  Update vbm_vol_atlas (skript for atlas creation), with merging of different
+     ROIs and final side alignment with left (odd) and right (even) labels.
+(4)  Update all atlas maps. Add a text-file with most important atlas information 
+     and a csv-file for ROI-IDs, ROI-names, and ROI-appresservation. 
+(5)  Create subfunctions for ROI mapping and value estimation.
+(6)  Correct "projection" error in vbm_io_writenii for images without mask.
+------------------------------------------------------------------------
+r | dahnke | 2013-11-19 08:44:28
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       ds.m
+D       images
+M       tbx_cfg_vbm.m
+M       templates_1.50mm/aal.csv
+M       templates_1.50mm/aal.nii
+A       templates_1.50mm/aal.txt
+M       templates_1.50mm/anatomy.csv
+M       templates_1.50mm/anatomy.nii
+A       templates_1.50mm/anatomy.txt
+M       templates_1.50mm/hammers.csv
+M       templates_1.50mm/hammers.nii
+A       templates_1.50mm/hammers.txt
+M       templates_1.50mm/ibsr.csv
+M       templates_1.50mm/ibsr.nii
+A       templates_1.50mm/ibsr.txt
+D       templates_1.50mm/jhu.nii
+A       templates_1.50mm/mori.csv
+A       templates_1.50mm/mori.nii
+A       templates_1.50mm/mori.txt
+M       vbm_io_writenii.m
+M       vbm_tst_pre.m
+M       vbm_vol_atlas.m
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexmaci64
+
+(1)  Update VBM Menu. 
+(2)  Removed thickness maps output.
+(3)  Update vbm_vol_atlas (skript for atlas creation), with merging of different
+     ROIs and final side alignment with left (odd) and right (even) labels.
+(4)  Update all atlas maps. Add a text-file with most important atlas information 
+     and a csv-file for ROI-IDs, ROI-names, and ROI-appresservation. 
+(5)  Create subfunctions for ROI mapping and value estimation.
+(6)  Correct "projection" error in vbm_io_writenii for images without mask.
+------------------------------------------------------------------------
+r520 | dahnke | 2013-11-19 08:46:50

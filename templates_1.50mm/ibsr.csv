@@ -1,81 +1,36 @@
-ROIid;ROIname;ROIabbr
-0;Unknown;UKN
-1;Left-Cerebral-Exterior;LCE-CSF
-2;Left-Cerebral-White-Matter;LC-WM
-3;Left-Cerebral-Cortex;LC-GM
-4;Left-Lateral-Ventricle;LLV
-5;Left-Inf-Lat-Vent;LILV
-6;Left-Cerebellum-Exterior;LCb-CSF
-7;Left-Cerebellum-White-Matter;LCb-WM
-8;Left-Cerebellum-Cortex;LCb-GM
-9;Left-Thalamus;LTh
-10;Left-Thalamus-Proper;LThP
-11;Left-Caudate;LCa
-12;Left-Putamen;LPu
-13;Left-Pallidum;LPa
-14;3rd-Ventricle;3rdV
-15;4th-Ventricle;4thV
-16;Brain-Stem;BS
-17;Left-Hippocampus;LHC
-18;Left-Amygdala;LA
-19;Left-Insula;LI
-20;Left-Operculum;LO 
-21;Line-1;L1
-22;Line-2;L2
-23;Line-3;L3
-24;CSF;CSF
-25;Left-Lesion;LL
-26;Left-Accumbens-area;LAA
-27;Left-Substancia-Nigra;LSN
-28;Left-VentralDC;LVD
-29;Left-undetermined;UKN
-30;Left-vessel;LBV
-31;Left-choroid-plexus;LCP
-32;Left-F3orb;LF3orb
-33;Left-lOg;LlOg
-34;Left-aOg;LaOg
-35;Left-mOg;LmOg
-36;Left-pOg;LpOg
-37;Left-Stellate;LS
-38;Left-Porg;LPorg
-39;Left-Aorg;LAorg
-40;Right-Cerebral-Exterior;RC-CSF
-41;Right-Cerebral-White-Matter;RC-WM
-42;Right-Cerebral-Cortex;RC-GM
-43;Right-Lateral-Ventricle;RLV
-44;Right-Inf-Lat-Vent;RILV
-45;Right-Cerebellum-Exterior;RC-CSF
-46;Right-Cerebellum-White-Matter;RC-WM
-47;Right-Cerebellum-Cortex;RC-GM
-48;Right-Thalamus;RTh
-49;Right-Thalamus-Proper;RThP
-50;Right-Caudate;RCa
-51;Right-Putamen;RPu
-52;Right-Pallidum;RPa
-53;Right-Hippocampus;RHC
-54;Right-Amygdala;RA
-55;Right-Insula;RI
-56;Right-Operculum;RO 
-57;Right-Lesion;RL
-58;Right-Accumbens-area;RAA
-59;Right-Substancia-Nigra;RSN
-60;Right-VentralDC;RV
-61;Right-undetermined;RUD
-62;Right-vessel;RBV
-63;Right-choroid-plexus;RCP
-64;Right-F3orb;RF3orb
-65;Right-lOg;RlOg
-66;Right-aOg;RaOg
-67;Right-mOg;RmOg
-68;Right-pOg;RpOg
-69;Right-Stellate;RS 
-70;Right-Porg;RPorg
-71;Right-Aorg;RAorg
-72;5th-Ventricle;5thV
-73;Right_Thin_Cerebral_White_Matter;RC-WM
-74;Left_Thin_Cerebral_White_Matter;LC-WM
-80;Bone;Bone
-81;Fat;Fat
-82;Bright-Unknown;UKNbright
-83;Dark_Unknown;UNKdark
-84;Corpus_Callosum;CC
+ROIid;ROIappr;ROIname;ROIbase
+0;BG;Background;Background
+1;lCbrB;Left Cerebral Brain;Left-Cerebral-Exterior  & Left-Cerebral-White-Matter  & Left-Cerebral-Cortex  & Right-Cerebral-Exterior  & Right-Cerebral-White-Matter  & Right-Cerebral-Cortex 
+2;rCbrB;Right Cerebral Brain;Left-Cerebral-Exterior  & Left-Cerebral-White-Matter  & Left-Cerebral-Cortex  & Right-Cerebral-Exterior  & Right-Cerebral-White-Matter  & Right-Cerebral-Cortex 
+3;lLatV;Left Lateral Ventricle;Left-Lateral-Ventricle  & Right-Lateral-Ventricle 
+4;rLatV;Right Lateral Ventricle;Left-Lateral-Ventricle  & Right-Lateral-Ventricle 
+5;lInfLatV;Left Inferior Lateral Ventricle;Left-Inf-Lat-Vent  & Right-Inf-Lat-Vent 
+6;rInfLatV;Right Inferior Lateral Ventricle;Left-Inf-Lat-Vent  & Right-Inf-Lat-Vent 
+7;lCbeB;Left Cerebellum Brain;Left-Cerebellum-Exterior  & Left-Cerebellum-White-Matter  & Left-Cerebellum-Cortex  & Right-Cerebellum-Exterior  & Right-Cerebellum-White-Matter  & Right-Cerebellum-Cortex 
+8;rCbeB;Right Cerebellum Brain;Left-Cerebellum-Exterior  & Left-Cerebellum-White-Matter  & Left-Cerebellum-Cortex  & Right-Cerebellum-Exterior  & Right-Cerebellum-White-Matter  & Right-Cerebellum-Cortex 
+9;lThaPro;Left Thalamus Proper;Left-Thalamus-Proper  & Right-Thalamus-Proper 
+10;rThaPro;Right Thalamus Proper;Left-Thalamus-Proper  & Right-Thalamus-Proper 
+11;lCau;Left Caudate;Left-Caudate  & Right-Caudate 
+12;rCau;Right Caudate;Left-Caudate  & Right-Caudate 
+13;lPut;Left Putamen;Left-Putamen  & Right-Putamen 
+14;rPut;Right Putamen;Left-Putamen  & Right-Putamen 
+15;lPal;Left Pallidum;Left-Pallidum  & Right-Pallidum 
+16;rPal;Right Pallidum;Left-Pallidum  & Right-Pallidum 
+17;l3thV;Left Third Ventricle;3rd-Ventricle 
+18;r3thV;Right Third Ventricle;3rd-Ventricle 
+19;l4thV;Left Fourth Ventricle;4th-Ventricle 
+20;r4thV;Right Fourth Ventricle;4th-Ventricle 
+21;lBst;Left Brainstem;Brain-Stem 
+22;rBst;Right Brainstem;Brain-Stem 
+23;lHip;Left Hippocampus;Left-Hippocampus  & Right-Hippocampus 
+24;rHip;Right Hippocampus;Left-Hippocampus  & Right-Hippocampus 
+25;lAmy;Left Amygdala;Left-Amygdala  & Right-Amygdala 
+26;rAmy;Right Amygdala;Left-Amygdala  & Right-Amygdala 
+27;lB;Left Brain;Line-1  & Line-2  & Line-3  & CSF  & Left-F3orb  & Left-lOg  & Left-aOg  & Left-mOg  & Left-pOg  & Left-Porg  & Left-Aorg  & Right-F3orb  & Right-lOg  & Right-aOg  & Right-mOg  & Right-pOg  & Right-Porg  & Right-Aorg 
+28;rB;Right Brain;Line-1  & Line-2  & Line-3  & CSF  & Left-F3orb  & Left-lOg  & Left-aOg  & Left-mOg  & Left-pOg  & Left-Porg  & Left-Aorg  & Right-F3orb  & Right-lOg  & Right-aOg  & Right-mOg  & Right-pOg  & Right-Porg  & Right-Aorg 
+29;lAcc;Left Accumbens;Left-Accumbens-area  & Right-Accumbens-area 
+30;rAcc;Right Accumbens;Left-Accumbens-area  & Right-Accumbens-area 
+31;lVenV;Left Ventral Ventricle;Left-VentralDC  & Right-VentralDC 
+32;rVenV;Right Ventral Ventricle;Left-VentralDC  & Right-VentralDC 
+33;lBV;Left Bloodvessel;Left-vessel  & Right-vessel 
+34;rBV;Right Bloodvessel;Left-vessel  & Right-vessel 

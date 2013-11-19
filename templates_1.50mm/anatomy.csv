@@ -1,69 +1,150 @@
-ROIid;ROIname;ROIabbr
-1;Amyg (CM);Amygdala_CM
-2;Amyg (LB);Amygdala_LB
-3;Amyg (SF);Amygdala_SF
-4;Area 1;PSC_1
-5;Area 17;hOC1
-6;Area 18;hOC2
-7;Area 2;PSC_2
-8;Area 3a;PSC_3a
-9;Area 3b;PSC_3b
-10;Area 44;Broca_44
-11;Area 45;Broca_45
-12;Area 4a;PMC_4a
-13;Area 4p;PMC_4p
-14;Area 6;premotor_6
-15;Hipp (CA);Hippocampus_CA
-16;Hipp (EC);Hippocampus_EC
-17;Hipp (FD);Hippocampus_FD
-18;Hipp (HATA);Hippocampus_HATA
-19;Hipp (SUB);Hippocampus_SUB
-20;IPC (PF);IPC_PF
-21;IPC (PFcm);IPC_PFcm
-22;IPC (PFm);IPC_PFm
-23;IPC (PFop);IPC_PFop
-24;IPC (PFt);IPC_PFt
-25;IPC (PGa);IPC_PGa
-26;IPC (PGp);IPC_PGp
-27;Insula (Id1);Insula_Id1
-28;Insula (Ig1);Insula_Ig1
-29;Insula (Ig2);Insula_Ig2
-30;Lobule IX (Hem);Cerebellum_IX_Hem
-31;Lobule IX (Vermis);Cerebellum_IX_Verm
-32;Lobule V;Cerebellum_V_Hem
-33;Lobule VI (Hem);Cerebellum_VI_Hem
-34;Lobule VI (Vermis);Cerebellum_VI_Verm
-35;Lobule VIIIa (Hem);Cerebellum_VIIIa_Hem
-36;Lobule VIIIa (Vermis);Cerebellum_VIIIa_Verm
-37;Lobule VIIIb (Hem);Cerebellum_VIIIb_Hem
-38;Lobule VIIIb (Vermis);Cerebellum_VIIIb_Verm
-39;Lobule VIIa Crus I (Hem);Cerebellum_VIIa_crusI_Hem
-40;Lobule VIIa Crus I (Vermis);Cerebellum_VIIa_crusI_Verm
-41;Lobule VIIa Crus II (Hem);Cerebellum_VIIa_crusII_Hem
-42;Lobule VIIa Crus II (Vermis);Cerebellum_VIIa_crusII_Verm
-43;Lobule VIIb (Hem);Cerebellum_VIIb_Hem
-44;Lobule VIIb (Vermis);Cerebellum_VIIb_Verm
-45;Lobule X (Hem);Cerebellum_X_Hem
-46;Lobule X (Vermis);Cerebellum_X_Verm
-47;Lobules I-IV (Hem);Cerebellum_I_IV_Hem
-48;OP 1;SII_OP1
-49;OP 2;SII_OP2
-50;OP 3;SII_OP3
-51;OP 4;SII_OP4
-52;SPL (5Ci);SPL_5Ci
-53;SPL (5L);SPL_5L
-54;SPL (5M);SPL_5M
-55;SPL (7A);SPL_7A
-56;SPL (7M);SPL_7M
-57;SPL (7P);SPL_7P
-58;SPL (7PC);SPL_7PC
-59;TE 1.0;PAC_TE10
-60;TE 1.1;PAC_TE11
-61;TE 1.2;PAC_TE12
-62;TE 3;Wernicke_TE30
-63;hIP1;AIPS_IP1
-64;hIP2;AIPS_IP2
-65;hIP3;AIPS_IP3
-66;hOC3v (V3v);hOC3v
-67;hOC4v (V4);hOC4
-68;hOC5 (V5);hOC5
+ROIid;ROIappr;ROIname;ROIoname
+0;BG;Background;Background
+1;l;Left Bothside;Acoustic radiation  & Corticospinal tract  & Fornix  & Optic radiation  & Uncinate fascicle 
+2;r;Right Bothside;Acoustic radiation  & Corticospinal tract  & Fornix  & Optic radiation  & Uncinate fascicle 
+3;lAmyCM;Left Amygdala (CM);Amyg (CM) 
+4;rAmyCM;Right Amygdala (CM);Amyg (CM) 
+5;lAmyLB;Left Amygdala (LB);Amyg (LB) 
+6;rAmyLB;Right Amygdala (LB);Amyg (LB) 
+7;lAmySF;Left Amygdala (SF);Amyg (SF) 
+8;rAmySF;Right Amygdala (SF);Amyg (SF) 
+9;lBrod01;Left Brodmann Area 1;Area 1 
+10;rBrod01;Right Brodmann Area 1;Area 1 
+11;lBrod17;Left Brodmann Area 17;Area 17 
+12;rBrod17;Right Brodmann Area 17;Area 17 
+13;lBrod18Brod01;Left Brodmann Area 18 Brodmann Area 1;Area 18 
+14;rBrod18Brod01;Right Brodmann Area 18 Brodmann Area 1;Area 18 
+15;lBrod02;Left Brodmann Area 2;Area 2 
+16;rBrod02;Right Brodmann Area 2;Area 2 
+17;lBrod03a;Left Brodmann Area 3a;Area 3a 
+18;rBrod03a;Right Brodmann Area 3a;Area 3a 
+19;lBrod03b;Left Brodmann Area 3b;Area 3b 
+20;rBrod03b;Right Brodmann Area 3b;Area 3b 
+21;lBrod44;Left Brodmann Area 44;Area 44 
+22;rBrod44;Right Brodmann Area 44;Area 44 
+23;lBrod45;Left Brodmann Area 45;Area 45 
+24;rBrod45;Right Brodmann Area 45;Area 45 
+25;lBrod04a;Left Brodmann Area 4a;Area 4a 
+26;rBrod04a;Right Brodmann Area 4a;Area 4a 
+27;lBrod04p;Left Brodmann Area 4p;Area 4p 
+28;rBrod04p;Right Brodmann Area 4p;Area 4p 
+29;lBrod06;Left Brodmann Area 6;Area 6 
+30;rBrod06;Right Brodmann Area 6;Area 6 
+31;lBod;Left (Body);Callosal body  & Mamillary body 
+32;rBod;Right (Body);Callosal body  & Mamillary body 
+33;lCin;Left Cingulum;Cingulum 
+34;rCin;Right Cingulum;Cingulum 
+35;lHipPF;Left Hippocampus (CA);Hipp (CA) 
+36;rHipPF;Right Hippocampus (CA);Hipp (CA) 
+37;lHipEC;Left Hippocampus (EC);Hipp (EC) 
+38;rHipEC;Right Hippocampus (EC);Hipp (EC) 
+39;lHipFD;Left Hippocampus (FD);Hipp (FD) 
+40;rHipFD;Right Hippocampus (FD);Hipp (FD) 
+41;lHipHATA;Left Hippocampus (HATA);Hipp (HATA) 
+42;rHipHATA;Right Hippocampus (HATA);Hipp (HATA) 
+43;lHipSub;Left Hippocampus (SUB);Hipp (SUB) 
+44;rHipSub;Right Hippocampus (SUB);Hipp (SUB) 
+45;lIPC_PF;Left IPC (PF);IPC (PF) 
+46;rIPC_PF;Right IPC (PF);IPC (PF) 
+47;lIPC_PFcm;Left IPC (PFcm);IPC (PFcm) 
+48;rIPC_PFcm;Right IPC (PFcm);IPC (PFcm) 
+49;lIPC_PFm;Left IPC (PFm);IPC (PFm) 
+50;rIPC_PFm;Right IPC (PFm);IPC (PFm) 
+51;lIPC_PFop;Left IPC (PFop);IPC (PFop) 
+52;rIPC_PFop;Right IPC (PFop);IPC (PFop) 
+53;lIPC_PFt;Left IPC (PFt);IPC (PFt) 
+54;rIPC_PFt;Right IPC (PFt);IPC (PFt) 
+55;lIPC_PFp;Left IPC (PGa);IPC (PGa)  & IPC (PGp) 
+56;rIPC_PFp;Right IPC (PGa);IPC (PGa)  & IPC (PGp) 
+57;lInfFro;Left Inferior Frontal;Inferior occipito-frontal fascicle 
+58;rInfFro;Right Inferior Frontal;Inferior occipito-frontal fascicle 
+59;lInsId1;Left Insula (Id1);Insula (Id1) 
+60;rInsId1;Right Insula (Id1);Insula (Id1) 
+61;lInsIg1;Left Insula (Ig1);Insula (Ig1) 
+62;rInsIg1;Right Insula (Ig1);Insula (Ig1) 
+63;lInsIg2;Left Insula (Ig2);Insula (Ig2) 
+64;rInsIg2;Right Insula (Ig2);Insula (Ig2) 
+65;lLatBod;Left Lateral (Body);Lateral geniculate body 
+66;rLatBod;Right Lateral (Body);Lateral geniculate body 
+67;lLCbe9H;Left Lobe Lobule IX (Hem);Lobule IX (Hem) 
+68;rLCbe9H;Right Lobe Lobule IX (Hem);Lobule IX (Hem) 
+69;lLVerCbe9V;Left Lobe Vermis Lobule IX (Vermis);Lobule IX (Vermis) 
+70;rLVerCbe9V;Right Lobe Vermis Lobule IX (Vermis);Lobule IX (Vermis) 
+71;lLCbe5;Left Lobe Lobule V ;Lobule V 
+72;rLCbe5;Right Lobe Lobule V ;Lobule V 
+73;lLCbe6H;Left Lobe Lobule VI (Hem);Lobule VI (Hem) 
+74;rLCbe6H;Right Lobe Lobule VI (Hem);Lobule VI (Hem) 
+75;lLVerCbe6V;Left Lobe Vermis Lobule VI (Vermis);Lobule VI (Vermis) 
+76;rLVerCbe6V;Right Lobe Vermis Lobule VI (Vermis);Lobule VI (Vermis) 
+77;lLCbe8aH;Left Lobe Lobule VIIIa (Hem);Lobule VIIIa (Hem) 
+78;rLCbe8aH;Right Lobe Lobule VIIIa (Hem);Lobule VIIIa (Hem) 
+79;lLVerCbe8aV;Left Lobe Vermis Lobule VIIIa (Vermis);Lobule VIIIa (Vermis) 
+80;rLVerCbe8aV;Right Lobe Vermis Lobule VIIIa (Vermis);Lobule VIIIa (Vermis) 
+81;lLCbe8bH;Left Lobe Lobule VIIIb (Hem);Lobule VIIIb (Hem) 
+82;rLCbe8bH;Right Lobe Lobule VIIIb (Hem);Lobule VIIIb (Hem) 
+83;lLVerCbe8bV;Left Lobe Vermis Lobule VIIIb (Vermis);Lobule VIIIb (Vermis) 
+84;rLVerCbe8bV;Right Lobe Vermis Lobule VIIIb (Vermis);Lobule VIIIb (Vermis) 
+85;lLCbe7a1H;Left Lobe Lobule VIIa Crus I (Hem);Lobule VIIa Crus I (Hem) 
+86;rLCbe7a1H;Right Lobe Lobule VIIa Crus I (Hem);Lobule VIIa Crus I (Hem) 
+87;lLVerCbe7a1V;Left Lobe Vermis Lobule VIIa Crus I (Vermis);Lobule VIIa Crus I (Vermis) 
+88;rLVerCbe7a1V;Right Lobe Vermis Lobule VIIa Crus I (Vermis);Lobule VIIa Crus I (Vermis) 
+89;lLCbe7a2H;Left Lobe Lobule VIIa Crus II (Hem);Lobule VIIa Crus II (Hem) 
+90;rLCbe7a2H;Right Lobe Lobule VIIa Crus II (Hem);Lobule VIIa Crus II (Hem) 
+91;lLVerCbe7a2V;Left Lobe Vermis Lobule VIIa Crus II (Vermis);Lobule VIIa Crus II (Vermis) 
+92;rLVerCbe7a2V;Right Lobe Vermis Lobule VIIa Crus II (Vermis);Lobule VIIa Crus II (Vermis) 
+93;lLCbe7b;Left Lobe Lobule VIIb (Hem);Lobule VIIb (Hem) 
+94;rLCbe7b;Right Lobe Lobule VIIb (Hem);Lobule VIIb (Hem) 
+95;lLVerCbe7b;Left Lobe Vermis Lobule VIIb (Vermis);Lobule VIIb (Vermis) 
+96;rLVerCbe7b;Right Lobe Vermis Lobule VIIb (Vermis);Lobule VIIb (Vermis) 
+97;lLCbe10H;Left Lobe Lobule X (Hem);Lobule X (Hem) 
+98;rLCbe10H;Right Lobe Lobule X (Hem);Lobule X (Hem) 
+99;lLVerCbe10V;Left Lobe Vermis Lobule X (Vermis);Lobule X (Vermis) 
+100;rLVerCbe10V;Right Lobe Vermis Lobule X (Vermis);Lobule X (Vermis) 
+101;lLCbe1_4H;Left Lobe Lobules I-IV (Hem);Lobules I-IV (Hem) 
+102;rLCbe1_4H;Right Lobe Lobules I-IV (Hem);Lobules I-IV (Hem) 
+103;lMedBod;Left Medial (Body);Medial geniculate body 
+104;rMedBod;Right Medial (Body);Medial geniculate body 
+105;lOP1;Left OP 1;OP 1 
+106;rOP1;Right OP 1;OP 1 
+107;lOP2;Left OP 2;OP 2 
+108;rOP2;Right OP 2;OP 2 
+109;lOP3;Left OP 3;OP 3 
+110;rOP3;Right OP 3;OP 3 
+111;lOP4;Left OP 4;OP 4 
+112;rOP4;Right OP 4;OP 4 
+113;lSPL5Ci;Left SPL (5Ci);SPL (5Ci) 
+114;rSPL5Ci;Right SPL (5Ci);SPL (5Ci) 
+115;lSPL5L;Left SPL (5L);SPL (5L) 
+116;rSPL5L;Right SPL (5L);SPL (5L) 
+117;lSPL5M;Left SPL (5M);SPL (5M) 
+118;rSPL5M;Right SPL (5M);SPL (5M) 
+119;lSPL7A;Left SPL (7A);SPL (7A) 
+120;rSPL7A;Right SPL (7A);SPL (7A) 
+121;lSPL7M;Left SPL (7M);SPL (7M) 
+122;rSPL7M;Right SPL (7M);SPL (7M) 
+123;lSPL7P;Left SPL (7P);SPL (7P) 
+124;rSPL7P;Right SPL (7P);SPL (7P) 
+125;lSPL7PC;Left SPL (7PC);SPL (7PC) 
+126;rSPL7PC;Right SPL (7PC);SPL (7PC) 
+127;lSup;Left Superior;Superior longitudinal fascicle 
+128;rSup;Right Superior;Superior longitudinal fascicle 
+129;lSupFro;Left Superior Frontal;Superior occipito-frontal fascicle 
+130;rSupFro;Right Superior Frontal;Superior occipito-frontal fascicle 
+131;lTE10;Left TE 1.0;TE 1.0 
+132;rTE10;Right TE 1.0;TE 1.0 
+133;lTE11;Left TE 1.1;TE 1.1 
+134;rTE11;Right TE 1.1;TE 1.1 
+135;lTE12;Left TE 1.2;TE 1.2 
+136;rTE12;Right TE 1.2;TE 1.2 
+137;lTE3;Left TE 3;TE 3 
+138;rTE3;Right TE 3;TE 3 
+139;lhIP1;Left hIP1;hIP1 
+140;rhIP1;Right hIP1;hIP1 
+141;lhIP2;Left hIP2;hIP2 
+142;rhIP2;Right hIP2;hIP2 
+143;lhIP3;Left hIP3;hIP3 
+144;rhIP3;Right hIP3;hIP3 
+145;lhOC3v;Left hOC3v (V3v);hOC3v (V3v) 
+146;rhOC3v;Right hOC3v (V3v);hOC3v (V3v) 
+147;lhOC4;Left hOC4v (V4);hOC4v (V4) 
+148;rhOC4;Right hOC4v (V4);hOC4v (V4) 

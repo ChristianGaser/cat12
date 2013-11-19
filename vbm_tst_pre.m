@@ -997,14 +997,10 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.native     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.warped     = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.dartel     = 0;
-  
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.native       = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.warped       = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.dartel       = 1;
-  
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.native        = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.warped        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.dartel        = 0;
+
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.native     = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.warped     = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.dartel     = 0;
   
   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.native        = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.warped        = 0;
