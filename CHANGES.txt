@@ -2874,3 +2874,22 @@ M       vbm_vol_localstat.mexmaci64
 (6)  Correct "projection" error in vbm_io_writenii for images without mask.
 ------------------------------------------------------------------------
 r520 | dahnke | 2013-11-19 08:46:50
+
+M       CHANGES.txt
+M       cg_cfg_realign.m
+M       cg_vbm_defaults.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+MM      spm_def2det.c
+ M      spm_def2det.mexa64
+ M      spm_def2det.mexglx
+ M      spm_def2det.mexmaci
+ M      spm_def2det.mexmaci64
+ M      spm_def2det.mexw32
+ M      spm_def2det.mexw64
+M       vbm12.man
+
+Removed some bugs in cg_vbm_write.m and removed flags that are not needed
+anymore in cg_vbm_defaults.m.
+------------------------------------------------------------------------
+r521 | gaser | 2013-11-19 13:16:04

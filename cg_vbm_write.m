@@ -112,7 +112,7 @@ warp.open_th = 0.25; % initial threshold for skull-stripping
 warp.dilate = 1; % number of final dilations for skull-stripping
 
 if do_dartel
-  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || cg_vbm_get_defaults('output.surf.dartel');
+  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc;
   need_dartel = need_dartel || any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
   if ~need_dartel
       fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
@@ -209,7 +209,7 @@ Coef{1} = spm_bsplinc(res.Twarp(:,:,:,1),prm);
 Coef{2} = spm_bsplinc(res.Twarp(:,:,:,2),prm);
 Coef{3} = spm_bsplinc(res.Twarp(:,:,:,3),prm);
 
-do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2)) || cg_vbm_get_defaults('output.surf.dartel');
+do_defs = any(df) || bf(1,2) || any(lb([2,3,4])) || any(tc(:,2));
 do_defs = do_defs || any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
 do_defs = do_defs || do_cls;
 if do_defs,
@@ -1160,7 +1160,7 @@ mat    = mm/vx3;
 
     
 % rigid transformation
-if (any(tc(:,2)) || lb(1,3)) || cg_vbm_get_defaults('output.surf.dartel')
+if (any(tc(:,2)) || lb(1,3))
     x      = affind(rgrid(d),M0);
     y1     = affind(Yy,M1);
         
@@ -1481,7 +1481,7 @@ if jc
     warning('cg_vbm_write:saveJacobian','Jacobian can only be saved if dartel normalization was used.');
   else
     VJT=VT; VJT.mat=M1; VJT.mat0=M0; 
-    vbm_io_write_nii(VT,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
+    vbm_io_writenii(VT,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
   end
 end
 

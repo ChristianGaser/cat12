@@ -32,8 +32,8 @@ vbm.opts.samp      = 3;                       % Sampling distance
 %   dartel    0/1/2 (none/rigid/affine)
 
 % bias and noise corrected, (localy) intensity normalized
-vbm.output.bias.native = 1;
-vbm.output.bias.warped = 0;
+vbm.output.bias.native = 0;
+vbm.output.bias.warped = 1;
 vbm.output.bias.affine = 0;
 
 % GM tissue maps
@@ -135,7 +135,7 @@ vbm.extopts.ROI         = 3;    % write csv-files with ROI data: 1 - subject spa
 % ROI maps from different sources mapped to VBM-space [IXI550]
 %  { filename , refinement , tissue , space }
 %  filename    = ''                                                     - path to the ROI-file
-%  refinement  = ['brain','gm','none']                                  - refinemnt of ROIs in subject space
+%  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 %  space       = [0|1|2|3] = [no ROIs|subject space|group space|both];  - space for value estimation
 vbm.extopts.atlas       = { ... 
@@ -146,8 +146,3 @@ vbm.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            3; ...
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            3; ...
   }; 
-
-% experimental (not yet working)
-%=======================================================================
-vbm.extopts.mask        = {fullfile(spm('dir'),'toolbox','vbm','submask.nii')}; % mask for subcortical areas + ventricles
-vbm.output.surf.dartel  = 0; % WM-surface 
