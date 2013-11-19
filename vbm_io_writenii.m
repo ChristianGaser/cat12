@@ -259,16 +259,16 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
   if write(4) 
     if write(4)==1 && isfield(transform,'rigid')
       transf=transform.rigid; 
-      pre4=['ra' pre]; post=''; desc4 = [desc '(rigid)'];
+      pre4=['r' pre]; post=''; desc4 = [desc '(rigid)'];
     elseif write(4)==2 && isfield(transform,'affine')
       transf=transform.affine;   
-      pre4=['ra' pre]; post='_affine'; desc4 = [desc '(affine)'];
+      pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];
     elseif isfield(transform,'rigid')
       transf=transform.rigid; 
-      pre4=['ra' pre]; post=''; desc4 = [desc '(rigid)'];
+      pre4=['r' pre]; post=''; desc4 = [desc '(rigid)'];
     elseif isfield(transform,'affine')
       transf=transform.affine;   
-      pre4=['ra' pre]; post='_affine'; desc4 = [desc '(affine)'];      
+      pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];      
     end
 
     if exist('pre4','var')

@@ -2893,3 +2893,17 @@ Removed some bugs in cg_vbm_write.m and removed flags that are not needed
 anymore in cg_vbm_defaults.m.
 ------------------------------------------------------------------------
 r521 | gaser | 2013-11-19 13:16:04
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+MM      templates_1.50mm/aal.txt
+MM      templates_1.50mm/anatomy.txt
+ M      templates_1.50mm/mori.csv
+ M      templates_1.50mm/mori.nii
+MM      templates_1.50mm/mori.txt
+M       vbm_io_writenii.m
+
+Some small changes in cg_vbm_batch.m and changed names for affine files
+in vbmi_io_writenii.m
+------------------------------------------------------------------------
+r522 | gaser | 2013-11-19 15:13:33
