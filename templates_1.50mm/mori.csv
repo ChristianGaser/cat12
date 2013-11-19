@@ -1,0 +1,130 @@
+ROIid;ROIappr;ROIname;ROIbase
+0;BG;Background;Background
+1;lSupParL;Left Superior Parietal Lobe;SUPERIOR_PARIETAL_LOBULE_left  & SUPERIOR_PARIETAL_LOBULE_right 
+2;rSupParL;Right Superior Parietal Lobe;SUPERIOR_PARIETAL_LOBULE_left  & SUPERIOR_PARIETAL_LOBULE_right 
+3;lCinG;Left Cingulate Gyrus;CINGULATE_GYRUS_left  & CINGULATE_GYRUS_right 
+4;rCinG;Right Cingulate Gyrus;CINGULATE_GYRUS_left  & CINGULATE_GYRUS_right 
+5;lSupFroG;Left Superior Frontal Gyrus;SUPERIOR_FRONTAL_GYRUS_left  & SUPERIOR_FRONTAL_GYRUS_right 
+6;rSupFroG;Right Superior Frontal Gyrus;SUPERIOR_FRONTAL_GYRUS_left  & SUPERIOR_FRONTAL_GYRUS_right 
+7;lMidFroG;Left Middle Frontal Gyrus;MIDDLE_FRONTAL_GYRUS_left  & MIDDLE_FRONTAL_GYRUS_right 
+8;rMidFroG;Right Middle Frontal Gyrus;MIDDLE_FRONTAL_GYRUS_left  & MIDDLE_FRONTAL_GYRUS_right 
+9;lFroG;Left Frontal Gyrus;INFERIOR_FRONTAL_GYRUS_left  & INFERIOR_FRONTAL_GYRUS_right 
+10;rFroG;Right Frontal Gyrus;INFERIOR_FRONTAL_GYRUS_left  & INFERIOR_FRONTAL_GYRUS_right 
+11;lPrcG;Left Precentral Gyrus;PRECENTRAL_GYRUS_left  & PRECENTRAL_GYRUS_right 
+12;rPrcG;Right Precentral Gyrus;PRECENTRAL_GYRUS_left  & PRECENTRAL_GYRUS_right 
+13;lPoCG;Left Postcentral Gyrus;POSTCENTRAL_GYRUS_left  & POSTCENTRAL_GYRUS_right 
+14;rPoCG;Right Postcentral Gyrus;POSTCENTRAL_GYRUS_left  & POSTCENTRAL_GYRUS_right 
+15;lAngG;Left Angular Gyrus;ANGULAR_GYRUS_left  & ANGULAR_GYRUS_right 
+16;rAngG;Right Angular Gyrus;ANGULAR_GYRUS_left  & ANGULAR_GYRUS_right 
+17;lCun;Left Cuneus;PRE-CUNEUS_left  & PRE-CUNEUS_right 
+18;rCun;Right Cuneus;PRE-CUNEUS_left  & PRE-CUNEUS_right 
+19;lLinG;Left Lingual Gyrus;LINGUAL_GYRUS_left  & LINGUAL_GYRUS_right 
+20;rLinG;Right Lingual Gyrus;LINGUAL_GYRUS_left  & LINGUAL_GYRUS_right 
+21;lFusG;Left Fusiform Gyrus;FUSIFORM_GYRUS_left  & FUSIFORM_GYRUS_right 
+22;rFusG;Right Fusiform Gyrus;FUSIFORM_GYRUS_left  & FUSIFORM_GYRUS_right 
+23;lParHipG;Left Parahippocampus Gyrus;PARAHIPPOCAMPAL_GYRUS_left  & PARAHIPPOCAMPAL_GYRUS_right 
+24;rParHipG;Right Parahippocampus Gyrus;PARAHIPPOCAMPAL_GYRUS_left  & PARAHIPPOCAMPAL_GYRUS_right 
+25;lSupOccG;Left Superior Occipital Gyrus;SUPERIOR_OCCIPITAL_GYRUS_left  & SUPERIOR_OCCIPITAL_GYRUS_right 
+26;rSupOccG;Right Superior Occipital Gyrus;SUPERIOR_OCCIPITAL_GYRUS_left  & SUPERIOR_OCCIPITAL_GYRUS_right 
+27;lOccG;Left Occipital Gyrus;INFERIOR_OCCIPITAL_GYRUS  & INFERIOR_OCCIPITAL_GYRUS_right 
+28;rOccG;Right Occipital Gyrus;INFERIOR_OCCIPITAL_GYRUS  & INFERIOR_OCCIPITAL_GYRUS_right 
+29;lMidOccG;Left Middle Occipital Gyrus;MIDDLE_OCCIPITAL_GYRUS  & MIDDLE_OCCIPITAL_GYRUS_right 
+30;rMidOccG;Right Middle Occipital Gyrus;MIDDLE_OCCIPITAL_GYRUS  & MIDDLE_OCCIPITAL_GYRUS_right 
+31;lEnt;Left Entorhinal Area;ENTORHINAL_AREA  & ENTORHINAL_AREA_right 
+32;rEnt;Right Entorhinal Area;ENTORHINAL_AREA  & ENTORHINAL_AREA_right 
+33;lSupTemG;Left Superior Temporal Gyrus;SUPERIOR_TEMPORAL_GYRUS  & SUPERIOR_TEMPORAL_GYRUS_right 
+34;rSupTemG;Right Superior Temporal Gyrus;SUPERIOR_TEMPORAL_GYRUS  & SUPERIOR_TEMPORAL_GYRUS_right 
+35;lTemG;Left Temporal Gyrus;INFERIOR_TEMPORAL_GYRUS  & INFERIOR_TEMPORAL_GYRUS_right 
+36;rTemG;Right Temporal Gyrus;INFERIOR_TEMPORAL_GYRUS  & INFERIOR_TEMPORAL_GYRUS_right 
+37;lMidTemG;Left Middle Temporal Gyrus;MIDDLE_TEMPORAL_GYRUS  & MIDDLE_TEMPORAL_GYRUS_right 
+38;rMidTemG;Right Middle Temporal Gyrus;MIDDLE_TEMPORAL_GYRUS  & MIDDLE_TEMPORAL_GYRUS_right 
+39;lLatOrbG;Left Lateral Orbital Gyrus;LATERAL_FRONTO-ORBITAL_GYRUS  & LATERAL_FRONTO-ORBITAL_GYRUS_right 
+40;rLatOrbG;Right Lateral Orbital Gyrus;LATERAL_FRONTO-ORBITAL_GYRUS  & LATERAL_FRONTO-ORBITAL_GYRUS_right 
+41;lMidOrbG;Left Middle Orbital Gyrus;MIDDLE_FRONTO-ORBITAL_GYRUS  & MIDDLE_FRONTO-ORBITAL_GYRUS_right 
+42;rMidOrbG;Right Middle Orbital Gyrus;MIDDLE_FRONTO-ORBITAL_GYRUS  & MIDDLE_FRONTO-ORBITAL_GYRUS_right 
+43;lSupMarG;Left Supramarginal Gyrus;SUPRAMARGINAL_GYRUS  & SUPRAMARGINAL_GYRUS_right 
+44;rSupMarG;Right Supramarginal Gyrus;SUPRAMARGINAL_GYRUS  & SUPRAMARGINAL_GYRUS_right 
+45;lRecG;Left Rectus Gyrus;GYRUS_RECTUS  & GYRUS_RECTUS_right 
+46;rRecG;Right Rectus Gyrus;GYRUS_RECTUS  & GYRUS_RECTUS_right 
+47;lIns;Left Insula;INSULAR  & INSULAR_right 
+48;rIns;Right Insula;INSULAR  & INSULAR_right 
+49;lAmy;Left Amygdala;AMYGDALA  & AMYGDALA_right 
+50;rAmy;Right Amygdala;AMYGDALA  & AMYGDALA_right 
+51;lHip;Left Hippocampus;HIPPOCAMPUS  & HIPPOCAMPUS_right 
+52;rHip;Right Hippocampus;HIPPOCAMPUS  & HIPPOCAMPUS_right 
+53;lCbe;Left Cerebellum;CEREBELLUM  & CEREBELLUM_right 
+54;rCbe;Right Cerebellum;CEREBELLUM  & CEREBELLUM_right 
+55;lCST;Left corticospinal_tract;Corticospinal_tract_left  & Corticospinal_tract_right 
+56;rCST;Right corticospinal_tract;Corticospinal_tract_left  & Corticospinal_tract_right 
+57;lCBePed;Left Cerebellar Peduncle;Inferior_cerebellar_peduncle_left  & Inferior_cerebellar_peduncle_right 
+58;rCBePed;Right Cerebellar Peduncle;Inferior_cerebellar_peduncle_left  & Inferior_cerebellar_peduncle_right 
+59;lMedLem;Left Medial Lemniscus;Medial_lemniscus_left  & Medial_lemniscus_right 
+60;rMedLem;Right Medial Lemniscus;Medial_lemniscus_left  & Medial_lemniscus_right 
+61;lSupCBePed;Left Superior Cerebellar Peduncle;Superior_cerebellar_peduncle_left  & Superior_cerebellar_peduncle_right 
+62;rSupCBePed;Right Superior Cerebellar Peduncle;Superior_cerebellar_peduncle_left  & Superior_cerebellar_peduncle_right 
+63;lCbrPed;Left Cerebral Peduncle;Cerebral_peduncle_left  & Cerebral_peduncle_right 
+64;rCbrPed;Right Cerebral Peduncle;Cerebral_peduncle_left  & Cerebral_peduncle_right 
+65;lAntCLIC;Left Anterior Capsule Limb of Internal;Anterior_limb_of_internal_capsule_left  & Anterior_limb_of_internal_capsule_right 
+66;rAntCLIC;Right Anterior Capsule Limb of Internal;Anterior_limb_of_internal_capsule_left  & Anterior_limb_of_internal_capsule_right 
+67;lPosCLIC;Left Posterior Capsule Limb of Internal;Posterior_limb_of_internal_capsule_left  & Posterior_limb_of_internal_capsule_right 
+68;rPosCLIC;Right Posterior Capsule Limb of Internal;Posterior_limb_of_internal_capsule_left  & Posterior_limb_of_internal_capsule_right 
+69;lPosThR;Left Posterior Thalamic Radiation;Posterior_thalamic_radiation_left  & Posterior_thalamic_radiation_(include_optic_radiation)_right 
+70;rPosThR;Right Posterior Thalamic Radiation;Posterior_thalamic_radiation_left  & Posterior_thalamic_radiation_(include_optic_radiation)_right 
+71;lAntCR;Left Anterior Corona Radiata;Anterior_corona_radiata_left  & Anterior_corona_radiata_right 
+72;rAntCR;Right Anterior Corona Radiata;Anterior_corona_radiata_left  & Anterior_corona_radiata_right 
+73;lSupCR;Left Superior Corona Radiata;Superior_corona_radiata_left  & Superior_corona_radiata_right 
+74;rSupCR;Right Superior Corona Radiata;Superior_corona_radiata_left  & Superior_corona_radiata_right 
+75;lPosCR;Left Posterior Corona Radiata;Posterior_corona_radiata_left  & Posterior_corona_radiata_right 
+76;rPosCR;Right Posterior Corona Radiata;Posterior_corona_radiata_left  & Posterior_corona_radiata_right 
+77;lCinaCinG;Left Cingulate and Cingulum Gyrus;Cingulum_(cingulate_gyrus)_left  & Cingulum_(cingulate_gyrus)_right 
+78;rCinaCinG;Right Cingulate and Cingulum Gyrus;Cingulum_(cingulate_gyrus)_left  & Cingulum_(cingulate_gyrus)_right 
+79;lCinaHip;Left Cingulum and Hippocampus;Cingulum_(hippocampus)_left  & Cingulum_(hippocampus)_right 
+80;rCinaHip;Right Cingulum and Hippocampus;Cingulum_(hippocampus)_left  & Cingulum_(hippocampus)_right 
+81;lForStrTer;Left Fornix Stria Terminalis;Fornix(cres)_Stria_terminalis_left  & Fornix(cres)_Stria_terminalis_right 
+82;rForStrTer;Right Fornix Stria Terminalis;Fornix(cres)_Stria_terminalis_left  & Fornix(cres)_Stria_terminalis_right 
+83;lSupLon;Left Superior Longitudinal;Superior_longitudinal_fasciculus_left  & Superior_longitudinal_fasciculus_right 
+84;rSupLon;Right Superior Longitudinal;Superior_longitudinal_fasciculus_left  & Superior_longitudinal_fasciculus_right 
+85;lSupOcc;Left Superior Occipital;Superior_fronto-occipital_fasciculus_left  & Superior_fronto-occipital_fasciculus_right 
+86;rSupOcc;Right Superior Occipital;Superior_fronto-occipital_fasciculus_left  & Superior_fronto-occipital_fasciculus_right 
+87;lOcc;Left Occipital;Inferior_fronto-occipital_fasciculus_left  & Inferior_fronto-occipital_fasciculus_right 
+88;rOcc;Right Occipital;Inferior_fronto-occipital_fasciculus_left  & Inferior_fronto-occipital_fasciculus_right 
+89;lSagStr;Left Sagital Stratum;Sagittal_stratum_left  & Sagittal_stratum_right 
+90;rSagStr;Right Sagital Stratum;Sagittal_stratum_left  & Sagittal_stratum_right 
+91;lCExt;Left Capsule External;External_capsule_left  & External_capsule_right 
+92;rCExt;Right Capsule External;External_capsule_left  & External_capsule_right 
+93;lUNC;Left Uncinate;Uncinate_fasciculus_left  & Uncinate_fasciculus_right 
+94;rUNC;Right Uncinate;Uncinate_fasciculus_left  & Uncinate_fasciculus_right 
+95;lPCT;Left Pontine Crossing Tract;Pontine_crossing_tract_left  & Pontine_crossing_tract_right 
+96;rPCT;Right Pontine Crossing Tract;Pontine_crossing_tract_left  & Pontine_crossing_tract_right 
+97;lMidCBePed;Left Middle Cerebellar Peduncle;Middle_cerebellar_peduncle_left  & Middle_cerebellar_peduncle_right 
+98;rMidCBePed;Right Middle Cerebellar Peduncle;Middle_cerebellar_peduncle_left  & Middle_cerebellar_peduncle_right 
+99;lBodForCol;Left (Body) Fornix Column;Fornix_(column_and_body)_left  & Fornix_(column_and_body)_right 
+100;rBodForCol;Right (Body) Fornix Column;Fornix_(column_and_body)_left  & Fornix_(column_and_body)_right 
+101;lCCGen;Left Corpus Callosum (Genu);Genu_of_corpus_callosum_left  & Genu_of_corpus_callosum_right 
+102;rCCGen;Right Corpus Callosum (Genu);Genu_of_corpus_callosum_left  & Genu_of_corpus_callosum_right 
+103;lCCBod;Left Corpus Callosum (Body);Body_of_corpus_callosum_left  & Body_of_corpus_callosum_right 
+104;rCCBod;Right Corpus Callosum (Body);Body_of_corpus_callosum_left  & Body_of_corpus_callosum_right 
+105;lCC;Left Corpus Callosum;Splenium_of_corpus_callosum_left  & Splenium_of_corpus_callosum_right 
+106;rCC;Right Corpus Callosum;Splenium_of_corpus_callosum_left  & Splenium_of_corpus_callosum_right 
+107;lCRetLenINC;Left Capsule Retrolenticular_part_of_internal_capsule;Retrolenticular_part_of_internal_capsule_left  & Retrolenticular_part_of_internal_capsule_right 
+108;rCRetLenINC;Right Capsule Retrolenticular_part_of_internal_capsule;Retrolenticular_part_of_internal_capsule_left  & Retrolenticular_part_of_internal_capsule_right 
+109;lNucRedNuc;Left Nucleus Red-Nucleus;Red_Nucleus_left  & Red_Nucleus_right 
+110;rNucRedNuc;Right Nucleus Red-Nucleus;Red_Nucleus_left  & Red_Nucleus_right 
+111;lSubNig;Left Substancia-Nigra;Substancia_Nigra_left  & Substancia_Nigra_right 
+112;rSubNig;Right Substancia-Nigra;Substancia_Nigra_left  & Substancia_Nigra_right 
+113;lTap;Left Tapatum;Tapatum_left  & Tapatum_right 
+114;rTap;Right Tapatum;Tapatum_left  & Tapatum_right 
+115;lCauNuc;Left Caudate Nucleus;CAUDATE_NUCLEUS_left  & CAUDATE_NUCLEUS_right 
+116;rCauNuc;Right Caudate Nucleus;CAUDATE_NUCLEUS_left  & CAUDATE_NUCLEUS_right 
+117;lPut;Left Putamen;PUTAMEN_left  & PUTAMEN_right 
+118;rPut;Right Putamen;PUTAMEN_left  & PUTAMEN_right 
+119;lTha;Left Thalamus;THALAMUS_left  & THALAMUS_right 
+120;rTha;Right Thalamus;THALAMUS_left  & THALAMUS_right 
+121;lGloPal;Left Globus Pallidus;GLOBUS_PALLIDUS_left  & GLOBUS_PALLIDUS_right 
+122;rGloPal;Right Globus Pallidus;GLOBUS_PALLIDUS_left  & GLOBUS_PALLIDUS_right 
+123;lMBR;Left Midbrain;MIDBRAIN_left  & MIDBRAIN_right 
+124;rMBR;Right Midbrain;MIDBRAIN_left  & MIDBRAIN_right 
+125;lPNS;Left Pons;PONS_left  & PONS_right 
+126;rPNS;Right Pons;PONS_left  & PONS_right 
+127;lMDA;Left Medulla;MEDULLA_left  & MEDULLA_right 
+128;rMDA;Right Medulla;MEDULLA_left  & MEDULLA_right 

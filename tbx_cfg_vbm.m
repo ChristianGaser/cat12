@@ -354,7 +354,7 @@ ROI = cfg_menu;
 ROI.tag  = 'ROI';
 ROI.name = 'ROI analyis';
 ROI.help = {[...
-  'Export of ROI data of volume, intensity, and thickness to csv-files. ' ...
+  'Export of ROI data of volume, intensity, and thickness to csv-files. ' ....
   'The values of a ROI can be estimated in subject and/or normalized ' ...
   'spaced. ' ...
   '' ...
@@ -364,6 +364,17 @@ ROI.help = {[...
   'because many statistical asumptions do not fit. Therefore, only ROI-based ' ...
   'values are available. To overcome this limitation surface-based analysis ' ...
   'functions for VBM are in development. ' ...
+  '' ...
+  'There are different atlas maps available: ' ...
+  '(1)' ...
+  '(2)' ...
+  '(3) Hammers:' ...
+  '  Alexander Hammers brain atlas from the Euripides project: ' ...
+  '  www.brain-development.org' ...
+  '  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell ' ...
+  '  TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas ' ...
+  '  of the human brain, with particular reference to the temporal lobe. ' ...
+  '  Hum Brain Mapp 2003, 19: 224-247.' ...
 ]};
 ROI.labels = {'no ROI analyis','subject space ROI analysis','template space ROI analyis','both'};
 ROI.values = {0 1 2 3};
@@ -436,6 +447,7 @@ extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
 extopts.val   = {dartelwarp,sanlm,LAS,gcutstr,cleanup,vox,bb,ROI,print};
+%extopts.val   = {sanlm,LAS,gcutstr,cleanup,vox,ROI,print};
 extopts.help  = {'Extended options'};
 
 %------------------------------------------------------------------------
@@ -481,40 +493,23 @@ dartel.help = {['This option is to export data into a form that can be used with
 native.def  = @(val)cg_vbm_get_defaults('output.bias.native', val{:});
 warped.def  = @(val)cg_vbm_get_defaults('output.bias.warped', val{:});
 affine.def  = @(val)cg_vbm_get_defaults('output.bias.affine', val{:});
-bias      = cfg_branch;
-bias.tag = 'bias';
-bias.name = 'Bias Corrected';
-bias.val = {native, warped, affine};
-bias.help = {[...
-'This is the option to save a bias corrected version of your image. ',...
-'MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity ',...
-'of the image (bias). ',...
-'These artifacts, although not usually a problem for visual inspection, can impede automated ',...
-'processing of the images. The bias corrected version should have more uniform intensities within ',...
-'the different types of tissues and can be saved in native space and/or normalised.']};
-
-%{
-native.def  = @(val)cg_vbm_get_defaults('output.mnT.native', val{:});
-warped.def  = @(val)cg_vbm_get_defaults('output.mnT.warped', val{:});
-affine.def  = @(val)cg_vbm_get_defaults('output.mnT.affine', val{:});
-mnT         = cfg_branch;
-mnT.tag     = 'mnT';
-mnT.name    = 'Bias and Noise Corrected';
-mnT.val     = {native, warped, affine};
-mnT.help    = {[...
-  'This is the option to save a bias and noise corrected version of your image. ' ...
-  'MR images are usually corrupted by a smooth, spatially varying artifact' ...
+bias        = cfg_branch;
+bias.tag    = 'bias';
+bias.name   = 'Bias Corrected';
+bias.val    = {native, warped, affine};
+bias.help   = {[ ...
+  'This is the option to save a bias, noise, and (local) intensity corrected' ...
+  'version of the original T1 image. ' ...
+  'MR images are usually corrupted by a smooth, spatially varying artifact ' ...
   'that modulates the intensity of the image (bias). ' ...
   'These artifacts, although not usually a problem for visual inspection, ' ...
-  'can impede automated processing of the images. The bias corrected version ' ...
-  'should have more uniform intensities within the different types of tissues ' ...
-  'and can be saved in native space and/or normalised.', ...
-  'Besides the bias, images are affected by random noise which limits the ' ...
-  'the accuracy of any quantitative measurements from the data.' ...
-  ' Noise is corrected by an adaptive non-local mean (NLM) filter ' ...
-  '(Manjón 2008, Medical Image Analysis 12). ' ...
+  'can impede automated processing of the images. The bias corrected ' ...
+  'version should have more uniform intensities within the different ' ...
+  'types of tissues and can be saved in native space and/or normalised.' ...
+  'Noise is corrected by an adaptive non-local mean (NLM) filter ' ...
+  '(Manjon 2008, Medical Image Analysis 12). ' ...
 ]};
-%}
+
 
 %------------------------------------------------------------------------
 
@@ -605,30 +600,22 @@ csf.name      = 'Cerebro-Spinal Fluid (CSF)';
 csf.val       = {native, warped, modulated, dartel};
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'};
 
+% not yet
 %-----------------------------------------------------------------------
-
-% thickness
-native.def    = @(val)cg_vbm_get_defaults('output.th1.native', val{:});
-warped.def    = @(val)cg_vbm_get_defaults('output.th1.warped', val{:});
-dartel.def    = @(val)cg_vbm_get_defaults('output.th1.dartel', val{:});
-th1           = cfg_branch;
-th1.tag       = 'th1';
-th1.name      = 'Grey Matter Thickness (GMT)';
-th1.val       = {native, warped, dartel};
-th1.help      = {'Options to produce GM thickness images: th1*.img, wth1*.img and mwth1*.img.'};
+%{
 
 % main structure atlas
-native.def    = @(val)cg_vbm_get_defaults('output.l1.native', val{:});
-warped.def    = @(val)cg_vbm_get_defaults('output.l1.warped', val{:});
-dartel.def    = @(val)cg_vbm_get_defaults('output.l1.dartel', val{:});
-l1            = cfg_branch;
-l1.tag        = 'l1';
-l1.name       = 'Atlas label maps';
-l1.val        = {native, warped, dartel};
-l1.help       = {[ ...
+native.def    = @(val)cg_vbm_get_defaults('output.atlas.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.atlas.warped', val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.atlas.dartel', val{:});
+atlas         = cfg_branch;
+atlas.tag     = 'atlas';
+atlas.name    = 'Atlas label maps';
+atlas.val     = {native, warped, dartel};
+atlas.help    = {[ ...
   'WARNING: The functions that create this maps are still under development! ' ...
   '' ...
-  'This is the option to save an atlas map with major structures (l1). ' ...
+  'This is the option to save an atlas map with major structures (a1*). ' ...
   'Odd numbers code the left, even numbers the right hemisphere. ' ...
   '' ...
   'Furthermore, AAL and Broadman atlas maps were created based on maps ' ...
@@ -646,8 +633,7 @@ l1.help       = {[ ...
   '  Hum Brain Mapp 2003, 19: 224-247.' ...
 ]};
 
-% not yet
-%{
+
 % preprocessing change map
 native.def      = @(val)cg_vbm_get_defaults('output.pcT.native', val{:});
 warped.def      = @(val)cg_vbm_get_defaults('output.pcT.warped', val{:});
@@ -667,7 +653,6 @@ pcT.help      = {[ ...
   'regions. '
 ]};
 %}
-
 %-----------------------------------------------------------------------
 
 warps = cfg_menu;
@@ -694,7 +679,7 @@ warps.help   = {[ ...
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
-%output.val = {grey, white, csf, label, bias, jacobian, warps, th1, l1};
+%output.val = {grey, white, csf, label, bias, jacobian, warps, atlas};
 output.val = {grey, white, csf, label, bias, jacobian, warps};
 output.help = {...
 'This routine produces spatial normalisation parameters (*_seg8.mat files) by default. ',...
@@ -899,77 +884,6 @@ if opts.bias.warped,
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 
-%{
-% bias corrected
-if opts.mnT.native,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Bias Noise Corr Images (mn*)';
-    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.mnT.warped,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Bias Noise Corr Images (wmn*)';
-    cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-%}
-%{
-% global intensity normalized
-if opts.mgT.native,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Intensity Normalized Images (mg*)';
-    cdep(end).src_output = substruct('()',{1}, '.','intcorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.mgT.native,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Intensity Normalized Images (wmg*)';
-    cdep(end).src_output = substruct('()',{1}, '.','wintcorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.label.dartel==1,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Rigid Registered Intensity Normalized Images';
-    cdep(end).src_output = substruct('()',{1}, '.','rintcorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.label.dartel==2,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Affine Registered Intensity Normalized Images';
-    cdep(end).src_output = substruct('()',{1}, '.','aintcorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-
-% thickness
-if opts.th1.native,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Thickness Images';
-    cdep(end).src_output = substruct('()',{1}, '.','thick','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.th1.warped,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Thickness Images';
-    cdep(end).src_output = substruct('()',{1}, '.','wthick','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.th1.dartel==1,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Rigid Registered Thickness Images';
-    cdep(end).src_output = substruct('()',{1}, '.','rthick','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.th1.dartel==2,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Affine Registered Thickness Images';
-    cdep(end).src_output = substruct('()',{1}, '.','athick','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-
-% major brain region label map
-
-%}
 
 % label
 if opts.label.native,

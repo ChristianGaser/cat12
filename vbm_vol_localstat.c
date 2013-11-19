@@ -32,6 +32,7 @@
 
 
 float min(float a, float b) {	if (a<b) return a; else return b; }
+float max(float a, float b) {	if (a>b) return a; else return b; }
 float abs2(float n) {	if (n<0) return -n; else return n; }        
 float pow2(float n) { return n*n;}
 
@@ -73,8 +74,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
   float NVstdth,nx,NVnmax,stdth=0.90; /*1-1/nh; 1 - 1/(2*nh+1); (2*nh+1)); */
   float NV[9261],NVn[9261],GV[9261],DN[9261], NVmn, NVstd; /* nmax ==10 */
   
-  int i,j,k,ind,ni,x,y,z,n,nn,HIST[1000]; /*,HIST1[1000],HIST2[1000]; */
-  for (nn=0;nn<1000;nn++) {HIST[nn]=0;}
+  int i,j,k,ind,ni,x,y,z,n,nn; /*,HIST1[1000],HIST2[1000]; */
   
   /* in- and output */
   float *D = (float *) mxGetPr(prhs[0]);
@@ -85,12 +85,18 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
   
   int n1i,n2i; 
   int HISTmax=256; /*HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
- 
+  int HISTmin=0;
+
+  
   if (st==7) {
+    HISTmin=0; for (i=0;i<nL;i++) { if (HISTmin>D[i]) HISTmin=D[i]; };  HISTmin--;
+    HISTmax=0; for (i=0;i<nL;i++) { if (HISTmax<D[i]) HISTmax=D[i]; };  HISTmax++;
     for (i=0;i<nL;i++) {
-      D[i] = ROUND(min(D[i],HISTmax));
+      D[i] = ROUND(max(min(D[i],HISTmax),HISTmin));
     }
   }
+  int HISTn  = HISTmax - HISTmin + 1;
+  float HIST[HISTn]; for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;}
   
   /* filter process */
   for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
@@ -105,7 +111,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
           DN[ni] = (float) sqrt( (double) ((i * i) + 
                                  (j * j) + 
                                  (k * k)) );
-          if ( D[ni]>0 && (DN[ni]<=(float)nh) ) { /*&& (DN[ni]<=(float)nh) ) { */
+          if ( (D[ni]>0 || st==7) && (DN[ni]<=(float)nh) ) { /*&& (DN[ni]<=(float)nh) ) { */
             NV[n] = D[ni];
             n++;
           }
@@ -123,9 +129,10 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
       };
       if (st==7) {
         /* max in histogram */
-        for (nn=0;nn<HISTmax;nn++) {HIST[nn]=0;}
-        for (nn=0;nn<n;nn++) {HIST[(int) NV[nn] ]++;}
-        NVmn=0; M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>NVmn) {NVmn=HIST[nn]; M[ind]=(float) nn;}}
+        for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;} /* init histogram */
+        for (nn=0;nn<n;nn++) {HIST[(int) (NV[nn] - HISTmin)]++;}  /* estimate histogram */
+        NVmn=0; M[ind]=0; for (nn=0;nn<HISTn;nn++) { if (HIST[nn]>NVmn) {NVmn=HIST[nn]; M[ind]=(float) nn;}}
+        M[ind]=M[ind] + HISTmin;
       };  
       if (st==5) {
         /* max in histogram */
@@ -138,10 +145,10 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
         /* max in histogram */
         NVmn = D[ni]; /*= 0.0; for (nn=0;nn<n;nn++) { NVmn  +=  NV[nn];}; NVmn/=n; */
         
-        for (nn=0;nn<200;nn++) {HIST[nn]=0;}
+        for (nn=0;nn<HISTmax;nn++) {HIST[nn]=0;}
         for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
         /*for (nn=0;nn<n;nn++) if (NV[nn]<MVmn) {HIST1[(int) ROUND( NV[nn]* (float) HISTmax) ]++;} */
-        M[ind]=0; for (nn=(int) ROUND( NVmn * (float) HISTmax);nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
+        M[ind]=0; for (nn=(int) ROUND( NVmn * (float) HISTmax);nn<HISTmax;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
         /*M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;} */
         M[ind]=M[ind]/(float) HISTmax;
         M2[ind]=0; for (nn=0;nn<(int) ROUND( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
@@ -167,7 +174,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
         if ( stdth>0 ) {
           NVnmax=0; for (i=0;i<n;i++) {
             NVn[i]=abs2(NVn[i]-NVmn); if (NVnmax<NVn[i]) NVnmax=NVn[i];
-            /* NVn[i]=abs2(NVn[i]-NVmn) + GV[i]; if (NVnmax<NVn[i]) NVnmax=NVn[i];
+            // NVn[i]=abs2(NVn[i]-NVmn) + GV[i]; if (NVnmax<NVn[i]) NVnmax=NVn[i]; 
           }
           NVstdth=NVnmax*stdth;
           
@@ -203,8 +210,9 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
     
     
   } 
-  
-  
+  for (i=0;i<nL;i++) { 
+			if (M[i]==-FLT_MAX || mxIsNaN(M[i])) M[i]=0; 	// correction of non-visited or other incorrect voxels
+	} 
   
 }
 
