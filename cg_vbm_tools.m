@@ -60,7 +60,7 @@ kthresh         = cfg_entry;
 kthresh.tag     = 'kthresh';
 kthresh.name    = 'Extent (voxels)';
 kthresh.help    = {'Enter the extent threshold in voxels'};
-kthresh.strtype = 'n';
+kthresh.strtype = 'r';
 kthresh.val     = {0};
 kthresh.num     = [1 1];
 
