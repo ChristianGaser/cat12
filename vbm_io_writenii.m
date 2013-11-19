@@ -115,7 +115,10 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     clear N; 
   end
 
-  if any(write(2:end))
+ 
+  % for masked images like thickness we need to fill undefined regions, 
+  % to avoid the PVE of boundary voxel. 
+  if any(write(2:end)) && exist('YM','var')
     [D,I] = vbdist(single(Y)); Y(:)=Y(I(:)); clear D I; 
   end
   switch class(Y)
@@ -139,16 +142,14 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     
     fname = vbm_io_handle_pre(V.fname,pre2,'',addpre,1);
     if labelmap==0
-      [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3)); wT0=wT==0;
+      [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3)); %wT0=wT==0;
       spm_field('bound',1);
       wT      = spm_field(w,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
-      wT(wT0) = 0; % clear regions that were not defined in the deformation
+      %wT(wT0) = 0; % clear regions that were not defined in the deformation
     elseif labelmap==1
       wT = zeros([transform.warped.odim(1:3),max(Y(:))],'uint8'); 
       for yi=1:max(Y(:)); 
         [wTi,w]  = spm_diffeo('push',single(Y==yi),transform.warped.y,transform.warped.odim(1:3));
-        %spm_field('bound',1);
-        %wTi     = spm_field(w,wTi,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
         wT(:,:,:,yi) = uint8(wTi*100); 
       end
       [wTmax,wT] = max(wT,[],4); 
@@ -157,10 +158,10 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     
     % final masking after transformation
     if exist('YM','var')
-      [wTM,w] = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); wT0=wT==0;
+      [wTM,w] = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); %wT0=wT==0;
       spm_field('bound',1);
       wTM = spm_field(w,wTM,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
-      wT(wT0)=0; clear wT0; % clear regions that were not defined in the deformation
+      %wT(wT0)=0; clear wT0; % clear regions that were not defined in the deformation
       wTM = round(wTM*100)/100; 
       wT  = wT .* (smooth3(wTM)>YMth);
       clear w wTM;

@@ -22,6 +22,8 @@ function varargout=ds(type,viewtype,DAR,varargin)
     case {'a','axial'},  for vi=1:vols, varagin{vi}=varagin{vi}; end %#ok<AGROW>
     case {'c','coronal'}
   end
+  if isempty(DAR), DAR=1; end
+  if numel(DAR)<2, DAR=repmat(DAR,1,3); end
   
   % figure properties
   fh=gcf;%  if nf, fh=figure; else fh=gcf; end

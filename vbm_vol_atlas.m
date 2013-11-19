@@ -6,6 +6,7 @@ function vbm_vol_atlas(atlas,refinei)
 % probability map and a 3D label map for each subject. Based on the 4D
 % a 4D probability map and a 3D label map were generated for the group. 
 % A refinement (median-filter + complete brain labeling) is possible. 
+% Each Atlas should have a txt-file with informations 
 %
 % WARNING: This script only create uint8 maps!
 %
@@ -17,24 +18,30 @@ function vbm_vol_atlas(atlas,refinei)
 % Predefined maps for VBM.
 % - ibsr (subcortical,ventricle,brainstem,...)
 % - hammers (subcortical,cortical,brainstem,...)
-% - jhu=jhu2|jhu1|jhu3 (subcortical,WM,cortical,brainstem,...)
+% - mori=mori2|mori1|mori3 (subcortical,WM,cortical,brainstem,...)
 % - anatomy (some ROIs)
 % - aal (subcortical,cortical)
+% - lpba40
 % - broadmann (Colins?)    
 %
 % ROI description should be available as csv-file:
 %   ROInr; ROIname [; ROInameid]
 %
 % TODO:
+% - 2 Typen von Atlanten:
+%     1) nicht optimiert:
+%        nur projektion, ggf. original csv-struktur, nummer, ...
+%     2) optimiert .... atlas+.nii
+%        ... meins
 % - opt-struktur für paraemter
-% - Definition von ROIs im CSF sieht tielweise komische aus, auch wenns 
-%   im Grunde ok ist ... ähnlich wie das füllproblem...
-% - textfile mit allen quellen und belegen?
-% - LR-Seitenzuweisung für anatomy atlas
-% - Abkürzungen vereinheitlichen und mit Literatur abgleichen
-% - Zusammenfassung von ROIs über die ROInameid denkbar
+%
 % - Zusammenfassung von Atlanten:
 %   Zusatzfunktion die auf den normalisierten Daten aufbauen könnte.
+%   Dazu muessten für die Atlantenauswahl mittel Selbstaufruf die Grund-
+%   daten generieren und könnte anschließen eine Merge-Funtkion starten.
+%   Hierbei wird es sich um eine vollständig manuell zu definierede Fkt. 
+%   handeln!
+%     - Region-Teilregion
 %_______________________________________________________________________
 % $Id$
 
@@ -42,20 +49,34 @@ function vbm_vol_atlas(atlas,refinei)
   
   if ~exist('atlas','var'), atlas=''; end
   
-  [P,PA,Pcsv,Ptxt,resdir,refine] = mydata(atlas);
-  if isempty(P)
-    P      = cellstr(spm_select(inf,'image','select T1 images'));
-    PA     = cellstr(spm_select(numel(P),'image','select ROIs'));
-    Pcsv   = cellstr(spm_select(1,'image','select ROI csv file'));
-    resdir = cellstr(spm_select(1,'dirs','result directory'));
+  [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas);
+  if isempty(P)|| isempty(P{1})
+    P      = cellstr(spm_select(inf,'image','select T1 images'));  
+    if isempty(P) || isempty(P{1})
+      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+    end 
+    PA     = cellstr(spm_select(numel(P),'image','select ROIs'));  
+    if isempty(PA) || isempty(PA{1}) 
+      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+    end 
+    Pcsv   = cellstr(spm_select(1,'image','select ROI csv file')); 
+    if isempty(Pcsv) || isempty(Pcsv{1}) 
+      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+    end 
+    resdir = cellstr(spm_select(1,'dirs','result directory'));    
+    if isempty(resdir) || isempty(resdir{1})
+      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+    end 
     atlas  = 'atlas';
     if ~exist('refinei','var') || isempty(refinei), refine = refini; else refine = 0; end
   end
   if isempty(P) || isempty(PA), return; end
   
+  
   recalc = 0; 
   mod    = 0; % modulation of each label map? .. do not work yet ... see cg_vbm_defs
-  if mod, modm='m'; else modm=''; end
+  if mod, modm='m'; else modm=''; end %#ok<UNRCH>
+  
   
   % refinment of expert label (smoothing)
   if strcmpi(atlas,'anatomy')
@@ -63,7 +84,7 @@ function vbm_vol_atlas(atlas,refinei)
   % --------------------------------------------------------------------
   
     % use VBM to create a segmenation and mapping
-    Pp0=P; Pwp0=P; Py=P; 
+    Pp0=P; Pwp0=P; Py=P;
     for fi = 1:numel(P);
       [pp1,ff1] = spm_fileparts(P{fi});
       Py{fi}    = fullfile(pp1 ,sprintf('%s%s.nii','y_r',ff1));
@@ -78,7 +99,29 @@ function vbm_vol_atlas(atlas,refinei)
         calldefs(Py{fi},Pp0{fi},3,0); 
       end
     end
-  
+    
+    % side image
+    Pws=P;
+    for fi = 1:numel(Ps);
+      [pps,ffs] = spm_fileparts(Ps{fi});
+      Pws{fi}   = fullfile(pps,sprintf('%s%s%s.nii',modm,'w'  ,ffs));
+
+      if exist(Ps{fi},'file')
+%         if refine 
+%           if recalc || ~exist(Pws{fi},'file')
+%             Vbfi  = spm_vol(Pb{fi}); 
+%             Ybfi  = single(spm_read_vols(Vbfi));   
+%             Ybfi  = vbm_vol_median3(Ybfi);
+%             Vbfi.fname = Pb{fi}; spm_write_vol(Vafi,Yafi);
+%           end
+%         end
+        if recalc || ~exist(Pws{fi},'file')
+          calldefs(Py{fi},Ps{fi},0,0); 
+        end
+      end
+    end   
+    
+    % roi maps
     Py=P; Pwa=P; Pa=P; PwA=P;
     for fi = 1:numel(PA);
       [ppa,ffa] = spm_fileparts(PA{fi});
@@ -86,6 +129,7 @@ function vbm_vol_atlas(atlas,refinei)
       Pa{fi}    = fullfile(ppa,sprintf('%s%s.nii','a'  ,ffa));
       Pwa{fi}   = fullfile(ppa,sprintf('%s%s%s.nii',modm,'wa' ,ffa));
       PwA{fi}   = fullfile(ppa,sprintf('%s%s%s.nii',modm,'w'  ,ffa));
+      
       
       % map ROI to atlas
       if refine 
@@ -107,9 +151,9 @@ function vbm_vol_atlas(atlas,refinei)
       end
     end
     if refine
-      ROIavg(Pwp0,Pwa,Pcsv,Ptxt,atlas,resdir);
+      ROIavg(Pwp0,Pwa,Pws,Pcsv,Ptxt,atlas,resdir);
     else
-      ROIavg(Pwp0,PwA,Pcsv,Ptxt,atlas,resdir);
+      ROIavg(Pwp0,PwA,Pws,Pcsv,Ptxt,atlas,resdir);
     end
 
 
@@ -118,7 +162,7 @@ function vbm_vol_atlas(atlas,refinei)
   % --------------------------------------------------------------------
   
     % preparte subject 
-    Pp0=P; Pwp0=P; Py=P; Pwa=P; Pa=P; PwA=P;
+    Pp0=P; Pwp0=P; Py=P; Pwa=P; Pa=P; PwA=P; 
     for fi=1:numel(P)
       % other filenames
       [pp ,ff ] = spm_fileparts(P{fi});
@@ -134,7 +178,7 @@ function vbm_vol_atlas(atlas,refinei)
       if ~exist(Pp0{fi},'file') || ~exist(Py{fi},'file')
         callvbm(P{fi});
       end
-
+      
       if refine
         refiter = round(refine);
         refsize = round(refine);
@@ -175,13 +219,13 @@ function vbm_vol_atlas(atlas,refinei)
     % create the final probability ROI map as a 4D dataset, the simplyfied 
     % atlas map for the VBM toolbox and a mean p0 images
     if refine
-      subROIavg(Pwp0,Pwa,Pcsv,Ptxt,atlas,resdir)
+      subROIavg(Pwp0,Pwa,Ps,Pcsv,Ptxt,atlas,resdir)
     else
-      subROIavg(Pwp0,PwA,Pcsv,Ptxt,atlas,resdir)
+      subROIavg(Pwp0,PwA,Ps,Pcsv,Ptxt,atlas,resdir)
     end
   end
 end
-function [P,PA,Pcsv,Ptxt,resdir,refine] = mydata(atlas)
+function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
 % ----------------------------------------------------------------------
 % This fucntion contains the paths to our atlas maps and the csv files.
 % ----------------------------------------------------------------------
@@ -190,42 +234,49 @@ function [P,PA,Pcsv,Ptxt,resdir,refine] = mydata(atlas)
     case 'ibsr'
       mdir   = '/Volumes/MyBook/MRData/Regions/ibsr';
       PA     = findfiles(mdir,'IBSR_*_seg_ana.nii');
+      Ps     = {''};
       P      = findfiles(mdir,'IBSR_*_ana.nii');
       P      = setdiff(P,PA);
       Pcsv   = findfiles(mdir,'IBSR.csv'); 
       Ptxt   = findfiles(mdir,'IBSR.txt'); 
       refine = 1;
-    
+      
     case 'hammers'
       mdir   = '/Volumes/MyBook/MRData/Regions/brain-development.org/Pediatric Brain Atlas/Hammers_mith_atlases_n20r67_for_pvelab';
       P      = findfiles(mdir,'MRalex.img');
       PA     = findfiles(mdir,'VOIalex.img');
+      Ps     = {''};
       Pcsv   = findfiles(mdir,'VOIalex.csv'); 
       Ptxt   = findfiles(mdir,'hammers.txt'); 
       refine = 1;
       
-    case {'jhu','jhu1','jhu2','jhu3'}
-      if numel(atlas)==4, aid=atlas(4); else aid='2'; end
+    case {'mori','mori1','mori2','mori3'}
+      if numel(atlas)==5, aid=atlas(5); else aid='2'; end
       mdir   = '/Volumes/MyBook/MRData/Regions/www.spl.harvard.edu/2010_JHU-MNI-ss Atlas';
       P      = findfiles(mdir,'JHU_MNI_SS_T1.nii'); 
       PA     = findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s.nii',repmat('I',1,str2double(aid))));
+      Ps     = {''};      
       Pcsv   = findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s_SlicerLUT.csv',repmat('I',1,str2double(aid))));
-      Ptxt   = findfiles(mdir,'jhu.txt'); 
+      Ptxt   = findfiles(mdir,'mori.txt'); 
       refine = 1;
     
     case 'anatomy'
       mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
       P      = findfiles(mdir,'colin27T1_seg.img');
-      PA     = findfiles(fullfile(mdir,'PMaps'),'*.img'); 
+      PA     = [findfiles(fullfile(mdir,'PMaps'),'*.img'), ...
+                findfiles(fullfile(mdir,'Fiber_Tracts','PMaps'),'*.img')];
+      Ps     = findfiles(mdir,'AnatMask.img'); 
       Pmat   = fullfile(mdir,'AllAreas_v18_MPM.mat');
+      Pmat2  = fullfile(mdir,'Fiber_Tracts','AllFibres_v15_MPM.mat');
       Pcsv   = {fullfile(mdir,[Pmat(1:end-8) '.csv'])};
-      Ptxt   = findfiles(mdir,'jhu.txt'); 
+      Ptxt   = findfiles(mdir,'anatomy.txt'); 
       refine = 1;
       
       
       % create csv ...
-      load(Pmat);
-      names   = [{MAP.name}' {MAP.ref}' {MAP.ref}'];
+      load(Pmat);   names   = [{MAP.name}' {MAP.ref}' {MAP.ref}'];
+      load(Pmat2);  names   = [names; {MAP.name}' {MAP.ref}' {MAP.ref}'];
+      
       PAff = PA;
       for ni=1:numel(PA)
         [pp,ff] = spm_fileparts(PA{ni}); PAff{ni}=ff;
@@ -245,14 +296,33 @@ function [P,PA,Pcsv,Ptxt,resdir,refine] = mydata(atlas)
       csv     = [num2cell(1:size(names,1))' names(:,1:2)]; 
       vbm_io_csv(Pcsv{1},csv);  
       
-    case 'aal'
+    case 'aala' % anatomy toolbox version
       mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
       P      = findfiles(mdir,'colin27T1_seg.img');
       PA     = findfiles(mdir,'MacroLabels.img');
+      Ps     = {''};
       Pcsv   = findfiles(mdir,'Macro.csv');
       Ptxt   = findfiles(mdir,'aal.txt'); 
       refine = 1;
+      
+    case 'aal'
+      mdir   = '/Volumes/MyBook/MRData/Regions/aal_for_SPM8';
+      P      = findfiles(mdir,'colin27T1_seg.img');
+      PA     = findfiles(mdir,'aal.nii');
+      Ps     = {''};
+      Pcsv   = findfiles(mdir,'aal.csv');
+      Ptxt   = findfiles(mdir,'aal.txt'); 
+      refine = 1;  
     
+    case 'lpba40'
+      mdir   = '/Volumes/MyBook/MRData/Regions/LPBA40';
+      P      = findfiles(mdir,'.img');
+      PA     = findfiles(mdir,'.nii');
+      Ps     = {''};
+      Pcsv   = findfiles(mdir,'.csv');
+      Ptxt   = findfiles(mdir,'.txt'); 
+      refine = 1;  
+   
     % for this atlas I have no source and no labels...
     %{
     case 'brodmann'
@@ -274,15 +344,13 @@ function [P,PA,Pcsv,Ptxt,resdir,refine] = mydata(atlas)
     %}
     
     otherwise % GUI ...
-      mdir    = '';
-      P       = '';
-      PA      = '';
-      Pcsv    = '';
-      Ptxt    = '';
+      P       = {''};
+      PA      = {''};
+      Ps      = {''};
+      Pcsv    = {''};
+      Ptxt    = {''};
       refine  = 0;
   end
-  
-  % normalization of ROI-names ...
   
   % combination of different atlas maps ...
 end
@@ -365,7 +433,7 @@ function calldefs(Py,PA,interp,modulate)
   end
   warning on; 
 end
-function subROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
+function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
 % atlas map for the VBM toolbox and a mean p0 images
@@ -374,57 +442,188 @@ function subROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
   if ~exist('resdir','var'), resdir = spm_fileparts(PA{1}); end
   if ~exist(resdir,'dir'),   mkdir(resdir); end
   
+  
+  
   % get csv-data
+  % --------------------------------------------------------------------
   if ~isempty(Pcsv) && exist(Pcsv{1},'file')
     csv = vbm_io_csv(Pcsv{1});
+  
+    % normalization of ROI-names ...
+    csv=translateROI(csv,atlas);
+  
     if size(csv,2)<3, for ROIi=2:size(csv,1), csv{ROIi,3} = csv{ROIi,2}; end; end
     if isnumeric(csv{1}) || (ischar(csv{1}) && isempty(str2double(csv{1})))
-      header = cell(1,size(csv,2)); header(1:3) = {'ROIid','ROIname','ROIabbr'};
+      header = {'ROIidO','ROInameO','ROIname','ROIabbr','ROIn','ROIs'};
       csv = [header;csv]; 
     end
-    dsc = fname; for ROIi=2:size(csv,1), dsc = sprintf('%s,%s-%s',dsc,csv{ROIi,1},csv{ROIi,3}); end
+    dsc = atlas; for ROIi=2:size(csv,1), dsc = sprintf('%s,%s-%s',dsc,csv{ROIi,1},csv{ROIi,3}); end
   else
-    dsc = fname;
+    dsc = atlas;
   end
   
+  
+  
   % images
+  % --------------------------------------------------------------------
+  % First we need a optimized labeling to avoid a oversized 4d file. 
+  % Therefore we create a table cod that contain in the first column the 
+  % original label and in the second column the optimized value.
+  % --------------------------------------------------------------------
   V  = spm_vol(char(P));
   VA = spm_vol(char(PA));
   Y  = spm_read_vols(VA(1));
+  %vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
+
+  switch VA(1).private.dat.dtype
+    case 'INT8-LE',   Y = int8(Y);   dt = 'int8';   
+    case 'INT16-LE',  Y = int16(Y);  dt = 'int16';  
+    case 'UINT8-LE',  Y = uint8(Y);  dt = 'uint8'; 
+    case 'UINT16-LE', Y = uint16(Y); dt = 'uint16'; 
+    otherwise         
+  end
+  if min(Y(:))>=0 
+    switch dt
+      case 'int8',  dt='uint8';  Y=uint8(Y);
+      case 'int16'; dt='uint16'; Y=uint16(Y);
+    end
+  else
+    error('ERROR:vbm_vol_atlas:bad_label_map','No negative Labels are allowed\n');
+  end
+  if max(abs(Y(:)))<256 
+    switch dt
+      case 'int16',  dt='int8';  Y=int8(Y);
+      case 'uint16'; dt='uint8'; Y=uint8(Y);
+    end
+  end
+  
+  
+
+  hb = [intmin(dt) intmax(dt)];
+  datarange = hb(1):hb(2); 
+  H    = hist(single(max(hb(1),min(hb(2),Y(:)))),single(datarange)); H(hb(1)+1)=0; 
+  cod  = repmat(datarange',1,4);
+  if hb(2)>0
+    codi=cod(H>0,1);
+    for codii=1:numel(codi), codi(codii) = csv{1+find([csv{2:end,1}]==codi(codii)),6}; end
+    cod(H>0,4) = codi; 
+
+    codi=cod(H>0,2);
+    for codii=1:numel(codi), codi(codii) = csv{1+find([csv{2:end,1}]==codi(codii)),5}; end
+    cod(H>0,2) = codi;
+    
+    % nicht alle alten strukturen sind doppel zu nehmen...
+    [ia,ib,ic] = unique(codi); 
+    cod(H>0,3) = ic*2; 
+    
+    del  = setdiff([csv{2:end,1}],[csv{2:end,5}]); 
+    codi = setdiff(codi,del);
+    
+    csvx = {'ROIid' 'ROIappr' 'ROIname' 'ROIbase'; 0 'BG' 'Background' 'Background'};
+    for ri=1:numel(codi)
+      id = find([csv{2:end,5}]==codi(ri),'1','first');
+      csvx{(ri*2)+1,1} = (ri*2)-1;   
+      csvx{(ri*2)+2,1} = (ri*2); 
+      csvx{(ri*2)+1,2} = csv{id+1,4}; csvx{(ri*2)+1,3} = csv{id+1,3}; csvx{(ri*2)+1,4} = csv{id+1,2}; 
+      csvx{(ri*2)+2,2} = csv{id+1,4}; csvx{(ri*2)+2,3} = csv{id+1,3}; csvx{(ri*2)+2,4} = csv{id+1,2}; 
+    end
+    
+%     %for idi=1:2:numel(ia); id(idi) = find([csv{2:end,5}]==idi,1,'first'); end
+%     csvx(:,1)  = [{'ROIid'};num2cell((0:numel(ia)*2)')];
+%     csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat((1+ia)',2,1),2*numel(ia),1),4)];
+%     csvx(:,3)  = [{'ROIname';'Background'};csv(reshape(repmat((1+ib)',2,1),2*numel(ia),1),3)];
+%     csvx(:,4)  = [{'ROIoname';'Background'};csv(reshape(repmat((1+ib)',2,1),2*numel(ia),1),2)];
+%     
+     %{
+      csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),4)];
+      csvx(:,3)  = [{'ROIname';'Background'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),3)];
+      csvx(:,4)  = [{'ROIoname';'Background'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),2)];
+    %}
+      
+    for si=3:size(csvx,1)
+      if mod(si,2)==1, csvx{si,2} = ['l',csvx{si,2}]; csvx{si,3} = ['Left ' ,csvx{si,3}];
+      else             csvx{si,2} = ['r',csvx{si,2}]; csvx{si,3} = ['Right ',csvx{si,3}];
+      end
+    end
+  end
+  if max(round(cod(H>0,3)))<256 
+    dt2='uint8';
+  else
+    dt2='uint16';
+  end
 
   
   % 4D-probability map
   % --------------------------------------------------------------------
+  % Here we create the probability map for each label with the optimized
+  % labeling cod.
+  % --------------------------------------------------------------------
   N             = nifti;
-  N.dat         = VA(1).private.dat;
-  N.dat.fname   = fullfile(resdir,['a4D' fname '.nii']);
-  N.dat.dtype   = 'UINT8-LE';
-  N.dat.dim(4)  = max(Y(:));
+  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VA(1).dim(1:3) ...
+                  max(round(cod(H>0,3)))+1],[spm_type(dt2) spm_platform('bigend')],0,1,0);
   N.mat         = VA(1).mat;
   N.mat0        = VA(1).private.mat0;
   N.descrip     = dsc;
   create(N);       
-  [H,ids] = hist(Y(Y(:)>0),1:max(Y(:)));
-  for j=ids
-    Y = zeros(VA(1).dim,'uint8');
+
+
+  % hier gehen noch zwei sachen schief...
+  % 1) liegt kein links rechts vor, dann mist
+  % 2) ist links rechts mist, dann bleibts mist
+  % x) seitenzuweisung ist irgendwie qatsch
+  for j=1:(N.dat.dim(4))
+    Y = zeros(VA(1).dim,dt2);
     for i=1:numel(PA)
       Yi = spm_read_vols(VA(i));
       if ~isempty(Yi==j)
-        Y  = Y + uint8(Yi==j);
+        % optimize label
+        switch dt
+          case 'uint8'
+            Ys = single(intlut(uint8(Yi),uint8(cod(:,4)')));
+            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(vbm_vol_laplace3R(Ys,Ys==1.5,0.01));
+            Yi = intlut(uint8(Yi),uint8(cod(:,3)'));
+          case 'uint16'
+            Ys = single(intlut(uint16(Yi),uint16(cod(:,4)')));
+            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(vbm_vol_laplace3R(Ys,Ys==1.5,0.01));
+            Yi = intlut(uint16(Yi),uint16(cod(:,3)'));
+          case 'int8'
+            Ys = single(intlut(int8(Yi),int8(cod(:,4)')));
+            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(vbm_vol_laplace3R(Ys,Ys==1.5,0.01));
+            Yi = intlut(int8(Yi),int8(cod(:,3)'));
+          case 'int16'
+            Ys = single(intlut(int16(Yi),int16(cod(:,4)')));
+            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(vbm_vol_laplace3R(Ys,Ys==1.5,0.01));
+            Yi = intlut(int16(Yi),int16(cod(:,3)'));
+        end
+        % flip LR
+        [x,y,z]=ind2sub(size(Ys),find(Ys==1));
+        if mean(x)>(size(Ys,1)/2), Ys(Ys==1)=1.5; Ys(Ys==2)=1; Ys(Ys==1.5)=2; end
+         % add case j 
+        switch dt2
+          case 'uint8'
+            Y  = Y + uint8(Yi==(ceil(j/2)*2) & (Ys)==(mod(j+1,2)+1));
+          case 'uint16'        
+            Y  = Y + uint16(Yi==(ceil(j/2)*2) & (Ys)==(mod(j+1,2)+1));
+          case 'int8'
+            Y  = Y + int8(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j+1,2)+1));
+          case 'int16'     
+            Y  = Y + int16(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j+1,2)+1));
+        end
       end
     end
+    clear Ps;
     N.dat(:,:,:,j) = Y;
   end
-
   
-  % p0-mean map
+  
+  %% p0-mean map
   % --------------------------------------------------------------------
   N             = nifti;
   N.dat         = V(1).private.dat; 
-  N.dat.fname   = fullfile(resdir,['p0' fname '.nii']);
+  N.dat.fname   = fullfile(resdir,['p0' atlas '.nii']);
   N.mat         = V(1).mat;
   N.mat0        = V(1).private.mat0;
-  N.descrip     = ['p0 ' fname];
+  N.descrip     = ['p0 ' atlas];
   create(N);  
   Y = zeros(VA(1).dim,'single');
   for i=1:numel(P)
@@ -434,21 +633,41 @@ function subROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
   M = vbm_vol_morph((Y/numel(P))>0.5,'labclose'); 
   
   
+  
   % 3d-label map
   % --------------------------------------------------------------------
+
   N             = nifti;
-  N.dat         = VA(1).private.dat;
-  N.dat.fname   = fullfile(resdir,[fname '.nii']);
-  N.dat.dtype   = 'UINT8-LE';
+  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VA(1).dim(1:3),...
+                  [spm_type(dt2) spm_platform('bigend')],0,1,0);
   N.mat         = VA(1).mat;
   N.mat0        = VA(1).private.mat0;
   N.descrip     = dsc;
   create(N);       
-  Y             = spm_read_vols(spm_vol(fullfile(resdir,['a4D' fname '.nii']))); 
-  cat(4,zeros(size(Y,1),size(Y,2),size(Y,3),'single'),Y); % add background class
-  [maxx,Y]      = nanmax(Y,[],4); clear maxx; Y = Y - 1;
+  Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
+  Y             = cat(4,~nanmax(Y,[],4),Y); % add background class
+  [maxx,Y]      = nanmax(Y,[],4); clear maxx; Y = Y-1;
   for xi=1:3, Y = vbm_vol_localstat(single(Y),M,1,7); end
-  N.dat(:,:,:)  = Y.*M;
+
+  % restor old labeling or use optimized
+  if 0
+    switch dt
+      case 'uint8',  Y = intlut(uint8(Y.*M),uint8(cod(:,1)'));
+      case 'uint16', Y = intlut(uint16(Y.*M),uint16(cod(:,1)'));
+      case 'int8',   Y = intlut(int8(Y.*M),int8(cod(:,1)'));
+      case 'int16',  Y = intlut(int16(Y.*M),int16(cod(:,1)'));
+    end
+  else
+    Y = Y.*M;
+  end
+  switch dt2
+    case 'uint8',  Y = uint8(Y);
+    case 'uint16', Y = uint16(Y);
+    case 'int8',   Y = int8(Y);
+    case 'int16',  Y = int16(Y);
+  end
+  N.dat(:,:,:)  = Y;
+
 
  
   % filling????
@@ -463,16 +682,22 @@ function subROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
   % Another solution would be the creation of a common own atlas from
   % multiple atlas maps.
   
+  
+  
   % csv and txt data
   % --------------------------------------------------------------------
   if ~isempty(Pcsv) && exist(Pcsv{1},'file')
-    vbm_io_csv(fullfile(resdir,[fname '.csv']),csv);
+    if exist('csvx','var')
+      vbm_io_csv(fullfile(resdir,[atlas '.csv']),csvx);
+    else
+      vbm_io_csv(fullfile(resdir,[atlas '.csv']),csv);
+    end
   end
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
-    copyfile(Ptxt{1},fullfile(resdir,[fname '.txt']));
+    copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
   end
 end
-function ROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
+function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
 % atlas map for the VBM toolbox and a mean p0 images
@@ -484,47 +709,128 @@ function ROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
   % get csv-data
   if ~isempty(Pcsv) && exist(Pcsv{1},'file')
     csv = vbm_io_csv(Pcsv{1});
+  
+    % normalization of ROI-names ...
+    csv=translateROI(csv,atlas);
+    
+    
     if size(csv,2)<3, for ROIi=2:size(csv,1), csv{ROIi,3} = csv{ROIi,2}; end; end
     if isnumeric(csv{1}) || (ischar(csv{1}) && isempty(str2double(csv{1})))
-      header = cell(1,size(csv,2)); header(1:3) = {'ROIid','ROIname','ROIabbr'};
+      header = {'ROIidO','ROInameO','ROIname','ROIabbr','ROIn','ROIs'};
       csv = [header;csv]; 
     end
-    dsc = fname; for ROIi=2:size(csv,1), dsc = sprintf('%s,%s-%s',dsc,csv{ROIi,1},csv{ROIi,3}); end
+    dsc = atlas; for ROIi=2:size(csv,1), dsc = sprintf('%s,%s-%s',dsc,csv{ROIi,1},csv{ROIi,3}); end
   else
-    dsc = fname;
+    dsc = atlas;
   end
   
   
-  %% images
+   %% images
   V  = spm_vol(char(P));
   VA = spm_vol(char(PA));
+  Y  = spm_read_vols(VA(1));
+  
+   switch VA(1).private.dat.dtype
+    case 'INT8-LE',   Y = int8(Y);   dt = 'int8';   
+    case 'INT16-LE',  Y = int16(Y);  dt = 'int16';  
+    case 'UINT8-LE',  Y = uint8(Y);  dt = 'uint8'; 
+    case 'UINT16-LE', Y = uint16(Y); dt = 'uint16'; 
+    otherwise         
+  end
+  if min(Y(:))>=0 
+    switch dt
+      case 'int8',  dt='uint8';  Y=uint8(Y);
+      case 'int16'; dt='uint16'; Y=uint16(Y);
+    end
+  else
+    error('ERROR:vbm_vol_atlas:bad_label_map','No negative Labels are allowed\n');
+  end
+  if max(abs(Y(:)))<256 
+    switch dt
+      case 'int16',  dt='int8';  Y=int8(Y);
+      case 'uint16'; dt='uint8'; Y=uint8(Y);
+    end
+  end
+  
+  
+  
+  % actual we got only the anatomy toolbox case...
+  hb = [intmin(dt) intmax(dt)];
+  datarange = hb(1):hb(2); 
+  H    = datarange<numel(PA); H(hb(1)+1)=0;
+  cod  = repmat(datarange',1,4);
+  if hb(2)>0
+    codi=cod(H>0,1);
+    for codii=1:numel(codi), codi(codii) = csv{1+find([csv{2:end,1}]==codi(codii)),6}; end
+    cod(H>0,4) = codi; 
 
+    codi=cod(H>0,1);
+    for codii=1:numel(codi), codi(codii) = csv{1+find([csv{2:end,1}]==codi(codii)),5}; end
+    cod(H>0,2) = codi;
+
+    [ia,ib,ic] = unique(codi);
+    cod(H>0,3) = ic*2; 
+
+    csvx(:,1)  = [{'ROIid'};num2cell((0:numel(ia)*2)')];
+    csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),4)];
+    csvx(:,3)  = [{'ROIname';'Background'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),3)];
+    csvx(:,4)  = [{'ROIoname';'Background'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),2)];
+    
+    for si=3:size(csvx,1)
+      if mod(si,2)==1, csvx{si,2} = ['l',csvx{si,2}]; csvx{si,3} = ['Left ' ,csvx{si,3}];
+      else             csvx{si,2} = ['r',csvx{si,2}]; csvx{si,3} = ['Right ',csvx{si,3}];
+      end
+    end
+  end
+  if max(round(cod(H>0,3)))<256 
+    dt2='uint8';
+  else
+    dt2='uint16';
+  end
+  
+  
+  
+ 
   
   % 4D-probability map
   % --------------------------------------------------------------------
   N             = nifti;
-  N.dat         = VA(1).private.dat;
-  N.dat.fname   = fullfile(resdir,['a4D' fname '.nii']);
-  N.dat.dtype   = 'UINT8-LE';
-  N.dat.dim(4)  = numel(PA);
+  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[V.dim(1:3) ...
+                  numel(PA)*2],[spm_type(dt2) spm_platform('bigend')],0,1,0);
   N.mat         = VA(1).mat;
   N.mat0        = VA(1).private.mat0;
   N.descrip     = dsc;
   create(N);       
- 
+     
+  if exist(Ps{1},'file')
+    Ys = spm_read_vols(spm_vol(char(Ps)));
+  end
   for i=1:numel(PA)
-    Y = spm_read_vols(VA(i));
-    N.dat(:,:,:,i) = Y;
+    Y  = spm_read_vols(VA(i));
+    if exist('Ys','var')
+      for si=1:2
+        Yi = Y .* (Ys==si); 
+        switch dt2
+          case 'uint8',  Yi = uint8(Yi);
+          case 'uint16', Yi = uint16(Yi);
+          case 'int8',   Yi = int8(Yi);
+          case 'int16',  Yi = int16(Yi);
+        end
+        N.dat(:,:,:,i*2 - (si==2) ) = Yi;
+      end
+    else
+      N.dat(:,:,:,i) = Y;
+    end
   end
   
   % p0-mean map
   % --------------------------------------------------------------------
   N             = nifti;
   N.dat         = V(1).private.dat; 
-  N.dat.fname   = fullfile(resdir,['p0' fname '.nii']);
+  N.dat.fname   = fullfile(resdir,['p0' atlas '.nii']);
   N.mat         = V(1).mat;
   N.mat0        = V(1).private.mat0;
-  N.descrip     = ['p0 ' fname];
+  N.descrip     = ['p0 ' atlas];
   create(N);  
   Y = zeros(VA(1).dim,'single');
   for i=1:numel(P)
@@ -534,31 +840,459 @@ function ROIavg(P,PA,Pcsv,Ptxt,fname,resdir)
   M = vbm_vol_morph((Y/numel(P))>0.5,'labclose'); 
   
   
-  % 3d-label map
+  %% 3d-label map
   % --------------------------------------------------------------------
   N             = nifti;
-  N.dat         = VA(1).private.dat;
-  N.dat.fname   = fullfile(resdir,[fname '.nii']);
-  N.dat.dtype   = 'UINT8-LE';
+  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VA(1).dim(1:3),...
+                  [spm_type(dt2) spm_platform('bigend')],0,1,0);
   N.mat         = VA(1).mat;
   N.mat0        = VA(1).private.mat0;
   N.descrip     = dsc;
-  create(N);     
-  Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' fname '.nii']))));
-  cat(4,zeros(size(Y,1),size(Y,2),size(Y,3),'single'),Y); % add background class
-  [maxx,Y]      = nanmax(Y,[],4); clear maxx; Y = Y - 1;
-  MD = vbm_vol_morph(Y>0,'d');
-  for xi=1:3, Y = vbm_vol_localstat(single(Y),MD,1,7); end
-  N.dat(:,:,:)   = Y.*M;
+  create(N);       
+  Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
+  Y             = cat(4,~nanmax(Y,[],4),Y); % add background class
+  [maxx,Y]      = nanmax(Y,[],4); clear maxx; Y = Y-1;
+  for xi=1:3, Y = vbm_vol_localstat(single(Y),M,1,7); end
 
+ % restor old labeling or use optimized
+  if 0
+    switch dt
+      case 'uint8'
+        Y = intlut(uint8(Y.*M),uint8(cod(:,1)'));
+      case 'uint16'
+        Y = intlut(uint16(Y.*M),uint16(cod(:,1)'));
+      case 'int8'
+        Y = intlut(int8(Y.*M),int8(cod(:,1)'));
+      case 'int16'
+        Y = intlut(int16(Y.*M),int16(cod(:,1)'));
+    end
+  else
+    Y = Y.*M;
+  end
+  switch dt2
+    case 'uint8',  Y = uint8(Y);
+    case 'uint16', Y = uint16(Y);
+    case 'int8',   Y = int8(Y);
+    case 'int16',  Y = int16(Y);
+  end
+  N.dat(:,:,:)  = Y;
  
   
   % csv and txt data
   % --------------------------------------------------------------------
   if ~isempty(Pcsv) && exist(Pcsv{1},'file')
-    vbm_io_csv(fullfile(resdir,[fname '.csv']),csv);
+    if exist('csvx','var')
+      vbm_io_csv(fullfile(resdir,[atlas '.csv']),csvx);
+    else
+      vbm_io_csv(fullfile(resdir,[atlas '.csv']),csv);
+    end
   end
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
-    copyfile(Ptxt{1},fullfile(resdir,[fname '.txt']));
+    copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']));
   end
 end
+function csv=translateROI(csv,atlas)
+%% ---------------------------------------------------------------------
+%  Translate the string by some key words definied in dict.
+%  ---------------------------------------------------------------------
+  if ~isempty(find([csv{:,1}]==0,1))
+    %csv{[csv{:,1}]==0,2} = 'Background';
+    csv([csv{:,1}]==0,:) = [];
+  else
+    %csv = [csv(1,:);csv];
+    %csv{1,1} = 0; csv{1,2} = 'Background';  
+  end
+  if size(csv,2)>3, csv(:,3:end) = []; end % remove other stuff
+  
+  csv(:,5) = csv(:,1);
+  dict  = ROIdict;
+  
+  for i=1:size(csv,1)
+    % side
+    csv{i,2} = [csv{i,2} ' ']; csv{i,3}=''; csv{i,4}=''; csv{i,6}=''; csv{i,6}=0;
+    
+    indi=zeros(1,size(dict.sides,1));
+    for di=1:size(dict.sides,1)
+      for pi=1:numel(dict.sides{di,2})
+        indi(di) = ~isempty(strfind(lower(csv{i,2}),lower(dict.sides{di,2}{pi})));
+        if indi(di)==1, break; end
+      end
+      for pi=1:numel(dict.sides{di,3})
+        if indi(di) && ~isempty(strfind(lower(csv{i,2}),lower(dict.sides{di,3}{pi})))
+          indi(di) = 0;
+        end
+      end
+    end
+    indi = find(indi,1,'first');
+    if ~isempty(indi)
+      csv{i,6}=1+strcmpi(dict.sides{indi,1},'r');
+      csv{i,4}=[csv{i,4} dict.sides{indi,1}]; 
+      csv{i,3}=[csv{i,3} dict.sides{indi,2}{1}];
+    end
+    if isempty(csv{i,4})
+      csv{i,6}=3;
+      csv{i,4}=[csv{i,4} 'b'];
+      csv{i,3}=[csv{i,3} 'Bothside']; 
+    end
+    
+    % directions
+    %fn = {'regions','directions','structures','addon'};
+    fn = {'directions','regions','structures','addon'};
+    for fni=1:numel(fn) 
+      indi=zeros(1,size(dict.(fn{fni}),1));
+      for di=1:size(dict.(fn{fni}),1)
+        for pi=1:numel(dict.(fn{fni}){di,2})
+          indi(di) = ~isempty(strfind(lower(csv{i,2}),lower(dict.(fn{fni}){di,2}{pi})));
+          if indi(di)==1, break; end
+        end
+        for pi=1:numel(dict.(fn{fni}){di,3})
+          if indi(di) && ~isempty(strfind(lower(csv{i,2}),lower(dict.(fn{fni}){di,3}{pi})))
+            indi(di) = 0;
+          end
+        end
+      end
+      [x,indi] = find(indi);
+      for indii=1:numel(indi)
+        if ~isempty(indi)
+          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5}>0
+            csv{i,4} = '';
+            csv{i,3} = '';
+            csv{i,5} = 0;
+          else
+            if strcmp(fn{fni},'regions') && indii>1
+              csv{i,4} = [csv{i,4} 'a'     dict.(fn{fni}){indi(indii),1}]; 
+              csv{i,3} = [csv{i,3} ' and ' dict.(fn{fni}){indi(indii),2}{1}];
+            else
+              csv{i,4} = [csv{i,4}     dict.(fn{fni}){indi(indii),1}];
+              csv{i,3} = [csv{i,3} ' ' dict.(fn{fni}){indi(indii),2}{1}];
+            end
+          end
+        end
+      end
+    end
+    % atlas specific
+  end 
+  
+  % atlas specific structures
+  for i=1:size(csv,1)
+    fn = {atlas};
+    for fni=1:numel(fn) 
+      indi=zeros(1,size(dict.(fn{fni}),1));
+      for di=1:size(dict.(fn{fni}),1)
+        for pi=1:numel(dict.(fn{fni}){di,2})
+          indi(di) = ~isempty(strfind(lower(csv{i,2}),lower(dict.(fn{fni}){di,2}{pi})));
+          if indi(di)==1, break; end
+        end
+        for pi=1:numel(dict.(fn{fni}){di,3})
+          if indi(di) && ~isempty(strfind(lower(csv{i,2}),lower(dict.(fn{fni}){di,3}{pi})))
+            indi(di) = 0;
+          end
+        end
+      end
+      [x,indi] = find(indi);
+      for indii=1:numel(indi)
+        if ~isempty(indi)
+          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5}
+            csv{i,4}='';
+            csv{i,3}='';
+            csv{i,5}=0;  
+          else     
+            csv{i,4}=[csv{i,4}     dict.(fn{fni}){indi(indii),1}];
+            csv{i,3}=[csv{i,3} ' ' dict.(fn{fni}){indi(indii),2}{1}];
+          end
+        end
+      end
+    end 
+  end
+  for i=1:size(csv,1), csv{i,3}=strrep(csv{i,3},'  ',' '); end
+
+  % remove side alignement
+  rmside = 1;
+  for i=1:size(csv,1)
+    if rmside
+      csv{i,3} = strrep(strrep(strrep(csv{i,3},'Left ',''),'Right ',''),'Bothside ','');
+      csv{i,4} = csv{i,4}(rmside+1:end);
+    end
+  end
+  
+  % reset label for structures with similar appreservations
+  for i=1:size(csv,1)
+    sids=strcmp(csv(:,4),csv{i,4});
+    if sum(sids(:))>1
+      fset=find(sids); fset=sort(fset);
+      minv=min(cell2mat(csv(sids,5))); 
+      for si=fset', csv{si,5}   = minv; end  % set other to first
+      if minv>0,
+        for si=fset(2:end)' 
+          if isempty(strfind(csv{fset(1),2},csv{si,2}))
+            csv{fset(1),2} = [csv{fset(1),2} ' & ' csv{si,2}]; 
+          end
+        end % add other labels 
+      end
+      for si=fset', csv{si,2} = csv{fset(1),2}; end
+    end
+  end
+  
+  
+  
+end
+function dict=ROIdict()
+  dict.sides = { 
+    'l'              {'Left' '_L'} {}
+    'r'              {'Right' '_R'} {}
+  };
+  dict.directions = { 
+    ...
+    'Ant'            {'Anterior' 'ant_' 'ant-' 'ant ' 'antarior'} {}
+    'Inf'            {'Inferior ' 'inf_' 'inf-' 'inf '} {}
+    'Pos'            {'Posterior' 'pos_' 'pos-' 'pos ' 'poss_'} {}
+    'Sup'            {'Superior' 'sup_' 'sup-' 'sup ' 'supp_'} {}
+    ...
+    'Med'            {'Medial' 'med_' 'med-' 'mid '} {}
+    'Mid'            {'Middle' 'mid_' 'mid-' 'mid '} {}
+    ...
+    'Sag'            {'Sagital' 'sag_' 'sag-' 'sag ' 'sagittal'} {}
+    'Fro'            {'Frontal'} {'Orbito-Frontal'}
+    'Lat'            {'Lateral' 'lat_' 'lat-' 'lat '} {}
+    'Occ'            {'Occipital' '_orb'} {'Fronto-Occupital'}
+    'OrbFro'         {'Orbito-Frontal' 'Frotono-Orbital'} {};                             
+    'Orb'            {'Orbital'} {'Frotono-Orbital'}
+    'FroOcc'         {'Fronto-Occupital'} {}
+    ...
+    'Par'            {'Parietal' 'Pariatal'} {}
+    'Pac'            {'Paracentral'} {}
+    'PoC'            {'Postcentral'} {}
+    'Prc'            {'Precentral'} {}
+    'Tem'            {'Temporal'} {}
+    'Ven'            {'Ventral'} {}
+  };
+  dict.structures = { ... % unspecific multiple cases
+    '3th'            {'Third','3rd'} {}
+    '4th'            {'Fourth','4th'} {}
+    '5th'            {'Fourth','5th'} {}
+    ...
+    'BG'             {'Background'} {}
+    'C'              {'Capsule' 'Capsula'} {}
+    'G'              {'Gyrus'} {}
+    'G'              {'Gyri'} {}
+    'P'              {'Pole'} {}
+    'S'              {'Sulcus'} {}
+    'S'              {'Sulci'} {}
+    'L'              {'Lobe' 'Lobule'} {}
+    'L'              {'Lobes'} {}
+    'F'              {'Fasiculus'} {}
+    'F'              {'Fiber'} {}
+    'V'              {'Ventricle' 'Vent'} {}
+    'V'              {'Ventricles'} {}
+    'Les'            {'Lesion'} {}
+    'Les'            {'Lesions'} {}
+    'Nuc'            {'Nucleus'} {}
+    'Nuc'            {'Nucli'} {}
+    'Ope'            {'Operculum' 'Oper_'} {}
+    'Ple'            {'Plexus'} {}
+    'Ple'            {'Plexi'} {}
+    'Pro'            {'Proper'} {}
+    'Ped'            {'Peduncle'} {}    
+    'Ver'            {'Vermis'} {}    
+    ''               {'Unknown' 'undetermine'} {}
+    'Bone'           {'Bone'} {}
+    'Fat'            {'Fat'} {}
+    'BV'             {'Bloodvessel' 'blood' 'vessel'} {}
+  };
+  dict.regions = { ... % specific - one case
+    'Acc'            {'Accumbens'} {}
+    'Ang'            {'Angular'} {}
+    'Amb'            {'Ambient'} {}
+    'Amy'            {'Amygdala'} {}
+    'Bst'            {'Brainstem' 'Brain-Stem'} {}
+    'Cal'            {'Calcarine'} {}
+    'Cbe'            {'Cerebellum' 'cerebelum'} {}
+    'Cbr'            {'Cerebral'} {}
+    'CBe'            {'Cerebellar'} {}
+    'Cin'            {'Cinguli' 'cinuli'} {}
+    'Cin'            {'Cingulus' 'cinulus'} {}
+    'Cin'            {'Cingulate'} {}
+    'Cin'            {'Cingulum'} {}
+    'Cun'            {'Cuneus'} {'Precuneus'}
+    'PCu'            {'Precuneus'} {}                              
+    'Cau'            {'Caudate'} {}
+    'Clo'            {'Choroid'} {}
+    'Fus'            {'Fusiform'} {}
+    'Hes'            {'Heschl' 'heschls'} {}
+    'Hip'            {'Hippocampus'} {'Parahippocampus'}                       
+    'Ins'            {'Insula'} {}
+    'Lin'            {'Lingual'} {}
+    'Lem'            {'Lemniscus'} {}
+    'Mot'            {'Motor'} {}
+    'Olf'            {'Olfactory'} {}
+    'Rec'            {'Rectus'} {}
+    'Rol'            {'Rolandic'} {}
+    'Pal'            {'Pallidum'} {}
+    'ParHip'         {'Parahippocampus' 'Parahippocampal'} {}
+    'Put'            {'Putamen'} {}
+    'Rec'            {'Rectal'} {}
+    'SubNig'         {'Substancia-Nigra' 'substancia_nigra'} {}
+    'SupMar'         {'Supramarginal'} {}
+    'Tha'            {'Thalamus'} {}
+    'Tap'            {'Tapatum'} {}
+    'CC'             {'Corpus Callosum' 'corpus-callosum' 'corpus callosum' 'corpuscallosum' 'callosum'} {}
+    'Ste'            {'Stellate'} {}
+  }; 
+  dict.addon = {
+    'Gen'            {'(Genu)' 'genu'} {}
+    'Bod'            {'(Body)' 'bod'} {}
+    'Rem'            {'(Remainder)'} {}
+    'Spe'            {'(Splenium)'} {}
+  };
+  dict.ibsr = {
+    'B'               {'Brain' 'Cortex'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'White-Matter'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'Exterior'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'Line-1'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'Line-2'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'Line-3'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'CSF'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'F3orb'} {'brainstem' 'brain-stem'}     
+    'B'               {'Brain' 'lOg'} {'brainstem' 'brain-stem'}          
+    'B'               {'Brain' 'aOg'} {'brainstem' 'brain-stem'}          
+    'B'               {'Brain' 'mOg'} {'brainstem' 'brain-stem'}                
+    'B'               {'Brain' 'pOg'} {'brainstem' 'brain-stem'}  
+    'B'               {'Brain' 'Porg'} {'brainstem' 'brain-stem'}
+    'B'               {'Brain' 'Aorg'} {'brainstem' 'brain-stem'}
+    ''                {'Background' 'Bright-Unknown'} {}
+    ''                {'Background' 'Dark_Unknown'} {}
+  };
+  dict.aala = {
+    'SMA'            {'SMA'} {}
+    'CerVer'         {'cerebella Vermis'} {}
+  };
+  dict.aal = {
+    'Cr1'            {'Cruis1'} {}
+    '3'              {'3'   '_3'} {}
+    '4-5'            {'4-5' '_4_5'} {}
+    '6'              {'6'   '_6'} {}
+    '7b'             {'7b'  '_7b'} {}
+    '8'              {'8'   '_8'} {}
+    '9'              {'9'   '_9'} {}
+    '10'             {'10'  '_10'} {}
+    '1-2'            {'1-2' '_1_2'} {}
+  };
+  dict.mori = {
+    'CST'            {'corticospinal_tract'} {}
+    'LIC'            {'Limb of Internal' 'Limb_of_internal'} {}
+    'ThR'            {'Thalamic Radiation' 'thalamic_radiation'} {}
+    'CR'             {'Corona Radiata' 'corona_radiata'} {}
+    'For'            {'Fornix'} {}
+    'RedNuc'         {'Red-Nucleus' 'red_nucleus'} {}
+    'MBR'            {'Midbrain'} {}
+    'PNS'            {'Pons'} {}
+    'MDA'            {'Medulla'} {}
+    'Ent'            {'Entorhinal Area' 'entorhinal_area'} {}
+    'Ext'            {'External'} {}
+    'UNC'            {'Uncinate'} {}
+    'RetLenINC'      {'Retrolenticular_part_of_internal_capsule'} {}
+    'Str'            {'Stratum'} {}
+    'Ext'            {'External Capsule' 'external_capule'} {}
+    'PCT'            {'Pontine Crossing Tract' 'pontine_crossing_tract'} {}
+    'Spl'            {'Splentum'} {}
+    'GloPal'         {'Globus Pallidus' 'globus_pallidus'} {}
+    'Str'            {'Stria'} {}
+    'Ter'            {'Terminalis'} {}
+    'Lon'            {'Longitudinal'} {}
+    'Col'            {'Column'} {}
+ 
+    ...
+  };
+  dict.hammers = {
+    ...
+  };
+  dict.anatomy = {
+    ... numbers
+    ... 
+    'AmyCM'          {'Amygdala (CM)' 'Amyg (CM)'} {}
+    'AmyLB'          {'Amygdala (LB)' 'Amyg (LB)'} {}
+    'AmySF'          {'Amygdala (SF)' 'Amyg (SF)'} {}
+    ... % brodmann areas
+    'Brod17'         {'Brodmann Area 17' 'Area 17'} {}
+    'Brod18'         {'Brodmann Area 18' 'Area 18'} {}
+    'Brod01'         {'Brodmann Area 1'  'Area 1'} {'Area 17'}
+    'Brod02'         {'Brodmann Area 2'  'Area 2'} {'Area 18'}
+    'Brod03a'        {'Brodmann Area 3a' 'Area 3a'} {}
+    'Brod03b'        {'Brodmann Area 3b' 'Area 3b'} {}
+    'Brod04a'        {'Brodmann Area 4a' 'Area 4a'} {}
+    'Brod04p'        {'Brodmann Area 4p' 'Area 4p'} {}
+    'Brod44'         {'Brodmann Area 44' 'Area 44'} {}
+    'Brod45'         {'Brodmann Area 45' 'Area 45'} {}
+    'Brod06'         {'Brodmann Area 6'  'Area 6'} {}
+    ... hippocampus
+    'HipPF'          {'Hippocampus (CA)'   'HIPP (CA)'} {}
+    'HipPF'          {'Hippocampus (PF)'   'HIPP (PF)'} {}
+    'HipEC'          {'Hippocampus (EC)'   'Hipp (EC)'} {}
+    'HipFD'          {'Hippocampus (FD)'   'Hipp (FD)'} {}
+    'HipHATA'        {'Hippocampus (HATA)' 'Hipp (HATA)'} {}
+    'HipSub'         {'Hippocampus (SUB)'  'Hipp (SUB)'} {}
+    ... IPC?
+    'IPC_PF'         {'IPC (PF)'} {}
+    'IPC_PFcm'       {'IPC (PFcm)'} {}
+    'IPC_PFm'        {'IPC (PFm)'} {}
+    'IPC_PFop'       {'IPC (PFop)'} {}
+    'IPC_PFt'        {'IPC (PFt)'} {}
+    'IPC_PFa'        {'IPC (PFa)'} {}
+    'IPC_PFp'        {'IPC (PFp)'} {}
+    'IPC_PFp'        {'IPC (PGa)'} {}
+    'IPC_PFp'        {'IPC (PGp)'} {}
+    ... inula
+    'Id1'            {'(Id1)' 'Insula (Id1)'} {} % anatomy
+    'Ig1'            {'(Ig1)' 'Insula (Ig1)'} {} % anatomy
+    'Ig2'            {'(Ig2)' 'Insula (Ig2)'} {} % anatomy
+    ... cerebellum
+    'Cbe10H'         {'Lobule X (Hem)'} {}
+    'Cbe10V'         {'Lobule X (Vermis)'} {}
+    'Cbe9H'          {'Lobule IX (Hem)'} {}
+    'Cbe9V'          {'Lobule IX (Vermis)'} {}
+    'Cbe8aH'         {'Lobule VIIIa (Hem)'} {}
+    'Cbe8aV'         {'Lobule VIIIa (Vermis)'} {}
+    'Cbe8bH'         {'Lobule VIIIb (Hem)'} {}
+    'Cbe8bV'         {'Lobule VIIIb (Vermis)'} {}
+    'Cbe7a1H'        {'Lobule VIIa Crus I (Hem)'} {}
+    'Cbe7a1V'        {'Lobule VIIa Crus I (Vermis)'} {} 
+    'Cbe7a2H'        {'Lobule VIIa Crus II (Hem)'} {}
+    'Cbe7a2V'        {'Lobule VIIa Crus II (Vermis)'} {} 
+    'Cbe7b'          {'Lobule VIIb (Hem)'} {}
+    'Cbe7b'          {'Lobule VIIb (Vermis)'} {} 
+    'Cbe6H'          {'Lobule VI (Hem)'} {}
+    'Cbe6V'          {'Lobule VI (Vermis)'} {}  
+    'Cbe5'           {'Lobule V '} {}  
+    'Cbe5H'          {'Lobule V (Hem)'} {}  
+    'Cbe5V'          {'Lobule V (Vermis)'} {}  
+    'Cbe1_4H'        {'Lobules I-IV (Hem)'} {}
+    ...
+    'OP1'            {'OP 1'} {}
+    'OP2'            {'OP 2'} {}
+    'OP3'            {'OP 3'} {}
+    'OP4'            {'OP 4'} {}
+    ...
+    'SPL5Ci'         {'SPL (5Ci)'} {}
+    'SPL5L'          {'SPL (5L)'} {}
+    'SPL5M'          {'SPL (5M)'} {}
+    'SPL7A'          {'SPL (7A)'} {}
+    'SPL7M'          {'SPL (7M)'} {}
+    'SPL7P'          {'SPL (7P)'} {}
+    'SPL7PC'         {'SPL (7PC)'} {}
+    ...
+    'TE10'           {'TE 1.0'} {}
+    'TE11'           {'TE 1.1'} {}
+    'TE12'           {'TE 1.2'} {}
+    'TE3'            {'TE 3'} {}
+    ...
+    'hIP1'           {'hIP1'} {}
+    'hIP2'           {'hIP2'} {}
+    'hIP3'           {'hIP3'} {}
+    ...
+    'hOC3v'          {'hOC3v (V3v)'} {}
+    'hOC4'           {'hOC4v (V4)'} {}
+    'hOC5'           {'hOC5 (V5)'} {}
+    ... ??
+   };
+end
+
