@@ -975,10 +975,10 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
   
   %%
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.warped        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.modulated     = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.dartel        = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.warped        = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.modulated     = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.dartel        = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.native        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.warped        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.modulated     = 0;
@@ -988,8 +988,8 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF.modulated    = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF.dartel       = 0;
   
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.jacobian.warped  = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.warps            = [0 0];
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.jacobian.warped  = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.warps            = [1 1];
   
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.native      = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.warped      = 0;

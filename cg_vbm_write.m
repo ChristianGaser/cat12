@@ -365,9 +365,7 @@ Yb = vbm_vol_resize(vbm_vol_smooth3X(Yb),'dereduceV',resT2)>0.4;
 qa.QM.bias = std(Ybf(Yb(:)));
 
 % write bias field in original space for QA
-vbm_io_writenii(VT0,Ybf,'bf', ...
-  'bias field','float32',[0,1],[1 0 0],0);
-clear Ybf;
+vbm_io_writenii(VT0,Ybf,'bf','bias field','float32',[0,1],[1 0 0],0); clear Ybf;
 
 
 % prevent NaN
@@ -1240,6 +1238,7 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     
     y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
     
+    if jc, trans.jc.u = u; end
     clear f g u
     
     [t1,t2] = ndgrid(1:d(1),1:d(2),1);
@@ -1424,7 +1423,7 @@ qas = vbm_vol_t1qacalc(VT,Yo,Ybf,Ym,Yp0,opt.vbmi);
 qa  = vbm_io_updateStruct(qa,qas);
 
 if exist(fullfile(pth,['bf' nam ext]),'file')
- delete(fullfile(pth,['bf' nam ext]));
+  delete(fullfile(pth,['bf' nam ext]));
 end
 
 clear Yo Ybf Yp0 qas;
@@ -1480,100 +1479,59 @@ if jc
   if ~do_dartel
     warning('cg_vbm_write:saveJacobian','Jacobian can only be saved if dartel normalization was used.');
   else
-    VJT=VT; VJT.mat=M1; VJT.mat0=M0; 
-    vbm_io_writenii(VT,VJT,'jac_wrp1','pbt-GM-thickness','uint8',[0,1],[0 0 0 2],0,trans);
+    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+    clear y0
+    N      = nifti;
+    N.dat  = file_array(fullfile(pth,['jac_wrp1', nam, '.nii']),d1,...
+             [spm_type('float32') spm_platform('bigend')],0,1,0);
+    N.mat  = M1;
+    N.mat0 = M1;
+    N.descrip = ['Jacobian' VT0.descrip];
+    create(N);
+    N.dat(:,:,:) = dt;
   end
 end
 
 
 
-Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+
 %% ---------------------------------------------------------------------
 %  tickness maps
 %  ---------------------------------------------------------------------
 if cg_vbm_get_defaults('extopts.ROI') 
-  str='Cortical Thickness'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
   
-  VT = res.image(1);
-  
-  opt.method  = 'pbt2x';
-  opt.interpV = 1; %cg_vbm_get_defaults('extopts.pbtres');
-  opt.interpV = max(0.5,min([min(vx_vol),opt.interpV,1]));
-
-  % prepare thickness estimation
-  % Here we used the intensity normalized image rather that the Yp0b
-  % image, because it has more information about sulci and we need this
-  % especial for asysmetrical sulci.
-  % Furthermore, we remove all non-cortical regions and refine the brain
-  % Yb to remove meninges and blood vessels.
-  
-  % filling of ventricle and subcortical regions
-  if exist('Yml','var'), Ymf = max(Yml/3,min(1,YMF)); clear Yml; 
-  else                   Ymf = max(Ym,min(1,YMF)); 
-  end
-  Ymf(YMF)=min(1,Ymf(YMF)); Ymfs = vbm_vol_smooth3X(Ymf,1); 
-  Ytmp  = vbm_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
-  Ymf(Ytmp) = max(min(Ym(Ytmp),1),Ymfs(Ytmp)); clear Ytmp Ymfs;
-  Ymf = Ymf*3;
-  
-  % removing blood vessels, and other regions
+  % brain masking 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  Ymf(Yp0<1 | Ymf<1.5/3) = 1; 
-  Ymf(Yl1==3 | Yl1==4 | Yl1==11 | Yl1==12 | Yl1==13 | Yl1==14 | Yl1==21 | Yl1==22 | Yl1==7 | Yl1==8)=1; 
-  Ymf(smooth3(vbm_vol_morph(Ymf>0,'open'))<0.5)=0; 
-  
-  
-  
-  %% update for 
-  FA = cg_vbm_get_defaults('extopts.atlas');
-  if strcmp(FA{1,2}(1),'w')
-    [pth1,nam1,ext1] = spm_fileparts(char(cg_vbm_get_defaults('extopts.darteltpm')));
-    VclsA = spm_vol(fullfile(pth1,[strrep(nam1,'Template_1','Template_6'),ext1]));
-  end 
-  Ymm = Yp0toC(Ymf,2); 
-  
-  clear YMF Yp0;
-  
-  %% thickness estimation
-  
-  % die interpolation ist recht speicherintensiv, weshalb es gut wÃ¤re
-  % mÃ¶glichst viel vorher rausschmeiÃŸen zu kÃ¶nnen.
-  [Ymf,BB]   = vbm_vol_resize(Ymf,'reduceBrain',vx_vol,2,Ymf>1);      % removing of background
-  [Ymf,resI] = vbm_vol_resize(Ymf,'interp',VT,opt.interpV);           % interpolate volume
-
-  if 0 % surface
-    [Yth1,Ypp] = vbm_vol_pbt(Ymf,struct('resV',opt.interpV));         % pbt calculation
+  if exist('Yml','var')
+    Ymm = Yml/3 .* (Yp0>0.5);
   else
-    Yth1  = vbm_vol_pbt(Ymf,struct('resV',opt.interpV));              % pbt calculation
+    Ymm = Ym  .* (Yp0>0.5);
   end
-  Yth1(Yth1>10)=0;
- 
-  Yth1  = vbm_vol_resize(Yth1,'deinterp',resI);                       % back to original resolution
-  Yth1  = vbm_vol_resize(Yth1,'dereduceBrain',BB);                    % adding of background
- 
-  %%
-  if 0 % surface
-    % bild schreiben
-    % oberfläche generieren 
-    % oberfläche schreiben
-    % oberflächen korrigieren
-    % oberfläche wieder einlesen
-    % dicke mappen
-    % oberfäche entgültig speichern
+  clear Yp0
+  
+  % surface creation and thickness estimation
+  if cg_vbm_get_defaults('extopts.surface') 
+    str='Surface & Thickness Estimation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
+    
+    [Yth1,S] = vbm_surf_createCS(VT0,Ymm,Yl1,YMF);
+    
+    % metadata
+    if isfield(S,'left'), th=S.left.th1; else th=[]; end; if isfield(S,'left'), th=[th, S.left.th1]; end
+    qa.SM.dist_thickness{1} = [nanmean(th(:)) nanstd(th(:))]; clear th; 
+  else
+    str='Thickness Estimation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
+    
+    Yth1 = vbm_surf_createCS(VT0,Ymm,Yl1,YMF);
+    
+    % metadata
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    Yth1x = Yth1; Yth1x(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))<0.5)=nan;
+    qa.SM.dist_thickness{1}  = [nanmean(Yth1x(:)) nanstd(Yth1x(Yth1x(:)>0))];
+    clear Yp0 Yth1x;
   end
   
-  %Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  %Yth1 = Yth1 .* (Yp0>1.25 & Yp0<2.75) .* (Yl1==1 | Yl1==2); % reset GM boundaries
-  
-  % metadata
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  Yth1x  = Yth1; Yth1x(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))<0.5)=nan;
-  qa.SM.dist_thickness{1}  = [nanmean(Yth1x(:)) nanstd(Yth1x(Yth1x(:)>0))];
-  clear Yp0 Yth1x;
-  
-  % save files 
-  %vbm_io_writenii(VT0,Yth1,'th1','pbt GM thickness','uint16',[0,1/1023],[1 0 0],0,trans,Ymm);
-  %clear Yp0 Ymf;
+  % save thickness image files (only for internal tests)
+  %vbm_io_writenii(VT0,Yth1,'th1','pbt GM thickness','uint16',[0,1/1023],[1 1 1],0,trans,Ymm);
   
   fprintf('%3.0fs\n',etime(clock,stime));
 end
@@ -1607,12 +1565,15 @@ if cg_vbm_get_defaults('extopts.ROI') ||  any(cell2mat(struct2cell(job.output.at
 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
+  Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+  
   % map atlas to RAW space
-  FA = cg_vbm_get_defaults('extopts.atlas'); 
+  ROIt = cg_vbm_get_defaults('extopts.ROI'); 
+  ROIt = [(ROIt==1 | ROIt==3) (ROIt==2 | ROIt==3)];
+  FA   = cg_vbm_get_defaults('extopts.atlas'); 
   for ai=2:size(FA,1)
-    FA{ai,4} = [(FA{ai,4}==1 | FA{ai,4}==3) (FA{ai,4}==2 | FA{ai,4}==3)];
     for si=1:2 % spaces
-      if FA{ai,4}(si)
+      if ROIt(si)
         tissue = FA{ai,3};
         [px,atlas] = fileparts(FA{ai,1}); 
         if si==1 % subject space
@@ -2027,19 +1988,19 @@ if do_cls && warp.print
   if exist(fullfile(pth,['o', nam, '.nii']),'file')
     delete(fullfile(pth,['o', nam, '.nii']));
     spm_orthviews('Delete',hho); % we have to remove the figure, otherwise the gui user may get an error
-    try set(cc{1},'visible','off'); end
+    try set(cc{1},'visible','off'); end %#ok<TRYNC>
   end
   % remove p0 image, if it was only written for printing
   if job.output.bias.native==0 && exist(fullfile(pth,['m', nam, '.nii']),'file')
     delete(fullfile(pth,['m', nam, '.nii']));
     spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
-    try set(cc{2},'visible','off'); end
+    try set(cc{2},'visible','off'); end %#ok<TRYNC>
   end
   % remove p0 image, if it was only written for printing
   if job.output.label.native==0 && exist(fullfile(pth,['p0', nam, '.nii']),'file')
     delete(fullfile(pth,['p0', nam, '.nii']));
     spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
-    try set(cc{3},'visible','off'); end
+    try set(cc{3},'visible','off'); end %#ok<TRYNC>
   end
   % remove p0 image, if it was only written for printing
 %   if exist('th1','var') && exist('Vtmpth1','var') && exist(Vtmpth1,'file')

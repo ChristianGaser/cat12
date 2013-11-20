@@ -2907,3 +2907,29 @@ Some small changes in cg_vbm_batch.m and changed names for affine files
 in vbmi_io_writenii.m
 ------------------------------------------------------------------------
 r522 | gaser | 2013-11-19 15:13:33
+
+A       CAT
+A       CAT/CAT_DeformSurf
+A       CAT/CAT_DeformSurf_ui
+A       CAT/CAT_FixTopology
+A       CAT/CAT_SeparateCluster
+A       CAT/CAT_SeparatePolygon
+A       CAT/CAT_Surf2Sphere
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+A       vbm_io_FreeSurfer.m
+M       vbm_io_writenii.m
+A       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_resize.m
+
+(1)  Corrected jacobian output.
+(2)  Update thickness estimation and move it to vbm_surf_createCS. 
+(3)  Add surface reconstruction and thickness estimation (vbm_surf_createCS).
+     This function include the topology correction and shape refinements for 
+     left and right hemispheres. The option "vbm.extopts.surface" in the 
+     cg_vbm_defaults-file controls surface estimation. 
+------------------------------------------------------------------------
+r523 | dahnke | 2013-11-20 12:53:28
