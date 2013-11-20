@@ -26,7 +26,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
   
   if ndims(T)>2, TI=T; clear T; T{1}=TI; end %else varargout{1}=T; end 
   if nargin<2, error('ERROR: vbm_vol_resolution: not enought input!\n'); end
-
+  
   
   switch lower(operation)
     % REDUCE & DEREDUCE
@@ -327,7 +327,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
         clear Dx Dy Dz;
         
         hdr.dim=size(T);
-        hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
+        %hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
       elseif all(res>0) && any(resV<=res)
         d = single(res./resV);
         [Rx,Ry,Rz]=meshgrid(d(1):d(1):size(T,2),d(2):d(2):size(T,1),d(3):d(3):size(T,3));
@@ -335,10 +335,13 @@ function varargout=vbm_vol_resize(T,operation,varargin)
         clear Rx Ry Rz;
         
         hdr.dim=size(T);
-        hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
+       % hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
     %    hdr.mat([1,6,11])  = sign(hdr.mat([1,6,11]))  .* res;
       end
-
+      vmat = spm_imatrix(hdr.mat);
+      vmat(7:9) = sign(vmat(7:9)).*res(1:3);
+      hdr.mat = spm_matrix(vmat);
+      
       varargout{1}       = T;
       varargout{2}.hdrO  = hdrO;
       varargout{2}.hdrN  = hdr;
