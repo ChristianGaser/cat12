@@ -122,8 +122,17 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     [D,I] = vbdist(single(Y)); Y(:)=Y(I(:)); clear D I; 
   end
   switch class(Y)
-    case {'single','double'}, labelmap=0;
-    otherwise, labelmap=1; Y=single(Y); 
+    case {'single','double'}
+      labelmap=0;
+    case {'uint8','uint16'}
+      if all(range == [0 1]); 
+        labelmap=1; 
+        Y = single(Y); 
+      else
+        labelmap=0;
+      end
+    otherwise
+      labelmap=0;
   end
   
   % warped
