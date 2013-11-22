@@ -7,9 +7,9 @@ function varargout=vbm_io_FreeSurfer(action,varargin)
       [varargout{1}.vertices,varargout{1}.faces] = read_surf(varargin{1}); 
       varargout{1}.faces = varargout{1}.faces+1;   
     case 'write_surf_data'
-      write_wfile(varargin{1},varargin{2});
+      write_curv(varargin{1},varargin{2});
     case 'read_surf_data'
-      [varargout{1},varargout{2}] = read_wfile(varargin{1});
+      [varargout{1},varargout{2}] = read_curv(varargin{1});
     otherwise
   end
 
@@ -339,4 +339,109 @@ function [w,v] = read_wfile(fname)
   end
 
   fclose(fid) ;
+end
+
+function [curv] = write_curv(fname, curv, fnum)
+% [curv] = write_curv(fname, curv, fnum)
+%
+% writes a curvature vector into a binary file
+%				fname - name of file to write to
+%				curv  - vector of curvatures
+%				fnum  - # of faces in surface.
+%
+
+
+%
+% write_curv.m
+%
+% Original Author: Bruce Fischl
+% CVS Revision Info:
+%    $Author$
+%    $Date$
+%    $Revision$
+%
+% Copyright (C) 2002-2007,
+% The General Hospital Corporation (Boston, MA). 
+% All rights reserved.
+%
+% Distribution, usage and copying of this software is covered under the
+% terms found in the License Agreement file named 'COPYING' found in the
+% FreeSurfer source code root directory, and duplicated here:
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferOpenSourceLicense
+%
+% General inquiries: freesurfer@nmr.mgh.harvard.edu
+% Bug reports: analysis-bugs@nmr.mgh.harvard.edu
+%
+
+% assume fixed tetrahedral topology
+if nargin == 2
+  fnum = (length(curv)-2)*2;
+end
+
+% open it as a big-endian file
+fid = fopen(fname, 'wb', 'b') ;
+vnum = length(curv) ;
+NEW_VERSION_MAGIC_NUMBER = 16777215;
+fwrite3(fid, NEW_VERSION_MAGIC_NUMBER ) ;
+fwrite(fid, vnum,'int32') ;
+fwrite(fid, fnum,'int32') ;
+fwrite(fid, 1, 'int32');
+fwrite(fid, curv, 'float') ;
+fclose(fid) ;
+
+end
+
+function [curv, fnum] = read_curv(fname)
+%
+% [curv, fnum] = read_curv(fname)
+% reads a binary curvature file into a vector
+%
+%
+% read_curv.m
+%
+% Original Author: Bruce Fischl
+% CVS Revision Info:
+%    $Author$
+%    $Date$
+%    $Revision$
+%
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+%
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
+%
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
+%
+
+
+%fid = fopen(fname, 'r') ;
+%nvertices = fscanf(fid, '%d', 1);
+%all = fscanf(fid, '%d %f %f %f %f\n', [5, nvertices]) ;
+%curv = all(5, :)' ;
+
+% open it as a big-endian file
+fid = fopen(fname, 'rb', 'b') ;
+if (fid < 0)
+	 str = sprintf('could not open curvature file %s', fname) ;
+	 error(str) ;
+end
+vnum = fread3(fid) ;
+NEW_VERSION_MAGIC_NUMBER = 16777215;
+if (vnum == NEW_VERSION_MAGIC_NUMBER)
+	 vnum = fread(fid, 1, 'int32') ;
+	 fnum = fread(fid, 1, 'int32') ;
+	 vals_per_vertex = fread(fid, 1, 'int32') ;
+   curv = fread(fid, vnum, 'float') ; 
+	   	
+  fclose(fid) ;
+else
+
+	fnum = fread3(fid) ;
+  curv = fread(fid, vnum, 'int16') ./ 100 ; 
+  fclose(fid) ;
+end
+
 end
