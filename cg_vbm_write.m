@@ -1516,18 +1516,8 @@ if cg_vbm_get_defaults('extopts.ROI')
     [Yth1,S] = vbm_surf_createCS(VT0,Ymm,Yl1,YMF);
     
     % metadata
-    if isfield(S,'left'), th=S.left.th1; else th=[]; end; if isfield(S,'left'), th=[th, S.left.th1]; end
+    if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
     qa.SM.dist_thickness{1} = [nanmean(th(:)) nanstd(th(:))]; clear th; 
-  else
-    str='Thickness Estimation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
-    
-    Yth1 = vbm_surf_createCS(VT0,Ymm,Yl1,YMF);
-    
-    % metadata
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-    Yth1x = Yth1; Yth1x(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))<0.5)=nan;
-    qa.SM.dist_thickness{1}  = [nanmean(Yth1x(:)) nanstd(Yth1x(Yth1x(:)>0))];
-    clear Yp0 Yth1x;
   end
   
   % save thickness image files (only for internal tests)

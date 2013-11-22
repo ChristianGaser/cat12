@@ -2933,3 +2933,86 @@ M       vbm_vol_resize.m
      cg_vbm_defaults-file controls surface estimation. 
 ------------------------------------------------------------------------
 r523 | dahnke | 2013-11-20 12:53:28
+
+D       CAT
+D       CAT/CAT_DeformSurf
+D       CAT/CAT_DeformSurf_ui
+D       CAT/CAT_FixTopology
+D       CAT/CAT_SeparateCluster
+D       CAT/CAT_SeparatePolygon
+D       CAT/CAT_Surf2Sphere
+A       CAT.glnx86
+A       CAT.glnx86/CAT_3dVol2Surf
+A       CAT.glnx86/CAT_AddValuesToSurf
+A       CAT.glnx86/CAT_BlurSurfHK
+A       CAT.glnx86/CAT_DeformSurf
+A       CAT.glnx86/CAT_DeformSurf_ui
+A       CAT.glnx86/CAT_DumpCurv
+A       CAT.glnx86/CAT_DumpGI
+A       CAT.glnx86/CAT_FixTopology
+A       CAT.glnx86/CAT_FractalDimension
+A       CAT.glnx86/CAT_Isometize
+A       CAT.glnx86/CAT_LBConformalMap
+A       CAT.glnx86/CAT_Obj2Neurolens
+A       CAT.glnx86/CAT_ReconSurf
+A       CAT.glnx86/CAT_ResampleFS_ui
+A       CAT.glnx86/CAT_ResampleSphericalSurf
+A       CAT.glnx86/CAT_ResampleSurf
+A       CAT.glnx86/CAT_SeparatePolygon
+A       CAT.glnx86/CAT_Surf2Sphere
+A       CAT.glnx86/CAT_WarpSurf
+A  +    CAT.maci64
+A       CAT.maci64/CAT_3dVol2Surf
+A       CAT.maci64/CAT_AddValuesToSurf
+A       CAT.maci64/CAT_BlurSurfHK
+M  +    CAT.maci64/CAT_DeformSurf
+D  +    CAT.maci64/CAT_DeformSurf_ui
+A       CAT.maci64/CAT_DumpCurv
+A       CAT.maci64/CAT_DumpGI
+M  +    CAT.maci64/CAT_FixTopology
+A       CAT.maci64/CAT_FractalDimension
+A       CAT.maci64/CAT_Isometize
+A       CAT.maci64/CAT_LBConformalMap
+A       CAT.maci64/CAT_ResampleSphericalSurf
+A       CAT.maci64/CAT_ResampleSurf
+D  +    CAT.maci64/CAT_SeparateCluster
+M  +    CAT.maci64/CAT_SeparatePolygon
+M  +    CAT.maci64/CAT_Surf2Sphere
+A       CAT.maci64/CAT_WarpSurf
+A       CAT.win32
+A       CAT.win32/CAT_3dVol2Surf.exe
+A       CAT.win32/CAT_AddValuesToSurf.exe
+A       CAT.win32/CAT_BlurSurfHK.exe
+A       CAT.win32/CAT_DeformSurf.exe
+A       CAT.win32/CAT_DumpCurv.exe
+A       CAT.win32/CAT_DumpGI.exe
+A       CAT.win32/CAT_FixTopology.exe
+A       CAT.win32/CAT_FractalDimension.exe
+A       CAT.win32/CAT_Isometize.exe
+A       CAT.win32/CAT_LBConformalMap.exe
+A       CAT.win32/CAT_ResampleSphericalSurf.exe
+A       CAT.win32/CAT_ResampleSurf.exe
+A       CAT.win32/CAT_SeparatePolygon.exe
+A       CAT.win32/CAT_Surf2Sphere.exe
+A       CAT.win32/CAT_WarpSurf.exe
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+A       fsaverage
+A       fsaverage/lh.smoothwm
+A       fsaverage/lh.sphere
+A       fsaverage/rh.smoothwm
+A       fsaverage/rh.sphere
+M       vbm_io_FreeSurfer.m
+M       vbm_surf_createCS.m
+
+(1) Corrected output for texture files (e.g. thickness) in vbm_io_FreeSurfer.m.
+(2) Thickness (ROI) output is only provided if extopts.surface is set in
+    cg_vbm_defaults.m.
+(3) Added executables for CAT.
+(4) Changed system calls in vbm_surf_createCS.
+(5) Added and changed surface filenames according to freesurfer notation.
+
+------------------------------------------------------------------------
+r524 | gaser | 2013-11-22 16:27:31
