@@ -3016,3 +3016,15 @@ M       vbm_surf_createCS.m
 
 ------------------------------------------------------------------------
 r524 | gaser | 2013-11-22 16:27:31
+
+M       CHANGES.txt
+
+(1) Corrected output for texture files (e.g. thickness) in vbm_io_FreeSurfer.m.
+(2) Thickness (ROI) output is only provided if extopts.surface is set in
+    cg_vbm_defaults.m.
+(3) Added executables for CAT.
+(4) Changed system calls in vbm_surf_createCS.
+(5) Added and changed surface filenames according to freesurfer notation.
+
+------------------------------------------------------------------------
+r525 | gaser | 2013-11-22 16:28:57
