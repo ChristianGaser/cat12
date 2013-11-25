@@ -3083,3 +3083,24 @@ MM      fsaverage/rh.smoothwm
 Updated binaries for CAT.
 ------------------------------------------------------------------------
 r526 | gaser | 2013-11-25 11:50:55
+
+M       CAT.maci64/CAT_3dVol2Surf
+M       CAT.maci64/CAT_AddValuesToSurf
+M       CAT.maci64/CAT_BlurSurfHK
+M       CAT.maci64/CAT_DeformSurf
+M       CAT.maci64/CAT_DumpCurv
+M       CAT.maci64/CAT_DumpGI
+M       CAT.maci64/CAT_FixTopology
+M       CAT.maci64/CAT_FractalDimension
+M       CAT.maci64/CAT_Isometize
+M       CAT.maci64/CAT_LBConformalMap
+M       CAT.maci64/CAT_ResampleSphericalSurf
+M       CAT.maci64/CAT_ResampleSurf
+M       CAT.maci64/CAT_SeparatePolygon
+M       CAT.maci64/CAT_Surf2Sphere
+M       CAT.maci64/CAT_WarpSurf
+M       CHANGES.txt
+
+Updated binaries for CAT.maci.
+------------------------------------------------------------------------
+r527 | gaser | 2013-11-25 16:35:03
