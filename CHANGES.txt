@@ -3028,3 +3028,58 @@ M       CHANGES.txt
 
 ------------------------------------------------------------------------
 r525 | gaser | 2013-11-22 16:28:57
+
+ M      CAT.glnx86/CAT_3dVol2Surf
+ M      CAT.glnx86/CAT_AddValuesToSurf
+ M      CAT.glnx86/CAT_BlurSurfHK
+ M      CAT.glnx86/CAT_DeformSurf
+MM      CAT.glnx86/CAT_DeformSurf_ui
+ M      CAT.glnx86/CAT_DumpCurv
+ M      CAT.glnx86/CAT_DumpGI
+ M      CAT.glnx86/CAT_FixTopology
+ M      CAT.glnx86/CAT_FractalDimension
+ M      CAT.glnx86/CAT_Isometize
+ M      CAT.glnx86/CAT_LBConformalMap
+ M      CAT.glnx86/CAT_Obj2Neurolens
+MM      CAT.glnx86/CAT_ReconSurf
+MM      CAT.glnx86/CAT_ResampleFS_ui
+ M      CAT.glnx86/CAT_ResampleSphericalSurf
+ M      CAT.glnx86/CAT_ResampleSurf
+ M      CAT.glnx86/CAT_SeparatePolygon
+ M      CAT.glnx86/CAT_Surf2Sphere
+ M      CAT.glnx86/CAT_WarpSurf
+MM      CAT.maci64/CAT_3dVol2Surf
+ M      CAT.maci64/CAT_AddValuesToSurf
+ M      CAT.maci64/CAT_BlurSurfHK
+ M      CAT.maci64/CAT_DumpCurv
+ M      CAT.maci64/CAT_DumpGI
+MM      CAT.maci64/CAT_FractalDimension
+MM      CAT.maci64/CAT_Isometize
+ M      CAT.maci64/CAT_LBConformalMap
+ M      CAT.maci64/CAT_ResampleSphericalSurf
+ M      CAT.maci64/CAT_ResampleSurf
+MM      CAT.maci64/CAT_WarpSurf
+MM      CAT.win32/CAT_3dVol2Surf.exe
+MM      CAT.win32/CAT_AddValuesToSurf.exe
+MM      CAT.win32/CAT_BlurSurfHK.exe
+MM      CAT.win32/CAT_DeformSurf.exe
+MM      CAT.win32/CAT_DumpCurv.exe
+MM      CAT.win32/CAT_DumpGI.exe
+MM      CAT.win32/CAT_FixTopology.exe
+MM      CAT.win32/CAT_FractalDimension.exe
+MM      CAT.win32/CAT_Isometize.exe
+MM      CAT.win32/CAT_LBConformalMap.exe
+MM      CAT.win32/CAT_ResampleSphericalSurf.exe
+MM      CAT.win32/CAT_ResampleSurf.exe
+MM      CAT.win32/CAT_SeparatePolygon.exe
+MM      CAT.win32/CAT_Surf2Sphere.exe
+MM      CAT.win32/CAT_WarpSurf.exe
+M       CHANGES.txt
+MM      fsaverage/lh.smoothwm
+ M      fsaverage/lh.sphere
+MM      fsaverage/rh.smoothwm
+ M      fsaverage/rh.sphere
+
+Updated binaries for CAT.
+------------------------------------------------------------------------
+r526 | gaser | 2013-11-25 11:50:55

@@ -4,7 +4,7 @@
 # University of Jena
 #
 # Copyright Christian Gaser, University of Jena.
-# $Id: CAT_DeformSurf_ui 259 2012-04-05 10:00:09Z gaser $
+# $Id$
 #
 
 if [ $# -lt 4 ]; then
