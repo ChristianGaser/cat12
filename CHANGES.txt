@@ -3110,3 +3110,28 @@ M       CHANGES.txt
 Updated binaries for CAT.maci.
 ------------------------------------------------------------------------
 r528 | gaser | 2013-11-25 16:52:45
+
+D       CAT.glnx86/CAT_DeformSurf_ui
+D       CAT.glnx86/CAT_Obj2Neurolens
+D       CAT.glnx86/CAT_ReconSurf
+D       CAT.glnx86/CAT_ResampleFS_ui
+RM      CAT.maci64/CAT_3dVol2Surf
+RM      CAT.maci64/CAT_AddValuesToSurf
+RM      CAT.maci64/CAT_BlurSurfHK
+RM      CAT.maci64/CAT_DeformSurf
+RM      CAT.maci64/CAT_DumpCurv
+RM      CAT.maci64/CAT_DumpGI
+RM      CAT.maci64/CAT_FixTopology
+RM      CAT.maci64/CAT_FractalDimension
+RM      CAT.maci64/CAT_Isometize
+RM      CAT.maci64/CAT_LBConformalMap
+RM      CAT.maci64/CAT_ResampleSphericalSurf
+RM      CAT.maci64/CAT_ResampleSurf
+RM      CAT.maci64/CAT_SeparatePolygon
+RM      CAT.maci64/CAT_Surf2Sphere
+RM      CAT.maci64/CAT_WarpSurf
+M       CHANGES.txt
+
+Updated binaries for CAT.maci.
+------------------------------------------------------------------------
+r529 | gaser | 2013-11-25 16:56:51
