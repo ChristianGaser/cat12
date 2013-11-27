@@ -606,12 +606,12 @@ if job.extopts.LAS
   [TLir,resT2] = vbm_vol_resize(TLi,'reduceV',vx_vol,4,32,'min');
   for li=1:3, TLir  = vbm_vol_localstat(TLir,TLir>0.5,2,1); end
   TLir  = vbm_vol_approx(TLir,'nh',resT2.vx_volr,4); TLir = vbm_vol_smooth3X(TLir,4); 
-  TL{2} = vbm_vol_smooth3X( max(T3th(1)*mean(TL{5}(:)) + 0.3*diff(T3th(1:2)), ...
-    (min(T3th(1) + 0.7*diff(T3th(1:2))*mean(TL{5}(:)), ...
+  TL{2} = vbm_vol_smooth3X( max( mean(TL{5}(:))*( T3th(1) + 0.4*diff(T3th(1:2)) ), ...
+    (min(T3th(1) + 0.6*diff(T3th(1:2))*mean(TL{5}(:)), ...
      min(TL{3} - diff(T3th(1:2)*mean(TL{5}(:))/2) ,vbm_vol_resize(TLir,'dereduceV',resT2))))),8); clear WIrr;     
 
   TL{1} = T3th(1) .* mean(TL{5}(:));
-  clear TLi TLir resT2 WMr T3th; 
+  clear TLi TLir resT2 WMr;% T3th; 
 
 
   %% final estimation of the probability and variance map
@@ -1377,7 +1377,7 @@ if any(cell2mat(struct2cell(job.output.te)'))
     %% SPM-Tissue template
     VclsB = spm_vol(res.tpm(1).fname);
     YclsB = cell(1,7);
-    for i=[1:3,7]
+    for i=1:3
       YclsB{i} = single(spm_sample_vol(VclsB(i), ...
                        double(trans.atlas.Yy(:,:,:,1)), ...
                        double(trans.atlas.Yy(:,:,:,2)), ...
@@ -1386,12 +1386,12 @@ if any(cell2mat(struct2cell(job.output.te)'))
     end
 
     % now we need to create a CSF probability map (for the next correction)
-    Yclsb = vbm_vol_smooth3X(vbm_vol_morph((YclsB{1} + YclsB{2} + YclsB{7})>0.3,'lc',2),2)>0.5;
+    Yclsb = vbm_vol_smooth3X(vbm_vol_morph((YclsB{1} + YclsB{2})>0.3,'lc',2),2)>0.5;
     for i=1:3, YclsB{i} = YclsB{i} .* smooth3(Yclsb); end
     % final correction for maximum probability of 1
-    YclsBsum   = (YclsB{1} + YclsB{2} + YclsB{3} + YclsB{7}) .* Yclsb;
+    YclsBsum   = (YclsB{1} + YclsB{2} + YclsB{3}) .* Yclsb;
     for i=1:3, YclsB{i} = (YclsB{i}./max(eps,YclsBsum)) .* Yclsb; end
-    Yp0A = YclsB{1}*2 + YclsB{7}*2 + YclsB{2}*3 + YclsB{3} .* Yclsb;
+    Yp0A = YclsB{1}*2 + YclsB{2}*3 + YclsB{3} .* Yclsb;
     clear YclsB YclsBsum Yclsb VclsB;
   end
 
@@ -1496,9 +1496,10 @@ end
 
 
 %% ---------------------------------------------------------------------
-%  tickness maps
+%  surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if cg_vbm_get_defaults('extopts.ROI') 
+if cg_vbm_get_defaults('extopts.surface') 
+  str='Surface and thickness estimation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock; 
   
   % brain masking 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
@@ -1510,19 +1511,13 @@ if cg_vbm_get_defaults('extopts.ROI')
   clear Yp0
   
   % surface creation and thickness estimation
-  if cg_vbm_get_defaults('extopts.surface') 
-    str='Surface & Thickness Estimation'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;   
+  [Yth1,S] = vbm_surf_createCS(VT0,Ymm,Yl1,YMF); % clear Ymm YMF
     
-    [Yth1,S] = vbm_surf_createCS(VT0,Ymm,Yl1,YMF);
-    
-    % metadata
-    if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
-    qa.SM.dist_thickness{1} = [nanmean(th(:)) nanstd(th(:))]; clear th; 
-  end
-  
-  % save thickness image files (only for internal tests)
-  %vbm_io_writenii(VT0,Yth1,'th1','pbt GM thickness','uint16',[0,1/1023],[1 1 1],0,trans,Ymm);
-  
+  % metadata
+  if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
+  qa.SM.dist_thickness{1} = [nanmean(th(:)) nanstd(th(:))]; clear th; 
+
+  %fprintf(sprintf('%s',repmat('\b',1,)));
   fprintf('%3.0fs\n',etime(clock,stime));
 end
 
@@ -1547,7 +1542,7 @@ end
 %  contrain other classes. Therefore, standard tissue ranges (>50%) where
 %  used.  
 %  ---------------------------------------------------------------------
-if cg_vbm_get_defaults('extopts.ROI') ||  any(cell2mat(struct2cell(job.output.atlas)')) 
+if cg_vbm_get_defaults('extopts.ROI') % || any(cell2mat(struct2cell(job.output.atlas)')) 
   str='Regional Segmentation (Partitioning)'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
 
   opt.partvol.res    = min([3 3 3],vx_vol*(2-cg_vbm_get_defaults('extopts.BVC')));   
@@ -1613,7 +1608,7 @@ if cg_vbm_get_defaults('extopts.ROI') ||  any(cell2mat(struct2cell(job.output.at
         % csv-export and xml-export (later) 
         vbm_io_csv(fullfile(pth,['vbmROI' normalize '_' atlas '_' nam '.csv']),...
           csv,'','',struct('delimiter',',','komma','.'));
-        ROI.([normalize '_'  atlas '_' nam]) = csv;
+        ROI.([normalize '_' atlas]) = csv;
         vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),struct('ROI',ROI),'write+');
       end
     end
@@ -1621,6 +1616,14 @@ if cg_vbm_get_defaults('extopts.ROI') ||  any(cell2mat(struct2cell(job.output.at
   
   fprintf('%3.0fs\n',etime(clock,stime));
 end
+
+
+
+
+
+%% ---------------------------------------------------------------------
+%  caret export
+%  ---------------------------------------------------------------------
 
 
 
@@ -1700,9 +1703,9 @@ if do_cls && warp.print
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
   
 % Image Quality measures:
-  str2 =       struct('name', '\bfImage Quality:','value',''); 
+  str2 =       struct('name', '\bfImage Quality:','value',['(orig ' char(187) ' corr)']); 
                % sprintf('%s',marks2str(qam.QM.avg(1),sprintf('%0.1f > %0.1f',qam.QM.avg(1),qam.QM.avg(2))))); 
-  str2 = [str2 struct('name', ' SNR (orig >> corr):' ,'value', ... 
+  str2 = [str2 struct('name', ' SNR:' ,'value', ... 
                sprintf('%s %s %s', ...
                marks2str(qam.QM.SNR(1),sprintf('%5.2f',qa.QM.SNR(1))), char(187), ...   
                marks2str(qam.QM.SNR(2),sprintf('%5.2f',qa.QM.SNR(2)))))];   
@@ -1818,7 +1821,7 @@ if do_cls && warp.print
     if opt.print
       
       % original image in original space
-      Yo   = single(spm_read_vols(spm_vol(res.image(1).fname)));
+      Yo   = single(spm_read_vols(spm_vol(fname0))); % res.image(1).fname
       Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
       Yo   = max(0,min(2,Yo ./ median(Yo(Yp0(:)>2.9)))); clear Yp0;
       
@@ -1859,7 +1862,22 @@ if do_cls && warp.print
       
       %{
       % this would be a nice place for the major atlas map...
+      
+      visualize a side
+      
+      % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
+        
       %}
+      CSl.vertices = (S.left.vmati*[S.left.vertices' ; ones(1,size(S.left.vertices,1))])';
+      CSl.vertices = S.left.vertices;
+      CSl.faces = S.left.faces; CSl.facevertexcdata = S.left.th1;
+      %CSr.vertices = S.left.vertices; CSr.faces = S.left.faces; CSr.facevertexcdata = S.left.th1;
+      
+      %pos3d = {[0.5 0.2 0.25 0.1] [0.75 0.2 0.25 0.1] [0.5 0.1 0.25 0.1] [0.75 0.1 0.25 0.1] [0.5 0.0 0.25 0.1] [0.75 0.0 0.25 0.1];
+      subplot('position',[0.5 0.05 0.5 0.25]);
+      csp=patch(CSl); view(3), camlight, lighting gouraud, axis equal off; set(csp,'facecolor','interp','edgecolor','none'); caxis([0,10])
+
+      
     else
     % ------------------------------------------------------------------
     % THIS IS THE OLD PRINTING FUNCTION

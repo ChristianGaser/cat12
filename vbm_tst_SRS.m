@@ -93,7 +93,7 @@ function varargout=vbm_tst_SRS
   % find files
   dataset = struct(); subdirs = cell(1);
   for di = 1:size(opt.datasets,1)
-    subdirs{di} = findfiles(fullfile(opt.dir.prepro,opt.realignpremethod,'SRS',opt.datasets{di,1}),...
+    subdirs{di} = vbm_findfiles(fullfile(opt.dir.prepro,opt.realignpremethod,'SRS',opt.datasets{di,1}),...
       '*',struct('dirs',1,'depth',1));
     for si = 1:numel(subdirs{di}), [pp,subdirs{di}{si}] = fileparts(subdirs{di}{si}); end 
     if isempty(subdirs{di}), subdirs{di} = {''}; end
@@ -114,7 +114,7 @@ function varargout=vbm_tst_SRS
 
         % p0-data of a preprocessing
         dataset(di).realignp0pre{si} = ...
-          findfiles(fullfile(opt.dir.prepro,opt.realignpremethod,'SRS',opt.datasets{di,1},subdirs{di}{si}),'p0*.nii');
+          vbm_findfiles(fullfile(opt.dir.prepro,opt.realignpremethod,'SRS',opt.datasets{di,1},subdirs{di}{si}),'p0*.nii');
         
         opt.dir.realigndatadir{si}{di} = ...
           fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},['realign_' opt.realignpremethod]);
@@ -202,7 +202,7 @@ function varargout=vbm_tst_SRS
         for mi = 1:numel(opt.methods)
           % find original p0 files in each preprocessing directory
           dataset(di).(opt.methods{mi}).p0pre{si} = ...
-            findfiles(fullfile(opt.dir.prepro,opt.methods{mi},'SRS',opt.datasets{di,1},subdirs{di}{si}),'p0*.nii');
+            vbm_findfiles(fullfile(opt.dir.prepro,opt.methods{mi},'SRS',opt.datasets{di,1},subdirs{di}{si}),'p0*.nii');
 
           % preprocessing directories
           opt.dir.predir{si}{mi}             = fullfile(opt.dir.prepro,opt.methods{mi},'SRS',opt.datasets{di,1},subdirs{di}{si});
@@ -335,7 +335,7 @@ function varargout=vbm_tst_SRS
                     };
                 end
                 dataset(di).(opt.methods{mi}).rp0{si} = ...
-                    findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rp0*.nii',struct('depth',1));
+                    vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rp0*.nii',struct('depth',1));
                 
                   
                 if isempty(dataset(di).(opt.methods{mi}).rp0{si}) || (opt.do.reslicing && opt.do.recalc)
@@ -354,7 +354,7 @@ function varargout=vbm_tst_SRS
                   
                   % copy resliced images to a subdirectory 
                   dataset(di).(opt.methods{mi}).rp0{si} = ...
-                    findfiles(fullfile(opt.dir.realignpredatadiro{si}{mi}),'rp0*.nii',struct('depth',1));
+                    vbm_findfiles(fullfile(opt.dir.realignpredatadiro{si}{mi}),'rp0*.nii',struct('depth',1));
                   if ~exist(opt.dir.realignpredatadir{si}{mi},'dir'), mkdir(opt.dir.realignpredatadir{si}{mi}); end
                   for fi=1:numel(dataset(di).(opt.methods{mi}).rp0{si})
                     [pp2,ff2,ee2] = fileparts( dataset(di).(opt.methods{mi}).rp0{si}{fi} );
@@ -372,7 +372,7 @@ function varargout=vbm_tst_SRS
                       spm_reslice([opt.templates.reslice(ri);dataset(di).(opt.methods{mi}).m{si}'],para.reslice); 
                       movefile(fullfile(pp,['mean' ff ee]),dataset(di).(opt.methods{mi}).mmean{si}{ri,1});
                       dataset(di).(opt.methods{mi}).rm{si} = ...
-                        findfiles(fullfile(opt.dir.realignpredatadiro{si}{mi}),'rm*.nii',struct('depth',1));
+                        vbm_findfiles(fullfile(opt.dir.realignpredatadiro{si}{mi}),'rm*.nii',struct('depth',1));
                       for fi=1:numel(dataset(di).(opt.methods{mi}).rm{si})
                         [pp2,ff2,ee2] = fileparts( dataset(di).(opt.methods{mi}).rm{si}{fi} );
                         movefile(dataset(di).(opt.methods{mi}).rm{si}{fi}, fullfile(opt.dir.realignpredatadirr{si}{mi},[ff2,ee2]));
@@ -390,7 +390,7 @@ function varargout=vbm_tst_SRS
                        spm_reslice([opt.templates.reslice(ri);dataset(di).(opt.methods{mi}).th1{si}'],para.reslice); 
                        movefile(fullfile(pp,['mean' ff ee]),dataset(di).(opt.methods{mi}).th1mean{si}{ri,1});
                       dataset(di).(opt.methods{mi}).rth1{si} = ...
-                        findfiles(fullfile(opt.dir.realignpredatadiro{si}{mi}),'rth1*.nii',struct('depth',1));
+                        vbm_findfiles(fullfile(opt.dir.realignpredatadiro{si}{mi}),'rth1*.nii',struct('depth',1));
                       for fi=1:numel(dataset(di).(opt.methods{mi}).rth1{si})
                         [pp2,ff2,ee2] = fileparts( dataset(di).(opt.methods{mi}).rth1{si}{fi} );
                         movefile(dataset(di).(opt.methods{mi}).rth1{si}{fi}, fullfile(opt.dir.realignpredatadirr{si}{mi},[ff2,ee2]));
@@ -405,7 +405,7 @@ function varargout=vbm_tst_SRS
                   else
                     fprintf('.\n');
                     dataset(di).(opt.methods{mi}).rm{si} = ...
-                        findfiles(opt.dir.realignpredatadirr{si}{mi},'rm*.nii',struct('depth',1));
+                        vbm_findfiles(opt.dir.realignpredatadirr{si}{mi},'rm*.nii',struct('depth',1));
                   end
                   
                   if ~opt.do.ofiles 
@@ -415,9 +415,9 @@ function varargout=vbm_tst_SRS
                   end
                 else
                   dataset(di).(opt.methods{mi}).rm{si} = ...
-                    findfiles(opt.dir.realignpredatadirr{si}{mi},'rm*.nii',struct('depth',1));  
+                    vbm_findfiles(opt.dir.realignpredatadirr{si}{mi},'rm*.nii',struct('depth',1));  
                   dataset(di).(opt.methods{mi}).rth1{si} = ...
-                    findfiles(opt.dir.realignpredatadirr{si}{mi},'rth1*.nii',struct('depth',1));  
+                    vbm_findfiles(opt.dir.realignpredatadirr{si}{mi},'rth1*.nii',struct('depth',1));  
                 end
                 
                 if opt.do.average || (opt.do.reslicing && opt.do.recalc)
@@ -506,11 +506,11 @@ function varargout=vbm_tst_SRS
                   sprintf('done:\n');
                 else
                   dataset(di).(opt.methods{mi}).rp0{si} = ...
-                    findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rp0*.nii',struct('depth',1));
+                    vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rp0*.nii',struct('depth',1));
                   dataset(di).(opt.methods{mi}).rm{si} = ...
-                    findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rm*.nii',struct('depth',1));
+                    vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rm*.nii',struct('depth',1));
                   dataset(di).(opt.methods{mi}).rth1{si} = ...
-                    findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rth1*.nii',struct('depth',1));
+                    vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rth1*.nii',struct('depth',1));
                 end
               end
             end
@@ -537,8 +537,8 @@ function varargout=vbm_tst_SRS
             % filelist of the means
             p0mean = {}; p0meanbo =  {};
             for gti = 1:numel(opt.gtmethods)
-              p0mean   = [p0mean  ;findfiles(fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},opt.gtmethods{gti}),['mean_' ff '*' opt.gtmethods{gti} 'all.nii'])']; %#ok<AGROW>
-              p0meanbo = [p0meanbo;findfiles(fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},opt.gtmethods{gti}),['mean_' ff '*' opt.gtmethods{gti} 'bo.nii'])']; %#ok<AGROW>
+              p0mean   = [p0mean  ;vbm_findfiles(fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},opt.gtmethods{gti}),['mean_' ff '*' opt.gtmethods{gti} 'all.nii'])']; %#ok<AGROW>
+              p0meanbo = [p0meanbo;vbm_findfiles(fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},opt.gtmethods{gti}),['mean_' ff '*' opt.gtmethods{gti} 'bo.nii'])']; %#ok<AGROW>
             end
 
             dataset(di).gtall{si}{ri,1} = { ...
@@ -587,7 +587,7 @@ function varargout=vbm_tst_SRS
               if ~exist(dataset(di).mat{si},'file') || opt.do.report || opt.do.recalc
                 fprintf('%s %s reports %s',opt.datasets{di,1},subdirs{di}{si},opt.methods{mi}); 
                 try
-                  %rp0mean = findfiles(fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},opt.methods{mi},'r'),'rp0*.nii');
+                  %rp0mean = vbm_findfiles(fullfile(opt.dir.realign,opt.datasets{di,1},subdirs{di}{si},opt.methods{mi},'r'),'rp0*.nii');
                   [txt1,tab1,val1] = vbm_tst_calc_kappa(...
                     dataset(di).(opt.methods{mi}).rp0{si},...
                     dataset(di).gtbo{si}{ri,1}{1},opt.methods{mi},0);  fprintf('.');

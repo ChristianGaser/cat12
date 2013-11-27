@@ -1,11 +1,11 @@
 function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
-% _________________________________________________________________________
+% ______________________________________________________________________
 %
 % Use a graph-based thickness estimation (gbdist) to estimate the distance
 % from the WM/GM boundary and a projection scheme to transfer the values at
 % GM/CSF boundary over the whole GM.
 %
-%   [GMT,PP]=gwt(SSEG,opt)
+%   [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 %  
 %   GMT:      GM thickness map 
 %   PP:       percentage possition map
@@ -19,11 +19,11 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 %
 %   See also BWT, VBT, GBT, GBTX, GBCL, LBT, LBTS, PBTV.
 %   
-% _________________________________________________________________________
+% ______________________________________________________________________
 %
 % More details and test:
 %   ... Paper
-% _________________________________________________________________________
+% ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
 %   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
@@ -31,7 +31,8 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 %   University Jena
 %
 %   Version: 1.00 © 2010/08
-% _________________________________________________________________________
+% ______________________________________________________________________
+% $Id$ 
 
 % default variables and check/set function  
   if ~exist('opt','var'), opt=struct(); end
@@ -42,9 +43,6 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   opt  = checkinopt(opt,def);%,cond);
   mvxs = mean(opt.resV);
   SSEG = round(SSEG*10)/10;
-%  SSEG(SSEG<1.25)=0;
-  
-%  [SSEG,BB] = vbm_vol_resize(SSEG,'reduceBrain',repmat(opt.resV,1,3),2,SSEG>0);   % removing of background
   
   % additional re-estimation of the boundarys... in development:
   % funkt nicht ... der einschnitt erzeugt einen fehler der vergleichbar
@@ -120,7 +118,16 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   
   GMT = GMT*mean(opt.resV); % darf ich erst hier machen wegen der projektion die aktuell nur für 1mm läuft!
   GMT(SSEG<1.5 | SSEG>2.5)=nan; GMT=vbm_vol_nanmean3(GMT); GMT(isnan(GMT))=eps; % erweitern
-  GMTS = smooth3(GMT,'gaussian',3,0.9); GMT(SSEG>=2 & SSEG<2.5)=GMTS(SSEG>=2 & SSEG<2.5); clear GMTs % smoothen allerdings nur für sicheren bereich
-  
- % [GMT,PP] = vbm_vol_resize({GMT,PP},'dereduceBrain',BB);
+  %GMTS = smooth3(GMT,'gaussian',3,0.9); GMT(SSEG>=2 & SSEG<2.5)=GMTS(SSEG>=2 & SSEG<2.5); clear GMTs % smoothen allerdings nur für sicheren bereich
+
+  GMT(GMT>10)=0; PP(isnan(PP))=0; 
+  YM  = vbm_vol_morph(GMT>0,'d');
+  GMT = vbm_vol_median3(GMT,YM);
+  PP  = vbm_vol_median3(PP ,YM);
+  clear Ymt;
+
+  % removing non brain objects
+  Ymm = PP>=0.5 & ~vbm_vol_morph(PP>=0.5,'labopen',1); 
+  PP(Ymm) = 0.5-eps; GMT(Ymm) = 0;
+ 
 end
