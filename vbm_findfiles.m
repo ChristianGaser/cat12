@@ -1,11 +1,12 @@
-function [filesfound,numberfound] = findfiles(varargin)
-% findfiles  - Linux/UNIX-like find command/function
+function [filesfound,numberfound] = vbm_findfiles(varargin)
+% ______________________________________________________________________
+% vbm_findfiles  - Linux/UNIX-like find command/function
 %
 % returns a list in which all files are listed that match one of the
-% patterns.
+% patterns. This function was copyed form the 
 %
 % FORMAT:
-% [files,number] = findfiles(startfolder, patterns, opts, ....)
+% [files,number] = vbm_findfiles(startfolder, patterns, opts, ....)
 %
 % - startfolder     <char array> folder where to start search
 % - patterns        <cell array <char array>> file patterns (shell-like)
@@ -25,12 +26,12 @@ function [filesfound,numberfound] = findfiles(varargin)
 % when used as a command, multiple opts can be given as multiple arguments,
 % seperated by spaces (' '):
 %
-% findfiles /search/folder *mypattern*.txt depth=3 oneperdir=1 relative=./
+% vbm_findfiles /search/folder *mypattern*.txt depth=3 oneperdir=1 relative=./
 %
 % when used in functional context, a second return value, the number
 % of matching files, can be obtained:
 %
-% [files,number] = findfiles('/where','*.txt');
+% [files,number] = vbm_findfiles('/where','*.txt');
 %
 % NOTE: the minage/maxage feature only fully works when the system
 % returns English-style month in calls to dir. i.e. under Linux, set the
@@ -40,13 +41,18 @@ function [filesfound,numberfound] = findfiles(varargin)
 % TODO: make the returning object (cell) a persistent value to increase
 %       speed by not having to return it from recursive calls !!!
 %
+% ______________________________________________________________________
+% This function was part of the ... toolbox that I cannot find anymore.
+% 
+% ______________________________________________________________________
+% $Id$ 
 
 %#ok<*EFIND>
 
 % - sanity checks: startfolder
   fsep = filesep;
   if nargin < 2
-      dispdebug('findfiles: at least startfolder and patterns must be provided!',4);
+      dispdebug('vbm_findfiles: at least startfolder and patterns must be provided!',4);
       if nargout < 1, help(mfilename); return; end
       filesfound=cell(0);
       return;
@@ -54,7 +60,7 @@ function [filesfound,numberfound] = findfiles(varargin)
   startfolder=varargin{1};
   if ischar(startfolder) && ~isempty(startfolder)
       ispattern=find(startfolder=='?'|startfolder=='*');
-      if ~isempty(ispattern), [filesfound,numberfound] = findfiles({varargin{1}},varargin{2:end}); return; end
+      if ~isempty(ispattern), [filesfound,numberfound] = vbm_findfiles({varargin{1}},varargin{2:end}); return; end
   elseif iscell(startfolder) && ~isempty(startfolder)
       nstartfolder=cell(0);
       for nelem=1:prod(size(startfolder))
@@ -70,9 +76,9 @@ function [filesfound,numberfound] = findfiles(varargin)
                   if ~isempty(find(pathparts{cpart}=='?'|pathparts{cpart}=='*')), break; end
               end
               if cpart==1
-                  [pfolders,npfolders]=findfiles('.',pathparts{1},struct('dirs',1,'depth',1));
+                  [pfolders,npfolders]=vbm_findfiles('.',pathparts{1},struct('dirs',1,'depth',1));
               else
-                  [pfolders,npfolders]=findfiles(gluetostring({pathparts{1:(cpart-1)}},fsep),pathparts{cpart},struct('dirs',1,'depth',1));
+                  [pfolders,npfolders]=vbm_findfiles(gluetostring({pathparts{1:(cpart-1)}},fsep),pathparts{cpart},struct('dirs',1,'depth',1));
               end
               if cpart < cparts
                   for ppart=1:npfolders
@@ -85,9 +91,9 @@ function [filesfound,numberfound] = findfiles(varargin)
       filesfound=cell(0);
       for nelem=1:length(nstartfolder)
           if ~isempty(find(nstartfolder{nelem}=='?'|nstartfolder{nelem}=='*'))
-              filesfound = [filesfound(1:end) , findfiles({nstartfolder{nelem}},varargin{2:end})];
+              filesfound = [filesfound(1:end) , vbm_findfiles({nstartfolder{nelem}},varargin{2:end})];
           elseif exist(nstartfolder{nelem},'dir') == 7
-              filesfound = [filesfound(1:end) , findfiles(nstartfolder{nelem},varargin{2:end})];
+              filesfound = [filesfound(1:end) , vbm_findfiles(nstartfolder{nelem},varargin{2:end})];
           end
       end
       numberfound=length(filesfound);
@@ -238,7 +244,7 @@ function [filesfound,numberfound] = findfiles(varargin)
   end
   if strcmp(lower(opt.return),'cellstr'), filesfound=cellstr(filesfound); end
 end
-% - end of findfiles(...)
+% - end of vbm_findfiles(...)
 
 
 % %%%%internal functions%%%%

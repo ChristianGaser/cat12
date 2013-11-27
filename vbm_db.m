@@ -468,7 +468,7 @@ function dicom_import(input_dir,opt)
   % 1.  Find all dicoms files and sort them by there home directories.
   % 1.1 Find all files within the subdirectories and remove all non-dicom files from this list.
   %     input_dir = char(input_dir); 
-  files = findfiles(input_dir,'*')';
+  files = vbm_findfiles(input_dir,'*')';
   for fi=numel(files):-1:1
     [p,f,e]=fileparts(files{fi});
     fdata=dir(files{fi}); % remove to small files and check access
@@ -511,26 +511,26 @@ function dicom_import(input_dir,opt)
                                 ([char(dfiles{j}') repmat(' ',size(dfiles{j},2),1)])'));  %#ok<NASGU>
     %fprintf('\n<<\n\n\n');
     if opt.dcm2nii.reorienate>0
-      nii_files=findfiles(tmpdir,'o*.nii')';
+      nii_files=vbm_findfiles(tmpdir,'o*.nii')';
       for fi=1:numel(nii_files), 
         [pp,ff,ee]=fileparts(nii_files{fi}); 
         movefile(nii_files{fi},fullfile(pp,[ff(2:end),ee]));
       end
     else
-      nii_files=findfiles(tmpdir,'co*.nii')';  
+      nii_files=vbm_findfiles(tmpdir,'co*.nii')';  
       for fi=1:numel(nii_files), delele(nii_files{fi}); end
     end
     if opt.dcm2nii.reorienate>1
-      nii_files=findfiles(tmpdir,'co*.nii')';  
+      nii_files=vbm_findfiles(tmpdir,'co*.nii')';  
       for fi=1:numel(nii_files), 
         [pp,ff,ee]=fileparts(nii_files{fi}); 
         movefile(nii_files{fi},fullfile(pp,[ff(3:end),ee]));
       end
     else
-      nii_files=findfiles(tmpdir,'co*.nii')';  
+      nii_files=vbm_findfiles(tmpdir,'co*.nii')';  
       for fi=1:numel(nii_files), delete(nii_files{fi}); end
     end
-    nii_files = findfiles(tmpdir,'*.nii')';
+    nii_files = vbm_findfiles(tmpdir,'*.nii')';
 
     if exist(opt.vbmDBfile,'file') && opt.use_vbmDBfile
       load(opt.vbmDBfile);
@@ -574,7 +574,7 @@ end
 function nifti_import(input_dir,opt)
   % find analyse files and convert to nifti
   
-  imgfiles = findfiles(input_dir,'*.img')';
+  imgfiles = vbm_findfiles(input_dir,'*.img')';
   if ~isempty(imgfiles)
     tmpdir = fullfile(tempdir,'vbmDBimport'); 
     if ~exist(tmpdir,'dir'); mkdir(tmpdir); end;
@@ -639,7 +639,7 @@ function nifti_import(input_dir,opt)
     end
     rmdir(tmpdir,'s');
   else
-    niifiles = findfiles(input_dir,'*.nii')';
+    niifiles = vbm_findfiles(input_dir,'*.nii')';
     if isempty(niifiles), fprintf(1,'No NIFTIs in %s!\n',char(input_dir)); return; end
     for d=1:numel(niifiles)
       meta = get_nifti_meta(niifiles{d},opt); % need the original data
@@ -1087,7 +1087,7 @@ function [ScanID,DB] = create_ScanID(meta,RAWdir,opt,DB)
                                                     
     if ~exist('DB','var') || isempty(DB)  
       stime = clock;                                               
-      RAWs = findfiles(RAWdir,'*.nii')'; 
+      RAWs = vbm_findfiles(RAWdir,'*.nii')'; 
       FmetaRAWs = cell(size(RAWs)); ScanIDs = zeros(size(RAWs)); ImportIDs = cell(size(RAWs));
   
       if numel(RAWs)>0

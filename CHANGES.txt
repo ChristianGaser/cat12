@@ -1,8 +1,4 @@
-M       VBM8-Manual.pdf
-M       tbx_cfg_vbm8.m
-M       cg_vbm8_write.m
-M       VBM8-Manual.doc
-M       cg_vbm8_run.m
+M VBM8-Manual.pdf M tbx_cfg_vbm8.m M cg_vbm8_write.m M VBM8-Manual.doc M cg_vbm8_run.m
 
 (1) Weighting for MRF and ORNLM can now be selected in the GUI. This will solve
     some problems with batch files, where changes of these parameters were not 
@@ -3141,3 +3137,31 @@ M       CHANGES.txt
 Updated binaries for CAT.maci.
 ------------------------------------------------------------------------
 r530 | gaser | 2013-11-25 16:57:32
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+D       findfiles.m
+M       tbx_cfg_vbm.m
+M       vbm12.txt
+M       vbm_db.m
+A  +    vbm_findfiles.m
+M       vbm_surf_createCS.m
+M       vbm_tst_SRS.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa_groups_test.m
+M       vbm_tst_t1qa.m
+M       vbm_vol_atlas.m
+M       vbm_vol_pbt.m
+M       vbm_vol_resize.m
+M       vbm_vol_t1qacalc.m
+
+(1)  Updated surface output names in 'cg_vbm_defaults-file'.
+(2)  Changed function-name 'findfiles' to 'vbm_findfiles'. 
+(3)  Updated command line output of surface pipeline.
+(4)  Added debugging parameter to 'cg_vbm_defaults'.
+(5)  Added surface parameter to GUI.
+(6)  Deactivated surface refinement due to position error. 
+------------------------------------------------------------------------
+r531 | dahnke | 2013-11-27 18:44:56

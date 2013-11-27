@@ -26,7 +26,7 @@ function vbm_tst_qa_groups_test
   % klare unterschiede bei nutzung von res
   % --------------------------------------------------------------------
   di=di+1;
-  ADNIdirs = vbm_fileparts(findfiles('/Volumes/MyBook/MRData/qa_tst/ADNI/T1w','*1.5*',struct('dirs',1,'depth',1)),'f');
+  ADNIdirs = vbm_fileparts(vbm_findfiles('/Volumes/MyBook/MRData/qa_tst/ADNI/T1w','*1.5*',struct('dirs',1,'depth',1)),'f');
   ADNIdirs = strrep(strrep(ADNIdirs,'ANDI_1.5T','1.5T_ADNI'),'ANDI_3.0T','3.0T_ADNI');
   data(di).name   = 'ADNI1.5';
   data(di).dirs   = {'/Volumes/MyBook/MRData/qa_tst/XMLdir'};
@@ -36,7 +36,7 @@ function vbm_tst_qa_groups_test
   % klare unterschiede bei nutzung von res
   % --------------------------------------------------------------------
   di=di+1;
-  ADNIdirs = vbm_fileparts(findfiles('/Volumes/MyBook/MRData/qa_tst/ADNI/T1w','*',struct('dirs',1,'depth',1)),'f');
+  ADNIdirs = vbm_fileparts(vbm_findfiles('/Volumes/MyBook/MRData/qa_tst/ADNI/T1w','*',struct('dirs',1,'depth',1)),'f');
   ADNIdirs = strrep(strrep(ADNIdirs,'ANDI_1.5T','1.5T_ADNI'),'ANDI_3.0T','3.0T_ADNI');
   data(di).name   = 'ADNI full';
   data(di).dirs   = {'/Volumes/MyBook/MRData/qa_tst/XMLdir'};
@@ -89,12 +89,12 @@ function vbm_tst_qa_groups_test
       if iscell(data(di).groups{gfi,2})
         for gffi=1:numel(data(di).groups{gfi,2})
           for pi=1:numel(data(di).dirs)
-            files{gfi} = [files{gfi}; findfiles(data(di).dirs{pi},['vbm_*' data(di).groups{gfi,2}{gffi} '*.xml'])'];
+            files{gfi} = [files{gfi}; vbm_findfiles(data(di).dirs{pi},['vbm_*' data(di).groups{gfi,2}{gffi} '*.xml'])'];
           end
         end
       else
         for pi=1:numel(data(di).dirs)
-          files{gfi} = [files{gfi}; findfiles(data(di).dirs{pi},['vbm_*' data(di).groups{gfi,2} '*.xml'])'];
+          files{gfi} = [files{gfi}; vbm_findfiles(data(di).dirs{pi},['vbm_*' data(di).groups{gfi,2} '*.xml'])'];
         end
       end
     end

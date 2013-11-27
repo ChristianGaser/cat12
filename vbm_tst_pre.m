@@ -117,7 +117,7 @@ function vbm_tst_pre
    
     % find original files of each test subdir without NC files
     opt.RAW.dirs{di} = fullfile(opt.path,opt.RAWdir,def.subdirs{di});
-    opt.RAW.T{di}    = findfiles(fullfile(opt.RAW.dirs{di},opt.Tdir),'*.nii');
+    opt.RAW.T{di}    = vbm_findfiles(fullfile(opt.RAW.dirs{di},opt.Tdir),'*.nii');
     sanlmfiles = ~cellfun('isempty',strfind(opt.RAW.T{di} ,'sanlm'));
     opt.RAW.T{di}(sanlmfiles) = []; clear sanlmfiles;
     
@@ -127,9 +127,9 @@ function vbm_tst_pre
     if ~exist(fullfile(opt.RAW.dirs{di},opt.GTdir),'dir')
       mkdir(fullfile(opt.RAW.dirs{di},opt.GTdir)); 
     end
-    opt.RAW.pmT{di}  = findfiles(fullfile(opt.RAW.dirs{di},opt.GTdir),'pm*.nii');
-    opt.RAW.p0T{di}  = findfiles(fullfile(opt.RAW.dirs{di},opt.GTdir),'p0*.nii');
-    opt.RAW.m0T{di}  = findfiles(fullfile(opt.RAW.dirs{di},opt.GTdir),'m0*.nii');   
+    opt.RAW.pmT{di}  = vbm_findfiles(fullfile(opt.RAW.dirs{di},opt.GTdir),'pm*.nii');
+    opt.RAW.p0T{di}  = vbm_findfiles(fullfile(opt.RAW.dirs{di},opt.GTdir),'p0*.nii');
+    opt.RAW.m0T{di}  = vbm_findfiles(fullfile(opt.RAW.dirs{di},opt.GTdir),'m0*.nii');   
     for fi=1:opt.subStepSize:numel(opt.RAW.T{di})
       [pp,ff,ee]=fileparts(opt.RAW.T{di}{fi}); 
       opt.RAW.psT{di}{fi} = fullfile(opt.RAW.dirs{di},opt.GTdir,['ps' ff ee]);
@@ -201,8 +201,8 @@ function vbm_tst_pre
           end
         end
         % and the mat file
-        opt.RAW.Tmat{di}{fi} = findfiles(pp,[ff '*.mat'],struct('chararr',1)); 
-        opt.method(mi).Tmat{di}{fi} = findfiles(ppn,[ff '*.mat'],struct('chararr',1)); 
+        opt.RAW.Tmat{di}{fi} = vbm_findfiles(pp,[ff '*.mat'],struct('chararr',1)); 
+        opt.method(mi).Tmat{di}{fi} = vbm_findfiles(ppn,[ff '*.mat'],struct('chararr',1)); 
         if ~isempty(opt.method(mi).Tmat{di}{fi}) && exist(opt.method(mi).Tmat{di}{fi},'file')
           linkfile(opt.RAW.Tmat{di}{fi},opt.method(mi).T{di}{fi},'f');
         end
@@ -854,7 +854,7 @@ function SPM8newsegment(file,SPM8dir,SPMwkd)
   end
 end
 function SPM12segment(file,SPM12dir,SPMwkd)
-%   SPM12dirs    = [SPM12dir findfiles(SPM12dir,'*',struct('dirs','1')) ...
+%   SPM12dirs    = [SPM12dir vbm_findfiles(SPM12dir,'*',struct('dirs','1')) ...
 %                   fullfile(SPM12path,'toolbox','VBM12+')]';
 %   SPM12baddirs = ~cellfun('isempty',strfind(SPM12dirs,'.svn')) | ... 
 %                 ~cellfun('isempty',strfind(SPM12dirs,'private'))| ... 
@@ -973,6 +973,8 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.print     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS       = LAS;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.ROI       = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface   = 1;
   
   %%
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 1;
@@ -988,8 +990,8 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF.modulated    = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF.dartel       = 0;
   
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.jacobian.warped  = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.warps            = [1 1];
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.jacobian.warped  = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.warps            = [0 0];
   
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.native      = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.warped      = 0;
@@ -1038,7 +1040,7 @@ end
 function VBM8segment(file,VBM8dir,SPMwkd)
 % % get old matlab-paths, seperate VBM12 entries and replace them by VBM8
 % % entries
-%   VBM8dirs    = [VBM8dir findfiles(VBM8dir,'*',struct('dirs','1'))]';
+%   VBM8dirs    = [VBM8dir vbm_findfiles(VBM8dir,'*',struct('dirs','1'))]';
 %   VBM8baddirs = ~cellfun('isempty',strfind(VBM8dirs,'.svn')) | ... 
 %                 ~cellfun('isempty',strfind(VBM8dirs,'private'))| ... 
 %                 ~cellfun('isempty',strfind(VBM8dirs,'@'));
@@ -1130,7 +1132,7 @@ function pathchanges = replaceSPMpath(oldSPMpath,newSPMpath)
   pathchanges.olddir = pwd; 
  
   if ~strcmp(oldSPMpath,newSPMpath{1})
-    newSPMpath=[newSPMpath,findfiles(newSPMpath,'*',struct('maxdepth',2,'dirs',1))];
+    newSPMpath=[newSPMpath,vbm_findfiles(newSPMpath,'*',struct('maxdepth',2,'dirs',1))];
     
     % find all directories in the old SPM path
     oldpath = textscan(path,'%s','bufsize',2^16,'Delimiter',':'); oldpath=oldpath{1};

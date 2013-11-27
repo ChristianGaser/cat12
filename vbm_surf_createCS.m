@@ -35,15 +35,17 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 % University Jena
 % ______________________________________________________________________
 % $Id$ 
- 
+
+ %#ok<*AGROW>
+
   if ~exist('opt','var'), opt=struct(); end
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   
-  opt.debug     = 1;
+  def.debug     = cg_vbm_get_defaults('extopts.debug');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.reduceCS  = 100000;  
   def.isosmooth = 0.3;
-  opt           = vbm_io_updateStruct(opt,def);
+  opt           = vbm_io_updateStruct(def,opt);
   opt.interpV   = cg_vbm_get_defaults('extopts.pbtres');
   opt.interpV   = max(0.5,min([min(vx_vol),opt.interpV,1]));
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
@@ -58,7 +60,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     opt.CATDir = [opt.CATDir '.glx'];
   end  
 
-  [pp,ff]       = spm_fileparts(V.fname);
+  [pp,ff,ee]   = spm_fileparts(V.fname);
 
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
@@ -73,6 +75,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   % removing blood vessels, and other regions
   Yth1 = zeros(size(Ymf),'single'); 
   
+  nstr = '';
   for si=1:numel(opt.surf)
     % surface filenames
     Praw       = fullfile(pp,sprintf('%s.central.nofix.%s',opt.surf{si},ff));    % raw
@@ -94,39 +97,69 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     
     
     %% thickness estimation
-    [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,2,Ymf>1);    % removing of background
+    [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,2,Ymfs>1);   % removing of background
     [Ymfs,resI] = vbm_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
 
     % pbt calculation
-    fprintf('\n%s:\nThickness estimation\n',opt.surf{si});
+    str = sprintf('\n%s:\n  Thickness estimation\n',opt.surf{si}); fprintf(str); nstr = [nstr str-3]; 
     [Yth1i,Yppi] = vbm_vol_pbt(Ymfs,struct('resV',opt.interpV)); clear Ymfs;       
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0; 
-
-    % removing non brain objects
-    Ymm = Yppi>=0.5 & ~vbm_vol_morph(Yppi>=0.5,'labopen',1); 
-    Yppi(Ymm) = 0.5-eps; Yth1i(Ymm) = 0;
     
-    % smoothing only in safe areas...
-    if opt.isosmooth>0
-      Yppsi  = Yppi+0;  spm_smooth(Yppi ,Yppsi ,opt.isosmooth/opt.interpV); M=Yppi<0.8; Yppi(M) =Yppsi(M);  clear Yppsi  M;
-      Yth1si = Yth1i+0; spm_smooth(Yth1i,Yth1si,opt.isosmooth/opt.interpV); M=Yppi>0.2; Yth1i(M)=Yth1si(M); clear Yth1si M;
-    end      
-    
-    Yth1t = vbm_vol_resize(Yth1i,'deinterp',resI);                    % back to original resolution
-    Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                 % adding of background
-    Yth1  = max(Yth1,Yth1t);                                          % save on main image
+    Yth1t = vbm_vol_resize(Yth1i,'deinterp',resI);                      % back to original resolution
+    Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding of background
+    Yth1  = max(Yth1,Yth1t);                                            % save on main image
     clear Yth1t;
     
+    
+    %{
+    %% Write Ypp for final deformation
+    %  Write Yppi file with 1 mm resolution for the final deformation, 
+    %  because CAT_DeformSurf_ui can not handle higher resolutions and
+    %  will create cauliflower surfaces. 
+    %  
+    %  #################################################################
+    %  Here we still have a problem. The image with 0 mm looks good, and
+    %  its coordinatats are correct. Check Reg shows pefect matching, but
+    %  something still went wrong... but if the error is not in the picture
+    %  this meas that the error is in the surface and that vmat and vmati
+    %  are not correct!
+    %  #################################################################
+    Yppt = vbm_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
+    Yppt = vbm_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
+    Vpp  = vbm_io_writenii(V,Yppt,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0],0,[]);
+    clear Yppt;
+    
+    Vpp1 = Vpp; 
+    Vpp1.fname    = fullfile(pp,['pp1' ff ee]);
+    vmat2         = spm_imatrix(Vpp1.mat);
+    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
+    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
+    Vpp1.mat      = spm_matrix(vmat2);
+    
+    Vpp1 = spm_create_vol(Vpp1); 
+    for x3 = 1:Vpp1.dim(3),
+      M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
+      v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1) *  0;                      % << remove the 0 ... 
+      Vpp1 = spm_write_plane(Vpp1,v,x3);
+    end;
+    clear M v x3; 
+    %}
+    
+    
     %% surface coordinate transformations
-    vmatBB = spm_imatrix(resI.hdrN.mat); vmatBBV = spm_imatrix(V.mat);
-    vmatBB(1:3) = vmatBB(1:3) + vmatBBV(7:9).*BB.BB([1,3,5]);
-    vmatBB = spm_matrix(vmatBB);
+    str = '  Create initial surface\n'; fprintf(str); nstr = [nstr str-1];
+    vmatBBV = spm_imatrix(V.mat);
+    
+    vmat  = V.mat(1:3,:);
+    vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
 
-    vmat  = vmatBB(1:3,:)*[0 1 0 0;1 0 0 0;0 0 1 0; 0 0 0 1];
-    vmati = inv([vmat; 0 0 0 1]);vmati(4,:)=[];    
-
-    % surface generation 
-    CS  = isosurface(Yppi,0.5); CSO=CS;
+    % surface generation and coordinate adaption for the orinal image
+    % this works well...
+    CS  = isosurface(Yppi,0.5); %clear Yppi;
+    CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
+    CS.vertices = CS.vertices + repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1); 
+    CS.vertices(:,1:2) = CS.vertices(:,2:-1:1);
+    CSO = CS; % save old surface, for later correction of reduction error
 
     % use only one major object
     vbm_io_FreeSurfer('write_surf',Praw,CS);
@@ -141,19 +174,12 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
         otherwise,          CS = reducepatch(CS,opt.reduceCS);
       end
     end
-
-    % only one major object
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     vbm_io_FreeSurfer('write_surf',Praw,CS); 
+    
 
-    % write Yppi file with 1 mm resolution for the final deformation
-    Yppt = vbm_vol_resize(Yppi,'deinterp',resI);                         % back to original resolution
-    Yppt = vbm_vol_resize(Yppt,'dereduceBrain',BB);                      % adding of background
-    Vpp  = vbm_io_writenii(V,Yppt,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0],0,[]);
-    clear Yppt;
-
-    % spherical surface mapping
-    disp('Initial spherical mapping');
+    %% spherical surface mapping 1 of the uncorrected surface for topology correction
+    str = '  Initial spherical mapping\n'; fprintf(str); nstr = [nstr str-1];
     cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
@@ -163,7 +189,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     % otherwise we have to use the original surface which takes much longer
     CSX = vbm_io_FreeSurfer('read_surf',Psphere0);
     if isnan(CSX.vertices(1)) 
-      disp('Spherical mapping with original high-resoluted surface');
+      str = '  Spherical mapping with original high-resoluted surface\n'; fprintf(str); nstr = [nstr str-1];
       CS = CSO;
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
       vbm_io_FreeSurfer('write_surf',Praw,CS); 
@@ -173,35 +199,40 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
     end
 
-    % topology correction and surface refinement 
+    
+    %% topology correction and surface refinement 
     clear CSX;
-    disp('Topology correction');
+    str = '  Topology correction\n'; fprintf(str); nstr = [nstr str-1];
     cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
-    disp('Surface refinement');
+    %{
+    str = '  Surface refinement\n'; fprintf(str); nstr = [nstr str-1];
     th = 128;
-    cmd = sprintf('CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 avg -0.15 0.15 .1 .1 15 0 "%g" "%g" n 0 0 0 250 0.01 0.0',Vpp.fname,Pcentral,Pcentral,th,th);
+    cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
+                   'avg -0.15 0.15 .1 .1 15 0 "%g" "%g" n 0 0 0 250 0.01 0.0'], ...
+                   Vpp1.fname,Pcentral,Pcentral,th,th);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
-    cmd = sprintf('CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 avg -0.05 0.05 .1 .1 15 0 "%g" "%g" n 0 0 0 250 0.01 0.0',Vpp.fname,Pcentral,Pcentral,th,th);
+    cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
+                   'avg -0.05 0.05 .1 .1 15 0 "%g" "%g" n 0 0 0 250 0.01 0.0'], ...
+                   Vpp1.fname,Pcentral,Pcentral,th,th);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
-
-
-    % spherical surface mapping of corrected surface
-    disp('Final spherical mapping');
+    %}
+    
+    %% spherical surface mapping 2 of corrected surface
+    str = '  Final spherical mapping\n'; fprintf(str); nstr = [nstr str-1];
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Pcentral,Psphere);
-    [ST, RS] = system(fullfile(opt.CATDir,cmd)); 
-    check_system_output(ST,RS,opt.debug);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
 
     % spherical registration to fsaverage
-    disp('Spherical registration');
+    str = '  Spherical registration\n'; fprintf(str); nstr = [nstr str-1];
     cmd = sprintf('CAT_WarpSurf -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
 
     % read final surface and map thickness data
-    disp('Project thickness map to surface');
-    CS = vbm_io_FreeSurfer('read_surf',Pcentral); 
+    str = '  Project thickness map to surface\n'; fprintf(str); nstr = [nstr str-1];
+    CS  = vbm_io_FreeSurfer('read_surf',Pcentral); 
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-    CS.facevertexcdata = isocolors2(Yth1i,CS.vertices); 
+    CS.facevertexcdata = isocolors2(Yth1,CS.vertices); 
     vbm_io_FreeSurfer('write_surf_data',Pthick,CS.facevertexcdata);
     
     % visualize a side
@@ -219,8 +250,14 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     % CAT_FixTopology!
     delete(Praw);  
     delete(Psphere0);
-    delete(Vpp.fname);
+    %delete(Vpp.fname);
+    %delete(Vpp1.fname);
+    
   end
+  
+  % remove old output from command window
+  if opt.debug==0, fprintf(sprintf('%s',repmat('\b',1,numel(nstr)))); end   
+  
 end
  
 function V = isocolors2(R,V,opt)

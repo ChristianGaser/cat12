@@ -59,11 +59,6 @@ vbm.output.label.native = 0;
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
-% partitioning atlas maps
-vbm.output.atlas.native = 0; 
-vbm.output.atlas.warped = 0; 
-vbm.output.atlas.dartel = 0; 
-
 % jacobian determinant 0/1 (none/yes)
 vbm.output.jacobian.warped = 0;
 
@@ -74,6 +69,11 @@ vbm.output.warps        = [0 0];
 % experimental maps
 %=======================================================================
 % WARNING: This map describes the changes of the preprocessing and is under development. 
+
+% partitioning atlas maps
+vbm.output.atlas.native = 0; 
+vbm.output.atlas.warped = 0; 
+vbm.output.atlas.dartel = 0; 
 
 % preprocessing changes map
 vbm.output.pc.native = 0;
@@ -128,8 +128,9 @@ vbm.extopts.BVC         = 1;    % Blood Vessel Correction:
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
 vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
-vbm.extopts.ROI         = 3;    % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 1)
+vbm.extopts.ROI         = 2;    % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 vbm.extopts.surface     = 1;    % surface and thickness creation
+vbm.extopts.debug       = 0;    % debuging option
 
 % expert options - ROIs
 %=======================================================================
@@ -140,9 +141,9 @@ vbm.extopts.surface     = 1;    % surface and thickness creation
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 vbm.extopts.atlas       = { ... 
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','l1a.nii')      'none'  {''}              ; ... % VBM atlas with major regions for SBM & ROIs
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... 
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... 
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ...
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'gm'    {'csf','gm','wm'} ; ...
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ...
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ...
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ...
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ...
   }; 

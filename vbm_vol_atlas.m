@@ -233,43 +233,43 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
   switch lower(atlas)
     case 'ibsr'
       mdir   = '/Volumes/MyBook/MRData/Regions/ibsr';
-      PA     = findfiles(mdir,'IBSR_*_seg_ana.nii');
+      PA     = vbm_findfiles(mdir,'IBSR_*_seg_ana.nii');
       Ps     = {''};
-      P      = findfiles(mdir,'IBSR_*_ana.nii');
+      P      = vbm_findfiles(mdir,'IBSR_*_ana.nii');
       P      = setdiff(P,PA);
-      Pcsv   = findfiles(mdir,'IBSR.csv'); 
-      Ptxt   = findfiles(mdir,'IBSR.txt'); 
+      Pcsv   = vbm_findfiles(mdir,'IBSR.csv'); 
+      Ptxt   = vbm_findfiles(mdir,'IBSR.txt'); 
       refine = 1;
       
     case 'hammers'
       mdir   = '/Volumes/MyBook/MRData/Regions/brain-development.org/Pediatric Brain Atlas/Hammers_mith_atlases_n20r67_for_pvelab';
-      P      = findfiles(mdir,'MRalex.img');
-      PA     = findfiles(mdir,'VOIalex.img');
+      P      = vbm_findfiles(mdir,'MRalex.img');
+      PA     = vbm_findfiles(mdir,'VOIalex.img');
       Ps     = {''};
-      Pcsv   = findfiles(mdir,'VOIalex.csv'); 
-      Ptxt   = findfiles(mdir,'hammers.txt'); 
+      Pcsv   = vbm_findfiles(mdir,'VOIalex.csv'); 
+      Ptxt   = vbm_findfiles(mdir,'hammers.txt'); 
       refine = 1;
       
     case {'mori','mori1','mori2','mori3'}
       if numel(atlas)==5, aid=atlas(5); else aid='2'; end
       mdir   = '/Volumes/MyBook/MRData/Regions/www.spl.harvard.edu/2010_JHU-MNI-ss Atlas';
-      P      = findfiles(mdir,'JHU_MNI_SS_T1.nii'); 
-      PA     = findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s.nii',repmat('I',1,str2double(aid))));
+      P      = vbm_findfiles(mdir,'JHU_MNI_SS_T1.nii'); 
+      PA     = vbm_findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s.nii',repmat('I',1,str2double(aid))));
       Ps     = {''};      
-      Pcsv   = findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s_SlicerLUT.csv',repmat('I',1,str2double(aid))));
-      Ptxt   = findfiles(mdir,'mori.txt'); 
+      Pcsv   = vbm_findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s_SlicerLUT.csv',repmat('I',1,str2double(aid))));
+      Ptxt   = vbm_findfiles(mdir,'mori.txt'); 
       refine = 1;
     
     case 'anatomy'
       mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
-      P      = findfiles(mdir,'colin27T1_seg.img');
-      PA     = [findfiles(fullfile(mdir,'PMaps'),'*.img'), ...
-                findfiles(fullfile(mdir,'Fiber_Tracts','PMaps'),'*.img')];
-      Ps     = findfiles(mdir,'AnatMask.img'); 
+      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
+      PA     = [vbm_findfiles(fullfile(mdir,'PMaps'),'*.img'), ...
+                vbm_findfiles(fullfile(mdir,'Fiber_Tracts','PMaps'),'*.img')];
+      Ps     = vbm_findfiles(mdir,'AnatMask.img'); 
       Pmat   = fullfile(mdir,'AllAreas_v18_MPM.mat');
       Pmat2  = fullfile(mdir,'Fiber_Tracts','AllFibres_v15_MPM.mat');
       Pcsv   = {fullfile(mdir,[Pmat(1:end-8) '.csv'])};
-      Ptxt   = findfiles(mdir,'anatomy.txt'); 
+      Ptxt   = vbm_findfiles(mdir,'anatomy.txt'); 
       refine = 1;
       
       
@@ -298,38 +298,38 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       
     case 'aala' % anatomy toolbox version
       mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
-      P      = findfiles(mdir,'colin27T1_seg.img');
-      PA     = findfiles(mdir,'MacroLabels.img');
+      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
+      PA     = vbm_findfiles(mdir,'MacroLabels.img');
       Ps     = {''};
-      Pcsv   = findfiles(mdir,'Macro.csv');
-      Ptxt   = findfiles(mdir,'aal.txt'); 
+      Pcsv   = vbm_findfiles(mdir,'Macro.csv');
+      Ptxt   = vbm_findfiles(mdir,'aal.txt'); 
       refine = 1;
       
     case 'aal'
       mdir   = '/Volumes/MyBook/MRData/Regions/aal_for_SPM8';
-      P      = findfiles(mdir,'colin27T1_seg.img');
-      PA     = findfiles(mdir,'aal.nii');
+      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
+      PA     = vbm_findfiles(mdir,'aal.nii');
       Ps     = {''};
-      Pcsv   = findfiles(mdir,'aal.csv');
-      Ptxt   = findfiles(mdir,'aal.txt'); 
+      Pcsv   = vbm_findfiles(mdir,'aal.csv');
+      Ptxt   = vbm_findfiles(mdir,'aal.txt'); 
       refine = 1;  
     
     case 'lpba40'
       mdir   = '/Volumes/MyBook/MRData/Regions/LPBA40';
-      P      = findfiles(mdir,'.img');
-      PA     = findfiles(mdir,'.nii');
+      P      = vbm_findfiles(mdir,'.img');
+      PA     = vbm_findfiles(mdir,'.nii');
       Ps     = {''};
-      Pcsv   = findfiles(mdir,'.csv');
-      Ptxt   = findfiles(mdir,'.txt'); 
+      Pcsv   = vbm_findfiles(mdir,'.csv');
+      Ptxt   = vbm_findfiles(mdir,'.txt'); 
       refine = 1;  
    
     % for this atlas I have no source and no labels...
     %{
     case 'brodmann'
       mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
-      P      = findfiles(mdir,'colin27T1_seg.img');
-      PA     = findfiles(mdir,'MacroLabels.img');
-      Pcsv   = findfiles(mdir,'Macro.csv');
+      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
+      PA     = vbm_findfiles(mdir,'MacroLabels.img');
+      Pcsv   = vbm_findfiles(mdir,'Macro.csv');
       refine = 1;
     %}
       
@@ -337,9 +337,9 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
     %{  
     case {'ibaspm116','ibaspm71'}
       mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
-      P      = findfiles(mdir,'colin27T1_seg.img');
-      PA     = findfiles(mdir,'MacroLabels.img');
-      Pcsv   = findfiles(mdir,'Macro.csv');
+      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
+      PA     = vbm_findfiles(mdir,'MacroLabels.img');
+      Pcsv   = vbm_findfiles(mdir,'Macro.csv');
       refine = 1;
     %}
     

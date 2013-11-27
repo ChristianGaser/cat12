@@ -56,7 +56,7 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
 
       Xp0T={}; 
       for di=1:numel(dirs),
-        Xp0T = [Xp0T findfiles(dirs{di},'p0*.nii')];  %#ok<AGROW>
+        Xp0T = [Xp0T vbm_findfiles(dirs{di},'p0*.nii')];  %#ok<AGROW>
       end
       XT=Xp0T; XmT=Xp0T;
       for fi=1:numel(Xp0T)
