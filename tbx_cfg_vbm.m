@@ -395,6 +395,21 @@ print.help = {[...
 
 %------------------------------------------------------------------------
 
+surface        = cfg_menu;
+surface.tag    = 'surface';
+surface.name   = 'Surface and thickness estimation';
+surface.labels = {'yes','no'};
+surface.values = {1 0};
+surface.def  = @(val)cg_vbm_get_defaults('extopts.surface', val{:});
+surface.help = {[...
+  'Use PBT (Dahnke et al. 2012) to estimate cortical thickness and to ' ...
+  'create the central cortical surface for left and right hemissphere. ' ...
+  'Surface reconstruction include topology correction (Yotter et al. 2011) ' ...
+  'and spherical projection (Yotter et al.). ' ...
+]};
+
+%------------------------------------------------------------------------
+
 darteltpm = cfg_files;
 darteltpm.tag  = 'darteltpm';
 darteltpm.name = 'Dartel Template';
@@ -446,7 +461,7 @@ dartelwarp.help   = {[
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
-extopts.val   = {dartelwarp,sanlm,LAS,gcutstr,cleanup,vox,bb,ROI,print};
+extopts.val   = {dartelwarp,sanlm,LAS,gcutstr,cleanup,vox,bb,ROI,print,surface};
 %extopts.val   = {sanlm,LAS,gcutstr,cleanup,vox,ROI,print};
 extopts.help  = {'Extended options'};
 

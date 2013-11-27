@@ -452,7 +452,7 @@ function noise = getNoiselevel(T,s,m,range) %#ok<DEFNU>
   V1 = std(u);
   C2 = u(u<=(M1+2*V1));
   [h,x] = hist(C2,N);
-  [M,M2] = max(h);
+  [~,M2] = max(h);
 
   m = x(M2);
 
@@ -467,7 +467,7 @@ function comp = getComp(T,B,range,stepsize)
 
   for i=1:numel(steps)
     M = vbm_vol_morph(B & (T>steps(i)),'o');
-    [ROI,num] = spm_bwlabel(double(M),6);
+    [~,num] = spm_bwlabel(double(M),6);
   end
 
   comp = mean(num);

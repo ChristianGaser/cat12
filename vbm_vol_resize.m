@@ -20,9 +20,11 @@ function varargout=vbm_vol_resize(T,operation,varargin)
 %   [Tr,aniso] = vbm_vol_resize(T ,'aniso2iso',vx_vol,method);         
 %   TV         = vbm_vol_resize(Tr,'iso2aniso',aniso,method);  
 % ______________________________________________________________________
-% Robert Dahnke 2012_10
+% Robert Dahnke
 % Structural Brain Mapping Group
 % University Jena
+% ______________________________________________________________________
+% $Id$ 
   
   if ndims(T)>2, TI=T; clear T; T{1}=TI; end %else varargout{1}=T; end 
   if nargin<2, error('ERROR: vbm_vol_resolution: not enought input!\n'); end
@@ -355,18 +357,35 @@ function varargout=vbm_vol_resize(T,operation,varargin)
       res   = varargin{1}.resO;
       resV  = varargin{1}.resN;
       sizeO = varargin{1}.resO;
-      if numel(varargin)>1, method = varargin{2}; else method=1; end
+      if numel(varargin)>1, method = varargin{2}; else method='linear'; end
+      
       
       T = single(T{1});
-      
-      if all(res>0) && any(round(abs(res)*100)/100>resV)
-        d = single(res./resV);
-        %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
-        [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
-        T = vbm_vol_interp3f(T,Rx,Ry,Rz,method);
-        clear Rx Ry Rz;
-      end
-      
+      if strcmp(method,'masked')
+        % for interpolation of partial defined maps like the cortical
+        % thickness... finally 'nearest' interpolation is often good 
+        % enought and much faster 
+        if all(res>0) && any(round(abs(res)*100)/100>resV)
+          d = single(res./resV);
+          %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
+          [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
+          M  = T>0.5; MM = vbm_vol_morph(M,'d',2);
+          [D,I] = vbdist(T,MM); T=T(I); clear D I; 
+          %Ts = smooth3(T); MM=vbm_vol_morph(M,'e'); T(~MM)=Ts(~MM); clear MM; 
+          M = vbm_vol_interp3f(single(M),Rx,Ry,Rz,'linear')>0.5;
+          T = vbm_vol_interp3f(T,Rx,Ry,Rz,'linear');
+          T = T .* M; 
+          clear Rx Ry Rz;
+        end
+      else
+        if all(res>0) && any(round(abs(res)*100)/100>resV)
+          d = single(res./resV);
+          %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
+          [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
+          T = vbm_vol_interp3f(T,Rx,Ry,Rz,method);
+          clear Rx Ry Rz;
+        end
+      end      
       
       varargout{1} = zeros(varargin{1}.sizeO,'single');
       varargout{1}(1:min(size(T,1),varargin{1}.sizeO(1)), ...
