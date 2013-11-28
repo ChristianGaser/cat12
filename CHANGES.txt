@@ -3165,3 +3165,42 @@ M       vbm_vol_t1qacalc.m
 (6)  Deactivated surface refinement due to position error. 
 ------------------------------------------------------------------------
 r531 | dahnke | 2013-11-27 18:44:56
+
+M       AmapMex.mexmaci64
+MM      CAT.maci64/CAT_3dVol2Surf
+ M      CAT.maci64/CAT_AddValuesToSurf
+ M      CAT.maci64/CAT_BlurSurfHK
+ M      CAT.maci64/CAT_DeformSurf
+ M      CAT.maci64/CAT_DumpCurv
+ M      CAT.maci64/CAT_DumpGI
+MM      CAT.maci64/CAT_FixTopology
+MM      CAT.maci64/CAT_FractalDimension
+MM      CAT.maci64/CAT_Isometize
+ M      CAT.maci64/CAT_LBConformalMap
+ M      CAT.maci64/CAT_ResampleSphericalSurf
+ M      CAT.maci64/CAT_ResampleSurf
+ M      CAT.maci64/CAT_SeparatePolygon
+ M      CAT.maci64/CAT_Surf2Sphere
+MM      CAT.maci64/CAT_WarpSurf
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       sanlmMex.mexmaci64
+M       vbdist.mexmaci64
+M       vbm_surf_createCS.m
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eikonal3.mexmaci64
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_simgrow.mexmaci64
+
+(1) Added subtle surface smoothing after topology correction.
+(2) Removed bug in cg_vbm_write caused by nonexisting 'left' field.
+------------------------------------------------------------------------
+r532 | gaser | 2013-11-28 16:21:45
