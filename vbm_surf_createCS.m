@@ -205,6 +205,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     str = '  Topology correction\n'; fprintf(str); nstr = [nstr str-1];
     cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+
+    cmd = sprintf('CAT_BlurSurfHK "%s" "%s"',Pcentral,Pcentral);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+
     %{
     str = '  Surface refinement\n'; fprintf(str); nstr = [nstr str-1];
     th = 128;
