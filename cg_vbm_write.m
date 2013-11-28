@@ -1868,10 +1868,10 @@ if do_cls && warp.print
       % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
         
       %}
-      CSl.vertices = (S.left.vmati*[S.left.vertices' ; ones(1,size(S.left.vertices,1))])';
-      CSl.vertices = S.left.vertices;
-      CSl.faces = S.left.faces; CSl.facevertexcdata = S.left.th1;
-      %CSr.vertices = S.left.vertices; CSr.faces = S.left.faces; CSr.facevertexcdata = S.left.th1;
+      CSl.vertices = (S.lh.vmati*[S.lh.vertices' ; ones(1,size(S.lh.vertices,1))])';
+      CSl.vertices = S.lh.vertices;
+      CSl.faces = S.lh.faces; CSl.facevertexcdata = S.lh.th1;
+      %CSr.vertices = S.lh.vertices; CSr.faces = S.lh.faces; CSr.facevertexcdata = S.lh.th1;
       
       %pos3d = {[0.5 0.2 0.25 0.1] [0.75 0.2 0.25 0.1] [0.5 0.1 0.25 0.1] [0.75 0.1 0.25 0.1] [0.5 0.0 0.25 0.1] [0.75 0.0 0.25 0.1];
       subplot('position',[0.5 0.05 0.5 0.25]);
