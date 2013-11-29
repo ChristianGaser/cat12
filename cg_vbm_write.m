@@ -467,7 +467,7 @@ end
 
 
 % global intensity normalization based on edge-free regions
-[gx,gy,gz]=vbm_vol_gradient3(Ysrc); Yg=abs(gx)+abs(gy)+abs(gz); Yg=Yg./Ysrc; clear gx gy gz; 
+[gx,gy,gz]=vbm_vol_gradient3(Ysrc); Yg=abs(gx)+abs(gy)+abs(gz); Yg=Yg./(Ysrc+eps); clear gx gy gz; 
 for i=1:3
   Ytmp = smooth3(Ycls{i}>64 & Yb & Yg<0.3)>0.5; 
   if i==2, Ytmp = Ysrc>(T3th(1)/2 + median(Ysrc(Ytmp(:)))/2) & vbm_vol_morph(Ytmp,'e'); end
@@ -484,21 +484,22 @@ clear Ytmp;
 % map atlas to RAW space
 opt.partvol.l1A    = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
 Vl1A = spm_vol(opt.partvol.l1A);
-Yl1A = uint8(spm_sample_vol(Vl1A,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+Yl1A = spm_sample_vol(Vl1A,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
 Yl1A = reshape(Yl1A,d);
-Yl1A = round(Yl1A/2)*2-1;
+Yl1A = uint8(round(Yl1A/2)*2);
+Yl1A(Yl1A>0) = Yl1A(Yl1A>0) - 1;
 
 % segment map 
 Yp0 = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
 
 % diverence helps to identify all gyri that should not be in the
 % GM, but helps to improve the WM
-% divergence is very memory intensive so we it is better to limit the
+% divergence is very memory intensive so it is better to limit the
 % resolution
 [Ymr,resT2] = vbm_vol_resize(Ym,'reduceV',vx_vol,1.5,32);
 [gx,gy,gz]=vbm_vol_gradient3(max(2/3,Ymr)); Ydivr=smooth3(divergence(gy,gx,gz)); clear gx gy gz Ymr;
 Ydiv = vbm_vol_resize(Ydivr,'dereduceV',resT2); clear Ydivr resT2; 
-[gx,gy,gz]=vbm_vol_gradient3(Ym); Yg   = abs(gx)+abs(gy)+abs(gz); Yg=Yg./Ym;  clear gx gy gz;
+[gx,gy,gz]=vbm_vol_gradient3(Ym); Yg   = abs(gx)+abs(gy)+abs(gz); Yg=Yg./(Ym+eps);  clear gx gy gz;
    
 
   
@@ -508,7 +509,7 @@ Yl1(smooth3((Ycls{2}>240 & Ym>2.85/3) | (Ycls{2}>240 & Ym>2.3/3 & Yl1A~=5 & Yl1A
     (Ym>2.1/3 & Yl1A==1 & Yg>0.1) | (Ycls{1}>240 & Yl1A~=5 & Yl1A~=9) | ...
     (Yl1==0 & Yl1A==15 & Ym<1.6/3))>0.5 | Ydiv<-0.05 | ...
     (Ycls{2}>240 & Ym>2.95/3))=1; % cerebrum
-Yl1(Yl1==0 & Yl1A==5  & Ym>1.5/3 & Ym<2.85/3 & Ydiv>-0.05)=5;  % basal ganglien
+Yl1(Yl1==0 & Yl1A==5  & Ym>1.5/3 & Ym<2.85/3 & Ydiv>-0.05)=5;  % basal ganglia
 Yl1(Yl1==0 & Yl1A==9  & Ym>1.5/3 & Ym<2.85/3 & Ydiv>-0.05)=9;  % thalamus
 Yl1(Yl1==0 & Yp0<2.00)=-inf; [Yl1,YD] = vbm_vol_simgrow(Yl1,Ym,0.02); Yl1(isinf(Yl1) | YD>0.10)=0; clear YD;
 Yl1(Yl1==0 & Yp0<1.75)=-inf; [Yl1,YD] = vbm_vol_simgrow(Yl1,Ym,0.02); Yl1(isinf(Yl1) | YD>0.05)=0; clear YD;
@@ -524,7 +525,7 @@ Yl1(YH==1) = 23; Yl1=uint8(Yl1); clear YH;
 
 
 %% class correction
-YBGs = min(min(255-uint8(vbm_vol_smooth3X(Yl1==1 & Ycls{2}>250,0.8)).*Ycls{2},...
+YBGs = min(min(255-uint8(round(vbm_vol_smooth3X(Yl1==1 & Ycls{2}>250,0.8))).*Ycls{2},...
   uint8(255*vbm_vol_smooth3X(YBG,0.5) .* (Ym<2.9/3))),255-Ycls{3});
 if numel(Ycls)>7
   Ycls{7} = YBGs;
@@ -2053,7 +2054,8 @@ if df(1),
     N.dat(:,:,:,:,:) = reshape(Yy,[d1,1,3]);
 end
 
-catch e
+catch
+  e = lasterror;
   vbm_io_cprintf(opt.color.error,'\n%s\nVBM Preprocessing error:\n%s\n', ...
     repmat('-',1,72),repmat('-',1,72));  
   rethrow(e); 

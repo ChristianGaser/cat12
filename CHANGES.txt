@@ -3211,3 +3211,31 @@ M       CHANGES.txt
 Modified CAT_FixTopology.
 ------------------------------------------------------------------------
 r533 | gaser | 2013-11-29 08:10:18
+
+M       CAT.maci64/CAT_3dVol2Surf
+M       CAT.maci64/CAT_AddValuesToSurf
+M       CAT.maci64/CAT_BlurSurfHK
+M       CAT.maci64/CAT_DeformSurf
+M       CAT.maci64/CAT_DumpCurv
+M       CAT.maci64/CAT_DumpGI
+M       CAT.maci64/CAT_FixTopology
+M       CAT.maci64/CAT_FractalDimension
+M       CAT.maci64/CAT_Isometize
+M       CAT.maci64/CAT_LBConformalMap
+M       CAT.maci64/CAT_ResampleSphericalSurf
+M       CAT.maci64/CAT_ResampleSurf
+M       CAT.maci64/CAT_SeparatePolygon
+M       CAT.maci64/CAT_Surf2Sphere
+M       CAT.maci64/CAT_WarpSurf
+M       CHANGES.txt
+M       cg_vbm_batch.sh
+M       cg_vbm_write.m
+M       vbm_surf_createCS.m
+
+(1) Many changes in cg_vbm_write to prevent division by zero and negative
+    and floating values for uint8.
+(2) Changed handling of error message inside try-catch (now with e=lasterror).
+(3) Added smoothing parameter for CAT_BlurSurfHK in vbm_surf_createCS.m.
+(4) Replaced some corrupt binaries for maci64.
+------------------------------------------------------------------------
+r534 | gaser | 2013-11-29 13:04:04
