@@ -3204,3 +3204,10 @@ M       vbm_vol_simgrow.mexmaci64
 (2) Removed bug in cg_vbm_write caused by nonexisting 'left' field.
 ------------------------------------------------------------------------
 r532 | gaser | 2013-11-28 16:21:45
+
+M       CAT.maci64/CAT_FixTopology
+M       CHANGES.txt
+
+Modified CAT_FixTopology.
+------------------------------------------------------------------------
+r533 | gaser | 2013-11-29 08:10:18
