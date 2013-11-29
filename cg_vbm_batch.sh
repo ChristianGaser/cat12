@@ -294,7 +294,7 @@ run_vbm ()
             date >> ${vbmlog}_${j}.log
             echo ---------------------------------- >> ${vbmlog}_${j}.log
             echo >> ${vbmlog}_${j}.log
-            echo $0 $file >> ${vbmlog}_${j}.log
+            echo $0 ${1+"$@"} >> ${vbmlog}_${j}.log
             echo >> ${vbmlog}_${j}.log
             if [ -z "$shellcommand" ]
             then
