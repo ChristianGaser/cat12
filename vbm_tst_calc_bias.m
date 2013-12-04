@@ -98,11 +98,11 @@ function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
           % tissue peaks - std == noise (Sled 1998: I = O * bias / noise)
           BCGWmean = zeros(1,4); BCGWstd = zeros(1,4); 
           for ci=2:4
-            BCGWmean(ci) = nanmean(m0T(round(p0GT(:)*rf)/rf==ci-1));
-            BCGWstd(ci)  = nanstd(m0T(round(p0GT(:)*rf)/rf==ci-1));
+            BCGWmean(ci) = vbm_stat_nanmean(m0T(round(p0GT(:)*rf)/rf==ci-1));
+            BCGWstd(ci)  = vbm_stat_vbm_stat_nanstd(m0T(round(p0GT(:)*rf)/rf==ci-1));
           end
-          BCGWmean(1) = nanmean(m0Ts(m0Ts(:)<BCGWmean(2)/2));
-          BCGWstd(1)  = nanstd(m0Ts(m0Ts(:)<BCGWmean(2)/2));
+          BCGWmean(1) = vbm_stat_nanmean(m0Ts(m0Ts(:)<BCGWmean(2)/2));
+          BCGWstd(1)  = vbm_stat_vbm_stat_nanstd(m0Ts(m0Ts(:)<BCGWmean(2)/2));
           BCGWstd     = BCGWstd  ./ BCGWmean(4);
           BCGWmean    = BCGWmean ./ BCGWmean(4); 
           
@@ -129,8 +129,8 @@ function varargout=vbm_tst_calc_bias(P,Vref,methodname,verb)
           gx = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
           gTv = abs(gx)+abs(gy)+abs(gz); gTv=gTv./m0TO; clear gx gy gz;
           M = vbm_vol_morph(p0GT>0.5,'e') & smooth3(gT)>0.05;
-          resgm = nanmean(gT(M(:)));
-          resgs = nanmean(gTv(M(:)));
+          resgm = vbm_stat_nanmean(gT(M(:)));
+          resgs = vbm_stat_nanmean(gTv(M(:)));
           clear M; 
          
           txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n',...

@@ -7,9 +7,9 @@ function I=vbm_vol_nanmean3(I,s,iterations)
   if ~exist('iterations','var'), iterations=1; end
   for iteration=1:iterations
     I2 = I; I3 = I;
-    for i=1+s:size(I,1)-s, I2(i,:,:) = nanmean(I3(i-s:i+s,:,:),1); end
-    for i=1+s:size(I,2)-s, I3(:,i,:) = nanmean(I2(:,i-s:i+s,:),2); end
-    for i=1+s:size(I,3)-s, I2(:,:,i) = nanmean(I3(:,:,i-s:i+s),3); end  
+    for i=1+s:size(I,1)-s, I2(i,:,:) = vbm_stat_nanmean(I3(i-s:i+s,:,:),1); end
+    for i=1+s:size(I,2)-s, I3(:,i,:) = vbm_stat_nanmean(I2(:,i-s:i+s,:),2); end
+    for i=1+s:size(I,3)-s, I2(:,:,i) = vbm_stat_nanmean(I3(:,:,i-s:i+s),3); end  
     I(isnan(I)) = I2(isnan(I));     
   end
 end 

@@ -159,10 +159,10 @@ function rms=calcRMS(v1,v2)
   for ci=1:3
     c1 = (v1-(ci-1)).* (v1>(ci-1) & v1<ci) + ((ci+1)-v1).*(v1>=ci & v1<(ci+1));
     c2 = (v2-(ci-1)).* (v2>(ci-1) & v2<ci) + ((ci+1)-v2).*(v2>=ci & v2<(ci+1));
-    rms(1,ci) = sqrt(nanmean((c1(:)-c2(:)).^2));
+    rms(1,ci) = sqrt(vbm_stat_nanmean((c1(:)-c2(:)).^2));
   end
   
-  rms(1,4) = sqrt(nanmean((v2(:)-v1(:)).^2));
+  rms(1,4) = sqrt(vbm_stat_nanmean((v2(:)-v1(:)).^2));
 end
 function varargout = cg_confusion_matrix(reference, classified, n_class)
 % compute statistic from confusion matrix
