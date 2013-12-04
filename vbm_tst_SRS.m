@@ -710,8 +710,8 @@ function avgImage(If,Sf,txt)
     % 1) mn,sd
     Ih  = spm_vol(char(cell2spm(If)'));
     I   = spm_read_vols(Ih); 
-    Imn = nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.mn{1}; spm_write_vol(Ihmn,Imn);
-    Isd = nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.sd{1}; spm_write_vol(Ihsd,Isd);
+    Imn = vbm_stat_nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.mn{1}; spm_write_vol(Ihmn,Imn);
+    Isd = vbm_stat_nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.sd{1}; spm_write_vol(Ihsd,Isd);
     clear Imn Isd Ihmn Ihsd;  
 
     % 2) dmn, dsd
@@ -719,8 +719,8 @@ function avgImage(If,Sf,txt)
       if numel(If{1})>1
         Ih  = spm_vol(char(If{i}));
         I   = spm_read_vols(Ih); 
-        Imn = nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.dmn{i}; spm_write_vol(Ihmn,Imn);
-        Isd = nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.dsd{i}; spm_write_vol(Ihsd,Isd);
+        Imn = vbm_stat_nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.dmn{i}; spm_write_vol(Ihmn,Imn);
+        Isd = vbm_stat_nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.dsd{i}; spm_write_vol(Ihsd,Isd);
         clear Imn Isd Ihmn Ihsd;  
       end
     end; 
@@ -728,15 +728,15 @@ function avgImage(If,Sf,txt)
     % 3) mn_dmn, sd_dmn
     Ih  = spm_vol(char(Sf.dmn));
     I   = spm_read_vols(Ih); 
-    Imn = nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.mn_dmn{1}; spm_write_vol(Ihmn,Imn);
-    Isd = nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.sd_dmn{1}; spm_write_vol(Ihsd,Isd);
+    Imn = vbm_stat_nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.mn_dmn{1}; spm_write_vol(Ihmn,Imn);
+    Isd = vbm_stat_nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.sd_dmn{1}; spm_write_vol(Ihsd,Isd);
     clear Imn Isd Ihmn Ihsd;  
 
     % 4) mn_dsd, sd_dsd
     Ih  = spm_vol(char(Sf.dsd));
     I   = spm_read_vols(Ih); 
-    Imn = nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.mn_dsd{1}; spm_write_vol(Ihmn,Imn);
-    Isd = nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.sd_dsd{1}; spm_write_vol(Ihsd,Isd);
+    Imn = vbm_stat_nanmean(I,4);  Ihmn=Ih(1); Ihmn.fname=Sf.mn_dsd{1}; spm_write_vol(Ihmn,Imn);
+    Isd = vbm_stat_nanstd(I,1,4); Ihsd=Ih(1); Ihsd.fname=Sf.sd_dsd{1}; spm_write_vol(Ihsd,Isd);
     clear Imn Isd Ihmn Ihsd;  
     dp('',struct('verb',2),stime);
   catch %#ok<*CTCH>

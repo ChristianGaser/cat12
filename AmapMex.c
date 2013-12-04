@@ -25,9 +25,31 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   else if (nlhs>2)
     mexErrMsgTxt("Too many output arguments.");
   
+  if (!mxIsDouble(prhs[0]))
+    mexErrMsgTxt("First argument must be double.");
   if (!mxIsUint8(prhs[1]))
     mexErrMsgTxt("Second argument must be uint8.");
+  if (!mxIsDouble(prhs[2]))
+    mexErrMsgTxt("Third argument must be double.");
+  if (!mxIsDouble(prhs[3]))
+    mexErrMsgTxt("4th argument must be double.");
+  if (!mxIsDouble(prhs[4]))
+    mexErrMsgTxt("5th argument must be double.");
+  if (!mxIsDouble(prhs[5]))
+    mexErrMsgTxt("6th argument must be double.");
+  if (!mxIsDouble(prhs[6]))
+    mexErrMsgTxt("7th argument must be double.");
+  if (!mxIsDouble(prhs[7]))
+    mexErrMsgTxt("8th argument must be double.");
+  if (!mxIsDouble(prhs[8]))
+    mexErrMsgTxt("9th argument must be double.");
+  if (!mxIsDouble(prhs[9]))
+    mexErrMsgTxt("10th argument must be double.");
+  if (!mxIsDouble(prhs[10]))
+    mexErrMsgTxt("11th argument must be double.");
 
+
+  
   src        = (double*)mxGetPr(prhs[0]);
   label      = (unsigned char*)mxGetPr(prhs[1]);
   n_classes  = (int)mxGetScalar(prhs[2]);

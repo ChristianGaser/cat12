@@ -492,11 +492,11 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
 
             BCGWmean = zeros(1,4); BCGWstd = zeros(1,4); 
             for ci=2:4
-              BCGWmean(ci) = nanmean(mbTs(p0T(:)>ci-1.5 & p0T(:)<ci-0.5));
-              BCGWstd(ci)  =  nanstd(mbTs(p0T(:)>ci-1.5 & p0T(:)<ci-0.5));
+              BCGWmean(ci) = vbm_stat_nanmean(mbTs(p0T(:)>ci-1.5 & p0T(:)<ci-0.5));
+              BCGWstd(ci)  =  vbm_stat_nanstd(mbTs(p0T(:)>ci-1.5 & p0T(:)<ci-0.5));
             end
-            BCGWmean(1) = nanmean(mbTs(mbTs(:)<BCGWmean(2)/2));
-            BCGWstd(1)  = nanstd(mbTs(mbTs(:)<BCGWmean(2)/2));
+            BCGWmean(1) = vbm_stat_nanmean(mbTs(mbTs(:)<BCGWmean(2)/2));
+            BCGWstd(1)  = vbm_stat_nanstd(mbTs(mbTs(:)<BCGWmean(2)/2));
             BCGWmean    = BCGWmean ./ BCGWmean(4); 
             BCGWstd     = BCGWstd  ./ BCGWmean(4);
 
@@ -563,12 +563,12 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
           % artifacts in the WM
           if isfield(QAS,'moves_WM')
             WI1=vbm_vol_localstat(maT,WM,1,4); WI2=vbm_vol_localstat(maT,WM,2,4);
-            QAS(i).moves_WM = nanmean(abs(WI2(WM(:))-WI1(WM(:))));
+            QAS(i).moves_WM = vbm_stat_nanmean(abs(WI2(WM(:))-WI1(WM(:))));
           end
           % artifacts in the relevant BG
           if isfield(QAS,'moves_BG')
             WI1=vbm_vol_localstat(maT,BGR,1,4); WI2=vbm_vol_localstat(maT,BGR,2,4); 
-            QAS(i).moves_BG = nanmean(abs(WI2(BGR(:))-WI1(BGR(:))));
+            QAS(i).moves_BG = vbm_stat_nanmean(abs(WI2(BGR(:))-WI1(BGR(:))));
           end
 
           if isfield(QAS,'comp')
@@ -606,7 +606,7 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
             
             ds('l2','',[1 1 1],mbT,WMB,mbT,gTv,17)
             
-            (1/nanmedian(gTv(WMB(:) & gTv(:)>noise/2))) / mean(vx_vol)
+            (1/vbm_stat_nanmedian(gTv(WMB(:) & gTv(:)>noise/2))) / mean(vx_vol)
           end
           % sharpness
           % ------------------------------------------------------------
@@ -635,26 +635,26 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
           if isfield(QAS,'NER') || isfield(QAS,'NERR')
             M = vbm_vol_morph(p0T>1.9,'e') & p0T<3 & ~WM & gT<1;
           end
-          if isfield(QAS,'noiseG'),  QAS(i).noiseG  = [nanmean(gT(WM(:))) ,nanstd(gT(WM(:)))]/QAS(i).contrast;  end  
-          if isfield(QAS,'noiseGr'), QAS(i).noiseGr = [nanmean(gTv(WM(:))),nanstd(gTv(WM(:)))]/QAS(i).contrast; end  
-          if isfield(QAS,'NER'),     QAS(i).NER     = [nanmean(gT(WM(:))) ,nanstd(gT(WM(:)))]  ./ ...
-                                                      [nanmean(gT(M(:)))  ,nanstd(gT(M(:)))];  end
-          if isfield(QAS,'NERR'),    QAS(i).NERR    = [nanmean(gTv(WM(:))),nanstd(gTv(WM(:)))] ./ ...
-                                                      [nanmean(gTv(M(:))) ,nanstd(gTv(M(:)))]; end        
+          if isfield(QAS,'noiseG'),  QAS(i).noiseG  = [vbm_stat_nanmean(gT(WM(:))) ,vbm_stat_nanstd(gT(WM(:)))]/QAS(i).contrast;  end  
+          if isfield(QAS,'noiseGr'), QAS(i).noiseGr = [vbm_stat_nanmean(gTv(WM(:))),vbm_stat_nanstd(gTv(WM(:)))]/QAS(i).contrast; end  
+          if isfield(QAS,'NER'),     QAS(i).NER     = [vbm_stat_nanmean(gT(WM(:))) ,vbm_stat_nanstd(gT(WM(:)))]  ./ ...
+                                                      [vbm_stat_nanmean(gT(M(:)))  ,vbm_stat_nanstd(gT(M(:)))];  end
+          if isfield(QAS,'NERR'),    QAS(i).NERR    = [vbm_stat_nanmean(gTv(WM(:))),vbm_stat_nanstd(gTv(WM(:)))] ./ ...
+                                                      [vbm_stat_nanmean(gTv(M(:))) ,vbm_stat_nanstd(gTv(M(:)))]; end        
           if isfield(QAS,'NERRn'),   
             [gx,gy,gz] = vbm_vol_gradient3(single(maT)); 
             gT  = abs(gx) + abs(gy) + abs(gz);
             gx  = gx./vx_vol(1); gy = gy./vx_vol(2); gz = gz./vx_vol(3);
             gTv = abs(gx) + abs(gy) + abs(gz); 
             %clear gx gy gz;
-                                     QAS(i).NERRn   = [nanmean(gTv(WM(:))),nanstd(gTv(WM(:)))] ./ ...
-                                                      [nanmean(gTv(M(:))) ,nanstd(gTv(M(:)))];         
+                                     QAS(i).NERRn   = [vbm_stat_nanmean(gTv(WM(:))),vbm_stat_nanstd(gTv(WM(:)))] ./ ...
+                                                      [vbm_stat_nanmean(gTv(M(:))) ,vbm_stat_nanstd(gTv(M(:)))];         
           end
           if isfield(QAS,'GER'),     
 %            gTv = max(cat(4,abs(gx),abs(gy),abs(gz)),[],4)*2*3;
             WMB = WMP & 1-WMS & gT>noise/2 & gT<1;
             gTv = vbm_vol_localstat(gTv*3,WMB>0,1,3);
-            QAS(i).GER     = 1/nanmedian(gTv(WMB(:)))/QAS(i).contrast * prod(vx_vol); 
+            QAS(i).GER     = 1/vbm_stat_nanmedian(gTv(WMB(:)))/QAS(i).contrast * prod(vx_vol); 
           end
           clear M gTv; clear gx gy gz;
 
@@ -714,9 +714,9 @@ function varargout = vbm_tst_t1qa(XT,Xp0T,XmT,opt)
                 %v1 = v1 - bth; v1(v1<0)=0;
                 %v2 = v2 - bth; v2(v2<0)=0;
 
-                rms(numel(bl)+1,1) = sqrt(nanmean((C1(:)-C2(:)).^2));
-                rms(numel(bl)+1,2) = sqrt(nanmean((G1(:)-G2(:)).^2));
-                rms(numel(bl)+1,3) = sqrt(nanmean((W1(:)-W2(:)).^2));
+                rms(numel(bl)+1,1) = sqrt(vbm_stat_nanmean((C1(:)-C2(:)).^2));
+                rms(numel(bl)+1,2) = sqrt(vbm_stat_nanmean((G1(:)-G2(:)).^2));
+                rms(numel(bl)+1,3) = sqrt(vbm_stat_nanmean((W1(:)-W2(:)).^2));
 
                bl(end+1) = mean(rms(end,:),2);
             end

@@ -36,7 +36,7 @@ end
 global defaults vbm matlabbatch
 
 % always deselect print option
-vbm.extopts.print = 0;
+% vbm.extopts.print = 1;
 
 names = textread(namefile,'%s');
 n = length(names);
@@ -57,15 +57,15 @@ for i=1:n
 	end
 end
 
-tmp_fields = char('darteltpm','finalmask','gcut','kmeans','mrf','bias_fwhm','BVC',...
-              'pbtres','INV','colormap','gcutstr','atlas','ROI','surface','debug');
+tmp_fields = char('darteltpm','finalmask','gcut','gcutstr','gcutCSF','kmeans','mrf','bias_fwhm','BVC','WMHC',...
+              'pbtres','INV','colormap','atlas','ROI','surface','debug');
 if writeonly
     matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,tmp_fields);
 else
     matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,tmp_fields);
 end
 
-tmp_fields = char('l1','ml');
+tmp_fields = char('atlas','te','pc');
 try
   if writeonly
     matlabbatch{1}.spm.tools.vbm.write.output = rmfield(matlabbatch{1}.spm.tools.vbm.write.output,tmp_fields);

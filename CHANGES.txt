@@ -3239,3 +3239,60 @@ M       vbm_surf_createCS.m
 (4) Replaced some corrupt binaries for maci64.
 ------------------------------------------------------------------------
 r534 | gaser | 2013-11-29 13:04:04
+
+M       AmapMex.c
+M       AmapMex.mexmaci64
+M       CAT.maci64/CAT_FixTopology
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_plot_boxplot.m
+A       vbm_stat_nanmean.m
+A       vbm_stat_nanmedian.m
+A       vbm_stat_nanstd.m
+M       vbm_surf_createCS.m
+M       vbm_tst_SRS.m
+M       vbm_tst_calc_bias.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa_groups.m
+M       vbm_tst_staple_multilabels.m
+M       vbm_tst_t1qa.m
+M       vbm_vol_atlas.m
+M       vbm_vol_average.m
+M       vbm_vol_iscale.m
+M       vbm_vol_nanmean3.m
+M       vbm_vol_partvol.m
+M       vbm_vol_resize.m
+M       vbm_vol_smooth3X.m
+M       vbm_vol_t1qacalc.m
+
+(1)  Renamed 'vbm_*.ps' to 'vbmreport_*' for correct spm-sorting of filetypes.
+(2)  Added experimental WM hyperintensity (WMH) correction (extopts.WMHC), WMH 
+     detection (vbm_vol_partioning) and WMH correction (in cg_write_vol).
+     WARNING: This code is in a very early development step and do not work yet
+              and default extopts.WMHC=0!
+(3)  Added variable (extopts.gcutCSF) to modify the gcut+ skull-stripping to 
+     obtain more surrounding CSF.  
+     WARNING: CSF contrast depend strongly on the MR-protocol, and high contrast 
+              images may have a similar intensity of CSF, background and bone!
+              Therefore CSF segment quality can vary strongly for multi-protocol
+              VBM, and extopts.gcutCSF may be turned off!
+              Added a warning for this case.
+(4)  Updated mean tissue intensity estimation for global intensity correction.
+(5)  Replaced MATLAB toolbox nan-functions and calls by own methods:
+     vbm_stat_nanmean,vbm_stat_nanstd,vbm_stat_nanmedian
+(6)  Created subfunctions for longer parts in cg_vbm_write to increase readability
+     may with some cost of memory (but this should be no critical part):
+      (a) the global intensity normalization (vbm_pre_gintnorm)
+      (b) fast partitioning for major brain structures (vbm_pre_fastpart)
+      (c) brain and maximum-based bias correction B3C (vbm_pre_B3C)
+      (d) calc preprocessing expectation map (vbm_qa_calcTE)
+(7)  Created subfunctions for often used parts in cg_vbm_write:
+      (a) egde image Yg (vbm_vol_grad)
+      (b) fast divergence image Ydiv (vbm_vol_div)     
+(8)  Corrected output for atlas, te, pc images in tbx_cfg_vbm and cg_vbm_batch.
+------------------------------------------------------------------------
+r535 | dahnke | 2013-12-04 18:51:25

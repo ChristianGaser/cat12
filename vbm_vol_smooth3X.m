@@ -23,8 +23,8 @@ function S=vbm_vol_smooth3X(S,s,filter)
     return
   end
   switch filter
-    case {'min'}, S = nanmin(S,SO);
-    case {'max'}, S = nanmax(S,SO);
+    case {'min'}, S = min(S,SO);
+    case {'max'}, S = max(S,SO);
   end
   
   S(isnan(S(:)) | isinf(-S(:)) | isinf(S(:)))=0;    

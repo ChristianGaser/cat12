@@ -305,17 +305,17 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ybf,Ym,Yp0,uselevel)
   % artifacts in the YWM
   if isfield(QAS.QM,'art_movesWM')
     WI1=vbm_vol_localstat(Ybi,YWM,1,4); WI2=vbm_vol_localstat(Ybi,YWM,2,4);
-    QAS.QM.art_movesWM(1) = nanmean(abs(WI2(YWM(:))-WI1(YWM(:))));
+    QAS.QM.art_movesWM(1) = vbm_stat_vbm_stat_nanmean(abs(WI2(YWM(:))-WI1(YWM(:))));
     WI1=vbm_vol_localstat(Ymi,YWM,1,4); WI2=vbm_vol_localstat(Ymi,YWM,2,4);
-    QAS.QM.art_movesWM(2) = nanmean(abs(WI2(YWM(:))-WI1(YWM(:))));
+    QAS.QM.art_movesWM(2) = vbm_stat_vbm_stat_nanmean(abs(WI2(YWM(:))-WI1(YWM(:))));
     clear WI1;
   end
   % artifacts in the relevant YBG
   if isfield(QAS.QM,'art_movesBG')
     WI1=vbm_vol_localstat(Ybi,YBGR,1,4); WI2=vbm_vol_localstat(Ybi,YBGR,2,4); 
-    QAS.QM.art_movesBG(1) = nanmean(abs(WI2(YBGR(:))-WI1(YBGR(:))));
+    QAS.QM.art_movesBG(1) = vbm_stat_vbm_stat_nanmean(abs(WI2(YBGR(:))-WI1(YBGR(:))));
     WI1=vbm_vol_localstat(Ymi,YBGR,1,4); WI2=vbm_vol_localstat(Ymi,YBGR,2,4); 
-    QAS.QM.art_movesBG(2) = nanmean(abs(WI2(YBGR(:))-WI1(YBGR(:))));
+    QAS.QM.art_movesBG(2) = vbm_stat_vbm_stat_nanmean(abs(WI2(YBGR(:))-WI1(YBGR(:))));
     clear WI1;
   end
 

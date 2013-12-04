@@ -19,7 +19,7 @@ function vbm_tst_staple_multilabels(P,Pm,Q,verb)
   for i=1:n
     vol(:,:,:,i) = single(spm_read_vols(V(i)));
   end 
-  n=n+1; vol(:,:,:,n) = nanmean(vol,4);
+  n=n+1; vol(:,:,:,n) = vbm_stat_nanmean(vol,4);
   %vol(isinf(vol(:)) | isnan(vol(:))) = 0;
   vol_size = size(vol);
 
