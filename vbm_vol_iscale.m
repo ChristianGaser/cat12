@@ -375,8 +375,8 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
     
 %  function tp=tissue_peaks(T,GWM)
 %  [gx,gy,gz] = vbm_vol_gradient3(T); G=abs(gx)+abs(gy)+abs(gz); G=G./T; clear gx gy gz;
-%  tp(3) = nanmedian(T(GWM(:) & T(:)>0.6 & T(:)<1.5 & G(:)<mean(G(GWM(:)))));
-%  tp(2) = nanmedian(T(GWM(:) & T(:)>0.4 & T(:)<tp(3)));
+%  tp(3) = vbm_stat_nanmedian(T(GWM(:) & T(:)>0.6 & T(:)<1.5 & G(:)<mean(G(GWM(:)))));
+%  tp(2) = vbm_stat_nanmedian(T(GWM(:) & T(:)>0.4 & T(:)<tp(3)));
 %  tp(1) = max(0, min( tp(2)/2 , tp(2)-diff(tp(2:3)) ));
 %
       if ndims(varargin{1})>2

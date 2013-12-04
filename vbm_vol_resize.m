@@ -90,7 +90,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
             for ii=1:ss(1)
               for jj=1:ss(2)
                 for kk=1:ss(3)
-                  varargout{i} = nanmax(varargout{i}, ...
+                  varargout{i} = max(varargout{i}, ...
                     (T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3))>0) .* ...
                      T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3)));
                     
@@ -104,7 +104,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
               for jj=1:ss(2)
                 for kk=1:ss(3)
 
-                  varargout{i} = nanmin(varargout{i}, ...
+                  varargout{i} = min(varargout{i}, ...
                     T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3)));
                     
                 end
@@ -129,7 +129,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
             end
             varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0);   
             varargout{i}(isnan(varargout{i})) = 0;
-         elseif strcmp(method,'nanmean') || strcmp(method,'meannan')
+         elseif strcmp(method,'vbm_stat_nanmean') || strcmp(method,'meannan')
             varargout{i} = zeros(floor(size(T{i})./ss),'single');
             counter = varargout{i};
             nsize = floor(size(T{i})./ss).*ss;

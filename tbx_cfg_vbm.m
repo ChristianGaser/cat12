@@ -615,9 +615,6 @@ csf.name      = 'Cerebro-Spinal Fluid (CSF)';
 csf.val       = {native, warped, modulated, dartel};
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'};
 
-% not yet
-%-----------------------------------------------------------------------
-%{
 
 % main structure atlas
 native.def    = @(val)cg_vbm_get_defaults('output.atlas.native', val{:});
@@ -650,14 +647,14 @@ atlas.help    = {[ ...
 
 
 % preprocessing change map
-native.def      = @(val)cg_vbm_get_defaults('output.pcT.native', val{:});
-warped.def      = @(val)cg_vbm_get_defaults('output.pcT.warped', val{:});
-dartel.def      = @(val)cg_vbm_get_defaults('output.pcT.dartel', val{:});
-pcT           = cfg_branch;
-pcT.tag       = 'pcT';
-pcT.name      = 'error map ';
-pcT.val       = {native, warped, dartel};
-pcT.help      = {[ ...
+native.def   = @(val)cg_vbm_get_defaults('output.pc.native', val{:});
+warped.def   = @(val)cg_vbm_get_defaults('output.pc.warped', val{:});
+dartel.def   = @(val)cg_vbm_get_defaults('output.pc.dartel', val{:});
+pc           = cfg_branch;
+pc.tag       = 'pc';
+pc.name      = 'preprocessing change map';
+pc.val       = {native, warped, dartel};
+pc.help      = {[ ...
   'WARNING: The preprocessing documentation map is under development!\n\n' ...
   'This is the option to save a map that protocol the canges that were ' ...
   'necessary to segment your image. In example the removement of blood ' ...
@@ -667,8 +664,22 @@ pcT.help      = {[ ...
   'values describe regions where error are more likely than in other ' ...
   'regions. '
 ]};
-%}
-%-----------------------------------------------------------------------
+
+
+% tissue expectation map
+native.def   = @(val)cg_vbm_get_defaults('output.te.native', val{:});
+warped.def   = @(val)cg_vbm_get_defaults('output.te.warped', val{:});
+dartel.def   = @(val)cg_vbm_get_defaults('output.te.dartel', val{:});
+te           = cfg_branch;
+te.tag       = 'te';
+te.name      = 'tissue expectation map';
+te.val       = {native, warped, dartel};
+te.help      = {[ ...
+  'WARNING: The preprocessing documentation map is under development!\n\n' ...
+  'Difference image of the atlas map in subject space and the segmentation.' ... 
+]};
+
+
 
 warps = cfg_menu;
 warps.tag    = 'warps';
@@ -694,8 +705,7 @@ warps.help   = {[ ...
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
-%output.val = {grey, white, csf, label, bias, jacobian, warps, atlas};
-output.val = {grey, white, csf, label, bias, jacobian, warps};
+output.val  = {grey, white, csf, label, bias, jacobian, warps}; %, atlas, pc, te};
 output.help = {...
 'This routine produces spatial normalisation parameters (*_seg8.mat files) by default. ',...
 '',...
@@ -926,33 +936,90 @@ if opts.label.dartel==2,
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 
-% pcT
-%{
-if opts.pcT.native,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Preprocessing Change Images';
-    cdep(end).src_output = substruct('()',{1}, '.','pcT','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.pcT.warped,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Preprocessing Change Images';
-    cdep(end).src_output = substruct('()',{1}, '.','wpcT','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.pcT.dartel==1,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Rigid Registered Preprocessing Change Images';
-    cdep(end).src_output = substruct('()',{1}, '.','rpcT','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.pcT.dartel==2,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Affine Registered Preprocessing Change Images';
-    cdep(end).src_output = substruct('()',{1}, '.','apcT','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-%}
+% atlas
+if isfield(opts,'atlas')
+  if opts.atlas.native,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Atlas Images';
+      cdep(end).src_output = substruct('()',{1}, '.','atlas','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.atlas.warped,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Warped Atlas Images';
+      cdep(end).src_output = substruct('()',{1}, '.','watlas','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.atlas.dartel==1,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Rigid Registered Atlas Images';
+      cdep(end).src_output = substruct('()',{1}, '.','ratlas','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.atlas.dartel==2,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Affine Registered Atlas Images';
+      cdep(end).src_output = substruct('()',{1}, '.','aatlas','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+end
+
+% pc
+if isfield(opts,'pc')
+  if opts.pc.native,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','pc','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.pc.warped,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Warped Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','wpc','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.pc.dartel==1,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Rigid Registered Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','rpc','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.pc.dartel==2,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Affine Registered Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','apc','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+end
+
+% te
+if isfield(opts,'te')
+  if opts.te.native,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','te','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.te.warped,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Warped Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','wte','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.te.dartel==1,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Rigid Registered Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','rte','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.te.dartel==2,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Affine Registered Preprocessing Change Images';
+      cdep(end).src_output = substruct('()',{1}, '.','ate','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+end
+
 
 % jacobian
 if opts.jacobian.warped,

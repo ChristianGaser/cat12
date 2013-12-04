@@ -106,7 +106,7 @@ function varargout = vbm_plot_boxplot(data,opt)
   % sort
   if isfield(opt,'sort') && opt.sort
     mdata = zeros(1,numel(data));
-    for i=1:numel(data), mdata(i) = nanmedian(data{i}(:)); end
+    for i=1:numel(data), mdata(i) = vbm_stat_nanmedian(data{i}(:)); end
     [mdata,sorti] = sort(mdata);
     data          = data(sorti);
     opt.names     = opt.names(sorti);

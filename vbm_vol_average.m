@@ -118,9 +118,9 @@ function VO = vbm_vol_average(P,fname,PT,dt,nr)
            Y(:,:,1,fi) = single(spm_slice_vol(V(fi),spm_matrix([0 0 p]),V(fi).dim(1:2),0));
         end
         switch i
-          case 1, YO = nanmedian(Y,4);
-          case 2, YO = nanmean(Y,4);
-          case 3, YO = nanstd(Y,1,4);
+          case 1, YO = vbm_stat_nanmedian(Y,4);
+          case 2, YO = vbm_stat_nanmean(Y,4);
+          case 3, YO = vbm_stat_nanstd(Y,1,4);
         end
         VO1 = spm_write_plane(VO1,YO,p);
       end

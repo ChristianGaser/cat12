@@ -596,7 +596,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
             Yi = intlut(int16(Yi),int16(cod(:,3)'));
         end
         % flip LR
-        [x,y,z]=ind2sub(size(Ys),find(Ys==1));
+        [x,y,z]=ind2sub(size(Ys),find(Ys==1)); %#ok<NASGU>
         if mean(x)>(size(Ys,1)/2), Ys(Ys==1)=1.5; Ys(Ys==2)=1; Ys(Ys==1.5)=2; end
          % add case j 
         switch dt2
@@ -645,8 +645,8 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   N.descrip     = dsc;
   create(N);       
   Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
-  Y             = cat(4,~nanmax(Y,[],4),Y); % add background class
-  [maxx,Y]      = nanmax(Y,[],4); clear maxx; Y = Y-1;
+  Y             = cat(4,~max(Y,[],4),Y); % add background class
+  [maxx,Y]      = max(Y,[],4); clear maxx; Y = Y-1;
   for xi=1:3, Y = vbm_vol_localstat(single(Y),M,1,7); end
 
   % restor old labeling or use optimized
@@ -850,8 +850,8 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   N.descrip     = dsc;
   create(N);       
   Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
-  Y             = cat(4,~nanmax(Y,[],4),Y); % add background class
-  [maxx,Y]      = nanmax(Y,[],4); clear maxx; Y = Y-1;
+  Y             = cat(4,~max(Y,[],4),Y); % add background class
+  [maxx,Y]      = max(Y,[],4); clear maxx; Y = Y-1;
   for xi=1:3, Y = vbm_vol_localstat(single(Y),M,1,7); end
 
  % restor old labeling or use optimized

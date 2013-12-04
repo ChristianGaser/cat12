@@ -96,9 +96,9 @@ function vbm_tst_qa_groups(files,names,qm,printgroup,name)
       group.(qm{qmi,1}).data{gi} = data.(qm{qmi,1})(strcmp(data.group,names{gi}));
    
       group.(qm{qmi,1}).n(gi)    = sum(strcmp(data.group,names{gi})); 
-      group.(qm{qmi,1}).med(gi)  = nanmedian(group.(qm{qmi,1}).data{gi});
-      group.(qm{qmi,1}).mean(gi) = nanmean(group.(qm{qmi,1}).data{gi});
-      group.(qm{qmi,1}).std(gi)  = nanstd(group.(qm{qmi,1}).data{gi});
+      group.(qm{qmi,1}).med(gi)  = vbm_stat_nanmedian(group.(qm{qmi,1}).data{gi});
+      group.(qm{qmi,1}).mean(gi) = vbm_stat_nanmean(group.(qm{qmi,1}).data{gi});
+      group.(qm{qmi,1}).std(gi)  = vbm_stat_nanstd(group.(qm{qmi,1}).data{gi});
       group.(qm{qmi,1}).sortval  = [ group.(qm{qmi,1}).sortval ;
         repmat(group.(qm{qmi,1}).med(gi)',group.(qm{qmi,1}).n(gi),1)];
         %repmat(group.(qm{qmi,1}).mean(gi)' + (group.(qm{qmi,1}).std(gi)/4)',group.(qm{qmi,1}).n(gi),1)];
@@ -304,7 +304,7 @@ function varargout=vbm_plot_SDbar(mdata,sdata,names,sortdata)
 % ______________________________________________________________________
 % plot bars with std
 %
-% vbm_plot_SDbar(nanmean(gmdist,1),nanstd(gmdist,1),pnames,1); 
+% vbm_plot_SDbar(vbm_stat_nanmean(gmdist,1),vbm_stat_nanstd(gmdist,1),pnames,1); 
 %    
 % ______________________________________________________________________
 % $Id$
