@@ -3314,3 +3314,109 @@ New version of CAT_Surf2Sphere that can now deal with reducepatched
 data.
 ------------------------------------------------------------------------
 r536 | gaser | 2013-12-09 10:36:39
+
+M       CAT.glnx86/CAT_3dVol2Surf
+M       CAT.glnx86/CAT_AddValuesToSurf
+M       CAT.glnx86/CAT_BlurSurfHK
+M       CAT.glnx86/CAT_DeformSurf
+M       CAT.glnx86/CAT_DumpCurv
+M       CAT.glnx86/CAT_DumpGI
+M       CAT.glnx86/CAT_FixTopology
+M       CAT.glnx86/CAT_FractalDimension
+M       CAT.glnx86/CAT_Isometize
+M       CAT.glnx86/CAT_LBConformalMap
+M       CAT.glnx86/CAT_ResampleSphericalSurf
+M       CAT.glnx86/CAT_ResampleSurf
+M       CAT.glnx86/CAT_SeparatePolygon
+M       CAT.glnx86/CAT_Surf2Sphere
+M       CAT.glnx86/CAT_WarpSurf
+RM      CAT.maci64/CAT_3dVol2Surf
+RM      CAT.maci64/CAT_AddValuesToSurf
+RM      CAT.maci64/CAT_BlurSurfHK
+RM      CAT.maci64/CAT_DeformSurf
+RM      CAT.maci64/CAT_DumpCurv
+RM      CAT.maci64/CAT_DumpGI
+RM      CAT.maci64/CAT_FixTopology
+RM      CAT.maci64/CAT_FractalDimension
+RM      CAT.maci64/CAT_Isometize
+RM      CAT.maci64/CAT_LBConformalMap
+RM      CAT.maci64/CAT_ResampleSphericalSurf
+RM      CAT.maci64/CAT_ResampleSurf
+RM      CAT.maci64/CAT_SeparatePolygon
+RM      CAT.maci64/CAT_Surf2Sphere
+RM      CAT.maci64/CAT_WarpSurf
+M       CAT.win32/CAT_3dVol2Surf.exe
+M       CAT.win32/CAT_AddValuesToSurf.exe
+M       CAT.win32/CAT_BlurSurfHK.exe
+M       CAT.win32/CAT_DeformSurf.exe
+M       CAT.win32/CAT_DumpCurv.exe
+M       CAT.win32/CAT_DumpGI.exe
+M       CAT.win32/CAT_FixTopology.exe
+M       CAT.win32/CAT_FractalDimension.exe
+M       CAT.win32/CAT_Isometize.exe
+M       CAT.win32/CAT_LBConformalMap.exe
+M       CAT.win32/CAT_ResampleSphericalSurf.exe
+M       CAT.win32/CAT_ResampleSurf.exe
+M       CAT.win32/CAT_SeparatePolygon.exe
+M       CAT.win32/CAT_Surf2Sphere.exe
+M       CAT.win32/CAT_WarpSurf.exe
+M       CHANGES.txt
+M       vbm_surf_createCS.m
+
+(1) Added new binaries for all platforms.
+(2) Corrected wrong path for linux binaries in vbm_surf_createCS.m.
+------------------------------------------------------------------------
+r537 | gaser | 2013-12-09 20:05:55
+
+M       CAT.glnx86/CAT_3dVol2Surf
+M       CAT.glnx86/CAT_AddValuesToSurf
+M       CAT.glnx86/CAT_BlurSurfHK
+M       CAT.glnx86/CAT_DeformSurf
+M       CAT.glnx86/CAT_DumpCurv
+M       CAT.glnx86/CAT_DumpGI
+M       CAT.glnx86/CAT_FixTopology
+M       CAT.glnx86/CAT_FractalDimension
+M       CAT.glnx86/CAT_Isometize
+M       CAT.glnx86/CAT_LBConformalMap
+M       CAT.glnx86/CAT_ResampleSphericalSurf
+M       CAT.glnx86/CAT_ResampleSurf
+M       CAT.glnx86/CAT_SeparatePolygon
+M       CAT.glnx86/CAT_Surf2Sphere
+M       CAT.glnx86/CAT_WarpSurf
+RM      CAT.maci64/CAT_3dVol2Surf
+RM      CAT.maci64/CAT_AddValuesToSurf
+RM      CAT.maci64/CAT_BlurSurfHK
+RM      CAT.maci64/CAT_DeformSurf
+RM      CAT.maci64/CAT_DumpCurv
+RM      CAT.maci64/CAT_DumpGI
+RM      CAT.maci64/CAT_FixTopology
+RM      CAT.maci64/CAT_FractalDimension
+RM      CAT.maci64/CAT_Isometize
+RM      CAT.maci64/CAT_LBConformalMap
+RM      CAT.maci64/CAT_ResampleSphericalSurf
+RM      CAT.maci64/CAT_ResampleSurf
+RM      CAT.maci64/CAT_SeparatePolygon
+RM      CAT.maci64/CAT_Surf2Sphere
+RM      CAT.maci64/CAT_WarpSurf
+M       CAT.win32/CAT_3dVol2Surf.exe
+M       CAT.win32/CAT_AddValuesToSurf.exe
+M       CAT.win32/CAT_BlurSurfHK.exe
+M       CAT.win32/CAT_DeformSurf.exe
+M       CAT.win32/CAT_DumpCurv.exe
+M       CAT.win32/CAT_DumpGI.exe
+M       CAT.win32/CAT_FixTopology.exe
+M       CAT.win32/CAT_FractalDimension.exe
+M       CAT.win32/CAT_Isometize.exe
+M       CAT.win32/CAT_LBConformalMap.exe
+M       CAT.win32/CAT_ResampleSphericalSurf.exe
+M       CAT.win32/CAT_ResampleSurf.exe
+M       CAT.win32/CAT_SeparatePolygon.exe
+M       CAT.win32/CAT_Surf2Sphere.exe
+M       CAT.win32/CAT_WarpSurf.exe
+M       CHANGES.txt
+M       vbm_surf_createCS.m
+
+(1) Added new binaries for all platforms.
+(2) Corrected wrong path for linux binaries in vbm_surf_createCS.m.
+------------------------------------------------------------------------
+r537 | gaser | 2013-12-09 20:07:28

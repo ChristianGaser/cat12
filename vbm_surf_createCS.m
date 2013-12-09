@@ -57,7 +57,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   elseif ismac
     opt.CATDir = [opt.CATDir '.maci64'];
   elseif isunix
-    opt.CATDir = [opt.CATDir '.glx'];
+    opt.CATDir = [opt.CATDir '.glnx86'];
   end  
 
   [pp,ff]   = spm_fileparts(V.fname);
