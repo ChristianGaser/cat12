@@ -3296,3 +3296,21 @@ M       vbm_vol_t1qacalc.m
 (8)  Corrected output for atlas, te, pc images in tbx_cfg_vbm and cg_vbm_batch.
 ------------------------------------------------------------------------
 r535 | dahnke | 2013-12-04 18:51:25
+
+M       CAT.maci64/CAT_BlurSurfHK
+M       CAT.maci64/CAT_DumpCurv
+M       CAT.maci64/CAT_DumpGI
+M       CAT.maci64/CAT_FixTopology
+M       CAT.maci64/CAT_FractalDimension
+M       CAT.maci64/CAT_Isometize
+M       CAT.maci64/CAT_LBConformalMap
+M       CAT.maci64/CAT_ResampleSphericalSurf
+M       CAT.maci64/CAT_ResampleSurf
+M       CAT.maci64/CAT_Surf2Sphere
+M       CAT.maci64/CAT_WarpSurf
+M       CHANGES.txt
+
+New version of CAT_Surf2Sphere that can now deal with reducepatched
+data.
+------------------------------------------------------------------------
+r536 | gaser | 2013-12-09 10:36:39
