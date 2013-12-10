@@ -41,7 +41,7 @@ else
   return
 end
 
-n = regexp(s,'vbm_r(\d.*?)\.zip','tokens');
+n = regexp(s,'vbm12_r(\d.*?)\.zip','tokens');
 if isempty(n)
   fprintf('There are no new releases available yet.\n');
   return;
