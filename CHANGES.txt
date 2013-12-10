@@ -3484,3 +3484,15 @@ M       CHANGES.txt
 (2) Removed CAT binaries because of the annoying issues.
 ------------------------------------------------------------------------
 r539 | gaser | 2013-12-10 09:28:03
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+M       cg_vbm_update.m
+M       sanlm_float.c
+M       spm_vbm12.m
+A       vbm_surf_parameters.m
+A       vbm_surf_resamp.m
+
+Added surface functions for parameter extraction and resampling.
+------------------------------------------------------------------------
+r540 | gaser | 2013-12-10 16:41:41

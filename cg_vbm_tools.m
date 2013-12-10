@@ -25,7 +25,7 @@ data.help = {[...
 %------------------------------------------------------------------------
 
 data_T2x = cfg_files;
-data_T2x.tag  = 'data';
+data_T2x.tag  = 'data_T2x';
 data_T2x.name = 'Volumes';
 data_T2x.filter = 'image';
 data_T2x.ufilter = '^spmT.*\.[in][im][gi]$';
@@ -49,7 +49,7 @@ thresh.num     = [1 1];
 thresh.val     = {0.05};
 
 thresh2         = cfg_entry;
-thresh2.tag     = 'thresh';
+thresh2.tag     = 'thresh2';
 thresh2.name    = 'Threshold';
 thresh2.help    = {''};
 thresh2.strtype = 'r';
@@ -208,7 +208,7 @@ T2x.help = {p1,p0,p2,p0,p3,p4,p3,p0,p5,p6,p7,p8,p9,p0,p3,p10,p3,p11,p12,p13,p0,p
 %------------------------------------------------------------------------
 
 data_F2x = cfg_files;
-data_F2x.tag  = 'data';
+data_F2x.tag  = 'data_F2x';
 data_F2x.name = 'Volumes';
 data_F2x.filter = 'image';
 data_F2x.ufilter = '^spmF.*\.[in][im][gi]$';
@@ -361,6 +361,69 @@ check_cov.help = {[...
 'you have selected the images in the order of different sub-groups. Furthermore this is also useful for fMRI images which can be ',...
 'also used with this tool. The proportional scaling option should be only used if image intensity is not scaled (e.g. T1 images) ',...
 'or if images have to be scaled during statistical analysis (e.g. modulated images).']};
+
+data_surf = cfg_files;
+data_surf.tag  = 'data_surf';
+data_surf.name = 'Surfaces';
+data_surf.filter = 'any';
+data_surf.ufilter = '^[lr]h.central';
+data_surf.num     = [1 Inf];
+data_surf.help = {'Select surfaces to extract values.'};
+
+GI      = cfg_menu;
+GI.name = 'Gyrification index';
+GI.tag  = 'GI';
+GI.labels = {'none','yes'};
+GI.values = {0,1};
+GI.val    = {1};
+GI.help = {'Extract gyrification index (GI) based on absolute mean curvature.',...
+'The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'};
+
+FD      = cfg_menu;
+FD.name = 'Cortical complexity (fractal dimension)';
+FD.tag  = 'FD';
+FD.labels = {'none','yes'};
+FD.values = {0,1};
+FD.val    = {1};
+FD.help = {'Extract Cortical complexity (fractal dimension) based on absolute mean curvature.',...
+'The method is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'};
+
+surfextract = cfg_exbranch;
+surfextract.tag = 'surfextract';
+surfextract.name = 'Extract surface parameters';
+surfextract.val = {data_surf,GI,FD};
+surfextract.prog   = @vbm_surf_parameters;
+surfextract.help = {[...
+'Not yet finished']};
+
+data_surf = cfg_files;
+data_surf.tag  = 'data_surf';
+data_surf.name = 'Surfaces parameters';
+data_surf.filter = 'any';
+data_surf.ufilter = '^[lr]h.[tgf][hir][ira]';
+data_surf.num     = [1 Inf];
+data_surf.help = {'Select surfaces parameters for resampling to template space.'};
+
+fwhm         = cfg_entry;
+fwhm.tag     = 'fwhm';
+fwhm.name    = 'Smoothing filter size in fwhm';
+fwhm.help    = {''};
+fwhm.strtype = 'r';
+fwhm.num     = [1 1];
+fwhm.val     = {20};
+fwhm.help = {[...
+'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, ',...
+'while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) ',...
+'need a larger filter size of about 25mm.']};
+
+
+surfresamp = cfg_exbranch;
+surfresamp.tag = 'surfresamp';
+surfresamp.name = 'Resample surface parameters to template space';
+surfresamp.val = {data_surf,fwhm};
+surfresamp.prog   = @vbm_surf_resamp;
+surfresamp.help = {[...
+'Not yet finished']};
 
 %------------------------------------------------------------------------
 
@@ -530,7 +593,7 @@ long    = cg_vbm_longitudinal_multi;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2};
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp};
 
 return
 
