@@ -3420,3 +3420,60 @@ M       vbm_surf_createCS.m
 (2) Corrected wrong path for linux binaries in vbm_surf_createCS.m.
 ------------------------------------------------------------------------
 r537 | gaser | 2013-12-09 20:07:28
+
+D       CAT.glnx86
+D       CAT.glnx86/CAT_3dVol2Surf
+D       CAT.glnx86/CAT_AddValuesToSurf
+D       CAT.glnx86/CAT_BlurSurfHK
+D       CAT.glnx86/CAT_DeformSurf
+D       CAT.glnx86/CAT_DumpCurv
+D       CAT.glnx86/CAT_DumpGI
+D       CAT.glnx86/CAT_FixTopology
+D       CAT.glnx86/CAT_FractalDimension
+D       CAT.glnx86/CAT_Isometize
+D       CAT.glnx86/CAT_LBConformalMap
+D       CAT.glnx86/CAT_ResampleSphericalSurf
+D       CAT.glnx86/CAT_ResampleSurf
+D       CAT.glnx86/CAT_SeparatePolygon
+D       CAT.glnx86/CAT_Surf2Sphere
+D       CAT.glnx86/CAT_WarpSurf
+D       CAT.maci64
+D       CAT.maci64/CAT_3dVol2Surf
+D       CAT.maci64/CAT_AddValuesToSurf
+D       CAT.maci64/CAT_BlurSurfHK
+D       CAT.maci64/CAT_DeformSurf
+D       CAT.maci64/CAT_DumpCurv
+D       CAT.maci64/CAT_DumpGI
+D       CAT.maci64/CAT_FixTopology
+D       CAT.maci64/CAT_FractalDimension
+D       CAT.maci64/CAT_Isometize
+D       CAT.maci64/CAT_LBConformalMap
+D       CAT.maci64/CAT_ResampleSphericalSurf
+D       CAT.maci64/CAT_ResampleSurf
+D       CAT.maci64/CAT_SeparatePolygon
+D       CAT.maci64/CAT_Surf2Sphere
+D       CAT.maci64/CAT_WarpSurf
+D       CAT.win32
+D       CAT.win32/CAT_3dVol2Surf.exe
+D       CAT.win32/CAT_AddValuesToSurf.exe
+D       CAT.win32/CAT_BlurSurfHK.exe
+D       CAT.win32/CAT_DeformSurf.exe
+D       CAT.win32/CAT_DumpCurv.exe
+D       CAT.win32/CAT_DumpGI.exe
+D       CAT.win32/CAT_FixTopology.exe
+D       CAT.win32/CAT_FractalDimension.exe
+D       CAT.win32/CAT_Isometize.exe
+D       CAT.win32/CAT_LBConformalMap.exe
+D       CAT.win32/CAT_ResampleSphericalSurf.exe
+D       CAT.win32/CAT_ResampleSurf.exe
+D       CAT.win32/CAT_SeparatePolygon.exe
+D       CAT.win32/CAT_Surf2Sphere.exe
+D       CAT.win32/CAT_WarpSurf.exe
+M       CHANGES.txt
+M       cg_vbm_update.m
+M       vbm12.man
+
+(1) Corrected wrong url in update function.
+(2) Removed CAT binaries because of the annoying issues.
+------------------------------------------------------------------------
+r538 | gaser | 2013-12-10 09:26:48
