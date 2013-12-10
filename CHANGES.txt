@@ -3477,3 +3477,10 @@ M       vbm12.man
 (2) Removed CAT binaries because of the annoying issues.
 ------------------------------------------------------------------------
 r538 | gaser | 2013-12-10 09:26:48
+
+M       CHANGES.txt
+
+(1) Corrected wrong url in update function.
+(2) Removed CAT binaries because of the annoying issues.
+------------------------------------------------------------------------
+r539 | gaser | 2013-12-10 09:28:03
