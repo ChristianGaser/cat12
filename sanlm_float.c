@@ -440,7 +440,7 @@ for (i = 0;i<cols;i+= 2)
                   t1i =  (max-(double)means[k*(rc)+(j*cols)+i])/(max-(double)means[nk*(rc)+(nj*cols)+ni]);  
                   t2 = ((double)variances[k*rc+(j*cols)+i])/((double)variances[nk*rc+(nj*cols)+ni]);
     
-                  if ( (t1>mu1 && t1<(1/mu1)) || (t1i>mu1 && t1i<(1/mu1)) && t2>var1 && t2<(1/var1))
+                  if ( (t1>mu1 && t1<(1.0/mu1)) || ((t1i>mu1 && t1i<(1.0/mu1)) && t2>var1 && t2<(1.0/var1)))
                   {                                                         
                     d = distance2(ima,means,i,j,k,ni,nj,nk,f,cols,rows,slices);
                     if (d<distanciaminima) distanciaminima = d;
@@ -494,7 +494,7 @@ for (i = 0;i<cols;i+= 2)
                         t1i =  (max-(double)means[k*(rc)+(j*cols)+i])/(max-(double)means[nk*(rc)+(nj*cols)+ni]);  
                         t2 = ((double)variances[k*rc+(j*cols)+i])/((double)variances[nk*rc+(nj*cols)+ni]);
     
-                        if ( (t1>mu1 && t1<(1/mu1)) || (t1i>mu1 && t1i<(1/mu1)) && t2>var1 && t2<(1/var1))
+                        if ( (t1>mu1 && t1<(1.0/mu1)) || ((t1i>mu1 && t1i<(1.0/mu1)) && t2>var1 && t2<(1.0/var1)))
                         {                                                       
                             d = distance(ima,i,j,k,ni,nj,nk,f,cols,rows,slices);
                                        
