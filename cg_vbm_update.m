@@ -27,7 +27,7 @@ for i=1:length(A)
   end
 end
 
-url = 'http://dbm.neuro.uni-jena.de/vbm/';
+url = 'http://dbm.neuro.uni-jena.de/vbm12/';
 
 % get new release number
 if usejava('jvm')

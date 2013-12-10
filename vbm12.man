@@ -1,7 +1,7 @@
 % __________________________________________________________________________
 % Voxel Based Morphometry Toolbox for SPM12
-% Version  519  (VBM12)  2013-11-13
-%  http://dbm.neuro.uni-jena.de/vbm/
+% Version  537  (VBM12)  2013-12-09
+% http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2013 Christian Gaser christian.gaser@uni-jena.de
 % 
@@ -28,7 +28,7 @@
 %
 %   *         - filenname
 %   #         - image space prefix
-% 
+%
 % Image space prefix
 %   m         - modulated
 %   m0        - modulated non-linear only
@@ -38,19 +38,30 @@
 %
 % Image data prefix:
 %   p         - segmented
-%   th1       - cortical thickness
-%   l1        - atlas maps of major brain structures
-%   pc        - preprocessing change map
-%   te        - tissue expectation map
 %   0         - PVE label
 %   1         - GM
 %   2         - WM
 %   3         - CSF
 %
+% Surface data prefix:
+%   SURF.TYPE.[nofix.]*
+%   SURF      - left, right hemisphere 
+%               [ lh | rh ] 
+%   TYPE      - surface data file
+%               [ central | sphere | thickness | curvature | ... ] 
+%               central     - coordinates and faces of the central surface
+%               sphere      - coordinates and faces of the spherical 
+%                             projection of the central surface
+%               thickness   - thickness values of the surface
+%               curvature   - curvature value of the surface
+%   nofix     - raw surface with uncorrected topology 
+%   reg       - ... surface
+%
 % Further data:
 %   Extracted data, global morphological measure and image quality measures
 %   were stored in the vbm_*.xml file. You can use the vbm_io_xml.m function 
-%   to read data from XML-files.
+%   to read data from xml-files.
+%   ROI data is also saved as csv-file vbmROI[SPACE]_[ATLAS]_*.csv file.
 %
 % ==========================================================================
 % Technical information
@@ -99,33 +110,70 @@
 % normalisation. Thus, for the majority of studies the creation of 
 % sample-specific Dartel templates is not necessary anymore. 
 %
-% 5. Local Adaptive Segmentation
-% ...
-% 
-% (6. Blood Vessel Correction)
-% ...
+% 5. Maximum-based bias correction
+% VBM12 includes a further bias correction that use the local maximum within
+% the WM-segment to reduce further inhomogeneities after SPM12 proprocessing.
 %
+% 6. Local Adaptive Segmentation (LAS)
+% Beside WM-inhomogeneities, also the GM intensity can vary for different 
+% regions like the motor cortex, the basal ganglia, or in the occipital lobe.
+% Although, these changes have a anatomical background, they depend on the 
+% MR-protocol and often lead to WM-overestimations for brighter intensities 
+% and CSF-overestimations for darker intensities. Therefore, a local intensity
+% transformation is used to reduce this effects in the m*-image before the
+% final segmentation.
+% 
+% 7. Skull-Stripping
+% VBM12 contain a revised graph-cut based skull-stripping with a arbitrary
+% strength, with 0 for a more liberal and wider brain masks and 1 for a harder
+% and closer result. The default is 0.5 and was successfully tested on a 
+% variety of different images. 
+%
+% The strength changes multiple internal parameters:
+%  1) Intensity thresholds to deal with blood-vessels and meninges 
+%  2) Distance and growing parameters for the graph-cut/region-growing 
+%  3) Closing parameters that fill the sulci
+%  4) Smoothing parameters that allow sharper or wider results
+%
+% If in the brain mask of your images parts of the brain are missing than 
+% decrease the strength. If the brain mask of your images contains parts of 
+% the head, than increase the strength.
+% 
 % __________________________________________________________________________
 % 
 %
-% Cortical Thickness Estimation:
+% Cortical surface and thickness estimation (in development):
 %
-% Further extensions to SPM12 are the estimation of cortical thickness maps
-% (Dahnke et al. 2012) and of cortical atlas maps with major brain structures
-% that is used to restrict thickness estimation to cortical areas.
-% You can use the thickness phantom (http://...)
-% directly in the VBM pipeline, although it was constructed as p0 image. But  
-% be warned, the estimated thickness will vary a little bit from the value 
-% in the paper, because it is now influenced by all preprocessing routines!
+% VBM12 also include the estimation of the cortical thickness and central 
+% surface of the left and right hemisspheres based on the PBT method 
+% (Dahnke et al. 2012). The surface pipeline also include a topology 
+% correction (Yotter et al. 2011) and a spherical mapping (Yotter et al.). 
 %
 % __________________________________________________________________________
 %
 %
-% VBM Report and Quality Control:
+% ROI analysis (in development):
+% 
+% VBM12 allows estimation of tissue volume [, intensity, and thickness] for
+% different atlas maps. 
+% Results were stored in a csv-file vbmROI[SPACE]_[ATLAS]_*.csv for each 
+% atlas map ATLAS. SPACE describes the space of value estimation an can be
+% s for subject space and w for normalized space.   
+% 
+% We prepared different atlas maps for the VBM12 IXI550 space that are stored
+% in the templates_1.50 directory. For each atlas you can find a csv-file 
+% with the ROI data and a txt-file with further atlas information like like 
+% terms of use and original publications. Further atlas options can be found 
+% in the cg_vbm_defauls-file.
+% 
+% __________________________________________________________________________
+%
+%
+% VBM Report and Quality Control (in development):
 %
 % Besides the used preprocessing parameters VBM now also print image quality
 % measurements and global subject measurements. All measurements were graded
-% (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, 5< - problematic).
+% (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, >5 - problematic).
 % Measures and/or grading are under development and should help to identify 
 % problematic datasets. 
 % All graded measurements were done for the original image and if useful for  
@@ -161,9 +209,6 @@
 %   measure cortical thickness. 
 %   ...
 %
-%  Preprocessing Change Map:
-%   ...
-%
 %
 % 2) Subject Averageness:
 %  CGW-Volumes: 
@@ -174,13 +219,7 @@
 %   Total Intracranial Volume as the sum of all tissue classes within the 
 %   brain mask.
 %
-%  Tissue Expectation Map:
-%   VBM uses prior maps only for initial purposes. This allows to estimate 
-%   a map that describes how well a subject fits to the prior maps. It is #
-%   expected that subject that are close to the average case are easyer to
-%   handle for most preprocessing routines for a similar image quality.
-%
-%  [Cortical thickness:]
+%  Cortical thickness:
 %   Mean cortical thickness and its standard deviation. 
 %   Only available, if cortical thickness is processed.
 % 
@@ -197,10 +236,6 @@
 %  WARNING: The scaling of the color is normally fixed, but interactive use 
 %           of the result figure can produce errors. 
 %
-%  (1. VBM Preprocessing Change Map (pc*.nii) )
-%  (2. VBM Tissue Expectation Map (te*.nii) )
-%
-%
 %
 % __________________________________________________________________________
-%                                                 Christian Gaser 2013/05/01
+%                                                 Christian Gaser 2013/12/01
