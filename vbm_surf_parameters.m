@@ -38,16 +38,15 @@ for i=1:size(P,1)
   PFD     = fullfile(pp,strrep(name,'central','fractaldimension'));
   Psphere = fullfile(pp,strrep(name,'central','sphere'));
   
+  fprintf('Extract parameters for %s\n',deblank(P(i,:)));
   if GI
     %% gyrification index based on absolute mean curvature
-    str = '  Extract gyrification index'; fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
-    cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',P(i,:),PGI);
+    cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',deblank(P(i,:)),PGI);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   end
   
   if FD
     %% fractal dimension using spherical harmonics
-    str = '  Extract fractal dimension'; fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
     cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,deblank(P(i,:)),Psphere,PFD);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   end

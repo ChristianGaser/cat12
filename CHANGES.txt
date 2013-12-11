@@ -3529,3 +3529,12 @@ M       vbm_surf_resamp.m
 Topology artefacts/defets are now marked in a gifti file.
 ------------------------------------------------------------------------
 r543 | gaser | 2013-12-11 15:51:02
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+M       vbm_surf_parameters.m
+M       vbm_surf_resamp.m
+
+Corrected some small bugs in resampling code.
+------------------------------------------------------------------------
+r544 | gaser | 2013-12-11 16:15:06

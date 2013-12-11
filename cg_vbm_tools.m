@@ -400,7 +400,7 @@ data_surf = cfg_files;
 data_surf.tag  = 'data_surf';
 data_surf.name = 'Surfaces parameters';
 data_surf.filter = 'any';
-data_surf.ufilter = '^[lr]h.[tgf][hir][ira]';
+data_surf.ufilter = '^[lr]h.[tgf][hyr][ira]';
 data_surf.num     = [1 Inf];
 data_surf.help = {'Select surfaces parameters for resampling to template space.'};
 
