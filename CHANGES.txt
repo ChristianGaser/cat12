@@ -3510,3 +3510,13 @@ M       vbm12.man
     (e.g. m0wrp1),
 ------------------------------------------------------------------------
 r541 | gaser | 2013-12-11 14:31:26
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       distribute_to_server.sh
+MM      vbm_surf_parameters.m
+MM      vbm_surf_resamp.m
+
+Some small changes in distribute_to_server.sh.
+------------------------------------------------------------------------
+r542 | gaser | 2013-12-11 14:49:37
