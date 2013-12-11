@@ -3,9 +3,9 @@ function vbm_surf_parameters(vargin)
 % gyrification and cortical complexity.
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: vbm_surf_parameters.m 475 2013-04-19 08:32:39Z gaser $
+% $Id$
 
-rev = '$Rev: 475 $';
+rev = '$Rev$';
 
 if nargin == 1
   P = char(vargin.data_surf);
