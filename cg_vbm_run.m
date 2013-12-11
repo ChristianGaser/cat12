@@ -307,7 +307,11 @@ for subj=1:numel(job.channel(1).vols),
     jc = job.jacobian;
     res.stime = stime;
     cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job);
-
+    
+    % delete denoised image
+    if job.warp.sanlm>0
+      delete(job.channel(1).vols{subj});
+    end
 end
 
 return
