@@ -3,9 +3,9 @@ function vbm_surf_resamp(vargin)
 % space and smooth it.
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: vbm_surf_resamp.m 475 2013-04-19 08:32:39Z gaser $
+% $Id$
 
-rev = '$Rev: 475 $';
+rev = '$Rev$';
 
 if nargin == 1
   P = char(vargin.data_surf);

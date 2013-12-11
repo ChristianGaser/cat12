@@ -59,26 +59,26 @@ parse_args ()
             DIR=$optarg
             shift
 
-  if [ -z "$PATTERN" ]; then
-    echo Pattern have to be defined.
-    exit 0
-  fi
+            if [ -z "$PATTERN" ]; then
+              echo Pattern have to be defined first to use that function.
+              exit 0
+            fi
 
-list=`find $DIR -name "*.[in][mi][gi]" \! -name "*wrp[0-3]*.nii"  \! -name "*wp[0-3]*.nii" \! -name "wm*.nii"   \! -name "wrm*.nii"  \! -name "bf*.nii"  \! -name "p[0-3]*.nii"  \! -name "iy_*.nii"  \! -name "y_*.nii"  \! -name "rp[0-3]*.nii"  \! -name "._*.nii"`
+            # exclude that patterns from search
+            list=`find $DIR -name "*.[in][mi][gi]" \! -name "*wrp[0-3]*.nii"  \! -name "*wp[0-3]*.nii" \! -name "wm*.nii"   \! -name "wrm*.nii"  \! -name "bf*.nii"  \! -name "p[0-3]*.nii"  \! -name "iy_*.nii"  \! -name "y_*.nii"  \! -name "rp[0-3]*.nii"  \! -name "._*.nii"`
 
-for i in ${list} ; do
-  # change extension to .nii and remove leading "./"
-  name=`echo $i|sed -e 's/.img/.nii/' -e 's/\.\///g'`
-  bname=`basename $name|cut -f1 -d'.'`
-  dname=`dirname $name` 
-  for j in ${dname}/${PATTERN}${bname}.nii ; do
-    if [ ! -f "$j" ]; then
-      ARRAY[$count]=$i
-      ((count++))
-    fi
-  done
-done
-
+            for i in ${list} ; do
+              # change extension to .nii and remove leading "./"
+              name=`echo $i|sed -e 's/.img/.nii/' -e 's/\.\///g'`
+              bname=`basename $name|cut -f1 -d'.'`
+              dname=`dirname $name` 
+              for j in ${dname}/${PATTERN}${bname}.nii ; do
+                if [ ! -f "$j" ]; then
+                  ARRAY[$count]=$i
+                  ((count++))
+                fi
+              done
+            done
             ;;
         -h | --help | -v | --version | -V)
             help
@@ -95,7 +95,7 @@ done
     shift
   done
 
-  if [ "$count" == "0" ]; then
+  if [ "$count" == "0" ] && [ -z "PATTERN" ] ; then
     echo All files are already processed.
     exit 0
   fi
@@ -209,14 +209,15 @@ help ()
 cat <<__EOM__
 
 USAGE:
-  distribute_to_server.sh [-s server] -c command_to_distribute_to_server.sh filename|filepattern
+  distribute_to_server.sh [-s server] [-p pattern] -c command_to_distribute_to_server.sh filename|filepattern|-d directory
   
-   -c   command that should be parallelized
-   -s   server list
+   -c   command that should be distributed
+   -s   server list (if empty the command runs on the local machine)
+   -p   pattern to for search of already processed files that is prepended. 
 
-   Only one filename or pattern is allowed. This can be either a single file or a pattern
-   with wildcards to process multiple files. Optionally you can set number of processes,
-   that are automatically set to the number of processors as default.
+   Only one filename or pattern or disrectory using the -d flag is allowed. This can be either a single file or a pattern
+   with wildcards to process multiple files or even a directory. For the latter case you also have to define a pattern that
+   is used for the search for already processed files. 
 
 PURPOSE:
    distribute_to_server.sh a job or command
@@ -227,11 +228,11 @@ EXAMPLE
    distribute_to_server.sh -c "niismooth -v -fwhm 8" sTRIO*.nii
    smoothing with fwhm of 8mm for all files sTRIO*.nii. Use verbose mode to see diagnostic output.
    
-   distribute_to_server.sh -s "141.35.68.68 141.35.68.72 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12b/toolbox/vbm12/cg_vbm_batch.sh -p 8 -d /Volumes/UltraMax/cg_vbm_defaults_p0123.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii
-   VBM12 batch for all files in /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii with 8 parallel jobs and optional default file 
+   distribute_to_server.sh -s "141.35.68.68 141.35.68.72 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12b/toolbox/vbm12/cg_vbm_batch.sh -p 8 -w -d /Volumes/UltraMax/cg_vbm_defaults_p0123.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii
+   VBM12 batch for all files in /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii with 8 parallel jobs and optional default file using "Write alreayd estimated segmentations" as option
 
-   distribute_to_server.sh -s "141.35.68.68 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12b/toolbox/vbm12/cg_vbm_batch.sh -p 8 -w -d /Volumes/UltraMax/cg_vbm_defaults_m0wrp12.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" -d /Volumes/UltraMax/SVE.LPBA40.testdata -p m0wrp1
-   VBM12 batch with 8 parallel jobs and optional default file using "Write alreayd estimated segmentations" as option. Only those files in /Volumes/UltraMax/SVE.LPBA40.testdata/ are processed where no prepended m0wrp1 pattern can be found. All other files are skipped.
+   distribute_to_server.sh -s "141.35.68.68 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12b/toolbox/vbm12/cg_vbm_batch.sh -p 8 -d /Volumes/UltraMax/cg_vbm_defaults_m0wrp12.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" -p m0wrp1 -d /Volumes/UltraMax/SVE.LPBA40.testdata
+   VBM12 batch with 8 parallel jobs and optional default file. Only those files in /Volumes/UltraMax/SVE.LPBA40.testdata/ are processed where no prepended m0wrp1 pattern can be found. All other files are skipped.
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
 This is ${version}.
