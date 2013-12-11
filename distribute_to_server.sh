@@ -3,7 +3,7 @@
 ########################################################
 # global parameters
 ########################################################
-version='distribute_to_server.sh $Id: distribute_to_server.sh 212 2013-08-12 08:57:32Z gaser $'
+version='distribute_to_server.sh $Id$'
 
 COMMAND=""
 SERVER=localhost

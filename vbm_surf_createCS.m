@@ -81,6 +81,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     Psphere0   = fullfile(pp,sprintf('%s.sphere.nofix.%s',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp,sprintf('%s.central.%s',opt.surf{si},ff));          % fiducial
     Pthick     = fullfile(pp,sprintf('%s.thickness.%s',opt.surf{si},ff));        % thickness
+    Pdefects   = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));          % defects
     Psphere    = fullfile(pp,sprintf('%s.sphere.%s',opt.surf{si},ff));           % sphere
     Pspherereg = fullfile(pp,sprintf('%s.sphere.reg.%s',opt.surf{si},ff));       % sphere.reg
     Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.smoothwm',opt.surf{si}));     % fsaverage smoothwm
@@ -208,6 +209,12 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     clear CSX;
 
     
+    %% mark defects and save as gifti
+    cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+    cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects,[Pdefects '.gii']);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+    
     %% topology correction and surface refinement 
     str = '  Topology correction and surface refinement'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
     cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
@@ -264,6 +271,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     % CAT_FixTopology!
     delete(Praw);  
     delete(Psphere0);
+    delete(Pdefects);
     if usePPmap
       delete(Vpp.fname);
       delete(Vpp1.fname);
