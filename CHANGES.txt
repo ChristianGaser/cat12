@@ -3496,3 +3496,17 @@ A       vbm_surf_resamp.m
 Added surface functions for parameter extraction and resampling.
 ------------------------------------------------------------------------
 r540 | gaser | 2013-12-10 16:41:41
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_batch.sh
+A       distribute_to_server.sh
+M       vbm12.man
+
+(1) Made some small changes to batch mode.
+(2) Added new script distribute_to_server.sh that allows to distribute jobs
+    to other server machines. Furthermore all files in a folder can be processed
+    by excluding those file wehre a prepending pattern can be found 
+    (e.g. m0wrp1),
+------------------------------------------------------------------------
+r541 | gaser | 2013-12-11 14:31:26
