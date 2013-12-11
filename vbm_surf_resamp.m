@@ -45,12 +45,12 @@ for i=1:size(P,1)
   Pcentral = fullfile(pp,Pcentral);
   Pfsavg   = fullfile(opt.fsavgDir,[hemi '.sphere']);
   
-  %% gyrification index based on absolute mean curvature
-  str = '  Resample values'; fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
+  fprintf('Resample %s\n',deblank(P(i,:)));
+
+  %% resample and smooth
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   
-  str = '  Smooth values'; fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,fwhm,Pvalue);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
 
