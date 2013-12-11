@@ -3538,3 +3538,16 @@ M       vbm_surf_resamp.m
 Corrected some small bugs in resampling code.
 ------------------------------------------------------------------------
 r544 | gaser | 2013-12-11 16:15:06
+
+M       CHANGES.txt
+M       cg_vbm_run.m
+M       spm_vbm12.m
+A       vbm_spm.m
+
+(1) Added vbm_spm for factorial design. This is a modified version
+    of spm_spm.m where the underlaying surface is replaced with fsaverage
+    and the smoothness estimation is modified.
+(2) spm_vbm12 is now extended by factorial design function adn estimation.
+(3) Remove sanlm-filtered image after cg_vbm_write.m
+------------------------------------------------------------------------
+r545 | gaser | 2013-12-11 17:26:26
