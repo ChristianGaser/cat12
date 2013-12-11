@@ -57,12 +57,14 @@ for i=1:n
 	end
 end
 
-tmp_fields = char('darteltpm','finalmask','gcut','gcutstr','gcutCSF','kmeans','mrf','bias_fwhm','BVC','WMHC',...
-              'pbtres','INV','colormap','atlas','ROI','surface','debug');
-if writeonly
-    matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,tmp_fields);
-else
-    matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,tmp_fields);
+tmp_fields = char('darteltpm','finalmask','gcut','gcutstr','gcutCSF','kmeans','mrf','bias_fwhm','BVC',...
+              'WMHC','pbtres','INV','colormap','atlas','ROI','surface','debug');
+try
+  if writeonly
+      matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,tmp_fields);
+  else
+      matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,tmp_fields);
+  end
 end
 
 tmp_fields = char('atlas','te','pc');

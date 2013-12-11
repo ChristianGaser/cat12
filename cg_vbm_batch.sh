@@ -8,10 +8,13 @@
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 writeonly=0
 defaults_file=""
-LOGDIR=$PWD
+LOGDIR=""
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
 time=`date "+%Y%b%d_%H%M"`
+NUMBER_OF_JOBS="";
+nicelevel=0
+shellcommand=
 
 ########################################################
 # run main
@@ -42,11 +45,7 @@ parse_args ()
     help
     exit 1
   fi
-  
-  NUMBER_OF_JOBS=1;
-  nicelevel=0
-  shellcommand=
-  
+    
   while [ $# -gt 0 ]
   do
     optname="`echo $1 | sed 's,=.*,,'`"
@@ -201,6 +200,12 @@ get_no_of_cpus () {
       exit 1
   fi
 
+  # use all processors if not other defined
+  if [ "$NUMBER_OF_JOBS" == "" ]
+  then
+      NUMBER_OF_JOBS=$NUMBER_OF_PROC
+  fi
+  
   if [ $NUMBER_OF_JOBS -le -1 ]
   then
     NUMBER_OF_JOBS=$(echo "$NUMBER_OF_PROC + $NUMBER_OF_JOBS" | bc)
