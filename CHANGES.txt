@@ -3520,3 +3520,12 @@ MM      vbm_surf_resamp.m
 Some small changes in distribute_to_server.sh.
 ------------------------------------------------------------------------
 r542 | gaser | 2013-12-11 14:49:37
+
+M       CHANGES.txt
+MM      distribute_to_server.sh
+M       vbm_surf_createCS.m
+M       vbm_surf_resamp.m
+
+Topology artefacts/defets are now marked in a gifti file.
+------------------------------------------------------------------------
+r543 | gaser | 2013-12-11 15:51:02
