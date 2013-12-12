@@ -268,10 +268,10 @@ function SPM = spm_spm(SPM)
 % Copyright (C) 1994-2012 Wellcome Trust Centre for Neuroimaging
 
 % Karl Friston & Guillaume Flandin
-% $Id: spm_spm.m 5489 2013-05-10 14:35:05Z guillaume $
+% $Id$
 
 
-SVNid = '$Rev: 5489 $';
+SVNid = '$Rev$';
 
 %-Say hello
 %--------------------------------------------------------------------------
