@@ -36,7 +36,7 @@ end
 global defaults vbm matlabbatch
 
 % always deselect print option
-% vbm.extopts.print = 1;
+vbm.extopts.print = 0;
 
 names = textread(namefile,'%s');
 n = length(names);
