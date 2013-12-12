@@ -363,9 +363,9 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
         % test
         vx_vol  = sqrt(sum(V(subj).mat(1:3,1:3).^2)); 
         stime1  = clock; [TH,MH] = vbm_vol_iscale(single(spm_read_vols(V(subj))), ...
-          'findhead' ,vx_vol,4); dp(' FH',struct('verb',2),stime1);
+          'findhead' ,vx_vol,4); 
         stime2  = clock; [TB,MB] = vbm_vol_iscale(single(spm_read_vols(V(subj))), ...
-          'findbrain',vx_vol,4); dp('|FH',struct('verb',2),stime2);
+          'findbrain',vx_vol,4); 
         ds('vbm_vol_iscale','',vx_vol,TH,MH,TB,MB,round(size(TH,3)/9*5)); 
         pause(1); fprintf('\n');        
       end

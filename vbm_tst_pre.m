@@ -234,7 +234,7 @@ function vbm_tst_pre
     % ------------------------------------------------------------------
     for mi=1:size(opt.methods,1)  
       for fi=1:opt.subStepSize:numel(opt.method(mi).T{di})
-        %fi=16;
+        %fi=17;%20;
         if opt.methods{mi,6}>0 || ...
             (~isempty(def.methods{mi,3}{1}) && ~exist(opt.method(mi).([def.methods{mi,3}{1} 'T']){di}{fi},'file')) || ...
             (~isempty(def.methods{mi,4}{1}) && ~exist(opt.method(mi).([def.methods{mi,4}{1} 'T']){di}{fi},'file'))
@@ -984,7 +984,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.warped        = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.modulated     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.dartel        = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.native        = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.native        = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.warped        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.modulated     = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM.dartel        = 0;
