@@ -255,6 +255,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       % we have to delete the original faces, because they have a different number of vertices after
       % CAT_FixTopology!
       delete(Praw);  
+      delete(Pdefects);  
       delete(Psphere0);
       if usePPmap
         delete(Vpp.fname);

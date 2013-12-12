@@ -3634,3 +3634,21 @@ M       vbm_vol_pbt.m
 (7)  Corrected error for global intensity Normalization for BG=CSF case. 
 ------------------------------------------------------------------------
 r548 | dahnke | 2013-12-12 12:22:15
+
+D       AmapMex.mexmaci
+M       CHANGES.txt
+M       Makefile.vbm
+ M      cg_boxplot.m
+MM      cg_check_mesh_cov.m
+D       sanlmMex.mexmaci
+D       sanlmMex_noopenmp.mexmaci
+D       spm_def2det.mexmaci
+D       vbdist.mexmaci
+M       vbm12.man
+M       vbm_surf_createCS.m
+M       vbm_surf_resamp.m
+
+(1) Removed old *mexmaci files (that were not complete at all).
+(2) Some cosmetic changes to vbm_surf_createCS.m and vbm_surf_resample.m
+------------------------------------------------------------------------
+r549 | gaser | 2013-12-12 14:25:50

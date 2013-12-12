@@ -3,10 +3,10 @@ function cg_check_mesh_cov(vargin)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cg_check_mesh_cov.m 475 2013-04-19 08:32:39Z gaser $
+% $Id$
 
 global fname jY h1 h2 YpY
-rev = '$Rev: 475 $';
+rev = '$Rev$';
 
 if nargin == 1
   P = char(vargin.data_surf);
