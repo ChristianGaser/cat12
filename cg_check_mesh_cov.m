@@ -149,7 +149,7 @@ hCloseButton = uicontrol(f,...
         'position',[round(ws(3)/2)-75 10 150 20],...
         'style','Pushbutton',...
         'string','Close windows',...
-        'callback','for i=4:20, try close(i); end; end;',...
+        'callback','for i=2:20, try close(i); end; end;',...
         'ToolTipString','Close windows',...
         'Interruptible','on','Enable','on');
 
@@ -195,14 +195,28 @@ end
 
 show = spm_input('Show files with poorest cov?',1,'yes|no',[1 0],2);
 if show
+
+  if measure == 1
+    data = data_array(:);
+    data(isnan(data) | isinf(data)) = [];
+    mn_data = min(data);
+    mx_data = max(data);
+  end
+    
   number = min([n 16]);
   number = spm_input('How many files ?','+1','e',number);
   
+  list = str2mat(P(ind(n:-1:1),:));
+  list2 = list(1:number,:);
+
   for i=1:number
-    h = spm_mesh_render(deblank(P(ind(i),:)));
-    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_str_manip(P(ind(i),:),'k40d'),'NumberTitle','off');
-    spm_mesh_render('ColourBar',h.axis,'on');
+    h = spm_mesh_render(deblank(list2(i,:)));
+    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_str_manip(list2(i,:),'k40d'),'NumberTitle','off');
     spm_mesh_render('ColourMap',h.axis,jet);
+    if measure == 1
+      h2 = spm_mesh_render('ColourBar',h.axis,'on');
+      set(h2.colourbar,'Ylim',[1.25*mn_data 0.8*mx_data]);
+    end
   end
 end
 return
