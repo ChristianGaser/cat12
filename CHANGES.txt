@@ -3663,3 +3663,12 @@ A       sanlmMex_noopenmp.mexw64
 (2) Added missing sanlmMex_noopenmp.mexw* files for windows.
 ------------------------------------------------------------------------
 r550 | gaser | 2013-12-12 14:30:53
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_surf_resamp.m
+
+Calculation of parameter Ycls was done for each slice leading to long
+computation time in cg_vbm_write.m.
+------------------------------------------------------------------------
+r551 | gaser | 2013-12-12 17:41:10

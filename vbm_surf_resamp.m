@@ -57,7 +57,9 @@ for i=1:size(P,1)
   cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   
+  delete(Presamp);
   delete(Pfwhm);
+  delete(Pvalue);
 
 end
   
