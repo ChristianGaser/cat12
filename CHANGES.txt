@@ -3587,3 +3587,11 @@ M       vbm_vol_simgrow.mexmaci64
 (4) Added cg_boxplot (extracted from cg_check_cov.m).
 ------------------------------------------------------------------------
 r546 | gaser | 2013-12-12 10:43:00
+
+M       CHANGES.txt
+M       cg_check_mesh_cov.m
+MM      vbm_spm.m
+
+Some rather cosmetic changes to cg_check_mesh_render.m
+------------------------------------------------------------------------
+r547 | gaser | 2013-12-12 11:36:49
