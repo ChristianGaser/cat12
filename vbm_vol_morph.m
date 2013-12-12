@@ -73,13 +73,11 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
   
   switch lower(action)
     case {'dilate' 'd'}
-      kx = [1 1 1]; ky = [1 1 1]; kz = [1 1 1];
-      vol = uint8(vol);
-      for i = 1:n
-        spm_conv_vol(vol,vol,kx,ky,kz,-[1 1 1]);
-        vol = uint8(vol~=0);
-      end
-      
+      vol = single(vol); 
+      k   = ones(1,2*n+1);
+      spm_conv_vol(vol,vol,k,k,k,-[n n n]);
+      vol = vol>0;   
+
     case {'erode' 'e'}
       vol=~vbm_vol_morph(~vol,'dilate',n,vx_vol); 
 
@@ -108,7 +106,7 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
     try  
       [ROI,num] = spm_bwlabel(double(vol),6);
       num       = hist( ROI( ROI(:)>0 ) , 1:num);
-      [tmp,num] = max(num(:)); clear tmp;
+      [~,num] = max(num(:)); clear tmp;
       vol       = ROI==num;	
     catch %#ok<CTCH>
       warning('MATLAB:vbm_vol_morph:NoObject','ERROR: vbm_vol_morph - lab - no object!');
@@ -147,6 +145,8 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
 
     %===================================================================
     case {'selftest' 'st'}
+      % a=zeros(7,11,3); a(4,4,2)=1; a(4,8,2)=1; % two dots
+      
       voltypes  = {'1','2','2c','2ce'};
       volclass  = {'cube','sphere'};
       method{1} = {'erode'      'e'
@@ -188,6 +188,7 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
     otherwise
       error('MATLAB:vbm_vol_morph:UnknownAction','Unknown action ''%s ''',action);
   end
-
+  
   eval(sprintf('vol = %s(vol);',classVol));
+  if isa(classVol,'uint8'); vol = 255*vol; end
 end

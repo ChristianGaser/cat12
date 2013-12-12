@@ -156,11 +156,21 @@ function count = vbm_io_cprintf(style,format,varargin)
   if ~exist('el','var') || isempty(el),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
   if nargin<1, showDemo(majorVersion,minorVersion); return;  end
   if isempty(style),  return;  end
-  if length(style)>3, style=style(1:3); end
+  if ischar(style)
+    switch lower(style)
+      case {'e','err','error'},    style=[0.8 0.0 0.0];
+      case {'w','warn','warning'}, style=[1.0 0.5 0.0];
+      case {'c','com','comment'},  style=[0.0 0.0 0.8];
+    end
+  elseif isnumeric(style)
+    if length(style)>3, style=style(1:3); end
+  end
+  
   if all(ishandle(style)) && length(style)~=3
       dumpElement(style);
       return;
   end
+ 
 
   % Process the text string
   if nargin<2, format = style; style='text';  end

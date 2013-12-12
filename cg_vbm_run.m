@@ -151,10 +151,10 @@ for subj=1:numel(job.channel(1).vols),
             job.warp.sanlm = min(1,job.warp.sanlm);
         end
           
-        if      job.warp.sanlm==1, str='NLM-Filter';  
-        elseif  job.warp.sanlm>=2, str='NLM-Filter with multi-threading';
+        if      job.warp.sanlm==1, stime = vbm_io_cmd('NLM-Filter'); 
+        elseif  job.warp.sanlm>=2, stime = vbm_io_cmd('NLM-Filter with multi-threading');
         end
-        fprintf('%s:%s',str,repmat(' ',1,67-length(str)));
+
 
         for n=1:numel(job.channel) 
             V = spm_vol(job.channel(n).vols{subj});
@@ -171,7 +171,7 @@ for subj=1:numel(job.channel(1).vols),
             clear Y V Vn;
         end
               
-        fprintf('%3.0fs\n',etime(clock,stime));     
+        fprintf('%4.0fs\n',etime(clock,stime));     
     end
 
     if estwrite % estimate and write segmentations            
@@ -213,8 +213,7 @@ for subj=1:numel(job.channel(1).vols),
             VG.pinfo(1:2,:)  = VG.pinfo(1:2,:)/spm_global(VG);
 
             %fprintf('Initial Coarse Affine Registration..\n');
-            str='Initial Coarse Affine Registration'; 
-            fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+            stime = vbm_io_cmd('Initial Coarse Affine Registration'); 
             aflags    = struct('sep',8, 'regtype',job.warp.affreg,...
                         'WG',[],'WF',[],'globnorm',0);
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
@@ -228,15 +227,14 @@ for subj=1:numel(job.channel(1).vols),
             aflags.WG  = spm_vol(fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii'));
             aflags.sep = aflags.sep/2;
             spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
-            Affine  = spm_affreg(VG, VF1, aflags, Affine, scale);
-            fprintf('%3.0fs\n',etime(clock,stime));
+            Affine = spm_affreg(VG, VF1, aflags, Affine, scale);
+            fprintf('%4.0fs\n',etime(clock,stime));
 
                     
             % Fine Affine Registration with 3 mm sampling distance
-            str='Fine Affine Registration'; 
-            fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
-            Affine  = spm_maff8(obj.image(1),3,obj.fudge,  tpm,Affine,job.warp.affreg);
-                fprintf('%3.0fs\n',etime(clock,stime)); 
+            stime = vbm_io_cmd('Fine Affine Registration');
+            Affine = spm_maff8(obj.image(1),3,obj.fudge,  tpm,Affine,job.warp.affreg);
+            fprintf('%4.0fs\n',etime(clock,stime)); 
         end;
         obj.Affine = Affine;
 
@@ -250,9 +248,9 @@ for subj=1:numel(job.channel(1).vols),
 %              job.warp.samp = min(job.warp.samp,max(2,round(mean(vx_vol))));
 %            end
             
-        str='SPM-Preprocessing 1'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+        stime = vbm_io_cmd('SPM-Preprocessing 1');
         res = spm_preproc8(obj);
-        fprintf('%3.0fs\n',etime(clock,stime));   
+        fprintf('%4.0fs\n',etime(clock,stime));   
 
         try
             [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
