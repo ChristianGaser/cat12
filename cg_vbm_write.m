@@ -315,12 +315,6 @@ for z=1:length(x3),
             end
             Q(:,:,z,:) = reshape(q,[d(1:2),1,Kb]);
 
-            % Normalise to sum to 1
-            sQ = (sum(Q,4)+eps)/255; Ycls=cell(1,size(Q,4));
-            for k1=1:size(Q,4)
-                Ycls{k1} = uint8(round(Q(:,:,:,k1)./sQ));
-            end
-
         end
         
         % initialize Yy only at first slice
@@ -335,6 +329,12 @@ for z=1:length(x3),
     spm_progress_bar('set',z);
 end
 spm_progress_bar('clear');
+
+% Normalise to sum to 1
+sQ = (sum(Q,4)+eps)/255; Ycls=cell(1,size(Q,4));
+for k1=1:size(Q,4)
+    Ycls{k1} = uint8(round(Q(:,:,:,k1)./sQ));
+end
 
 if do_cls
   clear Q sQ
