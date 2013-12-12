@@ -54,8 +54,8 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
     % It it not usefull for the WM boundary because it may remove the
     % sulcus!
     
-%     M = max(0,min(1,(SSEG-2.9)*10)); M(SSEG<=2)=-inf; WMD  = eidist_r04(M,ones(size(M),'single')); dp(opt);
-%     M = max(0,min(1,(2.1-SSEG)*10)); M(SSEG>=3)=-inf; CSFD = eidist_r04(M,ones(size(M),'single')); dp(opt);
+%     M = max(0,min(1,(SSEG-2.9)*10)); M(SSEG<=2)=-inf; WMD  = eidist_r04(M,ones(size(M),'single'));
+%     M = max(0,min(1,(2.1-SSEG)*10)); M(SSEG>=3)=-inf; CSFD = eidist_r04(M,ones(size(M),'single'));
 %     [~,PP] = vbm_vol_pbtp( (1.1*(2.5-SSEG)) + 2 , CSFD , WMD);  % 1.25 , 1.1
 %     PP = 1-vbm_vol_median3(1-PP,0.5,0,0.5);
 %     M = SSEG>2 & SSEG<3; SSEG(M) = max(SSEG(M),2.75-0.75*PP(M)); %max(SSEG(M),min(2.75,3-PP(M)));
@@ -90,8 +90,8 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 
     WMD(isnan(WMD) | isinf(WMD) | isinf(-WMD))=0; CSFD(isnan(CSFD) | isinf(CSFD) | isinf(-CSFD))=0; % das nicht nötig sein...
     
-    GMT1 = vbm_vol_pbtp(  SSEG,WMD,CSFD); dp(opt);%########################## TIM
-    try GMT2 = vbm_vol_pbtp(4-SSEG,CSFD,WMD); dp(opt); catch, GMT2=inf(size(SSEG),'single'); end %#ok<CTCH>
+    GMT1 = vbm_vol_pbtp(  SSEG,WMD,CSFD); %########################## TIM
+    try GMT2 = vbm_vol_pbtp(4-SSEG,CSFD,WMD); catch, GMT2=inf(size(SSEG),'single'); end %#ok<CTCH>
     GMT2(GMT2<=(2/mean(opt.resV)) | SSEG<2)=inf; % try this correction only in thick regions
     
     [GMT,I] = min(cat(4,GMT1,GMT2+0.25*mean(opt.resV)),[],4); 
@@ -100,12 +100,12 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
     M=SSEG> 2.0 & SSEG<=2.5; PP(M) = ((GMT1(M) - WMD(M)).*(I(M)==1) + CSFD(M).*(I(M)==2)) ./ (GMT(M) + eps); 
     PP(SSEG>2.5)=1;
   else
-    M = max(0,min(1,(2-SSEG))); M(SSEG>=3)=-inf; CSFD = vbm_vol_eidist(M,max(0,(min(1,3-SSEG))/2)); dp(opt); % (1-L + min(1,3-SSEG))/2))
+    M = max(0,min(1,(2-SSEG))); M(SSEG>=3)=-inf; CSFD = vbm_vol_eidist(M,max(0,(min(1,3-SSEG))/2)); % (1-L + min(1,3-SSEG))/2))
 
     clear L M; %CSFD(DG>(sqrt(3)/opt.resV) | SSEG<1.5) = 0; 
     WMD(isnan(WMD) | isinf(WMD) | isinf(-WMD))=0; CSFD(isnan(CSFD) | isinf(CSFD) | isinf(-CSFD))=0; % das nicht nötig sein...
 
-   [GMT,PP] = vbm_vol_pbtp(SSEG,WMD,CSFD);dp(opt);%########################## TIM
+   [GMT,PP] = vbm_vol_pbtp(SSEG,WMD,CSFD);%########################## TIM
   end
   clear WMD CSFD;
 

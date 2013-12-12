@@ -37,7 +37,7 @@ function out = vbm_stat_nanstd(in, dim)
   tmpin = in;
   tmpin(isnan(in)) = 0;
   dm = size(in); dm(setdiff(1:numel(dm),dim)) = 1;
-  mn = sum(tmpin, dim) ./ sum(~isnan(in),dim); 
+  mn = sum(tmpin, dim) ./ (eps+sum(~isnan(in),dim)); 
   mn = repmat(mn,dm); mn(isnan(in)) = 0;
   
   % estimate std
