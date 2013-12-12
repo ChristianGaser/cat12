@@ -3652,3 +3652,14 @@ M       vbm_surf_resamp.m
 (2) Some cosmetic changes to vbm_surf_createCS.m and vbm_surf_resample.m
 ------------------------------------------------------------------------
 r549 | gaser | 2013-12-12 14:25:50
+
+M       CHANGES.txt
+A       fsaverage/lh.smoothwm.gii
+A       fsaverage/rh.smoothwm.gii
+A       sanlmMex_noopenmp.mexw32
+A       sanlmMex_noopenmp.mexw64
+
+(1) Added gifti files for fsaverage surfaces.
+(2) Added missing sanlmMex_noopenmp.mexw* files for windows.
+------------------------------------------------------------------------
+r550 | gaser | 2013-12-12 14:30:53
