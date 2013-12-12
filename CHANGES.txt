@@ -3551,3 +3551,39 @@ A       vbm_spm.m
 (3) Remove sanlm-filtered image after cg_vbm_write.m
 ------------------------------------------------------------------------
 r545 | gaser | 2013-12-11 17:26:26
+
+M       AmapMex.mexmaci64
+M       CHANGES.txt
+M       Makefile.vbm
+A       cg_boxplot.m
+M       cg_check_cov.m
+A       cg_check_mesh_cov.m
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_tools.m
+M       compile.m
+M       sanlmMex.mexmaci64
+M       sanlmMex_noopenmp.mexmaci64
+M       spm_vbm12.m
+M       vbdist.mexmaci64
+M       vbm12.man
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eikonal3.mexmaci64
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_simgrow.mexmaci64
+
+(1) Removed multi-thread support for sanlmMex because results differ and it's
+    not working for OSX < 10.6.
+(2) Compiled mex-files for OSX < 10.6.
+(3) Added cg_check_mesh_cov.m to check surface covariance.
+(4) Added cg_boxplot (extracted from cg_check_cov.m).
+------------------------------------------------------------------------
+r546 | gaser | 2013-12-12 10:43:00

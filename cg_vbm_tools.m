@@ -402,7 +402,7 @@ data_surf.name = 'Surfaces parameters';
 data_surf.filter = 'any';
 data_surf.ufilter = '^[lr]h.[tgf][hyr][ira]';
 data_surf.num     = [1 Inf];
-data_surf.help = {'Select surfaces parameters for resampling to template space.'};
+data_surf.help = {'Select surfaces parameters files for resampling to template space.'};
 
 fwhm         = cfg_entry;
 fwhm.tag     = 'fwhm';
@@ -416,7 +416,6 @@ fwhm.help = {[...
 'while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) ',...
 'need a larger filter size of about 25mm.']};
 
-
 surfresamp = cfg_exbranch;
 surfresamp.tag = 'surfresamp';
 surfresamp.name = 'Resample surface parameters to template space';
@@ -424,6 +423,42 @@ surfresamp.val = {data_surf,fwhm};
 surfresamp.prog   = @vbm_surf_resamp;
 surfresamp.help = {[...
 'Not yet finished']};
+
+data_surf = cfg_files;
+data_surf.tag  = 'data_surf';
+data_surf.name = 'Surfaces';
+data_surf.filter = 'gifti';
+data_surf.ufilter = '[lr]h.[tgf][hyr][ira]';
+data_surf.num     = [1 Inf];
+data_surf.help = {'Select surfaces parameters files.'};
+
+measure      = cfg_menu;
+measure.name = 'Check covariance for';
+measure.tag  = 'measure';
+measure.labels = {'Surface parameters (e.g. thickness)','Surface coordinates (e.g. shape)'};
+measure.values = {1,2};
+measure.val    = {1};
+measure.help = {[...
+'Select parameter that is used to check covariance. You can use either surface parameter values ',...
+'that are later used for statistical analysis (e.g. thickness) or surface coordinates to check for ',...
+'deviating surface shape (after normalization).']};
+
+check_mesh_cov = cfg_exbranch;
+check_mesh_cov.tag = 'check_mesh_cov';
+check_mesh_cov.name = 'Check sample homogeneity using covariance';
+check_mesh_cov.val = {data_surf,measure};
+check_mesh_cov.prog   = @cg_check_mesh_cov;
+check_mesh_cov.help = {[...
+'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality ',...
+'or even artefacts you can use this function. Surfaces have to be resampled to the template space ',...
+'(e.g. normalized images). The idea of this tool is to check the covariance of all files across the sample.'],...
+'',[...
+'The covariance is calculated between all images and the mean for each image is plotted using a boxplot and the indicated ',...
+'filenames. The smaller the mean covariance the more deviant is this image from the sample mean. ',...
+'In the plot outliers from ',...
+'the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean ',...
+'covariance is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if ',...
+'you have selected the images in the order of different sub-groups.']};
 
 %------------------------------------------------------------------------
 
@@ -593,7 +628,7 @@ long    = cg_vbm_longitudinal_multi;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp};
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp,check_mesh_cov};
 
 return
 
