@@ -86,7 +86,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       Pdefects   = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));          % defects
       Psphere    = fullfile(pp,sprintf('%s.sphere.%s',opt.surf{si},ff));           % sphere
       Pspherereg = fullfile(pp,sprintf('%s.sphere.reg.%s',opt.surf{si},ff));       % sphere.reg
-      Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.smoothwm',opt.surf{si}));     % fsaverage smoothwm
+      Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central',opt.surf{si}));      % fsaverage central
       Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere',opt.surf{si}));       % fsaverage sphere
 
       % reduce for object area
@@ -231,7 +231,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
       % spherical registration to fsaverage
       stime = vbm_io_cmd('  Spherical registration');
-      cmd = sprintf('CAT_WarpSurf -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+      cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       fprintf('%4.0fs\n',etime(clock,stime)); 
 

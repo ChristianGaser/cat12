@@ -3672,3 +3672,22 @@ Calculation of parameter Ycls was done for each slice leading to long
 computation time in cg_vbm_write.m.
 ------------------------------------------------------------------------
 r551 | gaser | 2013-12-12 17:41:10
+
+M       CHANGES.txt
+A       fsaverage/lh.central
+A       fsaverage/lh.central.gii
+D       fsaverage/lh.smoothwm
+D       fsaverage/lh.smoothwm.gii
+A       fsaverage/rh.central
+A       fsaverage/rh.central.gii
+D       fsaverage/rh.smoothwm
+D       fsaverage/rh.smoothwm.gii
+ M      sanlmMex_noopenmp.mexw32
+ M      sanlmMex_noopenmp.mexw64
+M       spm_vbm12.m
+M       vbm_spm.m
+M       vbm_surf_createCS.m
+
+Changed template from smoothwm to central surface and changed code resp.
+------------------------------------------------------------------------
+r552 | gaser | 2013-12-18 17:24:43
