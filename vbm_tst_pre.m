@@ -51,7 +51,7 @@ function vbm_tst_pre
   def.csv.komma     = '.';
   
   def.stableMethods = {'SPM12nc','VBM12','VBM12i'};
-  def.stableRecalc  = 0;  
+  def.stableRecalc  = 1;  
   opt.reprint       = 0;
 
   replaceSPMpath(def.SPM8path,def.SPM12path);
@@ -63,14 +63,14 @@ function vbm_tst_pre
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
   % 'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
-%    'VBM12'   0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
-%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+    'VBM12'   0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
-%     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
+     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
    %  'SPM'     0 {'p0'}      {''}        {0.5}       0 
   %  'SPM8'    0 {'p0'}      {''}        {0.5}       0 
-%    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
+    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
 %    'FSL'     0 {'p0'}      {''}        {-inf}      0 
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
@@ -81,7 +81,7 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-     'BO'
+   'BO'
 %     'SVE_LPBA40'
 %   'BWP_Collins_fast'
 %     'ADHD'
@@ -234,7 +234,7 @@ function vbm_tst_pre
     % ------------------------------------------------------------------
     for mi=1:size(opt.methods,1)  
       for fi=1:opt.subStepSize:numel(opt.method(mi).T{di})
-        %fi=17;%20;
+        %fi=21; %17;%20;
         if opt.methods{mi,6}>0 || ...
             (~isempty(def.methods{mi,3}{1}) && ~exist(opt.method(mi).([def.methods{mi,3}{1} 'T']){di}{fi},'file')) || ...
             (~isempty(def.methods{mi,4}{1}) && ~exist(opt.method(mi).([def.methods{mi,4}{1} 'T']){di}{fi},'file'))
@@ -977,7 +977,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.WMHC      = 1;    
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.ROI       = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface   = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface   = 1;
   
   %%
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 1;
@@ -1026,7 +1026,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
     clear global;
     spm_jobman('initcfg');
     spm_jobman('run',matlabbatch);  
-
+%cg_vbm_batch(namefile,writeonly,vbm_defaults)
     %delete(fullfile(pp,[ff '_seg8.mat']));
   catch %#ok<CTCH>
     createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['p0' ff ee]));
