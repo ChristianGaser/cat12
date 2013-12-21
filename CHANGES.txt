@@ -3691,3 +3691,121 @@ M       vbm_surf_createCS.m
 Changed template from smoothwm to central surface and changed code resp.
 ------------------------------------------------------------------------
 r552 | gaser | 2013-12-18 17:24:43
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+R  +  C sanlmMex.mexmaci64
+      >   local replace, incoming edit upon update
+R  +  C sanlmMex_noopenmp.mexmaci64
+      >   local replace, incoming edit upon update
+M       vbm_io_cmd.m
+M       vbm_io_cprintf.m
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_ROIval.c
+A       vbm_vol_ROIval.mexmaci64
+R  +  C vbm_vol_eidist.mexmaci64
+      >   local replace, incoming edit upon update
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+
+(1)  Updated cmd line plot (vbm_vol_cmd) for detailed output (vbm.extopts.verb)
+     of the partitioning (vbm_vol_partvol), the skull-stripping (vbm_vol_gcut2
+     in cg_write_vol), and the ROI estimation.
+(2)  Updated partition and skull-stripping functions. Removed errors and inc. 
+     calculation speed. Add resolution variable (vbm.extopts.vx_res), where 
+     images with higher resolutions are reduce to the half resolution.     
+------------------------------------------------------------------------
+r553 | dahnke | 2013-12-21 19:46:46
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+ M      fsaverage/lh.central
+ M      fsaverage/lh.central.gii
+ M      fsaverage/rh.central
+ M      fsaverage/rh.central.gii
+R  +  C sanlmMex.mexmaci64
+      >   local replace, incoming edit upon update
+M       vbm_io_cmd.m
+M       vbm_io_cprintf.m
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_ROIval.c
+A       vbm_vol_ROIval.mexmaci64
+R  +  C vbm_vol_eidist.mexmaci64
+      >   local replace, incoming edit upon update
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+
+(1)  Updated cmd line plot (vbm_vol_cmd) for detailed output (vbm.extopts.verb)
+     of the partitioning (vbm_vol_partvol), the skull-stripping (vbm_vol_gcut2
+     in cg_write_vol), and the ROI estimation.
+(2)  Updated partition and skull-stripping functions. Removed errors and inc. 
+     calculation speed. Add resolution variable (vbm.extopts.vx_res), where 
+     images with higher resolutions are reduce to the half resolution.     
+------------------------------------------------------------------------
+r553 | dahnke | 2013-12-21 19:47:53
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+ M      fsaverage/lh.central
+ M      fsaverage/lh.central.gii
+ M      fsaverage/rh.central
+ M      fsaverage/rh.central.gii
+M       sanlmMex.mexmaci64
+M       vbm_io_cmd.m
+M       vbm_io_cprintf.m
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_ROIval.c
+A       vbm_vol_ROIval.mexmaci64
+R  +  C vbm_vol_eidist.mexmaci64
+      >   local replace, incoming edit upon update
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+
+(1)  Updated cmd line plot (vbm_vol_cmd) for detailed output (vbm.extopts.verb)
+     of the partitioning (vbm_vol_partvol), the skull-stripping (vbm_vol_gcut2
+     in cg_write_vol), and the ROI estimation.
+(2)  Updated partition and skull-stripping functions. Removed errors and inc. 
+     calculation speed. Add resolution variable (vbm.extopts.vx_res), where 
+     images with higher resolutions are reduce to the half resolution.     
+------------------------------------------------------------------------
+r553 | dahnke | 2013-12-21 19:49:46
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+ M      fsaverage/lh.central
+ M      fsaverage/lh.central.gii
+ M      fsaverage/rh.central
+ M      fsaverage/rh.central.gii
+M       sanlmMex.mexmaci64
+M       vbm_io_cmd.m
+M       vbm_io_cprintf.m
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_ROIval.c
+A       vbm_vol_ROIval.mexmaci64
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+
+(1)  Updated cmd line plot (vbm_vol_cmd) for detailed output (vbm.extopts.verb)
+     of the partitioning (vbm_vol_partvol), the skull-stripping (vbm_vol_gcut2
+     in cg_write_vol), and the ROI estimation.
+(2)  Updated partition and skull-stripping functions. Removed errors and inc. 
+     calculation speed. Add resolution variable (vbm.extopts.vx_res), where 
+     images with higher resolutions are reduce to the half resolution.     
+------------------------------------------------------------------------
+r553 | dahnke | 2013-12-21 19:50:17

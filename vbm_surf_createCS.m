@@ -64,12 +64,12 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  
+    
   % filling
   Ymf  = max(Ym,min(1,YMF)); 
   Ymfs = vbm_vol_smooth3X(Ymf,1); 
   Ytmp = vbm_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
-  Ymf(Ytmp) = max(min(Ym(Ytmp),1),Ymfs(Ytmp)); clear Ytmp Ymfs YMF Ym; 
+  Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs YMF Ym; 
   Ymf = Ymf*3;
     
   % removing blood vessels, and other regions
@@ -91,10 +91,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
       % reduce for object area
       switch opt.surf{si}
-        case {'L','lh'},         Ymfs = max(1,Ymf .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1)); 
-        case {'R','rh'},         Ymfs = max(1,Ymf .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==0));      
-        case {'C','cerebellum'}, Ymfs = max(1,Ymf .* NS(Ya,3));
-        case {'B','brain'},      Ymfs = max(1,Ymf);
+        case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1); 
+        case {'R','rh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==0);      
+        case {'C','cerebellum'}, Ymfs = Ymf .* (Ya>0) .* NS(Ya,3);
+        case {'B','brain'},      Ymfs = Ymf .* (Ya>0);
       end 
 
 
@@ -109,7 +109,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       % pbt calculation
       [Yth1i,Yppi] = vbm_vol_pbt(Ymfs,struct('resV',opt.interpV)); clear Ymfs;       
       Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0; 
-
+% hier im cc-bereich die Yppi filtern, um stufen zu vermeiden
       Yth1t = vbm_vol_resize(Yth1i,'deinterp',resI);                      % back to original resolution
       Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding of background
       Yth1  = max(Yth1,Yth1t);                                            % save on main image
@@ -183,25 +183,25 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       end
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
       vbm_io_FreeSurfer('write_surf',Praw,CS); 
-      fprintf('%4.0fs\n',etime(clock,stime)); 
+      %fprintf('%4.0fs\n',etime(clock,stime)); 
 
-
-      %% spherical surface mapping 1 of the uncorrected surface for topology correction
-      stime = vbm_io_cmd('  Initial spherical mapping');
+      % spherical surface mapping 1 of the uncorrected surface for topology correction
+      %stime = vbm_io_cmd('  Initial spherical mapping');
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
-      fprintf('%4.0fs\n',etime(clock,stime)); 
-
-      %% mark defects and save as gifti
+      
+      % mark defects and save as gifti
       cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects,[Pdefects '.gii']);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+      fprintf('%4.0fs\n',etime(clock,stime)); 
+      
       
       %% topology correction and surface refinement 
-      str = '  Topology correction and surface refinement'; fprintf('%s:%s',str,repmat(' ',1,67-length(str))); stime = clock;
+      stime = vbm_io_cmd('  Topology correction and surface refinement');
       cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       if usePPmap
