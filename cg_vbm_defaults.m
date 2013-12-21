@@ -55,7 +55,7 @@ vbm.output.CSF.mod    = 0;
 vbm.output.CSF.dartel = 0;
 
 % label
-vbm.output.label.native = 0; 
+vbm.output.label.native = 1; 
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
@@ -113,9 +113,10 @@ vbm.defs.interp         = 5;  % 5th degree B-spline
 
 % expert options
 %=======================================================================
-vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 -thorough
+vbm.extopts.cleanup     = 1;    % Cleanup: 0 - no; 1 - light; 2 - thorough
 vbm.extopts.finalmask   = 1;    % Final masking: 0 - no; 1 - yes
-vbm.extopts.gcut        = 2;    % Skull-stripping with graph-cut: 0 - no; 1 - old; 2 - new
+vbm.extopts.vx_res      = 0.9;  % resolution threshold for partioning, LAS, skull-stripping, ...
+vbm.extopts.gcut        = 1;    % Skull-stripping with graph-cut: 0 - no; 1 - yes
 vbm.extopts.gcutstr     = 0.5;  % gcut+: strengh of skull-stripping with 0 for softer and wider and 1 for harder and closer (default 0.5)
 vbm.extopts.gcutCSF     = 1;    % gcut+: brain mask with surrounding CSF (WARNING: CSF-contrast depend strongly on the MR-protocol)
 vbm.extopts.kmeans      = 0;    % segmentation initialization: 0 - new segment; 1 - Kmeans
@@ -133,6 +134,8 @@ vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {
 vbm.extopts.ROI         = 2;    % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 vbm.extopts.surface     = 1;    % surface and thickness creation
 vbm.extopts.debug       = 0;    % debuging option
+vbm.extopts.verb        = 1;    % Verbose: 1 - default; 2 - details
+
 
 % expert options - ROIs
 %=======================================================================

@@ -76,8 +76,8 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
 
   % estimate WM distance WMD and the non-corrected CSF distance CSFD (not correct in sulcal areas)  
   %L = laplace3(single(SSEG==2)*0.5 + single(SSEG>2),0,1,0.01);
-  M = max(0,min(1,(SSEG-2))); M(SSEG<1)=-inf; WMD  = vbm_vol_eidist(M,max(0,( max(0,min(1,SSEG-1))))); % L + min.../2
-  M = max(0,min(1,(SSEG-1))); M(SSEG<1)=-inf; CSFD = vbm_vol_eidist(M,max(0,  max(0,min(1,SSEG-1))));   
+  M = max(0,min(1,(SSEG-2))); M(SSEG<=1)=-inf; WMD  = vbm_vol_eidist(M,max(0,( max(0,min(1,SSEG-1))))); % L + min.../2
+  M = max(0,min(1,(SSEG-1))); M(SSEG<=1)=-inf; CSFD = vbm_vol_eidist(M,max(0,  max(0,min(1,SSEG-1))));   
   M = SSEG>1 & SSEG<1.5; WMD(M) = WMD(M) - CSFD(M); clear CSFD;
   WMDM = vbm_vol_median3(WMD,WMD>mvxs & M,WMD>mvxs & M,opt.resV/8); WMD(M) = WMDM(M); clear WMDM;
 
@@ -109,21 +109,19 @@ function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
   end
   clear WMD CSFD;
 
-  if opt.resV<1
-    PP  = vbm_vol_median3(PP,PP>0.125 & PP<0.175,PP>0 & PP<1,0.25);
-    PP  = vbm_vol_median3(PP,PP>0.125 & PP<0.175,PP>0 & PP<1,0.00); % 0.10
-    GMT = vbm_vol_median3(GMT,GMT>eps,GMT>eps,opt.resV/4);
-    GMT = vbm_vol_median3(GMT,GMT>eps,GMT>eps,0);
-  end
+  PP  = vbm_vol_median3(PP,SSEG>0 & PP<1,SSEG>0 & PP<1,0.25);
+  PP  = vbm_vol_median3(PP,SSEG>0 & PP<1,PP>0 & PP<1,0.25);
+  PP  = vbm_vol_median3(PP,SSEG>0 & PP<1,PP>0 & PP<1,0.10); % 0.10
+  GMT = vbm_vol_median3(GMT,PP>0,GMT>eps,opt.resV/4);
+  GMT = vbm_vol_median3(GMT,PP>0,GMT>eps,0);
   
   GMT = GMT*mean(opt.resV); % darf ich erst hier machen wegen der projektion die aktuell nur für 1mm läuft!
-  GMT(SSEG<1.5 | SSEG>2.5)=nan; GMT=vbm_vol_nanmean3(GMT); GMT(isnan(GMT))=eps; % erweitern
+ % GMT(SSEG<1 | SSEG>3)=nan; GMT=vbm_vol_nanmean3(GMT); GMT(isnan(GMT))=eps; % erweitern
   %GMTS = smooth3(GMT,'gaussian',3,0.9); GMT(SSEG>=2 & SSEG<2.5)=GMTS(SSEG>=2 & SSEG<2.5); clear GMTs % smoothen allerdings nur für sicheren bereich
 
   GMT(GMT>10)=0; PP(isnan(PP))=0; 
-  YM  = vbm_vol_morph(GMT>0,'d');
-  GMT = vbm_vol_median3(GMT,YM);
-  PP  = vbm_vol_median3(PP ,YM);
+%  GMT = vbm_vol_median3(GMT,vbm_vol_morph(GMT>eps,'d') & GMT<=eps,GMT>eps);
+  
   clear Ymt;
 
   % removing non brain objects

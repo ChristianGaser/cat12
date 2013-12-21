@@ -155,12 +155,27 @@ function count = vbm_io_cprintf(style,format,varargin)
   %global docElement txt el
   if ~exist('el','var') || isempty(el),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
   if nargin<1, showDemo(majorVersion,minorVersion); return;  end
-  if isempty(style),  return;  end
+  %if isempty(style),  return;  end
+  if isempty(style), style='text'; end
   if ischar(style)
     switch lower(style)
+      case {'t','txt','text','k'}, style=[0.0 0.0 0.0];
       case {'e','err','error'},    style=[0.8 0.0 0.0];
       case {'w','warn','warning'}, style=[1.0 0.5 0.0];
-      case {'c','com','comment'},  style=[0.0 0.0 0.8];
+      case {'com','comment'},      style=[0.0 0.0 0.8];
+      case {'g','green'},          style=[0.0 1.0 0.0];
+      case {'b','blue'},           style=[0.0 0.0 0.1];
+      case {'r','red'},            style=[1.0 0.0 0.0];
+      case {'c','cyan'},           style=[0.0 1.0 1.0];
+      case {'m','magenta'},        style=[1.0 1.0 0.0];
+      case {'y','yellow'},         style=[1.0 0.0 1.0];
+      case {'o','orange'},         style=[1.0 0.5 0.0];
+      case {'g9','gray9'},         style=[0.1 0.1 0.1];
+      case {'g8','gray8'},         style=[0.2 0.2 0.2];
+      case {'g7','gray7'},         style=[0.3 0.3 0.3];
+      case {'g6','gray6'},         style=[0.3 0.4 0.4];
+      case {'g5','gray5'},         style=[0.5 0.5 0.5];
+      otherwise                    style=[0 0 0];
     end
   elseif isnumeric(style)
     if length(style)>3, style=style(1:3); end
