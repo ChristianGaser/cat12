@@ -3809,3 +3809,16 @@ M       vbm_vol_pbt.m
      images with higher resolutions are reduce to the half resolution.     
 ------------------------------------------------------------------------
 r553 | dahnke | 2013-12-21 19:50:17
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_stat_nanmean.m
+M       vbm_stat_nanstd.m
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+ M      vbm_vol_ROIval.mexmaci64
+RM      vbm_vol_eidist.mexmaci64
+
+Corrected minor errors.
+------------------------------------------------------------------------
+r554 | dahnke | 2014-01-08 17:27:43

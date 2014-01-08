@@ -9,7 +9,7 @@ function out = vbm_stat_nanstd(in, dim)
 %   a = rand(4,6,3); 
 %   a(rand(size(a))>0.5)=nan; 
 %   av = vbm_stat_nanstd(a,3); 
-%   am = nanstd(a,3); % of the statistical toolbox ...
+%   am = nanstd(a,0,3); % of the statistical toolbox ...
 %   fprintf('%0.4f %0.4f\n',([av(:),am(:)])');
 % ----------------------------------------------------------------------
 % Robert Dahnke 
@@ -35,11 +35,14 @@ function out = vbm_stat_nanstd(in, dim)
   
   % estimate mean
   tmpin = in;
-  tmpin(isnan(in)) = 0;
+  tmpin(isnan(in(:))) = 0;
+  mn = vbm_stat_nanmean(in,dim);
+ 
   dm = size(in); dm(setdiff(1:numel(dm),dim)) = 1;
-  mn = sum(tmpin, dim) ./ (eps+sum(~isnan(in),dim)); 
-  mn = repmat(mn,dm); mn(isnan(in)) = 0;
-  
+  tmpmn = repmat(mn,dm);
+  tmpmn(isnan(in(:))) = 0; 
+    
   % estimate std
-  out = (sum( (in-mn).^2 , dim) ./ max(1,(size(in,dim) - sum(isnan(in),dim))-1)).^0.5;
+  out = (sum( (tmpin-tmpmn).^2 , dim) ./ max(1,(size(in,dim) - sum(isnan(in),dim))-1)).^0.5;
+  out(isnan(mn))=nan;
 end
