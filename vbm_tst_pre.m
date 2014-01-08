@@ -50,8 +50,8 @@ function vbm_tst_pre
   def.csv.delimiter = ',';
   def.csv.komma     = '.';
   
-  def.stableMethods = {'SPM12nc','VBM12','VBM12i'};
-  def.stableRecalc  = 1;  
+  def.stableMethods = {'SPM12nc','VBM12i'};
+  def.stableRecalc  = 0;  
   opt.reprint       = 0;
 
   replaceSPMpath(def.SPM8path,def.SPM12path);
@@ -63,7 +63,7 @@ function vbm_tst_pre
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
   % 'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
-    'VBM12'   0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+    'VBM12'   0 {'p0'}      {'m'}       {1.5}       0 % internal noise correction
     'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 

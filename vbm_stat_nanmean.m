@@ -36,5 +36,5 @@ function out = vbm_stat_nanmean(in, dim)
   % estimate mean
   tmpin = in;
   tmpin(isnan(in(:))) = 0;
-  out = sum(tmpin, dim) ./ (eps+sum(~isnan(in),dim));
+  out = sum(tmpin, dim) ./ sum(~isnan(in),dim);
 end
