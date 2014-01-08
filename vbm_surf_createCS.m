@@ -41,6 +41,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   if ~exist('opt','var'), opt=struct(); end
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   
+  %def.surface   = cg_vbm_get_defaults('extopts.surface');
   def.debug     = cg_vbm_get_defaults('extopts.debug');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.reduceCS  = 100000;  
@@ -50,7 +51,8 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   opt.interpV   = max(0.5,min([min(vx_vol),opt.interpV,1]));
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
-
+  opt.usePPmap  = 0; % ########### 1 does not work yet ##########
+  
   % add system dependent extension to CAT folder
   if ispc
     opt.CATDir = [opt.CATDir '.w32'];
@@ -117,6 +119,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       fprintf('%4.0fs\n',etime(clock,stime)); 
 
 
+     % if opt.surface
       %% Write Ypp for final deformation
       %  Write Yppi file with 1 mm resolution for the final deformation, 
       %  because CAT_DeformSurf_ui can not handle higher resolutions and
@@ -129,8 +132,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       %  this meas that the error is in the surface and that vmat and vmati
       %  are not correct!
       %  #################################################################
-      usePPmap = 0;
-      if usePPmap
+      if opt.usePPmap
         Yppt = vbm_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
         Yppt = vbm_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
         Vpp  = vbm_io_writenii(V,Yppt,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0],0,[]);
@@ -145,7 +147,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
         Vpp1 = spm_create_vol(Vpp1); 
         for x3 = 1:Vpp1.dim(3),
-          M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat);
+          M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
           v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
           Vpp1 = spm_write_plane(Vpp1,v,x3);
         end;
@@ -166,7 +168,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
       CS.vertices = CS.vertices + repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1); 
       %CS.vertices(:,1:2) = CS.vertices(:,2:-1:1);
-      CSO = CS; % save old surface, for later correction of reduction error
+      %CSO = CS; % save old surface, for later correction of reduction error
 
       % use only one major object
       vbm_io_FreeSurfer('write_surf',Praw,CS);
@@ -191,20 +193,20 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
-      
+
       % mark defects and save as gifti
       cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects,[Pdefects '.gii']);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
       fprintf('%4.0fs\n',etime(clock,stime)); 
-      
-      
+
+
       %% topology correction and surface refinement 
       stime = vbm_io_cmd('  Topology correction and surface refinement');
       cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
-      if usePPmap
+      if opt.usePPmap
         % surface refinement by surface deformation based on the PP map
         th = 128;
         cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
@@ -257,10 +259,11 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       delete(Praw);  
       delete(Pdefects);  
       delete(Psphere0);
-      if usePPmap
+      if opt.usePPmap
         delete(Vpp.fname);
         delete(Vpp1.fname);
       end
+     % end
     catch err
       switch err.identifier
         case 'VBM:surf_createCS:system_error'

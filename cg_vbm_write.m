@@ -1277,9 +1277,9 @@ if cg_vbm_get_defaults('extopts.ROI') % || any(cell2mat(struct2cell(job.output.a
           % for thickness we need special correction to avoid values 
           % in bad map ROIs that comes to the GM
             Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
-            Ymm    = uint8(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
+            Ymm    = smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5;
             csv    = vbm_vol_ROIestimate(Yp0,Ya,Yth1x.*Ymm,vx_vol,ai,'T',csv,tissue);
-            csvth1 = vbm_vol_ROIestimate(Yp0,Ya,Yp0.*Ymm  ,vx_vol,ai,'V',[],{'gm'});
+            csvth1 = vbm_vol_ROIestimate(Yp0,Ya,Yp0  .*Ymm,vx_vol,ai,'V',[],{'gm'});
             corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
             csv(2:end,end) = num2cell(corth1);
             clear Yth1x Ymm csvth1 corth1;
