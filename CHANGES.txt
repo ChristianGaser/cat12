@@ -3822,3 +3822,15 @@ RM      vbm_vol_eidist.mexmaci64
 Corrected minor errors.
 ------------------------------------------------------------------------
 r554 | dahnke | 2014-01-08 17:27:43
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       spm_vbm12.m
+M       vbm12.man
+
+(1) Removed saving of temporary file in cg_vbm_write.m.
+(2) Don't write label as default.
+(3) Removed option for longitudinal data, because this is not yet prepared.
+------------------------------------------------------------------------
+r555 | gaser | 2014-01-10 12:43:08

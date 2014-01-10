@@ -473,7 +473,7 @@ NS = @(Ys,s) Ys==s | Ys==s+1; % remove side alignment from atlas maps
 
 % global intensity normalization
 Ym = vbm_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol);
-tmpmat = fullfile(pth,[nam '_tmp.mat']); save(tmpmat);
+%tmpmat = fullfile(pth,[nam '_tmp.mat']); save(tmpmat);
 
 
 

@@ -55,7 +55,7 @@ vbm.output.CSF.mod    = 0;
 vbm.output.CSF.dartel = 0;
 
 % label
-vbm.output.label.native = 1; 
+vbm.output.label.native = 0; 
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
