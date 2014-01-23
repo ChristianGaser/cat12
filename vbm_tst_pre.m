@@ -24,7 +24,7 @@ function vbm_tst_pre
   %def.results.printCase = 0; % [0=none,1=only vbm12,2=all]
   def.subStepSize = 1; % use every xth subject
   def.path        = '/Volumes/MyBook/MRData/vbm_tst';
-  def.printspace  = [40 7 2]; % [name,columnwidth,fractonal digits] 
+  def.printspace  = [50 7 2]; % [name,columnwidth,fractonal digits] 
   def.SPM8path    = '/Users/dahnke/Neuroimaging/SPM8R4290_VBM8';
   def.VBM12ppath  = '/Users/dahnke/Neuroimaging/SPM8R4290_VBM12+';
   def.SPM12path   = '/Users/dahnke/Neuroimaging/SPM12Rbeta';
@@ -81,9 +81,10 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-   'BO'
+%  'BO'
 %     'SVE_LPBA40'
-%   'BWP_Collins_fast'
+   'BWP_Collins_MS'
+%  'BWP_Collins_fast'
 %     'ADHD'
 %     'ADNI'
 %     'IXI'

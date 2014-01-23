@@ -15,6 +15,10 @@
 #include "math.h"
 #include "float.h"
 
+#ifndef isnan
+#define isnan(a) ((a)!=(a)) 
+#endif
+
 /* qicksort for median */
 /*
 void swap(float *a, float *b)
