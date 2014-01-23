@@ -55,7 +55,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     end
   end  
   if ~exist('range','var'),  range  = [0 1]; end
-  if ~exist('addpre','var'), addpre = 0; end
+  addpre = 1; %if ~exist('addpre','var'), addpre = 1; end % deactivated 
   write = [1 0 0 0];
   if isstruct(writes)
     if isfield(writes,'native'),   write(1) = writes.native; end

@@ -58,11 +58,12 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   %else                 vol = spm_read_vols(Vref(1));
   %end
   vol  = single(spm_read_vols(Vref(1))); 
-  ncls = max(round(vol(:))); clear vol;
+  ncls = max(round(vol(:))); 
   if     ncls==255, ncls=1; 
   elseif ncls==254, ncls=3; % IBSR
+  elseif max(vol(:))>0, ncls=1; 
   end
-
+  clear vol;
   
   estr=sprintf('%s\n%s\n\n',spm_str_manip(P(1,:),'h'),Vref(1).fname);
   
@@ -92,7 +93,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
           %else                 vol1 = spm_read_vols(Vref(i));
           %end
           if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
-          vol1 = single(spm_read_vols(Vref(Vrefi))); maxv=max(round(vol1(:))); if maxv==255, vol1=vol1/maxv; end
+          vol1 = single(spm_read_vols(Vref(Vrefi))); maxv=max((vol1(:))); if maxv==255, vol1=vol1/maxv; else vol1=vol1/maxv; end
           vol2 = single(spm_read_vols(V(i)));
           
           [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion, dice, jaccard] = ...
@@ -110,10 +111,11 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
         case 3
           if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
           vol1 = single(spm_read_vols(Vref(Vrefi))); 
-          maxv=max(round(vol1(:))); if maxv>3, vol1=round(vol1); vol1=vol1/maxv*3; end
+          maxv=max((vol1(:))); if maxv>3, vol1=round(vol1); vol1=vol1/maxv*3; end
           vol2 = single(spm_read_vols(V(i)));
 
-          for c=1:3, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
+          for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
+          c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))>=c)+1), 2); 
           bth=1;     kappa_all(1,4) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
 
           rms = calcRMS(vol1,vol2);
@@ -148,7 +150,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   
   if manu
     load gong.mat; 
-    soundsc(y(5000:25000),Fs)
+   % soundsc(y(5000:25000),Fs)
   end
 end
 function rms=calcRMS(v1,v2)

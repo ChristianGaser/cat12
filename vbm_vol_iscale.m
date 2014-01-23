@@ -432,7 +432,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
           CMr    = Br & Tr<mean(tp1(2));                            
           tp2(1) = peak(Tr(CMr(:)));
           tp2(1) = min(tp2(1),tp2(2)-diff(tp2(2:3)));
-          tp2(4) = min(1.5,tp1(3)+diff(tp2(2:3)));
+          tp2(4) = min(1.5,tp2(3)+diff(tp2(2:3)));
 
           tp2=tp1;
           tp2=tp2*tpa;
@@ -442,9 +442,14 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       end
       
       % Intensity Normalized Image
+      if size(tp2,2)<4,  tp2(4) = min(tp2(3).*1.5,tp2(3)+diff(tp2(2:3))); end % add WM+
+      BG=true(size(T)); BG(3:end-2,3:end-2,3:end-2)=0; 
+      tp2=[vbm_stat_nanmean(T(BG(:))),tp2];                               % add background
+      T = T - tp2(1); tp2=tp2-tp2(1);
+      %{
       try
-        imax = double(intmax('uint16')); isc=10000; 
-        lut  = [-1/3 0:1/3:10]; lut2=[-1/3 0 tp2(1:3) tp2(4)+(0:1/3:10)];
+        imax = double(intmax('uint16')); isc=1000; 
+        lut  = [-1/3 0:1/3:10]; lut2=[-1/3 tp2(1:4) tp2(5)+(0:1/3:10)];
         lut2 = lut2(1:numel(lut));
         TI   = single(intlut(uint16(isc*T),uint16(isc * ...
                  interp1(lut2,lut,0:1/isc:imax/isc,'pchip'))))/isc;
@@ -452,15 +457,20 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       catch %#ok<CTCH>
       % if inlut is not available... only temporarly!!!
       % ################################################################
-        TI = T; M = T>=0 & T<=tp2(1); TI(M(:)) = T(M(:))/tp2(1)/3; 
-        for i=2:numel(tp2)
-          M = T>tp2(i-1) & T<=tp2(i);
-          TI(M(:)) = (i-1)/3 + (T(M(:)) - tp2(i-1))/diff(tp2(i-1:i))/3;
-        end
-        M  = T>=tp2(end); 
-        TI(M(:)) = numel(tp2)/3 + (T(M(:)) - tp2(i))/diff(tp2(end-1:end))/3;
+     
       % ################################################################
       end
+      end
+      %}
+        TI = T; 
+        isc = 2;
+        tp2 = interp1(tp2,1:1/isc:5,'pchip');
+        for i=2:numel(tp2)
+          M = T>tp2(i-1) & T<=tp2(i);
+          TI(M(:)) = (i-2)/isc/3 + (T(M(:)) - tp2(i-1))/diff(tp2(i-1:i))/isc/3;
+        end
+        M  = T>=tp2(end); 
+        TI(M(:)) = numel(tp2)/isc/3 + (T(M(:)) - tp2(i))/diff(tp2(end-1:end))/isc/3;
       
       varargout{1} = tp2;
     otherwise
