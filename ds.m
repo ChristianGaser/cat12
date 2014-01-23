@@ -58,7 +58,13 @@ function varargout=ds(type,viewtype,DAR,varargin)
           annotation('textbox',labelpos{tli},'string',labeltext{tli},'color','white','FontWeight','bold',...
             'Fontsize',16,'FontName','Arial','HorizontalAlignment','center','EdgeColor','none');
         end
-      case {'d2','default2'}
+      case {'x2','default2'}
+        set(fh,'WindowStyle','docked','Visible','on');
+        subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); axis equal off; daspect(DAR);
+        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); axis equal off; daspect(DAR);
+        subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); axis equal off; daspect(DAR);
+        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); axis equal off; daspect(DAR);
+           case {'d2','default2'}
         set(fh,'WindowStyle','docked','Visible','on');
         subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);

@@ -24,9 +24,11 @@
 #define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
 #endif
 
+/*
 #ifndef isnan
 #define isnan(a) ((a)!=(a)) 
 #endif
+*/
 
 #define index(A,B,C,DIM) ((C)*DIM[0]*DIM[1] + (B)*DIM[0] + (A))
 
@@ -68,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float s1 = abs2((float)S[0]),s2 = abs2((float)S[1]),s3 = abs2((float)S[2]);
    
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
+  const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
 /*printf("%d",st); */
 
   float NVstdth,nx,NVnmax,stdth=0.90; /*1-1/nh; 1 - 1/(2*nh+1); (2*nh+1)); */
@@ -155,7 +157,7 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
         M2[ind]=M2[ind]/(float) HISTmax;
       };  
       
-      if ((M[ind]==-FLT_MAX) || (D[ind]==FLT_MAX) || (isnan(D[ind])) ) M[ind]=0;
+      if ((M[ind]==-FLT_MAX) || (D[ind]==FLT_MAX) || (mxIsNaN(D[ind])) ) M[ind]=0;
      /*
       H[ind]=-FLT_MAX; L[ind]=FLT_MAX; NVmn = 0; NVstd = 0; nx=0; 
       for (nn=0;nn<n;nn++) {
@@ -186,16 +188,16 @@ const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
         
           if (H[ind]==-FLT_MAX) H[ind]=0;
           if (L[ind]== FLT_MAX) L[ind]=0;
-          if (isnan(NVmn))      NVmn=0;
-          if (isnan(NVstd))     NVstd=0;
+          if (mxIsNaN(NVmn))    NVmn=0;
+          if (mxIsNaN(NVstd))   NVstd=0;
           
         }
 
       
       if (H[ind]==-FLT_MAX) H[ind]=0;
       if (L[ind]== FLT_MAX) L[ind]=0;
-      if (isnan(NVmn))      NVmn=0;
-      if (isnan(NVstd))     NVstd=0;
+      if (mxIsNaN(NVmn))    NVmn=0;
+      if (mxIsNaN(NVstd))   NVstd=0;
 
       M[ind] = NVmn;
       SD[ind] = NVstd;

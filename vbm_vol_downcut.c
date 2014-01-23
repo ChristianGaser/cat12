@@ -40,9 +40,11 @@
 #include "math.h"
 #include "float.h"
 
+/*
 #ifndef isnan
 #define isnan(a) ((a)!=(a)) 
 #endif
+/*
 
 /* HELPFUNCTIONS */
 
@@ -127,7 +129,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	/* initialisation of parameter volumes */
 	for (i=0;i<nL;i++) { 
 		SLAB[i] = ALAB[i]; 
-		if (isnan(SLAB[i])) SLAB[i]=0;
+		if (mxIsNaN(SLAB[i])) SLAB[i]=0;
 		if (SLAB[i]==0) 					{DIST[i]= FLT_MAX; } 
 		else {
 			if (SLAB[i]==-FLT_MAX) {DIST[i]=-FLT_MAX; }
