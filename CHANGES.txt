@@ -4014,3 +4014,11 @@ M       CHANGES.txt
 Removed CAT.maci64 because of difficulties to use subversion for binaries.
 ------------------------------------------------------------------------
 r562 | gaser | 2014-01-27 11:19:00
+
+M       CHANGES.txt
+ M      tricases.h
+M       vbm12.man
+
+Removed CAT.maci64 because of difficulties to use subversion for binaries.
+------------------------------------------------------------------------
+r563 | gaser | 2014-01-27 11:22:42
