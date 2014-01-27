@@ -4008,3 +4008,9 @@ M       vbm12.man
 Added missing tricases.h.
 ------------------------------------------------------------------------
 r561 | gaser | 2014-01-27 11:16:26
+
+M       CHANGES.txt
+
+Removed CAT.maci64 because of difficulties to use subversion for binaries.
+------------------------------------------------------------------------
+r562 | gaser | 2014-01-27 11:19:00
