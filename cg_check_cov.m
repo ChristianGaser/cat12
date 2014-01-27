@@ -88,7 +88,7 @@ ws = spm('Winsize','Graphics');
 FS    = spm('FontSizes');
 
 pos = struct(...
-    'fig',   [10 10 ws(3)+150 ws(3)],... % figure
+    'fig',   [10 10 1.2*ws(3) ws(3)],... % figure
     'cbar',  [0.715 0.050 0.02 0.50],... % colorbar for correlation matrix
     'corr',  [-0.05 0.050 0.80 0.80],... % correlation matrix
     'quit',  [0.775 0.900 0.20 0.05],... % quit button
@@ -331,8 +331,10 @@ function check_worst_data(obj, event_obj)
 global P ind_sorted issurf mn_data mx_data H
 
 n = size(P,1);
-number = min([n 15]);
+number = min([n 24]);
 number = spm_input('How many files ?',1,'e',number);
+number = min([number 24]);
+number = min([number size(P,1)]);
   
 list = str2mat(P(ind_sorted(n:-1:1),:));
 list2 = list(1:number,:);
@@ -481,15 +483,13 @@ end
 set(H.text,'String',txt2)
 axes('Position',pos.slice);
 
-if issurf
+if issurf 
   % use indexed 2D-sheet to display surface data as image
-  imgx = data_array(:,pos.x); imgy = data_array(:,pos.y);
-  
   % check surface size to use indexed 2D map
   if (length(data_array(:,pos.x)) == 163842)
     ind = spm_load(fullfile(spm('dir'),'toolbox','vbm12','fsaverage','fsavg.index2D_256x128.txt'));
-    tmpx = imgx(ind); tmpy = imgy(ind);
-    img = [reshape(tmpx,[256,128]) reshape(tmpy,[256,128])];
+    img = [reshape(data_array(ind,pos.x),[256,128]) reshape(data_array(ind,pos.y),[256,128])];
+    img = circshift(img,128);
   else
     img = [data_array(:,pos.y) data_array(:,pos.x)]';
   end
@@ -497,7 +497,7 @@ if issurf
   % scale img to 0..64
   mn = min(data_array(:));
   mx = max(data_array(:));
-  img = 64*((img - mn)/(mx_data-mx));
+  img = 64*((img - mn)/(mx-mn));
 else
   % add slider for colume data
   set(H.mm,'Visible','on');
