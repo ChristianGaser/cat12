@@ -4022,3 +4022,11 @@ M       vbm12.man
 Removed CAT.maci64 because of difficulties to use subversion for binaries.
 ------------------------------------------------------------------------
 r563 | gaser | 2014-01-27 11:22:42
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       vbm12.man
+
+Removed cg_check_mesh_cov from Makefile.vbm.
+------------------------------------------------------------------------
+r564 | gaser | 2014-01-27 11:25:25
