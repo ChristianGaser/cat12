@@ -27,51 +27,17 @@
 #include "math.h"
 #include <stdlib.h>
 
-
-// estimate minimum of A and its index in A    
-void pmin(const float A[], int sA, float & minimum, int & index) {
-  minimum=1e15f; index=0; 
-  for(int i=0;i<sA;i++) {
-    if ((A[i]>0) && (minimum>A[i])) { 
-      minimum = A[i];
-      index   = i;
-    }
-  }
-}
-float mean3(float a, float b, float c) {
-  return (a+b+c)/3;
-}
-
-
-// simple maximum and absolute value
-float max(float n1, float n2) { if (n1>n2) return n1;	else return n2; }
-float abs2(float n) {	if (n<0) return -n; else return n; }
-
-/*
-void pmax(const float GMT[],const float RPM[],const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA, float & maximum, int & index) {
-  float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0; maximum=WMD; index=0; float maximum2=WMD; 
-  //maximum=WMD; index=0; //printf("%d ",sizeof(A)/8);
-  for(int i=0;i<=sA;i++) {
-    
-    if (  (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.65)>WMD) && SEG[i]>1.5 && SEGI>=2)     //work: +-0.4 to +-0.5
-      {
-        n++; 
-        maximum = GMT[i]; 
-        index = i;
-      }
-//    if (  (GMT[i]<1e15) && (GMT[i]>WMD) && ((RPM[i]-ND[i]-0.3)<WMD) && ((RPM[i]-ND[i]+0.9)>WMD) && SEG[i]>1.5 && SEGI>=2) 
-//      {
-//        maximum2 = (maximum2 + GMT[i])/2; 
-//      } 
-    //if (maximum<=maximum2+0.5) maximum = 0.9*maximum + 0.1*maximum2;
-  }
-}
-
-*/
+struct opt_type {
+	int   CSFD;													/* use CSFD */
+	int   PVE;													/* 0, 1=fast, 2=exact */
+	float LB, HB, LLB, HLB, LHB, HHB;  	/* boundary */
+	int   sL[3];
+	// ...
+	} opt;
 
 
 // get all values ot the voxels witch are in WMD-range (children of this voxel)  
-void pmax(const float GMT[],const float RPM[],const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA, float & maximum, int & index) {
+void pmax(const float GMT[], const float RPM[], const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA, float & maximum, int & index) {
   float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0; maximum=WMD; index=0; 
   
   for(int i=0;i<=sA;i++) {
@@ -104,7 +70,7 @@ int sub2ind(int x,int y, int z, int s[]) {
   return i;
 }
 
-// read out linear interpolatet value of the volume
+// read out linear interpolated value of the volume
 float isoval(float*SEG,float x, float y, float z, int sSEG[]){
   float fx = floor(x),   fy = floor(y),   fz = floor(z);
   float cx = floor(x+1), cy = floor(y+1), cz = floor(z+1);
@@ -127,16 +93,6 @@ float isoval(float*SEG,float x, float y, float z, int sSEG[]){
   for (int i=0; i<8; i++) seg = seg + N[i]*W[i];
   return seg;  
 }
-
-
-struct opt_type {
-	int   CSFD;													/* use CSFD */
-	int   PVE;													/* 0, 1=fast, 2=exact */
-	float LB, HB, LLB, HLB, LHB, HHB;  	/* boundary */
-	int   sL[3];
-	// ...
-	} opt;
-
 
 
 // main function
@@ -164,7 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int   sN  = sizeof(NI)/4;  
   float       DN[sN],DI[sN],GMTN[sN],WMDN[sN],SEGN[sN],DNm;
   
-  float 			du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
+  float 	  du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
   int         ni,DNi,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
     
   // main volumes - actual without memory optimation ...
@@ -243,7 +199,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
  
  
- 	for (int i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i]=0; //WMD[i]
+  for (int i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i]=0; //WMD[i]
 
  
   
@@ -259,7 +215,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			CSFDi  = GMT[i] - WMD[i];
 		
 			if ( CSFD[i]>CSFDi )	CSFD[i] = CSFDi; 					
-			else   		 			  		GMT[i]  = GMTi;
+			else   		 			GMT[i]  = GMTi;
 		}
 	}
  
@@ -274,9 +230,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			n1i=i-1; ind2sub(n1i,nu,nv,nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2 ) n1i=i; 
 			n2i=i+1; ind2sub(n2i,nu,nv,nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2 ) n2i=i;
 			//if (GMT[n1i]==0), n1i=n2i; if (GMT[n2i]==0), n2i=n2i; 
-			if 			( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]<GMT[n2i] ) RPM[i] = GMT[n1i];
+			if 		( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]<GMT[n2i] ) RPM[i] = GMT[n1i];
 			else if ( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]>GMT[n2i] ) RPM[i] = GMT[n2i];
-			else																									 							RPM[i] = GMT[i];
+			else																RPM[i] = GMT[i];
 		}
 		
 		for (int i=0;i<nL;i++) 
@@ -285,8 +241,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			n1i=i-x; ind2sub(n1i,nu,nv,nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n1i=i;
 			n2i=i+x; ind2sub(n2i,nu,nv,nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n2i=i;
 			if 			( RPM[n1i]>RPM[i] && RPM[i]<RPM[n2i] && RPM[n1i]<RPM[n2i] ) GMT[i] = RPM[n1i];
-			else if ( RPM[n1i]>RPM[i] && RPM[i]<RPM[n2i] && RPM[n1i]>RPM[n2i] ) GMT[i] = RPM[n2i];
-			else																																GMT[i] = RPM[i];
+			else if ( RPM[n1i]>RPM[i] && RPM[i]<RPM[n2i] && RPM[n1i]>RPM[n2i] )     GMT[i] = RPM[n2i];
+			else																	GMT[i] = RPM[i];
 		}
 		
 		for (int i=0;i<nL;i++) 
@@ -295,8 +251,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			n1i=i-xy; ind2sub(n1i,nu,nv,nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n1i=i;
 			n2i=i+xy; ind2sub(n2i,nu,nv,nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n2i=i;
 			if 			( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]<GMT[n2i] ) RPM[i] = GMT[n1i];
-			else if ( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]>GMT[n2i] ) RPM[i] = GMT[n2i];
-			else																																RPM[i] = GMT[i];
+			else if ( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]>GMT[n2i] )     RPM[i] = GMT[n2i];
+			else																	RPM[i] = GMT[i];
 		}
 		
 		for (int i=0;i<nL;i++) {

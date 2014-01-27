@@ -62,7 +62,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     opt.CATDir = [opt.CATDir '.glnx86'];
   end  
 
-  [pp,ff]   = spm_fileparts(V.fname);
+  [pp,ff,ee]   = spm_fileparts(V.fname);
 
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
@@ -105,15 +105,14 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       fprintf('%s:\n',opt.surf{si});
       stime = vbm_io_cmd('  Thickness estimation');
 
-      [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,2,Ymfs>1);   % removing of background
+      [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,2,Ymfs>1);   % removing background
       [Ymfs,resI] = vbm_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
 
       % pbt calculation
       [Yth1i,Yppi] = vbm_vol_pbt(Ymfs,struct('resV',opt.interpV)); clear Ymfs;       
       Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0; 
-% hier im cc-bereich die Yppi filtern, um stufen zu vermeiden
       Yth1t = vbm_vol_resize(Yth1i,'deinterp',resI);                      % back to original resolution
-      Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding of background
+      Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
       Yth1  = max(Yth1,Yth1t);                                            % save on main image
       clear Yth1t;
       fprintf('%4.0fs\n',etime(clock,stime)); 
@@ -162,9 +161,11 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
       vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
 
-      % surface generation and coordinate adaption for the orinal image
-      % this works well...
-      CS  = isosurface(Yppi,0.5); %clear Yppi;
+      % surface generation using genus0 approach that does not remove all topology defects but minimizes the number
+%      CS  = isosurface(Yppi,0.5);
+      [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(Yppi,0.5);
+      clear Yppi;
+
       CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
       CS.vertices = CS.vertices + repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1); 
       %CS.vertices(:,1:2) = CS.vertices(:,2:-1:1);
@@ -252,7 +253,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       S.(opt.surf{si}).th1      = CS.facevertexcdata;
       S.(opt.surf{si}).vmat     = vmat;
       S.(opt.surf{si}).vmati    = vmati;
-      clear Yth1i Yppi;
+      clear Yth1i
 
       % we have to delete the original faces, because they have a different number of vertices after
       % CAT_FixTopology!

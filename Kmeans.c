@@ -13,7 +13,7 @@
  * Statistical approach to single-channel MR brain scans
  * J. C. Rajapakse, J. N. Giedd, and J. L. Rapoport
  * IEEE Transactions on Medical Imaging, Vol 16, No 2, 1997
-/*
+ *
  * Tree structure k-means algorithm
  *
  * Jagath C. Rajapakse (raja@cns.mpg.de) 23-07-97

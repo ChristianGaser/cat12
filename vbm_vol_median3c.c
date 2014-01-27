@@ -122,7 +122,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
       }
       /* find maximum occurent value */
-      M[ind]=0; n=0; for (i=0;i<255;i++) {if (NV[i]>=0 & (NV[i]>n)) {n=NV[i]; M[ind]=i;}}
+      M[ind]=0; n=0; for (i=0;i<255;i++) {if ((NV[i]>=0) && (NV[i]>n)) {n=NV[i]; M[ind]=i;}}
      }
     else {
       M[ind] = D[ind];

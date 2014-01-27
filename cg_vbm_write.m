@@ -1824,7 +1824,7 @@ return
 %=======================================================================
 function Ydiv = vbm_vol_div(Ym,vx_vol)
 % ----------------------------------------------------------------------
-% Diverence helps to identify all gyri that should not be in the GM, but 
+% Divergence helps to identify all gyri that should not be in the GM, but 
 % helps to improve the WM. Divergence estimation is very memory intensive 
 % so it is better to limit the resolution.
 % ----------------------------------------------------------------------

@@ -44,7 +44,7 @@
 #ifndef isnan
 #define isnan(a) ((a)!=(a)) 
 #endif
-/*
+*/
 
 /* HELPFUNCTIONS */
 
