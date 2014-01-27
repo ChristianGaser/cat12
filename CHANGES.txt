@@ -3978,3 +3978,14 @@ A       vbm_vol_genus0.mexw64
 Added missing vbm_vol_genus0.mex* files.
 ------------------------------------------------------------------------
 r558 | gaser | 2014-01-27 11:14:11
+
+M       CHANGES.txt
+ M      fsaverage/fsavg.index2D_256x128.txt
+ M      genus0.c
+ M      genus0.h
+M       vbm12.man
+MM      vbm_vol_genus0.c
+
+Added missing vbm_vol_genus0.mex* files.
+------------------------------------------------------------------------
+r559 | gaser | 2014-01-27 11:14:40
