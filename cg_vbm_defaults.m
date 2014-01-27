@@ -138,7 +138,7 @@ vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing
 vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 vbm.extopts.ROI         = 2;    % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
-vbm.extopts.surface     = 0;    % surface and thickness creation
+vbm.extopts.surface     = 1;    % surface and thickness creation
 vbm.extopts.debug       = 0;    % debuging option
 vbm.extopts.verb        = 1;    % Verbose: 1 - default; 2 - details
 
