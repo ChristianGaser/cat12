@@ -4038,3 +4038,10 @@ M       cg_vbm_tools.m
 Some changes in cg_vbm_tools.m and cg_vbm_batch.m to use batch mode.
 ------------------------------------------------------------------------
 r565 | gaser | 2014-01-27 12:44:03
+
+M       CHANGES.txt
+M       vbm_vol_eidist.mexmaci64
+
+Removed debugging output in vbm_vol_eidist.c
+------------------------------------------------------------------------
+r566 | gaser | 2014-01-27 12:48:26
