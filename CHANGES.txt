@@ -4030,3 +4030,11 @@ M       vbm12.man
 Removed cg_check_mesh_cov from Makefile.vbm.
 ------------------------------------------------------------------------
 r564 | gaser | 2014-01-27 11:25:25
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_tools.m
+
+Some changes in cg_vbm_tools.m and cg_vbm_batch.m to use batch mode.
+------------------------------------------------------------------------
+r565 | gaser | 2014-01-27 12:44:03
