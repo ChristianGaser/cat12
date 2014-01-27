@@ -34,7 +34,7 @@ int sub2ind(int x,int y, int z, int s[]) {
   return i;
 }
 
-float abs2(float n) {	if (n<0) return -n; else return n; }
+float abs2(float n) { if (n<0) return -n; else return n; }
 
 
 /* main function */
@@ -84,10 +84,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float*F    = (float *)mxGetPr(prhs[1]);
 
   float TH=0.01;
-  if ( TH>=0.5 || TH<0.0001 ) mexErrMsgTxt("ERROR:eikonal3: threshhold must be >0.0001 and smaller than 0.5\n");
+  if ( TH>=0.5 || TH<0.0001 ) mexErrMsgTxt("ERROR:eikonal3: threshold must be >0.0001 and smaller than 0.5\n");
   
-  unsigned int i, n; 
-  /* intitialisiation */
+  int i, n; 
+  /* initialisiation */
   for (i=0;i<nL;i++) {
     if ( SEG[i]<0 ) {D[i]=0; L[i]=SEG[i];} 
     else            {D[i]=FLT_MAX; L[i]=0;} /*{ if ( SEG[i]<0 ) D[i]=SEG[i]-0.5;}else */
@@ -96,26 +96,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float diff, maxdiffi, maxdiff=1, Dio, DNi;
   
   while ( ( maxdiff > TH ) && kll<2000 ) {
-  	maxdiffi=0;
-  	kll++;
-  	for (i=0;i<nL;i++) {
+    maxdiffi=0;
+    kll++;
+    for (i=0;i<nL;i++) {
       if ( SEG[i]>0 && SEG[i]<FLT_MAX) {
         ind2sub(i,&u,&v,&w,xy,x);
         /* read neighbor values */
         Dio = D[i];
         
         for (n=0;n<sN;n++) {
-        	if ( SEG[i]!=FLT_MAX ) {
-	          ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
-    	  	 	if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) { DNi = D[ni] + ND[n]*SEG[i]; if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } } 
-      	  }
-				}
-				
+          if ( SEG[i]!=FLT_MAX ) {
+            ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
+            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) { DNi = D[ni] + ND[n]*SEG[i]; if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } } 
+          }
+        }
+        
         diff  = abs2( Dio - D[i] );
         if ( maxdiffi<diff ) maxdiffi=diff;  
       }
     }
-		for (i=nL-1;i<0;i--) {
+    for (i=nL-1;i<0;i--) {
       if ( SEG[i]>=0 && SEG[i]<FLT_MAX) {
         ind2sub(i,&u,&v,&w,xy,x);
 
@@ -123,17 +123,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         Dio = D[i];
         
         for (n=0;n<sN;n++) {
-        	if ( SEG[i]!=FLT_MAX ) {
-	          ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
-    	  	 	if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) { DNi = D[ni] + ND[n]*SEG[i]; if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } } 
-       	  }
-				}
-				
+          if ( SEG[i]!=FLT_MAX ) {
+            ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
+            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) { DNi = D[ni] + ND[n]*SEG[i]; if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } } 
+          }
+        }
+        
         diff  = abs2( Dio - D[i] ); 
         if ( maxdiffi<diff ) maxdiffi=diff;  
       }
     }
-    maxdiff = maxdiffi;  	
+    maxdiff = maxdiffi;   
   }
-	/*printf("%d",kll); */
+  /*printf("%d",kll); */
 }

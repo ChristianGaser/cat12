@@ -306,23 +306,13 @@ nuisance.name  = 'Nuisance';
 nuisance.val   = {c};
 nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 
-slice = cfg_entry;
-slice.tag = 'slice';
-slice.name = 'Show slice (in mm)?';
-slice.strtype = 'r';
-slice.num = [1 1];
-slice.val  = {0};
-slice.help = {[...
-'Choose slice in mm.']};
-
 gap = cfg_entry;
 gap.tag = 'gap';
-gap.name = 'Gap to skip slices';
+gap.name = 'Separation';
 gap.strtype = 'n';
 gap.num = [1 1];
-gap.val  = {5};
-gap.help = {[...
-'To speed up calculations you can define that only every x slice the covariance is estimated.']};
+gap.val  = {3};
+gap.help    = {'To speed up calculations you can define that only every x voxel correlation is estimated. Smaller sampling distances gives slightly more accurate correlations, but will be much slower.'};
 
 scale = cfg_menu;
 scale.tag = 'scale';
@@ -345,8 +335,8 @@ transform.num     = [0 Inf];
 
 check_cov = cfg_exbranch;
 check_cov.tag = 'check_cov';
-check_cov.name = 'Check sample homogeneity using covariance';
-check_cov.val = {data,scale,slice,gap,transform};
+check_cov.name = 'Check homogeneity using sample correlation';
+check_cov.val = {data,gap,transform};
 check_cov.prog   = @cg_check_cov;
 check_cov.help = {[...
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality ',...

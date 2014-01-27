@@ -6,7 +6,7 @@
 
 /* voxelbased euclidean distance calculation
  * ________________________________________________________________________
- * Calculates the euklidean distance without PVE to an object in P with a 
+ * Calculates the euclidean distance without PVE to an object in P with a 
  * boundary of 0.5.
  * 
  *  [D,I,L] = vbdist(P[,R])
@@ -32,8 +32,8 @@
 void pmin(float A[], int sA, float *minimum, int *index)
 {
   int i; 
-  *minimum=FLT_MAX; *index=0; /* printf("%d ",sizeof(A)/8); */
-  for(i=0;i<sA;i++) {
+  *minimum = FLT_MAX; *index = 0; /* printf("%d ",sizeof(A)/8); */
+  for(i=0; i<sA; i++) {
     if ((A[i]>0) && (*minimum>A[i]))
     { 
       *minimum = A[i]; 
@@ -42,11 +42,9 @@ void pmin(float A[], int sA, float *minimum, int *index)
   }
 }
 
-float abs2(float n) {	if (n<0) return -n; else return n; }
-
 
 /* estimate x,y,z position of index i in an array size sx,sxy=sx*sy... */
-void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
+void ind2sub(int i, int *x, int *y, int *z, int sxy, int sy) {
   *z = (int)floor( (double)i / (double)sxy ) +1; 
    i = i % (sxy);
   *y = (int)floor( (double)i / (double)sy ) +1;        
@@ -72,10 +70,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   const int sS[] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
-  double*S = mxGetPr(SS);
-  if (nrhs<3) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[2]);}
+  double  *S = mxGetPr(SS);
+  if (nrhs<3) {S[0]=1.0; S[1]=1.0; S[2]=1.0;} else {S=mxGetPr(prhs[2]);}
   
-  float s1 = abs2((float)S[0]),s2 = abs2((float)S[1]),s3 = abs2((float)S[2]);
+  float s1 = fabs((float)S[0]),s2 = fabs((float)S[1]),s3 = fabs((float)S[2]);
   const float   s12  = sqrt( s1*s1  + s2*s2); /* xy - voxel size */
   const float   s13  = sqrt( s1*s1  + s3*s3); /* xz - voxel size */
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz - voxel size */
@@ -88,9 +86,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const float ND[] = {0.0, s1, s12, s2, s12,    s13, s3,  s13,     s123,  s23,   s123,     s123,  s23,   s123};
   const int   sN = sizeof(NI)/4;    
   float       DN[sN],DI[sN];
-  float       DNm=FLT_MAX;
-  double      mod;
-  int i, n, ni, DNi=0;
+  float       DNm = FLT_MAX;
+  int i, n, ni, DNi = 0;
 
   
   /* data */
@@ -105,10 +102,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   bool          *R; if (nrhs>1) R=(bool *)mxGetPr(prhs[1]); 
 
   
-  /* intitialisiation */
+  /* intitialisation */
   for (i=0;i<nL;i++) 
   {
     if (V[i]>0.5) D[i]=0.0; else D[i]=FLT_MAX; 
+    if (V[i]>255.0) fprintf(stderr,"Warning: First parameter of vbdist > 255!\n"); 
     L[i]=(unsigned char) ceil(V[i]);
     I[i]=(unsigned int)i;
   }
@@ -135,7 +133,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       /* update values */
       if (DNi>0) {
         L[i] = L[i+NI[DNi]];
-        I[i] = (unsigned int)  I[i+NI[DNi]];
+        I[i] = (unsigned int) I[i+NI[DNi]];
         D[i] = DNm; 
         ind2sub((int)I[i],&nu,&nv,&nw,xy,x); 
         D[i] = sqrt(pow((float)(u-nu)*s1,2) + pow((float)(v-nv)*s2,2) + pow((float)(w-nw)*s3,2));

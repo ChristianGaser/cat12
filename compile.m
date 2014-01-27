@@ -16,6 +16,7 @@ function compile
   mex -O vbm_vol_pbtp.cpp
   mex -O vbm_vol_interp3f.cpp
   mex -O vbm_vol_eidist.c
+  mex -O vbm_vol_genus0.c genus0.c
   mex -O vbdist.c
   
   d2 = vbm_vol_median3(d);             disp('Compilation of vbm_vol_median3 successful')
@@ -34,9 +35,9 @@ function compile
 
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')
-          mex CC='gcc-4.0' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex CC='gcc' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc-4.0' CFLAGS='-m64 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
+          mex CC='gcc' CFLAGS='-m64 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexmaci')
           mex CC='gcc-4.0' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
