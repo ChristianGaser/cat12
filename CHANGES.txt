@@ -4045,3 +4045,12 @@ M       vbm_vol_eidist.mexmaci64
 Removed debugging output in vbm_vol_eidist.c
 ------------------------------------------------------------------------
 r566 | gaser | 2014-01-27 12:48:26
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       cg_vbm_defaults.m
+M       vbm12.man
+
+Some minor changes to cg_check_cov.m.
+------------------------------------------------------------------------
+r567 | gaser | 2014-01-27 16:25:00
