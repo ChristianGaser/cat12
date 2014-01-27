@@ -49,13 +49,23 @@
 #include "matrix.h"
 #include "math.h"
 #include "float.h"
+#include "limits.h"
 
+#ifdef _MSC_VER
+  #define FINFINITY (FLT_MAX+FLT_MAX);
+  static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
+  #define FNAN (*(const float *) __nan)
+#else
+  #define FINFINITY 1.0f/0.0f;
+  #define FNAN 0.0f/0.0f
+#endif
 
+float min(float a, float b) {	if (a<b) return a; else return b; }
 
 /* 
  * Estimate x,y,z position of index i in an array size sx,sxy.
  */
-void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
+void ind2sub(int i, int *x, int *y, int *z, int sxy, int sy) {
   *z = (int)floor( i / (double)sxy ) +1; 
    i = i % (sxy);
   *y = (int)floor( i / (double)sy ) +1;        
@@ -79,12 +89,12 @@ int sub2ind(int x,int y, int z, int s[]) {
  * s on the position x,y,z.
  */
 float isoval(float SEG[], float x, float y, float z, int s[]){
-	if (x<0) x=0; if (x>s[0]) x=s[0];
-	if (y<0) y=0; if (y>s[1]) y=s[1];
-	if (z<0) z=0; if (z>s[2]) z=s[2];
+	if (x<0) x=0; if (x>s[0]) x=(float)s[0];
+	if (y<0) y=0; if (y>s[1]) y=(float)s[1];
+	if (z<0) z=0; if (z>s[2]) z=(float)s[2];
 
   int i;
-  float fx = floor(x),   fy = floor(y),		fz = floor(z);
+  float fx = floor(x),   fy = floor(y),	  fz = floor(z);
   float cx = floor(x+1), cy = floor(y+1), cz = floor(z+1);
     
   float wfx = cx-x, wfy = cy-y, wfz = cz-z;
@@ -125,20 +135,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs==5 && mxIsDouble(prhs[4])==0 &&  mxGetNumberOfElements(prhs[4])!=1) {printf("ERROR:vbm_vol_eidist: fifth input must be one double value"); }; 
   if (nrhs==6 && mxIsDouble(prhs[5])==0 &&  mxGetNumberOfElements(prhs[5])!=1) {printf("ERROR:vbm_vol_eidist: sixth input must be one double value"); }; 
   
-  
-  /* use of NaN and Infinity */
-  const float myNAN = 0.0/0.0;
-  const float myINF = 5.0/0.0;
-
-  
+    
   /* set default variables */
   int euklid=1; double*deuklid; if (nrhs>=4) {deuklid=mxGetPr(prhs[3]); euklid = (int) deuklid[0]>0.5;};    
   int setnan=1; double*dsetnan; if (nrhs>=5) {dsetnan=mxGetPr(prhs[4]); setnan = (int) dsetnan[0]>0.5;};    
   int verb=0;   double*dverb;   if (nrhs>=6) {dverb=mxGetPr(prhs[5]);   verb   = (int) dverb[0]>0.5;};    
 
   float nanres;
-  if ( setnan>=1 ) nanres = myNAN; else nanres = myINF; 
- 
+  if ( setnan>=1 ) nanres = FNAN; else nanres = FINFINITY; 
+
   /* main input variables B (boundary map) and L (speed map) */
   float*B	 = (float *)mxGetPr(prhs[0]);	
   float*L  = (float *)mxGetPr(prhs[1]);	
@@ -158,7 +163,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    */
   const int sS[] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
-  double*S = mxGetPr(SS);
+  double   *S = mxGetPr(SS);
   if (nrhs<3) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[2]);}
   
   float s1 = fabs((float)S[0]),s2 = fabs((float)S[1]),s3 = fabs((float)S[2]); /* x,y,z - voxel size */
@@ -205,21 +210,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
  	for (i=0;i<nL;i++) { 
     if ( B[i]>=0.5 ) vx++;                                              /* count object voxel */
     
-    if ( (L[i]<=0 || mxIsNaN(L[i])) && B[i]<0.5) B[i] = myNAN;          /* ignore voxel that canot be visited */
+    if ( (L[i]<=0 || mxIsNaN(L[i])) && B[i]<0.5) B[i] = FNAN;          /* ignore voxel that canot be visited */
     
-    if ( mxIsInf(B[i]) && B[i]<0 ) B[i] = myNAN;                        /* voxel to ignore */
+    if ( mxIsInf(B[i]) && B[i]<0 ) B[i] = FNAN;                        /* voxel to ignore */
     if ( B[i]>1 ) B[i] = 1;                                             /* normalize object */
     I[i] = (unsigned int) i;                                            /* initialize index map */
     
     if ( L[i]<=0 || mxIsNaN(B[i]) || mxIsNaN(L[i]) ) 
-      D[i] = myNAN;
+      D[i] = FNAN;
     else 
-      D[i] = myINF;
+      D[i] = FINFINITY;
   }
   
     
   /* 
-   * Check if there is a object and return myINF and i=i+1 (for matlab) 
+   * Check if there is a object and return FINFINITY and i=i+1 (for matlab) 
    * for all points if there is no object.
    */
  	if ( vx==0 ) { 
@@ -251,9 +256,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
           if ( ( (ni<0) || (ni>nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || (ni==i) )==0 && B[ni]<0.5) {
             if ( B[i]==1 )
-              DIN = ND[n] * (0.5 + fmin(0.5-B[ni],0.5));
+              DIN = ND[n] * (0.5 + min(0.5-B[ni],0.5));
             else
-              DIN = ND[n] * (0.5 + fmin(1-B[i],0.5));
+              DIN = ND[n] * (0.5 + min(1-B[i],0.5));
 
             if ( fabs(D[ni])>DIN ) {
               D[ni] = -DIN; 
@@ -348,7 +353,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         /* 
          * Demarking the start voxels
          */
-        if (D[i]==0) D[i]=-myINF; 
+        if (D[i]==0) D[i]=-FINFINITY; 
       }
     }
 
@@ -363,7 +368,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if ( verb ) printf("\n  Correction of non-visited points: ");  
 	for (i=0;i<nL;i++) {
     if ( mxIsInf(D[i]) && D[i]<0 ) D[i]=0;
-		if ( D[i]<0 ) D[i]=-myINF; 
+		if ( D[i]<0 ) D[i]=-FINFINITY; 
 	}
   
      

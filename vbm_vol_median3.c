@@ -67,8 +67,6 @@ void sort(float arr[], int beg, int end)
   }
 }
 
-float abs2(float n) {	if (n<0) return -n; else return n; }        
-
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -165,13 +163,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* selective filter settings - only big changes (only change extremly noisy data) */
   if (sf>0) {
     for (i=0;i<nL;i++) {
-      if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (abs2(D[i]-M[i])<sf) ) M[i]=D[i];
+      if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (fabs(D[i]-M[i])<sf) ) M[i]=D[i];
     }
   }
   /* selective filter settings - only small changes */
   if (sf<0) { 
     for (i=0;i<nL;i++) {
-      if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (abs2(D[i]-M[i])>-sf) ) M[i]=D[i];
+      if ( (nrhs>=2 && Bi[i]) && D[i]>bil && D[i]<bih && (fabs(D[i]-M[i])>-sf) ) M[i]=D[i];
     }
   }
  

@@ -91,14 +91,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   
   if (st==7) {
-    HISTmin=0; for (i=0;i<nL;i++) { if (HISTmin>D[i]) HISTmin=D[i]; };  HISTmin--;
-    HISTmax=0; for (i=0;i<nL;i++) { if (HISTmax<D[i]) HISTmax=D[i]; };  HISTmax++;
+    HISTmin=0; for (i=0;i<nL;i++) { if (HISTmin>D[i]) HISTmin=(int)D[i]; };  HISTmin--;
+    HISTmax=0; for (i=0;i<nL;i++) { if (HISTmax<D[i]) HISTmax=(int)D[i]; };  HISTmax++;
     for (i=0;i<nL;i++) {
-      D[i] = ROUND(max(min(D[i],HISTmax),HISTmin));
+      D[i] = (float)ROUND(max(min(D[i],(float)HISTmax),(float)HISTmin));
     }
   }
   int HISTn  = HISTmax - HISTmin + 1;
-  float HIST[HISTn]; for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;}
+  float *HIST;
+  HIST = (float *) malloc(sizeof(float)*HISTn);
+  for (nn=0;nn<HISTn;nn++) HIST[nn]=0.0;
   
   /* filter process */
   for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
@@ -213,9 +215,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
   } 
   for (i=0;i<nL;i++) { 
-			if (M[i]==-FLT_MAX || mxIsNaN(M[i])) M[i]=0; 	// correction of non-visited or other incorrect voxels
+			if (M[i]==-FLT_MAX || mxIsNaN(M[i])) M[i]=0; 	/* correction of non-visited or other incorrect voxels */
 	} 
   
+  free(HIST);
 }
 
 

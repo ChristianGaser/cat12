@@ -3858,3 +3858,112 @@ M       vbm_vol_partvol.m
 
 ------------------------------------------------------------------------
 r556 | dahnke | 2014-01-23 09:36:00
+
+M       AmapMex.mexa64
+M       AmapMex.mexglx
+M       AmapMex.mexmaci64
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       Kmeans.c
+M       Makefile.vbm
+M       cg_check_cov.m
+D       cg_check_mesh_cov.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       compile.m
+A       fsaverage/fsavg.index2D_256x128.txt
+A       genus0.c
+A       genus0.h
+M       sanlmMex.mexglx
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       spm_vbm12.m
+M       vbdist.c
+M       vbdist.mexa64
+M       vbdist.mexglx
+M       vbdist.mexmaci64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm12.man
+M       vbm_surf_createCS.m
+M       vbm_vol_downcut.c
+M       vbm_vol_downcut.mexa64
+M       vbm_vol_downcut.mexglx
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.c
+M       vbm_vol_eidist.mexa64
+M       vbm_vol_eidist.mexglx
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_eikonal3.c
+M       vbm_vol_eikonal3.mexa64
+M       vbm_vol_eikonal3.mexglx
+M       vbm_vol_eikonal3.mexmaci64
+M       vbm_vol_eikonal3.mexw32
+M       vbm_vol_eikonal3.mexw64
+A       vbm_vol_genus0.c
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexa64
+M       vbm_vol_localstat.mexglx
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.c
+M       vbm_vol_median3.mexa64
+M       vbm_vol_median3.mexglx
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.c
+M       vbm_vol_median3c.mexa64
+M       vbm_vol_median3c.mexglx
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.cpp
+M       vbm_vol_pbtp.mexa64
+M       vbm_vol_pbtp.mexglx
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexa64
+M       vbm_vol_simgrow.mexglx
+M       vbm_vol_simgrow.mexmaci64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) Corrected typos in vbm_vol_downcut.c, Kmeans.c, genus0.c.
+(2) Added vbm_vol_genus0.c and genus0.*
+(3) Replaced isosurface in vbm_surf_createCS.m by vbm_vol_genus0.
+(4) Added missing extension ee in vbm_surf_createCS.m.
+(5) Changed compile.m and Makefile.vbm to consider new files.
+(6) Recompiled mexfiles for all systems.
+(8) Updated cg_check_cov.m that can now deal with volume and surface data. 
+(9) Deleted cg_check_mesh_cov.m that is replaced by cg_check_cov.m.
+(10) Updated cg_vbm_tools.m and spm_vbm12.m for new cg_check_cov.m.
+(11) Added fsaverage/fsavg.index2D_256x128.txt (index for 2D map).
+(12) Redefined FNAN and FINFINITY in vol_vol_edist.c to work with MSC.
+
+
+------------------------------------------------------------------------
+r557 | gaser | 2014-01-27 11:12:50
