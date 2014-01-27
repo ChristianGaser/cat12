@@ -3989,3 +3989,14 @@ MM      vbm_vol_genus0.c
 Added missing vbm_vol_genus0.mex* files.
 ------------------------------------------------------------------------
 r559 | gaser | 2014-01-27 11:14:40
+
+M       CHANGES.txt
+ M      vbm_vol_genus0.mexa64
+ M      vbm_vol_genus0.mexglx
+ M      vbm_vol_genus0.mexmaci64
+ M      vbm_vol_genus0.mexw32
+ M      vbm_vol_genus0.mexw64
+
+Added missing vbm_vol_genus0.mex* files.
+------------------------------------------------------------------------
+r560 | gaser | 2014-01-27 11:14:53
