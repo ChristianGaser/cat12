@@ -4000,3 +4000,11 @@ M       CHANGES.txt
 Added missing vbm_vol_genus0.mex* files.
 ------------------------------------------------------------------------
 r560 | gaser | 2014-01-27 11:14:53
+
+M       CHANGES.txt
+A       tricases.h
+M       vbm12.man
+
+Added missing tricases.h.
+------------------------------------------------------------------------
+r561 | gaser | 2014-01-27 11:16:26
