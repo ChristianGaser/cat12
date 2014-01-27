@@ -3967,3 +3967,14 @@ M       vbm_vol_simgrow.mexw64
 
 ------------------------------------------------------------------------
 r557 | gaser | 2014-01-27 11:12:50
+
+M       CHANGES.txt
+A       vbm_vol_genus0.mexa64
+A       vbm_vol_genus0.mexglx
+A       vbm_vol_genus0.mexmaci64
+A       vbm_vol_genus0.mexw32
+A       vbm_vol_genus0.mexw64
+
+Added missing vbm_vol_genus0.mex* files.
+------------------------------------------------------------------------
+r558 | gaser | 2014-01-27 11:14:11
