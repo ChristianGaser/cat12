@@ -133,14 +133,14 @@ vbm.extopts.vox         = 1.5;  % voxel size for normalized data
 vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data; 
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
 vbm.extopts.BVC         = 1;    % Blood Vessel Correction (in development)
-vbm.extopts.WMHC        = 1;    % correction for WM hyperintensities (in development)
+vbm.extopts.WMHC        = 2;    % correction for WM hyperintensities (in development): 0 - no; 1 - only for Dartel; 2 - also for SEG
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
 vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 vbm.extopts.ROI         = 2;    % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 vbm.extopts.surface     = 1;    % surface and thickness creation
-vbm.extopts.debug       = 0;    % debuging option
-vbm.extopts.verb        = 1;    % Verbose: 1 - default; 2 - details
+vbm.extopts.debug       = 1;    % debuging option
+vbm.extopts.verb        = 2;    % Verbose: 1 - default; 2 - details
 
 
 % expert options - ROIs
@@ -151,7 +151,7 @@ vbm.extopts.verb        = 1;    % Verbose: 1 - default; 2 - details
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 vbm.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','l1a.nii')      'none'  {''}              ; ... % VBM atlas with major regions for SBM & ROIs
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')      'none'  {''}            ; ... % VBM atlas with major regions for SBM & ROIs
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... 
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ...
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'gm'    {'csf','gm','wm'} ; ...

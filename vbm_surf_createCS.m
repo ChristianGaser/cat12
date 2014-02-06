@@ -105,7 +105,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       fprintf('%s:\n',opt.surf{si});
       stime = vbm_io_cmd('  Thickness estimation');
 
-      [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,2,Ymfs>1);   % removing background
+      [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,4,Ymfs>1);   % removing background
       [Ymfs,resI] = vbm_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
 
       % pbt calculation
