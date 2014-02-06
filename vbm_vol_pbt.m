@@ -1,131 +1,114 @@
-function [GMT,PP]=vbm_vol_pbt(SSEG,opt)
+function [Ygmt,Ypp] = vbm_vol_pbt(Ymf,opt)
 % ______________________________________________________________________
 %
-% Use a graph-based thickness estimation (gbdist) to estimate the distance
-% from the WM/GM boundary and a projection scheme to transfer the values at
-% GM/CSF boundary over the whole GM.
-%
-%   [GMT,PP]=vbm_vol_pbt(SSEG,opt)
+% Cortical thickness and surface possition estimation. 
+% 
+%   [Ygmt,Ypp]=vbm_vol_pbt(Ymf,opt)
 %  
-%   GMT:      GM thickness map 
-%   PP:       percentage possition map
-%   SSEG:     tissue segment image
-%   opt.resV  voxel resolution (only isotropic)
-%
-%   Needed functions:
-%   - qedist.cpp (fast estimation of a submask for speedup - only isotropic)
-%   - gbdist.m   (only isotropic)
-%   - WMDskeleton.m
-%
-%   See also BWT, VBT, GBT, GBTX, GBCL, LBT, LBTS, PBTV.
-%   
+%   Ygmt:      GM thickness map 
+%   Ypp:       percentage possition map
+%   Ymf:       tissue segment image or better the noise, bias, and 
+%              intensity corrected 
+%   opt.resV   voxel resolution (only isotropic)
+%   opt.method choose of method {'pbt2x','pbt2'} with default=pbt2x as 
+%              the method that is described in the paper.
 % ______________________________________________________________________
 %
-% More details and test:
-%   ... Paper
+%   Dahnke, R; Yotter R; Gaser C.
+%   Cortical thickness and central surface estimation.
+%   NeuroImage 65 (2013) 226-248.
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
 %   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of psychiatry and psychotherapy 
+%   Department of neurology
 %   University Jena
 %
-%   Version: 1.00 © 2010/08
+%   Version: 1.10 © 2014/02
 % ______________________________________________________________________
 % $Id$ 
+
 
 % default variables and check/set function  
   if ~exist('opt','var'), opt=struct(); end
   def.resV   = 1;
-  def.fsize  = @(x) 1+2*max(round(x * 1.5),1); 
   def.method = 'pbt2x';
-  %cond = {'resV(1)==resV(2)';'resV(1)==resV(3)'}; % only isotropic (see qedist and gbdist)
-  opt  = checkinopt(opt,def);%,cond);
-  mvxs = mean(opt.resV);
-  SSEG = round(SSEG*10)/10;
+  def.debug  = cg_vbm_get_defaults('extopts.debug');
+  def.verb   = cg_vbm_get_defaults('extopts.verb')-1;
+  opt  = checkinopt(opt,def);
+  opt.resV = mean(opt.resV);
+
   
-  % additional re-estimation of the boundarys... in development:
-  % funkt nicht ... der einschnitt erzeugt einen fehler der vergleichbar
-  % hoch ist - zwar etwas netter (vor allem dünner) - aber nicht sinnvoll
-  % begründbar
-  if  0 && strcmp(opt.method,'pbt2x')
-    % Refinement of sulcal areas: Although pbt do not need this to find
-    % the sulcus it helps to find the CSF boundary a little bit more exact.
-    % It it not usefull for the WM boundary because it may remove the
-    % sulcus!
-    
-%     M = max(0,min(1,(SSEG-2.9)*10)); M(SSEG<=2)=-inf; WMD  = eidist_r04(M,ones(size(M),'single'));
-%     M = max(0,min(1,(2.1-SSEG)*10)); M(SSEG>=3)=-inf; CSFD = eidist_r04(M,ones(size(M),'single'));
-%     [~,PP] = vbm_vol_pbtp( (1.1*(2.5-SSEG)) + 2 , CSFD , WMD);  % 1.25 , 1.1
-%     PP = 1-vbm_vol_median3(1-PP,0.5,0,0.5);
-%     M = SSEG>2 & SSEG<3; SSEG(M) = max(SSEG(M),2.75-0.75*PP(M)); %max(SSEG(M),min(2.75,3-PP(M)));
-%     clear WMD CSFD PP;
+  % rounding of values for simpler projection
+  %Ymf  = round(Ymf*20)/20; 
+  
+   
+  % Estimate WM distance Ywmd and the outer CSF distance Ycsfdc to correct
+  % values in CSF area to limit the Ywmd to the maximum value that is 
+  % possible within the cortex.
+  if opt.verb, fprintf('\n'); end
+  stime = vbm_io_cmd('    WM distance: ','g5','',opt.verb);
+  YM = max(0,min(1,(Ymf-2))); YM(Ymf<=0)=nan; Ywmd   = vbm_vol_eidist(YM,max(0,min(1,Ymf/2)),[1 1 1],1,1,0,opt.debug); 
+  YM = max(0,min(1,(Ymf-1))); YM(Ymf<=0)=nan; Ycsfdc = vbm_vol_eidist(YM,max(0,min(1,Ymf/2)),[1 1 1],1,1,0,opt.debug);   
+  YM = Ymf>0 & Ymf<1.5; Ywmd(YM) = Ywmd(YM) - Ycsfdc(YM); Ywmd(isinf(Ywmd)) = 0; clear Ycsfdc;
+  YwmdM = vbm_vol_median3(Ywmd,Ywmd>opt.resV & YM,Ywmd>1,0.25); Ywmd(YM) = YwmdM(YM); clear YwmdM YM;
 
-    M = max(0,min(1,(SSEG-1.9)*10)); M(SSEG<=1)=-inf; WMD  = vbm_vol_eidist(M,ones(size(M),'single')); 
-    M = max(0,min(1,(1.1-SSEG)*10)); M(SSEG>=2)=-inf; CSFD = vbm_vol_eidist(M,ones(size(M),'single')); 
-
-    try %#ok<TRYNC>
-      [GMT,PP] = vbm_vol_pbtp( (1.1*(SSEG-1.5) ) + 2 , WMD , CSFD );  % 1.25 , 1.1
-      PP = vbm_vol_median3(PP,0.5,0,0.5); PP=1-PP; PP=PP.*(GMT*0.375); 
-      M = SSEG>1 & SSEG<2; SSEG(M) = min(SSEG(M),max(1,2-PP(M))); %min(SSEG(M),max(1.25,1+PP)); %min(SSEG(M),1.45+PP(M).*(0.55*(SSEG(M)-1)));
-    end
-    clear PP SSEGO WMD CSFD;
-  end
+  
+  % Estimate CSF distance Ycsfd and the CSF distance Ycsfdc to correct 
+  % values in WM area to limit the Ycsfd to the maximum value that
+  % is possible within the cortex.
+  stime = vbm_io_cmd('    CSF distance: ','g5','',opt.verb,stime);
+  Ywmm = vbm_vol_morph(Ymf>2.5,'d');
+  YM = max(0,min(1,(2-Ymf))); YM(Ywmm)=nan; Ycsfd = vbm_vol_eidist(YM,max(0,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug); 
+  YM = max(0,min(1,(3-Ymf))); YM(Ywmm)=nan; Ywmdc = vbm_vol_eidist(YM,max(0,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug);   
+  YM = Ymf>2.5 & ~Ywmm; Ycsfd(YM) = Ycsfd(YM) - Ywmdc(YM); Ycsfd(isinf(-Ycsfd)) = 0; clear Ywmdc;
+  YcsfdM = vbm_vol_median3(Ycsfd,Ycsfd>opt.resV & YM,Ycsfd>1,0.25); Ycsfd(YM) = YcsfdM(YM); clear YcsfdM YM;
   
   
-
-  % estimate WM distance WMD and the non-corrected CSF distance CSFD (not correct in sulcal areas)  
-  %L = laplace3(single(SSEG==2)*0.5 + single(SSEG>2),0,1,0.01);
-  M = max(0,min(1,(SSEG-2))); M(SSEG<=1)=-inf; WMD  = vbm_vol_eidist(M,max(0,( max(0,min(1,SSEG-1))))); % L + min.../2
-  M = max(0,min(1,(SSEG-1))); M(SSEG<=1)=-inf; CSFD = vbm_vol_eidist(M,max(0,  max(0,min(1,SSEG-1))));   
-  M = SSEG>1 & SSEG<1.5; WMD(M) = WMD(M) - CSFD(M); clear CSFD;
-  WMDM = vbm_vol_median3(WMD,WMD>mvxs & M,WMD>mvxs & M,opt.resV/8); WMD(M) = WMDM(M); clear WMDM;
-
+  % PBT is the default thickness estimation, but PBT2x is the optimized
+  % version that use both sulci and gyris refinements, because not only 
+  % thin sulci can blurred. PBT2x is furthermore the methode that is
+  % described in the paper, but PBT is faster.
   if strcmp(opt.method,'pbt2x')  
-    M = max(0,min(1,(2-SSEG))); M(SSEG>=3)=-inf; CSFD = vbm_vol_eidist(M,max(0,(min(1,3-SSEG)))); %(1-L + min(1,3-SSEG))/2))
-    M = max(0,min(1,(3-SSEG))); M(SSEG>=3)=-inf; WMDC = vbm_vol_eidist(M,max(0, min(1,3-SSEG)));   
-    M = SSEG>2.5 & SSEG<3.0; CSFD(M) = CSFD(M) - WMDC(M); clear WMDC;
-    CSFDM = vbm_vol_median3(CSFD,CSFD>mvxs & M,CSFD>mvxs & M,opt.resV/8); CSFD(M) = CSFDM(M); clear CSFDM;
-    clear L M; 
-
-    WMD(isnan(WMD) | isinf(WMD) | isinf(-WMD))=0; CSFD(isnan(CSFD) | isinf(CSFD) | isinf(-CSFD))=0; % das nicht nötig sein...
+    % Estimation of the cortical thickness with sulcus (Ygmt1) and gyri 
+    % correction (Ygmt2) to create the final thickness as the minimum map
+    % of both.
+    stime = vbm_io_cmd('    PBT2x thickness: ','g5','',opt.verb,stime);
+    Ygmt1 = vbm_vol_pbtp(Ymf,Ywmd,Ycsfd);   Ygmt1 = vbm_vol_median3(Ygmt1,Ygmt1>0,Ygmt1>0,opt.resV/4);
+    Ygmt2 = vbm_vol_pbtp(4-Ymf,Ycsfd,Ywmd); Ygmt2 = vbm_vol_median3(Ygmt2,Ygmt2>0,Ygmt2>0,opt.resV/4);
+    [Ygmt,Yi] = min(cat(4,Ygmt1,Ygmt2+0.25*mean(opt.resV)),[],4); 
+        
     
-    GMT1 = vbm_vol_pbtp(  SSEG,WMD,CSFD); %########################## TIM
-    try GMT2 = vbm_vol_pbtp(4-SSEG,CSFD,WMD); catch, GMT2=inf(size(SSEG),'single'); end %#ok<CTCH>
-    GMT2(GMT2<=(2/mean(opt.resV)) | SSEG<2)=inf; % try this correction only in thick regions
-    
-    [GMT,I] = min(cat(4,GMT1,GMT2+0.25*mean(opt.resV)),[],4); 
-    PP=zeros(size(SSEG),'single');
-    M=SSEG>=1.5 & SSEG<=2.0; PP(M) = ((GMT1(M) - WMD(M))) ./ (GMT1(M)); 
-    M=SSEG> 2.0 & SSEG<=2.5; PP(M) = ((GMT1(M) - WMD(M)).*(I(M)==1) + CSFD(M).*(I(M)==2)) ./ (GMT(M) + eps); 
-    PP(SSEG>2.5)=1;
+    % Estimation of a mixed percentual possion map Ypp.
+    Ypp=zeros(size(Ymf),'single');
+    YM=Ymf>=1.5 & Ymf<=2.0; Ypp(YM) =   (Ygmt1(YM) - Ywmd(YM)) ./ (Ygmt1(YM) + eps); 
+    YM=Ymf> 2.0 & Ymf<2.5;  Ypp(YM) = ( (Ygmt1(YM) - Ywmd(YM)).*(Yi(YM)==1) + Ycsfd(YM).*(Yi(YM)==2) ) ./ (Ygmt(YM) + eps); 
+    Ypp(Ymf>=2.5 | (Ymf>2 & Ygmt<=1))=1;
   else
-    M = max(0,min(1,(2-SSEG))); M(SSEG>=3)=-inf; CSFD = vbm_vol_eidist(M,max(0,(min(1,3-SSEG))/2)); % (1-L + min(1,3-SSEG))/2))
-
-    clear L M; %CSFD(DG>(sqrt(3)/opt.resV) | SSEG<1.5) = 0; 
-    WMD(isnan(WMD) | isinf(WMD) | isinf(-WMD))=0; CSFD(isnan(CSFD) | isinf(CSFD) | isinf(-CSFD))=0; % das nicht nötig sein...
-
-   [GMT,PP] = vbm_vol_pbtp(SSEG,WMD,CSFD);%########################## TIM
+    % Estimation of thickness map Ygmt and percentual possion map Ypp.
+    stime = vbm_io_cmd('    PBT2 thickness: ','g5','',opt.verb,stime);
+    [Ygmt,Ypp] = vbm_vol_pbtp(Ymf,Ywmd,Ycsfd);
   end
-  clear WMD CSFD;
+  clear Ywmd Ycsfd;
 
-  PP  = vbm_vol_median3(PP,SSEG>0 & PP<1,SSEG>0 & PP<1,0.25);
-  PP  = vbm_vol_median3(PP,SSEG>0 & PP<1,PP>0 & PP<1,0.25);
-  PP  = vbm_vol_median3(PP,SSEG>0 & PP<1,PP>0 & PP<1,0.10); % 0.10
-  GMT = vbm_vol_median3(GMT,PP>0,GMT>eps,opt.resV/4);
-  GMT = vbm_vol_median3(GMT,PP>0,GMT>eps,0);
   
-  GMT = GMT*mean(opt.resV); % darf ich erst hier machen wegen der projektion die aktuell nur für 1mm läuft!
- % GMT(SSEG<1 | SSEG>3)=nan; GMT=vbm_vol_nanmean3(GMT); GMT(isnan(GMT))=eps; % erweitern
-  %GMTS = smooth3(GMT,'gaussian',3,0.9); GMT(SSEG>=2 & SSEG<2.5)=GMTS(SSEG>=2 & SSEG<2.5); clear GMTs % smoothen allerdings nur für sicheren bereich
-
-  GMT(GMT>10)=0; PP(isnan(PP))=0; 
-%  GMT = vbm_vol_median3(GMT,vbm_vol_morph(GMT>eps,'d') & GMT<=eps,GMT>eps);
+  % Final corrections for position map with removing of non brain objects.
+  stime = vbm_io_cmd('    Final Corrections: ','g5','',opt.verb,stime);
+  Ypp(isnan(Ypp)) = 0; 
+  Ypp = vbm_vol_median3(Ypp,Ymf>0 & Ymf<3,Ymf>0 & Ymf<3,2);
+  YM  = Ypp>=0.5 & ~vbm_vol_morph(Ypp>=0.5,'labopen',1);  
+  Ypp(YM) = 0.5-eps; clear YM
   
-  clear Ymt;
-
-  % removing non brain objects
-  Ymm = PP>=0.5 & ~vbm_vol_morph(PP>=0.5,'labopen',1); 
-  PP(Ymm) = 0.5-eps; GMT(Ymm) = 0;
- 
+  
+  % Final corrections for thickness map with thickness limit of 10 mm. 
+  % Resolution correction of the thickness map after all other operations, 
+  % because PBT actually works only with the voxel-distance (isotropic 1 mm)
+  [~,Yi] = vbdist(single(Ygmt>eps),vbm_vol_morph(Ygmt>eps | (Ymf>1.5 & Ymf<2.5),'d',2)); Ygmt=Ygmt(Yi); clear Yi;
+  Ygmt = vbm_vol_median3(Ygmt,Ymf>0 & Ymf<3,Ygmt>eps,0.25);
+  Ygmt = vbm_vol_median3(Ygmt,Ymf>0 & Ymf<3,Ygmt>eps);
+  Ygmt = Ygmt*opt.resV; 
+  Ygmt(Ygmt>10) = 10; 
+  
+  
+  if opt.debug, vbm_io_cmd(' ','','',opt.debug,stime); end
 end

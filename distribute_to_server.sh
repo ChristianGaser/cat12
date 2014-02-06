@@ -8,6 +8,7 @@ version='distribute_to_server.sh $Id$'
 COMMAND=""
 SERVER=localhost
 PATTERN=""
+USER=whoami
 DIR=""
 
 ########################################################
@@ -52,6 +53,11 @@ parse_args ()
         --pattern* | -p*)
             exit_if_empty "$optname" "$optarg"
             PATTERN=$optarg
+            shift
+            ;;
+        --user* | -u*)
+            exit_if_empty "$optname" "$optarg"
+            USER=$optarg
             shift
             ;;
         --dir* | -d*)
@@ -192,7 +198,7 @@ distribute ()
       if [ "$x" == "localhost" ]; then
         $COMMAND ${ARG_LIST[$i]}
       else
-        bash -c "ssh ${x} $COMMAND ${ARG_LIST[$i]}"
+        bash -c "ssh ${USER}@${x} $COMMAND ${ARG_LIST[$i]}"
       fi
     fi
     ((i++))
@@ -214,6 +220,7 @@ USAGE:
    -c   command that should be distributed
    -s   server list (if empty the command runs on the local machine)
    -p   pattern to for search of already processed files that is prepended. 
+   -u   user
 
    Only one filename or pattern or disrectory using the -d flag is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files or even a directory. For the latter case you also have to define a pattern that

@@ -5,18 +5,21 @@ function vbm_tst_qa_groups_test
 
 
 %%
-  test     = 2;
+  test     = 6;
   method   = 1;
 
   opt.printgroup = 1;
   opt.qm         = {
-   %'contrast'      'low (bad)  <--- contrast (GW contrast) ---> strong (better)'
-   %'noise'         'low (good) <--- noise (noise (1/CNR) befor cor.) ---> strong (bad)'
-   %'bias'          'low (good) <--- bias (inhomogeneity befor cor.) ---> strong (bad)'
+%   'contrast'      'low (bad)  <--- contrast (GW contrast) ---> strong (better)'
+%   'noise'         'low (good) <--- noise (noise (1/CNR) befor cor.) ---> strong (bad)'
+%   'bias'          'low (good) <--- bias (inhomogeneity befor cor.) ---> strong (bad)'
     'noisec'        'low (good) <--- noisec (noise (1/CNR) after cor.) ---> strong (bad)'
     'biasc'         'low (good) <--- biasc (inhomogeneity after cor.) ---> strong (bad)'
-    'res'           'low (good) <--- res (resolution) ---> strong (bad)'
+   %'res'           'low (good) <--- res (resolution) ---> strong (bad)'
     'NERR'          'low (good) <--- NERR (NoiseEdgeResolutionRelation) ---> strong (bad)'
+   % 'CNR'         'low (good) <--- CNR (noise after cor.) ---> strong (bad)'
+   % 'CIR'         'low (good) <--- CIR (inhomogeneity after cor.) ---> strong (bad)'
+   % 'res_vol'     'low (good) <--- res (resolution) ---> strong (bad)'
   };  
 
 
@@ -78,10 +81,39 @@ function vbm_tst_qa_groups_test
   data(di).name   = 'Projects';
   data(di).dirs   = {'/Volumes/MyBook/MRData/qa_tst/XMLdir'};
   data(di).groups = [NISALSc' NISALSc'];
-     
+  data(di).groups = [data(di).groups; NISALSc' NISALSc'];
+  % --------------------------------------------------------------------
+  % NISALS Neu
+  % --------------------------------------------------------------------
+  di=di+1;
+ % NISALSc= vbm_fileparts(vbm_findfiles('/Volumes/4TBWD/MRData/pre/vbm12qa/','*',struct('dirs',1,'depth',2)),'f');
+  NISALSc={'C001','C002','C003','C004','C006','C007','C008','C009','C012','C013','C018','C021','C022'};
+  data(di).name   = 'Projects';
+  data(di).dirs   = {'/Volumes/4TBWD/MRData/pre/vbm12qa/'};
+  data(di).groups = [NISALSc' NISALSc'];   
+  % --------------------------------------------------------------------
+  % NISALS Neu
+  % --------------------------------------------------------------------
+  di=di+1;
+ %%
+  data(di).name   = 'Projects';
+  data(di).dirs   = {'/Volumes/MyBook/MRData/qa_tst/XMLdir'};
+  data(di).groups = {
+    'IXI'       {'IXI'}
+    'OASIS'     {'OASIS'}
+    'NIH'       {'NIH'}
+    'ADNI'      {'ADNI'}
+    %'ADNI15'    {'1.5'}
+    %'ADNI30'    {'3.0'}
+    'NISALS'   {'C001','C002','C003','C004','C006','C007','C008','C009','C012','C022','C013','C018','C021'}
+  };
+  data(di).name   = 'Projects';
+  data(di).dirs   = {'/Volumes/MyBook/MRData/qa_tst/XMLdir'};
+    
   
   
-  for di = 1; %1:numel(data)
+  %%
+  for di = 7; %1:numel(data)
     files = cell(size(data(di).groups,1),1);
     data(di).groups(:,1) = strrep(data(di).groups(:,1),'_',''); 
     for gfi = 1:size(data(di).groups,1)

@@ -81,9 +81,9 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-%  'BO'
+  'BO'
 %     'SVE_LPBA40'
-   'BWP_Collins_MS'
+%   'BWP_Collins_MS'
 %  'BWP_Collins_fast'
 %     'ADHD'
 %     'ADNI'
@@ -975,7 +975,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.bb        = [[-90 -126 -72];[90 90 108]];
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.print     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS       = LAS;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.WMHC      = 1;    
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.WMHC      = 2;    
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.ROI       = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface   = 1;
