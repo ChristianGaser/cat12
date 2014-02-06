@@ -188,24 +188,18 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % ROI can lead to overgrowing. Using of non ventrilce ROI doesn't work
   % because dartle failed for large ventricle. 
   stime = vbm_io_cmd('  Ventricle detection','g5','',verb,stime);
-  Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',8*vxd) | (YA==LAB.NV | YA==LAB.CB | YA==LAB.BS),'d',2);
+  Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',6*vxd) | (YA==LAB.NV | YA==LAB.CB | YA==LAB.BS),'d',2);
   Ynv = single(Ynv & Ym<2 & ~vbm_vol_morph(Yp0<2 & (YA==LAB.VT) & Yg<0.2,'d',4*vxd));
-  % region-growing for non-ventricle
-  Ynv(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.4)>0.7)=2; Ynv(Ynv==0 & Ym>2)=nan;
-  Ynv = vbm_vol_downcut(Ynv,3-Ym,noise*2,vx_vol); Ynv = (Ynv==1 & Yp0<2); Ynv=single(Ynv); Ynv(Ynv==0 & (Ym<2 | Ym>2.5))=nan;
-  Ynv = vbm_vol_downcut(Ynv,3-Ym,-noise,vx_vol); Ynv = smooth3(Ynv)>0.5 & Ym<2.5; 
   % between thamlamus
-  Ynv = Ynv | (vbm_vol_morph(Ya1==LAB.TH,'c',10) & Yp0<2.5);
-  Ynv = smooth3(Ynv)>0.5;
-  % region-growing for ventricle
-  Yvt = single(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.5 & ~Ynv)>0.7); 
-  Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>2)=nan;
-  Yvt = vbm_vol_downcut(Yvt,1-Ym,noise*2,vx_vol); %Ynv = (Yvt==2 & Yp0<2.5); 
-  Yvt = smooth3(Yvt==1 & Yp0<1.5)>0.5; 
+  Ynv = Ynv | (vbm_vol_morph(Ya1==LAB.TH,'c',10) & Yp0<2) | YA==LAB.CB | YA==LAB.BS;
+  Ynv = smooth3(Ynv)>0.8;
+  Yvt = single(smooth3(Yp0<1.25 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
+  Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.5)=nan; Yvt(Yvt==0)=1.5;
+  Yvt2 = vbm_vol_laplace3R(Yvt,Yvt==1.5,0.005);
+  Yvt = smooth3(round(Yvt2)==1 & Yp0<1.5)>0.5; 
   Ya1(Yvt)=LAB.VT; 
 
  
-  
   %% WMH (White Matter Hyperintensities):
   % WMHs can be found as GM next to the ventricle (A) that do not belong 
   % to a subcortical structure (A) or there must be a big difference 
@@ -215,23 +209,22 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % There can also be deep GM Hyperintensities! 
   % ####################################################################
   stime = vbm_io_cmd('  WMH detection','g5','',verb,stime);
-  Yvtd = vbm_vol_morph(Ya1==LAB.VT,'d',4*vxd) & Ym>1.5 & Ym<2.5 & ...
-        ~vbm_vol_morph(Ynv & Yp0<2,'d',2*vxd) & Ya1~=LAB.VT; % (A) - around the ventricle
-  Yvtd = vbm_vol_downcut(single(Yvtd),1-Ym,-.1,vx_vol) & Ym>1.5 & Ym<2.5;
-  Ybg  = smooth3(vbm_vol_morph(Ya1>1 & Ya1<20 & Ya1~=LAB.VT & Ya1~=LAB.BV & Ya1~=LAB.BG & Ya1~=LAB.TH,'d',4) | ...
-         (vbm_vol_morph(Ya1==LAB.BG | Ya1==LAB.TH,'d',4) & Ym>1.8 & (Yp0 - Ym)<0.6))>0.5; % (B) no deep GM
-  Ywmh = single(vbm_vol_morph(( ~Ybg & ~Ynv & (Yp0 - Ym)>0.6) | ... % (C) 
-    ( Yvtd & ~Ybg & ~Ynv & Ym>1.25 & Ym<2.5 & ( (Yp0 - Ym)>0.2) ),'c',2*vxd) & Ym>1.25 & Ym<2.5); 
-  Ywmh = smooth3(Ywmh)>0.5;
-  if ~debug, clear Yvtd Ybg; end
-  %% now a lit bit region growing for similiar values
-  Ywmh = single(Ywmh); spm_smooth(Ywmh,Ywmh,1./vx_vol); Ywmh=round(Ywmh); Ywmh(Yp0<1.25 | Ym>2.75 | Ynv)=nan; Ywmh(Ynv & Ym>0)=2;
-  [Ywmh,YD]=vbm_vol_downcut(Ywmh,3-Ym,-noise,vx_vol); Ywmh(isinf(Ya1) | (YD>50 & Ywmh==1))=0; Ywmh(Yp0<1.25 | Ym>2.75)=nan; 
-  [Ywmh,YD]=vbm_vol_downcut(Ywmh,3-Ym,+noise,vx_vol); Ywmh(isinf(Ya1) | YD>50)=0; Ywmh(Yp0<1.25 | Ym>2.75 | Ywmh==2)=nan; clear YD
-  spm_smooth(Ywmh,Ywmh,2./vx_vol); Ywmh=round(Ywmh); 
-  Ywmh = smooth3(vbm_vol_morph(Ym>2.5 | Ywmh | Yvt,'lc',1) & ~(Yvt | Ym>2.5))>0.5 & Ym<2.75 & Ym>1.25 & ...
-    Ya1~=LAB.CB & Ya1~=LAB.BG & Ya1~=LAB.TH & Ya1~=LAB.BS;
-  Ya1(Ywmh==1 & Ya1~=LAB.VT)=LAB.HI;
+ 
+  Ywmh=single(vbm_vol_morph(Yvt2<1.5,'d',1) & Ym<2.75); 
+  Ywmh(smooth3((Yp0 - Ym)>0.6 & Ym<2.75 & Ym>1.75)>0.7)=1;
+  Ywmh(vbm_vol_morph(Yp0>2.5,'c',0) & ~(Yp0>2.5))=1;
+  Ywmh(Yvt2>1.75 & Yvt2<3 | (Ywmh==0 & Ym<1.25))=2;
+  Ywmh((Ywmh==0 & Ym>2.75) | Ya1==LAB.BG | Ya1==LAB.TH)=-inf;
+  Ywmh = vbm_vol_downcut(Ywmh,(3-Ym)/3,noise,vx_vol); Ywmh(Yp0<1.25 | Ym>2.75 | Ywmh<0)=nan;  
+  
+  Ya1(smooth3(Ywmh<1.5)>0.6 & Ya1~=LAB.VT)=LAB.HI;
+  %{
+   Yvt2(Yvt2>1.45 & Yvt2<1.55)=inf; Yvt2=round(Yvt2);
+  Yvt2(Yvt2>3 & Ym<2.5 & Ym>1.5 & YA~=LAB.CB & YA~=LAB.BS & Ya1~=LAB.BG & Ya1~=LAB.TH)=1.5;
+  Yvt2(Yvt2==1.5 & smooth3((Yp0 - Ym)>0.6 & Ym<2.75 & Ym>1.75)>0.7)=1; 
+  Yvt2(Yvt2>3)=1.5;
+  Yvt2 = vbm_vol_laplace3R(Yvt2,Yvt2==1.5 & Ym<2.75 & YA~=LAB.BS & Ya1~=LAB.BG & Ya1~=LAB.TH,0.005); %Yvt2 = round(Yvt2);
+  %}
   if ~debug, clear Ywmh Yvt; end
 
   
@@ -268,7 +261,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   %% side aligment using laplace to correct for missalignments due to the normalization
   stime = vbm_io_cmd('  Side Alignment','g5','',verb,stime);
   YBG  = Ya1==LAB.BG | Ya1==LAB.TH;
-  YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH;  % | Ya1==LAB.HI
+  YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI; 
   YMF2 = vbm_vol_morph(YMF,'d',2*vxd) | Ya1==LAB.CB | Ya1==LAB.BS | Ya1==LAB.MB;
   Ymf  = max(Ym,smooth3(single(YMF2*3))); 
   Yt = vbm_vol_smooth3X(YS==0,6)<0.9 & vbm_vol_smooth3X(YS==1,6)<0.9 & ~YMF2 & Yp0>0 & Ym<3.1 & (Yp0<2.5 | Ya1==LAB.BV);
@@ -279,7 +272,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   
   % YMF for FreeSurfer fsaverage
   Ysm  = vbm_vol_morph(Ys==2,'d',1.75*vxd) & vbm_vol_morph(Ys==1,'d',1.75*vxd);
-  YMF  = vbm_vol_morph(Ya1==LAB.VT | Ya1==LAB.BG | (Ya1==LAB.TH & smooth3(Yp0)>2),'c',3) & ~Ysm; 
+  YMF  = vbm_vol_morph(Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.HI | (Ya1==LAB.TH & smooth3(Yp0)>2),'c',3) & ~Ysm; 
   YMF  = smooth3(YMF)>0.5;
   clear Ysm; 
   

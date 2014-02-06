@@ -12,61 +12,6 @@ function Ycls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
 
 %#ok<*ASGLU>
 
-try
-  
-% complete output structure
-if ~isfield(job.output,'atlas')
-  try
-    job.output.atlas = struct('native',cg_vbm_get_defaults('output.atlas.native'), ...
-                            'warped',cg_vbm_get_defaults('output.atlas.warped'), ...
-                            'affine',cg_vbm_get_defaults('output.atlas.affine'));
-  catch %#ok<CTCH>
-    job.output.atlas = struct('native',0,'warped',0,'affine',0);
-  end
-end
-if ~isfield(job.output,'pc')
-  try
-    job.output.pc  = struct('native',cg_vbm_get_defaults('output.pc.native'), ...
-                            'warped',cg_vbm_get_defaults('output.pc.warped'), ...
-                            'mod'   ,cg_vbm_get_defaults('output.pc.mod'), ...
-                            'dartel',cg_vbm_get_defaults('output.pc.dartel'));
-  catch %#ok<CTCH>
-    job.output.pc  = struct('native',0,'warped',0,'mod',0,'dartel',0);
-  end
-end
-if ~isfield(job.output,'te')
-  try
-    job.output.te  = struct('native',cg_vbm_get_defaults('output.te.native'), ...
-                            'warped',cg_vbm_get_defaults('output.te.warped'), ...
-                            'mod'   ,cg_vbm_get_defaults('output.te.mod'), ...
-                            'dartel',cg_vbm_get_defaults('output.te.dartel'));
-  catch %#ok<CTCH>
-    job.output.te  = struct('native',0,'warped',0,'mod',0,'dartel',0);
-  end
-end
-if ~isfield(job.output,'WMH')
-  try
-    job.output.WMH  = struct('native',cg_vbm_get_defaults('output.WMH.native'), ...
-                             'warped',cg_vbm_get_defaults('output.WMH.warped'), ...
-                             'mod'   ,cg_vbm_get_defaults('output.WMH.mod'), ...
-                             'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
-  catch %#ok<CTCH>
-    job.output.te  = struct('native',0,'warped',0,'mod',0,'dartel',0);
-  end
-end
-if ~isfield(job.output,'pp')
-  try
-    job.output.pp  = struct('native',cg_vbm_get_defaults('output.pp.native'));
-  catch %#ok<CTCH>
-    job.output.pp  = struct('native',0); 
-  end
-end
-
-
-FA = cg_vbm_get_defaults('extopts.atlas');
-def.partvol.l1A    = FA{1,1}; 
-
-
 def.vbmi            = 0;
 def.color.error     = [0.8 0.0 0.0];
 def.color.warning   = [0.0 0.0 1.0];
@@ -75,6 +20,45 @@ def.color.highlight = [0.2 0.2 0.8];
 
 opt = struct();
 opt = checkinopt(opt,def);
+
+try
+  
+%% complete output structure
+if ~isfield(job.output,'atlas')
+  job.output.atlas = struct('native',cg_vbm_get_defaults('output.atlas.native'), ...
+                            'warped',cg_vbm_get_defaults('output.atlas.warped'), ...
+                            'affine',cg_vbm_get_defaults('output.atlas.dartel'));
+end
+if ~isfield(job.output,'pc')
+  job.output.pc  = struct('native',cg_vbm_get_defaults('output.pc.native'), ...
+                          'warped',cg_vbm_get_defaults('output.pc.warped'), ...
+                          'mod'   ,cg_vbm_get_defaults('output.pc.mod'), ...
+                          'dartel',cg_vbm_get_defaults('output.pc.dartel'));
+end
+if ~isfield(job.output,'te')
+  job.output.te  = struct('native',cg_vbm_get_defaults('output.te.native'), ...
+                          'warped',cg_vbm_get_defaults('output.te.warped'), ...
+                          'mod'   ,cg_vbm_get_defaults('output.te.mod'), ...
+                          'dartel',cg_vbm_get_defaults('output.te.dartel'));
+end
+if ~isfield(job.output,'WMH')
+  job.output.WMH  = struct('native',cg_vbm_get_defaults('output.WMH.native'), ...
+                           'warped',cg_vbm_get_defaults('output.WMH.warped'), ...
+                           'mod'   ,cg_vbm_get_defaults('output.WMH.mod'), ...
+                           'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
+end
+FN = {'INV','atlas','debug','BVC','WMHC','gcutstr','verb'};
+for fni=1:numel(FN)
+  if ~isfield(job.extopts,FN{fni})
+    job.extopts.(FN{fni}) = cg_vbm_get_defaults(sprintf('extopts.%s',FN{fni}));
+  end
+end
+
+
+opt.partvol.l1A    = job.extopts.atlas{1,1}; 
+%%
+
+
 
 
 if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
@@ -435,7 +419,7 @@ end
 if  T3th(1)>T3th(3) || T3th(2)>T3th(3) || T3th(1)>T3th(2)
   % if INV==1 and if there is a good contrast between all tissues we try
   % an inveration 
-  if cg_vbm_get_defaults('extopts.INV')==1 
+  if job.extopts.INV==1 
     if T3th(1)>T3th(2) && T3th(2)>T3th(3) 
       %YsrcO = Ysrc+0;
       % invert image to get t1 modality like relations
@@ -457,7 +441,7 @@ if  T3th(1)>T3th(3) || T3th(2)>T3th(3) || T3th(1)>T3th(2)
         'T2/PD preprocessing only for clear tissue contrasts!\n' ...
         '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th(1),T3th(2),T3th(3)); 
     end
-  elseif  cg_vbm_get_defaults('extopts.INV')==2 
+  elseif job.extopts.INV==2 
     Ysrc = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255);  
     
     opt.inv_weighting = 1;
@@ -474,7 +458,7 @@ NS = @(Ys,s) Ys==s | Ys==s+1; % remove side alignment from atlas maps
 
 
 % for fast debuging...
-if cg_vbm_get_defaults('extopts.debug')
+if job.extopts.debug
   tmpmat = fullfile(pth,[nam '_tmp.mat']); save(tmpmat);
 end
 
@@ -531,7 +515,7 @@ end
 %  remove high frequency strutures and avoid missclassifications.
 %  ---------------------------------------------------------------------
 clear TL Ysrc;
-if cg_vbm_get_defaults('extopts.BVC') && ~opt.inv_weighting; 
+if job.extopts.BVC && ~opt.inv_weighting; 
   stime = vbm_io_cmd('Blood Vessel Correction');
   
   Ybv   = vbm_vol_smooth3X(vbm_vol_smooth3X((Yl1==7 | Yl1==8).*(Ym*3-1),0.3).^4,0.1)/3;
@@ -703,7 +687,7 @@ if do_cls && do_defs,
 
   % reorder probability maps according to spm order
   prob = prob(:,:,:,[2 3 1]);
-  clear vol
+  clear vol Ymlb
   fprintf('%4.0fs\n',etime(clock,stime)); 
 
   
@@ -818,10 +802,10 @@ if do_cls && do_defs,
   spm_smooth(Ywmh,Ywmh,0.5*vx_vol); 
   Ywmh = uint8(round(Ywmh*255));
 
-  % WMHC for Dartel
-  %if cg_vbm_get_defaults('extopts.WMHC')>1;
+  % WMHC only for Dartel
+  if job.extopts.WMHC==1
     Yclso = Ycls;
-  %end
+  end
   % correction of Ycls
   if 1
     Yclssum = Ycls{1}+Ycls{2}+Ycls{3};
@@ -834,12 +818,9 @@ if do_cls && do_defs,
   
   clear Yclssum Yp0;  
   
-  if cg_vbm_get_defaults('extopts.WMHC');
-    %  stime = vbm_io_cmd('WM hyperintensity correction'); 
-  
+  if job.extopts.WMHC
     % update of Yp0b
     Yp0b = 2/3*Ycls{1}(indx,indy,indz)+Ycls{2}(indx,indy,indz)+1/3*Ycls{3}(indx,indy,indz)+Ywmh(indx,indy,indz);
-  %  fprintf('%4.0fs\n',etime(clock,stime)); 
   else
     if qa.SM.WMH_rel>3 || qa.SM.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       vbm_io_cmd(sprintf('  uncorrected WM hyperintensities greater 5%% (%2.2f%%) of the WM! ',...
@@ -854,7 +835,7 @@ if do_cls && do_defs,
   %  -------------------------------------------------------------------
   if finalmask 
     stime   = vbm_io_cmd('Final Masking'); 
-    gcutstr = cg_vbm_get_defaults('extopts.gcutstr');
+    gcutstr = job.extopts.gcutstr; 
 
     % create final Yb
     Ybt = single(Ycls{1}) + single(Ycls{2}) + single(Ycls{3});
@@ -1036,7 +1017,7 @@ if exist('Yy','var'),
 
     clear Yy t1 t2 t3 M;
 end
-if ~cg_vbm_get_defaults('extopts.WMHC');
+if job.extopts.WMHC==1;
   Ycls = Yclso; clear Yclso;
 end
 
@@ -1145,18 +1126,19 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %% ---------------------------------------------------------------------
 %  write results
 %  ---------------------------------------------------------------------
+Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
 
-% bias and noise corrected without/without masking
+% bias and noise corrected without masking for subject space and with 
+% masking for other spaces 
 vbm_io_writenii(VT0,Yml,'m', ...
   'bias and noise corrected, intensity normalized', ...
   'float32',[0,1],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),0,trans);
-vbm_io_writenii(VT0,Yml,'m', ...
+vbm_io_writenii(VT0,Yml.*(Yp0>0),'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
   'float32',[0,1],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),0,trans);
   
 % Yp0b maps
-Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-if cg_vbm_get_defaults('extopts.WMHC')
+if job.extopts.WMHC==2
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
 vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,4/255],job.output.label,0,trans);
@@ -1213,7 +1195,7 @@ end
 %  ---------------------------------------------------------------------
 %  ... add Ywmh later ... 
 %
-if cg_vbm_get_defaults('extopts.surface') 
+if job.extopts.surface
   stime = vbm_io_cmd('Surface and thickness estimation'); 
   
   % brain masking 
@@ -1258,20 +1240,20 @@ end
 %  contrain other classes. Therefore, standard tissue ranges (>50%) where
 %  used.  
 %  ---------------------------------------------------------------------
-if cg_vbm_get_defaults('extopts.ROI') % || any(cell2mat(struct2cell(job.output.atlas)')) 
+if job.extopts.ROI % || any(cell2mat(struct2cell(job.output.atlas)')) 
   stime = vbm_io_cmd('ROI estimation');   
 
-  opt.partvol.res    = min([3 3 3],vx_vol*(2-cg_vbm_get_defaults('extopts.BVC')));   
+  opt.partvol.res    = min([3 3 3],vx_vol*(2-job.extopts.BVC));   
   opt.partvol.vx_vol = vx_vol; 
 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
   Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
   
-  ROIt = cg_vbm_get_defaults('extopts.ROI'); 
+  ROIt = job.extopts.ROI; 
   ROIt = [(ROIt==1 | ROIt==3) (ROIt==2 | ROIt==3)];
-  FA   = cg_vbm_get_defaults('extopts.atlas'); 
-  verb = cg_vbm_get_defaults('extopts.verb')-1;
+  FA   = job.extopts.atlas; 
+  verb = job.extopts.verb-1;
  
   if verb, fprintf('\n'); firsttime=1; end; 
    
@@ -1866,7 +1848,14 @@ function [Ym,T3th] = vbm_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol)
   end;
   
   T3th=T3th([3 1 2]); % spm tissue order
- % T3th(1) =  min(T3th(1),T3th(2) - diff(T3th(2:3))); % phantom or images with CSF==BG
+  
+  % There are some images with very strong GM/WM contrast that will now
+  % fail (ADHD200 - 0010001). The got a to high CSF threshold resulting 
+  % in strong reduction of GM (70.2748   83.6393  146.4749). 
+  % But for most contrast the CSF/GM contrast is similar or higher than 
+  % the GM/WM contrast.
+  T3th(1) =  min(T3th(1),T3th(2) - diff(T3th(2:3)*2/3)); 
+  
   Ym = vbm_vol_iscale(Ysrc,'gCGW',vx_vol,T3th); 
 return
 %=======================================================================
@@ -2001,6 +1990,7 @@ function [Yml,Ycls] = vbm_pre_LAS(Ysrc,Ym,Ycls,Yb,YBG,TL,T3thn,sanlm,vx_vol)
 
   vx_res  = cg_vbm_get_defaults('extopts.vx_res')*3;
   verb    = cg_vbm_get_defaults('extopts.verb')-1;
+  debug   = cg_vbm_get_defaults('extopts.debug');
 
   if verb, fprintf('\n'); end
   stime = vbm_io_cmd('  rough local GM value','g5','',verb);
@@ -2099,7 +2089,7 @@ function [Yml,Ycls] = vbm_pre_LAS(Ysrc,Ym,Ycls,Yb,YBG,TL,T3thn,sanlm,vx_vol)
     [Ymlr,Ybr,resT2] = vbm_vol_resize({Ymlr,Ybr},'reduceV',vx_vol,1.2,32);
     %YCSFDr = smooth3(vbdist(single(Ymlr<2 | ~Ybr))); 
     Yt = max(0,min(1,2-Ymlr)); Yt(~Ybr)=nan; 
-    YCSFDr = vbm_vol_eidist(Yt,max(0.1,min(1,1-Ymlr/3))); clear Yt;
+    YCSFDr = vbm_vol_eidist(Yt,max(0.1,min(1,1-Ymlr/3)),vx_vol,1,1,0,debug); clear Yt;
     YCSFDr = smooth3(vbm_vol_median3(YCSFDr,YCSFDr>0,true(size(YCSFDr)),0.5)); 
     [gx,gy,gz]=vbm_vol_gradient3(YCSFDr); Ydiv2r=divergence(gy,gx,gz); clear gx gy gz YCSFDr;
     Ydiv2r = vbm_vol_resize(Ydiv2r,'dereduceV',resT2); 
@@ -2116,11 +2106,11 @@ function [Yml,Ycls] = vbm_pre_LAS(Ysrc,Ym,Ycls,Yb,YBG,TL,T3thn,sanlm,vx_vol)
   % this required removed blood vessels
   if 1
     stime = vbm_io_cmd('  CSF refinement','g5','',verb,stime); 
-    [Ymlr,Ybr,BB]    = vbm_vol_resize({max(Yml,YBG*3),Yb},'reduceBrain',vx_vol,2,Yb);  
+    [Ymlr,Ybr,BB]    = vbm_vol_resize({max(Yml,YBG*3),Yb},'reduceBrain',vx_vol,4,Yb);  
     [Ymlr,Ybr,resT2] = vbm_vol_resize({Ymlr ,Ybr},'reduceV',vx_vol,1.2,32);
     %YWMDr  = smooth3(vbdist(single(Ymlr>2 | ~Ybr))); 
     Yt = max(0,min(1,Ymlr-2)); Yt(vbm_vol_morph(~Ybr,'d',2))=nan; 
-    YWMDr = vbm_vol_eidist(Yt,max(0,min(1,Ymlr/3))); clear Yt; 
+    YWMDr = vbm_vol_eidist(Yt,max(0,min(1,Ymlr/3)),vx_vol,1,1,0,debug); clear Yt; 
     YWMDr = smooth3(vbm_vol_median3(YWMDr,YWMDr>0,true(size(YWMDr)),0.5)); 
     [gx,gy,gz]=vbm_vol_gradient3(YWMDr); Ydiv2r=divergence(gy,gx,gz); clear gx gy gz YWMDr;
     Ydiv2r = vbm_vol_resize(Ydiv2r,'dereduceV',resT2); 

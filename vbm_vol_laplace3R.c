@@ -1,5 +1,5 @@
 /* laplace calculation
- * ________________________________________________________________________
+ * _____________________________________________________________________
  * L = laplace3(SEG,low,high,TH)
  *
  * SEG  = 3d sinlge input matrix
@@ -9,7 +9,7 @@
  *        maximum change of an element after interation
  *
  * TODO: change of L1 and L2 by pointer
- * ________________________________________________________________________
+ * _____________________________________________________________________
  * Robert Dahnke 
  * Structural Brain Mapping Group
  * University Jena

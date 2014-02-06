@@ -156,7 +156,44 @@ function vbm_vol_atlas(atlas,refinei)
       ROIavg(Pwp0,PwA,Pws,Pcsv,Ptxt,atlas,resdir);
     end
 
+    
+  % creation of a final VBM atlas as average of other maps
+  % --------------------------------------------------------------------
+  elseif strcmpi(atlas,'vbm12') 
 
+    vbm12tempdir = fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm');
+  
+    A.l1A = fullfile(vbm12tempdir,'l1A.nii');
+    A.ham = fullfile(vbm12tempdir,'hammers.nii');
+    A.ana = fullfile(vbm12tempdir,'anatomy.nii');
+    A.ibs = fullfile(vbm12tempdir,'ibsr.nii');
+    %A.lpb = fullfile(vbm12tempdir,'lpba40.nii');
+
+    % output file
+    C = fullfile(vbm12tempdir,'vbm12.nii');
+
+   % LAB.CT = { 1,{'l1A'},{[1,2]}}; % cortex
+  %  LAB.BV = { 7,{'l1A'},{[7,8]}}; % Blood Vessels
+   % LAB.HD = {21,{'l1A'},{[21,22]}}; % head
+   % LAB.ON = {11,{'l1A'},{[11,12]}}; % Optical Nerv
+
+   % LAB.CT2 = { 1,{'ibs'},{'Cbr'}}; % cortex
+    LAB.MB = {13,{'ham','ibs'},{'MBR','VenV'}}; % MidBrain
+    LAB.BS = {13,{'ham','ibs' },{'Bst'}}; % BrainStem
+    LAB.CB = { 3,{'ham','ibs'},{'Cbe'}}; % Cerebellum
+    LAB.BG = { 5,{'ham','ibs'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
+    LAB.TH = { 9,{'ham','ibs'},{'Tha'}}; % Hypothalamus 
+    LAB.HC = {19,{'ham','ibs'},{'Hip'}}; % Hippocampus 
+    LAB.AM = {19,{'ham','ibs'},{'Amy'}}; % Amygdala
+    LAB.VT = {15,{'ham','ibs'},{'LatV','LatTemV','VenV'}}; % Ventricle
+    LAB.NV = {17,{'ham','ibs'},{'Ins','3thV','4thV'}}; % no Ventricle
+  
+    
+    create_vbm_atlas(A,C,LAB);
+    
+    
+    
+    
   else
   % this is the standard pipeline  
   % --------------------------------------------------------------------
@@ -229,10 +266,12 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
 % ----------------------------------------------------------------------
 % This fucntion contains the paths to our atlas maps and the csv files.
 % ----------------------------------------------------------------------
+  rawdir = '/Volumes/MyBook/MRData/Regions/';
   resdir = '/Volumes/MyBook/MRData/Regions/vbmROIs';
+  
   switch lower(atlas)
     case 'ibsr'
-      mdir   = '/Volumes/MyBook/MRData/Regions/ibsr';
+      mdir   = fullfile(rawdir,'ibsr');
       PA     = vbm_findfiles(mdir,'IBSR_*_seg_ana.nii');
       Ps     = {''};
       P      = vbm_findfiles(mdir,'IBSR_*_ana.nii');
@@ -242,7 +281,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       refine = 1;
       
     case 'hammers'
-      mdir   = '/Volumes/MyBook/MRData/Regions/brain-development.org/Pediatric Brain Atlas/Hammers_mith_atlases_n20r67_for_pvelab';
+      mdir   = fullfile(rawdir,'brain-development.org/Pediatric Brain Atlas/Hammers_mith_atlases_n20r67_for_pvelab');
       P      = vbm_findfiles(mdir,'MRalex.img');
       PA     = vbm_findfiles(mdir,'VOIalex.img');
       Ps     = {''};
@@ -252,7 +291,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       
     case {'mori','mori1','mori2','mori3'}
       if numel(atlas)==5, aid=atlas(5); else aid='2'; end
-      mdir   = '/Volumes/MyBook/MRData/Regions/www.spl.harvard.edu/2010_JHU-MNI-ss Atlas';
+      mdir   = fullfile(rawdir,'www.spl.harvard.edu/2010_JHU-MNI-ss Atlas');
       P      = vbm_findfiles(mdir,'JHU_MNI_SS_T1.nii'); 
       PA     = vbm_findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s.nii',repmat('I',1,str2double(aid))));
       Ps     = {''};      
@@ -261,7 +300,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       refine = 1;
     
     case 'anatomy'
-      mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
+      mdir   = fullfile(rawdir,'Anatomy');
       P      = vbm_findfiles(mdir,'colin27T1_seg.img');
       PA     = [vbm_findfiles(fullfile(mdir,'PMaps'),'*.img'), ...
                 vbm_findfiles(fullfile(mdir,'Fiber_Tracts','PMaps'),'*.img')];
@@ -297,7 +336,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       vbm_io_csv(Pcsv{1},csv);  
       
     case 'aala' % anatomy toolbox version
-      mdir   = '/Volumes/MyBook/MRData/Regions/Anatomy';
+      mdir   = fullfile(rawdir,'Anatomy');
       P      = vbm_findfiles(mdir,'colin27T1_seg.img');
       PA     = vbm_findfiles(mdir,'MacroLabels.img');
       Ps     = {''};
@@ -306,7 +345,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       refine = 1;
       
     case 'aal'
-      mdir   = '/Volumes/MyBook/MRData/Regions/aal_for_SPM8';
+      mdir   = fullfile(rawdir,'aal_for_SPM8');
       P      = vbm_findfiles(mdir,'colin27T1_seg.img');
       PA     = vbm_findfiles(mdir,'aal.nii');
       Ps     = {''};
@@ -315,7 +354,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       refine = 1;  
     
     case 'lpba40'
-      mdir   = '/Volumes/MyBook/MRData/Regions/LPBA40';
+      mdir   = fullfile(rawdir,'LPBA40');
       P      = vbm_findfiles(mdir,'.img');
       PA     = vbm_findfiles(mdir,'.nii');
       Ps     = {''};
@@ -342,6 +381,15 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       Pcsv   = vbm_findfiles(mdir,'Macro.csv');
       refine = 1;
     %}
+    
+    case 'vbm12'
+      mdir    = resdir; %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm');
+      P       = vbm_findfiles(mdir,'*.nii');
+      PA      = vbm_findfiles(mdir,'*.nii');
+      Ps      = {''};
+      Pcsv    = {''};
+      Ptxt    = {''};
+      refine  = 0;
     
     otherwise % GUI ...
       P       = {''};
@@ -1295,4 +1343,155 @@ function dict=ROIdict()
     ... ??
    };
 end
+function create_vbm_atlas(A,C,LAB)
+%%
+% ToDo:
+% - T1-Data für feineren Abgleich mit Gewebewahrscheinlichkeit?
+% - Mitteln/Ergänzen von Regionen
 
+  % output file
+  VC = spm_vol(A.l1A); VC.fname = C; 
+  
+  
+  LAB.BV = { 7,{'l1A'},{[7,8]}}; % Blood Vessels
+  LAB.HD = {21,{'l1A'},{[21,22]}}; % head
+  LAB.ON = {11,{'l1A'},{[11,12]}}; % Optical Nerv
+ 
+  if 1
+    LAB.CT = { 1,{'ibs'},{'Cbr'}}; % cortex
+    LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
+    LAB.BS = {13,{'ham'},{'Bst'}}; % BrainStem
+    LAB.CB = { 3,{'ham','l1A'},{'Cbe'}}; % Cerebellum
+    LAB.BG = { 5,{'ham'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
+    LAB.TH = { 9,{'ham'},{'Tha'}}; % Hypothalamus 
+    LAB.HC = {19,{'ham'},{'Hip'}}; % Hippocampus 
+    LAB.AM = {19,{'ham'},{'Amy'}}; % Amygdala
+    LAB.VT = {15,{'ham'},{'LatV','LatTemV','VenV'}}; % Ventricle
+    LAB.NV = {17,{'ham'},{'Ins','3thV','4thV'}}; % no Ventricle
+  end
+  
+  % get atlas and descriptions 
+  AFN=fieldnames(A);
+  for afni=1:numel(AFN)
+    [pp,ff]=fileparts(A.(AFN{afni}));
+    try
+      csv.(AFN{afni})=vbm_io_csv(fullfile(pp,[ff '.csv']));
+    catch
+      csv.(AFN{afni})={};
+    end
+    YA.(AFN{afni}) = uint8(round(spm_read_vols(spm_vol(A.(AFN{afni})))));
+    YB.(AFN{afni}) = zeros(VC.dim,'uint8');
+  end
+  csv.l1A = { ...
+     1 'lCbr';
+     2 'rCbr';
+     3 'lCbe';
+     4 'rCbe';
+     5 'lBG';
+     6 'rBG';
+     7 'lBV';
+     8 'rBV';
+     9 'lTha';
+    10 'rTha';
+    15 'lLatV';
+    16 'rLatV';
+    19 'lAmy';
+    20 'rAmy';
+    21 'lHD';
+    22 'rHD';
+  };
+
+
+  % convert main atlas data
+  LFN=fieldnames(LAB);
+  for lfni=1:numel(LFN)
+    for afni=1:numel(LAB.(LFN{lfni}){2})
+      for ri=1:numel(LAB.(LFN{lfni}){3})
+        fprintf('%2d %2d\n',lfni,ri);
+        if ischar(LAB.(LFN{lfni}){3}{ri})
+          fi = find(cellfun('isempty',strfind( csv.(LAB.(LFN{lfni}){2}{afni})(:,2) , LAB.(LFN{lfni}){3}{ri} ))==0);
+          ni = cell2mat(csv.(LAB.(LFN{lfni}){2}{afni})(fi,1));  %#ok<FNDSB>
+        else
+          ni = LAB.(LFN{lfni}){3}{ri};
+        end
+
+        for si = 1:numel(ni)
+          YB.(LAB.(LFN{lfni}){2}{afni})(YA.(LAB.(LFN{lfni}){2}{afni})==ni(si)) = LAB.(LFN{lfni}){1} + (si==2);
+        end
+      end
+    end
+  end
+  
+  %% convert expert data
+  LFN=fieldnames(LAB);
+ 
+  for afni=2:numel(AFN)  
+    [pp,atlas]=fileparts(A.(AFN{afni}));
+    [~,PA,Pcsv] = mydata(atlas);
+    csv2=vbm_io_csv(Pcsv{1});
+    csv2=translateROI(csv2,atlas);
+    for pai=1:numel(PA)
+      VPA = spm_vol(PA{pai});
+      YPA = uint8(round(spm_read_vols(VPA)));
+      YPB = YPA*0;
+      fprintf('%2d %2d\n',afni,pai);
+      
+      for lfni=1:numel(LFN)
+        for ri=1:numel(LAB.(LFN{lfni}){3})
+          if ischar(LAB.(LFN{lfni}){3}{ri})
+            fi = find(cellfun('isempty',strfind( csv.(AFN{afni})(:,2) , LAB.(LFN{lfni}){3}{ri} ))==0); % entry in the mean map
+            if ~isempty(fi)
+              rn = csv.(AFN{afni})(fi,4); % long roi name
+              fi2 = find(cellfun('isempty',strfind( csv2(:,2) , rn{1} ))==0); % entry in the original map
+              ni = cell2mat(csv2(fi2,1)); % id in the original map
+              xi = csv2(fi2,6); % its side alignment
+              for si = 1:numel(xi)
+                YPB(YPA==ni(si)) = LAB.(LFN{lfni}){1} + 1*uint8(xi{si}==2);
+              end
+            end
+          end
+        end
+      end
+      VPB = VPA; [pp,ff] = fileparts(VPB.fname);
+      switch atlas
+        case 'hammers'
+          [pp1,pp2]=fileparts(pp);
+          VPB.fname = fullfile(pp1,['vbm12a1_' ff '_' pp2 '.nii']);
+        otherwise
+          VPB.fname = fullfile(pp,['vbm12a1_' ff '.nii']);
+      end
+      spm_write_vol(VPB,YPB);
+    end
+  end
+  
+  
+  
+%%
+  if 0
+    % STAPLE
+    for afni=1:numel(AFN)
+      VB=VC; VB.fname = sprintf('vbm_vol_create_Atlas%d.nii',afni); P{afni}=VB.fname;
+      spm_write_vol(VB,YB.(AFN{afni}));
+    end
+    vbm_tst_staple_multilabels(char(P),'',C,1);
+    for afni=1:numel(AFN)
+      delete(P{afni});
+    end
+  else
+    YC = zeros(VC.dim,'uint8');
+    for lfni=1:numel(LFN) % für jeden layer
+      for si=0:1
+        ll =  LAB.(LFN{lfni}){1} + si;
+        Ysum = zeros(size(YB.(AFN{afni})),'single'); esum=0;
+        for afni=1:numel(AFN)
+          Ysum = Ysum + single(YB.(AFN{afni})==ll);
+          esum = esum + (sum(YB.(AFN{afni})(:)==ll)>0);
+        end
+        YC((Ysum/esum)>0.4)=ll; 
+      end
+      fprintf('%s %2d %2d %2d\n',LFN{lfni},lfni,ri,esum);
+    end
+    spm_write_vol(VC,YC);
+  end
+  
+end

@@ -61,12 +61,12 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   ncls = max(round(vol(:))); 
   if     ncls==255, ncls=1; 
   elseif ncls==254, ncls=3; % IBSR
-  elseif max(vol(:))>0, ncls=1; 
+  %elseif max(vol(:))>0, ncls=1; 
   end
   clear vol;
   
   estr=sprintf('%s\n%s\n\n',spm_str_manip(P(1,:),'h'),Vref(1).fname);
-  
+  %%
   for nc=1:(ncls>1 && nargout>2)+1  
   % create header  
     switch ncls
@@ -75,10 +75,11 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
               txt{1} = sprintf('\n%s%30s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\n',estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
       case 3, tab = {['Name' methodname],'k(C)','k(G)','k(W)','k(GW)','RMS(C)','RMS(G)','RMS(W)','RMS(p0)'};  
               txt{1} = sprintf('\n%s%30s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n',estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9}); 
-      otherwise, fprintf('Ground truth error');  continue; %error('unallowed number of classes');
+      %otherwise, 
+        %fprintf('Ground truth error');  continue; %error('unallowed number of classes');
     end
     txt{2} = ''; k = zeros(n,8);
-    if verb, fprintf(txt{1}); end
+    if verb && ~isempty(txt{1}), fprintf(txt{1}); end
 
 
   % evaluation
@@ -87,6 +88,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
       val(i).fname = V(i).fname;
       val(i).path  = pth;
       val(i).name  = name;
+      fprintf('Number of Classes: %0.0f\n\n',ncls);
       switch ncls
         case 1
           %if length(Vref)==n,  vol1 = spm_read_vols(Vref(i))/255+1;
@@ -123,6 +125,12 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
           txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n',name(1:min(numel(name),30)),k(i,:)); 
 
           val(i).SEG = struct('kappa',kappa_all(1:3),'rms',rms(1:3),'kappaGW',kappa_all(4),'rmsGW',rms(4));
+        otherwise
+          if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
+          vol1 = single(spm_read_vols(Vref(Vrefi))); 
+          vol2 = single(spm_read_vols(V(i)));
+          
+          for c=1:ncls, kappa_all(i,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
       end
       if verb, fprintf(txti); end; txt{2}=[txt{2} txti]; tab=[tab;[{name},num2cell(k(i,:))]]; 
     end

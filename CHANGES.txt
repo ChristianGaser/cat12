@@ -4054,3 +4054,29 @@ M       vbm12.man
 Some minor changes to cg_check_cov.m.
 ------------------------------------------------------------------------
 r567 | gaser | 2014-01-27 16:25:00
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       distribute_to_server.sh
+A       templates_1.50mm/vbm12.nii
+M       vbm_surf_createCS.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa_groups.m
+M       vbm_tst_qa_groups_test.m
+M       vbm_tst_t1qa.m
+M       vbm_vol_atlas.m
+M       vbm_vol_eidist.c
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_laplace3R.c
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+
+(1)  Corrected vbm_vol_eidist distance estimation. 
+(2)  Updated vbm_vol_pbt thickness estimation.
+(3)  Added vbm12.nii region atlas that based on Hammers and replace the l1A atlas. 
+(4)  Updated ventricle and WMH partitioning by Laplace approach.
+(5)  Update CSF global threshold estimation for high GM/WM-contrast images.  
+------------------------------------------------------------------------
+r568 | dahnke | 2014-02-06 18:39:49

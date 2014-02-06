@@ -57,17 +57,20 @@ function vbm_tst_qa_groups(files,names,qm,printgroup,name)
       data.groupn{ci,1}  = namesn{gi};
       data.gir{ci,1}     = gir(gi);
       data.girn{ci,1}    = girn(gi);
-
+      data.fnames{ci,1}  = files{gi}{fi};
+      
       tmp{gi}{fi} = vbm_io_xml(files{gi}{fi});
 
       for qmi=1:size(qm,1)
         try
-          if isinf(tmp{gi}{fi}.qa.(qm{qmi,1})(1))
+          if isinf(tmp{gi}{fi}.qa.(qm{qmi,1})(1)) %tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1)) 
             data.(qm{qmi,1})(ci,1) = nan;
             data.full(ci,qmi)      = nan;
           else
             data.(qm{qmi,1})(ci,1) = tmp{gi}{fi}.qa.(qm{qmi,1})(1);
             data.full(ci,qmi)      = tmp{gi}{fi}.qa.(qm{qmi,1})(1);
+            %data.(qm{qmi,1})(ci,1) = tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1);
+            %data.full(ci,qmi)      = tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1);
           end
         catch
           data.(qm{qmi,1})(ci,1)   = nan;
@@ -132,8 +135,8 @@ function vbm_tst_qa_groups(files,names,qm,printgroup,name)
 
   %% 3) MANOVA
   [mano.d,mano.p,mano.stats] = manova1(data.full,data.group); 
-
-
+%%
+names=unique(data.group);
   %% 4) Create result structures and tables 
   % gmdist = mahalanobis distance between groups
   % mmdist = mahalanobis distance within groups
