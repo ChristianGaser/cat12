@@ -4080,3 +4080,53 @@ M       vbm_vol_pbt.m
 (5)  Update CSF global threshold estimation for high GM/WM-contrast images.  
 ------------------------------------------------------------------------
 r568 | dahnke | 2014-02-06 18:39:49
+
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       cg_check_cov.m
+M       distribute_to_server.sh
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm12.man
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.c
+M       vbm_vol_eidist.mexa64
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_eikonal3.mexw32
+M       vbm_vol_eikonal3.mexw64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) Changed default definition of SUER in distribute_to_server.sh that worked
+    not properly.
+(2) Some slight changes in cg_check_cov.m.
+(3) Changed vbm_vol_eidist.c according to standard gcc.
+(4) Recompiled mexfiles.
+------------------------------------------------------------------------
+r569 | gaser | 2014-02-07 10:45:44

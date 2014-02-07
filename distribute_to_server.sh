@@ -8,7 +8,7 @@ version='distribute_to_server.sh $Id$'
 COMMAND=""
 SERVER=localhost
 PATTERN=""
-USER=whoami
+USER=`whoami`
 DIR=""
 
 ########################################################
