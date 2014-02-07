@@ -105,7 +105,7 @@ int sub2ind(int x,int y, int z, int s[]) {
   if (y<0) y=0; if (y>s[1]-1) y=s[1]-1; 
   if (z<0) z=0; if (z>s[2]-1) z=s[2]-1; 
   
-  //int i=(z)*s[0]*s[1] + (y)*s[0] + (x) - 1;
+  /* int i=(z)*s[0]*s[1] + (y)*s[0] + (x) - 1; */
   return (z)*s[0]*s[1] + (y)*s[0] + (x);
 }
 
@@ -489,7 +489,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           WM = isoval(B,((float)nu) + dinu,((float)nv) + dinv,((float)nw) + dinw,sizeL);
           
           if ( B[ni]!=WM ) {
-            // estimate new point bevor border to get the gradient based on this the exact HB 
+            /* estimate new point bevor border to get the gradient based on this the exact HB */
             dcf = (B[ni] - 0.5) / ( B[ni] - WM );
             WMu = ((float)nu) + dinu*dcf; WMv = ((float)nv) + dinv*dcf; WMw = ((float)nw) + dinw*dcf; 
             WM  = isoval(B,WMu,WMv,WMw,sizeL);
@@ -500,7 +500,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
               WM  = isoval(B,WMu,WMv,WMw,sizeL);
             }
             
-            //new exact distance to interpolatet boundary 
+            /* new exact distance to interpolated boundary */ 
             if ( WM>0.4 && WM<0.6 ) {
               dinu = iu-WMu; dinv = iv-WMv; dinw = iw-WMw;
               DIN  = fsqrt(fpow(dinu*s1,2) + fpow(dinv*s2,2) + fpow(dinw*s3,2));   
