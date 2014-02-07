@@ -67,7 +67,7 @@ try
   end
 end
 
-tmp_fields = char('atlas','te','pc');
+tmp_fields = char('atlas','te','pc','WMH');
 try
   if writeonly
     matlabbatch{1}.spm.tools.vbm.write.output = rmfield(matlabbatch{1}.spm.tools.vbm.write.output,tmp_fields);
@@ -94,15 +94,6 @@ try
     matlabbatch{1}.spm.tools.vbm.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.GM,'mod');
     matlabbatch{1}.spm.tools.vbm.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.WM,'mod');
     matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF,'mod');
-  end
-end
-
-tmp_fields = char('native','warped','mod','dartel');
-try
-  if writeonly
-    matlabbatch{1}.spm.tools.vbm.write.output.WMH = rmfield(matlabbatch{1}.spm.tools.vbm.write.output.WMH,tmp_fields);
-  else
-    matlabbatch{1}.spm.tools.vbm.estwrite.output.WMH = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.WMH,tmp_fields);
   end
 end
 
