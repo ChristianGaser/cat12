@@ -1764,7 +1764,7 @@ if df(1),
     N.dat(:,:,:,:,:) = reshape(Yy,[d1,1,3]);
 end
 
-catch err
+catch 
   %e = lasterror; % matlab help that we should try the old way ... maybe 
   % "e" was a to short variable name ...
   vbm_io_cprintf(opt.color.error,'\n%s\nVBM Preprocessing error:\n%s\n', ...
@@ -1786,7 +1786,7 @@ catch err
   end  
   
   % rethrow error
-  rethrow(err); 
+  rethrow(lasterror); 
 end
 
 return;

@@ -4159,3 +4159,12 @@ M       vbm_vol_t1qacalc.m
 Matlab R2007a does not accept terms such as [~,m] = function.
 ------------------------------------------------------------------------
 r572 | gaser | 2014-02-10 11:09:51
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_write.m
+
+(1) Matlab R2007a does not accept catch err in cg_vbm_write.m
+(2) Changed hamdling of rmfield in cg_vbm_batch.m
+------------------------------------------------------------------------
+r573 | gaser | 2014-02-10 17:59:41
