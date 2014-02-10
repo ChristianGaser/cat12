@@ -1917,12 +1917,12 @@ function [Yl1,YBG,Ycls,Ydiv] = vbm_pre_fastpart(Ym,Ycls,Yb,Yy,vx_vol)
   Yl1=zeros(size(Ym),'single');
   % ventricle
   Yvt = single(Yp0<1.8 & Yl1A==opt.LAB.VT(1) & Yg<0.3);
-  [~,D] = vbm_vol_simgrow(single(Yvt>0.5),Ym,0.05); Yvt(D<0.5 & D>0 & Yp0<1.5)=1; 
+  [tmp0,D] = vbm_vol_simgrow(single(Yvt>0.5),Ym,0.05); Yvt(D<0.5 & D>0 & Yp0<1.5)=1; clear tmp0;
   spm_smooth(Yvt,Yvt,vx_vol*2);  
   Yl1(Yvt>0.5)=opt.LAB.VT(1); clear Yvt;
   % WMH
   Ywmh = single( (Yp0 - 3*Ym)>0.5 & Yl1A~=opt.LAB.BG(1) & Yl1A~=opt.LAB.TH(1) & Yg<0.3);
-  [~,D] = vbm_vol_simgrow(single(Ywmh>0.5),Ym ,0.02); 
+  [tmp0,D] = vbm_vol_simgrow(single(Ywmh>0.5),Ym ,0.02); clear tmp0;
   Ywmh(D<0.1 & D>0 & Yl1A~=opt.LAB.BG(1) & Yl1A~=opt.LAB.TH(1))=1; 
   spm_smooth(Ywmh,Ywmh,vx_vol*1);  
   Yl1(Ywmh>0.5 & Yl1~=opt.LAB.VT(1))=opt.LAB.HI(1); clear Ywmh;
@@ -1940,7 +1940,7 @@ function [Yl1,YBG,Ycls,Ydiv] = vbm_pre_fastpart(Ym,Ycls,Yb,Yy,vx_vol)
   Yl1(Yl1==0 & Yl1A==opt.LAB.TH(1) & Ym>1.5/3 & Ym<2.85/3 & Ydiv>-0.05)=opt.LAB.TH(1);      % thalamus
   Yl1(Ym>4/3 & Yp0) = opt.LAB.BV(1); 
   % complete map
-  [~,~,Yl1] = vbdist(Yl1,Yp0>0.5);
+  [tmp0,tmp1,Yl1] = vbdist(Yl1,Yp0>0.5); clear tmp0 tmp1;
   Yl1 = vbm_vol_median3c(single(Yl1),Yp0>0);
   
   Yl1 = vbm_vol_resize(Yl1,'dereduceBrain',BB); Yl1 = uint8(round(Yl1));
@@ -2289,7 +2289,7 @@ function [Yb,Ybcs,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,T3th,vx_vol)
   
   % update Yb
   Yl1(~Yb)  = 0;
-  [~,~,Yl1] = vbdist(single(Yl1),Yl1==0 & Yb);
+  [tmp0,tmp1,Yl1] = vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
 
   if verb, vbm_io_cmd(' ','','',verb,stime); end
 return
