@@ -59,29 +59,36 @@ end
 
 tmp_fields = char('darteltpm','finalmask','vx_res','gcut','gcutstr','gcutCSF','kmeans','mrf','bias_fwhm','BVC',...
               'WMHC','pbtres','INV','colormap','atlas','ROI','surface','debug','verb');
-try
-  if writeonly
-      matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,tmp_fields);
-  else
-      matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,tmp_fields);
+for i=1:size(tmp_fields,1)
+  try
+    if writeonly
+        matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,deblank(tmp_fields(i,:)));
+    else
+        matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,deblank(tmp_fields(i,:)));
+    end
   end
 end
 
 tmp_fields = char('atlas','te','pc','WMH');
-try
-  if writeonly
-    matlabbatch{1}.spm.tools.vbm.write.output = rmfield(matlabbatch{1}.spm.tools.vbm.write.output,tmp_fields);
-  else
-    matlabbatch{1}.spm.tools.vbm.estwrite.output = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output,tmp_fields);
+for i=1:size(tmp_fields,1)
+  try
+    if writeonly
+      matlabbatch{1}.spm.tools.vbm.write.output = rmfield(matlabbatch{1}.spm.tools.vbm.write.output,deblank(tmp_fields(i,:)));
+    else
+      matlabbatch{1}.spm.tools.vbm.estwrite.output = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output,deblank(tmp_fields(i,:)));
+    end
   end
 end
 
+
 tmp_fields = char('opts','bias','realign','defs');
-try
-  if writeonly
-    matlabbatch{1}.spm.tools.vbm.write = rmfield(matlabbatch{1}.spm.tools.vbm.write,tmp_fields);
-  else
-    matlabbatch{1}.spm.tools.vbm.estwrite = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite,tmp_fields);
+for i=1:size(tmp_fields,1)
+  try
+    if writeonly
+      matlabbatch{1}.spm.tools.vbm.write = rmfield(matlabbatch{1}.spm.tools.vbm.write,deblank(tmp_fields(i,:)));
+    else
+      matlabbatch{1}.spm.tools.vbm.estwrite = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite,deblank(tmp_fields(i,:)));
+    end
   end
 end
 
