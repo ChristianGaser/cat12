@@ -106,7 +106,7 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
     try  
       [ROI,num] = spm_bwlabel(double(vol),6);
       num       = hist( ROI( ROI(:)>0 ) , 1:num);
-      [~,num] = max(num(:)); clear tmp;
+      [tmp0,num] = max(num(:)); clear tmp;
       vol       = ROI==num;	
     catch %#ok<CTCH>
       warning('MATLAB:vbm_vol_morph:NoObject','ERROR: vbm_vol_morph - lab - no object!');

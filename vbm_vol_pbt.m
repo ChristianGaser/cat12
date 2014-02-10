@@ -103,7 +103,7 @@ function [Ygmt,Ypp] = vbm_vol_pbt(Ymf,opt)
   % Final corrections for thickness map with thickness limit of 10 mm. 
   % Resolution correction of the thickness map after all other operations, 
   % because PBT actually works only with the voxel-distance (isotropic 1 mm)
-  [~,Yi] = vbdist(single(Ygmt>eps),vbm_vol_morph(Ygmt>eps | (Ymf>1.5 & Ymf<2.5),'d',2)); Ygmt=Ygmt(Yi); clear Yi;
+  [tmp0,Yi] = vbdist(single(Ygmt>eps),vbm_vol_morph(Ygmt>eps | (Ymf>1.5 & Ymf<2.5),'d',2)); Ygmt=Ygmt(Yi); clear Yi tmp0;
   Ygmt = vbm_vol_median3(Ygmt,Ymf>0 & Ymf<3,Ygmt>eps,0.25);
   Ygmt = vbm_vol_median3(Ygmt,Ymf>0 & Ymf<3,Ygmt>eps);
   Ygmt = Ygmt*opt.resV; 
