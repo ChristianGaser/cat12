@@ -120,7 +120,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   vxd    = 1/mean(vx_vol); 
   
   % prepare maps
-  [~,~,YS] = vbdist(single(mod(YA,2)) + 2*single(YA>0)); YS=mod(YS,2);  % side map
+  [tmp0,tmp1,YS] = vbdist(single(mod(YA,2)) + 2*single(YA>0)); YS=mod(YS,2); clear tmp0 tmp1;  % side map
   YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;                    % ROI map without side
   YA   = uint8(round(vbm_vol_median3c(single(YA),Yp0>0)));
   Yg   = vbm_vol_grad(Ym,vx_vol);
@@ -254,7 +254,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   
   
   %% complete map
-  [~,~,Ya1] = vbdist(Ya1,Yb);
+  [tmp0,tmp1,Ya1] = vbdist(Ya1,Yb); clear tmp0 tmp1;
   
   
   
@@ -267,8 +267,8 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   Yt = vbm_vol_smooth3X(YS==0,6)<0.9 & vbm_vol_smooth3X(YS==1,6)<0.9 & ~YMF2 & Yp0>0 & Ym<3.1 & (Yp0<2.5 | Ya1==LAB.BV);
   Ys = (2-single(YS)) .* single(smooth3(Yt)<0.4);
   Ys(Ys==0 & (Ym<1 | Ym>3.1))=nan; Ys = vbm_vol_downcut(Ys,Ymf,0.1,vx_vol); 
-  [~,~,Ys] = vbdist(Ys,Ys==0);
-  clear YMF2 Yt YS;
+  [tmp0,tmp1,Ys] = vbdist(Ys,Ys==0);
+  clear YMF2 Yt YS tmp0 tmp1;
   
   % YMF for FreeSurfer fsaverage
   Ysm  = vbm_vol_morph(Ys==2,'d',1.75*vxd) & vbm_vol_morph(Ys==1,'d',1.75*vxd);
@@ -285,7 +285,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   YBG = vbm_vol_resize(YBG,'dereduceV',resTr);
   
   Ya1 = vbm_vol_resize(Ya1,'dereduceBrain',BB); Ya1 = uint8(round(Ya1));
-  Ys  = vbm_vol_resize(Ys ,'dereduceBrain',BB); [~,~,Ys] = vbdist(Ys,Ya1>0); 
+  Ys  = vbm_vol_resize(Ys ,'dereduceBrain',BB); [tmp0,tmp1,Ys] = vbdist(Ys,Ya1>0); clear tmp0 tmp1;
   YMF = vbm_vol_resize(YMF,'dereduceBrain',BB); 
   YBG = vbm_vol_resize(YBG,'dereduceBrain',BB); 
   Ym  = Ym0; clear Ym0;

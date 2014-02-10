@@ -4146,3 +4146,16 @@ M       vbm12.man
 removed too li,iting ufilter in tbx_cfg_vbm.m.
 ------------------------------------------------------------------------
 r571 | gaser | 2014-02-10 10:52:27
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm12.man
+M       vbm_vol_atlas.m
+M       vbm_vol_morph.m
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+M       vbm_vol_t1qacalc.m
+
+Matlab R2007a does not accept terms such as [~,m] = function.
+------------------------------------------------------------------------
+r572 | gaser | 2014-02-10 11:09:51

@@ -1427,7 +1427,7 @@ function create_vbm_atlas(A,C,LAB)
  
   for afni=2:numel(AFN)  
     [pp,atlas]=fileparts(A.(AFN{afni}));
-    [~,PA,Pcsv] = mydata(atlas);
+    [tmp0,PA,Pcsv] = mydata(atlas); clear tmp0;
     csv2=vbm_io_csv(Pcsv{1});
     csv2=translateROI(csv2,atlas);
     for pai=1:numel(PA)
