@@ -4138,3 +4138,11 @@ M       cg_vbm_batch.m
 Corrected wrong handling of WMH in cg_vbm_batch.m.
 ------------------------------------------------------------------------
 r570 | gaser | 2014-02-07 11:01:42
+
+M       CHANGES.txt
+M       tbx_cfg_vbm.m
+M       vbm12.man
+
+removed too li,iting ufilter in tbx_cfg_vbm.m.
+------------------------------------------------------------------------
+r571 | gaser | 2014-02-10 10:52:27

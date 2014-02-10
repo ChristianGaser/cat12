@@ -27,11 +27,11 @@ data.help = {[...
 'images of different contrasts) processing is not yet implemented ',...
 'for this method.']};
 data.filter = 'image';
-% data.ufilter = '.*';
+data.ufilter = '.*';
 % by default only files that do not start with the typical VBM prefix of 
 % strongly preprocessed images that can not be used for preprocessing
 % ^[^(^(p[0123]|^c[123]|^m[0w]|^iy_|^y_|^jac_|^te|^pc)])].*
-data.ufilter = '(^[^p][^0123c]).*'; 
+%data.ufilter = '(^[^p][^0123c]).*'; 
 data.num     = [1 Inf];
 
 %_______________________________________________________________________
