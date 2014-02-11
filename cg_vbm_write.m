@@ -800,27 +800,36 @@ if do_cls && do_defs,
   Ywmh = vbm_vol_morph(NS(Yl1,23),'d') & vbm_vol_morph(Ycls{2}>128,'d');
   Ywmh = single((NS(Yl1,23) | Ywmh) & vbm_vol_morph(NS(Yl1,23),'d')); 
   spm_smooth(Ywmh,Ywmh,0.5*vx_vol); 
-  Ywmh = uint8(round(Ywmh*255));
+  Ywmh = max(0,min(255,Ywmh*255));
 
-  % WMHC only for Dartel
-  if job.extopts.WMHC==1
+  %% 
+  if job.extopts.WMHC
     Yclso = Ycls;
-  end
-  % correction of Ycls
-  if 1
-    Yclssum = Ycls{1}+Ycls{2}+Ycls{3};
-    Ycls{1} = max(0  ,Ycls{1} - Ywmh);
-    Ycls{2} = max(0  ,Ycls{2} - Ywmh);
-    Ycls{3} = max(0  ,Ycls{3} - Ywmh);
 
-    Ywmh = min(255,Yclssum - Ycls{1} - Ycls{2} - Ycls{3});
+    % WMH as seperate class 
+    Yclssum = max(eps,single(Ycls{1})+single(Ycls{2})+single(Ycls{3}));
+    Ycls{1} = uint8(round(max(0 , min( 255, single(Ycls{1}) - Ywmh .* (single(Ycls{1})./Yclssum)))));
+    Ycls{2} = uint8(round(max(0 , min( 255, single(Ycls{2}) - Ywmh .* (single(Ycls{2})./Yclssum)))));
+    Ycls{3} = uint8(round(max(0 , min( 255, single(Ycls{3}) - Ywmh .* (single(Ycls{3})./Yclssum)))));
+    Ywmh    = uint8(round(max(0 , min( 255, Yclssum - single(Ycls{1}) - single(Ycls{2}) - single(Ycls{3})))));
+    
+    % if the segmentation should be corrected later...
+    if job.extopts.WMHC>1
+      Yclso = Ycls;
+    end
+    
+    % upate of the actual segmenation only for Dartel
+    Ycls{2} = uint8(round(max(0 , min( 255, single(Ycls{2} + Ywmh)))));
+    
   end
   
   clear Yclssum Yp0;  
   
   if job.extopts.WMHC
     % update of Yp0b
-    Yp0b = 2/3*Ycls{1}(indx,indy,indz)+Ycls{2}(indx,indy,indz)+1/3*Ycls{3}(indx,indy,indz)+Ywmh(indx,indy,indz);
+    Yp0b = uint8(round(2/3*single(Ycls{1}(indx,indy,indz)) + ...
+                           single(Ycls{2}(indx,indy,indz)) + ...
+                       1/3*single(Ycls{3}(indx,indy,indz))));
   else
     if qa.SM.WMH_rel>3 || qa.SM.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       vbm_io_cmd(sprintf('  uncorrected WM hyperintensities greater 5%% (%2.2f%%) of the WM! ',...
@@ -1017,7 +1026,7 @@ if exist('Yy','var'),
 
     clear Yy t1 t2 t3 M;
 end
-if job.extopts.WMHC==1;
+if job.extopts.WMHC;
   Ycls = Yclso; clear Yclso;
 end
 

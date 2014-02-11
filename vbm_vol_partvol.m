@@ -295,15 +295,15 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
  
   
   % class correction
-  YBGs = min(min(255-uint8(round(vbm_vol_smooth3X(Ya1==1 & Ycls{2}>250,0.8))).*Ycls{2},...
-    uint8(round(255*vbm_vol_smooth3X(YBG,0.5) .* (Ym<2.9/3)))),255-Ycls{3});
-  Ycls{2} = min(Ycls{2},255-YBGs);
-  Ycls{1} = max(Ycls{1},YBGs);
-  Ysum = zeros(size(Ym),'uint8'); for i=1:numel(Ycls), Ysum = Ysum + Ycls{i}; end;
-  Ycls{2} = Ycls{2} + (255-Ysum).*uint8(Ym>2.75/3);
-  Ycls{1} = Ycls{1} + (255-Ysum).*uint8(Ym<2.75/3 & YBGs==0);
-  clear YBGs Ysum; 
-
+  % YBG is smoothed a little bit and (B) reset all values that are related
+  % with GM/WM intensity (Ym<2.9/3) (A)
+  Yclssum = single(Ycls{1})+single(Ycls{2})+single(Ycls{3});
+  YBGs    = min( max(0,min(255, 255 - vbm_vol_smooth3X(Ya1==1 & Ycls{2}>round(2.9/3),0.8) .* single(Ycls{2}) )), ... (A)
+                 max(0,min(255, 255 * vbm_vol_smooth3X(YBG .* (Ym<=2.9/3 & Ym>2/3) ,0.5) )) ); % (B)
+  Ycls{1} = uint8(round(max(0 , min( 255, single(Ycls{1}) + YBGs .* (single(Ycls{2})./max(eps,Yclssum))))));
+  Ycls{2} = uint8(round(max(0 , min( 255, single(Ycls{2}) - YBGs .* (single(Ycls{2})./max(eps,Yclssum))))));
+  clear YBGs Yclssum; 
+ 
   if verb, vbm_io_cmd(' ','','',verb,stime); end
 
 end
@@ -314,7 +314,7 @@ function Yg = vbm_vol_grad(Ym,vx_vol)
 % ----------------------------------------------------------------------
   [gx,gy,gz] = vbm_vol_gradient3(Ym); 
   Yg = abs(gx./vx_vol(1))+abs(gy./vx_vol(2))+abs(gz./vx_vol(3)); 
-  Yg = Yg ./ (Ym+eps);
+  Yg = Yg ./ max(eps,Ym);
 end
 %=======================================================================
 

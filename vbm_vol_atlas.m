@@ -1350,25 +1350,23 @@ function create_vbm_atlas(A,C,LAB)
 % - Mitteln/Ergänzen von Regionen
 
   % output file
-  VC = spm_vol(A.l1A); VC.fname = C; 
+  VC = spm_vol(A.ham); VC.fname = C; 
   
   
-  LAB.BV = { 7,{'l1A'},{[7,8]}}; % Blood Vessels
-  LAB.HD = {21,{'l1A'},{[21,22]}}; % head
-  LAB.ON = {11,{'l1A'},{[11,12]}}; % Optical Nerv
+  LAB.BV = { 7,{'l1A'},{[8,7]}}; % Blood Vessels
+  LAB.HD = {21,{'l1A'},{[22,21]}}; % head
+  LAB.ON = {11,{'l1A'},{[12,11]}}; % Optical Nerv
  
-  if 1
-    LAB.CT = { 1,{'ibs'},{'Cbr'}}; % cortex
-    LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
-    LAB.BS = {13,{'ham'},{'Bst'}}; % BrainStem
-    LAB.CB = { 3,{'ham','l1A'},{'Cbe'}}; % Cerebellum
-    LAB.BG = { 5,{'ham'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
-    LAB.TH = { 9,{'ham'},{'Tha'}}; % Hypothalamus 
-    LAB.HC = {19,{'ham'},{'Hip'}}; % Hippocampus 
-    LAB.AM = {19,{'ham'},{'Amy'}}; % Amygdala
-    LAB.VT = {15,{'ham'},{'LatV','LatTemV','VenV'}}; % Ventricle
-    LAB.NV = {17,{'ham'},{'Ins','3thV','4thV'}}; % no Ventricle
-  end
+  LAB.CT = { 1,{'ibs'},{'Cbr'}}; % cortex
+  LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
+  LAB.BS = {13,{'ham'},{'Bst'}}; % BrainStem
+  LAB.CB = { 3,{'ham'},{'Cbe'}}; % Cerebellum
+  LAB.BG = { 5,{'ham'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
+  LAB.TH = { 9,{'ham'},{'Tha'}}; % Hypothalamus 
+  LAB.HC = {19,{'ham'},{'Hip'}}; % Hippocampus 
+  LAB.AM = {19,{'ham'},{'Amy'}}; % Amygdala
+  LAB.VT = {15,{'ham'},{'LatV','LatTemV','VenV'}}; % Ventricle
+  LAB.NV = {17,{'ham'},{'Ins','3thV','4thV'}}; % no Ventricle
   
   % get atlas and descriptions 
   AFN=fieldnames(A);
@@ -1379,7 +1377,8 @@ function create_vbm_atlas(A,C,LAB)
     catch
       csv.(AFN{afni})={};
     end
-    YA.(AFN{afni}) = uint8(round(spm_read_vols(spm_vol(A.(AFN{afni})))));
+    VA.(AFN{afni}) = spm_vol(A.(AFN{afni}));
+    YA.(AFN{afni}) = uint8(round(spm_read_vols(VA.(AFN{afni}))));
     YB.(AFN{afni}) = zeros(VC.dim,'uint8');
   end
   csv.l1A = { ...
@@ -1416,7 +1415,7 @@ function create_vbm_atlas(A,C,LAB)
         end
 
         for si = 1:numel(ni)
-          YB.(LAB.(LFN{lfni}){2}{afni})(YA.(LAB.(LFN{lfni}){2}{afni})==ni(si)) = LAB.(LFN{lfni}){1} + (si==2);
+          YB.(LAB.(LFN{lfni}){2}{afni})(YA.(LAB.(LFN{lfni}){2}{afni})==ni(si)) = LAB.(LFN{lfni}){1} + si-1;
         end
       end
     end
@@ -1446,7 +1445,7 @@ function create_vbm_atlas(A,C,LAB)
               ni = cell2mat(csv2(fi2,1)); % id in the original map
               xi = csv2(fi2,6); % its side alignment
               for si = 1:numel(xi)
-                YPB(YPA==ni(si)) = LAB.(LFN{lfni}){1} + 1*uint8(xi{si}==2);
+                YPB(YPA==ni(si)) = LAB.(LFN{lfni}){1} + 1*uint8(xi{si}==1);
               end
             end
           end
