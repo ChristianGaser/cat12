@@ -4168,3 +4168,18 @@ M       cg_vbm_write.m
 (2) Changed hamdling of rmfield in cg_vbm_batch.m
 ------------------------------------------------------------------------
 r573 | gaser | 2014-02-10 17:59:41
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       ds.m
+M       templates_1.50mm/vbm12.nii
+M       vbm_io_cprintf.m
+M       vbm_vol_atlas.m
+M       vbm_vol_partvol.m
+M       vbm_vol_sanlm.m
+M       vbm_vol_t1qacalc.m
+
+(1)  Corrected small errors.
+(2)  Corrected vbm12.nii atlas (side error).
+------------------------------------------------------------------------
+r574 | dahnke | 2014-02-11 14:40:12

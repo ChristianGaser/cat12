@@ -13,7 +13,11 @@ else
 end
   
 if nargin > 0 && ~isempty(varargin{1})
-	P = char(varargin{1}.data);
+  if isstruct(varargin{1})
+  	P = char(varargin{1}.data);
+  else
+    P = char(varargin{1});
+  end
 else
   P = spm_select(Inf,'image','Select images to filter');
 end
