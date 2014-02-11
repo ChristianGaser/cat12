@@ -140,171 +140,181 @@ function count = vbm_io_cprintf(style,format,varargin)
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
 % $Revision$  $Date$
 
-  persistent majorVersion minorVersion
-  if isempty(majorVersion)
-      %v = version; if str2double(v(1:3)) <= 7.1
-      %majorVersion = str2double(regexprep(version,'^(\d+).*','$1'));
-      %minorVersion = str2double(regexprep(version,'^\d+\.(\d+).*','$1'));
-      %[a,b,c,d,versionIdStrs]=regexp(version,'^(\d+)\.(\d+).*');  %#ok unused
-      v = sscanf(version, '%d.', 2);
-      majorVersion = v(1); %str2double(versionIdStrs{1}{1});
-      minorVersion = v(2); %str2double(versionIdStrs{1}{2});
-  end
-
-  % The following is for debug use only:
-  %global docElement txt el
-  if ~exist('el','var') || isempty(el),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
-  if nargin<1, showDemo(majorVersion,minorVersion); return;  end
-  %if isempty(style),  return;  end
-  if isempty(style), style='text'; end
-  if ischar(style)
-    switch lower(style)
-      case {'t','txt','text','k'}, style=[0.0 0.0 0.0];
-      case {'e','err','error'},    style=[0.8 0.0 0.0];
-      case {'w','warn','warning'}, style=[1.0 0.5 0.0];
-      case {'com','comment'},      style=[0.0 0.0 0.8];
-      case {'g','green'},          style=[0.0 1.0 0.0];
-      case {'b','blue'},           style=[0.0 0.0 0.1];
-      case {'r','red'},            style=[1.0 0.0 0.0];
-      case {'c','cyan'},           style=[0.0 1.0 1.0];
-      case {'m','magenta'},        style=[1.0 1.0 0.0];
-      case {'y','yellow'},         style=[1.0 0.0 1.0];
-      case {'o','orange'},         style=[1.0 0.5 0.0];
-      case {'g9','gray9'},         style=[0.1 0.1 0.1];
-      case {'g8','gray8'},         style=[0.2 0.2 0.2];
-      case {'g7','gray7'},         style=[0.3 0.3 0.3];
-      case {'g6','gray6'},         style=[0.3 0.4 0.4];
-      case {'g5','gray5'},         style=[0.5 0.5 0.5];
-      otherwise                    style=[0 0 0];
+  try
+    persistent majorVersion minorVersion
+    if isempty(majorVersion)
+        %v = version; if str2double(v(1:3)) <= 7.1
+        %majorVersion = str2double(regexprep(version,'^(\d+).*','$1'));
+        %minorVersion = str2double(regexprep(version,'^\d+\.(\d+).*','$1'));
+        %[a,b,c,d,versionIdStrs]=regexp(version,'^(\d+)\.(\d+).*');  %#ok unused
+        v = sscanf(version, '%d.', 2);
+        majorVersion = v(1); %str2double(versionIdStrs{1}{1});
+        minorVersion = v(2); %str2double(versionIdStrs{1}{2});
     end
-  elseif isnumeric(style)
-    if length(style)>3, style=style(1:3); end
-  end
+
+    % The following is for debug use only:
+    %global docElement txt el
+    if ~exist('el','var') || isempty(el),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
+    if nargin<1, showDemo(majorVersion,minorVersion); return;  end
+    %if isempty(style),  return;  end
+    if isempty(style), style='text'; end
+    if ischar(style)
+      switch lower(style)
+        case {'t','txt','text','k'}, style=[0.0 0.0 0.0];
+        case {'e','err','error'},    style=[0.8 0.0 0.0];
+        case {'w','warn','warning'}, style=[1.0 0.5 0.0];
+        case {'com','comment'},      style=[0.0 0.0 0.8];
+        case {'g','green'},          style=[0.0 1.0 0.0];
+        case {'b','blue'},           style=[0.0 0.0 0.1];
+        case {'r','red'},            style=[1.0 0.0 0.0];
+        case {'c','cyan'},           style=[0.0 1.0 1.0];
+        case {'m','magenta'},        style=[1.0 1.0 0.0];
+        case {'y','yellow'},         style=[1.0 0.0 1.0];
+        case {'o','orange'},         style=[1.0 0.5 0.0];
+        case {'g9','gray9'},         style=[0.1 0.1 0.1];
+        case {'g8','gray8'},         style=[0.2 0.2 0.2];
+        case {'g7','gray7'},         style=[0.3 0.3 0.3];
+        case {'g6','gray6'},         style=[0.3 0.4 0.4];
+        case {'g5','gray5'},         style=[0.5 0.5 0.5];
+        otherwise                    style=[0 0 0];
+      end
+    elseif isnumeric(style)
+      if length(style)>3, style=double(style(1:3)); end
+    end
+
+    if all(ishandle(style)) && length(style)~=3
+        dumpElement(style);
+        return;
+    end
+
+
+    % Process the text string
+    if nargin<2, format = style; style='text';  end
+    %error(nargchk(2, inf, nargin, 'struct'));
+    %str = sprintf(format,varargin{:});
+
+    % In compiled mode
+    try useDesktop = usejava('desktop'); catch, useDesktop = false; end
+    if isdeployed | ~useDesktop %#ok<OR2> - for Matlab 6 compatibility
+        % do not display any formatting - use simple fprintf()
+        % See: http://undocumentedmatlab.com/blog/bold-color-text-in-the-command-window/#comment-103035
+        % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/1390a26e7ef4aa4d
+        % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/13a6ed3223333b21
+        count1 = fprintf(format,varargin{:});
+    else
+        % Else (Matlab desktop mode)
+        % Get the normalized style name and underlining flag
+        [underlineFlag, boldFlag, style] = processStyleInfo(style);
+
+        % Set hyperlinking, if so requested
+        if underlineFlag
+            format = ['<a href="">' format '</a>'];
+
+            % Matlab 7.1 R14 (possibly a few newer versions as well?)
+            % have a bug in rendering consecutive hyperlinks
+            % This is fixed by appending a single non-linked space
+            if majorVersion < 7 || (majorVersion==7 && minorVersion <= 1)
+                format(end+1) = ' ';
+            end
+        end
+
+        % Set bold, if requested and supported (R2011b+)
+        if boldFlag
+            if (majorVersion > 7 || minorVersion >= 13)
+                format = ['<strong>' format '</strong>'];
+            else
+                boldFlag = 0;
+            end
+        end
+
+        % Get the current CW position
+        cmdWinDoc = com.mathworks.mde.cmdwin.CmdWinDocument.getInstance;
+        lastPos = cmdWinDoc.getLength;
+
+        % If not beginning of line
+        bolFlag = 0;  %#ok
+        %if docElement.getEndOffset - docElement.getStartOffset > 1
+            % Display a hyperlink element in order to force element separation
+            % (otherwise adjacent elements on the same line will be merged)
+            if majorVersion<7 || (majorVersion==7 && minorVersion<13)
+                if ~underlineFlag
+                    fprintf('<a href=""> </a>');  %fprintf('<a href=""> </a>\b');
+                elseif format(end)~=10  % if no newline at end
+                    fprintf(' ');  %fprintf(' \b');
+                end
+            end
+            %drawnow;
+            bolFlag = 1;
+        %end
+
+        % Get a handle to the Command Window component
+        mde = com.mathworks.mde.desk.MLDesktop.getInstance;
+        cw = mde.getClient('Command Window');
+        xCmdWndView = cw.getComponent(0).getViewport.getComponent(0);
+
+        % Store the CW background color as a special color pref
+        % This way, if the CW bg color changes (via File/Preferences), 
+        % it will also affect existing rendered strs
+        com.mathworks.services.Prefs.setColorPref('CW_BG_Color',xCmdWndView.getBackground);
+
+        % Display the text in the Command Window
+        count1 = fprintf(2,format,varargin{:});
+
+        %awtinvoke(cmdWinDoc,'remove',lastPos,1);   % TODO: find out how to remove the extra '_'
+        drawnow;  % this is necessary for the following to work properly (refer to Evgeny Pr in FEX comment 16/1/2011)
+        docElement = cmdWinDoc.getParagraphElement(lastPos+1);
+        if majorVersion<7 || (majorVersion==7 && minorVersion<13)
+            if bolFlag && ~underlineFlag
+                % Set the leading hyperlink space character ('_') to the bg color, effectively hiding it
+                % Note: old Matlab versions have a bug in hyperlinks that need to be accounted for...
+                %disp(' '); dumpElement(docElement)
+                setElementStyle(docElement,'CW_BG_Color',1+underlineFlag,majorVersion,minorVersion); %+getUrlsFix(docElement));
+                %disp(' '); dumpElement(docElement)
+                el(end+1) = handle(docElement);  %#ok used in debug only
+            end
+
+            % Fix a problem with some hidden hyperlinks becoming unhidden...
+            fixHyperlink(docElement);
+            %dumpElement(docElement);
+        end
+
+        % Get the Document Element(s) corresponding to the latest fprintf operation
+        while docElement.getStartOffset < cmdWinDoc.getLength
+            % Set the element style according to the current style
+            %disp(' '); dumpElement(docElement)
+            specialFlag = underlineFlag | boldFlag;
+            setElementStyle(docElement,style,specialFlag,majorVersion,minorVersion);
+            %disp(' '); dumpElement(docElement)
+            docElement2 = cmdWinDoc.getParagraphElement(docElement.getEndOffset+1);
+            if isequal(docElement,docElement2),  break;  end
+            docElement = docElement2;
+            %disp(' '); dumpElement(docElement)
+        end
+
+        % Force a Command-Window repaint
+        % Note: this is important in case the rendered str was not '\n'-terminated
+        xCmdWndView.repaint;
+
+        % The following is for debug use only:
+        el(end+1) = handle(docElement);  %#ok used in debug only
+        %elementStart  = docElement.getStartOffset;
+        %elementLength = docElement.getEndOffset - elementStart;
+        %txt = cmdWinDoc.getText(elementStart,elementLength);
+    end
+
+    if nargout
+        count = count1;
+    end
+  catch
+  % there are maybe some java error ...
+    count1 = fprintf(format,varargin{:});
+    if nargout
+        count = count1;
+    end
+
+  end  
   
-  if all(ishandle(style)) && length(style)~=3
-      dumpElement(style);
-      return;
-  end
- 
-
-  % Process the text string
-  if nargin<2, format = style; style='text';  end
-  %error(nargchk(2, inf, nargin, 'struct'));
-  %str = sprintf(format,varargin{:});
-
-  % In compiled mode
-  try useDesktop = usejava('desktop'); catch, useDesktop = false; end
-  if isdeployed | ~useDesktop %#ok<OR2> - for Matlab 6 compatibility
-      % do not display any formatting - use simple fprintf()
-      % See: http://undocumentedmatlab.com/blog/bold-color-text-in-the-command-window/#comment-103035
-      % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/1390a26e7ef4aa4d
-      % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/13a6ed3223333b21
-      count1 = fprintf(format,varargin{:});
-  else
-      % Else (Matlab desktop mode)
-      % Get the normalized style name and underlining flag
-      [underlineFlag, boldFlag, style] = processStyleInfo(style);
-
-      % Set hyperlinking, if so requested
-      if underlineFlag
-          format = ['<a href="">' format '</a>'];
-
-          % Matlab 7.1 R14 (possibly a few newer versions as well?)
-          % have a bug in rendering consecutive hyperlinks
-          % This is fixed by appending a single non-linked space
-          if majorVersion < 7 || (majorVersion==7 && minorVersion <= 1)
-              format(end+1) = ' ';
-          end
-      end
-
-      % Set bold, if requested and supported (R2011b+)
-      if boldFlag
-          if (majorVersion > 7 || minorVersion >= 13)
-              format = ['<strong>' format '</strong>'];
-          else
-              boldFlag = 0;
-          end
-      end
-
-      % Get the current CW position
-      cmdWinDoc = com.mathworks.mde.cmdwin.CmdWinDocument.getInstance;
-      lastPos = cmdWinDoc.getLength;
-
-      % If not beginning of line
-      bolFlag = 0;  %#ok
-      %if docElement.getEndOffset - docElement.getStartOffset > 1
-          % Display a hyperlink element in order to force element separation
-          % (otherwise adjacent elements on the same line will be merged)
-          if majorVersion<7 || (majorVersion==7 && minorVersion<13)
-              if ~underlineFlag
-                  fprintf('<a href=""> </a>');  %fprintf('<a href=""> </a>\b');
-              elseif format(end)~=10  % if no newline at end
-                  fprintf(' ');  %fprintf(' \b');
-              end
-          end
-          %drawnow;
-          bolFlag = 1;
-      %end
-
-      % Get a handle to the Command Window component
-      mde = com.mathworks.mde.desk.MLDesktop.getInstance;
-      cw = mde.getClient('Command Window');
-      xCmdWndView = cw.getComponent(0).getViewport.getComponent(0);
-
-      % Store the CW background color as a special color pref
-      % This way, if the CW bg color changes (via File/Preferences), 
-      % it will also affect existing rendered strs
-      com.mathworks.services.Prefs.setColorPref('CW_BG_Color',xCmdWndView.getBackground);
-
-      % Display the text in the Command Window
-      count1 = fprintf(2,format,varargin{:});
-
-      %awtinvoke(cmdWinDoc,'remove',lastPos,1);   % TODO: find out how to remove the extra '_'
-      drawnow;  % this is necessary for the following to work properly (refer to Evgeny Pr in FEX comment 16/1/2011)
-      docElement = cmdWinDoc.getParagraphElement(lastPos+1);
-      if majorVersion<7 || (majorVersion==7 && minorVersion<13)
-          if bolFlag && ~underlineFlag
-              % Set the leading hyperlink space character ('_') to the bg color, effectively hiding it
-              % Note: old Matlab versions have a bug in hyperlinks that need to be accounted for...
-              %disp(' '); dumpElement(docElement)
-              setElementStyle(docElement,'CW_BG_Color',1+underlineFlag,majorVersion,minorVersion); %+getUrlsFix(docElement));
-              %disp(' '); dumpElement(docElement)
-              el(end+1) = handle(docElement);  %#ok used in debug only
-          end
-
-          % Fix a problem with some hidden hyperlinks becoming unhidden...
-          fixHyperlink(docElement);
-          %dumpElement(docElement);
-      end
-
-      % Get the Document Element(s) corresponding to the latest fprintf operation
-      while docElement.getStartOffset < cmdWinDoc.getLength
-          % Set the element style according to the current style
-          %disp(' '); dumpElement(docElement)
-          specialFlag = underlineFlag | boldFlag;
-          setElementStyle(docElement,style,specialFlag,majorVersion,minorVersion);
-          %disp(' '); dumpElement(docElement)
-          docElement2 = cmdWinDoc.getParagraphElement(docElement.getEndOffset+1);
-          if isequal(docElement,docElement2),  break;  end
-          docElement = docElement2;
-          %disp(' '); dumpElement(docElement)
-      end
-
-      % Force a Command-Window repaint
-      % Note: this is important in case the rendered str was not '\n'-terminated
-      xCmdWndView.repaint;
-
-      % The following is for debug use only:
-      el(end+1) = handle(docElement);  %#ok used in debug only
-      %elementStart  = docElement.getStartOffset;
-      %elementLength = docElement.getEndOffset - elementStart;
-      %txt = cmdWinDoc.getText(elementStart,elementLength);
-  end
-
-  if nargout
-      count = count1;
-  end
-  return;  % debug breakpoint
+return;  % debug breakpoint
 
 % Process the requested style information
 function [underlineFlag,boldFlag,style] = processStyleInfo(style)

@@ -221,7 +221,7 @@ function QAS = vbm_vol_t1qacalc(V,Y,Ybf,Ym,Yp0,uselevel)
   % were skull-stripped or special preprocessed like ADNI.
   % For the standard noise variable the signal is given by the
   % GW-contrast that is more important than CG- or BC-Contrast.
-  [gx,gy,gz] = vbm_vol_gradient3(Ymi); Yg = abs(gx)+abs(gy)+abs(gz); clear gx gy gz; Yg=Yg./Ymi; 
+  [gx,gy,gz] = vbm_vol_gradient3(Ymi); Yg = abs(gx)+abs(gy)+abs(gz); clear gx gy gz; Yg=Yg./max(Ymi,eps); 
   noise = [estimateNoiseLevel(Ybi,YWM,Yg), estimateNoiseLevel(Ymi,YWM,Yg)];  
   QAS.QM.CNR   = contrast ./ noise / 0.655;   
   QAS.QM.SNR   = 1 ./ noise /0.655;   
