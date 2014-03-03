@@ -4191,3 +4191,11 @@ M       cg_vbm_defs.m
 (2) Corrected wrong CAT.win32 folder to CAT.w32.
 ------------------------------------------------------------------------
 r575 | gaser | 2014-03-03 12:56:35
+
+M       CHANGES.txt
+M       distribute_to_server.sh
+M       vbm12.man
+
+Some small changes to dsitribute_to_server.sh.
+------------------------------------------------------------------------
+r576 | gaser | 2014-03-03 15:24:36
