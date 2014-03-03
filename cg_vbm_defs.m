@@ -7,10 +7,6 @@ function cg_vbm_defs(job)
 
 % remove potential file number at the end
 
-
-% we need spm_def2det.m from HDW toolbox
-addpath(fullfile(spm('dir'),'toolbox','HDW'));
-
 many_images = 0;
 
 try
