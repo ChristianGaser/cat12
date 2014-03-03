@@ -4183,3 +4183,11 @@ M       vbm_vol_t1qacalc.m
 (2)  Corrected vbm12.nii atlas (side error).
 ------------------------------------------------------------------------
 r574 | dahnke | 2014-02-11 14:40:12
+
+M       CHANGES.txt
+M       cg_vbm_defs.m
+
+(1) Removed dependence on HDW toolbox in cg_vbm_defs.m
+(2) Corrected wrong CAT.win32 folder to CAT.w32.
+------------------------------------------------------------------------
+r575 | gaser | 2014-03-03 12:56:35
