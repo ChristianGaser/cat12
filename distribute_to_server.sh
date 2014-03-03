@@ -71,14 +71,17 @@ parse_args ()
             fi
 
             # exclude that patterns from search
-            list=`find $DIR -name "*.[in][mi][gi]" \! -name "*wrp[0-3]*.nii"  \! -name "*wp[0-3]*.nii" \! -name "wm*.nii"   \! -name "wrm*.nii"  \! -name "bf*.nii"  \! -name "p[0-3]*.nii"  \! -name "iy_*.nii"  \! -name "y_*.nii"  \! -name "rp[0-3]*.nii"  \! -name "._*.nii"`
+            list=`find $DIR -name "*.[in][mi][gi]" \! -name "*wrp[0-3]*.nii"  \! -name "*wp[0-3]*.nii" \! -name "wm*.nii"   \! -name "wrm*.nii"  \! -name "bf*.nii"  \! -name "p[0-3]*.nii"  \! -name "iy_*.nii"  \! -name "y_*.nii"  \! -name "rp[0-3]*.nii"`
 
             for i in ${list} ; do
-              # change extension to .nii and remove leading "./"
-              name=`echo $i|sed -e 's/.img/.nii/' -e 's/\.\///g'`
-              bname=`basename $name|cut -f1 -d'.'`
-              dname=`dirname $name` 
-              for j in ${dname}/${PATTERN}${bname}.nii ; do
+              ext="${i##*.}"
+              name="${i%.*}"
+              # remove leading "./"
+              name=`echo $name|sed -e 's/\.\///g'`
+              bname="${name##*/}"
+              dname="${name%/*}"
+              
+              for j in ${dname}/${PATTERN}${bname}*.nii ; do
                 if [ ! -f "$j" ]; then
                   ARRAY[$count]=$i
                   ((count++))
