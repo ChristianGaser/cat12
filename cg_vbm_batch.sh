@@ -15,6 +15,8 @@ time=`date "+%Y%b%d_%H%M"`
 NUMBER_OF_JOBS="";
 nicelevel=0
 shellcommand=
+matlabcommand=
+vbmdir=
 
 ########################################################
 # run main
@@ -103,6 +105,16 @@ parse_args ()
         --s* | -s* | --shell* | -shell*)
             exit_if_empty "$optname" "$optarg"
             shellcommand=$optarg
+            shift
+            ;;      
+        --c* | -c* | --matlabcommand* | -matlabcommand*)
+            exit_if_empty "$optname" "$optarg"
+            matlabcommand=$optarg
+            shift
+            ;;      
+        --v* | -v* | --vbmdir* | -vbmdir*)
+            exit_if_empty "$optname" "$optarg"
+            vbmdir=$optarg
             shift
             ;;      
         -h | --help | -v | --version | -V)
@@ -229,7 +241,12 @@ get_no_of_cpus () {
 
 run_vbm ()
 {
-    cwd=`dirname $0`
+    if [ -z "$vbmdir" ]
+    then 
+      cwd=`dirname $0`
+    else
+      cwd=$vbmdir
+    fi
     pwd=$PWD
     
     # we have to go into toolbox folder to find matlab files
@@ -290,9 +307,24 @@ run_vbm ()
     do
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
             j=$(($i+1))
-            COMMAND="cg_vbm_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
+            if [ -z "$matlabcommand" ]
+            then
+              COMMAND="cg_vbm_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
+            else
+              CFILES=""
+              for F in ${ARG_LIST[$i]} 
+              do 
+                CFILES=$CFILES";"\'$F\';
+              done
+              CFILES=$(echo $CFILES | cut -c 2-);
+              CFILES="{"$CFILES"}";
+              matlabcommand2=$matlabcommand
+              matlabcommand2=$(echo $matlabcommand2 |sed 's/CFILES/$CFILES/g');
+              eval "COMMAND=\"$matlabcommand2\";"
+              COMMAND="try, spm; spm_get_defaults; cg_vbm_get_defaults; global defaults vbm matlabbatch; $COMMAND; catch, fprintf('ERROR'); e=lasterror; e.message, exit; end; fprintf('VBM batch processing done.'); exit;";
+            fi
             SHCOMMAND="$shellcommand ${ARG_LIST[$i]}"          
-            
+                        
             echo Calculate
             for F in ${ARG_LIST[$i]}; do echo $F; done
             echo ---------------------------------- >> ${vbmlog}_${j}.log
@@ -301,9 +333,13 @@ run_vbm ()
             echo >> ${vbmlog}_${j}.log
             echo $0 ${1+"$@"} >> ${vbmlog}_${j}.log
             echo >> ${vbmlog}_${j}.log
+            echo $COMMAND >> ${vbmlog}_${j}.log
+            echo >> ${vbmlog}_${j}.log
+            echo $SHCOMMAND >> ${vbmlog}_${j}.log
+            echo >> ${vbmlog}_${j}.log
             if [ -z "$shellcommand" ]
             then
-              nohup nice -n $nicelevel ${matlab} -nodisplay -nosplash -r $COMMAND >> ${vbmlog}_${j}.log 2>&1 &
+              nohup nice -n $nicelevel ${matlab} -nodisplay -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
             else
               nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
             fi
@@ -341,8 +377,10 @@ USAGE:
    cg_vbm_batch.sh filename|filepattern [-m matlab_command] [-w] [-p number_of_processes] [-d default_file] [-l log_folder]
    
    -n   nice level
-   -m   matlab command
-   -s   shell command
+  [-v   vbm directory (private) ] 
+   -m   matlab command (matlab version)
+   -s   shell command to call other shell scripts (like FSL)
+   -c   matlab command to call other function like the sanlm-filter
    -f   file with files to process
    -p   number of parallel jobs (=number of processors)
    -np  set number of jobs by number_of_processors - number_of_processes
@@ -374,6 +412,9 @@ EXAMPLE
    Using wildcards all files containing the term "152" will be processed. In this case these 
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
    As matlab-command /usr/local/bin/matlab7 will be used.
+   
+   /Volumes/vbmDB/MRData/batches/cg_vbm_batch.sh -p 2 -c "vbm_vol_sanlm(CFILES,'shtest_')" /Volumes/4TBWD/raw-cg/r[12][0-9][0-9][0-9]*.nii
+   
 
 INPUT:
    analyze or nifti files

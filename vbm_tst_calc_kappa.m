@@ -69,6 +69,8 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   %%
   for nc=1:(ncls>1 && nargout>2)+1  
   % create header  
+    fprintf('Number of Classes: %0.0f\n\n',ncls);
+    
     switch ncls
       case 0, txt{1}='Error ground truth empty!'; continue
       case 1, tab = {['Name' methodname],'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
@@ -88,8 +90,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
       val(i).fname = V(i).fname;
       val(i).path  = pth;
       val(i).name  = name;
-      fprintf('Number of Classes: %0.0f\n\n',ncls);
-      switch ncls
+       switch ncls
         case 1
           %if length(Vref)==n,  vol1 = spm_read_vols(Vref(i))/255+1;
           %else                 vol1 = spm_read_vols(Vref(i));
@@ -115,6 +116,11 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
           vol1 = single(spm_read_vols(Vref(Vrefi))); 
           maxv=max((vol1(:))); if maxv>3, vol1=round(vol1); vol1=vol1/maxv*3; end
           vol2 = single(spm_read_vols(V(i)));
+          % temporare
+          % bei dem BWP test bei fsl gibts einen ungeklärten versatz
+          if ~isempty(strfind(V(i).fname,'vbm_tst/FSL/BWP_Collins'))
+            vol2(2:end,:,:)=vol2(1:end-1,:,:);
+          end
 
           for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
           c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))>=c)+1), 2); 

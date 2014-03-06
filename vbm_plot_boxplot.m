@@ -90,11 +90,13 @@ function varargout = vbm_plot_boxplot(data,opt)
   def.vertical    = 1;
   def.maxwhisker  = 1.5;
   def.sort        = 0; 
-  def.names       = 1:numel(data);
+  def.names       = num2str( (1:numel(data))' );
   def.fill        = 1;
+  def.ylim        = [];
   
   opt = checkinopt(opt,def);
- 
+  opt.names = cellstr(opt.names);
+  
   % figure out how many data sets we have
   if iscell(data), 
     nc = length(data);
@@ -203,6 +205,8 @@ function varargout = vbm_plot_boxplot(data,opt)
 
   %% Do the plot
   children0=get(gca,'Children');
+  
+  
   if opt.vertical
     if opt.fill
       fill(quartile_x, quartile_y,'b-','FaceColor',[0.9 0.9 1.0],'EdgeColor',[0.1 0.1 0.5])
@@ -215,6 +219,7 @@ function varargout = vbm_plot_boxplot(data,opt)
     plot(median_x, median_y, 'r-')
     plot(outliers_x,  outliers_y, [opt.symbol(1),'r'])
     plot(outliers2_x, outliers2_y, [opt.symbol(2),'r']);
+    plot(median_x, median_y, 'r-') % yes, two times... otherwise the last median is below the box ...
   else
     if opt.fill
       fill(quartile_y, quartile_x,'b-','FaceColor',[0.9 0.9 1.0],'EdgeColor',[0.1 0.1 0.5])
@@ -224,14 +229,19 @@ function varargout = vbm_plot_boxplot(data,opt)
     hold on
     plot(whisker_y, whisker_x, 'b-')
     plot(cap_y, cap_x, 'b-')
-    plot(median_y, median_x, 'r-')
+    plot(median_x, median_y, 'r-')
     plot(outliers_y,  outliers_x, [opt.symbol(1),'r'])
     plot(outliers2_y, outliers2_x, [opt.symbol(2),'r']);
+    plot(median_y, median_x, 'r-')
   end
 
+  
   linecolor = [0.8 0.8 0.8];
   set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0 numel(opt.names)+1]);
-  ytick=get(gca,'YTick'); 
+  if ~isempty(opt.ylim)
+    ylim(gca,opt.ylim);
+  end
+  ytick=get(gca,'YTick');
   plot(repmat([0;numel(opt.names)+1],1,numel(ytick)),[ytick;ytick],'Color',linecolor);
   plot(repmat([0,numel(opt.names)+1],2,1),[ytick(1) ytick(1);ytick(end) ytick(end)],'Color',linecolor);
   

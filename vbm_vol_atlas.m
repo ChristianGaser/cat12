@@ -178,17 +178,27 @@ function vbm_vol_atlas(atlas,refinei)
    % LAB.ON = {11,{'l1A'},{[11,12]}}; % Optical Nerv
 
    % LAB.CT2 = { 1,{'ibs'},{'Cbr'}}; % cortex
-    LAB.MB = {13,{'ham','ibs'},{'MBR','VenV'}}; % MidBrain
-    LAB.BS = {13,{'ham','ibs' },{'Bst'}}; % BrainStem
-    LAB.CB = { 3,{'ham','ibs'},{'Cbe'}}; % Cerebellum
-    LAB.BG = { 5,{'ham','ibs'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
-    LAB.TH = { 9,{'ham','ibs'},{'Tha'}}; % Hypothalamus 
-    LAB.HC = {19,{'ham','ibs'},{'Hip'}}; % Hippocampus 
-    LAB.AM = {19,{'ham','ibs'},{'Amy'}}; % Amygdala
-    LAB.VT = {15,{'ham','ibs'},{'LatV','LatTemV','VenV'}}; % Ventricle
-    LAB.NV = {17,{'ham','ibs'},{'Ins','3thV','4thV'}}; % no Ventricle
-  
-    
+    if 0
+      LAB.MB = {13,{'ham','ibs'},{'MBR','VenV'}}; % MidBrain
+      LAB.BS = {13,{'ham','ibs' },{'Bst'}}; % BrainStem
+      LAB.CB = { 3,{'ham','ibs'},{'Cbe'}}; % Cerebellum
+      LAB.BG = { 5,{'ham','ibs'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
+      LAB.TH = { 9,{'ham','ibs'},{'Tha'}}; % Hypothalamus 
+      LAB.HC = {19,{'ham','ibs'},{'Hip'}}; % Hippocampus 
+      LAB.AM = {19,{'ham','ibs'},{'Amy'}}; % Amygdala
+      LAB.VT = {15,{'ham','ibs'},{'LatV','LatTemV','VenV'}}; % Ventricle
+      LAB.NV = {17,{'ham','ibs'},{'Ins','3thV','4thV'}}; % no Ventricle
+    else
+      LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
+      LAB.BS = {13,{'ham'},{'Bst'}}; % BrainStem
+      LAB.CB = { 3,{'ham'},{'Cbe'}}; % Cerebellum
+      LAB.BG = { 5,{'ham'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
+      LAB.TH = { 9,{'ham'},{'Tha'}}; % Hypothalamus 
+      LAB.HC = {19,{'ham'},{'Hip'}}; % Hippocampus 
+      LAB.AM = {19,{'ham'},{'Amy'}}; % Amygdala
+      LAB.VT = {15,{'ham'},{'LatV','LatTemV','VenV'}}; % Ventricle
+      LAB.NV = {17,{'ham'},{'Ins','3thV','4thV'}}; % no Ventricle     
+    end
     create_vbm_atlas(A,C,LAB);
     
     
@@ -1352,21 +1362,24 @@ function create_vbm_atlas(A,C,LAB)
   % output file
   VC = spm_vol(A.ham); VC.fname = C; 
   
-  
-  LAB.BV = { 7,{'l1A'},{[8,7]}}; % Blood Vessels
-  LAB.HD = {21,{'l1A'},{[22,21]}}; % head
-  LAB.ON = {11,{'l1A'},{[12,11]}}; % Optical Nerv
- 
-  LAB.CT = { 1,{'ibs'},{'Cbr'}}; % cortex
-  LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
-  LAB.BS = {13,{'ham'},{'Bst'}}; % BrainStem
-  LAB.CB = { 3,{'ham'},{'Cbe'}}; % Cerebellum
-  LAB.BG = { 5,{'ham'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
-  LAB.TH = { 9,{'ham'},{'Tha'}}; % Hypothalamus 
-  LAB.HC = {19,{'ham'},{'Hip'}}; % Hippocampus 
-  LAB.AM = {19,{'ham'},{'Amy'}}; % Amygdala
-  LAB.VT = {15,{'ham'},{'LatV','LatTemV','VenV'}}; % Ventricle
-  LAB.NV = {17,{'ham'},{'Ins','3thV','4thV'}}; % no Ventricle
+  if 1
+    clear LAB
+    
+    LAB.BV = { 7,{'l1A'},{[8,7]}}; % Blood Vessels
+    LAB.HD = {21,{'l1A'},{[22,21]}}; % head
+    LAB.ON = {11,{'l1A'},{[12,11]}}; % Optical Nerv
+
+    LAB.CT = { 1,{'ibs'},{'Cbr'}}; % cortex
+    LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
+    LAB.BS = {13,{'ham'},{'Bst'}}; % BrainStem
+    LAB.CB = { 3,{'ham'},{'Cbe'}}; % Cerebellum
+    LAB.BG = { 5,{'ham'},{'Put','Pal','CauNuc'}}; % BasalGanglia 
+    LAB.TH = { 9,{'ham'},{'Tha'}}; % Hypothalamus 
+    LAB.HC = {19,{'ham'},{'Hip'}}; % Hippocampus 
+    LAB.AM = {19,{'ham'},{'Amy'}}; % Amygdala
+    LAB.VT = {15,{'ham'},{'LatV','LatTemV','VenV'}}; % Ventricle
+    LAB.NV = {17,{'ham'},{'Ins','3thV','4thV'}}; % no Ventricle
+  end
   
   % get atlas and descriptions 
   AFN=fieldnames(A);
@@ -1486,7 +1499,7 @@ function create_vbm_atlas(A,C,LAB)
           Ysum = Ysum + single(YB.(AFN{afni})==ll);
           esum = esum + (sum(YB.(AFN{afni})(:)==ll)>0);
         end
-        YC((Ysum/esum)>0.4)=ll; 
+        YC((Ysum/esum)>0.5)=ll; 
       end
       fprintf('%s %2d %2d %2d\n',LFN{lfni},lfni,ri,esum);
     end
