@@ -4239,3 +4239,15 @@ M       vbm_vol_partvol.m
 
 ------------------------------------------------------------------------
 r577 | dahnke | 2014-03-06 11:14:03
+
+M       CHANGES.txt
+M       cg_set_com.m
+M       vbm_vol_localstat.mexa64
+M       vbm_vol_localstat.mexglx
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+
+(1) Changed reference origin in cg_set_com.m for z-axis.
+(2) Recompiled vbm_vol_localstat.c for all systems.
+------------------------------------------------------------------------
+r578 | gaser | 2014-03-06 13:00:11
