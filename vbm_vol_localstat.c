@@ -24,11 +24,6 @@
 #define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
 #endif
 
-/*
-#ifndef isnan
-#define isnan(a) ((a)!=(a)) 
-#endif
-*/
 
 #define index(A,B,C,DIM) ((C)*DIM[0]*DIM[1] + (B)*DIM[0] + (A))
 
@@ -105,19 +100,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* filter process */
   for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
     ind = index(x,y,z,sL);
-    if (B[ind]) {
+    if ( B[ind] && mxIsNaN(D[i])==0 && mxIsInf(D[i])==0  ) {
       n = 0;
       /* go through all elements in a nh x nh x nh box */
       for (i=-nh;i<=nh;i++) for (j=-nh;j<=nh;j++) for (k=-nh;k<=nh;k++) {
         /* check borders, masks, NaN or Infinities */
-        if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2]) ) {
-          ni     = index(x+i,y+j,z+k,sL);
-          DN[ni] = (float) sqrt( (double) ((i * i) + 
-                                 (j * j) + 
-                                 (k * k)) );
-          if ( (D[ni]>0 || st==7) && (DN[ni]<=(float)nh) ) { /*&& (DN[ni]<=(float)nh) ) { */
-            NV[n] = D[ni];
-            n++;
+        if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2])) {
+          ni = index(x+i,y+j,z+k,sL);
+          if ( B[ni]>0 && mxIsNaN(D[ni])==0 && mxIsInf(D[ni])==0 ) {
+            DN[ni] = (float) sqrt( (double) ((i * i) + (j * j) + (k * k)) );
+            if ( (D[ni]>0 || st==7) && (DN[ni]<=(float)nh) ) { /*&& (DN[ni]<=(float)nh) ) { */
+              NV[n] = D[ni];
+              n++;
+            }
           }
         }
       }

@@ -51,7 +51,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       
       % noise estimation is only possible in edge-free regions
       [gx,gy,gz] = vbm_vol_gradient3(T); G=abs(gx)+abs(gy)+abs(gz); 
-      G=G./T; G(isinf(G) | isnan(G) | G<0)=0; clear gx gy gz;
+      G=G./max(eps,T); G(isinf(G) | isnan(G) | G<0)=0; clear gx gy gz;
       [Tr,Gr,resT] = vbm_vol_resize({T,G},'reduceV',vx_vol,12,24);
 
       Mr  = Gr<mean(Gr(:)) & Tr>mean(Tr(:));  
