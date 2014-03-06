@@ -103,9 +103,9 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   stime = vbm_io_cmd('  Atlas 2 Subjectspace','g5','',verb);
   PA = cg_vbm_get_defaults('extopts.atlas'); PA = PA{1,1};
   VA = spm_vol(PA);
-  YA = uint8(round(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
+  YA = vbm_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   YA = reshape(YA,size(Ym));
-  clear Yy;
+ % clear Yy;
   
   Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
 
@@ -122,7 +122,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % prepare maps
   [tmp0,tmp1,YS] = vbdist(single(mod(YA,2)) + 2*single(YA>0)); YS=mod(YS,2); clear tmp0 tmp1;  % side map
   YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;                    % ROI map without side
-  YA   = uint8(round(vbm_vol_median3c(single(YA),Yp0>0)));
+  YA   = vbm_vol_ctype(vbm_vol_median3c(single(YA),Yp0>0));
   Yg   = vbm_vol_grad(Ym,vx_vol);
   Ydiv = vbm_vol_div(Ym,vx_vol);
   Ym   = Ym*3 .* (Yb);
@@ -188,12 +188,13 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % ROI can lead to overgrowing. Using of non ventrilce ROI doesn't work
   % because dartle failed for large ventricle. 
   stime = vbm_io_cmd('  Ventricle detection','g5','',verb,stime);
-  Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',6*vxd) | (YA==LAB.NV | YA==LAB.CB | YA==LAB.BS),'d',2);
+  Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',6*vxd) | (YA==LAB.CB | YA==LAB.BS),'d',2) | vbm_vol_morph(YA==LAB.NV,'e',1);
   Ynv = single(Ynv & Ym<2 & ~vbm_vol_morph(Yp0<2 & (YA==LAB.VT) & Yg<0.2,'d',4*vxd));
+  Ynv = smooth3(round(Ynv))>0.5; 
   % between thamlamus
   Ynv = Ynv | (vbm_vol_morph(Ya1==LAB.TH,'c',10) & Yp0<2) | YA==LAB.CB | YA==LAB.BS;
   Ynv = smooth3(Ynv)>0.8;
-  Yvt = single(smooth3(Yp0<1.25 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
+  Yvt = single(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
   Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.5)=nan; Yvt(Yvt==0)=1.5;
   Yvt2 = vbm_vol_laplace3R(Yvt,Yvt==1.5,0.005);
   Yvt = smooth3(round(Yvt2)==1 & Yp0<1.5)>0.5; 
@@ -210,14 +211,22 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % ####################################################################
   stime = vbm_io_cmd('  WMH detection','g5','',verb,stime);
  
-  Ywmh=single(vbm_vol_morph(Yvt2<1.5,'d',1) & Ym<2.75); 
-  Ywmh(smooth3((Yp0 - Ym)>0.6 & Ym<2.75 & Ym>1.75)>0.7)=1;
+  Ywmh=single(vbm_vol_morph(Yvt2<1.5,'d',1) & Ym<2.75 & ~vbm_vol_morph(YA==LAB.HC,'d',4*vxd)); 
+  Ywmh(smooth3((Yp0 - Ym)>0.3 & Ym<2.75 & Ym>1.75)>0.8)=1;
   Ywmh(vbm_vol_morph(Yp0>2.5,'c',0) & ~(Yp0>2.5))=1;
-  Ywmh(Yvt2>1.75 & Yvt2<3 | (Ywmh==0 & Ym<1.25))=2;
-  Ywmh((Ywmh==0 & Ym>2.75) | Ya1==LAB.BG | Ya1==LAB.TH)=-inf;
-  Ywmh = vbm_vol_downcut(Ywmh,(3-Ym)/3,noise,vx_vol); Ywmh(Yp0<1.25 | Ym>2.75 | Ywmh<0)=nan;  
-  
-  Ya1(smooth3(Ywmh<1.5)>0.6 & Ya1~=LAB.VT)=LAB.HI;
+  Ywmh(Yvt2>1.75 & Yvt2<3 | (Ywmh==0 & Ym<1.5))=2;
+  Ywmh(smooth3(Ywmh>0)<0.8)=0;
+  Ywmh((Ywmh==0 & Ym>2.25) | Ya1==LAB.BG | Ya1==LAB.TH)=-inf;
+  Ywmh = vbm_vol_downcut(Ywmh,(3-Ym)/3,noise,vx_vol); 
+  Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.6)=0;
+  Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.6)=0;
+  %%
+  Ywmh(isinf(Ywmh))=0;
+  Ywmh((Ywmh==0 & Ym>2.75) | Ya1==LAB.BG | Ya1==LAB.TH)=nan; Ywmh(Ywmh==0)=1.5;
+  Ywmh = vbm_vol_laplace3R(Ywmh,Ywmh==1.5,0.005);
+  Ywmh(vbm_vol_morph(YS==1,'d',3*vxd) & vbm_vol_morph(YS==0,'d',3*vxd))=2; % not for the CC
+  %%
+  Ya1(smooth3(Ywmh<1.25)>0.6 & Ya1~=LAB.VT)=LAB.HI;
   %{
    Yvt2(Yvt2>1.45 & Yvt2<1.55)=inf; Yvt2=round(Yvt2);
   Yvt2(Yvt2>3 & Ym<2.5 & Ym>1.5 & YA~=LAB.CB & YA~=LAB.BS & Ya1~=LAB.BG & Ya1~=LAB.TH)=1.5;
@@ -284,7 +293,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   YMF = vbm_vol_resize(YMF,'dereduceV',resTr);
   YBG = vbm_vol_resize(YBG,'dereduceV',resTr);
   
-  Ya1 = vbm_vol_resize(Ya1,'dereduceBrain',BB); Ya1 = uint8(round(Ya1));
+  Ya1 = vbm_vol_resize(Ya1,'dereduceBrain',BB); Ya1 = vbm_vol_ctype(Ya1);
   Ys  = vbm_vol_resize(Ys ,'dereduceBrain',BB); [tmp0,tmp1,Ys] = vbdist(Ys,Ya1>0); clear tmp0 tmp1;
   YMF = vbm_vol_resize(YMF,'dereduceBrain',BB); 
   YBG = vbm_vol_resize(YBG,'dereduceBrain',BB); 
@@ -300,8 +309,8 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   Yclssum = single(Ycls{1})+single(Ycls{2})+single(Ycls{3});
   YBGs    = min( max(0,min(255, 255 - vbm_vol_smooth3X(Ya1==1 & Ycls{2}>round(2.9/3),0.8) .* single(Ycls{2}) )), ... (A)
                  max(0,min(255, 255 * vbm_vol_smooth3X(YBG .* (Ym<=2.9/3 & Ym>2/3) ,0.5) )) ); % (B)
-  Ycls{1} = uint8(round(max(0 , min( 255, single(Ycls{1}) + YBGs .* (single(Ycls{2})./max(eps,Yclssum))))));
-  Ycls{2} = uint8(round(max(0 , min( 255, single(Ycls{2}) - YBGs .* (single(Ycls{2})./max(eps,Yclssum))))));
+  Ycls{1} = vbm_vol_ctype(single(Ycls{1}) + YBGs .* (single(Ycls{2})./max(eps,Yclssum)));
+  Ycls{2} = vbm_vol_ctype(single(Ycls{2}) - YBGs .* (single(Ycls{2})./max(eps,Yclssum)));
   clear YBGs Yclssum; 
  
   if verb, vbm_io_cmd(' ','','',verb,stime); end

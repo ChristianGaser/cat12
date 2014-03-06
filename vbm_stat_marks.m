@@ -42,71 +42,80 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   def.QS        = { 
 % -- structure ---------------------------------------------------------
-% 'measure'  'fieldname'       'marktpye'  markrange     use print help
-% 'measure'  'fieldname'       'linear'    [best worst]   0 0    'use for most qa measures
-% 'measure'  'fieldname'       'normal'    [mean std]     0 0    'use for most subject measures
+% 'measure'  'fieldname'       'marktpye'    markrange        use print help
+% 'measure'  'fieldname'       'linear'      [best worst]       0 0     'use for most qa measures
+% 'measure'  'fieldname'       'normal'      [mean std]         0 0     'use for most subject measures
+% -- software data -----------------------------------------------------
+   'SW'  'matlab'                ''          []                 1 0     'MATLAB version'
+   'SW'  'spm'                   ''          []                 1 0     'SPM version'
+   'SW'  'vbm'                   ''          []                 1 0     'VBM version'
+   'SW'  'qamethod'              ''          []                 1 0     'VBM QA method'
+   'SW'  'date'                  ''          []                 1 0     'calculation date'
 % -- file data ---------------------------------------------------------
-   'FD' 'scan'                  ''          []             1 0    'path and filename'
-   'FD' 'path'                  ''          []             1 0    'path'
-   'FD' 'file'                  ''          []             1 0    'filename'
-  %'FD' 'size'                  ''          []             0 0    'filesize'
-% -- dicom data --------------------------------------------------------
-  %'DC' 
-% -- image quality measures --------------------------------------------
-   'QM' 'res_vx_vol'            'linearb'   [0.75  3.00]   1 0    'voxel dimensions'
-   'QM' 'res_vol'               'linearb'   [0.50  8.00]   1 1    'voxel volume'
-   'QM' 'res_isotropy'          'linearb'   [1.00   7/3]   1 1    'voxel isotropy'
-  %'QM' 'noise'                 'linearb'   [0.01  0.10]   1 1    'noise_WM / GW-contrast'
-  %'QM' 'bias'                  'linearb'   [0.01  0.10]   1 1    'noise_WM / GW-contrast'
-   'QM' 'SNR'                   'linearb'   [ 100    20]   1 1    '1 / noise_WM_SNR'
-   'QM' 'CNR'                   'linearb'   [  33     7]   1 1    'GW-contrast / noise'
-   'QM' 'CIR'                   'linearb'   [  10   0.2]   1 1    'GW_contrast / bias'
-  %'QM' 'noise_CG'              'linear'    [0.01  0.12]   1 0    'other noise measure ...
-  %'QM' 'noise_WM_SRN'          'linear'    [0.015 0.09]   1 0    'local std in WM 
-  %'QM' 'noise_WM'              'linear'    [0.015 0.09]   1 0    'local std in WM 
-  %'QM' 'noise_BG'              'linear'    [0.01  0.08]   1 0    'local std in BG (problems for skull-striped data and ADNI) 
-  %'QM' 'noise_LG'              'linear'    [0.01  0.12]   1 0    'local std in the whole image      
-  %'QM' 'bias_std'              'linearb'   [0.05  0.15]   1 1    'global std in the bias field'
-  %'QM' 'bias_WMstd'            'linearb'   [0.05  0.15]   1 1    'global std in the WM'
-  %'QM' 'bias_WMinhomogeneity'  'linear'    [1.00  0.50]   1 0    'WMinhomogeneity
-  %'QM' 'bias_WMentropy'      	'linear'    [1.00  0.50]   1 0    'entropy in the WM segment
-  %'QM' 'tissue_median'         'normal'    def.tissue     1 1    'median within the tissue classes
-   'QM' 'tissue_mean'           'normalb'   def.tissue     1 1    'mean within the tissue classes'
-  %'QM' 'tissue_std'            'linearb'   [1/12   1/6]   1 1    'std within the tissue classes
-   'QM' 'vbm_change'            'linearb'   [0.05  1.00]   2 1    'changes between t1 and label'
-   'QM' 'vbm_expect'            'linearb'   [0.05  1.00]   2 1    'difference between template and label'
-  %'QM' 'contrast'              'linearb'   [1/3   0.05]   1 1    'contrast between tissue classe'
-  %'QM' 'contrastT'             'linearb'   [0.30  0.05]   1 0    'contrast between tissue classes (correced for noise)
-% -- experimental image quality measures -------------------------------
-  %'QM' 'art_BGartifacts'       'linearb'   [0.05  0.50]   0 1    'artifacts in the background (experimental)'    
-  %'QM' 'art_BGentropy'         'linearb'   [3.00  4.00]   0 1    'artifacts in the background (experimental)'
-  %'QM' 'art_comp'              'linearb'   [   0   100]   0 1    'artifacts'
-  %'QM' 'art_movesWM'           'linearb'   [0.00  0.10]   0 1    'artifacts in the WM (experimental)'
-  %'QM' 'art_movesBG'           'linearb'   [0.05  0.20]   0 1    'artifacts in the background (experimental)'
-  %'QM' 'hist_brain'            ''          []             0 0    'histogram brain'     
-  %'QM' 'hist_BG'               ''          []             0 0    'histogram background'
-   'QM' 'blurring'              'linearb'   [0.00  1.00]   2 1    'edge quality between tissues'
-  %'QM' 'sampling'              'linearb'   [0.00  1.00]   0 1    'edge quality between tissues'
-  %'QM' 'mgradient'             'linearb'   [0.20  0.10]   0 1    'edge quality between tissues'
+   'FD'  'fname'                 ''          []                 1 0     'path and filename'
+   'FD'  'path'                  ''          []                 1 0     'path'
+   'FD'  'file'                  ''          []                 1 0     'filename'
+  %'FD'  'size'                  ''          []                 0 0     'filesize'
+  %'FD'  'dtype'                 ''          []                 0 0     'datatype'
+  %'FD'  'dtype'                 ''          []                 0 0     'datatype'
+   'FD'  'F'                     ''          []                 0 0     'fname'
+   'FD'  'Fm'                    ''          []                 0 0     'fname'
+   'FD'  'Fp0'                   ''          []                 0 0     'fname'
+% -- further image quality measures on the original image --------------
+  % - resolution - 
+   'QMo'  'res_RMS'              'linear'    [  0.50   3.00]    1 1     'RMS error of voxel size'
+   'QMm'  'res_RMS'              'linear'    [  0.50   3.00]    1 1     'RMS error of voxel size'
+   'QMo'  'res_BB'               'normal'    [     0   1000]    1 1     'brain next to the image boundary'
+   'QMm'  'res_BB'               'normal'    [     0   1000]    1 1     'brain next to the image boundary'
+   'QMo'  'res_vx_vol'           'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
+   'QMm'  'res_vx_vol'           'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
+   'QMo'  'res_vol'              'linear'    [  0.50   8.00]    1 0     'voxel volume'
+   'QMm'  'res_vol'              'linear'    [  0.50   8.00]    1 0     'voxel volume'
+   'QMo'  'res_isotropy'         'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
+   'QMm'  'res_isotropy'         'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
+  % - tissue mean and varianz - 
+   'QMo'  'tissue_mn'             'normal'    def.tissue        1 1     'mean within the tissue classes'
+   'QMm'  'tissue_mn'             'normal'    def.tissue        1 1     'mean within the tissue classes'
+   'QMo'  'tissue_std'            'normal'    [  0.10   0.20]   1 1     'std within the tissue classes'
+   'QMm'  'tissue_std'            'normal'    [  0.10   0.20]   1 1     'std within the tissue classes'
+  % - contrast - 
+   'QMo'  'contrast'              'linear'    [   1/3   0.05]   1 1     'contrast between tissue classe'
+   'QMm'  'contrast'              'linear'    [   1/3   0.05]   1 1     'contrast between tissue classe'
+  % - noise & contrast -
+   'QMo'  'NCR'                   'linear'    [  1/20    1/2]   1 1     'noise to contrast ratio'
+   'QMm'  'NCR'                   'linear'    [  1/20   1/10]   1 1     'noise to contrast ratio'
+   'QMo'  'CNR'                   'linear'    [    20      2]   1 1     'contrast to noise ratio'
+   'QMm'  'CNR'                   'linear'    [    20     10]   1 1     'contrast to noise ratio'
+  % - inhomogeneity & contrast -
+   'QMo'  'ICR'                   'linear'    [   1/4      1]   1 1     'inhomogeneity to contrast ratio'
+   'QMm'  'ICR'                   'linear'    [   1/6    1/3]   1 1     'inhomogeneity to contrast ratio'
+   'QMo'  'CIR'                   'linear'    [     4      1]   1 1     'contrast to inhomogeneity ratio'
+   'QMm'  'CIR'                   'linear'    [     6      3]   1 1     'contrast to inhomogeneity ratio'
+  % - artefacts -
+   'QMo'  'NERR'                  'linear'    [  0.00  -0.40]   2 1     'noise edge resolution relation'
+   'QMm'  'NERR'                  'linear'    [  0.00  -0.10]   2 1     'noise edge resolution relation'
+  % - experimental image quality measures -
+   'QMo'  'PC'                    'linear'    [  0.05   1.00]   2 1     'changes between t1 and label'
+   'QMm'  'PC'                    'linear'    [  0.05   1.00]   2 1     'changes between t1 and label'
+   'QMo'  'STC'                   'linear'    [  0.05   1.00]   2 1     'difference between template and label'
+   'QMm'  'STC'                   'linear'    [  0.05   1.00]   2 1     'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
-   'SM' 'vol_TIV'               'normal'    [1500  1000]   1 1    'total intracranial volume (GM+WM+VT)'
-   'SM' 'vol_CHvsGW'            'linear'    def.CHvsCG     2 1    'relation between brain and non brain'
-  %'SM' 'vol_abs_CGW'           'linearb'   def.tisvola    1 1    'absolut  tissue volume (CSF,GM,WM)'
-  %'SM' 'vol_abs_BG'            'linearb'   [  10    10]   1 1    'absolut  tissue volume of basal structures'
-  %'SM' 'vol_abs_VT'            'linearb'   [  10    10]   1 1    'absolut  tissue volume of the ventricle'
-  %'SM' 'vol_abs_BV'            'linearb'   [   0    10]   1 1    'absolut  blood vessel volume'
-   'SM' 'vol_rel_CGW'           'linearb'   def.tisvolr    1 1    'relative tissue volume (CSF,GM,WM)'
-   'SM' 'vol_rel_BG'            'linearb'   [0.05  0.05]   2 1    'relative tissue volume of basal structures'
-   'SM' 'vol_rel_VT'            'linearb'   [0.05  0.05]   2 1    'relative tissue volume of the ventricle'
-   'SM' 'vol_rel_BV'            'linearb'   [0.00  0.05]   2 1    'relative blood vessel volume'
-   'SM' 'dist_thickness'        'normalb'   def.thickness  1 1    'absolut  thickness (CSF,GM,WM)'
-   'SM' 'dist_abs_depth'        'normalb'   [5.00  2.00]   0 0    'absolut  sulcal depth'
-   'SM' 'dist_rel_depth'        'normalb'   [0.50  0.20]   0 0    'relative sulcal depth'
+   'SM'  'vol_TIV'               'normal'    [  1500   1000]   1 1     'total intracranial volume (GM+WM+VT)'
+  %'SM'  'vol_CHvsGW'            'linear'    def.CHvsCG        2 1     'relation between brain and non brain'
+  %'SM'  'vol_abs_CGW'           'linear'    def.tisvola       1 1     'absolut  tissue volume (CSF,GM,WM)'
+  %'SM'  'vol_abs_BG'            'linear'    [    10     10]   1 1     'absolut  tissue volume of basal structures'
+  %'SM'  'vol_abs_VT'            'linear'    [    10     10]   1 1     'absolut  tissue volume of the ventricle'
+  %'SM'  'vol_abs_BV'            'linear'    [     0     10]   1 1     'absolut  blood vessel volume'
+  %'SM'  'vol_abs_WMH'           'linear'    [     0     10]   2 1     'absolut WMH volume'
+   'SM'  'vol_rel_CGW'           'linear'    def.tisvolr       1 1     'relative tissue volume (CSF,GM,WM)'
+   'SM'  'vol_rel_BG'            'linear'    [  0.05   0.05]   2 1     'relative tissue volume of basal structures'
+   'SM'  'vol_rel_VT'            'linear'    [  0.05   0.05]   2 1     'relative tissue volume of the ventricle'
+   'SM'  'vol_rel_BV'            'linear'    [  0.00   0.05]   2 1     'relative blood vessel volume'
+   'SM'  'vol_rel_WMH'           'linear'    [  0.00   0.05]   2 1     'relative WMH volume'
+   'SM'  'dist_thickness'        'normal'    def.thickness     1 1     'absolut  thickness (CSF,GM,WM)'
+   'SM'  'dist_abs_depth'        'normal'    [  5.00   2.00]   0 0     'absolut  sulcal depth'
+   'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]   0 0     'relative sulcal depth'
   };
-
-  def.QM.avg = {'noise','bias_WMstd','contrast','res_vol','res_isotropy','vbm_change','vbm_expect'}; 
-  def.SM.avg = {'vol_rel_CGW'};
-  
   % create structure
   for QSi=1:size(def.QS,1)
     if def.QS{QSi,5}>0 && def.QS{QSi,5}<uselevel+2
@@ -117,7 +126,10 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       end
     end
   end
-
+  def.QMo.avg = {'res_RMS','NCR','ICR','NERR'}; 
+  def.QMm.avg = def.QMo.avg; 
+  def.SM.avg = {'vol_rel_CGW'};
+  
 
   % mark functions
   evalnormal  = @(x,best,worst,marks) min(9.5-eps,max(0,1 + (abs(best-x)./worst)*(marks-1)));      
@@ -193,11 +205,12 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       end
       
       %% average
-      Qavg = {'QM','SM'};
-      for Qavgi=1:2;
-        QAM.(Qavg{Qavgi}).mean = [0 0]; 
-        QAM.(Qavg{Qavgi}).max  = [0 0];
-        QAM.(Qavg{Qavgi}).avg  = [0 0];
+      Qavg = {'QMo','QMm','SM'};
+      for Qavgi=1:3;
+        QAM.(Qavg{Qavgi}).mean = 0; 
+        QAM.(Qavg{Qavgi}).max  = 0;
+        QAM.(Qavg{Qavgi}).avg  = 0;
+        QAM.(Qavg{Qavgi}).rms  = 0;
         for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
           if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
             if ~iscell(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))
@@ -206,11 +219,15 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                   QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
                 QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
                   QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).rms  = QAM.(Qavg{Qavgi}).rms + ...
+                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/numel(def.(Qavg{Qavgi}).avg);
               else
                 QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                   max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                 QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
                   mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).rms = QAM.(Qavg{Qavgi}).rms + ...
+                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/numel(def.(Qavg{Qavgi}).avg);
               end
             else
               if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
@@ -218,11 +235,15 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                   max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                 QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
                   mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).rms = QAM.(Qavg{Qavgi}).rms + ...
+                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/numel(def.(Qavg{Qavgi}).avg);
               else
                 QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                   max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                 QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
                   mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).rms = QAM.(Qavg{Qavgi}).rms + ...
+                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/numel(def.(Qavg{Qavgi}).avg);
               end
             end
           end
@@ -231,12 +252,14 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
         
         try
           QAM.(Qavg{Qavgi}).avg = mean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
+          QAM.(Qavg{Qavgi}).rms = sqrt(QAM.(Qavg{Qavgi}).rms);
         end
       end
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur
       varargout{1} = QS;
+      varargout{2} = def.QMo.avg; 
   end
   
   

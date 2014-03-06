@@ -93,13 +93,12 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
       % reduce for object area
       switch opt.surf{si}
-        case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1); 
+        case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1);
         case {'R','rh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==0);      
         case {'C','cerebellum'}, Ymfs = Ymf .* (Ya>0) .* NS(Ya,3);
         case {'B','brain'},      Ymfs = Ymf .* (Ya>0);
       end 
-
-
+      
       %% thickness estimation
       if si==1, fprintf('\n'); end
       fprintf('%s:\n',opt.surf{si});
@@ -107,10 +106,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
       [Ymfs,BB]   = vbm_vol_resize(Ymfs,'reduceBrain',vx_vol,4,Ymfs>1);   % removing background
       [Ymfs,resI] = vbm_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
-
+      
       % pbt calculation
       [Yth1i,Yppi] = vbm_vol_pbt(Ymfs,struct('resV',opt.interpV)); clear Ymfs;       
-      Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0; 
+      Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
       Yth1t = vbm_vol_resize(Yth1i,'deinterp',resI);                      % back to original resolution
       Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
       Yth1  = max(Yth1,Yth1t);                                            % save on main image
@@ -239,6 +238,15 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       fprintf('%4.0fs\n',etime(clock,stime)); 
 
       % read final surface and map thickness data
+      
+      % thickness is not defined in the cutting regions and it should be 
+      % set to NaN to avoid smoothing a large area of zeros
+      YS = mod(Ya,2)>0.5; 
+      YS = (vbm_vol_morph(YS==1,'d') & vbm_vol_morph(YS==0,'d'));  % CC cut
+      YS = YS | vbm_vol_morph(NS(Ya,13),'d') | NS(Ya,11);          % midbrain/brainstem cut + optical nerv
+      YS = vbm_vol_morph(YS & Ymf>2.5,'lc',8);  % there should be only one large region 
+      Yth1(YS) = nan; % no-thickness in cut regions ... 
+      
       CS  = vbm_io_FreeSurfer('read_surf',Pcentral); 
       CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
       CS.facevertexcdata = isocolors2(Yth1,CS.vertices); 

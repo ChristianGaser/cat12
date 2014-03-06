@@ -62,16 +62,16 @@ function vbm_tst_pre
   % 'name'    NC segments t1corr recalc                       % new
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
   % 'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
-    'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
-    'VBM12'   0 {'p0'}      {'m'}       {1.5}       0 % internal noise correction
-    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+ %   'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
+%    'VBM12'   0 {'p0'}      {'m'}       {1.5}       0 % internal noise correction
+%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
-     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
+%     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
    %  'SPM'     0 {'p0'}      {''}        {0.5}       0 
   %  'SPM8'    0 {'p0'}      {''}        {0.5}       0 
-    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
-%    'FSL'     0 {'p0'}      {''}        {-inf}      0 
+%    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
+    'FSL'     1 {'p0'}      {''}        {-inf}      1 
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
   };
@@ -81,9 +81,11 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-  'BO'
+  'BWP_Collins'
+%  'BWP_Collins_res_slice'
+%  'BO'
 %     'SVE_LPBA40'
-%   'BWP_Collins_MS'
+ %  'BWP_Collins_MS'
 %  'BWP_Collins_fast'
 %     'ADHD'
 %     'ADNI'
