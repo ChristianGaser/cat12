@@ -4259,3 +4259,12 @@ M       vbm_vol_ctype.m
 vbm_vol_ctype.m can now work with datatypes such uint8-le.
 ------------------------------------------------------------------------
 r579 | gaser | 2014-03-10 09:45:37
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       vbm_surf_createCS.m
+
+(1) Deselected lesion mapping as default.
+(2) Commented out set of NaN for CC and other areas in thickness maps.
+------------------------------------------------------------------------
+r580 | gaser | 2014-03-10 11:41:01
