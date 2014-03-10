@@ -1,6 +1,6 @@
 function Y=vbm_vol_ctype(Y,type)
 % ______________________________________________________________________
-% Y=vbm_vol_conv(Y[,type])
+% Y=vbm_vol_conv(Y[,type])
 %
 % Convert datatype with checking of min/max, nan, and rounding for 
 % [u]int[8|16], single, double, and char. Default round type is 'uint8'. 
@@ -26,6 +26,11 @@ function Y=vbm_vol_ctype(Y,type)
     type = 'uint8';
   else
     type  = lower(type);
+    % check for additional information such as -le and cut name 
+    ind = strfind(type,'-');
+    if ~isempty(ind)
+      type = type(1:ind-1);
+    end
     if all(cellfun('isempty',strfind(types,type)))
       error('MATLAB:SPM:VBM:vbm_vol_ctype:UnknownType', ...
             ['ERROR: vbm_vol_ctype: unknown data type ''%s'' ' ...
@@ -42,7 +47,7 @@ function Y=vbm_vol_ctype(Y,type)
   else
     type = types{find(~cellfun('isempty',strfind(types,type)),1,'first')};
  
-    % prepare convertation
+    % prepare conversion
     if ~isempty(strfind('int',type)) || ~isempty(strfind('char',type))
       switch class(Y)
         case {'single','double'}
