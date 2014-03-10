@@ -73,7 +73,7 @@ vbm.output.warps        = [0 0];
 % WMH tissue maps
 vbm.output.WMH.native  = 0;
 vbm.output.WMH.warped  = 0;
-vbm.output.WMH.mod     = 2;
+vbm.output.WMH.mod     = 0;
 vbm.output.WMH.dartel  = 0;
 
 % partitioning atlas maps
@@ -133,7 +133,7 @@ vbm.extopts.vox         = 1.5;  % voxel size for normalized data
 vbm.extopts.bb          = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data; 
 vbm.extopts.LAS         = 1;    % Local Adaptive Segmentation (VMB12i)
 vbm.extopts.BVC         = 1;    % Blood Vessel Correction (in development)
-vbm.extopts.WMHC        = 2;    % correction for WM hyperintensities (in development): 0 - no; 1 - only for Dartel; 2 - also for SEG
+vbm.extopts.WMHC        = 0;    % correction for WM hyperintensities (in development): 0 - no; 1 - only for Dartel; 2 - also for SEG
 vbm.extopts.INV         = 1;    % Invert PD/T2 images for standard preprocessing  
 vbm.extopts.pbtres      = 0.5;  % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 vbm.extopts.colormap    = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};

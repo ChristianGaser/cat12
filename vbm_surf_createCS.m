@@ -161,7 +161,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
 
       % surface generation using genus0 approach that does not remove all topology defects but minimizes the number
-%      CS  = isosurface(Yppi,0.5);
       [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(Yppi,0.5);
       clear Yppi;
 
@@ -241,11 +240,11 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       
       % thickness is not defined in the cutting regions and it should be 
       % set to NaN to avoid smoothing a large area of zeros
-      YS = mod(Ya,2)>0.5; 
-      YS = (vbm_vol_morph(YS==1,'d') & vbm_vol_morph(YS==0,'d'));  % CC cut
-      YS = YS | vbm_vol_morph(NS(Ya,13),'d') | NS(Ya,11);          % midbrain/brainstem cut + optical nerv
-      YS = vbm_vol_morph(YS & Ymf>2.5,'lc',8);  % there should be only one large region 
-      Yth1(YS) = nan; % no-thickness in cut regions ... 
+%      YS = mod(Ya,2)>0.5; 
+%      YS = (vbm_vol_morph(YS==1,'d') & vbm_vol_morph(YS==0,'d'));  % CC cut
+%      YS = YS | vbm_vol_morph(NS(Ya,13),'d') | NS(Ya,11);          % midbrain/brainstem cut + optical nerv
+%      YS = vbm_vol_morph(YS & Ymf>2.5,'lc',8);  % there should be only one large region 
+%      Yth1(YS) = nan; % no-thickness in cut regions ... 
       
       CS  = vbm_io_FreeSurfer('read_surf',Pcentral); 
       CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
