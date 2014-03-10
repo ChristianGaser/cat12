@@ -4251,3 +4251,11 @@ M       vbm_vol_localstat.mexw64
 (2) Recompiled vbm_vol_localstat.c for all systems.
 ------------------------------------------------------------------------
 r578 | gaser | 2014-03-06 13:00:11
+
+M       CHANGES.txt
+M       vbm12.man
+M       vbm_vol_ctype.m
+
+vbm_vol_ctype.m can now work with datatypes such uint8-le.
+------------------------------------------------------------------------
+r579 | gaser | 2014-03-10 09:45:37
