@@ -37,23 +37,30 @@ for i=1:size(P,1)
   
   k = strfind(name,'.');
   pname = ff(k(1)+1:k(2)-1);
-  Pcentral = strrep(name,pname,'central');
-  Psphere  = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
-  Presamp  = fullfile(pp,strrep(Pcentral,'central','resampled'));
-  Pvalue   = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
-  Pfwhm    = fullfile(pp,[sprintf('s%gmm.',fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
-  Pcentral = fullfile(pp,Pcentral);
-  Pfsavg   = fullfile(opt.fsavgDir,[hemi '.sphere']);
+  Pcentral   = strrep(name,pname,'central');
+  Psphere    = fullfile(pp,strrep(Pcentral,'central','sphere'));
+  Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
+  Presamp    = fullfile(pp,strrep(Pcentral,'central','resampled'));
+  Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
+  Pfwhm      = fullfile(pp,[sprintf('s%gmm.',fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
+  Pcentral   = fullfile(pp,Pcentral);
+  Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere']);
   
   fprintf('Resample %s\n',deblank(P(i,:)));
 
-  %% resample and smooth
-  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
+  % resample values using warped sphere 
+  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   
+  % resample surface using sphere 
+  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp);
+  [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+
+  % smooth resampled values
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,fwhm,Pvalue);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
 
+  % add values to resampled surf and save as gifti
   cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   

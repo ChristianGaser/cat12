@@ -4268,3 +4268,11 @@ M       vbm_surf_createCS.m
 (2) Commented out set of NaN for CC and other areas in thickness maps.
 ------------------------------------------------------------------------
 r580 | gaser | 2014-03-10 11:41:01
+
+M       CHANGES.txt
+M       vbm_surf_resamp.m
+
+Surfaces are now resampled using sphere, while values will be still resampled
+using sphere.reg.
+------------------------------------------------------------------------
+r581 | gaser | 2014-03-10 14:22:38
