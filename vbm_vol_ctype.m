@@ -48,7 +48,7 @@ function Y=vbm_vol_ctype(Y,type)
     type = types{find(~cellfun('isempty',strfind(types,type)),1,'first')};
  
     % prepare conversion
-    if ~isempty(strfind('int',type)) || ~isempty(strfind('char',type))
+    if ~isempty(strfind(type,'int')) || ~isempty(strfind(type,'char'))
       switch class(Y)
         case {'single','double'}
           Y = single(Y);
