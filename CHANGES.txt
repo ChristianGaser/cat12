@@ -4276,3 +4276,27 @@ Surfaces are now resampled using sphere, while values will be still resampled
 using sphere.reg.
 ------------------------------------------------------------------------
 r581 | gaser | 2014-03-10 14:22:38
+
+M       AmapMex.mexw32
+M       CHANGES.txt
+M       sanlmMex.mexw32
+M       sanlmMex_noopenmp.mexw32
+M       vbdist.mexw32
+M       vbm_vol_ctype.m
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eikonal3.mexw32
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_simgrow.mexw32
+
+Changed order of inputs for strfind in vbm_vol_ctype.m.
+------------------------------------------------------------------------
+r582 | gaser | 2014-03-11 16:41:55
