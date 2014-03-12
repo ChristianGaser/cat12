@@ -4300,3 +4300,29 @@ M       vbm_vol_simgrow.mexw32
 Changed order of inputs for strfind in vbm_vol_ctype.m.
 ------------------------------------------------------------------------
 r582 | gaser | 2014-03-11 16:41:55
+
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexw64
+M       vbdist.mexw64
+M       vbm12.man
+M       vbm_surf_createCS.m
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_eikonal3.mexw64
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexw64
+
+(1) Recompiled for Windows 64 bit.
+(2) Error and catch handling in vbm_surf_create.m changed.
+------------------------------------------------------------------------
+r583 | gaser | 2014-03-12 08:46:21

@@ -1,6 +1,6 @@
 % __________________________________________________________________________
 % Voxel Based Morphometry Toolbox for SPM12
-% Version  578  (VBM12)  2014-03-06
+% Version  582  (VBM12)  2014-03-11
 % http://dbm.neuro.uni-jena.de/vbm/
 % __________________________________________________________________________
 % Copyright (C) 2013 Christian Gaser christian.gaser@uni-jena.de

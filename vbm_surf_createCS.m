@@ -272,15 +272,8 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
         delete(Vpp1.fname);
       end
      % end
-    catch err
-      switch err.identifier
-        case 'VBM:surf_createCS:system_error'
-          vbm_io_cprintf('error','ERR\n')
-        case 'VBM:surf_createCS:segmenationfault'
-          vbm_io_cprintf('error','ERR\n')
-        otherwise
-          rethrow(err);
-      end
+    catch
+      rethrow(lasterror);
     end
   end  
 end
