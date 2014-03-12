@@ -4326,3 +4326,10 @@ M       vbm_vol_simgrow.mexw64
 (2) Error and catch handling in vbm_surf_create.m changed.
 ------------------------------------------------------------------------
 r583 | gaser | 2014-03-12 08:46:21
+
+M       CHANGES.txt
+M       vbm_surf_resamp.m
+
+Corrected error in vbm_surf_resamp.m
+------------------------------------------------------------------------
+r584 | gaser | 2014-03-12 17:59:19
