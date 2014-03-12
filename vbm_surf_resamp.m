@@ -53,7 +53,7 @@ for i=1:size(P,1)
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
   
   % resample surface using sphere 
-  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp);
+  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
 
   % smooth resampled values
