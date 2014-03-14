@@ -347,8 +347,8 @@ if issurf
      set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(list2(i,:),'short40'),...
          'NumberTitle','off');
     spm_mesh_render('ColourMap',h.axis,jet);
-    h2 = spm_mesh_render('ColourBar',h.axis,'on');
-    set(h2.colourbar,'Ylim',[mn_data mx_data]);
+    spm_mesh_render('ColourBar',h.axis,'on');
+    spm_mesh_render('CLim',h,[mn_data mx_data]);
   end
 else
   spm_check_registration(list2)

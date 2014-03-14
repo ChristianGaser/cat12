@@ -4333,3 +4333,12 @@ M       vbm_surf_resamp.m
 Corrected error in vbm_surf_resamp.m
 ------------------------------------------------------------------------
 r584 | gaser | 2014-03-12 17:59:19
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       spm_vbm12.m
+
+(1) cg_check_cov now allows same scaling for all texture maps.
+(2) Display surfaces can now display multiple surfaces.
+------------------------------------------------------------------------
+r585 | gaser | 2014-03-14 10:25:47
