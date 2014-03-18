@@ -9,7 +9,7 @@ function cg_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY data_array pos V ind_sorted mean_cov FS P issurf mn_data mx_data
+global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data
 rev = '$Rev$';
 
 if nargin == 1
@@ -30,6 +30,8 @@ if nargin < 1
   P = spm_select(Inf,'image','Select images');
 end
 
+n_subjects = size(P,1);
+
 [pth,nam,ext] = spm_fileparts(deblank(P(1,:)));
 
 if strcmp(ext,'.gii')
@@ -40,17 +42,33 @@ end
 
 if issurf
   % load surface texture data
-  V = gifti(deblank(P));
-  sz = length(V(1).cdata);
-  % check surface size
-  for i=2:length(V)
-    if length(V(i).cdata) ~= sz
+  spm_progress_bar('Init',n_subjects,'Load surfaces','subjects completed')
+
+  V = gifti(deblank(P(1,:)));
+  sz = length(V.cdata);
+
+  Y = zeros(n_subjects,sz);
+  tmp = V.cdata;
+  tmp(isnan(tmp)) = 0;
+  Y(1,:) = tmp';
+
+  for i = 2:n_subjects
+    V = gifti(deblank(P(i,:)));
+    if length(V.cdata) ~= sz
       error(sprintf('File %s has different surface size than %',P(i,:),P(1,:)));
     end
+    tmp = V.cdata;
+    tmp(isnan(tmp)) = 0;
+    Y(i,:) = tmp';
+    spm_progress_bar('Set',i);  
   end
+
+  spm_progress_bar('Clear');
+
 else
   % load volume data
   V = spm_vol(deblank(P));
+  
   % voxelsize and origin
   vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
   Orig = V(1).mat\[0 0 0 1]';
@@ -62,8 +80,6 @@ else
     error('images don''t all have same orientation & voxel size')
   end
 end
-
-n_subjects = size(P,1);
 
 if nargin < 1
   def_nuis = spm_input('Variable to covariate out (nuisance parameter)?','+1','yes|no',[1 0],2);
@@ -99,17 +115,10 @@ pos = struct(...
     'slider',[0.775 0.000 0.20 0.03]);   % slider for z-slice
 
 if issurf
-  Y = zeros(n_subjects,length(V(1).cdata));
-  for i = 1:n_subjects
-    tmp = V(i).cdata;
-    tmp(isnan(tmp)) = 0;
-    Y(i,:) = tmp';
-  end
-
   % rescue unscaled data min/max
   mn_data = min(Y(:));
   mx_data = max(Y(:));
-  Y = Y - repmat(mean(Y,2), [1 length(V(1).cdata)]);
+  Y = Y - repmat(mean(Y,2), [1 length(V.cdata)]);
 
   % remove nuisance and add again mean (otherwise correlations are quite small and misleading)
   if ~isempty(G) 
@@ -359,13 +368,13 @@ return
 %-----------------------------------------------------------------------
 function show_mean_boxplot(obj, event_obj)
 %-----------------------------------------------------------------------
-global V fname H YpY pos mean_cov FS
+global fname H YpY pos mean_cov FS
 
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
 
-xpos = 2*(0:length(V)-1)/(length(V)-1);
-for i=1:length(V)
+xpos = 2*(0:length(fname.m)-1)/(length(fname.m)-1);
+for i=1:length(fname.m)
   text(xpos(i),mean_cov(i),fname.m{i},'FontSize',FS(7),'HorizontalAlignment','center')
 end
 
