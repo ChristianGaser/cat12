@@ -4342,3 +4342,11 @@ M       spm_vbm12.m
 (2) Display surfaces can now display multiple surfaces.
 ------------------------------------------------------------------------
 r585 | gaser | 2014-03-14 10:25:47
+
+M       CHANGES.txt
+M       cg_check_cov.m
+
+Some corrections and new functionality in cg_check_cov.m
+
+------------------------------------------------------------------------
+r586 | gaser | 2014-03-18 17:29:32
