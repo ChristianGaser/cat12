@@ -4350,3 +4350,15 @@ Some corrections and new functionality in cg_check_cov.m
 
 ------------------------------------------------------------------------
 r586 | gaser | 2014-03-18 17:29:32
+
+M       CHANGES.txt
+M       spm_vbm12.m
+M       vbm_spm.m
+M       vbm_vol_partvol.m
+
+(1) vbm_vol_parts: flipping of sites to correct for wrong hemis (quick & 
+    dirty solution suggested by Robert).
+(2) Vertices and faces are removed in vbm_spm.m to get rid of the huge 
+    SPM.mat files.
+------------------------------------------------------------------------
+r587 | gaser | 2014-03-21 10:12:29
