@@ -678,6 +678,12 @@ else
     RPV(~mask) = NaN;
     VRpv = spm_data_write(VRpv,RPV);
     FWHM = [1 1 1] * (1/mean(RPV(mask))).^(1/3);
+    
+    % remove memory demanding faces and vertices which are not necessary
+    for i=1:length(VY)
+      SPM.xY.VY(i).private.faces = [];
+      SPM.xY.VY(i).private.vertices = [];
+    end
 end
     
 %-Delete the standardised residual files
@@ -733,7 +739,7 @@ SPM.swd        = pwd;
 %-Save SPM.mat
 %--------------------------------------------------------------------------
 fprintf('%-40s: %30s','Saving SPM.mat','...writing');                   %-#
-save('SPM.mat','SPM', spm_get_defaults('mat.format'));
+save('SPM.mat','SPM', '-v7.3');
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 
 %-Exit
