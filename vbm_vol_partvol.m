@@ -120,7 +120,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   vxd    = 1/mean(vx_vol); 
   
   % prepare maps
-  [tmp0,tmp1,YS] = vbdist(single(mod(YA,2)) + 2*single(YA>0)); YS=mod(YS,2); clear tmp0 tmp1;  % side map
+  [tmp0,tmp1,YS] = vbdist(single(mod(YA,2)) + 2*single(YA>0)); YS=~mod(YS,2); clear tmp0 tmp1;  % side map
   YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;                    % ROI map without side
   YA   = vbm_vol_ctype(vbm_vol_median3c(single(YA),Yp0>0));
   Yg   = vbm_vol_grad(Ym,vx_vol);
