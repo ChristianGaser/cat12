@@ -4362,3 +4362,66 @@ M       vbm_vol_partvol.m
     SPM.mat files.
 ------------------------------------------------------------------------
 r587 | gaser | 2014-03-21 10:12:29
+
+M       AmapMex.mexmaci64
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       cg_check_cov.m
+M       compile.m
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+!       templates_1.50mm/hammers.nii
+M       vbdist.mexmaci64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_eikonal3.mexmaci64
+M       vbm_vol_eikonal3.mexw32
+M       vbm_vol_eikonal3.mexw64
+M       vbm_vol_genus0.c
+M       vbm_vol_genus0.mexmaci64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexmaci64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) Added additional flag to vbm_vol_genus0.c in order to allow simple
+    surface extraction without volume-based topology correction.
+(2) Recompiled windows and mac mex-files.
+------------------------------------------------------------------------
+r588 | gaser | 2014-06-18 11:33:40

@@ -3,21 +3,21 @@ function compile
   rand('state',0);
   d = single(rand(10,10,10));
   
-  mex -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
-  mex -O vbm_vol_median3.c
-  mex -O vbm_vol_median3c.c
-  mex -O vbm_vol_eikonal3.c
-  mex -O vbm_vol_downcut.c
-  mex -O vbm_vol_laplace3.c
-  mex -O vbm_vol_laplace3R.c
-  mex -O vbm_vol_gradient3.c
-  mex -O vbm_vol_simgrow.c
-  mex -O vbm_vol_localstat.c
-  mex -O vbm_vol_pbtp.cpp
-  mex -O vbm_vol_interp3f.cpp
-  mex -O vbm_vol_eidist.c
-  mex -O vbm_vol_genus0.c genus0.c
-  mex -O vbdist.c
+  mex -Dchar16_t=UINT16_T -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_median3.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_median3c.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_eikonal3.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_downcut.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_laplace3.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_laplace3R.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_gradient3.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_simgrow.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_localstat.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_pbtp.cpp
+  mex -Dchar16_t=UINT16_T -O vbm_vol_interp3f.cpp
+  mex -Dchar16_t=UINT16_T -O vbm_vol_eidist.c
+  mex -Dchar16_t=UINT16_T -O vbm_vol_genus0.c genus0.c
+  mex -Dchar16_t=UINT16_T -O vbdist.c
   
   d2 = vbm_vol_median3(d);             disp('Compilation of vbm_vol_median3 successful')
   d2 = vbm_vol_median3c(d);            disp('Compilation of vbm_vol_median3c successful')
@@ -35,15 +35,15 @@ function compile
 
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')
-          mex CC='gcc' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc' CFLAGS='-m64 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-m64 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexmaci')
-          mex CC='gcc-4.0' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CC='gcc-4.0' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc-4.0' CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CC='gcc-4.0' CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexa64')
-          mex CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
           mex CFLAGS='-fopenmp -m64 -fPIC -O3' -O -lgomp sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexglx')
@@ -53,16 +53,16 @@ function compile
       elseif strcmp(mexext,'mexw64')
           mex CFLAGS='-U_OPENMP -m64' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex -O sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T -O sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexw32')
           mex CFLAGS='-U_OPENMP -m32' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex -O sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T -O sanlmMex.c sanlm_float.c
       end
       disp('Compiling sanlmMex with OpenMP')
   catch 
       disp('Compiling sanlmMex without OpenMP')
-      mex CFLAGS='-fPIC -O3' -O sanlmMex.c sanlm_float.c 
+      mex -Dchar16_t=UINT16_T CFLAGS='-fPIC -O3' -O sanlmMex.c sanlm_float.c 
   end
   
   sanlmMex(d,3,1);
