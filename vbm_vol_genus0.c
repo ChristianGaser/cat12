@@ -13,8 +13,8 @@
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs!=2) mexErrMsgTxt("ERROR:vbm_vol_genus0: Two input elements necessary.\n");
-  if (nlhs<1)  mexErrMsgTxt("ERROR:vbm_vol_genus0: At least one output element necessary.\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:vbm_vol_genus0: At least two input elements necessary.\n");
+  if (nlhs<1) mexErrMsgTxt("ERROR:vbm_vol_genus0: At least one output element necessary.\n");
 
   /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL  = mxGetDimensions(prhs[0]);
@@ -65,13 +65,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   g0->alt_value=1;
   g0->contour_value=1;
   g0->alt_contour_value=1;
-  g0->any_genus = 0;
   g0->biggest_component = 1;
   g0->pad[0] = g0->pad[1] = g0->pad[2] = 2;
   g0->ijk2ras = ijk2ras;
   g0->verbose = 1;
   g0->return_surface = 0;
   g0->extraijkscale[0] = g0->extraijkscale[1] = g0->extraijkscale[2] = 1;
+
+  if (nrhs==3) g0->any_genus = (int) mxGetScalar(prhs[2]);
+  else         g0->any_genus = 0;
 
   if (nlhs==3) g0->return_surface = 1;
 
