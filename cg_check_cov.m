@@ -9,7 +9,7 @@ function cg_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data
+global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data V
 rev = '$Rev$';
 
 if nargin == 1
