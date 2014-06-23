@@ -64,7 +64,7 @@ function varargout = vbm_io_xml(file,varargin)
       error('MATLAB:vbm_io_xml','ERROR: To many inputs.\n');
     end
   end
-  if numel(file)>1000, verbose = 1; end
+  if numel(file)>200, verbose = 1; end
   
   % multi-file read 
   if strcmp(action,'read')

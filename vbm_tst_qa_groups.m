@@ -26,25 +26,15 @@ function vbm_tst_qa_groups(files,names,qm,printgroup,name)
 
   if ~exist('names','var'), names = cellstr(num2str((1:numel(files))')); end
   namesn = names; for fi=1:numel(files), namesn{fi} = sprintf('%s (%d)',names{fi},numel(files{fi})); end
-
   if numel(files) > numel(names), error('MATLAB:vbm_tst_qa_groups:groupnames','Error: To small number of group names.\n'); end
-
-  if ~exist('qm','var')
-    qm = {
-      'noisec'         'low (good) <--- noisec (noise (1/CNR) after correction) ---> strong (bad)'
-      'biasc'          'low (good) <--- biasc (inhomogeneity after correction) ---> strong (bad)'
-      'NERR'           'low (good) <--- NERR (NoiseEdgeResolutionRelation - artifacts) ---> strong (bad)'
-      };
-  end
-
-  if ~exist('printgroup','var'), printgroup = 0; end
   if ~exist('name','var'), name = ''; end
   
   gir  = 1:numel(files);
-  %gir  = randperm(numel(files)); % char(64 + randperm(numel(files)));
   girn = cell(numel(files),1); for fi=1:numel(files), girn{fi} = sprintf('%02d: %s (%d)',gir(fi),names{fi},numel(files{fi})); end
 
-  
+  fig.type  = '-depsc';
+  fig.res   = '-r150';
+  fig.print = 1;
 
 
   %% 1) get data from xml files 
@@ -63,30 +53,35 @@ function vbm_tst_qa_groups(files,names,qm,printgroup,name)
 
       for qmi=1:size(qm,1)
         try
-          if isinf(tmp{gi}{fi}.qa.(qm{qmi,1})(1)) %tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1)) 
-            data.(qm{qmi,1})(ci,1) = nan;
+          if isinf(tmp{gi}{fi}.qa.(qm{qmi,1}).(qm{qmi,2})(1)) %tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1)) 
+            data.(qm{qmi,2})(ci,1) = nan;
             data.full(ci,qmi)      = nan;
           else
-            data.(qm{qmi,1})(ci,1) = tmp{gi}{fi}.qa.(qm{qmi,1})(1);
-            data.full(ci,qmi)      = tmp{gi}{fi}.qa.(qm{qmi,1})(1);
+            data.(qm{qmi,2})(ci,1) = tmp{gi}{fi}.qa.(qm{qmi,1}).(qm{qmi,2})(1);
+            data.full(ci,qmi)      = tmp{gi}{fi}.qa.(qm{qmi,1}).(qm{qmi,2})(1);
             %data.(qm{qmi,1})(ci,1) = tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1);
             %data.full(ci,qmi)      = tmp{gi}{fi}.qa.QM.(qm{qmi,1})(1);
           end
         catch
-          data.(qm{qmi,1})(ci,1)   = nan;
+          data.(qm{qmi,2})(ci,1)   = nan;
           data.full(ci,qmi)        = nan;
         end
       end
     end
   end
-
-
+  if isfield(data,'res_RMS')
+    rf=10;
+    data.res_RMS = round(data.res_RMS*rf)/rf;
+    qmi = find(strcmp(qm(:,2),'res_RMS')==1);
+    data.full(:,qmi) =  round(data.full(:,qmi)*rf)/rf + 0.001.*rand(size(data.full,1),1);;
+  end
+        
 
   %% 2) estimate median (and other group values) to sort groups
   group = struct(); 
   for qmi=1:size(qm,1)
     for gi=1:numel(files)
-      group.(qm{qmi,1}).data{gi} = data.(qm{qmi,1})(strcmp(data.group,names{gi}));
+      group.(qm{qmi,2}).data{gi} = data.(qm{qmi,2})(strcmp(data.group,names{gi}));
     end
   end
   
@@ -135,8 +130,8 @@ function vbm_tst_qa_groups(files,names,qm,printgroup,name)
 
   %% 3) MANOVA
   [mano.d,mano.p,mano.stats] = manova1(data.full,data.group); 
-%%
-names=unique(data.group);
+  
+  names=unique(data.group);
   %% 4) Create result structures and tables 
   % gmdist = mahalanobis distance between groups
   % mmdist = mahalanobis distance within groups
@@ -173,16 +168,22 @@ names=unique(data.group);
   fontsize(3)    = fontsize(1) * 0.9 - numel(names)/50;
   plotn          = size(qm,1)+4;
   if numel(names)<grouplimits(3)
-    plotwidth    = 0.94;
+    if ~isempty(strfind(name,'ALVIN'))
+      plotwidth    = 0.2;
+    else
+      plotwidth    = 0.94;
+    end
     pnames       = names;
     lpos         = [0.92,1-7*(0.90/plotn)+numel(names)*0.0065,0,0];
   else 
-    plotwidth    = 0.8;
-    pnames       = gir;
-    lpos         = [0.92,1-5*(0.90/plotn)+numel(names)*0.0065,0,0];
+    plotwidth    = 0.9;
+    pnames       = names; %num2str(gir');
+    lpos         = [0.92,1-7*(0.90/plotn)+numel(names)*0.0065,0,0];
   end
-  
-
+  % sort
+  [tmp,sorti] = sort(median(mano.stats.gmdist,2)); %
+sorti=1;
+  sortd=sorti; if numel(sortd)>1, sortd=2; end
   if numel(names)<grouplimits(1)
     hand.spmfig = spm_figure('GetWin','Graphics');
     spm_figure('Clear','Graphics');
@@ -192,39 +193,52 @@ names=unique(data.group);
     % BOXPLOTs for each QM
     for qmi=1:size(qm,1)
       hand.sp{1,qmi} = subplot(plotn,1,qmi);
-      vbm_plot_boxplot(group.(qm{qmi,1}).data,struct('names',{pnames},'sort',1));
-      set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - numel(names)/500,1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]); 
+      vbm_plot_boxplot(group.(qm{qmi,2}).data,struct('names',{pnames},'sort',sorti,'ylim',qm{qmi,3}));
+      set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - min(0.02,numel(names)/500),1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]); 
       title([qm{qmi,2} '        '],'FontSize',fontsize(1),'FontWeight','bold'); %,'Position',[40 0.2]);
     end
     
     % BOXPLOT for mahalanobis distance
     qmi=qmi+1;
     hand.sp{1,qmi} = subplot(plotn,1,qmi);
-    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - numel(names)/500,1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]);
-    vbm_plot_boxplot(mano.stats.mmdist,struct('names',{pnames},'sort',1));
+    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - min(0.02,numel(names)/500),1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]);
+    vbm_plot_boxplot(mano.stats.mmdist,struct('names',{pnames},'sort',sorti,'ylim',[0 50]));%*(strcmp(qm{1},'QMo')+1)
     title('in Mahalanobis distance within group    ','FontSize',fontsize(1),'FontWeight','bold'); 
     
     % BOXPLOT for mahalanobis distance
     qmi=qmi+1; hand.sp{1,qmi} = subplot(plotn,1,qmi);
-    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - numel(names)/500,1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]);
+    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - min(0.02,numel(names)/500),1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]);
     gmdist=mano.stats.gmdist; gmdist(eye(size(gmdist,1))==1)=nan;
-    vbm_plot_boxplot(mat2cell(gmdist,ones(1,size(gmdist,1)),size(gmdist,1)),struct('names',{pnames},'sort',1));
-    title('mean Mahalanobis distance to other groups      ','FontSize',fontsize(1),'FontWeight','bold'); 
+    vbm_plot_boxplot(mat2cell(gmdist,ones(1,size(gmdist,1)),size(gmdist,1)),struct('names',{pnames},'sort',sorti,'ylim',[0 100]));
+    title('inter group Mahalanobis distance     ','FontSize',fontsize(1),'FontWeight','bold');  %*(strcmp(qm{1},'QMo')+1)c
     
     % Groupmatix
     qmi=qmi+1; hand.sp{1,qmi} = subplot(plotn,2,plotn*2-1);
-    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - numel(names)/500,0.03,0.40,2*0.95/plotn]);
-    [tmp,sorti]=sort(median(mano.stats.gmdist,2)); 
+    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.06 - min(0.03,numel(names)/500),0.03,0.40,2*0.95/plotn]);
+    if numel(sorti)==1 && sorti==0
+      sorti=1:numel(names);
+    else
+      if ~isempty(strfind(name,'ALVIN'))
+        sorti=[5 6 1 2 3 7 8 4];
+      else
+        %[tmp,sorti] = sort(mean(mano.stats.gmdist,2) + median(mano.stats.gmdist,2));
+        [tmp,sorti] = sort(median(mano.stats.gmdist,2));
+      end
+    end    
     imagesc(mano.stats.gmdist(sorti,sorti)); daspect([1  1  1]);
     set(gca,'XTick',1:numel(names),'XTickLabel',pnames(sorti),'YTick',1:numel(names),'YTickLabel',pnames(sorti));
-    title('Mahalanobis distance between group means      ','FontSize',fontsize(1),'FontWeight','bold');  
+    title('intra group Mahalanobis distance    ','FontSize',fontsize(1),'FontWeight','bold');  
     
     % MANOVA
     qmi=qmi+1; hand.sp{1,qmi} = subplot(plotn,2,plotn*2);
-    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.50,0.03,0.45 - 0.2*(numel(names)>grouplimits(2)),2*0.95/plotn]);
+    set(hand.sp{1,qmi},'FontSize',fontsize(2),'Position',[0.50,0.03,0.35 - 0.2*(numel(names)>grouplimits(2)),2*0.95/plotn]);
     axissize=max(mano.stats.canon,[],1) - min(mano.stats.canon,[],1);
     if axissize(1)>axissize(2)
-      hand.gscatter{1} = gscatter(mano.stats.canon(:,1),mano.stats.canon(:,2),data.groupn,[],'.xo+*',[],'off');
+      if ~isempty(strfind(name,'ALVIN'))
+        hand.gscatter{1} = gscatter(mano.stats.canon(:,1),mano.stats.canon(:,2),data.groupn,[],'..+*..**',[],'off');
+      else
+        hand.gscatter{1} = gscatter(mano.stats.canon(:,1),mano.stats.canon(:,2),data.groupn,[],'.xo+*',[],'off');
+      end
       xlabel('C1'); ylabel('C2'); %axis equal;
     else
       hand.gscatter{1} = gscatter(mano.stats.canon(:,2),mano.stats.canon(:,1),data.groupn,[],'.xo+*',[],'off');
@@ -232,73 +246,43 @@ names=unique(data.group);
     end
     %set(hand.gscatter{1},'MarkerSize',markersize,'LineWidth',1)
     %set(hand.sp{1,qmi},'FontSize',fontsize(2));
-    qms=qm{1}; for qmi=2:size(qm,1), qms=[qms ', ' qm{qmi,1}]; end %#ok<AGROW>
-    title(sprintf('Principle components of a MANOVA test     \n of %s    ',qms),'FontSize',fontsize(1),'FontWeight','bold');
+    qms=qm{1,2}; for qmi=2:size(qm,1), qms=[qms ', ' qm{qmi,2}]; end %#ok<AGROW>
+    title(sprintf('Principle components of a MANOVA test     \n of %s (%s)   ',qms,qm{1}),'FontSize',fontsize(1),'FontWeight','bold');
     
+    if 0 && ~isempty(strfind(name,'ALVIN'))
+      subplot('Position',[0.06 - numel(names)/500 + plotwidth,1.0-qmi*(0.90/plotn),plotwidth,0.65/plotn]);
+      
+      %% Kappa Berechung 
+      if 1
+        [txt,val]=vbm_tst_calc_kappa; 
+        save(fullfile(printdir,'bwp_kappa_vbm8.mat'),'txt','val')
+      else
+        load(fullfile(printdir,'bwp_kappa_vbm8.mat'))
+      end
+      kappa.markv = mean(cell2mat(val(2:end-2,2:4)),2);
+      clear txt val
+      
+      
+      
+    end
     
-    colormap jet;
-    warning off;
-    legend(girn,'Position',lpos);
+    colormap jet; caxis([0 50])
+    warning off; 
+    legend(girn,'Position',[0.88,0.03,0.10,2*0.95/plotn]);
     warning on;
     colormap(vbm_io_colormaps('marks',50)); 
-  end
-
-  %%
-
-  %{
-  if printgroup
-    for gi=6 %1:numel(files)
-
-      spm_figure('TurnPage',spm_figure('#page'),hand.spmfig);
-      hand.spmfig = spm_figure('FindWin','Graphics');
-
-      for qmi=1:size(qm,1)
-        sgroup = datas.(qm{qmi,1}).group; ci=1;
-        for ni=setxor(gi,1:numel(names))
-          sgroup(~cellfun('isempty',strfind(datas.(qm{qmi,1}).group,names{ni}))) = ...
-            cellstr(repmat( gir(ci) ,sum(~cellfun('isempty',strfind(datas.(qm{qmi,1}).group,names{ni}))),1)); ci=ci+1;
-        end  
-        hand.sp{gi+1,qmi}   = subplot(plotn,1,mod(qmi-1,plotn)+1);
-        set(hand.sp{gi+1,qmi},'FontSize',fontsize(2));
-        %boxplot(datas.(qm{qmi,1}).(qm{qmi,1}),sgroup,'notch','on'); % 'plotstyle','compact')
-
-        title(qm{qmi,2},'FontSize',fontsize(1),'FontWeight','bold');
-      end
-      %ylim([0,round(6*max(datas.(qm{qmi,1}).(qm{qmi,1})))/4]);
-
-      % 
-      qmi = qmi + 1;
-      if qmi>1 && mod(qmi,plotn)==0,
-        spm_figure('NewPage',hand.spmfig); 
-        spm_figure('TurnPage',spm_figure('#page'),hand.spmfig);
-        %hand.spmfig = spm_figure('FindWin','Graphics');
-        qmi = qmi + 1;
-      end
-
-      sgroup = data.groupn; ci=1;
-      for ni=setxor(gi,1:numel(names))
-        sgroup(~cellfun('isempty',strfind(data.group,names{ni}))) = ...
-          cellstr(repmat( girn{ci} ,sum(~cellfun('isempty',strfind(data.group,names{ni}))),1)); ci=ci+1;
-      end  
-      %% groupcolor = repmat([0 0 1],numel(sgroup),1); groupcolor(gi,:)=[1 0 0];
-      groupcolor = max(0,colormap(jet(round(size(files,1)*1.4)))-0.1);
-      groupcolor(groupcolor(:,1)>0.8 & groupcolor(:,2)>0.8 & groupcolor(:,3)>0.8,:)=[];
-      groupcolor(sum(groupcolor(:,1:2),2)>1.7,:)=max(0,groupcolor(sum(groupcolor(:,1:2),2)>1.7,:) - 0.3);
-      groupcolor(size(files,1)+1:end,:)=[]; groupcolor(gi,:)=[0.9 0 0];
-      groupmarker = repmat('x+o.sd^v><ph',1,numel(sgroup)); groupmarker(gi)='*';
-      hand.sp{gi+1,qmi}   = subplot(plotn,1,mod(qmi-1,plotn)+1 : mod(qmi-1,plotn)+2); 
-      %hand.gscatter{gi+1} = gscatter(mano.stats.canon(:,2),mano.stats.canon(:,1),sgroup,cold,'.o+*');
-      hand.gscatter{gi+1} = gscatter(mano.stats.canon(:,2),mano.stats.canon(:,1),sgroup,groupcolor,groupmarker);
-      set(hand.gscatter{gi+1},'MarkerSize',markersize,'LineWidth',1)
-      set(hand.sp{gi+1,qmi},'FontSize',fontsize(2));
-      title(sprintf('Principle Components of a %s \n of %s','Manova',qms),'FontSize',fontsize(1),'FontWeight','bold');
-
-      % spm_figure('NewPage',hand.spmfig); 
+    
+    printdir = fullfile(pwd,name);
+    if ~exist(printdir,'dir')
+      mkdir(printdir);
     end
-
+    if fig.print
+      set(hand.spmfig,'PaperPositionMode','auto');
+      print(hand.spmfig,fullfile(printdir,sprintf('fig_%s_%s_order%d_%s',name,qm{1},sortd,datestr(clock,'yyyymmdd'))),fig.res,fig.type);
+    end
   end
-  %}
 
+ 
 end
 
 

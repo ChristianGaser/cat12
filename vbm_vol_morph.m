@@ -69,7 +69,13 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
     error('MATLAB:vbm_vol_morph:vx_vol', ...
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
   end
-  no=n; n=round(n); if n==0, return; end
+  no=n; n=round(n); 
+  switch lower(action)
+    case {'l' 'lc' 'lo' 'labclose' 'labopen'}
+      % not return in this case
+    otherwise
+      if n==0, return; end 
+  end
   
   switch lower(action)
     case {'dilate' 'd'}

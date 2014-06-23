@@ -61,44 +61,62 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'FD'  'F'                     ''          []                 0 0     'fname'
    'FD'  'Fm'                    ''          []                 0 0     'fname'
    'FD'  'Fp0'                   ''          []                 0 0     'fname'
-% -- further image quality measures on the original image --------------
+%  % -- further image quality measures on the original image --------------
   % - resolution - 
-   'QMo'  'res_RMS'              'linear'    [  0.50   3.00]    1 1     'RMS error of voxel size'
-   'QMm'  'res_RMS'              'linear'    [  0.50   3.00]    1 1     'RMS error of voxel size'
+   'QMo'  'res_RMS'              'linear'    [  0.75   2.00]    1 1     'RMS error of voxel size'
+   'QMm'  'res_RMS'              'linear'    [  0.75   2.00]    1 1     'RMS error of voxel size'
+   'QMv'  'res_RMS'              'linear'    [  0.75   2.00]    1 1     'RMS error of voxel size'
    'QMo'  'res_BB'               'normal'    [     0   1000]    1 1     'brain next to the image boundary'
    'QMm'  'res_BB'               'normal'    [     0   1000]    1 1     'brain next to the image boundary'
+   'QMv'  'res_BB'               'normal'    [     0   1000]    1 1     'brain next to the image boundary'
    'QMo'  'res_vx_vol'           'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
    'QMm'  'res_vx_vol'           'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
+   'QMv'  'res_vx_vol'           'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
    'QMo'  'res_vol'              'linear'    [  0.50   8.00]    1 0     'voxel volume'
    'QMm'  'res_vol'              'linear'    [  0.50   8.00]    1 0     'voxel volume'
+   'QMv'  'res_vol'              'linear'    [  0.50   8.00]    1 0     'voxel volume'
    'QMo'  'res_isotropy'         'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
    'QMm'  'res_isotropy'         'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
+   'QMv'  'res_isotropy'         'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
   % - tissue mean and varianz - 
    'QMo'  'tissue_mn'             'normal'    def.tissue        1 1     'mean within the tissue classes'
    'QMm'  'tissue_mn'             'normal'    def.tissue        1 1     'mean within the tissue classes'
+   'QMv'  'tissue_mn'             'normal'    def.tissue        1 1     'mean within the tissue classes'
    'QMo'  'tissue_std'            'normal'    [  0.10   0.20]   1 1     'std within the tissue classes'
    'QMm'  'tissue_std'            'normal'    [  0.10   0.20]   1 1     'std within the tissue classes'
+   'QMv'  'tissue_std'            'normal'    [  0.10   0.20]   1 1     'std within the tissue classes'
   % - contrast - 
-   'QMo'  'contrast'              'linear'    [   1/3   0.05]   1 1     'contrast between tissue classe'
-   'QMm'  'contrast'              'linear'    [   1/3   0.05]   1 1     'contrast between tissue classe'
+   'QMo'  'contrast'              'linear'    [   1/3   1/12]   1 1     'contrast between tissue classe'
+   'QMm'  'contrast'              'linear'    [   1/3   1/12]   1 1     'contrast between tissue classe'
+   'QMv'  'contrast'              'linear'    [   1/3   1/12]   1 1     'contrast between tissue classe'
   % - noise & contrast -
    'QMo'  'NCR'                   'linear'    [  1/20    1/2]   1 1     'noise to contrast ratio'
-   'QMm'  'NCR'                   'linear'    [  1/20   1/10]   1 1     'noise to contrast ratio'
+   'QMm'  'NCR'                   'linear'    [  1/20    1/2]   1 1     'noise to contrast ratio'
+   'QMv'  'NCR'                   'linear'    [  1/20    1/8]   1 1     'noise to contrast ratio'
    'QMo'  'CNR'                   'linear'    [    20      2]   1 1     'contrast to noise ratio'
-   'QMm'  'CNR'                   'linear'    [    20     10]   1 1     'contrast to noise ratio'
+   'QMm'  'CNR'                   'linear'    [    20      2]   1 1     'contrast to noise ratio'
+   'QMv'  'CNR'                   'linear'    [    20      8]   1 1     'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QMo'  'ICR'                   'linear'    [   1/4      1]   1 1     'inhomogeneity to contrast ratio'
-   'QMm'  'ICR'                   'linear'    [   1/6    1/3]   1 1     'inhomogeneity to contrast ratio'
-   'QMo'  'CIR'                   'linear'    [     4      1]   1 1     'contrast to inhomogeneity ratio'
-   'QMm'  'CIR'                   'linear'    [     6      3]   1 1     'contrast to inhomogeneity ratio'
-  % - artefacts -
-   'QMo'  'NERR'                  'linear'    [  0.00  -0.40]   2 1     'noise edge resolution relation'
-   'QMm'  'NERR'                  'linear'    [  0.00  -0.10]   2 1     'noise edge resolution relation'
-  % - experimental image quality measures -
-   'QMo'  'PC'                    'linear'    [  0.05   1.00]   2 1     'changes between t1 and label'
-   'QMm'  'PC'                    'linear'    [  0.05   1.00]   2 1     'changes between t1 and label'
-   'QMo'  'STC'                   'linear'    [  0.05   1.00]   2 1     'difference between template and label'
-   'QMm'  'STC'                   'linear'    [  0.05   1.00]   2 1     'difference between template and label'
+   'QMo'  'ICR'                   'linear'    [  1/10      1]   1 1     'inhomogeneity to contrast ratio'
+   'QMm'  'ICR'                   'linear'    [  1/10      1]   1 1     'inhomogeneity to contrast ratio'
+   'QMv'  'ICR'                   'linear'    [  1/10    1/8]   1 1     'inhomogeneity to contrast ratio'
+   'QMo'  'CIR'                   'linear'    [    10      1]   1 1     'contrast to inhomogeneity ratio'
+   'QMm'  'CIR'                   'linear'    [    10      1]   1 1     'contrast to inhomogeneity ratio'
+   'QMv'  'CIR'                   'linear'    [    10      8]   1 1     'contrast to inhomogeneity ratio'
+  % - artefacts & resolution -
+   'QMo'  'NERR'                  'linear'    [   1/5    1/2]   2 1     'noise edge resolution relation'
+   'QMm'  'NERR'                  'linear'    [   1/5    1/2]   2 1     'noise edge resolution relation'
+   'QMv'  'NERR'                  'linear'    [   1/5    1/4]   2 1     'noise edge resolution relation'
+  % - subject measures / preprocessing measures -
+   'QMo'  'MPC'                   'linear'    [  0.08   0.32]   2 1     'changes between t1 and label'
+   'QMm'  'MPC'                   'linear'    [  0.08   0.32]   2 1     'changes between t1 and label'
+   'QMv'  'MPC'                   'linear'    [  0.08   0.16]   2 1     'changes between t1 and label'
+   'QMo'  'MJD'                   'linear'    [  0.05   0.15]   2 1     'changes between t1 and label'
+   'QMm'  'MJD'                   'linear'    [  0.05   0.15]   2 1     'changes between t1 and label'
+   'QMv'  'MJD'                   'linear'    [  0.05   0.15]   2 1     'changes between t1 and label'
+   'QMo'  'STC'                   'linear'    [  0.05   0.15]   2 1     'difference between template and label'
+   'QMm'  'STC'                   'linear'    [  0.05   0.15]   2 1     'difference between template and label'
+   'QMv'  'STC'                   'linear'    [  0.05   0.15]   2 1     'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
    'SM'  'vol_TIV'               'normal'    [  1500   1000]   1 1     'total intracranial volume (GM+WM+VT)'
   %'SM'  'vol_CHvsGW'            'linear'    def.CHvsCG        2 1     'relation between brain and non brain'
@@ -126,16 +144,18 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       end
     end
   end
-  def.QMo.avg = {'res_RMS','NCR','ICR','NERR'}; 
+  def.QMo.avg = {'res_RMS','NCR','ICR','MPC'}; %,'NERR'
   def.QMm.avg = def.QMo.avg; 
+  def.QMv.avg = def.QMo.avg; 
   def.SM.avg = {'vol_rel_CGW'};
   
 
   % mark functions
-  evalnormal  = @(x,best,worst,marks) min(9.5-eps,max(0,1 + (abs(best-x)./worst)*(marks-1)));      
-  evalnormalb = @(x,best,worst,marks) min(marks  ,max(1,1 + (abs(best-x)./worst)*(marks-1))); 
-  evallinear  = @(x,best,worst,marks) min(9.5-eps,max(0,1 + ((best-x)./diff([worst,best])*(marks-1))));
-  evallinearb = @(x,best,worst,marks) min(marks  ,max(1,1 + ((best-x)./diff([worst,best])*(marks-1)))); 
+  setnan=[1 nan];
+  evalnormal  = @(x,best,worst,marks) min(9.5-eps,max(0,(abs(best-x)./worst)*(marks-1))) + setnan(isnan(x)+1);      
+  evalnormalb = @(x,best,worst,marks) min(marks  ,max(1,(abs(best-x)./worst)*(marks-1))) + setnan(isnan(x)+1);    
+  evallinear  = @(x,best,worst,marks) min(9.5-eps,max(0,((best-x)./diff([worst,best])*(marks-1)))) + setnan(isnan(x)+1);   
+  evallinearb = @(x,best,worst,marks) min(marks  ,max(1,((best-x)./diff([worst,best])*(marks-1)))) + setnan(isnan(x)+1);   
 
   
   switch action
@@ -169,14 +189,14 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                size(def.QS{QSi,4},1) == numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
               for v=1:size(def.QS{QSi,4},1)
                 for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
-                  eval(sprintf(['QAM.%s.%s(ij) = mean(eval%s(' ...
+                  eval(sprintf(['QAM.%s.%s(ij) = vbm_stat_nanmean(eval%s(' ...
                    'QA.%s.%s(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2),6));'], ...
                    def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                 end
               end
             else
               for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
-                eval(sprintf(['QAM.%s.%s(ij) = mean(eval%s(' ...
+                eval(sprintf(['QAM.%s.%s(ij) = vbm_stat_nanmean(eval%s(' ...
                  'QA.%s.%s(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2),6));'], ...
                  def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
               end
@@ -187,14 +207,14 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                  size(def.QS{QSi,4},1) == numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
                 for v=1:size(def.QS{QSi,4},1)
                   for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
-                    eval(sprintf(['QAM.%s.%s{ci}(ij) = mean(eval%s(' ...
+                    eval(sprintf(['QAM.%s.%s{ci}(ij) = vbm_stat_nanmean(eval%s(' ...
                      'QA.%s.%s{ci}(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2),6));'], ...
                      def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                   end
                 end
               else
                 for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
-                  eval(sprintf(['QAM.%s.%s{ci}(ij) = mean(eval%s(' ...
+                  eval(sprintf(['QAM.%s.%s{ci}(ij) = vbm_stat_nanmean(eval%s(' ...
                    'QA.%s.%s{ci}(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2),6));'], ...
                    def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                 end
@@ -203,47 +223,56 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
           end  
         end
       end
+      QAM.QMv=QAM.QMm;
       
       %% average
-      Qavg = {'QMo','QMm','SM'};
-      for Qavgi=1:3;
+      Qavg = {'QMo','QMm','QMv','SM'};
+      for Qavgi=1:4;
         QAM.(Qavg{Qavgi}).mean = 0; 
         QAM.(Qavg{Qavgi}).max  = 0;
         QAM.(Qavg{Qavgi}).avg  = 0;
         QAM.(Qavg{Qavgi}).rms  = 0;
+        
+        nonnan=0;
+        for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
+          if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
+            nonnan = nonnan + ~any(isnan(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+          end
+        end
+        
         for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
           if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
             if ~iscell(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))
               if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
                 QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                   QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
-                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
-                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/numel(def.(Qavg{Qavgi}).avg);
-                QAM.(Qavg{Qavgi}).rms  = QAM.(Qavg{Qavgi}).rms + ...
-                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
+                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/nonnan]);
+                QAM.(Qavg{Qavgi}).rms  = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
               else
                 QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                   max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
-                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
-                QAM.(Qavg{Qavgi}).rms = QAM.(Qavg{Qavgi}).rms + ...
-                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean,...
+                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
+                QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
               end
             else
               if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
                 QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                   max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
-                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
-                QAM.(Qavg{Qavgi}).rms = QAM.(Qavg{Qavgi}).rms + ...
-                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
+                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
+                QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
               else
                 QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                   max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                QAM.(Qavg{Qavgi}).mean = QAM.(Qavg{Qavgi}).mean + ...
-                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/numel(def.(Qavg{Qavgi}).avg);
-                QAM.(Qavg{Qavgi}).rms = QAM.(Qavg{Qavgi}).rms + ...
-                  mean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/numel(def.(Qavg{Qavgi}).avg);
+                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
+                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
+                QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
               end
             end
           end
@@ -251,7 +280,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
         
         
         try
-          QAM.(Qavg{Qavgi}).avg = mean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
+          QAM.(Qavg{Qavgi}).avg = vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
           QAM.(Qavg{Qavgi}).rms = sqrt(QAM.(Qavg{Qavgi}).rms);
         end
       end
@@ -260,6 +289,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
     case 'init',    % ausgabe einer leeren struktur
       varargout{1} = QS;
       varargout{2} = def.QMo.avg; 
+    case 'marks',    % ausgabe einer leeren struktur
+      varargout{1} = def.QS;
   end
   
   

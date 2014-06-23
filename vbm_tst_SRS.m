@@ -17,6 +17,7 @@ function varargout=vbm_tst_SRS
   % - Update for QA measures ...
   
   opt.dir.realign = '/Users/dahnke/MRData/SRS/';
+  opt.dir.realign = '/Volumes/MyBook/MRData/SRS/';
   opt.dir.prepro  = '/Volumes/MyBook/MRData/vbm_tst/';
   
   % templates for realginment (p0-template) and reslicing (empty images
@@ -24,24 +25,24 @@ function varargout=vbm_tst_SRS
   opt.templates.realign = ... 
     '/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/p0A.nii';
   opt.templates.reslice = { 
-    '/Users/dahnke/MRData/SRS/p0_R1000my.nii' 1.00
-    '/Users/dahnke/MRData/SRS/p0_R0750my.nii' 0.75
-    '/Users/dahnke/MRData/SRS/p0_R0500my.nii' 0.50
+    '/Volumes/MyBook/MRData/SRS/p0_R1000my.nii' 1.00
+    '/Volumes/MyBook/MRData/SRS/p0_R0750my.nii' 0.75
+    '/Volumes/MyBook/MRData/SRS/p0_R0500my.nii' 0.50
   };
   
   % SRS datasets
   % Teildatensätze und andere Teilmengen ... 2d dataset variable ...
   opt.datasets = {
   % name      resliceres
-     'Bert'    0.75    1
-     'CG'      0.75    1 
-     'ThomasM' 0.75    0.8
-     'ThomasA' 0.75    0.8
-     'Tohoku'  0.50    0.8
-     'ADB-SRS' 1.00    1% NIH
+  %   'Bert'    0.75    1
      'NIH'     0.75    1
+     'CG'      0.75    1 
+     'Tohoku'  0.50    0.8
      'ALVIN'   0.75    1
      'XNAT'    0.75    1
+   %  'ThomasM' 0.75    0.8
+   %  'ThomasA' 0.75    0.8
+   %  'ADB-SRS' 1.00    1% NIH
  % OASIS!!!
  % ADNI!!!
  % Gabi-Schweiz
@@ -66,11 +67,11 @@ function varargout=vbm_tst_SRS
   opt.do.spmdisp     = 0; %if ~opt.do.spmdisp, spm('Quit'); end
   opt.do.mfiles      = 1; % mean image of m files of each preprocessing
   opt.do.mfileso     = 1; % mean image of all original files
-  opt.do.ofiles      = 0; % die bauch ich an sich nach dem reslicing nicht mehr
+  opt.do.ofiles      = 1; % die bauch ich an sich nach dem reslicing nicht mehr
   
-  opt.do.recalc      = 1;
+  opt.do.recalc      = 0;
   opt.do.realignment = 1;
- % opt.do.realcopy    = 1;
+  opt.do.realcopy    = 1;
   opt.do.reslicing   = 1;
   opt.do.average     = 1;
   opt.do.report      = 1;
@@ -112,7 +113,7 @@ function varargout=vbm_tst_SRS
     % mean image
     % ------------------------------------------------------------------
 
-        % p0-data of a preprocessing
+        %% p0-data of a preprocessing
         dataset(di).realignp0pre{si} = ...
           vbm_findfiles(fullfile(opt.dir.prepro,opt.realignpremethod,'SRS',opt.datasets{di,1},subdirs{di}{si}),'p0*.nii');
         
@@ -134,6 +135,7 @@ function varargout=vbm_tst_SRS
         end
 
         if opt.do.realignment 
+       
           fprintf('%s%s realignment ',opt.datasets{di,1},subdirs{di}{si});
           
         % realignment of the first p0 images to the template and the 
@@ -168,7 +170,7 @@ function varargout=vbm_tst_SRS
           end
           fprintf('done.\n'); %vbm_spm_reprint('done.\n',-3*73 - numel(pwd) -51);
       
-        % mean of the originals
+          % mean of the originals
           if opt.do.mfileso
             para.reslice.which   = 0;
             para.reslice.interp  = 5;
@@ -222,10 +224,10 @@ function varargout=vbm_tst_SRS
 
             dataset(di).(opt.methods{mi}).p0{si}{fi}      = fullfile(opt.dir.realignpredatadiro{si}{mi},[ff ee]);
             dataset(di).(opt.methods{mi}).m{si}{fi}       = fullfile(opt.dir.realignpredatadiro{si}{mi},['m'   ff(3:end) ee]);
-            dataset(di).(opt.methods{mi}).th1{si}{fi}     = fullfile(opt.dir.realignpredatadiro{si}{mi},['th1' ff(3:end) ee]);
+          %  dataset(di).(opt.methods{mi}).th1{si}{fi}     = fullfile(opt.dir.realignpredatadiro{si}{mi},['th1' ff(3:end) ee]);
             dataset(di).(opt.methods{mi}).opre{si}{fi}    = fullfile(pp,[ff(3:end) ee]);
             dataset(di).(opt.methods{mi}).mpre{si}{fi}    = fullfile(pp,['m'   ff(3:end) ee]);
-            dataset(di).(opt.methods{mi}).th1pre{si}{fi}  = fullfile(pp,['th1' ff(3:end) ee]);
+          %  dataset(di).(opt.methods{mi}).th1pre{si}{fi}  = fullfile(pp,['th1' ff(3:end) ee]);
 
             if (opt.do.realignment && opt.do.recalc) || ~exist(dataset(di).(opt.methods{mi}).p0{si}{fi},'file') || ...
               (opt.do.mfiles && opt.do.recalc && ~exist(dataset(di).(opt.methods{mi}).m{si}{fi},'file') )
@@ -233,7 +235,7 @@ function varargout=vbm_tst_SRS
               [ppr,ffr] = fileparts(dataset(di).realignp0{si}{fi});
               [ppp,ffp] = fileparts(dataset(di).(opt.methods{mi}).p0pre{si}{fi});
               [ppm,ffm] = fileparts(dataset(di).(opt.methods{mi}).mpre{si}{fi}); %#ok<NASGU>
-              [ppt,fft] = fileparts(dataset(di).(opt.methods{mi}).th1pre{si}{fi}); %#ok<NASGU>
+           %   [ppt,fft] = fileparts(dataset(di).(opt.methods{mi}).th1pre{si}{fi}); %#ok<NASGU>
 
               if strcmp(ffr(3:end),ffp(3:end)) % && (~opt.do.mfiles || strcmp(ffr(3:end),ffm(2:end)))
                 if fi==1, fprintf('%s update realignment %s\n',opt.datasets{di,1},opt.methods{mi}); end
@@ -263,15 +265,15 @@ function varargout=vbm_tst_SRS
                     spm_write_vol(mV,Y);
                   end
                   
-                  try  %#ok<TRYNC> % SPM8-12 have maybe no m*.nii 
-                    tV  = spm_vol(dataset(di).(opt.methods{mi}).th1pre{si}{fi}); 
-                    Y = spm_read_vols(tV); tV.mat  = rV.mat; 
-                    tV.fname    = dataset(di).(opt.methods{mi}).th1{si}{fi};  
-                    tV.dt(1)    = 512; 
-                    tV.pinfo(1) = 10/(2^16-1); % int
-                    if exist(tV.fname,'file'), delete(tV.fname); end
-                    spm_write_vol(tV,Y);
-                  end
+%                   try  %#ok<TRYNC> % SPM8-12 have maybe no m*.nii 
+%                     tV  = spm_vol(dataset(di).(opt.methods{mi}).th1pre{si}{fi}); 
+%                     Y = spm_read_vols(tV); tV.mat  = rV.mat; 
+%                     tV.fname    = dataset(di).(opt.methods{mi}).th1{si}{fi};  
+%                     tV.dt(1)    = 512; 
+%                     tV.pinfo(1) = 10/(2^16-1); % int
+%                     if exist(tV.fname,'file'), delete(tV.fname); end
+%                     spm_write_vol(tV,Y);
+%                   end
                 end
 
               else
@@ -299,8 +301,8 @@ function varargout=vbm_tst_SRS
                   fullfile(opt.dir.realignpredatadir{si}{mi},['mean_' ff '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} ee]);
                 dataset(di).(opt.methods{mi}).mmean{si}{ri,1} = ...
                   fullfile(opt.dir.realignpredatadir{si}{mi},['mean_m' ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} ee]);
-                dataset(di).(opt.methods{mi}).th1mean{si}{ri,1} = ...
-                  fullfile(opt.dir.realignpredatadir{si}{mi},['mean_th1' ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} ee]);
+                %dataset(di).(opt.methods{mi}).th1mean{si}{ri,1} = ...
+                %  fullfile(opt.dir.realignpredatadir{si}{mi},['mean_th1' ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} ee]);
               
                 dataset(di).(opt.methods{mi}).p0med{si}{ri,1} = { ...
                   fullfile(opt.dir.realignpredatadir{si}{mi},['median_' ff '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} 'all' ee]);
@@ -322,6 +324,7 @@ function varargout=vbm_tst_SRS
                   fullfile(opt.dir.realignpredatadir{si}{mi},['mean_m'   ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} 'bo' ee]);
                   fullfile(opt.dir.realignpredatadir{si}{mi},['std_m'    ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} 'bo' ee]);
                   };
+                %{
                 if numel(opt.methods{mi,1})>=5 && strcmp(opt.methods{mi,1}(1:5),'VBM12')
                   dataset(di).(opt.methods{mi}).th1med{si}{ri,1} = { ...
                     fullfile(opt.dir.realignpredatadir{si}{mi},['median_th1' ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} 'all' ee]);
@@ -334,6 +337,7 @@ function varargout=vbm_tst_SRS
                     fullfile(opt.dir.realignpredatadir{si}{mi},['std_th1'    ff(3:end) '_' opt.datasets{di,1} repmat('_',1,length(subdirs{di}{si})) subdirs{di}{si} '_' opt.methods{mi,1} 'bo' ee]);
                     };
                 end
+                %}
                 dataset(di).(opt.methods{mi}).rp0{si} = ...
                     vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rp0*.nii',struct('depth',1));
                 
@@ -384,6 +388,7 @@ function varargout=vbm_tst_SRS
                       dataset(di).(opt.methods{mi}).rm{si}={};
                       fprintf(' and no m done.\n');
                     end
+                    %{
                     try
                       para.reslice.which  = opt.do.mfiles;
                       para.reslice.interp = 0; % spline for m
@@ -402,6 +407,7 @@ function varargout=vbm_tst_SRS
                       dataset(di).(opt.methods{mi}).rth1{si}={};
                       fprintf(' and no th1 done.\n');
                     end
+                    %}
                   else
                     fprintf('.\n');
                     dataset(di).(opt.methods{mi}).rm{si} = ...
@@ -416,8 +422,8 @@ function varargout=vbm_tst_SRS
                 else
                   dataset(di).(opt.methods{mi}).rm{si} = ...
                     vbm_findfiles(opt.dir.realignpredatadirr{si}{mi},'rm*.nii',struct('depth',1));  
-                  dataset(di).(opt.methods{mi}).rth1{si} = ...
-                    vbm_findfiles(opt.dir.realignpredatadirr{si}{mi},'rth1*.nii',struct('depth',1));  
+                  %dataset(di).(opt.methods{mi}).rth1{si} = ...
+                  %  vbm_findfiles(opt.dir.realignpredatadirr{si}{mi},'rth1*.nii',struct('depth',1));  
                 end
                 
                 if opt.do.average || (opt.do.reslicing && opt.do.recalc)
@@ -425,7 +431,7 @@ function varargout=vbm_tst_SRS
                   % where the volume is  
                   dataset(di).(opt.methods{mi}).rp0bo{si}  = dataset(di).(opt.methods{mi}).rp0{si};
                   dataset(di).(opt.methods{mi}).rmbo{si}   = dataset(di).(opt.methods{mi}).rm{si};
-                  dataset(di).(opt.methods{mi}).rth1bo{si} = dataset(di).(opt.methods{mi}).rth1{si};
+                  %dataset(di).(opt.methods{mi}).rth1bo{si} = dataset(di).(opt.methods{mi}).rth1{si};
                   vx_vol=zeros(numel(dataset(di).(opt.methods{mi}).rp0{si}),3); 
                   for fi = 1:numel(dataset(di).(opt.methods{mi}).rp0{si})
                     [pp,ff,ee] = spm_fileparts(dataset(di).(opt.methods{mi}).rp0{si}{fi});
@@ -443,12 +449,16 @@ function varargout=vbm_tst_SRS
                       vol      >= max(0.6,max((opt.templates.reslice{ri,2}*1.2).^3,mean(vol)*1.02)) | ...
                       isotropy >= max(1.5,mean(isotropy)))=[];
                   end
+                  %{ 
                   try %#ok<TRYNC>
                     dataset(di).(opt.methods{mi}).rth1bo{si}(...
                       vol      >= max(0.6,max((opt.templates.reslice{ri,2}*1.2).^3,mean(vol)*1.02)) | ...
                       isotropy >= max(1.5,mean(isotropy)))=[];
-                  end            
-               %{ 
+                  end
+                  %}
+                  
+                  
+                  %{
                   % second, noise can be used
                   noise=zeros(size(rp0mean)); bias=zeros(size(rp0mean));
                   for fi = 1:numel(rp0mean), 
@@ -498,10 +508,12 @@ function varargout=vbm_tst_SRS
                   if opt.do.mfiles 
                     vbm_vol_average(dataset(di).(opt.methods{mi}).rm{si}    ,dataset(di).(opt.methods{mi}).mmed{si}{ri,1}    ,'',[4,4,4]);
                     vbm_vol_average(dataset(di).(opt.methods{mi}).rmbo{si}  ,dataset(di).(opt.methods{mi}).mmedbo{si}{ri,1}  ,'',[4,4,4]);
+                    %{
                     if numel(opt.methods{mi,1})>=5 && strcmp(opt.methods{mi,1}(1:5),'VBM12')
                       vbm_vol_average(dataset(di).(opt.methods{mi}).rth1{si}  ,dataset(di).(opt.methods{mi}).th1med{si}{ri,1}  ,'',[4,0,0]);
                       vbm_vol_average(dataset(di).(opt.methods{mi}).rth1bo{si},dataset(di).(opt.methods{mi}).th1medbo{si}{ri,1},'',[4,0,0]);
                     end
+                    %}
                   end
                   sprintf('done:\n');
                 else
@@ -509,8 +521,8 @@ function varargout=vbm_tst_SRS
                     vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rp0*.nii',struct('depth',1));
                   dataset(di).(opt.methods{mi}).rm{si} = ...
                     vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rm*.nii',struct('depth',1));
-                  dataset(di).(opt.methods{mi}).rth1{si} = ...
-                    vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rth1*.nii',struct('depth',1));
+%                   dataset(di).(opt.methods{mi}).rth1{si} = ...
+%                     vbm_findfiles(fullfile(opt.dir.realignpredatadirr{si}{mi}),'rth1*.nii',struct('depth',1));
                 end
               end
             end
