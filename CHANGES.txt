@@ -4425,3 +4425,47 @@ M       vbm_vol_simgrow.mexw64
 (2) Recompiled windows and mac mex-files.
 ------------------------------------------------------------------------
 r588 | gaser | 2014-06-18 11:33:40
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       checkinopt.m
+M       spm_vbm12.m
+M       vbm_io_colormaps.m
+M       vbm_io_cprintf.m
+A       vbm_io_struct2table.m
+M       vbm_io_updateStruct.m
+M       vbm_io_writenii.m
+M       vbm_io_xml.m
+A       vbm_io_xml2csv.m
+M       vbm_plot_boxplot.m
+M       vbm_qa_calcSTC.m
+M       vbm_stat_marks.m
+A       vbm_stat_nansum.m
+A       vbm_tst_CJV.m
+M       vbm_tst_SRS.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_pre.m
+A       vbm_tst_qa.m
+M       vbm_tst_qa_groups.m
+M       vbm_tst_qa_groups_test.m
+D       vbm_tst_t1qa.m
+M       vbm_vol_average.m
+M       vbm_vol_gradient3.c
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_morph.m
+M       vbm_vol_partvol.m
+D       vbm_vol_t1qacalc.m
+
+(1)  Enhancement of opt-input structure of 'vbm_plot_boxplot', with coloring, 
+     different scalings, and outlier output. Requires further test! 
+(2)  Added PID output for Matlab calls of 'cg_vbm_batch.sh'. 
+(3)  Enhancement of 'vbm_tst_t1qa' with GUI and command line control in one file.
+(4)  Corrected side error of warped images. 
+(5)  Update of 'vbm_io_structUpdate'. 
+
+------------------------------------------------------------------------
+r589 | dahnke | 2014-06-23 10:00:17

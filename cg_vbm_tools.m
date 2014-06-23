@@ -9,7 +9,7 @@ rev = '$Rev$';
 
 %_______________________________________________________________________
 
-data = cfg_files;
+data = cfg_files; 
 data.tag  = 'data';
 data.name = 'Volumes';
 data.filter = 'image';
@@ -312,8 +312,7 @@ slice.name = 'Show slice (in mm)?';
 slice.strtype = 'r';
 slice.num = [1 1];
 slice.val  = {0};
-slice.help = {[...
-'Choose slice in mm.']};
+slice.help = {'Choose slice in mm.'};
 
 gap = cfg_entry;
 gap.tag = 'gap';
@@ -321,7 +320,9 @@ gap.name = 'Separation';
 gap.strtype = 'n';
 gap.num = [1 1];
 gap.val  = {3};
-gap.help    = {'To speed up calculations you can define that only every x voxel correlation is estimated. Smaller sampling distances gives slightly more accurate correlations, but will be much slower.'};
+gap.help    = {[ ...
+  'To speed up calculations you can define that only every x voxel correlation is estimated. '...
+  'Smaller sampling distances gives slightly more accurate correlations, but will be much slower.']};
 
 scale = cfg_menu;
 scale.tag = 'scale';
@@ -451,6 +452,78 @@ check_mesh_cov.help = {[...
 %------------------------------------------------------------------------
 
 data.help = {[...
+'Select images for quality assurance.']};
+
+qa        = cfg_exbranch;
+qa.tag    = 'qa';
+qa.name   = 'VBM Quality Assurance';
+qa.val    = {data};
+qa.prog   = @vbm_tst_qa;
+qa.vfiles = @vfiles_qa;
+qa.help   = {[...
+  'VBM Quality Assurance of T1 images. ']};
+
+
+
+%{
+  if 0
+  dartelwarp    = cfg_menu;
+  dartelwarp.tag = 'dartelwarp';
+  dartelwarp.name = 'Spatial normalization';
+  dartelwarp.labels = {'Low-dimensional: SPM default','High-dimensional: Dartel'};
+  dartelwarp.values = {0 1};
+  dartelwarp.def  = @(val)cg_vbm8_get_defaults('extopts.dartelwarp', val{:});
+  dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization.
+ Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '};
+  end
+
+  darteltpm = cfg_files;
+  darteltpm.tag  = 'darteltpm';
+  darteltpm.name = 'Dartel Template';
+  darteltpm.help    = {
+                 'Selected tissue probability map must be in multi-volume nifti format and contain all six tissue priors.'
+                 }';
+
+  darteltpm.filter = 'image';
+  darteltpm.ufilter = '_1_';
+  darteltpm.def  = @(val)cg_vbm8_get_defaults('extopts.darteltpm', val{:});
+  darteltpm.num     = [1 1];
+
+  normhigh         = cfg_branch;
+  normhigh.tag     = 'normhigh';
+  normhigh.name    = 'High-dimensional: Dartel';
+  normhigh.val     = {darteltpm};
+  normhigh.help    = {
+                 'Use high-dimensional Dartel normalization. '
+                 ''
+                 'Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '
+                 ''
+  }';
+
+  normlow         = cfg_branch;
+  normlow.tag     = 'normlow';
+  normlow.name    = 'Low-dimensional: SPM default';
+  normlow.help    = {
+                 'Use standard spatial normalization. '
+                 ''
+  }';
+
+  dartelwarp    = cfg_choice;
+  dartelwarp.tag = 'dartelwarp';
+  dartelwarp.name = 'Spatial normalization';
+  if cg_vbm8_get_defaults('extopts.dartelwarp')
+      dartelwarp.val = {normhigh};
+  else
+      dartelwarp.val = {normlow};
+  end
+  dartelwarp.values = {normlow normhigh};
+  dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normali
+%}
+
+
+%------------------------------------------------------------------------
+
+data.help = {[...
 'Select all images. Images have to be in the same orientation with same voxel size and dimension ',...
 '(e.g. normalized images)']};
 
@@ -472,14 +545,15 @@ sanlm = cfg_exbranch;
 sanlm.tag = 'sanlm';
 sanlm.name = 'Spatially adaptive non local means denoising filter';
 sanlm.val = {data};
-sanlm.prog   = @cg_sanlm;
+sanlm.prog   = @vbm_vol_sanlm; %cg_sanlm;
 sanlm.vfiles  = @vfiles_sanlm;
 sanlm.help = {[...
 'This function applies an spatial adaptive non local means denoising filter to the data. This filter will remove noise while ',...
 'preserving edges. The smoothing filter size is automatically estimated based on the standard deviation of the noise. ',...
 'The resulting images are prepended with the term "sanlm_".'],...
 '',[...
-'This filter is internally used in the segmentation procedure anyway. Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.']};
+'This filter is internally used in the segmentation procedure anyway. '...
+'Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.']};
 
 %------------------------------------------------------------------------
 calcvol_files = cfg_files;
@@ -597,7 +671,7 @@ defs.name = 'Apply Deformations (Many images)';
 defs.val = {field1,images1,interp,modulate};
 defs.prog    = @cg_vbm_defs;
 defs.vfiles  = @vfiles_defs;
-defs.help    = {'This is a utility for applying a deformation field of one subject to many images.'};;
+defs.help    = {'This is a utility for applying a deformation field of one subject to many images.'};
 
 defs2 = cfg_exbranch;
 defs2.tag = 'defs2';
@@ -605,7 +679,7 @@ defs2.name = 'Apply Deformations (Many subjects)';
 defs2.val = {field,images,interp,modulate};
 defs2.prog    = @cg_vbm_defs;
 defs2.vfiles  = @vfiles_defs2;
-defs2.help    = {'This is a utility for applying deformation fields of many subjects to images.'};;
+defs2.help    = {'This is a utility for applying deformation fields of many subjects to images.'};
 
 %------------------------------------------------------------------------
 realign = cg_cfg_realign;
@@ -616,7 +690,7 @@ long    = cg_vbm_longitudinal_multi;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp,check_mesh_cov};
+tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp,check_mesh_cov};
 
 return
 
@@ -673,6 +747,16 @@ s  = strvcat(job.data);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
     vf = {vf{:}, fullfile(pth,['sanlm_',nam,ext,num])};
+end;
+return;
+%_______________________________________________________________________
+function vf = vfiles_qa(job)
+vf = {};
+
+s  = strvcat(job.data);
+for i=1:size(s,1),
+    [pth,nam,ext,num] = spm_fileparts(s(i,:));
+    vf = {vf{:}, fullfile(pth,['p0',nam,'ext'])};
 end;
 return;
 %_______________________________________________________________________

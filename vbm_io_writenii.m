@@ -62,7 +62,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     if isfield(writes,'warped'),   write(2) = writes.warped; end
     if isfield(writes,'mod'   ),   write(3) = writes.mod;    end
     if isfield(writes,'affine'),   write(4) = writes.affine; end
-    if isfield(writes,'darte' ),   write(4) = writes.dartel; end
+    if isfield(writes,'dartel'),   write(4) = writes.dartel; end
   elseif isnumeric(writes)
     if numel(writes)==3, write = [writes(1:2) 0 writes(3)]; else write = writes; end
   end
@@ -154,11 +154,14 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
       [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3)); %wT0=wT==0;
       spm_field('bound',1);
       wT      = spm_field(w,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]); 
-      %wT(wT0) = 0; % clear regions that were not defined in the deformation
+
+     % vx1=sqrt(sum(V(1).mat(1:3,1:3).^2)); vx = abs(prod(vx1))^(1/3);
+     % [wT,w]  = dartel3('push',Y ,transform.warped.y,transform.warped.odim(1:3)); %wT0=wT==0;
+     % C = optimNn(w,wT,[1  vx vx vx 1e-4 1e-6 0  3 2]);      %wT(wT0) = 0; % clear regions that were not defined in the deformation
     elseif labelmap==1
       wT = zeros([transform.warped.odim(1:3),max(Y(:))],'uint8'); 
       for yi=1:max(Y(:)); 
-        [wTi,w]  = spm_diffeo('push',single(Y==yi),transform.warped.y,transform.warped.odim(1:3));
+        [wTi,w]  = spm_diffeo('push',single(Y==yi),transform.warped.y,transform.warped.odim(1:3)); %#ok<NASGU>
         wT(:,:,:,yi) = uint8(wTi*100); 
       end
       [wTmax,wT] = max(wT,[],4); 
@@ -226,7 +229,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
           elseif all(size(wT)==size(YM)) 
             wTM = YM;
           else
-            error('MATLAB:vbm_io_writenii:YMsize','Error size of YM ~ Y');
+            error('MATLAB:vbm_io_writenii:YMsize','Error size of YM ~Â Y');
           end
         end
       end
