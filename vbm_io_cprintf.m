@@ -165,7 +165,7 @@ function count = vbm_io_cprintf(style,format,varargin)
         case {'w','warn','warning'}, style=[1.0 0.5 0.0];
         case {'com','comment'},      style=[0.0 0.0 0.8];
         case {'g','green'},          style=[0.0 1.0 0.0];
-        case {'b','blue'},           style=[0.0 0.0 0.1];
+        case {'b','blue'},           style=[0.0 0.0 1.0];
         case {'r','red'},            style=[1.0 0.0 0.0];
         case {'c','cyan'},           style=[0.0 1.0 1.0];
         case {'m','magenta'},        style=[1.0 1.0 0.0];
@@ -306,7 +306,7 @@ function count = vbm_io_cprintf(style,format,varargin)
         count = count1;
     end
   catch
-  % there are maybe some java error ...
+  % there are maybe some java errors ...
     count1 = fprintf(format,varargin{:});
     if nargout
         count = count1;

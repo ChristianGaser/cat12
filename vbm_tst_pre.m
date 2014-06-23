@@ -61,17 +61,17 @@ function vbm_tst_pre
   def.methods   = { 
   % 'name'    NC segments t1corr recalc                       % new
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
-  % 'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
- %   'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
-%    'VBM12'   0 {'p0'}      {'m'}       {1.5}       0 % internal noise correction
-%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+%  'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
+     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
+     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
+%     'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
-%     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
-%     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
-   %  'SPM'     0 {'p0'}      {''}        {0.5}       0 
-  %  'SPM8'    0 {'p0'}      {''}        {0.5}       0 
-%    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
-    'FSL'     1 {'p0'}      {''}        {-inf}      1 
+%    'SPM'     0 {'p0'}      {''}        {0.5}       1 
+%    'SPM8'    0 {'p0'}      {''}        {0.5}       1 
+%    'SPM12'   0 {'p0'}      {''}        {0.5}       1 
+%    'SPM8nc'  1 {'p0'}      {''}        {0.5}       1 
+%    'SPM12nc' 1 {'p0'}      {''}        {0.5}       1 
+%     'FSL'     1 {'p0'}      {''}        {-inf}      0 
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
   };
@@ -81,25 +81,25 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-  'BWP_Collins'
+%  'BWP_Collins'
 %  'BWP_Collins_res_slice'
-%  'BO'
-%     'SVE_LPBA40'
- %  'BWP_Collins_MS'
+%  'BWP_Collins_MS'
 %  'BWP_Collins_fast'
 %     'ADHD'
 %     'ADNI'
 %     'IXI'
 %     'NIH'
 %     'OASIS'
-%      'IBSRv1'
 %      'IBSRv2'
+%      'IBSRv1'
 %      'BWP_20N'
 %      'Tumorbase'
 %      'private'
-%     'SRS'
+%     'SVE_LPBA40'
+%     'BO'
 %      'private_full'
-%      'BWP_Collins'
+      'BWP_Collins'
+     'SRS'
 %      'Apes'
    };
  
@@ -356,18 +356,18 @@ function vbm_tst_pre
     % for all datasets (BWP-Collins) and phantoms with a ground truth
     % dataset for each image (BWP-20N, SVE, ..).
     %   ds('l2','',[1 1 1],T/signal,p0T==3,T/signal,p0T/3,90)
-    fprintf('RAW-QA:          ');
-    for fi=1:opt.subStepSize:numel(opt.RAW.T{di})
-      if numel(opt.RAW.p0T{di})==1 && exist(opt.RAW.p0T{di}{1},'file')
-        [opt.RAW.qa(di,fi).p0T,opt.RAW.qam(di,fi).p0T] = vbm_tst_t1qa(...
-          opt.RAW.T{di}{fi},opt.RAW.p0T{di}{1},'',struct('verb',0));
-      elseif numel(opt.RAW.p0T{di})>1 && exist(opt.RAW.p0T{di}{fi},'file')
-        [opt.RAW.qa(di,fi).p0T,opt.RAW.qam(di,fi).p0T]  = vbm_tst_t1qa(...
-          opt.RAW.T{di}{fi},opt.RAW.p0T{di}{fi},'',struct('verb',0));   
-      elseif exist(opt.RAW.psT{di}{fi},'file')
-        [opt.RAW.qa(di,fi).psT,opt.RAW.qam(di,fi).psT] = vbm_tst_t1qa(...
-          opt.RAW.T{di}{fi},opt.RAW.psT{di}{fi},'',struct('verb',0));
-      end
+%    fprintf('RAW-QA:          ');
+%    for fi=1:opt.subStepSize:numel(opt.RAW.T{di})
+%       if numel(opt.RAW.p0T{di})==1 && exist(opt.RAW.p0T{di}{1},'file')
+%         [opt.RAW.qa(di,fi).p0T,opt.RAW.qam(di,fi).p0T] = vbm_tst_t1qa(...
+%           opt.RAW.T{di}{fi},opt.RAW.p0T{di}{1},'',struct('verb',0));
+%       elseif numel(opt.RAW.p0T{di})>1 && exist(opt.RAW.p0T{di}{fi},'file')
+%         [opt.RAW.qa(di,fi).p0T,opt.RAW.qam(di,fi).p0T]  = vbm_tst_t1qa(...
+%           opt.RAW.T{di}{fi},opt.RAW.p0T{di}{fi},'',struct('verb',0));   
+%       elseif exist(opt.RAW.psT{di}{fi},'file')
+%         [opt.RAW.qa(di,fi).psT,opt.RAW.qam(di,fi).psT] = vbm_tst_t1qa(...
+%           opt.RAW.T{di}{fi},opt.RAW.psT{di}{fi},'',struct('verb',0));
+%       end
 %         
 %         fprintf(sprintf('%s%%4d/%%4d',sprintf('%s',repmat('\b',1,9))),fi,numel(opt.RAW.T{di})); 
 %       else
@@ -382,8 +382,8 @@ function vbm_tst_pre
 %           opt.RAW.qam(di,fi).psT = S.qam;
 %         end
 %       end
-    end
-    fprintf(' .. done. \n');
+%    end
+%    fprintf(' .. done. \n');
     clear T p0T;
    
     
@@ -801,7 +801,7 @@ function SPM8newsegment(file,SPM8dir,SPMwkd)
   matlabbatch{1}.spm.tools.preproc8.channel.vols      = cellstr(file);
   matlabbatch{1}.spm.tools.preproc8.channel.biasreg   = 0.0001;
   matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm  = 60;
-  matlabbatch{1}.spm.tools.preproc8.channel.write     = [1 0];
+  matlabbatch{1}.spm.tools.preproc8.channel.write     = [1 1];
   matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm     = {fullfile(spm('dir'),'TPM','TPM.nii,1')};
   matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus   = 2;
   matlabbatch{1}.spm.tools.preproc8.tissue(1).native  = [1 0];
@@ -881,7 +881,7 @@ function SPM12segment(file,SPM12dir,SPMwkd)
   matlabbatch{mb}.spm.spatial.preproc.channel.vols      = cellstr(file);
   matlabbatch{mb}.spm.spatial.preproc.channel.biasreg   = 0.001; % 0.0001
   matlabbatch{mb}.spm.spatial.preproc.channel.biasfwhm  = 60;
-  matlabbatch{mb}.spm.spatial.preproc.channel.write     = [1 0];
+  matlabbatch{mb}.spm.spatial.preproc.channel.write     = [1 1];
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,1'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).ngaus   = 1;
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).native  = [1 0];
@@ -971,16 +971,17 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
     {'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/Template_1_IXI550_MNI152.nii'};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm     = 2;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanup   = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstr   = 0.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutCSF   = 1;  
+%   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstr   = 0.5;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutCSF   = 0;  
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.vox       = 1.5;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.bb        = [[-90 -126 -72];[90 90 108]];
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.print     = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS       = LAS;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.WMHC      = 2;    
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.ROI       = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface   = 1;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.WMHC      = 0;  
+%   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.WMHCstr   = 0.5; 
+%   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.BVC       = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.ROI       = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface   = 0;
   
   %%
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 1;
@@ -1003,21 +1004,21 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.warped      = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.affine      = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.label.native     = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.label.warped     = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.label.dartel     = 0;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.label.warped     = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.label.dartel     = 1;
 
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.native     = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.warped     = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.dartel     = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.native     = 1;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.warped     = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.atlas.dartel     = 0;
   
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.native        = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.warped        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.modulated     = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.dartel        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.te.native        = 1;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.te.warped        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.te.modulated     = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.te.dartel        = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.native        = 1;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.warped        = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.modulated     = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.pc.dartel        = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.te.native        = 1;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.te.warped        = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.te.modulated     = 0;
+%   matlabbatch{1}.spm.tools.vbm.estwrite.output.te.dartel        = 0;
 
   
 

@@ -118,7 +118,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
           vol2 = single(spm_read_vols(V(i)));
           % temporare
           % bei dem BWP test bei fsl gibts einen ungeklärten versatz
-          if ~isempty(strfind(V(i).fname,'vbm_tst/FSL/BWP_Collins'))
+          if ~isempty(strfind(upper(V(i).fname),'FSL')) && ~isempty(strfind(upper(V(i).fname),'BWP'))
             vol2(2:end,:,:)=vol2(1:end-1,:,:);
           end
 

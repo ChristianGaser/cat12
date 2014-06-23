@@ -29,11 +29,11 @@ function [C,XML] = vbm_io_colormaps(Cname,ncolors)
   switch Cname
     case 'marks+', 
       C = [ 
-            0.0000    0.2000    0.5000  % 0 - excellent (dark green)
-            0.0000    0.5000    0.0000  % 1 - excellent (dark green)
-            0.4000    0.6000    0.1000  % 2 - good      (green)
+            0.0000    0.4000    0.0000  % 0 - excellent (dark green)
+            0.0000    0.8000    0.0000  % 1 - excellent (light green)
+            0.4000    0.6000    0.1000  % 2 - good      (yellow-green)
             1.0000    0.6000    0.4000  % 3 - ok        (yellow-orange)
-            1.0000    0.3000    0.0000  % 4 - bad       (red-yellow)
+            1.0000    0.3000    0.0000  % 4 - bad       (red-orange)
             0.8000    0.2000    0.0000  % 5 - very bad  (red)
             0.7000    0.0000    0.0000  % 6 - unusable  (dark red)
             0.6000    0.0000    0.0000  % 7 - unusable  (dark red)
@@ -64,8 +64,8 @@ function [C,XML] = vbm_io_colormaps(Cname,ncolors)
   
   % interpolate colormap
   if size(C,1)~=ncolors;
-    ss    = size(C,1)/(ncolors+2);
-    [X,Y] = meshgrid(1:ss:size(C,1),1:3);
+    ss    = (size(C,1)-1)/(ncolors);
+    [X,Y] = meshgrid(1:ss:size(C,1)-ss,1:3);
     C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
     XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...
              dec2hex(round(min(255,max(0,C(:,2)*255)))), ...

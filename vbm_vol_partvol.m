@@ -94,7 +94,8 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   LAB.HD = 21; % head
   LAB.HI = 23; % WM hyperintensities
   
-  vx_res  = cg_vbm_get_defaults('extopts.vx_res')*2;
+  WMHCstr = cg_vbm_get_defaults('extopts.WMHCstr'); 
+  vx_res  = cg_vbm_get_defaults('extopts.vx_res')*1; %*2
   verb    = cg_vbm_get_defaults('extopts.verb')-1;
   debug   = cg_vbm_get_defaults('extopts.debug');
 
@@ -210,23 +211,25 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % There can also be deep GM Hyperintensities! 
   % ####################################################################
   stime = vbm_io_cmd('  WMH detection','g5','',verb,stime);
- 
-  Ywmh=single(vbm_vol_morph(Yvt2<1.5,'d',1) & Ym<2.75 & ~vbm_vol_morph(YA==LAB.HC,'d',4*vxd)); 
-  Ywmh(smooth3((Yp0 - Ym)>0.3 & Ym<2.75 & Ym>1.75)>0.8)=1;
-  Ywmh(vbm_vol_morph(Yp0>2.5,'c',0) & ~(Yp0>2.5))=1;
+  Ywmh = single(smooth3(vbm_vol_morph(Yvt2<1.45,'d',1) & Ym<2.25 &...
+    ~vbm_vol_morph(YA==LAB.HC,'d',4*vxd))>0.75-WMHCstr/2); % ventricle
+  Ywmh(smooth3((Yp0 - Ym)>0.75-WMHCstr/2 & Ym<2.75 & Ym>1.5)>0.8)=1; % WMH
+  Ywmh(vbm_vol_morph(Yp0>2.5,'c',0) & ~(Yp0>2.5))=1; % WMH wholes
   Ywmh(Yvt2>1.75 & Yvt2<3 | (Ywmh==0 & Ym<1.5))=2;
-  Ywmh(smooth3(Ywmh>0)<0.8)=0;
   Ywmh((Ywmh==0 & Ym>2.25) | Ya1==LAB.BG | Ya1==LAB.TH)=-inf;
-  Ywmh = vbm_vol_downcut(Ywmh,(3-Ym)/3,noise,vx_vol); 
-  Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.6)=0;
-  Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.6)=0;
-  %%
+  Ywmh = vbm_vol_downcut(Ywmh,(3-Ym)/3,max(-0.02,noise*WMHCstr - (0.5-WMHCstr)),vx_vol); 
+  Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.25+WMHCstr/2)=0;
+  Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.25+WMHCstr/2)=0;
+  %
   Ywmh(isinf(Ywmh))=0;
   Ywmh((Ywmh==0 & Ym>2.75) | Ya1==LAB.BG | Ya1==LAB.TH)=nan; Ywmh(Ywmh==0)=1.5;
   Ywmh = vbm_vol_laplace3R(Ywmh,Ywmh==1.5,0.005);
   Ywmh(vbm_vol_morph(YS==1,'d',3*vxd) & vbm_vol_morph(YS==0,'d',3*vxd))=2; % not for the CC
+  Ynwmh = ~smooth3(vbm_vol_morph(Ya1==LAB.VT | Ya1==LAB.TH | Ya1==LAB.BG,'c',4))>0.5;
+  Ywmh = smooth3(Ywmh<1.25+WMHCstr/4 & Ya1~=LAB.VT & Ynwmh)>0.75-WMHCstr/2;
+  Ywmh = smooth3(vbm_vol_morph(vbm_vol_morph(Ywmh,'o',1),'c',1) & Ym<2.75)>(0.75-WMHCstr/2);
   %%
-  Ya1(smooth3(Ywmh<1.25)>0.6 & Ya1~=LAB.VT)=LAB.HI;
+  Ya1(Ywmh)=LAB.HI;
   %{
    Yvt2(Yvt2>1.45 & Yvt2<1.55)=inf; Yvt2=round(Yvt2);
   Yvt2(Yvt2>3 & Ym<2.5 & Ym>1.5 & YA~=LAB.CB & YA~=LAB.BS & Ya1~=LAB.BG & Ya1~=LAB.TH)=1.5;
@@ -234,7 +237,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   Yvt2(Yvt2>3)=1.5;
   Yvt2 = vbm_vol_laplace3R(Yvt2,Yvt2==1.5 & Ym<2.75 & YA~=LAB.BS & Ya1~=LAB.BG & Ya1~=LAB.TH,0.005); %Yvt2 = round(Yvt2);
   %}
-  if ~debug, clear Ywmh Yvt; end
+  if ~debug, clear Ywmh Yvt Ynwmh; end
 
   
   

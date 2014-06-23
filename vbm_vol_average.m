@@ -60,11 +60,11 @@ function PO = vbm_vol_average(P,fname,PT,dt,nr)
     dt = [16 16 16];
   end
   if size(P,1)<2,
-    warning('MATLAB:vbm_vol_average:input','WARNING:vbm_vol_average:to less input (n=1)!\n');
+    warning('MATLAB:vbm_vol_average:input','WARNING:vbm_vol_average:to small input (n=1)!\n');
     VO=struct(); return; 
   end
   if size(P,1)<3,
-    warning('MATLAB:vbm_vol_average:input','WARNING:vbm_vol_average:to less input for median and std (n=2)!\n');
+    warning('MATLAB:vbm_vol_average:input','WARNING:vbm_vol_average:to small input for median and std (n=2)!\n');
     dt(1)=0; dt(1)=0;
   end
   
