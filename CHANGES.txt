@@ -4469,3 +4469,18 @@ D       vbm_vol_t1qacalc.m
 
 ------------------------------------------------------------------------
 r589 | dahnke | 2014-06-23 10:00:17
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_tools.m
+M       spm_vbm12.m
+M       vbm12.man
+A       vbm_check_system_output.m
+M       vbm_surf_createCS.m
+M       vbm_surf_resamp.m
+
+(1) Added function to resample and smooth existing freesurfer data.
+(2) Added vbm_check_system_output.m that was used internally in several
+    function that use system calls.
+------------------------------------------------------------------------
+r590 | gaser | 2014-07-24 12:37:52
