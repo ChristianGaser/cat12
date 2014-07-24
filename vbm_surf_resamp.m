@@ -50,35 +50,22 @@ for i=1:size(P,1)
 
   % resample values using warped sphere 
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
-  [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+  [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
   
   % resample surface using sphere 
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp);
-  [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+  [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
 
   % smooth resampled values
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,fwhm,Pvalue);
-  [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+  [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
 
   % add values to resampled surf and save as gifti
   cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
-  [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+  [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
   
   delete(Presamp);
   delete(Pfwhm);
   delete(Pvalue);
 
-end
-  
-end
-
-function check_system_output(status,result,debugON)
-  if status==1 || ...
-     ~isempty(strfind(result,'ERROR')) || ...
-     ~isempty(strfind(result,'Segmentation fault'))
-    error('VBM:system_error',result); 
-  end
-  if nargin > 2
-    if debugON, disp(result); end
-  end
 end
