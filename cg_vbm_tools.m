@@ -213,7 +213,7 @@ data_F2x.name = 'Volumes';
 data_F2x.filter = 'image';
 data_F2x.ufilter = '^spmF.*\.[in][im][gi]$';
 data_F2x.num     = [1 Inf];
-data_F2x.help = {'Select spmF-images to sel.'};
+data_F2x.help = {'Select spmF-images to select.'};
 
 sel      = cfg_menu;
 sel.name = 'Convert F value to';
@@ -410,7 +410,7 @@ fwhm.name    = 'Smoothing filter size in fwhm';
 fwhm.help    = {''};
 fwhm.strtype = 'r';
 fwhm.num     = [1 1];
-fwhm.val     = {20};
+fwhm.val     = {15};
 fwhm.help = {[...
 'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, ',...
 'while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) ',...
@@ -418,11 +418,38 @@ fwhm.help = {[...
 
 surfresamp = cfg_exbranch;
 surfresamp.tag = 'surfresamp';
-surfresamp.name = 'Resample surface parameters to template space';
+surfresamp.name = 'Resample and smooth surface parameters';
 surfresamp.val = {data_surf,fwhm};
 surfresamp.prog   = @vbm_surf_resamp;
 surfresamp.help = {[...
-'Not yet finished']};
+'In order to analyze surface parameters all data have to be resampled into template space and ',...
+'the resampled data have to be finally smoothed. Resampling is done using the warped coordinates ',...
+'of the resp. sphere.']};
+
+data_fs = cfg_files;
+data_fs.tag  = 'data_fs';
+data_fs.name = 'Freesurfer subject directories';
+data_fs.filter = 'dir';
+data_fs.ufilter = '.*';
+data_fs.num     = [1 Inf];
+data_fs.help = {'Select subject folders of freesurfer data to resample thickness data.'};
+
+outdir         = cfg_files;
+outdir.tag     = 'outdir';
+outdir.name    = 'Output directory';
+outdir.help    = {'Select a directory where files are written.'};
+outdir.filter  = 'dir';
+outdir.ufilter = '.*';
+outdir.num     = [1 1];
+
+surfresamp_fs = cfg_exbranch;
+surfresamp_fs.tag = 'surfresamp_fs';
+surfresamp_fs.name = 'Resample and smooth existing freesurfer thickness data';
+surfresamp_fs.val = {data_fs,fwhm,outdir};
+surfresamp_fs.prog   = @vbm_surf_resamp_freesurfer;
+surfresamp_fs.help = {[...
+'If you have existing freesurfer thickness data this function can be used to resample these data,',...
+'smooth the resampled data, and convert freesurfer data to gifti format.']};
 
 data_surf = cfg_files;
 data_surf.tag  = 'data_surf';
@@ -690,7 +717,7 @@ long    = cg_vbm_longitudinal_multi;
 tools = cfg_choice;
 tools.name = 'Tools';
 tools.tag  = 'tools';
-tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp,check_mesh_cov};
+tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp,surfresamp_fs,check_mesh_cov};
 
 return
 
