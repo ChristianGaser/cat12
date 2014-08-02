@@ -33,8 +33,14 @@ function out = vbm_stat_nanmean(in, dim)
     end;
   end;
   
+  if isempty(in), out = nan; return; end
+  
   % estimate mean
   tmpin = in;
   tmpin(isnan(in(:))) = 0;
-  out = sum(tmpin, dim) ./ sum(~isnan(in),dim);
+  if sum(~isnan(in),dim)==0
+    out = nan;
+  else
+    out = sum(tmpin, dim) ./ max(eps,sum(~isnan(in),dim));
+  end
 end

@@ -16,9 +16,9 @@ function stime = vbm_io_cmd(str,style,strlength,verb,stime)
 %   Testfunction                                                      3s
 %
 %
-%   stime = vbm_io_cmd('Testfunction2','comment','','',''); 
+%   stime = clock; 
 %   pause(2.34);
-%   vbm_io_cmd('','comment','','',stime); 
+%   stime = vbm_io_cmd('  Prepare segments','g5','',1,stime);
 %   Testfunction2                                                     3s
 %
 % see also: vbm_io_cprintf for colored command line output.
@@ -35,7 +35,7 @@ function stime = vbm_io_cmd(str,style,strlength,verb,stime)
   if ~exist('strlength','var') || isempty(strlength), strlength=66; end
   if verb
     if exist('stime','var') && ~isempty(stime)
-      fprintf('%4.0fs\n',etime(clock,stime));
+      fprintf('% 4.0fs\n',etime(clock,stime));
     end
       
     if ~isempty(str) 

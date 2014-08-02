@@ -3,10 +3,12 @@ function compile
   rand('state',0);
   d = single(rand(10,10,10));
   
+  cd(fullfile(spm('dir'),'toolbox','vbm12'));
+  
   mex -Dchar16_t=UINT16_T -O AmapMex.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c
   mex -Dchar16_t=UINT16_T -O vbm_vol_median3.c
   mex -Dchar16_t=UINT16_T -O vbm_vol_median3c.c
-  mex -Dchar16_t=UINT16_T -O vbm_vol_eikonal3.c
+  %mex -Dchar16_t=UINT16_T -O vbm_vol_eikonal3.c
   mex -Dchar16_t=UINT16_T -O vbm_vol_downcut.c
   mex -Dchar16_t=UINT16_T -O vbm_vol_laplace3.c
   mex -Dchar16_t=UINT16_T -O vbm_vol_laplace3R.c
@@ -19,9 +21,11 @@ function compile
   mex -Dchar16_t=UINT16_T -O vbm_vol_genus0.c genus0.c
   mex -Dchar16_t=UINT16_T -O vbdist.c
   
+  
+  %%
   d2 = vbm_vol_median3(d);             disp('Compilation of vbm_vol_median3 successful')
   d2 = vbm_vol_median3c(d);            disp('Compilation of vbm_vol_median3c successful')
-  d2 = vbm_vol_eikonal3(d);            disp('Compilation of vbm_vol_eikonal3 successful')
+  %d2 = vbm_vol_eikonal3(d);            disp('Compilation of vbm_vol_eikonal3 successful')
   d2 = vbm_vol_laplace3(d,0,0,0.001);  disp('Compilation of vbm_vol_laplace3 successful')
   d2 = vbm_vol_laplace3R(d,d>0.5,0.2); disp('Compilation of vbm_vol_laplace3R successful')
   [d2,d3,d4] = vbm_vol_gradient3(d);   disp('Compilation of vbm_vol_gradient3 successful')
@@ -33,6 +37,8 @@ function compile
   d2 = vbm_vol_eidist(d,d);            disp('Compilation of vbm_vol_eidist successful')
   d2 = vbm_vol_pbtp(3*d,d,d);          disp('Compilation of vbm_vol_pbtp successful')
 
+  
+  %%
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')
           mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c

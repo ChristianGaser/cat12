@@ -100,13 +100,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
-  /*printf("%d",st); */
 
-  float NVstdth,nx,NVnmax,stdth=0.90; /*1-1/nh; 1 - 1/(2*nh+1); (2*nh+1)); */
+  float NVstdth,nx,NVnmax; 
+  float stdth = (float) 0.90; /*1-1/nh; 1 - 1/(2*nh+1); (2*nh+1)); */
   float DV[9261],NV[9261],NVn[9261],GV[9261],DN[9261], NVmd, NVmn, NVstd; /* nmax ==10 */
-  float stdd[3],stdp[3],stdn[3],stdm[2];
+  float stdd[3],stdp[3],stdn[3];
   int   stddc[3],stdpc[3],stdnc[3];
   int   di,i,j,k,ind,ni,x,y,z,n,nn,n2,md; /*,HIST1[1000],HIST2[1000]; */
+  float stdm[2];
   
   /* in- and output */
   float *D = (float *) mxGetPr(prhs[0]);
@@ -114,6 +115,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M   = (float *) mxGetPr(plhs[0]);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M2  = (float *) mxGetPr(plhs[1]);
+  
+  for (i=0;i<nL;i++) { 
+		if (D[i]==-FLT_MAX || mxIsNaN(D[i])) D[i]=0.0; 	/* correction of non-visited or other incorrect voxels */
+    M[i]  = 0.0;
+    M2[i] = 0.0;
+	} 
+  
   
   int n1i,n2i; 
   int HISTmax=256; /* HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
@@ -137,28 +145,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   for (z=0;z<sL[2];z++) for (y=0;y<sL[1];y++) for (x=0;x<sL[0];x++) {
     ind = index(x,y,z,sL);
     if ( B[ind] && mxIsNaN(D[i])==0 && mxIsInf(D[i])==0  ) {
-      n = 0;
-      n2= 0;
+      n  = 0;
+      n2 = 0;
       
       /* go through all elements in a nh x nh x nh box */
       for (i=-nh;i<=nh;i++) for (j=-nh;j<=nh;j++) for (k=-nh;k<=nh;k++) {
         /* check borders, masks, NaN or Infinities */
         if ( ((x+i)>=0) && ((x+i)<sL[0]) && ((y+j)>=0) && ((y+j)<sL[1]) && ((z+k)>=0) && ((z+k)<sL[2])) {
           ni = index(x+i,y+j,z+k,sL);
-          if ( B[ni]>0 && mxIsNaN(D[ni])==0 && mxIsInf(D[ni])==0 ) {
-            DN[ni] = (float) sqrt( (double) ((i * i) + (j * j) + (k * k)) );
+          if ( B[ni] && mxIsNaN(D[ni])==0 && mxIsInf(D[ni])==0 ) {
+            DN[n] = sqrtf( ( (float) ((i * i) + (j * j) + (k * k)) ) );
             if (st==10) {
-              if ( (D[ni]>0 || st==7) && (DN[ni]<=max(1,(float)nh)) ) { /* && (DN[ni]<=(float)nh) ) { */
+              if ( (D[ni]>0.0 || st==7) && (DN[n]<=max(1.0,(float)nh)) ) { /* && (DN[ni]<=(float)nh) ) { */
                 DV[n2] = D[ni];
                 n2++;
               }
-              if ( (D[ni]>0 || st==7) && (DN[ni]>1) && (DN[ni]<=(float)nh)) { /* && (DN[ni]<=(float)nh) ) { */
+              if ( (D[ni]>0.0 || st==7) && (DN[n]>1.0) && (DN[n]<=(float)nh)) { /* && (DN[ni]<=(float)nh) ) { */
                 NV[n] = D[ni];
                 n++;
               }              
             }
             else {
-              if ( (B[ni]==1 || st==7) && (DN[ni]<=(float)nh) ) { /* && (DN[ni]<=(float)nh) ) { */
+              if ( (B[ni] || st==7) && (DN[n]<=(float)nh) ) { /* && (DN[ni]<=(float)nh) ) { */
                 NV[n] = D[ni];
                 n++;
               }              
@@ -167,7 +175,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
       }
      
-      NVmn = 0;nx=0; 
+      NVmn = 0.0; nx = 0.0; 
       
       /* mean */
       if (st==1) { M[ind]=   0.0; for (nn=0;nn<n;nn++) { M[ind]+=NV[nn]; nx++;}; M[ind]/=nx;};
@@ -182,7 +190,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       if (st==4) {
         M[ind] = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind];
         NVstd  = 0.0; for (nn=0;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
-        M[ind] = sqrtf((NVstd/(nx-1)));
+        M[ind] = sqrtf((NVstd/(nx-1.0)));
       };
      
       /* ===============================================================
@@ -193,7 +201,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       if (st==5) {
         for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;}
         for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
-        M[ind]=0; for (nn=0;nn<HISTn;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) HIST[nn]; }
+        M[ind]=0.0; for (nn=0;nn<HISTn;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) HIST[nn]; }
         M[ind]=M[ind]/(float) HISTmax;
       };  
       
@@ -207,15 +215,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         M[ind]=0; for (nn=(int) ROUND( NVmn * (float) HISTmax);nn<HISTn;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
         /*M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;} */
         M[ind]=M[ind]/(float) HISTmax;
-        M2[ind]=0; for (nn=0;nn<(int) ROUND( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
+        M2[ind]=0.0; for (nn=0;nn<(int) ROUND( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
         M2[ind]=M2[ind]/(float) HISTmax;
       };  
       
       /* max in histogram 3 */
       if (st==7) {
-        for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;} /* init histogram */
+        for (nn=0;nn<HISTn;nn++) {HIST[nn]=0.0;} /* init histogram */
         for (nn=0;nn<n;nn++) {HIST[(int) (NV[nn] - HISTmin)]++;}  /* estimate histogram */
-        NVmn=0; M[ind]=0; for (nn=0;nn<HISTn;nn++) { if (HIST[nn]>NVmn) {NVmn=HIST[nn]; M[ind]=(float) nn;}}
+        NVmn=0.0; M[ind]=0.0; for (nn=0;nn<HISTn;nn++) { if (HIST[nn]>NVmn) {NVmn=HIST[nn]; M[ind]=(float) nn;}}
         M[ind]=M[ind] + HISTmin;
       };   
      
@@ -224,22 +232,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      if (st==8) {
         if (n>nh*nh*nh) { 
           sort(NV,0,n); 
-          md=(int)round(n*0.75);
+          md=(int)ROUND(n*0.75);
           NVmd = NV[md];
 
           
           nx=0;
           M[ind] = 0.0; for (nn=0;nn<md;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind]; /* NVmn=NVmd; */ 
           NVstd  = 0.0; for (nn=0;nn<md;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
-          if ( nx>nh*nh ) M2[ind] = sqrtf((NVstd/(nx-1))); else M[ind]=0;
+          if ( nx>nh*nh ) M2[ind] = sqrtf((NVstd/(nx-1.0))); else M[ind]=0.0;
           
           nx=0;
           M[ind] = 0.0; for (nn=md;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind]; /* NVmn=NVmd; */
           NVstd  = 0.0; for (nn=md;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
-          if ( nx>nh*nh ) M[ind] = sqrtf((NVstd/(nx-1))); else M[ind]=0;
+          if ( nx>nh*nh ) M[ind] = sqrtf((NVstd/(nx-1.0))); else M[ind]=0.0;
 
-          M[ind]  = M[ind]*2;
-          M2[ind] = M2[ind]*2;
+          M[ind]  = M[ind]*2.0;
+          M2[ind] = M2[ind]*2.0;
           if (M[ind]>M2[ind]) {NVmn=M2[ind]; M2[ind]=M[ind]; M[ind]=NVmn;}
                   
           /* M2[ind] = max(0,M2[ind] - M[ind]*5); */
@@ -258,21 +266,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* mean (or better median) intensity in the area */
         /*  M[ind] = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind]; */
         if (n>1) { if (n==2) {
-            NVmd = (NV[0] + NV[1]) / 2;  
+            NVmd = (NV[0] + NV[1]) / 2.0;  
           }
           else {
             sort(NV,0,n); 
-           NVmd = NV[(int)(n/2)];
+           NVmd = NV[(int)(n/2.0)];
           }
         }
         M[ind] = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind];
         NVstd  = 0.0; for (nn=0;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
-        M[ind] = (float)sqrt((double)(NVstd/(nx-1)));
+        M[ind] = (float)sqrt((double)(NVstd/(nx-1.0)));
         
         /* estimation of noise for each dimention */
-        stdd[0]=0; stdd[1]=0;stdd[2]=0;
-        stdp[0]=0; stdp[1]=0;stdp[2]=0;
-        stdn[0]=0; stdn[1]=0;stdn[2]=0;
+        stdd[0]=0.0; stdd[1]=0.0;stdd[2]=0.0;
+        stdp[0]=0.0; stdp[1]=0.0;stdp[2]=0.0;
+        stdn[0]=0.0; stdn[1]=0.0;stdn[2]=0.0;
 
         stddc[0]=0; stddc[1]=0;stddc[2]=0;
         stdpc[0]=0; stdpc[1]=0;stdpc[2]=0;
@@ -290,7 +298,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
 
             if ( (x+i)>=0 && (x+i)<sL[0] ) {
-              if (B[ni]>0 && mxIsNaN(D[ni])==0 && mxIsInf(D[ni])==0 ) {
+              if (B[ni] && mxIsNaN(D[ni])==0 && mxIsInf(D[ni])==0 ) {
                 stdd[di] += (D[ni]-NVmn)*(D[ni]-NVmn); stddc[di]++;
                 if (D[ind]>NVmd) {
                   stdp[di] += (D[ni]-NVmn)*(D[ni]-NVmn); stdpc[di]++;
@@ -302,9 +310,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
           }
           
-          if ( stddc[di]>1 ) {stdd[di]=sqrtf((stdd[di]/(stddc[di]-1)));} else {stdd[di] = 0;}
-          if ( stdpc[di]>1 ) {stdp[di]=sqrtf((stdp[di]/(stdpc[di]-1)));} else {stdp[di] = 0;}
-          if ( stdnc[di]>1 ) {stdn[di]=sqrtf((stdn[di]/(stdnc[di]-1)));} else {stdn[di] = 0;}
+          if ( stddc[di]>1 ) {stdd[di]=sqrtf((stdd[di]/(stddc[di]-1)));} else {stdd[di] = 0.0;}
+          if ( stdpc[di]>1 ) {stdp[di]=sqrtf((stdp[di]/(stdpc[di]-1)));} else {stdp[di] = 0.0;}
+          if ( stdnc[di]>1 ) {stdn[di]=sqrtf((stdn[di]/(stdnc[di]-1)));} else {stdn[di] = 0.0;}
         }
        /* sort(stdd,0,2); */
         
@@ -317,19 +325,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       }
       
       
-      if ((M[ind]==-FLT_MAX) || (D[ind]==FLT_MAX) || (mxIsNaN(D[ind])) ) M[ind]=0;
+      if ((M[ind]==-FLT_MAX) || (D[ind]==FLT_MAX) || (mxIsNaN(D[ind])) ) M[ind]=0.0;
     
 
     }
     else {
-      M[ind] = 0; /*D[ind];*/
+      M[ind] = 0.0; /*D[ind];*/
      /* SD[ind] = 0; */      
     }
     
     
   } 
   for (i=0;i<nL;i++) { 
-			if (M[i]==-FLT_MAX || mxIsNaN(M[i])) M[i]=0; 	/* correction of non-visited or other incorrect voxels */
+		if ( M[i]==-FLT_MAX || M[i]==FLT_MAX || mxIsNaN(M[i]) ) M[i]=0.0; 	/* correction of non-visited or other incorrect voxels */
 	} 
   
   free(HIST);
