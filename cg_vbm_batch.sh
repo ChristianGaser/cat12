@@ -42,6 +42,7 @@ parse_args ()
 {
   local optname optarg
   count=0
+  paras=
 
   if [ $# -lt 1 ]; then
     help
@@ -52,6 +53,7 @@ parse_args ()
   do
     optname="`echo $1 | sed 's,=.*,,'`"
     optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    paras="$paras $optname $optarg"
     case "$1" in
         --matlab* | -m*)
             exit_if_empty "$optname" "$optarg"
@@ -81,7 +83,7 @@ parse_args ()
             LOGDIR=$optarg
             if [ ! -d $LOGDIR ] 
             then
-              mkdir $LOGDIR
+              mkdir -p $LOGDIR
             fi
             shift
             ;;
@@ -263,18 +265,18 @@ run_vbm ()
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
-    
+   
     # argument empty?
     if [ ! "${defaults_file}" == "" ]; then
         # check wether absolute or relative names were given
-        if [ ! -f ${defaults_file} ];  then
+        if [ ! -f ${defaults_file} -a -f ${pwd}/${defaults_file} ];  then
             defaults_file=${pwd}/${defaults_file}
         fi
     
         # check whether defaults file exist
-        if [ ! -f ${defaults_file} ];  then
-            echo $defaults_file not found.
-        fi
+        #if [ ! -f ${defaults_file} ];  then
+        #    echo $defaults_file not found.
+        #fi
     fi
 
     # split files and prepare tmp-file with filenames
@@ -327,24 +329,34 @@ run_vbm ()
                         
             echo Calculate
             for F in ${ARG_LIST[$i]}; do echo $F; done
+            # File Output
             echo ---------------------------------- >> ${vbmlog}_${j}.log
-            date >> ${vbmlog}_${j}.log
+            date                                    >> ${vbmlog}_${j}.log
             echo ---------------------------------- >> ${vbmlog}_${j}.log
-            echo >> ${vbmlog}_${j}.log
-            echo $0 ${1+"$@"} >> ${vbmlog}_${j}.log
-            echo >> ${vbmlog}_${j}.log
-            echo $COMMAND >> ${vbmlog}_${j}.log
-            echo >> ${vbmlog}_${j}.log
-            echo $SHCOMMAND >> ${vbmlog}_${j}.log
-            echo >> ${vbmlog}_${j}.log
-            if [ -z "$shellcommand" ]
-            then
-              nohup nice -n $nicelevel ${matlab} -nodisplay -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
+            echo                                    >> ${vbmlog}_${j}.log
+            echo Calling string of this batch:      >> ${vbmlog}_${j}.log
+            echo "  $0 $paras"                      >> ${vbmlog}_${j}.log
+            echo                                    >> ${vbmlog}_${j}.log
+            echo MATLAB command of this batch:      >> ${vbmlog}_${j}.log
+            echo "  $COMMAND"                       >> ${vbmlog}_${j}.log
+            echo                                    >> ${vbmlog}_${j}.log
+            echo Shell command of this batch:       >> ${vbmlog}_${j}.log
+            echo "  $SHCOMMAND"                     >> ${vbmlog}_${j}.log
+            echo                                    >> ${vbmlog}_${j}.log
+            
+            if [ -f ${defaults_file} ];  then
+              if [ -z "$shellcommand" ]
+              then
+                nohup nice -n $nicelevel ${matlab} -nodisplay -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
+              else
+                nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
+              fi
+              echo Check ${vbmlog}_${j}.log for logging information
+              echo
             else
-              nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
+              echo Stop processing, because of missing default file: >> ${vbmlog}_${j}.log
+              echo   ${defaults_file}  >> ${vbmlog}_${j}.log
             fi
-            echo Check ${vbmlog}_${j}.log for logging information
-            echo
         fi
         ((i++))
     done

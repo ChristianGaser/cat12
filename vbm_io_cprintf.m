@@ -139,7 +139,7 @@ function count = vbm_io_cprintf(style,format,varargin)
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
 % $Revision$  $Date$
-
+  warning off; 
   try
     persistent majorVersion minorVersion
     if isempty(majorVersion)
@@ -260,6 +260,7 @@ function count = vbm_io_cprintf(style,format,varargin)
         % Display the text in the Command Window
         count1 = fprintf(2,format,varargin{:});
 
+
         %awtinvoke(cmdWinDoc,'remove',lastPos,1);   % TODO: find out how to remove the extra '_'
         drawnow;  % this is necessary for the following to work properly (refer to Evgeny Pr in FEX comment 16/1/2011)
         docElement = cmdWinDoc.getParagraphElement(lastPos+1);
@@ -310,10 +311,10 @@ function count = vbm_io_cprintf(style,format,varargin)
     count1 = fprintf(format,varargin{:});
     if nargout
         count = count1;
-    end
+    end 
 
   end  
-  
+  warning on;
 return;  % debug breakpoint
 
 % Process the requested style information

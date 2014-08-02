@@ -35,11 +35,12 @@ function varargout=vbm_tst_SRS
   opt.datasets = {
   % name      resliceres
   %   'Bert'    0.75    1
-     'NIH'     0.75    1
-     'CG'      0.75    1 
-     'Tohoku'  0.50    0.8
-     'ALVIN'   0.75    1
-     'XNAT'    0.75    1
+%      'NIH'     0.75    1
+%      'CG'      0.75    1 
+%      'Tohoku'  0.50    0.8
+%      'ALVIN'   0.75    1
+%      'XNAT'    0.75    1
+     'RD'      0.75    1
    %  'ThomasM' 0.75    0.8
    %  'ThomasA' 0.75    0.8
    %  'ADB-SRS' 1.00    1% NIH
@@ -51,13 +52,13 @@ function varargout=vbm_tst_SRS
   % preprocessing methods that are used for input for the p0 reslicing
   opt.realignpremethod = 'VBM12i';
   opt.methods   = { 
-     'VBM12i' 
-     'VBM12'  
-     'SPM12'  
-     'VBM8'
-     'SPM'    
-     'SPM8'   
-     'FSL'    
+   %   'VBM12i' 
+      'VBM12'  
+      'SPM12'  
+      'VBM8'
+      'SPM'    
+      'SPM8'   
+  %    'FSL'    
   };
   opt.gtmethods = {'SPM12','VBM12','VBM12i'};
   opt.gtth = 'mean-2sd'; % {'mean','mean-sd','mean-sd'} only to remove hard outlier
@@ -74,7 +75,7 @@ function varargout=vbm_tst_SRS
   opt.do.realcopy    = 1;
   opt.do.reslicing   = 1;
   opt.do.average     = 1;
-  opt.do.report      = 1;
+  opt.do.report      = 0;
 
   % realignment parameter
   para.realign.quality = 1.0; %1.0;
@@ -160,7 +161,8 @@ function varargout=vbm_tst_SRS
           para.realign.fwhm    = opt.datasets{di,3};
           para.realign.sep     = opt.datasets{di,3};
           spm_realign(dataset(di).realignp0{si} , para.realign);
-
+        
+        
         % update realignment parameter for a copy of the original files
           for fi = 1:numel(dataset(di).realignp0pre{si})
             rV  = spm_vol(dataset(di).realignp0{si}{fi});

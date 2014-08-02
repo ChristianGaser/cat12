@@ -1,4 +1,4 @@
-function [QAS,QAM]=vbm_tst_qa(action,varargin)
+function [QAS,QAM,vbm_warnings]=vbm_tst_qa(action,varargin)
 % VBM Preprocessing T1 Quality Assurance
 % ______________________________________________________________________
 % 
@@ -79,15 +79,14 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
 %#ok<*ASGLU>
 
   rev = '$Rev$';
+  vbm_warnings = struct('identifier',{},'message',{});
   
+  % no input and setting of default options
+  if nargin==0, action='p0'; end 
   if isstruct(action)
     Pp0 = action.data;
     action = 'p0';
   end
-  
-  
-  % no input and setting of default options
-  if nargin==0, action='p0'; end
   if nargin>1 && isstruct(varargin{end}) && isstruct(varargin{end})
     opt  = vbm_check('checkinopt',varargin{end},defaults);
     nopt = 1; 
@@ -187,12 +186,13 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
       Yp0 = 1;
     case 'vbm12'
       % VBM12 internal input
-      if nargin==4 || nargin==5
+      if nargin>3 || nargin<6
         Yp0 = varargin{1};
         Vo  = spm_vol(varargin{2});
         Yo  = single(spm_read_vols(Vo));    
         Ym  = varargin{3}; 
-        res = varargin{4}; 
+        res = varargin{4};
+        vbm_warnings = varargin{5};
         opt.verb = 0;
       else
         error('MATLAB:vbm_vol_qa:inputerror',...
@@ -275,6 +275,7 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
     
       
       QAS = struct(); QAM = struct(); 
+      
       for fi=1:numel(Pp0)
         try
     
@@ -345,7 +346,8 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
                 qamatm(fi,:),max(1,min(6,mqamatm(fi)))));
             end
           end
-        catch e
+        catch 
+          e = lasterror; %#ok<LERR> ... normal "catch err" does not work for MATLAB 2007a
           em=['ERROR:\n' repmat(' ',1,10) e.message '\n'];
           for ei=1:numel(e.stack)
             em=sprintf('%s%s%5d: %s\n',em,repmat(' ',1,10),...
@@ -462,8 +464,7 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
       QAS.FD.F     = Vo.fname; 
       QAS.FD.Fm    = fullfile(pp,['m'  ff ee]);
       QAS.FD.Fp0   = fullfile(pp,['p0' ff ee]);
-
-
+    
 
       % software information
       % ----------------------------------------------------------------
@@ -481,6 +482,7 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
       QAS.SW.markdefs  = which('vbm_stat_marks');
       QAS.SW.qamethod  = action; 
       QAS.SW.date      = datestr(clock,'yyyymmdd-HHMMSS');
+      QAS.SW.vbm_warnings = vbm_warnings;
       clear A
 
       % constrast estimation by mat-file or internal routine 
@@ -546,9 +548,15 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
       Ywm = vbm_vol_morph(Yp0>2.9 & Yp0<3.1,'c') & ~vbm_vol_morph(Yp0<2.5 & Yp0<3.1,'d');
       %warning on MATLAB:vbm_vol_morph:NoObject 
       if sum(Ywm(:))==0
-        vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
-           spm_str_manip(QAS.FD.file,['f' num2str(snspace(1) - 14)]),...
-           'Bad segmentation - no WM. \n'));
+        if verb
+          vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
+             spm_str_manip(QAS.FD.file,['f' num2str(snspace(1) - 14)]),...
+             'Bad segmentation - no WM. \n'));
+        else
+          vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+            'VBM:cg_vbm_write:BadSegmenationNoWM',...
+            'Bad segmentation - no WM.');
+        end
         return
       end
 
@@ -578,17 +586,30 @@ function [QAS,QAM]=vbm_tst_qa(action,varargin)
         T3v(ti)  = sum(round(Yp0(:))==ti).*prod(vx_vol)/1000;
       end
       if any(diff(T3th))<0
-        vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
-           spm_str_manip(QAS.FD.file,['f' num2str(snspace(1) - 14)]),...
-           'Bad segmentation or T1 image. \n'));
+        if verb
+          vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
+             spm_str_manip(QAS.FD.file,['f' num2str(snspace(1) - 14)]),...
+             'Bad segmentation or T1 image. \n'));
+        else
+          vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+            'VBM:cg_vbm_write:BadSegmenationBadData',...
+            'Bad segmentation or T1 image.');
+        end
         return
       end
       if sum(T3v)<400 || sum(T3v)>4500 || T3v(2)<T3v(3)/8 || ...
           T3v(3)<T3v(2)/8 || T3v(1)>T3v(2)*8 || T3v(1)>T3v(3)*8
-        vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
-           spm_str_manip(QAS.FD.file,['f' num2str(snspace(1) - 14)]), ...
-           sprintf(['Bad segmentation - V_CSF=%0.0f cm^3, '...
-           'V_GM=%0.0f cm^3 ,V_WM=%0.0f cm^3). \n'],T3v)));
+        if verb
+          vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
+             spm_str_manip(QAS.FD.file,['f' num2str(snspace(1) - 14)]), ...
+             sprintf(['Bad segmentation - V_CSF=%0.0f cm^3, '...
+             'V_GM=%0.0f cm^3 ,V_WM=%0.0f cm^3). \n'],T3v)));
+        else
+          vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+            'VBM:cg_vbm_write:BadSegmenation',...
+            sprintf(['Bad segmentation - V_CSF=%0.0f cm^3, '...
+             'V_GM=%0.0f cm^3 ,V_WM=%0.0f cm^3). \n'],T3v));
+        end
         return
       end
 
@@ -837,7 +858,7 @@ function QM = estimateQM(Yo,Yb,Yp0,Ywm,vx_vol,res)
  %Yi2=Yi+0; spm_smooth(Yi2,Yi2,1./vx_vol); Yi(Ywm)=Yi2(Ywm); clear Yi2;
   %% artefacts
   spm_smooth(Yi,Yi,1./vx_vol);
-  [Ygx,Ygy,Ygz] = vbm_vol_gradient3(single( Yi ),Yp0>0); %clear Yi;
+  [Ygx,Ygy,Ygz] = vbm_vol_gradient3(single(Yi),Yp0>0); %clear Yi;
   Ygx  = Ygx./vx_vol(1); Ygy = Ygy./vx_vol(2); Ygz = Ygz./vx_vol(3);
   Yg   = max(cat(4,Ygx,Ygy,Ygz),[],4); 
   clear Ygx Ygy Ygz; 
@@ -851,7 +872,7 @@ function QM = estimateQM(Yo,Yb,Yp0,Ywm,vx_vol,res)
   %% noise estimation
   QM.NCR = estimateNoiseLevel(Yb,Ywm,3) / QM.contrast;
   QM.CNR = 1 / QM.NCR;  
-  QM.WMS = (sum(Ywmc(:))-sum(Ywm(:))) / sum(Ywmc(:));
+  QM.WMS = (sum(Ywmc(:))-sum(Ywm(:))) / max(eps,sum(Ywmc(:)));
   
 
   %% Bias/Inhomogeneity 

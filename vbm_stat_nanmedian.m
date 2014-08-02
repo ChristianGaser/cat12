@@ -35,6 +35,8 @@ function out = vbm_stat_nanmedian(in, dim)
   
   sz  = size(in);
 
+  if isempty(in), out = nan; return; end
+  
   % reduce to 2d matrix
   pm = [dim:max(length(size(in)),dim) 1:dim-1];
   in = reshape(permute(in,pm),size(in,dim),prod(sz)/size(in,dim));

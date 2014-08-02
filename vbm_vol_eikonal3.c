@@ -107,7 +107,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         for (n=0;n<sN;n++) {
           if ( SEG[i]!=FLT_MAX ) {
             ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
-            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) { DNi = D[ni] + ND[n]*SEG[i]; if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } } 
+            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) {
+              DNi = D[ni] + ND[n]*SEG[i]; 
+              if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } 
+            } 
           }
         }
         
@@ -125,7 +128,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         for (n=0;n<sN;n++) {
           if ( SEG[i]!=FLT_MAX ) {
             ni = i + NI[n]; ind2sub(ni,&nu,&nv,&nw,xy,x);
-            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) { DNi = D[ni] + ND[n]*SEG[i]; if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } } 
+            if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==0 ) {
+              DNi = D[ni] + ND[n]*SEG[i]; 
+              if ( DNi<D[i] ) {D[i]=DNi; L[i]=L[ni]; } 
+            } 
           }
         }
         

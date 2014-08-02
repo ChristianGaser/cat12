@@ -115,7 +115,7 @@ function vol = vbm_vol_morph(vol,action,n,vx_vol)
       [tmp0,num] = max(num(:)); clear tmp;
       vol       = ROI==num;	
     catch %#ok<CTCH>
-      warning('MATLAB:vbm_vol_morph:NoObject','ERROR: vbm_vol_morph - lab - no object!');
+      warning('MATLAB:vbm_vol_morph:NoObject','WARNING: vbm_vol_morph - lab - no object!');
     end 
 
     

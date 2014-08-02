@@ -4484,3 +4484,108 @@ M       vbm_surf_resamp.m
     function that use system calls.
 ------------------------------------------------------------------------
 r590 | gaser | 2014-07-24 12:37:52
+
+ M      .
+M       AmapMex.mexmaci64
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_batch.sh
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+A       cg_vbm_run_job.m
+A       cg_vbm_run_newcatch.m
+A       cg_vbm_run_oldcatch.m
+M       cg_vbm_write.m
+M       compile.m
+M       distribute_to_server.sh
+A       ornlmMex.c
+A       ornlmMex.m
+A       ornlmMex.mexa64
+A       ornlmMex.mexglx
+A       ornlmMex.mexmaci
+A       ornlmMex.mexmaci64
+A       ornlmMex.mexw32
+A       ornlmMex.mexw64
+M       sanlmMex.mexmaci64
+M       sanlmMex_noopenmp.mexmaci64
+M       tbx_cfg_vbm.m
+M       vbdist.mexmaci64
+M       vbm_io_FreeSurfer.m
+M       vbm_io_cmd.m
+M       vbm_io_cprintf.m
+M       vbm_stat_marks.m
+M       vbm_stat_nanmean.m
+M       vbm_stat_nanmedian.m
+M       vbm_stat_nanstd.m
+M       vbm_stat_nansum.m
+M       vbm_surf_createCS.m
+M       vbm_tst_SRS.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa.m
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eikonal3.c
+M       vbm_vol_eikonal3.mexmaci64
+M       vbm_vol_genus0.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_morph.m
+M       vbm_vol_partvol.m
+M       vbm_vol_pbt.m
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_resize.m
+M       vbm_vol_simgrow.mexmaci64
+
+This update contain a lot of changes, corrections and updates for large parts of
+the segmentation pipeline.
+(1)  Added symbolic link support for "distribute_to_server.sh".
+(2)  Optimized skull-stripping and removed "gcutcsf" parameter.
+     Verified behavior of 'gcutstr' in range between 0 and 1.   
+(3)  Merged B3C inhomogeneity correction and the Local Adaptive Segmentation 
+     (LAS) with direct access to atlas data. 
+     Removed 'Final LAS corrections' and 'Final Masking' function and options.
+     Verified behavior of 'LASstr' in range between 0 and 1.   
+(4)  Extended "BVC" to "BVCstr" parameter for further control of the blood 
+     vessel correction, with 0 for no correction.
+     Verified behavior of 'BVCstr' in range between 0 and 1.   
+(5)  Updated and tested inverse pipeline 'extopts.INV' that is now part of the 
+     global intensity normalization function, including a small bias WM based 
+     inhomogeneity correction to avoid inversion problems.   
+     Verified behavior for T2 and PD datasets, with good results for good data. 
+(6)  Added new improved cleanup routine ('extopts.cleanup==3'). 
+(7)  Added VBM warnings to 'vbm12*.mat' (QA.SW.vbm_warnings) and display them 
+     in the final report (not tested yet).  
+(8)  Added old ORNLM filter for noise removal after intensity scaling. The 
+     strength of the filter is controlled by a CJV like measure to assure 
+     smooth tissues. Using the NLM filter should work better than only a 
+     stronger MRF filter! Filter strength is limited by a sixth of tissue 
+     contrast. 
+     
+Unsolved problems, warnings, and errors:
+(1)  Unsolved errors for "extopts.kmeans=1" with AMAP segmentation errors.
+(2)  Unsolved errors for surface generation "Cat_SeparatePolygon" or "reducepatch" under Windows with incorrect  
+     values of the vertices of the the surface faces.
+(3)  Images with low NCR/high CNR trend to have local WM overestimation. 
+     The brainstem is a little bit to white and lead to WM overestimations in 
+     the cerebellum (see also BWP_MS2_Collins_t1_pn9_rf100pA.nii).
+     > Check LAS bias correction. 
+(4)  To strong noise correction in high resolution images (ORNLM strength). 
+(5)  PD/T2 pipeline:
+     > The GM/CSF boundary/peak estimation in low contrast images (CSF~GM) 
+       requires stronger connection of SPM-segmentation and intensity information 
+       (see XNAT-flash3 subjects / BWP_HC_Collins_pd_pn[3|9]_rf[040|100]pA ).
+     > Some images show background inversion problems and requires blood vessel 
+       correction (NIH-T2 subjects).
+     > Evaluation for IXI and NIH data in relation to T1 segmentation required
+------------------------------------------------------------------------
+r591 | dahnke | 2014-08-02 08:53:49
