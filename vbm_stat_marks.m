@@ -228,60 +228,65 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       %% average
       Qavg = {'QMo','QMm','QMv','SM'};
       for Qavgi=1:4;
-        QAM.(Qavg{Qavgi}).mean = 0; 
-        QAM.(Qavg{Qavgi}).max  = 0;
-        QAM.(Qavg{Qavgi}).avg  = 0;
-        QAM.(Qavg{Qavgi}).rms  = 0;
-        
-        nonnan=0;
-        for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
-          if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
-            nonnan = nonnan + ~any(isnan(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+        if isfield(QAM,Qavg{Qavgi})
+          QAM.(Qavg{Qavgi}).mean = 0; 
+          QAM.(Qavg{Qavgi}).max  = 0;
+          QAM.(Qavg{Qavgi}).avg  = 0;
+          QAM.(Qavg{Qavgi}).rms  = 0;
+
+          nonnan=0;
+          for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
+            if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
+              nonnan = nonnan + ~any(isnan(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+            end
           end
-        end
-        
-        for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
-          if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
-            if ~iscell(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))
-              if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
-                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
-                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
-                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/nonnan]);
-                QAM.(Qavg{Qavgi}).rms  = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                  QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
+
+          for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
+            if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
+              if ~iscell(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))
+                if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
+                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
+                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
+                    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/nonnan]);
+                  QAM.(Qavg{Qavgi}).rms  = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
+                else
+                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                    max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean,...
+                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
+                  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
+                end
               else
-                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                  max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean,...
-                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
-              end
-            else
-              if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
-                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                  max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
-                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
-              else
-                QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                  max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
-                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                  vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
+                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                    max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
+                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
+                  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                else
+                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
+                    max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
+                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
+                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
+                  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                end
               end
             end
           end
-        end
-        
-        
-        try
-          QAM.(Qavg{Qavgi}).avg = vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
-          QAM.(Qavg{Qavgi}).rms = sqrt(QAM.(Qavg{Qavgi}).rms);
+
+
+          try
+            QAM.(Qavg{Qavgi}).avg = vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
+            QAM.(Qavg{Qavgi}).rms = sqrt(QAM.(Qavg{Qavgi}).rms);
+          catch
+            QAM.(Qavg{Qavgi}).avg = nan;
+            QAM.(Qavg{Qavgi}).rms = nan;
+          end
         end
       end
       

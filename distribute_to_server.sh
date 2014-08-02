@@ -1,4 +1,4 @@
-#! /bin/sh
+ #! /bin/sh
 
 ########################################################
 # global parameters
@@ -55,7 +55,7 @@ parse_args ()
             PATTERN=$optarg
             shift
             ;;
-        --user* | -u*)
+        --dir* | -u*)
             exit_if_empty "$optname" "$optarg"
             USER=$optarg
             shift
@@ -154,7 +154,7 @@ check_files ()
   i=0
   while [ "$i" -lt "$SIZE_OF_ARRAY" ]
   do
-    if [ ! -f "${ARRAY[$i]}" ] && [ ! -d "${ARRAY[$i]}" ]; then
+    if [ ! -f "${ARRAY[$i]}" -a ! -L "${ARRAY[$i]}" ] && [ ! -d "${ARRAY[$i]}" ]; then
       echo ERROR: File or directory ${ARRAY[$i]} not found
       help
       exit 1

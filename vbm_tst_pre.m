@@ -62,16 +62,16 @@ function vbm_tst_pre
   % 'name'    NC segments t1corr recalc                       % new
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
 %  'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
-     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
-     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
-%     'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+%     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
+%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
-%    'SPM'     0 {'p0'}      {''}        {0.5}       1 
-%    'SPM8'    0 {'p0'}      {''}        {0.5}       1 
-%    'SPM12'   0 {'p0'}      {''}        {0.5}       1 
-%    'SPM8nc'  1 {'p0'}      {''}        {0.5}       1 
-%    'SPM12nc' 1 {'p0'}      {''}        {0.5}       1 
-%     'FSL'     1 {'p0'}      {''}        {-inf}      0 
+%     'SPM'     0 {'p0'}      {''}        {0.5}       0 
+     'SPM8'    0 {'p0'}      {''}        {0.5}       0 
+%    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
+     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
+     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
+     'FSL'     1 {'p0'}      {''}        {-inf}      0 
+     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
   };
@@ -97,9 +97,10 @@ function vbm_tst_pre
 %      'private'
 %     'SVE_LPBA40'
 %     'BO'
+%    'BO_inverse'     
 %      'private_full'
-      'BWP_Collins'
-     'SRS'
+%     'BWP_Collins'
+    'SRS'
 %      'Apes'
    };
  
@@ -431,10 +432,10 @@ function vbm_tst_pre
              
               %???????????
               % Biaskorrektur-test
-              opt.RAW.qa(di,fi).psT = vbm_tst_t1qa( ...
-                opt.method(mi).T{di}{fi}, ...
-                opt.method(mi).([opt.methods{mi,3}{ii} 'T']){di}{fi}, ...
-                opt.method(mi).([opt.methods{mi,4}{ii} 'T']){di}{fi}, struct('verb',0));
+              opt.RAW.qa(di,fi).psT = 0; %vbm_tst_t1qa( ...
+%                 opt.method(mi).T{di}{fi}, ...
+%                 opt.method(mi).([opt.methods{mi,3}{ii} 'T']){di}{fi}, ...
+%                 opt.method(mi).([opt.methods{mi,4}{ii} 'T']){di}{fi}, struct('verb',0));
               
               vbm_io_xml(opt.RAW.XML{di}{fi},struct('qa',opt.RAW.qa(di,fi)),'write+');
             end
@@ -960,8 +961,8 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm          = ...
     {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
     %{'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/TPM.nii'};
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus        = [2 2 2 3 4 2]; 
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg      = 0.0001;
+  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus        = [1 1 2 3 4 2];  % [2 2 2 3 4 2] 
+  matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg      = 0.001; % 0.0001 - stronger correction
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasfwhm     = 60;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.affreg       = 'mni';
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg      = [0 0.001 0.5 0.025 0.1];

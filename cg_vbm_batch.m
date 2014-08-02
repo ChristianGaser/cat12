@@ -17,6 +17,9 @@ if nargin < 2
 	writeonly = 0;
 end
 
+[t,pid]=system('echo $$');
+fprintf('cg_vbm_batch: \n  PID = %s\n\n',pid);
+
 spm_get_defaults;
 
 if nargin < 3
@@ -57,8 +60,9 @@ for i=1:n
 	end
 end
 
-tmp_fields = char('darteltpm','finalmask','vx_res','gcut','gcutstr','gcutCSF','kmeans','mrf','bias_fwhm','BVC',...
-              'WMHC','pbtres','INV','colormap','atlas','ROI','surface','debug','verb');
+tmp_fields = char('darteltpm','gcut','gcutstr','kmeans','mrf','bias_fwhm','BVCstr','LAS','LASstr',...
+              'WMHC','WMHCstr','pbtres','INV','colormap','atlas','ROI','surface','debug','verb','ignoreErrors',...
+              'QAcleanup','QAcleanupth','LAB');
 for i=1:size(tmp_fields,1)
   try
     if writeonly

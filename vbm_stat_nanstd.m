@@ -33,6 +33,8 @@ function out = vbm_stat_nanstd(in, dim)
     end;
   end;
   
+  if isempty(in), out = nan; return; end
+  
   % estimate mean
   tmpin = in;
   tmpin(isnan(in(:))) = 0;

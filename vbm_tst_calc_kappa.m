@@ -67,6 +67,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   
   estr=sprintf('%s\n%s\n\n',spm_str_manip(P(1,:),'h'),Vref(1).fname);
   %%
+  spaces = 80; 
   for nc=1:(ncls>1 && nargout>2)+1  
   % create header  
     fprintf('Number of Classes: %0.0f\n\n',ncls);
@@ -74,9 +75,11 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
     switch ncls
       case 0, txt{1}='Error ground truth empty!'; continue
       case 1, tab = {['Name' methodname],'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
-              txt{1} = sprintf('\n%s%30s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\t%6s\n',estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
+              txt{1} = sprintf(sprintf('\\n%%%ds\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\n',spaces),...
+                estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
       case 3, tab = {['Name' methodname],'k(C)','k(G)','k(W)','k(GW)','RMS(C)','RMS(G)','RMS(W)','RMS(p0)'};  
-              txt{1} = sprintf('\n%s%30s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n',estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9}); 
+              txt{1} = sprintf(sprintf('\\n%%%ds\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\n',spaces),...
+                estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9}); 
       %otherwise, 
         %fprintf('Ground truth error');  continue; %error('unallowed number of classes');
     end
@@ -106,7 +109,8 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
           %end
           FP     = confusion(1,2); FN = confusion(2,1);
           k(i,:) = [kappa_all,jaccard(1),dice(1),sensit(1),sensit(2),FP,FN,FN/(FN+FP)];
-          txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%6.0f\t%6.0f\t%3.4f\n',name(1:min(numel(name),30)),k(i,:)); 
+          txti   = sprintf(sprintf('%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%6.0f\\t%%6.0f\\t%%%3.4f\\n',spaces),...
+            name(1:min(numel(name),spaces)),k(i,:)); 
 
           val(i).BE  = struct('kappa',kappa_all,'accuracy',accuracy_all, ...
                        'FP',FP,'FN',FN, ...
@@ -128,7 +132,8 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
 
           rms = calcRMS(vol1,vol2);
           k(i,:) = [kappa_all,rms];
-          txti   = sprintf('%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n',name(1:min(numel(name),30)),k(i,:)); 
+          txti   = sprintf(sprintf('%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n', ...
+            spaces),name(1:min(numel(name),spaces)),k(i,:)); 
 
           val(i).SEG = struct('kappa',kappa_all(1:3),'rms',rms(1:3),'kappaGW',kappa_all(4),'rmsGW',rms(4));
         otherwise
@@ -143,10 +148,14 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   
   % conclustion
     switch ncls
-      case 1, txt{3} = sprintf(['\n%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%6.0f\t%6.0f\t%3.4f\n' ...
-                                  '%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%6.0f\t%6.0f\t%3.4f\n\n'],'mean',mean(k,1),'std',std(k,1,1));
-      case 3, txt{3} = sprintf(['\n%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n' ...
-                                  '%30s\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\t%3.4f\n\n'],'mean',mean(k,1),'std',std(k,1,1));    
+      case 1, txt{3} = sprintf(sprintf( ...
+                         ['\\n%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%6.0f\\t%%6.0f\\t%%3.4f\\n', ...
+                             '%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%6.0f\\t%%6.0f\\t%%3.4f\\n\\n'], ...
+                             spaces),'mean',mean(k,1),'std',std(k,1,1));
+      case 3, txt{3} = sprintf(sprintf( ...
+                         ['\\n%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n' ...
+                             '%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n\\n'], ...
+                             spaces),'mean',mean(k,1),'std',std(k,1,1));    
     end
     if verb, fprintf(txt{3}); end; tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   
  

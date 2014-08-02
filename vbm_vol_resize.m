@@ -288,14 +288,17 @@ function varargout=vbm_vol_resize(T,operation,varargin)
       
     case 'dereducebrain'
       BB = varargin{1}.BB;
-      TO = zeros(varargin{1}.sizeT,'single'); 
-      
       for i=1:numel(T) 
         if ndims(T{i})==3
-          varargout{i}=TO; varargout{i}(BB(1):BB(2),BB(3):BB(4),BB(5):BB(6)) = single(T{i}(:,:,:)); 
+          if islogical(T{i})
+            TO = false(varargin{1}.sizeT);
+          else
+            TO = zeros(varargin{1}.sizeT,class(T{i}));
+          end
+          varargout{i}=TO; varargout{i}(BB(1):BB(2),BB(3):BB(4),BB(5):BB(6)) = T{i}(:,:,:); 
         elseif ndims(T{i})==4
-          TO = zeros([varargin{1}.sizeT,size(T{i},4)],'single'); 
-          varargout{i}=TO; varargout{i}(BB(1):BB(2),BB(3):BB(4),BB(5):BB(6),:) = single(T{i}(:,:,:,:)); 
+          TO = zeros([varargin{1}.sizeT,size(T{i},4)],class(T{i})); 
+          varargout{i}=TO; varargout{i}(BB(1):BB(2),BB(3):BB(4),BB(5):BB(6),:) = T{i}(:,:,:,:); 
         end
       end
     

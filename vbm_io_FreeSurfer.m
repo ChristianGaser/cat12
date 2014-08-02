@@ -120,6 +120,9 @@ function [vertex_coords, faces] = read_surf(fname)
   TRIANGLE_FILE_MAGIC_NUMBER =  16777214 ;
   QUAD_FILE_MAGIC_NUMBER =  16777215 ;
 
+  if ~exist(fname,'file')
+    error('MATLAB:vbm_io_FreeSurfer:read_surf','curvature file %s does not exist.', fname) ;
+  end
   fid = fopen(fname, 'rb', 'b') ;
   if (fid < 0)
     error('MATLAB:vbm_io_FreeSurfer:read_surf','could not open curvature file %s.', fname) ;
