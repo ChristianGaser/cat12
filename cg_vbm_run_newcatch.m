@@ -12,8 +12,7 @@ function cg_vbm_run_newcatch(job,estwrite,tpm,subj)
     if isempty(vbmerr.identifier)
       switch vbmerr.message
         case 'insufficient image overlap'
-          adderr = MException('SPM:AlignmentError','There is not enough overlap in the images.');
-        to obtain a solution.;
+          adderr = MException('SPM:AlignmentError','There is not enough overlap in the images to obtain a solution.');
         otherwise                         
           adderr = MException(vbmerr.message,vbmerr.message);
       end

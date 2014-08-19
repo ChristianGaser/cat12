@@ -426,7 +426,7 @@ debug = 1; % this is a manuel debuging option for matlab debuging mode
 
 stime = vbm_io_cmd('Global Intensity Correction');;
 [Ym,Yb,T3th,Tth,opt.inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
-if debug, Ym2=Ym; end
+if debug, Ym2=Ym; end %#ok<NASGU>
 % update in inverse case
 if opt.inv_weighting
   T3th = 1/3:1/3:1;
@@ -470,7 +470,7 @@ if job.extopts.LAS
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
-if debug, Ym3=Ym; end
+if debug, Ym3=Ym; end %#ok<NASGU>
 % After the intensity scaling and with correct information about the
 % variance of the tissue, a further harder noise correction is meaningful.
 % Finally, it a stronger NLM-filter is better than a strong MRF filter!
@@ -978,7 +978,7 @@ if do_cls && do_defs,,
       vbm_warnings = vbm_io_addwarning(vbm_warnings,...
         'MATLAB:SPM:VBM:cg_vbm_write:uncorrectedWMH',...
         sprintf(['uncorrected WM hyperintensities greater 5%%%% (%2.2f%%%%) of the WM!\\n'],qa.SM.WMH_rel));
-      printf('\n');
+      fprintf('\n');
     end
   end
   
@@ -2220,7 +2220,6 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol
   debug   = 1; 
   
   verb    = cg_vbm_get_defaults('extopts.verb')-1;
-  LAS     = max(1,min(2,cg_vbm_get_defaults('extopts.LAS')));
   LASstr  = max(eps,min(1,cg_vbm_get_defaults('extopts.LASstr')));      % LAS strenght (for GM/WM threshold)3
   cleanupstr  = min(1,max(0,cg_vbm_get_defaults('extopts.gcutstr')));   % required to avoid critical regions
   cleanupdist = min(3,max(1,1 + 2*cleanupstr));
@@ -2443,7 +2442,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol
   meanYc = max(median(Yc(:)),median(Yx(:))); 
   stdYbc = mean([std(Yc(:)),std(Yx(:))]);
   Yxa = vbm_vol_approx(Yx ,'nh',resT2.vx_volr,16); %+(Yb>0).*stdYbc  + Yc.*meanYb/max(eps,meanYc)
-  Yca = vbm_vol_approx(Yc + Yx.*min(min(2,1+2*(stdYbc/mean([meanYx,meanYc]))),...
+  Yca = vbm_vol_approx(Yc + Yx.*min(min(2,1+2*(stdYbc/max(eps,mean([meanYx,meanYc])))),...
     meanYc/max(eps,meanYx)),'nh',resT2.vx_volr,16); % + Yb.*meanYc/max(eps,meanYb)
   Ylab{3} = vbm_vol_resize(Yca,'dereduceV',resT2).*Ylab{2};  
   Ylab{6} = vbm_vol_resize(Yxa,'dereduceV',resT2).*Ylab{2};
