@@ -4589,3 +4589,30 @@ Unsolved problems, warnings, and errors:
      > Evaluation for IXI and NIH data in relation to T1 segmentation required
 ------------------------------------------------------------------------
 r591 | dahnke | 2014-08-02 08:53:49
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run_newcatch.m
+M       cg_vbm_write.m
+D       templates_1.50mm/TPM.nii
+M       templates_1.50mm/aal.nii
+M       templates_1.50mm/anatomy.csv
+M       templates_1.50mm/anatomy.nii
+M       templates_1.50mm/anatomy.txt
+D       templates_1.50mm/brodmann.nii
+M       templates_1.50mm/hammers.nii
+M       templates_1.50mm/ibsr.nii
+M       templates_1.50mm/mori.nii
+M       templates_1.50mm/vbm12.nii
+MM      vbm_check_system_output.m
+M       vbm_vol_atlas.m
+M       vbm_vol_partvol.m
+
+(1) Corrected atlas image properties.
+(2) Updated "anatomy" atlas (version 2.0).
+(3) Removed "brodmann" atlas map due to missing labels. 
+(4) Removed "TPM.nii" from "template_1.50mm" directory.
+(5) Updated "cg_vbm_default.m" parameters.
+------------------------------------------------------------------------
+r592 | dahnke | 2014-08-19 21:02:17

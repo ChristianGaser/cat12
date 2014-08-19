@@ -3,7 +3,7 @@ function vbm_check_system_output(status,result,debugON)
 
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: vbm_check_system_output.m 584 2014-03-12 16:59:22Z gaser $
+% $Id$
 
 
   if status==1 || ...

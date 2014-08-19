@@ -14,8 +14,8 @@ global vbm
 % Estimation options
 %=======================================================================
 vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-vbm.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class
-vbm.opts.affreg    = 'mni';                   % Affine regularisation
+vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - [1 1 2 3 4 2];[2 2 2 3 4 2];[3 3 2 3 4 2];
+vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation
 vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller for stronger bias fields
 vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower for stronger bias fieds, but look for overfitting in subcortical GM
