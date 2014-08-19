@@ -310,12 +310,12 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       refine = 1;
     
     case 'anatomy'
-      mdir   = fullfile(rawdir,'Anatomy');
-      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
-      PA     = [vbm_findfiles(fullfile(mdir,'PMaps'),'*.img'), ...
+      mdir   = fullfile(rawdir,'Anatomy2.0');
+      P      = vbm_findfiles(mdir,'colin27T1_seg.nii');
+      PA     = [vbm_findfiles(fullfile(mdir,'PMaps'),'*.nii'), ...
                 vbm_findfiles(fullfile(mdir,'Fiber_Tracts','PMaps'),'*.img')];
-      Ps     = vbm_findfiles(mdir,'AnatMask.img'); 
-      Pmat   = fullfile(mdir,'AllAreas_v18_MPM.mat');
+      Ps     = vbm_findfiles(mdir,'wAnatMask.nii'); 
+      Pmat   = fullfile(mdir,'Anatomy_v20_MPM.mat');
       Pmat2  = fullfile(mdir,'Fiber_Tracts','AllFibres_v15_MPM.mat');
       Pcsv   = {fullfile(mdir,[Pmat(1:end-8) '.csv'])};
       Ptxt   = vbm_findfiles(mdir,'anatomy.txt'); 
@@ -431,7 +431,7 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.samp               = 3;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.dartelwarp.normhigh.darteltpm = ...
-    {'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/Template_1_IXI550_MNI152.nii'};
+    {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii')};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 2;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS             = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstrength    = 0.5;
@@ -528,6 +528,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   % Therefore we create a table cod that contain in the first column the 
   % original label and in the second column the optimized value.
   % --------------------------------------------------------------------
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii'));
   V  = spm_vol(char(P));
   VA = spm_vol(char(PA));
   Y  = spm_read_vols(VA(1));
@@ -611,16 +612,16 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   end
 
   
-  % 4D-probability map
+  %% 4D-probability map
   % --------------------------------------------------------------------
   % Here we create the probability map for each label with the optimized
   % labeling cod.
   % --------------------------------------------------------------------
   N             = nifti;
-  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VA(1).dim(1:3) ...
+  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VC(1).dim(1:3) ...
                   max(round(cod(H>0,3)))+1],[spm_type(dt2) spm_platform('bigend')],0,1,0);
-  N.mat         = VA(1).mat;
-  N.mat0        = VA(1).private.mat0;
+  N.mat         = VC(1).mat;
+  N.mat0        = VC(1).private.mat0;
   N.descrip     = dsc;
   create(N);       
 
@@ -659,13 +660,13 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
          % add case j 
         switch dt2
           case 'uint8'
-            Y  = Y + uint8(Yi==(ceil(j/2)*2) & (Ys)==(mod(j+1,2)+1));
+            Y  = Y + uint8(Yi==(ceil(j/2)*2) & (Ys)==(mod(j,2)+1));
           case 'uint16'        
-            Y  = Y + uint16(Yi==(ceil(j/2)*2) & (Ys)==(mod(j+1,2)+1));
+            Y  = Y + uint16(Yi==(ceil(j/2)*2) & (Ys)==(mod(j,2)+1));
           case 'int8'
-            Y  = Y + int8(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j+1,2)+1));
+            Y  = Y + int8(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j,2)+1));
           case 'int16'     
-            Y  = Y + int16(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j+1,2)+1));
+            Y  = Y + int16(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j,2)+1)); % mod(j+1,2)+1 mit seitenfehler
         end
       end
     end
@@ -677,29 +678,29 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   %% p0-mean map
   % --------------------------------------------------------------------
   N             = nifti;
-  N.dat         = V(1).private.dat; 
-  N.dat.fname   = fullfile(resdir,['p0' atlas '.nii']);
-  N.mat         = V(1).mat;
-  N.mat0        = V(1).private.mat0;
-  N.descrip     = ['p0 ' atlas];
+  N.dat         = file_array(fullfile(resdir,['p0' atlas '.nii']),...
+                  VC(1).private.dat.dim(1:3),[spm_type(dt2) spm_platform('bigend')],0,3/255,0);
+  N.mat         = VC(1).mat;
+  N.mat0        = VC(1).private.mat0;                
+  N.descrip     = ['p0 ' atlas]; 
   create(N);  
   Y = zeros(VA(1).dim,'single');
   for i=1:numel(P)
     Y = Y + spm_read_vols(spm_vol(P{i})); 
   end
-  N.dat(:,:,:)  = Y/numel(P);  
+  N.dat(:,:,:)  = double(Y/numel(P));  
+  
+  
+  
+  %% 3d-label map
+  % --------------------------------------------------------------------
   M = vbm_vol_morph((Y/numel(P))>0.5,'labclose'); 
   
-  
-  
-  % 3d-label map
-  % --------------------------------------------------------------------
-
   N             = nifti;
-  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VA(1).dim(1:3),...
+  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VC(1).dim(1:3),...
                   [spm_type(dt2) spm_platform('bigend')],0,1,0);
-  N.mat         = VA(1).mat;
-  N.mat0        = VA(1).private.mat0;
+  N.mat         = VC(1).mat;
+  N.mat0        = VC(1).private.mat0;    
   N.descrip     = dsc;
   create(N);       
   Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
@@ -848,15 +849,16 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   
   
   
- 
   
   % 4D-probability map
   % --------------------------------------------------------------------
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii')); VC=VC(1);
+ 
   N             = nifti;
-  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[V.dim(1:3) ...
-                  numel(PA)*2],[spm_type(dt2) spm_platform('bigend')],0,1,0);
-  N.mat         = VA(1).mat;
-  N.mat0        = VA(1).private.mat0;
+  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VC.dim(1:3) ...
+                  numel(PA)*2],[spm_type(dt2) spm_platform('bigend')],0,1/255,0);
+  N.mat         = VC(1).mat;
+  N.mat0        = VC(1).private.mat0;
   N.descrip     = dsc;
   create(N);       
      
@@ -864,47 +866,43 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
     Ys = spm_read_vols(spm_vol(char(Ps)));
   end
   for i=1:numel(PA)
-    Y  = spm_read_vols(VA(i));
+    Y  = single(spm_read_vols(VA(i)));
+    if nanmax(Y(:))>1, mx = 255; else mx = 1; end
     if exist('Ys','var')
       for si=1:2
         Yi = Y .* (Ys==si); 
-        switch dt2
-          case 'uint8',  Yi = uint8(Yi);
-          case 'uint16', Yi = uint16(Yi);
-          case 'int8',   Yi = int8(Yi);
-          case 'int16',  Yi = int16(Yi);
-        end
-        N.dat(:,:,:,i*2 - (si==2) ) = Yi;
+        N.dat(:,:,:,i*2 - (si==1) ) = double(Yi)/mx;
       end
     else
-      N.dat(:,:,:,i) = Y;
+      N.dat(:,:,:,i) = double(Y)/mx;
     end
   end
   
-  % p0-mean map
+  %% p0-mean map
   % --------------------------------------------------------------------
+ 
   N             = nifti;
-  N.dat         = V(1).private.dat; 
-  N.dat.fname   = fullfile(resdir,['p0' atlas '.nii']);
-  N.mat         = V(1).mat;
-  N.mat0        = V(1).private.mat0;
+  N.dat         = file_array(fullfile(resdir,['p0' atlas '.nii']),VC.dim(1:3), ...
+                  [spm_type(dt2) spm_platform('bigend')],0,3/255,0);
+  N.mat         = VC(1).mat;
+  N.mat0        = VC(1).private.mat0;
   N.descrip     = ['p0 ' atlas];
   create(N);  
   Y = zeros(VA(1).dim,'single');
   for i=1:numel(P)
     Y = Y + spm_read_vols(spm_vol(P{i})); 
   end
-  N.dat(:,:,:)  = Y/numel(P);  
-  M = vbm_vol_morph((Y/numel(P))>0.5,'labclose'); 
+  N.dat(:,:,:)  = double(Y/numel(P));  
   
   
   %% 3d-label map
   % --------------------------------------------------------------------
+  M = vbm_vol_morph((Y/numel(P))>0.5,'labclose'); 
   N             = nifti;
-  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VA(1).dim(1:3),...
+  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VC(1).dim(1:3),...
                   [spm_type(dt2) spm_platform('bigend')],0,1,0);
-  N.mat         = VA(1).mat;
-  N.mat0        = VA(1).private.mat0;
+  N.mat         = VC(1).mat;
+  N.mat0        = VC(1).private.mat0;
   N.descrip     = dsc;
   create(N);       
   Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
@@ -933,10 +931,10 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
     case 'int8',   Y = int8(Y);
     case 'int16',  Y = int16(Y);
   end
-  N.dat(:,:,:)  = Y;
+  N.dat(:,:,:)  = double(Y);
  
   
-  % csv and txt data
+  %% csv and txt data
   % --------------------------------------------------------------------
   if ~isempty(Pcsv) && exist(Pcsv{1},'file')
     if exist('csvx','var')
@@ -1360,14 +1358,16 @@ function create_vbm_atlas(A,C,LAB)
 % - Mitteln/Ergänzen von Regionen
 
   % output file
-  VC = spm_vol(A.ham); VC.fname = C; 
+%  VC = spm_vol(A.ham); VC.fname = C; 
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii')); VC=VC(1);
+  VC.fname = C; 
   
   if 1
     clear LAB
     
-    LAB.BV = { 7,{'l1A'},{[8,7]}}; % Blood Vessels
-    LAB.HD = {21,{'l1A'},{[22,21]}}; % head
-    LAB.ON = {11,{'l1A'},{[12,11]}}; % Optical Nerv
+    LAB.BV = { 7,{'l1A'},{[7,8]}}; % Blood Vessels
+    LAB.HD = {21,{'l1A'},{[21,22]}}; % head
+    LAB.ON = {11,{'l1A'},{[11,12]}}; % Optical Nerv
 
     LAB.CT = { 1,{'ibs'},{'Cbr'}}; % cortex
     LAB.MB = {13,{'ham'},{'MBR','VenV'}}; % MidBrain
@@ -1490,7 +1490,13 @@ function create_vbm_atlas(A,C,LAB)
       delete(P{afni});
     end
   else
-    YC = zeros(VC.dim,'uint8');
+    N             = nifti;
+    N.dat         = file_array(C,VC(1).dim(1:3),...
+                    [spm_type(2) spm_platform('bigend')],0,1,0);
+    N.mat         = VC(1).mat;
+    N.mat0        = VC(1).private.mat0;
+    N.descrip     = 'vbm atlas map';
+    YC = zeros(N.dat.dim,'single');
     for lfni=1:numel(LFN) % für jeden layer
       for si=0:1
         ll =  LAB.(LFN{lfni}){1} + si;
@@ -1503,7 +1509,8 @@ function create_vbm_atlas(A,C,LAB)
       end
       fprintf('%s %2d %2d %2d\n',LFN{lfni},lfni,ri,esum);
     end
-    spm_write_vol(VC,YC);
+    N.dat(:,:,:) = double(YC);
+    create(N);  
   end
   
 end

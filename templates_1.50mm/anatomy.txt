@@ -14,8 +14,8 @@ regions between the left an right potential. If most or no side alignment in the
 original map was available, a side label map from the anatomy toolbox of SPM was
 used.
 
-Please have also a look for the anatomy toolbox of Simon Eickhoff (Version 1.8, 
-2011-05-02) that provide the data.
+Please have also a look for the anatomy toolbox of Simon Eickhoff (Version 2.0, 
+2014-07-23) that provide the data.
 If you use these atlases, please cite the references below.
 
 
