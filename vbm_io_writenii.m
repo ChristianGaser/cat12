@@ -285,7 +285,6 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
 
     if exist('pre4','var')
       fname = vbm_io_handle_pre(V.fname,pre4,post,addpre,1);
-
       VraT = struct('fname',fname,'dim',transf.odim,...
            'dt',   [spm_type(spmtype) spm_platform('bigend')],...
            'pinfo',[range(2) range(1)]','mat',transf.mat);%[1.0 0]'
@@ -298,14 +297,14 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
       N.mat0  = transf.mat; % hier stand mit mat0, aber da stimmten die dimensionen nicht!!!
       warning on
 
-      N.mat_intent  = 'Aligned';
-      N.mat0_intent = 'Aligned';
+      %N.mat_intent  = 'Aligned';
+      %N.mat0_intent = 'Aligned';
       if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc4 ' < ' V.descrip]; end
       create(N);
 
       for i=1:transf.odim(3),
         if labelmap
-          tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
+          tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0); % spm_matrix([0 0 i])
         else
           tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
         end

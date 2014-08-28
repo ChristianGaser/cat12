@@ -4616,3 +4616,29 @@ M       vbm_vol_partvol.m
 (5) Updated "cg_vbm_default.m" parameters.
 ------------------------------------------------------------------------
 r592 | dahnke | 2014-08-19 21:02:17
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       ds.m
+ M      templates_1.50mm
+A       templates_1.50mm/Template_0_IXI555_MNI152.nii
+A       templates_1.50mm/Template_1_IXI555_MNI152.nii
+A       templates_1.50mm/Template_2_IXI555_MNI152.nii
+A       templates_1.50mm/Template_3_IXI555_MNI152.nii
+A       templates_1.50mm/Template_4_IXI555_MNI152.nii
+A       templates_1.50mm/Template_5_IXI555_MNI152.nii
+A       templates_1.50mm/Template_6_IXI555_MNI152.nii
+M       vbm_io_writenii.m
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+
+(1) Corrected GM segmentation error in the global intensity scaling process of
+    PD/T2 images with strong underestimation of the GM segment.
+(2) Optimized cerebellum LAS detection.  
+(3) Added "cleanupstr" variable. 
+(4) Corrected image x-axis properties by wrong boundary box values. 
+    Forced negative x-axis.
+(5) Added "IXI555" template (x-axis properties update (4) is in process).
+------------------------------------------------------------------------
+r593 | dahnke | 2014-08-28 15:25:35
