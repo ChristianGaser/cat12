@@ -51,7 +51,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   opt.interpV   = max(0.5,min([min(vx_vol),opt.interpV,1]));
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
-  opt.usePPmap  = 0; % ########### 1 does not work yet ##########
+  opt.usePPmap  = 1; % ########### 1 does not work yet ##########
   
   % add system dependent extension to CAT folder
   if ispc
@@ -169,10 +169,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     %CSO = CS; % save old surface, for later correction of reduction error
 
     % use only one major object
-    vbm_io_FreeSurfer('write_surf',Praw,CS);
-    cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw);
-    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-    CS = vbm_io_FreeSurfer('read_surf',Praw); 
+      %vbm_io_FreeSurfer('write_surf',Praw,CS);
+      %cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon doesn't works here
+      %[ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+      %CS = vbm_io_FreeSurfer('read_surf',Praw); 
 
     % correct the number of vertices depending on the number of major objects
     if opt.reduceCS>0, 
@@ -187,7 +187,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
     % spherical surface mapping 1 of the uncorrected surface for topology correction
     %stime = vbm_io_cmd('  Initial spherical mapping');
-    cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw);
+    cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon works here
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);

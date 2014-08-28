@@ -38,6 +38,20 @@ function varargout=ds(type,viewtype,DAR,varargin)
   
   for s=slice(end:-1:1)
     switch type
+      case {'ex'}
+        set(fh,'WindowStyle','normal','Visible','on');
+        pos=get(fh,'Position');
+        set(fh,'Position',[pos(1:2) size(varargin{1},2)*4 size(varargin{1},1)*4]);
+        imagesc(varargin{1}(:,:,s));
+        cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);caxis([0 2]);
+        axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
+      case {'ex2'}
+        set(fh,'WindowStyle','normal','Visible','on');
+        pos=get(fh,'Position');
+        set(fh,'Position',[pos(1:2) size(varargin{1},2)*4 size(varargin{1},1)*4]);
+         image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
+
       case {'l1','label1'}
         set(fh,'WindowStyle','docked','Visible','on');
         image(ind2rgb( uint16(7+8*(varargin{1}(:,:,s) + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); %
@@ -72,7 +86,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2','label2'}
-        set(fh,'WindowStyle','docked','Visible','on');
+        %set(fh,'WindowStyle','docked','Visible','on');
         subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); caxis([0 2]);                                                       axis equal off; daspect(DAR);
         subplot('Position',[0 0 0.5 0.5]);     image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)' ));               axis equal off; daspect(DAR);

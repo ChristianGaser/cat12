@@ -34,7 +34,7 @@ function vbm_tst_pre
   def.GTdir       = 'SEG';
   def.SRSdir      = 'SRS';
   def.initPATH    = [ ...
-    'export FSLDIR=/Applications/FSL4.1; sh ${FSLDIR}/etc/fslconf/fsl.sh;' ...
+    'export FSLDIR=/Applications/FSL5.0; sh ${FSLDIR}/etc/fslconf/fsl.sh;' ...
     'export FREESURFER_HOME=/Applications/Freesurfer5.1; ${FREESURFER_HOME}/SetUpFreeSurfer.sh;' ...
     'MNI_DIR=${FREESURFER_HOME}/mni; ' ...
     'PATH=$PATH:$FSLDIR/bin:$MNI_DIR/bin; ' ...
@@ -66,12 +66,12 @@ function vbm_tst_pre
 %    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM'     0 {'p0'}      {''}        {0.5}       0 
-     'SPM8'    0 {'p0'}      {''}        {0.5}       0 
-%    'SPM12'   0 {'p0'}      {''}        {0.5}       0 
-     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
-     'SPM12nc' 1 {'p0'}      {''}        {0.5}       0 
-     'FSL'     1 {'p0'}      {''}        {-inf}      0 
-     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
+%    'SPM8'    0 {'p0'}      {''}        {0.5}       1 
+%    'SPM12'   0 {'p0'}      {''}        {0.5}       1 
+%     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
+%     'SPM12nc' 1 {'p0'}      {''}        {0.5}       1 
+     'FSL'     1 {'p0'}      {''}        {-inf}      1 
+%     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
   };
@@ -81,7 +81,11 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-%  'BWP_Collins'
+  %'IBSRv2'
+  %'SVE_LPBA40'
+  'BWP_Collins'
+  'BWP_Collins_T2'
+  'BWP_Collins_PD'
 %  'BWP_Collins_res_slice'
 %  'BWP_Collins_MS'
 %  'BWP_Collins_fast'
@@ -90,17 +94,15 @@ function vbm_tst_pre
 %     'IXI'
 %     'NIH'
 %     'OASIS'
-%      'IBSRv2'
 %      'IBSRv1'
 %      'BWP_20N'
 %      'Tumorbase'
 %      'private'
-%     'SVE_LPBA40'
 %     'BO'
 %    'BO_inverse'     
 %      'private_full'
 %     'BWP_Collins'
-    'SRS'
+%    'SRS'
 %      'Apes'
    };
  
@@ -697,6 +699,11 @@ function FSL(file,initPATH,p0T)
   wkd=pwd;
   [pp,ff,ee]=spm_fileparts(file); cd(pp);
   
+  if      findstr(lower(ff),'t2'), modality='2';
+  elseif  findstr(lower(ff),'pd'), modality='3';
+  else                             modality='1';  
+  end
+  
   try
     calcFSL.init  = [ ...
       'ff=$(basename $T .nii); pp=$(dirname $T);' ...
@@ -704,12 +711,12 @@ function FSL(file,initPATH,p0T)
     calcFSL.susan     = 'susan ${oT}.nii -1 1 3 1 0 ${nT}.nii;'; % noise correction 
     calcFSL.BET_FAST  = [ ...
       'BET2 ${nT}.nii ${paT};' ...% skull-stripping -S -R
-      'fast -b -B -o ${oT} ${paT}.nii;']; %-B 
+      'fast -B -o ${oT} -t ' modality ' ${paT}.nii;']; % -B: output Ym;  -b: output: Yeb; 
     calcFSL.STAPLE_FAST = [...
       'BET2 ${nT}.nii ${paT};' ...
       'cp %{oT}.nii ${psT}.nii;' ...
       'fslmath ${psT}.nii -mas ' p0T ';' ...
-      'fast -b -B -o ${oT} ${paT}.nii;']; %-B 
+      'fast -b -B -t ' modality '-o ${oT} ${paT}.nii;']; %-B 
     calcFSL.cleanup = [ ...
       'mv -f ${oT}_restore.nii ${mT}.nii; mv -f ${oT}_bias.nii ${ebT}.nii;' ...
       'rm -f ${oT}_pveseg.nii ${oT}_seg.nii ${oT}_mixeltype.nii;' ...
@@ -727,10 +734,22 @@ function FSL(file,initPATH,p0T)
     
     [SS,SR]=system(sprintf('%s T="%s"; %s',initPATH,file,calcFSLs)); 
 
-    vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
-                   fullfile(pp,[ff '_pve_1.nii']), ...
-                   fullfile(pp,[ff '_pve_2.nii']),'FSL',1);
-                 
+                         
+    switch modality
+      case '1'
+        vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
+                       fullfile(pp,[ff '_pve_1.nii']), ...
+                       fullfile(pp,[ff '_pve_2.nii']),'FSL',1);
+      case '2'                 
+       vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
+                      fullfile(pp,[ff '_pve_1.nii']), ...
+                      fullfile(pp,[ff '_pve_2.nii']),'FSL',1);
+      case '3'                 
+       vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
+                      fullfile(pp,[ff '_pve_2.nii']), ...
+                      fullfile(pp,[ff '_pve_1.nii']),'FSL',1);
+    end
+    
     
   catch  %#ok<CTCH>
     createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['p0' ff ee]));
@@ -802,7 +821,7 @@ function SPM8newsegment(file,SPM8dir,SPMwkd)
   matlabbatch{1}.spm.tools.preproc8.channel.vols      = cellstr(file);
   matlabbatch{1}.spm.tools.preproc8.channel.biasreg   = 0.0001;
   matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm  = 60;
-  matlabbatch{1}.spm.tools.preproc8.channel.write     = [1 1];
+  matlabbatch{1}.spm.tools.preproc8.channel.write     = [0 1];
   matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm     = {fullfile(spm('dir'),'TPM','TPM.nii,1')};
   matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus   = 2;
   matlabbatch{1}.spm.tools.preproc8.tissue(1).native  = [1 0];
@@ -880,9 +899,9 @@ function SPM12segment(file,SPM12dir,SPMwkd)
 %-----------------------------------------------------------------------
   mb=1;
   matlabbatch{mb}.spm.spatial.preproc.channel.vols      = cellstr(file);
-  matlabbatch{mb}.spm.spatial.preproc.channel.biasreg   = 0.001; % 0.0001
+  matlabbatch{mb}.spm.spatial.preproc.channel.biasreg   = 0.0001;
   matlabbatch{mb}.spm.spatial.preproc.channel.biasfwhm  = 60;
-  matlabbatch{mb}.spm.spatial.preproc.channel.write     = [1 1];
+  matlabbatch{mb}.spm.spatial.preproc.channel.write     = [0 1];
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,1'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).ngaus   = 1;
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).native  = [1 0];
