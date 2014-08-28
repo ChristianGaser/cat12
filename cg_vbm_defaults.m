@@ -97,7 +97,7 @@ vbm.output.te.dartel = 0;
 %=======================================================================
 vbm.extopts.dartelwarp  = 1;  % dartel normalization: 0 - spm default; 1 - yes
 vbm.extopts.darteltpm   = ... % Indicate first Dartel template
-  {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI550_MNI152.nii')}; 
+  {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')}; 
 vbm.extopts.print       = 1; % Display and print results
 
 % bias correction options
@@ -123,6 +123,7 @@ vbm.defs.interp         = 5;  % 5th degree B-spline
 vbm.extopts.gcut         = 1;     % Skull-stripping with graph-cut:  0 - no; 1 - yes (default)
 vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping with 0 for softer and wider, and 1 for harder and closer (default = 0.5)
 vbm.extopts.cleanup      = 3;     % Cleanup of meninges: 0 - no; 1 - light; 2 - thorough; 3 - new improved cleanup (default)
+vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process (only cleanup = 3).
 % segmenation options
 vbm.extopts.LAS          = 1;     % Local adaptive segmentation (VMB12i):  0 - no adaption; 1 - adaption (default); 2 - adaption & sharpening (this is just a test - do not use!)
 vbm.extopts.LASstr       = 0.5;   % Strength of the local adaption:  0 - lower adaption; 1 - strong adaption (default = 0.5)
