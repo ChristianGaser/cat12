@@ -4642,3 +4642,87 @@ M       vbm_tst_pre.m
 (5) Added "IXI555" template (x-axis properties update (4) is in process).
 ------------------------------------------------------------------------
 r593 | dahnke | 2014-08-28 15:25:35
+
+M       AmapMex.mexmaci64
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       Contents_info.txt
+M       Makefile.vbm
+M       cg_slice_overlay.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       compile.m
+M       ornlmMex.c
+M       ornlmMex.mexa64
+M       ornlmMex.mexglx
+M       ornlmMex.mexmaci64
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+A       ornlm_float.c
+M       sanlmMex.mexglx
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       vbdist.mexmaci64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm12.man
+M       vbm_vol_atlas.m
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexglx
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_eikonal3.mexmaci64
+M       vbm_vol_eikonal3.mexw32
+M       vbm_vol_eikonal3.mexw64
+M       vbm_vol_genus0.mexa64
+M       vbm_vol_genus0.mexglx
+M       vbm_vol_genus0.mexmaci64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexa64
+M       vbm_vol_gradient3.mexglx
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexa64
+M       vbm_vol_localstat.mexglx
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexmaci64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) Added new files to Makefile.vbm.
+(2) Modified compile.m to consider different flags for different systems.
+(3) Added ornlm files and adapted ornlmMex.c. Also changed to float format.
+(4) Recompiled CAT and mexfiles.
+(5) Corrected orientation of slices in cg_slice_overlay.m.
+------------------------------------------------------------------------
+r594 | gaser | 2014-08-29 11:04:15

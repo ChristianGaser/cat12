@@ -451,8 +451,8 @@ elseif warp.sanlm==3
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
+  Ymss = double(ornlmMex(Yms,3,1,noise2)); 
   Yms  = double(Yms);
-  Ymss = single(ornlmMex(Yms,3,1,noise2)); 
   Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
@@ -487,8 +487,8 @@ elseif warp.sanlm==3
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Local Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
+  Ymss = double(ornlmMex(Yms,3,1,noise2)); 
   Yms  = double(Yms);
-  Ymss = single(ornlmMex(Yms,3,1,noise2)); 
   Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   clear Yms BB;
@@ -2748,7 +2748,7 @@ function Ylai = vbm_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job)
 %
 % Gyri and Sulci are defiened on the ... sulcal depth growing ROIs
 % ----------------------------------------------------------------------
-% ROI maps from different sources mapped to VBM-space [IXI550]
+% ROI maps from different sources mapped to VBM-space [IXI555]
 %  { filename , refinement , mask , sidessep , [roi space] }
 %  filename    = path to the ROI-file
 %  refinement  = [B|G|N]=[brain,GM,none] 
