@@ -155,7 +155,7 @@ vbm.extopts.QAcleanupth  = [3 5]; % NOT IMPLEMENTED % mark threshold for questio
 
 % expert options - ROIs
 %=======================================================================
-% ROI maps from different sources mapped to VBM-space [IXI550]
+% ROI maps from different sources mapped to VBM-space [IXI555]
 %  { filename , refinement , tissue }
 %  filename    = ''                                                     - path to the ROI-file
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space

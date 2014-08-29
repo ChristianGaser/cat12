@@ -78,6 +78,6 @@
 %   cg_vbm_batch.sh             - shell script to use vbm from unix without gui
 %
 % Templates/Images
-%   Template_?_IXI550_MNI152.nii - Dartel template of 550 subjects from IXI database
+%   Template_?_IXI555_MNI152.nii - Dartel template of 555 subjects from IXI database
 %                                  in MNI152 space provided for 6 different iteration steps
-% avgT1_Dartel_IXI550_MNI152.nii - average of 550 T1 images of IXI database in MNI152 space
+% avgT1_Dartel_IXI555_MNI152.nii - average of 555 T1 images of IXI database in MNI152 space

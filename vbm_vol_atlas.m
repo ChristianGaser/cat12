@@ -431,7 +431,7 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.samp               = 3;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.dartelwarp.normhigh.darteltpm = ...
-    {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii')};
+    {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii')};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 2;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS             = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstrength    = 0.5;
@@ -528,7 +528,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   % Therefore we create a table cod that contain in the first column the 
   % original label and in the second column the optimized value.
   % --------------------------------------------------------------------
-  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii'));
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii'));
   V  = spm_vol(char(P));
   VA = spm_vol(char(PA));
   Y  = spm_read_vols(VA(1));
@@ -852,7 +852,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   
   % 4D-probability map
   % --------------------------------------------------------------------
-  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii')); VC=VC(1);
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii')); VC=VC(1);
  
   N             = nifti;
   N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VC.dim(1:3) ...
@@ -1359,7 +1359,7 @@ function create_vbm_atlas(A,C,LAB)
 
   % output file
 %  VC = spm_vol(A.ham); VC.fname = C; 
-  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI550_MNI152.nii')); VC=VC(1);
+  VC = spm_vol(fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii')); VC=VC(1);
   VC.fname = C; 
   
   if 1
