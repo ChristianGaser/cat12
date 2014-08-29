@@ -158,7 +158,7 @@ switch lower(OV.transform)
 	case 'sagittal'
 		ref_img = ref_vol(:,:,Orig(3))';
 		slices_vx = slices/vx(1) + Orig(1);
-		image(ref_img)
+		image(fliplr(ref_img))
 		for i=slices_vx
 			h = line([i i],[1 dim(2)]);
 			set(h,'Color','r')
