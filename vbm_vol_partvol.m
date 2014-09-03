@@ -195,26 +195,26 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   % because dartle failed for large ventricle. 
   % It is important to use labopen for each side!
   stime = vbm_io_cmd('  Ventricle detection','g5','',verb,stime);
-  Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',6*vxd) | (YA==LAB.CB | YA==LAB.BS),'d',2) | vbm_vol_morph(YA==LAB.NV,'e',1);
+  Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',4*vxd) | (YA==LAB.CB | YA==LAB.BS),'d',2) | vbm_vol_morph(YA==LAB.NV,'e',1);
   Ynv = single(Ynv & Ym<2 & ~vbm_vol_morph(Yp0<2 & (YA==LAB.VT) & Yg<0.2,'d',4*vxd));
   Ynv = smooth3(round(Ynv))>0.5; 
   % between thamlamus
   Ynv = Ynv | (vbm_vol_morph(Ya1==LAB.TH,'c',10) & Yp0<2) | YA==LAB.CB | YA==LAB.BS;
   Ynv = smooth3(Ynv)>0.8;
   Yvt = single(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
-  Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.5)=nan; Yvt(Yvt==0)=1.5;
+  Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.8)=nan; Yvt(Yvt==0)=1.5;
   Yvt2 = vbm_vol_laplace3R(Yvt,Yvt==1.5,0.005);
-  
+ 
   warning('off','MATLAB:vbm_vol_morph:NoObject');
-  Yvts1 = vbm_vol_morph(Yvt2<1.9 & YS==0,'lo',1);
-  if sum(Yvts1)==0, Yvts1 = vbm_vol_morph(smooth3(Yvt2<1.9 & YS==0)>0.6,'l'); end
-  if sum(Yvts1)==0, Yvts1 = smooth3(Yvt2<1.9 & YS==0)>0.5; end
-  Yvts2 = vbm_vol_morph(Yvt2<1.9 & YS==1,'lo',1); 
-  if sum(Yvts2)==0, Yvts2 = vbm_vol_morph(smooth3(Yvt2<1.9 & YS==1)>0.6,'l'); end
-  if sum(Yvts2)==0, Yvts2 = smooth3(Yvt2<1.9 & YS==1)>0.5; end
+  Yvts1 = vbm_vol_morph(Yvt2<1.5 & YS==0,'lo',1);
+  if sum(Yvts1)==0, Yvts1 = vbm_vol_morph(smooth3(Yvt2<1.5 & YS==0)>0.6,'l'); end
+  if sum(Yvts1)==0, Yvts1 = smooth3(Yvt2<1.5 & YS==0)>0.5; end
+  Yvts2 = vbm_vol_morph(Yvt2<1.5 & YS==1,'lo',1); 
+  if sum(Yvts2)==0, Yvts2 = vbm_vol_morph(smooth3(Yvt2<1.5 & YS==1)>0.6,'l'); end
+  if sum(Yvts2)==0, Yvts2 = smooth3(Yvt2<1.5 & YS==1)>0.5; end
   warning('on','MATLAB:vbm_vol_morph:NoObject');
   
-  Yvt = smooth3((Yvts1 | Yvts2) & Yp0<1.5)>0.5; 
+  Yvt = smooth3((Yvts1 | Yvts2 | (YA==LAB.VT & Ym<1.7)) & Yp0<1.5 & Ym<1.5)>0.5; 
   Ya1(Yvt)=LAB.VT; 
   clear Yvts1 Yvts2;
 
