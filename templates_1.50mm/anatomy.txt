@@ -22,14 +22,20 @@ If you use these atlases, please cite the references below.
 Websites:    
 A) http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html
 
+References for the SPM Anatomy toolbox:
+1) Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. NeuroImage 25(4), 1325-1335, 2005
 
-References:
-1) Zilles K, Amunts K (2010) Centenary of Brodmann’s map – conception and fate. Nature Reviews Neuroscience 11(2): 139-145 
+2) Eickhoff SB, Heim S, Zilles K, Amunts K. Testing anatomically specified hypotheses in functional imaging using cytoarchitectonic maps. NeuroImage 32(2), 570-582, 2006-
 
-2) Amunts K, Schleicher A, Zilles K (2007) Cytoarchitecture of the cerebral cortex – more than localization. Neuroimage 37: 1061-1065
+3) Eickhoff SB, Paus T, Caspers S, Grosbras MH, Evans A, Zilles K, Amunts K Assignment of functional activations to probabilistic cytoarchitectonic areas revisited. NeuroImage 36(3), 511-521, 2007
 
-3) Zilles K, Schleicher A, Palomero-Gallagher N, Amunts K (2002) Quantitative analysis of cyto- and receptor architecture of the human brain. In: /Brain Mapping: The Methods/, J. C. Mazziotta and A. Toga (eds.), USA: Elsevier, 2002, p. 573-602.
-Version: 1.8 (02.05.2011)
+References for probabilistic cytoarchitectonic mapping:
+1) Zilles K, Amunts K. Centenary of Brodmann’s map – conception and fate. Nature Reviews Neuroscience 11(2): 139-145, 2010.
+
+2) Amunts K, Schleicher A, Zilles K. Cytoarchitecture of the cerebral cortex – more than localization. Neuroimage 37: 1061-1065, 2007.
+
+3) Zilles K, Schleicher A, Palomero-Gallagher N, Amunts K (2002). Quantitative analysis of cyto- and receptor architecture of the human brain. Brain Mapping: The Methods, J. C. Mazziotta and A. Toga (eds.), USA: Elsevier, 2002, p. 573-602, 2002.
+
 
 
 --------------------------------------------------------------------------------

@@ -53,19 +53,19 @@ function vbm_vol_atlas(atlas,refinei)
   if isempty(P)|| isempty(P{1})
     P      = cellstr(spm_select(inf,'image','select T1 images'));  
     if isempty(P) || isempty(P{1})
-      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+      vbm_io_cprintf([1 0 0],'Exit without atlas mapping, because of missing data.\n'); return; 
     end 
     PA     = cellstr(spm_select(numel(P),'image','select ROIs'));  
     if isempty(PA) || isempty(PA{1}) 
-      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+      vbm_io_cprintf([1 0 0],'Exit without atlas mapping, because of missing data.\n'); return; 
     end 
     Pcsv   = cellstr(spm_select(1,'image','select ROI csv file')); 
     if isempty(Pcsv) || isempty(Pcsv{1}) 
-      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+      vbm_io_cprintf([1 0 0],'Exit without atlas mapping, because of missing data.\n'); return; 
     end 
     resdir = cellstr(spm_select(1,'dirs','result directory'));    
     if isempty(resdir) || isempty(resdir{1})
-      vbm_io_cprintf([1 0 0],'Exit without atals mapping, because of missing data.\n'); return; 
+      vbm_io_cprintf([1 0 0],'Exit without atlas mapping, because of missing data.\n'); return; 
     end 
     atlas  = 'atlas';
     if ~exist('refinei','var') || isempty(refinei), refine = refini; else refine = 0; end
@@ -73,7 +73,7 @@ function vbm_vol_atlas(atlas,refinei)
   if isempty(P) || isempty(PA), return; end
   
   
-  recalc = 0; 
+  recalc = 1; 
   mod    = 0; % modulation of each label map? .. do not work yet ... see cg_vbm_defs
   if mod, modm='m'; else modm=''; end %#ok<UNRCH>
   
@@ -222,7 +222,7 @@ function vbm_vol_atlas(atlas,refinei)
       PwA{fi}   = fullfile(ppa,sprintf('%s%s%s.nii',modm,'w'  ,ffa));
 
       % use VBM to create a segmenation and mapping
-      if ~exist(Pp0{fi},'file') || ~exist(Py{fi},'file')
+      if recalc || ~exist(Pp0{fi},'file') || ~exist(Py{fi},'file')
         callvbm(P{fi});
       end
       
@@ -424,16 +424,15 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.data = {P};
 
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm                = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus              = [2 2 2 3 4 2];
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg            = 0.001;
+  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus              = [3 3 3 3 4 2];
+  matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg            = 0.0001;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasfwhm           = 60;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.affreg             = 'mni';
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.samp               = 3;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.dartelwarp.normhigh.darteltpm = ...
     {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii')};
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 2;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LAS             = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 3;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstrength    = 0.5;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanup         = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.vox             = 1.5;
@@ -459,12 +458,7 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.affine      = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.jacobian.warped  = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.warps            = [1 1];
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.native       = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.warped       = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.th1.dartel       = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.native        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.warped        = 0;
-  matlabbatch{1}.spm.tools.vbm.estwrite.output.l1.dartel        = 0;
+
 
   warning off;
   try

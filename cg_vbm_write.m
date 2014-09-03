@@ -47,7 +47,7 @@ if ~isfield(job.output,'WMH')
                            'mod'   ,cg_vbm_get_defaults('output.WMH.mod'), ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
-FN = {'INV','atlas','debug','BVCstr','WMHC','gcutstr','verb'};
+FN = {'INV','atlas','debug','BVCstr','WMHC','gcutstr','verb','LAS'};
 for fni=1:numel(FN)
   if ~isfield(job.extopts,FN{fni})
     job.extopts.(FN{fni}) = cg_vbm_get_defaults(sprintf('extopts.%s',FN{fni}));
@@ -451,8 +451,7 @@ elseif warp.sanlm==3
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-  Ymss = double(ornlmMex(Yms,3,1,noise2)); 
-  Yms  = double(Yms);
+  Ymss = ornlmMex(Yms,3,1,noise2); 
   Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
@@ -461,7 +460,7 @@ elseif warp.sanlm==3
 end
   
 
-% Local Intensity Correction 
+%% Local Intensity Correction 
 if job.extopts.LAS
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = vbm_io_cmd(sprintf('Local Adaptive Segmentation (LAS%d,LASstr=%0.2f)',...
@@ -594,7 +593,7 @@ if do_cls && do_defs,,
     %  prepare data for segmentation
     %  -----------------------------------------------------------------
     if 1
-      % classic approach
+      % classic approach, consider the WMH!
       Kb2 = 3;
       cls2 = zeros([d(1:2) Kb2]);
       Yp0  = zeros(d,'uint8');
@@ -764,7 +763,6 @@ if do_cls && do_defs,,
     if debug; prob = probo; end
 
     
-    %%
     fprintf('\n');
     stime = vbm_io_cmd('  Level 1 cleanup (ROI estimation)','g5','',verb);
     
@@ -791,13 +789,14 @@ if do_cls && do_defs,,
     Yroi = Ybd<cleanupdist*2 | ...                                      % next to the brain mask
            (~Ycbn & Ycbp & (Ylhp | Yrhp)) | ...                         % between the cortex and the cerebellum                       
            (Ylhp & Yrhp) | ...                                          % between left and right hemisphere
+           NS(Yl1b,LAB.VT) | ...                                        % in the ventricle 
            (NS(Yl1b,LAB.BS) & Ycbp);                                    % between brainstem and crebellum
     Yrbv = Yp0>0 & Ybd<6 & vbm_vol_morph( (Ylhp & Yrhp) | (~Ycbn & Ycbp & (Ylhp | Yrhp)),'d',4);
     Yroi = (Yroi | Yrbv) & ~NS(Yl1b,LAB.BS); 
     
     if ~debug, clear Ycbp Ycbn Ylhp; end
     
-    %% roi to change GM or WM to CSF or background
+    % roi to change GM or WM to CSF or background
     stime = vbm_io_cmd('  Level 1 cleanup (brain masking)','g5','',verb,stime);
     Yrw = Yp0>0 & Yroi & Ymb>0.9+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
     Yrw = Yrw | smooth3(Yrw)>0.3-0.3*cleanupstr;                        % dilate region
@@ -813,6 +812,7 @@ if do_cls && do_defs,,
     Ybb(vbm_vol_smooth3X(Ybb,2)>0.4 & ~Yrw)=1;
     Ybb = vbm_vol_morph(Ybb | Ybd>3,'lc',1*vxv); 
     Ybb = single(Ybb); spm_smooth(Ybb,Ybb,0.6./vx_vol); Ybb = Ybb>1/3;
+    
     % correct to background
     for i=1:3, prob(:,:,:,i)=min(prob(:,:,:,i),uint8(Ybb*255)); end
     % correct to CSF
@@ -828,7 +828,7 @@ if do_cls && do_defs,,
     % correct GM-WM missclassifications that look like meninges, but 
     % came from low contrast, artefacts and strong uncorrected bias. 
     % Test a lot of things, but its time to give up ...
-    if 1
+    if 0
       stime = vbm_io_cmd('  Level 2 cleanup (ROI estimation)','g5','',verb,stime);
       Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
       Ybd  = vbdist(single(~vbm_vol_morph(Yp0>0,'lc',vxv)),true(size(Yp0)),vx_vol);
@@ -846,7 +846,7 @@ if do_cls && do_defs,,
     end
     
     
-    %% cleanup of meninges
+    % cleanup of meninges
     % ------------------------------------------------------------------
     % This removes meninges next to the brain... works quite well.
     clear Yrg Yrw Yroi
@@ -860,27 +860,40 @@ if do_cls && do_defs,,
     prob(:,:,:,2)=min(prob(:,:,:,2),uint8(~YM*255));
     prob(:,:,:,3)=max(prob(:,:,:,3),uint8( (YM | (Ybb & Yp0==0))*255));
     
+    
+    
+    
     % cleanup WM 
     % ------------------------------------------------------------------
     % the idea was to close WMH ... but its not stable enough yes
-    %Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
-    %Yswm = vbm_vol_morph(vbm_vol_morph(Yp0>2.75,'lc',1),'e',1);
-    %prob(:,:,:,1)=min(prob(:,:,:,1),uint8(~Yswm*255));
-    %prob(:,:,:,2)=max(prob(:,:,:,2),uint8( Yswm*255));
-    %Yp0   = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
-    % clear and aligning of tissue maps from prob to Ycls
+    Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
+    Ywmh = false(size(Yp0)); 
+    for p0thi=2.1:0.2:2.9
+      Ywmh = Ywmh | ~vbm_vol_morph(Yp0<p0thi,'l') & (Yp0<p0thi); 
+    end
+    Ywmh = smooth3(Ywmh)>0.1 & NS(Yl1b,1) & Yp0>=2 & Yp0<3; 
+    Yl1b(Ywmh) = LAB.HI + ~mod(Yl1b(Ywmh),2); 
+    clear Ywmh;
+    % correction later depending on WMHC
  
-    %% 
+    
+    
+    
     % ------------------------------------------------------------------
     % cleanup in regions with PVE between WM and CSF without GM
     % ------------------------------------------------------------------
-    %stime = vbm_io_cmd('  Level 1 cleanup (ROI estimation)','g5','',verb);
+    stime = vbm_io_cmd('  Level 3 cleanup (CSF/WM PVE)','g5','',verb,stime);
     Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
-    Yroi = vbm_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BS),'d',2) & ...
-           ~vbm_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BS),'e',2) & ...
+    Ybs  = NS(Yl1b,LAB.BS) & Ymb>2/3;
+    YpveVB = vbm_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
+    YpveCC = vbm_vol_morph(Yl1b==1,'d',3*vxv) & vbm_vol_morph(Yl1b==2,'d',3*vxv) & ...
+             vbm_vol_morph(NS(Yl1b,LAB.VT),'d',2);                      % corpus callosum
+    Ynpve  = smooth3(NS(Yl1b,LAB.BG) | NS(Yl1b,LAB.TH))>0.3;            % no subcortical structure 
+    Yroi = (YpveVB | YpveCC) & ~Ynpve & ...
            vbm_vol_morph(Yp0==3,'d',2) & vbm_vol_morph(Yp0==1,'d',2) & ...
            Yp0<3 & Yp0>1 & ...
-           smooth3((Yp0<3 & Yp0>1) & ~vbm_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.2;
+           smooth3((Yp0<3 & Yp0>1) & ~vbm_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.1;
+    clear YpveVB YpveCC Ybs Ynpve;         
     Yncm = (3-Yp0)/2.*Yroi; 
     
     for i=1:3, Ycls{i}=zeros(size(Ycls{i}),'uint8'); end
@@ -888,28 +901,13 @@ if do_cls && do_defs,,
     Ycls{2}(indx,indy,indz) = vbm_vol_ctype(single(prob(:,:,:,2)).*~Yroi + (Yroi - Yncm)*255,'uint8');
     Ycls{3}(indx,indy,indz) = vbm_vol_ctype(single(prob(:,:,:,3)).*~Yroi + Yncm*255,'uint8');
     
-    
-    if 0 % remove later - p0 pve scaling with no values between 1.5 and 2.5
-      Yncm = Yncm/2 + (Yp0>1 & Yp0<=2 & Yroi)/2 + 0.01; Ynwm = Yroi - Yncm; 
-    
-      Yclsb=cell(1,3); for i=1:3, Yclsb{i}=zeros(size(Ycls{i}),'uint8'); end 
-      Yclsb{1}(indx,indy,indz) = min(prob(:,:,:,1),uint8(~Yroi*255));
-      Yclsb{2}(indx,indy,indz) = vbm_vol_ctype(single(prob(:,:,:,2)).*~Yroi + Ynwm*255,'uint8');
-      Yclsb{3}(indx,indy,indz) = vbm_vol_ctype(single(prob(:,:,:,3)).*~Yroi + Yncm*255,'uint8');
+    Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
+    Yp0b = Yp0b(indx,indy,indz); 
 
-      if verb, vbm_io_cmd(' ','','',verb,stime); end
-    
-      Yp0b = vbm_vol_ctype(single(Yclsb{1})*2/3 + single(Yclsb{2}) + single(Yclsb{3})*1/3,'uint8');
-      Yp0b = Yp0b(indx,indy,indz); 
-    else
-      Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
-      Yp0b = Yp0b(indx,indy,indz); 
-    end  
-  % clear Yp0;
     fprintf('%4.0fs\n',etime(clock,stimec));
     
     %% 
-     clear YM Ybb Ymb Yl1b probo
+    clear YM Ybb Ymb Yl1b probo Yp0
   elseif warp.cleanup>0
     stime = vbm_io_cmd('Final cleanup'); 
     %% get sure that all regions outside Yb are zero
@@ -949,14 +947,7 @@ if do_cls && do_defs,,
   qa.SM.WMH_WM_rel = qa.SM.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   clear Ywmhrel Yp0
 
-  if exist('Yclsb','var') 
-    %Yp0b = single(Yclsb{1})/255*2 + single(Yclsb{2})/255*3 + single(Yclsb{3})/255;
-    Yp0b = vbm_vol_ctype(single(Yclsb{1})*2/3 + single(Yclsb{2}) + single(Yclsb{3})*1/3,'uint8');
-    clear Yclsb;
-  else
-    Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
-    %Yp0b = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
-  end
+  Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
   Yp0b = Yp0b(indx,indy,indz); 
 
   
@@ -976,8 +967,8 @@ if do_cls && do_defs,,
     %  ... code ...
 
     % prepare correction map
-    Ywmh = vbm_vol_morph(NS(Yl1,23),'d') & vbm_vol_morph(Ycls{2}>128,'d');
-    Ywmh = single((NS(Yl1,23) | Ywmh) & vbm_vol_morph(NS(Yl1,23),'d')); 
+    Ywmh = vbm_vol_morph(NS(Yl1,LAB.HI),'d') & vbm_vol_morph(Ycls{2}>128,'d');
+    Ywmh = single((NS(Yl1,LAB.HI) | Ywmh) & vbm_vol_morph(NS(Yl1,LAB.HI),'d')); 
     spm_smooth(Ywmh,Ywmh,0.5*vx_vol); 
     Ywmh = max(0,min(255,Ywmh*255));
 
@@ -1001,42 +992,37 @@ if do_cls && do_defs,,
     if job.extopts.WMHC>1
       if warp.cleanup==3
       % update of Yp0b for WM/CSF PVE ROI
-        Yl1b = Yl1(indx,indy,indz);
-    
+
         Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
         Yp0  = Yp0(indx,indy,indz);
-        Yroi = vbm_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BS),'d',2) & ...
-               ~vbm_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BS),'e',2) & ...
+        Yl1b = Yl1(indx,indy,indz);
+        Ymb  = Ym(indx,indy,indz);
+ 
+        Ybs  = NS(Yl1b,LAB.BS) & Ymb>2/3;
+        YpveVB = vbm_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
+        YpveCC = vbm_vol_morph(Yl1b==1,'d',3*vxv) & vbm_vol_morph(Yl1b==2,'d',3*vxv) & ...
+                 vbm_vol_morph(NS(Yl1b,LAB.VT),'d',2);                      % corpus callosum
+        Ynpve  = smooth3(NS(Yl1b,LAB.BG) | NS(Yl1b,LAB.TH))>0.3;            % no subcortical structure 
+        Yroi = (YpveVB | YpveCC) & ~Ynpve & ...
                vbm_vol_morph(Yp0==3,'d',2) & vbm_vol_morph(Yp0==1,'d',2) & ...
                Yp0<3 & Yp0>1 & ...
-               smooth3((Yp0<3 & Yp0>1) & ~vbm_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.2;
+               smooth3((Yp0<3 & Yp0>1) & ~vbm_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.1;
+        clear YpveVB YpveCC Ybs Ynpve ;         
         Yncm = (3-Yp0)/2.*Yroi; 
 
         Ycls{1}(indx,indy,indz) = min(Ycls{1}(indx,indy,indz),uint8(~Yroi*255));
         Ycls{2}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{2}(indx,indy,indz)).*~Yroi + (Yroi - Yncm)*255,'uint8');
         Ycls{3}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{3}(indx,indy,indz)).*~Yroi + Yncm*255,'uint8');
-        
-        if 0 % remove later - p0 pve scaling with no values between 1.5 and 2.5
-          Yncm = Yncm/2 + (Yp0>1 & Yp0<=2 & Yroi)/2 + 0.01; Ynwm = Yroi - Yncm; 
-        
-          Yclsb{1}(indx,indy,indz) = min(Ycls{1}(indx,indy,indz),uint8(~Yroi*255));
-          Yclsb{2}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{2}(indx,indy,indz)).*~Yroi + Ynwm*255,'uint8');
-          Yclsb{3}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{3}(indx,indy,indz)).*~Yroi + Yncm*255,'uint8');
-
-          Yp0b = vbm_vol_ctype(single(Yclsb{1})*2/3 + single(Yclsb{2}) + single(Yclsb{3})*1/3,'uint8'); 
-          clear Yclsb Yncm Yroi Yp0 Yl1b;
-        else
-          Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8'); 
-        end
-      else
-        Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
+        clear Yp0 Yroi;
       end
+      
+      Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
       Yp0b = Yp0b(indx,indy,indz); 
     else
       if qa.SM.WMH_rel>3 || qa.SM.WMH_WM_rel>5 % #% of the TIV or the WM are affected
         vbm_warnings = vbm_io_addwarning(vbm_warnings,...
           'MATLAB:SPM:VBM:cg_vbm_write:uncorrectedWMH',...
-          sprintf(['uncorrected WM hyperintensities greater 5%%%% (%2.2f%%%%) of the WM!\\n'],qa.SM.WMH_rel));
+          sprintf('uncorrected WM hyperintensities greater 5%%%% (%2.2f%%%%) of the WM!\\n',qa.SM.WMH_rel));
         vbm_io_cmd(' ','','',1);
       end
     end
@@ -1045,7 +1031,7 @@ if do_cls && do_defs,,
     if qa.SM.WMH_rel>3 || qa.SM.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       vbm_warnings = vbm_io_addwarning(vbm_warnings,...
         'MATLAB:SPM:VBM:cg_vbm_write:uncorrectedWMH',...
-        sprintf(['uncorrected WM hyperintensities greater 5%%%% (%2.2f%%%%) of the WM!\\n'],qa.SM.WMH_rel));
+        sprintf('uncorrected WM hyperintensities greater 5%%%% (%2.2f%%%%) of the WM!\\n',qa.SM.WMH_rel));
       fprintf('\n');
     end
   end
@@ -1259,7 +1245,7 @@ vbm_io_writenii(VT0,Ym.*(Yp0>0.1),'m', ...
   'float32',[0,1],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),0,trans);
   
 % Yp0b maps
-if job.extopts.LAS && job.extopts.WMHC==2 && ~opt.inv_weighting; 
+if job.extopts.LAS && job.extopts.WMHC==3 && ~opt.inv_weighting; 
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
 vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,4/255],job.output.label,0,trans);
@@ -1281,8 +1267,6 @@ for clsi=1:3
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 1 2 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),0,trans);
 end
-
-
 % write WMH class maps
 if job.extopts.LAS && job.extopts.WMHC==1 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint8',[0,1/255],...
