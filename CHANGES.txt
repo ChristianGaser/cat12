@@ -4726,3 +4726,83 @@ M       vbm_vol_simgrow.mexw64
 (5) Corrected orientation of slices in cg_slice_overlay.m.
 ------------------------------------------------------------------------
 r594 | gaser | 2014-08-29 11:04:15
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+ M      templates_1.50mm
+D       templates_1.50mm/Template_0_IXI555_MNI152.nii
+D       templates_1.50mm/Template_1_IXI550_MNI152.nii
+M       templates_1.50mm/Template_1_IXI555_MNI152.nii
+D       templates_1.50mm/Template_2_IXI550_MNI152.nii
+M       templates_1.50mm/Template_2_IXI555_MNI152.nii
+D       templates_1.50mm/Template_3_IXI550_MNI152.nii
+M       templates_1.50mm/Template_3_IXI555_MNI152.nii
+D       templates_1.50mm/Template_4_IXI550_MNI152.nii
+M       templates_1.50mm/Template_4_IXI555_MNI152.nii
+D       templates_1.50mm/Template_5_IXI550_MNI152.nii
+M       templates_1.50mm/Template_5_IXI555_MNI152.nii
+D       templates_1.50mm/Template_6_IXI550_MNI152.nii
+M       templates_1.50mm/Template_6_IXI555_MNI152.nii
+M       templates_1.50mm/anatomy.txt
+M       templates_1.50mm/vbm12.nii
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_atlas.m
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_partvol.m
+
+(1) Updated cleanup function, by adding a WM-CSF PVE correction next to the 
+    ventricle, the CC and the brainstem.
+(2) Added cleanupstr parameter to control strength of the cleanup function.
+(3) Corrected error in "vbm_vol_localstat.c".
+(4) Updated IXI555 template. 
+(5) Removed surface defect marking for Windows systems.  
+(6) Prepared GUI entries for some parameter.
+(7) Corrected ventricle detection in "vbm_vol_partvol".
+------------------------------------------------------------------------
+r595 | dahnke | 2014-09-02 17:38:41
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+MM      ornlm_float.c
+M       tbx_cfg_vbm.m
+ M      templates_1.50mm
+D       templates_1.50mm/Template_0_IXI555_MNI152.nii
+D       templates_1.50mm/Template_1_IXI550_MNI152.nii
+M       templates_1.50mm/Template_1_IXI555_MNI152.nii
+D       templates_1.50mm/Template_2_IXI550_MNI152.nii
+M       templates_1.50mm/Template_2_IXI555_MNI152.nii
+D       templates_1.50mm/Template_3_IXI550_MNI152.nii
+M       templates_1.50mm/Template_3_IXI555_MNI152.nii
+D       templates_1.50mm/Template_4_IXI550_MNI152.nii
+M       templates_1.50mm/Template_4_IXI555_MNI152.nii
+D       templates_1.50mm/Template_5_IXI550_MNI152.nii
+M       templates_1.50mm/Template_5_IXI555_MNI152.nii
+D       templates_1.50mm/Template_6_IXI550_MNI152.nii
+M       templates_1.50mm/Template_6_IXI555_MNI152.nii
+M       templates_1.50mm/anatomy.txt
+M       templates_1.50mm/vbm12.nii
+M       vbm_surf_createCS.m
+M       vbm_tst_pre.m
+M       vbm_vol_atlas.m
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_partvol.m
+
+(1) Updated cleanup function, by adding a WM-CSF PVE correction next to the 
+    ventricle, the CC and the brainstem.
+(2) Added cleanupstr parameter to control strength of the cleanup function.
+(3) Corrected error in "vbm_vol_localstat.c".
+(4) Updated IXI555 template. 
+(5) Removed surface defect marking for Windows systems.  
+(6) Prepared GUI entries for some parameter.
+(7) Corrected ventricle detection in "vbm_vol_partvol".
+------------------------------------------------------------------------
+r595 | dahnke | 2014-09-03 08:39:57

@@ -54,7 +54,14 @@ vbm.output.CSF.warped = 0;
 vbm.output.CSF.mod    = 0;
 vbm.output.CSF.dartel = 0;
 
-% label
+% WMH tissue maps (only for opt.extopts.WMHC==3) - in development
+vbm.output.WMH.native  = 0;
+vbm.output.WMH.warped  = 0;
+vbm.output.WMH.mod     = 0;
+vbm.output.WMH.dartel  = 0;
+
+% label 
+% background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extropts.WMHC==3)
 vbm.output.label.native = 0; 
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
@@ -66,15 +73,9 @@ vbm.output.jacobian.warped = 0;
 % order is [forward inverse]
 vbm.output.warps        = [0 0];
 
+
 % experimental maps
 %=======================================================================
-% WARNING: This map describes the changes of the preprocessing and is under development. 
-
-% WMH tissue maps
-vbm.output.WMH.native  = 0;
-vbm.output.WMH.warped  = 0;
-vbm.output.WMH.mod     = 0;
-vbm.output.WMH.dartel  = 0;
 
 % partitioning atlas maps
 vbm.output.atlas.native = 0; 
@@ -93,64 +94,65 @@ vbm.output.te.warped = 0;
 vbm.output.te.mod    = 0;
 vbm.output.te.dartel = 0;
 
-% Extended writing options
-%=======================================================================
-vbm.extopts.dartelwarp  = 1;  % dartel normalization: 0 - spm default; 1 - yes
-vbm.extopts.darteltpm   = ... % Indicate first Dartel template
-  {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')}; 
-vbm.extopts.print       = 1; % Display and print results
 
-% bias correction options
+% Longitudinal pipeline?
 %=======================================================================
+% bias correction options
 vbm.bias.nits_bias      = 8;
 vbm.bias.biasfwhm       = 60;
 vbm.bias.biasreg        = 1e-6;
 vbm.bias.lmreg          = 1e-6;
-
-% realign options
-%=======================================================================
-vbm.realign.halfway     = 1; % use halfway registration: 0 - no; 1 - yes
-vbm.realign.weight      = 1; % weight registration with inverse std: 0 - no; 1 - yes
-vbm.realign.ignore_mat  = 0; % ignore exisiting positional information: 0 - no; 1 - yes
-
+% realign options 
+vbm.realign.halfway     = 1;      % use halfway registration: 0 - no; 1 - yes
+vbm.realign.weight      = 1;      % weight registration with inverse std: 0 - no; 1 - yes
+vbm.realign.ignore_mat  = 0;      % ignore exisiting positional information: 0 - no; 1 - yes
 % apply deformations options
-%=======================================================================
-vbm.defs.interp         = 5;  % 5th degree B-spline
+vbm.defs.interp         = 5;      % 5th degree B-spline
+
 
 % expert options
 %=======================================================================
+
 % skull-stripping options
 vbm.extopts.gcut         = 1;     % Skull-stripping with graph-cut:  0 - no; 1 - yes (default)
 vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping with 0 for softer and wider, and 1 for harder and closer (default = 0.5)
 vbm.extopts.cleanup      = 3;     % Cleanup of meninges: 0 - no; 1 - light; 2 - thorough; 3 - new improved cleanup (default)
 vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process (only cleanup = 3).
+
 % segmenation options
 vbm.extopts.LAS          = 1;     % Local adaptive segmentation (VMB12i):  0 - no adaption; 1 - adaption (default); 2 - adaption & sharpening (this is just a test - do not use!)
 vbm.extopts.LASstr       = 0.5;   % Strength of the local adaption:  0 - lower adaption; 1 - strong adaption (default = 0.5)
 vbm.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction (in development):  0 - no correction; 1 - strong correction
-vbm.extopts.WMHC         = 1;     % correction for WM hyperintensities (in development):  0 - no; 1 - only for Dartel (default); 2 - also for segmentation 
+vbm.extopts.WMHC         = 1;     % correction for WM hyperintensities (in development):  0 - no; 1 - only for Dartel (default); 2 - also for segmentation (corred to WM); 3 - separate class
 vbm.extopts.WMHCstr      = 0.5;   % strength of WM hyperintensity correction (in development):  0 for lower, 1 for stronger corrections (default = 0.5)
-vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
 vbm.extopts.mrf          = 1;     % MRF weighting:  0-1 - manuell setting; 1 - auto (default)
 vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
-                                  %                   3 - SANLM with single-threading + ORNLM filter; 2 - SANLM with multi-threading (not stable!) + ORNLM filter; 
+                                  %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter; 
 vbm.extopts.bias_fwhm    = 60;    % REMOVE ME - because I had to turn it to 0 segmenation due to error % FWHM of Kmeans internal bias correction
 vbm.extopts.kmeans       = 0;     % REMOVE ME - because only 0 works correct % segmentation initialization: 0 - new segment; 1 - Kmeans
+vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
+
 % normalization options
 vbm.extopts.vox          = 1.5;   % voxel size for normalized data
 vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data; 
+vbm.extopts.dartelwarp   = 1;     % dartel normalization: 0 - spm default; 1 - yes
+vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')}; % Indicate first Dartel template
+
 % surface options
 vbm.extopts.surface      = 1;     % surface and thickness creation
 vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
+
 % visualisation, print and debugging options
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 vbm.extopts.ROI          = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
-vbm.extopts.debug        = 1;     % debuging option: 0 - default; 1 - write debuging files 
+vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
+vbm.extopts.debug        = 1;     % debuging option: 0 - default; 1 - write debuging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
-% QA options
-vbm.extopts.QAcleanup    = 1;     % NOT IMPLEMENTED % move images with questionable or bad quality (see QAcleanupth) to subdirectories
-vbm.extopts.QAcleanupth  = [3 5]; % NOT IMPLEMENTED % mark threshold for questionable and bad quality for QAcleanup
+
+% QA options -  NOT IMPLEMENTED - just the idea
+%vbm.extopts.QAcleanup    = 1;     % NOT IMPLEMENTED % move images with questionable or bad quality (see QAcleanupth) to subdirectories
+%vbm.extopts.QAcleanupth  = [3 5]; % NOT IMPLEMENTED % mark threshold for questionable and bad quality for QAcleanup
 
 
 % expert options - ROIs
@@ -161,12 +163,12 @@ vbm.extopts.QAcleanupth  = [3 5]; % NOT IMPLEMENTED % mark threshold for questio
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 vbm.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')      'none'  {''}            ; ... % VBM atlas with major regions for SBM & ROIs
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')    'none'  {''}              ; ... % VBM atlas with major regions for VBM, SBM & ROIs
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... 
   fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'gm'    {'csf','gm','wm'} ; ...
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ...
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ...
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammer, low T1 image quality
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ... % only one subject, but with WM regions
   }; 
 
 % IDs of the ROIs in the vbm12 atlas map (vbm12.nii). 

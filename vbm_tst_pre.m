@@ -81,11 +81,9 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
-  %'IBSRv2'
-  %'SVE_LPBA40'
-  'BWP_Collins'
-  'BWP_Collins_T2'
-  'BWP_Collins_PD'
+%  'BWP_Collins'
+%  'BWP_Collins_T2'
+%  'BWP_Collins_PD'
 %  'BWP_Collins_res_slice'
 %  'BWP_Collins_MS'
 %  'BWP_Collins_fast'
@@ -94,7 +92,9 @@ function vbm_tst_pre
 %     'IXI'
 %     'NIH'
 %     'OASIS'
-%      'IBSRv1'
+ %  'IBSRv1'
+ %  'IBSRv2'
+%   'SVE_LPBA40'
 %      'BWP_20N'
 %      'Tumorbase'
 %      'private'
@@ -102,7 +102,7 @@ function vbm_tst_pre
 %    'BO_inverse'     
 %      'private_full'
 %     'BWP_Collins'
-%    'SRS'
+    'SRS'
 %      'Apes'
    };
  
