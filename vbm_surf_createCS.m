@@ -62,7 +62,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     opt.CATDir = [opt.CATDir '.glnx86'];
   end  
 
-  [pp,ff,ee]   = spm_fileparts(V.fname);
+  [pp,ff]   = spm_fileparts(V.fname);
 
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
@@ -136,7 +136,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       clear Yppt;
 
       Vpp1 = Vpp; 
-      Vpp1.fname    = fullfile(pp,['pp1' ff ee]);
+      Vpp1.fname    = fullfile(pp,['pp1' ff '.nii']);
       vmat2         = spm_imatrix(Vpp1.mat);
       Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
       vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];

@@ -1678,7 +1678,7 @@ if do_cls && warp.print
   % remove p0 image, if it was only written for printing
   if exist(fullfile(pth,['o', nam, '.nii']),'file')
     delete(fullfile(pth,['o', nam, '.nii']));
-    spm_orthviews('Delete',hho); % we have to remove the figure, otherwise the gui user may get an error
+    try spm_orthviews('Delete',hho); end %#ok<TRYNC> % we have to remove the figure, otherwise the gui user may get an error
     try set(cc{1},'visible','off'); end %#ok<TRYNC>
   end
   % remove p0 image, if it was only written for printing
