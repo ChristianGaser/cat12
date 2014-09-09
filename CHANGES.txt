@@ -4806,3 +4806,14 @@ M       vbm_vol_partvol.m
 (7) Corrected ventricle detection in "vbm_vol_partvol".
 ------------------------------------------------------------------------
 r595 | dahnke | 2014-09-03 08:39:57
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_write.m
+M       vbm12.man
+M       vbm_surf_createCS.m
+
+(1) Use always .nii as extension in vbm_surf_createCS.m
+(2) Parameter hho was only definedfor prinintg ps-file.
+------------------------------------------------------------------------
+r596 | gaser | 2014-09-09 12:37:38
