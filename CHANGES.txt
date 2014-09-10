@@ -4817,3 +4817,11 @@ M       vbm_surf_createCS.m
 (2) Parameter hho was only definedfor prinintg ps-file.
 ------------------------------------------------------------------------
 r596 | gaser | 2014-09-09 12:37:38
+
+M       CHANGES.txt
+M       vbm_surf_createCS.m
+
+Deselected use of CAT_DeformSurf due to non-solved issues.
+
+------------------------------------------------------------------------
+r597 | gaser | 2014-09-10 13:28:53

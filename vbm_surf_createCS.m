@@ -51,7 +51,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   opt.interpV   = max(0.5,min([min(vx_vol),opt.interpV,1]));
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
-  opt.usePPmap  = 1; % ########### 1 does not work yet ##########
+  opt.usePPmap  = 0; % ########### 1 does not work yet ##########
   
   % add system dependent extension to CAT folder
   if ispc
