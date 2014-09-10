@@ -1219,7 +1219,7 @@ end
 %  ---------------------------------------------------------------------
 stime = vbm_io_cmd('Quality Control');; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
-qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings);
+qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0));
 clear Yo Ybf Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));
 
@@ -1494,17 +1494,17 @@ if do_cls && warp.print
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
   
 % Image Quality measures:
-  str2 =       struct('name', '\bfImage Quality:','value','\bf orig.  corr.  final.'); %['(orig ' char(187) ' corr)']); 
-               % sprintf('%s',marks2str(qam.QMv.avg(1),sprintf('%0.1f > %0.1f',qam.QMv.avg(1),qam.QMv.avg(2))))); 
+  str2 =       struct('name', '\bfImage Quality:','value',''); 
   str2 = [str2 struct('name', ' Voxel Volume:','value', ...
-               sprintf('%s',marks2str(qam.QMv.res_vol,sprintf('%5.2f mm%s',qam.QMv.res_vol,char(179)))))];
+               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qam.QM.res_vol,char(179)))))];
   str2 = [str2 struct('name', ' Voxel Isotropy:','value', ...   
-               sprintf('%s',marks2str(qam.QMv.res_isotropy,sprintf('%5.2f',qam.QMv.res_isotropy))))];
-  str2 = [str2 struct('name',' RES (resolution):','value',marks2str(qam.QMv.res_RMS,sprintf('%5.2f',qam.QMv.res_RMS)))];
-  str2 = [str2 struct('name',' NCR (noise):','value',marks2str(qam.QMv.NCR,sprintf('%5.2f %5.2f %5.2f',qam.QMo.NCR,qam.QMm.NCR,qam.QMv.NCR)))];
-  str2 = [str2 struct('name',' ICR (bias):','value',marks2str(qam.QMv.ICR,sprintf('%5.2f %5.2f %5.2f',qam.QMo.ICR,qam.QMm.ICR,qam.QMv.ICR)))];
-  str2 = [str2 struct('name',' MPC (processibility):','value',marks2str(qam.QMv.MPC,sprintf('%5.2f %5.2f %5.2f',qam.QMo.MPC,qam.QMm.MPC,qam.QMv.MPC)))];
-  str2 = [str2 struct('name','\bf average (RMS):','value',marks2str(qam.QMv.avg,sprintf('%5.2f %5.2f %5.2f',qam.QMo.avg,qam.QMm.avg,qam.QMv.avg)))];
+               sprintf('%s',marks2str(qam.QM.res_isotropy,sprintf('%5.2f',qam.QM.res_isotropy))))];
+  str2 = [str2 struct('name',' RES (resolution):','value',marks2str(qam.QM.res_RMS,sprintf('%5.2f',qam.QM.res_RMS)))];
+  str2 = [str2 struct('name',' NCR (noise):','value',marks2str(qam.QM.NCR,sprintf('%5.2f',qam.QM.NCR)))];
+  str2 = [str2 struct('name',' ICR (bias):','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
+  str2 = [str2 struct('name',' MPC (processibility):','value',marks2str(qam.QM.MPC,sprintf('%5.2f',qam.QM.MPC)))];
+  str2 = [str2 struct('name',' CJV (processibility):','value',marks2str(qam.QM.CJV,sprintf('%5.2f',qam.QM.CJV)))];
+  str2 = [str2 struct('name','\bf average (RMS):','value',marks2str(qam.QM.avg,sprintf('%5.2f',qam.QM.avg)))];
 
       
 % Subject Measures
@@ -1522,8 +1522,8 @@ if do_cls && warp.print
           sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f cm' char(179)],qa.SM.vol_TIV)))];  
   if opt.vbmi      
     str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
-            sprintf('%s',marks2str(qam.QMv.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',...
-            qam.QMv.vbm_expect(1),qa.QMv.vbm_expect(1)*100))))]; 
+            sprintf('%s',marks2str(qam.QM.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',...
+            qam.QM.vbm_expect(1),qa.QM.vbm_expect(1)*100))))]; 
   end
   if isfield(qa.SM,'dist_thickness') && ~isempty(qa.SM.dist_thickness)
     str3 = [str3 struct('name', ' Thickness (abs):','value',sprintf('%s%s%s mm', ...
@@ -1595,20 +1595,32 @@ if do_cls && warp.print
 	  spm_orthviews('Reset');
 
     if cmmax==2
-      ytick      = ([0.5,10,15.5,21,26.5,32,59]);
-      yticklabel = {' BG',' CSF',' CGM',' GM',' GWM',' WM',' BV/HD'};
+      ytick       = ([0.5,10,15.5,21,26.5,32,59]);
+      yticklabel  = {' BG',' CSF',' CGM',' GM',' GWM',' WM',' BV/HD'};
+      yticklabelo = {' BG',' ',' ',' ',' ',' WM',' BV/HD'};
     else
-      ytick      = min(60,max(0.5,round([0.5,22,42,59]/cmmax)));
-      yticklabel = {' BG',' CSF',' GM',' WM'};
+      ytick       = min(60,max(0.5,round([0.5,22,42,59]/cmmax)));
+      yticklabel  = {' BG',' CSF',' GM',' WM'};
+      yticklabelo = {' BG',' ',' ',' WM'};
     end
     
-    % BB box is not optimal for all images...
-    % furthermore repositioning the cross to the BG is maybe usefull...
-    spm_orthviews('BB',bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
+  
+   
+
     
     %%
     opt.print=1;
     if opt.print
+      % BB box is not optimal for all images...
+      % furthermore repositioning the cross to the BG is maybe usefull...
+      %global st
+      %fig     = spm_figure('FindWin','Graphics');
+      %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
+      %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
+      %st.vols = cell(24,1);
+
+      bb = warp.bb;
+      spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
       
       % original image in original space
       Yo   = single(spm_read_vols(spm_vol(fname0))); % res.image(1).fname
@@ -1620,8 +1632,8 @@ if do_cls && warp.print
     	spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
       spm_orthviews('window',hho,[0 cmmax]);
-      cc{1} = colorbar('location','west','position',[pos(1,1)+0.30 0.38 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
       
       
       % full corrected images in original space
@@ -1633,7 +1645,7 @@ if do_cls && warp.print
     	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
       spm_orthviews('window',hhm,[0 cmmax]);
-      cc{2} = colorbar('location','west','position',[pos(2,1)+0.30 0.38 0.02 0.15], ...
+      cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
         'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
 
       
@@ -1646,7 +1658,7 @@ if do_cls && warp.print
       hhp0 = spm_orthviews('Image',Vtmp2,pos(3,:));
       spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
       spm_orthviews('window',hhp0,[0 3*cmmax]);
-      cc{3} = colorbar('location','west','position',[pos(3,1)+0.30 0.38 0.02 0.15], ...
+      cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
         'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
       
  
@@ -1684,7 +1696,9 @@ if do_cls && warp.print
   % remove p0 image, if it was only written for printing
   if job.output.bias.native==0 && exist(fullfile(pth,['m', nam, '.nii']),'file')
     delete(fullfile(pth,['m', nam, '.nii']));
-    spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
+    if exist('hhm','var')
+      spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
+    end
     try set(cc{2},'visible','off'); end %#ok<TRYNC>
   end
   % remove p0 image, if it was only written for printing
@@ -1705,8 +1719,8 @@ if do_cls && warp.print
   fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  vbm_io_cprintf(color(QMC,qam.QMv.avg), ...
-    sprintf('Overall Image Quality:         %0.1f\n',qam.QMv.avg(1)));
+  vbm_io_cprintf(color(QMC,qam.QM.avg), ...
+    sprintf('Overall Image Quality:         %0.1f\n',qam.QM.avg(1)));
   vbm_io_cprintf(color(QMC,qam.SM.avg), ...
     sprintf('Overall Subject Averageness:   %0.1f',qam.SM.avg(1)));
   fprintf('\n%s\n\n',repmat('-',1,72));
@@ -1718,8 +1732,8 @@ else
   fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  vbm_io_cprintf(color(QMC,qam.QMv.avg), ...
-    sprintf('Overall Image Quality:         %0.1f\n',qam.QMv.avg(1)));
+  vbm_io_cprintf(color(QMC,qam.QM.avg), ...
+    sprintf('Overall Image Quality:         %0.1f\n',qam.QM.avg(1)));
   vbm_io_cprintf(color(QMC,qam.SM.avg), ...
     sprintf('Overall Subject Averageness:   %0.1f',qam.SM.avg(1)));
   fprintf('\n%s\n\n',repmat('-',1,72));
@@ -3116,5 +3130,33 @@ for i=1:d(3),
     x(:,:,i,3) = single(i);
 end
 %=======================================================================
+function reset_st
+global st
+fig     = spm_figure('FindWin','Graphics');
+bb      = []; %[ [-78 78]' [-112 76]' [-50 85]' ];
+st      = struct('n', 0, 'vols',[], 'bb',bb,'Space',eye(4),'centre',[0 0 0],'callback',';','xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
+st.vols = cell(24,1);
 
+xTB = spm('TBs');
+if ~isempty(xTB)
+    pluginbase = {spm('Dir') xTB.dir};
+else
+    pluginbase = {spm('Dir')};
+end
+for k = 1:numel(pluginbase)
+    pluginpath = fullfile(pluginbase{k},'spm_orthviews');
+    if isdir(pluginpath)
+        pluginfiles = dir(fullfile(pluginpath,'spm_ov_*.m'));
+        if ~isempty(pluginfiles)
+            if ~isdeployed, addpath(pluginpath); end
+            % fprintf('spm_orthviews: Using Plugins in %s\n', pluginpath);
+            for l = 1:numel(pluginfiles)
+                [p, pluginname, e, v] = spm_fileparts(pluginfiles(l).name);
+                st.plugins{end+1} = strrep(pluginname, 'spm_ov_','');
+                % fprintf('%s\n',st.plugins{k});
+            end;
+        end;
+    end;
+end;
+return;
 

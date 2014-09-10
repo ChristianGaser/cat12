@@ -4825,3 +4825,19 @@ Deselected use of CAT_DeformSurf due to non-solved issues.
 
 ------------------------------------------------------------------------
 r597 | gaser | 2014-09-10 13:28:53
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       distribute_to_server.sh
+M       vbm_io_xml.m
+M       vbm_stat_marks.m
+M       vbm_tst_qa.m
+M       vbm_vol_sanlm.m
+
+(1)  Added some comments in "vbm_vol_sanlm" and "distribute_to_server.sh".
+(2)  Corrected "vbm_io_xml" write error for empty structures.
+(3)  Corrected small export/display errors. 
+(4)  Updated "vbm_tst_qa" and "vbm_stat_marks" functions for "simpler" quality 
+     measures that were restricted to uncorrected exor corrected images. 
+------------------------------------------------------------------------
+r598 | dahnke | 2014-09-10 17:01:06
