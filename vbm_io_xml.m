@@ -1032,7 +1032,9 @@ end
                   'Struct field named ATTRIBUTE encountered which was not a struct. Ignoring.');
               end
             otherwise                            % set children of the node
-              struct2DOMnode(xml, node, x, field, Pref ); % recursive call will modify 'node'
+              if ~isempty(s.(field))
+                struct2DOMnode(xml, node, x, field, Pref ); % recursive call will modify 'node'
+              end
           end
         end  % end for i=1:nFields
         parent.appendChild(node);
