@@ -63,9 +63,11 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
     % noise-correction
     if job.warp.sanlm
-        % for windows disable multi-threading
-        if strcmp(mexext,'mexw32') || strcmp(mexext,'mexw64')
-            job.warp.sanlm = min(1,job.warp.sanlm);
+        % for windows always disable multi-threading
+        if ispc
+            if (job.warp.sanlm == 2) || (job.warp.sanlm == 4)
+                job.warp.sanlm = job.warp.sanlm - 1;
+            end
         end
 
         switch job.warp.sanlm

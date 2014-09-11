@@ -41,7 +41,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   if ~exist('opt','var'), opt=struct(); end
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   
-  %def.surface   = cg_vbm_get_defaults('extopts.surface');
   def.debug     = cg_vbm_get_defaults('extopts.debug');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.reduceCS  = 100000;  
@@ -116,7 +115,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
 
 
-   % if opt.surface
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
     %  because CAT_DeformSurf_ui can not handle higher resolutions and
@@ -193,7 +191,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
 
     % mark defects and save as gifti for non windows systems (their is an error in CAT_MarkDefects) 
-    if opt.debug && ~any(strcmp(computer,{'PCWIN','PCWIN64'})) 
+    if opt.debug && ~ispc 
       cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects); 
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects,[Pdefects '.gii']);
