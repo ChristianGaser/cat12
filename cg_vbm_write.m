@@ -22,7 +22,6 @@ opt = struct();
 opt = checkinopt(opt,def);
 
 
-
 %% complete output structure
 if ~isfield(job.output,'atlas')
   job.output.atlas = struct('native',cg_vbm_get_defaults('output.atlas.native'), ...
@@ -436,7 +435,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
 % After the intensity scaling and with correct information about the
 % variance of the tissue, a further harder noise correction is meaningful.
-% Finally, it a stronger NLM-filter is better than a strong MRF filter!
+% Finally, a stronger NLM-filter is better than a strong MRF filter!
 if warp.sanlm>0 && warp.sanlm<3
   stime = vbm_io_cmd('Noise correction after Global Intensity Correction');
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
@@ -2686,7 +2685,7 @@ function [Yb,Ybcs,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   Ybs = single(Yb); spm_smooth(Ybs,Ybs,4*gc.s./vx_vol); Yb   = Yb | (Ybs>(gc.s-0.25) & Ym<1.25/3);
   
   %% filling of ventricles and smooth mask
-  stime = vbm_io_cmd('  Ventrilce-closing','g5','',verb,stime);
+  stime = vbm_io_cmd('  Ventricle-closing','g5','',verb,stime);
   Yb  = Yb | (vbm_vol_morph(Yb ,'labclose',vxd*gc.f) & ...
     Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
   Yb  = Yb | (vbm_vol_morph(Yb ,'labclose',vxd) & Ym<1.1);
@@ -2935,7 +2934,7 @@ function csv = vbm_vol_ROIestimate(Yp0,Ya,Yv,vx_vol,ai,name,csv,tissue)
             Ymm=Yp0>1.5 & Yp0<2.5;
             
             for ri=2:size(csv,1)
-              csv{ri,end} = nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
+              csv{ri,end} = vbm_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
             end
           case 'wm'   
           case 'brain'
@@ -2952,7 +2951,7 @@ function csv = vbm_vol_ROIestimate(Yp0,Ya,Yv,vx_vol,ai,name,csv,tissue)
             case 'brain', Ymm=Yp0>0.5;
             case '',      Ymm=true(size(Yp0));
           end
-          csv{ri,end} = nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
+          csv{ri,end} = vbm_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
        end
     end
   end
