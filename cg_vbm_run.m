@@ -108,6 +108,8 @@ switch lower(arg)
         error('Unknown argument ("%s").', arg);
 end
 
+colormap(gray)
+
 return
 %_______________________________________________________________________
 
