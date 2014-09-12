@@ -430,7 +430,7 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.affreg             = 'mni';
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.samp               = 3;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.dartelwarp.normhigh.darteltpm = ...
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.darteltpm = ...
     {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii')};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 3;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstrength    = 0.5;

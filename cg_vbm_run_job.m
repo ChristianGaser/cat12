@@ -62,15 +62,15 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
 
     % noise-correction
-    if job.warp.sanlm
+    if job.vbm.sanlm
         % for windows always disable multi-threading
         if ispc
-            if (job.warp.sanlm == 2) || (job.warp.sanlm == 4)
-                job.warp.sanlm = job.warp.sanlm - 1;
+            if (job.vbm.sanlm == 2) || (job.vbm.sanlm == 4)
+                job.vbm.sanlm = job.vbm.sanlm - 1;
             end
         end
 
-        switch job.warp.sanlm
+        switch job.vbm.sanlm
           case {1,3}, stime = vbm_io_cmd('NLM-Filter'); 
           case {2,4}, stime = vbm_io_cmd('NLM-Filter with multi-threading');
         end
@@ -80,7 +80,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             V = spm_vol(job.channel(n).vols{subj});
             Y = single(spm_read_vols(V));
             Y(isnan(Y)) = 0;
-            switch job.warp.sanlm
+            switch job.vbm.sanlm
               case {1,3}, sanlmMex_noopenmp(Y,3,1); % use single-threaded version
               case {2,4}, sanlmMex(Y,3,1);          % use multi-threaded version
             end
@@ -103,7 +103,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         obj.image    = spm_vol(images);
         spm_check_orientations(obj.image);
 
-        obj.fwhm     = job.warp.fwhm;
+        obj.fwhm     = job.vbm.fwhm;
         obj.fudge    = 5;
         obj.biasreg  = cat(1,job.biasreg);
         obj.biasfwhm = cat(1,job.biasfwhm);
@@ -114,8 +114,9 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
                 obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
             end;
         end
-        obj.reg      = job.warp.reg;
-        obj.samp     = job.warp.samp;              
+
+        obj.reg      = job.vbm.reg;
+        obj.samp     = job.vbm.samp;              
         M = eye(4);
 
 
@@ -148,7 +149,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         %% Initial affine registration.
         Affine  = eye(4);
-        if ~isempty(job.warp.affreg),
+        if ~isempty(job.vbm.affreg),
             try
               VG = spm_vol(fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii'));
             catch
@@ -166,7 +167,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
             %fprintf('Initial Coarse Affine Registration..\n');
             stime = vbm_io_cmd('Initial Coarse Affine Registration'); 
-            aflags    = struct('sep',8, 'regtype',job.warp.affreg,...
+            aflags    = struct('sep',8, 'regtype',job.vbm.affreg,...
                         'WG',[],'WF',[],'globnorm',0);
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -188,7 +189,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             % Fine Affine Registration with 3 mm sampling distance
             stime = vbm_io_cmd('Fine Affine Registration');
             warning off;
-            Affine = spm_maff8(obj.image(1),3,obj.fudge,  tpm,Affine,job.warp.affreg);
+            Affine = spm_maff8(obj.image(1),3,obj.fudge,  tpm,Affine,job.vbm.affreg);
             warning on;
             fprintf('%4.0fs\n',etime(clock,stime)); 
         end;
@@ -203,7 +204,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         try
             [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-            if job.warp.sanlm>0
+            if job.vbm.sanlm>0
               nam = nam(2:end);
             end
             save(fullfile(pth,['vbm12_' nam '.mat']),'-struct','res', spm_get_defaults('mat.format'));
@@ -212,7 +213,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     else % only write segmentations
 
         [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-        if job.warp.sanlm>0
+        if job.vbm.sanlm>0
           nam = nam(2:end);
         end
         seg12_name = fullfile(pth,['vbm12_' nam '.mat']);
@@ -249,14 +250,14 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     % Final iteration, so write out the required data.
     tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
     bf = job.bias;
-    df = job.warp.write;
+    df = job.vbm.write;
     lb = job.label;
     jc = job.jacobian;
     res.stime = stime;
-    cg_vbm_write(res, tc, bf, df, lb, jc, job.warp, tpm, job);
+    cg_vbm_write(res, tc, bf, df, lb, jc, job.vbm, tpm, job);
 
     % delete denoised image
-    if job.warp.sanlm>0
+    if job.vbm.sanlm>0
       delete(job.channel(1).vols{subj});
     end
 

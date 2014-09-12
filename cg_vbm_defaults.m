@@ -25,11 +25,12 @@ vbm.opts.samp      = 3;                       % Sampling distance - smaller 'bet
 % Writing options
 %=======================================================================
 
-% segmentations:
-%   native    0/1   (none/yes)
-%   warped    0/1   (none/yes)
-%   modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
-%   dartel    0/1/2 (none/rigid/affine)
+% options:
+%   native    0/1     (none/yes)
+%   warped    0/1     (none/yes)
+%   mod       0/1/2   (none/affine+nonlinear/nonlinear only)
+%   dartel    0/1/2   (none/rigid/affine)
+%   affine    0/1     (none/affine)
 
 % bias and noise corrected, (localy) intensity normalized
 vbm.output.bias.native = 0;
@@ -57,7 +58,6 @@ vbm.output.CSF.dartel = 0;
 % WMH tissue maps (only for opt.extopts.WMHC==3) - in development
 vbm.output.WMH.native  = 0;
 vbm.output.WMH.warped  = 0;
-vbm.output.WMH.mod     = 0;
 vbm.output.WMH.dartel  = 0;
 
 % label 
@@ -85,13 +85,11 @@ vbm.output.atlas.dartel = 0;
 % preprocessing changes map
 vbm.output.pc.native = 0;
 vbm.output.pc.warped = 0;
-vbm.output.pc.mod    = 0;
 vbm.output.pc.dartel = 0;
 
 % tissue expectation map
 vbm.output.te.native = 0;
 vbm.output.te.warped = 0;
-vbm.output.te.mod    = 0;
 vbm.output.te.dartel = 0;
 
 
