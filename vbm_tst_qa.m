@@ -800,6 +800,7 @@ function varargout = vbm_tst_qa(action,varargin)
   if nargout>0, varargout{1} = QAS; end 
 
 end
+
 function def=defaults
   % default parameter 
   def.verb       = 2;         % verbose level    [ 0=nothing | 1=points | 2*=results ]
@@ -816,11 +817,9 @@ function def=defaults
   def.nogui      = exist('XT','var');
   def.output.te  = struct('native',cg_vbm_get_defaults('output.te.native'), ...
                           'warped',cg_vbm_get_defaults('output.te.warped'), ...
-                          'mod'   ,cg_vbm_get_defaults('output.te.mod'), ...
                           'dartel',cg_vbm_get_defaults('output.te.dartel'));
   def.output.pc  = struct('native',cg_vbm_get_defaults('output.pc.native'), ...
                           'warped',cg_vbm_get_defaults('output.pc.warped'), ...
-                          'mod'   ,cg_vbm_get_defaults('output.pc.mod'), ...
                           'dartel',cg_vbm_get_defaults('output.pc.dartel'));
   def.MarkColor = vbm_io_colormaps('marks+',40); 
 end

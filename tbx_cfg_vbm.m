@@ -255,7 +255,7 @@ samp.help  = {[ ...
 opts      = cfg_branch;
 opts.tag = 'opts';
 opts.name = 'Estimation options';
-opts.val = {tpm,ngaus,biasreg,biasfwhm,affreg,warpreg,samp};
+opts.val = {tpm,biasreg,biasfwhm,affreg,warpreg};
 opts.help = {[...
   'Various options can be adjusted in order to improve the performance of the ',...
   'algorithm with your data.  Knowing what works best should be a matter ',...
@@ -540,47 +540,12 @@ darteltpm.ufilter = '_1_';
 darteltpm.def  = @(val)cg_vbm_get_defaults('extopts.darteltpm', val{:});
 darteltpm.num     = [1 1];
 
-normhigh         = cfg_branch;
-normhigh.tag     = 'normhigh';
-normhigh.name    = 'High-dimensional: Dartel';
-normhigh.val     = {darteltpm};
-normhigh.help    = {
-               'Use high-dimensional Dartel normalization. '
-               ''
-               'Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '
-               ''
-}';
-
-normlow         = cfg_branch;
-normlow.tag     = 'normlow';
-normlow.name    = 'Low-dimensional: SPM default';
-normlow.help    = {
-               'Use standard spatial normalization. '
-               ''
-}';
-
-dartelwarp    = cfg_choice;
-dartelwarp.tag = 'dartelwarp';
-dartelwarp.name = 'Spatial normalization';
-if cg_vbm_get_defaults('extopts.dartelwarp')
-    dartelwarp.val = {normhigh};
-else
-    dartelwarp.val = {normlow};
-end
-dartelwarp.values = {normlow normhigh};
-dartelwarp.help   = {[
-  'Choose between standard spatial normalization and high-dimensional ' ...
-  'Dartel normalization. Dartel normalized images are indicated by an ' ...
-  'additional ''''r'''' (e.g. wrp*). ' ...
-]};
-
-
 %------------------------------------------------------------------------
 
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
-extopts.val   = {dartelwarp,sanlm,LASstr,gcutstr,cleanup,cleanupstr,bb,vox,ROI,surface,print}; 
+extopts.val   = {sanlm,LASstr,gcutstr,cleanupstr,darteltpm,bb,vox,ROI,surface,print}; 
 extopts.help  = {'Extended options'};
 
 %------------------------------------------------------------------------
@@ -619,8 +584,9 @@ dartel.name = 'DARTEL export';
 dartel.labels = {'none','rigid (SPM12 default)','affine'};
 dartel.values = {0 1 2};
 dartel.help = {['This option is to export data into a form that can be used with DARTEL.',...
-'The SPM12 default is to only apply rigid body transformation. An additional option is to ',...
-'apply affine transformation.']};
+'The SPM default is to only apply rigid body transformation. However, a more appropriate ',...
+'option is to apply affine transformation, because the additional scaling of the images ',...
+'requires less deformations to non-linearly register brains to the template.']};
 
 
 native.def  = @(val)cg_vbm_get_defaults('output.bias.native', val{:});
@@ -736,12 +702,11 @@ csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img
 
 native.def    = @(val)cg_vbm_get_defaults('output.WMH.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.WMH.warped', val{:});
-modulated.def = @(val)cg_vbm_get_defaults('output.WMH.mod', val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.WMH.dartel', val{:});
 wmh           = cfg_branch;
 wmh.tag       = 'WMH';
 wmh.name      = 'White matter hyperintensity (WMH)';
-wmh.val       = {native, warped, modulated, dartel};
+wmh.val       = {native, warped, dartel};
 wmh.help      = {'Options to produce WMH images, if WMHC==3: p4*.img, wp4*.img and mwp4*.img.'};
 
 % main structure atlas
@@ -1008,6 +973,7 @@ vbm.values = {estwrite,write,tools};
 function dep = vout(job)
 
 opts  = job.output;
+
 tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
 tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
 tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
