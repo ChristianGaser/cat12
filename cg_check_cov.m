@@ -379,7 +379,7 @@ for i=1:length(fname.m)
 end
 
 hold on
-cg_boxplot({mean_cov});
+vbm_plot_boxplot({mean_cov});
 set(gca,'XTick',[],'XLim',[-.25 2.25]);
 if max(mean_cov) > min(mean_cov)
   ylim_min = 0.99*min(mean_cov);

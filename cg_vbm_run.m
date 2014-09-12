@@ -9,12 +9,12 @@ function varargout = cg_vbm_run(job,arg)
 % job.tissue(k).ngaus
 % job.tissue(k).native
 % job.tissue(k).warped
-% job.warp.affreg
-% job.warp.reg
-% job.warp.samp
-% job.warp.write
-% job.warp.dartelwarp
-% job.warp.print
+% job.vbm.affreg
+% job.vbm.reg
+% job.vbm.samp
+% job.vbm.write
+% job.vbm.darteltpm
+% job.vbm.print
 %
 % See the user interface for a description of the fields.
 %_______________________________________________________________________
@@ -41,21 +41,19 @@ end
 
 channel = struct('vols',{job.data});
                  
-warp = struct('affreg', job.opts.affreg,...
-              'samp', job.opts.samp,...
-              'reg', job.opts.warpreg,...
-              'write', job.output.warps,...
-              'sanlm', job.extopts.sanlm,...
-              'print', job.extopts.print,...
-              'cleanup', job.extopts.cleanup,...
-              'bb', job.extopts.bb,...
-              'vox', job.extopts.vox,...
-              'dartelwarp', isfield(job.extopts.dartelwarp,'normhigh'));
+vbm = struct( 'affreg',    job.opts.affreg,...
+              'samp',      cg_vbm_get_defaults('opts.samp'),...
+              'reg',       job.opts.warpreg,...
+              'write',     job.output.warps,...
+              'sanlm',     job.extopts.sanlm,...
+              'print',     job.extopts.print,...
+              'cleanup',   cg_vbm_get_defaults('extopts.cleanup'),...
+              'ngaus',     cg_vbm_get_defaults('opts.ngaus'),...
+              'bb',        job.extopts.bb,...
+              'vox',       job.extopts.vox,...
+              'dartelwarp',cg_vbm_get_defaults('extopts.dartelwarp'));
 
-if isfield(job.extopts.dartelwarp,'normhigh')
-    warp.darteltpm = job.extopts.dartelwarp.normhigh.darteltpm{1};
-end
-
+vbm.darteltpm = job.extopts.darteltpm{1};
 
 % prepare tissue priors and number of gaussians for all 6 classes
 if estwrite
@@ -63,7 +61,7 @@ if estwrite
     [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
     tissue = struct();
     for i=1:clsn;
-        tissue(i).ngaus = job.opts.ngaus(i);
+        tissue(i).ngaus = vbm.ngaus(i);
         tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
     end
 end
@@ -75,6 +73,7 @@ tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.out
 tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
 tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
 tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
+
 
 % never write class 4-6
 for i=4:6;
@@ -89,7 +88,7 @@ job.jacobian = job.output.jacobian.warped;
 job.biasreg  = job.opts.biasreg;
 job.biasfwhm = job.opts.biasfwhm;
 job.channel  = channel;
-job.warp     = warp;
+job.vbm      = vbm;
 job.warps    = job.output.warps;
 job.tissue   = tissue;
 
@@ -108,8 +107,6 @@ switch lower(arg)
         error('Unknown argument ("%s").', arg);
 end
 
-colormap(gray)
-
 return
 %_______________________________________________________________________
 
@@ -117,7 +114,7 @@ return
 function vout = run_job(job,estwrite)
   vout   = vout_job(job);
 
-  if ~isfield(job.warp,'fwhm'),    job.warp.fwhm    =  1; end
+  if ~isfield(job.vbm,'fwhm'),    job.vbm.fwhm    =  1; end
 
   % load tpm priors only for estimate and write
   if estwrite
@@ -143,6 +140,9 @@ function vout = run_job(job,estwrite)
       cg_vbm_run_newcatch(job,estwrite,tpm,subj);
     end
   end
+
+  colormap(gray)
+
 return
 %_______________________________________________________________________
 
@@ -167,7 +167,7 @@ return
 %_______________________________________________________________________
 function vout = vout_job(job)
 
-do_dartel = isfield(job.extopts.dartelwarp,'normhigh');
+do_dartel = cg_vbm_get_defaults('extopts.dartelwarp');
 
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
@@ -182,7 +182,7 @@ alabel = {};
 
 for j=1:n,
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
-    if job.warp.sanlm>0
+    if job.vbm.sanlm>0
       parts{j,2} = parts{j,2}(2:end);
     end
 end
@@ -198,7 +198,7 @@ if job.bias(2),
     wbiascorr = cell(n,1);
     for j=1:n
         if do_dartel
-            wbiascorr{j} = fullfile(parts{j,1},['wmr',parts{j,2},'.nii']);
+            wbiascorr{j} = fullfile(parts{j,1},['wrm',parts{j,2},'.nii']);
         else
             wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
         end
@@ -294,7 +294,7 @@ for i=1:numel(job.tissue),
     end
 end
 
-if job.warp.write(1),
+if job.vbm.write(1),
     fordef = cell(n,1);
     for j=1:n
         if do_dartel
@@ -307,7 +307,7 @@ else
     fordef = {};
 end
 
-if job.warp.write(2),
+if job.vbm.write(2),
     invdef = cell(n,1);
     for j=1:n
         if do_dartel

@@ -1,4 +1,4 @@
-function Ycls = cg_vbm_write(res,tc,bf,df,lb,jc,warp,tpm,job)
+function Ycls = cg_vbm_write(res,tc,bf,df,lb,jc,vbm,tpm,job)
 % Write out VBM preprocessed data
 % FORMAT Ycls = cg_vbm_write(res,tc,bf,df)
 %____________________________________________________________________________
@@ -31,19 +31,17 @@ end
 if ~isfield(job.output,'pc')
   job.output.pc  = struct('native',cg_vbm_get_defaults('output.pc.native'), ...
                           'warped',cg_vbm_get_defaults('output.pc.warped'), ...
-                          'mod'   ,cg_vbm_get_defaults('output.pc.mod'), ...
                           'dartel',cg_vbm_get_defaults('output.pc.dartel'));
 end
 if ~isfield(job.output,'te')
   job.output.te  = struct('native',cg_vbm_get_defaults('output.te.native'), ...
                           'warped',cg_vbm_get_defaults('output.te.warped'), ...
-                          'mod'   ,cg_vbm_get_defaults('output.te.mod'), ...
                           'dartel',cg_vbm_get_defaults('output.te.dartel'));
 end
 if ~isfield(job.output,'WMH')
   job.output.WMH  = struct('native',cg_vbm_get_defaults('output.WMH.native'), ...
                            'warped',cg_vbm_get_defaults('output.WMH.warped'), ...
-                           'mod'   ,cg_vbm_get_defaults('output.WMH.mod'), ...
+                           'mod',0, ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
 FN = {'INV','atlas','debug','BVCstr','WMHC','gcutstr','verb','LAS'};
@@ -70,8 +68,8 @@ d1        = d1(1:3);
 
 % Sort out bounding box etc
 [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
-bb = warp.bb;
-vx = warp.vox;
+bb = vbm.bb;
+vx = vbm.vox;
 bb(~isfinite(bb)) = bb1(~isfinite(bb));
 if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
 bb(1,:) = vx*round(bb(1,:)/vx);
@@ -99,9 +97,9 @@ end
 % lb - Yp0b: native, warped Yp0b, rigid Yp0b, affine Yp0b
 % jc - jacobian: no, normalized 
 
-do_dartel = warp.dartelwarp;   % apply dartel normalization
-warp.open_th = 0.25; % initial threshold for skull-stripping
-warp.dilate = 1; % number of final dilations for skull-stripping
+do_dartel = vbm.dartelwarp;  % apply dartel normalization
+vbm.open_th = 0.25; % initial threshold for skull-stripping
+vbm.dilate = 1; % number of final dilations for skull-stripping
 
 if do_dartel
   need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc;
@@ -124,7 +122,7 @@ if exist(oldxml,'file'), delete(oldxml); end
 VT = spm_vol(res.image(1).fname);
 
 % remove noise prefix
-if warp.sanlm>0
+if vbm.sanlm>0
   nam = nam(2:end);
   fname0 = fullfile(pth,[nam ext num]);
   % check whether nii-image exists, otherwise use '.img' as extension
@@ -135,6 +133,7 @@ if warp.sanlm>0
 else
   % names without denoising
   VT0 = VT;
+  fname0 = VT.fname;
 end
 
 d    = res.image(1).dim(1:3);
@@ -144,7 +143,7 @@ x3  = 1:d(3);
 
 % run dartel registration to GM/WM dartel template
 if do_dartel
-    darteltpm = warp.darteltpm;
+    darteltpm = vbm.darteltpm;
     % find position of '_1_'
     numpos = strfind(darteltpm,'Template_1.nii');
     numpos = numpos+8;
@@ -177,7 +176,7 @@ for n=1:N,
     chan(n).T  = res.Tbias{n};
 
     [pth1,nam1] = spm_fileparts(res.image(n).fname);
-    if warp.sanlm>0
+    if vbm.sanlm>0
       nam1 = nam1(2:end);
     end
     chan(n).ind      = res.image(n).n;
@@ -436,17 +435,17 @@ fprintf('%4.0fs\n',etime(clock,stime));
 % After the intensity scaling and with correct information about the
 % variance of the tissue, a further harder noise correction is meaningful.
 % Finally, a stronger NLM-filter is better than a strong MRF filter!
-if warp.sanlm>0 && warp.sanlm<3
+if vbm.sanlm>0 && vbm.sanlm<3
   stime = vbm_io_cmd('Noise correction after Global Intensity Correction');
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-  if     warp.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
-  elseif warp.sanlm==2, sanlmMex(Yms,3,1);
+  if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
+  elseif vbm.sanlm==2, sanlmMex(Yms,3,1);
   end
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
   clear Yms BB;
   fprintf('%4.0fs\n',etime(clock,stime));  
-elseif warp.sanlm==3
+elseif vbm.sanlm==3
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
@@ -472,16 +471,16 @@ if debug, Ym3=Ym; end %#ok<NASGU>
 % After the intensity scaling and with correct information about the
 % variance of the tissue, a further harder noise correction is meaningful.
 % Finally, it a stronger NLM-filter is better than a strong MRF filter!
-if warp.sanlm>0 && warp.sanlm<3
+if vbm.sanlm>0 && vbm.sanlm<3
   stime = vbm_io_cmd('Noise correction after Local Intensity Correction');
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-  if     warp.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
-  elseif warp.sanlm==2, sanlmMex(Yms,3,1);
+  if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
+  elseif vbm.sanlm==2, sanlmMex(Yms,3,1);
   end
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   clear Yms BB;
   fprintf('%4.0fs\n',etime(clock,stime));  
-elseif warp.sanlm==3
+elseif vbm.sanlm==3
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Local Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
@@ -622,12 +621,12 @@ if do_cls && do_defs,,
     Yb = Yb + single(Ycls{2});
 
     % keep largest connected component after at least 1 iteration of opening
-    n_initial_openings = max(1,round(scale_morph*warp.cleanup));
-    Yb = vbm_vol_morph(Yb>warp.open_th,'open',n_initial_openings);
+    n_initial_openings = max(1,round(scale_morph*vbm.cleanup));
+    Yb = vbm_vol_morph(Yb>vbm.open_th,'open',n_initial_openings);
     Yb = vbm_vol_morph(Yb,'lc');
 
     % dilate and close to fill ventricles
-    Yb = vbm_vol_morph(Yb,'dilate',warp.dilate);
+    Yb = vbm_vol_morph(Yb,'dilate',vbm.dilate);
     Yb = vbm_vol_morph(Yb,'lc',round(scale_morph*10));
 
     % remove sinus
@@ -745,7 +744,7 @@ if do_cls && do_defs,,
   %  As far as the cleanup has a strong relation to the skull-stripping, 
   %  cleanupstr is controlled by the gcutstr. 
   %  -------------------------------------------------------------------
-  if warp.cleanup==3
+  if vbm.cleanup==3
     if debug, probo=prob; end
     %% -----------------------------------------------------------------
     %  final cleanup 2.0
@@ -907,14 +906,14 @@ if do_cls && do_defs,,
     
     %% 
     clear YM Ybb Ymb Yl1b probo Yp0
-  elseif warp.cleanup>0
+  elseif vbm.cleanup>0
     stime = vbm_io_cmd('Final cleanup'); 
     %% get sure that all regions outside Yb are zero
     for i=1:3
       Ycls{i}(:) = 0; 
     end
     [Ycls{1}(indx,indy,indz), Ycls{2}(indx,indy,indz), Ycls{3}(indx,indy,indz)] = ...
-      cg_cleanup_gwc(prob(:,:,:,1), prob(:,:,:,2), prob(:,:,:,3), warp.cleanup);
+      cg_cleanup_gwc(prob(:,:,:,1), prob(:,:,:,2), prob(:,:,:,3), vbm.cleanup);
     sum_cls = Ycls{1}(indx,indy,indz)+Ycls{2}(indx,indy,indz)+Ycls{3}(indx,indy,indz);
     Yp0b(sum_cls<0.15*255) = 0;
     clear sum_cls;
@@ -989,7 +988,7 @@ if do_cls && do_defs,,
     Ycls{2} = vbm_vol_ctype(single(Ycls{2} + Ywmh));
  
     if job.extopts.WMHC>1
-      if warp.cleanup==3
+      if vbm.cleanup==3
       % update of Yp0b for WM/CSF PVE ROI
 
         Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
@@ -1200,16 +1199,13 @@ if exist('Yy','var'),
     end
     %M1 = mat;
     
-    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',tpm.M,'M2',M1\res.Affine*M0,'dartel',warp.dartelwarp);
+    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',tpm.M,'M2',M1\res.Affine*M0,'dartel',vbm.dartelwarp);
 
     clear Yy t1 t2 t3 M;
 end
 if job.extopts.LAS && job.extopts.WMHC==1 && ~opt.inv_weighting;
   Ycls = Yclso; clear Yclso;
 end
-
-
-
 
 
 
@@ -1224,8 +1220,6 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
 
 % here it would be possible to change the path for low res images ... 
-
-
 
 
 
@@ -1465,7 +1459,7 @@ vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
 %  ---------------------------------------------------------------------
 %  display and print result if possible
 %  ---------------------------------------------------------------------
-if do_cls && warp.print
+if do_cls && vbm.print
   
   
   %% create report text
@@ -1474,17 +1468,17 @@ if do_cls && warp.print
   
 	str = [];
 	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
-	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(warp.dartelwarp+1,:)))];
+	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(vbm.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
-	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',warp.affreg))];
-	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',warp.reg))];
+	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
+	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',vbm.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
   if job.opts.biasfwhm
   	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
   end
 	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
   str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(warp.sanlm>0))),' '.*(warp.sanlm>0),mrf))];
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(vbm.sanlm>0))),' '.*(vbm.sanlm>0),mrf))];
   
   QMC = vbm_io_colormaps('marks+',30);
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -1549,7 +1543,7 @@ if do_cls && warp.print
   try %#ok<TRYNC>
     
     
-	  fg = spm_figure('FindWin','Graphics'); 
+    fg = spm_figure('FindWin','Graphics'); 
     ofg = gcf; set(0,'CurrentFigure',fg)
     if isempty(fg), fg = spm_figure('Create','Graphics'); end
     set(fg,'windowstyle','normal'); 
@@ -1618,7 +1612,7 @@ if do_cls && warp.print
       %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
       %st.vols = cell(24,1);
 
-      bb = warp.bb;
+      bb = vbm.bb;
       spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
       
       % original image in original space

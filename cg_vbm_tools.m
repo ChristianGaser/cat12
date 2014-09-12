@@ -490,64 +490,6 @@ qa.vfiles = @vfiles_qa;
 qa.help   = {[...
   'VBM Quality Assurance of T1 images. ']};
 
-
-
-%{
-  if 0
-  dartelwarp    = cfg_menu;
-  dartelwarp.tag = 'dartelwarp';
-  dartelwarp.name = 'Spatial normalization';
-  dartelwarp.labels = {'Low-dimensional: SPM default','High-dimensional: Dartel'};
-  dartelwarp.values = {0 1};
-  dartelwarp.def  = @(val)cg_vbm8_get_defaults('extopts.dartelwarp', val{:});
-  dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normalization.
- Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '};
-  end
-
-  darteltpm = cfg_files;
-  darteltpm.tag  = 'darteltpm';
-  darteltpm.name = 'Dartel Template';
-  darteltpm.help    = {
-                 'Selected tissue probability map must be in multi-volume nifti format and contain all six tissue priors.'
-                 }';
-
-  darteltpm.filter = 'image';
-  darteltpm.ufilter = '_1_';
-  darteltpm.def  = @(val)cg_vbm8_get_defaults('extopts.darteltpm', val{:});
-  darteltpm.num     = [1 1];
-
-  normhigh         = cfg_branch;
-  normhigh.tag     = 'normhigh';
-  normhigh.name    = 'High-dimensional: Dartel';
-  normhigh.val     = {darteltpm};
-  normhigh.help    = {
-                 'Use high-dimensional Dartel normalization. '
-                 ''
-                 'Dartel normalized images are indicated by an additional ''''r'''' (e.g. wrp*). '
-                 ''
-  }';
-
-  normlow         = cfg_branch;
-  normlow.tag     = 'normlow';
-  normlow.name    = 'Low-dimensional: SPM default';
-  normlow.help    = {
-                 'Use standard spatial normalization. '
-                 ''
-  }';
-
-  dartelwarp    = cfg_choice;
-  dartelwarp.tag = 'dartelwarp';
-  dartelwarp.name = 'Spatial normalization';
-  if cg_vbm8_get_defaults('extopts.dartelwarp')
-      dartelwarp.val = {normhigh};
-  else
-      dartelwarp.val = {normlow};
-  end
-  dartelwarp.values = {normlow normhigh};
-  dartelwarp.help    = {'Choose between standard spatial normalization and high-dimensional Dartel normali
-%}
-
-
 %------------------------------------------------------------------------
 
 data.help = {[...

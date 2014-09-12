@@ -4859,3 +4859,23 @@ M       vbm_surf_createCS.m
 (5) Forced gray colormap at the final end in cg_vbm_run.m.
 ------------------------------------------------------------------------
 r599 | gaser | 2014-09-11 15:36:32
+
+M       CHANGES.txt
+D       cg_boxplot.m
+M       cg_check_cov.m
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_tst_qa.m
+M       vbm_vol_atlas.m
+
+(1) Removed cg_boxplot.m and all calss to it because now vbm_plot_boxplot.m
+    is used.
+(2) Removed ngaus, samp and Dartel option as parameters from GUI.
+(3) Removed modulation where it's not really necessary.
+
+------------------------------------------------------------------------
+r600 | gaser | 2014-09-12 13:13:46
