@@ -4879,3 +4879,59 @@ M       vbm_vol_atlas.m
 
 ------------------------------------------------------------------------
 r600 | gaser | 2014-09-12 13:13:46
+
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_batch.sh
+M       compile.m
+A       compile_test_debug.m
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+M       sanlmMex.mexa64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       tbx_cfg_vbm.m
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_eikonal3.mexw64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexa64
+M       vbm_vol_localstat.mexglx
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) Updated compile-tool and added test tool where save results after
+    compilation can be compared: compile_test_debug.m.
+(2) Replaced roundf from vbm_vol_localstats with ROUND macro.
+(3) Some tags in tbx_cfg_vbm were not correct and mixed.
+(4) Default folder for log-file in cg_vbm_bash is now PWD.
+
+------------------------------------------------------------------------
+r601 | gaser | 2014-09-15 08:24:48

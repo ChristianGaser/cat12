@@ -88,9 +88,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   if ( dL != 3 || mxIsSingle(prhs[0])==0)                mexErrMsgTxt("ERROR:vbm_vol_localstat: first input must be a single 3d matrix\n");
   if ( dB != 3 || mxIsLogical(prhs[1])==0 || nL != nB )  mexErrMsgTxt("ERROR:vbm_vol_localstat: second input must be a logical 3d matrix with equal size than input 1\n");
-  if (nrhs<3)  nh = 1; else  nh = (int) roundf(*mxGetPr(prhs[2]));
+  if (nrhs<3)  nh = 1; else  nh = (int) *mxGetPr(prhs[2]);
   if ( nh > 10 )                                         mexErrMsgTxt("ERROR:vbm_vol_localstat: number of neighbors is limited to 10. (Use reduce resolution instead.) \n");
-  if (nrhs<4)  st = 1; else st = (int) roundf(*mxGetPr(prhs[3]));
+  if (nrhs<4)  st = 1; else st = (int) *mxGetPr(prhs[3]);
   if ( st<1 || st>8 )                                    mexErrMsgTxt("ERROR:vbm_vol_localstat: fourth input has to be 1=mean, 2=min, 3=max, 4=std. \n");
   int verb=0;   double*dverb;   if (nrhs>=5) {dverb=mxGetPr(prhs[4]);   verb   = (int) dverb[0]>0.5;};    
 
@@ -138,7 +138,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (i=0;i<nL;i++) { if (HISTmin>D[i]) HISTmin=(int)D[i]; };  HISTmin--;
     for (i=0;i<nL;i++) { if (HISTmax<D[i]) HISTmax=(int)D[i]; };  HISTmax++;
     for (i=0;i<nL;i++) {
-      D[i] = (float)roundf(max(min(D[i],(float)HISTmax),(float)HISTmin));
+      D[i] = (float)ROUND(max(min(D[i],(float)HISTmax),(float)HISTmin));
     }
   }
  
@@ -195,7 +195,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /* max in histogram 1 */
       if (st==5) {
         for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;}
-        for (nn=0;nn<n;nn++) {HIST[(int) roundf( NV[nn]* (float) HISTmax) ]++;}
+        for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
         M[ind]=0.0; for (nn=0;nn<HISTn;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) HIST[nn]; }
         M[ind]=M[ind]/(float) HISTmax;
       };  
@@ -205,12 +205,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         NVmn = D[ni]; /*= 0.0; for (nn=0;nn<n;nn++) { NVmn  +=  NV[nn];}; NVmn/=n; */
         
         for (nn=0;nn<HISTn;nn++) {HIST[nn]=0;}
-        for (nn=0;nn<n;nn++) {HIST[(int) roundf( NV[nn]* (float) HISTmax) ]++;}
+        for (nn=0;nn<n;nn++) {HIST[(int) ROUND( NV[nn]* (float) HISTmax) ]++;}
         /*for (nn=0;nn<n;nn++) if (NV[nn]<MVmn) {HIST1[(int) ROUND( NV[nn]* (float) HISTmax) ]++;} */
         M[ind]=0; for (nn=(int) ROUND( NVmn * (float) HISTmax);nn<HISTn;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;}
         /*M[ind]=0; for (nn=0;nn<200;nn++) { if (HIST[nn]>M[ind]) M[ind]=(float) nn;} */
         M[ind]=M[ind]/(float) HISTmax;
-        M2[ind]=0.0; for (nn=0;nn<(int) roundf( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
+        M2[ind]=0.0; for (nn=0;nn<(int) ROUND( NVmn * (float) HISTmax);nn++) { if (HIST[nn]>M2[ind]) M2[ind]=(float) nn;}
         M2[ind]=M2[ind]/(float) HISTmax;
       };  
       
@@ -227,7 +227,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      if (st==8) {
         if (n>nh*nh*nh) { 
           sort(NV,0,n); 
-          md=(int)roundf(n*0.75);
+          md=(int)ROUND(n*0.75);
           NVmd = NV[md];
 
           
