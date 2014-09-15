@@ -434,16 +434,16 @@ WMHC.values = {0 1 2 3};
 WMHC.def  = @(val)cg_vbm_get_defaults('extopts.WMHC', val{:});
 
 WMHCstr = cfg_entry;
-WMHCstr.tag  = 'cleanupstrength';
-WMHCstr.name = 'Strength of New Cleanup';
+WMHCstr.tag  = 'WMHCstr';
+WMHCstr.name = 'Strength of WMH Correction';
 WMHCstr.help = {[...
-  'Strengh of the modification of the WM Hyperintensity Correciton (WMHC). ' ...
+  'Strengh of the modification of the WM Hyperintensity Correction (WMHC). ' ...
   'The default 0.5 was successfully tested on a variety of scans. ' ...
   'Use smaller values (>=0) for small changes and higher values (<=1) for stronger corrections. ' ...
   ],''};
 WMHCstr.strtype = 'r';
 WMHCstr.num = [1 1];
-WMHCstr.def = @(val)cg_vbm_get_defaults('extopts.LASstr', val{:});
+WMHCstr.def = @(val)cg_vbm_get_defaults('extopts.WMHCstr', val{:});
 
 %------------------------------------------------------------------------
 

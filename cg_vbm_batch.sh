@@ -8,7 +8,7 @@
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 writeonly=0
 defaults_file=""
-LOGDIR=""
+LOGDIR=`PWD`
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
 time=`date "+%Y%b%d_%H%M"`

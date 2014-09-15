@@ -62,7 +62,7 @@ end
 
 tmp_fields = char('darteltpm','gcut','gcutstr','cleanupstr','kmeans','mrf','bias_fwhm','BVCstr','LAS','LASstr',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','ROI','surface','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB');
+              'QAcleanup','QAcleanupth','LAB','cleanup','dartelwarp');
 for i=1:size(tmp_fields,1)
   try
     if writeonly
