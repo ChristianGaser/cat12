@@ -112,10 +112,8 @@ function varargout = vbm_io_xml(file,varargin)
       try
         S=orderfields(S);
         xml_write(file,S);
-      catch e %#ok<*NASGU> % can write xml file??
-        %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
-        vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t write XML-file ''%s''!\n' ...
-            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
+      catch %#ok<*NASGU> % can write xml file??
+        error('MATLAB:vbm_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end
       
       
@@ -127,20 +125,9 @@ function varargout = vbm_io_xml(file,varargin)
       if exist(file,'file')
         try
           S = xml_read(file);
-        catch e
-          vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t read XML-file ''%s''!\n' ...
-            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
+        catch 
+          error('MATLAB:vbm_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
-      else
-        try
-          xml_write(file,S);
-        catch e % can write xml file??
-          %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
-          vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t write XML-file ''%s''!\n' ...
-            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
-        end
-        return
-        %error('MATLAB:vbm_io_xml','''%s'' does not exist!\n',file);
       end
       
       if numel(S)>1 || numel(S)>1,
@@ -151,10 +138,8 @@ function varargout = vbm_io_xml(file,varargin)
       
       try
         xml_write(file,S);
-      catch e % can write xml file??
-        %warning('MATLAB:vbm_io_xml:write','Can''t write XML-file ''%s''!\n',file);
-        vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t write XML-file ''%s''!\n' ...
-          '%4d:%s\n'],file,e.stack(1).line(1),e.message));
+      catch 
+        error('MATLAB:vbm_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end 
     
       
@@ -164,9 +149,8 @@ function varargout = vbm_io_xml(file,varargin)
       if exist(file,'file')
         try 
           S = xml_read(file);
-        catch e
-          vbm_io_cprintf([1 0 0.5],sprintf(['MATLAB:vbm_io_xml:write: Can''t read XML-file ''%s''!\n' ...
-            '%4d:%s\n'],file,e.stack(1).line(1),e.message));
+        catch 
+          verror('MATLAB:vbm_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
       else
         error('MATLAB:vbm_io_xml','''%s'' does not exist!\n',file);
@@ -303,11 +287,11 @@ function [tree, RootName, DOMnode] = xml_read(xmlfile, Pref)
   if isa(xmlfile, 'org.apache.xerces.dom.DeferredDocumentImpl');
     % if xmlfile is a DOMnode than skip the call to xmlread
     try
-      try
+      %try
         DOMnode = xmlfile;
-      catch ME
-        error('Invalid DOM node: \n%s.', getReport(ME));
-      end
+      %catch ME
+      %  error('Invalid DOM node: \n%s.', getReport(ME));
+      %end
     catch %#ok<CTCH> catch for mablab versions prior to 7.5
       error('Invalid DOM node. \n');
     end
@@ -316,11 +300,11 @@ function [tree, RootName, DOMnode] = xml_read(xmlfile, Pref)
       DOMnode = xmlread(xmlfile);
     else       % in normal mode crashes are not allowed
       try
-        try
+        %try
           DOMnode = xmlread(xmlfile);
-        catch ME
-          error('Failed to read XML file %s: \n%s',xmlfile, getReport(ME));
-        end
+        %catch ME
+        %  error('Failed to read XML file %s: \n%s',xmlfile, getReport(ME));
+        %end
       catch %#ok<CTCH> catch for mablab versions prior to 7.5
         error('Failed to read XML file %s\n',xmlfile);
       end
@@ -356,11 +340,11 @@ function [tree, RootName, DOMnode] = xml_read(xmlfile, Pref)
     [tree RootName] = DOMnode2struct(RootNode, DPref, 1);
   else         % in normal mode crashes are not allowed
     try
-      try
+      %try
         [tree RootName] = DOMnode2struct(RootNode, DPref, 1);
-      catch ME
-        error('Unable to parse XML file %s: \n %s.',xmlfile, getReport(ME));
-      end
+      %catch ME
+      %  error('Unable to parse XML file %s: \n %s.',xmlfile, getReport(ME));
+      %end
     catch %#ok<CTCH> catch for mablab versions prior to 7.5
       error('Unable to parse XML file %s.',xmlfile);
     end
@@ -400,7 +384,7 @@ end
       if (LeafNode>1 && ~Pref.ReadSpec), LeafNode=-1; end % tags only so ignore special nodes
       if (LeafNode>0) % supported leaf node types
         try
-          try         % use try-catch: errors here are often due to VERY large fields (like images) that overflow java memory
+          %try         % use try-catch: errors here are often due to VERY large fields (like images) that overflow java memory
             s = char(node.getData);
             if (isempty(s)), s = ' '; end                              % make it a string
             % for some reason current xmlread 'creates' a lot of empty text
@@ -409,11 +393,11 @@ end
               if (isspace(s(1)) || isspace(s(end))), s = strtrim(s); end % trim speces is any
             end
             if (LeafNode==1), s=str2var(s, Pref.Str2Num, 0); end       % convert to number(s) if needed
-          catch ME    % catch for mablab versions 7.5 and higher
-            warning('xml_io_tools:read:LeafRead', ...
-              'This leaf node could not be read and was ignored. ');
-            getReport(ME)
-          end
+          %catch ME    % catch for mablab versions 7.5 and higher
+          %  warning('xml_io_tools:read:LeafRead', ...
+          %    'This leaf node could not be read and was ignored. ');
+          %  getReport(ME)
+          %end
         catch         %#ok<CTCH> catch for mablab versions prior to 7.5
           warning('xml_io_tools:read:LeafRead', ...
             'This leaf node could not be read and was ignored. ');

@@ -128,6 +128,10 @@ function varargout = vbm_tst_qa(action,varargin)
           Pm = cellstr(spm_select(repmat(numel(Pp0),1,2),...
             'image','select modified image(s)',{},pwd,'.*')); 
         end
+      elseif nargin<=5
+        Pp0 = varargin{1};
+        Po  = varargin{2};
+        Pm  = varargin{3};
       else
         error('MATLAB:vbm_vol_qa:inputerror',...
           'Wrong number/structure of input elements!'); 
@@ -197,11 +201,8 @@ function varargout = vbm_tst_qa(action,varargin)
         Ym  = varargin{3}; 
         res = varargin{4};
         vbm_warnings = varargin{5};
-        %if numel(varargin)>5
-        %  opt = vbm_check('checkinopt',varargin{end},defaults);
-        %  opt = varargin{6};
-        %end
         opt.verb = 0;
+        opt.method = 'vbm12';
       else
         error('MATLAB:vbm_vol_qa:inputerror',...
           'Wrong number/structure of input elements!'); 
@@ -519,9 +520,9 @@ function varargout = vbm_tst_qa(action,varargin)
       %% estimate QA
       %  -----------------------------------------------------------
       % eroded WM and GM segment - stop processing, if this fails
-      Ywm = Yp0toC(Yp0,3)>0.5 & (~vbm_vol_morph(Yp0<2.05 | Yp0>3.45,'d') | Yp0toC(Yp0,3)>0.9);
-      Ygm = Yp0toC(Yp0,2)>0.5 & (~vbm_vol_morph(Yp0<1.05 | Yp0>2.95,'d') | Yp0toC(Yp0,2)>0.9) & ~Ywm;
-      Ycm = Yp0toC(Yp0,1)>0.5 & (~vbm_vol_morph(Yp0<0.05 | Yp0>1.50,'d') | Yp0toC(Yp0,1)>0.9) & ~Ywm & ~Ygm;
+      Ywm = Yp0toC(Yp0,3)>0.5 & (~vbm_vol_morph(Yp0<2.5 | Yp0>3.5,'d') | Yp0toC(Yp0,3)>0.9);
+      Ygm = Yp0toC(Yp0,2)>0.5 & (~vbm_vol_morph(Yp0<1.5 | Yp0>2.5,'d') | Yp0toC(Yp0,2)>0.9) & ~Ywm;
+      Ycm = Yp0toC(Yp0,1)>0.5 & (~vbm_vol_morph(Yp0<0.5 | Yp0>1.5,'d') | Yp0toC(Yp0,1)>0.9) & ~Ywm & ~Ygm;
         
       if sum(Ywm(:))==0
         if opt.verb 
@@ -651,7 +652,7 @@ function varargout = vbm_tst_qa(action,varargin)
           clear res; res.T3th = QAS.QM.tissue_mn; 
 
           QAS.QM.T3th = [0 CSFth GMth WMth] * (WMvb - BGvb) + BGvb;
-          clear Ybs BGvb WMvb;
+          clear Ybs BGvb WMvb Ycm;
         end
         
         % class standard deviation
@@ -678,8 +679,12 @@ function varargout = vbm_tst_qa(action,varargin)
 
       
       %% estimate QA for Ym
-      if opt.process~=0 && exist('Ym','var')     
-        Yi = Ym+0; [Yi,T3th] = vbm_pre_gintnorm2(Yi,Yp0,Yp0>0,vx_vol);
+      if opt.process~=0 && exist('Ym','var')   
+        %Ywm = Yp0toC(Yp0,3)>0.5;
+        %Ygm = Yp0toC(Yp0,2)>0.5;
+        
+        %Yi = Ym+0; Yi = vbm_pre_gintnorm(Yi,Yp0,Yp0>0,vx_vol);
+        Yi = Ym+0; Yi = vbm_pre_gintnorm(Yi,Yp0,vx_vol); 
         
         % tissue blocks without PVE
         QAS.QM.CJV = (std(Yi(Ygm(:)))/2 + std(Yi(Ywm(:)))/2) * 3;
@@ -787,7 +792,7 @@ function varargout = vbm_tst_qa(action,varargin)
       
 
       %% marks
-      QAM = vbm_stat_marks('eval',1,QAS);
+      QAM = vbm_stat_marks('eval',1,QAS,opt.method);
       
       % export 
       if opt.write_xml
@@ -814,6 +819,7 @@ function def=defaults
   def.calc_MPC   = 1;
   def.calc_STC   = 0;
   def.calc_MJD   = 0;
+  def.method     = 'spm';
   def.nogui      = exist('XT','var');
   def.output.te  = struct('native',cg_vbm_get_defaults('output.te.native'), ...
                           'warped',cg_vbm_get_defaults('output.te.warped'), ...
@@ -822,133 +828,6 @@ function def=defaults
                           'warped',cg_vbm_get_defaults('output.pc.warped'), ...
                           'dartel',cg_vbm_get_defaults('output.pc.dartel'));
   def.MarkColor = vbm_io_colormaps('marks+',40); 
-end
-function QM = estimateQM(Yo,Yb,Yp0,Ywm,vx_vol,res)
-%   ds('l2','',vx_vol,Ym,Ywm,Yo,Ym,140)
-
-  % class peak intensity 
-  warning 'off' 'MATLAB:vbm_vol_morph:NoObject'
-  Ybg = vbm_vol_morph(Yb<vbm_stat_nanmean(Yb(round(Yp0(:))==1)), ...
-    'lo') & ~isnan(Yb);
-  warning 'on'  'MATLAB:vbm_vol_morph:NoObject'
-  minY = -1;
-  
-  if exist('res','var') && ~isempty(res) && round(median(Yo(Ywm)))~=1
-    CSFth = sum(res.mn(res.lkp==3) .* res.mg(res.lkp==3)'); 
-    GMth  = sum(res.mn(res.lkp==1) .* res.mg(res.lkp==1)'); 
-    WMth  = sum(res.mn(res.lkp==2) .* res.mg(res.lkp==2)'); 
-    BGth  = sum(res.mn(res.lkp==6) .* res.mg(res.lkp==6)'); 
-    BGth  = min(BGth,CSFth); % OASIS0162 
-    
-    QM.tissue_mn(1)   = 0;
-    QM.tissue_mn(2:4) = ([CSFth GMth WMth]-BGth) ./ (WMth-BGth);
-    
-    Yo  = max(minY,(Yo - BGth) / max(eps,WMth - BGth)); 
-    Yb  = max(minY,(Yb - BGth) / max(eps,WMth - BGth));
-    
-    QM.T3th = [BGth CSFth GMth WMth];
-  else
-    %% intensity scaling based on the WM (Ywm) and background (Ybg) signal 
-    Yos   = Yo+0; spm_smooth(Yos,Yos,1./vx_vol); 
-    Ybs   = Yb+0; spm_smooth(Ybs,Ybs,1./vx_vol); 
-    if any(Ybg(:))
-      BGvo  = sort(Yos(Ybg)); BGvo = BGvo(max(1,...
-        min(numel(BGvo),round(0.50*numel(BGvo))))); 
-      BGvb  = sort(Ybs(Ybg)); BGvb = BGvb(max(1,...
-        min(numel(BGvb),round(0.50*numel(BGvb))))); 
-    else
-      BGvo = min(Yos(:)); BGvb = min(Yos(:));
-    end
-    WMvo  = sort(Yos(Ywm)); WMvo = WMvo(max(1,...
-      min(numel(WMvo),round(0.5*numel(WMvo))))); 
-    WMvb  = sort(Ybs(Ywm)); WMvb = WMvb(max(1,...
-      min(numel(WMvb),round(0.5*numel(WMvb))))); 
-    Yo  = max(minY,(Yo - BGvo) / max(eps,WMvo - BGvo)); 
-    Yb  = max(minY,(Yb - BGvb) / max(eps,WMvb - BGvb));
-    clear Yos Ybs BGvo WMvo ;
-   
-    Ybs   = Yb+0; spm_smooth(Ybs,Ybs,1./vx_vol);
-    WMv   = sort(Ybs(Ywm)); 
-    WMth  = WMv(round(0.90*numel(WMv))); clear WMv; 
-            %median(Ybs(Yp0(:)>2.8 & Yp0(:)<3.2)); % GM/WM WM  
-    CSFth = kmeans3D(Ybs(Yp0(:)>0.8 & Yp0(:)<1.9),3); 
-    CSFth = CSFth(1); % CSF CSF/GM
-    GMth  = kmeans3D(Ybs(Yp0(:)>1.8 & Yp0(:)<2.2 & ...
-      Ybs(:)<(WMth(1)*0.9) & Ybs(:)>(CSFth(1)*1.5)),3); % CSF/GM GM GM/WM
-    GMth  = GMth(2);
-    QM.tissue_mn(1)   = 0;
-    QM.tissue_mn(2:4) = [CSFth GMth WMth] ./ WMth;
-    clear res; res.T3th = QM.tissue_mn; 
-    
-    QM.T3th = [0 CSFth GMth WMth] * (WMvb - BGvb) + BGvb;
-    clear Ybs BGvb WMvb;
-  end
-  
-
-  %% class standard deviation
-  QM.tissue_std(1) = vbm_stat_nanstd( Yb(Ybg(:)) );
-  for ci=2:4
-    QM.tissue_std(ci) = vbm_stat_nanstd(Yb(Yp0(:)>(ci-1.5) & Yp0(:)<(ci-0.5)));
-  end
-  clear Ybg;
-  
-  % mininum tissue contrast ( CSF-GM-WM )
-  QM.contrast  = min(diff(QM.tissue_mn(2:4))) ./ diff(QM.tissue_mn([1,4])); 
- 
-  
-  %% gradient and divergence maps for artefact measures
-  Yi   = Yb+0; Yi = vbm_pre_gintnorm(Yi,Yp0,vx_vol,res); 
-  %Ywmn = vbm_vol_morph(Yp0>2.9 & Yi>2.75/3,'c',2) & ~vbm_vol_morph(Yp0<2.5 & Yi<2.5,'d');
-  Ywmc = vbm_vol_morph(Yp0>2.5 & Yi>2.5/3,'lc',2) & ...
-    ~vbm_vol_morph(Yp0<2.1 & Yi<2.1,'d') & vbm_vol_morph(Ywm,'lc',2);
-
-  %Ypc = (Yi - Yp0/3) .* (Yp0>0);
-  %QM.MPC = mean( Ypc(Yp0>0).^2).^0.5; 
-  %QM.MPC = mean( abs(Ypc(Yp0>0)));
- %clear Ypc
-  
- %Yi2=Yi+0; spm_smooth(Yi2,Yi2,1./vx_vol); Yi(Ywm)=Yi2(Ywm); clear Yi2;
-  %% artefacts
-  spm_smooth(Yi,Yi,1./vx_vol);
-  [Ygx,Ygy,Ygz] = vbm_vol_gradient3(single(Yi),Yp0>0); %clear Yi;
-  Ygx  = Ygx./vx_vol(1); Ygy = Ygy./vx_vol(2); Ygz = Ygz./vx_vol(3);
-  Yg   = max(cat(4,Ygx,Ygy,Ygz),[],4); 
-  clear Ygx Ygy Ygz; 
-  
-  YE = vbm_vol_morph(Yp0<2.5,'d') & vbm_vol_morph(Yp0>2.5,'d') &  ... 
-      ~vbm_vol_morph(vbm_vol_morph(Yp0<1.25,'o',2),'d',1); % and not next to the CSF or BV
-  QM.NERR = vbm_stat_nanmean(Yg(YE(:))); %vbm_stat_nanmean(Yg(Ywm(:))) / 
-  clear Yg Ydiv YE 
-  clear Yi;
-  
-  
-  %% noise estimation
-  QM.NCR = estimateNoiseLevel(Yb,Ywm,3) / QM.contrast;
-  QM.CNR = 1 / QM.NCR;  
-  QM.WMS = (sum(Ywmc(:))-sum(Ywm(:))) / max(eps,sum(Ywmc(:)));
-  
-
-  %% Bias/Inhomogeneity 
-  clear Yb Ys WMv %Ywmn
-  Yos=Yo+0; 
-  for si=1:max(1,round(QM.NCR*10)), Yos = vbm_vol_localstat(Yos,Ywm,2,1); end 
-  QM.ICR  = std(Yos(Ywm(:)>0)) / QM.contrast; 
-  QM.CIR  = 1 / QM.ICR;
-  clear Yos;
-  
-  
-  %% resolution
-  QM.res_vx_vol    = vx_vol;
-  QM.res_isotropy  = max(vx_vol)./min(vx_vol);
-  QM.res_vol       = prod(abs(vx_vol));
-  QM.res_RMS       = mean(vx_vol.^2).^0.5;
-  
-  
-  %% boundary box
-  bbth = 3; M = true(size(Yp0));
-  M(bbth:end-bbth,bbth:end-bbth,bbth:end-bbth) = 0;
-  QM.res_BB = sum(Yp0(:)>1.5 & M(:))*QM.res_vol; 
-
 end
 function noise = estimateNoiseLevel(Ym,YM,r,vx_vol)
   if ~exist('vx_vol','var');
@@ -1124,33 +1003,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm2(Ysrc,Y
           median(Ysrc(Ycls{1}(:)>192 & Yg(:)<0.20)) ...
           median(Ysrc(Ycls{2}(:)>192 & Yg(:)<0.10))];
   T3thn = T3th/T3th(3);
-  Ywm   = vbm_vol_morph(Ycls{2}>128,'e'); 
-  noise = std(Ysrc(Ywm(:))) / min(diff(T3th(1:3)));
-
   
   
-  %% -------------------------------------------------------------------
-  %  intensity checks and noise contrast ratio (contrast part 1)
-  %  -------------------------------------------------------------------
-  % relation between the GM/WM and CSF/GM and CSF/WM contrast has to be
-  % greater that 3 times of the maximum contrast (max-min).
-  checkcontrast = @(T3th,minContrast) ...
-    abs(diff(T3th([1,3]))) < (max(T3th(:))-min(T3th(:)))*minContrast || ...
-    abs(diff(T3th(1:2)))   < (max(T3th(:))-min(T3th(:)))*minContrast || ...
-    abs(diff(T3th(2:3)))   < (max(T3th(:))-min(T3th(:)))*minContrast;
-  if checkcontrast(T3thn,1/9) && exist('vbm_warnings','var') % contrast relation
-    vbm_warnings = vbm_io_addwarning(vbm_warnings,...
-      'VBM:cg_vbm_write:LowContrast',...
-      sprintf(['The contrast between the tissues is extremely low! ' ...
-           '(C=%0.2f, G=%0.2f, W=%0.2f)'],T3thn(1),T3thn(2),T3thn(3)));
-  end
-  if noise>1/2 && exist('vbm_warnings','var') % contrast relation
-    vbm_warnings = vbm_io_addwarning(vbm_warnings,...
-      'VBM:cg_vbm_write:LowNCR',...
-      sprintf('Low contrast to noise ratio (NCR~%0.2f)!',noise));
-  end
-
-
   %  -------------------------------------------------------------------
   %  check modality (contrast part 2)
   %  -------------------------------------------------------------------
@@ -1205,9 +1059,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm2(Ysrc,Y
     GMth  = vbm_stat_nanmedian(Ysrc(Ygm(:))); %kmeans3D(Ysrc(Ygm(:)),3); % CSF/GM GM GM/WM
     T3th_cls = [CSFth(1) GMth(1) WMth(1)];
     %clear Ybg
-   %
+
     if any(isnan(T3th_cls)) 
-      fprintf('\n');
       error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain',...
         'Bad SPM-Segmentation. Check image orientation!');
     end
@@ -1366,7 +1219,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm2(Ysrc,Y
           clear Ywm Yp0;
         end
       else 
-        
+
         if exist('vbm_warnings','var')
           vbm_warnings = vbm_io_addwarning(vbm_warnings,...
             'VBM:inverse_weighting2',...
@@ -1379,19 +1232,12 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm2(Ysrc,Y
         T3th3 = 1/3:1/3:3;
       end
     else
-      if exist('vbm_warnings','var')
-        vbm_warnings = vbm_io_addwarning(vbm_warnings,...
-          'VBM:inverse_weighting_LQ',...
-          ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
-           'Synthesize T1 image from SPM segmentation (INV==2). Check your results!']);
-      end
-      
+           
       Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
       T3th3 = 1/3:1/3:3;
 
     end
   else
-    fprintf('\n');
     error('VBM:cg_vbm_write:BadImageProperties', ...
         ['VBM12 is designed to work only on highres T1 images.\n' ...
          'T2/PD preprocessing can be forced on your own risk by setting \n' ...

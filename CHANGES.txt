@@ -4935,3 +4935,28 @@ M       vbm_vol_simgrow.mexw64
 
 ------------------------------------------------------------------------
 r601 | gaser | 2014-09-15 08:24:48
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_write.m
+A       templates_1.50mm/Template_vbm12R593a_IXI556_MNI152_T1.nii
+M       vbm_io_xml.m
+M       vbm_stat_marks.m
+M       vbm_tst_qa.m
+M       vbm_vol_atlas.m
+M       vbm_vol_partvol.m
+
+(1)  Updated atlas variables and set Hammers atlas as default atlas.
+(2)  Corrected MATLAB 7.4 try-catch-error in "vbm_io_xml".
+(3)  Added new T1 average image "Template_vbm12R593a_IXI556_MNI152_T1.nii" 
+     in "templates_1.50mm" directory.
+(4)  Modified bias marking. Worst case is now 200% BWP inhomogeneity that
+     is around 2 times of the minimum tissue contrast.
+(5)  Removed AMAP "kmeans" and "bias_fwhm" options in "cg_vbm_defaults".
+(6)  Removed "LAS", "gcut", and "cleanup" options in "cg_vbm_defaults".
+(7)  Updated "LASstr", "gcutstr", "cleanupstr" options in "cg_vbm_defaults".
+
+------------------------------------------------------------------------
+r602 | dahnke | 2014-09-16 16:10:52
