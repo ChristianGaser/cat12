@@ -60,9 +60,9 @@ for i=1:n
 	end
 end
 
-tmp_fields = char('darteltpm','gcut','gcutstr','cleanupstr','kmeans','mrf','bias_fwhm','BVCstr','LAS','LASstr',...
+tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','BVCstr','LASstr',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','ROI','surface','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB','cleanup','dartelwarp');
+              'QAcleanup','QAcleanupth','LAB','dartelwarp');
 for i=1:size(tmp_fields,1)
   try
     if writeonly

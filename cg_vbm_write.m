@@ -44,7 +44,7 @@ if ~isfield(job.output,'WMH')
                            'mod',0, ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
-FN = {'INV','atlas','debug','BVCstr','WMHC','gcutstr','verb','LAS'};
+FN = {'INV','atlas','debug','WMHC','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb'};
 for fni=1:numel(FN)
   if ~isfield(job.extopts,FN{fni})
     job.extopts.(FN{fni}) = cg_vbm_get_defaults(sprintf('extopts.%s',FN{fni}));
@@ -408,10 +408,6 @@ end
 %  and a global  and local intensity correction. The local intensity 
 %  correction refines the tissue maps to aproximate the local tissue 
 %  peaks of WM (maximum-based), GM, and CSF. 
-%  It include an further non standard sharpening function (LAS==2).
-%  In both cases a second noise correction is possible and usefull, 
-%  because signal intensity may change strongly. Especialy low GM-WM
-%  contrast images require now a furhter correction. 
 %
 %  If you want to see intermediate steps of the processing use the "ds"
 %  function:
@@ -459,10 +455,9 @@ end
   
 
 %% Local Intensity Correction 
-if job.extopts.LAS
+if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
-  stime = vbm_io_cmd(sprintf('Local Adaptive Segmentation (LAS%d,LASstr=%0.2f)',...
-    cg_vbm_get_defaults('extopts.LAS'),cg_vbm_get_defaults('extopts.LASstr')));
+  stime = vbm_io_cmd(sprintf('Local Adaptive Segmentation (LASstr=%0.2f)',job.extopts.LASstr));
   [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
@@ -557,16 +552,6 @@ end
 %  segmentation, and further tissue corrections (cleanup,LAS,finalmask).
 %  ---------------------------------------------------------------------
 if do_cls && do_defs,,
-
-  % default parameters
-  bias_fwhm   = cg_vbm_get_defaults('extopts.bias_fwhm');
-  init_kmeans = cg_vbm_get_defaults('extopts.kmeans');
-  gcut        = cg_vbm_get_defaults('extopts.gcut');
-  gcutstr     = cg_vbm_get_defaults('extopts.gcutstr');
-  mrf         = cg_vbm_get_defaults('extopts.mrf');
-
-  scale_morph = 1/mean(vx_vol);
-
     
   %  -------------------------------------------------------------------
   %  skull-stipping
@@ -576,46 +561,25 @@ if do_cls && do_defs,,
   %  Futhermore, both parts prepare the initial segmentation map for the 
   %  AMAP function.
   %  -------------------------------------------------------------------
-  if gcut
+  if job.extopts.gcutstr>0
     %  -----------------------------------------------------------------
     %  gcut+: skull-stripping using graph-cut
     %  -----------------------------------------------------------------
-    stime = vbm_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',gcutstr));
-    [Yb,Ybcs,Yl1] = vbm_pre_gcut2(Ym,Yb,Ycls,Yl1,YMF,vx_vol);
-    % correct for harder brain mask to avoid meninges in the segmentation
-    Ymb = Ym; Ymb(~Yb) = 0; 
-    Ymb(~Ybcs) = min(1.40/3,Ymb(~Ybcs)); 
-    Ymb(Ybcs)  = max(0.90/3,Ymb(Ybcs)); 
-    
-    %  -----------------------------------------------------------------
-    %  prepare data for segmentation
-    %  -----------------------------------------------------------------
-    if 1
-      % classic approach, consider the WMH!
-      Kb2 = 3;
-      cls2 = zeros([d(1:2) Kb2]);
-      Yp0  = zeros(d,'uint8');
-      for i=1:d(3)
-          for k1 = 1:Kb2, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
-          % find maximum for reordered segmentations
-          [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
-          for k1 = 1:Kb2
-            Yp0(:,:,i) = Yp0(:,:,i) + vbm_vol_ctype((maxind == k1).*(maxi~=0)*k1.*Yb(:,:,i)); 
-          end
-      end
-      clear maxi maxind Kb k1 cls2;
-    else
-      % more direct method ... a little bit more WM, less CSF
-      Yp0 = uint8(max(Yb,min(3,round(Ym*3)))); Yp0(~Yb) = 0;
-    end  
-    
-    fprintf('%4.0fs\n',etime(clock,stime));
-  else
+    try 
+      stime = vbm_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
+      [Yb,Ybcs,Yl1] = vbm_pre_gcut2(Ym,Yb,Ycls,Yl1,YMF,vx_vol);
+    catch
+      fprintf('%4.0fs\n',etime(clock,stime));
+      job.extopts.gcutstr = 0;
+    end
+  end
+  if job.extopts.gcutstr==0
     %  -----------------------------------------------------------------
     %  Simple skull-stripping that catch errors of the gcut-skull-stripping.
     %  -----------------------------------------------------------------
     stime = vbm_io_cmd('Skull-stripping using morphological operations');
-
+    scale_morph = 1/mean(vx_vol);
+    
     % use Yb of GM and WM
     Yb = single(Ycls{1});
     Yb = Yb + single(Ycls{2});
@@ -635,45 +599,14 @@ if do_cls && do_defs,,
                (single(Ycls{5})<single(Ycls{3})));                
 
     % fill holes that may remain
-    Yb = vbm_vol_morph(Yb,'lc',round(scale_morph*2)); 
-    fprintf(' %3.0fs\n',etime(clock,stime));
-    
-    
-    %  -----------------------------------------------------------------
-    %  prepare data for segmentation
-    %  -----------------------------------------------------------------
-
-    % calculate Yp0b image for all classes 
-    cls2 = zeros([d(1:2) Kb]);
-    Yp0 = zeros(d,'uint8');
-    for i=1:d(3)
-        for k1 = 1:Kb, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
-        % find maximum for reordered segmentations
-        [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb]),[],3);
-        for k1 = 1:Kb
-          Yp0(:,:,i) = Yp0(:,:,i) + vbm_vol_ctype((maxind == k1).*(maxi~=0)*k1);
-        end
-    end
-    clear maxi maxind Kb k1 cls2;
-
-    % set all non-brain tissue outside Yb to 0
-    Yp0(Yb == 0)  = 0;
-    Yp0(Yb == 1 & Yp0 == 0) = 1; % to deal with wrong SPM maps!
-    Yp0(Yp0 > 3) = 0;            % and for skull/bkg tissue classes to 0
-
-    % fill remaining holes in Yp0b with 1
-    Yb = cg_morph_vol(Yp0,'close',round(scale_morph*2),0);    
-    Yp0((Yp0 == 0) & (Yb > 0)) = 1;
-
-    Ymb = Ym;
+    Yb   = vbm_vol_morph(Yb,'lc',round(scale_morph*2)); 
+    Ybcs = Yb;
   end
-
-
+  fprintf('%4.0fs\n',etime(clock,stime));
   
   
   
   
-     
   %  -------------------------------------------------------------------
   %  AMAP segmentation
   %  -------------------------------------------------------------------
@@ -681,6 +614,32 @@ if do_cls && do_defs,,
   %  a low level of iterations and no further bias correction, because
   %  some images get tile artifacts. 
   %  -------------------------------------------------------------------
+  
+  % correct for harder brain mask to avoid meninges in the segmentation
+  Ymb = Ym; Ymb(~Yb) = 0; 
+  Ymb(~Ybcs) = min(1.40/3,Ymb(~Ybcs)); 
+  Ymb(Ybcs)  = max(0.90/3,Ymb(Ybcs)); 
+  
+  %  prepare data for segmentation
+  if 1
+    % classic approach, consider the WMH!
+    Kb2 = 3;
+    cls2 = zeros([d(1:2) Kb2]);
+    Yp0  = zeros(d,'uint8');
+    for i=1:d(3)
+        for k1 = 1:Kb2, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
+        % find maximum for reordered segmentations
+        [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
+        for k1 = 1:Kb2
+          Yp0(:,:,i) = Yp0(:,:,i) + vbm_vol_ctype((maxind == k1).*(maxi~=0)*k1.*Yb(:,:,i)); 
+        end
+    end
+    clear maxi maxind Kb k1 cls2;
+  else
+    % more direct method ... a little bit more WM, less CSF
+    % Yp0 = uint8(max(Yb,min(3,round(Ym*3)))); Yp0(~Yb) = 0;
+  end  
+    
       
   % use index to speed up and save memory
   sz = size(Yb);
@@ -697,35 +656,33 @@ if do_cls && do_defs,,
   
   % remove non-brain tissue with a smooth mask and set values inside the
   % brain at least to CSF to avoid wholes for images with CSF==BG.
-  if job.extopts.LAS 
+  if job.extopts.LASstr>0 
     csf = double(0.33 * Yb(indx,indy,indz)); spm_smooth(csf,csf,0.6*vx_vol);
     Ymb = max(csf,Ymb); clear csf Yb; 
   end
   
   % Amap parameters 
-  % n_iters = 200; sub = 16; n_classes = 3; pve = 5; iters_icm = 20;
-  % sub = 16 (tile errors), sub = 512 (interation error)
-  n_iters = 16; sub = 16; n_classes = 3; pve = 5; iters_icm = 0;
+  n_iters = 16; sub = 16; n_classes = 3; pve = 5; 
+  iters_icm = 0; bias_fwhm = 60; init_kmeans = 0; 
 
   % adaptive mrf noise 
-  if mrf>=1 || mrf<0; 
+  if job.extopts.mrf>=1 || job.extopts.mrf<0; 
     %Yg     = vbm_vol_grad(Ym,vx_vol);
     % the image was NLM corrected, therefore we can use Yg<0.05
     %Ytmp   = Ycls{2}>128 & ~YMF & vbm_vol_morph(Yg<0.1,'c');
     %noise2 = double(std(Yg(Ytmp(:)))); % typischerweise im WM 
     %mrf    = min(0.25,max(0.03,noise2));
-    noise3 = double(std(Ym(vbm_vol_morph(Ycls{2}>64,'e'))));
-    mrf    = min(0.6,max(0.03,(noise3*100)^2/100*3)); %1.5
+    noise3  = double(std(Ym(vbm_vol_morph(Ycls{2}>64,'e'))));
+    job.extopts.mrf = min(0.6,max(0.03,(noise3*100)^2/100*3)); %1.5
     clear Ytmp noise2 noise3;
   end
   
   % display something
-  if init_kmeans, stime = vbm_io_cmd(sprintf('Amap with Kmeans with MRF-Filterstrength %0.2f',mrf)); 
-  else            stime = vbm_io_cmd(sprintf('Amap without Kmeans with MRF-Filterstrength %0.2f',mrf));       
-  end
+  stime = vbm_io_cmd(sprintf('Amap without Kmeans with MRF-Filterstrength %0.2f',job.extopts.mrf));       
 
   % do segmentation  
-  prob = AmapMex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
+  prob = AmapMex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
+    job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
 
   % reorder probability maps according to spm order
   prob = prob(:,:,:,[2 3 1]);
@@ -744,7 +701,7 @@ if do_cls && do_defs,,
   %  As far as the cleanup has a strong relation to the skull-stripping, 
   %  cleanupstr is controlled by the gcutstr. 
   %  -------------------------------------------------------------------
-  if vbm.cleanup==3
+  if job.extopts.cleanupstr>0;;
     if debug, probo=prob; end
     %% -----------------------------------------------------------------
     %  final cleanup 2.0
@@ -753,8 +710,8 @@ if do_cls && do_defs,,
     %  menignes occure in the sulci and next to the skull. Therefore we 
     %  use the brainmask and the label map to identify special regions.
     %  -----------------------------------------------------------------
-    cleanupstr  = 1; %min(1,max(0,cg_vbm_get_defaults('extopts.cleanupstr')));;
-    cleanupdist = min(3,max(1,1 + 2*cleanupstr));
+    cleanupstr  = min(1,max(0,job.extopts.cleanupstr));
+    cleanupdist = min(3,max(1,1 + 2*job.extopts.cleanupstr));
     
     verb   = cg_vbm_get_defaults('extopts.verb')-1;
     stimec = vbm_io_cmd(sprintf('Final cleanup (gcutstr=%0.2f)',cleanupstr));
@@ -906,18 +863,6 @@ if do_cls && do_defs,,
     
     %% 
     clear YM Ybb Ymb Yl1b probo Yp0
-  elseif vbm.cleanup>0
-    stime = vbm_io_cmd('Final cleanup'); 
-    %% get sure that all regions outside Yb are zero
-    for i=1:3
-      Ycls{i}(:) = 0; 
-    end
-    [Ycls{1}(indx,indy,indz), Ycls{2}(indx,indy,indz), Ycls{3}(indx,indy,indz)] = ...
-      cg_cleanup_gwc(prob(:,:,:,1), prob(:,:,:,2), prob(:,:,:,3), vbm.cleanup);
-    sum_cls = Ycls{1}(indx,indy,indz)+Ycls{2}(indx,indy,indz)+Ycls{3}(indx,indy,indz);
-    Yp0b(sum_cls<0.15*255) = 0;
-    clear sum_cls;
-    fprintf('%4.0fs\n',etime(clock,stime));
   else
     for i=1:3
        Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
@@ -950,13 +895,12 @@ if do_cls && do_defs,,
 
   
   % correction for normalization [and final segmentation]
-  if job.extopts.LAS && job.extopts.WMHC && ~opt.inv_weighting; 
-    WMHCstr = cg_vbm_get_defaults('extopts.WMHCstr'); 
+  if job.extopts.WMHC && job.extopts.WMHCstr>0 && ~opt.inv_weighting; 
     
     if job.extopts.WMHC==1
-      stime = vbm_io_cmd(sprintf('Temporary WMH Correction for normalization (WMHCstr=%0.2f)',WMHCstr));
-    elseif job.extopts.WMHC==1
-      stime = vbm_io_cmd(sprintf('Permanent WMH Correction (WMHCstr=%0.2f)',WMHCstr));
+      stime = vbm_io_cmd(sprintf('Temporary WMH Correction for normalization (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+    elseif job.extopts.WMHC>1
+      stime = vbm_io_cmd(sprintf('Permanent WMH Correction (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     end
     
     % setting of furter WMHC that can now be detected by the further
@@ -988,31 +932,29 @@ if do_cls && do_defs,,
     Ycls{2} = vbm_vol_ctype(single(Ycls{2} + Ywmh));
  
     if job.extopts.WMHC>1
-      if vbm.cleanup==3
       % update of Yp0b for WM/CSF PVE ROI
 
-        Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
-        Yp0  = Yp0(indx,indy,indz);
-        Yl1b = Yl1(indx,indy,indz);
-        Ymb  = Ym(indx,indy,indz);
- 
-        Ybs  = NS(Yl1b,LAB.BS) & Ymb>2/3;
-        YpveVB = vbm_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
-        YpveCC = vbm_vol_morph(Yl1b==1,'d',3*vxv) & vbm_vol_morph(Yl1b==2,'d',3*vxv) & ...
-                 vbm_vol_morph(NS(Yl1b,LAB.VT),'d',2);                      % corpus callosum
-        Ynpve  = smooth3(NS(Yl1b,LAB.BG) | NS(Yl1b,LAB.TH))>0.3;            % no subcortical structure 
-        Yroi = (YpveVB | YpveCC) & ~Ynpve & ...
-               vbm_vol_morph(Yp0==3,'d',2) & vbm_vol_morph(Yp0==1,'d',2) & ...
-               Yp0<3 & Yp0>1 & ...
-               smooth3((Yp0<3 & Yp0>1) & ~vbm_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.1;
-        clear YpveVB YpveCC Ybs Ynpve ;         
-        Yncm = (3-Yp0)/2.*Yroi; 
+      Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
+      Yp0  = Yp0(indx,indy,indz);
+      Yl1b = Yl1(indx,indy,indz);
+      Ymb  = Ym(indx,indy,indz);
 
-        Ycls{1}(indx,indy,indz) = min(Ycls{1}(indx,indy,indz),uint8(~Yroi*255));
-        Ycls{2}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{2}(indx,indy,indz)).*~Yroi + (Yroi - Yncm)*255,'uint8');
-        Ycls{3}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{3}(indx,indy,indz)).*~Yroi + Yncm*255,'uint8');
-        clear Yp0 Yroi;
-      end
+      Ybs  = NS(Yl1b,LAB.BS) & Ymb>2/3;
+      YpveVB = vbm_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
+      YpveCC = vbm_vol_morph(Yl1b==1,'d',3*vxv) & vbm_vol_morph(Yl1b==2,'d',3*vxv) & ...
+               vbm_vol_morph(NS(Yl1b,LAB.VT),'d',2);                      % corpus callosum
+      Ynpve  = smooth3(NS(Yl1b,LAB.BG) | NS(Yl1b,LAB.TH))>0.3;            % no subcortical structure 
+      Yroi = (YpveVB | YpveCC) & ~Ynpve & ...
+             vbm_vol_morph(Yp0==3,'d',2) & vbm_vol_morph(Yp0==1,'d',2) & ...
+             Yp0<3 & Yp0>1 & ...
+             smooth3((Yp0<3 & Yp0>1) & ~vbm_vol_morph(Yp0<3 & Yp0>1,'o',1))>0.1;
+      clear YpveVB YpveCC Ybs Ynpve ;         
+      Yncm = (3-Yp0)/2.*Yroi; 
+
+      Ycls{1}(indx,indy,indz) = min(Ycls{1}(indx,indy,indz),uint8(~Yroi*255));
+      Ycls{2}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{2}(indx,indy,indz)).*~Yroi + (Yroi - Yncm)*255,'uint8');
+      Ycls{3}(indx,indy,indz) = vbm_vol_ctype(single(Ycls{3}(indx,indy,indz)).*~Yroi + Yncm*255,'uint8');
+      clear Yp0 Yroi;
       
       Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
       Yp0b = Yp0b(indx,indy,indz); 
@@ -1203,7 +1145,7 @@ if exist('Yy','var'),
 
     clear Yy t1 t2 t3 M;
 end
-if job.extopts.LAS && job.extopts.WMHC==1 && ~opt.inv_weighting;
+if job.extopts.WMHC==1 && ~opt.inv_weighting;
   Ycls = Yclso; clear Yclso;
 end
 
@@ -1238,7 +1180,7 @@ vbm_io_writenii(VT0,Ym.*(Yp0>0.1),'m', ...
   'float32',[0,1],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),0,trans);
   
 % Yp0b maps
-if job.extopts.LAS && job.extopts.WMHC==3 && ~opt.inv_weighting; 
+if job.extopts.WMHC==3 && ~opt.inv_weighting; 
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
 vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,4/255],job.output.label,0,trans);
@@ -1261,7 +1203,7 @@ for clsi=1:3
     min([0 1 2 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),0,trans);
 end
 % write WMH class maps
-if job.extopts.LAS && job.extopts.WMHC==1 && ~opt.inv_weighting;
+if job.extopts.WMHC==1 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint8',[0,1/255],...
     min([1 0 0 0],cell2mat(struct2cell(job.output.WMH)')),0,trans);
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint16',[0,1/255],...
@@ -1467,18 +1409,14 @@ if do_cls && vbm.print
 	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
   
 	str = [];
-	str = [str struct('name', 'Versions Matlab/SPM12/VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
+	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(vbm.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',vbm.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
-  if job.opts.biasfwhm
-  	str = [str struct('name', 'Kmeans initialization:','value',sprintf('%d',cg_vbm_get_defaults('extopts.kmeans')))];
-  end
-	str = [str struct('name', 'Bias FWHM in Kmeans:','value',sprintf('%d',cg_vbm_get_defaults('extopts.bias_fwhm')))];
   str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(vbm.sanlm>0))),' '.*(vbm.sanlm>0),mrf))];
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(vbm.sanlm>0))),' '.*(vbm.sanlm>0),job.extopts.mrf))];
   
   QMC = vbm_io_colormaps('marks+',30);
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -1487,7 +1425,7 @@ if do_cls && vbm.print
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
   
 % Image Quality measures:
-  str2 =       struct('name', '\bfImage Quality:','value',''); 
+  str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name', ' Voxel Volume:','value', ...
                sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qam.QM.res_vol,char(179)))))];
   str2 = [str2 struct('name', ' Voxel Isotropy:','value', ...   
@@ -1822,7 +1760,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Yc
 % intensity. 
 % ----------------------------------------------------------------------
 
-  INV = cg_vbm_get_defaults('extopts.INV');
+  INV   = cg_vbm_get_defaults('extopts.INV');
+  debug = cg_vbm_get_defaults('extopts.debug');
   inv_weighting = 0;
   if nargout==6
     vbm_warnings = struct('identifier',{},'message',{});
@@ -1917,7 +1856,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Yc
            'This can be an orienation problem (check origin), ' ...
            'untypical (non human)\n'...
            'subjects, due to bad image quality, or something else...'],Ymp0diff);
-      elseif Ymp0diff>0.10
+      elseif Ymp0diff>0.10 && debug
         vbm_warnings = vbm_io_addwarning(vbm_warnings,...
           'VBM:cg_vbm_write:badSPMsegment',sprintf(...
           ['SPM segmentation does not fit to the image (RMS(Ym,Yp0)=%0.2f).\n'...
@@ -2382,7 +2321,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol
   
   %% adding of atlas information (for subcortical structures)
   %  -------------------------------------------------------------------
-  if 1 %LAS==2 
+  if 1 
     stime = vbm_io_cmd('  Prepare partitions','g5','',verb,stime);
 
     % map atlas to RAW space
