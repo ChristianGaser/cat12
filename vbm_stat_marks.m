@@ -78,15 +78,15 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'NCR'                   'linear'    [  1/20    1/2]    1 1     'noise to contrast råatio'
    'QM'  'CNR'                   'linear'    [    20      2]    1 1     'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [  1/10      1]    1 1     'inhomogeneity to contrast ratio'
-   'QM'  'CIR'                   'linear'    [    10      1]    1 1     'contrast to inhomogeneity ratio'
+   'QM'  'ICR'                   'linear'    [  1/10      2]    1 1     'inhomogeneity to contrast ratio'
+   'QM'  'CIR'                   'linear'    [    10      2]    1 1     'contrast to inhomogeneity ratio'
   % - artefacts & resolution -
    'QM'  'NERR'                  'linear'    [   1/5    1/2]    2 1     'noise edge resolution relation'
   % - subject measures / preprocessing measures -
 %   'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
 %   'QM'  'MPC'                   'linear'    [  0.06   0.12]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
    'QM'  'CJV'                   'linear'    [  0.12   0.36]    2 1     'coefficiant of variation - avg. std in GM and WM'
-   'QM'  'MPC'                   'linear'    [  0.06   0.26]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
+   'QM'  'MPC'                   'linear'    [  0.06   0.24]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
    'QM'  'MJD'                   'linear'    [  0.05   0.15]    2 1     'mean jacobian determinant'
    'QM'  'STC'                   'linear'    [  0.05   0.15]    2 1     'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
@@ -143,7 +143,25 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       if ~isstruct(varargin{1})
         error('MATLAB:vbm_stat_marks:input','Second input has to be a structure!\n');
       end
-       
+      if numel(varargin)>1, method = varargin{2}; else method = 'spm'; end
+      CJVpos = find(cellfun('isempty',strfind(def.QS(:,2),'CJV'))==0);
+      MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
+      switch method
+        case 'fsl'
+          def.QS{CJVpos,4} = [  0.12   0.36];
+          def.QS{MPCpos,4} = [  0.06   0.24];
+        case 'spm'
+          def.QS{CJVpos,4} = [  0.12   0.36];
+          def.QS{MPCpos,4} = [  0.06   0.24];
+        case 'vbm8'
+          def.QS{CJVpos,4} = [  0.12   0.36];
+          def.QS{MPCpos,4} = [  0.06   0.24];
+        case 'vbm12'
+          def.QS{CJVpos,4} = [  0.12  0.18];
+          def.QS{MPCpos,4} = [  0.06  0.12];
+        otherwise 
+          error('MATLAB:vbm_stat_mark:unknownMethod','Unknown method ''%s'' use ''fsl'',''spm'',''vbm8'',''vbm12''.',method);
+      end
       % evaluation
       QA = varargin{1};
       for QSi=1:size(def.QS,1)

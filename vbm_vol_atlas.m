@@ -423,21 +423,22 @@ function callvbm(P)
 % ----------------------------------------------------------------------
   matlabbatch{1}.spm.tools.vbm.estwrite.data = {P};
 
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm                = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus              = [3 3 3 3 4 2];
+  matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm                = ...
+    {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg            = 0.0001;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasfwhm           = 60;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.affreg             = 'mni';
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
-  matlabbatch{1}.spm.tools.vbm.estwrite.opts.samp               = 3;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.darteltpm = ...
-    {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_1_IXI555_MNI152.nii')};
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.darteltpm       = ...
+    {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 3;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LASstr          = 0.5;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstrength    = 0.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanup         = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanupstr      = 0.5;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.vox             = 1.5;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.bb              = [-90 -126 -72; 90 90 108];
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.print           = 1;
+  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface         = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.warped        = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.modulated     = 0;
@@ -458,7 +459,6 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.output.bias.affine      = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.jacobian.warped  = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.warps            = [1 1];
-
 
   warning off;
   try

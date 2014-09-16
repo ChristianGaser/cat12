@@ -32,7 +32,7 @@ vbm.opts.samp      = 3;                       % Sampling distance - smaller 'bet
 %   dartel    0/1/2   (none/rigid/affine)
 %   affine    0/1     (none/affine)
 
-% bias and noise corrected, (localy) intensity normalized
+% bias and noise corrected, (localy - if LAS>0) intensity normalized
 vbm.output.bias.native = 0;
 vbm.output.bias.warped = 1;
 vbm.output.bias.affine = 0;
@@ -56,6 +56,7 @@ vbm.output.CSF.mod    = 0;
 vbm.output.CSF.dartel = 0;
 
 % WMH tissue maps (only for opt.extopts.WMHC==3) - in development
+% no modulation available, due to the high spatial variation of WMHs
 vbm.output.WMH.native  = 0;
 vbm.output.WMH.warped  = 0;
 vbm.output.WMH.dartel  = 0;
@@ -77,7 +78,7 @@ vbm.output.warps        = [0 0];
 % experimental maps
 %=======================================================================
 
-% partitioning atlas maps
+% partitioning atlas maps (vbm12 atlas)
 vbm.output.atlas.native = 0; 
 vbm.output.atlas.warped = 0; 
 vbm.output.atlas.dartel = 0; 
@@ -93,7 +94,7 @@ vbm.output.te.warped = 0;
 vbm.output.te.dartel = 0;
 
 
-% Longitudinal pipeline?
+% Longitudinal pipeline
 %=======================================================================
 % bias correction options
 vbm.bias.nits_bias      = 8;
@@ -112,22 +113,18 @@ vbm.defs.interp         = 5;      % 5th degree B-spline
 %=======================================================================
 
 % skull-stripping options
-vbm.extopts.gcut         = 1;     % Skull-stripping with graph-cut:  0 - no; 1 - yes (default)
-vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping with 0 for softer and wider, and 1 for harder and closer (default = 0.5)
-vbm.extopts.cleanup      = 3;     % Cleanup of meninges: 0 - no; 1 - light; 2 - thorough; 3 - new improved cleanup (default)
-vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process (only cleanup = 3).
+vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
+vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
 
 % segmenation options
-vbm.extopts.LAS          = 1;     % Local adaptive segmentation (VMB12i):  0 - no adaption; 1 - adaption (default); 2 - adaption & sharpening (this is just a test - do not use!)
-vbm.extopts.LASstr       = 0.5;   % Strength of the local adaption:  0 - lower adaption; 1 - strong adaption (default = 0.5)
-vbm.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction (in development):  0 - no correction; 1 - strong correction
-vbm.extopts.WMHC         = 1;     % correction for WM hyperintensities (in development):  0 - no; 1 - only for Dartel (default); 2 - also for segmentation (corred to WM); 3 - separate class
-vbm.extopts.WMHCstr      = 0.5;   % strength of WM hyperintensity correction (in development):  0 for lower, 1 for stronger corrections (default = 0.5)
-vbm.extopts.mrf          = 1;     % MRF weighting:  0-1 - manuell setting; 1 - auto (default)
+vbm.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
+vbm.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
+vbm.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
+                                  %                                           2 - also for segmentation (corred to WM like SPM); 3 - separate class
+vbm.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
+vbm.extopts.mrf          = 1;     % MRF weighting:                            0-1 - manuell setting; 1 - auto (default)
 vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
                                   %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter; 
-vbm.extopts.bias_fwhm    = 60;    % REMOVE ME - because I had to turn it to 0 segmenation due to error % FWHM of Kmeans internal bias correction
-vbm.extopts.kmeans       = 0;     % REMOVE ME - because only 0 works correct % segmentation initialization: 0 - new segment; 1 - Kmeans
 vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
 
 % normalization options
@@ -135,6 +132,7 @@ vbm.extopts.vox          = 1.5;   % voxel size for normalized data
 vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data; 
 vbm.extopts.dartelwarp   = 1;     % dartel normalization: 0 - spm default; 1 - yes
 vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')}; % Indicate first Dartel template
+vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')}; % VBM atlas with major regions for VBM, SBM & ROIs
 
 % surface options
 vbm.extopts.surface      = 1;     % surface and thickness creation
@@ -161,16 +159,15 @@ vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch err
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 vbm.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')    'none'  {''}              ; ... % VBM atlas with major regions for VBM, SBM & ROIs
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'gm'    {'csf','gm','wm'} ; ...
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammer, 18 subjects, low T1 image quality
+ %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... % ROIs requires further work >> use Anatomy toolbox
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammer, low T1 image quality
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ... % only one subject, but with WM regions
   }; 
 
-% IDs of the ROIs in the vbm12 atlas map (vbm12.nii). 
-% Do not change this!
+
+% IDs of the ROIs in the vbm12 atlas map (vbm12.nii). Do not change this!
 vbm.extopts.LAB.CT =  1; % cortex
 vbm.extopts.LAB.MB = 13; % MidBrain
 vbm.extopts.LAB.BS = 13; % BrainStem
