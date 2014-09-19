@@ -5070,3 +5070,15 @@ M       vbm_surf_createCS.m
 some small bugs removed...
 ------------------------------------------------------------------------
 r604 | gaser | 2014-09-19 11:48:09
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+ M      fsaverage/lh.sphere.gii
+ M      fsaverage/rh.sphere.gii
+M       vbm12.man
+M       vbm_surf_createCS.m
+
+Manual flipping of vertices according to vmat in vbm_surf_createCS.m did
+not considered all potential cases.
+------------------------------------------------------------------------
+r605 | gaser | 2014-09-19 15:53:35

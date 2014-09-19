@@ -179,12 +179,12 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       end
     end
     
-    % transform coordinates and do manual flipping of data if negative values for x-scaling are found
-    ind_neg = find(vmat(1,1:3) == -1);
-    if ~isempty(ind_neg)
-      vmat(1,:) = -1*(vmat(1,:));
+    % transform coordinates and do manual flipping of data if negative values for scaling are found
+    [ix,iy] = find(vmat(:,1:3) == -1);
+    if ~isempty(ix)
+      vmat(ix,:) = -1*(vmat(ix,:));
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-      CS.vertices(:,1) = -1*CS.vertices(:,1);
+      CS.vertices(:,ix) = -1*CS.vertices(:,ix);
     else    
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     end
