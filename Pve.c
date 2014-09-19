@@ -19,8 +19,8 @@
 
 void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims)
 {
-  int x,y,z,i,z_area,y_dims,ind,mxi;
-  double w, mx;
+  int x,y,z,z_area,y_dims,ind;
+  double w;
   unsigned char new_val[MAX_NC];
   
   int area = dims[0]*dims[1];
@@ -90,8 +90,8 @@ void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, 
 
 void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims)
 {
-  int x,y,z,i,z_area,y_dims,ind,mxi;
-  double w, mx;
+  int x,y,z,z_area,y_dims,ind;
+  double w;
   unsigned char new_val[MAX_NC];
   
   int area = dims[0]*dims[1];

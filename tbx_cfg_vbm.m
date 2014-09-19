@@ -255,7 +255,7 @@ samp.help  = {[ ...
 opts      = cfg_branch;
 opts.tag = 'opts';
 opts.name = 'Estimation options';
-opts.val = {tpm,biasreg,biasfwhm,affreg,warpreg};
+opts.val = {tpm,biasreg,biasfwhm,affreg};
 opts.help = {[...
   'Various options can be adjusted in order to improve the performance of the ',...
   'algorithm with your data.  Knowing what works best should be a matter ',...
@@ -545,7 +545,7 @@ darteltpm.num     = [1 1];
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
-extopts.val   = {sanlm,LASstr,gcutstr,cleanupstr,darteltpm,bb,vox,ROI,surface,print}; 
+extopts.val   = {sanlm,LASstr,gcutstr,cleanupstr,darteltpm,ROI,surface,print}; 
 extopts.help  = {'Extended options'};
 
 %------------------------------------------------------------------------

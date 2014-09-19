@@ -5,7 +5,7 @@ function compile
   d0(5,5,5) = NaN;
     
   if strcmp(mexext,'mexmaci64')
-    mexflag='-Dchar16_t=UINT16_T';
+    mexflag='-Dchar16_t=UINT16_T CFLAGS=''$CFLAGS -Wall -ansi -pedantic -Wextra'' CPPLAGS=''$CPPFLAGS -Wall -ansi -pedantic -Wextra''';
   else
     mexflag='';
   end
@@ -47,34 +47,34 @@ function compile
   %%
   try % try OpenMP support
       if strcmp(mexext,'mexmaci64')
-          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-m64 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
+          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS=' -Wall -ansi -pedantic -Wextra -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexmaci')
-          mex CC='gcc-4.0' CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex CC='gcc-4.0' CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc-4.0' CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
+          mex CC='gcc-4.0' CFLAGS='-fopenmp  -Wall -ansi -pedantic -Wextra -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexa64')
-          mex CFLAGS='-U_OPENMP -m64 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex CFLAGS='-U_OPENMP -fPIC -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CFLAGS='-fopenmp -m64 -fPIC -O3' -O -lgomp sanlmMex.c sanlm_float.c
+          mex CFLAGS='-fopenmp -fPIC  -Wall -ansi -pedantic -Wextra -O3' -O -lgomp sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexglx')
-          mex CFLAGS='-U_OPENMP -m32 -fPIC -O3' -O sanlmMex.c sanlm_float.c
+          mex CFLAGS='-U_OPENMP -fPIC  -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CFLAGS='-fopenmp -m32 -fPIC -O3' -O /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.4/libgomp.a sanlmMex.c sanlm_float.c
+          mex CFLAGS='-fopenmp -fPIC  -Wall -ansi -pedantic -Wextra -O3' -O /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.4/libgomp.a sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexw64')
-          mex CFLAGS='-U_OPENMP -m64' -O sanlmMex.c sanlm_float.c
+          mex CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
           mex -O sanlmMex.c sanlm_float.c
       elseif strcmp(mexext,'mexw32')
-          mex CFLAGS='-U_OPENMP -m32' -O sanlmMex.c sanlm_float.c
+          mex CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra' -O sanlmMex.c sanlm_float.c
           movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
           mex -O sanlmMex.c sanlm_float.c
       end
       disp('Compiling sanlmMex with OpenMP')
   catch 
       disp('Compiling sanlmMex without OpenMP')
-      mex CFLAGS='-fPIC -O3' -O sanlmMex.c sanlm_float.c 
+      mex CFLAGS='-Wall -fPIC -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c 
   end
   
   sanlmMex(d0,3,1);

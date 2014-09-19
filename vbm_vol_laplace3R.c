@@ -51,7 +51,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const int     x  = sL[0];
   const int     y  = sL[1];
   const int     xy = x*y;
-  const int     nr = nrhs;
   
   /* input data */
   float*SEG = (float *)mxGetPr(prhs[0]);
@@ -64,9 +63,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = { -1, 1, -x, x, -xy, xy};  
-  const float ND[]  = {1/abs2((float)S[0]),1/abs2((float)S[0]), 1/abs2((float)S[1]),1/abs2((float)S[1]), 1/abs2((float)S[2]),1/abs2((float)S[2])};
   const int   sN = sizeof(NI)/4;    
-  unsigned int i, n;
+  int i, n;
   
   /* output data */
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
@@ -84,7 +82,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     LN[i] = M[i];
   }
 
-  int u,v,w,nu,nv,nw,ni,iter=0,stop=0,maxiter=2000;
+  int u,v,w,nu,nv,nw,ni,iter=0,maxiter=2000;
   float Nn, diff, maxdiffi, maxdiff=1;
   while ( maxdiff > TH && iter < maxiter) {
     maxdiffi=0; iter++;

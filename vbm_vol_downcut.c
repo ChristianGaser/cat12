@@ -80,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs==5 && mxGetNumberOfElements(prhs[4])!=2)                mexErrMsgTxt("ERROR:vbm_vol_downcut: fifht input must have 2 Elements");
     
   /* main informations about input data (size, dimensions, ...) */
-  const mwSize *sL = mxGetDimensions(prhs[0]); int sSEG[] = {sL[0],sL[1],sL[2]}; 
+  const mwSize *sL = mxGetDimensions(prhs[0]); 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
   const int     x  = sL[0];
@@ -99,14 +99,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const float   s13  = sqrt( s1*s1  + s3*s3); /* xz - voxel size */
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz - voxel size */
   const float   s123 = sqrt(s12*s12 + s3*s3); /* xyz - voxel size */
-  const int     nr = nrhs;
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = {  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x,  -xy-x-1,-xy-x+1,-xy+x-1,-xy+x+1, xy-x-1,xy-x+1,xy+x-1,xy+x+1};  
   const float ND[]  = { s1, s1, s2, s2, s3, s3,  s12, s12,s12,s12,   s13,  s13, s13, s13,   s23,  s23, s23, s23,     s123,   s123,   s123,   s123,   s123,  s123,  s123,  s123};
  
-  float 	  du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
-  int         i,n,ni,DNi,u,v,w,nu,nv,nw, tmpint, cmi;
+  int         i,n,ni,u,v,w,nu,nv,nw;
     
   /* main volumes - actual without memory optimation ... */
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); /* label map  */
@@ -123,8 +121,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   int	  nCV = 0; 		/* # voxel of interest (negative voxel that have to processed)  */
 	int 	kll;
 	int 	kllv = 2000;
-	float DISTN, nmaxD, down;
-	int   noLABnb;
+	float DISTN;
 	
 	/* initialisation of parameter volumes */
 	for (i=0;i<nL;i++) { 

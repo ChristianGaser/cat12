@@ -19,7 +19,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL  = mxGetDimensions(prhs[0]);
   const int     dL  = mxGetNumberOfDimensions(prhs[0]);
-  const int     nL  = (int) mxGetNumberOfElements(prhs[0]);
     
   unsigned short *input;
   

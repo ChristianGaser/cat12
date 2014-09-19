@@ -34,8 +34,8 @@ for i=1:size(P,1)
     
   name = [ff ex];
   
-  PGI     = fullfile(pp,strrep(name,'central','gyrification'));
-  PFD     = fullfile(pp,strrep(name,'central','fractaldimension'));
+  PGI     = fullfile(pp,strrep(ff,'central','gyrification'));
+  PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
   Psphere = fullfile(pp,strrep(name,'central','sphere'));
   
   fprintf('Extract parameters for %s\n',deblank(P(i,:)));

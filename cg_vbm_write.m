@@ -441,7 +441,7 @@ if vbm.sanlm>0 && vbm.sanlm<3
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
   clear Yms BB;
   fprintf('%4.0fs\n',etime(clock,stime));  
-elseif vbm.sanlm==3
+elseif vbm.sanlm>2
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
@@ -475,7 +475,7 @@ if vbm.sanlm>0 && vbm.sanlm<3
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   clear Yms BB;
   fprintf('%4.0fs\n',etime(clock,stime));  
-elseif vbm.sanlm==3
+elseif vbm.sanlm>2
   noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
   stime = vbm_io_cmd(sprintf('NLM-Filter after Local Intensity Correction (ORNLMstr=%0.2f)',noise2));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
@@ -1409,14 +1409,17 @@ if do_cls && vbm.print
 	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
   
 	str = [];
-	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
+	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %d',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
 	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(vbm.dartelwarp+1,:)))];
 	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
 	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',vbm.reg))];
 	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
-  str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(vbm.sanlm>0))),' '.*(vbm.sanlm>0),job.extopts.mrf))];
+    if vbm.sanlm>0 && vbm.sanlm<3
+      str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + MRF(%0.2f)',mrf))];
+    elseif vbm.sanlm>2
+      str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + ORNLM + MRF(%0.2f)',mrf))];
+    end
   
   QMC = vbm_io_colormaps('marks+',30);
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -1470,11 +1473,6 @@ if do_cls && vbm.print
       str3 = [str3 struct('name', '','value',shorter)];  %#ok<AGROW>
     end
   end
-%   if vbmerr
-%     str2 = [str2 struct('name', ' Missing Structures:' ,'value',...
-%                  sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}',opt.color.error))];
-%       end
-  
   
   
  %%
