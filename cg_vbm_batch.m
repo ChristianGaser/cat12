@@ -3,7 +3,7 @@ function cg_vbm_batch(namefile,writeonly,vbm_defaults)
 %
 % namefile      - array of file names
 % writeonly     - if "1" do not estimate segmentations
-% vbm_defaults - use this default file instead of cg_vbm_defaults.m
+% vbm_defaults  - use this default file instead of cg_vbm_defaults.m
 %
 %_______________________________________________________________________
 % $Id$
@@ -62,7 +62,7 @@ end
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','BVCstr','LASstr',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','ROI','surface','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB','dartelwarp');
+              'QAcleanup','QAcleanupth','LAB','dartelwarp','vox','bb','vbm12atlas');
 for i=1:size(tmp_fields,1)
   try
     if writeonly
