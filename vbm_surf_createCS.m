@@ -238,7 +238,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
     % spherical registration to fsaverage
     stime = vbm_io_cmd('  Spherical registration');
-    cmd = sprintf('CAT_WarpSurf -v -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+    cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     fprintf('%4.0fs\n',etime(clock,stime)); 
 
@@ -252,8 +252,8 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 %      YS = vbm_vol_morph(YS & Ymf>2.5,'lc',8);  % there should be only one large region 
 %      Yth1(YS) = nan; % no-thickness in cut regions ... 
 
-    CS = gifti(Pcentral)
-    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])'
+    CS = gifti(Pcentral);
+    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
     vbm_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
 

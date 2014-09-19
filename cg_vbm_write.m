@@ -1418,7 +1418,7 @@ if do_cls && vbm.print
     if vbm.sanlm>0 && vbm.sanlm<3
       str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + MRF(%0.2f)',mrf))];
     elseif vbm.sanlm>2
-      str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + ORNLM + MRF(%0.2f)',mrf))];
+      str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + ORNLM + MRF(%0.2f)',job.extopts.mrf))];
     end
   
   QMC = vbm_io_colormaps('marks+',30);
