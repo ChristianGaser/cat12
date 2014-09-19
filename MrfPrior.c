@@ -24,7 +24,7 @@
 
 void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, int init, int *dims)
 {
-  int i, j, k, x, y, z;
+  int i, j, x, y, z;
   int fi, fj;
   long color[MAX_NC][7][7][7][7];
   long area;

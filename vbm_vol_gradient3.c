@@ -55,8 +55,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float*I = (float *)mxGetPr(prhs[0]);
   bool *M;
   if ( nrhs>1) {
-    const mwSize *sM = mxGetDimensions(prhs[1]);
-    const int     dM = mxGetNumberOfDimensions(prhs[1]);
     const int     nM = (int) mxGetNumberOfElements(prhs[1]);
     
     if ( mxGetNumberOfDimensions(prhs[1]) != 3 ) 
@@ -77,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float *G2 = (float *)mxGetPr(plhs[1]);
   float *G3 = (float *)mxGetPr(plhs[2]);
   
-  int i,u,v,w,ni,nu,nv,nw,n1i,n2i; 
+  int i,u,v,w,nu,nv,nw,n1i,n2i; 
   for (i=0;i<nL;i++) 
   {
     ind2sub(i,&u,&v,&w,xy,x);

@@ -79,15 +79,16 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   for si=1:numel(opt.surf)
    
     % surface filenames
-    Praw       = fullfile(pp,sprintf('%s.central.nofix.%s',opt.surf{si},ff));    % raw
-    Psphere0   = fullfile(pp,sprintf('%s.sphere.nofix.%s',opt.surf{si},ff));     % sphere.nofix
-    Pcentral   = fullfile(pp,sprintf('%s.central.%s',opt.surf{si},ff));          % fiducial
-    Pthick     = fullfile(pp,sprintf('%s.thickness.%s',opt.surf{si},ff));        % thickness
-    Pdefects   = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));          % defects
-    Psphere    = fullfile(pp,sprintf('%s.sphere.%s',opt.surf{si},ff));           % sphere
-    Pspherereg = fullfile(pp,sprintf('%s.sphere.reg.%s',opt.surf{si},ff));       % sphere.reg
-    Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central',opt.surf{si}));      % fsaverage central
-    Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere',opt.surf{si}));       % fsaverage sphere
+    Praw       = fullfile(pp,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
+    Psphere0   = fullfile(pp,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
+    Pcentral   = fullfile(pp,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
+    Pthick     = fullfile(pp,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness
+    Pdefects0  = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
+    Pdefects   = fullfile(pp,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
+    Psphere    = fullfile(pp,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
+    Pspherereg = fullfile(pp,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
+    Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central.gii',opt.surf{si}));      % fsaverage central
+    Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere.gii',opt.surf{si}));       % fsaverage sphere
 
     % reduce for object area
     switch opt.surf{si}
@@ -163,8 +164,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
     CS.vertices = CS.vertices + repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1); 
-    %CS.vertices(:,1:2) = CS.vertices(:,2:-1:1);
-    %CSO = CS; % save old surface, for later correction of reduction error
 
     % use only one major object
       %vbm_io_FreeSurfer('write_surf',Praw,CS);
@@ -179,9 +178,17 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
         otherwise,          CS = reducepatch(CS,opt.reduceCS);
       end
     end
-    CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-    vbm_io_FreeSurfer('write_surf',Praw,CS); 
-    %fprintf('%4.0fs\n',etime(clock,stime)); 
+    
+    % transform coordinates and do manual flipping of data if negative values for x-scaling are found
+    ind_neg = find(vmat(1,1:3) == -1);
+    if ~isempty(ind_neg)
+      vmat(1,:) = -1*(vmat(1,:));
+      CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
+      CS.vertices(:,1) = -1*CS.vertices(:,1);
+    else    
+      CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
+    end
+    save(gifti(struct('faces',CS.faces,'vertices',CS.vertices,'mat',vmat)),Praw,'ASCII');
 
     % spherical surface mapping 1 of the uncorrected surface for topology correction
     %stime = vbm_io_cmd('  Initial spherical mapping');
@@ -190,11 +197,11 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
 
-    % mark defects and save as gifti for non windows systems (their is an error in CAT_MarkDefects) 
-    if opt.debug && ~ispc 
-      cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',Praw,Psphere0,Pdefects); 
+    % mark defects and save as gifti 
+    if opt.debug 
+      cmd = sprintf('CAT_MarkDefects -binary "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects,[Pdefects '.gii']);
+      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects0,Pdefects);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     end
     fprintf('%4.0fs\n',etime(clock,stime)); 
@@ -231,7 +238,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
     % spherical registration to fsaverage
     stime = vbm_io_cmd('  Spherical registration');
-    cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+    cmd = sprintf('CAT_WarpSurf -v -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     fprintf('%4.0fs\n',etime(clock,stime)); 
 
@@ -245,10 +252,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 %      YS = vbm_vol_morph(YS & Ymf>2.5,'lc',8);  % there should be only one large region 
 %      Yth1(YS) = nan; % no-thickness in cut regions ... 
 
-    CS  = vbm_io_FreeSurfer('read_surf',Pcentral); 
-    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-    CS.facevertexcdata = isocolors2(Yth1,CS.vertices); 
-    vbm_io_FreeSurfer('write_surf_data',Pthick,CS.facevertexcdata);
+    CS = gifti(Pcentral)
+    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])'
+    facevertexcdata = isocolors2(Yth1,CS.vertices); 
+    vbm_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
 
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
@@ -256,7 +263,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     % create output structure
     S.(opt.surf{si}).vertices = CS.vertices;
     S.(opt.surf{si}).faces    = CS.faces;
-    S.(opt.surf{si}).th1      = CS.facevertexcdata;
+    S.(opt.surf{si}).th1      = facevertexcdata;
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;
     clear Yth1i
@@ -264,12 +271,13 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     % we have to delete the original faces, because they have a different number of vertices after
     % CAT_FixTopology!
     delete(Praw);  
-    delete(Pdefects);  
+    delete(Pdefects0);  
     delete(Psphere0);
     if opt.usePPmap
       delete(Vpp.fname);
       delete(Vpp1.fname);
     end
+    clear CS
   end  
 end
  
@@ -312,5 +320,7 @@ function V = isocolors2(R,V,opt)
       V = sum(R(sub2ind(size(R),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))) .* w8b,3);
   end  
   if ~VD, V = single(V); end
-end                   
-  
+
+
+                   
+end

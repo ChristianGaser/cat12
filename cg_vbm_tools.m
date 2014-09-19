@@ -365,7 +365,7 @@ check_cov.help = {[...
 data_surf = cfg_files;
 data_surf.tag  = 'data_surf';
 data_surf.name = 'Surfaces';
-data_surf.filter = 'any';
+data_surf.filter = 'gifti';
 data_surf.ufilter = '^[lr]h.central';
 data_surf.num     = [1 Inf];
 data_surf.help = {'Select surfaces to extract values.'};
@@ -402,7 +402,7 @@ data_surf.name = 'Surfaces parameters';
 data_surf.filter = 'any';
 data_surf.ufilter = '^[lr]h.[tgf][hyr][ira]';
 data_surf.num     = [1 Inf];
-data_surf.help = {'Select surfaces parameters files for resampling to template space.'};
+data_surf.help = {'Select surfaces parameter files for resampling to template space.'};
 
 fwhm         = cfg_entry;
 fwhm.tag     = 'fwhm';
@@ -457,7 +457,7 @@ data_surf.name = 'Surfaces';
 data_surf.filter = 'gifti';
 data_surf.ufilter = '[lr]h.[tgf][hyr][ira]';
 data_surf.num     = [1 Inf];
-data_surf.help = {'Select surfaces parameters files.'};
+data_surf.help = {'Select surfaces parameter files.'};
 
 check_mesh_cov = cfg_exbranch;
 check_mesh_cov.tag = 'check_mesh_cov';

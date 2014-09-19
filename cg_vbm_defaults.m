@@ -128,14 +128,14 @@ vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM wi
 vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
 
 % normalization options
-vbm.extopts.vox          = 1.5;   % voxel size for normalized data
-vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data; 
+vbm.extopts.vox          = 1.5;   % voxel size for normalized data (not yet working)
+vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data (not yet working)
 vbm.extopts.dartelwarp   = 1;     % dartel normalization: 0 - spm default; 1 - yes
 vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')}; % Indicate first Dartel template
 vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')}; % VBM atlas with major regions for VBM, SBM & ROIs
 
 % surface options
-vbm.extopts.surface      = 1;     % surface and thickness creation
+vbm.extopts.surface      = 0;     % surface and thickness creation
 vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 
 % visualisation, print and debugging options

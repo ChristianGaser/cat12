@@ -78,14 +78,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const float   s13  = sqrt( s1*s1  + s3*s3); /* xz - voxel size */
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz - voxel size */
   const float   s123 = sqrt(s12*s12 + s3*s3); /* xyz - voxel size */
-  const int     nr = nrhs;
   /*printf("%1.2f,%1.2f,%1.2f - %1.2f,%1.2f,%1.2f - %1.2f",s1,s2,s3,s12,s23,s13,s123); */
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[] = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
   const float ND[] = {0.0, s1, s12, s2, s12,    s13, s3,  s13,     s123,  s23,   s123,     s123,  s23,   s123};
   const int   sN = sizeof(NI)/4;    
-  float       DN[sN],DI[sN];
+  float       DN[sN];
   float       DNm = FLT_MAX;
   int i, n, ni, DNi = 0;
 
