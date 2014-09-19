@@ -228,7 +228,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const float   s13  = sqrt( s1*s1  + s3*s3); /* xz  - voxel size */
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz  - voxel size */
   const float   s123 = sqrt(s12*s12 + s3*s3); /* nL - voxel size */
-  const int     nr = nrhs;
   
   const int   NI[]  = {  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x,  -xy-x-1,-xy-x+1,-xy+x-1,-xy+x+1, xy-x-1,xy-x+1,xy+x-1,xy+x+1};  
   const float ND[]  = { s1, s1, s2, s2, s3, s3,  s12, s12,s12,s12,   s13,  s13, s13, s13,   s23,  s23, s23, s23,     s123,   s123,   s123,   s123,   s123,  s123,  s123,  s123};
@@ -238,20 +237,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /* 
    * other variables 
    */
-  float 	dinu, dinv, dinw, dcf, WMu, WMv, WMw, WM, DN, DIN;	/* distance and intensity variables */
-  int     i,j,n,ii,ni,DNi,u,v,w,nu,nv,nw,iu,iv,iw;          	/* nL and index-values of a voxel, one neighbor and the nearest boundary voxel */
+  float 	dinu, dinv, dinw, dcf, WMu, WMv, WMw, WM, DIN;	/* distance and intensity variables */
+  int     i,n,ii,ni,u,v,w,nu,nv,nw,iu,iv,iw;          	/* nL and index-values of a voxel, one neighbor and the nearest boundary voxel */
   int	  	nC=sL[0]*sL[1]*sL[2], nCo=FINFINITY;                /* runtime variables */
-  int     nCVL=0, kll=0, nCVo, kllo;                          /* runtime variables */
+  int     kll=0;                                               /* runtime variables */
   int     fast=1;                                             /* stop if number of unvisited points stay constant */
-  
+
   
   /* 
    * Create main output volumes and variables D (distance map) and I (index map)
    */ 
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); 
   plhs[1] = mxCreateNumericArray(dL,sL,mxUINT32_CLASS,mxREAL); 
-  float*D  				= (float *)mxGetPr(plhs[0]);				
-  unsigned int*I  = (unsigned int *)mxGetPr(plhs[1]);	
+  float *D  				= (float *)mxGetPr(plhs[0]);				
+  unsigned int *I  = (unsigned int *)mxGetPr(plhs[1]);	
   
  
   /*
@@ -307,7 +306,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    * for all points if there is no object.
    */
  	if ( vx==0 ) { 
-    for (i=0;i<nL;i++) { D[i]=nanres; I[i]=i+1; } 
+    for (i=0;i<nL;i++) { D[i]=nanres; I[i]=(unsigned int)i+1; } 
     printf("WARNING:vbm_vol_eidist: Found no object for distance estimation!\n");
     return;
   }
@@ -462,7 +461,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if ( verb ) printf("  Euclidean distance estimation \n"); 
   if ( 1 && euklid ) {
     for (i=0;i<nL;i++) { 
-      if ( mxIsNaN(B[i])==0 && mxIsInf(B[i])==0 && D[i]>0 && I[i]!=i ) { 
+      if ( mxIsNaN(B[i])==0 && mxIsInf(B[i])==0 && D[i]>0 && I[i]!=(unsigned int)i ) { 
 
         ni = (int) I[i];
         

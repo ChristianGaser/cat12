@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef _WIN32 
+#define isnan(x) _isnan(x)
+#endif
+
 #ifdef _OPENMP
 #include "omp.h"
 #endif
@@ -164,7 +168,6 @@ int x_pos,y_pos,z_pos;
 int is_outside;
 double value = 0.0;
 unsigned char label = 0;
-double denoised_value  = 0.0;
 int count = 0 ;
 int a,b,c,ns,sxy;
 
@@ -539,7 +542,7 @@ void anlm(float* ima, int v, int f, int rician, const int* dims)
 float *means, *variances, *Estimate, *average, *bias;
 unsigned char *Label;
 int ndim = 3;
-double SNR,h,mean,var,estimate,d;
+double SNR,mean,var,estimate,d;
 int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin,r;
 
 myargument *ThreadArgs;  
@@ -684,11 +687,7 @@ if (rician)
      {
        SNR = (double)means[i]/sqrt((double)variances[i]);      
        bias[i] = 2*(variances[i]/(float)Epsi(SNR));      
-#if defined(_WIN32)
-       if (_isnan(bias[i])) bias[i] = 0.0;     
-#else
-       if (isnan(bias[i])) bias[i] = 0.0;     
-#endif
+/*       if (!isnan(bias[i])) bias[i] = 0.0;     */
      }
   }
 }

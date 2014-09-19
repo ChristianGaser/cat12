@@ -50,14 +50,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const int     x  = sL[0];
   const int     y  = sL[1];
   const int     xy = x*y;
-  const int     nr = nrhs;
   
   /* input data */
   float*SEG = (float *)mxGetPr(prhs[0]);
   float LB  = (float) mxGetScalar(prhs[1]);
   float HB  = (float) mxGetScalar(prhs[2]);
   float TH  = (float) mxGetScalar(prhs[3]); if ( TH>=0.5 || TH<0.0001 ) mexErrMsgTxt("ERROR:laplace3: threshhold must be >0.0001 and smaller than 0.5\n");
-  float BD  = HB-LB;
   const int sS[] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
   double*S = mxGetPr(SS);
@@ -65,9 +63,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = { -1, 1, -x, x, -xy, xy};  
-  const float ND[]  = {1/abs2((float)S[0]),1/abs2((float)S[0]), 1/abs2((float)S[1]),1/abs2((float)S[1]), 1/abs2((float)S[2]),1/abs2((float)S[2])};
   const int   sN = sizeof(NI)/4;    
-  unsigned int i, n;
+  int i, n;
   
   /* output data */
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
@@ -77,7 +74,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float  *L1 = (float *)mxGetPr(plhs[0]);
   float  *L2 = (float *)mxGetPr(plhs[1]);
   bool   *LN = (bool  *)mxGetPr(plhs[2]);
-  float  *Lt;
   
   /* intitialisiation */
   for (i=0;i<nL;i++) 
@@ -87,7 +83,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( (SEG[i]>LB) && (SEG[i]<HB) ) LN[i]=1; else LN[i]=0;
   }
 
-  int u,v,w,nu,nv,nw,ni,stop=0;
+  int u,v,w,nu,nv,nw,ni;
   float Nn, diff, maxdiffi, maxdiff=1;
   while ( maxdiff > TH ) 
   {

@@ -82,8 +82,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   if ( dL  != 3 || mxIsSingle(prhs[0])==0)        mexErrMsgTxt("ERROR:vbm_vol_median3: first input must be a single 3d matrix\n");
   if ( nrhs>1) {
-    const mwSize *sBi = mxGetDimensions(prhs[1]);
-    const int     dBi = mxGetNumberOfDimensions(prhs[1]);
     const int     nBi = (int) mxGetNumberOfElements(prhs[1]);
     
     if ( mxGetNumberOfDimensions(prhs[1]) != 3 ) mexErrMsgTxt("ERROR:vbm_vol_median3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
@@ -91,8 +89,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( nL != nBi)                              mexErrMsgTxt("ERROR:vbm_vol_median3: second input must be a logical 3d matrix with equal size than input 1\n");
   } 
   if ( nrhs>2) {
-    const mwSize *sBn = mxGetDimensions(prhs[2]);
-    const int     dBn = mxGetNumberOfDimensions(prhs[2]);
     const int     nBn = (int) mxGetNumberOfElements(prhs[2]); 
     
     if ( mxGetNumberOfDimensions(prhs[2]) != 3 ) mexErrMsgTxt("ERROR:vbm_vol_median3: third input must be 3d - to use a later parameter use ''true(size( input1 ))'\n");

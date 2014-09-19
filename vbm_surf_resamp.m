@@ -37,14 +37,16 @@ for i=1:size(P,1)
   
   k = strfind(name,'.');
   pname = ff(k(1)+1:k(2)-1);
-  Pcentral   = strrep(name,pname,'central');
+  Pcentral   = [strrep(name,pname,'central') '.gii'];
   Psphere    = fullfile(pp,strrep(Pcentral,'central','sphere'));
   Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
   Presamp    = fullfile(pp,strrep(Pcentral,'central','resampled'));
   Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
+  Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
   Pfwhm      = fullfile(pp,[sprintf('s%gmm.',fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
+  Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
   Pcentral   = fullfile(pp,Pcentral);
-  Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere']);
+  Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.gii']);
   
   fprintf('Resample %s\n',deblank(P(i,:)));
 

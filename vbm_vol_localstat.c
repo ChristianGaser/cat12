@@ -79,7 +79,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = (int) mxGetNumberOfElements(prhs[0]);
-  const mwSize *sB = mxGetDimensions(prhs[0]);
   const int     dB = mxGetNumberOfDimensions(prhs[0]);
   const int     nB = (int) mxGetNumberOfElements(prhs[0]);
   int nh, st;
@@ -96,15 +95,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int NVs=(int) (2*nh+1)*(2*nh+1)*(2*nh+1);
 
-  float NVstdth,nx,NVnmax; 
-  float stdth = (float) 0.90; /*1-1/nh; 1 - 1/(2*nh+1); (2*nh+1)); */
-  float DV[9261],NV[9261],NVn[9261],GV[9261],DN[9261], NVmd, NVmn, NVstd; /* nmax ==10 */
+  float nx; 
+  float NV[9261],DN[9261], NVmd, NVmn, NVstd; /* nmax ==10 */
   float stdd[3],stdp[3],stdn[3];
   int   stddc[3],stdpc[3],stdnc[3];
   int   di,i,j,k,ind,ni,x,y,z,n,nn,md; /*,HIST1[1000],HIST2[1000]; */
-  float stdm[2];
   
   /* in- and output */
   float *D = (float *) mxGetPr(prhs[0]);
@@ -120,7 +116,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	} 
   
   
-  int n1i,n2i; 
   int HISTmax=256; /* HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
   int HISTmin=0;
 

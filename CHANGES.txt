@@ -4960,3 +4960,104 @@ M       vbm_vol_partvol.m
 
 ------------------------------------------------------------------------
 r602 | dahnke | 2014-09-16 16:10:52
+
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       MrfPrior.c
+M       Pve.c
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       compile.m
+ M      compile_test_debug.m
+D       fsaverage/lh.central
+D       fsaverage/lh.sphere
+A       fsaverage/lh.sphere.gii
+D       fsaverage/rh.central
+D       fsaverage/rh.sphere
+A       fsaverage/rh.sphere.gii
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+M       sanlmMex.mexa64
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexa64
+M       sanlmMex_noopenmp.mexglx
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       sanlm_float.c
+M       spm_vbm12.m
+M       tbx_cfg_vbm.m
+M       vbdist.c
+M       vbdist.mexa64
+M       vbdist.mexmaci64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm12.man
+M       vbm_surf_createCS.m
+M       vbm_surf_parameters.m
+M       vbm_surf_resamp.m
+M       vbm_vol_downcut.c
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.c
+M       vbm_vol_eidist.mexa64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_genus0.c
+M       vbm_vol_genus0.mexa64
+M       vbm_vol_genus0.mexmaci64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.c
+M       vbm_vol_gradient3.mexa64
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.c
+M       vbm_vol_laplace3.mexa64
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.c
+M       vbm_vol_laplace3R.mexa64
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.c
+M       vbm_vol_localstat.mexa64
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.c
+M       vbm_vol_median3.mexa64
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.c
+M       vbm_vol_simgrow.mexa64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) CAT is now using gifti formaz as default because fucking windows
+    was not accepting freesurfer files.
+(2) Updated surface filenames to gifti.
+(3) Removed parameters bb and vox from GUI.
+(4) No distiction at GUI level whether estimate or write segmentations.
+(5) Handling of sanlm/ornlm flags was still not yet correct. 
+(6) Added strict testing in compile script.
+(7) Cleaned some code according to new warnings from #6.
+(8) Recompiled all CAT- and mex-files.
+
+------------------------------------------------------------------------
+r603 | gaser | 2014-09-19 10:30:56
