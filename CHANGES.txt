@@ -5098,3 +5098,11 @@ Dartel was wrongly deselected if surfaces awere written, but no normalized
 images. 
 ------------------------------------------------------------------------
 r607 | gaser | 2014-09-22 13:29:28
+
+M       CHANGES.txt
+A       vbm_surf_resamp_freesurfer.m
+
+Added vbm_surf_resamp_freesurfer.m to resample freesurfer data to gifti.
+
+------------------------------------------------------------------------
+r608 | gaser | 2014-09-22 13:45:12
