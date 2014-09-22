@@ -165,12 +165,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
     CS.vertices = CS.vertices + repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1); 
 
-    % use only one major object
-      %vbm_io_FreeSurfer('write_surf',Praw,CS);
-      %cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon doesn't works here
-      %[ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-      %CS = vbm_io_FreeSurfer('read_surf',Praw); 
-
     % correct the number of vertices depending on the number of major objects
     if opt.reduceCS>0, 
       switch opt.surf{si}
@@ -179,16 +173,9 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       end
     end
     
-    % transform coordinates and do manual flipping of data if negative values for scaling are found
-    [ix,iy] = find(vmat(:,1:3) == -1);
-    if ~isempty(ix)
-      vmat(ix,:) = -1*(vmat(ix,:));
-      CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-      CS.vertices(:,ix) = -1*CS.vertices(:,ix);
-    else    
-      CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
-    end
-    save(gifti(struct('faces',CS.faces,'vertices',CS.vertices,'mat',vmat)),Praw,'ASCII');
+    % transform coordinates
+    CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
+    save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
 
     % spherical surface mapping 1 of the uncorrected surface for topology correction
     %stime = vbm_io_cmd('  Initial spherical mapping');
