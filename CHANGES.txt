@@ -5090,3 +5090,11 @@ Force saving compressed gifti because ASCII format caused trouble with CAT.
  
 ------------------------------------------------------------------------
 r606 | gaser | 2014-09-22 13:17:19
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+Dartel was wrongly deselected if surfaces awere written, but no normalized
+images. 
+------------------------------------------------------------------------
+r607 | gaser | 2014-09-22 13:29:28

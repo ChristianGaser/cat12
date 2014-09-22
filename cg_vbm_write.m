@@ -102,7 +102,7 @@ vbm.open_th = 0.25; % initial threshold for skull-stripping
 vbm.dilate = 1; % number of final dilations for skull-stripping
 
 if do_dartel
-  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc;
+  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.extopts.surface;
   need_dartel = need_dartel || any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
   if ~need_dartel
       fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
