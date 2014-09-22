@@ -5082,3 +5082,11 @@ Manual flipping of vertices according to vmat in vbm_surf_createCS.m did
 not considered all potential cases.
 ------------------------------------------------------------------------
 r605 | gaser | 2014-09-19 15:53:35
+
+M       CHANGES.txt
+M       vbm_surf_createCS.m
+
+Force saving compressed gifti because ASCII format caused trouble with CAT.
+ 
+------------------------------------------------------------------------
+r606 | gaser | 2014-09-22 13:17:19
