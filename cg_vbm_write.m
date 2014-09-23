@@ -1466,7 +1466,7 @@ if do_cls && vbm.print
   end
   if numel(vbm_warnings)>1
     str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
-    for wi=2:vbm_warnings
+    for wi=2:numel(vbm_warnings)
       shorter = vbm_warnings(mi).identifier; 
       dots = strfind(':',shorter);
       shorter = shorter(dots(end-1):end);

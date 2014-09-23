@@ -5106,3 +5106,12 @@ Added vbm_surf_resamp_freesurfer.m to resample freesurfer data to gifti.
 
 ------------------------------------------------------------------------
 r608 | gaser | 2014-09-22 13:45:12
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm12.man
+
+Removed error in cg_vbm_write.m for undefined method 'colon'.
+
+------------------------------------------------------------------------
+r609 | gaser | 2014-09-23 16:42:50
