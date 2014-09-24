@@ -5275,3 +5275,14 @@ M       vbm_vol_simgrow.mexw64
 
 ------------------------------------------------------------------------
 r612 | gaser | 2014-09-24 17:17:01
+
+M       CHANGES.txt
+D       avgT1_Dartel_IXI550_MNI152.nii
+M       cg_vbm_write.m
+
+(1)  Removed 3rd noise correction after LAS.
+(2)  Corrected intensity normalization error in 7T data. 
+(3)  Removed old average T1 IXI image in VBM main directory. 
+     A new average T1 can be found in the "template_1.50mm" directory. 
+------------------------------------------------------------------------
+r613 | dahnke | 2014-09-24 18:21:36
