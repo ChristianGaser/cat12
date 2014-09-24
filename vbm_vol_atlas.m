@@ -73,7 +73,7 @@ function vbm_vol_atlas(atlas,refinei)
   if isempty(P) || isempty(PA), return; end
   
   
-  recalc = 1; 
+  recalc = 0; 
   mod    = 0; % modulation of each label map? .. do not work yet ... see cg_vbm_defs
   if mod, modm='m'; else modm=''; end %#ok<UNRCH>
   
@@ -688,7 +688,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   
   %% 3d-label map
   % --------------------------------------------------------------------
-  M = vbm_vol_morph((Y/numel(P))>0.5,'labclose'); 
+  M = smooth3(vbm_vol_morph((Y/numel(P))>0.1,'labclose',1))>0.2; 
   
   N             = nifti;
   N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VC(1).dim(1:3),...
