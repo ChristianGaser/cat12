@@ -3,9 +3,9 @@ function vbm_surf_resamp_freesurfer(vargin)
 % space and smooth it.
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: vbm_surf_resamp_freesurfer.m 584 2014-03-12 16:59:22Z gaser $
+% $Id$
 
-rev = '$Rev: 584 $';
+rev = '$Rev$';
 
 if nargin == 1
   Psubj = char(vargin.data_fs);
