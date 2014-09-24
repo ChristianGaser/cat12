@@ -142,7 +142,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       if ~isstruct(varargin{1})
         error('MATLAB:vbm_stat_marks:input','Second input has to be a structure!\n');
       end
-      if numel(varargin)>1, method = varargin{2}; else method = 'spm'; end
+      if numel(varargin)>1, method = varargin{2}; else method = 'vbm12'; end
       CJVpos = find(cellfun('isempty',strfind(def.QS(:,2),'CJV'))==0);
       MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
       switch method
