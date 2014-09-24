@@ -40,7 +40,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
     Vref = spm_vol(char(Pref));
   end
   if ~exist('methodname','var'), methodname=''; else methodname=[' (' methodname ')']; end
-  if isempty(methodname), methodname = spm_str_manip(spm_str_manip(P(1,:),'h'),'l20'); end
+  if isempty(methodname), methodname = ['(' spm_str_manip(spm_str_manip(P(1,:),'h'),'l20') ')']; end
   if ~exist('verb','var'), verb=1; end
   if isempty(V) || isempty(Vref), return; end 
   
@@ -67,23 +67,27 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
   
   estr=sprintf('%s\n%s\n\n',spm_str_manip(P(1,:),'h'),Vref(1).fname);
   %%
-  spaces = 80; 
+  spaces = 50; 
   for nc=1:(ncls>1 && nargout>2)+1  
   % create header  
-    fprintf('Number of Classes: %0.0f\n\n',ncls);
+    fprintf('vbm_tst_calc_kappa with %d classes.\n',ncls);
     
     switch ncls
       case 0, txt{1}='Error ground truth empty!'; continue
-      case 1, tab = {['Name' methodname],'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
-              txt{1} = sprintf(sprintf('\\n%%%ds\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\n',spaces),...
+      case 1, tab = {['File ' sprintf(sprintf('%%%ds',spaces-5),methodname)],...
+                    'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
+              txt{1} = sprintf(sprintf('\\n%%%ds%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\t%%6s\\n',spaces),...
                 estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
-      case 3, tab = {['Name' methodname],'k(C)','k(G)','k(W)','k(GW)','RMS(C)','RMS(G)','RMS(W)','RMS(p0)'};  
-              txt{1} = sprintf(sprintf('\\n%%%ds\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\n',spaces),...
-                estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9}); 
+              k = zeros(n,8);
+      case 3, tab = {['File ' sprintf(sprintf('%%%ds',spaces-5),methodname)],...
+                    'K(C)','K(G)','K(W)','K(CGW)','K(B)','RMS(C)','RMS(G)','RMS(W)','RMS(CGW','RMS(B)'};
+              txt{1} = sprintf(sprintf('\\n%%%ds%%s\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s|\\t%%s\\t%%s\\t%%s\\t%%s\\t%%s\\n',spaces),...
+                estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9},tab{10},tab{11}); 
+              k = zeros(n,10);
       %otherwise, 
         %fprintf('Ground truth error');  continue; %error('unallowed number of classes');
     end
-    txt{2} = ''; k = zeros(n,8);
+    txt{2} = ''; 
     if verb && ~isempty(txt{1}), fprintf(txt{1}); end
 
 
@@ -93,6 +97,8 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
       val(i).fname = V(i).fname;
       val(i).path  = pth;
       val(i).name  = name;
+      fnamestr     = [spm_str_manip(pth,sprintf('k%d',floor(spaces/3) - 1)),'/',...
+                      spm_str_manip(name,sprintf('k%d',spaces - floor(spaces/3)))];
        switch ncls
         case 1
           %if length(Vref)==n,  vol1 = spm_read_vols(Vref(i))/255+1;
@@ -110,7 +116,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
           FP     = confusion(1,2); FN = confusion(2,1);
           k(i,:) = [kappa_all,jaccard(1),dice(1),sensit(1),sensit(2),FP,FN,FN/(FN+FP)];
           txti   = sprintf(sprintf('%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%6.0f\\t%%6.0f\\t%%%3.4f\\n',spaces),...
-            name(1:min(numel(name),spaces)),k(i,:)); 
+            fnamestr,k(i,:)); 
 
           val(i).BE  = struct('kappa',kappa_all,'accuracy',accuracy_all, ...
                        'FP',FP,'FN',FN, ...
@@ -128,12 +134,13 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
 
           for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
           c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))>=c)+1), 2); 
-          bth=1;     kappa_all(1,4) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
+          bth=1;     kappa_all(1,5) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
+          kappa_all(1,4) = mean(kappa_all(1,1:3)); 
 
-          rms = calcRMS(vol1,vol2);
+          rms = calcRMS(vol1,vol2); rms = [rms(1:3) mean(rms(1:3)) rms(4)];
           k(i,:) = [kappa_all,rms];
-          txti   = sprintf(sprintf('%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n', ...
-            spaces),name(1:min(numel(name),spaces)),k(i,:)); 
+          txti   = sprintf(sprintf('%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f|\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n', ...
+            spaces),fnamestr,k(i,:)); 
 
           val(i).SEG = struct('kappa',kappa_all(1:3),'rms',rms(1:3),'kappaGW',kappa_all(4),'rmsGW',rms(4));
         otherwise
@@ -153,8 +160,8 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb)
                              '%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%6.0f\\t%%6.0f\\t%%3.4f\\n\\n'], ...
                              spaces),'mean',mean(k,1),'std',std(k,1,1));
       case 3, txt{3} = sprintf(sprintf( ...
-                         ['\\n%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n' ...
-                             '%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n\\n'], ...
+                         ['\\n%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n' ...
+                             '%%%ds\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\t%%3.4f\\n\\n'], ...
                              spaces),'mean',mean(k,1),'std',std(k,1,1));    
     end
     if verb, fprintf(txt{3}); end; tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   

@@ -37,10 +37,10 @@ function varargout=vbm_tst_SRS
   %   'Bert'    0.75    1
 %      'NIH'     0.75    1
 %      'CG'      0.75    1 
-%      'Tohoku'  0.50    0.8
+      'Tohoku'  0.50    0.8
 %      'ALVIN'   0.75    1
 %      'XNAT'    0.75    1
-     'RD'      0.75    1
+ %    'RD'      0.75    1
    %  'ThomasM' 0.75    0.8
    %  'ThomasA' 0.75    0.8
    %  'ADB-SRS' 1.00    1% NIH

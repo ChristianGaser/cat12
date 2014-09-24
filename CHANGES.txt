@@ -5125,3 +5125,23 @@ Modified CAT_FixTopology.c in CAT to consider issues with large defects.
 
 ------------------------------------------------------------------------
 r610 | gaser | 2014-09-24 10:17:55
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+A  +    templates_1.50mm/Template_T1_IXI555_MNI152.nii
+D       templates_1.50mm/Template_vbm12R593a_IXI556_MNI152_T1.nii
+M       vbm_plot_boxplot.m
+M       vbm_stat_marks.m
+M       vbm_tst_SRS.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_qa.m
+M       vbm_vol_atlas.m
+
+(1)  Updated VBM report.
+(2)  Added comments in "vbm_cg_defaults".
+(3)  Corrected output of "vbm_tst_calc_kappa".
+(4)  Updated QA functions and ratings.
+
+------------------------------------------------------------------------
+r611 | dahnke | 2014-09-24 16:33:55

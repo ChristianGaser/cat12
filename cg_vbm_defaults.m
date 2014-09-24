@@ -14,12 +14,12 @@ global vbm
 % Estimation options
 %=======================================================================
 vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - [1 1 2 3 4 2];[2 2 2 3 4 2];[3 3 2 3 4 2];
+vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3 WM classes for robustness
 vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';
-vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation
-vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller for stronger bias fields
-vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower for stronger bias fieds, but look for overfitting in subcortical GM
-vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better' and slower
+vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
+vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller values for stronger bias fields
+vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fieds, but look for overfitting in subcortical GM (values <50 mm)
+vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
 
 
 % Writing options
@@ -84,6 +84,7 @@ vbm.output.atlas.warped = 0;
 vbm.output.atlas.dartel = 0; 
 
 % preprocessing changes map
+% this is the map of the MPC QA measure   
 vbm.output.pc.native = 0;
 vbm.output.pc.warped = 0;
 vbm.output.pc.dartel = 0;
