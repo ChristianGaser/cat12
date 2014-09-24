@@ -34,10 +34,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef _WIN32 
-#define isnan(x) _isnan(x)
-#endif
-
 #ifdef _OPENMP
 #include "omp.h"
 #endif
@@ -687,7 +683,11 @@ if (rician)
      {
        SNR = (double)means[i]/sqrt((double)variances[i]);      
        bias[i] = 2*(variances[i]/(float)Epsi(SNR));      
-/*       if (!isnan(bias[i])) bias[i] = 0.0;     */
+#if defined(_WIN32)
+       if (_isnan(bias[i])) bias[i] = 0.0;     
+#else
+       if (isnan(bias[i])) bias[i] = 0.0;     
+#endif
      }
   }
 }

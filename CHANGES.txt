@@ -5126,22 +5126,152 @@ Modified CAT_FixTopology.c in CAT to consider issues with large defects.
 ------------------------------------------------------------------------
 r610 | gaser | 2014-09-24 10:17:55
 
+M       AmapMex.mexmaci64
+M       AmapMex.mexw32
+M       AmapMex.mexw64
 M       CHANGES.txt
-M       cg_vbm_defaults.m
-M       cg_vbm_write.m
-A  +    templates_1.50mm/Template_T1_IXI555_MNI152.nii
-D       templates_1.50mm/Template_vbm12R593a_IXI556_MNI152_T1.nii
-M       vbm_plot_boxplot.m
-M       vbm_stat_marks.m
-M       vbm_tst_SRS.m
-M       vbm_tst_calc_kappa.m
-M       vbm_tst_qa.m
-M       vbm_vol_atlas.m
+M       compile.m
+M       ornlmMex.mexmaci64
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+M       sanlmMex.mexa64
+M       sanlmMex.mexglx
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexa64
+M       sanlmMex_noopenmp.mexglx
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       sanlm_float.c
+M       vbdist.mexglx
+M       vbdist.mexmaci64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm_vol_downcut.mexglx
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexglx
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_genus0.mexglx
+M       vbm_vol_genus0.mexmaci64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexglx
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexglx
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexglx
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexglx
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexglx
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexglx
+M       vbm_vol_simgrow.mexmaci64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
 
-(1)  Updated VBM report.
-(2)  Added comments in "vbm_cg_defaults".
-(3)  Corrected output of "vbm_tst_calc_kappa".
-(4)  Updated QA functions and ratings.
+(1) SANLM-Filter had issues in white matter because of error in NAN.
+(2) Recompiled all mex-files.
 
 ------------------------------------------------------------------------
-r611 | dahnke | 2014-09-24 16:33:55
+r611 | gaser | 2014-09-24 17:16:19
+
+M       AmapMex.mexmaci64
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       compile.m
+M       ornlmMex.mexmaci64
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+M       sanlmMex.mexa64
+M       sanlmMex.mexglx
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexa64
+M       sanlmMex_noopenmp.mexglx
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       sanlm_float.c
+M       vbdist.mexglx
+M       vbdist.mexmaci64
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm_vol_downcut.mexglx
+M       vbm_vol_downcut.mexmaci64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexglx
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_genus0.mexglx
+M       vbm_vol_genus0.mexmaci64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexglx
+M       vbm_vol_gradient3.mexmaci64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexmaci64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexglx
+M       vbm_vol_laplace3.mexmaci64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexglx
+M       vbm_vol_laplace3R.mexmaci64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexglx
+M       vbm_vol_localstat.mexmaci64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexglx
+M       vbm_vol_median3.mexmaci64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexmaci64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexmaci64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexglx
+M       vbm_vol_simgrow.mexmaci64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) SANLM-Filter had issues in white matter because of error in NAN.
+(2) Recompiled all mex-files.
+
+------------------------------------------------------------------------
+r612 | gaser | 2014-09-24 17:17:01
