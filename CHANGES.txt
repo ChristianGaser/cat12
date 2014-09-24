@@ -5115,3 +5115,13 @@ Removed error in cg_vbm_write.m for undefined method 'colon'.
 
 ------------------------------------------------------------------------
 r609 | gaser | 2014-09-23 16:42:50
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       spm_vbm12.m
+MM      vbm_surf_resamp_freesurfer.m
+
+Modified CAT_FixTopology.c in CAT to consider issues with large defects.
+
+------------------------------------------------------------------------
+r610 | gaser | 2014-09-24 10:17:55
