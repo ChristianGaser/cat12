@@ -442,10 +442,10 @@ if vbm.sanlm>0 && vbm.sanlm<3
   clear Yms BB;
   fprintf('%4.0fs\n',etime(clock,stime));  
 elseif vbm.sanlm>2
-  noise2 = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
-  stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',noise2));
+  ornlmstr = min(1/6,1/3 * 1/prod(vx_vol) * mean([std(Ym(Ycls{1}(:)>128)),std(Ym(Ycls{2}(:)>128))]));
+  stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',ornlmstr));
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-  Ymss = ornlmMex(Yms,3,1,noise2); 
+  Ymss = ornlmMex(Yms,3,1,ornlmstr); 
   Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
@@ -1156,7 +1156,7 @@ end
 %  ---------------------------------------------------------------------
 stime = vbm_io_cmd('Quality Control');; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
-qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0));
+qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0,'method','vbm12'));
 clear Yo Ybf Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));
 
@@ -1389,7 +1389,7 @@ clear wYp0 wYcls wYv
 %% ---------------------------------------------------------------------
 %  evaluate measurements and write XML
 %  ---------------------------------------------------------------------
-qam = vbm_stat_marks('eval',opt.vbmi,qa);;
+qam = vbm_stat_marks('eval',opt.vbmi,qa,struct('method','vbm12'));;
  
 vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
   struct('qa',qa,'qam',qam),'write+');
@@ -1405,30 +1405,36 @@ if do_cls && vbm.print
   
   
   %% create report text
-	tpm_name = spm_str_manip(res.tpm(1).fname,'k40d');
-	dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
-  
-	str = [];
-	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %d',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
-	str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(vbm.dartelwarp+1,:)))];
-	str = [str struct('name', 'Tissue Probability Map:','value',sprintf('%s',tpm_name))];
-	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
-	str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',vbm.reg))];
-	str = [str struct('name', 'Bias FWHM:','value',sprintf('%d',job.opts.biasfwhm))];
-    if vbm.sanlm>0 && vbm.sanlm<3
-      str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + MRF(%0.2f)',mrf))];
-    elseif vbm.sanlm>2
-      str = [str struct('name', 'Noise reduction:','value',sprintf('SANLM + ORNLM + MRF(%0.2f)',job.extopts.mrf))];
-    end
-  
+
   QMC = vbm_io_colormaps('marks+',30);
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-  %mark2str  = @(mark) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%0.1f',color(QMC,mark),mark);
   mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-  
-% Image Quality measures:
-  str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
+	
+    
+  % VBM GUI parameter:
+  % --------------------------------------------------------------------
+	str = [];
+	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
+	%dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
+  %str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(vbm.dartelwarp+1,:)))];
+	%str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',vbm.reg))];
+	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
+  str = [str struct('name', 'Dartel Template:','value',spm_str_manip(vbm.darteltpm,'k40d'))];
+	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
+	str = [str struct('name', 'Bias FWHM / Bias reg.:','value',sprintf('%d / %0.08f',job.opts.biasfwhm,job.opts.biasreg))];
+  str = [str struct('name', 'Noise reduction:','value',...
+           sprintf('%s%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(vbm.sanlm>0))),...
+           spm_str_manip(sprintf(' ORNLM(%0.2f) +',ornlmstr),sprintf('f%d',14*(vbm.sanlm>2))),...
+           ' '.*(vbm.sanlm>0),job.extopts.mrf))];
+  str = [str struct('name', 'LASstr / gcutstr / cleanupstr:','value',sprintf('%0.2f / %0.2f / %0.2f',...
+         job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
+  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; 
+    
+         
+  % Image Quality measures:
+  % --------------------------------------------------------------------
+ 	str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name', ' Voxel Volume:','value', ...
                sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qam.QM.res_vol,char(179)))))];
   str2 = [str2 struct('name', ' Voxel Isotropy:','value', ...   
@@ -1438,11 +1444,12 @@ if do_cls && vbm.print
   str2 = [str2 struct('name',' ICR (bias):','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
   str2 = [str2 struct('name',' MPC (processibility):','value',marks2str(qam.QM.MPC,sprintf('%5.2f',qam.QM.MPC)))];
   str2 = [str2 struct('name',' CJV (processibility):','value',marks2str(qam.QM.CJV,sprintf('%5.2f',qam.QM.CJV)))];
-  str2 = [str2 struct('name','\bf average (RMS):','value',marks2str(qam.QM.avg,sprintf('%5.2f',qam.QM.avg)))];
+  str2 = [str2 struct('name','\bf average (RMS):','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
 
       
-% Subject Measures
-  str3 = struct('name', '\bfSubject Averageness:','value',''); 
+  % Subject Measures
+  % --------------------------------------------------------------------
+  str3 = struct('name', '\bfSubject Mediocrity:','value',''); 
          % sprintf('%s',mark2str2(qam.SM.avg(1),'%0.1f',qam.SM.avg(1))));  
   str3 = [str3 struct('name', ' CGW-Volumes (abs):','value',sprintf('%s %s %s cm%s', ...
           mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
@@ -1464,13 +1471,14 @@ if do_cls && vbm.print
           mark2str2(qam.SM.dist_thickness{1}(1),'%0.2f',qa.SM.dist_thickness{1}(1)),177, ...
           mark2str2(qam.SM.dist_thickness{1}(2),'%0.2f',qa.SM.dist_thickness{1}(2))))];
   end
-  if numel(vbm_warnings)>1
+  if numel(vbm_warnings)>0
+    str3 = [str3 struct('name', '','value','')]; 
     str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
-    for wi=2:numel(vbm_warnings)
-      shorter = vbm_warnings(mi).identifier; 
-      dots = strfind(':',shorter);
+    for wi=1:numel(vbm_warnings)
+      shorter = spm_str_manip(vbm_warnings(mi).identifier,'l20'); 
+      dots    = strfind(':',shorter);
       shorter = shorter(dots(end-1):end);
-      str3 = [str3 struct('name', '','value',shorter)];  %#ok<AGROW>
+      str3    = [str3 struct('name', '','value',shorter)];  %#ok<AGROW>
     end
   end
   
@@ -1511,12 +1519,12 @@ if do_cls && vbm.print
 		  text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
 	  end
 	  for i=1:size(str2,2)  % qa-measurements
-		  text(0.01,0.40-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  text(0.25,0.40-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.01,0.45-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.25,0.45-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
     for i=1:size(str3,2)  % subject-measurements
-		  text(0.51,0.40-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  text(0.80,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.51,0.45-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.80,0.45-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
 	  end
 	  
 	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
@@ -1649,9 +1657,9 @@ if do_cls && vbm.print
   fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
   vbm_io_cprintf(color(QMC,qam.QM.avg), ...
-    sprintf('Overall Image Quality:         %0.1f\n',qam.QM.avg(1)));
+    sprintf('Overall Image Quality:         %0.1f\n',qam.QM.rms));
   vbm_io_cprintf(color(QMC,qam.SM.avg), ...
-    sprintf('Overall Subject Averageness:   %0.1f',qam.SM.avg(1)));
+    sprintf('Overall Subject Averageness:   %0.1f',qam.SM.rms));
   fprintf('\n%s\n\n',repmat('-',1,72));
  
   

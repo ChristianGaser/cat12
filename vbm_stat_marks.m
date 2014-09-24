@@ -64,7 +64,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
 %  % -- further image quality measures on the original image --------------
   % - resolution - 
    'QM'  'res_RMS'               'linear'    [  0.75   2.00]    1 1     'RMS error of voxel size'
-   'QM'  'res_BB'                'normal'    [     0   1000]    1 1     'brain next to the image boundary'
+   'QM'  'res_BB'                'linear'    [   200    500]    1 1     'brain next to the image boundary'
    'QM'  'res_vx_vol'            'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
    'QM'  'res_vol'               'linear'    [  0.50   8.00]    1 0     'voxel volume'
    'QM'  'res_isotropy'          'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
@@ -78,15 +78,13 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'NCR'                   'linear'    [  1/20    1/2]    1 1     'noise to contrast råatio'
    'QM'  'CNR'                   'linear'    [    20      2]    1 1     'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [  1/10      2]    1 1     'inhomogeneity to contrast ratio'
+   'QM'  'ICR'                   'linear'    [  1/10    1/2]    1 1     'inhomogeneity to contrast ratio'
    'QM'  'CIR'                   'linear'    [    10      2]    1 1     'contrast to inhomogeneity ratio'
-  % - artefacts & resolution -
-   'QM'  'NERR'                  'linear'    [   1/5    1/2]    2 1     'noise edge resolution relation'
   % - subject measures / preprocessing measures -
 %   'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
 %   'QM'  'MPC'                   'linear'    [  0.06   0.12]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
-   'QM'  'CJV'                   'linear'    [  0.12   0.36]    2 1     'coefficiant of variation - avg. std in GM and WM'
-   'QM'  'MPC'                   'linear'    [  0.06   0.24]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
+   'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
+   'QM'  'MPC'                   'linear'    [  0.06   0.12]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
    'QM'  'MJD'                   'linear'    [  0.05   0.15]    2 1     'mean jacobian determinant'
    'QM'  'STC'                   'linear'    [  0.05   0.15]    2 1     'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
@@ -111,8 +109,9 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       end
     end
   end
-  def.QM.avg = {'res_RMS','NCR','ICR','MPC','CJV'}; %,'NERR'
-  def.SM.avg = {'vol_rel_CGW'};
+  def.QM.avg  = {'res_RMS','NCR','MPC'}; %,'ICR',,'ICR','CJV'
+  def.QM.avgw = [ 1 1 0 1];
+  def.SM.avg  = {'vol_rel_CGW'};
   
 
   % mark functions
@@ -147,18 +146,21 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       CJVpos = find(cellfun('isempty',strfind(def.QS(:,2),'CJV'))==0);
       MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
       switch method
-        case 'fsl'
-          def.QS{CJVpos,4} = [  0.12   0.36];
-          def.QS{MPCpos,4} = [  0.06   0.24];
-        case 'spm'
-          def.QS{CJVpos,4} = [  0.12   0.36];
-          def.QS{MPCpos,4} = [  0.06   0.24];
+        case 'fsl5'
+          def.QS{CJVpos,4} = [  0.11   0.17];
+          def.QS{MPCpos,4} = [  0.13   0.44];
+        case 'spm8'
+          def.QS{CJVpos,4} = [  0.11   0.17];
+          def.QS{MPCpos,4} = [  0.10   0.27];
+        case 'spm12'
+          def.QS{CJVpos,4} = [  0.11   0.17];
+          def.QS{MPCpos,4} = [  0.11   0.33];  
         case 'vbm8'
-          def.QS{CJVpos,4} = [  0.12   0.36];
-          def.QS{MPCpos,4} = [  0.06   0.24];
+          def.QS{CJVpos,4} = [  0.16   0.22];
+          def.QS{MPCpos,4} = [  0.11   0.81];
         case 'vbm12'
           def.QS{CJVpos,4} = [  0.12  0.18];
-          def.QS{MPCpos,4} = [  0.06  0.12];
+          def.QS{MPCpos,4} = [  0.08  0.15];
         otherwise 
           error('MATLAB:vbm_stat_mark:unknownMethod','Unknown method ''%s'' use ''fsl'',''spm'',''vbm8'',''vbm12''.',method);
       end
@@ -262,10 +264,11 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
             end
           end
 
-
+          QAM.(Qavg{Qavgi}).mean  = min(6,max(1,QAM.(Qavg{Qavgi}).mean));
+          QAM.(Qavg{Qavgi}).max   = min(6,max(1,QAM.(Qavg{Qavgi}).max));
           try
-            QAM.(Qavg{Qavgi}).avg = vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max]);
-            QAM.(Qavg{Qavgi}).rms = sqrt(QAM.(Qavg{Qavgi}).rms);
+            QAM.(Qavg{Qavgi}).avg = min(6,max(1,vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max])));
+            QAM.(Qavg{Qavgi}).rms = min(6,max(1,sqrt(QAM.(Qavg{Qavgi}).rms)));
           catch
             QAM.(Qavg{Qavgi}).avg = nan;
             QAM.(Qavg{Qavgi}).rms = nan;

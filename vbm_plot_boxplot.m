@@ -131,9 +131,9 @@ function [out,s] = vbm_plot_boxplot(data,opt)
   
   % update colortable
   if size(opt.groupcolor,1)==1
-    if size(opt.groupcolor,1)<nc 
-      warning('WARNING:vbm_plot_boxplot:groupcolor','WARNING: To short colortable.'); 
-    end
+    %if size(opt.groupcolor,1)<nc 
+    %  warning('WARNING:vbm_plot_boxplot:groupcolor','WARNING: To short colortable.'); 
+    %end
     opt.groupcolor = repmat(opt.groupcolor(1,:),numel(data),1);
   end
   if numel(opt.sort)>1 && numel(opt.sort) ~= nc
@@ -458,7 +458,7 @@ function [out,s] = vbm_plot_boxplot(data,opt)
       ytick=get(gca,'XTick');
       if numel(ytick)<5, ytick=interp1(ytick,1:0.5:numel(ytick)); elseif numel(ytick)>10, ytick=ytick(1:2:end); end
       if ytick(1)==opt.ylim(1),   ytick(1)=[];   end
-      if ytick(end)==opt.ylim(2), ytick(end)=[]; end
+      if ytick(end)-eps>=opt.ylim(2), ytick(end)=[]; end
       h1=plot([ytick;ytick],repmat([0;numel(opt.names)+1],1,numel(ytick)),'Color',linecolor);
       uistack(h1,'bottom')
     end
