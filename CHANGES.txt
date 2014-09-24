@@ -5286,3 +5286,13 @@ M       cg_vbm_write.m
      A new average T1 can be found in the "template_1.50mm" directory. 
 ------------------------------------------------------------------------
 r613 | dahnke | 2014-09-24 18:21:36
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_stat_marks.m
+
+(1)  Corrected QA execution error. 
+
+
+------------------------------------------------------------------------
+r614 | dahnke | 2014-09-25 01:09:08
