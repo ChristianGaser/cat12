@@ -77,7 +77,7 @@ function compile
       mex CFLAGS='-Wall -fPIC -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c 
   end
   
-  sanlmMex(d0,3,1);
+%  sanlmMex(d0,3,1);
   d{16} = d0;
 
   rand('state',0);
