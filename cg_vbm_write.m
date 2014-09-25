@@ -2477,17 +2477,17 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol
   Ynwm = Ywm & ~Ygm & Yml/3>0.95 & Yml/3<1.2;
   Ynwm = Ynwm | (smooth3(Ywm)>0.6 & Yml/3>5/6); Ynwm(smooth3(Ynwm)<0.5)=0;
   Yngm = Ygm & ~Ywm & Yml/3<0.95; Yngm(smooth3(Yngm)<0.5)=0;
-  Yncm = ~Ygm & ~Ywm & (Yml/3>1/6 | Ycls{3}>128) & Yml/3<0.5 & Yb;
-  Ycls{2} = vbm_vol_ctype(single(Ycls{2}) + (Ynwm & ~Yngm)*256,'uint8');
-  Ycls{1} = vbm_vol_ctype(single(Ycls{1}) + (Yngm & ~Ynwm)*256,'uint8');
-  Ycls{3} = vbm_vol_ctype(single(Ycls{3}) - (Ynwm | Yngm)*256,'uint8');
-  Ycls{3} = vbm_vol_ctype(single(Ycls{3}) + (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
+  Yncm = ~Ygm & ~Ywm & ((Yml/3)>1/6 | Ycls{3}>128) & (Yml/3)<0.5 & Yb;
+  Ycls{2} = vbm_vol_ctype(single(Ycls{2}) + (Ynwm & ~Yngm & Yp0>=2)*256 - (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
+  Ycls{1} = vbm_vol_ctype(single(Ycls{1}) - (Ynwm & ~Yngm & Yp0>=2)*256 + (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
+  %Ycls{3} = vbm_vol_ctype(single(Ycls{3}) - ((Ynwm | Yngm) & Yp0>=2)*256,'uint8');
+  %Ycls{3} = vbm_vol_ctype(single(Ycls{3}) + (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls{1} = vbm_vol_ctype(single(Ycls{1}) - (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls{2} = vbm_vol_ctype(single(Ycls{2}) - (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls2 = {Yngm,Ynwm,Yncm};
   clear Yngm Ynwm Yncm;
   
-  
+  %%
   Yml = Yml/3;
   
   if verb, vbm_io_cmd(' ','','',verb,stime); end
