@@ -5296,3 +5296,11 @@ M       vbm_stat_marks.m
 
 ------------------------------------------------------------------------
 r614 | dahnke | 2014-09-25 01:09:08
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_tst_pre.m
+
+(1)  Corrected error in LAS class correction that cause problems with the WMHC.
+------------------------------------------------------------------------
+r615 | dahnke | 2014-09-25 13:51:10
