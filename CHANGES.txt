@@ -5304,3 +5304,22 @@ M       vbm_tst_pre.m
 (1)  Corrected error in LAS class correction that cause problems with the WMHC.
 ------------------------------------------------------------------------
 r615 | dahnke | 2014-09-25 13:51:10
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_write.m
+M       compile.m
+M       tbx_cfg_vbm.m
+M       vbm12.man
+M       vbm_io_cmd.m
+M       vbm_surf_createCS.m
+
+(1) Corrected output of processing time in cg_vbm_write.m and 
+    vbm_surf_createCS.m.
+(2) Some minor modication to GUI-text.
+(3) Modified compile tool.
+(4) Handling of exlusively saving jacobian was not correct.
+
+
+------------------------------------------------------------------------
+r616 | gaser | 2014-09-29 11:20:33

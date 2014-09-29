@@ -1,7 +1,7 @@
 function stime = vbm_io_cmd(str,style,strlength,verb,stime)
 % ______________________________________________________________________
 % Writes a string str with a specific style or color followed by a set 
-% of blanks to fit a length of strlenght character. 
+% of blanks to fit a length of strlength character. 
 % The style variable can be a color that should be a 1x3 matrix with RGB
 % value from 0 to 1. Otherwise, it can be a str 'error' (red), 'warning'
 % (orange), or 'comment' (blue). If no style is given it is black. 
