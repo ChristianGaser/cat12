@@ -223,7 +223,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     stime = vbm_io_cmd('  Spherical registration');
     cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-    fprintf('%s %4.0fs\n\n',repmat(' ',1,66),etime(clock,stime)); 
+    fprintf('%4.0fs\n',etime(clock,stime)); 
 
     % read final surface and map thickness data
 
