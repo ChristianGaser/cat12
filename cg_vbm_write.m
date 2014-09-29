@@ -321,14 +321,31 @@ for z=1:length(x3),
 end
 spm_progress_bar('clear');
 
-% Normalise to sum to 1
-sQ = (sum(Q,4)+eps)/255; Ycls=cell(1,size(Q,4));
-for k1=1:size(Q,4)
-    Ycls{k1} = vbm_vol_ctype(round(Q(:,:,:,k1)./sQ));
-end
-
+mrf_spm = 1;
 if do_cls
-  clear Q sQ
+    if mrf_spm==0 % Normalise to sum to 1
+      sQ = (sum(Q,4)+eps)/255; Ycls=cell(1,size(Q,4));
+      for k1=1:size(Q,4)
+          Ycls{k1} = vbm_vol_ctype(round(Q(:,:,:,k1)./sQ));
+      end
+      clear sQ
+    else % use spm_mrf to denoise segmentations
+        P = zeros([d(1:3),Kb],'uint8');
+        % Use a MRF cleanup procedure
+        nmrf_its = 10;
+        spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
+        G   = ones([Kb,1],'single')*mrf_spm;
+        vx2 = single(sum(res.image(1).mat(1:3,1:3).^2));
+        for iter=1:nmrf_its,
+            spm_mrf(P,Q,G,vx2);
+            spm_progress_bar('set',iter);
+        end
+        for k1=1:size(Q,4)
+            Ycls{k1} = P(:,:,:,k1);
+        end
+  end
+  
+  clear Q
 end
 
 clear q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
