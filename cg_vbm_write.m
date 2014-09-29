@@ -1402,12 +1402,12 @@ if do_cls && vbm.print
   end
   str = [str struct('name', 'LASstr / gcutstr / cleanupstr:','value',sprintf('%0.2f / %0.2f / %0.2f',...
          job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
-  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; 
+%  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',vbm.vox))]; 
     
          
   % Image Quality measures:
   % --------------------------------------------------------------------
- 	str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
+  str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name', ' Voxel Volume:','value', ...
                sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qam.QM.res_vol,char(179)))))];
   str2 = [str2 struct('name', ' Voxel Isotropy:','value', ...   
