@@ -5335,3 +5335,14 @@ M       vbm_surf_createCS.m
 
 ------------------------------------------------------------------------
 r617 | gaser | 2014-09-29 14:10:48
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm12.man
+
+(1) Again corrected output of processing time in cg_vbm_write.m and 
+    vbm_surf_createCS.m.
+(2) ornlm_str was missing if only SANLM filter was used in cg_vbm_write.m.
+
+------------------------------------------------------------------------
+r618 | gaser | 2014-09-29 15:05:51
