@@ -5355,3 +5355,12 @@ Added denoising of initial spm segmentation using spm_mrf.
 
 ------------------------------------------------------------------------
 r619 | gaser | 2014-09-29 17:13:44
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm12.man
+
+spm_progress_bar was not cleared in cg_vbm_write.m.
+
+------------------------------------------------------------------------
+r620 | gaser | 2014-09-29 17:23:14

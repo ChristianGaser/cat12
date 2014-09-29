@@ -340,6 +340,7 @@ if do_cls
             spm_mrf(P,Q,G,vx2);
             spm_progress_bar('set',iter);
         end
+        spm_progress_bar('clear');
         for k1=1:size(Q,4)
             Ycls{k1} = P(:,:,:,k1);
         end
