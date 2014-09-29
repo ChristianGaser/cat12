@@ -56,8 +56,6 @@ opt.partvol.l1A    = job.extopts.atlas{1,1};
 %%
 
 
-
-
 if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
     tpm = spm_load_priors8(tpm);
 end
@@ -195,7 +193,7 @@ for n=1:N,
 end
 clear d3
 
-do_cls   = any(tc(:)) || any(lb) || any(df) || nargout>=1;
+do_cls   = any(tc(:)) || any(lb) || any(df) || any(jc) || nargout>=1;
 
 prm     = [3 3 3 0 0 0];
 Coef    = cell(1,3);
@@ -437,7 +435,7 @@ if vbm.sanlm>0 && vbm.sanlm<3
   if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
   elseif vbm.sanlm==2, sanlmMex(Yms,3,1);
   end
-  Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;clear
+  Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
   clear Yms BB;
@@ -654,7 +652,7 @@ if do_cls && do_defs,,
   end
   
   % display something
-  stime = vbm_io_cmd(sprintf('Amap without Kmeans with MRF-Filterstrength %0.2f',job.extopts.mrf));       
+  stime = vbm_io_cmd(sprintf('Amap without Kmeans with MRF-Filterstrength %0.2f\n',job.extopts.mrf));       
 
   % do segmentation  
   prob = AmapMex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
@@ -663,11 +661,7 @@ if do_cls && do_defs,,
   % reorder probability maps according to spm order
   prob = prob(:,:,:,[2 3 1]);
   clear vol %Ymb
-  fprintf('%4.0fs\n',etime(clock,stime)); 
-
-
-  
-  
+  fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 
   
   
@@ -956,12 +950,9 @@ if do_cls && do_defs,,
 
 end
 % clear last 3 tissue classes to save memory
+% please do not try to write out these segmentations because class 4-6 are form SPM12
+% and class 1-3 from VBM12 and these are completely different segmentation approaches
 for i=4:6, Ycls{i}=[]; end   
-
-
-
-
-
 
 %% ---------------------------------------------------------------------
 %  Deformation
@@ -1100,7 +1091,7 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a z k1
     
     fprintf(sprintf('%s',repmat('\b',1,it0*39-9)));
-    fprintf('%4.0fs\n',etime(clock,stime));
+    fprintf('\n%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 end
 
 if exist('Yy','var'),
@@ -1130,7 +1121,7 @@ end
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
-stime = vbm_io_cmd('Quality Control');; 
+stime = vbm_io_cmd('Quality Control');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0,'method','vbm12'));
 clear Yo Ybf Yp0 qas;

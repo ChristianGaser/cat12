@@ -152,13 +152,11 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
 
     %% surface coordinate transformations
-    stime = vbm_io_cmd('  Create initial surface');
+    stime = vbm_io_cmd('  Create initial surface'); fprintf('\n');
     vmatBBV = spm_imatrix(V.mat);
 
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
-
-    % surface generation using genus0 approach that does not remove all topology defects but minimizes the number
     [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(Yppi,0.5);
     clear Yppi;
 
@@ -178,7 +176,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
 
     % spherical surface mapping 1 of the uncorrected surface for topology correction
-    %stime = vbm_io_cmd('  Initial spherical mapping');
     cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon works here
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
@@ -191,11 +188,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects0,Pdefects);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     end
-    fprintf('%4.0fs\n',etime(clock,stime)); 
-
+    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 
     %% topology correction and surface refinement 
-    stime = vbm_io_cmd('  Topology correction and surface refinement');
+    stime = vbm_io_cmd('  Topology correction and surface refinement'); fprintf('\n');
     cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     if opt.usePPmap
@@ -214,20 +210,20 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       cmd = sprintf('CAT_BlurSurfHK "%s" "%s" 2',Pcentral,Pcentral);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     end
-    fprintf('%4.0fs\n',etime(clock,stime)); 
+    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 
 
     %% spherical surface mapping 2 of corrected surface
-    stime = vbm_io_cmd('  Spherical mapping');
+    stime = vbm_io_cmd('  Spherical mapping'); fprintf('\n');
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Pcentral,Psphere);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-    fprintf('%4.0fs\n',etime(clock,stime)); 
+    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 
     % spherical registration to fsaverage
     stime = vbm_io_cmd('  Spherical registration');
     cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-    fprintf('%4.0fs\n',etime(clock,stime)); 
+    fprintf('%s %4.0fs\n\n',repmat(' ',1,66),etime(clock,stime)); 
 
     % read final surface and map thickness data
 
