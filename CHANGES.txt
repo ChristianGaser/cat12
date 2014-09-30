@@ -5364,3 +5364,11 @@ spm_progress_bar was not cleared in cg_vbm_write.m.
 
 ------------------------------------------------------------------------
 r620 | gaser | 2014-09-29 17:23:14
+
+M       CHANGES.txt
+M       vbm_spm.m
+
+SPM is saved using spm_get_defaults('mat.format') in spm_vbm.m.
+
+------------------------------------------------------------------------
+r621 | gaser | 2014-09-30 12:16:04
