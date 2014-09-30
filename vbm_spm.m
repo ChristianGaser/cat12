@@ -739,7 +739,7 @@ SPM.swd        = pwd;
 %-Save SPM.mat
 %--------------------------------------------------------------------------
 fprintf('%-40s: %30s','Saving SPM.mat','...writing');                   %-#
-save('SPM.mat','SPM', '-v7.3');
+save('SPM.mat','SPM', spm_get_defaults('mat.format'));
 fprintf('%s%30s\n',repmat(sprintf('\b'),1,30),'...done')                %-#
 
 %-Exit
