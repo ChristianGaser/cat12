@@ -8,7 +8,8 @@ rev = '$Rev$';
 
 SPMid = spm('FnBanner',mfilename,rev);
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','VBM12');
-spm_help('!Disp','vbm12.man','',Fgraph,'Voxel-based morphometry toolbox for SPM12');
+url = fullfile(spm('Dir'),'toolbox','vbm12','vbm12.html');
+spm_help('!Disp',url,'',Fgraph,'Voxel-based morphometry toolbox for SPM12');
 
 fig = spm_figure('GetWin','Interactive');
 h0  = uimenu(fig,...
