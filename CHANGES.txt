@@ -5394,3 +5394,11 @@ Again updated update function and welcome message which is now coded in HTML.
 
 ------------------------------------------------------------------------
 r623 | gaser | 2014-10-01 12:45:03
+
+M       CHANGES.txt
+M       spm_vbm12.m
+
+Again updated update function and welcome message which is now coded in HTML.
+
+------------------------------------------------------------------------
+r624 | gaser | 2014-10-01 12:50:50
