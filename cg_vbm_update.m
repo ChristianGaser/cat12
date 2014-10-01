@@ -78,10 +78,10 @@ end
 
 if update
     d = fullfile(spm('Dir'),'toolbox'); 
-    overwrite = spm_input('Update',1,'m','Do not update|Download zip-file only|Overwrite old VBM12 installation',[-1 0 1],3);
-    switch overwrite
-    case 1
+    overwrite = spm_input('Update',1,'yes|no',[1 0],1);
+    if overwrite
       try
+        lastwarn('');
         % list mex-files and delete these files to prevent that old
         % compiled files are used
         mexfiles = dir(fullfile(d,'vbm12','*.mex*'));
@@ -89,23 +89,33 @@ if update
           name = fullfile(d,'vbm12',mexfiles(i).name);
           spm_unlink(name);
         end
-        fprintf('Download VBM12\n');
+        m = '          Download and install VBM12...\n';
+        if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
         s = unzip([url sprintf('vbm12_r%d.zip',rnew)], d);
-        fprintf('%d files have been updated.\nSPM should be restarted.\n',numel(s));
-        restart = spm_input('Restart SPM',1,'m','no|yes',[0 1],2);
-        if restart
-          rehash
-          toolbox_path_cache
-          eval(['spm fmri']);
-        end
+        m = sprintf('         Success: %d files have been updated.\n',numel(s));
+        if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
+        rehash
+        rehash toolboxcache;
+        toolbox_path_cache
+        eval(['spm fmri']);
       catch
-        fprintf('Update failed: check file permissions. Download zip-file only.\n');
-        web([url sprintf('vbm12_r%d.zip',rnew)],'-browser');
-        fprintf('Unzip file to %s\n',d);
+        le = lasterror;
+        switch le.identifier
+            case 'MATLAB:checkfilename:urlwriteError'
+                fprintf('          Update failed: cannot download update file.\n');
+            otherwise
+                fprintf('\n%s\n',le.message);
+        end
       end
-    case 0
-      web([url sprintf('vbm12_r%d.zip',rnew)],'-browser');
-      fprintf('Unzip file to %s\n',d);
+      [warnmsg, msgid] = lastwarn;
+      switch msgid
+        case ''
+        case 'MATLAB:extractArchive:unableToCreate'
+            fprintf('          Update failed: check folder permission.\n');
+        case 'MATLAB:extractArchive:unableToOverwrite'
+            fprintf('          Update failed: check file permissions.\n');
+        otherwise
+            fprintf('          Update failed: %s.\n',warnmsg);
+      end
     end
-    rehash toolboxcache;
 end
