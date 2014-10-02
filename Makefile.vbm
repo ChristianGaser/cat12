@@ -5,8 +5,8 @@
 VERSION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
-TARGET=/Users/gaser/spm/spm12b/toolbox/vbm12
-TARGET2=/Volumes/UltraMax/spm12b/toolbox/vbm12
+TARGET=/Users/gaser/spm/spm12/toolbox/vbm12
+TARGET2=/Volumes/UltraMax/spm12/toolbox/vbm12
 
 STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/vbm12
 
