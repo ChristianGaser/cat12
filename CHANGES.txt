@@ -5414,3 +5414,12 @@ Added GUI interface.
 
 ------------------------------------------------------------------------
 r625 | gaser | 2014-10-02 15:27:26
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       distribute_to_server.sh
+
+Adapted paths to new SPM12 version (no beta anymore!).
+
+------------------------------------------------------------------------
+r626 | gaser | 2014-10-02 16:28:40
