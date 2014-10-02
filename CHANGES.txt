@@ -5402,3 +5402,15 @@ Again updated update function and welcome message which is now coded in HTML.
 
 ------------------------------------------------------------------------
 r624 | gaser | 2014-10-01 12:50:50
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_defaults.m
+M       spm_vbm12.m
+A       vbm12.fig
+A       vbm12.m
+
+Added GUI interface.
+
+------------------------------------------------------------------------
+r625 | gaser | 2014-10-02 15:27:26
