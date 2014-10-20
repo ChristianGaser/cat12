@@ -5614,3 +5614,12 @@ D       vbm12.txt
 
 ------------------------------------------------------------------------
 r629 | gaser | 2014-10-20 17:10:52
+
+M       CHANGES.txt
+
+(1) Renamed txt folder to html.
+(2) Changed resolution-threshold fro interpolation in cg_vbm_run_job.m.
+(3) Deleted vbm12.txt
+
+------------------------------------------------------------------------
+r630 | gaser | 2014-10-20 17:11:34
