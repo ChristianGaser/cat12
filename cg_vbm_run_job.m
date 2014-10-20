@@ -30,33 +30,26 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
       V = spm_vol(job.channel(n).vols{subj});
       vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
-      if any(vx_vol>3.5)  % to high slice thickness
+      if any(vx_vol>5)  % to high slice thickness
         error('VBM:cg_vbm_write:ToLowResolution', sprintf(...
              ['Voxel resolution has to be better than 3.5 mm in any dimention \n' ...
               'for save VBM preprocessing and a reasonable anatomical analysis! \n' ...
               'This image has got a resolution %0.2fx%0.2fx%0.2f mm%s. '], ... 
                 vx_vol,char(179))); %#ok<SPERR>
       end
-      if prod(vx_vol)>10  % to low voxel volume (smaller than 2x2x2 mm3)
+      if prod(vx_vol)>27  % to low voxel volume (smaller than 3x3x3 mm3)
         error('VBM:cg_vbm_write:ToHighVoxelVolume', ...
              ['Voxel volume has to be smaller than 10 mm%s (around 2x2x2 mm%s) to \n' ...
               'allow a save VBM preprocessing and reasonable anatomical analysis! \n' ...
               'This image has got a voxel volume of %0.2f mm%s. '], ...
               char(179),char(179),prod(vx_vol),char(179));
       end
-      if max(vx_vol)/min(vx_vol)>8 % isotropy
+      if max(vx_vol)/min(vx_vol)>8 % isotropy 
         error('VBM:cg_vbm_write:ToStrongIsotropy', sprintf(...
              ['Voxel isotropy (max(vx_size)/min(vx_size)) has to be smaller 8 to \n' ...
               'allow a save VBM preprocessing and reasonable anatomical analysis! \n' ...
               'This image has got a resolution %0.2fx%0.2fx%0.2f mm%s and a isotropy of %0.2f. '], ...
               vx_vol,char(179),max(vx_vol)/min(vx_vol))); %#ok<SPERR>
-      end
-      if sqrt(mean([2 2 2].^2))>8 % resolution RMS value
-        error('VBM:cg_vbm_write:ToLowRMSResolution', sprintf(...
-             ['Voxel RMS value has to be smaller 2 to allow a save VBM preprocessing and  \n' ...
-              'reasonable anatomical analysis! \n' ...
-              'This image has got a resolution %0.2fx%0.2fx%0.2f mm%s and a RMS value of %0.2f. '], ...
-              vx_vol,char(179),sqrt(mean([2 2 2].^2)))); %#ok<SPERR>
       end
     end
 
@@ -91,7 +84,45 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         fprintf('%4.0fs\n',etime(clock,stime));     
     end
+    
+    
+    %% Interpolation
+    segres = min(cg_vbm_get_defaults('extopts.segres'),cg_vbm_get_defaults('extopts.vox')); 
+    if segres>0  
+      for n=1:numel(job.channel) 
 
+        % prepare header of resampled volume
+        Vi        = spm_vol(job.channel(n).vols{subj}); 
+        vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
+        vx_voli   = max(0.2, min( median(vx_vol) , repmat(segres,1,3) )); % interpolation resolution limits 0.2x0.2x0.2 mm
+
+        % interpolation to similare resolutions only if there are create changes
+        if any((vx_vol ./ vx_voli)>1.2)
+          Vi        = rmfield(Vi,'private'); 
+          imat      = spm_imatrix(Vi.mat); 
+          Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
+          imat(7:9) = vx_voli .* sign(imat(7:9));
+          Vi.mat    = spm_matrix(imat);
+        
+          Vn = spm_vol(job.channel(n).vols{subj}); 
+          Vn = rmfield(Vn,'private'); 
+          if job.vbm.sanlm==0
+            [pp,ff,ee,dd] = spm_fileparts(Vn.fname); 
+            Vi.fname = fullfile(pp,['n' ff ee dd]);
+            job.channel(n).vols{subj} = Vi.fname;
+          end
+        
+          stime = vbm_io_cmd('Intern interpolation');
+          vbm_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
+          
+          fprintf('%4.0fs\n',etime(clock,stime));    
+        end
+        clear Vi Vn;
+      end
+    end
+    
+    
+    %%
     if estwrite % estimate and write segmentations            
 
         % 

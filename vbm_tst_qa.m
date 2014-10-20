@@ -207,6 +207,32 @@ function varargout = vbm_tst_qa(action,varargin)
         res = varargin{4};
         vbm_warnings = varargin{5};
         opt.verb = 0;
+        
+        % reduce to original native space if it was interpolated
+        if any(size(Yp0)~=Vo.dim)
+          [pp,ff,ee] = spm_fileparts(Vo.fname); 
+          Vp0t       = res.image;
+          Vp0t       = rmfield(Vp0t,'private');
+          Vp0t.fname = fullfile(pp,[ff 'tmp' ee]); 
+          Vp0t.dt(1) = 16;
+          
+          % resampling and corrections of the Yp0
+          Vp0t       = spm_write_vol(Vp0t,double(Yp0));
+          [Vtpm,Yp0] = vbm_vol_imcalc(Vp0t,Vo,'i1',struct('interp',6,'verb',0));
+          rf         = 50;
+          Yp0        = single(Yp0);
+          Yp0r       = round(Yp0*rf)/rf;
+          YMR        = false(size(Yp0));
+          for i=1:4, YMR = YMR | (Yp0>(i-1/rf) & Yp0<(i+1/rf)); end
+          Yp0(YMR)   = Yp0r(YMR); clear YMR Ynr;
+          
+          % resampling of the corrected image
+          Vp0t       = spm_write_vol(Vp0t,double(Ym)); 
+          [Vtpm,Ym]  = vbm_vol_imcalc(Vp0t,Vo,'i1',struct('interp',6,'verb',0)); 
+          Ym         = single(Ym);
+          delete(Vp0t.fname);
+        end
+        
       else
         error('MATLAB:vbm_vol_qa:inputerror',...
           'Wrong number/structure of input elements!'); 
@@ -242,8 +268,8 @@ function varargout = vbm_tst_qa(action,varargin)
     Tline2  = sprintf('%s%%%d.%df',Tline2,opt.snspace(2),opt.snspace(3));
     Tavg    = sprintf('%s%%%d.%df',Tavg,opt.snspace(2),opt.snspace(3));
   end
-  Cheader = [Cheader 'mean'];
-  Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'mean');
+  Cheader = [Cheader 'RMS'];
+  Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'RMS');
   Tline   = sprintf('%s%%%d.%df\n',Tline,opt.snspace(2),opt.snspace(3));
   Tline2  = sprintf('%s%%%d.%df\n',Tline2,opt.snspace(2),opt.snspace(3));
   Tavg    = sprintf('%s%%%d.%df\n',Tavg,opt.snspace(2),opt.snspace(3));
@@ -283,15 +309,17 @@ function varargout = vbm_tst_qa(action,varargin)
           else
             error('vbm_tst_qa:noYo','No original image.');
           end
+% tic   
           Yp0 = single(spm_read_vols(spm_vol(Pp0{fi})));
           if ~isempty(Pm{fi}) && exist(Pm{fi},'file')
             Ym  = single(spm_read_vols(spm_vol(Pm{fi})));
           else
             error('vbm_tst_qa:noYm','No corrected image.');
           end
+% toc, tic   
           [QASfi,QAMfi,vbm_qa_warnings{fi}] = vbm_tst_qa('vbm12',Yp0,Vo,Ym,'',vbm_warnings,opt);
 
-          
+     
           QAS = vbm_io_updateStruct(QAS,QASfi,0,fi);
           QAM = vbm_io_updateStruct(QAM,QAMfi,0,fi);
         
@@ -301,7 +329,7 @@ function varargout = vbm_tst_qa(action,varargin)
             qamat(fi,fni)  = QAS(fi).QM.(QMAfn{fni});
             qamatm(fi,fni) = QAM(fi).QM.(QMAfn{fni});
           end
-          mqamatm(fi) = QAM(fi).QM.avg;
+          mqamatm(fi) = QAM(fi).QM.rms;
           mqamatm(fi) = max(0,min(9.5, mqamatm(fi)));
           
           
@@ -320,29 +348,32 @@ function varargout = vbm_tst_qa(action,varargin)
             end
           end
         catch  %#ok<CTCH> ... normal "catch err" does not work for MATLAB 2007a
+          try
           e = lasterror; %#ok<LERR> ... normal "catch err" does not work for MATLAB 2007a
-          switch e.identifier
-            case {'vbm_tst_qa:noYo','vbm_tst_qa:noYm','vbm_tst_qa:badSegmentation'}
-              em=e.identifier;
-            otherwise
-              em=['ERROR:\n' repmat(' ',1,10) e.message '\n'];
-              for ei=1:numel(e.stack)
-                em=sprintf('%s%s%5d: %s\n',em,repmat(' ',1,10),...
-                  e.stack(ei).line(end),e.stack(ei).name);
-              end  
-          end
-          
-          [pp,ff] = spm_fileparts(Po{fi});
-          QAS(fi).FD.fnames = [spm_str_manip(pp,sprintf('k%d',floor( (opt.snspace(1)-19) /3) - 1)),'/',...
-                               spm_str_manip(ff,sprintf('k%d',(opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
-          vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
-             QAS(fi).FD.fnames,[em '\n']));
+         
+            switch e.identifier
+              case {'vbm_tst_qa:noYo','vbm_tst_qa:noYm','vbm_tst_qa:badSegmentation'}
+                em = e.identifier;
+              otherwise
+                em = ['ERROR:\n' repmat(' ',1,10) e.message '\n'];
+                for ei=1:numel(e.stack)
+                  em = sprintf('%s%s%5d: %s\n',em,repmat(' ',1,10),...
+                    e.stack(ei).line(end),e.stack(ei).name);
+                end  
+            end
+
+            [pp,ff] = spm_fileparts(Po{fi});
+            QAS(fi).FD.fnames = [spm_str_manip(pp,sprintf('k%d',floor( (opt.snspace(1)-19) /3) - 1)),'/',...
+                                 spm_str_manip(ff,sprintf('k%d',(opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+            vbm_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
+               QAS(fi).FD.fnames,[em '\n']));
 %            spm_str_manip(Po{fi},['f' num2str(opt.snspace(1) - 14)]),em));
+          end
         end
       end      
       
       
-      
+     
       % sort by mean mark
       % ----------------------------------------------------------------
       if opt.sortQATm && numel(Po)>1
@@ -427,12 +458,12 @@ function varargout = vbm_tst_qa(action,varargin)
         fprintf('Quality Control for %d subject was done in %0.0fs\n', ...
           numel(Pp0),etime(clock,stime)); fprintf('\n');
       end
-      
+  
       
       
     case 'vbm12'
     % estimation of the measures for the single case    
-    
+% toc, tic        
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
@@ -469,7 +500,7 @@ function varargout = vbm_tst_qa(action,varargin)
       end
       clear A
 
-
+      
       %% inti, volumina, resolution, boundary box
       %  ---------------------------------------------------------------
       QAS.SW.vbm_qa_warnings = struct('identifier',{},'message',{});
@@ -477,9 +508,10 @@ function varargout = vbm_tst_qa(action,varargin)
       Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
       
       %  volumina 
-      QAS.SM.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ...
-                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ...
-                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),3))];
+      QAS.SM.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
+                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ... GM 
+                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),3)), ... WM
+                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),4))];  % WMH
       QAS.SM.vol_TIV     =  sum(QAS.SM.vol_abs_CGW); 
       QAS.SM.vol_rel_CGW =  QAS.SM.vol_abs_CGW ./ QAS.SM.vol_TIV;
       
@@ -488,41 +520,76 @@ function varargout = vbm_tst_qa(action,varargin)
       QAS.QM.res_isotropy  = max(vx_vol)./min(vx_vol);
       QAS.QM.res_vol       = prod(abs(vx_vol));
       QAS.QM.res_RMS       = mean(vx_vol.^2).^0.5;
-    
+      QAS.QM.res_MVR       = mean(vx_vol);
+      
       % boundary box - brain tissue next to image boundary
       bbth = round(2/mean(vx_vol)); M = true(size(Yp0));
       M(bbth:end-bbth,bbth:end-bbth,bbth:end-bbth) = 0;
       QAS.QM.res_BB = sum(Yp0(:)>1.25 & M(:))*QAS.QM.res_vol; 
 
       % check segmentation
-      if ( sum(Yp0(:)>2.5 & Yp0(:)<3.5)*prod(vx_vol)/1000 < 100 ) || ...
+      if ( sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000 < 100 ) || ...
          ( sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000 < 100 ) || ... 
          ( sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000 < 50 ) 
         error('vbm_tst_qa:badSegmentation','Bad Segmentation.')
       end
 
       
-      
+  
+% toc, tic      
       %  estimate QA
       %  ---------------------------------------------------------------
       %  reduce resolution
-      [Yo,Ym,Yp0,BB]    = vbm_vol_resize({Yo,Ym,Yp0},'reduceBrain',vx_vol,2,Yp0>0);
-      
+      [Yo,Ym,Yp0,BB]   = vbm_vol_resize({Yo,Ym,Yp0},'reduceBrain',vx_vol,2,Yp0>0.5);
+      [Yo,Ym,Yp0,resr] = vbm_vol_resize({Yo,Ym,Yp0},'reduceV',vx_vol,1,32,'meanm'); vx_vol=resr.vx_volr;
+   
       %% prepare special maps
-      Yp0s = vbm_vol_median3(Yp0,Yp0>0,Yp0>0);
+      Yp0s = vbm_vol_median3(Yp0,Yp0>0.5 & Yp0~=1 & Yp0~=2 & Yp0~=3,Yp0>0.5);
       WMth = vbm_stat_nanmean(Yo(Yp0s(:)>2.75));
-      Yos  = vbm_vol_median3(Yo);
-      Yos  = smoothseg(Yos,Yp0s,0.95,1,1);
+     %Yos  = vbm_vol_median3(Yo,Yp0>0.5,Yp0>0.5);
+      Yos  = smoothseg(Yo,Yp0s,0.75,1,1);
       Yg   = vbm_vol_grad(Yos ./ WMth,vx_vol);
       Ydiv = vbm_vol_div(Yos ./ WMth,vx_vol);
       noise = vbm_stat_nanmedian(Yg(Yp0>2.9));  
+      gth   = max(0.06,min(0.5,noise*3));
       
+      %% bias correction based on the segmentation for correct noise estimation
+      %  ---------------------------------------------------------------
+      if vbm_stat_nanmedian(Ym(Yp0s>2.5))>0.9 &&  vbm_stat_nanmedian(Ym(Yp0s>2.5))<1.1 
+        WI = zeros(size(Yp0s),'single'); 
+        WI(Yp0s>2.5) = Yos(Yp0s>2.5)./Ym(Yp0s>2.5);
+        for si=1:2, WI = vbm_vol_localstat(WI,Yp0s>2.5,2,1); end 
+        WIs  = vbm_vol_approx(WI,4); WI(WI==0)=WIs(WI==0); WI = vbm_vol_smooth3X(WI,2);
+        WI = WI / vbm_stat_nanmedian(WI(Yp0s>0.5));  
+      else
+        WI  = Yo./Ym; WI(isnan(WI) | isinf(WI)) = 0; 
+        WIs = vbm_vol_approx(WI,4); WI(WI==0) = WIs(WI==0); 
+        WI  = vbm_vol_smooth3X(WI,1);
+      end
+      Ybc  = Yo./WI; 
+      Ybs  = Yos./WI; 
+      clear WIs WI;
+      
+      
+
+  
       % tissue segments for contrast estimation etc. 
-      Ywm = Yg<noise*1.5 & Yp0toC(Yp0s,3)>0.8 & (~vbm_vol_morph(Yp0s<2.5 | Yp0s>3.5,'d',1));
+      T3th = [median(Ybs(Yp0toC(Yp0(:),1)>0.5)) median(Ybs(Yp0toC(Yp0(:),2)>0.5)) median(Ybs(Yp0toC(Yp0(:),3)>0.5))]; 
+      
+      Ywm = Yg<gth & Yp0toC(Yp0s,3)>0.8 & (~vbm_vol_morph(Yp0s<2.5 | Yp0s>3.5,'d',1));
       Ywm(smooth3(Ywm)<0.5)=0; Ywm = vbm_vol_morph(Ywm,'l');
+      Ybg  = vbm_vol_morph(Yp0toC(Yp0,2)>0.1 & Ybs>mean(T3th(2)),'o',2/mean(vx_vol));
       Ywmd = vbdist(single(Ywm),Yp0s>1,vx_vol);
-      Ygm = Yg<noise*3.0 & abs(Ydiv)<noise*2 & Yp0toC(Yp0s,2)>0.5 & (~vbm_vol_morph(Yp0s<1.5 | Yp0s>2.5,'d',1) | Yp0toC(Yp0s,2)>0.9) & ~Ywm & Ywmd<8;
-      Ycm = Yg<noise*1.5 & Yp0toC(Yp0s,1)>0.5 & (~vbm_vol_morph(Yp0s<0.5 | Yp0s>1.5,'d',1) | Yp0toC(Yp0s,1)>0.9) & ~Ywm & ~Ygm;
+      Ygm = Yg<gth*2 & abs(Ydiv)<noise*2 & Yp0toC(Yp0s,2)>0.5 & ~Ybg & ...
+            (~vbm_vol_morph(Yp0s<1.5 | Yp0s>2.5,'d',1) | Yp0toC(Yp0s,2)>0.9) & ~Ywm & Ywmd<8;
+          
+          
+      if vbm_stat_nanmedian(Yo(Ygm)) < vbm_stat_nanmedian(Yo(Ywm)) % T1
+        Ycm = Yg<gth & Ydiv>-0.05 & Yp0toC(Yp0s,1)>0.5 & ...
+          (~vbm_vol_morph(Yp0s<0.5 | Yp0s>1.5,'d',1/mean(vx_vol)) | Yp0toC(Yp0s,1)>0.9) & ~Ywm & ~Ygm;
+      else
+        Ycm = Yp0toC(Yp0s,1)>0.5 & (~vbm_vol_morph(Yp0s<0.5,'d',4/mean(vx_vol)) | Yp0toC(Yp0s,1)>0.95) & ~Ywm & ~Ygm;
+      end
       Ycm(smooth3(Ycm)<0.7)=0;
       
       % check for errors
@@ -539,36 +606,22 @@ function varargout = vbm_tst_qa(action,varargin)
         return
       end
 
+% toc, tic
 
-      %% bias correction based on the segmentation for correct noise estimation
-      %  ---------------------------------------------------------------
-      if vbm_stat_nanmedian(Ym(Yp0s>2.5))>0.9 &&  vbm_stat_nanmedian(Ym(Yp0s>2.5))<1.1 
-        WI = zeros(size(Yp0s),'single'); 
-        WI(Yp0s>2.5) = Yos(Yp0s>2.5)./Ym(Yp0s>2.5);
-        for si=1:2, WI = vbm_vol_localstat(WI,Yp0s>2.5,2,1); end 
-        WIs  = vbm_vol_approx(WI,4); WI(WI==0)=WIs(WI==0); WI = vbm_vol_smooth3X(WI,2);
-        WI = WI / vbm_stat_nanmedian(WI(Yp0s>0.5));  
-       % WI = 1; 
-      else
-        WI  = Yo./Ym; WI(isnan(WI) | isinf(WI)) = 0; 
-        WIs = vbm_vol_approx(WI,4); WI(WI==0) = WIs(WI==0); 
-        WI  = vbm_vol_smooth3X(WI,1);
-      end
-      Ybc  = Yo./WI; 
-      Ybs  = Yos./WI; 
-      clear WIs;
 
- 
+
       %% estimate QA for Yo
       % class peak intensity 
-      [Yosr,resYbg] = vbm_vol_resize(Yos,'reduceV',vx_vol,4,32,'meanm'); 
+      % estimate background
+      [Yosr,resYbg] = vbm_vol_resize(Yos,'reduceV',vx_vol,3,32,'meanm'); 
       warning 'off' 'MATLAB:vbm_vol_morph:NoObject'
-      Ybgr = vbm_vol_morph(vbm_vol_morph(Yosr<min([...
+      BGCth = min([...
         vbm_stat_nanmean(Ybs(round(Yp0s(:))==1)),...
         vbm_stat_nanmean(Ybs(round(Yp0s(:))==2)),...
-        vbm_stat_nanmean(Ybs(round(Yp0s(:))==3))])/2, ...
-        'lc',1),'e',1) & ~isnan(Yosr);
-      Ybg = vbm_vol_resize(Ybgr,'dereduceV',resYbg); clear Yosr Ybgr;
+        vbm_stat_nanmean(Ybs(round(Yp0s(:))==3))])/2; 
+      Ybgr = vbm_vol_morph(vbm_vol_morph(Yosr<BGCth,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Yosr);
+      Ybg = vbm_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
+      if sum(Ybg(:))<32, Ybg = vbm_vol_morph(Yosr<BGCth,'lc',1) & ~isnan(Yos); end
       warning 'on'  'MATLAB:vbm_vol_morph:NoObject'
 
       %% (relative) average tissue intensity of each class
@@ -578,8 +631,13 @@ function varargout = vbm_tst_qa(action,varargin)
       GMth  = vbm_stat_nanmedian(Ybs(Ygm(:))); 
 
       QAS.QM.tissue_mn  = ([BGth CSFth GMth WMth]);
-      QAS.QM.tissue_mnr = ([BGth CSFth GMth WMth] - BGth) ./ (WMth-BGth);
-
+      QAS.QM.tissue_mnr = ([BGth CSFth GMth WMth] - BGth) ./ (max([WMth,GMth])-BGth);
+      if WMth>GMth
+        QAS.QM.tissue_weighting = 'T1';
+      elseif WMth<GMth && GMth<CSFth
+        QAS.QM.tissue_weighting = 'inverse';
+      end
+      
       % (relative) standard deviation of each class
       QAS.QM.tissue_std(1) = vbm_stat_nanstd( Ybc(Ybg(:)) );
       for ci=2:4
@@ -589,16 +647,67 @@ function varargout = vbm_tst_qa(action,varargin)
      
       % (relative) mininum tissue contrast ( CSF-GM-WM ) 
       QAS.QM.contrast  = min(abs(diff(QAS.QM.tissue_mn(2:4)))); 
-      QAS.QM.contrastr = min(abs(diff(QAS.QM.tissue_mn(2:4)))) ./ (WMth-BGth);
+      QAS.QM.contrastr = min(abs(diff(QAS.QM.tissue_mn(2:4)))) ./ (max([WMth,GMth])-BGth);
 
-      % noise estimation (original (bias corrected) image)
-      QAS.QM.NCR = estimateNoiseLevel(Ybc,Ywm,2) / QAS.QM.contrast;
+      %% noise estimation (original (bias corrected) image)
+      
+      rms = 2;
+      
+      % WM variance
+      if GMth<WMth % T1
+        Yos1 = Ybc/WMth .* (Ywm & Ybc>WMth); %(0.9*WMth+0.1*GMth));  
+      else
+        Yos1 = Ybc/WMth .* (Ywm & Ybc<WMth); %(0.1*WMth+0.9*GMth));
+      end
+      NCww = sum(Yos1(:)>0); % resolution and noise reduction 
+      [Yos1,YM1] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,2,32,'meanm'); 
+      [Yos2,YM2] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,3,32,'meanm');
+      NCRw = mean([estimateNoiseLevel(Yos1,YM1>0,4,rms), ...
+                   estimateNoiseLevel(Yos2,YM2>0,4,rms)]) * WMth / QAS.QM.contrast *2; % only upper varince
+      clear Yos1 Yos2 YM1 YM2;
+
+      
+      % CSF variance of large ventricle
+      Ycmo = vbm_vol_morph(Ycm,'o',1/mean(vx_vol)); Ycmo = smooth3(Ycmo)>0.7;
+      if GMth<WMth % T1
+        Yos1 = Ybc/WMth .* (Ycmo & Ybc<CSFth); %(0.9*WMth+0.1*GMth));  
+      else
+        Yos1 = Ybc/WMth .* (Ycmo & Ybc>CSFth); %(0.1*WMth+0.9*GMth));
+      end
+      NCwc = sum(Yos1(:)>0);
+      % for typical T2 images we have to much signal in the CSF and
+      % can't use it for noise estimation!
+      if CSFth>GMth, NCwc = 0; end
+      if NCwc>100
+        [Yos1,YM1] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,2,32,'meanm'); 
+        [Yos2,YM2] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,3,32,'meanm');
+        NCRc = mean([estimateNoiseLevel(Yos1,YM1>0,4,rms), ...
+                     estimateNoiseLevel(Yos2,YM2>0,4,rms)]) * WMth  / QAS.QM.contrast*2; % only upper varince
+        clear Yos1 Yos2 YM1 YM2;
+      else
+        NCRc = nan;
+        NCwc = nan;
+      end
+      
+      
+      % BG varianze of large ventricle
+      %NCRb = std(Yo(Ybg))/QAS.QM.contrast;
+      %NCwb = sum(Yo(:)>0);
+      % +NCwg+NCwb 
+      QAS.QM.NCR = NCRw.*(NCww/(NCww+NCwc)) + NCRc.*(NCwc/(NCww+NCwc)); % + ...
+                 %  NCRg.*(NCwg/(NCww+NCwc+NCwg+NCwb)) + NCRb.*(NCwc/(NCww+NCwc+NCwg+NCwb)) ;
+      QAS.QM.NCR = QAS.QM.NCR .* mean(resr.vx_volr)/mean(resr.vx_vol);
+      QAS.QM.NCR = nanmean([NCRw NCRc]);
       QAS.QM.CNR = 1 / QAS.QM.NCR;  
 
-
-      % Bias/Inhomogeneity (original image with smoothed WM segment)
-     % QAS.QM.ICR  = (bias/WMth) / QAS.QM.contrast; 
-      Yosm = vbm_vol_localstat(Yos,Yp0s>2.5,1,3);                      % maximum to avoid GM PVE effect
+      
+    
+      %% Bias/Inhomogeneity (original image with smoothed WM segment)
+      if GMth<WMth % T1
+        Yosm = vbm_vol_localstat(Yos,Yp0s>2.5 & Ybc>mean([GMth,WMth]),1,3);  % maximum to avoid GM PVE effect
+      else
+        Yosm = vbm_vol_localstat(Yos,Yp0s>2.5 & Ybc<mean([GMth,WMth]),1,2);  % minimum to avoid GM PVE effect
+      end  
       Yosm = vbm_vol_resize(Yosm,'reduceV',vx_vol,4,32,'meanm');      % resolution and noise reduction
       for si=1:max(1,min(2,round(QAS.QM.NCR*2))), Yosm = vbm_vol_localstat(Yosm,Yosm>0,1,1); end 
       Yosm = vbm_vol_localstat(Yosm,Yosm>0,10,4); 
@@ -606,20 +715,19 @@ function varargout = vbm_tst_qa(action,varargin)
       QAS.QM.CIR  = 1 / QAS.QM.ICR;
       clear Yos;
       
-   %fprintf('%s: %4.0f %4.0f %4.0f %4.0f - %0.3f - %0.3f\n',pp,QAS.QM.tissue_mn, QAS.QM.NCR * QAS.QM.contrast,QAS.QM.contrast);
+ %fprintf('%s: %4.0f %4.0f %4.0f %4.0f - %0.3f - %0.3f\n',pp,QAS.QM.tissue_mn, QAS.QM.NCR * QAS.QM.contrast,QAS.QM.contrast);
    
-      %% intensity scalling  
-      if ~(vbm_stat_nanmedian(Ym(Yp0s>2.5))>0.9 &&  vbm_stat_nanmedian(Ym(Yp0s>2.5))<1.1)
-        Ybcx = max(0,(Ybc - BGth) / max(eps,WMth - BGth));
-        Yi = vbm_pre_gintnorm(Ybcx,QAS.QM.tissue_mnr);
-        clear Ybcx;
-      else
-        Yi = Ym; 
-      end
-      % tissue blocks without PVE
-      QAS.QM.CJV = (std(Yi(Ygm(:)))/2 + std(Yi(Ywm(:)))/2) * 3;
 
-
+      % CJVs
+      QAS.QM.CJV2  = ( vbm_stat_nanstd(Ybc(Ygm(:))) +  vbm_stat_nanstd(Ybc(Ywm(:)))) ./ ...
+                     (vbm_stat_nanmean(Ybc(Ygm(:))) + vbm_stat_nanmean(Ybc(Ywm(:))));
+      QAS.QM.CJV   = ( vbm_stat_nanstd(Ybc(Yp0toC(Yp0(:),2)>0.5)) +  vbm_stat_nanstd(Ybc(Yp0toC(Yp0(:),3)>0.5))) ./ ...
+                     (vbm_stat_nanmean(Ybc(Yp0toC(Yp0(:),2)>0.5)) + vbm_stat_nanmean(Ybc(Yp0toC(Yp0(:),3)>0.5)));
+      QAS.QM.CJVm2 = ( vbm_stat_nanstd(Ym(Ygm(:))) +  vbm_stat_nanstd(Ym(Ywm(:)))) ./ ...
+                     (vbm_stat_nanmean(Ym(Ygm(:))) + vbm_stat_nanmean(Ym(Ywm(:))));
+      QAS.QM.CJVm  = ( vbm_stat_nanstd(Ym(Yp0toC(Yp0(:),2)>0.5)) +  vbm_stat_nanstd(Ym(Yp0toC(Yp0(:),3)>0.5))) ./ ...
+                     (vbm_stat_nanmean(Ym(Yp0toC(Yp0(:),2)>0.5)) + vbm_stat_nanmean(Ym(Yp0toC(Yp0(:),3)>0.5)));      
+% toc          
       %% STC: subject template conformity 
       %  -------------------------------------------------------------
       Fwrp0 = fullfile(pp,['wrp0' ff ee]);
@@ -657,7 +765,25 @@ function varargout = vbm_tst_qa(action,varargin)
 
       %% PCM: preprocessing change map (8 seconds)
       %  ---------------------------------------------------------------
-      if opt.calc_MPC 
+      if opt.calc_MPC  &&  GMth<WMth % T1
+        
+          %% intensity scalling  
+          if 1
+            %~(vbm_stat_nanmedian(Ym(Yp0s>2.5))>0.9 &&  vbm_stat_nanmedian(Ym(Yp0s>2.5))<1.1)
+            Ybcx = max(0,(Ybc - BGth) / max(eps,max([WMth,GMth]) - BGth));
+            Yi   = vbm_pre_gintnorm(Ybcx,QAS.QM.tissue_mnr);
+            %Yis  = Yi.*(Yp0>0);  sanlmMex_noopenmp(Yis,3,1); Yi(Yp0>0) = Yis(Yp0>0); clear Yis;
+            %Yi   = vbm_vol_median3(Yi,Yp0>0,Yp0>0);
+            %Yi  = smooth3(Yi);
+    %         for ci=1:3
+    %           Yis = vbm_vol_localstat(Yi,Yp0toC(Yp0,ci)>0.9,1,1); 
+    %           Yi(Yp0toC(Yp0,ci)>0.9) = Yis(Yp0toC(Yp0,ci)>0.9); clear Yis;
+    %         end
+            clear Ybcx;
+          else
+            Yi = Ym; 
+          end
+
         % set transformations to subject space for export (20 seconds!)
         if opt.calc_MPC && any(cell2mat(struct2cell(opt.output.pc))) && ...
            (exist(vbm12mat,'file') ||  exist(vbm8mat,'file')) && opt.process~=0 
@@ -686,8 +812,11 @@ function varargout = vbm_tst_qa(action,varargin)
         end
 
         % estimate MPC
-        Ypc = abs(3*min(7/6,Yi  .* (Yp0>1 & Yp0<3.1)) - ...
-                            Yp0 .* (Yp0>1 & Yp0<3.1)); 
+        YM  = Yp0toC(Yp0,3)>0.95 | Yp0toC(Yp0,2)>0.95 | (Yp0toC(Yp0,1)>0.95 & Yi<1.5/3 & Yi>0.5/3); 
+        %YM  = (Yp0>1.5 & Yp0<3.05 & Yg<0.3) | (Yp0toC(Yp0,1)>0.9 & Yi<1.5/3 & Yi>0.5/3 & Yg<0.3);
+        Ypc = zeros(size(Yp0),'single'); Ypc(YM) = abs(3*min(7/6,Yi(YM)) - Yp0(YM));
+        YM  = Yp0>0 & ~YM; Yc = vbm_vol_localstat(Yi,YM,2,1);
+        Ypc(YM) = abs(Yi(YM) - Yc(YM))*3; 
         QAS.QM.MPC = sum(Ypc(:)) ./ sum((Yp0(:)>1 & Yp0(:)<3.1)); 
         if any(cell2mat(struct2cell(opt.output.pc)))
           Ypc = vbm_vol_resize(Ypc,'dereduceBrain',BB); 
@@ -700,15 +829,15 @@ function varargout = vbm_tst_qa(action,varargin)
       else
         QAS.QM.MPC = nan;
       end
-
+  
     %% marks
     QAM = vbm_stat_marks('eval',1,QAS,opt.method);
 
     % export 
     if opt.write_xml
       vbm_io_xml(fullfile(pp,[opt.prefix ff '.xml']),struct('QAS',QAS,'QAM',QAM'),'write+');
-    end 
-
+    end
+    
     clear Yi Ym Yo Yos Ybc
     clear Ywm Ygm Ycsf Ybg
      
@@ -731,7 +860,7 @@ function def=defaults
   def.prefix     = 'vbm_';    % intensity scaled  image
   def.mprefix    = 'm';       % prefix of the preprocessed image
   def.process    = 3;         % used image [ 0=T1 | 1=mT1 | 2=avg | 3=both ] 
-  def.calc_MPC   = 1;
+  def.calc_MPC   = 0;
   def.calc_STC   = 0;
   def.calc_MJD   = 0;
   def.method     = 'spm';
@@ -746,7 +875,7 @@ function def=defaults
   def.MarkColor = vbm_io_colormaps('marks+',40); 
 end
 
-function noise = estimateNoiseLevel(Ym,YM,r,vx_vol)
+function noise = estimateNoiseLevel(Ym,YM,r,rms,vx_vol)
 % ----------------------------------------------------------------------
 % noise estimation within Ym and YM.
 % ----------------------------------------------------------------------
@@ -758,9 +887,12 @@ function noise = estimateNoiseLevel(Ym,YM,r,vx_vol)
   else
     r = min(10,max(max(vx_vol),r));
   end
-   
+  if ~exist('rms','var')
+    rms = 1;
+  end
+  
   Ysd   = vbm_vol_localstat(single(Ym),YM,r,4);
-  noise = vbm_stat_nanstat1d(Ysd(YM),'mean'); 
+  noise = vbm_stat_nanstat1d(Ysd(YM).^rms,'mean').^(1/rms); 
 end
 %=======================================================================
 function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)

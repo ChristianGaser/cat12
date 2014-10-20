@@ -1,0 +1,88 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('contact.jpg') right;">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_SBM.html">Surface-based preprocessing</a>
+      </div>
+    </div>
+  
+    <!-- TEXT 
+      - Gebrauchsanleitung
+      - Parameter
+    --> 
+    <div id="content">
+      <h2>Cortical surface and thickness estimation (in development):</h2>
+      <p>
+        VBM12 also include the estimation of the cortical thickness and central surface of the left and right hemispheres based on the PBT method <a href="http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf">(Dahnke et al. 2012)</a>. 
+        Furthermore, the surface pipeline uses topology correction <a href="http://dbm.neuro.uni-jena.de/pdf-files/Yotter-HBM10.pdf">(Yotter et al. 2011a)</a>, spherical mapping <a href="http://dbm.neuro.uni-jena.de/pdf-files/Yotter-JoN10.pdf">(Yotter et al. 2011b)</a> and estimation of local surface complexity <a href="http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf">(Yotter et al. 2011c)</a> and local gyrification <a href="http://dbm.neuro.uni-jena.de/pdf-files/Luders-NI06.pdf">(Luders et al. 2006)</a>.
+      </p> 
+      
+      <p>Major aspects are:</p>
+      <ol>
+        <li>
+          <h4>PBT (Projection-based Thickness)</h4>
+          <p>
+            The PBT approach use ...</p> 
+        </li>
+        <li>
+          <h4>Topology Correction</h4>
+          <p>
+            Although, the initial PBT surface looks still quite good, the often contain small defects in problematic regions like the hypocampus that have to be removed for a correct spherical projection to the average surface. 
+            VBM12 use a topology correction that based on spherical harmonics to replace affected regions by low bandwidth representations of these regions.
+          </p>
+        </li>
+        <li>
+          <h4>Spherical Mapping</h4>
+          <p>
+            ... 
+          </p>
+        </li>
+        <li>
+          <h4>Folding Measures</h4>
+          <p>
+            ... 
+          </p>
+          <ul>
+            <li>
+              <h5>Surface Complexity</h5>
+              <p>
+                ...  
+              </p>
+            </li>
+            <li>
+              <h5>Local Gyrification (Curvature)</h5>
+              <p>
+                ...
+              </p>
+            <li>
+              <h5>Local Laplacian Gyrification</h5>
+              <p>
+                ...
+              </p>
+            </li>
+          </ul>
+        </li>
+      </ol>
+    </div>  
+  
+    <div id="content"><a href="vbm12_methods.html">< Methods</a></div>    
+    <div id="footer">
+      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>

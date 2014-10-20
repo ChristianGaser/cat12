@@ -1,0 +1,139 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('research.jpg') right;">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_instruction.html">Instruction manual</a> > <a href="vbm12_instruction_PP.html">Preprocessing</a>
+      </div>
+    </div>
+	
+    <!-- Short description of the parameter and their relation to each other -->
+    <div id="content">
+      <h2>Preprocessing</h2>
+      <p>
+        VBM12 preprocessing comprehend methods to reduce image interference, classify the brain and its major tissue classes and normalize the individual anatomy. 
+        Furthermore, it allows creation of the central surface with cortical thickness and folding measures. 
+        The theoretical background can be found in the <a href="vbm12_methods.html">Methods</a> section.
+      </p>
+      
+      <ul>
+        <li>
+          <h4>Estimation options</h4>
+          <p>
+            Although VBM12 use SPM12 preprocessing it apply an independent segmentation approach. 
+            Thus, most parameters were set to SPM default and removed from the GUI. 
+            Modification should be made only by expert users via <a href="matlab:open cg_vbm_defaults;">cg_vbm_defaults</a> file.
+            Please choose the SPM "Tissue Probability Map" and "Affine Registration" for your data.
+            <!-- 
+            For non human TPM see <a href="vbm12_stuff.html">Links, sources, and recommendations</a>.
+            -->
+          </p>
+        </li>
+        <li>      
+          <h4>Extended options</h4>
+          <p>
+            VBM12 use adaptive denoising methods to allow a exact and stable segmentation for different levels of noise.
+          </p>
+          <p>
+            For the Local Adaptive Segmentation, the Skull-Stripping, and of the Cleanup function a strength parameter allows simple modifications, if the default segmentation does not fit for your requirements. 
+            Setting the strength to 0 will deactivate the method. 
+            Values smaller than the default value of 0.5 will run the functions with less power, whereas higher values (maximum=1) will increase the power.
+          </p>
+          <p>
+            For very young children and diseases with strong anatomical properties you may require a special Dartel template.
+            <!-- (see <a>Own VBM12 templates</a>) --> 
+            Be aware of problems with the ROI analysis, because the VBM12 atlas maps are optimized for VBM12 IXI555 template!
+          </p>
+          <p>
+            For regional analysis the Hammers atlas in IXI555 template space allows extraction of values such as thickness.
+            Results were stored in the <i>vbm_*.XML</i> and a csv-file <i>vbmROI*.csv</i> files. 
+            <!--
+            <i>vbmROI[SPACE]_[ATLAS]_*.csv</i> for each atlas map <i>ATLAS</i> and its estimation space [SPACE] (<i>s</i> for subject space and <i>w</i> for normalized space).
+            -->
+            <!--
+            The data can be accessed by external software or by using the <a class="function" href="matlab:vbm_io_xml">vbm_io_xml</a> and <a class="function" href="matlab:vbm_io_csv">vbm_io_csv</a> function.
+             (see <a>Analysis of XML data</a>) 
+             -->
+          </p>
+          <p>
+            VBM12 also allows the creation of the central cortical surface and the estimation of thickness and folding parameters.
+            Surface processing will take around 2 times longer as segmentation only preprocessing (around 1 hour for a standard dataset on a computer of the year 2013).
+          </p>
+        </li>
+        <li>
+          <h4>Writing options</h4>
+          <p>
+            VBM12 allows to write the results of the preprocessing in different spaces - native/subject space, normalized space, modulated normalized space, and DARTEL export. 
+            For most VBM analysis the <i>modulated normalized</i> or <i>normalized</i> space are the best choice.
+            DARTEL export is only required for special analysis (Brain<i>AGE</i>) or for DARTEL template generation. 
+          </p>
+          <p>There are the following map types:</p>
+          <ul>
+            <li>
+              <h5>GM, WM, and CSF class maps (p1, p2, and p3 maps)</h5>
+              <p>
+                The PVE tissue map for each class, similar to the SPM tissue maps c1, c2, and c3.
+              </p>  
+            </li>
+            <li>
+              <h5>PVE label map (p0 maps)</h5>
+              <p>
+                A combination of the tissue maps with background=0, CSF=1, GM=2, and WM=3. 
+                A value of 2.41 will mean that the voxel contain 41% WM and 59% GM. 
+              </p>
+            </li>
+            <li>
+              <h5>Bias corrected (m maps)</h5>
+              <p>
+                Before segmentation VBM12 preprocessing removes image interferences like noise and inhomogeneity from the images. 
+                Furthermore, global and local tissue intensities were normalized (background=0, CSF=1/3, GM=2/3, and WM=1) to allow VBM analysis.
+                The optimized T1-image contain more informations, such as small changes in the WM. 
+                On the other hand, they were also stronger affected by the scan protocol and uncorrected image interferences.
+              </p>
+            </li>
+            <li>
+              <h5>Jacobian determinant</h5>
+              <p>Describes the local volume changes and can be used in a pure deformation based morphometry (DBM) design.</p>
+            </li>
+            <li>
+              <h5>Deformation fields</h5>
+              <p>
+                These fields contain the information to map images from native to MNI space (forward), or from MNI to native space (backward).
+                Use the <i>Deformation Utility</i> to apply deformations to a subject.
+              </p>
+            </li>
+          </ul>
+          <p>
+            The resulting structure of the filenames can be found <a href="VBM12_methods_FF.html">here</a>.
+          </p>
+        </li>
+        <li>      
+          <h4>Expert options</h4>
+          <p> 
+            Further options and parameter such as the SPM12 parameter used for preprocessing are available for expert users via <a href="matlab:open cg_vbm_defaults;">cg_vbm_defaults</a> file.
+          </p>
+        </li>
+      </ul>
+    </div>
+  
+  
+    <div id="content"><a href="vbm12_instruction.html">< Instruction manual</a></div>  
+    <div id="footer">
+      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

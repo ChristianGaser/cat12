@@ -1,0 +1,130 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('research.jpg') right;">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_FAQ.html">FAQ</a> 
+      </div>
+    </div>
+  
+    
+    <div id="content">
+      <h2>FAQ</h2>
+      
+      <h3>Segmentation</h3>
+      <ul>
+        <li>
+          <h4>Do I need further noise or bias corrections?</h4>
+          <p>
+            No, in general we recommend to use the original images without any preprocessing. 
+            Low frequency corrections for inhomogeneity e.g. the N3 algorithm are unproblematic, but not required for most datasets.  
+            Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocess could be helpful if VBM12 show problems.  
+            Try to avoid high frequency corrections or resampling of the data, because this will reduce the ability of the NLM filters. 
+          </p>
+        </li>
+        <li>
+          <h4>The segmentation or surface looks totally wrong.</h4>
+          <p>
+            Check orientation and visual image quality of the affected images. 
+            The full brain and the major tissue classes should be identifiable.   
+            If the surface looks bad, check if this depend on the segmentation. 
+          </p>
+        </li>
+        <li>
+          <h4>The normalized images have artifacts.</h4>
+          <p>This depend on the input resolution of our files. Smooth the images or interpolate the original files by using ... </p>
+        </li>
+        <li>
+          <h4>Parts of the brain are missing, or a wider brain mask is required.</h4>
+          <p>Decrease the <i>Strength of gcut+ Skull-Stripping</i> = <i>gcutstr</i> parameter.</p>
+        </li>
+        <li>
+          <h4>Parts of the head (but not meninges/blood vessels) are within the brain mask, or closer brain mask is required. </h4>
+          <p>Increase the <i>gcutstr</i> parameter.</p>
+        </li>        
+        <li>
+          <h4>Thin brain structures (e.g. in the cerebellum) are missing.</h4>
+          <p>Decrease the <i>cleanupstr</i> parameter.</p>
+        </li>
+        <li>
+          <h4>There are to many meninges (but not high intensity blood vessels).</h4>
+          <p>Increase the <i>cleanupstr</i> parameter.</p>
+        </li>
+        <li>
+          <h4>There are blood vessels in the tissue segmentation that were classified as WM.</h4>
+          <p>Correction of blood vessels with similar intensity like the WM is problematic. Try to increase the <i>BVCstr</i> parameter.</p>
+        </li>
+        <li>
+          <h4>The segmentation of the subcortical structures... </h4>
+          <p>Modify <i>LASstr</i> parameter.</p>
+        </li>
+      </ul>
+
+      <h3>Surface reconstruction and thickness estimation</h3>
+      <ul>
+        <li>
+          <h4>Incomplete surface or bubble surfaces</h4>
+          <p>check segmentation (check report file)...</p>
+        </li>
+        <li>
+          <h4>Unexpected thickness values </h4>
+          <p>check segmentation (check report file)...</p>
+        </li>
+        <li>
+          <h4>Is there a thickness map that allows a voxel-based analysis?</h4>
+          <p>
+            No. Although PBT creates such a map, it is only used for mapping thickness to the surface and for ROI analysis. 
+            A voxel-based analysis of such a map is not meaningful because the standard statistical processing is not optimized for this case. 
+            Simple Gaussian smoothing is not direct possible (it will alter the values) and the changing width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. 
+          </p>
+      </ul>
+     
+      <h3>Quality control / assurance</h3>
+      <ul>
+        <li>
+          <h4>Some of my image get a low rating - can I use them?</h4>
+          <p>
+            Outlier of image quality are often effected by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
+            Best praxis is to remove strong outlier (2 standard deviations), if the problems depend on the image quality and not other subject properties.  
+            If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>vbm12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
+            Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.showslice');"a>Check data homogeneity</a> to proof that the segmentation of these subjects were correct. <br />
+            Have a look to the <a href="vbm12_methods_QA.html">quality assurance methods</a> for further information. 
+          </p>
+        </li>
+        <li>
+          <h4>My whole data get a low average rating - can I use it?</h4>
+          <p>
+            Yes, but you have to check for preprocessing problem. Low rating depend on low resolution and/or higher noise/artifacts and is typical for very short sequences that are required e.g. for children.  
+            Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance.  
+            Overall segmentation and reconstruction quality will be lower than for high quality data (Kappa < 0.9) and you have to check if the cortex was segmented correctly.<br />
+            Use the <i>Check data homogeneity</i> and/or have a look to the segmentations in subject space by checking the <i>vbm12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.
+          </p>
+        </li>
+        <li>
+          <h4>Unexpected thickness values</h4>
+          <p>Check segmentation (check report file)...</p>
+        </li>
+      </ul>
+    
+    </div>
+  
+    <div id="content"><a href="vbm12.html">< VBM12</a></div>  
+    <div id="footer">
+      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>
