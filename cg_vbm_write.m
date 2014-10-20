@@ -1466,7 +1466,7 @@ if do_cls && vbm.print
     str3 = [str3 struct('name', '','value','')]; 
     str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
     for wi=1:numel(vbm_warnings)
-      shorter = spm_str_manip(vbm_warnings(mi).identifier,'l20'); 
+      shorter = spm_str_manip(vbm_warnings(wi).identifier,'l20'); 
       dots    = strfind(':',shorter);
       shorter = shorter(dots(end-1):end);
       str3    = [str3 struct('name', '','value',shorter)];  %#ok<AGROW>
