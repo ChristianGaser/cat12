@@ -18,7 +18,7 @@ vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3
 vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller values for stronger bias fields
-vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fieds, but look for overfitting in subcortical GM (values <50 mm)
+vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
 vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
 
 
@@ -127,6 +127,8 @@ vbm.extopts.mrf          = 1;     % MRF weighting:                            0-
 vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
                                   %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter; 
 vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
+vbm.extopts.segres       = 0;     % minimum resolution for intern interpolation of the segmentation routines (in development)
+                                  % requires better connetection to PBT
 
 % normalization options
 vbm.extopts.vox          = 1.5;   % voxel size for normalized data (not yet working)

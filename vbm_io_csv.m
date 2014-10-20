@@ -34,7 +34,11 @@ function varargout = vbm_io_csv(filename,varargin)
 
   if nargout>0, action='r'; else action='w'; end
   if ~exist('filename','var'),    
-    error('need filename');
+    filename = spm_select([0 1],'xml','Select *.csv files',{},pwd,'.*.csv');
+    if isempty(filename)
+      if nargout>0, varargout{1}=cell(); end
+      return;
+    end
   else
     [pp,ff,ee] = fileparts(filename);
     if ~strcmp(ee,'.csv'); ee='.csv'; end

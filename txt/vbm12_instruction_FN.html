@@ -1,0 +1,169 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_instruction.html">Instruction manual</a> > <a href="vbm12_instruction_FN.html">Filenames</a>
+      </div>
+    </div>
+  
+    
+    <!-- TEXT --> 
+    <div id="content">
+      <h2>Naming convention of output files</h2>
+      
+      <h3>Images:</h3>
+      <table width="540" border="0">
+        <tr>
+          <td width="203">Segmented Images:</td>
+          <td width="88">#p[0123]*</td>
+          <td width="235">[m[0]w[r]]p[0123]*[_affine]</td>
+        </tr>
+        <tr>
+          <td>Local Intensity Normalized:</td>
+          <td>#m*</td>
+          <td>[w[r]]m*</td>
+        </tr>
+        <tr>
+          <td>Atlas Maps:</td>
+          <td>#a*</td>
+          <td>[mw[r]]a1*</td>
+        </tr>
+        <tr>
+          <td>Preprocessing Changes Map:</td>
+          <td>#pc*</td>
+          <td>[mw[r]]pc*</td>
+        </tr>
+        <tr>
+          <td>Tissue Expectation Map:</td>
+          <td>#te*</td>
+          <td>[mw[r]]te*</td>
+        </tr>
+      </table>
+      <br />
+      <table border="0">
+        <tr>
+          <td>*</td>
+          <td>filename</td>
+        </tr>
+        <tr>
+          <td>#</td>
+          <td>image space prefix</td>
+        </tr>
+        <tr>
+          <td><br /><b>Image space prefix:</b></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>m</td>
+          <td>modulated</td>
+        </tr>
+        <tr>
+          <td>m0</td>
+          <td>modulated non-linear only</td>
+        </tr>
+        <tr>
+          <td>w</td>
+          <td>warped (spatially normalized)</td>
+        </tr>
+        <tr>
+          <td>r</td>
+          <td>DARTEL warped</td>
+        </tr>
+        <tr>
+          <td>_affine</td>
+          <td>affine registered only</td>
+        </tr>
+        <tr>
+          <td><br /><b>Image data prefix:</b></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>p</td>
+          <td>segmented</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>PVE label</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>GM</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>WM</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>CSF</td>
+        </tr>
+      </table>
+      <h3>Surface data prefix:</h3>
+      <p>SURF.TYPE.[nofix.]*</p>
+      <table border="0">
+         <tr>
+          <td width="70">SURF</td>
+          <td width="400">left, right hemisphere [ lh | rh ] </td>
+        </tr>
+        <tr>
+          <td>TYPE</td>
+          <td>surface data file [ central | sphere | thickness | curvature | ... ]</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>central - coordinates and faces of the central surface</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>sphere - coordinates and faces of the spherical 
+                       projection of the central surface</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>thickness - thickness values of the surface</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>curvature - curvature value of the surface</td>
+        </tr>
+        <tr>
+          <td>nofix</td>
+          <td>raw surface with uncorrected topology</td>
+        </tr>
+        <tr>
+          <td>reg</td>
+          <td>spherically registered surface</td>
+        </tr>
+      </table>
+      
+      <h3>Further data:</h3>
+      <p>
+        Extracted data, global morphometric measure and image quality measures were stored in the <em class="var">vbm_*.xml</em> file. <br /> 
+        You can use the <a href="matlab:vbm_io_xml;" class="function">vbm_io_xml</a> function to read data from xml-files. <br />
+        ROI data is also saved as csv-file <em>vbmROI[SPACE]_[ATLAS]_*.csv</em>.</p>  
+      
+  
+    </div>
+  
+  
+    <div id="content"><a href="vbm12_instruction.html">< Instruction manual</a></div>  
+    <div id="footer">
+      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>

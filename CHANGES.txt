@@ -5433,3 +5433,136 @@ In cg_vbm_write.m wi and mi were mixed up at line 1469.
 
 ------------------------------------------------------------------------
 r627 | gaser | 2014-10-20 12:15:34
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_run_job.m
+M       cg_vbm_run_newcatch.m
+M       cg_vbm_write.m
+M       spm_vbm12.m
+A       txt
+A       txt/analyse_methods.png
+A       txt/contact.jpg
+A       txt/cortical_measures.png
+A       txt/gyrification_index.png
+A       txt/home.jpg
+A       txt/human_brain.en.jpg
+A       txt/human_brain.png
+A       txt/images.jpg
+A       txt/people.jpg
+A       txt/research.jpg
+A       txt/rqa01-intro-bwp-real.png
+A       txt/style.css
+A       txt/vbm.jpg
+A       txt/vbm12.html
+A       txt/vbm12.txt
+A       txt/vbm12_FAQ.html
+A       txt/vbm12_ackknowledgement.html
+A       txt/vbm12_instruction.html
+A       txt/vbm12_instruction_FF.html
+A       txt/vbm12_instruction_FN.html
+A       txt/vbm12_instruction_MS.html
+A       txt/vbm12_instruction_PP.html
+A       txt/vbm12_instruction_QA.html
+A       txt/vbm12_instruction_ST.html
+A       txt/vbm12_introduction.html
+A       txt/vbm12_methods.html
+A       txt/vbm12_methods_QA.html
+A       txt/vbm12_methods_RBM.html
+A       txt/vbm12_methods_SBM.html
+A       txt/vbm12_methods_VBM.html
+A       txt/vbm12_stuff.html
+!       vbm12.html
+M       vbm_findfiles.m
+M       vbm_io_csv.m
+M       vbm_io_writenii.m
+M       vbm_io_xml.m
+M       vbm_stat_marks.m
+M       vbm_surf_createCS.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa.m
+A       vbm_tst_reduceRes.m
+A       vbm_vol_imcalc.m
+
+(1)  Changed input limitation for resolution properties in "cg_vbm_run_job". 
+(2)  Corrected cleanup error with to strong corrections in the cerebellum of the
+     BWP and images with low resolutions in "cg_vbm_write".
+(3)  Initialize new VBM12 help with subdirectory for HTML help files.
+(4)  Added resampling function in "vbm_tst_calc_kappa" for unequal resolutions.
+(5)  Added kappa-depending result coloration in "vbm_tst_calc_kappa".
+(6)  Added intern interpolation routine in "cg_vbm_run_job" and extended 
+     "vbm_io_writenii" and "vbm_tst_qa" for downsampling of interpolated data
+     back to native space.
+(7)  Corrected CSF-background problems in global intensity scaling function 
+     "vbm_pre_gintnorm" in "cg_vbm_write.m". 
+------------------------------------------------------------------------
+r628 | dahnke | 2014-10-20 16:12:54
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_run_job.m
+M       cg_vbm_run_newcatch.m
+M       cg_vbm_write.m
+M       spm_vbm12.m
+A       txt
+A       txt/analyse_methods.png
+A       txt/contact.jpg
+A       txt/cortical_measures.png
+A       txt/gyrification_index.png
+A       txt/home.jpg
+A       txt/human_brain.en.jpg
+A       txt/human_brain.png
+A       txt/images.jpg
+A       txt/people.jpg
+A       txt/research.jpg
+A       txt/rqa01-intro-bwp-real.png
+A       txt/style.css
+A       txt/vbm.jpg
+A       txt/vbm12.html
+A       txt/vbm12.txt
+A       txt/vbm12_FAQ.html
+A       txt/vbm12_ackknowledgement.html
+A       txt/vbm12_instruction.html
+A       txt/vbm12_instruction_FF.html
+A       txt/vbm12_instruction_FN.html
+A       txt/vbm12_instruction_MS.html
+A       txt/vbm12_instruction_PP.html
+A       txt/vbm12_instruction_QA.html
+A       txt/vbm12_instruction_ST.html
+A       txt/vbm12_introduction.html
+A       txt/vbm12_methods.html
+A       txt/vbm12_methods_QA.html
+A       txt/vbm12_methods_RBM.html
+A       txt/vbm12_methods_SBM.html
+A       txt/vbm12_methods_VBM.html
+A       txt/vbm12_stuff.html
+M       vbm_findfiles.m
+M       vbm_io_csv.m
+M       vbm_io_writenii.m
+M       vbm_io_xml.m
+M       vbm_stat_marks.m
+M       vbm_surf_createCS.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa.m
+A       vbm_tst_reduceRes.m
+A       vbm_vol_imcalc.m
+
+(1)  Changed input limitation for resolution properties in "cg_vbm_run_job". 
+(2)  Corrected cleanup error with to strong corrections in the cerebellum of the
+     BWP and images with low resolutions in "cg_vbm_write".
+(3)  Initialize new VBM12 help with subdirectory for HTML help files.
+(4)  Added resampling function in "vbm_tst_calc_kappa" for unequal resolutions.
+(5)  Added kappa-depending result coloration in "vbm_tst_calc_kappa".
+(6)  Added intern interpolation routine in "cg_vbm_run_job" and extended 
+     "vbm_io_writenii" and "vbm_tst_qa" for downsampling of interpolated data
+     back to native space.
+(7)  Corrected CSF-background problems in global intensity scaling function 
+     "vbm_pre_gintnorm" in "cg_vbm_write.m". 
+------------------------------------------------------------------------
+r628 | dahnke | 2014-10-20 16:49:17
