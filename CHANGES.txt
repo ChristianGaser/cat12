@@ -5423,3 +5423,13 @@ Adapted paths to new SPM12 version (no beta anymore!).
 
 ------------------------------------------------------------------------
 r626 | gaser | 2014-10-02 16:28:40
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+ M      vbm12.fig
+ M      vbm12.m
+
+In cg_vbm_write.m wi and mi were mixed up at line 1469.
+
+------------------------------------------------------------------------
+r627 | gaser | 2014-10-20 12:15:34
