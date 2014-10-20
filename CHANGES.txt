@@ -5566,3 +5566,51 @@ A       vbm_vol_imcalc.m
      "vbm_pre_gintnorm" in "cg_vbm_write.m". 
 ------------------------------------------------------------------------
 r628 | dahnke | 2014-10-20 16:49:17
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_run_job.m
+A  +    html
+M  +    html/vbm12.html
+M  +    html/vbm12.txt
+M       spm_vbm12.m
+D       txt
+D       txt/analyse_methods.png
+D       txt/contact.jpg
+D       txt/cortical_measures.png
+D       txt/gyrification_index.png
+D       txt/home.jpg
+D       txt/human_brain.en.jpg
+D       txt/human_brain.png
+D       txt/images.jpg
+D       txt/people.jpg
+D       txt/research.jpg
+D       txt/rqa01-intro-bwp-real.png
+D       txt/style.css
+D       txt/vbm.jpg
+D       txt/vbm12.html
+D       txt/vbm12.txt
+D       txt/vbm12_FAQ.html
+D       txt/vbm12_ackknowledgement.html
+D       txt/vbm12_instruction.html
+D       txt/vbm12_instruction_FF.html
+D       txt/vbm12_instruction_FN.html
+D       txt/vbm12_instruction_MS.html
+D       txt/vbm12_instruction_PP.html
+D       txt/vbm12_instruction_QA.html
+D       txt/vbm12_instruction_ST.html
+D       txt/vbm12_introduction.html
+D       txt/vbm12_methods.html
+D       txt/vbm12_methods_QA.html
+D       txt/vbm12_methods_RBM.html
+D       txt/vbm12_methods_SBM.html
+D       txt/vbm12_methods_VBM.html
+D       txt/vbm12_stuff.html
+D       vbm12.txt
+
+(1) Renamed txt folder to html.
+(2) Changed resolution-threshold fro interpolation in cg_vbm_run_job.m.
+(3) Deleted vbm12.txt
+
+------------------------------------------------------------------------
+r629 | gaser | 2014-10-20 17:10:52

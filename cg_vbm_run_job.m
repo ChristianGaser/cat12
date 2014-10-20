@@ -97,7 +97,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         vx_voli   = max(0.2, min( median(vx_vol) , repmat(segres,1,3) )); % interpolation resolution limits 0.2x0.2x0.2 mm
 
         % interpolation to similare resolutions only if there are create changes
-        if any((vx_vol ./ vx_voli)>1.2)
+        if any((vx_vol ./ vx_voli)>1.5)
           Vi        = rmfield(Vi,'private'); 
           imat      = spm_imatrix(Vi.mat); 
           Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
