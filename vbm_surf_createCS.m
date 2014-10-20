@@ -61,7 +61,14 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     opt.CATDir = [opt.CATDir '.glnx86'];
   end  
 
-  [pp,ff]   = spm_fileparts(V.fname);
+  [pp,ff,ee]   = spm_fileparts(V.fname);
+  % correction for 'n' prefix for noise corrected and/or interpolated files
+  if ff(1)=='n'
+    Po = fullfile(pp,[ff(2:end) ee]); 
+    if exist(Po,'file')
+      ff = ff(2:end);
+    end
+  end
 
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 

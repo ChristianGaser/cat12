@@ -1,3 +1,4 @@
+
 function varargout = vbm_stat_marks(action,uselevel,varargin) 
 % ______________________________________________________________________
 % 
@@ -63,9 +64,10 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'FD'  'Fp0'                   ''          []                 0 0     'fname'
 %  % -- further image quality measures on the original image --------------
   % - resolution - 
-   'QM'  'res_RMS'               'linear'    [  0.75   2.00]    1 1     'RMS error of voxel size'
+   'QM'  'res_RMS'               'linear'    [   0.5    3.0]    1 1     'RMS error of voxel size'
+   'QM'  'res_MVR'               'linear'    [   0.5    3.0]    1 1     'mean voxel resolution'
    'QM'  'res_BB'                'linear'    [   200    500]    1 1     'brain next to the image boundary'
-   'QM'  'res_vx_vol'            'linear'    [  0.75   3.00]    1 0     'voxel dimensions'
+   'QM'  'res_vx_vol'            'linear'    [  0.50   3.00]    1 0     'voxel dimensions'
    'QM'  'res_vol'               'linear'    [  0.50   8.00]    1 0     'voxel volume'
    'QM'  'res_isotropy'          'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
   % - tissue mean and varianz - 
@@ -75,16 +77,17 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   % - contrast - 
    'QM'  'contrast'              'linear'    [   1/3   1/12]    1 1     'contrast between tissue classe'
   % - noise & contrast -
-   'QM'  'NCR'                   'linear'    [  1/20    1/2]    1 1     'noise to contrast råatio'
-   'QM'  'CNR'                   'linear'    [    20      2]    1 1     'contrast to noise ratio'
+  % 'QM'  'NCR'                   'linear'    [  1/20   0.65]    1 1     'noise to contrast råatio'
+   'QM'  'NCR'                   'linear'    [  0.05   0.55]    1 1     'noise to contrast råatio'
+   'QM'  'CNR'                   'linear'    [    20 1/0.65]    1 1     'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [  1/10    1/2]    1 1     'inhomogeneity to contrast ratio'
-   'QM'  'CIR'                   'linear'    [    10      2]    1 1     'contrast to inhomogeneity ratio'
+   'QM'  'ICR'                   'linear'    [  1/10    0.4]    1 1     'inhomogeneity to contrast ratio'
+   'QM'  'CIR'                   'linear'    [    10  1/0.4]    1 1     'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
 %   'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
 %   'QM'  'MPC'                   'linear'    [  0.06   0.12]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
    'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
-   'QM'  'MPC'                   'linear'    [  0.06   0.12]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
+   'QM'  'MPC'                   'linear'    [  0.11   0.33]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
    'QM'  'MJD'                   'linear'    [  0.05   0.15]    2 1     'mean jacobian determinant'
    'QM'  'STC'                   'linear'    [  0.05   0.15]    2 1     'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
@@ -109,8 +112,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       end
     end
   end
-  def.QM.avg  = {'res_RMS','NCR','MPC'}; %,'ICR',,'ICR','CJV'
-  def.QM.avgw = [ 1 1 0 1];
+  def.QM.avg  = {'res_RMS','NCR','ICR','CJV'}; %,'ICR',,'ICR','CJV','MPC'
   def.SM.avg  = {'vol_rel_CGW'};
   
 
@@ -118,9 +120,11 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   setnan=[1 nan];
   evalnormal  = @(x,best,worst,marks) min(90.5-eps,max(0,(abs(best-x)./worst)*(marks-1))) + setnan(isnan(x)+1);      
   evalnormalb = @(x,best,worst,marks) min(marks  ,max(1,(abs(best-x)./worst)*(marks-1))) + setnan(isnan(x)+1);    
-  evallinear  = @(x,best,worst,marks) min(90.5-eps,max(0,((best-x)./diff([worst,best])*(marks-1)))) + setnan(isnan(x)+1);   
-  evallinearb = @(x,best,worst,marks) min(marks  ,max(1,((best-x)./diff([worst,best])*(marks-1)))) + setnan(isnan(x)+1);   
-
+  setnan=[0 nan];
+  evallinearb = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
+  evallinear  = @(x,best,worst,marks) abs(best-x)./abs(diff([worst,best]))*(marks-1)+1 + setnan(isnan(x)+1); 
+  rms         = @(a,fact)   max(0,vbm_stat_nanmean(a.^fact).^(1/fact));
+  rmsw        = @(a,fact,w) max(0,(vbm_stat_nansum((a.*w).^fact)/vbm_stat_nansum(w)).^(1/fact));
   
   switch action
     case 'isfield', % active field?
@@ -142,30 +146,77 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       if ~isstruct(varargin{1})
         error('MATLAB:vbm_stat_marks:input','Second input has to be a structure!\n');
       end
+      QA = varargin{1};
+      
       if numel(varargin)>1, method = varargin{2}; else method = 'vbm12'; end
       CJVpos = find(cellfun('isempty',strfind(def.QS(:,2),'CJV'))==0);
       MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
-      switch method
-        case 'fsl5'
+
+      def.QM.avgw  = ones(size(def.QM.avg),'single');
+      
+    % fitting for specific methods (
+    % vbm8     vbm12      fsl5      spm8     spm12
+      BWP.kappaNCR = [
+    0.0661    0.05      0.0900    0.0445    0.0363
+    0.6619    0.6619    0.3894    0.3478    0.4256
+      ];
+      BWP.kappaNCR(2,:) = BWP.kappaNCR(2,:)/1.5;
+      BWP.kappaMVR = [
+    0.7741    0.8206    1.2933    0.0272    0.8329
+    3.4294    2.4655    2.4595    4.2494    2.3423
+      ];
+      switch lower(method)
+        case 'vbm8',         mid = 1;
+        case 'vbm12',        mid = 2;
+        case {'fsl','fsl5'}, mid = 3;
+        case 'spm8',         mid = 4;
+        case 'spm12',        mid = 5;
+        otherwise            mid = 2;
+      end
+      evallinearx  = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
+      BWP.NCRm = evallinearx(QA.QM.NCR,BWP.kappaNCR(1,mid),BWP.kappaNCR(2,mid),6);
+      BWP.MVRm = evallinearx(QA.QM.res_MVR,BWP.kappaMVR(1,mid),BWP.kappaMVR(2,mid),6);    
+      
+      
+      % resRMS NCR ICR MPC
+      x2 = ([ ...
+... vbm8      vbm12     fsl5      spm8      spm12
+    0.6586    0.8194    0.4374    0.3903    0.6278
+    0.6174    0.4164    0.7415    0.6654    0.5376
+    ]);
+    
+    sf = 1;
+    C  = [BWP.MVRm BWP.NCRm];
+    QAM.QM.rms = ((C.^sf) * x2(:,mid)).^(1/sf); 
+    QAM.QM.rms = rms([BWP.MVRm BWP.NCRm],8);
+   %QAM.QM.rms = max(BWP.NCRm, BWP.MVRm );
+      switch lower(method)
+        case {'fsl','fsl5'}
           def.QS{CJVpos,4} = [  0.11   0.17];
           def.QS{MPCpos,4} = [  0.13   0.44];
+          def.QM.avgw      = x2(3,:); %[2.2 1.3  0.2 1];
         case 'spm8'
           def.QS{CJVpos,4} = [  0.11   0.17];
           def.QS{MPCpos,4} = [  0.10   0.27];
+          def.QM.avgw      = x2(4,:); %[2 1.3  0.1 1];
         case 'spm12'
           def.QS{CJVpos,4} = [  0.11   0.17];
           def.QS{MPCpos,4} = [  0.11   0.33];  
+          def.QM.avgw      = x2(5,:); %2 0.95 0.1 1];
         case 'vbm8'
           def.QS{CJVpos,4} = [  0.16   0.22];
           def.QS{MPCpos,4} = [  0.11   0.81];
+          def.QM.avgw      = x2(1,:); %[2 0.6  0.1 1]; 
         case 'vbm12'
           def.QS{CJVpos,4} = [  0.12  0.18];
-          def.QS{MPCpos,4} = [  0.08  0.15];
+          def.QS{MPCpos,4} = [  0.10  0.35];
+          def.QM.avgw      = x2(2,:); %[1 1 0 0]; %x2(2,:); %;
         otherwise 
-          error('MATLAB:vbm_stat_mark:unknownMethod','Unknown method ''%s'' use ''fsl'',''spm'',''vbm8'',''vbm12''.',method);
+          %error('MATLAB:vbm_stat_mark:unknownMethod','Unknown method ''%s'' use ''fsl'',''spm'',''vbm8'',''vbm12''.',method);
       end
+      %def.QM.avgw = def.QM.avgw(1:numel(def.QM.avg));
+      
       % evaluation
-      QA = varargin{1};
       for QSi=1:size(def.QS,1)
         if ~isempty(def.QS{QSi,3}) && isfield(QA,def.QS{QSi,1}) && ...
             isfield(QA.(def.QS{QSi,1}),def.QS{QSi,2})
@@ -217,7 +268,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
           QAM.(Qavg{Qavgi}).mean = 0; 
           QAM.(Qavg{Qavgi}).max  = 0;
           QAM.(Qavg{Qavgi}).avg  = 0;
-          QAM.(Qavg{Qavgi}).rms  = 0;
+          %QAM.(Qavg{Qavgi}).rms  = 0;
 
           nonnan=0;
           for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
@@ -234,15 +285,15 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                     QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
                     QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/nonnan]);
-                  QAM.(Qavg{Qavgi}).rms  = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
+                %  QAM.(Qavg{Qavgi}).rms(1) = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                %    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
                 else
                   QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                     max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean,...
                     vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
+                %  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                %    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
                 end
               else
                 if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
@@ -257,8 +308,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                     max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
                     vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                 % QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                 %   vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
                 end
               end
             end
@@ -268,13 +319,20 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
           QAM.(Qavg{Qavgi}).max   = min(6,max(1,QAM.(Qavg{Qavgi}).max));
           try
             QAM.(Qavg{Qavgi}).avg = min(6,max(1,vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max])));
-            QAM.(Qavg{Qavgi}).rms = min(6,max(1,sqrt(QAM.(Qavg{Qavgi}).rms)));
+          %  QAM.(Qavg{Qavgi}).rms = min(6,max(1,sqrt(QAM.(Qavg{Qavgi}).rms)));
           catch
             QAM.(Qavg{Qavgi}).avg = nan;
-            QAM.(Qavg{Qavgi}).rms = nan;
+          %  QAM.(Qavg{Qavgi}).rms = nan;
           end
         end
       end
+      
+      avg = nan(1,numel(def.QM.avg));
+      for avgi = 1:numel(def.QM.avg)
+        avg(avgi) = QAM.QM.(def.QM.avg{avgi});
+      end
+      %QAM.QM.rms = rmsw(avg,3,def.QM.avgw);
+      %QAM.QM.rms = sum(avg.*def.QM.avgw);
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur

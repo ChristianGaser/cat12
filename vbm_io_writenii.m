@@ -89,8 +89,16 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
   % ____________________________________________________________________
   if write(1)==1
     fname = vbm_io_handle_pre(V.fname,pre,'',addpre,1);
- 
-    nV        = V; 
+    if exist('transform','var') && isfield(transform,'native')
+      if any(size(Y)~=transform.native.Vo.dim)
+        nV = transform.native.Vi;
+      else
+        nV = transform.native.Vo;
+      end
+    else
+      nV = V;
+    end
+
     N         = nifti;
     N.dat     = file_array(fname,nV.dim(1:3),[spm_type(spmtype) ...
                   spm_platform('bigend')],range(1),range(2),0);
@@ -109,8 +117,33 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     else
       N.dat(:,:,:) = double(Y);
     end
+
+    Vn = spm_vol(fname); 
+    % reduce to original native space if it was interpolated
+    if exist('transform','var') && isfield(transform,'native') && any(size(Y)~=transform.native.Vo.dim)
+      [pp,ff] = spm_fileparts(fname); 
+      Vo = transform.native.Vo; 
+      Vo.fname = fname; 
+      Vo.dt    = Vn.dt; 
+      Vo.pinfo = Vn.pinfo;
+      if strcmp(ff(1:2),'p0')
+        [Vn,Yn] = vbm_vol_imcalc(Vn,Vo,'i1',struct('interp',6,'verb',0)); 
+        % correction for interpolation artifacts
+        rf  = 50;
+        Ynr = round(Yn*rf)/rf;
+        YMR = false(size(Yn));
+        for i=1:4, YMR = YMR | (Yn>(i-1/rf) & Yn<(i+1/rf)); end
+        Yn(YMR)     = Ynr(YMR); clear YMR Ynr;
+        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
+        Vn = spm_write_vol(Vn,double(Yn));
+      else
+        [Vn,Yn] = vbm_vol_imcalc(Vn,Vo,'i1',struct('interp',6,'verb',0));
+        delete(Vn.fname); % remove it, otherwise it will have the wrong filesize (correct readable, but still to big)
+        Vn = spm_write_vol(Vn,double(Yn));
+      end
+    end
     
-    if nargout>0, varargout{1}(1) = spm_vol(fname); end
+    if nargout>0, varargout{1}(1) = Vn; end
     if nargout>1, varargout{2}{1} = []; end
     clear N; 
   end

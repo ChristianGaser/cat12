@@ -42,7 +42,13 @@ function varargout = vbm_io_xml(file,varargin)
     warning('MATLAB:SPM:VBM:vbm_io_xml:javaerror', ...
       'VBM-ERROR: VBM XML-im/export requires JVM!\n');
   end
-  if ~exist('file','var'), error('MATLAB:vbm_io_xml','ERROR: Need input file.\n'); end
+  if ~exist('file','var'),
+    P = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^vbm.*.xml');
+    if isempty(P)
+      if nargout>0, varargout{1}=struct(); end
+      return;
+    end
+  end
   if exist('varargin','var') 
     if numel(varargin)==0
       action='read';

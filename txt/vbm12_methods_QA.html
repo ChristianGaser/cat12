@@ -1,0 +1,113 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('contact.jpg') right;">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_QA.html">Quality Control</a>
+      </div>
+    </div>
+      
+  
+    <div id="content">  
+      <h2>VBM report and quality control (in development):</h2>
+      <p>
+        Besides the used preprocessing parameters VBM now also print image quality measurements and global subject measurements. 
+        All measurements were graded (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, >5 - problematic). 
+        Measures and/or grading are under development and should help to identify problematic datasets. 
+        Although, the preprocessing routines try to correct image interferences like noise or inhomogeneities, stronger interferences require stronger corrections that reduce spacial resolution or maybe fail. 
+        To describe the quality of a dataset different aspects are interesting - the image quality, the processing quality and subject averageness.
+      </p> 
+    
+      <h3>Image quality measures</h3>
+      <p>
+        Image quality measures describe the properties of the image, but not the processing. 
+        The VBM12 image quality were estimated based on the tissue segmentation and were widely independent of subject sex and health status. 
+        Only age has a small influence (+0.02 per 10 years), because the WM segment undergoes small changes in lifetime.
+        The WM is used rather than the background, because the background can be influenced by anonymization routines or include interferences that does not effect the brain.
+      </p>
+      <ul>
+        <li>
+          <h4>NCR (Noise Contrast Ratio):</h4>
+          <p>
+            The NCR measures the local standard deviation in the WM segment and scaled by the minimum tissue contrast.
+          </p>
+        </li>
+        <li>
+          <h4>ICR  (Inhomogeneity Contrast Ratio):</h4>
+          <p>
+            The ICR is measured as the global standard deviation in the WM segment and scaled by the minimum tissue contrast. 
+            Also for the ICR only the WM segment is used, because the GM is strongly effected by the <i>PVE</i> and has varying intensities like in the basal ganglia, the motor cortex or the occipital lobe.
+          </p>
+        </li> 
+        <li>
+          <h4>MVR (Mean Voxel Resolution):</h4>
+          <p>
+            To describe the resolution of an image, the average voxel size is used. 
+          </p>
+        </li>
+      </ul>
+      <p>
+        The results were scaled and validated using the BWP and real data.
+        A NCR mark of 1 equal to 1% BWP T1 noise, and a NCR mark 5 fits the 9% image, so that a reduction of 1 mark is similar to 2% higher noise in the BWP.
+        For ICR mark 1 is defined by 0% inhomogeneity, whereas the mark 6 is described by the 100% BWP inhomogeneity.
+        The scaling of the resolution was fixed for 0.5 (mark 1) to 3 mm (mark 6) to describe the practical range of images.
+      </p>
+      
+      <h3>Processing quality measures</h3>
+      <p>
+        Although, the result of all preprocessing methods depend strongly on the input data, they can show a very different behavior by processing the data. 
+        Some methods may have a very high accuracy, but were not very robust against image interferences, whereas other are very robust but have lower accuracy in the best cases. 
+        For averaging the different QM in one preprocessing mark, a least squares approach was used to solve the equation "k = QM * s" with k as vector of the reconstruction quality of VBM12 (mean Kappa of all tissues), QM as matrix of quality measures, and w as weighting that was estimated.
+        To get a better solution it was necessary to normalize the measures for specific kappa boundaries (kappa of 0.925 = mark 1, kappa of 0.8 = mark 6) by a function <i>f</i>. 
+        As far as good aspects of an image can often not compensate the bad ones  ......  sshheeiißß  ttaassttaattuurr  ......  jjeettzztt  ggeehheenn  nnuurr  nnoocchh  zzwweeii  zzeeiicchheenn  aauuff  eeiinnmmaall!!!!!!!!
+        
+        
+        ( f(QM)^s * w)^(1/s)
+        For VBM12 inhomogeneity plays nearly no role and the final results are best characterized by noise and resolution.
+        For images with a mark>4 a Kappa value below 0.8 can be expected.
+        Outliers with very low rating should be removed e.g. if your scans have an average rating of 2.12, scans with ratings below 4 are often affected by motion artifacts.       
+      </p>
+      
+      <h3>Subject averageness:</h3>
+      <p>
+        Besides the image quality also the anatomy of a subject influence the result.
+        Subjects with average properties have a better chance of a good preprocessing. 
+        Subject measures are often part of the analysis an therefore not directly meaningful for quality and preprocessing analysis.
+        The measures give only a orientation how average a subject is.
+        Untypical values can help to identify a failed preprocessing or untypical subjects within a group, but bad marks do not mean that this dataset should be removed!
+      </p>
+      <ul>  
+        <li><b>CGW-Volumes:</b><br />Absolute and relative volume of the major tissue classes for all brain structures.</p></li>
+        <li><b>TIV (Total Inter-cranial Volume):</b><br /> The TIV is the sum of all tissue classes within the brain mask.</p></li>
+        <li><b> Cortical thickness:</b><br />Mean cortical thickness and its standard deviation. Only available, if cortical thickness was processed.</p></li>
+        <li><b> Absolute curvature:</b><br />Mean absolute curvature and its standard deviation. Only available, if cortical thickness was processed.</p></li>
+      </ul>
+    
+        
+      <!--
+      <h3>Result images:</h3>
+      <p>VBM result images depending on the export options. The first row displays the intensity normalized, noise and bias corrected T1 image on the left side and the label map p0 on the right. The second row shows the GM (left)  and WM (right) segment. All images where displayed in normalized spaces, if the were available, otherwise the native space is used.<br />Therefore, the figure can contain images of different spaces, so don't  wonder, if the crosshair doesn't show the same structures.</p>
+      <p> WARNING: The scaling of the color is normally fixed, but interactive use of the result figure can produce errors. </p>
+      -->
+    </div>
+  
+    <div id="content"><a href="vbm12_methods.html">< Methods</a></div>    
+    <div id="footer">
+      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>

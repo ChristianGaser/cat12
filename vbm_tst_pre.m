@@ -63,14 +63,14 @@ function vbm_tst_pre
   %'VBM12+'  1 {'pb' 'p0'} {'mc' 'mc'} {0.5  0.5}  0 % internal
 %  'VBM12+'  1 {'p0'}      {'mg'}      {0.5}       0 % internal
 %     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
-%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM'     0 {'p0'}      {''}        {0.5}       0 
-%    'SPM8'    0 {'p0'}      {''}        {0.5}       1 
+    'SPM8'    0 {'p0'}      {''}        {0.5}       0 
     'SPM12'   0 {'p0'}      {''}        {0.5}       1 
 %     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
 %     'SPM12nc' 1 {'p0'}      {''}        {0.5}       1 
- %    'FSL'     1 {'p0'}      {''}        {-inf}      1 
+    'FSL'     0 {'p0'}      {''}        {-inf}      0 
+    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
@@ -81,13 +81,16 @@ function vbm_tst_pre
 % ----------------------------------------------------------------------
   % datasets with ground truth
   def.subdirs = {
+%  'BWPC_noise'
+%  'BWPC_bias'
+%  'BWPC_resi'
+%  'BWPC_resr'
+   'QA_good'
+   'QA_bad'
+%  'BWPC_NIR'
 %  'BWP_Collins'
 %  'BWP_Collins_T2'
 %  'BWP_Collins_PD'
-%  'BWP_Collins_res_slice'
-  'BWP_Collins_resn'
-%  'BWP_Collins_MS'
-%  'BWP_Collins_fast'
 %     'ADHD'
 %     'ADNI'
 %     'IXI'
@@ -394,7 +397,9 @@ function vbm_tst_pre
     
     
     
+    
     %% Evaluation 
+    %{
     %  -----------------------------------------------------------------
     for mi=1:size(opt.methods,1)
       fprintf('%s-EV:          ',opt.methods{mi});
@@ -471,13 +476,14 @@ function vbm_tst_pre
       end
       fprintf(' .. done. \n');
     end
+    %}
   end
   
   
   
   % write results 
   % --------------------------------------------------------------------
-  %%
+  %{
 
   
   result = cell(1,numel(opt.subdirs)); resultNF = result;
@@ -636,7 +642,7 @@ function vbm_tst_pre
    fprintf(QATFtxt,QATF);
    fclose(QATFtxt); clear QATFtxt
 %%
- 
+ %}
   
   % 4) statistic
   
@@ -948,15 +954,16 @@ function SPM12segment(file,SPM12dir,SPMwkd)
                    fullfile(pp,['c1' ff '.nii']), ...
                    fullfile(pp,['c2' ff '.nii']),'SPM');
      
-    if matlabbatch{mb}.spm.spatial.preproc.channel.write(2)            
-      movefile(fullfile(pp,['BiasField_' ff '.nii']),fullfile(pp,['eb' ff '.nii']));
+    biasfile = fullfile(pp,['BiasField_' ff '.nii']); 
+    if matlabbatch{mb}.spm.spatial.preproc.channel.write(2) && exist(biasfile,'file');
+      movefile(biasfile,fullfile(pp,['eb' ff '.nii']));
     end
     
     delete(fullfile(pp,['p' ff '_seg8.txt']));
     delete(fullfile(pp,[ff '_seg8.mat']));
   catch e %#ok<NASGU>
     createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['p0' ff ee]));
-    
+    createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['m' ff ee]));
   end
   warning on;
 
@@ -1160,7 +1167,7 @@ function pathchanges = replaceSPMpath(oldSPMpath,newSPMpath)
   pathchanges.olddir = pwd; 
  
   if ~strcmp(oldSPMpath,newSPMpath{1})
-    newSPMpath=[newSPMpath,vbm_findfiles(newSPMpath,'*',struct('maxdepth',2,'dirs',1))];
+    newSPMpath=[newSPMpath;vbm_findfiles(newSPMpath,'*',struct('maxdepth',2,'dirs',1))];
     
     % find all directories in the old SPM path
     oldpath = textscan(path,'%s','bufsize',2^16,'Delimiter',':'); oldpath=oldpath{1};

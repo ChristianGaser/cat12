@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('contact.jpg') right;">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_RBM.html">Atlas creation and ROI based analysis</a>
+      </div>
+    </div>
+  
+    
+    <!-- TEXT --> 
+    <div id="content">
+      <h2>Atlas creation and ROI based analysis (in development)</h2>
+      <p>
+        VBM12 allows estimation of tissue volume [, intensity, and thickness] for different atlas maps.
+      </p> 
+      <p>
+        Results were stored in a csv-file <i>vbmROI[SPACE]_[ATLAS]_*.csv</i> for each atlas map <i>ATLAS</i> and in the <i>vbm_*.XML</i> file. 
+        <i>SPACE</i> describes the space of the value estimation an can be <i>s</i> for subject space and <i>w</i> for normalized space.
+        You can use external software like Excel for analysis or the <a class="function" href="matlab:vbm_io_csv">vbm_io_csv</a> function to read the data as table, or the <a class="function" href="matlab:vbm_io_xml">vbm_io_xml</a>.
+      </p>
+      <p>
+        We prepared different atlas maps for the VBM12 IXI555 space that are stored in the <i>templates_1.50mm</i> directory. 
+        For each atlas you can find a csv-file with the ROI IDs, short and full names. 
+        The txt-file contain further informations, terms of use, and the name of the original publications and websites. 
+        <!--
+        Further atlas options can be found in the <i>cg_vbm_defauls-file</i>.
+        -->
+      </p>
+      <h4>List of atlas maps in VBM12</h4>
+      <ul>
+        <li>
+          <h5>Hammers</h5>
+          <p>
+            20 Subjects, good alignment
+          </p>
+        </li>
+        <li>
+          <h5>Mori</h5>
+          <p>
+            just one subject, but WM regions
+          </p>
+        </li>
+        <li>
+          <h5>IBSR</h5>
+          <p>
+            18 subjectes of the IBSR v2 dataset, with low quality T1 data, but good labels maps. 
+          </p>
+        </li>
+        <!--
+        <li>
+          <h5>AAL</h5>
+          <p>
+            one subject, bad alignment
+          </p>
+        </li>
+        <li>
+          <h5>LPBA40</h5>
+          <p>
+          </p>
+        </li>
+        -->
+      </ul>
+      
+      <h4>Atlas creation with original data (Hammers, IBSR, Mori)</h4>
+      <p>
+        If original T1 maps and subject label maps were available we used VBM12 to preprocess the data and map them to common space. 
+        The subject dependent labels were translated to the VBM12 name system.            
+      </p>
+      <!--
+      <h4>Atlas creation of general maps (AAL)</h4>
+      <p>
+        ...
+      </p>
+      -->
+      
+    </div>  
+  
+    
+    <div id="content"><a href="vbm12_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>
