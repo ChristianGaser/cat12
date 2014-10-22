@@ -56,7 +56,7 @@ typedef struct{
     int radioS;   
 } myargument;
 
-int rician = 1;
+int rician;
 double max;
 
 /*Returns the modified Bessel function I0(x) for any real x.*/
@@ -533,13 +533,15 @@ return 0;
 }
 
 
-void anlm(float* ima, int v, int f, int rician, const int* dims)
+void anlm(float* ima, int v, int f, int use_rician, const int* dims)
 {
 float *means, *variances, *Estimate, *average, *bias;
 unsigned char *Label;
 int ndim = 3;
 double SNR,mean,var,estimate,d;
 int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin,r;
+
+extern int rician;
 
 myargument *ThreadArgs;  
 
@@ -553,6 +555,10 @@ means = (float*)malloc(vol*sizeof(float));
 variances = (float*)malloc(vol*sizeof(float));
 Estimate = (float*)malloc(vol*sizeof(float));
 Label = (unsigned char*)malloc(vol*sizeof(unsigned char));
+
+/* set global parameter */
+if (use_rician)
+    rician = 1;
 
 if (rician) bias = (float*)malloc(vol*sizeof(float));
 

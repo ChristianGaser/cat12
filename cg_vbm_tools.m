@@ -9,13 +9,13 @@ rev = '$Rev$';
 
 %_______________________________________________________________________
 
-data = cfg_files; 
-data.tag  = 'data';
-data.name = 'Volumes';
-data.filter = 'image';
+data         = cfg_files; 
+data.tag     = 'data';
+data.name    = 'Volumes';
+data.filter  = 'image';
 data.ufilter = '.*';
 data.num     = [1 Inf];
-data.help = {[...
+data.help    = {[...
 'Select raw data (e.g. T1 images) for processing. ',...
 'This assumes that there is one scan for each subject. ',...
 'Note that multi-spectral (when there are two or more registered ',...
@@ -24,21 +24,21 @@ data.help = {[...
 
 %------------------------------------------------------------------------
 
-data_T2x = cfg_files;
-data_T2x.tag  = 'data_T2x';
-data_T2x.name = 'Volumes';
-data_T2x.filter = 'image';
+data_T2x         = cfg_files;
+data_T2x.tag     = 'data_T2x';
+data_T2x.name    = 'Volumes';
+data_T2x.filter  = 'image';
 data_T2x.ufilter = '^spmT.*\.[in][im][gi]$';
 data_T2x.num     = [1 Inf];
-data_T2x.help = {'Select spmT-images to transform or convert.'};
+data_T2x.help    = {'Select spmT-images to transform or convert.'};
 
-sel      = cfg_menu;
-sel.name = 'Convert t value to';
-sel.tag  = 'sel';
+sel        = cfg_menu;
+sel.name   = 'Convert t value to';
+sel.tag    = 'sel';
 sel.labels = {'p','-log(p)','correlation coefficient cc','effect size d','apply thresholds without conversion'};
 sel.values = {1,2,3,4,5};
 sel.val    = {2};
-sel.help = {'Select conversion of t-value'};
+sel.help   = {'Select conversion of t-value'};
 
 thresh         = cfg_entry;
 thresh.tag     = 'thresh';
@@ -64,13 +64,13 @@ kthresh.strtype = 'r';
 kthresh.val     = {0};
 kthresh.num     = [1 1];
 
-noniso      = cfg_menu;
-noniso.name = 'Correct for non-isotropic smoothness';
-noniso.tag  = 'noniso';
+noniso        = cfg_menu;
+noniso.name   = 'Correct for non-isotropic smoothness';
+noniso.tag    = 'noniso';
 noniso.labels = {'yes','no'};
 noniso.values = {1,0};
 noniso.val    = {1};
-noniso.help = {'Correct for non-isotropic smoothness for cluster extent thresholds.'};
+noniso.help  = {'Correct for non-isotropic smoothness for cluster extent thresholds.'};
 
 none         = cfg_const;
 none.tag     = 'none';
@@ -120,27 +120,27 @@ En.name    = 'Expected voxels per cluster';
 En.val     = {noniso };
 En.help    = {''};
 
-inverse      = cfg_menu;
-inverse.name = 'Show also inverse effects (e.g. neg. values)';
-inverse.tag  = 'inverse';
+inverse        = cfg_menu;
+inverse.name   = 'Show also inverse effects (e.g. neg. values)';
+inverse.tag    = 'inverse';
 inverse.labels = {'yes','no'};
 inverse.values = {1,0};
 inverse.val    = {0};
-inverse.help = {'Show also inverse effects (e.g. neg. values). This is not valid if you convert to (log) p-values.'};
+inverse.help   = {'Show also inverse effects (e.g. neg. values). This is not valid if you convert to (log) p-values.'};
 
-threshdesc      = cfg_choice;
-threshdesc.name = 'Threshold type peak-level';
-threshdesc.tag  = 'threshdesc';
+threshdesc        = cfg_choice;
+threshdesc.name   = 'Threshold type peak-level';
+threshdesc.tag    = 'threshdesc';
 threshdesc.values = {none uncorr fdr fwe};
-threshdesc.val  = {uncorr};
-threshdesc.help = {'Select method for voxel threshold'};
+threshdesc.val    = {uncorr};
+threshdesc.help   = {'Select method for voxel threshold'};
 
-cluster      = cfg_choice;
-cluster.name = 'Cluster extent threshold';
-cluster.tag  = 'cluster';
+cluster        = cfg_choice;
+cluster.name   = 'Cluster extent threshold';
+cluster.tag    = 'cluster';
 cluster.values = {none k En uncorr2 fwe2};
-cluster.val  = {none};
-cluster.help = {'Select method for extent threshold'};
+cluster.val    = {none};
+cluster.help   = {'Select method for extent threshold'};
 
 conversion         = cfg_branch;
 conversion.tag     = 'conversion';
@@ -148,11 +148,11 @@ conversion.name    = 'Conversion';
 conversion.val     = {sel threshdesc inverse cluster};
 conversion.help    = {''};
 
-T2x = cfg_exbranch;
-T2x.tag = 'T2x';
+T2x      = cfg_exbranch;
+T2x.tag  = 'T2x';
 T2x.name = 'Threshold and transform spmT-maps';
-T2x.val = {data_T2x,conversion};
-T2x.prog   = @cg_spmT2x;
+T2x.val  = {data_T2x,conversion};
+T2x.prog = @cg_spmT2x;
 
 p0 = '';
 p1 = 'This function transforms t-maps to P, -log(P), r or d-maps.';
@@ -207,21 +207,21 @@ T2x.help = {p1,p0,p2,p0,p3,p4,p3,p0,p5,p6,p7,p8,p9,p0,p3,p10,p3,p11,p12,p13,p0,p
 	p29,p30,p31,p32,p33,p0,p34,p35,p0,p36,p37,p38,p0,p39,p40,p0,p41,p0,p42,p43};
 %------------------------------------------------------------------------
 
-data_F2x = cfg_files;
-data_F2x.tag  = 'data_F2x';
-data_F2x.name = 'Volumes';
-data_F2x.filter = 'image';
+data_F2x         = cfg_files;
+data_F2x.tag     = 'data_F2x';
+data_F2x.name    = 'Volumes';
+data_F2x.filter  = 'image';
 data_F2x.ufilter = '^spmF.*\.[in][im][gi]$';
 data_F2x.num     = [1 Inf];
-data_F2x.help = {'Select spmF-images to select.'};
+data_F2x.help    = {'Select spmF-images to select.'};
 
-sel      = cfg_menu;
-sel.name = 'Convert F value to';
-sel.tag  = 'sel';
+sel        = cfg_menu;
+sel.name   = 'Convert F value to';
+sel.tag    = 'sel';
 sel.labels = {'p','-log(p)','coefficient of determination R^2'};
 sel.values = {1,2,3};
 sel.val    = {2};
-sel.help = {'Select conversion of F-value'};
+sel.help  = {'Select conversion of F-value'};
 
 none         = cfg_const;
 none.tag     = 'none';
@@ -229,12 +229,12 @@ none.name    = 'None';
 none.val     = {1};
 none.help    = {'No threshold'};
 
-cluster      = cfg_choice;
-cluster.name = 'Cluster extent threshold';
-cluster.tag  = 'cluster';
+cluster        = cfg_choice;
+cluster.name   = 'Cluster extent threshold';
+cluster.tag    = 'cluster';
 cluster.values = {none k};
-cluster.val  = {none};
-cluster.help = {'Select method for extent threshold'};
+cluster.val    = {none};
+cluster.help  = {'Select method for extent threshold'};
 
 conversion         = cfg_branch;
 conversion.tag     = 'conversion';
@@ -242,11 +242,11 @@ conversion.name    = 'Conversion';
 conversion.val     = {sel threshdesc cluster};
 conversion.help    = {''};
 
-F2x = cfg_exbranch;
-F2x.tag = 'F2x';
+F2x      = cfg_exbranch;
+F2x.tag  = 'F2x';
 F2x.name = 'Threshold and transform spmF-maps';
-F2x.val = {data_F2x,conversion};
-F2x.prog   = @cg_spmF2x;
+F2x.val  = {data_F2x,conversion};
+F2x.prog = @cg_spmF2x;
 
 p0 = '';
 p1 = 'This function transforms F-maps to P, -log(P), or R2-maps.';
@@ -306,20 +306,20 @@ nuisance.name  = 'Nuisance';
 nuisance.val   = {c};
 nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 
-slice = cfg_entry;
-slice.tag = 'slice';
-slice.name = 'Show slice (in mm)?';
+slice         = cfg_entry;
+slice.tag     = 'slice';
+slice.name    = 'Show slice (in mm)?';
 slice.strtype = 'r';
-slice.num = [1 1];
-slice.val  = {0};
-slice.help = {'Choose slice in mm.'};
+slice.num     = [1 1];
+slice.val     = {0};
+slice.help    = {'Choose slice in mm.'};
 
-gap = cfg_entry;
-gap.tag = 'gap';
-gap.name = 'Separation';
+gap         = cfg_entry;
+gap.tag     = 'gap';
+gap.name    = 'Separation';
 gap.strtype = 'n';
-gap.num = [1 1];
-gap.val  = {3};
+gap.num     = [1 1];
+gap.val     = {3};
 gap.help    = {[ ...
   'To speed up calculations you can define that only every x voxel correlation is estimated. '...
   'Smaller sampling distances gives slightly more accurate correlations, but will be much slower.']};
@@ -510,16 +510,36 @@ showslice.help = {[...
 data.help = {[...
 'Select images for filtering']};
 
+rician         = cfg_menu;
+rician.tag     = 'rician';
+rician.name    = 'Rician noise';
+rician.help    = {['MRIs can have Gaussian or Rician distributed noise with uniform or nonuniform variance across the image. If SNR is high ',...
+'enough (>3) noise can be well approximated by Gaussian noise in the foreground. However, for SENSE reconstruction or DTI data a Rician distribution ',...
+'is expected.'],...
+'',[...
+Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts (e.g. cortex ',...
+'can be affected by very high values in the scalp or in blood vessels.']};
+rician.labels  = {'Yes' 'No'};
+rician.values  = {1 0};
+rician.val     = {0};
+
+prefix         = cfg_entry;
+prefix.tag     = 'prefix';
+prefix.name    = 'Filename Prefix';
+prefix.help    = {'Specify the string to be prepended to the filenames of the smoothed image file(s). Default prefix is ''samlm_''.'};
+prefix.strtype = 's';
+prefix.num     = [1 Inf];
+prefix.val     = {'sanlm_'};
+
 sanlm = cfg_exbranch;
 sanlm.tag = 'sanlm';
-sanlm.name = 'Spatially adaptive non local means denoising filter';
-sanlm.val = {data};
-sanlm.prog   = @vbm_vol_sanlm; %cg_sanlm;
+sanlm.name = 'Spatially adaptive non-local means denoising filter';
+sanlm.val = {data prefix rician};
+sanlm.prog   = @vbm_vol_sanlm;
 sanlm.vfiles  = @vfiles_sanlm;
 sanlm.help = {[...
-'This function applies an spatial adaptive non local means denoising filter to the data. This filter will remove noise while ',...
-'preserving edges. The smoothing filter size is automatically estimated based on the standard deviation of the noise. ',...
-'The resulting images are prepended with the term "sanlm_".'],...
+'This function applies an spatial adaptive non-local means denoising filter to the data. This filter will remove noise while ',...
+'preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '],...
 '',[...
 'This filter is internally used in the segmentation procedure anyway. '...
 'Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.']};
@@ -715,7 +735,7 @@ vf = {};
 s  = strvcat(job.data);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
-    vf = {vf{:}, fullfile(pth,['sanlm_',nam,ext,num])};
+    vf = {vf{:}, fullfile(pth,[job.prefix,nam,ext,num])};
 end;
 return;
 %_______________________________________________________________________

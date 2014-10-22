@@ -5623,3 +5623,75 @@ M       CHANGES.txt
 
 ------------------------------------------------------------------------
 r630 | gaser | 2014-10-20 17:11:34
+
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       Makefile.vbm
+D       cg_sanlm.m
+M       cg_vbm_defaults.m
+M       cg_vbm_run_job.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       html/vbm12.html
+M       html/vbm12_FAQ.html
+M       html/vbm12_ackknowledgement.html
+M       html/vbm12_instruction.html
+M       html/vbm12_instruction_FF.html
+M       html/vbm12_instruction_PP.html
+M       html/vbm12_introduction.html
+M       html/vbm12_methods_SBM.html
+M       html/vbm12_methods_VBM.html
+M       html/vbm12_stuff.html
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+M       sanlmMex.c
+M       sanlmMex.mexa64
+M       sanlmMex.mexglx
+M       sanlmMex.mexmaci64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       sanlmMex_noopenmp.mexa64
+M       sanlmMex_noopenmp.mexglx
+M       sanlmMex_noopenmp.mexmaci64
+M       sanlmMex_noopenmp.mexw32
+M       sanlmMex_noopenmp.mexw64
+M       sanlm_float.c
+M       vbdist.mexw32
+M       vbdist.mexw64
+MM      vbm_tst_reduceRes.m
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_sanlm.m
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+(1) Added rician option to sanlm_float.c and sanlMex.c to allow to disable
+    Rician noise estimation that causes artefacts in the neighbourhood
+    of high signal intensities.
+(2) Modified vbm_vol_sanlm.m and cg_vbm_tools.m to consider rician option.
+(3) Recompiled all c-files.
+(4) Modified html text.
+
+------------------------------------------------------------------------
+r631 | gaser | 2014-10-22 10:56:57
