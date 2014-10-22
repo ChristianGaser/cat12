@@ -25,8 +25,8 @@
     <div id="content">
       <h2>Preprocessing</h2>
       <p>
-        VBM12 preprocessing comprehend methods to reduce image interference, classify the brain and its major tissue classes and normalize the individual anatomy. 
-        Furthermore, it allows creation of the central surface with cortical thickness and folding measures. 
+        VBM12 preprocessing comprehends methods to reduce image interference, classify the brain and its major tissue classes and normalize the individual anatomy. 
+        Furthermore, it allows the creation of the central surface with cortical thickness and folding measures. 
         The theoretical background can be found in the <a href="vbm12_methods.html">Methods</a> section.
       </p>
       
@@ -34,7 +34,7 @@
         <li>
           <h4>Estimation options</h4>
           <p>
-            Although VBM12 use SPM12 preprocessing it apply an independent segmentation approach. 
+            Although VBM12 uses SPM12 preprocessing it uses an independent segmentation approach and the SPM12 segmentation is only used as starting estimate. 
             Thus, most parameters were set to SPM default and removed from the GUI. 
             Modification should be made only by expert users via <a href="matlab:open cg_vbm_defaults;">cg_vbm_defaults</a> file.
             Please choose the SPM "Tissue Probability Map" and "Affine Registration" for your data.
@@ -46,7 +46,7 @@
         <li>      
           <h4>Extended options</h4>
           <p>
-            VBM12 use adaptive denoising methods to allow a exact and stable segmentation for different levels of noise.
+            VBM12 uses adaptive denoising methods to allow a exact and stable segmentation for different levels of noise.
           </p>
           <p>
             For the Local Adaptive Segmentation, the Skull-Stripping, and of the Cleanup function a strength parameter allows simple modifications, if the default segmentation does not fit for your requirements. 

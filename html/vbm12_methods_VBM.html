@@ -17,12 +17,12 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_VBM.html">Voxelbased Preprocessing Methods</a>
+        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_VBM.html">Voxel-based Preprocessing Methods</a>
       </div>
     </div>
       
     <div id="content">
-      <h2>Voxelbased Preprocessing Methods:</h2>
+      <h2>Voxel-based Preprocessing Methods:</h2>
 
       <p>
         This toolbox is an extension of the default segmentation in SPM12, but uses a completely different segmentation approach.
@@ -33,7 +33,7 @@
         <li>
           <h4>AMAP Segmenation</h4>
           <p>
-            The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue           probabilities.  
+            The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities.  
             That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach <a>(Ashburner et. al. 2005)</a>, but just for spatial normalization.  
             The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions <a>(Rajapakse et al. 1997)</a>.  
             This not only accounts for intensity inhomogeneities but also for other local variations of intensity.
@@ -83,7 +83,7 @@
         <li> 
           <h4>Skull-Stripping</h4>
           <p>
-            VBM12 contain a revised graph-cut based skull-stripping with a arbitrary strength, with 0 for a more liberal and wider brain masks and 1 for a harder
+            VBM12 contains a revised graph-cut based skull-stripping with a arbitrary strength, with 0 for a more liberal and wider brain masks and 1 for a harder
           and closer result.  The default is 0.5 and was successfully tested on a variety of different images.
           </p> 
           <p>The strength parameter changes multiple internal parameters:</p>
@@ -101,15 +101,14 @@
         <li>
           <h4>Cleanup</h4>
           <p>
-            VBM12 include a new cleanup routine that used morphological, distance and smoothing operations to remove reminding meninges from the final segmentation.  The strength of the cleanup is controlled by the <i>cleanupstr</i> parameter, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
+            VBM12 includes a new cleanup routine that used morphological, distance and smoothing operations to remove reminding meninges from the final segmentation.  The strength of the cleanup is controlled by the <i>cleanupstr</i> parameter, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
           </p>
         </li>
         <li>
           <h4>Interpolation</h4>
           <p>
-            VBM12 use an intern interpolation to allow more stable results also for low resolution image. 
-            Also an interpolation can not add further details to the images, some of the used function profit of the higher number of voxels.
-            In example a morphological open operation that was designed for 1 mm, will be two times stronger on a 2 mm image. 
+            VBM12 uses an intern interpolation to allow more stable results also for low resolution image. 
+            Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artefcats in modulated images are strongly diminished. 
           </p>       
         </li>
       </ol>

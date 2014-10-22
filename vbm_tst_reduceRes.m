@@ -25,7 +25,7 @@ function vbm_tst_reduceRes(P,resi)
 % Structural Brain Mapping Group
 % University Jena
 %  
-% $Id: vbm_stat_marks.m 614 2014-09-24 23:09:15Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
 

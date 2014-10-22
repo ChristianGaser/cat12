@@ -32,20 +32,20 @@
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
             Low frequency corrections for inhomogeneity e.g. the N3 algorithm are unproblematic, but not required for most datasets.  
-            Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocess could be helpful if VBM12 show problems.  
+            Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocessing might be helpful if VBM12 shows any problems.  
             Try to avoid high frequency corrections or resampling of the data, because this will reduce the ability of the NLM filters. 
           </p>
         </li>
         <li>
-          <h4>The segmentation or surface looks totally wrong.</h4>
+          <h4>The segmentation or surface reconstruction looks totally wrong.</h4>
           <p>
             Check orientation and visual image quality of the affected images. 
             The full brain and the major tissue classes should be identifiable.   
-            If the surface looks bad, check if this depend on the segmentation. 
+            If the surface looks bad, check if this depends on the segmentation. 
           </p>
         </li>
         <li>
-          <h4>The normalized images have artifacts.</h4>
+          <h4>The normalized images have striped artifacts.</h4>
           <p>This depend on the input resolution of our files. Smooth the images or interpolate the original files by using ... </p>
         </li>
         <li>
@@ -61,7 +61,7 @@
           <p>Decrease the <i>cleanupstr</i> parameter.</p>
         </li>
         <li>
-          <h4>There are to many meninges (but not high intensity blood vessels).</h4>
+          <h4>There are too many meninges (but not high intensity blood vessels).</h4>
           <p>Increase the <i>cleanupstr</i> parameter.</p>
         </li>
         <li>
@@ -87,19 +87,19 @@
         <li>
           <h4>Is there a thickness map that allows a voxel-based analysis?</h4>
           <p>
-            No. Although PBT creates such a map, it is only used for mapping thickness to the surface and for ROI analysis. 
-            A voxel-based analysis of such a map is not meaningful because the standard statistical processing is not optimized for this case. 
-            Simple Gaussian smoothing is not direct possible (it will alter the values) and the changing width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. 
+            No. Although the PBT approach creates such a map, it is only used for mapping thickness to the surface and for ROI analysis. 
+            A voxel-based analysis of such a map is not meaningful because the standard statistical processing is not optimized for this type of data. 
+            Simple Gaussian smoothing is not recommended (it will alter the values) and the varying width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. 
           </p>
       </ul>
      
       <h3>Quality control / assurance</h3>
       <ul>
         <li>
-          <h4>Some of my image get a low rating - can I use them?</h4>
+          <h4>Some of my images get a low rating - can I use them anyway?</h4>
           <p>
-            Outlier of image quality are often effected by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
-            Best praxis is to remove strong outlier (2 standard deviations), if the problems depend on the image quality and not other subject properties.  
+            Outliers of image quality are often caused by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
+            Best praxis is to remove strong outliers (e.g. > 2 standard deviations), if the problems depend on the image quality and not other subject properties.  
             If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>vbm12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
             Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.showslice');"a>Check data homogeneity</a> to proof that the segmentation of these subjects were correct. <br />
             Have a look to the <a href="vbm12_methods_QA.html">quality assurance methods</a> for further information. 

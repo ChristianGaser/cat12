@@ -74,8 +74,8 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             Y = single(spm_read_vols(V));
             Y(isnan(Y)) = 0;
             switch job.vbm.sanlm
-              case {1,3}, sanlmMex_noopenmp(Y,3,1); % use single-threaded version
-              case {2,4}, sanlmMex(Y,3,1);          % use multi-threaded version
+              case {1,3}, sanlmMex_noopenmp(Y,3,1,0); % use single-threaded version
+              case {2,4}, sanlmMex(Y,3,1,0);          % use multi-threaded version
             end
             Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
             job.channel(n).vols{subj} = Vn.fname;
