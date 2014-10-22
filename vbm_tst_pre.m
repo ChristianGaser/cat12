@@ -65,12 +65,12 @@ function vbm_tst_pre
 %     'VBM12i'  0 {'p0'}      {'m'}       {1.8}       1 % internal noise correction
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM'     0 {'p0'}      {''}        {0.5}       0 
-    'SPM8'    0 {'p0'}      {''}        {0.5}       0 
+%    'SPM8'    0 {'p0'}      {''}        {0.5}       0 
     'SPM12'   0 {'p0'}      {''}        {0.5}       1 
 %     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
 %     'SPM12nc' 1 {'p0'}      {''}        {0.5}       1 
-    'FSL'     0 {'p0'}      {''}        {-inf}      0 
-    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
+%    'FSL'     0 {'p0'}      {''}        {-inf}      0 
+%    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
 %    't1qa'   1 {'pa'}      {'mc'}      {0.80}       0
@@ -83,11 +83,11 @@ function vbm_tst_pre
   def.subdirs = {
 %  'BWPC_noise'
 %  'BWPC_bias'
-%  'BWPC_resi'
-%  'BWPC_resr'
-   'QA_good'
-   'QA_bad'
-%  'BWPC_NIR'
+  'BWPC_resi'
+  'BWPC_resr'
+  'QA_good'
+  'QA_bad'
+  'BWPC_NIR'
 %  'BWP_Collins'
 %  'BWP_Collins_T2'
 %  'BWP_Collins_PD'
@@ -954,9 +954,11 @@ function SPM12segment(file,SPM12dir,SPMwkd)
                    fullfile(pp,['c1' ff '.nii']), ...
                    fullfile(pp,['c2' ff '.nii']),'SPM');
      
-    biasfile = fullfile(pp,['BiasField_' ff '.nii']); 
-    if matlabbatch{mb}.spm.spatial.preproc.channel.write(2) && exist(biasfile,'file');
-      movefile(biasfile,fullfile(pp,['eb' ff '.nii']));
+    try
+      biasfile = fullfile(pp,['BiasField_' ff '.nii']); 
+      if matlabbatch{mb}.spm.spatial.preproc.channel.write(2) && exist(biasfile,'file');
+        movefile(biasfile,fullfile(pp,['eb' ff '.nii']));
+      end
     end
     
     delete(fullfile(pp,['p' ff '_seg8.txt']));

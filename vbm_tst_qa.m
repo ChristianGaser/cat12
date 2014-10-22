@@ -541,7 +541,7 @@ function varargout = vbm_tst_qa(action,varargin)
       %  ---------------------------------------------------------------
       %  reduce resolution
       [Yo,Ym,Yp0,BB]   = vbm_vol_resize({Yo,Ym,Yp0},'reduceBrain',vx_vol,2,Yp0>0.5);
-      [Yo,Ym,Yp0,resr] = vbm_vol_resize({Yo,Ym,Yp0},'reduceV',vx_vol,1,32,'meanm'); vx_vol=resr.vx_volr;
+      [Yo,Ym,Yp0,resr] = vbm_vol_resize({Yo,Ym,Yp0},'reduceV',vx_vol,0.5,32,'meanm'); vx_vol=resr.vx_volr;
    
       %% prepare special maps
       Yp0s = vbm_vol_median3(Yp0,Yp0>0.5 & Yp0~=1 & Yp0~=2 & Yp0~=3,Yp0>0.5);
@@ -621,7 +621,7 @@ function varargout = vbm_tst_qa(action,varargin)
         vbm_stat_nanmean(Ybs(round(Yp0s(:))==3))])/2; 
       Ybgr = vbm_vol_morph(vbm_vol_morph(Yosr<BGCth,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Yosr);
       Ybg = vbm_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
-      if sum(Ybg(:))<32, Ybg = vbm_vol_morph(Yosr<BGCth,'lc',1) & ~isnan(Yos); end
+      if sum(Ybg(:))<32, Ybg = vbm_vol_morph(Yos<BGCth,'lc',1) & ~isnan(Yos); end
       warning 'on'  'MATLAB:vbm_vol_morph:NoObject'
 
       %% (relative) average tissue intensity of each class
