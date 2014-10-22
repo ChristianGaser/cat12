@@ -5695,3 +5695,15 @@ M       vbm_vol_simgrow.mexw64
 
 ------------------------------------------------------------------------
 r631 | gaser | 2014-10-22 10:56:57
+
+M       CHANGES.txt
+
+(1) Added rician option to sanlm_float.c and sanlMex.c to allow to disable
+    Rician noise estimation that causes artefacts in the neighbourhood
+    of high signal intensities.
+(2) Modified vbm_vol_sanlm.m and cg_vbm_tools.m to consider rician option.
+(3) Recompiled all c-files.
+(4) Modified html text.
+
+------------------------------------------------------------------------
+r632 | gaser | 2014-10-22 10:58:02
