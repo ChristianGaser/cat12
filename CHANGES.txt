@@ -5718,3 +5718,12 @@ Corrected typo in cg_vbm_tools.
 
 ------------------------------------------------------------------------
 r633 | gaser | 2014-10-22 11:03:06
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+M       html/vbm12.html
+
+Did some formatting in cg_vbm_tools.m.
+
+------------------------------------------------------------------------
+r634 | gaser | 2014-10-22 12:00:26
