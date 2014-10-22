@@ -5727,3 +5727,32 @@ Did some formatting in cg_vbm_tools.m.
 
 ------------------------------------------------------------------------
 r634 | gaser | 2014-10-22 12:00:26
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+M       vbm_stat_marks.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa.m
+M       vbm_vol_eidist.c
+
+(1)  Corrected to strong CSF/GM cleanup (cg_vbm_write - cleanup section).
+(2)  Corrected CSF threshold problem for bad SPM segmentation of the global 
+     intensity scaling (cg_vbm_write > vbm_pre_gintnorm). 
+(3)  Added "extopts.sanlm==5" backend option and code to use only the ORNLM 
+     filter to avoid problems with untypical noise (cg_vbm_write - noise 
+     correction section)
+(4)  Corrected CSF/GM map creation for bad SPM segmentations and local CSF/back-
+     ground estimation (cg_vbm_write > vbm_pre_LAS). 
+(5)  Added "extopts.NCstr==0.5" paramter to control the strength of the ORNLM
+     and MRF noise correction.
+(6)  Corrected interpolation behavior to guaranty Dartel resolution in any case.
+(7)  Updated VBM12 report. 
+
+------------------------------------------------------------------------
+r635 | dahnke | 2014-10-22 14:18:44
