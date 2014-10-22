@@ -38,7 +38,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
 % ______________________________________________________________________
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
-  def.tisvolr   = [0.15  0.2; 0.45  0.2; 0.35  0.2]; % relative expected tissue volumes
+  def.tisvolr   = [0.15  0.2; 0.45  0.2; 0.35  0.2; 0 0.10]; % relative expected tissue volumes
   def.thickness = [2.50  1.0; 0.75  1.0];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   def.QS        = { 
@@ -69,7 +69,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'res_BB'                'linear'    [   200    500]    1 1     'brain next to the image boundary'
    'QM'  'res_vx_vol'            'linear'    [  0.50   3.00]    1 0     'voxel dimensions'
    'QM'  'res_vol'               'linear'    [  0.50   8.00]    1 0     'voxel volume'
-   'QM'  'res_isotropy'          'linear'    [  1.00    7/3]    1 0     'voxel isotropy'
+   'QM'  'res_isotropy'          'linear'    [  1.00   8.00]    1 0     'voxel isotropy'
   % - tissue mean and varianz - 
    'QM'  'tissue_mn'             'normal'    def.tissue         1 1     'mean within the tissue classes'
    'QM'  'tissue_std'            'normal'    [  0.10   0.20]    1 1     'std within the tissue classes'
@@ -190,6 +190,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
     QAM.QM.rms = ((C.^sf) * x2(:,mid)).^(1/sf); 
     QAM.QM.rms = rms([BWP.MVRm BWP.NCRm],8);
    %QAM.QM.rms = max(BWP.NCRm, BWP.MVRm );
+   %{
       switch lower(method)
         case {'fsl','fsl5'}
           def.QS{CJVpos,4} = [  0.11   0.17];
@@ -215,7 +216,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
           %error('MATLAB:vbm_stat_mark:unknownMethod','Unknown method ''%s'' use ''fsl'',''spm'',''vbm8'',''vbm12''.',method);
       end
       %def.QM.avgw = def.QM.avgw(1:numel(def.QM.avg));
-      
+      %}
+   
       % evaluation
       for QSi=1:size(def.QS,1)
         if ~isempty(def.QS{QSi,3}) && isfield(QA,def.QS{QSi,1}) && ...
@@ -268,8 +270,10 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
           QAM.(Qavg{Qavgi}).mean = 0; 
           QAM.(Qavg{Qavgi}).max  = 0;
           QAM.(Qavg{Qavgi}).avg  = 0;
-          %QAM.(Qavg{Qavgi}).rms  = 0;
-
+          if strcmp(Qavg{Qavgi},'SM')
+            QAM.(Qavg{Qavgi}).rms  = 0;
+          end
+          
           nonnan=0;
           for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
             if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
@@ -285,15 +289,19 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                     QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
                     QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/nonnan]);
-                %  QAM.(Qavg{Qavgi}).rms(1) = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                %    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
+                  if strcmp(Qavg{Qavgi},'SM')
+                    QAM.(Qavg{Qavgi}).rms(1) = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                      QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
+                  end
                 else
                   QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                     max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean,...
                     vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                %  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                %    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
+                  if strcmp(Qavg{Qavgi},'SM')
+                    QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                      vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
+                  end
                 end
               else
                 if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
@@ -301,15 +309,19 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                     max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
                     vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                  QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                  if strcmp(Qavg{Qavgi},'SM')
+                    QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                      vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                  end
                 else
                   QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
                     max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
                   QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
                     vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                 % QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                 %   vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                  if strcmp(Qavg{Qavgi},'SM')
+                   QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
+                      vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
+                  end
                 end
               end
             end
@@ -317,22 +329,21 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
 
           QAM.(Qavg{Qavgi}).mean  = min(6,max(1,QAM.(Qavg{Qavgi}).mean));
           QAM.(Qavg{Qavgi}).max   = min(6,max(1,QAM.(Qavg{Qavgi}).max));
-          try
-            QAM.(Qavg{Qavgi}).avg = min(6,max(1,vbm_stat_nanmean([QAM.(Qavg{Qavgi}).mean;QAM.(Qavg{Qavgi}).max])));
-          %  QAM.(Qavg{Qavgi}).rms = min(6,max(1,sqrt(QAM.(Qavg{Qavgi}).rms)));
-          catch
-            QAM.(Qavg{Qavgi}).avg = nan;
-          %  QAM.(Qavg{Qavgi}).rms = nan;
+          
+          if strcmp(Qavg{Qavgi},'SM')
+            QAM.(Qavg{Qavgi}).rms = min(6,max(1,sqrt(QAM.(Qavg{Qavgi}).rms)));
           end
         end
       end
       
+      %{
       avg = nan(1,numel(def.QM.avg));
       for avgi = 1:numel(def.QM.avg)
         avg(avgi) = QAM.QM.(def.QM.avg{avgi});
       end
-      %QAM.QM.rms = rmsw(avg,3,def.QM.avgw);
-      %QAM.QM.rms = sum(avg.*def.QM.avgw);
+      QAM.QM.rms = rmsw(avg,3,def.QM.avgw);
+      QAM.QM.rms = sum(avg.*def.QM.avgw);
+      %}
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur

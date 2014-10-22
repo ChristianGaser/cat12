@@ -62,6 +62,7 @@
 #include "math.h"
 #include "float.h"
 #include "limits.h"
+#include "algorithm.h" 
 
 #ifdef _MSC_VER
   #define FINFINITY (FLT_MAX+FLT_MAX);

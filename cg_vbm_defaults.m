@@ -124,10 +124,12 @@ vbm.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 
                                   %                                           2 - also for segmentation (corred to WM like SPM); 3 - separate class
 vbm.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
 vbm.extopts.mrf          = 1;     % MRF weighting:                            0-1 - manuell setting; 1 - auto (default)
-vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
-                                  %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter; 
+vbm.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
+vbm.extopts.sanlm        = 5;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
+                                  %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter;
+                                  %                   5 - only ORNLM filter for the final result
 vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
-vbm.extopts.segres       = 0;     % minimum resolution for intern interpolation of the segmentation routines (in development)
+vbm.extopts.segres       = 1;     % minimum resolution for intern interpolation of the segmentation routines (in development)
                                   % requires better connetection to PBT
 
 % normalization options

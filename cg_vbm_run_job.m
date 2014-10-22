@@ -66,6 +66,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         switch job.vbm.sanlm
           case {1,3}, stime = vbm_io_cmd('NLM-Filter'); 
           case {2,4}, stime = vbm_io_cmd('NLM-Filter with multi-threading');
+          case {5},   stime = vbm_io_cmd('Temporary NLM-Filter with multi-threading');
         end
 
 
@@ -74,8 +75,8 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             Y = single(spm_read_vols(V));
             Y(isnan(Y)) = 0;
             switch job.vbm.sanlm
-              case {1,3}, sanlmMex_noopenmp(Y,3,1,0); % use single-threaded version
-              case {2,4}, sanlmMex(Y,3,1,0);          % use multi-threaded version
+              case {1,3,5}, sanlmMex_noopenmp(Y,3,1); % use single-threaded version
+              case {2,4},   sanlmMex(Y,3,1);          % use multi-threaded version
             end
             Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
             job.channel(n).vols{subj} = Vn.fname;
@@ -87,38 +88,52 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     
     
     %% Interpolation
-    segres = min(cg_vbm_get_defaults('extopts.segres'),cg_vbm_get_defaults('extopts.vox')); 
-    if segres>0  
-      for n=1:numel(job.channel) 
+    % The interpolation can help to reduce problems for morphologic
+    % operations on strong isotropic images. 
+    % Especially for Dartel a native resolution higher than the Dartel 
+    % resolution helps to reduce normalization artifacts of the
+    % deformation. Also this artifacts were reduce by the final smoothing
+    % it is much better to avoid them.  
+    segres = cg_vbm_get_defaults('extopts.segres'); 
+    vox    = cg_vbm_get_defaults('extopts.vox');
+    for n=1:numel(job.channel) 
 
-        % prepare header of resampled volume
-        Vi        = spm_vol(job.channel(n).vols{subj}); 
-        vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
-        vx_voli   = max(0.2, min( median(vx_vol) , repmat(segres,1,3) )); % interpolation resolution limits 0.2x0.2x0.2 mm
+      % prepare header of resampled volume
+      Vi        = spm_vol(job.channel(n).vols{subj}); 
+      vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
+      vx_voli   = max(0.2, min( median(vx_vol) , repmat(segres,1,3) )); % interpolation resolution limits 0.2x0.2x0.2 mm
+      vx_vold   = max(0.2, min( median(vx_vol) , repmat(vox,1,3)    )); 
 
-        % interpolation to similare resolutions only if there are create changes
-        if any((vx_vol ./ vx_voli)>1.5)
-          Vi        = rmfield(Vi,'private'); 
-          imat      = spm_imatrix(Vi.mat); 
-          Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
-          imat(7:9) = vx_voli .* sign(imat(7:9));
-          Vi.mat    = spm_matrix(imat);
-        
-          Vn = spm_vol(job.channel(n).vols{subj}); 
-          Vn = rmfield(Vn,'private'); 
-          if job.vbm.sanlm==0
-            [pp,ff,ee,dd] = spm_fileparts(Vn.fname); 
-            Vi.fname = fullfile(pp,['n' ff ee dd]);
-            job.channel(n).vols{subj} = Vi.fname;
-          end
-        
-          stime = vbm_io_cmd('Intern interpolation');
-          vbm_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
-          
-          fprintf('%4.0fs\n',etime(clock,stime));    
+      % interpolation to similare resolutions only if there are create 
+      % changes or if it is below the Dartel resolution
+      if any( (vx_vol ./ vx_voli) >1.5 ) || any(  vx_vol > vox )        % greater changes or below dartel default resolution
+       
+        if any( (vx_vol ./ vx_voli) >1.5 )
+          stime = vbm_io_cmd(sprintf('Intern Interpolation (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_voli));
+          vx_voli = min(vx_voli,vx_vold); % greater changes - use simply the best resolution
+        else
+          stime = vbm_io_cmd(sprintf('Intern Interpolation for Dartel (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_vold));
+          vx_voli = vx_vold; % no greater changes, but below dartel resolution - use dartel resolution
         end
-        clear Vi Vn;
+       
+        Vi        = rmfield(Vi,'private'); 
+        imat      = spm_imatrix(Vi.mat); 
+        Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
+        imat(7:9) = vx_voli .* sign(imat(7:9));
+        Vi.mat    = spm_matrix(imat);
+
+        Vn = spm_vol(job.channel(n).vols{subj}); 
+        Vn = rmfield(Vn,'private'); 
+        if job.vbm.sanlm==0
+          [pp,ff,ee,dd] = spm_fileparts(Vn.fname); 
+          Vi.fname = fullfile(pp,['n' ff ee dd]);
+          job.channel(n).vols{subj} = Vi.fname;
+        end
+        vbm_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
+
+        fprintf('%4.0fs\n',etime(clock,stime));    
       end
+      clear Vi Vn;
     end
     
     
