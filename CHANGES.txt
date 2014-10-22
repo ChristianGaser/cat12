@@ -5707,3 +5707,14 @@ M       CHANGES.txt
 
 ------------------------------------------------------------------------
 r632 | gaser | 2014-10-22 10:58:02
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       html/vbm12.txt
+M       html/vbm12_instruction_FF.html
+
+Corrected typo in cg_vbm_tools.
+
+------------------------------------------------------------------------
+r633 | gaser | 2014-10-22 11:03:06
