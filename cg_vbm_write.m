@@ -453,8 +453,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
 if vbm.sanlm>0 && vbm.sanlm<3
   stime = vbm_io_cmd('Noise correction after Global Intensity Correction');
   [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-  if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
-  elseif vbm.sanlm==2, sanlmMex(Yms,3,1);
+  if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1,0); 
+  elseif vbm.sanlm==2, sanlmMex(Yms,3,1,0);
   end
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
   
@@ -1485,8 +1485,8 @@ if do_cls && vbm.print
   if numel(vbm_warnings)>0
     str3 = [str3 struct('name', '','value','')]; 
     str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
-    for wi=1:numel(vbm_warnings)
-      shorter = spm_str_manip(vbm_warnings(mi).identifier,'l20'); 
+    for wi=2:numel(vbm_warnings)
+      shorter = spm_str_manip(vbm_warnings(wi).identifier,'l20'); 
       dots    = strfind(':',shorter);
       shorter = shorter(dots(end-1):end);
       str3    = [str3 struct('name', '','value',shorter)];  %#ok<AGROW>
