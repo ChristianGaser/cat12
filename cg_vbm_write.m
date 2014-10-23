@@ -461,8 +461,8 @@ if vbm.sanlm~=5
   if vbm.sanlm>0 && vbm.sanlm<3
     stime = vbm_io_cmd('Noise correction after Global Intensity Correction');
     [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-    if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1); 
-    elseif vbm.sanlm==2, sanlmMex(Yms,3,1);
+    if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1,0); 
+    elseif vbm.sanlm==2, sanlmMex(Yms,3,1,0);
     end
     Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
 
@@ -1563,7 +1563,11 @@ if do_cls && vbm.print
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
     str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
+  end
+  for si=1:numel(str2)
     str2(si).name  = [str2(si).name '  '];  str2(si).value = [str2(si).value '  '];
+  end
+  for si=1:numel(str3)
     str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
   end
     
