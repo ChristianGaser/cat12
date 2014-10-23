@@ -168,6 +168,7 @@ function vbm_vol_atlas(atlas,refinei)
     A.ana = fullfile(vbm12tempdir,'anatomy.nii');
     A.ibs = fullfile(vbm12tempdir,'ibsr.nii');
     %A.lpb = fullfile(vbm12tempdir,'lpba40.nii');
+    %A.nmm = fullfile(vbm12tempdir,'neuromorphometrics.nii');
 
     % output file
     C = fullfile(vbm12tempdir,'vbm12.nii');
@@ -371,7 +372,15 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       Pcsv   = vbm_findfiles(mdir,'.csv');
       Ptxt   = vbm_findfiles(mdir,'.txt'); 
       refine = 1;  
-   
+ 
+    case 'neuromorphometrics'
+      mdir   = fullfile(rawdir,'MICCAI2012-Neuromorphometrics','full');
+      P      = vbm_findfiles(mdir,'*_3.nii');
+      PA     = vbm_findfiles(mdir,'*_3_glm.nii');
+      Ps     = {''};
+      Pcsv   = vbm_findfiles(mdir,'.csv');
+      Ptxt   = vbm_findfiles(mdir,'.txt'); 
+      refine = 1;        
     % for this atlas I have no source and no labels...
     %{
     case 'brodmann'
@@ -431,12 +440,6 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.warpreg            = [0 0.001 0.5 0.05 0.2];
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.darteltpm       = ...
     {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm           = 3;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.LASstr          = 0.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstrength    = 0.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanupstr      = 0.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.vox             = 1.5;
-  matlabbatch{1}.spm.tools.vbm.estwrite.extopts.bb              = [-90 -126 -72; 90 90 108];
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.print           = 1;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.surface         = 0;
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM.native        = 0;
@@ -746,6 +749,9 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
       vbm_io_csv(fullfile(resdir,[atlas '.csv']),csv);
     end
   end
+  
+  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv);
+  
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
   end
@@ -1507,4 +1513,57 @@ function create_vbm_atlas(A,C,LAB)
     create(N);  
   end
   
+end
+function create_spm_atlas_xml(fname,csv,opt)
+% create an spm12 compatible xml version of the csv data
+  [pp,ff] = spm_fileparts(fname); 
+
+  def.name   = ff;
+  def.desc   = '';
+  def.url    = '';
+  def.lic    = 'CC BY-NC';
+  def.cor    = 'MNI'; 
+  def.type   = 'Label';
+  def.images = [ff '.nii'];
+  
+  opt = checkinopt(opt,def);
+
+  xml.header = [...
+    '<?xml version="1.0" encoding="ISO-8859-1"?>\n' ...
+    '<!-- This is a temporary file format -->\n' ...
+    '  <atlas version="2.0">\n' ...
+    '    <header>\n' ...
+    '      <name>' opt.name '</name>\n' ...
+    '      <version>1.0</version>\n' ...
+    '      <description>' opt.desc '</description>\n' ...
+    '      <url>' opt. url '</url>\n' ...
+    '      <licence>' opt.lic '</licence>\n' ...
+    '      <coordinate_system>' opt.cor '</coordinate_system>\n' ...
+    '      <type>' opt.type '</type>\n' ...
+    '      <images>\n' ...
+    '        <imagefile>' opt.fname '</imagefile>\n' ...
+    '      </images>\n' ...
+    '    </header>\n' ...
+    '  <data>\n' ...
+    '    <!-- could also include short_name, RGBA, XYZmm -->\n' ...
+    ];
+  xml.data = '';
+  for di = 1:size(csv,1);
+    % index      = label id
+    % name       = long name SIDE STRUCTURE TISSUE 
+    % short_name = short name 
+    % RGBA       = RGB color
+    % XYZmm      = XYZ coordinate
+    xml.data = [xml.data sprintf(['    <label><index>%d</index><name>%s</name>' ...
+      '<short_name>%s</short_name><RGBA></RGBA><XYZmm></XYZmm></label>\n'],...
+      csv{di,2},csv{di,2})];
+  end
+  xml.footer = [ ...
+    '  </data>\n' ...
+    '</atlas>\n' ...
+    ];
+  
+  fid = fopen(fname,'w');
+  fprintf(fid,'%s%s%s',xml.header,xml.data,xml.footer);
+  fclose(fid);
 end
