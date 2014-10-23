@@ -1,3 +1,4 @@
+
 M VBM8-Manual.pdf M tbx_cfg_vbm8.m M cg_vbm8_write.m M VBM8-Manual.doc M cg_vbm8_run.m
 
 (1) Weighting for MRF and ORNLM can now be selected in the GUI. This will solve
@@ -5806,3 +5807,11 @@ M       cg_vbm_defs.m
      function that requires this function.
 ------------------------------------------------------------------------
 r640 | dahnke | 2014-10-23 12:11:32
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       html/vbm12.html
+
+Yb was too early deleted for further surface use.
+------------------------------------------------------------------------
+r641 | gaser | 2014-10-23 16:10:41

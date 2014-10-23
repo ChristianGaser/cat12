@@ -702,7 +702,12 @@ if do_cls && do_defs,,
   % brain at least to CSF to avoid wholes for images with CSF==BG.
   if job.extopts.LASstr>0 
     Ycsf = double(0.33 * Yb(indx,indy,indz)); spm_smooth(Ycsf,Ycsf,0.6*vx_vol);
-    Ymb  = max(Ycsf,Ymb); clear Ycsf Yb; 
+    Ymb  = max(Ycsf,Ymb); 
+    clear Ycsf; 
+    % Yb is needed for surface reconstruction
+    if ~job.extopts.surface
+      clear Yb
+    end
   end
   
   % Amap parameters 
