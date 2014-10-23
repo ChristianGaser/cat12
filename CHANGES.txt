@@ -5766,3 +5766,15 @@ M       vbm_vol_atlas.m
 (1)  Added VBM12 header figure in VBM12 GUI.
 ------------------------------------------------------------------------
 r636 | dahnke | 2014-10-23 08:27:34
+
+M       CHANGES.txt
+M       cg_vbm_run_job.m
+M       tbx_cfg_vbm.m
+M       vbm_spm.m
+
+(1) Added rician flag to cg_vbm_run_job.m.
+(2) Added some comments in vbm_spm.m.
+(3) Many edits and formattings in tbx_cfg_vbm.m.
+
+------------------------------------------------------------------------
+r637 | gaser | 2014-10-23 11:48:33
