@@ -424,7 +424,7 @@ function callvbm(P)
   matlabbatch{1}.spm.tools.vbm.estwrite.data = {P};
 
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm                = ...
-    {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
+    {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii'};
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg            = 0.0001;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasfwhm           = 60;
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.affreg             = 'mni';
