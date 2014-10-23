@@ -27,7 +27,7 @@ function vbm_tst_pre
   def.printspace  = [50 7 2]; % [name,columnwidth,fractonal digits] 
   def.SPM8path    = '/Users/dahnke/Neuroimaging/SPM8R4290_VBM8';
   def.VBM12ppath  = '/Users/dahnke/Neuroimaging/SPM8R4290_VBM12+';
-  def.SPM12path   = '/Users/dahnke/Neuroimaging/SPM12Rbeta';
+  def.SPM12path   = '/Users/dahnke/Neuroimaging/spm12';
   def.RAWdir      = '+RAW';
   def.CSVdir      = '+CSV';
   def.Tdir        = 'T1';
@@ -909,27 +909,27 @@ function SPM12segment(file,SPM12dir,SPMwkd)
   matlabbatch{mb}.spm.spatial.preproc.channel.biasreg   = 0.0001;
   matlabbatch{mb}.spm.spatial.preproc.channel.biasfwhm  = 60;
   matlabbatch{mb}.spm.spatial.preproc.channel.write     = [0 1];
-  matlabbatch{mb}.spm.spatial.preproc.tissue(1).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,1'};
+  matlabbatch{mb}.spm.spatial.preproc.tissue(1).tpm     = {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii,1'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).ngaus   = 1;
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).native  = [1 0];
   matlabbatch{mb}.spm.spatial.preproc.tissue(1).warped  = [0 0];
-  matlabbatch{mb}.spm.spatial.preproc.tissue(2).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,2'};
+  matlabbatch{mb}.spm.spatial.preproc.tissue(2).tpm     = {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii,2'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(2).ngaus   = 1;
   matlabbatch{mb}.spm.spatial.preproc.tissue(2).native  = [1 0];
   matlabbatch{mb}.spm.spatial.preproc.tissue(2).warped  = [0 0];
-  matlabbatch{mb}.spm.spatial.preproc.tissue(3).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,3'};
+  matlabbatch{mb}.spm.spatial.preproc.tissue(3).tpm     = {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii,3'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(3).ngaus   = 2;
   matlabbatch{mb}.spm.spatial.preproc.tissue(3).native  = [1 0];
   matlabbatch{mb}.spm.spatial.preproc.tissue(3).warped  = [0 0];
-  matlabbatch{mb}.spm.spatial.preproc.tissue(4).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,4'};
+  matlabbatch{mb}.spm.spatial.preproc.tissue(4).tpm     = {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii,4'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(4).ngaus   = 3;
   matlabbatch{mb}.spm.spatial.preproc.tissue(4).native  = [0 0];
   matlabbatch{mb}.spm.spatial.preproc.tissue(4).warped  = [0 0];
-  matlabbatch{mb}.spm.spatial.preproc.tissue(5).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,5'};
+  matlabbatch{mb}.spm.spatial.preproc.tissue(5).tpm     = {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii,5'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(5).ngaus   = 4;
   matlabbatch{mb}.spm.spatial.preproc.tissue(5).native  = [0 0];
   matlabbatch{mb}.spm.spatial.preproc.tissue(5).warped  = [0 0];
-  matlabbatch{mb}.spm.spatial.preproc.tissue(6).tpm     = {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii,6'};
+  matlabbatch{mb}.spm.spatial.preproc.tissue(6).tpm     = {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii,6'};
   matlabbatch{mb}.spm.spatial.preproc.tissue(6).ngaus   = 2;
   matlabbatch{mb}.spm.spatial.preproc.tissue(6).native  = [0 0];
   matlabbatch{mb}.spm.spatial.preproc.tissue(6).warped  = [0 0];
@@ -988,8 +988,8 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
 %-----------------------------------------------------------------------
   matlabbatch{1}.spm.tools.vbm.estwrite.data              = cellstr(file);
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.tpm          = ...
-    {'/Users/dahnke/Neuroimaging/SPM12Rbeta/tpm/TPM.nii'};
-    %{'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/TPM.nii'};
+    {'/Users/dahnke/Neuroimaging/spm12/tpm/TPM.nii'};
+    %{'/Users/dahnke/Neuroimaging/spm12/toolbox/vbm12/templates_1.50mm/TPM.nii'};
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.ngaus        = [1 1 2 3 4 2];  % [2 2 2 3 4 2] 
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasreg      = 0.001; % 0.0001 - stronger correction
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.biasfwhm     = 60;
@@ -998,7 +998,7 @@ function VBM12segment(file,SPM12dir,SPMwkd,LAS)
   matlabbatch{1}.spm.tools.vbm.estwrite.opts.samp         = 3;
   
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.dartelwarp.normhigh.darteltpm = ...
-    {'/Users/dahnke/Neuroimaging/SPM12Rbeta/toolbox/vbm12/templates_1.50mm/Template_1_IXI550_MNI152.nii'};
+    {'/Users/dahnke/Neuroimaging/spm12/toolbox/vbm12/templates_1.50mm/Template_1_IXI550_MNI152.nii'};
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.sanlm     = 2;
   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.cleanup   = 0;
 %   matlabbatch{1}.spm.tools.vbm.estwrite.extopts.gcutstr   = 0.5;

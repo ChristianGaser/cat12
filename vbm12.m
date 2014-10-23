@@ -20,9 +20,10 @@ function varargout = vbm12(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help vbm12
+% Edit the above vbm12title to modify the response to help vbm12
 
-% Last Modified by GUIDE v2.5 02-Oct-2014 15:06:00
+% Last Modified by GUIDE v2.5 22-Oct-2014 18:28:46
+
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,6 +43,17 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
+
+
+% This creates the 'background' image
+if ~nargin
+  ha = axes('units','normalized','position',[0 0.87 1 0.13]);
+  uistack(ha,'bottom');
+  I=imread(fullfile(spm('dir'),'toolbox','vbm12','html','contact.jpg'));
+  hi = imagesc(I);
+  text(80,100,'VBM12 Toolbox','Color',[1 1 1],'Fontsize',22,'Fontweight','bold');
+  set(ha,'handlevisibility','off','visible','off');
+end
 
 
 % --- Executes just before vbm12 is made visible.
@@ -184,3 +196,17 @@ function popupmenu4_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes during object creation, after setting all properties.
+function figure1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in pushbutton165.
+function pushbutton165_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton165 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
