@@ -267,7 +267,9 @@ function SPM = spm_spm(SPM)
 %__________________________________________________________________________
 % Copyright (C) 1994-2012 Wellcome Trust Centre for Neuroimaging
 
-% Karl Friston & Guillaume Flandin
+% based on:
+% spm_spm.m 6015 2014-05-23 15:46:19Z guillaume
+%
 % $Id$
 
 
@@ -492,6 +494,7 @@ VResMS = spm_data_hdr_write(VResMS);
 %-Initialise standardised residual images
 %--------------------------------------------------------------------------
 nSres = min(nScan, spm_get_defaults('stats.maxres'));
+resInMem = spm_get_defaults('stats.resmem');
 VResI(1:nSres) = deal(struct(...
     'fname',   [],...
     'dim',     DIM,...
@@ -499,6 +502,7 @@ VResI(1:nSres) = deal(struct(...
     'mat',     M,...
     'pinfo',   [1 0 0]',...
     'descrip', 'spm_spm:StandardisedResiduals'));
+if resInMem, for i=1:nSres, VResI(i).dat = zeros(VResI(i).dim); end; end
 
 for i = 1:nSres
     VResI(i).fname   = [sprintf('ResI_%04d', i) file_ext];
@@ -537,7 +541,7 @@ chunksize = floor(spm_get_defaults('stats.maxmem') / 8 / nScan);
 nbchunks  = ceil(prod(DIM) / chunksize);
 chunks    = min(cumsum([1 repmat(chunksize,1,nbchunks)]),prod(DIM)+1);
 
-spm_progress_bar('Init',nbchunks,'Parameters estimation','Chunks');
+spm_progress_bar('Init',nbchunks,'Parameter estimation','Chunks');
 
 for i=1:nbchunks
     chunk = chunks(i):chunks(i+1)-1;
@@ -616,6 +620,10 @@ end
 
 fprintf('\n');                                                          %-#
 spm_progress_bar('Clear');
+
+if ~any(mask(:))
+    error('Please check your data: There are no inmask voxels.');
+end
 
 
 %==========================================================================
