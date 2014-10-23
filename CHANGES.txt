@@ -5798,3 +5798,11 @@ M       vbm_vol_atlas.m
 (3)  Prepared further atlas data and xml export in vbm_vol_atlas (not read yet).
 ------------------------------------------------------------------------
 r639 | dahnke | 2014-10-23 12:03:49
+
+M       CHANGES.txt
+M       cg_vbm_defs.m
+
+(1)  Added spm_load_float (that was removed in SPM12) into cg_vbm_defs (the only
+     function that requires this function.
+------------------------------------------------------------------------
+r640 | dahnke | 2014-10-23 12:11:32
