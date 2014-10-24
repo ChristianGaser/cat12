@@ -1,0 +1,126 @@
+ROIid;ROIappr;ROIname;ROIbase
+0;BG;Background;Background
+1;l3thV;Left Third Ventricle;3rd Ventricle 
+2;r3thV;Right Third Ventricle;3rd Ventricle 
+3;l4thV;Left Fourth Ventricle;4th Ventricle 
+4;r4thV;Right Fourth Ventricle;4th Ventricle 
+5;lAcc;Left Accumbens;Right Accumbens Area  & Left Accumbens Area 
+6;rAcc;Right Accumbens;Right Accumbens Area  & Left Accumbens Area 
+7;lAmy;Left Amygdala;Right Amygdala  & Left Amygdala 
+8;rAmy;Right Amygdala;Right Amygdala  & Left Amygdala 
+9;l;Left Bothside;Brain Stem  & CSF  & Optic Chiasm  & Left Basal Forebrain  & Right Basal Forebrain  & Right Ent entorhinal area  & Left Ent entorhinal area  & Right PP planum polare  & Left PP planum polare  & Right SCA subcallosal area  & Left SCA subcallosal area 
+10;r;Right Bothside;Brain Stem  & CSF  & Optic Chiasm  & Left Basal Forebrain  & Right Basal Forebrain  & Right Ent entorhinal area  & Left Ent entorhinal area  & Right PP planum polare  & Left PP planum polare  & Right SCA subcallosal area  & Left SCA subcallosal area 
+11;lCau;Left Caudate;Right Caudate  & Left Caudate 
+12;rCau;Right Caudate;Right Caudate  & Left Caudate 
+13;lCbe;Left Cerebellum;Right Cerebellum Exterior  & Left Cerebellum Exterior  & Right Cerebellum White Matter  & Left Cerebellum White Matter 
+14;rCbe;Right Cerebellum;Right Cerebellum Exterior  & Left Cerebellum Exterior  & Right Cerebellum White Matter  & Left Cerebellum White Matter 
+15;lCbr;Left Cerebral;Right Cerebral White Matter  & Left Cerebral White Matter 
+16;rCbr;Right Cerebral;Right Cerebral White Matter  & Left Cerebral White Matter 
+17;lHip;Left Hippocampus;Right Hippocampus  & Left Hippocampus 
+18;rHip;Right Hippocampus;Right Hippocampus  & Left Hippocampus 
+19;lInfLatV;Left Inferior Lateral Ventricle;Right Inf Lat Vent  & Left Inf Lat Vent 
+20;rInfLatV;Right Inferior Lateral Ventricle;Right Inf Lat Vent  & Left Inf Lat Vent 
+21;lLatV;Left Lateral Ventricle;Right Lateral Ventricle  & Left Lateral Ventricle 
+22;rLatV;Right Lateral Ventricle;Right Lateral Ventricle  & Left Lateral Ventricle 
+23;lPal;Left Pallidum;Right Pallidum  & Left Pallidum 
+24;rPal;Right Pallidum;Right Pallidum  & Left Pallidum 
+25;lPut;Left Putamen;Right Putamen  & Left Putamen 
+26;rPut;Right Putamen;Right Putamen  & Left Putamen 
+27;lThaPro;Left Thalamus Proper;Right Thalamus Proper  & Left Thalamus Proper 
+28;rThaPro;Right Thalamus Proper;Right Thalamus Proper  & Left Thalamus Proper 
+29;lVenV;Left Ventral Ventricle;Right Ventral DC  & Left Ventral DC 
+30;rVenV;Right Ventral Ventricle;Right Ventral DC  & Left Ventral DC 
+31;lCBeL;Left Cerebellar Lobe;Cerebellar Vermal Lobules I-V  & Cerebellar Vermal Lobules VI-VII  & Cerebellar Vermal Lobules VIII-X 
+32;rCBeL;Right Cerebellar Lobe;Cerebellar Vermal Lobules I-V  & Cerebellar Vermal Lobules VI-VII  & Cerebellar Vermal Lobules VIII-X 
+33;lAntCinG;Left Anterior Cingulate Gyrus;Right ACgG anterior cingulate gyrus  & Left ACgG anterior cingulate gyrus 
+34;rAntCinG;Right Anterior Cingulate Gyrus;Right ACgG anterior cingulate gyrus  & Left ACgG anterior cingulate gyrus 
+35;lAntIns;Left Anterior Insula;Right AIns anterior insula  & Left AIns anterior insula 
+36;rAntIns;Right Anterior Insula;Right AIns anterior insula  & Left AIns anterior insula 
+37;lAntOrbG;Left Anterior Orbital Gyrus;Right AOrG anterior orbital gyrus  & Left AOrG anterior orbital gyrus 
+38;rAntOrbG;Right Anterior Orbital Gyrus;Right AOrG anterior orbital gyrus  & Left AOrG anterior orbital gyrus 
+39;lAngG;Left Angular Gyrus;Right AnG angular gyrus  & Left AnG angular gyrus 
+40;rAngG;Right Angular Gyrus;Right AnG angular gyrus  & Left AnG angular gyrus 
+41;lCal;Left Calcarine;Right Calc calcarine cortex  & Left Calc calcarine cortex 
+42;rCal;Right Calcarine;Right Calc calcarine cortex  & Left Calc calcarine cortex 
+43;lOpe;Left Operculum;Right CO central operculum  & Left CO central operculum 
+44;rOpe;Right Operculum;Right CO central operculum  & Left CO central operculum 
+45;lCun;Left Cuneus;Right Cun cuneus  & Left Cun cuneus 
+46;rCun;Right Cuneus;Right Cun cuneus  & Left Cun cuneus 
+47;lFroOpe;Left Frontal Operculum;Right FO frontal operculum  & Left FO frontal operculum 
+48;rFroOpe;Right Frontal Operculum;Right FO frontal operculum  & Left FO frontal operculum 
+49;lFroP;Left Frontal Pole;Right FRP frontal pole  & Left FRP frontal pole 
+50;rFroP;Right Frontal Pole;Right FRP frontal pole  & Left FRP frontal pole 
+51;lFusG;Left Fusiform Gyrus;Right FuG fusiform gyrus  & Left FuG fusiform gyrus 
+52;rFusG;Right Fusiform Gyrus;Right FuG fusiform gyrus  & Left FuG fusiform gyrus 
+53;lRecG;Left Rectus Gyrus;Right GRe gyrus rectus  & Left GRe gyrus rectus 
+54;rRecG;Right Rectus Gyrus;Right GRe gyrus rectus  & Left GRe gyrus rectus 
+55;lInfOccG;Left Inferior Occipital Gyrus;Right IOG inferior occipital gyrus  & Left IOG inferior occipital gyrus 
+56;rInfOccG;Right Inferior Occipital Gyrus;Right IOG inferior occipital gyrus  & Left IOG inferior occipital gyrus 
+57;lInfTemG;Left Inferior Temporal Gyrus;Right ITG inferior temporal gyrus  & Left ITG inferior temporal gyrus 
+58;rInfTemG;Right Inferior Temporal Gyrus;Right ITG inferior temporal gyrus  & Left ITG inferior temporal gyrus 
+59;lLinG;Left Lingual Gyrus;Right LiG lingual gyrus  & Left LiG lingual gyrus 
+60;rLinG;Right Lingual Gyrus;Right LiG lingual gyrus  & Left LiG lingual gyrus 
+61;lLatOrbG;Left Lateral Orbital Gyrus;Right LOrG lateral orbital gyrus  & Left LOrG lateral orbital gyrus 
+62;rLatOrbG;Right Lateral Orbital Gyrus;Right LOrG lateral orbital gyrus  & Left LOrG lateral orbital gyrus 
+63;lMidCinG;Left Middle Cingulate Gyrus;Right MCgG middle cingulate gyrus  & Left MCgG middle cingulate gyrus 
+64;rMidCinG;Right Middle Cingulate Gyrus;Right MCgG middle cingulate gyrus  & Left MCgG middle cingulate gyrus 
+65;lMedFro;Left Medial Frontal;Right MFC medial frontal cortex  & Left MFC medial frontal cortex 
+66;rMedFro;Right Medial Frontal;Right MFC medial frontal cortex  & Left MFC medial frontal cortex 
+67;lMidFroG;Left Middle Frontal Gyrus;Right MFG middle frontal gyrus  & Left MFG middle frontal gyrus 
+68;rMidFroG;Right Middle Frontal Gyrus;Right MFG middle frontal gyrus  & Left MFG middle frontal gyrus 
+69;lMidOccG;Left Middle Occipital Gyrus;Right MOG middle occipital gyrus  & Left MOG middle occipital gyrus 
+70;rMidOccG;Right Middle Occipital Gyrus;Right MOG middle occipital gyrus  & Left MOG middle occipital gyrus 
+71;lMedOrbG;Left Medial Orbital Gyrus;Right MOrG medial orbital gyrus  & Left MOrG medial orbital gyrus 
+72;rMedOrbG;Right Medial Orbital Gyrus;Right MOrG medial orbital gyrus  & Left MOrG medial orbital gyrus 
+73;lMedPoCG;Left Medial Postcentral Gyrus;Right MPoG postcentral gyrus medial segment  & Left MPoG postcentral gyrus medial segment 
+74;rMedPoCG;Right Medial Postcentral Gyrus;Right MPoG postcentral gyrus medial segment  & Left MPoG postcentral gyrus medial segment 
+75;lMedPrcG;Left Medial Precentral Gyrus;Right MPrG precentral gyrus medial segment  & Left MPrG precentral gyrus medial segment 
+76;rMedPrcG;Right Medial Precentral Gyrus;Right MPrG precentral gyrus medial segment  & Left MPrG precentral gyrus medial segment 
+77;lSupMedFroG;Left Superior Medial Frontal Gyrus;Right MSFG superior frontal gyrus medial segment  & Left MSFG superior frontal gyrus medial segment 
+78;rSupMedFroG;Right Superior Medial Frontal Gyrus;Right MSFG superior frontal gyrus medial segment  & Left MSFG superior frontal gyrus medial segment 
+79;lMidTemG;Left Middle Temporal Gyrus;Right MTG middle temporal gyrus  & Left MTG middle temporal gyrus 
+80;rMidTemG;Right Middle Temporal Gyrus;Right MTG middle temporal gyrus  & Left MTG middle temporal gyrus 
+81;lOccP;Left Occipital Pole;Right OCP occipital pole  & Left OCP occipital pole 
+82;rOccP;Right Occipital Pole;Right OCP occipital pole  & Left OCP occipital pole 
+83;lOccFusG;Left Occipital Fusiform Gyrus;Right OFuG occipital fusiform gyrus  & Left OFuG occipital fusiform gyrus 
+84;rOccFusG;Right Occipital Fusiform Gyrus;Right OFuG occipital fusiform gyrus  & Left OFuG occipital fusiform gyrus 
+85;lInfFroG;Left Inferior Frontal Gyrus;Right OpIFG opercular part of the inferior frontal gyrus  & Left OpIFG opercular part of the inferior frontal gyrus 
+86;rInfFroG;Right Inferior Frontal Gyrus;Right OpIFG opercular part of the inferior frontal gyrus  & Left OpIFG opercular part of the inferior frontal gyrus 
+87;lInfFroOrbG;Left Inferior Frontal Orbital Gyrus;Right OrIFG orbital part of the inferior frontal gyrus  & Left OrIFG orbital part of the inferior frontal gyrus 
+88;rInfFroOrbG;Right Inferior Frontal Orbital Gyrus;Right OrIFG orbital part of the inferior frontal gyrus  & Left OrIFG orbital part of the inferior frontal gyrus 
+89;lPosCinG;Left Posterior Cingulate Gyrus;Right PCgG posterior cingulate gyrus  & Left PCgG posterior cingulate gyrus 
+90;rPosCinG;Right Posterior Cingulate Gyrus;Right PCgG posterior cingulate gyrus  & Left PCgG posterior cingulate gyrus 
+91;lPCu;Left Precuneus;Right PCu precuneus  & Left PCu precuneus 
+92;rPCu;Right Precuneus;Right PCu precuneus  & Left PCu precuneus 
+93;lParHipG;Left Parahippocampus Gyrus;Right PHG parahippocampal gyrus  & Left PHG parahippocampal gyrus 
+94;rParHipG;Right Parahippocampus Gyrus;Right PHG parahippocampal gyrus  & Left PHG parahippocampal gyrus 
+95;lPosIns;Left Posterior Insula;Right PIns posterior insula  & Left PIns posterior insula 
+96;rPosIns;Right Posterior Insula;Right PIns posterior insula  & Left PIns posterior insula 
+97;lParOpe;Left Parietal Operculum;Right PO parietal operculum  & Left PO parietal operculum 
+98;rParOpe;Right Parietal Operculum;Right PO parietal operculum  & Left PO parietal operculum 
+99;lPoCG;Left Postcentral Gyrus;Right PoG postcentral gyrus  & Left PoG postcentral gyrus 
+100;rPoCG;Right Postcentral Gyrus;Right PoG postcentral gyrus  & Left PoG postcentral gyrus 
+101;lPosOrbG;Left Posterior Orbital Gyrus;Right POrG posterior orbital gyrus  & Left POrG posterior orbital gyrus 
+102;rPosOrbG;Right Posterior Orbital Gyrus;Right POrG posterior orbital gyrus  & Left POrG posterior orbital gyrus 
+103;lPrcG;Left Precentral Gyrus;Right PrG precentral gyrus  & Left PrG precentral gyrus 
+104;rPrcG;Right Precentral Gyrus;Right PrG precentral gyrus  & Left PrG precentral gyrus 
+105;lTem;Left Temporal;Right PT planum temporale  & Left PT planum temporale 
+106;rTem;Right Temporal;Right PT planum temporale  & Left PT planum temporale 
+107;lSupFroG;Left Superior Frontal Gyrus;Right SFG superior frontal gyrus  & Left SFG superior frontal gyrus 
+108;rSupFroG;Right Superior Frontal Gyrus;Right SFG superior frontal gyrus  & Left SFG superior frontal gyrus 
+109;lMot;Left Motor;Right SMC supplementary motor cortex  & Left SMC supplementary motor cortex 
+110;rMot;Right Motor;Right SMC supplementary motor cortex  & Left SMC supplementary motor cortex 
+111;lSupMarG;Left Supramarginal Gyrus;Right SMG supramarginal gyrus  & Left SMG supramarginal gyrus 
+112;rSupMarG;Right Supramarginal Gyrus;Right SMG supramarginal gyrus  & Left SMG supramarginal gyrus 
+113;lSupOccG;Left Superior Occipital Gyrus;Right SOG superior occipital gyrus  & Left SOG superior occipital gyrus 
+114;rSupOccG;Right Superior Occipital Gyrus;Right SOG superior occipital gyrus  & Left SOG superior occipital gyrus 
+115;lSupParL;Left Superior Parietal Lobe;Right SPL superior parietal lobule  & Left SPL superior parietal lobule 
+116;rSupParL;Right Superior Parietal Lobe;Right SPL superior parietal lobule  & Left SPL superior parietal lobule 
+117;lSupTemG;Left Superior Temporal Gyrus;Right STG superior temporal gyrus  & Left STG superior temporal gyrus 
+118;rSupTemG;Right Superior Temporal Gyrus;Right STG superior temporal gyrus  & Left STG superior temporal gyrus 
+119;lTemP;Left Temporal Pole;Right TMP temporal pole  & Left TMP temporal pole 
+120;rTemP;Right Temporal Pole;Right TMP temporal pole  & Left TMP temporal pole 
+121;lInfFroAngG;Left Inferior Frontal Angular Gyrus;Right TrIFG triangular part of the inferior frontal gyrus  & Left TrIFG triangular part of the inferior frontal gyrus 
+122;rInfFroAngG;Right Inferior Frontal Angular Gyrus;Right TrIFG triangular part of the inferior frontal gyrus  & Left TrIFG triangular part of the inferior frontal gyrus 
+123;lTemG;Left Temporal Gyrus;Right TTG transverse temporal gyrus  & Left TTG transverse temporal gyrus 
+124;rTemG;Right Temporal Gyrus;Right TTG transverse temporal gyrus  & Left TTG transverse temporal gyrus 

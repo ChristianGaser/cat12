@@ -374,12 +374,12 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       refine = 1;  
  
     case 'neuromorphometrics'
-      mdir   = fullfile(rawdir,'MICCAI2012-Neuromorphometrics','full');
-      P      = vbm_findfiles(mdir,'*_3.nii');
-      PA     = vbm_findfiles(mdir,'*_3_glm.nii');
+      mdir   = fullfile(rawdir,'MICCAI2012-Neuromorphometrics');
+      P      = vbm_findfiles(fullfile(mdir,'full'),'1*_3.nii');
+      PA     = vbm_findfiles(fullfile(mdir,'full'),'1*_3_glm.nii');
       Ps     = {''};
-      Pcsv   = vbm_findfiles(mdir,'.csv');
-      Ptxt   = vbm_findfiles(mdir,'.txt'); 
+      Pcsv   = vbm_findfiles(mdir,'MICCAI2012-Neuromorphometrics.csv');
+      Ptxt   = vbm_findfiles(mdir,'MICCAI2012-Neuromorphometrics.txt'); 
       refine = 1;        
     % for this atlas I have no source and no labels...
     %{
@@ -751,7 +751,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
   end
   
   create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv);
-  
+   
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
   end
@@ -943,6 +943,9 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
       vbm_io_csv(fullfile(resdir,[atlas '.csv']),csv);
     end
   end
+  
+  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv);
+  
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']));
   end
@@ -1350,6 +1353,9 @@ function dict=ROIdict()
     'hOC5'           {'hOC5 (V5)'} {}
     ... ??
    };
+  dict.neuromorphometrics = {
+    ...
+  };
 end
 function create_vbm_atlas(A,C,LAB)
 %%
@@ -1516,6 +1522,8 @@ function create_vbm_atlas(A,C,LAB)
 end
 function create_spm_atlas_xml(fname,csv,opt)
 % create an spm12 compatible xml version of the csv data
+  if ~exist('opt','var'), opt = struct(); end
+
   [pp,ff] = spm_fileparts(fname); 
 
   def.name   = ff;
@@ -1541,22 +1549,25 @@ function create_spm_atlas_xml(fname,csv,opt)
     '      <coordinate_system>' opt.cor '</coordinate_system>\n' ...
     '      <type>' opt.type '</type>\n' ...
     '      <images>\n' ...
-    '        <imagefile>' opt.fname '</imagefile>\n' ...
+    '        <imagefile>' opt.images '</imagefile>\n' ...
     '      </images>\n' ...
     '    </header>\n' ...
     '  <data>\n' ...
     '    <!-- could also include short_name, RGBA, XYZmm -->\n' ...
     ];
   xml.data = '';
-  for di = 1:size(csv,1);
+  sidel = {'Left ','Right ','Bothside '};
+  sides = {'l','r','b'};
+  for di = 2:size(csv,1);
     % index      = label id
     % name       = long name SIDE STRUCTURE TISSUE 
     % short_name = short name 
     % RGBA       = RGB color
     % XYZmm      = XYZ coordinate
-    xml.data = [xml.data sprintf(['    <label><index>%d</index><name>%s</name>' ...
-      '<short_name>%s</short_name><RGBA></RGBA><XYZmm></XYZmm></label>\n'],...
-      csv{di,2},csv{di,2})];
+    xml.data = [xml.data sprintf(['    <label><index>%d</index>'...
+      '<short_name>%s</short_name><name>%s</name>' ...
+      '<RGBA></RGBA><XYZmm></XYZmm></label>\\n'],...
+      csv{di,1},[sides{csv{di,6}} csv{di,4}],[sidel{csv{di,6}} csv{di,3}])];
   end
   xml.footer = [ ...
     '  </data>\n' ...
@@ -1564,6 +1575,6 @@ function create_spm_atlas_xml(fname,csv,opt)
     ];
   
   fid = fopen(fname,'w');
-  fprintf(fid,'%s%s%s',xml.header,xml.data,xml.footer);
+  fprintf(fid,[xml.header,xml.data,xml.footer]);
   fclose(fid);
 end
