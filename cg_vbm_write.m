@@ -1288,6 +1288,24 @@ if jc
     N.dat(:,:,:) = dt;
   end
 end
+
+
+% deformations
+if df(1),
+    Yy         = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
+    N         = nifti;
+    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
+                           [d1,1,3],'float32',0,1,0);
+    if do_dartel
+        N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']);
+    end
+    N.mat     = M1;
+    N.mat0    = M1;
+    N.descrip = 'Deformation';
+    create(N);
+    N.dat(:,:,:,:,:) = reshape(Yy,[d1,1,3]);
+end
+
 fprintf('%4.0fs\n',etime(clock,stime));
 
 
@@ -1460,13 +1478,15 @@ vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
 %  ---------------------------------------------------------------------
 %  display and print result if possible
 %  ---------------------------------------------------------------------
+QMC   = vbm_io_colormaps('marks+',30);
+color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 if do_cls && vbm.print
-  
-  
   %% create report text
-
-  QMC = vbm_io_colormaps('marks+',30);
-  color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+  oldcolormap = colormap; 
+  Pm  = fullfile(pth,['m', nam, '.nii']); 
+  Pp0 = fullfile(pth,['p0', nam, '.nii']); 
+      
+  
   mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
 	
@@ -1500,8 +1520,9 @@ if do_cls && vbm.print
   str = [str struct('name', 'NCstr / LASstr / gcutstr / cleanupstr:','value',...
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
-%  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',vbm.vox))]; 
-    
+%  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',vbm.vox))]; % does not work yet 
+% intern interpolation?
+
          
   % Image Quality measures:
   % --------------------------------------------------------------------
@@ -1517,9 +1538,13 @@ if do_cls && vbm.print
   str2 = [str2 struct('name',' RES (resolution):','value',marks2str(qam.QM.res_RMS,sprintf('%5.2f',qam.QM.res_RMS)))];
   str2 = [str2 struct('name',' NCR (noise):','value',marks2str(qam.QM.NCR,sprintf('%5.2f',qam.QM.NCR)))];
   str2 = [str2 struct('name',' ICR (bias):','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
-  str2 = [str2 struct('name',' MPC (processibility):','value',marks2str(qam.QM.MPC,sprintf('%5.2f',qam.QM.MPC)))];
-  str2 = [str2 struct('name',' CJV (processibility):','value',marks2str(qam.QM.CJV,sprintf('%5.2f',qam.QM.CJV)))];
-  str2 = [str2 struct('name','\bf RQ (processibility):','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
+  if ~isnan(qam.QM.MPC) % can be turned off in QA, missing validation/evaluation, time consuming estimation
+    str2 = [str2 struct('name',' MPC (processibility):','value',marks2str(qam.QM.MPC,sprintf('%5.2f',qam.QM.MPC)))];
+  end
+  if ~isnan(qam.QM.CJV) % can be turned off in QA, missing validation/evaluation
+    str2 = [str2 struct('name',' CJV (processibility):','value',marks2str(qam.QM.CJV,sprintf('%5.2f',qam.QM.CJV)))];
+  end
+  str2 = [str2 struct('name','\bf PQ (processibility):','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
 
       
   % Subject Measures
@@ -1626,12 +1651,14 @@ if do_cls && vbm.print
 
     if cmmax==2
       ytick       = ([0.5,10,15.5,21,26.5,32,59]);
+      yticko      = ([0.5,32,59]);
       yticklabel  = {' BG',' CSF',' CGM',' GM',' GWM',' WM',' BV/HD'};
-      yticklabelo = {' BG',' ',' ',' ',' ',' WM',' BV/HD'};
+      yticklabelo = {' BG',' WM',' BV/HD'};
     else
       ytick       = min(60,max(0.5,round([0.5,22,42,59]/cmmax)));
+      yticko(2,3) = []; 
       yticklabel  = {' BG',' CSF',' GM',' WM'};
-      yticklabelo = {' BG',' ',' ',' WM'};
+      yticklabelo = {' BG',' WM'};
     end
     
   
@@ -1652,46 +1679,39 @@ if do_cls && vbm.print
       bb = vbm.bb;
       spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
       
-      % original image in original space
-      Yo   = single(spm_read_vols(spm_vol(fname0))); % res.image(1).fname
-      Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-      Yo   = max(0,min(2,Yo ./ median(Yo(Yp0(:)>2.9)))); clear Yp0;
-      
-      vbm_io_writenii(VT0,Yo,'o','intensity scaled original','float32',[0,1],[1 0 0],0,trans);
-      hho = spm_orthviews('Image',fullfile(pth,['o', nam, '.nii']),pos(1,:)); clear Yo;
+      % Yo - original image in original space
+      Yo     = single(spm_read_vols(spm_vol(fname0))); 
+      Yowmth = median(Yo(Yo(:)>median(Yo(:))))*1.2; clear Yo;
+      hho = spm_orthviews('Image',fname0,pos(1,:)); 
     	spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
-      spm_orthviews('window',hho,[0 cmmax]);
+      spm_orthviews('window',hho,[0 Yowmth*4]); caxis([0,2]);
       cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+        'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
       
-      
-      % full corrected images in original space
-      Vtmp = fullfile(pth,['m', nam, '.nii']); 
-      if ~exist(Vtmp,'file')
-        vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,1],[1 0 0],0,trans);
+      % Ym - full corrected images in original space
+      if ~exist(Pm,'file')
+        vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,2],[1 0 0],0,trans);
       end
-    	hhm = spm_orthviews('Image',Vtmp,pos(2,:));
+    	hhm = spm_orthviews('Image',Pm,pos(2,:));
     	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
-      spm_orthviews('window',hhm,[0 cmmax]);
+      spm_orthviews('window',hhm,[0 cmmax]); 
       cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
         'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
 
       
-      % p0
-      Vtmp2 = fullfile(pth,['p0', nam, '.nii']); 
-      if ~exist(Vtmp2,'file')
+      % Yp0 - segment image in original space
+      if ~exist(Pp0,'file')
         Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
         vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
       end
-      hhp0 = spm_orthviews('Image',Vtmp2,pos(3,:));
+      hhp0 = spm_orthviews('Image',Pp0,pos(3,:));
       spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
       spm_orthviews('window',hhp0,[0 3*cmmax]);
       cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
         'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
       
- 
       % surface
       if exist('S','var')
         CSl.vertices = S.lh.vertices; CSl.faces = S.lh.faces; CSl.facevertexcdata = S.lh.th1;
@@ -1705,6 +1725,7 @@ if do_cls && vbm.print
   
     end
     
+    % set to old colormap and correct scaling
     colormap(vbm_io_colormaps(cm));
     set(0,'CurrentFigure',ofg)
   end
@@ -1716,81 +1737,63 @@ if do_cls && vbm.print
   % print subject report file
   psf=fullfile(pth,['vbmreport_' nam '.ps']);
   if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
+   
+  if opt.print
+    % reset colormap
+    colormap(oldcolormap)
     
-  % remove p0 image, if it was only written for printing
-  if exist(fullfile(pth,['o', nam, '.nii']),'file')
-    delete(fullfile(pth,['o', nam, '.nii']));
-    try spm_orthviews('Delete',hho); end %#ok<TRYNC> % we have to remove the figure, otherwise the gui user may get an error
-    try set(cc{1},'visible','off'); end %#ok<TRYNC>
-  end
-  % remove p0 image, if it was only written for printing
-  if job.output.bias.native==0 && exist(fullfile(pth,['m', nam, '.nii']),'file')
-    delete(fullfile(pth,['m', nam, '.nii']));
-    if exist('hhm','var')
-      spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
-    end
+    ytick       = min(59,max(0.5,round([0.5,22,42,59])));
+    yticko      = ytick(1:3:end); 
+    yticklabel  = {' BG',' CSF',' GM',' WM'};
+    yticklabelo = {' BG',' WM'};
+
+    
+    % remove m image, if it was only written for printing
     try set(cc{2},'visible','off'); end %#ok<TRYNC>
-  end
-  % remove p0 image, if it was only written for printing
-  if job.output.label.native==0 && exist(fullfile(pth,['p0', nam, '.nii']),'file')
-    delete(fullfile(pth,['p0', nam, '.nii']));
-    if exist('hhp0','var')
-      spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
+    if job.output.bias.native==0 && exist(Pm,'file')
+      delete(fullfile(pth,['m', nam, '.nii']));
+      if exist('hhm','var')
+        spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
+      end
+    else
+      spm_orthviews('window',hhm ,[0 1]); 
+      colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
     end
-    try set(cc{3},'visible','off'); end %#ok<TRYNC>
+
+
+    % remove p0 image, if it was only written for printing
+    try, set(cc{3},'visible','off'); end %#ok<TRYNC>  
+    if job.output.label.native==0 && exist(Pp0,'file')
+      delete(fullfile(pth,['p0', nam, '.nii']));
+      if exist('hhp0','var')
+        spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
+      end
+    else
+      spm_orthviews('window',hhp0,[0 1]); 
+      colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+    end
+    
+    spm_orthviews('window',hho,[0 Yowmth*2]);
+    try set(cc{1},'visible','off'); end %#ok<TRYNC>
+    colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
+          'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+
   end
-  % remove p0 image, if it was only written for printing
-%   if exist('th1','var') && exist('Vtmpth1','var') && exist(Vtmpth1,'file')
-%     delete(Vtmpth1);
-%     spm_orthviews('Delete',hhth1); % we have to remove the figure, otherwise the gui user may get an error
-%   end
-  
-  
-  
-  %% small command window output
-  fprintf('\n%s',repmat('-',1,72));
-  fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
-    floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  vbm_io_cprintf(color(QMC,qam.QM.rms), ...
-    sprintf('Overall Image Quality:         %0.1f\n',qam.QM.rms));
-  vbm_io_cprintf(color(QMC,qam.SM.rms), ...
-    sprintf('Overall Subject Averageness:   %0.1f',qam.SM.rms));
-  fprintf('\n%s\n\n',repmat('-',1,72));
- 
-  
-else
-  QMC = vbm_io_colormaps('marks+',30);
-  color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-  fprintf('\n%s',repmat('-',1,72));
-  fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
-    floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  vbm_io_cprintf(color(QMC,qam.QM.rms), ...
-    sprintf('Overall Image Quality:         %0.1f\n',qam.QM.rms));
-  vbm_io_cprintf(color(QMC,qam.SM.rms), ...
-    sprintf('Overall Subject Averageness:   %0.1f',qam.SM.rms));
-  fprintf('\n%s\n\n',repmat('-',1,72));
 end
   
 % command window output
-
+fprintf('\n%s',repmat('-',1,72));
+  fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
+    floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
+  vbm_io_cprintf(color(QMC,qam.QM.rms), sprintf('Overall Preprocessing Quality:  %0.1f\n',qam.QM.rms));
+  vbm_io_cprintf(color(QMC,qam.SM.rms), sprintf('Overall Subject Averageness:    %0.1f',qam.SM.rms));
+  fprintf('\n%s\n\n',repmat('-',1,72));
  
 clear C c Ym Ymf
 
-% deformations
-if df(1),
-    Yy         = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
-    N         = nifti;
-    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
-                           [d1,1,3],'float32',0,1,0);
-    if do_dartel
-        N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']);
-    end
-    N.mat     = M1;
-    N.mat0    = M1;
-    N.descrip = 'Deformation';
-    create(N);
-    N.dat(:,:,:,:,:) = reshape(Yy,[d1,1,3]);
-end
+
 
 return;
 %=======================================================================
