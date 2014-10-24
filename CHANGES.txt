@@ -5824,3 +5824,24 @@ Adapted cg_vbm_batch.m to new parameters.
 
 ------------------------------------------------------------------------
 r642 | gaser | 2014-10-24 10:14:07
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_write.m
+A       templates_1.50mm/aal.xml
+A       templates_1.50mm/hammers.xml
+A       templates_1.50mm/ibsr.xml
+A       templates_1.50mm/mori.xml
+A       templates_1.50mm/neuromorphometrics.csv
+A       templates_1.50mm/neuromorphometrics.nii
+A       templates_1.50mm/neuromorphometrics.txt
+A       templates_1.50mm/neuromorphometrics.xml
+M       vbm_stat_marks.m
+M       vbm_vol_atlas.m
+
+(1)  Moved code block "deformation output" in cg_vbm_write to "write output" section.
+(2)  Update command line report.
+(3)  Added atlas-xml files for SPM12-ROI analysis (alpha version).
+(4)  Added neuromorphometrics atlas (alpha version). 
+------------------------------------------------------------------------
+r643 | dahnke | 2014-10-24 17:50:32

@@ -160,7 +160,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
     0.0661    0.05      0.0900    0.0445    0.0363
     0.6619    0.6619    0.3894    0.3478    0.4256
       ];
-      BWP.kappaNCR(2,:) = BWP.kappaNCR(2,:)/1.5;
+      BWP.kappaNCR(2,:) = BWP.kappaNCR(2,:)/2;
       BWP.kappaMVR = [
     0.7741    0.8206    1.2933    0.0272    0.8329
     3.4294    2.4655    2.4595    4.2494    2.3423
@@ -173,7 +173,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
         case 'spm12',        mid = 5;
         otherwise            mid = 2;
       end
-      evallinearx  = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
+%      evallinearx  = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
+      evallinearx  = @(x,best,worst,marks) min(9.5,max(  0,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
       BWP.NCRm = evallinearx(QA.QM.NCR,BWP.kappaNCR(1,mid),BWP.kappaNCR(2,mid),6);
       BWP.MVRm = evallinearx(QA.QM.res_MVR,BWP.kappaMVR(1,mid),BWP.kappaMVR(2,mid),6);    
       

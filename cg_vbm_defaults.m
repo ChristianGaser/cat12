@@ -165,7 +165,8 @@ vbm.extopts.gui           = 1;     % use GUI
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 vbm.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')  'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
+  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','neuromorphometrics.nii')  'gm'    {'csf','gm'};       ... % good atlas based on 35 subjects
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammer, 18 subjects, low T1 image quality
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... % ROIs requires further work >> use Anatomy toolbox
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
