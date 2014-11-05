@@ -11,6 +11,8 @@ if nargin == 1
   P = char(vargin.data_surf);
   GI = vargin.GI;
   FD = vargin.FD;
+  SD = vargin.SD;
+  SA = vargin.SA;
 else
   error('Not enough parameters.');
 end
@@ -36,32 +38,35 @@ for i=1:size(P,1)
   
   PGI     = fullfile(pp,strrep(ff,'central','gyrification'));
   PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
+  PSD     = fullfile(pp,strrep(ff,'central','logsulc'));
+  PSA     = fullfile(pp,strrep(ff,'central','logarea'));
   Psphere = fullfile(pp,strrep(name,'central','sphere'));
   
   fprintf('Extract parameters for %s\n',deblank(P(i,:)));
   if GI
     %% gyrification index based on absolute mean curvature
     cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',deblank(P(i,:)),PGI);
-    [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
   end
   
+  if SD
+    %% sulcus depth
+    cmd = sprintf('CAT_SulcusDepth -log "%s" "%s" "%s"',deblank(P(i,:)),Psphere,PSD);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+  end
+
+  if SA
+    %% glocal surface area
+    cmd = sprintf('CAT_DumpSurfArea -log -sphere "%s" "%s" "%s"',Psphere,deblank(P(i,:)),PSA);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+  end
+
   if FD
     %% fractal dimension using spherical harmonics
     cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,deblank(P(i,:)),Psphere,PFD);
-    [ST, RS] = system(fullfile(opt.CATDir,cmd)); check_system_output(ST,RS,opt.debug);
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
   end
 
 end
 
-end
-
-function check_system_output(status,result,debugON)
-  if status==1 || ...
-     ~isempty(strfind(result,'ERROR')) || ...
-     ~isempty(strfind(result,'Segmentation fault'))
-    error('VBM:system_error',result); 
-  end
-  if nargin > 2
-    if debugON, disp(result); end
-  end
 end
