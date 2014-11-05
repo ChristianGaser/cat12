@@ -77,7 +77,7 @@ function cg_spmT2x(vargin)
 rev = '$Rev$';
 
 if nargin == 1
-    P = char(vargin.data);
+    P = char(vargin.data_T2x);
     
     sel = vargin.conversion.sel;
 

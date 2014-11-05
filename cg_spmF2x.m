@@ -63,7 +63,7 @@ function cg_spmF2x(vargin)
 rev = '$Rev$';
 
 if nargin == 1
-    P = char(vargin.data);
+    P = char(vargin.data_F2x);
 
     sel = vargin.conversion.sel;
 

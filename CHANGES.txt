@@ -5845,3 +5845,16 @@ M       vbm_vol_atlas.m
 (4)  Added neuromorphometrics atlas (alpha version). 
 ------------------------------------------------------------------------
 r643 | dahnke | 2014-10-24 17:50:32
+
+M       CHANGES.txt
+M       cg_spmF2x.m
+M       cg_spmT2x.m
+M       cg_vbm_tools.m
+M       vbm_surf_parameters.m
+
+(1) Added estimation of sucus depth and surface area and updated all
+    relevant functions.
+(2) Corrected bug in spmT2x.m and spmF2x regarding wrong filenames.
+
+------------------------------------------------------------------------
+r644 | gaser | 2014-11-05 12:09:25

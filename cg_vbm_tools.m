@@ -350,21 +350,49 @@ FD.name   = 'Cortical complexity (fractal dimension)';
 FD.tag    = 'FD';
 FD.labels = {'none','yes'};
 FD.values = {0,1};
-FD.val    = {1};
-FD.help   = {'Extract Cortical complexity (fractal dimension) based on absolute mean curvature. The method is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'};
+FD.val    = {0};
+FD.help   = {'Extract Cortical complexity (fractal dimension) based on absolute mean curvature. The method is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
+             ''
+             'Warning: Estimation of cortical complexity is very slow!'
+''
+};
+
+SD        = cfg_menu;
+SD.name   = 'Sulcus depth';
+SD.tag    = 'SD';
+SD.labels = {'none','yes'};
+SD.values = {0,1};
+SD.val    = {1};
+SD.help   = {'Extract log10-transformed sulcus depth based on the euclidian distance between the central surface and its convex hull.'
+             ''
+             'Log-transformation is used to render the data more normally distributed.'
+''
+};
+
+SA        = cfg_menu;
+SA.name   = 'Surface area';
+SA.tag    = 'SA';
+SA.labels = {'none','yes'};
+SA.values = {0,1};
+SA.val    = {1};
+SA.help   = {'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428–1443, 2012.',
+             ''
+             'Log-transformation is used to render the data more normally distributed.'
+''
+};
 
 surfextract      = cfg_exbranch;
 surfextract.tag  = 'surfextract';
 surfextract.name = 'Extract surface parameters';
-surfextract.val  = {data_surf,GI,FD};
+surfextract.val  = {data_surf,GI,FD,SD,SA};
 surfextract.prog = @vbm_surf_parameters;
-surfextract.help = {'Not yet finished'};
+surfextract.help = {'Using this option several surface parameters can be extracted that can be further analyzed.'};
 
 data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
 data_surf.name    = 'Surfaces parameters';
 data_surf.filter  = 'any';
-data_surf.ufilter = '^[lr]h.[tgf][hyr][ira]';
+data_surf.ufilter = '^[lr]h.[tgfl][hyro][irag][cias]';
 data_surf.num     = [1 Inf];
 data_surf.help    = {'Select surfaces parameter files for resampling to template space.'};
 
@@ -413,7 +441,7 @@ data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
 data_surf.name    = 'Surfaces';
 data_surf.filter  = 'gifti';
-data_surf.ufilter = '[lr]h.[tgf][hyr][ira]';
+data_surf.ufilter = 'resampled';
 data_surf.num     = [1 Inf];
 data_surf.help    = {'Select surfaces parameter files.'};
 
@@ -425,7 +453,9 @@ check_mesh_cov.prog = @cg_check_cov;
 check_mesh_cov.help = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
 ''
-'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
+'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'
+''
+};
 
 %------------------------------------------------------------------------
 
@@ -465,7 +495,9 @@ rician.values  = {1 0};
 rician.val     = {0};
 rician.help    = {'MRIs can have Gaussian or Rician distributed noise with uniform or nonuniform variance across the image. If SNR is high enough (>3) noise can be well approximated by Gaussian noise in the foreground. However, for SENSE reconstruction or DTI data a Rician distribution is expected.'
 ''
-'Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts (e.g. cortex can be affected by very high values in the scalp or in blood vessels.'};
+'Please note that the Rician noise estimation is sensitive for large signals in the neighbourhood and can lead to artefacts (e.g. cortex can be affected by very high values in the scalp or in blood vessels.'
+''
+};
 
 prefix         = cfg_entry;
 prefix.tag     = 'prefix';
@@ -484,7 +516,9 @@ sanlm.vfiles = @vfiles_sanlm;
 sanlm.help   = {
 'This function applies an spatial adaptive non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
 '',
-'This filter is internally used in the segmentation procedure anyway. Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.'};
+'This filter is internally used in the segmentation procedure anyway. Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.'
+''
+};
 
 %------------------------------------------------------------------------
 calcvol_files         = cfg_files;
@@ -513,7 +547,9 @@ calcvol.prog  = @execute_calcvol;
 calcvol.help  = {
 'This function reads raw volumes for GM/WM/CSF/Total and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. The values for GM/WM/CSF/TOTAL are now saved in vol(:,1) vol(:,2) vol(:,3) and vol(:,4).'
 ''
-'You can use these variables either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option. Depending on your hypothesis and/or your data you can just use gray matter ("gm") or calculate the sum of gray/white matter with "gm+wm". The use of raw volumes as nuisance or globals is only recommended for modulated data. These data are corrected for size changes due to spatial  normalization and are thought to be in raw (un-normalized) space. In contrast, un-modulated data are yet corrected for differences in size due to spatial normalization to a reference brain and there is no need to correct for these differences again.'};
+'You can use these variables either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option. Depending on your hypothesis and/or your data you can just use gray matter ("gm") or calculate the sum of gray/white matter with "gm+wm". The use of raw volumes as nuisance or globals is only recommended for modulated data. These data are corrected for size changes due to spatial  normalization and are thought to be in raw (un-normalized) space. In contrast, un-modulated data are yet corrected for differences in size due to spatial normalization to a reference brain and there is no need to correct for these differences again.'
+''
+};
 
 %------------------------------------------------------------------------
 
