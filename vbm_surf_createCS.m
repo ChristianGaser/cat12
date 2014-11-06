@@ -221,8 +221,8 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
 
     %% spherical surface mapping 2 of corrected surface
-    stime = vbm_io_cmd('  Spherical mapping'); fprintf('\n');
-    cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Pcentral,Psphere);
+    stime = vbm_io_cmd('  Spherical mapping with areal smoothing'); fprintf('\n');
+    cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 10',Pcentral,Psphere);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 
