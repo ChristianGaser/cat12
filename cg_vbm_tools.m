@@ -384,7 +384,7 @@ SA.help   = {'Extract log10-transformed local surface area using re-parameterize
 surfextract      = cfg_exbranch;
 surfextract.tag  = 'surfextract';
 surfextract.name = 'Extract surface parameters';
-surfextract.val  = {data_surf,GI,FD,SD,SA};
+surfextract.val  = {data_surf,GI,FD,SD};
 surfextract.prog = @vbm_surf_parameters;
 surfextract.help = {'Using this option several surface parameters can be extracted that can be further analyzed.'};
 

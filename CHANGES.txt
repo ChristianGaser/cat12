@@ -5858,3 +5858,18 @@ M       vbm_surf_parameters.m
 
 ------------------------------------------------------------------------
 r644 | gaser | 2014-11-05 12:09:25
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       vbm_surf_createCS.m
+M       vbm_surf_parameters.m
+
+(1) Added areal smoothing to spherical inflation to obtain more equally
+    sized spheres.
+(2) Removed estimation of local surface area because it worked not yet
+    correctly.
+
+
+------------------------------------------------------------------------
+r645 | gaser | 2014-11-06 14:15:25
