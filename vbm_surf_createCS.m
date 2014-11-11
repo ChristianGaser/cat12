@@ -157,7 +157,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
       clear M v x3; 
     end
 
-
     %% surface coordinate transformations
     stime = vbm_io_cmd('  Create initial surface'); fprintf('\n');
     vmatBBV = spm_imatrix(V.mat);
@@ -182,9 +181,16 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
 
-    % spherical surface mapping 1 of the uncorrected surface for topology correction
+    % after reducepatch many triangles have very large area which causes isses for resampling
+    % RefineMesh addds triangles in those areas
+    cmd = sprintf('CAT_RefineMesh "%s" "%s" 2',Praw,Praw); 
+    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+
+    % remove some unconnected meshes
     cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon works here
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+
+    % spherical surface mapping 1 of the uncorrected surface for topology correction
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
 
@@ -201,6 +207,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     stime = vbm_io_cmd('  Topology correction and surface refinement'); fprintf('\n');
     cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+    
     if opt.usePPmap
       % surface refinement by surface deformation based on the PP map
       th = 128;
@@ -226,7 +233,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 
-    % spherical registration to fsaverage
+    % spherical registration to fsaverage template
     stime = vbm_io_cmd('  Spherical registration');
     cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
