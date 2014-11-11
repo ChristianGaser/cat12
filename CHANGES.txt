@@ -5873,3 +5873,15 @@ M       vbm_surf_parameters.m
 
 ------------------------------------------------------------------------
 r645 | gaser | 2014-11-06 14:15:25
+
+M       CHANGES.txt
+M       html/vbm12.html
+M       vbm_surf_createCS.m
+
+(1) Added CAT_RefineMesh after reduce_patch in vbm_surf_createCS.m because
+    reducing patch leads to huge triangles in some areas.
+(2) Flag usePPmap is again set to "0" because CAT_DeformSurface did not worked
+    properly.
+
+------------------------------------------------------------------------
+r646 | gaser | 2014-11-11 09:23:38
