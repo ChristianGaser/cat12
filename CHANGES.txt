@@ -5885,3 +5885,13 @@ M       vbm_surf_createCS.m
 
 ------------------------------------------------------------------------
 r646 | gaser | 2014-11-11 09:23:38
+
+M       CHANGES.txt
+A       fsaverage/lh.inflated.gii
+A       fsaverage/rh.inflated.gii
+M       html/vbm12.html
+
+Added inflated surfaces to fsaverage for display purposes.
+
+------------------------------------------------------------------------
+r647 | gaser | 2014-11-13 08:39:05
