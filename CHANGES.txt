@@ -5895,3 +5895,14 @@ Added inflated surfaces to fsaverage for display purposes.
 
 ------------------------------------------------------------------------
 r647 | gaser | 2014-11-13 08:39:05
+
+M       CHANGES.txt
+M       html/vbm12.html
+M       vbm12.fig
+M       vbm_surf_resamp.m
+
+(1) Slightly changed GUI buttons.
+(2) Resampled values without smoothing will skip the s*mm. as prepend.
+
+------------------------------------------------------------------------
+r648 | gaser | 2014-11-13 10:44:21

@@ -1,5 +1,5 @@
 function vbm_surf_resamp(vargin)
-%vbm_surf_resamp to resample parameters to template
+% vbm_surf_resamp to resample parameters to template
 % space and smooth it.
 %_______________________________________________________________________
 % Christian Gaser
@@ -43,7 +43,11 @@ for i=1:size(P,1)
   Presamp    = fullfile(pp,strrep(Pcentral,'central','resampled'));
   Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
   Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
-  Pfwhm      = fullfile(pp,[sprintf('s%gmm.',fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
+  if fwhm > 0
+      Pfwhm      = fullfile(pp,[sprintf('s%gmm.',fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
+  else
+      Pfwhm      = fullfile(pp,[strrep(Pcentral,'central',[pname '.resampled'])]);
+  end
   Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
   Pcentral   = fullfile(pp,Pcentral);
   Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.gii']);
