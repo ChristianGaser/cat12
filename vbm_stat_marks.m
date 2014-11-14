@@ -78,8 +78,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'contrast'              'linear'    [   1/3   1/12]    1 1     'contrast between tissue classe'
   % - noise & contrast -
   % 'QM'  'NCR'                   'linear'    [  1/20   0.65]    1 1     'noise to contrast råatio'
-   'QM'  'NCR'                   'linear'    [  0.05   0.55]    1 1     'noise to contrast råatio'
-   'QM'  'CNR'                   'linear'    [    20 1/0.65]    1 1     'contrast to noise ratio'
+   'QM'  'NCR'                   'linear'    [  0.05   0.40]    1 1     'noise to contrast råatio'
+   'QM'  'CNR'                   'linear'    [    20 1/0.40]    1 1     'contrast to noise ratio'
   % - inhomogeneity & contrast -
    'QM'  'ICR'                   'linear'    [  1/10    0.4]    1 1     'inhomogeneity to contrast ratio'
    'QM'  'CIR'                   'linear'    [    10  1/0.4]    1 1     'contrast to inhomogeneity ratio'
@@ -155,40 +155,47 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       def.QM.avgw  = ones(size(def.QM.avg),'single');
       
     % fitting for specific methods (
-    % vbm8     vbm12      fsl5      spm8     spm12
-      BWP.kappaNCR = [
-    0.0661    0.05      0.0900    0.0445    0.0363
-    0.6619    0.6619    0.3894    0.3478    0.4256
-      ];
-      BWP.kappaNCR(2,:) = BWP.kappaNCR(2,:)/2;
-      BWP.kappaMVR = [
-    0.7741    0.8206    1.2933    0.0272    0.8329
-    3.4294    2.4655    2.4595    4.2494    2.3423
-      ];
-      switch lower(method)
-        case 'vbm8',         mid = 1;
-        case 'vbm12',        mid = 2;
-        case {'fsl','fsl5'}, mid = 3;
-        case 'spm8',         mid = 4;
-        case 'spm12',        mid = 5;
-        otherwise            mid = 2;
-      end
-%      evallinearx  = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
-      evallinearx  = @(x,best,worst,marks) min(9.5,max(  0,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
-      BWP.NCRm = evallinearx(QA.QM.NCR,BWP.kappaNCR(1,mid),BWP.kappaNCR(2,mid),6);
-      BWP.MVRm = evallinearx(QA.QM.res_MVR,BWP.kappaMVR(1,mid),BWP.kappaMVR(2,mid),6);    
+%     % vbm8     vbm12      fsl5      spm8     spm12
+%       BWP.kappaNCR = [
+%     0.0661    0.05      0.0900    0.0445    0.0363
+%     0.6619    0.6619    0.3894    0.3478    0.4256
+%       ];
+%     %  BWP.kappaNCR = [
+%     %0.05    0.05    0.05    0.05    0.05
+%     %0.35    0.35    0.25    0.25    0.25
+%     %  ];
+%     BWP.kappaNCR(2,:) = BWP.kappaNCR(2,:)/1.5;
+%       BWP.kappaMVR = [
+%     0.7741    0.8206    1.2933    0.0272    0.8329
+%     3.4294    2.4655    2.4595    4.2494    2.3423
+%       ];
+%       switch lower(method)
+%         case 'vbm8',         mid = 1;
+%         case 'vbm12',        mid = 2;
+%         case {'fsl','fsl5'}, mid = 3;
+%         case 'spm8',         mid = 4;
+%         case 'spm12',        mid = 5;
+%         otherwise            mid = 2;
+%       end
+      %evallinearx  = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
+      evallinearx  = @(x,best,worst,marks) min(99.5,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
+%       BWP.NCRm = evallinearx(QA.QM.NCR,BWP.kappaNCR(1,mid),BWP.kappaNCR(2,mid),6);
+%       BWP.MVRm = evallinearx(QA.QM.res_MVR,BWP.kappaMVR(1,mid),BWP.kappaMVR(2,mid),6);    
+      
+      BWP.NCRm = evallinearx(QA.QM.NCR    ,0.05,0.35,6);
+      BWP.MVRm = evallinearx(QA.QM.res_RMS,0.50,3.00,6);    
       
       
-      % resRMS NCR ICR MPC
-      x2 = ([ ...
-... vbm8      vbm12     fsl5      spm8      spm12
-    0.6586    0.8194    0.4374    0.3903    0.6278
-    0.6174    0.4164    0.7415    0.6654    0.5376
-    ]);
-    
-    sf = 1;
-    C  = [BWP.MVRm BWP.NCRm];
-    QAM.QM.rms = ((C.^sf) * x2(:,mid)).^(1/sf); 
+%       % resRMS NCR ICR MPC
+%       x2 = ([ ...
+% ... vbm8      vbm12     fsl5      spm8      spm12
+%     0.6586    0.8194    0.4374    0.3903    0.6278
+%     0.6174    0.4164    0.7415    0.6654    0.5376
+%     ]);
+%     
+%     sf = 1;
+%     C  = [BWP.MVRm BWP.NCRm];
+%     QAM.QM.rms = ((C.^sf) * x2(:,mid)).^(1/sf); 
     QAM.QM.rms = rms([BWP.MVRm BWP.NCRm],8);
    %QAM.QM.rms = max(BWP.NCRm, BWP.MVRm );
    %{

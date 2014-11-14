@@ -114,7 +114,12 @@ function C=readcsv(filename,sheet,pos,opt)
       if isempty(C1{i})
         C2{i} = '';  %#ok<AGROW>
       else
-        C2{i}=textscan(C1{i},'%q','delimiter',opt.delimiter,'BufSize',2^24)'; C2{i}=C2{i}{1}';  %#ok<AGROW>
+        mv = version; mvi = strfind(mv,'R');
+        if str2double(mv(mvi+1:mvi+4)) > 2013
+          C2{i}=textscan(C1{i},'%q','delimiter',opt.delimiter,'BufSize',2^24)'; C2{i}=C2{i}{1}';  %#ok<AGROW>
+        else
+          C2{i}=textscan(C1{i},'%q','delimiter',opt.delimiter)'; C2{i}=C2{i}{1}';  %#ok<AGROW>
+        end
         %if size(C2{i},2)~=size(C2{1}), fprintf('Line %4d: %4d - %4d\n',i,size(C2{i},2),size(C2{1},2)); end
       end
     % fprintf('%4.0f-%4.0f\n',numel(strfind(C1{i},';')),numel(C2{i}));

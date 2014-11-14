@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
+function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -101,11 +101,11 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol)
   vx_res  = mean([max(vx_vol) min(vx_vol)]); % cg_vbm_get_defaults('extopts.vx_res'); 
   verb    = cg_vbm_get_defaults('extopts.verb')-1;
   debug   = cg_vbm_get_defaults('extopts.debug');
+  
 
   %% map atlas to RAW space
   if verb, fprintf('\n'); end
   stime = vbm_io_cmd('  Atlas 2 Subjectspace','g5','',verb);
-  PA = cg_vbm_get_defaults('extopts.vbm12atlas'); PA = PA{1,1};
   VA = spm_vol(PA);
   YA = vbm_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   YA = reshape(YA,size(Ym));

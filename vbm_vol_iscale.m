@@ -145,7 +145,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       [Tr,Hr,resT] = vbm_vol_resize({min(1.5,TS/Tth),H},'reduceV',vx_vol,redres,32,'mean');
       [Gr]         = vbm_vol_resize(G,'reduceV',vx_vol,redres,32,'max');
       HDr = vbdist(single(~Hr),true(size(Hr)),resT.vx_volr);
-      [Mr,Dr] = vbm_pre_downcut(single(~vbm_vol_morph(Hr,'e')), ...
+      [Mr,Dr] = vbm_vol_downcut(single(~vbm_vol_morph(Hr,'e')), ...
         1-Gr,0.1,resT.vx_volr,[double(eps('single')) 1]);
       Dr = Dr .* HDr/vbm_stat_nanstat1d(HDr(:),'max'); %Dr = max(0,Dr - vbm_stat_nanstat1d(Dr(:),'max')/2);
       Dr(isnan(Dr) | isinf(Dr))=0; clear Mr; 
@@ -169,7 +169,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
         [Gr,Dr,resT1] = vbm_vol_resize({G,D},'reduceV',vx_vol,res1,32,'meanm');
         TSr  = vbm_vol_resize(TS,'reduceV',vx_vol,res1,32,'max');
         M2r  = vbm_vol_resize(M2,'reduceV',vx_vol,res1,32,'meanm')>0.5;
-        TSXr = TSr .* vbm_vol_morph(Gr<Gth*2 & TSr/Tth<1.5 & TSr/Tth>0.1,'lo'); TSXr=vbm_vol_vbm_vol_median3(TSXr,TSXr>0);
+        TSXr = TSr .* vbm_vol_morph(Gr<Gth*2 & TSr/Tth<1.5 & TSr/Tth>0.1,'lo'); TSXr=vbm_vol_median3(TSXr,TSXr>0);
         
         % very rough maximum based correction for better GWM estimation
         [WIrr,resT2] = vbm_vol_resize(TSXr,'reduceV',vx_vol,4,32,'max'); TSXrr=WIrr>0;
@@ -187,7 +187,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
          
         
         % rought maximum based bias correction 
-        TSXOr = vbm_vol_morph(Gr<Gth*2 & TSr./WIr<1.2 &  TSr>GWMr*0.95 & TSr<GWMr*2,'l') .* TSr; TSXOr=vbm_vol_vbm_vol_median3(TSXOr,TSXOr>0);
+        TSXOr = vbm_vol_morph(Gr<Gth*2 & TSr./WIr<1.2 &  TSr>GWMr*0.95 & TSr<GWMr*2,'l') .* TSr; TSXOr=vbm_vol_median3(TSXOr,TSXOr>0);
         [WIrr,resT2] = vbm_vol_resize(TSXOr,'reduceV',resT1.vx_volr,4,32,'max');  TSXrr=WIrr>0;
         WIrr = vbm_vol_localstat(WIrr,WIrr>0,1,3);
         WIrr = vbm_vol_approx(WIrr,'nh',resT2.vx_volr,8); WIrr = vbm_vol_smooth3X(WIrr,max(2,min(4,Tth/std(WIrr(TSXrr(:))))));
@@ -212,7 +212,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
 
         %% rough skull-stipping
         % use the head distance map D to find a central tissue (low gradient) with WM intensity
-        [Grr,Trr,GWMrr,Drr,M2rr,resT4] = vbm_vol_resize({Gr,TSr./WIr,GWMr./WIr,Dr,M2r},'reduceV',vx_vol,4,32,'meanm');
+        [Grr,Trr,GWMrr,Drr,M2rr,resT4] = vbm_vol_resize({Gr,TSr./WIr,GWMr./WIr,Dr,M2r},'reduceV',vx_vol,2,32,'meanm');
         Brr  = vbm_vol_morph(Trr<1.2 & Trr>max(0.8,GWMrr) & Grr<Gth & M2rr); 
         [L,num] = spm_bwlabel(double(Brr),6);
         HST = hist(L(L(:)>0),1:num); [Hs,Hi] = sort(HST,'descend'); 
@@ -230,22 +230,25 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
         %GWM  = vbm_vol_resize(GWMr./WIr,'dereduceV',resT1);
         WI   = vbm_vol_resize(WIr,'dereduceV',resT1);
         B    = vbm_vol_resize(vbm_vol_smooth3X(Br),'dereduceV',resT1)>0.5;  
+      
         
-        [TI,T3th,T3] = vbm_vol_CGWscale(TS./WI,G,B,Gth,resT1.vx_vol);
+      
+        TI=TS./WI;
+%        [TI,T3th,T3] = vbm_vol_CGWscale(TS./WI,G,B,Gth,resT1.vx_vol);
         Tr  = vbm_vol_resize(TI,'reduceV',vx_vol,res1,32,'max');
         Br  = Br>0.5 & Tr>4/5 & Tr<8/6 & Gr<Gth*1.5; 
         Br  = single(vbm_vol_morph(Br,'l')); 
-        Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.02/mean(resTr.vx_volr))>0,1)>0.5);
-        Br(~Br & (Tr<2/3 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.01/mean(resTr.vx_volr))>0,1)>0.5);
-        Br(~Br & (Tr<1/3 | Tr>2/3))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5);
-        Br(~Br & (Tr<1/6 | Tr>1/2))=-inf; Br = vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr,-0.02*mean(resTr.vx_volr))>0,1)>0.5;
+        Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.02/mean(resTr.vx_volr))>0,1)>0.5);
+        Br(~Br & (Tr<2/3 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.01/mean(resTr.vx_volr))>0,1)>0.5);
+        Br(~Br & (Tr<1/3 | Tr>2/3))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5);
+        Br(~Br & (Tr<1/6 | Tr>1/2))=-inf; Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.02*mean(resTr.vx_volr))>0,1)>0.5;
         [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
         Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'ldc',4) & Trr<8/6),'lo',2);
         Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
         B    = vbm_vol_resize(vbm_vol_smooth3X(Br),'dereduceV',resT1)>0.5;   
       end
       %toc,tic   
-        
+      %}  
         
       %% Fine correction
       % ----------------------------------------------------------------
@@ -253,7 +256,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
         %res1 = 1.6;
         
         %TI = vbm_vol_iscale(TS./WI,'gCGW',vx_vol,T3th); 
-        
+  %{      
         % final maximum based bias correction WI3
         %GM  = B & vbm_vol_resize(vbm_vol_smooth3X(T3r{2},0.5),'dereduceV',resT1)>0.5;  
         %GMC = B & vbm_vol_resize(vbm_vol_smooth3X(vbm_vol_morph(T3r{2},'c',4),0.5),'dereduceV',resT1)>0.5;  
@@ -265,30 +268,32 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
         [WI3r,resT6] = vbm_vol_resize(TSO.*WM,'reduceV',resT1.vx_volr,1.6,32,'max'); WMrr=WI3r>0;
         WI3r = vbm_vol_localstat(WI3r,WI3r>0,round(3/mean(resT6.vx_volr)),3);
         WI3r = vbm_vol_approx(WI3r,'linear',resT6.vx_volr,8); WI3r = vbm_vol_smooth3X(WI3r,max(2,min(6,Tth/std(WI3r(WMrr(:))))));
-        if it==1, WI3O=ones(size(TS)); else WI3O=WI3; end
+        
         WI3 = vbm_vol_resize(WI3r,'dereduceV',resT6); %clear WI3r;
         [TI,T3th,T3] = vbm_vol_CGWscale(TSO./WI3,G,B,Gth,resT1.vx_vol);
         WM  = vbm_vol_morph(B & TI>11/12 & TI<8/6 & G<Gth*1.5,'l');
         WM  = WM | vbm_vol_smooth3X( (B & ~GM & GMC & TI>5/6 & TI<1.2 & G<Gth),0.5)>0.5;     
-        
+ %}       
         %{
         [Tr,Br,Gr,BOr,resTr] = vbm_vol_resize({TI,single(WM.*B),G,B},'reduceV',vx_vol,res1,32);
         Br  = BOr>0.5 & Tr>9/12 & Tr<8/6 & Gr<Gth*1.5; 
         Br  = single(vbm_vol_morph(Br,'l')); 
-        Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.020/mean(resTr.vx_volr))>0,1)>0.5);
-        Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
-        Br(~Br & (Tr<2/3 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.005/mean(resTr.vx_volr))>0,1)>0.5);
-        Br(~Br & (Tr<1/3 | Tr>2/3))=-inf; Br = vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5;
+        Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.020/mean(resTr.vx_volr))>0,1)>0.5);
+        Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
+        Br(~Br & (Tr<2/3 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.005/mean(resTr.vx_volr))>0,1)>0.5);
+        Br(~Br & (Tr<1/3 | Tr>2/3))=-inf; Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5;
         [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
         Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'ldc',4) & Trr<7/6),'lo',2);
         Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
         B   = vbm_vol_resize(vbm_vol_smooth3X(Br),'dereduceV',resTr)>0.5;
         %}
         
-        
+        if it==1, WI3O=ones(size(TS)); else WI3O=WI; end
+     
+        WM  = vbm_vol_morph(B & TI>11/12 & TI<8/6 & G<Gth*1.5,'l');
         
         %% bias measurements and updates
-        T = TS; TS = TSO./WI3; TS = TS ./ median(TS(WM(:))); TS=TS.*Tth; it=it+1;
+        T = TS; TS = TSO./WI; TS = TS ./ median(TS(WM(:))); TS=TS.*Tth; it=it+1;
        
         CV   = std( TS(WM(:)>0))/mean( TS(WM(:)>0));% + std( TS(B(:)>0 & GM(:)>0))/mean( TS(B(:)>0 & GM(:)>0));
         CVP  = std(  T(WM(:)>0))/mean(  T(WM(:)>0));% + std(  T(B(:)>0 & GM(:)>0))/mean(  T(B(:)>0 & GM(:)>0));
@@ -300,7 +305,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       TS = TSO; %T = T/median(T(WM(:)>0)); 
       %fprintf('Tissue Peaks: %0.2f %0.2f %0.2f\n',T3th);
       
-    toc
+  %  toc
      
       %% scull-stipping on low res
     tic; clear TSO WI GWM;
@@ -309,9 +314,9 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
      % Tr  = vbm_vol_CGWscale(Tr,Gr,BOr,Gth,vx_vol);
       Br  = BOr>0.5 & Tr>5/6 & Tr<8/6 & Gr<Gth*1.5; 
       Br  = single(vbm_vol_morph(Br,'l')); 
-      Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
-      Br(~Br & (Tr<2/3 | Tr>5/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr, 0.001/mean(resTr.vx_volr))>0,1)>0.5);
-      Br(~Br & (Tr<1/3 | Tr>2/3))=-inf; Br = vbm_vol_smooth3X(vbm_pre_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5;
+      Br(~Br & (Tr<5/6 | Tr>8/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.010/mean(resTr.vx_volr))>0,1)>0.5);
+      Br(~Br & (Tr<2/3 | Tr>5/6))=-inf; Br = single(vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr, 0.001/mean(resTr.vx_volr))>0,1)>0.5);
+      Br(~Br & (Tr<1/3 | Tr>2/3))=-inf; Br = vbm_vol_smooth3X(vbm_vol_downcut(Br,Tr,-0.01*mean(resTr.vx_volr))>0,1)>0.5;
       [Trr,Brr,resTBr] = vbm_vol_resize({Tr,Br},'reduceV',vx_vol,4,32); Brr=Brr>0.5;
       Brr = vbm_vol_morph(Brr | (vbm_vol_morph(Brr,'lc',1) & Trr<7/6),'lo',2);
       Br  = (Br.*Tr)>0.5 | (vbm_vol_resize(vbm_vol_smooth3X(Brr),'dereduceV',resTBr)>0.5 & Tr<1.05);
@@ -327,6 +332,7 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       WM  = vbm_vol_resize(WM ,'dereduceV',resTO)>0.5;
 
       % segment image
+      %{
       %   ds('l2','',vx_vol,T,p0T,TO./WI2,T/Tth,90)
       WM   = vbm_vol_morph(WM,'e');
       TI   = vbm_vol_CGWscale(TO./WI3,G,B,Gth,vx_vol);
@@ -337,15 +343,15 @@ function [TI,varargout] = vbm_vol_iscale(T,action,vx_vol,varargin)
       p0T  = max(B,min(3,round(vbm_vol_smooth3X(TI,nc)*3).*B));
       p0T(BV & p0T) = min(BV(BV & p0T),p0T(BV & p0T)); 
       p0T(vbm_vol_morph(p0T==3,'l'))=3; % close small WM wholes
-     
-    toc
+     %}
+    %toc
       varargout{1} = B;
-      varargout{2} = p0T>2.5;
-      varargout{3} = H;
-      varargout{4} = vbm_stat_nanstat1d(TO(WM(:)),'mean'); 
-      varargout{5} = min(1.2,max(0,(TI*3)-1)/2); %(TO./WI3);
-      varargout{5} = varargout{5}  / vbm_stat_nanstat1d(varargout{5}(WM(:)),'mean');
-      varargout{6} = p0T;
+      varargout{2} = WM;
+%      varargout{3} = H;
+%      varargout{4} = vbm_stat_nanstat1d(TO(WM(:)),'mean'); 
+%      varargout{5} = min(1.2,max(0,(TI*3)-1)/2); %(TO./WI3);
+%      varargout{5} = varargout{5}  / vbm_stat_nanstat1d(varargout{5}(WM(:)),'mean');
+ %     varargout{6} = p0T;
     case 'test_findhead_findbrain' 
       opt.fnamelenght = 40;
       
