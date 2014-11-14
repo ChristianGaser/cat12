@@ -29,11 +29,11 @@ else
         cg_vbm_get_defaults;
     else
         fprintf('Use defaults in %s.\n',vbm_defaults);
-        [path, name] = spm_fileparts(vbm_defaults);
+        [pp, name] = spm_fileparts(vbm_defaults);
         oldpath = pwd;
-        eval(['cd ' path])
+        cd(pp)
         eval(name);
-        eval(['cd ' oldpath])
+        cd(oldpath)
     end
 end
 global defaults vbm matlabbatch
@@ -60,9 +60,9 @@ for i=1:n
 	end
 end
 
-tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','segres',...
+tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','ROI','surface','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB','dartelwarp','vox','bb','vbm12atlas','sanlm','gui');
+              'QAcleanup','QAcleanupth','LAB','dartelwarp','vox','bb','vbm12atlas','sanlm','gui','brainmask','T1');
               
 for i=1:size(tmp_fields,1)
   try
@@ -109,10 +109,16 @@ try
   end
 end
 
+%save(fullfile(spm('dir'),'tmp.vbm.batch.mat'));
+
 try
   spm_jobman('initcfg');
   spm_jobman('run',matlabbatch);
 catch
+  %vbmerr = lasterror; 
+  %sprintf('\n%s\nVBM Preprocessing error: %s:\n%s\n', repmat('-',1,72),vbmerr.identifier,vbmerr.message,repmat('-',1,72));
+  %for si=1:numel(vbmerr.stack), vbm_io_cprintf('err',sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name)); end;
+  %vbm_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72))); exit; end; 
   error('Batch failed.');
 end
 

@@ -199,13 +199,15 @@ function varargout = vbm_tst_qa(action,varargin)
       Yp0 = 1;
     case 'vbm12'
       % VBM12 internal input
-      if nargin>3 || nargin<6
+      if nargin>3 
         Yp0 = varargin{1};
         Vo  = spm_vol(varargin{2});
         Yo  = single(spm_read_vols(Vo));    
         Ym  = varargin{3}; 
         res = varargin{4};
         vbm_warnings = varargin{5};
+        species = varargin{6};
+        
         opt.verb = 0;
         
         % reduce to original native space if it was interpolated
@@ -241,7 +243,7 @@ function varargout = vbm_tst_qa(action,varargin)
       error('MATLAB:vbm_vol_qa:inputerror',...
         'Wrong number/structure of input elements!'); 
   end
-
+  if ~exist('species','var'), species='human'; end
     
   
   %
@@ -317,7 +319,7 @@ function varargout = vbm_tst_qa(action,varargin)
             error('vbm_tst_qa:noYm','No corrected image.');
           end
 % toc, tic   
-          [QASfi,QAMfi,vbm_qa_warnings{fi}] = vbm_tst_qa('vbm12',Yp0,Vo,Ym,'',vbm_warnings,opt);
+          [QASfi,QAMfi,vbm_qa_warnings{fi}] = vbm_tst_qa('vbm12',Yp0,Vo,Ym,'',vbm_warnings,species,opt);
 
      
           QAS = vbm_io_updateStruct(QAS,QASfi,0,fi);
@@ -528,13 +530,21 @@ function varargout = vbm_tst_qa(action,varargin)
       QAS.QM.res_BB = sum(Yp0(:)>1.25 & M(:))*QAS.QM.res_vol; 
 
       % check segmentation
-      if ( sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000 < 100 ) || ...
-         ( sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000 < 100 ) || ... 
-         ( sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000 < 50 ) 
-        error('vbm_tst_qa:badSegmentation','Bad Segmentation.')
+      switch species
+        case 'human'
+          if ( sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000 < 100 ) || ...
+            ( sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000 < 100 ) || ... 
+            ( sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000 < 50 ) 
+           error('vbm_tst_qa:badSegmentation','Bad Segmentation.')
+          end
+        case {'ape_greater','ape_lesser','monkey_oldworld','monkey_newworld'}
+          if ( sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000 < 25 ) || ...
+            ( sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000 < 25 ) || ... 
+            ( sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000 < 12 ) 
+           error('vbm_tst_qa:badSegmentation','Bad Segmentation.')
+          end
       end
 
-      
   
 % toc, tic      
       %  estimate QA
@@ -694,9 +704,9 @@ function varargout = vbm_tst_qa(action,varargin)
       %NCRb = std(Yo(Ybg))/QAS.QM.contrast;
       %NCwb = sum(Yo(:)>0);
       % +NCwg+NCwb 
-      QAS.QM.NCR = NCRw.*(NCww/(NCww+NCwc)) + NCRc.*(NCwc/(NCww+NCwc)); % + ...
+      %QAS.QM.NCR = NCRw.*(NCww/(NCww+NCwc)) + NCRc.*(NCwc/(NCww+NCwc)); % + ...
                  %  NCRg.*(NCwg/(NCww+NCwc+NCwg+NCwb)) + NCRb.*(NCwc/(NCww+NCwc+NCwg+NCwb)) ;
-      QAS.QM.NCR = QAS.QM.NCR .* mean(resr.vx_volr)/mean(resr.vx_vol);
+      %QAS.QM.NCR = QAS.QM.NCR .* mean(resr.vx_volr)/mean(resr.vx_vol);
       QAS.QM.NCR = nanmean([NCRw NCRc]);
       QAS.QM.CNR = 1 / QAS.QM.NCR;  
 

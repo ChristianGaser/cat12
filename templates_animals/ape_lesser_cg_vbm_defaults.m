@@ -1,4 +1,4 @@
-function cg_vbm_defaults
+function cg_vbm_defaults_ape_lesser
 % Sets the defaults for VBM
 % FORMAT cg_vbm_defaults
 %_______________________________________________________________________
@@ -11,15 +11,29 @@ function cg_vbm_defaults
 
 global vbm
 
+% important fields of the animal version
+%=======================================================================
+% - vbm.opts.tpm 
+% - vbm.extopts.darteltpm
+% - vbm.extopts.vbm12atlas
+% - vbm.extopts.brainmask
+% - vbm.extopts.bb         > [-inf -inf -inf; inf inf inf] 
+% - vbm.extopts.vox        > inf
+% - vbm.opts.biasreg       > 0.00001
+% - vbm.opts.biasfwhm      > 40
+% - vbm.opts.samp          > 2 mm
+%=======================================================================
+
+
 % Estimation options
 %=======================================================================
-vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
+vbm.opts.tpm       = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_lesser_TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3 WM classes for robustness
-vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
+vbm.opts.affreg    = 'sub';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
-vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller values for stronger bias fields
-vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
-vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
+vbm.opts.biasreg   = 0.00001;                 % Bias regularisation - smaller values for stronger bias fields
+vbm.opts.biasfwhm  = 40;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
+vbm.opts.samp      = 2;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
 
                                               
                                               
@@ -117,7 +131,7 @@ vbm.defs.interp         = 5;      % 5th degree B-spline
 %=======================================================================
 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
-vbm.extopts.species      = 'human';  
+vbm.extopts.species      = 'ape_greater';  
 
 % skull-stripping options
 vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
@@ -140,14 +154,14 @@ vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessi
 vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
 vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
 
-% registration and normalization options 
-vbm.extopts.vox          = 1.5;                            % voxel size for normalized data (not yet working):  inf - use Tempate values;; 
-vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data (not yet working): inf - use Tempate values; ; 
-vbm.extopts.dartelwarp   = 1;                              % dartel normalization: 0 - spm default; 1 - yes
-vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};  % Indicate first Dartel template
-vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')};                     % VBM atlas with major regions for VBM, SBM & ROIs
-vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brainmask.nii')};                 % brainmask for affine registration
-vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_T1_IXI555_MNI152.nii')}; % brainmask for affine registration
+% normalization options
+vbm.extopts.vox          = inf;                                % voxel size for normalized data (not yet working):  inf - use Tempate values
+vbm.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];   % bounding box for normalized data (not yet working): inf - use Tempate values
+vbm.extopts.dartelwarp   = 1;                                  % dartel normalization: 0 - spm default; 1 - yes
+vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_lesser_Template_1.nii')}; % Indicate first Dartel template
+vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_lesser_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
+vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_lesser_brainmask.nii')};  % brainmask for affine registration
+vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_lesser_T1.nii')};         % T1 for affine registration
 
 % surface options
 vbm.extopts.surface      = 0;     % surface and thickness creation
@@ -175,12 +189,6 @@ vbm.extopts.gui           = 1;     % use GUI
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 vbm.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
-  fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','neuromorphometrics.nii')  'gm'    {'csf','gm'};       ... % good atlas based on 35 subjects
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammer, 18 subjects, low T1 image quality
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... % ROIs requires further work >> use Anatomy toolbox
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
- %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ... % only one subject, but with WM regions
   }; 
 
 

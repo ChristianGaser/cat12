@@ -66,10 +66,11 @@ function vbm_tst_pre
 %     'SPMnc'   1 {'p0'}      {''}        {0.5}       0 
 %     'SPM'     0 {'p0'}      {''}        {0.5}       0 
 %    'SPM8'    0 {'p0'}      {''}        {0.5}       0 
-    'SPM12'   0 {'p0'}      {''}        {0.5}       1 
-%     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
+%    'SPM12'   0 {'p0'}      {''}        {0.5}       1 
+     'SPM8nc'  1 {'p0'}      {''}        {0.5}       0 
 %     'SPM12nc' 1 {'p0'}      {''}        {0.5}       1 
-%    'FSL'     0 {'p0'}      {''}        {-inf}      0 
+%    'FSLncN3'   1 {'p0'}      {''}        {-inf}      1 
+%    'FSL'     0 {'p0'}      {''}        {-inf}      1 
 %    'VBM8'    0 {'p0'}      {'m'}       {0.5}       0 % internal noise correction
 %     'VBM12'   0 {'p0'}      {'m'}       {1.5}       1 % internal noise correction
 %    'N3'      0 {''}        {'m'}       {-inf}       0 
@@ -83,11 +84,11 @@ function vbm_tst_pre
   def.subdirs = {
 %  'BWPC_noise'
 %  'BWPC_bias'
-  'BWPC_resi'
-  'BWPC_resr'
-  'QA_good'
-  'QA_bad'
-  'BWPC_NIR'
+%   'BWPC_resi'
+%   'BWPC_resr'
+%   'QA_good'
+%   'QA_bad'
+%   'BWPC_NIR'
 %  'BWP_Collins'
 %  'BWP_Collins_T2'
 %  'BWP_Collins_PD'
@@ -107,7 +108,8 @@ function vbm_tst_pre
 %      'private_full'
 %     'BWP_Collins'
  %   'SRS'
-%      'Apes'
+ %      'Apes'
+   'Apes_uthscsa'
    };
  
 
@@ -153,7 +155,7 @@ function vbm_tst_pre
       opt.RAW.nT{di}{fi} = fullfile(pp,['sanlm_' ff ee]);
       if ~exist(opt.RAW.nT{di}{fi},'file')
         fprintf('sanlm %s\n',opt.RAW.nT{di}{fi});
-        vbm_vol_sanlm(struct('data',opt.RAW.T{di}{fi})); 
+        vbm_vol_sanlm(struct('data',opt.RAW.T{di}{fi},'rician',0)); 
       end
     end
     
@@ -284,7 +286,7 @@ function vbm_tst_pre
               case {'SPM12','SPM12nc'}, SPM12segment(opt.method(mi).T{di}{fi},opt.SPM12path,opt.SPM12path);
               case {'SPM8','SPM8nc'},   SPM8newsegment(opt.method(mi).T{di}{fi},opt.SPM8path,opt.SPM12path);
               case {'SPM','SPMnc'},     SPM8segment(opt.method(mi).T{di}{fi},opt.SPM8path,opt.SPM12path);
-              case 'FSL',               FSL(opt.method(mi).T{di}{fi},opt.initPATH);
+              case {'FSL','FSLncN3'},   FSL(opt.method(mi).T{di}{fi},opt.initPATH);
               case 'FSLnc',             FSL(opt.method(mi).T{di}{fi},opt.initPATH,opt.RAW.psT{di}{fi});
               case {'N3','N3nc'},       N3(opt.method(mi).T{di}{fi},opt.initPATH);
               otherwise
@@ -670,22 +672,25 @@ function N3(file,initPATH)
   wkd=pwd;
   [pp,ff,ee]=spm_fileparts(file); cd(pp);
   try 
+
     calcN3=[ ...
       ... filenames
       'pp=$(dirname $T); ff=$(basename $T .nii); ' ...
       'oT=$pp/$ff; mT=$pp/m$ff;' ...
       ... create mask and convert to mnc
-      'mri_convert ${oT}.nii  ${oT}.mnc; ' ...
+...      'mri_convert ${oT}.nii  ${oT}.mnc; ' ...
       ... N3-nu-correction
-      'nu_correct -quiet -clobber -stop 0.0001 -distance 30 ' ...
-      '  -iterations 1000 -fwhm 0.05 ${oT}.mnc ${mT}.mnc; ' ...
-      ... convert back to nifti and delete files
-      'mri_convert ${mT}.mnc ${mT}.nii;' ...
-      'rm ${oT}.mnc ${mT}.mnc ${mT}.imp; ' ...
+...      'nu_correct -quiet -clobber -stop 0.01 -distance 40 -iterations 100 -fwhm 0.05 ${oT}.mnc ${mT}.mnc; cp -f ${mT}.mnc ${oT}.mnc ;' ...
+...      'nu_correct -quiet -clobber -stop 0.01 -distance 20 -iterations 100 -fwhm 0.05 ${oT}.mnc ${mT}.mnc; cp -f ${mT}.mnc ${oT}.mnc;' ...
+...      'nu_correct -quiet -clobber -stop 0.01 -distance 10 -iterations 100 -fwhm 0.05 ${oT}.mnc ${mT}.mnc; cp -f ${mT}.mnc ${oT}.mnc;' ...
+...      ... convert back to nifti and delete files
+...      'mri_convert ${mT}.mnc ${mT}.nii;' ...
+...      'rm ${oT}.mnc ${mT}.mnc ${mT}.imp; ' ...
+     'cp -f ${oT}.nii ${mT}.nii;'
       ];
-    
+   
     [SS,SR]=system(sprintf('%s T="%s"; %s',initPATH,file,calcN3)); 
-    
+
   catch  %#ok<CTCH>
     createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['m' ff ee]));
   end
@@ -702,34 +707,79 @@ function FSL(file,initPATH,p0T)
   else
     FSLtype = 'optimal';
   end
-
+  
+  [pp,ff,ee] = spm_fileparts(file);
+  Pp0 = fullfile(pp,sprintf('p0%s%s',ff,ee));
+  Pn  = fullfile(pp,sprintf('n%s%s',ff,ee));
+  Pm  = fullfile(pp,sprintf('n%s%s',ff,ee));
+  
+  if strfind(file,'Apes')
+     
+    % set atlas maps
+    if ~isempty([strfind(lower(ff),'chimpanzee') strfind(lower(ff),'orangutan') strfind(lower(ff),'gorilla')])
+      atlas = '/Users/dahnke/Neuroimaging/spm12/toolbox/vbm12/templates_1.50mm/TPM_gapes0_T1.nii';
+    elseif ~isempty([strfind(lower(ff),'rhesus') strfind(lower(ff),'capuchin') strfind(lower(ff),'gibbon')])
+      atlas = '/Users/dahnke/Neuroimaging/spm12/toolbox/vbm12/templates_1.50mm/TPM_lapes0_T1.nii'; %return
+    elseif ~isempty([strfind(lower(ff),'squirrel')])
+      atlas = '/Users/dahnke/Neuroimaging/spm12/toolbox/vbm12/templates_1.50mm/TPM_monkeys0_T1.nii'; return
+    else
+      atlas = '/Users/dahnke/Neuroimaging/spm12/toolbox/vbm12/templates_1.50mm/TPM_gapes1_T1.nii'; % macaqure, baboon, ...
+    end
+    
+    % call N3 inhomogeneity correction
+    if 1 %~exist(Pp0,'file') || ~exist(Pn,'file') 
+      FSLtype = 'apes'; 
+      N3(file,initPATH);
+      copyfile(fullfile(pp,['m' ff ee]),fullfile(pp,['n' ff ee]));
+    end
+    
+    betape = '';
+  else
+    betape = '';
+  end
+  
   wkd=pwd;
   [pp,ff,ee]=spm_fileparts(file); cd(pp);
   
-  if      findstr(lower(ff),'t2'), modality='2';
-  elseif  findstr(lower(ff),'pd'), modality='3';
+  if      strfind(lower(ff),'t2'), modality='2';
+  elseif  strfind(lower(ff),'pd'), modality='3';
   else                             modality='1';  
   end
   
+
   try
     calcFSL.init  = [ ...
       'ff=$(basename $T .nii); pp=$(dirname $T);' ...
-      'oT=$pp/$ff; nT=$pp/n$ff; paT=$pp/pa$ff; psT=$pp/ps$ff; p0T=$pp/p0$ff; mT=$pp/m$ff; ebT=$pp/eb$ff;'];
+      'oT=$pp/$ff; nT=$pp/n$ff; paT=$pp/pa$ff; psT=$pp/ps$ff; p0T=$pp/p0$ff; mT=$pp/m$ff; ebT=$pp/eb$ff;' ...
+      'omat=$pp/${ff}_flirt.mat;' ...
+      ];
     calcFSL.susan     = 'susan ${oT}.nii -1 1 3 1 0 ${nT}.nii;'; % noise correction 
     calcFSL.BET_FAST  = [ ...
-      'BET2 ${nT}.nii ${paT};' ...% skull-stripping -S -R
+      'BET2 ${nT}.nii ${paT} ' betape ';' ...% skull-stripping -S -R
       'fast -B -o ${oT} -t ' modality ' ${paT}.nii;']; % -B: output Ym;  -b: output: Yeb; 
-    calcFSL.STAPLE_FAST = [...
+    calcFSL.STABLE_FAST = [...
       'BET2 ${nT}.nii ${paT};' ...
       'cp %{oT}.nii ${psT}.nii;' ...
       'fslmath ${psT}.nii -mas ' p0T ';' ...
-      'fast -b -B -t ' modality '-o ${oT} ${paT}.nii;']; %-B 
+      'fast -b -B -t ' modality '-o ${oT} ${paT}.nii;'];
     calcFSL.cleanup = [ ...
-      'mv -f ${oT}_restore.nii ${mT}.nii; mv -f ${oT}_bias.nii ${ebT}.nii;' ...
+      'mv -f ${oT}_restore.nii ${mT}.nii;' ...
+      ... 'mv -f ${oT}_bias.nii ${ebT}.nii;' ...
       'rm -f ${oT}_pveseg.nii ${oT}_seg.nii ${oT}_mixeltype.nii;' ...
-      'rm -f ${nT}.nii ${paT}.nii' ...
+      ...'rm -f ${nT}.nii ${paT}.nii' ...
+      'find ${pp} -name "*.mnc" -delete' ...
       ];
-    
+    calcFSL.flirt = [ ... linear registration
+      'flirt -dof 12              -ref ${p0T}  -in ${Aa}.nii    -omat mat0;' ... init
+      'convert_xfm -omat mat0 -inverse mat0;' ...
+       'flirt -init mat0 -applyxfm -ref ${A} -in ${p0T}.nii -out ${p0T}.a1.nii;  ' ...
+      'flirt -dof 12  -ref ${A}  -in ${p0T}.a1.nii     -omat ${omat};' ... fine
+      'flirt -init ${omat} -applyxfm -ref ${A} -in ${oT}.nii -out ${mT}.affine.nii;  ' ... % ... auf n ändern
+      ...'flirt -interp sinc -init ${omat} -applyxfm -ref ${A} -in ${oT}_pve_0.nii -out ${oT}_pve_0.affine.nii; ' ...
+      ...'flirt -interp sinc -init ${omat} -applyxfm -ref ${A} -in ${oT}_pve_1.nii -out ${oT}_pve_1.affine.nii; ' ...
+      ...'flirt -interp sinc -init ${omat} -applyxfm -ref ${A} -in ${oT}_pve_2.nii -out ${oT}_pve_2.affine.nii; ' ...
+    ];
+  %%
     switch FSLtype
       case 'original'
         % susan filtering, bet for skull-stripping
@@ -737,30 +787,59 @@ function FSL(file,initPATH,p0T)
       case 'optimal'
         % sanlm-filtered image and ground truth segmentation for fast
         calcFSLs = [calcFSL.init calcFSL.susan calcFSL.STABLE_FAST calcFSL.cleanup];
+      case 'apes'
+        % sanlm-filtered image and ground truth segmentation for fast
+        calcFSLs = [calcFSL.init calcFSL.BET_FAST calcFSL.cleanup];
     end
     
-    [SS,SR]=system(sprintf('%s T="%s"; %s',initPATH,file,calcFSLs)); 
+    
+    if ~exist(Pp0,'file') || ~exist(Pm,'file') 
+      [SS,SR] = system(sprintf('%s T="%s"; %s',initPATH,file,calcFSLs)); 
 
-                         
-    switch modality
-      case '1'
-        vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
-                       fullfile(pp,[ff '_pve_1.nii']), ...
-                       fullfile(pp,[ff '_pve_2.nii']),'FSL',1);
-      case '2'                 
-       vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
-                      fullfile(pp,[ff '_pve_1.nii']), ...
-                      fullfile(pp,[ff '_pve_2.nii']),'FSL',1);
-      case '3'                 
-       vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
-                      fullfile(pp,[ff '_pve_2.nii']), ...
-                      fullfile(pp,[ff '_pve_1.nii']),'FSL',1);
+
+      switch modality
+        case '1'
+          vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
+                         fullfile(pp,[ff '_pve_1.nii']), ...
+                         fullfile(pp,[ff '_pve_2.nii']),'FSL',1); %~strcmp(FSLtype,'apes'));
+        case '2'                 
+         vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
+                        fullfile(pp,[ff '_pve_1.nii']), ...
+                        fullfile(pp,[ff '_pve_2.nii']),'FSL',1); %~strcmp(FSLtype,'apes'));
+        case '3'                 
+         vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.nii']), ...
+                        fullfile(pp,[ff '_pve_2.nii']), ...
+                        fullfile(pp,[ff '_pve_1.nii']),'FSL',1); %~strcmp(FSLtype,'apes'));
+      end
     end
     
+    % flirt realignment ... does not work very well...
+    if 0 %strcmp(FSLtype,'apes')
+      %%
+      [SS,SR] = system(sprintf('%s T="%s"; A="%s"; As="%s"; Ass="%s"; Aa="%s"; %s',...
+        initPATH,file,atlas,atlass,atlasss,atlasa,[calcFSL.init calcFSL.flirt])); 
     
+      if 0 
+        switch modality
+          case '1'
+           vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.affine.nii']), ...
+                           fullfile(pp,[ff '_pve_1.affine.nii']), ...
+                           fullfile(pp,[ff '_pve_2.affine.nii']),'FSL',1);
+          case '2'                 
+            vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.affine.nii']), ...
+                           fullfile(pp,[ff '_pve_1.affine.nii']), ...
+                           fullfile(pp,[ff '_pve_2.affine.nii']),'FSL',1);
+          case '3'                 
+            vbm_io_cgw2seg(fullfile(pp,[ff '_pve_0.affine.nii']), ...
+                           fullfile(pp,[ff '_pve_2.affine.nii']), ...
+                           fullfile(pp,[ff '_pve_1.affine.nii']),'FSL',1);
+        end  
+        movefile(fullfile(pp,['p0' ff '_pve_0..nii']),fullfile(pp,['p0' ff '.affine.nii']));   
+      end
+    end
   catch  %#ok<CTCH>
-    createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['p0' ff ee]));
-    createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['m' ff ee]));
+    %createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['p0' ff ee]));
+    %createNullImage(fullfile(pp,[ff ee]),fullfile(pp,['m' ff ee]));
   end
                  
   cd(wkd);

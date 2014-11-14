@@ -5906,3 +5906,108 @@ M       vbm_surf_resamp.m
 
 ------------------------------------------------------------------------
 r648 | gaser | 2014-11-13 10:44:21
+
+ M      .
+M       CHANGES.txt
+D       brainmask_LPBA40.nii
+D       brainmask_LPBA40_dartel.nii
+M       cg_vbm_batch.m
+M       cg_vbm_batch.sh
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_run_newcatch.m
+M       cg_vbm_write.m
+M       distribute_to_server.sh
+M       html/vbm12_FAQ.html
+A       html/vbm_vol_correct_slice_scaling_768.png
+D       submask.nii
+M       tbx_cfg_vbm.m
+ M      templates_1.50mm
+A       templates_1.50mm/brainmask.nii
+A       templates_animals
+A       templates_animals/ape_greater_T1.nii
+A       templates_animals/ape_greater_T2.nii
+A       templates_animals/ape_greater_TPM.nii
+A       templates_animals/ape_greater_TPMt.nii
+A       templates_animals/ape_greater_Template_1.nii
+A       templates_animals/ape_greater_Template_2.nii
+A       templates_animals/ape_greater_Template_3.nii
+A       templates_animals/ape_greater_Template_4.nii
+A       templates_animals/ape_greater_Template_5.nii
+A       templates_animals/ape_greater_Template_6.nii
+A       templates_animals/ape_greater_brainmask.nii
+A       templates_animals/ape_greater_cg_vbm_defaults.m
+A       templates_animals/ape_greater_vbm12.nii
+A       templates_animals/ape_lesser_T1.nii
+A       templates_animals/ape_lesser_T2.nii
+A       templates_animals/ape_lesser_TPM.nii
+A       templates_animals/ape_lesser_brainmask.nii
+A       templates_animals/ape_lesser_cg_vbm_defaults.m
+A       templates_animals/monkey_newworld_T1.nii
+A       templates_animals/monkey_newworld_T2.nii
+A       templates_animals/monkey_newworld_TPM.nii
+A       templates_animals/monkey_newworld_brainmask.nii
+A       templates_animals/monkey_newworld_cg_vbm_defaults.m
+A       templates_animals/monkey_oldworld_T1.nii
+A       templates_animals/monkey_oldworld_T2.nii
+A       templates_animals/monkey_oldworld_TPM.nii
+A       templates_animals/monkey_oldworld_Template_1.nii
+A       templates_animals/monkey_oldworld_Template_2.nii
+A       templates_animals/monkey_oldworld_Template_3.nii
+A       templates_animals/monkey_oldworld_Template_4.nii
+A       templates_animals/monkey_oldworld_Template_5.nii
+A       templates_animals/monkey_oldworld_Template_6.nii
+A       templates_animals/monkey_oldworld_brainmask.nii
+A       templates_animals/monkey_oldworld_cg_vbm_defaults.m
+A       templates_animals/monkey_oldworld_vbm12.nii
+D       vbm_db.m
+D       vbm_db_batch.m
+M       vbm_io_csv.m
+D       vbm_io_mysql.m
+M       vbm_stat_marks.m
+D       vbm_tst_SRS.m
+D       vbm_tst_calc_bias.m
+M       vbm_tst_pre.m
+M       vbm_tst_qa.m
+D       vbm_tst_qa_groups.m
+D       vbm_tst_qa_groups_test.m
+M       vbm_vol_atlas.m
+M       vbm_vol_average.m
+A       vbm_vol_correct_slice_scaling.m
+M       vbm_vol_iscale.m
+M       vbm_vol_partvol.m
+M       vbm_vol_sanlm.m
+M       vbm_vol_smooth3X.m
+
+(1)  Removed private or unnecessary files: 
+     * vbm_tst_qa_groups.m           - private - NISALS QA - out of date
+     * vbm_tst_qa_groups_test.m      - private - NISALS QA - out of date
+     * brainmask_LPBA40_dartel.nii   - unused
+     * brainmask_LPBA40.nii          - unused
+     * submask.nii                   - unused / private 
+     * vbm_db                        - private - NISALS QA - out of date
+     * vbm_db_batch                  - private - NISALS QA - out of date
+     * vbm_io_mysql                  - private - NISALS QA - out of date
+     * vbm_tst_SRS                   - private
+     * vbm_tst_calc_bias             - private - qa script - out of date
+(2)  Updated "vbm_vol_sanlm".
+(3)  Added function to correct slice intensity errors 
+     "vbm_vol_corrected_slice_scaling" that based on "cg_correct_slice_scaling".
+(4)  Prepare multi species processing: 
+     Added "species" variable to batch and add further default-files. 
+     Added 4 further primate species:
+      - ape_greater:     chimpanzees, bonobos, gorillas, orang-utans
+      - apes_lesser:     gibbons
+      - monkey_oldworld: baboons, macaques
+      - monkey_newwold:  squirrels, ...
+     The maps of this species are located in the "templates_animal" directory.
+     Each species comes with TPM, T1, T2, brainmask, vbm12, and Dartel
+     template maps. 
+(5)  Corrected "Warning: Control Character '\U'" in "cg_vbm_run_newcatch 19" by
+     replacing '\' by '\\'. 
+(6)  The "textscan" function in "vbm_io_csv" requires for MATLAB>2013 no 
+     "BufSize" variable and throw warnings. Added distinction by cases.
+(7)  Corrected GUI variable name errors.
+------------------------------------------------------------------------
+r649 | dahnke | 2014-11-14 12:53:27

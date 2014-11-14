@@ -33,7 +33,16 @@
             No, in general we recommend to use the original images without any preprocessing. 
             Low frequency corrections for inhomogeneity e.g. the N3 algorithm are unproblematic, but not required for most datasets.  
             Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocessing might be helpful if VBM12 shows any problems.  
+          </p>
+          <p>
             Try to avoid high frequency corrections or resampling of the data, because this will reduce the ability of the NLM filters. 
+          </p>
+          <p>
+            For images with slice-artifacts use the <a class="function" href="matlab:vbm_vol_correct_slice_scaling;">VBM slice corrections</a> (see image).
+            You can specify the filter direction and the strength of the filtering. 
+            Try to correct only the affected direction. 
+            Do not use this correction, if you does not have such kind of artifacts, because it may introduce errors in this case!
+            <img src="vbm_vol_correct_slice_scaling_768.png" class="center" alt="VBM slice correction for 2 datasets"/>
           </p>
         </li>
         <li>
@@ -101,7 +110,7 @@
             Outliers of image quality are often caused by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
             Best praxis is to remove strong outliers (e.g. > 2 standard deviations), if the problems depend on the image quality and not other subject properties.  
             If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>vbm12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
-            Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.showslice');"a>Check data homogeneity</a> to proof that the segmentation of these subjects were correct. <br />
+            Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.showslice');">Check data homogeneity</a> to proof that the segmentation of these subjects were correct. <br />
             Have a look to the <a href="vbm12_methods_QA.html">quality assurance methods</a> for further information. 
           </p>
         </li>

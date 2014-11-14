@@ -14,7 +14,6 @@ function vbm = tbx_cfg_vbm
 %rev = '$Rev$'; % not used
 
 addpath(fileparts(which(mfilename)));
-
 %_______________________________________________________________________
 
 data          = cfg_files;
@@ -30,13 +29,14 @@ data.num      = [1 Inf];
 data.help     = {
   'Select highres raw data (e.g. T1 images) for processing. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method and each images is processed separately.'};
 
+
 %_______________________________________________________________________
 tpm         = cfg_files;
 tpm.tag     = 'tpm';
 tpm.name    = 'Tissue Probability Map';
 tpm.filter  = 'image';
 tpm.ufilter = '.*';
-tpm.def     = @(val)cg_vbm_get_defaults('opts.tpm', val{:});
+tpm.def     =  @(val)cg_vbm_get_defaults('opts.tpm', val{:});
 tpm.num     = [1 1];
 tpm.help    = {
   'Select the tissue probability image for this class. These should be maps of eg grey matter, white matter or cerebro-spinal fluid probability. A nonlinear deformation field is estimated that best overlays the tissue probability maps on the individual subjects'' image. The default tissue probability maps are modified versions of the ICBM Tissue Probabilistic Atlases. These tissue probability maps are kindly provided by the International Consortium for Brain Mapping, John C. Mazziotta and Arthur W. Toga. http://www.loni.ucla.edu/ICBM/ICBM_TissueProb.html.'
@@ -171,6 +171,98 @@ bb.help    = {'The bounding box (in mm) of the volume which is to be written (re
 };
 
 %------------------------------------------------------------------------
+% Species
+%------------------------------------------------------------------------
+
+%{
+species        = cfg_menu;
+species.tag    = 'species';
+species.name   = 'Species';
+species.labels = {'Humans','Greater apes (bonobos,chimpanzees,gorillas,orang-utans)','Lesser apes (gibbons)','Oldworld monkeys (baboons,maquaces)','Newworld monkeys'};
+species.values = {'human','ape_greater','ape_lesser','monkey_oldworld','monkey_newworld'};
+species.def    = @(val)cg_vbm_get_defaults('extopts.species', val{:});
+species.help   = {
+  'Preprocessing of other species requires special TPM, atlas and template maps.'
+  'This option will modify other relevant parameter automaticly and is still in the development.'
+};
+%}
+
+%------------------------------------------------------------------------
+% Resolution
+%------------------------------------------------------------------------
+
+resnative        = cfg_branch;
+resnative.tag    = 'resval';
+resnative.name   = 'Native resolution preprocessing';
+resnative.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+resnative.help   = {
+  'Preprocessing with native resolution.'
+  'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+  ''
+  'Examples:'
+  '  native resolution       internal resolution '
+  '   0.95 0.95 1.05     >     0.95 0.95 1.05'
+  '   0.45 0.45 1.70     >     0.45 0.45 1.50'
+  '' 
+}; 
+
+resbest        = cfg_entry;
+resbest.tag    = 'resval';
+resbest.name   = 'Best native resolution with interpolation boundary:';
+resbest.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+resbest.num    = [1 2];
+resbest.help   = {
+  'Preprocessing with the best (minimal) voxel dimension of the native image.'
+  'The first value limits the interpolation, whereas the second value avoid interpolation of nearly correct resolutions.'
+  'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+  ''
+  'Examples:'
+  '  Parameters    native resolution       internal resolution'
+  '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.00 1.00'
+  '  [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00'
+  '  [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75'  
+  '  [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80'  
+  '  [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45'  
+  ''
+}; 
+
+resfixed        = cfg_entry;
+resfixed.tag    = 'resval';
+resfixed.name   = 'Fixed resolution';
+resfixed.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+resfixed.num    = [1 2];
+resfixed.help   = {
+  'The first value controls the resolution that is used, if the voxel resolution differ more than the second parameter from the first one. '
+  'The second paramter is used to avoid small interpolation for nearly correct resolutions. ' 
+  'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+  ''
+  'Examples: '
+  '  Parameters     native resolution       internal resolution'
+  '  [1.00 0.10]     0.45 0.45 1.70     >     1.00 1.00 1.00'
+  '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
+  '  [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00'
+  '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
+  '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 1.75 0.75'
+}; 
+
+
+restype        = cfg_choice;
+restype.tag    = 'restype';
+restype.name   = 'Spatial resolution';
+switch cg_vbm_get_defaults('extopts.restype')
+  case 'native', restype.val = {resnative};
+  case 'best',   restype.val = {resbest};
+  case 'fixed',  restype.val = {resfixed};
+end
+restype.values = {resnative resbest resfixed};
+restype.help   = {
+  'There are 3 major ways to control the resolution ''native'', ''best'', and ''fixed''. Due to special optimization functions and Dartel low resolution output artifacts the lowest resolution is limited to 1.5 mm in all cases! Highest resolution is limited to 0.2 mm. '
+  ''
+  'We commend to use ''best'' for highrest quality. ' 
+}; 
+
+
+%------------------------------------------------------------------------
 % Cleanup
 %------------------------------------------------------------------------
 
@@ -186,7 +278,7 @@ cleanup.help   = {
 };
 
 cleanupstr         = cfg_entry;
-cleanupstr.tag     = 'cleanupstrength';
+cleanupstr.tag     = 'cleanupstr';
 cleanupstr.name    = 'Strength of New Cleanup';
 cleanupstr.strtype = 'r';
 cleanupstr.num     = [1 1];
@@ -205,7 +297,7 @@ cleanupstr.help    = {
 %------------------------------------------------------------------------
 
 gcutstr         = cfg_entry;
-gcutstr.tag     = 'gcutstrength';
+gcutstr.tag     = 'gcutstr';
 gcutstr.name    = 'Strength of gcut+ Skull-Stripping';
 gcutstr.strtype = 'r';
 gcutstr.num     = [1 1];
@@ -248,7 +340,7 @@ sanlm.help   = {
 %}
 
 NCstr         = cfg_entry;
-NCstr.tag     = 'NCstrength';
+NCstr.tag     = 'NCstr';
 NCstr.name    = 'Strength of Noise Corrections';
 NCstr.strtype = 'r';
 NCstr.num     = [1 1];
@@ -276,7 +368,7 @@ LAS.help   = {
 };
 
 LASstr         = cfg_entry;
-LASstr.tag     = 'LASstrength';
+LASstr.tag     = 'LASstr';
 LASstr.name    = 'Strength of Local Adaptive Segmentation';
 LASstr.strtype = 'r';
 LASstr.num     = [1 1];
@@ -400,7 +492,7 @@ darteltpm.help    = {
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
-extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,ROI,surface,print}; 
+extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,ROI,surface,restype,print}; 
 extopts.help  = {'Using the extended options you can adjust the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data). Furthermore, you can select additional options to create surface reconstructions, ROI analysis  etc.'};
 
 %------------------------------------------------------------------------
@@ -633,7 +725,7 @@ estwrite.vout   = @vout;
 estwrite.help   = {
 'This toolbox is an extension of the default segmentation in SPM12, but uses a completely different segmentation approach.'
 ''
-' The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities. That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach (Ashburner et. al. 2005), but just for spatial normalization. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions (Rajapakse et al. 1997). This not only accounts for intensity inhomogeneities but also for other local variations of intensity.'
+'The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities. That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach (Ashburner et. al. 2005), but just for spatial normalization. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions (Rajapakse et al. 1997). This not only accounts for intensity inhomogeneities but also for other local variations of intensity.'
 ''
 'Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types (Tohka et al. 2004). We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation. The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF. This results in an estimation of the amount (or fraction) of each pure tissue type present in every voxel (as single voxels - given by their size - probably contain more than one tissue type) and thus provides a more accurate segmentation.'
 ''
@@ -679,6 +771,7 @@ cdep = cfg_dep;
 cdep(end).sname      = 'Seg Params';
 cdep(end).src_output = substruct('.','param','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
+
 
 % bias corrected
 if opts.bias.native,

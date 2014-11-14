@@ -235,7 +235,7 @@ end
 
 for z=1:length(x3),
 
-    % Bias corrected image
+    %% Bias corrected image
     cr = cell(1,N);
     for n=1:N,
         f = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
@@ -444,7 +444,7 @@ end
 %  allows up to 20 colors
 %  ---------------------------------------------------------------------
 debug = 1; % this is a manuel debuging option for matlab debuging mode
-if vbm.sanlm~=5
+if ~(vbm.sanlm==5 && job.extopts.NCstr)
   stime = vbm_io_cmd('Global Intensity Correction');;
   [Ym,Yb,T3th,Tth,opt.inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
   if debug, Ym2=Ym; end %#ok<NASGU>
@@ -458,14 +458,19 @@ if vbm.sanlm~=5
   % After the intensity scaling and with correct information about the
   % variance of the tissue, a further harder noise correction is meaningful.
   % Finally, a stronger NLM-filter is better than a strong MRF filter!
-  if vbm.sanlm>0 && vbm.sanlm<3
+  if vbm.sanlm>0 && vbm.sanlm<3 && job.extopts.NCstr
     stime = vbm_io_cmd('Noise correction after Global Intensity Correction');
-    [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-    if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1,0); 
-    elseif vbm.sanlm==2, sanlmMex(Yms,3,1,0);
+    if ~any(cell2mat(struct2cell(job.output.bias)'))
+      [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
+      if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1,0); 
+      elseif vbm.sanlm==2, sanlmMex(Yms,3,1,0);
+      end
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
+    else
+      if     vbm.sanlm==1, sanlmMex_noopenmp(Ym,3,1,0); 
+      elseif vbm.sanlm==2, sanlmMex(Ym,3,1,0);
+      end
     end
-    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
-
     Ysrc = vbm_pre_gintnormi(Ym,Tth);
     clear Yms BB;
     fprintf('%4.0fs\n',etime(clock,stime));  
@@ -478,10 +483,19 @@ if vbm.sanlm~=5
     ornlmstr = min(1/6,vbm_stat_nanmean(Yn(Yn(:)>0))) * job.extopts.NCstr * 2; 
     clear Yn Ycls1 Ycls2;
 
-    stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2fx%0.2f)',ornlmstr));
-    if ornlmstr>0.01, Ymss = ornlmMex(Yms,3,1,ornlmstr); end
-    Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
-    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
+    stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',ornlmstr));
+    if ~any(cell2mat(struct2cell(job.output.bias)'))
+      if ornlmstr>0.01,
+        Ymss = ornlmMex(Yms,3,1,ornlmstr); 
+        Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
+      end
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
+    else
+      if ornlmstr>0.01,
+        Yms = ornlmMex(Ym,3,1,ornlmstr);
+        Ym(Ym<1.1) = Yms(Ym<1.1);   % avoid filtering of blood vessels; 
+      end
+    end
     Ysrc = vbm_pre_gintnormi(Ym,Tth);
     clear Yms BB;
     fprintf('%4.0fs\n',etime(clock,stime));
@@ -550,7 +564,7 @@ end
 stime = vbm_io_cmd('ROI Segmentation (Partitioning)');
 % replace by more exact partitioning ... for speedup use lower resolution
 % [Yl1,YBG,Ycls] = vbm_pre_fastpart(Ym,Ycls,Yb,Yy,vx_vol);
-[Yl1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol);
+[Yl1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,job.vbm.vbm12atlas);
 fprintf('%4.0fs\n',etime(clock,stime));
 
 
@@ -1055,28 +1069,28 @@ M0 = res.image(1).mat;
 % value of the bb is negative
 if bb(1)<bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
 
-% figure out the mapping from the volumes to create to the original
-mm  = [[bb(1,1) bb(1,2) bb(1,3)
-        bb(2,1) bb(1,2) bb(1,3)
-        bb(1,1) bb(2,2) bb(1,3)
-        bb(2,1) bb(2,2) bb(1,3)
-        bb(1,1) bb(1,2) bb(2,3)
-        bb(2,1) bb(1,2) bb(2,3)
-        bb(1,1) bb(2,2) bb(2,3)
-        bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
 
-vx2  = M1\mm;
-vx3 = [[1       1       1
-        odim(1) 1       1
-        1       odim(2) 1
-        odim(1) odim(2) 1
-        1       1       odim(3)
-        odim(1) 1       odim(3)
-        1       odim(2) odim(3)
-        odim(1) odim(2) odim(3)]'; ones(1,8)];
-mat    = mm/vx3; 
+  % figure out the mapping from the volumes to create to the original
+  mm  = [[bb(1,1) bb(1,2) bb(1,3)
+          bb(2,1) bb(1,2) bb(1,3)
+          bb(1,1) bb(2,2) bb(1,3)
+          bb(2,1) bb(2,2) bb(1,3)
+          bb(1,1) bb(1,2) bb(2,3)
+          bb(2,1) bb(1,2) bb(2,3)
+          bb(1,1) bb(2,2) bb(2,3)
+          bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
 
-    
+  vx2  = M1\mm;
+  vx3 = [[1       1       1
+          odim(1) 1       1
+          1       odim(2) 1
+          odim(1) odim(2) 1
+          1       1       odim(3)
+          odim(1) 1       odim(3)
+          1       odim(2) odim(3)
+          odim(1) odim(2) odim(3)]'; ones(1,8)];
+  mat    = mm/vx3; 
+
 % rigid transformation
 if (any(tc(:,2)) || lb(1,3))
     x      = affind(rgrid(d),M0);
@@ -1208,7 +1222,7 @@ if job.extopts.WMHC==1 && ~opt.inv_weighting;
 end
 
 
-
+%{
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
@@ -1217,13 +1231,13 @@ Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3;
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0,'method','vbm12'));
 clear Yo Ybf Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));
-
+%}
 
 % here it would be possible to change the path for low res images ... 
 
 
 
-%  ---------------------------------------------------------------------
+%%  ---------------------------------------------------------------------
 %  write results
 %  ---------------------------------------------------------------------
 stime = vbm_io_cmd('Write result maps');
@@ -1450,6 +1464,18 @@ if job.extopts.ROI,, % || any(cell2mat(struct2cell(job.output.atlas)'))
   vbm_io_cmd('','n','',1,stime);
 end
 clear wYp0 wYcls wYv
+
+
+%% ---------------------------------------------------------------------
+%  XML-report and Quality Assurance
+%  ---------------------------------------------------------------------
+stime = vbm_io_cmd('Quality Control');
+Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
+qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
+          struct('write_csv',0,'write_xml',0,'method','vbm12'));
+clear Yo Ybf Yp0 qas;
+fprintf('%4.0fs\n',etime(clock,stime));
+
 
 
 
@@ -1763,7 +1789,7 @@ if do_cls && vbm.print
 
 
     % remove p0 image, if it was only written for printing
-    try, set(cc{3},'visible','off'); end %#ok<TRYNC>  
+    try set(cc{3},'visible','off'); end %#ok<TRYNC>  
     if job.output.label.native==0 && exist(Pp0,'file')
       delete(fullfile(pth,['p0', nam, '.nii']));
       if exist('hhp0','var')
@@ -1775,7 +1801,7 @@ if do_cls && vbm.print
         'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
     end
     
-    spm_orthviews('window',hho,[0 Yowmth*2]);
+    try spm_orthviews('window',hho,[0 Yowmth*2]); end %#ok<TRYNC>
     try set(cc{1},'visible','off'); end %#ok<TRYNC>
     colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
           'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');

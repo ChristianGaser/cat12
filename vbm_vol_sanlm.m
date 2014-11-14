@@ -1,23 +1,37 @@
 function vbm_vol_sanlm(varargin)
 % Spatial Adaptive Non Local Means Denoising Filter
 % Filter a set of images and add the prefix 'sanlm_'.
-% 
+% Missing input will call GUI or/and use defaults. 
+%
 % Input:
 % job    - harvested job data structure (see matlabbatch help)
+% 
 % Output:
 % out    - computation results, usually a struct variable.
 %
+% vbm_vol_sanlm(job)
+%   job.data   = set of images 
+%   job.prefix = prefix for filtered images (default = 'sanlm_') 
+%   job.rician = noise distribution
+%
+% Example:
+%   vbm_vol_sanlm(struct('data','','prefix','n','rician',0));
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
 
-if nargin == 0
-    P = spm_select([1 Inf],'image','select images to filter');
-    for i=1:size(P,1)
-        job.data{i} = deblank(P(i,:));
-    end
+if nargin == 0 
+    job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
+    %for i=1:size(P,1)
+    %    job.data{i} = deblank(P(i,:));
+    %end
 else
     job = varargin{1};
+end
+if ~isfield(job,'data') || isempty(job.data)
+   job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
+else
+   job.data = cellstr(job.data);
 end
 
 if ~isfield(job,'prefix')

@@ -8,6 +8,13 @@ function S=vbm_vol_smooth3X(S,s,filter)
   S(isnan(S(:)) | isinf(-S(:)) | isinf(S(:)))=0;                                          % correct bad cases
   
   SO=S;
+  if ndims(S)==2
+    slice = 1;
+    S = repmat(S,1,1,2*s+1);
+  else
+    slice = 0;
+  end
+  
   if s>0 && s<0.5
     S  = smooth3(S,'gaussian',3,0.5)*s + S*(1-s);
   elseif s>=0.5 && s<=1.0
@@ -28,6 +35,10 @@ function S=vbm_vol_smooth3X(S,s,filter)
   end
   
   S(isnan(S(:)) | isinf(-S(:)) | isinf(S(:)))=0;    
+  
+  if slice 
+    S = S(:,:,2); 
+  end
 end
 function D=reduceRes(D,method)
   if ~exist('method','var'), method='linear'; end

@@ -1,10 +1,10 @@
-function PO = vbm_vol_average(P,fname,PT,dt,nr)
+function PO = vbm_vol_average(P,fname,PT,dt,nr,mask)
 % ______________________________________________________________________
 % Creates median images of a set of files P or volumes V with the same
 % image properties.
 %
-%   VO = vbm_vol_median(V[,fname,PT,tpye,nr])
-%   VO = vbm_vol_median(P[,fname,PT,dt,nr])
+%   VO = vbm_vol_average(V[,fname,PT,dt,nr])
+%   VO = vbm_vol_average(P[,fname,PT,dt,nr])
 %
 %   P     = char or cell array with filenames
 %   PT    = template image with another resolution (for interpolation)
@@ -15,6 +15,7 @@ function PO = vbm_vol_average(P,fname,PT,dt,nr)
 %   nr    = use number in fname
 %   fname = name of the outputfile, add median/mean/std automaticly
 %            mypath/myname.nii > mypath/median003_myname.nii ...
+%   mask  = value for masking
 % ______________________________________________________________________
 % Robert Dahnke 2013_08
 % Structural Brain Mapping Group
@@ -121,6 +122,10 @@ function PO = vbm_vol_average(P,fname,PT,dt,nr)
           case 1, YO = vbm_stat_nanmedian(Y,4);
           case 2, YO = vbm_stat_nanmean(Y,4);
           case 3, YO = vbm_stat_nanstd(Y,4);
+        end
+        if mask
+          YM = vbm_stat_nansum(Y>0,4)>=(mask*size(P,1));
+          YO = YO .* YM;
         end
         VO1 = spm_write_plane(VO1,YO,p);
       end
