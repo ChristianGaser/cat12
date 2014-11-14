@@ -27,6 +27,9 @@ function vbm_vol_atlas(atlas,refinei)
 % ROI description should be available as csv-file:
 %   ROInr; ROIname [; ROInameid]
 %
+%_______________________________________________________________________
+
+%_______________________________________________________________________
 % TODO:
 % - 2 Typen von Atlanten:
 %     1) nicht optimiert:
@@ -49,7 +52,7 @@ function vbm_vol_atlas(atlas,refinei)
   
   if ~exist('atlas','var'), atlas=''; end
   
-  [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas);
+  [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas);
   if isempty(P)|| isempty(P{1})
     P      = cellstr(spm_select(inf,'image','select T1 images'));  
     if isempty(P) || isempty(P{1})
@@ -151,9 +154,9 @@ function vbm_vol_atlas(atlas,refinei)
       end
     end
     if refine
-      ROIavg(Pwp0,Pwa,Pws,Pcsv,Ptxt,atlas,resdir);
+      ROIavg(Pwp0,Pwa,Pws,Pcsv,Ptxt,atlas,resdir,Pxml);
     else
-      ROIavg(Pwp0,PwA,Pws,Pcsv,Ptxt,atlas,resdir);
+      ROIavg(Pwp0,PwA,Pws,Pcsv,Ptxt,atlas,resdir,Pxml);
     end
 
     
@@ -267,18 +270,20 @@ function vbm_vol_atlas(atlas,refinei)
     % create the final probability ROI map as a 4D dataset, the simplyfied 
     % atlas map for the VBM toolbox and a mean p0 images
     if refine
-      subROIavg(Pwp0,Pwa,Ps,Pcsv,Ptxt,atlas,resdir)
+      subROIavg(Pwp0,Pwa,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
     else
-      subROIavg(Pwp0,PwA,Ps,Pcsv,Ptxt,atlas,resdir)
+      subROIavg(Pwp0,PwA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
     end
   end
 end
-function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
+function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
 % ----------------------------------------------------------------------
 % This fucntion contains the paths to our atlas maps and the csv files.
 % ----------------------------------------------------------------------
-  rawdir = '/Volumes/MyBook/MRData/Regions/';
-  resdir = '/Volumes/MyBook/MRData/Regions/vbmROIs';
+  rawdir  = '/Volumes/MyBook/MRData/Regions/';
+  resdir  = '/Volumes/MyBook/MRData/Regions/vbmROIs';
+  Pxml    = struct();
+  species = 'human';
   
   switch lower(atlas)
     case 'ibsr'
@@ -288,8 +293,25 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       P      = vbm_findfiles(mdir,'IBSR_*_ana.nii');
       P      = setdiff(P,PA);
       Pcsv   = vbm_findfiles(mdir,'IBSR.csv'); 
-      Ptxt   = vbm_findfiles(mdir,'IBSR.txt'); 
+      Ptxt   = vbm_findfiles(mdir,'IBSR.txt');
       refine = 1;
+      Pxml.ver = 0.9;
+      Pxml.lic = 'IBSR terms';
+      Pxml.url = 'http://www.nitrc.org/projects/ibsr';
+      Pxml.des = [ ...
+        'VBM12 was used to preprocess the T1 data to map each label to IXI555 space. ' ...
+        'A 3D median filter was used to remove outliers in the label map. ROI-IDs ' ...
+        'were reseted to guaranty that left side ROIs were described by odd numbers, ' ...
+        'whereas right-hand side ROIs only have even numbers. ROIs without side-alignment ' ...
+        'in the original atlas like the brainstem were broken into a right and left part. ' ...
+        'Therefore, a Laplace filter was used to estimate the potential field of unaligned' ...
+        'regions between the left an right potential. ' ...
+        'When publishing results using the data, acknowledge the source by including' ...
+        'the statement, "The MR brain data sets and their manual segmentations were' ...
+        'provided by the Center for Morphometric Analysis at Massachusetts General' ...
+        'Hospital and are available at http://www.cma.mgh.harvard.edu/ibsr/."' ...
+      ];
+      Pxml.ref = 'http://www.nitrc.org/projects/ibsr';
       
     case 'hammers'
       mdir   = fullfile(rawdir,'brain-development.org/Pediatric Brain Atlas/Hammers_mith_atlases_n20r67_for_pvelab');
@@ -299,7 +321,32 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       Pcsv   = vbm_findfiles(mdir,'VOIalex.csv'); 
       Ptxt   = vbm_findfiles(mdir,'hammers.txt'); 
       refine = 1;
-      
+      Pxml.ver = 1.0;
+      Pxml.lic = 'CC BY-NC';
+      Pxml.url = 'http://biomedic.doc.ic.ac.uk/brain-development/index.php?n=Main.Atlases';
+      Pxml.des = [ ...
+        'This atlas, based on Alexander Hammers brain atlas, made available for the ' ...
+        'Euripides project, Nov 2009 (A). ' ...
+        'VBM12 was used to segment the T1 data and estimate Dartel normalization to the ' ...
+        'VBM IXI550 template for each subject. Dartel mapping was then applied for label ' ...
+        'map. A 3D median filter was used to remove outliers in the label map. ROI-IDs ' ...
+        'were reseted to guaranty that left side ROIs were described by odd numbers, ' ...
+        'whereas right-hand side ROIs only have even numbers. ROIs without side-alignment ' ... 
+        'in the original atlas like the brainstem were broken into a right and left part. ' ...
+        'Therefore, a Laplace filter was used to estimate the potential field of unaligned ' ...
+        'regions between the left an right potential. ' ...
+        'Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, ' ...
+        'Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas of the human ' ...
+        'brain, with particular reference to the temporal lobe. Hum Brain Mapp 2003, 19:' ...
+        '224-247. ' ...
+      ];
+      Pxml.ref = [ ...
+        'Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, ' ...
+        'Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas of the human ' ...
+        'brain, with particular reference to the temporal lobe. Hum Brain Mapp 2003, 19:' ...
+        '224-247. ' ...
+      ];
+    
     case {'mori','mori1','mori2','mori3'}
       if numel(atlas)==5, aid=atlas(5); else aid='2'; end
       mdir   = fullfile(rawdir,'www.spl.harvard.edu/2010_JHU-MNI-ss Atlas');
@@ -309,7 +356,29 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       Pcsv   = vbm_findfiles(mdir,sprintf('JHU_MNI_SS_WMPM_Type-%s_SlicerLUT.csv',repmat('I',1,str2double(aid))));
       Ptxt   = vbm_findfiles(mdir,'mori.txt'); 
       refine = 1;
-    
+      Pxml.ver = 0.9;
+      Pxml.lic = 'CC BY-NC';
+      Pxml.url = 'http://www.spl.harvard.edu/publications/item/view/1883';
+      Pxml.des = [ ...
+        'This atlas based on the "Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II" atlas ' ...
+        '(http://www.spl.harvard.edu/publications/item/view/1883)' ...  
+        'of Version 2010-05.  The T1 and label data was segmented and normalized by VBM12 ' ...
+        'to projected the atlas to IXI550 template space.  ' ...
+        'If you use these atlases, please cite the references below.  ' ...
+        'Reference: Atlas-based whole brain white matter analysis using large deformation ' ...
+        'diffeomorphic metric mapping: application to normal elderly and Alzheimers ' ...
+        'disease participants.  Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, ' ...
+        'Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, ' ...
+        'Rosa-Neto P, Evans A, Mazziotta J, Mori S.' ...
+      ];
+      Pxml.ref = [ ...
+        'Reference: Atlas-based whole brain white matter analysis using large deformation ' ...
+        'diffeomorphic metric mapping: application to normal elderly and Alzheimers ' ...
+        'disease participants.  Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, ' ...
+        'Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, ' ...
+        'Rosa-Neto P, Evans A, Mazziotta J, Mori S.' ...    
+      ];
+
     case 'anatomy'
       mdir   = fullfile(rawdir,'Anatomy2.0');
       P      = vbm_findfiles(mdir,'colin27T1_seg.nii');
@@ -380,7 +449,38 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       Ps     = {''};
       Pcsv   = vbm_findfiles(mdir,'MICCAI2012-Neuromorphometrics.csv');
       Ptxt   = vbm_findfiles(mdir,'MICCAI2012-Neuromorphometrics.txt'); 
-      refine = 1;        
+      refine = 1;    
+      Pxml.ver = 0.9;
+      Pxml.lic = 'CC BY-NC';
+      Pxml.url = 'https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details';
+      Pxml.des = [ ...
+        'Maximum probability tissue labels derived from the ``MICCAI 2012 Grand Challenge and Workshop ' ...
+        'on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details).' ...
+        'These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. ' ...
+        'Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and ' ...
+        'the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic ' ...
+        'subscription".  These references should be included in all workshop and final publications.' ...
+      ];
+    
+    case 'inia'
+      mdir   = fullfile(rawdir,'animals','inia19');
+      P      = vbm_findfiles(mdir,'inia19-t1-brain.nii');
+      PA     = vbm_findfiles(mdir,'inia19-NeuroMaps.nii');
+      Ps     = {''};
+      Pcsv   = vbm_findfiles(mdir,'MICCAI2012-Neuromorphometrics.csv');
+      Ptxt   = vbm_findfiles(mdir,'MICCAI2012-Neuromorphometrics.txt'); 
+      refine = 1;    
+      Pxml.ver = 0.9;
+      Pxml.lic = 'CC BY-NC';
+      Pxml.url = 'https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details';
+      Pxml.des = [ ...
+        'Maximum probability tissue labels derived from the ``MICCAI 2012 Grand Challenge and Workshop ' ...
+        'on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details).' ...
+        'These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. ' ...
+        'Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and ' ...
+        'the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic ' ...
+        'subscription".  These references should be included in all workshop and final publications.' ...
+      ];    
     % for this atlas I have no source and no labels...
     %{
     case 'brodmann'
@@ -409,6 +509,12 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine] = mydata(atlas)
       Pcsv    = {''};
       Ptxt    = {''};
       refine  = 0;
+      Pxml.ver = 1.0;
+      Pxml.lic = 'CC BY-NC';
+      Pxml.url = 'https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details';
+      Pxml.des = [ ...
+        'Internal atlas of VBM12.' ...
+      ];
     
     otherwise % GUI ...
       P       = {''};
@@ -488,7 +594,7 @@ function calldefs(Py,PA,interp,modulate)
   end
   warning on; 
 end
-function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
+function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
 % atlas map for the VBM toolbox and a mean p0 images
@@ -750,13 +856,13 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
     end
   end
   
-  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv);
+  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv,Pxml);
    
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
   end
 end
-function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
+function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
 % atlas map for the VBM toolbox and a mean p0 images
@@ -944,7 +1050,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir)
     end
   end
   
-  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv);
+  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv,Pxml);
   
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']));
@@ -1109,9 +1215,11 @@ function dict=ROIdict()
     ...
     'Med'            {'Medial' 'med_' 'med-' 'mid '} {}
     'Mid'            {'Middle' 'mid_' 'mid-' 'mid '} {}
+    'Cen'            {'Central'} {}
     ...
     'Sag'            {'Sagital' 'sag_' 'sag-' 'sag ' 'sagittal'} {}
     'Fro'            {'Frontal'} {'Orbito-Frontal'}
+    'Bas'            {'Basal'} {}
     'Lat'            {'Lateral' 'lat_' 'lat-' 'lat '} {}
     'Occ'            {'Occipital' '_orb'} {'Fronto-Occupital'}
     'OrbFro'         {'Orbito-Frontal' 'Frotono-Orbital'} {};                             
@@ -1123,7 +1231,10 @@ function dict=ROIdict()
     'PoC'            {'Postcentral'} {}
     'Prc'            {'Precentral'} {}
     'Tem'            {'Temporal'} {}
+    'Tra'            {'Transverse'} {}
     'Ven'            {'Ventral'} {}
+    ...
+    'Ext'            {'Exterior'} {}
   };
   dict.structures = { ... % unspecific multiple cases
     '3th'            {'Third','3rd'} {}
@@ -1157,13 +1268,15 @@ function dict=ROIdict()
     'Bone'           {'Bone'} {}
     'Fat'            {'Fat'} {}
     'BV'             {'Bloodvessel' 'blood' 'vessel'} {}
+    'OC'             {'Optic Chiasm'} {}
   };
   dict.regions = { ... % specific - one case
+    ... 'Area'           {'Area'} {}
     'Acc'            {'Accumbens'} {}
     'Ang'            {'Angular'} {}
     'Amb'            {'Ambient'} {}
     'Amy'            {'Amygdala'} {}
-    'Bst'            {'Brainstem' 'Brain-Stem'} {}
+    'Bst'            {'Brainstem' 'Brain-Stem' 'Brain Stem'} {}
     'Cal'            {'Calcarine'} {}
     'Cbe'            {'Cerebellum' 'cerebelum'} {}
     'Cbr'            {'Cerebral'} {}
@@ -1176,7 +1289,9 @@ function dict=ROIdict()
     'PCu'            {'Precuneus'} {}                              
     'Cau'            {'Caudate'} {}
     'Clo'            {'Choroid'} {}
+    'Ent'            {'Entorhinal Area'} {}
     'Fus'            {'Fusiform'} {}
+    'Fob'            {'Forebrain'} {}
     'Hes'            {'Heschl' 'heschls'} {}
     'Hip'            {'Hippocampus'} {'Parahippocampus'}                       
     'Ins'            {'Insula'} {}
@@ -1188,8 +1303,10 @@ function dict=ROIdict()
     'Rol'            {'Rolandic'} {}
     'Pal'            {'Pallidum'} {}
     'ParHip'         {'Parahippocampus' 'Parahippocampal'} {}
+    'Pla'            {'Planum Polare'} {}
     'Put'            {'Putamen'} {}
     'Rec'            {'Rectal'} {}
+    'SCA'            {'Subcallosal Area'} {}
     'SubNig'         {'Substancia-Nigra' 'substancia_nigra'} {}
     'SupMar'         {'Supramarginal'} {}
     'Tha'            {'Thalamus'} {}
@@ -1354,7 +1471,20 @@ function dict=ROIdict()
     ... ??
    };
   dict.neuromorphometrics = {
-    ...
+    'Ventricle'      {'Ventricle'} {}
+    'Cbe1-5'         {'Cerebellar Vermal Lobules I-V'} {}
+    'Cbe6-7'         {'Cerebellar Vermal Lobules VI-VII'} {}
+    'Cbe8-10'        {'Cerebellar Vermal Lobules VIII-X'} {}
+    'Forb'           {'Forbrain'} {}
+    ''               {'ACgG','AIns','AOrG','AnG','Calc','CO','Cun','Ent',...
+                      'FO','FRP','FuG','GRe','LOrG','MCgG','MFC','MFG',...
+                      'MOG','MOrG','MPoG','MPrG','MSFG','MTG','OCP',...
+                      'OFuG','OpIFG','PCgG','PCu','PHG','PIns','PO','PoG',...
+                      'POrG','PP','PrG','PT','SCA','SFG','SMC','SMG','SOG',...
+                      'SPL','STG','TMP','TrIFG','TTG'} {}
+    'B'             {'Brain'} {'brainstem' 'brain-stem' 'brain stem'}   
+    'WM'            {'White Matter'};
+    'CSF'           {'CSF'};
   };
 end
 function create_vbm_atlas(A,C,LAB)

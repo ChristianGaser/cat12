@@ -322,8 +322,8 @@ run_vbm ()
               CFILES="{"$CFILES"}";
               matlabcommand2=$matlabcommand
               matlabcommand2=$(echo $matlabcommand2 |sed 's/CFILES/$CFILES/g');
-              eval "COMMAND=\"$matlabcommand2\";"
-              COMMAND="try, spm; spm_get_defaults; cg_vbm_get_defaults; global defaults vbm matlabbatch; $COMMAND; catch, fprintf('ERROR'); e=lasterror; e.message, exit; end; fprintf('VBM batch processing done.'); exit;";
+              eval "COMMAND=\"$matlabcommand2\";" # fprintf('ERROR'); e=lasterror; e.message,
+              COMMAND="try, spm; spm_get_defaults; cg_vbm_get_defaults; global defaults vbm matlabbatch; $COMMAND; catch vbmerr, sprintf('\n%s\nVBM Preprocessing error: %s:\n%s\n', repmat('-',1,72),vbmerr.identifier,vbmerr.message,repmat('-',1,72)); for si=1:numel(vbmerr.stack), vbm_io_cprintf('err',sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name)); end; vbm_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72))); exit; end; fprintf('VBM batch processing done.'); exit;";
             fi
             SHCOMMAND="$shellcommand ${ARG_LIST[$i]}"          
                         

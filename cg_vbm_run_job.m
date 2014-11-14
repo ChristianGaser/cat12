@@ -55,7 +55,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
 
     % noise-correction
-    if job.vbm.sanlm
+    if job.vbm.sanlm && job.extopts.NCstr
         % for windows always disable multi-threading
         if ispc
             if (job.vbm.sanlm == 2) || (job.vbm.sanlm == 4)
@@ -89,32 +89,38 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     
     %% Interpolation
     % The interpolation can help to reduce problems for morphologic
-    % operations on strong isotropic images. 
+    % operations for low resolutions and strong isotropic images. 
     % Especially for Dartel a native resolution higher than the Dartel 
     % resolution helps to reduce normalization artifacts of the
     % deformation. Also this artifacts were reduce by the final smoothing
     % it is much better to avoid them.  
-    segres = cg_vbm_get_defaults('extopts.segres'); 
-    vox    = cg_vbm_get_defaults('extopts.vox');
+    restype = cg_vbm_get_defaults('extopts.restype'); 
+    resval  = abs(cg_vbm_get_defaults('extopts.resval')); 
+    Vt      = tpm.V(1); 
+    vx_vold = min(cg_vbm_get_defaults('extopts.vox'),sqrt(sum(Vt.mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
     for n=1:numel(job.channel) 
 
       % prepare header of resampled volume
       Vi        = spm_vol(job.channel(n).vols{subj}); 
       vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
-      vx_voli   = max(0.2, min( median(vx_vol) , repmat(segres,1,3) )); % interpolation resolution limits 0.2x0.2x0.2 mm
-      vx_vold   = max(0.2, min( median(vx_vol) , repmat(vox,1,3)    )); 
-
-      % interpolation to similare resolutions only if there are create 
-      % changes or if it is below the Dartel resolution
-      if any( (vx_vol ./ vx_voli) >1.5 ) || any(  vx_vol > vox )        % greater changes or below dartel default resolution
+      switch restype 
+        case 'native'
+          vx_voli  = vx_vol;
+        case 'fixed', 
+          vx_voli  = min(vx_vol ,resval(1) ./ (vx_vol > (resval(1)+resval(2))));
+          vx_voli  = max(vx_voli,resval(1) .* (vx_vol < (resval(1)-resval(2))));
+        case 'best'
+          vx_voli  = min(vx_vol ,resval(1) ./ (vx_vol > (resval(1)+resval(2))));
+        otherwise 
+          error('cg_vbm_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
+      end
+      vx_voli   = max(0.2,min(vx_vold,vx_voli)); % garanty Dartel resolution
+      
+      
+      % interpolation 
+      if any( (vx_vol ~= vx_voli) )  
        
-        if any( (vx_vol ./ vx_voli) >1.5 )
-          stime = vbm_io_cmd(sprintf('Intern Interpolation (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_voli));
-          vx_voli = min(vx_voli,vx_vold); % greater changes - use simply the best resolution
-        else
-          stime = vbm_io_cmd(sprintf('Intern Interpolation for Dartel (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_vold));
-          vx_voli = vx_vold; % no greater changes, but below dartel resolution - use dartel resolution
-        end
+        stime = vbm_io_cmd(sprintf('Intern resolution (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_vold));
        
         Vi        = rmfield(Vi,'private'); 
         imat      = spm_imatrix(Vi.mat); 
@@ -160,93 +166,115 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
                 obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
             end;
         end
-
         obj.reg      = job.vbm.reg;
         obj.samp     = job.vbm.samp;              
-        M = eye(4);
-
-
-        %{
-        %%  -------------------------------------------------------------
-        %  Correct orientation, if the the AC is 2 SD outside of the
-        %  center of mass of the major object.
-        %  -------------------------------------------------------------
-        % estimate average object intensity 
-        % (typically a value something between GM and WM)
-        V   = spm_vol(obj.image(1));
-        vol = spm_read_vols(V);
-        avg = mean(vol(:));
-        avg = mean(vol(vol>avg));
-
-        % don't use background values
-        [x,y,z] = ind2sub(size(vol),find(vol>avg));
-        com = [mean(x) mean(y) mean(z)];
-        cSD = [std(x)  std(y)  std(z)];
-
-        vmat = spm_imatrix(obj.image(1).mat);
-        if any((vmat(1:3).*vmat(7:9))<(com - 2*cSD)) || any((-vmat(1:3).*vmat(7:9))>(com + 2*cSD))
-          VG  = spm_vol(fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii'));
-          mat = spm_matrix([-com.*vmat(7:9) 0 0 0 vmat(7:9) 0 0 0]);
-          M   = eye(4);
-          M   = VG.mat\M*mat;
-        end
-        %}
+       
 
 
         %% Initial affine registration.
         Affine  = eye(4);
-        if ~isempty(job.vbm.affreg),
+        Pbt = [tempname '.nii'];
+        Pb  = char(cg_vbm_get_defaults('extopts.brainmask'));
+        Pt1 = char(cg_vbm_get_defaults('extopts.T1'));
+        if ~isempty(job.vbm.affreg)
+          
             try
-              VG = spm_vol(fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii'));
+              VG = spm_vol(Pt1);
             catch
               pause(rand(1))
-              VG = spm_vol(fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii'));
+              VG = spm_vol(Pt1);
             end
             VF = spm_vol(obj.image(1));
 
+            %{
+            %% -------------------------------------------------------------
+            %  Correct orientation, if the the AC is 2 SD outside of the
+            %  center of mass of the major object.
+            %  -------------------------------------------------------------
+            % estimate average object intensity 
+            % (typically a value something between GM and WM)
+            vol = spm_read_vols(VF);
+            avg = mean(vol(:));
+            avg = mean(vol(vol>avg));
+
+            % don't use background values
+            [x,y,z] = ind2sub(size(vol),find(vol>avg));
+            com = [mean(x) mean(y) mean(z)];
+            cSD = [std(x)  std(y)  std(z)];
+
+            vmat = spm_imatrix(obj.image(1).mat);
+            if any((vmat(1:3).*vmat(7:9))<(com - 2*cSD)) || any((-vmat(1:3).*vmat(7:9))>(com + 2*cSD))
+              VF.mat = spm_matrix([-com.*vmat(7:9) 0 0 0 vmat(7:9) 0 0 0]);
+            end
+            %}
+
             % smooth source with 8mm
             VF1 = spm_smoothto8bit(VF,8);
+            VG1 = spm_smoothto8bit(VG,8);
 
             % Rescale images so that globals are better conditioned
             VF1.pinfo(1:2,:) = VF1.pinfo(1:2,:)/spm_global(VF1);
-            VG.pinfo(1:2,:)  = VG.pinfo(1:2,:)/spm_global(VG);
+            VG1.pinfo(1:2,:) = VG1.pinfo(1:2,:)/spm_global(VG1);
+            VG.pinfo(1:2,:)  = VG.pinfo(1:2,:) /spm_global(VG);
 
-            %fprintf('Initial Coarse Affine Registration..\n');
+            % initial coarse registration
             stime = vbm_io_cmd('Initial Coarse Affine Registration'); 
-            aflags    = struct('sep',8, 'regtype',job.vbm.affreg,...
-                        'WG',[],'WF',[],'globnorm',0);
+            spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
+            aflags    = struct('sep',8,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
+            [Affine, scale]  = spm_affreg(VG1, VF1, aflags, Affine);
+            clear VG1 VF1
 
-            spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
-            warning off;
-            [Affine, scale]  = spm_affreg(VG, VF1, aflags,M);
-            warning on;
 
-            aflags.WG  = spm_vol(fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii'));
-            aflags.sep = aflags.sep/2;
+            % refinend coarse registration with brainmask
+            % for the template image (WG) and for the subject image (WF)
             spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
-            warning off;
-            Affine = spm_affreg(VG, VF1, aflags, Affine, scale);
-            warning on;
+            aflags.WG = spm_vol(Pb);
+            vbm_vol_imcalc([VF,aflags.WG],Pbt,'i2',struct('interp',6,'verb',0)); 
+            aflags.WF  = spm_vol(Pbt);
+            aflags.sep = aflags.sep/2;
+            Affine = spm_affreg(VG, VF, aflags, Affine, scale);
             fprintf('%4.0fs\n',etime(clock,stime));
 
 
             % Fine Affine Registration with 3 mm sampling distance
+            % Especially for non-human TPMs a brain mask is important
+            % to avoid 'SingularMatrix' errors!
             stime = vbm_io_cmd('Fine Affine Registration');
-            warning off;
-            Affine = spm_maff8(obj.image(1),3,obj.fudge,  tpm,Affine,job.vbm.affreg);
-            warning on;
-            fprintf('%4.0fs\n',etime(clock,stime)); 
+            %aftpm = spm_load_priors8(spm_vol(obj.tpm.V(1).fname));
+            warning off
+            Affine2 = spm_maff8(obj.image(1),3,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
+            warning on 
+            fprintf('%4.0fs\n',etime(clock,stime));
+            if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
         end;
         obj.Affine = Affine;
-
-
+        
+        
+        
+        %% SPM preprocessing 1
+        warning off MATLAB:SingularMatrix 
         stime = vbm_io_cmd('SPM-Preprocessing 1');
-        warning off; 
+        
+        % species
+        % --------------------------------------------------------------
+        if ~exist(Pbt,'file') && ~strcmp(job.vbm.species,'human')
+          % Similar to the fine Affine registration this VBM12 
+          % function requries brain masking for non-human subjects.
+          % Old SPM segment will runs much simpler, but does not 
+          % work directly for VBM12 due to the change data structure.
+          Vb = spm_vol(Pb);
+          vbm_vol_imcalc([VF,Vb],Pbt,'i2',struct('interp',6,'verb',0)); 
+        end
+        % --------------------------------------------------------------
+
+        obj.msk = Pbt;
         res = spm_preproc8(obj);
-        warning on;
+        if ~exist(Pbt,'file'), delete(Ppt); end
         fprintf('%4.0fs\n',etime(clock,stime));   
+        warning on MATLAB:SingularMatrix
+            
 
         try
             [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
@@ -293,14 +321,14 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         end
     end
 
-    % Final iteration, so write out the required data.
+    %% Final iteration, so write out the required data.
     tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
     bf = job.bias;
     df = job.vbm.write;
     lb = job.label;
     jc = job.jacobian;
     res.stime = stime;
-    cg_vbm_write(res, tc, bf, df, lb, jc, job.vbm, tpm, job);
+    cg_vbm_write(res, tc, bf, df, lb, jc, job.vbm, obj.tpm, job);
 
     % delete denoised image
     if job.vbm.sanlm>0

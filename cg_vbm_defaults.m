@@ -15,13 +15,16 @@ global vbm
 %=======================================================================
 vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3 WM classes for robustness
-vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';
+vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller values for stronger bias fields
 vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
 vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
 
-
+                                              
+                                              
+                                              
+                                              
 % Writing options
 %=======================================================================
 
@@ -113,6 +116,9 @@ vbm.defs.interp         = 5;      % 5th degree B-spline
 % expert options
 %=======================================================================
 
+% Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
+vbm.extopts.species      = 'human';  
+
 % skull-stripping options
 vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
 vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
@@ -129,15 +135,19 @@ vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM wi
                                   %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter;
                                   %                   5 - only ORNLM filter for the final result
 vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
-vbm.extopts.segres       = 1;     % minimum resolution for intern interpolation of the segmentation routines (in development)
-                                  % requires better connetection to PBT
 
-% normalization options
-vbm.extopts.vox          = 1.5;   % voxel size for normalized data (not yet working)
-vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data (not yet working)
-vbm.extopts.dartelwarp   = 1;     % dartel normalization: 0 - spm default; 1 - yes
-vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')}; % Indicate first Dartel template
-vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')}; % VBM atlas with major regions for VBM, SBM & ROIs
+% resolution options:
+vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
+vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
+
+% registration and normalization options 
+vbm.extopts.vox          = 1.5;                            % voxel size for normalized data (not yet working):  inf - use Tempate values;; 
+vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];   % bounding box for normalized data (not yet working): inf - use Tempate values; ; 
+vbm.extopts.dartelwarp   = 1;                              % dartel normalization: 0 - spm default; 1 - yes
+vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};  % Indicate first Dartel template
+vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')};                     % VBM atlas with major regions for VBM, SBM & ROIs
+vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brainmask.nii')};                 % brainmask for affine registration
+vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_T1_IXI555_MNI152.nii')}; % brainmask for affine registration
 
 % surface options
 vbm.extopts.surface      = 0;     % surface and thickness creation
