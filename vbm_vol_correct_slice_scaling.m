@@ -6,7 +6,7 @@ function vbm_vol_correct_slice_scaling(varargin)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: vbm_tst_qa.m 635 2014-10-22 12:18:51Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
 % check / set intput

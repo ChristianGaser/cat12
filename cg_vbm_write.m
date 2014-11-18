@@ -57,8 +57,7 @@ for fni=1:numel(FN)
     job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));
   end
 end
-opt.partvol.l1A    = job.extopts.atlas{1,1}; 
-%%
+
 
 
 if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
@@ -77,7 +76,8 @@ bb(~isfinite(bb)) = bb1(~isfinite(bb));
 if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
 bb(1,:) = vx*round(bb(1,:)/vx);
 bb(2,:) = vx*round(bb(2,:)/vx);
-odim    = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
+%odim    = abs(round((bb(2,1:3)-bb(1,1:3))/vx))+1;
+odim = d1;
 clear vx vx1 bb1   
 
 if isfield(res,'mg'),
@@ -116,28 +116,18 @@ end
 stime = vbm_io_cmd('SPM-Preprocessing 2');
 
 
-[pth,nam,ext,num] = spm_fileparts(res.image(1).fname); 
-ext='.nii'; % force use of nii-extension
+% remove noise/interpolation prefix
+VT  = res.image(1);  % denoised/interpolated n*.nii
+VT0 = res.image0(1); % original 
+fname0 = VT0.fname;
+[pth,nam] = spm_fileparts(res.image0(1).fname); 
+
+% delete old xml file 
 oldxml = fullfile(pth,['vbm_' nam '.xml']);  
 if exist(oldxml,'file'), delete(oldxml); end
+clear oldxml
 
 
-VT = spm_vol(res.image(1).fname);
-
-% remove noise prefix
-if vbm.sanlm>0
-  nam = nam(2:end);
-  fname0 = fullfile(pth,[nam ext num]);
-  % check whether nii-image exists, otherwise use '.img' as extension
-  if ~exist(fname0,'file')
-    fname0 = fullfile(pth,[nam '.img' num]);
-  end
-  VT0 = spm_vol(fname0);
-else
-  % names without denoising
-  VT0 = VT;
-  fname0 = VT.fname;
-end
 
 d    = res.image(1).dim(1:3);
 
@@ -212,7 +202,7 @@ do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
         Ndef      = nifti;
-        Ndef.dat  = file_array(fullfile(pth,['iy_', nam, '.nii']),...
+        Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),...
                                [res.image(1).dim(1:3),1,3],...
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
@@ -351,9 +341,9 @@ if do_cls
         for k1=1:size(Q,4)
             Ycls{k1} = P(:,:,:,k1);
         end
-  end
-  
-  clear Q
+    end
+
+    clear Q
 end
 
 clear q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
@@ -545,7 +535,7 @@ end
 if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = vbm_io_cmd(sprintf('Local Adaptive Segmentation (LASstr=%0.2f)',job.extopts.LASstr));
-  [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol);
+  [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.vbm.vbm12atlas);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
@@ -1215,8 +1205,8 @@ if exist('Yy','var'),
 
     clear Yy t1 t2 t3 M;
 end
-trans.native.Vo = spm_vol(fname0);
-trans.native.Vi = spm_vol(VT);
+trans.native.Vo = VT0;
+trans.native.Vi = VT;
 if job.extopts.WMHC==1 && ~opt.inv_weighting;
   Ycls = Yclso; clear Yclso;
 end
@@ -1304,22 +1294,41 @@ if jc
 end
 
 
-% deformations
-if df(1),
-    Yy         = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
+% deformations y - dartel > subject
+if df(1)
+    Yy        = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
     N         = nifti;
-    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),...
-                           [d1,1,3],'float32',0,1,0);
-    if do_dartel
-        N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']);
-    end
+    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),[d1,1,3],'float32',0,1,0);
+    if do_dartel, N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']); end
     N.mat     = M1;
     N.mat0    = M1;
     N.descrip = 'Deformation';
     create(N);
     N.dat(:,:,:,:,:) = reshape(Yy,[d1,1,3]);
 end
-
+% deformation iy - subject > dartel
+if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
+  % update df(2) for interpolated images
+  Vdef = res.image0(1);
+  Vdef.dt(1) = spm_type('float32');
+  Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
+  for i=1:3
+    Vdef.fname = fullfile(pth,['iy2_r', nam1, '.nii']);
+    vbm_vol_imcalc(spm_vol(fullfile(pth,['iy_r', nam1, '.nii,1,' num2str(i)])),Vdef,'i1',struct('interp',6));
+    Yy2(:,:,:,:,i) = spm_read_vols(Vdef); % spm_sample_vol(
+  end
+  % write new output
+  Ndef      = nifti;
+  Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...
+              [spm_type('float32') spm_platform('bigend')],0,1,0);
+  if do_dartel, Ndef.dat.fname = fullfile(pth,['iy_r', nam1, '.nii']); end
+  Ndef.mat  = res.image0(1).mat;
+  Ndef.mat0 = res.image0(1).mat;
+  Ndef.descrip = 'Inverse Deformation';
+  create(Ndef);
+  Ndef.dat(:,:,:,:,:) = Yy2;
+  clear Yy2;
+end
 fprintf('%4.0fs\n',etime(clock,stime));
 
 
@@ -1343,7 +1352,7 @@ if job.extopts.surface
   
   % metadata
   if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
-  qa.SM.dist_thickness{1} = [vbm_stat_nanmean(th(:)) vbm_stat_nanstd(th(:))]; clear th; 
+  dist_thickness{1} = [vbm_stat_nanmean(th(:)) vbm_stat_nanstd(th(:))]; clear th; 
 
   vbm_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));
@@ -1372,9 +1381,6 @@ end
 %  ---------------------------------------------------------------------
 if job.extopts.ROI,, % || any(cell2mat(struct2cell(job.output.atlas)')) 
   stime = vbm_io_cmd('ROI estimation');   
-
-  opt.partvol.res    = min([3 3 3],vx_vol*(2-job.extopts.BVCstr));   
-  opt.partvol.vx_vol = vx_vol; 
 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
@@ -1706,7 +1712,7 @@ if do_cls && vbm.print
       spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
       
       % Yo - original image in original space
-      Yo     = single(spm_read_vols(spm_vol(fname0))); 
+      Yo     = single(spm_read_vols(VT0)); 
       Yowmth = median(Yo(Yo(:)>median(Yo(:))))*1.2; clear Yo;
       hho = spm_orthviews('Image',fname0,pos(1,:)); 
     	spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -1782,9 +1788,11 @@ if do_cls && vbm.print
         spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
       end
     else
-      spm_orthviews('window',hhm ,[0 1]); 
-      colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      try %#ok<TRYNC>
+        spm_orthviews('window',hhm ,[0 1]); 
+        colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
+          'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      end
     end
 
 
@@ -1796,9 +1804,11 @@ if do_cls && vbm.print
         spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
       end
     else
-      spm_orthviews('window',hhp0,[0 1]); 
-      colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      try %#ok<TRYNC>
+        spm_orthviews('window',hhp0,[0 1]); 
+        colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
+          'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+      end
     end
     
     try spm_orthviews('window',hho,[0 Yowmth*2]); end %#ok<TRYNC>
@@ -2315,7 +2325,7 @@ return
 
 
 %=======================================================================
-function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol)
+function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,PA)
 % ----------------------------------------------------------------------
 % Local Adaptive Segmentation (LAS):
 %
@@ -2459,13 +2469,9 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol
     stime = vbm_io_cmd('  Prepare partitions','g5','',verb,stime);
 
     % map atlas to RAW space
-    opt.partvol.l1A = fullfile(spm('Dir'),'toolbox','vbm12','templates_1.50mm','l1A.nii');
-    if ~exist(opt.partvol.l1A,'file')
-      error('vbm:cg_vbm_write:missAtlas','Miss vbm Atlas-File ''%s''!',opt.partvol.l1A);
-    end
     for i=1:5
       try
-        Vl1A = spm_vol(opt.partvol.l1A);
+        Vl1A = spm_vol(PA);
         break
       catch 
         % read error in parallel processing

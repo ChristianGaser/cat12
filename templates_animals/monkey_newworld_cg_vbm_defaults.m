@@ -1,4 +1,4 @@
-function cg_vbm_defaults_monkey_newworld
+function monkey_newworld_cg_vbm_defaults
 % Sets the defaults for VBM
 % FORMAT cg_vbm_defaults
 %_______________________________________________________________________
@@ -19,6 +19,7 @@ global vbm
 % - vbm.extopts.brainmask
 % - vbm.extopts.bb         > [-inf -inf -inf; inf inf inf] 
 % - vbm.extopts.vox        > inf
+% - vbm.opts.affreg        > subj
 % - vbm.opts.biasreg       > 0.00001
 % - vbm.opts.biasfwhm      > 40
 % - vbm.opts.samp          > 2 mm
@@ -29,7 +30,7 @@ global vbm
 %=======================================================================
 vbm.opts.tpm       = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_newworld_TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3 WM classes for robustness
-vbm.opts.affreg    = 'sub';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
+vbm.opts.affreg    = 'subj';                  % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 vbm.opts.biasreg   = 0.00001;                 % Bias regularisation - smaller values for stronger bias fields
 vbm.opts.biasfwhm  = 40;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
@@ -154,7 +155,7 @@ vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessi
 vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
 vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
 
-% normalization options
+% registration and normalization options 
 vbm.extopts.vox          = inf;                                % voxel size for normalized data (not yet working):  inf - use Tempate values
 vbm.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];   % bounding box for normalized data (not yet working): inf - use Tempate values
 vbm.extopts.dartelwarp   = 1;                                  % dartel normalization: 0 - spm default; 1 - yes

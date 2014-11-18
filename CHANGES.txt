@@ -6011,3 +6011,38 @@ M       vbm_vol_smooth3X.m
 (7)  Corrected GUI variable name errors.
 ------------------------------------------------------------------------
 r649 | dahnke | 2014-11-14 12:53:27
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+ M      html
+M       html/vbm12_instruction_PP.html
+ M      html/vbm_vol_correct_slice_scaling_768.png
+A       human_IXI555_cg_vbm_defaults.m
+M       tbx_cfg_vbm.m
+ M      templates_1.50mm
+ M      templates_1.50mm/brainmask.nii
+ M      templates_animals
+M       templates_animals/ape_greater_cg_vbm_defaults.m
+M       templates_animals/ape_lesser_cg_vbm_defaults.m
+M       templates_animals/monkey_newworld_cg_vbm_defaults.m
+A       templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.csv
+A       templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.nii
+A       templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.txt
+M       templates_animals/monkey_oldworld_brainmask.nii
+M       templates_animals/monkey_oldworld_cg_vbm_defaults.m
+A       vbm_set_cg_vbm_defaults.m
+M       vbm_surf_parameters.m
+MM      vbm_vol_correct_slice_scaling.m
+
+(1)  Added "vbm_set_cg_vbm_defaults" to change the cg_vbm_defaults file e.g. 
+     for non-human data.
+(2)  Corrected error in animal-defaults-files.
+(3)  Corrected vbm12 atlas setting errors.
+ 
+
+------------------------------------------------------------------------
+r650 | dahnke | 2014-11-18 17:15:25
