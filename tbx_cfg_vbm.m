@@ -16,6 +16,8 @@ function vbm = tbx_cfg_vbm
 addpath(fileparts(which(mfilename)));
 %_______________________________________________________________________
 
+expert = 0; % switch to de/activate further GUI options
+
 data          = cfg_files;
 data.tag      = 'data';
 data.name     = 'Volumes';
@@ -191,75 +193,76 @@ species.help   = {
 % Resolution
 %------------------------------------------------------------------------
 
-resnative        = cfg_branch;
-resnative.tag    = 'resval';
-resnative.name   = 'Native resolution preprocessing';
-resnative.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
-resnative.help   = {
-  'Preprocessing with native resolution.'
-  'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
-  ''
-  'Examples:'
-  '  native resolution       internal resolution '
-  '   0.95 0.95 1.05     >     0.95 0.95 1.05'
-  '   0.45 0.45 1.70     >     0.45 0.45 1.50'
-  '' 
-}; 
+if expert
+  resnative        = cfg_branch;
+  resnative.tag    = 'native';
+  resnative.name   = 'Native resolution preprocessing';
+  resnative.help   = {
+    'Preprocessing with native resolution.'
+    'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+    ''
+    'Examples:'
+    '  native resolution       internal resolution '
+    '   0.95 0.95 1.05     >     0.95 0.95 1.05'
+    '   0.45 0.45 1.70     >     0.45 0.45 1.50'
+    '' 
+  }; 
 
-resbest        = cfg_entry;
-resbest.tag    = 'resval';
-resbest.name   = 'Best native resolution with interpolation boundary:';
-resbest.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
-resbest.num    = [1 2];
-resbest.help   = {
-  'Preprocessing with the best (minimal) voxel dimension of the native image.'
-  'The first value limits the interpolation, whereas the second value avoid interpolation of nearly correct resolutions.'
-  'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
-  ''
-  'Examples:'
-  '  Parameters    native resolution       internal resolution'
-  '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.00 1.00'
-  '  [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00'
-  '  [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75'  
-  '  [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80'  
-  '  [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45'  
-  ''
-}; 
+  resbest        = cfg_entry;
+  resbest.tag    = 'best';
+  resbest.name   = 'Best native resolution with interpolation boundary:';
+  resbest.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+  resbest.num    = [1 2];
+  resbest.help   = {
+    'Preprocessing with the best (minimal) voxel dimension of the native image.'
+    'The first value limits the interpolation, whereas the second value avoid interpolation of nearly correct resolutions.'
+    'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+    ''
+    'Examples:'
+    '  Parameters    native resolution       internal resolution'
+    '  [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.00 1.00'
+    '  [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00'
+    '  [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75'  
+    '  [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80'  
+    '  [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45'  
+    ''
+  }; 
 
-resfixed        = cfg_entry;
-resfixed.tag    = 'resval';
-resfixed.name   = 'Fixed resolution';
-resfixed.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
-resfixed.num    = [1 2];
-resfixed.help   = {
-  'The first value controls the resolution that is used, if the voxel resolution differ more than the second parameter from the first one. '
-  'The second paramter is used to avoid small interpolation for nearly correct resolutions. ' 
-  'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
-  ''
-  'Examples: '
-  '  Parameters     native resolution       internal resolution'
-  '  [1.00 0.10]     0.45 0.45 1.70     >     1.00 1.00 1.00'
-  '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
-  '  [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00'
-  '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
-  '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 1.75 0.75'
-}; 
+  resfixed        = cfg_entry;
+  resfixed.tag    = 'fixed';
+  resfixed.name   = 'Fixed resolution';
+  resfixed.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+  resfixed.num    = [1 2];
+  resfixed.help   = {
+    'The first value controls the resolution that is used, if the voxel resolution differ more than the second parameter from the first one. '
+    'The second paramter is used to avoid small interpolation for nearly correct resolutions. ' 
+    'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+    ''
+    'Examples: '
+    '  Parameters     native resolution       internal resolution'
+    '  [1.00 0.10]     0.45 0.45 1.70     >     1.00 1.00 1.00'
+    '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
+    '  [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00'
+    '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
+    '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 1.75 0.75'
+  }; 
 
 
-restype        = cfg_choice;
-restype.tag    = 'restype';
-restype.name   = 'Spatial resolution';
-switch cg_vbm_get_defaults('extopts.restype')
-  case 'native', restype.val = {resnative};
-  case 'best',   restype.val = {resbest};
-  case 'fixed',  restype.val = {resfixed};
+  restype        = cfg_choice;
+  restype.tag    = 'restype';
+  restype.name   = 'Spatial resolution';
+  switch cg_vbm_get_defaults('extopts.restype')
+    case 'native', restype.val = {resnative};
+    case 'best',   restype.val = {resbest};
+    case 'fixed',  restype.val = {resfixed};
+  end
+  restype.values = {resnative resbest resfixed};
+  restype.help   = {
+    'There are 3 major ways to control the resolution ''native'', ''best'', and ''fixed''. Due to special optimization functions and Dartel low resolution output artifacts the lowest resolution is limited to 1.5 mm in all cases! Highest resolution is limited to 0.2 mm. '
+    ''
+    'We commend to use ''best'' for highrest quality. ' 
+  }; 
 end
-restype.values = {resnative resbest resfixed};
-restype.help   = {
-  'There are 3 major ways to control the resolution ''native'', ''best'', and ''fixed''. Due to special optimization functions and Dartel low resolution output artifacts the lowest resolution is limited to 1.5 mm in all cases! Highest resolution is limited to 0.2 mm. '
-  ''
-  'We commend to use ''best'' for highrest quality. ' 
-}; 
 
 
 %------------------------------------------------------------------------
@@ -319,25 +322,25 @@ gcutstr.help    = {
 %------------------------------------------------------------------------
 % Noise correction
 %------------------------------------------------------------------------
-%{
-sanlm        = cfg_menu;
-sanlm.tag    = 'sanlm';
-sanlm.name   = 'Use SANLM de-noising filter';
-sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)'
-                'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM'
-};
-sanlm.values = {0 1 2 3 4 5};
-sanlm.def    = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
-sanlm.help   = {
-  'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. '
-  'The smoothing filter size is automatically estimated based on the local variance in the image. '
-  'Due to varying contrast a second NLM filter is used after inhomogeneity '
-  'correction and intensity scaling in order to remove increased noise after local scaling. '
-  'Using an option with ORNLM filter allows further modification of the strength of the noise correction. '] ...
-  'The following options are available: 0) No noise correction  1) SANLM  2) SANLM (multi-threaded) 3) SANLM + ORNLM 4) SANLM (multi-threaded) + ORNLM'
- ' 5) Only ORNLM (with temporarily SANLM filter, '
-  '    but only one final noise correction of the original data)' };
-%}
+if expert
+  sanlm        = cfg_menu;
+  sanlm.tag    = 'sanlm';
+  sanlm.name   = 'Use SANLM de-noising filter';
+  sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)',...
+    'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM'
+  };
+  sanlm.values = {0 1 2 3 4 5};
+  sanlm.def    = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
+  sanlm.help   = {
+    'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Due to varying contrast a second NLM filter is used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
+    'The following options are available: '
+    '  0) No noise correction '
+    '  1) SANLM '
+    '  2) SANLM (multi-threaded) '
+    '  3) SANLM + ORNLM 4) SANLM (multi-threaded) + ORNLM'
+    '  5) Only ORNLM (with temporarily SANLM filter, but only one final noise correction of the original data)' 
+  };
+end
 
 NCstr         = cfg_entry;
 NCstr.tag     = 'NCstr';
@@ -492,7 +495,11 @@ darteltpm.help    = {
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
-extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,ROI,surface,restype,print}; 
+if expert
+  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,ROI,surface,restype,print}; 
+else
+  extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,ROI,surface,print}; 
+end
 extopts.help  = {'Using the extended options you can adjust the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data). Furthermore, you can select additional options to create surface reconstructions, ROI analysis  etc.'};
 
 %------------------------------------------------------------------------

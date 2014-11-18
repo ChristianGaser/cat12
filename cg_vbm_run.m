@@ -56,21 +56,26 @@ vbm = struct('species',   cg_vbm_get_defaults('extopts.species'), ... job.extopt
              'vox',       cg_vbm_get_defaults('extopts.vox'),...
              'dartelwarp',cg_vbm_get_defaults('extopts.dartelwarp'));
 
+if isfield(job.extopts,'restype')
+  vbm.restype = char(fieldnames(job.extopts.restype));
+  vbm.resval  = job.extopts.restype.(vbm.restype); 
+else
+  vbm.restype = cg_vbm_get_defaults('extopts.restype');
+  vbm.resval  = cg_vbm_get_defaults('extopts.resval');
+end
            
 % set vbm.bb and vb.vox by Dartel template properties
-Vd      = spm_vol([vbm.darteltpm ',1']);
-amat    = spm_imatrix(Vd.mat);
-boxmm   = round(Vd.dim .* abs(amat(7:9)));
-bb1     = -abs(amat(1:3));
-bb2     = boxmm + bb1;
-if vbm.bb(1)<vbm.bb(2), bbt=vbm.bb(1); vbm.bb(1)=vbm.bb(2); vbm.bb(2)=bbt; clear bbt; end
-vbm.bb  = [ max(vbm.bb(1,1:3) , bb1 ./ (isinf(vbm.bb(1,1:3)) | isnan(vbm.bb(1,1:3))))
-            min(vbm.bb(2,1:3) , bb2 ./ (isinf(vbm.bb(2,1:3)) | isnan(vbm.bb(2,1:3)))) ];
+Vd       = spm_vol([vbm.darteltpm ',1']);
+[bb,vox] = spm_get_bbox(Vd, 'old');  
+if vbm.bb(1)>vbm.bb(2), bbt=vbm.bb(1); vbm.bb(1)=vbm.bb(2); vbm.bb(2)=bbt; clear bbt; end
+if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
+vbm.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ (isinf(bb(1,1:3)) | isnan(bb(1,1:3))))
+            min(bb(2,1:3) , bb(2,1:3) ./ (isinf(bb(2,1:3)) | isnan(bb(2,1:3)))) ];
           
 if isinf(vbm.vox) || isnan(vbm.vox)
-  vbm.vox = abs(Vd.mat(1));
+  vbm.vox = abs(vox);
 end
-  
+
 
 
 % prepare tissue priors and number of gaussians for all 6 classes

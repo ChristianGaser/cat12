@@ -54,6 +54,10 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     end
 
 
+    % save original file name 
+    for n=1:numel(job.channel) 
+      job.channel(n).vols0{subj} = job.channel(n).vols{subj};
+    end
     % noise-correction
     if job.vbm.sanlm && job.extopts.NCstr
         % for windows always disable multi-threading
@@ -94,8 +98,6 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     % resolution helps to reduce normalization artifacts of the
     % deformation. Also this artifacts were reduce by the final smoothing
     % it is much better to avoid them.  
-    restype = cg_vbm_get_defaults('extopts.restype'); 
-    resval  = abs(cg_vbm_get_defaults('extopts.resval')); 
     Vt      = tpm.V(1); 
     vx_vold = min(cg_vbm_get_defaults('extopts.vox'),sqrt(sum(Vt.mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
     for n=1:numel(job.channel) 
@@ -103,14 +105,14 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
       % prepare header of resampled volume
       Vi        = spm_vol(job.channel(n).vols{subj}); 
       vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
-      switch restype 
+      switch job.vbm.restype 
         case 'native'
           vx_voli  = vx_vol;
         case 'fixed', 
-          vx_voli  = min(vx_vol ,resval(1) ./ (vx_vol > (resval(1)+resval(2))));
-          vx_voli  = max(vx_voli,resval(1) .* (vx_vol < (resval(1)-resval(2))));
+          vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ (vx_vol > (job.vbm.resval(1)+job.vbm.resval(2))));
+          vx_voli  = max(vx_voli,job.vbm.resval(1) .* (vx_vol < (job.vbm.resval(1)-job.vbm.resval(2))));
         case 'best'
-          vx_voli  = min(vx_vol ,resval(1) ./ (vx_vol > (resval(1)+resval(2))));
+          vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ (vx_vol > (job.vbm.resval(1)+job.vbm.resval(2))));
         otherwise 
           error('cg_vbm_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
       end
@@ -120,7 +122,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
       % interpolation 
       if any( (vx_vol ~= vx_voli) )  
        
-        stime = vbm_io_cmd(sprintf('Intern resolution (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_vold));
+        stime = vbm_io_cmd(sprintf('Intern resolution (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_voli));
        
         Vi        = rmfield(Vi,'private'); 
         imat      = spm_imatrix(Vi.mat); 
@@ -130,6 +132,12 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         Vn = spm_vol(job.channel(n).vols{subj}); 
         Vn = rmfield(Vn,'private'); 
+        if ~(job.vbm.sanlm && job.extopts.NCstr)
+          % if no noise correction we have to add the 'n' prefix here
+          [pp,ff,ee] = spm_fileparts(Vn.fname);
+          Vi.fname = fullfile(pp,['n' ff ee]);
+          job.channel(n).vols{subj} = Vi.fname;
+        end
         if job.vbm.sanlm==0
           [pp,ff,ee,dd] = spm_fileparts(Vn.fname); 
           Vi.fname = fullfile(pp,['n' ff ee dd]);
@@ -243,9 +251,9 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             % to avoid 'SingularMatrix' errors!
             stime = vbm_io_cmd('Fine Affine Registration');
             %aftpm = spm_load_priors8(spm_vol(obj.tpm.V(1).fname));
-            warning off
+            warning off %#ok<WNOFF>
             Affine2 = spm_maff8(obj.image(1),3,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
-            warning on 
+            warning on  %#ok<WNON>
             fprintf('%4.0fs\n',etime(clock,stime));
             if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
         end;
@@ -276,7 +284,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         warning on MATLAB:SingularMatrix
             
 
-        try
+        try %#ok<TRYNC>
             [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
             if job.vbm.sanlm>0
               nam = nam(2:end);
@@ -316,6 +324,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             % use path of mat-file in case that image was moved
             [image_pth,image_nam,image_ext] = spm_fileparts(job.channel(1).vols{subj});
             res.image(1).fname = fullfile(image_pth, [image_nam, image_ext]);
+            obj.tpm = tpm; clear tpm;
         else
             error(['Can''t load file ' seg12_name]);  
         end
@@ -328,11 +337,13 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     lb = job.label;
     jc = job.jacobian;
     res.stime = stime;
+    res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     cg_vbm_write(res, tc, bf, df, lb, jc, job.vbm, obj.tpm, job);
 
-    % delete denoised image
-    if job.vbm.sanlm>0
-      delete(job.channel(1).vols{subj});
+    % delete denoised/interpolated image
+    if (job.vbm.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) 
+      [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
+      delete(fullfile(pp,[ff,ee]));
     end
 
 return

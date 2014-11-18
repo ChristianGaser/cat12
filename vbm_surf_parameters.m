@@ -12,7 +12,7 @@ if nargin == 1
   GI = vargin.GI;
   FD = vargin.FD;
   SD = vargin.SD;
-  SA = vargin.SA;
+  SA = 0; %vargin.SA;
 else
   error('Not enough parameters.');
 end
