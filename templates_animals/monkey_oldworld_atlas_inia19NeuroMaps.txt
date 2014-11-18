@@ -1,0 +1,13 @@
+INIA19 atlas:
+--------------------------------------------------------------------------------
+The INIA19 is a new, high-quality template for imaging-based studies of non-human primate brains, created from high-resolution, T1-weighted magnetic resonance (MR) images of 19 rhesus macaque (Macaca mulatta) animals. Combined with the comprehensive cortical and sub-cortical label map of the NeuroMaps atlas, the INIA19 is equally suitable for studies requiring both spatial normalization and atlas label propagation. Population-averaged template images are provided for both the brain and the whole head, to allow alignment of the atlas with both skull-stripped and unstripped data, and thus to facilitate its use for skull stripping of new images. This article describes the construction of the template using freely available software tools, as well as the template itself, which is being made available to the scientific community (http://nitrc.org/projects/inia19/).
+
+Paper:
+The INIA19 template and NeuroMaps atlas for primate brain image parcellation and spatial normalization.
+Torsten Rohlfing, Christopher D. Kroenke, Edith V. Sullivan, Mark F. Dubach, Douglas M. Bowden, Kathleen A. Grant and Adolf Pfefferbaum
+Front. Neuroinform., 06 December 2012 | doi: 10.3389/fninf.2012.00027
+
+Websites:    
+A) http://journal.frontiersin.org/Journal/10.3389/fninf.2012.00027/abstract
+B) http://nitrc.org/projects/inia19/
+
