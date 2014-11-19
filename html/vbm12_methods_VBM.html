@@ -33,8 +33,8 @@
         <li>
           <h4>AMAP Segmenation</h4>
           <p>
-            The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities.  
-            That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach <a>(Ashburner et. al. 2005)</a>, but just for spatial normalization.  
+            The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for <i>a priori</i> information about tissue probabilities.  
+            That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach <a>(Ashburner et. al. 2005)</a>, but only for spatial normalization and the inital skull-stripping.  
             The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions <a>(Rajapakse et al. 1997)</a>.  
             This not only accounts for intensity inhomogeneities but also for other local variations of intensity.
           </p>
@@ -60,7 +60,7 @@
             After global intensity correction an block-wise optimized non-local means (ORNLM) denoising filter is applied <a>(Coupe et al. 2008)</a>.  
             These filters remove noise while preserving edges and are implemented as preprocessing step.  
             The third method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a>(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
-            The strength of the ORNLM and MRF filter were defied automatically by the reminding noise in the image.
+            The strength of the ORNLM and MRF filter are automatically obtained by estimating the remaining noise in the image.
           </p>
         </li>
         <li>
@@ -75,16 +75,16 @@
           <h4>Local Adaptive Segmentation (LAS)</h4>
           <p>
             Beside WM-inhomogeneities, also the GM intensity can vary for different regions like the motor cortex, the basal ganglia, or in the occipital lobe.  
-            Although, these changes have a anatomical background, they depend on the MR-protocol and often lead to WM-overestimations for brighter intensities and CSF-overestimations for darker intensities.  
+            Although, these changes have an anatomical background, they depend on the MR-protocol and often lead to WM-overestimations for higher intensities and CSF-overestimations for lower intensities.  
             Therefore, a local intensity transformation of all tissue classes is used to reduce this effects in the <i>m*-image</i> before the final AMAP segmentation. 
-            The strength of the changes were controlled by the <i>LASstr</i> parameter, with 0 for no LAS, small values (0-0.5) for small adaptions, 0.5 for average adaption (default), and higher values (0.5-1) for strong adaptions.
+            The strength of the changes are controlled by the <i>LASstr</i> parameter, with 0 for no LAS, small values (0.01-0.5) for small adaptions, 0.5 for average adaption (default), and higher values (0.5-1) for strong adaptions.
           </p>
         </li>
         <li> 
           <h4>Skull-Stripping</h4>
           <p>
-            VBM12 contains a revised graph-cut based skull-stripping with a arbitrary strength, with 0 for a more liberal and wider brain masks and 1 for a harder
-          and closer result.  The default is 0.5 and was successfully tested on a variety of different images.
+            VBM12 contains a revised graph-cut based skull-stripping with a arbitrary strength, with 0 for a more liberal and wider brain masks and 1 for a more
+          aggressive skull-stripping.  The default is 0.5 and was successfully tested on a variety of different images.
           </p> 
           <p>The strength parameter changes multiple internal parameters:</p>
           <ul>
@@ -107,8 +107,8 @@
         <li>
           <h4>Interpolation</h4>
           <p>
-            VBM12 uses an intern interpolation to allow more stable results also for low resolution image. 
-            Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artefcats in modulated images are strongly diminished. 
+            VBM12 uses an internal interpolation in order to allow more relaible results also for low resolution images. 
+            Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artefacts in modulated images are strongly diminished. 
           </p>       
         </li>
       </ol>
