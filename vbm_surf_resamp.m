@@ -27,7 +27,6 @@ elseif isunix
   opt.CATDir = [opt.CATDir '.glnx86'];
 end  
 
-
 for i=1:size(P,1)
 
   [pp,ff,ex]   = spm_fileparts(deblank(P(i,:)));
@@ -58,10 +57,6 @@ for i=1:size(P,1)
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
   
-  % resample surface using sphere 
-  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Psphere,Pfsavg,Presamp);
-  [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-
   % smooth resampled values
   cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,fwhm,Pvalue);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);

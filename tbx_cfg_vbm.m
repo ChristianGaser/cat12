@@ -104,7 +104,6 @@ warpreg.tag     = 'warpreg';
 warpreg.name    = 'Warping Regularisation';
 warpreg.strtype = 'r';
 warpreg.num     = [1 5];
-warpreg.val     = {[0 0.001 0.5 0.025 0.1]};
 warpreg.help    = {
   'The objective function for registering the tissue probability maps to the image to process, involves minimising the sum of two terms. One term gives a function of how probable the data is given the warping parameters. The other is a function of how probable the parameters are, and provides a penalty for unlikely deformations. Smoother deformations are deemed to be more probable. The amount of regularisation determines the tradeoff between the terms. Pick a value around one.  However, if your normalised images appear distorted, then it may be an idea to increase the amount of regularisation (by an order of magnitude). More regularisation gives smoother deformations, where the smoothness measure is determined by the bending energy of the deformations. '
 };
