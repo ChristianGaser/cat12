@@ -6046,3 +6046,17 @@ MM      vbm_vol_correct_slice_scaling.m
 
 ------------------------------------------------------------------------
 r650 | dahnke | 2014-11-18 17:15:25
+
+M       CHANGES.txt
+ M      fsaverage/lh.inflated.gii
+ M      fsaverage/rh.inflated.gii
+M       html/vbm12_methods_VBM.html
+M       tbx_cfg_vbm.m
+M       vbm_surf_resamp.m
+
+(1) Solved resampling issue. The underlying resampled surface is now always 
+    the non-linearely registered surface.
+(2) Some editing in html/vbm12_methods_VBM.html.
+
+------------------------------------------------------------------------
+r651 | gaser | 2014-11-19 11:13:44
