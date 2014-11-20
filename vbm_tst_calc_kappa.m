@@ -122,7 +122,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
       val(i).fname = V(i).fname;
       val(i).path  = pth;
       val(i).name  = name;
-      fnamestr     = [spm_str_manip(pth,sprintf('k%d',min(floor(spaces/3),spaces-numel(name)-1)-1)),'/',...
+      fnamestr     = [spm_str_manip(pth,sprintf('k%d',max(0,min(floor(spaces/3),spaces-numel(name)-1)-1))),'/',...
                       spm_str_manip(name,sprintf('k%d',spaces - floor(spaces/3)))];
       
                     

@@ -1479,17 +1479,11 @@ stime = vbm_io_cmd('Quality Control');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
           struct('write_csv',0,'write_xml',0,'method','vbm12'));
+if job.extopts.surface
+  qa.SM.dist_thickness{1} = dist_thickness{1};
+end  
 clear Yo Ybf Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));
-
-
-
-
-
-%% ---------------------------------------------------------------------
-%  caret export
-%  ---------------------------------------------------------------------
-
 
 
 
@@ -1510,7 +1504,7 @@ vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
 %  ---------------------------------------------------------------------
 %  display and print result if possible
 %  ---------------------------------------------------------------------
-QMC   = vbm_io_colormaps('marks+',30);
+QMC   = vbm_io_colormaps('marks+',17);
 color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 if do_cls && vbm.print
   %% create report text
@@ -1527,9 +1521,6 @@ if do_cls && vbm.print
   % --------------------------------------------------------------------
 	str = [];
 	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
-	%dartelwarp = char('Low-dimensional (SPM default)','High-dimensional (Dartel)');
-  %str = [str struct('name', 'Non-linear normalization:','value',sprintf('%s',dartelwarp(vbm.dartelwarp+1,:)))];
-	%str = [str struct('name', 'Warp regularisation:','value',sprintf('%g %g %g %g %g',vbm.reg))];
 	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
   str = [str struct('name', 'Dartel Template:','value',spm_str_manip(vbm.darteltpm,'k40d'))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
@@ -1554,6 +1545,7 @@ if do_cls && vbm.print
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
 %  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',vbm.vox))]; % does not work yet 
 % intern interpolation?
+% pbt resolution
 
          
   % Image Quality measures:
@@ -1564,36 +1556,27 @@ if do_cls && vbm.print
                 mark2str2(qam.QM.res_vx_vol(2),'%4.2f',qa.QM.res_vx_vol(2)),...
                 mark2str2(qam.QM.res_vx_vol(3),'%4.2f',qa.QM.res_vx_vol(3)),char(179)))];
   str2 = [str2 struct('name', ' Voxel Volume:','value', ...
-               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qam.QM.res_vol,char(179)))))];
-  %str2 = [str2 struct('name', ' Voxel Isotropy:','value', ...   
-  %             sprintf('%s',marks2str(qam.QM.res_isotropy,sprintf('%5.2f',qam.QM.res_isotropy))))];
-  str2 = [str2 struct('name',' RES (resolution):','value',marks2str(qam.QM.res_RMS,sprintf('%5.2f',qam.QM.res_RMS)))];
-  str2 = [str2 struct('name',' NCR (noise):','value',marks2str(qam.QM.NCR,sprintf('%5.2f',qam.QM.NCR)))];
-  str2 = [str2 struct('name',' ICR (bias):','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
-  if ~isnan(qam.QM.MPC) % can be turned off in QA, missing validation/evaluation, time consuming estimation
-    str2 = [str2 struct('name',' MPC (processibility):','value',marks2str(qam.QM.MPC,sprintf('%5.2f',qam.QM.MPC)))];
-  end
-  if ~isnan(qam.QM.CJV) % can be turned off in QA, missing validation/evaluation
-    str2 = [str2 struct('name',' CJV (processibility):','value',marks2str(qam.QM.CJV,sprintf('%5.2f',qam.QM.CJV)))];
-  end
-  str2 = [str2 struct('name','\bf PQ (processibility):','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
+               sprintf('%s',marks2str(qam.QM.res_vol,sprintf('%5.2f mm%s',qa.QM.res_vol,char(179)))))];
+  str2 = [str2 struct('name',' Resolution:','value',marks2str(qam.QM.res_RMS,sprintf('%5.2f',qam.QM.res_RMS)))];
+  str2 = [str2 struct('name',' Noise:','value',marks2str(qam.QM.NCR,sprintf('%5.2f',qam.QM.NCR)))];
+  str2 = [str2 struct('name',' Bias:','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
+  str2 = [str2 struct('name','\bfProcessibility:','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
 
       
   % Subject Measures
   % --------------------------------------------------------------------
-  str3 = struct('name', '\bfSubject Mediocrity:','value',''); 
-         % sprintf('%s',mark2str2(qam.SM.avg(1),'%0.1f',qam.SM.avg(1))));  
-  str3 = [str3 struct('name', ' CGWH-Volumes (abs):','value',sprintf('%s %s %s %s cm%s', ...
+  str3 = struct('name', '\bfVolumes:','value',sprintf('%4s %4s %4s %4s cm%s','CSF','GM','WM','WMH')); 
+  str3 = [str3 struct('name', ' absolute volume:','value',sprintf('%s %s %s %s cm%s', ...
           mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
           mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
           mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f',qa.SM.vol_abs_CGW(3)),...
           mark2str2(qam.SM.vol_rel_CGW(4),'%4.0f',qa.SM.vol_abs_CGW(4)),char(179)))];
-  str3 = [str3 struct('name', ' CGWH-Volumes (rel):','value',sprintf('%s %s %s %s %%', ...
+  str3 = [str3 struct('name', ' relative volume:','value',sprintf('%s %s %s %s %%', ...
           mark2str2(qam.SM.vol_rel_CGW(1),'%0.1f',qa.SM.vol_rel_CGW(1)*100),...
           mark2str2(qam.SM.vol_rel_CGW(2),'%0.1f',qa.SM.vol_rel_CGW(2)*100),...
           mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f',qa.SM.vol_rel_CGW(3)*100),...
           mark2str2(qam.SM.vol_rel_CGW(4),'%0.1f',qa.SM.vol_rel_CGW(4)*100)))];
-  str3 = [str3 struct('name', ' TIV:'              ,'value',...
+  str3 = [str3 struct('name', '\bfTIV:'              ,'value',...
           sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f cm' char(179)],qa.SM.vol_TIV)))];  
   if opt.vbmi      
     str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
@@ -1601,7 +1584,7 @@ if do_cls && vbm.print
             qam.QM.vbm_expect(1),qa.QM.vbm_expect(1)*100))))]; 
   end
   if isfield(qa.SM,'dist_thickness') && ~isempty(qa.SM.dist_thickness)
-    str3 = [str3 struct('name', ' Thickness (abs):','value',sprintf('%s%s%s mm', ...
+    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%s%s%s mm', ...
           mark2str2(qam.SM.dist_thickness{1}(1),'%0.2f',qa.SM.dist_thickness{1}(1)),177, ...
           mark2str2(qam.SM.dist_thickness{1}(2),'%0.2f',qa.SM.dist_thickness{1}(2))))];
   end
@@ -1617,11 +1600,16 @@ if do_cls && vbm.print
       if ~isempty(dots), shorter = shorter(dots:end); end
       % limit lenght of the string and replace critical character
       shorter = spm_str_manip(shorter,'l40');
-      shorter = marks2str(5,shorter);
+      shorter = marks2str(4,shorter);
       shorter = strrep(shorter,'_','\_');
       str3    = [str3 struct('name',shorter,'value','')];  %#ok<AGROW>
     end
   end
+  str4 = struct('name',sprintf('Marks/Colors: %s, %s, %s, %s, %s',...
+        mark2str2(1,'%s','1=super'),mark2str2(2,'%s','2=good'), ...
+        mark2str2(3,'%s','3=ok'),mark2str2(4,'%s','4=marginal'), ...
+        mark2str2(5,'%s','5>problematic')),'value','');  
+  
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
     str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
@@ -1632,7 +1620,9 @@ if do_cls && vbm.print
   for si=1:numel(str3)
     str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
   end
-    
+  for si=1:numel(str4)
+    str4(si).name  = [str4(si).name '  '];  str4(si).value = [str4(si).value '  '];
+  end    
  %%
   try %#ok<TRYNC>
     
@@ -1675,7 +1665,12 @@ if do_cls && vbm.print
     for i=1:size(str3,2)  % subject-measurements
 		  text(0.51,0.45-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
 		  text(0.80,0.45-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-	  end
+    end
+    for i=1:size(str3,2)  % subject-measurements
+		  text(0.51,0.45-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  text(0.80,0.45-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    end
+    text(0.01,0.0,str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
 	  
 	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
