@@ -98,6 +98,8 @@ function PO = vbm_vol_average(P,fname,PT,dt,nr,mask)
     vbm_spm_reprint; 
   end
   
+  if ~exist('mask','var'), mask=0; end
+  
   PO = cell(1,3);
   for i=1:3
     if dt(i)>0
