@@ -6060,3 +6060,15 @@ M       vbm_surf_resamp.m
 
 ------------------------------------------------------------------------
 r651 | gaser | 2014-11-19 11:13:44
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_tst_calc_kappa.m
+M       vbm_vol_average.m
+M       vbm_vol_correct_slice_scaling.m
+
+(1)  Simplified VBM12 report.
+(2)  Corrected error in vbm_vol_correct_slice_scaling, added parameters and
+     help text. 
+------------------------------------------------------------------------
+r652 | dahnke | 2014-11-20 17:08:59
