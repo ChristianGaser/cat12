@@ -100,7 +100,7 @@ end
 % lb - Yp0b: native, warped Yp0b, rigid Yp0b, affine Yp0b
 % jc - jacobian: no, normalized 
 
-do_dartel = vbm.dartelwarp;  % apply dartel normalization
+do_dartel = 1;  % always use dartel normalization
 vbm.open_th = 0.25; % initial threshold for skull-stripping
 vbm.dilate = 1; % number of final dilations for skull-stripping
 
@@ -206,9 +206,6 @@ if do_defs,
                                [res.image(1).dim(1:3),1,3],...
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
-        if do_dartel
-            Ndef.dat.fname = fullfile(pth,['iy_r', nam1, '.nii']);
-        end
         Ndef.mat  = res.image(1).mat;
         Ndef.mat0 = res.image(1).mat;
         Ndef.descrip = 'Inverse Deformation';
@@ -1201,7 +1198,7 @@ if exist('Yy','var'),
     end
     %M1 = mat;
     
-    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',tpm.M,'M2',M1\res.Affine*M0,'dartel',vbm.dartelwarp);
+    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',tpm.M,'M2',M1\res.Affine*M0,'dartel',do_dartel);
 
     clear Yy t1 t2 t3 M;
 end
@@ -1277,20 +1274,16 @@ end
 
 % write jacobian determinant
 if jc
-  if ~do_dartel
-    warning('cg_vbm_write:saveJacobian','Jacobian can only be saved if dartel normalization was used.');
-  else
-    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
-    clear y0
-    N      = nifti;
-    N.dat  = file_array(fullfile(pth,['jac_wrp1', nam, '.nii']),d1,...
+  [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+  clear y0
+  N      = nifti;
+  N.dat  = file_array(fullfile(pth,['jac_wp1', nam, '.nii']),d1,...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
-    N.mat  = M1;
-    N.mat0 = M1;
-    N.descrip = ['Jacobian' VT0.descrip];
-    create(N);
-    N.dat(:,:,:) = dt;
-  end
+  N.mat  = M1;
+  N.mat0 = M1;
+  N.descrip = ['Jacobian' VT0.descrip];
+  create(N);
+  N.dat(:,:,:) = dt;
 end
 
 
@@ -1299,7 +1292,6 @@ if df(1)
     Yy        = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),[d1,1,3],'float32',0,1,0);
-    if do_dartel, N.dat.fname = fullfile(pth,['y_r', nam1, '.nii']); end
     N.mat     = M1;
     N.mat0    = M1;
     N.descrip = 'Deformation';
@@ -1321,7 +1313,6 @@ if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
   Ndef      = nifti;
   Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...
               [spm_type('float32') spm_platform('bigend')],0,1,0);
-  if do_dartel, Ndef.dat.fname = fullfile(pth,['iy_r', nam1, '.nii']); end
   Ndef.mat  = res.image0(1).mat;
   Ndef.mat0 = res.image0(1).mat;
   Ndef.descrip = 'Inverse Deformation';

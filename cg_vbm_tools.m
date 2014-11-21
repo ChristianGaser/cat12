@@ -351,7 +351,7 @@ FD.tag    = 'FD';
 FD.labels = {'none','yes'};
 FD.values = {0,1};
 FD.val    = {0};
-FD.help   = {'Extract Cortical complexity (fractal dimension) based on absolute mean curvature. The method is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
+FD.help   = {'Extract Cortical complexity (fractal dimension) which is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
              ''
              'Warning: Estimation of cortical complexity is very slow!'
 ''
@@ -464,7 +464,7 @@ data.help = {
 
 qa        = cfg_exbranch;
 qa.tag    = 'qa';
-qa.name   = 'VBM Quality Assurance';
+qa.name   = 'VBM quality assurance';
 qa.val    = {data};
 qa.prog   = @vbm_tst_qa;
 qa.vfiles = @vfiles_qa;
@@ -593,7 +593,7 @@ interp.labels = {'Nearest neighbour','Trilinear','2nd Degree B-spline',...
 '3rd Degree B-Spline ','4th Degree B-Spline ','5th Degree B-Spline',...
 '6th Degree B-Spline','7th Degree B-Spline'};
 interp.values = {0,1,2,3,4,5,6,7};
-interp.def    = @(val)cg_vbm_get_defaults('defs.interp',val{:});
+interp.val    = {5};
 interp.help   = {
 'The method by which the images are sampled when being written in a different space.'
 '    Nearest Neighbour:     - Fastest, but not normally recommended.'
@@ -626,16 +626,41 @@ defs2.prog   = @cg_vbm_defs;
 defs2.vfiles = @vfiles_defs2;
 defs2.help   = {'This is a utility for applying deformation fields of many subjects to images.'};
 
+data.help = {
+'Select all images for this subject'};
+
+bparam         = cfg_entry;
+bparam.tag     = 'bparam';
+bparam.name    = 'Bias Regularisation';
+bparam.help    = {'MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images.'
+                   ''
+                   'An important issue relates to the distinction between variations in the difference between the images that arise because of the differential bias artifact due to the physics of MR scanning, and those that arise due to shape differences.  The objective is to model the latter by deformations, while modelling the former with a bias field. We know a priori that intensity variations due to MR physics tend to be spatially smooth. A more accurate estimate of a bias field can be obtained by including prior knowledge about the distribution of the fields likely to be encountered by the correction algorithm. For example, if it is known that there is little or no intensity non-uniformity, then it would be wise to penalise large estimates of the intensity non-uniformity.'
+                   'Knowing what works best should be a matter of empirical exploration, as it depends on the scans themselves.  For example, if your data has very little of the artifact, then the bias regularisation should be increased.  This effectively tells the algorithm that there is very little bias in your data, so it does not try to model it.'
+                   }';
+bparam.strtype = 'e';
+bparam.num      = [1 1];
+bparam.val      = {1e6};
+
+realign         = cfg_exbranch;
+realign.tag     = 'series';
+realign.name    = 'Serial longitudinal registration';
+realign.val     = {data bparam};
+realign.help    = {'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on groupwise alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
+''
+'The alignment assumes that all scans have similar resolutions and dimensions, and were collected on the same (or very similar) MR scanner using the same pulse sequence.  If these assumption are not correct, then the approach will not work as well.'
+''
+'The resliced images are named the same as the originals, except that they are prefixed by ''r''.'};
+realign.prog = @vbm_vol_series_align;
+realign.vout = @vout_reslice;
+
 %------------------------------------------------------------------------
-realign = cg_cfg_realign;
-bias    = cg_vbm_bias;
 long    = cg_vbm_longitudinal_multi;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,bias,realign,long,defs,defs2,surfextract,surfresamp,surfresamp_fs,check_mesh_cov};
+tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2,surfextract,surfresamp,surfresamp_fs,check_mesh_cov};
 
 return
 
@@ -706,6 +731,20 @@ end;
 return;
 %_______________________________________________________________________
 
+%------------------------------------------------------------------------
+function cdep = vout_reslice(job)
+
+cdep(1)          = cfg_dep;
+cdep(1).sname      = 'Midpoint Average';
+cdep(1).src_output = substruct('.','avg');
+cdep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+cdep(2)          = cfg_dep;
+cdep(2).sname      = 'Realigned images';
+cdep(2).src_output = substruct('.','rimg');
+cdep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+%------------------------------------------------------------------------
+ 
 %------------------------------------------------------------------------
 function execute_calcvol(p)
 %

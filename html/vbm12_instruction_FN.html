@@ -31,27 +31,27 @@
         <tr>
           <td width="203">Segmented Images:</td>
           <td width="88">#p[0123]*</td>
-          <td width="235">[m[0]w[r]]p[0123]*[_affine]</td>
+          <td width="235">[m[0]w]p[0123]*[_affine]</td>
         </tr>
         <tr>
           <td>Local Intensity Normalized:</td>
           <td>#m*</td>
-          <td>[w[r]]m*</td>
+          <td>[w]m*</td>
         </tr>
         <tr>
           <td>Atlas Maps:</td>
           <td>#a*</td>
-          <td>[mw[r]]a1*</td>
+          <td>[mw]a1*</td>
         </tr>
         <tr>
           <td>Preprocessing Changes Map:</td>
           <td>#pc*</td>
-          <td>[mw[r]]pc*</td>
+          <td>[mw]pc*</td>
         </tr>
         <tr>
           <td>Tissue Expectation Map:</td>
           <td>#te*</td>
-          <td>[mw[r]]te*</td>
+          <td>[mw]te*</td>
         </tr>
       </table>
       <br />
@@ -78,11 +78,11 @@
         </tr>
         <tr>
           <td>w</td>
-          <td>warped (spatially normalized)</td>
+          <td>warped (spatially normalized using DARTEL)</td>
         </tr>
         <tr>
-          <td>r</td>
-          <td>DARTEL warped</td>
+          <td><br /><b>Image space extension:</b></td>
+          <td></td>
         </tr>
         <tr>
           <td>_affine</td>
@@ -113,8 +113,8 @@
           <td>CSF</td>
         </tr>
       </table>
-      <h3>Surface data prefix:</h3>
-      <p>SURF.TYPE.[nofix.]*</p>
+      <h3>Surfaces:</h3>
+      <p>SURF.TYPE.*</p>
       <table border="0">
          <tr>
           <td width="70">SURF</td>
@@ -122,7 +122,7 @@
         </tr>
         <tr>
           <td>TYPE</td>
-          <td>surface data file [ central | sphere | thickness | curvature | ... ]</td>
+          <td>surface data file [ central | sphere | thickness | logsulc | ... ]</td>
         </tr>
         <tr>
           <td></td>
@@ -135,25 +135,31 @@
         </tr>
         <tr>
           <td></td>
+          <td>sphere.reg - coordinates and faces of the sphere 
+                       after spherical registration</td>
+        </tr>
+        <tr>
+          <td></td>
           <td>thickness - thickness values of the surface</td>
         </tr>
         <tr>
           <td></td>
-          <td>curvature - curvature value of the surface</td>
+          <td>logsulc - log10-transformed values of sulcul depth based on the euclidian distance between the central surface and its convex hull</td>
         </tr>
         <tr>
-          <td>nofix</td>
-          <td>raw surface with uncorrected topology</td>
+          <td></td>
+          <td>gyrification - gyrification values based on absolute mean curvature</td>
         </tr>
         <tr>
-          <td>reg</td>
-          <td>spherically registered surface</td>
+        <tr>
+          <td></td>
+          <td>fractaldimension - fractal dimension values (cortical complexity)</td>
         </tr>
       </table>
       
-      <h3>Further data:</h3>
+      <h3>Additional data:</h3>
       <p>
-        Extracted data, global morphometric measure and image quality measures were stored in the <em class="var">vbm_*.xml</em> file. <br /> 
+        Extracted data, global morphometric measure and image quality measures are stored in the <em class="var">vbm_*.xml</em> file. <br /> 
         You can use the <a href="matlab:vbm_io_xml;" class="function">vbm_io_xml</a> function to read data from xml-files. <br />
         ROI data is also saved as csv-file <em>vbmROI[SPACE]_[ATLAS]_*.csv</em>.</p>  
       

@@ -41,6 +41,8 @@ function varargout = vbm_io_xml(file,varargin)
   if usejava('jvm')==0
     warning('MATLAB:SPM:VBM:vbm_io_xml:javaerror', ...
       'VBM-ERROR: VBM XML-im/export requires JVM!\n');
+    varargout = {};
+    return;
   end
   if ~exist('file','var'),
     P = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^vbm.*.xml');

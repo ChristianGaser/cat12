@@ -1,8 +1,7 @@
-function cg_vbm_batch(namefile,writeonly,vbm_defaults)
+function cg_vbm_batch(namefile,vbm_defaults)
 % wrapper for using batch mode (see cg_vbm_batch.sh)
 %
 % namefile      - array of file names
-% writeonly     - if "1" do not estimate segmentations
 % vbm_defaults  - use this default file instead of cg_vbm_defaults.m
 %
 %_______________________________________________________________________
@@ -11,10 +10,6 @@ function cg_vbm_batch(namefile,writeonly,vbm_defaults)
 if nargin < 1
 	fprintf('Syntax: cg_vbm_batch(namefile)\n');
 	return
-end
-
-if nargin < 2
-	writeonly = 0;
 end
 
 [t,pid]=system('echo $$');
@@ -46,42 +41,26 @@ n = length(names);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
 
-if writeonly
-	matlabbatch{1}.spm.tools.vbm.write = vbm;
-else
-	matlabbatch{1}.spm.tools.vbm.estwrite = vbm;
-end
+matlabbatch{1}.spm.tools.vbm.estwrite = vbm;
 
 for i=1:n
-	if writeonly
-		matlabbatch{1}.spm.tools.vbm.write.data{i} = names{i};
-	else
-		matlabbatch{1}.spm.tools.vbm.estwrite.data{i} = names{i};
-	end
+	matlabbatch{1}.spm.tools.vbm.estwrite.data{i} = names{i};
 end
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...
-              'WMHC','WMHCstr','pbtres','INV','colormap','atlas','ROI','surface','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB','dartelwarp','vox','bb','vbm12atlas','sanlm','gui','brainmask','T1');
+              'WMHC','WMHCstr','pbtres','INV','colormap','atlas','print','debug','verb','ignoreErrors',...
+              'QAcleanup','QAcleanupth','LAB','vox','bb','vbm12atlas','sanlm','gui','brainmask','T1');
               
 for i=1:size(tmp_fields,1)
   try
-    if writeonly
-        matlabbatch{1}.spm.tools.vbm.write.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.write.extopts,deblank(tmp_fields(i,:)));
-    else
-        matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,deblank(tmp_fields(i,:)));
-    end
+    matlabbatch{1}.spm.tools.vbm.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.extopts,deblank(tmp_fields(i,:)));
   end
 end
 
 tmp_fields = char('atlas','te','pc','WMH');
 for i=1:size(tmp_fields,1)
   try
-    if writeonly
-      matlabbatch{1}.spm.tools.vbm.write.output = rmfield(matlabbatch{1}.spm.tools.vbm.write.output,deblank(tmp_fields(i,:)));
-    else
-      matlabbatch{1}.spm.tools.vbm.estwrite.output = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output,deblank(tmp_fields(i,:)));
-    end
+    matlabbatch{1}.spm.tools.vbm.estwrite.output = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output,deblank(tmp_fields(i,:)));
   end
 end
 
@@ -89,24 +68,14 @@ end
 tmp_fields = char('opts','bias','realign','defs');
 for i=1:size(tmp_fields,1)
   try
-    if writeonly
-      matlabbatch{1}.spm.tools.vbm.write = rmfield(matlabbatch{1}.spm.tools.vbm.write,deblank(tmp_fields(i,:)));
-    else
-      matlabbatch{1}.spm.tools.vbm.estwrite = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite,deblank(tmp_fields(i,:)));
-    end
+    matlabbatch{1}.spm.tools.vbm.estwrite = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite,deblank(tmp_fields(i,:)));
   end
 end
 
 try
-  if writeonly
-    matlabbatch{1}.spm.tools.vbm.write.output.GM  = rmfield(matlabbatch{1}.spm.tools.vbm.write.output.GM,'mod');
-    matlabbatch{1}.spm.tools.vbm.write.output.WM  = rmfield(matlabbatch{1}.spm.tools.vbm.write.output.WM,'mod');
-    matlabbatch{1}.spm.tools.vbm.write.output.CSF = rmfield(matlabbatch{1}.spm.tools.vbm.write.output.CSF,'mod');
-  else
-    matlabbatch{1}.spm.tools.vbm.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.GM,'mod');
-    matlabbatch{1}.spm.tools.vbm.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.WM,'mod');
-    matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF,'mod');
-  end
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.GM,'mod');
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.WM,'mod');
+  matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF,'mod');
 end
 
 %save(fullfile(spm('dir'),'tmp.vbm.batch.mat'));

@@ -6,7 +6,6 @@
 # $Id$
 
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
-writeonly=0
 defaults_file=""
 LOGDIR=`PWD`
 CPUINFO=/proc/cpuinfo
@@ -74,9 +73,6 @@ parse_args ()
             exit_if_empty "$optname" "$optarg"
             NUMBER_OF_JOBS=$optarg
             shift
-            ;;
-        --writeonly* | -w*)
-            writeonly=1
             ;;
         --logdir* | -l*)
             exit_if_empty "$optname" "$optarg"
@@ -311,7 +307,7 @@ run_vbm ()
             j=$(($i+1))
             if [ -z "$matlabcommand" ]
             then
-              COMMAND="cg_vbm_batch('${TMP}${i}',${writeonly},'${defaults_file}')"
+              COMMAND="cg_vbm_batch('${TMP}${i}','${defaults_file}')"
             else
               CFILES=""
               for F in ${ARG_LIST[$i]} 

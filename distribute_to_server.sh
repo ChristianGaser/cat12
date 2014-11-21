@@ -238,8 +238,8 @@ EXAMPLE
    distribute_to_server.sh -c "niismooth -v -fwhm 8" sTRIO*.nii
    smoothing with fwhm of 8mm for all files sTRIO*.nii. Use verbose mode to see diagnostic output.
    
-   distribute_to_server.sh -s "141.35.68.68 141.35.68.72 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/vbm12/cg_vbm_batch.sh -p 8 -w -d /Volumes/UltraMax/cg_vbm_defaults_p0123.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii
-   VBM12 batch for all files in /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii with 8 parallel jobs and optional default file using "Write already estimated segmentations" as option
+   distribute_to_server.sh -s "141.35.68.68 141.35.68.72 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/vbm12/cg_vbm_batch.sh -p 8 -d /Volumes/UltraMax/cg_vbm_defaults_p0123.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii
+   VBM12 batch for all files in /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii with 8 parallel jobs and optional default file
 
    distribute_to_server.sh -s "141.35.68.68 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/vbm12/cg_vbm_batch.sh -p 8 -d /Volumes/UltraMax/cg_vbm_defaults_m0wrp12.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" -p m0wrp1 -d /Volumes/UltraMax/SVE.LPBA40.testdata
    VBM12 batch with 8 parallel jobs and optional default file. Only those files in /Volumes/UltraMax/SVE.LPBA40.testdata/ are processed where no prepended m0wrp1 pattern can be found. All other files are skipped.
