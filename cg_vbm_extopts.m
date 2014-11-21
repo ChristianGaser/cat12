@@ -2,7 +2,7 @@ function extopts = cg_vbm_extopts
 % Configuration file for extended VBM options
 %
 % Christian Gaser
-% $Id: cg_vbm_extopts.m 404 2011-04-11 10:03:40Z gaser $
+% $Id$
 %#ok<*AGROW>
 
 expert = 0; % switch to de/activate further GUI options
