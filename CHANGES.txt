@@ -6118,3 +6118,11 @@ A       vbm_vol_series_align.m
 
 ------------------------------------------------------------------------
 r653 | gaser | 2014-11-21 14:13:42
+
+M       CHANGES.txt
+M       cg_vbm_run.m
+
+Non-existing option dartelwarp was still used in cg_vbm_run.m.
+
+------------------------------------------------------------------------
+r654 | gaser | 2014-11-21 14:53:39
