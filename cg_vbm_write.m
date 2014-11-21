@@ -1370,14 +1370,14 @@ end
 %  contrain other classes. Therefore, standard tissue ranges (>50%) where
 %  used.  
 %  ---------------------------------------------------------------------
-if job.extopts.ROI,, % || any(cell2mat(struct2cell(job.output.atlas)')) 
+if job.output.ROI,, % || any(cell2mat(struct2cell(job.output.atlas)')) 
   stime = vbm_io_cmd('ROI estimation');   
 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
   Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
   
-  ROIt = job.extopts.ROI; 
+  ROIt = job.output.ROI; 
   ROIt = [(ROIt==1 | ROIt==3) (ROIt==2 | ROIt==3)];
   FA   = job.extopts.atlas; 
   verb = job.extopts.verb-1;
