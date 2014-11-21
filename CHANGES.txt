@@ -6126,3 +6126,15 @@ Non-existing option dartelwarp was still used in cg_vbm_run.m.
 
 ------------------------------------------------------------------------
 r654 | gaser | 2014-11-21 14:53:39
+
+M       CHANGES.txt
+MM      cg_vbm_extopts.m
+MM      cg_vbm_opts.m
+M       cg_vbm_write.m
+ M      vbm_vol_groupwise_ls.m
+ M      vbm_vol_series_align.m
+
+In cg_vbm_write surface option was still linked to flag extopts.
+
+------------------------------------------------------------------------
+r655 | gaser | 2014-11-21 16:06:42

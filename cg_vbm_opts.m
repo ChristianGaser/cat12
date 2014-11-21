@@ -2,7 +2,7 @@ function opts = cg_vbm_opts
 % Configuration file for VBM options
 %
 % Christian Gaser
-% $Id: cg_vbm_opts.m 404 2011-04-11 10:03:40Z gaser $
+% $Id$
 %#ok<*AGROW>
 
 %_______________________________________________________________________
