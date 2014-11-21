@@ -105,7 +105,7 @@ vbm.open_th = 0.25; % initial threshold for skull-stripping
 vbm.dilate = 1; % number of final dilations for skull-stripping
 
 if do_dartel
-  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.extopts.surface;
+  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.output.surface;
   need_dartel = need_dartel || any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
   if ~need_dartel
       fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
@@ -706,7 +706,7 @@ if do_cls && do_defs,,
     Ymb  = max(Ycsf,Ymb); 
     clear Ycsf; 
     % Yb is needed for surface reconstruction
-    if ~job.extopts.surface
+    if ~job.output.surface
       clear Yb
     end
   end
@@ -1329,7 +1329,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  ---------------------------------------------------------------------
 %  ... add Ywmh later ... 
 %
-if job.extopts.surface
+if job.output.surface
   stime = vbm_io_cmd('Surface and thickness estimation');; 
   
   % brain masking 
@@ -1470,7 +1470,7 @@ stime = vbm_io_cmd('Quality Control');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
           struct('write_csv',0,'write_xml',0,'method','vbm12'));
-if job.extopts.surface
+if job.output.surface
   qa.SM.dist_thickness{1} = dist_thickness{1};
 end  
 clear Yo Ybf Yp0 qas;
