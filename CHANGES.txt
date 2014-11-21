@@ -6072,3 +6072,49 @@ M       vbm_vol_correct_slice_scaling.m
      help text. 
 ------------------------------------------------------------------------
 r652 | dahnke | 2014-11-20 17:08:59
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_spm_batch.sh
+M       cg_vbm_batch.m
+M       cg_vbm_batch.sh
+M       cg_vbm_defaults.m
+M       cg_vbm_defs.m
+A       cg_vbm_extopts.m
+M       cg_vbm_longitudinal.m
+M       cg_vbm_longitudinal_multi.m
+M       cg_vbm_longitudinal_multi_run.m
+A       cg_vbm_opts.m
+M       cg_vbm_run.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       distribute_to_server.sh
+M       html/vbm12.html
+M       html/vbm12_instruction_FN.html
+M       html/vbm12_instruction_PP.html
+M       human_IXI555_cg_vbm_defaults.m
+M       tbx_cfg_vbm.m
+ M      templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.csv
+ M      templates_animals/monkey_oldworld_atlas_inia19NeuroMaps.txt
+M       vbm12.fig
+M       vbm12.m
+M       vbm_io_xml.m
+A       vbm_vol_groupwise_ls.m
+A       vbm_vol_series_align.m
+
+(1) Added new longitudinal pipeline that strongly relies on the serial 
+    longitudinal registration of the Longitudinal Toolbox in SPM12.
+(2) Removed old stuff for longitduinal registration nincluding bias-
+    correction between scans.
+(3) Solved issue with repmat in vbm_vol_correct_slices.m.
+(4) If no jvm is available vbm_io_xml.m now immediately returns.
+(5) Cleaned cg_vbm_defs.m from some unused functions.
+
+(6) Divided tbx_cfg_vbm.m in different parts for opts and extopts that can 
+    be now easily used by other batches (e,g, cg_vbm_longitudinal_multi.m).
+(7) Removed all dartelwarp option because Dartel is now always used.
+(8) Warped files are now without additional "r".
+(9) Some editing in htlm files to consider new changes.
+
+------------------------------------------------------------------------
+r653 | gaser | 2014-11-21 14:13:42

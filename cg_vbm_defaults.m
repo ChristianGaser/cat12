@@ -37,9 +37,6 @@ vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for str
 vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
 
                                               
-                                              
-                                              
-                                              
 % Writing options
 %=======================================================================
 
@@ -50,7 +47,13 @@ vbm.opts.samp      = 3;                       % Sampling distance - smaller 'bet
 %   dartel    0/1/2   (none/rigid/affine)
 %   affine    0/1     (none/affine)
 
-% bias and noise corrected, (localy - if LAS>0) intensity normalized
+% save surface and thickness
+vbm.output.surface     = 0;     % surface and thickness creation
+
+% save ROI values
+vbm.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
+
+% bias and noise corrected, (locally - if LAS>0) intensity normalized
 vbm.output.bias.native = 0;
 vbm.output.bias.warped = 1;
 vbm.output.bias.affine = 0;
@@ -92,7 +95,6 @@ vbm.output.jacobian.warped = 0;
 % order is [forward inverse]
 vbm.output.warps        = [0 0];
 
-
 % experimental maps
 %=======================================================================
 
@@ -111,22 +113,6 @@ vbm.output.pc.dartel = 0;
 vbm.output.te.native = 0;
 vbm.output.te.warped = 0;
 vbm.output.te.dartel = 0;
-
-
-% Longitudinal pipeline
-%=======================================================================
-% bias correction options
-vbm.bias.nits_bias      = 8;
-vbm.bias.biasfwhm       = 60;
-vbm.bias.biasreg        = 1e-6;
-vbm.bias.lmreg          = 1e-6;
-% realign options 
-vbm.realign.halfway     = 1;      % use halfway registration: 0 - no; 1 - yes
-vbm.realign.weight      = 1;      % weight registration with inverse std: 0 - no; 1 - yes
-vbm.realign.ignore_mat  = 0;      % ignore exisiting positional information: 0 - no; 1 - yes
-% apply deformations options
-vbm.defs.interp         = 5;      % 5th degree B-spline
-
 
 % expert options
 %=======================================================================
@@ -158,22 +144,19 @@ vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance fo
 % registration and normalization options 
 vbm.extopts.vox          = 1.5;                                % voxel size for normalized data (not yet working):  inf - use Tempate values
 vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];       % bounding box for normalized data (not yet working): inf - use Tempate values
-vbm.extopts.dartelwarp   = 1;                                  % dartel normalization: 0 - spm default; 1 - yes
 vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};  % Indicate first Dartel template
 vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')};                     % VBM atlas with major regions for VBM, SBM & ROIs
 vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brainmask.nii')};                 % brainmask for affine registration
 vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_T1_IXI555_MNI152.nii')}; % T1 for affine registration
 
 % surface options
-vbm.extopts.surface      = 0;     % surface and thickness creation
 vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 
 % visualisation, print and debugging options
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
-vbm.extopts.ROI          = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
-vbm.extopts.debug        = 1;     % debuging option: 0 - default; 1 - write debuging files 
+vbm.extopts.debug        = 1;     % debuging option: 0 - default; 1 - write debugging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 
 % QA options -  NOT IMPLEMENTED - just the idea
@@ -200,17 +183,17 @@ vbm.extopts.atlas       = { ...
 
 
 % IDs of the ROIs in the vbm12 atlas map (vbm12.nii). Do not change this!
+vbm.extopts.LAB.NB =  0; % no brain 
 vbm.extopts.LAB.CT =  1; % cortex
+vbm.extopts.LAB.CB =  3; % Cerebellum
+vbm.extopts.LAB.BG =  5; % BasalGanglia 
+vbm.extopts.LAB.BV =  7; % Blood Vessels
+vbm.extopts.LAB.TH =  9; % Hypothalamus 
+vbm.extopts.LAB.ON = 11; % Optical Nerve
 vbm.extopts.LAB.MB = 13; % MidBrain
 vbm.extopts.LAB.BS = 13; % BrainStem
-vbm.extopts.LAB.CB =  3; % Cerebellum
-vbm.extopts.LAB.ON = 11; % Optical Nerv
-vbm.extopts.LAB.BG =  5; % BasalGanglia 
-vbm.extopts.LAB.TH =  9; % Hypothalamus 
-vbm.extopts.LAB.HC = 19; % Hippocampus 
 vbm.extopts.LAB.VT = 15; % Ventricle
 vbm.extopts.LAB.NV = 17; % no Ventricle
-vbm.extopts.LAB.BV =  7; % Blood Vessels
-vbm.extopts.LAB.NB =  0; % no brain 
-vbm.extopts.LAB.HD = 21; % head
+vbm.extopts.LAB.HC = 19; % Hippocampus 
+vbm.extopts.LAB.HD = 21; % Head
 vbm.extopts.LAB.HI = 23; % WM hyperintensities

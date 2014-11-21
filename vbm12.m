@@ -22,7 +22,7 @@ function varargout = vbm12(varargin)
 
 % Edit the above vbm12title to modify the response to help vbm12
 
-% Last Modified by GUIDE v2.5 22-Oct-2014 18:28:46
+% Last Modified by GUIDE v2.5 20-Nov-2014 16:50:19
 
 
 % Begin initialization code - DO NOT EDIT
@@ -177,12 +177,8 @@ end
 
 % --- Executes on selection change in popupmenu4.
 function popupmenu4_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+spm_jobman('interactive','','spm.tools.vbm.tools.long');
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu4 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu4
 
 
 % --- Executes during object creation, after setting all properties.
@@ -209,4 +205,20 @@ function figure1_CreateFcn(hObject, eventdata, handles)
 function pushbutton165_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton165 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+spm_jobman('interactive','','spm.tools.vbm.tools.long');
+
+
+
+% --- Executes on key press with focus on pushbutton1 and none of its controls.
+function pushbutton1_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to pushbutton1 (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)

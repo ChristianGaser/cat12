@@ -94,14 +94,16 @@
             <li>
               <h5>GM, WM, and CSF class maps (p1, p2, and p3 maps)</h5>
               <p>
-                The PVE tissue map for each class, similar to the SPM tissue maps c1, c2, and c3.
+                The PVE tissue map for each class, similar to the SPM tissue maps c1, c2, and c3. However, the main difference is that PVE maps provide a 
+                measure about the volume fraction of a tissue type. A value of 0.7 in the PVE GM map means that this voxel contains 70% GM and 30% remaining
+                tissue (either WM or CSF depending on the neighbouring voxels).
               </p>  
             </li>
             <li>
               <h5>PVE label map (p0 maps)</h5>
               <p>
                 A combination of the tissue maps with background=0, CSF=1, GM=2, and WM=3. 
-                A value of 2.41 will mean that the voxel contain 41% WM and 59% GM. 
+                A value of 2.41 means that the voxel contains 41% WM and 59% GM. 
               </p>
             </li>
             <li>
@@ -126,7 +128,7 @@
             </li>
           </ul>
           <p>
-            The resulting structure of the filenames can be found <a href="VBM12_methods_FF.html">here</a>.
+            The resulting structure of the filenames can be found <a href="VBM12_instruction_FN.html">here</a>.
           </p>
         </li>
         <li>      

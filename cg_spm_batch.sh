@@ -7,6 +7,7 @@
 
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
+LOGDIR=`PWD`
 
 ########################################################
 # run main
@@ -40,14 +41,23 @@ parse_args ()
 	optname="`echo $1 | sed 's,=.*,,'`"
 	optarg="`echo $2 | sed 's,^[^=]*=,,'`"
 	case "$1" in
-		--m* | -m*)
+        --matlab* | -m*)
 			exit_if_empty "$optname" "$optarg"
 			matlab=$optarg
 			shift
 			;;
-		--d* | -d*)
+		--display* | -d*)
 			display=1
 			;;
+        --logdir* | -l*)
+            exit_if_empty "$optname" "$optarg"
+            LOGDIR=$optarg
+            if [ ! -d $LOGDIR ] 
+            then
+              mkdir -p $LOGDIR
+            fi
+            shift
+            ;;
 		-h | --help | -v | --version | -V)
 			help
 			exit 1
@@ -95,8 +105,12 @@ run_batch ()
 	# we have to go into toolbox folder to find matlab files
 	cd $cwd
 
-  spm12=`dirname $cwd`
-  spm12=`dirname $spm12`
+    spm12=`dirname $cwd`
+    spm12=`dirname $spm12`
+
+    if [ "${LOGDIR}" == "" ]; then
+        LOGDIR=`dirname ${ARRAY[0]}`
+    fi
 
   # add current folder to matlabfile if file was not found
 	if [ ! -f $file ]; then
@@ -119,7 +133,7 @@ run_batch ()
 	export MATLABPATH=$spm12:$dname
 	
 	time=`date "+%Y%b%d_%H%M"`
-	spmlog=${pwd}/spm12_${time}.log
+    spmlog=${LOGDIR}/spm_${HOSTNAME}_${time}.log
 	echo Check $spmlog for logging information
 	echo
 		
@@ -135,9 +149,9 @@ run_batch ()
 	echo $0 $file >> $spmlog
 	echo >> $spmlog
 	if [ $display == 0 ]; then
-		nohup ${matlab} -nodisplay -nojvm -nosplash -r $X >> $spmlog 2>&1 &
+		nohup ${matlab} -nodisplay -nosplash -r $X >> $spmlog 2>&1 &
 	else
-		nohup ${matlab} -nojvm -nosplash -r $X >> $spmlog 2>&1 &
+		nohup ${matlab} -nosplash -r $X >> $spmlog 2>&1 &
 	fi
 	exit 0
 }
@@ -186,7 +200,7 @@ INPUT:
    batch file saved as matlab-script or mat-file
 
 OUTPUT:
-   spm12_log_$time.txt for log information
+   ${LOGDIR}/spm_${HOSTNAME}_${time}.log for log information
 
 USED FUNCTIONS:
    SPM12
