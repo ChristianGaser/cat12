@@ -6138,3 +6138,11 @@ In cg_vbm_write surface option was still linked to flag extopts.
 
 ------------------------------------------------------------------------
 r655 | gaser | 2014-11-21 16:06:42
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+In cg_vbm_write ROI option was still linked to flag extopts.
+
+------------------------------------------------------------------------
+r656 | gaser | 2014-11-21 16:21:30
