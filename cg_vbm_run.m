@@ -190,8 +190,6 @@ return
 %_______________________________________________________________________
 function vout = vout_job(job)
 
-do_dartel = cg_vbm_get_defaults('extopts.dartelwarp');
-
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
 
@@ -205,9 +203,6 @@ alabel = {};
 
 for j=1:n,
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
-    if job.vbm.sanlm>0
-      parts{j,2} = parts{j,2}(2:end);
-    end
 end
 
 if job.bias(1),
@@ -220,11 +215,7 @@ end
 if job.bias(2),
     wbiascorr = cell(n,1);
     for j=1:n
-        if do_dartel
-            wbiascorr{j} = fullfile(parts{j,1},['wrm',parts{j,2},'.nii']);
-        else
-            wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
-        end
+        wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
     end
 end
 
@@ -238,11 +229,7 @@ end
 if job.label(2),
     wlabel = cell(n,1);
     for j=1:n
-        if do_dartel
-            wlabel{j} = fullfile(parts{j,1},['wrp0',parts{j,2},'.nii']);
-        else
-            wlabel{j} = fullfile(parts{j,1},['wp0',parts{j,2},'.nii']);
-        end
+        wlabel{j} = fullfile(parts{j,1},['wp0',parts{j,2},'.nii']);
     end
 end
 
@@ -288,31 +275,19 @@ for i=1:numel(job.tissue),
     if job.tissue(i).warped(1),
         tiss(i).wc = cell(n,1);
         for j=1:n
-            if do_dartel
-                tiss(i).wc{j} = fullfile(parts{j,1},['wrp',num2str(i),parts{j,2},'.nii']);
-            else
-                tiss(i).wc{j} = fullfile(parts{j,1},['wp',num2str(i),parts{j,2},'.nii']);
-            end
+            tiss(i).wc{j} = fullfile(parts{j,1},['wp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(2),
         tiss(i).mwc = cell(n,1);
         for j=1:n
-            if do_dartel
-                tiss(i).mwc{j} = fullfile(parts{j,1},['mwrp',num2str(i),parts{j,2},'.nii']);
-            else
-                tiss(i).mwc{j} = fullfile(parts{j,1},['mwp',num2str(i),parts{j,2},'.nii']);
-            end
+            tiss(i).mwc{j} = fullfile(parts{j,1},['mwp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(3),
         tiss(i).m0wc = cell(n,1);
         for j=1:n
-            if do_dartel
-                tiss(i).m0wc{j} = fullfile(parts{j,1},['m0wrp',num2str(i),parts{j,2},'.nii']);
-            else
-                tiss(i).m0wc{j} = fullfile(parts{j,1},['m0wp',num2str(i),parts{j,2},'.nii']);
-            end
+            tiss(i).m0wc{j} = fullfile(parts{j,1},['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
@@ -320,11 +295,7 @@ end
 if job.vbm.write(1),
     fordef = cell(n,1);
     for j=1:n
-        if do_dartel
-            fordef{j} = fullfile(parts{j,1},['y_r',parts{j,2},'.nii']);
-        else
-            fordef{j} = fullfile(parts{j,1},['y_',parts{j,2},'.nii']);
-        end
+        fordef{j} = fullfile(parts{j,1},['y_',parts{j,2},'.nii']);
     end
 else
     fordef = {};
@@ -333,11 +304,7 @@ end
 if job.vbm.write(2),
     invdef = cell(n,1);
     for j=1:n
-        if do_dartel
-            invdef{j} = fullfile(parts{j,1},['iy_r',parts{j,2},'.nii']);
-        else
-            invdef{j} = fullfile(parts{j,1},['iy_',parts{j,2},'.nii']);
-        end
+        invdef{j} = fullfile(parts{j,1},['iy_',parts{j,2},'.nii']);
     end
 else
     invdef = {};
@@ -346,11 +313,7 @@ end
 if job.jacobian,
     jacobian = cell(n,1);
     for j=1:n
-        if do_dartel
-            jacobian{j} = fullfile(parts{j,1},['jac_wrp1',parts{j,2},'.nii']);
-        else
-            jacobian{j} = '';
-        end
+        jacobian{j} = '';
     end
 else
     jacobian = {};
