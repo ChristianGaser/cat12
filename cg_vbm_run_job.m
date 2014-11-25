@@ -181,8 +181,10 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         %% Initial affine registration.
         Affine  = eye(4);
-        Pbt = [tempname '.nii'];
+        [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
+        Pbt = fullfile(pp,['brainmask_' ff '.nii']);
         Pb  = char(cg_vbm_get_defaults('extopts.brainmask'));
+      
         Pt1 = char(cg_vbm_get_defaults('extopts.T1'));
         if ~isempty(job.vbm.affreg)
           
@@ -231,26 +233,37 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             aflags    = struct('sep',8,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
             aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
             aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
+            warning off %#ok<WNOFF>
             [Affine, scale]  = spm_affreg(VG1, VF1, aflags, Affine);
-            clear VG1 VF1
-
-
-            % refinend coarse registration with brainmask
-            % for the template image (WG) and for the subject image (WF)
+            warning on  %#ok<WNON>
+            
+            % fine affine registration
             spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
-            aflags.WG = spm_vol(Pb);
-            vbm_vol_imcalc([VF,aflags.WG],Pbt,'i2',struct('interp',6,'verb',0)); 
-            aflags.WF  = spm_vol(Pbt);
             aflags.sep = aflags.sep/2;
-            Affine = spm_affreg(VG, VF, aflags, Affine, scale);
+            warning off %#ok<WNOFF>
+            Affine2 = spm_affreg(VG1, VF1, aflags, Affine, scale);
+            warning on  %#ok<WNON>
+            if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
+            
+            if ~strcmp(job.vbm.species,'human')
+            % refinend registration with brainmask
+            % for the template image (WG) and for the subject image (WF)
+              aflags.WG = spm_vol(Pb);
+              vbm_vol_imcalc([VF,aflags.WG],Pbt,'i2',struct('interp',6,'verb',0)); 
+              aflags.WF  = spm_vol(Pbt);
+              warning off %#ok<WNOFF>
+              Affine2 = spm_affreg(VG1, VF1, aflags, Affine, scale);
+              warning on  %#ok<WNON>
+              if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
+            end            
             fprintf('%4.0fs\n',etime(clock,stime));
+            clear VG1 VF1
 
 
             % Fine Affine Registration with 3 mm sampling distance
             % Especially for non-human TPMs a brain mask is important
             % to avoid 'SingularMatrix' errors!
             stime = vbm_io_cmd('Fine Affine Registration');
-            %aftpm = spm_load_priors8(spm_vol(obj.tpm.V(1).fname));
             warning off %#ok<WNOFF>
             Affine2 = spm_maff8(obj.image(1),3,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
             warning on  %#ok<WNON>
@@ -262,7 +275,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         
         
         %% SPM preprocessing 1
-        warning off MATLAB:SingularMatrix 
+        
         stime = vbm_io_cmd('SPM-Preprocessing 1');
         
         % species
@@ -274,14 +287,17 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           % work directly for VBM12 due to the change data structure.
           Vb = spm_vol(Pb);
           vbm_vol_imcalc([VF,Vb],Pbt,'i2',struct('interp',6,'verb',0)); 
+          obj.msk = Pbt;
         end
         % --------------------------------------------------------------
-
-        obj.msk = Pbt;
+        
+        warning off %#ok<WNOFF>
         res = spm_preproc8(obj);
-        if ~exist(Pbt,'file'), delete(Ppt); end
+        warning on  %#ok<WNON>
+        
+        if exist(Pbt,'file'), delete(Pbt); end
+       
         fprintf('%4.0fs\n',etime(clock,stime));   
-        warning on MATLAB:SingularMatrix
             
 
         try %#ok<TRYNC>
