@@ -112,7 +112,11 @@ SO.img(2).vol = spm_vol(img);
 
 SO.img(2).prop = OV.opacity;   % transparent overlay
 SO.img(2).cmap = OV.cmap;	    % colormap
-SO.img(2).func = 'i1(i1==0)=NaN;';
+if ~isfield(OV,'func')
+    SO.img(2).func = 'i1(i1==0)=NaN;';
+else
+    SO.img(2).func = OV.func;
+end
 
 if ~isfield(OV,'range')
 	  [mx mn] = volmaxmin(OV.img(2).vol);

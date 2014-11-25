@@ -353,8 +353,16 @@ if issurf
   for i=1:number
     h = spm_mesh_render(deblank(list2(i,:)));
     
-     set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(list2(i,:),'short40'),...
-         'NumberTitle','off');
+    % shift each figure slightly
+    if i==1
+        pos = get(h.figure,'Position');
+    else
+        pos = pos - [20 20 0 0];
+    end
+    
+    % remove menubar and toolbar, use filename as title
+    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(list2(i,:),'short50'),...
+         'NumberTitle','off','Position',pos);
     spm_mesh_render('ColourMap',h.axis,jet);
     spm_mesh_render('ColourBar',h.axis,'on');
     spm_mesh_render('CLim',h,[mn_data mx_data]);
