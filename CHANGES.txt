@@ -6146,3 +6146,17 @@ In cg_vbm_write ROI option was still linked to flag extopts.
 
 ------------------------------------------------------------------------
 r656 | gaser | 2014-11-21 16:21:30
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       cg_slice_overlay.m
+M       cg_slice_overlay_ui.m
+M       html/vbm12.html
+M       vbm12.fig
+M       vbm12.m
+
+(1) Added TFCE button that is enabled if toolbox is installed.
+(2) Added flag "func" to cg_slice_overlay.m.
+
+------------------------------------------------------------------------
+r657 | gaser | 2014-11-25 11:13:51

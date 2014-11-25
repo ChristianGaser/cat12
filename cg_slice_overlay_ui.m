@@ -3,8 +3,8 @@ function cg_slice_overay_ui
 % Christian Gaser
 % $Id$
 
-OV.reference_image = fullfile(spm('dir'),'canonical','single_subj_T1.nii');
-OV.reference_range = [0.05 0.6];                         % intensity range for reference image
+OV.reference_image = fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_T1_IXI555_MNI152.nii');
+OV.reference_range = [0.2 1.0];                         % intensity range for reference image
 OV.opacity = Inf;                                      % transparence value for overlay (<1)
 OV.cmap    = jet;                                      % colormap for overlay
 
@@ -30,6 +30,7 @@ OV.name=str2mat(fullfile(spm('dir'),'tpm','grey.nii'),...
 % or give one field, which is valid for all.
 % Be carefule: intensities below the lower range are not shown!
 OV.range   =[[0.5 1]; [0.5 1]];
+%OV.func = 'i1(i1>-1.3 & i1<1.3)=NaN;';
 
 % selection of slices and orientations
 OV.slices_str = char('[-30 -5 5 40 50 60]','-30:2:30','-20:5:45');
