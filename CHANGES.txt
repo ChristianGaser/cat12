@@ -6169,3 +6169,12 @@ Solved issue with missing function for longitduinal data in vbm12.m.
 
 ------------------------------------------------------------------------
 r658 | gaser | 2014-11-25 11:46:03
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       html/vbm12.html
+
+Replaced additional opt.print flag in cg_vbm_write.m by general vbm.print.
+
+------------------------------------------------------------------------
+r659 | gaser | 2014-11-25 15:26:44

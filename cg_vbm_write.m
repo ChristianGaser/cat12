@@ -1684,8 +1684,7 @@ if do_cls && vbm.print
 
     
     %%
-    opt.print=1;
-    if opt.print
+    if vbm.print
       % BB box is not optimal for all images...
       % furthermore repositioning the cross to the BG is maybe usefull...
       %global st
@@ -1756,7 +1755,7 @@ if do_cls && vbm.print
   psf=fullfile(pth,['vbmreport_' nam '.ps']);
   if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
    
-  if opt.print
+  if vbm.print
     % reset colormap
     colormap(oldcolormap)
     
