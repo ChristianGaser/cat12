@@ -150,6 +150,10 @@ try,web('http://dbm.neuro.uni-jena.de/vbm','-browser');end
 function pushbutton164_Callback(hObject, eventdata, handles)
 close(gcf);
 
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+spm_jobman('interactive','','spm.tools.vbm.tools.long');
+
 % --- Executes on selection change in popupmenu2.
 function popupmenu2_Callback(hObject, eventdata, handles)
 % hObject    handle to popupmenu2 (see GCBO)
