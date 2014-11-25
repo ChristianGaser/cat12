@@ -107,6 +107,7 @@ function [out,s] = vbm_plot_boxplot(data,opt)
   def.names       = num2str( (1:numel(data))' );
   def.fill        = 1;
   def.groupcolor  = repmat([0.6 0.6 0.8],numel(data),1);
+  def.symbolcolor = 'r';
   def.groupnum    = 1;
   def.groupmin    = 5;
   def.ylim        = [-inf inf];
@@ -372,25 +373,33 @@ function [out,s] = vbm_plot_boxplot(data,opt)
         end
         plot(quartile_x(:,i), quartile_y(:,i),'Color',[0 0 0.5]); 
       end
-      plot(outliers_x,  min(opt.ylim(2),max(opt.ylim(1),outliers_y)) ,'MarkerSize',...
-        max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor','r','LineStyle','none')
-      plot(outliers2_x, min(opt.ylim(2),max(opt.ylim(1),outliers2_y)),'MarkerSize',...
-        max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor','r','LineStyle','none');
+      if opt.symbol(1)~=' '
+        plot(outliers_x,  min(opt.ylim(2),max(opt.ylim(1),outliers_y)) ,'MarkerSize',...
+          max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none')
+      end
+      if opt.symbol(2)~=' '
+        plot(outliers2_x, min(opt.ylim(2),max(opt.ylim(1),outliers2_y)),'MarkerSize',...
+          max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none');
+      end
     else
       plot(quartile_x, quartile_y, 'b-')
       hold on
       plot(whisker_x, whisker_y, 'b-')
       plot(cap_x, cap_y, 'b-')
       plot(median_x, median_y, 'r-')
-      plot(outliers_x,  min(opt.ylim(2),max(opt.ylim(1),outliers_y)) , [opt.symbol(1),'r'])
-      plot(outliers2_x, min(opt.ylim(2),max(opt.ylim(1),outliers2_y)), [opt.symbol(2),'r']);
+      if opt.symbol(1)~=' '
+        plot(outliers_x,  min(opt.ylim(2),max(opt.ylim(1),outliers_y)) , [opt.symbol(1),opt.symbolcolor])
+      end
+      if opt.symbol(2)~=' '
+        plot(outliers2_x, min(opt.ylim(2),max(opt.ylim(1),outliers2_y)), [opt.symbol(2),opt.symbolcolor]);
+      end
       plot(median_x, median_y, 'r-') % yes, two times... otherwise the last median is below the box ...
     end
     
     
     % add labels
     linecolor = [0.8 0.8 0.8];
-    set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0.4 numel(opt.names)+0.6]);
+    set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0.3 numel(opt.names)+0.5]);
     if ~isempty(opt.ylim)
       ylim(gca,opt.ylim);
     end

@@ -6178,3 +6178,15 @@ Replaced additional opt.print flag in cg_vbm_write.m by general vbm.print.
 
 ------------------------------------------------------------------------
 r659 | gaser | 2014-11-25 15:26:44
+
+M       CHANGES.txt
+M       cg_vbm_run_job.m
+M       html/vbm12_instruction_PP.html
+ M      templates_1.50mm
+M       vbm_plot_boxplot.m
+!       vbm_tst_pre.m
+D       vbm_tst_reduceRes.m
+
+(1)  Corrected affine registration error.
+------------------------------------------------------------------------
+r660 | dahnke | 2014-11-25 21:08:42
