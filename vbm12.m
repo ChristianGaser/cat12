@@ -22,7 +22,7 @@ function varargout = vbm12(varargin)
 
 % Edit the above vbm12title to modify the response to help vbm12
 
-% Last Modified by GUIDE v2.5 25-Nov-2014 10:10:09
+% Last Modified by GUIDE v2.5 03-Dec-2014 09:15:35
 
 
 % Begin initialization code - DO NOT EDIT
@@ -81,20 +81,33 @@ function varargout = vbm12_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+% --- Executes during object creation, after setting all properties.
+function figure1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+%-------------------------------------------------------------------
+
 % --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
 spm_jobman('interactive','','spm.tools.vbm.estwrite');
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+spm_jobman('interactive','','spm.tools.vbm.tools.long');
 
 % --- Executes on button press in pushbutton3.
 function pushbutton3_Callback(hObject, eventdata, handles)
 spm_jobman('interactive','','spm.tools.vbm.tools.showslice');
 
-% --- Executes on button press in pushbutton14.
-function pushbutton14_Callback(hObject, eventdata, handles)
-spm('PopUpCB',gcbo);
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+spm_jobman('interactive','','spm.stats.factorial_design');
 
-% --- Executes on button press in pushbutton84.
-function pushbutton84_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pushbutton5.
+function pushbutton5_Callback(hObject, eventdata, handles)
 P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');
 for i=1:size(P,1)
     swd      = spm_file(P(i,:),'fpath');
@@ -103,16 +116,16 @@ for i=1:size(P,1)
     vbm_spm(SPM);
 end
 
-% --- Executes on button press in pushbutton155.
-function pushbutton155_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
 spm_jobman('interactive','','spm.tools.vbm.tools.surfextract');
 
-% --- Executes on button press in pushbutton154.
-function pushbutton154_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pushbutton7.
+function pushbutton7_Callback(hObject, eventdata, handles)
 spm_jobman('interactive','','spm.tools.vbm.tools.surfresamp');
 
-% --- Executes on button press in pushbutton156.
-function pushbutton156_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pushbutton8.
+function pushbutton8_Callback(hObject, eventdata, handles)
 P=spm_select([1 24],'gifti','Select surface');
 for i=1:size(P,1)
     h = spm_mesh_render(deblank(P(i,:)));
@@ -120,141 +133,10 @@ for i=1:size(P,1)
     spm_mesh_render('ColourMap',h.axis,jet); spm_mesh_render('ColourBar',h.axis,'on');
 end
 
-% --- Executes on button press in pushbutton157.
-function pushbutton157_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.tools.T2x');
-
-% --- Executes on button press in pushbutton158.
-function pushbutton158_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pushbutton9.
+function pushbutton9_Callback(hObject, eventdata, handles)
 cg_slice_overlay;
 
-% --- Executes on button press in pushbutton159.
-function pushbutton159_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.tools.F2x');
-
-% --- Executes on button press in pushbutton160.
-function pushbutton160_Callback(hObject, eventdata, handles)
-spm('alert',evalc('cg_vbm_update(1)'),'VBM Update');
-
-
-% --- Executes on button press in pushbutton161.
-function pushbutton161_Callback(hObject, eventdata, handles)
-try,open(fullfile(spm('dir'),'toolbox','vbm12','VBM12-Manual.pdf'));end
-
-
-% --- Executes on button press in pushbutton162.
-function pushbutton162_Callback(hObject, eventdata, handles)
-try,web('http://dbm.neuro.uni-jena.de/vbm','-browser');end
-
-% --- Executes on button press in pushbutton164.
-function pushbutton164_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pushbutton10.
+function pushbutton10_Callback(hObject, eventdata, handles)
 close(gcf);
-
-% --- Executes on button press in pushbutton4.
-function pushbutton4_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.tools.long');
-
-% --- Executes on selection change in popupmenu2.
-function popupmenu2_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu2
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in popupmenu4.
-function popupmenu4_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.tools.long');
-
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function figure1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- Executes on button press in pushbutton165.
-function pushbutton165_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton165 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on key press with focus on pushbutton1 and none of its controls.
-function pushbutton1_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to pushbutton1 (see GCBO)
-% eventdata  structure with the following fields (see UICONTROL)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes during object creation, after setting all properties.
-function pushbutton161_CreateFcn(hObject, eventdata, handles)
-
-
-% --- Executes on selection change in popupmenu6.
-function popupmenu6_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu6 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu6 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu6
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu6_CreateFcn(hObject, eventdata, handles)
-if exist(fullfile(spm('dir'),'toolbox','TFCE'))
-    set(hObject,'enable','on');
-else
-    set(hObject,'enable','off');
-end
-
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end

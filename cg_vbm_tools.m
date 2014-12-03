@@ -321,7 +321,7 @@ transform.help    = {'This option allows for the specification of nuisance effec
 
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
-check_cov.name = 'Check homogeneity using sample correlation';
+check_cov.name = 'Check sample homogeneity of VBM data';
 check_cov.val  = {data,gap,transform};
 check_cov.prog = @cg_check_cov;
 check_cov.help  = {
@@ -447,7 +447,7 @@ data_surf.help    = {'Select surfaces parameter files.'};
 
 check_mesh_cov      = cfg_exbranch;
 check_mesh_cov.tag  = 'check_mesh_cov';
-check_mesh_cov.name = 'Check homogeneity using sample correlation';
+check_mesh_cov.name = 'Check sample homogeneity of surfaces';
 check_mesh_cov.val  = {data_surf,transform};
 check_mesh_cov.prog = @cg_check_cov;
 check_mesh_cov.help = {
@@ -612,7 +612,7 @@ modulate.help   = {
 
 defs        = cfg_exbranch;
 defs.tag    = 'defs';
-defs.name   = 'Apply Deformations (Many images)';
+defs.name   = 'Apply deformations (many images)';
 defs.val    = {field1,images1,interp,modulate};
 defs.prog   = @cg_vbm_defs;
 defs.vfiles = @vfiles_defs;
@@ -620,7 +620,7 @@ defs.help   = {'This is a utility for applying a deformation field of one subjec
 
 defs2        = cfg_exbranch;
 defs2.tag    = 'defs2';
-defs2.name   = 'Apply Deformations (Many subjects)';
+defs2.name   = 'Apply deformations (many subjects)';
 defs2.val    = {field,images,interp,modulate};
 defs2.prog   = @cg_vbm_defs;
 defs2.vfiles = @vfiles_defs2;
@@ -660,7 +660,7 @@ long    = cg_vbm_longitudinal_multi;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2,surfextract,surfresamp,surfresamp_fs,check_mesh_cov};
+tools.values = {showslice,check_cov,check_mesh_cov,qa,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2,surfextract,surfresamp,surfresamp_fs};
 
 return
 
