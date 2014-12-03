@@ -6209,3 +6209,21 @@ M       vbm12.m
 
 ------------------------------------------------------------------------
 r661 | gaser | 2014-12-03 10:51:19
+
+M       CHANGES.txt
+M       cg_vbm_defs.m
+M       cg_vbm_longitudinal.m
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       tbx_cfg_vbm.m
+M       vbm_vol_partvol.m
+
+(1) Added modulation option for non-linear only to cg_vbm_defs.m.
+(2) Replaced spm_def2det in cg_vbm_defs.m by spm_diffeo.
+(3) Always use "No" instead of "None" in tbx_cfg_vbm
+(4) Corrected captials and some output in vbm_vol_partitions.m.
+(5) Always write modulated data non-linear-only in cg_vbm_longitudinal.m.
+
+
+------------------------------------------------------------------------
+r662 | gaser | 2014-12-03 13:05:38
