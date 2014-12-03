@@ -109,7 +109,7 @@ affine.help   = {'Write image in normalized space, but restricted to affine tran
 dartel        = cfg_menu;
 dartel.tag    = 'dartel';
 dartel.name   = 'DARTEL export';
-dartel.labels = {'None','Rigid (SPM12 default)','Affine'};
+dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
 dartel.values = {0 1 2};
 dartel.help   = {
 'This option is to export data into a form that can be used with DARTEL.The SPM default is to only apply rigid body transformation. However, a more appropriate option is to apply affine transformation, because the additional scaling of the images requires less deformations to non-linearly register brains to the template.'
@@ -160,7 +160,7 @@ label.help  = {
 modulated        = cfg_menu;
 modulated.tag    = 'modulated';
 modulated.name   = 'Modulated normalized';
-modulated.labels = {'None','Affine + non-linear (SPM12 default)','Non-linear only'};
+modulated.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
 modulated.values = {0 1 2};
 modulated.help = {
 '"Modulation" is to compensate for the effect of spatial normalisation. Spatial normalisation causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). The SPM default is to adjust spatially normalised grey matter (or other tissue class) by using both terms and the resulting modulated images are preserved for the total amount of grey matter. Thus, modulated images reflect the grey matter volumes before spatial normalisation. However, the user is often interested in removing the confound of different brain sizes and there are many ways to apply this correction. We can use the total amount of GM, GM+WM, GM+WM+CSF, or manual estimated total intracranial volume (TIV). Theses parameters can be modeled as nuisance parameters (additive effects) in an AnCova model or used to globally scale the data (multiplicative effects): '
@@ -267,7 +267,7 @@ warps = cfg_menu;
 warps.tag    = 'warps';
 warps.name   = 'Deformation Fields';
 warps.labels = {
-    'None'
+    'No'
     'Image->Template (forward)'
     'Template->Image (inverse)'
     'inverse + forward'};

@@ -105,7 +105,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
 
   %% map atlas to RAW space
   if verb, fprintf('\n'); end
-  stime = vbm_io_cmd('  Atlas 2 Subjectspace','g5','',verb);
+  stime = vbm_io_cmd('  Atlas -> subject space','g5','',verb);
   VA = spm_vol(PA);
   YA = vbm_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   YA = reshape(YA,size(Ym));
@@ -135,7 +135,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% Create individual mapping:
-  stime = vbm_io_cmd('  Major Struktures','g5','',verb,stime);
+  stime = vbm_io_cmd('  Major structures','g5','',verb,stime);
   noise = double(max(0.02,min(0.1,mean(Yg(Yp0>2.9))/3)));
   
   % Major structure mapping:
@@ -163,7 +163,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   % For this we may require the best resolution!
   % first a hard regions growing have to find the real WM-WM/GM region
   if BVCstr
-    stime = vbm_io_cmd('  Blood Vessel detection','g5','',verb,stime);
+    stime = vbm_io_cmd('  Blood vessel detection','g5','',verb,stime);
     Ywm = Yp0>2.5 & Ym>2.5 & Yp0<3.1 & Ym<4;                              % init WM 
     Ywm = single(vbm_vol_morph(Ywm,'lc',2));                              % closing WM               
     Ywm(smooth3(single(Ywm))<0.5)=0;                                      % remove small dots
@@ -289,7 +289,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% side aligment using laplace to correct for missalignments due to the normalization
-  stime = vbm_io_cmd('  Side Alignment','g5','',verb,stime);
+  stime = vbm_io_cmd('  Side alignment','g5','',verb,stime);
   YBG  = Ya1==LAB.BG | Ya1==LAB.TH;
   YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI; 
   YMF2 = vbm_vol_morph(YMF,'d',2*vxd) | Ya1==LAB.CB | Ya1==LAB.BS | Ya1==LAB.MB;

@@ -40,14 +40,12 @@ return
 %_______________________________________________________________________
 function [Def,mat] = get_def(job)
 % Load a deformation field saved as an image
-
-P      = [repmat(job,3,1), [',1,1';',1,2';',1,3']];
-V      = spm_vol(P);
-Def    = cell(3,1);
-Def{1} = spm_load_float(V(1));
-Def{2} = spm_load_float(V(2));
-Def{3} = spm_load_float(V(3));
-mat    = V(1).mat;
+Nii = nifti(job);
+Def = single(Nii.dat(:,:,:,1,:));
+d   = size(Def);
+if d(4)~=1 || d(5)~=3, error('Deformation field is wrong!'); end
+Def = reshape(Def,[d(1:3) d(5)]);
+mat = Nii.mat;
 
 %_______________________________________________________________________
 function apply_def(Def,mat,fnames,intrp,modulate)
@@ -60,27 +58,32 @@ for i=1:size(fnames,1),
     V = spm_vol(fnames(i,:));
     M = inv(V.mat);
     [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:))); ext = '.nii'; 
-    if modulate
-        ofnames{i} = fullfile(pth,['mw',nam,ext]);
-    else
+    switch modulate
+    case 0
         ofnames{i} = fullfile(pth,['w',nam,ext]);
+    case 1
+        ofnames{i} = fullfile(pth,['mw',nam,ext]);
+    case 2
+        ofnames{i} = fullfile(pth,['m0w',nam,ext]);
     end
     Vo = struct('fname',ofnames{i},...
-                'dim',[size(Def{1},1) size(Def{1},2) size(Def{1},3)],...
-                'dt',V.dt,...
-                'pinfo',V.pinfo,...
+                'dim',[size(Def(:,:,:,1),1) size(Def(:,:,:,1),2) size(Def(:,:,:,1),3)],...
+                'dt',[spm_type('int16') spm_platform('bigend')],...
+                'pinfo',[20/32767 0 0]',...
                 'mat',mat,...
                 'n',V.n,...
                 'descrip',V.descrip);
     ofnames{i} = [ofnames{i} num];
     C  = spm_bsplinc(V,intrp);
     Vo = spm_create_vol(Vo);
+    
     if modulate
-      dt = spm_def2det(Def{1},Def{2},Def{3},V.mat);
-      dt = dt*(det(V.mat(1:3,1:3))/det(Vo.mat(1:3,1:3)));
+      dt = spm_diffeo('def2det',Def)/det(mat(1:3,1:3));
+      dt(:,:,[1 end]) = NaN;
+      dt(:,[1 end],:) = NaN;
+      dt([1 end],:,:) = NaN;
 
-if 0
-        
+      if modulate == 2
         M0 = V.mat;
         dim = Vo.dim(1:3);
         M1 = Vo.mat;
@@ -90,21 +93,18 @@ if 0
         vx2 = prod(vx2);
         
         x      = affind(rgrid(dim),M0);
-        y = zeros([dim 3]);
-        for i=1:3
-          y(:,:,:,i) = Def{i};
-        end
-
-        y1     = affind(y,M1);
+        y1     = affind(Def,M1);
         
-        [M3,R]  = spm_get_closest_affine(x,y1);
+        [M3,R] = spm_get_closest_affine(x,y1);
 
-      Ma = M1\M3*M0
-      abs(det(Ma(1:3,1:3))*vx1/vx2)
-end
+        Ma = M1\M3*M0;
+        dt = dt/abs(det(Ma(1:3,1:3))*vx1/vx2);
+      end
+    
     end
-    for j=1:size(Def{1},3)
-      d0    = {double(Def{1}(:,:,j)), double(Def{2}(:,:,j)),double(Def{3}(:,:,j))};
+    
+    for j=1:size(Def(:,:,:,1),3)
+      d0    = {double(Def(:,:,j,1)), double(Def(:,:,j,2)),double(Def(:,:,j,3))};
       d{1}  = M(1,1)*d0{1}+M(1,2)*d0{2}+M(1,3)*d0{3}+M(1,4);
       d{2}  = M(2,1)*d0{1}+M(2,2)*d0{2}+M(2,3)*d0{3}+M(2,4);
       d{3}  = M(3,1)*d0{1}+M(3,2)*d0{2}+M(3,3)*d0{3}+M(3,4);
