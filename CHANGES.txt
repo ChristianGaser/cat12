@@ -6190,3 +6190,22 @@ D       vbm_tst_reduceRes.m
 (1)  Corrected affine registration error.
 ------------------------------------------------------------------------
 r660 | dahnke | 2014-11-25 21:08:42
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       html/vbm12_ackknowledgement.html
+M       html/vbm12_instruction.html
+M       html/vbm12_instruction_PP.html
+M       html/vbm12_introduction.html
+M       html/vbm12_methods_SBM.html
+A       html/vbm12_starting.html
+M       html/vbm12_stuff.html
+M       vbm12.fig
+M       vbm12.m
+
+(1) Updated GUI and added some more functionality.
+(2) Updated html-documentation and added quick starting guide.
+
+------------------------------------------------------------------------
+r661 | gaser | 2014-12-03 10:51:19
