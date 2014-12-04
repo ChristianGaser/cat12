@@ -93,12 +93,26 @@ ROI.help   = {
 };
 
 %------------------------------------------------------------------------
+modulate        = cfg_menu;
+modulate.tag    = 'modulate';
+modulate.name   = 'Modulated normalized';
+modulate.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
+modulate.values = {0 1 2};
+modulate.val    = {2};
+modulate.help = {
+'"Modulation" is to compensate for the effect of spatial normalisation. Spatial normalisation causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). The SPM default is to adjust spatially normalised grey matter (or other tissue class) by using both terms and the resulting modulate images are preserved for the total amount of grey matter. Thus, modulate images reflect the grey matter volumes before spatial normalisation. However, the user is often interested in removing the confound of different brain sizes and there are many ways to apply this correction. I suggest another option to remove the confounding effects of different brain sizes. Modulated images can be optionally saved by correcting for non-linear warping only. Volume changes due to affine normalisation will be not considered and this equals the use of default modulation and globally scaling data according to the inverse scaling factor due to affine normalisation. I recommend this option if your hypothesis is about effects of relative volumes which are corrected for different brain sizes. This is a widely used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. These modulate images are indicated by "m0" instead of "m". '
+''
+'For longitudinal data the modulation is actually not necessary because normalization estimates for one subject are the same for all time points and thus modulation will be also the same for all time points. However, modulation might be useful if you want to compare the baseline images in a cross-sectional design in order to test whether there are any differences between the groups at the beginning of the longitudinal study. '
+''
+};
+
+%------------------------------------------------------------------------
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 output.val  = {surface, ROI};
 output.help = {
-'Additionally to the segmentations the surfaces and ROI values can be estimated and saved.'
+'Additionally to the segmentations the surfaces and ROI values can be estimated and saved and modulation option for segmented data can be selected.'
 ''
 };
 
@@ -110,11 +124,13 @@ opts    = cg_vbm_opts;
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
-long.val  = {esubjs,opts,extopts,output};
+long.val  = {esubjs,opts,extopts,output,modulate};
 long.prog = @cg_vbm_longitudinal_multi_run;
 long.vout = @vout_long;
 long.help = {
-'This option provides customized processing of longitudinal data.'};
+'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'
+''
+};
 
 %------------------------------------------------------------------------
 
