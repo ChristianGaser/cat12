@@ -23,6 +23,11 @@ for j=2:3
   end
 end
 
+% modulation option for applying deformations
+if exist('modulate','var')
+  matlabbatch{4}.spm.tools.vbm.tools.defs.modulate = modulate;
+end
+
 matlabbatch{1}.spm.tools.vbm.tools.series.bparam = 1000000;
 matlabbatch{2}.spm.tools.vbm.estwrite.data(1) = cfg_dep('Serial longitudinal registration: Midpoint Average', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg'));
 matlabbatch{2}.spm.tools.vbm.estwrite.output.surface = 0;
@@ -62,7 +67,7 @@ matlabbatch{3}.spm.tools.vbm.estwrite.output.CSF.dartel = 0;
 matlabbatch{3}.spm.tools.vbm.estwrite.output.label.native = 0;
 matlabbatch{3}.spm.tools.vbm.estwrite.output.label.warped = 0;
 matlabbatch{3}.spm.tools.vbm.estwrite.output.label.dartel = 0;
-matlabbatch{3}.spm.tools.vbm.estwrite.output.bias.native = 1;
+matlabbatch{3}.spm.tools.vbm.estwrite.output.bias.native = 0;
 matlabbatch{3}.spm.tools.vbm.estwrite.output.bias.warped = 0;
 matlabbatch{3}.spm.tools.vbm.estwrite.output.bias.affine = 0;
 matlabbatch{3}.spm.tools.vbm.estwrite.output.jacobian.warped = 0;
@@ -70,10 +75,8 @@ matlabbatch{3}.spm.tools.vbm.estwrite.output.warps = [0 0];
 matlabbatch{4}.spm.tools.vbm.tools.defs.field1(1) = cfg_dep('VBM12: Segmentation: Deformation Field', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','fordef', '()',{':'}));
 matlabbatch{4}.spm.tools.vbm.tools.defs.images(1) = cfg_dep('VBM12: Segmentation: p1 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
 matlabbatch{4}.spm.tools.vbm.tools.defs.images(2) = cfg_dep('VBM12: Segmentation: p2 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','c', '()',{':'}));
-matlabbatch{4}.spm.tools.vbm.tools.defs.interp = 5;
-matlabbatch{4}.spm.tools.vbm.tools.defs.modulate = 2;
+matlabbatch{4}.spm.tools.vbm.tools.defs.interp = 4;
 matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('VBM12: Segmentation: Deformation Field', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','fordef', '()',{':'}));
-matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(2) = cfg_dep('VBM12: Segmentation: Bias Corr Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','biascorr', '()',{':'}));
-matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(3) = cfg_dep('VBM12: Segmentation: p1 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
-matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(4) = cfg_dep('VBM12: Segmentation: p2 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','c', '()',{':'}));
+matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(2) = cfg_dep('VBM12: Segmentation: p1 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
+matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(3) = cfg_dep('VBM12: Segmentation: p2 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','c', '()',{':'}));
 matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;

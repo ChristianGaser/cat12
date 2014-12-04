@@ -607,7 +607,7 @@ modulate.name   = 'Modulate image (preserve volume)';
 modulate.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
 modulate.values = {0 1 2};
 modulate.val    = {0};
-modulated.help = {
+modulate.help = {
 '"Modulation" is to compensate for the effect of spatial normalisation. Spatial normalisation causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). The SPM default is to adjust spatially normalised grey matter (or other tissue class) by using both terms and the resulting modulated images are preserved for the total amount of grey matter. Thus, modulated images reflect the grey matter volumes before spatial normalisation. However, the user is often interested in removing the confound of different brain sizes and there are many ways to apply this correction. We can use the total amount of GM, GM+WM, GM+WM+CSF, or manual estimated total intracranial volume (TIV). Theses parameters can be modeled as nuisance parameters (additive effects) in an AnCova model or used to globally scale the data (multiplicative effects): '
 ''
 '% Correction   Interpretation'
@@ -686,9 +686,12 @@ for i=1:numel(PU),
     [pth,nam] = spm_fileparts(PU{i});
     for m=1:numel(PI),
         [pth1,nam,ext,num] = spm_fileparts(PI{m});
-        if job.modulate,
+        switch job.modulate
+        case 2
+            fname = fullfile(pth,['m0w' nam ext]);
+        case 1
             fname = fullfile(pth,['mw' nam ext]);
-        else
+        case 0
             fname = fullfile(pth,['w' nam ext]);
         end;
         vf{m} = fname;
@@ -708,9 +711,12 @@ for i=1:numel(PU),
     [pth,nam] = spm_fileparts(PU{i});
     for m=1:numel(PI),
         [pth1,nam,ext,num] = spm_fileparts(PI{m}{i});
-        if job.modulate,
+        switch job.modulate
+        case 2
+            fname = fullfile(pth,['m0w' nam ext]);
+        case 1
             fname = fullfile(pth,['mw' nam ext]);
-        else
+        case 0
             fname = fullfile(pth,['w' nam ext]);
         end;
         vf{i,m} = fname;

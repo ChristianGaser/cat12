@@ -6227,3 +6227,15 @@ M       vbm_vol_partvol.m
 
 ------------------------------------------------------------------------
 r662 | gaser | 2014-12-03 13:05:38
+
+M       CHANGES.txt
+M       cg_vbm_longitudinal.m
+M       cg_vbm_longitudinal_multi.m
+M       cg_vbm_longitudinal_multi_run.m
+M       cg_vbm_tools.m
+ M      html/vbm12_starting.html
+
+Updated use of modulation option for longitudinal pipeline.
+
+------------------------------------------------------------------------
+r663 | gaser | 2014-12-04 10:15:03
