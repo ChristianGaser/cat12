@@ -9,9 +9,9 @@ global data_long opts extopts output modulate
 warning off;
 
 % use some options from GUI or default file
-opts = job.opts;
-extopts = job.extopts;
-output = job.output;
+opts     = job.opts;
+extopts  = job.extopts;
+output   = job.output;
 modulate = job.modulate;
 
 for i=1:numel(job.subj),

@@ -6239,3 +6239,14 @@ Updated use of modulation option for longitudinal pipeline.
 
 ------------------------------------------------------------------------
 r663 | gaser | 2014-12-04 10:15:03
+
+M       CHANGES.txt
+M       Makefile.vbm
+A       cg_vbm_longitudinal_batch.m
+A       cg_vbm_longitudinal_batch.sh
+M       cg_vbm_longitudinal_multi_run.m
+
+Added commandline batch for longitudinal pipeline.
+
+------------------------------------------------------------------------
+r664 | gaser | 2014-12-04 11:45:29
