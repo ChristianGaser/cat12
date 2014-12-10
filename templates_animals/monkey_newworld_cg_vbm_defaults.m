@@ -50,6 +50,12 @@ vbm.opts.samp      = 2;                       % Sampling distance - smaller 'bet
 %   dartel    0/1/2   (none/rigid/affine)
 %   affine    0/1     (none/affine)
 
+% save surface and thickness
+vbm.output.surface     = 0;     % surface and thickness creation
+
+% save ROI values
+vbm.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
+
 % bias and noise corrected, (localy - if LAS>0) intensity normalized
 vbm.output.bias.native = 0;
 vbm.output.bias.warped = 1;
@@ -158,19 +164,16 @@ vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance fo
 % registration and normalization options 
 vbm.extopts.vox          = inf;                                % voxel size for normalized data (not yet working):  inf - use Tempate values
 vbm.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];   % bounding box for normalized data (not yet working): inf - use Tempate values
-vbm.extopts.dartelwarp   = 1;                                  % dartel normalization: 0 - spm default; 1 - yes
 vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_newworld_Template_1.nii')}; % Indicate first Dartel template
 vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_newworld_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
 vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_newworld_brainmask.nii')};  % brainmask for affine registration
 vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_newworld_T1.nii')};         % T1 for affine registration
 
 % surface options
-vbm.extopts.surface      = 0;     % surface and thickness creation
 vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
 
 % visualisation, print and debugging options
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
-vbm.extopts.ROI          = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
 vbm.extopts.debug        = 1;     % debuging option: 0 - default; 1 - write debuging files 

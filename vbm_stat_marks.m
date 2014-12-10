@@ -43,86 +43,91 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   def.QS        = { 
 % -- structure ---------------------------------------------------------
-% 'measure'  'fieldname'       'marktpye'    markrange        use print help
-% 'measure'  'fieldname'       'linear'      [best worst]       0 0     'use for most qa measures
-% 'measure'  'fieldname'       'normal'      [mean std]         0 0     'use for most subject measures
+% 'measure'  'fieldname'       'marktpye'    markrange        help
+% 'measure'  'fieldname'       'linear'      [best worst]     'use for most qa measures
+% 'measure'  'fieldname'       'normal'      [mean std]       'use for most subject measures
 % -- software data -----------------------------------------------------
-   'SW'  'matlab'                ''          []                 1 0     'MATLAB version'
-   'SW'  'spm'                   ''          []                 1 0     'SPM version'
-   'SW'  'vbm'                   ''          []                 1 0     'VBM version'
-   'SW'  'qamethod'              ''          []                 1 0     'VBM QA method'
-   'SW'  'date'                  ''          []                 1 0     'calculation date'
+   'SW'  'matlab'                ''          []               'MATLAB version'
+   'SW'  'spm'                   ''          []               'SPM version'
+   'SW'  'vbm'                   ''          []               'VBM version'
+   'SW'  'qamethod'              ''          []               'VBM QA method'
+   'SW'  'date'                  ''          []               'calculation date'
 % -- file data ---------------------------------------------------------
-   'FD'  'fname'                 ''          []                 1 0     'path and filename'
-   'FD'  'path'                  ''          []                 1 0     'path'
-   'FD'  'file'                  ''          []                 1 0     'filename'
-  %'FD'  'size'                  ''          []                 0 0     'filesize'
-  %'FD'  'dtype'                 ''          []                 0 0     'datatype'
-  %'FD'  'dtype'                 ''          []                 0 0     'datatype'
-   'FD'  'F'                     ''          []                 0 0     'fname'
-   'FD'  'Fm'                    ''          []                 0 0     'fname'
-   'FD'  'Fp0'                   ''          []                 0 0     'fname'
-%  % -- further image quality measures on the original image --------------
+   'FD'  'fname'                 ''          []               'path and filename'
+   'FD'  'path'                  ''          []               'path'
+   'FD'  'file'                  ''          []               'filename'
+  %'FD'  'size'                  ''          []               'filesize'
+  %'FD'  'dtype'                 ''          []               'datatype'
+   'FD'  'F'                     ''          []               'original filename used for QA'
+   'FD'  'Fm'                    ''          []               'modified filename used for QA'
+   'FD'  'Fp0'                   ''          []               'segmentmap filename used for QA'
+% -- image quality measures on the original image ----------------------
   % - resolution - 
-   'QM'  'res_RMS'               'linear'    [   0.5    3.0]    1 1     'RMS error of voxel size'
-   'QM'  'res_MVR'               'linear'    [   0.5    3.0]    1 1     'mean voxel resolution'
-   'QM'  'res_BB'                'linear'    [   200    500]    1 1     'brain next to the image boundary'
-   'QM'  'res_vx_vol'            'linear'    [  0.50   3.00]    1 0     'voxel dimensions'
-   'QM'  'res_vol'               'linear'    [  0.50   8.00]    1 0     'voxel volume'
-   'QM'  'res_isotropy'          'linear'    [  1.00   8.00]    1 0     'voxel isotropy'
+   'QM'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
+   'QM'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
+   'QM'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
+   'QM'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
+   'QM'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
+   'QM'  'res_BB'                'linear'    [   200    500]  'brain next to the image boundary'
   % - tissue mean and varianz - 
-   'QM'  'tissue_mn'             'normal'    def.tissue         1 1     'mean within the tissue classes'
-   'QM'  'tissue_std'            'normal'    [  0.10   0.20]    1 1     'std within the tissue classes'
-   'QM'  'tissue_std'            'normal'    [  0.10   0.20]    1 1     'std within the tissue classes'
+   'QM'  'tissue_mn'             'normal'    def.tissue       'mean within the tissue classes'
+   'QM'  'tissue_std'            'normal'    [  0.10   0.20]  'std within the tissue classes'
   % - contrast - 
-   'QM'  'contrast'              'linear'    [   1/3   1/12]    1 1     'contrast between tissue classe'
+   'QM'  'contrast'              'linear'    [   1/3   1/12]  'contrast between tissue classe'
   % - noise & contrast -
-  % 'QM'  'NCR'                   'linear'    [  1/20   0.65]    1 1     'noise to contrast råatio'
-   'QM'  'NCR'                   'linear'    [  0.05   0.40]    1 1     'noise to contrast råatio'
-   'QM'  'CNR'                   'linear'    [    20 1/0.40]    1 1     'contrast to noise ratio'
+   'QM'  'NCR'                   'linear'    [  0.05   0.40]  'noise to contrast ratio'
+   'QM'  'CNR'                   'linear'    [    20 1/0.40]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [  1/10    0.4]    1 1     'inhomogeneity to contrast ratio'
-   'QM'  'CIR'                   'linear'    [    10  1/0.4]    1 1     'contrast to inhomogeneity ratio'
+   'QM'  'ICR'                   'linear'    [  1/10    0.4]  'inhomogeneity to contrast ratio'
+   'QM'  'CIR'                   'linear'    [    10  1/0.4]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
-%   'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
-%   'QM'  'MPC'                   'linear'    [  0.06   0.12]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
-   'QM'  'CJV'                   'linear'    [  0.12   0.18]    2 1     'coefficiant of variation - avg. std in GM and WM'
-   'QM'  'MPC'                   'linear'    [  0.11   0.33]    2 1     'mean preprocessing change map - diff. betw. opt. T1 and p0'
-   'QM'  'MJD'                   'linear'    [  0.05   0.15]    2 1     'mean jacobian determinant'
-   'QM'  'STC'                   'linear'    [  0.05   0.15]    2 1     'difference between template and label'
+   'QM'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
+   'QM'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
+   'QM'  'MJD'                   'linear'    [  0.05   0.15]  'mean jacobian determinant'
+   'QM'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
-   'SM'  'vol_TIV'               'normal'    [  1500   1000]    1 1     'total intracranial volume (GM+WM+VT)'
-   'SM'  'vol_CHvsGW'            'linear'    def.CHvsCG         2 1     'relation between brain and non brain'
-   'SM'  'vol_rel_CGW'           'linear'    def.tisvolr        1 1     'relative tissue volume (CSF,GM,WM)'
-   'SM'  'vol_rel_BG'            'linear'    [  0.05   0.05]    2 1     'relative tissue volume of basal structures'
-   'SM'  'vol_rel_VT'            'linear'    [  0.05   0.05]    2 1     'relative tissue volume of the ventricle'
-   'SM'  'vol_rel_BV'            'linear'    [  0.00   0.05]    2 1     'relative blood vessel volume'
-   'SM'  'vol_rel_WMH'           'linear'    [  0.00   0.05]    2 1     'relative WMH volume'
-   'SM'  'dist_thickness'        'normal'    def.thickness      1 1     'absolut  thickness (CSF,GM,WM)'
-   'SM'  'dist_abs_depth'        'normal'    [  5.00   2.00]    0 0     'absolut  sulcal depth'
-   'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]    0 0     'relative sulcal depth'
+  % - volumetric measures - 
+   'SM'  'vol_TIV'               'normal'    [  1500   1000]  'total intracranial volume (GM+WM+VT)'
+   'SM'  'vol_CHvsGW'            'linear'    def.CHvsCG       'relation between brain and non brain'
+   'SM'  'vol_rel_CGW'           'linear'    def.tisvolr      'relative tissue volume (CSF,GM,WM)'
+   'SM'  'vol_rel_BG'            'linear'    [  0.05   0.05]  'relative tissue volume of basal structures'
+   'SM'  'vol_rel_VT'            'linear'    [  0.05   0.05]  'relative tissue volume of the ventricle'
+   'SM'  'vol_rel_BV'            'linear'    [  0.00   0.05]  'relative blood vessel volume'
+   'SM'  'vol_rel_WMH'           'linear'    [  0.00   0.05]  'relative WMH volume'
+  % - distance / thickness measures - 
+   'SM'  'dist_thickness'        'normal'    def.thickness    'absolut  thickness (CSF,GM,WM)'
+   'SM'  'dist_abs_depth'        'normal'    [  5.00   2.00]  'absolut  sulcal depth'
+   'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
+  % - area measures -
   };
   % create structure
   for QSi=1:size(def.QS,1)
-    if def.QS{QSi,5}>0 && def.QS{QSi,5}<uselevel+2
-      if isempty(def.QS{QSi,3})
-        eval(sprintf('QS.%s.%s = '''';',def.QS{QSi,1},def.QS{QSi,2}));
-      else
-        eval(sprintf('QS.%s.%s = [];',def.QS{QSi,1},def.QS{QSi,2}));
-      end
+    if isempty(def.QS{QSi,3})
+      eval(sprintf('QS.%s.%s = '''';',def.QS{QSi,1},def.QS{QSi,2}));
+    else
+      eval(sprintf('QS.%s.%s = [];',def.QS{QSi,1},def.QS{QSi,2}));
     end
   end
-  def.QM.avg  = {'res_RMS','NCR','ICR','CJV'}; %,'ICR',,'ICR','CJV','MPC'
-  def.SM.avg  = {'vol_rel_CGW'};
   
-
+  % mark limits
+  def.bstm    = 1;      % best mark
+  def.wstm    = 6;      % worst mark
+  def.wstmn   = 8.624;  % worst mark to get a 4 for values with std 
+  def.bstl    = 1;      % highest rating
+  def.wstl    = 99;     % lowest rating
+  
   % mark functions
-  setnan=[1 nan];
-  evalnormal  = @(x,best,worst,marks) min(90.5-eps,max(0,(abs(best-x)./worst)*(marks-1))) + setnan(isnan(x)+1);      
-  evalnormalb = @(x,best,worst,marks) min(marks  ,max(1,(abs(best-x)./worst)*(marks-1))) + setnan(isnan(x)+1);    
-  setnan=[0 nan];
-  evallinearb = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
-  evallinear  = @(x,best,worst,marks) abs(best-x)./abs(diff([worst,best]))*(marks-1)+1 + setnan(isnan(x)+1); 
+  setnan      = [1 nan];
+  nv          = @(x,m,s) (1./sqrt(2.*pi.*s^2) .* exp( - (x-m)^2 ./ (2.*s^2))) ./ (1./sqrt(2.*pi.*s^2) .* exp( - (0)^2 ./ (2.*s^2)));
+  evallinearx = @(bst,wst ,bstm,wstm,bstl,wstl,x) setnan(isnan(x)+1) .* ...
+                (min(wstl,max(bstl,abs(x - bst) ./ abs(diff([wst ,bst])) .* abs(diff([bstm,wstm])) + bstm)));
+  evalnormalx = @(bst,wstd,bstm,wstm,bstl,wstl,x) setnan(isnan(x)+1) .* ...
+                (min(wstl,max(bstl,(1 - nv(x,bst,wstd)) .* abs(diff([bstm,wstm])) + bstm)));
+  evallinear = @(x,bst,wst)  setnan(isnan(x)+1) .* ...
+    (min(def.wstl,max(def.bstl,abs(x - bst) ./ abs(diff([wst ,bst])) .* abs(diff([def.bstm,def.wstm])) + def.bstm)));
+  evalnormal = @(x,bst,wstd) setnan(isnan(x)+1) .* ...
+    (min(def.wstl,max(def.bstl,(1 - nv(x,bst,wstd)) .* abs(diff([def.bstm,def.wstmn])) + def.bstm)));  
+  
   rms         = @(a,fact)   max(0,vbm_stat_nanmean(a.^fact).^(1/fact));
   rmsw        = @(a,fact,w) max(0,(vbm_stat_nansum((a.*w).^fact)/vbm_stat_nansum(w)).^(1/fact));
   
@@ -131,12 +136,12 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       if nargin<1 || isempty(varargin{1})
         error('MATLAB:vbm_stat_marks:input','Need fieldname!\n');
       end
-      pi = strfind(varargin{1},'.'); 
-      if isempty(pi)
+      pii = strfind(varargin{1},'.'); 
+      if isempty(pii)
         varargout{1} = any(strcmp(def.QS(:,2),varargin{1}));
       else
-        varargout{1} = any(strcmp(def.QS(:,1),varargin{1}(1:pi-1)) & ...
-                           strcmp(def.QS(:,2),varargin{1}(pi+1:end)));
+        varargout{1} = any(strcmp(def.QS(:,1),varargin{1}(1:pii-1)) & ...
+                           strcmp(def.QS(:,2),varargin{1}(pii+1:end)));
       end        
       
     case 'eval',    % evalutate input structure
@@ -148,85 +153,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       end
       QA = varargin{1};
       
-      if numel(varargin)>1, method = varargin{2}; else method = 'vbm12'; end
-      CJVpos = find(cellfun('isempty',strfind(def.QS(:,2),'CJV'))==0);
-      MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
-
-      def.QM.avgw  = ones(size(def.QM.avg),'single');
-      
-    % fitting for specific methods (
-%     % vbm8     vbm12      fsl5      spm8     spm12
-%       BWP.kappaNCR = [
-%     0.0661    0.05      0.0900    0.0445    0.0363
-%     0.6619    0.6619    0.3894    0.3478    0.4256
-%       ];
-%     %  BWP.kappaNCR = [
-%     %0.05    0.05    0.05    0.05    0.05
-%     %0.35    0.35    0.25    0.25    0.25
-%     %  ];
-%     BWP.kappaNCR(2,:) = BWP.kappaNCR(2,:)/1.5;
-%       BWP.kappaMVR = [
-%     0.7741    0.8206    1.2933    0.0272    0.8329
-%     3.4294    2.4655    2.4595    4.2494    2.3423
-%       ];
-%       switch lower(method)
-%         case 'vbm8',         mid = 1;
-%         case 'vbm12',        mid = 2;
-%         case {'fsl','fsl5'}, mid = 3;
-%         case 'spm8',         mid = 4;
-%         case 'spm12',        mid = 5;
-%         otherwise            mid = 2;
-%       end
-      %evallinearx  = @(x,best,worst,marks) min(marks,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
-      evallinearx  = @(x,best,worst,marks) min(99.5,max(  1,(abs(best-x)./abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
-%       BWP.NCRm = evallinearx(QA.QM.NCR,BWP.kappaNCR(1,mid),BWP.kappaNCR(2,mid),6);
-%       BWP.MVRm = evallinearx(QA.QM.res_MVR,BWP.kappaMVR(1,mid),BWP.kappaMVR(2,mid),6);    
-      
-      BWP.NCRm = evallinearx(QA.QM.NCR    ,0.05,0.35,6);
-      BWP.MVRm = evallinearx(QA.QM.res_RMS,0.50,3.00,6);    
-      
-      
-%       % resRMS NCR ICR MPC
-%       x2 = ([ ...
-% ... vbm8      vbm12     fsl5      spm8      spm12
-%     0.6586    0.8194    0.4374    0.3903    0.6278
-%     0.6174    0.4164    0.7415    0.6654    0.5376
-%     ]);
-%     
-%     sf = 1;
-%     C  = [BWP.MVRm BWP.NCRm];
-%     QAM.QM.rms = ((C.^sf) * x2(:,mid)).^(1/sf); 
-    QAM.QM.rms = rms([BWP.MVRm BWP.NCRm],8);
-   %QAM.QM.rms = max(BWP.NCRm, BWP.MVRm );
-   %{
-      switch lower(method)
-        case {'fsl','fsl5'}
-          def.QS{CJVpos,4} = [  0.11   0.17];
-          def.QS{MPCpos,4} = [  0.13   0.44];
-          def.QM.avgw      = x2(3,:); %[2.2 1.3  0.2 1];
-        case 'spm8'
-          def.QS{CJVpos,4} = [  0.11   0.17];
-          def.QS{MPCpos,4} = [  0.10   0.27];
-          def.QM.avgw      = x2(4,:); %[2 1.3  0.1 1];
-        case 'spm12'
-          def.QS{CJVpos,4} = [  0.11   0.17];
-          def.QS{MPCpos,4} = [  0.11   0.33];  
-          def.QM.avgw      = x2(5,:); %2 0.95 0.1 1];
-        case 'vbm8'
-          def.QS{CJVpos,4} = [  0.16   0.22];
-          def.QS{MPCpos,4} = [  0.11   0.81];
-          def.QM.avgw      = x2(1,:); %[2 0.6  0.1 1]; 
-        case 'vbm12'
-          def.QS{CJVpos,4} = [  0.12  0.18];
-          def.QS{MPCpos,4} = [  0.10  0.35];
-          def.QM.avgw      = x2(2,:); %[1 1 0 0]; %x2(2,:); %;
-        otherwise 
-          %error('MATLAB:vbm_stat_mark:unknownMethod','Unknown method ''%s'' use ''fsl'',''spm'',''vbm8'',''vbm12''.',method);
-      end
-      %def.QM.avgw = def.QM.avgw(1:numel(def.QM.avg));
-      %}
-   
       % evaluation
+      QAM = struct();
       for QSi=1:size(def.QS,1)
         if ~isempty(def.QS{QSi,3}) && isfield(QA,def.QS{QSi,1}) && ...
             isfield(QA.(def.QS{QSi,1}),def.QS{QSi,2})
@@ -236,14 +164,14 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
               for v=1:size(def.QS{QSi,4},1)
                 for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
                   eval(sprintf(['QAM.%s.%s(ij) = vbm_stat_nanmean(eval%s(' ...
-                   'QA.%s.%s(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2),6));'], ...
+                   'QA.%s.%s(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2)));'], ...
                    def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                 end
               end
             else
               for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
                 eval(sprintf(['QAM.%s.%s(ij) = vbm_stat_nanmean(eval%s(' ...
-                 'QA.%s.%s(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2),6));'], ...
+                 'QA.%s.%s(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2)));'], ...
                  def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
               end
             end
@@ -254,14 +182,14 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                 for v=1:size(def.QS{QSi,4},1)
                   for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
                     eval(sprintf(['QAM.%s.%s{ci}(ij) = vbm_stat_nanmean(eval%s(' ...
-                     'QA.%s.%s{ci}(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2),6));'], ...
+                     'QA.%s.%s{ci}(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2)));'], ...
                      def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                   end
                 end
               else
                 for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
                   eval(sprintf(['QAM.%s.%s{ci}(ij) = vbm_stat_nanmean(eval%s(' ...
-                   'QA.%s.%s{ci}(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2),6));'], ...
+                   'QA.%s.%s{ci}(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2)));'], ...
                    def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                 end
               end
@@ -269,94 +197,22 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
           end  
         end
       end
-     
+           
+%       if numel(varargin)>1, method = varargin{2}; else method = 'vbm12'; end
+%       CJVpos = find(cellfun('isempty',strfind(def.QS(:,2),'CJV'))==0);
+%       MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
+% 
+%       % average
+%       BWP.NCRm = evallinear(QA.QM.NCR    ,0.05,0.35,6);
+%       BWP.MVRm = evallinear(QA.QM.res_RMS,0.50,3.00,6);    
       
-      %% average
-      Qavg = {'QM','SM'};
-      for Qavgi=1:numel(Qavg);
-        if isfield(QAM,Qavg{Qavgi})
-          QAM.(Qavg{Qavgi}).mean = 0; 
-          QAM.(Qavg{Qavgi}).max  = 0;
-          QAM.(Qavg{Qavgi}).avg  = 0;
-          if strcmp(Qavg{Qavgi},'SM')
-            QAM.(Qavg{Qavgi}).rms  = 0;
-          end
-          
-          nonnan=0;
-          for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
-            if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
-              nonnan = nonnan + ~any(isnan(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-            end
-          end
-
-          for QavgMi=1:numel(def.(Qavg{Qavgi}).avg)
-            if isfield(QAM.(Qavg{Qavgi}),def.(Qavg{Qavgi}).avg{QavgMi})
-              if ~iscell(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))
-                if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
-                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}));
-                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
-                    QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})/nonnan]);
-                  if strcmp(Qavg{Qavgi},'SM')
-                    QAM.(Qavg{Qavgi}).rms(1) = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                      QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2/nonnan]);
-                  end
-                else
-                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                    max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean,...
-                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                  if strcmp(Qavg{Qavgi},'SM')
-                    QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                      vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}).^2)/nonnan]);
-                  end
-                end
-              else
-                if numel(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))==2
-                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                    max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
-                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                  if strcmp(Qavg{Qavgi},'SM')
-                    QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                      vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
-                  end
-                else
-                  QAM.(Qavg{Qavgi}).max  = max(QAM.(Qavg{Qavgi}).max,...
-                    max(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})));
-                  QAM.(Qavg{Qavgi}).mean = vbm_stat_nansum([QAM.(Qavg{Qavgi}).mean, ...
-                    vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi}))/nonnan]);
-                  if strcmp(Qavg{Qavgi},'SM')
-                   QAM.(Qavg{Qavgi}).rms = vbm_stat_nansum([QAM.(Qavg{Qavgi}).rms, ...
-                      vbm_stat_nanmean(QAM.(Qavg{Qavgi}).(def.(Qavg{Qavgi}).avg{QavgMi})).^2/nonnan]);
-                  end
-                end
-              end
-            end
-          end
-
-          QAM.(Qavg{Qavgi}).mean  = min(6,max(1,QAM.(Qavg{Qavgi}).mean));
-          QAM.(Qavg{Qavgi}).max   = min(6,max(1,QAM.(Qavg{Qavgi}).max));
-          
-          if strcmp(Qavg{Qavgi},'SM')
-            QAM.(Qavg{Qavgi}).rms = min(6,max(1,sqrt(QAM.(Qavg{Qavgi}).rms)));
-          end
-        end
-      end
-      
-      %{
-      avg = nan(1,numel(def.QM.avg));
-      for avgi = 1:numel(def.QM.avg)
-        avg(avgi) = QAM.QM.(def.QM.avg{avgi});
-      end
-      QAM.QM.rms = rmsw(avg,3,def.QM.avgw);
-      QAM.QM.rms = sum(avg.*def.QM.avgw);
-      %}
+      QAM.QM.rms = rms([QAM.QM.NCR QAM.QM.res_RMS],2);
+      QAM.SM.rms = rms([QAM.SM.vol_rel_CGW],2);
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur
       varargout{1} = QS;
-      varargout{2} = def.QM.avg; 
+      varargout{2} = {'NCR','ICR','res_RMS'}; 
     case 'marks',    % ausgabe einer leeren struktur
       varargout{1} = def.QS;
   end

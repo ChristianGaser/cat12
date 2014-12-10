@@ -1,4 +1,4 @@
-function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,transform,YM,YMth)
+function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform,YM,YMth)
 % ______________________________________________________________________
 % Write an image Y with the properties described by V with the datatype 
 % spmtype for a specific range. Add the prefix pre and the description 
@@ -17,8 +17,6 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
 %               warped    0/1   (none/yes)
 %               modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
 %               dartel    0/1/2 (none/rigid/affine)
-%   addpre  = 0 - remove the old prefix and only use the new one (default)
-%             1 - add prefix to the filename
 %   transform = transformation data to write the image to warped, 
 %               modulated, or dartel space (see cg_vbm_write)
 %   YM      = mask for the final image (i.e. save thickness and ROIs)
@@ -55,7 +53,6 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     end
   end  
   if ~exist('range','var'),  range  = [0 1]; end
-  addpre = 1; %if ~exist('addpre','var'), addpre = 1; end % deactivated 
   write = [1 0 0 0];
   if isstruct(writes)
     if isfield(writes,'native'),   write(1) = writes.native; end
@@ -88,7 +85,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
   % write native file
   % ____________________________________________________________________
   if write(1)==1
-    fname = vbm_io_handle_pre(V.fname,pre,'',addpre,1);
+    fname = vbm_io_handle_pre(V.fname,pre,'');
     if exist('transform','var') && isfield(transform,'native')
       if any(size(Y)~=transform.native.Vo.dim)
         nV = transform.native.Vi;
@@ -182,7 +179,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
       pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
     end
     
-    fname = vbm_io_handle_pre(V.fname,pre2,'',addpre,1);
+    fname = vbm_io_handle_pre(V.fname,pre2,'');
     if labelmap==0
       [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3)); %wT0=wT==0;
       spm_field('bound',1);
@@ -244,7 +241,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
       end
     end
     
-    fname = vbm_io_handle_pre(V.fname,pre3,'',addpre,1);
+    fname = vbm_io_handle_pre(V.fname,pre3,'');
     
     if write(3)==2
       [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
@@ -317,7 +314,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
     end
 
     if exist('pre4','var')
-      fname = vbm_io_handle_pre(V.fname,pre4,post,addpre,1);
+      fname = vbm_io_handle_pre(V.fname,pre4,post);
       VraT = struct('fname',fname,'dim',transf.odim,...
            'dt',   [spm_type(spmtype) spm_platform('bigend')],...
            'pinfo',[range(2) range(1)]','mat',transf.mat);%[1.0 0]'
@@ -361,28 +358,10 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,addpre,tr
   
 end
 
-function FO = vbm_io_handle_pre(F,pre,post,addpre,existfile)
+function FO = vbm_io_handle_pre(F,pre,post)
 % Remove all known vbm prefix types from a filename (and check if this file exist). 
   [pp,ff,ee] = spm_fileparts(F); 
 
-  if ~addpre
-    prefix{1} = {'r','m','w'};
-    prefix{2} = {'ml','mg','wr','mw' ...
-                 'pc','p0','p1','p2','p3','pf','pp' ...   
-                 'l1','l2','sd'}; 
-    prefix{3} = {'th1','th2','th3', ...                                 % thickness
-                 'ra0','ra1','rw0','mwr','m0w'};
-    prefix{4} = {'m0wr'};
-
-    for pf=1:numel(prefix)
-      if numel(ff)>pf+1 && any(strcmp(ff(1:pf),prefix{pf})) && ...
-        (~existfile || exist(fullfile(pp,[ff(pf+1:end) ee]),'file'))
-         FN = vbm_io_handle_pre(fullfile(pp,[ff(pf+1:end) ee]),'','',addpre,existfile); 
-         if (~existfile || exist(FN,'file')), [ppn,ffn] = spm_fileparts(FN); ff=ffn; end 
-      end
-    end
-  end
-  
   % always use .nii as extension
   FO = fullfile(pp,[pre ff post '.nii']);
 end

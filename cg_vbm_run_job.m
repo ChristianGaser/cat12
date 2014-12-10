@@ -82,7 +82,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
               case {1,3,5}, sanlmMex_noopenmp(Y,3,1,0); % use single-threaded version
               case {2,4},   sanlmMex(Y,3,1,0);          % use multi-threaded version
             end
-            Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0],0);
+            Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0]);
             job.channel(n).vols{subj} = Vn.fname;
             clear Y V Vn;
         end
@@ -184,92 +184,82 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
         Pbt = fullfile(pp,['brainmask_' ff '.nii']);
         Pb  = char(cg_vbm_get_defaults('extopts.brainmask'));
-      
         Pt1 = char(cg_vbm_get_defaults('extopts.T1'));
         if ~isempty(job.vbm.affreg)
           
-            try
-              VG = spm_vol(Pt1);
-            catch
-              pause(rand(1))
-              VG = spm_vol(Pt1);
-            end
-            VF = spm_vol(obj.image(1));
+          warning off %#ok<WNOFF>
+          
+          try 
+            VG = spm_vol(Pt1);
+          catch
+            pause(rand(1))
+            VG = spm_vol(Pt1);
+          end
+          VF = spm_vol(obj.image(1));
 
-            %{
-            %% -------------------------------------------------------------
-            %  Correct orientation, if the the AC is 2 SD outside of the
-            %  center of mass of the major object.
-            %  -------------------------------------------------------------
-            % estimate average object intensity 
-            % (typically a value something between GM and WM)
-            vol = spm_read_vols(VF);
-            avg = mean(vol(:));
-            avg = mean(vol(vol>avg));
+           % Rescale images so that globals are better conditioned
+          VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
+          VG.pinfo(1:2,:) = VG.pinfo(1:2,:)/spm_global(VG);
 
-            % don't use background values
-            [x,y,z] = ind2sub(size(vol),find(vol>avg));
-            com = [mean(x) mean(y) mean(z)];
-            cSD = [std(x)  std(y)  std(z)];
+          % smooth source with 8mm
+          VF1 = spm_smoothto8bit(VF,8);
+         
+          stime = vbm_io_cmd('Initial Coarse Affine Registration'); 
+          aflags     = struct('sep',8,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
+          aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
+          aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
-            vmat = spm_imatrix(obj.image(1).mat);
-            if any((vmat(1:3).*vmat(7:9))<(com - 2*cSD)) || any((-vmat(1:3).*vmat(7:9))>(com + 2*cSD))
-              VF.mat = spm_matrix([-com.*vmat(7:9) 0 0 0 vmat(7:9) 0 0 0]);
-            end
-            %}
-
-            % smooth source with 8mm
-            VF1 = spm_smoothto8bit(VF,8);
-            VG1 = spm_smoothto8bit(VG,8);
-
-            % Rescale images so that globals are better conditioned
-            VF1.pinfo(1:2,:) = VF1.pinfo(1:2,:)/spm_global(VF1);
-            VG1.pinfo(1:2,:) = VG1.pinfo(1:2,:)/spm_global(VG1);
-            VG.pinfo(1:2,:)  = VG.pinfo(1:2,:) /spm_global(VG);
-
-            % initial coarse registration
-            stime = vbm_io_cmd('Initial Coarse Affine Registration'); 
+          try
             spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
-            aflags    = struct('sep',8,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
-            aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
-            aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-            warning off %#ok<WNOFF>
-            [Affine, scale]  = spm_affreg(VG1, VF1, aflags, Affine);
-            warning on  %#ok<WNON>
-            
-            % fine affine registration
+          catch
+            spm_chi2_plot('Init','Coarse Affine Registration','Mean squared difference','Iteration');
+          end
+          [Affine, scale]  = spm_affreg(VG, VF1, aflags, eye(4));
+
+          % 4 mm
+          try 
+            aflags.WG  = spm_vol(Pb);
+          catch
+            pause(rand(1))
+            aflags.WG  = spm_vol(Pb);
+          end
+          
+          aflags.sep = aflags.sep/2;
+          try
             spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
-            aflags.sep = aflags.sep/2;
-            warning off %#ok<WNOFF>
-            Affine2 = spm_affreg(VG1, VF1, aflags, Affine, scale);
-            warning on  %#ok<WNON>
-            if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
+          catch
+            spm_chi2_plot('Init','Fine Affine Registration','Mean squared difference','Iteration');
+          end
+          Affine2 = spm_affreg(VG, VF1, aflags, Affine, scale);
+          if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
+
             
-            if ~strcmp(job.vbm.species,'human')
-            % refinend registration with brainmask
-            % for the template image (WG) and for the subject image (WF)
-              aflags.WG = spm_vol(Pb);
-              vbm_vol_imcalc([VF,aflags.WG],Pbt,'i2',struct('interp',6,'verb',0)); 
-              aflags.WF  = spm_vol(Pbt);
-              warning off %#ok<WNOFF>
-              Affine2 = spm_affreg(VG1, VF1, aflags, Affine, scale);
-              warning on  %#ok<WNON>
-              if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
-            end            
-            fprintf('%4.0fs\n',etime(clock,stime));
-            clear VG1 VF1
-
-
-            % Fine Affine Registration with 3 mm sampling distance
-            % Especially for non-human TPMs a brain mask is important
-            % to avoid 'SingularMatrix' errors!
-            stime = vbm_io_cmd('Fine Affine Registration');
-            warning off %#ok<WNOFF>
-            Affine2 = spm_maff8(obj.image(1),3,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
-            warning on  %#ok<WNON>
-            fprintf('%4.0fs\n',etime(clock,stime));
+          if 0 %~strcmp(job.vbm.species,'human')
+          % refinend registration with brainmask
+          % for the template image (WG) and for the subject image (WF)
+            aflags.WG = spm_vol(Pb);
+            vbm_vol_imcalc([VF,aflags.WG],Pbt,'i2',struct('interp',6,'verb',0)); 
+            aflags.WF  = spm_vol(Pbt);
+            Affine2 = spm_affreg(VG1, VF1, aflags, Affine, scale);
             if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
-        end;
+          end            
+            
+          clear VG1 VF1 VF
+
+          fprintf('%4.0fs\n',etime(clock,stime));
+        end
+        
+        
+        % Fine Affine Registration with 3 mm sampling distance
+        % Especially for non-human TPMs a brain mask is important
+        % to avoid 'SingularMatrix' errors!
+        stime = vbm_io_cmd('Fine Affine Registration');
+        spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
+        Affine2 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
+        fprintf('%4.0fs\n',etime(clock,stime));
+        if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
+
+        warning on  %#ok<WNON>
         obj.Affine = Affine;
         
         

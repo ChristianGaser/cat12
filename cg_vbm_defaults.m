@@ -34,7 +34,7 @@ vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni'
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller values for stronger bias fields
 vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
-vbm.opts.samp      = 3;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
+vbm.opts.samp      = 2;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
 
                                               
 % Writing options
@@ -146,8 +146,8 @@ vbm.extopts.vox          = 1.5;                                % voxel size for 
 vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];       % bounding box for normalized data (not yet working): inf - use Tempate values
 vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};  % Indicate first Dartel template
 vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')};                     % VBM atlas with major regions for VBM, SBM & ROIs
-vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','brainmask.nii')};                 % brainmask for affine registration
-vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_T1_IXI555_MNI152.nii')}; % T1 for affine registration
+vbm.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % brainmask for affine registration
+vbm.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
 % surface options
 vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 

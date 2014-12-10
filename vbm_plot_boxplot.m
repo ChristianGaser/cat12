@@ -117,6 +117,7 @@ function [out,s] = vbm_plot_boxplot(data,opt)
 
   opt = checkinopt(opt,def);
   opt.notched = max(0,min(1,opt.notched));
+  %opt.ylim = opt.ylim + sign(opt.ylim) .* [eps -eps];
   
   % figure out how many data sets we have
   if iscell(data), 
@@ -412,8 +413,8 @@ function [out,s] = vbm_plot_boxplot(data,opt)
     if opt.ygrid
       ytick=get(gca,'YTick');
       if numel(ytick)<5, ytick=interp1(ytick,1:0.5:numel(ytick)); elseif numel(ytick)>10, ytick=ytick(1:2:end); end
-      if ytick(1)==opt.ylim(1),   ytick(1)=[];   end
-      if ytick(end)==opt.ylim(2), ytick(end)=[]; end
+      if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
+      if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
       h1=plot(repmat([0;numel(opt.names)+1],1,numel(ytick)),[ytick;ytick],'Color',linecolor);
       uistack(h1,'bottom')
     end
@@ -466,8 +467,8 @@ function [out,s] = vbm_plot_boxplot(data,opt)
     if opt.ygrid
       ytick=get(gca,'XTick');
       if numel(ytick)<5, ytick=interp1(ytick,1:0.5:numel(ytick)); elseif numel(ytick)>10, ytick=ytick(1:2:end); end
-      if ytick(1)==opt.ylim(1),   ytick(1)=[];   end
-      if ytick(end)-eps>=opt.ylim(2), ytick(end)=[]; end
+      if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
+      if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
       h1=plot([ytick;ytick],repmat([0;numel(opt.names)+1],1,numel(ytick)),'Color',linecolor);
       uistack(h1,'bottom')
     end
