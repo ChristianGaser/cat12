@@ -6250,3 +6250,29 @@ Added commandline batch for longitudinal pipeline.
 
 ------------------------------------------------------------------------
 r664 | gaser | 2014-12-04 11:45:29
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       templates_animals/ape_greater_cg_vbm_defaults.m
+M       templates_animals/ape_lesser_cg_vbm_defaults.m
+M       templates_animals/monkey_newworld_cg_vbm_defaults.m
+M       templates_animals/monkey_oldworld_cg_vbm_defaults.m
+M       vbm_io_writenii.m
+M       vbm_plot_boxplot.m
+M       vbm_qa_calcSTC.m
+M       vbm_stat_marks.m
+M       vbm_surf_createCS.m
+D       vbm_tst_pre.m
+M       vbm_tst_qa.m
+
+(1)  Corrected affine registration error.
+(2)  Changed vbm.opts.samp to 2 mm. 
+(3)  Corrected small errors.
+(4)  Updated primate vbm_defaults.
+(5)  Removed prefix variable in  vbm_io_writenii.  
+(6)  Update QA parameter.
+
+------------------------------------------------------------------------
+r665 | dahnke | 2014-12-10 13:51:37

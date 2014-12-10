@@ -380,7 +380,7 @@ Yb = vbm_vol_resize(vbm_vol_smooth3X(Yb,2),'dereduceV',resT2)>0.4;
 
 
 % write bias field in original space for QA
-%vbm_io_writenii(VT0,Ybf,'bf','bias field','float32',[0,1],[1 0 0],0); clear Ybf;
+%vbm_io_writenii(VT0,Ybf,'bf','bias field','float32',[0,1],[1 0 0]); clear Ybf;
 
 
 % prevent NaN
@@ -1234,21 +1234,21 @@ Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255;
 % masking for other spaces 
 vbm_io_writenii(VT0,Ym,'m', ...
   'bias and noise corrected, intensity normalized', ...
-  'float32',[0,1],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),0,trans);
+  'float32',[0,1],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),trans);
 vbm_io_writenii(VT0,Ym.*(Yp0>0.1),'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
-  'float32',[0,1],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),0,trans);
+  'float32',[0,1],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),trans);
   
 % Yp0b maps
 if job.extopts.WMHC==3 && ~opt.inv_weighting; 
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
-vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,4/255],job.output.label,0,trans);
+vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,4/255],job.output.label,trans);
 clear Yp0; 
 
 % partitioning
 vbm_io_writenii(VT0,Yl1,'a1','brain atlas map for major structures and sides',...
-  'uint8',[0,1],job.output.atlas,0,trans);
+  'uint8',[0,1],job.output.atlas,trans);
 
 
 
@@ -1257,17 +1257,17 @@ fn = {'GM','WM','CSF'};
 for clsi=1:3
   vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
-    min([1 0 0 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),0,trans);
+    min([1 0 0 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
   vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-    min([0 1 2 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),0,trans);
+    min([0 1 2 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
 % write WMH class maps
 if job.extopts.WMHC==1 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint8',[0,1/255],...
-    min([1 0 0 0],cell2mat(struct2cell(job.output.WMH)')),0,trans);
+    min([1 0 0 0],cell2mat(struct2cell(job.output.WMH)')),trans);
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint16',[0,1/255],...
-    min([0 1 2 2],cell2mat(struct2cell(job.output.WMH)')),0,trans);
+    min([0 1 2 2],cell2mat(struct2cell(job.output.WMH)')),trans);
 end  
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
@@ -1497,7 +1497,7 @@ vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
 %  ---------------------------------------------------------------------
 QMC   = vbm_io_colormaps('marks+',17);
 color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-if do_cls && vbm.print
+if vbm.print
   %% create report text
   oldcolormap = colormap; 
   Pm  = fullfile(pth,['m', nam, '.nii']); 
@@ -1551,7 +1551,7 @@ if do_cls && vbm.print
   str2 = [str2 struct('name',' Resolution:','value',marks2str(qam.QM.res_RMS,sprintf('%5.2f',qam.QM.res_RMS)))];
   str2 = [str2 struct('name',' Noise:','value',marks2str(qam.QM.NCR,sprintf('%5.2f',qam.QM.NCR)))];
   str2 = [str2 struct('name',' Bias:','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
-  str2 = [str2 struct('name','\bfProcessibility:','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
+  str2 = [str2 struct('name','\bf Average:','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
 
       
   % Subject Measures
@@ -1684,68 +1684,68 @@ if do_cls && vbm.print
 
     
     %%
-    if vbm.print
-      % BB box is not optimal for all images...
-      % furthermore repositioning the cross to the BG is maybe usefull...
-      %global st
-      %fig     = spm_figure('FindWin','Graphics');
-      %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
-      %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
-      %st.vols = cell(24,1);
 
-      bb = vbm.bb;
-      spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
-      
-      % Yo - original image in original space
-      Yo     = single(spm_read_vols(VT0)); 
-      Yowmth = median(Yo(Yo(:)>median(Yo(:))))*1.2; clear Yo;
-      hho = spm_orthviews('Image',fname0,pos(1,:)); 
-    	spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+    % BB box is not optimal for all images...
+    % furthermore repositioning the cross to the BG is maybe usefull...
+    %global st
+    %fig     = spm_figure('FindWin','Graphics');
+    %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
+    %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
+    %st.vols = cell(24,1);
 
-      spm_orthviews('window',hho,[0 Yowmth*4]); caxis([0,2]);
-      cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-        'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
-      
-      % Ym - full corrected images in original space
-      if ~exist(Pm,'file')
-        vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,2],[1 0 0],0,trans);
-      end
-    	hhm = spm_orthviews('Image',Pm,pos(2,:));
-    	spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+    bb = vbm.bb;
+    spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
 
-      spm_orthviews('window',hhm,[0 cmmax]); 
-      cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+    % Yo - original image in original space
+    Yo     = single(spm_read_vols(VT0)); 
+    Yowmth = median(Yo(Yo(:)>median(Yo(:))))*1.2; clear Yo;
+    hho = spm_orthviews('Image',fname0,pos(1,:)); 
+    spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
 
-      
-      % Yp0 - segment image in original space
-      if ~exist(Pp0,'file')
-        Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-        vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],0,trans);
-      end
-      hhp0 = spm_orthviews('Image',Pp0,pos(3,:));
-      spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
-      spm_orthviews('window',hhp0,[0 3*cmmax]);
-      cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-      
-      % surface
-      if exist('S','var')
-        CSl.vertices = S.lh.vertices; CSl.faces = S.lh.faces; CSl.facevertexcdata = S.lh.th1;
-        CSr.vertices = S.rh.vertices; CSr.faces = S.rh.faces; CSr.facevertexcdata = S.rh.th1;
+    spm_orthviews('window',hho,[0 Yowmth*4]); caxis([0,2]);
+    cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
+      'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
 
-        subplot('position',[0.5 0.05 0.5 0.25]);
-        cspl=patch(CSl); set(cspl,'facecolor','interp','edgecolor','none');
-        cspr=patch(CSr); set(cspr,'facecolor','interp','edgecolor','none');
-        view(3), camlight, lighting gouraud, axis equal off;  caxis([0,10])
-      end
-  
+    % Ym - full corrected images in original space
+    if ~exist(Pm,'file')
+      vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,2],[1 0 0],trans);
     end
-    
-    % set to old colormap and correct scaling
-    colormap(vbm_io_colormaps(cm));
-    set(0,'CurrentFigure',ofg)
+    hhm = spm_orthviews('Image',Pm,pos(2,:));
+    spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+
+    spm_orthviews('window',hhm,[0 cmmax]); 
+    cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
+      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+
+
+    % Yp0 - segment image in original space
+    if ~exist(Pp0,'file')
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+      vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],trans);
+    end
+    hhp0 = spm_orthviews('Image',Pp0,pos(3,:));
+    spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('window',hhp0,[0 3*cmmax]);
+    cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
+      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+
+    % surface
+    if exist('S','var')
+      CSl.vertices = S.lh.vertices; CSl.faces = S.lh.faces; CSl.facevertexcdata = S.lh.th1;
+      CSr.vertices = S.rh.vertices; CSr.faces = S.rh.faces; CSr.facevertexcdata = S.rh.th1;
+
+      subplot('position',[0.5 0.05 0.5 0.25]);
+      cspl=patch(CSl); set(cspl,'facecolor','interp','edgecolor','none');
+      cspr=patch(CSr); set(cspr,'facecolor','interp','edgecolor','none');
+      view(3), camlight, lighting gouraud, axis equal off;  caxis([0,10])
+    end
+
   end
+
+  % set to old colormap and correct scaling
+  colormap(vbm_io_colormaps(cm));
+  set(0,'CurrentFigure',ofg)
+
 
   
   %% print group report file 
@@ -1798,10 +1798,13 @@ if do_cls && vbm.print
     
     try spm_orthviews('window',hho,[0 Yowmth*2]); end %#ok<TRYNC>
     try set(cc{1},'visible','off'); end %#ok<TRYNC>
-    colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
+    try %#ok<TRYNC>
+      colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
           'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
-
+    end
   end
+  
+  colormap(oldcolormap)
 end
   
 % command window output
@@ -2861,7 +2864,7 @@ function Ylai = vbm_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job)
   [pp,ff,ee] = fileparts(FA{ai,1}); [pp,pph] = fileparts(pp);
   vbm_io_writenii(VT0,Ylai,sprintf('l%d',ai+1),...
     sprintf('brain atlas map of %s map',fullfile(pph,ff,ee)),...
-    'uint8',[0,1],job,0,trans);
+    'uint8',[0,1],job,trans);
   clear Ymm;
 return
 %=======================================================================
