@@ -70,7 +70,7 @@ end
 
 spm_progress_bar('Clear')
 
-Fgraph = spm_figure('FindWin','Graphics');
+Fgraph = spm_figure('GetWin','Graphics');
 FS      = spm('FontSizes');
 figure(Fgraph);
 spm_figure('Clear',Fgraph);

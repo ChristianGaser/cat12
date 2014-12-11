@@ -29,12 +29,12 @@ global vbm
 % Estimation options
 %=======================================================================
 vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3 WM classes for robustness
-vbm.opts.affreg    = 'mni';                   % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
+vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
+vbm.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
-vbm.opts.biasreg   = 0.0001;                  % Bias regularisation - smaller values for stronger bias fields
-vbm.opts.biasfwhm  = 60;                      % Bias FWHM - lower values for stronger bias fields, but look for overfitting in subcortical GM (values <50 mm)
-vbm.opts.samp      = 2;                       % Sampling distance - smaller 'better', but slower - maybe usefull for >6 Tesla 
+vbm.opts.biasreg   = 0.0001;                  % Bias regularisation    - smaller values for stronger bias fields
+vbm.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
+vbm.opts.samp      = 2;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
 
                                               
 % Writing options
@@ -156,7 +156,7 @@ vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
-vbm.extopts.debug        = 1;     % debuging option: 0 - default; 1 - write debugging files 
+vbm.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debugging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 
 % QA options -  NOT IMPLEMENTED - just the idea

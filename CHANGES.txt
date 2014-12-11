@@ -6276,3 +6276,29 @@ M       vbm_tst_qa.m
 
 ------------------------------------------------------------------------
 r665 | dahnke | 2014-12-10 13:51:37
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       cg_showslice_all.m
+M       cg_vbm_defaults.m
+M       cg_vbm_longitudinal_batch.m
+M       cg_vbm_longitudinal_batch.sh
+M       cg_vbm_longitudinal_multi.m
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       tbx_cfg_vbm.m
+M       vbm_io_writenii.m
+M       vbm_io_xml.m
+M       vbm_plot_boxplot.m
+M       vbm_surf_createCS.m
+
+(1) Set debug to zero and solved issues with debug flag in vbm_surf_createCS.m.
+(2) Corrected some typos in vbm_plot_boxplot.m and vbm_io_xml.m.
+(3) vbm_io_writenii still had dartel options and extensions for writing data.
+(4) Added many options to ch_check_cov to deal with different samples and
+    to display quality measures in xml-files.
+(5) Solved issue with 'GetWin' in cg_showslice_all.m.
+
+
+------------------------------------------------------------------------
+r666 | gaser | 2014-12-11 15:53:34

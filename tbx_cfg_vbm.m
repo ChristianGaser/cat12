@@ -112,7 +112,7 @@ dartel.name   = 'DARTEL export';
 dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
 dartel.values = {0 1 2};
 dartel.help   = {
-'This option is to export data into a form that can be used with DARTEL.The SPM default is to only apply rigid body transformation. However, a more appropriate option is to apply affine transformation, because the additional scaling of the images requires less deformations to non-linearly register brains to the template.'
+'This option is to export data into a form that can be used with DARTEL. The SPM default is to only apply rigid body transformation. However, a more appropriate option is to apply affine transformation, because the additional scaling of the images requires less deformations to non-linearly register brains to the template.'
 ''
 };
 
@@ -136,7 +136,7 @@ jacobian.tag  = 'jacobian';
 jacobian.name = 'Jacobian determinant';
 jacobian.val  = {warped};
 jacobian.help = {
-  'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design.'
+  'This is the option to save the Jacobian determinant, which expresses local volume changes. This image can be used in a pure deformation based morphometry (DBM) design. Please note that the affine part of the deformation field is ignored. Thus, there is no need for any additional correction for different brain sizes using ICV.'
 ''
 };
 
@@ -183,7 +183,7 @@ grey          = cfg_branch;
 grey.tag      = 'GM';
 grey.name     = 'Grey matter';
 grey.val      = {native, warped, modulated, dartel};
-grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and mwp1*.img.'
+grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and m[0]wp1*.img.'
 ''
 };
 
@@ -195,7 +195,7 @@ white         = cfg_branch;
 white.tag     = 'WM';
 white.name    = 'White matter';
 white.val     = {native, warped, modulated, dartel};
-white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and mwp2*.img.'
+white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and m[0]wp2*.img.'
 ''
 };
 
@@ -207,7 +207,7 @@ csf           = cfg_branch;
 csf.tag       = 'CSF';
 csf.name      = 'Cerebro-Spinal Fluid (CSF)';
 csf.val       = {native, warped, modulated, dartel};
-csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and mwp3*.img.'
+csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and m[0]wp3*.img.'
 ''
 };
 
@@ -218,7 +218,7 @@ wmh           = cfg_branch;
 wmh.tag       = 'WMH';
 wmh.name      = 'White matter hyperintensity (WMH)';
 wmh.val       = {native, warped, dartel};
-wmh.help      = {'Options to produce WMH images, if WMHC==3: p4*.img, wp4*.img and mwp4*.img.'
+wmh.help      = {'Options to produce WMH images, if WMHC==3: p4*.img, wp4*.img and m[0]wp4*.img.'
 ''
 };
 

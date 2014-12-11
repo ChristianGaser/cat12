@@ -9,12 +9,12 @@ function cg_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data V
+global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data V sample xml_files
 rev = '$Rev$';
 
 if nargin == 1
-  if isfield(vargin,'data')
-    P = char(vargin.data);
+  if isfield(vargin,'data_vbm')
+    P = char(vargin.data_vbm);
     sep = vargin.gap;
   else
     P = char(vargin.data_surf);
@@ -24,13 +24,50 @@ if nargin == 1
   else
     G = vargin.nuisance.c;
   end
+  if isempty(vargin.coding)
+    sample = ones(1,size(P,1));
+  else
+    sample = vargin.coding.c;
+  end
+  if isempty(vargin.xml)
+    xml_files = [];
+  else
+    xml_files = char(vargin.xml.data_xml);
+  end
 end
+
 
 if nargin < 1
   P = spm_select(Inf,'image','Select images');
 end
 
 n_subjects = size(P,1);
+
+if size(sample,2) == 1
+  sample = sample';
+end
+
+if size(sample,2) ~= n_subjects
+  error('Vector for sample coding must have same length as sample');
+end
+
+if ~isempty(xml_files)
+  if size(xml_files,1) ~= n_subjects
+    error('Number of xml-files must have same as sample size');
+  end
+  
+  QM = ones(n_subjects,3);
+  QM_names = str2mat('Noise','Bias','PQ processibility');
+  spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
+  for i=1:n_subjects
+    xml = convert(xmltree(deblank(xml_files(i,:))));
+    QM(i,:) = [str2double(xml.qam.QM.NCR) str2double(xml.qam.QM.ICR) str2double(xml.qam.QM.rms)];
+    spm_progress_bar('Set',i);  
+  end
+  spm_progress_bar('Clear');
+else
+  QM_names = '';
+end
 
 [pth,nam,ext] = spm_fileparts(deblank(P(1,:)));
 
@@ -89,6 +126,7 @@ if nargin < 1
     G = [];
   end
   sep = spm_input('Separation between points to speed up','+1','e',0,1);
+  sample = [];
 end
 
 % add constant to nuisance parameter
@@ -120,7 +158,7 @@ if issurf
   mx_data = max(Y(:));
   Y = Y - repmat(mean(Y,2), [1 length(V.cdata)]);
 
-  % remove nuisance and add again mean (otherwise correlations are quite small and misleading)
+  % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
   if ~isempty(G) 
     Ymean = repmat(mean(Y), [n_subjects 1]);
     Y = Y - G*(pinv(G)*Y) + Ymean;
@@ -162,7 +200,7 @@ else
       Y = vol(:,mask);
       Y = Y - repmat(mean(Y,2), [1 sum(mask)]);
 
-      % remove nuisance and add again mean (otherwise correlations are quite small and misleading)
+      % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
       if ~isempty(G) 
         Ymean = repmat(mean(Y), [n_subjects 1]);
         Y = Y - G*(pinv(G)*Y) + Ymean;
@@ -187,8 +225,6 @@ YpY(1:n_subjects+1:end) = sign(diag(YpY));
 
 YpYsum = sum(YpY,1);
 [iY, jY] = sort(YpYsum, 2, 'descend');
-YpYsorted = YpY(jY,jY);
-Nsorted = P(jY,:);
 
 % extract mean correlation for each data set
 mean_cov = zeros(n_subjects,1);
@@ -242,7 +278,8 @@ set(H.figure,'MenuBar','none','Position',pos.fig,...
     
 H.ax = axes('Position',pos.corr,'Parent',H.figure);
 cm = datacursormode(H.figure);
-set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on','NewDataCursorOnClick',false);
+set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
+try, set(cm,'NewDataCursorOnClick',false); end
 
 % create two colormaps
 cmap = [hot(64); gray(64)];
@@ -251,7 +288,6 @@ cmap = [hot(64); gray(64)];
 mn = min(YpY(:));
 mx = max(YpY(:));
 YpY_scaled = (YpY - mn)/(mx - mn);
-YpYsorted_scaled = (YpYsorted - mn)/(mx - mn);
 
 % show only lower left triangle
 ind_tril = find(tril(ones(size(YpY))));
@@ -292,13 +328,30 @@ H.show = uicontrol(H.figure,...
         'ToolTipString','Display worst files',...
         'Interruptible','on','Enable','on');
 
-H.boxp = uicontrol(H.figure,...
+if isempty(xml_files)
+  H.boxp = uicontrol(H.figure,...
         'string','Boxplot of mean correlation','Units','normalized',...
         'position',pos.boxp,...
         'style','Pushbutton','HorizontalAlignment','center',...
-        'callback',@show_mean_boxplot,...
+        'callback',{@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
         'ToolTipString','Display boxplot of mean correlation',...
         'Interruptible','on','Visible','off');
+else
+  data_boxp = mean_cov;
+  str  = { 'Boxplot...','Mean correlation',QM_names};
+  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
+           {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
+           {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
+           {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1}};
+
+  H.boxp = uicontrol(H.figure,...
+        'string',str,'Units','normalized',...
+        'position',pos.boxp,'UserData',tmp,...
+        'style','PopUp','HorizontalAlignment','center',...
+        'callback','spm(''PopUpCB'',gcbo)',...
+        'ToolTipString','Display boxplot',...
+        'Interruptible','on','Visible','on');
+end
 
 H.text = uicontrol(H.figure,...
         'Units','normalized','position',pos.text,...
@@ -319,15 +372,17 @@ if ~issurf
   update_slices_array;
 end
    
-show_mean_boxplot;
+show_mean_boxplot(mean_cov,'Mean correlation',1);
 
 % check for replicates
 for i=1:n_subjects
   for j=1:n_subjects
-  if (i>j) & (mean_cov(i) == mean_cov(j))
-    [s,differ] = unix(['diff ' P(i,:) ' ' P(j,:)]);
-    if (s==0), fprintf(['\nWarning: ' P(i,:) ' and ' P(j,:) ' are same files?\n']); end
-  end
+    if (i>j) & (mean_cov(i) == mean_cov(j))
+      try
+        [s,differ] = unix(['diff ' P(i,:) ' ' P(j,:)]);
+        if (s==0), fprintf(['\nWarning: ' P(i,:) ' and ' P(j,:) ' are same files?\n']); end
+      end
+    end
   end
 end
 
@@ -374,40 +429,74 @@ end
 return
 
 %-----------------------------------------------------------------------
-function show_mean_boxplot(obj, event_obj)
+function show_mean_boxplot(data_boxp, name, quality_order)
 %-----------------------------------------------------------------------
-global fname H YpY pos mean_cov FS
+global fname H YpY pos FS sample xml_files ind_sorted
 
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
 
-xpos = 2*(0:length(fname.m)-1)/(length(fname.m)-1);
-for i=1:length(fname.m)
-  text(xpos(i),mean_cov(i),fname.m{i},'FontSize',FS(7),'HorizontalAlignment','center')
+n_samples = max(sample);
+
+xpos = cell(1,n_samples);
+data = cell(1,n_samples);
+
+for i=1:n_samples
+  ind = find(sample == i);
+  data{i} = data_boxp(ind);
+  
+  if n_samples == 1
+    xpos{i} = (i-1)+2*(0:length(ind)-1)/(length(ind)-1);
+  else
+    xpos{i} = 0.5/length(ind) + 0.5+(i-1)+1*(0:length(ind)-1)/(length(ind));
+  end
+
+  for j=1:length(ind)
+    text(xpos{i}(j),data{i}(j),fname.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
+  end
 end
 
 hold on
-vbm_plot_boxplot({mean_cov});
-set(gca,'XTick',[],'XLim',[-.25 2.25]);
-if max(mean_cov) > min(mean_cov)
-  ylim_min = 0.99*min(mean_cov);
-  ylim_max = 1.01*max(mean_cov);
-  if ylim_min > min(mean_cov)
-    ylim_min = 1.01*min(mean_cov);
+
+
+opt = struct('groupnum',0,'ygrid',0,'groupcolor',jet(n_samples));
+
+vbm_plot_boxplot(data,opt);
+
+set(gca,'XTick',[],'XLim',[-.25 n_samples+1.25]);
+if max(data_boxp) > min(data_boxp)
+  ylim_min = 0.99*min(data_boxp);
+  ylim_max = 1.01*max(data_boxp);
+  if ylim_min > min(data_boxp)
+    ylim_min = 1.01*min(data_boxp);
   end
-  if ylim_max < max(mean_cov)
-    ylim_max = 0.99*max(mean_cov);
+  if ylim_max < max(data_boxp)
+    ylim_max = 0.99*max(data_boxp);
   end
   set(gca,'YLim',[ylim_min ylim_max]);
 end
 
-title(sprintf('Boxplot: Mean Correlation  \nCommon filename: %s*%s',spm_file(fname.s,'short25'),fname.e),'FontSize',FS(10),'FontWeight','Bold');
-ylabel('<----- Low (poor quality) --- Mean Correlation --- High (good quality)------>  ','FontSize',FS(10),'FontWeight','Bold');
+title(sprintf('Boxplot: %s  \nCommon filename: %s*%s',name,spm_file(fname.s,'short25'),fname.e),'FontSize',FS(10),'FontWeight','Bold');
+if quality_order > 0
+  ylabel(sprintf('<----- Low (poor quality) --- %s --- High (good quality)------>  ',name),'FontSize',FS(10),'FontWeight','Bold');
+else
+  ylabel(sprintf('<----- High rating (good quality) --- %s --- Low rating (poor quality)------>  ',name),'FontSize',FS(10),'FontWeight','Bold');
+end
 xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),'FontWeight','Bold');
 hold off
 
 % hide button again
-set(H.boxp,'Visible','off');
+if isempty(xml_files)
+  set(H.boxp,'Visible','off');
+end
+
+% estimate sorted index new fo displaying worst files
+if quality_order > 0
+  [tmp, ind_sorted] = sort(data_boxp,'descend');
+else
+  [tmp, ind_sorted] = sort(data_boxp,'ascend');
+  
+end
 
 return
 

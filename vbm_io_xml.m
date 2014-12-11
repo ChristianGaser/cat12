@@ -1,7 +1,7 @@
 function varargout = vbm_io_xml(file,varargin)
 % Import/export of a matlab structure from/to a xml file. Use functions 
 % from Jaroslaw Tuszynski publisches on MATLAB Central (xml_io_tools_2010_11_05). 
-% I also tryed the "struct2xml" and "xml2struct" functions of Wouter 
+% I also tried the "struct2xml" and "xml2struct" functions of Wouter 
 % Falkena, but there were some problems for multi-element structures, 
 % and fields where set as struct too and the only char is supported for
 % datastoring.
