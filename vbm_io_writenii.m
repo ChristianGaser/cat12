@@ -173,11 +173,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
   % maybe generates another label), we need to replace this voxel by 
   % its nearest neighbor value.
   if write(2)
-    if transform.warped.dartel
-      pre2 = ['wr' pre]; desc2 = [desc '(warped non-linear only)'];
-    else
-      pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
-    end
+    pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
     
     fname = vbm_io_handle_pre(V.fname,pre2,'');
     if labelmap==0
@@ -231,15 +227,8 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
   % no label case ...
   if write(3)
        
-    if transform.warped.dartel
-      if     write(3)==1, pre3 = ['mwr'  pre]; desc3 = [desc '(Jac. sc. warped'];
-      elseif write(3)==2, pre3 = ['m0wr' pre]; desc3 = [desc '(Jac. sc. warped non-lin only)'];
-      end
-    else
-      if     write(3)==1, pre3 = ['mw'   pre]; desc3 = [desc '(Jac. sc. warped)'];
-      elseif write(3)==2, pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; 
-      end
-    end
+    if     write(3)==1, pre3 = ['mw'   pre]; desc3 = [desc '(Jac. sc. warped)'];
+    elseif write(3)==2, pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; end
     
     fname = vbm_io_handle_pre(V.fname,pre3,'');
     

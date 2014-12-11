@@ -24,6 +24,9 @@ for i=1:n
   matlabbatch{1}.spm.tools.vbm.tools.long.subj.mov{i} = names{i};
 end
 
+% always deselect print option
+matlabbatch{1}.spm.tools.vbm.tools.long.extopts.print = 0;
+
 warning off
 spm_jobman('initcfg');
 spm_jobman('run',matlabbatch);

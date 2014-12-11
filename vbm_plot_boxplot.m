@@ -11,7 +11,7 @@ function [out,s] = vbm_plot_boxplot(data,opt)
 %                  = 1;             % sort groups (ascending)
 %                  = 2;             % sort groups (descending)[inactive]
 %                  = [index];       % or by a index matrix
-%  opt.names       = {};            & cell of group names
+%  opt.names       = {};            % cell of group names
 %  opt.fill        = 1;             % filling of boxes
 %  opt.groupnum    = 1;             % add number of elements
 % [opt.groupmin    = 5;]            % minimum number of non-nan-elements
@@ -21,8 +21,8 @@ function [out,s] = vbm_plot_boxplot(data,opt)
 %  opt.groupcolor  = [R G B];       % matrix with (group)-bar-color(s) 
 %                                     use jet(numel(data)) 
 %                                     or other color functions
-%  opt.fontsize    = [];            % achsis fontsize 
-%                                     important for ygird size!
+%  opt.fontsize    = [];            % axis fontsize 
+%                                     important for ygrid size!
 %
 % The box plot is a graphical display that simultaneously describes several 
 % important features of a data set, such as center, spread, departure from 

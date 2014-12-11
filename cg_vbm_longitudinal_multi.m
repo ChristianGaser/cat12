@@ -4,20 +4,6 @@ function long = cg_vbm_longitudinal_multi
 % Christian Gaser
 % $Id$
 
-data          = cfg_files;
-data.tag      = 'data';
-data.name     = 'Volumes';
-data.filter   = 'image';
-data.ufilter  = '.*';
-% by default only files that do not start with the typical VBM prefix of 
-% strongly preprocessed images that can not be used for preprocessing
-% ^[^(^(p[0123]|^c[123]|^m[0w]|^iy_|^y_|^jac_|^te|^pc)])].*
-%data.ufilter = '(^[^p][^0123c]).*'; 
-data.num      = [1 Inf];
-data.help     = {
-  'Select highres raw data (e.g. T1 images) for processing. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method and each images is processed separately.'};
-
-
 mov = cfg_files;
 mov.name = 'Longitudinal data for one subject';
 mov.tag  = 'mov';
