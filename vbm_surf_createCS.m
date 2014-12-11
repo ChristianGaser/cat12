@@ -240,15 +240,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
 
     % read final surface and map thickness data
-
-    % thickness is not defined in the cutting regions and it should be 
-    % set to NaN to avoid smoothing a large area of zeros
-%      YS = mod(Ya,2)>0.5; 
-%      YS = (vbm_vol_morph(YS==1,'d') & vbm_vol_morph(YS==0,'d'));  % CC cut
-%      YS = YS | vbm_vol_morph(NS(Ya,13),'d') | NS(Ya,11);          % midbrain/brainstem cut + optical nerv
-%      YS = vbm_vol_morph(YS & Ymf>2.5,'lc',8);  % there should be only one large region 
-%      Yth1(YS) = nan; % no-thickness in cut regions ... 
-
     CS = gifti(Pcentral);
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
@@ -268,7 +259,9 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     % we have to delete the original faces, because they have a different number of vertices after
     % CAT_FixTopology!
     delete(Praw);  
-    delete(Pdefects0);  
+    if opt.debug 
+      delete(Pdefects0);  
+    end
     delete(Psphere0);
     if opt.usePPmap
       delete(Vpp.fname);

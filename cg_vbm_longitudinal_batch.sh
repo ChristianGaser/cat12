@@ -215,7 +215,7 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_vbm_longitudinal_batch.sh batchfile.m [-d] [-m matlabcommand]
+   cg_vbm_longitudinal_batch.sh file1.nii file2.nii ... filex.nii [-d] [-m matlabcommand]
    
    -d   use display option in matlab in case that batch file needs graphical output
    -m   matlab command
@@ -229,12 +229,12 @@ PURPOSE:
    Command line call of SPM12 batch files
 
 EXAMPLE
-   cg_vbm_longitudinal_batch.sh test_batch.m -m /usr/local/bin/matlab7
-   This command will process the batch file test_batch.m. As matlab command 
-   /usr/local/bin/matlab7 will be used.
+   cg_vbm_longitudinal_batch.sh all_files*.nii -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab
+   This command will process all given files in the longitudinal pipeline. As matlab command 
+   /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab will be used.
    
 INPUT:
-   batch file saved as matlab-script or mat-file
+   filenames
 
 OUTPUT:
    ${LOGDIR}/spm_${HOSTNAME}_${time}.log for log information
