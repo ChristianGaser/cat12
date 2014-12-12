@@ -327,16 +327,10 @@ data_xml.num  = [1 Inf];
 data_xml.help   = {[...
 'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files..']};
 
-xml       = cfg_branch;
-xml.tag   = 'xml';
-xml.name  = 'Quality measures';
-xml.val   = {data_xml};
-xml.help  = {'Load quality measures from xml-files.'};
-
 qam         = cfg_repeat;
 qam.tag     = 'qam';
 qam.name    = 'Load quality measures';
-qam.values  = {xml};
+qam.values  = {data_xml};
 qam.num     = [0 Inf];
 qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 

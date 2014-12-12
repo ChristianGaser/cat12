@@ -6325,3 +6325,13 @@ Use simpler options in cg_check_cov.m.
 
 ------------------------------------------------------------------------
 r668 | gaser | 2014-12-12 10:42:08
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       cg_vbm_tools.m
+M       html/vbm12.html
+
+Updated some plot functions in cg_check_cov.m for nicer output.
+
+------------------------------------------------------------------------
+r669 | gaser | 2014-12-12 13:26:12
