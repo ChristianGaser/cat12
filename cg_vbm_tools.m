@@ -314,8 +314,8 @@ scale.help   = {'This option should be only used if image intensity is not scale
 
 transform         = cfg_repeat;
 transform.tag     = 'transform';
-transform.name    = 'Nuisance';
-transform.values  = {nuisance};
+transform.name    = 'Nuisance variable';
+transform.values  = {c};
 transform.num     = [0 Inf];
 transform.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
 
@@ -341,32 +341,25 @@ qam.num     = [0 Inf];
 qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
 data_vbm = cfg_files;
-data_vbm.name = 'Images';
+data_vbm.name = 'Sample';
 data_vbm.tag  = 'data_vbm';
 data_vbm.filter = 'image';
 data_vbm.num  = [1 Inf];
 data_vbm.help   = {[...
 'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.']};
 
-sample = cfg_branch;
-sample.name = 'Sample';
-sample.tag = 'sample';
-sample.val = {data_vbm};
+sample         = cfg_repeat;
+sample.tag     = 'sample';
+sample.name    = 'Data';
+sample.values  = {data_vbm };
+sample.num     = [1 Inf];
 sample.help = {[...
-'Images of the same sample.']};
-
-esample         = cfg_repeat;
-esample.tag     = 'esample';
-esample.name    = 'Data';
-esample.values  = {sample };
-esample.num     = [1 Inf];
-esample.help = {[...
 'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
 
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
 check_cov.name = 'Check sample homogeneity of VBM data';
-check_cov.val  = {esample,qam,gap,transform};
+check_cov.val  = {sample,qam,gap,transform};
 check_cov.prog = @cg_check_cov;
 check_cov.help  = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
@@ -375,7 +368,7 @@ check_cov.help  = {
 
 data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
-data_surf.name    = 'Surfaces';
+data_surf.name    = 'Sample';
 data_surf.filter  = 'gifti';
 data_surf.ufilter = '^[lr]h.central';
 data_surf.num     = [1 Inf];
@@ -451,11 +444,11 @@ fwhm.help    = {
 
 surfresamp      = cfg_exbranch;
 surfresamp.tag  = 'surfresamp';
-surfresamp.name = 'Resample and smooth surface parameters';
+surfresamp.name = 'Rsample and smooth surface parameters';
 surfresamp.val  = {data_surf,fwhm};
 surfresamp.prog = @vbm_surf_resamp;
 surfresamp.help = {
-'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
+'In order to analyze surface parameters all data have to be rsampled into template space and the rsampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
 
 data_fs         = cfg_files;
 data_fs.tag     = 'data_fs';
@@ -463,7 +456,7 @@ data_fs.name    = 'Freesurfer subject directories';
 data_fs.filter  = 'dir';
 data_fs.ufilter = '.*';
 data_fs.num     = [1 Inf];
-data_fs.help    = {'Select subject folders of freesurfer data to resample thickness data.'};
+data_fs.help    = {'Select subject folders of freesurfer data to rsample thickness data.'};
 
 outdir         = cfg_files;
 outdir.tag     = 'outdir';
@@ -475,42 +468,35 @@ outdir.help    = {'Select a directory where files are written.'};
 
 surfresamp_fs      = cfg_exbranch;
 surfresamp_fs.tag  = 'surfresamp_fs';
-surfresamp_fs.name = 'Resample and smooth existing freesurfer thickness data';
+surfresamp_fs.name = 'Rsample and smooth existing freesurfer thickness data';
 surfresamp_fs.val  = {data_fs,fwhm,outdir};
 surfresamp_fs.prog = @vbm_surf_resamp_freesurfer;
 surfresamp_fs.help = {
-'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
+'If you have existing freesurfer thickness data this function can be used to rsample these data, smooth the rsampled data, and convert freesurfer data to gifti format.'};
 
 data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
 data_surf.name    = 'Surfaces';
 data_surf.filter  = 'gifti';
-data_surf.ufilter = 'resampled';
+data_surf.ufilter = 'rsampled';
 data_surf.num     = [1 Inf];
-data_surf.help    = {'Select resample surfaces parameter files.'};
+data_surf.help    = {'Select rsample surfaces parameter files.'};
 
-sample = cfg_branch;
-sample.name = 'Sample';
-sample.tag = 'sample';
-sample.val = {data_surf};
+sample         = cfg_repeat;
+sample.tag     = 'data_surf';
+sample.name    = 'Data';
+sample.values  = {sample };
+sample.num     = [1 Inf];
 sample.help = {[...
-'Surfaces of the same sample.']};
-
-esample         = cfg_repeat;
-esample.tag     = 'esample';
-esample.name    = 'Data';
-esample.values  = {sample };
-esample.num     = [1 Inf];
-esample.help = {[...
 'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
 
 check_mesh_cov      = cfg_exbranch;
 check_mesh_cov.tag  = 'check_mesh_cov';
 check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-check_mesh_cov.val  = {esample,qam,transform};
+check_mesh_cov.val  = {sample,qam,transform};
 check_mesh_cov.prog = @cg_check_cov;
 check_mesh_cov.help = {
-'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
+'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be rsampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
 ''
 'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'
 ''
