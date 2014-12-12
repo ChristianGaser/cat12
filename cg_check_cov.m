@@ -38,11 +38,11 @@ if nargin == 1
       G = [G vargin.c{i}];
     end
   end
-  
-  if isempty(vargin.xml)
+
+  if isempty(vargin.data_xml)
     xml_files = [];
   else
-    xml_files = char(vargin.xml.data_xml);
+    xml_files = char(vargin.data_xml{1});
   end
   
 else
@@ -52,7 +52,7 @@ end
 if ~isempty(xml_files)
 
   if size(xml_files,1) ~= n_subjects
-    error('Number of xml-files must have same as sample size');
+    error('XML-files must have the same number as sample size');
   end
   
   QM = ones(n_subjects,3);
@@ -60,8 +60,21 @@ if ~isempty(xml_files)
 
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
+    % get basename for xml- and data files
+    [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
+    [pth, data_name] = fileparts(deblank(P(i,:)));
+    
+    % remove leading 'vbm_'
+    xml_name = xml_name(5:end);
+    
+    % check for filenames
+    if isempty(strfind(data_name,xml_name))
+      warning(sprintf('Please check file names because of deviating subject names\n: %s vs. %s\n',P(i,:),xml_files(i,:)));
+    end
+    
     xml = convert(xmltree(deblank(xml_files(i,:))));
     QM(i,:) = [str2double(xml.qam.QM.NCR) str2double(xml.qam.QM.ICR) str2double(xml.qam.QM.rms)];
+    
     spm_progress_bar('Set',i);  
   end
   spm_progress_bar('Clear');
@@ -137,7 +150,7 @@ pos = struct(...
     'corr',  [-0.05 0.050 0.80 0.80],... % correlation matrix
     'quit',  [0.775 0.900 0.20 0.05],... % quit button
     'show',  [0.775 0.850 0.20 0.05],... % button to show worst cases
-    'boxp',  [0.775 0.800 0.20 0.05],... % button to display boxplot
+    'boxp',  [0.775 0.795 0.20 0.05],... % button to display boxplot
     'text',  [0.775 0.625 0.20 0.15],... % textbox
     'slice', [0.775 0.050 0.20 0.40],... % two single images according to position of mouse pointer
     'slider',[0.775 0.000 0.20 0.03]);   % slider for z-slice
@@ -320,31 +333,25 @@ H.show = uicontrol(H.figure,...
         'ToolTipString','Display worst files',...
         'Interruptible','on','Enable','on');
 
-% create button or popoup menu if xml-files were loaded
+% create popoup menu 
 if isempty(xml_files)
-  H.boxp = uicontrol(H.figure,...
-        'string','Boxplot of mean correlation','Units','normalized',...
-        'position',pos.boxp,...
-        'style','Pushbutton','HorizontalAlignment','center',...
-        'callback',{@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
-        'ToolTipString','Display boxplot of mean correlation',...
-        'Interruptible','on','Visible','off');
+  str  = { 'Boxplot...','Mean correlation'};
+  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1} };
 else
-  data_boxp = mean_cov;
   str  = { 'Boxplot...','Mean correlation',QM_names};
   tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
            {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
            {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-           {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1}};
+           {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1} };
+end
 
-  H.boxp = uicontrol(H.figure,...
+H.boxp = uicontrol(H.figure,...
         'string',str,'Units','normalized',...
         'position',pos.boxp,'UserData',tmp,...
         'style','PopUp','HorizontalAlignment','center',...
         'callback','spm(''PopUpCB'',gcbo)',...
         'ToolTipString','Display boxplot',...
         'Interruptible','on','Visible','on');
-end
 
 H.text = uicontrol(H.figure,...
         'Units','normalized','position',pos.text,...
@@ -424,8 +431,8 @@ return
 %-----------------------------------------------------------------------
 function show_mean_boxplot(data_boxp, name, quality_order)
 %-----------------------------------------------------------------------
-global fname H FS sample xml_files ind_sorted
-
+global fname H FS sample ind_sorted
+ 
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
 
@@ -469,19 +476,22 @@ if max(data_boxp) > min(data_boxp)
   set(gca,'YLim',[ylim_min ylim_max]);
 end
 
+% add colored labels and title
 title(sprintf('Boxplot: %s  \nCommon filename: %s*%s',name,spm_file(fname.s,'short25'),fname.e),'FontSize',FS(10),'FontWeight','Bold');
 xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),'FontWeight','Bold');
-if quality_order > 0
-  ylabel(sprintf('<----- Low (poor quality) --- %s --- High (good quality)------>  ',name),'FontSize',FS(10),'FontWeight','Bold');
-else
-  ylabel(sprintf('<----- High rating (good quality) --- %s --- Low rating (poor quality)------>  ',name),'FontSize',FS(10),'FontWeight','Bold');
-end
-hold off
 
-% hide button again
-if isempty(xml_files)
-  set(H.boxp,'Visible','off');
+xpos = -0.35 - n_samples*0.1;
+
+if quality_order > 0
+  text(xpos, ylim_min,'<----- Low rating (poor quality)','Color','red','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
+  text(xpos, ylim_max,'High rating (good quality) ------>','Color','green','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
+else
+  text(xpos, ylim_max,'<----- Low rating (poor quality)','Color','red','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
+  text(xpos, ylim_min,'High rating (good quality) ------>','Color','green','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
 end
+text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name),'Color','black','Rotation',90,'HorizontalAlignment','center','FontSize',FS(10),'FontWeight','Bold')
+
+hold off
 
 % estimate sorted index new fo displaying worst files
 if quality_order > 0
