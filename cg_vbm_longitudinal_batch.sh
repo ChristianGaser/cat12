@@ -3,7 +3,7 @@
 ########################################################
 # global parameters
 ########################################################
-# $Id: cg_vbm_longitudinal_batch.sh 653 2014-11-21 13:13:47Z gaser $
+# $Id$
 
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
