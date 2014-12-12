@@ -3,7 +3,7 @@ function cg_vbm_longitudinal_batch(namefile)
 %
 % namefile      - array of file names
 %_______________________________________________________________________
-% $Id: cg_vbm_longitudinal_batch.m 451 2013-03-26 13:38:49Z gaser $
+% $Id$
 
 if nargin < 1
 	fprintf('Syntax: cg_vbm_longitudinal_batch(namefile)\n');

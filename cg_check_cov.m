@@ -2,9 +2,9 @@ function cg_check_cov(vargin)
 %cg_check_cov to check covriance across sample
 %
 % Images have to be in the same orientation with same voxel size
-% and dimension (e.g. normalized images)
+% and dimension (e.g. spatially registered images)
 %
-% Surfaces have to be same size
+% Surfaces have to be same size (number of vertices).
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -13,51 +13,50 @@ global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_dat
 rev = '$Rev$';
 
 if nargin == 1
-  if isfield(vargin,'data_vbm')
-    P = char(vargin.data_vbm);
+  P = [];
+  sample = [];
+
+  % read filenames for each sample and indicate sample parameter
+  if isfield(vargin.sample,'data_vbm')
+    for i=1:numel(vargin.sample)
+      P = char([P; vargin.sample(i).data_vbm]);
+      sample = [sample, i*ones(1,size(vargin.sample(i).data_vbm,1))];
+    end
     sep = vargin.gap;
   else
-    P = char(vargin.data_surf);
+    for i=1:numel(vargin.sample)
+      P = char([P; vargin.sample(i).data_surf]);
+      sample = [sample, i*ones(1,size(vargin.sample(i).data_surf,1))];
+    end
   end
+  
+  n_subjects = size(P,1);
+  
   if isempty(vargin.nuisance)
     G = [];
   else
     G = vargin.nuisance.c;
   end
-  if isempty(vargin.coding)
-    sample = ones(1,size(P,1));
-  else
-    sample = vargin.coding.c;
-  end
+  
   if isempty(vargin.xml)
     xml_files = [];
   else
     xml_files = char(vargin.xml.data_xml);
   end
-end
-
-
-if nargin < 1
-  P = spm_select(Inf,'image','Select images');
-end
-
-n_subjects = size(P,1);
-
-if size(sample,2) == 1
-  sample = sample';
-end
-
-if size(sample,2) ~= n_subjects
-  error('Vector for sample coding must have same length as sample');
+  
+else
+  error('No argument give.');
 end
 
 if ~isempty(xml_files)
+
   if size(xml_files,1) ~= n_subjects
     error('Number of xml-files must have same as sample size');
   end
   
   QM = ones(n_subjects,3);
   QM_names = str2mat('Noise','Bias','PQ processibility');
+
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
     xml = convert(xmltree(deblank(xml_files(i,:))));
@@ -65,6 +64,7 @@ if ~isempty(xml_files)
     spm_progress_bar('Set',i);  
   end
   spm_progress_bar('Clear');
+
 else
   QM_names = '';
 end
@@ -118,17 +118,6 @@ else
   end
 end
 
-if nargin < 1
-  def_nuis = spm_input('Variable to covariate out (nuisance parameter)?','+1','yes|no',[1 0],2);
-  if def_nuis
-    G = spm_input('Nuisance parameter:','+1','r',[],n_subjects);
-  else
-    G = [];
-  end
-  sep = spm_input('Separation between points to speed up','+1','e',0,1);
-  sample = [];
-end
-
 % add constant to nuisance parameter
 if ~isempty(G)
   if size(G,1) ~= n_subjects
@@ -139,7 +128,7 @@ end
 
 % positions & font size
 ws = spm('Winsize','Graphics');
-FS    = spm('FontSizes');
+FS = spm('FontSizes');
 
 pos = struct(...
     'fig',   [10 10 1.2*ws(3) ws(3)],... % figure
@@ -216,10 +205,10 @@ end
 
 
 % normalize YpY
-d = sqrt(diag(YpY)); % sqrt first to avoid under/overflow
-dd = d*d';
-YpY = YpY./(dd+eps);
-t = find(abs(YpY) > 1); 
+d      = sqrt(diag(YpY)); % sqrt first to avoid under/overflow
+dd     = d*d';
+YpY    = YpY./(dd+eps);
+t      = find(abs(YpY) > 1); 
 YpY(t) = YpY(t)./abs(YpY(t));
 YpY(1:n_subjects+1:end) = sign(diag(YpY));
 
@@ -231,6 +220,7 @@ mean_cov = zeros(n_subjects,1);
 for i=1:n_subjects
   % extract row for each subject
   cov0 = YpY(i,:);
+
   % remove cov with its own
   cov0(i) = [];
   mean_cov(i) = mean(cov0);
@@ -320,6 +310,7 @@ H.quit = uicontrol(H.figure,...
         'ToolTipString','Close windows',...
         'Interruptible','on','Enable','on');
 
+% check button
 H.show = uicontrol(H.figure,...
         'string','Check the worst data','Units','normalized',...
         'position',pos.show,...
@@ -328,6 +319,7 @@ H.show = uicontrol(H.figure,...
         'ToolTipString','Display worst files',...
         'Interruptible','on','Enable','on');
 
+% create button or popoup menu if xml-files were loaded
 if isempty(xml_files)
   H.boxp = uicontrol(H.figure,...
         'string','Boxplot of mean correlation','Units','normalized',...
@@ -431,7 +423,7 @@ return
 %-----------------------------------------------------------------------
 function show_mean_boxplot(data_boxp, name, quality_order)
 %-----------------------------------------------------------------------
-global fname H YpY pos FS sample xml_files ind_sorted
+global fname H FS sample xml_files ind_sorted
 
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
@@ -477,12 +469,12 @@ if max(data_boxp) > min(data_boxp)
 end
 
 title(sprintf('Boxplot: %s  \nCommon filename: %s*%s',name,spm_file(fname.s,'short25'),fname.e),'FontSize',FS(10),'FontWeight','Bold');
+xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),'FontWeight','Bold');
 if quality_order > 0
   ylabel(sprintf('<----- Low (poor quality) --- %s --- High (good quality)------>  ',name),'FontSize',FS(10),'FontWeight','Bold');
 else
   ylabel(sprintf('<----- High rating (good quality) --- %s --- Low rating (poor quality)------>  ',name),'FontSize',FS(10),'FontWeight','Bold');
 end
-xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),'FontWeight','Bold');
 hold off
 
 % hide button again
@@ -511,9 +503,9 @@ else
   slice_mm = 0;
 end
 
-vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
+vx   =  sqrt(sum(V(1).mat(1:3,1:3).^2));
 Orig = V(1).mat\[0 0 0 1]';
-sl = round(slice_mm/vx(3)+Orig(3));
+sl   = round(slice_mm/vx(3)+Orig(3));
 
 % if slice is outside of image use middle slice
 if (sl>V(1).dim(3)) | (sl<1)
@@ -525,6 +517,7 @@ M  = spm_matrix([0 0 sl]);
 for i = 1:length(V)
   img = spm_slice_vol(V(i),M,V(1).dim(1:2),[1 0]);
   img(isnan(img)) = 0;
+  
   % scale image according to mean
   data_array(:,:,i) = img/mean(img(find(img ~= 0)));
 end

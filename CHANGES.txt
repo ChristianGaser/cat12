@@ -6302,3 +6302,16 @@ M       vbm_surf_createCS.m
 
 ------------------------------------------------------------------------
 r666 | gaser | 2014-12-11 15:53:34
+
+M       CHANGES.txt
+M       cg_check_cov.m
+MM      cg_vbm_longitudinal_batch.m
+MM      cg_vbm_longitudinal_batch.sh
+M       cg_vbm_tools.m
+M       html/vbm12.html
+
+Removed sample coding from cg_chek_cov.m and added option to sepcify different samples.
+
+
+------------------------------------------------------------------------
+r667 | gaser | 2014-12-12 10:19:59
