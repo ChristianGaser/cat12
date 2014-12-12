@@ -283,7 +283,7 @@ c.num     = [Inf 1];
 
 nuisance       = cfg_branch;
 nuisance.tag   = 'nuisance';
-nuisance.name  = 'Nuisance';
+nuisance.name  = 'Nuisance variable';
 nuisance.val   = {c};
 nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 
@@ -319,30 +319,6 @@ transform.values  = {nuisance};
 transform.num     = [0 Inf];
 transform.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
 
-c         = cfg_entry;
-c.tag     = 'c';
-c.name    = 'Vector';
-c.help    = {'Enter a vector that specifies which sample these images belong to. The length of this vector should correspond to the overall number of images. Increasing numbers indicate the samples: '
-''
-'[1 1 1 2 2 2 3 3 3] means that the first three images belong to sample #1, the next three to sample #2 and the last three to sample #3.'
-''
-};
-c.strtype = 'r';
-c.num     = [Inf 1];
-
-coding       = cfg_branch;
-coding.tag   = 'coding';
-coding.name  = 'Coding';
-coding.val   = {c};
-coding.help  = {'Add coding for different samples'};
-
-sample         = cfg_repeat;
-sample.tag     = 'sample';
-sample.name    = 'Sample coding';
-sample.values  = {coding};
-sample.num     = [0 Inf];
-sample.help    = {'This option allows for the specification of different samples in order to estimate sample homogeneity inside each sample seperately.'};
-
 data_xml = cfg_files;
 data_xml.name = 'XML files';
 data_xml.tag  = 'data_xml';
@@ -365,17 +341,32 @@ qam.num     = [0 Inf];
 qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
 data_vbm = cfg_files;
-data_vbm.name = 'Data';
+data_vbm.name = 'Images';
 data_vbm.tag  = 'data_vbm';
 data_vbm.filter = 'image';
 data_vbm.num  = [1 Inf];
 data_vbm.help   = {[...
 'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.']};
 
+sample = cfg_branch;
+sample.name = 'Sample';
+sample.tag = 'sample';
+sample.val = {data_vbm};
+sample.help = {[...
+'Images of the same sample.']};
+
+esample         = cfg_repeat;
+esample.tag     = 'esample';
+esample.name    = 'Data';
+esample.values  = {sample };
+esample.num     = [1 Inf];
+esample.help = {[...
+'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
+
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
 check_cov.name = 'Check sample homogeneity of VBM data';
-check_cov.val  = {data_vbm,qam,gap,transform,sample};
+check_cov.val  = {esample,qam,gap,transform};
 check_cov.prog = @cg_check_cov;
 check_cov.help  = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
@@ -498,10 +489,25 @@ data_surf.ufilter = 'resampled';
 data_surf.num     = [1 Inf];
 data_surf.help    = {'Select resample surfaces parameter files.'};
 
+sample = cfg_branch;
+sample.name = 'Sample';
+sample.tag = 'sample';
+sample.val = {data_surf};
+sample.help = {[...
+'Surfaces of the same sample.']};
+
+esample         = cfg_repeat;
+esample.tag     = 'esample';
+esample.name    = 'Data';
+esample.values  = {sample };
+esample.num     = [1 Inf];
+esample.help = {[...
+'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
+
 check_mesh_cov      = cfg_exbranch;
 check_mesh_cov.tag  = 'check_mesh_cov';
 check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-check_mesh_cov.val  = {data_surf,qam,transform,sample};
+check_mesh_cov.val  = {esample,qam,transform};
 check_mesh_cov.prog = @cg_check_cov;
 check_mesh_cov.help = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
