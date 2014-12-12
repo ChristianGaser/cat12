@@ -6315,3 +6315,13 @@ Removed sample coding from cg_chek_cov.m and added option to sepcify different s
 
 ------------------------------------------------------------------------
 r667 | gaser | 2014-12-12 10:19:59
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       cg_vbm_tools.m
+M       html/vbm12.html
+
+Use simpler options in cg_check_cov.m.
+
+------------------------------------------------------------------------
+r668 | gaser | 2014-12-12 10:42:08

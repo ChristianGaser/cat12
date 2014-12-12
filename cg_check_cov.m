@@ -13,29 +13,30 @@ global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_dat
 rev = '$Rev$';
 
 if nargin == 1
-  P = [];
+  P      = [];
   sample = [];
+  G      = [];
 
   % read filenames for each sample and indicate sample parameter
-  if isfield(vargin.sample,'data_vbm')
-    for i=1:numel(vargin.sample)
-      P = char([P; vargin.sample(i).data_vbm]);
-      sample = [sample, i*ones(1,size(vargin.sample(i).data_vbm,1))];
+  if isfield(vargin,'data_vbm')
+    for i=1:numel(vargin.data_vbm)
+      P = char([P; vargin.data_vbm{i}]);
+      sample = [sample, i*ones(1,size(vargin.data_vbm{i},1))];
     end
     sep = vargin.gap;
   else
-    for i=1:numel(vargin.sample)
-      P = char([P; vargin.sample(i).data_surf]);
-      sample = [sample, i*ones(1,size(vargin.sample(i).data_surf,1))];
+    for i=1:numel(vargin.data_surf)
+      P = char([P; vargin.data_surf{i}]);
+      sample = [sample, i*ones(1,size(vargin.data_surf{i},1))];
     end
   end
   
   n_subjects = size(P,1);
   
-  if isempty(vargin.nuisance)
-    G = [];
-  else
-    G = vargin.nuisance.c;
+  if ~isempty(vargin.c)
+    for i=1:numel(vargin.c)
+      G = [G vargin.c{i}];
+    end
   end
   
   if isempty(vargin.xml)
