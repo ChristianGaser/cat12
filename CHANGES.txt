@@ -6335,3 +6335,12 @@ Updated some plot functions in cg_check_cov.m for nicer output.
 
 ------------------------------------------------------------------------
 r669 | gaser | 2014-12-12 13:26:12
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       html/vbm12.html
+
+Solved issue with not used externel default file in cg_vbm_batch.m.
+
+------------------------------------------------------------------------
+r670 | gaser | 2014-12-15 14:40:05

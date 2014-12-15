@@ -17,7 +17,7 @@ fprintf('cg_vbm_batch: \n  PID = %s\n\n',pid);
 
 spm_get_defaults;
 
-if nargin < 3
+if nargin < 2
     cg_vbm_get_defaults;
 else
     if isempty(vbm_defaults)
