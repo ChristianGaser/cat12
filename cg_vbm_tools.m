@@ -470,16 +470,16 @@ surfresamp_fs.help = {
 
 data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
-data_surf.name    = 'Surfaces';
+data_surf.name    = 'Sample';
 data_surf.filter  = 'gifti';
-data_surf.ufilter = 'rsampled';
+data_surf.ufilter = 'resampled';
 data_surf.num     = [1 Inf];
 data_surf.help    = {'Select rsample surfaces parameter files.'};
 
 sample         = cfg_repeat;
-sample.tag     = 'data_surf';
+sample.tag     = 'sample';
 sample.name    = 'Data';
-sample.values  = {sample };
+sample.values  = {data_surf };
 sample.num     = [1 Inf];
 sample.help = {[...
 'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
@@ -492,9 +492,7 @@ check_mesh_cov.prog = @cg_check_cov;
 check_mesh_cov.help = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be rsampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
 ''
-'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'
-''
-};
+'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
 
 %------------------------------------------------------------------------
 

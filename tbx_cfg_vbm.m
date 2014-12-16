@@ -8,8 +8,6 @@ function vbm = tbx_cfg_vbm
 %
 %#ok<*AGROW>
  
-%rev = '$Rev$'; % not used
-
 addpath(fileparts(which(mfilename)));
 %_______________________________________________________________________
 
