@@ -6344,3 +6344,16 @@ Solved issue with not used externel default file in cg_vbm_batch.m.
 
 ------------------------------------------------------------------------
 r670 | gaser | 2014-12-15 14:40:05
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+
+(1) If no images are saved within cg_vbm_write.m the flag do_cls is set to 1 
+    because segmentations are necessary for ROI output and quality measures.
+(2) Solved some issues in cg_vbm_tools for covariance check for surfaces.
+ 
+------------------------------------------------------------------------
+r671 | gaser | 2014-12-16 15:46:22
