@@ -127,8 +127,6 @@ oldxml = fullfile(pth,['vbm_' nam '.xml']);
 if exist(oldxml,'file'), delete(oldxml); end
 clear oldxml
 
-
-
 d    = res.image(1).dim(1:3);
 
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
@@ -189,6 +187,12 @@ end
 clear d3
 
 do_cls   = any(tc(:)) || any(lb) || any(df) || any(jc) || nargout>=1;
+
+% also do segmentation if no images are saved because we need that for quality measures and ROIs
+if ~any(tc(:)) && ~any(lb) && ~any(df) && ~any(jc)
+  do_cls = 1;
+  fprintf('Warning: No output images defined.\n');
+end
 
 prm     = [3 3 3 0 0 0];
 Coef    = cell(1,3);
@@ -377,10 +381,6 @@ Yb = vbm_vol_morph((Ysrc>median(Ysrc(Ycls{1}(:)>128)) & ...
 Yb = Yb | (Ym<0.8 & vbm_vol_morph(Yb,'lc',6)); % large ventricle closing
 Yb = vbm_vol_morph(Yb,'lc',2);                 % standard closing
 Yb = vbm_vol_resize(vbm_vol_smooth3X(Yb,2),'dereduceV',resT2)>0.4; 
-
-
-% write bias field in original space for QA
-%vbm_io_writenii(VT0,Ybf,'bf','bias field','float32',[0,1],[1 0 0]); clear Ybf;
 
 
 % prevent NaN
@@ -599,7 +599,7 @@ end
 %  Now, it is time for skull-stripping (gcut,morph), AMAP tissue 
 %  segmentation, and further tissue corrections (cleanup,LAS,finalmask).
 %  ---------------------------------------------------------------------
-if do_cls && do_defs,,
+if do_cls && do_defs
     
   %  -------------------------------------------------------------------
   %  skull-stipping
@@ -945,7 +945,7 @@ if do_cls && do_defs,,
   
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = NS(Yl1,23);
-  qa.SM.WMH_abs    = 100*sum(Ywmhrel(:));                       % absolut WMH volume without PVE
+  qa.SM.WMH_abs    = 100*sum(Ywmhrel(:));                       % absolute WMH volume without PVE
   qa.SM.WMH_rel    = qa.SM.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
   qa.SM.WMH_WM_rel = qa.SM.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   clear Ywmhrel Yp0
@@ -1370,7 +1370,7 @@ end
 %  contrain other classes. Therefore, standard tissue ranges (>50%) where
 %  used.  
 %  ---------------------------------------------------------------------
-if job.output.ROI,, % || any(cell2mat(struct2cell(job.output.atlas)')) 
+if job.output.ROI && do_cls 
   stime = vbm_io_cmd('ROI estimation');   
 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
