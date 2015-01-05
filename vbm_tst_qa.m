@@ -707,7 +707,7 @@ function varargout = vbm_tst_qa(action,varargin)
       %QAS.QM.NCR = NCRw.*(NCww/(NCww+NCwc)) + NCRc.*(NCwc/(NCww+NCwc)); % + ...
                  %  NCRg.*(NCwg/(NCww+NCwc+NCwg+NCwb)) + NCRb.*(NCwc/(NCww+NCwc+NCwg+NCwb)) ;
       %QAS.QM.NCR = QAS.QM.NCR .* mean(resr.vx_volr)/mean(resr.vx_vol);
-      QAS.QM.NCR = nanmean([NCRw NCRc]);
+      QAS.QM.NCR = vbm_stat_nanmean([NCRw NCRc]);
       QAS.QM.CNR = 1 / QAS.QM.NCR;  
 
       
