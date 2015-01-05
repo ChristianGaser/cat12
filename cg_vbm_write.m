@@ -1974,7 +1974,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Yc
     % check SPM segmentation
     if exist('vbm_warnings','var')
       Ymx = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
-      Ygw = Yb & ((Ycls{1}+Ycls{1})>128);
+      Ygw = Yb & ((Ycls{1}+Ycls{2})>128);
       Ymp0diff = sqrt(mean(Ym(Ygw(:)) - Ymx(Ygw(:)))^2); 
       if Ymp0diff>0.15
         error(...

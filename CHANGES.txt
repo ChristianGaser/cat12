@@ -6357,3 +6357,20 @@ M       tbx_cfg_vbm.m
  
 ------------------------------------------------------------------------
 r671 | gaser | 2014-12-16 15:46:22
+
+M       CHANGES.txt
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       html/vbm12.html
+!       vbm_surf_createCS.m
+M       vbm_tst_qa.m
+!       vbm_vol_approx.m
+
+(1) Replaced nanmean by vbm_stat_nanmean in vbm_tst_qa.m
+(2) Corrected typo in cg_vbm_write.m for calculating Yqw.
+(3) Added eps to division in cg_vbm_run_job.m and cg_vbm_run.
+
+ 
+------------------------------------------------------------------------
+r672 | gaser | 2015-01-05 09:24:30
