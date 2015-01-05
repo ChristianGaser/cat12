@@ -68,8 +68,8 @@ Vd       = spm_vol([vbm.darteltpm ',1']);
 [bb,vox] = spm_get_bbox(Vd, 'old');  
 if vbm.bb(1)>vbm.bb(2), bbt=vbm.bb(1); vbm.bb(1)=vbm.bb(2); vbm.bb(2)=bbt; clear bbt; end
 if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-vbm.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ (isinf(bb(1,1:3)) | isnan(bb(1,1:3))))
-            min(bb(2,1:3) , bb(2,1:3) ./ (isinf(bb(2,1:3)) | isnan(bb(2,1:3)))) ];
+vbm.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
+            min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
           
 if isinf(vbm.vox) || isnan(vbm.vox)
   vbm.vox = abs(vox);

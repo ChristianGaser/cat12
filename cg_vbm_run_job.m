@@ -109,10 +109,10 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         case 'native'
           vx_voli  = vx_vol;
         case 'fixed', 
-          vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ (vx_vol > (job.vbm.resval(1)+job.vbm.resval(2))));
+          vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ ((vx_vol > (job.vbm.resval(1)+job.vbm.resval(2)))+eps));
           vx_voli  = max(vx_voli,job.vbm.resval(1) .* (vx_vol < (job.vbm.resval(1)-job.vbm.resval(2))));
         case 'best'
-          vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ (vx_vol > (job.vbm.resval(1)+job.vbm.resval(2))));
+          vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ ((vx_vol > (job.vbm.resval(1)+job.vbm.resval(2)))+eps));
         otherwise 
           error('cg_vbm_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
       end
