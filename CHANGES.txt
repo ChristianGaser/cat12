@@ -6374,3 +6374,25 @@ M       vbm_tst_qa.m
  
 ------------------------------------------------------------------------
 r672 | gaser | 2015-01-05 09:24:30
+
+M       CHANGES.txt
+M       compile.m
+M       vbm_surf_createCS.m
+M       vbm_vol_eidist.c
+M       vbm_vol_genus0.c
+
+(1) Updated compile.m.
+(2) Added algorithm.h in the header of vbm_vol_eidist.c.
+(3) Correction for 'n' prefix in vbm_surf_createCS.m was not working for 
+    img-files.
+(4) Added a bunch of new functions to CAT_Topology.c:
+      - get_cluster_size 
+      - changed_voxels_between_surfaces
+      - surface_deform
+(5) Made a lot of changed fix_topology_sph in CAT_Topology.c:
+      - estimate SPHs of surface with either handles or holes
+      - estimate change in voxel space for handle/hole approach
+      - choose operation with smaller change in voxel space 
+
+------------------------------------------------------------------------
+r673 | gaser | 2015-01-27 11:46:26

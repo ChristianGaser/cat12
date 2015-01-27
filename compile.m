@@ -22,6 +22,7 @@ function compile
   eval(['mex ' mexflag ' -O vbm_vol_pbtp.cpp'])
   eval(['mex ' mexflag ' -O vbm_vol_interp3f.cpp'])
   eval(['mex ' mexflag ' -O vbm_vol_eidist.c'])
+  eval(['mex ' mexflag ' -O vbm_vol_eulernumber.c'])
   eval(['mex ' mexflag ' -O vbm_vol_genus0.c genus0.c'])
   eval(['mex ' mexflag ' -O vbdist.c'])
   eval(['mex ' mexflag ' -O ornlmMex.c ornlm_float.c'])
@@ -29,19 +30,20 @@ function compile
   %%
   
   d = cell(17, 1);
-  d{1} = vbm_vol_pbtp(3*d0,d0,d0);         disp('Compilation of vbm_vol_pbtp successful')
-  d{2} = vbm_vol_median3(d0);              disp('Compilation of vbm_vol_median3 successful')
-  d{3} = vbm_vol_median3c(d0,d0==0);       disp('Compilation of vbm_vol_median3c successful')
-  d{4} = ornlmMex(d0,3,1,0.1);             disp('Compilation of ornlmMex successful')
-  d{5} = vbm_vol_laplace3(d0,0,0,0.001);   disp('Compilation of vbm_vol_laplace3 successful')
-  d{6} = vbm_vol_laplace3R(d0,d0>0.5,0.2); disp('Compilation of vbm_vol_laplace3R successful')
-  [d{7},d{8},d{9}] = vbm_vol_gradient3(d0);disp('Compilation of vbm_vol_gradient3 successful')
-  d{10} = vbm_vol_downcut(d0,d0.^1.5,1);   disp('Compilation of vbm_vol_down_cut successful')
-  d{11} = vbdist(d0);                      disp('Compilation of vbdist successful')
-  d{12} = vbm_vol_interp3f(d0,d0,d0,d0);   disp('Compilation of vbm_vol_interp3f successful')
-  d{13} = vbm_vol_localstat(d0,d0>0);      disp('Compilation of vbm_vol_localstat successful')
-  d{14} = vbm_vol_simgrow(d0,d0,0.01);     disp('Compilation of vbm_vol_simgrow successful')
-  d{15} = vbm_vol_eidist(d0,d0);           disp('Compilation of vbm_vol_eidist successful')
+  d{1} = vbm_vol_pbtp(3*d0,d0,d0);          disp('Compilation of vbm_vol_pbtp successful')
+  d{2} = vbm_vol_median3(d0);               disp('Compilation of vbm_vol_median3 successful')
+  d{3} = vbm_vol_median3c(d0,d0==0);        disp('Compilation of vbm_vol_median3c successful')
+  d{4} = ornlmMex(d0,3,1,0.1);              disp('Compilation of ornlmMex successful')
+  d{5} = vbm_vol_laplace3(d0,0,0,0.001);    disp('Compilation of vbm_vol_laplace3 successful')
+  d{6} = vbm_vol_laplace3R(d0,d0>0.5,0.2);  disp('Compilation of vbm_vol_laplace3R successful')
+  [d{7},d{8},d{9}] = vbm_vol_gradient3(d0); disp('Compilation of vbm_vol_gradient3 successful')
+  d{10} = vbm_vol_downcut(d0,d0.^1.5,1);    disp('Compilation of vbm_vol_down_cut successful')
+  d{11} = vbdist(d0);                       disp('Compilation of vbdist successful')
+  d{12} = vbm_vol_interp3f(d0,d0,d0,d0);    disp('Compilation of vbm_vol_interp3f successful')
+  d{13} = vbm_vol_localstat(d0,d0>0);       disp('Compilation of vbm_vol_localstat successful')
+  d{14} = vbm_vol_simgrow(d0,d0,0.01);      disp('Compilation of vbm_vol_simgrow successful')
+  d{15} = vbm_vol_eidist(d0,d0);            disp('Compilation of vbm_vol_eidist successful')
+  d{16} = vbm_vol_eulernumber(double(d0>0));disp('Compilation of vbm_vol_eulernumber successful')
   [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(d0,0.5); disp('Compilation of vbm_vol_genus0')
   
   %%
@@ -79,14 +81,14 @@ function compile
   end
   
   sanlmMex(d0,3,1);
-  d{16} = d0;
+  d{17} = d0;
 
   rand('state',0);
   d0  = single(rand(10,10,10));
   d0(5,5,5) = NaN;
   
   sanlmMex_noopenmp(d0,3,1);
-  d{17} = d0;
+  d{18} = d0;
 
   debugname = ['debug_' mexext '.mat'];
   disp(['save ' debugname]);
