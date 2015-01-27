@@ -55,15 +55,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /* set some parameters/options */
   for(j= 0; j <dL; j++ ) g0->dims[j] = sL[j];
   
-  g0->return_adjusted_label_map=1;
+  g0->return_adjusted_label_map = 1;
   g0->cut_loops = 0;
   g0->connectivity = 6;
   g0->connected_component = 1;
   g0->input = input;
   g0->value = 1;
-  g0->alt_value=1;
-  g0->contour_value=1;
-  g0->alt_contour_value=1;
+  g0->alt_value = 1;
+  g0->contour_value = 1;
+  g0->alt_contour_value = 1;
   g0->biggest_component = 1;
   g0->pad[0] = g0->pad[1] = g0->pad[2] = 2;
   g0->ijk2ras = ijk2ras;
