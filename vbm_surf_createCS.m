@@ -64,8 +64,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   [pp,ff,ee]   = spm_fileparts(V.fname);
   % correction for 'n' prefix for noise corrected and/or interpolated files
   if ff(1)=='n'
-    Po = fullfile(pp,[ff(2:end) ee]); 
-    if exist(Po,'file')
+    if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
       ff = ff(2:end);
     end
   end
@@ -163,6 +162,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
+
     [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(Yppi,0.5);
     clear Yppi;
 
@@ -271,6 +271,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   end  
 end
  
+%=======================================================================
 function V = isocolors2(R,V,opt)
 % ______________________________________________________________________
 % calculates a linear interpolated value of a vertex in R  
@@ -310,7 +311,5 @@ function V = isocolors2(R,V,opt)
       V = sum(R(sub2ind(size(R),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))) .* w8b,3);
   end  
   if ~VD, V = single(V); end
-
-
-                   
 end
+                   
