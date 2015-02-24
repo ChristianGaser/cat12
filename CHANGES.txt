@@ -6396,3 +6396,56 @@ M       vbm_vol_genus0.c
 
 ------------------------------------------------------------------------
 r673 | gaser | 2015-01-27 11:46:26
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+A       cg_vbm_defaults_template_humanIXI555.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+A  +    html/vbm12_instruction_templates.html
+ M      templates_animals
+A       templates_animals/cg_vbm_defaults_template_primate130.m
+A       templates_animals/cg_vbm_defaults_template_primate15.m
+A       templates_animals/cg_vbm_defaults_template_primate400.m
+A       templates_animals/cg_vbm_defaults_template_primate45.m
+M       vbm_io_cgw2seg.m
+M       vbm_io_img2nii.m
+M       vbm_io_remat.m
+M       vbm_set_cg_vbm_defaults.m
+M       vbm_stat_marks.m
+M       vbm_tst_CJV.m
+M       vbm_tst_qa.m
+M       vbm_vol_approx.m
+M       vbm_vol_correct_slice_scaling.m
+
+Major changes:
+(1)  Corrected "median"-problem in "vbm_pre_gintnorm" in "cg_vbm_write". 
+     The median was used to estimate tissue peaks, but lightly different mask 
+     in different OS leaded to different tissue peaks that lead to stronger 
+     differences between Linux and Windows/Mac. Used rounding operations (10^-5)
+     to guaranty similar values.  
+(2)  Corrected error in CSF/BG estimation in "vbm_pre_LAS2" in "cg_vbm_write"
+     that emphasize background noise.
+     Added code to improve the cortical GM segmentation, especially after the 
+     bias correction (LAS-WM threshold).
+(3)  Changed handling of the MRF filter after spm-preprocessing2 in 
+     "cg_vbm_write". 
+(4)  Large update for "vbm_vol_correct_slice_scaling". 
+     Added automatic detection of slice and iteration criteria and validate the 
+     function for simulated artifacts in the brain web phantom. Added the private 
+     script "vbm_tst_BWPsliceartifact" that modifies and test images.
+     
+     
+Minor changes:
+(1)  Added help and small corrections in "cg_io_cgw2seg" and "vbm_io_img2nii.
+(2)  Updated "vbm_io_remat" and added help.
+(3)  Updated species specific processing in "vbm_tst_qa".
+(4)  Added new "cg_vbm_defaults" for primates brain volume based primate 
+     templates and html-help file.
+(5)  Added code to compare the preprocessing steps on different operating 
+     systems in "cg_vbm_run_job" and "cg_vbm_run_job".  
+(*)  Further small corrections. 
+
+------------------------------------------------------------------------
+r674 | dahnke | 2015-02-24 15:59:35

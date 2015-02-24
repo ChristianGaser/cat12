@@ -1,4 +1,15 @@
 function varargout=vbm_io_img2nii(img,c,verb)
+% ______________________________________________________________________
+% Convert img/hdr images to nii.
+%
+%  varargout=vbm_io_img2nii(img,c,verb)
+%
+%  img  .. list of *.img images 
+%  c    .. delete original data (default=1)
+%  verb .. display something (default=1)
+% 
+% ______________________________________________________________________
+% $Revision$  $Date$
   if ~exist('img','var') || isempty(img)
     img = spm_select(Inf  ,'img','Select img files'); 
   end

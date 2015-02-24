@@ -38,6 +38,12 @@ function CJV = vbm_tst_CJV(P,Pp0)
         Y = spm_read_vols(V(i));
         if numel(Vp0)>1
           Yp0 = spm_read_vols(Vp0(i));
+        else
+          Yp0 = spm_read_vols(Vp0);
+        end
+        ncls = max(round(Yp0(:))); 
+        if ncls==254
+          Yp0 = Yp0/ncls*3;
         end
 
         CJV(i) = ( vbm_stat_nanstd(Y(Yp0>2.5))/2 + ...

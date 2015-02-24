@@ -7,7 +7,7 @@ function cg_vbm_defaults_template_humanIXI555
 %
 % Care must be taken when modifying this file
 %_______________________________________________________________________
-% $Id$
+% $Id: cg_vbm_defaults.m 666 2014-12-11 14:53:38Z gaser $
 
 global vbm
 
@@ -32,9 +32,9 @@ vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
 vbm.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
-vbm.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
+vbm.opts.biasreg   = 0.0001;                  % Bias regularisation    - smaller values for stronger bias fields
 vbm.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
-vbm.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
+vbm.opts.samp      = 2;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
 
                                               
 % Writing options
@@ -54,18 +54,18 @@ vbm.output.surface     = 0;     % surface and thickness creation
 vbm.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
-vbm.output.bias.native = 1;
+vbm.output.bias.native = 0;
 vbm.output.bias.warped = 1;
 vbm.output.bias.affine = 0;
 
 % GM tissue maps
-vbm.output.GM.native  = 1;
+vbm.output.GM.native  = 0;
 vbm.output.GM.warped  = 0;
 vbm.output.GM.mod     = 2;
 vbm.output.GM.dartel  = 0;
 
 % WM tissue maps
-vbm.output.WM.native  = 1;
+vbm.output.WM.native  = 0;
 vbm.output.WM.warped  = 0;
 vbm.output.WM.mod     = 2;
 vbm.output.WM.dartel  = 0;
@@ -84,7 +84,7 @@ vbm.output.WMH.dartel  = 0;
 
 % label 
 % background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extropts.WMHC==3)
-vbm.output.label.native = 1; 
+vbm.output.label.native = 0; 
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
@@ -127,7 +127,7 @@ vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 
 % segmentation options
 vbm.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 vbm.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
-vbm.extopts.WMHC         = 0;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
+vbm.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
                                   %                                           2 - also for segmentation (corred to WM like SPM); 3 - separate class
 vbm.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
 vbm.extopts.mrf          = 1;     % MRF weighting:                            0-1 - manuell setting; 1 - auto (default)
@@ -156,7 +156,7 @@ vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
-vbm.extopts.debug        = 2;     % debuging option: 0 - default; 1 - write debugging files 
+vbm.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debugging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 
 % QA options -  NOT IMPLEMENTED - just the idea
