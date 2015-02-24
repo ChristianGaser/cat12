@@ -31,7 +31,7 @@ function vbm_set_cg_vbm_defaults(Pdef)
   
     switch species 
       case 'human'
-        Pdef = fullfile(VBMdir,'human_IXI555_cg_vbm_defaults.m');
+        Pdef = fullfile(VBMdir,'cg_vbm_defaults_template_humanIXI555.m');
       case {'ape_greater','ape_lesser','monkey_oldworld','monkey_newwold'}
         Pdef = fullfile(VBMdir,'templates_animals',[species '_cg_vbm_defaults.m']);
       otherwise
