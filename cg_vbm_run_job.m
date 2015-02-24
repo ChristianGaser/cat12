@@ -214,7 +214,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           catch
             spm_chi2_plot('Init','Coarse Affine Registration','Mean squared difference','Iteration');
           end
-          [Affine, scale]  = spm_affreg(VG, VF1, aflags, eye(4));
+          [Affine0, scale]  = spm_affreg(VG, VF1, aflags, eye(4)); Affine = Affine0; 
 
           % 4 mm
           try 
@@ -230,8 +230,8 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           catch
             spm_chi2_plot('Init','Fine Affine Registration','Mean squared difference','Iteration');
           end
-          Affine2 = spm_affreg(VG, VF1, aflags, Affine, scale);
-          if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
+          Affine1 = spm_affreg(VG, VF1, aflags, Affine, scale);   
+          if ~any(isnan(Affine1(1:3,:))), Affine = Affine1; end
 
             
           if 0 %~strcmp(job.vbm.species,'human')
@@ -244,7 +244,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
           end            
             
-          clear VG1 VF1 VF
+          clear VG1 VF1
 
           fprintf('%4.0fs\n',etime(clock,stime));
         end
@@ -255,10 +255,10 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         % to avoid 'SingularMatrix' errors!
         stime = vbm_io_cmd('Fine Affine Registration');
         spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
-        Affine2 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
+        Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
+        if ~any(isnan(Affine3(1:3,:))), Affine = Affine3; end
         fprintf('%4.0fs\n',etime(clock,stime));
-        if ~any(isnan(Affine2(1:3,:))), Affine = Affine2; end
-
+        
         warning on  %#ok<WNON>
         obj.Affine = Affine;
         
@@ -284,6 +284,13 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         warning off %#ok<WNOFF>
         res = spm_preproc8(obj);
         warning on  %#ok<WNON>
+
+        if cg_vbm_get_defaults('extopts.debug')==2
+          % save information for debuging and OS test
+          [pth,nam] = spm_fileparts(job.channel(1).vols0{subj}); 
+          tmpmat = fullfile(pth,sprintf('%s_%s_%s.mat',nam,'runjob','postpreproc8')); 
+          save(tmpmat,'obj','res','Affine','Affine0','Affine1','Affine3');      
+        end 
         
         if exist(Pbt,'file'), delete(Pbt); end
        

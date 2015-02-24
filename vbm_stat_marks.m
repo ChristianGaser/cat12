@@ -206,8 +206,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.QM.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.QM.res_RMS,0.50,3.00,6);    
       
-      QAM.QM.rms = rms([QAM.QM.NCR QAM.QM.res_RMS],2);
-      QAM.SM.rms = rms([QAM.SM.vol_rel_CGW],2);
+      QAM.QM.rms = rms([QAM.QM.NCR QAM.QM.res_RMS],8);
+      QAM.SM.rms = rms([QAM.SM.vol_rel_CGW],8);
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur

@@ -530,22 +530,26 @@ function varargout = vbm_tst_qa(action,varargin)
       QAS.QM.res_BB = sum(Yp0(:)>1.25 & M(:))*QAS.QM.res_vol; 
 
       % check segmentation
-      switch species
-        case 'human'
-          if ( sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000 < 100 ) || ...
-            ( sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000 < 100 ) || ... 
-            ( sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000 < 50 ) 
-           error('vbm_tst_qa:badSegmentation','Bad Segmentation.')
-          end
-        case {'ape_greater','ape_lesser','monkey_oldworld','monkey_newworld'}
-          if ( sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000 < 25 ) || ...
-            ( sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000 < 25 ) || ... 
-            ( sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000 < 12 ) 
-           error('vbm_tst_qa:badSegmentation','Bad Segmentation.')
-          end
+      spec = species; for ai=num2str(0:9); spec = strrep(spec,ai,''); end; 
+      bvol = species; for ai=char(65:122); bvol = strrep(bvol,ai,''); end; bvol = str2double(bvol);
+      
+      subvol = [sum(Yp0(:)>2.5 & Yp0(:)<3.1)*prod(vx_vol)/1000,... 
+                sum(Yp0(:)>1.5 & Yp0(:)<2.5)*prod(vx_vol)/1000,...
+                sum(Yp0(:)>0.5 & Yp0(:)<1.5)*prod(vx_vol)/1000]; 
+      
+      if isempty(bvol) 
+        switch spec
+          case 'human'
+            bvol = 1400; 
+          otherwise
+            warning('vbm_tst_qa:species',sprintf('Unknown species %s (C=%0.0f,G=%0.0f,W=%0.0f).',species,subvol)); %#ok<SPWRN>
+        end
+      end
+      if  sum(subvol)<bvol/3 || sum(subvol)>bvol*3
+        warning('vbm_tst_qa:badSegmentation',sprintf('Bad %s segmentation (C=%0.0f,G=%0.0f,W=%0.0f).',species,subvol)) %#ok<SPWRN>
       end
 
-  
+      
 % toc, tic      
       %  estimate QA
       %  ---------------------------------------------------------------

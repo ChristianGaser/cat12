@@ -46,10 +46,10 @@ function TA=vbm_vol_approx(T,method,vx_vol,res,opt)
   opt = checkinopt(opt,def);
   
   maxT = max(T(T(:)<inf & ~isnan(T(:))));
-  T = single(T/maxT);
+  T = single(T/max(eps,maxT));
   
   T(isnan(T))=0;
-  [Tr,resTr]    = vbm_vol_resize(T,'reduceV',vx_vol,res,16,'nearest');
+  [Tr,resTr]    = vbm_vol_resize(T,'reduceV',vx_vol,res,16,'meanm');
   %strcmp(method,'linear') || 0 %
   if (opt.hull || strcmp(method,'linear')) && ~strcmp(method,'spm')
     [Brr,resTrr] = vbm_vol_resize(Tr>0,'reduceV',resTr.vx_volr,16,16,'max');
@@ -84,7 +84,7 @@ function TA=vbm_vol_approx(T,method,vx_vol,res,opt)
       vx_voln = resTr.vx_vol./mean(resTr.vx_vol);  
       [MDFr,EIFr] = vbdist(single(vbm_vol_morph(BMr>0,'disterode',max(3,8/res))),true(size(Tr)),vx_voln);  
       [MDNr,EINr] = vbdist(single(vbm_vol_morph(BMr>0,'disterode',max(1,6/res))),true(size(Tr)),vx_voln); 
-      TAr = Tr; TAr(~Tr) = Tr(EINr(~Tr)) + ( (Tr(EINr(~Tr))-Tr(EIFr(~Tr))) ./ ( (MDFr(~Tr)-MDNr(~Tr))./MDFr(~Tr)) ); TAr(1)=TAr(2);
+      TAr = Tr; TAr(~Tr) = Tr(EINr(~Tr)) + ( (Tr(EINr(~Tr))-Tr(EIFr(~Tr))) ./ max(eps,( (MDFr(~Tr)-MDNr(~Tr))./MDFr(~Tr)) )); TAr(1)=TAr(2);
       % correction and smoothing
       TAr = min(max(TAr,TNr/2),TNr*2); % /2
       TAr = vbm_vol_median3(TAr,~BMr); TAr=TAr(MIr); TASr=vbm_vol_smooth3X(TAr,1); 
@@ -117,7 +117,7 @@ function TA=vbm_vol_approx(T,method,vx_vol,res,opt)
       % SPM bias correction
       bT  = spm_bias_estimate(V,struct('nbins',256,'reg',0.001,'cutoff',30));
       VA  = spm_bias_apply(V ,bT); TA = spm_read_vols(VA); 
-      VAr = spm_bias_apply(VB,bT); TAr = 1/single(spm_read_vols(VAr)) * mean(TA(Tr(:)>0));
+      VAr = spm_bias_apply(VB,bT); TAr = 1/max(eps,single(spm_read_vols(VAr)) * mean(TA(Tr(:)>0)));
 %      ds('d2','',[1 1 1],PT{1},PT{2}/max(PT{2}(:)),TA,TAr,20)
       
       delete(fname,fnameB);

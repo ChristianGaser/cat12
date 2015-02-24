@@ -1,6 +1,15 @@
 function varargout=vbm_io_cgw2seg(c,g,w,mode,d)
-% convert SPM or FSL posibility maps to label files
-  
+% ______________________________________________________________________
+% convert SPM or FSL posibility maps to PVE label files
+%
+%   varargout=vbm_io_cgw2seg(c,g,w,mode,d)
+%
+%   mode .. {'SPM','FLS'}
+%   d    .. delete old files [0|1], default = 0;
+%
+% ______________________________________________________________________
+% $Revision$  $Date$
+
   opt.verb = 0;
 
   % if there is no input, select files
@@ -26,7 +35,7 @@ function varargout=vbm_io_cgw2seg(c,g,w,mode,d)
           c = cellstr(spm_select(Inf  ,'image','Select CSF files',{},'','*seg_0.*')); 
           g=c; w=c; for i=1:numel(c), g{i}(end-6)='1'; w{i}(end-6)='2'; end
         case 'SPM', 
-          g = cellstr(spm_select(Inf  ,'image','Select GM files',{},'','c1*'));       
+          g = cellstr(spm_select(Inf  ,'image','Select GM files',{},'','^c1.*'));       
           c=g; w=g; 
           for i=1:numel(g), 
             [h,f,e,nn]=spm_fileparts(g{i}); e=e(1:4); 
@@ -41,7 +50,7 @@ function varargout=vbm_io_cgw2seg(c,g,w,mode,d)
       end
     end
   end
-  if ~exist('d','var'), d=1; end
+  if ~exist('d','var'), d=0; end
   
   % if the input is given by char, convert it to cellstr
   if isa(c,'char'), c=cellstr(c); g=cellstr(g); w=cellstr(w); end
