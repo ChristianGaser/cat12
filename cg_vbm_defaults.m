@@ -54,18 +54,18 @@ vbm.output.surface     = 0;     % surface and thickness creation
 vbm.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
-vbm.output.bias.native = 1;
+vbm.output.bias.native = 0;
 vbm.output.bias.warped = 1;
 vbm.output.bias.affine = 0;
 
 % GM tissue maps
-vbm.output.GM.native  = 1;
+vbm.output.GM.native  = 0;
 vbm.output.GM.warped  = 0;
 vbm.output.GM.mod     = 2;
 vbm.output.GM.dartel  = 0;
 
 % WM tissue maps
-vbm.output.WM.native  = 1;
+vbm.output.WM.native  = 0;
 vbm.output.WM.warped  = 0;
 vbm.output.WM.mod     = 2;
 vbm.output.WM.dartel  = 0;
@@ -84,7 +84,7 @@ vbm.output.WMH.dartel  = 0;
 
 % label 
 % background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extropts.WMHC==3)
-vbm.output.label.native = 1; 
+vbm.output.label.native = 0; 
 vbm.output.label.warped = 0;
 vbm.output.label.dartel = 0;
 
@@ -156,7 +156,7 @@ vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
 vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
-vbm.extopts.debug        = 2;     % debuging option: 0 - default; 1 - write debugging files 
+vbm.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debugging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 
 % QA options -  NOT IMPLEMENTED - just the idea
