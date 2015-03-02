@@ -254,6 +254,19 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
       end
     end
     
+    
+    % filtering of the jacobian determinant
+    wrs = wr + 0;
+    spm_smooth(wrs,wrs,1.5);
+    if 1 
+      wT = spm_field(wr,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]) .* wrs; 
+    else % simpler and faster with a similar but not identical result (spm_field is a function)
+      wT = wT./max(eps,wr) .* wrs;
+    end
+    clear wrs;
+  
+
+
     if write(3)==1
       N         = nifti;
       N.dat     = file_array(fname,transform.warped.odim,...

@@ -460,6 +460,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
   if debug, Ym2=Ym; end %#ok<NASGU>
   % update in inverse case
   if opt.inv_weighting
+    Ysrc = Ym; 
     T3th = 1/3:1/3:1;
   end
   fprintf('%4.0fs\n',etime(clock,stime));
@@ -471,7 +472,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
   end
   
   
-  % After the intensity scaling and with correct information about the
+  %% After the intensity scaling and with correct information about the
   % variance of the tissue, a further harder noise correction is meaningful.
   % Finally, a stronger NLM-filter is better than a strong MRF filter!
   if vbm.sanlm>0 && vbm.sanlm<3 && job.extopts.NCstr
@@ -487,7 +488,11 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
       elseif vbm.sanlm==2, sanlmMex(Ym,3,1,0);
       end
     end
-    Ysrc = vbm_pre_gintnormi(Ym,Tth);
+    if opt.inv_weighting
+      Ysrc = Ym;
+    else
+      Ysrc = vbm_pre_gintnormi(Ym,Tth);
+    end
     clear Yms BB;
     fprintf('%4.0fs\n',etime(clock,stime));  
   elseif vbm.sanlm>2 && vbm.sanlm<5 && job.extopts.NCstr
@@ -513,7 +518,11 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
         Ym(Ym<1.1) = Yms(Ym<1.1);   % avoid filtering of blood vessels; 
       end
     end
-    Ysrc = vbm_pre_gintnormi(Ym,Tth);
+    if opt.inv_weighting
+      Ysrc = Ym; 
+    else
+      Ysrc = vbm_pre_gintnormi(Ym,Tth);
+    end
     clear Yms BB;
     fprintf('%4.0fs\n',etime(clock,stime));
   else
@@ -1550,8 +1559,10 @@ vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),...
 QMC   = vbm_io_colormaps('marks+',17);
 color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 if vbm.print
+  
+  warning off; % there is a div by 0 warning in spm_orthviews in linux
+  
   %% create report text
-  oldcolormap = colormap; 
   Pm  = fullfile(pth,['m', nam, '.nii']); 
   Pp0 = fullfile(pth,['p0', nam, '.nii']); 
       
@@ -1671,29 +1682,39 @@ if vbm.print
     
     
     fg = spm_figure('FindWin','Graphics'); 
-    ofg = gcf; set(0,'CurrentFigure',fg)
+    set(0,'CurrentFigure',fg)
     if isempty(fg), fg = spm_figure('Create','Graphics'); end
     set(fg,'windowstyle','normal'); 
 	  spm_figure('Clear','Graphics'); fontsize = 9.5;
-	  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
+    ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
 	  
     text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k60d') '       '],...
       'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
     
     cm = cg_vbm_get_defaults('extopts.colormap'); 
     
+    % check colormap name
     switch lower(cm)
-      case {'bcgwhw','bcgwhn'}
-        colormap(vbm_io_colormaps(cm));
-        cmmax = 2;
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-        colormap(cm);
-        cmmax = 1.1;
+      case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
+          'gray','bone','copper','pink','bcgwhw','bcgwhn'}
       otherwise
         vbm_io_cprintf(opt.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
-        cm = 'BCGWHw';
-        colormap(vbm_io_colormaps(cm));
+        cm = 'gray';
+    end
+    
+    switch lower(cm)
+      case {'bcgwhw','bcgwhn'} % vbm colormaps with larger range
+        ytick       = [1,5:5:60];
+        yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
+        yticklabelo = {' BG',' ','    ','    ','   ','     ','  ',' ',' ',' ',' ',' ',' WM / BV / HD '};
+        colormap(vbm_io_colormaps(cm,60));
         cmmax = 2;
+      case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
+        ytick       = [1 20 40 60]; 
+        yticklabel  = {' BG',' CSF',' GM',' WM'};
+        yticklabelo = {' BG','    ','   ',' WM'};
+        colormap(cm);
+        cmmax = 1;
     end
     spm_orthviews('Redraw');
     
@@ -1719,23 +1740,9 @@ if vbm.print
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
 	  spm_orthviews('Reset');
 
-    if cmmax==2
-      ytick       = ([0.5,10,15.5,21,26.5,32,59]);
-      yticko      = ([0.5,32,59]);
-      yticklabel  = {' BG',' CSF',' CGM',' GM',' GWM',' WM',' BV/HD'};
-      yticklabelo = {' BG',' WM',' BV/HD'};
-    else
-      ytick       = min(60,max(0.5,round([0.5,22,42,59]/cmmax)));
-      yticko(2,3) = []; 
-      yticklabel  = {' BG',' CSF',' GM',' WM'};
-      yticklabelo = {' BG',' WM'};
-    end
     
   
-   
-
     
-    %%
 
     % BB box is not optimal for all images...
     % furthermore repositioning the cross to the BG is maybe usefull...
@@ -1744,32 +1751,28 @@ if vbm.print
     %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
     %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
     %st.vols = cell(24,1);
-
     bb = vbm.bb;
     spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
-
+    
     % Yo - original image in original space
     Yo     = single(spm_read_vols(VT0)); 
-    Yowmth = median(Yo(Yo(:)>median(Yo(:))))*1.2; clear Yo;
+    Yowmth = median(Yo(Ycls{2}(:)>128))*1.2; clear Yo;
     hho = spm_orthviews('Image',fname0,pos(1,:)); 
     spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
-
-    spm_orthviews('window',hho,[0 Yowmth*4]); caxis([0,2]);
+    spm_orthviews('window',hho,[0 Yowmth*cmmax]); caxis([0,2]);
     cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-      'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
-
+       'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+    
     % Ym - full corrected images in original space
     if ~exist(Pm,'file')
       vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,2],[1 0 0],trans);
     end
     hhm = spm_orthviews('Image',Pm,pos(2,:));
     spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
-
-    spm_orthviews('window',hhm,[0 cmmax]); 
+    spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
     cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-
-
+  
     % Yp0 - segment image in original space
     if ~exist(Pp0,'file')
       Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
@@ -1777,9 +1780,11 @@ if vbm.print
     end
     hhp0 = spm_orthviews('Image',Pp0,pos(3,:));
     spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hhp0,[0 3*cmmax]);
+    spm_orthviews('window',hhp0,[0 3*cmmax]); caxis([0,2]);
     cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+    
+    spm_orthviews('Reposition',[0 0 5]);     % default view with basal structures
 
     % surface
     if exist('S','var')
@@ -1794,69 +1799,62 @@ if vbm.print
 
   end
 
-  % set to old colormap and correct scaling
-  colormap(vbm_io_colormaps(cm));
-  set(0,'CurrentFigure',ofg)
-
-
   
   %% print group report file 
   fprintf(1,'\n'); spm_print;
-  
+
   % print subject report file
   psf=fullfile(pth,['vbmreport_' nam '.ps']);
   if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
-   
-  if vbm.print
-    % reset colormap
-    colormap(oldcolormap)
-    
-    ytick       = min(59,max(0.5,round([0.5,22,42,59])));
-    yticko      = ytick(1:3:end); 
-    yticklabel  = {' BG',' CSF',' GM',' WM'};
-    yticklabelo = {' BG',' WM'};
 
-    
-    % remove m image, if it was only written for printing
-    try set(cc{2},'visible','off'); end %#ok<TRYNC>
-    if job.output.bias.native==0 && exist(Pm,'file')
-      delete(fullfile(pth,['m', nam, '.nii']));
-      if exist('hhm','var')
-        spm_orthviews('Delete',hhm); % we have to remove the figure, otherwise the gui user may get an error
-      end
-    else
-      try %#ok<TRYNC>
-        spm_orthviews('window',hhm ,[0 1]); 
-        colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-          'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-      end
-    end
+  %% reset colormap
+  fg = spm_figure('FindWin','Graphics');
+  set(0,'CurrentFigure',fg)
+  colormap('gray'); 
+ 
+  % remove old legends
+  for ci=1:3, try set(cc{ci},'visible','off'); end; end %#ok<TRYNC>
+  % setup new legend 
+  ytick       = [1 20 40 60];
+  yticklabel  = {' BG',' CSF',' GM',' WM'};
+  yticklabelo = {' BG','    ','   ',' WM'};
 
-
-    % remove p0 image, if it was only written for printing
-    try set(cc{3},'visible','off'); end %#ok<TRYNC>  
-    if job.output.label.native==0 && exist(Pp0,'file')
-      delete(fullfile(pth,['p0', nam, '.nii']));
-      if exist('hhp0','var')
-        spm_orthviews('Delete',hhp0); % we have to remove the figure, otherwise the gui user may get an error
-      end
-    else
-      try %#ok<TRYNC>
-        spm_orthviews('window',hhp0,[0 1]); 
-        colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
-          'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-      end
-    end
-    
-    try spm_orthviews('window',hho,[0 Yowmth*2]); end %#ok<TRYNC>
-    try set(cc{1},'visible','off'); end %#ok<TRYNC>
+  % remove m image, if it was only written for printing
+  % we have to remove the figure, otherwise the gui user may get an error
+  if job.output.bias.native==0 && exist(Pm,'file')
+    delete(fullfile(pth,['m', nam, '.nii']));
+    if exist('hhm','var'), spm_orthviews('Delete',hhm); end
+  else
     try %#ok<TRYNC>
-      colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-          'YTick',yticko,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+      spm_orthviews('window',hhm ,[0 1]); 
+      colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
     end
   end
+
+  % remove p0 image, if it was only written for printing
+  if job.output.label.native==0 && exist(Pp0,'file')
+    delete(fullfile(pth,['p0', nam, '.nii']));
+    if exist('hhp0','var'), spm_orthviews('Delete',hhp0); end
+  else
+    try %#ok<TRYNC>
+      spm_orthviews('window',hhp0,[0 3]);
+      colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+    end
+  end
+
+  % original image
+  try %#ok<TRYNC>
+    spm_orthviews('window',hho,[0 Yowmth]); 
+    colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
+        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+  end
   
-  colormap(oldcolormap)
+  
+  warning on;
+  
+  
 end
   
 % command window output
@@ -1905,6 +1903,9 @@ function Ym = vbm_pre_gintnormi(Ysrc,Tth)
   T3th  = Tth.T3thx; 
   T3thx = Tth.T3th; 
 
+  [T3th,si] = sort(T3th);
+  T3thx = T3thx(si);
+  
   isc=1;
   Ysrc = Ysrc*3;
   Ym = Ysrc; % warum nochmal mal 3??? 
@@ -1942,35 +1943,107 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Yc
 % intensity. 
 % ----------------------------------------------------------------------
 
-  INV   = cg_vbm_get_defaults('extopts.INV');
   debug = cg_vbm_get_defaults('extopts.debug');
   inv_weighting = 0;
   if nargout==6
     vbm_warnings = struct('identifier',{},'message',{});
   end
-  vxv = 1/mean(vx_vol);
+  vxv    = 1/mean(vx_vol);
+  res.mn = round(res.mn*10^5)/10^5; 
+  
   
   %% initial thresholds and intensity scaling
-  T3th3 = [max(max(res.mn(res.lkp==2))*0.05,min(res.mn(res.lkp==3))) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
+  T3th3 = [mean(res.mn(res.lkp==3)) mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))];
   T3th3 = round(T3th3*10^5)/10^5; 
-  T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) T3th3 ...
-              T3th3(end) + diff(T3th3([1,numel(T3th3)])/2) ...
-              max(T3th3(end)+diff(T3th3([1,numel(T3th3)])/2) , ...
-              max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:))))) ];
-  T3thx = 0:5;
-
-  % intensity scalling for gradient estimation
-  Ym = Ysrc+0; 
-  for i=2:numel(T3th)
-    M = Ysrc>T3th(i-1) & Ysrc<=T3th(i);
-    Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));
-  end
-  M  = Ysrc>=T3th(end); 
-  Ym(M(:)) = numel(T3th)/6 + (Ysrc(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
-  Ym = Ym / 3; 
-  clear T3thx;
   
-  % new initial segment threshold
+  if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) % invers (T2 / PD)
+    T3th3 = [max(res.mn(res.lkp==3)) mean(res.mn(res.lkp==1)) min(res.mn(res.lkp==2))];
+    
+    Yn    = vbm_vol_localstat(Ysrc,Ycls{1}>240,2,4) + vbm_vol_localstat(Ysrc,Ycls{2}>240,2,4); 
+    noise = round(vbm_stat_nanmean(Yn(Ycls{2}>192)) / min(abs(diff(T3th3))) * 10^6)/10^6; 
+  
+    Yg    = vbm_vol_grad(Ysrc,vx_vol)/T3th3(3);
+    Ydiv  = vbm_vol_div(Ysrc,vx_vol)/T3th3(3);
+    gth   = max(0.06,min(0.5,noise*3));
+    
+    %% bias correction
+    Ywmx  = (single(Ycls{2})/255 - Yg + Ydiv)>0.8   | ...
+      (Ysrc/T3th3(3) + Yg - Ydiv)<1+gth & Ysrc>T3th3(3)*0.5-gth & Ysrc<(T3th3(2)*0.2+0.8*T3th3(3)) & Yb;
+    Ywmx(smooth3(Ywmx)<0.5)=0;
+    [Yi,resT2] = vbm_vol_resize(Ysrc.*Ywmx,'reduceV',vx_vol,1,16,'min');
+    for xi=1:1, Yi = vbm_vol_localstat(Yi,Yi>0,2,1); end
+    Yi = vbm_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = vbm_vol_smooth3X(Yi,4); 
+    Yi = vbm_vol_resize(Yi,'dereduceV',resT2)./median(Yi(Ycls{2}>192));  
+    Ysrcr = round(Ysrc ./ Yi * 10^5)/10^5; % * T3th3(3) * 1.05
+    if debug==0, clear Yg Ydiv Yn Ywmx Yi; end
+    
+    %% thresholds
+    T3th3 = [max(res.mn(res.lkp==3)) mean(res.mn(res.lkp==1)) min(res.mn(res.lkp==2))];
+    T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) ...
+             max(res.mn(res.lkp==6)) T3th3 ...
+             min(res.mn(res.lkp==2))*0.8 ...
+             max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ...
+             max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
+             max(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:))))) ];
+    T3thx = [0,0.05,1.4,2,3,2.9,1.0,0.7];
+    
+    [T3th,si] = sort(T3th);
+    T3thx     = T3thx(si);
+    
+    Tth.T3th  = T3th;
+    Tth.T3thx = T3thx;
+    
+    inv_weighting = 1;
+    
+  elseif T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3) % T1
+    T3th3 = [max(max(res.mn(res.lkp==2))*0.05,min(res.mn(res.lkp==3))) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
+    T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... minimum
+             mean(res.mn(res.lkp==6)) ... mean background
+             T3th3 ... csf gm wm 
+             max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
+             max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ... maximum
+              max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:))))) ];
+    T3thx = [0,0.05,1:5];
+    Ysrcr = round(Ysrc*10^5)/10^5; 
+  else    
+    %%
+%     T3th3 = [mean(res.mn(res.lkp==3)) mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))];
+%     T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... minimum
+%              mean(res.mn(res.lkp==6)) ... backgound
+%              T3th3 ... csf gm wm
+%               max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
+%              max(max(T3th3)*1.4,max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:))))) ]; % maximum
+%     T3thx = [0,0.05,1:5];
+%            
+%     [T3th,si] = sort(T3th);
+%     T3thx     = T3thx(si);
+   
+    Tth.T3th  = 0:5;
+    Tth.T3thx = 0:5;
+    
+    inv_weighting = 1;
+ 
+    Ym = single(Ycls{1})/255*2/3 + single(Ycls{2})/255*3/3 + single(Ycls{3})/255*1/3 + ...
+         Ysrc./mean(res.mn(res.lkp==5)) .* single(Ycls{5})/255;
+       return
+ %   Ysrcr = round(Ysrc*10^5)/10^5; 
+    
+  end
+
+  %% intensity scalling for gradient estimation
+  Ym = Ysrcr+0; 
+  for i=2:numel(T3th)
+    M = Ysrcr>T3th(i-1) & Ysrcr<=T3th(i);
+    Ym(M(:)) = T3thx(i-1) + (Ysrcr(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));
+  end
+  M  = Ysrcr>=T3th(end); 
+  Ym(M(:)) = numel(T3th)/6 + (Ysrcr(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
+  Ym = Ym / 3; 
+ 
+  
+ 
+  %% new initial segment threshold
+
   Yg    = vbm_vol_grad(Ym,vx_vol)./max(eps,Ym);
   Ysrcr = round(Ysrc*10^5)/10^5; 
   T3th  = [median(Ysrcr(Ycls{3}(:)>192 & Yg(:)<0.20 & Ym(:)<0.45)) ...
@@ -1978,12 +2051,12 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Yc
            median(Ysrcr(Ycls{2}(:)>192 & Yg(:)<0.10))];
   T3thn = T3th/T3th(3);
   Yn    = vbm_vol_localstat(Ysrc,Ycls{1}>192,2,4) + vbm_vol_localstat(Ysrc,Ycls{2}>192,2,4); 
-  noise = round(vbm_stat_nanmean(Yn(Yn(:)>0)) / min(diff(T3th(1:3))) * 10^6)/10^6; 
+  noise = round(vbm_stat_nanmean(Yn(Yn(:)>0)) / min(abs(diff(T3th(1:3)))) * 10^6)/10^6; 
   
   if debug==2
     [pth,nam] = spm_fileparts(res.image0(1).fname);
     tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm00'));
-    save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','Yg','Yn','Ym','noise');
+    save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','T3thx','Yg','Ym','noise');
   end
   
   
@@ -2182,177 +2255,198 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Yc
     
     Tth.T3th  = T3th;
     Tth.T3thx = T3thx;
-    
-    
-  elseif INV>0
-  %  -------------------------------------------------------------------
-  %  The preprocessing of inverse contrast in VBM is provided by an 
-  %  intensity inverations for images with clearly completelly inverse 
-  %  contrast. For other images a artificial images based on SPM 
-  %  segmentation can be created. 
-  %  Anyway a waringing will be displayed.
-  %  -------------------------------------------------------------------
-    Tth.T3th  = [0 1 2 3 4];
-    Tth.T3thx = [0 1 2 3 4];
-    inv_weighting = 1;
-    if INV==1 
-      if T3thn(1)>T3thn(2) && T3thn(2)>T3thn(3) 
-        vbm_warnings = vbm_io_addwarning(vbm_warnings,...
-          'VBM:inverse_weighting1',...
-          ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
-          'Invert T1 image (INV==1). Check your results!'],numel(vbm_warnings)==0);
-        inv_weighting = 1;
+  elseif T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3)
+    %% reestimation of brain mask
+    Yb  = Ym>0.8 & Ym<1.2 & (Ycls{5}<64); Yb  = single(vbm_vol_morph(Yb,'lo',1));
+    [Ybr,Ymr,Ycls5,resT2] = vbm_vol_resize({single(Yb),Ym,single(Ycls{5})/255},'reduceV',vx_vol,2,32); 
+    Ybr(~Ybr & (Ymr<2.5/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
+    [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,0.03); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
+    Ybr(~Ybr & (Ymr<1.9/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
+    [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
+    Ybr(~Ybr & (Ymr<1/3 | Ymr>2.5/3 | Ycls5>0.5))=nan; 
+    [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,-0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
+    Ybr = Ybr>0 | (Ymr<0.8 & vbm_vol_morph(Ybr,'lc',6) & Ycls5<0.02); % large ventricle closing
+    Ybr = vbm_vol_morph(Ybr,'lc',2);                 % standard closing
+    Yb  = vbm_vol_resize(vbm_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.4; 
+    clear Ybr Ymr;
 
-        % For most normal cases SPM works very well, but if SPM failed
-        % (BWP_3_40A) we inherit the problems in the SPM peak values, but
-        % also the segments. 
-        % I.e. if large WM regions were part of the GM segment then 
-        % GM peak is to high (often peak of subcortical GM) and most GM
-        % areas will fade to CSF! 
-        if 1  
-          %T3th_spm = [min(res.mn(res.lkp==3)) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
-          
-          %Ym    = Ysrc ./ median(Ysrc(Ycls{2}(:)>128)); 
-          %Yg    = vbm_vol_grad(Ym,vx_vol);
-          %noise = estimateNoiseLevel(Ysrc/median(Ysrc(Ycls{2}(:)>192 & Yg(:)<0.3)),Ycls{2});
-          Ysrcr  = round( Ysrc.*10^5 ) / 10^5;
-          
-          Ym    = double(Ysrcr+0); spm_smooth(Ym,Ym,double(100/3*noise./vx_vol));
-          Ym    = single(Ym) ./ median(Ysrcr(Ycls{2}(:)>128));
-          Ym    = round(Ym*10^5)/10^5; 
-          Yg    = vbm_vol_grad(Ym,vx_vol);
-          Ydiv  = vbm_vol_div(Ym,vx_vol);
-          
-          gth   = max(0.06,min(0.3,noise*6));
-          Ywm   = smooth3((Ycls{2}>128 & Yg<gth) | (Ym-Ydiv)<1.05 & (Ym-Ydiv)>0.95 & Yb)>0.6; % intensity | structure
-          Ycm   = smooth3(Ycls{3}>128 & Yg<gth*2 & Ysrc>median(Ysrcr(Ycls{3}(:)>192)))>0.7; % & Yg<gth & vbm_vol_morph(Yb,'e',8))>0.7;
-          if isempty(Ywm) || isempty(Ycm) 
-            Ycm   = smooth3((Ycls{3}>240) & vbm_vol_morph(Yb,'e',8))>0.5;
-            if isempty(Ywm) || isempty(Ycm) 
-              error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
-            end
-          end
-          
-          % bias correction
-          Ywmx  = smooth3((Ycls{2}>128 & Yg<gth*2) | (Ym-Ydiv)<1.1 & (Ym-Ydiv)>0.90 & Yb)>0.5;
-          [Yi,resT2] = vbm_vol_resize(Ysrcr.*Ywmx,'reduceV',vx_vol,1,16,'min');
-          for xi=1:1, Yi = vbm_vol_localstat(Yi,Yi>0,2,1); end
-          Yi = vbm_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = vbm_vol_smooth3X(Yi,4); 
-          Yi = vbm_vol_resize(Yi,'dereduceV',resT2);  
-          
-          %%
-          WMth  = median(Ysrcr(Ywm(:))); % kmeans3D(Ysrc(Ycls{2}(:)>192 & Yg(:)<gth),1); % GM/WM WM
-          CSFth = median(Ysrcr(Ycm(:))); % kmeans3D(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
-          CWcon = CSFth - WMth;
-          if WMth==0|| CSFth==0
-            error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
-          end
-          Ybg   = vbm_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*mean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
-          Ygm   = smooth3(Yg<gth*CSFth/WMth & ~Ywm & ~Ycm & Yb & abs(Ydiv)<gth/2*CSFth/WMth & ~Ybg & ...
-                    Ym<(CSFth-CWcon*0.1)/WMth & Ym>(WMth+CWcon*0.1)/WMth)>0.6;
-          GMth  = vbm_stat_nanmedian(Ysrcr(Ygm(:)));
-          Ygm   = smooth3(Yg<gth*CSFth/WMth & ~Ywm & ~Ycm & Yb & abs(Ydiv)<gth/2*CSFth/WMth & ~Ybg & ...
-                    Ym<mean([CSFth,GMth])/WMth & Ym>mean([WMth,GMth])/WMth)>0.6;
-          GMth  = vbm_stat_nanmedian(Ysrcr(Ygm(:)));
-          if isempty(Ygm) 
-            error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
-          end
-          T3th = round([CSFth(1) GMth(1) WMth(1)]*10^4)/10^4;
-
-        else  
-          %T3th = [median(Ysrc(Ycls{3}(:)>192)) median(Ysrc(Ycls{1}(:)>192)) median(Ysrc(Ycls{2}(:)>192))];
-          T3th = [min(res.mn(res.lkp==3)) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
-        end
-
-        %% peaks and inveration
-        T3th  = [round(max(Ysrcr(:))) T3th T3th(3)+diff(T3th(1:3))];
-        T3thx = [0:1/3:4/3];
-
-        Ym = Ysrc./Yi; 
-        isc = 1;
-        T3th  = interp1(T3th,1:1/isc:numel(T3th)*isc,'spline');  %pchip');
-        T3thx = interp1(T3thx,1:1/isc:numel(T3th)*isc,'spline'); %pchip');
-
-        for i=2:numel(T3th)
-          YM = Ysrc>min(T3th(i-1:i)) & Ysrc<=max(T3th(i-1:i));
-          Ym(YM(:)) = T3thx(i) - (min(T3th(i-1:i))-Ysrc(YM(:))) / diff(T3th(i-1:i))*diff(T3thx(i-1:i));
-        end
-        YM  = Ysrc<T3th(4)/1.2; 
-        Ym(YM(:)) = Ysrc(YM(:)) / (T3th(4)/1.2);    
-        YM  = (smooth3(Ysrc<T3th(4)/1.2) & smooth3(Ysrc>T3th(3))) | Ym>2; 
-        Ym = vbm_vol_median3(Ym,YM,Ym<1.5,0.1);
-        Yms = smooth3(Ym); Ym(YM & Ym>0.5)=Yms(YM & Ym>0.5);
-        clear YM; 
-       
-        
-        %% reestimation of brain mask
-        Yb  = Ym>0.8 & Ym<1.2 & (Ycls{5}<64); Yb  = single(vbm_vol_morph(Yb,'lo',1));
-        [Ybr,Ymr,Ycls5,resT2] = vbm_vol_resize({single(Yb),Ym,single(Ycls{5})/255},'reduceV',vx_vol,2,32); 
-        Ybr(~Ybr & (Ymr<2.5/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
-        [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,0.03); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
-        Ybr(~Ybr & (Ymr<1.9/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
-        [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
-        Ybr(~Ybr & (Ymr<1/3 | Ymr>2.5/3 | Ycls5>0.5))=nan; 
-        [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,-0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
-        Ybr = Ybr>0 | (Ymr<0.8 & vbm_vol_morph(Ybr,'lc',6) & Ycls5<0.02); % large ventricle closing
-        Ybr = vbm_vol_morph(Ybr,'lc',2);                 % standard closing
-        Yb  = vbm_vol_resize(vbm_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.4; 
-        clear Ybr Ymr;
-
-        %% WM cleanup 
-
-
-        %% reset of Ycls
-        if 0  
-          Ydiv = vbm_vol_div(max(0.33,Ym),vx_vol);
-          Ywm  = (Ym>0.95 & Ym<1.05 & Yb) | (Ym-Ydiv>0.98 & Ym-Ydiv<1.1 & Yb); 
-          Ywm(smooth3(Ywm)<0.5)=0;
-          Ywm  = vbm_vol_morph(Ywm,'lc'); 
-          clear Ydiv;
-
-          Yp0  = Ym .* Yb;
-          Yp0(Ywm)=1;
-          Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
-          Ycls{1} = uint8(Yp0toC(Yp0*3,2)*255);
-          Ycls{2} = uint8(Yp0toC(Yp0*3,3)*255);
-          Ycls{3} = uint8(Yp0toC(Yp0*3,1)*255); 
-          clear Ywm Yp0;
-        end
-      else 
-        
-        if exist('vbm_warnings','var')
-          vbm_warnings = vbm_io_addwarning(vbm_warnings,...
-            'VBM:inverse_weighting2',...
-            ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
-             'Synthesize T1 image from SPM segmentation, ' ...
-             'due to low tissue contrast (INV==2). Check your results!'],numel(vbm_warnings)==0);
-        end
-        
-        Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
-        T3th3 = 1/3:1/3:3;
-      end
-    else
-      if exist('vbm_warnings','var')
-        vbm_warnings = vbm_io_addwarning(vbm_warnings,...
-          'VBM:inverse_weighting_LQ',...
-          ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
-           'Synthesize T1 image from SPM segmentation (INV==2). Check your results!'],numel(vbm_warnings)==0);
-      end
-      
-      Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
-      T3th3 = 1/3:1/3:3;
-
-    end
-  else
-    fprintf('\n');
-    error('VBM:cg_vbm_write:BadImageProperties', ...
-        ['VBM12 is designed to work only on highres T1 images.\n' ...
-         'T2/PD preprocessing can be forced on your own risk by setting \n' ...
-         '''vbm.extopts.INV=1'' in the vbm default file. If this was a highres \n' ...
-         'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
-         'by alignment problems (check image orientation).'],numel(vbm_warnings)==0);   
+    %% filtering
+    %YM  = Ysrc<Tth.T3th(5)/1.2; 
+    %Ym(YM(:)) = Ysrc(YM(:)) / (Tth.T3th(5)/1.2);    
+    YM  = (smooth3(Ysrc<Tth.T3th(5)/1.2) & smooth3(Ysrc>Tth.T3th(4))) | Ym>2; 
+    Ym = vbm_vol_median3(Ym,YM,Ym<1.5,0.1);
   end
-  
+    
+%   elseif 0 %INV>0
+%   %  -------------------------------------------------------------------
+%   %  The preprocessing of inverse contrast in VBM is provided by an 
+%   %  intensity inverations for images with clearly completelly inverse 
+%   %  contrast. For other images a artificial images based on SPM 
+%   %  segmentation can be created. 
+%   %  Anyway a waringing will be displayed.
+%   %  -------------------------------------------------------------------
+%     Tth.T3th  = [0 1 2 3 4];
+%     Tth.T3thx = [0 1 2 3 4];
+%     inv_weighting = 1;
+%     if INV==1 
+%       if T3thn(1)>T3thn(2) && T3thn(2)>T3thn(3) 
+%         vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+%           'VBM:inverse_weighting1',...
+%           ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
+%           'Invert T1 image (INV==1). Check your results!'],numel(vbm_warnings)==0);
+%         inv_weighting = 1;
+% 
+%         % For most normal cases SPM works very well, but if SPM failed
+%         % (BWP_3_40A) we inherit the problems in the SPM peak values, but
+%         % also the segments. 
+%         % I.e. if large WM regions were part of the GM segment then 
+%         % GM peak is to high (often peak of subcortical GM) and most GM
+%         % areas will fade to CSF! 
+%         if 1  
+%           %T3th_spm = [min(res.mn(res.lkp==3)) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
+%           
+%           %Ym    = Ysrc ./ median(Ysrc(Ycls{2}(:)>128)); 
+%           %Yg    = vbm_vol_grad(Ym,vx_vol);
+%           %noise = estimateNoiseLevel(Ysrc/median(Ysrc(Ycls{2}(:)>192 & Yg(:)<0.3)),Ycls{2});
+%           Ysrcr  = round( Ysrc.*10^5 ) / 10^5;
+%           
+%           Ym    = double(Ysrcr+0); spm_smooth(Ym,Ym,double(100/3*noise./vx_vol));
+%           Ym    = single(Ym) ./ median(Ysrcr(Ycls{2}(:)>128));
+%           Ym    = round(Ym*10^5)/10^5; 
+%           %%
+%           Yg    = vbm_vol_grad(Ym,vx_vol);
+%           Ydiv  = vbm_vol_div(Ym,vx_vol);
+%           
+%           gth   = max(0.06,min(0.3,noise*6));
+%           Ywm   = smooth3((Ycls{2}>128 & Yg<gth) | (Ym-Ydiv)<1.05 & (Ym-Ydiv)>0.95 & Yb)>0.6; % intensity | structure
+%           Ycm   = smooth3(Ycls{3}>128 & Yg<gth*2 & Ysrc>median(Ysrcr(Ycls{3}(:)>192)))>0.7; % & Yg<gth & vbm_vol_morph(Yb,'e',8))>0.7;
+%           if isempty(Ywm) || isempty(Ycm) 
+%             Ycm   = smooth3((Ycls{3}>240) & vbm_vol_morph(Yb,'e',8))>0.5;
+%             if isempty(Ywm) || isempty(Ycm) 
+%               error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
+%             end
+%           end
+%           
+%           %% bias correction
+%           Ywmx  = smooth3((Ycls{2}>192 & Yg<gth*2) | (Ym-Ydiv)<1.1 & (Ym-Ydiv)>0.90 & Yb & Yg<gth*2 & Ycls{3}<0)>0.5;
+%           [Yi,resT2] = vbm_vol_resize(Ysrcr.*Ywmx,'reduceV',vx_vol,1,16,'min');
+%           for xi=1:1, Yi = vbm_vol_localstat(Yi,Yi>0,2,1); end
+%           Yi = vbm_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = vbm_vol_smooth3X(Yi,4); 
+%           Yi = vbm_vol_resize(Yi,'dereduceV',resT2);  
+%           
+%           %%
+%           WMth  = median(Ysrcr(Ywm(:))); % kmeans3D(Ysrc(Ycls{2}(:)>192 & Yg(:)<gth),1); % GM/WM WM
+%           CSFth = median(Ysrcr(Ycm(:))); % kmeans3D(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
+%           CWcon = CSFth - WMth;
+%           if WMth==0|| CSFth==0
+%             error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
+%           end
+%           Ybg   = vbm_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*mean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
+%           Ygm   = smooth3(Yg<gth*CSFth/WMth & ~Ywm & ~Ycm & Yb & abs(Ydiv)<gth/2*CSFth/WMth & ~Ybg & ...
+%                     Ym<(CSFth-CWcon*0.1)/WMth & Ym>(WMth+CWcon*0.1)/WMth)>0.6;
+%           GMth  = vbm_stat_nanmedian(Ysrcr(Ygm(:)));
+%           Ygm   = smooth3(Yg<gth*CSFth/WMth & ~Ywm & ~Ycm & Yb & abs(Ydiv)<gth/2*CSFth/WMth & ~Ybg & ...
+%                     Ym<mean([CSFth,GMth])/WMth & Ym>mean([WMth,GMth])/WMth)>0.6;
+%           GMth  = vbm_stat_nanmedian(Ysrcr(Ygm(:)));
+%           if isempty(Ygm) 
+%             error('VBM:cg_vbm_write:vbm_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
+%           end
+%           T3th = round([CSFth(1) GMth(1) WMth(1)]*10^4)/10^4;
+% 
+%         else  
+%           %T3th = [median(Ysrc(Ycls{3}(:)>192)) median(Ysrc(Ycls{1}(:)>192)) median(Ysrc(Ycls{2}(:)>192))];
+%           T3th = [min(res.mn(res.lkp==3)) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
+%         end
+% 
+%         %% peaks and inveration
+%         T3th  = [round(max(Ysrcr(:))) T3th T3th(3)+diff(T3th(1:3))];
+%         T3thx = [0:1/3:4/3];
+% 
+%         Ym = Ysrc./Yi; 
+%         isc = 1;
+%         T3th  = interp1(T3th,1:1/isc:numel(T3th)*isc,'spline');  %pchip');
+%         T3thx = interp1(T3thx,1:1/isc:numel(T3th)*isc,'spline'); %pchip');
+% 
+%         for i=2:numel(T3th)
+%           YM = Ysrc>min(T3th(i-1:i)) & Ysrc<=max(T3th(i-1:i));
+%           Ym(YM(:)) = T3thx(i) - (min(T3th(i-1:i))-Ysrc(YM(:))) / diff(T3th(i-1:i))*diff(T3thx(i-1:i));
+%         end
+%         YM  = Ysrc<T3th(4)/1.2; 
+%         Ym(YM(:)) = Ysrc(YM(:)) / (T3th(4)/1.2);    
+%         YM  = (smooth3(Ysrc<T3th(4)/1.2) & smooth3(Ysrc>T3th(3))) | Ym>2; 
+%         Ym = vbm_vol_median3(Ym,YM,Ym<1.5,0.1);
+%         Yms = smooth3(Ym); Ym(YM & Ym>0.5)=Yms(YM & Ym>0.5);
+%         clear YM; 
+%        
+%         
+%         %% reestimation of brain mask
+%         Yb  = Ym>0.8 & Ym<1.2 & (Ycls{5}<64); Yb  = single(vbm_vol_morph(Yb,'lo',1));
+%         [Ybr,Ymr,Ycls5,resT2] = vbm_vol_resize({single(Yb),Ym,single(Ycls{5})/255},'reduceV',vx_vol,2,32); 
+%         Ybr(~Ybr & (Ymr<2.5/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
+%         [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,0.03); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
+%         Ybr(~Ybr & (Ymr<1.9/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
+%         [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
+%         Ybr(~Ybr & (Ymr<1/3 | Ymr>2.5/3 | Ycls5>0.5))=nan; 
+%         [Ybr1,Ydr] = vbm_vol_downcut(Ybr,Ymr,-0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
+%         Ybr = Ybr>0 | (Ymr<0.8 & vbm_vol_morph(Ybr,'lc',6) & Ycls5<0.02); % large ventricle closing
+%         Ybr = vbm_vol_morph(Ybr,'lc',2);                 % standard closing
+%         Yb  = vbm_vol_resize(vbm_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.4; 
+%         clear Ybr Ymr;
+% 
+%         %% WM cleanup 
+% 
+% 
+%         %% reset of Ycls
+%         if 0  
+%           Ydiv = vbm_vol_div(max(0.33,Ym),vx_vol);
+%           Ywm  = (Ym>0.95 & Ym<1.05 & Yb) | (Ym-Ydiv>0.98 & Ym-Ydiv<1.1 & Yb); 
+%           Ywm(smooth3(Ywm)<0.5)=0;
+%           Ywm  = vbm_vol_morph(Ywm,'lc'); 
+%           clear Ydiv;
+% 
+%           Yp0  = Ym .* Yb;
+%           Yp0(Ywm)=1;
+%           Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
+%           Ycls{1} = uint8(Yp0toC(Yp0*3,2)*255);
+%           Ycls{2} = uint8(Yp0toC(Yp0*3,3)*255);
+%           Ycls{3} = uint8(Yp0toC(Yp0*3,1)*255); 
+%           clear Ywm Yp0;
+%         end
+%       else 
+%         
+%         if exist('vbm_warnings','var')
+%           vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+%             'VBM:inverse_weighting2',...
+%             ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
+%              'Synthesize T1 image from SPM segmentation, ' ...
+%              'due to low tissue contrast (INV==2). Check your results!'],numel(vbm_warnings)==0);
+%         end
+%         
+%         Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
+%         T3th3 = 1/3:1/3:3;
+%       end
+%     else
+%       if exist('vbm_warnings','var')
+%         vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+%           'VBM:inverse_weighting_LQ',...
+%           ['Segmentation of PD/T2 weighted images is no standard VBM preprocessing.\n'...
+%            'Synthesize T1 image from SPM segmentation (INV==2). Check your results!'],numel(vbm_warnings)==0);
+%       end
+%       
+%       Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
+%       T3th3 = 1/3:1/3:3;
+%
+%    end
+%   else
+%     fprintf('\n');
+%     error('VBM:cg_vbm_write:BadImageProperties', ...
+%         ['VBM12 is designed to work only on highres T1 images.\n' ...
+%          'T2/PD preprocessing can be forced on your own risk by setting \n' ...
+%          '''vbm.extopts.INV=1'' in the vbm default file. If this was a highres \n' ...
+%          'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
+%          'by alignment problems (check image orientation).'],numel(vbm_warnings)==0);   
+%   end
+%   
 
   
   %% if there was a warning we need a new line 

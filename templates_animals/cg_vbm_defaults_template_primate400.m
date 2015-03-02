@@ -7,7 +7,7 @@ function ape_greater_cg_vbm_defaults
 %
 % Care must be taken when modifying this file
 %_______________________________________________________________________
-% $Id: ape_greater_cg_vbm_defaults.m 649 2014-11-14 11:53:44Z dahnke $
+% $Id$
 
 global vbm
 
