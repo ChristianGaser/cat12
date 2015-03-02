@@ -159,35 +159,6 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   
-  %% Blood vessels
-  % For this we may require the best resolution!
-  % first a hard regions growing have to find the real WM-WM/GM region
-  if BVCstr
-    stime = vbm_io_cmd('  Blood vessel detection','g5','',verb,stime);
-    Ywm = Yp0>2.5 & Ym>2.5 & Yp0<3.1 & Ym<4;                              % init WM 
-    Ywm = single(vbm_vol_morph(Ywm,'lc',2));                              % closing WM               
-    Ywm(smooth3(single(Ywm))<0.5)=0;                                      % remove small dots
-    Ywm(~Ywm & (Yp0<0.5 | Ym<1.2 | Ym>4))=nan;                            % set regions growing are
-    [Ywm1,YDr] = vbm_vol_downcut(Ywm,Ym,2*noise*(1-BVCstr/2));            % region growing
-    Ywm(Ywm==-inf | YDr>20)=0; Ywm(Ywm1>0)=1; clear Ywm1                  % set regions growing
-    % smoothing
-    Ywms = smooth3(single(Ywm)); Yms=smooth3(Ym);                         
-    Ywm(Ywms<0.5)=0; Ywm(Ywms>0.5 & Yb & (Ym-Yms)<0.5)=1;                 
-    Ywm(Ywms<0.5 & Yb & (Ym-Yms)>0.5)=0; clear Ywms                       
-    %% set blood vessels
-    Ybv=vbm_vol_morph( (Ym>3.75-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr)) | ... % high intensity, but not classified as WM (SPM)
-      (Yms>2.5 & (Ym-Yms)>0.6) | ...                                     % regions that strongly change by smoothing
-      (Ym>2.5-(0.5*BVCstr) & Ywm==0) | ...                               % high intensity, but not classified as WM (SPM)
-      (Ym>2.5-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr) & Ya1==0 & YA==LAB.CT),'c',1) & ...
-      vbm_vol_morph(Ya1==LAB.CT,'d',2) & ~Ywm;  clear Ywm 
-    %% smoothing
-    Ybvs = smooth3(Ybv);
-    Ybv(Ybvs>0.3 & Ym>2.5 & Yp0<2.5)=1; Ybv(Ybvs>0.3 & Ym>3.5 & Yp0<2.9)=1;
-    Ybv(Ybvs<0.2 & Ym<4-2*BVCstr)=0; clear Yvbs;
-    Ya1(Ybv)=LAB.BV; clear Ybv 
-  end
-  
-  
   %% Ventricle:
   % Ventricle estimation with a previous definition of non ventricle CSF
   % to have a second ROI in the region-growin. Using only the ventricle
@@ -218,7 +189,40 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   Ya1(Yvt)=LAB.VT; 
   clear Yvts1 Yvts2;
 
- 
+  
+  
+  %% Blood vessels
+  % For this we may require the best resolution!
+  % first a hard regions growing have to find the real WM-WM/GM region
+  if BVCstr
+    stime = vbm_io_cmd('  Blood vessel detection','g5','',verb,stime);
+    Ywm = Yp0>2.5 & Ym>2.5 & Yp0<3.1 & Ym<4;                              % init WM 
+    Ywm = single(vbm_vol_morph(Ywm,'lc',2));                              % closing WM               
+    Ywm(smooth3(single(Ywm))<0.5)=0;                                      % remove small dots
+    Ywm(~Ywm & (Yp0<0.5 | Ym<1.2 | Ym>4))=nan;                            % set regions growing are
+    [Ywm1,YDr] = vbm_vol_downcut(Ywm,Ym,2*noise*(1-BVCstr/2));            % region growing
+    Ywm(Ywm==-inf | YDr>20)=0; Ywm(Ywm1>0)=1; clear Ywm1                  % set regions growing
+    % smoothing
+    Ywms = smooth3(single(Ywm)); Yms=smooth3(Ym);                         
+    Ywm(Ywms<0.5)=0; Ywm(Ywms>0.5 & Yb & (Ym-Yms)<0.5)=1;                 
+    Ywm(Ywms<0.5 & Yb & (Ym-Yms)>0.5)=0; clear Ywms                       
+    %% set blood vessels
+    Ybv=vbm_vol_morph( (Ym>3.75-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr)) | ... % high intensity, but not classified as WM (SPM)
+      (Yms>2.5 & (Ym-Yms)>0.6) | ...                                     % regions that strongly change by smoothing
+      (Ym>2.5-(0.5*BVCstr) & Ywm==0) | ...                               % high intensity, but not classified as WM (SPM)
+      (Ym>2.5-(0.5*BVCstr) & Yp0<2+(0.5*BVCstr) & Ya1==0 & YA==LAB.CT),'c',1) & ...
+      vbm_vol_morph(Ya1==LAB.CT,'d',2) & ~vbm_vol_morph(Ya1==LAB.HC,'d',2) & ...
+      vbm_vol_morph((Ya1==0 | Ya1==LAB.CT | Ya1==LAB.BV | Ym>1.5) & Ya1~=LAB.VT & Yp0<2.5,'e',1) & ... avoid subcortical regions
+      ~Ywm;  clear Ywm 
+    %% smoothing
+    Ybvs = smooth3(Ybv);
+    Ybv(Ybvs>0.3 & Ym>2.5 & Yp0<2.5)=1; Ybv(Ybvs>0.3 & Ym>3.5 & Yp0<2.9)=1;
+    Ybv(Ybvs<0.2 & Ym<4-2*BVCstr)=0; clear Yvbs;
+    Ya1(Ybv)=LAB.BV; clear Ybv 
+  end
+
+  
+
   %% WMH (White Matter Hyperintensities):
   % WMHs can be found as GM next to the ventricle (A) that do not belong 
   % to a subcortical structure (A) or there must be a big difference 

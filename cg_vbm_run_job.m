@@ -343,6 +343,40 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         end
     end
 
+    %% check contrast
+    Tgw = [mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))]; 
+    Tth = [
+      ... mean(res.mn(res.lkp==6)) ... background
+      max( min(mean(res.mn(res.lkp==3)) , max(Tgw)+abs(diff(Tgw))),min(Tgw)-abs(diff(Tgw)) ) ... % csf with limit for T2!
+      mean(res.mn(res.lkp==1)) ... gm
+      mean(res.mn(res.lkp==2)) ... wm 
+    ];
+    
+    % inactive preprocessing of inverse images (PD/T2) 
+    if cg_vbm_get_defaults('extopts.INV')==0 && any(diff(Tth)<=0)
+      error('VBM:cg_vbm_write:BadImageProperties', ...
+      ['VBM12 is designed to work only on highres T1 images.\n' ...
+       'T2/PD preprocessing can be forced on your own risk by setting \n' ...
+       '''vbm.extopts.INV=1'' in the vbm default file. If this was a highres \n' ...
+       'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
+       'by alignment problems (check image orientation).']);    
+    end
+    
+%     % check contrast difference between tissues 
+%     % this is no variance / noise check! on
+%     Td = abs(diff(sort(Tth)));
+%     if (max(Td)/min(Td))>16
+%      error('VBM:cg_vbm_write:BadImageProperties', ...
+%       ['Low contrast (%0.2f>16):\n' ...
+%        '  BG:   %8.2f\n' ...
+%        '  CSF:  %8.2f\n' ...
+%        '  GM:   %8.2f\n' ...
+%        '  WM:   %8.2f\n'],(max(Td)/min(Td)),mean(res.mn(res.lkp==6)),...
+%       mean(res.mn(res.lkp==3)),mean(res.mn(res.lkp==1)),mean(res.mn(res.lkp==2)));
+%     end
+    
+    %clear Tgw Tth Td;
+    
     %% Final iteration, so write out the required data.
     tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
     bf = job.bias;
