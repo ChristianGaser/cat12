@@ -6465,3 +6465,25 @@ Set cg_vbm_defaults.m to standard values without debugging.
 
 ------------------------------------------------------------------------
 r676 | gaser | 2015-02-26 16:14:16
+
+M       CHANGES.txt
+MM      cg_vbm_defaults_template_humanIXI555.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+MM      templates_animals/cg_vbm_defaults_template_primate130.m
+MM      templates_animals/cg_vbm_defaults_template_primate15.m
+MM      templates_animals/cg_vbm_defaults_template_primate400.m
+MM      templates_animals/cg_vbm_defaults_template_primate45.m
+M       vbm_io_writenii.m
+A       vbm_tst_BWPsliceartifact.m
+M       vbm_vol_partvol.m
+
+(1)  Updated blood vessel detection in "vbm_vol_partvol". Use now a smaller
+     region for blood vessel detection to avoid defects in the hippocampus.
+(2)  Added contrast check in "cg_vbm_run_job" to avoid preprocessing of inverse
+     images (T2/PD weighted) if "extopts.INV=0". 
+(3)  Updated inverse intensity processing in "vbm_pre_intnorm" in "cg_vbm_write".  
+(4)  Updated modulated output in "vbm_io_write" to reduce artifacts.
+(5)  Corrected output behavior in vbm-report.
+------------------------------------------------------------------------
+r677 | dahnke | 2015-03-02 14:59:39

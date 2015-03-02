@@ -7,7 +7,7 @@ function cg_vbm_defaults_template_humanIXI555
 %
 % Care must be taken when modifying this file
 %_______________________________________________________________________
-% $Id: cg_vbm_defaults.m 666 2014-12-11 14:53:38Z gaser $
+% $Id$
 
 global vbm
 
