@@ -105,7 +105,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
 
   %% map atlas to RAW space
   if verb, fprintf('\n'); end
-  stime = vbm_io_cmd('  Atlas -> subject space','g5','',verb);
+  stime = vbm_io_cmd('  Atlas -> subject space','g5','',verb); dispc=1;
   VA = spm_vol(PA);
   YA = vbm_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   YA = reshape(YA,size(Ym));
@@ -135,7 +135,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% Create individual mapping:
-  stime = vbm_io_cmd('  Major structures','g5','',verb,stime);
+  stime = vbm_io_cmd('  Major structures','g5','',verb,stime); dispc=dispc+1;
   noise = double(max(0.02,min(0.1,mean(Yg(Yp0>2.9))/3)));
   
   % Major structure mapping:
@@ -165,7 +165,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   % ROI can lead to overgrowing. Using of non ventrilce ROI doesn't work
   % because dartle failed for large ventricle. 
   % It is important to use labopen for each side!
-  stime = vbm_io_cmd('  Ventricle detection','g5','',verb,stime);
+  stime = vbm_io_cmd('  Ventricle detection','g5','',verb,stime); dispc=dispc+1;
   Ynv = vbm_vol_morph(vbm_vol_morph(~Yb,'d',4*vxd) | (YA==LAB.CB | YA==LAB.BS),'d',2) | vbm_vol_morph(YA==LAB.NV,'e',1);
   Ynv = single(Ynv & Ym<2 & ~vbm_vol_morph(Yp0<2 & (YA==LAB.VT) & Yg<0.2,'d',4*vxd));
   Ynv = smooth3(round(Ynv))>0.5; 
@@ -195,7 +195,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   % For this we may require the best resolution!
   % first a hard regions growing have to find the real WM-WM/GM region
   if BVCstr
-    stime = vbm_io_cmd('  Blood vessel detection','g5','',verb,stime);
+    stime = vbm_io_cmd('  Blood vessel detection','g5','',verb,stime); dispc=dispc+1;
     Ywm = Yp0>2.5 & Ym>2.5 & Yp0<3.1 & Ym<4;                              % init WM 
     Ywm = single(vbm_vol_morph(Ywm,'lc',2));                              % closing WM               
     Ywm(smooth3(single(Ywm))<0.5)=0;                                      % remove small dots
@@ -232,7 +232,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   % There can also be deep GM Hyperintensities! 
   % ####################################################################
   % ds('l2','',vx_vol,Ym,Ywmh,Ym/3,Ym/3,90)
-  stime = vbm_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime);
+  stime = vbm_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
   Ywmh = single(smooth3(vbm_vol_morph(Yvt,'d',1) & Ym<2.25 &...
     ~(vbm_vol_morph(YA==LAB.HC & Ym>1.5,'d',4*vxd) & Ym>1.5))>0.5); % ventricle
   Ywmh(smooth3((Yp0 - Ym)>0.75-WMHCstr/2 & Ym<2.75 & Ym>1.5)>0.8)=1; % WMH
@@ -264,7 +264,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% Closing of gaps between diffent structures:
-  stime = vbm_io_cmd('  Closing for deep structures','g5','',verb,stime);
+  stime = vbm_io_cmd('  Closing for deep structures','g5','',verb,stime); dispc=dispc+1;
   Yvtd2 = vbm_vol_morph(Ya1==LAB.VT,'d',2*vxd) & Ya1~=LAB.VT;
   % CT and VT
   Yt = vbm_vol_morph(Ya1==LAB.VT,'d',2*vxd) & ...
@@ -293,7 +293,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% side aligment using laplace to correct for missalignments due to the normalization
-  stime = vbm_io_cmd('  Side alignment','g5','',verb,stime);
+  stime = vbm_io_cmd('  Side alignment','g5','',verb,stime); dispc=dispc+1;
   YBG  = Ya1==LAB.BG | Ya1==LAB.TH;
   YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI; 
   YMF2 = vbm_vol_morph(YMF,'d',2*vxd) | Ya1==LAB.CB | Ya1==LAB.BS | Ya1==LAB.MB;
@@ -312,7 +312,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% back to original size
-  stime = vbm_io_cmd('  Final corrections','g5','',verb,stime);
+  stime = vbm_io_cmd('  Final corrections','g5','',verb,stime); dispc=dispc+1;
   Ya1 = vbm_vol_resize(Ya1,'dereduceV',resTr,'nearest'); Ya1 = vbm_vol_median3c(Ya1,Ya1>1 & Ya1~=LAB.BV);
   Ys  = vbm_vol_resize(Ys ,'dereduceV',resTr,'nearest'); Ys  = 1 + single(smooth3(Ys)>1.5);
   YMF = vbm_vol_resize(YMF,'dereduceV',resTr);
@@ -338,8 +338,12 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   Ycls{2} = vbm_vol_ctype(single(Ycls{2}) - YBGs .* (single(Ycls{2})./max(eps,Yclssum)));
   clear YBGs Yclssum; 
  
-  if verb, vbm_io_cmd(' ','','',verb,stime); end
-
+  if debug
+    vbm_io_cmd(' ','','',verb,stime); 
+  else
+    vbm_io_cmd('cleanup',dispc,'',verb); 
+  end
+  
 end
 %=======================================================================
 function Yg = vbm_vol_grad(Ym,vx_vol)
