@@ -34,16 +34,24 @@ function stime = vbm_io_cmd(str,style,strlength,verb,stime)
   if ~exist('verb','var') || isempty(verb), verb=1; end
   if ~exist('strlength','var') || isempty(strlength), strlength=66; end
   if verb
-    if exist('stime','var') && ~isempty(stime)
-      fprintf('% 4.0fs\n',etime(clock,stime));
-    end
-      
-    if ~isempty(str) 
-      if exist('style','var')
-        vbm_io_cprintf(style,'%s%s',str,repmat(' ',1,1+strlength-length(str))); 
-      else
-        fprintf('%s:%s',str,repmat(' ',1,strlength-length(str))); 
-      end
+    switch str
+      case 'cleanup'
+        fprintf(sprintf('%s',repmat('\b',1,style * (strlength+7) - 5)));
+        if exist('stime','var') && ~isempty(stime)
+          vbm_io_cmd('','','',verb,stime);
+        end
+      otherwise
+        if exist('stime','var') && ~isempty(stime)
+          fprintf('% 4.0fs\n',etime(clock,stime));
+        end
+
+        if ~isempty(str) 
+          if exist('style','var')
+            vbm_io_cprintf(style,'%s%s',str,repmat(' ',1,1+strlength-length(str))); 
+          else
+            fprintf('%s:%s',str,repmat(' ',1,strlength-length(str))); 
+          end
+        end
     end
   end
   stime = clock;  

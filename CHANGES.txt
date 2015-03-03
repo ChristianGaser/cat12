@@ -6487,3 +6487,17 @@ M       vbm_vol_partvol.m
 (5)  Corrected output behavior in vbm-report.
 ------------------------------------------------------------------------
 r677 | dahnke | 2015-03-02 14:59:39
+
+M       CHANGES.txt
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       vbm_io_cmd.m
+M       vbm_vol_partvol.m
+
+(1)  Added final affine registration in "cg_vbm_write" after segmentation. 
+(2)  Prepared computer depending font size for vbm-report in "cg_vbm_write". 
+(3)  New shorter command window output if debug==0 with a final removing of the
+     gray output of the subroutines. 
+     (changes in "vbm_io_cmd","vbm_vol_partvol","cg_vbm_write"). 
+------------------------------------------------------------------------
+r678 | dahnke | 2015-03-03 11:28:57
