@@ -617,7 +617,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  Of course we only want to do this for highres T1 data!
 %  ---------------------------------------------------------------------
 if job.extopts.BVCstr && ~opt.inv_weighting && all(vx_vol<2); 
-  stime = vbm_io_cmd('Blood Vessel Correction (BVC)'); 
+  stime = vbm_io_cmd(sprintf('Blood Vessel Correction (BVCstr=%0.2f)',job.extopts.BVCstr));
   clear Ysrc;
   
   Ybv  = vbm_vol_smooth3X(vbm_vol_smooth3X( ...
@@ -683,7 +683,7 @@ if do_cls && do_defs
     Yb = Yb + single(Ycls{2});
 
     % keep largest connected component after at least 1 iteration of opening
-    n_initial_openings = max(1,round(scale_morph*vbm.cleanup));
+    n_initial_openings = max(1,round(scale_morph*2*min(1,max(0,job.extopts.cleanupstr))));
     Yb = vbm_vol_morph(Yb>vbm.open_th,'open',n_initial_openings);
     Yb = vbm_vol_morph(Yb,'lc');
 
@@ -828,7 +828,7 @@ if do_cls && do_defs
 
     
     fprintf('\n');
-    stime = vbm_io_cmd('  Level 1 cleanup (ROI estimation)','g5','',verb);
+    stime = vbm_io_cmd('  Level 1 cleanup (ROI estimation)','g5','',verb); dispc=1;
     
     Yl1b = Yl1(indx,indy,indz);
     Ymb  = Ym(indx,indy,indz);
@@ -857,7 +857,7 @@ if do_cls && do_defs
     if ~debug, clear Ycbp Ycbn Ylhp; end
     
     % roi to change GM or WM to CSF or background
-    stime = vbm_io_cmd('  Level 1 cleanup (brain masking)','g5','',verb,stime);
+    stime = vbm_io_cmd('  Level 1 cleanup (brain masking)','g5','',verb,stime); dispc=dispc+1;
     Yrw = Yp0>0 & Yroi & Ymb>0.9+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
     Yrw = Yrw | smooth3(Yrw)>0.3-0.3*cleanupstr;                        % dilate region
     Ygw = vbm_vol_morph(Yp0>=2 & ~Yrw,'lo',1); 
@@ -889,13 +889,13 @@ if do_cls && do_defs
     % came from low contrast, artefacts and strong uncorrected bias. 
     % Test a lot of things, but its time to give up ...
     if 0
-      stime = vbm_io_cmd('  Level 2 cleanup (ROI estimation)','g5','',verb,stime);
+      stime = vbm_io_cmd('  Level 2 cleanup (ROI estimation)','g5','',verb,stime); dispc=dispc+1;
       Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
       Ybd  = vbdist(single(~vbm_vol_morph(Yp0>0,'lc',vxv)),true(size(Yp0)),vx_vol);
       clear Ycbp Yrhp Ylhp; 
 
       % roi to change WM to CSF or background
-      stime = vbm_io_cmd('  Level 2 cleanup (GM correction)','g5','',verb,stime);
+      stime = vbm_io_cmd('  Level 2 cleanup (GM correction)','g5','',verb,stime); dispc=dispc+1;
       Yd  = vbdist(single(Yp0<1.5));
       Ynwm = smooth3(vbm_vol_morph(Yp0>2.75 - cleanupstr/2,'lo',vxv))<0.2; % WM with PVE 
       Yrg = Ybd<2 & Ybb & Yl1b<2 & Yd<2 & Yp0>2 & Ymb<1 & Ynwm & ~Yrw & ~NS(Yl1b,LAB.CB); % roi to change to GM
@@ -910,7 +910,7 @@ if do_cls && do_defs
     % ------------------------------------------------------------------
     % This removes meninges next to the brain... works quite well.
     clear Yrg Yrw Yroi
-    stime = vbm_io_cmd('  Level 2 cleanup (CSF correction)','g5','',verb,stime);
+    stime = vbm_io_cmd('  Level 2 cleanup (CSF correction)','g5','',verb,stime); dispc=dispc+1;
     Yp0 = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
     YM  = single(vbm_vol_morph((prob(:,:,:,1) + prob(:,:,:,2))>(160 + 32*cleanupstr) & ...
            ~vbm_vol_morph(Yp0>1 & Yp0<1.5+cleanupstr/2,'o',vxv)  ,'l')); 
@@ -942,7 +942,7 @@ if do_cls && do_defs
     % ------------------------------------------------------------------
     % cleanup in regions with PVE between WM and CSF without GM
     % ------------------------------------------------------------------
-    stime = vbm_io_cmd('  Level 3 cleanup (CSF/WM PVE)','g5','',verb,stime);
+    stime = vbm_io_cmd('  Level 3 cleanup (CSF/WM PVE)','g5','',verb,stime); dispc=dispc+1;
     Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
     Ybs  = NS(Yl1b,LAB.BS) & Ymb>2/3;
     YpveVB = vbm_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
@@ -964,6 +964,7 @@ if do_cls && do_defs
     Yp0b = vbm_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
     Yp0b = Yp0b(indx,indy,indz); 
 
+    if ~job.extopts.debug, vbm_io_cmd('cleanup',dispc,'',verb); end
     fprintf('%4.0fs\n',etime(clock,stimec));
     
     %% 
@@ -1104,7 +1105,69 @@ end
 % and class 1-3 from VBM12 and these are completely different segmentation approaches
 for i=4:6, Ycls{i}=[]; end   
 
+
+
+
+
 %% ---------------------------------------------------------------------
+%  Affine registration:
+%  Use the segmentation result (p0 label image) for the final affine 
+%  registration to a t1 map of the TPM map. There are two registration 
+%  approaches - affreg (faster and similar good?) and maff8.
+%  As far as the farst registration takes only 3 seconds, it is part of 
+%  the Dartel normalization process.
+%  ---------------------------------------------------------------------
+stime = vbm_io_cmd('Dartel normalization'); 
+%stime = vbm_io_cmd('Final Affine Registration'); 
+
+ameth = 1;
+if ameth
+  % parameter
+  aflags = struct('sep',job.vbm.samp,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
+
+  % template
+  VG = tpm.V(1); VG.fname = [tempname '.nii']; cid = [2 3 1]; 
+  VG.dat = zeros(VG.dim,'uint8'); VG.dt = [2 0]; VG.pinfo(3) = 0;
+  for ci=1:3
+    Yt = spm_read_vols(tpm.V(ci)); 
+    VG.dat = VG.dat + vbm_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt
+  end
+
+  % VF1
+  VF = VT0; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
+  VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b; 
+
+  % smooth source with 4 mm
+  VF = spm_smoothto8bit(VF,4);
+
+  % affreg registration for one tissue segment
+  Affine = spm_affreg(VG, VF, aflags, res.Affine); 
+else
+  % VF1 (p0)
+  VF = VT0; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
+  VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b; 
+  
+  % smooth source with 4 mm
+  VF = spm_smoothto8bit(VF,4);
+  
+  Affine = spm_maff8(VF,job.vbm.samp,5,tpm,res.Affine,job.vbm.affreg);
+end
+rf=10^6; Affine = fix(Affine * rf)/rf;
+res.image(1).mat = Affine * res.image(1).mat;
+res.Affine       = Affine;
+clear VG VF Affine
+
+%fprintf('%4.0fs\n',etime(clock,stime));
+% write test image
+if 0
+  VTx = VT0; VTx.mat = Affine * res.image(1).mat;
+  vbm_io_writenii(VTx,Yp0,['px' num2str(ameth)],'Yp0b map',...
+    'uint8',[0,4/255],struct('native',1,'warped',0,'dartel',0));
+end
+
+
+
+%  ---------------------------------------------------------------------
 %  Deformation
 %  ---------------------------------------------------------------------
 trans = struct();;
@@ -1164,7 +1227,7 @@ trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
 
 % dartel spatial normalization to given template
 if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
-    stime = vbm_io_cmd('Dartel normalization'); 
+    %stime = vbm_io_cmd('Dartel normalization'); 
     
     % use GM/WM for dartel
     n1 = 2;
@@ -1685,7 +1748,13 @@ if vbm.print
     set(0,'CurrentFigure',fg)
     if isempty(fg), fg = spm_figure('Create','Graphics'); end
     set(fg,'windowstyle','normal'); 
-	  spm_figure('Clear','Graphics'); fontsize = 9.5;
+	  spm_figure('Clear','Graphics'); 
+    switch computer
+      case {'PCWIN','PCWIN64'}, fontsize = 8;
+      case {'GLNXA','GLNXA64'}, fontsize = 8;
+      case {'MACI','MACI64'},   fontsize = 9.5;
+      otherwise,                fontsize = 9.5;
+    end
     ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
 	  
     text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k60d') '       '],...
@@ -1827,6 +1896,8 @@ if vbm.print
   else
     try %#ok<TRYNC>
       spm_orthviews('window',hhm ,[0 1]); 
+    end
+    try
       colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
         'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
     end
@@ -2552,7 +2623,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
 %  maps (especially the divergence). 
 %  ---------------------------------------------------------------------
   fprintf('\n');
-  stime = vbm_io_cmd('  Prepare maps','g5','',verb);
+  stime = vbm_io_cmd('  Prepare maps','g5','',verb); dispc=1;
 
   
   % brain segmentation can be restricted to the brain to save time 
@@ -2574,7 +2645,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   
   
   %% helping segments
-  stime = vbm_io_cmd('  Prepare segments','g5','',verb,stime);
+  stime = vbm_io_cmd('  Prepare segments','g5','',verb,stime); dispc=dispc+1;
   % Ybb = don't trust SPM to much by using Yp0 because it may miss some areas! Shood be better now with MRF.
   Ybb = vbm_vol_morph((Yb & Ym>1.5/3 & Ydiv<0.05) | Yp0>1.5,'lo',vxv);
   % Ysw = save WM and blood vessels mpas
@@ -2630,7 +2701,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   %% adding of atlas information (for subcortical structures)
   %  -------------------------------------------------------------------
   if 1 
-    stime = vbm_io_cmd('  Prepare partitions','g5','',verb,stime);
+    stime = vbm_io_cmd('  Prepare partitions','g5','',verb,stime); dispc=dispc+1;
 
     % map atlas to RAW space
     for i=1:5
@@ -2736,7 +2807,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   % avoid overfitting. CSF is problematic in high contrast or skull-
   % stripped image should not be used here, or in GM peak estimation
   mres = 1.5; 
-  stime = vbm_io_cmd('  Estimate local tissue thresholds','g5','',verb,stime); 
+  stime = vbm_io_cmd('  Estimate local tissue thresholds','g5','',verb,stime); dispc=dispc+1;
   Ysrcm = vbm_vol_median3(Ysrc.*Ywm,Ywm,Ywm); 
   rf    = [10^5 10^4];
   T3th3 = max(1,min(10^6,rf(2) / (round(T3th(3)*rf(1))/rf(1))));
@@ -2857,10 +2928,13 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   
   %%
   Yml = Yml/3;
-  
-  if verb, vbm_io_cmd(' ','','',verb,stime); end
+  if debug
+    vbm_io_cmd(' ','','',verb,stime); 
+  else
+    vbm_io_cmd('cleanup',dispc,'',verb);
+  end
 
- %%
+%%
 return
 %=======================================================================
 
@@ -2891,6 +2965,7 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   LAB.VT = 15; % Ventricle
   LAB.HI = 23; % WM hyperintensities
   
+  debug   = cg_vbm_get_defaults('extopts.debug');
   gcutstr = cg_vbm_get_defaults('extopts.gcutstr');
   verb    = cg_vbm_get_defaults('extopts.verb')-1;
   gcutstr = max(0,min(1,gcutstr));
@@ -2909,7 +2984,7 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   gc.s = 0.4  + 0.20*min(0.55,gcutstr); % smoothing parameter                     - higher > less tissue
   
   if verb, fprintf('\n'); end
-  stime = vbm_io_cmd('  WM-initialisation','g5','',verb);
+  stime = vbm_io_cmd('  WM-initialisation','g5','',verb); dispc=1;
   %% init: go to reduces resolution 
   [Ym,Yl1,YMF,BB] = vbm_vol_resize({Ysrc,Yl1,YMF},'reduceBrain',vx_vol,4,Yb);
   [Ywm,Ygm,Ycsf,Ymg,Yb] = vbm_vol_resize({single(Ycls{2})/255,single(Ycls{1})/255,...
@@ -2928,7 +3003,7 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   
   
   %% region growing GM/WM (here we have to get all WM gyris!)
-  stime = vbm_io_cmd('  GM-region-growing','g5','',verb,stime);
+  stime = vbm_io_cmd('  GM-region-growing','g5','',verb,stime); dispc=dispc+1;
   Yb(~Yb & (YHDr | Ym<1.9/3 | Ym>gc.h/3 | (Ywm + Ygm)<0.5))=nan; %clear Ywm Ygm; 
   [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.06+gc.c*vxd); % this have to be not to small... 
   Yb(isnan(Yb) | YD>gc.d*vxd*2)=0; Yb(Yb1>0 & YD<gc.d*vxd*2)=1;
@@ -2937,7 +3012,7 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
 
   
   %% region growing CSF/GM 
-  stime = vbm_io_cmd('  GM-CSF-region-growing','g5','',verb,stime);
+  stime = vbm_io_cmd('  GM-CSF-region-growing','g5','',verb,stime); dispc=dispc+1;
   Yb(~Yb & (YHDr | Ym<gc.l/3 | Ym>gc.h/3) | Ymg)=nan;
   [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.01+gc.c*vxd);
   Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d)=1; 
@@ -2952,7 +3027,7 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   Yb  = single(Yb | (vbm_vol_morph(Yb ,'labclose',1) & Ym<1.1));
   
   %% region growing - add CSF regions   
-  stime = vbm_io_cmd('  CSF-region-growing','g5','',verb,stime);
+  stime = vbm_io_cmd('  CSF-region-growing','g5','',verb,stime); dispc=dispc+1;
   Ygr = vbm_vol_grad(Ym,vx_vol);
   Yb(~Yb & smooth3(vbm_vol_morph(smooth3(Ym<0.75/3 | (Ym>1.25/3 & ~Yb) | ...
     (Ygr>0.05 & ~Yb))>0.5,'lc',vxd*2) | Ymg )>0.5)=nan; 
@@ -2965,7 +3040,7 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   Ybs = single(Yb); spm_smooth(Ybs,Ybs,4*gc.s./vx_vol); Yb   = Yb | (Ybs>(gc.s-0.25) & Ym<1.25/3);
   
   %% filling of ventricles and smooth mask
-  stime = vbm_io_cmd('  Ventricle-closing','g5','',verb,stime);
+  stime = vbm_io_cmd('  Ventricle-closing','g5','',verb,stime); dispc=dispc+1;
   Yb  = Yb | (vbm_vol_morph(Yb ,'labclose',vxd*gc.f) & ...
     Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
   Yb  = Yb | (vbm_vol_morph(Yb ,'labclose',vxd) & Ym<1.1);
@@ -2979,7 +3054,12 @@ function [Yb,Yl1] = vbm_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
   Yl1(~Yb)  = 0;
   [tmp0,tmp1,Yl1] = vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
 
-  if verb, vbm_io_cmd(' ','','',verb,stime); end
+  if debug
+    vbm_io_cmd(' ','','',verb,stime); 
+  else
+    vbm_io_cmd('cleanup',dispc,'',verb);
+  end
+
 return
 %=======================================================================
 
