@@ -1120,6 +1120,13 @@ for i=4:6, Ycls{i}=[]; end
 stime = vbm_io_cmd('Dartel normalization'); 
 %stime = vbm_io_cmd('Final Affine Registration'); 
 
+% VF1
+VF = VT; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
+VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b; VF.dim = d;
+
+% smooth source with 4 mm
+VF = spm_smoothto8bit(VF,4);
+
 ameth = 1;
 if ameth
   % parameter
@@ -1133,23 +1140,9 @@ if ameth
     VG.dat = VG.dat + vbm_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt
   end
 
-  % VF1
-  VF = VT0; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
-  VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b; 
-
-  % smooth source with 4 mm
-  VF = spm_smoothto8bit(VF,4);
-
   % affreg registration for one tissue segment
   Affine = spm_affreg(VG, VF, aflags, res.Affine); 
 else
-  % VF1 (p0)
-  VF = VT0; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
-  VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b; 
-  
-  % smooth source with 4 mm
-  VF = spm_smoothto8bit(VF,4);
-  
   Affine = spm_maff8(VF,job.vbm.samp,5,tpm,res.Affine,job.vbm.affreg);
 end
 rf=10^6; Affine = fix(Affine * rf)/rf;
@@ -1424,16 +1417,21 @@ if df(1)
 end
 % deformation iy - subject > dartel
 if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
-  % update df(2) for interpolated images
+  %% update df(2) for interpolated images
   Vdef = res.image0(1);
   Vdef.dt(1) = spm_type('float32');
+  Vdef = rmfield(Vdef,'private');
+  Vdef.dat = zeros(size(Vdef.dim),'single');
+  Vdef.pinfo(3) = 0; 
+  Vdef.fname = fullfile(pth,['iy2_r', nam1, '.nii']);
   Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
+  Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
   for i=1:3
-    Vdef.fname = fullfile(pth,['iy2_r', nam1, '.nii']);
-    vbm_vol_imcalc(spm_vol(fullfile(pth,['iy_r', nam1, '.nii,1,' num2str(i)])),Vdef,'i1',struct('interp',6));
-    Yy2(:,:,:,:,i) = spm_read_vols(Vdef); % spm_sample_vol(
+    Vyy.dat=trans.atlas.Yy(:,:,:,i); 
+    [Vt,Yy2(:,:,:,:,i)] = vbm_vol_imcalc(Vyy,Vdef,'i1',struct('interp',6));
   end
-  % write new output
+  clear Vt Vdef Vyy
+  %% write new output
   Ndef      = nifti;
   Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...
               [spm_type('float32') spm_platform('bigend')],0,1,0);
