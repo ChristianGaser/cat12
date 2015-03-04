@@ -1087,17 +1087,13 @@ if do_cls && do_defs
     end
   end
   clear Yclsb;
-
-  
    
-if job.extopts.debug==2
-  Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255; %#ok<NASGU>
-  tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
-  save(tmpmat,'Yp0','Ycls','Ym','T3th','vx_vol','Yl1');
-  clear Yp0;
-end
-  
-  
+  if job.extopts.debug==2
+    Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255; %#ok<NASGU>
+    tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    save(tmpmat,'Yp0','Ycls','Ym','T3th','vx_vol','Yl1');
+    clear Yp0;
+  end
 
 end
 % clear last 3 tissue classes to save memory
@@ -1106,59 +1102,38 @@ end
 for i=4:6, Ycls{i}=[]; end   
 
 
-
-
-
 %% ---------------------------------------------------------------------
 %  Affine registration:
 %  Use the segmentation result (p0 label image) for the final affine 
-%  registration to a t1 map of the TPM map. There are two registration 
-%  approaches - affreg (faster and similar good?) and maff8.
-%  As far as the farst registration takes only 3 seconds, it is part of 
-%  the Dartel normalization process.
+%  registration to a pseudo T1 image of the TPM. 
 %  ---------------------------------------------------------------------
-stime = vbm_io_cmd('Dartel normalization'); 
-%stime = vbm_io_cmd('Final Affine Registration'); 
 
-% VF1
+% parameter
+aflags = struct('sep',job.vbm.samp,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
+
+% VG template
+VG = tpm.V(1); VG.fname = [tempname '.nii']; cid = [2 3 1]; 
+VG.dat = zeros(VG.dim,'uint8'); VG.dt = [2 0]; VG.pinfo(3) = 0;
+for ci=1:3
+  Yt = spm_read_vols(tpm.V(ci)); 
+  VG.dat = VG.dat + vbm_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt
+end
+
+% VF image
 VF = VT; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
-VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b; VF.dim = d;
+VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; VF.dat(indx,indy,indz) = Yp0b;
 
 % smooth source with 4 mm
 VF = spm_smoothto8bit(VF,4);
 
-ameth = 1;
-if ameth
-  % parameter
-  aflags = struct('sep',job.vbm.samp,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
+% affreg registration for one tissue segment
+Affine = spm_affreg(VG, VF, aflags, res.Affine); 
 
-  % template
-  VG = tpm.V(1); VG.fname = [tempname '.nii']; cid = [2 3 1]; 
-  VG.dat = zeros(VG.dim,'uint8'); VG.dt = [2 0]; VG.pinfo(3) = 0;
-  for ci=1:3
-    Yt = spm_read_vols(tpm.V(ci)); 
-    VG.dat = VG.dat + vbm_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt
-  end
-
-  % affreg registration for one tissue segment
-  Affine = spm_affreg(VG, VF, aflags, res.Affine); 
-else
-  Affine = spm_maff8(VF,job.vbm.samp,5,tpm,res.Affine,job.vbm.affreg);
-end
-rf=10^6; Affine = fix(Affine * rf)/rf;
-res.image(1).mat = Affine * res.image(1).mat;
-res.Affine       = Affine;
+rf=10^6; Affine   = fix(Affine * rf)/rf;
+res.image(1).mat  = Affine\res.Affine * res.image(1).mat;
+res.image(1).mat0 = res.image(1).mat;
+res.Affine        = Affine;
 clear VG VF Affine
-
-%fprintf('%4.0fs\n',etime(clock,stime));
-% write test image
-if 0
-  VTx = VT0; VTx.mat = Affine * res.image(1).mat;
-  vbm_io_writenii(VTx,Yp0,['px' num2str(ameth)],'Yp0b map',...
-    'uint8',[0,4/255],struct('native',1,'warped',0,'dartel',0));
-end
-
-
 
 %  ---------------------------------------------------------------------
 %  Deformation
@@ -1220,7 +1195,7 @@ trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
 
 % dartel spatial normalization to given template
 if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
-    %stime = vbm_io_cmd('Dartel normalization'); 
+    stime = vbm_io_cmd('Dartel normalization'); 
     
     % use GM/WM for dartel
     n1 = 2;
@@ -1590,8 +1565,10 @@ clear wYp0 wYcls wYv
 %  ---------------------------------------------------------------------
 stime = vbm_io_cmd('Quality Control');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
+warning off
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
           struct('write_csv',0,'write_xml',0,'method','vbm12'));
+warning on
 if job.output.surface
   qa.SM.dist_thickness{1} = dist_thickness{1};
 end  

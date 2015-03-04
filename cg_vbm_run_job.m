@@ -293,47 +293,9 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             if job.vbm.sanlm>0
               nam = nam(2:end);
             end
-            save(fullfile(pth,['vbm12_' nam '.mat']),'-struct','res', spm_get_defaults('mat.format'));
-        end
-
-    else % only write segmentations
-
-        [pth,nam] = spm_fileparts(job.channel(1).vols{subj});
-        if job.vbm.sanlm>0
-          nam = nam(2:end);
-        end
-        seg12_name = fullfile(pth,['vbm12_' nam '.mat']);
-
-        if exist(seg12_name,'file')
-            res = load(seg12_name);
-
-            % check for spm version
-            if ~isfield(res,'wp')
-                error([fullfile(pth,['vbm12_' nam '.mat']) ' was not processed using SPM12. Use Estimate&Write option.']);
-            end
-
-            % load original used tpm, which is save in seg12.mat file
-            try
-                tpm    = spm_load_priors8(res.tpm);
-            catch
-                % or use default TPM
-                fprintf('Original TPM image %s was not found. use default TPM image instead.\n',res.tpm(1).fname);
-                for i=1:6
-                    job.tissue(i).tpm = fullfile(spm('dir'),'tpm',['TPM.nii,' num2str(i)]);
-                end
-                tpm    = char(cat(1,job.tissue(:).tpm));
-                tpm    = spm_load_priors8(tpm);
-            end
-
-            % use path of mat-file in case that image was moved
-            [image_pth,image_nam,image_ext] = spm_fileparts(job.channel(1).vols{subj});
-            res.image(1).fname = fullfile(image_pth, [image_nam, image_ext]);
-            obj.tpm = tpm; clear tpm;
-        else
-            error(['Can''t load file ' seg12_name]);  
         end
     end
-
+    
     %% check contrast
     Tgw = [mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))]; 
     Tth = [
@@ -352,22 +314,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
        'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
        'by alignment problems (check image orientation).']);    
     end
-    
-%     % check contrast difference between tissues 
-%     % this is no variance / noise check! on
-%     Td = abs(diff(sort(Tth)));
-%     if (max(Td)/min(Td))>16
-%      error('VBM:cg_vbm_write:BadImageProperties', ...
-%       ['Low contrast (%0.2f>16):\n' ...
-%        '  BG:   %8.2f\n' ...
-%        '  CSF:  %8.2f\n' ...
-%        '  GM:   %8.2f\n' ...
-%        '  WM:   %8.2f\n'],(max(Td)/min(Td)),mean(res.mn(res.lkp==6)),...
-%       mean(res.mn(res.lkp==3)),mean(res.mn(res.lkp==1)),mean(res.mn(res.lkp==2)));
-%     end
-    
-    %clear Tgw Tth Td;
-    
+            
     %% Final iteration, so write out the required data.
     tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
     bf = job.bias;
