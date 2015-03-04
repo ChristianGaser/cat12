@@ -6510,3 +6510,18 @@ M       cg_vbm_write.m
 (2)  Corrected error in final Affine segmentation for low resolution images.
 ------------------------------------------------------------------------
 r679 | dahnke | 2015-03-04 09:05:15
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       html/vbm12.html
+
+(1) Changed default values back to r674 in cg_vbm_defaults.m.
+(2) Use correct estimate of mat file after final affine transformation.
+(3) Added check for field before isfield is called in vbm_tst_qa.m.
+(4) Removed saving of vbm12_*.mat file because it's not necessary
+    anymore.
+    
+------------------------------------------------------------------------
+r680 | gaser | 2015-03-04 16:37:48
