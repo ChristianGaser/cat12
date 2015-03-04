@@ -32,9 +32,9 @@ vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
 vbm.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
-vbm.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
+vbm.opts.biasreg   = 0.0001;                  % Bias regularisation    - smaller values for stronger bias fields
 vbm.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
-vbm.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
+vbm.opts.samp      = 2;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
 
                                               
 % Writing options
