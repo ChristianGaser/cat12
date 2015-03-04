@@ -6501,3 +6501,12 @@ M       vbm_vol_partvol.m
      (changes in "vbm_io_cmd","vbm_vol_partvol","cg_vbm_write"). 
 ------------------------------------------------------------------------
 r678 | dahnke | 2015-03-03 11:28:57
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+ M      vbm_tst_BWPsliceartifact.m
+
+(1)  Corrected Yy output error for low resolution images.
+(2)  Corrected error in final Affine segmentation for low resolution images.
+------------------------------------------------------------------------
+r679 | dahnke | 2015-03-04 09:05:15
