@@ -213,13 +213,20 @@ function varargout = vbm_tst_qa(action,varargin)
         % reduce to original native space if it was interpolated
         if any(size(Yp0)~=Vo.dim)
           [pp,ff,ee] = spm_fileparts(Vo.fname); 
-          Vp0t       = res.image;
-          Vp0t       = rmfield(Vp0t,'private');
-          Vp0t.fname = fullfile(pp,[ff 'tmp' ee]); 
-          Vp0t.dt(1) = 16;
+          if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
+          if isfield(Vo,'mat0'),    Vo = rmfield(Vo,'mat0');    end
+          Vo.dat = zeros(Vo.dim,spm_type(Vo.dt(1)));
           
+          Vp0t          = res.image;
+          if isfield(Vp0t,'private'), Vp0t = rmfield(Vp0t,'private'); end
+          if isfield(Vp0t,'mat0'),    Vp0t = rmfield(Vp0t,'mat0'); end
+          Vp0t.fname    = fullfile(pp,[ff 'tmp' ee]); 
+          Vp0t.dt(1)    = 16;
+          Vp0t.pinfo(3) = 0;
+          Vp0t.dat      = Yp0;
+
           % resampling and corrections of the Yp0
-          Vp0t       = spm_write_vol(Vp0t,double(Yp0));
+         % Vp0t       = spm_write_vol(Vp0t,double(Yp0));
           [Vtpm,Yp0] = vbm_vol_imcalc(Vp0t,Vo,'i1',struct('interp',6,'verb',0));
           rf         = 50;
           Yp0        = single(Yp0);
@@ -229,7 +236,7 @@ function varargout = vbm_tst_qa(action,varargin)
           Yp0(YMR)   = Yp0r(YMR); clear YMR Ynr;
           
           % resampling of the corrected image
-          Vp0t       = spm_write_vol(Vp0t,double(Ym)); 
+          Vp0t.dat   = Ym;
           [Vtpm,Ym]  = vbm_vol_imcalc(Vp0t,Vo,'i1',struct('interp',6,'verb',0)); 
           Ym         = single(Ym);
           delete(Vp0t.fname);
@@ -724,9 +731,14 @@ function varargout = vbm_tst_qa(action,varargin)
       end  
       Yosm = vbm_vol_resize(Yosm,'reduceV',vx_vol,4,32,'meanm');      % resolution and noise reduction
       for si=1:max(1,min(2,round(QAS.QM.NCR*2))), Yosm = vbm_vol_localstat(Yosm,Yosm>0,1,1); end 
+      %[gx,gy,gz]=vbm_vol_gradient3(Yosm,Yosm>0); Yg=(abs(gx)+abs(gy)+abs(gz))/(QAS.QM.contrast); clear gx gy gz;
+      %[h,v] = hist(Yg(Yg(:)>0),0:.01:2); %min(v((cumsum(h)/sum(h))>0.95))
       Yosm = vbm_vol_localstat(Yosm,Yosm>0,10,4); 
-      QAS.QM.ICR  = mean(Yosm(Yosm(:)>0)) / QAS.QM.contrast; 
+      [h,v] = hist(Yosm(Yosm(:)>0)/QAS.QM.contrast,0:.01:2);
+      QAS.QM.ICR  = min(v((cumsum(h)/sum(h))>0.98)); % best of the worst 5%
+      %QAS.QM.ICR  = mean(Yosm(Yosm(:)>0)) / QAS.QM.contrast; 
       QAS.QM.CIR  = 1 / QAS.QM.ICR;
+      %%
       clear Yos;
       
  %fprintf('%s: %4.0f %4.0f %4.0f %4.0f - %0.3f - %0.3f\n',pp,QAS.QM.tissue_mn, QAS.QM.NCR * QAS.QM.contrast,QAS.QM.contrast);

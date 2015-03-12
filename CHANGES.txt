@@ -6525,3 +6525,22 @@ M       html/vbm12.html
     
 ------------------------------------------------------------------------
 r680 | gaser | 2015-03-04 16:37:48
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_stat_marks.m
+M       vbm_tst_qa.m
+
+(1)  Corrected errors in "cg_vbm_write" due to MRF filtering of SPM segmentation
+     that requires skull-stripping / cleanup.
+(2)  Corrected error in "vbm_tst_qa" for "cg_vbm_write" call. 
+(3)  Updated inhomogeneity measure ICR/CIR in "vbm_tst_qa" and rating. 
+     Test showed low correlation between ICR/CIR and preprocessing quality. 
+     Used a more relaxed scaling (BWP 100 inhomogeneity ~ mark 3.5, worst case
+     real data - HR075 and 7Tesla ~ mark 5 to 6).
+(4)  Corrected filter strength of the ORNLM filter. Used CNR previous as input,
+     but theornlmMEX function requires a SNR value (~CNR*3).
+
+
+------------------------------------------------------------------------
+r681 | dahnke | 2015-03-12 14:02:25
