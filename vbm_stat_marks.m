@@ -78,8 +78,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'NCR'                   'linear'    [  0.05   0.40]  'noise to contrast ratio'
    'QM'  'CNR'                   'linear'    [    20 1/0.40]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [  1/10    0.4]  'inhomogeneity to contrast ratio'
-   'QM'  'CIR'                   'linear'    [    10  1/0.4]  'contrast to inhomogeneity ratio'
+   'QM'  'ICR'                   'linear'    [   1/5    0.8]  'inhomogeneity to contrast ratio'
+   'QM'  'CIR'                   'linear'    [    20  1/0.8]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
    'QM'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
    'QM'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
