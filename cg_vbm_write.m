@@ -1182,10 +1182,11 @@ VF = spm_smoothto8bit(VF,4);
 % affreg registration for one tissue segment
 Affine = spm_affreg(VG, VF, aflags, res.Affine); 
 
-rf=10^6; Affine   = fix(Affine * rf)/rf;
-res.image(1).mat  = Affine\res.Affine * res.image(1).mat;
-res.image(1).mat0 = res.image(1).mat;
-res.Affine        = Affine;
+rf=10^6; Affine    = fix(Affine * rf)/rf;
+res.imaged         = res.image(1); 
+res.imaged(1).mat  = Affine\res.Affine * res.image(1).mat;
+res.imaged(1).mat0 = res.image(1).mat;
+res.Affine         = Affine;
 clear VG VF Affine cid
 
 %  ---------------------------------------------------------------------
@@ -1193,7 +1194,7 @@ clear VG VF Affine cid
 %  ---------------------------------------------------------------------
 trans = struct();;
 
-M0 = res.image(1).mat;
+M0 = res.imaged.mat;
 
 % prepare transformations 
 
@@ -1618,10 +1619,8 @@ clear wYp0 wYcls wYv
 %  ---------------------------------------------------------------------
 stime = vbm_io_cmd('Quality Control');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
-warning off
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
           struct('write_csv',0,'write_xml',0,'method','vbm12'));
-warning on
 if job.output.surface
   qa.SM.dist_thickness{1} = dist_thickness{1};
 end  
@@ -1785,7 +1784,7 @@ if vbm.print
     end
     ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
 	  
-    text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image(1).fname,'k60d') '       '],...
+    text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
       'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
     
     cm = cg_vbm_get_defaults('extopts.colormap'); 
