@@ -212,15 +212,13 @@ function varargout = vbm_tst_qa(action,varargin)
         
         % reduce to original native space if it was interpolated
         if any(size(Yp0)~=Vo.dim)
-          [pp,ff,ee] = spm_fileparts(Vo.fname); 
           if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
           if isfield(Vo,'mat0'),    Vo = rmfield(Vo,'mat0');    end
-          Vo.dat = zeros(Vo.dim,spm_type(Vo.dt(1)));
+          Vo.dat = zeros(Vo.dim,'single'); Vo.dt(1) = 16; Vo.pinfo(3) = 0;
           
           Vp0t          = res.image;
           if isfield(Vp0t,'private'), Vp0t = rmfield(Vp0t,'private'); end
           if isfield(Vp0t,'mat0'),    Vp0t = rmfield(Vp0t,'mat0'); end
-          Vp0t.fname    = fullfile(pp,[ff 'tmp' ee]); 
           Vp0t.dt(1)    = 16;
           Vp0t.pinfo(3) = 0;
           Vp0t.dat      = Yp0;
@@ -239,7 +237,6 @@ function varargout = vbm_tst_qa(action,varargin)
           Vp0t.dat   = Ym;
           [Vtpm,Ym]  = vbm_vol_imcalc(Vp0t,Vo,'i1',struct('interp',6,'verb',0)); 
           Ym         = single(Ym);
-          delete(Vp0t.fname);
         end
         
       else
