@@ -6567,3 +6567,15 @@ M       vbm_plot_boxplot.m
     
 ------------------------------------------------------------------------
 r683 | gaser | 2015-03-16 16:50:04
+
+M       CHANGES.txt
+M       html/vbm12.html
+
+(1) Changed default values back to SPM-defaults in cg_vbm_defaults.m.
+(2) Added function prctile to vbm_plot_boxplot.m to get rid of dependency
+    from stat toolbox.
+(3) Added new functionality to cg_slice_overlay.m to automatically estimate
+    cluster peaks and plot resp. slices as default.
+    
+------------------------------------------------------------------------
+r684 | gaser | 2015-03-16 16:50:19
