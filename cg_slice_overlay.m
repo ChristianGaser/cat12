@@ -8,7 +8,7 @@ global SO
 
 if nargin == 0
 
-    imgs = spm_select(2, 'image', 'Select structural and overlay image');
+    imgs = spm_select(2, 'image', 'Select additional overlay image',{fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm/Template_T1_IXI555_MNI152.nii')});
     OV = pr_basic_ui(imgs,0);
     
     % set options
@@ -351,16 +351,38 @@ s = spm_str_manip(s,'v');
 return
 
 % --------------------------------------------------------------------------
-function [mx,mn] = volmaxmin(vol)
+function [mx, mn, XYZ, img] = volmaxmin(vol)
+
+if nargout > 2
+    XYZ = [];
+end
+if nargout > 3
+    img = [];
+end
+
 mx = -Inf; mn = Inf;
 for i=1:vol.dim(3),
     tmp = spm_slice_vol(vol,spm_matrix([0 0 i]),vol.dim(1:2),[0 NaN]);
-    tmp = tmp(find(isfinite(tmp(:)) & (tmp(:)~=0)));
-    if ~isempty(tmp)
-        mx = max([mx; tmp]);
-        mn = min([mn; tmp]);
+    tmp1 = tmp(find(isfinite(tmp(:)) & (tmp(:)~=0)));
+    if ~isempty(tmp1)
+        if nargout > 2
+            [Qc Qr] = find(isfinite(tmp) & (tmp~=0));
+		    if size(Qc,1)
+			    XYZ = [XYZ; [Qc Qr i*ones(size(Qc))]];
+			    if nargout > 3
+			        img = [img; tmp1];
+			    end
+		    end    
+        end
+        mx = max([mx; tmp1]);
+        mn = min([mn; tmp1]);
     end
 end
+
+if nargout > 2
+    XYZ = XYZ';
+end
+
 return
 
 % --------------------------------------------------------------------------
@@ -395,7 +417,7 @@ global SO
 spm_input('!SetNextPos', 1);
 
 % load images
-nimgs = size(imgs);
+nimgs = length(imgs);
 
 % process names
 nchars = 20;
@@ -405,16 +427,40 @@ imgns = spm_str_manip(imgs, ['rck' num2str(nchars)]);
 SO.cbar = [];
 for i = 1:nimgs
   SO.img(i).vol = spm_vol(imgs{i});
-  [mx mn] = volmaxmin(SO.img(i).vol);
   if i==1
     SO.img(i).cmap = gray;
-    SO.img(i).range = [2*mn mx]; % increase minimum value to enhance contrast
+    [mx, mn] = volmaxmin(SO.img(i).vol);
+    SO.img(i).range = [0.15*mx 0.9*mx];
   else
+    [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
     SO.img(i).func = 'i1(i1==0)=NaN;';
     SO.img(i).prop = Inf;
     SO.cbar = [SO.cbar i];
     SO.img(i).cmap = return_cmap('Colormap:', 'jet');
     SO.img(i).range = spm_input('Img val range for colormap','+1', 'e', [mn mx], 2);
+
+    % threshold map and restrict coordinates
+    Q = find(img >= SO.img(i).range(1) & img <= SO.img(i).range(2));
+    XYZ = XYZ(:,Q);
+    img = img(Q);
+    
+    M = SO.img(i).vol.mat;
+    XYZmm = M(1:3,:)*[XYZ; ones(1,size(XYZ,2))];
+    xyz_array = [];
+
+    % cluster map
+    A = spm_clusters(XYZ);
+    for j = 1:max(A)
+        ind = find(A==j);
+        xyz = XYZmm(:,ind);
+        xyz_array = [xyz_array xyz(:,find(img(ind) == max(img(ind))))];
+    end
+
+    % only keep unique coordinates
+    XYZ_unique = cell(3,1);
+    for j=1:3
+        XYZ_unique{j} = unique(xyz_array(j,:));
+    end
   end
 end
 
@@ -424,10 +470,10 @@ SO.transform = deblank(spm_input('Image orientation', '+1', ['Axial|' ...
             1));
 
 % slices for display
-orientn = find(strcmpi(SO.transform, {'axial','coronal','sagittal'}));
-ts = [0 0 0 0 0 0 1 1 1;...
+orientn = find(strcmpi(SO.transform, {'sagittal','coronal','axial'}));
+ts = [0 0 0 pi/2 0 -pi/2 -1 1 1;...
       0 0 0 pi/2 0 0 1 -1 1;...
-      0 0 0 pi/2 0 -pi/2 -1 1 1];
+      0 0 0 0 0 0 1 1 1];
 
 V = SO.img(2).vol;
 D = V.dim(1:3);
@@ -438,11 +484,10 @@ corners = T * [vcorners; ones(1,8)];
 SC = sort(corners');
 vxsz = sqrt(sum(T(1:3,1:3).^2));
   
-SO.slices = spm_input('Slices to display (mm)', '+1', 'e', ...
-              sprintf('%0.0f:%0.0f:%0.0f',...
-                  SC(1,3),...
-                  vxsz(3),...
-                  SC(8,3)));
+%SO.slices = spm_input('Slices to display (mm)', '+1', 'e', ...
+%              sprintf('%0.0f:%0.0f:%0.0f',SC(1,3),vxsz(3),SC(8,3)));
+
+SO.slices = spm_input('Slices to display (mm)', '+1', 'e', XYZ_unique{orientn});
 
 SO.figure = figure(12);
 
