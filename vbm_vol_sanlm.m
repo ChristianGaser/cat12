@@ -44,6 +44,7 @@ end
 
 V = spm_vol(char(job.data));
 
+spm_clf('Interactive'); 
 spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
 for i = 1:numel(job.data)
     [pth,nm,xt,vr] = spm_fileparts(deblank(V(i).fname));

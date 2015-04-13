@@ -614,3 +614,4 @@ end
 if ~dimArgGiven && isvector(x)
     y = reshape(y,size(p)); 
 end
+end
