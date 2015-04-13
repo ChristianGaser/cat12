@@ -36,11 +36,15 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   
 % used measures and marks:
 % ______________________________________________________________________
+%  def.tisvolr with the mean relative tissue volume of 10 year groups of
+%  healty subjects of a set of different projects with IQM<3 and the std
+%  of all datasets (5122 images).
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
-  def.tisvolr   = [0.15  0.2; 0.45  0.2; 0.35  0.2; 0 0.10]; % relative expected tissue volumes
+  def.tisvolr   = [0.1754  0.1439; 0.4538  0.1998; 0.3688  0.1325; 0 0.1]; % relative expected tissue volumes
   def.thickness = [2.50  1.0; 0.75  1.0];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
+  NM=[0.50,1.26];
   def.QS        = { 
 % -- structure ---------------------------------------------------------
 % 'measure'  'fieldname'       'marktpye'    markrange        help
@@ -75,11 +79,11 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   % - contrast - 
    'QM'  'contrast'              'linear'    [   1/3   1/12]  'contrast between tissue classe'
   % - noise & contrast -
-   'QM'  'NCR'                   'linear'    [  0.05   0.40]  'noise to contrast ratio'
-   'QM'  'CNR'                   'linear'    [    20 1/0.40]  'contrast to noise ratio'
+   'QM'  'NCR'                   'linear'    [NM(1)/6 NM(1)/1]  'noise to contrast ratio' 
+   'QM'  'CNR'                   'linear'    [6/NM(1) 1/NM(1)]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [   1/5    0.8]  'inhomogeneity to contrast ratio'
-   'QM'  'CIR'                   'linear'    [    20  1/0.8]  'contrast to inhomogeneity ratio'
+   'QM'  'ICR'                   'linear'    [NM(2)/6   NM(2)]  'inhomogeneity to contrast ratio' 
+   'QM'  'CIR'                   'linear'    [6/NM(2) 1/NM(2)]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
    'QM'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
    'QM'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
@@ -87,7 +91,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
   % - volumetric measures - 
-   'SM'  'vol_TIV'               'normal'    [  1500   1000]  'total intracranial volume (GM+WM+VT)'
+   'SM'  'vol_TIV'               'normal'    [  1400    400]  'total intracranial volume (GM+WM+VT)'
    'SM'  'vol_CHvsGW'            'linear'    def.CHvsCG       'relation between brain and non brain'
    'SM'  'vol_rel_CGW'           'linear'    def.tisvolr      'relative tissue volume (CSF,GM,WM)'
    'SM'  'vol_rel_BG'            'linear'    [  0.05   0.05]  'relative tissue volume of basal structures'
@@ -113,8 +117,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.bstm    = 1;      % best mark
   def.wstm    = 6;      % worst mark
   def.wstmn   = 8.624;  % worst mark to get a 4 for values with std 
-  def.bstl    = 1;      % highest rating
-  def.wstl    = 99;     % lowest rating
+  def.bstl    = 0.5+eps*2; % highest rating ... 0.5 because of rounding values
+  def.wstl    = 9.5-eps*2; % lowest rating  ... to have only values with 1 digit
   
   % mark functions
   setnan      = [1 nan];
@@ -123,8 +127,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
                 (min(wstl,max(bstl,abs(x - bst) ./ abs(diff([wst ,bst])) .* abs(diff([bstm,wstm])) + bstm)));
   evalnormalx = @(bst,wstd,bstm,wstm,bstl,wstl,x) setnan(isnan(x)+1) .* ...
                 (min(wstl,max(bstl,(1 - nv(x,bst,wstd)) .* abs(diff([bstm,wstm])) + bstm)));
-  evallinear = @(x,bst,wst)  setnan(isnan(x)+1) .* ...
-    (min(def.wstl,max(def.bstl,abs(x - bst) ./ abs(diff([wst ,bst])) .* abs(diff([def.bstm,def.wstm])) + def.bstm)));
+  evallinear = @(x,bst,wst)  setnan(isnan(x)+1) .* ... max(0,
+    (min(def.wstl,max(def.bstl,(sign(wst-bst)*x - sign(wst-bst)*bst) ./ abs(diff([wst ,bst])) .* abs(diff([def.bstm,def.wstm])) + def.bstm)));
   evalnormal = @(x,bst,wstd) setnan(isnan(x)+1) .* ...
     (min(def.wstl,max(def.bstl,(1 - nv(x,bst,wstd)) .* abs(diff([def.bstm,def.wstmn])) + def.bstm)));  
   
