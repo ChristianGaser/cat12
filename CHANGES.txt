@@ -6607,3 +6607,23 @@ M       vbm_vol_sanlm.m
 
 ------------------------------------------------------------------------
 r685 | dahnke | 2015-04-13 18:39:00
+
+M       CHANGES.txt
+ M      fsaverage/lh.s1template.IXI555.gii
+ M      fsaverage/lh.s32template.IXI555.gii
+ M      fsaverage/lh.template.Template_T1_IXI555_MNI152.gii
+ M      fsaverage/rh.s1template.IXI555.gii
+ M      fsaverage/rh.s32template.IXI555.gii
+ M      fsaverage/rh.template.Template_T1_IXI555_MNI152.gii
+M       vbm_tst_qa.m
+
+(1)  Updated QA estimation, because of large differences between different 
+     segmentations. Added skull-stripping (especially for FSL and SPM) and a 
+     fast version of the AMAP segmentation to get similar tissue peaks. 
+(2)  Updated noise and bias estimation and increased accuracy.   
+(3)  Updated relative volume marks by experimental values (median relative
+     volume and its standard deviation of each tissue class based on a mixed 
+     dataset of healthy control subjects of multiple databases (IXI, NIH, ...).
+
+------------------------------------------------------------------------
+r686 | dahnke | 2015-04-13 19:26:03
