@@ -11,7 +11,7 @@ function cg_showslice_all(vargin)
 rev = '$Rev$';
 
 if nargin == 1
-	P = char(vargin.data);
+	P = char(vargin.data_vbm);
 	scaling = vargin.scale;
 	slice_mm = vargin.slice;
 end

@@ -6579,3 +6579,31 @@ M       html/vbm12.html
     
 ------------------------------------------------------------------------
 r684 | gaser | 2015-03-16 16:50:19
+
+ M      .
+M       CHANGES.txt
+M       cg_showslice_all.m
+M       cg_vbm_write.m
+A       fsaverage/lh.s1template.IXI555.gii
+A       fsaverage/lh.s32template.IXI555.gii
+A       fsaverage/lh.template.Template_T1_IXI555_MNI152.gii
+A       fsaverage/rh.s1template.IXI555.gii
+A       fsaverage/rh.s32template.IXI555.gii
+A       fsaverage/rh.template.Template_T1_IXI555_MNI152.gii
+ M      templates_1.50mm
+M       vbm_io_csv.m
+M       vbm_plot_boxplot.m
+M       vbm_stat_marks.m
+M       vbm_vol_sanlm.m
+
+(1)  Using of MRF filter in "cg_vbm_write" without prior maps, required a simple
+     skull-stripping and update of tissue maps before the MRF filtering. 
+     Therefore, the loading of the bias corrected image was moved before the 
+     class correction.
+(2)  Corrections of the "cg_vbm_write" final affine registration.
+(3)  Corrections in the "cg_vbm_write" cleanup routine.
+(4)  Corrected small errors in other files. 
+(5)  Added template surfaces.
+
+------------------------------------------------------------------------
+r685 | dahnke | 2015-04-13 18:39:00
