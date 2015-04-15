@@ -294,6 +294,7 @@ output.help = {
 
 %------------------------------------------------------------------------
 tools   = cg_vbm_tools;
+stools  = cg_vbm_stools;
 extopts = cg_vbm_extopts;
 opts    = cg_vbm_opts;
 %------------------------------------------------------------------------
@@ -317,7 +318,8 @@ estwrite.help   = {
 vbm        = cfg_choice;
 vbm.name   = 'VBM12';
 vbm.tag    = 'vbm';
-vbm.values = {estwrite,tools};
+vbm.values = {estwrite,tools,stools};
+%vbm.values = {estwrite,tools};
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------

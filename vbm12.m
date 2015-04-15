@@ -128,9 +128,16 @@ spm_jobman('interactive','','spm.tools.vbm.tools.surfresamp');
 function pushbutton8_Callback(hObject, eventdata, handles)
 P=spm_select([1 24],'gifti','Select surface');
 for i=1:size(P,1)
+  if 0 % use spm
     h = spm_mesh_render(deblank(P(i,:)));
     set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(P(i,:),'short40'),'NumberTitle','off');
     spm_mesh_render('ColourMap',h.axis,jet); spm_mesh_render('ColourBar',h.axis,'on');
+  else 
+    %% use vbm
+    h = vbm_mesh_render(deblank(P(i,:)));
+    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(P(i,:),'short40'),'NumberTitle','off');
+    vbm_mesh_render('ColourMap',h.axis,jet); vbm_mesh_render('ColourBar',h.axis,'on');
+  end
 end
 
 % --- Executes on button press in pushbutton9.
