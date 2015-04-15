@@ -350,6 +350,7 @@ sample.num     = [1 Inf];
 sample.help = {[...
 'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
 
+ 
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
 check_cov.name = 'Check sample homogeneity of VBM data';
@@ -359,6 +360,7 @@ check_cov.help  = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
 ''
 'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups. Furthermore this is also useful for fMRI images which can be also used with this tool. The proportional scaling option should be only used if image intensity is not scaled (e.g. T1 images) or if images have to be scaled during statistical analysis (e.g. modulated images).'};
+
 
 data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
@@ -412,6 +414,204 @@ SA.help   = {'Extract log10-transformed local surface area using re-parameterize
 ''
 };
 
+outdir         = cfg_files;
+outdir.tag     = 'outdir';
+outdir.name    = 'Output directory';
+outdir.filter  = 'dir';
+outdir.ufilter = '.*';
+outdir.num     = [1 1];
+outdir.help    = {'Select a directory where files are written.'};
+
+%{
+% average surface 
+% ----------------------------------------------------------------------
+
+  surfname         = cfg_entry;
+  surfname.tag     = 'surfname';
+  surfname.name    = 'Surfname';
+  surfname.strtype = 's';
+  surfname.num     = [1 Inf];
+  surfname.val     = {'average'};
+  surfname.help    = {'Name of the surface.'};
+
+  surfsmooth         = cfg_entry;
+  surfsmooth.tag     = 'surfsmooth';
+  surfsmooth.name    = 'Surface smoothing';
+  surfsmooth.strtype = 'r';
+  surfsmooth.num     = [1 Inf];
+  surfsmooth.val     = {[0 8]};
+  surfsmooth.help    = {
+    'Smoothing of the average surface.'
+    };
+  
+  surfside         = cfg_entry;
+  surfside.tag     = 'surfside';
+  surfside.name    = 'Side handling';
+  surfside.labels  = {'separate','mirror'};
+  surfside.values  = {1,2};
+  surfside.val     = {1};
+  surfside.help    = {
+    'Handling of the cortical hemispheres.'
+    };
+
+  avg_surf      = cfg_exbranch;
+  avg_surf.tag  = 'avg_surf';
+  avg_surf.name = 'Average surfaces';
+  avg_surf.val  = {data_surf,surfsmooth,surfside,surfname,outdir};
+  avg_surf.prog = @vbm_surf_avg;
+  avg_surf.help = {''};
+  %}
+  
+% surface calculations
+% ----------------------------------------------------------------------
+  %{
+  data_mesh         = cfg_files;
+  data_mesh.tag     = 'data_mesh';
+  data_mesh.name    = 'Sample';
+  data_mesh.filter  = 'gifti';
+  data_mesh.ufilter = '^[lr]h.central';
+  data_mesh.num     = [2];
+  data_mesh.help    = {'Select lh and rh average surfaces.'};
+
+  surffunction         = cfg_entry;
+  surffunction.tag     = 'surfname';
+  surffunction.name    = 'Surfname';
+  surffunction.strtype = 's';
+  surffunction.num     = [1 Inf];
+  surffunction.val     = {'average'};
+  surffunction.help    = {
+    'Function to evaluate the surfaces.'
+    's1 + s2'
+    'mean(X)'
+    };
+  
+  surfcalc      = cfg_exbranch;
+  surfcalc.tag  = 'surfcalc';
+  surfcalc.name = 'Surface data calculation';
+  surfcalc.val  = {data_mesh,data_surf,surffunction,surfside,surfname,outdir};
+  surfcalc.prog = @vbm_surf_avg;
+  surfcalc.help = {''};
+  %}
+  
+  %{
+
+% average surface 
+% ----------------------------------------------------------------------
+  cdata_surf         = cfg_files;
+  cdata_surf.tag     = 'data_surf';
+  cdata_surf.name    = 'Sample';
+  cdata_surf.filter  = 'gifti';
+  cdata_surf.ufilter = '^[s].*[lr]h.*';
+  cdata_surf.num     = [1 Inf];
+  cdata_surf.help    = {
+    'Select resampled surfaces data files to extract values.'
+    'Use ''Resample_Surface'' function to create such files.'
+    };
+  
+  groupname         = cfg_entry;
+  groupname.tag     = 'groupname';
+  groupname.name    = 'Groupname';
+  groupname.strtype = 's';
+  groupname.num     = [1 Inf];
+  groupname.val     = {'group'};
+  groupname.help    = {'Name of the group. Default ''group#''. The filename will further include the hemisphere and the average function'};
+
+  surfname         = cfg_entry;
+  surfname.tag     = 'surfname';
+  surfname.name    = 'Surfname';
+  surfname.strtype = 's';
+  surfname.num     = [1 Inf];
+  surfname.val     = {'group'};
+  surfname.help    = {'Name of the surface.'};
+
+  data_group         = cfg_branch;
+  data_group.tag     = 'data_group';
+  data_group.name    = 'Data group';
+  data_group.val     = {cdata_surf,groupname};
+  data_group.help    = {''};
+  
+  sample_surf         = cfg_repeat;
+  sample_surf.tag     = 'sample';
+  sample_surf.name    = 'Data';
+  sample_surf.values  = {data_group};
+  sample_surf.num     = [1 Inf];
+  sample_surf.help    = {'Specify data for each sample.'};
+
+  surftype        = cfg_entry;
+  surftype.tag    = 'surftype';
+  surftype.name   = 'Surface type';
+  surftype.strtype = 'r';
+  surftype.num     = [1 4];
+  surftype.val     = {[0 1 1 1]};
+  surftype.help   = {
+    'Surface type for final visualisation.'
+    '[ FSavg , IXIavg , GROUPavg , ALLavg ]'
+    ''
+    'FSavg is the FreeSurfer average surface.'
+    'IXIavg is the average IXI555 dataset processed by VBM12.'
+    'GROUPavg is the average of each input group.'
+    'ALLavg is the average of all input datasets.'
+    ''
+    };
+  
+  surfsmooth         = cfg_entry;
+  surfsmooth.tag     = 'surfsmooth';
+  surfsmooth.name    = 'Final surface smoothing';
+  surfsmooth.strtype = 'r';
+  surfsmooth.num     = [1 Inf];
+  surfsmooth.val     = {[0 8]};
+  surfsmooth.help    = {
+    'Final smoothing of the average surface.'
+    };
+  
+  surfstat         = cfg_entry;
+  surfstat.tag     = 'surfstat';
+  surfstat.name    = 'Average function';
+  surfstat.strtype = 'r';
+  surfstat.num     = [1 3];
+  surfstat.val     = {[1 1 1]}; % 0 0 0
+  surfstat.help    = {
+    'Statistikal type for averaging. '
+    '[ mean ,  median , std]' % , var , min , max ]'
+    };
+  
+  surfdiff         = cfg_entry;
+  surfdiff.tag     = 'surfdiff';
+  surfdiff.name    = 'Group differences';
+  surfdiff.strtype = 'r';
+  surfdiff.num     = [1 3];
+  surfdiff.val     = {[1 0 0]};
+  surfdiff.help    = {
+    'Estimate (absolute) difference between neighbor groups g_{i} and g_{i+1} for the average function datasets.'
+    'Difference of [ mean ,  median , std] with 0 for no difference, 1 for difference, and 2 for absolute difference estimation.'
+    };
+  
+  bothside        = cfg_menu;
+  bothside.name   = 'Both hemispheres';
+  bothside.tag    = 'bothside';
+  bothside.labels = {'no','yes'};
+  bothside.values = {0,1};
+  bothside.val    = {1};
+  bothside.help   = {'Calculate both hemispheres.'};
+
+  avg_surf      = cfg_exbranch;
+  avg_surf.tag  = 'avg_surf';
+  avg_surf.name = 'Average surfaces';
+  avg_surf.val  = {sample_surf,surftype,surfsmooth,surfstat,surfname,bothside,outdir}; % surfdiff
+  avg_surf.prog = @vbm_surf_avg;
+  avg_surf.help = {''};
+  
+%}
+
+  % surface math
+  % --------------------------------------------------------------------
+  % simple:
+  %   2 surface 
+  %   operation (+,-,*,/,abs)
+  % complex:
+  %   set of surface 
+  %   operation string
+
 surfextract      = cfg_exbranch;
 surfextract.tag  = 'surfextract';
 surfextract.name = 'Extract surface parameters';
@@ -438,7 +638,7 @@ fwhm.help    = {
 
 surfresamp      = cfg_exbranch;
 surfresamp.tag  = 'surfresamp';
-surfresamp.name = 'Rsample and smooth surface parameters';
+surfresamp.name = 'Resample and smooth surface parameters';
 surfresamp.val  = {data_surf,fwhm};
 surfresamp.prog = @vbm_surf_resamp;
 surfresamp.help = {
@@ -451,14 +651,6 @@ data_fs.filter  = 'dir';
 data_fs.ufilter = '.*';
 data_fs.num     = [1 Inf];
 data_fs.help    = {'Select subject folders of freesurfer data to rsample thickness data.'};
-
-outdir         = cfg_files;
-outdir.tag     = 'outdir';
-outdir.name    = 'Output directory';
-outdir.filter  = 'dir';
-outdir.ufilter = '.*';
-outdir.num     = [1 1];
-outdir.help    = {'Select a directory where files are written.'};
 
 surfresamp_fs      = cfg_exbranch;
 surfresamp_fs.tag  = 'surfresamp_fs';
@@ -707,7 +899,12 @@ long    = cg_vbm_longitudinal_multi;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,check_mesh_cov,qa,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2,surfextract,surfresamp,surfresamp_fs};
+tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2}; 
+
+stools = cfg_choice;
+stools.name   = 'Surface Tools';
+stools.tag    = 'stools';
+stools.values = {check_mesh_cov,surfextract,surfresamp,surfresamp_fs}; %,surfcalc,avg_surf
 
 return
 
@@ -829,3 +1026,7 @@ end
 
 return
 %------------------------------------------------------------------------
+
+
+
+

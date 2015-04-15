@@ -563,7 +563,6 @@ function varargout = vbm_tst_qa(action,varargin)
       [Yo,Ym,Yp0,resr] = vbm_vol_resize({Yo,Ym,Yp0},'reduceV',vx_vol,0.5,32,'meanm'); vx_vol=resr.vx_volr;
    
       
-      
       %% bias correction for Yo data 
       %  ---------------------------------------------------------------
       if 1
@@ -580,7 +579,7 @@ function varargout = vbm_tst_qa(action,varargin)
       end
       Ym = Ymi; % replace Ymi by Ym later
       
-      
+    
       
       %% brain extraction
       %  ---------------------------------------------------------------
@@ -612,6 +611,7 @@ function varargout = vbm_tst_qa(action,varargin)
         Yp0(Yb==0)=0;
         clear Ybr
       else
+        T3th = tissue_mn(Ym,Yp0,vx_vol,2);
         Yb  = Yp0>0;
         [Ybr,resT2] = vbm_vol_resize(Yb,'reduceV',vx_vol,4,32);
         Ybb = vbm_vol_morph(Ybr,'e',4);
@@ -641,10 +641,12 @@ function varargout = vbm_tst_qa(action,varargin)
       %  ---------------------------------------------------------------
       %T3th = tissue_mn(Ym,Yp0,vx_vol,2);
       Yg    = vbm_vol_grad(Ymi ./ T3th(3),vx_vol);
+      for xi=1:2, Yg = vbm_vol_localstat(Yg,Yp0>2.9,1,1); end
       noise = vbm_stat_nanmedian(Yg(Yp0>2.9));  
       gth   = max(0.06,min(0.5,noise*3));
+      QAS.QM.noise = noise;
       
-      Ywm = Yg<gth & (Yp0toC(Yp0,3)>0.8); 
+      Ywm = Yg<gth & (Yp0toC(Yp0,3)>0.9); 
       Ywm(smooth3(Ywm)<0.5)=0; 
       Ywm = vbm_vol_morph(Ywm,'l');
       Ygm = Yp0toC(Yp0,2)>0.5; 
@@ -687,10 +689,10 @@ function varargout = vbm_tst_qa(action,varargin)
       %  ---------------------------------------------------------------
       [Ymir,Ybgr] = vbm_vol_resize({Ymi,Ybg},'reduceV',vx_vol,3,32,'meanm'); 
       Ymir  = round(Ymir*100)/100;
-      BGth  = vbm_stat_nanmedian(Ymir(Ybgr(:)));   
+      BGth  = vbm_stat_nanmedian(Ymir(Ybgr(:)>0.9));   
       clear Ymir Ybgr;
       
-      tp=0;
+      tp=1;
       if tp==1
         T3th = tissue_mn(Ym,Yp0.*Ybb,vx_vol,4);
       elseif tp==2
@@ -716,47 +718,54 @@ function varargout = vbm_tst_qa(action,varargin)
       QAS.QM.tissue_stdr = QAS.QM.tissue_std ./ (WMth-BGth);
      
       % (relative) mininum tissue contrast ( CSF-GM-WM ) 
-      QAS.QM.contrast  = min(abs(diff(QAS.QM.tissue_mn(3:4)))); 
-      QAS.QM.contrastr = min(abs(diff(QAS.QM.tissue_mn(3:4)))) ./ (max([WMth,GMth]));
+      QAS.QM.contrast  = min(abs(diff(QAS.QM.tissue_mn(2:4)))); 
+      QAS.QM.contrastr = min(abs(diff(QAS.QM.tissue_mn(2:4)))) ./ (max([WMth,GMth]));
    
       
       
       %% noise estimation (original (bias corrected) image)
       rms = 1;
       % WM variance only in one direction to avoid WMHs!
-      Yos1 = Ymi .* vbm_vol_morph(Ywm & Ymi>(vbm_stat_nanmedian(Ymi(Ywm(:))) -  1*std(Ymi(Ywm(:)))),'c');
+      %Ymis = vbm_vol_localstat(Ymi,Ywm>0,1,1);
+      Yos1 = Ymi .*  Ywm; %vbm_vol_morph(Ywm & Ymis>(vbm_stat_nanmedian(Ymis(Ywm(:))) - 2*std(Ymis(Ywm(:)))),'c');
       for xi=1:1, Yos1 = vbm_vol_localstat(Yos1,Yos1>0,1,1); end
-     %[Yos0,YM0] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,1,32,'meanm'); % high frequeny noise is good correctable % 
-      [Yos2,YM2] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,4,16,'meanm');
-      [Yos1,YM1] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,3,16,'meanm'); 
+      Yos2 = vbm_vol_resize(Yos1,'reduceV',1,2,16,'meanm');
+      Yos3 = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); 
       NCww = sum(Yos1(:)>0);
+      QAS.QM.NCRw2 = estimateNoiseLevel(Yos2,Yos2>0,1,rms);
+      QAS.QM.NCRw3 = estimateNoiseLevel(Yos3,Yos3>0,1,rms);
       NCRw = mean([...estimateNoiseLevel(Yos0,YM0,4,rms), ...
-                   estimateNoiseLevel(Yos1,YM1>0,3,rms), ...
-                   estimateNoiseLevel(Yos2,YM2>0,4,rms)]) / max(GMth,WMth) / QAS.QM.contrastr * 2 * 2; % only upper varince
+                   QAS.QM.NCRw2, ...max(GMth,WMth)
+                   QAS.QM.NCRw3]) / (max(GMth,WMth)) / QAS.QM.contrastr * 5; 
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
-  
+      QAS.QM.NCRw = NCRw;
+      
       
       % CSF variance of large ventricle
-      Ycmo = vbm_vol_morph(Ycm,'o',3/mean(vx_vol)); Ycmo = smooth3(Ycmo)>0.5;
-      Yos1 = Ymi .* Ycmo;
+      Ycmo = vbm_vol_morph(Ycm,'o',1/mean(vx_vol)); Ycmo = smooth3(Ycmo)>0.5;
+      Yos1 = Ymi .* Ycmo; %(Ycmo & Ymis>(vbm_stat_nanmedian(Ymis(Ycmo(:))) + 4*std(Ycmi(Ycmo(:)))));
       NCwc = sum(Yos1(:)>0);
       % for typical T2 images we have to much signal in the CSF and
       % can't use it for noise estimation!
       if CSFth>GMth, NCwc = 0; end
       if NCwc>20
-        %[Yos0,YM0] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,1,32,'meanm'); 
-        [Yos2,YM2] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,4,16,'meanm');
-        [Yos1,YM1] = vbm_vol_resize({Yos1,Yos1>0},'reduceV',vx_vol,3,16,'meanm'); 
+        Yos2 = vbm_vol_resize(Yos1,'reduceV',1,2,16,'meanm');
+        Yos3 = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm');
+        QAS.QM.NCRc2 = estimateNoiseLevel(Yos2,Yos2>0,2,rms);
+        QAS.QM.NCRc3 = estimateNoiseLevel(Yos3,Yos3>0,3,rms);
         NCRc = mean([...estimateNoiseLevel(Yos0,YM0,4,rms), ...
-                     estimateNoiseLevel(Yos1,YM1>0,4,rms), ...
-                     estimateNoiseLevel(Yos2,YM2>0,4,rms)]) / max(GMth,WMth)  / QAS.QM.contrastr * 2 * 2; % only upper varince
+                     QAS.QM.NCRc2, ...
+                     QAS.QM.NCRc3]) / (max(GMth,WMth))  / QAS.QM.contrastr * 5; 
         clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else
         NCRc = 0;
         NCwc = 0;
       end
+      QAS.QM.NCRc = NCRc;
       % averaging
-      QAS.QM.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
+%      QAS.QM.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
+%(diff(qa(i).QM.tissue_mn(1:3:4))/qa(i).QM.tissue_mn(4))
+      QAS.QM.NCR = noise  / (1-QAS.QM.noise) /QAS.QM.contrastr;
       QAS.QM.CNR = 1 / QAS.QM.NCR;  
 
       

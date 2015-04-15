@@ -6627,3 +6627,26 @@ M       vbm_tst_qa.m
 
 ------------------------------------------------------------------------
 r686 | dahnke | 2015-04-13 19:26:03
+
+M       CHANGES.txt
+A       cg_vbm_stools.m
+M       cg_vbm_tools.m
+M       tbx_cfg_vbm.m
+M       vbm12.m
+A       vbm_surf_display.m
+A       vbm_surf_info.m
+A       vbm_surf_rename.m
+A       vbm_surf_render.m
+M       vbm_tst_qa.m
+
+(1)  Added "vbm_surf_render" a modified version of the "spm_mesh_render" with 
+     "inner light" and "vbm_surf_display" for further texture handling
+(2)  Separate volume and surface tools:
+     - cg_vbm_tools      .. volume tools
+     - cg_vbm_stools     .. surface tools 
+(3)  Added management surface functions 
+     - vbm_surf_info     .. extract surface information from filename
+     - vbm_surf_rename   .. replace specific parts of surface filenames
+     
+------------------------------------------------------------------------
+r687 | dahnke | 2015-04-15 13:40:38
