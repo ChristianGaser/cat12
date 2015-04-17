@@ -77,7 +77,13 @@ switch lower(action)
         if isfield(O,'cdata')
           M.cdata = O.cdata; 
         elseif isfield(O,'pcdata')
-          M.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata); 
+          [pp,ff,ee] = fileparts(O.pcdata);
+          if strcmp(ee,'.gii')
+            Mt = gifti(O.pcdata);
+            M.cdata = Mt.cdata;
+          else
+            M.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata);
+          end
         end
         
         M = export(M,'patch');
@@ -876,5 +882,5 @@ set(H.patch, 'FaceVertexCData',C, 'FaceColor','interp');
 %-Update the colourbar
 %--------------------------------------------------------------------------
 if isfield(H,'colourbar')
-    vbm_mesh_render('Colourbar',H);
+    vbm_surf_render('Colourbar',H);
 end

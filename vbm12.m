@@ -118,14 +118,16 @@ end
 
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.tools.surfextract');
+spm_jobman('interactive','','spm.tools.vbm.stools.surfextract');
 
 % --- Executes on button press in pushbutton7.
 function pushbutton7_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.tools.surfresamp');
+spm_jobman('interactive','','spm.tools.vbm.stools.surfresamp');
 
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
+vbm_surf_display;
+%{
 P=spm_select([1 24],'gifti','Select surface');
 for i=1:size(P,1)
   if 0 % use spm
@@ -139,6 +141,7 @@ for i=1:size(P,1)
     vbm_mesh_render('ColourMap',h.axis,jet); vbm_mesh_render('ColourBar',h.axis,'on');
   end
 end
+%}
 
 % --- Executes on button press in pushbutton9.
 function pushbutton9_Callback(hObject, eventdata, handles)

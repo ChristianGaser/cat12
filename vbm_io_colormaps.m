@@ -54,10 +54,32 @@ function [C,XML] = vbm_io_colormaps(Cname,ncolors)
     % GMT output
     % ...
     case 'BCGWHw'
-     C = BCGWHw;
+      C = BCGWHw;
     case 'BCGWHn'
-     C = BCGWHn;
-    
+      C = BCGWHn;
+    case 'curvature';
+      C = [ 
+            0.9900    0.9900    0.9900 
+            0.9500    0.9000    0.8000 
+            0.9700    0.8500    0.6000 
+            1.0000    0.8000    0.3000 
+            1.0000    0.6000    0.0000 
+            1.0000    0.3000    0.0000 
+            1.0000    0.0000    0.0000  
+            0.5000    0.0000    0.0000  
+            0.0000    0.0000    0.0000  
+          ];
+    case 'hotinv';
+      C = [ 
+            0.9900    0.9900    0.9900 
+            0.9500    0.9000    0.6000 
+            1.0000    0.8000    0.3000 
+            1.0000    0.6000    0.0000 
+            1.0000    0.3000    0.0000 
+            1.0000    0.0000    0.0000  
+            0.5000    0.0000    0.0000  
+            0.0000    0.0000    0.0000  
+          ];
     otherwise, error('MATLAB:vbm_io_colormaps','Unknown Colormap ''%s''\n',Cname);
   end
   if isempty(ncolors), ncolors = size(C,1); end

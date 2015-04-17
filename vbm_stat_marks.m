@@ -44,7 +44,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.tisvolr   = [0.1754  0.1439; 0.4538  0.1998; 0.3688  0.1325; 0 0.1]; % relative expected tissue volumes
   def.thickness = [2.50  1.0; 0.75  1.0];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
-  NM=[0.50,1.26];
+  NM=[0.06 0.32/5*6]; 
+  BM=[0.17 0.70/5*6];
   def.QS        = { 
 % -- structure ---------------------------------------------------------
 % 'measure'  'fieldname'       'marktpye'    markrange        help
@@ -79,11 +80,11 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   % - contrast - 
    'QM'  'contrast'              'linear'    [   1/3   1/12]  'contrast between tissue classe'
   % - noise & contrast -
-   'QM'  'NCR'                   'linear'    [NM(1)/6 NM(1)/1]  'noise to contrast ratio' 
-   'QM'  'CNR'                   'linear'    [6/NM(1) 1/NM(1)]  'contrast to noise ratio'
+   'QM'  'NCR'                   'linear'    [  NM(1)   NM(2)]  'noise to contrast ratio' 
+   'QM'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [NM(2)/6   NM(2)]  'inhomogeneity to contrast ratio' 
-   'QM'  'CIR'                   'linear'    [6/NM(2) 1/NM(2)]  'contrast to inhomogeneity ratio'
+   'QM'  'ICR'                   'linear'    [  BM(1)   BM(2)]  'inhomogeneity to contrast ratio' 
+   'QM'  'CIR'                   'linear'    [1/BM(1) 1/BM(2)]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
    'QM'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
    'QM'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
