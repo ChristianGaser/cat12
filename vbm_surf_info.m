@@ -36,6 +36,7 @@ function sinfo = vbm_surf_info(P,read)
     'ff','',...         % filename
     'ee','',...         % filetype
     'exist','',...      % exist
+    'fdata','',...      % datainfo (filesize)
     'ftype','',...      % filetype [0=no surface,1=gifti,2=freesurfer]
     ...
     'statready',0,...   % ready for statistik (^s#mm.*.gii)
@@ -46,17 +47,19 @@ function sinfo = vbm_surf_info(P,read)
     'texture','',...    % textureclass [central|sphere|thickness|...]
     'resampled','',...  % dataspace
     'template','',...   % individual surface or tempalte
-    'Pmesh','',...      % meshfile file
-    'Pvalue','',...     % texture file
     'nvertices',[],...  % number vertices
-    'nfaces',[]...      % number faces
+    'nfaces',[],...     % number faces
+    ...
+    'Pmesh','',...      % meshfile
+    'Pdata',''...       % datafile
   );
 
   if isempty(P), return; end
     
   for i=1:numel(P)
     [pp,ff,ee] = spm_fileparts(P{i});
-
+    sinfo(i).fdata = dir(P{i});
+    
     sinfo(i).fname = P{i};
     sinfo(i).exist = exist(P{i},'file'); 
     sinfo(i).pp = pp;
@@ -124,7 +127,7 @@ function sinfo = vbm_surf_info(P,read)
     sinfo(i).dataname  = strrep(sinfo(i).posside,'.resampled','');
     
     % special datatypes
-    FN = {'thickness','central','sphere','defects','curv','frac'};
+    FN = {'thickness','central','sphere','defects','gyrification','logsulc','frac'};
     for fi=1:numel(FN)
       if strfind(sinfo(i).dataname,FN{fi}), sinfo(i).texture = FN{fi}; end
     end   
@@ -133,22 +136,59 @@ function sinfo = vbm_surf_info(P,read)
     sinfo(i).template  = ~isempty(regexp(noname,'.*\.template\..*')); 
 
     % resampled
-    sinfo(i).resampled = ~isempty(regexp(noname,'.*\.resampled\..*'));
+    sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
     if sinfo(i).template,  sinfo(i).resampled = 1; end
     
-    if sinfo(i).template
-    % template mesh
-      sinfo(i).Pmesh = char(vbm_surf_rename(sinfo(i),'dataname','central'));
-    else
-      sinfo(i).Pmesh = char(vbm_surf_rename(sinfo(i),'dataname','central'));
-    end
     
-    if ~strcmp(sinfo(i).Pmesh,sinfo(i).fname);
+    
+    
+    % find Mesh and Data Files
+    %  -----------------------------------------------------------------
+    sinfo(i).Pmesh = '';
+    sinfo(i).Pdata = '';
+    % here we know that the gifti is a surf
+    if sinfo(i).statready 
+      sinfo(i).Pmesh = sinfo(i).fname;
       sinfo(i).Pdata = sinfo(i).fname;
-    else
-      sinfo(i).Pdata = '';
     end
-    % if resampled > matching avg-meshs?
+    % if we have read the gifti than we can check for the fields
+    if isempty(sinfo(i).Pmesh) && sinfo(i).exist && read && isfield(S,'vertices')
+      sinfo(i).Pmesh = sinfo(i).fname; 
+    end
+    if isempty(sinfo(i).Pdata) && sinfo(i).exist && read && isfield(S,'cdata')
+      sinfo(i).Pdata = sinfo(i).fname;
+    end
+    % if the dataname is central we got a mesh or surf datafile
+    if isempty(sinfo(i).Pdata) 
+      switch sinfo(i).dataname
+        case {'defects'} % surf
+          sinfo(i).Pmesh = sinfo(i).fname;
+          sinfo(i).Pdata = sinfo(i).fname;
+        case {'central','sphere'} % only mesh
+          sinfo(i).Pmesh = sinfo(i).fname;
+          sinfo(i).Pdata = '';
+        case {'thickness','gyrification','frac','logsulc'} % only thickness
+          sinfo(i).Pdata = sinfo(i).fname;
+      end
+    end
+    % if we still dont know what kind of datafile, we can try to find a
+    % mesh surface
+    if isempty(sinfo(i).Pmesh) 
+      % template mesh handling !!!
+      Pmesh = char(vbm_surf_rename(sinfo(i),'dataname','central','ee','.gii'));
+      if exist(Pmesh,'file')
+        sinfo(i).Pmesh = Pmesh;
+        sinfo(i).Pdata = sinfo(i).fname;
+      end
+    end
+    % if we got still no mesh than we can find an average mesh
+    % ...
+    
+    if sinfo(i).exist && read
+      if isfield(S,'vertices'), sinfo(i).nvertices = numel(S.vertices); end
+      if isfield(S,'faces'),    sinfo(i).nfaces    = numel(S.faces); end
+    end
+    clear S
   end
   
 end
