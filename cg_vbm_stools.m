@@ -183,9 +183,9 @@ function stools = cg_vbm_stools
   data_smooth.tag     = 'data_smooth';
   data_smooth.name    = 'Sample';
   data_smooth.filter  = 'any';
-  data_smooth.ufilter = '(?=thickness|gyri|frac|logs)';
+  data_smooth.ufilter = '[rl]h.(?!cent|sphe|defe).*';
   data_smooth.num     = [1 Inf];
-  data_smooth.help    = {'Select surface data files for smoothing.'};
+  data_smooth.help    = {'Select surface data (texture) files for smoothing.'};
   
   fwhm_smooth         = cfg_entry;
   fwhm_smooth.tag     = 'fwhm';
@@ -204,9 +204,9 @@ function stools = cg_vbm_stools
     fwhm_smooth ...
   };
   datasmooth.vfiles = @vfiles_datasmooth;
-  datasmooth.prog = @vbm_surf_display; %@vbm_surf_smooth;
+  datasmooth.prog = @vbm_surf_smooth;
   datasmooth.help = {
-    'Gaussian smoothing of surface data surfaces.'
+    'Gaussian smoothing of surface data (texture).'
     ''
   }; 
 

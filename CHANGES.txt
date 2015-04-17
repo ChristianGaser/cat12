@@ -6650,3 +6650,23 @@ M       vbm_tst_qa.m
      
 ------------------------------------------------------------------------
 r687 | dahnke | 2015-04-15 13:40:38
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+M       vbm12.m
+M       vbm_io_colormaps.m
+M       vbm_stat_marks.m
+M       vbm_surf_display.m
+M       vbm_surf_info.m
+M       vbm_surf_rename.m
+M       vbm_surf_render.m
+A       vbm_surf_smooth.m
+M       vbm_tst_qa.m
+
+(1)  Corrections and updates of surface management and display functions.
+(2)  Added "vbm_suf_smooth" for texture smoothing.
+(3)  Added colormaps for surfaces textures.        
+(4)  Temporary, but not final modification of QA noise estimation. 
+
+------------------------------------------------------------------------
+r688 | dahnke | 2015-04-17 11:25:10
