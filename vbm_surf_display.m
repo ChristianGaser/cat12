@@ -33,7 +33,6 @@ function vbm_surf_display(varargin)
     else
       % only gifti surface without texture
       h = vbm_surf_render(sinfo(i).Pmesh);
-      set(h.patch,'AmbientStrength',0.2,'DiffuseStrength',0.8,'SpecularStrength',0.1)
     end
     
     % textur handling
@@ -42,14 +41,47 @@ function vbm_surf_display(varargin)
     switch sinfo(i).texture
       case 'thickness'
         vbm_surf_render('ColourMap',h.axis,jet); 
-        vbm_surf_render('clim',h.axis,[0 5]);
-      case 'gyrification'
+        clim = iscaling(h.cdata);
+        if clim(1)>3 || clim(2)<2 || clim(2)>8 || clim(1)<1; 
+          vbm_surf_render('clim',h.axis,clim);
+        else % default range
+          vbm_surf_render('clim',h.axis,[0 5]);
+        end
+      case {'curvature','gyrification'}
         vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('curvature',128)); 
-        %vbm_surf_render('clim',h.axis,[0 90]);
+        vbm_surf_render('clim',h.axis,iscaling(h.cdata));
       case 'logsulc'
         vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('hotinv',128));
-        vbm_surf_render('clim',h.axis,[0 1.5]);
+        vbm_surf_render('clim',h.axis,iscaling(h.cdata));
+      case 'defects'
+        %set(h.patch,'DiffuseStrength',0,
+      case 'central'
+        set(h.patch,'AmbientStrength',0.2,'DiffuseStrength',0.8,'SpecularStrength',0.1)
+      otherwise
+        %vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('BWR',128)); 
+        clim = iscaling(h.cdata);
+        if clim(1)<0
+          clim = [-max(abs(clim)) max(abs(clim))];
+          vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('BWR',128)); 
+        else
+          vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('hotinv',128)); 
+        end
+        vbm_surf_render('clim',h.axis,clim);
     end
-
+    
   end
 end
+function clim = iscaling(cdata,plim)
+%%
+  ASD = min(0.02,0.0001./max(eps,std(cdata))/max(abs(cdata))); 
+  if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
+
+  bcdata  = [min(cdata) max(cdata)]; 
+  range   = [bcdata(1):diff(bcdata)/1000:bcdata(2)];
+  hst     = hist(cdata,range);
+  clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
+  clim(2) = range(min(numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')));
+end
+
+
+

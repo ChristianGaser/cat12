@@ -11,6 +11,7 @@ function varargout=vbm_io_FreeSurfer(action,varargin)
     case 'read_surf_data'
       [varargout{1},varargout{2}] = read_curv(varargin{1});
     otherwise
+      error('vbm_io_FreeSurfer:unknownAction','Unknown action ''%s''!',action);
   end
 
 end

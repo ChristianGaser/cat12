@@ -1,4 +1,4 @@
-function sinfo = vbm_surf_info(P,read)
+function [varargout] = vbm_surf_info(P,read)
 % ______________________________________________________________________
 % Extact surface information from filename.
 %
@@ -55,7 +55,7 @@ function sinfo = vbm_surf_info(P,read)
   );
 
   if isempty(P), return; end
-    
+  
   for i=1:numel(P)
     [pp,ff,ee] = spm_fileparts(P{i});
     sinfo(i).fdata = dir(P{i});
@@ -67,19 +67,19 @@ function sinfo = vbm_surf_info(P,read)
       case {'.xml','.txt','.html','.csv'}
         sinfo(i).ff = ff;
         sinfo(i).ee = ee;
-        sinfo(i).surform = 0;
+        sinfo(i).ftype = 0;
         continue
       case '.gii'
         sinfo(i).ff = ff;
         sinfo(i).ee = ee;
-        sinfo(i).surform = 1;
+        sinfo(i).ftype = 1;
         if sinfo(i).exist && read
           S = gifti(P{i});
         end
       otherwise
         sinfo(i).ff = [ff ee];
         sinfo(i).ee = '';
-        sinfo(i).surform = 2;
+        sinfo(i).ftype = 0;
         if sinfo(i).exist && read
           clear S; 
           try
@@ -88,6 +88,9 @@ function sinfo = vbm_surf_info(P,read)
           try
             S.cdata = vbm_io_FreeSurfer('read_surf_data',P{1}); 
           end
+        end
+        if exist('S','var')
+          sinfo(i).ftype = 2;
         end
     end
     
@@ -113,7 +116,7 @@ function sinfo = vbm_surf_info(P,read)
     
     % datatype
     if sinfo(i).exist && read
-      switch char([isfield('vertices',S),isfield('cdata',S)])
+      switch num2str([isfield(S,'vertices'),isfield(S,'cdata')],'%d%d')
         case '00',  sinfo(i).datatype  = 0;
         case '01',  sinfo(i).datatype  = 1;
         case '10',  sinfo(i).datatype  = 2;
@@ -128,6 +131,7 @@ function sinfo = vbm_surf_info(P,read)
     
     % special datatypes
     FN = {'thickness','central','sphere','defects','gyrification','logsulc','frac'};
+    sinfo(i).texture = '';
     for fi=1:numel(FN)
       if strfind(sinfo(i).dataname,FN{fi}), sinfo(i).texture = FN{fi}; end
     end   
@@ -183,12 +187,32 @@ function sinfo = vbm_surf_info(P,read)
     end
     % if we got still no mesh than we can find an average mesh
     % ...
+    if isempty(sinfo(i).Pmesh) && sinfo(i).ftype==1; 
+      sinfo(i).Pmesh = sinfo(i).fname;
+    end
+    
     
     if sinfo(i).exist && read
-      if isfield(S,'vertices'), sinfo(i).nvertices = numel(S.vertices); end
-      if isfield(S,'faces'),    sinfo(i).nfaces    = numel(S.faces); end
+      if isfield(S,'vertices'), 
+        sinfo(i).nvertices = size(S.vertices,1);
+      else
+        if ~isempty(sinfo(i).Pmesh)
+          S2 = gifti(sinfo(i).Pmesh);
+          S.vertices = S2.vertices;
+          S.faces    = S2.faces;
+        end
+        sinfo(i).nvertices = size(S.vertices,1);
+      end
+      if isfield(S,'faces'),    sinfo(i).nfaces    = size(S.faces,1); end
+      if isfield(S,'cdata'),    sinfo(i).ncdata    = size(S.cdata,1); end
     end
-    clear S
+    
+
+    if nargout>1
+      varargout{2}{i} = S; 
+    else
+      clear S
+    end
   end
-  
+  varargout{1} = sinfo; 
 end

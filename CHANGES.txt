@@ -6670,3 +6670,22 @@ M       vbm_tst_qa.m
 
 ------------------------------------------------------------------------
 r688 | dahnke | 2015-04-17 11:25:10
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+A       internal
+M       vbm_io_FreeSurfer.m
+M       vbm_io_colormaps.m
+A       vbm_surf_calc.m
+M       vbm_surf_display.m
+M       vbm_surf_info.m
+M       vbm_surf_render.m
+M       vbm_tst_qa.m
+
+(1)  vbm_surf_calc
+(2)  Added further texture handling in "vbm_surf_display".
+
+
+
+------------------------------------------------------------------------
+r689 | dahnke | 2015-04-19 17:37:20

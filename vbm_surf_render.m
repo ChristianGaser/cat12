@@ -102,6 +102,12 @@ switch lower(action)
         renderer = get(H.figure,'Renderer');
         set(H.figure,'Renderer','OpenGL');
         
+        if isfield(M,'facevertexcdata')
+          H.cdata = M.facevertexcdata;
+        else
+          H.cdata = []; 
+        end
+        
         %-Patch
         %------------------------------------------------------------------
         P = struct('vertices',M.vertices, 'faces',M.faces);

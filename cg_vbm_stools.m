@@ -14,15 +14,15 @@ function stools = cg_vbm_stools
 %-----------------------------------------------------------------------  
   outdir         = cfg_files;
   outdir.tag     = 'outdir';
-  outdir.name    = 'Output directory';
+  outdir.name    = 'Output Directory';
   outdir.filter  = 'dir';
   outdir.ufilter = '.*';
-  outdir.num     = [1 1];
+  outdir.num     = [0 1];
   outdir.help    = {'Select a directory where files are written.'};
 
   surfname         = cfg_entry;
   surfname.tag     = 'surfname';
-  surfname.name    = 'Surface name';
+  surfname.name    = 'Surface Filename';
   surfname.strtype = 's';
   surfname.num     = [1 Inf];
   surfname.val     = {'average'};
@@ -30,7 +30,7 @@ function stools = cg_vbm_stools
   
   datafieldname         = cfg_entry;
   datafieldname.tag     = 'datafieldname';
-  datafieldname.name    = 'Datafield name';
+  datafieldname.name    = 'Texture Name';
   datafieldname.strtype = 's';
   datafieldname.num     = [1 Inf];
   datafieldname.val     = {'intensity'};
@@ -491,94 +491,128 @@ function stools = cg_vbm_stools
 % estimation per person (individual and group sampling):
 % g groups with i datafiles and i result datafile
  
-  data_surf         = cfg_files;
-  data_surf.tag     = 'data_surf';
-  data_surf.name    = 'Sample';
-  data_surf.filter  = 'gifti';
-  data_surf.ufilter = 'resampled';
-  data_surf.num     = [1 Inf];
-  data_surf.help    = {'Select surfaces.'};
+  sc.cdata         = cfg_files;
+  sc.cdata.tag     = 'cdata';
+  sc.cdata.name    = 'Textures Files';
+  sc.cdata.filter  = 'any';
+  sc.cdata.ufilter = '^s.mm.*';
+  sc.cdata.num     = [1 Inf];
+  sc.cdata.help    = {'These are the texture files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
+  
+  sc.cdata_sub         = cfg_files;
+  sc.cdata_sub.tag     = 'cdata';
+  sc.cdata_sub.name    = 'Textures Files';
+  sc.cdata_sub.filter  = 'any';
+  sc.cdata_sub.ufilter = '^(s.mm.[rl]h|[rl]h).(?!cent|sphe|defe).*';
+  sc.cdata_sub.num     = [1 Inf];
+  sc.cdata_sub.help    = {'These are the texture files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
+   
+  sc.cdata_sample         = cfg_repeat;
+  sc.cdata_sample.tag     = 'cdata_sub.';
+  sc.cdata_sample.name    = 'Texture Sample';
+  sc.cdata_sample.values  = {sc.cdata_sub};
+  sc.cdata_sample.num     = [1 Inf];
+  sc.cdata_sample.help = {...
+    'Specify data for each sample.  All samples must have the same size and same order.'};
  
+  sc.outdir         = cfg_files;
+  sc.outdir.tag     = 'outdir';
+  sc.outdir.name    = 'Output Directory';
+  sc.outdir.filter  = 'dir';
+  sc.outdir.ufilter = '.*';
+  sc.outdir.num     = [0 1];
+  sc.outdir.val{1}  = {''};
+  sc.outdir.help    = {
+    'Files  produced by this  function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
+  };
   
-  sample_calc         = cfg_repeat;
-  sample_calc.tag     = 'sample';
-  sample_calc.name    = 'Data';
-  sample_calc.values  = {data_surf};
-  sample_calc.num     = [1 Inf];
-  sample_calc.help = {...
-  'Specify data for each sample. All sample must have the same size and same entry order.'};
+  sc.surfname         = cfg_entry;
+  sc.surfname.tag     = 'dataname';
+  sc.surfname.name    = 'Output Filename';
+  sc.surfname.strtype = 's';
+  sc.surfname.num     = [1 Inf];
+  sc.surfname.val     = {'output'};
+  sc.surfname.help    = {'The output texture is written to current working directory unless a valid full pathname is given.  If a path name is given here, the output directory setting will be ignored.'};
+ 
+  sc.dataname         = cfg_entry;
+  sc.dataname.tag     = 'dataname';
+  sc.dataname.name    = 'Texture Name';
+  sc.dataname.strtype = 's';
+  sc.dataname.num     = [1 Inf];
+  sc.dataname.val     = {'output'};
+  sc.dataname.help    = {
+    'Name of the texture part of the filename.'
+    ''
+    '  [rh|lh].TEXTURENAME[.resampled|].subjectname[.gii]' 
+  };
 
-  
-  surffunction         = cfg_entry;
-  surffunction.tag     = 'surffunction';
-  surffunction.name    = 'Function';
-  surffunction.strtype = 's';
-  surffunction.num     = [1 Inf];
-  surffunction.val     = {'mean(S)'};
-  surffunction.help    = {
-    'Function to evaluate the surfaces.'
-    's1 + s2'
-    'mean(S)'
+  sc.expression         = cfg_entry;
+  sc.expression.tag     = 'expression';
+  sc.expression.name    = 'Expression';
+  sc.expression.strtype = 's';
+  sc.expression.num     = [1 Inf];
+  sc.expression.val     = {' '};
+  sc.expression.help    = {
+    'Example expressions (f):'
+    '  * Mean of six surface textures (select six texture files)'
+    '    f = ''(s1+s2+s3+s4+s5+s6)/6'''
+    '  * Make a binaray mask texture at threshold of 100'
+    '    f = ''(s1>100)'''
+    '  * Make a mask from one texture and apply to another'
+    '    f = ''s2.*(s1>100)'''
+    '        - here the first texture is used to make the mask, which is applied to the second texture'
+    '  * Sum of n texures'
+    '    f = ''i1 + i2 + i3 + i4 + i5 + ...'''
+    '  * Sum of n texures (when reading data into a data-matrix - use dmtx arg)'
+    '    f = mean(S)'
+    ''
+  };
+
+  sc.dmtx         = cfg_menu;
+  sc.dmtx.tag     = 'dmtx';
+  sc.dmtx.name    = 'Data Matrix';
+  sc.dmtx.labels  = {
+    'No - don''t read images into data matrix',...
+    'Yes -  read images into data matrix'
+  };
+  sc.dmtx.values  = {0,1};
+  sc.dmtx.val     = {0};
+  sc.dmtx.help    = {
+    'If the dmtx flag is set, then textures are read into a data matrix S (rather than into separate variables s1, s2, s3,...). The data matrix  should be referred to as S, and contains textures in rows. Computation is vertex by vertex, S is a NxK matrix, where N is the number of input textures, and K is the number of vertices per plane.'
   };
 
   surfcalc      = cfg_exbranch;
   surfcalc.tag  = 'surfcalc';
-  surfcalc.name = 'Surface value calculations (multi-mesh).';
+  surfcalc.name = 'Texture Calculator';
   surfcalc.val  = {
-    sample_calc ...
-    surffunction ...
-    surfside ...
-    surfname ...
-    outdir ...
+    sc.cdata ...
+    sc.surfname ...
+    sc.outdir ...
+    sc.expression ...
+    sc.dmtx ...
   };
-  surfcalc.prog = @vbm_surf_display; %@vbm_surf_calc;
+  surfcalc.prog = @vbm_surf_calc;
   surfcalc.help = {
-    'Mathematical operations for a set of surface data.'
+    'Mathematical operations for surface data (textures).'
+    'It works similar to ''spm_imcalc''.  The Input textures must have the same number of entries.  This means that the must came from same hemisphere of a subject, or the have to be resampled.'
   };
 
 
-
-
-% surface calculations
-% ----------------------------------------------------------------------
-% estimation per person (only group sampling):
-% i datafiles and 1 datafiles
- 
-  data_surf         = cfg_files;
-  data_surf.tag     = 'data_surf';
-  data_surf.name    = 'Sample';
-  data_surf.filter  = 'gifti';
-  data_surf.ufilter = 'resampled';
-  data_surf.num     = [1 Inf];
-  data_surf.help    = {'Select surfaces.'};
- 
-  surffunction         = cfg_entry;
-  surffunction.tag     = 'surffunction';
-  surffunction.name    = 'Function';
-  surffunction.strtype = 's';
-  surffunction.num     = [1 Inf];
-  surffunction.val     = {'mean(S)'};
-  surffunction.help    = {
-    'Function to evaluate the surfaces.'
-    's1 + s2'
-    'mean(S)'
+  surfcalcsub      = cfg_exbranch;
+  surfcalcsub.tag  = 'surfcalcsample';
+  surfcalcsub.name = 'Subject Texture Calculator';
+  surfcalcsub.val  = {
+    sc.cdata_sample ...
+    sc.dataname ...
+    sc.outdir ...
+    sc.expression ...
+    sc.dmtx ...
   };
-
-  surfcalcavg      = cfg_exbranch;
-  surfcalcavg.tag  = 'vbm_surf_calcavg';
-  surfcalcavg.name = 'Surface value calculations (single-mesh).';
-  surfcalcavg.val  = {
-    data_surf ...
-    surffunction ...
-    surfside ...
-    surfname ...
-    outdir ...
+  surfcalcsub.prog = @vbm_surf_calc;
+  surfcalcsub.help = {
+    'Mathematical operations for a set of surface data (textures).'
+    'In contrast to the ''Texture Calculator'' it allows the definition of texture sets ''si'' of multiple subjects, rather than a single texture. Therefore, each sample requires textures of the same subjects to evalute the expression for each subject.'
   };
-  surfcalcavg.prog = @vbm_surf_display; %@vbm_surf_calcavg;
-  surfcalcavg.help = {
-    'Mathematical operations for surface data.'
-  };
-
 
 
 
@@ -635,7 +669,7 @@ function stools = cg_vbm_stools
   stools.tag    = 'stools';
   stools.values = {check_mesh_cov,surfextract,surfresamp,surfresamp_fs,...
     resample_data,datasmooth,avg_surf,...
-    vol2surf,vol2surfexp,vol2tempsurf,vol2tempsurfexp,surfcalc,surfcalcavg};
+    vol2surf,vol2surfexp,vol2tempsurf,vol2tempsurfexp,surfcalc,surfcalcsub};
 
 return
 
