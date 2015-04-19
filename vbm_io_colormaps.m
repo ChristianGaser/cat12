@@ -70,16 +70,18 @@ function [C,XML] = vbm_io_colormaps(Cname,ncolors)
             0.0000    0.0000    0.0000  
           ];
     case 'hotinv';
-      C = [ 
-            0.9900    0.9900    0.9900 
-            0.9500    0.9000    0.6000 
-            1.0000    0.8000    0.3000 
-            1.0000    0.6000    0.0000 
-            1.0000    0.3000    0.0000 
-            1.0000    0.0000    0.0000  
-            0.5000    0.0000    0.0000  
-            0.0000    0.0000    0.0000  
-          ];
+      C = hotinv;
+    case 'hot';
+      C = hotinv; C = C(end:-1:1,:);
+    case 'cold';
+      C = hotinv; C = C(end:-1:1,:); C = [C(:,3),C(:,2),C(:,1)];
+    case 'coldinv';
+      C = hotinv; C = [C(:,3),C(:,2),C(:,1)];
+    case 'BWR';
+      CR = hotinv; 
+      CB = [CR(:,3),CR(:,2),CR(:,1)]; CB = CB(end:-1:1,:);
+      C  = [CB;CR(2:end,:,:,:)];
+
     otherwise, error('MATLAB:vbm_io_colormaps','Unknown Colormap ''%s''\n',Cname);
   end
   if isempty(ncolors), ncolors = size(C,1); end
@@ -95,6 +97,18 @@ function [C,XML] = vbm_io_colormaps(Cname,ncolors)
   end
  
   
+end
+function C=hotinv
+  C = [ 
+    0.9900    0.9900    0.9900 
+    0.9500    0.9000    0.6000 
+    1.0000    0.8000    0.3000 
+    1.0000    0.6000    0.0000 
+    1.0000    0.3000    0.0000 
+    1.0000    0.0000    0.0000  
+    0.5000    0.0000    0.0000  
+    0.0000    0.0000    0.0000  
+  ]; 
 end
 function C=BCGWHn
   C = [
