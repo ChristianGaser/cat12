@@ -96,9 +96,9 @@ function surfcalc(job)
   subsetsize = round(10e10 / numel(job.cdata));
   % dispaly something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',sinfo1(1).nfaces/subsetsize,...
+  spm_progress_bar('Init',numel(job.cdata),...
     sprintf('Texture Calculator\n%s',job.output),'Textures Completed'); 
-  sdata = struct('dsize',[],'fsize',[],'vsize',[]);
+  sdata = struct('dsize',[],'fsize',[],'vsize',[]); 
   for si = 1:ceil(sinfo1(1).nvertices/subsetsize)
     range = [ (si-1) * subsetsize + 1 , si * subsetsize ]; 
     range = min(range,sinfo1(1).nvertices);
@@ -151,6 +151,14 @@ function surfcalc(job)
       else
         eval(['s',num2str(i),'=d;']);
       end
+      
+      %% evaluate mesh 
+      if sinfo1.datatype==3
+        vdata(1,range,:) = mean(V);
+      end
+      
+      spm_progress_bar('Set',(si-1)*numel(job.cdata)/subsetsize + i);
+       
     end
 
     %% evaluate texture
@@ -161,12 +169,9 @@ function surfcalc(job)
       error('%s\nCan''t evaluate "%s".',l.message,job.expression);
     end
 
-    %% evaluate mesh 
-    if sinfo(1).datatype==3
-      vdata(1,range,:) = mean(V);
-    end
 
-    spm_progress_bar('Set',si);
+
+    %spm_progress_bar('Set',si);
   end
   
 

@@ -527,7 +527,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
 
 % for fast debuging...
-if job.extopts.debug
+if job.extopts.debug==2
   tmpmat = fullfile(pth,[nam '_tmp.mat']); save(tmpmat);
 end
 
@@ -1259,6 +1259,9 @@ VF.dat(indx,indy,indz) = Yp0b;
 % smooth source with job.vbm.samp mm
 VF = spm_smoothto8bit(VF,job.vbm.samp*2); % *2, because of the TPM smoothness!
 
+
+save tmp.mat
+
 %% affreg registration for one tissue segment
 Affine = spm_affreg(VG, VF, aflags, res.Affine); 
 rf=10^6; Affine    = fix(Affine * rf)/rf;
@@ -1275,49 +1278,43 @@ M0 = res.image.mat;
 
 % prepare transformations 
 
+% resoltion changes:
+tpmres = abs(M1(1)); newres = cg_vbm_get_defaults('extopts.vox');
+if isinf(newres), newres = tpmres; end
+M1d = M1; M1([1,6,11])=M1([1,6,11]) .* newres/tpmres; 
+odim=floor(odim*tpmres/newres);
+
+
 % to write a correct x=-1 output image, we have to be sure that the x
 % value of the bb is negative
 if bb(1)<bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
 
 
-  % figure out the mapping from the volumes to create to the original
-  mm  = [[bb(1,1) bb(1,2) bb(1,3)
-          bb(2,1) bb(1,2) bb(1,3)
-          bb(1,1) bb(2,2) bb(1,3)
-          bb(2,1) bb(2,2) bb(1,3)
-          bb(1,1) bb(1,2) bb(2,3)
-          bb(2,1) bb(1,2) bb(2,3)
-          bb(1,1) bb(2,2) bb(2,3)
-          bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
+% figure out the mapping from the volumes to create to the original
+mm  = [[bb(1,1) bb(1,2) bb(1,3)
+        bb(2,1) bb(1,2) bb(1,3)
+        bb(1,1) bb(2,2) bb(1,3)
+        bb(2,1) bb(2,2) bb(1,3)
+        bb(1,1) bb(1,2) bb(2,3)
+        bb(2,1) bb(1,2) bb(2,3)
+        bb(1,1) bb(2,2) bb(2,3)
+        bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
 
-  vx2  = M1\mm;
-  vx3 = [[1       1       1
-          odim(1) 1       1
-          1       odim(2) 1
-          odim(1) odim(2) 1
-          1       1       odim(3)
-          odim(1) 1       odim(3)
-          1       odim(2) odim(3)
-          odim(1) odim(2) odim(3)]'; ones(1,8)];
-  mat    = mm/vx3; 
+vx2  = M1\mm;
+vx2d = M1d\mm;
+vx3  = [[1       1       1
+        odim(1) 1       1
+        1       odim(2) 1
+        odim(1) odim(2) 1
+        1       1       odim(3)
+        odim(1) 1       odim(3)
+        1       odim(2) odim(3)
+        odim(1) odim(2) odim(3)]'; ones(1,8)];
+mat    = mm/vx3; 
 
-% rigid transformation
-if (any(tc(:,2)) || lb(1,3))
-    x      = affind(rgrid(d),M0);
-    y1     = affind(Yy,M1);
-        
-    [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
-    clear x y1
-
-    % rigid parameters
-    Mr      = M0\inv(R)*M1*vx2/vx3;
-    mat0r   =    R\M1*vx2/vx3;
-    matr    = mm/vx3;
-    
-    trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
-end
     
 % affine parameters
+Mad     = vx2d/vx3; % affine parameter for dartel template M1d\(res.Affine)*
 Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
 mat0a   = res.Affine\M1*vx2/vx3;
 mata    = mm/vx3;
@@ -1369,9 +1366,10 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
         % load new template for this iteration
         for k1=1:n1
             for i=1:odim(3),
-                g(:,:,i,k1) = single(spm_slice_vol(tpm2{it}(k1),spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
+                g(:,:,i,k1) = single(spm_slice_vol(tpm2{it}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
             end
         end
+        %%
         for j = 1:param(it).its,
             it0 = it0 + 1;
             [u,ll] = dartel3(u,f,g,prm);
@@ -1421,10 +1419,28 @@ if exist('Yy','var'),
     end
     %M1 = mat;
     
-    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',tpm.M,'M2',M1\res.Affine*M0,'dartel',do_dartel);
+    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',M1,'M2',M1\res.Affine*M0,'dartel',do_dartel);
 
     clear Yy t1 t2 t3 M;
 end
+
+% rigid transformation
+if (any(tc(:,2)) || lb(1,3))
+    %M0o = res.image0.mat; 
+    x      = affind(rgrid(d),M0);
+    y1     = affind(trans.warped.y,M1); % required new transformation
+        
+    [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
+    clear x y1
+
+    % rigid parameters
+    Mr      = M0\inv(R)*M1*vx2/vx3;
+    mat0r   = R\M1*vx2/vx3;
+    matr    = mm/vx3;
+    
+    trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
+end
+
 trans.native.Vo = VT0;
 trans.native.Vi = VT;
 if job.extopts.WMHC==1 && ~opt.inv_weighting;
@@ -1473,10 +1489,10 @@ vbm_io_writenii(VT0,Ypp,'pp','Ypp map','uint8',[0,1/255],struct('native',0,'warp
 % masking for other spaces 
 vbm_io_writenii(VT0,Ym,'m', ...
   'bias and noise corrected, intensity normalized', ...
-  'float32',[0,1],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),trans);
+  'uint16',[0,0.0001],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),trans);
 vbm_io_writenii(VT0,Ym.*(Yp0>0.1),'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
-  'float32',[0,1],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),trans);
+  'uint16',[0,0.0001],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),trans);
   
 % Yp0b maps
 if job.extopts.WMHC==3 && ~opt.inv_weighting; 
@@ -1516,7 +1532,7 @@ if jc
   [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
   clear y0
   N      = nifti;
-  N.dat  = file_array(fullfile(pth,['jac_wp1', nam, '.nii']),d1,...
+  N.dat  = file_array(fullfile(pth,['jac_wp1', nam, '.nii']),trans.warped.odim(1:3),...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
   N.mat  = M1;
   N.mat0 = M1;
@@ -1530,12 +1546,12 @@ end
 if df(1)
     Yy        = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
     N         = nifti;
-    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),[d1,1,3],'float32',0,1,0);
+    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = M1;
     N.mat0    = M1;
     N.descrip = 'Deformation';
     create(N);
-    N.dat(:,:,:,:,:) = reshape(Yy,[d1,1,3]);
+    N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim(1:3),1,3]);
 end
 % deformation iy - subject > dartel
 if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
@@ -3345,6 +3361,11 @@ function wYv = vbm_vol_ROInorm(Yv,trans,ai,mod)
       end
     end
     wYv = spm_read_vols(wVv);
+    if wVv.mat(1) ~= trans.warped.M1(1)
+      %wVv = rmfield(wVv,'private');
+      wVv2 = wVv; wVv2.mat = trans.warped.M1; wVv2.dim = trans.warped.odim; 
+      [t,wYv] = vbm_vol_imcalc(wVv,wVv2,'i1',struct('interp',0,'verb',0));
+    end
     wYv = vbm_vol_ctype(wYv,wVv(1).private.dat.dtype);
  
     %if FA{ai,2}, [D,I] = vbdist(single(wYlai)); wYlai(:) = wYlai(I(:)); clear D I; end

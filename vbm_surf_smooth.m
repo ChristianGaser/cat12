@@ -40,7 +40,7 @@ function varargout = vbm_surf_smooth(varargin)
   
   Psdata = Pdata;
   sinfo  = vbm_surf_info(Pdata);
-  for i=numel(Pdata)
+  for i=1:numel(Pdata)
     %% new file name
     Psdata(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname));
     
