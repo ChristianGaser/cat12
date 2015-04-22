@@ -95,6 +95,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     else
       nV = V;
     end
+    if exist(fname,'file'), delete(fname); end
 
     N         = nifti;
     N.dat     = file_array(fname,nV.dim(1:3),[spm_type(spmtype) ...
@@ -126,7 +127,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
       if strcmp(ff(1:2),'p0')
         [Vn,Yn] = vbm_vol_imcalc(Vn,Vo,'i1',struct('interp',6,'verb',0)); 
         % correction for interpolation artifacts
-        rf  = 50;
+        rf  = 100;
         Ynr = round(Yn*rf)/rf;
         YMR = false(size(Yn));
         for i=1:4, YMR = YMR | (Yn>(i-1/rf) & Yn<(i+1/rf)); end
@@ -176,6 +177,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
     
     fname = vbm_io_handle_pre(V.fname,pre2,'');
+    if exist(fname,'file'), delete(fname); end
     if labelmap==0
       [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3)); %wT0=wT==0;
       spm_field('bound',1);
@@ -231,7 +233,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     elseif write(3)==2, pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; end
     
     fname = vbm_io_handle_pre(V.fname,pre3,'');
-    
+    if exist(fname,'file'), delete(fname); end
     if write(3)==2
       [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
       if exist('YM','var') % final masking after transformation
@@ -256,15 +258,16 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     
     
     % filtering of the jacobian determinant
-    wrs = wr + 0;
-    spm_smooth(wrs,wrs,1.5);
-    if 1 
-      wT = spm_field(wr,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]) .* wrs; 
-    else % simpler and faster with a similar but not identical result (spm_field is a function)
-      wT = wT./max(eps,wr) .* wrs;
+    if write(3)==2
+      wrs = wr - 1; 
+      spm_smooth(wrs,wrs,2/abs(transform.warped.M1(1))); wrs = wrs + 1;
+      if 1 
+        wT = spm_field(wr,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]) .* wrs; 
+      else % simpler and faster with a similar but not identical result (spm_field is a function)
+        wT = wT./max(eps,wr) .* wrs;
+      end
+      clear wrs;
     end
-    clear wrs;
-  
 
 
     if write(3)==1
@@ -317,6 +320,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
 
     if exist('pre4','var')
       fname = vbm_io_handle_pre(V.fname,pre4,post);
+      if exist(fname,'file'), delete(fname); end
       VraT = struct('fname',fname,'dim',transf.odim,...
            'dt',   [spm_type(spmtype) spm_platform('bigend')],...
            'pinfo',[range(2) range(1)]','mat',transf.mat);%[1.0 0]'

@@ -6689,3 +6689,26 @@ M       vbm_tst_qa.m
 
 ------------------------------------------------------------------------
 r689 | dahnke | 2015-04-19 17:37:20
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_io_cmd.m
+A       vbm_io_matlabversion.m
+M       vbm_io_writenii.m
+M       vbm_surf_calc.m
+M       vbm_surf_display.m
+M       vbm_surf_smooth.m
+M       vbm_tst_qa.m
+M       vbm_vol_resize.m
+
+(1)  Added modification to change Dartel resolution in "cg_vbm_write" and 
+     "vbm_io_writenii" by the "cg_vbm_defaults" parameter "extopts.vox".
+(2)  Corrected error in mean mesh estimation and process bar in "vbm_surf_calc".
+(3)  Changed datatype of intensity normalized output files from single to uint16.
+     The images intensity is not displayed correctly in MRIcron for MAC.
+(4)  Corrected small errors in "vbm_surf_display", "vbm_surf_smooth".
+(5)  Added "vbm_io_matlabversion" to get the year-release number.
+(6)  Corrected small MATLAB version depending error in "vbm_io_cmd" output that
+     depend further on "vbm_io_cprintf" line 265. 
+------------------------------------------------------------------------
+r690 | dahnke | 2015-04-22 14:24:56

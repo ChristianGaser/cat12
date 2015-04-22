@@ -76,7 +76,8 @@ function varargout=vbm_vol_resize(T,operation,varargin)
 %      vx_red  = vx_vol./min(max(vx_vol,minSize),vx_volr); vx_red  = ceil(vx_red*4)/4;
 %      vx_red  = vx_red .* (1+(sizeT.*vx_red < minSize));  vx_red  = ceil(vx_red*4)/4;
 %      vx_volr = vx_vol./vx_red;
-      
+      %minvoxcount = min(8,mean(ss)/2);
+      minvoxcount = mean(ss);
       for i=1:numel(T)
         if any(vx_red<=0.5) % 0.65
           if mod(size(T{i},1),2)==1 && vx_red(1)<=0.75, T{i}(end+1,:,:)=T{i}(end,:,:); end
@@ -86,10 +87,14 @@ function varargout=vbm_vol_resize(T,operation,varargin)
           %ss=floor([1 1 1]./vx_red); % <=0.5); % 0.65
           if strcmp(method,'max')
             varargout{i} = zeros(floor(size(T{i})./ss),'single');
+            counter = varargout{i};
             nsize = floor(size(T{i})./ss).*ss;
             for ii=1:ss(1)
               for jj=1:ss(2)
                 for kk=1:ss(3)
+                  Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
+                  Tadd(isnan(Tadd(:))) = 0;
+                  counter = counter + (Tadd>0);
                   varargout{i} = max(varargout{i}, ...
                     (T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3))>0) .* ...
                      T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3)));
@@ -97,20 +102,24 @@ function varargout=vbm_vol_resize(T,operation,varargin)
                 end
               end
             end
+            varargout{i}(counter(:)<minvoxcount) = 0;
           elseif strcmp(method,'min') 
             varargout{i} = nan(floor(size(T{i})./ss),'single');
+            counter = varargout{i};
             nsize = floor(size(T{i})./ss).*ss; T{i}(T{i}<eps)=nan; 
             for ii=1:ss(1)
               for jj=1:ss(2)
                 for kk=1:ss(3)
-
+                  Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
+                  Tadd(isnan(Tadd(:))) = 0;
+                  counter = counter + (Tadd>0);
                   varargout{i} = min(varargout{i}, ...
                     T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3)));
                     
                 end
               end
             end
-
+            varargout{i}(counter(:)<minvoxcount) = 0;
 
           elseif strcmp(method,'meanm')
             varargout{i} = zeros(floor(size(T{i})./ss),'single');
@@ -127,6 +136,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
                 end
               end
             end
+            varargout{i}(counter(:)<minvoxcount) = 0;
             varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0);   
             varargout{i}(isnan(varargout{i})) = 0;
          elseif strcmp(method,'vbm_stat_nanmean') || strcmp(method,'meannan')

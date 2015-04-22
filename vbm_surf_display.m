@@ -20,7 +20,7 @@ function vbm_surf_display(varargin)
     P = spm_select([1 24],'any','Select surface','','','[lr]h.*');
   end
   P = cellstr(P);
-  
+  %%
   sinfo = vbm_surf_info(P); 
   for i=1:numel(P)
     %% 
@@ -42,7 +42,7 @@ function vbm_surf_display(varargin)
       case 'thickness'
         vbm_surf_render('ColourMap',h.axis,jet); 
         clim = iscaling(h.cdata);
-        if clim(1)>3 || clim(2)<2 || clim(2)>8 || clim(1)<1; 
+        if clim(1)>3 || clim(1)<0  || clim(2)<2 || clim(2)>8  
           vbm_surf_render('clim',h.axis,clim);
         else % default range
           vbm_surf_render('clim',h.axis,[0 5]);
@@ -53,6 +53,7 @@ function vbm_surf_display(varargin)
       case 'logsulc'
         vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('hotinv',128));
         vbm_surf_render('clim',h.axis,iscaling(h.cdata));
+        %vbm_surf_render('clim',h.axis,[0 1.5]);
       case 'defects'
         %set(h.patch,'DiffuseStrength',0,
       case 'central'
