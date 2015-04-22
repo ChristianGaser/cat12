@@ -745,28 +745,32 @@ function varargout = vbm_tst_qa(action,varargin)
 %       noise1 = vbm_stat_nanmedian(Ygr(Ygr>0));
 %       Ywm = vbm_vol_morph(Yp0>2.9,'e',1) & Ymi>(T3th(3) - 2*noise1);
       for ri=1:numel(ncr);
-        [Ygr,resG] = vbm_vol_resize((Ymi ./ T3th(3)) .* (Ywm),'reduceV',vx_vol,ncr(ri),16,'meanm');
-        Ygr = vbm_vol_localstat(Ygr,Ygr>0,1,1);
-        Ygr = vbm_vol_grad(Ygr,[1 1 1]); %resG.vx_volr/max(resG.vx_volr)); %mean([resG.vx_vol;1./resG.vx_red;resG.vx_volr])); 
-        noiser(ri) = vbm_stat_nanmedian(Ygr(Ygr>0)); %*prod(resG.vx_volr)^(1/3) / 4;  
+        %[Ygr,resG] = vbm_vol_resize((Ymi ./ T3th(3)) .* (Ywm),'reduceV',vx_vol,ncr(ri),16,'meanm');
+        %Ygr = vbm_vol_localstat(Ygr,Ygr>0,1,1);
+        %Ygr = vbm_vol_grad(Ygr,[1 1 1]); %resG.vx_volr/max(resG.vx_volr)); %mean([resG.vx_vol;1./resG.vx_red;resG.vx_volr])); 
+        %noiser(ri) = vbm_stat_nanmedian(Ygr(Ygr>0)); %*prod(resG.vx_volr)^(1/3) / 4;  
+        [Yos2,resr] = vbm_vol_resize((Ymi ./ T3th(3)) .* (Ywm),'reduceV',vx_vol,vx_vol.*ncr(ri),2,'meanm');
+        [gx,gy,gz] = vbm_vol_gradient3(Yos2,Yos2>0); 
+        Yg = abs(gx.*resr.vx_volr(1)) + abs(gy.*resr.vx_volr(2)) + abs(gz.*resr.vx_volr(3)); Yg=Yg*3;
+        noiser(ri) = std(Yg(Yg>0)) ./ (prod(resr.vx_volr))^(1/2);
       end
       QAS.QM.noiser = noiser;
-      noise = max(0,mean(noiser))*2.*(QAS.QM.res_vol)^(1/3);    
-      
+      QAS.QM.NCR = mean( noiser( abs(noiser - median(noiser))<2*std(noiser)))*6;    
+      QAS.QM.CNR = 1 / QAS.QM.NCR;  
       
       
       %% noise estimation (original (bias corrected) image)
-    
-      
+    %{
       rms = 1; 
       % WM variance only in one direction to avoid WMHs!
       Yos1 = Ymi .* vbm_vol_morph(Ywm & Ymi>(vbm_stat_nanmedian(Ymi(Ywm(:))) - 2*std(Ymi(Ywm(:)))),'c');
-      for xi=1:1, Yos1 = vbm_vol_localstat(Yos1,Yos1>0,1,1); end
-      [Yos2,res2] = vbm_vol_resize(Yos1,'reduceV',1,4,16,'meanm'); Yos2 = vbm_vol_localstat(Yos2,Yos2>0,1,1)*2.5;
-      [Yos3,res3] = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); Yos3 = vbm_vol_localstat(Yos3,Yos3>0,1,1)*2.5; 
+      ncr = 2:0.25:4; noiser = zeros(size(ncr)); 
+      for ri=1:numel(ncr);
+      [Yos2,res2] = vbm_vol_resize(Yos1,'reduceV',1,4,16,'meanm'); %Yos2 = vbm_vol_localstat(Yos2,Yos2>0,1,1)*2.5;
+      [Yos3,res3] = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); %Yos3 = vbm_vol_localstat(Yos3,Yos3>0,1,1)*2.5; 
       NCww = sum(Yos1(:)>0);
-      QAS.QM.NCRw2 = estimateNoiseLevel(Yos2,Yos2>0,1,rms);% * mean(res2.vx_vol)/mean(res2.vx_volr); 
-      QAS.QM.NCRw3 = estimateNoiseLevel(Yos3,Yos3>0,1,rms);% * mean(res3.vx_vol)/mean(res3.vx_volr);
+      QAS.QM.NCRw2 = estimateNoiseLevel(Yos2,Yos2>0,1,rms) .* (prod(res2.vx_volr))^(1/2);% * mean(res2.vx_vol)/mean(res2.vx_volr); 
+      QAS.QM.NCRw3 = estimateNoiseLevel(Yos3,Yos3>0,1,rms) .* (prod(res3.vx_volr))^(1/2);% * mean(res3.vx_vol)/mean(res3.vx_volr);
       NCRw = mean([...estimateNoiseLevel(Yos0,YM0,4,rms), ...
                    QAS.QM.NCRw2, ...max(GMth,WMth)
                    QAS.QM.NCRw3]) / (max(GMth,WMth)) / QAS.QM.contrastr; 
@@ -790,10 +794,10 @@ function varargout = vbm_tst_qa(action,varargin)
       % can't use it for noise estimation!
       if CSFth>GMth, NCwc = 0; end
       if NCwc>20
-        [Yos2,res2] = vbm_vol_resize(Yos1,'reduceV',1,4,16,'meanm'); Yos2 = vbm_vol_localstat(Yos2,Yos2>0,1,1)*2.5;
-        [Yos3,res3] = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); Yos3 = vbm_vol_localstat(Yos3,Yos3>0,1,1)*2.5; 
-        QAS.QM.NCRc2 = estimateNoiseLevel(Yos2,Yos2>0,2,rms);% * prod(res2.vx_vol)/prod(res2.vx_volr);
-        QAS.QM.NCRc3 = estimateNoiseLevel(Yos3,Yos3>0,3,rms);% * prod(res3.vx_vol)/prod(res3.vx_volr);
+        [Yos2,res2] = vbm_vol_resize(Yos1,'reduceV',1,4,16,'meanm'); %Yos2 = vbm_vol_localstat(Yos2,Yos2>0,1,1)*2.5;
+        [Yos3,res3] = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); %Yos3 = vbm_vol_localstat(Yos3,Yos3>0,1,1)*2.5; 
+        QAS.QM.NCRc2 = estimateNoiseLevel(Yos2,Yos2>0,2,rms) .* (prod(res2.vx_volr))^(1/2);% * prod(res2.vx_vol)/prod(res2.vx_volr);
+        QAS.QM.NCRc3 = estimateNoiseLevel(Yos3,Yos3>0,3,rms) .* (prod(res3.vx_volr))^(1/2);% * prod(res3.vx_vol)/prod(res3.vx_volr);
         NCRc = mean([...estimateNoiseLevel(Yos0,YM0,4,rms), ...
                      QAS.QM.NCRc2, ...
                      QAS.QM.NCRc3]) / (max(GMth,WMth))  / QAS.QM.contrastr; 
@@ -804,9 +808,70 @@ function varargout = vbm_tst_qa(action,varargin)
       end
       QAS.QM.NCRc = NCRc;
       % averaging
-      QAS.QM.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
+       %mean( noise( abs(noise(:,i) - median(noise(:,i)))<2*std(noise(:,i)),i) )
+      QAS.QM.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc)/5;
       QAS.QM.NCR = QAS.QM.NCR / (1-QAS.QM.NCR) /QAS.QM.contrastr ; % signal-nosignal change & contrast 
-      QAS.QM.NCR = QAS.QM.NCR * ((QAS.QM.res_vol)^(1/3)); % volume change in bwp
+      QAS.QM.NCR = QAS.QM.NCR * (1 + log(QAS.QM.res_vol)); % volume change in bwp
+
+     % QAS.QM.NCR = noise / QAS.QM.contrastr * 3; %/ (1-noise/4)
+     % QAS.QM.CNR = 1 / QAS.QM.NCR;  
+     
+      QAS.QM.noise   = noise;
+      QAS.QM.noisec1 = noise / (1-noise/4);
+      %}
+      
+      
+      %{
+      rms = 1; 
+      % WM variance only in one direction to avoid WMHs!
+      Yos1 = Ymi .* vbm_vol_morph(Ywm & Ymi>(vbm_stat_nanmedian(Ymi(Ywm(:))) - 2*std(Ymi(Ywm(:)))),'c');
+      for xi=1:1, Yos1 = vbm_vol_localstat(Yos1,Yos1>0,1,1); end
+      [Yos2,res2] = vbm_vol_resize(Yos1,'reduceV',1,4,16,'meanm'); %Yos2 = vbm_vol_localstat(Yos2,Yos2>0,1,1)*2.5;
+      [Yos3,res3] = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); %Yos3 = vbm_vol_localstat(Yos3,Yos3>0,1,1)*2.5; 
+      NCww = sum(Yos1(:)>0);
+      QAS.QM.NCRw2 = estimateNoiseLevel(Yos2,Yos2>0,1,rms) .* (prod(res2.vx_volr))^(1/2);% * mean(res2.vx_vol)/mean(res2.vx_volr); 
+      QAS.QM.NCRw3 = estimateNoiseLevel(Yos3,Yos3>0,1,rms) .* (prod(res3.vx_volr))^(1/2);% * mean(res3.vx_vol)/mean(res3.vx_volr);
+      NCRw = mean([...estimateNoiseLevel(Yos0,YM0,4,rms), ...
+                   QAS.QM.NCRw2, ...max(GMth,WMth)
+                   QAS.QM.NCRw3]) / (max(GMth,WMth)) / QAS.QM.contrastr; 
+      clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
+      QAS.QM.NCRw = NCRw;
+     
+      
+      % CSF variance of large ventricle
+      Ygm = Yp0toC(Yp0,2)>0.5;
+      if vbm_stat_nanmedian(Yo(Ygm)) < vbm_stat_nanmedian(Yo(Ywm)) % T1 Yg<gth &
+        Ycm = Yp0toC(Yp0,1)>0.9 & Yo<mean(T3th(1:2)) & Yo>T3th(1)/2 & Ybb & ~Ywm & ~Ygm & ... 
+          (~vbm_vol_morph(Yp0<0.5 | Yp0>1.5 | Ymi>mean(T3th(1:2)) | Ymi<mean(T3th(1)/2),'d',1/mean(vx_vol)));
+      else
+        Ycm = Yp0toC(Yp0,1)>0.85 & Ybb & ~Ywm & ~Ygm;
+      end
+     
+      Ycmo = vbm_vol_morph(Ycm,'o',2/mean(vx_vol)); Ycmo = smooth3(Ycmo)>0.5;
+      Yos1 = Ymi .* (Ycmo & Ymi>(vbm_stat_nanmedian(Ymi(Ycmo(:))) + 2*std(Ymi(Ycmo(:)))));
+      NCwc = sum(Yos1(:)>0);
+      % for typical T2 images we have to much signal in the CSF and
+      % can't use it for noise estimation!
+      if CSFth>GMth, NCwc = 0; end
+      if NCwc>20
+        [Yos2,res2] = vbm_vol_resize(Yos1,'reduceV',1,4,16,'meanm'); %Yos2 = vbm_vol_localstat(Yos2,Yos2>0,1,1)*2.5;
+        [Yos3,res3] = vbm_vol_resize(Yos1,'reduceV',1,3,16,'meanm'); %Yos3 = vbm_vol_localstat(Yos3,Yos3>0,1,1)*2.5; 
+        QAS.QM.NCRc2 = estimateNoiseLevel(Yos2,Yos2>0,2,rms) .* (prod(res2.vx_volr))^(1/2);% * prod(res2.vx_vol)/prod(res2.vx_volr);
+        QAS.QM.NCRc3 = estimateNoiseLevel(Yos3,Yos3>0,3,rms) .* (prod(res3.vx_volr))^(1/2);% * prod(res3.vx_vol)/prod(res3.vx_volr);
+        NCRc = mean([...estimateNoiseLevel(Yos0,YM0,4,rms), ...
+                     QAS.QM.NCRc2, ...
+                     QAS.QM.NCRc3]) / (max(GMth,WMth))  / QAS.QM.contrastr; 
+        clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
+      else
+        NCRc = 0;
+        NCwc = 0;
+      end
+      QAS.QM.NCRc = NCRc;
+      % averaging
+       %mean( noise( abs(noise(:,i) - median(noise(:,i)))<2*std(noise(:,i)),i) )
+      QAS.QM.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc)/5;
+      QAS.QM.NCR = QAS.QM.NCR / (1-QAS.QM.NCR) /QAS.QM.contrastr ; % signal-nosignal change & contrast 
+      QAS.QM.NCR = QAS.QM.NCR * (1 + log(QAS.QM.res_vol)); % volume change in bwp
 
      % QAS.QM.NCR = noise / QAS.QM.contrastr * 3; %/ (1-noise/4)
      % QAS.QM.CNR = 1 / QAS.QM.NCR;  
