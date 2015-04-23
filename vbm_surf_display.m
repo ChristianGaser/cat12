@@ -19,7 +19,10 @@ function vbm_surf_display(varargin)
   else
     P = spm_select([1 24],'any','Select surface','','','[lr]h.*');
   end
+  if isempty(P), return; end
   P = cellstr(P);
+  
+  
   %%
   sinfo = vbm_surf_info(P); 
   for i=1:numel(P)

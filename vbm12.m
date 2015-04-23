@@ -22,7 +22,7 @@ function varargout = vbm12(varargin)
 
 % Edit the above vbm12title to modify the response to help vbm12
 
-% Last Modified by GUIDE v2.5 03-Dec-2014 09:15:35
+% Last Modified by GUIDE v2.5 23-Apr-2015 11:03:09
 
 
 % Begin initialization code - DO NOT EDIT
@@ -118,7 +118,7 @@ end
 
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
-spm_jobman('interactive','','spm.tools.vbm.stools.surfextract');
+spm_jobman('interactive','','spm.tools.vbm.stools.surfcalc');
 
 % --- Executes on button press in pushbutton7.
 function pushbutton7_Callback(hObject, eventdata, handles)
@@ -127,21 +127,6 @@ spm_jobman('interactive','','spm.tools.vbm.stools.surfresamp');
 % --- Executes on button press in pushbutton8.
 function pushbutton8_Callback(hObject, eventdata, handles)
 vbm_surf_display;
-%{
-P=spm_select([1 24],'gifti','Select surface');
-for i=1:size(P,1)
-  if 0 % use spm
-    h = spm_mesh_render(deblank(P(i,:)));
-    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(P(i,:),'short40'),'NumberTitle','off');
-    spm_mesh_render('ColourMap',h.axis,jet); spm_mesh_render('ColourBar',h.axis,'on');
-  else 
-    %% use vbm
-    h = vbm_mesh_render(deblank(P(i,:)));
-    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(P(i,:),'short40'),'NumberTitle','off');
-    vbm_mesh_render('ColourMap',h.axis,jet); vbm_mesh_render('ColourBar',h.axis,'on');
-  end
-end
-%}
 
 % --- Executes on button press in pushbutton9.
 function pushbutton9_Callback(hObject, eventdata, handles)
@@ -150,3 +135,36 @@ cg_slice_overlay;
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
 close(gcf);
+
+
+% --- Executes on selection change in popupmenu9.
+function popupmenu9_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu9 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu9
+
+
+% --- Executes on selection change in popupmenu11.
+function popupmenu11_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu11 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu11
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu11_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

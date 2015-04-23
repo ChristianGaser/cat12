@@ -1,53 +1,13 @@
-function stools = cg_vbm_stools
-% wrapper for calling VBM utilities
-%
+function stools = cg_vbm_stools(expert)
 %_______________________________________________________________________
-% Christian Gaser
+% wrapper for calling VBM surface utilities
+%_______________________________________________________________________
+% Robert Dahnke and Christian Gaser
 % $Id$
-
 %_______________________________________________________________________
 
 
 
-
-%% common fields
-%-----------------------------------------------------------------------  
-  outdir         = cfg_files;
-  outdir.tag     = 'outdir';
-  outdir.name    = 'Output Directory';
-  outdir.filter  = 'dir';
-  outdir.ufilter = '.*';
-  outdir.num     = [0 1];
-  outdir.help    = {'Select a directory where files are written.'};
-
-  surfname         = cfg_entry;
-  surfname.tag     = 'surfname';
-  surfname.name    = 'Surface Filename';
-  surfname.strtype = 's';
-  surfname.num     = [1 Inf];
-  surfname.val     = {'average'};
-  surfname.help    = {'Name of the surface.'};
-  
-  datafieldname         = cfg_entry;
-  datafieldname.tag     = 'datafieldname';
-  datafieldname.name    = 'Texture Name';
-  datafieldname.strtype = 's';
-  datafieldname.num     = [1 Inf];
-  datafieldname.val     = {'intensity'};
-  datafieldname.help    = {'Name of the extracted data.'};
- 
-  fwhm         = cfg_entry;
-  fwhm.tag     = 'fwhm';
-  fwhm.name    = 'Smoothing filter size in fwhm';
-  fwhm.strtype = 'r';
-  fwhm.num     = [1 1];
-  fwhm.val     = {15};
-  fwhm.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm.'};
- 
-
-  
-  
 %% Surface covariance and quality assurance
 %-----------------------------------------------------------------------
   data_surf_cov         = cfg_files;
@@ -57,7 +17,16 @@ function stools = cg_vbm_stools
   data_surf_cov.ufilter = 'resampled';
   data_surf_cov.num     = [1 Inf];
   data_surf_cov.help    = {'Select resampled surfaces parameter files.'};
+  
+  data_xml = cfg_files;
+  data_xml.name = 'XML files';
+  data_xml.tag  = 'data_xml';
+  data_xml.filter = 'xml';
+  data_xml.num  = [1 Inf];
+  data_xml.help   = {
+  'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files..'};
 
+  
   sample_cov         = cfg_repeat;
   sample_cov.tag     = 'sample';
   sample_cov.name    = 'Data';
@@ -65,6 +34,13 @@ function stools = cg_vbm_stools
   sample_cov.num     = [1 Inf];
   sample_cov.help = {...
   'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.'};
+
+  qam         = cfg_repeat;
+  qam.tag     = 'qam';
+  qam.name    = 'Load quality measures';
+  qam.values  = {data_xml};
+  qam.num     = [0 Inf];
+  qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
   c         = cfg_entry;
   c.tag     = 'c';
@@ -79,21 +55,6 @@ function stools = cg_vbm_stools
   transform.values  = {c};
   transform.num     = [0 Inf];
   transform.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
-
-  data_xml = cfg_files;
-  data_xml.name = 'XML files';
-  data_xml.tag  = 'data_xml';
-  data_xml.filter = 'xml';
-  data_xml.num  = [1 Inf];
-  data_xml.help   = {
-  'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files..'};
-
-  qam         = cfg_repeat;
-  qam.tag     = 'qam';
-  qam.name    = 'Load quality measures';
-  qam.values  = {data_xml};
-  qam.num     = [0 Inf];
-  qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
   check_mesh_cov      = cfg_exbranch;
   check_mesh_cov.tag  = 'check_mesh_cov';
@@ -174,45 +135,19 @@ function stools = cg_vbm_stools
   surfextract.prog = @vbm_surf_parameters;
   surfextract.help = {'Using this option several surface parameters can be extracted that can be further analyzed.'};
 
-  
-  
 
-%% data smoothing
-%-----------------------------------------------------------------------
-  data_smooth         = cfg_files;
-  data_smooth.tag     = 'data_smooth';
-  data_smooth.name    = 'Sample';
-  data_smooth.filter  = 'any';
-  data_smooth.ufilter = '[rl]h.(?!cent|sphe|defe).*';
-  data_smooth.num     = [1 Inf];
-  data_smooth.help    = {'Select surface data (texture) files for smoothing.'};
-  
-  fwhm_smooth         = cfg_entry;
-  fwhm_smooth.tag     = 'fwhm';
-  fwhm_smooth.name    = 'Smoothing filter size in fwhm';
-  fwhm_smooth.strtype = 'r';
-  fwhm_smooth.num     = [1 1];
-  fwhm_smooth.val     = {15};
-  fwhm_smooth.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm.'};
- 
-  datasmooth      = cfg_exbranch;
-  datasmooth.tag  = 'datasmooth';
-  datasmooth.name = 'Smooth surface data';
-  datasmooth.val  = {
-    data_smooth ...
-    fwhm_smooth ...
-  };
-  datasmooth.vfiles = @vfiles_datasmooth;
-  datasmooth.prog = @vbm_surf_smooth;
-  datasmooth.help = {
-    'Gaussian smoothing of surface data (texture).'
-    ''
-  }; 
 
 
 % extract volumetric data
 %-----------------------------------------------------------------------  
+  v2s.datafieldname         = cfg_entry;
+  v2s.datafieldname.tag     = 'datafieldname';
+  v2s.datafieldname.name    = 'Texture Name';
+  v2s.datafieldname.strtype = 's';
+  v2s.datafieldname.num     = [1 Inf];
+  v2s.datafieldname.val     = {'intensity'};
+  v2s.datafieldname.help    = {'Name of the extracted data.'};
+ 
   v2s.res         = cfg_entry;
   v2s.res.tag     = 'res';
   v2s.res.name    = 'Sampling Size';
@@ -286,114 +221,104 @@ function stools = cg_vbm_stools
 
   % range +2 value, min/max +maskvol, exp +1 value
   % further filter option by thickness and sulcus/gyrus witdh
+
   
 
-%% extract volumetric data in individual space
+% extract volumetric data in individual space
 %-----------------------------------------------------------------------  
-  data_surf_sub         = cfg_files;
-  data_surf_sub.tag     = 'data_mesh';
-  data_surf_sub.name    = 'Sample';
-  data_surf_sub.filter  = 'gifti';
-  data_surf_sub.ufilter = '^[rl]h.central.*';
-  data_surf_sub.num     = [1 Inf];
-  data_surf_sub.help    = {'Select subject surface files.'};
+  v2s.data_surf_sub         = cfg_files;
+  v2s.data_surf_sub.tag     = 'data_mesh';
+  v2s.data_surf_sub.name    = 'Sample';
+  v2s.data_surf_sub.filter  = 'gifti';
+  v2s.data_surf_sub.ufilter = '^[rl]h.central.*';
+  v2s.data_surf_sub.num     = [1 Inf];
+  v2s.data_surf_sub.help    = {'Select subject surface files.'};
   
-  data_sub         = cfg_files; 
-  data_sub.tag     = 'data_vol';
-  data_sub.name    = 'Volumes';
-  data_sub.filter  = 'image';
-  data_sub.ufilter = '^(?!wmr|wp|w0rp|wc).*'; % no normalized images
-  data_sub.num     = [1 Inf];
-  data_sub.help    = {
+  v2s.data_sub         = cfg_files; 
+  v2s.data_sub.tag     = 'data_vol';
+  v2s.data_sub.name    = 'Volumes';
+  v2s.data_sub.filter  = 'image';
+  v2s.data_sub.ufilter = '^(?!wmr|wp|w0rp|wc).*'; % no normalized images
+  v2s.data_sub.num     = [1 Inf];
+  v2s.data_sub.help    = {
     'Select subject space volumes.'
   };
 
-  vol2surf      = cfg_exbranch;
-  vol2surf.tag  = 'vol2surf';
-  vol2surf.name = 'Extract Volume Data by Individual Surface';
-  vol2surf.val  = {
-    data_surf_sub ...
-    data_sub ...
-    datafieldname ...
-  };
-  vol2surf.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
-  vol2surf.help = {
+  v2s.vol2surf      = cfg_exbranch;
+  v2s.vol2surf.tag  = 'vol2surf';
+  v2s.vol2surf.name = 'Extract Volume Data by Individual Surface';
+  if expert
+    v2s.vol2surf.val = {
+      v2s.data_surf_sub ...
+      v2s.data_sub ...
+      v2s.datafieldname ...
+      v2s.res v2s.origin v2s.length ...
+      v2s.interp ...
+      v2s.mapping ...
+      };
+  else
+    v2s.vol2surf.val = {
+      v2s.data_surf_sub ...
+      v2s.data_sub ...
+      v2s.datafieldname ...
+      };
+  end
+  v2s.vol2surf.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
+  v2s.vol2surf.help = {
     'Extract volumetric data from individual space.'
     ''
   };
 
-  vol2surfexp      = cfg_exbranch;
-  vol2surfexp.tag  = 'vol2surfexp';
-  vol2surfexp.name = 'Extract Volume Data by Individual Surface (expert)';
-  vol2surfexp.val  = {
-    data_surf_sub ...
-    data_sub ...
-    datafieldname ...
-    v2s.res v2s.origin v2s.length ...
-    v2s.interp ...
-    v2s.mapping ...
-  };
-  vol2surfexp.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
-  vol2surfexp.help = {
-    'Extract volumetric data from individual space.'
-    ''
-  };
 
 
 %% extract volumetric data in template space
 %-----------------------------------------------------------------------  
-  data_surf_avg         = cfg_files; 
-  data_surf_avg.tag     = 'data_mesh';
-  data_surf_avg.name    = 'Sample';
-  data_surf_avg.filter  = 'gifti';
-  data_surf_avg.ufilter = '^[rl]h.*';
-  data_surf_avg.num     = [1 2];
-  data_surf_avg.dir     = fullfile(spm('dir'),'toolbox','vbm12');
-  data_surf_avg.help    = {'Select template surface files.'};
+  v2s.data_surf_avg         = cfg_files; 
+  v2s.data_surf_avg.tag     = 'data_mesh';
+  v2s.data_surf_avg.name    = 'Sample';
+  v2s.data_surf_avg.filter  = 'gifti';
+  v2s.data_surf_avg.ufilter = '^[rl]h.*';
+  v2s.data_surf_avg.num     = [1 2];
+  v2s.data_surf_avg.dir     = fullfile(spm('dir'),'toolbox','vbm12');
+  v2s.data_surf_avg.help    = {'Select template surface files.'};
 
-  data_norm         = cfg_files; 
-  data_norm.tag     = 'data_vol';
-  data_norm.name    = 'Volumes';
-  data_norm.filter  = 'image';
-  data_norm.ufilter = '^(?=wm|wp|w0rp|wc).*'; % only normalized images
-  data_norm.num     = [1 Inf];
-  data_norm.help    = {
+  v2s.data_norm         = cfg_files; 
+  v2s.data_norm.tag     = 'data_vol';
+  v2s.data_norm.name    = 'Volumes';
+  v2s.data_norm.filter  = 'image';
+  v2s.data_norm.ufilter = '^(?=wm|wp|w0rp|wc).*'; % only normalized images
+  v2s.data_norm.num     = [1 Inf];
+  v2s.data_norm.help    = {
     'Select normalized space volumes.'
   };
 
-  vol2tempsurf      = cfg_exbranch;
-  vol2tempsurf.tag  = 'vol2surf';
-  vol2tempsurf.name = 'Extract Volume Data by Template Surface';
-  vol2tempsurf.val  = {
-    data_surf_avg ...
-    data_norm ...
-    datafieldname ...
-  };
-  vol2tempsurf.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
-  vol2tempsurf.help = {
-    'Extract volumetric data from template/normalized space.'
-    ''
-  };
-
-  vol2tempsurfexp      = cfg_exbranch;
-  vol2tempsurfexp.tag  = 'vol2tempsurfexp';
-  vol2tempsurfexp.name = 'Extract Volume Data by Template Surface (expert)';
-  vol2tempsurfexp.val  = {
-    data_surf_avg ...
-    data_norm ...
-    datafieldname ...
-    v2s.res v2s.origin v2s.length ...
-    v2s.interp ...
-    v2s.mapping ...
-  };
-  vol2tempsurfexp.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
-  vol2tempsurfexp.help = {
+  v2s.vol2tempsurf      = cfg_exbranch;
+  v2s.vol2tempsurf.tag  = 'vol2surftemp';
+  v2s.vol2tempsurf.name = 'Extract Volume Data by Template Surface';
+  if expert
+    v2s.vol2tempsurf.val  = {
+      v2s.data_surf_avg ...
+      v2s.data_norm ...
+      v2s.datafieldname ...
+      v2s.res v2s.origin v2s.length ...
+      v2s.interp ...
+      v2s.mapping ...
+    };
+  else
+    v2s.vol2tempsurf.val  = {
+      v2s.data_surf_avg ...
+      v2s.data_norm ...
+      v2s.datafieldname ...
+    };
+  end
+  v2s.vol2tempsurf.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
+  v2s.vol2tempsurf.help = {
     'Extract volumetric data from template space.'
     'The template surface was generated by VBM12 surface processing [1] of the average wmr*.nii images of VBM12.   '
     ''
-    '[1] Dahnke, R., Yotter, R. A., and Gaser, C. 2012.'
-    'Cortical thickness and central surface estimation.'
-    'Neuroimage, 65C:336?348.'
+    '  [1] Dahnke, R., Yotter, R. A., and Gaser, C. 2012.'
+    '  Cortical thickness and central surface estimation.'
+    '  Neuroimage, 65C:336?348.'
     ''
     '  WARNING: ONLY FOR VISUAL PURPOSE! '
     '           ALTHOUGH THERE IS A GOOD OVERLAPE TO THE TEMPLATE,'
@@ -404,87 +329,6 @@ function stools = cg_vbm_stools
 
 
 
-%% resample surface (mesh and data)
-%-----------------------------------------------------------------------
-  data_surfdata         = cfg_files;
-  data_surfdata.tag     = 'data_surf';
-  data_surfdata.name    = 'Surfaces parameters';
-  data_surfdata.filter  = 'any';
-  data_surfdata.ufilter = '^[lr]h.';
-  data_surfdata.num     = [1 Inf];
-  data_surfdata.help    = {'Select surfaces parameter files for resampling to template space.'};
-
-  resample_data      = cfg_exbranch;
-  resample_data.tag  = 'surfresamp';
-  resample_data.name = 'Resample surface parameters';
-  resample_data.val  = {data_surfdata};
-  resample_data.prog = @vbm_surf_display; %@vbm_surf_resample;
-  resample_data.help = {
-    'In order to analyze surface parameters all data have to be rsampled into template space and the rsampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
-
-  
-
-
-
-%% average surface mesh
-%-----------------------------------------------------------------------
-  data_surf_avg         = cfg_files;
-  data_surf_avg.tag     = 'data_surf';
-  data_surf_avg.name    = 'Sample';
-  data_surf_avg.filter  = 'gifti';
-  data_surf_avg.ufilter = 'resampled';
-  data_surf_avg.num     = [1 Inf];
-  data_surf_avg.help    = {'Select surfaces.'};
-
-
-  surfsmooth         = cfg_entry;
-  surfsmooth.tag     = 'surfsmooth';
-  surfsmooth.name    = 'Surface smoothing iterations';
-  surfsmooth.strtype = 'r';
-  surfsmooth.num     = [1 Inf];
-  surfsmooth.val     = {[0 2 32]};
-  surfsmooth.help    = {
-    'Smoothing of the average surface. '
-    ''
-    };
-
-  surfside         = cfg_menu;
-  surfside.tag     = 'surfside';
-  surfside.name    = 'Side handling';
-  surfside.labels  = {'separate','mirror'};
-  surfside.values  = {1,2};
-  surfside.val     = {1};
-  surfside.help    = {
-    'Handling of the cortical hemispheres.'
-    ''
-    };
-
-  outdir_fsavg         = cfg_files;
-  outdir_fsavg.tag     = 'outdir';
-  outdir_fsavg.name    = 'Output directory';
-  outdir_fsavg.filter  = 'dir';
-  outdir_fsavg.ufilter = '.*';
-  outdir_fsavg.num     = [1 1];
-  outdir_fsavg.dir     = fullfile(spm('dir'),'toolbox','vbm12');
-  outdir_fsavg.help    = {'Select a directory where files are written.'};
-  
-  avg_surf      = cfg_exbranch;
-  avg_surf.tag  = 'avg_surf';
-  avg_surf.name = 'Average surface mesh';
-  avg_surf.val  = {
-    data_surf_avg ...
-    surfsmooth ...
-    surfside ...
-    surfname ...
-    outdir_fsavg ...
-  };
-  avg_surf.prog = @vbm_surf_display; %@vbm_surf_avg;
-  avg_surf.help = {
-    'Averaging of cortical surfaces.'
-    ''
-  };
-
-
 
 % surface calculations 
 % ----------------------------------------------------------------------
@@ -493,23 +337,23 @@ function stools = cg_vbm_stools
  
   sc.cdata         = cfg_files;
   sc.cdata.tag     = 'cdata';
-  sc.cdata.name    = 'Textures Files';
+  sc.cdata.name    = 'Surface Data Files';
   sc.cdata.filter  = 'any';
   sc.cdata.ufilter = '^s.mm.*';
   sc.cdata.num     = [1 Inf];
-  sc.cdata.help    = {'These are the texture files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
+  sc.cdata.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
   
   sc.cdata_sub         = cfg_files;
   sc.cdata_sub.tag     = 'cdata';
-  sc.cdata_sub.name    = 'Textures Files';
+  sc.cdata_sub.name    = 'Surface Data Files';
   sc.cdata_sub.filter  = 'any';
   sc.cdata_sub.ufilter = '^(s.mm.[rl]h|[rl]h).(?!cent|sphe|defe).*';
   sc.cdata_sub.num     = [1 Inf];
-  sc.cdata_sub.help    = {'These are the texture files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
+  sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
    
   sc.cdata_sample         = cfg_repeat;
   sc.cdata_sample.tag     = 'cdata_sub.';
-  sc.cdata_sample.name    = 'Texture Sample';
+  sc.cdata_sample.name    = 'Surface Data Sample';
   sc.cdata_sample.values  = {sc.cdata_sub};
   sc.cdata_sample.num     = [1 Inf];
   sc.cdata_sample.help = {...
@@ -532,7 +376,7 @@ function stools = cg_vbm_stools
   sc.surfname.strtype = 's';
   sc.surfname.num     = [1 Inf];
   sc.surfname.val     = {'output'};
-  sc.surfname.help    = {'The output texture is written to current working directory unless a valid full pathname is given.  If a path name is given here, the output directory setting will be ignored.'};
+  sc.surfname.help    = {'The output surface data file is written to current working directory unless a valid full pathname is given.  If a path name is given here, the output directory setting will be ignored.'};
  
   sc.dataname         = cfg_entry;
   sc.dataname.tag     = 'dataname';
@@ -541,9 +385,9 @@ function stools = cg_vbm_stools
   sc.dataname.num     = [1 Inf];
   sc.dataname.val     = {'output'};
   sc.dataname.help    = {
-    'Name of the texture part of the filename.'
+    'Name of the surface data part of the filename.'
     ''
-    '  [rh|lh].TEXTURENAME[.resampled|].subjectname[.gii]' 
+    '  [s*mm.][rh|lh].DATANAME[.resampled|].subjectname[.gii]' 
   };
 
   sc.expression         = cfg_entry;
@@ -581,9 +425,12 @@ function stools = cg_vbm_stools
     'If the dmtx flag is set, then textures are read into a data matrix S (rather than into separate variables s1, s2, s3,...). The data matrix  should be referred to as S, and contains textures in rows. Computation is vertex by vertex, S is a NxK matrix, where N is the number of input textures, and K is the number of vertices per plane.'
   };
 
+
+% ----------------------------------------------------------------------
+
   surfcalc      = cfg_exbranch;
   surfcalc.tag  = 'surfcalc';
-  surfcalc.name = 'Texture Calculator';
+  surfcalc.name = 'Surface Calculator';
   surfcalc.val  = {
     sc.cdata ...
     sc.surfname ...
@@ -600,7 +447,7 @@ function stools = cg_vbm_stools
 
   surfcalcsub      = cfg_exbranch;
   surfcalcsub.tag  = 'surfcalcsample';
-  surfcalcsub.name = 'Subject Texture Calculator';
+  surfcalcsub.name = 'Surface Calculator (many subjects)';
   surfcalcsub.val  = {
     sc.cdata_sample ...
     sc.dataname ...
@@ -611,7 +458,7 @@ function stools = cg_vbm_stools
   surfcalcsub.prog = @vbm_surf_calc;
   surfcalcsub.help = {
     'Mathematical operations for a set of surface data (textures).'
-    'In contrast to the ''Texture Calculator'' it allows the definition of texture sets ''si'' of multiple subjects, rather than a single texture. Therefore, each sample requires textures of the same subjects to evalute the expression for each subject.'
+    'In contrast to the ''Texture Calculator'' it allows the definition of texture sets ''si'' for multiple subjects.  Therefore, each sample requires textures of the same subjects to evalute the expression for each subject.'
   };
 
 
@@ -621,15 +468,24 @@ function stools = cg_vbm_stools
 %-----------------------------------------------------------------------
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
-  data_surf.name    = 'Surfaces parameters';
+  data_surf.name    = 'Surfaces Data';
   data_surf.filter  = 'any';
   data_surf.ufilter = '^[lr]h.[tgfl][hyro][irag][cias]';
   data_surf.num     = [1 Inf];
-  data_surf.help    = {'Select surfaces parameter files for resampling to template space.'};
+  data_surf.help    = {'Select Surfaces Data Files for Resampling to Template Space.'};
 
+  fwhm         = cfg_entry;
+  fwhm.tag     = 'fwhm';
+  fwhm.name    = 'Smoothing Filter Size in FWHM';
+  fwhm.strtype = 'r';
+  fwhm.num     = [1 1];
+  fwhm.val     = {15};
+  fwhm.help    = {
+    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm.'};
+  
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
-  surfresamp.name = 'Resample and smooth surface parameters';
+  surfresamp.name = 'Resample and Smooth Surface Data';
   surfresamp.val  = {data_surf,fwhm};
   surfresamp.prog = @vbm_surf_resamp;
   surfresamp.help = {
@@ -642,20 +498,27 @@ function stools = cg_vbm_stools
 %-----------------------------------------------------------------------
   data_fs         = cfg_files;
   data_fs.tag     = 'data_fs';
-  data_fs.name    = 'Freesurfer subject directories';
+  data_fs.name    = 'Freesurfer Subject Directories';
   data_fs.filter  = 'dir';
   data_fs.ufilter = '.*';
   data_fs.num     = [1 Inf];
   data_fs.help    = {'Select subject folders of freesurfer data to rsample thickness data.'};
 
+  outdir         = cfg_files;
+  outdir.tag     = 'outdir';
+  outdir.name    = 'Output Directory';
+  outdir.filter  = 'dir';
+  outdir.ufilter = '.*';
+  outdir.num     = [0 1];
+  outdir.help    = {'Select a directory where files are written.'};
+
   surfresamp_fs      = cfg_exbranch;
   surfresamp_fs.tag  = 'surfresamp_fs';
-  surfresamp_fs.name = 'Resample and smooth existing freesurfer thickness data';
+  surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Thickness Data';
   surfresamp_fs.val  = {data_fs,fwhm,outdir};
   surfresamp_fs.prog = @vbm_surf_resamp_freesurfer;
   surfresamp_fs.help = {
   'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
-
 
 
 
@@ -667,26 +530,19 @@ function stools = cg_vbm_stools
   stools = cfg_choice;
   stools.name   = 'Surface Tools';
   stools.tag    = 'stools';
-  stools.values = {check_mesh_cov,surfextract,surfresamp,surfresamp_fs,...
-    resample_data,datasmooth,avg_surf,...
-    vol2surf,vol2surfexp,vol2tempsurf,vol2tempsurfexp,surfcalc,surfcalcsub};
+  stools.values = { ...
+    check_mesh_cov, ...
+    surfextract, ...
+    surfresamp, ...
+    surfresamp_fs,...
+    v2s.vol2surf, ...
+    v2s.vol2tempsurf, ...
+    surfcalc, ...
+    surfcalcsub ...
+    };
 
 return
 
 
 %% Result files
 %_______________________________________________________________________
-function vf = vfiles_datasmooth(job)
-  vf = job.data_smooth;
-  for i=1:size(job.data_smooth,1),
-      [pth,nam,ext] = spm_fileparts(job.data_smooth{i});
-      vf{i} = fullfile(pth,sprintf('s%d.%s%s%s',job.fhwm,nam,ext));
-  end;
-return;
-function vf = vfiles_resample_data(job)
-  vf = job.data_smooth;
-  for i=1:size(job.data_smooth,1),
-      [pth,nam,ext] = spm_fileparts(job.data_smooth{i});
-      vf{i} = fullfile(pth,sprintf('s%d.%s%s%s',job.fhwm,nam,ext));
-  end;
-return;

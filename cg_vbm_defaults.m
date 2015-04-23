@@ -164,6 +164,7 @@ vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch err
 %vbm.extopts.QAcleanupth  = [3 5]; % NOT IMPLEMENTED % mark threshold for questionable and bad quality for QAcleanup
 
 vbm.extopts.gui           = 1;     % use GUI 
+vbm.extopts.expertgui     = 1;     % use full GUI
 
 % expert options - ROIs
 %=======================================================================

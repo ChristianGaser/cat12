@@ -1,11 +1,13 @@
-function extopts = cg_vbm_extopts
+function extopts = cg_vbm_extopts(expert)
 % Configuration file for extended VBM options
 %
 % Christian Gaser
 % $Id$
 %#ok<*AGROW>
 
-expert = 0; % switch to de/activate further GUI options
+if ~exist('expert','var')
+  expert = 0; % switch to de/activate further GUI options
+end
 
 %_______________________________________________________________________
 % options for output

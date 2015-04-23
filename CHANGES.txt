@@ -6723,3 +6723,43 @@ Corrected some typos or comments.
 
 ------------------------------------------------------------------------
 r691 | gaser | 2015-04-23 10:40:48
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_extopts.m
+M       cg_vbm_stools.m
+A       cg_vbm_stoolsexp.m
+D       fsaverage
+D       fsaverage/fsavg.index2D_256x128.txt
+D       fsaverage/lh.central.gii
+D       fsaverage/lh.inflated.gii
+D       fsaverage/lh.s1template.IXI555.gii
+D       fsaverage/lh.s32template.IXI555.gii
+D       fsaverage/lh.sphere.gii
+D       fsaverage/lh.template.Template_T1_IXI555_MNI152.gii
+D       fsaverage/rh.central.gii
+D       fsaverage/rh.inflated.gii
+D       fsaverage/rh.s1template.IXI555.gii
+D       fsaverage/rh.s32template.IXI555.gii
+D       fsaverage/rh.sphere.gii
+D       fsaverage/rh.template.Template_T1_IXI555_MNI152.gii
+M       tbx_cfg_vbm.m
+A  +    templates_surfaces
+M       vbm12.fig
+M       vbm12.m
+M       vbm_spm.m
+M       vbm_surf_calc.m
+M       vbm_surf_createCS.m
+M       vbm_surf_display.m
+M       vbm_surf_resamp.m
+M       vbm_surf_resamp_freesurfer.m
+M       vbm_surf_smooth.m
+
+(1)  Added "extopts.expertgui" flag to "cg_vbm_defaults" to add further GUI
+     options and batch function (default=0). 
+(2)  Added "cg_vbm_stoolsepx" for further expert batch functions, if 
+     "extopts.expertgui==0".
+(3)  Updated VBM12 GUI.
+(4)  Renamed "fsaverage" to "templates_surfaces".
+------------------------------------------------------------------------
+r692 | dahnke | 2015-04-23 11:49:01
