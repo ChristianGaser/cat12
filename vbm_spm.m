@@ -663,7 +663,7 @@ else
     g = gifti(VY(1).fname);
     
     % workaround to use fsaverage surface for display
-    fsavgDir = fullfile(spm('dir'),'toolbox','vbm12','fsaverage');
+    fsavgDir = fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces');
     if exist(fsavgDir) == 7
       [pp,ff]   = spm_fileparts(VY(1).fname);
       

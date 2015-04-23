@@ -292,11 +292,27 @@ output.help = {
 ''
 'The value of dx''/dy is a measure of how much x'' changes if y is changed by a tiny amount. The determinant of the Jacobian is the measure of relative volumes of warped and unwarped structures.  The modulation step simply involves multiplying by the relative volumes.'};
 
-%------------------------------------------------------------------------
-tools   = cg_vbm_tools;
-stools  = cg_vbm_stools;
-extopts = cg_vbm_extopts;
-opts    = cg_vbm_opts;
+%% ------------------------------------------------------------------------
+try
+  defid = fopen(fullfile(spm('dir'),'toolbox','vbm12','cg_vbm_defaults.m'));
+  defstr = textscan(defid,'%s'); 
+  fclose(defid); 
+  experti = find(cellfun('isempty',strfind(defstr{1},'vbm.extopts.expertgui'))==0);
+  expert = str2double(defstr{1}{experti+2}(1)); %cg_vbm_get_defaults('extopts.expertgui');
+catch
+  expert = 0; 
+end
+if isempty(expert) 
+  expert = 0;
+end  
+%% ------------------------------------------------------------------------
+tools      = cg_vbm_tools;             % volume tools
+stools     = cg_vbm_stools(expert);    % surface tools
+if expert 
+  stoolsexp  = cg_vbm_stoolsexp;       % surface expert tools
+end
+extopts    = cg_vbm_extopts(expert);   
+opts       = cg_vbm_opts; 
 %------------------------------------------------------------------------
 
 estwrite        = cfg_exbranch;
@@ -318,8 +334,11 @@ estwrite.help   = {
 vbm        = cfg_choice;
 vbm.name   = 'VBM12';
 vbm.tag    = 'vbm';
-vbm.values = {estwrite,tools,stools};
-%vbm.values = {estwrite,tools};
+if expert
+  vbm.values = {estwrite,tools,stools,stoolsexp};
+else
+  vbm.values = {estwrite,tools,stools}; 
+end
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------

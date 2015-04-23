@@ -23,7 +23,7 @@ function varargout = vbm_surf_smooth(varargin)
 
   opt.debug     = cg_vbm_get_defaults('extopts.debug');
   opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
-  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
+  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces'); 
 
   % add system dependent extension to CAT folder
   if ispc
@@ -38,11 +38,13 @@ function varargout = vbm_surf_smooth(varargin)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Complete');
   
+  % 
+  
   Psdata = Pdata;
   sinfo  = vbm_surf_info(Pdata);
   for i=1:numel(Pdata)
     %% new file name
-    Psdata(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname));
+    Psdata(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname,'ee');
     
     % assure gifty output
     if assuregifti && ~strcmp(sinfo(i).ee,'.gii')
