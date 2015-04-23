@@ -6712,3 +6712,14 @@ M       vbm_vol_resize.m
      depend further on "vbm_io_cprintf" line 265. 
 ------------------------------------------------------------------------
 r690 | dahnke | 2015-04-22 14:24:56
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_vbm_defaults.m
+M       html/vbm12.html
+M       vbm_surf_display.m
+
+Corrected some typos or comments.
+
+------------------------------------------------------------------------
+r691 | gaser | 2015-04-23 10:40:48

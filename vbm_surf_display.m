@@ -1,6 +1,6 @@
 function vbm_surf_display(varargin)
 % ______________________________________________________________________
-% Function to display surfaces. Based on spm_mesh_render.
+% Function to display surfaces. Warapper  to vbm_surf_render.
 %
 % [Psdata] = vbm_surf_display(job)
 % 
