@@ -17,7 +17,7 @@ end
 
 opt.debug     = cg_vbm_get_defaults('extopts.debug');
 opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
-opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
+opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces'); 
   
 % add system dependent extension to CAT folder
 if ispc

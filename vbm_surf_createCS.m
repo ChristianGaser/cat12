@@ -48,7 +48,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   opt           = vbm_io_updateStruct(def,opt);
   opt.interpV   = cg_vbm_get_defaults('extopts.pbtres');
   opt.interpV   = max(0.5,min([min(vx_vol),opt.interpV,1]));
-  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','fsaverage'); 
+  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
   opt.usePPmap  = 0; % ########### 1 does not work yet ##########
   
