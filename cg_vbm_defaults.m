@@ -130,7 +130,7 @@ vbm.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction:  0 
 vbm.extopts.WMHC         = 0;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
                                   %                                           2 - also for segmentation (corred to WM like SPM); 3 - separate class
 vbm.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
-vbm.extopts.mrf          = 1;     % MRF weighting:                            0-1 - manuell setting; 1 - auto (default)
+vbm.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
 vbm.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
 vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
                                   %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter;

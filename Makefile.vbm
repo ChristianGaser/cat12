@@ -10,7 +10,7 @@ TARGET2=/Volumes/UltraMax/spm12/toolbox/vbm12
 
 STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/vbm12
 
-MATLAB_FILES=Contents.m cg_vbm_defaults.m cg_vbm_run.m cg_vbm_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm_tools.m cg_vbm_debug.m cg_morph_vol.m cg_vbm_batch.* tbx_cfg_vbm.m spm_vbm12.m vbm12.m vbm12.fig cg_spm_batch.* cg_vbm_defs.m cg_vbm_longitudinal.m cg_vbm_update.m cg_vbm_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m slice_overlay.m cg_cleanup_gwc.m cg_vbm_longitudinal_multi_run.m cg_vbm_longitudinal_multi.m cg_set_com.m cg_vbm_opts.m cg_vbm_longitudinal_batch.* cg_vbm_extopts.m checkinopt.m cg_vbm_run_*.m kmeans3D.m sliderPanel.m
+MATLAB_FILES=Contents.m cg_vbm_defaults.m cg_vbm_run.m cg_vbm_write.m cg_check_cov.m cg_showslice_all.m cg_spmT2x.m cg_spmF2x.m cg_vbm_tools.m cg_vbm_debug.m cg_morph_vol.m cg_vbm_batch.* tbx_cfg_vbm.m spm_vbm12.m vbm12.m vbm12.fig cg_spm_batch.* cg_vbm_stools.m cg_vbm_defs.m cg_vbm_longitudinal.m cg_vbm_update.m cg_vbm_get_defaults.m cg_slice_overlay.m cg_slice_overlay_ui.m slice_overlay.m cg_cleanup_gwc.m cg_vbm_longitudinal_multi_run.m cg_vbm_longitudinal_multi.m cg_set_com.m cg_vbm_opts.m cg_vbm_longitudinal_batch.* cg_vbm_extopts.m checkinopt.m cg_vbm_run_*.m kmeans3D.m sliderPanel.m
 C_FILES=Amap.[ch] AmapMex.* sanlmMex.* sanlmMex_noopenmp.* ornlmMex.* ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c vbdist.* vollib.c vbm_*.* genus0.[ch] tricases.h
 MISC_FILES=VBM12-Manual.pdf CHANGES.txt INSTALL.txt templates_1.50mm html fsaverage CAT.* distribute_to_server.sh
 
