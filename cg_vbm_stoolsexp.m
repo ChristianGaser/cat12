@@ -3,7 +3,7 @@ function stoolsexp = cg_vbm_stoolsexp
 % wrapper for calling VBM surface utilities
 %_______________________________________________________________________
 % Robert Dahnke and Christian Gaser
-% $Id: cg_vbm_stools.m 689 2015-04-19 15:37:49Z dahnke $
+% $Id$
 %_______________________________________________________________________
 
 
