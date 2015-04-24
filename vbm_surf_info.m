@@ -51,6 +51,8 @@ function [varargout] = vbm_surf_info(P,read)
     'nfaces',[],...     % number faces
     ...
     'Pmesh','',...      % meshfile
+    'Psphere','',...    % meshfile
+    'Pdefects','',...   % meshfile
     'Pdata',''...       % datafile
   );
 
@@ -191,6 +193,12 @@ function [varargout] = vbm_surf_info(P,read)
       sinfo(i).Pmesh = sinfo(i).fname;
     end
     
+    [ppm,ffm,eem] = fileparts(sinfo(i).Pmesh);
+    sinfo(i).Psphere  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
+    sinfo(i).Pdefects = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));
+    if ~exist(sinfo(i).Psphere ,'file'), sinfo(i).Psphere  = ''; end
+    if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end
+    
     
     if sinfo(i).exist && read
       if isfield(S,'vertices'), 
@@ -198,8 +206,8 @@ function [varargout] = vbm_surf_info(P,read)
       else
         if ~isempty(sinfo(i).Pmesh)
           S2 = gifti(sinfo(i).Pmesh);
-          S.vertices = S2.vertices;
-          S.faces    = S2.faces;
+          if isfield(S2,'vertices'), S.vertices = S2.vertices; else S.vertices = []; end
+          if isfield(S2,'faces'),    S.faces    = S2.faces;    else S.faces = []; end
         end
         sinfo(i).nvertices = size(S.vertices,1);
       end

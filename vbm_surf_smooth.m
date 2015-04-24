@@ -10,11 +10,11 @@ function varargout = vbm_surf_smooth(varargin)
 % Robert Dahnke
 % $Id$
 
-  assuregifti = 1;
+  assuregifti = 0;
 
   if nargin == 1
-    Pdata = varargin.data_smooth;
-    fwhm  = varargin.fwhm;
+    Pdata = varargin{1}.data;
+    fwhm  = varargin{1}.fwhm;
   else
     spm_clf('Interactive'); 
     Pdata = cellstr(spm_select([1 inf],'any','Select surface data','','','[rl]h.(?!cent|sphe|defe).*'));
@@ -38,13 +38,13 @@ function varargout = vbm_surf_smooth(varargin)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Complete');
   
-  % 
-  
   Psdata = Pdata;
   sinfo  = vbm_surf_info(Pdata);
   for i=1:numel(Pdata)
+    fprintf('Smooth %s\n',Pdata{i});
+    
     %% new file name
-    Psdata(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname,'ee');
+    Psdata(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname));
     
     % assure gifty output
     if assuregifti && ~strcmp(sinfo(i).ee,'.gii')
@@ -57,6 +57,11 @@ function varargout = vbm_surf_smooth(varargin)
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     
+    % if gifti output, check if there is surface data in the original gifti and add it
+    if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
+      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
+      [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+    end
     
     spm_progress_bar('Set',i);
   end
