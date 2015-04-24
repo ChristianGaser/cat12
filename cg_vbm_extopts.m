@@ -36,22 +36,6 @@ bb.help    = {'The bounding box (in mm) of the volume which is to be written (re
 ''
 };
 
-%------------------------------------------------------------------------
-% Species
-%------------------------------------------------------------------------
-
-%{
-species        = cfg_menu;
-species.tag    = 'species';
-species.name   = 'Species';
-species.labels = {'Humans','Greater apes (bonobos,chimpanzees,gorillas,orang-utans)','Lesser apes (gibbons)','Oldworld monkeys (baboons,maquaces)','Newworld monkeys'};
-species.values = {'human','ape_greater','ape_lesser','monkey_oldworld','monkey_newworld'};
-species.def    = @(val)cg_vbm_get_defaults('extopts.species', val{:});
-species.help   = {
-  'Preprocessing of other species requires special TPM, atlas and template maps.'
-  'This option will modify other relevant parameter automaticly and is still in the development.'
-};
-%}
 
 %------------------------------------------------------------------------
 % Resolution
