@@ -17,6 +17,7 @@ function [PO,sinfo] = vbm_surf_rename(P,varargin)
   else
     sinfo = P;
   end  
+  PN = struct();
   if mod(nargin-1,2)==1
     error('paired input');
   else
@@ -29,8 +30,10 @@ function [PO,sinfo] = vbm_surf_rename(P,varargin)
   PO = cell(size(sinfo));
   for i=1:numel(sinfo)
     
-    for fni=1:numel(FN)
-      sinfo(i).(FN{fni}) = PN.(FN{fni}); 
+    if ~isempty(PN)
+      for fni=1:numel(FN)
+        sinfo(i).(FN{fni}) = PN.(FN{fni}); 
+      end
     end
     
     if sinfo(i).resampled==1

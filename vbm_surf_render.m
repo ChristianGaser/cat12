@@ -85,6 +85,9 @@ switch lower(action)
             M.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata);
           end
         end
+        if ~isfield(M,'vertices') || ~isfield(M,'faces')
+          error('vbm_surf_render:nomesh','ERROR:vbm_surf_render: No input mesh in ''%s''', varargin{1});
+        end
         
         M = export(M,'patch');
         

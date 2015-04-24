@@ -11,30 +11,30 @@ function stoolsexp = cg_vbm_stoolsexp
 %% average surface mesh
 %-----------------------------------------------------------------------
 
-  avg.data_surf         = cfg_files;
-  avg.data_surf.tag     = 'data_surf';
-  avg.data_surf.name    = 'Sample';
-  avg.data_surf.filter  = 'gifti';
-  avg.data_surf.ufilter = 'resampled';
-  avg.data_surf.num     = [1 Inf];
-  avg.data_surf.help    = {
+  avg.data         = cfg_files;
+  avg.data.tag     = 'data';
+  avg.data.name    = 'Sample';
+  avg.data.filter  = 'gifti';
+  avg.data.ufilter = '^[rl]h.central';
+  avg.data.num     = [1 Inf];
+  avg.data.help    = {
     'Select surfaces.'
     };
 
-  avg.surfsmooth         = cfg_entry;
-  avg.surfsmooth.tag     = 'surfsmooth';
-  avg.surfsmooth.name    = 'Surface smoothing iterations';
-  avg.surfsmooth.strtype = 'r';
-  avg.surfsmooth.num     = [1 Inf];
-  avg.surfsmooth.val     = {[0 2 32]};
-  avg.surfsmooth.help    = {
+  avg.meshsmooth         = cfg_entry;
+  avg.meshsmooth.tag     = 'meshsmooth';
+  avg.meshsmooth.name    = 'Surface Smoothing Iterations';
+  avg.meshsmooth.strtype = 'r';
+  avg.meshsmooth.num     = [1 Inf];
+  avg.meshsmooth.val     = {[0 2 32]};
+  avg.meshsmooth.help    = {
     'Smoothing of the average surface. '
     ''
     };
 
   avg.surfside         = cfg_menu;
   avg.surfside.tag     = 'surfside';
-  avg.surfside.name    = 'Side handling';
+  avg.surfside.name    = 'Side Handling';
   avg.surfside.labels  = {'separate','mirror'};
   avg.surfside.values  = {1,2};
   avg.surfside.val     = {1};
@@ -44,7 +44,7 @@ function stoolsexp = cg_vbm_stoolsexp
     };
  
   avg.surfname         = cfg_entry;
-  avg.surfname.tag     = 'surfsurfname';
+  avg.surfname.tag     = 'surfname';
   avg.surfname.name    = 'Surface Filename';
   avg.surfname.strtype = 's';
   avg.surfname.num     = [1 Inf];
@@ -53,86 +53,90 @@ function stoolsexp = cg_vbm_stoolsexp
 
   avg.outdir         = cfg_files;
   avg.outdir.tag     = 'outdir';
-  avg.outdir.name    = 'Output directory';
+  avg.outdir.name    = 'Output Directory';
   avg.outdir.filter  = 'dir';
   avg.outdir.ufilter = '.*';
-  avg.outdir.num     = [1 1];
+  avg.outdir.num     = [0 1];
+  avg.outdir.val{1}  = {''};
   avg.outdir.dir     = fullfile(spm('dir'),'toolbox','vbm12');
   avg.outdir.help    = {'Select a directory where files are written.'};
 
-  avg.avg_surf      = cfg_exbranch;
-  avg.avg_surf.tag  = 'avg_surf';
-  avg.avg_surf.name = 'Average surface mesh';
-  avg.avg_surf.val  = {
-    avg.data_surf ...
-    avg.surfsmooth ...
+  avg.main          = cfg_exbranch;
+  avg.main.tag      = 'avg_surf';
+  avg.main.name     = 'Average Surface Mesh';
+  avg.main.val      = {
+    avg.data ...
+    avg.meshsmooth ...
     avg.surfside ...
     avg.surfname ...
     avg.outdir ...
     };
-  avg.avg_surf.prog = @vbm_surf_display; %@vbm_surf_avg;
-  avg.avg_surf.help = {
+  avg.main.vfiles   = @vfiles_avg;  
+  avg.main.prog     = @vbm_surf_avg;
+  avg.main.help     = {
     'Averaging of cortical surfaces.'
     ''
     };
 
-  
+  %}
   
 %% data smoothing
 %-----------------------------------------------------------------------
-  data_smooth         = cfg_files;
-  data_smooth.tag     = 'data_smooth';
-  data_smooth.name    = 'Sample';
-  data_smooth.filter  = 'any';
-  data_smooth.ufilter = '[rl]h.(?!cent|sphe|defe).*';
-  data_smooth.num     = [1 Inf];
-  data_smooth.help    = {'Select surface data (texture) files for smoothing.'};
+  smooth.data         = cfg_files;
+  smooth.data.tag     = 'data';
+  smooth.data.name    = 'Sample';
+  smooth.data.filter  = 'any';
+  smooth.data.ufilter = '^[rl]h.(?!cent|sphe|defe).*';
+  smooth.data.num     = [1 Inf];
+  smooth.data.help    = {'Select surface data (texture) files for smoothing.'};
   
-  fwhm_smooth         = cfg_entry;
-  fwhm_smooth.tag     = 'fwhm';
-  fwhm_smooth.name    = 'Smoothing filter size in fwhm';
-  fwhm_smooth.strtype = 'r';
-  fwhm_smooth.num     = [1 1];
-  fwhm_smooth.val     = {15};
-  fwhm_smooth.help    = {
+  smooth.fwhm         = cfg_entry;
+  smooth.fwhm.tag     = 'fwhm';
+  smooth.fwhm.name    = 'Smoothing filter size in fwhm';
+  smooth.fwhm.strtype = 'r';
+  smooth.fwhm.num     = [1 1];
+  smooth.fwhm.val     = {15};
+  smooth.fwhm.help    = {
     'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm.'};
  
-  datasmooth      = cfg_exbranch;
-  datasmooth.tag  = 'datasmooth';
-  datasmooth.name = 'Smooth surface data';
-  datasmooth.val  = {
-    data_smooth ...
-    fwhm_smooth ...
+  smooth.main      = cfg_exbranch;
+  smooth.main.tag  = 'datasmooth';
+  smooth.main.name = 'Smooth Surface Data';
+  smooth.main.val  = {
+    smooth.data ...
+    smooth.fwhm ...
   };
-  datasmooth.vfiles = @vfiles_datasmooth;
-  datasmooth.prog = @vbm_surf_smooth;
-  datasmooth.help = {
+  smooth.main.vfiles = @vfiles_smooth;
+  smooth.main.prog = @vbm_surf_smooth;
+  smooth.main.help = {
     'Gaussian smoothing of surface data (texture).'
     ''
   }; 
 
 
 
-
 %% resample surface (mesh and data)
 %-----------------------------------------------------------------------
-  data_surfdata         = cfg_files;
-  data_surfdata.tag     = 'data_surf';
-  data_surfdata.name    = 'Surfaces parameters';
-  data_surfdata.filter  = 'any';
-  data_surfdata.ufilter = '^[lr]h.';
-  data_surfdata.num     = [1 Inf];
-  data_surfdata.help    = {'Select surfaces parameter files for resampling to template space.'};
+  resample.data         = cfg_files;
+  resample.data.tag     = 'data';
+  resample.data.name    = 'Surface Data Files';
+  resample.data.filter  = 'any';
+  resample.data.ufilter = '^[rl]h.(?!cent|sphe|defe).*';
+  resample.data.num     = [1 Inf];
+  resample.data.help    = {'Select surfaces files for resampling to template space.'};
 
-  resample_data      = cfg_exbranch;
-  resample_data.tag  = 'surfresamp';
-  resample_data.name = 'Resample surface parameters';
-  resample_data.val  = {data_surfdata};
-  resample_data.prog = @vbm_surf_display; %@vbm_surf_resample;
-  resample_data.help = {
+  resample.main         = cfg_exbranch;
+  resample.main.tag     = 'surfresamp';
+  resample.main.name    = 'Resample Surface Data';
+  resample.main.val     = {
+    resample.data
+    };
+  resample.main.vfiles  = @vfiles_resample;
+  resample.main.prog    = @vbm_surf_resample;
+  resample.main.help    = {
     'In order to analyze surface parameters all data have to be rsampled into template space and the rsampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
 
-  
+
 
 
 
@@ -143,9 +147,9 @@ function stoolsexp = cg_vbm_stoolsexp
   stoolsexp.name   = 'Surface Expert Tools';
   stoolsexp.tag    = 'stoolsexp';
   stoolsexp.values = {...
-    resample_data, ...
-    datasmooth, ...
-    avg.avg_surf, ...
+    resample.main, ...
+    smooth.main, ...
+    avg.main, ...
     };
 
 return
@@ -154,17 +158,45 @@ return
 
 %% Result files
 %_______________________________________________________________________
-function vf = vfiles_datasmooth(job)
-  vf = job.data_smooth;
-  for i=1:size(job.data_smooth,1),
-      [pth,nam,ext] = spm_fileparts(job.data_smooth{i});
-      vf{i} = fullfile(pth,sprintf('s%d.%s%s%s',job.fhwm,nam,ext));
-  end;
+function vf = vfiles_smooth(job)
+  vf    = job.data; 
+  sinfo = vbm_surf_info(job.data);
+  for i=1:numel(vf)
+    vf(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',job.fwhm,sinfo(i).dataname));
+  end
 return;
-function vf = vfiles_resample_data(job)
-  vf = job.data_smooth;
-  for i=1:size(job.data_smooth,1),
-      [pth,nam,ext] = spm_fileparts(job.data_smooth{i});
-      vf{i} = fullfile(pth,sprintf('s%d.%s%s%s',job.fhwm,nam,ext));
-  end;
+function vf = vfiles_resample(job)
+  vf    = job.data; 
+  sinfo = vbm_surf_info(job.data);
+  for i=1:numel(vf)
+    sinfo(i).resampled = 1; 
+    vf(i) = vbm_surf_rename(sinfo(i));
+  end
+return;
+function vf = vfiles_avg(job)
+  if isempty(job.outdir{1})
+    outdir = spm_fileparts(job.data{1});
+  else
+    outdir = isempty(job.outdir{1});
+  end
+  
+  if job.surfside==2
+    side = {'lh','rh'}; 
+  else
+    side = {};
+    sinfo = vbm_surf_info(job.data);
+    if ~isempty(strfind([sinfo.side],'lh')), side{end+1}= 'lh'; end
+    if ~isempty(strfind([sinfo.side],'rh')), side{end+1}= 'rh'; end
+  end
+  vf    = cell(numel(side),numel(job.meshsmooth));
+  for si = 1:numel(side)
+    for smi=1:numel(job.meshsmooth)
+      if job.meshsmooth(smi)>0
+        vf{si,smi} = fullfile(outdir,sprintf('%s.%s_%dmm.gii',side{si},job.surfname,job.meshsmooth(smi)));
+      else
+        vf{si,smi} = fullfile(outdir,sprintf('%s.%s.gii',side{si},job.surfname));
+      end   
+    end
+  end
+ 
 return;

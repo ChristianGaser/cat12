@@ -6763,3 +6763,27 @@ M       vbm_surf_smooth.m
 (4)  Renamed "fsaverage" to "templates_surfaces".
 ------------------------------------------------------------------------
 r692 | dahnke | 2015-04-23 11:49:01
+
+M       CHANGES.txt
+M       cg_vbm_extopts.m
+M       cg_vbm_stoolsexp.m
+A  +    templates_surfaces/lh.central.Template_T1_IXI555_MNI152.gii
+D       templates_surfaces/lh.template.Template_T1_IXI555_MNI152.gii
+A  +    templates_surfaces/rh.central.Template_T1_IXI555_MNI152.gii
+D       templates_surfaces/rh.template.Template_T1_IXI555_MNI152.gii
+M       vbm12.fig
+A       vbm_surf_avg.m
+M       vbm_surf_display.m
+M       vbm_surf_info.m
+M       vbm_surf_rename.m
+M       vbm_surf_render.m
+A       vbm_surf_resample.m
+M       vbm_surf_smooth.m
+
+(1)  Added file dependencies for "vbm_surf_smooth".
+(2)  Added "vbm_surf_resample" for texture (and surface) resampling.
+(3)  Added "vbm_surf_avg" for averaging and smoothing of meshs.
+     Mirror averaging of sides did not work correctly.
+(4)  Further small corrections.
+------------------------------------------------------------------------
+r693 | dahnke | 2015-04-24 08:08:24
