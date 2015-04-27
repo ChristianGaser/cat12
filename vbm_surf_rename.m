@@ -38,7 +38,7 @@ function [PO,sinfo] = vbm_surf_rename(P,varargin)
     
     if sinfo(i).resampled==1
       if sinfo(i).template==1
-        templateresampled='.template';
+        templateresampled=''; %.template';
       else
         templateresampled='.resampled';
       end
@@ -46,13 +46,17 @@ function [PO,sinfo] = vbm_surf_rename(P,varargin)
       templateresampled='';
     end
     
-    PO{i} = fullfile(sinfo.pp,sprintf('%s%s.%s%s.%s%s',...
+    if isempty(sinfo(i).name), namedot=''; else namedot='.'; end
+    
+    PO{i} = fullfile(sinfo(i).pp,sprintf('%s%s.%s%s%s%s%s',...
       sinfo(i).preside,...
       sinfo(i).side,...
       sinfo(i).dataname,...
       templateresampled,...
+      namedot,...
       sinfo(i).name,...
       sinfo(i).ee));
+    
   end
   
 end

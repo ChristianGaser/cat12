@@ -8,7 +8,7 @@ function varargout = vbm_surf_resample(varargin)
 % job.fwhm
 % ______________________________________________________________________
 % Robert Dahnke
-% $Id: vbm_surf_resamp_freesurfer.m 610 2014-09-24 08:18:03Z gaser $
+% $Id$
 
   if nargin == 1
     Pdata = varargin{1}.data;

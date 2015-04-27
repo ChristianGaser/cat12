@@ -6,7 +6,7 @@ function varargout = vbm_surf_avg(varargin)
 %
 % ______________________________________________________________________
 % Robert Dahnke
-% $Id: vbm_surf_calc.m 692 2015-04-23 09:49:12Z dahnke $
+% $Id$
 
 
 % TODO: 
