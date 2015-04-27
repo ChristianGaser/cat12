@@ -139,7 +139,7 @@ function [varargout] = vbm_surf_info(P,read)
     end   
         
     % template
-    sinfo(i).template  = ~isempty(regexp(noname,'.*\.template\..*')); 
+    sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
 
     % resampled
     sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
@@ -189,8 +189,10 @@ function [varargout] = vbm_surf_info(P,read)
     end
     % if we got still no mesh than we can find an average mesh
     % ...
-    if isempty(sinfo(i).Pmesh) && sinfo(i).ftype==1; 
-      sinfo(i).Pmesh = sinfo(i).fname;
+    if isempty(sinfo(i).Pmesh) && sinfo(i).ftype==1
+      sinfo(i).Pmesh = char(vbm_surf_rename(sinfo(i),'pp',...
+        fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces'),'name','','ee','.gii'));
+      sinfo(i).Pdata = sinfo(i).fname;
     end
     
     [ppm,ffm,eem] = fileparts(sinfo(i).Pmesh);
@@ -198,7 +200,7 @@ function [varargout] = vbm_surf_info(P,read)
     sinfo(i).Pdefects = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));
     if ~exist(sinfo(i).Psphere ,'file'), sinfo(i).Psphere  = ''; end
     if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end
-    
+
     
     if sinfo(i).exist && read
       if isfield(S,'vertices'), 
