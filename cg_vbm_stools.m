@@ -138,7 +138,7 @@ function stools = cg_vbm_stools(expert)
 
 
 
-% extract volumetric data
+%% extract volumetric data
 %-----------------------------------------------------------------------  
   v2s.datafieldname         = cfg_entry;
   v2s.datafieldname.tag     = 'datafieldname';
@@ -148,37 +148,174 @@ function stools = cg_vbm_stools(expert)
   v2s.datafieldname.val     = {'intensity'};
   v2s.datafieldname.help    = {'Name of the extracted data.'};
  
-  v2s.res         = cfg_entry;
-  v2s.res.tag     = 'res';
-  v2s.res.name    = 'Sampling Size';
-  v2s.res.strtype = 'r';
-  v2s.res.num     = [1 1];
-  v2s.res.val     = {0.5};
-  v2s.res.help    = {
-    'Resolution of grid along normals [mm]. '
+  
+  % Mapping function - Volume extration interpolation type
+  %---------------------------------------------------------------------  
+  v2s.map.mean         = cfg_branch;
+  v2s.map.mean.tag     = 'mean';
+  v2s.map.mean.name    = 'Mean';
+  v2s.map.mean.help    = {
     ''
   };
 
-  v2s.origin         = cfg_entry;
-  v2s.origin.tag     = 'origin';
-  v2s.origin.name    = 'Origin';
-  v2s.origin.strtype = 'r';
-  v2s.origin.num     = [1 1];
-  v2s.origin.val     = {-1};
-  v2s.origin.help    = {
-    'Origin (start point) of grid along normals [mm]. Give negative values for origin outside the surface.'
+  v2s.map.median         = cfg_branch;
+  v2s.map.median.tag     = 'median';
+  v2s.map.median.name    = 'Median';
+  v2s.map.median.help    = {
     ''
   };
 
-  v2s.length         = cfg_entry;
-  v2s.length.tag     = 'length';
-  v2s.length.name    = 'Length';
-  v2s.length.strtype = 'r';
-  v2s.length.num     = [1 1];
-  v2s.length.val     = {15};
-  v2s.length.help    = {
-    'Lenght of grid along normals [mm].'
+  v2s.map.range         = cfg_entry;
+  v2s.map.range.tag     = 'range';
+  v2s.map.range.name    = 'Sampling Intensity Range';
+  v2s.map.range.strtype = 'r';
+  v2s.map.range.val{1}  = [-3.40282e+38 3.40282e+38];
+  v2s.map.range.num     = [1 1];
+  v2s.map.range.help    = {
+    'If any value is out of range values will be counted only until this point.'
     ''
+  };
+
+  v2s.map.min         = cfg_files;
+  v2s.map.min.tag     = 'min';
+  v2s.map.min.name    = 'Minimum (possible mask images)';
+  v2s.map.min.filter  = 'nifti';
+  v2s.map.min.ufilter = '.*';
+  v2s.map.min.num     = [0 Inf];
+  v2s.map.min.val{1}  = ''; 
+  v2s.map.min.help    = {
+    ''
+    };
+
+  v2s.map.max         = cfg_files;
+  v2s.map.max.tag     = 'max';
+  v2s.map.max.name    = 'Maximum (possible mask images)';
+  v2s.map.max.filter  = 'nifti';
+  v2s.map.max.ufilter = '.*';
+  v2s.map.max.num     = [0 Inf];
+  v2s.map.max.val{1}  = ''; 
+  v2s.map.max.help    = {
+    ''
+  };
+
+  v2s.map.exp         = cfg_entry;
+  v2s.map.exp.tag     = 'exp';
+  v2s.map.exp.name    = 'Exponential';
+  v2s.map.exp.strtype = 'r';
+  v2s.map.exp.val     = {2};
+  v2s.map.exp.num     = [1 1];
+  v2s.map.exp.help    = {
+    'The argument defines the distance in mm where values are decayed to 50% (recommended value is 2 mm).'
+    ''
+  };
+
+  v2s.map.str         = cfg_entry;
+  v2s.map.str.tag     = 'str';
+  v2s.map.str.name    = 'Expression';
+  v2s.map.str.strtype = 's';
+  v2s.map.str.num     = [1 Inf];
+  v2s.map.str.help    = {
+    ''
+  };
+
+  v2s.mapping         = cfg_choice;
+  v2s.mapping.tag     = 'mapping';
+  v2s.mapping.name    = 'Mapping function';
+  if expert
+    v2s.mapping.values  = {
+      v2s.map.mean ...
+      v2s.map.median ...
+      v2s.map.range ...
+      v2s.map.min ...
+      v2s.map.max ...
+      v2s.map.exp ...
+      v2s.map.str ...
+      }; 
+  else
+    v2s.mapping.values  = {
+      v2s.map.mean ...
+      v2s.map.median ...
+      v2s.map.range ...
+      v2s.map.min ...
+      v2s.map.max ...
+      v2s.map.exp ...
+      };
+  end
+  v2s.mapping.val     = {v2s.map.exp};
+  v2s.mapping.help    = {
+    'Volume extration interpolation type. '
+    ' -average:  Use average for mapping along normals.'
+    ' -range:    Count number of values in range for mapping along normals.'
+    '            If any value is out of range values will be counted only until this point'
+    '            Default value: 3.40282e+38 3.40282e+38'
+    ' -max:      Use maximum value for mapping along normals (Default). '
+    '            Optionally a 2nd volume can be defined to output its value at the maximum value of the 1st volume.'
+    ' -min:      Use minimum value for mapping along normals. '
+    '            Optionally a 2nd volume can be defined to output its value at the minimum value of the 1st volume.'
+    ' -exp:      Use exponential average of values for mapping along normals.'
+    '            The argument defines the distance in mm where values are decayed to 50% (recommended value is 10mm).'
+    '            Default value: 3.40282e+38'
+    '' 
+  };
+  
+
+  % Sampling function
+  %---------------------------------------------------------------------  
+
+  v2s.sample.GM         = cfg_branch;
+  v2s.sample.GM.tag     = 'GM';
+  v2s.sample.GM.name    = 'GM Area';
+  v2s.sample.GM.help    = {
+    '' 
+  };
+
+  v2s.sample.WM         = cfg_branch;
+  v2s.sample.WM.tag     = 'WM';
+  v2s.sample.WM.name    = 'WM Area';
+  v2s.sample.WM.help    = {
+    '' 
+  };
+
+  v2s.sample.CSF         = cfg_branch;
+  v2s.sample.CSF.tag     = 'CSF';
+  v2s.sample.CSF.name    = 'CSF Area';
+  v2s.sample.CSF.help    = {
+    '' 
+  };
+
+  v2s.sample.rpos         = cfg_entry;
+  v2s.sample.rpos.tag     = 'rpos';
+  v2s.sample.rpos.name    = 'Relative Position';
+  v2s.sample.rpos.strtype = 'r'; 
+  v2s.sample.rpos.num     = [1 1];
+  v2s.sample.rpos.val     = {0.5};
+  v2s.sample.rpos.help    = {
+    '' 
+  };
+
+  v2s.sample.exact         = cfg_entry;
+  v2s.sample.exact.tag     = 'exact';
+  v2s.sample.exact.name    = 'Exact Position';
+  v2s.sample.exact.strtype = 'r'; 
+  v2s.sample.exact.num     = [1 3];
+  v2s.sample.exact.val{1}  = [-1 0.5 1];
+  v2s.sample.exact.help    = {
+    '' 
+  };
+  
+  v2s.sampling         = cfg_choice;
+  v2s.sampling.tag     = 'sampling';
+  v2s.sampling.name    = 'Sampling function';
+  v2s.sampling.values  = {
+    v2s.sample.GM ...
+    v2s.sample.WM ...
+    v2s.sample.CSF ...
+    v2s.sample.rpos ...
+    v2s.sample.exact ...
+    };
+  v2s.sampling.val     = {v2s.sample.exact};
+  v2s.sampling.help    = {
+    '' 
   };
 
   v2s.interp         = cfg_menu;
@@ -195,44 +332,30 @@ function stools = cg_vbm_stools(expert)
     ''
   };
 
-  v2s.mapping         = cfg_menu;
-  v2s.mapping.tag     = 'func';
-  v2s.mapping.name    = 'Mapping function';
-  v2s.mapping.labels  = {'mean','min','max','exp'}; %,'range'
-  v2s.mapping.values  = {{'average'},{'min'},{'max'},{'exp'}}; %,'range'
-  v2s.mapping.val     = {{'average'}};
-  v2s.mapping.help    = {
-    'Volume extration interpolation type. '
-    ' -average:  Use average for mapping along normals.'
-    ...' -range:    Count number of values in range for mapping along normals.'
-    ...'            If any value is out of range values will be counted only until this point'
-    ...'            Default value: 3.40282e+38 3.40282e+38'
-    ' -max:      Use maximum value for mapping along normals (Default). '
-    ...'            Optionally a 2nd volume can be defined to output its value at the maximum value of the 1st volume.'
-    ' -min:      Use minimum value for mapping along normals. '
-    ...'            Optionally a 2nd volume can be defined to output its value at the minimum value of the 1st volume.'
-    ' -exp:      Use exponential average of values for mapping along normals.'
-    ...'            The argument defines the distance in mm where values are decayed to 50% '...
-    ...'            (recommended value is 10mm).'
-    ...'            Default value: 3.40282e+38'
-    ...' -sum:               Use sum of values for mapping along normals.'
-    '' ...
-  };
-
-  % range +2 value, min/max +maskvol, exp +1 value
-  % further filter option by thickness and sulcus/gyrus witdh
-
   
 
 % extract volumetric data in individual space
 %-----------------------------------------------------------------------  
-  v2s.data_surf_sub         = cfg_files;
-  v2s.data_surf_sub.tag     = 'data_mesh';
-  v2s.data_surf_sub.name    = 'Sample';
-  v2s.data_surf_sub.filter  = 'gifti';
-  v2s.data_surf_sub.ufilter = '^[rl]h.central.*';
-  v2s.data_surf_sub.num     = [1 Inf];
-  v2s.data_surf_sub.help    = {'Select subject surface files.'};
+  v2s.data_surf_sub_lh         = cfg_files;
+  v2s.data_surf_sub_lh.tag     = 'data_mesh_lh';
+  v2s.data_surf_sub_lh.name    = 'Left Individual Surfaces';
+  v2s.data_surf_sub_lh.filter  = 'gifti';
+  v2s.data_surf_sub_lh.ufilter = '^lh.central.*';
+  v2s.data_surf_sub_lh.num     = [1 Inf];
+  v2s.data_surf_sub_lh.help    = {
+    'Select left subject surface files.'
+    'Right side will processed automaticly.'
+    };
+ 
+  v2s.data_surf_sub_rh         = cfg_files;
+  v2s.data_surf_sub_rh.tag     = 'data_mesh_rh';
+  v2s.data_surf_sub_rh.name    = 'Right Individual Surfaces';
+  v2s.data_surf_sub_rh.filter  = 'gifti';
+  v2s.data_surf_sub_rh.ufilter = '^rh.central.*';
+  v2s.data_surf_sub_rh.num     = [0 Inf];
+  v2s.data_surf_sub_rh.help    = {
+    'Select right subject surface files.'
+    };
   
   v2s.data_sub         = cfg_files; 
   v2s.data_sub.tag     = 'data_vol';
@@ -246,24 +369,27 @@ function stools = cg_vbm_stools(expert)
 
   v2s.vol2surf      = cfg_exbranch;
   v2s.vol2surf.tag  = 'vol2surf';
-  v2s.vol2surf.name = 'Extract Volume Data by Individual Surface';
+  v2s.vol2surf.name = 'Extract Volume Data by Individual Surfaces';
   if expert
     v2s.vol2surf.val = {
-      v2s.data_surf_sub ...
       v2s.data_sub ...
+      v2s.data_surf_sub_lh ...
+      ... v2s.data_surf_sub_rh ...
       v2s.datafieldname ...
-      v2s.res v2s.origin v2s.length ...
-      v2s.interp ...
       v2s.mapping ...
+      v2s.sampling ...
+      v2s.interp ...
       };
   else
     v2s.vol2surf.val = {
-      v2s.data_surf_sub ...
       v2s.data_sub ...
+      v2s.data_surf_sub_lh ...
+      ... v2s.data_surf_sub_rh ...
       v2s.datafieldname ...
+      v2s.mapping ...
       };
   end
-  v2s.vol2surf.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
+  v2s.vol2surf.prog = @vbm_surf_vol2surf;
   v2s.vol2surf.help = {
     'Extract volumetric data from individual space.'
     ''
@@ -273,15 +399,31 @@ function stools = cg_vbm_stools(expert)
 
 %% extract volumetric data in template space
 %-----------------------------------------------------------------------  
-  v2s.data_surf_avg         = cfg_files; 
-  v2s.data_surf_avg.tag     = 'data_mesh';
-  v2s.data_surf_avg.name    = 'Sample';
-  v2s.data_surf_avg.filter  = 'gifti';
-  v2s.data_surf_avg.ufilter = '^[rl]h.*';
-  v2s.data_surf_avg.num     = [1 2];
-  v2s.data_surf_avg.dir     = fullfile(spm('dir'),'toolbox','vbm12');
-  v2s.data_surf_avg.help    = {'Select template surface files.'};
-
+  v2s.data_surf_avg_lh         = cfg_files; 
+  v2s.data_surf_avg_lh.tag     = 'data_mesh_lh';
+  v2s.data_surf_avg_lh.name    = 'Left Template Surface';
+  v2s.data_surf_avg_lh.filter  = 'gifti';
+  v2s.data_surf_avg_lh.ufilter = '^lh.*';
+  v2s.data_surf_avg_lh.num     = [1 1];
+  v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii')};
+  v2s.data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','vbm12');
+  v2s.data_surf_avg_lh.help    = {
+    'Select left template surface file. '
+    'Right side will processed automaticly.'
+    };
+  
+  v2s.data_surf_avg_rh         = cfg_files; 
+  v2s.data_surf_avg_rh.tag     = 'data_mesh_rh';
+  v2s.data_surf_avg_rh.name    = 'Left Template Surface';
+  v2s.data_surf_avg_rh.filter  = 'gifti';
+  v2s.data_surf_avg_rh.ufilter = '^rh.*';
+  v2s.data_surf_avg_rh.num     = [0 1];
+  v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii')};  
+  v2s.data_surf_avg_rh.dir     = fullfile(spm('dir'),'toolbox','vbm12');
+  v2s.data_surf_avg_rh.help    = {
+    'Select right template surface file.'
+    };
+  
   v2s.data_norm         = cfg_files; 
   v2s.data_norm.tag     = 'data_vol';
   v2s.data_norm.name    = 'Volumes';
@@ -294,24 +436,27 @@ function stools = cg_vbm_stools(expert)
 
   v2s.vol2tempsurf      = cfg_exbranch;
   v2s.vol2tempsurf.tag  = 'vol2surftemp';
-  v2s.vol2tempsurf.name = 'Extract Volume Data by Template Surface';
+  v2s.vol2tempsurf.name = 'Extract Volume Data by Template Surfaces';
   if expert
     v2s.vol2tempsurf.val  = {
-      v2s.data_surf_avg ...
       v2s.data_norm ...
+      v2s.data_surf_avg_lh ...
+      ... v2s.data_surf_avg_rh ...
       v2s.datafieldname ...
-      v2s.res v2s.origin v2s.length ...
-      v2s.interp ...
       v2s.mapping ...
+      v2s.sampling ...
+      v2s.interp ...
     };
   else
     v2s.vol2tempsurf.val  = {
-      v2s.data_surf_avg ...
       v2s.data_norm ...
+      v2s.data_surf_avg_lh ...
+      ... v2s.data_surf_avg_rh ...
       v2s.datafieldname ...
+      v2s.mapping ...
     };
   end
-  v2s.vol2tempsurf.prog = @vbm_surf_display; %@vbm_surf_vol2surf;
+  v2s.vol2tempsurf.prog = @vbm_surf_vol2surf;
   v2s.vol2tempsurf.help = {
     'Extract volumetric data from template space.'
     'The template surface was generated by VBM12 surface processing [1] of the average wmr*.nii images of VBM12.   '

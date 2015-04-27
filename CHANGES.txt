@@ -6794,3 +6794,19 @@ MM      cg_vbm_stoolsexp.m
 (1)  
 ------------------------------------------------------------------------
 r694 | dahnke | 2015-04-24 08:09:18
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+ M      vbm_io_matlabversion.m
+MM      vbm_surf_avg.m
+M       vbm_surf_info.m
+M       vbm_surf_rename.m
+MM      vbm_surf_resample.m
+A       vbm_surf_vol2surf.m
+
+(1)  Added "vbm_surf_vol2surf" function (alpha) and updated GUI.
+     SPM data type (no stepsize correction) and orientation problems 
+     in "CAT_3dVol2Surf" with subject space data.
+(2)  Small corrections in other files.
+------------------------------------------------------------------------
+r695 | dahnke | 2015-04-27 21:06:52
