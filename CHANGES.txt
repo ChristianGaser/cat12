@@ -6810,3 +6810,15 @@ A       vbm_surf_vol2surf.m
 (2)  Small corrections in other files.
 ------------------------------------------------------------------------
 r695 | dahnke | 2015-04-27 21:06:52
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+M       vbm12.fig
+M       vbm12.m
+M       vbm_surf_display.m
+M       vbm_surf_vol2surf.m
+
+(1)  Updated vol2surf GUI. 
+(2)  Small corrections and updates in "vbm_surf_display".
+------------------------------------------------------------------------
+r696 | dahnke | 2015-04-29 14:15:50
