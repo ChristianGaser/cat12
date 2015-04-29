@@ -22,7 +22,7 @@ function varargout = vbm12(varargin)
 
 % Edit the above vbm12title to modify the response to help vbm12
 
-% Last Modified by GUIDE v2.5 23-Apr-2015 11:03:09
+% Last Modified by GUIDE v2.5 28-Apr-2015 13:35:33
 
 
 % Begin initialization code - DO NOT EDIT
@@ -160,6 +160,29 @@ function popupmenu11_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function popupmenu11_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to popupmenu11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu12.
+function popupmenu12_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu12 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu12
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu12_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu12 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

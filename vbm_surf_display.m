@@ -41,6 +41,7 @@ function vbm_surf_display(varargin)
       % textur handling
       set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(P{i},'short60'),'NumberTitle','off');
       vbm_surf_render('ColourBar',h.axis,'on');
+      if strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
       switch sinfo(i).texture
         case 'thickness'
           vbm_surf_render('ColourMap',h.axis,jet); 
@@ -76,7 +77,11 @@ function vbm_surf_display(varargin)
           end
       end
     catch %#ok<CTCH>
-      vbm_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',P{i})); 
+      try
+        h = vbm_surf_render(P{i});
+      catch
+        vbm_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',P{i})); 
+      end
     end
   end
 end

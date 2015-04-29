@@ -146,184 +146,18 @@ function stools = cg_vbm_stools(expert)
   v2s.datafieldname.strtype = 's';
   v2s.datafieldname.num     = [1 Inf];
   v2s.datafieldname.val     = {'intensity'};
-  v2s.datafieldname.help    = {'Name of the extracted data.'};
+  v2s.datafieldname.help    = {
+    'Name of the surface data part of the filename.'
+    ''
+    '  [s*mm.][rh|lh].DATANAME[.resampled|].subjectname[.gii]' 
+    };
  
-  
-  % Mapping function - Volume extration interpolation type
-  %---------------------------------------------------------------------  
-  v2s.map.mean         = cfg_branch;
-  v2s.map.mean.tag     = 'mean';
-  v2s.map.mean.name    = 'Mean';
-  v2s.map.mean.help    = {
-    ''
-  };
-
-  v2s.map.median         = cfg_branch;
-  v2s.map.median.tag     = 'median';
-  v2s.map.median.name    = 'Median';
-  v2s.map.median.help    = {
-    ''
-  };
-
-  v2s.map.range         = cfg_entry;
-  v2s.map.range.tag     = 'range';
-  v2s.map.range.name    = 'Sampling Intensity Range';
-  v2s.map.range.strtype = 'r';
-  v2s.map.range.val{1}  = [-3.40282e+38 3.40282e+38];
-  v2s.map.range.num     = [1 1];
-  v2s.map.range.help    = {
-    'If any value is out of range values will be counted only until this point.'
-    ''
-  };
-
-  v2s.map.min         = cfg_files;
-  v2s.map.min.tag     = 'min';
-  v2s.map.min.name    = 'Minimum (possible mask images)';
-  v2s.map.min.filter  = 'nifti';
-  v2s.map.min.ufilter = '.*';
-  v2s.map.min.num     = [0 Inf];
-  v2s.map.min.val{1}  = ''; 
-  v2s.map.min.help    = {
-    ''
-    };
-
-  v2s.map.max         = cfg_files;
-  v2s.map.max.tag     = 'max';
-  v2s.map.max.name    = 'Maximum (possible mask images)';
-  v2s.map.max.filter  = 'nifti';
-  v2s.map.max.ufilter = '.*';
-  v2s.map.max.num     = [0 Inf];
-  v2s.map.max.val{1}  = ''; 
-  v2s.map.max.help    = {
-    ''
-  };
-
-  v2s.map.exp         = cfg_entry;
-  v2s.map.exp.tag     = 'exp';
-  v2s.map.exp.name    = 'Exponential';
-  v2s.map.exp.strtype = 'r';
-  v2s.map.exp.val     = {2};
-  v2s.map.exp.num     = [1 1];
-  v2s.map.exp.help    = {
-    'The argument defines the distance in mm where values are decayed to 50% (recommended value is 2 mm).'
-    ''
-  };
-
-  v2s.map.str         = cfg_entry;
-  v2s.map.str.tag     = 'str';
-  v2s.map.str.name    = 'Expression';
-  v2s.map.str.strtype = 's';
-  v2s.map.str.num     = [1 Inf];
-  v2s.map.str.help    = {
-    ''
-  };
-
-  v2s.mapping         = cfg_choice;
-  v2s.mapping.tag     = 'mapping';
-  v2s.mapping.name    = 'Mapping function';
-  if expert
-    v2s.mapping.values  = {
-      v2s.map.mean ...
-      v2s.map.median ...
-      v2s.map.range ...
-      v2s.map.min ...
-      v2s.map.max ...
-      v2s.map.exp ...
-      v2s.map.str ...
-      }; 
-  else
-    v2s.mapping.values  = {
-      v2s.map.mean ...
-      v2s.map.median ...
-      v2s.map.range ...
-      v2s.map.min ...
-      v2s.map.max ...
-      v2s.map.exp ...
-      };
-  end
-  v2s.mapping.val     = {v2s.map.exp};
-  v2s.mapping.help    = {
-    'Volume extration interpolation type. '
-    ' -average:  Use average for mapping along normals.'
-    ' -range:    Count number of values in range for mapping along normals.'
-    '            If any value is out of range values will be counted only until this point'
-    '            Default value: 3.40282e+38 3.40282e+38'
-    ' -max:      Use maximum value for mapping along normals (Default). '
-    '            Optionally a 2nd volume can be defined to output its value at the maximum value of the 1st volume.'
-    ' -min:      Use minimum value for mapping along normals. '
-    '            Optionally a 2nd volume can be defined to output its value at the minimum value of the 1st volume.'
-    ' -exp:      Use exponential average of values for mapping along normals.'
-    '            The argument defines the distance in mm where values are decayed to 50% (recommended value is 10mm).'
-    '            Default value: 3.40282e+38'
-    '' 
-  };
-  
-
-  % Sampling function
-  %---------------------------------------------------------------------  
-
-  v2s.sample.GM         = cfg_branch;
-  v2s.sample.GM.tag     = 'GM';
-  v2s.sample.GM.name    = 'GM Area';
-  v2s.sample.GM.help    = {
-    '' 
-  };
-
-  v2s.sample.WM         = cfg_branch;
-  v2s.sample.WM.tag     = 'WM';
-  v2s.sample.WM.name    = 'WM Area';
-  v2s.sample.WM.help    = {
-    '' 
-  };
-
-  v2s.sample.CSF         = cfg_branch;
-  v2s.sample.CSF.tag     = 'CSF';
-  v2s.sample.CSF.name    = 'CSF Area';
-  v2s.sample.CSF.help    = {
-    '' 
-  };
-
-  v2s.sample.rpos         = cfg_entry;
-  v2s.sample.rpos.tag     = 'rpos';
-  v2s.sample.rpos.name    = 'Relative Position';
-  v2s.sample.rpos.strtype = 'r'; 
-  v2s.sample.rpos.num     = [1 1];
-  v2s.sample.rpos.val     = {0.5};
-  v2s.sample.rpos.help    = {
-    '' 
-  };
-
-  v2s.sample.exact         = cfg_entry;
-  v2s.sample.exact.tag     = 'exact';
-  v2s.sample.exact.name    = 'Exact Position';
-  v2s.sample.exact.strtype = 'r'; 
-  v2s.sample.exact.num     = [1 3];
-  v2s.sample.exact.val{1}  = [-1 0.5 1];
-  v2s.sample.exact.help    = {
-    '' 
-  };
-  
-  v2s.sampling         = cfg_choice;
-  v2s.sampling.tag     = 'sampling';
-  v2s.sampling.name    = 'Sampling function';
-  v2s.sampling.values  = {
-    v2s.sample.GM ...
-    v2s.sample.WM ...
-    v2s.sample.CSF ...
-    v2s.sample.rpos ...
-    v2s.sample.exact ...
-    };
-  v2s.sampling.val     = {v2s.sample.exact};
-  v2s.sampling.help    = {
-    '' 
-  };
-
   v2s.interp         = cfg_menu;
   v2s.interp.tag     = 'interp';
   v2s.interp.name    = 'Interpolation Type';
   v2s.interp.labels  = {'nearest','linear','cubic'};
   v2s.interp.values  = {{'nearest_neighbour'},{'linear'},{'cubic'}};
-  v2s.interp.val     = {{'nearest_neighbour'}};
+  v2s.interp.val     = {{'linear'}};
   v2s.interp.help    = {
     'Volume extration interpolation type. '
     ' -linear:            Use linear interpolation.'
@@ -331,14 +165,221 @@ function stools = cg_vbm_stools(expert)
     ' -cubic:             Use cubic interpolation.'
     ''
   };
-
   
+  
+  %% -- absolute position from a boundary --
+  
+  v2s.boundary_class         = cfg_menu;
+  v2s.boundary_class.tag     = 'class';
+  v2s.boundary_class.name    = 'Tissue Boundary';
+  v2s.boundary_class.labels  = {'central','inner','outer'}; % hull?
+  v2s.boundary_class.values  = {1 2 3};
+  v2s.boundary_class.val     = {1};
+  v2s.boundary_class.help    = {
+    'Tissue boundary used for distance description.'
+  };
+
+  v2s.boundary_pos         = cfg_entry;
+  v2s.boundary_pos.tag     = 'pos';
+  v2s.boundary_pos.name    = 'Absolute Position';
+  v2s.boundary_pos.strtype = 'r';
+  v2s.boundary_pos.val     = {0};
+  v2s.boundary_pos.num     = [1 1];
+  v2s.boundary_pos.help    = {
+    'Absolute position from tissue boundary. Negative values for deeper.'
+    'All values are limited by the maximum possible distance within a cortical structur such as gyri or sucli.'
+  };
+  
+  
+  v2s.boundary         = cfg_exbranch;
+  v2s.boundary.tag     = 'boundary';
+  v2s.boundary.name    = 'Absolute Position From a Tissue Boundary';
+  v2s.boundary.val     = {
+    v2s.boundary_class ...
+    v2s.boundary_pos ...
+    };
+  v2s.boundary.help    = {
+    'Map volumetric data from a absolute position from a tissue boundary.'
+    'A value of -1 from the WM boundary will map WM values that are 1 mm distance to the GM/WM boundary. '
+    'A value of 1 from the WM boundary will map GM values that were in 1 mm distance to the GM/WM boundary. '
+  };
+
+  %% -- relative position within a tissue class
+   
+  v2s.tissue_class         = cfg_menu;
+  v2s.tissue_class.tag     = 'class';
+  v2s.tissue_class.name    = 'Tissue Class';
+  v2s.tissue_class.labels  = {'GM','WM','CSF'};
+  v2s.tissue_class.values  = {1 2 3};
+  v2s.tissue_class.val     = {1};
+  v2s.tissue_class.help    = {
+    'Tissue class were the relative positions were estimated.'
+  };
+
+  v2s.tissue_pos         = cfg_entry;
+  v2s.tissue_pos.tag     = 'pos';
+  v2s.tissue_pos.name    = 'Relative Position';
+  v2s.tissue_pos.strtype = 'r';
+  v2s.tissue_pos.val     = {0};
+  v2s.tissue_pos.num     = [1 1];
+  v2s.tissue_pos.help    = {
+    'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
+    'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
+    'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
+  };
+  
+  v2s.tissue         = cfg_branch;
+  v2s.tissue.tag     = 'tissue';
+  v2s.tissue.name    = 'Relative Position Within a Tissue Class';
+  v2s.tissue.val     = {
+    v2s.tissue_class ...
+    v2s.tissue_pos ...
+    };
+  v2s.tissue.help    = {
+    'Map volumetric data from a relative position within a tissue class.'
+  };
+
+  %% -- tissue sample --
+  
+  v2s.tissuerange_class         = cfg_menu;
+  v2s.tissuerange_class.tag     = 'class';
+  v2s.tissuerange_class.name    = 'Tissue Class';
+  v2s.tissuerange_class.labels  = {'GM','WM','CSF'}; % hull
+  v2s.tissuerange_class.values  = {1 2 3};
+  v2s.tissuerange_class.val     = {1};
+  v2s.tissuerange_class.help    = {
+    'Tissue class were the relative positions were estimated.'
+  };
+
+  v2s.tissuerange_stepsize         = cfg_entry;
+  v2s.tissuerange_stepsize.tag     = 'stepsize';
+  v2s.tissuerange_stepsize.name    = 'Stepsize';
+  v2s.tissuerange_stepsize.strtype = 'r';
+  v2s.tissuerange_stepsize.val     = {0.1};
+  v2s.tissuerange_stepsize.num     = [1 1];
+  v2s.tissuerange_stepsize.help    = {
+    'Relative stepsize of the sample points centered around 0.5.  In example a stepsize of 0.3 will result in 3 sample points at a relative position of 0.2, 0.5 and 0.8.' 
+  };
+
+  v2s.tissuerange_sample         = cfg_menu;
+  v2s.tissuerange_sample.tag     = 'sample';
+  v2s.tissuerange_sample.name    = 'Sample Function';
+  v2s.tissuerange_sample.labels  = {'mean','max','min',}; %,'median','std'
+  v2s.tissuerange_sample.values  = {{'average'},{'max'},{'min'}}; %,{'median'},{'std'}
+  v2s.tissuerange_sample.val     = {{'average'}};
+  v2s.tissuerange_sample.help    = {
+    'Tissue boundary used for distance description.'
+  };
+  
+  v2s.tissuerange         = cfg_branch;
+  v2s.tissuerange.tag     = 'tissuerange';
+  v2s.tissuerange.name    = 'Relative Position Within a Tissue Class (Sample)';
+  v2s.tissuerange.val     = {
+    v2s.tissuerange_class ...
+    v2s.tissuerange_stepsize ...
+    v2s.tissuerange_sample ...
+    };
+  v2s.boundary.help    = {
+    'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, median, minimum, maximum or standard deviation'
+  };
+
+  %% -- boundary sample? 
+  
+  v2s.boundaryrange_class         = cfg_menu;
+  v2s.boundaryrange_class.tag     = 'class';
+  v2s.boundaryrange_class.name    = 'Tissue Class';
+  v2s.boundaryrange_class.labels  = {'GM','WM','CSF'}; % hull
+  v2s.boundaryrange_class.values  = {1 2 3};
+  v2s.boundaryrange_class.val     = {1};
+  v2s.boundaryrange_class.help    = {
+    'Tissue boundary used for distance description.'
+  };
+
+  v2s.boundaryrange_stepsize         = cfg_entry;
+  v2s.boundaryrange_stepsize.tag     = 'stepsize';
+  v2s.boundaryrange_stepsize.name    = 'Stepsize';
+  v2s.boundaryrange_stepsize.strtype = 'r';
+  v2s.boundaryrange_stepsize.val     = {0.1};
+  v2s.boundaryrange_stepsize.num     = [1 1];
+  v2s.boundaryrange_stepsize.help    = {
+    'Absolute stepsize of the sample points centered around the tissue boundary. '
+    'The function use 5 sample points.  The maximum value is 1 (to avoid problems with cortical structures).'
+    'This means a stepsize of 0.5 will generate 5 sample points with absolute distance to the choosen boundary of -1, -0.5, 0.0, 0.5, 1.0 mm.'
+  };
+ 
+  v2s.boundaryrange_sample         = cfg_menu;
+  v2s.boundaryrange_sample.tag     = 'sample';
+  v2s.boundaryrange_sample.name    = 'Sample Function';
+  v2s.boundaryrange_sample.labels  = {'mean','max','min',}; %,'median','std'
+  v2s.boundaryrange_sample.values  = {{'average'},{'max'},{'min'}}; %,{'median'},{'std'}
+  v2s.boundaryrange_sample.val     = {{'average'}};
+  v2s.boundaryrange_sample.help    = {
+    'Tissue boundary used for distance description.'
+  };
+  
+  v2s.boundaryrange         = cfg_branch;
+  v2s.boundaryrange.tag     = 'boundaryrange';
+  v2s.boundaryrange.name    = 'Absolute Position From a Tissue Boundary (Sample)';
+  v2s.boundaryrange.val     = {
+    v2s.boundaryrange_class ...
+    v2s.boundaryrange_stepsize ...
+    v2s.boundaryrange_sample ...
+    };
+  v2s.boundary.help    = {
+    'Extract a set of values around a tissue boundary with a specified absolute sample distance and average these values by mean, median, minimum, maximum or standard deviation'
+  };
+
+
+  %% -- Mapping function
+
+  v2s.mapping         = cfg_choice;
+  v2s.mapping.tag     = 'mapping';
+  v2s.mapping.name    = 'Mapping Function';
+  if expert
+    v2s.mapping.values  = {
+      v2s.tissuerange ...
+      v2s.tissue ...
+      v2s.boundaryrange ...
+      v2s.boundary ...
+      }; 
+    v2s.mapping.help    = {
+      'Volume extration type. '
+      '  tissue-range:'
+      '    extract a set of values within a tissue class with a specified relative sample '
+      '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+      '  tissue-based:' 
+      '    extract one value with a specified relative position within a tissue class'
+      '  boundary-range:' 
+      '    extract a set of values within a tissue class with a specified relative sample'
+      '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+      '  boundary-based: '
+      '    extract one value from a specified absolute distance from a tissue interface'
+      '' 
+      };
+  else
+    v2s.mapping.values  = {
+      v2s.tissuerange ...
+      v2s.tissue ...
+      }; 
+    v2s.mapping.help    = {
+      'Volume extration type. '
+      '  tissue-range:'
+      '    extract a set of values within a tissue class with a specified relative sample '
+      '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+      '  tissue-based:'
+      '    extract one value with a specified relative position within a tissue class'
+      '' 
+      };
+  end
+  v2s.mapping.val     = {v2s.tissuerange};
+  
+
 
 % extract volumetric data in individual space
 %-----------------------------------------------------------------------  
   v2s.data_surf_sub_lh         = cfg_files;
   v2s.data_surf_sub_lh.tag     = 'data_mesh_lh';
-  v2s.data_surf_sub_lh.name    = 'Left Individual Surfaces';
+  v2s.data_surf_sub_lh.name    = '(Left) Individual Surfaces';
   v2s.data_surf_sub_lh.filter  = 'gifti';
   v2s.data_surf_sub_lh.ufilter = '^lh.central.*';
   v2s.data_surf_sub_lh.num     = [1 Inf];
@@ -347,15 +388,15 @@ function stools = cg_vbm_stools(expert)
     'Right side will processed automaticly.'
     };
  
-  v2s.data_surf_sub_rh         = cfg_files;
-  v2s.data_surf_sub_rh.tag     = 'data_mesh_rh';
-  v2s.data_surf_sub_rh.name    = 'Right Individual Surfaces';
-  v2s.data_surf_sub_rh.filter  = 'gifti';
-  v2s.data_surf_sub_rh.ufilter = '^rh.central.*';
-  v2s.data_surf_sub_rh.num     = [0 Inf];
-  v2s.data_surf_sub_rh.help    = {
-    'Select right subject surface files.'
-    };
+%   v2s.data_surf_sub_rh         = cfg_files;
+%   v2s.data_surf_sub_rh.tag     = 'data_mesh_rh';
+%   v2s.data_surf_sub_rh.name    = '(Right) Individual Surfaces';
+%   v2s.data_surf_sub_rh.filter  = 'gifti';
+%   v2s.data_surf_sub_rh.ufilter = '^rh.central.*';
+%   v2s.data_surf_sub_rh.num     = [0 Inf];
+%   v2s.data_surf_sub_rh.help    = {
+%     'Select right subject surface files.'
+%     };
   
   v2s.data_sub         = cfg_files; 
   v2s.data_sub.tag     = 'data_vol';
@@ -369,26 +410,15 @@ function stools = cg_vbm_stools(expert)
 
   v2s.vol2surf      = cfg_exbranch;
   v2s.vol2surf.tag  = 'vol2surf';
-  v2s.vol2surf.name = 'Extract Volume Data by Individual Surfaces';
-  if expert
-    v2s.vol2surf.val = {
-      v2s.data_sub ...
-      v2s.data_surf_sub_lh ...
-      ... v2s.data_surf_sub_rh ...
-      v2s.datafieldname ...
-      v2s.mapping ...
-      v2s.sampling ...
-      v2s.interp ...
-      };
-  else
-    v2s.vol2surf.val = {
-      v2s.data_sub ...
-      v2s.data_surf_sub_lh ...
-      ... v2s.data_surf_sub_rh ...
-      v2s.datafieldname ...
-      v2s.mapping ...
-      };
-  end
+  v2s.vol2surf.name = 'Map Subjectspace Volumes to Individual Hemisheres';
+  v2s.vol2surf.val = {
+    v2s.data_sub ...
+    v2s.data_surf_sub_lh ...
+    ... v2s.data_surf_sub_rh ...
+    v2s.datafieldname ...
+    v2s.interp ...
+    v2s.mapping ...
+    };
   v2s.vol2surf.prog = @vbm_surf_vol2surf;
   v2s.vol2surf.help = {
     'Extract volumetric data from individual space.'
@@ -401,7 +431,7 @@ function stools = cg_vbm_stools(expert)
 %-----------------------------------------------------------------------  
   v2s.data_surf_avg_lh         = cfg_files; 
   v2s.data_surf_avg_lh.tag     = 'data_mesh_lh';
-  v2s.data_surf_avg_lh.name    = 'Left Template Surface';
+  v2s.data_surf_avg_lh.name    = '(Left) Template Hemisphere';
   v2s.data_surf_avg_lh.filter  = 'gifti';
   v2s.data_surf_avg_lh.ufilter = '^lh.*';
   v2s.data_surf_avg_lh.num     = [1 1];
@@ -409,20 +439,20 @@ function stools = cg_vbm_stools(expert)
   v2s.data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','vbm12');
   v2s.data_surf_avg_lh.help    = {
     'Select left template surface file. '
-    'Right side will processed automaticly.'
+    'Right hemisphere will processed automaticly.'
     };
   
-  v2s.data_surf_avg_rh         = cfg_files; 
-  v2s.data_surf_avg_rh.tag     = 'data_mesh_rh';
-  v2s.data_surf_avg_rh.name    = 'Left Template Surface';
-  v2s.data_surf_avg_rh.filter  = 'gifti';
-  v2s.data_surf_avg_rh.ufilter = '^rh.*';
-  v2s.data_surf_avg_rh.num     = [0 1];
-  v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii')};  
-  v2s.data_surf_avg_rh.dir     = fullfile(spm('dir'),'toolbox','vbm12');
-  v2s.data_surf_avg_rh.help    = {
-    'Select right template surface file.'
-    };
+%   v2s.data_surf_avg_rh         = cfg_files; 
+%   v2s.data_surf_avg_rh.tag     = 'data_mesh_rh';
+%   v2s.data_surf_avg_rh.name    = 'Right Template Hemisphere';
+%   v2s.data_surf_avg_rh.filter  = 'gifti';
+%   v2s.data_surf_avg_rh.ufilter = '^rh.*';
+%   v2s.data_surf_avg_rh.num     = [0 1];
+%   v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii')};  
+%   v2s.data_surf_avg_rh.dir     = fullfile(spm('dir'),'toolbox','vbm12');
+%   v2s.data_surf_avg_rh.help    = {
+%     'Select right template surface file.'
+%     };
   
   v2s.data_norm         = cfg_files; 
   v2s.data_norm.tag     = 'data_vol';
@@ -431,31 +461,20 @@ function stools = cg_vbm_stools(expert)
   v2s.data_norm.ufilter = '^(?=wm|wp|w0rp|wc).*'; % only normalized images
   v2s.data_norm.num     = [1 Inf];
   v2s.data_norm.help    = {
-    'Select normalized space volumes.'
+    'Select templatespace volumes.'
   };
 
   v2s.vol2tempsurf      = cfg_exbranch;
   v2s.vol2tempsurf.tag  = 'vol2surftemp';
-  v2s.vol2tempsurf.name = 'Extract Volume Data by Template Surfaces';
-  if expert
-    v2s.vol2tempsurf.val  = {
-      v2s.data_norm ...
-      v2s.data_surf_avg_lh ...
-      ... v2s.data_surf_avg_rh ...
-      v2s.datafieldname ...
-      v2s.mapping ...
-      v2s.sampling ...
-      v2s.interp ...
-    };
-  else
-    v2s.vol2tempsurf.val  = {
-      v2s.data_norm ...
-      v2s.data_surf_avg_lh ...
-      ... v2s.data_surf_avg_rh ...
-      v2s.datafieldname ...
-      v2s.mapping ...
-    };
-  end
+  v2s.vol2tempsurf.name = 'Map Templatespace Volumes to Template Hemispheres';
+  v2s.vol2tempsurf.val  = {
+    v2s.data_norm ...
+    v2s.data_surf_avg_lh ...
+    ... v2s.data_surf_avg_rh ...
+    v2s.datafieldname ...
+    v2s.interp ...
+    v2s.mapping ...
+  };
   v2s.vol2tempsurf.prog = @vbm_surf_vol2surf;
   v2s.vol2tempsurf.help = {
     'Extract volumetric data from template space.'
@@ -492,7 +511,7 @@ function stools = cg_vbm_stools(expert)
   sc.cdata_sub.tag     = 'cdata';
   sc.cdata_sub.name    = 'Surface Data Files';
   sc.cdata_sub.filter  = 'any';
-  sc.cdata_sub.ufilter = '^(s.mm.[rl]h|[rl]h).(?!cent|sphe|defe).*';
+  sc.cdata_sub.ufilter = '[rl]h|[rl]h).(?!cent|sphe|defe).*';
   sc.cdata_sub.num     = [1 Inf];
   sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
    
@@ -551,7 +570,7 @@ function stools = cg_vbm_stools(expert)
     '    f = ''s2.*(s1>100)'''
     '        - here the first texture is used to make the mask, which is applied to the second texture'
     '  * Sum of n texures'
-    '    f = ''i1 + i2 + i3 + i4 + i5 + ...'''
+    '    f = ''s1 + s2 + s3 + s4 + s5 + ...'''
     '  * Sum of n texures (when reading data into a data-matrix - use dmtx arg)'
     '    f = mean(S)'
     ''
@@ -567,7 +586,7 @@ function stools = cg_vbm_stools(expert)
   sc.dmtx.values  = {0,1};
   sc.dmtx.val     = {0};
   sc.dmtx.help    = {
-    'If the dmtx flag is set, then textures are read into a data matrix S (rather than into separate variables s1, s2, s3,...). The data matrix  should be referred to as S, and contains textures in rows. Computation is vertex by vertex, S is a NxK matrix, where N is the number of input textures, and K is the number of vertices per plane.'
+    'If the dmtx flag is set, then textures are read into a data matrix S (rather than into separate variables s1, s2, s3,...). The data matrix should be referred to as S, and contains textures in rows. Computation is vertex by vertex, S is a NxK matrix, where N is the number of input textures, and K is the number of vertices per plane.'
   };
 
 
@@ -585,14 +604,14 @@ function stools = cg_vbm_stools(expert)
   };
   surfcalc.prog = @vbm_surf_calc;
   surfcalc.help = {
-    'Mathematical operations for surface data (textures).'
-    'It works similar to ''spm_imcalc''.  The Input textures must have the same number of entries.  This means that the must came from same hemisphere of a subject, or the have to be resampled.'
+    'Mathematical operations for surface data (texture).'
+    'It works similar to ''spm_imcalc''.  The input surface data must have the same number of entries.  This means that the must came from same hemisphere of a subject, or the have to be resampled.'
   };
 
 
   surfcalcsub      = cfg_exbranch;
-  surfcalcsub.tag  = 'surfcalcsample';
-  surfcalcsub.name = 'Surface Calculator (many subjects)';
+  surfcalcsub.tag  = 'surfcalcsub';
+  surfcalcsub.name = 'Surface Calculator (subjectwise)';
   surfcalcsub.val  = {
     sc.cdata_sample ...
     sc.dataname ...
@@ -602,14 +621,14 @@ function stools = cg_vbm_stools(expert)
   };
   surfcalcsub.prog = @vbm_surf_calc;
   surfcalcsub.help = {
-    'Mathematical operations for a set of surface data (textures).'
-    'In contrast to the ''Texture Calculator'' it allows the definition of texture sets ''si'' for multiple subjects.  Therefore, each sample requires textures of the same subjects to evalute the expression for each subject.'
+    'Mathematical operations for surface data sets (textures).'
+    'In contrast to the ''Surface Calculator'' it allows the definition of datasets sets ''si'' for multiple subjects.  Therefore, each sample requires surface data of the same subjects to evalute the expression for each subject.'
   };
 
 
 
 
-%% Resample surfaces 
+%% Resample and smooth surfaces 
 %-----------------------------------------------------------------------
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
@@ -639,7 +658,7 @@ function stools = cg_vbm_stools(expert)
 
 
 
-%% Resample surfaces FreeSurfer
+%% Resample and smooth FreeSurfer surfaces
 %-----------------------------------------------------------------------
   data_fs         = cfg_files;
   data_fs.tag     = 'data_fs';

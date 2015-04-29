@@ -54,54 +54,45 @@ function varargout = vbm_surf_vol2surf(varargin)
   % --------------------------------------------------------------------
   MFN = fieldnames(job.mapping);
   switch MFN{1}
-    case 'mean'
+    case 'boundary'
       job.mappingstr = 'average';
-    case 'median'
-      job.mappingstr = 'average';
-    case 'range'
-      job.mappingstr = sprintf('range %0.5f %0.5f ',abs(job.mapping.range));
-    case 'max'
-      job.mappingstr = 'range %%s';
-    case 'min'
-      job.mappingstr = 'range %%s';
-    case 'exp'
-      job.mappingstr = sprintf('exp %d',job.mapping.exp);
-    case 'str'
-      job.mappingstr = job.mapping.str;
+      switch job.mapping.boundary.class % thickness + absolute position
+        case 1, job.origin =  0 + job.mapping.boundary.pos;
+        case 2, job.origin = -2 + job.mapping.boundary.pos;
+        case 3, job.origin =  2 + job.mapping.boundary.pos;
+      end
+      job.res    = 1; 
+      job.length = 1;
+    case 'tissue'
+     job.mappingstr = 'average';
+      switch job.mapping.tissue.class % ...
+        case 1, job.origin =  0 .* (job.mapping.tissue.pos-0.5);
+        case 2, job.origin = -2 .* (job.mapping.tissue.pos-0.5);
+        case 3, job.origin =  2 .* (job.mapping.tissue.pos-0.5);
+      end
+      job.res    = 1; 
+      job.length = 1;
+    case 'boundaryrange'
+      job.mappingstr = job.mapping.boundaryrange.sample{1};
+      switch job.mapping.boundaryrange.class % thickness + absolute position
+        case 1, job.origin =  0 - 2*job.mapping.boundaryrange.stepsize;
+        case 2, job.origin = -2 - 2*job.mapping.boundaryrange.stepsize;
+        case 3, job.origin =  2 - 2*job.mapping.boundaryrange.stepsize;
+      end
+      job.res    = job.mapping.boundaryrange.stepsize; 
+      job.length = 5;
+    case 'tissuerange'
+      job.mappingstr = job.mapping.tissuerange.sample{1};
+      switch job.mapping.tissuerange.class % thickness + absolute position
+        case 1, job.origin =  0 - 2*job.mapping.tissuerange.stepsize;
+        case 2, job.origin = -2 - 2*job.mapping.tissuerange.stepsize;
+        case 3, job.origin =  2 - 2*job.mapping.tissuerange.stepsize;
+      end
+      job.res    = job.mapping.tissuerange.stepsize; 
+      job.length = 5;
   end  
+  job.origin = -job.origin;
       
-   
-  
-  
-  % Command-specific options:
-  SFN = fieldnames(job.sampling);
-  switch lower(SFN{1})
-    case 'gm'
-      job.origin = -0.75; 
-      job.res    = 0.25; 
-      job.length = (2*abs(job.origin./job.res)) + 1;
-    case 'wm'
-      job.origin = +0.75; 
-      job.res    = 0.25; 
-      job.length = 3;
-    case 'csf'
-      job.origin = -0.75; 
-      job.res    = 0.25; 
-      job.length = 3;
-    case 'rpos'
-      job.origin = -0.75; 
-      job.res    = 0.25; 
-      job.length = (2*abs(job.origin./job.res)) + 1;
-    case 'exact'
-      job.origin = job.sampling.exact(1); 
-      job.res    = job.sampling.exact(2); 
-      job.length = diff(job.sampling.exact(1:2:3))./job.sampling.exact(2) + 1;
-    otherwise
-      job.origin = -1; 
-      job.res    = 0.25; 
-      job.length = (2*abs(job.origin./job.res)) + 1;
-  end
-
   % Interpolation options:
   if ~isfield(job,'interp') || isempty(job.interp), job.interp = 'linear'; end
   
