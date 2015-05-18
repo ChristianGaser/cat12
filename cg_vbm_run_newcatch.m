@@ -36,11 +36,15 @@ function cg_vbm_run_newcatch(job,estwrite,tpm,subj)
     [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
     % delete bias map
     if exist(fullfile(pth,['bf' nam(2:end) ext]),'file')
-      delete(fullfile(pth,['bf' nam(2:end) ext]));
+      try %#ok<TRYNC>
+        delete(fullfile(pth,['bf' nam(2:end) ext]));
+      end
     end
     % delete noise corrected image
     if exist(fullfile(pth,['n' nam(2:end) ext]),'file')
-      delete(fullfile(pth,['n' nam(2:end) ext]));
+      try %#ok<TRYNC>
+        delete(fullfile(pth,['n' nam(2:end) ext]));
+      end
     end
 
     % rethrow error 
