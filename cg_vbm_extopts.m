@@ -12,36 +12,36 @@ end
 %_______________________________________________________________________
 % options for output
 %-----------------------------------------------------------------------
-
-vox         = cfg_entry;
-vox.tag     = 'vox';
-vox.name    = 'Voxel size for normalized images';
-vox.strtype = 'r';
-vox.num     = [1 1];
-vox.def     = @(val)cg_vbm_get_defaults('extopts.vox', val{:});
-vox.help    = {
-  'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
-''
-};
-
-%------------------------------------------------------------------------
-
-bb         = cfg_entry;
-bb.tag     = 'bb';
-bb.name    = 'Bounding box';
-bb.strtype = 'r';
-bb.num     = [2 3];
-bb.def     = @(val)cg_vbm_get_defaults('extopts.bb', val{:});
-bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
-''
-};
-
-
-%------------------------------------------------------------------------
-% Resolution
-%------------------------------------------------------------------------
-
 if expert
+  vox         = cfg_entry;
+  vox.tag     = 'vox';
+  vox.name    = 'Voxel size for normalized images';
+  vox.strtype = 'r';
+  vox.num     = [1 1];
+  vox.def     = @(val)cg_vbm_get_defaults('extopts.vox', val{:});
+  vox.help    = {
+    'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
+  ''
+  };
+
+
+  %---------------------------------------------------------------------
+
+  bb         = cfg_entry;
+  bb.tag     = 'bb';
+  bb.name    = 'Bounding box';
+  bb.strtype = 'r';
+  bb.num     = [2 3];
+  bb.def     = @(val)cg_vbm_get_defaults('extopts.bb', val{:});
+  bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
+  ''
+  };
+
+
+  %---------------------------------------------------------------------
+  % Resolution
+  %---------------------------------------------------------------------
+
   resnative        = cfg_branch;
   resnative.tag    = 'native';
   resnative.name   = 'Native resolution preprocessing';
@@ -289,7 +289,7 @@ extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options';
 if expert
-  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,print}; 
+  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,vox,print}; 
 else
   extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,print}; 
 end

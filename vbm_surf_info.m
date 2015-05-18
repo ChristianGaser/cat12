@@ -132,7 +132,8 @@ function [varargout] = vbm_surf_info(P,read)
     sinfo(i).dataname  = strrep(sinfo(i).posside,'.resampled','');
     
     % special datatypes
-    FN = {'thickness','central','sphere','defects','gyrification','logsulc','frac'};
+    FN = {'thickness','central','sphere','defects','gyrification','logsulc','frac',...
+          'WMdepth','WD','CSFdepth','CD','hulldist'};
     sinfo(i).texture = '';
     for fi=1:numel(FN)
       if strfind(sinfo(i).dataname,FN{fi}), sinfo(i).texture = FN{fi}; end

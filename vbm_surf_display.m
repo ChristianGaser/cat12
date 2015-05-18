@@ -51,6 +51,18 @@ function vbm_surf_display(varargin)
           else % default range
             vbm_surf_render('clim',h.axis,[0 5]);
           end
+        case {'WMdepth','WD'}
+          vbm_surf_render('ColourMap',h.axis,jet); 
+          clim = iscaling(h.cdata);
+          if clim(1)>5 || clim(1)<0  || clim(2)<5 || clim(2)>15 
+            vbm_surf_render('clim',h.axis,clim);
+          else % default range
+            vbm_surf_render('clim',h.axis,[0 10]);
+          end
+        case {'CSFdepth','CD'}
+          vbm_surf_render('ColourMap',h.axis,jet); 
+          clim = iscaling(h.cdata);
+          vbm_surf_render('clim',h.axis,clim);
         case {'curvature','gyrification'}
           vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('curvature',128)); 
           vbm_surf_render('clim',h.axis,iscaling(h.cdata));

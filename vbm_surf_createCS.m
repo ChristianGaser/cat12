@@ -81,6 +81,9 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     
   % removing blood vessels, and other regions
   Yth1 = zeros(size(Ymf),'single'); 
+  Ywd  = zeros(size(Ymf),'single'); 
+  Ycd  = zeros(size(Ymf),'single'); 
+  Ysd  = zeros(size(Ymf),'single'); 
   
   for si=1:numel(opt.surf)
    
@@ -89,6 +92,10 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     Psphere0   = fullfile(pp,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
     Pthick     = fullfile(pp,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness
+    Pwd        = fullfile(pp,sprintf('%s.WMdepth.%s',opt.surf{si},ff));              % WM depth
+    Pwdn       = fullfile(pp,sprintf('%s.WMdepthnorm.%s',opt.surf{si},ff));          % WM depth normalized
+    Pcd        = fullfile(pp,sprintf('%s.CSFdepth.%s',opt.surf{si},ff));             % CSF depth
+    Psd        = fullfile(pp,sprintf('%s.hulldist.%s',opt.surf{si},ff));             % sulcal depth
     Pdefects0  = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
     Pdefects   = fullfile(pp,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
     Psphere    = fullfile(pp,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
@@ -113,15 +120,40 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     [Ymfs,resI] = vbm_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
 
     % pbt calculation
-    [Yth1i,Yppi] = vbm_vol_pbt(Ymfs,struct('resV',opt.interpV)); clear Ymfs;       
+    [Yth1i,Yppi] = vbm_vol_pbt(Ymfs,struct('resV',opt.interpV)); %clear Ymfs;       
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     Yth1t = vbm_vol_resize(Yth1i,'deinterp',resI);                      % back to original resolution
     Yth1t = vbm_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
     Yth1  = max(Yth1,Yth1t);                                            % save on main image
     clear Yth1t;
     fprintf('%4.0fs\n',etime(clock,stime)); 
-
-
+    
+    %% pbt wm width
+    % Hülle bestimmen (pro Seite oder gesamt?)
+    % SD von Hülle in ~WM bestimmen
+    % CSD in Hülle beidseitig bestimmen (eidist)
+    %YM = max(0,min(1,1-Yppis)); Yid = vbm_vol_eidist(1-Yppis,YM,repmat(opt.interpV,1,3),1,1,0,0); 
+    %YM = max(0,min(1,1-Yppis))/2; YM(Ymfs==0)=nan; Yod = vbm_vol_eidist(  Yppis,YM,repmat(opt.interpV,1,3),1,1,0,0); 
+    
+    stime = vbm_io_cmd('  WM depth estimation');
+    Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
+    Ywdt = vbdist(1-Yppis);
+    Ywdt = vbm_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))/opt.interpV;
+    Ywdt = vbm_vol_resize(Ywdt,'deinterp',resI); 
+    Ywdt = vbm_vol_resize(Ywdt,'dereduceBrain',BB);                   % adding background
+    Ywd  = max(Ywd,Ywdt); 
+    fprintf('%4.0fs\n',etime(clock,stime)); 
+    
+    stime = vbm_io_cmd('  CSF depth estimation');
+    Ycdt = vbdist(Yppis,Ymfs>0.5); 
+    Ycdt = vbm_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))/opt.interpV; 
+    Ycdt(Ymfs<=0.5)=0;
+    Ycdt = vbm_vol_resize(Ycdt,'deinterp',resI); 
+    Ycdt = vbm_vol_resize(Ycdt,'dereduceBrain',BB); 
+    Ycd  = max(Ycd,Ycdt); 
+    fprintf('%4.0fs\n',etime(clock,stime));
+    
+    
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
     %  because CAT_DeformSurf_ui can not handle higher resolutions and
@@ -240,10 +272,28 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
 
     % read final surface and map thickness data
+    stime = vbm_io_cmd('  Thickness / Depth mapping');
     CS = gifti(Pcentral);
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
     vbm_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
+    
+    % map WM and CSF witdh data (corrected by thickness)
+    %r = mean(abs(diff([min(CS.vertices,1);max(CS.vertices,1)],1,1));
+    facevertexcdata2 = isocolors2(Ywd,CS.vertices); 
+    facevertexcdata2 = correctWMdepth(CS,facevertexcdata2);
+    facevertexcdata2 = max(0,facevertexcdata2 - facevertexcdata/2);
+    vbm_io_FreeSurfer('write_surf_data',Pwd,facevertexcdata2);
+    % just a test ... problem with other species ...
+      %norm = sum(Ymf(:)>0.5) / prod(vx_vol) / 1000 / 1400;
+      %norm = mean([2 1 1].*diff([min(CS.vertices);max(CS.vertices)])); 
+      norm = mean([2 1 1].*std(CS.vertices)); % maybe the hull surface is better...
+      vbm_io_FreeSurfer('write_surf_data',Pwdn,facevertexcdata2/norm);
+ 
+    facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
+    facevertexcdata3 = max(0,facevertexcdata3 - facevertexcdata/2); 
+    vbm_io_FreeSurfer('write_surf_data',Pcd,facevertexcdata3);
+    fprintf('%4.0fs\n',etime(clock,stime)); 
 
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
@@ -252,6 +302,8 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     S.(opt.surf{si}).vertices = CS.vertices;
     S.(opt.surf{si}).faces    = CS.faces;
     S.(opt.surf{si}).th1      = facevertexcdata;
+    S.(opt.surf{si}).th2      = facevertexcdata2;
+    S.(opt.surf{si}).th3      = facevertexcdata3;
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;
     clear Yth1i
@@ -270,7 +322,34 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     clear CS
   end  
 end
- 
+%=======================================================================
+function cdata = correctWMdepth(CS,cdata)
+% ______________________________________________________________________
+% Correct deep WM depth values that does not fit to the local thickness 
+% of the local gyri.
+% ______________________________________________________________________
+
+%%
+  SV  = CS.vertices;                                                          % Surface Vertices 
+  SE  = unique([CS.faces(:,1:2);CS.faces(:,2:3);CS.faces(:,3:-2:1)],'rows');  % Surface Edges
+  SEv = single(diff(cat(3,SV(SE(:,1),:),SV(SE(:,2),:)),1,3));                 % Surface Edge Vector
+  SEL = sum(SEv.^2,2).^0.5;                                                   % Surface Edge Length  
+  clear SEv
+  
+
+  SEd = cdata(SE(:,1))<5; SE(SEd,:)=[];
+  i=0; cdatac = cdata; lengthfactor = 2;
+  while i<10 && sum((cdatac(SE(:,1)) - SEL(SE(:,1))*lengthfactor)  >= cdata(SE(:,2)))>size(CS.vertices,1)/20;
+    i=i+1; 
+    cdatac = cdata;
+    
+    for j=1:size(SE,1)
+      if cdata(SE(j,2))>3 && ( cdata(SE(j,1)) - SEL(SE(j,1))*lengthfactor ) > cdata(SE(j,2))
+        cdata(SE(j,1)) = cdata(SE(j,2)) + SEL(SE(j,1))*0.5; 
+      end
+    end
+  end
+end
 %=======================================================================
 function V = isocolors2(R,V,opt)
 % ______________________________________________________________________
