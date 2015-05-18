@@ -328,9 +328,10 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
 
       N  = nifti(VraT.fname);
 
+      % the mat0 contain the rigid transformation for the deformation tools!
       % get rid of the QFORM0 rounding warning
       warning off
-      N.mat0  = transf.mat; % hier stand mit mat0, aber da stimmten die dimensionen nicht!!!
+      N.mat0  = transf.mat0;
       warning on
 
       %N.mat_intent  = 'Aligned';

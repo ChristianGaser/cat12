@@ -44,7 +44,7 @@ if ~isfield(job.output,'WMH')
                            'mod',0, ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
-FN = {'INV','atlas','debug','WMHC','NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb'};
+FN = {'INV','atlas','debug','WMHC','NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb','vox'};
 for fni=1:numel(FN)
   if ~isfield(job.extopts,FN{fni})
     job.extopts.(FN{fni}) = cg_vbm_get_defaults(sprintf('extopts.%s',FN{fni}));
@@ -623,7 +623,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
     stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',ornlmstr));
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       if ornlmstr>0.01,
-        Ymss = ornlmMex(Yms,3,1,ornlmstr); 
+        Ymss = ornlmMex(double(Yms),3,1,ornlmstr); 
         Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
       end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
@@ -1279,7 +1279,7 @@ M0 = res.image.mat;
 % prepare transformations 
 
 % resoltion changes:
-tpmres = abs(M1(1)); newres = cg_vbm_get_defaults('extopts.vox');
+tpmres = abs(M1(1)); newres = job.extopts.vox; 
 if isinf(newres), newres = tpmres; end
 M1d = M1; M1([1,6,11])=M1([1,6,11]) .* newres/tpmres; 
 odim=floor(odim*tpmres/newres);
@@ -1426,9 +1426,10 @@ end
 
 % rigid transformation
 if (any(tc(:,2)) || lb(1,3))
+  %%
     %M0o = res.image0.mat; 
     x      = affind(rgrid(d),M0);
-    y1     = affind(trans.warped.y,M1); % required new transformation
+    y1     = affind(trans.warped.y,M1d); % required new transformation
         
     [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
     clear x y1
@@ -1439,6 +1440,10 @@ if (any(tc(:,2)) || lb(1,3))
     matr    = mm/vx3;
     
     trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
+    
+    %vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+    %sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
+    %min([0 0 0 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
 
 trans.native.Vo = VT0;
@@ -1510,19 +1515,20 @@ vbm_io_writenii(VT0,Yl1,'a1','brain atlas map for major structures and sides',..
 % class maps
 fn = {'GM','WM','CSF'};
 for clsi=1:3
+  %%
   vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
-    min([1 0 0 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
+    min([1 1 0 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
   vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-    min([0 1 2 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
+    min([0 0 2 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
 % write WMH class maps
 if job.extopts.WMHC==1 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint8',[0,1/255],...
-    min([1 0 0 0],cell2mat(struct2cell(job.output.WMH)')),trans);
+    min([1 1 0 2],cell2mat(struct2cell(job.output.WMH)')),trans); % 1 0 0 0
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint16',[0,1/255],...
-    min([0 1 2 2],cell2mat(struct2cell(job.output.WMH)')),trans);
+    min([0 0 2 0],cell2mat(struct2cell(job.output.WMH)')),trans); % 0 1 2 2
 end  
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
@@ -1604,6 +1610,11 @@ if job.output.surface
   % metadata
   if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
   dist_thickness{1} = [vbm_stat_nanmean(th(:)) vbm_stat_nanstd(th(:))]; clear th; 
+  if isfield(S,'lh'), th=S.lh.th2; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th2]; end
+  dist_thickness{2} = [vbm_stat_nanmean(th(:)) vbm_stat_nanstd(th(:))]; clear th; 
+  if isfield(S,'lh'), th=S.lh.th3; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th3]; end
+  dist_thickness{3} = [vbm_stat_nanmean(th(:)) vbm_stat_nanstd(th(:))]; clear th; 
+
 
   vbm_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));
@@ -1732,6 +1743,8 @@ qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
           struct('write_csv',0,'write_xml',0,'method','vbm12'));
 if job.output.surface
   qa.SM.dist_thickness{1} = dist_thickness{1};
+  qa.SM.dist_WMdepth{1}   = dist_thickness{2};
+  qa.SM.dist_CSFdepth{1}  = dist_thickness{3};
 end  
 clear Yo Ybf Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));

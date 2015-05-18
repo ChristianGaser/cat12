@@ -42,7 +42,9 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
     
   def.tissue    = [ 1/3 3/12;  2/3 3/12;    1 3/12]; % ideal normalized tissue peak values 
   def.tisvolr   = [0.1754  0.1439; 0.4538  0.1998; 0.3688  0.1325; 0 0.1]; % relative expected tissue volumes
-  def.thickness = [2.50  1.0; 0.75  1.0];            % absolut  expected tickness
+  def.thickness = [2.50  1.0; 0.75  0.5];            % absolut  expected tickness
+  def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolut  expected tickness
+  def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   NM=[0.06 0.32/5*6]; 
   BM=[0.17 0.70/5*6];
@@ -100,7 +102,9 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'SM'  'vol_rel_BV'            'linear'    [  0.00   0.05]  'relative blood vessel volume'
    'SM'  'vol_rel_WMH'           'linear'    [  0.00   0.05]  'relative WMH volume'
   % - distance / thickness measures - 
-   'SM'  'dist_thickness'        'normal'    def.thickness    'absolut  thickness (CSF,GM,WM)'
+   'SM'  'dist_thickness'        'normal'    def.thickness    'absolut GM thickness'
+   'SM'  'dist_WMdepth'          'normal'    def.WMdepth      'absolut WM depth'
+   'SM'  'dist_CSFdepth'         'normal'    def.CSFdepth     'absolut CSF depth'
    'SM'  'dist_abs_depth'        'normal'    [  5.00   2.00]  'absolut  sulcal depth'
    'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
   % - area measures -
