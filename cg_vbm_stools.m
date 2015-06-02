@@ -511,7 +511,7 @@ function stools = cg_vbm_stools(expert)
   sc.cdata_sub.tag     = 'cdata';
   sc.cdata_sub.name    = 'Surface Data Files';
   sc.cdata_sub.filter  = 'any';
-  sc.cdata_sub.ufilter = '[rl]h|[rl]h).(?!cent|sphe|defe).*';
+  sc.cdata_sub.ufilter = '[rl]h.(?!cent|sphe|defe).*';
   sc.cdata_sub.num     = [1 Inf];
   sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
    

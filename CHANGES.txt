@@ -6838,3 +6838,46 @@ M       vbm_surf_info.m
 (2)  Added PBT WM and CSF thickness/depth estimation in "vbm_surf_createCS".
 ------------------------------------------------------------------------
 r697 | dahnke | 2015-05-18 16:03:57
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+M       cg_vbm_write.m
+A       templates_surfaces/lh.central.freesurfer.gii
+A       templates_surfaces/rh.central.freesurfer.gii
+M       vbm12.fig
+M       vbm_surf_calc.m
+M       vbm_surf_createCS.m
+M       vbm_surf_display.m
+M       vbm_surf_info.m
+M       vbm_surf_rename.m
+M       vbm_surf_render.m
+M       vbm_surf_resample.m
+M       vbm_surf_smooth.m
+
+(1)  Changes for MT-image processing in "cg_vbm_write":
+     - Deactivate SPM MRF filter to 0, because it removed to much informations. 
+     - Corrected global intensity scaling errors for negative values in MT 
+       contrast images ("vbm_pre_gintnorm" in "cg_vbm_write").
+(2)  LAS updates in "cg_vbm_write":
+     - Added estimation for the difference between cortical and subcortical GM 
+       for further automatic control of the LAS filter strength. 
+       MT data with lesser variation of GM tissue intensities will have a lower
+       CV value and require less adaption.
+     - Replaced TPM by Dartel template map.  
+     - Added divergence skeleton for more better distance based cortical GM 
+       detection and correction.
+(3)  Added a try-catch block for surface creation in "cg_vbm_write".
+(4)  Updates for surface rendering:
+     - Renamed gyrus and sulcus width surface textures filenames according to 
+       "thickness" texture filename in "gyruswidth", "gyruswidthWM", and
+       "sulcuswidth".
+     - Corrected print problems in "vbm_surf_display" (lighting does not work 
+       with phong) and prepare print function. 
+     - Set finer colormaps (256 values rather than 32).
+     - Added multi-surface display in "vbm_surf_render" and "vbm_surf_display".
+(5)  Corrected output directory and progress bar errors in "vbm_surf_calc".
+(6)  Added FreeSurfer average surfaces "[lr]h.central.freesurfer.gii".
+(7)  Added lazy processing in "vbm_surf_resample" and "vbm_surf_smooth" 
+     (estimation only if files does not exist). 
+------------------------------------------------------------------------
+r698 | dahnke | 2015-06-02 10:40:03

@@ -92,9 +92,9 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     Psphere0   = fullfile(pp,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
     Pthick     = fullfile(pp,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness
-    Pwd        = fullfile(pp,sprintf('%s.WMdepth.%s',opt.surf{si},ff));              % WM depth
-    Pwdn       = fullfile(pp,sprintf('%s.WMdepthnorm.%s',opt.surf{si},ff));          % WM depth normalized
-    Pcd        = fullfile(pp,sprintf('%s.CSFdepth.%s',opt.surf{si},ff));             % CSF depth
+    Pgw        = fullfile(pp,sprintf('%s.gyruswidth.%s',opt.surf{si},ff));           % gyrus width
+    Pgww       = fullfile(pp,sprintf('%s.gyruswidthWM.%s',opt.surf{si},ff));         % gyrus witdh of the WM 
+    Psw        = fullfile(pp,sprintf('%s.sulcuswidth.%s',opt.surf{si},ff));          % sulcus width
     Psd        = fullfile(pp,sprintf('%s.hulldist.%s',opt.surf{si},ff));             % sulcal depth
     Pdefects0  = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
     Pdefects   = fullfile(pp,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
@@ -128,25 +128,25 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     clear Yth1t;
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
-    %% pbt wm width
+    %% PBT estimation of the gyrus and sulcus width 
     % Hülle bestimmen (pro Seite oder gesamt?)
     % SD von Hülle in ~WM bestimmen
     % CSD in Hülle beidseitig bestimmen (eidist)
     %YM = max(0,min(1,1-Yppis)); Yid = vbm_vol_eidist(1-Yppis,YM,repmat(opt.interpV,1,3),1,1,0,0); 
     %YM = max(0,min(1,1-Yppis))/2; YM(Ymfs==0)=nan; Yod = vbm_vol_eidist(  Yppis,YM,repmat(opt.interpV,1,3),1,1,0,0); 
     
-    stime = vbm_io_cmd('  WM depth estimation');
+    stime = vbm_io_cmd('  Gyrus width estimation');
     Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
     Ywdt = vbdist(1-Yppis);
-    Ywdt = vbm_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))/opt.interpV;
+    Ywdt = vbm_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
     Ywdt = vbm_vol_resize(Ywdt,'deinterp',resI); 
     Ywdt = vbm_vol_resize(Ywdt,'dereduceBrain',BB);                   % adding background
     Ywd  = max(Ywd,Ywdt); 
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
-    stime = vbm_io_cmd('  CSF depth estimation');
+    stime = vbm_io_cmd('  Sulcus witdh estimation');
     Ycdt = vbdist(Yppis,Ymfs>0.5); 
-    Ycdt = vbm_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))/opt.interpV; 
+    Ycdt = vbm_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
     Ycdt(Ymfs<=0.5)=0;
     Ycdt = vbm_vol_resize(Ycdt,'deinterp',resI); 
     Ycdt = vbm_vol_resize(Ycdt,'dereduceBrain',BB); 
@@ -282,17 +282,18 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     %r = mean(abs(diff([min(CS.vertices,1);max(CS.vertices,1)],1,1));
     facevertexcdata2 = isocolors2(Ywd,CS.vertices); 
     facevertexcdata2 = correctWMdepth(CS,facevertexcdata2);
+    facevertexcdata2 = max(0,facevertexcdata2 + facevertexcdata/2);
+    vbm_io_FreeSurfer('write_surf_data',Pgw,facevertexcdata2); % gyrus width (WM and GM)
     facevertexcdata2 = max(0,facevertexcdata2 - facevertexcdata/2);
-    vbm_io_FreeSurfer('write_surf_data',Pwd,facevertexcdata2);
+    vbm_io_FreeSurfer('write_surf_data',Pgww,facevertexcdata2); % gyrus width WM only
     % just a test ... problem with other species ...
       %norm = sum(Ymf(:)>0.5) / prod(vx_vol) / 1000 / 1400;
       %norm = mean([2 1 1].*diff([min(CS.vertices);max(CS.vertices)])); 
-      norm = mean([2 1 1].*std(CS.vertices)); % maybe the hull surface is better...
-      vbm_io_FreeSurfer('write_surf_data',Pwdn,facevertexcdata2/norm);
+      %norm = mean([2 1 1].*std(CS.vertices)); % maybe the hull surface is better...
  
     facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
     facevertexcdata3 = max(0,facevertexcdata3 - facevertexcdata/2); 
-    vbm_io_FreeSurfer('write_surf_data',Pcd,facevertexcdata3);
+    vbm_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
     fprintf('%4.0fs\n',etime(clock,stime)); 
 
     % visualize a side

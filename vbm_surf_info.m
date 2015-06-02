@@ -26,6 +26,8 @@ function [varargout] = vbm_surf_info(P,read)
 
 %#ok<*RGXP1>
 
+  if isempty(P) && nargout>0, varargout{1} = {}; return; end
+  
   if nargin<2, read = 0; end
 
   P = cellstr(P);
@@ -104,8 +106,8 @@ function [varargout] = vbm_surf_info(P,read)
     sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)mm\..*')); 
     
     % side
-    if     strfind(noname,'lh.'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
-    elseif strfind(noname,'rh.'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
+    if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
+    elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
     else                          sinfo(i).side='';   sidei = 0;
     end
     if sidei>0
@@ -133,7 +135,8 @@ function [varargout] = vbm_surf_info(P,read)
     
     % special datatypes
     FN = {'thickness','central','sphere','defects','gyrification','logsulc','frac',...
-          'WMdepth','WD','CSFdepth','CD','hulldist'};
+          'gyruswidth','gyruswidthWM','sulcuswidth',...
+          'hulldist'};
     sinfo(i).texture = '';
     for fi=1:numel(FN)
       if strfind(sinfo(i).dataname,FN{fi}), sinfo(i).texture = FN{fi}; end
@@ -167,14 +170,15 @@ function [varargout] = vbm_surf_info(P,read)
     end
     % if the dataname is central we got a mesh or surf datafile
     if isempty(sinfo(i).Pdata) 
-      switch sinfo(i).dataname
+      switch sinfo(i).texture
         case {'defects'} % surf
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = sinfo(i).fname;
         case {'central','sphere'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
-        case {'thickness','gyrification','frac','logsulc'} % only thickness
+        case {'thickness','gyrification','frac','logsulc',...
+             'gyruswidth','gyruswidthWM','sulcuswidth'} % only thickness
           sinfo(i).Pdata = sinfo(i).fname;
       end
     end
@@ -190,9 +194,9 @@ function [varargout] = vbm_surf_info(P,read)
     end
     % if we got still no mesh than we can find an average mesh
     % ...
-    if isempty(sinfo(i).Pmesh) && sinfo(i).ftype==1
-      sinfo(i).Pmesh = char(vbm_surf_rename(sinfo(i),'pp',...
-        fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces'),'name','','ee','.gii'));
+    if isempty(sinfo(i).Pmesh) %&& sinfo(i).ftype==1
+      sinfo(i).Pmesh = ...
+        fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces',[sinfo(i).side '.central.freesurfer.gii']);
       sinfo(i).Pdata = sinfo(i).fname;
     end
     
@@ -218,7 +222,9 @@ function [varargout] = vbm_surf_info(P,read)
       if isfield(S,'cdata'),    sinfo(i).ncdata    = size(S.cdata,1); end
     end
     
-
+    sinfo(i).vbmxml = fullfile(pp,['vbm_' sinfo(i).name '*.xml']);
+    if ~exist(sinfo(i).vbmxml,'file'), sinfo(i).vbmxml = ''; end 
+    
     if nargout>1
       varargout{2}{i} = S; 
     else

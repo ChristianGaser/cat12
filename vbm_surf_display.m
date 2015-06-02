@@ -1,4 +1,4 @@
-function vbm_surf_display(varargin)
+function varargout = vbm_surf_display(varargin)
 % ______________________________________________________________________
 % Function to display surfaces. Warapper  to vbm_surf_render.
 %
@@ -10,91 +10,150 @@ function vbm_surf_display(varargin)
 % Robert Dahnke
 % $Id$
 
+  SVNid = '$Rev$';
+
   if nargin>0
-    if isstruct(varargin)
-      P = varargin{1}.data;
+    if isstruct(varargin{1})
+      job = varargin{1};
     else
-      P = varargin{1};
+      job.data = varargin{1};
     end
   else
-    P = spm_select([1 24],'any','Select surface','','','[lr]h.*');
+    job.data = spm_select([1 24],'any','Select surface','','','[lr]h.*');
+    job.imgprint.do = 0;
   end
-  if isempty(P), return; end
-  P = cellstr(P);
+  if isempty(job.data), return; end
+  job.data = cellstr(job.data);
   
+  % scaling options for textures
+  def.colormap = '';
+  def.caxis    = []; % default/auto, range
+  
+  % print options ... just a quick output > vbm_surf_print as final function 
+  def.imgprint.type  = '-dpng';
+  def.imgprint.dpi   = 600;
+  def.imgprint.fdpi  = @(x) ['-r' num2str(x)];
+  def.imgprint.do    = 1;
+  def.imgprint.close = 1;
+
+  % multi-surface output for one subject 
+  def.multisurf = 1; % 0 - no; 1 - both hemispheres;
+  
+  job = checkinopt(job,def);
   
   %%
-  sinfo = vbm_surf_info(P); 
-  for i=1:numel(P)
+  sinfo = vbm_surf_info(job.data); 
+  spm('FnBanner',mfilename,SVNid); 
+  for i=1:numel(job.data)
+    
+    % load multiple surfaces
+    if job.multisurf
+      if strcmp(sinfo(i).side,'rh'), oside = 'lh'; else oside = 'rh'; end
+      Pmesh = [sinfo(i).Pmesh vbm_surf_rename(sinfo(i).Pmesh,'side',oside)];
+      Pdata = [sinfo(i).Pdata vbm_surf_rename(sinfo(i).Pdata,'side',oside)]; 
+    else
+      Pmesh = sinfo(i).Pmesh;
+      Pdata = sinfo(i).Pdata; 
+    end
+    
     try
+      fprintf('  %s\n',job.data{i});
 
-      % old ... % h = spm_mesh_render(sinfo(i).Pmesh);
-
-      if ~strcmp(sinfo(i).Pmesh,sinfo(i).Pdata) && ~isempty(sinfo(i).Pdata)
+      if ~all(strcmp(Pmesh,Pdata)) && ~all(cellfun('isempty',Pdata))
         % only gifti surface without texture
-        h = vbm_surf_render(sinfo(i).Pmesh,'Pcdata',sinfo(i).Pdata);
+        if isfield(job,'parent')
+          h = vbm_surf_render('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
+        else
+          h = vbm_surf_render('disp',Pmesh,'Pcdata',Pdata);
+        end  
       else
         % only gifti surface without texture
-        h = vbm_surf_render(sinfo(i).Pmesh);
+        if isfield(job,'ah')
+          h = vbm_surf_render(Pmesh,'parent',job.parent);
+        else
+          h = vbm_surf_render(Pmesh);
+        end
       end
-
-      % textur handling
-      set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(P{i},'short60'),'NumberTitle','off');
+      
+      
+      %% textur handling
+      set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
       vbm_surf_render('ColourBar',h.axis,'on');
-      if strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
-      switch sinfo(i).texture
-        case 'thickness'
-          vbm_surf_render('ColourMap',h.axis,jet); 
-          clim = iscaling(h.cdata);
-          if clim(1)>3 || clim(1)<0  || clim(2)<2 || clim(2)>8  
-            vbm_surf_render('clim',h.axis,clim);
-          else % default range
-            vbm_surf_render('clim',h.axis,[0 5]);
-          end
-        case {'WMdepth','WD'}
-          vbm_surf_render('ColourMap',h.axis,jet); 
-          clim = iscaling(h.cdata);
-          if clim(1)>5 || clim(1)<0  || clim(2)<5 || clim(2)>15 
-            vbm_surf_render('clim',h.axis,clim);
-          else % default range
-            vbm_surf_render('clim',h.axis,[0 10]);
-          end
-        case {'CSFdepth','CD'}
-          vbm_surf_render('ColourMap',h.axis,jet); 
-          clim = iscaling(h.cdata);
-          vbm_surf_render('clim',h.axis,clim);
-        case {'curvature','gyrification'}
-          vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('curvature',128)); 
-          vbm_surf_render('clim',h.axis,iscaling(h.cdata));
-        case 'logsulc'
-          vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('hotinv',128));
-          vbm_surf_render('clim',h.axis,iscaling(h.cdata));
-          %vbm_surf_render('clim',h.axis,[0 1.5]);
-        case 'defects'
-          %set(h.patch,'DiffuseStrength',0,
-        case 'sphere'
-          % exist curvature or depth???
-        case 'central'
-          set(h.patch,'AmbientStrength',0.2,'DiffuseStrength',0.8,'SpecularStrength',0.1)
-        otherwise
-          if ~isempty(h.cdata)
-            clim = iscaling(h.cdata);
-            if clim(1)<0
-              clim = [-max(abs(clim)) max(abs(clim))];
-              vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('BWR',128)); 
-            else
-              vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('hotinv',128)); 
+      if ~job.multisurf && strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
+      
+      
+      % colormap
+      if isempty(job.colormap)
+        vbm_surf_render('ColourMap',h.axis,jet(256)); 
+      else
+        vbm_surf_render('ColourMap',h.axis,eval(job.colormap));
+      end
+      
+      % scaling
+      if isempty(job.caxis)
+        switch sinfo(i).texture
+          case {'defects','sphere'}
+            % no texture
+          case {'central'}
+            % default curvature
+            set(h.patch,'AmbientStrength',0.2,'DiffuseStrength',0.8,'SpecularStrength',0.1)
+          case ''
+            % no texture name
+            if ~isempty(h.cdata)
+              clim = iscaling(h.cdata);
+              if clim(1)<0
+                clim = [-max(abs(clim)) max(abs(clim))];
+                vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('BWR',128)); 
+              else
+                vbm_surf_render('ColourMap',h.axis,vbm_io_colormaps('hotinv',128)); 
+              end
+              vbm_surf_render('clim',h.axis,clim);
             end
-            vbm_surf_render('clim',h.axis,clim);
-          end
+          otherwise
+            %%
+            ranges = {
+              ... name single group
+              'thickness'     [0.5  4.0]  [0.5  4.0]
+              'gyruswidthWM'  [0.5  8.0]  [1.0  7.0]
+              'gyruswidth'    [1.0 12.0]  [1.5 11.0]
+              'sulcuswidth'   [0.0  3.0]  [0.0  3.0]
+              'gyrification'  [0.0  1.0]  [0.0  0.5]
+              'logsulc'       [0.0  1.5]  [0.0  1.5]
+            };
+
+            texturei = find(cellfun('isempty',strfind(ranges(:,1),sinfo(i).texture))==0,1,'first');
+
+            if ~isempty(texturei)
+              vbm_surf_render('clim',h.axis,ranges{texturei,3});
+            else
+              clim = iscaling(h.cdata);  
+              vbm_surf_render('clim',h.axis,round(clim));
+            end
+        end     
+      else
+        vbm_surf_render('clim',h.axis,job.caxis);
       end
     catch %#ok<CTCH>
       try
-        h = vbm_surf_render(P{i});
-      catch
-        vbm_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',P{i})); 
+        h = vbm_surf_render(job.data{i});
+      catch %#ok<CTCH>
+        vbm_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',job.data{i})); 
       end
     end
+        
+    if job.imgprint.do 
+      [pp,ff] = spm_fileparts(job.data{i}); % PaperPositition
+      print(h.figure , job.imgprint.type , job.imgprint.fdpi(job.imgprint.dpi) , ...
+        fullfile(pp,[ff '.' job.imgprint.type(3:end)])); 
+      
+      if job.imgprint.close
+        close(h.figure);
+      end
+    end
+    
+    if nargout>0
+      varargout{1}{i} = h;
+    end   
   end
 end
 function clim = iscaling(cdata,plim)
