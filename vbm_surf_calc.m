@@ -25,10 +25,10 @@ function varargout = vbm_surf_calc(varargin)
   end
   
   % prepare output filename
-  [pp,ff,ee] = spm_fileparts(job.dataname);
-  if ~strcmp(ee,'.gii'), ff = [ff ee]; end 
-  if ~isempty(pp), outdir = pp; else outdir = job.outdir{1}; end  
-  if assuregifti, ee = '.gii'; end
+  sinfo = vbm_surf_info(job.dataname); 
+  if ~strcmp(sinfo.ee,'.gii'), ff = [sinfo.ff sinfo.ee]; end 
+  if ~isempty(sinfo.pp), outdir = sinfo.pp; else outdir = job.outdir{1}; end  
+  ee = sinfo.ee; if assuregifti, ee = '.gii'; end
 
   
   % single or multi subject calculation
@@ -36,32 +36,58 @@ function varargout = vbm_surf_calc(varargin)
     if isempty(outdir), outdir = fileparts(job.cdata{1}); end
 
     job.output = fullfile(outdir,[ff,ee]); 
+      
     
     % call surfcalc
-    surfcalc(job);
+    if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
+      copyfile(job.cdata{1},job.output);
+    else
+      surfcalc(job);
+    end
   else  
+    spm_progress_bar('Init',numel(job.cdata{1}),...
+      sprintf('Texture Calculator\n%s',numel(job.cdata{1})),'Subjects Completed'); 
+    
     for si = 1:numel(job.cdata{1}) % for subjects
       sjob = job; 
+      sjob.verb = 0;
       
       % subject data 
       sjob.cdata = {};
       for ti = 1:numel(job.cdata) % for textures
         sjob.cdata{ti} = job.cdata{ti}{si};
       end
-      sinfo = vbm_surf_info(sjob.cdata{ti});
+      %sinfo = vbm_surf_info(sjob.cdata{ti});
      
       % set output filename,
-      if isempty(outdir), outdir = fileparts(job.cdata{ti}{1}); end
+      if ~isempty(outdir)
+        soutdir = outdir;
+      else
+        soutdir = fileparts(sjob.cdata{1});
+      end
 
       job.output{si} = char(vbm_surf_rename(sjob.cdata{1},...
-        'preside','','pp',outdir,'dataname',job.dataname,'ee',ee));
-      [sjob.outdir{1},sjob.dataname,ee2] = fileparts(job.output{si});
-      sjob.output = job.output{si}; 
-      sjob.dataname = [sjob.dataname ee2];
-      
-      fprintf('Process: %s\n',job.output{si});
-      vbm_surf_calc(sjob);
+        'preside','','pp',soutdir,'dataname',job.dataname,'ee',ee));
+      %[sjob.outdir{1},sjob.dataname,ee2] = fileparts(job.output{si});
+      %sjob.dataname = [sjob.dataname ee2];
+      sjob.output   = job.output{si}; 
+      fprintf('Process: %s',job.output{si});
+      try
+        %vbm_surf_calc(sjob);
+        if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
+          copyfile(sjob.cdata{1},job.output{si});
+        else
+          surfcalc(sjob);
+        end
+        fprintf(' done \n');
+      catch
+        fprintf(' failed \n');
+      end
+        
+      spm_progress_bar('Set',si);
     end
+    
+    spm_progress_bar('Clear');
   end
   
   if nargout
@@ -94,10 +120,12 @@ function surfcalc(job)
 
   % work on subsets ("slices") to save memory
   subsetsize = round(10e10 / numel(job.cdata));
-  % dispaly something
-  spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.cdata),...
-    sprintf('Texture Calculator\n%s',job.output),'Textures Completed'); 
+  
+  if job.verb
+    spm_clf('Interactive'); 
+    spm_progress_bar('Init',numel(job.cdata),...
+      sprintf('Texture Calculator\n%s',job.output),'Input Textures Completed'); 
+  end
   sdata = struct('dsize',[],'fsize',[],'vsize',[]); 
   for si = 1:ceil(sinfo1(1).nvertices/subsetsize)
     range = [ (si-1) * subsetsize + 1 , si * subsetsize ]; 
@@ -154,11 +182,12 @@ function surfcalc(job)
       
       %% evaluate mesh 
       if sinfo1.datatype==3
-        vdata(1,range,:) = mean(V);
+        vdata(1,range,:) = mean(V,1);
       end
       
-      spm_progress_bar('Set',(si-1)*numel(job.cdata)/subsetsize + i);
-       
+      if job.verb
+        spm_progress_bar('Set',(si-1)*numel(job.cdata)/subsetsize + i);
+      end      
     end
 
     %% evaluate texture
@@ -189,6 +218,8 @@ function surfcalc(job)
     vbm_io_FreeSurfer('write_surf_data',job.output,cdata');
   end
 
-  spm_progress_bar('Clear');
+  if job.verb
+    spm_progress_bar('Clear');
+  end
 end
 

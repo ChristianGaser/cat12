@@ -41,18 +41,20 @@ function varargout = vbm_surf_resample(varargin)
     if sinfo(i).resampled
       fprintf('Allready resampled %s\n',Pdata{i});
     else
-      fprintf('Resample %s\n',Pdata{i});
-
       % new file name
       Prdata(i) = vbm_surf_rename(sinfo(i).Pdata,'dataname',sprintf('%s.resampled',sinfo(i).dataname));
       Prmesh(i) = vbm_surf_rename(sinfo(i).Pmesh,'dataname',sprintf('%s.resampled',sinfo(i).dataname));
       Pfsavg    = fullfile(opt.fsavgDir,[sinfo(i).side '.sphere.gii']);
 
-      % resample mesh and values
-      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',...
-        sinfo(i).Pmesh,sinfo(i).Psphere,Pfsavg,Prmesh{i},Pdata{i},Prdata{i});
-      [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-
+      if exist(Prdata{i},'file') %&& exist(Prmesh{i},'file') 
+        fprintf('Allready resampled %s\n',Pdata{i});
+      else
+        fprintf('Resample %s\n',Pdata{i});
+        % resample mesh and values
+        cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',...
+          sinfo(i).Pmesh,sinfo(i).Psphere,Pfsavg,Prmesh{i},Pdata{i},Prdata{i});
+        [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+      end
     end
     spm_progress_bar('Set',i);
   end
