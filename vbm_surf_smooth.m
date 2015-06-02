@@ -41,8 +41,6 @@ function varargout = vbm_surf_smooth(varargin)
   Psdata = Pdata;
   sinfo  = vbm_surf_info(Pdata);
   for i=1:numel(Pdata)
-    fprintf('Smooth %s\n',Pdata{i});
-    
     %% new file name
     Psdata(i) = vbm_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname));
     
@@ -53,14 +51,20 @@ function varargout = vbm_surf_smooth(varargin)
       save(gifti(struct('cdata',cdata)),Psdata{i});
     end
       
-    % smooth values
-    cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
-    [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
-    
-    % if gifti output, check if there is surface data in the original gifti and add it
-    if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
-      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
+    if exist(Psdata{i},'file')
+      fprintf('Allready smoothed %s\n',Pdata{i});
+    else
+      fprintf('Smooth %s\n',Pdata{i});
+      
+      % smooth values
+      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+
+      % if gifti output, check if there is surface data in the original gifti and add it
+      if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
+        cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
+        [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
+      end
     end
     
     spm_progress_bar('Set',i);

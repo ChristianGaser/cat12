@@ -12,11 +12,7 @@ function [PO,sinfo] = vbm_surf_rename(P,varargin)
 
 % Todo: updata sinfo! also for other fields!
 
-  if ~isstruct(P)
-    sinfo = vbm_surf_info(P);
-  else
-    sinfo = P;
-  end  
+
   PN = struct();
   if mod(nargin-1,2)==1
     error('paired input');
@@ -25,6 +21,12 @@ function [PO,sinfo] = vbm_surf_rename(P,varargin)
       PN.(varargin{i}) = varargin{i+1}; 
     end
   end
+  
+  if ~isstruct(P)
+    sinfo = vbm_surf_info(P);
+  else
+    sinfo = P;
+  end  
   
   FN = fieldnames(PN);
   PO = cell(size(sinfo));

@@ -457,7 +457,7 @@ if do_cls
         P = Pp; clear Pp Ybb;
 
         % Used spm_mrf help and tested the probability TPM map for Q without good results.         
-        nmrf_its = 10; % 10 interation better to get full probability in thin GM areas 
+        nmrf_its = 0; % 10 interation better to get full probability in thin GM areas 
         spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
         G   = ones([Kb,1],'single')*mrf_spm;
         vx2 = single(sum(res.image(1).mat(1:3,1:3).^2));
@@ -476,7 +476,7 @@ if do_cls
             P = spm_mrf(P,single(P),G,vx2); % spm_mrf(P,Q,G,vx2);
             spm_progress_bar('set',iter);
         end
-      %  P = clean_gwc(P,1);
+         P = clean_gwc(P,1);
         spm_progress_bar('clear');
         for k1=1:size(Q,4)
             Ycls{k1} = P(:,:,:,k1);
@@ -623,7 +623,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
     stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',ornlmstr));
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       if ornlmstr>0.01,
-        Ymss = ornlmMex(double(Yms),3,1,ornlmstr); 
+        Ymss = ornlmMex(Yms,3,1,ornlmstr); % double???
         Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
       end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
@@ -693,7 +693,7 @@ end
 if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = vbm_io_cmd(sprintf('Local Adaptive Segmentation (LASstr=%0.2f)',job.extopts.LASstr));
-  [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.vbm.vbm12atlas);
+  [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.vbm.vbm12atlas,vbm.darteltpm);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
@@ -1597,16 +1597,33 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %
 if job.output.surface
   stime = vbm_io_cmd('Surface and thickness estimation');; 
-  
   % brain masking 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   Ymm = Ym  .* (Yp0>0.5) .* Yb;
   clear Yp0
-  
-  % surface creation and thickness estimation
-  [Yth1,S] = vbm_surf_createCS(res.image(1),Ymm,Yl1,YMF); % clear Ymm YMF  % VT0 - without interpolation
 
-  
+  % surface creation and thickness estimation
+  % Add a try-catch-block to handle special problems of surface
+  % creation without interruption of standard vbm processing.
+  try
+    [Yth1,S] = vbm_surf_createCS(res.image(1),Ymm,Yl1,YMF); % clear Ymm YMF  % VT0 - without interpolation
+  catch
+    surferr = lasterror; %#ok<LERR>
+    message =  sprintf('\n%s\nVBM Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
+      repmat('-',1,72),surferr.identifier,...
+      spm_str_manip(job.channel(1).vols{subj},'a60'),...
+      repmat('-',1,72),surferr.message,repmat('-',1,72));  
+    for si=1:numel(surferr.stack)
+      message = sprintf('%s%5d - %s\n',message,vbmerr.stack(si).line,vbmerr.stack(si).name);  
+    end
+    message = sprintf('%s%s\n',message,repmat('-',1,72));  
+    
+    vbm_warnings = vbm_io_addwarning(vbm_warnings,...
+      'VBM:cg_vbm_write:createCS',...
+      sprintf('Surfaceceation error! %s',message));
+     
+  end
+
   % metadata
   if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
   dist_thickness{1} = [vbm_stat_nanmean(th(:)) vbm_stat_nanstd(th(:))]; clear th; 
@@ -1618,6 +1635,7 @@ if job.output.surface
 
   vbm_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));
+
 end
 
 
@@ -2248,9 +2266,13 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,vbm_warnings] = vbm_pre_gintnorm(Y
     inv_weighting = 1;
     
   elseif T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3) % T1
+    %%
+    BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
+    BGcon = max(BGmin*1.1,T3th3(1) - mean(diff(T3th3)));
+    
     T3th3 = [max(max(res.mn(res.lkp==2))*0.05,min(res.mn(res.lkp==3))) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
-    T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... minimum
-             mean(res.mn(res.lkp==6)) ... mean background
+    T3th  = [BGmin ... minimum
+             BGcon ... mean background (MT contrast with strong background noise)
              T3th3 ... csf gm wm 
              max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ... higher
              max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ... maximum
@@ -2418,8 +2440,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,vbm_warnings] = vbm_pre_gintnorm(Y
     
     Yb2   = vbm_vol_morph(Yb & Ym>0.5,'e',2*vxv); 
     gth   = max(0.06,min(0.3,noise*6));
-    Ybm   = vbm_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
-    BMth  = max(0.01,vbm_stat_nanmedian(Ysrc(Ybm(:))));
+    %Ybm   = vbm_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
+    BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
+    BGcon = max(BGmin*1.1,T3th3(1) - mean(diff(T3th3)));
+    BMth  = BGcon; %max(0.01,vbm_stat_nanmedian(Ysrc(Ybm(:))));
     Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*mean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
     Ycm   = smooth3((Ycls{3}>240 | Ym<0.05) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.45)>0.5; % important to avoid PVE!
     
@@ -2718,7 +2742,7 @@ return
 
 
 %=======================================================================
-function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,PA)
+function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,PA,template)
 % ----------------------------------------------------------------------
 % Local Adaptive Segmentation (LAS):
 %
@@ -2764,17 +2788,16 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   % function (that normally save half of processing time)
   debug   = cg_vbm_get_defaults('extopts.debug'); %debug =1;
   verb    = cg_vbm_get_defaults('extopts.verb')-1;
+  vxv     = 1/ mean(vx_vol);
+  dsize   = size(Ysrc);
+  NS      = @(Ys,s) Ys==s | Ys==s+1;                                    % function to ignore brain hemisphere coding
   LASstr  = max(eps,min(1,cg_vbm_get_defaults('extopts.LASstr')));      % LAS strenght (for GM/WM threshold)3
+  LAB     = cg_vbm_get_defaults('extopts.LAB');                         % atlas labels
+  LABl1   = 1;                                                          % use atlas map
   cleanupstr  = min(1,max(0,cg_vbm_get_defaults('extopts.gcutstr')));   % required to avoid critical regions
   cleanupdist = min(3,max(1,1 + 2*cleanupstr));
-  %%
-  LASfs   = 1 / max(0.05,LASstr);                                       % smoothing filter strength 
-  LASi    = min(8,LASfs);                                               % smoothing interation (limited)
-  LABl1   = 1;                                                          % use atlas map
-  LAB     = cg_vbm_get_defaults('extopts.LAB');
-  NS      = @(Ys,s) Ys==s | Ys==s+1;
-  dsize   = size(Ysrc);
-  vxv     = 1/ mean(vx_vol);
+    
+  
   
 %% ---------------------------------------------------------------------
 %  First, we have to optimize the segments using further information that 
@@ -2809,8 +2832,48 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ydiv  = vbm_vol_div(max(0.33,Ym),vx_vol);
   Yp0   = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
   Yb    = smooth3(Yb | vbm_vol_morph(Yb,'d',2*vxv) & Ym<0.8 & Yg<0.3 & Ym>0)>0.5; % increase brain mask, for missing GM 
-
   
+  
+  %% adding of atlas information (for subcortical structures)
+  %  -------------------------------------------------------------------
+  if LABl1 
+    stime = vbm_io_cmd('  Prepare partitions','g5','',verb,stime); dispc=dispc+1;
+
+    % map atlas to RAW space
+    for i=1:5
+      try
+        Vl1A = spm_vol(PA);
+        break
+      catch 
+        % read error in parallel processing
+        pause(rand)
+      end
+    end
+    Yl1  = vbm_vol_ctype(round(spm_sample_vol(Vl1A,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
+    Yl1  = reshape(Yl1,dsize);
+    
+    % load WM of the TPM or Dartel/Shooting Template for WMHs
+    %Ywtpm = vbm_vol_ctype(spm_sample_vol(res.tpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
+    template  = strrep(template,'Template_1.nii','Template_6.nii'); 
+    Vtemplate = spm_vol(template); 
+    Ywtpm = vbm_vol_ctype(spm_sample_vol(Vtemplate(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
+    Ywtpm = reshape(Ywtpm,dsize); spm_smooth(Ywtpm,Ywtpm,2*vxv);
+    Ywtpm = single(Ywtpm)/255;
+    Yl1    = vbm_vol_resize(Yl1  ,'reduceBrain',vx_vol,4,BB.BB);
+    Ywtpm  = vbm_vol_resize(Ywtpm,'reduceBrain',vx_vol,4,BB.BB);
+    if ~debug, clear Yy; end
+    
+    LASmod = min(2,max(0,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Ycls{1}>4)) - 2/3) * 8));
+  else
+    LASmod = 1; 
+  end
+  
+  
+  %% adaption of the LASstr depending on average basal values 
+  LASstr  = min(1,max(0.05,LASstr * LASmod));                           % adaption by local BG variation
+  LASfs   = 1 / max(0.05,LASstr);                                       % smoothing filter strength 
+  LASi    = min(8,round(LASfs));                                        % smoothing interation (limited)
+   
   
   %% helping segments
   stime = vbm_io_cmd('  Prepare segments','g5','',verb,stime); dispc=dispc+1;
@@ -2828,6 +2891,10 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
         (single(Ycls{6})+single(Ycls{5})+single(Ycls{4}))>192 | ...     % save non-csf 
         ~vbm_vol_morph(Ybb,'lc',5) | ...                                % add background
         Ym<0.3;                                                         % but do not trust the brain mask!
+  Ywd = vbdist(single(Yp0>2.5),Yp0>0.5,vx_vol);                         % WM distance for skelelton
+  Ysk = vbm_vol_div(min(5,Ywd),vx_vol); %clear Ywd;                      % divergence skeleton
+  Ysk = (Ym + min(0,Ysk))<0.5;                                          % binary divergence skeleton
+  Ycp = Ycp | Ysk; %clear Ysk;                                          % 
   Ycp(smooth3(Ycp)>0.4)=1;                                              % remove some meninges
   Ycd = vbdist(single(Ycp),~Ycp,vx_vol);                                % real CSF distance 
   Ycd((Ym-Ydiv<2/3 | Ydiv>0.1) & Ycls{3}>4 & Ycls{3}>1) =  ... correction for sulci ... maybe a second distance estimation??=
@@ -2845,11 +2912,11 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ysc = Ycp & Yb & Ycls{3}>192 & ~Ybv & Ym<0.45 & Yg<0.1;
   Ycm = Ycp & Yb & Ycls{3}>192 & ~Ybv & Ym<0.45 & Yg<0.2 & Ym>0 & Ydiv>-0.05;
   Ycm = Ycm | (Yb & (Ym-max(0,Ydiv))<0.5); 
-  Ywm = (Ysw | Ycls{2}>252 | ((Ycd-Ydiv)>2 & Ydiv<0 & Ym>0.9 & Yb) | ... % save WM 
+  Ywm = (Ysw | Ycls{2}>252 | ((Ycd-Ydiv)>2 & Ydiv<0 & Ym>0.9+LASstr*0.05 & Yb) | ... % save WM 
         ((Ycd-Ydiv.*Ycd)>4 & (Ydiv<-0.01) & Yb & Ym>0.5 & Ybd<20 & Ycd>2) ) & ...
         ... ((Ycd-Ydiv*5)>3 & (Ydiv<-0.01 & (Yg + max(0,0.05-Ycd/100))<0.1) & Yb & Ym>0.4 & Ybd<20 & Ycd>2.5) ) & ... % further WM (cg_833!)
         ~Ybv & Yb & Ybd>1 & (Ycd>1.0 | (Yvt & Yp0>2.9)) & (Yg+Ydiv<(Ybd/50) | (Ydiv-Ym)<-1); % Ybd/800 + Ycd/50
-  Ygm = ~Yvt & Ybb & ~Ybv & ~Ywm & ~Ycm & Ycd>0.5 & (Ym-Ydiv-max(0,2-Ycd)/10)<1.0 & (Ym+Ydiv)>0.5 & ...
+  Ygm = ~Ysk & ~Yvt & Ybb & ~Ybv & ~Ywm & ~Ycm & Ycd>0.5 & (Ym-Ydiv-max(0,2-Ycd)/10)<1.0 & (Ym+Ydiv)>0.5 & ...
         (Ycls{1}>4 | (Ym>0.7 & Ycls{3}>64) | Ycd<(Ym+Ydiv)*3 ) & ...
         (Yg>(Ybd/800) & Ycls{2}<240 ); % avoid GM next to hard boundies in the middle of the brain
   Ygx = Ybb & ~Ycm & ~Ywm & Ym>1/3 & Ym<2.9/3 & Yg<0.4 & (Ym-Ydiv)>1/3 & (Ym-Ydiv)<1; Ygx(smooth3(Ygx)<0.5) = 0;
@@ -2866,32 +2933,8 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     end
   end
   
-  %% adding of atlas information (for subcortical structures)
-  %  -------------------------------------------------------------------
-  if 1 
-    stime = vbm_io_cmd('  Prepare partitions','g5','',verb,stime); dispc=dispc+1;
 
-    % map atlas to RAW space
-    for i=1:5
-      try
-        Vl1A = spm_vol(PA);
-        break
-      catch 
-        % read error in parallel processing
-        pause(rand)
-      end
-    end
-    Yl1  = vbm_vol_ctype(round(spm_sample_vol(Vl1A,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
-    Yl1  = reshape(Yl1,dsize);
-    
-    % load tpm wm for WMHs
-    Ywtpm = vbm_vol_ctype(spm_sample_vol(res.tpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
-    Ywtpm = reshape(Ywtpm,dsize); spm_smooth(Ywtpm,Ywtpm,2*vxv);
-    Ywtpm = single(Ywtpm)/255;
-    Yl1    = vbm_vol_resize(Yl1  ,'reduceBrain',vx_vol,4,BB.BB);
-    Ywtpm  = vbm_vol_resize(Ywtpm,'reduceBrain',vx_vol,4,BB.BB);
-    if ~debug, clear Yy; end
-    
+  if LABl1   
     %% ------------------------------------------------------------------
     % SPM GM segmentation can be affected by inhomogeneities and some GM
     % is missclassified as CSF/GM (Ycls{5}). But for some regions we can 
@@ -2909,15 +2952,17 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     Ybvv = (Ym-max(0,6-abs(Ycbp-6))/50)<0.6 & Ym>0.4 & Yb & Ycbp<8 & Ycbp>1;
     
     %% subcortical map refinements
-    THth = 0.5; % lower more thalamus
+    THth = 0.8 - LASstr*0.6; %0.5; % lower more thalamus
     YTH = NS(Yl1,LAB.TH) | (vbm_vol_morph(NS(Yl1,LAB.TH),'d',3) & Ym>0.5 & Ycls{1}>128);
     Ytd = vbdist(single(Ym<0.45),YTH | NS(Yl1,LAB.BG),vx_vol); Ytd(Ytd>2^16)=0; % CSF distance in the TH
     Yxd = vbdist(single(NS(Yl1,LAB.BG)),YTH,vx_vol); Yxd(Yxd>2^16)=0; % BG distance in the TH
     %Yyd = vbdist(single(NS(Yl1,LAB.TH)),NS(Yl1,LAB.BG),vx_vol); Yyd(Yyd>2^16)=0; % TH distance in the BG
     Yss = NS(Yl1,LAB.BG) | NS(Yl1,LAB.TH); 
-    Yss = Yss | (vbm_vol_morph(Yss,'d',vxv*3) &  NS(Yl1,LAB.VT) & Yp0>1.5 & Yp0<2.3);
-    Yss = Yss & Yp0>1.5 & ((Yp0<2.5 | Ym<0.90) | (Ydiv>0.01 & Yg<0.1 & (Yp0<2.75 | Ym<0.95))); % by intensity
-    Yss = Yss | (Yxd./max(eps,Ytd+Yxd))>THth/2;  % save TH by distances - for overcorrected images
+    Yss = Yss | (vbm_vol_morph(Yss,'d',vxv*2) & Ym>2.25/3 & Ym<2.75/3 & Ydiv>-0.01); % add ihger tissue around mask
+    Yss = Yss | (vbm_vol_morph(Yss,'d',vxv*3) &  NS(Yl1,LAB.VT) & Yp0>1.5 & Yp0<2.3); % add lower tissue around mask
+    Yss = Yss & Yp0>1.5 & (Yp0<2.75 | (Ym<(2.5+LASstr*0.45)/3 & Ydiv>-0.05)); % by intensity
+    Yss = Yss | ((Yxd./max(eps,Ytd+Yxd))>THth/2 & (Yp0<2.75 | (Ym<(2.75+LASstr*0.20)/3 & Ydiv>-0.05)));  % save TH by distances - for overcorrected images
+    Yss = vbm_vol_morph(Yss,'o');
     Ynw = (Yxd./max(eps,Ytd+Yxd))>THth/2 | (NS(Yl1,LAB.BG) & Ydiv>-0.01);
     if ~debug, clear Ytd Yxd ; end
     % increase CSF roi
@@ -2954,6 +2999,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   [Ym,Yp0,Yl1] = vbm_vol_resize({Ym,Yp0,Yl1},'dereduceBrain',BB);
   [Ybd,Ybvv] = vbm_vol_resize({Ybd,Ybvv},'dereduceBrain',BB);
   [Yg,Ydiv] = vbm_vol_resize({Yg,Ydiv},'dereduceBrain',BB);
+  [Ysk,Ywd] = vbm_vol_resize({Ysk,Ywd},'dereduceBrain',BB);
   Ycls=Yclso; Ysrc=Ysrco; 
   clear Yclso Ysrco Ybv;
   
@@ -3015,7 +3061,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
         Ysrc./Ylab{2}<T3th(1)/T3th(3);                                                         % but do not trust the brain mask!
   Ycp(smooth3(Ycp)>0.4)=1;                                              % remove some meninges
   Ycd = vbdist(single(Ycp),~Ycp,vx_vol);  
-  Ygm = Ygm & ~Ycm & ~Ywm; %  & ~Ybvv 
+  Ygm = Ygm & ~Ycm & ~Ywm & ~Ysk & Ywd<5; %  & ~Ybvv 
   
   Ygm = Ygm | (NS(Yl1,1) & Ybd<20 & (Ycd-Ydiv)<2 & Ycls{1}>0 & ~Ycm & Ybb & Ym>0.6 & Yg<max(0.5,1-Ybd/30) & Ysrc./Ylab{2}<0.95); % outer high intensity GM
 %%
@@ -3032,9 +3078,9 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
 %  Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); 
   Yi = Ysrc./Ylab{2} .* Ygm; 
   Yi = round(Yi*rf(2))/rf(2);
-  Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); 
+ % Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); % ????
   Yi(Ybs)  = Ysrc(Ybs)./Ylab{2}(Ybs)   .* T3th(2)/T3th(3); 
-  Yi = vbm_vol_median3(Yi,Yi>0); 
+  Yi = vbm_vol_median3(Yi,Yi>0.5,Yi>0.5); 
   [Yi,Yii,resT2] = vbm_vol_resize({Yi,Ylab{2}/T3th(3)},'reduceV',vx_vol,1,32,'meanm');
   for xi=1:2*LASi, Yi = vbm_vol_localstat(Yi,Yi>0,3,1); end
   Yi = vbm_vol_approx(Yi,'nh',resT2.vx_volr,2); 

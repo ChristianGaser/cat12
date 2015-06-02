@@ -62,31 +62,78 @@ switch lower(action)
         else
             M = varargin{1};
         end
-        if ischar(M) || isstruct(M), M = gifti(M); end
+        if ischar(M) || isstruct(M) % default - one surface
+            M  = gifti(M); 
+        elseif iscellstr(M) % multiple surfaces
+          %%
+            MS = M; % save filelist 
+            M  = gifti(MS{1}); 
+            for mi = 2:numel(MS)
+                try
+                    MI         = gifti(MS{mi});
+                    M.faces    = [M.faces; MI.faces + size(M.vertices,1)];   % further faces with increased vertices ids
+                    M.vertices = [M.vertices; MI.vertices];                 % further points at the end of the list
+                    if isfield(M,'cdata');
+                        M.cdata  = [M.cdata; MI.cdata];                     % further texture values at the end of the list
+                    end
+                catch
+                    error('vbm_surf_render:multisurf','Error adding surface %d: ''%s''.\n',mi,MS{mi});
+                end
+            end
+        end
         if ~isfield(M,'vertices')
             try
                 MM = M;
                 M  = gifti(MM.private.metadata(1).value);
-                try, M.cdata = MM.cdata(); end
+                try %#ok<TRYNC>
+                    M.cdata = MM.cdata();
+                end
             catch
                 error('Cannot find a surface mesh to be displayed.');
             end
         end
         O = getOptions(varargin{2:end});
         
-        if isfield(O,'cdata')
-          M.cdata = O.cdata; 
-        elseif isfield(O,'pcdata')
-          [pp,ff,ee] = fileparts(O.pcdata);
-          if strcmp(ee,'.gii')
-            Mt = gifti(O.pcdata);
-            M.cdata = Mt.cdata;
-          else
-            M.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata);
-          end
+        if isfield(O,'cdata') % data input
+            M.cdata = O.cdata; 
+        elseif isfield(O,'pcdata') % single file input 
+            if ischar(O.pcdata)
+                [pp,ff,ee] = fileparts(O.pcdata);
+                if strcmp(ee,'.gii')
+                    Mt = gifti(O.pcdata);
+                    M.cdata = Mt.cdata;
+                else
+                    M.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata);
+                end
+            elseif iscell(O.pcdata) % multifile input
+                if ~exist('MS','var') || numel(O.pcdata)~=numel(MS)
+                    error('vbm_surf_render:multisurfcdata',...
+                      'Number of meshes and texture files must be equal.\n');
+                end
+                [pp,ff,ee] = fileparts(O.pcdata{mi});
+                if strcmp(ee,'.gii')
+                    M = gifti(O.pcdata{1});
+                else
+                    M.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata{1});
+                end
+                for mi = 2:numel(MS)
+                    [pp,ff,ee] = fileparts(O.pcdata{mi});
+                    if strcmp(ee,'.gii')
+                        Mt = gifti(O.pcdata{mi});
+                    else
+                        Mt.cdata = vbm_io_FreeSurfer('read_surf_data',O.pcdata{mi});
+                    end
+                    M.cdata = [M.cdata;Mt.cdata];
+                end
+                if size(M.vertices,1)~=numel(M.cdata); 
+                  warning('vbm_surf_render:multisurfcdata',...
+                    'Surface data error (number of vertices does not match number of surface data), remove texture.\n');
+                  M = rmfield(M,'cdata');
+                end
+            end 
         end
         if ~isfield(M,'vertices') || ~isfield(M,'faces')
-          error('vbm_surf_render:nomesh','ERROR:vbm_surf_render: No input mesh in ''%s''', varargin{1});
+            error('vbm_surf_render:nomesh','ERROR:vbm_surf_render: No input mesh in ''%s''', varargin{1});
         end
         
         M = export(M,'patch');
@@ -117,11 +164,11 @@ switch lower(action)
         H.patch = patch(P,...
             'FaceColor',        [0.6 0.6 0.6],...
             'EdgeColor',        'none',...
-            'FaceLighting',     'phong',...
+            'FaceLighting',     'gouraud',... phong got print problems
             'SpecularStrength', 0.0,... 0.7
             'AmbientStrength',  0.4,... 0.1
             'DiffuseStrength',  0.6,... 0.7
-            'BackFaceLighting','unlit', ... for innner light
+            'BackFaceLighting', 'unlit', ... for inner light 
             'SpecularExponent', 10,...
             'Clipping',         'off',...
             'DeleteFcn',        {@myDeleteFcn, renderer},...
