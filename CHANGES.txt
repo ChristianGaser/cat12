@@ -6881,3 +6881,13 @@ M       vbm_surf_smooth.m
      (estimation only if files does not exist). 
 ------------------------------------------------------------------------
 r698 | dahnke | 2015-06-02 10:40:03
+
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_check_cov.m
+M       html/vbm12.html
+
+Corrected wrong surface-template folder in cg_check_cov.m.
+
+------------------------------------------------------------------------
+r699 | gaser | 2015-06-17 17:36:56
