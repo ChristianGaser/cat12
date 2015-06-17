@@ -486,8 +486,8 @@ if quality_order > 0
   text(xpos, ylim_min,'<----- Low rating (poor quality)','Color','red','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
   text(xpos, ylim_max,'High rating (good quality) ------>','Color','green','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
 else
-  text(xpos, ylim_max,'<----- Low rating (poor quality)','Color','red','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
-  text(xpos, ylim_min,'High rating (good quality) ------>','Color','green','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
+  text(xpos, ylim_max,'Low rating (poor quality) ------>','Color','red','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
+  text(xpos, ylim_min,'<----- High rating (good quality)','Color','green','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
 end
 text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name),'Color','black','Rotation',90,'HorizontalAlignment','center','FontSize',FS(10),'FontWeight','Bold')
 
@@ -590,14 +590,14 @@ else
     [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
 end      
 
-set(H.text,'String',txt2)
+set(H.text,'String',txt2);
 axes('Position',pos.slice);
 
 if issurf 
   % use indexed 2D-sheet to display surface data as image
   % check surface size to use indexed 2D map
   if (length(data_array(:,pos.x)) == 163842)
-    ind = spm_load(fullfile(spm('dir'),'toolbox','vbm12','fsaverage','fsavg.index2D_256x128.txt'));
+    ind = spm_load(fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces','fsavg.index2D_256x128.txt'));
     img = [reshape(data_array(ind,pos.x),[256,128]) reshape(data_array(ind,pos.y),[256,128])];
     img = circshift(img,128);
   else
