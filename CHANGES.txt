@@ -6891,3 +6891,13 @@ Corrected wrong surface-template folder in cg_check_cov.m.
 
 ------------------------------------------------------------------------
 r699 | gaser | 2015-06-17 17:36:56
+
+M       CHANGES.txt
+M       vbm_surf_resample.m
+M       vbm_surf_smooth.m
+
+Always overwrite already written data in vbm_surf_resample.m and vbm_surf_smooth.m, otherwise users might 
+oversee that message if they want to write updated data.
+
+------------------------------------------------------------------------
+r700 | gaser | 2015-06-17 17:46:36
