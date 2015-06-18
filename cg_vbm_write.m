@@ -533,7 +533,6 @@ end
 
 
 
-
 %% ---------------------------------------------------------------------
 %  check if the brain hits a image boundary
 %  ---------------------------------------------------------------------
@@ -541,8 +540,6 @@ end
 %Yib1 = vbm_vol_morph(true(size(Yb)),'e',1);
 %Yib3 = vbm_vol_morph(true(size(Yb)),'e',2);
 %Ybbs = sum(Yb & Yib);
-
-
 
 
 
@@ -1258,9 +1255,6 @@ VF.dat(indx,indy,indz) = Yp0b;
 
 % smooth source with job.vbm.samp mm
 VF = spm_smoothto8bit(VF,job.vbm.samp*2); % *2, because of the TPM smoothness!
-
-
-save tmp.mat
 
 %% affreg registration for one tissue segment
 Affine = spm_affreg(VG, VF, aflags, res.Affine); 
