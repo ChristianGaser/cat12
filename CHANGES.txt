@@ -6901,3 +6901,14 @@ oversee that message if they want to write updated data.
 
 ------------------------------------------------------------------------
 r700 | gaser | 2015-06-17 17:46:36
+
+M       CHANGES.txt
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       html/vbm12.html
+
+(1) In cg_vbm_write.m changed some outputs of the log-page.
+(2) Corrected typo in cg_vbm_run_job.m.
+
+------------------------------------------------------------------------
+r701 | gaser | 2015-06-18 17:33:40
