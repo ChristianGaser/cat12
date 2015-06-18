@@ -122,7 +122,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
       % interpolation 
       if any( (vx_vol ~= vx_voli) )  
        
-        stime = vbm_io_cmd(sprintf('Intern resolution (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_voli));
+        stime = vbm_io_cmd(sprintf('Internal resolution (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_voli));
        
         Vi        = rmfield(Vi,'private'); 
         imat      = spm_imatrix(Vi.mat); 
