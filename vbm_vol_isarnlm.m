@@ -142,6 +142,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
 % $Id: vbm_tst_qa.m 682 2015-03-13 09:38:24Z dahnke $
 % ______________________________________________________________________
 
+  if ~exist('opt','var'), opt = struct(); end
 
   def.verb   = 1;     % display progess
   def.red    = 2;     % maximum number of resolution reduction
@@ -149,7 +150,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
   def.rician = 0;     % noise type 
   def.cstr   = 1;     % correction strength 
   def.SANFM  = 1;     % spatial adaptive noise filter modification 
-  def.Nth    = 0.015; % noise threshold (filter only  
+  def.Nth    = 0.01;  % noise threshold (filter only  
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
   opt        = checkinopt(opt,def);
   opt.iter   = max(1,opt.iter);         % at least one iteration (iter = 0 means no filtering)
@@ -159,9 +160,11 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
   YM = YM>0.5;
   Yi = Y .* YM;
   
+ 
+  Tth = median(Y(Y(:)>median(Y(Y>median(Y(:)))))); 
+  
   % just for display
-  % Tth = mean(Y(Y(:)>mean(Y(Y>mean(Y(:)))))); 
-  % ds('d2','',vx_vol,Y/Tth*0.95,Yi/Tth*0.95,Ys/Tth*0.95,Yi/Tth*0.95,90)
+  % ds('d2','',vx_vol,Y/Tth*0.95,Yi/Tth*0.95,Ys/Tth*0.95,abs(Yi-Ys)./max(Tth*0.2,Ys),90)
   
   iter = 0; noise = inf; Ys = Yi; 
   while iter < opt.iter && noise>opt.Nth
@@ -175,7 +178,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
     catch %#ok<*CTCH>
       sanlmMex_noopenmp(Ys,3,1,opt.rician);
     end
-    noise = nanmean(abs(Y(YM(:))-Ys(YM(:)))./Ys(YM(:)))/sqrt(prod(vx_vol));
+    noise = vbm_stat_nanmean(abs(Y(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol));
     if opt.verb, fprintf('  noise = %4.3f,  time = %4.0fs\n',noise,etime(clock,stime)); end
 
     
@@ -184,11 +187,12 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
     %  if the currect resolution is high enought
     %  important is a previous NLM on the main resolution to avoid 
     %  filtering of fine anatomical structures on lower resolutions
-    if opt.red && all(vx_vol<1.11) && sum(vx_vol<1.01)>1 && noise>opt.Nth  && def.red>0
+    if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.01)>1 && (noise>opt.Nth || iter==0) && def.red>0
+      %%
       Yi = Ys + 0;
 
       % first block
-      [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,min(vx_vol)*2.6,32,'meanm'); YMr = YMr>0.5;
+      [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
       YR  = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
       Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,vbm_io_updateStruct(opt,struct('red',def.red-1)));
       YRs = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
@@ -196,7 +200,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
 
       % second block
       [Yr,YMr,resr] = vbm_vol_resize({Yi(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
-        'reduceV',vx_vol,min(vx_vol)*2.6,32,'meanm'); YMr = YMr>0.5;
+        'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
       YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
       YR  = Yi; YR(2:end,2:end,2:end) = YRr; 
       Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,vbm_io_updateStruct(opt,struct('red',opt.red-1)));
@@ -223,7 +227,11 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
       YRcr  = vbm_vol_smooth3X(YRcr,2/mean(resr.vx_volr));
       YRc   = vbm_vol_resize(YRcr,'dereduceV',resr,'linear');
       lowf  = 0.5 + 0.5*min(1,max(0,mean(2 - vx_vol))); % reduce filtering on anatical frequency
-      Ys    = Yi + (Ys - Yi) .* (YM>0) .* (YRc ./ max(YRc(:))) .* lowf; 
+      Ys    = Yi + (Ys - Yi) .* (YM>0) .* ...
+        (YRc ./ max(YRc(:))) .* ...                     % local filter strength weighting
+        (abs(Ys - Yi)<8*YRc) .* ...                     % structur weighting
+        lowf;                                           % resolution weighting
+        
     end
 
 
@@ -237,8 +245,11 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
     
   end
   
-  
   % final mixing
   Ys = Y*(1-opt.cstr) + Ys*opt.cstr;
   
+  % garantie positive values
+  if min(Y(:))>=0
+    Ys = Ys + min(Ys(:)); 
+  end
 end
