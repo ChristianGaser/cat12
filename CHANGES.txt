@@ -6939,3 +6939,10 @@ M       vbm_vol_resize.m
 (4)  Added median reduction in "vbm_vol_resize".
 ------------------------------------------------------------------------
 r703 | dahnke | 2015-07-07 09:09:52
+
+M       CHANGES.txt
+M       vbm_vol_isarnlm.m
+
+(1)  Corrected small errors in "vbm_vol_isarnlm".
+------------------------------------------------------------------------
+r704 | dahnke | 2015-07-07 15:34:53
