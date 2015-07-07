@@ -46,8 +46,10 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolut  expected tickness
   def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
-  NM=[0.06 0.32/5*6]; 
-  BM=[0.17 0.70/5*6];
+  NM=[0.0728 0.3400]; NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];
+  BM=[0.2042 0.7469]; BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
+  %CM=[1/3    1/12];   CM = [CM(1)-CM(2)/2 CM(2)-CM(2)/2];
+  CM=[1/2 1/6]; CM = [CM(1)+diff(CM)/12 CM(2)+diff(CM)/12];
   def.QS        = { 
 % -- structure ---------------------------------------------------------
 % 'measure'  'fieldname'       'marktpye'    markrange        help
@@ -80,7 +82,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'QM'  'tissue_mn'             'normal'    def.tissue       'mean within the tissue classes'
    'QM'  'tissue_std'            'normal'    [  0.10   0.20]  'std within the tissue classes'
   % - contrast - 
-   'QM'  'contrast'              'linear'    [   1/3   1/12]  'contrast between tissue classe'
+   'QM'  'contrast'              'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe' % das geht nicht
+   'QM'  'contrastr'             'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe'
   % - noise & contrast -
    'QM'  'NCR'                   'linear'    [  NM(1)   NM(2)]  'noise to contrast ratio' 
    'QM'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
@@ -109,6 +112,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
    'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
   % - area measures -
   };
+  if nargin>3 && isstruct(varargin{2}), def = checkinopt(varargin{2},def); end
+  
   % create structure
   for QSi=1:size(def.QS,1)
     if isempty(def.QS{QSi,3})
@@ -124,6 +129,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.wstmn   = 8.624;  % worst mark to get a 4 for values with std 
   def.bstl    = 0.5+eps*2; % highest rating ... 0.5 because of rounding values
   def.wstl    = 9.5-eps*2; % lowest rating  ... to have only values with 1 digit
+  
   
   % mark functions
   setnan      = [1 nan];
@@ -221,7 +227,7 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur
       varargout{1} = QS;
-      varargout{2} = {'NCR','ICR','res_RMS'}; 
+      varargout{2} = {'NCR','ICR','res_RMS','contrastr'}; 
     case 'marks',    % ausgabe einer leeren struktur
       varargout{1} = def.QS;
   end
