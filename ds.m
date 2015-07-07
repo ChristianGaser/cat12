@@ -34,7 +34,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
   %if nargin>2, varargin{2}=reduce_color(varargin{2}); end
 
   
-  [X,Y] = meshgrid(0.125:0.125:64,1:3);
+  [X,Y] = meshgrid(0.125/4:0.125/4:64,1:3);
   
   for s=slice(end:-1:1)
     switch type
@@ -79,11 +79,11 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
       case {'d2','default2'}
-        set(fh,'WindowStyle','docked','Visible','on');
-        subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);
-        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);
-        subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);
-        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR);
+        %set(fh,'WindowStyle','docked','Visible','on');
+        subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
+        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
+        subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
+        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2','label2'}
         %set(fh,'WindowStyle','docked','Visible','on');

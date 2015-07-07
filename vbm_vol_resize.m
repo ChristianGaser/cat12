@@ -131,7 +131,7 @@ function varargout=vbm_vol_resize(T,operation,varargin)
                   Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
                   Tadd(isnan(Tadd(:))) = 0;
                   varargout{i} = varargout{i} + Tadd;
-                  counter = counter + (Tadd>0);
+                  counter = counter + (Tadd~=0);
                   clear Tadd;
                 end
               end
@@ -139,6 +139,20 @@ function varargout=vbm_vol_resize(T,operation,varargin)
             varargout{i}(counter(:)<minvoxcount) = 0;
             varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0);   
             varargout{i}(isnan(varargout{i})) = 0;
+         elseif strcmp(method,'median')
+            varargout{i} = zeros([floor(size(T{i})./ss),prod(size(T{i}) ./ floor(size(T{i})./ss))],'single');
+            medi=1; nsize = floor(size(T{i})./ss).*ss;
+            for ii=1:ss(1)
+              for jj=1:ss(2)
+                for kk=1:ss(3)
+                  Tadd = T{i}(ii:ss(1):nsize(1),jj:ss(2):nsize(2),kk:ss(3):nsize(3));
+                  Tadd(isnan(Tadd(:))) = 0;
+                  varargout{i}(:,:,:,medi) = Tadd; medi=medi+1;
+                  clear Tadd;
+                end
+              end
+            end
+            varargout{i} = median(varargout{i},4);
          elseif strcmp(method,'vbm_stat_nanmean') || strcmp(method,'meannan')
             varargout{i} = zeros(floor(size(T{i})./ss),'single');
             counter = varargout{i};

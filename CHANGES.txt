@@ -6921,3 +6921,21 @@ Forgot to remove some debugging code in cg_vbm_write.m.
 
 ------------------------------------------------------------------------
 r702 | gaser | 2015-06-18 17:36:48
+
+M       CHANGES.txt
+M       cg_vbm_stoolsexp.m
+M       ds.m
+ M      templates_surfaces
+M       vbm_io_writenii.m
+M       vbm_stat_marks.m
+M       vbm_surf_avg.m
+M       vbm_surf_display.m
+A       vbm_vol_isarnlm.m
+M       vbm_vol_resize.m
+
+(1)  Corrected error in "vbm_surf_display".
+(2)  Deactivated mat0 changes in "vbm_io_writenii".
+(3)  Added ISARNLM-filter to reduce parallel imaging artifacts. 
+(4)  Added median reduction in "vbm_vol_resize".
+------------------------------------------------------------------------
+r703 | dahnke | 2015-07-07 09:09:52
