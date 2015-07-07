@@ -177,7 +177,7 @@ function vf = vfiles_avg(job)
   if isempty(job.outdir{1})
     outdir = spm_fileparts(job.data{1});
   else
-    outdir = isempty(job.outdir{1});
+    outdir = job.outdir{1};
   end
   
   if job.surfside==2

@@ -31,7 +31,7 @@ function varargout = vbm_surf_avg(varargin)
   if isempty(job.outdir{1})
     outdir = spm_fileparts(job.data{1});
   else
-    outdir = isempty(job.outdir{1});
+    outdir = job.outdir{1};
   end
   
   %%
@@ -80,7 +80,7 @@ function varargout = vbm_surf_avg(varargin)
   for si=1:numel(side)
     if numel(job.(side{si}))>0
       Savg.(side{si}).vertices = zeros(size(FSavg.(side{si}).vertices),'single');
-
+%%
       sinfo = vbm_surf_info(job.(side{si})); 
       for di=1:numel(job.(side{si}))
         %%
@@ -90,7 +90,7 @@ function varargout = vbm_surf_avg(varargin)
         Pspherereg = fullfile(pp1,[strrep(ff1,'central','sphere.reg') ee1]);
 
         % resample values using warped sphere 
-        if ~exist(Presamp,'file')
+        if 1 %~exist(Presamp,'file')
           cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
           [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
         end

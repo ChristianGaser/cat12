@@ -37,7 +37,7 @@ function varargout = vbm_surf_display(varargin)
   def.imgprint.close = 1;
 
   % multi-surface output for one subject 
-  def.multisurf = 1; % 0 - no; 1 - both hemispheres;
+  def.multisurf = 0; % 0 - no; 1 - both hemispheres;
   
   job = checkinopt(job,def);
   
@@ -59,7 +59,7 @@ function varargout = vbm_surf_display(varargin)
     try
       fprintf('  %s\n',job.data{i});
 
-      if ~all(strcmp(Pmesh,Pdata)) && ~all(cellfun('isempty',Pdata))
+      if ~all(strcmp(Pmesh,Pdata)) && ~isempty(Pdata) && (~job.multisurf || ~all(cellfun('isempty',Pdata)))
         % only gifti surface without texture
         if isfield(job,'parent')
           h = vbm_surf_render('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
