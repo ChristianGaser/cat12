@@ -6946,3 +6946,14 @@ M       vbm_vol_isarnlm.m
 (1)  Corrected small errors in "vbm_vol_isarnlm".
 ------------------------------------------------------------------------
 r704 | dahnke | 2015-07-07 15:34:53
+
+M       CHANGES.txt
+M       cg_spmT2x.m
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       vbm_surf_render.m
+
+(1) Corrected wrong fields in cg_vbm_tools.m and cg_spmT2x.m for thresholds.
+(2) Extended vbm_surf_render.m by functions for scaling and png-saving
+------------------------------------------------------------------------
+r705 | gaser | 2015-07-09 10:40:39

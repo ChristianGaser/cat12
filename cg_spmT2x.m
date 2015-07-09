@@ -89,7 +89,7 @@ if nargin == 1
         u0  = vargin.conversion.threshdesc.fdr.thresh;
     elseif isfield(vargin.conversion.threshdesc,'uncorr')
         adjustment = 0;
-        u0  = vargin.conversion.threshdesc.uncorr.thresh;
+        u0  = vargin.conversion.threshdesc.uncorr.thresh2;
     elseif isfield(vargin.conversion.threshdesc,'none')
         adjustment = -1;
         u0  = -Inf;
