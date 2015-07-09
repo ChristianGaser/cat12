@@ -27,6 +27,12 @@ function varargout = vbm_surf_render(action,varargin)
 % FORMAT MAP = vbm_surf_render('ColourMap',AX)
 % Retrieves the current colourmap.
 %
+% FORMAT H = vbm_surf_render('Clim',AX, range)
+% range    - range of colour scaling
+%
+% FORMAT H = vbm_surf_render('SaveAs',AX, filename)
+% filename - filename
+%
 % FORMAT vbm_surf_render('Register',AX,hReg)
 % AX       - axis handle or structure returned by vbm_surf_render('Disp',...)
 % hReg     - Handle of HandleGraphics object to build registry in.
@@ -296,6 +302,20 @@ switch lower(action)
         set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
             'DisplayStyle','Window', 'Updatefcn',{@myDataCursorUpdate, H});
         
+    %-View
+    %======================================================================
+    case 'view'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        myView([],[],H,varargin{2});
+
+    %-SaveAs
+    %======================================================================
+    case 'saveas'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        mySavePNG(H.patch,[],H, varargin{2});
+
     %-Overlay
     %======================================================================
     case 'overlay'
@@ -638,6 +658,37 @@ if isempty(h)
 else
     set(h,'Color',c);
 end
+
+%==========================================================================
+function mySavePNG(obj,evt,H,filename)
+    [pth,nam,ext] = fileparts(filename);
+                    filename = fullfile(pth,[filename '.png']);
+            u  = get(H.axis,'units');
+            set(H.axis,'units','pixels');
+            p  = get(H.axis,'Position');
+            r  = get(H.figure,'Renderer');
+            hc = findobj(H.figure,'Tag','SPMMeshRenderBackground');
+            if isempty(hc)
+                c = get(H.figure,'Color');
+            else
+                c = get(hc,'Color');
+            end
+            h = figure('Position',p+[0 0 10 10], ...
+                'InvertHardcopy','off', ...
+                'Color',c, ...
+                'Renderer',r);
+            copyobj(H.axis,h);
+            set(H.axis,'units',u);
+            set(get(h,'children'),'visible','off');
+            %a = get(h,'children');
+            %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
+            if isdeployed
+                deployprint(h, '-dpng', '-opengl', fullfile(pth, filename));
+            else
+                print(h, '-dpng', '-opengl', fullfile(pth, filename));
+            end
+            close(h);
+            set(getappdata(obj,'fig'),'renderer',r);
 
 %==========================================================================
 function mySave(obj,evt,H)

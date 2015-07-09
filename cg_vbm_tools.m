@@ -98,13 +98,13 @@ fwe2.help    = {''};
 
 uncorr         = cfg_branch;
 uncorr.tag     = 'uncorr';
-uncorr.name    = 'unocrrected';
+uncorr.name    = 'uncorrected';
 uncorr.val     = {thresh2 };
 uncorr.help    = {''};
 
 uncorr2         = cfg_branch;
 uncorr2.tag     = 'uncorr2';
-uncorr2.name    = 'unocrrected';
+uncorr2.name    = 'uncorrected';
 uncorr2.val     = {thresh2, noniso };
 uncorr2.help    = {''};
 
