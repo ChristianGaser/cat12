@@ -6957,3 +6957,31 @@ M       vbm_surf_render.m
 (2) Extended vbm_surf_render.m by functions for scaling and png-saving
 ------------------------------------------------------------------------
 r705 | gaser | 2015-07-09 10:40:39
+
+ M      .
+M       CHANGES.txt
+M       cg_vbm_defs.m
+M       checkinopt.m
+M       templates_1.50mm/aal.csv
+M       templates_1.50mm/aal.nii
+M       templates_1.50mm/aal.txt
+M       templates_1.50mm/aal.xml
+M       vbm_io_cmd.m
+M       vbm_io_updateStruct.m
+M       vbm_stat_marks.m
+M       vbm_stat_nanmean.m
+M       vbm_surf_display.m
+M       vbm_vol_atlas.m
+M       vbm_vol_average.m
+M       vbm_vol_isarnlm.m
+
+(1)  Deactivated "cleanup" case in "vbm_io_cmd", because it did not work in all 
+     MATLAB versions. 
+(2)  Restore file data type setting (V.dt, V.pinfo) in "cg_vbm_defs".
+(3)  Corrected labeling in AAL atlas.
+(4)  Corrected small errors in "vbm_stat_nanmean", "vbm_io_update_Struct", 
+     "checkinopt" 
+(5)  Added view options in "vbm_surf_display".
+
+------------------------------------------------------------------------
+r706 | dahnke | 2015-08-03 16:40:39

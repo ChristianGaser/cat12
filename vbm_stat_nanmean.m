@@ -39,7 +39,7 @@ function out = vbm_stat_nanmean(in, dim)
   tmpin = in;
   tmpin(isnan(in(:))) = 0;
   if sum(~isnan(in),dim)==0
-    out = nan;
+    out = nan(size(sum(tmpin, dim)));
   else
     out = sum(tmpin, dim) ./ max(eps,sum(~isnan(in),dim));
   end

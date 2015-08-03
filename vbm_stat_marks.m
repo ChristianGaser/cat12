@@ -46,8 +46,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolut  expected tickness
   def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
-  NM=[0.0728 0.3400]; NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];
-  BM=[0.2042 0.7469]; BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
+  NM=[0.0500 0.3245]; NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];
+  BM=[0.1314 0.7508]; BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
   %CM=[1/3    1/12];   CM = [CM(1)-CM(2)/2 CM(2)-CM(2)/2];
   CM=[1/2 1/6]; CM = [CM(1)+diff(CM)/12 CM(2)+diff(CM)/12];
   def.QS        = { 
@@ -147,6 +147,8 @@ function varargout = vbm_stat_marks(action,uselevel,varargin)
   rmsw        = @(a,fact,w) max(0,(vbm_stat_nansum((a.*w).^fact)/vbm_stat_nansum(w)).^(1/fact));
   
   switch action
+    case 'default',
+      varargout{1} = def;  
     case 'isfield', % active field?
       if nargin<1 || isempty(varargin{1})
         error('MATLAB:vbm_stat_marks:input','Need fieldname!\n');

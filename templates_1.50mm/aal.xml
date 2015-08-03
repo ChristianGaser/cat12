@@ -15,8 +15,8 @@
     </header>
   <data>
     <!-- could also include short_name, RGBA, XYZmm -->
-    <label><index>2001</index><short_name>lPrc</short_name><name>Left Precentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>2002</index><short_name>rPrc</short_name><name>Right Precentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>2001</index><short_name>lCenPrc</short_name><name>Left Central Precentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>2002</index><short_name>rCenPrc</short_name><name>Right Central Precentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>2101</index><short_name>lSupFro</short_name><name>Left Superior Frontal</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>2102</index><short_name>rSupFro</short_name><name>Right Superior Frontal</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>2111</index><short_name>lSupFroOcc</short_name><name>Left Superior Frontal Occipital</name><RGBA></RGBA><XYZmm></XYZmm></label>
@@ -71,8 +71,8 @@
     <label><index>5302</index><short_name>rInfOcc</short_name><name>Right Inferior Occipital</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>5401</index><short_name>lFus</short_name><name>Left Fusiform</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>5402</index><short_name>rFus</short_name><name>Right Fusiform</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>6001</index><short_name>lPoC</short_name><name>Left Postcentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>6002</index><short_name>rPoC</short_name><name>Right Postcentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>6001</index><short_name>lCenPoC</short_name><name>Left Central Postcentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>6002</index><short_name>rCenPoC</short_name><name>Right Central Postcentral</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>6101</index><short_name>lSupPar</short_name><name>Left Superior Parietal</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>6102</index><short_name>rSupPar</short_name><name>Right Superior Parietal</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>6201</index><short_name>lInfPar</short_name><name>Left Inferior Parietal</name><RGBA></RGBA><XYZmm></XYZmm></label>
@@ -83,8 +83,8 @@
     <label><index>6222</index><short_name>rAng</short_name><name>Right Angular</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>6301</index><short_name>lPCu</short_name><name>Left Precuneus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>6302</index><short_name>rPCu</short_name><name>Right Precuneus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>6401</index><short_name>lPacL</short_name><name>Left Paracentral Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>6402</index><short_name>lPacL</short_name><name>Left Paracentral Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>6401</index><short_name>lCenPacL</short_name><name>Left Central Paracentral Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>6402</index><short_name>rCenPacL</short_name><name>Right Central Paracentral Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>7001</index><short_name>lCau</short_name><name>Left Caudate</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>7002</index><short_name>rCau</short_name><name>Right Caudate</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>7011</index><short_name>lPut</short_name><name>Left Putamen</name><RGBA></RGBA><XYZmm></XYZmm></label>

@@ -145,41 +145,51 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
   if ~exist('opt','var'), opt = struct(); end
 
   def.verb   = 1;     % display progess
-  def.red    = 2;     % maximum number of resolution reduction
-  def.iter   = 3;     % maximum number of iterations
+  def.red    = 1;     % maximum number of resolution reduction
+  def.iter   = 4;     % maximum number of iterations
   def.rician = 0;     % noise type 
   def.cstr   = 1;     % correction strength 
   def.SANFM  = 1;     % spatial adaptive noise filter modification 
   def.Nth    = 0.01;  % noise threshold (filter only  
+  def.fast   = 0;     % masking background?
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
+  def.level  = 1;     % just for display
   opt        = checkinopt(opt,def);
-  opt.iter   = max(1,opt.iter);         % at least one iteration (iter = 0 means no filtering)
+  opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
   opt.cstr   = max(0,min(1,opt.cstr));  % range 0-1
 
   if isempty(YM), YM = true(size(Y)); end 
   YM = YM>0.5;
-  Yi = Y .* YM;
   
+  Tth = median(Y(Y(:)>median(Y(Y>2*median(Y(:)))))); 
  
-  Tth = median(Y(Y(:)>median(Y(Y>median(Y(:)))))); 
+  if opt.fast 
+    Y0=Y; 
+    [Y,YM,BB] = vbm_vol_resize({Y,YM},'reduceBrain',vx_vol,4,Y>Tth>0.2);
+  end
   
+  Yi = Y .* YM;
   % just for display
   % ds('d2','',vx_vol,Y/Tth*0.95,Yi/Tth*0.95,Ys/Tth*0.95,abs(Yi-Ys)./max(Tth*0.2,Ys),90)
   
-  iter = 0; noise = inf; Ys = Yi; 
-  while iter < opt.iter && noise>opt.Nth
+  iter = 0; noise = inf; Ys = Yi; noiser=1;
+  while iter < opt.iter && noise>opt.Nth && (opt.level<3 || noiser>1/4) && (iter==0 || mean(vx_vol)<1.5)
     
     
     %% SANLM filtering
-    if opt.verb, fprintf('  %0.2fx%0.2fx%0.2f mm - Iteration %d:  ',vx_vol,iter+1); stime = clock; end
-    Ys = Yi+0;
+    if opt.verb, fprintf('%2d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
+    Ys  = Yi+0;
+    YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
     try
       sanlmMex(Ys,3,1,opt.rician);
     catch %#ok<*CTCH>
       sanlmMex_noopenmp(Ys,3,1,opt.rician);
     end
-    noise = vbm_stat_nanmean(abs(Y(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol));
-    if opt.verb, fprintf('  noise = %4.3f,  time = %4.0fs\n',noise,etime(clock,stime)); end
+    noiser = 1 - (vbm_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
+    if noiser<0, noiser = noiser+1; end
+    noise  = vbm_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
+    
+    if opt.verb, fprintf('  noise = %4.4f;  noiser: %4.4f;  time = %4.0fs\n',noise,noiser,etime(clock,stime)); end
 
     
     
@@ -187,29 +197,105 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
     %  if the currect resolution is high enought
     %  important is a previous NLM on the main resolution to avoid 
     %  filtering of fine anatomical structures on lower resolutions
-    if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.01)>1 && (noise>opt.Nth || iter==0) && def.red>0
+    if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.1)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
       %%
       Yi = Ys + 0;
+    
+      if all(vx_vol<2)
+        % first block
+        [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
+        optr       = opt;
+        optr.red   = opt.red - 1; 
+        %optr.iter  = opt.iter - 1;
+        %optr.Nth   = opt.Nth * prod(resr.vx_vol) / prod(resr.vx_volr);
+        optr.level = opt.level + 1; 
+        YR  = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+        Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRs = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+        Ys  = (Yi - YR) + YRs; 
 
-      % first block
-      [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
-      YR  = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
-      Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,vbm_io_updateStruct(opt,struct('red',def.red-1)));
-      YRs = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
-      Ys  = (Yi - YR) + YRs; 
+        % second block
+        [Yr,YMr,resr] = vbm_vol_resize({Yi(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
+          'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
+        YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yi; YR(2:end,2:end,2:end) = YRr; 
+        Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yi; YRs(2:end,2:end,2:end) = YRr; 
+        Ys  = Ys + (Yi - YR) + YRs; 
 
-      % second block
-      [Yr,YMr,resr] = vbm_vol_resize({Yi(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
-        'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
-      YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
-      YR  = Yi; YR(2:end,2:end,2:end) = YRr; 
-      Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,vbm_io_updateStruct(opt,struct('red',opt.red-1)));
-      YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
-      YRs = Yi; YRs(2:end,2:end,2:end) = YRr; 
-      Ys  = Ys + (Yi - YR) + YRs; 
+        % average both blocks
+        Ys = Ys / 2;
+      elseif 0 %all(vx_vol>=1)
+        % first block
+        if all(vx_vol<[2 2 1]*1.1)
+          [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,vx_vol.*[1 1 2],32,'meanm'); YMr = YMr>0.5;
+          optr       = opt;
+          optr.red   = opt.red - 1; 
+          optr.level = opt.level + 1; 
+          YR  = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+          YRs = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          Ys  = (Yi - YR) + YRs; 
 
-      % average both blocks
-      Ys = Ys / 2;
+          % second block
+          [Yr,YMr,resr] = vbm_vol_resize({Yi(1:end,1:end,2:end),YM(1:end,1:end,2:end)},...
+            'reduceV',vx_vol,vx_vol.*[1 1 2],32,'meanm'); YMr = YMr>0.5;
+          YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          YR  = Yi; YR(1:end,1:end,2:end) = YRr; 
+          Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+          YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          YRs = Yi; YRs(1:end,1:end,2:end) = YRr; 
+          Ys  = Ys + (Yi - YR) + YRs; 
+        end
+        
+        if all(vx_vol<[2 1 2]*1.1)
+          % first block
+          [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,vx_vol.*[1 2 1],32,'meanm'); YMr = YMr>0.5;
+          optr       = opt;
+          optr.red   = opt.red - 1; 
+          optr.level = opt.level + 1; 
+          YR  = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+          YRs = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          Ys  = Ys + (Yi - YR) + YRs; 
+
+          % second block
+          [Yr,YMr,resr] = vbm_vol_resize({Yi(1:end,2:end,1:end),YM(1:end,2:end,1:end)},...
+            'reduceV',vx_vol,vx_vol.*[1 2 1],32,'meanm'); YMr = YMr>0.5;
+          YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          YR  = Yi; YR(1:end,2:end,1:end) = YRr; 
+          Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+          YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          YRs = Yi; YRs(1:end,2:end,1:end) = YRr; 
+          Ys  = Ys + (Yi - YR) + YRs; 
+        end
+        
+        if all(vx_vol<[1 2 2]*1.1)
+          % first block
+          [Yr,YMr,resr] = vbm_vol_resize({Yi,YM},'reduceV',vx_vol,vx_vol.*[2 1 1],32,'meanm'); YMr = YMr>0.5;
+          optr       = opt;
+          optr.red   = opt.red - 1; 
+          optr.level = opt.level + 1; 
+          YR  = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+          YRs = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          Ys  = Ys + (Yi - YR) + YRs; 
+
+          % second block
+          [Yr,YMr,resr] = vbm_vol_resize({Yi(2:end,1:end,1:end),YM(2:end,1:end,1:end)},...
+            'reduceV',vx_vol,vx_vol.*[2 1 1],32,'meanm'); YMr = YMr>0.5;
+          YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          YR  = Yi; YR(2:end,1:end,1:end) = YRr; 
+          Yr  = vbm_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+          YRr = vbm_vol_resize(Yr,'dereduceV',resr,'nearest');
+          YRs = Yi; YRs(2:end,1:end,1:end) = YRr; 
+          Ys  = Ys + (Yi - YR) + YRs; 
+        end
+        
+        % average both blocks
+        Ys = Ys / max(1,all(vx_vol<[2 1 2]*1.1)*2 + all(vx_vol<[2 2 1]*1.1)*2 + all(vx_vol<[1 2 2]*1.1)*2);
+      end
     end
     
     
@@ -221,17 +307,18 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
     %   mostly describe anatomical structures (opt.Sth)
     if def.SANFM 
       YRc   = abs(Yi - Ys); 
-      YRc   = min(mean(YRc(YM(:)>0.5))*3,YRc);
-      [YRcr,resr] = vbm_vol_resize(YRc,'reduceV',vx_vol,vx_vol*4,16,'meanm');
-      YRcr  = vbm_vol_approx(YRcr,'nn',resr.vx_volr,1);
-      YRcr  = vbm_vol_smooth3X(YRcr,2/mean(resr.vx_volr));
-      YRc   = vbm_vol_resize(YRcr,'dereduceV',resr,'linear');
-      lowf  = 0.5 + 0.5*min(1,max(0,mean(2 - vx_vol))); % reduce filtering on anatical frequency
-      Ys    = Yi + (Ys - Yi) .* (YM>0) .* ...
-        (YRc ./ max(YRc(:))) .* ...                     % local filter strength weighting
-        (abs(Ys - Yi)<8*YRc) .* ...                     % structur weighting
-        lowf;                                           % resolution weighting
-        
+      if sum(YRc)>0
+        YRc   = max(0.2*max(YRc(:)),min(mean(YRc(YM(:)>0.5))*3,YRc));
+        [YRcr,resr] = vbm_vol_resize(YRc,'reduceV',vx_vol,vx_vol*4,16,'meanm');
+        YRcr  = vbm_vol_approx(YRcr,'nn',resr.vx_volr(1),1);
+        YRcr  = vbm_vol_smooth3X(YRcr,2/mean(resr.vx_volr));
+        YRc   = vbm_vol_resize(YRcr,'dereduceV',resr,'linear');
+        lowf  = 0.5 + 0.5*min(1,max(0,mean(2 - vx_vol))); % reduce filtering on anatical frequency
+        Ys    = Yi + (Ys - Yi) .* (YM>0) .* max(0.2,max(Ys<max(Ys(:))*0.9,...
+          (YRc ./ max(YRc(:))) .* ...                     % local filter strength weighting
+          (abs(Ys - Yi)<8*YRc) .* ...                     % structur weighting
+          lowf));                                           % resolution weighting
+      end
     end
 
 
@@ -249,7 +336,11 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
   Ys = Y*(1-opt.cstr) + Ys*opt.cstr;
   
   % garantie positive values
-  if min(Y(:))>=0
-    Ys = Ys + min(Ys(:)); 
+  if min(Y(:))>-0.001 && sum(Y(:)<0)>0.01*numel(Y(:));
+    Ys = Ys - min(Ys(:)); 
+  end
+  
+  if opt.fast
+    Y0(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6))=Ys; Ys = Y0;
   end
 end
