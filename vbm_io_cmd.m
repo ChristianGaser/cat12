@@ -38,6 +38,8 @@ function varargout = vbm_io_cmd(str,style,strlength,verb,stime)
 % ______________________________________________________________________
 % $Id$ %
 
+  %#ok<*NASGU> 
+
   if ~exist('verb','var') || isempty(verb), verb=1; end
   if ~exist('strlength','var') || isempty(strlength), strlength=66; end
   strlength2 = strlength;
@@ -59,13 +61,21 @@ function varargout = vbm_io_cmd(str,style,strlength,verb,stime)
         stime  = vbm_io_cmd('','','',1,stime1);
         fprintf('done.\n');
         
+% ---        
+% this case does not work equal on all matlab versions, because in some 
+% versions an addition space is placed by cprintf by unknown reasons
+%       case 'cleanup'
+%         % this works not for all matlab versions correctly
+%         fprintf(sprintf('%s',repmat('\b',1,style * (strlength2+7) - 5)));
+%         if exist('stime','var') && ~isempty(stime)
+%           vbm_io_cmd('','','',verb,stime);
+%         end
+% ---    
       case 'cleanup'
-        % this works not for all matlab versions correctly
-        fprintf(sprintf('%s',repmat('\b',1,style * (strlength2+7) - 5)));
         if exist('stime','var') && ~isempty(stime)
-          vbm_io_cmd('','','',verb,stime);
-        end
-        
+          fprintf('% 4.0fs\n',etime(clock,stime));
+        end        
+% ---        
       otherwise
         if exist('stime','var') && ~isempty(stime)
           fprintf('% 4.0fs\n',etime(clock,stime));
@@ -81,7 +91,7 @@ function varargout = vbm_io_cmd(str,style,strlength,verb,stime)
     end
   end
   
-  if ~strcmp(str,'testthisfunction') & nargout>0;
+  if ~strcmp(str,'testthisfunction') && nargout>0;
     varargout{1} = clock; 
   end  
 end

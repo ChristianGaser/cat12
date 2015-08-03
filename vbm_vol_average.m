@@ -72,7 +72,7 @@ function PO = vbm_vol_average(P,fname,PT,dt,nr,mask)
   
   if numel(dt)==1; dt=repmat(dt,1,3); end
   
-  if exist('PT','var') && ~isempty(PT) && exist(PT,'file')
+  if exist('PT','var') && ~isempty(PT) %&& exist(PT,'file')
   % reslicing
     if iscell(PT) && size(PT,1)<size(PT,2), PT=PT'; end
     PT = char(PT);
