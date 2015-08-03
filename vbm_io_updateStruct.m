@@ -16,7 +16,7 @@ function S=vbm_io_updateStruct(S,SN,RepByEmpty,ind)
 % $Id$
 
   % check input
-  if ~exist('empty','var'), RepByEmpty=0; end
+  if ~exist('RepByEmpty','var'), RepByEmpty=0; end
   if ~exist('ind','var') 
     if numel(SN)<=1, ind=1; else ind=1:numel(SN); end
   end
@@ -33,7 +33,7 @@ function S=vbm_io_updateStruct(S,SN,RepByEmpty,ind)
     fnS = fieldnames(SN);
     for fnSi=1:numel(fnS)
       if isfield(S,fnS{fnSi}) 
-        if RepByEmpty || ~isempty(SN.(fnS{fnSi}))
+        if (ischar(SN.(fnS{fnSi})) && RepByEmpty) || ~isempty(SN.(fnS{fnSi}))
           if isstruct(SN.(fnS{fnSi})) 
             % if the field is a structure too, vbm_io_updateStruct has
             % to be used recursive

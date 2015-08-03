@@ -76,9 +76,9 @@ function vbm_vol_atlas(atlas,refinei)
   if isempty(P) || isempty(PA), return; end
   
   
-  recalc = 0; 
-  mod    = 0; % modulation of each label map? .. do not work yet ... see cg_vbm_defs
-  if mod, modm='m'; else modm=''; end %#ok<UNRCH>
+  recalc  = 0; 
+  mode    = 0; % modulation of each label map? .. do not work yet ... see cg_vbm_defs
+  if mode, modm='m'; else modm=''; end %#ok<UNRCH>
   
   
   % refinment of expert label (smoothing)
@@ -145,11 +145,11 @@ function vbm_vol_atlas(atlas,refinei)
         end
       
         if recalc || ~exist(Pwa{fi},'file')
-          calldefs(Py{fi},Pa{fi},3,mod);
+          calldefs(Py{fi},Pa{fi},3,mode);
         end
       else
         if recalc || ~exist(PA{fi},'file')
-          calldefs(Py{fi},PA{fi},3,mod);
+          calldefs(Py{fi},PA{fi},3,mode);
         end
       end
     end
@@ -225,6 +225,10 @@ function vbm_vol_atlas(atlas,refinei)
       Pwa{fi}   = fullfile(ppa,sprintf('%s%s%s.nii',modm,'wa' ,ffa));
       PwA{fi}   = fullfile(ppa,sprintf('%s%s%s.nii',modm,'w'  ,ffa));
 
+      if ~exist(Py{fi},'file')
+        Py{fi}  = fullfile(pp ,sprintf('%s%s.nii','y_',ff ));
+      end
+      
       % use VBM to create a segmenation and mapping
       if recalc || ~exist(Pp0{fi},'file') || ~exist(Py{fi},'file')
         callvbm(P{fi});
@@ -237,18 +241,19 @@ function vbm_vol_atlas(atlas,refinei)
         if recalc || ( ~exist(Pwa{fi},'file') || ~exist(Pwp0{fi},'file') ) 
         % refinement of the expert label
           Vafi  = spm_vol(PA{fi});  Yafi  = single(spm_read_vols(Vafi)); 
-          Vp0fi = spm_vol(Pp0{fi}); Yp0fi = single(spm_read_vols(Vp0fi)); Vafi.mat = Vp0fi.mat; 
-          for xi=1:refiter, Yafi=vbm_vol_localstat(single(Yafi),Yp0fi>0,refsize*2,7); end
+ %         Vp0fi = spm_vol(Pp0{fi}); Yp0fi = single(spm_read_vols(Vp0fi)); Vafi.mat = Vp0fi.mat; 
+          for xi=1:refiter, Yafi=vbm_vol_localstat(Yafi,true(size(Yafi)),refsize*2,7); end
         % Fill unaligned regions:
         % This do not work!
         % das ergibt leider nicht immer sinn!!! beim aal gibts bsp, kein
         % hirnstamm und das kleinhirn besetzt hier dann alles!!!
          %vx_vol = sqrt(sum(Vafi.mat(1:3,1:3).^2));
          %[YD,YI,Yafi]=vbdist(Yafi,smooth3(Yp0fi)>0); Yafi=single(Yafi); clear YD YI;  
+          Vafi.dt = [4 0]; Vafi.pinfo(1) = 1; 
           Vafi.fname = Pa{fi}; spm_write_vol(Vafi,Yafi);
 
         % map ROI to atlas
-          calldefs(Py{fi},Pa{fi} ,0,mod);
+          calldefs(Py{fi},Pa{fi} ,0,mode);
           calldefs(Py{fi},Pp0{fi},3,0);
 
         % refinement of normalized map
@@ -262,7 +267,7 @@ function vbm_vol_atlas(atlas,refinei)
       else
         if recalc || ( ~exist(PwA{fi},'file') || ~exist(Pwp0{fi},'file') )   
         % map ROI to atlas
-          calldefs(Py{fi},PA{fi} ,0,mod);
+          calldefs(Py{fi},PA{fi} ,0,mode);
           calldefs(Py{fi},Pp0{fi},3,0);
         end
       end
@@ -382,9 +387,9 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
     case 'anatomy'
       mdir   = fullfile(rawdir,'Anatomy2.0');
       P      = vbm_findfiles(mdir,'colin27T1_seg.nii');
-      PA     = [vbm_findfiles(fullfile(mdir,'PMaps'),'*.nii'), ...
+      PA     = [vbm_findfiles(fullfile(mdir,'PMaps'),'*.nii'); ...
                 vbm_findfiles(fullfile(mdir,'Fiber_Tracts','PMaps'),'*.img')];
-      Ps     = vbm_findfiles(mdir,'wAnatMask.nii'); 
+      Ps     = vbm_findfiles(mdir,'AnatMask.nii'); 
       Pmat   = fullfile(mdir,'Anatomy_v20_MPM.mat');
       Pmat2  = fullfile(mdir,'Fiber_Tracts','AllFibres_v15_MPM.mat');
       Pcsv   = {fullfile(mdir,[Pmat(1:end-8) '.csv'])};
@@ -426,7 +431,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
       
     case 'aal'
       mdir   = fullfile(rawdir,'aal_for_SPM8');
-      P      = vbm_findfiles(mdir,'colin27T1_seg.img');
+      P      = vbm_findfiles(mdir,'Collins.nii');
       PA     = vbm_findfiles(mdir,'aal.nii');
       Ps     = {''};
       Pcsv   = vbm_findfiles(mdir,'aal.csv');
@@ -708,7 +713,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
       end
     end
   end
-  if max(round(cod(H>0,3)))<256 
+  if max([csv{5,:}]) %max(round(cod(H>0,3)))<256 
     dt2='uint8';
   else
     dt2='uint16';
@@ -895,21 +900,21 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   VA = spm_vol(char(PA));
   Y  = spm_read_vols(VA(1));
   
-   switch VA(1).private.dat.dtype
+  switch VA(1).private.dat.dtype
     case 'INT8-LE',   Y = int8(Y);   dt = 'int8';   
     case 'INT16-LE',  Y = int16(Y);  dt = 'int16';  
     case 'UINT8-LE',  Y = uint8(Y);  dt = 'uint8'; 
     case 'UINT16-LE', Y = uint16(Y); dt = 'uint16'; 
-    otherwise         
+    otherwise,        Y = single(Y); dt = 'uint8'; Y(Y<0)=0; Y(isnan(Y) | isinf(Y) )=0;
   end
-  if min(Y(:))>=0 
+ % if min(Y(:))>=0 
     switch dt
       case 'int8',  dt='uint8';  Y=uint8(Y);
       case 'int16'; dt='uint16'; Y=uint16(Y);
     end
-  else
-    error('ERROR:vbm_vol_atlas:bad_label_map','No negative Labels are allowed\n');
-  end
+ % else
+ %   error('ERROR:vbm_vol_atlas:bad_label_map','No negative Labels are allowed\n');
+ % end
   if max(abs(Y(:)))<256 
     switch dt
       case 'int16',  dt='int8';  Y=int8(Y);
@@ -969,14 +974,16 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   create(N);       
      
   if exist(Ps{1},'file')
-    Ys = spm_read_vols(spm_vol(char(Ps)));
+    Ys  = single(spm_read_vols(spm_vol(char(Ps))));
+    Yp0 = single(spm_read_vols(spm_vol(char(P))));
+    [Yd,Yi] = vbdist(single(Ys>0)); Ys = Ys(Yi);
   end
   for i=1:numel(PA)
     Y  = single(spm_read_vols(VA(i)));
     if nanmax(Y(:))>1, mx = 255; else mx = 1; end
     if exist('Ys','var')
       for si=1:2
-        Yi = Y .* (Ys==si); 
+        Yi = Y .* (Ys==si) .* Yp0>0.5; 
         N.dat(:,:,:,i*2 - (si==1) ) = double(Yi)/mx;
       end
     else
@@ -1069,25 +1076,28 @@ function csv=translateROI(csv,atlas)
   end
   if size(csv,2)>3, csv(:,3:end) = []; end % remove other stuff
   
-  csv(:,5) = csv(:,1);
+  csv(:,5) = csv(:,1); %num2cell((1:size(csv,1))'); %
   dict  = ROIdict;
   
   for i=1:size(csv,1)
-    % side
+    %% side
     csv{i,2} = [csv{i,2} ' ']; csv{i,3}=''; csv{i,4}=''; csv{i,6}=''; csv{i,6}=0;
     
     indi=zeros(1,size(dict.sides,1));
     for di=1:size(dict.sides,1)
       for pi=1:numel(dict.sides{di,2})
-        indi(di) = ~isempty(strfind(lower(csv{i,2}),lower(dict.sides{di,2}{pi})));
+        sid = strfind(lower(csv{i,2}),lower(dict.sides{di,2}{pi})); 
+        indi(di) = ~isempty(sid);
         if indi(di)==1, break; end
       end
       for pi=1:numel(dict.sides{di,3})
-        if indi(di) && ~isempty(strfind(lower(csv{i,2}),lower(dict.sides{di,3}{pi})))
-          indi(di) = 0;
+        nsid = strfind(lower(csv{i,2}),lower(dict.sides{di,3}{pi})); 
+        if indi(di) && ~isempty(nsid) && numel(nsid)>=numel(sid)
+          indi(di) = 0; pi
         end
       end
     end
+    %%
     indi = find(indi,1,'first');
     if ~isempty(indi)
       csv{i,6}=1+strcmpi(dict.sides{indi,1},'r');
@@ -1100,7 +1110,7 @@ function csv=translateROI(csv,atlas)
       csv{i,3}=[csv{i,3} 'Bothside']; 
     end
     
-    % directions
+    %% directions
     %fn = {'regions','directions','structures','addon'};
     fn = {'directions','regions','structures','addon'};
     for fni=1:numel(fn) 
@@ -1203,8 +1213,8 @@ function csv=translateROI(csv,atlas)
 end
 function dict=ROIdict()
   dict.sides = { 
-    'l'              {'Left' '_L'} {}
-    'r'              {'Right' '_R'} {}
+    'l'              {'Left' '_L'} {'_Lo','_La','_Li'}
+    'r'              {'Right' '_R'} {'_Ro','_Ra','_Ru','_Re'}
   };
   dict.directions = { 
     ...
@@ -1218,17 +1228,20 @@ function dict=ROIdict()
     'Cen'            {'Central'} {}
     ...
     'Sag'            {'Sagital' 'sag_' 'sag-' 'sag ' 'sagittal'} {}
-    'Fro'            {'Frontal'} {'Orbito-Frontal'}
+    'Fro'            {'Frontal'} {'Orbito-Frontal' 'Frontal-Orbito' 'Prefrontal' 'Fronto-Occupital' 'Occipito-Frontal'}
     'Bas'            {'Basal'} {}
     'Lat'            {'Lateral' 'lat_' 'lat-' 'lat '} {}
+    'Lon'            {'Longitudinal'} {}
     'Occ'            {'Occipital' '_orb'} {'Fronto-Occupital'}
-    'OrbFro'         {'Orbito-Frontal' 'Frotono-Orbital'} {};                             
+    'OrbFro'         {'Orbito-Frontal' 'Frotono-Orbital'} {};             
     'Orb'            {'Orbital'} {'Frotono-Orbital'}
-    'FroOcc'         {'Fronto-Occupital'} {}
+    'FroOcc'         {'Fronto-Occupital' 'Occipito-Frontal'} {}
     ...
     'Par'            {'Parietal' 'Pariatal'} {}
     'Pac'            {'Paracentral'} {}
     'PoC'            {'Postcentral'} {}
+    'PrFro'          {'Prefrontal'} {}
+    'PrMot'          {'Premotor'} {}
     'Prc'            {'Precentral'} {}
     'Tem'            {'Temporal'} {}
     'Tra'            {'Transverse'} {}
@@ -1248,9 +1261,11 @@ function dict=ROIdict()
     'P'              {'Pole'} {}
     'S'              {'Sulcus'} {}
     'S'              {'Sulci'} {}
-    'L'              {'Lobe' 'Lobule'} {}
-    'L'              {'Lobes'} {}
+    'L'              {'Lobe'} {'Lobes'}
+    'L'              {'Lobule'} {}
+    'L'              {'Lobes'} {'Lobe'}
     'F'              {'Fasiculus'} {}
+    'F'              {'Fascicle'} {}
     'F'              {'Fiber'} {}
     'V'              {'Ventricle' 'Vent'} {}
     'V'              {'Ventricles'} {}
@@ -1292,12 +1307,13 @@ function dict=ROIdict()
     'Ent'            {'Entorhinal Area'} {}
     'Fus'            {'Fusiform'} {}
     'Fob'            {'Forebrain'} {}
+    'Gen'            {'geniculate'} {}
     'Hes'            {'Heschl' 'heschls'} {}
     'Hip'            {'Hippocampus'} {'Parahippocampus'}                       
     'Ins'            {'Insula'} {}
     'Lin'            {'Lingual'} {}
     'Lem'            {'Lemniscus'} {}
-    'Mot'            {'Motor'} {}
+    'Mot'            {'Motor'} {'Premotor'}
     'Olf'            {'Olfactory'} {}
     'Rec'            {'Rectus'} {}
     'Rol'            {'Rolandic'} {}
@@ -1307,12 +1323,14 @@ function dict=ROIdict()
     'Put'            {'Putamen'} {}
     'Rec'            {'Rectal'} {}
     'SCA'            {'Subcallosal Area'} {}
+    'Som'            {'Somatosensory'} {}
     'SubNig'         {'Substancia-Nigra' 'substancia_nigra'} {}
     'SupMar'         {'Supramarginal'} {}
-    'Tha'            {'Thalamus'} {}
+    'Tha'            {'Thalamus' 'Thal:'} {}
     'Tap'            {'Tapatum'} {}
     'CC'             {'Corpus Callosum' 'corpus-callosum' 'corpus callosum' 'corpuscallosum' 'callosum'} {}
     'Ste'            {'Stellate'} {}
+    'Vis'            {'Visual'} {}
   }; 
   dict.addon = {
     'Gen'            {'(Genu)' 'genu'} {}
@@ -1376,8 +1394,7 @@ function dict=ROIdict()
     'Ter'            {'Terminalis'} {}
     'Lon'            {'Longitudinal'} {}
     'Col'            {'Column'} {}
- 
-    ...
+     ...
   };
   dict.hammers = {
     ...
@@ -1385,69 +1402,113 @@ function dict=ROIdict()
   dict.anatomy = {
     ... numbers
     ... 
-    'AmyCM'          {'Amygdala (CM)' 'Amyg (CM)'} {}
-    'AmyLB'          {'Amygdala (LB)' 'Amyg (LB)'} {}
-    'AmySF'          {'Amygdala (SF)' 'Amyg (SF)'} {}
+    'AcuRad'         {'Acoustic radiation'} {}
+    'CM'             {'Amygdala (CM)' 'Amyg (CM)'} {}
+    'LB'             {'Amygdala (LB)' 'Amyg (LB)'} {}
+    'SF'             {'Amygdala (SF)' 'Amyg (SF)'} {}
     ... % brodmann areas
-    'Brod17'         {'Brodmann Area 17' 'Area 17'} {}
-    'Brod18'         {'Brodmann Area 18' 'Area 18'} {}
-    'Brod01'         {'Brodmann Area 1'  'Area 1'} {'Area 17'}
-    'Brod02'         {'Brodmann Area 2'  'Area 2'} {'Area 18'}
+    'Brod01'         {'Brodmann Area 1'  'Area 1'} {'Area 17'} % PSC 1
+    'Brod02'         {'Brodmann Area 2'  'Area 2'} {'Area 18'} % PSC 2
     'Brod03a'        {'Brodmann Area 3a' 'Area 3a'} {}
     'Brod03b'        {'Brodmann Area 3b' 'Area 3b'} {}
-    'Brod04a'        {'Brodmann Area 4a' 'Area 4a'} {}
-    'Brod04p'        {'Brodmann Area 4p' 'Area 4p'} {}
+    'Brod04a'        {'Brodmann Area 4a' 'Area 4a'} {} % motor
+    'Brod04p'        {'Brodmann Area 4p' 'Area 4p'} {} % motor
+    'Brod17'         {'Brodmann Area 17' 'Area 17'} {}
+    'Brod18'         {'Brodmann Area 18' 'Area 18'} {}
     'Brod44'         {'Brodmann Area 44' 'Area 44'} {}
     'Brod45'         {'Brodmann Area 45' 'Area 45'} {}
     'Brod06'         {'Brodmann Area 6'  'Area 6'} {}
+    ... SPL - Area 5, 7
+    'SPL_Brod5Ci'    {'Brodmann Area 5Ci (SPL)' 'Area 5Ci'} {}
+    'SPL_Brod5l'     {'Brodmann Area 5l (SPL)' 'Area 5l'} {}
+    'SPL_Brod5m'     {'Brodmann Area 5m (SPL)' 'Area 5m'} {}
+    'SPL_Brod7A'     {'Brodmann Area 7A (SPL)' 'Area 7A'} {}
+    'SPL_Brod7M'     {'Brodmann Area 7M (SPL)' 'Area 7M'} {}
+    'SPL_Brod7P'     {'Brodmann Area 7P (SPL)' 'Area 7P'} {}
+    'SPL_Brod7PC'    {'Brodmann Area 7PC (SPL)' 'Area 7PC'} {'Area 7P'}
+    ... FG
+    'BrodFG1'        {'Area FG1'} {}
+    'BrodFG2'        {'Area FG2'} {}
+    ... Fp
+    'BrodFp1'        {'Area Fp1'} {}
+    'BrodFp2'        {'Area Fp2'} {}
+    ... IPL
+    'IPL_BrodFP'     {'Area PF (IPL)'} {}
+    'IPL_BrodFPcm'   {'Area PFcm (IPL)'} {}
+    'IPL_BrodFPm'    {'Area PFm (IPL)'} {}
+    'IPL_BrodFPop'   {'Area PFop (IPL)'} {}
+    'IPL_BrodFP'     {'Area PFt (IPL)'} {}
+    'IPL_BrodPGa'    {'Area PGa (IPL)'} {}
+    'IPL_BrodPGp'    {'Area PGp (IPL)'} {}
+    ...
+    'BF_CH1-3'       {'BF (Ch 1-3)'} {}
+    'BF_Ch4'         {'BF (Ch 4)'} {}
+    'CST'            {'Corticospinal tract'} {}
+    'EC'             {'Entorhinal Cortex'} {}
+    'F'              {'Fornix'} {}
+    ...'HATA'           {'HATA Region'} {} %  Hipp HATA
+    'OR'             {'Optic radiation'} {}
+    'SC'             {'Subiculum'} {}
+    ...
+    'Unc'            {'Uncinate'} {}
+    ... hOc
+    'hOc1'           {'hcO1 [V1]','hOc1 [V1]'} {}
+    'hOc2'           {'hOc2 [V2]'} {}
+    'hOc3d'          {'hOc3d [V3d]'} {}
+    'hOc3v'          {'hOc3v [V3v]'} {}
+    'hOc4d'          {'hOc4d [V3A]'} {}
+    'hOc4v'          {'hOc4v [V4(v)]'} {}
+    'hOc5'           {'hOc5 [V5/MT]'} {}
     ... hippocampus
-    'HipPF'          {'Hippocampus (CA)'   'HIPP (CA)'} {}
-    'HipPF'          {'Hippocampus (PF)'   'HIPP (PF)'} {}
-    'HipEC'          {'Hippocampus (EC)'   'Hipp (EC)'} {}
-    'HipFD'          {'Hippocampus (FD)'   'Hipp (FD)'} {}
-    'HipHATA'        {'Hippocampus (HATA)' 'Hipp (HATA)'} {}
-    'HipSub'         {'Hippocampus (SUB)'  'Hipp (SUB)'} {}
-    ... IPC?
-    'IPC_PF'         {'IPC (PF)'} {}
-    'IPC_PFcm'       {'IPC (PFcm)'} {}
-    'IPC_PFm'        {'IPC (PFm)'} {}
-    'IPC_PFop'       {'IPC (PFop)'} {}
-    'IPC_PFt'        {'IPC (PFt)'} {}
-    'IPC_PFa'        {'IPC (PFa)'} {}
-    'IPC_PFp'        {'IPC (PFp)'} {}
-    'IPC_PFp'        {'IPC (PGa)'} {}
-    'IPC_PFp'        {'IPC (PGp)'} {}
+    'CA'          {'Hippocampus (CA)'   'HIPP (CA)'} {}
+    'PF'          {'Hippocampus (PF)'   'HIPP (PF)'} {}
+    'EC'          {'Hippocampus (EC)'   'Hipp (EC)'} {}
+    'FD'          {'Hippocampus (FD)'   'Hipp (FD)'} {}
+    'DG'          {'Hippocampus (DG)'   'Hipp (DG)' 'DG (Hippocampus)' 'hippocampus_DG'} {}
+    'HATA'        {'Hippocampus (HATA)' 'Hipp (HATA)' 'HATA'} {}
+    'Sub'         {'Hippocampus (SUB)'  'Hipp (SUB)'} {}
+    'CA1'         {'Hippocampus (CA1)'  'CA1 (Hippocampus)','hippocampus_CA1'} {}
+    'CA2'         {'Hippocampus (CA2)'  'CA2 (Hippocampus)','hippocampus_CA3'} {}
+    'CA3'         {'Hippocampus (CA3)'  'CA3 (Hippocampus)','hippocampus_CA3'} {}
+    ... IPL
+    'IPL_PF'         {'IPL (PF)'   'Area PF (IPL)'   'IPL_PF'}    {'IPL_PFcm' 'IPL_PFm' 'IPL_Pfop' 'IPL_Pfa' 'IPL_Pft' 'IPL_Pfp'}
+    'IPL_PFcm'       {'IPL (PFcm)' 'Area PFcm (IPL)' 'IPL_PFcm'}  {}
+    'IPL_PFm'        {'IPL (PFm)'  'Area PFm (IPL)'  'IPL_PFm'}   {}
+    'IPL_PFop'       {'IPL (PFop)' 'Area PFop (IPL)' 'IPL_Pfop'}  {}
+    'IPL_PFt'        {'IPL (PFt)'  'Area PFt (IPL)'  'IPL_Pft'}  {}
+    'IPL_PFa'        {'IPL (PFa)'  'Area PFa (IPL)'  'IPL_Pfa'}  {}
+    'IPL_PFp'        {'IPL (PFp)'  'Area PFp (IPL)'  'IPL_Pfp'}  {}
     ... inula
-    'Id1'            {'(Id1)' 'Insula (Id1)'} {} % anatomy
-    'Ig1'            {'(Ig1)' 'Insula (Ig1)'} {} % anatomy
-    'Ig2'            {'(Ig2)' 'Insula (Ig2)'} {} % anatomy
+    'Id1'            {'(Id1)' 'Insula (Id1)' 'Area Id1 (Insula)' 'Insula_Id1'} {} % anatomy
+    'Ig1'            {'(Ig1)' 'Insula (Ig1)' 'Area Ig1 (Insula)' 'Insula_Ig1'} {} % anatomy
+    'Ig2'            {'(Ig2)' 'Insula (Ig2)' 'Area Ig2 (Insula)' 'Insula_Ig2'} {} % anatomy
     ... cerebellum
     'Cbe10H'         {'Lobule X (Hem)'} {}
-    'Cbe10V'         {'Lobule X (Vermis)'} {}
+    'Cbe10V'         {'Lobule X (Verm)' 'Lobule X (Vermis)'} {}
     'Cbe9H'          {'Lobule IX (Hem)'} {}
-    'Cbe9V'          {'Lobule IX (Vermis)'} {}
+    'Cbe9V'          {'Lobule IX (Vermis)' 'Lobule IX (Vermis)'} {}
     'Cbe8aH'         {'Lobule VIIIa (Hem)'} {}
-    'Cbe8aV'         {'Lobule VIIIa (Vermis)'} {}
+    'Cbe8aV'         {'Lobule VIIIa (Verm)' 'Lobule VIIIa (Vermis)'} {}
     'Cbe8bH'         {'Lobule VIIIb (Hem)'} {}
-    'Cbe8bV'         {'Lobule VIIIb (Vermis)'} {}
-    'Cbe7a1H'        {'Lobule VIIa Crus I (Hem)'} {}
-    'Cbe7a1V'        {'Lobule VIIa Crus I (Vermis)'} {} 
-    'Cbe7a2H'        {'Lobule VIIa Crus II (Hem)'} {}
-    'Cbe7a2V'        {'Lobule VIIa Crus II (Vermis)'} {} 
-    'Cbe7b'          {'Lobule VIIb (Hem)'} {}
-    'Cbe7b'          {'Lobule VIIb (Vermis)'} {} 
+    'Cbe8bV'         {'Lobule VIIIb (Verm)' 'Lobule VIIIb (Vermis)'} {}
+    'Cbe7a1H'        {'Lobule VIIa Crus I (Hem)' 'Lobule VIIa crusI (Hem)'} {}
+    'Cbe7a1V'        {'Lobule VIIa Crus I (Verm)' 'Lobule VIIa crusI (Verm)' 'Lobule VIIa Crus I (Vermis)'} {} 
+    'Cbe7a2H'        {'Lobule VIIa Crus II (Hem)' 'Lobule VIIa crusII (Hem)' } {}
+    'Cbe7a2V'        {'Lobule VIIa Crus II (Verm)' 'Lobule VIIa crusII (Verm)' 'Lobule VIIa Crus II (Vermis)'} {} 
+    'Cbe7b'          {'Lobule VIIb (Hem)' 'Cerebellum_VIIb_Hem'} {}
+    'Cbe7b'          {'Lobule VIIb (Verm)' 'Cerebellum_VIIb_Verm' 'Lobule VIIb (Vermis)'} {} 
     'Cbe6H'          {'Lobule VI (Hem)'} {}
-    'Cbe6V'          {'Lobule VI (Vermis)'} {}  
+    'Cbe6V'          {'Lobule VI (Verm)' 'Lobule VI (Vermis)'} {}  
     'Cbe5'           {'Lobule V '} {}  
     'Cbe5H'          {'Lobule V (Hem)'} {}  
-    'Cbe5V'          {'Lobule V (Vermis)'} {}  
-    'Cbe1_4H'        {'Lobules I-IV (Hem)'} {}
-    ...
+    'Cbe5V'          {'Lobule V (Verm)' 'Lobule V (Vermis)'} {}  
+    'Cbe1_4H'        {'Lobules I-IV (Hem)' 'Lobule I IV (Hem)'} {}
+    ... Area OP
     'OP1'            {'OP 1'} {}
     'OP2'            {'OP 2'} {}
     'OP3'            {'OP 3'} {}
     'OP4'            {'OP 4'} {}
-    ...
+    ... SPL
     'SPL5Ci'         {'SPL (5Ci)'} {}
     'SPL5L'          {'SPL (5L)'} {}
     'SPL5M'          {'SPL (5M)'} {}
@@ -1455,20 +1516,21 @@ function dict=ROIdict()
     'SPL7M'          {'SPL (7M)'} {}
     'SPL7P'          {'SPL (7P)'} {}
     'SPL7PC'         {'SPL (7PC)'} {}
-    ...
+    ... Area TE (auditory)
     'TE10'           {'TE 1.0'} {}
     'TE11'           {'TE 1.1'} {}
     'TE12'           {'TE 1.2'} {}
     'TE3'            {'TE 3'} {}
-    ...
-    'hIP1'           {'hIP1'} {}
-    'hIP2'           {'hIP2'} {}
-    'hIP3'           {'hIP3'} {}
-    ...
+    ... hIP
+    'IPS_hIP1'       {'IPS_hIP1' 'Area hIP1 (IPS)' 'AIPS_IP1'} {}
+    'IPS_hIP2'       {'IPS_hIP2' 'Area hIP2 (IPS)' 'AIPS_IP2'} {}
+    'IPS_hIP3'       {'IPS_hIP3' 'Area hIP3 (IPS)' 'AIPS_IP3'} {}
+    ... hOC
     'hOC3v'          {'hOC3v (V3v)'} {}
     'hOC4'           {'hOC4v (V4)'} {}
     'hOC5'           {'hOC5 (V5)'} {}
     ... ??
+    'CalMam'         {'Callosal body  & Mamillary body'} {}
    };
   dict.neuromorphometrics = {
     'Ventricle'      {'Ventricle'} {}
@@ -1482,9 +1544,9 @@ function dict=ROIdict()
                       'OFuG','OpIFG','PCgG','PCu','PHG','PIns','PO','PoG',...
                       'POrG','PP','PrG','PT','SCA','SFG','SMC','SMG','SOG',...
                       'SPL','STG','TMP','TrIFG','TTG'} {}
-    'B'             {'Brain'} {'brainstem' 'brain-stem' 'brain stem'}   
-    'WM'            {'White Matter'};
-    'CSF'           {'CSF'};
+    'B'             {'Brain'} {'brainstem' 'brain-stem' 'brain stem'} 
+    'WM'            {'White Matter'} {};
+    'CSF'           {'CSF'} {};
   };
 end
 function create_vbm_atlas(A,C,LAB)

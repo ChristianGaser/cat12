@@ -1,11 +1,22 @@
 function varargout = vbm_surf_display(varargin)
 % ______________________________________________________________________
-% Function to display surfaces. Warapper  to vbm_surf_render.
+% Function to display surfaces. Wrapper to vbm_surf_render.
 %
 % [Psdata] = vbm_surf_display(job)
 % 
-% job.data_resample
-% job.fwhm
+% job.data      .. [rl]h.* surfaces 
+% job.colormap  .. colormap
+% job.caxis     .. range of the colormap
+% job.multisurf .. load both sides, if possible  
+% job.view      .. view 
+%                   l=left, r=right
+%                   a=anterior, p=posterior
+%                   s=superior, i=inferior
+%
+% job.imgprint.do   .. print image (default = 0)
+% job.imgprint.type .. render image type (default = png)
+% job.dpi           .. print resolution of the image (default = 600 dpi)
+%
 % ______________________________________________________________________
 % Robert Dahnke
 % $Id$
@@ -15,12 +26,18 @@ function varargout = vbm_surf_display(varargin)
   if nargin>0
     if isstruct(varargin{1})
       job = varargin{1};
+      if ~isfield(job,'data')
+        job.data = spm_select([1 24],'any','Select surface','','','[lr]h.*');
+        job.imgprint.do    = 0;
+        job.imgprint.close = 0;  
+      end
     else
       job.data = varargin{1};
     end
   else
     job.data = spm_select([1 24],'any','Select surface','','','[lr]h.*');
-    job.imgprint.do = 0;
+    job.imgprint.do    = 0;
+    job.imgprint.close = 0;  
   end
   if isempty(job.data), return; end
   job.data = cellstr(job.data);
@@ -55,6 +72,8 @@ function varargout = vbm_surf_display(varargin)
       Pmesh = sinfo(i).Pmesh;
       Pdata = sinfo(i).Pdata; 
     end
+    
+    
     
     try
       fprintf('  %s\n',job.data{i});
@@ -140,11 +159,37 @@ function varargout = vbm_surf_display(varargin)
         vbm_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',job.data{i})); 
       end
     end
-        
+    
+    
+    
+    
+    %% view
+    viewname = '';
+    if isfield(job,'view')
+      switch lower(job.view)
+        case {'r','right'},                 view([  90   0]); viewname = '.r';
+        case {'l','left'},                  view([ -90   0]); viewname = '.l';
+        case {'t','s','top','superior'},    view([   0  90]); viewname = '.s';
+        case {'b','i','bottom','inferior'}, view([-180 -90]); viewname = '.i'; 
+        case {'f','a','front','anterior'},  view([-180   0]); viewname = '.a';
+        case {'p','back','posterior'},      view([   0   0]); viewname = '.p';
+        otherwise
+          if isnumeric(job.view) && size(job.view)==2
+            view(job.view); viewname = sprintf('.%04dx%04d',mod(job.view,360));
+          else
+            error('Unknown view.\n')
+          end
+      end
+    end    
+    
+    
+    
+    
+    %% print
     if job.imgprint.do 
-      [pp,ff] = spm_fileparts(job.data{i}); % PaperPositition
-      print(h.figure , job.imgprint.type , job.imgprint.fdpi(job.imgprint.dpi) , ...
-        fullfile(pp,[ff '.' job.imgprint.type(3:end)])); 
+      %%
+      pfname = fullfile(sinfo(i).pp,sprintf('%s.%s%s.%s',[sinfo(i).ff,viewname,job.imgprint.type(3:end)]));
+      print(h.figure , job.imgprint.type , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 
       
       if job.imgprint.close
         close(h.figure);

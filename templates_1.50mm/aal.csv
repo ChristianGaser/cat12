@@ -1,7 +1,7 @@
 ROIid;ROIappr;ROIname;ROIbase
 0;BG;Background;Background
-1;lPrc;Left Precentral;Precentral_L  & Precentral_R 
-2;rPrc;Right Precentral;Precentral_L  & Precentral_R 
+1;lCenPrc;Left Central Precentral;Precentral_L  & Precentral_R 
+2;rCenPrc;Right Central Precentral;Precentral_L  & Precentral_R 
 3;lSupFro;Left Superior Frontal;Frontal_Sup_L  & Frontal_Sup_R 
 4;rSupFro;Right Superior Frontal;Frontal_Sup_L  & Frontal_Sup_R 
 5;lSupFroOcc;Left Superior Frontal Occipital;Frontal_Sup_Orb_L  & Frontal_Sup_Orb_R 
@@ -56,8 +56,8 @@ ROIid;ROIappr;ROIname;ROIbase
 54;rInfOcc;Right Inferior Occipital;Occipital_Inf_L  & Occipital_Inf_R 
 55;lFus;Left Fusiform;Fusiform_L  & Fusiform_R 
 56;rFus;Right Fusiform;Fusiform_L  & Fusiform_R 
-57;lPoC;Left Postcentral;Postcentral_L  & Postcentral_R 
-58;rPoC;Right Postcentral;Postcentral_L  & Postcentral_R 
+57;lCenPoC;Left Central Postcentral;Postcentral_L  & Postcentral_R 
+58;rCenPoC;Right Central Postcentral;Postcentral_L  & Postcentral_R 
 59;lSupPar;Left Superior Parietal;Parietal_Sup_L  & Parietal_Sup_R 
 60;rSupPar;Right Superior Parietal;Parietal_Sup_L  & Parietal_Sup_R 
 61;lInfPar;Left Inferior Parietal;Parietal_Inf_L  & Parietal_Inf_R 
@@ -68,8 +68,8 @@ ROIid;ROIappr;ROIname;ROIbase
 66;rAng;Right Angular;Angular_L  & Angular_R 
 67;lPCu;Left Precuneus;Precuneus_L  & Precuneus_R 
 68;rPCu;Right Precuneus;Precuneus_L  & Precuneus_R 
-69;lPacL;Left Paracentral Lobe;Paracentral_Lobule_L  & Paracentral_Lobule_R 
-70;rPacL;Right Paracentral Lobe;Paracentral_Lobule_L  & Paracentral_Lobule_R 
+69;lCenPacL;Left Central Paracentral Lobe;Paracentral_Lobule_L  & Paracentral_Lobule_R 
+70;rCenPacL;Right Central Paracentral Lobe;Paracentral_Lobule_L  & Paracentral_Lobule_R 
 71;lCau;Left Caudate;Caudate_L  & Caudate_R 
 72;rCau;Right Caudate;Caudate_L  & Caudate_R 
 73;lPut;Left Putamen;Putamen_L  & Putamen_R 
