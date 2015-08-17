@@ -1,4 +1,4 @@
-function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
+function varargout=vbm_tst_calc_kappa(P,Pref,opt)
 % ______________________________________________________________________
 % Estimates Kappa for a set of input images P to one reference image 
 % Pref for all or each input image. 
@@ -71,9 +71,18 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
   end
   if isempty(Pref), return; end
 
-  if ~exist('methodname','var'), methodname=''; else methodname=[' (' methodname ')']; end
-  if isempty(methodname), methodname = ['(' spm_str_manip(spm_str_manip(P(1,:),'h'),'l20') ')']; end
-  if ~exist('verb','var'), verb=1; end
+  if ~exist('opt','var'), opt=struct(); end
+  def.methodname = '';
+  def.verb       = 1;
+  def.realign    = 0;
+  def.realignres = 1.5; 
+  def.diffimg    = 0;
+  opt = checkinopt(opt,def);
+  
+  
+ % if ~exist('methodname','var'), methodname=''; else methodname=[' (' methodname ')']; end
+ % if ~exist('verb','var'), verb=1; end
+  if isempty(opt.methodname), opt.methodname = ['(' spm_str_manip(spm_str_manip(P(1,:),'h'),'l20') ')']; end
   if isempty(V) || isempty(Vref), return; end 
 
   
@@ -82,6 +91,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
   ncls = max(round(vol(:))); 
   if     ncls==255, ncls=1; 
   elseif ncls==254, ncls=3; % IBSR
+  elseif ncls==4, ncls=3;
   %elseif max(vol(:))>0, ncls=1; 
   end
   clear vol;
@@ -101,19 +111,19 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
     fprintf('vbm_tst_calc_kappa with %d classes.\n',ncls);
     switch ncls
       case 0, txt{1}='Error ground truth empty!'; continue
-      case 1, tab = {['File ' sprintf(sprintf('%%%ds',spaces-4),methodname)],...
+      case 1, tab = {['File ' sprintf(sprintf('%%%ds',spaces-4),opt.methodname)],...
                     'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
-              txt{1} = sprintf(sprintf('\\n%%%ds%%6s%%8s%%8s%%8s%%8s%%8s%%8s%%8s\\n',spaces),...
+              txt{1} = sprintf(sprintf('\\n%%%ds%%6s%%8s%%8s%%8s%%8s%%8s%%8s%%8s%%8s\\n',spaces),...
                 estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
               k = zeros(n,8);
-      case 3, tab = {['File ' sprintf(sprintf('%%%ds',spaces-4),methodname)],...
+      case 3, tab = {['File ' sprintf(sprintf('%%%ds',spaces-4),opt.methodname)],...
                     'K(C)','K(G)','K(W)','K(CGW)','K(B)','RMS(C)','RMS(G)','RMS(W)','RMS(CGW)','RMS(B)'};
               txt{1} = sprintf(sprintf('\\n%%%ds%%s%%8s%%8s%%8s%%8s%%8s |%%8s%%8s%%8s%%8s%%8s\\n',spaces),...
                 estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9},tab{10},tab{11}); 
               k = zeros(n,10);
     end
     txt{2} = ''; 
-    if verb && ~isempty(txt{1}), fprintf(txt{1}); end
+    if opt.verb && ~isempty(txt{1}), fprintf(txt{1}); end
 
 
   % evaluation
@@ -129,20 +139,35 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
       if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end                    
       
       % interpolate
-      if any(V(i).dim ~= Vref(Vrefi).dim)
-        %Vo = Vref(Vrefi);
-        %[pp,ff,ee]  = spm_fileparts(Vref(Vrefi).fname); 
-        %Vo.fname    = fullfile(pp,[ff '_vbm_tst_calc_kappa_tmp_interp' ee]);
-        [V(i),vol2] = vbm_vol_imcalc(V(i),Vref(Vrefi),'i1',struct('interp',6,'verb',0));
-        %fprintf(sprintf('%s',repmat('\b',1,316+5)));
-        %V(i)=Vo;
+      if any(V(i).dim ~= Vref(Vrefi).dim) || opt.realign %|| any(V(i).mat(:) ~= Vref(Vrefi).mat(:)) 
+        [pp,ff,ee] = spm_fileparts(V(i).fname);
+        Vir = [tempname ee];
+        try
+          copyfile(V(i).fname,Vir);
+          spm_realign(char([{Vref(Vrefi).fname};{Vir}]),...
+            struct('sep',opt.realignres,'rtm',0,'interp',4,'graphics',0,'fwhm',opt.realignres));
+          fprintf(repmat('\b',1,73*3+1))
+        catch
+          delete(Vir);
+        end  
+        [V(i),vol2] = vbm_vol_imcalc(Vir,Vref(Vrefi),'i1',struct('interp',6,'verb',0));
         vol1 = single(spm_read_vols(Vref(Vrefi))); 
       else
         vol1 = single(spm_read_vols(Vref(Vrefi))); 
         vol2 = single(spm_read_vols(V(i)));
       end
       
-          
+      if opt.diffimg
+        [pp,ff,ee] = spm_fileparts(V(i).fname);
+        [pr,fr]    = spm_fileparts(Vref(Vrefi).fname);
+        
+        Vd = Vref(Vrefi);
+        %Vd.fname = fullfile(pp,['diffimg.' strrep(ff,'-','') '-' strrep(fr,'-','') '.' genvarname(strrep(opt.methodname,'/','-')) ee]);
+        Vd.fname = fullfile(pr,['diffimg.' ff '.' fr '.' ...
+          strrep(genvarname(strrep(['XNT',opt.methodname],'/','-')),'XNT','') ee]);
+        spm_write_vol(Vd,vol2-vol1);
+      end
+      
       switch ncls
         case 1
           %if length(Vref)==n,  vol1 = spm_read_vols(Vref(i))/255+1;
@@ -165,7 +190,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
           colori = mean(kappa_all);
         case 3
           maxv=max((vol1(:))); 
-          if maxv>3, vol1=round(vol1); vol1=vol1/maxv*3; end
+          if maxv>4, vol1=round(vol1); vol1=vol1/maxv*3; end
           
           if 0
             % temporare
@@ -200,8 +225,12 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
         delete(Vo.fname); 
         clear Vo;
       end
-      if verb
-        vbm_io_cprintf(MarkColor(round(min(40,max(1,evallinearb(colori,0.90,0.65,6)/10*40))),:),txti); 
+      if opt.verb
+        if ncls==1
+          vbm_io_cprintf(MarkColor(round(min(40,max(1,evallinearb(colori,1.00,0.80,6)/10*40))),:),txti); 
+        else
+          vbm_io_cprintf(MarkColor(round(min(40,max(1,evallinearb(colori,0.90,0.65,6)/10*40))),:),txti); 
+        end
       end; 
       txt{2}=[txt{2} txti]; tab=[tab;[{name},num2cell(k(i,:))]]; 
     end
@@ -218,7 +247,7 @@ function varargout=vbm_tst_calc_kappa(P,Pref,methodname,verb,fname)
                              '%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n\\n'], ...
                              spaces,spaces),'mean',mean(k,1),'std',std(k,1,1));     
     end
-    if verb, fprintf(txt{3}); end; tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   
+    if opt.verb, fprintf(txt{3}); end; tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   
  
     
     % export

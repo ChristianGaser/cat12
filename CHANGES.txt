@@ -6985,3 +6985,27 @@ M       vbm_vol_isarnlm.m
 
 ------------------------------------------------------------------------
 r706 | dahnke | 2015-08-03 16:40:39
+
+M       CHANGES.txt
+M       ds.m
+M       vbm_stat_marks.m
+M       vbm_tst_calc_kappa.m
+M       vbm_tst_qa.m
+
+(1)  Added realignment function in "vbm_tst_calc_kappa".
+(2)  Major update of the QA estimation "vbm_tst_qa" and "vbm_stat_marks":
+     - The last changes (R686-R690) did not show improvements in all test areas. 
+       There were strong age effects, and only partial improvements that did not 
+       fit to the increased complexity and run time of the code.
+       Therefore, the function was rebuild based on R650 and optimized by the 
+       best ideas of versions R665-R682 to reduce variation between different 
+       preprocessing methods (SPM8/12,FSL,VBM8/12) that were a strong problem in
+       version R650. 
+     - Most mentionable is that the focus of noise estimation moved from WM to
+       CSF (if possible) to avoid aging effects, where the age depended changes
+       of the WM structure can be misinterpreted as noise. Although, the methods
+       to avoid these regions work in most cases, some kind of noise/movement
+       artifacts showed a similar pattern that lead to an underestimation of 
+       noise in these cases. 
+------------------------------------------------------------------------
+r707 | dahnke | 2015-08-17 14:21:11

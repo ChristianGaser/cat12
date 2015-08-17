@@ -86,6 +86,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2','label2'}
+        [X,Y] = meshgrid(0.125:0.125:64,1:3);
         %set(fh,'WindowStyle','docked','Visible','on');
         subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); caxis([0 2]);                                                       axis equal off; daspect(DAR);
@@ -93,6 +94,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); caxis([0 2]);                                                       axis equal off;  daspect(DAR);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2x','label2x'}
+        [X,Y] = meshgrid(0.125:0.125:64,1:3);
         set(fh,'WindowStyle','docked','Visible','on');
         subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{4}(:,:,s)); caxis([0 2]); axis equal off; daspect(DAR);
@@ -100,6 +102,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{5}(:,:,s)); caxis([0 2]); axis equal off; daspect(DAR);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l3','label3'}
+        [X,Y] = meshgrid(0.125:0.125:64,1:3);
         set(fh,'WindowStyle','docked','Visible','on');
         % top row
         subplot('Position',[0/3 2/3 1/3 1/3]); imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]);  axis equal off; daspect(DAR);
