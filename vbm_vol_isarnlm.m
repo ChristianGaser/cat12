@@ -33,7 +33,7 @@ function varargout = vbm_vol_isarnlm(varargin) %#ok<STOUT>
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: vbm_tst_qa.m 682 2015-03-13 09:38:24Z dahnke $
+% $Id$
 % ______________________________________________________________________
  
   if nargin == 0 
@@ -139,7 +139,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: vbm_tst_qa.m 682 2015-03-13 09:38:24Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
   if ~exist('opt','var'), opt = struct(); end

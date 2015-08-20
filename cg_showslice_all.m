@@ -14,6 +14,7 @@ if nargin == 1
 	P = char(vargin.data_vbm);
 	scaling = vargin.scale;
 	slice_mm = vargin.slice;
+	orient = vargin.orient;
 end
 
 if nargin < 1
@@ -24,6 +25,7 @@ if nargin < 1
 	end
 	scaling = spm_input('Prop. scaling (e.g. for T1- or modulated images)?',1,'yes|no',[1 0],2);
 	slice_mm = spm_input('Slice [mm]?','+1','e',0,1);
+	orient = spm_input('Orientation',1,'axial|coronal|sagittal',[3 2 1],1);
 end
 
 V = spm_vol(deblank(P));
@@ -33,18 +35,27 @@ hold = 1;
 
 % voxelsize and origin
 vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
+if det(V(1).mat(1:3,1:3))<0, vx(1) = -vx(1); end
 Orig = V(1).mat\[0 0 0 1]';
 
 % range
-range = ([1 V(1).dim(3)] - Orig(3))*vx(3);
+range = ([1 V(1).dim(orient)] - Orig(orient))*vx(orient);
 
 % calculate slice from mm to voxel
-sl = slice_mm/vx(3)+Orig(3);
-while (sl < 1) | (sl > V(1).dim(3))
+sl = slice_mm/vx(orient)+Orig(orient);
+while (sl < 1) | (sl > V(1).dim(orient))
 	slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
-	sl = slice_mm/vx(3)+Orig(3);
+	sl = slice_mm/vx(orient)+Orig(orient);
 end
-M = spm_matrix([0 0 sl 0 0 0 1 1 1]);
+
+M = spm_matrix([0 0 0 0 0 0 1 1 1]);
+switch orient
+  case 1, dim_array = [V(1).dim(2), V(1).dim(3)]; M(:,1:3) = M(:,[2 3 1]);
+  case 2, dim_array = [V(1).dim(3), V(1).dim(1)]; M(:,1:3) = M(:,[3 1 2]);
+  case 3, dim_array = [V(1).dim(1), V(1).dim(2)]; M(:,1:3) = M(:,[1 2 3]);
+end
+
+M(orient,4) = sl;
 
 % global scaling
 if scaling
@@ -57,13 +68,16 @@ if scaling
 	end
 end
 
-Y = zeros(V(1).dim(1),V(1).dim(2),n);
+Y = zeros([dim_array,n]);
+
 %-Start progress plot
 %-----------------------------------------------------------------------
 spm_progress_bar('Init',n,'volumes completed');
 for i=1:n
-
-	d = spm_slice_vol(V(i),M,V(1).dim(1:2),[hold,NaN]);
+	d = spm_slice_vol(V(i),M,dim_array,[hold,NaN]);
+    if orient == 2
+      d = flipud(rot90(d));
+    end
 	Y(:,:,i) = d;
 	spm_progress_bar('Set',i);
 end
@@ -76,20 +90,20 @@ figure(Fgraph);
 spm_figure('Clear',Fgraph);
 WIN    = get(gcf,'Position');
 WIN    = WIN(3)/WIN(4);
-WIN    = WIN/(V(1).dim(1)/V(1).dim(2));
+WIN    = WIN/(dim_array(1)/dim_array(2));
 sizex  = round(sqrt(n*WIN));
 sizey  = round(n/sizex);
 
 while sizex * sizey < n, sizex = sizex + 1; end
 if sizex * (sizey-1) >= n, sizey = sizey - 1; end
 
-img = zeros(sizex*V(1).dim(1),sizey*V(1).dim(2));
+img = zeros(sizex*dim_array(1),sizey*dim_array(2));
 
 for i = 1:sizex
    for j = 1:sizey
         k = (sizex-i) + sizex*(j-1);
 	if k < n
-	  img((i-1)*V(1).dim(1)+1:(i)*V(1).dim(1),(j-1)*V(1).dim(2)+1:(j)*V(1).dim(2)) = fliplr(Y(:,:,(k+1)));
+      img((i-1)*dim_array(1)+1:(i)*dim_array(1),(j-1)*dim_array(2)+1:(j)*dim_array(2)) = fliplr(Y(:,:,(k+1)));
 	end
   end
 end
@@ -114,7 +128,7 @@ for i = 1:sizex
    for j = 1:sizey
         k = (sizex-i) + sizex*(j-1);
 	if k < n
-	  text(round(sizex*V(1).dim(1)-((i-1)*V(1).dim(1)+(i)*V(1).dim(1))/2),(j-1)*V(1).dim(2)+fs+2,names.m{k+1},...
+	  text(round(sizex*dim_array(1)-((i-1)*dim_array(1)+(i)*dim_array(1))/2),(j-1)*dim_array(2)+fs+2,names.m{k+1},...
 	  	'FontSize',fs,'Color','r','HorizontalAlignment','center');
 	end
   end
