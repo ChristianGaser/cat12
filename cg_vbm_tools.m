@@ -704,10 +704,18 @@ qa.help   = {'VBM Quality Assurance of T1 images. '};
 data.help = {
 'Select all images. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images)'};
 
+orient        = cfg_menu;
+orient.tag    = 'orient';
+orient.name   = 'Spatial orientation';
+orient.labels = {'axial','coronal','sagittal'};
+orient.values = {3 2 1};
+orient.val    = {3};
+orient.help   = {'Spatial orientation of slice.'};
+
 showslice      = cfg_exbranch;
 showslice.tag  = 'showslice';
 showslice.name = 'Display one slice for all images';
-showslice.val  = {data_vbm,scale,slice};
+showslice.val  = {data_vbm,scale,orient,slice};
 showslice.prog = @cg_showslice_all;
 showslice.help = {'This function displays a selected slice for all images and indicates the respective filenames which is useful to check image quality for a large number of files in a circumscribed region (slice).'};
 

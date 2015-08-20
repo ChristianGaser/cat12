@@ -7009,3 +7009,15 @@ M       vbm_tst_qa.m
        noise in these cases. 
 ------------------------------------------------------------------------
 r707 | dahnke | 2015-08-17 14:21:11
+
+M       CHANGES.txt
+M       cg_showslice_all.m
+M       cg_vbm_tools.m
+M       html/vbm12.html
+M       vbm_surf_render.m
+MM      vbm_vol_isarnlm.m
+
+Added option to select slice orientation in cg_showslice_all.m
+
+------------------------------------------------------------------------
+r708 | gaser | 2015-08-20 11:02:15
