@@ -27,6 +27,10 @@ function varargout = vbm_surf_render(action,varargin)
 % FORMAT MAP = vbm_surf_render('ColourMap',AX)
 % Retrieves the current colourmap.
 %
+% FORMAT H = vbm_surf_render('Underlay',AX,P)
+% AX       - axis handle or structure given by vbm_surf_render('Disp',...)
+% P        - data (curvature) to be underlayed on mesh (see spm_mesh_project)
+%
 % FORMAT H = vbm_surf_render('Clim',AX, range)
 % range    - range of colour scaling
 %
@@ -315,6 +319,26 @@ switch lower(action)
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
         mySavePNG(H.patch,[],H, varargin{2});
+
+    %-Underlay
+    %======================================================================
+    case 'underlay'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        if nargin < 3, varargin{2} = []; end
+
+        v = varargin{2};
+        if ischar(v)
+          try, spm_vol(v); catch, v = gifti(v); end;
+        end
+        if isa(v,'gifti')
+          v = v.cdata;
+        else
+          error('File has to be gifti-format');
+        end
+
+        setappdata(H.patch,'curvature',v);
+        setappdata(H.axis,'handles',H);
 
     %-Overlay
     %======================================================================
