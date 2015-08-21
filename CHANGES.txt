@@ -7021,3 +7021,12 @@ Added option to select slice orientation in cg_showslice_all.m
 
 ------------------------------------------------------------------------
 r708 | gaser | 2015-08-20 11:02:15
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       html/vbm12.html
+
+Added estimation of mean squared error to cg_check_cov.m
+
+------------------------------------------------------------------------
+r709 | gaser | 2015-08-21 11:48:45
