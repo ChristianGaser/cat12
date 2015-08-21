@@ -169,6 +169,11 @@ if issurf
 
   data_array = Y';
   YpY = (Y*Y')/n_subjects;
+
+  % calculate residual mean square of mean adjusted Y
+  Y = Y - repmat(mean(Y,1), [n_subjects 1]);
+  MSE = MSE + sum(Y.*Y,2);
+
   clear Y
 else
   % consider image aspect ratio
@@ -178,6 +183,7 @@ else
 
   vol = zeros(n_subjects, prod(length(1:sep:V(1).dim(1))*length(1:sep:V(1).dim(2))));
   YpY = zeros(n_subjects);
+  MSE = zeros(n_subjects,1);
   data_array = zeros([V(1).dim(1:2) n_subjects]);
 
   %-Start progress plot
@@ -209,7 +215,12 @@ else
         Y = Y - G*(pinv(G)*Y) + Ymean;
       end
       YpY = YpY + (Y*Y')/n_subjects;
+
+      % calculate residual mean square of mean adjusted Y
+      Y = Y - repmat(mean(Y,1), [n_subjects 1]);
+      MSE = MSE + sum(Y.*Y,2);
     end 
+
     spm_progress_bar('Set',j);  
   end
 
@@ -335,11 +346,13 @@ H.show = uicontrol(H.figure,...
 
 % create popoup menu 
 if isempty(xml_files)
-  str  = { 'Boxplot...','Mean correlation'};
-  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1} };
-else
-  str  = { 'Boxplot...','Mean correlation',QM_names};
+  str  = { 'Boxplot...','Mean correlation','Mean squared error'};
   tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
+           {@show_mean_boxplot, MSE, 'Mean squared error', -1} };
+else
+  str  = { 'Boxplot...','Mean correlation','Mean squared error',QM_names};
+  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
+           {@show_mean_boxplot, MSE, 'Mean squared error', -1},...;
            {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
            {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
            {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1} };
