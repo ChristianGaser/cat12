@@ -181,7 +181,9 @@ else
 
   slices = 1:sep:V(1).dim(3);
 
-  vol = zeros(n_subjects, prod(length(1:sep:V(1).dim(1))*length(1:sep:V(1).dim(2))));
+  dimx = length(1:sep:V(1).dim(1));
+  dimy = length(1:sep:V(1).dim(2));
+  Y = zeros(n_subjects, prod(dimx*dimy));
   YpY = zeros(n_subjects);
   MSE = zeros(n_subjects,1);
   data_array = zeros([V(1).dim(1:2) n_subjects]);
@@ -192,40 +194,33 @@ else
 
   for j=slices
 
-    M  = spm_matrix([0 0 j]);
+    M  = spm_matrix([0 0 j 0 0 0 sep sep sep]);
 
     for i = 1:n_subjects
-      img = spm_slice_vol(V(i),M,V(1).dim(1:2),[1 0]);
-      img = img(1:sep:V(1).dim(1),1:sep:V(1).dim(2));
+      img = spm_slice_vol(V(i),M,[dimx dimy],[1 0]);
       img(isnan(img)) = 0;
-      vol(i,:) = img(:);
+      Y(i,:) = img(:);
     end
 
-    % find mask with non-zeros voxels in all images
-    mask = all(vol ~= 0);
+    % make sure data is zero mean
+    Y = Y - repmat(mean(Y,2), [1 prod(dimx*dimy)]);
 
-    if sum(mask)>0
-      % make sure data is zero mean
-      Y = vol(:,mask);
-      Y = Y - repmat(mean(Y,2), [1 sum(mask)]);
+    % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
+    if ~isempty(G) 
+      Ymean = repmat(mean(Y), [n_subjects 1]);
+      Y = Y - G*(pinv(G)*Y) + Ymean;
+    end
+    YpY = YpY + (Y*Y')/n_subjects;
 
-      % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
-      if ~isempty(G) 
-        Ymean = repmat(mean(Y), [n_subjects 1]);
-        Y = Y - G*(pinv(G)*Y) + Ymean;
-      end
-      YpY = YpY + (Y*Y')/n_subjects;
-
-      % calculate residual mean square of mean adjusted Y
-      Y = Y - repmat(mean(Y,1), [n_subjects 1]);
-      MSE = MSE + sum(Y.*Y,2);
-    end 
+    % calculate residual mean square of mean adjusted Y
+    Y = Y - repmat(mean(Y,1), [n_subjects 1]);
+    MSE = MSE + sum(Y.*Y,2);
 
     spm_progress_bar('Set',j);  
+
   end
 
   spm_progress_bar('Clear');
-
 end
 
 
