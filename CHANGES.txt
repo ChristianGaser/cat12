@@ -7030,3 +7030,11 @@ Added estimation of mean squared error to cg_check_cov.m
 
 ------------------------------------------------------------------------
 r709 | gaser | 2015-08-21 11:48:45
+
+M       CHANGES.txt
+M       cg_check_cov.m
+
+Don't use masking anymore in cg_check_cov.m.
+
+------------------------------------------------------------------------
+r710 | gaser | 2015-08-21 17:33:47
