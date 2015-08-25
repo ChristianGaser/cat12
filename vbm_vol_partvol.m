@@ -264,7 +264,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   
   
   %% Closing of gaps between diffent structures:
-  stime = vbm_io_cmd('  Closing for deep structures','g5','',verb,stime); dispc=dispc+1;
+  stime = vbm_io_cmd('  Closing of deep structures','g5','',verb,stime); dispc=dispc+1;
   Yvtd2 = vbm_vol_morph(Ya1==LAB.VT,'d',2*vxd) & Ya1~=LAB.VT;
   % CT and VT
   Yt = vbm_vol_morph(Ya1==LAB.VT,'d',2*vxd) & ...
