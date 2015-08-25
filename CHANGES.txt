@@ -7038,3 +7038,22 @@ Don't use masking anymore in cg_check_cov.m.
 
 ------------------------------------------------------------------------
 r710 | gaser | 2015-08-21 17:33:47
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_extopts.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       html/vbm12.html
+M       vbm_tst_qa.m
+M       vbm_vol_partvol.m
+
+(1) Replaced nanstd by vbm_stat_nanstd in vbm_tst_qa.m.
+(2) Updated cg_vbm_batch.m for new default parameters.
+(3) Many naming changes to outputs and help texts incg_vbm_write, 
+    vbm_vol_partvol, cg_vbm_run_job.
+(4) Removed error message if peaks are too different in cg_vbm_write.m.
+
+------------------------------------------------------------------------
+r711 | gaser | 2015-08-25 15:58:23

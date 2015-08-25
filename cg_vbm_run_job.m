@@ -92,7 +92,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     
     
     %% Interpolation
-    % The interpolation can help to reduce problems for morphologic
+    % The interpolation can help to reduce problems for morphological
     % operations for low resolutions and strong isotropic images. 
     % Especially for Dartel a native resolution higher than the Dartel 
     % resolution helps to reduce normalization artifacts of the
@@ -116,13 +116,13 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         otherwise 
           error('cg_vbm_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
       end
-      vx_voli   = max(0.2,min(vx_vold,vx_voli)); % garanty Dartel resolution
+      vx_voli   = max(0.5,min(vx_vold,vx_voli)); % guarantee Dartel resolution
       
       
       % interpolation 
       if any( (vx_vol ~= vx_voli) )  
        
-        stime = vbm_io_cmd(sprintf('Internal resolution (%4.2fx%4.2fx%4.2f > %4.2fx%4.2fx%4.2f)',vx_vol,vx_voli));
+        stime = vbm_io_cmd(sprintf('Internal resampling (%4.2fx%4.2fx%4.2fmm > %4.2fx%4.2fx%4.2fmm)',vx_vol,vx_voli));
        
         Vi        = rmfield(Vi,'private'); 
         imat      = spm_imatrix(Vi.mat); 
@@ -257,7 +257,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         
         %% SPM preprocessing 1
         
-        stime = vbm_io_cmd('SPM-Preprocessing 1');
+        stime = vbm_io_cmd('SPM preprocessing 1');
         
         % species
         % --------------------------------------------------------------
