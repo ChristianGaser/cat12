@@ -724,7 +724,7 @@ function varargout = vbm_tst_qa(action,varargin)
       %% Bias/Inhomogeneity (original image with smoothed WM segment)
       Yosm = vbm_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm');      % resolution and noise reduction
       for si=1:max(1,min(3,round(QAS.QM.NCR*4))), Yosm = vbm_vol_localstat(Yosm,Yosm>0,1,1); end 
-      QAS.QM.ICR  = nanstd(Yosm(Yosm(:)>0)) / QAS.QM.contrast;
+      QAS.QM.ICR  = vbm_stat_nanstd(Yosm(Yosm(:)>0)) / QAS.QM.contrast;
       QAS.QM.CIR  = 1 / QAS.QM.ICR;
 
       

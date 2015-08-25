@@ -44,27 +44,27 @@ if expert
 
   resnative        = cfg_branch;
   resnative.tag    = 'native';
-  resnative.name   = 'Native resolution preprocessing';
+  resnative.name   = 'Native resolution ';
   resnative.help   = {
     'Preprocessing with native resolution.'
-    'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+    'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
     ''
     'Examples:'
     '  native resolution       internal resolution '
     '   0.95 0.95 1.05     >     0.95 0.95 1.05'
-    '   0.45 0.45 1.70     >     0.45 0.45 1.50'
+    '   0.45 0.45 1.70     >     0.45 0.45 1.50 (if voxel size for normalized images is 1.5mm)'
     '' 
   }; 
 
   resbest        = cfg_entry;
   resbest.tag    = 'best';
-  resbest.name   = 'Best native resolution with interpolation boundary:';
+  resbest.name   = 'Best native resolution';
   resbest.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
   resbest.num    = [1 2];
   resbest.help   = {
     'Preprocessing with the best (minimal) voxel dimension of the native image.'
-    'The first value limits the interpolation, whereas the second value avoid interpolation of nearly correct resolutions.'
-    'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+    'The first parameters defines the lowest spatial resolution for every dimension, while the second is used to avoid tiny interpolations for almost correct resolutions.'
+    'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
     ''
     'Examples:'
     '  Parameters    native resolution       internal resolution'
@@ -82,9 +82,9 @@ if expert
   resfixed.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
   resfixed.num    = [1 2];
   resfixed.help   = {
-    'The first value controls the resolution that is used, if the voxel resolution differ more than the second parameter from the first one. '
-    'The second paramter is used to avoid small interpolation for nearly correct resolutions. ' 
-    'Because of special VBM12 optimization function and to void interpolation artifacts in Dartel output the lowest resolution is limited to 1.5 mm in all cases! Highes resolution is limited to 0.2 mm. '
+    'This options prefers an isotropic voxel size that is controled by the first parameters.  '
+    'The second parameter is used to avoid tiny interpolations for almost correct resolutions. ' 
+    'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
     ''
     'Examples: '
     '  Parameters     native resolution       internal resolution'
@@ -92,13 +92,13 @@ if expert
     '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
     '  [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00'
     '  [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00'
-    '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 1.75 0.75'
+    '  [0.75 0.10]     0.75 0.95 1.25     >     0.75 0.75 0.75'
   }; 
 
 
   restype        = cfg_choice;
   restype.tag    = 'restype';
-  restype.name   = 'Spatial resolution';
+  restype.name   = 'Internal resampling for preprocessing';
   switch cg_vbm_get_defaults('extopts.restype')
     case 'native', restype.val = {resnative};
     case 'best',   restype.val = {resbest};
@@ -106,9 +106,9 @@ if expert
   end
   restype.values = {resnative resbest resfixed};
   restype.help   = {
-    'There are 3 major ways to control the resolution ''native'', ''best'', and ''fixed''. Due to special optimization functions and Dartel low resolution output artifacts the lowest resolution is limited to 1.5 mm in all cases! Highest resolution is limited to 0.2 mm. '
+    'There are 3 major ways to control the internal spatial resolution ''native'', ''best'', and ''fixed''. In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). The minimum spatial resolution is 0.5mm. '
     ''
-    'We commend to use ''best'' for highrest quality. ' 
+    'We commend to use ''best'' option to ensure optimal quality for preprocessing. ' 
   }; 
 end
 
