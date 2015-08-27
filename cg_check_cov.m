@@ -9,8 +9,11 @@ function cg_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data V sample xml_files
+global fname H YpY YpYsorted data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data V sample xml_files sorted
 rev = '$Rev$';
+
+% show data by fileorder
+sorted = 0;
 
 if nargin == 1
   P      = [];
@@ -145,15 +148,28 @@ ws = spm('Winsize','Graphics');
 FS = spm('FontSizes');
 
 pos = struct(...
-    'fig',   [10 10 1.2*ws(3) ws(3)],... % figure
-    'cbar',  [0.715 0.050 0.02 0.50],... % colorbar for correlation matrix
-    'corr',  [-0.05 0.050 0.80 0.80],... % correlation matrix
-    'close', [0.775 0.900 0.20 0.05],... % close button
-    'show',  [0.775 0.850 0.20 0.05],... % button to show worst cases
-    'boxp',  [0.775 0.795 0.20 0.05],... % button to display boxplot
-    'text',  [0.775 0.625 0.20 0.15],... % textbox
-    'slice', [0.775 0.050 0.20 0.40],... % two single images according to position of mouse pointer
-    'slider',[0.775 0.000 0.20 0.03]);   % slider for z-slice
+    'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
+    'cbar',  [0.725 0.050 0.020 0.500],... % colorbar for correlation matrix
+    'corr',  [-0.02 0.050 0.775 0.775],... % correlation matrix
+    'close', [0.775 0.900 0.200 0.050],... % close button
+    'show',  [0.775 0.850 0.200 0.050],... % button to show worst cases
+    'boxp',  [0.775 0.795 0.200 0.050],... % button to display boxplot
+    'sort',  [0.775 0.765 0.200 0.050],... % button to enable ordered matrix
+    'text',  [0.775 0.625 0.200 0.150],... % textbox
+    'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
+    'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
+
+pos = struct(...
+    'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
+    'cbar',  [0.24 0.925 0.3 0.02],... % colorbar for correlation matrix
+    'corr',  [-0.02 0.050 0.825 0.825],... % correlation matrix
+    'close', [0.775 0.900 0.200 0.050],... % close button
+    'show',  [0.775 0.850 0.200 0.050],... % button to show worst cases
+    'boxp',  [0.775 0.795 0.200 0.050],... % button to display boxplot
+    'sort',  [0.775 0.765 0.200 0.050],... % button to enable ordered matrix
+    'text',  [0.775 0.625 0.200 0.150],... % textbox
+    'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
+    'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
 
 if issurf
   % rescue unscaled data min/max
@@ -232,9 +248,6 @@ t      = find(abs(YpY) > 1);
 YpY(t) = YpY(t)./abs(YpY(t));
 YpY(1:n_subjects+1:end) = sign(diag(YpY));
 
-YpYsum = sum(YpY,1);
-[iY, jY] = sort(YpYsum, 2, 'descend');
-
 % extract mean correlation for each data set
 mean_cov = zeros(n_subjects,1);
 for i=1:n_subjects
@@ -267,13 +280,16 @@ if ~isempty(indx) & (sqrt(length(indx)) < 0.5*n_subjects)
   end
 end
 
-% sort files
+% sort data
 [mean_cov_sorted, ind_sorted] = sort(mean_cov,'descend');
+YpYsorted = YpY(ind_sorted,ind_sorted);
+
 threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 n_thresholded = min(find(mean_cov_sorted < threshold_cov));
 
 if ~isempty(n_thresholded)
-  fprintf('\nMean correlation for data below 2 standard deviations:\n');
+  fprintf('\nMean correlation for data below 2 standard deviations.\n');
+  fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   for i=n_thresholded:n_subjects
     fprintf('%s: %3.3f\n',P(ind_sorted(i),:),mean_cov_sorted(i));
   end
@@ -286,40 +302,23 @@ clf(H.figure);
 set(H.figure,'MenuBar','none','Position',pos.fig,...
     'Name','Click in correlation matrix to display slices','NumberTitle','off');
     
-H.ax = axes('Position',pos.corr,'Parent',H.figure);
 cm = datacursormode(H.figure);
 set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
 try, set(cm,'NewDataCursorOnClick',false); end
 
+show_matrix(YpY, sorted);
+
 % create two colormaps
 cmap = [hot(64); gray(64)];
-
-% scale YpY to 0..1
-mn = min(YpY(:));
-mx = max(YpY(:));
-YpY_scaled = (YpY - mn)/(mx - mn);
-
-% show only lower left triangle
-ind_tril = find(tril(ones(size(YpY))));
-ima = zeros(size(YpY_scaled));
-ima(ind_tril) = YpY_scaled(ind_tril);
-image(64*ima)
-set(gca,'XTickLabel','','YTickLabel','');
-axis image
-xlabel('<----- First ---      File order      --- Last ------>  ','FontSize',FS(8),'FontWeight','Bold');
-ylabel('<----- Last ---      File order      --- First ------>  ','FontSize',FS(8),'FontWeight','Bold');
-title('Sample Correlation Matrix','FontSize',FS(10),'FontWeight','Bold');
 colormap(cmap)
 
 % add colorbar
 axes('Position',pos.cbar,'Parent',H.figure);
-image((64:-1:1)');
+image((1:64));
 
 % display YTick with 5 values (limit accuracy for floating numbers)
-set(gca,'XTickLabel','','YTickLabel','','YTick',linspace(1,64,5), 'YTickLabel',...
-  round(100*linspace(mx,mn,5))/100,'TickLength',[0 0]);
-xlabel(gca,'Correlation')
-
+set(gca,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
+  round(100*linspace(min(YpY(:)),max(YpY(:)),5))/100,'TickLength',[0 0]);
 
 % add button for closing all windows
 H.close = uicontrol(H.figure,...
@@ -359,6 +358,18 @@ H.boxp = uicontrol(H.figure,...
         'style','PopUp','HorizontalAlignment','center',...
         'callback','spm(''PopUpCB'',gcbo)',...
         'ToolTipString','Display boxplot',...
+        'Interruptible','on','Visible','on');
+
+str  = { 'Correlation matrix...','Order by selected filename','Sorted by mean correlation'};
+tmp  = { {@show_matrix, YpY, 0},...
+         {@show_matrix, YpYsorted, 1} };
+
+H.sort = uicontrol(H.figure,...
+        'string',str,'Units','normalized',...
+        'position',pos.sort,'UserData',tmp,...
+        'style','PopUp','HorizontalAlignment','center',...
+        'callback','spm(''PopUpCB'',gcbo)',...
+        'ToolTipString','Sort matrix',...
         'Interruptible','on','Visible','on');
 
 H.text = uicontrol(H.figure,...
@@ -437,6 +448,46 @@ end
 return
 
 %-----------------------------------------------------------------------
+function show_matrix(data, order)
+%-----------------------------------------------------------------------
+global P H FS pos sorted
+
+% get sorting order
+sorted = order;
+
+% clear larger area and set background color to update labels and title
+H.ax = axes('Position',[-.1 -.1 0.75 1],'Parent',H.figure);
+cla(H.ax);
+set(H.ax,'Color',[0.8 0.8 0.8]);
+
+H.ax = axes('Position',pos.corr,'Parent',H.figure);
+
+% scale data to 0..1
+mn = min(data(:));
+mx = max(data(:));
+data_scaled = (data - mn)/(mx - mn);
+
+% show only lower left triangle
+ind_tril = find(tril(ones(size(data))));
+ima = zeros(size(data));
+ima(ind_tril) = data_scaled(ind_tril);
+image(64*ima)
+set(gca,'XTickLabel','','YTickLabel','');
+axis image
+
+if sorted
+  xlabel('<----- Best ---      File Order      --- Worst ------>  ','FontSize',FS(8),'FontWeight','Bold');
+  ylabel('<----- Worst ---      File Order      --- Best ------>  ','FontSize',FS(8),'FontWeight','Bold');
+  title('Sorted Sample Correlation Matrix','FontSize',FS(10),'FontWeight','Bold');
+else
+  xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(8),'FontWeight','Bold');
+  ylabel('<----- Last ---      File Order      --- First ------>  ','FontSize',FS(8),'FontWeight','Bold');
+  title('Sample Correlation Matrix','FontSize',FS(10),'FontWeight','Bold');
+end
+
+return
+
+%-----------------------------------------------------------------------
 function show_mean_boxplot(data_boxp, name, quality_order)
 %-----------------------------------------------------------------------
 global fname H FS sample ind_sorted
@@ -465,7 +516,6 @@ for i=1:n_samples
 end
 
 hold on
-
 
 opt = struct('groupnum',0,'ygrid',0,'groupcolor',jet(n_samples));
 
@@ -501,7 +551,7 @@ text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name),'Color','black','Rotation',9
 
 hold off
 
-% estimate sorted index new fo displaying worst files
+% estimate sorted index new for displaying worst files
 if quality_order > 0
   [tmp, ind_sorted] = sort(data_boxp,'descend');
 else
@@ -514,7 +564,7 @@ return
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global V fname data_array H YpY pos
+global V fname data_array H YpY pos sorted ind_sorted
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -546,17 +596,29 @@ mn = min(data_array(:));
 mx = max(data_array(:));
 data_array = 64*((data_array - mn)/(mx-mn));
 
+if sorted
+  if isfield(pos,'x')
+    x = ind_sorted(pos.x);
+    y = ind_sorted(pos.y);
+  end
+else
+  if isfield(pos,'x')
+    x = pos.x;
+    y = pos.y;
+  end
+end
+
 % check whether mouse position is defined
 if isfield(pos,'x')
-  img = [data_array(:,:,pos.y) data_array(:,:,pos.x)]';
+  img = [data_array(:,:,y) data_array(:,:,x)]';
 
   % use gray scale colormap for values > 64
   axes('Position',pos.slice);
   image(65 + flipud(img))
   set(gca,'XTickLabel','','YTickLabel','');
 
-  txt = {sprintf('Correlation: %3.3f',YpY(pos.x,pos.y)),[],['Top: ',spm_file(fname.m{pos.x},'short25')],...
-      ['Bottom: ',spm_file(fname.m{pos.y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+  txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(fname.m{x},'short25')],...
+      ['Bottom: ',spm_file(fname.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   set(H.text,'String',txt);
 end
 
@@ -565,7 +627,7 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global fname H YpY data_array pos issurf mn_data mx_data
+global fname H YpY YpYsorted data_array pos issurf mn_data mx_data ind_sorted sorted
 
 pos_mouse = get(event_obj, 'Position');
 
@@ -579,22 +641,34 @@ end
 pos.x = pos_mouse(1);
 pos.y = pos_mouse(2);
 
+if sorted
+  if isfield(pos,'x')
+    x = ind_sorted(pos.x);
+    y = ind_sorted(pos.y);
+  end
+else
+  if isfield(pos,'x')
+    x = pos.x;
+    y = pos.y;
+  end
+end
+
 % text info for data cursor window
 if issurf
-  txt = {sprintf('Correlation: %3.3f',YpY(pos.x,pos.y)),['Left: ',fname.m{pos.x}],...
-    ['Right: ',fname.m{pos.y}]};
+  txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',fname.m{x}],...
+    ['Right: ',fname.m{y}]};
 else
-  txt = {sprintf('Correlation: %3.3f',YpY(pos.x,pos.y)),['Top: ',fname.m{pos.x}],...
-    ['Bottom: ',fname.m{pos.y}]};
+  txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',fname.m{x}],...
+    ['Bottom: ',fname.m{y}]};
 end
 
 % text info for textbox
 if issurf
-  txt2 = {sprintf('Correlation: %3.3f',YpY(pos.x,pos.y)),[],['Left: ',...
-    spm_file(fname.m{pos.x},'short25')],['Right: ',spm_file(fname.m{pos.y},'short25')]};
+  txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Left: ',...
+    spm_file(fname.m{x},'short25')],['Right: ',spm_file(fname.m{y},'short25')]};
 else
-  txt2 = {sprintf('Correlation: %3.3f',YpY(pos.x,pos.y)),[],['Top: ',...
-    spm_file(fname.m{pos.x},'short25')],['Bottom: ',spm_file(fname.m{pos.y},'short25')],...
+  txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
+    spm_file(fname.m{x},'short25')],['Bottom: ',spm_file(fname.m{y},'short25')],...
     [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
 end      
 
@@ -604,12 +678,12 @@ axes('Position',pos.slice);
 if issurf 
   % use indexed 2D-sheet to display surface data as image
   % check surface size to use indexed 2D map
-  if (length(data_array(:,pos.x)) == 163842)
+  if (length(data_array(:,x)) == 163842)
     ind = spm_load(fullfile(spm('dir'),'toolbox','vbm12','templates_surfaces','fsavg.index2D_256x128.txt'));
-    img = [reshape(data_array(ind,pos.x),[256,128]) reshape(data_array(ind,pos.y),[256,128])];
+    img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
     img = circshift(img,128);
   else
-    img = [data_array(:,pos.y) data_array(:,pos.x)]';
+    img = [data_array(:,y) data_array(:,x)]';
   end
   
   % scale img to 0..64
@@ -619,7 +693,7 @@ if issurf
 else
   % add slider for colume data
   set(H.mm,'Visible','on');
-  img = [data_array(:,:,pos.y) data_array(:,:,pos.x)]';
+  img = [data_array(:,:,y) data_array(:,:,x)]';
 end
 
 % display image with 2nd colorbar (gray)
