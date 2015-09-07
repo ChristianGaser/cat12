@@ -9,8 +9,8 @@ OV.opacity = Inf;                                      % transparence value for 
 OV.cmap    = jet;                                      % colormap for overlay
 
 % name of files
-OV.name=str2mat(fullfile(spm('dir'),'tpm','grey.nii'),...
-                fullfile(spm('dir'),'tpm','white.nii'));
+OV.name = str2mat(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
+                  fullfile(spm('dir'),'tpm','labels_Neuromorphometrics.nii'));
                 
 % range for each file
 % Use range 0..0 if you want to autoscale range.
@@ -30,12 +30,14 @@ OV.name=str2mat(fullfile(spm('dir'),'tpm','grey.nii'),...
 % or give one field, which is valid for all.
 % Be carefule: intensities below the lower range are not shown!
 OV.range   =[[0.5 1]; [0.5 1]];
+
+% OV.func can be used to set the image to defined values (e.g. NaN) for the given range
 %OV.func = 'i1(i1>-1.3 & i1<1.3)=NaN;';
 
 % selection of slices and orientations
-OV.slices_str = char('[-30 -5 5 40 50 60]','-30:2:30','-20:5:45');
+% if OV.slices_str is an empty string then slices with local maxima are estimated automatically
+OV.slices_str = char('','-30:2:30','-20:5:45');
 OV.transform = char('axial','sagittal','coronal');
-OV.printstr = 'print -r300 -painters -noui';
 
 % define output format of slices
 OV.labels.format = '%3.1f';
