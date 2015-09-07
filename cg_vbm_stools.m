@@ -62,7 +62,7 @@ function stools = cg_vbm_stools(expert)
   check_mesh_cov.val  = {sample_cov,qam,transform};
   check_mesh_cov.prog = @cg_check_cov;
   check_mesh_cov.help = {
-  'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be rsampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
+  'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
   ''
   'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
 
@@ -186,8 +186,8 @@ function stools = cg_vbm_stools(expert)
   v2s.boundary_pos.val     = {0};
   v2s.boundary_pos.num     = [1 1];
   v2s.boundary_pos.help    = {
-    'Absolute position from tissue boundary. Negative values for deeper.'
-    'All values are limited by the maximum possible distance within a cortical structur such as gyri or sucli.'
+    'Absolute position from tissue boundary. Use negative values for deeper positions.'
+    'All values are limited by the maximum possible distance within a cortical structure such as gyri or sulci.'
   };
   
   
@@ -213,7 +213,7 @@ function stools = cg_vbm_stools(expert)
   v2s.tissue_class.values  = {1 2 3};
   v2s.tissue_class.val     = {1};
   v2s.tissue_class.help    = {
-    'Tissue class were the relative positions were estimated.'
+    'Tissue class for which the relative positions are estimated.'
   };
 
   v2s.tissue_pos         = cfg_entry;
@@ -241,16 +241,6 @@ function stools = cg_vbm_stools(expert)
 
   %% -- tissue sample --
   
-  v2s.tissuerange_class         = cfg_menu;
-  v2s.tissuerange_class.tag     = 'class';
-  v2s.tissuerange_class.name    = 'Tissue Class';
-  v2s.tissuerange_class.labels  = {'GM','WM','CSF'}; % hull
-  v2s.tissuerange_class.values  = {1 2 3};
-  v2s.tissuerange_class.val     = {1};
-  v2s.tissuerange_class.help    = {
-    'Tissue class were the relative positions were estimated.'
-  };
-
   v2s.tissuerange_stepsize         = cfg_entry;
   v2s.tissuerange_stepsize.tag     = 'stepsize';
   v2s.tissuerange_stepsize.name    = 'Stepsize';
@@ -258,7 +248,8 @@ function stools = cg_vbm_stools(expert)
   v2s.tissuerange_stepsize.val     = {0.1};
   v2s.tissuerange_stepsize.num     = [1 1];
   v2s.tissuerange_stepsize.help    = {
-    'Relative stepsize of the sample points centered around 0.5.  In example a stepsize of 0.3 will result in 3 sample points at a relative position of 0.2, 0.5 and 0.8.' 
+    'Relative stepsize of the sample points centered around 0.5.  For example a stepsize of 0.3 will result in 3 sample points at a relative position of 0.2, 0.5 and 0.8, '
+    'while a stepsize of 0.1 will result in sample points 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0.' 
   };
 
   v2s.tissuerange_sample         = cfg_menu;
@@ -273,14 +264,14 @@ function stools = cg_vbm_stools(expert)
   
   v2s.tissuerange         = cfg_branch;
   v2s.tissuerange.tag     = 'tissuerange';
-  v2s.tissuerange.name    = 'Relative Position Within a Tissue Class (Sample)';
+  v2s.tissuerange.name    = 'Sample Across Several Relative Positions Within a Tissue Class';
   v2s.tissuerange.val     = {
-    v2s.tissuerange_class ...
+    v2s.tissue_class ...
     v2s.tissuerange_stepsize ...
     v2s.tissuerange_sample ...
     };
   v2s.boundary.help    = {
-    'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, median, minimum, maximum or standard deviation'
+    'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, median, min, max or standard deviation'
   };
 
   %% -- boundary sample? 
@@ -390,7 +381,7 @@ function stools = cg_vbm_stools(expert)
    
   v2s.data_sub         = cfg_files; 
   v2s.data_sub.tag     = 'data_vol';
-  v2s.data_sub.name    = 'Volumes';
+  v2s.data_sub.name    = 'Volumes in native space';
   v2s.data_sub.filter  = 'image';
   v2s.data_sub.ufilter = '^(?!wmr|wp|w0rp|wc).*'; % no normalized images
   v2s.data_sub.num     = [1 Inf];
@@ -433,7 +424,7 @@ function stools = cg_vbm_stools(expert)
     
   v2s.data_norm         = cfg_files; 
   v2s.data_norm.tag     = 'data_vol';
-  v2s.data_norm.name    = 'Volumes';
+  v2s.data_norm.name    = 'Spatially Normalized Volumes';
   v2s.data_norm.filter  = 'image';
   v2s.data_norm.ufilter = '^(?=wm|wp|w0rp|wc).*'; % only normalized images
   v2s.data_norm.num     = [1 Inf];
@@ -454,7 +445,7 @@ function stools = cg_vbm_stools(expert)
   v2s.vol2tempsurf.prog = @vbm_surf_vol2surf;
   v2s.vol2tempsurf.help = {
     'Map spatially normalized data (in template space) to template surface.'
-    'The template surface was generated by VBM12 surface processing [1] of the average of 550 Dartel-normalized images of the IXI database that were also used to create the IXI Dartel template.   '
+    'The template surface was generated by VBM12 surface processing [1] of the average of 555 Dartel-normalized images of the IXI database that were also used to create the IXI Dartel template.   '
     ''
     '  [1] Dahnke, R., Yotter, R. A., and Gaser, C. 2012.'
     '  Cortical thickness and central surface estimation.'
@@ -506,7 +497,7 @@ function stools = cg_vbm_stools(expert)
   sc.outdir.num     = [0 1];
   sc.outdir.val{1}  = {''};
   sc.outdir.help    = {
-    'Files  produced by this  function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
+    'Files produced by this function will be written into this output directory.  If no directory is given, images will be written  to current working directory.  If both output filename and output directory contain a directory, then output filename takes precedence.'
   };
   
   sc.surfname         = cfg_entry;
@@ -579,7 +570,7 @@ function stools = cg_vbm_stools(expert)
   };
   surfcalc.prog = @vbm_surf_calc;
   surfcalc.help = {
-    'Mathematical operations for surface data (texture).'
+    'Mathematical operations for surface data (textures).'
     'It works similar to ''spm_imcalc''.  The input surface data must have the same number of entries.  This means that the must came from same hemisphere of a subject, or the have to be resampled.'
   };
 
@@ -628,7 +619,7 @@ function stools = cg_vbm_stools(expert)
   surfresamp.val  = {data_surf,fwhm};
   surfresamp.prog = @vbm_surf_resamp;
   surfresamp.help = {
-  'In order to analyze surface parameters all data have to be rsampled into template space and the rsampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
+  'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
 
 
 
@@ -641,7 +632,7 @@ function stools = cg_vbm_stools(expert)
   data_fs.filter  = 'dir';
   data_fs.ufilter = '.*';
   data_fs.num     = [1 Inf];
-  data_fs.help    = {'Select subject folders of freesurfer data to rsample thickness data.'};
+  data_fs.help    = {'Select subject folders of freesurfer data to resample thickness data.'};
 
   outdir         = cfg_files;
   outdir.tag     = 'outdir';

@@ -7122,3 +7122,22 @@ M       tbx_cfg_vbm.m
 
 ------------------------------------------------------------------------
 r717 | gaser | 2015-09-07 09:09:56
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_run_job.m
+M       cg_vbm_stools.m
+M       cg_vbm_stoolsexp.m
+M       cg_vbm_tools.m
+M       cg_vbm_write.m
+M       vbm_surf_createCS.m
+
+(1) Corrected some typos in cg_vbm_defaults.m and vbm_surf_createCS.m.
+(2) Updated help text in cg_vbm_tools.m, cg_vbm_stoolsexp.m,
+    cg_vbm_stools.m, and cg_vbm_run_job.m
+(3) Updated output in cg_vbm_write.m.
+(4) Volumes are now printed in black in cg_vbm_write.m.
+
+
+------------------------------------------------------------------------
+r718 | gaser | 2015-09-07 15:15:41

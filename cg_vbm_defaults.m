@@ -138,7 +138,7 @@ vbm.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 
                                   %                                           2 - also for segmentation (corred to WM like SPM); 3 - separate class
 vbm.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
 vbm.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
-vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
+vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
 
 % resolution options:
 vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'

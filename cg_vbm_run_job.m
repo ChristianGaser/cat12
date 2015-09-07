@@ -68,9 +68,9 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         end
 
         switch job.vbm.sanlm
-          case {1,3}, stime = vbm_io_cmd('NLM-Filter'); 
-          case {2,4}, stime = vbm_io_cmd('NLM-Filter with multi-threading');
-          case {5},   stime = vbm_io_cmd('Temporary NLM-Filter with multi-threading');
+          case {1,3}, stime = vbm_io_cmd('NLM-filter'); 
+          case {2,4}, stime = vbm_io_cmd('NLM-filter with multi-threading');
+          case {5},   stime = vbm_io_cmd('Temporary NLM-filter with multi-threading');
         end
 
 
@@ -180,7 +180,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
 
         %% Initial affine registration.
-        stime = vbm_io_cmd('Affine Registration'); 
+        stime = vbm_io_cmd('Affine registration'); 
  
         Affine  = eye(4);
         [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
@@ -206,7 +206,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           % smooth source with 8mm
           VF1 = spm_smoothto8bit(VF,8);
          
-          %stime = vbm_io_cmd('Initial Coarse Affine Registration'); 
+          %stime = vbm_io_cmd('Initial carse afine registration'); 
           aflags     = struct('sep',8,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -244,7 +244,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         % Fine Affine Registration with 3 mm sampling distance
         % Especially for non-human TPMs a brain mask is important
         % to avoid 'SingularMatrix' errors!
-        %stime = vbm_io_cmd('Fine Affine Registration');
+        %stime = vbm_io_cmd('Fine affine registration');
         spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
         Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
         if ~any(isnan(Affine3(1:3,:))), Affine = Affine3; end
