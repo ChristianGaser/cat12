@@ -178,7 +178,7 @@ for n=1:N,
     chan(n).T  = res.Tbias{n};
 
     [pth1,nam1] = spm_fileparts(res.image(n).fname);
-    if vbm.sanlm>0
+    if vbm.sanlm>0 && job.extopts.NCstr
       nam1 = nam1(2:end);
     end
     chan(n).ind      = res.image(n).n;
