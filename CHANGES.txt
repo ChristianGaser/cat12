@@ -7066,3 +7066,12 @@ Added option to sort data according to mean correlation in cg_check_cov.m.
 
 ------------------------------------------------------------------------
 r712 | gaser | 2015-08-27 16:09:38
+
+M       CHANGES.txt
+M       cg_check_cov.m
+M       html/vbm12.html
+
+Removed bug in cg_check_cov.m fpr MSE estimation for surfaces.
+
+------------------------------------------------------------------------
+r713 | gaser | 2015-09-07 08:49:29
