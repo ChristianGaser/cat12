@@ -134,7 +134,7 @@ function stoolsexp = cg_vbm_stoolsexp
   resample.main.vfiles  = @vfiles_resample;
   resample.main.prog    = @vbm_surf_resample;
   resample.main.help    = {
-    'In order to analyze surface parameters all data have to be rsampled into template space and the rsampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
+    'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
 
 
 
