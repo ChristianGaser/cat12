@@ -1,4 +1,4 @@
-function cg_vbm_defaults_template_humanIXI555
+function cg_vbm_defaults
 % Sets the defaults for VBM
 % FORMAT cg_vbm_defaults
 %_______________________________________________________________________
@@ -11,7 +11,7 @@ function cg_vbm_defaults_template_humanIXI555
 
 global vbm
 
-% important fields of the animal version
+% Important fields for the processing of animal data
 %=======================================================================
 % - vbm.opts.tpm 
 % - vbm.extopts.darteltpm
@@ -26,7 +26,7 @@ global vbm
 %=======================================================================
 
 
-% Estimation options
+% Options for inital SPM12 segmentation that is used as starting point for VBM12
 %=======================================================================
 vbm.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
@@ -95,7 +95,7 @@ vbm.output.jacobian.warped = 0;
 % order is [forward inverse]
 vbm.output.warps        = [0 0];
 
-% experimental maps
+% Experimental maps (not for general use)
 %=======================================================================
 
 % partitioning atlas maps (vbm12 atlas)
@@ -114,8 +114,11 @@ vbm.output.te.native = 0;
 vbm.output.te.warped = 0;
 vbm.output.te.dartel = 0;
 
-% expert options
+% Expert options
 %=======================================================================
+
+% set this option in order to see all options in GUI
+vbm.extopts.expertgui     = 0;     % use full GUI
 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 vbm.extopts.species      = 'human';  
@@ -125,20 +128,58 @@ vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 
 vbm.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
 
 % segmentation options
+vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
+                                  %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter;
+                                  %                   5 - only ORNLM filter for the final result
+vbm.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
 vbm.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 vbm.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
 vbm.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
                                   %                                           2 - also for segmentation (corred to WM like SPM); 3 - separate class
 vbm.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
 vbm.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
-vbm.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
-vbm.extopts.sanlm        = 3;     % use SANLM filter: 0 - no SANLM; 1 - SANLM with single-threading; 2 - SANLM with multi-threading (not stable!); 
-                                  %                   3 - SANLM with single-threading + ORNLM filter; 4 - SANLM with multi-threading (not stable!) + ORNLM filter;
-                                  %                   5 - only ORNLM filter for the final result
 vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try invertation (default), 2 - synthesize T1 image
 
 % resolution options:
 vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
+%{
+best:
+    Preprocessing with native resolution.
+    In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
+
+    Examples:
+      native resolution       internal resolution 
+       0.95 0.95 1.05     >     0.95 0.95 1.05
+       0.45 0.45 1.70     >     0.45 0.45 1.50 (if voxel size for normalized images is 1.5mm)
+
+native:
+    Preprocessing with the best (minimal) voxel dimension of the native image.'
+    The first parameters defines the lowest spatial resolution for every dimension, while the second is used to avoid tiny interpolations for almost correct resolutions.
+    In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
+
+    Examples:
+      Parameters    native resolution       internal resolution
+      [1.00 0.10]    0.95 1.05 1.25     >     0.95 1.00 1.00
+      [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00
+      [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75  
+      [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80  
+      [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45  
+
+fix:
+    This options prefers an isotropic voxel size that is controled by the first parameters.  
+    The second parameter is used to avoid tiny interpolations for almost correct resolutions. 
+    In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
+    
+    Examples: 
+      Parameters     native resolution       internal resolution
+      [1.00 0.10]     0.45 0.45 1.70     >     1.00 1.00 1.00
+      [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00
+      [1.00 0.02]     0.95 1.05 1.25     >     1.00 1.00 1.00
+      [1.00 0.10]     0.95 1.05 1.25     >     0.95 1.05 1.00
+      [0.75 0.10]     0.75 0.95 1.25     >     0.75 0.75 0.75
+
+%}
+
 vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
 
 % registration and normalization options 
@@ -150,7 +191,9 @@ vbm.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.
 vbm.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
 % surface options
-vbm.extopts.pbtres       = 0.5;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
+vbm.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm: 
+                                  % 1   - normal resolution
+                                  % 0.5 - high res (default) 
 
 % visualisation, print and debugging options
 vbm.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -160,11 +203,10 @@ vbm.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debu
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 
 vbm.extopts.gui           = 1;     % use GUI 
-vbm.extopts.expertgui     = 1;     % use full GUI
 
 % expert options - ROIs
 %=======================================================================
-% ROI maps from different sources mapped to VBM-space [IXI555]
+% ROI maps from different sources mapped to Dartel VBM-space of IXI-template
 %  { filename , refinement , tissue }
 %  filename    = ''                                                     - path to the ROI-file
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
