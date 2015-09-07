@@ -144,7 +144,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     Ywd  = max(Ywd,Ywdt); 
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
-    stime = vbm_io_cmd('  Sulcus witdh estimation');
+    stime = vbm_io_cmd('  Sulcus width estimation');
     Ycdt = vbdist(Yppis,Ymfs>0.5); 
     Ycdt = vbm_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
     Ycdt(Ymfs<=0.5)=0;

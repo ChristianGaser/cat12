@@ -44,6 +44,17 @@ if ~isfield(job.output,'WMH')
                            'mod',0, ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
+if ~isfield(job.output,'CSF')
+  job.output.CSF  = struct('native',cg_vbm_get_defaults('output.CSF.native'), ...
+                           'warped',cg_vbm_get_defaults('output.CSF.warped'), ...
+                           'mod',cg_vbm_get_defaults('output.CSF.mod'), ...
+                           'dartel',cg_vbm_get_defaults('output.CSF.dartel'));
+end
+if ~isfield(job.output,'label')
+  job.output.label  = struct('native',cg_vbm_get_defaults('output.label.native'), ...
+                             'warped',cg_vbm_get_defaults('output.label.warped'), ...
+                             'dartel',cg_vbm_get_defaults('output.label.dartel'));
+end
 FN = {'INV','atlas','debug','WMHC','NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb','vox'};
 for fni=1:numel(FN)
   if ~isfield(job.extopts,FN{fni})
@@ -113,7 +124,7 @@ if do_dartel
   end
 end
 
-stime = vbm_io_cmd('SPM Preprocessing 2');
+stime = vbm_io_cmd('SPM preprocessing 2');
 
 
 % remove noise/interpolation prefix
@@ -566,7 +577,7 @@ end
 %  ---------------------------------------------------------------------
 debug = 1; % this is a manuel debuging option for matlab debuging mode
 if ~(vbm.sanlm==5 && job.extopts.NCstr)
-  stime = vbm_io_cmd('Global Intensity Correction');;
+  stime = vbm_io_cmd('Global intensity correction');;
   [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,vbm_warnings] = vbm_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
   if debug, Ym2=Ym; end %#ok<NASGU>
   % update in inverse case
@@ -587,7 +598,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
   % variance of the tissue, a further harder noise correction is meaningful.
   % Finally, a stronger NLM-filter is better than a strong MRF filter!
   if vbm.sanlm>0 && vbm.sanlm<3 && job.extopts.NCstr
-    stime = vbm_io_cmd('Noise correction after Global Intensity Correction');
+    stime = vbm_io_cmd('Noise correction after global intensity correction');
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
       if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1,0); 
@@ -617,7 +628,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
     ornlmstr = round(ornlmstr*10^6)/10^6;
     clear Yn Ycls1 Ycls2;
 
-    stime = vbm_io_cmd(sprintf('NLM-Filter after Global Intensity Correction (ORNLMstr=%0.2f)',ornlmstr));
+    stime = vbm_io_cmd(sprintf('NLM-Filter after global intensity correction (ORNLMstr=%0.2f)',ornlmstr));
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       if ornlmstr>0.01,
         Ymss = ornlmMex(Yms,3,1,ornlmstr); % double???
@@ -642,7 +653,7 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
   end
 else
 % use only ornlm e.g. for magnetisation transfer images ...
-  stime = vbm_io_cmd('Global Intensity Correction');
+  stime = vbm_io_cmd('Global intensity correction');
   
   % interpolation 
   vbm_vol_imcalc(VT0,res.image(1),'i1',struct('interp',6,'verb',0));
@@ -671,7 +682,7 @@ else
   fprintf('%4.0fs\n',etime(clock,stime));
   
   % filtering
-  stime = vbm_io_cmd(sprintf('Only ORNLM-Filter (ORNLMstr=%0.2f)',ornlmstr));
+  stime = vbm_io_cmd(sprintf('ORNLM-Filter (ORNLMstr=%0.2f)',ornlmstr));
   if ornlmstr>0.01, Yms = ornlmMex(Ym,3,1,ornlmstr); end
   Ym(Ym<1.3) = Yms(Ym<1.3); clear Yms;  % avoid filtering of blood vessels; 
   Ysrc = vbm_pre_gintnormi(Ym,Tth);
@@ -689,7 +700,7 @@ end
 %% Local Intensity Correction 
 if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
-  stime = vbm_io_cmd(sprintf('Local Adaptive Segmentation (LASstr=%0.2f)',job.extopts.LASstr));
+  stime = vbm_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
   [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.vbm.vbm12atlas,vbm.darteltpm);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
@@ -710,7 +721,7 @@ end
 %  But for bias correction the ROIs are important too, to avoid over
 %  corrections in special regions like the cerbellum and subcortex. 
 %  ---------------------------------------------------------------------
-stime = vbm_io_cmd('ROI Segmentation (Partitioning)');
+stime = vbm_io_cmd('ROI segmentation (partitioning)');
 % replace by more exact partitioning ... for speedup use lower resolution
 % [Yl1,YBG,Ycls] = vbm_pre_fastpart(Ym,Ycls,Yb,Yy,vx_vol);
 [Yl1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,job.vbm.vbm12atlas);
@@ -729,7 +740,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  Of course we only want to do this for highres T1 data!
 %  ---------------------------------------------------------------------
 if job.extopts.BVCstr && ~opt.inv_weighting && all(vx_vol<2); 
-  stime = vbm_io_cmd(sprintf('Blood Vessel Correction (BVCstr=%0.2f)',job.extopts.BVCstr));
+  stime = vbm_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
   clear Ysrc;
   
   Ybv  = vbm_vol_smooth3X(vbm_vol_smooth3X( ...
@@ -935,7 +946,7 @@ if do_cls && do_defs
     cleanupdist = min(2,max(0,1 + 2*job.extopts.cleanupstr));
     
     
-    stimec = vbm_io_cmd(sprintf('Final Cleanup (gcutstr=%0.2f)',cleanupstr));
+    stimec = vbm_io_cmd(sprintf('Final cleanup (gcutstr=%0.2f)',cleanupstr));
     if debug; prob = probo; end
 
     
@@ -978,7 +989,7 @@ if do_cls && do_defs
     if ~debug, clear Ycbp Ycbn Ylhp; end
     
     %% roi to change GM or WM to CSF or background
-    stime = vbm_io_cmd('  Level 1 cleanup (Brain masking)','g5','',verb,stime); dispc=dispc+1;
+    stime = vbm_io_cmd('  Level 1 cleanup (brain masking)','g5','',verb,stime); dispc=dispc+1;
     Yrw = Yp0>0 & Yroi & Ymb>0.9+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
     Yrw = Yrw | smooth3(Yrw)>0.3-0.3*cleanupstr;                        % dilate region
     Ygw = vbm_vol_morph(Yp0>=2 & ~Yrw,'lo',1); 
@@ -1133,9 +1144,9 @@ if do_cls && do_defs
   if job.extopts.WMHC && job.extopts.WMHCstr>0 && ~opt.inv_weighting; 
     
     if job.extopts.WMHC==1
-      stime = vbm_io_cmd(sprintf('Temporary WMH Correction for normalization (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+      stime = vbm_io_cmd(sprintf('Internal WMH correction for spatial normalization (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     elseif job.extopts.WMHC>1
-      stime = vbm_io_cmd(sprintf('Permanent WMH Correction (WMHCstr=%0.2f)',job.extopts.WMHCstr));
+      stime = vbm_io_cmd(sprintf('Permanent WMH correction (WMHCstr=%0.2f)',job.extopts.WMHCstr));
     end
     
     % setting of furter WMHC that can now be detected by the further
@@ -1317,7 +1328,7 @@ trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
 %%
 % dartel spatial normalization to given template
 if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
-    stime = vbm_io_cmd('Dartel Registration'); 
+    stime = vbm_io_cmd('Dartel registration'); 
     
     % use GM/WM for dartel
     n1 = 2;
@@ -1395,7 +1406,8 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a z k1
     
     fprintf(sprintf('%s',repmat('\b',1,it0*39-9)));
-    fprintf('%4.0fs\n',etime(clock,stime));
+    fprintf('\n');
+    vbm_io_cmd(' ','g5','',verb,stime);
     %fprintf('\n%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
 end
 
@@ -1442,7 +1454,7 @@ end
 
 trans.native.Vo = VT0;
 trans.native.Vi = VT;
-if job.extopts.WMHC==1 && ~opt.inv_weighting;
+if job.extopts.WMHC==1 && job.extopts.WMHCstr>0 && ~opt.inv_weighting;
   Ycls = Yclso; clear Yclso;
 end
 
@@ -1451,7 +1463,7 @@ end
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
-stime = vbm_io_cmd('Quality Control');
+stime = vbm_io_cmd('Quality check');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0,'method','vbm12'));
 clear Yo Ybf Yp0 qas;
@@ -1654,7 +1666,7 @@ end
 %  used.  
 %  ---------------------------------------------------------------------
 if job.output.ROI && do_cls 
-  stime = vbm_io_cmd('ROI Estimation');   
+  stime = vbm_io_cmd('ROI estimation');   
 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
@@ -1749,7 +1761,7 @@ clear wYp0 wYcls wYv
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
-stime = vbm_io_cmd('Quality Check');
+stime = vbm_io_cmd('Quality check');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
           struct('write_csv',0,'write_xml',0,'method','vbm12'));
@@ -1844,18 +1856,22 @@ if vbm.print
   % Subject Measures
   % --------------------------------------------------------------------
   str3 = struct('name', '\bfVolumes:','value',sprintf('%4s %4s %4s %4s cm%s','CSF','GM','WM','WMH')); 
-  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%s %s %s %s cm%s', ...
-          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
-          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
-          mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f',qa.SM.vol_abs_CGW(3)),...
-          mark2str2(qam.SM.vol_rel_CGW(4),'%4.0f',qa.SM.vol_abs_CGW(4)),char(179)))];
-  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%s %s %s %s %%', ...
-          mark2str2(qam.SM.vol_rel_CGW(1),'%0.1f',qa.SM.vol_rel_CGW(1)*100),...
-          mark2str2(qam.SM.vol_rel_CGW(2),'%0.1f',qa.SM.vol_rel_CGW(2)*100),...
-          mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f',qa.SM.vol_rel_CGW(3)*100),...
-          mark2str2(qam.SM.vol_rel_CGW(4),'%0.1f',qa.SM.vol_rel_CGW(4)*100)))];
-  str3 = [str3 struct('name', '\bfTIV:'              ,'value',...
-          sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f cm' char(179)],qa.SM.vol_TIV)))];  
+  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f cm%s', ...
+          qa.SM.vol_abs_CGW(1),qa.SM.vol_abs_CGW(2),qa.SM.vol_abs_CGW(3),qa.SM.vol_abs_CGW(4),char(179)))];
+  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f cm%s', ...
+          qa.SM.vol_rel_CGW(1),qa.SM.vol_rel_CGW(2),qa.SM.vol_rel_CGW(3),qa.SM.vol_rel_CGW(4),char(179)))];
+%  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%s %s %s %s cm%s', ...
+%          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
+%          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
+%          mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f',qa.SM.vol_abs_CGW(3)),...
+%          mark2str2(qam.SM.vol_rel_CGW(4),'%4.0f',qa.SM.vol_abs_CGW(4)),char(179)))];
+%  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%s %s %s %s %%', ...
+%          mark2str2(qam.SM.vol_rel_CGW(1),'%0.1f',qa.SM.vol_rel_CGW(1)*100),...
+%          mark2str2(qam.SM.vol_rel_CGW(2),'%0.1f',qa.SM.vol_rel_CGW(2)*100),...
+%          mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f',qa.SM.vol_rel_CGW(3)*100),...
+%          mark2str2(qam.SM.vol_rel_CGW(4),'%0.1f',qa.SM.vol_rel_CGW(4)*100)))];
+%  str3 = [str3 struct('name', '\bfTotal brain volume including CSF:'              ,'value',...
+%          sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f cm' char(179)],qa.SM.vol_TIV)))];  
   if opt.vbmi      
     str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
             sprintf('%s',marks2str(qam.QM.vbm_expect(1),sprintf('%0.1f (%2.0f %%)',...

@@ -289,7 +289,7 @@ nuisance.help  = {'Add a nuisance parameter to be removed from data'};
 
 slice         = cfg_entry;
 slice.tag     = 'slice';
-slice.name    = 'Show slice (in mm)?';
+slice.name    = 'Selected slice (in mm)?';
 slice.strtype = 'r';
 slice.num     = [1 1];
 slice.val     = {0};
@@ -335,7 +335,7 @@ qam.num     = [0 Inf];
 qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
 data_vbm = cfg_files;
-data_vbm.name = 'Sample';
+data_vbm.name = 'Sample data';
 data_vbm.tag  = 'data_vbm';
 data_vbm.filter = 'image';
 data_vbm.num  = [1 Inf];
@@ -642,7 +642,7 @@ surfresamp.name = 'Resample and smooth surface parameters';
 surfresamp.val  = {data_surf,fwhm};
 surfresamp.prog = @vbm_surf_resamp;
 surfresamp.help = {
-'In order to analyze surface parameters all data have to be rsampled into template space and the rsampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
+'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
 
 data_fs         = cfg_files;
 data_fs.tag     = 'data_fs';
@@ -650,7 +650,7 @@ data_fs.name    = 'Freesurfer subject directories';
 data_fs.filter  = 'dir';
 data_fs.ufilter = '.*';
 data_fs.num     = [1 Inf];
-data_fs.help    = {'Select subject folders of freesurfer data to rsample thickness data.'};
+data_fs.help    = {'Select subject folders of freesurfer data to resample thickness data.'};
 
 surfresamp_fs      = cfg_exbranch;
 surfresamp_fs.tag  = 'surfresamp_fs';
@@ -658,7 +658,7 @@ surfresamp_fs.name = 'Rsample and smooth existing freesurfer thickness data';
 surfresamp_fs.val  = {data_fs,fwhm,outdir};
 surfresamp_fs.prog = @vbm_surf_resamp_freesurfer;
 surfresamp_fs.help = {
-'If you have existing freesurfer thickness data this function can be used to rsample these data, smooth the rsampled data, and convert freesurfer data to gifti format.'};
+'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
 
 data_surf         = cfg_files;
 data_surf.tag     = 'data_surf';
@@ -666,7 +666,7 @@ data_surf.name    = 'Sample';
 data_surf.filter  = 'gifti';
 data_surf.ufilter = 'resampled';
 data_surf.num     = [1 Inf];
-data_surf.help    = {'Select rsample surfaces parameter files.'};
+data_surf.help    = {'Select resample surfaces parameter files.'};
 
 sample         = cfg_repeat;
 sample.tag     = 'sample';
@@ -682,7 +682,7 @@ check_mesh_cov.name = 'Check sample homogeneity of surfaces';
 check_mesh_cov.val  = {sample,qam,transform};
 check_mesh_cov.prog = @cg_check_cov;
 check_mesh_cov.help = {
-'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be rsampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
+'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
 ''
 'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
 
