@@ -7087,3 +7087,13 @@ M       cg_slice_overlay_ui.m
  
 ------------------------------------------------------------------------
 r714 | gaser | 2015-09-07 08:54:19
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+M       vbm12.fig
+
+(1) Many changes of text and names in cg_vbm_stools.m.
+(2) Changed some names in vbm12.fig.
+
+------------------------------------------------------------------------
+r715 | gaser | 2015-09-07 08:56:33
