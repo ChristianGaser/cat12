@@ -7075,3 +7075,15 @@ Removed bug in cg_check_cov.m fpr MSE estimation for surfaces.
 
 ------------------------------------------------------------------------
 r713 | gaser | 2015-09-07 08:49:29
+
+M       CHANGES.txt
+M       cg_slice_overlay.m
+M       cg_slice_overlay_ui.m
+
+(1) Extended cg_slice_overlay.m by option to automatically display slices 
+    with local maxima if slice_str is empty string.
+(2) Corrected bug in cg_slice_overlay.m for saving images of wrong window.
+(3) Updated cg_slice_overlay_ui according to new functions in cg_slice_overlay.m
+ 
+------------------------------------------------------------------------
+r714 | gaser | 2015-09-07 08:54:19
