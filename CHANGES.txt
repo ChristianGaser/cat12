@@ -7161,3 +7161,10 @@ D       templates_surfaces/rh.s32template.IXI555.gii
     templates_surfaces/?h.inflated.Template_T1_IXI555_MNI152.gii
 ------------------------------------------------------------------------
 r719 | gaser | 2015-09-07 15:38:00
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+
+Corrected bug in cg_vbm_write.m if strength of NLM-filter was set to 0.
+------------------------------------------------------------------------
+r720 | gaser | 2015-09-07 15:46:06
