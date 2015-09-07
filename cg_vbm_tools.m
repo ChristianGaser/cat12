@@ -654,7 +654,7 @@ data_fs.help    = {'Select subject folders of freesurfer data to resample thickn
 
 surfresamp_fs      = cfg_exbranch;
 surfresamp_fs.tag  = 'surfresamp_fs';
-surfresamp_fs.name = 'Rsample and smooth existing freesurfer thickness data';
+surfresamp_fs.name = 'Resample and smooth existing freesurfer thickness data';
 surfresamp_fs.val  = {data_fs,fwhm,outdir};
 surfresamp_fs.prog = @vbm_surf_resamp_freesurfer;
 surfresamp_fs.help = {
