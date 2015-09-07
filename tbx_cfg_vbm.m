@@ -22,7 +22,7 @@ data.ufilter  = '.*';
 %data.ufilter = '(^[^p][^0123c]).*'; 
 data.num      = [1 Inf];
 data.help     = {
-  'Select highres raw data (e.g. T1 images) for processing. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method and each images is processed separately.'};
+  'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method.'};
 
 
 %------------------------------------------------------------------------
@@ -38,7 +38,7 @@ surface.labels = {'No','Yes'};
 surface.values = {0 1};
 surface.def    = @(val)cg_vbm_get_defaults('output.surface', val{:});
 surface.help   = {
-  'Use PBT (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
+  'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
 ''
   'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
 ''
@@ -55,25 +55,22 @@ ROI.def    = @(val)cg_vbm_get_defaults('output.ROI', val{:});
 ROI.help   = {
   'Export of ROI data of volume, intensity, and thickness to csv-files. The values of a ROI can be estimated in subject and/or normalized spaced. '
   ''
-  'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that estimates cortical thickness for each GM voxel. Although, this maps can be mapped to different spaces the analysis is difficult, because many statistical asumptions do not fit. Therefore, only ROI-based values are available. To overcome this limitation surface-based analysis functions for VBM are in development. '
+  'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that estimates cortical thickness for each GM voxel. '
   ''
   'There are different atlas maps available: '
-  '(1) Anatomy Toolbox Maps (Version 2.0, 2014-07-23)' 
-  '    References for the SPM Anatomy toolbox:'
-  '    1) Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. NeuroImage 25(4), 1325-1335, 2005'
-  '    2) Eickhoff SB, Heim S, Zilles K, Amunts K. Testing anatomically specified hypotheses in functional imaging using cytoarchitectonic maps. NeuroImage 32(2), 570-582, 2006'
-  '    3) Eickhoff SB, Paus T, Caspers S, Grosbras MH, Evans A, Zilles K, Amunts K. Assignment of functional activations to probabilistic cytoarchitectonic areas revisited. NeuroImage 36(3), 511-521, 2007'
+  '(1) Anatomy Toolbox Maps (Version 2.0, 2014-07-23):' 
   ''
-  '    References for probabilistic cytoarchitectonic mapping:'
-  '    1) Zilles K, Amunts K. Centenary of Brodmann?s map ? conception and fate. Nature Reviews Neuroscience 11(2), 2010: 139-145 '
-  '    2) Amunts K, Schleicher A, Zilles K). Cytoarchitecture of the cerebral cortex ? more than localization. Neuroimage 37, 2007: 1061-1065.'
-  '    3) Zilles K, Schleicher A, Palomero-Gallagher N, Amunts K. Quantitative analysis of cyto- and receptor architecture of the human brain. Brain Mapping: The Methods, J. C. Mazziotta and A. Toga (eds.), USA: Elsevier, 2002, p. 573-602.'
+  '    Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. NeuroImage 25(4), 1325-1335, 2005'
   ''
   '(2) Hammers:'
   '    Alexander Hammers brain atlas from the Euripides project: '
   '    www.brain-development.org'
   ''
   '    Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe. Hum Brain Mapp 2003, 19: 224-247.'
+  ''
+  '(3) Neuromorphometrics:'
+  '    Maximum probability tissue labels derived from the MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'
+  '    https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details'
 ''
 };
 
@@ -281,7 +278,7 @@ warps.help   = {
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
-output.val  = {surface, ROI, grey, white, csf, label, bias, jacobian, warps}; % wmh, atlas, pc, te};
+output.val  = {surface, ROI, grey, white, bias, jacobian, warps}; % csf, label, wmh, atlas, pc, te};
 output.help = {
 'There are a number of options about what data you would like the routine to produce. The routine can be used for producing images of tissue classes, as well as bias corrected images. The native space option will produce a tissue class image (p*) that is in alignment with the original image. You can also produce spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the vbm toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The produced images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
 ''
@@ -350,8 +347,10 @@ tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==
 tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
 tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
 tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
-tissue(3).warped = [opts.CSF.warped (opts.CSF.modulated==1) (opts.CSF.modulated==2)];
-tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
+if isfield(opts,'CSF')
+  tissue(3).warped = [opts.CSF.warped (opts.CSF.modulated==1) (opts.CSF.modulated==2)];
+  tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
+end
 
 % This depends on job contents, which may not be present when virtual
 % outputs are calculated.
@@ -378,30 +377,32 @@ end;
 
 
 % label
-if opts.label.native,
+if isfield(opts,'label')
+  if opts.label.native,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Label Images';
     cdep(end).src_output = substruct('()',{1}, '.','label','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.label.warped,
+  end;
+  if opts.label.warped,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Warped Label Images';
     cdep(end).src_output = substruct('()',{1}, '.','wlabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.label.dartel==1,
+  end;
+  if opts.label.dartel==1,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Rigid Registered Label Images';
     cdep(end).src_output = substruct('()',{1}, '.','rlabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
-if opts.label.dartel==2,
+  end;
+  if opts.label.dartel==2,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Affine Registered Label Images';
     cdep(end).src_output = substruct('()',{1}, '.','alabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
+  end;
+end
 
 % atlas
 if isfield(opts,'atlas')

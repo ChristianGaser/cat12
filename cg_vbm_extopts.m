@@ -12,40 +12,39 @@ end
 %_______________________________________________________________________
 % options for output
 %-----------------------------------------------------------------------
-if expert
-  vox         = cfg_entry;
-  vox.tag     = 'vox';
-  vox.name    = 'Voxel size for normalized images';
-  vox.strtype = 'r';
-  vox.num     = [1 1];
-  vox.def     = @(val)cg_vbm_get_defaults('extopts.vox', val{:});
-  vox.help    = {
+vox         = cfg_entry;
+vox.tag     = 'vox';
+vox.name    = 'Voxel size for normalized images';
+vox.strtype = 'r';
+vox.num     = [1 1];
+vox.def     = @(val)cg_vbm_get_defaults('extopts.vox', val{:});
+vox.help    = {
     'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
-  ''
-  };
+''
+};
 
 
-  %---------------------------------------------------------------------
+%---------------------------------------------------------------------
 
-  bb         = cfg_entry;
-  bb.tag     = 'bb';
-  bb.name    = 'Bounding box';
-  bb.strtype = 'r';
-  bb.num     = [2 3];
-  bb.def     = @(val)cg_vbm_get_defaults('extopts.bb', val{:});
-  bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
-  ''
-  };
+bb         = cfg_entry;
+bb.tag     = 'bb';
+bb.name    = 'Bounding box';
+bb.strtype = 'r';
+bb.num     = [2 3];
+bb.def     = @(val)cg_vbm_get_defaults('extopts.bb', val{:});
+bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
+''
+};
 
 
-  %---------------------------------------------------------------------
-  % Resolution
-  %---------------------------------------------------------------------
+%---------------------------------------------------------------------
+% Resolution
+%---------------------------------------------------------------------
 
-  resnative        = cfg_branch;
-  resnative.tag    = 'native';
-  resnative.name   = 'Native resolution ';
-  resnative.help   = {
+resnative        = cfg_branch;
+resnative.tag    = 'native';
+resnative.name   = 'Native resolution ';
+resnative.help   = {
     'Preprocessing with native resolution.'
     'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
     ''
@@ -56,12 +55,12 @@ if expert
     '' 
   }; 
 
-  resbest        = cfg_entry;
-  resbest.tag    = 'best';
-  resbest.name   = 'Best native resolution';
-  resbest.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
-  resbest.num    = [1 2];
-  resbest.help   = {
+resbest        = cfg_entry;
+resbest.tag    = 'best';
+resbest.name   = 'Best native resolution';
+resbest.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+resbest.num    = [1 2];
+resbest.help   = {
     'Preprocessing with the best (minimal) voxel dimension of the native image.'
     'The first parameters defines the lowest spatial resolution for every dimension, while the second is used to avoid tiny interpolations for almost correct resolutions.'
     'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
@@ -76,12 +75,12 @@ if expert
     ''
   }; 
 
-  resfixed        = cfg_entry;
-  resfixed.tag    = 'fixed';
-  resfixed.name   = 'Fixed resolution';
-  resfixed.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
-  resfixed.num    = [1 2];
-  resfixed.help   = {
+resfixed        = cfg_entry;
+resfixed.tag    = 'fixed';
+resfixed.name   = 'Fixed resolution';
+resfixed.def    = @(val)cg_vbm_get_defaults('extopts.resval', val{:});
+resfixed.num    = [1 2];
+resfixed.help   = {
     'This options prefers an isotropic voxel size that is controled by the first parameters.  '
     'The second parameter is used to avoid tiny interpolations for almost correct resolutions. ' 
     'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
@@ -96,21 +95,20 @@ if expert
   }; 
 
 
-  restype        = cfg_choice;
-  restype.tag    = 'restype';
-  restype.name   = 'Internal resampling for preprocessing';
-  switch cg_vbm_get_defaults('extopts.restype')
-    case 'native', restype.val = {resnative};
-    case 'best',   restype.val = {resbest};
-    case 'fixed',  restype.val = {resfixed};
-  end
-  restype.values = {resnative resbest resfixed};
-  restype.help   = {
+restype        = cfg_choice;
+restype.tag    = 'restype';
+restype.name   = 'Internal resampling for preprocessing';
+switch cg_vbm_get_defaults('extopts.restype')
+  case 'native', restype.val = {resnative};
+  case 'best',   restype.val = {resbest};
+  case 'fixed',  restype.val = {resfixed};
+end
+restype.values = {resnative resbest resfixed};
+restype.help   = {
     'There are 3 major ways to control the internal spatial resolution ''native'', ''best'', and ''fixed''. In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). The minimum spatial resolution is 0.5mm. '
     ''
     'We commend to use ''best'' option to ensure optimal quality for preprocessing. ' 
-  }; 
-end
+}; 
 
 
 %------------------------------------------------------------------------
@@ -161,25 +159,23 @@ gcutstr.help    = {
 %------------------------------------------------------------------------
 % Noise correction
 %------------------------------------------------------------------------
-if expert
-  sanlm        = cfg_menu;
-  sanlm.tag    = 'sanlm';
-  sanlm.name   = 'Use SANLM de-noising filter';
-  sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)',...
-    'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM'
-  };
-  sanlm.values = {0 1 2 3 4 5};
-  sanlm.def    = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
-  sanlm.help   = {
-    'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Due to varying contrast a second NLM filter is used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
+sanlm        = cfg_menu;
+sanlm.tag    = 'sanlm';
+sanlm.name   = 'Use SANLM de-noising filter';
+sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)',...
+    'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM','ORNLM denoising'
+};
+sanlm.values = {0 1 2 3 4 5};
+sanlm.def    = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
+sanlm.help   = {
+    'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Optionally, a second ORNLM filter is  used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
     'The following options are available: '
     '  0) No noise correction '
     '  1) SANLM '
     '  2) SANLM (multi-threaded) '
     '  3) SANLM + ORNLM 4) SANLM (multi-threaded) + ORNLM'
     '  5) Only ORNLM (with temporarily SANLM filter, but only one final noise correction of the original data)' 
-  };
-end
+};
 
 NCstr         = cfg_entry;
 NCstr.tag     = 'NCstr';
@@ -203,7 +199,7 @@ LAS.labels = {'No','Yes'};
 LAS.values = {0 1};
 LAS.def    = @(val)cg_vbm_get_defaults('extopts.LAS', val{:});
 LAS.help   = {
-  'Adaption for local intensity changes of WM, GM and CSF for medium/low spatial frequencies.The changes are clear visible in subcortical GM areas. This function will also improve the inhomogeneity correction. '
+  'Correction of local intensity changes with medium/low spatial frequencies. This will affect mostly subcortical GM areas. This function will also utilize the inhomogeneity correction. '
   ''
   'See also ...'
   ''
@@ -216,7 +212,7 @@ LASstr.strtype = 'r';
 LASstr.num     = [1 1];
 LASstr.def     = @(val)cg_vbm_get_defaults('extopts.LASstr', val{:});
 LASstr.help    = {
-  'Strengh of the modification by the Local Adaptive Segmenation (LAS). The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive LAS.'
+  'Strengh of the modification by the Local Adaptive Segmentation (LAS). The default 0.5 was successfully tested on a large variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive LAS.'
   ''
 };
 
@@ -226,8 +222,8 @@ LASstr.help    = {
 
 WMHC        = cfg_menu;
 WMHC.tag    = 'WMHC';
-WMHC.name   = 'WM Hyperintensity Correction';
-WMHC.labels = {'no WMHC','temporary WMHCWMHC - correction to WM like SPM','WMHC - correction to a separate class'};
+WMHC.name   = 'WM Hyperintensity Correction (WMHC)';
+WMHC.labels = {'no correction','WMHC - correction to WM like SPM','WMHC - correction to a separate class'};
 WMHC.values = {0 1 2 3};
 WMHC.def    = @(val)cg_vbm_get_defaults('extopts.WMHC', val{:});
 WMHC.help   = {
@@ -287,10 +283,10 @@ darteltpm.help    = {
 
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
-extopts.name  = 'Extended options';
+extopts.name  = 'Extended options for VBM12 segmentation';
 if expert
   extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,vox,print}; 
 else
-  extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,print}; 
+  extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,vox,print}; 
 end
 extopts.help  = {'Using the extended options you can adjust the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};

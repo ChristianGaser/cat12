@@ -7104,3 +7104,21 @@ M       cg_vbm_longitudinal_multi.m
 Updated help text for modulation in cg_vbm_longitudinal_multi.m
 ------------------------------------------------------------------------
 r716 | gaser | 2015-09-07 08:58:17
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_defaults.m
+M       cg_vbm_extopts.m
+M       cg_vbm_opts.m
+M       cg_vbm_run.m
+M       tbx_cfg_vbm.m
+
+(1) Updated help text for many options in tbx_cfg_vbm.m, cg_vbm_opts.m, and
+    cg_vbm_extopts.m.
+(2) Removed some options (CSF, label) from GUI.
+(3) Updated cg_vbm_run.m and cg_vbm_batch.m according to changes in (2).
+(4) Updated expert options in cg_vbm_extopts.m.
+(5) Updated some options in cg_vbm_defaults.m-
+
+------------------------------------------------------------------------
+r717 | gaser | 2015-09-07 09:09:56

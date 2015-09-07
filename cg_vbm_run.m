@@ -93,9 +93,13 @@ tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.out
 tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
 tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
 tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
-tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
-tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
-
+if isfield(job.output,'CSF')
+  tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
+  tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
+else
+  tissue(3).warped = [cg_vbm_get_defaults('output.CSF.warped') (cg_vbm_get_defaults('output.CSF.mod')==1)    (cg_vbm_get_defaults('output.CSF.mod')==2)];
+  tissue(3).native = [cg_vbm_get_defaults('output.CSF.native') (cg_vbm_get_defaults('output.CSF.dartel')==1) (cg_vbm_get_defaults('output.CSF.dartel')==2)];
+end
 
 % never write class 4-6
 for i=4:6;
@@ -104,7 +108,11 @@ for i=4:6;
 end
 
 job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.affine];
-job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
+if isfield(job.output,'label')
+  job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
+else
+  job.label    = [cg_vbm_get_defaults('output.label.native') cg_vbm_get_defaults('output.label.warped') (cg_vbm_get_defaults('output.label.dartel')==1) (cg_vbm_get_defaults('output.label.dartel')==2)];
+end
 job.jacobian = job.output.jacobian.warped;
 
 job.biasreg  = job.opts.biasreg;
