@@ -7097,3 +7097,10 @@ M       vbm12.fig
 
 ------------------------------------------------------------------------
 r715 | gaser | 2015-09-07 08:56:33
+
+M       CHANGES.txt
+M       cg_vbm_longitudinal_multi.m
+
+Updated help text for modulation in cg_vbm_longitudinal_multi.m
+------------------------------------------------------------------------
+r716 | gaser | 2015-09-07 08:58:17
