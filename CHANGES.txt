@@ -7141,3 +7141,23 @@ M       vbm_surf_createCS.m
 
 ------------------------------------------------------------------------
 r718 | gaser | 2015-09-07 15:15:41
+
+M       CHANGES.txt
+M       cg_vbm_tools.m
+D       templates_surfaces/lh.central.freesurfer.gii
+A  +    templates_surfaces/lh.inflated.Template_T1_IXI555_MNI152.gii
+D       templates_surfaces/lh.inflated.gii
+D       templates_surfaces/lh.s1template.IXI555.gii
+D       templates_surfaces/lh.s32template.IXI555.gii
+D       templates_surfaces/rh.central.freesurfer.gii
+A  +    templates_surfaces/rh.inflated.Template_T1_IXI555_MNI152.gii
+D       templates_surfaces/rh.inflated.gii
+D       templates_surfaces/rh.s1template.IXI555.gii
+D       templates_surfaces/rh.s32template.IXI555.gii
+
+(1) Removed templates_surfaces/?h.central.freesurfer.gii and 
+    templates_surfaces/?h.s1template.IXI555.gii.
+(2) Renamed templates_surfaces/?h.s32template.IXI555.gii to
+    templates_surfaces/?h.inflated.Template_T1_IXI555_MNI152.gii
+------------------------------------------------------------------------
+r719 | gaser | 2015-09-07 15:38:00
