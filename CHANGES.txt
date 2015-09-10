@@ -7168,3 +7168,12 @@ M       cg_vbm_write.m
 Corrected bug in cg_vbm_write.m if strength of NLM-filter was set to 0.
 ------------------------------------------------------------------------
 r720 | gaser | 2015-09-07 15:46:06
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       html/vbm12.html
+
+Corrected bug in cg_vbm_write.m whwre relative volume was not correctly printed.
+
+------------------------------------------------------------------------
+r721 | gaser | 2015-09-10 14:50:20
