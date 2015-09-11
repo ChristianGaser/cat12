@@ -372,10 +372,10 @@ function stools = cg_vbm_stools(expert)
   v2s.data_surf_sub_lh.tag     = 'data_mesh_lh';
   v2s.data_surf_sub_lh.name    = '(Left) Individual Surfaces';
   v2s.data_surf_sub_lh.filter  = 'gifti';
-  v2s.data_surf_sub_lh.ufilter = '^lh.central.*';
+  v2s.data_surf_sub_lh.ufilter = '^lh.central.(?!nofix).*';
   v2s.data_surf_sub_lh.num     = [1 Inf];
   v2s.data_surf_sub_lh.help    = {
-    'Select left subject surface files.'
+    'Select left subject surface files (do not select the *.nofix.* surface).'
     'Right side will automatically processed.'
     };
    
@@ -383,7 +383,7 @@ function stools = cg_vbm_stools(expert)
   v2s.data_sub.tag     = 'data_vol';
   v2s.data_sub.name    = 'Volumes in native space';
   v2s.data_sub.filter  = 'image';
-  v2s.data_sub.ufilter = '^(?!wmr|wp|w0rp|wc).*'; % no normalized images
+  v2s.data_sub.ufilter = '^(?!wm|wp|w0rp|wc).*'; % no normalized images
   v2s.data_sub.num     = [1 Inf];
   v2s.data_sub.help    = {
     'Select volumes in native (subject) space.'

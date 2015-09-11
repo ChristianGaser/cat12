@@ -7177,3 +7177,22 @@ Corrected bug in cg_vbm_write.m whwre relative volume was not correctly printed.
 
 ------------------------------------------------------------------------
 r721 | gaser | 2015-09-10 14:50:20
+
+M       CHANGES.txt
+M       cg_vbm_longitudinal.m
+M       cg_vbm_longitudinal_multi.m
+M       cg_vbm_stools.m
+M       cg_vbm_tools.m
+M       vbm12.fig
+M       vbm_io_xml.m
+M       vbm_surf_vol2surf.m
+
+(1) Some cosmetic changes to vbm_surf_vol2surf.m and vbm_io_xml.m
+    and cg_vbm_longitudinal_multi.
+(2) Renamed longitudinal batch to prevent confucion with spm12 tool for
+    longitudinal registration.
+(3) Changed and corrected some ufilters in cg_vbm_stools.m.
+(4) Changed cg_vbm_longitudinal.m accoring to (3).
+
+------------------------------------------------------------------------
+r722 | gaser | 2015-09-11 17:36:22

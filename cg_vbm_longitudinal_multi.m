@@ -5,7 +5,7 @@ function long = cg_vbm_longitudinal_multi
 % $Id$
 
 mov = cfg_files;
-mov.name = 'Longitudinal data for one subject';
+mov.name = 'Longitudinal data for this subject';
 mov.tag  = 'mov';
 mov.filter = 'image';
 mov.num  = [1 Inf];
@@ -25,7 +25,7 @@ subj.help = {[...
 esubjs         = cfg_repeat;
 esubjs.tag     = 'esubjs';
 esubjs.name    = 'Data';
-esubjs.values  = {subj };
+esubjs.values  = {subj};
 esubjs.num     = [1 Inf];
 esubjs.help = {[...
 'Specify data for each subject.']};
