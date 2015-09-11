@@ -12,9 +12,9 @@ function varargout = vbm_surf_vol2surf(varargin)
   if nargin == 1
     job = varargin{1};
   else 
-    error('Only batch mode'); 
+    error('Only batch mode possible'); 
     
-    %{
+%{
     % mesh input
     % --------------------------------------------------------------------
     if ~isfield(job,'data_mesh') || isempty(job.data_mesh)
@@ -36,16 +36,18 @@ function varargout = vbm_surf_vol2surf(varargin)
       [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
       job.data_vol{vi} = fullfile(ppv,[ffv,eev]);
     end
-    %}
+%}
   end
   
   
   %%
   side  = {'data_mesh_lh','data_mesh_rh'};
   sside = {'sinfo_lh','sinfo_rh'};
+  
   if ~isfield(job,'data_mesh_rh')
     job.data_mesh_rh = vbm_surf_rename(job.data_mesh_lh,'side','rh');
   end
+  
   job.sinfo_lh = vbm_surf_info(job.data_mesh_lh);
   job.sinfo_rh = vbm_surf_info(job.data_mesh_rh);
   template = job.sinfo_lh(1).template; 
@@ -99,7 +101,7 @@ function varargout = vbm_surf_vol2surf(varargin)
   
   mappingstr = sprintf('-%s -%s -res %0.4f -origin %0.4f -length %d',...
            job.interp{1},job.mappingstr,job.res,job.origin,job.length); 
-       
+                  
   % cat
   opt.debug     = cg_vbm_get_defaults('extopts.debug');
   opt.CATDir    = fullfile(spm('dir'),'toolbox','vbm12','CAT');   
@@ -115,7 +117,7 @@ function varargout = vbm_surf_vol2surf(varargin)
   end  
 
         
-  %% dispaly something
+  %% display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data_vol),'Extracted Volumes','Volumes Complete');
   P.data = cell(numel(job.data_vol),2);
@@ -155,7 +157,7 @@ function varargout = vbm_surf_vol2surf(varargin)
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
-          mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
+          mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si})
         [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
       end
     
