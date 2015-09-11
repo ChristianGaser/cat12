@@ -31,6 +31,7 @@ end
 matlabbatch{1}.spm.tools.vbm.tools.series.bparam = 1000000;
 matlabbatch{2}.spm.tools.vbm.estwrite.data(1) = cfg_dep('Longitudinal Rigid Registration: Midpoint Average', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg'));
 matlabbatch{2}.spm.tools.vbm.estwrite.output.surface = 0;
+matlabbatch{2}.spm.tools.vbm.estwrite.output.ROI = 0;
 matlabbatch{2}.spm.tools.vbm.estwrite.output.GM.native = 0;
 matlabbatch{2}.spm.tools.vbm.estwrite.output.GM.warped = 0;
 matlabbatch{2}.spm.tools.vbm.estwrite.output.GM.modulated = 0;

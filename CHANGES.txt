@@ -7196,3 +7196,12 @@ M       vbm_surf_vol2surf.m
 
 ------------------------------------------------------------------------
 r722 | gaser | 2015-09-11 17:36:22
+
+M       CHANGES.txt
+M       cg_vbm_longitudinal.m
+M       tbx_cfg_vbm.m
+
+Some cosmetic changes to cg_vbm_longitudinal.m and tbx_cfg_vbm.m.
+
+------------------------------------------------------------------------
+r723 | gaser | 2015-09-11 18:11:03
