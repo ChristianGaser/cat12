@@ -16,13 +16,10 @@ data.tag      = 'data';
 data.name     = 'Volumes';
 data.filter   = 'image';
 data.ufilter  = '.*';
-% by default only files that do not start with the typical VBM prefix of 
-% strongly preprocessed images that can not be used for preprocessing
-% ^[^(^(p[0123]|^c[123]|^m[0w]|^iy_|^y_|^jac_|^te|^pc)])].*
-%data.ufilter = '(^[^p][^0123c]).*'; 
-data.num      = [1 Inf];
+data.num      = [0 Inf];
 data.help     = {
   'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method.'};
+data.preview  = @(f) spm_check_registration(char(f));
 
 
 %------------------------------------------------------------------------
@@ -117,7 +114,7 @@ affine.def  = @(val)cg_vbm_get_defaults('output.bias.affine', val{:});
 bias        = cfg_branch;
 bias.tag    = 'bias';
 bias.name   = 'Bias Corrected';
-bias.val    = {native, warped, affine};
+bias.val    = {native warped affine};
 bias.help   = {
   'This is the option to save a bias, noise, and (local) intensity correctedversion of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised.Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
 ''
@@ -144,7 +141,7 @@ dartel.def  = @(val)cg_vbm_get_defaults('output.label.dartel', val{:});
 label       = cfg_branch;
 label.tag   = 'label';
 label.name  = 'PVE label image';
-label.val   = {native, warped, dartel};
+label.val   = {native warped dartel};
 label.help  = {
 'This is the option to save a labeled version of your segmentations. Labels are saved as Partial Volume Estimation (PVE) values with different mix classes for GM-WM (2.5) and GM-CSF (0.5). BG=0, CSF=1, GM=2, WM=3, WMH=4 (if WMHC=3)'
 ''
@@ -177,7 +174,7 @@ dartel.def    = @(val)cg_vbm_get_defaults('output.GM.dartel', val{:});
 grey          = cfg_branch;
 grey.tag      = 'GM';
 grey.name     = 'Grey matter';
-grey.val      = {native, warped, modulated, dartel};
+grey.val      = {native warped modulated dartel};
 grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and m[0]wp1*.img.'
 ''
 };
@@ -189,7 +186,7 @@ dartel.def    = @(val)cg_vbm_get_defaults('output.WM.dartel', val{:});
 white         = cfg_branch;
 white.tag     = 'WM';
 white.name    = 'White matter';
-white.val     = {native, warped, modulated, dartel};
+white.val     = {native warped modulated dartel};
 white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and m[0]wp2*.img.'
 ''
 };
@@ -201,7 +198,7 @@ dartel.def    = @(val)cg_vbm_get_defaults('output.CSF.dartel', val{:});
 csf           = cfg_branch;
 csf.tag       = 'CSF';
 csf.name      = 'Cerebro-Spinal Fluid (CSF)';
-csf.val       = {native, warped, modulated, dartel};
+csf.val       = {native warped modulated dartel};
 csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and m[0]wp3*.img.'
 ''
 };
@@ -212,7 +209,7 @@ dartel.def    = @(val)cg_vbm_get_defaults('output.WMH.dartel', val{:});
 wmh           = cfg_branch;
 wmh.tag       = 'WMH';
 wmh.name      = 'White matter hyperintensity (WMH)';
-wmh.val       = {native, warped, dartel};
+wmh.val       = {native warped dartel};
 wmh.help      = {'Options to produce WMH images, if WMHC==3: p4*.img, wp4*.img and m[0]wp4*.img.'
 ''
 };
@@ -224,7 +221,7 @@ dartel.def    = @(val)cg_vbm_get_defaults('output.atlas.dartel', val{:});
 atlas         = cfg_branch;
 atlas.tag     = 'atlas';
 atlas.name    = 'Atlas label maps';
-atlas.val     = {native, warped, dartel};
+atlas.val     = {native warped dartel};
 atlas.help    = {
   'WARNING: The functions that create this maps are still under development! This is the option to save an atlas map with major structures (a1*). Odd numbers code the left, even numbers the right hemisphere. Furthermore, AAL and Broadman atlas maps were created based on maps from MRIcron that where adapted to the other VBM maps. Other maps are used from the IBASPM toolbox.  http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy toolbox:Alexander Hammers brain atlas from the Euripides project:   www.brain-development.org  Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell   TN, Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas   of the human brain, with particular reference to the temporal lobe.   Hum Brain Mapp 2003, 19: 224-247.'
 ''
@@ -238,7 +235,7 @@ dartel.def   = @(val)cg_vbm_get_defaults('output.pc.dartel', val{:});
 pc           = cfg_branch;
 pc.tag       = 'pc';
 pc.name      = 'preprocessing change map';
-pc.val       = {native, warped, dartel};
+pc.val       = {native warped dartel};
 pc.help      = {
   'WARNING: The preprocessing documentation map is under development!\n\nThis is the option to save a map that protocol the canges that were necessary to segment your image. In example the removement of blood vessels or the adaption for local GM intensity will result in strong modifications of the orignal image. Although this corrections normaly helps to improve segmenation quality they can fail. As a result higher values describe regions where error are more likely than in other regions. '
 ''
@@ -252,7 +249,7 @@ dartel.def   = @(val)cg_vbm_get_defaults('output.te.dartel', val{:});
 te           = cfg_branch;
 te.tag       = 'te';
 te.name      = 'tissue expectation map';
-te.val       = {native, warped, dartel};
+te.val       = {native warped dartel};
 te.help      = {
   'WARNING: The preprocessing documentation map is under development!\n\nDifference image of the atlas map in subject space and the segmentation.' };
 
@@ -278,7 +275,7 @@ warps.help   = {
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
-output.val  = {surface, ROI, grey, white, bias, jacobian, warps}; % csf, label, wmh, atlas, pc, te};
+output.val  = {surface ROI grey white bias jacobian warps}; % csf, label, wmh, atlas, pc, te};
 output.help = {
 'There are a number of options about what data you would like the routine to produce. The routine can be used for producing images of tissue classes, as well as bias corrected images. The native space option will produce a tissue class image (p*) that is in alignment with the original image. You can also produce spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the vbm toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The produced images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
 ''
@@ -315,7 +312,7 @@ opts       = cg_vbm_opts;
 estwrite        = cfg_exbranch;
 estwrite.tag    = 'estwrite';
 estwrite.name   = 'VBM12: Segmentation';
-estwrite.val    = {data,opts,extopts,output};
+estwrite.val    = {data opts extopts output};
 estwrite.prog   = @cg_vbm_run;
 estwrite.vout   = @vout;
 estwrite.help   = {
@@ -332,9 +329,9 @@ vbm        = cfg_choice;
 vbm.name   = 'VBM12';
 vbm.tag    = 'vbm';
 if expert
-  vbm.values = {estwrite,tools,stools,stoolsexp};
+  vbm.values = {estwrite tools stools stoolsexp};
 else
-  vbm.values = {estwrite,tools,stools}; 
+  vbm.values = {estwrite tools stools}; 
 end
 %------------------------------------------------------------------------
 
