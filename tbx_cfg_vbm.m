@@ -113,10 +113,10 @@ warped.def  = @(val)cg_vbm_get_defaults('output.bias.warped', val{:});
 affine.def  = @(val)cg_vbm_get_defaults('output.bias.affine', val{:});
 bias        = cfg_branch;
 bias.tag    = 'bias';
-bias.name   = 'Bias Corrected';
+bias.name   = 'Bias, noise and intensity corrected';
 bias.val    = {native warped affine};
 bias.help   = {
-  'This is the option to save a bias, noise, and (local) intensity correctedversion of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised.Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+  'This is the option to save a bias, noise, and (local) intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
 ''
 };
 
