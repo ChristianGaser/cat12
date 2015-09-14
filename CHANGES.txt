@@ -7230,3 +7230,16 @@ Disabled mapping in native space in  cg_vbm_stools.m. because it is not yet
 working because of coordination issues.
 ------------------------------------------------------------------------
 r726 | gaser | 2015-09-14 11:16:12
+
+M       CHANGES.txt
+M       cg_vbm_opts.m
+M       cg_vbm_run.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+
+(1) Removed options for SPM12 bias correction form GUI.
+(2) Adapted some fucntions according to (1).
+(3) pause(rand) did not work properly, now always pause(1) is used in 
+    cg_vbm_write.m
+------------------------------------------------------------------------
+r727 | gaser | 2015-09-14 14:55:31

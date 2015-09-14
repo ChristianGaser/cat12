@@ -1814,7 +1814,6 @@ if vbm.print
 	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
   str = [str struct('name', 'Dartel Template:','value',spm_str_manip(vbm.darteltpm,'k40d'))];
 	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
-	str = [str struct('name', 'Bias FWHM / Bias reg.:','value',sprintf('%d / %0.08f',job.opts.biasfwhm,job.opts.biasreg))];
   if vbm.sanlm==0 || job.extopts.NCstr==0
     str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
   elseif vbm.sanlm>0 && vbm.sanlm<3
@@ -2847,7 +2846,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
         break
       catch 
         % read error in parallel processing
-        pause(rand)
+        pause(1)
       end
     end
     Yl1  = vbm_vol_ctype(round(spm_sample_vol(Vl1A,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
@@ -3417,7 +3416,7 @@ function wYv = vbm_vol_ROInorm(Yv,trans,ai,mod)
         break
       catch 
         % read error in parallel processing
-        pause(rand)
+        pause(1)
       end
     end
     wYv = spm_read_vols(wVv);
