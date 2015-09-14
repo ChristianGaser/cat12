@@ -118,7 +118,7 @@ vbm.output.te.dartel = 0;
 %=======================================================================
 
 % set this option in order to see all options in GUI
-vbm.extopts.expertgui     = 0;     % use full GUI
+vbm.extopts.expertgui     = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental functions (unsafe)!
 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 vbm.extopts.species      = 'human';  
