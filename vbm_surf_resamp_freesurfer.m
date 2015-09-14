@@ -57,7 +57,7 @@ for i=1:size(Psubj,1)
     Presamp    = fullfile(dname,[hemi '.smoothwm.resampled']);
     Pvalue     = fullfile(dname,[hemi '.' pname '.resampled']);
     Pfwhm      = fullfile(outdir,[sprintf('s%gmm.',fwhm) hemi '.' pname '.resampled.' name]);
-    Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.gii']);
+    Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
   
     fprintf('Resample %s in %s\n',hemi,deblank(Psubj(i,:)));
 

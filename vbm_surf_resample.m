@@ -44,7 +44,7 @@ function varargout = vbm_surf_resample(varargin)
       % new file name
       Prdata(i) = vbm_surf_rename(sinfo(i).Pdata,'dataname',sprintf('%s.resampled',sinfo(i).dataname));
       Prmesh(i) = vbm_surf_rename(sinfo(i).Pmesh,'dataname',sprintf('%s.resampled',sinfo(i).dataname));
-      Pfsavg    = fullfile(opt.fsavgDir,[sinfo(i).side '.sphere.gii']);
+      Pfsavg    = fullfile(opt.fsavgDir,[sinfo(i).side '.sphere.freesurfer.gii']);
 
       fprintf('Resample %s\n',Pdata{i});
       % resample mesh and values

@@ -49,7 +49,7 @@ for i=1:size(P,1)
   end
   Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
   Pcentral   = fullfile(pp,Pcentral);
-  Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.gii']);
+  Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
   
   fprintf('Resample %s\n',deblank(P(i,:)));
 
