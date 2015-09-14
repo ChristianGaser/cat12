@@ -115,8 +115,8 @@ else
 end
 job.jacobian = job.output.jacobian.warped;
 
-job.biasreg  = job.opts.biasreg;
-job.biasfwhm = job.opts.biasfwhm;
+job.biasreg  = cg_vbm_get_defaults('opts.biasreg');
+job.biasfwhm = cg_vbm_get_defaults('opts.biasfwhm');
 job.channel  = channel;
 job.vbm      = vbm;
 job.warps    = job.output.warps;
