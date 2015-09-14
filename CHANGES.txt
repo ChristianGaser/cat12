@@ -7243,3 +7243,25 @@ M       tbx_cfg_vbm.m
     cg_vbm_write.m
 ------------------------------------------------------------------------
 r727 | gaser | 2015-09-14 14:55:31
+
+M       CHANGES.txt
+A  +    templates_surfaces/lh.central.freesurfer.gii
+D       templates_surfaces/lh.central.gii
+A  +    templates_surfaces/lh.sphere.freesurfer.gii
+D       templates_surfaces/lh.sphere.gii
+A  +    templates_surfaces/rh.central.freesurfer.gii
+D       templates_surfaces/rh.central.gii
+A  +    templates_surfaces/rh.sphere.freesurfer.gii
+D       templates_surfaces/rh.sphere.gii
+M       vbm_spm.m
+M       vbm_surf_avg.m
+M       vbm_surf_createCS.m
+M       vbm_surf_resamp.m
+M       vbm_surf_resamp_freesurfer.m
+M       vbm_surf_resample.m
+
+Renamed ?h.sphere.gii and ?h.central.gii to ?h.central.freesurfer.gii
+and ?h.sphere.freesurfer.gii and changed resp. files.
+
+------------------------------------------------------------------------
+r728 | gaser | 2015-09-14 15:28:55

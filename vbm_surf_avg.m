@@ -38,7 +38,7 @@ function varargout = vbm_surf_avg(varargin)
   side  = {'lh','rh'}; 
   fname = cell(numel(side),numel(job.meshsmooth)); FSavgfname = cell(1,2);
   for si = 1:numel(side)
-    FSavgfname{si} = fullfile(opt.fsavgDir,sprintf('%s.central.gii',side{si})); 
+    FSavgfname{si} = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',side{si})); 
     FSavg.(side{si}) = gifti(FSavgfname{si});
     Savg.(side{si})  = struct(...
       'vertices',zeros(size(FSavg.(side{si}).vertices),'single'),...

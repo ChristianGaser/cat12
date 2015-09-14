@@ -100,8 +100,8 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     Pdefects   = fullfile(pp,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
     Psphere    = fullfile(pp,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
     Pspherereg = fullfile(pp,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
-    Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central.gii',opt.surf{si}));      % fsaverage central
-    Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere.gii',opt.surf{si}));       % fsaverage sphere
+    Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',opt.surf{si}));      % fsaverage central
+    Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));       % fsaverage sphere
 
     % reduce for object area
     switch opt.surf{si}

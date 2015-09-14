@@ -673,7 +673,7 @@ else
       hemi_ind = [hemi_ind strfind(ff,'rh')];
       hemi = ff(hemi_ind:hemi_ind+1);
       if ~isempty(hemi)
-        g = gifti(fullfile(fsavgDir,[hemi '.central.gii']));
+        g = gifti(fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
       end
     else
       g = g.private.metadata(1).value;
