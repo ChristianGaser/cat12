@@ -387,7 +387,8 @@ function stools = cg_vbm_stools(expert)
     v2s.interp ...
     v2s.mapping ...
     };
-  v2s.vol2surf.prog = @vbm_surf_vol2surf;
+% not yet working because of coordination issues
+%  v2s.vol2surf.prog = @vbm_surf_vol2surf;
   v2s.vol2surf.help = {
     'Map volume (native space) to individual surface.'
     ''

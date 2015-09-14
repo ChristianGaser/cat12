@@ -7222,3 +7222,11 @@ M       cg_vbm_stools.m
 Shortened some names in cg_vbm_stools.m.
 ------------------------------------------------------------------------
 r725 | gaser | 2015-09-14 11:12:02
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+
+Disabled mapping in native space in  cg_vbm_stools.m. because it is not yet 
+working because of coordination issues.
+------------------------------------------------------------------------
+r726 | gaser | 2015-09-14 11:16:12
