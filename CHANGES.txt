@@ -7265,3 +7265,13 @@ and ?h.sphere.freesurfer.gii and changed resp. files.
 
 ------------------------------------------------------------------------
 r728 | gaser | 2015-09-14 15:28:55
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_stools.m
+
+(1) Added expert modus 2 for experimental functions.
+(2) Changed some file selection settings according to expert modus.
+
+------------------------------------------------------------------------
+r729 | gaser | 2015-09-14 15:44:30

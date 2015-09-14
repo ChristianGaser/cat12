@@ -415,7 +415,7 @@ function stools = cg_vbm_stools(expert)
   v2s.data_norm.tag     = 'data_vol';
   v2s.data_norm.name    = 'Spatially Normalized Volumes';
   v2s.data_norm.filter  = 'image';
-  v2s.data_norm.ufilter = '^(?=wm|wp|w0rp|wc).*'; % only normalized images
+  v2s.data_norm.ufilter = '.*';
   v2s.data_norm.num     = [1 Inf];
   v2s.data_norm.help    = {
     'Select spatially normalized volumes (in template space).'
@@ -589,7 +589,11 @@ function stools = cg_vbm_stools(expert)
   data_surf.tag     = 'data_surf';
   data_surf.name    = 'Surfaces Data';
   data_surf.filter  = 'any';
-  data_surf.ufilter = '^[lr]h.[tgfl][hyro][irag][cias]';
+  if expert > 1
+    data_surf.ufilter = '^[lr]h.';
+  else
+    data_surf.ufilter = '[lr]h.(?!cent|sphe|defe|gyrus|sulcuswidth).*';
+  end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select Surfaces Data Files for Resampling to Template Space.'};
 
