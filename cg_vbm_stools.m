@@ -422,7 +422,7 @@ function stools = cg_vbm_stools(expert)
 
   v2s.vol2tempsurf      = cfg_exbranch;
   v2s.vol2tempsurf.tag  = 'vol2surftemp';
-  v2s.vol2tempsurf.name = 'Map Normalized Volume (Template Space) to Template Surface';
+  v2s.vol2tempsurf.name = 'Map Normalized Volume to Template Surface';
   v2s.vol2tempsurf.val  = {
     v2s.data_norm ...
     v2s.data_surf_avg_lh ...
