@@ -8,7 +8,7 @@ function stools = cg_vbm_stools(expert)
 
 
 
-%% Surface covariance and quality assurance
+%% Surface correlation and quality check
 %-----------------------------------------------------------------------
   data_surf_cov         = cfg_files;
   data_surf_cov.tag     = 'data_surf';
@@ -26,7 +26,6 @@ function stools = cg_vbm_stools(expert)
   data_xml.help   = {
   'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files..'};
 
-  
   sample_cov         = cfg_repeat;
   sample_cov.tag     = 'sample';
   sample_cov.name    = 'Data';
@@ -54,7 +53,9 @@ function stools = cg_vbm_stools(expert)
   transform.name    = 'Nuisance variable';
   transform.values  = {c};
   transform.num     = [0 Inf];
-  transform.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
+  transform.help    = {...
+  'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance ',...
+  'explained by age will be removed prior to the calculation of the correlation.'};
 
   check_mesh_cov      = cfg_exbranch;
   check_mesh_cov.tag  = 'check_mesh_cov';
@@ -62,9 +63,9 @@ function stools = cg_vbm_stools(expert)
   check_mesh_cov.val  = {sample_cov,qam,transform};
   check_mesh_cov.prog = @cg_check_cov;
   check_mesh_cov.help = {
-  'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
+  'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces measures have to be resampled to the template space (e.g. normalized data). The idea of this tool is to check the correlation of all files across the sample.'
   ''
-  'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
+  'The correlation is calculated between all surfaces measures and the mean for each surface measures is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface measures from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
 
     
   
@@ -138,7 +139,7 @@ function stools = cg_vbm_stools(expert)
 
 
 
-%% extract volumetric data
+%% map volumetric data
 %-----------------------------------------------------------------------  
   v2s.datafieldname         = cfg_entry;
   v2s.datafieldname.tag     = 'datafieldname';
@@ -171,12 +172,15 @@ function stools = cg_vbm_stools(expert)
   
   v2s.boundary_class         = cfg_menu;
   v2s.boundary_class.tag     = 'class';
-  v2s.boundary_class.name    = 'Tissue Boundary';
+  v2s.boundary_class.name    = 'Surface';
   v2s.boundary_class.labels  = {'central','inner','outer'}; % hull?
   v2s.boundary_class.values  = {1 2 3};
+  % "inner" and "outer" are not yet prepared...
+  v2s.boundary_class.labels  = {'central'}; % hull?
+  v2s.boundary_class.values  = {1};
   v2s.boundary_class.val     = {1};
   v2s.boundary_class.help    = {
-    'Tissue boundary used for distance description.'
+    'Surface used for distance description.'
   };
 
   v2s.boundary_pos         = cfg_entry;
@@ -186,22 +190,22 @@ function stools = cg_vbm_stools(expert)
   v2s.boundary_pos.val     = {0};
   v2s.boundary_pos.num     = [1 1];
   v2s.boundary_pos.help    = {
-    'Absolute position from tissue boundary. Use negative values for deeper positions.'
+    'Absolute position from surface. Use negative values for deeper positions pointing inwards.'
     'All values are limited by the maximum possible distance within a cortical structure such as gyri or sulci.'
   };
   
   
   v2s.boundary         = cfg_exbranch;
   v2s.boundary.tag     = 'boundary';
-  v2s.boundary.name    = 'Absolute Position From a Tissue Boundary';
+  v2s.boundary.name    = 'Absolute Position From a Surface Boundary';
   v2s.boundary.val     = {
     v2s.boundary_class ...
     v2s.boundary_pos ...
     };
   v2s.boundary.help    = {
-    'Map volumetric data from a absolute position from a tissue boundary.'
-    'A value of -1 from the WM boundary will map WM values that are 1 mm distance to the GM/WM boundary. '
-    'A value of 1 from the WM boundary will map GM values that were in 1 mm distance to the GM/WM boundary. '
+    'Map volumetric data at an absolute position from a surface.'
+    'A value of -1 from the central surface will map GM values at a position of 1 mm inwards to the central surface. '
+    'A value of 1 from the central surface will map GM values at a position of 1 mm outwards to the central surface. '
   };
 
   %% -- relative position within a tissue class
@@ -209,8 +213,8 @@ function stools = cg_vbm_stools(expert)
   v2s.tissue_class         = cfg_menu;
   v2s.tissue_class.tag     = 'class';
   v2s.tissue_class.name    = 'Tissue Class';
-  v2s.tissue_class.labels  = {'GM','WM','CSF'};
-  v2s.tissue_class.values  = {1 2 3};
+  v2s.tissue_class.labels  = {'GM','WM'};
+  v2s.tissue_class.values  = {1 2};
   v2s.tissue_class.val     = {1};
   v2s.tissue_class.help    = {
     'Tissue class for which the relative positions are estimated.'
@@ -279,8 +283,8 @@ function stools = cg_vbm_stools(expert)
   v2s.boundaryrange_class         = cfg_menu;
   v2s.boundaryrange_class.tag     = 'class';
   v2s.boundaryrange_class.name    = 'Tissue Class';
-  v2s.boundaryrange_class.labels  = {'GM','WM','CSF'}; % hull
-  v2s.boundaryrange_class.values  = {1 2 3};
+  v2s.boundaryrange_class.labels  = {'GM','WM'}; % hull
+  v2s.boundaryrange_class.values  = {1 2};
   v2s.boundaryrange_class.val     = {1};
   v2s.boundaryrange_class.help    = {
     'Tissue boundary used for distance description.'
@@ -326,43 +330,27 @@ function stools = cg_vbm_stools(expert)
   v2s.mapping         = cfg_choice;
   v2s.mapping.tag     = 'mapping';
   v2s.mapping.name    = 'Mapping Function';
-  if expert
-    v2s.mapping.values  = {
-      v2s.tissuerange ...
-      v2s.tissue ...
-      v2s.boundaryrange ...
-      v2s.boundary ...
-      }; 
-    v2s.mapping.help    = {
-      'Volume extration type. '
-      '  tissue-range:'
-      '    extract a set of values within a tissue class with a specified relative sample '
-      '    distance and average these values by mean, median, minimum, maximum or standard deviation'
-      '  tissue-based:' 
-      '    extract one value with a specified relative position within a tissue class'
-      '  boundary-range:' 
-      '    extract a set of values within a tissue class with a specified relative sample'
-      '    distance and average these values by mean, median, minimum, maximum or standard deviation'
-      '  boundary-based: '
-      '    extract one value from a specified absolute distance from a tissue interface'
-      '' 
-      };
-  else
-    v2s.mapping.values  = {
-      v2s.tissuerange ...
-      v2s.tissue ...
-      }; 
-    v2s.mapping.help    = {
-      'Volume extration type. '
-      '  tissue-range:'
-      '    extract a set of values within a tissue class with a specified relative sample '
-      '    distance and average these values by mean, median, minimum, maximum or standard deviation'
-      '  tissue-based:'
-      '    extract one value with a specified relative position within a tissue class'
-      '' 
-      };
-  end
-  v2s.mapping.val     = {v2s.tissuerange};
+  v2s.mapping.values  = {
+...      v2s.tissuerange ...
+...      v2s.tissue ...
+...      v2s.boundaryrange ...
+    v2s.boundary ...
+  }; 
+  v2s.mapping.help    = {
+    'Volume extration type. '
+    '  tissue-range:'
+    '    extract a set of values within a tissue class with a specified relative sample '
+    '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+    '  tissue-based:' 
+    '    extract one value with a specified relative position within a tissue class'
+    '  boundary-range:' 
+    '    extract a set of values within a tissue class with a specified relative sample'
+    '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+    '  boundary-based: '
+    '    extract one value from a specified absolute distance from a tissue interface'
+    '' 
+  };
+  v2s.mapping.val     = {v2s.boundary};
   
 
 

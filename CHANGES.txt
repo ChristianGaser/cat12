@@ -7205,3 +7205,13 @@ Some cosmetic changes to cg_vbm_longitudinal.m and tbx_cfg_vbm.m.
 
 ------------------------------------------------------------------------
 r723 | gaser | 2015-09-11 18:11:03
+
+M       CHANGES.txt
+M       cg_vbm_stools.m
+M       vbm_surf_vol2surf.m
+
+(1) Recompiled CAT_3dVol2Surf.c to enable sampling at only one defined position.
+(2) Some cosmetic changes to cg_vbm_stools.m and commented out functions that
+    are not yet finished.
+------------------------------------------------------------------------
+r724 | gaser | 2015-09-14 11:05:33

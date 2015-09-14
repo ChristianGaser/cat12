@@ -64,7 +64,7 @@ function varargout = vbm_surf_vol2surf(varargin)
         case 3, job.origin =  2 + job.mapping.boundary.pos;
       end
       job.res    = 1; 
-      job.length = 1;
+      job.length = 0; % length has to be set to zero because we only need one values at the defined position
     case 'tissue'
      job.mappingstr = 'average';
       switch job.mapping.tissue.class % ...
@@ -157,7 +157,7 @@ function varargout = vbm_surf_vol2surf(varargin)
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
-          mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si})
+          mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
       end
     
