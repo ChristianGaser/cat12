@@ -7289,3 +7289,15 @@ M       vbm_vol_series_align.m
     vbm_vol_groupwise_ls.m, and cg_vbm_tools.m
 ------------------------------------------------------------------------
 r730 | gaser | 2015-09-16 11:34:37
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_tst_qa.m
+
+(1)  Simplification of SPM classification correction and correction of data 
+     type errors.
+(2)  Removed "Subject Averageness" mark, corrected relative volume unit 
+     (% rather than cm3), and refined quality mark description. 
+
+------------------------------------------------------------------------
+r731 | dahnke | 2015-09-16 15:50:20
