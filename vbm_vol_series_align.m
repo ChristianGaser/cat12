@@ -21,7 +21,6 @@ for i=1:N,
 end
 prec   = noise.^(-2);
 
-
 bparam    = [0 0 job.bparam];
 
 Nii    = nifti(strvcat(job.data));
