@@ -410,62 +410,74 @@ if do_cls
         Ydiv = vbm_vol_resize(Ydiv ,'dereduceBrain',BB);
         clear Ybo;
      
-
+      
         %% Update probability maps
-        % background vs. head
-        [Ybgr,resT2] = vbm_vol_resize(P(:,:,:,6),'reduceV',vx_vol,2,32); 
-        Ybgr = vbm_vol_morph(vbm_vol_morph(Ybgr>128,'lo',1),'lc',1);
+        % background vs. head - important for noise background such as in MT weighting
+        [Ybgr,Ysrcr,resT2] = vbm_vol_resize({P(:,:,:,6),Ysrc},'reduceV',vx_vol,2,32); 
+        Ybgr = vbm_vol_morph(vbm_vol_morph(Ybgr & vbm_vol_morph(Ybgr>128,'d') & Ysrcr<T3th(1),'lo',1),'lc',1);
         Ybg  = vbm_vol_resize(vbm_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
-        Ybgc = vbm_vol_ctype(single(P(:,:,:,6)) + 255*max(0,Ybg-1/2)*2) - P(:,:,:,6); 
-        P(:,:,:,5) = P(:,:,:,5) - Ybgc;
-        P(:,:,:,6) = P(:,:,:,6) + Ybgc;
-        Ybgc = vbm_vol_ctype(255*max(0,(1-Ybg)-1/2)*2  - single(255-P(:,:,:,6))); 
-        P(:,:,:,5) = P(:,:,:,5) + Ybgc;
-        P(:,:,:,6) = P(:,:,:,6) - Ybgc;
-        clear Ybg Ybgc;
+        P4   = vbm_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
+        P5   = vbm_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
+        P6   = vbm_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+        P(:,:,:,4) = P4;
+        P(:,:,:,5) = P5;
+        P(:,:,:,6) = P6;
+        clear P4 P5 P6;
+        
+        %% correct probability maps to 100%
+        sumP = vbm_vol_ctype(255 - sum(P(:,:,:,1:6),4));
+        P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>mean(T3th(1:2)) & Ysrc<mean(T3th(2:3)));
+        P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=mean(T3th(2:3)));
+        P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=mean(T3th(1:2)));
+        P(:,:,:,4) = P(:,:,:,4) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc<T3th(2));
+        P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
+        P(:,:,:,6) = P(:,:,:,6) + sumP .* uint8( Ybg>=0.5 & ~Yb );
+        clear Ybg;
+        
         %% head to WM 
-        %P=Po;
-        Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<0.5 | (P(:,:,:,1))>128 | Ydiv>0.03)=nan;
-        [Ywm1,YD] = vbm_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0;
-        Ywme = smooth3(Ywm)>0.7;
-        Ywmc = vbm_vol_ctype(max(single(P(:,:,:,2)),Ywme.*2550.*max(0,Ysrc/T3th(3)-1))) - P(:,:,:,2);
-        Ygmc = vbm_vol_ctype(max(single(P(:,:,:,1)),255*(vbm_vol_morph(Ywmc>8,'d',2) & ~Ywmc & ~Ywme & Ydiv>0 & Yb))) - P(:,:,:,1);
-        Ygmc = max(Ygmc,255*uint8((sum(P(:,:,:,1:3),4)<128 & Ybb>0.7 & ~Ywmc & ~Ygmc & smooth3(Ywmc & Ygmc)>0.3)));
-        P(:,:,:,5) = vbm_vol_ctype(P(:,:,:,5) .* uint8(1-Ywmc-Ygmc));
-        P(:,:,:,3) = vbm_vol_ctype(P(:,:,:,3) .* uint8(1-Ywmc-Ygmc));
-        P(:,:,:,1) = vbm_vol_ctype(P(:,:,:,1) .* uint8(1-Ywmc)) + Ygmc;
-        P(:,:,:,2) = vbm_vol_ctype(P(:,:,:,2) .* uint8(1-Ygmc)) + Ywmc;
+        % Undercorrection of strong inhomogeneities in high field scans 
+        % (>1.5T) can cause missalignments of the template and therefore 
+        % miss classifications of the tissues that finally avoid further 
+        % corrections in by LAS. 
+        % Typically the alginment failed in this cases because the high 
+        % intensities next to the head that were counted as head and not
+        % corrected by SPM.
+        % e.g. HR075, Magdeburg7T, SRS_SRS_Jena_DaRo81_T1_20150320-191509_MPR-08mm-G2-bw330-nbc.nii, ...
+        Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<0.5 | (P(:,:,:,1)>128 & abs(Ysrc/T3th(3)-2/3)<1/3) | Ydiv>0.03) = nan;
+        [Ywm1,YD] = vbm_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0; clear Ywm1 YD;
+        Ywmc = uint8(smooth3(Ywm)>0.7);
+        Ygmc = uint8(vbm_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & vbm_vol_smooth3X(Yb,8)<0.9);
+        P(:,:,:,[1,3:6]) = P(:,:,:,[1,3:6]) .* repmat(1-Ywmc,[1,1,1,5]);
+        P(:,:,:,2:6)     = P(:,:,:,2:6)     .* repmat(1-Ygmc,[1,1,1,5]);
+        P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
+        P(:,:,:,2)       = max(P(:,:,:,2),255*Ywmc);
         Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-        %% head to GM
-        Ygm = vbm_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>mean(T3th(2:3))) & Yp0<2/3;
-        P(:,:,:,5) = P(:,:,:,5) .* uint8(1-Ygm);
-        P(:,:,:,3) = P(:,:,:,3) .* uint8(1-Ygm);
-        P(:,:,:,2) = P(:,:,:,2) .* uint8(1-Ygm);
-        P(:,:,:,1) = vbm_vol_ctype(single(P(:,:,:,1)) + 255*Ygm);
+        clear Ygmc Ywmc;
+        % head to GM
+        Ygm = uint8(vbm_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>mean(T3th(2:3))) & Yp0<2/3);
+        P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
+        P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
+        P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
+        P(:,:,:,1) = vbm_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
         Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-        clear Ywm Ywmc Ygm;
-        % CSF > skull
-        Yhd  = smooth3(Ysrc/T3th(3).*(Ybb>0.2) - Yp0)>0.3; 
-        Yhdc = vbm_vol_ctype(single(P(:,:,:,3)) - 255*(~Yhd));
-        P(:,:,:,3) = P(:,:,:,3) - Yhdc;
-        P(:,:,:,5) = P(:,:,:,5) + Yhdc;
-        % CSF > scull
-        P(:,:,:,5) = P(:,:,:,5) +  P(:,:,:,3) .* uint8(Ybb<=0.05);
-        P(:,:,:,3) = P(:,:,:,3)               .* uint8(Ybb>0.05);
-        % GM/WM > head
-        for k1=1:2,
-          P(:,:,:,5)  =  P(:,:,:,5)  + (P(:,:,:,k1)/2 .* uint8(1-Yb));
-          P(:,:,:,k1) =  P(:,:,:,k1)                   ./ uint8(2-Yb);
-        end
-        P(:,:,:,5) = P(:,:,:,5) +  P(:,:,:,3) .* uint8(Ybb<=0.05);
-        P(:,:,:,3) = P(:,:,:,3) .* uint8(Ybb>0.05);
-        sP = max(1,single(sum(P,4)))/255; Pp = zeros([d(1:3),Kb],'uint8');
-        for k1=1:size(P,4)
-          Pp(:,:,:,k1) = vbm_vol_ctype(round(single(P(:,:,:,k1))./sP));
-        end
+        clear Ywm Ygm;
+        %% remove brain tissues outside the brainmask ...
+        % tissues > skull (within the brainmask)
+        Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>0.2) - Yp0 )>0.5); 
+        sumP = sum(P(:,:,:,1:3),4); 
+        P(:,:,:,4)   =  vbm_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
+        P(:,:,:,5)   =  vbm_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
+        P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
+        %Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+
+        %%
+%         sP = max(1,single(sum(P,4)))/255; Pp = zeros([d(1:3),Kb],'uint8');
+%         for k1=1:size(P,4)
+%           Pp(:,:,:,k1) = vbm_vol_ctype(round(single(P(:,:,:,k1))./sP));
+%         end
       
         %% MRF
-        P = Pp; clear Pp Ybb;
+%         P = Pp; clear Pp Ybb;
 
         % Used spm_mrf help and tested the probability TPM map for Q without good results.         
         nmrf_its = 0; % 10 interation better to get full probability in thin GM areas 
@@ -1857,8 +1869,8 @@ if vbm.print
   str3 = struct('name', '\bfVolumes:','value',sprintf('%4s %4s %4s %4s cm%s','CSF','GM','WM','WMH')); 
   str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f cm%s', ...
           qa.SM.vol_abs_CGW(1),qa.SM.vol_abs_CGW(2),qa.SM.vol_abs_CGW(3),qa.SM.vol_abs_CGW(4),char(179)))];
-  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f cm%s', ...
-          qa.SM.vol_rel_CGW(1)*100,qa.SM.vol_rel_CGW(2)*100,qa.SM.vol_rel_CGW(3)*100,qa.SM.vol_rel_CGW(4)*100,char(179)))];
+  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f %%', ...
+          qa.SM.vol_rel_CGW(1)*100,qa.SM.vol_rel_CGW(2)*100,qa.SM.vol_rel_CGW(3)*100,qa.SM.vol_rel_CGW(4)*100))];
 %  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%s %s %s %s cm%s', ...
 %          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
 %          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
@@ -1898,10 +1910,10 @@ if vbm.print
       str3    = [str3 struct('name',shorter,'value','')];  %#ok<AGROW>
     end
   end
-  str4 = struct('name',sprintf('Marks/Colors: %s, %s, %s, %s, %s',...
-        mark2str2(1,'%s','1=perfect'),mark2str2(2,'%s','2=good'), ...
-        mark2str2(3,'%s','3=average'),mark2str2(4,'%s','4=poor'), ...
-        mark2str2(5,'%s','5>critical')),'value','');  
+  str4 = struct('name',sprintf('Marks/Colors: %s, %s, %s, %s, %s, %s',...
+        mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
+        mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
+        mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
   
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
@@ -2107,8 +2119,8 @@ fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nVBM preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
   vbm_io_cprintf(color(QMC,qam.QM.rms), sprintf('Overall Preprocessing Quality:  %0.1f\n',qam.QM.rms));
-  vbm_io_cprintf(color(QMC,qam.SM.rms), sprintf('Overall Subject Averageness:    %0.1f',qam.SM.rms));
-  fprintf('\n%s\n\n',repmat('-',1,72));
+  %vbm_io_cprintf(color(QMC,qam.SM.rms), sprintf('\nOverall Subject Averageness:    %0.1f\n',qam.SM.rms));
+  fprintf('%s\n\n',repmat('-',1,72));
  
 clear C c Ym Ymf
 

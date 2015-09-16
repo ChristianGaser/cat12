@@ -633,7 +633,7 @@ function varargout = vbm_tst_qa(action,varargin)
       Ywc = Ywc .* (mean(Yo(Yp0(:)>2))/mean(Ym(Yp0(:)>2)));
       
       %% bias correction for original map, based on the 
-      WI  = Yw./Ywc; WI(isnan(WI) | isinf(WI)) = 0; 
+      WI  = Yw./max(eps,Ywc); WI(isnan(WI) | isinf(WI)) = 0; 
       WI  = vbm_vol_approx(WI,2);
       WI  = vbm_vol_smooth3X(WI,1);
       Ywn = Ywn./WI; Ywn = round(Ywn*1000)/1000;
