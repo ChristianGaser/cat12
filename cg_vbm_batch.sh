@@ -15,7 +15,6 @@ NUMBER_OF_JOBS="";
 nicelevel=0
 shellcommand=
 matlabcommand=
-vbmdir=
 
 ########################################################
 # run main
@@ -108,11 +107,6 @@ parse_args ()
         --c* | -c* | --matlabcommand* | -matlabcommand*)
             exit_if_empty "$optname" "$optarg"
             matlabcommand=$optarg
-            shift
-            ;;      
-        --v* | -v* | --vbmdir* | -vbmdir*)
-            exit_if_empty "$optname" "$optarg"
-            vbmdir=$optarg
             shift
             ;;      
         -h | --help | -v | --version | -V)
@@ -239,12 +233,7 @@ get_no_of_cpus () {
 
 run_vbm ()
 {
-    if [ -z "$vbmdir" ]
-    then 
-      cwd=`dirname $0`
-    else
-      cwd=$vbmdir
-    fi
+    cwd=`dirname $0`
     pwd=$PWD
     
     # we have to go into toolbox folder to find matlab files
@@ -385,17 +374,15 @@ USAGE:
    cg_vbm_batch.sh filename|filepattern [-m matlab_command] [-w] [-p number_of_processes] [-d default_file] [-l log_folder]
    
    -n   nice level
-  [-v   vbm directory (private) ] 
    -m   matlab command (matlab version)
    -s   shell command to call other shell scripts (like FSL)
-   -c   matlab command to call other function like the sanlm-filter
    -f   file with files to process
    -p   number of parallel jobs (=number of processors)
    -np  set number of jobs by number_of_processors - number_of_processes
         (=number of free processors)
-   -w   write already segmented images
    -d   optional default file
    -l   directory for log-file
+   -c   alternative matlab function that can be called such as the SANLM-filter
    
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. Optionally you can set the matlab command 
@@ -421,7 +408,9 @@ EXAMPLE
    are the files avg152PD.nii, avg152T1.nii, and avg152T2.nii.
    As matlab-command /usr/local/bin/matlab7 will be used.
    
-   /Volumes/vbmDB/MRData/batches/cg_vbm_batch.sh -p 2 -c "vbm_vol_sanlm(CFILES,'shtest_')" /Volumes/4TBWD/raw-cg/r[12][0-9][0-9][0-9]*.nii
+   cg_vbm_batch.sh -p 2 -c "vbm_vol_sanlm(CFILES,'sanlm_')" /Volumes/4TBWD/raw-cg/r[12][0-9][0-9][0-9]*.nii
+   This command will call the SANLM-filter using the given files, that have to be indicated with CFILES
+   as first argument. As prefix 'sanlm_' will be used.
    
 
 INPUT:
