@@ -1,4 +1,4 @@
-function out = spm_groupwise_ls(Nii, output, prec, b_settings, ord)
+function out = vbm_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
 % Groupwise registration via least squares
 % FORMAT out = spm_groupwise_ls(Nii, output, prec, b_settings, ord)
 % Nii    - a nifti object for two or more image volumes.
@@ -22,7 +22,7 @@ function out = spm_groupwise_ls(Nii, output, prec, b_settings, ord)
 % John Ashburner
 % spm_groupwise_ls.m 6008 2014-05-22 12:08:01Z john
 %
-% $Id cg_groupwise_ls.m $
+% $Id vbm_vol_groupwise_ls.m $
 
 % Get handles to NIfTI data
 %-----------------------------------------------------------------------
@@ -380,7 +380,7 @@ if need_avg,
         Nio.descrip = sprintf('Average of %d', numel(param));
         create(Nio);
         Nio.dat(:,:,:) = mu;
-        out.avg{1}     = nam;
+        out.avg        = nam;
     else
         out.avg        = mu;
     end

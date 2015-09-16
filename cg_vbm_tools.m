@@ -994,11 +994,11 @@ function cdep = vout_reslice(job)
 
 cdep(1)          = cfg_dep;
 cdep(1).sname      = 'Midpoint Average';
-cdep(1).src_output = substruct('.','avg');
+cdep(1).src_output = substruct('.','avg','()',{':'});
 cdep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 cdep(2)          = cfg_dep;
 cdep(2).sname      = 'Realigned images';
-cdep(2).src_output = substruct('.','rimg');
+cdep(2).src_output = substruct('.','rimg','()',{':'});
 cdep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
 %------------------------------------------------------------------------

@@ -22,12 +22,10 @@ function vbm_vol_sanlm(varargin)
 
 if nargin == 0 
     job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
-    %for i=1:size(P,1)
-    %    job.data{i} = deblank(P(i,:));
-    %end
 else
     job = varargin{1};
 end
+
 if ~isfield(job,'data') || isempty(job.data)
    job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
 else

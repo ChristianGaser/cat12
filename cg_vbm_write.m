@@ -1107,7 +1107,7 @@ if do_cls && do_defs
     if job.extopts.cleanupstr>0
       vbm_warnings = vbm_io_addwarning(vbm_warnings,...
         'MATLAB:SPM:VBM:cg_vbm_write:noCleanup',...
-        sprintf('No cleanup possible, because of to low resolution!'),0);
+        sprintf('No cleanup possible, because of too low resolution!'),0);
       fprintf('\n');
     end
     for i=1:3
