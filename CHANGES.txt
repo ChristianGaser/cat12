@@ -7318,3 +7318,12 @@ column cellstr. Thanks to Yang Ding for pointing to that issue.
 
 ------------------------------------------------------------------------
 r732 | gaser | 2015-09-17 10:01:45
+
+M       CHANGES.txt
+M       html/vbm12.html
+M       vbm_vol_groupwise_ls.m
+
+Replace noise estimation of NaN by average value in vbm_vol_groupwise_ls.m.
+
+------------------------------------------------------------------------
+r733 | gaser | 2015-09-17 13:33:53
