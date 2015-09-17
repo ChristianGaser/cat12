@@ -49,6 +49,13 @@ for i=find(~isfinite(prec)),
     prec(i) = 1/spm_noise_estimate(Nii(i)).^2;
 end
 
+% set all values of average if NaN values were found in noise estimation
+ind_nan = find(~isfinite(prec));
+if ~isempty(ind_nan)
+  mean_prec = mean(prec(isfinite(prec)));
+  prec(:) = mean_prec;
+end
+
 % Basis functions for algebra of rigid-body transform
 %-----------------------------------------------------------------------
 B = se3_basis;
