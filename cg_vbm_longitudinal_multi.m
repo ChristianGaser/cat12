@@ -134,9 +134,14 @@ return;
 %------------------------------------------------------------------------
 function dep = vout_long(job)
 for k=1:numel(job.subj)
-    dep(k)            = cfg_dep;
-    dep(k).sname      = sprintf('Segmented longitudinal data (Subj %d)',k);
-    dep(k).src_output = substruct('()',{k},'.','files');
-    dep(k).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    cdep(k)            = cfg_dep;
+    cdep(k).sname      = sprintf('Segmented longitudinal data (Subj %d)',k);
+    cdep(k).src_output = substruct('.','sess','()',{k},'.','files');
+    cdep(k).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    if k == 1
+        dep = cdep;
+    else
+        dep = [dep cdep];
+    end
 end;
 %------------------------------------------------------------------------

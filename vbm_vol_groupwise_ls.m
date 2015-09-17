@@ -6,7 +6,6 @@ function out = vbm_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
 %          'wimg   - write realigned images to disk
 %          'avg'   - return average in out.avg
 %          'wavg'  - write average to disk, and return filename in out.avg
-%          'rigid' - return rigid-body transforms
 %
 % prec       - reciprocal of noise variance on images.
 % b_settings - regularisation settings for nonuniformity field.
@@ -380,9 +379,9 @@ if need_avg,
         Nio.descrip = sprintf('Average of %d', numel(param));
         create(Nio);
         Nio.dat(:,:,:) = mu;
-        out.avg        = nam;
+        out.avg       = nam;
     else
-        out.avg        = mu;
+        out.avg       = mu;
     end
 end
 
@@ -402,7 +401,7 @@ if need_wimg,
         Nio.descrip = sprintf('Realigned %d', numel(param));
         create(Nio);
         Nio.dat(:,:,:) = img;
-        out.rimg{i} = nam;
+        out.rimg{i}    = nam;
     end
 end
 

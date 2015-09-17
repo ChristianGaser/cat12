@@ -28,6 +28,9 @@ Nii    = nifti(strvcat(job.data));
 % always write realigned images and average to disk
 output = [{'wimg'}, {'wavg'}];
 
-out    = vbm_vol_groupwise_ls(Nii, output, prec, bparam);
+dat    = vbm_vol_groupwise_ls(Nii, output, prec, bparam);
+out.avg{1} = dat.avg;
+out.rimg   = dat.rimg;
+
 return
 

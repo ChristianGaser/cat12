@@ -4,7 +4,7 @@ function out = cg_vbm_longitudinal_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global data_long opts extopts output modulate
+global opts extopts output modulate
 
 warning off;
 
@@ -13,6 +13,9 @@ opts     = job.opts;
 extopts  = job.extopts;
 output   = job.output;
 modulate = job.modulate;
+
+jobs = repmat({'cg_vbm_longitudinal.m'}, 1, numel(job.subj));
+inputs = cell(1, numel(job.subj));
 
 for i=1:numel(job.subj),
     out(i).files = cell(numel(job.subj(i).mov),1);
@@ -30,9 +33,9 @@ for i=1:numel(job.subj),
         end
         data{j} = job.subj(i).mov{j};
     end
-    data_long = data;
-    cg_vbm_longitudinal;
-    spm_jobman('run',matlabbatch);
+    inputs{1,i} = data;
 end;
+
+spm_jobman('run',jobs,inputs{:});
 
 warning on;
