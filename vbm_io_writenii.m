@@ -102,10 +102,11 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
                   spm_platform('bigend')],range(1),range(2),0);
     N.mat     = nV.mat;
 
-    % do not change mat0 - 20150612
-    %warning off; 
-    %N.mat0    = nV.mat;
-    %warning on; 
+    % do not change mat0 - 20150612 
+    % its a new image! 20150916
+    warning off; 
+    N.mat0    = nV.mat;
+    warning on; 
 
     if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc ' < ' V.descrip]; end
     create(N);
@@ -213,7 +214,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
               [spm_type(spmtype) spm_platform('bigend')], ...
               range(1),range(2),0);
     N.mat  = transform.warped.M1;
-    %N.mat0 = transform.warped.M1; % do not change mat0 - 20150612
+    N.mat0 = transform.warped.M1; % do not change mat0 - 20150612 - not changing, creating 20150916
     if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc2 ' < ' V.descrip]; end
     create(N);
     N.dat(:,:,:) = double(wT);
@@ -277,7 +278,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
                     [spm_type(spmtype) spm_platform('bigend')], ...
                     range(1),range(2),0);
       N.mat     = transform.warped.M1;
-      %N.mat0    = transform.warped.M1; % do not change mat0 - 20150612
+      N.mat0    = transform.warped.M1; % do not change mat0 - 20150612 - not changing, creating 20150916
       create(N);       
       if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc3 ' < ' V.descrip]; end
       N.dat(:,:,:) = double(wT)*abs(det(transform.warped.M0(1:3,1:3))/ ...
@@ -288,7 +289,7 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
                     [spm_type(spmtype) spm_platform('bigend')], ...
                     range(1),range(2),0);
       N.mat     = transform.warped.M1;
-      %N.mat0    = transform.warped.M1; % do not change mat0 - 20150612
+      N.mat0    = transform.warped.M1; % do not change mat0 - 20150612 - not changing, creating 20150916
       if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc ' < ' V.descrip]; end
       create(N);       
       if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc ' < ' V.descrip]; end
@@ -332,9 +333,10 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
       % do not change mat0 - 20150612
       % the mat0 contain the rigid transformation for the deformation tools!
       % get rid of the QFORM0 rounding warning
-      %warning off
-      %N.mat0  = transf.mat0;
-      %warning on
+      warning off
+      N.mat   = transf.mat; 
+      N.mat0  = transf.mat0; 
+      warning on
 
       %N.mat_intent  = 'Aligned';
       %N.mat0_intent = 'Aligned';
