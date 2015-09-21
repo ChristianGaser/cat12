@@ -1530,7 +1530,7 @@ vbm_io_writenii(VT0,Yl1,'a1','brain atlas map for major structures and sides',..
 
 
 
-% class maps
+%% class maps
 fn = {'GM','WM','CSF'};
 for clsi=1:3
   %%
@@ -1541,7 +1541,7 @@ for clsi=1:3
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 0 2 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
-% write WMH class maps
+%% write WMH class maps
 if job.extopts.WMHC==1 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint8',[0,1/255],...
     min([1 1 0 2],cell2mat(struct2cell(job.output.WMH)')),trans); % 1 0 0 0
@@ -1551,7 +1551,7 @@ end
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
 
-% write jacobian determinant
+%% write jacobian determinant
 if jc
   [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
   clear y0
@@ -1776,7 +1776,7 @@ clear wYp0 wYcls wYv
 stime = vbm_io_cmd('Quality check');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
-          struct('write_csv',0,'write_xml',0,'method','vbm12'));
+          struct('write_csv',0,'write_xml',1,'method','vbm12'));
 if job.output.surface
   qa.SM.dist_thickness{1} = dist_thickness{1};
   qa.SM.dist_WMdepth{1}   = dist_thickness{2};
@@ -1866,7 +1866,7 @@ if vbm.print
       
   % Subject Measures
   % --------------------------------------------------------------------
-  str3 = struct('name', '\bfVolumes:','value',sprintf('%4s %4s %4s %4s cm%s','CSF','GM','WM','WMH')); 
+  str3 = struct('name', '\bfVolumes:','value',sprintf('%4s %4s %4s %4s%s','CSF','GM','WM','WMH')); 
   str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f cm%s', ...
           qa.SM.vol_abs_CGW(1),qa.SM.vol_abs_CGW(2),qa.SM.vol_abs_CGW(3),qa.SM.vol_abs_CGW(4),char(179)))];
   str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f %%', ...

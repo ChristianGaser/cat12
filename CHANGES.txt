@@ -7299,7 +7299,6 @@ M       vbm_vol_series_align.m
 
 Reorganized and updated longitudinal batch that caused problems with 
 column cellstr. Thanks to Yang Ding for pointing to that issue. 
- 
 
 ------------------------------------------------------------------------
 r731 | gaser | 2015-09-16 17:18:08
@@ -7314,7 +7313,6 @@ M       vbm_vol_series_align.m
 
 Reorganized and updated longitudinal batch that caused problems with 
 column cellstr. Thanks to Yang Ding for pointing to that issue. 
- 
 
 ------------------------------------------------------------------------
 r732 | gaser | 2015-09-17 10:01:45
@@ -7327,3 +7325,13 @@ Replace noise estimation of NaN by average value in vbm_vol_groupwise_ls.m.
 
 ------------------------------------------------------------------------
 r733 | gaser | 2015-09-17 13:33:53
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       vbm_io_writenii.m
+
+Corrected mat0 in rigid output images.
+
+
+------------------------------------------------------------------------
+r734 | dahnke | 2015-09-21 07:57:05
