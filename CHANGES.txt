@@ -7335,3 +7335,12 @@ Corrected mat0 in rigid output images.
 
 ------------------------------------------------------------------------
 r734 | dahnke | 2015-09-21 07:57:05
+
+M       CHANGES.txt
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+
+(1) Added CSF and label again to GUI...
+(2) Slightly changed printed outpput of cg_vbm_write.m.
+------------------------------------------------------------------------
+r735 | gaser | 2015-09-24 10:23:47
