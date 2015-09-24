@@ -51,7 +51,7 @@ function varargout = vbm_surf_display(varargin)
   def.imgprint.dpi   = 600;
   def.imgprint.fdpi  = @(x) ['-r' num2str(x)];
   def.imgprint.do    = 1;
-  def.imgprint.close = 1;
+  def.imgprint.close = 0;
 
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;

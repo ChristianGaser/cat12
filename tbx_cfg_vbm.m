@@ -42,7 +42,11 @@ surface.help   = {
 };
 
 %------------------------------------------------------------------------
-
+% Parameter to choose between different ways to extract data by ROIs.
+% Inactive due to missing evaluation of the subject space ROI analysis. 
+% RD 20150924
+%------------------------------------------------------------------------
+%{
 ROI        = cfg_menu;
 ROI.tag    = 'ROI';
 ROI.name   = 'ROI analyis';
@@ -70,7 +74,7 @@ ROI.help   = {
   '    https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details'
 ''
 };
-
+%}
 
 native        = cfg_menu;
 native.tag    = 'native';
@@ -275,7 +279,7 @@ warps.help   = {
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
-output.val  = {surface ROI grey white csf label bias jacobian warps}; % wmh, atlas, pc, te};
+output.val  = {surface grey white csf label bias jacobian warps}; % ROI, wmh, atlas, pc, te};
 output.help = {
 'There are a number of options about what data you would like the routine to produce. The routine can be used for producing images of tissue classes, as well as bias corrected images. The native space option will produce a tissue class image (p*) that is in alignment with the original image. You can also produce spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the vbm toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The produced images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
 ''

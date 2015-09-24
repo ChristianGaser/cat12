@@ -269,13 +269,13 @@ print.help   = {
 
 darteltpm         = cfg_files;
 darteltpm.tag     = 'darteltpm';
-darteltpm.name    = 'Dartel Template';
+darteltpm.name    = 'Spatial normalization Template';
 darteltpm.filter  = 'image';
-darteltpm.ufilter = '_1_';
+darteltpm.ufilter = '_1';
 darteltpm.def     = @(val)cg_vbm_get_defaults('extopts.darteltpm', val{:});
 darteltpm.num     = [1 1];
 darteltpm.help    = {
-   'Selected Dartel template must be in multi-volume nifti format and should contain GM and WM segmentations. Here the template of the first iteration (indicated by _1_) should be selected, but the templates of all 6 iterations should be present.'
+   'Selected Dartel/Shooting template must be in multi-volume nifti format and should contain GM and WM segmentations. For Dartel the template of the first iteration (indicated by '_1') should be selected, whereas the zero iteration template (indicated by '_0') should be selected for Shooting.  In both cases the templates of all 6 (Dartel) or 4 (Shooting) iterations must be present.'
 ''
 };
 

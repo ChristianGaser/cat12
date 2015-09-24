@@ -7344,3 +7344,28 @@ M       tbx_cfg_vbm.m
 (2) Slightly changed printed outpput of cg_vbm_write.m.
 ------------------------------------------------------------------------
 r735 | gaser | 2015-09-24 10:23:47
+
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_extopts.m
+M       cg_vbm_write.m
+M       tbx_cfg_vbm.m
+ M      templates_1.50mm
+A       templates_1.50mm/Template_0_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_1_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_2_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_3_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
+M       vbm_surf_display.m
+
+(1)  Added preliminary Shooting deformation that still requires a correction of  
+     the affine component of the modulated output with/without - in other words
+     the w0r* wr* images are not correct!
+     The differentiation between Dartel and Shooting is done by the selected  
+     template. 
+(2)  Removed ROI data extraction option from GUI.
+(3)  Corrected small errors.
+(4)  Corrected another uint8 NAN error.
+(5)  Added preliminary Shooting template (Template_*_NKI174_MNI152_GS.nii).
+------------------------------------------------------------------------
+r736 | dahnke | 2015-09-24 17:06:07
