@@ -44,6 +44,17 @@ if ~isfield(job.output,'WMH')
                            'mod',0, ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
+if ~isfield(job.output,'CSF')
+  job.output.CSF  = struct('native',cg_vbm_get_defaults('output.CSF.native'), ...
+                           'warped',cg_vbm_get_defaults('output.CSF.warped'), ...
+                           'mod',cg_vbm_get_defaults('output.CSF.mod'), ...
+                           'dartel',cg_vbm_get_defaults('output.CSF.dartel'));
+end
+if ~isfield(job.output,'label')
+  job.output.label  = struct('native',cg_vbm_get_defaults('output.label.native'), ...
+                             'warped',cg_vbm_get_defaults('output.label.warped'), ...
+                             'dartel',cg_vbm_get_defaults('output.label.dartel'));
+end
 FN = {'INV','atlas','debug','WMHC','NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb','vox'};
 for fni=1:numel(FN)
   if ~isfield(job.extopts,FN{fni})
@@ -100,9 +111,9 @@ end
 % lb - Yp0b: native, warped Yp0b, rigid Yp0b, affine Yp0b
 % jc - jacobian: no, normalized 
 
-do_dartel = 1;  % always use dartel normalization
+do_dartel = 1;      % always use dartel/shooting normalization
 vbm.open_th = 0.25; % initial threshold for skull-stripping
-vbm.dilate = 1; % number of final dilations for skull-stripping
+vbm.dilate = 1;     % number of final dilations for skull-stripping
 
 if do_dartel
   need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.output.surface;
@@ -134,27 +145,28 @@ x3  = 1:d(3);
 
 % run dartel registration to GM/WM dartel template
 if do_dartel
-    darteltpm = vbm.darteltpm;
-    % find position of '_1_'
-    numpos = strfind(darteltpm,'Template_1.nii');
-    numpos = numpos+8;
-    if isempty(numpos)
-        numpos = strfind(darteltpm,'_1_');
+  %% find all templates and distinguish between Dartel and Shooting 
+  %  writen to match for Template_1 or Template_0 as first template.  
+  template = strrep(vbm.darteltpm,',1','');
+  [templatep,templatef,templatee] = spm_fileparts(template);
+  numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
+  if isempty(numpos)
+    error('Could not find ''Template_1'' or ''Template_0'' that indicates the first Dartel/Shooting template in cg_vbm_defaults.');
+  end
+  vbm.templates = vbm_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
+  vbm.templates(cellfun('length',vbm.templates)~=numel(template)) = [];
+  tpm2 = cell(1,numel(vbm.templates));
+  if numel(vbm.templates)~=6, do_dartel=2; end
+  [template1p,template1f] = spm_fileparts(vbm.templates{1});
+  if ~isempty(strfind(templatef,'Template_1')) && ~isempty(strfind(template1f,'Template_0')), vbm.templates(1) = []; end 
+  run2 = struct();
+  for j=1:numel(vbm.templates)
+    for i=1:2
+      run2(i).tpm = fullfile(templatep,[templatef(1:numpos) num2str(j-(templatef(numpos+1)=='0')) ...
+        templatef(numpos+2:end) templatee ',' num2str(i)]);
     end
-    if isempty(numpos)
-        error('Could not find _1_ that indicates the first Dartel template in cg_vbm_defaults.');
-    end
-    if strcmp(darteltpm(1,end-1:end),',1') >0
-        darteltpm = darteltpm(1,1:end-2);
-    end
-    tpm2 = cell(1,6);
-    for j=1:6
-        run2 = struct();
-        for i=1:2
-            run2(i).tpm =  [darteltpm(1:numpos) num2str(j) darteltpm(numpos+2:end) ',' num2str(i)];
-        end
-        tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
-    end
+    tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
+  end
 end
 clear numpos run2 darteltpm
 
@@ -413,7 +425,7 @@ if do_cls
         P(:,:,:,6) = P6;
         clear P4 P5 P6;
         
-        %% correct probability maps to 100%
+        %% correct probability maps to 100% 
         sumP = vbm_vol_ctype(255 - sum(P(:,:,:,1:6),4));
         P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>mean(T3th(1:2)) & Ysrc<mean(T3th(2:3)));
         P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=mean(T3th(2:3)));
@@ -460,10 +472,10 @@ if do_cls
         %Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
 
         %%
-%         sP = max(1,single(sum(P,4)))/255; Pp = zeros([d(1:3),Kb],'uint8');
-%         for k1=1:size(P,4)
-%           Pp(:,:,:,k1) = vbm_vol_ctype(round(single(P(:,:,:,k1))./sP));
-%         end
+        sP = max(1,single(sum(P,4)))/255; Pp = zeros([d(1:3),Kb],'uint8');
+        for k1=1:size(P,4)
+          Pp(:,:,:,k1) = vbm_vol_ctype(round(single(P(:,:,:,k1))./sP));
+        end
       
         %% MRF
 %         P = Pp; clear Pp Ybb;
@@ -702,7 +714,7 @@ end
 if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = vbm_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
-  [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.vbm.vbm12atlas,vbm.darteltpm);
+  [Ym,Ycls] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.vbm.vbm12atlas,vbm.templates);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
@@ -1318,6 +1330,9 @@ vx3  = [[1       1       1
         odim(1) odim(2) odim(3)]'; ones(1,8)];
 mat    = mm/vx3; 
 
+% individual parameters
+trans.native.Vo = VT0;
+trans.native.Vi = VT;
     
 % affine parameters
 Mad     = vx2d/vx3; % affine parameter for dartel template M1d\(res.Affine)*
@@ -1325,10 +1340,22 @@ Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
 mat0a   = res.Affine\M1*vx2/vx3;
 mata    = mm/vx3;
 trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
-    
+
+% rigid parameters
+x      = affind(rgrid(d),M0);
+y1     = affind(Yy,M1d);     
+[M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
+Mr      = M0\inv(R)*M1*vx2/vx3;
+mat0r   = R\M1*vx2/vx3;
+matr    = mm/vx3;
+
+% old spm normalization used for atlas map
+trans.atlas.Yy = Yy; 
+
+
 %%
 % dartel spatial normalization to given template
-if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
+if do_dartel==1 && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     stime = vbm_io_cmd('Dartel registration'); 
     
     % use GM/WM for dartel
@@ -1375,7 +1402,7 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
                 g(:,:,i,k1) = single(spm_slice_vol(tpm2{it}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
             end
         end
-        %%
+
         for j = 1:param(it).its,
             it0 = it0 + 1;
             [u,ll] = dartel3(u,f,g,prm);
@@ -1410,10 +1437,10 @@ if do_dartel && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     fprintf('\n');
     vbm_io_cmd(' ','g5','',verb,stime);
     %fprintf('\n%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
-end
 
-if exist('Yy','var'),
-    trans.atlas.Yy = Yy; 
+    
+    %%
+    
 
     M = mat\M1;
     for i=1:size(Yy,3),
@@ -1428,50 +1455,139 @@ if exist('Yy','var'),
     
     trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',M1,'M2',M1\res.Affine*M0,'dartel',do_dartel);
 
-    clear Yy t1 t2 t3 M;
-end
+    clear Yy t1 t2 t3 M; 
+    
+    % rigid transformation update 
+    % erstmal nicht, wird eigentlich anhand der Yy vor Dartel bestimmt 
+    % und kann zu abweichung zw. den Deformationen führen ... 50120921
+    %{
+    if do_dartel==1 && (any(tc(:,2)) || lb(1,3))
+        %M0o = res.image0.mat; 
 
-% rigid transformation
-if (any(tc(:,2)) || lb(1,3))
+        x      = affind(rgrid(d),M0);
+        y1     = affind(trans.warped.y,M1d); % required new transformation
+
+        [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255); % M3 ist die neue affine matrix !
+        clear x y1
+
+        % rigid parameters
+        Mr      = M0\inv(R)*M1*vx2/vx3;
+        mat0r   = R\M1*vx2/vx3;
+        matr    = mm/vx3;
+  
+        trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
+    end
+    %}
+  
+    
+elseif do_dartel==2 && any([tc(2:end),bf(2:end),df,lb(1:end),jc])    
   %%
-    %M0o = res.image0.mat; 
-    x      = affind(rgrid(d),M0);
-    y1     = affind(trans.warped.y,M1d); % required new transformation
-        
-    [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
-    clear x y1
+    stime = vbm_io_cmd('Shooting registration'); fprintf('\n'); 
+    
+    % shooting parameter
+    sd      = spm_shoot_defaults;
+    cyc_its = sd.cyc_its;      % No. multigrid cycles and inerations
+    sched   = sd.sched;        % Schedule for coarse to fine
+    nits    = numel(sched)-1;
+    rparam  = sd.rparam;       % Regularisation parameters for deformation
+    eul_its = sd.eul_its;      % Start with fewer steps
+    scale   = sd.scale;        % Fraction of Gauss-Newton update step to use
+    bs_args = sd.bs_args;      % B-spline settings for interpolation
+    n1      = 2;              % use GM/WM for shooting
+    vxs     = repmat(prod(job.extopts.vox),1,3); % shooting voxel size
+    dm      = max(vx2(1:3,:),[],2)';
+    
+    % use affine registration as Shooting input
+    affine  = 1; if affine, Ms = Ma; else Ms = Mr; end 
+    
+    % Sort out which template for each iteration
+    tmpl_no = round(((1:nits)-1)/(nits-1)*(numel(tpm2)-0.51))+1;
 
-    % rigid parameters
-    Mr      = M0\inv(R)*M1*vx2/vx3;
-    mat0r   = R\M1*vx2/vx3;
-    matr    = mm/vx3;
+    % create shooting files - here the affine images!
+    f = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');ones(odim(1:3),'single')};  % individual [rigid|affine] GM, WM and BG segments 
+    g = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');zeros(odim(1:3),'single')}; % template GM, WM and BG segments
+    def = single(reshape(affind(spm_diffeo('Exp',zeros([dm,3],'single'),[0 1]),mat0r),[dm,1,3])); 
+    y = affind(squeeze(def),inv(mat0r)); clear def;                     % deformation field
+    u = zeros([odim(1:3) 3],'single');                                  % flow field
+    dt = ones(odim(1:3),'single');                                      % jacobian
+    for k1=1:n1
+      for i=1:odim(3),
+        f{k1}(:,:,i) = single(spm_slice_vol(single(Ycls{k1}),Ms*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255); 
+      end
+      f{k1}(isnan(f{k1}) | ~isfinite(f{k1}))=0;
+      f{n1+1} = f{n1+1} - f{k1}; 
+    end
     
-    trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
+    % The actual work
+    for it=1:nits,
+
+      % load new template for this iteration
+      if it==1 || (tmpl_no(it)~=tmpl_no(it-1))
+        bg = ones(odim,'single');
+        for k1=1:n1
+          for i=1:odim(3),
+            g{k1}(:,:,i) = single(spm_slice_vol(tpm2{tmpl_no(it)}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
+          end
+          bg    = bg - g{k1};
+          g{k1} = spm_bsplinc(log(g{k1}), bs_args);
+        end
+        g{n1+1}  = log(max(bg,eps));
+        clear bg
+      end
+
+
+      % More regularisation in the early iterations, as well as a
+      % a less accurate approximation in the integration.
+      prm      = [vxs, rparam*sched(it+1)*prod(vxs)];
+      int_args = [eul_its(it), cyc_its]; drawnow
+
+      fprintf('%-3d\t| ',it);
+
+      % Gauss-Newton iteration to re-estimate deformations for this subject
+      u     = spm_shoot_update(g,f,u,y,dt,prm,bs_args,scale); drawnow
+      [y,J] = spm_shoot3d(u,prm,int_args); drawnow
+      dt    = spm_diffeo('det',J); clear J
+      clear J
+
+      if any(~isfinite(dt(:)) | dt(:)>100 | dt(:)<1/100)
+        fprintf('Problem with Shooting (dets: %g .. %g)\n', min(dt(:)), max(dt(:)));
+        clear dt
+      end
+      drawnow
+
+    end
     
-    %vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
-    %sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-    %min([0 0 0 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
+    yi = spm_diffeo('invdef',y,d,Ms,eye(4)); 
+
+    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel>0);
+    trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr); % require old rigid transformation
+   
+    %% schneller test
+    %%{ 
+    % class maps
+    fn = {'GM','WM','CSF'};
+    for clsi=1:2
+      %%
+      vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+        sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[1 1 0 1],trans);
+      vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+        sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 2],trans);
+      vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+        sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 1 0],trans);
+      vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+        sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 2 0],trans);  
+    end
+    %}
+    
+    vbm_io_cmd(' ','',''); vbm_io_cmd('','','',verb,stime);
 end
+clear Yy u;
+    
 
-trans.native.Vo = VT0;
-trans.native.Vi = VT;
+
 if job.extopts.WMHC==1 && job.extopts.WMHCstr>0 && ~opt.inv_weighting;
   Ycls = Yclso; clear Yclso;
 end
-
-
-%{
-%% ---------------------------------------------------------------------
-%  XML-report and Quality Assurance
-%  ---------------------------------------------------------------------
-stime = vbm_io_cmd('Quality check');
-Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
-qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,struct('write_csv',0,'write_xml',0,'method','vbm12'));
-clear Yo Ybf Yp0 qas;
-fprintf('%4.0fs\n',etime(clock,stime));
-%}
-
-% here it would be possible to change the path for low res images ... 
 
 
 
@@ -1480,22 +1596,6 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  ---------------------------------------------------------------------
 stime = vbm_io_cmd('Write result maps');
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-
-%% ------ TEST -------
-%{
-Ymb = Ym(indx,indy,indz); Ymb = 3*Ymb.*(Yp0b>0.5);
-YM  = max(0,min(1,(Ymb-2))); YM(Ymb<=0)=nan; Ywmd  = vbm_vol_eidist(YM,max(0,min(1,Ymb-1)),vx_vol,1,1,0,0); 
-YM  = max(0,min(1,(2-Ymb))); YM(Ymb<=0)=nan; Ycsfd = vbm_vol_eidist(YM,max(0,min(1,3-Ymb)),vx_vol,1,1,0,0);
-[Ygmt,Yppg] = vbm_vol_pbtp(Ymb,Ywmd,Ycsfd); clear Ygmt;
-YM  = max(0,min(1,(2.5-Ymb)*2)); YM(Ymb<=0)=nan; Ywmdi = vbm_vol_eidist(YM,ones(size(YM),'single'),vx_vol,1,1,0,0);
-[Ygmt,Yppw] = vbm_vol_pbtp(max(2,5-Ymb),Ywmdi,inf(size(Ywmdi),'single')); clear Ygmt;
-Yppb = (Yppg + (1-Yppw).*min(1,Ywmdi/2))/2;
-Yppb = vbm_vol_median3(Yppb,Yp0b>1 & Yppb<0.7,Yp0b>1 & Yppb<0.7);
-spm_smooth(Yppb,Yppb,[1.5,1.5,1.5]);
-Ypp  = zeros(d,'single'); Ypp(indx,indy,indz) = single(Yppb); 
-vbm_io_writenii(VT0,Ypp,'pp','Ypp map','uint8',[0,1/255],struct('native',0,'warped',0,'dartel',2),trans);
-%}
-%% ------ END TEST ---
 
 % bias and noise corrected without masking for subject space and with 
 % masking for other spaces 
@@ -1522,7 +1622,6 @@ vbm_io_writenii(VT0,Yl1,'a1','brain atlas map for major structures and sides',..
 %% class maps
 fn = {'GM','WM','CSF'};
 for clsi=1:3
-  %%
   vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
     min([1 1 0 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
@@ -1542,10 +1641,12 @@ end
 
 %% write jacobian determinant
 if jc
-  [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
-  clear y0
+  if do_dartel==1
+    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+    clear y0
+  end
   N      = nifti;
-  N.dat  = file_array(fullfile(pth,['jac_wp1', nam, '.nii']),trans.warped.odim(1:3),...
+  N.dat  = file_array(fullfile(pth,['j_', nam, '.nii']),trans.warped.odim(1:3),...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
   N.mat  = M1;
   N.mat0 = M1;
@@ -1810,11 +1911,13 @@ if vbm.print
     
   % VBM GUI parameter:
   % --------------------------------------------------------------------
+  SpaNormMeth = {'None','Dartel','Shooting'}; 
 	str = [];
 	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
 	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
-  str = [str struct('name', 'Dartel Template:','value',spm_str_manip(vbm.darteltpm,'k40d'))];
-	str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
+  str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(vbm.darteltpm,'k40d'))];
+  str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
+  str = [str struct('name', 'Affine regularization:','value',sprintf('%s',vbm.affreg))];
   if vbm.sanlm==0 || job.extopts.NCstr==0
     str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
   elseif vbm.sanlm>0 && vbm.sanlm<3
@@ -2857,7 +2960,7 @@ function [Yml,Ycls,Ycls2,T3th] = vbm_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     
     % load WM of the TPM or Dartel/Shooting Template for WMHs
     %Ywtpm = vbm_vol_ctype(spm_sample_vol(res.tpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
-    template  = strrep(template,'Template_1.nii','Template_6.nii'); 
+    template = template{end}; 
     Vtemplate = spm_vol(template); 
     Ywtpm = vbm_vol_ctype(spm_sample_vol(Vtemplate(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
     Ywtpm = reshape(Ywtpm,dsize); spm_smooth(Ywtpm,Ywtpm,2*vxv);
@@ -3772,11 +3875,11 @@ spm_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
 for j=1:niter
     if j>2, th=th1; else th=0.6; end  % Dilate after two its of erosion
     for i=1:size(b,3)
-        gp       = double(P(:,:,i,1));
-        wp       = double(P(:,:,i,2));
-        bp       = double(b(:,:,i))/255;
+        gp       = single(P(:,:,i,1));
+        wp       = single(P(:,:,i,2));
+        bp       = single(b(:,:,i))/255;
         bp       = (bp>th).*(wp+gp);
-        b(:,:,i) = uint8(round(bp));
+        b(:,:,i) = vbm_vol_ctype(round(bp));
     end
     spm_conv_vol(b,b,kx,ky,kz,-[1 1 1]);
     spm_progress_bar('Set',j);
@@ -3787,12 +3890,12 @@ if niter2 > 0,
     c = b;
     for j=1:niter2
         for i=1:size(b,3)
-            gp       = double(P(:,:,i,1));
-            wp       = double(P(:,:,i,2));
-            cp       = double(P(:,:,i,3));
-            bp       = double(c(:,:,i))/255;
+            gp       = single(P(:,:,i,1));
+            wp       = single(P(:,:,i,2));
+            cp       = single(P(:,:,i,3));
+            bp       = single(c(:,:,i))/255;
             bp       = (bp>th).*(wp+gp+cp);
-            c(:,:,i) = uint8(round(bp));
+            c(:,:,i) = vbm_vol_ctype(round(bp));
         end
         spm_conv_vol(c,c,kx,ky,kz,-[1 1 1]);
         spm_progress_bar('Set',j+niter);
@@ -3803,15 +3906,15 @@ th = 0.05;
 for i=1:size(b,3)
     slices = cell(1,size(P,4));
     for k1=1:size(P,4),
-        slices{k1} = double(P(:,:,i,k1))/255;
+        slices{k1} = single(P(:,:,i,k1))/255;
     end
-    bp        = double(b(:,:,i))/255;
+    bp        = single(b(:,:,i))/255;
     bp        = ((bp>th).*(slices{1}+slices{2}))>th;
     slices{1} = slices{1}.*bp;
     slices{2} = slices{2}.*bp;
 
     if niter2>0,
-        cp        = double(c(:,:,i))/255;
+        cp        = single(c(:,:,i))/255;
         cp        = ((cp>th).*(slices{1}+slices{2}+slices{3}))>th;
         slices{3} = slices{3}.*cp;
     end
@@ -3821,7 +3924,7 @@ for i=1:size(b,3)
         tot   = tot + slices{k1};
     end
     for k1=1:size(P,4),
-        P(:,:,i,k1) = uint8(round(slices{k1}./tot*255));
+        P(:,:,i,k1) = vbm_vol_ctype(round(slices{k1}./tot*255));
     end 
 end
 spm_progress_bar('Clear');
