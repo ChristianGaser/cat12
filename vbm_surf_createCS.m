@@ -154,39 +154,27 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime));
     
     
-    %% Write Ypp for final deformation
-    %  Write Yppi file with 1 mm resolution for the final deformation, 
-    %  because CAT_DeformSurf_ui can not handle higher resolutions and
-    %  will create cauliflower surfaces. 
-    %  
-    %  #################################################################
-    %  Here we still have a problem. The image with 0 mm looks good, and
-    %  its coordinatats are correct. Check Reg shows pefect matching, but
-    %  something still went wrong... but if the error is not in the picture
-    %  this meas that the error is in the surface and that vmat and vmati
-    %  are not correct!
-    %  #################################################################
-    if opt.usePPmap
-      Yppt = vbm_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
-      Yppt = vbm_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-      Vpp  = vbm_io_writenii(V,Yppt,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-      clear Yppt;
+    %% Write Yppi file with 1 mm resolution for the final deformation, 
+    %  because CAT_DeformSurf_ui can not handle higher resolutions.
+    Yppt = vbm_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
+    Yppt = vbm_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
+    Vpp  = vbm_io_writenii(V,Yppt,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+    clear Yppt;
 
-      Vpp1 = Vpp; 
-      Vpp1.fname    = fullfile(pp,['pp1' ff '.nii']);
-      vmat2         = spm_imatrix(Vpp1.mat);
-      Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
-      vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
-      Vpp1.mat      = spm_matrix(vmat2);
+    Vpp1 = Vpp; 
+    Vpp1.fname    = fullfile(pp,[opt.surf{si} '.pos1' ff '.nii']);
+    vmat2         = spm_imatrix(Vpp1.mat);
+    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
+    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
+    Vpp1.mat      = spm_matrix(vmat2);
 
-      Vpp1 = spm_create_vol(Vpp1); 
-      for x3 = 1:Vpp1.dim(3),
-        M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
-        v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
-        Vpp1 = spm_write_plane(Vpp1,v,x3);
-      end;
-      clear M v x3; 
-    end
+    Vpp1 = spm_create_vol(Vpp1); 
+    for x3 = 1:Vpp1.dim(3),
+      M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
+      v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
+      Vpp1 = spm_write_plane(Vpp1,v,x3);
+    end;
+    clear M v x3; 
 
     %% surface coordinate transformations
     stime = vbm_io_cmd('  Create initial surface'); fprintf('\n');
@@ -318,7 +306,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
     delete(Psphere0);
     if opt.usePPmap
       delete(Vpp.fname);
-      delete(Vpp1.fname);
     end
     clear CS
   end  

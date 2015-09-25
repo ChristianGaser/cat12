@@ -7369,3 +7369,21 @@ M       vbm_surf_display.m
 (5)  Added preliminary Shooting template (Template_*_NKI174_MNI152_GS.nii).
 ------------------------------------------------------------------------
 r736 | dahnke | 2015-09-24 17:06:07
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_batch.sh
+M       cg_vbm_extopts.m
+M       cg_vbm_stools.m
+M       cg_vbm_write.m
+M       vbm_surf_createCS.m
+M       vbm_surf_vol2surf.m
+
+(1) Corrected use of boundary position in vbm_vol_vol2surf.m and cg_vbm_stools.m.
+(2) Quote type corrected in cg_vbm_extopts.m.
+(3) Added forground flag to cg_vbm_batch.sh for vbmweb use.
+(4) Corrected missing output.ROI filed in cg_vbm_write.m.
+(5) Write pp1-map per default in vbm_surf_createCS.m for mapping and added
+    side information.
+------------------------------------------------------------------------
+r737 | gaser | 2015-09-25 17:21:57
