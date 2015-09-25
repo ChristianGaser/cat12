@@ -27,9 +27,9 @@ function varargout = vbm_surf_vol2surf(varargin)
     % --------------------------------------------------------------------
     if ~isfield(job,'data_vol') || isempty(job.data_vol)
       if template
-        job.data_vol  = cellstr(spm_select([1 inf],'image','Select volumes','','','^(?=wm|wp|w0rp).*'));
+        job.data_vol  = cellstr(spm_select([1 inf],'image','Select volumes','','','.*'));
       else
-        job.data_vol  = cellstr(spm_select([1 inf],'image','Select volumes','','','^(?!wm|wp|w0rp).*'));
+        job.data_vol  = cellstr(spm_select([1 inf],'image','Select volumes','','','^(?!wm|wp|m0wp|mwp|wc).*'));
       end
     end
     for vi = 1:numel(job.data_vol)

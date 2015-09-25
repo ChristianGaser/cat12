@@ -280,14 +280,26 @@ function stools = cg_vbm_stools(expert)
 
   %% -- boundary sample? 
   
+  v2s.tissue_pos         = cfg_entry;
+  v2s.tissue_pos.tag     = 'pos';
+  v2s.tissue_pos.name    = 'Relative Position';
+  v2s.tissue_pos.strtype = 'r';
+  v2s.tissue_pos.val     = {0};
+  v2s.tissue_pos.num     = [1 1];
+  v2s.tissue_pos.help    = {
+    'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
+    'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
+    'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
+  };
+
   v2s.boundaryrange_class         = cfg_menu;
   v2s.boundaryrange_class.tag     = 'class';
-  v2s.boundaryrange_class.name    = 'Tissue Class';
-  v2s.boundaryrange_class.labels  = {'GM','WM'}; % hull
-  v2s.boundaryrange_class.values  = {1 2};
+  v2s.boundaryrange_class.name    = 'Surface';
+  v2s.boundaryrange_class.labels  = {'central'}; % hull
+  v2s.boundaryrange_class.values  = {1};
   v2s.boundaryrange_class.val     = {1};
   v2s.boundaryrange_class.help    = {
-    'Tissue boundary used for distance description.'
+    'Surface used for distance description.'
   };
 
   v2s.boundaryrange_stepsize         = cfg_entry;
@@ -298,7 +310,7 @@ function stools = cg_vbm_stools(expert)
   v2s.boundaryrange_stepsize.num     = [1 1];
   v2s.boundaryrange_stepsize.help    = {
     'Absolute stepsize of the sample points centered around the tissue boundary. '
-    'The function use 5 sample points.  The maximum value is 1 (to avoid problems with cortical structures).'
+    'The function uses 5 sample points.  The maximum value is 1 (to avoid problems with cortical structures).'
     'This means a stepsize of 0.5 will generate 5 sample points with absolute distance to the choosen boundary of -1, -0.5, 0.0, 0.5, 1.0 mm.'
   };
  
@@ -333,7 +345,7 @@ function stools = cg_vbm_stools(expert)
   v2s.mapping.values  = {
 ...      v2s.tissuerange ...
 ...      v2s.tissue ...
-...      v2s.boundaryrange ...
+...    v2s.boundaryrange ...
     v2s.boundary ...
   }; 
   v2s.mapping.help    = {
@@ -371,7 +383,7 @@ function stools = cg_vbm_stools(expert)
   v2s.data_sub.tag     = 'data_vol';
   v2s.data_sub.name    = 'Volumes in native space';
   v2s.data_sub.filter  = 'image';
-  v2s.data_sub.ufilter = '^(?!wm|wp|w0rp|wc).*'; % no normalized images
+  v2s.data_sub.ufilter = '^(?!wm|wp|m0wp|mwp|wc).*'; % no normalized images
   v2s.data_sub.num     = [1 Inf];
   v2s.data_sub.help    = {
     'Select volumes in native (subject) space.'
@@ -387,8 +399,7 @@ function stools = cg_vbm_stools(expert)
     v2s.interp ...
     v2s.mapping ...
     };
-% not yet working because of coordination issues
-%  v2s.vol2surf.prog = @vbm_surf_vol2surf;
+  v2s.vol2surf.prog = @vbm_surf_vol2surf;
   v2s.vol2surf.help = {
     'Map volume (native space) to individual surface.'
     ''

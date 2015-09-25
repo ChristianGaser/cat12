@@ -44,17 +44,10 @@ if ~isfield(job.output,'WMH')
                            'mod',0, ...
                            'dartel',cg_vbm_get_defaults('output.WMH.dartel'));
 end
-if ~isfield(job.output,'CSF')
-  job.output.CSF  = struct('native',cg_vbm_get_defaults('output.CSF.native'), ...
-                           'warped',cg_vbm_get_defaults('output.CSF.warped'), ...
-                           'mod',cg_vbm_get_defaults('output.CSF.mod'), ...
-                           'dartel',cg_vbm_get_defaults('output.CSF.dartel'));
+if ~isfield(job.output,'ROI')
+  job.output.ROI  = cg_vbm_get_defaults('output.ROI');
 end
-if ~isfield(job.output,'label')
-  job.output.label  = struct('native',cg_vbm_get_defaults('output.label.native'), ...
-                             'warped',cg_vbm_get_defaults('output.label.warped'), ...
-                             'dartel',cg_vbm_get_defaults('output.label.dartel'));
-end
+
 FN = {'INV','atlas','debug','WMHC','NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb','vox'};
 for fni=1:numel(FN)
   if ~isfield(job.extopts,FN{fni})
