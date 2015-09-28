@@ -7387,3 +7387,15 @@ M       vbm_surf_vol2surf.m
     side information.
 ------------------------------------------------------------------------
 r737 | gaser | 2015-09-25 17:21:57
+
+M       CHANGES.txt
+ M      templates_1.50mm/Template_0_NKI174_MNI152_GS.nii
+ M      templates_1.50mm/Template_1_NKI174_MNI152_GS.nii
+ M      templates_1.50mm/Template_2_NKI174_MNI152_GS.nii
+ M      templates_1.50mm/Template_3_NKI174_MNI152_GS.nii
+ M      templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
+M       vbm_surf_createCS.m
+
+Undo changes to write pp1-map per default in vbm_surf_createCS.m.
+------------------------------------------------------------------------
+r738 | gaser | 2015-09-28 09:18:06
