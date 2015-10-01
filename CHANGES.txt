@@ -7399,3 +7399,13 @@ M       vbm_surf_createCS.m
 Undo changes to write pp1-map per default in vbm_surf_createCS.m.
 ------------------------------------------------------------------------
 r738 | gaser | 2015-09-28 09:18:06
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_write.m
+
+(1) Some small changes in cg_vbm_write regarding batch mode and incorrect
+    settings (ROI, LAS).
+(2) Corrected ROI setting in cg_vbm_batch.m
+------------------------------------------------------------------------
+r739 | gaser | 2015-10-01 12:00:53
