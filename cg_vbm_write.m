@@ -109,7 +109,7 @@ vbm.open_th = 0.25; % initial threshold for skull-stripping
 vbm.dilate = 1;     % number of final dilations for skull-stripping
 
 if do_dartel
-  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.output.surface;
+  need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.output.surface || job.output.ROI;
   need_dartel = need_dartel || any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
   if ~need_dartel
       fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
@@ -137,7 +137,7 @@ d    = res.image(1).dim(1:3);
 x3  = 1:d(3);
 
 % run dartel registration to GM/WM dartel template
-if do_dartel
+if do_dartel || job.extopts.LASstr>0
   %% find all templates and distinguish between Dartel and Shooting 
   %  writen to match for Template_1 or Template_0 as first template.  
   template = strrep(vbm.darteltpm,',1','');
@@ -1128,7 +1128,7 @@ if do_cls && do_defs
   %% -------------------------------------------------------------------
   %  Correction of WM hyperintensities
   %  -------------------------------------------------------------------
-  %  The correciton of WMH should be important for a correct normalization.
+  %  The correction of WMH should be important for a correct normalization.
   %  It is only important to close the mayor WMH structures, and further
   %  closing can lead to problems with small gyri. So keep it simple here 
   %  and maybe add further refinements in the partitioning function.
@@ -1623,7 +1623,7 @@ for clsi=1:3
     min([0 0 2 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
 %% write WMH class maps
-if job.extopts.WMHC==1 && ~opt.inv_weighting;
+if job.extopts.WMHC==3 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint8',[0,1/255],...
     min([1 1 0 2],cell2mat(struct2cell(job.output.WMH)')),trans); % 1 0 0 0
   vbm_io_writenii(VT0,single(Ywmh)/255,'p4','WMH tissue map','uint16',[0,1/255],...
@@ -1977,8 +1977,8 @@ if vbm.print
 %    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%s%s%s mm', ...
 %          mark2str2(qam.SM.dist_thickness{1}(1),'%0.2f',qa.SM.dist_thickness{1}(1)),177, ...
 %          mark2str2(qam.SM.dist_thickness{1}(2),'%0.2f',qa.SM.dist_thickness{1}(2))))];
-    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%s%s%s mm', ...
-           qa.SM.dist_thickness{1}(1),qa.SM.dist_thickness{1}(2)))];
+    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%4.2f%s%4.2f mm', ...
+           qa.SM.dist_thickness{1}(1),177,qa.SM.dist_thickness{1}(2)))];
   end
   if numel(vbm_warnings)>0
     str3 = [str3 struct('name', '','value','')]; 
