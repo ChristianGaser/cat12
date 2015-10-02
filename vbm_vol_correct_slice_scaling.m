@@ -118,9 +118,9 @@ function vbm_vol_correct_slice_scaling(varargin)
   
   % force at least one iteration in one direction processing
   if ~isfield(job,'force')
-    force = job.force;
-  else
     force = 3;
+  else
+    force = job.force;
   end
   
   
