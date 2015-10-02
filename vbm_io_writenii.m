@@ -226,11 +226,69 @@ function varargout = vbm_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
 
   
   
-  % modulated
-  % ____________________________________________________________________
-  % no label case ...
+  %% modulated
+  %  ___________________________________________________________________
+  %{ 
   if write(3)
-       
+    %% 
+    if write(3)==1 % SPM default with rigid transformation 
+      pre3  = ['mw'   pre];
+      desc3 = [desc '(Jac. sc. warped)'];
+    elseif write(3)==2
+      pre3 = ['m0w'  pre]; 
+      desc3 = [desc '(Jac. sc. warped non-lin only)']; 
+    end
+    if (write(3)==1 && transform.warped.dartel==1) || (write(3)==2 && transform.warped.dartel==2)
+    % for VBM Dartel, an affine registration was used and we now have to add the scaling factor
+
+    elseif (write(3)==1 && transform.warped.dartel==2) || (write(3)==2 && transform.warped.dartel==1)
+    % for VBM Shooting, a ridid registration was used and no further changes are required for standard SPM warped output
+
+    end
+
+    
+    fname = vbm_io_handle_pre(V.fname,pre3,'');
+    if exist(fname,'file'), delete(fname); end
+    
+    [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
+
+    % final masking after transformation
+    if exist('YM','var')
+      wTM = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); 
+      wT = wT .* (smooth3(wTM)>YMth);
+    end
+    
+    % filtering of the jacobian determinant
+    wrs = wr - 1; 
+    spm_smooth(wrs,wrs,3/abs(transform.warped.M1(1))); wrs = wrs + 1;
+    wT = spm_field(wr,wT ,[sqrt(sum(transform.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]) .* wrs; 
+    clear wrs;
+  
+    % create image
+    N         = nifti;
+    N.dat     = file_array(fname,transform.warped.odim,...
+                  [spm_type(spmtype) spm_platform('bigend')], ...
+                  range(1),range(2),0);
+    N.mat     = transform.warped.M1;
+    N.mat0    = transform.warped.M1; 
+    if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc3 ' < ' V.descrip]; end
+    create(N);       
+    if write(3)==1
+      N.dat(:,:,:) = double(wT)*abs(det(transform.warped.M0(1:3,1:3))/ ...
+                     det(transform.warped.M1(1:3,1:3)));
+    elseif write(3)==2
+      N.dat(:,:,:) = double(wT)*abs(det(transform.warped.M2(1:3,1:3)));
+    end
+    clear N;
+    
+    if nargout>0, varargout{1}(3) = spm_vol(fname); end
+    if nargout>1, varargout{2}{3} = wT*abs(det(transform.warped.M2(1:3,1:3))); end
+  end
+  %}
+ 
+  %% old code ...
+  if write(3)
+      %% 
     if     write(3)==1, pre3 = ['mw'   pre]; desc3 = [desc '(Jac. sc. warped)'];
     elseif write(3)==2, pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; end
     

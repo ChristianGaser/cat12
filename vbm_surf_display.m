@@ -76,7 +76,7 @@ function varargout = vbm_surf_display(varargin)
     
     
     try
-      fprintf('  %s\n',job.data{i});
+      fprintf('Display %s\n',spm_file(job.data{i},'link','vbm_surf_display(''%s'')'));
 
       if ~all(strcmp(Pmesh,Pdata)) && ~isempty(Pdata) && (~job.multisurf || ~all(cellfun('isempty',Pdata)))
         % only gifti surface without texture
