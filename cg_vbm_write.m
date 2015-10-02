@@ -112,7 +112,7 @@ if do_dartel
   need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.output.surface || job.output.ROI;
   need_dartel = need_dartel || any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
   if ~need_dartel
-      fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
+      %fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
       do_dartel = 0;
   end
 end
@@ -136,26 +136,32 @@ d    = res.image(1).dim(1:3);
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
 x3  = 1:d(3);
 
+% Find all templates and distinguish between Dartel and Shooting 
+% written to match for Template_1 or Template_0 as first template.  
+template = strrep(vbm.darteltpm,',1','');
+[templatep,templatef,templatee] = spm_fileparts(template);
+numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
+if isempty(numpos)
+  error('Could not find ''Template_1'' that indicates the first Dartel/Shooting template in cg_vbm_defaults.');
+end
+vbm.templates = vbm_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
+vbm.templates(cellfun('length',vbm.templates)~=numel(template)) = []; % furhter condition maybe necessary
+[template1p,template1f] = spm_fileparts(vbm.templates{1});
+if do_dartel 
+  if (numel(vbm.templates)==6 || numel(vbm.templates)==7)
+    if ~isempty(strfind(template1f,'Template_0')), vbm.templates(1) = []; end   
+    do_dartel=1;
+  else
+    do_dartel=2; 
+  end
+end
 % run dartel registration to GM/WM dartel template
 if do_dartel || job.extopts.LASstr>0
-  %% find all templates and distinguish between Dartel and Shooting 
-  %  writen to match for Template_1 or Template_0 as first template.  
-  template = strrep(vbm.darteltpm,',1','');
-  [templatep,templatef,templatee] = spm_fileparts(template);
-  numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
-  if isempty(numpos)
-    error('Could not find ''Template_1'' or ''Template_0'' that indicates the first Dartel/Shooting template in cg_vbm_defaults.');
-  end
-  vbm.templates = vbm_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
-  vbm.templates(cellfun('length',vbm.templates)~=numel(template)) = [];
-  tpm2 = cell(1,numel(vbm.templates));
-  if numel(vbm.templates)~=6, do_dartel=2; end
-  [template1p,template1f] = spm_fileparts(vbm.templates{1});
-  if ~isempty(strfind(templatef,'Template_1')) && ~isempty(strfind(template1f,'Template_0')), vbm.templates(1) = []; end 
   run2 = struct();
+  tpm2 = cell(1,numel(vbm.templates));
   for j=1:numel(vbm.templates)
     for i=1:2
-      run2(i).tpm = fullfile(templatep,[templatef(1:numpos) num2str(j-(templatef(numpos+1)=='0')) ...
+      run2(i).tpm = fullfile(templatep,[templatef(1:numpos) num2str(j-(template1f(numpos+1)=='0')) ...
         templatef(numpos+2:end) templatee ',' num2str(i)]);
     end
     tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
@@ -915,7 +921,7 @@ if do_cls && do_defs
   end
   
   % display something
-  stime = vbm_io_cmd(sprintf('Amap using initial SPM12 segmentations\nMRF filter strength %0.2f ',job.extopts.mrf));       
+  stime = vbm_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
   % do segmentation  
   prob = AmapMex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
@@ -1348,7 +1354,7 @@ trans.atlas.Yy = Yy;
 
 %%
 % dartel spatial normalization to given template
-if do_dartel==1 && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
+if do_dartel==1 %&& any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     stime = vbm_io_cmd('Dartel registration'); 
     
     % use GM/WM for dartel
@@ -1473,25 +1479,38 @@ if do_dartel==1 && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     %}
   
     
-elseif do_dartel==2 && any([tc(2:end),bf(2:end),df,lb(1:end),jc])    
-  %%
+elseif do_dartel==2 %&& any([tc(2:end),bf(2:end),df,lb(1:end),jc])    
+%%  Geodesic Shooting with Template 0 to 4 
     stime = vbm_io_cmd('Shooting registration'); fprintf('\n'); 
     
-    % shooting parameter
+    %% shooting parameter
     sd      = spm_shoot_defaults;
+    if 0 % vbm12 optimizations
+      % it is maybe possible to reduce the number of iterations, becuase 
+      % of the large number of subjects of the IXI555 template
+      % Schedule for coarse to fine
+      nits      = 12;         % No. iterations of Gauss-Newton - smaller==faster (def. 24)
+      lam       = 0.5;        % Decay of coarse to fine schedule - smaller==smoother (def. 0.5)
+      inter     = 32;         % Scaling of parameters at first iteration - higher==wider/smoother(def. 32)
+      msd.sched = (inter-1)*exp(-lam*((1:(nits+1))-1))+1;
+      msd.sched = msd.sched/msd.sched(end);
+      maxoil    = 8;                          % Maximum number of time steps for integration
+      msd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
+    end
     cyc_its = sd.cyc_its;      % No. multigrid cycles and inerations
     sched   = sd.sched;        % Schedule for coarse to fine
     nits    = numel(sched)-1;
     rparam  = sd.rparam;       % Regularisation parameters for deformation
-    eul_its = sd.eul_its;      % Start with fewer steps
+    eul_its = sd.eul_its;     % Start with fewer steps
     scale   = sd.scale;        % Fraction of Gauss-Newton update step to use
     bs_args = sd.bs_args;      % B-spline settings for interpolation
-    n1      = 2;              % use GM/WM for shooting
+    n1      = 2;               % use GM/WM for shooting
     vxs     = repmat(prod(job.extopts.vox),1,3); % shooting voxel size
     dm      = max(vx2(1:3,:),[],2)';
     
-    % use affine registration as Shooting input
-    affine  = 1; if affine, Ms = Ma; else Ms = Mr; end 
+    % use affine registration as Shooting input is not standard and will
+    % lead to problems with the SPM Deformation Utility Toolbox
+    affine = 0; if affine, Ms = Ma; else Ms = Mr; end 
     
     % Sort out which template for each iteration
     tmpl_no = round(((1:nits)-1)/(nits-1)*(numel(tpm2)-0.51))+1;
@@ -1549,10 +1568,11 @@ elseif do_dartel==2 && any([tc(2:end),bf(2:end),df,lb(1:end),jc])
       drawnow
 
     end
+    if ~jc, clear dt; end
     
     yi = spm_diffeo('invdef',y,d,Ms,eye(4)); 
-
-    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel>0);
+    
+    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel);
     trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr); % require old rigid transformation
    
     %% schneller test

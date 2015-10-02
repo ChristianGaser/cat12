@@ -82,12 +82,16 @@ end
 
 try
   spm_jobman('initcfg');
+  
+ % names
+ % matlabbatch{1}.spm.tools.vbm.estwrite
+  
   spm_jobman('run',matlabbatch);
 catch
-  %vbmerr = lasterror; 
-  %sprintf('\n%s\nVBM Preprocessing error: %s:\n%s\n', repmat('-',1,72),vbmerr.identifier,vbmerr.message,repmat('-',1,72));
-  %for si=1:numel(vbmerr.stack), vbm_io_cprintf('err',sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name)); end;
-  %vbm_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72))); exit; end; 
+  vbmerr = lasterror; 
+  sprintf('\n%s\nVBM Preprocessing error: %s:\n%s\n', repmat('-',1,72),vbmerr.identifier,vbmerr.message,repmat('-',1,72));
+  for si=1:numel(vbmerr.stack), vbm_io_cprintf('err',sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name)); end;
+  vbm_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72)));  
   error('Batch failed.');
 end
 

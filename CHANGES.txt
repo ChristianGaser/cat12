@@ -7409,3 +7409,29 @@ M       cg_vbm_write.m
 (2) Corrected ROI setting in cg_vbm_batch.m
 ------------------------------------------------------------------------
 r739 | gaser | 2015-10-01 12:00:53
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_extopts.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+ M      templates_animals
+M       vbm_io_writenii.m
+M       vbm_surf_display.m
+M       vbm_vol_correct_slice_scaling.m
+
+(1)  Updated hard masking of T1 images for non human preprocessing. Although it
+     worked with SPM version 6080 by using a brain mask for spm_preproc8, it 
+     didn't work anymore and a real masking of the T1 data is required. Because 
+     the masked image is also used for SPM Preprocessing (1 and 2) a relatively
+     good skull-stripping (inclusive fast bias correction) was added. 
+(2)  Added error message in "cg_vbm_batch".
+(3)  Updated command window output of "vbm_surf_display".
+(4)  Corrected small GUI-error in "vbm_vol_slice_scaling".
+(5)  Prepared update of modulated output in "vbm_io_writenii".
+(6)  Corrected template setting in "cg_vbm_write". Remove "do_dartel==0" message
+     because there is no GUI dartel control option anymore. Added some test 
+     parameter for Shooting e.g. to reduce the number of iteration.
+
+------------------------------------------------------------------------
+r740 | dahnke | 2015-10-02 15:38:05
