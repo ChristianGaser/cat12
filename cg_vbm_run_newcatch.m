@@ -7,9 +7,8 @@ function cg_vbm_run_newcatch(job,estwrite,tpm,subj)
 % ______________________________________________________________________
 % $Revision$  $Date$
   try
-    cg_vbm_run_job(job,estwrite,tpm,subj);
+    cg_vbm_run_job(job,estwrite,tpm,subj); %#ok<NASGU>
   catch vbmerr 
-
     % add further information for special errors
     if isempty(vbmerr.identifier)
       switch vbmerr.message
@@ -47,6 +46,13 @@ function cg_vbm_run_newcatch(job,estwrite,tpm,subj)
       end
     end
 
+    % save vbm xml file
+    for si=1:numel(vbmerr.stack)
+      vbmerrstruct.line = vbmerr.stack(si).line;
+      vbmerrstruct.name = vbmerr.stack(si).name;  
+    end
+    vbm_tst_qa('vbm12err',struct('write_csv',0,'write_xml',1,'job',job,'vbmerr',vbmerrstruct));
+    
     % rethrow error 
     if ~cg_vbm_get_defaults('extopts.ignoreErrors')
       rethrow(vbmerr); 

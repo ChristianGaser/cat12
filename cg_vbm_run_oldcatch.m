@@ -11,10 +11,10 @@ function cg_vbm_run_oldcatch(job,estwrite,tpm,subj)
 % See also cg_vbm_run_newcatch.
 % ______________________________________________________________________
 % $Revision$  $Date$
-
+    
   if cg_vbm_get_defaults('extopts.ignoreErrors')
     try
-      cg_vbm_run_job(job,estwrite,tpm,subj);
+      cg_vbm_run_job(job,estwrite,tpm,subj); %#ok<NASGU>
     catch
       vbmerr = lasterror;  %#ok<LERR>,
       vbm_io_cprintf('err',sprintf('\n%s\nVBM Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
@@ -40,6 +40,14 @@ function cg_vbm_run_oldcatch(job,estwrite,tpm,subj)
           delete(fullfile(pth,['bf' nam(2:end) ext]));
         end
       end
+      
+      % save vbm xml file
+      for si=1:numel(vbmerr.stack)
+        vbmerrstruct.line = vbmerr.stack(si).line;
+        vbmerrstruct.name = vbmerr.stack(si).name;  
+      end
+      vbm_tst_qa('vbm12err',struct('write_csv',0,'write_xml',1,'job',job,'vbmerr',vbmerrstruct));
+      
       % delete noise corrected image
       if exist(fullfile(pth,['n' nam(2:end) ext]),'file')
         try %#ok<TRYNC>

@@ -7,6 +7,8 @@ function cg_vbm_batch(namefile,vbm_defaults)
 %_______________________________________________________________________
 % $Id$
 
+ %#ok<*TRYNC>
+ 
 if nargin < 1
 	fprintf('Syntax: cg_vbm_batch(namefile)\n');
 	return
@@ -31,7 +33,7 @@ else
         cd(oldpath)
     end
 end
-global defaults vbm matlabbatch
+global defaults vbm matlabbatch %#ok<NUSED>
 
 % always deselect print option
 vbm.extopts.print = 0;
@@ -39,13 +41,10 @@ vbm.extopts.print = 0;
 names = textread(namefile,'%s');
 n = length(names);
 
-if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
+if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>
 
 matlabbatch{1}.spm.tools.vbm.estwrite = vbm;
-
-for i=1:n
-	matlabbatch{1}.spm.tools.vbm.estwrite.data{i} = names{i};
-end
+matlabbatch{1}.spm.tools.vbm.estwrite.data = cellstr(names);
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','print','debug','verb','ignoreErrors',...
@@ -72,23 +71,17 @@ for i=1:size(tmp_fields,1)
   end
 end
 
-try
+try 
   matlabbatch{1}.spm.tools.vbm.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.GM,'mod');
   matlabbatch{1}.spm.tools.vbm.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.WM,'mod');
   matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.vbm.estwrite.output.CSF,'mod');
 end
 
-%save(fullfile(spm('dir'),'tmp.vbm.batch.mat'));
-
 try
   spm_jobman('initcfg');
-  
- % names
- % matlabbatch{1}.spm.tools.vbm.estwrite
-  
   spm_jobman('run',matlabbatch);
-catch
-  vbmerr = lasterror; 
+catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
+  vbmerr = lasterror;  %#ok<LERR>
   sprintf('\n%s\nVBM Preprocessing error: %s:\n%s\n', repmat('-',1,72),vbmerr.identifier,vbmerr.message,repmat('-',1,72));
   for si=1:numel(vbmerr.stack), vbm_io_cprintf('err',sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name)); end;
   vbm_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72)));  
