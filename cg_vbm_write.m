@@ -1814,56 +1814,60 @@ if job.output.ROI && do_cls
       if ROIt(si)
         tissue = FA{ai,3};
         [px,atlas] = fileparts(FA{ai,1}); 
-        if si==1 
-        %% subject space
-          if firsttime
-            stime2 = vbm_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb);
-            firsttime=0;
+        if exist(FA{ai,1},'file')
+          if si==1 
+          %% subject space
+            if firsttime
+              stime2 = vbm_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb);
+              firsttime=0;
+            else
+              stime2 = vbm_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb,stime2);
+            end  
+            normalize = 's';
+            Ya = vbm_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job.output.atlas);
+
+            csv = vbm_vol_ROIestimate(Yp0,Ya,Yp0 ,vx_vol,ai,'V',[] ,tissue);
+            csv = vbm_vol_ROIestimate(Yp0,Ya,Ym  ,vx_vol,ai,'I',csv,tissue);
+            if exist('Yth1','var'),
+            % for thickness we need special correction to avoid values 
+            % in bad map ROIs that comes to the GM
+              Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
+              Ymm    = smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5;
+              csv    = vbm_vol_ROIestimate(Yp0,Ya,Yth1x.*Ymm,vx_vol,ai,'T',csv,tissue);
+              csvth1 = vbm_vol_ROIestimate(Yp0,Ya,Yp0  .*Ymm,vx_vol,ai,'V',[],{'gm'});
+              corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
+              csv(2:end,end) = num2cell(corth1);
+              clear Yth1x Ymm csvth1 corth1;
+            end
           else
-            stime2 = vbm_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb,stime2);
-          end  
-          normalize = 's';
-          Ya = vbm_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job.output.atlas);
-         
-          csv = vbm_vol_ROIestimate(Yp0,Ya,Yp0 ,vx_vol,ai,'V',[] ,tissue);
-          csv = vbm_vol_ROIestimate(Yp0,Ya,Ym  ,vx_vol,ai,'I',csv,tissue);
-          if exist('Yth1','var'),
-          % for thickness we need special correction to avoid values 
-          % in bad map ROIs that comes to the GM
-            Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
-            Ymm    = smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5;
-            csv    = vbm_vol_ROIestimate(Yp0,Ya,Yth1x.*Ymm,vx_vol,ai,'T',csv,tissue);
-            csvth1 = vbm_vol_ROIestimate(Yp0,Ya,Yp0  .*Ymm,vx_vol,ai,'V',[],{'gm'});
-            corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
-            csv(2:end,end) = num2cell(corth1);
-            clear Yth1x Ymm csvth1 corth1;
+          %% normalized space
+            % ds('l2','',1.5,wYv,wYp0,wYv,single(wYa)/50 .* (wYp0<2.5),70)
+            normalize = 'w';
+            wYa   = vbm_vol_ROInorm([],trans,ai,0);
+
+            stime2 = vbm_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' to group space',atlas),'g5','',verb,stime2);
+            csv   = vbm_vol_ROIestimate(wYp0,wYa,wYcls,[],ai,'V',[],tissue);  % volume
+            csv   = vbm_vol_ROIestimate(wYp0,wYa,wYm  ,[],ai,'I',csv,tissue); % intensity
+            % thickness
+            if exist('Yth1','var'),
+            % for thickness we need special correction to avoid values 
+            % in bad map ROIs that comes to the GM
+              csv    = vbm_vol_ROIestimate(wYp0,wYa,wYth1.*wYmm,[],ai,'T',csv,tissue);
+              csvth1 = vbm_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmm,[],ai,'V',[] ,{''});
+              corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
+              csv(2:end,end) = num2cell(corth1);
+              clear Yth1x
+            end
           end
+
+          % csv-export and xml-export (later) 
+          vbm_io_csv(fullfile(pth,['vbmROI' normalize '_' atlas '_' nam '.csv']),...
+            csv,'','',struct('delimiter',',','komma','.'));
+          ROI.([normalize '_' atlas]) = csv;
+          vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),struct('ROI',ROI),'write+');
         else
-        %% normalized space
-          % ds('l2','',1.5,wYv,wYp0,wYv,single(wYa)/50 .* (wYp0<2.5),70)
-          normalize = 'w';
-          wYa   = vbm_vol_ROInorm([],trans,ai,0);
-          
-          stime2 = vbm_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' to group space',atlas),'g5','',verb,stime2);
-          csv   = vbm_vol_ROIestimate(wYp0,wYa,wYcls,[],ai,'V',[],tissue);  % volume
-          csv   = vbm_vol_ROIestimate(wYp0,wYa,wYm  ,[],ai,'I',csv,tissue); % intensity
-          % thickness
-          if exist('Yth1','var'),
-          % for thickness we need special correction to avoid values 
-          % in bad map ROIs that comes to the GM
-            csv    = vbm_vol_ROIestimate(wYp0,wYa,wYth1.*wYmm,[],ai,'T',csv,tissue);
-            csvth1 = vbm_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmm,[],ai,'V',[] ,{''});
-            corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
-            csv(2:end,end) = num2cell(corth1);
-            clear Yth1x
-          end
+          stime2 = vbm_io_cmd(sprintf('  ROI estimation failed. Atals ''%s'' not exist.',atlas),'g5','',verb,stime2);
         end
-        
-        % csv-export and xml-export (later) 
-        vbm_io_csv(fullfile(pth,['vbmROI' normalize '_' atlas '_' nam '.csv']),...
-          csv,'','',struct('delimiter',',','komma','.'));
-        ROI.([normalize '_' atlas]) = csv;
-        vbm_io_xml(fullfile(pth,['vbm_' nam '.xml']),struct('ROI',ROI),'write+');
       end
     end
   end 
@@ -1879,7 +1883,7 @@ clear wYp0 wYcls wYv
 stime = vbm_io_cmd('Quality check');
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
 qa    = vbm_tst_qa('vbm12',Yp0,fname0,Ym,res,vbm_warnings,job.vbm.species, ...
-          struct('write_csv',0,'write_xml',1,'method','vbm12'));
+          struct('write_csv',0,'write_xml',1,'method','vbm12','job',job));
 if job.output.surface
   qa.SM.dist_thickness{1} = dist_thickness{1};
   qa.SM.dist_WMdepth{1}   = dist_thickness{2};
@@ -1926,7 +1930,8 @@ if vbm.print
   % --------------------------------------------------------------------
   SpaNormMeth = {'None','Dartel','Shooting'}; 
 	str = [];
-	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',sprintf('%s / %s / %s',qa.SW.matlab,qa.SW.spm,qa.SW.vbm))];
+	str = [str struct('name', 'Versions Matlab / SPM12 / VBM12:','value',...
+    sprintf('%s / %s / %s',qa.SW.version_matlab,qa.SW.version_spm,qa.SW.version_vbm))];
 	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(vbm.darteltpm,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
@@ -2070,7 +2075,7 @@ if vbm.print
       case {'bcgwhw','bcgwhn'} % vbm colormaps with larger range
         ytick       = [1,5:5:60];
         yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
-        yticklabelo = {' BG',' ','    ','    ','   ','     ','  ',' ',' ',' ',' ',' ',' WM / BV / HD '};
+        yticklabelo = {' BG',' ','    ','    ','   ','     ',' average WM  ',' ',' ',' ',' ',' ',' BV / HD '};
         colormap(vbm_io_colormaps(cm,60));
         cmmax = 2;
       case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
@@ -2104,10 +2109,6 @@ if vbm.print
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
 	  spm_orthviews('Reset');
 
-    
-  
-    
-
     % BB box is not optimal for all images...
     % furthermore repositioning the cross to the BG is maybe usefull...
     %global st
@@ -2115,39 +2116,39 @@ if vbm.print
     %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
     %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
     %st.vols = cell(24,1);
-    bb = vbm.bb;
+    bb = vbm.bb/2;
     spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
     
     % Yo - original image in original space
-    Yo     = single(spm_read_vols(VT0)); 
-    Yowmth = median(Yo(Ycls{2}(:)>128))*1.2; clear Yo;
-    hho = spm_orthviews('Image',fname0,pos(1,:)); 
+    hho = spm_orthviews('Image',VT0,pos(1,:)); 
     spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hho,[0 Yowmth*cmmax]); caxis([0,2]);
+    spm_orthviews('window',hho,[0 mean(res.mn(res.lkp==2))*cmmax]); caxis([0,2]);
     cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
     
-    % Ym - full corrected images in original space
-    if ~exist(Pm,'file')
-      vbm_io_writenii(VT0,Ym,'m','Yp0b map','float32',[0,2],[1 0 0],trans);
-    end
-    hhm = spm_orthviews('Image',Pm,pos(2,:));
+    % Ym - normalized image in original space
+    Vm        = spm_vol(VT.fname);
+    Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
+    Vm.dat(:,:,:) = single(Ym); 
+    Vm.pinfo = repmat([1;0],1,size(Ym,3));
+    hhm = spm_orthviews('Image',Vm,pos(2,:));
     spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
     cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-  
-    % Yp0 - segment image in original space
-    if ~exist(Pp0,'file')
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-      vbm_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,3/255],[1 0 0],trans);
-    end
-    hhp0 = spm_orthviews('Image',Pp0,pos(3,:));
+   
+    % Yo - segmentation in original space
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    VO        = spm_vol(VT.fname);
+    VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
+    VO.dat(:,:,:) = single(Yp0/3); 
+    VO.pinfo = repmat([1;0],1,size(Yp0,3));
+    hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
     spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hhp0,[0 3*cmmax]); caxis([0,2]);
+    spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
     cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-    
+  
     spm_orthviews('Reposition',[0 0 5]);     % default view with basal structures
 
     % surface
@@ -2181,43 +2182,22 @@ if vbm.print
   % setup new legend 
   ytick       = [1 20 40 60];
   yticklabel  = {' BG',' CSF',' GM',' WM'};
-  yticklabelo = {' BG','    ','   ',' WM'};
-
-  % remove m image, if it was only written for printing
-  % we have to remove the figure, otherwise the gui user may get an error
-  if job.output.bias.native==0 && exist(Pm,'file')
-    delete(fullfile(pth,['m', nam, '.nii']));
-    if exist('hhm','var'), spm_orthviews('Delete',hhm); end
-  else
-    try %#ok<TRYNC>
-      spm_orthviews('window',hhm ,[0 1]); 
-      colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-    end
-  end
-
-  % remove p0 image, if it was only written for printing
-  if job.output.label.native==0 && exist(Pp0,'file')
-    delete(fullfile(pth,['p0', nam, '.nii']));
-    if exist('hhp0','var'), spm_orthviews('Delete',hhp0); end
-  else
-    try %#ok<TRYNC>
-      spm_orthviews('window',hhp0,[0 3]);
-      colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-    end
-  end
+  yticklabelo = {' BG','    ','   ',' average WM  '};
 
   % original image
   try %#ok<TRYNC>
-    spm_orthviews('window',hho,[0 Yowmth]); 
+    spm_orthviews('window',hho ,[0 Yowmth]); 
+    spm_orthviews('window',hhm ,[0 1]); 
+    spm_orthviews('window',hhp0,[0 1]); 
     colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+      'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+    colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
+      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
+    colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
+      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
   end
   
-  
   warning on;  %#ok<WNON>
-  
   
 end
   

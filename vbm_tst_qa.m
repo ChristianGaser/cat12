@@ -84,7 +84,8 @@ function varargout = vbm_tst_qa(action,varargin)
   vbm_qa_warnings = struct('identifier',{},'message',{});
   vbm_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
-  
+
+   
   % no input and setting of default options
   if nargin==0, action='p0'; end 
   if isstruct(action)
@@ -197,6 +198,8 @@ function varargout = vbm_tst_qa(action,varargin)
       end
 
       Yp0 = 1;
+    case 'vbm12err'
+      opt  = vbm_check('checkinopt',varargin{end},defaults);
     case 'vbm12'
       % VBM12 internal input
       if nargin>3 
@@ -207,7 +210,7 @@ function varargout = vbm_tst_qa(action,varargin)
         res = varargin{4};
         vbm_warnings = varargin{5};
         species = varargin{6};
-        
+        % opt = varargin{end} in line 96)
         opt.verb = 0;
         
         % reduce to original native space if it was interpolated
@@ -466,6 +469,46 @@ function varargout = vbm_tst_qa(action,varargin)
       end
   
       
+    case 'vbm12err'
+      % file information
+      % ----------------------------------------------------------------
+      [pp,ff,ee] = spm_fileparts(opt.job.data{1});
+      [QAS.FD.path,QAS.FD.file] = spm_fileparts(opt.job.data{1});
+      QAS.FD.fname  = opt.job.data{1};
+      QAS.FD.F      = opt.job.data{1}; 
+      QAS.FD.Fm     = fullfile(pp,['m'  ff ee]);
+      QAS.FD.Fp0    = fullfile(pp,['p0' ff ee]);
+      QAS.FD.fnames = [spm_str_manip(pp,sprintf('k%d',...
+                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+                       spm_str_manip(ff,sprintf('k%d',...
+                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+    
+
+      % software, parameter and job information
+      % ----------------------------------------------------------------
+      A = ver;
+      for i=1:length(A)
+        if strcmp(A(i).Name,'Statistical Parametric Mapping')
+          QAS.SW.version_spm    = A(i).Version; 
+        end
+        if strcmp(A(i).Name,'MATLAB'),
+          QAS.SW.version_matlab = A(i).Version; 
+        end
+      end
+      clear A
+      QAS.SW.version_vbm  = sprintf('%0.0f',str2double(rev(6:end-2)));
+      QAS.SW.function     = which('vbm_vol_qa');
+      QAS.SW.markdefs     = which('vbm_stat_marks');
+      QAS.SW.qamethod     = action; 
+      QAS.SW.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      QAS.SW.vbm_warnings = vbm_warnings;
+      QAS.SW.job          = opt.job; 
+      QAS.SW.vbmerr       = opt.vbmerr; 
+      
+      % export 
+      if opt.write_xml
+        vbm_io_xml(fullfile(pp,[opt.prefix ff '.xml']),struct('QAS',QAS),'write+');
+      end
       
     case 'vbm12'
     % estimation of the measures for the single case    
@@ -484,29 +527,33 @@ function varargout = vbm_tst_qa(action,varargin)
                          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
-      % software information
+      % software, parameter and job information
       % ----------------------------------------------------------------
       A = ver;
       for i=1:length(A)
         if strcmp(A(i).Name,'Statistical Parametric Mapping')
-          QAS.SW.spm    = A(i).Version; 
+          QAS.SW.version_spm    = A(i).Version; 
         end
         if strcmp(A(i).Name,'MATLAB'),
-          QAS.SW.matlab = A(i).Version; 
+          QAS.SW.version_matlab = A(i).Version; 
         end
       end
-      QAS.SW.vbm       = rev(6:10);
-      QAS.SW.function  = which('vbm_vol_qa');
-      QAS.SW.markdefs  = which('vbm_stat_marks');
-      QAS.SW.qamethod  = action; 
-      QAS.SW.date      = datestr(clock,'yyyymmdd-HHMMSS');
-      QAS.SW.vbm_warnings = vbm_warnings;
-      if exist('vbm','var');
-        QAS.SW.vbm_defaults = vbm; 
-      else
-        QAS.SW.vbm_defaults = struct();
-      end
       clear A
+      QAS.SW.version_vbm  = sprintf('%0.0f',str2double(rev(6:end-2)));
+      QAS.SW.function     = which('vbm_vol_qa');
+      QAS.SW.markdefs     = which('vbm_stat_marks');
+      QAS.SW.qamethod     = action; 
+      QAS.SW.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      QAS.SW.vbm_warnings = vbm_warnings;
+      QAS.SW.job          = opt.job; 
+      if exist('res','var');
+        rf = {'Twarp','Tbias','image0','image','tpm'}; % field to remove in res structure report
+        for rfi=1:numel(rf)
+          if isfield(res,rf{rfi}), res=rmfield(res,rf{rfi}); end
+        end
+        QAS.SW.res = res; 
+      end
+
      
       %% inti, volumina, resolution, boundary box
       %  ---------------------------------------------------------------
@@ -734,7 +781,7 @@ function varargout = vbm_tst_qa(action,varargin)
 
       % export 
       if opt.write_xml
-        vbm_io_xml(fullfile(pp,[opt.prefix ff '.xml']),struct('QAS',QAS,'QAM',QAM'),'write+');
+        vbm_io_xml(fullfile(pp,[opt.prefix ff '.xml']),struct('QAS',QAS,'QAM',QAM),'write+');
       end
 
       clear Yi Ym Yo Yos Ybc

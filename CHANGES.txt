@@ -7435,3 +7435,26 @@ M       vbm_vol_correct_slice_scaling.m
 
 ------------------------------------------------------------------------
 r740 | dahnke | 2015-10-02 15:38:05
+
+M       CHANGES.txt
+M       cg_vbm_batch.m
+M       cg_vbm_run_job.m
+M       cg_vbm_run_newcatch.m
+M       cg_vbm_run_oldcatch.m
+M       cg_vbm_write.m
+M       vbm_surf_calc.m
+M       vbm_surf_display.m
+M       vbm_tst_qa.m
+
+(1)  Added command line output of the resulting file in "vbm_surf_calc".
+(2)  Replace temporary image output for VBM report by "V.dat" field in 
+     "cg_vbm_write".
+(3)  Added preprocessing parameter (job,res) output in "vbm_tst_qa".
+(4)  Added output of the "vbm_*xml" with preprocessing parameter (job) and
+     vbmerr, if "cg_vbm_run_job" failed (Changes is "cg_vbm_run_[new|old]catch"). 
+(5)  Small corrections in "cg_vbm_batch".
+(6)  Cleaned old primate processing commands in "cg_vbm_run_job".
+(7)  ROI estimation only if file exist.
+
+------------------------------------------------------------------------
+r741 | dahnke | 2015-10-07 20:23:24

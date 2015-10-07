@@ -16,10 +16,12 @@ function varargout = vbm_surf_calc(varargin)
 % Robert Dahnke
 % $Id$
 
-  assuregifti = 0;
+  assuregifti = 1;
 
   if nargin == 1
+    def.verb = 0;
     job = varargin{1}; 
+    job = checkinopt(job,def);
   else
     error('Only batch mode'); 
   end
@@ -44,6 +46,7 @@ function varargout = vbm_surf_calc(varargin)
     else
       surfcalc(job);
     end
+    fprintf('Output %s\n',spm_file(job.output,'link','vbm_surf_display(''%s'')'));
   else  
     spm_progress_bar('Init',numel(job.cdata{1}),...
       sprintf('Texture Calculator\n%s',numel(job.cdata{1})),'Subjects Completed'); 
@@ -73,15 +76,15 @@ function varargout = vbm_surf_calc(varargin)
       sjob.output   = job.output{si}; 
       fprintf('Process: %s',job.output{si});
       try
-        %vbm_surf_calc(sjob);
         if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
           copyfile(sjob.cdata{1},job.output{si});
         else
           surfcalc(sjob);
         end
+        fprintf('Output %s\n',spm_file(sjob.output{si},'link','vbm_surf_display(''%s'')'));
         fprintf(' done \n');
       catch
-        fprintf(' failed \n');
+        fprintf('Output %s failed\n',sjob.output{si});
       end
         
       spm_progress_bar('Set',si);
