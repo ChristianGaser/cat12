@@ -59,7 +59,10 @@ function varargout = vbm_surf_display(varargin)
   job = checkinopt(job,def);
   
   %%
-  sinfo = vbm_surf_info(job.data); 
+  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
+  % ... need futher development 
+  readsurf = 1; 
+  sinfo = vbm_surf_info(job.data,readsurf);  
   spm('FnBanner',mfilename,SVNid); 
   for i=1:numel(job.data)
     
@@ -188,7 +191,7 @@ function varargout = vbm_surf_display(varargin)
     %% print
     if job.imgprint.do 
       %%
-      pfname = fullfile(sinfo(i).pp,sprintf('%s.%s%s.%s',[sinfo(i).ff,viewname,job.imgprint.type(3:end)]));
+      pfname = fullfile(sinfo(i).pp,sprintf('%s%s.%s',[sinfo(i).ff,viewname,job.imgprint.type(3:end)]));
       print(h.figure , job.imgprint.type , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 
       
       if job.imgprint.close

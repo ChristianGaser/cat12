@@ -94,7 +94,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
          % for spm_preproc8 that include rewriting the pricture!
          for n=1:numel(job.channel) 
           [pp,ff] = spm_fileparts(job.channel(n).vols{subj}); 
-          job.channel(n).vols{subj} = fullfile(pp,[pre ff post '.nii']);
+          job.channel(n).vols{subj} = fullfile(pp,['n' ff '.nii']);
          end
        end
     end
@@ -330,28 +330,23 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         %% SPM preprocessing 1
         stime = vbm_io_cmd('SPM preprocessing 1');
         if ~strcmp(job.vbm.species,'human')
-          obj.image.private.dat(:,:,:) = min(2*WMth,Ysrc .* Yb); % schreibt bild neu :/
+%          obj.image.private.dat(:,:,:) = min(2*WMth,Ysrc .* Yb); % schreibt bild neu :/
           obj.msk = spm_smoothto8bit(VF,0.1); obj.msk.dat = uint8(Yb*255); 
-%          obj.image.dat = vbm_vol_ctype(min(1.5*WMth,Ysrc .* single(dilmsk)),spm_type(obj.image.private.dt)); % dtype error??? 
-          %  obj.image.pinfo(3)=0;
-            % die V.dat variante funktioniert noch nicht wegen dt error
-          %obj.msk = vbm_vol_imcalc([VF,spm_vol(Pb)],Pbt,'i2',struct('interp',6,'verb',0));  
-          %  obj.image.dat = vbm_vol_ctype(min(1.5*WMth,src .* single(dilmsk)),spm_type(obj.image.dt)); % dtype error??? 
-          %  obj.image.pinfo(3)=0;
+          obj.image.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
+          obj.image.dat(:,:,:) = single(min(2*WMth,Ysrc .* Yb)); 
+          obj.image.pinfo      = repmat([1;0],1,size(Ysrc,3));
         end
         warning off %#ok<WNOFF>
         try 
           res = spm_preproc8(obj);
         catch
+          if (job.vbm.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.vbm.species,'human') 
+            [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
+            delete(fullfile(pp,[ff,ee]));
+          end
           error('VBM:cg_vbm_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
         end
         warning on  %#ok<WNON>
-      
-        %if ~strcmp(job.vbm.species,'human')
-          % reset masking
-          %obj.image.private.dat(:,:,:) = Ysrc;
-          %if exist(Pbt,'file'), delete(Pbt); end
-        %end
         
         if cg_vbm_get_defaults('extopts.debug')==2
           % save information for debuging and OS test
@@ -401,13 +396,8 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     cg_vbm_write(res, tc, bf, df, lb, jc, job.vbm, obj.tpm, job);
     
-    if ~strcmp(job.vbm.species,'human')
-      % reset masking
-      obj.image.private.dat(:,:,:) = Ysrc;
-    end
-    
     % delete denoised/interpolated image
-    if (job.vbm.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) 
+    if (job.vbm.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.vbm.species,'human') 
       [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
       delete(fullfile(pp,[ff,ee]));
     end
