@@ -6049,6 +6049,17 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
+r743 | gaser | 2015-10-08 14:10:01 +0200 (Do, 08 Okt 2015) | 8 lines
+
+Changed paths:
+M       CHANGES.txt
+M       svn_ci_log
+
+Corrected previous changes in svn_ci_log to also include actual
+changes.
+
+
+------------------------------------------------------------------------
 
 M       CHANGES.txt
 M       svn_ci_log
@@ -6056,4 +6067,4 @@ Corrected previous changes in svn_ci_log to also include actual
 changes.
 
 ------------------------------------------------------------------------
-r743 | gaser | 2015-10-08 14:09:39
+r744 | gaser | 2015-10-08 14:10:34
