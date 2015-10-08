@@ -228,7 +228,7 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 
     %% topology correction and surface refinement 
     stime = vbm_io_cmd('  Topology correction and surface refinement'); fprintf('\n');
-    cmd = sprintf('CAT_FixTopology -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); vbm_check_system_output(ST,RS,opt.debug);
     
     if opt.usePPmap

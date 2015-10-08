@@ -4,20 +4,15 @@ oldrev=`svn info | grep 'Last Changed Rev'| cut -f2 -d':' | sed 's/[^[:digit:]]/
 newrev=`expr $oldrev + 1`
 date=`date "+%Y-%m-%d %H:%M:%S"`
 
-echo "Changed paths:" > log2
-svn -q status >> log2
-echo >> CHANGES.txt
-svn -q status >> CHANGES.txt
-echo  >> log2
-echo  >> CHANGES.txt
+nano log
+
 if [ -f log ]; then
+  svn log -r HEAD:440 > CHANGES.txt
+  echo "Changed paths:" > log2
+  svn -q status >> log2
+  echo  >> log2
   cat log >> log2
   echo  >> log2
-  cat log >> CHANGES.txt
-  echo  >> CHANGES.txt
-  echo '------------------------------------------------------------------------' >> CHANGES.txt
-  echo r$newrev '|' $USER '|' $date >> CHANGES.txt
-  nano CHANGES.txt
   svn ci -F log2
   svn list -R | grep -v '/$' | xargs svn propset svn:keywords "Id Rev Date Author" 1>/dev/null
   svn update
