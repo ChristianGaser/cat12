@@ -1,5 +1,9 @@
 #include "genus0.h"
 
+#ifdef MATLAB_MEX_FILE
+#include <mex.h> 
+#endif
+
 static int verbose,invconnectivity, connectivity, autocrop[3][2];
 static int img_horiz,img_vert,img_depth,paddeddims[3];
 static int nbrs[6],offs[27],nbrs18[18],nbrs26[26],pass[27];
@@ -19,7 +23,7 @@ static float *g_deltax, *g_tmp, *g_tmp_row, **g_j, *g_x, **g_recip, **g_square;
  
 static void print_msg(char * msg)
   {
-  fprintf(stdout,"%s",msg);
+  printf("%s",msg); 
   }
 
 static void *basic_calloc(size_t nelem, size_t elsize)

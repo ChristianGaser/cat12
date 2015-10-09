@@ -105,7 +105,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   for (i=0;i<nL;i++) 
   {
     if (V[i]>0.5) D[i]=0.0; else D[i]=FLT_MAX; 
-    if (V[i]>255.0) fprintf(stderr,"Warning: First parameter of vbdist > 255!\n"); 
+    if (V[i]>255.0) printf("Warning: First parameter of vbdist > 255!\n"); 
     L[i]=(unsigned char) ceil(V[i]);
     I[i]=(unsigned int)i;
   }
