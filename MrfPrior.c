@@ -21,6 +21,9 @@
 #include <math.h>
 #include "Amap.h"
 
+#ifdef MATLAB_MEX_FILE
+#include <mex.h> 
+#endif
 
 void MrfPrior(unsigned char *label, int n_classes, double *alpha, double *beta, int init, int *dims)
 {

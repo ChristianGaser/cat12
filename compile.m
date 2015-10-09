@@ -26,6 +26,7 @@ function compile
   eval(['mex ' mexflag ' -O vbm_vol_genus0.c genus0.c'])
   eval(['mex ' mexflag ' -O vbdist.c'])
   eval(['mex ' mexflag ' -O ornlmMex.c ornlm_float.c'])
+  eval(['mex ' mexflag ' -O sanlmMex.c sanlm_float.c'])
   
   %%
   
@@ -44,56 +45,15 @@ function compile
   d{14} = vbm_vol_simgrow(d0,d0,0.01);      disp('Compilation of vbm_vol_simgrow successful')
   d{15} = vbm_vol_eidist(d0,d0);            disp('Compilation of vbm_vol_eidist successful')
   d{16} = vbm_vol_eulernumber(double(d0>0));disp('Compilation of vbm_vol_eulernumber successful')
-  [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(d0,0.5); disp('Compilation of vbm_vol_genus0')
-  
-  %%
-  try % try OpenMP support
-      if strcmp(mexext,'mexmaci64')
-          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
-          movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex -Dchar16_t=UINT16_T CC='gcc' CFLAGS=' -Wall -ansi -pedantic -Wextra -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
-      elseif strcmp(mexext,'mexmaci')
-          mex CC='gcc-4.0' CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
-          movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CC='gcc-4.0' CFLAGS='-fopenmp  -Wall -ansi -pedantic -Wextra -O3' -O /usr/local/lib/libgomp.a sanlmMex.c sanlm_float.c
-      elseif strcmp(mexext,'mexa64')
-          mex CFLAGS='-U_OPENMP -fPIC -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
-          movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CFLAGS='-fopenmp -fPIC  -Wall -ansi -pedantic -Wextra -O3' -O -lgomp sanlmMex.c sanlm_float.c
-      elseif strcmp(mexext,'mexglx')
-          mex CFLAGS='-U_OPENMP -fPIC  -Wall -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c
-          movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex CFLAGS='-fopenmp -fPIC  -Wall -ansi -pedantic -Wextra -O3' -O /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.4/libgomp.a sanlmMex.c sanlm_float.c
-      elseif strcmp(mexext,'mexw64')
-          mex CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra' -O sanlmMex.c sanlm_float.c
-          movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex -O sanlmMex.c sanlm_float.c
-      elseif strcmp(mexext,'mexw32')
-          mex CFLAGS='-U_OPENMP  -Wall -ansi -pedantic -Wextra' -O sanlmMex.c sanlm_float.c
-          movefile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-          mex -O sanlmMex.c sanlm_float.c
-      end
-      disp('Compiling sanlmMex with OpenMP')
-  catch 
-      disp('Compiling sanlmMex without OpenMP')
-      mex CFLAGS='-Wall -fPIC -ansi -pedantic -Wextra -O3' -O sanlmMex.c sanlm_float.c 
-      copyfile(['sanlmMex.' mexext], ['sanlmMex_noopenmp.' mexext],'f');
-  end
-  
+  [tmp,CS.faces,CS.vertices] = vbm_vol_genus0(d0,0.5); disp('Compilation of vbm_vol_genus0 successful')
+    
   sanlmMex(d0,3,1);
   d{17} = d0;
-
-  rand('state',0);
-  d0  = single(rand(10,10,10));
-  d0(5,5,5) = NaN;
-  
-  sanlmMex_noopenmp(d0,3,1);
-  d{18} = d0;
+  disp('Compilation of sanlmMex successful')
 
   debugname = ['debug_' mexext '.mat'];
   disp(['save ' debugname]);
   save(debugname,'d','CS');
   
-  disp('Compilation of sanlmMex successful')
   
 end
