@@ -180,11 +180,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
     if opt.verb, fprintf('%2d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
-    try
-      sanlmMex(Ys,3,1,opt.rician);
-    catch %#ok<*CTCH>
-      sanlmMex_noopenmp(Ys,3,1,opt.rician);
-    end
+    sanlmMex(Ys,3,1,opt.rician);
     noiser = 1 - (vbm_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
     if noiser<0, noiser = noiser+1; end
     noise  = vbm_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));

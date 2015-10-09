@@ -34,8 +34,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef _OPENMP
-#include "omp.h"
+#ifdef MATLAB_MEX_FILE
+#include <mex.h> 
+#endif
+
+/* Multithreading stuff */
+#if defined(_WIN32)
+#include <windows.h>
+#include <process.h>
+#else
+#include <pthread.h>
 #endif
 
 #define PI 3.1415926535
@@ -112,16 +120,16 @@ double Epsi(double snr)
 }
 
 /* Function which compute the weighted average for one block */
-void Average_block(float *ima,int x,int y,int z,int neighborhoodsize,float *average, double weight, int sx,int sy,int sz)
+void Average_block(float *ima,int x,int y,int z,int neighborhoodsize,float *average,double weight,int sx,int sy,int sz)
 {
-int x_pos,y_pos,z_pos;
-int is_outside; 
-int a,b,c,ns,sxy,index;
+  int x_pos,y_pos,z_pos;
+  int is_outside; 
+  int a,b,c,ns,sxy,index;
 
-extern int rician;
+  extern int rician;
 
-ns = 2*neighborhoodsize+1;
-sxy = sx*sy;
+  ns = 2*neighborhoodsize+1;
+  sxy = sx*sy;
 
     for (c = 0; c<ns;c++)
     {
@@ -158,18 +166,17 @@ sxy = sx*sy;
 }
 
 /* Function which computes the value assigned to each voxel */
-void Value_block(float *Estimate, unsigned char *Label,int x,int y,int z,int neighborhoodsize,float *average, double global_sum, int sx,int sy,int sz)
+void Value_block(float *Estimate, unsigned char *Label,int x,int y,int z,int neighborhoodsize,float *average,double global_sum,int sx,int sy,int sz)
 {
-int x_pos,y_pos,z_pos;
-int is_outside;
-double value = 0.0;
-unsigned char label = 0;
-int count = 0 ;
-int a,b,c,ns,sxy;
+  int x_pos,y_pos,z_pos;
+  int is_outside;
+  double value = 0.0;
+  unsigned char label = 0;
+  int count = 0 ;
+  int a,b,c,ns,sxy;
 
-ns = 2*neighborhoodsize+1;
-sxy = sx*sy;
-
+  ns = 2*neighborhoodsize+1;
+  sxy = sx*sy;
 
     for (c = 0; c<ns;c++)
     {
@@ -203,223 +210,229 @@ sxy = sx*sy;
 
 double distance(float* ima,int x,int y,int z,int nx,int ny,int nz,int f,int sx,int sy,int sz)
 {
-double d,acu,distancetotal;
-int i,j,k,ni1,nj1,ni2,nj2,nk1,nk2;
+  double d,acu,distancetotal;
+  int i,j,k,ni1,nj1,ni2,nj2,nk1,nk2;
 
-distancetotal = 0;
-for (k = -f; k <= f; k++)
-{
-  nk1 = z+k;
-  nk2 = nz+k;  
-  if (nk1<0) nk1 = -nk1;
-  if (nk2<0) nk2 = -nk2;
-  if (nk1>= sz) nk1 = 2*sz-nk1-1;    
-  if (nk2>= sz) nk2 = 2*sz-nk2-1;
-
-  for (j = -f; j <= f; j++)
+  distancetotal = 0;
+  for (k = -f; k <= f; k++)
   {
-    nj1 = y+j;
-    nj2 = ny+j;    
-    if (nj1<0) nj1 = -nj1;    
-    if (nj2<0) nj2 = -nj2;
-    if (nj1>= sy) nj1 = 2*sy-nj1-1;
-    if (nj2>= sy) nj2 = 2*sy-nj2-1;
+    nk1 = z+k;
+    nk2 = nz+k;  
+    if (nk1<0) nk1 = -nk1;
+    if (nk2<0) nk2 = -nk2;
+    if (nk1>= sz) nk1 = 2*sz-nk1-1;    
+    if (nk2>= sz) nk2 = 2*sz-nk2-1;
 
-    for (i = -f; i<= f; i++)
+    for (j = -f; j <= f; j++)
     {
-      ni1 = x+i;
-      ni2 = nx+i;    
-      if (ni1<0) ni1 = -ni1;
-      if (ni2<0) ni2 = -ni2;    
-      if (ni1>= sx) ni1 = 2*sx-ni1-1;
-      if (ni2>= sx) ni2 = 2*sx-ni2-1;
+      nj1 = y+j;
+      nj2 = ny+j;    
+      if (nj1<0) nj1 = -nj1;    
+      if (nj2<0) nj2 = -nj2;
+      if (nj1>= sy) nj1 = 2*sy-nj1-1;
+      if (nj2>= sy) nj2 = 2*sy-nj2-1;
+
+      for (i = -f; i<= f; i++)
+      {
+        ni1 = x+i;
+        ni2 = nx+i;    
+        if (ni1<0) ni1 = -ni1;
+        if (ni2<0) ni2 = -ni2;    
+        if (ni1>= sx) ni1 = 2*sx-ni1-1;
+        if (ni2>= sx) ni2 = 2*sx-ni2-1;
       
-      d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]);
-      distancetotal += d*d;   
+        d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]);
+        distancetotal += d*d;   
+      }
     }
   }
-}
 
-acu = (2*f+1)*(2*f+1)*(2*f+1);
-d = distancetotal/acu;
+  acu = (2*f+1)*(2*f+1)*(2*f+1);
+  d = distancetotal/acu;
 
-return d;
+  return d;
 }
 
 double distance2(float *ima,float *medias,int x,int y,int z,int nx,int ny,int nz,int f,int sx,int sy,int sz)
 {
-double d,acu,distancetotal;
-int i,j,k,ni1,nj1,ni2,nj2,nk1,nk2;
+  double d,acu,distancetotal;
+  int i,j,k,ni1,nj1,ni2,nj2,nk1,nk2;
 
-acu = 0;
-distancetotal = 0;
+  acu = 0;
+  distancetotal = 0;
     
-for (k = -f; k <= f; k++)
-{
-  nk1 = z+k;
-  nk2 = nz+k;  
-  if (nk1<0) nk1 = -nk1;
-  if (nk2<0) nk2 = -nk2;
-  if (nk1>= sz) nk1 = 2*sz-nk1-1;    
-  if (nk2>= sz) nk2 = 2*sz-nk2-1;
-  for (j = -f; j <= f; j++)
+  for (k = -f; k <= f; k++)
   {
-    nj1 = y+j;
-    nj2 = ny+j;    
-    if (nj1<0) nj1 = -nj1;    
-    if (nj2<0) nj2 = -nj2;
-    if (nj1>= sy) nj1 = 2*sy-nj1-1;
-    if (nj2>= sy) nj2 = 2*sy-nj2-1;
-    for (i = -f; i <= f; i++)
+    nk1 = z+k;
+    nk2 = nz+k;  
+    if (nk1<0) nk1 = -nk1;
+    if (nk2<0) nk2 = -nk2;
+    if (nk1>= sz) nk1 = 2*sz-nk1-1;    
+    if (nk2>= sz) nk2 = 2*sz-nk2-1;
+    for (j = -f; j <= f; j++)
     {
-      ni1 = x+i;
-      ni2 = nx+i;    
-      if (ni1<0) ni1 = -ni1;
-      if (ni2<0) ni2 = -ni2;    
+      nj1 = y+j;
+      nj2 = ny+j;    
+      if (nj1<0) nj1 = -nj1;    
+      if (nj2<0) nj2 = -nj2;
+      if (nj1>= sy) nj1 = 2*sy-nj1-1;
+      if (nj2>= sy) nj2 = 2*sy-nj2-1;
+      for (i = -f; i <= f; i++)
+      {
+        ni1 = x+i;
+        ni2 = nx+i;    
+        if (ni1<0) ni1 = -ni1;
+        if (ni2<0) ni2 = -ni2;    
         if (ni1>= sx) ni1 = 2*sx-ni1-1;
-      if (ni2>= sx) ni2 = 2*sx-ni2-1;
+        if (ni2>= sx) ni2 = 2*sx-ni2-1;
             
-      d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)medias[nk1*(sx*sy)+(nj1*sx)+ni1])-((double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]-(double)medias[nk2*(sx*sy)+(nj2*sx)+ni2]);            
+        d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)medias[nk1*(sx*sy)+(nj1*sx)+ni1])-((double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]-(double)medias[nk2*(sx*sy)+(nj2*sx)+ni2]);            
         distancetotal += d*d;              
+      }
     }
   }
-}
 
-acu = (2*f+1)*(2*f+1)*(2*f+1);
-d = distancetotal/acu;
+  acu = (2*f+1)*(2*f+1)*(2*f+1);
+  d = distancetotal/acu;
 
-return d;
+  return d;
 }
 
 void Regularize(float *in,float *out,int r,int sx,int sy,int sz)
 {
-double acu, *temp;
-int ind,i,j,k,ni,nj,nk,ii,jj,kk;
+  double acu, *temp;
+  int ind,i,j,k,ni,nj,nk,ii,jj,kk;
 
-temp = (double *)malloc(sx*sy*sz*sizeof(double));
+  temp = (double *)malloc(sx*sy*sz*sizeof(double));
 
-/* separable convolution */
-for (k = 0; k<sz; k++)
-for (j = 0; j<sy; j++)
-for (i = 0; i<sx; i++)
-{
-  if (in[k*(sx*sy)+(j*sx)+i] == 0.0) continue;
-  
-  acu = 0;
-  ind = 0;
-  for (ii = -r; ii <= r; ii++)
+  /* separable convolution */
+  for (k = 0; k<sz; k++)
+  for (j = 0; j<sy; j++)
+  for (i = 0; i<sx; i++)
   {
-    ni = i+ii;
-    if (ni<0) ni = -ni;
-    if (ni>= sx) ni = 2*sx-ni-1;
-    if (in[k*(sx*sy)+(j*sx)+ni]>0)
-    {
-      acu+= (double)in[k*(sx*sy)+(j*sx)+ni];            
-      ind++;      
-    }
-  }
-  if (ind == 0) ind = 1; 
-  out[k*(sx*sy)+(j*sx)+i] = (float)acu/ind;
-}
-
-for (k = 0;k<sz;k++)
-for (j = 0;j<sy;j++)
-for (i = 0;i<sx;i++)
-{
-  if (out[k*(sx*sy)+(j*sx)+i] == 0) continue;
+    if (in[k*(sx*sy)+(j*sx)+i] == 0.0) continue;
   
-  acu = 0;
-  ind = 0;
-  for (jj = -r; jj <= r; jj++)
-  { 
-    nj = j+jj;      
-    if (nj<0) nj = -nj;     
-    if (nj>= sy) nj = 2*sy-nj-1;
-    if (out[k*(sx*sy)+(nj*sx)+i]>0)
+    acu = 0;
+    ind = 0;
+    for (ii = -r; ii <= r; ii++)
     {
-      acu+= (double)out[k*(sx*sy)+(nj*sx)+i];            
-      ind++;        
+      ni = i+ii;
+      if (ni<0) ni = -ni;
+      if (ni>= sx) ni = 2*sx-ni-1;
+      if (in[k*(sx*sy)+(j*sx)+ni]>0)
+      {
+        acu+= (double)in[k*(sx*sy)+(j*sx)+ni];            
+        ind++;      
+      }
     }
+    if (ind == 0) ind = 1; 
+    out[k*(sx*sy)+(j*sx)+i] = (float)acu/ind;
   }
-  if (ind == 0) ind = 1;
-  temp[k*(sx*sy)+(j*sx)+i] = acu/ind;
-}
 
-for (k = 0;k<sz;k++)
-for (j = 0;j<sy;j++)
-for (i = 0;i<sx;i++)
-{
-  if (temp[k*(sx*sy)+(j*sx)+i] == 0) continue;
-  
-  acu = 0;
-  ind = 0;
-  for (kk = -r; kk <= r; kk++)
+  for (k = 0;k<sz;k++)
+  for (j = 0;j<sy;j++)
+  for (i = 0;i<sx;i++)
   {
-    nk = k+kk;          
-    if (nk<0) nk = -nk;         
-    if (nk>= sz) nk = 2*sz-nk-1;        
-    if (temp[nk*(sx*sy)+(j*sx)+i]>0)
-    {
-      acu+= temp[nk*(sx*sy)+(j*sx)+i];            
-      ind++;        
+    if (out[k*(sx*sy)+(j*sx)+i] == 0) continue;
+  
+    acu = 0;
+    ind = 0;
+    for (jj = -r; jj <= r; jj++)
+    { 
+      nj = j+jj;      
+      if (nj<0) nj = -nj;     
+      if (nj>= sy) nj = 2*sy-nj-1;
+      if (out[k*(sx*sy)+(nj*sx)+i]>0)
+      {
+        acu+= (double)out[k*(sx*sy)+(nj*sx)+i];            
+        ind++;        
+      }
     }
+    if (ind == 0) ind = 1;
+    temp[k*(sx*sy)+(j*sx)+i] = acu/ind;
   }
-  if (ind == 0) ind = 1;
-  out[k*(sx*sy)+(j*sx)+i] = (float)acu/ind;
+
+  for (k = 0;k<sz;k++)
+  for (j = 0;j<sy;j++)
+  for (i = 0;i<sx;i++)
+  {
+    if (temp[k*(sx*sy)+(j*sx)+i] == 0) continue;
+  
+    acu = 0;
+    ind = 0;
+    for (kk = -r; kk <= r; kk++)
+    {
+      nk = k+kk;          
+      if (nk<0) nk = -nk;         
+      if (nk>= sz) nk = 2*sz-nk-1;        
+      if (temp[nk*(sx*sy)+(j*sx)+i]>0)
+      {
+        acu+= temp[nk*(sx*sy)+(j*sx)+i];            
+        ind++;        
+      }
+    }
+    if (ind == 0) ind = 1;
+    out[k*(sx*sy)+(j*sx)+i] = (float)acu/ind;
+  }
+
+  free(temp);
+  return;
 }
 
-free(temp);
-return;
-}
-
-unsigned ThreadFunc( myargument arg )
+#if defined(_WIN32)
+unsigned __stdcall ThreadFunc( void* pArguments )
+#else
+void* ThreadFunc( void* pArguments )
+#endif
 {
-float *bias,*Estimate,*ima,*means,*variances,*average;
-double epsilon,mu1,var1,totalweight,wmax,t1,t1i,t2,d,w,distanciaminima;
-unsigned char *Label;
-int rows,cols,slices,ini,fin,v,f,init,i,j,k,rc,ii,jj,kk,ni,nj,nk,Ndims;
+  float *bias,*Estimate,*ima,*means,*variances,*average;
+  double epsilon,mu1,var1,totalweight,wmax,t1,t1i,t2,d,w,distanciaminima;
+  unsigned char *Label;
+  int rows,cols,slices,ini,fin,v,f,i,j,k,l,rc,ii,jj,kk,ni,nj,nk,Ndims;
     
-extern int rician;
-extern double max;
+  extern int rician;
+  extern double max;
     
-rows = arg.rows;    
-cols = arg.cols;
-slices = arg.slices;
-ini = arg.ini;    
-fin = arg.fin;
-ima = arg.in_image;    
-means = arg.means_image;  
-variances = arg.var_image;     
-Estimate = arg.estimate;
-bias = arg.bias;
-Label = arg.label;    
-v = arg.radioB;
-f = arg.radioS;    
+  myargument arg;
+  arg=*(myargument *) pArguments;
+
+  rows = arg.rows;    
+  cols = arg.cols;
+  slices = arg.slices;
+  ini = arg.ini;    
+  fin = arg.fin;
+  ima = arg.in_image;    
+  means = arg.means_image;  
+  variances = arg.var_image;     
+  Estimate = arg.estimate;
+  bias = arg.bias;
+  Label = arg.label;    
+  v = arg.radioB;
+  f = arg.radioS;    
                       
-/* filter */
-epsilon = 0.00001;
-mu1 = 0.95;
-var1 = 0.5;
-init = 0;
-rc = rows*cols;
+  /* filter */
+  epsilon = 1e-5;
+  mu1 = 0.95;
+  var1 = 0.5;
+  rc = rows*cols;
 
-Ndims = (2*f+1)*(2*f+1)*(2*f+1);
+  Ndims = (2*f+1)*(2*f+1)*(2*f+1);
 
-average = (float*)malloc(Ndims*sizeof(float));
+  average = (float*)malloc(Ndims*sizeof(float));
 
-wmax = 0.0;
+  wmax = 0.0;
 
-for (k = ini;k<fin;k+= 2)
-for (j = 0;j<rows;j+= 2)
-for (i = 0;i<cols;i+= 2)
-{ 
-  /* init */  
-  for (init = 0 ; init < Ndims; init++) average[init] = 0.0;     
-  totalweight = 0.0;                                                
-  distanciaminima = 1e15;
+  for (k = ini; k<fin; k+= 2)
+  for (j = 0;  j<rows; j+= 2)
+  for (i = 0;  i<cols; i+= 2)
+  { 
+    /* init */  
+    for (l = 0 ; l < Ndims; l++) average[l] = 0.0;     
+    totalweight = 0.0;                                                
+    distanciaminima = 1e15;
        
-  if (ima[k*rc+(j*cols)+i]>0 && (means[k*rc+(j*cols)+i])>epsilon && (variances[k*rc+(j*cols)+i]>epsilon))
-  {                    
+    if (ima[(k*rc)+(j*cols)+i]>0 && (means[(k*rc)+(j*cols)+i])>epsilon && (variances[(k*rc)+(j*cols)+i]>epsilon))
+    {                    
        /* calculate minimum distance */
        for (kk = -v;kk<= v;kk++)
        {
@@ -431,13 +444,14 @@ for (i = 0;i<cols;i+= 2)
            {
               ni = i+ii;                                                        
               if (ii == 0 && jj == 0 && kk == 0) continue;              
+
               if (ni>= 0 && nj>= 0 && nk>= 0 && ni<cols && nj<rows && nk<slices)
               {                                 
-                if (ima[nk*rc+(nj*cols)+ni]>0 && (means[nk*(rc)+(nj*cols)+ni])> epsilon && (variances[nk*rc+(nj*cols)+ni]>epsilon))
+                if (ima[(nk*rc)+(nj*cols)+ni]>0 && (means[(nk*rc)+(nj*cols)+ni])> epsilon && (variances[(nk*rc)+(nj*cols)+ni]>epsilon))
                 {               
-                  t1 = ((double)means[k*rc+(j*cols)+i])/((double)means[nk*rc+(nj*cols)+ni]);  
-                  t1i =  (max-(double)means[k*(rc)+(j*cols)+i])/(max-(double)means[nk*(rc)+(nj*cols)+ni]);  
-                  t2 = ((double)variances[k*rc+(j*cols)+i])/((double)variances[nk*rc+(nj*cols)+ni]);
+                  t1 = ((double)means[(k*rc)+(j*cols)+i])/((double)means[(nk*rc)+(nj*cols)+ni]);  
+                  t1i =  (max-(double)means[(k*rc)+(j*cols)+i])/(max-(double)means[(nk*rc)+(nj*cols)+ni]);  
+                  t2 = ((double)variances[(k*rc)+(j*cols)+i])/((double)variances[(nk*rc)+(nj*cols)+ni]);
     
                   if ( (t1>mu1 && t1<(1.0/mu1)) || ((t1i>mu1 && t1i<(1.0/mu1)) && t2>var1 && t2<(1.0/var1)))
                   {                                                         
@@ -465,8 +479,8 @@ for (i = 0;i<cols;i+= 2)
                     nj = j+jj;                          
                     if (ni>= 0 && nj>= 0 && nk>= 0 && ni<cols && nj<rows && nk<slices)
                     {   
-                       if (distanciaminima == 1e15) bias[nk*(rc)+(nj*cols)+ni] = 0.0; 
-                       else bias[nk*(rc)+(nj*cols)+ni] = (float)distanciaminima;                                  
+                       if (distanciaminima == 1e15) bias[(nk*rc)+(nj*cols)+ni] = 0.0; 
+                       else bias[(nk*rc)+(nj*cols)+ni] = (float)distanciaminima;                                  
                     }
                  }
               }
@@ -487,11 +501,11 @@ for (i = 0;i<cols;i+= 2)
                 
                 if (ni>= 0 && nj>= 0 && nk>= 0 && ni<cols && nj<rows && nk<slices)
                 {                                   
-                    if (ima[nk*rc+(nj*cols)+ni]>0 && (means[nk*(rc)+(nj*cols)+ni])> epsilon && (variances[nk*rc+(nj*cols)+ni]>epsilon))
+                    if (ima[(nk*rc)+(nj*cols)+ni]>0 && (means[(nk*rc)+(nj*cols)+ni])> epsilon && (variances[(nk*rc)+(nj*cols)+ni]>epsilon))
                     {               
-                        t1 = ((double)means[k*rc+(j*cols)+i])/((double)means[nk*rc+(nj*cols)+ni]);  
-                        t1i =  (max-(double)means[k*(rc)+(j*cols)+i])/(max-(double)means[nk*(rc)+(nj*cols)+ni]);  
-                        t2 = ((double)variances[k*rc+(j*cols)+i])/((double)variances[nk*rc+(nj*cols)+ni]);
+                        t1 = ((double)means[(k*rc)+(j*cols)+i])/((double)means[(nk*rc)+(nj*cols)+ni]);  
+                        t1i =  (max-(double)means[(k*rc)+(j*cols)+i])/(max-(double)means[(nk*rc)+(nj*cols)+ni]);  
+                        t2 = ((double)variances[(k*rc)+(j*cols)+i])/((double)variances[(nk*rc)+(nj*cols)+ni]);
     
                         if ( (t1>mu1 && t1<(1.0/mu1)) || ((t1i>mu1 && t1i<(1.0/mu1)) && t2>var1 && t2<(1.0/var1)))
                         {                                                       
@@ -526,53 +540,64 @@ for (i = 0;i<cols;i+= 2)
       totalweight = totalweight + wmax;
       Value_block(Estimate,Label,i,j,k,f,average,totalweight,cols,rows,slices);
     }
-}
+  }
 
-free(average);
-return 0;
+#if defined(_WIN32)
+  _endthreadex(0);    
+#else
+  pthread_exit(0);    
+#endif
+
+  free(average);
+  return 0;
 }
 
 
 void anlm(float* ima, int v, int f, int use_rician, const int* dims)
 {
-float *means, *variances, *Estimate, *average, *bias;
-unsigned char *Label;
-int ndim = 3;
-double SNR,mean,var,estimate,d;
-int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin,r;
+  float *means, *variances, *Estimate, *bias;
+  unsigned char *Label;
+  int ndim = 3;
+  double SNR,mean,var,estimate,d;
+  int vol,slice,label,Ndims,i,j,k,ii,jj,kk,ni,nj,nk,indice,Nthreads,ini,fin,r;
 
-extern int rician;
+  extern int rician;
 
-myargument *ThreadArgs;  
+  myargument *ThreadArgs;  
 
-Ndims = (int)floor(pow((2.0*f+1.0),ndim));
-slice = dims[0]*dims[1];
-vol = dims[0]*dims[1]*dims[2];
+#if defined(_WIN32)
+  HANDLE *ThreadList; /* Handles to the worker threads*/
+#else
+  pthread_t * ThreadList;
+#endif
 
-/*Allocate memory */
-average = (float*)malloc(Ndims*sizeof(float));
-means = (float*)malloc(vol*sizeof(float));
-variances = (float*)malloc(vol*sizeof(float));
-Estimate = (float*)malloc(vol*sizeof(float));
-Label = (unsigned char*)malloc(vol*sizeof(unsigned char));
+  Ndims = (int)floor(pow((2.0*f+1.0),ndim));
+  slice = dims[0]*dims[1];
+  vol = dims[0]*dims[1]*dims[2];
 
-/* set global parameter */
-if (use_rician)
+  /*Allocate memory */
+  means = (float*)malloc(vol*sizeof(float));
+  variances = (float*)malloc(vol*sizeof(float));
+  Estimate = (float*)malloc(vol*sizeof(float));
+  Label = (unsigned char*)malloc(vol*sizeof(unsigned char));
+
+  /* set global parameter */
+  if (use_rician)
     rician = 1;
 
-if (rician) bias = (float*)malloc(vol*sizeof(float));
+  if (rician) bias = (float*)malloc(vol*sizeof(float));
 
-for (i = 0; i < vol; i++)
-{
+  for (i = 0; i < vol; i++)
+  {
     Estimate[i] = 0.0;
     Label[i] = 0;
     if (rician) bias[i] = 0.0;
-}
+  }
 
 
-max = 0.0;
-for (k = 0;k<dims[2];k++)
-{
+  max = 0.0;
+  for (k = 0;k<dims[2];k++)
+  {
     for (j = 0;j<dims[1];j++)
     {
         for (i = 0;i<dims[0];i++)
@@ -609,10 +634,10 @@ for (k = 0;k<dims[2];k++)
             means[k*(slice)+(j*dims[0])+i] = (float)mean;
         }
     }
-}
+  }
 
-for (k = 0;k<dims[2];k++)
-{
+  for (k = 0;k<dims[2];k++)
+  {
     for (j = 0;j<dims[1];j++)
     {
         for (i = 0;i<dims[0];i++)
@@ -641,25 +666,23 @@ for (k = 0;k<dims[2];k++)
             variances[k*(slice)+(j*dims[0])+i] = (float)var;
         }
     }
-}
+  }
 
-Nthreads = 1;
+  Nthreads = dims[2]<8?dims[2]:8;
+  if(Nthreads<1) Nthreads=1;
 
-#ifdef _OPENMP
-    Nthreads = omp_get_num_procs();
-    omp_set_num_threads(Nthreads);
-    printf("Using %d processors\n",Nthreads);fflush(stdout);
-#endif
+  if(Nthreads>1) printf("Using %d processors\n",Nthreads);fflush(stdout);
 
-/* Reserve room for handles of threads in ThreadList */
-ThreadArgs = (myargument*) malloc( Nthreads*sizeof(myargument));
 
-#ifdef _OPENMP
-    # pragma omp parallel for default(shared) private(i, ini, fin)
-#endif
-for (i = 0; i<Nthreads; i++)
-{         
-    /* Make Thread Structure */
+#if defined(_WIN32)
+
+  /* Reserve room for handles of threads in ThreadList*/
+  ThreadList = (HANDLE*) malloc(Nthreads*sizeof( HANDLE ));
+  ThreadArgs = (myargument*) malloc( Nthreads*sizeof(myargument));
+
+  for (i=0; i<Nthreads; i++)
+ {         
+	/* Make Thread Structure   */
     ini = (i*dims[2])/Nthreads;
     fin = ((i+1)*dims[2])/Nthreads;            
     ThreadArgs[i].cols = dims[0];
@@ -675,34 +698,78 @@ for (i = 0; i<Nthreads; i++)
     ThreadArgs[i].fin = fin;
     ThreadArgs[i].radioB = v;
     ThreadArgs[i].radioS = f;  
+    	
+    ThreadList[i] = (HANDLE)_beginthreadex( (void *)NULL, 0, &ThreadFunc, &ThreadArgs[i] , 0, (unsigned *)NULL );
         
-    (void)ThreadFunc(ThreadArgs[i]);    
-}
+ }
     
-if (rician)
-{
-  r = 5;  
-  Regularize(bias,variances,r,dims[0],dims[1],dims[2]);
+  for (i=0; i<Nthreads; i++) { WaitForSingleObject(ThreadList[i], INFINITE); }
+  for (i=0; i<Nthreads; i++) { CloseHandle( ThreadList[i] ); }
+    
+#else
+
+  /* Reserve room for handles of threads in ThreadList*/
+  ThreadList = (pthread_t *) calloc(Nthreads,sizeof(pthread_t));
+  ThreadArgs = (myargument*) calloc( Nthreads,sizeof(myargument));
+
+  for (i=0; i<Nthreads; i++)
+  {         
+	/* Make Thread Structure   */
+    ini = (i*dims[2])/Nthreads;
+    fin = ((i+1)*dims[2])/Nthreads;  
+    ThreadArgs[i].cols = dims[0];
+    ThreadArgs[i].rows = dims[1];
+    ThreadArgs[i].slices = dims[2];
+    ThreadArgs[i].in_image = ima;   
+    ThreadArgs[i].var_image = variances;
+    ThreadArgs[i].means_image = means;  
+    ThreadArgs[i].estimate = Estimate;
+    ThreadArgs[i].bias = bias;    
+    ThreadArgs[i].label = Label;    
+    ThreadArgs[i].ini = ini;
+    ThreadArgs[i].fin = fin;
+    ThreadArgs[i].radioB = v;
+    ThreadArgs[i].radioS = f;  
+  }
+
+  for (i=0; i<Nthreads; i++)
+  {
+    if(pthread_create(&ThreadList[i], NULL, ThreadFunc,&ThreadArgs[i]))
+    {
+       printf("Threads cannot be created\n");
+       exit(1);
+    }        
+  }
+  
+  for (i=0; i<Nthreads; i++)
+    pthread_join(ThreadList[i],NULL);
+
+#endif
+    
+  if (rician)
+  {
+    r = 5;  
+    Regularize(bias,variances,r,dims[0],dims[1],dims[2]);
+    for (i = 0;i<vol;i++)
+    {
+      if (variances[i]>0.0) 
+      {
+        SNR = (double)means[i]/sqrt((double)variances[i]);      
+        bias[i] = 2*(variances[i]/(float)Epsi(SNR));      
+#if defined(_WIN32)
+        if (_isnan(bias[i])) bias[i] = 0.0;     
+#else
+        if (isnan(bias[i])) bias[i] = 0.0;     
+#endif
+      }
+    }
+  }
+
+  /* Aggregation of the estimators (i.e. means computation) */
+  label = 0;
+  estimate = 0.0;
   for (i = 0;i<vol;i++)
   {
-     if (variances[i]>0.0) 
-     {
-       SNR = (double)means[i]/sqrt((double)variances[i]);      
-       bias[i] = 2*(variances[i]/(float)Epsi(SNR));      
-#if defined(_WIN32)
-       if (_isnan(bias[i])) bias[i] = 0.0;     
-#else
-       if (isnan(bias[i])) bias[i] = 0.0;     
-#endif
-     }
-  }
-}
-
-/* Aggregation of the estimators (i.e. means computation) */
-label = 0;
-estimate = 0.0;
-for (i = 0;i<vol;i++)
-{
     label = Label[i];
     if (label > 0)
     {
@@ -715,17 +782,17 @@ for (i = 0;i<vol;i++)
       }
       else ima[i] = (float)estimate;  
     }
-}
+  }
 
-free(ThreadArgs);
-free(average);
-free(means);
-free(variances);
-free(Estimate);
-free(Label);
-if (rician) free(bias);
+  free(ThreadList);
+  free(ThreadArgs);
+  free(means);
+  free(variances);
+  free(Estimate);
+  free(Label);
+  if (rician) free(bias);
 
-return;
+  return;
 
 }
 

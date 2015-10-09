@@ -28,6 +28,10 @@
 #include <math.h>
 #include "Amap.h"
 
+#ifdef MATLAB_MEX_FILE
+#include <mex.h> 
+#endif
+
 /* calculate the mean and variance for every class on a grid size SUBxSUBxSUB */
 static void GetMeansVariances(double *src, unsigned char *label, int n_classes, struct point *r, int sub, int *dims, double *thresh)
 {

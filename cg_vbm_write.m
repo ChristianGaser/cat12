@@ -613,14 +613,10 @@ if ~(vbm.sanlm==5 && job.extopts.NCstr)
     stime = vbm_io_cmd('Noise correction after global intensity correction');
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       [Yms,BB]  = vbm_vol_resize(Ym,'reduceBrain',vx_vol,2,Yb);
-      if     vbm.sanlm==1, sanlmMex_noopenmp(Yms,3,1,0); 
-      elseif vbm.sanlm==2, sanlmMex(Yms,3,1,0);
-      end
+      if (vbm.sanlm==1) || (vbm.sanlm==2), sanlmMex(Yms,3,1,0); end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
     else
-      if     vbm.sanlm==1, sanlmMex_noopenmp(Ym,3,1,0); 
-      elseif vbm.sanlm==2, sanlmMex(Ym,3,1,0);
-      end
+      if (vbm.sanlm==1) || (vbm.sanlm==2), sanlmMex(Ym,3,1,0); end
     end
     if opt.inv_weighting
       Ysrc = Ym;
