@@ -10,6 +10,7 @@ if [ -f log ]; then
   svn log -r 440:HEAD > CHANGES.txt
 
   echo >> CHANGES.txt
+  echo "Changed paths:" > log2
   svn -q status >> CHANGES.txt
   cat log >> CHANGES.txt
   echo  >> CHANGES.txt
