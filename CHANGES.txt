@@ -6071,7 +6071,9 @@ changes.
 
 
 ------------------------------------------------------------------------
+r745 | gaser | 2015-10-09 16:58:04 +0200 (Fr, 09 Okt 2015) | 84 lines
 
+Changed paths:
 M       Amap.c
 M       AmapMex.mexa64
 M       AmapMex.mexglx
@@ -6148,10 +6150,18 @@ M       vbm_vol_sanlm.m
 M       vbm_vol_simgrow.mexmaci64
 M       vbm_vol_simgrow.mexw32
 M       vbm_vol_simgrow.mexw64
+
 (1) Replaced OPENMP with Posix Threads in sanlm-code for multi-threading.
 (2) Use always multithreading SANLM. 
 (3) Added inclusion of mex.h if mex-file is detected (important for printf
     under fucking windows).
 (4) Recompiled everything...
+
 ------------------------------------------------------------------------
-r745 | gaser | 2015-10-09 16:57:47
+
+M       CHANGES.txt
+M       svn_ci_log
+Tiny change in svn_ci_log
+
+------------------------------------------------------------------------
+r746 | gaser | 2015-10-09 17:01:57
