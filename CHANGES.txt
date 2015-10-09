@@ -6177,6 +6177,7 @@ Tiny change in svn_ci_log
 
 
 ------------------------------------------------------------------------
+r748 | gaser | 2015-10-09 17:04:18 +0200 (Fr, 09 Okt 2015) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6184,5 +6185,28 @@ M       svn_ci_log
 
 Tiny change in svn_ci_log
 
+
 ------------------------------------------------------------------------
-r747 | gaser | 2015-10-09 17:04:11
+
+Changed paths:
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       ornlmMex.mexw64
+M       sanlmMex.mexw64
+M       vbdist.mexw64
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexw64
+
+Recompiled windows 64bit.
+------------------------------------------------------------------------
+r749 | gaser | 2015-10-09 18:04:08
