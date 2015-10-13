@@ -30,9 +30,10 @@
     
       <br />
       <h2>Description</h2>
-      <p>This toolbox is a an extensions to SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-based morphometry (VBM). It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the GNU General Public Licence.</p>
+      <p>This toolbox is a an extensions to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12/')">SPM12</a> (Wellcome Department of Cognitive Neurology) to provide voxel-based morphometry (VBM). It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html')">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version.</p>
         
       <ol>
+        <li><a href=vbm12_starting.html>Quick start guide</a></li>         
         <li><a href=vbm12_introduction.html>Introduction</a></li>               <!-- Why we do all this -->
         <li><a href=vbm12_instruction.html>Instruction manual</a></li>          <!-- How to use this toolbox an some special functions - GUI view & control -->
         <ul>
@@ -63,7 +64,7 @@
     
   
     <div id="footer">
-      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
     </div>
   </body>
 </html>
