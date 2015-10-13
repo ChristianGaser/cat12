@@ -6187,6 +6187,7 @@ Tiny change in svn_ci_log
 
 
 ------------------------------------------------------------------------
+r749 | gaser | 2015-10-09 18:04:18 +0200 (Fr, 09 Okt 2015) | 21 lines
 
 Changed paths:
 M       AmapMex.mexw64
@@ -6208,5 +6209,39 @@ M       vbm_vol_pbtp.mexw64
 M       vbm_vol_simgrow.mexw64
 
 Recompiled windows 64bit.
+
 ------------------------------------------------------------------------
-r749 | gaser | 2015-10-09 18:04:08
+
+Changed paths:
+M       CHANGES.txt
+M       cg_check_cov.m
+M       html/vbm12.html
+M       html/vbm12.txt
+M       html/vbm12_FAQ.html
+M       html/vbm12_ackknowledgement.html
+M       html/vbm12_instruction.html
+M       html/vbm12_instruction_FF.html
+M       html/vbm12_instruction_FN.html
+M       html/vbm12_instruction_MS.html
+M       html/vbm12_instruction_PP.html
+M       html/vbm12_instruction_QA.html
+M       html/vbm12_instruction_ST.html
+M       html/vbm12_instruction_templates.html
+M       html/vbm12_introduction.html
+M       html/vbm12_methods.html
+M       html/vbm12_methods_QA.html
+M       html/vbm12_methods_RBM.html
+M       html/vbm12_methods_SBM.html
+M       html/vbm12_methods_VBM.html
+M       html/vbm12_starting.html
+M       html/vbm12_stuff.html
+M       vbm12.fig
+
+(1) Changed y-limit in cg_check_cov.m.
+(2) Updated html-files with many changes and additional links.
+ 
+
+
+
+------------------------------------------------------------------------
+r750 | gaser | 2015-10-13 13:39:27

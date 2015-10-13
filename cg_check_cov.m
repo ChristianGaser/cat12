@@ -149,19 +149,7 @@ FS = spm('FontSizes');
 
 pos = struct(...
     'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
-    'cbar',  [0.725 0.050 0.020 0.500],... % colorbar for correlation matrix
-    'corr',  [-0.02 0.050 0.775 0.775],... % correlation matrix
-    'close', [0.775 0.900 0.200 0.050],... % close button
-    'show',  [0.775 0.850 0.200 0.050],... % button to show worst cases
-    'boxp',  [0.775 0.795 0.200 0.050],... % button to display boxplot
-    'sort',  [0.775 0.765 0.200 0.050],... % button to enable ordered matrix
-    'text',  [0.775 0.625 0.200 0.150],... % textbox
-    'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
-    'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
-
-pos = struct(...
-    'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
-    'cbar',  [0.24 0.925 0.3 0.02],... % colorbar for correlation matrix
+    'cbar',  [0.240 0.925 0.300 0.020],... % colorbar for correlation matrix
     'corr',  [-0.02 0.050 0.825 0.825],... % correlation matrix
     'close', [0.775 0.900 0.200 0.050],... % close button
     'show',  [0.775 0.850 0.200 0.050],... % button to show worst cases
@@ -523,14 +511,9 @@ vbm_plot_boxplot(data,opt);
 
 set(gca,'XTick',[],'XLim',[-.25 n_samples+1.25]);
 if max(data_boxp) > min(data_boxp)
-  ylim_min = 0.99*min(data_boxp);
-  ylim_max = 1.01*max(data_boxp);
-  if ylim_min > min(data_boxp)
-    ylim_min = 1.01*min(data_boxp);
-  end
-  if ylim_max < max(data_boxp)
-    ylim_max = 0.99*max(data_boxp);
-  end
+  yamp = max(data_boxp) - min(data_boxp);
+  ylim_min = min(data_boxp) - 0.05*yamp;
+  ylim_max = max(data_boxp) + 0.05*yamp;
   set(gca,'YLim',[ylim_min ylim_max]);
 end
 
