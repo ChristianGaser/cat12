@@ -25,30 +25,31 @@
       <h2>Quick start guide:</h2>
       <p>VBM data</p>
       <ul>
-        <li>Segment data using defaults (for longitudinal data use longitudinal pipeline)</li>
-        <li>Check data quality using sample homogeneity for VBM data</li>
-        <li>Smooth data</li>
-        <li>Build 2nd-level model: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
-        <li>Estimate model</li>
-        <li>Optionally transform and threshold SPM-maps to (log-scaled) p-maps or correlation maps</li>
-        <li>Optionally overlay selected slices</li>
+        <li><a href="matlab:spm_jobman('interactive','','spm.tools.vbm.estwrite');">Segment</a> data using defaults (for longitudinal data use <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.long');">longitudinal pipeline</a>)</li>
+        <li>Check data quality using <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.check_cov');">sample homogeneity</a> for VBM data</li>
+        <li><a href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data</li>
+        <li>Build <a href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
+        <li><a href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model</li>
+        <li>Optionally <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.T2x');">transform and threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps</li>
+        <li>Optionally <a href="matlab:slice_overlay;">overlay selected slices</a></li>
       </ul>
 
       <p>Additional surface data</p>
       <ul>
-        <li>Segment data and additionally select "Surface and thickness estimation" in "Writing options"</li>
-        <li>Check data quality using sample homogeneity for surface data</li>
-        <li>Optionally extract additional surface parameters (e.g. suclus depth, gyrification index, cortical complexity)</li>
-        <li>Resample and smooth surface data</li>
-        <li>Build 2nd-level model: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
-        <li>Estimate surface model</li>
+        <li><a href="matlab:spm_jobman('interactive','','spm.tools.vbm.estwrite');">Segment</a> data and additionally select "Surface and thickness estimation" in "Writing options"</li>
+        <li>Check data quality using <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.stools.check_mesh_cov');">sample homogeneity</a> for surface data</li>
+        <li>Optionally <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.stools.surfextract');">extract additional surface parameters</a> (e.g. suclus depth, gyrification index, cortical complexity)</li>
+        <li><a href="matlab:spm_jobman('interactive','','spm.tools.vbm.stools.surfresamp');">Resample and smooth</a> surface data</li>
+        <li>Build <a href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a> model: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
+        <li><a href="matlab:P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');for i=1:size(P,1),swd = spm_file(P(i,:),'fpath'); load(fullfile(swd,'SPM.mat')); SPM.swd  = swd; vbm_spm(SPM); end
+;">Estimate</a> surface model</li>
       </ul>
 
     </div>  
   
     <div id="content"><a href="vbm12.html">< VBM12</a></div>  
     <div id="footer">
-      <p>Copyright (C) 2001-2014 The Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
     </div>
   </body>
 </html>
