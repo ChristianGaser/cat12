@@ -84,8 +84,8 @@ ROIid;ROIappr;ROIname;ROIbase
 82;rOccP;Right Occipital Pole;Right OCP occipital pole  & Left OCP occipital pole 
 83;lOccFusG;Left Occipital Fusiform Gyrus;Right OFuG occipital fusiform gyrus  & Left OFuG occipital fusiform gyrus 
 84;rOccFusG;Right Occipital Fusiform Gyrus;Right OFuG occipital fusiform gyrus  & Left OFuG occipital fusiform gyrus 
-85;lInfFroG;Left Inferior Frontal Gyrus;Right OpIFG opercular part of the inferior frontal gyrus  & Left OpIFG opercular part of the inferior frontal gyrus 
-86;rInfFroG;Right Inferior Frontal Gyrus;Right OpIFG opercular part of the inferior frontal gyrus  & Left OpIFG opercular part of the inferior frontal gyrus 
+85;lInfFroG;Left Inferior Frontal Gyrus;Right InfFroG inferior frontal gyrus  & Left InfFroG inferior frontal gyrus 
+86;rInfFroG;Right Inferior Frontal Gyrus;Right InfFroG inferior frontal gyrus  & Left InfFroG inferior frontal gyrus 
 87;lInfFroOrbG;Left Inferior Frontal Orbital Gyrus;Right OrIFG orbital part of the inferior frontal gyrus  & Left OrIFG orbital part of the inferior frontal gyrus 
 88;rInfFroOrbG;Right Inferior Frontal Orbital Gyrus;Right OrIFG orbital part of the inferior frontal gyrus  & Left OrIFG orbital part of the inferior frontal gyrus 
 89;lPosCinG;Left Posterior Cingulate Gyrus;Right PCgG posterior cingulate gyrus  & Left PCgG posterior cingulate gyrus 
@@ -114,8 +114,8 @@ ROIid;ROIappr;ROIname;ROIbase
 112;rSupMarG;Right Supramarginal Gyrus;Right SMG supramarginal gyrus  & Left SMG supramarginal gyrus 
 113;lSupOccG;Left Superior Occipital Gyrus;Right SOG superior occipital gyrus  & Left SOG superior occipital gyrus 
 114;rSupOccG;Right Superior Occipital Gyrus;Right SOG superior occipital gyrus  & Left SOG superior occipital gyrus 
-115;lSupParL;Left Superior Parietal Lobe;Right SPL superior parietal lobule  & Left SPL superior parietal lobule 
-116;rSupParL;Right Superior Parietal Lobe;Right SPL superior parietal lobule  & Left SPL superior parietal lobule 
+115;lSupParL;Left Superior Parietal Lobe;Right SPL superior parietal lobe  & Left SPL superior parietal lobe 
+116;rSupParL;Right Superior Parietal Lobe;Right SPL superior parietal lobe  & Left SPL superior parietal lobe 
 117;lSupTemG;Left Superior Temporal Gyrus;Right STG superior temporal gyrus  & Left STG superior temporal gyrus 
 118;rSupTemG;Right Superior Temporal Gyrus;Right STG superior temporal gyrus  & Left STG superior temporal gyrus 
 119;lTemP;Left Temporal Pole;Right TMP temporal pole  & Left TMP temporal pole 
