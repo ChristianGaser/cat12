@@ -380,7 +380,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             
             /* use DIN, if the actual value is larger */
             if ( fabs(D[ni])>DIN ) {
-              if (D[ni]>0) nC++;
+              if (D[ni]>0.0) nC++;
               D[ni] = -DIN; 
               I[ni] = I[i];
             }

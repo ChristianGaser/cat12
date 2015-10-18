@@ -6246,6 +6246,7 @@ M       vbm12.fig
 
 
 ------------------------------------------------------------------------
+r751 | gaser | 2015-10-18 20:47:01 +0200 (So, 18 Okt 2015) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6256,5 +6257,56 @@ M       vbm_vol_eidist.mexmaci64
 (2) Removed maci64-bug in vbm_vol_eidist.c.
 
 
+
 ------------------------------------------------------------------------
-r751 | gaser | 2015-10-18 20:46:48
+
+Changed paths:
+M       AmapMex.mexw32
+M       AmapMex.mexw64
+M       CHANGES.txt
+M       html/vbm12.html
+M       ornlmMex.mexw32
+M       ornlmMex.mexw64
+M       sanlmMex.mexw32
+M       sanlmMex.mexw64
+M       templates_1.50mm/neuromorphometrics.csv
+M       vbdist.mexw32
+M       vbdist.mexw64
+M       vbm_vol_downcut.mexw32
+M       vbm_vol_downcut.mexw64
+M       vbm_vol_eidist.c
+M       vbm_vol_eidist.mexa64
+M       vbm_vol_eidist.mexglx
+M       vbm_vol_eidist.mexmaci64
+M       vbm_vol_eidist.mexw32
+M       vbm_vol_eidist.mexw64
+M       vbm_vol_genus0.mexw32
+M       vbm_vol_genus0.mexw64
+M       vbm_vol_gradient3.mexw32
+M       vbm_vol_gradient3.mexw64
+M       vbm_vol_interp3f.mexw32
+M       vbm_vol_interp3f.mexw64
+M       vbm_vol_laplace3.mexw32
+M       vbm_vol_laplace3.mexw64
+M       vbm_vol_laplace3R.mexw32
+M       vbm_vol_laplace3R.mexw64
+M       vbm_vol_localstat.mexw32
+M       vbm_vol_localstat.mexw64
+M       vbm_vol_median3.mexw32
+M       vbm_vol_median3.mexw64
+M       vbm_vol_median3c.mexw32
+M       vbm_vol_median3c.mexw64
+M       vbm_vol_pbtp.mexw32
+M       vbm_vol_pbtp.mexw64
+M       vbm_vol_simgrow.mexw32
+M       vbm_vol_simgrow.mexw64
+
+
+(1) Recompiled code.
+(2) Corrected doubled definition in vbm_vol_eidist.c.
+ 
+
+
+
+------------------------------------------------------------------------
+r752 | gaser | 2015-10-18 21:23:42
