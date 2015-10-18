@@ -6211,6 +6211,7 @@ M       vbm_vol_simgrow.mexw64
 Recompiled windows 64bit.
 
 ------------------------------------------------------------------------
+r750 | gaser | 2015-10-13 13:39:39 +0200 (Di, 13 Okt 2015) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6243,5 +6244,17 @@ M       vbm12.fig
 
 
 
+
 ------------------------------------------------------------------------
-r750 | gaser | 2015-10-13 13:39:27
+
+Changed paths:
+M       CHANGES.txt
+M       vbm_vol_eidist.c
+M       vbm_vol_eidist.mexmaci64
+
+(1) Many cosmetic changes to vbm_vol_eidist.c.
+(2) Removed maci64-bug in vbm_vol_eidist.c.
+
+
+------------------------------------------------------------------------
+r751 | gaser | 2015-10-18 20:46:48
