@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
-r440 | gaser | 2012-03-28 09:50:58 +0200 (Mi, 28 Mär 2012) | 7 lines
+r440 | gaser | 2012-03-28 09:50:58 +0200 (Wed, 28 Mar 2012) | 7 lines
 
 Changed paths:
 M       cg_vbm8_defs.m
@@ -9,7 +9,7 @@ M       CHANGES.txt
 Added HDW path to cg_vbm8_defs.m.
 
 ------------------------------------------------------------------------
-r441 | gaser | 2012-07-18 09:03:10 +0200 (Mi, 18 Jul 2012) | 38 lines
+r441 | gaser | 2012-07-18 09:03:10 +0200 (Wed, 18 Jul 2012) | 38 lines
 
 Changed paths:
 !       cg_vbm8_defs.m
@@ -50,7 +50,7 @@ M       cg_cfg_realign.m
 Renamed all occurance of vbm8 to vbm12.
 
 ------------------------------------------------------------------------
-r442 | gaser | 2012-07-18 09:09:18 +0200 (Mi, 18 Jul 2012) | 54 lines
+r442 | gaser | 2012-07-18 09:09:18 +0200 (Wed, 18 Jul 2012) | 54 lines
 
 Changed paths:
 D       cg_vbm8_defs.m
@@ -107,7 +107,7 @@ A  +    VBM12-Manual.doc
 Renamed all files from vbm8 to vbm12.
 
 ------------------------------------------------------------------------
-r443 | gaser | 2012-07-18 09:10:56 +0200 (Mi, 18 Jul 2012) | 27 lines
+r443 | gaser | 2012-07-18 09:10:56 +0200 (Wed, 18 Jul 2012) | 27 lines
 
 Changed paths:
 M       cg_vbm12_get_defaults.m
@@ -137,7 +137,7 @@ M       VBM12-Manual.doc
 Renamed all occurances of vbm8 to vbm12.
 
 ------------------------------------------------------------------------
-r444 | gaser | 2012-07-18 09:28:11 +0200 (Mi, 18 Jul 2012) | 52 lines
+r444 | gaser | 2012-07-18 09:28:11 +0200 (Wed, 18 Jul 2012) | 52 lines
 
 Changed paths:
 D       cg_vbm12_get_defaults.m
@@ -192,7 +192,7 @@ D       cg_vbm12_write.m
 Changed my mind and renamed all *vbm12* files to *vbm*.
 
 ------------------------------------------------------------------------
-r445 | gaser | 2012-07-18 09:32:03 +0200 (Mi, 18 Jul 2012) | 10 lines
+r445 | gaser | 2012-07-18 09:32:03 +0200 (Wed, 18 Jul 2012) | 10 lines
 
 Changed paths:
 A  +    cg_spm_batch.sh
@@ -205,7 +205,7 @@ D       cg_spm8_batch.m
 Removed some old files and renamed spm8 to spm in filenames.
 
 ------------------------------------------------------------------------
-r446 | gaser | 2012-07-18 10:21:40 +0200 (Mi, 18 Jul 2012) | 5 lines
+r446 | gaser | 2012-07-18 10:21:40 +0200 (Wed, 18 Jul 2012) | 5 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -213,7 +213,7 @@ M       Makefile.vbm
 Changed filenames in Makefile.vbm.
 
 ------------------------------------------------------------------------
-r447 | gaser | 2012-07-18 10:36:17 +0200 (Mi, 18 Jul 2012) | 7 lines
+r447 | gaser | 2012-07-18 10:36:17 +0200 (Wed, 18 Jul 2012) | 7 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -223,11 +223,11 @@ A  +    spm_vbm12.m
 Renamed spm_vbm.m to spm_vbm12.m to enable toolbox call.
 
 ------------------------------------------------------------------------
-r448 | dahnke | 2012-07-18 12:33:30 +0200 (Mi, 18 Jul 2012) | 1 line
+r448 | dahnke | 2012-07-18 12:33:30 +0200 (Wed, 18 Jul 2012) | 1 line
 
 directory for templates, test and validiation images
 ------------------------------------------------------------------------
-r449 | gaser | 2012-09-13 12:53:51 +0200 (Do, 13 Sep 2012) | 5 lines
+r449 | gaser | 2012-09-13 12:53:51 +0200 (Thu, 13 Sep 2012) | 5 lines
 
 Changed paths:
 M       tbx_cfg_vbm.m
@@ -235,7 +235,7 @@ M       tbx_cfg_vbm.m
 Corrected "BlaBlaBla" in tbx_cfg_vbm.m
 
 ------------------------------------------------------------------------
-r450 | gaser | 2013-03-26 14:10:21 +0100 (Di, 26 Mär 2013) | 6 lines
+r450 | gaser | 2013-03-26 14:10:21 +0100 (Tue, 26 Mar 2013) | 6 lines
 
 Changed paths:
 M       cg_cleanup_gwc.m
@@ -244,7 +244,7 @@ M       CHANGES.txt
 Added check whether clustering failed in cg_cleanup_gwc.m.
 
 ------------------------------------------------------------------------
-r451 | gaser | 2013-03-26 14:38:49 +0100 (Di, 26 Mär 2013) | 24 lines
+r451 | gaser | 2013-03-26 14:38:49 +0100 (Tue, 26 Mar 2013) | 24 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -271,7 +271,7 @@ Numerous changes to use spm12 segmentation as starting label. Kmeans is now
 deselected by default.
 
 ------------------------------------------------------------------------
-r452 | gaser | 2013-03-26 15:09:46 +0100 (Di, 26 Mär 2013) | 13 lines
+r452 | gaser | 2013-03-26 15:09:46 +0100 (Tue, 26 Mar 2013) | 13 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -287,11 +287,11 @@ M       cg_vbm_write.m
 (4) Name of volume files is now *seg.txt. 
 
 ------------------------------------------------------------------------
-r453 | dahnke | 2013-03-27 11:05:32 +0100 (Mi, 27 Mär 2013) | 1 line
+r453 | dahnke | 2013-03-27 11:05:32 +0100 (Wed, 27 Mar 2013) | 1 line
 
-Little changes for Skull-Stripping and adding of export for the bias and noise corrected image (can find the original part… )
+Little changes for Skull-Stripping and adding of export for the bias and noise corrected image (can find the original part?\226?\128?\166 )
 ------------------------------------------------------------------------
-r454 | gaser | 2013-03-28 09:19:03 +0100 (Do, 28 Mär 2013) | 11 lines
+r454 | gaser | 2013-03-28 09:19:03 +0100 (Thu, 28 Mar 2013) | 11 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -305,7 +305,7 @@ M       cg_vbm_write.m
 
 
 ------------------------------------------------------------------------
-r455 | gaser | 2013-03-28 10:30:11 +0100 (Do, 28 Mär 2013) | 6 lines
+r455 | gaser | 2013-03-28 10:30:11 +0100 (Thu, 28 Mar 2013) | 6 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -314,7 +314,7 @@ M       cg_vbm_run.m
 (2) Removed unnecessary code cg_vbm_run.m.
 
 ------------------------------------------------------------------------
-r456 | gaser | 2013-03-28 10:49:51 +0100 (Do, 28 Mär 2013) | 6 lines
+r456 | gaser | 2013-03-28 10:49:51 +0100 (Thu, 28 Mar 2013) | 6 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -323,7 +323,7 @@ Removed debugging output in cg_vbm_run.m.
 
 
 ------------------------------------------------------------------------
-r457 | gaser | 2013-03-28 12:45:37 +0100 (Do, 28 Mär 2013) | 6 lines
+r457 | gaser | 2013-03-28 12:45:37 +0100 (Thu, 28 Mar 2013) | 6 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -332,19 +332,19 @@ Use old bounding box, because change of it and voxel size does not yer work
 with Dartel.
 
 ------------------------------------------------------------------------
-r458 | dahnke | 2013-04-12 10:47:18 +0200 (Fr, 12 Apr 2013) | 1 line
+r458 | dahnke | 2013-04-12 10:47:18 +0200 (Fri, 12 Apr 2013) | 1 line
 
 XML import and export of a MATLAB structure. The main functions based on the xml_io_tools of Jaroslaw Tuszynski from MATLAB Central (Version: 2010-11-05). The vbm_io_xml used the vbm_io_updateStruct function to allow updates of existing files, where parts of the main structure, where replaced by the new input.
 ------------------------------------------------------------------------
-r459 | dahnke | 2013-04-12 10:48:55 +0200 (Fr, 12 Apr 2013) | 1 line
+r459 | dahnke | 2013-04-12 10:48:55 +0200 (Fri, 12 Apr 2013) | 1 line
 
 Local statistic (mean,min,max,std(,peak)) function for a masked region.
 ------------------------------------------------------------------------
-r460 | dahnke | 2013-04-12 10:54:14 +0200 (Fr, 12 Apr 2013) | 1 line
+r460 | dahnke | 2013-04-12 10:54:14 +0200 (Fri, 12 Apr 2013) | 1 line
 
 Rename and update of the median filter (median3 > vbm_io_median3).
 ------------------------------------------------------------------------
-r461 | dahnke | 2013-04-15 10:40:03 +0200 (Mo, 15 Apr 2013) | 77 lines
+r461 | dahnke | 2013-04-15 10:40:03 +0200 (Mon, 15 Apr 2013) | 77 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -424,7 +424,7 @@ This update include a lot of new methods and function mostly with alpa-status.
 (10) Update of the GUI and variables for the additional functions.
 
 ------------------------------------------------------------------------
-r462 | gaser | 2013-04-15 12:20:36 +0200 (Mo, 15 Apr 2013) | 5 lines
+r462 | gaser | 2013-04-15 12:20:36 +0200 (Mon, 15 Apr 2013) | 5 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -432,7 +432,7 @@ M       cg_vbm_defaults.m
 Some editing and reordering in cg_vbm_defaults.
 
 ------------------------------------------------------------------------
-r463 | gaser | 2013-04-15 12:25:27 +0200 (Mo, 15 Apr 2013) | 10 lines
+r463 | gaser | 2013-04-15 12:25:27 +0200 (Mon, 15 Apr 2013) | 10 lines
 
 Changed paths:
  M      vbm_stat_nanstat1d.m
@@ -445,7 +445,7 @@ M       vbm12.txt
 Some editing and reordering in vbm12.txt.
 
 ------------------------------------------------------------------------
-r464 | gaser | 2013-04-15 12:26:59 +0200 (Mo, 15 Apr 2013) | 5 lines
+r464 | gaser | 2013-04-15 12:26:59 +0200 (Mon, 15 Apr 2013) | 5 lines
 
 Changed paths:
 M       checkinopt.m
@@ -453,7 +453,7 @@ M       checkinopt.m
 Some editing in checkinopt.m.
 
 ------------------------------------------------------------------------
-r465 | gaser | 2013-04-15 12:39:36 +0200 (Mo, 15 Apr 2013) | 5 lines
+r465 | gaser | 2013-04-15 12:39:36 +0200 (Mon, 15 Apr 2013) | 5 lines
 
 Changed paths:
 M       tbx_cfg_vbm.m
@@ -461,7 +461,7 @@ M       tbx_cfg_vbm.m
 Corrected typo in tbx_cfg_vbm.m.
 
 ------------------------------------------------------------------------
-r466 | gaser | 2013-04-15 14:55:56 +0200 (Mo, 15 Apr 2013) | 23 lines
+r466 | gaser | 2013-04-15 14:55:56 +0200 (Mon, 15 Apr 2013) | 23 lines
 
 Changed paths:
 D       AmapMexNu.m
@@ -487,7 +487,7 @@ D       AmapMexNu.c
 Deleted som functions that are not necessary anymore.
 
 ------------------------------------------------------------------------
-r467 | gaser | 2013-04-15 15:41:40 +0200 (Mo, 15 Apr 2013) | 6 lines
+r467 | gaser | 2013-04-15 15:41:40 +0200 (Mon, 15 Apr 2013) | 6 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -496,7 +496,7 @@ M       vbm12.man
 Hide warning in cg_vbm_run.m that calls spm_affreg.m.
 
 ------------------------------------------------------------------------
-r468 | gaser | 2013-04-15 15:52:32 +0200 (Mo, 15 Apr 2013) | 26 lines
+r468 | gaser | 2013-04-15 15:52:32 +0200 (Mon, 15 Apr 2013) | 26 lines
 
 Changed paths:
 D       ornlmMex.mexmaci
@@ -525,7 +525,7 @@ D       upfirdn2dMex.mexmaci
 Removed many functions that are not needed anymore.
 
 ------------------------------------------------------------------------
-r469 | dahnke | 2013-04-15 16:51:10 +0200 (Mo, 15 Apr 2013) | 17 lines
+r469 | dahnke | 2013-04-15 16:51:10 +0200 (Mon, 15 Apr 2013) | 17 lines
 
 Changed paths:
  M      .
@@ -545,7 +545,7 @@ This update include a lot of new methods and function mostly with alpa-status.
     Runs with default SPM segmentation.
 
 ------------------------------------------------------------------------
-r470 | gaser | 2013-04-16 13:54:05 +0200 (Di, 16 Apr 2013) | 7 lines
+r470 | gaser | 2013-04-16 13:54:05 +0200 (Tue, 16 Apr 2013) | 7 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -555,7 +555,7 @@ Changed regularization default to new default of SPM12 r5373.
 
 
 ------------------------------------------------------------------------
-r471 | gaser | 2013-04-16 14:31:49 +0200 (Di, 16 Apr 2013) | 15 lines
+r471 | gaser | 2013-04-16 14:31:49 +0200 (Tue, 16 Apr 2013) | 15 lines
 
 Changed paths:
 M       vbm_vol_iscale.m
@@ -573,7 +573,7 @@ M       cg_vbm_write.m
 
 
 ------------------------------------------------------------------------
-r472 | dahnke | 2013-04-16 14:44:17 +0200 (Di, 16 Apr 2013) | 10 lines
+r472 | dahnke | 2013-04-16 14:44:17 +0200 (Tue, 16 Apr 2013) | 10 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -586,7 +586,7 @@ A       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r473 | dahnke | 2013-04-17 18:12:39 +0200 (Mi, 17 Apr 2013) | 15 lines
+r473 | dahnke | 2013-04-17 18:12:39 +0200 (Wed, 17 Apr 2013) | 15 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -604,7 +604,7 @@ M       vbm_vol_resize.m
 
 
 ------------------------------------------------------------------------
-r474 | dahnke | 2013-04-17 18:21:18 +0200 (Mi, 17 Apr 2013) | 5 lines
+r474 | dahnke | 2013-04-17 18:21:18 +0200 (Wed, 17 Apr 2013) | 5 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -612,7 +612,7 @@ M       cg_vbm_write.m
 (1) Add a missing variable.
 
 ------------------------------------------------------------------------
-r475 | gaser | 2013-04-19 10:32:39 +0200 (Fr, 19 Apr 2013) | 6 lines
+r475 | gaser | 2013-04-19 10:32:39 +0200 (Fri, 19 Apr 2013) | 6 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -621,7 +621,7 @@ M       cg_check_cov.m
 Some minor changes in cg_check_ocv.m.
 
 ------------------------------------------------------------------------
-r476 | dahnke | 2013-04-19 17:18:14 +0200 (Fr, 19 Apr 2013) | 25 lines
+r476 | dahnke | 2013-04-19 17:18:14 +0200 (Fri, 19 Apr 2013) | 25 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -649,7 +649,7 @@ M       vbm_vol_simgrow.mexmaci64
     rating that based on our experience.  
 
 ------------------------------------------------------------------------
-r477 | gaser | 2013-04-22 11:08:41 +0200 (Mo, 22 Apr 2013) | 11 lines
+r477 | gaser | 2013-04-22 11:08:41 +0200 (Mon, 22 Apr 2013) | 11 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -663,7 +663,7 @@ M       cg_vbm_write.m
     in cg_vbm_write.m
 
 ------------------------------------------------------------------------
-r478 | gaser | 2013-04-22 13:24:17 +0200 (Mo, 22 Apr 2013) | 5 lines
+r478 | gaser | 2013-04-22 13:24:17 +0200 (Mon, 22 Apr 2013) | 5 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -671,7 +671,7 @@ M       cg_vbm_write.m
 Changed some handling with deformation field in cg_vbm_write.m.
 
 ------------------------------------------------------------------------
-r479 | gaser | 2013-04-22 17:07:28 +0200 (Mo, 22 Apr 2013) | 7 lines
+r479 | gaser | 2013-04-22 17:07:28 +0200 (Mon, 22 Apr 2013) | 7 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -681,7 +681,7 @@ M       cg_vbm_batch.sh
 Updated batch system.
 
 ------------------------------------------------------------------------
-r480 | dahnke | 2013-04-22 18:17:09 +0200 (Mo, 22 Apr 2013) | 18 lines
+r480 | dahnke | 2013-04-22 18:17:09 +0200 (Mon, 22 Apr 2013) | 18 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -702,7 +702,7 @@ A       vbm_vol_t1qacalc.m
 
 
 ------------------------------------------------------------------------
-r481 | dahnke | 2013-04-23 09:58:25 +0200 (Di, 23 Apr 2013) | 8 lines
+r481 | dahnke | 2013-04-23 09:58:25 +0200 (Tue, 23 Apr 2013) | 8 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -713,7 +713,7 @@ M       vbm_vol_t1qacalc.m
 (2) Updates for VBM12i skull stripping to get more brain tissue.
 
 ------------------------------------------------------------------------
-r482 | gaser | 2013-04-23 11:24:11 +0200 (Di, 23 Apr 2013) | 6 lines
+r482 | gaser | 2013-04-23 11:24:11 +0200 (Tue, 23 Apr 2013) | 6 lines
 
 Changed paths:
 M       cg_vbm_batch.sh
@@ -722,7 +722,7 @@ cg_vbm_batch.sh now allows to define folder for log-files and uses hostname
 for log-file.
 
 ------------------------------------------------------------------------
-r483 | dahnke | 2013-04-23 15:23:35 +0200 (Di, 23 Apr 2013) | 10 lines
+r483 | dahnke | 2013-04-23 15:23:35 +0200 (Tue, 23 Apr 2013) | 10 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -735,7 +735,7 @@ M       vbm_vol_resize.m
 (4) Correct resizing error in vbm_vol_partvol for highres images. 
 
 ------------------------------------------------------------------------
-r484 | gaser | 2013-04-29 16:10:33 +0200 (Mo, 29 Apr 2013) | 7 lines
+r484 | gaser | 2013-04-29 16:10:33 +0200 (Mon, 29 Apr 2013) | 7 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -745,7 +745,7 @@ M       compile.m
 Corrected filenames in cg_vbm_batch.m.
 
 ------------------------------------------------------------------------
-r485 | dahnke | 2013-05-03 18:16:06 +0200 (Fr, 03 Mai 2013) | 26 lines
+r485 | dahnke | 2013-05-03 18:16:06 +0200 (Fri, 03 May 2013) | 26 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -774,7 +774,7 @@ M       vbm_vol_t1qacalc.m
     MRF-filter strength (default).
 
 ------------------------------------------------------------------------
-r486 | gaser | 2013-05-07 10:53:11 +0200 (Di, 07 Mai 2013) | 6 lines
+r486 | gaser | 2013-05-07 10:53:11 +0200 (Tue, 07 May 2013) | 6 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -783,7 +783,7 @@ M       cg_vbm_batch.m
 Updated filenames in cg_vbm_batch.m and Makefile.vbm.
 
 ------------------------------------------------------------------------
-r487 | dahnke | 2013-05-15 11:20:44 +0200 (Mi, 15 Mai 2013) | 35 lines
+r487 | dahnke | 2013-05-15 11:20:44 +0200 (Wed, 15 May 2013) | 35 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -821,7 +821,7 @@ M       vbm_vol_partvol.m
     - Final reduction of Dartel command window output.
 
 ------------------------------------------------------------------------
-r488 | dahnke | 2013-05-19 16:11:49 +0200 (So, 19 Mai 2013) | 17 lines
+r488 | dahnke | 2013-05-19 16:11:49 +0200 (Sun, 19 May 2013) | 17 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -841,7 +841,7 @@ M       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r489 | gaser | 2013-05-22 10:20:57 +0200 (Mi, 22 Mai 2013) | 8 lines
+r489 | gaser | 2013-05-22 10:20:57 +0200 (Wed, 22 May 2013) | 8 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -852,7 +852,7 @@ M       vbm12.man
 (2) Log-file for cg_vbm_batch.sh os now saved as default in current folder.
 
 ------------------------------------------------------------------------
-r490 | dahnke | 2013-05-24 10:02:52 +0200 (Fr, 24 Mai 2013) | 20 lines
+r490 | dahnke | 2013-05-24 10:02:52 +0200 (Fri, 24 May 2013) | 20 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -875,7 +875,7 @@ I change the next things...
 (4) Skull-Stripping of this version is still to aggressive.
 
 ------------------------------------------------------------------------
-r491 | dahnke | 2013-05-28 16:48:26 +0200 (Di, 28 Mai 2013) | 22 lines
+r491 | dahnke | 2013-05-28 16:48:26 +0200 (Tue, 28 May 2013) | 22 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -900,7 +900,7 @@ M       vbm_vol_t1qacalc.m
 (5) Removed unnecessary variables to save memory. 
 
 ------------------------------------------------------------------------
-r492 | dahnke | 2013-05-30 16:51:58 +0200 (Do, 30 Mai 2013) | 24 lines
+r492 | dahnke | 2013-05-30 16:51:58 +0200 (Thu, 30 May 2013) | 24 lines
 
 Changed paths:
 D       Template_1_IXI550_MNI152.nii
@@ -927,7 +927,7 @@ M       vbm_vol_t1qacalc.m
 (2) Added VBM 7 class segmentation image TPM.nii to template directory.
 
 ------------------------------------------------------------------------
-r493 | dahnke | 2013-06-27 10:12:27 +0200 (Do, 27 Jun 2013) | 20 lines
+r493 | dahnke | 2013-06-27 10:12:27 +0200 (Thu, 27 Jun 2013) | 20 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -950,7 +950,7 @@ M       vbm_vol_t1qacalc.m
 
 
 ------------------------------------------------------------------------
-r494 | gaser | 2013-07-09 12:42:46 +0200 (Di, 09 Jul 2013) | 5 lines
+r494 | gaser | 2013-07-09 12:42:46 +0200 (Tue, 09 Jul 2013) | 5 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -958,7 +958,7 @@ M       cg_vbm_run.m
 Cleaned code in cg_vbm_run.m and removed parts that were not necessary anymore.
 
 ------------------------------------------------------------------------
-r495 | gaser | 2013-07-09 13:05:57 +0200 (Di, 09 Jul 2013) | 14 lines
+r495 | gaser | 2013-07-09 13:05:57 +0200 (Tue, 09 Jul 2013) | 14 lines
 
 Changed paths:
  M      vbm_tst_calc_bias.m
@@ -975,7 +975,7 @@ M       cg_vbm_run.m
 Corrected errors in cg_vbm_run.m when already estimated segmentations were used.
 
 ------------------------------------------------------------------------
-r496 | dahnke | 2013-09-16 17:54:41 +0200 (Mo, 16 Sep 2013) | 24 lines
+r496 | dahnke | 2013-09-16 17:54:41 +0200 (Mon, 16 Sep 2013) | 24 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -1002,7 +1002,7 @@ A       vbm_vol_sanlm.m
 (7) Update quality measures.
 
 ------------------------------------------------------------------------
-r497 | dahnke | 2013-09-18 13:06:11 +0200 (Mi, 18 Sep 2013) | 20 lines
+r497 | dahnke | 2013-09-18 13:06:11 +0200 (Wed, 18 Sep 2013) | 20 lines
 
 Changed paths:
  M      templates_1.50mm
@@ -1025,7 +1025,7 @@ MM      vbm_vol_sanlm.m
 (2) Add QM estimation (vbm_tst_t1qa).
 
 ------------------------------------------------------------------------
-r498 | gaser | 2013-09-20 09:41:00 +0200 (Fr, 20 Sep 2013) | 10 lines
+r498 | gaser | 2013-09-20 09:41:00 +0200 (Fri, 20 Sep 2013) | 10 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -1038,7 +1038,7 @@ M       cg_vbm_write.m
     cg_vbm_write.m
 
 ------------------------------------------------------------------------
-r499 | dahnke | 2013-09-20 13:01:10 +0200 (Fr, 20 Sep 2013) | 7 lines
+r499 | dahnke | 2013-09-20 13:01:10 +0200 (Fri, 20 Sep 2013) | 7 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -1048,7 +1048,7 @@ M       compile.m
 
 
 ------------------------------------------------------------------------
-r500 | gaser | 2013-09-23 13:04:00 +0200 (Mo, 23 Sep 2013) | 5 lines
+r500 | gaser | 2013-09-23 13:04:00 +0200 (Mon, 23 Sep 2013) | 5 lines
 
 Changed paths:
 
@@ -1056,7 +1056,7 @@ Changed paths:
 (2) Cleaned up some variables to save memory in cg_vbm_write.m.
 
 ------------------------------------------------------------------------
-r501 | gaser | 2013-09-23 14:56:37 +0200 (Mo, 23 Sep 2013) | 7 lines
+r501 | gaser | 2013-09-23 14:56:37 +0200 (Mon, 23 Sep 2013) | 7 lines
 
 Changed paths:
 M       vbm_vol_resize.m
@@ -1066,7 +1066,7 @@ M       cg_vbm_write.m
 (2) Cleaned up some variables to save memory in cg_vbm_write.m.
 
 ------------------------------------------------------------------------
-r502 | gaser | 2013-09-23 16:41:10 +0200 (Mo, 23 Sep 2013) | 5 lines
+r502 | gaser | 2013-09-23 16:41:10 +0200 (Mon, 23 Sep 2013) | 5 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -1074,7 +1074,7 @@ M       cg_vbm_run.m
 Option to write already estimated segmentations can now deal with additional denoising in cg_vbm_run.m. 
 
 ------------------------------------------------------------------------
-r503 | gaser | 2013-09-24 17:02:13 +0200 (Di, 24 Sep 2013) | 21 lines
+r503 | gaser | 2013-09-24 17:02:13 +0200 (Tue, 24 Sep 2013) | 21 lines
 
 Changed paths:
 M       vbdist.mexglx
@@ -1098,7 +1098,7 @@ M       AmapMex.mexglx
 (2) Re-compiling for linux/windows.
 
 ------------------------------------------------------------------------
-r504 | gaser | 2013-09-24 17:13:20 +0200 (Di, 24 Sep 2013) | 8 lines
+r504 | gaser | 2013-09-24 17:13:20 +0200 (Tue, 24 Sep 2013) | 8 lines
 
 Changed paths:
 M       compile.m
@@ -1109,7 +1109,7 @@ M       sanlmMex.mexa64
 (3) Changed compile.m to consider new paths for libgomp.a.
 
 ------------------------------------------------------------------------
-r505 | gaser | 2013-09-25 13:04:05 +0200 (Mi, 25 Sep 2013) | 19 lines
+r505 | gaser | 2013-09-25 13:04:05 +0200 (Wed, 25 Sep 2013) | 19 lines
 
 Changed paths:
 M       vbm_vol_median3.mexmaci64
@@ -1131,7 +1131,7 @@ M       vbm_vol_interp3f.mexmaci64
 
 
 ------------------------------------------------------------------------
-r506 | gaser | 2013-09-25 16:42:06 +0200 (Mi, 25 Sep 2013) | 7 lines
+r506 | gaser | 2013-09-25 16:42:06 +0200 (Wed, 25 Sep 2013) | 7 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -1141,7 +1141,7 @@ Many changes to cg_vbm_write and cg_vbm_run to clean up the mess with the
 filenames.
 
 ------------------------------------------------------------------------
-r507 | gaser | 2013-09-30 12:54:54 +0200 (Mo, 30 Sep 2013) | 8 lines
+r507 | gaser | 2013-09-30 12:54:54 +0200 (Mon, 30 Sep 2013) | 8 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -1152,7 +1152,7 @@ M       cg_vbm_write.m
     typos and bugs.
 
 ------------------------------------------------------------------------
-r508 | gaser | 2013-10-14 16:33:59 +0200 (Mo, 14 Okt 2013) | 24 lines
+r508 | gaser | 2013-10-14 16:33:59 +0200 (Mon, 14 Oct 2013) | 24 lines
 
 Changed paths:
 M       sanlmMex.mexw32
@@ -1179,7 +1179,7 @@ M       vbm_vol_median3c.mexmaci64
 (3) Re-compiling for all platforms.
 
 ------------------------------------------------------------------------
-r509 | gaser | 2013-10-14 16:35:33 +0200 (Mo, 14 Okt 2013) | 52 lines
+r509 | gaser | 2013-10-14 16:35:33 +0200 (Mon, 14 Oct 2013) | 52 lines
 
 Changed paths:
 A       vbm_vol_pbtp.mexa64
@@ -1234,7 +1234,7 @@ A       vbm_vol_simgrow.mexa64
 Added missing mex-files.
 
 ------------------------------------------------------------------------
-r510 | gaser | 2013-10-14 18:33:37 +0200 (Mo, 14 Okt 2013) | 7 lines
+r510 | gaser | 2013-10-14 18:33:37 +0200 (Mon, 14 Oct 2013) | 7 lines
 
 Changed paths:
 M       Kmeans.c
@@ -1244,7 +1244,7 @@ M       vbm12.man
 Replaced fprintf with printf to allow output for windows platforms.
 
 ------------------------------------------------------------------------
-r511 | gaser | 2013-10-15 09:55:38 +0200 (Di, 15 Okt 2013) | 55 lines
+r511 | gaser | 2013-10-15 09:55:38 +0200 (Tue, 15 Oct 2013) | 55 lines
 
 Changed paths:
  M      vbm_vol_pbtp.mexa64
@@ -1302,7 +1302,7 @@ M       KmeansMex.c
 Replaced malloc in AmapMex.c with mxMalloc.
 
 ------------------------------------------------------------------------
-r512 | gaser | 2013-10-15 10:02:34 +0200 (Di, 15 Okt 2013) | 7 lines
+r512 | gaser | 2013-10-15 10:02:34 +0200 (Tue, 15 Oct 2013) | 7 lines
 
 Changed paths:
 M       AmapMex.c
@@ -1312,7 +1312,7 @@ M       KmeansMex.c
 Replaced free in AmapMex.c and KmeanMex.c with mxFree.
 
 ------------------------------------------------------------------------
-r513 | dahnke | 2013-10-26 18:35:40 +0200 (Sa, 26 Okt 2013) | 49 lines
+r513 | dahnke | 2013-10-26 18:35:40 +0200 (Sat, 26 Oct 2013) | 49 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -1364,7 +1364,7 @@ M       vbm_vol_sanlm.m
      
 
 ------------------------------------------------------------------------
-r514 | dahnke | 2013-10-28 18:22:52 +0100 (Mo, 28 Okt 2013) | 27 lines
+r514 | dahnke | 2013-10-28 18:22:52 +0100 (Mon, 28 Oct 2013) | 27 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -1394,7 +1394,7 @@ M       vbm_vol_eidist.mexmaci64
      csv-file per atlas and to the vbm_*.xml.
 
 ------------------------------------------------------------------------
-r515 | dahnke | 2013-10-30 15:47:16 +0100 (Mi, 30 Okt 2013) | 8 lines
+r515 | dahnke | 2013-10-30 15:47:16 +0100 (Wed, 30 Oct 2013) | 8 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -1405,7 +1405,7 @@ M       vbm_io_writenii.m
 
 
 ------------------------------------------------------------------------
-r516 | gaser | 2013-11-01 08:12:22 +0100 (Fr, 01 Nov 2013) | 5 lines
+r516 | gaser | 2013-11-01 08:12:22 +0100 (Fri, 01 Nov 2013) | 5 lines
 
 Changed paths:
 M       tbx_cfg_vbm.m
@@ -1413,7 +1413,7 @@ M       tbx_cfg_vbm.m
 Removed some typos.
 
 ------------------------------------------------------------------------
-r517 | gaser | 2013-11-06 12:43:55 +0100 (Mi, 06 Nov 2013) | 10 lines
+r517 | gaser | 2013-11-06 12:43:55 +0100 (Wed, 06 Nov 2013) | 10 lines
 
 Changed paths:
 M       cg_cfg_realign.m
@@ -1426,7 +1426,7 @@ Changed strtype-parameters from 'e' to either 'r' (real value) or 'n' (integer)
 according to new spm12b update r5731.
 
 ------------------------------------------------------------------------
-r518 | dahnke | 2013-11-07 13:11:56 +0100 (Do, 07 Nov 2013) | 44 lines
+r518 | dahnke | 2013-11-07 13:11:56 +0100 (Thu, 07 Nov 2013) | 44 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -1473,7 +1473,7 @@ M       vbm_vol_localstat.mexmaci64
 (7)  Update ROI options in cg_vbm_defaults. 
 
 ------------------------------------------------------------------------
-r519 | gaser | 2013-11-13 13:35:38 +0100 (Mi, 13 Nov 2013) | 6 lines
+r519 | gaser | 2013-11-13 13:35:38 +0100 (Wed, 13 Nov 2013) | 6 lines
 
 Changed paths:
 M       tbx_cfg_vbm.m
@@ -1482,7 +1482,7 @@ M       vbm12.man
 Corrected wrong datatype for gcut+ strnegth in tbx_cfg_vbm.m
 
 ------------------------------------------------------------------------
-r520 | dahnke | 2013-11-19 08:46:54 +0100 (Di, 19 Nov 2013) | 38 lines
+r520 | dahnke | 2013-11-19 08:46:54 +0100 (Tue, 19 Nov 2013) | 38 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -1523,7 +1523,7 @@ M       vbm_vol_localstat.mexmaci64
 (6)  Correct "projection" error in vbm_io_writenii for images without mask.
 
 ------------------------------------------------------------------------
-r521 | gaser | 2013-11-19 13:16:08 +0100 (Di, 19 Nov 2013) | 17 lines
+r521 | gaser | 2013-11-19 13:16:08 +0100 (Tue, 19 Nov 2013) | 17 lines
 
 Changed paths:
 M       cg_cfg_realign.m
@@ -1543,7 +1543,7 @@ Removed some bugs in cg_vbm_write.m and removed flags that are not needed
 anymore in cg_vbm_defaults.m.
 
 ------------------------------------------------------------------------
-r522 | gaser | 2013-11-19 15:13:36 +0100 (Di, 19 Nov 2013) | 12 lines
+r522 | gaser | 2013-11-19 15:13:36 +0100 (Tue, 19 Nov 2013) | 12 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -1558,7 +1558,7 @@ Some small changes in cg_vbm_batch.m and changed names for affine files
 in vbmi_io_writenii.m
 
 ------------------------------------------------------------------------
-r523 | dahnke | 2013-11-20 12:53:33 +0100 (Mi, 20 Nov 2013) | 24 lines
+r523 | dahnke | 2013-11-20 12:53:33 +0100 (Wed, 20 Nov 2013) | 24 lines
 
 Changed paths:
 A       CAT
@@ -1585,7 +1585,7 @@ M       vbm_vol_resize.m
      cg_vbm_defaults-file controls surface estimation. 
 
 ------------------------------------------------------------------------
-r524 | gaser | 2013-11-22 16:27:45 +0100 (Fr, 22 Nov 2013) | 81 lines
+r524 | gaser | 2013-11-22 16:27:45 +0100 (Fri, 22 Nov 2013) | 81 lines
 
 Changed paths:
 D       CAT
@@ -1669,7 +1669,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r525 | gaser | 2013-11-22 16:28:59 +0100 (Fr, 22 Nov 2013) | 10 lines
+r525 | gaser | 2013-11-22 16:28:59 +0100 (Fri, 22 Nov 2013) | 10 lines
 
 Changed paths:
 
@@ -1682,7 +1682,7 @@ Changed paths:
 
 
 ------------------------------------------------------------------------
-r526 | gaser | 2013-11-25 11:50:55 +0100 (Mo, 25 Nov 2013) | 53 lines
+r526 | gaser | 2013-11-25 11:50:55 +0100 (Mon, 25 Nov 2013) | 53 lines
 
 Changed paths:
  M      CAT.glnx86/CAT_3dVol2Surf
@@ -1738,7 +1738,7 @@ MM      fsaverage/rh.smoothwm
 Updated binaries for CAT.
 
 ------------------------------------------------------------------------
-r527 | gaser | 2013-11-25 16:35:00 +0100 (Mo, 25 Nov 2013) | 19 lines
+r527 | gaser | 2013-11-25 16:35:00 +0100 (Mon, 25 Nov 2013) | 19 lines
 
 Changed paths:
 M       CAT.maci64/CAT_3dVol2Surf
@@ -1760,14 +1760,14 @@ M       CAT.maci64/CAT_WarpSurf
 Updated binaries for CAT.maci.
 
 ------------------------------------------------------------------------
-r528 | gaser | 2013-11-25 16:52:42 +0100 (Mo, 25 Nov 2013) | 4 lines
+r528 | gaser | 2013-11-25 16:52:42 +0100 (Mon, 25 Nov 2013) | 4 lines
 
 Changed paths:
 
 Updated binaries for CAT.maci.
 
 ------------------------------------------------------------------------
-r529 | gaser | 2013-11-25 16:56:48 +0100 (Mo, 25 Nov 2013) | 23 lines
+r529 | gaser | 2013-11-25 16:56:48 +0100 (Mon, 25 Nov 2013) | 23 lines
 
 Changed paths:
 D       CAT.glnx86/CAT_DeformSurf_ui
@@ -1793,14 +1793,14 @@ RM      CAT.maci64/CAT_WarpSurf
 Updated binaries for CAT.maci.
 
 ------------------------------------------------------------------------
-r530 | gaser | 2013-11-25 16:57:29 +0100 (Mo, 25 Nov 2013) | 4 lines
+r530 | gaser | 2013-11-25 16:57:29 +0100 (Mon, 25 Nov 2013) | 4 lines
 
 Changed paths:
 
 Updated binaries for CAT.maci.
 
 ------------------------------------------------------------------------
-r531 | dahnke | 2013-11-27 18:47:09 +0100 (Mi, 27 Nov 2013) | 26 lines
+r531 | dahnke | 2013-11-27 18:47:09 +0100 (Wed, 27 Nov 2013) | 26 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -1829,7 +1829,7 @@ M       vbm_vol_t1qacalc.m
 (6)  Deactivated surface refinement due to position error. 
 
 ------------------------------------------------------------------------
-r532 | gaser | 2013-11-28 16:21:49 +0100 (Do, 28 Nov 2013) | 37 lines
+r532 | gaser | 2013-11-28 16:21:49 +0100 (Thu, 28 Nov 2013) | 37 lines
 
 Changed paths:
 M       AmapMex.mexmaci64
@@ -1869,7 +1869,7 @@ M       vbm_vol_simgrow.mexmaci64
 (2) Removed bug in cg_vbm_write caused by nonexisting 'left' field.
 
 ------------------------------------------------------------------------
-r533 | gaser | 2013-11-29 08:10:16 +0100 (Fr, 29 Nov 2013) | 5 lines
+r533 | gaser | 2013-11-29 08:10:16 +0100 (Fri, 29 Nov 2013) | 5 lines
 
 Changed paths:
 M       CAT.maci64/CAT_FixTopology
@@ -1877,7 +1877,7 @@ M       CAT.maci64/CAT_FixTopology
 Modified CAT_FixTopology.
 
 ------------------------------------------------------------------------
-r534 | gaser | 2013-11-29 13:04:04 +0100 (Fr, 29 Nov 2013) | 26 lines
+r534 | gaser | 2013-11-29 13:04:04 +0100 (Fri, 29 Nov 2013) | 26 lines
 
 Changed paths:
 M       CAT.maci64/CAT_3dVol2Surf
@@ -1906,7 +1906,7 @@ M       vbm_surf_createCS.m
 (4) Replaced some corrupt binaries for maci64.
 
 ------------------------------------------------------------------------
-r535 | dahnke | 2013-12-04 18:51:36 +0100 (Mi, 04 Dez 2013) | 55 lines
+r535 | dahnke | 2013-12-04 18:51:36 +0100 (Wed, 04 Dec 2013) | 55 lines
 
 Changed paths:
 M       AmapMex.c
@@ -1964,7 +1964,7 @@ M       vbm_vol_t1qacalc.m
 (8)  Corrected output for atlas, te, pc images in tbx_cfg_vbm and cg_vbm_batch.
 
 ------------------------------------------------------------------------
-r536 | gaser | 2013-12-09 10:36:38 +0100 (Mo, 09 Dez 2013) | 16 lines
+r536 | gaser | 2013-12-09 10:36:38 +0100 (Mon, 09 Dec 2013) | 16 lines
 
 Changed paths:
 M       CAT.maci64/CAT_BlurSurfHK
@@ -1983,7 +1983,7 @@ New version of CAT_Surf2Sphere that can now deal with reducepatched
 data.
 
 ------------------------------------------------------------------------
-r537 | gaser | 2013-12-09 20:07:39 +0100 (Mo, 09 Dez 2013) | 52 lines
+r537 | gaser | 2013-12-09 20:07:39 +0100 (Mon, 09 Dec 2013) | 52 lines
 
 Changed paths:
 M       CAT.glnx86/CAT_3dVol2Surf
@@ -2038,7 +2038,7 @@ M       vbm_surf_createCS.m
 (2) Corrected wrong path for linux binaries in vbm_surf_createCS.m.
 
 ------------------------------------------------------------------------
-r538 | gaser | 2013-12-10 09:26:52 +0100 (Di, 10 Dez 2013) | 55 lines
+r538 | gaser | 2013-12-10 09:26:52 +0100 (Tue, 10 Dec 2013) | 55 lines
 
 Changed paths:
 D       CAT.glnx86
@@ -2096,7 +2096,7 @@ M       vbm12.man
 (2) Removed CAT binaries because of the annoying issues.
 
 ------------------------------------------------------------------------
-r539 | gaser | 2013-12-10 09:28:06 +0100 (Di, 10 Dez 2013) | 5 lines
+r539 | gaser | 2013-12-10 09:28:06 +0100 (Tue, 10 Dec 2013) | 5 lines
 
 Changed paths:
 
@@ -2104,7 +2104,7 @@ Changed paths:
 (2) Removed CAT binaries because of the annoying issues.
 
 ------------------------------------------------------------------------
-r540 | gaser | 2013-12-10 16:41:44 +0100 (Di, 10 Dez 2013) | 10 lines
+r540 | gaser | 2013-12-10 16:41:44 +0100 (Tue, 10 Dec 2013) | 10 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -2117,7 +2117,7 @@ A       vbm_surf_resamp.m
 Added surface functions for parameter extraction and resampling.
 
 ------------------------------------------------------------------------
-r541 | gaser | 2013-12-11 14:31:30 +0100 (Mi, 11 Dez 2013) | 12 lines
+r541 | gaser | 2013-12-11 14:31:30 +0100 (Wed, 11 Dec 2013) | 12 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -2132,7 +2132,7 @@ M       vbm12.man
     (e.g. m0wrp1),
 
 ------------------------------------------------------------------------
-r542 | gaser | 2013-12-11 14:49:40 +0100 (Mi, 11 Dez 2013) | 8 lines
+r542 | gaser | 2013-12-11 14:49:40 +0100 (Wed, 11 Dec 2013) | 8 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -2143,7 +2143,7 @@ MM      vbm_surf_resamp.m
 Some small changes in distribute_to_server.sh.
 
 ------------------------------------------------------------------------
-r543 | gaser | 2013-12-11 15:51:05 +0100 (Mi, 11 Dez 2013) | 7 lines
+r543 | gaser | 2013-12-11 15:51:05 +0100 (Wed, 11 Dec 2013) | 7 lines
 
 Changed paths:
 MM      distribute_to_server.sh
@@ -2153,7 +2153,7 @@ M       vbm_surf_resamp.m
 Topology artefacts/defets are now marked in a gifti file.
 
 ------------------------------------------------------------------------
-r544 | gaser | 2013-12-11 16:15:09 +0100 (Mi, 11 Dez 2013) | 7 lines
+r544 | gaser | 2013-12-11 16:15:09 +0100 (Wed, 11 Dec 2013) | 7 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -2163,7 +2163,7 @@ M       vbm_surf_resamp.m
 Corrected some small bugs in resampling code.
 
 ------------------------------------------------------------------------
-r545 | gaser | 2013-12-11 17:26:30 +0100 (Mi, 11 Dez 2013) | 11 lines
+r545 | gaser | 2013-12-11 17:26:30 +0100 (Wed, 11 Dec 2013) | 11 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -2177,7 +2177,7 @@ A       vbm_spm.m
 (3) Remove sanlm-filtered image after cg_vbm_write.m
 
 ------------------------------------------------------------------------
-r546 | gaser | 2013-12-12 10:43:04 +0100 (Do, 12 Dez 2013) | 34 lines
+r546 | gaser | 2013-12-12 10:43:04 +0100 (Thu, 12 Dec 2013) | 34 lines
 
 Changed paths:
 M       AmapMex.mexmaci64
@@ -2214,7 +2214,7 @@ M       vbm_vol_simgrow.mexmaci64
 (4) Added cg_boxplot (extracted from cg_check_cov.m).
 
 ------------------------------------------------------------------------
-r547 | gaser | 2013-12-12 11:36:52 +0100 (Do, 12 Dez 2013) | 6 lines
+r547 | gaser | 2013-12-12 11:36:52 +0100 (Thu, 12 Dec 2013) | 6 lines
 
 Changed paths:
 M       cg_check_mesh_cov.m
@@ -2223,7 +2223,7 @@ MM      vbm_spm.m
 Some rather cosmetic changes to cg_check_mesh_render.m
 
 ------------------------------------------------------------------------
-r548 | dahnke | 2013-12-12 12:22:20 +0100 (Do, 12 Dez 2013) | 37 lines
+r548 | dahnke | 2013-12-12 12:22:20 +0100 (Thu, 12 Dec 2013) | 37 lines
 
 Changed paths:
  M      .
@@ -2263,7 +2263,7 @@ M       vbm_vol_pbt.m
 (7)  Corrected error for global intensity Normalization for BG=CSF case. 
 
 ------------------------------------------------------------------------
-r549 | gaser | 2013-12-12 14:25:54 +0100 (Do, 12 Dez 2013) | 16 lines
+r549 | gaser | 2013-12-12 14:25:54 +0100 (Thu, 12 Dec 2013) | 16 lines
 
 Changed paths:
 D       AmapMex.mexmaci
@@ -2282,7 +2282,7 @@ M       vbm_surf_resamp.m
 (2) Some cosmetic changes to vbm_surf_createCS.m and vbm_surf_resample.m
 
 ------------------------------------------------------------------------
-r550 | gaser | 2013-12-12 14:30:58 +0100 (Do, 12 Dez 2013) | 9 lines
+r550 | gaser | 2013-12-12 14:30:58 +0100 (Thu, 12 Dec 2013) | 9 lines
 
 Changed paths:
 A       fsaverage/lh.smoothwm.gii
@@ -2294,7 +2294,7 @@ A       sanlmMex_noopenmp.mexw64
 (2) Added missing sanlmMex_noopenmp.mexw* files for windows.
 
 ------------------------------------------------------------------------
-r551 | gaser | 2013-12-12 17:41:13 +0100 (Do, 12 Dez 2013) | 7 lines
+r551 | gaser | 2013-12-12 17:41:13 +0100 (Thu, 12 Dec 2013) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -2304,7 +2304,7 @@ Calculation of parameter Ycls was done for each slice leading to long
 computation time in cg_vbm_write.m.
 
 ------------------------------------------------------------------------
-r552 | gaser | 2013-12-18 17:24:50 +0100 (Mi, 18 Dez 2013) | 17 lines
+r552 | gaser | 2013-12-18 17:24:50 +0100 (Wed, 18 Dec 2013) | 17 lines
 
 Changed paths:
 A       fsaverage/lh.central
@@ -2324,7 +2324,7 @@ M       vbm_surf_createCS.m
 Changed template from smoothwm to central surface and changed code resp.
 
 ------------------------------------------------------------------------
-r553 | dahnke | 2013-12-21 19:50:22 +0100 (Sa, 21 Dez 2013) | 27 lines
+r553 | dahnke | 2013-12-21 19:50:22 +0100 (Sat, 21 Dec 2013) | 27 lines
 
 Changed paths:
  M      .
@@ -2354,7 +2354,7 @@ M       vbm_vol_pbt.m
      images with higher resolutions are reduce to the half resolution.     
 
 ------------------------------------------------------------------------
-r554 | dahnke | 2014-01-08 17:27:53 +0100 (Mi, 08 Jan 2014) | 11 lines
+r554 | dahnke | 2014-01-08 17:27:53 +0100 (Wed, 08 Jan 2014) | 11 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -2368,7 +2368,7 @@ RM      vbm_vol_eidist.mexmaci64
 Corrected minor errors.
 
 ------------------------------------------------------------------------
-r555 | gaser | 2014-01-10 12:43:11 +0100 (Fr, 10 Jan 2014) | 10 lines
+r555 | gaser | 2014-01-10 12:43:11 +0100 (Fri, 10 Jan 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -2381,7 +2381,7 @@ M       vbm12.man
 (3) Removed option for longitudinal data, because this is not yet prepared.
 
 ------------------------------------------------------------------------
-r556 | dahnke | 2014-01-23 09:36:10 +0100 (Do, 23 Jan 2014) | 22 lines
+r556 | dahnke | 2014-01-23 09:36:10 +0100 (Thu, 23 Jan 2014) | 22 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -2406,7 +2406,7 @@ M       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r557 | gaser | 2014-01-27 11:12:51 +0100 (Mo, 27 Jan 2014) | 107 lines
+r557 | gaser | 2014-01-27 11:12:51 +0100 (Mon, 27 Jan 2014) | 107 lines
 
 Changed paths:
 M       AmapMex.mexa64
@@ -2516,7 +2516,7 @@ M       vbm_vol_simgrow.mexw64
 
 
 ------------------------------------------------------------------------
-r558 | gaser | 2014-01-27 11:14:05 +0100 (Mo, 27 Jan 2014) | 9 lines
+r558 | gaser | 2014-01-27 11:14:05 +0100 (Mon, 27 Jan 2014) | 9 lines
 
 Changed paths:
 A       vbm_vol_genus0.mexa64
@@ -2528,7 +2528,7 @@ A       vbm_vol_genus0.mexw64
 Added missing vbm_vol_genus0.mex* files.
 
 ------------------------------------------------------------------------
-r559 | gaser | 2014-01-27 11:14:36 +0100 (Mo, 27 Jan 2014) | 9 lines
+r559 | gaser | 2014-01-27 11:14:36 +0100 (Mon, 27 Jan 2014) | 9 lines
 
 Changed paths:
  M      fsaverage/fsavg.index2D_256x128.txt
@@ -2540,7 +2540,7 @@ MM      vbm_vol_genus0.c
 Added missing vbm_vol_genus0.mex* files.
 
 ------------------------------------------------------------------------
-r560 | gaser | 2014-01-27 11:14:49 +0100 (Mo, 27 Jan 2014) | 9 lines
+r560 | gaser | 2014-01-27 11:14:49 +0100 (Mon, 27 Jan 2014) | 9 lines
 
 Changed paths:
  M      vbm_vol_genus0.mexa64
@@ -2552,7 +2552,7 @@ Changed paths:
 Added missing vbm_vol_genus0.mex* files.
 
 ------------------------------------------------------------------------
-r561 | gaser | 2014-01-27 11:16:21 +0100 (Mo, 27 Jan 2014) | 6 lines
+r561 | gaser | 2014-01-27 11:16:21 +0100 (Mon, 27 Jan 2014) | 6 lines
 
 Changed paths:
 A       tricases.h
@@ -2561,14 +2561,14 @@ M       vbm12.man
 Added missing tricases.h.
 
 ------------------------------------------------------------------------
-r562 | gaser | 2014-01-27 11:18:54 +0100 (Mo, 27 Jan 2014) | 4 lines
+r562 | gaser | 2014-01-27 11:18:54 +0100 (Mon, 27 Jan 2014) | 4 lines
 
 Changed paths:
 
 Removed CAT.maci64 because of difficulties to use subversion for binaries.
 
 ------------------------------------------------------------------------
-r563 | gaser | 2014-01-27 11:22:36 +0100 (Mo, 27 Jan 2014) | 6 lines
+r563 | gaser | 2014-01-27 11:22:36 +0100 (Mon, 27 Jan 2014) | 6 lines
 
 Changed paths:
  M      tricases.h
@@ -2577,7 +2577,7 @@ M       vbm12.man
 Removed CAT.maci64 because of difficulties to use subversion for binaries.
 
 ------------------------------------------------------------------------
-r564 | gaser | 2014-01-27 11:25:19 +0100 (Mo, 27 Jan 2014) | 6 lines
+r564 | gaser | 2014-01-27 11:25:19 +0100 (Mon, 27 Jan 2014) | 6 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -2586,7 +2586,7 @@ M       vbm12.man
 Removed cg_check_mesh_cov from Makefile.vbm.
 
 ------------------------------------------------------------------------
-r565 | gaser | 2014-01-27 12:44:05 +0100 (Mo, 27 Jan 2014) | 6 lines
+r565 | gaser | 2014-01-27 12:44:05 +0100 (Mon, 27 Jan 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -2595,7 +2595,7 @@ M       cg_vbm_tools.m
 Some changes in cg_vbm_tools.m and cg_vbm_batch.m to use batch mode.
 
 ------------------------------------------------------------------------
-r566 | gaser | 2014-01-27 12:48:22 +0100 (Mo, 27 Jan 2014) | 5 lines
+r566 | gaser | 2014-01-27 12:48:22 +0100 (Mon, 27 Jan 2014) | 5 lines
 
 Changed paths:
 M       vbm_vol_eidist.mexmaci64
@@ -2603,7 +2603,7 @@ M       vbm_vol_eidist.mexmaci64
 Removed debugging output in vbm_vol_eidist.c
 
 ------------------------------------------------------------------------
-r567 | gaser | 2014-01-27 16:24:56 +0100 (Mo, 27 Jan 2014) | 7 lines
+r567 | gaser | 2014-01-27 16:24:56 +0100 (Mon, 27 Jan 2014) | 7 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -2613,7 +2613,7 @@ M       vbm12.man
 Some minor changes to cg_check_cov.m.
 
 ------------------------------------------------------------------------
-r568 | dahnke | 2014-02-06 18:40:18 +0100 (Do, 06 Feb 2014) | 24 lines
+r568 | dahnke | 2014-02-06 18:40:18 +0100 (Thu, 06 Feb 2014) | 24 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -2640,7 +2640,7 @@ M       vbm_vol_pbt.m
 (5)  Update CSF global threshold estimation for high GM/WM-contrast images.  
 
 ------------------------------------------------------------------------
-r569 | gaser | 2014-02-07 10:45:58 +0100 (Fr, 07 Feb 2014) | 48 lines
+r569 | gaser | 2014-02-07 10:45:58 +0100 (Fri, 07 Feb 2014) | 48 lines
 
 Changed paths:
 M       AmapMex.mexw32
@@ -2691,7 +2691,7 @@ M       vbm_vol_simgrow.mexw64
 (4) Recompiled mexfiles.
 
 ------------------------------------------------------------------------
-r570 | gaser | 2014-02-07 11:01:45 +0100 (Fr, 07 Feb 2014) | 6 lines
+r570 | gaser | 2014-02-07 11:01:45 +0100 (Fri, 07 Feb 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -2700,7 +2700,7 @@ M       cg_vbm_batch.m
 Corrected wrong handling of WMH in cg_vbm_batch.m.
 
 ------------------------------------------------------------------------
-r571 | gaser | 2014-02-10 10:52:24 +0100 (Mo, 10 Feb 2014) | 6 lines
+r571 | gaser | 2014-02-10 10:52:24 +0100 (Mon, 10 Feb 2014) | 6 lines
 
 Changed paths:
 M       tbx_cfg_vbm.m
@@ -2709,7 +2709,7 @@ M       vbm12.man
 removed too li,iting ufilter in tbx_cfg_vbm.m.
 
 ------------------------------------------------------------------------
-r572 | gaser | 2014-02-10 11:09:48 +0100 (Mo, 10 Feb 2014) | 11 lines
+r572 | gaser | 2014-02-10 11:09:48 +0100 (Mon, 10 Feb 2014) | 11 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -2723,7 +2723,7 @@ M       vbm_vol_t1qacalc.m
 Matlab R2007a does not accept terms such as [~,m] = function.
 
 ------------------------------------------------------------------------
-r573 | gaser | 2014-02-10 17:59:39 +0100 (Mo, 10 Feb 2014) | 7 lines
+r573 | gaser | 2014-02-10 17:59:39 +0100 (Mon, 10 Feb 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -2733,7 +2733,7 @@ M       cg_vbm_write.m
 (2) Changed hamdling of rmfield in cg_vbm_batch.m
 
 ------------------------------------------------------------------------
-r574 | dahnke | 2014-02-11 14:40:18 +0100 (Di, 11 Feb 2014) | 13 lines
+r574 | dahnke | 2014-02-11 14:40:18 +0100 (Tue, 11 Feb 2014) | 13 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -2749,7 +2749,7 @@ M       vbm_vol_t1qacalc.m
 (2)  Corrected vbm12.nii atlas (side error).
 
 ------------------------------------------------------------------------
-r575 | gaser | 2014-03-03 12:56:38 +0100 (Mo, 03 Mär 2014) | 6 lines
+r575 | gaser | 2014-03-03 12:56:38 +0100 (Mon, 03 Mar 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_defs.m
@@ -2758,7 +2758,7 @@ M       cg_vbm_defs.m
 (2) Corrected wrong CAT.win32 folder to CAT.w32.
 
 ------------------------------------------------------------------------
-r576 | gaser | 2014-03-03 15:24:39 +0100 (Mo, 03 Mär 2014) | 6 lines
+r576 | gaser | 2014-03-03 15:24:39 +0100 (Mon, 03 Mar 2014) | 6 lines
 
 Changed paths:
 M       distribute_to_server.sh
@@ -2767,7 +2767,7 @@ M       vbm12.man
 Some small changes to dsitribute_to_server.sh.
 
 ------------------------------------------------------------------------
-r577 | dahnke | 2014-03-06 11:14:10 +0100 (Do, 06 Mär 2014) | 38 lines
+r577 | dahnke | 2014-03-06 11:14:10 +0100 (Thu, 06 Mar 2014) | 38 lines
 
 Changed paths:
 M       cg_set_com.m
@@ -2808,7 +2808,7 @@ M       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r578 | gaser | 2014-03-06 13:00:17 +0100 (Do, 06 Mär 2014) | 10 lines
+r578 | gaser | 2014-03-06 13:00:17 +0100 (Thu, 06 Mar 2014) | 10 lines
 
 Changed paths:
 M       cg_set_com.m
@@ -2821,7 +2821,7 @@ M       vbm_vol_localstat.mexw64
 (2) Recompiled vbm_vol_localstat.c for all systems.
 
 ------------------------------------------------------------------------
-r579 | gaser | 2014-03-10 09:45:41 +0100 (Mo, 10 Mär 2014) | 6 lines
+r579 | gaser | 2014-03-10 09:45:41 +0100 (Mon, 10 Mar 2014) | 6 lines
 
 Changed paths:
 M       vbm12.man
@@ -2830,7 +2830,7 @@ M       vbm_vol_ctype.m
 vbm_vol_ctype.m can now work with datatypes such uint8-le.
 
 ------------------------------------------------------------------------
-r580 | gaser | 2014-03-10 11:41:03 +0100 (Mo, 10 Mär 2014) | 7 lines
+r580 | gaser | 2014-03-10 11:41:03 +0100 (Mon, 10 Mar 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -2840,7 +2840,7 @@ M       vbm_surf_createCS.m
 (2) Commented out set of NaN for CC and other areas in thickness maps.
 
 ------------------------------------------------------------------------
-r581 | gaser | 2014-03-10 14:22:41 +0100 (Mo, 10 Mär 2014) | 6 lines
+r581 | gaser | 2014-03-10 14:22:41 +0100 (Mon, 10 Mar 2014) | 6 lines
 
 Changed paths:
 M       vbm_surf_resamp.m
@@ -2849,7 +2849,7 @@ Surfaces are now resampled using sphere, while values will be still resampled
 using sphere.reg.
 
 ------------------------------------------------------------------------
-r582 | gaser | 2014-03-11 16:42:00 +0100 (Di, 11 Mär 2014) | 22 lines
+r582 | gaser | 2014-03-11 16:42:00 +0100 (Tue, 11 Mar 2014) | 22 lines
 
 Changed paths:
 M       AmapMex.mexw32
@@ -2874,7 +2874,7 @@ M       vbm_vol_simgrow.mexw32
 Changed order of inputs for strfind in vbm_vol_ctype.m.
 
 ------------------------------------------------------------------------
-r583 | gaser | 2014-03-12 08:46:26 +0100 (Mi, 12 Mär 2014) | 24 lines
+r583 | gaser | 2014-03-12 08:46:26 +0100 (Wed, 12 Mar 2014) | 24 lines
 
 Changed paths:
 M       AmapMex.mexw64
@@ -2901,7 +2901,7 @@ M       vbm_vol_simgrow.mexw64
 (2) Error and catch handling in vbm_surf_create.m changed.
 
 ------------------------------------------------------------------------
-r584 | gaser | 2014-03-12 17:59:22 +0100 (Mi, 12 Mär 2014) | 5 lines
+r584 | gaser | 2014-03-12 17:59:22 +0100 (Wed, 12 Mar 2014) | 5 lines
 
 Changed paths:
 M       vbm_surf_resamp.m
@@ -2909,7 +2909,7 @@ M       vbm_surf_resamp.m
 Corrected error in vbm_surf_resamp.m
 
 ------------------------------------------------------------------------
-r585 | gaser | 2014-03-14 10:25:51 +0100 (Fr, 14 Mär 2014) | 7 lines
+r585 | gaser | 2014-03-14 10:25:51 +0100 (Fri, 14 Mar 2014) | 7 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -2919,7 +2919,7 @@ M       spm_vbm12.m
 (2) Display surfaces can now display multiple surfaces.
 
 ------------------------------------------------------------------------
-r586 | gaser | 2014-03-18 17:29:41 +0100 (Di, 18 Mär 2014) | 6 lines
+r586 | gaser | 2014-03-18 17:29:41 +0100 (Tue, 18 Mar 2014) | 6 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -2928,7 +2928,7 @@ Some corrections and new functionality in cg_check_cov.m
 
 
 ------------------------------------------------------------------------
-r587 | gaser | 2014-03-21 10:12:52 +0100 (Fr, 21 Mär 2014) | 10 lines
+r587 | gaser | 2014-03-21 10:12:52 +0100 (Fri, 21 Mar 2014) | 10 lines
 
 Changed paths:
 M       spm_vbm12.m
@@ -2941,7 +2941,7 @@ M       vbm_vol_partvol.m
     SPM.mat files.
 
 ------------------------------------------------------------------------
-r588 | gaser | 2014-06-18 11:33:45 +0200 (Mi, 18 Jun 2014) | 61 lines
+r588 | gaser | 2014-06-18 11:33:45 +0200 (Wed, 18 Jun 2014) | 61 lines
 
 Changed paths:
 M       AmapMex.mexmaci64
@@ -3005,7 +3005,7 @@ M       vbm_vol_simgrow.mexw64
 (2) Recompiled windows and mac mex-files.
 
 ------------------------------------------------------------------------
-r589 | dahnke | 2014-06-23 10:00:35 +0200 (Mo, 23 Jun 2014) | 42 lines
+r589 | dahnke | 2014-06-23 10:00:35 +0200 (Mon, 23 Jun 2014) | 42 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -3050,7 +3050,7 @@ D       vbm_vol_t1qacalc.m
 
 
 ------------------------------------------------------------------------
-r590 | gaser | 2014-07-24 12:37:56 +0200 (Do, 24 Jul 2014) | 13 lines
+r590 | gaser | 2014-07-24 12:37:56 +0200 (Thu, 24 Jul 2014) | 13 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3066,7 +3066,7 @@ M       vbm_surf_resamp.m
     function that use system calls.
 
 ------------------------------------------------------------------------
-r591 | dahnke | 2014-08-02 08:53:56 +0200 (Sa, 02 Aug 2014) | 103 lines
+r591 | dahnke | 2014-08-02 08:53:56 +0200 (Sat, 02 Aug 2014) | 103 lines
 
 Changed paths:
  M      .
@@ -3172,7 +3172,7 @@ Unsolved problems, warnings, and errors:
      > Evaluation for IXI and NIH data in relation to T1 segmentation required
 
 ------------------------------------------------------------------------
-r592 | dahnke | 2014-08-19 21:02:38 +0200 (Di, 19 Aug 2014) | 25 lines
+r592 | dahnke | 2014-08-19 21:02:38 +0200 (Tue, 19 Aug 2014) | 25 lines
 
 Changed paths:
  M      .
@@ -3200,7 +3200,7 @@ M       vbm_vol_partvol.m
 (5) Updated "cg_vbm_default.m" parameters.
 
 ------------------------------------------------------------------------
-r593 | dahnke | 2014-08-28 15:25:47 +0200 (Do, 28 Aug 2014) | 24 lines
+r593 | dahnke | 2014-08-28 15:25:47 +0200 (Thu, 28 Aug 2014) | 24 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -3227,7 +3227,7 @@ M       vbm_tst_pre.m
 (5) Added "IXI555" template (x-axis properties update (4) is in process).
 
 ------------------------------------------------------------------------
-r594 | gaser | 2014-08-29 11:04:22 +0200 (Fr, 29 Aug 2014) | 82 lines
+r594 | gaser | 2014-08-29 11:04:22 +0200 (Fri, 29 Aug 2014) | 82 lines
 
 Changed paths:
 M       AmapMex.mexmaci64
@@ -3312,7 +3312,7 @@ M       vbm_vol_simgrow.mexw64
 (5) Corrected orientation of slices in cg_slice_overlay.m.
 
 ------------------------------------------------------------------------
-r595 | dahnke | 2014-09-03 08:40:06 +0200 (Mi, 03 Sep 2014) | 40 lines
+r595 | dahnke | 2014-09-03 08:40:06 +0200 (Wed, 03 Sep 2014) | 40 lines
 
 Changed paths:
  M      .
@@ -3355,7 +3355,7 @@ M       vbm_vol_partvol.m
 (7) Corrected ventricle detection in "vbm_vol_partvol".
 
 ------------------------------------------------------------------------
-r596 | gaser | 2014-09-09 12:37:44 +0200 (Di, 09 Sep 2014) | 9 lines
+r596 | gaser | 2014-09-09 12:37:44 +0200 (Tue, 09 Sep 2014) | 9 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3367,7 +3367,7 @@ M       vbm_surf_createCS.m
 (2) Parameter hho was only definedfor prinintg ps-file.
 
 ------------------------------------------------------------------------
-r597 | gaser | 2014-09-10 13:29:00 +0200 (Mi, 10 Sep 2014) | 6 lines
+r597 | gaser | 2014-09-10 13:29:00 +0200 (Wed, 10 Sep 2014) | 6 lines
 
 Changed paths:
 M       vbm_surf_createCS.m
@@ -3376,7 +3376,7 @@ Deselected use of CAT_DeformSurf due to non-solved issues.
 
 
 ------------------------------------------------------------------------
-r598 | dahnke | 2014-09-10 17:01:16 +0200 (Mi, 10 Sep 2014) | 14 lines
+r598 | dahnke | 2014-09-10 17:01:16 +0200 (Wed, 10 Sep 2014) | 14 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3393,7 +3393,7 @@ M       vbm_vol_sanlm.m
      measures that were restricted to uncorrected exor corrected images. 
 
 ------------------------------------------------------------------------
-r599 | gaser | 2014-09-11 15:36:38 +0200 (Do, 11 Sep 2014) | 16 lines
+r599 | gaser | 2014-09-11 15:36:38 +0200 (Thu, 11 Sep 2014) | 16 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -3412,7 +3412,7 @@ M       vbm_surf_createCS.m
 (5) Forced gray colormap at the final end in cg_vbm_run.m.
 
 ------------------------------------------------------------------------
-r600 | gaser | 2014-09-12 13:13:55 +0200 (Fr, 12 Sep 2014) | 18 lines
+r600 | gaser | 2014-09-12 13:13:55 +0200 (Fri, 12 Sep 2014) | 18 lines
 
 Changed paths:
 D       cg_boxplot.m
@@ -3433,7 +3433,7 @@ M       vbm_vol_atlas.m
 
 
 ------------------------------------------------------------------------
-r601 | gaser | 2014-09-15 08:24:54 +0200 (Mo, 15 Sep 2014) | 54 lines
+r601 | gaser | 2014-09-15 08:24:54 +0200 (Mon, 15 Sep 2014) | 54 lines
 
 Changed paths:
 M       AmapMex.mexw32
@@ -3490,7 +3490,7 @@ M       vbm_vol_simgrow.mexw64
 
 
 ------------------------------------------------------------------------
-r602 | dahnke | 2014-09-16 16:12:44 +0200 (Di, 16 Sep 2014) | 23 lines
+r602 | dahnke | 2014-09-16 16:12:44 +0200 (Tue, 16 Sep 2014) | 23 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -3516,7 +3516,7 @@ M       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r603 | gaser | 2014-09-19 10:31:06 +0200 (Fr, 19 Sep 2014) | 99 lines
+r603 | gaser | 2014-09-19 10:31:06 +0200 (Fri, 19 Sep 2014) | 99 lines
 
 Changed paths:
 M       AmapMex.mexw32
@@ -3618,7 +3618,7 @@ M       vbm_vol_simgrow.mexw64
 
 
 ------------------------------------------------------------------------
-r604 | gaser | 2014-09-19 11:48:16 +0200 (Fr, 19 Sep 2014) | 7 lines
+r604 | gaser | 2014-09-19 11:48:16 +0200 (Fri, 19 Sep 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3628,7 +3628,7 @@ M       vbm_surf_createCS.m
 some small bugs removed...
 
 ------------------------------------------------------------------------
-r605 | gaser | 2014-09-19 15:53:49 +0200 (Fr, 19 Sep 2014) | 10 lines
+r605 | gaser | 2014-09-19 15:53:49 +0200 (Fri, 19 Sep 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -3641,7 +3641,7 @@ Manual flipping of vertices according to vmat in vbm_surf_createCS.m did
 not considered all potential cases.
 
 ------------------------------------------------------------------------
-r606 | gaser | 2014-09-22 13:17:26 +0200 (Mo, 22 Sep 2014) | 6 lines
+r606 | gaser | 2014-09-22 13:17:26 +0200 (Mon, 22 Sep 2014) | 6 lines
 
 Changed paths:
 M       vbm_surf_createCS.m
@@ -3650,7 +3650,7 @@ Force saving compressed gifti because ASCII format caused trouble with CAT.
  
 
 ------------------------------------------------------------------------
-r607 | gaser | 2014-09-22 13:29:37 +0200 (Mo, 22 Sep 2014) | 6 lines
+r607 | gaser | 2014-09-22 13:29:37 +0200 (Mon, 22 Sep 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3659,7 +3659,7 @@ Dartel was wrongly deselected if surfaces awere written, but no normalized
 images. 
 
 ------------------------------------------------------------------------
-r608 | gaser | 2014-09-22 13:45:20 +0200 (Mo, 22 Sep 2014) | 6 lines
+r608 | gaser | 2014-09-22 13:45:20 +0200 (Mon, 22 Sep 2014) | 6 lines
 
 Changed paths:
 A       vbm_surf_resamp_freesurfer.m
@@ -3668,7 +3668,7 @@ Added vbm_surf_resamp_freesurfer.m to resample freesurfer data to gifti.
 
 
 ------------------------------------------------------------------------
-r609 | gaser | 2014-09-23 16:43:01 +0200 (Di, 23 Sep 2014) | 7 lines
+r609 | gaser | 2014-09-23 16:43:01 +0200 (Tue, 23 Sep 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3678,7 +3678,7 @@ Removed error in cg_vbm_write.m for undefined method 'colon'.
 
 
 ------------------------------------------------------------------------
-r610 | gaser | 2014-09-24 10:18:03 +0200 (Mi, 24 Sep 2014) | 8 lines
+r610 | gaser | 2014-09-24 10:18:03 +0200 (Wed, 24 Sep 2014) | 8 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3689,7 +3689,7 @@ Modified CAT_FixTopology.c in CAT to consider issues with large defects.
 
 
 ------------------------------------------------------------------------
-r611 | dahnke | 2014-09-24 16:34:01 +0200 (Mi, 24 Sep 2014) | 18 lines
+r611 | dahnke | 2014-09-24 16:34:01 +0200 (Wed, 24 Sep 2014) | 18 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -3710,7 +3710,7 @@ M       vbm_vol_atlas.m
 
 
 ------------------------------------------------------------------------
-r612 | gaser | 2014-09-24 17:17:18 +0200 (Mi, 24 Sep 2014) | 74 lines
+r612 | gaser | 2014-09-24 17:17:18 +0200 (Wed, 24 Sep 2014) | 74 lines
 
 Changed paths:
 M       AmapMex.mexmaci64
@@ -3787,7 +3787,7 @@ M       vbm_vol_simgrow.mexw64
 
 
 ------------------------------------------------------------------------
-r613 | dahnke | 2014-09-24 18:21:40 +0200 (Mi, 24 Sep 2014) | 9 lines
+r613 | dahnke | 2014-09-24 18:21:40 +0200 (Wed, 24 Sep 2014) | 9 lines
 
 Changed paths:
 D       avgT1_Dartel_IXI550_MNI152.nii
@@ -3799,7 +3799,7 @@ M       cg_vbm_write.m
      A new average T1 can be found in the "template_1.50mm" directory. 
 
 ------------------------------------------------------------------------
-r614 | dahnke | 2014-09-25 01:09:15 +0200 (Do, 25 Sep 2014) | 8 lines
+r614 | dahnke | 2014-09-25 01:09:15 +0200 (Thu, 25 Sep 2014) | 8 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3810,7 +3810,7 @@ M       vbm_stat_marks.m
 
 
 ------------------------------------------------------------------------
-r615 | dahnke | 2014-09-25 13:51:15 +0200 (Do, 25 Sep 2014) | 6 lines
+r615 | dahnke | 2014-09-25 13:51:15 +0200 (Thu, 25 Sep 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3819,7 +3819,7 @@ M       vbm_tst_pre.m
 (1)  Corrected error in LAS class correction that cause problems with the WMHC.
 
 ------------------------------------------------------------------------
-r616 | gaser | 2014-09-29 11:20:40 +0200 (Mo, 29 Sep 2014) | 17 lines
+r616 | gaser | 2014-09-29 11:20:40 +0200 (Mon, 29 Sep 2014) | 17 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3839,7 +3839,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r617 | gaser | 2014-09-29 14:10:58 +0200 (Mo, 29 Sep 2014) | 10 lines
+r617 | gaser | 2014-09-29 14:10:58 +0200 (Mon, 29 Sep 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3852,7 +3852,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r618 | gaser | 2014-09-29 15:06:01 +0200 (Mo, 29 Sep 2014) | 9 lines
+r618 | gaser | 2014-09-29 15:06:01 +0200 (Mon, 29 Sep 2014) | 9 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3864,7 +3864,7 @@ M       vbm12.man
 
 
 ------------------------------------------------------------------------
-r619 | gaser | 2014-09-29 17:13:57 +0200 (Mo, 29 Sep 2014) | 7 lines
+r619 | gaser | 2014-09-29 17:13:57 +0200 (Mon, 29 Sep 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3874,7 +3874,7 @@ Added denoising of initial spm segmentation using spm_mrf.
 
 
 ------------------------------------------------------------------------
-r620 | gaser | 2014-09-29 17:23:28 +0200 (Mo, 29 Sep 2014) | 7 lines
+r620 | gaser | 2014-09-29 17:23:28 +0200 (Mon, 29 Sep 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3884,7 +3884,7 @@ spm_progress_bar was not cleared in cg_vbm_write.m.
 
 
 ------------------------------------------------------------------------
-r621 | gaser | 2014-09-30 12:16:11 +0200 (Di, 30 Sep 2014) | 6 lines
+r621 | gaser | 2014-09-30 12:16:11 +0200 (Tue, 30 Sep 2014) | 6 lines
 
 Changed paths:
 M       vbm_spm.m
@@ -3893,7 +3893,7 @@ SPM is saved using spm_get_defaults('mat.format') in spm_vbm.m.
 
 
 ------------------------------------------------------------------------
-r622 | gaser | 2014-10-01 11:36:12 +0200 (Mi, 01 Okt 2014) | 10 lines
+r622 | gaser | 2014-10-01 11:36:12 +0200 (Wed, 01 Oct 2014) | 10 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3906,7 +3906,7 @@ Updated update function and welcome message which is now coded in HTML.
 
 
 ------------------------------------------------------------------------
-r623 | gaser | 2014-10-01 12:45:11 +0200 (Mi, 01 Okt 2014) | 8 lines
+r623 | gaser | 2014-10-01 12:45:11 +0200 (Wed, 01 Oct 2014) | 8 lines
 
 Changed paths:
 M       cg_vbm_update.m
@@ -3917,7 +3917,7 @@ Again updated update function and welcome message which is now coded in HTML.
 
 
 ------------------------------------------------------------------------
-r624 | gaser | 2014-10-01 12:50:58 +0200 (Mi, 01 Okt 2014) | 6 lines
+r624 | gaser | 2014-10-01 12:50:58 +0200 (Wed, 01 Oct 2014) | 6 lines
 
 Changed paths:
 M       spm_vbm12.m
@@ -3926,7 +3926,7 @@ Again updated update function and welcome message which is now coded in HTML.
 
 
 ------------------------------------------------------------------------
-r625 | gaser | 2014-10-02 15:27:36 +0200 (Do, 02 Okt 2014) | 10 lines
+r625 | gaser | 2014-10-02 15:27:36 +0200 (Thu, 02 Oct 2014) | 10 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3939,7 +3939,7 @@ Added GUI interface.
 
 
 ------------------------------------------------------------------------
-r626 | gaser | 2014-10-02 16:28:51 +0200 (Do, 02 Okt 2014) | 7 lines
+r626 | gaser | 2014-10-02 16:28:51 +0200 (Thu, 02 Oct 2014) | 7 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -3949,7 +3949,7 @@ Adapted paths to new SPM12 version (no beta anymore!).
 
 
 ------------------------------------------------------------------------
-r627 | gaser | 2014-10-20 12:23:26 +0200 (Mo, 20 Okt 2014) | 8 lines
+r627 | gaser | 2014-10-20 12:23:26 +0200 (Mon, 20 Oct 2014) | 8 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -3960,7 +3960,7 @@ In cg_vbm_write.m wi and mi were mixed up at line 1469.
 
 
 ------------------------------------------------------------------------
-r628 | dahnke | 2014-10-20 16:49:28 +0200 (Mo, 20 Okt 2014) | 65 lines
+r628 | dahnke | 2014-10-20 16:49:28 +0200 (Mon, 20 Oct 2014) | 65 lines
 
 Changed paths:
  M      .
@@ -4028,7 +4028,7 @@ A       vbm_vol_imcalc.m
      "vbm_pre_gintnorm" in "cg_vbm_write.m". 
 
 ------------------------------------------------------------------------
-r629 | gaser | 2014-10-20 17:18:50 +0200 (Mo, 20 Okt 2014) | 46 lines
+r629 | gaser | 2014-10-20 17:18:50 +0200 (Mon, 20 Oct 2014) | 46 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -4077,7 +4077,7 @@ D       vbm12.txt
 
 
 ------------------------------------------------------------------------
-r630 | gaser | 2014-10-20 17:19:31 +0200 (Mo, 20 Okt 2014) | 7 lines
+r630 | gaser | 2014-10-20 17:19:31 +0200 (Mon, 20 Oct 2014) | 7 lines
 
 Changed paths:
 
@@ -4087,7 +4087,7 @@ Changed paths:
 
 
 ------------------------------------------------------------------------
-r631 | gaser | 2014-10-22 11:05:46 +0200 (Mi, 22 Okt 2014) | 70 lines
+r631 | gaser | 2014-10-22 11:05:46 +0200 (Wed, 22 Oct 2014) | 70 lines
 
 Changed paths:
 M       AmapMex.mexw32
@@ -4160,7 +4160,7 @@ M       vbm_vol_simgrow.mexw64
 
 
 ------------------------------------------------------------------------
-r632 | gaser | 2014-10-22 11:06:47 +0200 (Mi, 22 Okt 2014) | 10 lines
+r632 | gaser | 2014-10-22 11:06:47 +0200 (Wed, 22 Oct 2014) | 10 lines
 
 Changed paths:
 
@@ -4173,7 +4173,7 @@ Changed paths:
 
 
 ------------------------------------------------------------------------
-r633 | gaser | 2014-10-22 11:11:50 +0200 (Mi, 22 Okt 2014) | 9 lines
+r633 | gaser | 2014-10-22 11:11:50 +0200 (Wed, 22 Oct 2014) | 9 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -4185,7 +4185,7 @@ Corrected typo in cg_vbm_tools.
 
 
 ------------------------------------------------------------------------
-r634 | gaser | 2014-10-22 12:09:12 +0200 (Mi, 22 Okt 2014) | 7 lines
+r634 | gaser | 2014-10-22 12:09:12 +0200 (Wed, 22 Oct 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -4195,7 +4195,7 @@ Did some formatting in cg_vbm_tools.m.
 
 
 ------------------------------------------------------------------------
-r635 | dahnke | 2014-10-22 14:18:51 +0200 (Mi, 22 Okt 2014) | 27 lines
+r635 | dahnke | 2014-10-22 14:18:51 +0200 (Wed, 22 Oct 2014) | 27 lines
 
 Changed paths:
  M      .
@@ -4225,7 +4225,7 @@ M       vbm_vol_eidist.c
 
 
 ------------------------------------------------------------------------
-r636 | dahnke | 2014-10-23 08:27:41 +0200 (Do, 23 Okt 2014) | 8 lines
+r636 | dahnke | 2014-10-23 08:27:41 +0200 (Thu, 23 Oct 2014) | 8 lines
 
 Changed paths:
 M       vbm12.fig
@@ -4236,7 +4236,7 @@ M       vbm_vol_atlas.m
 (1)  Added VBM12 header figure in VBM12 GUI.
 
 ------------------------------------------------------------------------
-r637 | gaser | 2014-10-23 11:48:36 +0200 (Do, 23 Okt 2014) | 10 lines
+r637 | gaser | 2014-10-23 11:48:36 +0200 (Thu, 23 Oct 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_run_job.m
@@ -4249,7 +4249,7 @@ M       vbm_spm.m
 
 
 ------------------------------------------------------------------------
-r638 | gaser | 2014-10-23 11:49:46 +0200 (Do, 23 Okt 2014) | 7 lines
+r638 | gaser | 2014-10-23 11:49:46 +0200 (Thu, 23 Oct 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -4259,7 +4259,7 @@ Set sanlm flag in cg_vbm_defaults again to "3".
 
 
 ------------------------------------------------------------------------
-r639 | dahnke | 2014-10-23 12:03:54 +0200 (Do, 23 Okt 2014) | 9 lines
+r639 | dahnke | 2014-10-23 12:03:54 +0200 (Thu, 23 Oct 2014) | 9 lines
 
 Changed paths:
 M       cg_vbm_run_newcatch.m
@@ -4271,7 +4271,7 @@ M       vbm_vol_atlas.m
 (3)  Prepared further atlas data and xml export in vbm_vol_atlas (not read yet).
 
 ------------------------------------------------------------------------
-r640 | dahnke | 2014-10-23 12:11:37 +0200 (Do, 23 Okt 2014) | 6 lines
+r640 | dahnke | 2014-10-23 12:11:37 +0200 (Thu, 23 Oct 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_defs.m
@@ -4280,7 +4280,7 @@ M       cg_vbm_defs.m
      function that requires this function.
 
 ------------------------------------------------------------------------
-r641 | gaser | 2014-10-23 16:10:57 +0200 (Do, 23 Okt 2014) | 6 lines
+r641 | gaser | 2014-10-23 16:10:57 +0200 (Thu, 23 Oct 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -4289,7 +4289,7 @@ M       html/vbm12.html
 Yb was too early deleted for further surface use.
 
 ------------------------------------------------------------------------
-r642 | gaser | 2014-10-24 10:14:11 +0200 (Fr, 24 Okt 2014) | 7 lines
+r642 | gaser | 2014-10-24 10:14:11 +0200 (Fri, 24 Oct 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -4299,7 +4299,7 @@ Adapted cg_vbm_batch.m to new parameters.
 
 
 ------------------------------------------------------------------------
-r643 | dahnke | 2014-10-24 17:50:36 +0200 (Fr, 24 Okt 2014) | 19 lines
+r643 | dahnke | 2014-10-24 17:50:36 +0200 (Fri, 24 Oct 2014) | 19 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -4321,7 +4321,7 @@ M       vbm_vol_atlas.m
 (4)  Added neuromorphometrics atlas (alpha version). 
 
 ------------------------------------------------------------------------
-r644 | gaser | 2014-11-05 12:09:30 +0100 (Mi, 05 Nov 2014) | 11 lines
+r644 | gaser | 2014-11-05 12:09:30 +0100 (Wed, 05 Nov 2014) | 11 lines
 
 Changed paths:
 M       cg_spmF2x.m
@@ -4335,7 +4335,7 @@ M       vbm_surf_parameters.m
 
 
 ------------------------------------------------------------------------
-r645 | gaser | 2014-11-06 14:15:28 +0100 (Do, 06 Nov 2014) | 13 lines
+r645 | gaser | 2014-11-06 14:15:28 +0100 (Thu, 06 Nov 2014) | 13 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -4351,7 +4351,7 @@ M       vbm_surf_parameters.m
 
 
 ------------------------------------------------------------------------
-r646 | gaser | 2014-11-11 09:23:41 +0100 (Di, 11 Nov 2014) | 10 lines
+r646 | gaser | 2014-11-11 09:23:41 +0100 (Tue, 11 Nov 2014) | 10 lines
 
 Changed paths:
 M       html/vbm12.html
@@ -4364,7 +4364,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r647 | gaser | 2014-11-13 08:39:10 +0100 (Do, 13 Nov 2014) | 8 lines
+r647 | gaser | 2014-11-13 08:39:10 +0100 (Thu, 13 Nov 2014) | 8 lines
 
 Changed paths:
 A       fsaverage/lh.inflated.gii
@@ -4375,7 +4375,7 @@ Added inflated surfaces to fsaverage for display purposes.
 
 
 ------------------------------------------------------------------------
-r648 | gaser | 2014-11-13 10:44:24 +0100 (Do, 13 Nov 2014) | 9 lines
+r648 | gaser | 2014-11-13 10:44:24 +0100 (Thu, 13 Nov 2014) | 9 lines
 
 Changed paths:
 M       html/vbm12.html
@@ -4387,7 +4387,7 @@ M       vbm_surf_resamp.m
 
 
 ------------------------------------------------------------------------
-r649 | dahnke | 2014-11-14 12:53:44 +0100 (Fr, 14 Nov 2014) | 103 lines
+r649 | dahnke | 2014-11-14 12:53:44 +0100 (Fri, 14 Nov 2014) | 103 lines
 
 Changed paths:
  M      .
@@ -4493,7 +4493,7 @@ M       vbm_vol_smooth3X.m
 (7)  Corrected GUI variable name errors.
 
 ------------------------------------------------------------------------
-r650 | dahnke | 2014-11-18 17:15:36 +0100 (Di, 18 Nov 2014) | 33 lines
+r650 | dahnke | 2014-11-18 17:15:36 +0100 (Tue, 18 Nov 2014) | 33 lines
 
 Changed paths:
  M      .
@@ -4529,7 +4529,7 @@ MM      vbm_vol_correct_slice_scaling.m
 
 
 ------------------------------------------------------------------------
-r651 | gaser | 2014-11-19 11:13:49 +0100 (Mi, 19 Nov 2014) | 12 lines
+r651 | gaser | 2014-11-19 11:13:49 +0100 (Wed, 19 Nov 2014) | 12 lines
 
 Changed paths:
  M      fsaverage/lh.inflated.gii
@@ -4544,7 +4544,7 @@ M       vbm_surf_resamp.m
 
 
 ------------------------------------------------------------------------
-r652 | dahnke | 2014-11-20 17:09:10 +0100 (Do, 20 Nov 2014) | 10 lines
+r652 | dahnke | 2014-11-20 17:09:10 +0100 (Thu, 20 Nov 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -4557,7 +4557,7 @@ M       vbm_vol_correct_slice_scaling.m
      help text. 
 
 ------------------------------------------------------------------------
-r653 | gaser | 2014-11-21 14:13:47 +0100 (Fr, 21 Nov 2014) | 44 lines
+r653 | gaser | 2014-11-21 14:13:47 +0100 (Fri, 21 Nov 2014) | 44 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -4604,7 +4604,7 @@ A       vbm_vol_series_align.m
 
 
 ------------------------------------------------------------------------
-r654 | gaser | 2014-11-21 14:53:42 +0100 (Fr, 21 Nov 2014) | 6 lines
+r654 | gaser | 2014-11-21 14:53:42 +0100 (Fri, 21 Nov 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -4613,7 +4613,7 @@ Non-existing option dartelwarp was still used in cg_vbm_run.m.
 
 
 ------------------------------------------------------------------------
-r655 | gaser | 2014-11-21 16:06:46 +0100 (Fr, 21 Nov 2014) | 10 lines
+r655 | gaser | 2014-11-21 16:06:46 +0100 (Fri, 21 Nov 2014) | 10 lines
 
 Changed paths:
 MM      cg_vbm_extopts.m
@@ -4626,7 +4626,7 @@ In cg_vbm_write surface option was still linked to flag extopts.
 
 
 ------------------------------------------------------------------------
-r656 | gaser | 2014-11-21 16:21:34 +0100 (Fr, 21 Nov 2014) | 6 lines
+r656 | gaser | 2014-11-21 16:21:34 +0100 (Fri, 21 Nov 2014) | 6 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -4635,7 +4635,7 @@ In cg_vbm_write ROI option was still linked to flag extopts.
 
 
 ------------------------------------------------------------------------
-r657 | gaser | 2014-11-25 11:13:53 +0100 (Di, 25 Nov 2014) | 12 lines
+r657 | gaser | 2014-11-25 11:13:53 +0100 (Tue, 25 Nov 2014) | 12 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -4650,7 +4650,7 @@ M       vbm12.m
 
 
 ------------------------------------------------------------------------
-r658 | gaser | 2014-11-25 11:46:05 +0100 (Di, 25 Nov 2014) | 7 lines
+r658 | gaser | 2014-11-25 11:46:05 +0100 (Tue, 25 Nov 2014) | 7 lines
 
 Changed paths:
 M       html/vbm12.html
@@ -4660,7 +4660,7 @@ Solved issue with missing function for longitduinal data in vbm12.m.
 
 
 ------------------------------------------------------------------------
-r659 | gaser | 2014-11-25 15:26:48 +0100 (Di, 25 Nov 2014) | 7 lines
+r659 | gaser | 2014-11-25 15:26:48 +0100 (Tue, 25 Nov 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -4670,7 +4670,7 @@ Replaced additional opt.print flag in cg_vbm_write.m by general vbm.print.
 
 
 ------------------------------------------------------------------------
-r660 | dahnke | 2014-11-25 21:08:52 +0100 (Di, 25 Nov 2014) | 10 lines
+r660 | dahnke | 2014-11-25 21:08:52 +0100 (Tue, 25 Nov 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_run_job.m
@@ -4683,7 +4683,7 @@ D       vbm_tst_reduceRes.m
 (1)  Corrected affine registration error.
 
 ------------------------------------------------------------------------
-r661 | gaser | 2014-12-03 10:51:22 +0100 (Mi, 03 Dez 2014) | 17 lines
+r661 | gaser | 2014-12-03 10:51:22 +0100 (Wed, 03 Dec 2014) | 17 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -4703,7 +4703,7 @@ M       vbm12.m
 
 
 ------------------------------------------------------------------------
-r662 | gaser | 2014-12-03 13:05:42 +0100 (Mi, 03 Dez 2014) | 16 lines
+r662 | gaser | 2014-12-03 13:05:42 +0100 (Wed, 03 Dec 2014) | 16 lines
 
 Changed paths:
 M       cg_vbm_defs.m
@@ -4722,7 +4722,7 @@ M       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r663 | gaser | 2014-12-04 10:15:06 +0100 (Do, 04 Dez 2014) | 10 lines
+r663 | gaser | 2014-12-04 10:15:06 +0100 (Thu, 04 Dec 2014) | 10 lines
 
 Changed paths:
 M       cg_vbm_longitudinal.m
@@ -4735,7 +4735,7 @@ Updated use of modulation option for longitudinal pipeline.
 
 
 ------------------------------------------------------------------------
-r664 | gaser | 2014-12-04 11:45:31 +0100 (Do, 04 Dez 2014) | 9 lines
+r664 | gaser | 2014-12-04 11:45:31 +0100 (Thu, 04 Dec 2014) | 9 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -4747,7 +4747,7 @@ Added commandline batch for longitudinal pipeline.
 
 
 ------------------------------------------------------------------------
-r665 | dahnke | 2014-12-10 13:51:45 +0100 (Mi, 10 Dez 2014) | 24 lines
+r665 | dahnke | 2014-12-10 13:51:45 +0100 (Wed, 10 Dec 2014) | 24 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -4774,7 +4774,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r666 | gaser | 2014-12-11 15:53:38 +0100 (Do, 11 Dez 2014) | 24 lines
+r666 | gaser | 2014-12-11 15:53:38 +0100 (Thu, 11 Dec 2014) | 24 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -4801,7 +4801,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r667 | gaser | 2014-12-12 10:20:02 +0100 (Fr, 12 Dez 2014) | 11 lines
+r667 | gaser | 2014-12-12 10:20:02 +0100 (Fri, 12 Dec 2014) | 11 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -4815,7 +4815,7 @@ Removed sample coding from cg_chek_cov.m and added option to sepcify different s
 
 
 ------------------------------------------------------------------------
-r668 | gaser | 2014-12-12 10:42:11 +0100 (Fr, 12 Dez 2014) | 8 lines
+r668 | gaser | 2014-12-12 10:42:11 +0100 (Fri, 12 Dec 2014) | 8 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -4826,7 +4826,7 @@ Use simpler options in cg_check_cov.m.
 
 
 ------------------------------------------------------------------------
-r669 | gaser | 2014-12-12 13:26:16 +0100 (Fr, 12 Dez 2014) | 8 lines
+r669 | gaser | 2014-12-12 13:26:16 +0100 (Fri, 12 Dec 2014) | 8 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -4837,7 +4837,7 @@ Updated some plot functions in cg_check_cov.m for nicer output.
 
 
 ------------------------------------------------------------------------
-r670 | gaser | 2014-12-15 14:40:08 +0100 (Mo, 15 Dez 2014) | 7 lines
+r670 | gaser | 2014-12-15 14:40:08 +0100 (Mon, 15 Dec 2014) | 7 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -4847,7 +4847,7 @@ Solved issue with not used externel default file in cg_vbm_batch.m.
 
 
 ------------------------------------------------------------------------
-r671 | gaser | 2014-12-16 15:46:26 +0100 (Di, 16 Dez 2014) | 11 lines
+r671 | gaser | 2014-12-16 15:46:26 +0100 (Tue, 16 Dec 2014) | 11 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -4861,7 +4861,7 @@ M       tbx_cfg_vbm.m
  
 
 ------------------------------------------------------------------------
-r672 | gaser | 2015-01-05 09:24:34 +0100 (Mo, 05 Jan 2015) | 15 lines
+r672 | gaser | 2015-01-05 09:24:34 +0100 (Mon, 05 Jan 2015) | 15 lines
 
 Changed paths:
 M       cg_vbm_run.m
@@ -4879,7 +4879,7 @@ M       vbm_tst_qa.m
  
 
 ------------------------------------------------------------------------
-r673 | gaser | 2015-01-27 11:46:31 +0100 (Di, 27 Jan 2015) | 20 lines
+r673 | gaser | 2015-01-27 11:46:31 +0100 (Tue, 27 Jan 2015) | 20 lines
 
 Changed paths:
 M       compile.m
@@ -4902,7 +4902,7 @@ M       vbm_vol_genus0.c
 
 
 ------------------------------------------------------------------------
-r674 | dahnke | 2015-02-24 15:59:47 +0100 (Di, 24 Feb 2015) | 51 lines
+r674 | dahnke | 2015-02-24 15:59:47 +0100 (Tue, 24 Feb 2015) | 51 lines
 
 Changed paths:
  M      .
@@ -4956,7 +4956,7 @@ Minor changes:
 
 
 ------------------------------------------------------------------------
-r675 | dahnke | 2015-02-26 09:58:05 +0100 (Do, 26 Feb 2015) | 5 lines
+r675 | dahnke | 2015-02-26 09:58:05 +0100 (Thu, 26 Feb 2015) | 5 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -4964,7 +4964,7 @@ M       cg_vbm_write.m
 (1)  Corrected "debug==0" error in "vbm_pre_LAS2" in "cg_vbm_write".
 
 ------------------------------------------------------------------------
-r676 | gaser | 2015-02-26 16:14:19 +0100 (Do, 26 Feb 2015) | 7 lines
+r676 | gaser | 2015-02-26 16:14:19 +0100 (Thu, 26 Feb 2015) | 7 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -4974,7 +4974,7 @@ Set cg_vbm_defaults.m to standard values without debugging.
 
 
 ------------------------------------------------------------------------
-r677 | dahnke | 2015-03-02 14:59:45 +0100 (Mo, 02 Mär 2015) | 20 lines
+r677 | dahnke | 2015-03-02 14:59:45 +0100 (Mon, 02 Mar 2015) | 20 lines
 
 Changed paths:
 MM      cg_vbm_defaults_template_humanIXI555.m
@@ -4997,7 +4997,7 @@ M       vbm_vol_partvol.m
 (5)  Corrected output behavior in vbm-report.
 
 ------------------------------------------------------------------------
-r678 | dahnke | 2015-03-03 11:29:16 +0100 (Di, 03 Mär 2015) | 12 lines
+r678 | dahnke | 2015-03-03 11:29:16 +0100 (Tue, 03 Mar 2015) | 12 lines
 
 Changed paths:
 M       cg_vbm_run_job.m
@@ -5012,7 +5012,7 @@ M       vbm_vol_partvol.m
      (changes in "vbm_io_cmd","vbm_vol_partvol","cg_vbm_write"). 
 
 ------------------------------------------------------------------------
-r679 | dahnke | 2015-03-04 09:05:32 +0100 (Mi, 04 Mär 2015) | 7 lines
+r679 | dahnke | 2015-03-04 09:05:32 +0100 (Wed, 04 Mar 2015) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5022,7 +5022,7 @@ M       cg_vbm_write.m
 (2)  Corrected error in final Affine segmentation for low resolution images.
 
 ------------------------------------------------------------------------
-r680 | gaser | 2015-03-04 16:37:51 +0100 (Mi, 04 Mär 2015) | 13 lines
+r680 | gaser | 2015-03-04 16:37:51 +0100 (Wed, 04 Mar 2015) | 13 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -5038,7 +5038,7 @@ M       html/vbm12.html
     
 
 ------------------------------------------------------------------------
-r681 | dahnke | 2015-03-12 14:02:32 +0100 (Do, 12 Mär 2015) | 17 lines
+r681 | dahnke | 2015-03-12 14:02:32 +0100 (Thu, 12 Mar 2015) | 17 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5058,7 +5058,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r682 | dahnke | 2015-03-13 10:38:24 +0100 (Fr, 13 Mär 2015) | 6 lines
+r682 | dahnke | 2015-03-13 10:38:24 +0100 (Fri, 13 Mar 2015) | 6 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5067,7 +5067,7 @@ M       vbm_tst_qa.m
 (1)  Corrected data type error in "vbm_tst_qa".
 
 ------------------------------------------------------------------------
-r683 | gaser | 2015-03-16 16:50:08 +0100 (Mo, 16 Mär 2015) | 13 lines
+r683 | gaser | 2015-03-16 16:50:08 +0100 (Mon, 16 Mar 2015) | 13 lines
 
 Changed paths:
 M       cg_slice_overlay.m
@@ -5083,7 +5083,7 @@ M       vbm_plot_boxplot.m
     
 
 ------------------------------------------------------------------------
-r684 | gaser | 2015-03-16 16:50:21 +0100 (Mo, 16 Mär 2015) | 10 lines
+r684 | gaser | 2015-03-16 16:50:21 +0100 (Mon, 16 Mar 2015) | 10 lines
 
 Changed paths:
 M       html/vbm12.html
@@ -5096,7 +5096,7 @@ M       html/vbm12.html
     
 
 ------------------------------------------------------------------------
-r685 | dahnke | 2015-04-13 18:39:40 +0200 (Mo, 13 Apr 2015) | 26 lines
+r685 | dahnke | 2015-04-13 18:39:40 +0200 (Mon, 13 Apr 2015) | 26 lines
 
 Changed paths:
  M      .
@@ -5125,7 +5125,7 @@ M       vbm_vol_sanlm.m
 
 
 ------------------------------------------------------------------------
-r686 | dahnke | 2015-04-13 19:26:22 +0200 (Mo, 13 Apr 2015) | 18 lines
+r686 | dahnke | 2015-04-13 19:26:22 +0200 (Mon, 13 Apr 2015) | 18 lines
 
 Changed paths:
  M      fsaverage/lh.s1template.IXI555.gii
@@ -5146,7 +5146,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r687 | dahnke | 2015-04-15 13:41:19 +0200 (Mi, 15 Apr 2015) | 21 lines
+r687 | dahnke | 2015-04-15 13:41:19 +0200 (Wed, 15 Apr 2015) | 21 lines
 
 Changed paths:
 A       cg_vbm_stools.m
@@ -5170,7 +5170,7 @@ M       vbm_tst_qa.m
      
 
 ------------------------------------------------------------------------
-r688 | dahnke | 2015-04-17 11:25:22 +0200 (Fr, 17 Apr 2015) | 18 lines
+r688 | dahnke | 2015-04-17 11:25:22 +0200 (Fri, 17 Apr 2015) | 18 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5191,7 +5191,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r689 | dahnke | 2015-04-19 17:37:49 +0200 (So, 19 Apr 2015) | 17 lines
+r689 | dahnke | 2015-04-19 17:37:49 +0200 (Sun, 19 Apr 2015) | 17 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5211,7 +5211,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r690 | dahnke | 2015-04-22 14:25:36 +0200 (Mi, 22 Apr 2015) | 21 lines
+r690 | dahnke | 2015-04-22 14:25:36 +0200 (Wed, 22 Apr 2015) | 21 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5235,7 +5235,7 @@ M       vbm_vol_resize.m
      depend further on "vbm_io_cprintf" line 265. 
 
 ------------------------------------------------------------------------
-r691 | gaser | 2015-04-23 10:40:56 +0200 (Do, 23 Apr 2015) | 9 lines
+r691 | gaser | 2015-04-23 10:40:56 +0200 (Thu, 23 Apr 2015) | 9 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -5247,7 +5247,7 @@ Corrected some typos or comments.
 
 
 ------------------------------------------------------------------------
-r692 | dahnke | 2015-04-23 11:49:12 +0200 (Do, 23 Apr 2015) | 38 lines
+r692 | dahnke | 2015-04-23 11:49:12 +0200 (Thu, 23 Apr 2015) | 38 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -5288,7 +5288,7 @@ M       vbm_surf_smooth.m
 (4)  Renamed "fsaverage" to "templates_surfaces".
 
 ------------------------------------------------------------------------
-r693 | dahnke | 2015-04-24 08:08:32 +0200 (Fr, 24 Apr 2015) | 22 lines
+r693 | dahnke | 2015-04-24 08:08:32 +0200 (Fri, 24 Apr 2015) | 22 lines
 
 Changed paths:
 M       cg_vbm_extopts.m
@@ -5313,7 +5313,7 @@ M       vbm_surf_smooth.m
 (4)  Further small corrections.
 
 ------------------------------------------------------------------------
-r694 | dahnke | 2015-04-24 08:09:23 +0200 (Fr, 24 Apr 2015) | 5 lines
+r694 | dahnke | 2015-04-24 08:09:23 +0200 (Fri, 24 Apr 2015) | 5 lines
 
 Changed paths:
 MM      cg_vbm_stoolsexp.m
@@ -5321,7 +5321,7 @@ MM      cg_vbm_stoolsexp.m
 (1)  
 
 ------------------------------------------------------------------------
-r695 | dahnke | 2015-04-27 21:07:15 +0200 (Mo, 27 Apr 2015) | 14 lines
+r695 | dahnke | 2015-04-27 21:07:15 +0200 (Mon, 27 Apr 2015) | 14 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5338,7 +5338,7 @@ A       vbm_surf_vol2surf.m
 (2)  Small corrections in other files.
 
 ------------------------------------------------------------------------
-r696 | dahnke | 2015-04-29 14:15:54 +0200 (Mi, 29 Apr 2015) | 10 lines
+r696 | dahnke | 2015-04-29 14:15:54 +0200 (Wed, 29 Apr 2015) | 10 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5351,7 +5351,7 @@ M       vbm_surf_vol2surf.m
 (2)  Small corrections and updates in "vbm_surf_display".
 
 ------------------------------------------------------------------------
-r697 | dahnke | 2015-05-18 16:04:03 +0200 (Mo, 18 Mai 2015) | 14 lines
+r697 | dahnke | 2015-05-18 16:04:03 +0200 (Mon, 18 May 2015) | 14 lines
 
 Changed paths:
 M       cg_vbm_extopts.m
@@ -5368,7 +5368,7 @@ M       vbm_surf_info.m
 (2)  Added PBT WM and CSF thickness/depth estimation in "vbm_surf_createCS".
 
 ------------------------------------------------------------------------
-r698 | dahnke | 2015-06-02 10:40:10 +0200 (Di, 02 Jun 2015) | 41 lines
+r698 | dahnke | 2015-06-02 10:40:10 +0200 (Tue, 02 Jun 2015) | 41 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5412,7 +5412,7 @@ M       vbm_surf_smooth.m
      (estimation only if files does not exist). 
 
 ------------------------------------------------------------------------
-r699 | gaser | 2015-06-17 17:36:59 +0200 (Mi, 17 Jun 2015) | 8 lines
+r699 | gaser | 2015-06-17 17:36:59 +0200 (Wed, 17 Jun 2015) | 8 lines
 
 Changed paths:
 M       Makefile.vbm
@@ -5423,7 +5423,7 @@ Corrected wrong surface-template folder in cg_check_cov.m.
 
 
 ------------------------------------------------------------------------
-r700 | gaser | 2015-06-17 17:46:39 +0200 (Mi, 17 Jun 2015) | 8 lines
+r700 | gaser | 2015-06-17 17:46:39 +0200 (Wed, 17 Jun 2015) | 8 lines
 
 Changed paths:
 M       vbm_surf_resample.m
@@ -5434,7 +5434,7 @@ oversee that message if they want to write updated data.
 
 
 ------------------------------------------------------------------------
-r701 | gaser | 2015-06-18 17:33:44 +0200 (Do, 18 Jun 2015) | 9 lines
+r701 | gaser | 2015-06-18 17:33:44 +0200 (Thu, 18 Jun 2015) | 9 lines
 
 Changed paths:
 M       cg_vbm_run_job.m
@@ -5446,7 +5446,7 @@ M       html/vbm12.html
 
 
 ------------------------------------------------------------------------
-r702 | gaser | 2015-06-18 17:36:50 +0200 (Do, 18 Jun 2015) | 7 lines
+r702 | gaser | 2015-06-18 17:36:50 +0200 (Thu, 18 Jun 2015) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5456,7 +5456,7 @@ Forgot to remove some debugging code in cg_vbm_write.m.
 
 
 ------------------------------------------------------------------------
-r703 | dahnke | 2015-07-07 09:10:01 +0200 (Di, 07 Jul 2015) | 16 lines
+r703 | dahnke | 2015-07-07 09:10:01 +0200 (Tue, 07 Jul 2015) | 16 lines
 
 Changed paths:
 M       cg_vbm_stoolsexp.m
@@ -5475,7 +5475,7 @@ M       vbm_vol_resize.m
 (4)  Added median reduction in "vbm_vol_resize".
 
 ------------------------------------------------------------------------
-r704 | dahnke | 2015-07-07 15:35:05 +0200 (Di, 07 Jul 2015) | 5 lines
+r704 | dahnke | 2015-07-07 15:35:05 +0200 (Tue, 07 Jul 2015) | 5 lines
 
 Changed paths:
 M       vbm_vol_isarnlm.m
@@ -5483,7 +5483,7 @@ M       vbm_vol_isarnlm.m
 (1)  Corrected small errors in "vbm_vol_isarnlm".
 
 ------------------------------------------------------------------------
-r705 | gaser | 2015-07-09 10:40:43 +0200 (Do, 09 Jul 2015) | 9 lines
+r705 | gaser | 2015-07-09 10:40:43 +0200 (Thu, 09 Jul 2015) | 9 lines
 
 Changed paths:
 M       cg_spmT2x.m
@@ -5495,7 +5495,7 @@ M       vbm_surf_render.m
 (2) Extended vbm_surf_render.m by functions for scaling and png-saving
 
 ------------------------------------------------------------------------
-r706 | dahnke | 2015-08-03 16:40:47 +0200 (Mo, 03 Aug 2015) | 26 lines
+r706 | dahnke | 2015-08-03 16:40:47 +0200 (Mon, 03 Aug 2015) | 26 lines
 
 Changed paths:
  M      .
@@ -5524,7 +5524,7 @@ M       vbm_vol_isarnlm.m
 
 
 ------------------------------------------------------------------------
-r707 | dahnke | 2015-08-17 14:22:10 +0200 (Mo, 17 Aug 2015) | 22 lines
+r707 | dahnke | 2015-08-17 14:22:10 +0200 (Mon, 17 Aug 2015) | 22 lines
 
 Changed paths:
 M       ds.m
@@ -5549,7 +5549,7 @@ M       vbm_tst_qa.m
        noise in these cases. 
 
 ------------------------------------------------------------------------
-r708 | gaser | 2015-08-20 11:02:20 +0200 (Do, 20 Aug 2015) | 10 lines
+r708 | gaser | 2015-08-20 11:02:20 +0200 (Thu, 20 Aug 2015) | 10 lines
 
 Changed paths:
 M       cg_showslice_all.m
@@ -5562,7 +5562,7 @@ Added option to select slice orientation in cg_showslice_all.m
 
 
 ------------------------------------------------------------------------
-r709 | gaser | 2015-08-21 11:48:49 +0200 (Fr, 21 Aug 2015) | 7 lines
+r709 | gaser | 2015-08-21 11:48:49 +0200 (Fri, 21 Aug 2015) | 7 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -5572,7 +5572,7 @@ Added estimation of mean squared error to cg_check_cov.m
 
 
 ------------------------------------------------------------------------
-r710 | gaser | 2015-08-21 17:33:50 +0200 (Fr, 21 Aug 2015) | 6 lines
+r710 | gaser | 2015-08-21 17:33:50 +0200 (Fri, 21 Aug 2015) | 6 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -5581,7 +5581,7 @@ Don't use masking anymore in cg_check_cov.m.
 
 
 ------------------------------------------------------------------------
-r711 | gaser | 2015-08-25 15:58:29 +0200 (Di, 25 Aug 2015) | 17 lines
+r711 | gaser | 2015-08-25 15:58:29 +0200 (Tue, 25 Aug 2015) | 17 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -5601,7 +5601,7 @@ M       vbm_vol_partvol.m
 
 
 ------------------------------------------------------------------------
-r712 | gaser | 2015-08-27 16:09:42 +0200 (Do, 27 Aug 2015) | 7 lines
+r712 | gaser | 2015-08-27 16:09:42 +0200 (Thu, 27 Aug 2015) | 7 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -5611,7 +5611,7 @@ Added option to sort data according to mean correlation in cg_check_cov.m.
 
 
 ------------------------------------------------------------------------
-r713 | gaser | 2015-09-07 08:49:33 +0200 (Mo, 07 Sep 2015) | 7 lines
+r713 | gaser | 2015-09-07 08:49:33 +0200 (Mon, 07 Sep 2015) | 7 lines
 
 Changed paths:
 M       cg_check_cov.m
@@ -5621,7 +5621,7 @@ Removed bug in cg_check_cov.m fpr MSE estimation for surfaces.
 
 
 ------------------------------------------------------------------------
-r714 | gaser | 2015-09-07 08:54:23 +0200 (Mo, 07 Sep 2015) | 10 lines
+r714 | gaser | 2015-09-07 08:54:23 +0200 (Mon, 07 Sep 2015) | 10 lines
 
 Changed paths:
 M       cg_slice_overlay.m
@@ -5634,7 +5634,7 @@ M       cg_slice_overlay_ui.m
  
 
 ------------------------------------------------------------------------
-r715 | gaser | 2015-09-07 08:56:36 +0200 (Mo, 07 Sep 2015) | 8 lines
+r715 | gaser | 2015-09-07 08:56:36 +0200 (Mon, 07 Sep 2015) | 8 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5645,7 +5645,7 @@ M       vbm12.fig
 
 
 ------------------------------------------------------------------------
-r716 | gaser | 2015-09-07 08:58:19 +0200 (Mo, 07 Sep 2015) | 5 lines
+r716 | gaser | 2015-09-07 08:58:19 +0200 (Mon, 07 Sep 2015) | 5 lines
 
 Changed paths:
 M       cg_vbm_longitudinal_multi.m
@@ -5653,7 +5653,7 @@ M       cg_vbm_longitudinal_multi.m
 Updated help text for modulation in cg_vbm_longitudinal_multi.m
 
 ------------------------------------------------------------------------
-r717 | gaser | 2015-09-07 09:10:01 +0200 (Mo, 07 Sep 2015) | 16 lines
+r717 | gaser | 2015-09-07 09:10:01 +0200 (Mon, 07 Sep 2015) | 16 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -5672,7 +5672,7 @@ M       tbx_cfg_vbm.m
 
 
 ------------------------------------------------------------------------
-r718 | gaser | 2015-09-07 15:15:44 +0200 (Mo, 07 Sep 2015) | 17 lines
+r718 | gaser | 2015-09-07 15:15:44 +0200 (Mon, 07 Sep 2015) | 17 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -5692,7 +5692,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r719 | gaser | 2015-09-07 15:38:03 +0200 (Mo, 07 Sep 2015) | 18 lines
+r719 | gaser | 2015-09-07 15:38:03 +0200 (Mon, 07 Sep 2015) | 18 lines
 
 Changed paths:
 M       cg_vbm_tools.m
@@ -5713,7 +5713,7 @@ D       templates_surfaces/rh.s32template.IXI555.gii
     templates_surfaces/?h.inflated.Template_T1_IXI555_MNI152.gii
 
 ------------------------------------------------------------------------
-r720 | gaser | 2015-09-07 15:46:09 +0200 (Mo, 07 Sep 2015) | 5 lines
+r720 | gaser | 2015-09-07 15:46:09 +0200 (Mon, 07 Sep 2015) | 5 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5721,7 +5721,7 @@ M       cg_vbm_write.m
 Corrected bug in cg_vbm_write.m if strength of NLM-filter was set to 0.
 
 ------------------------------------------------------------------------
-r721 | gaser | 2015-09-10 14:50:23 +0200 (Do, 10 Sep 2015) | 7 lines
+r721 | gaser | 2015-09-10 14:50:23 +0200 (Thu, 10 Sep 2015) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5731,7 +5731,7 @@ Corrected bug in cg_vbm_write.m whwre relative volume was not correctly printed.
 
 
 ------------------------------------------------------------------------
-r722 | gaser | 2015-09-11 17:36:26 +0200 (Fr, 11 Sep 2015) | 17 lines
+r722 | gaser | 2015-09-11 17:36:26 +0200 (Fri, 11 Sep 2015) | 17 lines
 
 Changed paths:
 M       cg_vbm_longitudinal.m
@@ -5751,7 +5751,7 @@ M       vbm_surf_vol2surf.m
 
 
 ------------------------------------------------------------------------
-r723 | gaser | 2015-09-11 18:11:06 +0200 (Fr, 11 Sep 2015) | 7 lines
+r723 | gaser | 2015-09-11 18:11:06 +0200 (Fri, 11 Sep 2015) | 7 lines
 
 Changed paths:
 M       cg_vbm_longitudinal.m
@@ -5761,7 +5761,7 @@ Some cosmetic changes to cg_vbm_longitudinal.m and tbx_cfg_vbm.m.
 
 
 ------------------------------------------------------------------------
-r724 | gaser | 2015-09-14 11:05:36 +0200 (Mo, 14 Sep 2015) | 8 lines
+r724 | gaser | 2015-09-14 11:05:36 +0200 (Mon, 14 Sep 2015) | 8 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5772,7 +5772,7 @@ M       vbm_surf_vol2surf.m
     are not yet finished.
 
 ------------------------------------------------------------------------
-r725 | gaser | 2015-09-14 11:12:05 +0200 (Mo, 14 Sep 2015) | 5 lines
+r725 | gaser | 2015-09-14 11:12:05 +0200 (Mon, 14 Sep 2015) | 5 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5780,7 +5780,7 @@ M       cg_vbm_stools.m
 Shortened some names in cg_vbm_stools.m.
 
 ------------------------------------------------------------------------
-r726 | gaser | 2015-09-14 11:16:14 +0200 (Mo, 14 Sep 2015) | 6 lines
+r726 | gaser | 2015-09-14 11:16:14 +0200 (Mon, 14 Sep 2015) | 6 lines
 
 Changed paths:
 M       cg_vbm_stools.m
@@ -5789,7 +5789,7 @@ Disabled mapping in native space in  cg_vbm_stools.m. because it is not yet
 working because of coordination issues.
 
 ------------------------------------------------------------------------
-r727 | gaser | 2015-09-14 14:55:36 +0200 (Mo, 14 Sep 2015) | 11 lines
+r727 | gaser | 2015-09-14 14:55:36 +0200 (Mon, 14 Sep 2015) | 11 lines
 
 Changed paths:
 M       cg_vbm_opts.m
@@ -5803,7 +5803,7 @@ M       tbx_cfg_vbm.m
     cg_vbm_write.m
 
 ------------------------------------------------------------------------
-r728 | gaser | 2015-09-14 15:28:58 +0200 (Mo, 14 Sep 2015) | 20 lines
+r728 | gaser | 2015-09-14 15:28:58 +0200 (Mon, 14 Sep 2015) | 20 lines
 
 Changed paths:
 A  +    templates_surfaces/lh.central.freesurfer.gii
@@ -5826,7 +5826,7 @@ and ?h.sphere.freesurfer.gii and changed resp. files.
 
 
 ------------------------------------------------------------------------
-r729 | gaser | 2015-09-14 15:44:32 +0200 (Mo, 14 Sep 2015) | 8 lines
+r729 | gaser | 2015-09-14 15:44:32 +0200 (Mon, 14 Sep 2015) | 8 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -5837,7 +5837,7 @@ M       cg_vbm_stools.m
 
 
 ------------------------------------------------------------------------
-r730 | gaser | 2015-09-16 11:34:40 +0200 (Mi, 16 Sep 2015) | 12 lines
+r730 | gaser | 2015-09-16 11:34:40 +0200 (Wed, 16 Sep 2015) | 12 lines
 
 Changed paths:
 M       cg_vbm_batch.sh
@@ -5852,7 +5852,7 @@ M       vbm_vol_series_align.m
     vbm_vol_groupwise_ls.m, and cg_vbm_tools.m
 
 ------------------------------------------------------------------------
-r731 | dahnke | 2015-09-16 15:50:24 +0200 (Mi, 16 Sep 2015) | 10 lines
+r731 | dahnke | 2015-09-16 15:50:24 +0200 (Wed, 16 Sep 2015) | 10 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5865,7 +5865,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r732 | gaser | 2015-09-17 10:01:49 +0200 (Do, 17 Sep 2015) | 14 lines
+r732 | gaser | 2015-09-17 10:01:49 +0200 (Thu, 17 Sep 2015) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -5882,7 +5882,7 @@ column cellstr. Thanks to Yang Ding for pointing to that issue.
 
 
 ------------------------------------------------------------------------
-r733 | gaser | 2015-09-17 13:33:56 +0200 (Do, 17 Sep 2015) | 7 lines
+r733 | gaser | 2015-09-17 13:33:56 +0200 (Thu, 17 Sep 2015) | 7 lines
 
 Changed paths:
 M       html/vbm12.html
@@ -5892,7 +5892,7 @@ Replace noise estimation of NaN by average value in vbm_vol_groupwise_ls.m.
 
 
 ------------------------------------------------------------------------
-r734 | dahnke | 2015-09-21 07:57:08 +0200 (Mo, 21 Sep 2015) | 9 lines
+r734 | dahnke | 2015-09-21 07:57:08 +0200 (Mon, 21 Sep 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -5904,7 +5904,7 @@ Corrected mat0 in rigid output images.
 
 
 ------------------------------------------------------------------------
-r735 | gaser | 2015-09-24 10:23:54 +0200 (Do, 24 Sep 2015) | 7 lines
+r735 | gaser | 2015-09-24 10:23:54 +0200 (Thu, 24 Sep 2015) | 7 lines
 
 Changed paths:
 M       cg_vbm_write.m
@@ -5914,7 +5914,7 @@ M       tbx_cfg_vbm.m
 (2) Slightly changed printed outpput of cg_vbm_write.m.
 
 ------------------------------------------------------------------------
-r736 | dahnke | 2015-09-24 17:06:13 +0200 (Do, 24 Sep 2015) | 23 lines
+r736 | dahnke | 2015-09-24 17:06:13 +0200 (Thu, 24 Sep 2015) | 23 lines
 
 Changed paths:
 M       cg_vbm_defaults.m
@@ -5940,7 +5940,7 @@ M       vbm_surf_display.m
 (5)  Added preliminary Shooting template (Template_*_NKI174_MNI152_GS.nii).
 
 ------------------------------------------------------------------------
-r737 | gaser | 2015-09-25 17:22:02 +0200 (Fr, 25 Sep 2015) | 16 lines
+r737 | gaser | 2015-09-25 17:22:02 +0200 (Fri, 25 Sep 2015) | 16 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -5959,7 +5959,7 @@ M       vbm_surf_vol2surf.m
     side information.
 
 ------------------------------------------------------------------------
-r738 | gaser | 2015-09-28 09:18:10 +0200 (Mo, 28 Sep 2015) | 10 lines
+r738 | gaser | 2015-09-28 09:18:10 +0200 (Mon, 28 Sep 2015) | 10 lines
 
 Changed paths:
  M      templates_1.50mm/Template_0_NKI174_MNI152_GS.nii
@@ -5972,7 +5972,7 @@ M       vbm_surf_createCS.m
 Undo changes to write pp1-map per default in vbm_surf_createCS.m.
 
 ------------------------------------------------------------------------
-r739 | gaser | 2015-10-01 12:00:57 +0200 (Do, 01 Okt 2015) | 8 lines
+r739 | gaser | 2015-10-01 12:00:57 +0200 (Thu, 01 Oct 2015) | 8 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -5983,7 +5983,7 @@ M       cg_vbm_write.m
 (2) Corrected ROI setting in cg_vbm_batch.m
 
 ------------------------------------------------------------------------
-r740 | dahnke | 2015-10-02 15:38:09 +0200 (Fr, 02 Okt 2015) | 24 lines
+r740 | dahnke | 2015-10-02 15:38:09 +0200 (Fri, 02 Oct 2015) | 24 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -6010,7 +6010,7 @@ M       vbm_vol_correct_slice_scaling.m
 
 
 ------------------------------------------------------------------------
-r741 | dahnke | 2015-10-07 20:23:28 +0200 (Mi, 07 Okt 2015) | 21 lines
+r741 | dahnke | 2015-10-07 20:23:28 +0200 (Wed, 07 Oct 2015) | 21 lines
 
 Changed paths:
 M       cg_vbm_batch.m
@@ -6034,7 +6034,7 @@ M       vbm_tst_qa.m
 
 
 ------------------------------------------------------------------------
-r742 | gaser | 2015-10-08 14:03:13 +0200 (Do, 08 Okt 2015) | 12 lines
+r742 | gaser | 2015-10-08 14:03:13 +0200 (Thu, 08 Oct 2015) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6049,7 +6049,7 @@ M       vbm_surf_createCS.m
 
 
 ------------------------------------------------------------------------
-r743 | gaser | 2015-10-08 14:10:01 +0200 (Do, 08 Okt 2015) | 8 lines
+r743 | gaser | 2015-10-08 14:10:01 +0200 (Thu, 08 Oct 2015) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6060,7 +6060,7 @@ changes.
 
 
 ------------------------------------------------------------------------
-r744 | gaser | 2015-10-08 14:10:37 +0200 (Do, 08 Okt 2015) | 8 lines
+r744 | gaser | 2015-10-08 14:10:37 +0200 (Thu, 08 Oct 2015) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6071,7 +6071,7 @@ changes.
 
 
 ------------------------------------------------------------------------
-r745 | gaser | 2015-10-09 16:58:04 +0200 (Fr, 09 Okt 2015) | 84 lines
+r745 | gaser | 2015-10-09 16:58:04 +0200 (Fri, 09 Oct 2015) | 84 lines
 
 Changed paths:
 M       Amap.c
@@ -6158,7 +6158,7 @@ M       vbm_vol_simgrow.mexw64
 (4) Recompiled everything...
 
 ------------------------------------------------------------------------
-r746 | gaser | 2015-10-09 17:02:04 +0200 (Fr, 09 Okt 2015) | 7 lines
+r746 | gaser | 2015-10-09 17:02:04 +0200 (Fri, 09 Oct 2015) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6168,7 +6168,7 @@ Tiny change in svn_ci_log
 
 
 ------------------------------------------------------------------------
-r747 | gaser | 2015-10-09 17:02:55 +0200 (Fr, 09 Okt 2015) | 6 lines
+r747 | gaser | 2015-10-09 17:02:55 +0200 (Fri, 09 Oct 2015) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6177,7 +6177,7 @@ Tiny change in svn_ci_log
 
 
 ------------------------------------------------------------------------
-r748 | gaser | 2015-10-09 17:04:18 +0200 (Fr, 09 Okt 2015) | 7 lines
+r748 | gaser | 2015-10-09 17:04:18 +0200 (Fri, 09 Oct 2015) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6187,7 +6187,7 @@ Tiny change in svn_ci_log
 
 
 ------------------------------------------------------------------------
-r749 | gaser | 2015-10-09 18:04:18 +0200 (Fr, 09 Okt 2015) | 21 lines
+r749 | gaser | 2015-10-09 18:04:18 +0200 (Fri, 09 Oct 2015) | 21 lines
 
 Changed paths:
 M       AmapMex.mexw64
@@ -6211,7 +6211,7 @@ M       vbm_vol_simgrow.mexw64
 Recompiled windows 64bit.
 
 ------------------------------------------------------------------------
-r750 | gaser | 2015-10-13 13:39:39 +0200 (Di, 13 Okt 2015) | 32 lines
+r750 | gaser | 2015-10-13 13:39:39 +0200 (Tue, 13 Oct 2015) | 32 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6246,7 +6246,7 @@ M       vbm12.fig
 
 
 ------------------------------------------------------------------------
-r751 | gaser | 2015-10-18 20:47:01 +0200 (So, 18 Okt 2015) | 10 lines
+r751 | gaser | 2015-10-18 20:47:01 +0200 (Sun, 18 Oct 2015) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6259,6 +6259,7 @@ M       vbm_vol_eidist.mexmaci64
 
 
 ------------------------------------------------------------------------
+r752 | gaser | 2015-10-18 21:24:02 +0200 (Sun, 18 Oct 2015) | 49 lines
 
 Changed paths:
 M       AmapMex.mexw32
@@ -6308,5 +6309,19 @@ M       vbm_vol_simgrow.mexw64
 
 
 
+
 ------------------------------------------------------------------------
-r752 | gaser | 2015-10-18 21:23:42
+
+Changed paths:
+M       CHANGES.txt
+A       Contents.m
+M       html/vbm12.html
+A       sliderPanel.m
+
+Added sliderPanel.m.
+ 
+
+
+
+------------------------------------------------------------------------
+r753 | gaser | 2015-10-18 23:37:02
