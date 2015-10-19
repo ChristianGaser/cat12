@@ -5,22 +5,21 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 % [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
 %
 % Yth1 = thickness map
-% S    = structure with surfaces, like the left hemishere, that contain
+% S    = structure with surfaces, like the left hemishere, that contains
 %        vertices, faces, GM thickness (th1), and the transformation to
-%        map for nifti space (vmat) and back (vmati).
+%        map to nifti space (vmat) and back (vmati).
 % V    = spm_vol-structure 
 % Ym   = the (local) intensity, noise, and bias corrected T1 image
 % Ya   = the atlas map with the ROIs for left and right hemispheres
 %        (this is generated with vbm_vol_partvol)
-% YMF  = a logical map with the area that has to be filed
+% YMF  = a logical map with the area that has to be filled
 %        (this is generated with vbm_vol_partvol)
 %   
 % opt.surf       = {'lh','rh'[,'cerebellum','brain']} - side
 %    .reduceCS   = 100000 - number of faces
-%    .isosmooth  = 0.3    - initial surface smoothing
 %
 % Options set by cg_vbm_defaults.m
-%    .interpV    = 0.5    - mm-resolution for estimation
+%    .interpV    = 0.5    - mm-resolution for thickness estimation
 % 
 % Here we used the intensity normalized image Ym, rather that the Yp0
 % image, because it has more information about sulci that we need 
@@ -44,7 +43,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   def.debug     = cg_vbm_get_defaults('extopts.debug');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.reduceCS  = 100000;  
-  def.isosmooth = 0.3;
   opt           = vbm_io_updateStruct(def,opt);
   opt.interpV   = cg_vbm_get_defaults('extopts.pbtres');
   opt.interpV   = max(0.5,min([min(vx_vol),opt.interpV,1]));
@@ -83,7 +81,6 @@ function [Yth1,S]=vbm_surf_createCS(V,Ym,Ya,YMF,opt)
   Yth1 = zeros(size(Ymf),'single'); 
   Ywd  = zeros(size(Ymf),'single'); 
   Ycd  = zeros(size(Ymf),'single'); 
-  Ysd  = zeros(size(Ymf),'single'); 
   
   for si=1:numel(opt.surf)
    
