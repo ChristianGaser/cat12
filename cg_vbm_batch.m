@@ -48,7 +48,7 @@ matlabbatch{1}.spm.tools.vbm.estwrite.data = cellstr(names);
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','print','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB','vox','bb','vbm12atlas','sanlm','gui','expertgui','brainmask','T1');
+              'QAcleanup','QAcleanupth','LAB','vox','bb','vbm12atlas','sanlm','gui','expertgui','brainmask','T1','APP');
               
 for i=1:size(tmp_fields,1)
   try

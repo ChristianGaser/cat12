@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
+function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -112,12 +112,15 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
  % clear Yy;
   
   Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
-
+  Yp0A = single(spm_sample_vol(Vtpm(1),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*2 + ...
+         single(spm_sample_vol(Vtpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*3 + ...
+         single(spm_sample_vol(Vtpm(3),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1))*1;
+  Yp0A = reshape(Yp0A,size(Ym));   
   
   % work on average resolution
   Ym0 = Ym; 
-  [Ym,YA,Yp0,Yb,BB] = vbm_vol_resize({Ym,YA,Yp0,Yb},'reduceBrain',vx_vol,2,Yb);
-  [Ym,Yp0,Yb,resTr] = vbm_vol_resize({Ym,Yp0,Yb},'reduceV',vx_vol,vx_res,64);
+  [Ym,YA,Yp0,Yb,Yp0A,BB] = vbm_vol_resize({Ym,YA,Yp0,Yb,Yp0A},'reduceBrain',vx_vol,2,Yb);
+  [Ym,Yp0,Yb,Yp0A,resTr] = vbm_vol_resize({Ym,Yp0,Yb,Yp0A},'reduceV',vx_vol,vx_res,64);
   [YA]              = vbm_vol_resize(YA ,'reduceV',vx_vol,vx_res,64,'nearest'); 
  
   vx_vol = resTr.vx_volr; 
@@ -128,7 +131,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;                    % ROI map without side
   YA   = vbm_vol_ctype(vbm_vol_median3c(single(YA),Yp0>0));
   Yg   = vbm_vol_grad(Ym,vx_vol);
-  Ydiv = vbm_vol_div(Ym,vx_vol);
+  Ydiv = vbm_vol_div(Ym,vx_vol); Ymo=Ym; 
   Ym   = Ym*3 .* (Yb);
   Yb   = Yb>0.5;
 
@@ -141,19 +144,29 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   % Major structure mapping:
   % Major structure mapping with downcut to have a better alginment for 
   % the CB and CT. Simple setting of BG and TH as GM structures. 
-  Ya1 = zeros(size(Ym),'single');
-  Ya1(YA==LAB.BG & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.BG;                % basal ganglia
+  Ya1  = zeros(size(Ym),'single');
+  
+  % Basal Ganglia
+  Ybg  = zeros(size(Ym),'single');
+  Ybgd = vbdist(single(YA==LAB.BG),Yb,vx_vol); 
+  Yosd = vbdist(single(YA==LAB.TH | YA==LAB.VT | YA==LAB.HC  | YA==LAB.BS | (YA==LAB.CT & Ym>2.9)),Yb,vx_vol); 
+  Ybg(smooth3(Yosd>3 & Ybgd<5  & Ym>1.9 & Ym<2.85 & Yg<4*noise & ((Ybgd<1 & Ydiv>-0.01) | (Ydiv>-0.01+Ybgd/100)))>0.7)=1;
+  Ybg(smooth3((Ybg==0 & Yp0>2.8 & Ym>2.8 & YA==LAB.CT) | Ym>2.9 | YA==LAB.TH | YA==LAB.HC | Yosd<2 | ...
+    (Ybg==0 & Yp0<1.25) | (Ybg==0 & Ybgd>8) | (Ybg==0 & Ydiv<-0.01+Ybgd/200))>0.3)=2;
+  Ybg(Ybg==0 & Ybgd>0 & Ybgd<10)=1.5; 
+  Ybg = vbm_vol_laplace3R(Ybg,Ybg==1.5,0.005)<1.5 & Ym<2.9 & Ym>1.8 & Ydiv>-0.02;
+  Ya1(Ybg)=LAB.BG;                                                      % basal ganglia
   Ya1(YA==LAB.TH & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.TH;                % thalamus
   Ya1(YA==LAB.HC & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.HC;                % hippocampus
-  Ybg = Ya1==0 & vbm_vol_morph(Ya1,'d',3) & ~vbm_vol_morph(YA==LAB.VT,'d',4); % VT correction area 
-  Ya1(((Yp0>2.5 & Ym>2.5) & YA==LAB.CT & Ya1==0) | Ybg)=LAB.CT;         % cerebrum
+  Ya1(((Yp0>2.5 & Ym>2.5 & (YA==LAB.CT | YA==LAB.BG)) | (Yp0>1.5 & Ym<3.5 & Ybgd>1 & Ybgd<8 & (Ybgd>4 | Ydiv<-0.02+Ybgd/200))) & Ya1==0)=LAB.CT;  % cerebrum
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.CB)=LAB.CB;                          % cerebellum
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.BS)=LAB.BS;                          % brainstem
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.ON)=LAB.ON;                          % optical nerv
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.MB)=LAB.MB;                          % midbrain
-  % region-growing
-  Ya1(Ya1==0 & Yp0<1.5)=nan; 
-  Ya1 = vbm_vol_downcut(Ya1,Ym,2*noise); Ya1(isinf(Ya1))=0; 
+  clear Ybg Ybgd; 
+  %% region-growing
+  Ya1(Ya1==0 & Yp0<1.9)=nan; 
+  Ya1 = vbm_vol_downcut(Ya1,Ym,4*noise); Ya1(isinf(Ya1))=0; 
   Ya1 = vbm_vol_median3c(Ya1,Yb);                                       % smoothing
   Ya1((Yp0>1.75 & Ym>1.75 & Yp0<2.5 & Ym<2.5) & Ya1==LAB.MB)=0;         % midbrain correction
   
@@ -235,7 +248,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   stime = vbm_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
   Ywmh = single(smooth3(vbm_vol_morph(Yvt,'d',1) & Ym<2.25 &...
     ~(vbm_vol_morph(YA==LAB.HC & Ym>1.5,'d',4*vxd) & Ym>1.5))>0.5); % ventricle
-  Ywmh(smooth3((Yp0 - Ym)>0.75-WMHCstr/2 & Ym<2.75 & Ym>1.5)>0.8)=1; % WMH
+  Ywmh(smooth3((Ym.*Yp0A - Ym.*Ym)>2-WMHCstr/5 & Ym<2.75 & Ym>1.5)>0.5)=1; % WMH
   Ywmh(vbm_vol_morph(Yp0>2.5,'c',0) & ~(Yp0>2.5))=1; % WMH wholes
   Ywmh(Yvt2>1.75 & Yvt2<3 | (Ywmh==0 & Ym<1.5))=2;
   Ywmh((Ywmh==0 & Ym>2.25) | Ya1==LAB.BG | Ya1==LAB.TH)=-inf;
@@ -250,7 +263,7 @@ function [Ya1,Ycls,YBG,YMF] = vbm_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA)
   Ynwmh = ~smooth3(vbm_vol_morph(Ya1==LAB.VT | Ya1==LAB.TH | Ya1==LAB.BG,'c',4))>0.5;
   Ywmh = smooth3(Ywmh<1.1+WMHCstr/4 & Ya1~=LAB.VT & Ynwmh)>0.75-WMHCstr/2;
   Ywmh = smooth3(vbm_vol_morph(vbm_vol_morph(Ywmh,'o',1),'c',1) & Ym<2.75)>(0.75-WMHCstr/2);
-  %%
+  %
   Ya1(Ywmh)=LAB.HI;
   %{
    Yvt2(Yvt2>1.45 & Yvt2<1.55)=inf; Yvt2=round(Yvt2);
