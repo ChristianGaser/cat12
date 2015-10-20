@@ -51,7 +51,8 @@ for i=1:size(P,1)
   Pcentral   = fullfile(pp,Pcentral);
   Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
   
-  fprintf('Resample %s\n',deblank(P(i,:)));
+  %fprintf('Resample %s\n',deblank(P(i,:)));
+  fprintf('Display resampled %s\n',spm_file([Pfwhm '.gii'],'link','vbm_surf_display(''%s'')'));
 
   % resample values using warped sphere 
   cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);

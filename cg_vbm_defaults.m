@@ -118,10 +118,13 @@ vbm.output.te.dartel = 0;
 %=======================================================================
 
 % set this option in order to see all options in GUI
-vbm.extopts.expertgui     = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental functions (unsafe)!
+vbm.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental functions (unsafe)!
 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 vbm.extopts.species      = 'human';  
+
+% Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
+vbm.extopts.APP          = 0;      % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
 
 % skull-stripping options
 vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
@@ -141,16 +144,16 @@ vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessi
 % resolution options:
 vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
 %{
-best:
+native:
     Preprocessing with native resolution.
     In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
 
     Examples:
       native resolution       internal resolution 
        0.95 0.95 1.05     >     0.95 0.95 1.05
-       0.45 0.45 1.70     >     0.45 0.45 1.50 (if voxel size for normalized images is 1.5mm)
+       0.45 0.45 1.70     >     0.45 0.45 1.50 (if voxel size for normalized images is 1.50 mm)
 
-native:
+best:
     Preprocessing with the best (minimal) voxel dimension of the native image.'
     The first parameters defines the lowest spatial resolution for every dimension, while the second is used to avoid tiny interpolations for almost correct resolutions.
     In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
@@ -167,7 +170,8 @@ fix:
     This options prefers an isotropic voxel size that is controled by the first parameters.  
     The second parameter is used to avoid tiny interpolations for almost correct resolutions. 
     In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
-    
+    There is no upper limit, but we recommend to avoid unnecessary interpolation.
+
     Examples: 
       Parameters     native resolution       internal resolution
       [1.00 0.10]     0.45 0.45 1.70     >     1.00 1.00 1.00

@@ -17,6 +17,10 @@ function varargout = vbm_surf_display(varargin)
 % job.imgprint.type .. render image type (default = png)
 % job.dpi           .. print resolution of the image (default = 600 dpi)
 %
+% Examples: 
+%  - Open both hemispheres of one subject S01:
+%   vbm_surf_display(struct('data','lh.thickness.S01.gii','multisurf',1))
+%
 % ______________________________________________________________________
 % Robert Dahnke
 % $Id$
@@ -161,6 +165,7 @@ function varargout = vbm_surf_display(varargin)
       catch %#ok<CTCH>
         vbm_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',job.data{i})); 
       end
+      continue
     end
     
     
@@ -191,7 +196,7 @@ function varargout = vbm_surf_display(varargin)
     %% print
     if job.imgprint.do 
       %%
-      pfname = fullfile(sinfo(i).pp,sprintf('%s%s.%s',[sinfo(i).ff,viewname,job.imgprint.type(3:end)]));
+      pfname = fullfile(sinfo(i).pp,sprintf('%s%s.%s',sinfo(i).ff,viewname,job.imgprint.type(3:end)));
       print(h.figure , job.imgprint.type , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 
       
       if job.imgprint.close
