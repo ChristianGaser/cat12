@@ -162,19 +162,32 @@ gcutstr.help    = {
 sanlm        = cfg_menu;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Use SANLM de-noising filter';
-sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)',...
-    'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM','ORNLM denoising'
+% sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)',...
+%      'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM','ORNLM denoising'
+% };
+% sanlm.values = {0 1 2 3 4 5};
+% sanlm.help   = {
+%     'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Optionally, a second ORNLM filter is  used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
+%     'The following options are available: '
+%     '  0) No noise correction '
+%     '  1) SANLM '
+%     '  2) SANLM (multi-threaded) '
+%     '  3) SANLM + ORNLM '
+%     '  4) SANLM (multi-threaded) + ORNLM'
+%     '  5) Only ORNLM (with temporarily SANLM filter, but only one final noise correction of the original data)' 
+% };
+sanlm.labels = {'No denoising','SANLM denoising',...
+    'SANLM denoising + ORNLM','ORNLM denoising'
 };
-sanlm.values = {0 1 2 3 4 5};
+sanlm.values = {0 1 3 5};
 sanlm.def    = @(val)cg_vbm_get_defaults('extopts.sanlm', val{:});
 sanlm.help   = {
     'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Optionally, a second ORNLM filter is  used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
     'The following options are available: '
-    '  0) No noise correction '
-    '  1) SANLM '
-    '  2) SANLM (multi-threaded) '
-    '  3) SANLM + ORNLM 4) SANLM (multi-threaded) + ORNLM'
-    '  5) Only ORNLM (with temporarily SANLM filter, but only one final noise correction of the original data)' 
+    '  * No noise correction '
+    '  * SANLM '
+    '  * SANLM + ORNLM ' 
+    '  * Only ORNLM (with temporarily SANLM filter) ' 
 };
 
 NCstr         = cfg_entry;
@@ -281,12 +294,27 @@ darteltpm.help    = {
 
 %------------------------------------------------------------------------
 
+APP        = cfg_menu;
+APP.tag    = 'print';
+APP.name   = 'Affine Preprocessing (APP)';
+APP.labels = {'none (only SPM)','APP with initial registraton','APP without initial registraton'};
+APP.values = {0 1 2};
+APP.def    = @(val)cg_vbm_get_defaults('extopts.print', val{:});
+APP.help   = {
+'Affine alignment and SPM preprocessing can fail in untypical subjects (other species/neonates) and the correction of inhomogeneities and extraction of the brain can reduce problems (APP = Affine PreProcessing). As far as also the first affine registration can fail the option "without initial registation" is available that requires excact AD-PC alignment by the user (i.e. by SPM Display). Non human species irgnore this option by using APP=2.  '
+''
+};
+
+%------------------------------------------------------------------------
+
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for VBM12 segmentation';
-if expert
+if expert==2 % experimental expert options
+  extopts.val   = {APP,sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,vox,print}; 
+elseif expert==1 % working expert options
   extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,vox,print}; 
 else
   extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,vox,print}; 
 end
-extopts.help  = {'Using the extended options you can adjust the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};
+extopts.help  = {'Using the extended options you can adjust special parameter or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};

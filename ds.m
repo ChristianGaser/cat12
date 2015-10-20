@@ -11,16 +11,16 @@ function varargout=ds(type,viewtype,DAR,varargin)
 % ds('l3','',vx_vol,TSEGF,TSEG,TSEGF,ALAB,SLAB,SLABB,60)
 %#ok<*TRYNC>
 
-  if ndims(varargin{end})<=2, slice=varargin{end}; vols=nargin-5;
-  else                        slice=80;                   vols=nargin-4;
+  if ndims(varargin{end})<=2, slice=varargin{end}; vols=nargin-4;
+  else                        slice=80;            vols=nargin-3;
   end
   for va=1:numel(varargin), try varargin{va}=single(varargin{va}); end; end 
   
   % rotate data...
   switch viewtype
-    case {'m','medial'}, for vi=1:vols, varagin{vi}=varagin{vi}; end %#ok<AGROW>
-    case {'a','axial'},  for vi=1:vols, varagin{vi}=varagin{vi}; end %#ok<AGROW>
-    case {'c','coronal'}
+    case {1,'m','medial'}, for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); DAR=shiftdim(DAR,1); end 
+    case {2,'a','axial'},  for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); DAR=shiftdim(DAR,2); end 
+    case {0,'c','coronal'}
   end
   if isempty(DAR), DAR=1; end
   if numel(DAR)<2, DAR=repmat(DAR,1,3); end
@@ -53,8 +53,8 @@ function varargout=ds(type,viewtype,DAR,varargin)
         axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
 
       case {'l1','label1'}
-        set(fh,'WindowStyle','docked','Visible','on');
-        image(ind2rgb( uint16(7+8*(varargin{1}(:,:,s) + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); %
+        %set(fh,'WindowStyle','docked','Visible','on');
+        image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
 
       case {'vbm_pre_iscale'}
