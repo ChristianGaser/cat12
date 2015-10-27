@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -17,15 +17,15 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_QA.html">Quality Control</a>
+        <a href="cat.html">CAT12</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_QA.html">Quality Control</a>
       </div>
     </div>
       
   
     <div id="content">  
-      <h2>VBM report and quality control (in development):</h2>
+      <h2>CAT report and quality control (in development):</h2>
       <p>
-        Besides the used preprocessing parameters VBM now also print image quality measurements and global subject measurements. 
+        Besides the used preprocessing parameters CAT now also print image quality measurements and global subject measurements. 
         All measurements were graded (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, >5 - problematic). 
         Measures and/or grading are under development and should help to identify problematic datasets. 
         Although, the preprocessing routines try to correct image interferences like noise or inhomogeneities, stronger interferences require stronger corrections that reduce spacial resolution or maybe fail. 
@@ -35,7 +35,7 @@
       <h3>Image quality measures</h3>
       <p>
         Image quality measures describe the properties of the image, but not the processing. 
-        The VBM12 image quality were estimated based on the tissue segmentation and were widely independent of subject sex and health status. 
+        The CAT12 image quality were estimated based on the tissue segmentation and were widely independent of subject sex and health status. 
         Only age has a small influence (+0.02 per 10 years), because the WM segment undergoes small changes in lifetime.
         The WM is used rather than the background, because the background can be influenced by anonymization routines or include interferences that does not effect the brain.
       </p>
@@ -71,13 +71,13 @@
       <p>
         Although, the result of all preprocessing methods depend strongly on the input data, they can show a very different behavior by processing the data. 
         Some methods may have a very high accuracy, but were not very robust against image interferences, whereas other are very robust but have lower accuracy in the best cases. 
-        For averaging the different QM in one preprocessing mark, a least squares approach was used to solve the equation "k = QM * s" with k as vector of the reconstruction quality of VBM12 (mean Kappa of all tissues), QM as matrix of quality measures, and w as weighting that was estimated.
+        For averaging the different QM in one preprocessing mark, a least squares approach was used to solve the equation "k = QM * s" with k as vector of the reconstruction quality of CAT12 (mean Kappa of all tissues), QM as matrix of quality measures, and w as weighting that was estimated.
         To get a better solution it was necessary to normalize the measures for specific kappa boundaries (kappa of 0.925 = mark 1, kappa of 0.8 = mark 6) by a function <i>f</i>. 
         As far as good aspects of an image can often not compensate the bad ones  ......  sshheeiißß  ttaassttaattuurr  ......  jjeettzztt  ggeehheenn  nnuurr  nnoocchh  zzwweeii  zzeeiicchheenn  aauuff  eeiinnmmaall!!!!!!!!
         
         
         ( f(QM)^s * w)^(1/s)
-        For VBM12 inhomogeneity plays nearly no role and the final results are best characterized by noise and resolution.
+        For CAT12 inhomogeneity plays nearly no role and the final results are best characterized by noise and resolution.
         For images with a mark>4 a Kappa value below 0.8 can be expected.
         Outliers with very low rating should be removed e.g. if your scans have an average rating of 2.12, scans with ratings below 4 are often affected by motion artifacts.       
       </p>
@@ -100,12 +100,12 @@
         
       <!--
       <h3>Result images:</h3>
-      <p>VBM result images depending on the export options. The first row displays the intensity normalized, noise and bias corrected T1 image on the left side and the label map p0 on the right. The second row shows the GM (left)  and WM (right) segment. All images where displayed in normalized spaces, if the were available, otherwise the native space is used.<br />Therefore, the figure can contain images of different spaces, so don't  wonder, if the crosshair doesn't show the same structures.</p>
+      <p>CAT result images depending on the export options. The first row displays the intensity normalized, noise and bias corrected T1 image on the left side and the label map p0 on the right. The second row shows the GM (left)  and WM (right) segment. All images where displayed in normalized spaces, if the were available, otherwise the native space is used.<br />Therefore, the figure can contain images of different spaces, so don't  wonder, if the crosshair doesn't show the same structures.</p>
       <p> WARNING: The scaling of the color is normally fixed, but interactive use of the result figure can produce errors. </p>
       -->
     </div>
   
-    <div id="content"><a href="vbm12_methods.html">< Methods</a></div>    
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>    
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
     </div>

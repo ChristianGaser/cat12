@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="vbm12.html">VBM12</a> > <a href="vbm12_starting.html">Quick start guide</a>
+        <a href="cat.html">CAT12</a> > <a href="cat_starting.html">Quick start guide</a>
       </div>
     </div>
 	
@@ -26,12 +26,12 @@
       <p>VBM data</p>
       <ul>
         <li><a href="matlab:spm_jobman('interactive','','spm.tools.vbm.estwrite');">Segment</a> data using defaults (for longitudinal data use <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.long');">longitudinal pipeline</a>)</li>
-        <li>Check data quality using <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.check_cov');">sample homogeneity</a> for VBM data</li>
+        <li>Check data quality using <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.check_cov');">sample homogeneity</a> for CAT data</li>
         <li><a href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data</li>
         <li>Build <a href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
         <li><a href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model</li>
         <li>Optionally <a href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.T2x');">transform and threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps</li>
-        <li>Optionally <a href="matlab:slice_overlay;">overlay selected slices</a></li>
+        <li>Optionally <a href="matlab:cg_slice_overlay;">overlay selected slices</a></li>
       </ul>
 
       <p>Additional surface data</p>
@@ -47,7 +47,7 @@
 
     </div>  
   
-    <div id="content"><a href="vbm12.html">< VBM12</a></div>  
+    <div id="content"><a href="cat.html">< CAT12</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
     </div>

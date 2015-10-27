@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="vbm12.html">VBM12</a> > <a href="vbm12_instruction.html">Instruction manual</a> > <a href="vbm12_instruction_PP.html">Preprocessing</a>
+        <a href="cat.html">CAT12</a> > <a href="cat_instruction.html">Instruction manual</a> > <a href="cat_instruction_PP.html">Preprocessing</a>
       </div>
     </div>
 	
@@ -25,16 +25,16 @@
     <div id="content">
       <h2>Preprocessing</h2>
       <p>
-        VBM12 preprocessing comprehends methods to reduce image interference, classify the brain and its major tissue classes and normalize the individual anatomy. 
+        CAT12 preprocessing comprehends methods to reduce image interference, classify the brain and its major tissue classes and normalize the individual anatomy. 
         Furthermore, it allows the creation of the central surface with cortical thickness and folding measures. 
-        The theoretical background can be found in the <a href="vbm12_methods.html">Methods</a> section.
+        The theoretical background can be found in the <a href="cat_methods.html">Methods</a> section.
         <!-- papers to cite -->
       </p>
       <!-- algo flow diagram -->
       
 <!--
       <p>
-        VBM12 also allows processing of other apes and monkeys. 
+        CAT12 also allows processing of other apes and monkeys. 
         First, you have to download the <a href="matlab:web('http://dbm.neuro.uni-jena.de/"','-browser');" target="_blank">animal templates and default parameter</a>.
         Next you have to <a href="matlab:vbm_set_cg_vbm_defaults">change the default file</a> according to your primate data.
       </p>
@@ -45,19 +45,19 @@
         <li>
           <h4>Estimation options</h4>
           <p>
-            Although VBM12 uses SPM12 preprocessing it uses an independent segmentation approach and the SPM12 segmentation is only used as starting estimate. 
+            Although CAT12 uses SPM12 preprocessing it uses an independent segmentation approach and the SPM12 segmentation is only used as starting estimate. 
             Thus, most parameters were set to SPM default and removed from the GUI. 
             Modification should be made only by expert users via <a href="matlab:open cg_vbm_defaults;">cg_vbm_defaults</a> file.
             Please choose the SPM "Tissue Probability Map" and "Affine Registration" for your data.
             <!-- 
-            For non human TPM see <a href="vbm12_stuff.html">Links, sources, and recommendations</a>.
+            For non human TPM see <a href="cat_stuff.html">Links, sources, and recommendations</a>.
             -->
           </p>
         </li>
         <li>      
           <h4>Extended options</h4>
           <p>
-            VBM12 uses adaptive denoising methods to allow an exact and stable segmentation for different levels of noise.
+            CAT12 uses adaptive denoising methods to allow an exact and stable segmentation for different levels of noise.
           </p>
           <p>
             For the denoising, the Local Adaptive Segmentation, the Skull-Stripping, and of the Cleanup function a strength parameter allows simple modifications, if the default segmentation does not fit for your requirements. 
@@ -66,8 +66,8 @@
           </p>
           <p>
             For children data you may need a special Dartel template.
-            <!-- (see <a>Own VBM12 templates</a>) --> 
-            Be aware of problems with the ROI analysis, because the VBM12 atlas maps are optimized for VBM12 IXI555 template!
+            <!-- (see <a>Own CAT12 templates</a>) --> 
+            Be aware of problems with the ROI analysis, because the CAT12 atlas maps are optimized for CAT12 IXI555 template!
           </p>
           <p>
             For regional analysis the Hammers atlas in IXI555 template space allows extraction of values such as thickness.
@@ -84,15 +84,15 @@
             
           </p>
           <p>
-            VBM12 also allows the creation of the central cortical surface and the estimation of thickness and folding parameters.
+            CAT12 also allows the creation of the central cortical surface and the estimation of thickness and folding parameters.
             Surface processing will take around 2 times longer as segmentation only preprocessing (around 1 hour for a standard dataset on a computer of the year 2013).
           </p>
         </li>
         <li>
           <h4>Writing options</h4>
           <p>
-            VBM12 allows to write the results of the preprocessing in different spaces - native/subject space, normalized space, modulated normalized space, and DARTEL export. 
-            For most VBM analysis the <i>modulated normalized</i> space is the best choice.
+            CAT12 allows to write the results of the preprocessing in different spaces - native/subject space, normalized space, modulated normalized space, and DARTEL export. 
+            For most CAT analysis the <i>modulated normalized</i> space is the best choice.
             DARTEL export is only required for special analysis (Brain<i>AGE</i>) or for DARTEL template generation. 
           </p>
           <p>There are the following map types:</p>
@@ -115,8 +115,8 @@
             <li>
               <h5>Bias corrected (m maps)</h5>
               <p>
-                Before segmentation VBM12 preprocessing removes image interferences such as noise and inhomogeneity from the images. 
-                Furthermore, global and local tissue intensities were normalized (background=0, CSF=1/3, GM=2/3, and WM=1) to allow VBM analysis.
+                Before segmentation CAT12 preprocessing removes image interferences such as noise and inhomogeneity from the images. 
+                Furthermore, global and local tissue intensities were normalized (background=0, CSF=1/3, GM=2/3, and WM=1) to allow CAT analysis.
                 The optimized T1-image contains more local information, such as small changes in the WM. 
               </p>
             </li>
@@ -133,7 +133,7 @@
             </li>
           </ul>
           <p>
-            The resulting structure of the filenames can be found <a href="VBM12_instruction_FN.html">here</a>.
+            The resulting structure of the filenames can be found <a href="CAT12_instruction_FN.html">here</a>.
           </p>
         </li>
         <li>      
@@ -146,7 +146,7 @@
     </div>
   
   
-    <div id="content"><a href="vbm12_instruction.html">< Instruction manual</a></div>  
+    <div id="content"><a href="cat_instruction.html">< Instruction manual</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
     </div>

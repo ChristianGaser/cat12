@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="vbm12.html">VBM12</a> > <a href="vbm12_methods.html">Methods</a> > <a href="vbm12_methods_RBM.html">Atlas creation and ROI based analysis</a>
+        <a href="cat.html">CAT12</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a>
       </div>
     </div>
   
@@ -26,7 +26,7 @@
     <div id="content">
       <h2>Atlas creation and ROI based analysis (in development)</h2>
       <p>
-        VBM12 allows estimation of tissue volume [, intensity, and thickness] for different atlas maps.
+        CAT12 allows estimation of tissue volume [, intensity, and thickness] for different atlas maps.
       </p> 
       <p>
         Results were stored in a csv-file <i>vbmROI[SPACE]_[ATLAS]_*.csv</i> for each atlas map <i>ATLAS</i> and in the <i>vbm_*.XML</i> file. 
@@ -34,14 +34,14 @@
         You can use external software like Excel for analysis or the <a class="function" href="matlab:vbm_io_csv">vbm_io_csv</a> function to read the data as table, or the <a class="function" href="matlab:vbm_io_xml">vbm_io_xml</a>.
       </p>
       <p>
-        We prepared different atlas maps for the VBM12 IXI555 space that are stored in the <i>templates_1.50mm</i> directory. 
+        We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <i>templates_1.50mm</i> directory. 
         For each atlas you can find a csv-file with the ROI IDs, short and full names. 
         The txt-file contain further informations, terms of use, and the name of the original publications and websites. 
         <!--
         Further atlas options can be found in the <i>cg_vbm_defauls-file</i>.
         -->
       </p>
-      <h4>List of atlas maps in VBM12</h4>
+      <h4>List of atlas maps in CAT12</h4>
       <ul>
         <li>
           <h5>Hammers</h5>
@@ -78,8 +78,8 @@
       
       <h4>Atlas creation with original data (Hammers, IBSR, Mori)</h4>
       <p>
-        If original T1 maps and subject label maps were available we used VBM12 to preprocess the data and map them to common space. 
-        The subject dependent labels were translated to the VBM12 name system.            
+        If original T1 maps and subject label maps were available we used CAT12 to preprocess the data and map them to common space. 
+        The subject dependent labels were translated to the CAT12 name system.            
       </p>
       <!--
       <h4>Atlas creation of general maps (AAL)</h4>
@@ -91,7 +91,7 @@
     </div>  
   
     
-    <div id="content"><a href="vbm12_methods.html">< Methods</a></div>  
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
     </div>

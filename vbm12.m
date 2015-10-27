@@ -51,7 +51,7 @@ if ~nargin
   uistack(ha,'bottom');
   I=imread(fullfile(spm('dir'),'toolbox','vbm12','html','contact.jpg'));
   hi = imagesc(I);
-  text(80,100,'VBM12 Toolbox','Color',[1 1 1],'Fontsize',22,'Fontweight','bold');
+  text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',22,'Fontweight','bold');
   set(ha,'handlevisibility','off','visible','off');
 end
 
