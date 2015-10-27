@@ -42,7 +42,7 @@ update:
 	-@echo '% Voxel Based Morphometry Toolbox' > INSTALL.txt
 	-@echo '% Version ' ${VERSION} ' (VBM12) ' ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
-	-@cat html/vbm12.txt | sed -e 's/RELNUMBER/r'${VERSION}'/g' -e 's/DATE/'${DATE}'/g' > html/vbm12.html
+	-@cat html/cat.txt | sed -e 's/RELNUMBER/r'${VERSION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
 
 zip: update
 	-@echo zip

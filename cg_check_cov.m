@@ -149,13 +149,13 @@ FS = spm('FontSizes');
 
 pos = struct(...
     'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
-    'cbar',  [0.240 0.925 0.300 0.020],... % colorbar for correlation matrix
+    'cbar',  [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
     'corr',  [-0.02 0.050 0.825 0.825],... % correlation matrix
     'close', [0.775 0.900 0.200 0.050],... % close button
     'show',  [0.775 0.850 0.200 0.050],... % button to show worst cases
     'boxp',  [0.775 0.795 0.200 0.050],... % button to display boxplot
-    'sort',  [0.775 0.765 0.200 0.050],... % button to enable ordered matrix
-    'text',  [0.775 0.625 0.200 0.150],... % textbox
+    'sort',  [0.775 0.750 0.200 0.050],... % button to enable ordered matrix
+    'text',  [0.775 0.550 0.200 0.200],... % textbox
     'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
     'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
 

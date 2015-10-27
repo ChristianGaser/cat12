@@ -6349,6 +6349,7 @@ Some cosmetic changes to vbm_surf_createCS.m.
 
 
 ------------------------------------------------------------------------
+r756 | dahnke | 2015-10-20 18:30:50 +0200 (Di, 20 Okt 2015) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6374,5 +6375,62 @@ M       vbm_vol_partvol.m
      low GM intensities were not corrected and therefore misclassified as CSF.
      Further tiny changes to stabilize the CSF/background field. 
 (5)  Improved segmentation of subcortical regions in vbm_vol_partvol.
+
 ------------------------------------------------------------------------
-r756 | dahnke | 2015-10-20 18:30:40
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_check_cov.m
+M       cg_vbm_extopts.m
+A       html/CAT.png
+A  +    html/cat.html
+A  +    html/cat.txt
+A  +    html/cat_FAQ.html
+A  +    html/cat_ackknowledgement.html
+A  +    html/cat_instruction.html
+A  +    html/cat_instruction_FF.html
+A  +    html/cat_instruction_FN.html
+A  +    html/cat_instruction_MS.html
+A  +    html/cat_instruction_PP.html
+A  +    html/cat_instruction_QA.html
+A  +    html/cat_instruction_ST.html
+A  +    html/cat_instruction_templates.html
+A  +    html/cat_introduction.html
+A  +    html/cat_methods.html
+A  +    html/cat_methods_QA.html
+A  +    html/cat_methods_RBM.html
+A  +    html/cat_methods_SBM.html
+A  +    html/cat_methods_VBM.html
+A  +    html/cat_starting.html
+A  +    html/cat_stuff.html
+D       html/vbm12.html
+D       html/vbm12.txt
+D       html/vbm12_FAQ.html
+D       html/vbm12_ackknowledgement.html
+D       html/vbm12_instruction.html
+D       html/vbm12_instruction_FF.html
+D       html/vbm12_instruction_FN.html
+D       html/vbm12_instruction_MS.html
+D       html/vbm12_instruction_PP.html
+D       html/vbm12_instruction_QA.html
+D       html/vbm12_instruction_ST.html
+D       html/vbm12_instruction_templates.html
+D       html/vbm12_introduction.html
+D       html/vbm12_methods.html
+D       html/vbm12_methods_QA.html
+D       html/vbm12_methods_RBM.html
+D       html/vbm12_methods_SBM.html
+D       html/vbm12_methods_VBM.html
+D       html/vbm12_starting.html
+D       html/vbm12_stuff.html
+ M      sliderPanel.m
+M       spm_vbm12.m
+M       vbm12.fig
+M       vbm12.m
+
+(1) Rename VBM to CAT in html-code and added new logo.
+(2) Slightly changed vbm12.figure according to new names.
+(3) Changed position of buttons and colorbar in cg_check_cov.m.
+------------------------------------------------------------------------
+r757 | gaser | 2015-10-27 08:20:38
