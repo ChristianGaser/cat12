@@ -8,8 +8,8 @@ rev = '$Rev$';
 
 SPMid = spm('FnBanner',mfilename,rev);
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','VBM12');
-url = fullfile(spm('Dir'),'toolbox','vbm12','html','vbm12.html');
-spm_help('!Disp',url,'',Fgraph,'Voxel-based morphometry toolbox for SPM12');
+url = fullfile(spm('Dir'),'toolbox','vbm12','html','cat.html');
+spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
 if cg_vbm_get_defaults('extopts.gui')
   vbm12

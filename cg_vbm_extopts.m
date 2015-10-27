@@ -299,7 +299,7 @@ APP.tag    = 'print';
 APP.name   = 'Affine Preprocessing (APP)';
 APP.labels = {'none (only SPM)','APP with initial registraton','APP without initial registraton'};
 APP.values = {0 1 2};
-APP.def    = @(val)cg_vbm_get_defaults('extopts.print', val{:});
+APP.def    = @(val)cg_vbm_get_defaults('extopts.APP', val{:});
 APP.help   = {
 'Affine alignment and SPM preprocessing can fail in untypical subjects (other species/neonates) and the correction of inhomogeneities and extraction of the brain can reduce problems (APP = Affine PreProcessing). As far as also the first affine registration can fail the option "without initial registation" is available that requires excact AD-PC alignment by the user (i.e. by SPM Display). Non human species irgnore this option by using APP=2.  '
 ''

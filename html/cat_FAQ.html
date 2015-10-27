@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>VBM12 - Voxel-based Morphometry for SPM12</title>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="vbm12.html">VBM12</a> > <a href="vbm12_FAQ.html">FAQ</a> 
+        <a href="cat.html">CAT12</a> > <a href="cat_FAQ.html">FAQ</a> 
       </div>
     </div>
   
@@ -32,17 +32,17 @@
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
             Low frequency corrections for inhomogeneity e.g. the N3 algorithm are unproblematic, but not required for most datasets.  
-            Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocessing might be helpful if VBM12 shows any problems.  
+            Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocessing might be helpful if CAT12 shows any problems.  
           </p>
           <p>
             Try to avoid high frequency corrections or resampling of the data, because this will reduce the ability of the NLM filters. 
           </p>
           <p>
-            For images with slice-artifacts use the <a class="function" href="matlab:vbm_vol_correct_slice_scaling;">VBM slice corrections</a> (see image).
+            For images with slice-artifacts use the <a class="function" href="matlab:vbm_vol_correct_slice_scaling;">CAT slice corrections</a> (see image).
             You can specify the filter direction and the strength of the filtering. 
             Try to correct only the affected direction. 
             Do not use this correction, if you does not have such kind of artifacts, because it may introduce errors in this case!
-            <img src="vbm_vol_correct_slice_scaling_768.png" class="center" alt="VBM slice correction for 2 datasets"/>
+            <img src="vbm_vol_correct_slice_scaling_768.png" class="center" alt="CAT slice correction for 2 datasets"/>
           </p>
         </li>
         <li>
@@ -109,9 +109,9 @@
           <p>
             Outliers of image quality are often caused by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
             Best praxis is to remove strong outliers (e.g. > 2 standard deviations), if the problems depend on the image quality and not other subject properties.  
-            If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>vbm12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
+            If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
             Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.vbm.tools.showslice');">Check data homogeneity</a> to proof that the segmentation of these subjects were correct. <br />
-            Have a look to the <a href="vbm12_methods_QA.html">quality assurance methods</a> for further information. 
+            Have a look to the <a href="cat_methods_QA.html">quality assurance methods</a> for further information. 
           </p>
         </li>
         <li>
@@ -120,7 +120,7 @@
             Yes, but you have to check for preprocessing problem. Low rating depend on low resolution and/or higher noise/artifacts and is typical for very short sequences that are required e.g. for children.  
             Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance.  
             Overall segmentation and reconstruction quality will be lower than for high quality data (Kappa < 0.9) and you have to check if the cortex was segmented correctly.<br />
-            Use the <i>Check data homogeneity</i> and/or have a look to the segmentations in subject space by checking the <i>vbm12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.
+            Use the <i>Check data homogeneity</i> and/or have a look to the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.
           </p>
         </li>
         <li>
@@ -131,7 +131,7 @@
     
     </div>
   
-    <div id="content"><a href="vbm12.html">< VBM12</a></div>  
+    <div id="content"><a href="cat.html">< CAT12</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
     </div>
