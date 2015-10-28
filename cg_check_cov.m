@@ -22,13 +22,17 @@ if nargin == 1
 
   % read filenames for each sample and indicate sample parameter
   if isfield(vargin,'data_vbm')
-    for i=1:numel(vargin.data_vbm)
+    issurf = 0;
+    n_samples = numel(vargin.data_vbm);
+    for i=1:n_samples
       P = char([P; vargin.data_vbm{i}]);
       sample = [sample, i*ones(1,size(vargin.data_vbm{i},1))];
     end
     sep = vargin.gap;
   else
-    for i=1:numel(vargin.data_surf)
+    issurf = 1;
+    n_samples = numel(vargin.data_surf);
+    for i=1:n_samples
       P = char([P; vargin.data_surf{i}]);
       sample = [sample, i*ones(1,size(vargin.data_surf{i},1))];
     end
@@ -87,12 +91,6 @@ else
 end
 
 [pth,nam,ext] = spm_fileparts(deblank(P(1,:)));
-
-if strcmp(ext,'.gii')
-  issurf = 1;
-else
-  issurf= 0;
-end
 
 if issurf
   % load surface texture data
@@ -247,13 +245,27 @@ for i=1:n_subjects
   mean_cov(i) = mean(cov0);
 end
 
-[tmp fname] = spm_str_manip(char(P),'C');
-fprintf('\nCompressed filenames: %s  \n',tmp);
+fprintf('\n');
+fname_m = [];
+fname_tmp = cell(n_samples,1);
+fname_s   = cell(n_samples,1);
+fname_e   = cell(n_samples,1);
+for i=1:n_samples
+  [tmp fname_tmp{i}] = spm_str_manip(char(P(find(sample == i),:)),'C');
+  fname_m = [fname_m; fname_tmp{i}.m];
+  fname_s{i} = fname_tmp{i}.s;
+  fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
+end
+
+fname = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
 
 % print suspecious files with cov>0.9
 YpY_tmp = YpY - tril(YpY);
 [indx, indy] = find(YpY_tmp>0.9);
-if ~isempty(indx) & (sqrt(length(indx)) < 0.5*n_subjects)
+
+% if more than 25% of the data this points to longitudinal data of one subject
+% and no warning will appear
+if ~isempty(indx) & (sqrt(length(indx)) < 0.25*n_subjects)
   fprintf('\nUnusual large correlation (check that subjects are not identical):\n');
   for i=1:length(indx)
     % exclude diagonal
@@ -518,7 +530,14 @@ if max(data_boxp) > min(data_boxp)
 end
 
 % add colored labels and title
-title(sprintf('Boxplot: %s  \nCommon filename: %s*%s',name,spm_file(fname.s,'short25'),fname.e),'FontSize',FS(10),'FontWeight','Bold');
+if n_samples > 1
+  [tmp  tmp2] = spm_str_manip(char(fname.s),'C');
+  title_str = sprintf('Boxplot: %s  \n%s ',name, strrep(tmp,tmp2.s,''));
+  fprintf('\nCommon filename: %s\n',tmp);
+else
+  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name,spm_file(char(fname.s),'short25'));
+end
+title(title_str,'FontSize',FS(8),'FontWeight','Bold');
 xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),'FontWeight','Bold');
 
 xpos = -0.35 - n_samples*0.1;
@@ -610,12 +629,12 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global fname H YpY YpYsorted data_array pos issurf mn_data mx_data ind_sorted sorted
+global fname sample H YpY YpYsorted data_array pos issurf mn_data mx_data ind_sorted sorted
 
 pos_mouse = get(event_obj, 'Position');
 
 % check for valid mouse position
-if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(fname.m) || pos_mouse(2)>length(fname.m)
+if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(sample) || pos_mouse(2)>length(sample)
   txt = {''};
   return
 end
