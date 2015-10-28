@@ -1,12 +1,12 @@
 function [Ygmt,Ypp] = vbm_vol_pbt(Ymf,opt)
 % ______________________________________________________________________
 %
-% Cortical thickness and surface possition estimation. 
+% Cortical thickness and surface position estimation. 
 % 
 %   [Ygmt,Ypp]=vbm_vol_pbt(Ymf,opt)
 %  
 %   Ygmt:      GM thickness map 
-%   Ypp:       percentage possition map
+%   Ypp:       percentage position map
 %   Ymf:       tissue segment image or better the noise, bias, and 
 %              intensity corrected 
 %   opt.resV   voxel resolution (only isotropic)
@@ -21,7 +21,7 @@ function [Ygmt,Ypp] = vbm_vol_pbt(Ymf,opt)
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
 %   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
-%   Department of neurology
+%   Department of Neurology
 %   University Jena
 %
 %   Version: 1.10 © 2014/02
@@ -85,7 +85,7 @@ function [Ygmt,Ypp] = vbm_vol_pbt(Ymf,opt)
     YM=Ymf> 2.0 & Ymf<2.5;  Ypp(YM) = ( (Ygmt1(YM) - Ywmd(YM)).*(Yi(YM)==1) + Ycsfd(YM).*(Yi(YM)==2) ) ./ (Ygmt(YM) + eps); 
     Ypp(Ymf>=2.5 | (Ymf>2 & Ygmt<=1))=1;
   else
-    % Estimation of thickness map Ygmt and percentual possion map Ypp.
+    % Estimation of thickness map Ygmt and percentual position map Ypp.
     stime = vbm_io_cmd('    PBT2 thickness: ','g5','',opt.verb,stime);
     [Ygmt,Ypp] = vbm_vol_pbtp(Ymf,Ywmd,Ycsfd);
   end

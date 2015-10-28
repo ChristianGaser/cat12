@@ -6377,6 +6377,7 @@ M       vbm_vol_partvol.m
 (5)  Improved segmentation of subcortical regions in vbm_vol_partvol.
 
 ------------------------------------------------------------------------
+r757 | gaser | 2015-10-27 08:20:49 +0100 (Di, 27 Okt 2015) | 55 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6432,5 +6433,17 @@ M       vbm12.m
 (1) Rename VBM to CAT in html-code and added new logo.
 (2) Slightly changed vbm12.figure according to new names.
 (3) Changed position of buttons and colorbar in cg_check_cov.m.
+
 ------------------------------------------------------------------------
-r757 | gaser | 2015-10-27 08:20:38
+
+Changed paths:
+M       CHANGES.txt
+M       cg_check_cov.m
+M       vbm_vol_pbt.m
+
+(1) Removed some typos in vbm_vol_pbt.m.
+(2) Handling and shortening of filenames in cg_check_cov.m is now done
+    sample-wise.
+    
+------------------------------------------------------------------------
+r758 | gaser | 2015-10-28 15:41:12
