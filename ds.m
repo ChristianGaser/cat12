@@ -17,13 +17,14 @@ function varargout=ds(type,viewtype,DAR,varargin)
   for va=1:numel(varargin), try varargin{va}=single(varargin{va}); end; end 
   
   % rotate data...
-  switch viewtype
-    case {1,'m','medial'}, for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); DAR=shiftdim(DAR,1); end 
-    case {2,'a','axial'},  for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); DAR=shiftdim(DAR,2); end 
-    case {0,'c','coronal'}
-  end
   if isempty(DAR), DAR=1; end
   if numel(DAR)<2, DAR=repmat(DAR,1,3); end
+  switch viewtype
+    case {1,'m','medial'}, for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); end; DAR=DAR([2 3 1]);
+    case {2,'a','axial'},  for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); end; DAR=DAR([3 1 2]); 
+    case {0,'c','coronal'}
+  end
+ 
   
   % figure properties
   fh=gcf;%  if nf, fh=figure; else fh=gcf; end
@@ -33,8 +34,8 @@ function varargout=ds(type,viewtype,DAR,varargin)
   %varargin{1}(varargin{1}>3)=3;
   %if nargin>2, varargin{2}=reduce_color(varargin{2}); end
 
-  
-  [X,Y] = meshgrid(0.125/4:0.125/4:64,1:3);
+  LAB   = size(labelmap16,1); 
+  [X,Y] = meshgrid(0.125/4:0.125/4:LAB,1:3);
   
   for s=slice(end:-1:1)
     switch type
@@ -49,18 +50,18 @@ function varargout=ds(type,viewtype,DAR,varargin)
         set(fh,'WindowStyle','normal','Visible','on');
         pos=get(fh,'Position');
         set(fh,'Position',[pos(1:2) size(varargin{1},2)*4 size(varargin{1},1)*4]);
-         image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+         image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
 
       case {'l1','label1'}
         %set(fh,'WindowStyle','docked','Visible','on');
-        image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
 
       case {'vbm_pre_iscale'}
         clf; set(fh,'WindowStyle','docked','Visible','on','color',[0 0 0]);
-        subplot('Position',[0.0 0.5 0.5 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
-        subplot('Position',[0.5 0.5 0.5 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{3}(:,:,s))*3 + 4*varargin{4}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); 
+        subplot('Position',[0.0 0.5 0.5 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        subplot('Position',[0.5 0.5 0.5 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{3}(:,:,s))*3 + 4*varargin{4}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); 
         subplot('Position',[0.0 0.0 0.5 0.5]); imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 4/3]); axis equal off; daspect(DAR); 
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 4/3]); axis equal off; daspect(DAR); 
         cm=myjet; ss=(1/3)/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1),1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm); 
@@ -86,23 +87,23 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2','label2'}
-        [X,Y] = meshgrid(0.125:0.125:64,1:3);
+        [X,Y] = meshgrid(0.125:0.125:LAB,1:3);
         %set(fh,'WindowStyle','docked','Visible','on');
-        subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
-        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); caxis([0 2]);                                                       axis equal off; daspect(DAR);
-        subplot('Position',[0 0 0.5 0.5]);     image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)' ));               axis equal off; daspect(DAR);
+        subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); caxis([0 2]);                                                                       axis equal off; daspect(DAR);
+        subplot('Position',[0 0 0.5 0.5]);     image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)' ));               axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); caxis([0 2]);                                                       axis equal off;  daspect(DAR);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2x','label2x'}
-        [X,Y] = meshgrid(0.125:0.125:64,1:3);
+        [X,Y] = meshgrid(0.125:0.125:LAB,1:3);
         set(fh,'WindowStyle','docked','Visible','on');
-        subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{4}(:,:,s)); caxis([0 2]); axis equal off; daspect(DAR);
         subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{3}(:,:,s)); caxis([0 2]); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{5}(:,:,s)); caxis([0 2]); axis equal off; daspect(DAR);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l3','label3'}
-        [X,Y] = meshgrid(0.125:0.125:64,1:3);
+        %[X,Y] = meshgrid(0.125:0.125:64,1:3);
         set(fh,'WindowStyle','docked','Visible','on');
         % top row
         subplot('Position',[0/3 2/3 1/3 1/3]); imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]);  axis equal off; daspect(DAR);
@@ -110,14 +111,14 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[2/3 2/3 1/3 1/3]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]);  axis equal off; daspect(DAR);
 
         % middle row
-        subplot('Position',[0/3 1/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(varargin{1}(:,:,s) + 4*varargin{4}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
-        subplot('Position',[1/3 1/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(varargin{2}(:,:,s) + 4*varargin{5}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
-        subplot('Position',[2/3 1/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(varargin{3}(:,:,s) + 4*varargin{6}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); 
+        subplot('Position',[0/3 1/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(varargin{1}(:,:,s) + 4*varargin{4}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        subplot('Position',[1/3 1/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(varargin{2}(:,:,s) + 4*varargin{5}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
+        subplot('Position',[2/3 1/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(varargin{3}(:,:,s) + 4*varargin{6}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); 
         
         % bottom row
-        subplot('Position',[0/3 0/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{4}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)' )); axis equal off; daspect(DAR); 
-        subplot('Position',[1/3 0/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{5}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)' )); axis equal off; daspect(DAR); 
-        subplot('Position',[2/3 0/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{6}(:,:,s)) ) , interp2(1:64,1:3,labelmap16',X,Y)' )); axis equal off; daspect(DAR); 
+        subplot('Position',[0/3 0/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{4}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)' )); axis equal off; daspect(DAR); 
+        subplot('Position',[1/3 0/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{5}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)' )); axis equal off; daspect(DAR); 
+        subplot('Position',[2/3 0/3 1/3 1/3]); image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{6}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)' )); axis equal off; daspect(DAR); 
       case {'d3','default3'}
         fh = figure(912);
         set(fh,'WindowStyle','docked','Visible','on');
@@ -310,7 +311,7 @@ function subplotvol(position,vol,lab,sideview,DAR)
   end
 %  [X,Y] = meshgrid(0.125:0.125:64,1:3);
   if ~isempty(lab), 
-    image(ind2rgb( uint16(7+8*(vol + 4*lab) ) , interp2(1:64,1:3,labelmap16',X,Y)'));
+    image(ind2rgb( uint16(7+8*(vol + 4*lab) ) , interp2(1:LAB,1:3,labelmap16',X,Y)'));
   else
     imagesc(vol); caxis([0,2]);
   end
@@ -376,17 +377,17 @@ LM = [... % R G B
     0.8055    0.2600    0.7843;
     0.8620    0.5200    0.8196;
          0         0         0;%4 CB RIGHT
-    0.4784    0.0627    0.8941;
-    0.6667    0.3824    0.9471;
-    0.8549    0.7020    1.0000;
+    0.80    0.0627    0.8941;
+    0.90    0.3824    0.9471;
+    1.00    0.7020    1.0000;
          0         0         0;%5 BG LEGT
-    1.0000    0.6941    0.3922;
-    1.0000    0.8314    0.6569;
-    1.0000    0.9686    0.9216;
-         0         0         0;%6 BG RIGHT
     0.8706    0.4902         0;
     0.9353    0.7196    0.4333;
     1.0000    0.9490    0.8667;
+         0         0         0;%6 BG RIGHT
+    1.0000    0.5000    0.3000;
+    1.0000    0.7500    0.6000;
+    1.0000    0.9686    0.9216;
     0.2000         0         0;%7 BV LEFT (red)
     0.6000         0         0;
     0.8000         0         0;
@@ -396,8 +397,8 @@ LM = [... % R G B
     0.8000         0         0;
     1.0000         0         0;
          0         0         0;%9 Hypocampus LEFT
-    0.7490    0.7490         0;
-    0.8745    0.8745         0;
+    0.6000    0.6000         0;
+    0.8000    0.8000         0;
     1.0000    1.0000         0;
          0         0         0;%10 Hypocampus RIGHT
     0.3150    0.3229         0;
@@ -419,10 +420,46 @@ LM = [... % R G B
        0.2    0.3333       0.2;
        0.4    0.6667       0.4;
        0.6    1.0000       0.6;
-         0         0         0;%15
+         0       0.1    0.2222;%15 Ventricle LEFT
+         0       0.2    0.4444;
+         0       0.3    0.6666;
+         0       0.4    0.8888;
+       0.0         0    0.1111;%12 Ventricle RIGHT
+      0.15      0.15    0.4444;
+      0.30      0.30    0.6666;
+      0.45      0.45    0.9999;
+         0       0.1    0.2222;%15 Ventricle LEFT
+         0       0.2    0.4444;
+         0       0.3    0.6666;
+         0       0.4    0.8888;
+       0.1         0    0.2222;%18 no Ventricle RIGHT
+       0.2         0    0.4444;
+       0.3         0    0.6666;
+       0.4         0    0.8888;
+         0         0         0;%19 Hypocampus LEFT
+    0.7490    0.7490         0;
+    0.8745    0.8745         0;
+    1.0000    1.0000         0;
+         0         0         0;%20 Hypocampus RIGHT
+    0.3150    0.3229         0;
+    0.6301    0.6458         0;
+    0.9451    0.9686         0;       
+         0         0         0;%21
     0.2850    0.2340    0.3333;
     0.5699    0.4680    0.6667;
-    0.8549    0.7020    1.0000;];
+    0.8549    0.7020    1.0000;       
+         0         0         0;%22
+    0.2850    0.2340    0.3333;
+    0.5699    0.4680    0.6667;
+    0.8549    0.7020    1.0000;
+         0         0         0;%1 CT LEFT (leicht blau)
+       0.3       0.7       0.5;
+       0.4       0.8       0.8;
+       0.5       0.9       0.9;
+         0         0         0;%2 CT RIGHT (leicht rot)
+       0.6       0.4       0.5;
+       0.7       0.5       0.6;
+       0.8       0.6       0.7;];
   LM(LM<0)=0; LM(LM>1)=1;
 end
 function LM=myjet

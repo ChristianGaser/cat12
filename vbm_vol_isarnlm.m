@@ -41,6 +41,16 @@ function varargout = vbm_vol_isarnlm(varargin) %#ok<STOUT>
   elseif nargin == 1 && isstruct(varargin{1})
       job = varargin{1};
       if nargout>0, error('No output availailable. '); end
+  elseif (nargin == 2 || nargin == 3) && isstruct(varargin{2}) && nargout==1
+    if isstruct(varargin{2})
+      V = varargin{2}; 
+      vx_vol  = sqrt(sum(V.mat(1:3,1:3).^2));
+    else
+      vx_vol = varargin{2};
+    end
+    if nargin == 3, verb=varargin{3}; else verb=1; end
+    varargout{1} = vbm_vol_sanlmX(varargin{1},'',vx_vol,struct('verb',verb));
+    return
   else
     if nargin>3 && isfield(varargin{4},'verb'), verb = varargin{4}.verb; else verb = 1; end 
     if verb, fprintf('amrnlm:\n'); stime=clock; end
@@ -146,7 +156,8 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
 
   def.verb   = 1;     % display progess
   def.red    = 1;     % maximum number of resolution reduction
-  def.iter   = 4;     % maximum number of iterations
+  def.iter   = 3;     % maximum number of iterations
+  def.iter1  = 2;     % maximum number of iterations at full resolution
   def.rician = 0;     % noise type 
   def.cstr   = 1;     % correction strength 
   def.SANFM  = 1;     % spatial adaptive noise filter modification 
@@ -165,7 +176,7 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
  
   if opt.fast 
     Y0=Y; 
-    [Y,YM,BB] = vbm_vol_resize({Y,YM},'reduceBrain',vx_vol,4,Y>Tth>0.2);
+    [Y,YM,BB] = vbm_vol_resize({Y,YM},'reduceBrain',vx_vol,4,Y>Tth*0.2);
   end
   
   Yi = Y .* YM;
@@ -173,14 +184,17 @@ function Ys = vbm_vol_sanlmX(Y,YM,vx_vol,opt)
   % ds('d2','',vx_vol,Y/Tth*0.95,Yi/Tth*0.95,Ys/Tth*0.95,abs(Yi-Ys)./max(Tth*0.2,Ys),90)
   
   iter = 0; noise = inf; Ys = Yi; noiser=1;
-  while iter < opt.iter && noise>opt.Nth && (opt.level<3 || noiser>1/4) && (iter==0 || mean(vx_vol)<1.5)
+  while ((iter < opt.iter && opt.level>1) || (iter < opt.iter1 && opt.level==1)) && ...
+      noise>opt.Nth && (opt.level<3 || noiser>1/4) && (iter==0 || mean(vx_vol)<1.5) 
     
     
     %% SANLM filtering
     if opt.verb, fprintf('%2d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
-    sanlmMex(Ys,3,1,opt.rician);
+    sanlmMex(Ys,3,1,opt.rician); 
+    %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
+    fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
     noiser = 1 - (vbm_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
     if noiser<0, noiser = noiser+1; end
     noise  = vbm_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
