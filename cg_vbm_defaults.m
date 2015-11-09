@@ -9,6 +9,7 @@ function cg_vbm_defaults
 %_______________________________________________________________________
 % $Id$
 
+if exist('vbm','var'), clear vbm; end 
 global vbm
 
 % Important fields for the processing of animal data
@@ -43,9 +44,8 @@ vbm.opts.samp      = 3;                       % Sampling distance      - smaller
 % options:
 %   native    0/1     (none/yes)
 %   warped    0/1     (none/yes)
-%   mod       0/1/2   (none/affine+nonlinear/nonlinear only)
-%   dartel    0/1/2   (none/rigid/affine)
-%   affine    0/1     (none/affine)
+%   mod       0/1/2/3 (none/affine+nonlinear/nonlinear only/both)
+%   dartel    0/1/2/3 (none/rigid/affine/both)
 
 % save surface and thickness
 vbm.output.surface     = 0;     % surface and thickness creation
@@ -56,7 +56,7 @@ vbm.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject spa
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
 vbm.output.bias.native = 0;
 vbm.output.bias.warped = 1;
-vbm.output.bias.affine = 0;
+vbm.output.bias.dartel = 0;
 
 % GM tissue maps
 vbm.output.GM.native  = 0;
@@ -77,9 +77,9 @@ vbm.output.CSF.mod    = 0;
 vbm.output.CSF.dartel = 0;
 
 % WMH tissue maps (only for opt.extopts.WMHC==3) - in development
-% no modulation available, due to the high spatial variation of WMHs
 vbm.output.WMH.native  = 0;
 vbm.output.WMH.warped  = 0;
+vbm.output.WMH.mod     = 0;
 vbm.output.WMH.dartel  = 0;
 
 % label 
@@ -95,36 +95,9 @@ vbm.output.jacobian.warped = 0;
 % order is [forward inverse]
 vbm.output.warps        = [0 0];
 
-% Experimental maps (not for general use)
-%=======================================================================
-
-% partitioning atlas maps (vbm12 atlas)
-vbm.output.atlas.native = 0; 
-vbm.output.atlas.warped = 0; 
-vbm.output.atlas.dartel = 0; 
-
-% preprocessing changes map
-% this is the map of the MPC QA measure   
-vbm.output.pc.native = 0;
-vbm.output.pc.warped = 0;
-vbm.output.pc.dartel = 0;
-
-% tissue expectation map
-vbm.output.te.native = 0;
-vbm.output.te.warped = 0;
-vbm.output.te.dartel = 0;
 
 % Expert options
 %=======================================================================
-
-% set this option in order to see all options in GUI
-vbm.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental functions (unsafe)!
-
-% Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
-vbm.extopts.species      = 'human';  
-
-% Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
-vbm.extopts.APP          = 0;      % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
 
 % skull-stripping options
 vbm.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
@@ -143,6 +116,8 @@ vbm.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessi
 
 % resolution options:
 vbm.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
+vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
+
 %{
 native:
     Preprocessing with native resolution.
@@ -182,11 +157,14 @@ fix:
 
 %}
 
-vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
 
 % registration and normalization options 
-vbm.extopts.vox          = 1.5;                                % voxel size for normalized data (not yet working):  inf - use Tempate values
-vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]];       % bounding box for normalized data (not yet working): inf - use Tempate values
+% Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
+vbm.extopts.species      = 'human';  
+% Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
+vbm.extopts.APP          = 0;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
+vbm.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
+vbm.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
 vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Tempalte_1)
 %vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0)
 vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','vbm12.nii')};                     % VBM atlas with major regions for VBM, SBM & ROIs
@@ -204,8 +182,9 @@ vbm.extopts.print        = 1;     % Display and print results
 vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
 vbm.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debugging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
+vbm.extopts.gui          = 1;     % use GUI 
+vbm.extopts.expertgui    = 2;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
 
-vbm.extopts.gui           = 1;     % use GUI 
 
 % expert options - ROIs
 %=======================================================================
@@ -223,6 +202,44 @@ vbm.extopts.atlas       = { ...
  %fullfile(spm('dir'),'toolbox','vbm12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ... % only one subject, but with WM regions
   }; 
 
+
+
+
+
+
+
+
+%=======================================================================
+% PRIVATE PARAMETER (NOT FOR GENERAL USE)
+%=======================================================================
+
+
+% further maps
+%=======================================================================
+% Tissue classes 4-6 to create own TPMs
+vbm.output.TPMC.native = 0; 
+vbm.output.TPMC.warped = 0;
+vbm.output.TPMC.mod    = 0;
+vbm.output.TPMC.dartel = 0;
+
+% partitioning atlas maps (vbm12 atlas)
+vbm.output.atlas.native = 0; 
+vbm.output.atlas.warped = 0; 
+vbm.output.atlas.dartel = 0; 
+
+% preprocessing changes map
+% this is the map that include local changes by preprocessing   
+vbm.output.pc.native = 0;
+vbm.output.pc.warped = 0;
+vbm.output.pc.mod    = 0;
+vbm.output.pc.dartel = 0;
+
+% tissue expectation map
+% this is a map that describes that difference to the TPM
+vbm.output.te.native = 0;
+vbm.output.te.warped = 0;
+vbm.output.te.mod    = 0; % meaningfull?
+vbm.output.te.dartel = 0;
 
 % IDs of the ROIs in the vbm12 atlas map (vbm12.nii). Do not change this!
 vbm.extopts.LAB.NB =  0; % no brain 

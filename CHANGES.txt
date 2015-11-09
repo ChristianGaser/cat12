@@ -6435,6 +6435,7 @@ M       vbm12.m
 (3) Changed position of buttons and colorbar in cg_check_cov.m.
 
 ------------------------------------------------------------------------
+r758 | gaser | 2015-10-28 15:41:21 +0100 (Mi, 28 Okt 2015) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6445,5 +6446,35 @@ M       vbm_vol_pbt.m
 (2) Handling and shortening of filenames in cg_check_cov.m is now done
     sample-wise.
     
+
 ------------------------------------------------------------------------
-r758 | gaser | 2015-10-28 15:41:12
+
+Changed paths:
+M       CHANGES.txt
+M       cg_vbm_defaults.m
+M       cg_vbm_extopts.m
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_run_newcatch.m
+M       cg_vbm_run_oldcatch.m
+M       cg_vbm_write.m
+M       ds.m
+M       tbx_cfg_vbm.m
+M       vbm_vol_isarnlm.m
+M       vbm_vol_partvol.m
+
+(1)  Dartel resolution limit as minimum voxel size only in best resolution case.
+(2)  Set millimeter-based boxing rather in voxel-based for brain boundary box. 
+(3)  Changes in the cg_vbm_defaults output definition. Replaced affine entry by
+     dartel entry. 
+(4)  Added ISARNLM (Iterative Spatial Adaptive multi-Resolution Non Local Means)
+     filter for high resolution data (<0.7 mm) to deal better with noise in 
+     interpolation, parallel-imaging and band-width artifacts.
+(5)  Updated APP processing and options. Corrected problems of data with strong 
+     bias (7T) or/and large ventricle (IXI175).  
+(6)  Added cls 4-6 output for template generation. 
+(7)  Corrected using of SPM class values (minimum fraction has to be 10%).
+(8)  Corrected command line output.
+(9)  Unready optimizations of the WMH correction.
+------------------------------------------------------------------------
+r759 | dahnke | 2015-11-09 10:38:41

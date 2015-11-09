@@ -62,6 +62,12 @@ else
   vbm.restype = cg_vbm_get_defaults('extopts.restype');
   vbm.resval  = cg_vbm_get_defaults('extopts.resval');
 end
+if isfield(job.extopts,'sanlm')
+  vbm.sanlm = job.extopts.sanlm;
+end
+if ~isfield(job.extopts,'verb')
+  job.extopts.verb =  cg_vbm_get_defaults('extopts.verb');
+end
            
 % set vbm.bb and vb.vox by Dartel template properties
 Vd       = spm_vol([vbm.darteltpm ',1']);
@@ -107,7 +113,7 @@ for i=4:6;
     tissue(i).native = [0 0 0];
 end
 
-job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.affine];
+job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.dartel];
 if isfield(job.output,'label')
   job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
 else

@@ -1,5 +1,6 @@
 function cg_vbm_run_job(job,estwrite,tpm,subj)
-    
+%#ok<*WNOFF,*WNON>
+
     stime = clock;
 
     %% print current VBM release number and subject file
@@ -63,7 +64,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         switch job.vbm.sanlm
           case {1,2,3,4}, stime = vbm_io_cmd('NLM-filter with multi-threading');
-          case {5},   stime = vbm_io_cmd('Temporary NLM-filter with multi-threading');
+          case {5},       stime = vbm_io_cmd('Temporary NLM-filter with multi-threading');
         end
 
 
@@ -72,7 +73,15 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             Y = single(spm_read_vols(V));
             Y(isnan(Y)) = 0;
             switch job.vbm.sanlm
-              case {1,2,3,4,5},   sanlmMex(Y,3,1,0);          % use multi-threaded version
+              case {1,2,3,4,5},  
+                if any(round(vx_vol*100)/100<=0.70)
+                  if job.extopts.verb>1, fprintf('\n'); end
+                  Y = vbm_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
+                  if job.extopts.verb>1, vbm_io_cmd(' '); end
+                else
+                  sanlmMex(Y,3,1,0);          % use multi-threaded version
+                  fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
+                end
             end
             Vn = vbm_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0]);
             job.channel(n).vols{subj} = Vn.fname;
@@ -81,12 +90,15 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
 
         fprintf('%4.0fs\n',etime(clock,stime));     
     else
-       if ~strcmp(job.vbm.species,'human')
+       if job.extopts.APP>0 || ~strcmp(job.vbm.species,'human')
          % this is necessary because of the real masking of the T1 data 
          % for spm_preproc8 that include rewriting the pricture!
          for n=1:numel(job.channel) 
-          [pp,ff] = spm_fileparts(job.channel(n).vols{subj}); 
-          job.channel(n).vols{subj} = fullfile(pp,['n' ff '.nii']);
+           [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
+           ofname  = fullfile(pp,[ff ee]); 
+           nfname  = fullfile(pp,['n' ff '.nii']); 
+           copyfile(ofname,nfname); 
+           job.channel(n).vols{subj} = nfname;
          end
        end
     end
@@ -115,10 +127,11 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           vx_voli  = max(vx_voli,job.vbm.resval(1) .* (vx_vol < (job.vbm.resval(1)-job.vbm.resval(2))));
         case 'best'
           vx_voli  = min(vx_vol ,job.vbm.resval(1) ./ ((vx_vol > (job.vbm.resval(1)+job.vbm.resval(2)))+eps));
+          vx_voli = min(vx_vold,vx_voli); % guarantee Dartel resolution
         otherwise 
           error('cg_vbm_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
       end
-      vx_voli = min(vx_vold,vx_voli); % guarantee Dartel resolution
+      
       
       
       % interpolation 
@@ -146,6 +159,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           job.channel(n).vols{subj} = Vi.fname;
         end
         vbm_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
+        vx_vol = vx_voli;
 
         fprintf('%4.0fs\n',etime(clock,stime));    
       end
@@ -184,36 +198,44 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         %% Initial affine registration.
         
         % APP option with subparameter
-        APP = cg_vbm_get_defaults('extopts.APP'); 
-        if ~strcmp(job.vbm.species,'human'), APP=2; end
-        switch APP
+        % Skull-stripping is helpfull for correct affine registration of neonates and other species. 
+        % Bias correction is important for the affine registration.
+        % However, the first registation can fail,
+        if ~strcmp(job.vbm.species,'human'), job.extopts.APP=2; end
+        switch job.extopts.APP
           case 0 % no APP
             doskullstripping = 0;
             dobiascorrection = 0;
+            doregistration   = 1;
+          case 1 % APP light with simple bias correction
+            doskullstripping = 0;
+            dobiascorrection = 1;
+            doregistration   = 1; % not available - allways active
+          case 2 % APP with full bias correction, but without brain mask
+            doskullstripping = 0;
+            dobiascorrection = 1;
+            doregistration   = 1;
+          case 3 % full APP without initial affine registration (AC-PC has to be correct) for other species
+            doskullstripping = 1;
+            dobiascorrection = 1;
             doregistration   = 0;
-          case 1 % APP with affine registration
+          case 4 % full APP (full bias correction and brain masking)
             doskullstripping = 1;
             dobiascorrection = 1;
             doregistration   = 1;
-          case 2 % APP without affine registration
-            doskullstripping = 1;
-            dobiascorrection = 1;
-            doregistration   = 0;
         end
-        if APP>0
-          stime = vbm_io_cmd(sprintf('Affine registration (APP=%d)',APP)); 
-        else
-          stime = vbm_io_cmd('Affine registration'); 
-        end
-        
+       
         Affine  = eye(4);
         [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
         Pbt = fullfile(pp,['brainmask_' ff '.nii']);
         Pb  = char(cg_vbm_get_defaults('extopts.brainmask'));
         Pt1 = char(cg_vbm_get_defaults('extopts.T1'));
         if ~isempty(job.vbm.affreg)
-          %%
-          warning off %#ok<WNOFF>
+         
+
+          
+          
+          %% first affine registration (with APP)
           try 
             VG = spm_vol(Pt1);
           catch
@@ -226,69 +248,52 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
           VG.pinfo(1:2,:) = VG.pinfo(1:2,:)/spm_global(VG);
 
-          % smooth data
-          if APP>0
-            resa = obj.samp*3; % definine smoothing by sample size
+          
+          % APP step 1 rough bias correction 
+          %   ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
+          if job.extopts.APP>0  
+            stime = vbm_io_cmd('APP1: rough bias correction'); 
+            [Ym,Yt,Ybg,WMth] = APP_initial_bias_correction(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);;
             
-            %% rough bias correction (~4 seconds for 1 mm3): 
-            %  All thissues (low gradient) should have a similar intensity.
-            %    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)
-            Ysrc = single(obj.image.private.dat(:,:,:)); 
-            Yg   = vbm_vol_grad(Ysrc,vx_vol)./max(eps,Ysrc);
-            WMth = single(vbm_stat_nanmedian(Ysrc(Yg(:)<0.2 & Ysrc(:)>vbm_stat_nanmean( ...
-              Ysrc(Yg(:)<0.2 & Ysrc(:)>vbm_stat_nanmean(Ysrc(:))))))); 
-            Ygs  = smooth3(Yg);
-            Ydiv = vbm_vol_div(Ysrc/WMth,vx_vol);
-            BGth = hist(Ysrc(Ygs(:)<0.1 & Ysrc(:)<WMth*0.5)/WMth,-1.0:0.05:1);
-            BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first')/20 - 1.0;
-            BGth = min(BGth*WMth*2,WMth*0.2);
-            %%  WI contain the values for correction for the object and
-            %  an approximation is required for all other voxels.
-            Yt   = Ysrc>BGth & Ysrc<WMth*1.1 & Yg<0.3 & Ydiv<0.2 & Ydiv>-1; 
-            WI   = (Ysrc .* Yt) ./ max(eps,Yt);  
-            [WI,resT2] = vbm_vol_resize(WI,'reduceV',vx_vol,vbm_stat_nanmean(vx_vol)*4,32,'max'); 
-            WI   = vbm_vol_approx(WI,4,vx_vol);
-            WI   = vbm_vol_smooth3X(WI,4);
-            WI   = vbm_vol_resize(WI,'dereduceV',resT2);      
-            %  A strong smoothing of this approximation is essential!
-            WI   = vbm_vol_smooth3X(WI,2); 
-            %%  Final intensity scaling
-            Ym   = Ysrc ./ WI; 
-            Wth  = single(vbm_stat_nanmedian(Ym(Yg(:)<0.2 & Ym(:)>vbm_stat_nanmean( Ym(Yg(:)<0.2 & Ym(:)>vbm_stat_nanmean(Ym(:))))))); 
-            [WIth,WMv] = hist(Ym(Ygs(:)<0.1 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
-            [BIth,BGv] = hist(Ym(Ygs(:)<0.1 & Ym(:)<Wth*0.5),-1.0:0.01:1);
-            BIth = find(cumsum(BIth)/sum(BIth)>0.05,1,'first'); BIth = BGv(BIth);
-            WIth = find(cumsum(WIth)/sum(WIth)>0.95,1,'first'); WIth = WMv(WIth);  
-            Ym   = (Ym - BIth) / (WIth-BIth); 
+            stime = vbm_io_cmd('Coarse Affine registration','','',1,stime); 
             
-            %% write data to VF
+            % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
             VF.dat(:,:,:) = uint8(Ym * 200); 
             VF.pinfo      = repmat([1;0],1,size(Ym,3));
             clear WI; 
             
             % smoothing
+            resa = obj.samp*3; % definine smoothing by sample size
             VF1  = spm_smoothto8bit(VF,resa);
             VG1  = spm_smoothto8bit(VG,resa);
-          else  % old approach
+          else
+            stime = vbm_io_cmd('Coarse Affine registration'); 
+            
+          % old approach with static resa value and no VG smoothing
             resa = 8;
             VF1  = spm_smoothto8bit(VF,resa);
             VG1  = VG; 
-          end        
-
+          end
+          
+          %% prepare affine parameter 
           aflags     = struct('sep',resa,'regtype',job.vbm.affreg,'WG',[],'WF',[],'globnorm',0);
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
+          % affine resistration
           try
             spm_plot_convergence('Init','Coarse Affine Registration','Mean squared difference','Iteration');
           catch
             spm_chi2_plot('Init','Coarse Affine Registration','Mean squared difference','Iteration');
           end
-          [Affine0, scale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
-
+          if doregistration
+            warning off 
+            [Affine0, scale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
+            warning on
+          end
           
-          %% improve sampling rate and use less smoothing and by brain masking
+          % improve sampling rate and use less smoothing and by brain masking
           try 
             aflags.WG  = spm_vol(Pb);
           catch
@@ -297,82 +302,28 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           end
           aflags.sep = aflags.sep/2;
           
-          % old approach ... only smoothing of the VF with 8 mm
-          if APP>0
-            % apply first affine registration
+          
+          %% APP step 2 - brainmasking and second tissue separated bias correction  
+          if job.extopts.APP>1
+            %  ---------------------------------------------------------
+            %  The second part of APP maps a brainmask to native space 
+            %  and refines this mask by morphologic operations and
+            %  region-growing to adapt for bad affine alignments. 
+            %  The mask has to be a little bit wider and it is important
+            %  that the brain is complete!
+            %  ---------------------------------------------------------
+            %  ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
+            
+            % apply (first affine) registration on the default brain mask
             VFa = VF; 
             if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
-            
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
             [Vmsk,Yb] = vbm_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
-         
-            % greater mask
-            [dilmsk,resT2] = vbm_vol_resize(single(Yb),'reduceV',vx_vol,mean(vx_vol)*4,32); 
-            dilmsk  = vbdist(dilmsk,true(size(dilmsk)),resT2.vx_volr);
-            dilmsk  = vbm_vol_resize(smooth3(dilmsk),'dereduceV',resT2); 
-            
-            Hth  = vbm_stat_nanmean(Ym(Ym(:)>0.2 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5)); % average intensity of major head tissues
-            GMth = vbm_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<0.9  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1));  % first guess of the GM intensity
-            CMth = vbm_stat_nanmean(Ym(Ym(:)>0.1 & Ym(:)<GMth*0.7 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05));  % first guess of the CSF intensity
-           
-            % rough scull stripping
-            %  The affine registration, especially spm_preproc8 requires a very good masking!
-            %  Because we it is also required for the Unified Segmenation
-            %  a wider mask with a complete brain is important
-            %    ds('l2','m',0.5,Ym*0.7+0.3,Yb,Ysrc/WMth,Ym,80)
-            Yb = (dilmsk<10 & Ym<1.2) & (Ym>0.7) & (Yg.*Ym)<0.3; Yb(smooth3(Yb)<0.5)=0; 
-            Yb = single(vbm_vol_morph(Yb,'lo'));
-            [dilmsk2,resT2] = vbm_vol_resize(single(Yb),'reduceV',vx_vol,mean(vx_vol)*4,32); 
-            dilmsk2  = vbdist(dilmsk2,true(size(dilmsk)),resT2.vx_volr);
-            dilmsk2  = vbm_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
-            %  WM growing
-            Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
-            [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.01); 
-            Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<400/mean(vx_vol))=1; Yb(isnan(Yb))=0;
-            Yb = smooth3(Yb)>0.5; 
-            Yb = single(Yb | (Ym>0.3 & Ym<1.2 & vbm_vol_morph(Yb,'lc',4)));
-            % GM growing
-            Yb(Yb<0.5 & (dilmsk2>30 | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
-            [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.00);
-            Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<400/mean(vx_vol))=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
-            Yb(smooth3(Yb)<0.5)=0;
-            Yb = single(Yb | (Ym>0.1 & Ym<1.1 & vbm_vol_morph(Yb,'lc',4)));
-            % CSF growing (add some tissue around the brain)
-            Yb(Yb<0.5 & (dilmsk2>30 | Ym<0.1 | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
-            [Yb1,YD] = vbm_vol_downcut(Yb,Ym,-0.01); Yb(isnan(Yb))=0; 
-            Yb(YD<400/mean(vx_vol))=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
-            Yb(smooth3(Yb)<0.7)=0;
-            Yb = single(vbm_vol_morph(Yb,'lab'));
-            Yb = Yb | (Ym>0.1 & Ym<1.2 & vbm_vol_morph(Yb,'lc',8));
-            % wider mask???
-            %Yb = Yb | (Ym<0.6 & vbm_vol_morph(Yb,'d',2));
-            Yb = vbm_vol_smooth3X(Yb,2)>0.3;
-            Ymo=Ym; 
-            %% improve bias correction
-            Ym   = Ymo;
-            Yw   = Ym>mean([1.0,GMth])  & Ym<1.2               & Ygs<0.5 & Yb & Ydiv<0.05 & Ydiv>-0.5; 
-            Yg   = Ym>mean([CMth,GMth]) & Ym<mean([1,GMth])    & Ygs<0.1 & Yb & Ydiv<0.10 & Ydiv>-0.1;  
-            Yc   = Ym<mean([CMth,GMth]) & Yg<0.1 & vbm_vol_smooth3X(Yb,8)>0.95;
-            Yh   = vbm_vol_morph(Ym>max(CMth,Hth*0.3) & Ym<1 & Ygs<0.2 & vbm_vol_smooth3X(Yb,8)<0.05 & Ydiv<0.2 & Ydiv>-0.2,'o');
-            WI   = max( cat(4,(Ysrc .* Yw ./ max(eps,Yw) ), ... 
-                   (Ysrc/(median(Ysrc(Yg(:)))/median(Ysrc(Yw(:)))) .* Yg ./ max(eps,Yg) ), ... 
-                   (Ysrc/(median(Ysrc(Yc(:)))/median(Ysrc(Yw(:)))) .* Yc ./ max(eps,Yc) ), ... 
-                   (Ysrc/Hth .* Yh ./ max(eps,Yh) ) ) , [], 4); 
-            [WI,resT2] = vbm_vol_resize(WI,'reduceV',vx_vol,mean(vx_vol)*2,32,'meanm'); 
-            WI   = vbm_vol_approx(WI,2,resT2.vx_volr);
-            WI   = vbm_vol_smooth3X(WI,4); 
-            WI   = vbm_vol_resize(WI,'dereduceV',resT2);
-            WI   = vbm_vol_smooth3X(WI,2); 
-            %  Final intensity scaling
-            Ym  = Ysrc ./ WI; 
-            Wth  = single(vbm_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ymo(:)>0.9))); 
-            [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>GMth & Ym(:)<Wth*1.2),0:0.01:2);
-            [BGth,BGv] = hist(Ym(Ygs(:)<0.1 & ~Yb(:) & Ym(:)<Wth*0.5),-1.0:0.01:1);
-            BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = BGv(BGth);
-            WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = WMv(WIth);  
-            Ym   = (Ym - BGth) / (WIth-BGth); 
-            
-            
+       
+            stime = vbm_io_cmd(sprintf('APP%d: fine bias correction',job.extopts.APP),'','',1,stime); 
+            [Ym,Yp0,Yb] = APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),Ym,Yb,Ybg,vx_vol,job.extopts.verb);;
+            stime = vbm_io_cmd('Affine registration','','',1,stime); 
+                                  
             %% msk T1 & TPM
             VF.dat(:,:,:) =  vbm_vol_ctype(Ym*200 .* Yb); 
             VF1 = spm_smoothto8bit(VF,aflags.sep/2);
@@ -380,58 +331,101 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             VG1 = spm_smoothto8bit(VG,0.1);
             VG1.dat = VG1.dat .* uint8(spm_read_vols(spm_vol(Pb))>0.5); 
             VG1 = spm_smoothto8bit(VG1,aflags.sep/2);
-            
+          elseif job.extopts.APP==1
+            %% msk T1 & TPM
+            stime = vbm_io_cmd('Affine registration','','',1,stime); 
+            VF.dat(:,:,:) =  vbm_vol_ctype(Ym*200); 
+            VF1 = spm_smoothto8bit(VF,aflags.sep/2);
+            VG1 = spm_smoothto8bit(VG1,aflags.sep/2);
           else
+          % old approach ... only smoothing of the VF with 2 mm
+            stime = vbm_io_cmd('Affine registration','','',1,stime); 
             VF1 = spm_smoothto8bit(VF,aflags.sep/2);
             VG1 = VG; 
           end
-       
+
+          
+          % fine affine registration 
           try
             spm_plot_convergence('Init','Coarse Affine Registration 2','Mean squared difference','Iteration');
           catch
             spm_chi2_plot('Init','Coarse Affine Registration 2','Mean squared difference','Iteration');
           end
+          warning off
           Affine1 = spm_affreg(VG1, VF1, aflags, Affine, scale);   
+          warning on
           if ~any(isnan(Affine1(1:3,:))), Affine = Affine1; end
             
           clear VG1 VF1
+        end
+        if job.extopts.APP && dobiascorrection
+          Ysrc = single(obj.image.private.dat(:,:,:)); 
+          obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
+          obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
+        
+          % rewrite bias correctd, but not skull-stripped image
+          %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+          % add temporary skull-stripped images
+          if doskullstripping
+             th = vbm_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>vbm_stat_nanmean(Ysrc(Yb(:))))) / ...
+                 vbm_stat_nanmean(Ym(Yb(:)   & Ym(:)>vbm_stat_nanmean(Ym(Yb(:)))));
+             obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); % .* Yb))); 
+          else
+            if exist('Yb','var')
+              th = vbm_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>vbm_stat_nanmean(Ysrc(Yb(:))))) / ...
+                   vbm_stat_nanmean(Ym(Yb(:)   & Ym(:)>vbm_stat_nanmean(Ym(Yb(:)))));
+            else % only initial bias correction
+              th = WMth;
+            end
+            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+            VFa = VF; 
+            if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Yb] = vbm_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
+          end
+          obj.msk       = VF; 
+          obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
+          obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+          obj.msk.dat(:,:,:) = uint8(Yb); 
+          obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
+          clear Ysrc; 
+        end
 
+        if job.extopts.APP
+          stime = vbm_io_cmd(sprintf('SPM preprocessing 1 (APP=%d):',job.extopts.APP),'','',1,stime);
+        else
+          stime = vbm_io_cmd('SPM preprocessing 1:','','',1,stime);
         end
         
         
-        % Fine Affine Registration with 3 mm sampling distance
+        
+        %% Fine Affine Registration with 3 mm sampling distance
         % This does not work for non human (or very small brains)
-        if APP==0
+        if strcmp('human',cg_vbm_get_defaults('extopts.species')) % job.extopts.APP==0
           spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
+          warning off 
           Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.vbm.affreg);
+          warning on  
           if ~any(isnan(Affine3(1:3,:))), Affine = Affine3; end
+          
+          if ~doskullstripping
+            VFa = VF; 
+            if doregistration, VFa.mat = Affine3 * VF.mat; else Affine = eye(4); end
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Yb] = vbm_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
+            obj.msk       = VF; 
+            obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
+            obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+            obj.msk.dat(:,:,:) = uint8(Yb); 
+            obj.msk = spm_smoothto8bit(obj.msk,0.1); 
+          end
         end
-        warning on  %#ok<WNON>
         obj.Affine = Affine;
-        fprintf('%4.0fs\n',etime(clock,stime));   
-        
         
         
         %% SPM preprocessing 1
         % ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
-        if APP>0
-          stime = vbm_io_cmd(sprintf('SPM preprocessing 1 (APP=%d)',APP));
-            
-          obj.msk = spm_smoothto8bit(VF,0.1); obj.msk.dat = uint8(Yb*255); 
-          obj.image.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
-          if dobiascorrection
-            th = vbm_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>vbm_stat_nanmean(Ysrc(Yb(:))))) / ...
-                 vbm_stat_nanmean(Ym(Yb(:)   & Ym(:)>vbm_stat_nanmean(Ym(Yb(:)))));
-            obj.image.private.dat(:,:,:) = single(min(2*WMth,Ym * th)); % rewrite image
-            obj.image.dat(:,:,:) = single(min(2*WMth,Ym * th .* Yb)); 
-          else
-            obj.image.dat(:,:,:) = single(min(2*WMth,Ysrc .* Yb)); 
-          end
-          obj.image.pinfo      = repmat([1;0],1,size(Ysrc,3));
-        else
-          stime = vbm_io_cmd('SPM preprocessing 1');
-        end
-        warning off %#ok<WNOFF>
+        warning off 
         try 
           res = spm_preproc8(obj);
         catch
@@ -441,7 +435,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
           end
           error('VBM:cg_vbm_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
         end
-        warning on  %#ok<WNON>
+        warning on 
         
         if cg_vbm_get_defaults('extopts.debug')==2
           % save information for debuging and OS test
@@ -488,6 +482,340 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     end
 %%
 return
+%=======================================================================
+
+%=======================================================================
+function r = roundx(r,rf)
+  r(:) = round(r(:) * rf) / rf;
+return
+%=======================================================================
+
+%=======================================================================
+function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
+%  ---------------------------------------------------------------------
+%  rough scull-stripping:
+%  The affine registration, especially spm_preproc8 requires a very good masking!
+%  Because we it is also required for the Unified Segmenation
+%  a wider mask with a complete brain is important
+%    ds('l2','m',0.5,Ym*0.7+0.3,Yb,Ysrc/WMth,Ym,80)
+%  ---------------------------------------------------------------------
+  if verb, fprintf('\n'); end
+  stime = vbm_io_cmd('  Initialize','g5','',verb);
+  msize = 222; %round(222 ./ max(size(Ysrco).*vx_vol) .* min(size(Ysrco).*vx_vol));  
+  
+  [Ysrc,Ym,resT3] = vbm_vol_resize({Ysrco,Ym},'reduceV',vx_vol,min(1.5,min(vx_vol)*2),msize,'meanm'); 
+  [Yb,Ybg]        = vbm_vol_resize({single(Yb),single(Ybg)},'reduceV',vx_vol,min(1.5,min(vx_vol)*2),msize,'meanm'); 
+  Ybg = Ybg>0.5;
+  
+  Yg   = vbm_vol_grad(Ym,resT3.vx_volr) ./ max(eps,Ym); 
+  Ydiv = vbm_vol_div(Ym,resT3.vx_volr)./Ym;
+  Ygs  = smooth3(Yg);
+  
+  % greater mask
+  [dilmsk,resT2] = vbm_vol_resize(Yb,'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
+  dilmsk  = vbdist(dilmsk,true(size(dilmsk)),resT2.vx_volr);
+  dilmsk  = dilmsk - vbdist(single(dilmsk>0),true(size(dilmsk)),resT2.vx_volr);
+  dilmsk  = vbm_vol_resize(smooth3(dilmsk),'dereduceV',resT2); 
+  headradius = -min(dilmsk(:)); 
+
+  % thresholds
+  rf   = 10^6; 
+  Hth  = roundx(vbm_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
+  GMth = roundx(vbm_stat_nanmean(Ym(Ym(:)>0.2 & Ym(:)<0.9  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
+  CMth = roundx(vbm_stat_nanmean(Ym(Ym(:)>0.1 & Ym(:)<GMth*0.7 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)),rf);  % first guess of the CSF intensity
+  %WMth = vbm_stat_nanmean(Ym(Ym(:)>0.8 & Ym(:)<1.2 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)); 
+  BGth = roundx(vbm_stat_nanmean(Ym(Ybg(:))),rf); 
+  
+  
+  %% Skull-Stripping
+  stime = vbm_io_cmd('  Skull-Stripping','g5','',verb,stime);
+  Yb = (dilmsk<20 & Ym<1.2) & (Ym>(GMth*0.7+0.3)) & Yg<0.5 & Ydiv<0.2; Yb(smooth3(Yb)<0.5)=0; 
+  Yb = single(smooth3(vbm_vol_morph(Yb,'l'))>0.2); 
+  [dilmsk2,resT2] = vbm_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
+  dilmsk2  = vbdist(dilmsk2,true(size(dilmsk)),resT2.vx_volr);
+  dilmsk2  = vbm_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
+  %% WM growing
+  Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.05); 
+  Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<400/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0;
+  Yb = smooth3(Yb)>0.2; 
+  % ventricle closing
+  [Ybr,resT2] = vbm_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
+  Ybr = vbm_vol_morph(Ybr>0.5,'lc',4);
+  Ybr = vbm_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5; 
+  Yb = single(Yb | (Ym<1.2 & Ybr));
+  % GWM growing
+  Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.01); 
+  Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<400/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0;
+  Yb = smooth3(Yb)>0.5; 
+  Yb = single(Yb | (Ym>0.3 & Ym<1.2 & vbm_vol_morph(Yb,'lc',2)));
+  % GM growing
+  Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = vbm_vol_downcut(Yb,Ym,0.00);
+  Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<200/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
+  Yb(smooth3(Yb)<0.5)=0;
+  Yb = single(Yb | (Ym>0.1 & Ym<1.1 & vbm_vol_morph(Yb,'lc',4)));
+  % CSF growing (add some tissue around the brain)
+  Yb(Yb<0.5 & (dilmsk2>30 | Ym<0.1 | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = vbm_vol_downcut(Yb,Ym,-0.01); Yb(isnan(Yb))=0; 
+  Yb(YD<100/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
+  Yb(smooth3(Yb)<0.7)=0;
+  Yb  = single(vbm_vol_morph(Yb,'lab'));
+  Yb  = Yb | (Ym>0.2 & Ym<0.6 & vbm_vol_morph(Yb,'lc',2));
+  Yb  = vbm_vol_smooth3X(Yb,2)>0.3;
+  Ymo = Ym; 
+
+
+  %% ---------------------------------------------------------
+  %  improve bias correction:
+  %  Also here it is important that the bias field is very smooth
+  %  to avoid overcorrections. In contrast to the first
+  %  correction we will try to separate between tissues...
+  %  ---------------------------------------------------------
+  stime = vbm_io_cmd('  Tissue classification','g5','',verb,stime);
+  Ym   = Ymo;
+  Yg   = vbm_vol_grad(Ym,vx_vol);%./max(eps,Ym)
+  Ygs  = smooth3(Yg);
+  Ydiv = vbm_vol_div(Ym,vx_vol);
+
+      % WM Skeleton:  Ydiv./Yg<-1    
+% nicht WM: Ydiv.*Yg<-0.02
+
+  %% tissue classes WM, GM, subcortical GM (Ybm), CSF, head tissue (Yhm) 
+  Ywm  = ((Ym-max(0,(Ydiv+0.01))*10)>(GMth*0.1+0.9) | Ym>(GMth*0.1+0.9) | ...
+          (Ydiv./Yg<0.5 & ((Ym>0.9 & Yg>0.1 & Ydiv<0) | (Ym>0.9)) & Ym<1.2) ) & ...
+          Ym<1.3 & Yg<0.6 & Ygs<0.9 & Yb & Ydiv<0.1 & Ydiv>-0.5; 
+  Ywm  = smooth3(Ywm)>0.5;      
+  % subcotical GM 
+  Ybm  = ((Ym-max(0,(Ydiv+0.01))*10)<0.98) & Ym<0.98 & dilmsk<-headradius*0.3 & ... 
+         Ym>(GMth*0.6+0.4) & Yb & Ygs<0.2 & Yg<0.2 & ... Ydiv<0.1 & Ydiv>-0.02 & ... Yg<0.1 & 
+         ~(Ydiv./Yg<0.5 & ((Ym>0.9 & Yg>0.1 & Ydiv<0) | (Ym>0.95)) & Ym<1.2);
+       %& ~Ywm;  
+  Ybm  = smooth3(Ybm)>0.5;
+  Ybm  = vbm_vol_morph(Ybm,'o',1);
+  % cortical GM 
+  Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm & ~Ywm; % & (Ym-Ydiv*2)<GMth;  
+  Ygm(smooth3(Ygm)<0.3)=0;
+  % CSF
+  Ycm  = Ym<(CMth*0.5+0.5*GMth) & Yg<0.1 & Yb & ~Ygm & dilmsk<-headradius*0.3; 
+  Ycm  = smooth3(Ycm)>0.5;
+  % head tissue
+  Yhm  = Ym>max(mean([CMth,GMth]),Hth*0.2) & Ym<1.2 & Yg<0.8 & vbm_vol_smooth3X(Yb,2)<0.1 & Ydiv<0.6 & Ydiv>-0.6;
+  Yhm  = smooth3(Yhm)>0.5;
+
+  %% refine
+  %Ygm  = Ygm | (vbm_vol_morph(Ywm,'d',3) & ~Ybm & ~Ywm & (Ym-Ydiv*2)<GMth & ...
+  %   ~Ycm & smooth3((Ym + Yg)<(CMth*0.8+0.2*GMth))<0.5) & Ym>(CMth*0.9+0.1*GMth) & Ym<(GMth*0.2+0.8);;
+  
+  %% masking of the original values and local filtering
+  stime = vbm_io_cmd('  Filtering','g5','',verb,stime);
+  fi   = round(max(3,min(resT3.vx_volr)*3)/3); 
+  Ywm  = Ysrc .* Ywm; Ywm  = vbm_vol_localstat(Ywm,Ywm>0,1,3); % PVE
+  Ycm  = Ysrc .* Ycm; Ycm  = vbm_vol_localstat(Ycm,Ycm>0,1,2);
+  for i=1:fi-1, Ywm = vbm_vol_localstat(Ywm,Ywm>0,2,1); end
+  for i=1:fi-1, Ycm = vbm_vol_localstat(Ycm,Ycm>0,2,1); end
+  Ybm  = Ysrc .* Ybm; for i=1:fi, Ybm = vbm_vol_localstat(Ybm,Ybm>0,2,1); end
+  Ygm  = Ysrc .* Ygm; for i=1:fi, Ygm = vbm_vol_localstat(Ygm,Ygm>0,2,1); end
+  Yhm  = Ysrc .* Yhm; for i=1:fi, Yhm = vbm_vol_localstat(Yhm,Yhm>0,2,1); end
+
+  % estimate intensity difference bettween the tissues
+  Ywmr = vbm_vol_resize(Ywm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
+  Ybmr = vbm_vol_resize(Ybm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
+  Ygmr = vbm_vol_resize(Ygm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
+  Ycmr = vbm_vol_resize(Ycm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
+  bmth = mean(Ybmr(Ybmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ybmr(:)>0 & Ywmr(:)>0));
+  gmth = mean(Ygmr(Ygmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ygmr(:)>0 & Ywmr(:)>0));
+  cmth = mean(Ycmr(Ycmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ycmr(:)>0 & Ywmr(:)>0));
+  Ywmr = vbm_vol_resize(Ywm,'reduceV',resT3.vx_volr,16,8,'meanm'); 
+  Yhmr = vbm_vol_resize(Yhm,'reduceV',resT3.vx_volr,16,8,'meanm'); 
+  hmth = mean(Yhmr(Yhmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ywmr(:)>0 & Ywmr(:)>0));
+  hmth = min(max(hmth,mean([cmth,gmth])),mean([gmth,1]));
+  % if something failed use global thresholds
+  if isnan(bmth), bmth = GMth; end
+  if isnan(gmth), gmth = GMth; end
+  if isnan(cmth), cmth = CMth; end
+  if isnan(hmth), hmth = GMth; end
+  clear Ywmr Ybmr Ygmr Yhmr Ycmr; 
+
+  Yhm = Yhm .* (dilmsk>20);  % to avoid near skull tissue
+  
+  %% estimate bias fields
+  stime = vbm_io_cmd('  Bias correction','g5','',verb,stime);
+  Ywi = sum( cat(4,Ywm,Ygm/gmth,Ybm/bmth,Ycm/cmth,Yhm/hmth),4) ./ sum( cat(4,Ywm>0,Ybm>0,Ygm>0,Ycm>0,Yhm>0),4 );
+  [Ywi,resT2]  = vbm_vol_resize(Ywi,'reduceV',resT3.vx_volr,min(4,min(resT3.vx_volr)*2),32,'meanm'); 
+  for i=1:4, Ywi=vbm_vol_localstat(Ywi,Ywi>0,2,1); end
+  Ywi   = vbm_vol_approx(Ywi,'nn',resT2.vx_volr,2);
+  Ywi   = vbm_vol_smooth3X(Ywi,4.*mean(vx_vol)); 
+  Ywi   = vbm_vol_resize(Ywi,'dereduceV',resT2);
+
+  %% background noise
+  stime = vbm_io_cmd('  Background correction','g5','',verb,stime);
+  %Ybc  = vbm_vol_morph(smooth3(Ym<mean([BGth,CMth]) & Ym<CMth & Ygs<0.05 & ~Yb & dilmsk2>8)>0.5,'lo',3); 
+  [Ybc,resT2] = vbm_vol_resize(Ysrc .* Ybg,'reduceV',resT2.vx_volr,max(8,max(16,vbm_stat_nanmean(resT2.vx_volr)*4)),16,'min'); 
+  Ybc  = vbm_vol_localstat(Ybc,Ybc>0,2,2);
+  for i=1:1, Ybc  = vbm_vol_localstat(Ybc,Ybc>0,2,1); end
+  %Ybc2 = vbm_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the backgound!  
+  %Ybc2 = vbm_vol_smooth3X(Ybc2,4);
+  Ybc  = vbm_vol_smooth3X(Ybc,2);
+  Ybc  = vbm_vol_resize(Ybc,'dereduceV',resT2); 
+  %Ybc2 = vbm_vol_resize(Ybc2,'dereduceV',resT2); 
+
+  %% back to original size
+  stime = vbm_io_cmd('  Final scaling','g5','',verb,stime);
+  [Ywi,Ybc] = vbm_vol_resize({Ywi,Ybc},'dereduceV',resT3); 
+  %Ybc2 = vbm_vol_resize({Ybc2},'dereduceV',resT3); 
+  [Yg,Ygs]  = vbm_vol_resize({Yg,Ygs},'dereduceV',resT3); 
+  Yb   = vbm_vol_resize(Yb,'dereduceV',resT3)>0.5; 
+  Yp0 = vbm_vol_resize(((Ywm>0)*3 + (Ygm>0)*2 + (Ybm>0)*2.3 + (Ycm>0)*1 + (Yhm>0)*2.7 + (Ybg>0)*0.5)/3,'dereduceV',resT3);
+  Ysrc = Ysrco; clear Ysrco;
+
+  %%  Final intensity scaling
+  Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc); % correct for noise only in background
+ % Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc2 + Ybc); % correct for noise only in background
+  Wth  = single(vbm_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.9))); 
+  [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>GMth & Ym(:)<Wth*1.2),0:0.01:2);
+  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = roundx(WMv(WIth),rf);  
+  [BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
+  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = roundx(BMv(BIth),rf);  
+  Ym   = (Ym - BIth) ./ (WIth - BIth); 
+  
+  vbm_io_cmd(' ','','',verb,stime); 
+ 
+return
+%=======================================================================
+
+%=======================================================================
+function [Ym,Yt,Ybg,WMth] = APP_initial_bias_correction(Ysrco,vx_vol,verb)
+%% ---------------------------------------------------------------------
+%  rough bias correction:
+%  All tissues (low gradient) should have a similar intensity.
+%  A strong smoothing of this approximation is essential to 
+%  avoid anatomical filtering between WM and GM that can first 
+%  be seen in overfitting of the subcortical structures!
+%  However, this filtering will overcorrect head tissue with
+%  a typical intensity around GM.
+%    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)
+%  ---------------------------------------------------------------------
+  rf = 10^6; 
+  bfsmoothness = 3; 
+  if verb, fprintf('\n'); end
+  
+  stime = vbm_io_cmd('  Initialize','g5','',verb);
+  msize = 222; %round(222 ./ max(size(Ysrco).*vx_vol) .* min(size(Ysrco).*vx_vol));  
+
+  [Ysrc,resT3] = vbm_vol_resize(Ysrco,'reduceV',vx_vol,min(1.2,vbm_stat_nanmean(vx_vol)*2),msize,'meanm'); 
+
+  % correction for negative backgrounds (MT weighting)
+  WMth = roundx(single(vbm_stat_nanmedian(Ysrc(Ysrc(:)>vbm_stat_nanmean( ...
+          Ysrc(Ysrc(:)>vbm_stat_nanmean(Ysrc(:))))))),rf); 
+  [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.5)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
+  BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
+
+  Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth;
+  Yg   = vbm_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
+  Ydiv = vbm_vol_div(Ysrc,resT3.vx_volr) ./ Ysrc;
+
+  WMth = roundx(single(vbm_stat_nanmedian(Ysrc(Yg(:)<0.2 & Ysrc(:)>vbm_stat_nanmean( ...
+           Ysrc(Yg(:)<0.2 & Ysrc(:)>vbm_stat_nanmean(Ysrc(:))))))),rf); 
+  [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.2)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
+  BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
+  BGth = max(BGth*WMth*4,WMth*0.2); % * 2 to get the CSF
+  Ym   = (Ysrc - BGth) ./ (WMth - BGth);
+
+  
+  % background
+  stime = vbm_io_cmd('  Estimate background','g5','',verb,stime);
+  Ybg = ((Yg.*Ym)<vbm_vol_smooth3X(Ym,2)*1.2) & Ym>0.1; 
+  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg(smooth3(Ybg)<0.5)=0;
+  [Ybg,resT2] = vbm_vol_resize(single(Ybg),'reduceV',resT3.vx_volr,2,32,'meanm'); 
+  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
+  Ybg  = vbm_vol_morph(Ybg,'lc',8);
+  Ybg  = vbm_vol_smooth3X(Ybg,2); 
+  Ybg  = vbm_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
+  BGth = roundx(mean(Ysrc(Ybg(:))),rf);
+  Ym   = (Ysrc - BGth) ./ (WMth - BGth);
+  
+  %% first WM inhomogeneity with low tissue boundary (may include CSF > strong filtering for IXI175)
+  stime = vbm_io_cmd('  Initial correction','g5','',verb,stime);
+  Yms  = vbm_vol_smooth3X( min(2 .* ~Ybg,Ym .* (Ydiv>-0.2) .* ~Ybg .* (Ym>0.1)),16*mean(vx_vol));     % this map is to avoid CSF in the mask!
+  Yms  = (Yms ./ mean(Yms(~Ybg(:)))) * WMth;
+  Yms  = vbm_vol_smooth3X( min(Yms*1.5 .* ~Ybg,Ysrc .* ~Ybg),16*mean(vx_vol));
+  Yms  = (Yms ./ mean(Yms(~Ybg(:)))) * WMth;
+  Yt   = Ysrc>max(BGth,Yms*0.3) & Ysrc<Yms*2 & Ysrc<WMth*(1+Yms/WMth*2) & Yg<0.9 & Ydiv<0.2 & ...
+         Ydiv>-0.6 & smooth3(Ysrc./Yms.*Yg.*Ydiv<-0.2)<0.3 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
+  Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
+  [Ywi,resT2] = vbm_vol_resize(Ywi,'reduceV',resT3.vx_volr,vbm_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
+  for i=1:1, Ywi = vbm_vol_localstat(Ywi,Ywi>0,2,3); end % only one iteration!
+  for i=1:4, Ywi = vbm_vol_localstat(Ywi,Ywi>0,2,1); end
+  Ywi  = vbm_vol_approx(Ywi,'nn',resT2.vx_volr,4);
+  Ywi  = vbm_vol_smooth3X(Ywi,bfsmoothness.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
+  Ywi  = vbm_vol_resize(Ywi,'dereduceV',resT2);    
+  Ybc  = Ysrc./Ywi;
+  WMt2 = roundx(vbm_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
+  Ywi  = Ywi * WMt2;
+  
+  %% background update
+  stime = vbm_io_cmd('  Refine background','g5','',verb,stime);
+  Ybg = ((Yg.*(Ysrc./Ywi))<vbm_vol_smooth3X(Ysrc./Ywi,2)*1.2) & Ysrc./Ywi>0.2; 
+  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg(smooth3(Ybg)<0.5)=0;
+  [Ybg,resT2] = vbm_vol_resize(single(Ybg),'reduceV',resT3.vx_volr,2,32,'meanm'); 
+  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
+  Ybg  = vbm_vol_morph(Ybg,'lc',8);
+  Ybg  = vbm_vol_smooth3X(Ybg,2); 
+  Ybg  = vbm_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
+
+  %% second WM inhomogeneity with improved Yt with higher lower threshold (avoid CSF and less filtering)
+  stime = vbm_io_cmd('  Final correction','g5','',verb,stime);
+  Yt   = Ysrc>max(BGth,Yms*0.3)  & Ysrc./Ywi>0.2 & Ysrc./Ywi<1.2 & Ysrc./Ywi<Yms/WMth*2 & Yg<0.9 & Ydiv<0.2 & Ydiv>-0.6 & ...
+         smooth3(Ysrc./Yms.*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
+  Yt   = Yt | (~Ybg & Ysrc>BGth/2 & Ysrc>Yms*0.5 & Ysrc<Yms*1.2 & Ydiv./Yg<0.5 & ((Ysrc./Ywi>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ysrc./Ywi>0.6)) & Ysrc./Ywi<1.2); 
+  Yt(smooth3(Yt)<0.7)=0;
+  Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
+  [Ywi,resT2] = vbm_vol_resize(Ywi,'reduceV',resT3.vx_volr,vbm_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
+  for i=1:1, Ywi = vbm_vol_localstat(Ywi,Ywi>0,2,3); end % only one iteration!
+  for i=1:4, Ywi = vbm_vol_localstat(Ywi,Ywi>0,2,1); end
+  Ywi  = vbm_vol_approx(Ywi,'nn',resT2.vx_volr,4);
+  Ywi  = vbm_vol_smooth3X(Ywi,bfsmoothness.*mean(vx_vol)); %.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
+  Ywi  = vbm_vol_resize(Ywi,'dereduceV',resT2);    
+  Ybc  = Ysrc./Ywi;
+  WMt2 = roundx(vbm_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
+  Ywi  = Ywi * WMt2;
+
+  
+  %% BG inhomogeneity (important for normalization of the background noise)
+  %[Ybc,Ygr,resT2] = vbm_vol_resize({Ysrc./Ywi,Yg},'reduceV',resT3.vx_volr,vbm_stat_nanmean(resT3.vx_volr)*4,16,'meanm'); 
+  %Ybc  = vbm_vol_morph(Ybc<BGth/WMth*2 & Ygr<0.05,'lc',2);
+  %Ybc  = vbm_vol_resize(smooth3(Ybc),'dereduceV',resT2)>0.5; 
+  stime = vbm_io_cmd('  Background correction','g5','',verb,stime);
+  [Ybc,resT2] = vbm_vol_resize(single(Ysrc .* Ybg),'reduceV',resT3.vx_volr,max(8,min(16,vbm_stat_nanmean(resT3.vx_volr)*4)),16,'min'); 
+  Ybc  = vbm_vol_localstat(Ybc,Ybc>0,2,2);
+  Ybc  = vbm_vol_localstat(Ybc,Ybc>0,2,1);
+  %Ybc  = vbm_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the background! 
+  Ybc  = vbm_vol_smooth3X(Ybc,4);
+  Ybc  = vbm_vol_resize(Ybc,'dereduceV',resT2); 
+
+
+  %% back to original size
+  stime = vbm_io_cmd('  Final scaling','g5','',verb,stime);
+  [Ywi,Ybc] = vbm_vol_resize({Ywi,Ybc},'dereduceV',resT3); 
+  Yg        = vbm_vol_resize(Yg,'dereduceV',resT3); 
+  [Yt,Ybg]  = vbm_vol_resize({single(Yt),single(Ybg)},'dereduceV',resT3); Yt = Yt>0.5; Ybg = Ybg>0.5;
+  Ysrc      = Ysrco; clear Ysrco;
+
+  %% intensity normalization (Ybc is the average background noise)
+  % in data with strong inhomogeneities (7T) the signal can trop below the noise level 
+  Ym   = (Ysrc - min(Ybc/2,Ywi/20)) ./ (Ywi - min(Ybc/2,Ywi/20)); 
+  Wth  = single(vbm_stat_nanmedian(Ym(Yg(:)<0.2 & Ym(:)>vbm_stat_nanmean( Ym(Yg(:)<0.2 & Ym(:)>vbm_stat_nanmean(Ym(:))))))); 
+  [WIth,WMv] = hist(Ym(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
+  WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = roundx(WMv(WIth),rf); 
+  Ym   = Ym ./ WIth; 
+
+  vbm_io_cmd(' ','','',verb,stime); 
+return
+%=======================================================================
+
+
 %=======================================================================
 function Yg = vbm_vol_grad(Ym,vx_vol)
 % ----------------------------------------------------------------------
