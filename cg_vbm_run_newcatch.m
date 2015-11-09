@@ -7,7 +7,7 @@ function cg_vbm_run_newcatch(job,estwrite,tpm,subj)
 % ______________________________________________________________________
 % $Revision$  $Date$
   try
-    cg_vbm_run_job(job,estwrite,tpm,subj); %#ok<NASGU>
+    cg_vbm_run_job(job,estwrite,tpm,subj); 
   catch vbmerr 
     % add further information for special errors
     if isempty(vbmerr.identifier)
@@ -26,32 +26,30 @@ function cg_vbm_run_newcatch(job,estwrite,tpm,subj)
       repmat('-',1,72),vbmerr.message,repmat('-',1,72)));  
 
     % write error report
+    vbmerrtxt = cell(numel(vbmerr.stack),1);
     for si=1:numel(vbmerr.stack)
       vbm_io_cprintf('err',sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name));  
+      vbmerrtxt{si} = sprintf('%5d - %s\n',vbmerr.stack(si).line,vbmerr.stack(si).name); 
     end
     vbm_io_cprintf('err',sprintf('%s\n',repmat('-',1,72)));  
 
     % delete template files 
     [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
-    % delete bias map
-    if exist(fullfile(pth,['bf' nam(2:end) ext]),'file')
-      try %#ok<TRYNC>
-        delete(fullfile(pth,['bf' nam(2:end) ext]));
-      end
-    end
     % delete noise corrected image
-    if exist(fullfile(pth,['n' nam(2:end) ext]),'file')
+    if exist(fullfile(pth,['n' nam ext]),'file')
       try %#ok<TRYNC>
-        delete(fullfile(pth,['n' nam(2:end) ext]));
+        delete(fullfile(pth,['n' nam ext]));
       end
     end
 
     % save vbm xml file
+    vbmerrstruct = struct();
     for si=1:numel(vbmerr.stack)
-      vbmerrstruct.line = vbmerr.stack(si).line;
-      vbmerrstruct.name = vbmerr.stack(si).name;  
+      vbmerrstruct(si).line = vbmerr.stack(si).line;
+      vbmerrstruct(si).name = vbmerr.stack(si).name;  
+      vbmerrstruct(si).file = vbmerr.stack(si).file;  
     end
-    vbm_tst_qa('vbm12err',struct('write_csv',0,'write_xml',1,'job',job,'vbmerr',vbmerrstruct));
+    vbm_tst_qa('vbm12err',struct('write_csv',0,'write_xml',1,'vbmerrtxt',vbmerrtxt,'vbmerr',vbmerrstruct,'job',job));
     
     % rethrow error 
     if ~cg_vbm_get_defaults('extopts.ignoreErrors')

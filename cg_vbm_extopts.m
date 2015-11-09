@@ -233,22 +233,27 @@ LASstr.help    = {
 % WM Hyperintensities:
 %------------------------------------------------------------------------
 
-WMHC        = cfg_menu;
-WMHC.tag    = 'WMHC';
-WMHC.name   = 'WM Hyperintensity Correction (WMHC)';
-WMHC.labels = {'no correction','WMHC - correction to WM like SPM','WMHC - correction to a separate class'};
-WMHC.values = {0 1 2 3};
-WMHC.def    = @(val)cg_vbm_get_defaults('extopts.WMHC', val{:});
-WMHC.help   = {
+wmhc        = cfg_menu;
+wmhc.tag    = 'WMHC';
+wmhc.name   = 'WM Hyperintensity Correction (WMHC)';
+wmhc.labels = { ...
+  'no correction' ...
+  'WMHC - correction to WM only for spatial normalization' ... 
+  'WMHC - correction to WM like SPM' ...
+  'WMHC - correction to a separate class' ...
+};
+wmhc.values = {0 1 2 3};
+wmhc.def    = @(val)cg_vbm_get_defaults('extopts.WMHC', val{:});
+wmhc.help   = {
   'In aging or diseases WM intensity be strongly reduces in T1 or increased in T2/PD images. These so called WM hyperintensies (WMHs) can lead to preprocessing errors. Large GM areas next to the ventricle can cause normalization problems. Therefore, a temporary correction for the normalization is meaningfull, if WMHs were expected. As far as these changes are an important marker, VBM allow different ways to handel WMHs. '
   ''
   ' 0) No Correction (like VBM8). '
   '     - Take care of large WMHs with normalization problems. '
   '     - Consider that GM in unexpected regions represent WMCs.  '
-  ' 1) Temporary Correction for normalization. '
+  ' 1) Temporary correction for normalization. '
   '     - Consider that GM in unexpected regions represent WMCs.  '
   ' 2) Correction to WM (like SPM). ' 
-  ' 3) Correction to separate class. '
+  ' 3) Correction to a separate class. '
   ''
   'See also ...'
 ''
@@ -294,15 +299,23 @@ darteltpm.help    = {
 
 %------------------------------------------------------------------------
 
-APP        = cfg_menu;
-APP.tag    = 'print';
-APP.name   = 'Affine Preprocessing (APP)';
-APP.labels = {'none (only SPM)','APP with initial registraton','APP without initial registraton'};
-APP.values = {0 1 2};
-APP.def    = @(val)cg_vbm_get_defaults('extopts.APP', val{:});
-APP.help   = {
-'Affine alignment and SPM preprocessing can fail in untypical subjects (other species/neonates) and the correction of inhomogeneities and extraction of the brain can reduce problems (APP = Affine PreProcessing). As far as also the first affine registration can fail the option "without initial registation" is available that requires excact AD-PC alignment by the user (i.e. by SPM Display). Non human species irgnore this option by using APP=2.  '
-''
+app        = cfg_menu;
+app.tag    = 'APP';
+app.name   = 'Affine Preprocessing (APP)';
+app.labels = { ...
+  'none (only SPM)' ... the old default 
+    'APP (light bias correction, no brain masking)' ... just to test it ... the second BC should be much more exact and stable
+    'APP (full  bias correction, no brain masking)' ... just to test it ... the hard skull-stripping can lead to problems if brain tissue is missing, but actual it seams to work very well
+    'APP (without initial registraton)' ... I expect that this is only important for animals and can maybe controlled by the species parameter
+  'APP full' ... if APP works correct without exceptions this could maybe the new default 
+  };
+app.values = {0 1 2 3 4};
+app.def    = @(val)cg_vbm_get_defaults('extopts.APP', val{:});
+app.help   = {
+  'Affine alignment and SPM preprocessing can fail in untypical subjects (other species/neonates) or images (strong inhomogeneities). ' ...
+  'An initial rough bias correction and the extraction of the brain can reduce problems (APP = Affine PreProcessing). ' ...
+  'As far as also the first affine registration that is required for the brain mask can fail in non-human the option "without initial registation" is available that requires excact AD-PC alignment by the user (i.e. by SPM Display). ' ... 
+  ''
 };
 
 %------------------------------------------------------------------------
@@ -311,9 +324,9 @@ extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for VBM12 segmentation';
 if expert==2 % experimental expert options
-  extopts.val   = {APP,sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,vox,print}; 
+  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,print}; 
 elseif expert==1 % working expert options
-  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,restype,vox,print}; 
+  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,print}; 
 else
   extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,vox,print}; 
 end

@@ -9,6 +9,20 @@ function vbm = tbx_cfg_vbm
 %#ok<*AGROW>
  
 addpath(fileparts(which(mfilename)));
+
+%% ------------------------------------------------------------------------
+try
+  defid = fopen(fullfile(spm('dir'),'toolbox','vbm12','cg_vbm_defaults.m'));
+  defstr = textscan(defid,'%s'); 
+  fclose(defid); 
+  experti = find(cellfun('isempty',strfind(defstr{1},'vbm.extopts.expertgui'))==0);
+  expert = str2double(defstr{1}{experti+2}(1)); %cg_vbm_get_defaults('extopts.expertgui');
+catch %#ok<CTCH>
+  expert = 0; 
+end
+if isempty(expert) 
+  expert = 0;
+end  
 %_______________________________________________________________________
 
 data          = cfg_files;
@@ -89,24 +103,34 @@ native.help   = {
 warped        = cfg_menu;
 warped.tag    = 'warped';
 warped.name   = 'Normalized';
-warped.labels = {'No','Yes'};
-warped.values = {0 1};
+if expert
+  warped.labels = {'No','Yes','Both'};
+  warped.values = {0 1 2};
+else
+  warped.labels = {'No','Yes'};
+  warped.values = {0 1};
+end
 warped.help   = {'Write image in normalized space without any modulation.'
 ''
 };
 
-affine        = cfg_menu;
-affine.tag    = 'affine';
-affine.name   = 'Affine';
-affine.labels = {'No','Yes'};
-affine.values = {0 1};
-affine.help   = {'Write image in normalized space, but restricted to affine transformation.'};
+% affine        = cfg_menu;
+% affine.tag    = 'affine';
+% affine.name   = 'Affine';
+% affine.labels = {'No','Yes'};
+% affine.values = {0 1};
+% affine.help   = {'Write image in normalized space, but restricted to affine transformation.'};
 
 dartel        = cfg_menu;
 dartel.tag    = 'dartel';
 dartel.name   = 'DARTEL export';
-dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
-dartel.values = {0 1 2};
+if expert
+  dartel.labels = {'No','Rigid (SPM12 default)','Affine','Both'};
+  dartel.values = {0 1 2 3};
+else
+  dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
+  dartel.values = {0 1 2};
+end
 dartel.help   = {
 'This option is to export data into a form that can be used with DARTEL. The SPM default is to only apply rigid body transformation. However, a more appropriate option is to apply affine transformation, because the additional scaling of the images requires less deformations to non-linearly register brains to the template.'
 ''
@@ -114,11 +138,11 @@ dartel.help   = {
 
 native.def  = @(val)cg_vbm_get_defaults('output.bias.native', val{:});
 warped.def  = @(val)cg_vbm_get_defaults('output.bias.warped', val{:});
-affine.def  = @(val)cg_vbm_get_defaults('output.bias.affine', val{:});
+dartel.def  = @(val)cg_vbm_get_defaults('output.bias.dartel', val{:});
 bias        = cfg_branch;
 bias.tag    = 'bias';
 bias.name   = 'Bias, noise and intensity corrected';
-bias.val    = {native warped affine};
+bias.val    = {native warped dartel};
 bias.help   = {
   'This is the option to save a bias, noise, and (local) intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
 ''
@@ -185,7 +209,7 @@ grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and m
 
 native.def    = @(val)cg_vbm_get_defaults('output.WM.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.WM.warped', val{:});
-modulated.def = @(val)cg_vbm_get_defaults('output.WM.mod', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.WM.mod',    val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.WM.dartel', val{:});
 white         = cfg_branch;
 white.tag     = 'WM';
@@ -197,7 +221,7 @@ white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and 
 
 native.def    = @(val)cg_vbm_get_defaults('output.CSF.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.CSF.warped', val{:});
-modulated.def = @(val)cg_vbm_get_defaults('output.CSF.mod', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.CSF.mod',    val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.CSF.dartel', val{:});
 csf           = cfg_branch;
 csf.tag       = 'CSF';
@@ -207,14 +231,29 @@ csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and m[0]wp3*.
 ''
 };
 
+% head tissues
+native.def    = @(val)cg_vbm_get_defaults('output.TPMC.native', val{:});
+warped.def    = @(val)cg_vbm_get_defaults('output.TPMC.warped', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.TPMC.mod',    val{:});
+dartel.def    = @(val)cg_vbm_get_defaults('output.TPMC.dartel', val{:});
+tpmc          = cfg_branch;
+tpmc.tag      = 'TPMC';
+tpmc.name     = 'Tissue Propability Map Classes';
+tpmc.val      = {native warped modulated dartel};
+tpmc.help     = {'Options to produce the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
+''
+};
+
+% WMH
 native.def    = @(val)cg_vbm_get_defaults('output.WMH.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.WMH.warped', val{:});
+modulated.def = @(val)cg_vbm_get_defaults('output.WMH.mod',    val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.WMH.dartel', val{:});
 wmh           = cfg_branch;
 wmh.tag       = 'WMH';
 wmh.name      = 'White matter hyperintensity (WMH)';
-wmh.val       = {native warped dartel};
-wmh.help      = {'Options to produce WMH images, if WMHC==3: p4*.img, wp4*.img and m[0]wp4*.img.'
+wmh.val       = {native warped modulated dartel};
+wmh.help      = {'Options to produce WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
 ''
 };
 
@@ -258,7 +297,6 @@ te.help      = {
   'WARNING: The preprocessing documentation map is under development!\n\nDifference image of the atlas map in subject space and the segmentation.' };
 
 
-
 warps = cfg_menu;
 warps.tag    = 'warps';
 warps.name   = 'Deformation Fields';
@@ -279,7 +317,13 @@ warps.help   = {
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
-output.val  = {surface grey white csf label bias jacobian warps}; % ROI, wmh, atlas, pc, te};
+if expert==2
+  output.val  = {surface grey white csf wmh tpmc atlas label pc te bias jacobian warps}; 
+elseif expert==1
+  output.val  = {surface grey white csf wmh label bias jacobian warps};
+else
+  output.val  = {surface grey white csf label bias jacobian warps};
+end
 output.help = {
 'There are a number of options about what data you would like the routine to produce. The routine can be used for producing images of tissue classes, as well as bias corrected images. The native space option will produce a tissue class image (p*) that is in alignment with the original image. You can also produce spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the vbm toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The produced images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
 ''
@@ -290,19 +334,7 @@ output.help = {
 ''
 'The value of dx''/dy is a measure of how much x'' changes if y is changed by a tiny amount. The determinant of the Jacobian is the measure of relative volumes of warped and unwarped structures.  The modulation step simply involves multiplying by the relative volumes.'};
 
-%% ------------------------------------------------------------------------
-try
-  defid = fopen(fullfile(spm('dir'),'toolbox','vbm12','cg_vbm_defaults.m'));
-  defstr = textscan(defid,'%s'); 
-  fclose(defid); 
-  experti = find(cellfun('isempty',strfind(defstr{1},'vbm.extopts.expertgui'))==0);
-  expert = str2double(defstr{1}{experti+2}(1)); %cg_vbm_get_defaults('extopts.expertgui');
-catch
-  expert = 0; 
-end
-if isempty(expert) 
-  expert = 0;
-end  
+
 %% ------------------------------------------------------------------------
 tools      = cg_vbm_tools;             % volume tools
 stools     = cg_vbm_stools(expert);    % surface tools
