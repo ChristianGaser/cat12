@@ -1,7 +1,6 @@
 function vbm = tbx_cfg_vbm
-% Configuration file for Segment jobs
+% Configuration file for segment jobs
 %_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Department of Imaging Neuroscience
 %
 % Christian Gaser
 % $Id$
@@ -103,13 +102,8 @@ native.help   = {
 warped        = cfg_menu;
 warped.tag    = 'warped';
 warped.name   = 'Normalized';
-if expert
-  warped.labels = {'No','Yes','Both'};
-  warped.values = {0 1 2};
-else
-  warped.labels = {'No','Yes'};
-  warped.values = {0 1};
-end
+warped.labels = {'No','Yes'};
+warped.values = {0 1};
 warped.help   = {'Write image in normalized space without any modulation.'
 ''
 };
@@ -231,16 +225,16 @@ csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and m[0]wp3*.
 ''
 };
 
-% head tissues
+% head/background tissue classes
 native.def    = @(val)cg_vbm_get_defaults('output.TPMC.native', val{:});
 warped.def    = @(val)cg_vbm_get_defaults('output.TPMC.warped', val{:});
 modulated.def = @(val)cg_vbm_get_defaults('output.TPMC.mod',    val{:});
 dartel.def    = @(val)cg_vbm_get_defaults('output.TPMC.dartel', val{:});
 tpmc          = cfg_branch;
 tpmc.tag      = 'TPMC';
-tpmc.name     = 'Tissue Propability Map Classes';
+tpmc.name     = 'Tissue Probability Map Classes';
 tpmc.val      = {native warped modulated dartel};
-tpmc.help     = {'Options to produce the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
+tpmc.help     = {'Option to produce the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
 ''
 };
 

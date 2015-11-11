@@ -7,8 +7,7 @@ function out = cg_run_realign_estimate(varargin)
 % Output:
 % out    - computation results, usually a struct variable.
 %_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
-
+%
 % $Id$
 
 job           = varargin{1};

@@ -44,7 +44,7 @@ function varargout = vbm_surf_render(action,varargin)
 %__________________________________________________________________________
 % Copyright (C) 2010-2011 Wellcome Trust Centre for Neuroimaging
 
-% Guillaume Flandin
+% based on spm_mesh_render.m
 % $Id$
 
 

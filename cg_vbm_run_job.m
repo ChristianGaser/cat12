@@ -74,6 +74,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
             Y(isnan(Y)) = 0;
             switch job.vbm.sanlm
               case {1,2,3,4,5},  
+                % use isarnlm-filter only if voxel size <= 0.7mm
                 if any(round(vx_vol*100)/100<=0.70)
                   if job.extopts.verb>1, fprintf('\n'); end
                   Y = vbm_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
@@ -198,7 +199,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
         %% Initial affine registration.
         
         % APP option with subparameter
-        % Skull-stripping is helpfull for correct affine registration of neonates and other species. 
+        % Skull-stripping is helpful for correcting affine registration of neonates and other species. 
         % Bias correction is important for the affine registration.
         % However, the first registation can fail,
         if ~strcmp(job.vbm.species,'human'), job.extopts.APP=2; end
