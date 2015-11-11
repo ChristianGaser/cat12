@@ -12,7 +12,7 @@ function varargout = cg_vbm_run(job,arg)
 % job.vbm.affreg
 % job.vbm.reg
 % job.vbm.samp
-% job.vbm.write
+% job.vbm.warps
 % job.vbm.darteltpm
 % job.vbm.print
 %
@@ -47,7 +47,7 @@ vbm = struct('species',   cg_vbm_get_defaults('extopts.species'), ... job.extopt
              'brainmask', cg_vbm_get_defaults('extopts.brainmask'), ...
              'affreg',    job.opts.affreg,...
              'samp',      cg_vbm_get_defaults('opts.samp'),...
-             'write',     job.output.warps,...
+             'warps',     job.output.warps,...
              'sanlm',     cg_vbm_get_defaults('extopts.sanlm'),... % job.extopts.sanlm,...
              'print',     job.extopts.print,...
              'ngaus',     cg_vbm_get_defaults('opts.ngaus'),...
@@ -305,7 +305,7 @@ for i=1:numel(job.tissue),
     end
 end
 
-if job.vbm.write(1),
+if job.vbm.warps(1),
     fordef = cell(n,1);
     for j=1:n
         fordef{j} = fullfile(parts{j,1},['y_',parts{j,2},'.nii']);
@@ -314,7 +314,7 @@ else
     fordef = {};
 end
 
-if job.vbm.write(2),
+if job.vbm.warps(2),
     invdef = cell(n,1);
     for j=1:n
         invdef{j} = fullfile(parts{j,1},['iy_',parts{j,2},'.nii']);

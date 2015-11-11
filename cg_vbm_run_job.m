@@ -469,7 +469,7 @@ function cg_vbm_run_job(job,estwrite,tpm,subj)
     %% Final iteration, so write out the required data.
     tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
     bf = job.bias;
-    df = job.vbm.write;
+    df = job.vbm.warps;
     lb = job.label;
     jc = job.jacobian;
     res.stime = stime;
