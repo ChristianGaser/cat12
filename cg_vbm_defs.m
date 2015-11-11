@@ -5,7 +5,7 @@ function cg_vbm_defs(job)
 % Christian Gaser
 % $Id$
 %
-% remove potential file number at the end
+% based on spm_deformations.m
 
 many_images = 0;
 

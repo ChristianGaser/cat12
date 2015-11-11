@@ -1685,13 +1685,10 @@ if job.extopts.WMHC==3 && ~opt.inv_weighting;
 end  
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
-
 %% write jacobian determinant
 if jc
-  if do_dartel==1
-    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
-    clear y0
-  end
+  [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+  clear y0
   N      = nifti;
   N.dat  = file_array(fullfile(pth,['j_', nam, '.nii']),trans.warped.odim(1:3),...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
@@ -1705,7 +1702,7 @@ end
 
 % deformations y - dartel > subject
 if df(1)
-    Yy        = spm_diffeo('invdef',trans.atlas.Yy,odim,eye(4),M0);
+    Yy        = spm_diffeo('invdef',trans.warped.y,odim,eye(4),M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = M1;
