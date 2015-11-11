@@ -6448,6 +6448,7 @@ M       vbm_vol_pbt.m
     
 
 ------------------------------------------------------------------------
+r759 | dahnke | 2015-11-09 10:38:54 +0100 (Mo, 09 Nov 2015) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6476,5 +6477,26 @@ M       vbm_vol_partvol.m
 (7)  Corrected using of SPM class values (minimum fraction has to be 10%).
 (8)  Corrected command line output.
 (9)  Unready optimizations of the WMH correction.
+
 ------------------------------------------------------------------------
-r759 | dahnke | 2015-11-09 10:38:41
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile.vbm
+M       cg_cfg_realign.m
+M       cg_run_realign_estimate.m
+M       cg_run_realign_estwrite.m
+M       cg_vbm_defaults.m
+M       cg_vbm_defs.m
+M       cg_vbm_extopts.m
+M       cg_vbm_run_job.m
+ M      html/CAT.png
+M       tbx_cfg_vbm.m
+M       vbm_surf_render.m
+
+(1) Removed some typos in several files.
+(2) Removed wrong warp option in tbx_cfg_vbm.m.
+(3) Set expertgui option to 0 in cg_vbm_default.m.
+    
+------------------------------------------------------------------------
+r760 | gaser | 2015-11-11 21:11:16

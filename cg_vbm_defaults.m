@@ -183,7 +183,7 @@ vbm.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
 vbm.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debugging files 
 vbm.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 vbm.extopts.gui          = 1;     % use GUI 
-vbm.extopts.expertgui    = 2;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
+vbm.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
 
 
 % expert options - ROIs
