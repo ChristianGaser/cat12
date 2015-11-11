@@ -4,7 +4,7 @@ function cg_vbm_defs(job)
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
-
+%
 % remove potential file number at the end
 
 many_images = 0;
@@ -146,12 +146,6 @@ function dat = spm_load_float(V)
 % FORMAT dat = spm_load_float(V)
 % V   - handle from spm_vol
 % dat - a 3D floating point array
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
-
-% John Ashburner
-% $Id$
-
 
 dim = V(1).dim(1:3);
 dat = single(0);
