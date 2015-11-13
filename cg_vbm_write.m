@@ -61,8 +61,9 @@ if job.extopts.APP>=3 && any(cell2mat(struct2cell(job.output.TPMC)')==0)
   vbm_io_cprintf('warn',sprintf('Disable TPMC output due to skull-stripped SPM input (APP=%d)!\n',job.extopts.APP));                      
 end
 %}
+
 if ~isfield(job.output,'ROI')
-  job.output.ROI  = cg_vbm_get_defaults('output.ROI');
+  job.output.ROI = cg_vbm_get_defaults('output.ROI');
 end
 
 FN = {'INV','atlas','debug','WMHC','NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf','verb','vox'};
@@ -71,6 +72,7 @@ for fni=1:numel(FN)
     job.extopts.(FN{fni}) = cg_vbm_get_defaults(sprintf('extopts.%s',FN{fni}));
   end
 end
+
 % check range of str variables
 FN = {'NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
 for fni=1:numel(FN)
@@ -78,7 +80,6 @@ for fni=1:numel(FN)
     job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));
   end
 end
-
 
 
 if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
@@ -1655,7 +1656,6 @@ vbm_io_writenii(VT0,Yl1,'a1','brain atlas map for major structures and sides',..
   'uint8',[0,1],job.output.atlas,trans);
 
 
-
 %% class maps
 fn = {'GM','WM','CSF','head','head','background'};
 for clsi=1:3
@@ -1666,6 +1666,7 @@ for clsi=1:3
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 0 2 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
+
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
     vbm_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
@@ -1676,6 +1677,7 @@ if any(cell2mat(struct2cell(job.output.TPMC)'))
       min([0 0 2 0],cell2mat(struct2cell(job.output.TPMC)')),trans);
   end
 end
+
 %% write WMH class maps
 if job.extopts.WMHC==3 && ~opt.inv_weighting;
   vbm_io_writenii(VT0,single(Ywmh)/255,'p7','WMH tissue map','uint8',[0,1/255],...
@@ -1699,7 +1701,6 @@ if jc
   N.dat(:,:,:) = dt;
 end
 
-
 % deformations y - dartel > subject
 if df(1)
     Yy        = spm_diffeo('invdef',trans.warped.y,odim,eye(4),M0);
@@ -1711,6 +1712,7 @@ if df(1)
     create(N);
     N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim(1:3),1,3]);
 end
+
 % deformation iy - subject > dartel
 if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
   %% update df(2) for interpolated images
@@ -3585,7 +3587,7 @@ function wYv = vbm_vol_ROInorm(Yv,trans,ai,mod)
     %if FA{ai,2}, [D,I] = vbdist(single(wYlai)); wYlai(:) = wYlai(I(:)); clear D I; end
   else
     if mod==0
-      [wYv,w] = spm_diffeo('push',Yv,trans.warped.y,trans.warped.odim(1:3)); spm_field('bound',1);
+      [wYv,w] = spm_diffeo('push',Yv,trans.warped.y,trans.warped.odim(1:3)); spm_field('boundary',1);
       wYv = spm_field(w,wYv,[sqrt(sum(trans.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
     elseif mod==1 && iscell(Yv) % tissue case
       for i=1:3
