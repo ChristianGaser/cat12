@@ -108,13 +108,6 @@ warped.help   = {'Write image in normalized space without any modulation.'
 ''
 };
 
-% affine        = cfg_menu;
-% affine.tag    = 'affine';
-% affine.name   = 'Affine';
-% affine.labels = {'No','Yes'};
-% affine.values = {0 1};
-% affine.help   = {'Write image in normalized space, but restricted to affine transformation.'};
-
 dartel        = cfg_menu;
 dartel.tag    = 'dartel';
 dartel.name   = 'DARTEL export';

@@ -33,7 +33,7 @@ function varargout = cg_vbm_run(job,arg)
 % check whether estimation & write should be done
 estwrite = isfield(job,'opts');
 
-% set some defaults if segmentations are not estimated
+% set some dummy defaults if segmentations are not estimated
 if ~estwrite
     job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
                       'reg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[3 3 2 3 4 2]);
@@ -67,6 +67,12 @@ if isfield(job.extopts,'sanlm')
 end
 if ~isfield(job.extopts,'verb')
   job.extopts.verb =  cg_vbm_get_defaults('extopts.verb');
+end
+if ~isfield(job.extopts,'APP')
+  job.extopts.APP =  cg_vbm_get_defaults('extopts.APP');
+end
+if ~isfield(job.output,'ROI')
+  job.output.ROI =  cg_vbm_get_defaults('output.ROI');
 end
            
 % set vbm.bb and vb.vox by Dartel template properties
