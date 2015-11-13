@@ -6501,6 +6501,7 @@ M       vbm_surf_render.m
     
 
 ------------------------------------------------------------------------
+r761 | gaser | 2015-11-12 00:47:35 +0100 (Do, 12 Nov 2015) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6513,5 +6514,19 @@ M       cg_vbm_write.m
     and not from the dartel registration (now use trans.warped.y rather
     than trans.atlas.Yy).
 (2) Some smaller changes to help textes or names.    
+
 ------------------------------------------------------------------------
-r761 | gaser | 2015-11-12 00:47:25
+
+Changed paths:
+M       CHANGES.txt
+M       cg_vbm_longitudinal.m
+M       cg_vbm_run.m
+M       cg_vbm_run_job.m
+M       cg_vbm_write.m
+M       checkinopt.m
+M       tbx_cfg_vbm.m
+
+(1) Updated some fields for longitudinal pipeline.
+(2) Some smaller cosmetic changes and typo minimization.    
+------------------------------------------------------------------------
+r762 | gaser | 2015-11-13 13:56:14
