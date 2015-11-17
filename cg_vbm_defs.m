@@ -68,8 +68,8 @@ for i=1:size(fnames,1),
     end
     Vo = struct('fname',ofnames{i},...
                 'dim',[size(Def(:,:,:,1),1) size(Def(:,:,:,1),2) size(Def(:,:,:,1),3)],...
-                'dt',V.dt,... 'dt',[spm_type('int16') spm_platform('bigend')],...
-                'pinfo',V.pinfo,... 'pinfo',[20/32767 0 0]',...
+                'dt',[spm_type('uint16') spm_platform('bigend')],...
+                'pinfo',[1/255 0 0]',...
                 'mat',mat,...
                 'n',V.n,...
                 'descrip',V.descrip);
@@ -83,22 +83,15 @@ for i=1:size(fnames,1),
       dt(:,[1 end],:) = NaN;
       dt([1 end],:,:) = NaN;
 
+      % for modulation of non-linear parts only we have to remove the affine part
+      % of the jacobian determinant
       if modulate == 2
-        M0 = V.mat;
-        dim = Vo.dim(1:3);
-        M1 = Vo.mat;
-        vx1 =  sqrt(sum(V.mat(1:3,1:3).^2));
-        vx2 =  sqrt(sum(Vo.mat(1:3,1:3).^2));
-        vx1 = prod(vx1);
-        vx2 = prod(vx2);
-        
-        x      = affind(rgrid(dim),M0);
-        y1     = affind(Def,M1);
-        
-        [M3,R] = spm_get_closest_affine(x,y1);
-
-        Ma = M1\M3*M0;
-        dt = dt/abs(det(Ma(1:3,1:3))*vx1/vx2);
+        M1  = Vo.mat;
+        [x1,x2,x3] = ndgrid(single(1:size(Def,1)),single(1:size(Def,2)),single(1:size(Def,3)));
+        X = cat(4,x1,x2,x3);
+        Ma = spm_get_closest_affine(X,Def)
+        M3 = Ma\M1;
+        dt = dt*abs(det(M3));
       end
     
     end
@@ -116,45 +109,3 @@ for i=1:size(fnames,1),
     end;
 end;
 return;
-
-%=======================================================================
-function y1 = affind(y0,M)
-y1 = zeros(size(y0),'single');
-for d=1:3,
-    y1(:,:,:,d) = y0(:,:,:,1)*M(d,1);
-    y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,2)*M(d,2);
-    y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,3)*M(d,3) + M(d,4);
-end
-return;
-%=======================================================================
-
-%=======================================================================
-function x = rgrid(d)
-x = zeros([d(1:3) 3],'single');
-[x1,x2] = ndgrid(single(1:d(1)),single(1:d(2)));
-for i=1:d(3),
-    x(:,:,i,1) = x1;
-    x(:,:,i,2) = x2;
-    x(:,:,i,3) = single(i);
-end
-return;
-%=======================================================================
-
-%=======================================================================
-function dat = spm_load_float(V)
-% Load a volume into a floating point array
-% FORMAT dat = spm_load_float(V)
-% V   - handle from spm_vol
-% dat - a 3D floating point array
-
-dim = V(1).dim(1:3);
-dat = single(0);
-dat(dim(1),dim(2),dim(3))=0;
-for i=1:V(1).dim(3),
-    M = spm_matrix([0 0 i]);
-    dat(:,:,i) = single(spm_slice_vol(V(1),M,dim(1:2),1));
-end;
-return;
-%=======================================================================
-
-
