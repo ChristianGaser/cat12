@@ -58,7 +58,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
         image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         axis equal off; set(gca,'Position',[0 0 1 1]); daspect(DAR);
 
-      case {'vbm_pre_iscale'}
+      case {'cat_pre_iscale'}
         clf; set(fh,'WindowStyle','docked','Visible','on','color',[0 0 0]);
         subplot('Position',[0.0 0.5 0.5 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
         subplot('Position',[0.5 0.5 0.5 0.5]); image(ind2rgb( uint16(7+8*(min(1,varargin{3}(:,:,s))*3 + 4*varargin{4}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); 

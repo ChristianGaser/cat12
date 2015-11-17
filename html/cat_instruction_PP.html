@@ -36,7 +36,7 @@
       <p>
         CAT12 also allows processing of other apes and monkeys. 
         First, you have to download the <a href="matlab:web('http://dbm.neuro.uni-jena.de/"','-browser');" target="_blank">animal templates and default parameter</a>.
-        Next you have to <a href="matlab:vbm_set_cg_vbm_defaults">change the default file</a> according to your primate data.
+        Next you have to <a href="matlab:cat_set_cat_defaults">change the default file</a> according to your primate data.
       </p>
 -->
       <!-- image of different species (Yp0) and ROIs -->
@@ -47,7 +47,7 @@
           <p>
             Although CAT12 uses SPM12 preprocessing it uses an independent segmentation approach and the SPM12 segmentation is only used as starting estimate. 
             Thus, most parameters were set to SPM default and removed from the GUI. 
-            Modification should be made only by expert users via <a href="matlab:open cg_vbm_defaults;">cg_vbm_defaults</a> file.
+            Modification should be made only by expert users via <a href="matlab:open cat_defaults;">cat_defaults</a> file.
             Please choose the SPM "Tissue Probability Map" and "Affine Registration" for your data.
             <!-- 
             For non human TPM see <a href="cat_stuff.html">Links, sources, and recommendations</a>.
@@ -71,12 +71,12 @@
           </p>
           <p>
             For regional analysis the Hammers atlas in IXI555 template space allows extraction of values such as thickness.
-            Results were stored in the <i>vbm_*.XML</i> and a csv-file <i>vbmROI*.csv</i> files. 
+            Results were stored in the <i>cat_*.XML</i> and a csv-file <i>vbmROI*.csv</i> files. 
             <!--
             <i>vbmROI[SPACE]_[ATLAS]_*.csv</i> for each atlas map <i>ATLAS</i> and its estimation space [SPACE] (<i>s</i> for subject space and <i>w</i> for normalized space).
             -->
             <!--
-            The data can be accessed by external software or by using the <a class="function" href="matlab:vbm_io_xml">vbm_io_xml</a> and <a class="function" href="matlab:vbm_io_csv">vbm_io_csv</a> function.
+            The data can be accessed by external software or by using the <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> and <a class="function" href="matlab:cat_io_csv">cat_io_csv</a> function.
              (see <a>Analysis of XML data</a>) 
              -->
           </p>
@@ -139,7 +139,7 @@
         <li>      
           <h4>Expert options</h4>
           <p> 
-            Further options and parameter such as the SPM12 parameter used for preprocessing are available for expert users via <a href="matlab:open cg_vbm_defaults;">cg_vbm_defaults</a> file.
+            Further options and parameter such as the SPM12 parameter used for preprocessing are available for expert users via <a href="matlab:open cat_defaults;">cat_defaults</a> file.
           </p>
         </li>
       </ul>
