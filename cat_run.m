@@ -41,7 +41,7 @@ end
 
 channel = struct('vols',{job.data});
 
-cat = struct('species',   cat_get_defaults('extopts.species'), ... job.extopts.species,...
+cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.species,...
              'cat12atlas',cat_get_defaults('extopts.cat12atlas'), ... 
              'darteltpm', job.extopts.darteltpm{1}, ...
              'brainmask', cat_get_defaults('extopts.brainmask'), ...
@@ -56,14 +56,14 @@ cat = struct('species',   cat_get_defaults('extopts.species'), ... job.extopts.s
              'vox',       cat_get_defaults('extopts.vox'));
 
 if isfield(job.extopts,'restype')
-  cat.restype = char(fieldnames(job.extopts.restype));
-  cat.resval  = job.extopts.restype.(cat.restype); 
+  cat12.restype = char(fieldnames(job.extopts.restype));
+  cat12.resval  = job.extopts.restype.(cat12.restype); 
 else
-  cat.restype = cat_get_defaults('extopts.restype');
-  cat.resval  = cat_get_defaults('extopts.resval');
+  cat12.restype = cat_get_defaults('extopts.restype');
+  cat12.resval  = cat_get_defaults('extopts.resval');
 end
 if isfield(job.extopts,'sanlm')
-  cat.sanlm = job.extopts.sanlm;
+  cat12.sanlm = job.extopts.sanlm;
 end
 if ~isfield(job.extopts,'verb')
   job.extopts.verb =  cat_get_defaults('extopts.verb');
@@ -75,16 +75,16 @@ if ~isfield(job.output,'ROI')
   job.output.ROI =  cat_get_defaults('output.ROI');
 end
            
-% set cat.bb and vb.vox by Dartel template properties
-Vd       = spm_vol([cat.darteltpm ',1']);
+% set cat12.bb and vb.vox by Dartel template properties
+Vd       = spm_vol([cat12.darteltpm ',1']);
 [bb,vox] = spm_get_bbox(Vd, 'old');  
-if cat.bb(1)>cat.bb(2), bbt=cat.bb(1); cat.bb(1)=cat.bb(2); cat.bb(2)=bbt; clear bbt; end
+if cat12.bb(1)>cat12.bb(2), bbt=cat12.bb(1); cat12.bb(1)=cat12.bb(2); cat12.bb(2)=bbt; clear bbt; end
 if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-cat.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
+cat12.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
             min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
           
-if isinf(cat.vox) || isnan(cat.vox)
-  cat.vox = abs(vox);
+if isinf(cat12.vox) || isnan(cat12.vox)
+  cat12.vox = abs(vox);
 end
 
 
@@ -95,7 +95,7 @@ if estwrite
     clsn = numel(spm_vol(fullfile(pth,[nam ext]))); 
     tissue = struct();
     for i=1:clsn;
-        tissue(i).ngaus = cat.ngaus(i);
+        tissue(i).ngaus = cat12.ngaus(i);
         tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
     end
 end
@@ -130,7 +130,7 @@ job.jacobian = job.output.jacobian.warped;
 job.biasreg  = cat_get_defaults('opts.biasreg');
 job.biasfwhm = cat_get_defaults('opts.biasfwhm');
 job.channel  = channel;
-job.cat      = cat;
+job.cat      = cat12;
 job.warps    = job.output.warps;
 job.tissue   = tissue;
 

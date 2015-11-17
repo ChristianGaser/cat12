@@ -1,4 +1,4 @@
-function res = cat_checkinopt(opt, def, cond)
+function res = cat_io_checkinopt(opt, def, cond)
 % format: res = checkin(opt,def,cond)
 % _________________________________________________________________________
 % Robert Dahnke 2011_01

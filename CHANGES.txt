@@ -6991,6 +6991,7 @@ D       vbdist.mexw64
 Huge renaming from vbm to cat.
 
 ------------------------------------------------------------------------
+r766 | gaser | 2015-11-17 16:05:32 +0100 (Di, 17 Nov 2015) | 116 lines
 
 Changed paths:
 D       AmapMex.c
@@ -7107,5 +7108,41 @@ M       templates_animals/monkey_oldworld_cg_vbm_defaults.m
 
 (1) Again a lot of more renaming.
 (2) Updating of cat12.fig to consider new functions.
+
 ------------------------------------------------------------------------
-r766 | gaser | 2015-11-17 16:05:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+M       cat_batch_long.m
+M       cat_batch_spm.m
+M       cat_batch_vbm.m
+M       cat_check.m
+M       cat_defaults.m
+M       cat_get_defaults.m
+M       cat_io_checkinopt.m
+M       cat_io_csv.m
+M       cat_io_xml.m
+M       cat_io_xml2csv.m
+M       cat_long_main.m
+M       cat_main.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_stat_marks.m
+M       cat_surf_calc.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_tst_calc_kappa.m
+M       cat_vol_approx.m
+M       cat_vol_atlas.m
+M       cat_vol_isarnlm.m
+M       cat_vol_pbt.m
+M       cg_vbm_defaults_template_humanIXI555.m
+M       human_IXI555_cg_vbm_defaults.m
+
+Again a lot of more renaming.
+
+------------------------------------------------------------------------
+r767 | gaser | 2015-11-17 17:00:11

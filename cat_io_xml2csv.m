@@ -97,7 +97,7 @@ function cat_io_xml2csv(PD,FN,fname)
   
   % filename
   if ~exist('fname','var') || isempty(fname)
-    fname = fullfile(pwd,'cat.csv');
+    fname = fullfile(pwd,'cat12.csv');
   end
   
   

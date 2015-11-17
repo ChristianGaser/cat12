@@ -77,7 +77,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
   def.realign    = 0;
   def.realignres = 1.5; 
   def.diffimg    = 0;
-  opt = cat_checkinopt(opt,def);
+  opt = cat_io_checkinopt(opt,def);
   
   
  % if ~exist('methodname','var'), methodname=''; else methodname=[' (' methodname ')']; end
