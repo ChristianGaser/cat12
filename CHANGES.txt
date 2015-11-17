@@ -6531,6 +6531,7 @@ M       tbx_cfg_vbm.m
 (2) Some smaller cosmetic changes and typo minimization.    
 
 ------------------------------------------------------------------------
+r763 | gaser | 2015-11-17 12:32:31 +0100 (Di, 17 Nov 2015) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6544,5 +6545,403 @@ M       vbm_tst_qa.m
     code in vbm_io_writenii.m and cg_vbm_defs.m.
 (2) Some smaller cosmetic changes and typo correction.  
 (3) release number of VBM12 was not correctly estimated in vbm_tst_qa.m.  
+
 ------------------------------------------------------------------------
-r763 | gaser | 2015-11-17 12:32:22
+
+Changed paths:
+M       CHANGES.txt
+M       Contents_info.txt
+A  +    cat12.fig
+A  +    cat12.m
+A  +    cat_batch_long.m
+A  +    cat_batch_long.sh
+A  +    cat_batch_spm.m
+A  +    cat_batch_spm.sh
+A  +    cat_batch_vbm.m
+A  +    cat_batch_vbm.sh
+A  +    cat_cfg_extopts.m
+A  +    cat_cfg_opts.m
+A  +    cat_cfg_stools.m
+A  +    cat_cfg_stoolsexp.m
+A  +    cat_cfg_tools.m
+A  +    cat_check.m
+A  +    cat_check_system_output.m
+A  +    cat_defaults.m
+A  +    cat_get_defaults.m
+A  +    cat_io_3Dto4D.m
+A  +    cat_io_FreeSurfer.m
+A  +    cat_io_cgw2seg.m
+A  +    cat_io_checkinopt.m
+A  +    cat_io_cmd.m
+A  +    cat_io_colormaps.m
+A  +    cat_io_cprintf.m
+A  +    cat_io_csv.m
+A  +    cat_io_handle_pre.m
+A  +    cat_io_img2nii.m
+A  +    cat_io_matlabversion.m
+A  +    cat_io_remat.m
+A  +    cat_io_seg2cgw.m
+A  +    cat_io_struct2table.m
+A  +    cat_io_updateStruct.m
+A  +    cat_io_writenii.m
+A  +    cat_io_xml.m
+A  +    cat_io_xml2csv.m
+A  +    cat_long_multi.m
+A  +    cat_long_multi_run.m
+A  +    cat_main.m
+A  +    cat_plot_boxplot.m
+A  +    cat_run.m
+A  +    cat_run_job.m
+A  +    cat_run_newcatch.m
+A  +    cat_run_oldcatch.m
+A  +    cat_set_defaults.m
+A  +    cat_stat_calc_stc.m
+A  +    cat_stat_check_cov.m
+A  +    cat_stat_marks.m
+A  +    cat_stat_nanmean.m
+A  +    cat_stat_nanmedian.m
+A  +    cat_stat_nanstat1d.m
+A  +    cat_stat_nanstd.m
+A  +    cat_stat_nansum.m
+A  +    cat_stat_showslice_all.m
+A  +    cat_stat_spm.m
+A  +    cat_stat_spmF2x.m
+A  +    cat_stat_spmT2x.m
+A  +    cat_surf_avg.m
+A  +    cat_surf_calc.m
+A  +    cat_surf_createCS.m
+A  +    cat_surf_display.m
+A  +    cat_surf_info.m
+A  +    cat_surf_parameters.m
+A  +    cat_surf_rename.m
+A  +    cat_surf_render.m
+A  +    cat_surf_resamp.m
+A  +    cat_surf_resamp_freesurfer.m
+A  +    cat_surf_resample.m
+A  +    cat_surf_smooth.m
+A  +    cat_surf_vol2surf.m
+A  +    cat_tst_BWPsliceartifact.m
+A  +    cat_tst_CJV.m
+A  +    cat_tst_calc_kappa.m
+A  +    cat_tst_qa.m
+A  +    cat_tst_staple_multilabels.m
+A  +    cat_update.m
+A  +    cat_vol_ROIval.c
+A  +    cat_vol_ROIval.mexmaci64
+A  +    cat_vol_approx.m
+A  +    cat_vol_atlas.m
+A  +    cat_vol_average.m
+A  +    cat_vol_calc_roi.m
+A  +    cat_vol_correct_slice_scaling.m
+A  +    cat_vol_ctype.m
+A  +    cat_vol_downcut.c
+A  +    cat_vol_downcut.mexa64
+A  +    cat_vol_downcut.mexglx
+A  +    cat_vol_downcut.mexmaci64
+A  +    cat_vol_downcut.mexw32
+A  +    cat_vol_downcut.mexw64
+A  +    cat_vol_eidist.c
+A  +    cat_vol_eidist.mexa64
+A  +    cat_vol_eidist.mexglx
+A  +    cat_vol_eidist.mexmaci64
+A  +    cat_vol_eidist.mexw32
+A  +    cat_vol_eidist.mexw64
+A  +    cat_vol_eikonal3.c
+A  +    cat_vol_eikonal3.mexa64
+A  +    cat_vol_eikonal3.mexglx
+A  +    cat_vol_eikonal3.mexmaci64
+A  +    cat_vol_eikonal3.mexw32
+A  +    cat_vol_eikonal3.mexw64
+A  +    cat_vol_findfiles.m
+A  +    cat_vol_genus0.c
+A  +    cat_vol_genus0.mexa64
+A  +    cat_vol_genus0.mexglx
+A  +    cat_vol_genus0.mexmaci64
+A  +    cat_vol_genus0.mexw32
+A  +    cat_vol_genus0.mexw64
+A  +    cat_vol_gradient3.c
+A  +    cat_vol_gradient3.mexa64
+A  +    cat_vol_gradient3.mexglx
+A  +    cat_vol_gradient3.mexmaci64
+A  +    cat_vol_gradient3.mexw32
+A  +    cat_vol_gradient3.mexw64
+A  +    cat_vol_groupwise_ls.m
+A  +    cat_vol_imcalc.m
+A  +    cat_vol_interp3f.cpp
+A  +    cat_vol_interp3f.mexa64
+A  +    cat_vol_interp3f.mexglx
+A  +    cat_vol_interp3f.mexmaci64
+A  +    cat_vol_interp3f.mexw32
+A  +    cat_vol_interp3f.mexw64
+A  +    cat_vol_isarnlm.m
+A  +    cat_vol_iscale.m
+A  +    cat_vol_laplace3.c
+A  +    cat_vol_laplace3.mexa64
+A  +    cat_vol_laplace3.mexglx
+A  +    cat_vol_laplace3.mexmaci64
+A  +    cat_vol_laplace3.mexw32
+A  +    cat_vol_laplace3.mexw64
+A  +    cat_vol_laplace3R.c
+A  +    cat_vol_laplace3R.mexa64
+A  +    cat_vol_laplace3R.mexglx
+A  +    cat_vol_laplace3R.mexmaci64
+A  +    cat_vol_laplace3R.mexw32
+A  +    cat_vol_laplace3R.mexw64
+A  +    cat_vol_localstat.c
+A  +    cat_vol_localstat.mexa64
+A  +    cat_vol_localstat.mexglx
+A  +    cat_vol_localstat.mexmaci64
+A  +    cat_vol_localstat.mexw32
+A  +    cat_vol_localstat.mexw64
+A  +    cat_vol_median3.c
+A  +    cat_vol_median3.mexa64
+A  +    cat_vol_median3.mexglx
+A  +    cat_vol_median3.mexmaci64
+A  +    cat_vol_median3.mexw32
+A  +    cat_vol_median3.mexw64
+A  +    cat_vol_median3c.c
+A  +    cat_vol_median3c.mexa64
+A  +    cat_vol_median3c.mexglx
+A  +    cat_vol_median3c.mexmaci64
+A  +    cat_vol_median3c.mexw32
+A  +    cat_vol_median3c.mexw64
+A  +    cat_vol_morph.m
+A  +    cat_vol_nanmean3.m
+A  +    cat_vol_partvol.m
+A  +    cat_vol_pbt.m
+A  +    cat_vol_pbtp.cpp
+A  +    cat_vol_pbtp.mexa64
+A  +    cat_vol_pbtp.mexglx
+A  +    cat_vol_pbtp.mexmaci64
+A  +    cat_vol_pbtp.mexw32
+A  +    cat_vol_pbtp.mexw64
+A  +    cat_vol_resize.m
+A  +    cat_vol_sanlm.m
+A  +    cat_vol_series_align.m
+A  +    cat_vol_set_com.m
+A  +    cat_vol_simgrow.c
+A  +    cat_vol_simgrow.mexa64
+A  +    cat_vol_simgrow.mexglx
+A  +    cat_vol_simgrow.mexmaci64
+A  +    cat_vol_simgrow.mexw32
+A  +    cat_vol_simgrow.mexw64
+A  +    cat_vol_slice_overlay.m
+A  +    cat_vol_slice_overlay_ui.m
+A  +    cat_vol_smooth3X.m
+D       cg_calculate_volume_ROI.m
+M       cg_cfg_realign.m
+D       cg_check_cov.m
+A  +    cg_debug.m
+A  +    cg_long_main.m
+M       cg_realign.m
+D       cg_set_com.m
+D       cg_showslice_all.m
+D       cg_slice_overlay.m
+D       cg_slice_overlay_ui.m
+D       cg_spmF2x.m
+D       cg_spmT2x.m
+D       cg_spm_batch.m
+D       cg_spm_batch.sh
+D       cg_vbm_batch.m
+D       cg_vbm_batch.sh
+M       cg_vbm_bias.m
+M       cg_vbm_bias_run.m
+M       cg_vbm_brainmask.m
+M       cg_vbm_brainmask_ui.m
+D       cg_vbm_debug.m
+D       cg_vbm_defaults.m
+M       cg_vbm_defaults_template_humanIXI555.m
+D       cg_vbm_defs.m
+D       cg_vbm_extopts.m
+D       cg_vbm_get_defaults.m
+D       cg_vbm_longitudinal.m
+D       cg_vbm_longitudinal_batch.m
+D       cg_vbm_longitudinal_batch.sh
+D       cg_vbm_longitudinal_multi.m
+D       cg_vbm_longitudinal_multi_run.m
+D       cg_vbm_opts.m
+D       cg_vbm_run.m
+D       cg_vbm_run_job.m
+D       cg_vbm_run_newcatch.m
+D       cg_vbm_run_oldcatch.m
+D       cg_vbm_stools.m
+D       cg_vbm_stoolsexp.m
+D       cg_vbm_tools.m
+D       cg_vbm_update.m
+D       cg_vbm_write.m
+A  +    cg_vol_defs.m
+D       checkinopt.m
+M       compile.m
+M       distribute_to_server.sh
+M       ds.m
+D       histeq_mask.nii
+D       histeq_mask.txt
+M       html/cat.html
+M       html/cat_FAQ.html
+M       html/cat_instruction_FF.html
+M       html/cat_instruction_FN.html
+M       html/cat_instruction_MS.html
+M       html/cat_instruction_PP.html
+M       html/cat_instruction_QA.html
+M       html/cat_instruction_templates.html
+M       html/cat_methods_RBM.html
+M       html/cat_starting.html
+M       human_IXI555_cg_vbm_defaults.m
+A  +    spm_cat12.m
+D       spm_vbm12.m
+A  +    tbx_cfg_cat.m
+D       tbx_cfg_vbm.m
+A  +    templates_1.50mm/cat12.nii
+D       templates_1.50mm/vbm12.nii
+D       vbm12.fig
+D       vbm12.m
+D       vbm12.man
+D       vbm_check.m
+D       vbm_check_system_output.m
+D       vbm_findfiles.m
+D       vbm_io_3Dto4D.m
+D       vbm_io_FreeSurfer.m
+D       vbm_io_cgw2seg.m
+D       vbm_io_cmd.m
+D       vbm_io_colormaps.m
+D       vbm_io_cprintf.m
+D       vbm_io_csv.m
+D       vbm_io_handle_pre.m
+D       vbm_io_img2nii.m
+D       vbm_io_matlabversion.m
+D       vbm_io_remat.m
+D       vbm_io_seg2cgw.m
+D       vbm_io_struct2table.m
+D       vbm_io_updateStruct.m
+D       vbm_io_writenii.m
+D       vbm_io_xml.m
+D       vbm_io_xml2csv.m
+D       vbm_plot_boxplot.m
+D       vbm_qa_calcSTC.m
+D       vbm_set_cg_vbm_defaults.m
+D       vbm_spm.m
+D       vbm_stat_marks.m
+D       vbm_stat_nanmean.m
+D       vbm_stat_nanmedian.m
+D       vbm_stat_nanstat1d.m
+D       vbm_stat_nanstd.m
+D       vbm_stat_nansum.m
+D       vbm_surf_avg.m
+D       vbm_surf_calc.m
+D       vbm_surf_createCS.m
+D       vbm_surf_display.m
+D       vbm_surf_info.m
+D       vbm_surf_parameters.m
+D       vbm_surf_rename.m
+D       vbm_surf_render.m
+D       vbm_surf_resamp.m
+D       vbm_surf_resamp_freesurfer.m
+D       vbm_surf_resample.m
+D       vbm_surf_smooth.m
+D       vbm_surf_vol2surf.m
+D       vbm_tst_BWPsliceartifact.m
+D       vbm_tst_CJV.m
+D       vbm_tst_calc_kappa.m
+D       vbm_tst_qa.m
+D       vbm_tst_staple_multilabels.m
+D       vbm_vol_ROIval.c
+D       vbm_vol_ROIval.mexmaci64
+D       vbm_vol_approx.m
+D       vbm_vol_atlas.m
+D       vbm_vol_average.m
+D       vbm_vol_correct_slice_scaling.m
+D       vbm_vol_ctype.m
+D       vbm_vol_downcut.c
+D       vbm_vol_downcut.mexa64
+D       vbm_vol_downcut.mexglx
+D       vbm_vol_downcut.mexmaci64
+D       vbm_vol_downcut.mexw32
+D       vbm_vol_downcut.mexw64
+D       vbm_vol_eidist.c
+D       vbm_vol_eidist.mexa64
+D       vbm_vol_eidist.mexglx
+D       vbm_vol_eidist.mexmaci64
+D       vbm_vol_eidist.mexw32
+D       vbm_vol_eidist.mexw64
+D       vbm_vol_eikonal3.c
+D       vbm_vol_eikonal3.mexa64
+D       vbm_vol_eikonal3.mexglx
+D       vbm_vol_eikonal3.mexmaci64
+D       vbm_vol_eikonal3.mexw32
+D       vbm_vol_eikonal3.mexw64
+D       vbm_vol_genus0.c
+D       vbm_vol_genus0.mexa64
+D       vbm_vol_genus0.mexglx
+D       vbm_vol_genus0.mexmaci64
+D       vbm_vol_genus0.mexw32
+D       vbm_vol_genus0.mexw64
+D       vbm_vol_gradient3.c
+D       vbm_vol_gradient3.mexa64
+D       vbm_vol_gradient3.mexglx
+D       vbm_vol_gradient3.mexmaci64
+D       vbm_vol_gradient3.mexw32
+D       vbm_vol_gradient3.mexw64
+D       vbm_vol_groupwise_ls.m
+D       vbm_vol_imcalc.m
+D       vbm_vol_interp3f.cpp
+D       vbm_vol_interp3f.mexa64
+D       vbm_vol_interp3f.mexglx
+D       vbm_vol_interp3f.mexmaci64
+D       vbm_vol_interp3f.mexw32
+D       vbm_vol_interp3f.mexw64
+D       vbm_vol_isarnlm.m
+D       vbm_vol_iscale.m
+D       vbm_vol_laplace3.c
+D       vbm_vol_laplace3.mexa64
+D       vbm_vol_laplace3.mexglx
+D       vbm_vol_laplace3.mexmaci64
+D       vbm_vol_laplace3.mexw32
+D       vbm_vol_laplace3.mexw64
+D       vbm_vol_laplace3R.c
+D       vbm_vol_laplace3R.mexa64
+D       vbm_vol_laplace3R.mexglx
+D       vbm_vol_laplace3R.mexmaci64
+D       vbm_vol_laplace3R.mexw32
+D       vbm_vol_laplace3R.mexw64
+D       vbm_vol_localstat.c
+D       vbm_vol_localstat.mexa64
+D       vbm_vol_localstat.mexglx
+D       vbm_vol_localstat.mexmaci64
+D       vbm_vol_localstat.mexw32
+D       vbm_vol_localstat.mexw64
+D       vbm_vol_median3.c
+D       vbm_vol_median3.mexa64
+D       vbm_vol_median3.mexglx
+D       vbm_vol_median3.mexmaci64
+D       vbm_vol_median3.mexw32
+D       vbm_vol_median3.mexw64
+D       vbm_vol_median3c.c
+D       vbm_vol_median3c.mexa64
+D       vbm_vol_median3c.mexglx
+D       vbm_vol_median3c.mexmaci64
+D       vbm_vol_median3c.mexw32
+D       vbm_vol_median3c.mexw64
+D       vbm_vol_morph.m
+D       vbm_vol_nanmean3.m
+D       vbm_vol_partvol.m
+D       vbm_vol_pbt.m
+D       vbm_vol_pbtp.cpp
+D       vbm_vol_pbtp.mexa64
+D       vbm_vol_pbtp.mexglx
+D       vbm_vol_pbtp.mexmaci64
+D       vbm_vol_pbtp.mexw32
+D       vbm_vol_pbtp.mexw64
+D       vbm_vol_resize.m
+D       vbm_vol_sanlm.m
+D       vbm_vol_series_align.m
+D       vbm_vol_simgrow.c
+D       vbm_vol_simgrow.mexa64
+D       vbm_vol_simgrow.mexglx
+D       vbm_vol_simgrow.mexmaci64
+D       vbm_vol_simgrow.mexw32
+D       vbm_vol_simgrow.mexw64
+D       vbm_vol_smooth3X.m
+
+Huge renaming from vbm to cat.
+------------------------------------------------------------------------
+r764 | gaser | 2015-11-17 14:11:40

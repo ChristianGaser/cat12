@@ -13,43 +13,42 @@
 %
 % General files
 %   INSTALL.txt                  - installation instructions
-%   vbm.man                     - notes on VBM12 toolbox
 %   CHANGES.txt                  - changes in revisions
 %   Contents.m                   - this file
 %
 % VBM12 functions
-%   cg_vbm_bias.m               - configuration file for bias correction between an image pair
-%   cg_vbm_bias_run.m           - correct bias between an image pair
-%   cg_vbm_debug.m              - print debug information for SPM12 and VBM12
-%   cg_vbm_defaults.m           - sets the defaults for VBM12
-%   cg_vbm_defs.m               - apply deformations to images
-%   cg_vbm_get_defaults.m       - defaults for VBM12
-%   cg_vbm_longitudinal.m       - VBM12 for longitudinal data
-%   cg_vbm_longitudinal_multi.m - VBM12 for longitudinal data
-%   cg_vbm_longitudinal_multi_run.m - VBM12 for longitudinal data
-%   cg_vbm_run.m                - runtime funtion for VBM12
-%   cg_vbm_tools.m              - wrapper for calling VBM12 utilities
-%   cg_vbm_update.m             - check for new updates
-%   cg_vbm_write.m              - write out VBM12 results
+%   cat_vbm_bias.m               - configuration file for bias correction between an image pair
+%   cat_vbm_bias_run.m           - correct bias between an image pair
+%   cat_vbm_debug.m              - print debug information for SPM12 and VBM12
+%   cat_vbm_defaults.m           - sets the defaults for VBM12
+%   cat_vbm_defs.m               - apply deformations to images
+%   cat_vbm_get_defaults.m       - defaults for VBM12
+%   cat_vbm_longitudinal.m       - VBM12 for longitudinal data
+%   cat_vbm_longitudinal_multi.m - VBM12 for longitudinal data
+%   cat_vbm_longitudinal_multi_run.m - VBM12 for longitudinal data
+%   cat_vbm_run.m                - runtime funtion for VBM12
+%   cat_vbm_tools.m              - wrapper for calling VBM12 utilities
+%   cat_vbm_update.m             - check for new updates
+%   cat_vbm_write.m              - write out VBM12 results
 %   spm_vbm.m                   - toolbox wrapper to call functions
 %   tbx_cfg_vbm.m               - configure VBM12
 %
 % Utility functions
 %   AmapMex.m                    - compilation wrapper for AmapMex.c
 %   GBM.m                        - skull-stripping using graph-cut
-%   cg_cfg_realign.m             - configuration file for cg_realign.m
-%   cg_check_cov.m               - check sample homogeneity across sample
-%   cg_cleanup_gwc.m             - use morphological operations to cleanup GM/WM/CSF
-%   cg_morph_vol.m               - morphological operations to 3D data
-%   cg_realign.m                 - estimation of within modality rigid body movement parameters
-%   cg_run_realign_estimate.m    - runtime function for estimate realign
-%   cg_run_realign_estwrite.m    - runtime function for estimate and write realign
-%   cg_sanlm.m                   - Spatial Adaptive Non Local Means Denoising Filter
-%   cg_showslice_all.m           - show 1 slice of all images
-%   cg_slice_overlay.m           - wrapper for overlay tool slice_overlay
-%   cg_slice_overlay_ui.m        - example for user interface for overlay wrapper cg_slice_overlay.m
-%   cg_spmF2x.m                  - transformation of F-maps to P, -log(P), R2 maps
-%   cg_spmT2x.m                  - transformation of t-maps to P, -log(P), r or d-maps
+%   cat_cfg_realign.m             - configuration file for cat_realign.m
+%   cat_check_cov.m               - check sample homogeneity across sample
+%   cat_cleanup_gwc.m             - use morphological operations to cleanup GM/WM/CSF
+%   cat_morph_vol.m               - morphological operations to 3D data
+%   cat_realign.m                 - estimation of within modality rigid body movement parameters
+%   cat_run_realign_estimate.m    - runtime function for estimate realign
+%   cat_run_realign_estwrite.m    - runtime function for estimate and write realign
+%   cat_sanlm.m                   - Spatial Adaptive Non Local Means Denoising Filter
+%   cat_showslice_all.m           - show 1 slice of all images
+%   cat_slice_overlay.m           - wrapper for overlay tool slice_overlay
+%   cat_slice_overlay_ui.m        - example for user interface for overlay wrapper cat_slice_overlay.m
+%   cat_spmF2x.m                  - transformation of F-maps to P, -log(P), R2 maps
+%   cat_spmT2x.m                  - transformation of t-maps to P, -log(P), r or d-maps
 %   checkinopt.m                 - check input and options
 %   dp.m                         - runtime estimation
 %   sanlmMex.m                   - compilation wrapper for sanlmMex.c
@@ -71,11 +70,11 @@
 %   vollib.c                     - volume convolving functions
 %
 % Batch functions
-%   cg_spm8_batch.m              - batch mode wrapper for spm_jobman for SPM12
-%   cg_spm8_batch.sh             - shell script to call matlab batch files from unix
+%   cat_spm8_batch.m              - batch mode wrapper for spm_jobman for SPM12
+%   cat_spm8_batch.sh             - shell script to call matlab batch files from unix
 %                                  without gui
-%   cg_vbm_batch.m              - batch mode wrapper for spm_jobman for VBM12
-%   cg_vbm_batch.sh             - shell script to use vbm from unix without gui
+%   cat_vbm_batch.m              - batch mode wrapper for spm_jobman for VBM12
+%   cat_vbm_batch.sh             - shell script to use vbm from unix without gui
 %
 % Templates/Images
 %   Template_?_IXI555_MNI152.nii - Dartel template of 555 subjects from IXI database
