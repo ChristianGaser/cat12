@@ -6516,6 +6516,7 @@ M       cg_vbm_write.m
 (2) Some smaller changes to help textes or names.    
 
 ------------------------------------------------------------------------
+r762 | gaser | 2015-11-13 13:56:23 +0100 (Fr, 13 Nov 2015) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6528,5 +6529,20 @@ M       tbx_cfg_vbm.m
 
 (1) Updated some fields for longitudinal pipeline.
 (2) Some smaller cosmetic changes and typo minimization.    
+
 ------------------------------------------------------------------------
-r762 | gaser | 2015-11-13 13:56:14
+
+Changed paths:
+M       CHANGES.txt
+M       cg_vbm_defs.m
+M       cg_vbm_run_job.m
+M       html/CAT.png
+M       vbm_io_writenii.m
+M       vbm_tst_qa.m
+
+(1) Use old modulation throughout VBM12. Changed a lot of according
+    code in vbm_io_writenii.m and cg_vbm_defs.m.
+(2) Some smaller cosmetic changes and typo correction.  
+(3) release number of VBM12 was not correctly estimated in vbm_tst_qa.m.  
+------------------------------------------------------------------------
+r763 | gaser | 2015-11-17 12:32:22

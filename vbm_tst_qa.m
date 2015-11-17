@@ -78,7 +78,14 @@ function varargout = vbm_tst_qa(action,varargin)
 
 %#ok<*ASGLU>
 
-  rev = '$Rev$';
+  % get current release number
+  A = ver;
+  for i=1:length(A)
+    if strcmp(A(i).Name,'Voxel Based Morphometry Toolbox')
+      rev = str2double(A(i).Version);
+    end
+  end
+
   % init output
   QAS = struct(); QAM = struct(); 
   vbm_qa_warnings = struct('identifier',{},'message',{});
@@ -301,7 +308,7 @@ function varargout = vbm_tst_qa(action,varargin)
       if opt.verb>1
         fprintf('\n%s\n\n%s\n%s\n', ...
           sprintf('VBM Preprocessing T1 Quality Assurance (%s):',...
-          rev(2:end-2)), Theader,repmat('-',size(Theader)));  
+          sprintf('Rev: %d',rev)), Theader,repmat('-',size(Theader)));  
       end
 
       qamat   = nan(numel(Po),numel(QMAfn));
@@ -496,7 +503,7 @@ function varargout = vbm_tst_qa(action,varargin)
         end
       end
       clear A
-      QAS.SW.version_vbm  = sprintf('%0.0f',str2double(rev(6:end-2)));
+      QAS.SW.version_vbm  = sprintf('%d',rev);
       QAS.SW.function     = which('vbm_vol_qa');
       QAS.SW.markdefs     = which('vbm_stat_marks');
       QAS.SW.qamethod     = action; 
@@ -539,7 +546,7 @@ function varargout = vbm_tst_qa(action,varargin)
         end
       end
       clear A
-      QAS.SW.version_vbm  = sprintf('%0.0f',str2double(rev(6:end-2)));
+      QAS.SW.version_vbm  = sprintf('%d',rev);
       QAS.SW.function     = which('vbm_vol_qa');
       QAS.SW.markdefs     = which('vbm_stat_marks');
       QAS.SW.qamethod     = action; 
