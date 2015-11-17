@@ -335,11 +335,11 @@ qam.num     = [0 Inf];
 qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
 data_vol = cfg_files;
-data_cat.name = 'Sample data';
-data_cat.tag  = 'data_vol';
-data_cat.filter = 'image';
-data_cat.num  = [1 Inf];
-data_cat.help   = {[...
+data_vol.name = 'Sample data';
+data_vol.tag  = 'data_vol';
+data_vol.filter = 'image';
+data_vol.num  = [1 Inf];
+data_vol.help   = {[...
 'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.']};
 
 sample         = cfg_repeat;
@@ -901,7 +901,7 @@ realign.prog = @cat_vol_series_align;
 realign.vout = @vout_reslice;
 
 %------------------------------------------------------------------------
-long    = cat_long_multi;
+long    = cat_conf_long;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;

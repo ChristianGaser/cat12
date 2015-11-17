@@ -14,7 +14,7 @@ if nargin < 1
 	return
 end
 
-[t,pid]=system('echo $$');
+[t,pid] = system('echo $$');
 fprintf('cat_batch_vbm: \n  PID = %s\n\n',pid);
 
 spm_get_defaults;
@@ -33,7 +33,7 @@ else
         cd(oldpath)
     end
 end
-global defaults cat matlabbatch %#ok<NUSED>
+global defaults cat12 matlabbatch %#ok<NUSED>
 
 % always deselect print option
 cat12.extopts.print = 0;
@@ -43,7 +43,7 @@ n = length(names);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>
 
-matlabbatch{1}.spm.tools.cat.estwrite = cat;
+matlabbatch{1}.spm.tools.cat.estwrite = cat12;
 matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...

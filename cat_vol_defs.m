@@ -89,7 +89,7 @@ for i=1:size(fnames,1),
         M1  = Vo.mat;
         [x1,x2,x3] = ndgrid(single(1:size(Def,1)),single(1:size(Def,2)),single(1:size(Def,3)));
         X = cat(4,x1,x2,x3);
-        Ma = spm_get_closest_affine(X,Def)
+        Ma = spm_get_closest_affine(X,Def);
         M3 = Ma\M1;
         dt = dt*abs(det(M3));
       end
