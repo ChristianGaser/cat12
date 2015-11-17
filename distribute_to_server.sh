@@ -238,18 +238,18 @@ EXAMPLE
    distribute_to_server.sh -c "niismooth -v -fwhm 8" sTRIO*.nii
    smoothing with fwhm of 8mm for all files sTRIO*.nii. Use verbose mode to see diagnostic output.
    
-   distribute_to_server.sh -s "141.35.68.68 141.35.68.72 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/vbm12/cg_vbm_batch.sh -p 8 -d /Volumes/UltraMax/cg_vbm_defaults_p0123.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii
-   VBM12 batch for all files in /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii with 8 parallel jobs and optional default file
+   distribute_to_server.sh -s "141.35.68.68 141.35.68.72 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/cat12/cat_batch_cat.sh -p 8 -d /Volumes/UltraMax/cat_defaults_p0123.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii
+   CAT12 batch for all files in /Volumes/UltraMax/SVE.LPBA40.testdata/S*.nii with 8 parallel jobs and optional default file
 
-   distribute_to_server.sh -s "141.35.68.68 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/vbm12/cg_vbm_batch.sh -p 8 -d /Volumes/UltraMax/cg_vbm_defaults_m0wrp12.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" -p m0wrp1 -d /Volumes/UltraMax/SVE.LPBA40.testdata
-   VBM12 batch with 8 parallel jobs and optional default file. Only those files in /Volumes/UltraMax/SVE.LPBA40.testdata/ are processed where no prepended m0wrp1 pattern can be found. All other files are skipped.
+   distribute_to_server.sh -s "141.35.68.68 141.35.68.73 141.35.68.74 141.35.68.75" -c "/Volumes/UltraMax/spm12/toolbox/cat12/cat_batch_cat.sh -p 8 -d /Volumes/UltraMax/cat_defaults_m0wrp12.m -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab" -p m0wrp1 -d /Volumes/UltraMax/SVE.LPBA40.testdata
+   CAT12 batch with 8 parallel jobs and optional default file. Only those files in /Volumes/UltraMax/SVE.LPBA40.testdata/ are processed where no prepended m0wrp1 pattern can be found. All other files are skipped.
 
-   Using of MATLAB, SPM and VBM commands like the NLM filter function "vbm_vol_sanlm({'file1','file2'})". CFILES contain the files for each job.  
-     distribute_to_server.sh -s "141.35.68.96" -c "/Volumes/vbmDB/MRData/batches/cg_vbm_batch.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/Ultramax/spm12/toolbox/vbm12/ -c \"vbm_vol_sanlm\(CFILES\)\"" -p 8 -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/INDI/HC/NYa/sub44*/INDI_*.nii
+   Using of MATLAB, SPM and VBM commands like the NLM filter function "cat_vol_sanlm({'file1','file2'})". CFILES contain the files for each job.  
+     distribute_to_server.sh -s "141.35.68.96" -c "/Volumes/vbmDB/MRData/batches/cat_batch_cat.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/Ultramax/spm12/toolbox/cat12/ -c \"cat_vol_sanlm\(CFILES\)\"" -p 8 -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/INDI/HC/NYa/sub44*/INDI_*.nii
 
    Quality assurance for files processed by VBM8 preprocessing. Requires external noise correction by sanlm-call with 'n' prefix
-     sh distribute_to_server.sh -s "141.35.68.96 141.35.68.95 141.35.68.75 141.35.68.74" -c "/Volumes/vbmDB/MRData/batches/spm12/toolbox/vbm12/cg_vbm_batch.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/vbmDB/MRData/batches/spm12/toolbox/vbm12 -p 4 -c \"vbm_vol_sanlm\(struct\('data',CFILES,'prefix',\'n'\)\)\"" -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/IXI/HC/*/*/p0*.nii
-     sh distribute_to_server.sh -s "141.35.68.96 141.35.68.95 141.35.68.75 141.35.68.74" -c "/Volumes/vbmDB/MRData/batches/spm12/toolbox/vbm12/cg_vbm_batch.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/vbmDB/MRData/batches/spm12/toolbox/vbm12 -l /Volumes/vbmDB/MRData/log -p 4 -c \"vbm_tst_qa2\(\'p0\',CFILES,struct\(\'prefix\',\'vbm8_\',\'write_csv\',0\)\)\"" -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/IXI/HC/*/*/p0*.nii
+     sh distribute_to_server.sh -s "141.35.68.96 141.35.68.95 141.35.68.75 141.35.68.74" -c "/Volumes/vbmDB/MRData/batches/spm12/toolbox/cat12/cat_batch_cat.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/vbmDB/MRData/batches/spm12/toolbox/cat12 -p 4 -c \"cat_vol_sanlm\(struct\('data',CFILES,'prefix',\'n'\)\)\"" -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/IXI/HC/*/*/p0*.nii
+     sh distribute_to_server.sh -s "141.35.68.96 141.35.68.95 141.35.68.75 141.35.68.74" -c "/Volumes/vbmDB/MRData/batches/spm12/toolbox/cat12/cat_batch_cat.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/vbmDB/MRData/batches/spm12/toolbox/cat12 -l /Volumes/vbmDB/MRData/log -p 4 -c \"cat_tst_qa2\(\'p0\',CFILES,struct\(\'prefix\',\'vbm8_\',\'write_csv\',0\)\)\"" -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/IXI/HC/*/*/p0*.nii
     
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
 This is ${version}.

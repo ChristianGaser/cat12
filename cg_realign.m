@@ -93,7 +93,7 @@ def_flags.graphics = 1;
 def_flags.halfway  = 1;
 def_flags.lkp      = 1:6;
 
-ignore_mat = cg_vbm_get_defaults('realign.ignore_mat');
+ignore_mat = cat_get_defaults('realign.ignore_mat');
 if nargin < 2,
     flags = def_flags;
 else

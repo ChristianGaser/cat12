@@ -1,4 +1,4 @@
-function out = cg_vbm_bias_run(job)
+function out = cg_cat_bias_run(job)
 % Correct bias between an image pair
 %__________________________________________________________________________
 % Christian Gaser
