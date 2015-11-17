@@ -1013,8 +1013,8 @@ if do_cls && do_defs
     % ------------------------------------------------------------------
     Yvt  = cat_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BG),'d',vxv*3);  % ventricle ... no cleanup here
     Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
-    Ybd  = vbdist(single(~cat_vol_morph(Yp0>0,'lc',vxv)),true(size(Yp0)),vx_vol);
-    Ybd  = vbdist(single(~cat_vol_morph(Yp0>1.5 | Ybd>8,'lc',vxv)),true(size(Yp0)),vx_vol);
+    Ybd  = cat_vbdist(single(~cat_vol_morph(Yp0>0,'lc',vxv)),true(size(Yp0)),vx_vol);
+    Ybd  = cat_vbdist(single(~cat_vol_morph(Yp0>1.5 | Ybd>8,'lc',vxv)),true(size(Yp0)),vx_vol);
     Ycbp = cat_vol_morph(NS(Yl1b,LAB.CB),'d',cleanupdist*vxv);          % next to the cerebellum
     Ycbn = cat_vol_morph(NS(Yl1b,LAB.CB),'e',0.2*cleanupdist*vxv);      % not to deep in the cerebellum
     Ylhp = cat_vol_morph(Yl1b==1 & Yp0<2.1,'d',cleanupdist*vxv*2);      % GM next to the left hemisphere 
@@ -1027,9 +1027,9 @@ if do_cls && do_defs
     Yrbv = Yp0>0 & Ybd<6 & cat_vol_morph( (Ylhp & Yrhp) | (~Ycbn & Ycbp & (Ylhp | Yrhp)),'d',4);
     Yroi = (Yroi | Yrbv) & ~NS(Yl1b,LAB.BS) & ~Ycbn; 
     % bv
-%     Ycd  = vbdist(single(Yp0>2.5 & Yl1b==LAB.CB),Ylhp & Yrhp,vx_vol);
-%     Ylhd = vbdist(single(Yp0>2.5 & Yl1b==1),Ylhp & Yrhp,vx_vol);
-%     Yrhd = vbdist(single(Yp0>2.5 & Yl1b==1),Ylhp & Yrhp,vx_vol);
+%     Ycd  = cat_vbdist(single(Yp0>2.5 & Yl1b==LAB.CB),Ylhp & Yrhp,vx_vol);
+%     Ylhd = cat_vbdist(single(Yp0>2.5 & Yl1b==1),Ylhp & Yrhp,vx_vol);
+%     Yrhd = cat_vbdist(single(Yp0>2.5 & Yl1b==1),Ylhp & Yrhp,vx_vol);
 %     Ybvx = single(min(cat(4,Ylhd,Yrhd,Ycd),[],4)<8 & (min(cat(4,Ylhd,Yrhd,Ycd),[],4))>3 & Ybd<5 & Ymb>0.3); 
 %     Ywm  = single(smooth3(Yp0>2)>0.5); Ybvx(Ymb<0.67 | Yp0==0)=nan;
 %     Ywm  = cat_vol_downcut(Ywm,Ymb,0.1);
@@ -2373,8 +2373,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     %% tissues for bias correction
     Ycm   = (Ym + Yg - Ydiv + single(Ycls{2})/255)<2/3 | ...
             (Ycls{3} + Ycls{6} + Ycls{4} + Ycls{5})>128; 
-    Ycd   = vbdist(single(Ycm));
-    Ybd   = vbdist(cat_vol_morph(single((Ycls{6} + Ycls{4} + Ycls{5})>128),'lo',1));
+    Ycd   = cat_vbdist(single(Ycm));
+    Ybd   = cat_vbdist(cat_vol_morph(single((Ycls{6} + Ycls{4} + Ycls{5})>128),'lo',1));
     
     Ywm  = (single(Ycls{2})/255 - Yg - Ydiv - max(0,3-Ycd-Ybd/40)/2)>0.7 | ... 
            (Ym-Yg-Ydiv-max(0,3-Ycd-Ybd/40)/2)>0.8 & Ycls{1}+Ycls{2}>240;
@@ -3042,17 +3042,17 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
         (single(Ycls{6})+single(Ycls{5})+single(Ycls{4}))>192 | ...     % save non-csf 
         ~cat_vol_morph(Ybb,'lc',5) | ...                                % add background
         Ym<0.3;                                                         % but do not trust the brain mask!
-  Ywd = vbdist(single(Yp0>2.5),Yp0>0.5,vx_vol);                         % WM distance for skelelton
+  Ywd = cat_vbdist(single(Yp0>2.5),Yp0>0.5,vx_vol);                         % WM distance for skelelton
   %Ysk = cat_vol_div(min(5,Ywd),2); %clear Ywd;                      % divergence skeleton
   %Ysk = (Ym + min(0,Ysk))<0.2;                                          % binary divergence skeleton
   %Ycp = Ycp | Ysk; %clear Ysk;                                          % 
   Ycp(smooth3(Ycp)>0.4)=1;                                              % remove some meninges
-  Ycd = vbdist(single(Ycp),~Ycp,vx_vol);                                % real CSF distance 
+  Ycd = cat_vbdist(single(Ycp),~Ycp,vx_vol);                                % real CSF distance 
   Ycd((Ym-Ydiv<2/3 | Ydiv>0.1) & Ycls{3}>4 & Ycls{3}>1) =  ... correction for sulci ... maybe a second distance estimation??=
     min(Ycd((Ym-Ydiv<2/3 | Ydiv>0.1) & Ycls{3}>4 & Ycls{3}>1),1.5);
   % we need to remove strong edge regions, because here is no GM layer between CSF and WM ???  
   Yb  = cat_vol_morph(~Ycp | (Ycls{3}>128),'lc',1);
-  Ybd = vbdist(single(~Yb),Yb,vx_vol);
+  Ybd = cat_vbdist(single(~Yb),Yb,vx_vol);
   Yvt = (Yg+abs(Ydiv))>0.4 & smooth3(single(Ycls{1})/255)<0.5 & Ybd>20 & ...
     cat_vol_morph(Ycls{3}>8,'d',vxv) & cat_vol_morph(Ycls{2}>8,'d',vxv); 
   Yvt = smooth3(Yvt)>0.7;
@@ -3091,11 +3091,11 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     % is missclassified as CSF/GM (Ycls{5}). But for some regions we can 
     % trust these information more
     % ------------------------------------------------------------------
-    Ybd  = vbdist(single(~Yb),Yb,vx_vol);
-    Ycbp = vbdist(single(NS(Yl1,LAB.CB)),Yb,vx_vol);                    % next to the cerebellum
-    Ycbn = vbdist(single(~NS(Yl1,LAB.CB)),Yb,vx_vol);                   % not to deep in the cerebellum
-    Ylhp = vbdist(single(mod(Yl1,2)==1 & Yb & Yl1>0),Yb,vx_vol);        % GM next to the left hemisphere 
-    Yrhp = vbdist(single(mod(Yl1,2)==0 & Yb & Yl1>0),Yb,vx_vol);        % GM next to the righ hemishpere
+    Ybd  = cat_vbdist(single(~Yb),Yb,vx_vol);
+    Ycbp = cat_vbdist(single(NS(Yl1,LAB.CB)),Yb,vx_vol);                    % next to the cerebellum
+    Ycbn = cat_vbdist(single(~NS(Yl1,LAB.CB)),Yb,vx_vol);                   % not to deep in the cerebellum
+    Ylhp = cat_vbdist(single(mod(Yl1,2)==1 & Yb & Yl1>0),Yb,vx_vol);        % GM next to the left hemisphere 
+    Yrhp = cat_vbdist(single(mod(Yl1,2)==0 & Yb & Yl1>0),Yb,vx_vol);        % GM next to the righ hemishpere
     Ybv2 = Ycls{5}>2 & Ym<0.7 & Ym>0.3 & Yb & (... 
            ((Ylhp+Ybd/2)<cleanupdist*6 & (Yrhp+Ybd/2)<cleanupdist*6) | ... % between the hemispheres next to skull                 
            ((Ycbp+Ybd/2)<cleanupdist*8 & (Ycbn+Ybd/2)<cleanupdist*8));     % between cerebrum and cerebellum next to hull
@@ -3105,9 +3105,9 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     %% subcortical map refinements
     THth = 0.8 - LASstr*0.6; %0.5; % lower more thalamus
     YTH = NS(Yl1,LAB.TH) | (cat_vol_morph(NS(Yl1,LAB.TH),'d',3) & Ym>0.5 & Ycls{1}>128);
-    Ytd = vbdist(single(Ym<0.45),YTH | NS(Yl1,LAB.BG),vx_vol); Ytd(Ytd>2^16)=0; % CSF distance in the TH
-    Yxd = vbdist(single(NS(Yl1,LAB.BG)),YTH,vx_vol); Yxd(Yxd>2^16)=0; % BG distance in the TH
-    %Yyd = vbdist(single(NS(Yl1,LAB.TH)),NS(Yl1,LAB.BG),vx_vol); Yyd(Yyd>2^16)=0; % TH distance in the BG
+    Ytd = cat_vbdist(single(Ym<0.45),YTH | NS(Yl1,LAB.BG),vx_vol); Ytd(Ytd>2^16)=0; % CSF distance in the TH
+    Yxd = cat_vbdist(single(NS(Yl1,LAB.BG)),YTH,vx_vol); Yxd(Yxd>2^16)=0; % BG distance in the TH
+    %Yyd = cat_vbdist(single(NS(Yl1,LAB.TH)),NS(Yl1,LAB.BG),vx_vol); Yyd(Yyd>2^16)=0; % TH distance in the BG
     Yss = NS(Yl1,LAB.BG) | NS(Yl1,LAB.TH); 
     Yss = Yss | (cat_vol_morph(Yss,'d',vxv*2) & Ym>2.25/3 & Ym<2.75/3 & Ydiv>-0.01); % add ihger tissue around mask
     Yss = Yss | (cat_vol_morph(Yss,'d',vxv*3) &  NS(Yl1,LAB.VT) & Yp0>1.5 & Yp0<2.3); % add lower tissue around mask
@@ -3195,7 +3195,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ygm(Ysrc./Ylab{2}<(T3th(2) + 0.75*diff(T3th(2:3)))/T3th(3) & ...
       Ysrc./Ylab{2}<(T3th(2) - 0.75*diff(T3th(2:3)))/T3th(3) & ...
       Ydiv<0.3 & Ydiv>-0.3 & Ybb & ~Ywm & ~Yvt & ~Ybv2)=1;
-  Ywmd2 = vbdist(single(Ywm),Yb);
+  Ywmd2 = cat_vbdist(single(Ywm),Yb);
   Ygx = Ywmd2-Ym+Ydiv>0.5 & Ym+0.5-Ydiv-Yg-Ywmd2/10>1/3 & ~Ybv2 & ... low intensity tissue
     ~(Ym-min(0.2,Yg+Ywmd2/10-Ydiv)<1/4) & Yg<Ylab{2}/T3th(3)*0.3 & Ysrc<Ylab{2}*0.9; % no real csf
   Ygx(smooth3(Ygx)<0.5)=0; 
@@ -3213,7 +3213,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
         ~cat_vol_morph(Ybb,'lc',5) | ...                                % add background
         Ysrc./Ylab{2}<T3th(1)/T3th(3);                                                         % but do not trust the brain mask!
   Ycp(smooth3(Ycp)>0.4)=1;                                              % remove some meninges
-  Ycd = vbdist(single(Ycp),~Ycp,vx_vol);  
+  Ycd = cat_vbdist(single(Ycp),~Ycp,vx_vol);  
   Ygm = Ygm & ~Ycm & ~Ywm & Ywd<5; %  & ~Ybvv  & ~Ysk
   
   Ygm = Ygm | (NS(Yl1,1) & Ybd<20 & (Ycd-Ydiv)<2 & Ycls{1}>0 & ~Ycm & Ybb & Ym>0.6 & Yg<max(0.5,1-Ybd/30)); 
@@ -3431,7 +3431,7 @@ function [Yb,Yl1] = cat_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol)
     
   %% update Yl1 with Yb
   Yl1(~Yb)  = 0;
-  [tmp0,tmp1,Yl1] = vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
+  [tmp0,tmp1,Yl1] = cat_vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
 
   if debug
     cat_io_cmd(' ','','',verb,stime); 
@@ -3508,7 +3508,7 @@ function Ylai = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job)
       Ylai = cat_vol_localstat(single(Ylai),Ylai>0,2,7);
       Ylai(Ylai==0 & Yp0<1)=nan; [YA,YD]=cat_vol_downcut(Ylai,Ym,0.1); Ylai(YD<50)=YA(YD<50);  clear YA YD;
       for xi=1:3, Ylai=cat_vol_localstat(single(Ylai),Ylai>0,2,7); end
-      [YD,YI,Ylai]=vbdist(single(Ylai),smooth3(Yp0)>0); clear YD YI;
+      [YD,YI,Ylai]=cat_vbdist(single(Ylai),smooth3(Yp0)>0); clear YD YI;
     case {'G','gm'} % more complex GM refinement for gyri based GM-ROI
       % set inital area (upper GM and WM to start from the gyris)
       Ylai = cat_vol_localstat(single(Ylai),Ylai>0,2,7);
@@ -3533,7 +3533,7 @@ function Ylai = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job)
       Ylai(isnan(Ylai) & Yp0>1 & Yp0<3 & ~YV)=0; [YA,YD]=cat_vol_downcut(Ylai,Ym,0.20); Ylai(YD<100)=YA(YD<100); clear YA YD;
       % smoothing and final filling
       for xi=1:3, Ylai=cat_vol_localstat(single(Ylai),Ylai>0,2,7); end
-      [YD,YI,Ylai]=vbdist(single(Ylai),smooth3(Yp0)>0); clear YD YI;
+      [YD,YI,Ylai]=cat_vbdist(single(Ylai),smooth3(Yp0)>0); clear YD YI;
     %case {'N','none'}
       % no refinement 
     %otherwise, error('MATLAB:cat_main:atlas','Unknown mask %s',FA{ai,2});     
@@ -3584,7 +3584,7 @@ function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
     end
     wYv = cat_vol_ctype(wYv,wVv(1).private.dat.dtype);
  
-    %if FA{ai,2}, [D,I] = vbdist(single(wYlai)); wYlai(:) = wYlai(I(:)); clear D I; end
+    %if FA{ai,2}, [D,I] = cat_vbdist(single(wYlai)); wYlai(:) = wYlai(I(:)); clear D I; end
   else
     if mod==0
       [wYv,w] = spm_diffeo('push',Yv,trans.warped.y,trans.warped.odim(1:3)); spm_field('boundary',1);

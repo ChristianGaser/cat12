@@ -127,7 +127,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   vxd    = 1/mean(vx_vol); 
   
   % prepare maps
-  [tmp0,tmp1,YS] = vbdist(single(mod(YA,2)) + single(YA>0)); YS=~mod(YS,2); clear tmp0 tmp1;  % side map
+  [tmp0,tmp1,YS] = cat_vbdist(single(mod(YA,2)) + single(YA>0)); YS=~mod(YS,2); clear tmp0 tmp1;  % side map
   YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;                    % ROI map without side
   YA   = cat_vol_ctype(cat_vol_median3c(single(YA),Yp0>0));
   Yg   = cat_vol_grad(Ym,vx_vol);
@@ -149,8 +149,8 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   
   % Basal Ganglia
   Ybg  = zeros(size(Ym),'single');
-  Ybgd = vbdist(single(YA==LAB.BG),Yb,vx_vol); 
-  Yosd = vbdist(single(YA==LAB.TH | YA==LAB.VT | YA==LAB.HC  | YA==LAB.BS | (YA==LAB.CT & Ym>2.9)),Yb,vx_vol); 
+  Ybgd = cat_vbdist(single(YA==LAB.BG),Yb,vx_vol); 
+  Yosd = cat_vbdist(single(YA==LAB.TH | YA==LAB.VT | YA==LAB.HC  | YA==LAB.BS | (YA==LAB.CT & Ym>2.9)),Yb,vx_vol); 
   Ybg(smooth3(Yosd>3 & Ybgd<5  & Ym>1.9 & Ym<2.85 & Yg<4*noise & ((Ybgd<1 & Ydiv>-0.01) | (Ydiv>-0.01+Ybgd/100)))>0.7)=1;
   Ybg(smooth3((Ybg==0 & Yp0>2.8 & Ym>2.8 & YA==LAB.CT) | Ym>2.9 | YA==LAB.TH | YA==LAB.HC | Yosd<2 | ...
     (Ybg==0 & Yp0<1.25) | (Ybg==0 & Ybgd>8) | (Ybg==0 & Ydiv<-0.01+Ybgd/200))>0.3)=2;
@@ -261,7 +261,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   % == dieser abschnitt ist noch in der entwicklung ==
  % Ywmh( smooth3((smooth3(~cat_vol_morph(Yp0<2.5,'lc',1))>0.5 | smooth3(Yp0 + Yp0A - Ym - Yg*2)>=(2.5+0.05-vols+noise)) & ... 
  %   Ym>2 & Ym<max(2.5,2.9-noise) & cat_vol_morph(YA==LAB.CT,'e',2))>0.5)=1;
-  Ygmd = vbdist(single( (Ym<=2 & Yp0<=2 & ~cat_vol_morph(Yp0>2.5,'lc')) | Yp0<1),Yp0>=1,vx_vol); % abstand zum CSF/GM bereich
+  Ygmd = cat_vbdist(single( (Ym<=2 & Yp0<=2 & ~cat_vol_morph(Yp0>2.5,'lc')) | Yp0<1),Yp0>=1,vx_vol); % abstand zum CSF/GM bereich
   Ywmm = cat_vol_localstat(Ym,cat_vol_morph(Yp0>2.2,'lc'),2,3); % lokaler wm threshold 
   Ywmm = cat_vol_localstat(Ywmm,Ywmm>0,1,1); 
   Ywmhsm = cat_vol_smooth3X( ((Ywmm - Ym)>max(0.15,min(0.5,noise/2))) &  Ygmd>3  & cat_vol_morph(YA==LAB.CT,'e',2) & ...
@@ -329,7 +329,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   
   
   %% complete map
-  [tmp0,tmp1,Ya1] = vbdist(Ya1,Yb); clear tmp0 tmp1;
+  [tmp0,tmp1,Ya1] = cat_vbdist(Ya1,Yb); clear tmp0 tmp1;
   
   
   
@@ -342,7 +342,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   Yt = cat_vol_smooth3X(YS==0,6)<0.9 & cat_vol_smooth3X(YS==1,6)<0.9 & ~YMF2 & Yp0>0 & Ym<3.1 & (Yp0<2.5 | Ya1==LAB.BV);
   Ys = (2-single(YS)) .* single(smooth3(Yt)<0.4);
   Ys(Ys==0 & (Ym<1 | Ym>3.1))=nan; Ys = cat_vol_downcut(Ys,Ymf,0.1,vx_vol); 
-  [tmp0,tmp1,Ys] = vbdist(Ys,Ys==0);
+  [tmp0,tmp1,Ys] = cat_vbdist(Ys,Ys==0);
   clear YMF2 Yt YS tmp0 tmp1;
   
   % YMF for FreeSurfer fsaverage
@@ -360,7 +360,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   YBG = cat_vol_resize(YBG,'dereduceV',resTr);
   
   Ya1 = cat_vol_resize(Ya1,'dereduceBrain',BB); Ya1 = cat_vol_ctype(Ya1);
-  Ys  = cat_vol_resize(Ys ,'dereduceBrain',BB); [tmp0,tmp1,Ys] = vbdist(Ys,Ya1>0); clear tmp0 tmp1;
+  Ys  = cat_vol_resize(Ys ,'dereduceBrain',BB); [tmp0,tmp1,Ys] = cat_vbdist(Ys,Ya1>0); clear tmp0 tmp1;
   YMF = cat_vol_resize(YMF,'dereduceBrain',BB); 
   YBG = cat_vol_resize(YBG,'dereduceBrain',BB); 
   Ym  = Ym0; clear Ym0;

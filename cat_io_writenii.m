@@ -143,7 +143,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
   % for masked images like thickness we need to fill undefined regions, 
   % to avoid the PVE of boundary voxel. 
   if any(write(2:end)) && exist('YM','var')
-    [D,I] = vbdist(single(Y)); Y(:)=Y(I(:)); clear D I; 
+    [D,I] = cat_vbdist(single(Y)); Y(:)=Y(I(:)); clear D I; 
   end
   
   % deal with label maps 
