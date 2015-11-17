@@ -7110,6 +7110,7 @@ M       templates_animals/monkey_oldworld_cg_vbm_defaults.m
 (2) Updating of cat12.fig to consider new functions.
 
 ------------------------------------------------------------------------
+r767 | gaser | 2015-11-17 17:00:13 +0100 (Di, 17 Nov 2015) | 34 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7144,5 +7145,15 @@ M       human_IXI555_cg_vbm_defaults.m
 
 Again a lot of more renaming.
 
+
 ------------------------------------------------------------------------
-r767 | gaser | 2015-11-17 17:00:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_long.m
+M       cat_batch_vbm.m
+M       cat_long_main.m
+
+Renamed some cat2-names in cat.
+------------------------------------------------------------------------
+r768 | gaser | 2015-11-17 17:14:09
