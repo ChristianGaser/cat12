@@ -32,7 +32,7 @@ function varargout = cat_check(action,varargin)
         case '4', [varargout{1},varargout{2},varargout{3},varargout{4}] = cat_checkinfiles(varargin);
       end      
     case 'checkoutfiles', varargout{1} = cat_checkoutfiles(varargin);
-    case 'checkinopt',    varargout{1} = cat_cat_checkinopt(varargin);
+    case 'checkinopt',    varargout{1} = cat_cat_io_checkinopt(varargin);
     otherwise, error('MATLAB:cat_check','Unknown action ''%s''',action);       
   end
   warning(warnstat(1).state,'all');
@@ -137,7 +137,7 @@ function varargout = cat_checkoutfiles(varargin)
     otherwise, error('MATLAB:cat_check','Unkown INtype ''%d''!\n',INtype);
   end
 end
-function varargout = cat_cat_checkinopt(varargin)
+function varargout = cat_cat_io_checkinopt(varargin)
   if numel(varargin{1})>0, opt  = varargin{1}{1}; 
   else  error('MATLAB:cat_check_files:checkinopt','Need at least one intput!\n');
   end

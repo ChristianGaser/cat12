@@ -43,7 +43,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   def.lfI  = 0.40;
   def.lfO  = 0.40;
   def.hull = 1;
-  opt = cat_checkinopt(opt,def);
+  opt = cat_io_checkinopt(opt,def);
   
   maxT = max(T(T(:)<inf & ~isnan(T(:))));
   T = single(T/max(eps,maxT));

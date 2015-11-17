@@ -1,5 +1,5 @@
 function cat_batch_spm(batchname)
-% wrapper for using spm8 batch mode (see cat_batch_cat.sh)
+% wrapper for using spm8 batch mode (see cat_batch_cat12.sh)
 %_______________________________________________________________________
 % $Id$
 

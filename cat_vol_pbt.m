@@ -35,7 +35,7 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
   def.method = 'pbt2x';
   def.debug  = 0; %cat_get_defaults('extopts.debug');
   def.verb   = cat_get_defaults('extopts.verb')-1;
-  opt  = cat_checkinopt(opt,def);
+  opt  = cat_io_checkinopt(opt,def);
   opt.resV = mean(opt.resV);
 
   

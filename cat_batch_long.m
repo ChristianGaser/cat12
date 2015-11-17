@@ -1,5 +1,5 @@
 function cat_batch_long(namefile)
-% wrapper for using spm8 batch mode (see cat_batch_cat.sh)
+% wrapper for using spm8 batch mode (see cat_batch_cat12.sh)
 %
 % namefile      - array of file names
 %_______________________________________________________________________
@@ -21,11 +21,11 @@ cat_get_defaults;
 global defaults cat matlabbatch
 
 for i=1:n
-  matlabbatch{1}.spm.tools.cat.tools.long.subj.mov{i} = names{i};
+  matlabbatch{1}.spm.tools.cat12.tools.long.subj.mov{i} = names{i};
 end
 
 % always deselect print option
-matlabbatch{1}.spm.tools.cat.tools.long.extopts.print = 0;
+matlabbatch{1}.spm.tools.cat12.tools.long.extopts.print = 0;
 
 warning off
 spm_jobman('initcfg');

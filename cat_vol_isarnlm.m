@@ -68,7 +68,7 @@ function varargout = cat_vol_isarnlm(varargin) %#ok<STOUT>
   def.prefix  = 'isarnlm_';
   def.postfix = '';  
   def.verb    = 1;
-  job = cat_checkinopt(job,def);
+  job = cat_io_checkinopt(job,def);
   
   if ~isfield(job,'rician') 
       job.rician = spm_input('Rician noise?',1,'yes|no',[1,0],2);
@@ -165,7 +165,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.fast   = 0;     % masking background?
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
   def.level  = 1;     % just for display
-  opt        = cat_checkinopt(opt,def);
+  opt        = cat_io_checkinopt(opt,def);
   opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
   opt.cstr   = max(0,min(1,opt.cstr));  % range 0-1
 

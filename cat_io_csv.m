@@ -58,7 +58,7 @@ function varargout = cat_io_csv(filename,varargin)
   def.format          = '%0.4f';
   def.finaldelimiter  = 0;
   
-  opt = cat_checkinopt(opt,def);
+  opt = cat_io_checkinopt(opt,def);
 
   switch action
     case {'write','w'}

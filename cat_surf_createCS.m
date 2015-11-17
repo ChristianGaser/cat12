@@ -353,7 +353,7 @@ function V = isocolors2(R,V,opt)
   if ~exist('opt','var'), opt=struct(); end
   
   def.interp = 'linear';
-  opt = cat_checkinopt(opt,def);
+  opt = cat_io_checkinopt(opt,def);
   
   if  isa(R,'double'), R = single(R); end
   if ~isa(V,'double'), V = double(V); VD=0; else VD=1; end

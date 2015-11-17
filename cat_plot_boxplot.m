@@ -115,7 +115,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
   def.fontsize    = []; % empty = default font size
   
 
-  opt = cat_checkinopt(opt,def);
+  opt = cat_io_checkinopt(opt,def);
   opt.notched = max(0,min(1,opt.notched));
   %opt.ylim = opt.ylim + sign(opt.ylim) .* [eps -eps];
   

@@ -21,7 +21,7 @@ function varargout = cat_surf_calc(varargin)
   if nargin == 1
     def.verb = 0;
     job = varargin{1}; 
-    job = cat_checkinopt(job,def);
+    job = cat_io_checkinopt(job,def);
   else
     error('Only batch mode'); 
   end
