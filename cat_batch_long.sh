@@ -175,7 +175,7 @@ run_batch ()
 	echo Check $vbmlog for logging information
 	echo
 		
-	X="cg_long_main_batch('${TMP}')"
+	X="cat_batch_long('${TMP}')"
 	echo Running $file
 	echo > $vbmlog
 	echo ---------------------------------- >> $vbmlog
@@ -215,7 +215,7 @@ help ()
 cat <<__EOM__
 
 USAGE:
-   cg_long_main_batch.sh file1.nii file2.nii ... filex.nii [-d] [-m matlabcommand]
+   cat_batch_long.sh file1.nii file2.nii ... filex.nii [-d] [-m matlabcommand]
    
    -d   use display option in matlab in case that batch file needs graphical output
    -m   matlab command
@@ -229,7 +229,7 @@ PURPOSE:
    Command line call of SPM12 batch files
 
 EXAMPLE
-   cg_long_main_batch.sh all_files*.nii -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab
+   cat_batch_long.sh all_files*.nii -m /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab
    This command will process all given files in the longitudinal pipeline. As matlab command 
    /Volumes/UltraMax/MATLAB_R2010b.app/bin/matlab will be used.
    

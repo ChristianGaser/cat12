@@ -538,18 +538,26 @@ else
   title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name,spm_file(char(fname.s),'short25'));
 end
 title(title_str,'FontSize',FS(8),'FontWeight','Bold');
-xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),'FontWeight','Bold');
+xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),...
+    'FontWeight','Bold');
 
 xpos = -0.35 - n_samples*0.1;
 
-if quality_order > 0
-  text(xpos, ylim_min,'<----- Low rating (poor quality)','Color','red','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
-  text(xpos, ylim_max,'High rating (good quality) ------>','Color','green','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
-else
-  text(xpos, ylim_max,'Low rating (poor quality) ------>','Color','red','Rotation',90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
-  text(xpos, ylim_min,'<----- High rating (good quality)','Color','green','Rotation',90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
+if (length(data_boxp) > 2)
+  if quality_order > 0
+    text(xpos, ylim_min,'<----- Low rating (poor quality)','Color','red','Rotation',...
+        90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
+    text(xpos, ylim_max,'High rating (good quality) ------>','Color','green','Rotation',...
+        90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
+  else
+    text(xpos, ylim_max,'Low rating (poor quality) ------>','Color','red','Rotation',...
+        90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
+    text(xpos, ylim_min,'<----- High rating (good quality)','Color','green','Rotation',...
+        90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
+  end
+  text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name),'Color','black','Rotation',...
+        90,'HorizontalAlignment','center','FontSize',FS(10),'FontWeight','Bold')
 end
-text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name),'Color','black','Rotation',90,'HorizontalAlignment','center','FontSize',FS(10),'FontWeight','Bold')
 
 hold off
 
