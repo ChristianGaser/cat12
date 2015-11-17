@@ -134,7 +134,7 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     stime = cat_io_cmd('  Gyrus width estimation');
     Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
-    Ywdt = vbdist(1-Yppis);
+    Ywdt = cat_vbdist(1-Yppis);
     Ywdt = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
     Ywdt = cat_vol_resize(Ywdt,'deinterp',resI); 
     Ywdt = cat_vol_resize(Ywdt,'dereduceBrain',BB);                   % adding background
@@ -142,7 +142,7 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     stime = cat_io_cmd('  Sulcus width estimation');
-    Ycdt = vbdist(Yppis,Ymfs>0.5); 
+    Ycdt = cat_vbdist(Yppis,Ymfs>0.5); 
     Ycdt = cat_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
     Ycdt(Ymfs<=0.5)=0;
     Ycdt = cat_vol_resize(Ycdt,'deinterp',resI); 

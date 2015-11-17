@@ -124,7 +124,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     % are bad represented for lower resolutions and lead to unaccurate 
     % results.
     case {'distdilate' 'dd'}
-      vol = vbdist(single(vol),true(size(vol)),vx_vol)<=no;
+      vol = cat_vbdist(single(vol),true(size(vol)),vx_vol)<=no;
   
     case {'disterode' 'de'}
       vol = ~cat_vol_morph(~vol,'distdilate',n,vx_vol); 
@@ -133,8 +133,8 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       sz   = size(vol);
       vol2 = zeros(sz(1)+(2*n),sz(2)+(2*n),sz(3)+(2*n),'single');
       vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n) = single(vol);
-      vol2 = vbdist(vol2,true(size(vol2)),vx_vol)<no;
-      vol2 = vbdist(single(~vol2),true(size(vol2)),vx_vol)<no;
+      vol2 = cat_vbdist(vol2,true(size(vol2)),vx_vol)<no;
+      vol2 = cat_vbdist(single(~vol2),true(size(vol2)),vx_vol)<no;
       vol  = vol | ~vol2(n+1:sz(1)+n,n+1:sz(2)+n,n+1:sz(3)+n);
 
     case {'distopen' 'do'}

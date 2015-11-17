@@ -24,7 +24,7 @@ function compile
   eval(['mex ' mexflag ' -O cat_vol_eidist.c'])
   eval(['mex ' mexflag ' -O cat_vol_eulernumber.c'])
   eval(['mex ' mexflag ' -O cat_vol_genus0.c genus0.c'])
-  eval(['mex ' mexflag ' -O vbdist.c'])
+  eval(['mex ' mexflag ' -O cat_vbdist.c'])
   eval(['mex ' mexflag ' -O ornlmMex.c ornlm_float.c'])
   eval(['mex ' mexflag ' -O sanlmMex.c sanlm_float.c'])
   
@@ -39,7 +39,7 @@ function compile
   d{6} = cat_vol_laplace3R(d0,d0>0.5,0.2);  disp('Compilation of cat_vol_laplace3R successful')
   [d{7},d{8},d{9}] = cat_vol_gradient3(d0); disp('Compilation of cat_vol_gradient3 successful')
   d{10} = cat_vol_downcut(d0,d0.^1.5,1);    disp('Compilation of cat_vol_down_cut successful')
-  d{11} = vbdist(d0);                       disp('Compilation of vbdist successful')
+  d{11} = cat_vbdist(d0);                   disp('Compilation of cat_vbdist successful')
   d{12} = cat_vol_interp3f(d0,d0,d0,d0);    disp('Compilation of cat_vol_interp3f successful')
   d{13} = cat_vol_localstat(d0,d0>0);       disp('Compilation of cat_vol_localstat successful')
   d{14} = cat_vol_simgrow(d0,d0,0.01);      disp('Compilation of cat_vol_simgrow successful')

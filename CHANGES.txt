@@ -6547,6 +6547,7 @@ M       vbm_tst_qa.m
 (3) release number of VBM12 was not correctly estimated in vbm_tst_qa.m.  
 
 ------------------------------------------------------------------------
+r764 | gaser | 2015-11-17 14:11:53 +0100 (Di, 17 Nov 2015) | 396 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -6943,5 +6944,49 @@ D       vbm_vol_simgrow.mexw64
 D       vbm_vol_smooth3X.m
 
 Huge renaming from vbm to cat.
+
 ------------------------------------------------------------------------
-r764 | gaser | 2015-11-17 14:11:40
+
+Changed paths:
+!       AmapMex.mexmaci64
+M       CHANGES.txt
+A  +    Makefile.cat
+D       Makefile.vbm
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+A  +    cat_vbdist.c
+A  +    cat_vbdist.mexa64
+A  +    cat_vbdist.mexglx
+A  +    cat_vbdist.mexmaci64
+A  +    cat_vbdist.mexw32
+A  +    cat_vbdist.mexw64
+M       cat_vol_approx.m
+M       cat_vol_atlas.m
+M       cat_vol_iscale.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       cat_vol_pbt.m
+M       cat_vol_resize.m
+M       cg_morph_vol.m
+M       compile.m
+D       cshift3D.m
+D       diffeo3d.c
+D       diffeo3d.h
+D       spm_def2det.c
+D       spm_def2det.mexa64
+D       spm_def2det.mexglx
+D       spm_def2det.mexmaci64
+D       spm_def2det.mexw32
+D       spm_def2det.mexw64
+D       vbdist.c
+D       vbdist.mexa64
+D       vbdist.mexglx
+D       vbdist.mexmaci64
+D       vbdist.mexw32
+D       vbdist.mexw64
+
+Huge renaming from vbm to cat.
+------------------------------------------------------------------------
+r765 | gaser | 2015-11-17 14:31:58

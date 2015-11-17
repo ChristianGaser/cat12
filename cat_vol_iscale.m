@@ -144,7 +144,7 @@ function [TI,varargout] = cat_vol_iscale(T,action,vx_vol,varargin)
       % distance estimation to find the brain 
       [Tr,Hr,resT] = cat_vol_resize({min(1.5,TS/Tth),H},'reduceV',vx_vol,redres,32,'mean');
       [Gr]         = cat_vol_resize(G,'reduceV',vx_vol,redres,32,'max');
-      HDr = vbdist(single(~Hr),true(size(Hr)),resT.vx_volr);
+      HDr = cat_vbdist(single(~Hr),true(size(Hr)),resT.vx_volr);
       [Mr,Dr] = cat_vol_downcut(single(~cat_vol_morph(Hr,'e')), ...
         1-Gr,0.1,resT.vx_volr,[double(eps('single')) 1]);
       Dr = Dr .* HDr/cat_stat_nanstat1d(HDr(:),'max'); %Dr = max(0,Dr - cat_stat_nanstat1d(Dr(:),'max')/2);

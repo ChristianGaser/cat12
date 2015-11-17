@@ -57,7 +57,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     BMr  = cat_vol_resize(BMrr,'dereduceV',resTrr); 
   
     % inside hull approximation ...
-    [MDr,MIr]  = vbdist(single(Tr>0),Tr==0,resTr.vx_volr); 
+    [MDr,MIr]  = cat_vbdist(single(Tr>0),Tr==0,resTr.vx_volr); 
     TAr=Tr(MIr); TAr(Tr>0) = Tr(Tr>0); 
     TASr=cat_vol_smooth3X(TAr,2); TAr(~BMr)=TASr(~BMr); clear TASr; 
     TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO); TAr = cat_vol_median3(TAr); %,Tr>0,Tr>0,0.05); 
@@ -73,7 +73,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     case 'nh'
     case 'nn'
       TAr  = TAr .* (BMr | Tr);
-      [MDr,MIr]  = vbdist(single(TAr>0),TAr==0,resTr.vx_volr); 
+      [MDr,MIr]  = cat_vbdist(single(TAr>0),TAr==0,resTr.vx_volr); 
       TAr=TAr(MIr); TASr=cat_vol_smooth3X(TAr,4); TAr(~BMr)=TASr(~BMr);  clear TASr; 
       TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO); TAr = cat_vol_median3(TAr,~BMr);
       TAr = cat_vol_laplace3R(TAr,~Tr,opt.lfO); 
@@ -82,8 +82,8 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
       Tr  = TAr .* BMr;
       % outside hull linear approximation ...
       vx_voln = resTr.vx_vol./mean(resTr.vx_vol);  
-      [MDFr,EIFr] = vbdist(single(cat_vol_morph(BMr>0,'disterode',max(3,8/res))),true(size(Tr)),vx_voln);  
-      [MDNr,EINr] = vbdist(single(cat_vol_morph(BMr>0,'disterode',max(1,6/res))),true(size(Tr)),vx_voln); 
+      [MDFr,EIFr] = cat_vbdist(single(cat_vol_morph(BMr>0,'disterode',max(3,8/res))),true(size(Tr)),vx_voln);  
+      [MDNr,EINr] = cat_vbdist(single(cat_vol_morph(BMr>0,'disterode',max(1,6/res))),true(size(Tr)),vx_voln); 
       TAr = Tr; TAr(~Tr) = Tr(EINr(~Tr)) + ( (Tr(EINr(~Tr))-Tr(EIFr(~Tr))) ./ max(eps,( (MDFr(~Tr)-MDNr(~Tr))./MDFr(~Tr)) )); TAr(1)=TAr(2);
       % correction and smoothing
       TAr = min(max(TAr,TNr/2),TNr*2); % /2
@@ -151,14 +151,14 @@ function cat_tst_pre_approx
   end
   % circle bias
   PT{2} = zeros(PTsize,'single'); PT{2}(round(PTsize(1)*3/7),round(PTsize(2)*3/7),round(PTsize(3)*3/7)) = 1; 
-  PT{2} = vbdist(PT{2}); PT{2} = max(0,PTrange(2) - (diff(PTrange)*(PT{2}/max(PT{2}(PT{2}<inf)))));
+  PT{2} = cat_vbdist(PT{2}); PT{2} = max(0,PTrange(2) - (diff(PTrange)*(PT{2}/max(PT{2}(PT{2}<inf)))));
   
   
   
   % Mask type:
   % --------------------------------------------------------------------
   PM{1} = zeros(PTsize,'single'); PM{1}(round(PTsize(1)/2),round(PTsize(2)/2),round(PTsize(3)/2)) = 1; 
-  PM{1} = (vbdist(PM{1},true(size(PM{1})),[1.5 1 1]) + ...
+  PM{1} = (cat_vbdist(PM{1},true(size(PM{1})),[1.5 1 1]) + ...
           cat_vol_smooth3X(rand(PTsize)*20,2) + cat_vol_smooth3X(randn(PTsize)*20)) <PTsize(1)/2; 
   
   ds('d2','',[1 1 1],PT{1},PT{2},PT{1}.*PM{1},PT{2}.*PM{1},32)
