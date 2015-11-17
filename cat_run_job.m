@@ -515,8 +515,8 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   
   % greater mask
   [dilmsk,resT2] = cat_vol_resize(Yb,'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
-  dilmsk  = vbdist(dilmsk,true(size(dilmsk)),resT2.vx_volr);
-  dilmsk  = dilmsk - vbdist(single(dilmsk>0),true(size(dilmsk)),resT2.vx_volr);
+  dilmsk  = cat_vbdist(dilmsk,true(size(dilmsk)),resT2.vx_volr);
+  dilmsk  = dilmsk - cat_vbdist(single(dilmsk>0),true(size(dilmsk)),resT2.vx_volr);
   dilmsk  = cat_vol_resize(smooth3(dilmsk),'dereduceV',resT2); 
   headradius = -min(dilmsk(:)); 
 
@@ -534,7 +534,7 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   Yb = (dilmsk<20 & Ym<1.2) & (Ym>(GMth*0.7+0.3)) & Yg<0.5 & Ydiv<0.2; Yb(smooth3(Yb)<0.5)=0; 
   Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.2); 
   [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
-  dilmsk2  = vbdist(dilmsk2,true(size(dilmsk)),resT2.vx_volr);
+  dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk)),resT2.vx_volr);
   dilmsk2  = cat_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
   %% WM growing
   Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;

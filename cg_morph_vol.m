@@ -90,13 +90,13 @@ switch lower(action)
   
   case 'distclose'
   %=======================================================================
-  vol = vbdist(single(vol),true(size(vol)),vx_vol);
-  vol = vbdist(single(vol>n),true(size(vol)),vx_vol)>n;
+  vol = cat_vbdist(single(vol),true(size(vol)),vx_vol);
+  vol = cat_vbdist(single(vol>n),true(size(vol)),vx_vol)>n;
   
   case 'distopen'
   %=======================================================================
-  vol = vbdist(1-single(vol),true(size(vol)),vx_vol);
-  vol = vbdist(single(vol>n),true(size(vol)),vx_vol)<n;
+  vol = cat_vbdist(1-single(vol),true(size(vol)),vx_vol);
+  vol = cat_vbdist(single(vol>n),true(size(vol)),vx_vol)<n;
   
 	otherwise
 		error('Unknown action');

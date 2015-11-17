@@ -248,7 +248,7 @@ function cat_vol_atlas(atlas,refinei)
         % das ergibt leider nicht immer sinn!!! beim aal gibts bsp, kein
         % hirnstamm und das kleinhirn besetzt hier dann alles!!!
          %vx_vol = sqrt(sum(Vafi.mat(1:3,1:3).^2));
-         %[YD,YI,Yafi]=vbdist(Yafi,smooth3(Yp0fi)>0); Yafi=single(Yafi); clear YD YI;  
+         %[YD,YI,Yafi]=cat_vbdist(Yafi,smooth3(Yp0fi)>0); Yafi=single(Yafi); clear YD YI;  
           Vafi.dt = [4 0]; Vafi.pinfo(1) = 1; 
           Vafi.fname = Pa{fi}; spm_write_vol(Vafi,Yafi);
 
@@ -261,7 +261,7 @@ function cat_vol_atlas(atlas,refinei)
           Vwp0fi = spm_vol(Pwp0{fi}); Ywp0fi = single(spm_read_vols(Vwp0fi)); 
           Ym = cat_vol_morph(Ywp0fi>0.5 | Ywafi>0.5,'lc',1);
           for xi=1:refiter, Ywafi=cat_vol_localstat(single(Ywafi),Ym,1*refsize,7); end
-          %[YD,YI,Ywafi]=vbdist(Ywafi,Ywp0fi>0.5); Ywafi=single(Ywafi); clear YD YI;  
+          %[YD,YI,Ywafi]=cat_vbdist(Ywafi,Ywp0fi>0.5); Ywafi=single(Ywafi); clear YD YI;  
           Vwafi.fname = Pwa{fi}; spm_write_vol(Vwafi,Ywafi);
         end
       else
@@ -840,7 +840,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   % filling????
   % --------------------------------------------------------------------
   % At this point it would be possible to dilate the maps. But this cannot 
-  % simply be done by vbdist, because for most cases not all regions are
+  % simply be done by cat_vbdist, because for most cases not all regions are
   % defined. I.e. for AAL the brainstem is missing and so the cerebellum
   % will be aligned. 
   % So one thing is that I can use the group map to add lower regions for
@@ -976,7 +976,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   if exist(Ps{1},'file')
     Ys  = single(spm_read_vols(spm_vol(char(Ps))));
     Yp0 = single(spm_read_vols(spm_vol(char(P))));
-    [Yd,Yi] = vbdist(single(Ys>0)); Ys = Ys(Yi);
+    [Yd,Yi] = cat_vbdist(single(Ys>0)); Ys = Ys(Yi);
   end
   for i=1:numel(PA)
     Y  = single(spm_read_vols(VA(i)));
