@@ -20,9 +20,9 @@ function varargout = cat12(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above cat12title to modify the response to help cat12
+% Edit the above title to modify the response to help cat12
 
-% Last Modified by GUIDE v2.5 28-Apr-2015 13:35:33
+% Last Modified by GUIDE v2.5 17-Nov-2015 16:52:56
 
 
 % Begin initialization code - DO NOT EDIT
@@ -49,7 +49,7 @@ end
 if ~nargin
   ha = axes('units','normalized','position',[0 0.87 1 0.13]);
   uistack(ha,'bottom');
-  I=imread(fullfile(spm('dir'),'toolbox','cat12','html','contact.jpg'));
+  I = imread(fullfile(spm('dir'),'toolbox','cat12','html','contact.jpg'));
   hi = imagesc(I);
   text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',22,'Fontweight','bold');
   set(ha,'handlevisibility','off','visible','off');
@@ -82,8 +82,8 @@ function varargout = cat12_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 % --- Executes during object creation, after setting all properties.
-function figure1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+function CAT_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CAT (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

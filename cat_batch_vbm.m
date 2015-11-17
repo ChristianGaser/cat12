@@ -1,5 +1,5 @@
 function cat_batch_vbm(namefile,cat_defaults)
-% wrapper for using batch mode (see cat_batch_cat.sh)
+% wrapper for using batch mode (see cat_batch_cat12.sh)
 %
 % namefile      - array of file names
 % cat_defaults  - use this default file instead of cat_defaults.m
@@ -36,15 +36,15 @@ end
 global defaults cat matlabbatch %#ok<NUSED>
 
 % always deselect print option
-cat.extopts.print = 0;
+cat12.extopts.print = 0;
 
 names = textread(namefile,'%s');
 n = length(names);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>
 
-matlabbatch{1}.spm.tools.cat.estwrite = cat;
-matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
+matlabbatch{1}.spm.tools.cat12.estwrite = cat;
+matlabbatch{1}.spm.tools.cat12.estwrite.data = cellstr(names);
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','print','debug','verb','ignoreErrors',...
@@ -52,14 +52,14 @@ tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LAS
               
 for i=1:size(tmp_fields,1)
   try
-    matlabbatch{1}.spm.tools.cat.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.extopts,deblank(tmp_fields(i,:)));
+    matlabbatch{1}.spm.tools.cat12.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.cat12.estwrite.extopts,deblank(tmp_fields(i,:)));
   end
 end
 
 tmp_fields = char('atlas','te','pc','WMH','ROI');
 for i=1:size(tmp_fields,1)
   try
-    matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(tmp_fields(i,:)));
+    matlabbatch{1}.spm.tools.cat12.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat12.estwrite.output,deblank(tmp_fields(i,:)));
   end
 end
 
@@ -67,14 +67,14 @@ end
 tmp_fields = char('opts','bias','realign','defs');
 for i=1:size(tmp_fields,1)
   try
-    matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,deblank(tmp_fields(i,:)));
+    matlabbatch{1}.spm.tools.cat12.estwrite = rmfield(matlabbatch{1}.spm.tools.cat12.estwrite,deblank(tmp_fields(i,:)));
   end
 end
 
 try 
-  matlabbatch{1}.spm.tools.cat.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.GM,'mod');
-  matlabbatch{1}.spm.tools.cat.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.WM,'mod');
-  matlabbatch{1}.spm.tools.cat.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.CSF,'mod');
+  matlabbatch{1}.spm.tools.cat12.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.cat12.estwrite.output.GM,'mod');
+  matlabbatch{1}.spm.tools.cat12.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.cat12.estwrite.output.WM,'mod');
+  matlabbatch{1}.spm.tools.cat12.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.cat12.estwrite.output.CSF,'mod');
 end
 
 try

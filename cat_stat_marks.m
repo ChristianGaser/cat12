@@ -112,7 +112,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
   % - area measures -
   };
-  if nargin>3 && isstruct(varargin{2}), def = cat_checkinopt(varargin{2},def); end
+  if nargin>3 && isstruct(varargin{2}), def = cat_io_checkinopt(varargin{2},def); end
   
   % create structure
   for QSi=1:size(def.QS,1)

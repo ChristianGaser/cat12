@@ -60,7 +60,7 @@ function varargout = cat_surf_display(varargin)
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;
   
-  job = cat_checkinopt(job,def);
+  job = cat_io_checkinopt(job,def);
   
   %%
   % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 

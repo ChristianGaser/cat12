@@ -1,4 +1,4 @@
-function Ycls = cat_main(res,tc,bf,df,lb,jc,cat,tpm,job)
+function Ycls = cat_main(res,tc,bf,df,lb,jc,cat12,tpm,job)
 % Write out CAT preprocessed data
 % FORMAT Ycls = cat_main(res,tc,bf,df)
 %____________________________________________________________________________
@@ -19,7 +19,7 @@ def.color.warning   = [0.8 0.9 0.3];
 def.color.highlight = [0.2 0.2 0.8];
 
 opt = struct();
-opt = cat_checkinopt(opt,def);
+opt = cat_io_checkinopt(opt,def);
 
 
 %% complete output structure
@@ -92,8 +92,8 @@ d1        = d1(1:3);
 
 % Sort out bounding box etc
 [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
-bb = cat.bb;
-vx = cat.vox;
+bb = cat12.bb;
+vx = cat12.vox;
 bb(~isfinite(bb)) = bb1(~isfinite(bb));
 if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
 bb(1,:) = vx.*round(bb(1,:)./vx);
@@ -123,8 +123,8 @@ end
 % jc - jacobian: no, normalized 
 
 do_dartel = 1;      % always use dartel/shooting normalization
-cat.open_th = 0.25; % initial threshold for skull-stripping
-cat.dilate = 1;     % number of final dilations for skull-stripping
+cat12.open_th = 0.25; % initial threshold for skull-stripping
+cat12.dilate = 1;     % number of final dilations for skull-stripping
 
 if do_dartel
   need_dartel = any(df)     || bf(1,2) || lb(1,2) || any(any(tc(:,[4 5 6]))) || jc || job.output.surface || job.output.ROI;
@@ -159,18 +159,18 @@ x3  = 1:d(3);
 
 % Find all templates and distinguish between Dartel and Shooting 
 % written to match for Template_1 or Template_0 as first template.  
-template = strrep(cat.darteltpm,',1','');
+template = strrep(cat12.darteltpm,',1','');
 [templatep,templatef,templatee] = spm_fileparts(template);
 numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
 if isempty(numpos)
   error('Could not find ''Template_1'' that indicates the first Dartel/Shooting template in cat_defaults.');
 end
-cat.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
-cat.templates(cellfun('length',cat.templates)~=numel(template)) = []; % furhter condition maybe necessary
-[template1p,template1f] = spm_fileparts(cat.templates{1});
+cat12.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
+cat12.templates(cellfun('length',cat12.templates)~=numel(template)) = []; % furhter condition maybe necessary
+[template1p,template1f] = spm_fileparts(cat12.templates{1});
 if do_dartel 
-  if (numel(cat.templates)==6 || numel(cat.templates)==7)
-    if ~isempty(strfind(template1f,'Template_0')), cat.templates(1) = []; end   
+  if (numel(cat12.templates)==6 || numel(cat12.templates)==7)
+    if ~isempty(strfind(template1f,'Template_0')), cat12.templates(1) = []; end   
     do_dartel=1;
   else
     do_dartel=2; 
@@ -179,8 +179,8 @@ end
 % run dartel registration to GM/WM dartel template
 if do_dartel || job.extopts.LASstr>0
   run2 = struct();
-  tpm2 = cell(1,numel(cat.templates));
-  for j=1:numel(cat.templates)
+  tpm2 = cell(1,numel(cat12.templates));
+  for j=1:numel(cat12.templates)
     for i=1:2
       run2(i).tpm = fullfile(templatep,[templatef(1:numpos) num2str(j-(template1f(numpos+1)=='0')) ...
         templatef(numpos+2:end) templatee ',' num2str(i)]);
@@ -199,7 +199,7 @@ for n=1:N,
     chan(n).T  = res.Tbias{n};
 
     [pth1,nam1] = spm_fileparts(res.image(n).fname);
-    if cat.sanlm>0 && job.extopts.NCstr
+    if cat12.sanlm>0 && job.extopts.NCstr
       nam1 = nam1(2:end);
     end
     chan(n).ind      = res.image(n).n;
@@ -363,7 +363,7 @@ for z=1:length(x3),
     Ysrc(:,:,z) = single(bf1 .* f); 
     Ybf(:,:,z)  = single(bf1 .* ones(size(f)));
 end
-if cat.sanlm~=5
+if cat12.sanlm~=5
   clear chan o x1 x2 x3 bf1 f z
 end
 
@@ -631,7 +631,7 @@ end
 %  allows up to 20 colors
 %  ---------------------------------------------------------------------
 debug = 1; % this is a manuel debuging option for matlab debuging mode
-if ~(cat.sanlm==5 && job.extopts.NCstr)
+if ~(cat12.sanlm==5 && job.extopts.NCstr)
   stime = cat_io_cmd('Global intensity correction');;
   [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
   if debug, Ym2=Ym; end %#ok<NASGU>
@@ -652,14 +652,14 @@ if ~(cat.sanlm==5 && job.extopts.NCstr)
   %% After the intensity scaling and with correct information about the
   % variance of the tissue, a further harder noise correction is meaningful.
   % Finally, a stronger NLM-filter is better than a strong MRF filter!
-  if cat.sanlm>0 && cat.sanlm<3 && job.extopts.NCstr
+  if cat12.sanlm>0 && cat12.sanlm<3 && job.extopts.NCstr
     stime = cat_io_cmd('Noise correction after global intensity correction');
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
-      if (cat.sanlm==1) || (cat.sanlm==2), cat_sanlm_mex(Yms,3,1,0); end
+      if (cat12.sanlm==1) || (cat12.sanlm==2), cat_sanlm_mex(Yms,3,1,0); end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
     else
-      if (cat.sanlm==1) || (cat.sanlm==2), cat_sanlm_mex(Ym,3,1,0); end
+      if (cat12.sanlm==1) || (cat12.sanlm==2), cat_sanlm_mex(Ym,3,1,0); end
     end
     if opt.inv_weighting
       Ysrc = Ym;
@@ -668,7 +668,7 @@ if ~(cat.sanlm==5 && job.extopts.NCstr)
     end
     clear Yms BB;
     fprintf('%4.0fs\n',etime(clock,stime));  
-  elseif cat.sanlm>2 && cat.sanlm<5 && job.extopts.NCstr
+  elseif cat12.sanlm>2 && cat12.sanlm<5 && job.extopts.NCstr
     [Yms,Ycls1,Ycls2,BB] = cat_vol_resize({Ym,Ycls{1},Ycls{2}},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
 
     % estimate noise
@@ -753,7 +753,7 @@ end
 if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
-  [Ym,Ycls] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.cat.cat12atlas,cat.templates);
+  [Ym,Ycls] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.cat.cat12atlas,cat12.templates);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
@@ -857,11 +857,11 @@ if do_cls && do_defs
 
     % keep largest connected component after at least 1 iteration of opening
     n_initial_openings = max(1,round(scale_morph*2*min(1,max(0,job.extopts.cleanupstr))));
-    Yb = cat_vol_morph(Yb>cat.open_th,'open',n_initial_openings);
+    Yb = cat_vol_morph(Yb>cat12.open_th,'open',n_initial_openings);
     Yb = cat_vol_morph(Yb,'lc');
 
     % dilate and close to fill ventricles
-    Yb = cat_vol_morph(Yb,'dilate',cat.dilate);
+    Yb = cat_vol_morph(Yb,'dilate',cat12.dilate);
     Yb = cat_vol_morph(Yb,'lc',round(scale_morph*10));
 
     % remove sinus
@@ -1947,7 +1947,7 @@ cat_io_xml(fullfile(pth,['cat_' nam '.xml']),...
 %  ---------------------------------------------------------------------
 QMC   = cat_io_colormaps('marks+',17);
 color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-if cat.print
+if cat12.print
   
   warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
   
@@ -1967,28 +1967,28 @@ if cat.print
 	str = [str struct('name', 'Versions Matlab / SPM12 / CAT12:','value',...
     sprintf('%s / %s / %s',qa.SW.version_matlab,qa.SW.version_spm,qa.SW.version_cat))];
 	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
-  str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(cat.darteltpm,'k40d'))];
+  str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(cat12.darteltpm,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
-  str = [str struct('name', 'Affine regularization:','value',sprintf('%s',cat.affreg))];
-  if cat.sanlm==0 || job.extopts.NCstr==0
+  str = [str struct('name', 'Affine regularization:','value',sprintf('%s',cat12.affreg))];
+  if cat12.sanlm==0 || job.extopts.NCstr==0
     str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
-  elseif cat.sanlm>0 && cat.sanlm<3
+  elseif cat12.sanlm>0 && cat12.sanlm<3
     str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(cat.sanlm>0))),...
-           ' '.*(cat.sanlm>0),job.extopts.mrf))];
-  elseif cat.sanlm>2 && cat.sanlm<5
+           sprintf('%s%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(cat12.sanlm>0))),...
+           ' '.*(cat12.sanlm>0),job.extopts.mrf))];
+  elseif cat12.sanlm>2 && cat12.sanlm<5
     str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(cat.sanlm>0))),...
-           spm_str_manip(sprintf(' ORNLM(%0.2f) +',ornlmstr),sprintf('f%d',14*(cat.sanlm>2))),...
-           char(' '.*(cat.sanlm>0)),job.extopts.mrf))];
-  elseif cat.sanlm==5
+           sprintf('%s%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(cat12.sanlm>0))),...
+           spm_str_manip(sprintf(' ORNLM(%0.2f) +',ornlmstr),sprintf('f%d',14*(cat12.sanlm>2))),...
+           char(' '.*(cat12.sanlm>0)),job.extopts.mrf))];
+  elseif cat12.sanlm==5
     str = [str struct('name', 'Noise reduction:','value',...
            sprintf('ORNLM(%0.2f) + MRF(%0.2f)',ornlmstr,job.extopts.mrf))];   
   end
   str = [str struct('name', 'NCstr / LASstr / GCUTstr / CLEANUPstr:','value',...
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
-%  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',cat.vox))]; % does not work yet 
+%  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',cat12.vox))]; % does not work yet 
 % intern interpolation?
 % pbt resolution
 
@@ -2150,7 +2150,7 @@ if cat.print
     %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
     %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
     %st.vols = cell(24,1);
-    bb = cat.bb;
+    bb = cat12.bb;
     spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
     
     % Yo - original image in original space
@@ -2861,7 +2861,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
 %     error('CAT:cat_main:BadImageProperties', ...
 %         ['CAT12 is designed to work only on highres T1 images.\n' ...
 %          'T2/PD preprocessing can be forced on your own risk by setting \n' ...
-%          '''cat.extopts.INV=1'' in the cat default file. If this was a highres \n' ...
+%          '''cat12.extopts.INV=1'' in the cat default file. If this was a highres \n' ...
 %          'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
 %          'by alignment problems (check image orientation).'],numel(cat_warnings)==0);   
 %   end
