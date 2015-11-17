@@ -192,7 +192,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     if opt.verb, fprintf('%2d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
-    sanlmMex(Ys,3,1,opt.rician); 
+    cat_sanlm_mex(Ys,3,1,opt.rician); 
     %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
     fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
     noiser = 1 - (cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;

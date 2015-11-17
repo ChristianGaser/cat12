@@ -15,7 +15,7 @@ global vbm
 %=======================================================================
 % - vbm.opts.tpm 
 % - vbm.extopts.darteltpm
-% - vbm.extopts.vbm12atlas
+% - vbm.extopts.cat12atlas
 % - vbm.extopts.brainmask
 % - vbm.extopts.bb         > [-inf -inf -inf; inf inf inf] 
 % - vbm.extopts.vox        > inf
@@ -28,7 +28,7 @@ global vbm
 
 % Estimation options
 %=======================================================================
-vbm.opts.tpm       = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','primate45_TPM.nii')};
+vbm.opts.tpm       = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','primate45_TPM.nii')};
 vbm.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class - 3 GM and 3 WM classes for robustness
 vbm.opts.affreg    = 'subj';                  % Affine regularisation - '';'mni';'eastern';'subj';'none';'rigid';
 vbm.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
@@ -89,7 +89,7 @@ vbm.output.bias.native = 0;
 vbm.output.bias.warped = 0;
 vbm.output.bias.affine = 0; 
 
-% partitioning atlas maps (vbm12 atlas)
+% partitioning atlas maps (cat12 atlas)
 vbm.output.atlas.native = 1; 
 vbm.output.atlas.warped = 0; 
 vbm.output.atlas.dartel = 2; 
@@ -160,10 +160,10 @@ vbm.extopts.resval       = [1.00 0.10];   % resolution value and its variance fo
 % registration and normalization options 
 vbm.extopts.vox          = inf;                                % voxel size for normalized data (not yet working):  inf - use Tempate values
 vbm.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];   % bounding box for normalized data (not yet working): inf - use Tempate values
-vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','primate45_Template_1.nii')}; % Indicate first Dartel template
-vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','primate45_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
-vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','primate45_brainmask.nii')};  % brainmask for affine registration
-vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','primate45_T1.nii')};         % T1 for affine registration
+vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','primate45_Template_1.nii')}; % Indicate first Dartel template
+vbm.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','primate45_cat12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
+vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','primate45_brainmask.nii')};  % brainmask for affine registration
+vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','primate45_T1.nii')};         % T1 for affine registration
 
 % surface options
 vbm.extopts.pbtres       = 0.25;   % resolution for thickness estimation in mm: 1 - normal res (default); 0.5 high res 
@@ -192,7 +192,7 @@ vbm.extopts.atlas       = { ...
   }; 
 
 
-% IDs of the ROIs in the vbm12 atlas map (vbm12.nii). Do not change this!
+% IDs of the ROIs in the cat12 atlas map (cat12.nii). Do not change this!
 vbm.extopts.LAB.CT =  1; % cortex
 vbm.extopts.LAB.MB = 13; % MidBrain
 vbm.extopts.LAB.BS = 13; % BrainStem

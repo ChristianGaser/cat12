@@ -14,8 +14,10 @@ try
   defid = fopen(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));
   defstr = textscan(defid,'%s'); 
   fclose(defid); 
-  experti = find(cellfun('isempty',strfind(defstr{1},'cat.extopts.expertgui'))==0);
-  expert = str2double(defstr{1}{experti+2}(1)); %cat_get_defaults('extopts.expertgui');
+  % @Robert: why so complicated?
+%  experti = find(cellfun('isempty',strfind(defstr{1},'cat.extopts.expertgui'))==0);
+%  expert = str2double(defstr{1}{experti+2}(1));
+  expert = cat_get_defaults('extopts.expertgui');
 catch %#ok<CTCH>
   expert = 0; 
 end
@@ -323,13 +325,13 @@ output.help = {
 
 
 %% ------------------------------------------------------------------------
-tools      = cat_cfg_tools;             % volume tools
-stools     = cat_cfg_stools(expert);    % surface tools
+tools      = cat_conf_tools;             % volume tools
+stools     = cat_conf_stools(expert);    % surface tools
 if expert 
-  stoolsexp  = cat_cfg_stoolsexp;       % surface expert tools
+  stoolsexp  = cat_conf_stoolsexp;       % surface expert tools
 end
-extopts    = cat_cfg_extopts(expert);   
-opts       = cat_cfg_opts; 
+extopts    = cat_conf_extopts(expert);   
+opts       = cat_conf_opts; 
 %------------------------------------------------------------------------
 
 estwrite        = cfg_exbranch;

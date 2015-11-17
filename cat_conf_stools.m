@@ -1,4 +1,4 @@
-function stools = cat_cfg_stools(expert)
+function stools = cat_conf_stools(expert)
 %_______________________________________________________________________
 % wrapper for calling CAT surface utilities
 %_______________________________________________________________________

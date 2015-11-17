@@ -6946,6 +6946,7 @@ D       vbm_vol_smooth3X.m
 Huge renaming from vbm to cat.
 
 ------------------------------------------------------------------------
+r765 | gaser | 2015-11-17 14:32:00 +0100 (Di, 17 Nov 2015) | 42 lines
 
 Changed paths:
 !       AmapMex.mexmaci64
@@ -6988,5 +6989,123 @@ D       vbdist.mexw32
 D       vbdist.mexw64
 
 Huge renaming from vbm to cat.
+
 ------------------------------------------------------------------------
-r765 | gaser | 2015-11-17 14:31:58
+
+Changed paths:
+D       AmapMex.c
+D       AmapMex.m
+D       AmapMex.mexa64
+D       AmapMex.mexglx
+D       AmapMex.mexmaci64
+D       AmapMex.mexw32
+D       AmapMex.mexw64
+A  +    CAT12-Manual.doc
+A  +    CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents_info.txt
+M       INSTALL_info.txt
+M       Makefile
+M       Makefile.cat
+D       VBM12-Manual.doc
+D       VBM12-Manual.pdf
+M       cat12.fig
+A  +    cat_amap_mex.c
+A  +    cat_amap_mex.m
+A  +    cat_amap_mex.mexa64
+A  +    cat_amap_mex.mexglx
+A  +    cat_amap_mex.mexmaci64
+A  +    cat_amap_mex.mexw32
+A  +    cat_amap_mex.mexw64
+M       cat_batch_long.m
+M       cat_batch_spm.m
+D       cat_cfg_extopts.m
+D       cat_cfg_opts.m
+D       cat_cfg_stools.m
+D       cat_cfg_stoolsexp.m
+D       cat_cfg_tools.m
+A  +    cat_conf_extopts.m
+A  +    cat_conf_opts.m
+A  +    cat_conf_stools.m
+A  +    cat_conf_stoolsexp.m
+A  +    cat_conf_tools.m
+A  +    cat_debug.m
+M       cat_io_writenii.m
+A  +    cat_long_main.m
+M       cat_long_multi.m
+M       cat_long_multi_run.m
+M       cat_main.m
+A  +    cat_ornlm_mex.c
+A  +    cat_ornlm_mex.m
+A  +    cat_ornlm_mex.mexa64
+A  +    cat_ornlm_mex.mexglx
+A  +    cat_ornlm_mex.mexmaci
+A  +    cat_ornlm_mex.mexmaci64
+A  +    cat_ornlm_mex.mexw32
+A  +    cat_ornlm_mex.mexw64
+M       cat_run_job.m
+A  +    cat_sanlm_mex.c
+A  +    cat_sanlm_mex.m
+A  +    cat_sanlm_mex.mexa64
+A  +    cat_sanlm_mex.mexglx
+A  +    cat_sanlm_mex.mexmaci64
+A  +    cat_sanlm_mex.mexw32
+A  +    cat_sanlm_mex.mexw64
+M       cat_vol_atlas.m
+A  +    cat_vol_defs.m
+M       cat_vol_isarnlm.m
+M       cat_vol_sanlm.m
+M       cat_vol_slice_overlay_ui.m
+D       cg_cfg_realign.m
+D       cg_cleanup_gwc.m
+D       cg_debug.m
+D       cg_lat_index.m
+D       cg_long_main.m
+D       cg_morph_vol.m
+D       cg_noise_estimation.m
+D       cg_realign.m
+D       cg_run_realign_estimate.m
+D       cg_run_realign_estwrite.m
+D       cg_vbm_bias.m
+D       cg_vbm_bias_run.m
+D       cg_vbm_brainmask.m
+D       cg_vbm_brainmask_ui.m
+D       cg_vol_defs.m
+M       compile.m
+M       html/cat.html
+D       ornlmMex.c
+D       ornlmMex.m
+D       ornlmMex.mexa64
+D       ornlmMex.mexglx
+D       ornlmMex.mexmaci
+D       ornlmMex.mexmaci64
+D       ornlmMex.mexw32
+D       ornlmMex.mexw64
+D       sanlmMex.c
+D       sanlmMex.m
+D       sanlmMex.mexa64
+D       sanlmMex.mexglx
+D       sanlmMex.mexmaci64
+D       sanlmMex.mexw32
+D       sanlmMex.mexw64
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+M       templates_1.50mm/aal.txt
+M       templates_1.50mm/anatomy.txt
+M       templates_1.50mm/hammers.txt
+M       templates_1.50mm/ibsr.txt
+M       templates_1.50mm/mori.txt
+M       templates_1.50mm/neuromorphometrics.txt
+M       templates_animals/ape_greater_cg_vbm_defaults.m
+M       templates_animals/ape_lesser_cg_vbm_defaults.m
+M       templates_animals/cg_vbm_defaults_template_primate130.m
+M       templates_animals/cg_vbm_defaults_template_primate15.m
+M       templates_animals/cg_vbm_defaults_template_primate400.m
+M       templates_animals/cg_vbm_defaults_template_primate45.m
+M       templates_animals/monkey_newworld_cg_vbm_defaults.m
+M       templates_animals/monkey_oldworld_cg_vbm_defaults.m
+
+(1) Again a lot of more renaming.
+(2) Updating of cat12.fig to consider new functions.
+------------------------------------------------------------------------
+r766 | gaser | 2015-11-17 16:05:28

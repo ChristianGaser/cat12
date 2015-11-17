@@ -1,5 +1,5 @@
-function out = cg_long_main_multi_run(job)
-% Call cg_long_main for multiple subjects
+function out = cat_long_multi_run(job)
+% Call cat_long_main for multiple subjects
 %
 % Christian Gaser
 % $Id$
@@ -14,7 +14,7 @@ extopts  = job.extopts;
 output   = job.output;
 modulate = job.modulate;
 
-jobs = repmat({'cg_long_main.m'}, 1, numel(job.subj));
+jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
 
 for i=1:numel(job.subj),

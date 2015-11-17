@@ -1,4 +1,4 @@
-function tools = cat_cfg_tools
+function tools = cat_conf_tools
 % wrapper for calling CAT utilities
 %
 %_______________________________________________________________________
@@ -861,7 +861,7 @@ defs        = cfg_exbranch;
 defs.tag    = 'defs';
 defs.name   = 'Apply deformations (many images)';
 defs.val    = {field1,images1,interp,modulate};
-defs.prog   = @cg_vol_defs;
+defs.prog   = @cat_vol_defs;
 defs.vfiles = @vfiles_defs;
 defs.help   = {'This is a utility for applying a deformation field of one subject to many images.'};
 
@@ -869,7 +869,7 @@ defs2        = cfg_exbranch;
 defs2.tag    = 'defs2';
 defs2.name   = 'Apply deformations (many subjects)';
 defs2.val    = {field,images,interp,modulate};
-defs2.prog   = @cg_vol_defs;
+defs2.prog   = @cat_vol_defs;
 defs2.vfiles = @vfiles_defs2;
 defs2.help   = {'This is a utility for applying deformation fields of many subjects to images.'};
 
@@ -901,7 +901,7 @@ realign.prog = @cat_vol_series_align;
 realign.vout = @vout_reslice;
 
 %------------------------------------------------------------------------
-long    = cg_long_main_multi;
+long    = cat_long_multi;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;

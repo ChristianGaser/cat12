@@ -2,7 +2,7 @@ AAL (AUTOMATED ANATOMICAL LABELING) atlas:
 --------------------------------------------------------------------------------
 Combining probabilistic cytoarchitectonic maps and functional imaging data.
 
-VBM12 was used to segment the T1 data (Collins brain) and to estimate the 
+CAT12 was used to segment the T1 data (Collins brain) and to estimate the 
 normalization parameter to project the AAL atlas to IXI550 space. 
 A 3D median filter was used to remove outliers in the label map. ROI-IDs 
 were reseted to guaranty that left side ROIs were described by odd numbers, 
