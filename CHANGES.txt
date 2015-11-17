@@ -7147,6 +7147,7 @@ Again a lot of more renaming.
 
 
 ------------------------------------------------------------------------
+r768 | gaser | 2015-11-17 17:14:11 +0100 (Di, 17 Nov 2015) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7155,5 +7156,28 @@ M       cat_batch_vbm.m
 M       cat_long_main.m
 
 Renamed some cat2-names in cat.
+
 ------------------------------------------------------------------------
-r768 | gaser | 2015-11-17 17:14:09
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile.cat
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_batch_vbm.m
+A  +    cat_conf_long.m
+M       cat_conf_tools.m
+D       cat_long_multi.m
+M       cat_stat_check_cov.m
+M       cat_vol_defs.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_instruction_FN.html
+M       html/cat_instruction_PP.html
+M       html/cat_methods_RBM.html
+
+(1) Again renaming of vbm-names that were overseen before.
+(2) Updated longitudinal batch that was not working from shell.
+
+------------------------------------------------------------------------
+r769 | gaser | 2015-11-18 00:06:03

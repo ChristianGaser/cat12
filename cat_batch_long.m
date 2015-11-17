@@ -18,18 +18,29 @@ if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
 spm_get_defaults;
 cat_get_defaults;
 
-global defaults cat matlabbatch
+global defaults cat12 matlabbatch
 
+matlabbatch{1}.spm.tools.cat.tools.long.subj.mov = cell(n,1);
 for i=1:n
   matlabbatch{1}.spm.tools.cat.tools.long.subj.mov{i} = names{i};
 end
+
+matlabbatch{1}.spm.tools.cat.tools.long.modulate = 2;
 
 % always deselect print option
 matlabbatch{1}.spm.tools.cat.tools.long.extopts.print = 0;
 
 warning off
-spm_jobman('initcfg');
-spm_jobman('run',matlabbatch);
+try
+  spm_jobman('initcfg');
+  spm_jobman('run',matlabbatch);
+catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
+  caterr = lasterror;  %#ok<LERR>
+  sprintf('\n%s\nCAT Preprocessing error: %s:\n%s\n', repmat('-',1,72),caterr.identifier,caterr.message,repmat('-',1,72));
+  for si=1:numel(caterr.stack), cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name)); end;
+  cat_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72)));  
+  error('Batch failed.');
+end
 
 spm_unlink(char(namefile))
 
