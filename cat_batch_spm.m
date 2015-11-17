@@ -1,4 +1,4 @@
-function cg_spm8_batch(batchname)
+function cat_batch_spm(batchname)
 % wrapper for using spm8 batch mode (see cat_batch_cat.sh)
 %_______________________________________________________________________
 % $Id$

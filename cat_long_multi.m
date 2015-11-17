@@ -1,4 +1,4 @@
-function long = cg_long_main_multi
+function long = cat_long_multi
 % Configuration file for longitudinal data
 %
 % Christian Gaser
@@ -111,15 +111,15 @@ output.help = {
 };
 
 %------------------------------------------------------------------------
-extopts = cat_cfg_extopts;
-opts    = cat_cfg_opts;
+extopts = cat_conf_extopts;
+opts    = cat_conf_opts;
 %------------------------------------------------------------------------
 
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
 long.val  = {esubjs,opts,extopts,output,modulate};
-long.prog = @cg_long_main_multi_run;
+long.prog = @cat_long_multi_run;
 long.vout = @vout_long;
 long.help = {
 'This option provides customized processing of longitudinal data. Please note that this processing pipeline was optimized for processing and detecting small changes over time as response to short-time plasticity effects (e.g. due to learning and training). This pipelines will not work properly for large longitudinal changes where large parts of the brain will change over time (e.g. atropy due to Alzheimers disease or ageing). This is due to the effect that the spatial normalization parameters are estimated using a mean image of all time points and subsequently applied to all time points. If large atrophy occurs between the time points this can lead to a shift of tissue borders and might result in areas of decreased volumes over time that are surrounded by areas of increased volumes due to this shifting issues. For data with large volume changes over time I would recommend to use the cross-sectional pipeline or the longitudinal toolbox in SPM12.'

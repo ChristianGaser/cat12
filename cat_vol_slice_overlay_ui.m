@@ -1,4 +1,4 @@
-function cg_slice_overay_ui
+function cat_vol_slice_overay_ui
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$

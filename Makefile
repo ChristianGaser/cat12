@@ -26,5 +26,5 @@ KmeansMex.$(SUF): KmeansMex.c Kmeans.o
 clean: 
 	$(DEL) *.o *.$(SUF).a
 
--include Makefile.vbm
+-include Makefile.cat
 

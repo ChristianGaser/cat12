@@ -1,7 +1,7 @@
-function cg_debug
-%cg_debug	print debug information for SPM12 and CAT12
+function cat_debug
+%cat_debug	print debug information for SPM12 and CAT12
 %
-% FORMAT cg_debug
+% FORMAT cat_debug
 %
 %__________________________________________________________________________
 % Christian Gaser

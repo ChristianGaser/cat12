@@ -1,4 +1,4 @@
-function cg_vol_defs(job)
+function cat_vol_defs(job)
 % Apply deformations to images. In contrast to spm_defs images are saved
 % in the original directory.
 %_______________________________________________________________________

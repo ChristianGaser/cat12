@@ -1,4 +1,4 @@
-function stoolsexp = cat_cfg_stoolsexp
+function stoolsexp = cat_conf_stoolsexp
 %_______________________________________________________________________
 % wrapper for calling CAT surface utilities
 %_______________________________________________________________________
