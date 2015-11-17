@@ -656,10 +656,10 @@ if ~(cat.sanlm==5 && job.extopts.NCstr)
     stime = cat_io_cmd('Noise correction after global intensity correction');
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
-      if (cat.sanlm==1) || (cat.sanlm==2), sanlmMex(Yms,3,1,0); end
+      if (cat.sanlm==1) || (cat.sanlm==2), cat_sanlm_mex(Yms,3,1,0); end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
     else
-      if (cat.sanlm==1) || (cat.sanlm==2), sanlmMex(Ym,3,1,0); end
+      if (cat.sanlm==1) || (cat.sanlm==2), cat_sanlm_mex(Ym,3,1,0); end
     end
     if opt.inv_weighting
       Ysrc = Ym;
@@ -682,13 +682,13 @@ if ~(cat.sanlm==5 && job.extopts.NCstr)
     stime = cat_io_cmd(sprintf('NLM-Filter after global intensity correction (ORNLMstr=%0.2f)',ornlmstr));
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       if ornlmstr>0.01,
-        Ymss = ornlmMex(Yms,3,1,ornlmstr); % double???
+        Ymss = cat_ornlm_mex(Yms,3,1,ornlmstr); % double???
         Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
       end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
     else
       if ornlmstr>0.01,
-        Yms = ornlmMex(Ym,3,1,ornlmstr);
+        Yms = cat_ornlm_mex(Ym,3,1,ornlmstr);
         Ym(Ym<1.1) = Yms(Ym<1.1);   % avoid filtering of blood vessels; 
       end
     end
@@ -735,7 +735,7 @@ else
   
   % filtering
   stime = cat_io_cmd(sprintf('ORNLM-Filter (ORNLMstr=%0.2f)',ornlmstr));
-  if ornlmstr>0.01, Yms = ornlmMex(Ym,3,1,ornlmstr); end
+  if ornlmstr>0.01, Yms = cat_ornlm_mex(Ym,3,1,ornlmstr); end
   Ym(Ym<1.3) = Yms(Ym<1.3); clear Yms;  % avoid filtering of blood vessels; 
   Ysrc = cat_pre_gintnormi(Ym,Tth);
   clear Yms BB;
@@ -961,7 +961,7 @@ if do_cls && do_defs
   stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
   % do segmentation  
-  prob = AmapMex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
+  prob = cat_amap_mex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
     job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
 
   % reorder probability maps according to spm order
@@ -3065,7 +3065,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   %Ycm = Ycm | (Yb & (Ym-max(0,Ydiv))<0.5); 
   Ywm = (Ysw | Ycls{2}>252 | ((Ycd-Ydiv)>2 & Ydiv<0 & Ym>0.9+LASstr*0.05 & Yb) | ... % save WM 
         ((Ycd-Ydiv.*Ycd)>4 & (Ydiv<-0.01) & Yb & Ym>0.5 & Ybd<20 & Ycd>2) ) & ...
-        ... ((Ycd-Ydiv*5)>3 & (Ydiv<-0.01 & (Yg + max(0,0.05-Ycd/100))<0.1) & Yb & Ym>0.4 & Ybd<20 & Ycd>2.5) ) & ... % further WM (cg_833!)
+        ... ((Ycd-Ydiv*5)>3 & (Ydiv<-0.01 & (Yg + max(0,0.05-Ycd/100))<0.1) & Yb & Ym>0.4 & Ybd<20 & Ycd>2.5) ) & ... % further WM
         ~Ybv & Yb & Ybd>1 & (Ycd>1.0 | (Yvt & Yp0>2.9)) & (Yg+Ydiv<(Ybd/50) | (Ydiv-Ym)<-1); % Ybd/800 + Ycd/50
   Ygm = ~Yvt & Ybb & ~Ybv & ~Ywm & ~Ycm & Ycd>0.5 & (Ym-Ydiv-max(0,2-Ycd)/10)<0.9 & (Ym+Ydiv)>0.5 & ... ~Ysk & 
         (Ycls{1}>4 | (Ym>0.7 & Ycls{3}>64) | Ycd<(Ym+Ydiv)*3 ) & ...

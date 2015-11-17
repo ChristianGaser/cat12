@@ -1,4 +1,4 @@
-function opts = cat_cfg_opts
+function opts = cat_conf_opts
 % Configuration file for CAT options
 %
 % Christian Gaser

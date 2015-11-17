@@ -1,4 +1,4 @@
-function cg_long_main_batch(namefile)
+function cat_batch_long(namefile)
 % wrapper for using spm8 batch mode (see cat_batch_cat.sh)
 %
 % namefile      - array of file names
@@ -6,7 +6,7 @@ function cg_long_main_batch(namefile)
 % $Id$
 
 if nargin < 1
-	fprintf('Syntax: cg_long_main_batch(namefile)\n');
+	fprintf('Syntax: cat_batch_long(namefile)\n');
 	exit
 end
 

@@ -77,7 +77,7 @@ function cat_vol_atlas(atlas,refinei)
   
   
   recalc  = 0; 
-  mode    = 0; % modulation of each label map? .. do not work yet ... see cg_vol_defs
+  mode    = 0; % modulation of each label map? .. do not work yet ... see cat_vol_defs
   if mode, modm='m'; else modm=''; end %#ok<UNRCH>
   
   

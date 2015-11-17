@@ -3,7 +3,7 @@ Hammers atlas:
 This atlas, based on Alexander Hammers' brain atlas, made available for the 
 Euripides project, Nov 2009 (A). 
 
-VBM12 was used to segment the T1 data and estimate Dartel normalization to the
+CAT12 was used to segment the T1 data and estimate Dartel normalization to the
 VBM IXI550 template for each subject. Dartel mapping was then applied for label
 map. A 3D median filter was used to remove outliers in the label map. ROI-IDs 
 were reseted to guaranty that left side ROIs were described by odd numbers, 

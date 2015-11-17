@@ -294,7 +294,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     % Modulation using spm_diffeo and push introduces aliasing artefacts,
     % thus we use the def2det function of the inverted deformations to obtain the old and 
     % in my view a more appropriate jacobian determinant 
-    % The 2nd reason to use the old modulation is compatibility with cg_vol_defs.m
+    % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
     Yy = spm_diffeo('invdef',transform.warped.y,transform.warped.odim,eye(4),transform.warped.M0);
     w  = spm_diffeo('def2det',Yy)/det(transform.warped.M0(1:3,1:3));
     

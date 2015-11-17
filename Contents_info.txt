@@ -6,32 +6,32 @@
 % Description
 % ==========================================================================
 % This toolbox is a collection of extensions to the segmentation algorithm 
-% of SPM12 (Wellcome Department of Cognitive Neurology) to provide voxel-
-% based morphometry (VBM). It is developed by Christian Gaser (University of 
-% Jena, Department of Psychiatry) and is available to the scientific 
-% community under the terms of the GNU General Public License.
+% of SPM12 (Wellcome Department of Cognitive Neurology) to provide computational
+% morphometry. It is developed by Christian Gaser and Robert Dahnke (University
+% of Jena, Departments of Psychiatry and Neurology) and is available to the 
+% scientific community under the terms of the GNU General Public License.
 %
 % General files
 %   INSTALL.txt                  - installation instructions
 %   CHANGES.txt                  - changes in revisions
 %   Contents.m                   - this file
 %
-% VBM12 functions
+% CAT12 functions
 %   cat_vbm_bias.m               - configuration file for bias correction between an image pair
 %   cat_vbm_bias_run.m           - correct bias between an image pair
-%   cat_vbm_debug.m              - print debug information for SPM12 and VBM12
-%   cat_vbm_defaults.m           - sets the defaults for VBM12
+%   cat_vbm_debug.m              - print debug information for SPM12 and CAT12
+%   cat_vbm_defaults.m           - sets the defaults for CAT12
 %   cat_vbm_defs.m               - apply deformations to images
-%   cat_vbm_get_defaults.m       - defaults for VBM12
-%   cat_vbm_longitudinal.m       - VBM12 for longitudinal data
-%   cat_vbm_longitudinal_multi.m - VBM12 for longitudinal data
-%   cat_vbm_longitudinal_multi_run.m - VBM12 for longitudinal data
-%   cat_vbm_run.m                - runtime funtion for VBM12
-%   cat_vbm_tools.m              - wrapper for calling VBM12 utilities
+%   cat_vbm_get_defaults.m       - defaults for CAT12
+%   cat_vbm_longitudinal.m       - CAT12 for longitudinal data
+%   cat_vbm_longitudinal_multi.m - CAT12 for longitudinal data
+%   cat_vbm_longitudinal_multi_run.m - CAT12 for longitudinal data
+%   cat_vbm_run.m                - runtime funtion for CAT12
+%   cat_vbm_tools.m              - wrapper for calling CAT12 utilities
 %   cat_vbm_update.m             - check for new updates
-%   cat_vbm_write.m              - write out VBM12 results
+%   cat_vbm_write.m              - write out CAT12 results
 %   spm_vbm.m                   - toolbox wrapper to call functions
-%   tbx_cfg_vbm.m               - configure VBM12
+%   tbx_cfg_vbm.m               - configure CAT12
 %
 % Utility functions
 %   AmapMex.m                    - compilation wrapper for AmapMex.c
@@ -73,7 +73,7 @@
 %   cat_spm8_batch.m              - batch mode wrapper for spm_jobman for SPM12
 %   cat_spm8_batch.sh             - shell script to call matlab batch files from unix
 %                                  without gui
-%   cat_vbm_batch.m              - batch mode wrapper for spm_jobman for VBM12
+%   cat_vbm_batch.m              - batch mode wrapper for spm_jobman for CAT12
 %   cat_vbm_batch.sh             - shell script to use vbm from unix without gui
 %
 % Templates/Images
