@@ -19,7 +19,7 @@ function varargout = cat_update(update)
 
 rev = '$Rev$';
 
-url = 'http://dbm.neuro.uni-jena.de/cat12/';
+url = 'http://www.neuro.uni-jena.de/cat12/';
 
 if ~nargin
     update = false;

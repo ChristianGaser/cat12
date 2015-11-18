@@ -7333,6 +7333,7 @@ mex-functions and other names will interfere with gui-functions such
 as cat_vol_sanlm.m
 
 ------------------------------------------------------------------------
+r773 | dahnke | 2015-11-18 13:18:08 +0100 (Mi, 18 Nov 2015) | 30 lines
 
 Changed paths:
  M      .
@@ -7363,5 +7364,27 @@ D       templates_animals/monkey_oldworld_cg_vbm_defaults.m
      separate default input file. Hence "cat_set_defaults" is obsolete. 
 (2)  Remove old animal default files and add new one. 
 
+
 ------------------------------------------------------------------------
-r773 | dahnke | 2015-11-18 13:17:58
+
+Changed paths:
+M       CHANGES.txt
+M       Contents_info.txt
+M       Makefile
+M       cat12.fig
+M       cat_check.m
+M       cat_main.m
+M       cat_update.m
+M       html/cat.html
+D       templates_1.50mm/p0A.nii
+D       templates_surfaces/lh.inflated.Template_T1_IXI555_MNI152.gii
+A       templates_surfaces/lh.inflated.freesurfer.gii
+D       templates_surfaces/rh.inflated.Template_T1_IXI555_MNI152.gii
+A       templates_surfaces/rh.inflated.freesurfer.gii
+
+(1) Replaced ?h.inflated.Template_T1_IXI555_MNI152.gii by inflated
+    surfaces of fsaverage from freesurfer
+(2) Updated Contents.m file
+(3) Some smaller rather cosmetic changes.
+------------------------------------------------------------------------
+r774 | gaser | 2015-11-18 16:52:58
