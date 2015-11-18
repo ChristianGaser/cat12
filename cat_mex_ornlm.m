@@ -1,5 +1,5 @@
-function out = cat_ornlm_mex(in, v, f, h)
-% FORMAT out = cat_ornlm_mex(in, v, f, h)
+function out = cat_mex_ornlm(in, v, f, h)
+% FORMAT out = cat_mex_ornlm(in, v, f, h)
 % 
 % Optimized Blockwise Non Local Means Denoising Filter
 %
@@ -22,14 +22,14 @@ function out = cat_ornlm_mex(in, v, f, h)
 
 rev = '$Rev$';
 
-disp('Compiling cat_ornlm_mex.c')
+disp('Compiling cat_mex_ornlm.c')
 
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O cat_ornlm_mex.c ornlm.c 
+mex -O cat_mex_ornlm.c ornlm.c 
 cd(p_path);
 
-out = cat_ornlm_mex(in, v, f, h);
+out = cat_mex_ornlm(in, v, f, h);
 
 return
