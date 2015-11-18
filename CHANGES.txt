@@ -7158,6 +7158,7 @@ M       cat_long_main.m
 Renamed some cat2-names in cat.
 
 ------------------------------------------------------------------------
+r769 | gaser | 2015-11-18 00:06:11 +0100 (Mi, 18 Nov 2015) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7179,5 +7180,20 @@ M       html/cat_methods_RBM.html
 (1) Again renaming of vbm-names that were overseen before.
 (2) Updated longitudinal batch that was not working from shell.
 
+
 ------------------------------------------------------------------------
-r769 | gaser | 2015-11-18 00:06:03
+
+Changed paths:
+M       CHANGES.txt
+M       INSTALL_info.txt
+A  +    cat_defaults_template_humanIXI555.m
+D       cg_vbm_defaults_template_humanIXI555.m
+M       html/cat.html
+M       html/cat_starting.html
+D       human_IXI555_cg_vbm_defaults.m
+
+Renamed and updated cat_defaults_template_humanIXI555.m and removed
+old human_IXI555_cg_vbm_defaults.m.
+
+------------------------------------------------------------------------
+r770 | gaser | 2015-11-18 11:20:00
