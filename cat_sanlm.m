@@ -1,5 +1,5 @@
-function cat_mex_sanlm(in, v, f)
-% FORMAT cat_mex_sanlm(in, v, f)
+function cat_sanlm(in, v, f)
+% FORMAT cat_sanlm(in, v, f)
 % 
 % Spatial Adaptive Non Local Means Denoising Filter
 %
@@ -23,14 +23,14 @@ function cat_mex_sanlm(in, v, f)
 
 rev = '$Rev$';
 
-disp('Compiling cat_mex_sanlm.c')
+disp('Compiling cat_sanlm.c')
 
 pth = fileparts(which(mfilename));
 p_path = pwd;
 cd(pth);
-mex -O cat_mex_sanlm.c sanlm_float.c 
+mex -O cat_sanlm.c sanlm_float.c 
 cd(p_path);
 
-cat_mex_sanlm(in, v, f);
+cat_sanlm(in, v, f);
 
 return

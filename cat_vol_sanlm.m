@@ -50,7 +50,7 @@ for i = 1:numel(job.data)
     src = single(spm_read_vols(V(i)));
     % prevent NaN
     src(isnan(src)) = 0;
-    cat_mex_sanlm(src,3,1,job.rician);
+    cat_sanlm(src,3,1,job.rician);
 
     V(i).fname = fullfile(pth,[job.prefix nm '.nii' vr]);
     V(i).descrip = sprintf('%s SANLM filtered',V(i).descrip);

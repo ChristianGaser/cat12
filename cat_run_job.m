@@ -81,7 +81,7 @@ function cat_run_job(job,estwrite,tpm,subj)
                   Y = cat_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
                   if job.extopts.verb>1, cat_io_cmd(' '); end
                 else
-                  cat_mex_sanlm(Y,3,1,0);          % use multi-threaded version
+                  cat_sanlm(Y,3,1,0);          % use multi-threaded version
                   fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
                 end
             end
