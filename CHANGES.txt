@@ -7273,6 +7273,7 @@ M       compile.m
 (2) Renamed mex-files according to cat_mex_name.*.
 
 ------------------------------------------------------------------------
+r772 | gaser | 2015-11-18 12:02:01 +0100 (Mi, 18 Nov 2015) | 57 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7330,5 +7331,37 @@ M       html/cat.html
 Removed _mex from mex-files because this is not consistent with other 
 mex-functions and other names will interfere with gui-functions such
 as cat_vol_sanlm.m
+
 ------------------------------------------------------------------------
-r772 | gaser | 2015-11-18 12:02:00
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       cat12.m
+D       cat_defaults_template_humanIXI555.m
+D       cat_set_defaults.m
+ M      html
+M       html/CAT.png
+M       html/cat.html
+A       html/cat_methods_LP.html
+M       html/style.css
+M       spm_cat12.m
+D       templates_animals/ape_greater_cg_vbm_defaults.m
+D       templates_animals/ape_lesser_cg_vbm_defaults.m
+A  +    templates_animals/cat_defaults_ape_greater.m
+A       templates_animals/cat_defaults_ape_lesser.m
+A       templates_animals/cat_defaults_monkey_newworld.m
+A       templates_animals/cat_defaults_monkey_oldworld.m
+D       templates_animals/cg_vbm_defaults_template_primate130.m
+D       templates_animals/cg_vbm_defaults_template_primate15.m
+D       templates_animals/cg_vbm_defaults_template_primate400.m
+D       templates_animals/cg_vbm_defaults_template_primate45.m
+D       templates_animals/monkey_newworld_cg_vbm_defaults.m
+D       templates_animals/monkey_oldworld_cg_vbm_defaults.m
+
+(1)  Extension of "spm_cat12" to use this function as VBM12 GUI starter with 
+     separate default input file. Hence "cat_set_defaults" is obsolete. 
+(2)  Remove old animal default files and add new one. 
+
+------------------------------------------------------------------------
+r773 | dahnke | 2015-11-18 13:17:58

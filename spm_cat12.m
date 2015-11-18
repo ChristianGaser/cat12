@@ -1,4 +1,4 @@
-function spm_cat12
+function spm_cat12(varargin)
 % CAT12 Toolbox wrapper to call cat functions
 %_______________________________________________________________________
 % Christian Gaser
@@ -6,12 +6,102 @@ function spm_cat12
 
 rev = '$Rev$';
 
+% start cat with different default file
+catdir = fullfile(spm('dir'),'toolbox','cat12'); 
+catdef = fullfile(catdir,'cat_defaults.m');
+if nargin==0
+  deffile = catdef;
+else 
+  deffile = varargin{1}; 
+end
+
+% choose files
+switch lower(deffile) 
+  case {'select','choose'}
+    deffile = spm_select(1,'batch','Select CAT default file!','',catdir);
+  case 'gui'
+    deffile = spm_input('Species class',1,'human|ape|monkey',...
+      {'human','ape','monkey'},1);
+    deffile = deffile{1}; 
+    
+    switch lower(deffile)
+      %case 'human'
+      %  deffile = spm_input('Species class','+1','adult|child|neonate|fetus|other',...
+      %    {'human_adult','human_child','human_neonate','human_fetus','human_other'},1); 
+      %  deffile = deffile{1};
+      case 'ape'
+        deffile = spm_input('Species class','+1','greater|lesser|other',...
+          {'ape_greater','ape_lesser','other'},1);
+        deffile = deffile{1};
+      case 'monkey'
+        deffile = spm_input('Species class','+1','old world|new world|other',...
+          {'monkey_oldworld','monkey_newworld','other'},1);
+        deffile = deffile{1};
+    end
+end
+switch lower(deffile)
+  case 'human'
+    deffile = catdef; 
+  case {'monkey_oldworld','oldwoldmonkey','cat_defaults_monkey_oldworld','cat_defaults_monkey_oldworld.m'}
+    deffile = fullfile(catdir,'templates_animals','cat_defaults_monkey_oldworld.m');
+  case {'monkey_newworld','newworldmonkey','cat_defaults_monkey_newworld','cat_defaults_monkey_newworld.m'}
+    deffile = fullfile(catdir,'templates_animals','cat_defaults_monkey_newworld.m');
+  case {'ape_greater','greaterape','cat_defaults_ape_greater','cat_defaults_ape_greater.m'}
+    deffile = fullfile(catdir,'templates_animals','cat_defaults_ape_greater.m');
+  case {'ape_lesser','lesserape','cat_defaults_ape_lesser','cat_defaults_ape_lesser.m'}
+    deffile = fullfile(catdir,'templates_animals','cat_defaults_ape_lesser.m');
+end
+
+% lazy input - no extension 
+[deffile_pp,deffile_ff,deffile_ee] = fileparts(deffile);
+if isempty(deffile_ee)
+  deffile_ee = '.m';
+end
+% lazy input - no directory
+if isempty(deffile_pp) 
+  if exist(fullfile(pwd,deffile_ff,deffile_ee),'file') 
+    deffile_pp = pwd; 
+  else
+    deffile_pp = fullfile(spm('dir'),'toolbox','cat12'); 
+  end
+end
+deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
+
+% check if file exist
+if ~exist(deffile,'file')
+  error('CAT:miss_cat_default_file','Can''t find CAT default file "%"','deffile'); 
+end
+
+% set other defaultfile
+if ~strcmp(catdef,deffile_ff)
+  oldwkd = cd; 
+  cd(deffile_pp);
+  clearvars -global cat12;
+  eval(deffile_ff);
+  cd(oldwkd);
+  
+  % reinitialize SPM 
+  spm_jobman('initcfg');
+end
+
 SPMid = spm('FnBanner',mfilename,rev);
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','CAT12');
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
 if cat_get_defaults('extopts.gui')
+  % command line output
+  cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
+    '\n' ...
+    '   _______  ___  _______    \n' ...
+    '  |  ____/ / _ \\\\ \\\\_   _/   \n' ...
+    '  | |___  / /_\\\\ \\\\  | |     Computational Anatomy Toolbox\n' ...
+    '  |____/ /_/   \\\\_\\\\ |_|     CAT12 - http://dbm.neuro.uni-jena.de\n\n']));
+  cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
+    'CAT default file:\n' ...
+    '\t%s\n\n'],deffile)); 
+
+  % call GUI
   cat12
 else
   fig = spm_figure('GetWin','Interactive');

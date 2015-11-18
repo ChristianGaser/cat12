@@ -1,6 +1,6 @@
 function cat_defaults
 % Sets the defaults for CAT
-% FORMAT cat_defaults
+% FORMAT cat_defaults_monkey_oldworld
 %_______________________________________________________________________
 %
 % This file is intended to be customised for the site.
@@ -51,30 +51,30 @@ cat12.opts.samp      = 3;                       % Sampling distance      - small
 cat12.output.surface     = 0;     % surface and thickness creation
 
 % save ROI values
-cat12.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
+cat12.output.ROI         = 0;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
-cat12.output.bias.native = 0;
-cat12.output.bias.warped = 1;
+cat12.output.bias.native = 1;
+cat12.output.bias.warped = 0;
 cat12.output.bias.dartel = 0;
 
 % GM tissue maps
 cat12.output.GM.native  = 0;
 cat12.output.GM.warped  = 0;
-cat12.output.GM.mod     = 2;
-cat12.output.GM.dartel  = 0;
+cat12.output.GM.mod     = 0;
+cat12.output.GM.dartel  = 3;
 
 % WM tissue maps
 cat12.output.WM.native  = 0;
 cat12.output.WM.warped  = 0;
-cat12.output.WM.mod     = 2;
-cat12.output.WM.dartel  = 0;
+cat12.output.WM.mod     = 0;
+cat12.output.WM.dartel  = 3;
  
 % CSF tissue maps
 cat12.output.CSF.native = 0;
 cat12.output.CSF.warped = 0;
 cat12.output.CSF.mod    = 0;
-cat12.output.CSF.dartel = 0;
+cat12.output.CSF.dartel = 3;
 
 % WMH tissue maps (only for opt.extopts.WMHC==3) - in development
 cat12.output.WMH.native  = 0;
@@ -84,7 +84,7 @@ cat12.output.WMH.dartel  = 0;
 
 % label 
 % background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extropts.WMHC==3)
-cat12.output.label.native = 0; 
+cat12.output.label.native = 1; 
 cat12.output.label.warped = 0;
 cat12.output.label.dartel = 0;
 
@@ -116,7 +116,7 @@ cat12.extopts.INV          = 1;     % Invert PD/T2 images for standard preproces
 
 % resolution options:
 cat12.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
-cat12.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
+cat12.extopts.resval       = [0.70 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
 
 %{
 native:
@@ -160,21 +160,20 @@ fix:
 
 % registration and normalization options 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
-cat12.extopts.species      = 'human';  
+cat12.extopts.species      = 'monkey_oldworld';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
-cat12.extopts.APP          = 0;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
+cat12.extopts.APP          = 4;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
 cat12.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
 cat12.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
-cat12.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Tempalte_1)
-%cat12.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0)
-cat12.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat12.nii')};                     % CAT atlas with major regions for VBM, SBM & ROIs
-cat12.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
-cat12.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
+vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_oldworld_Template_1.nii')}; % Indicate first Dartel template
+vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_oldworld_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
+vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_oldworld_brainmask.nii')};  % brainmask for affine registration
+vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_oldworld_T1.nii')};         % T1 for affine registration
 
 % surface options
-cat12.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm: 
-                                  % 1   - normal resolution
-                                  % 0.5 - high res (default) 
+cat12.extopts.pbtres       = 0.35;   % internal resolution for thickness estimation in mm: 
+                                     % 1   - normal resolution
+                                     % 0.5 - high res (default) 
 
 % visualisation, print and debugging options
 cat12.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -194,12 +193,6 @@ cat12.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus wi
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 cat12.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'gm'    {'csf','gm'};       ... % good atlas based on 35 subjects
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammers, 18 subjects, low T1 image quality
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... % ROIs requires further work >> use Anatomy toolbox
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ... % only one subject, but with WM regions
   }; 
 
 
