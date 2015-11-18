@@ -102,7 +102,7 @@ if cat_get_defaults('extopts.gui')
     '\t%s\n\n'],deffile)); 
 
   % call GUI
-  cat12
+  cat12('fig'); 
 else
   fig = spm_figure('GetWin','Interactive');
   h0  = uimenu(fig,...
