@@ -656,10 +656,10 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
     stime = cat_io_cmd('Noise correction after global intensity correction');
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
-      if (cat12.sanlm==1) || (cat12.sanlm==2), cat_sanlm_mex(Yms,3,1,0); end
+      if (cat12.sanlm==1) || (cat12.sanlm==2), cat_mex_sanlm(Yms,3,1,0); end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
     else
-      if (cat12.sanlm==1) || (cat12.sanlm==2), cat_sanlm_mex(Ym,3,1,0); end
+      if (cat12.sanlm==1) || (cat12.sanlm==2), cat_mex_sanlm(Ym,3,1,0); end
     end
     if opt.inv_weighting
       Ysrc = Ym;
@@ -682,13 +682,13 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
     stime = cat_io_cmd(sprintf('NLM-Filter after global intensity correction (ORNLMstr=%0.2f)',ornlmstr));
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       if ornlmstr>0.01,
-        Ymss = cat_ornlm_mex(Yms,3,1,ornlmstr); % double???
+        Ymss = cat_mex_ornlm(Yms,3,1,ornlmstr); % double???
         Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
       end
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
     else
       if ornlmstr>0.01,
-        Yms = cat_ornlm_mex(Ym,3,1,ornlmstr);
+        Yms = cat_mex_ornlm(Ym,3,1,ornlmstr);
         Ym(Ym<1.1) = Yms(Ym<1.1);   % avoid filtering of blood vessels; 
       end
     end
@@ -735,7 +735,7 @@ else
   
   % filtering
   stime = cat_io_cmd(sprintf('ORNLM-Filter (ORNLMstr=%0.2f)',ornlmstr));
-  if ornlmstr>0.01, Yms = cat_ornlm_mex(Ym,3,1,ornlmstr); end
+  if ornlmstr>0.01, Yms = cat_mex_ornlm(Ym,3,1,ornlmstr); end
   Ym(Ym<1.3) = Yms(Ym<1.3); clear Yms;  % avoid filtering of blood vessels; 
   Ysrc = cat_pre_gintnormi(Ym,Tth);
   clear Yms BB;
@@ -961,7 +961,7 @@ if do_cls && do_defs
   stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
   % do segmentation  
-  prob = cat_amap_mex(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
+  prob = cat_mex_amap(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
     job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
 
   % reorder probability maps according to spm order

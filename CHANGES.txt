@@ -7182,6 +7182,7 @@ M       html/cat_methods_RBM.html
 
 
 ------------------------------------------------------------------------
+r770 | gaser | 2015-11-18 11:20:03 +0100 (Mi, 18 Nov 2015) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7195,5 +7196,79 @@ D       human_IXI555_cg_vbm_defaults.m
 Renamed and updated cat_defaults_template_humanIXI555.m and removed
 old human_IXI555_cg_vbm_defaults.m.
 
+
 ------------------------------------------------------------------------
-r770 | gaser | 2015-11-18 11:20:00
+
+Changed paths:
+M       CHANGES.txt
+R  +    Makefile
+D       Makefile.cat
+D       Makefile.var
+D       cat_amap_mex.c
+D       cat_amap_mex.m
+D       cat_amap_mex.mexa64
+D       cat_amap_mex.mexglx
+D       cat_amap_mex.mexmaci64
+D       cat_amap_mex.mexw32
+D       cat_amap_mex.mexw64
+M       cat_main.m
+A  +    cat_mex_amap.c
+A  +    cat_mex_amap.m
+A  +    cat_mex_amap.mexa64
+A  +    cat_mex_amap.mexglx
+A  +    cat_mex_amap.mexmaci64
+A  +    cat_mex_amap.mexw32
+A  +    cat_mex_amap.mexw64
+A  +    cat_mex_ornlm.c
+A  +    cat_mex_ornlm.m
+A  +    cat_mex_ornlm.mexa64
+A  +    cat_mex_ornlm.mexglx
+A  +    cat_mex_ornlm.mexmaci
+A  +    cat_mex_ornlm.mexmaci64
+A  +    cat_mex_ornlm.mexw32
+A  +    cat_mex_ornlm.mexw64
+A  +    cat_mex_sanlm.c
+A  +    cat_mex_sanlm.m
+A  +    cat_mex_sanlm.mexa64
+A  +    cat_mex_sanlm.mexglx
+A  +    cat_mex_sanlm.mexmaci64
+A  +    cat_mex_sanlm.mexw32
+A  +    cat_mex_sanlm.mexw64
+D       cat_ornlm_mex.c
+D       cat_ornlm_mex.m
+D       cat_ornlm_mex.mexa64
+D       cat_ornlm_mex.mexglx
+D       cat_ornlm_mex.mexmaci
+D       cat_ornlm_mex.mexmaci64
+D       cat_ornlm_mex.mexw32
+D       cat_ornlm_mex.mexw64
+M       cat_run_job.m
+D       cat_sanlm_mex.c
+D       cat_sanlm_mex.m
+D       cat_sanlm_mex.mexa64
+D       cat_sanlm_mex.mexglx
+D       cat_sanlm_mex.mexmaci64
+D       cat_sanlm_mex.mexw32
+D       cat_sanlm_mex.mexw64
+M       cat_vbdist.mexmaci64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_isarnlm.m
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_sanlm.m
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+
+(1) Removed Makefile.var and renamed Makefile.cat to Makefile because all
+    the compilation is done inside compile.m
+(2) Renamed mex-files according to cat_mex_name.*.
+------------------------------------------------------------------------
+r771 | gaser | 2015-11-18 11:53:58
