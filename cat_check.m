@@ -3,9 +3,9 @@ function varargout = cat_check(action,varargin)
 % ______________________________________________________________________
 % Blabla
 %
-% [INtype,F,V,T] = cat_check_files('checkinfiles',IN);
-% OUT            = cat_check_files('checkinfiles',INtype,F,V,T);
-% res            = cat_check_files('checkinopt',opt,def,cond);
+% [INtype,F,V,T] = cat_check('checkinfiles',IN);
+% OUT            = cat_check('checkinfiles',INtype,F,V,T);
+% res            = cat_check('checkinopt',opt,def,cond);
 % 
 % INtype = [1=F(file) | 2=V(hdr) | 3=V(hdr)+T(volume) | 4=T(volume)]
 % ______________________________________________________________________
@@ -32,11 +32,12 @@ function varargout = cat_check(action,varargin)
         case '4', [varargout{1},varargout{2},varargout{3},varargout{4}] = cat_checkinfiles(varargin);
       end      
     case 'checkoutfiles', varargout{1} = cat_checkoutfiles(varargin);
-    case 'checkinopt',    varargout{1} = cat_cat_io_checkinopt(varargin);
+    case 'checkinopt',    varargout{1} = cat_io_checkinopt(varargin);
     otherwise, error('MATLAB:cat_check','Unknown action ''%s''',action);       
   end
   warning(warnstat(1).state,'all');
 end
+
 function varargout = cat_checkinfiles(varargin)
   if numel(varargin{1})>0, IN       = varargin{1}{1}; end
   if numel(varargin{1})>1, readvols = varargin{1}{2}; else readvols = 0; end;
@@ -52,7 +53,7 @@ function varargout = cat_checkinfiles(varargin)
   elseif isnumeric(IN)
     INtype = 4; 
   else
-    error('MATLAB:cat_check_files','Unknown input.\n');
+    error('MATLAB:cat_check','Unknown input.\n');
   end
   
   % create output
@@ -137,9 +138,10 @@ function varargout = cat_checkoutfiles(varargin)
     otherwise, error('MATLAB:cat_check','Unkown INtype ''%d''!\n',INtype);
   end
 end
-function varargout = cat_cat_io_checkinopt(varargin)
+
+function varargout = cat_io_checkinopt(varargin)
   if numel(varargin{1})>0, opt  = varargin{1}{1}; 
-  else  error('MATLAB:cat_check_files:checkinopt','Need at least one intput!\n');
+  else  error('MATLAB:cat_check:checkinopt','Need at least one intput!\n');
   end
   if numel(varargin{1})>1, def  = varargin{1}{2}; else def=[]; end
   if numel(varargin{1})>2, cond = varargin{1}{3}; else cond=[]; end
