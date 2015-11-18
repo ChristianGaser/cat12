@@ -45,17 +45,6 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% This creates the 'background' image
-if ~nargin
-  ha = axes('units','normalized','position',[0 0.87 1 0.13]);
-  uistack(ha,'bottom');
-  I = imread(fullfile(spm('dir'),'toolbox','cat12','html','contact.jpg'));
-  hi = imagesc(I);
-  text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',22,'Fontweight','bold');
-  set(ha,'handlevisibility','off','visible','off');
-end
-
-
 % --- Executes just before cat12 is made visible.
 function cat12_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -80,6 +69,15 @@ function varargout = cat12_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
+% This creates the 'background' image
+ha = axes('units','normalized','position',[0 0.87 1 0.13]);
+uistack(ha,'bottom');
+I = imread(fullfile(spm('dir'),'toolbox','cat12','html','contact.jpg'));
+hi = imagesc(I);
+text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',22,'Fontweight','bold');
+set(ha,'handlevisibility','off','visible','off');
+
 
 % --- Executes during object creation, after setting all properties.
 function CAT_CreateFcn(hObject, eventdata, handles)
