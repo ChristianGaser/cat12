@@ -10,7 +10,7 @@ function compile
     mexflag='';
   end
 
-  eval(['mex ' mexflag ' -O cat_mex_amap.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c'])
+  eval(['mex ' mexflag ' -O cat_amap.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c'])
   eval(['mex ' mexflag ' -O cat_vol_median3.c'])
   eval(['mex ' mexflag ' -O cat_vol_median3c.c'])
   eval(['mex ' mexflag ' -O cat_vol_downcut.c'])
@@ -24,8 +24,8 @@ function compile
   eval(['mex ' mexflag ' -O cat_vol_eidist.c'])
   eval(['mex ' mexflag ' -O cat_vol_genus0.c genus0.c'])
   eval(['mex ' mexflag ' -O cat_vbdist.c'])
-  eval(['mex ' mexflag ' -O cat_mex_ornlm.c ornlm_float.c'])
-  eval(['mex ' mexflag ' -O cat_mex_sanlm.c sanlm_float.c'])
+  eval(['mex ' mexflag ' -O cat_ornlm.c ornlm_float.c'])
+  eval(['mex ' mexflag ' -O cat_sanlm.c sanlm_float.c'])
   
   %%
   
@@ -33,7 +33,7 @@ function compile
   d{1} = cat_vol_pbtp(3*d0,d0,d0);          disp('Compilation of cat_vol_pbtp successful')
   d{2} = cat_vol_median3(d0);               disp('Compilation of cat_vol_median3 successful')
   d{3} = cat_vol_median3c(d0,d0==0);        disp('Compilation of cat_vol_median3c successful')
-  d{4} = cat_mex_ornlm(d0,3,1,0.1);         disp('Compilation of cat_mex_ornlm successful')
+  d{4} = cat_ornlm(d0,3,1,0.1);         disp('Compilation of cat_ornlm successful')
   d{5} = cat_vol_laplace3(d0,0,0,0.001);    disp('Compilation of cat_vol_laplace3 successful')
   d{6} = cat_vol_laplace3R(d0,d0>0.5,0.2);  disp('Compilation of cat_vol_laplace3R successful')
   [d{7},d{8},d{9}] = cat_vol_gradient3(d0); disp('Compilation of cat_vol_gradient3 successful')
@@ -45,9 +45,9 @@ function compile
   d{15} = cat_vol_eidist(d0,d0);            disp('Compilation of cat_vol_eidist successful')
   [tmp,CS.faces,CS.vertices] = cat_vol_genus0(d0,0.5); disp('Compilation of cat_vol_genus0 successful')
     
-  cat_mex_sanlm(d0,3,1);
+  cat_sanlm(d0,3,1);
   d{16} = d0;
-  disp('Compilation of cat_mex_sanlm successful')
+  disp('Compilation of cat_sanlm successful')
 
   debugname = ['debug_' mexext '.mat'];
   disp(['save ' debugname]);
