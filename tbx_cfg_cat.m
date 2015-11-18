@@ -11,12 +11,6 @@ addpath(fileparts(which(mfilename)));
 
 %% ------------------------------------------------------------------------
 try
-  defid = fopen(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));
-  defstr = textscan(defid,'%s'); 
-  fclose(defid); 
-  % @Robert: why so complicated?
-%  experti = find(cellfun('isempty',strfind(defstr{1},'cat.extopts.expertgui'))==0);
-%  expert = str2double(defstr{1}{experti+2}(1));
   expert = cat_get_defaults('extopts.expertgui');
 catch %#ok<CTCH>
   expert = 0; 

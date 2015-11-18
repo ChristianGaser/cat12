@@ -24,6 +24,9 @@ function varargout = cat12(varargin)
 
 % Last Modified by GUIDE v2.5 17-Nov-2015 16:52:56
 
+if nargin==0 || (nargin==1 && ~strcmp(varargin{1},'fig'))
+  spm_cat12; return;
+end
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -33,7 +36,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @cat12_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
-if nargin && ischar(varargin{1})
+if nargin && ~strcmp(varargin{1},'fig') && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
 
@@ -43,6 +46,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
+
 
 
 % --- Executes just before cat12 is made visible.
@@ -132,6 +136,12 @@ cat_vol_slice_overlay;
 
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
+F = spm_figure('FindWin','Menu');
+% close SPM windows, if no Menu window exist
+if isempty(F)
+  spm_figure('Close',spm_figure('FindWin','Graphics')); 
+  spm_figure('Close',spm_figure('FindWin','Interactive'));
+end
 close(gcf);
 
 
