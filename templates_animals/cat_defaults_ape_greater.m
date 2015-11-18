@@ -165,10 +165,10 @@ cat12.extopts.species      = 'ape_greater';
 cat12.extopts.APP          = 4;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
 cat12.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
 cat12.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
-vbm.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_greater_Template_1.nii')}; % Indicate first Dartel template
-vbm.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_greater_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
-vbm.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_greater_brainmask.nii')};  % brainmask for affine registration
-vbm.extopts.T1           = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_greater_T1.nii')};         % T1 for affine registration
+cat12.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','ape_greater_Template_1.nii')}; % Indicate first Dartel template
+cat12.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','ape_greater_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
+cat12.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','ape_greater_brainmask.nii')};  % brainmask for affine registration
+cat12.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','ape_greater_T1.nii')};         % T1 for affine registration
 
 % surface options
 cat12.extopts.pbtres       = 0.35;   % internal resolution for thickness estimation in mm: 

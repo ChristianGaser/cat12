@@ -7366,6 +7366,7 @@ D       templates_animals/monkey_oldworld_cg_vbm_defaults.m
 
 
 ------------------------------------------------------------------------
+r774 | gaser | 2015-11-18 16:53:05 +0100 (Mi, 18 Nov 2015) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7386,5 +7387,27 @@ A       templates_surfaces/rh.inflated.freesurfer.gii
     surfaces of fsaverage from freesurfer
 (2) Updated Contents.m file
 (3) Some smaller rather cosmetic changes.
+
 ------------------------------------------------------------------------
-r774 | gaser | 2015-11-18 16:52:58
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+A       Contents.m
+M       cat12.fig
+M       cat12.m
+M       html/cat.txt
+ M      html/cat_methods_LP.html
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+M       templates_animals/cat_defaults_ape_greater.m
+M       templates_animals/cat_defaults_ape_lesser.m
+M       templates_animals/cat_defaults_monkey_newworld.m
+M       templates_animals/cat_defaults_monkey_oldworld.m
+
+(1)  Corrected problems for simple call of "cat12.m". 
+(2)  If only CAT is running and no SPM Menu figure is active, all figures (also
+     Interactive and Graphics) will be closed. 
+(3)  Deactivate resizing of cat12 menu.
+------------------------------------------------------------------------
+r775 | dahnke | 2015-11-18 17:13:49
