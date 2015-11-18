@@ -7198,6 +7198,7 @@ old human_IXI555_cg_vbm_defaults.m.
 
 
 ------------------------------------------------------------------------
+r771 | gaser | 2015-11-18 11:54:01 +0100 (Mi, 18 Nov 2015) | 72 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7270,5 +7271,64 @@ M       compile.m
 (1) Removed Makefile.var and renamed Makefile.cat to Makefile because all
     the compilation is done inside compile.m
 (2) Renamed mex-files according to cat_mex_name.*.
+
 ------------------------------------------------------------------------
-r771 | gaser | 2015-11-18 11:53:58
+
+Changed paths:
+M       CHANGES.txt
+A  +    cat_amap.c
+A  +    cat_amap.m
+A  +    cat_amap.mexa64
+A  +    cat_amap.mexglx
+A  +    cat_amap.mexmaci64
+A  +    cat_amap.mexw32
+A  +    cat_amap.mexw64
+M       cat_main.m
+D       cat_mex_amap.c
+D       cat_mex_amap.m
+D       cat_mex_amap.mexa64
+D       cat_mex_amap.mexglx
+D       cat_mex_amap.mexmaci64
+D       cat_mex_amap.mexw32
+D       cat_mex_amap.mexw64
+D       cat_mex_ornlm.c
+D       cat_mex_ornlm.m
+D       cat_mex_ornlm.mexa64
+D       cat_mex_ornlm.mexglx
+D       cat_mex_ornlm.mexmaci
+D       cat_mex_ornlm.mexmaci64
+D       cat_mex_ornlm.mexw32
+D       cat_mex_ornlm.mexw64
+D       cat_mex_sanlm.c
+D       cat_mex_sanlm.m
+D       cat_mex_sanlm.mexa64
+D       cat_mex_sanlm.mexglx
+D       cat_mex_sanlm.mexmaci64
+D       cat_mex_sanlm.mexw32
+D       cat_mex_sanlm.mexw64
+A  +    cat_ornlm.c
+A  +    cat_ornlm.m
+A  +    cat_ornlm.mexa64
+A  +    cat_ornlm.mexglx
+A  +    cat_ornlm.mexmaci
+A  +    cat_ornlm.mexmaci64
+A  +    cat_ornlm.mexw32
+A  +    cat_ornlm.mexw64
+M       cat_run_job.m
+A  +    cat_sanlm.c
+A  +    cat_sanlm.m
+A  +    cat_sanlm.mexa64
+A  +    cat_sanlm.mexglx
+A  +    cat_sanlm.mexmaci64
+A  +    cat_sanlm.mexw32
+A  +    cat_sanlm.mexw64
+M       cat_vol_isarnlm.m
+M       cat_vol_sanlm.m
+M       compile.m
+M       html/cat.html
+
+Removed _mex from mex-files because this is not consistent with other 
+mex-functions and other names will interfere with gui-functions such
+as cat_vol_sanlm.m
+------------------------------------------------------------------------
+r772 | gaser | 2015-11-18 12:02:00
