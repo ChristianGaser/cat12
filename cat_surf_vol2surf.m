@@ -50,14 +50,14 @@ function varargout = cat_surf_vol2surf(varargin)
   
   job.sinfo_lh = cat_surf_info(job.data_mesh_lh);
   job.sinfo_rh = cat_surf_info(job.data_mesh_rh);
-  template = job.sinfo_lh(1).template; 
+  template = job.sinfo_lh(1).template;
   
   % Mapping commando 
   % --------------------------------------------------------------------
   MFN = fieldnames(job.mapping);
   switch MFN{1}
     case 'boundary'
-      job.mappingstr = 'average';
+      job.mappingstr = 'avg';
       switch job.mapping.boundary.class % thickness + absolute position
         case 1, job.origin =  0 + job.mapping.boundary.pos;
         case 2, job.origin = -2 + job.mapping.boundary.pos;
@@ -66,7 +66,7 @@ function varargout = cat_surf_vol2surf(varargin)
       job.res    = 1; 
       job.length = 0; % length has to be set to zero because we only need one values at the defined position
     case 'tissue'
-     job.mappingstr = 'average';
+     job.mappingstr = 'avg';
       switch job.mapping.tissue.class % ...
         case 1, job.origin =  0 .* (job.mapping.tissue.pos-0.5);
         case 2, job.origin = -2 .* (job.mapping.tissue.pos-0.5);
@@ -131,7 +131,6 @@ function varargout = cat_surf_vol2surf(varargin)
           'preside','','pp',ppv,'name',sprintf('%s.%s',job.(sside{si}).name,ffv));
 
         % map values
-        % system(fullfile(opt.CATDir,'CAT_3dVol2Surf -help'))
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
           mappingstr, job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
