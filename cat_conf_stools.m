@@ -148,9 +148,9 @@ function stools = cat_conf_stools(expert)
   v2s.datafieldname.num     = [1 Inf];
   v2s.datafieldname.val     = {'intensity'};
   v2s.datafieldname.help    = {
-    'Name of the surface data part of the filename.'
+    'Name of the texture as part of the filename.'
     ''
-    '  [s*mm.][rh|lh].DATANAME[.resampled|].subjectname[.gii]' 
+    '  [rh|lh].TEXTURENAME[.resampled|].subjectname[.gii]' 
     };
  
   v2s.interp         = cfg_menu;
@@ -190,7 +190,7 @@ function stools = cat_conf_stools(expert)
   v2s.boundary_pos.val     = {0};
   v2s.boundary_pos.num     = [1 1];
   v2s.boundary_pos.help    = {
-    'Absolute position from surface. Use negative values for deeper positions pointing inwards.'
+    'Absolute position from surface in mm. Use negative values for deeper positions pointing inwards.'
     'All values are limited by the maximum possible distance within a cortical structure such as gyri or sulci.'
   };
   
@@ -381,7 +381,7 @@ function stools = cat_conf_stools(expert)
    
   v2s.data_sub         = cfg_files; 
   v2s.data_sub.tag     = 'data_vol';
-  v2s.data_sub.name    = 'Volumes in native space';
+  v2s.data_sub.name    = 'Volumes in Native Space';
   v2s.data_sub.filter  = 'image';
   v2s.data_sub.ufilter = '^(?!wm|wp|m0wp|mwp|wc).*'; % no normalized images
   v2s.data_sub.num     = [1 Inf];
@@ -429,7 +429,9 @@ function stools = cat_conf_stools(expert)
   v2s.data_norm.ufilter = '.*';
   v2s.data_norm.num     = [1 Inf];
   v2s.data_norm.help    = {
-    'Select spatially normalized volumes (in template space).'
+    'Select spatially normalized volumes (in template space). The output file will be named according to the volume names'
+    ''
+    '  [rh|lh].central.Template_T1_IXI555_MNI152.VOLUMENAME.gii' 
   };
 
   v2s.vol2tempsurf      = cfg_exbranch;
@@ -438,7 +440,6 @@ function stools = cat_conf_stools(expert)
   v2s.vol2tempsurf.val  = {
     v2s.data_norm ...
     v2s.data_surf_avg_lh ...
-    v2s.datafieldname ...
     v2s.interp ...
     v2s.mapping ...
   };
@@ -515,9 +516,9 @@ function stools = cat_conf_stools(expert)
   sc.dataname.num     = [1 Inf];
   sc.dataname.val     = {'output'};
   sc.dataname.help    = {
-    'Name of the surface data part of the filename.'
+    'Name of the texture as part of the filename.'
     ''
-    '  [s*mm.][rh|lh].DATANAME[.resampled|].subjectname[.gii]' 
+    '  [rh|lh].TEXTURENAME[.resampled|].subjectname[.gii]' 
   };
 
   sc.expression         = cfg_entry;

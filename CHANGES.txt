@@ -7412,6 +7412,7 @@ M       templates_animals/cat_defaults_monkey_oldworld.m
 (3)  Deactivate resizing of cat12 menu.
 
 ------------------------------------------------------------------------
+r776 | gaser | 2015-11-19 01:19:34 +0100 (Do, 19 Nov 2015) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7423,5 +7424,23 @@ M       html/cat.html
 
 Added and updated functions to read raw volumes and TIV from xml-files.
 
+
 ------------------------------------------------------------------------
-r776 | gaser | 2015-11-19 01:19:32
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_surf_vol2surf.m
+M       cat_tst_qa.m
+ M      templates_surfaces/lh.inflated.freesurfer.gii
+ M      templates_surfaces/rh.inflated.freesurfer.gii
+
+(1) In cat_surf_vol2surf.m the wrong flag for calling CAT_3DVol2Surf was 
+    used instead of "avg".
+(2) Quality assurance is commented out from cat_conf_tools.m because it
+    is not yet ready.
+(3) Corrected some field names and removed fields that were not used anymore
+    in cat_conf_stools.m. 
+------------------------------------------------------------------------
+r777 | gaser | 2015-11-19 16:53:06
