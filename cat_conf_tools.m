@@ -325,7 +325,7 @@ data_xml.tag  = 'data_xml';
 data_xml.filter = 'xml';
 data_xml.num  = [1 Inf];
 data_xml.help   = {[...
-'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files..']};
+'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files.']};
 
 qam         = cfg_repeat;
 qam.tag     = 'qam';
@@ -758,15 +758,6 @@ sanlm.help   = {
 };
 
 %------------------------------------------------------------------------
-calcvol_files         = cfg_files;
-calcvol_files.tag     = 'data';
-calcvol_files.name    = 'Volumes';
-calcvol_files.filter  = '*';
-calcvol_files.ufilter = 'seg.*\.txt$';
-calcvol_files.num     = [1 Inf];
-calcvol_files.help    = {
-'Select all *_seg.txt files containing raw volumes, which were saved by CAT12 toolbox.'};
-
 calcvol_name         = cfg_entry;
 calcvol_name.tag     = 'calcvol_name';
 calcvol_name.name    = 'Output file';
@@ -778,13 +769,13 @@ calcvol_name.help    = {
 
 calcvol       = cfg_exbranch;
 calcvol.tag   = 'calcvol';
-calcvol.name  = 'Read raw volumes (GM/WM/CSF/Total)';
-calcvol.val   = {calcvol_files,calcvol_name};
+calcvol.name  = 'Read raw volumes (TIV/GM/WM/CSF)';
+calcvol.val   = {data_xml,calcvol_name};
 calcvol.prog  = @execute_calcvol;
 calcvol.help  = {
-'This function reads raw volumes for GM/WM/CSF/Total and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. The values for GM/WM/CSF/TOTAL are now saved in vol(:,1) vol(:,2) vol(:,3) and vol(:,4).'
+'This function reads raw volumes for TIV/GM/WM/CSF and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. The values for TIV/GM/WM/CSF are now saved in vol(:,1) vol(:,2) vol(:,3) and vol(:,4).'
 ''
-'You can use these variables either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option. Depending on your hypothesis and/or your data you can just use gray matter ("gm") or calculate the sum of gray/white matter with "gm+wm". The use of raw volumes as nuisance or globals is only recommended for modulated data. These data are corrected for size changes due to spatial  normalization and are thought to be in raw (un-normalized) space. In contrast, un-modulated data are yet corrected for differences in size due to spatial normalization to a reference brain and there is no need to correct for these differences again.'
+'You can use these variables either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option depending on your hypothesis. The use of raw volumes as nuisance or globals is only recommended for modulated data. These data are corrected for size changes due to spatial  normalization and are thought to be in raw (un-normalized) space.'
 ''
 };
 
@@ -1009,25 +1000,28 @@ function execute_calcvol(p)
 % calculate raw volumes all tissue classes
 %
 
-fprintf('%35s\t%5s\t%5s\t%5s\t%5s\n','Name','GM','WM','CSF','Total');
+fprintf('%35s\t%5s\t%5s\t%5s\t%5s\t%5s\n','Name','Total','GM','WM','CSF','WMH');
 fid = fopen(p.calcvol_name,'w');
 
 if fid < 0
 	error('No write access: check file permissions or disk space.');
 end
 
-for i=1:length(p.data)
-	tmp = load(deblank(p.data{i}));
-    [pth,nam]     = spm_fileparts(p.data{i});
-	if numel(tmp)==3
-		fprintf(fid,'%3.2f\t%3.2f\t%3.2f\t%3.2f\n',tmp(1),tmp(2),...
-			tmp(3),sum(tmp));
-		fprintf('%35s\t%5.2f\t%5.2f\t%5.2f\t%5.2f\n',nam(1:end-4),tmp(1),tmp(2),...
-			tmp(3),sum(tmp));
-	else
-		error(['Wrong format in ' p.data{i}]);
-	end
+spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
+for i=1:length(p.data_xml)
+    xml = convert(xmltree(deblank(p.data_xml{i})));
+    tmp = eval(xml.QAS.SM.vol_abs_CGW);
+
+    [pth,nam]     = spm_fileparts(p.data_xml{i});
+    fprintf(fid,'%3.2f\t%3.2f\t%3.2f\t%3.2f\t%3.2f\n',sum(tmp),tmp(3),tmp(1),...
+			tmp(2),tmp(4));
+    fprintf('%35s\t%5.2f\t%5.2f\t%5.2f\t%5.2f\t%5.2f\n',nam(5:end),sum(tmp),tmp(3),tmp(1),...
+			tmp(2),tmp(4));
+    spm_progress_bar('Set',i);  
 end
+spm_progress_bar('Clear');
+
+
 if fclose(fid)==0
 	fprintf('\nValues saved in %s.\n',p.calcvol_name);
 end

@@ -7389,6 +7389,7 @@ A       templates_surfaces/rh.inflated.freesurfer.gii
 (3) Some smaller rather cosmetic changes.
 
 ------------------------------------------------------------------------
+r775 | dahnke | 2015-11-18 17:13:57 +0100 (Mi, 18 Nov 2015) | 20 lines
 
 Changed paths:
  M      .
@@ -7409,5 +7410,18 @@ M       templates_animals/cat_defaults_monkey_oldworld.m
 (2)  If only CAT is running and no SPM Menu figure is active, all figures (also
      Interactive and Graphics) will be closed. 
 (3)  Deactivate resizing of cat12 menu.
+
 ------------------------------------------------------------------------
-r775 | dahnke | 2015-11-18 17:13:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Contents_info.txt
+M       cat_conf_tools.m
+A       cat_stat_TIV.m
+M       html/cat.html
+
+Added and updated functions to read raw volumes and TIV from xml-files.
+
+------------------------------------------------------------------------
+r776 | gaser | 2015-11-19 01:19:32
