@@ -74,6 +74,7 @@
 %   cat_stat_spm.m
 %   cat_stat_spmF2x.m               - transformation of F-maps to P, -log(P), R2 maps
 %   cat_stat_spmT2x.m               - transformation of t-maps to P, -log(P), r or d-maps
+%   cat_stat_TIV.m                  - read total intracranial volume (TIV) from xml-files
 %   
 % Surface functions
 %   cat_surf_avg.m
