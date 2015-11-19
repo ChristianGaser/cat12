@@ -8,7 +8,7 @@ function varargout = cat_tst_qa(action,varargin)
 % [QAS,QAM] = cat_vol_qa(action,varargin)
 % 
 %
-% 1) Use GUI interface to choose segmenation and automatic setting of 
+% 1) Use GUI interface to choose segmentation and automatic setting of 
 %    original and modified image (if available)
 %     [QAS,QAM] = cat_vol_qa()                = cat_vol_qa('p0')
 %

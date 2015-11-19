@@ -898,7 +898,7 @@ long    = cat_conf_long;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,qa,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2}; 
+tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
 
 stools = cfg_choice;
 stools.name   = 'Surface Tools';
