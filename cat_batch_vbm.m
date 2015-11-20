@@ -56,7 +56,7 @@ for i=1:size(tmp_fields,1)
   end
 end
 
-tmp_fields = char('atlas','te','pc','WMH','ROI');
+tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(tmp_fields(i,:)));

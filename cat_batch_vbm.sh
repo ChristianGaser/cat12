@@ -260,18 +260,22 @@ run_vbm ()
     i=0
     while [ "$i" -lt "$SIZE_OF_ARRAY" ]; do
         count=$((10000* $i / $BLOCK ))
-        
+
         # check wether absolute or relative names were given
         if [ ! -f ${ARRAY[$i]} ];  then
-            FILE=${pwd}/${ARRAY[$i]}
+            if [ -f ${pwd}/${ARRAY[$i]} ]; then
+                FILE=${pwd}/${ARRAY[$i]}
+            fi
         else
             FILE=${ARRAY[$i]}
         fi
+        
         if [ -z "${ARG_LIST[$count]}" ]; then
             ARG_LIST[$count]="$FILE"
         else
             ARG_LIST[$count]="${ARG_LIST[$count]} $FILE"
         fi
+
         echo ${FILE} >> ${TMP}${count}
         FDIR=$(dirname $FILE)
         ((i++))
