@@ -7426,6 +7426,7 @@ Added and updated functions to read raw volumes and TIV from xml-files.
 
 
 ------------------------------------------------------------------------
+r777 | gaser | 2015-11-19 16:53:11 +0100 (Do, 19 Nov 2015) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7442,5 +7443,18 @@ M       cat_tst_qa.m
     is not yet ready.
 (3) Corrected some field names and removed fields that were not used anymore
     in cat_conf_stools.m. 
+
 ------------------------------------------------------------------------
-r777 | gaser | 2015-11-19 16:53:06
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_vbm.m
+M       cat_batch_vbm.sh
+MM      cat_stat_TIV.m
+M       html/cat.html
+
+Updated batch mode files.
+
+------------------------------------------------------------------------
+r778 | gaser | 2015-11-20 11:19:06
