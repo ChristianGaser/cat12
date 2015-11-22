@@ -156,56 +156,87 @@ function stools = cat_conf_stools(expert)
   v2s.interp         = cfg_menu;
   v2s.interp.tag     = 'interp';
   v2s.interp.name    = 'Interpolation Type';
-  v2s.interp.labels  = {'nearest','linear','cubic'};
+  v2s.interp.labels  = {'Nearest neighbour','Linear','Cubic'};
   v2s.interp.values  = {{'nearest_neighbour'},{'linear'},{'cubic'}};
   v2s.interp.val     = {{'linear'}};
   v2s.interp.help    = {
     'Volume extration interpolation type. '
-    ' -linear:            Use linear interpolation.'
-    ' -nearest_neighbour: Use nearest neighbour interpolation (Default).'
+    ' -linear:            Use linear interpolation (default).'
+    ' -nearest_neighbour: Use nearest neighbour interpolation.'
     ' -cubic:             Use cubic interpolation.'
     ''
   };
   
   
   %% -- absolute position from a boundary --
-  
-  v2s.boundary_class         = cfg_menu;
-  v2s.boundary_class.tag     = 'class';
-  v2s.boundary_class.name    = 'Surface';
-  v2s.boundary_class.labels  = {'central','inner','outer'}; % hull?
-  v2s.boundary_class.values  = {1 2 3};
-  % "inner" and "outer" are not yet prepared...
-  v2s.boundary_class.labels  = {'central'}; % hull?
-  v2s.boundary_class.values  = {1};
-  v2s.boundary_class.val     = {1};
-  v2s.boundary_class.help    = {
-    'Surface used for distance description.'
-  };
-
-  v2s.boundary_pos         = cfg_entry;
-  v2s.boundary_pos.tag     = 'pos';
-  v2s.boundary_pos.name    = 'Absolute Position';
-  v2s.boundary_pos.strtype = 'r';
-  v2s.boundary_pos.val     = {0};
-  v2s.boundary_pos.num     = [1 1];
-  v2s.boundary_pos.help    = {
-    'Absolute position from surface in mm. Use negative values for deeper positions pointing inwards.'
-    'All values are limited by the maximum possible distance within a cortical structure such as gyri or sulci.'
-  };
-  
-  
-  v2s.boundary         = cfg_exbranch;
+    
+  v2s.boundary         = cfg_entry;
   v2s.boundary.tag     = 'boundary';
   v2s.boundary.name    = 'Absolute Position From a Surface Boundary';
-  v2s.boundary.val     = {
-    v2s.boundary_class ...
-    v2s.boundary_pos ...
-    };
+  v2s.boundary.strtype = 'r';
+  v2s.boundary.val     = {0};
+  v2s.boundary.num     = [1 1];
   v2s.boundary.help    = {
-    'Map volumetric data at an absolute position from a surface.'
+    'Map volumetric data at an absolute position from a surface in mm.'
     'A value of -1 from the central surface will map GM values at a position of 1 mm inwards to the central surface. '
     'A value of 1 from the central surface will map GM values at a position of 1 mm outwards to the central surface. '
+  };
+
+  %% -- set of absolute position from a boundary --
+
+  v2s.boundaryrange_origin         = cfg_entry;
+  v2s.boundaryrange_origin.tag     = 'origin';
+  v2s.boundaryrange_origin.name    = 'Origin';
+  v2s.boundaryrange_origin.strtype = 'r';
+  v2s.boundaryrange_origin.val     = {0};
+  v2s.boundaryrange_origin.num     = [1 1];
+  v2s.boundaryrange_origin.help    = {
+    'Origin (start point) of grid along normals [mm]. Give negative values for origin outside the surface.'
+  };
+ 
+  v2s.boundaryrange_stepsize         = cfg_entry;
+  v2s.boundaryrange_stepsize.tag     = 'stepsize';
+  v2s.boundaryrange_stepsize.name    = 'Stepsize';
+  v2s.boundaryrange_stepsize.strtype = 'r';
+  v2s.boundaryrange_stepsize.val     = {0.5};
+  v2s.boundaryrange_stepsize.num     = [1 1];
+  v2s.boundaryrange_stepsize.help    = {
+    'Absolute stepsize (resolution) of the grid beginning from the origin. '
+  };
+
+  v2s.boundaryrange_length         = cfg_entry;
+  v2s.boundaryrange_length.tag     = 'length';
+  v2s.boundaryrange_length.name    = 'Length';
+  v2s.boundaryrange_length.strtype = 'r';
+  v2s.boundaryrange_length.val     = {3};
+  v2s.boundaryrange_length.num     = [1 1];
+  v2s.boundaryrange_length.help    = {
+    'Length of grid along normals [mm].'
+  };
+
+  v2s.boundaryrange_sample         = cfg_menu;
+  v2s.boundaryrange_sample.tag     = 'sample';
+  v2s.boundaryrange_sample.name    = 'Sample Function';
+  v2s.boundaryrange_sample.labels  = {'Mean','Maximum','Minimum','Absolute maximum'};
+  v2s.boundaryrange_sample.values  = {{'avg'},{'max'},{'min'},{'maxabs'}};
+  v2s.boundaryrange_sample.val     = {{'max'}};
+  v2s.boundaryrange_sample.help    = {
+    'Sample function to combine values.'
+  };
+  
+  v2s.boundaryrange         = cfg_branch;
+  v2s.boundaryrange.tag     = 'boundaryrange';
+  v2s.boundaryrange.name    = 'Range of Absolute Position From a Tissue Boundary)';
+  v2s.boundaryrange.val     = {
+    v2s.boundaryrange_origin ...
+    v2s.boundaryrange_stepsize ...
+    v2s.boundaryrange_length ...
+    v2s.boundaryrange_sample ...
+    };
+  v2s.boundary.help    = {
+    'Extract a set of values around a tissue boundary with a specified absolute sample distance and merge these values by mean, minimum, maximum or absolute maximum. '
+    ''
+    'Example: if origin is -1, step size is 0.5, length is 2 and the sample function is maximum, then the maximal value at the sample points -1 -0.5 0 0.5 1 mm is used. While negative values represent values outside the surface boundary, positive values point inwards the surface boundary.'
   };
 
   %% -- relative position within a tissue class
@@ -275,7 +306,7 @@ function stools = cat_conf_stools(expert)
     v2s.tissuerange_sample ...
     };
   v2s.boundary.help    = {
-    'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, median, min, max or standard deviation'
+    'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, min, or max.'
   };
 
   %% -- boundary sample? 
@@ -292,51 +323,6 @@ function stools = cat_conf_stools(expert)
     'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
   };
 
-  v2s.boundaryrange_class         = cfg_menu;
-  v2s.boundaryrange_class.tag     = 'class';
-  v2s.boundaryrange_class.name    = 'Surface';
-  v2s.boundaryrange_class.labels  = {'central'}; % hull
-  v2s.boundaryrange_class.values  = {1};
-  v2s.boundaryrange_class.val     = {1};
-  v2s.boundaryrange_class.help    = {
-    'Surface used for distance description.'
-  };
-
-  v2s.boundaryrange_stepsize         = cfg_entry;
-  v2s.boundaryrange_stepsize.tag     = 'stepsize';
-  v2s.boundaryrange_stepsize.name    = 'Stepsize';
-  v2s.boundaryrange_stepsize.strtype = 'r';
-  v2s.boundaryrange_stepsize.val     = {0.1};
-  v2s.boundaryrange_stepsize.num     = [1 1];
-  v2s.boundaryrange_stepsize.help    = {
-    'Absolute stepsize of the sample points centered around the tissue boundary. '
-    'The function uses 5 sample points.  The maximum value is 1 (to avoid problems with cortical structures).'
-    'This means a stepsize of 0.5 will generate 5 sample points with absolute distance to the choosen boundary of -1, -0.5, 0.0, 0.5, 1.0 mm.'
-  };
- 
-  v2s.boundaryrange_sample         = cfg_menu;
-  v2s.boundaryrange_sample.tag     = 'sample';
-  v2s.boundaryrange_sample.name    = 'Sample Function';
-  v2s.boundaryrange_sample.labels  = {'mean','max','min',}; %,'median','std'
-  v2s.boundaryrange_sample.values  = {{'average'},{'max'},{'min'}}; %,{'median'},{'std'}
-  v2s.boundaryrange_sample.val     = {{'average'}};
-  v2s.boundaryrange_sample.help    = {
-    'Tissue boundary used for distance description.'
-  };
-  
-  v2s.boundaryrange         = cfg_branch;
-  v2s.boundaryrange.tag     = 'boundaryrange';
-  v2s.boundaryrange.name    = 'Absolute Position From a Tissue Boundary (Sample)';
-  v2s.boundaryrange.val     = {
-    v2s.boundaryrange_class ...
-    v2s.boundaryrange_stepsize ...
-    v2s.boundaryrange_sample ...
-    };
-  v2s.boundary.help    = {
-    'Extract a set of values around a tissue boundary with a specified absolute sample distance and average these values by mean, median, minimum, maximum or standard deviation'
-  };
-
-
   %% -- Mapping function
 
   v2s.mapping         = cfg_choice;
@@ -345,19 +331,19 @@ function stools = cat_conf_stools(expert)
   v2s.mapping.values  = {
 ...      v2s.tissuerange ...
 ...      v2s.tissue ...
-...    v2s.boundaryrange ...
+    v2s.boundaryrange ...
     v2s.boundary ...
   }; 
   v2s.mapping.help    = {
     'Volume extration type. '
     '  tissue-range:'
     '    extract a set of values within a tissue class with a specified relative sample '
-    '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+    '    distance and average these values by mean, minimum, maximum or absolute maximum'
     '  tissue-based:' 
     '    extract one value with a specified relative position within a tissue class'
     '  boundary-range:' 
     '    extract a set of values within a tissue class with a specified relative sample'
-    '    distance and average these values by mean, median, minimum, maximum or standard deviation'
+    '    distance and average these values by mean, minimum, maximum or absolute maximum'
     '  boundary-based: '
     '    extract one value from a specified absolute distance from a tissue interface'
     '' 

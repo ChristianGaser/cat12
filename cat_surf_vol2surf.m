@@ -13,30 +13,6 @@ function varargout = cat_surf_vol2surf(varargin)
     job = varargin{1};
   else 
     error('Only batch mode possible'); 
-    
-%{
-    % mesh input
-    % --------------------------------------------------------------------
-    if ~isfield(job,'data_mesh') || isempty(job.data_mesh)
-      job.data_mesh = cellstr(spm_select([1 inf],'gifti','Select left (template) surface mesh(s)'));
-    end
-    
-    sinfo    = cat_surf_info(job.data_mesh);
-    
-       % volume input
-    % --------------------------------------------------------------------
-    if ~isfield(job,'data_vol') || isempty(job.data_vol)
-      if template
-        job.data_vol  = cellstr(spm_select([1 inf],'image','Select volumes','','','.*'));
-      else
-        job.data_vol  = cellstr(spm_select([1 inf],'image','Select volumes','','','^(?!wm|wp|m0wp|mwp|wc).*'));
-      end
-    end
-    for vi = 1:numel(job.data_vol)
-      [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
-      job.data_vol{vi} = fullfile(ppv,[ffv,eev]);
-    end
-%}
   end
   
   
@@ -57,14 +33,15 @@ function varargout = cat_surf_vol2surf(varargin)
   MFN = fieldnames(job.mapping);
   switch MFN{1}
     case 'boundary'
-      job.mappingstr = 'avg';
-      switch job.mapping.boundary.class % thickness + absolute position
-        case 1, job.origin =  0 + job.mapping.boundary.pos;
-        case 2, job.origin = -2 + job.mapping.boundary.pos;
-        case 3, job.origin =  2 + job.mapping.boundary.pos;
-      end
+      job.mappingstr = 'max';
+      job.origin = job.mapping.boundary;
       job.res    = 1; 
-      job.length = 0; % length has to be set to zero because we only need one values at the defined position
+      job.length = 0; % length has to be set to zero because we only need one value at the defined position
+    case 'boundaryrange'
+      job.mappingstr = job.mapping.boundaryrange.sample{1};
+      job.origin     = job.mapping.boundaryrange.origin;
+      job.res        = job.mapping.boundaryrange.stepsize; 
+      job.length     = job.mapping.boundaryrange.length; 
     case 'tissue'
      job.mappingstr = 'avg';
       switch job.mapping.tissue.class % ...
@@ -74,15 +51,6 @@ function varargout = cat_surf_vol2surf(varargin)
       end
       job.res    = 1; 
       job.length = 1;
-    case 'boundaryrange'
-      job.mappingstr = job.mapping.boundaryrange.sample{1};
-      switch job.mapping.boundaryrange.class % thickness + absolute position
-        case 1, job.origin =  0 - 2*job.mapping.boundaryrange.stepsize;
-        case 2, job.origin = -2 - 2*job.mapping.boundaryrange.stepsize;
-        case 3, job.origin =  2 - 2*job.mapping.boundaryrange.stepsize;
-      end
-      job.res    = job.mapping.boundaryrange.stepsize; 
-      job.length = 5;
     case 'tissuerange'
       job.mappingstr = job.mapping.tissuerange.sample{1};
       switch job.mapping.tissuerange.class % thickness + absolute position

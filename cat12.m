@@ -22,7 +22,7 @@ function varargout = cat12(varargin)
 
 % Edit the above title to modify the response to help cat12
 
-% Last Modified by GUIDE v2.5 17-Nov-2015 16:52:56
+% Last Modified by GUIDE v2.5 21-Nov-2015 23:32:29
 
 if nargin==0 || (nargin==1 && ~strcmp(varargin{1},'fig'))
   spm_cat12; return;
@@ -199,3 +199,8 @@ function popupmenu12_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in pushbutton169.
+function pushbutton169_Callback(hObject, eventdata, handles)
+spm_jobman('interactive','','spm.tools.cat.tools.calcvol');
