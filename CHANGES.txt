@@ -7445,6 +7445,7 @@ M       cat_tst_qa.m
     in cat_conf_stools.m. 
 
 ------------------------------------------------------------------------
+r778 | gaser | 2015-11-20 11:19:09 +0100 (Fr, 20 Nov 2015) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7456,5 +7457,24 @@ M       html/cat.html
 
 Updated batch mode files.
 
+
 ------------------------------------------------------------------------
-r778 | gaser | 2015-11-20 11:19:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_TIV.m
+M       cat_surf_vol2surf.m
+A       templates_surfaces/lh.thickness.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152
+
+(1) Modified cat_stat_TIV that it runs as batch mode only.
+(2) Added button to cat12.m for estimating TIV.
+(3) Updated volume to surface mapping. Now absolute boundary as well
+    as absolute boundary sampling (range) is provided.
+    
+------------------------------------------------------------------------
+r779 | gaser | 2015-11-22 21:34:17

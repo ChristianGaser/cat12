@@ -763,19 +763,29 @@ calcvol_name.tag     = 'calcvol_name';
 calcvol_name.name    = 'Output file';
 calcvol_name.strtype = 's';
 calcvol_name.num     = [1 Inf];
-calcvol_name.val     = {'raw_volumes.txt'};
+calcvol_name.val     = {'TIV.txt'};
 calcvol_name.help    = {
 'The output file is written to current working directory unless a valid full pathname is given'};
 
+calcvol_TIV         = cfg_menu;
+calcvol_TIV.tag     = 'calcvol_TIV';
+calcvol_TIV.name    = 'Save values';
+calcvol_TIV.labels  = {'TIV only' 'TIV & GM/WM/CSF/WMH'};
+calcvol_TIV.values  = {1 0};
+calcvol_TIV.val     = {1};
+calcvol_TIV.help    = {'You can save either the total intracranial volume (TIV) only or additionally also save the global volumes for GM, WM, CSF, and WM hyperintensities.'
+''
+};
+
 calcvol       = cfg_exbranch;
 calcvol.tag   = 'calcvol';
-calcvol.name  = 'Read raw volumes (TIV/GM/WM/CSF)';
-calcvol.val   = {data_xml,calcvol_name};
-calcvol.prog  = @execute_calcvol;
+calcvol.name  = 'Estimate TIV and global tissue volumes';
+calcvol.val   = {data_xml,calcvol_TIV,calcvol_name};
+calcvol.prog  = @cat_stat_TIV;
 calcvol.help  = {
-'This function reads raw volumes for TIV/GM/WM/CSF and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. The values for TIV/GM/WM/CSF are now saved in vol(:,1) vol(:,2) vol(:,3) and vol(:,4).'
+'This function reads raw volumes for TIV/GM/WM/CSF/WM hyperintensities (WMH) and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. If you choode to save all values the entries for TIV/GM/WM/CSF/WMH are now saved in vol(:,1) vol(:,2) vol(:,3), vol(:,4), and vol(:,5) respectively.'
 ''
-'You can use these variables either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option depending on your hypothesis. The use of raw volumes as nuisance or globals is only recommended for modulated data. These data are corrected for size changes due to spatial  normalization and are thought to be in raw (un-normalized) space.'
+'You can use TIV either as nuisance in an AnCova model or as user-specified globals with the "global calculation" option depending on your hypothesis. The use of TIV as nuisance or globals is recommended for modulated data where both the affine transformation and the non-linear warping of the registration are corrected for. '
 ''
 };
 
@@ -844,7 +854,7 @@ modulate.help = {
 '% globals 	     relative volume after correcting for total GM or TIV (multiplicative effects)'
 '% AnCova 	      relative volume that can not be explained by total GM or TIV (additive effects)'
 ''
-'I suggest another option to remove the confounding effects of different brain sizes. Modulated images can be optionally saved by correcting for non-linear warping only. Volume changes due to affine normalisation will be not considered and this equals the use of default modulation and globally scaling data according to the inverse scaling factor due to affine normalisation. I recommend this option if your hypothesis is about effects of relative volumes which are corrected for different brain sizes. This is a widely used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. These modulated images are indicated by "m0" instead of "m". '
+'Modulated images can be optionally saved by correcting for non-linear warping only. Volume changes due to affine normalisation will be not considered and this equals the use of default modulation and globally scaling data according to the inverse scaling factor due to affine normalisation. I recommend this option if your hypothesis is about effects of relative volumes which are corrected for different brain sizes. This is a widely used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. These modulated images are indicated by "m0" instead of "m". '
 ''
 };
 
@@ -992,43 +1002,6 @@ cdep(2).sname      = 'Realigned images';
 cdep(2).src_output = substruct('.','rimg','()',{':'});
 cdep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
-%------------------------------------------------------------------------
- 
-%------------------------------------------------------------------------
-function execute_calcvol(p)
-%
-% calculate raw volumes all tissue classes
-%
-
-fprintf('%35s\t%5s\t%5s\t%5s\t%5s\t%5s\n','Name','Total','GM','WM','CSF','WMH');
-fid = fopen(p.calcvol_name,'w');
-
-if fid < 0
-	error('No write access: check file permissions or disk space.');
-end
-
-spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
-for i=1:length(p.data_xml)
-    xml = convert(xmltree(deblank(p.data_xml{i})));
-    tmp = eval(xml.QAS.SM.vol_abs_CGW);
-
-    [pth,nam]     = spm_fileparts(p.data_xml{i});
-    fprintf(fid,'%3.2f\t%3.2f\t%3.2f\t%3.2f\t%3.2f\n',sum(tmp),tmp(3),tmp(1),...
-			tmp(2),tmp(4));
-    fprintf('%35s\t%5.2f\t%5.2f\t%5.2f\t%5.2f\t%5.2f\n',nam(5:end),sum(tmp),tmp(3),tmp(1),...
-			tmp(2),tmp(4));
-    spm_progress_bar('Set',i);  
-end
-spm_progress_bar('Clear');
-
-
-if fclose(fid)==0
-	fprintf('\nValues saved in %s.\n',p.calcvol_name);
-end
-
 return
 %------------------------------------------------------------------------
-
-
-
-
+ 
