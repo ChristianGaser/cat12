@@ -76,7 +76,11 @@ end
 if ~strcmp(catdef,deffile_ff)
   oldwkd = cd; 
   cd(deffile_pp);
-  clearvars -global cat12;
+  try
+    clearvars -global cat12;
+  catch
+    clear cat12;
+  end
   eval(deffile_ff);
   cd(oldwkd);
   

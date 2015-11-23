@@ -30,6 +30,72 @@ function varargout = cat_run(job,arg)
 
 %rev = '$Rev$';
 
+  
+% split job and data into separate processes to save computation time
+if isfield(job,'nproc')
+  if (job.nproc > 1) && (~isfield(job,'process_index'))
+
+    fprintf('WARNING: Please note that no additional modules in the batch can be run except CAT12 Segmentation. The dependencies will be broken for any further modules if you split the job into separate processes.\n');
+
+    % rescue original subjects
+    job_data = job.data;
+    n_subjects = numel(job.data);
+    if job.nproc > n_subjects
+      job.nproc = n_subjects;
+    end
+    job.process_index = cell(job.nproc,1);
+  
+    % initial splitting of data
+    for i=1:job.nproc
+      job.process_index{i} = (1:job.nproc:(n_subjects-job.nproc+1))+(i-1);
+    end
+  
+    % check if all data are covered
+    for i=1:rem(n_subjects,job.nproc)
+      job.process_index{i} = [job.process_index{i} n_subjects-i+1];
+    end
+  
+    tmp_array = cell(job.nproc,1);
+    for i=1:job.nproc
+      fprintf('Running job %d:\n',i);
+      disp(job_data(job.process_index{i}));
+      job.data = job_data(job.process_index{i});
+    
+      % temporary name for saving job information
+      tmp_name = [tempname '.mat'];
+      tmp_array{i} = tmp_name;
+      save(tmp_name,'job');
+    
+      % matlab command          
+      matlab_cmd = sprintf('"addpath %s %s %s %s;load %s; cat_run(job)"',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+          fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
+    
+      % log-file for output
+      log_name = ['log' sprintf('%02d',i) '_' datestr(now,1) '_' strrep(datestr(now,15),':','_') '.txt'];
+    
+      % prepare system specific path for matlab
+      export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
+    
+      % call matlab with command in the background
+      if ispc
+        system_cmd = [export_cmd ' & start matlab.bat -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
+      else
+        system_cmd = [export_cmd ';matlab -nodisplay -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
+      end
+
+      fprintf('Check %s  for logging information.\n',log_name);
+      fprintf('_______________________________________________________________\n');
+      [status,result] = system(system_cmd);
+      
+      % call editor for non-windows systems
+      if ~ispc, edit(log_name); end
+    end
+        
+    varargout{1} = [];
+    return
+  end
+end
+
 % check whether estimation & write should be done
 estwrite = isfield(job,'opts');
 
