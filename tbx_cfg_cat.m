@@ -39,7 +39,7 @@ nproc.help    = {
     ''
     'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
     ''
-    'Please further note that no additional modules in the batch can be run except CAT12 Segmentation. All dependencies will be broken for any further modules if you split the job into separate processes.'
+    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. All dependencies will be broken for any further modules if you split the job into separate processes.'
   };
 
 %_______________________________________________________________________
