@@ -7459,6 +7459,7 @@ Updated batch mode files.
 
 
 ------------------------------------------------------------------------
+r779 | gaser | 2015-11-22 21:34:22 +0100 (So, 22 Nov 2015) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7476,5 +7477,16 @@ A       templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152
 (3) Updated volume to surface mapping. Now absolute boundary as well
     as absolute boundary sampling (range) is provided.
     
+
 ------------------------------------------------------------------------
-r779 | gaser | 2015-11-22 21:34:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+Added pseudo multi-threading to cat_run.m
+    
+------------------------------------------------------------------------
+r780 | gaser | 2015-11-23 16:53:21

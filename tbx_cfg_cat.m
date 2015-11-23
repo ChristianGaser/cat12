@@ -18,6 +18,30 @@ end
 if isempty(expert) 
   expert = 0;
 end  
+
+% try to estimate number of processor cores
+try
+  numcores = feature('numcores');
+  numcores = max(round(numcores/2),1);
+catch
+  numcores = 1;
+end
+
+%_______________________________________________________________________
+nproc         = cfg_entry;
+nproc.tag     = 'nproc';
+nproc.name    = 'Split job into separate processes';
+nproc.strtype = 'n';
+nproc.val     = {numcores};
+nproc.num     = [1 1];
+nproc.help    = {
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background.'
+    ''
+    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
+    ''
+    'Please further note that no additional modules in the batch can be run except CAT12 Segmentation. All dependencies will be broken for any further modules if you split the job into separate processes.'
+  };
+
 %_______________________________________________________________________
 
 data          = cfg_files;
@@ -27,7 +51,7 @@ data.filter   = 'image';
 data.ufilter  = '.*';
 data.num      = [0 Inf];
 data.help     = {
-  'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method.'};
+  'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method.'};
 data.preview  = @(f) spm_check_registration(char(f));
 
 
@@ -331,7 +355,12 @@ opts       = cat_conf_opts;
 estwrite        = cfg_exbranch;
 estwrite.tag    = 'estwrite';
 estwrite.name   = 'CAT12: Segmentation';
-estwrite.val    = {data opts extopts output};
+% use multithreading only if availabe
+if feature('numcores') > 1
+  estwrite.val    = {nproc data opts extopts output};
+else
+  estwrite.val    = {data opts extopts output};
+end
 estwrite.prog   = @cat_run;
 estwrite.vout   = @vout;
 estwrite.help   = {
