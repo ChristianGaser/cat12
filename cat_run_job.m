@@ -76,7 +76,7 @@ function cat_run_job(job,tpm,subj)
             switch job.cat.sanlm
               case {1,2,3,4,5},  
                 % use isarnlm-filter only if voxel size <= 0.7mm
-                if any(round(vx_vol*100)/100<=0.70)
+                if any(round(vx_vol*100)/100<=0.70) && strcmp(job.cat.species,'human')
                   if job.extopts.verb>1, fprintf('\n'); end
                   Y = cat_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
                   if job.extopts.verb>1, cat_io_cmd(' '); end
@@ -200,7 +200,7 @@ function cat_run_job(job,tpm,subj)
     % Skull-stripping is helpful for correcting affine registration of neonates and other species. 
     % Bias correction is important for the affine registration.
     % However, the first registation can fail,
-    if ~strcmp(job.cat.species,'human'), job.extopts.APP=2; end
+    if ~strcmp(job.cat.species,'human'), job.extopts.APP=3; end
     switch job.extopts.APP
         case 0 % no APP
             doskullstripping = 0;
@@ -286,7 +286,7 @@ function cat_run_job(job,tpm,subj)
         end
         if doregistration
             warning off 
-            [Affine0, scale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
+            [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
             warning on
         end
           
@@ -313,7 +313,7 @@ function cat_run_job(job,tpm,subj)
             
             % apply (first affine) registration on the default brain mask
             VFa = VF; 
-            if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
+            if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); affscale = 1; end
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
        
@@ -350,44 +350,49 @@ function cat_run_job(job,tpm,subj)
             spm_chi2_plot('Init','Coarse Affine Registration 2','Mean squared difference','Iteration');
         end
         warning off
-        Affine1 = spm_affreg(VG1, VF1, aflags, Affine, scale);   
+        [Affine1,affscale] = spm_affreg(VG1, VF1, aflags, Affine, affscale);   
         warning on
         if ~any(isnan(Affine1(1:3,:))), Affine = Affine1; end
-            
         clear VG1 VF1
-    end
-    if job.extopts.APP && dobiascorrection
-        Ysrc = single(obj.image.private.dat(:,:,:)); 
-        obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
-        obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
-        
-        % rewrite bias correctd, but not skull-stripped image
-        %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
-        % add temporary skull-stripped images
-        if doskullstripping
-            th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
-                 cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
-            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); % .* Yb))); 
-        else
-            if exist('Yb','var')
+      end
+      if job.extopts.APP && dobiascorrection
+          Ysrc = single(obj.image.private.dat(:,:,:)); 
+          obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
+          obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
+
+          % rewrite bias correctd, but not skull-stripped image
+          %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+          % add temporary skull-stripped images
+          if doskullstripping
               th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
                    cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
-            else % only initial bias correction
-              th = WMth;
-            end
-            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
-            VFa = VF; 
-            if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
-            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
-        end
-        obj.msk       = VF; 
-        obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
-        obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-        obj.msk.dat(:,:,:) = uint8(Yb); 
-        obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
-        clear Ysrc; 
-    end
+              obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); % .* Yb))); 
+          else
+              if exist('Yb','var')
+                th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
+                     cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
+              else % only initial bias correction
+                th = WMth;
+              end
+              obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+              VFa = VF; 
+              if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
+              if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+              [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
+          end
+          if job.extopts.APP==3
+              Ybd = cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); % be shure that all brain tissue is included
+              %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+              obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); 
+              obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); 
+          end
+          obj.msk       = VF; 
+          obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
+          obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+          obj.msk.dat(:,:,:) = uint8(Yb); 
+          obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
+          clear Ysrc; 
+      end
 
     if job.extopts.APP
         stime = cat_io_cmd(sprintf('SPM preprocessing 1 (APP=%d):',job.extopts.APP),'','',1,stime);
@@ -416,6 +421,9 @@ function cat_run_job(job,tpm,subj)
             obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
             obj.msk.dat(:,:,:) = uint8(Yb); 
             obj.msk = spm_smoothto8bit(obj.msk,0.1); 
+          
+%           % hard masking for non human
+
         end
     end
     obj.Affine = Affine;
@@ -510,11 +518,15 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   
   % greater mask
   [dilmsk,resT2] = cat_vol_resize(Yb,'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
-  dilmsk  = cat_vbdist(dilmsk,true(size(dilmsk)),resT2.vx_volr);
-  dilmsk  = dilmsk - cat_vbdist(single(dilmsk>0),true(size(dilmsk)),resT2.vx_volr);
+  dilmsk  = cat_vbdist(dilmsk,true(size(dilmsk)))*mean(resT2.vx_volr); %resT2.vx_volr);
+  dilmsk  = dilmsk - cat_vbdist(single(dilmsk>0),true(size(dilmsk)))*mean(resT2.vx_volr); %,resT2.vx_volr);
   dilmsk  = cat_vol_resize(smooth3(dilmsk),'dereduceV',resT2); 
-  headradius = -min(dilmsk(:)); 
+  headradius = -min(dilmsk(:));
+  dilmsk  = dilmsk / headradius; 
 
+  voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
+  brad = voli(sum(Yb(:)>0).*prod(vx_vol)/1000); 
+  
   % thresholds
   rf   = 10^6; 
   Hth  = roundx(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
@@ -526,37 +538,39 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   
   %% Skull-Stripping
   stime = cat_io_cmd('  Skull-Stripping','g5','',verb,stime);
-  Yb = (dilmsk<20 & Ym<1.2) & (Ym>(GMth*0.7+0.3)) & Yg<0.5 & Ydiv<0.2; Yb(smooth3(Yb)<0.5)=0; 
-  Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.2); 
-  [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
-  dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk)),resT2.vx_volr);
+  Yb = (dilmsk<0.2 & Ym<1.1) & (Ym>(GMth*0.7+0.3)) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<1.1; Yb(smooth3(Yb)<0.5)=0; 
+  Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.5); 
+  [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
+  dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk2)))*mean(resT2.vx_volr); %resT2.vx_volr);
+  dilmsk2  = dilmsk2 - cat_vbdist(single(dilmsk2>0),true(size(dilmsk2)))*mean(resT2.vx_volr); %,resT2.vx_volr);
   dilmsk2  = cat_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
+  dilmsk2  = dilmsk2 / headradius; 
   %% WM growing
-  Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
+  Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.05); 
-  Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<400/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0;
+  Yb(isnan(Yb))=0; Yb((YD)<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0;
   Yb = smooth3(Yb)>0.2; 
   % ventricle closing
   [Ybr,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
-  Ybr = cat_vol_morph(Ybr>0.5,'lc',4);
+  Ybr = cat_vol_morph(Ybr>0.5,'lc',brad/2/mean(resT2.vx_volr));
   Ybr = cat_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5; 
   Yb = single(Yb | (Ym<1.2 & Ybr));
   % GWM growing
-  Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
+  Yb(Yb<0.5 & (dilmsk2>0.2  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01); 
-  Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<400/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0;
+  Yb(isnan(Yb))=0; Yb((YD)<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0;
   Yb = smooth3(Yb)>0.5; 
-  Yb = single(Yb | (Ym>0.3 & Ym<1.2 & cat_vol_morph(Yb,'lc',2)));
+  Yb = single(Yb | (Ym>0.2 & Ym<1.2 & cat_vol_morph(Yb,'lc',2)));
   % GM growing
-  Yb(Yb<0.5 & (dilmsk2>20 | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
+  Yb(Yb<0.5 & (dilmsk2>0.2  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.00);
-  Yb(isnan(Yb))=0; Yb((YD.*dilmsk2/10)<200/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
+  Yb(isnan(Yb))=0; Yb((YD)<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
   Yb(smooth3(Yb)<0.5)=0;
   Yb = single(Yb | (Ym>0.1 & Ym<1.1 & cat_vol_morph(Yb,'lc',4)));
   % CSF growing (add some tissue around the brain)
-  Yb(Yb<0.5 & (dilmsk2>30 | Ym<0.1 | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
+  Yb(Yb<0.5 & (dilmsk2>0.3  | Ym<0.1 | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.01); Yb(isnan(Yb))=0; 
-  Yb(YD<100/mean(resT3.vx_volr))=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
+  Yb(isnan(Yb))=0; Yb(YD<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
   Yb(smooth3(Yb)<0.7)=0;
   Yb  = single(cat_vol_morph(Yb,'lab'));
   Yb  = Yb | (Ym>0.2 & Ym<0.6 & cat_vol_morph(Yb,'lc',2));

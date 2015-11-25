@@ -247,6 +247,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   % ####################################################################
   % ds('l2','',vx_vol,Ym,Ywmh,Ym/3,Ym/3,90)
   stime = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
+  try 
   Yp0e = Yp0.*cat_vol_morph(Yb,'e',2); 
   vols = mean([sum(round(Yp0e(:))==1) sum(round(Yp0e(:))==1 & Yvt(:))] / sum(round(Yp0e(:))>0.5));
   
@@ -293,6 +294,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
   for lhsti=1:numel(lhstind), Ywmh(Ywmhl==lhstind(lhsti))=0; end
   %%
   Ya1(Ywmh)=LAB.HI;
+  end
   %{
    Yvt2(Yvt2>1.45 & Yvt2<1.55)=inf; Yvt2=round(Yvt2);
   Yvt2(Yvt2>3 & Ym<2.5 & Ym>1.5 & YA~=LAB.CB & YA~=LAB.BS & Ya1~=LAB.BG & Ya1~=LAB.TH)=1.5;

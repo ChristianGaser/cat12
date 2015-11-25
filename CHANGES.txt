@@ -7503,6 +7503,7 @@ M       tbx_cfg_cat.m
 Corrected typo in cat_main for job.cat12.cat12atlas (was job.cat.cat12atlas).
 
 ------------------------------------------------------------------------
+r782 | gaser | 2015-11-25 10:14:42 +0100 (Mi, 25 Nov 2015) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7518,5 +7519,26 @@ M       tbx_cfg_cat.m
 (1) Removed estwrite option that was not used anymore.
 (2) Updated multi-threading slightly.
 (3) Many changes to cat_run.m to allow correct output names that are returned.
+
 ------------------------------------------------------------------------
-r782 | gaser | 2015-11-25 10:14:37
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_vol_partvol.m
+M       spm_cat12.m
+M       templates_animals/cat_defaults_ape_greater.m
+M       templates_animals/cat_defaults_ape_lesser.m
+M       templates_animals/cat_defaults_monkey_newworld.m
+M       templates_animals/cat_defaults_monkey_oldworld.m
+
+(1)  Cosmetic changes in pseudo multi-threading command line output in cat_run.m
+     Call MATLAB with full path (set PATH does not work in every shell).
+(2)  Changes in cat_defaults_*primates* parameter files.
+(3)  Faster CAT initialization.
+
+------------------------------------------------------------------------
+r783 | dahnke | 2015-11-25 13:20:15
