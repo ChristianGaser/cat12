@@ -7521,6 +7521,7 @@ M       tbx_cfg_cat.m
 (3) Many changes to cat_run.m to allow correct output names that are returned.
 
 ------------------------------------------------------------------------
+r783 | dahnke | 2015-11-25 13:20:24 +0100 (Mi, 25 Nov 2015) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7540,5 +7541,19 @@ M       templates_animals/cat_defaults_monkey_oldworld.m
 (2)  Changes in cat_defaults_*primates* parameter files.
 (3)  Faster CAT initialization.
 
+
 ------------------------------------------------------------------------
-r783 | dahnke | 2015-11-25 13:20:15
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_run.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Corrected old vbm_vol_morph call.
+(2) Updated multi-threading slightly.
+------------------------------------------------------------------------
+r784 | gaser | 2015-11-25 16:07:26

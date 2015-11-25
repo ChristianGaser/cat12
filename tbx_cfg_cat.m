@@ -30,7 +30,7 @@ end
 nproc         = cfg_entry;
 nproc.tag     = 'nproc';
 nproc.name    = 'Split job into separate processes';
-nproc.strtype = 'n';
+nproc.strtype = 'r';
 nproc.val     = {numcores};
 nproc.num     = [1 1];
 nproc.help    = {
