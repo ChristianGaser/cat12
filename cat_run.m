@@ -33,9 +33,9 @@ function varargout = cat_run(job,arg)
   
 % split job and data into separate processes to save computation time
 if isfield(job,'nproc')
-  if (job.nproc > 1) && (~isfield(job,'process_index'))
+  if (job.nproc > 0) && (~isfield(job,'process_index'))
 
-    fprintf('WARNING: Please note that no additional modules in the batch can be run except CAT12 Segmentation. The dependencies will be broken for any further modules if you split the job into separate processes.\n');
+    fprintf('WARNING: Please note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules if you split the job into separate processes.\n');
 
     % rescue original subjects
     job_data = job.data;
@@ -87,27 +87,41 @@ if isfield(job,'nproc')
       fprintf('_______________________________________________________________\n');
       [status,result] = system(system_cmd);
       
-      % call editor for non-windows systems
-      if ~ispc, edit(log_name); end
+      % call editor for non-windows systems after 1s
+      if ~ispc
+        pause(1);
+        edit(log_name);
+      end
     end
-        
-    varargout{1} = [];
+    
+    job = update_job(job);
+    varargout{1} = vout_job(job);
     return
   end
 end
 
-% check whether estimation & write should be done
-estwrite = isfield(job,'opts');
+job = update_job(job);
 
-% set some dummy defaults if segmentations are not estimated
-if ~estwrite
-    job.opts = struct('biasreg',0.001,'biasfwhm',60,'affreg','mni',...
-                      'reg',[0 0.001 0.5 0.025 0.1],'samp',3,'ngaus',[3 3 2 3 4 2]);
+if nargin == 1, arg = 'run'; end
+
+switch lower(arg)
+    case 'run'
+       varargout{1} = run_job(job);
+    case 'check'
+        varargout{1} = check_job(job);
+    case 'vfiles'
+        varargout{1} = vfiles_job(job);
+    case 'vout'
+        varargout{1} = vout_job(job);
+    otherwise
+        error('Unknown argument ("%s").', arg);
 end
 
-channel = struct('vols',{job.data});
+return
+%_______________________________________________________________________
+function job = update_job(job)
 
-cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.species,...
+  cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.species,...
              'cat12atlas',cat_get_defaults('extopts.cat12atlas'), ... 
              'darteltpm', job.extopts.darteltpm{1}, ...
              'brainmask', cat_get_defaults('extopts.brainmask'), ...
@@ -121,116 +135,92 @@ cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.s
              'bb',        cat_get_defaults('extopts.bb'),...
              'vox',       cat_get_defaults('extopts.vox'));
 
-if isfield(job.extopts,'restype')
-  cat12.restype = char(fieldnames(job.extopts.restype));
-  cat12.resval  = job.extopts.restype.(cat12.restype); 
-else
-  cat12.restype = cat_get_defaults('extopts.restype');
-  cat12.resval  = cat_get_defaults('extopts.resval');
-end
-if isfield(job.extopts,'sanlm')
-  cat12.sanlm = job.extopts.sanlm;
-end
-if ~isfield(job.extopts,'verb')
-  job.extopts.verb =  cat_get_defaults('extopts.verb');
-end
-if ~isfield(job.extopts,'APP')
-  job.extopts.APP =  cat_get_defaults('extopts.APP');
-end
-if ~isfield(job.output,'ROI')
-  job.output.ROI =  cat_get_defaults('output.ROI');
-end
+  if isfield(job.extopts,'restype')
+    cat12.restype = char(fieldnames(job.extopts.restype));
+    cat12.resval  = job.extopts.restype.(cat12.restype); 
+  else
+    cat12.restype = cat_get_defaults('extopts.restype');
+    cat12.resval  = cat_get_defaults('extopts.resval');
+  end
+  if isfield(job.extopts,'sanlm')
+    cat12.sanlm = job.extopts.sanlm;
+  end
+  if ~isfield(job.extopts,'verb')
+    job.extopts.verb =  cat_get_defaults('extopts.verb');
+  end
+  if ~isfield(job.extopts,'APP')
+    job.extopts.APP =  cat_get_defaults('extopts.APP');
+  end
+  if ~isfield(job.output,'ROI')
+    job.output.ROI =  cat_get_defaults('output.ROI');
+  end
            
-% set cat12.bb and vb.vox by Dartel template properties
-Vd       = spm_vol([cat12.darteltpm ',1']);
-[bb,vox] = spm_get_bbox(Vd, 'old');  
-if cat12.bb(1)>cat12.bb(2), bbt=cat12.bb(1); cat12.bb(1)=cat12.bb(2); cat12.bb(2)=bbt; clear bbt; end
-if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-cat12.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
-            min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
+  % set cat12.bb and vb.vox by Dartel template properties
+  Vd       = spm_vol([cat12.darteltpm ',1']);
+  [bb,vox] = spm_get_bbox(Vd, 'old');  
+  if cat12.bb(1)>cat12.bb(2), bbt=cat12.bb(1); cat12.bb(1)=cat12.bb(2); cat12.bb(2)=bbt; clear bbt; end
+  if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
+  cat12.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
+                min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
           
-if isinf(cat12.vox) || isnan(cat12.vox)
-  cat12.vox = abs(vox);
-end
+  if isinf(cat12.vox) || isnan(cat12.vox)
+    cat12.vox = abs(vox);
+  end
 
+  % prepare tissue priors and number of gaussians for all 6 classes
+  [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
+  clsn = numel(spm_vol(fullfile(pth,[nam ext]))); 
+  tissue = struct();
+  for i=1:clsn;
+    tissue(i).ngaus = cat12.ngaus(i);
+    tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+  end
 
+  % write tissue class 1-3              
+  tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
+  tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
+  tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
+  tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
+  if isfield(job.output,'CSF')
+    tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
+    tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
+  else
+    tissue(3).warped = [cat_get_defaults('output.CSF.warped') (cat_get_defaults('output.CSF.mod')==1)    (cat_get_defaults('output.CSF.mod')==2)];
+    tissue(3).native = [cat_get_defaults('output.CSF.native') (cat_get_defaults('output.CSF.dartel')==1) (cat_get_defaults('output.CSF.dartel')==2)];
+  end
 
-% prepare tissue priors and number of gaussians for all 6 classes
-if estwrite
-    [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
-    clsn = numel(spm_vol(fullfile(pth,[nam ext]))); 
-    tissue = struct();
-    for i=1:clsn;
-        tissue(i).ngaus = cat12.ngaus(i);
-        tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
-    end
-end
-
-% write tissue class 1-3              
-tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
-tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
-tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
-tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
-if isfield(job.output,'CSF')
-  tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
-  tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
-else
-  tissue(3).warped = [cat_get_defaults('output.CSF.warped') (cat_get_defaults('output.CSF.mod')==1)    (cat_get_defaults('output.CSF.mod')==2)];
-  tissue(3).native = [cat_get_defaults('output.CSF.native') (cat_get_defaults('output.CSF.dartel')==1) (cat_get_defaults('output.CSF.dartel')==2)];
-end
-
-% never write class 4-6
-for i=4:6;
+  % never write class 4-6
+  for i=4:6;
     tissue(i).warped = [0 0 0];
     tissue(i).native = [0 0 0];
-end
+  end
 
-job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.dartel];
-if isfield(job.output,'label')
-  job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
-else
-  job.label    = [cat_get_defaults('output.label.native') cat_get_defaults('output.label.warped') (cat_get_defaults('output.label.dartel')==1) (cat_get_defaults('output.label.dartel')==2)];
-end
-job.jacobian = job.output.jacobian.warped;
+  job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.dartel];
+  if isfield(job.output,'label')
+    job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
+  else
+    job.label    = [cat_get_defaults('output.label.native') cat_get_defaults('output.label.warped') (cat_get_defaults('output.label.dartel')==1) (cat_get_defaults('output.label.dartel')==2)];
+  end
+  job.jacobian = job.output.jacobian.warped;
 
-job.biasreg  = cat_get_defaults('opts.biasreg');
-job.biasfwhm = cat_get_defaults('opts.biasfwhm');
-job.channel  = channel;
-job.cat      = cat12;
-job.warps    = job.output.warps;
-job.tissue   = tissue;
+  job.biasreg  = cat_get_defaults('opts.biasreg');
+  job.biasfwhm = cat_get_defaults('opts.biasfwhm');
+  job.channel  = struct('vols',{job.data});
+  job.cat      = cat12;
+  job.warps    = job.output.warps;
+  job.tissue   = tissue;
 
-if nargin == 1, arg = 'run'; end
-
-switch lower(arg)
-    case 'run'
-       varargout{1} = run_job(job,estwrite);
-    case 'check'
-        varargout{1} = check_job(job);
-    case 'vfiles'
-        varargout{1} = vfiles_job(job);
-    case 'vout'
-        varargout{1} = vout_job(job);
-    otherwise
-        error('Unknown argument ("%s").', arg);
-end
-
-return
-%_______________________________________________________________________
+return;
 
 %_______________________________________________________________________
-function vout = run_job(job,estwrite)
+function vout = run_job(job)
   vout   = vout_job(job);
 
   if ~isfield(job.cat,'fwhm'),    job.cat.fwhm    =  1; end
 
-  % load tpm priors only for estimate and write
-  if estwrite
-      tpm = char(cat(1,job.tissue(:).tpm));
-      tpm = spm_load_priors8(tpm);
-  else
-      tpm = '';
-  end
+  % load tpm priors 
+  tpm = char(cat(1,job.tissue(:).tpm));
+  tpm = spm_load_priors8(tpm);
 
   for subj=1:numel(job.channel(1).vols),
     % __________________________________________________________________
@@ -243,9 +233,9 @@ function vout = run_job(job,estwrite)
     points = strfind(matlabversion,'.');
     if str2double(matlabversion(1:points(1)-1))<=7 && ...
        str2double(matlabversion(points(1)+1:points(2)-1))<=5
-      cat_run_oldcatch(job,estwrite,tpm,subj);
+      cat_run_oldcatch(job,tpm,subj);
     else
-      cat_run_newcatch(job,estwrite,tpm,subj);
+      cat_run_newcatch(job,tpm,subj);
     end
   end
 
@@ -253,7 +243,6 @@ function vout = run_job(job,estwrite)
 
 return
 %_______________________________________________________________________
-
 
 %_______________________________________________________________________
 function msg = check_job(job)
