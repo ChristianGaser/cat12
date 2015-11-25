@@ -410,7 +410,7 @@ if do_cls
         %% create a new brainmask
         %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
         Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
-        Yp0(smooth3(vbm_vol_morph(Yp0>1/6,'lo'))<0.5)=0;
+        Yp0(smooth3(cat_vol_morph(Yp0>1/6,'lo'))<0.5)=0;
         
         voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
         brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
