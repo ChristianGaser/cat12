@@ -73,19 +73,23 @@ if ~exist(deffile,'file')
 end
 
 % set other defaultfile
-if ~strcmp(catdef,deffile_ff)
+% The cat12 global varialbe is created and localy destroyed, because we 
+% want to call the cat12 function. 
+if 1 %nargin>0 %~strcmp(catdef,deffile) 
   oldwkd = cd; 
   cd(deffile_pp);
-  try
-    clearvars -global cat12;
-  catch
-    clear cat12;
-  end
+  clearvars -global cat12; clear cat12;
+  eval('global cat12;'); 
   eval(deffile_ff);
   cd(oldwkd);
   
-  % reinitialize SPM 
-  spm_jobman('initcfg');
+  % initialize SPM 
+  eval('global defaults;'); 
+  if isempty(defaults)
+    clear defaults; 
+    spm_jobman('initcfg');
+  end
+  clear cat12;
 end
 
 SPMid = spm('FnBanner',mfilename,rev);
@@ -102,7 +106,7 @@ if cat_get_defaults('extopts.gui')
     '  | |___  / /_\\\\ \\\\  | |     Computational Anatomy Toolbox\n' ...
     '  |____/ /_/   \\\\_\\\\ |_|     CAT12 - http://dbm.neuro.uni-jena.de\n\n']));
   cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
-    'CAT default file:\n' ...
+    ' CAT default file:\n' ...
     '\t%s\n\n'],deffile)); 
 
   % call GUI
@@ -302,4 +306,5 @@ else
 	'HandleVisibility','on');
 
 end
+  
 

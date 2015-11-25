@@ -410,15 +410,20 @@ if do_cls
         %% create a new brainmask
         %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
         Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
+        Yp0(smooth3(vbm_vol_morph(Yp0>1/6,'lo'))<0.5)=0;
+        
+        voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
+        brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
+        
         [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
         Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
         Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
         Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
-        Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.1,'lc',2),'d',4/mean(vx_vol)); 
+        Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
         BVth = diff(T3th(1:2:3))/T3th(3)*1.5; 
         RGth = diff(T3th(2:3))/T3th(3)*0.1; 
         Yb   = single(cat_vol_morph((Yp0>2/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5),'lo')); 
-        % region-growing GM 1
+        %% region-growing GM 1
         Yb(~Yb & (~Ybo | Ysrcb<mean(T3th(2)) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
         [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
         Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
