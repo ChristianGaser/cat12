@@ -753,14 +753,14 @@ end
 if job.extopts.LASstr>0
   % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
-  [Ym,Ycls] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.cat12.cat12atlas,cat12.templates);
+  [Ym,Ycls] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.cat.cat12atlas,cat12.templates);
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
 
 if job.extopts.debug==2
-                                  tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
-                                  save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
+  tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
+  save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
 end
 
 %  ---------------------------------------------------------------------
@@ -774,7 +774,7 @@ end
 %  corrections in special regions like the cerbellum and subcortex. 
 %  ---------------------------------------------------------------------
 stime = cat_io_cmd('ROI segmentation (partitioning)');
-[Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,job.cat12.cat12atlas,tpm.V,noise);
+[Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,job.cat.cat12atlas,tpm.V,noise);
 fprintf('%4.0fs\n',etime(clock,stime));
 
 

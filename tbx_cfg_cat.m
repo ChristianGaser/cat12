@@ -21,8 +21,7 @@ end
 
 % try to estimate number of processor cores
 try
-  numcores = feature('numcores');
-  numcores = max(round(numcores/2),1);
+  numcores = max(feature('numcores'),1);
 catch
   numcores = 1;
 end
@@ -35,11 +34,11 @@ nproc.strtype = 'n';
 nproc.val     = {numcores};
 nproc.num     = [1 1];
 nproc.help    = {
-    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background.'
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
     ''
     'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
     ''
-    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. All dependencies will be broken for any further modules if you split the job into separate processes.'
+    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
   };
 
 %_______________________________________________________________________
@@ -357,7 +356,7 @@ estwrite.tag    = 'estwrite';
 estwrite.name   = 'CAT12: Segmentation';
 % use multithreading only if availabe
 if feature('numcores') > 1
-  estwrite.val    = {nproc data opts extopts output};
+  estwrite.val    = {data nproc opts extopts output};
 else
   estwrite.val    = {data opts extopts output};
 end

@@ -1,4 +1,4 @@
-function cat_run_newcatch(job,estwrite,tpm,subj)
+function cat_run_newcatch(job,tpm,subj)
 % ______________________________________________________________________
 % This function contains the new matlab try-catch block.
 % The new try-catch block has to be in a separate file to avoid an error.
@@ -7,7 +7,7 @@ function cat_run_newcatch(job,estwrite,tpm,subj)
 % ______________________________________________________________________
 % $Revision$  $Date$
   try
-    cat_run_job(job,estwrite,tpm,subj); 
+    cat_run_job(job,tpm,subj); 
   catch caterr 
     % add further information for special errors
     if isempty(caterr.identifier)
