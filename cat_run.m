@@ -32,10 +32,13 @@ function varargout = cat_run(job,arg)
 
   
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc')
+if isfield(job,'nproc') && job.nproc>1
   if (job.nproc > 0) && (~isfield(job,'process_index'))
 
-    fprintf('WARNING: Please note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules if you split the job into separate processes.\n');
+    cat_io_cprintf('warn',...
+      ['\nWARNING: Please note that no additional modules in the batch can be run except \n' ...
+       '         CAT12 segmentation. Any dependencies will be broken for subsequent \n' ...
+       '         modules if you split the job into separate processes.\n\n']);
 
     % rescue original subjects
     job_data = job.data;
@@ -58,7 +61,9 @@ if isfield(job,'nproc')
     tmp_array = cell(job.nproc,1);
     for i=1:job.nproc
       fprintf('Running job %d:\n',i);
-      disp(job_data(job.process_index{i}));
+      for fi=1:numel(job_data(job.process_index{i}))
+        fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
+      end
       job.data = job_data(job.process_index{i});
     
       % temporary name for saving job information
@@ -72,26 +77,27 @@ if isfield(job,'nproc')
     
       % log-file for output
       log_name = ['log' sprintf('%02d',i) '_' datestr(now,1) '_' strrep(datestr(now,15),':','_') '.txt'];
-    
-      % prepare system specific path for matlab
-      export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
-    
+      
       % call matlab with command in the background
       if ispc
+        % prepare system specific path for matlab
+        export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
+    
         system_cmd = [export_cmd ' & start matlab.bat -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
       else
-        system_cmd = [export_cmd ';matlab -nodisplay -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
+        system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodisplay -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
       end
 
-      fprintf('Check %s  for logging information.\n',log_name);
-      fprintf('_______________________________________________________________\n');
       [status,result] = system(system_cmd);
+      % @Christian: no editor, just a linked file? write to a another directory (the directory of the first file, my wkd is mostly not the datadirectory, often it's the cat12 or spm directory)?
+      %if ~ispc
+      %  pause(1); % call editor for non-windows systems after 1s
+      %  edit(log_name);
+      %end 
+      fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
+      fprintf('_______________________________________________________________\n');
+     
       
-      % call editor for non-windows systems after 1s
-      if ~ispc
-        pause(1);
-        edit(log_name);
-      end
     end
     
     job = update_job(job);

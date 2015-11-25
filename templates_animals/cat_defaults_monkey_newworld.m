@@ -29,9 +29,9 @@ global cat12
 
 % Options for inital SPM12 segmentation that is used as starting point for CAT12
 %=======================================================================
-cat12.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
+cat12.opts.tpm       = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_greater_TPM.nii')};
 cat12.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
-cat12.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
+cat12.opts.affreg    = 'none';                  % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
 cat12.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 cat12.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
 cat12.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
@@ -162,11 +162,11 @@ fix:
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 cat12.extopts.species      = 'monkey_newworld';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
-cat12.extopts.APP          = 4;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
-cat12.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
-cat12.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
+cat12.extopts.APP          = 3;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
+cat12.extopts.vox          = 0.70; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
+cat12.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];; % bounding box for normalized data (not yet working): inf - use Tempate values
 cat12.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_newworld_Template_1.nii')}; % Indicate first Dartel template
-cat12.extopts.vbm12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_newworld_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
+cat12.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_newworld_vbm12.nii')};      % VBM atlas with major regions for VBM, SBM & ROIs
 cat12.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_newworld_brainmask.nii')};  % brainmask for affine registration
 cat12.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_newworld_T1.nii')};         % T1 for affine registration
 
@@ -182,7 +182,7 @@ cat12.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
 cat12.extopts.debug        = 0;     % debuging option: 0 - default; 1 - write debugging files 
 cat12.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 cat12.extopts.gui          = 1;     % use GUI 
-cat12.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
+cat12.extopts.expertgui    = 2;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
 
 
 % expert options - ROIs

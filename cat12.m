@@ -24,8 +24,12 @@ function varargout = cat12(varargin)
 
 % Last Modified by GUIDE v2.5 21-Nov-2015 23:32:29
 
-if nargin==0 || (nargin==1 && ~strcmp(varargin{1},'fig'))
-  spm_cat12; return;
+if nargin==0 
+  spm_cat12;
+  return;
+elseif nargin==1 && ~strcmp(varargin{1},'fig')
+  spm_cat12(varargin{1});
+  return;
 end
 
 % Begin initialization code - DO NOT EDIT
@@ -139,8 +143,7 @@ function pushbutton10_Callback(hObject, eventdata, handles)
 F = spm_figure('FindWin','Menu');
 % close SPM windows, if no Menu window exist
 if isempty(F)
-  spm_figure('Close',spm_figure('FindWin','Graphics')); 
-  spm_figure('Close',spm_figure('FindWin','Interactive'));
+  spm('Quit')
 end
 close(gcf);
 
