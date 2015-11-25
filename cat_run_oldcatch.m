@@ -1,4 +1,4 @@
-function cat_run_oldcatch(job,estwrite,tpm,subj)
+function cat_run_oldcatch(job,tpm,subj)
 % ______________________________________________________________________
 % This function contains an old matlab try-catch block. MATLAB2007a does 
 % not support an error variable and throw an error even it is printed as
@@ -14,7 +14,7 @@ function cat_run_oldcatch(job,estwrite,tpm,subj)
     
   if cat_get_defaults('extopts.ignoreErrors')
     try
-      cat_run_job(job,estwrite,tpm,subj); %#ok<NASGU>
+      cat_run_job(job,tpm,subj); %#ok<NASGU>
     catch
       caterr = lasterror;  %#ok<LERR>,
       cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
@@ -60,6 +60,6 @@ function cat_run_oldcatch(job,estwrite,tpm,subj)
       end
     end
   else
-    cat_run_job(job,estwrite,tpm,subj);
+    cat_run_job(job,tpm,subj);
   end
 end

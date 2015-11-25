@@ -7491,6 +7491,7 @@ Added pseudo multi-threading to cat_run.m
     
 
 ------------------------------------------------------------------------
+r781 | gaser | 2015-11-23 23:43:44 +0100 (Mo, 23 Nov 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7500,5 +7501,22 @@ M       tbx_cfg_cat.m
  M      templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152
 
 Corrected typo in cat_main for job.cat12.cat12atlas (was job.cat.cat12atlas).
+
 ------------------------------------------------------------------------
-r781 | gaser | 2015-11-23 23:43:40
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Removed estwrite option that was not used anymore.
+(2) Updated multi-threading slightly.
+(3) Many changes to cat_run.m to allow correct output names that are returned.
+------------------------------------------------------------------------
+r782 | gaser | 2015-11-25 10:14:37
