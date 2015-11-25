@@ -32,14 +32,19 @@ function varargout = cat_run(job,arg)
 
   
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc') && job.nproc>1
+if isfield(job,'nproc')
+
+  % just to ensure that no floating numbers were defined (we cannot use natural numbers because 0 should be the
+  % smallest possible entry
+  job.nproc = max(round(job.nproc),0);
+
   if (job.nproc > 0) && (~isfield(job,'process_index'))
 
     cat_io_cprintf('warn',...
       ['\nWARNING: Please note that no additional modules in the batch can be run except \n' ...
        '         CAT12 segmentation. Any dependencies will be broken for subsequent \n' ...
        '         modules if you split the job into separate processes.\n\n']);
-
+    
     % rescue original subjects
     job_data = job.data;
     n_subjects = numel(job.data);
@@ -72,7 +77,7 @@ if isfield(job,'nproc') && job.nproc>1
       save(tmp_name,'job');
     
       % matlab command          
-      matlab_cmd = sprintf('"addpath %s %s %s %s;load %s; cat_run(job)"',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+      matlab_cmd = sprintf('"addpath %s %s %s %s;load %s; cat_run(job);"',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
           fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
     
       % log-file for output
@@ -89,11 +94,10 @@ if isfield(job,'nproc') && job.nproc>1
       end
 
       [status,result] = system(system_cmd);
-      % @Christian: no editor, just a linked file? write to a another directory (the directory of the first file, my wkd is mostly not the datadirectory, often it's the cat12 or spm directory)?
-      %if ~ispc
-      %  pause(1); % call editor for non-windows systems after 1s
-      %  edit(log_name);
-      %end 
+      if ~ispc
+        pause(1); % call editor for non-windows systems after 1s
+        edit(log_name);
+      end 
       fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
       fprintf('_______________________________________________________________\n');
      
