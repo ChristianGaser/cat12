@@ -7607,6 +7607,7 @@ M       templates_1.50mm/neuromorphometrics.xml
 Changed default modulation and updated help and html text accordingly.
 
 ------------------------------------------------------------------------
+r787 | dahnke | 2015-11-26 16:17:16 +0100 (Do, 26 Nov 2015) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7627,5 +7628,14 @@ M       templates_animals/cat_defaults_monkey_oldworld.m
 (2)  Changed: Renamed of XML structure and removed unnecessary variables.
 (3)  Changed: Update parameter in primate cat_defaults. 
 
+
 ------------------------------------------------------------------------
-r787 | dahnke | 2015-11-26 16:15:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+
+Changed: Removed check of nproc field and check of too many processes
+in cat_run.m
+------------------------------------------------------------------------
+r788 | gaser | 2015-11-26 17:18:49
