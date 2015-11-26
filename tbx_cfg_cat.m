@@ -186,18 +186,17 @@ label.help  = {
 modulated        = cfg_menu;
 modulated.tag    = 'modulated';
 modulated.name   = 'Modulated normalized';
-modulated.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
-modulated.values = {0 1 2};
+if expert
+  modulated.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
+  modulated.values = {0 1 2};
+else
+  modulated.labels = {'No','Yes'};
+  modulated.values = {0 1};
+end
 modulated.help = {
-'"Modulation" is to compensate for the effect of spatial normalisation. Spatial normalisation causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). The SPM default is to adjust spatially normalised grey matter (or other tissue class) by using both terms and the resulting modulated images are preserved for the total amount of grey matter. Thus, modulated images reflect the grey matter volumes before spatial normalisation. However, the user is often interested in removing the confound of different brain sizes and there are many ways to apply this correction. We can use the total amount of GM, GM+WM, GM+WM+CSF, or manual estimated total intracranial volume (TIV). Theses parameters can be modeled as nuisance parameters (additive effects) in an AnCova model or used to globally scale the data (multiplicative effects): '
+'"Modulation" is to compensate for the effect of spatial normalisation. Spatial normalisation causes volume changes due to affine transformation (global scaling) and non-linear warping (local volume change). After modulation the resulting modulated images are preserved for the total amount of grey matter signal in the normalised partitions. Thus, modulated images reflect the tissue volumes before spatial normalisation. However, the user is almost always interested in removing the confound of different brain sizes and there are many ways to apply this correction. In contrast to previous VBM versions I now recommend to use total intracranial volume (TIV) as nuisance parameter in an AnCova model. '
 ''
-'% Correction   Interpretation'
-'% ----------   --------------'
-'% nothing      absolute volume'
-'% globals 	     relative volume after correcting for total GM or TIV (multiplicative effects)'
-'% AnCova 	      relative volume that can not be explained by total GM or TIV (additive effects)'
-''
-'I suggest another option to remove the confounding effects of different brain sizes. Modulated images can be optionally saved by correcting for non-linear warping only. Volume changes due to affine normalisation will be not considered and this equals the use of default modulation and globally scaling data according to the inverse scaling factor due to affine normalisation. I recommend this option if your hypothesis is about effects of relative volumes which are corrected for different brain sizes. This is a widely used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. These modulated images are indicated by "m0" instead of "m". '
+'Please note that I do not use the SPM modulation where the original voxels are projected into their new location in the warped images because this method introduces aliasing artifacts. Here, I use the scaling by the Jacobian determinants to generate "modulated" data. '
 ''
 };
 

@@ -23,8 +23,8 @@
     <label><index>6</index><short_name>lAntMedTemL</short_name><name>Left Anterior Medial Temporal Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>7</index><short_name>rAntLatTemL</short_name><name>Right Anterior Lateral Temporal Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>8</index><short_name>lAntLatTemL</short_name><name>Left Anterior Lateral Temporal Lobe</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>9</index><short_name>rAmbaParHipG</short_name><name>Right Ambient and Parahippocampus Gyri</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>10</index><short_name>lAmbaParHipG</short_name><name>Left Ambient and Parahippocampus Gyri</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>9</index><short_name>rAmbaParHipG</short_name><name>Right Ambient and Parahippocampal Gyri</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>10</index><short_name>lAmbaParHipG</short_name><name>Left Ambient and Parahippocampal Gyri</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>11</index><short_name>rSupTemG</short_name><name>Right Superior Temporal Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>12</index><short_name>lSupTemG</short_name><name>Left Superior Temporal Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>13</index><short_name>rInfMidTemG</short_name><name>Right Inferior Middle Temporal Gyri</name><RGBA></RGBA><XYZmm></XYZmm></label>

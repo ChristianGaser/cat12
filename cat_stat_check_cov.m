@@ -288,7 +288,7 @@ threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 n_thresholded = min(find(mean_cov_sorted < threshold_cov));
 
 if ~isempty(n_thresholded)
-  fprintf('\nMean correlation for data below 2 standard deviations.\n');
+  fprintf('\nThese data have a mean correlation below 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   for i=n_thresholded:n_subjects
     fprintf('%s: %3.3f\n',P(ind_sorted(i),:),mean_cov_sorted(i));
