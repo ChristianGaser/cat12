@@ -32,82 +32,86 @@ function varargout = cat_run(job,arg)
 
   
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc')
-
-  % just to ensure that no floating numbers were defined (we cannot use natural numbers because 0 should be the
-  % smallest possible entry
-  job.nproc = max(round(job.nproc),0);
-
-  if (job.nproc > 0) && (~isfield(job,'process_index'))
-
-    cat_io_cprintf('warn',...
-      ['\nWARNING: Please note that no additional modules in the batch can be run except \n' ...
-       '         CAT12 segmentation. Any dependencies will be broken for subsequent \n' ...
-       '         modules if you split the job into separate processes.\n\n']);
-    
-    % rescue original subjects
-    job_data = job.data;
-    n_subjects = numel(job.data);
-    if job.nproc > n_subjects
-      job.nproc = n_subjects;
-    end
-    job.process_index = cell(job.nproc,1);
-  
-    % initial splitting of data
-    for i=1:job.nproc
-      job.process_index{i} = (1:job.nproc:(n_subjects-job.nproc+1))+(i-1);
-    end
-  
-    % check if all data are covered
-    for i=1:rem(n_subjects,job.nproc)
-      job.process_index{i} = [job.process_index{i} n_subjects-i+1];
-    end
-  
-    tmp_array = cell(job.nproc,1);
-    for i=1:job.nproc
-      fprintf('Running job %d:\n',i);
-      for fi=1:numel(job_data(job.process_index{i}))
-        fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
-      end
-      job.data = job_data(job.process_index{i});
-    
-      % temporary name for saving job information
-      tmp_name = [tempname '.mat'];
-      tmp_array{i} = tmp_name;
-      save(tmp_name,'job');
-    
-      % matlab command          
-      matlab_cmd = sprintf('"addpath %s %s %s %s;load %s; cat_run(job);"',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
-          fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
-    
-      % log-file for output
-      log_name = ['log' sprintf('%02d',i) '_' datestr(now,1) '_' strrep(datestr(now,15),':','_') '.txt'];
-      
-      % call matlab with command in the background
-      if ispc
-        % prepare system specific path for matlab
-        export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
-    
-        system_cmd = [export_cmd ' & start matlab.bat -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
-      else
-        system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodisplay -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
-      end
-
-      [status,result] = system(system_cmd);
-      if ~ispc
-        pause(1); % call editor for non-windows systems after 1s
-        edit(log_name);
-      end 
-      fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
-      fprintf('_______________________________________________________________\n');
-     
-      
-    end
-    
-    job = update_job(job);
-    varargout{1} = vout_job(job);
-    return
+if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+  % @Christian: usefull to limit this?
+  try
+    numcores = max(feature('numcores'),1);
+  catch %#ok<CTCH>
+    numcores = 1;
   end
+  if isfield(job,'nproc') && job.nproc>numcores*2, 
+    error('To many jobs for the number of processors (%d processors detected). \n',numcores); 
+  end
+
+  
+  cat_io_cprintf('warn',...
+    ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
+     '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+     '         subsequent modules if you split the job into separate processes.\n\n']);
+    
+  % rescue original subjects
+  job_data = job.data;
+  n_subjects = numel(job.data);
+  if job.nproc > n_subjects
+    job.nproc = n_subjects;
+  end
+  job.process_index = cell(job.nproc,1);
+
+  % initial splitting of data
+  for i=1:job.nproc
+    job.process_index{i} = (1:job.nproc:(n_subjects-job.nproc+1))+(i-1);
+  end
+
+  % check if all data are covered
+  for i=1:rem(n_subjects,job.nproc)
+    job.process_index{i} = [job.process_index{i} n_subjects-i+1];
+  end
+
+  tmp_array = cell(job.nproc,1);
+  logdate   = [datestr(now,1) '_' strrep(datestr(now,15),':','_')]; 
+  for i=1:job.nproc
+    fprintf('Running job %d:\n',i);
+    for fi=1:numel(job_data(job.process_index{i}))
+      fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
+    end
+    job.data = job_data(job.process_index{i});
+
+    % temporary name for saving job information
+    tmp_name = [tempname '.mat'];
+    tmp_array{i} = tmp_name; 
+    global defaults cat12; %#ok<NUSED,TLEV>
+    save(tmp_name,'job','defaults','cat12');
+    clear defaults cat12;
+    
+    % matlab command          
+    matlab_cmd = sprintf('"addpath %s %s %s %s;load %s; cat_run(job); "',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+        fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
+
+    % log-file for output
+    log_name = ['log' sprintf('%02d',i) '_' logdate '.txt'];
+
+    % call matlab with command in the background
+    if ispc
+      % prepare system specific path for matlab
+      export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
+
+      system_cmd = [export_cmd ' & start matlab.bat -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
+    else
+      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodisplay -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
+    end
+
+    [status,result] = system(system_cmd);
+    if ~ispc, pause(1); end % call editor for non-windows systems after 1s
+    edit(log_name);
+    fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
+    fprintf('_______________________________________________________________\n');
+
+
+  end
+
+  job = update_job(job);
+  varargout{1} = vout_job(job);
+  return
 end
 
 job = update_job(job);
@@ -130,7 +134,6 @@ end
 return
 %_______________________________________________________________________
 function job = update_job(job)
-
   cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.species,...
              'cat12atlas',cat_get_defaults('extopts.cat12atlas'), ... 
              'darteltpm', job.extopts.darteltpm{1}, ...
@@ -250,7 +253,11 @@ function vout = run_job(job)
   end
 
   colormap(gray)
-
+  
+  if isfield(job,'nproc') && job.nproc>0 
+    fprintf('\n%s',repmat('_',1,72));
+    fprintf('\nFinish this CAT12 Segmentation job.''\n');
+  end
 return
 %_______________________________________________________________________
 

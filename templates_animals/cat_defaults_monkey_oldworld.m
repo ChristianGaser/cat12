@@ -29,13 +29,13 @@ global cat12
 
 % Options for inital SPM12 segmentation that is used as starting point for CAT12
 %=======================================================================
-cat12.opts.tpm       = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','monkey_oldworld_TPM.nii')};
+cat12.opts.tpm       = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_oldworld_TPM.nii')};
 cat12.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
 cat12.opts.affreg    = 'none';                  % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
 cat12.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 cat12.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
 cat12.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
-cat12.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
+cat12.opts.samp      = 2;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
 
                                               
 % Writing options
@@ -193,7 +193,7 @@ cat12.extopts.expertgui    = 2;     % 0 - common user modus; 1 - expert modus wi
 %  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
 %  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
 cat12.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
+  ... fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % good atlas based on 20 subjects
   }; 
 
 
