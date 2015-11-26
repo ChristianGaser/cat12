@@ -1,4 +1,4 @@
-function SPM = spm_spm(SPM)
+function SPM = cat_stat_spm(SPM)
 % [Re]ML Estimation of a General Linear Model
 % FORMAT SPM = spm_spm(SPM)
 %

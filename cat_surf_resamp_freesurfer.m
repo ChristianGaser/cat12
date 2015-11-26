@@ -28,7 +28,7 @@ elseif isunix
   opt.CATDir = [opt.CATDir '.glnx86'];
 end  
 
-hemi_str = str2mat('lh','rh');
+hemi_str = char('lh','rh');
 
 for i=1:size(Psubj,1)
 

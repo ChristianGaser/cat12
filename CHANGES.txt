@@ -7543,6 +7543,7 @@ M       templates_animals/cat_defaults_monkey_oldworld.m
 
 
 ------------------------------------------------------------------------
+r784 | gaser | 2015-11-25 16:07:30 +0100 (Mi, 25 Nov 2015) | 12 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -7555,5 +7556,35 @@ M       tbx_cfg_cat.m
 
 (1) Corrected old vbm_vol_morph call.
 (2) Updated multi-threading slightly.
+
 ------------------------------------------------------------------------
-r784 | gaser | 2015-11-25 16:07:26
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_long.m
+M       cat_batch_vbm.m
+M       cat_conf_long.m
+M       cat_conf_tools.m
+M       cat_io_FreeSurfer.m
+M       cat_io_cprintf.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_stat_TIV.m
+M       cat_stat_check_cov.m
+M       cat_stat_showslice_all.m
+M       cat_stat_spm.m
+M       cat_stat_spmF2x.m
+M       cat_stat_spmT2x.m
+M       cat_surf_createCS.m
+M       cat_surf_render.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+M       html/cat.html
+
+Used code analyzer to remove many unused variables and corrected code
+according to suggestions.
+------------------------------------------------------------------------
+r785 | gaser | 2015-11-26 10:14:19

@@ -9,16 +9,16 @@ mov.name = 'Longitudinal data for this subject';
 mov.tag  = 'mov';
 mov.filter = 'image';
 mov.num  = [1 Inf];
-mov.help   = {[...
-'These are the data of the same subject.']};
+mov.help   = {...
+'These are the data of the same subject.'};
 %------------------------------------------------------------------------
 
 subj = cfg_branch;
 subj.name = 'Subject';
 subj.tag = 'subj';
 subj.val = {mov};
-subj.help = {[...
-'Images of the same subject.']};
+subj.help = {...
+'Images of the same subject.'};
 
 %------------------------------------------------------------------------
 
@@ -27,8 +27,8 @@ esubjs.tag     = 'esubjs';
 esubjs.name    = 'Data';
 esubjs.values  = {subj};
 esubjs.num     = [1 Inf];
-esubjs.help = {[...
-'Specify data for each subject.']};
+esubjs.help = {...
+'Specify data for each subject.'};
 
 %------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-function cat_vol_slice_overlay(OV);
+function cat_vol_slice_overlay(OV)
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -25,13 +25,13 @@ end
 % check filename whether log. scaling was used
 OV.logP = zeros(size(OV.name,1));
 for i=1:size(OV.name,1)
-  if findstr(OV.name(i,:),'logP')
+  if strfind(OV.name(i,:),'logP')
     OV.logP(i) = 1;
   end
 end
 
 % check fields of OV structure
-fieldnames = str2mat('reference_image','reference_range',...
+fieldnames = char('reference_image','reference_range',...
     'opacity','cmap','name','range','logP','slices_str','transform');
 for i=1:size(fieldnames,1)
   str = deblank(fieldnames(i,:));
@@ -49,7 +49,7 @@ end
 if isfield(OV,'cbar')
   SO.cbar = OV.cbar;
 else
-  SO.cbar = [2];  % colorbar
+  SO.cbar = 2;  % colorbar
 end
 
 n = size(OV.name,1);
@@ -78,7 +78,7 @@ else
   logP = OV.logP;
 end
 
-[path tmp ext] = spm_fileparts(nm);
+[path tmp] = spm_fileparts(nm);
 img = nm;
 
 n_slice = size(OV.slices_str,1);
@@ -99,7 +99,7 @@ for i=1:size(OV.transform,1)
   if n_slice > 0
     sl_name = strvcat(sl_name,[OV.transform(i,:) ': ' OV.slices_str(i,:)]);
   else
-    sl_name = strvcat(sl_name,[OV.transform(i,:)]);
+    sl_name = strvcat(sl_name,OV.transform(i,:));
   end
 end
 
@@ -268,13 +268,13 @@ slice_overlay
 
 
 % change labels of colorbar for log-scale
-if (SO.cbar == 2) & logP
+if (SO.cbar == 2) && logP
   H = gca;
   YTick = get(H,'YTick');
   mn = floor(min(YTick));
   mx = ceil(max(YTick));
   % allow only integer values
-  values = [floor(mn:mx)];
+  values = floor(mn:mx);
   pos = get(get(gca,'YLabel'),'position');
   pos(1) = 2.5;
 
@@ -283,7 +283,7 @@ if (SO.cbar == 2) & logP
 
   YTickLabel = [];
   for i=1:length(YTick)
-    YTickLabel = strvcat(YTickLabel,remove_zeros(sprintf('%.g',10^(-YTick(i)))));
+    YTickLabel = char(YTickLabel,remove_zeros(sprintf('%.g',10^(-YTick(i)))));
   end
   set(H,'YTickLabel',YTickLabel)
   set(get(gca,'YLabel'),'string','p-value','position',pos)
@@ -294,7 +294,7 @@ else
 end
 
 % save image
-image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf|tif',str2mat('none','png','jpeg','pdf','tiff'),2);
+image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf|tif',char('none','png','jpeg','pdf','tiff'),2);
 if ~strcmp(image_ext,'none')
   [pt,nm] = spm_fileparts(img);
   
@@ -315,7 +315,6 @@ if ~strcmp(image_ext,'none')
   
   % and print
 H  = findobj(get(SO.figure,'Children'),'flat','Type','axes');
-un = cellstr(get(H,'Units'));
 set(H,'Units','normalized')
 
   saveas(SO.figure,imaname,image_ext);
@@ -506,8 +505,6 @@ T = spm_matrix(ts(orientn,:)) * V.mat;
 vcorners = [1 1 1; D(1) 1 1; 1 D(2) 1; D(1:2) 1; ...
        1 1 D(3); D(1) 1 D(3); 1 D(2:3) ; D(1:3)]';
 corners = T * [vcorners; ones(1,8)];
-SC = sort(corners');
-vxsz = sqrt(sum(T(1:3,1:3).^2));
 
 SO.slices = spm_input('Slices to display (mm)', '+1', 'e', XYZ_unique{orientn});
 SO.figure = figure(21);
@@ -535,7 +532,7 @@ A = spm_clusters(XYZ);
 for j = 1:max(A)
   ind = find(A==j);
   xyz = XYZmm(:,ind);
-  xyz_array = [xyz_array xyz(:,find(img(ind) == max(img(ind))))];
+  xyz_array = [xyz_array xyz(:,img(ind) == max(img(ind)))];
 end
 
 % only keep unique coordinates
