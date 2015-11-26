@@ -324,8 +324,8 @@ data_xml.name = 'XML files';
 data_xml.tag  = 'data_xml';
 data_xml.filter = 'xml';
 data_xml.num  = [1 Inf];
-data_xml.help   = {[...
-'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files.']};
+data_xml.help   = {...
+'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files.'};
 
 qam         = cfg_repeat;
 qam.tag     = 'qam';
@@ -339,16 +339,16 @@ data_vol.name = 'Sample data';
 data_vol.tag  = 'data_vol';
 data_vol.filter = 'image';
 data_vol.num  = [1 Inf];
-data_vol.help   = {[...
-'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.']};
+data_vol.help   = {...
+'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.'};
 
 sample         = cfg_repeat;
 sample.tag     = 'sample';
 sample.name    = 'Data';
 sample.values  = {data_vol };
 sample.num     = [1 Inf];
-sample.help = {[...
-'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
+sample.help = {...
+'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.'};
 
  
 check_cov      = cfg_exbranch;
@@ -673,8 +673,8 @@ sample.tag     = 'sample';
 sample.name    = 'Data';
 sample.values  = {data_surf };
 sample.num     = [1 Inf];
-sample.help = {[...
-'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.']};
+sample.help = {...
+'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.'};
 
 check_mesh_cov      = cfg_exbranch;
 check_mesh_cov.tag  = 'check_mesh_cov';
@@ -926,9 +926,9 @@ PI = job.images;
 
 vf = cell(numel(PI),1);
 for i=1:numel(PU),
-    [pth,nam] = spm_fileparts(PU{i});
+    pth = spm_fileparts(PU{i});
     for m=1:numel(PI),
-        [pth1,nam,ext,num] = spm_fileparts(PI{m});
+        [pth1,nam,ext] = spm_fileparts(PI{m});
         switch job.modulate
         case 2
             fname = fullfile(pth,['m0w' nam ext]);
@@ -953,7 +953,7 @@ vf = cell(numel(PU),numel(PI));
 for i=1:numel(PU),
     [pth,nam] = spm_fileparts(PU{i});
     for m=1:numel(PI),
-        [pth1,nam,ext,num] = spm_fileparts(PI{m}{i});
+        [pth1,nam,ext] = spm_fileparts(PI{m}{i});
         switch job.modulate
         case 2
             fname = fullfile(pth,['m0w' nam ext]);
@@ -982,9 +982,9 @@ return;
 function vf = vfiles_qa(job)
 vf = {};
 
-s  = strvcat(job.data);
+s  = char(job.data);
 for i=1:size(s,1),
-    [pth,nam,ext,num] = spm_fileparts(s(i,:));
+    [pth,nam] = spm_fileparts(s(i,:));
     vf = {vf{:}, fullfile(pth,['p0',nam,'ext'])};
 end;
 return;

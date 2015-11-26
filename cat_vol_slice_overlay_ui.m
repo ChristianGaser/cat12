@@ -1,4 +1,4 @@
-function cat_vol_slice_overay_ui
+function cat_vol_slice_overlay_ui
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -9,8 +9,8 @@ OV.opacity = Inf;                                      % transparence value for 
 OV.cmap    = jet;                                      % colormap for overlay
 
 % name of files
-OV.name = str2mat(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
-                  fullfile(spm('dir'),'tpm','labels_Neuromorphometrics.nii'));
+OV.name = char(fullfile(spm('dir'),'tpm','TPM.nii,1'),...
+               fullfile(spm('dir'),'tpm','labels_Neuromorphometrics.nii'));
                 
 % range for each file
 % Use range 0..0 if you want to autoscale range.

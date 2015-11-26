@@ -63,7 +63,7 @@ if ~isempty(xml_files)
   end
   
   QM = ones(n_subjects,3);
-  QM_names = str2mat('Noise','Bias','PQ processibility');
+  QM_names = char('Noise','Bias','PQ processibility');
 
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
@@ -90,7 +90,7 @@ else
   QM_names = '';
 end
 
-[pth,nam,ext] = spm_fileparts(deblank(P(1,:)));
+[pth,nam] = spm_fileparts(deblank(P(1,:)));
 
 if issurf
   % load surface texture data
@@ -125,7 +125,7 @@ else
   vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
   Orig = V(1).mat\[0 0 0 1]';
 
-  if length(V)>1 & any(any(diff(cat(1,V.dim),1,1),1))
+  if length(V)>1 && any(any(diff(cat(1,V.dim),1,1),1))
     error('images don''t all have same dimensions')
   end
   if max(max(max(abs(diff(cat(3,V.mat),1,3))))) > 1e-8
@@ -251,7 +251,7 @@ fname_tmp = cell(n_samples,1);
 fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
 for i=1:n_samples
-  [tmp fname_tmp{i}] = spm_str_manip(char(P(find(sample == i),:)),'C');
+  [tmp fname_tmp{i}] = spm_str_manip(char(P(sample == i,:)),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
   fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
@@ -265,7 +265,7 @@ YpY_tmp = YpY - tril(YpY);
 
 % if more than 25% of the data this points to longitudinal data of one subject
 % and no warning will appear
-if ~isempty(indx) & (sqrt(length(indx)) < 0.25*n_subjects)
+if ~isempty(indx) && (sqrt(length(indx)) < 0.25*n_subjects)
   fprintf('\nUnusual large correlation (check that subjects are not identical):\n');
   for i=1:length(indx)
     % exclude diagonal
@@ -396,9 +396,9 @@ show_mean_boxplot(mean_cov,'Mean correlation',1);
 % check for replicates
 for i=1:n_subjects
   for j=1:n_subjects
-    if (i>j) & (mean_cov(i) == mean_cov(j))
+    if (i>j) && (mean_cov(i) == mean_cov(j))
       try
-        [s,differ] = unix(['diff ' P(i,:) ' ' P(j,:)]);
+        s = unix(['diff ' P(i,:) ' ' P(j,:)]);
         if (s==0), fprintf(['\nWarning: ' P(i,:) ' and ' P(j,:) ' are same files?\n']); end
       end
     end
@@ -419,7 +419,7 @@ number = spm_input('How many files ?',1,'e',number);
 number = min([number 24]);
 number = min([number size(P,1)]);
   
-list = str2mat(P(ind_sorted(n:-1:1),:));
+list = char(P(ind_sorted(n:-1:1),:));
 list2 = list(1:number,:);
 
 if issurf
@@ -450,7 +450,7 @@ return
 %-----------------------------------------------------------------------
 function show_matrix(data, order)
 %-----------------------------------------------------------------------
-global P H FS pos sorted
+global H FS pos sorted
 
 % get sorting order
 sorted = order;
@@ -490,7 +490,7 @@ return
 %-----------------------------------------------------------------------
 function show_mean_boxplot(data_boxp, name, quality_order)
 %-----------------------------------------------------------------------
-global fname H FS sample ind_sorted
+global fname FS sample ind_sorted
  
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
@@ -587,7 +587,7 @@ Orig = V(1).mat\[0 0 0 1]';
 sl   = round(slice_mm/vx(3)+Orig(3));
 
 % if slice is outside of image use middle slice
-if (sl>V(1).dim(3)) | (sl<1)
+if (sl>V(1).dim(3)) || (sl<1)
   sl = round(V(1).dim(3)/2);
 end
 
@@ -598,7 +598,7 @@ for i = 1:length(V)
   img(isnan(img)) = 0;
   
   % scale image according to mean
-  data_array(:,:,i) = img/mean(img(find(img ~= 0)));
+  data_array(:,:,i) = img/mean(img(img ~= 0));
 end
 
 % enhance contrast and scale image to 0..64
@@ -637,7 +637,7 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global fname sample H YpY YpYsorted data_array pos issurf mn_data mx_data ind_sorted sorted
+global fname sample H YpY data_array pos issurf ind_sorted sorted
 
 pos_mouse = get(event_obj, 'Position');
 

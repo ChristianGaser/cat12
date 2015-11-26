@@ -1,4 +1,4 @@
-function TIV = cat_stat_TIV(p)
+function cat_stat_TIV(p)
 %cat_stat_TIV to read total intracranial volume (TIV) from xml-files
 %
 %_______________________________________________________________________

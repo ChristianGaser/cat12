@@ -37,7 +37,6 @@ for i=1:size(P,1)
   k = strfind(name,'.');
   pname = ff(k(1)+1:k(2)-1);
   Pcentral   = [strrep(name,pname,'central') '.gii'];
-  Psphere    = fullfile(pp,strrep(Pcentral,'central','sphere'));
   Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
   Presamp    = fullfile(pp,strrep(Pcentral,'central','resampled'));
   Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));

@@ -409,7 +409,7 @@ if do_cls
         
         %% create a new brainmask
         %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
-        Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
+        Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
         Yp0(smooth3(cat_vol_morph(Yp0>1/6,'lo'))<0.5)=0;
         
         voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
@@ -637,7 +637,7 @@ end
 %  ---------------------------------------------------------------------
 debug = 1; % this is a manuel debuging option for matlab debuging mode
 if ~(cat12.sanlm==5 && job.extopts.NCstr)
-  stime = cat_io_cmd('Global intensity correction');;
+  stime = cat_io_cmd('Global intensity correction');
   [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
   if debug, Ym2=Ym; end %#ok<NASGU>
   % update in inverse case
@@ -988,7 +988,7 @@ if do_cls && do_defs
   vxv  = 1/max(vx_volr);         % use original voxel size!!!
   NS   = @(Ys,s) Ys==s | Ys==s+1; % remove side alignment from atlas maps
     
-  if job.extopts.cleanupstr>0 && max(vx_volr)<=1.6;;
+  if job.extopts.cleanupstr>0 && max(vx_volr)<=1.6;
     if debug, probo=prob; end
     %% -----------------------------------------------------------------
     %  final cleanup 2.0
@@ -1318,7 +1318,7 @@ clear VG VF cid %Affine
 %  ---------------------------------------------------------------------
 %  Deformation
 %  ---------------------------------------------------------------------
-trans = struct();;
+trans = struct();
 
 M0 = res.image.mat;
 
@@ -1755,7 +1755,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  ... add Ywmh later ... 
 %
 if job.output.surface
-  stime = cat_io_cmd('Surface and thickness estimation');; 
+  stime = cat_io_cmd('Surface and thickness estimation'); 
   % brain masking 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   Ymm = Ym  .* (Yp0>0.5) .* Yb;
@@ -1938,7 +1938,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %% ---------------------------------------------------------------------
 %  evaluate measurements and write XML
 %  ---------------------------------------------------------------------
-qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
+qam = cat_stat_marks('eval',opt.cati,qa,'cat12');
  
 cat_io_xml(fullfile(pth,['cat_' nam '.xml']),...
   struct('qa',qa,'qam',qam),'write+');
@@ -1955,11 +1955,7 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 if cat12.print
   
   warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
-  
-  %% create report text
-  Pm  = fullfile(pth,['m', nam, '.nii']); 
-  Pp0 = fullfile(pth,['p0', nam, '.nii']); 
-      
+        
   
   mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
@@ -2978,7 +2974,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   
   % brain segmentation can be restricted to the brain to save time 
   
-  Yclso=Ycls; Ysrco=Ysrc; Ymo=Ym;
+  Yclso=Ycls; Ysrco=Ysrc;
   [Ysrc,Ym,Yb,BB] = cat_vol_resize({Ysrc,Ym,Yb0},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb0);
   for i=1:6, Ycls{i} = cat_vol_resize(Ycls{i},'reduceBrain',vx_vol,BB.BB); end
   

@@ -43,7 +43,7 @@ range = ([1 V(1).dim(orient)] - Orig(orient))*vx(orient);
 
 % calculate slice from mm to voxel
 sl = slice_mm/vx(orient)+Orig(orient);
-while (sl < 1) | (sl > V(1).dim(orient))
+while (sl < 1) || (sl > V(1).dim(orient))
 	slice_mm = spm_input(['Slice (in mm) [' num2str(range(1)) '...' num2str(range(2)) ']'],1,'e',0);
 	sl = slice_mm/vx(orient)+Orig(orient);
 end

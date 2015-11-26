@@ -148,7 +148,7 @@ if nargin < 1
     case 0  %-NB: no adjustment
         % p for conjunctions is p of the conjunction SPM
         %---------------------------------------------------------------
-        u0  = spm_input(['threshold {T or p value}'],'+0','r',0.001,1);
+        u0  = spm_input('threshold {T or p value}','+0','r',0.001,1);
     otherwise  %-NB: no threshold
         % p for conjunctions is p of the conjunction SPM
         %---------------------------------------------------------------
@@ -160,7 +160,7 @@ if nargin < 1
     else
         pk = 0;
     end
-    if (pk < 1) & (pk > 0)
+    if (pk < 1) && (pk > 0)
         extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
     end
 
@@ -187,12 +187,12 @@ end
 for i=1:size(P,1)
     spmT = deblank(P(i,:));
     Vspm = spm_vol(spmT);   
-    [pth,nm,xt,vr] = spm_fileparts(spmT);
+    [pth,nm] = spm_fileparts(spmT);
 
     SPM_name = fullfile(pth, 'SPM.mat');
     
     % SPM.mat exist?
-    if ~exist(SPM_name)
+    if ~exist(SPM_name,'file')
        error('SPM.mat not found')
     end
 
@@ -232,7 +232,7 @@ for i=1:size(P,1)
     otherwise  %-NB: no adjustment
     % p for conjunctions is p of the conjunction SPM
     %---------------------------------------------------------------
-       if (u0 <= 1) & (u0 > 0)
+       if (u0 <= 1) && (u0 > 0)
            u = spm_u(u0,df,STAT);
        else
            u = u0;
@@ -261,11 +261,11 @@ for i=1:size(P,1)
     %-----------------------------------------------------------------------
     if ~isempty(XYZ)
 
-        if (pk < 1) & (pk > 0)
+        if (pk < 1) && (pk > 0)
             if extent_FWE
                 Pk = 1;
                 k = 0;
-                while (Pk >= pk & k<S)
+                while (Pk >= pk && k<S)
                     k = k + 1;
                     [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
                 end
@@ -273,7 +273,7 @@ for i=1:size(P,1)
             else
                 Pn = 1;
                 k = 0;
-                while (Pn >= pk & k<S)
+                while (Pn >= pk && k<S)
                     k = k + 1;
                     [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
                 end
@@ -387,14 +387,14 @@ for i=1:size(P,1)
        str_num = deblank(xCon(Ic).name);
 
        % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
-       str_num(findstr(str_num,' ')) = '_';
-       strpos = findstr(str_num,' > ');
+       str_num(strfind(str_num,' ')) = '_';
+       strpos = strfind(str_num,' > ');
        if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
-       strpos = findstr(str_num,' < ');
+       strpos = strfind(str_num,' < ');
        if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
-       strpos = findstr(str_num,'>');
+       strpos = strfind(str_num,'>');
        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
-       strpos = findstr(str_num,'<');
+       strpos = strfind(str_num,'<');
        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
        str_num = spm_str_manip(str_num,'v');
     

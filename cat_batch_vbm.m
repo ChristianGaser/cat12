@@ -38,7 +38,9 @@ global defaults cat12 matlabbatch %#ok<NUSED>
 % always deselect print option
 cat12.extopts.print = 0;
 
-names = textread(namefile,'%s');
+fid = fopen(namefile,'r');
+names = textscan(fid,'%s');
+fclose(fid);
 n = length(names);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end %#ok<SPERR>

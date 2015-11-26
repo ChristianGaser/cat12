@@ -176,7 +176,7 @@ function count = cat_io_cprintf(style,format,varargin)
         case {'g7','gray7'},         style=[0.3 0.3 0.3];
         case {'g6','gray6'},         style=[0.3 0.4 0.4];
         case {'g5','gray5'},         style=[0.5 0.5 0.5];
-        otherwise                    style=[0 0 0];
+        otherwise,                   style=[0 0 0];
       end
     elseif isnumeric(style)
       if length(style)>3, style=double(style(1:3)); end

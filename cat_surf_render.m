@@ -932,8 +932,8 @@ curv = getappdata(H.patch,'curvature');
 
 if size(curv,2) == 1
     th = 0.15;
-    curv(find((curv<-th))) = -th;
-    curv(find((curv>th)))  =  th;
+    curv((curv<-th)) = -th;
+    curv((curv>th))  =  th;
     curv = 0.5*(curv + th)/(2*th);
     curv = 0.5 + repmat(curv,1,3);
 end
@@ -998,7 +998,7 @@ end
 
 clip = getappdata(H.patch, 'clip');
 if ~isempty(clip)
-    v(find(v>clip(2) & v<clip(3))) = NaN;
+    v(v>clip(2) & v<clip(3)) = NaN;
     setappdata(H.patch, 'clip', [true clip(2) clip(3)]);
 end
 
