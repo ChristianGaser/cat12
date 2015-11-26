@@ -115,8 +115,8 @@
     <label><index>167</index><short_name>lPosCinG</short_name><name>Left Posterior Cingulate Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>168</index><short_name>rPCu</short_name><name>Right Precuneus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>169</index><short_name>lPCu</short_name><name>Left Precuneus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>170</index><short_name>rParHipG</short_name><name>Right Parahippocampus Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>171</index><short_name>lParHipG</short_name><name>Left Parahippocampus Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>170</index><short_name>rParHipG</short_name><name>Right Parahippocampal Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>171</index><short_name>lParHipG</short_name><name>Left Parahippocampal Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>172</index><short_name>rPosIns</short_name><name>Right Posterior Insula</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>173</index><short_name>lPosIns</short_name><name>Left Posterior Insula</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>174</index><short_name>rParOpe</short_name><name>Right Parietal Operculum</name><RGBA></RGBA><XYZmm></XYZmm></label>

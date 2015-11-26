@@ -27,7 +27,7 @@
     <label><index>10</index><short_name>lCun</short_name><name>Left Cuneus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>11</index><short_name>lLinG</short_name><name>Left Lingual Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>12</index><short_name>lFusG</short_name><name>Left Fusiform Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>13</index><short_name>lParHipG</short_name><name>Left Parahippocampus Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>13</index><short_name>lParHipG</short_name><name>Left Parahippocampal Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>14</index><short_name>lSupOccG</short_name><name>Left Superior Occipital Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>15</index><short_name>bOccG</short_name><name>Bothside Occipital Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>16</index><short_name>bMidOccG</short_name><name>Bothside Middle Occipital Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
@@ -92,7 +92,7 @@
     <label><index>75</index><short_name>rCun</short_name><name>Right Cuneus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>76</index><short_name>rLinG</short_name><name>Right Lingual Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>77</index><short_name>rFusG</short_name><name>Right Fusiform Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>78</index><short_name>rParHipG</short_name><name>Right Parahippocampus Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>78</index><short_name>rParHipG</short_name><name>Right Parahippocampal Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>79</index><short_name>rSupOccG</short_name><name>Right Superior Occipital Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>80</index><short_name>rOccG</short_name><name>Right Occipital Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>81</index><short_name>rMidOccG</short_name><name>Right Middle Occipital Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
