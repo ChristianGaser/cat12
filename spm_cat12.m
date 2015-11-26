@@ -1,8 +1,25 @@
 function spm_cat12(varargin)
-% CAT12 Toolbox wrapper to call cat functions
-%_______________________________________________________________________
+% ______________________________________________________________________
+% CAT12 Toolbox wrapper to call CAT functions.
+% 
+%   spm_cat12 
+%     .. start with CAT default parameter file
+%   spm_cat12('gui')
+%     .. start with default file of another species (in development)
+%   spm_cat12(species) 
+%     .. start with default file of another species (in development)
+%        species = ['oldwoldmonkey'|'newwoldmonkey'|'greaterape'|'lesserape']
+%   spm_cat12('mypath/cat_defaults_mydefaults') 
+%     .. start CAT with another default parameter file
+% ______________________________________________________________________
 % Christian Gaser
 % $Id$
+
+% ______________________________________________________________________
+% Development:
+%   spm_cat12('mypath/cat_defaults_mydefaults',1) 
+%     .. restart SPM for GUI updates
+% ______________________________________________________________________
 
 rev = '$Rev$';
 
@@ -10,10 +27,13 @@ rev = '$Rev$';
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
 catdef = fullfile(catdir,'cat_defaults.m');
 if nargin==0
-  deffile = catdef;
+  deffile = catdef; 
+  restartspm = 1; 
 else 
   deffile = varargin{1}; 
+  restartspm = 0; 
 end
+
 
 % choose files
 switch lower(deffile) 
@@ -79,13 +99,13 @@ if 1 %nargin>0 %~strcmp(catdef,deffile)
   oldwkd = cd; 
   cd(deffile_pp);
   clearvars -global cat12; clear cat12;
-  eval('global cat12;'); 
   eval(deffile_ff);
+  eval('global cat12;'); 
   cd(oldwkd);
   
   % initialize SPM 
   eval('global defaults;'); 
-  if isempty(defaults)
+  if isempty(defaults) || (nargin==2 && varargin{2}==1) || restartspm
     clear defaults; 
     spm_jobman('initcfg');
   end

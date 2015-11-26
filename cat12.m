@@ -1,4 +1,20 @@
 function varargout = cat12(varargin)
+% ______________________________________________________________________
+% CAT12 Toolbox wrapper to call CAT functions.
+% 
+%   cat12 
+%     .. start with CAT default parameter file
+%   cat12('gui')
+%     .. start with default file of another species (in development)
+%   cat12(species) 
+%     .. start with default file of another species (in development)
+%        species = ['oldwoldmonkey'|'newwoldmonkey'|'greaterape'|'lesserape']
+%   cat12('mypath/cat_defaults_mydefaults') 
+%     .. start CAT with another default parameter file
+% ______________________________________________________________________
+% Christian Gaser
+% $Id$
+
 % CAT12 M-file for cat12.fig
 %      CAT12, by itself, creates a new CAT12 or raises the existing
 %      singleton*.
@@ -29,6 +45,9 @@ if nargin==0
   return;
 elseif nargin==1 && ~strcmp(varargin{1},'fig')
   spm_cat12(varargin{1});
+  return;
+elseif nargin==2 && ~strcmp(varargin{1},'fig')
+  spm_cat12(varargin{1},varargin{2});
   return;
 end
 
