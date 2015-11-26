@@ -10,7 +10,10 @@ if nargin < 1
 	exit
 end
 
-names = textread(namefile,'%s');
+fid = fopen(namefile,'r');
+names = textscan(fid,'%s');
+fclose(fid);
+
 n = length(names);
 
 if n == 0, error(sprintf('No file found in %s.\n',namefile)); end

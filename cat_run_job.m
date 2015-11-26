@@ -250,7 +250,7 @@ function cat_run_job(job,tpm,subj)
         if job.extopts.APP>0  
             stime = cat_io_cmd('APP1: rough bias correction'); 
             [Ym,Yt,Ybg,WMth] = APP_initial_bias_correction(single(obj.image.private.dat(:,:,:)),...
-                vx_vol,job.extopts.verb);;
+                vx_vol,job.extopts.verb);
             
             stime = cat_io_cmd('Coarse Affine registration','','',1,stime); 
             
@@ -319,7 +319,7 @@ function cat_run_job(job,tpm,subj)
        
             stime = cat_io_cmd(sprintf('APP%d: fine bias correction',job.extopts.APP),'','',1,stime); 
             [Ym,Yp0,Yb] = APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),...
-                Ym,Yb,Ybg,vx_vol,job.extopts.verb);;
+                Ym,Yb,Ybg,vx_vol,job.extopts.verb);
             stime = cat_io_cmd('Affine registration','','',1,stime); 
                                   
             %% msk T1 & TPM
@@ -354,7 +354,7 @@ function cat_run_job(job,tpm,subj)
         warning on
         if ~any(isnan(Affine1(1:3,:))), Affine = Affine1; end
         clear VG1 VF1
-      end
+    end
       if job.extopts.APP && dobiascorrection
           Ysrc = single(obj.image.private.dat(:,:,:)); 
           obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];

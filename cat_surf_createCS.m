@@ -59,7 +59,7 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     opt.CATDir = [opt.CATDir '.glnx86'];
   end  
 
-  [pp,ff,ee]   = spm_fileparts(V.fname);
+  [pp,ff]   = spm_fileparts(V.fname);
   % correction for 'n' prefix for noise corrected and/or interpolated files
   if ff(1)=='n'
     if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
@@ -92,7 +92,6 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Pgw        = fullfile(pp,sprintf('%s.gyruswidth.%s',opt.surf{si},ff));           % gyrus width
     Pgww       = fullfile(pp,sprintf('%s.gyruswidthWM.%s',opt.surf{si},ff));         % gyrus witdh of the WM 
     Psw        = fullfile(pp,sprintf('%s.sulcuswidth.%s',opt.surf{si},ff));          % sulcus width
-    Psd        = fullfile(pp,sprintf('%s.hulldist.%s',opt.surf{si},ff));             % sulcal depth
     Pdefects0  = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
     Pdefects   = fullfile(pp,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
     Psphere    = fullfile(pp,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
