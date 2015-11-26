@@ -342,10 +342,10 @@ function varargout = cat_tst_qa(action,varargin)
           
           % color for the differen mark cases (opt.process)
           for fni=1:numel(QMAfn)
-            qamat(fi,fni)  = QAS(fi).QM.(QMAfn{fni});
-            qamatm(fi,fni) = QAM(fi).QM.(QMAfn{fni});
+            qamat(fi,fni)  = QAS(fi).qualitymeasures.(QMAfn{fni});
+            qamatm(fi,fni) = QAM(fi).qualitymeasures.(QMAfn{fni});
           end
-          mqamatm(fi) = QAM(fi).QM.rms;
+          mqamatm(fi) = QAM(fi).qualitymeasures.rms;
           mqamatm(fi) = max(0,min(9.5, mqamatm(fi)));
           
           
@@ -354,12 +354,12 @@ function varargout = cat_tst_qa(action,varargin)
             if opt.orgval 
               cat_io_cprintf(opt.MarkColor(max(1,round( mqamatm(fi,:)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
-                QAS(fi).FD.fnames, ... spm_str_manip(QAS(fi).FD.file,['f' num2str(opt.snspace(1) - 14)]),...
+                QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
                 qamat(fi,:),max(1,min(6,mqamatm(fi)))));
             else
               cat_io_cprintf(opt.MarkColor(max(1,round( mqamatm(fi,:)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
-                QAS(fi).FD.fnames, ... spm_str_manip(QAS(fi).FD.file,['f' num2str(opt.snspace(1) - 14)]),...
+                QAS(fi).filedata.fnames, ... spm_str_manip(QAS(fi).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
                 qamatm(fi,:),max(1,min(6,mqamatm(fi)))));
             end
           end
@@ -379,10 +379,10 @@ function varargout = cat_tst_qa(action,varargin)
             end
 
             [pp,ff] = spm_fileparts(Po{fi});
-            QAS(fi).FD.fnames = [spm_str_manip(pp,sprintf('k%d',floor( (opt.snspace(1)-19) /3) - 1)),'/',...
+            QAS(fi).filedata.fnames = [spm_str_manip(pp,sprintf('k%d',floor( (opt.snspace(1)-19) /3) - 1)),'/',...
                                  spm_str_manip(ff,sprintf('k%d',(opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
             cat_io_cprintf(opt.MarkColor(end,:),sprintf(TlineE,fi,...
-               QAS(fi).FD.fnames,[em '\n']));
+               QAS(fi).filedata.fnames,[em '\n']));
 %            spm_str_manip(Po{fi},['f' num2str(opt.snspace(1) - 14)]),em));
           end
         end
@@ -407,16 +407,16 @@ function varargout = cat_tst_qa(action,varargin)
                 round( smqamatm(fi,:)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(...
                 Tline2,fi,sprintf('(%d)',smqamatmi(fi)),...
-                QAS(smqamatmi(fi)).FD.fnames, ...
-                ...spm_str_manip(QAS(smqamatmi(fi)).FD.file,['f' num2str(opt.snspace(1) - 14)]),...
+                QAS(smqamatmi(fi)).filedata.fnames, ...
+                ...spm_str_manip(QAS(smqamatmi(fi)).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
                 sqamat(fi,:),max(1,min(6,smqamatm(fi)))));
             else
               cat_io_cprintf(opt.MarkColor(min(size(opt.MarkColor,1),...
                 round( smqamatm(fi,:)/9.5 * ...
                 size(opt.MarkColor,1))),:),sprintf(...
                 Tline2,fi,sprintf('(%d)',smqamatmi(fi)),...
-                QAS(smqamatmi(fi)).FD.fnames, ...
-                ...spm_str_manip(QAS(smqamatmi(fi)).FD.file,['f' num2str(opt.snspace(1) - 14)]),...
+                QAS(smqamatmi(fi)).filedata.fnames, ...
+                ...spm_str_manip(QAS(smqamatmi(fi)).filedata.file,['f' num2str(opt.snspace(1) - 14)]),...
                 sqamatm(fi,:),smqamatm(fi)));
             end
           end
@@ -477,15 +477,16 @@ function varargout = cat_tst_qa(action,varargin)
   
       
     case 'cat12err'
+      
       % file information
       % ----------------------------------------------------------------
-      [pp,ff,ee] = spm_fileparts(opt.job.data{1});
-      [QAS.FD.path,QAS.FD.file] = spm_fileparts(opt.job.data{1});
-      QAS.FD.fname  = opt.job.data{1};
-      QAS.FD.F      = opt.job.data{1}; 
-      QAS.FD.Fm     = fullfile(pp,['m'  ff ee]);
-      QAS.FD.Fp0    = fullfile(pp,['p0' ff ee]);
-      QAS.FD.fnames = [spm_str_manip(pp,sprintf('k%d',...
+      [pp,ff,ee] = spm_fileparts(opt.job.channel.vols{opt.subj});
+      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
+      QAS.filedata.fname  = opt.job.data{1};
+      QAS.filedata.F      = opt.job.data{1}; 
+      QAS.filedata.Fm     = fullfile(pp,['m'  ff ee]);
+      QAS.filedata.Fp0    = fullfile(pp,['p0' ff ee]);
+      QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                        spm_str_manip(ff,sprintf('k%d',...
                          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
@@ -496,39 +497,43 @@ function varargout = cat_tst_qa(action,varargin)
       A = ver;
       for i=1:length(A)
         if strcmp(A(i).Name,'Statistical Parametric Mapping')
-          QAS.SW.version_spm    = A(i).Version; 
+          QAS.software.version_spm    = A(i).Version; 
         end
         if strcmp(A(i).Name,'MATLAB'),
-          QAS.SW.version_matlab = A(i).Version; 
+          QAS.software.version_matlab = A(i).Version; 
         end
       end
       clear A
-      QAS.SW.version_cat  = sprintf('%d',rev);
-      QAS.SW.function     = which('cat_vol_qa');
-      QAS.SW.markdefs     = which('cat_stat_marks');
-      QAS.SW.qamethod     = action; 
-      QAS.SW.date         = datestr(clock,'yyyymmdd-HHMMSS');
-      QAS.SW.cat_warnings = cat_warnings;
-      QAS.SW.job          = opt.job; 
-      QAS.SW.caterr       = opt.caterr; 
+      QAS.software.version_cat  = sprintf('%d',rev);
+      QAS.software.function     = which('cat_vol_qa');
+      QAS.software.markdefs     = which('cat_stat_marks');
+      QAS.software.qamethod     = action; 
+      QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      
+      %opt.job  = rmfield(opt.job,{'data','channel','output'}); 
+      %QAS.parameter             = opt.job; 
+      QAS.parameter.vbm         = rmfield(cat_get_defaults,'output');
+      QAS.parameter.caterr      = opt.caterr; 
+      QAS.error                 = opt.caterrtxt; 
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,[opt.prefix ff '.xml']),struct('QAS',QAS),'write+');
+        cat_io_xml(fullfile(pp,[opt.prefix ff '.xml']),QAS,'write');
       end
       
     case 'cat12'
     % estimation of the measures for the single case    
-       
+    
+    
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
-      [QAS.FD.path,QAS.FD.file] = spm_fileparts(Vo.fname);
-      QAS.FD.fname  = Vo.fname;
-      QAS.FD.F      = Vo.fname; 
-      QAS.FD.Fm     = fullfile(pp,['m'  ff ee]);
-      QAS.FD.Fp0    = fullfile(pp,['p0' ff ee]);
-      QAS.FD.fnames = [spm_str_manip(pp,sprintf('k%d',...
+      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
+      QAS.filedata.fname  = Vo.fname;
+      QAS.filedata.F      = Vo.fname; 
+      QAS.filedata.Fm     = fullfile(pp,['m'  ff ee]);
+      QAS.filedata.Fp0    = fullfile(pp,['p0' ff ee]);
+      QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                        spm_str_manip(ff,sprintf('k%d',...
                          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
@@ -539,54 +544,58 @@ function varargout = cat_tst_qa(action,varargin)
       A = ver;
       for i=1:length(A)
         if strcmp(A(i).Name,'Statistical Parametric Mapping')
-          QAS.SW.version_spm    = A(i).Version; 
+          QAS.software.version_spm    = A(i).Version; 
         end
         if strcmp(A(i).Name,'MATLAB'),
-          QAS.SW.version_matlab = A(i).Version; 
+          QAS.software.version_matlab = A(i).Version; 
         end
       end
       clear A
-      QAS.SW.version_cat  = sprintf('%d',rev);
-      QAS.SW.function     = which('cat_vol_qa');
-      QAS.SW.markdefs     = which('cat_stat_marks');
-      QAS.SW.qamethod     = action; 
-      QAS.SW.date         = datestr(clock,'yyyymmdd-HHMMSS');
-      QAS.SW.cat_warnings = cat_warnings;
-      QAS.SW.job          = opt.job; 
+      QAS.software.version_cat  = sprintf('%d',rev);
+      QAS.software.function     = which('cat_vol_qa');
+      QAS.software.markdefs     = which('cat_stat_marks');
+      QAS.software.qamethod     = action; 
+      QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      QAS.software.cat_warnings = cat_warnings;
+ 
+      % @Christian: Do we only want the cat parameter or is it important to have further information? 
+      %             I think cat defaults would be enought for the beginning.  
+      %             Furhter data will only be excess baggage for the cat*.xml file. 
+      %QAS.parameter.spm = spm_get_defaults;
+      QAS.parameter.vbm =  rmfield(cat_get_defaults,'output');
       if exist('res','var');
-        rf = {'Twarp','Tbias','image0','image','tpm'}; % field to remove in res structure report
+        rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
         for rfi=1:numel(rf)
-          if isfield(res,rf{rfi}), res=rmfield(res,rf{rfi}); end
+          if isfield(res,rf{rfi}), QAS.parameter.spm.(rf{rfi}) = res.(rf{rfi}); end
         end
-        QAS.SW.res = res; 
       end
 
      
       %% inti, volumina, resolution, boundary box
       %  ---------------------------------------------------------------
-      QAS.SW.cat_qa_warnings = struct('identifier',{},'message',{});
+      QAS.software.cat_qa_warnings = struct('identifier',{},'message',{});
       vx_vol = sqrt(sum(Vo.mat(1:3,1:3).^2));
       Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
       
       %  volumina 
-      QAS.SM.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
+      QAS.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
                             prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ... GM 
                             prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),3)), ... WM
                             prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),4))];  % WMH
-      QAS.SM.vol_TIV     =  sum(QAS.SM.vol_abs_CGW); 
-      QAS.SM.vol_rel_CGW =  QAS.SM.vol_abs_CGW ./ QAS.SM.vol_TIV;
+      QAS.subjectmeasures.vol_TIV     =  sum(QAS.subjectmeasures.vol_abs_CGW); 
+      QAS.subjectmeasures.vol_rel_CGW =  QAS.subjectmeasures.vol_abs_CGW ./ QAS.subjectmeasures.vol_TIV;
       
       %  resolution 
-      QAS.QM.res_vx_vol    = vx_vol;
-      QAS.QM.res_isotropy  = max(vx_vol)./min(vx_vol);
-      QAS.QM.res_vol       = prod(abs(vx_vol));
-      QAS.QM.res_RMS       = mean(vx_vol.^2).^0.5;
-      QAS.QM.res_MVR       = mean(vx_vol);
+      QAS.qualitymeasures.res_vx_vol    = vx_vol;
+      %QAS.qualitymeasures.res_isotropy  = max(vx_vol)./min(vx_vol);
+      %QAS.qualitymeasures.res_vol       = prod(abs(vx_vol));
+      QAS.qualitymeasures.res_RMS       = mean(vx_vol.^2).^0.5;
+      %QAS.qualitymeasures.res_MVR       = mean(vx_vol);
       
       % boundary box - brain tissue next to image boundary
       bbth = round(2/mean(vx_vol)); M = true(size(Yp0));
       M(bbth:end-bbth,bbth:end-bbth,bbth:end-bbth) = 0;
-      QAS.QM.res_BB = sum(Yp0(:)>1.25 & M(:))*QAS.QM.res_vol; 
+      QAS.qualitymeasures.res_BB = sum(Yp0(:)>1.25 & M(:))*prod(abs(vx_vol)); 
 
       % check segmentation
       spec = species; for ai=num2str(0:9); spec = strrep(spec,ai,''); end; 
@@ -625,7 +634,7 @@ function varargout = cat_tst_qa(action,varargin)
             
       % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
       voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
-      rad  = voli( QAS.SM.vol_TIV) ./ mean(vx_vol);
+      rad  = voli( QAS.subjectmeasures.vol_TIV) ./ mean(vx_vol);
       Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Yo==0,min(24,max(16,rad*2)));   % fast 'distance' map
       Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<mean(T1th(1:2)),'e') & ...
               Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
@@ -716,30 +725,30 @@ function varargout = cat_tst_qa(action,varargin)
       BGth  = cat_stat_nanmedian(Ymi(Ybg(:)));   
  
       % (relative) average tissue intensity of each class
-      QAS.QM.tissue_mn  = ([BGth CSFth GMth WMth]);
-      QAS.QM.tissue_mnr = QAS.QM.tissue_mn ./ (max([WMth,GMth])); 
+      QAS.qualitymeasures.tissue_mn  = ([BGth CSFth GMth WMth]);
+      QAS.qualitymeasures.tissue_mnr = QAS.qualitymeasures.tissue_mn ./ (max([WMth,GMth])); 
       if WMth>GMth
-        QAS.QM.tissue_weighting = 'T1';
+        QAS.qualitymeasures.tissue_weighting = 'T1';
       elseif WMth<GMth && GMth<CSFth
-        QAS.QM.tissue_weighting = 'inverse';
+        QAS.qualitymeasures.tissue_weighting = 'inverse';
       end
       
       % (relative) standard deviation of each class
-      QAS.QM.tissue_std(1) = cat_stat_nanstd( Ymi(Ybg(:)) );
+      QAS.qualitymeasures.tissue_std(1) = cat_stat_nanstd( Ymi(Ybg(:)) );
       for ci=2:4
-        QAS.QM.tissue_std(ci) = cat_stat_nanstd(Ymi(Yp0toC(Yp0(:),ci-1)>0.5 & ~isinf(Yp0(:))));
+        QAS.qualitymeasures.tissue_std(ci) = cat_stat_nanstd(Ymi(Yp0toC(Yp0(:),ci-1)>0.5 & ~isinf(Yp0(:))));
       end
-      QAS.QM.tissue_stdr = QAS.QM.tissue_std ./ (WMth-BGth);
+      QAS.qualitymeasures.tissue_stdr = QAS.qualitymeasures.tissue_std ./ (WMth-BGth);
        
       % (relative) (mininum) tissue contrast ( CSF-GM-WM ) 
       % - the CSF threshold varies strongly due to bad segmentations,
       %   and anatomica variance, so its better to use GM-WM contrast 
       %   and take care of overoptimisation with values strongly >1/3
       %   of the relative contrast
-      contrast = min(abs(diff(QAS.QM.tissue_mn(3:4)))) ./ (max([WMth,GMth])); % default contrast
+      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ (max([WMth,GMth])); % default contrast
       contrast = contrast + min(0,13/36 - contrast)*1.2;                      % avoid overoptimsization
-      QAS.QM.contrast  = contrast * (max([WMth,GMth])); 
-      QAS.QM.contrastr = contrast;
+      %QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
+      %QAS.qualitymeasures.contrastr = contrast;
 
       
       
@@ -749,7 +758,7 @@ function varargout = cat_tst_qa(action,varargin)
       NCww = sum(Ywn(:)>0) * prod(vx_vol);
       NCwc = sum(Ycn(:)>0) * prod(vx_vol);
       [Yos2,YM2] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,3,16,'meanm');
-      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth) / QAS.QM.contrastr  ; 
+      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth) / contrast  ; 
       if BGth<-0.1 && WMth<3, NCRw=NCRw/3; end% MT weighting
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
         
@@ -758,7 +767,7 @@ function varargout = cat_tst_qa(action,varargin)
       wcth = 200; 
       if CSFth<GMth && NCwc>wcth
         [Yos2,YM2] = cat_vol_resize({Ycn,Ycn>0},'reduceV',vx_vol,3,16,'meanm');
-        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth)  / QAS.QM.contrastr ; 
+        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth)  / contrast ; 
         clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else
         NCRc = 0;
@@ -769,17 +778,17 @@ function varargout = cat_tst_qa(action,varargin)
       % Nitz W R. Praxiskurs MRT. Page 28.
       NCwc = min(wcth,max(0,NCwc-wcth)); NCww = min(wcth,NCww) - NCwc; % use CSF if possible
       if NCwc<3*wcth && NCww<10*wcth, NCRc = min(NCRc,NCRw); end
-      QAS.QM.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
-      QAS.QM.NCR = QAS.QM.NCR * (prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
-      QAS.QM.CNR = 1 / QAS.QM.NCR;  
+      QAS.qualitymeasures.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
+      QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * (prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
+      %QAS.qualitymeasures.CNR = 1 / QAS.qualitymeasures.NCR;  
 %fprintf('NCRw: %8.3f, NCRc: %8.3f, NCRf: %8.3f\n',NCRw,NCRc,(NCRw*NCww + NCRc*NCwc)/(NCww+NCwc));
 
       
       %% Bias/Inhomogeneity (original image with smoothed WM segment)
       Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm');      % resolution and noise reduction
-      for si=1:max(1,min(3,round(QAS.QM.NCR*4))), Yosm = cat_vol_localstat(Yosm,Yosm>0,1,1); end 
-      QAS.QM.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / QAS.QM.contrast;
-      QAS.QM.CIR  = 1 / QAS.QM.ICR;
+      for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), Yosm = cat_vol_localstat(Yosm,Yosm>0,1,1); end 
+      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / contrast;
+      %QAS.qualitymeasures.CIR  = 1 / QAS.qualitymeasures.ICR;
 
       
   
@@ -788,7 +797,10 @@ function varargout = cat_tst_qa(action,varargin)
 
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,[opt.prefix ff '.xml']),struct('QAS',QAS,'QAM',QAM),'write+');
+        QAS.qualityratings = QAM.qualitymeasures;
+       % QAS.subjectratings = QAM.subjectmeasures;
+        
+        cat_io_xml(fullfile(pp,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
 
       clear Yi Ym Yo Yos Ybc

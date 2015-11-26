@@ -56,60 +56,58 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 % 'measure'  'fieldname'       'linear'      [best worst]     'use for most qa measures
 % 'measure'  'fieldname'       'normal'      [mean std]       'use for most subject measures
 % -- software data -----------------------------------------------------
-   'SW'  'matlab'                ''          []               'MATLAB version'
-   'SW'  'spm'                   ''          []               'SPM version'
-   'SW'  'cat'                   ''          []               'CAT version'
-   'SW'  'qamethod'              ''          []               'CAT QA method'
-   'SW'  'date'                  ''          []               'calculation date'
+   'software'  'matlab'                ''          []               'MATLAB version'
+   'software'  'spm'                   ''          []               'SPM version'
+   'software'  'cat'                   ''          []               'CAT version'
+   'software'  'qamethod'              ''          []               'CAT QA method'
+   'software'  'date'                  ''          []               'calculation date'
 % -- file data ---------------------------------------------------------
-   'FD'  'fname'                 ''          []               'path and filename'
-   'FD'  'path'                  ''          []               'path'
-   'FD'  'file'                  ''          []               'filename'
-  %'FD'  'size'                  ''          []               'filesize'
-  %'FD'  'dtype'                 ''          []               'datatype'
-   'FD'  'F'                     ''          []               'original filename used for QA'
-   'FD'  'Fm'                    ''          []               'modified filename used for QA'
-   'FD'  'Fp0'                   ''          []               'segmentmap filename used for QA'
+   'filedata'  'fname'                 ''          []               'path and filename'
+   'filedata'  'path'                  ''          []               'path'
+   'filedata'  'file'                  ''          []               'filename'
+   'filedata'  'F'                     ''          []               'original filename used for QA'
+   'filedata'  'Fm'                    ''          []               'modified filename used for QA'
+   'filedata'  'Fp0'                   ''          []               'segmentmap filename used for QA'
 % -- image quality measures on the original image ----------------------
   % - resolution - 
-   'QM'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
-   'QM'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
-   'QM'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
-   'QM'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
-   'QM'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
-   'QM'  'res_BB'                'linear'    [   200    500]  'brain next to the image boundary'
+   'qualitymeasures'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
+   'qualitymeasures'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
+  %'qualitymeasures'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
+  %'qualitymeasures'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
+  %'qualitymeasures'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
+   'qualitymeasures'  'res_BB'                'linear'    [   200    500]  'brain next to the image boundary'
   % - tissue mean and varianz - 
-   'QM'  'tissue_mn'             'normal'    def.tissue       'mean within the tissue classes'
-   'QM'  'tissue_std'            'normal'    [  0.10   0.20]  'std within the tissue classes'
+   'qualitymeasures'  'tissue_mn'             'normal'    def.tissue       'mean within the tissue classes'
+   'qualitymeasures'  'tissue_std'            'normal'    [  0.10   0.20]  'std within the tissue classes'
   % - contrast - 
-   'QM'  'contrast'              'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe' % das geht nicht
-   'QM'  'contrastr'             'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe'
+   'qualitymeasures'  'contrast'              'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe' % das geht nicht
+   'qualitymeasures'  'contrastr'             'linear'    [  CM(1)   CM(2)]  'contrast between tissue classe'
   % - noise & contrast -
-   'QM'  'NCR'                   'linear'    [  NM(1)   NM(2)]  'noise to contrast ratio' 
-   'QM'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
+   'qualitymeasures'  'NCR'                   'linear'    [  NM(1)   NM(2)]  'noise to contrast ratio' 
+  %'qualitymeasures'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'QM'  'ICR'                   'linear'    [  BM(1)   BM(2)]  'inhomogeneity to contrast ratio' 
-   'QM'  'CIR'                   'linear'    [1/BM(1) 1/BM(2)]  'contrast to inhomogeneity ratio'
+   'qualitymeasures'  'ICR'                   'linear'    [  BM(1)   BM(2)]  'inhomogeneity to contrast ratio' 
+  %'qualitymeasures'  'CIR'                   'linear'    [1/BM(1) 1/BM(2)]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
-   'QM'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
-   'QM'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
-   'QM'  'MJD'                   'linear'    [  0.05   0.15]  'mean jacobian determinant'
-   'QM'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
+  %'qualitymeasures'  'CJV'                   'linear'    [  0.12   0.18]  'coefficiant of variation - avg. std in GM and WM'
+  %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - diff. betw. opt. T1 and p0'
+  %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean jacobian determinant'
+  %'qualitymeasures'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
 % -- subject-related data from the preprocessing -----------------------
   % - volumetric measures - 
-   'SM'  'vol_TIV'               'normal'    [  1400    400]  'total intracranial volume (GM+WM+VT)'
-   'SM'  'vol_CHvsGW'            'linear'    def.CHvsCG       'relation between brain and non brain'
-   'SM'  'vol_rel_CGW'           'linear'    def.tisvolr      'relative tissue volume (CSF,GM,WM)'
-   'SM'  'vol_rel_BG'            'linear'    [  0.05   0.05]  'relative tissue volume of basal structures'
-   'SM'  'vol_rel_VT'            'linear'    [  0.05   0.05]  'relative tissue volume of the ventricle'
-   'SM'  'vol_rel_BV'            'linear'    [  0.00   0.05]  'relative blood vessel volume'
-   'SM'  'vol_rel_WMH'           'linear'    [  0.00   0.05]  'relative WMH volume'
+   'subjectmeasures'  'vol_TIV'               'normal'    [  1400    400]  'total intracranial volume (GM+WM+VT)'
+   'subjectmeasures'  'vol_CHvsGW'            'linear'    def.CHvsCG       'relation between brain and non brain'
+   'subjectmeasures'  'vol_rel_CGW'           'linear'    def.tisvolr      'relative tissue volume (CSF,GM,WM)'
+   'subjectmeasures'  'vol_rel_BG'            'linear'    [  0.05   0.05]  'relative tissue volume of basal structures'
+   'subjectmeasures'  'vol_rel_VT'            'linear'    [  0.05   0.05]  'relative tissue volume of the ventricle'
+   'subjectmeasures'  'vol_rel_BV'            'linear'    [  0.00   0.05]  'relative blood vessel volume'
+   'subjectmeasures'  'vol_rel_WMH'           'linear'    [  0.00   0.05]  'relative WMH volume'
   % - distance / thickness measures - 
-   'SM'  'dist_thickness'        'normal'    def.thickness    'absolut GM thickness'
-   'SM'  'dist_WMdepth'          'normal'    def.WMdepth      'absolut WM depth'
-   'SM'  'dist_CSFdepth'         'normal'    def.CSFdepth     'absolut CSF depth'
-   'SM'  'dist_abs_depth'        'normal'    [  5.00   2.00]  'absolut  sulcal depth'
-   'SM'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
+   'subjectmeasures'  'dist_thickness'        'normal'    def.thickness    'absolut GM thickness'
+   'subjectmeasures'  'dist_WMdepth'          'normal'    def.WMdepth      'absolut WM depth'
+   'subjectmeasures'  'dist_CSFdepth'         'normal'    def.CSFdepth     'absolut CSF depth'
+   'subjectmeasures'  'dist_abs_depth'        'normal'    [  5.00   2.00]  'absolut  sulcal depth'
+   'subjectmeasures'  'dist_rel_depth'        'normal'    [  0.50   0.20]  'relative sulcal depth'
   % - area measures -
   };
   if nargin>3 && isstruct(varargin{2}), def = cat_io_checkinopt(varargin{2},def); end
@@ -220,11 +218,11 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       MPCpos = find(cellfun('isempty',strfind(def.QS(:,2),'MPC'))==0);
 % 
 %       % average
-%       BWP.NCRm = evallinear(QA.QM.NCR    ,0.05,0.35,6);
-%       BWP.MVRm = evallinear(QA.QM.res_RMS,0.50,3.00,6);    
+%       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
+%       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      QAM.QM.rms = rms([QAM.QM.NCR QAM.QM.res_RMS],8);
-      QAM.SM.rms = rms([QAM.SM.vol_rel_CGW],8);
+      QAM.qualitymeasures.IQR = rms([QAM.qualitymeasures.NCR QAM.qualitymeasures.res_RMS],8);
+      QAM.subjectmeasures.SQR = rms([QAM.subjectmeasures.vol_rel_CGW],8);
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur

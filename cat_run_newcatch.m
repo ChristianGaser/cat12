@@ -49,7 +49,8 @@ function cat_run_newcatch(job,tpm,subj)
       caterrstruct(si).name = caterr.stack(si).name;  
       caterrstruct(si).file = caterr.stack(si).file;  
     end
-    cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
+    
+    cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
     
     % rethrow error 
     if ~cat_get_defaults('extopts.ignoreErrors')

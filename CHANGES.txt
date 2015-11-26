@@ -7589,6 +7589,7 @@ Used code analyzer to remove many unused variables and corrected code
 according to suggestions.
 
 ------------------------------------------------------------------------
+r786 | gaser | 2015-11-26 14:38:40 +0100 (Do, 26 Nov 2015) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7604,5 +7605,27 @@ M       templates_1.50mm/mori.xml
 M       templates_1.50mm/neuromorphometrics.xml
 
 Changed default modulation and updated help and html text accordingly.
+
 ------------------------------------------------------------------------
-r786 | gaser | 2015-11-26 14:38:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_newcatch.m
+M       cat_stat_marks.m
+M       cat_tst_qa.m
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+M       templates_animals/cat_defaults_ape_greater.m
+M       templates_animals/cat_defaults_ape_lesser.m
+M       templates_animals/cat_defaults_monkey_newworld.m
+M       templates_animals/cat_defaults_monkey_oldworld.m
+
+(1)  Fixed:   XML output in error case.
+(2)  Changed: Renamed of XML structure and removed unnecessary variables.
+(3)  Changed: Update parameter in primate cat_defaults. 
+
+------------------------------------------------------------------------
+r787 | dahnke | 2015-11-26 16:15:10

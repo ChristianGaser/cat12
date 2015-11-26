@@ -29,13 +29,13 @@ global cat12
 
 % Options for inital SPM12 segmentation that is used as starting point for CAT12
 %=======================================================================
-cat12.opts.tpm       = {fullfile(spm('dir'),'toolbox','vbm12','templates_animals','ape_greater_TPM.nii')};
+cat12.opts.tpm       = {fullfile(spm('dir'),'toolbox','cat12','templates_animals','ape_greater_TPM.nii')};
 cat12.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
 cat12.opts.affreg    = 'none';                  % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
 cat12.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
 cat12.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
 cat12.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
-cat12.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
+cat12.opts.samp      = 2;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
 
                                               
 % Writing options

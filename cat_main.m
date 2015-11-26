@@ -1164,9 +1164,9 @@ if do_cls && do_defs
   
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = NS(Yl1,23);
-  qa.SM.WMH_abs    = 100*sum(Ywmhrel(:));                       % absolute WMH volume without PVE
-  qa.SM.WMH_rel    = qa.SM.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
-  qa.SM.WMH_WM_rel = qa.SM.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = 100*sum(Ywmhrel(:));                       % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
   clear Ywmhrel Yp0
 
   Yp0b = cat_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
@@ -1245,19 +1245,19 @@ if do_cls && do_defs
       Yp0b = cat_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
       Yp0b = Yp0b(indx,indy,indz); 
     else
-      if qa.SM.WMH_rel>3 || qa.SM.WMH_WM_rel>5 % #% of the TIV or the WM are affected
+      if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
         cat_warnings = cat_io_addwarning(cat_warnings,...
           'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-          sprintf('Uncorrected WM hyperintensities (%2.2f%%%%%%%% of the WM)!',qa.SM.WMH_WM_rel),1);
+          sprintf('Uncorrected WM hyperintensities (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_WM_rel),1);
         fprintf('\n'); cat_io_cmd(' ','','',1);
       end
     end
     fprintf('%4.0fs\n',etime(clock,stime));
   else
-    if qa.SM.WMH_rel>3 || qa.SM.WMH_WM_rel>5 % #% of the TIV or the WM are affected
+    if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       cat_warnings = cat_io_addwarning(cat_warnings,...
         'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-        sprintf('Uncorrected WM hyperintensities greater (%2.2f%%%% of the WM)!\\n',qa.SM.WMH_rel));
+        sprintf('Uncorrected WM hyperintensities greater (%2.2f%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
     end
   end
   clear Yclsb;
@@ -1306,7 +1306,7 @@ VF.dat(indx,indy,indz) = Yp0b;
 % VG.dat = uint8(VG.dat>85)*255; VF.dat = uint8(VF.dat>85)*255;
 
 % smooth source with job.cat.samp mm
-VF = spm_smoothto8bit(VF,job.cat.samp*2); % *2, because of the TPM smoothness!
+VF = spm_smoothto8bit(VF,job.cat.samp/2); % smoothing, because of the TPM smoothness!
 
 %% affreg registration for one tissue segment
 Affine = spm_affreg(VG, VF, aflags, res.Affine); 
@@ -1924,31 +1924,24 @@ Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3;
 qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.cat.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job));
 if job.output.surface
-  qa.SM.dist_thickness{1} = dist_thickness{1};
-  qa.SM.dist_WMdepth{1}   = dist_thickness{2};
-  qa.SM.dist_CSFdepth{1}  = dist_thickness{3};
+  qa.subjectmeasures.dist_thickness{1} = dist_thickness{1};
+  qa.subjectmeasures.dist_WMdepth{1}   = dist_thickness{2};
+  qa.subjectmeasures.dist_CSFdepth{1}  = dist_thickness{3};
+  
+  qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
+ 
+cat_io_xml(fullfile(pth,['cat_' nam '.xml']),struct(...
+  ... 'subjectratings',QAM.subjectmeasures, ... not ready
+  'qualityratings',qam.qualitymeasures),'write+'); % here we have to use the write+!
+
+
 end  
 clear Yo Ybf Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));
 
 
 
-
-
-%% ---------------------------------------------------------------------
-%  evaluate measurements and write XML
-%  ---------------------------------------------------------------------
-qam = cat_stat_marks('eval',opt.cati,qa,'cat12');
- 
-cat_io_xml(fullfile(pth,['cat_' nam '.xml']),...
-  struct('qa',qa,'qam',qam),'write+');
-
-
-
-
-
-%  ---------------------------------------------------------------------
-%  display and print result if possible
+%% display and print result if possible
 %  ---------------------------------------------------------------------
 QMC   = cat_io_colormaps('marks+',17);
 color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -1966,7 +1959,7 @@ if cat12.print
   SpaNormMeth = {'None','Dartel','Shooting'}; 
 	str = [];
 	str = [str struct('name', 'Versions Matlab / SPM12 / CAT12:','value',...
-    sprintf('%s / %s / %s',qa.SW.version_matlab,qa.SW.version_spm,qa.SW.version_cat))];
+    sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
 	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(cat12.darteltpm,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
@@ -1989,7 +1982,7 @@ if cat12.print
   str = [str struct('name', 'NCstr / LASstr / GCUTstr / CLEANUPstr:','value',...
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
-%  str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',cat12.vox))]; % does not work yet 
+% str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',cat12.vox))]; % does not work yet 
 % intern interpolation?
 % pbt resolution
 
@@ -1998,49 +1991,34 @@ if cat12.print
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name', ' Voxel resolution:','value',sprintf('%sx%sx%s mm%s', ...
-                sprintf('%4.2f',qa.QM.res_vx_vol(1)),...
-                sprintf('%4.2f',qa.QM.res_vx_vol(2)),...
-                sprintf('%4.2f',qa.QM.res_vx_vol(3)),char(179)))];
-  str2 = [str2 struct('name', ' Voxel volume:','value', ...
-               sprintf('%5.2f mm%s',qa.QM.res_vol,char(179)))];
-  str2 = [str2 struct('name',' Resolution:','value',marks2str(qam.QM.res_RMS,sprintf('%5.2f',qam.QM.res_RMS)))];
-  str2 = [str2 struct('name',' Noise:','value',marks2str(qam.QM.NCR,sprintf('%5.2f',qam.QM.NCR)))];
-  str2 = [str2 struct('name',' Bias:','value',marks2str(qam.QM.ICR,sprintf('%5.2f',qam.QM.ICR)))];
-  str2 = [str2 struct('name','\bf Weighted average:','value',marks2str(qam.QM.rms,sprintf('%5.2f',qam.QM.rms)))];
+                sprintf('%4.2f',qa.qualitymeasures.res_vx_vol(1)),...
+                sprintf('%4.2f',qa.qualitymeasures.res_vx_vol(2)),...
+                sprintf('%4.2f',qa.qualitymeasures.res_vx_vol(3)),char(179)))];
+  str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,sprintf('%5.2f',qa.qualityratings.res_RMS)))];
+  str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,sprintf('%5.2f',qa.qualityratings.NCR)))];
+  %str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,sprintf('%5.2f',qa.qualityratings.ICR)))]; % not important and more confussing 
+  str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,sprintf('%5.2f',qa.qualityratings.IQR)))];
 
       
   % Subject Measures
   % --------------------------------------------------------------------
-  str3 = struct('name', '\bfVolumes:','value',sprintf('%4s %4s %4s %4s%s','CSF','GM','WM','WMH')); 
-  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%4.0f %4.0f %4.0f %4.0f cm%s', ...
-          qa.SM.vol_abs_CGW(1),qa.SM.vol_abs_CGW(2),qa.SM.vol_abs_CGW(3),qa.SM.vol_abs_CGW(4),char(179)))];
-  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%4.1f %4.1f %4.1f %4.1f %%', ...
-          qa.SM.vol_rel_CGW(1)*100,qa.SM.vol_rel_CGW(2)*100,qa.SM.vol_rel_CGW(3)*100,qa.SM.vol_rel_CGW(4)*100))];
-%  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%s %s %s %s cm%s', ...
-%          mark2str2(qam.SM.vol_rel_CGW(1),'%4.0f',qa.SM.vol_abs_CGW(1)),...
-%          mark2str2(qam.SM.vol_rel_CGW(2),'%4.0f',qa.SM.vol_abs_CGW(2)),...
-%          mark2str2(qam.SM.vol_rel_CGW(3),'%4.0f',qa.SM.vol_abs_CGW(3)),...
-%          mark2str2(qam.SM.vol_rel_CGW(4),'%4.0f',qa.SM.vol_abs_CGW(4)),char(179)))];
-%  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%s %s %s %s %%', ...
-%          mark2str2(qam.SM.vol_rel_CGW(1),'%0.1f',qa.SM.vol_rel_CGW(1)*100),...
-%          mark2str2(qam.SM.vol_rel_CGW(2),'%0.1f',qa.SM.vol_rel_CGW(2)*100),...
-%          mark2str2(qam.SM.vol_rel_CGW(3),'%0.1f',qa.SM.vol_rel_CGW(3)*100),...
-%          mark2str2(qam.SM.vol_rel_CGW(4),'%0.1f',qa.SM.vol_rel_CGW(4)*100)))];
-%  str3 = [str3 struct('name', '\bfTotal brain volume including CSF:'              ,'value',...
-%          sprintf('%s',mark2str2(qam.SM.vol_TIV,['%0.0f cm' char(179)],qa.SM.vol_TIV)))];  
-  if opt.cati      
-    str3 = [str3 struct('name', ' Tissue Exp. Map:'  ,'value', ...  
-            sprintf('%s',marks2str(qam.QM.cat_expect(1),sprintf('%0.1f (%2.0f %%)',...
-            qam.QM.cat_expect(1),qa.QM.cat_expect(1)*100))))]; 
+  
+  % Volume measures
+  str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
+  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f %5.0f cm%s', ...
+          qa.subjectmeasures.vol_abs_CGW(1),qa.subjectmeasures.vol_abs_CGW(2),qa.subjectmeasures.vol_abs_CGW(3),qa.subjectmeasures.vol_abs_CGW(4),char(179)))];
+  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
+          qa.subjectmeasures.vol_rel_CGW(1)*100,qa.subjectmeasures.vol_rel_CGW(2)*100,qa.subjectmeasures.vol_rel_CGW(3)*100,qa.subjectmeasures.vol_rel_CGW(4)*100))];
+  str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
+  
+  % Surface measures - Thickness, (Curvature, Depth, ...)
+  if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
+    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
+           qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
   end
-  if isfield(qa.SM,'dist_thickness') && ~isempty(qa.SM.dist_thickness)
-%    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%s%s%s mm', ...
-%          mark2str2(qam.SM.dist_thickness{1}(1),'%0.2f',qa.SM.dist_thickness{1}(1)),177, ...
-%          mark2str2(qam.SM.dist_thickness{1}(2),'%0.2f',qa.SM.dist_thickness{1}(2))))];
-    str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%4.2f%s%4.2f mm', ...
-           qa.SM.dist_thickness{1}(1),177,qa.SM.dist_thickness{1}(2)))];
-  end
-  if numel(cat_warnings)>0
+  
+  % Warnings
+  if numel(cat_warnings)>0 && cat_get_defaults('extopts.expertgui')>0
     str3 = [str3 struct('name', '','value','')]; 
     str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
     for wi=1:numel(cat_warnings)
@@ -2057,7 +2035,9 @@ if cat12.print
       str3    = [str3 struct('name',shorter,'value','')];  %#ok<AGROW>
     end
   end
-  str4 = struct('name',sprintf('Marks/Colors: %s, %s, %s, %s, %s, %s',...
+  
+  % Rating scala
+  str4 = struct('name',sprintf('Ratingcolors: %s, %s, %s, %s, %s, %s',...
         mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
         mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
         mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
@@ -2075,7 +2055,7 @@ if cat12.print
   for si=1:numel(str4)
     str4(si).name  = [str4(si).name '  '];  str4(si).value = [str4(si).value '  '];
   end    
- %%
+ 
   try %#ok<TRYNC>
     
     
@@ -2145,29 +2125,23 @@ if cat12.print
 	  spm_orthviews('Reset');
 
     % BB box is not optimal for all images...
-    % furthermore repositioning the cross to the BG is maybe usefull...
-    %global st
-    %fig     = spm_figure('FindWin','Graphics');
-    %st      = struct('n', 0, 'vols',[], 'bb',[],'Space',eye(4),'centre',[0 0 0],'callback',';',...
-    %            'xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
-    %st.vols = cell(24,1);
-    bb = cat12.bb;
-    spm_orthviews('BB', bb / mean(vx_vol) ); % spm_orthviews('BB',bb);
+    scale = spm_imatrix(res.Affine); scale = scale(7:9);
+    spm_orthviews('BB', round(cat12.bb ./ [scale;scale])); % mean(scale)
     
     % Yo - original image in original space
     hho = spm_orthviews('Image',VT0,pos(1,:)); 
-    spm_orthviews('Caption',hho,{'*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 mean(res.mn(res.lkp==2 & res.mg'>0.1))*cmmax]); caxis([0,2]);
     cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
     
-    % Ym - normalized image in original space
+    %% Ym - normalized image in original space
     Vm        = spm_vol(VT.fname);
     Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
     Vm.dat(:,:,:) = single(Ym); 
     Vm.pinfo = repmat([1;0],1,size(Ym,3));
     hhm = spm_orthviews('Image',Vm,pos(2,:));
-    spm_orthviews('Caption',hhm,{'m*.nii (native)'},'FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
     cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
@@ -2179,7 +2153,7 @@ if cat12.print
     VO.dat(:,:,:) = single(Yp0/3); 
     VO.pinfo = repmat([1;0],1,size(Yp0,3));
     hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
-    spm_orthviews('Caption',hhp0,'p0*.nii (native)','FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
     cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
@@ -2197,6 +2171,8 @@ if cat12.print
       view(3), camlight, lighting gouraud, axis equal off;  caxis([0,10])
     end
 
+  catch
+    cat_io_cprintf('warn','Unspecific print report error.\n');
   end
 
   
@@ -2240,8 +2216,7 @@ end
 fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  cat_io_cprintf(color(QMC,qam.QM.rms), sprintf('Overall Preprocessing Quality:  %0.1f\n',qam.QM.rms));
-  %cat_io_cprintf(color(QMC,qam.SM.rms), sprintf('\nOverall Subject Averageness:    %0.1f\n',qam.SM.rms));
+  cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %0.1f\n',qa.qualityratings.IQR));
   fprintf('%s\n\n',repmat('-',1,72));
  
 clear C c Ym Ymf
