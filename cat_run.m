@@ -32,17 +32,7 @@ function varargout = cat_run(job,arg)
 
   
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
-  % @Christian: usefull to limit this?
-  try
-    numcores = max(feature('numcores'),1);
-  catch %#ok<CTCH>
-    numcores = 1;
-  end
-  if isfield(job,'nproc') && job.nproc>numcores*2, 
-    error('To many jobs for the number of processors (%d processors detected). \n',numcores); 
-  end
-
+if job.nproc>0 && (~isfield(job,'process_index'))
   
   cat_io_cprintf('warn',...
     ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
@@ -254,7 +244,7 @@ function vout = run_job(job)
 
   colormap(gray)
   
-  if isfield(job,'nproc') && job.nproc>0 
+  if job.nproc>0 
     fprintf('\n%s',repmat('_',1,72));
     fprintf('\nFinish this CAT12 Segmentation job.''\n');
   end
