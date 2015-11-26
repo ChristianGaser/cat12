@@ -7558,6 +7558,7 @@ M       tbx_cfg_cat.m
 (2) Updated multi-threading slightly.
 
 ------------------------------------------------------------------------
+r785 | gaser | 2015-11-26 10:14:24 +0100 (Do, 26 Nov 2015) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7586,5 +7587,22 @@ M       html/cat.html
 
 Used code analyzer to remove many unused variables and corrected code
 according to suggestions.
+
 ------------------------------------------------------------------------
-r785 | gaser | 2015-11-26 10:14:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_stat_check_cov.m
+M       html/cat_starting.html
+M       tbx_cfg_cat.m
+M       templates_1.50mm/hammers.xml
+A       templates_1.50mm/lpba40.nii
+A       templates_1.50mm/lpba40.txt
+A       templates_1.50mm/lpba40.xml
+M       templates_1.50mm/mori.xml
+M       templates_1.50mm/neuromorphometrics.xml
+
+Changed default modulation and updated help and html text accordingly.
+------------------------------------------------------------------------
+r786 | gaser | 2015-11-26 14:38:38
