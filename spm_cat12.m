@@ -28,10 +28,10 @@ catdir = fullfile(spm('dir'),'toolbox','cat12');
 catdef = fullfile(catdir,'cat_defaults.m');
 if nargin==0
   deffile = catdef; 
-  restartspm = 1; 
+  restartspm = 0; 
 else 
   deffile = varargin{1}; 
-  restartspm = 0; 
+  restartspm = 1; 
 end
 
 
