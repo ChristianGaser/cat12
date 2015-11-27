@@ -17,7 +17,7 @@ end
 spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
 for i=1:length(p.data_xml)
     xml = convert(xmltree(deblank(p.data_xml{i})));
-    tmp = eval(xml.QAS.SM.vol_abs_CGW);
+    tmp = eval(xml.subjectmeasures.vol_abs_CGW);
 
     [pth,nam]     = spm_fileparts(p.data_xml{i});
     % only save TIV

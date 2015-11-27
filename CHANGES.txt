@@ -7662,6 +7662,7 @@ MM      templates_1.50mm/lpba40.txt
 (5) Changed: Removed ROI entry from long. batch mode.
 
 ------------------------------------------------------------------------
+r790 | gaser | 2015-11-27 10:23:54 +0100 (Fr, 27 Nov 2015) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7684,5 +7685,16 @@ M       cat_vol_simgrow.mexa64
 
 Changed: Updated linux + mac mex-files.
 
+
 ------------------------------------------------------------------------
-r790 | gaser | 2015-11-27 10:23:51
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_TIV.m
+M       html/cat.html
+
+Fixed: Updated xml entries in cat_stat_TIV.m.
+
+------------------------------------------------------------------------
+r791 | gaser | 2015-11-27 11:57:49
