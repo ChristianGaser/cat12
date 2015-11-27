@@ -41,4 +41,4 @@ Maximum likelihood atlas (LPBA40) - for each voxel, we computed the most likely 
 Maximum likelihood grey matter atlas (LPBA40) - This is similar to LPBA40, above, but the tissue labels were pre before performing the maximum likelihood computation
 
 --------------------------------------------------------------------------------
-$Id: lpba40.txt 766 2015-11-17 15:05:32Z gaser $
+$Id$
