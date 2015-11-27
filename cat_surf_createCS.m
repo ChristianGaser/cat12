@@ -50,6 +50,8 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   opt.usePPmap  = 0; % ########### 1 does not work yet ##########
   
+  expert = cat_get_defaults('extopts.expertgui');
+  
   % add system dependent extension to CAT folder
   if ispc
     opt.CATDir = [opt.CATDir '.w32'];
@@ -79,8 +81,10 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
   % removing blood vessels, and other regions
   Yth1 = zeros(size(Ymf),'single'); 
-  Ywd  = zeros(size(Ymf),'single'); 
-  Ycd  = zeros(size(Ymf),'single'); 
+  if expert > 1
+    Ywd  = zeros(size(Ymf),'single'); 
+    Ycd  = zeros(size(Ymf),'single'); 
+  end
   
   for si=1:numel(opt.surf)
    
@@ -125,30 +129,27 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
-    % Hülle bestimmen (pro Seite oder gesamt?)
-    % SD von Hülle in ~WM bestimmen
-    % CSD in Hülle beidseitig bestimmen (eidist)
-    %YM = max(0,min(1,1-Yppis)); Yid = cat_vol_eidist(1-Yppis,YM,repmat(opt.interpV,1,3),1,1,0,0); 
-    %YM = max(0,min(1,1-Yppis))/2; YM(Ymfs==0)=nan; Yod = cat_vol_eidist(  Yppis,YM,repmat(opt.interpV,1,3),1,1,0,0); 
+    if expert > 1
+      stime = cat_io_cmd('  Gyrus width estimation');
+      Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
+      Ywdt = cat_vbdist(1-Yppis);
+      Ywdt = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
+      Ywdt = cat_vol_resize(Ywdt,'deinterp',resI); 
+      Ywdt = cat_vol_resize(Ywdt,'dereduceBrain',BB);                   % adding background
+      Ywd  = max(Ywd,Ywdt); 
+      clear Ywdt;
+      fprintf('%4.0fs\n',etime(clock,stime)); 
     
-    stime = cat_io_cmd('  Gyrus width estimation');
-    Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
-    Ywdt = cat_vbdist(1-Yppis);
-    Ywdt = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
-    Ywdt = cat_vol_resize(Ywdt,'deinterp',resI); 
-    Ywdt = cat_vol_resize(Ywdt,'dereduceBrain',BB);                   % adding background
-    Ywd  = max(Ywd,Ywdt); 
-    fprintf('%4.0fs\n',etime(clock,stime)); 
-    
-    stime = cat_io_cmd('  Sulcus width estimation');
-    Ycdt = cat_vbdist(Yppis,Ymfs>0.5); 
-    Ycdt = cat_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
-    Ycdt(Ymfs<=0.5)=0;
-    Ycdt = cat_vol_resize(Ycdt,'deinterp',resI); 
-    Ycdt = cat_vol_resize(Ycdt,'dereduceBrain',BB); 
-    Ycd  = max(Ycd,Ycdt); 
-    fprintf('%4.0fs\n',etime(clock,stime));
-    
+      stime = cat_io_cmd('  Sulcus width estimation');
+      Ycdt = cat_vbdist(Yppis,Ymfs>0.5); 
+      Ycdt = cat_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
+      Ycdt(Ymfs<=0.5)=0;
+      Ycdt = cat_vol_resize(Ycdt,'deinterp',resI); 
+      Ycdt = cat_vol_resize(Ycdt,'dereduceBrain',BB); 
+      Ycd  = max(Ycd,Ycdt); 
+      clear Ycdt;
+      fprintf('%4.0fs\n',etime(clock,stime));
+    end
     
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
@@ -266,22 +267,23 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
     
     % map WM and CSF witdh data (corrected by thickness)
-    %r = mean(abs(diff([min(CS.vertices,1);max(CS.vertices,1)],1,1));
-    facevertexcdata2 = isocolors2(Ywd,CS.vertices); 
-    facevertexcdata2 = correctWMdepth(CS,facevertexcdata2);
-    facevertexcdata2 = max(0,facevertexcdata2 + facevertexcdata/2);
-    cat_io_FreeSurfer('write_surf_data',Pgw,facevertexcdata2); % gyrus width (WM and GM)
-    facevertexcdata2 = max(0,facevertexcdata2 - facevertexcdata/2);
-    cat_io_FreeSurfer('write_surf_data',Pgww,facevertexcdata2); % gyrus width WM only
+    if expert > 1
+      facevertexcdata2 = isocolors2(Ywd,CS.vertices); 
+      facevertexcdata2 = correctWMdepth(CS,facevertexcdata2);
+      facevertexcdata2 = max(0,facevertexcdata2 + facevertexcdata/2);
+      cat_io_FreeSurfer('write_surf_data',Pgw,facevertexcdata2); % gyrus width (WM and GM)
+      facevertexcdata2 = max(0,facevertexcdata2 - facevertexcdata/2);
+      cat_io_FreeSurfer('write_surf_data',Pgww,facevertexcdata2); % gyrus width WM only
     % just a test ... problem with other species ...
       %norm = sum(Ymf(:)>0.5) / prod(vx_vol) / 1000 / 1400;
       %norm = mean([2 1 1].*diff([min(CS.vertices);max(CS.vertices)])); 
       %norm = mean([2 1 1].*std(CS.vertices)); % maybe the hull surface is better...
  
-    facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
-    facevertexcdata3 = max(0,facevertexcdata3 - facevertexcdata/2); 
-    cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
-    fprintf('%4.0fs\n',etime(clock,stime)); 
+      facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
+      facevertexcdata3 = max(0,facevertexcdata3 - facevertexcdata/2); 
+      cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
+      fprintf('%4.0fs\n',etime(clock,stime)); 
+    end
 
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
@@ -289,11 +291,13 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     % create output structure
     S.(opt.surf{si}).vertices = CS.vertices;
     S.(opt.surf{si}).faces    = CS.faces;
-    S.(opt.surf{si}).th1      = facevertexcdata;
-    S.(opt.surf{si}).th2      = facevertexcdata2;
-    S.(opt.surf{si}).th3      = facevertexcdata3;
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;
+    if expert > 1
+      S.(opt.surf{si}).th1      = facevertexcdata;
+      S.(opt.surf{si}).th2      = facevertexcdata2;
+      S.(opt.surf{si}).th3      = facevertexcdata3;
+    end
     clear Yth1i
 
     % we have to delete the original faces, because they have a different number of vertices after

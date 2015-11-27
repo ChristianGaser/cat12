@@ -7687,6 +7687,7 @@ Changed: Updated linux + mac mex-files.
 
 
 ------------------------------------------------------------------------
+r791 | gaser | 2015-11-27 11:57:52 +0100 (Fr, 27 Nov 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7696,5 +7697,19 @@ M       html/cat.html
 
 Fixed: Updated xml entries in cat_stat_TIV.m.
 
+
 ------------------------------------------------------------------------
-r791 | gaser | 2015-11-27 11:57:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Changed: Estimation of gyrus(WM)- and sulcus-width only in expert 
+    modus 2.
+(2) Fixed: Zombie error in cat_main again if surface pipleine fails.
+
+------------------------------------------------------------------------
+r792 | gaser | 2015-11-27 13:32:28
