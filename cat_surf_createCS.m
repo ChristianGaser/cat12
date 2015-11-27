@@ -215,7 +215,7 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
 
     % mark defects and save as gifti 
-    if opt.debug 
+    if opt.debug == 2 
       cmd = sprintf('CAT_MarkDefects -binary "%s" "%s" "%s"',Praw,Psphere0,Pdefects0); 
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects0,Pdefects);
@@ -303,7 +303,7 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     % we have to delete the original faces, because they have a different number of vertices after
     % CAT_FixTopology!
     delete(Praw);  
-    if opt.debug 
+    if opt.debug == 2
       delete(Pdefects0);  
     end
     delete(Psphere0);

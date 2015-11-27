@@ -561,7 +561,7 @@ clear q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
 
 
 if job.extopts.debug==2
-  % save information for debuging and OS test
+  % save information for debugging and OS test
   % input variables + bias corrected, bias field, class image
   % strong differences in bias fields can be the result of different 
   % registration > check 'res.image.mat' and 'res.Affine'
@@ -636,7 +636,7 @@ end
 %  slice. The images were scaled in a range of 0 to 1. The overlay 
 %  allows up to 20 colors
 %  ---------------------------------------------------------------------
-debug = 1; % this is a manuel debuging option for matlab debuging mode
+debug = 1; % this is a manual debugging option for matlab debugging mode
 if ~(cat12.sanlm==5 && job.extopts.NCstr)
   stime = cat_io_cmd('Global intensity correction');
   [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
