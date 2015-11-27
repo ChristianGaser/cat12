@@ -7640,6 +7640,7 @@ Changed: Removed check of nproc field and check of too many processes
 in cat_run.m
 
 ------------------------------------------------------------------------
+r789 | gaser | 2015-11-27 10:19:15 +0100 (Fr, 27 Nov 2015) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7659,5 +7660,29 @@ MM      templates_1.50mm/lpba40.txt
 (3) Changed: Updated linux binaries to 64bit.
 (4) Changed: Updated Makefile to also allow copying binaries.
 (5) Changed: Removed ROI entry from long. batch mode.
+
 ------------------------------------------------------------------------
-r789 | gaser | 2015-11-27 10:19:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_amap.mexa64
+M       cat_ornlm.mexa64
+M       cat_sanlm.mexa64
+M       cat_vbdist.mexa64
+M       cat_vol_downcut.mexa64
+M       cat_vol_eidist.mexa64
+M       cat_vol_genus0.mexa64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_localstat.mexa64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3c.mexa64
+M       cat_vol_pbtp.mexa64
+M       cat_vol_simgrow.mexa64
+
+Changed: Updated linux + mac mex-files.
+
+------------------------------------------------------------------------
+r790 | gaser | 2015-11-27 10:23:51
