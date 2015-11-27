@@ -1773,7 +1773,7 @@ if job.output.surface
       spm_str_manip(res.image0(1).fname,'a60'),...
       repmat('-',1,72),surferr.message,repmat('-',1,72));  
     for si=1:numel(surferr.stack)
-      message = sprintf('%s%5d - %s\n',message,caterr.stack(si).line,caterr.stack(si).name);  
+      message = sprintf('%s%5d - %s\n',message,surferr.stack(si).line,surferr.stack(si).name);  
     end
     message = sprintf('%s%s\n',message,repmat('-',1,72));  
     
