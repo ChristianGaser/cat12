@@ -7728,6 +7728,7 @@ M       spm_cat12.m
 
 
 ------------------------------------------------------------------------
+r794 | gaser | 2015-11-27 15:42:35 +0100 (Fr, 27 Nov 2015) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7739,5 +7740,18 @@ M       html/cat.html
 (1) Fixed: Some errors in cat_main regarding expert flag.
 (2) Changed: Hardware information using mexext instead of computer.
 
+
 ------------------------------------------------------------------------
-r794 | gaser | 2015-11-27 15:42:31
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+Changed: Set debug option and use debug=2 for saving debugging information
+and debug=1 for being more verbose.
+------------------------------------------------------------------------
+r795 | gaser | 2015-11-27 16:18:07
