@@ -7714,6 +7714,7 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r793 | dahnke | 2015-11-27 13:57:03 +0100 (Fr, 27 Nov 2015) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7725,5 +7726,18 @@ M       spm_cat12.m
 (2)  Fixed:   SPM initialization for fast CAT start.
 (3)  Changed: Add hardware information for QA XML file.
 
+
 ------------------------------------------------------------------------
-r793 | dahnke | 2015-11-27 13:56:55
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_tst_qa.m
+M       html/cat.html
+
+(1) Fixed: Some errors in cat_main regarding expert flag.
+(2) Changed: Hardware information using mexext instead of computer.
+
+------------------------------------------------------------------------
+r794 | gaser | 2015-11-27 15:42:31
