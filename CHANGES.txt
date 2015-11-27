@@ -7699,6 +7699,7 @@ Fixed: Updated xml entries in cat_stat_TIV.m.
 
 
 ------------------------------------------------------------------------
+r792 | gaser | 2015-11-27 13:32:32 +0100 (Fr, 27 Nov 2015) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7711,5 +7712,18 @@ M       html/cat.html
     modus 2.
 (2) Fixed: Zombie error in cat_main again if surface pipleine fails.
 
+
 ------------------------------------------------------------------------
-r792 | gaser | 2015-11-27 13:32:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+M       cat_tst_qa.m
+M       spm_cat12.m
+
+(1)  Fixed:   Minimal PBT resolution (0.5 > 0.25 mm).
+(2)  Fixed:   SPM initialization for fast CAT start.
+(3)  Changed: Add hardware information for QA XML file.
+
+------------------------------------------------------------------------
+r793 | dahnke | 2015-11-27 13:56:55

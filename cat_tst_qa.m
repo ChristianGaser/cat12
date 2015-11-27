@@ -509,6 +509,14 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+     
+      QAS.hardware.computer     = computer; 
+      try
+        QAS.hardware.numcores = max(feature('numcores'),1);
+      catch
+        QAS.hardware.numcores = 1;
+      end
+      
       
       %opt.job  = rmfield(opt.job,{'data','channel','output'}); 
       %QAS.parameter             = opt.job; 
