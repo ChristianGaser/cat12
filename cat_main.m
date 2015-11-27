@@ -21,6 +21,7 @@ def.color.highlight = [0.2 0.2 0.8];
 opt = struct();
 opt = cat_io_checkinopt(opt,def);
 
+expert = cat_get_defaults('extopts.expertgui');
 
 %% complete output structure
 if ~isfield(job.output,'atlas')
@@ -1784,13 +1785,14 @@ if job.output.surface
   end
 
   % metadata
-  if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
-  dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  if isfield(S,'lh'), th=S.lh.th2; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th2]; end
-  dist_thickness{2} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  if isfield(S,'lh'), th=S.lh.th3; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th3]; end
-  dist_thickness{3} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-
+  if expert  1
+    if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
+    dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    if isfield(S,'lh'), th=S.lh.th2; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th2]; end
+    dist_thickness{2} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    if isfield(S,'lh'), th=S.lh.th3; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th3]; end
+    dist_thickness{3} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  else th = []; end
 
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));
@@ -1924,9 +1926,11 @@ Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3;
 qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.cat.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job));
 if job.output.surface
-  qa.subjectmeasures.dist_thickness{1} = dist_thickness{1};
-  qa.subjectmeasures.dist_WMdepth{1}   = dist_thickness{2};
-  qa.subjectmeasures.dist_CSFdepth{1}  = dist_thickness{3};
+  if expert > 1
+    qa.subjectmeasures.dist_thickness{1} = dist_thickness{1};
+    qa.subjectmeasures.dist_WMdepth{1}   = dist_thickness{2};
+    qa.subjectmeasures.dist_CSFdepth{1}  = dist_thickness{3};
+  end
   
   qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
  
@@ -2018,7 +2022,7 @@ if cat12.print
   end
   
   % Warnings
-  if numel(cat_warnings)>0 && cat_get_defaults('extopts.expertgui')>0
+  if numel(cat_warnings)>0 && expert>0
     str3 = [str3 struct('name', '','value','')]; 
     str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
     for wi=1:numel(cat_warnings)

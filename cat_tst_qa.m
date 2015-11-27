@@ -510,7 +510,7 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
      
-      QAS.hardware.computer     = computer; 
+      QAS.hardware.computer     = mexext; 
       try
         QAS.hardware.numcores = max(feature('numcores'),1);
       catch
