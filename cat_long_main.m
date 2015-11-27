@@ -11,6 +11,7 @@ matlabbatch{1}.spm.tools.cat.tools.series.data = '<UNDEFINED>';
 
 % use some options from gui or default file
 for j=2:3
+  matlabbatch{j}.spm.tools.cat.estwrite.nproc = 0;
   if exist('opts','var')
     matlabbatch{j}.spm.tools.cat.estwrite.opts = opts;
   end
@@ -30,7 +31,6 @@ end
 matlabbatch{1}.spm.tools.cat.tools.series.bparam = 1000000;
 matlabbatch{2}.spm.tools.cat.estwrite.data(1) = cfg_dep('Longitudinal Rigid Registration: Midpoint Average', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{2}.spm.tools.cat.estwrite.output.surface = 0;
-matlabbatch{2}.spm.tools.cat.estwrite.output.ROI = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.GM.native = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.GM.warped = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.GM.modulated = 0;

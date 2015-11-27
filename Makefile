@@ -32,7 +32,7 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp update
+	-@echo install zip scp update cp_binaries
 
 update:
 	-@svn update
@@ -54,3 +54,15 @@ zip: update
 scp: zip
 	-@echo scp to http://dbm.neuro.uni-jena.de/cat12/${ZIPFILE}
 	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
+	
+cp_binaries: 
+	-@echo copy binaries
+	-@rm ~/work/c/CAT/build-*/Progs/*.o
+	-@cd CAT.glnx86
+	-@for i in *; do cp ~/work/c/CAT/build-i586-pc-linux/Progs/${i} .; done
+	-@cd ../CAT.w32
+	-@for i in *; do cp ~/work/c/CAT/build-i586-mingw32/Progs/${i} .; done
+	-@chmod a+x *.exe
+	-@cd ../CAT.maci64
+	-@for i in *; do cp ~/work/c/CAT/build-native/Progs/${i} .; done
+	-@cd ..
