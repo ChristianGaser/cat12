@@ -7742,6 +7742,7 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r795 | gaser | 2015-11-27 16:18:10 +0100 (Fr, 27 Nov 2015) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7753,5 +7754,14 @@ M       html/cat.html
 
 Changed: Set debug option and use debug=2 for saving debugging information
 and debug=1 for being more verbose.
+
 ------------------------------------------------------------------------
-r795 | gaser | 2015-11-27 16:18:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+
+Changed: Replaced compiled CAT-files for glnx86 because they needed some
+libraries.
+------------------------------------------------------------------------
+r796 | gaser | 2015-11-27 17:21:28

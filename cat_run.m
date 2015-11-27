@@ -246,7 +246,7 @@ function vout = run_job(job)
   
   if job.nproc>0 
     fprintf('\n%s',repmat('_',1,72));
-    fprintf('\nFinish this CAT12 Segmentation job.''\n');
+    fprintf('\nCAT12 Segmentation job finished.'\n');
   end
 return
 %_______________________________________________________________________
