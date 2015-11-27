@@ -7630,6 +7630,7 @@ M       templates_animals/cat_defaults_monkey_oldworld.m
 
 
 ------------------------------------------------------------------------
+r788 | gaser | 2015-11-26 17:19:16 +0100 (Do, 26 Nov 2015) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7637,5 +7638,26 @@ M       cat_run.m
 
 Changed: Removed check of nproc field and check of too many processes
 in cat_run.m
+
 ------------------------------------------------------------------------
-r788 | gaser | 2015-11-26 17:18:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_conf_long.m
+M       cat_long_main.m
+M       cat_main.m
+M       html/cat.html
+ M      templates_1.50mm/lpba40.nii
+MM      templates_1.50mm/lpba40.txt
+ M      templates_1.50mm/lpba40.xml
+
+(1) Fixed: Zombie error in cat_main.m due to crashing surface pipeline
+    and wrong catch call to variable "subj".
+(2) Fixed: Long. batch was running with background processes.
+(3) Changed: Updated linux binaries to 64bit.
+(4) Changed: Updated Makefile to also allow copying binaries.
+(5) Changed: Removed ROI entry from long. batch mode.
+------------------------------------------------------------------------
+r789 | gaser | 2015-11-27 10:19:10
