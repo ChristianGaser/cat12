@@ -59,10 +59,10 @@ cp_binaries:
 	-@echo copy binaries
 	-@rm ~/work/c/CAT/build-*/Progs/*.o
 	-@cd CAT.glnx86
-	-@for i in *; do cp ~/work/c/CAT/build-i586-pc-linux/Progs/${i} .; done
-	-@cd ../CAT.w32
-	-@for i in *; do cp ~/work/c/CAT/build-i586-mingw32/Progs/${i} .; done
-	-@chmod a+x *.exe
-	-@cd ../CAT.maci64
-	-@for i in *; do cp ~/work/c/CAT/build-native/Progs/${i} .; done
+	-@for i in *; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/${i} .; done
+#	-@cd ../CAT.w32
+#	-@for i in *; do cp ~/work/c/CAT/build-i586-mingw32/Progs/${i} .; done
+#	-@chmod a+x *.exe
+#	-@cd ../CAT.maci64
+#	-@for i in *; do cp ~/work/c/CAT/build-native/Progs/${i} .; done
 	-@cd ..
