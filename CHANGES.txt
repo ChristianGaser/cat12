@@ -7797,11 +7797,20 @@ M       html/cat.html
 (2) Changed: Updated Makefile to allow copy of binaries.
 
 ------------------------------------------------------------------------
+r800 | gaser | 2015-11-29 21:32:36 +0100 (So, 29 Nov 2015) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 
 (1) Fixed: Again new binaries for linux are now 64bit based on glibc2.12.
 (2) Changed: Updated Makefile to allow copy of binaries.
+
 ------------------------------------------------------------------------
-r800 | gaser | 2015-11-29 21:32:34
+
+Changed paths:
+M       CHANGES.txt
+A       cross_compiling.txt
+
+New: Added notes fro cross-compiling.
+------------------------------------------------------------------------
+r801 | gaser | 2015-11-29 21:37:09
