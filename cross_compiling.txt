@@ -1,0 +1,7 @@
+- Get precompiled packages for Linux on MacOS X:
+    http://crossgcc.rts-software.org/doku.php?id=compiling_for_linux
+    http://crossgcc.rts-software.org/download/gcc-4.5.2-for-linux32-linux64/gcc-4.8.0-for-linux64.dmg
+- Rename /usr/local/gcc-4.8.0-for-linux64 to /usr/local/x86_64-pc-linux
+(- Edit /usr/local/x86_64-pc-linux/include/stdio.h:
+    http://insanecoding.blogspot.de/2012/07/creating-portable-linux-binaries.html)
+- Use cross_compile.sh
