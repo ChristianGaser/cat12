@@ -57,12 +57,7 @@ scp: zip
 	
 cp_binaries: 
 	-@echo copy binaries
-	-@rm ~/work/c/CAT/build-*/Progs/*.o
-	-@cd CAT.glnx86
-	-@for i in *; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/${i} .; done
-#	-@cd ../CAT.w32
-#	-@for i in *; do cp ~/work/c/CAT/build-i586-mingw32/Progs/${i} .; done
-#	-@chmod a+x *.exe
-#	-@cd ../CAT.maci64
-#	-@for i in *; do cp ~/work/c/CAT/build-native/Progs/${i} .; done
-	-@cd ..
+	-@test ! -f ~/work/c/CAT/build-*/Progs/*.o || rm ~/work/c/CAT/build-*/Progs/*.o
+	-@for i in CAT.glnx86/CAT*; do cp ~/work/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
+	-@for i in CAT.w32/CAT*; do cp ~/work/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
+	-@for i in CAT.maci64/CAT*; do cp ~/work/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
