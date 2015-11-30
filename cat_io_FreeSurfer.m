@@ -324,7 +324,7 @@ if nargin == 2
 end
 
 % open it as a big-endian file
-fid = fopen(fname, 'wb', 'b') ;
+fid = fopen(fname, 'w', 'b') ;
 vnum = length(curv) ;
 NEW_VERSION_MAGIC_NUMBER = 16777215;
 fwrite3(fid, NEW_VERSION_MAGIC_NUMBER ) ;
@@ -368,7 +368,7 @@ function [curv, fnum] = read_curv(fname)
 %curv = all(5, :)' ;
 
 % open it as a big-endian file
-fid = fopen(fname, 'rb', 'b') ;
+fid = fopen(fname, 'r', 'b') ;
 if (fid < 0)
 	 str = sprintf('could not open curvature file %s', fname) ;
 	 error(str) ;
@@ -378,13 +378,14 @@ NEW_VERSION_MAGIC_NUMBER = 16777215;
 if (vnum == NEW_VERSION_MAGIC_NUMBER)
 	 vnum = fread(fid, 1, 'int32') ;
 	 fnum = fread(fid, 1, 'int32') ;
+   x    = fread(fid, 1, 'int32') ;
    curv = fread(fid, vnum, 'float') ; 
 	   	
   fclose(fid) ;
 else
 
 	fnum = fread3(fid) ;
-  curv = fread(fid, vnum, 'int16') ./ 100 ; 
+  curv = fread(fid, vnum, 'int32') ./ 100 ; 
   fclose(fid) ;
 end
 

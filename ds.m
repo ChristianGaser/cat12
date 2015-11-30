@@ -27,7 +27,17 @@ function varargout=ds(type,viewtype,DAR,varargin)
  
   
   % figure properties
-  fh=gcf;%  if nf, fh=figure; else fh=gcf; end
+  fhn = 'DisplaySlice';%  if nf, fh=figure; else fh=gcf; end
+  fh  = findobj('type','figure','tag',fhn); %,'name',fhn); 
+  if ~isempty(fh)
+    figure(fh);
+  else
+    mp   = get(0,'MonitorPositions');
+    fpos = min(mp(end,3:4),[1600 900]);
+    fpos = [(mp(end,3:4) - fpos)/2 fpos];
+    figure('tag',fhn,'name',fhn,'Position',fpos,'color',[0.5 0.5 0.5],'PaperPositionMode','auto');
+  end
+  
   if numel(slice)>1, hold on; end
   set(fh,'Color',[1 1 1]); 
   

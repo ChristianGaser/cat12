@@ -1766,7 +1766,8 @@ if job.output.surface
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
   try
-    [Yth1,S] = cat_surf_createCS(res.image(1),Ymm,Yl1,YMF); % clear Ymm YMF  % VT0 - without interpolation
+    [Yth1,S] = cat_surf_createCS(res.image(1),Ymm,Yl1,YMF,...
+      struct('pbtres',0.5)); % clear Ymm YMF  % VT0 - without interpolation
   catch
     surferr = lasterror; %#ok<LERR>
     message =  sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...

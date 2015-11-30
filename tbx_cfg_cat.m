@@ -78,7 +78,6 @@ surface.help   = {
 % Inactive due to missing evaluation of the subject space ROI analysis. 
 % RD 20150924
 %------------------------------------------------------------------------
-%{
 ROI        = cfg_menu;
 ROI.tag    = 'ROI';
 ROI.name   = 'ROI analyis';
@@ -106,7 +105,7 @@ ROI.help   = {
   '    https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details'
 ''
 };
-%}
+
 
 native        = cfg_menu;
 native.tag    = 'native';
@@ -323,7 +322,7 @@ output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 if expert==2
-  output.val  = {surface grey white csf wmh tpmc atlas label pc te bias jacobian warps}; 
+  output.val  = {ROI surface grey white csf wmh tpmc atlas label pc te bias jacobian warps}; 
 elseif expert==1
   output.val  = {surface grey white csf wmh label bias jacobian warps};
 else

@@ -42,10 +42,9 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   
   def.debug     = cat_get_defaults('extopts.debug');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
+  def.interpV   = max(0.25,min([min(vx_vol),opt.interpV,1]));
   def.reduceCS  = 100000;  
   opt           = cat_io_updateStruct(def,opt);
-  opt.interpV   = cat_get_defaults('extopts.pbtres');
-  opt.interpV   = max(0.25,min([min(vx_vol),opt.interpV,1]));
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   opt.usePPmap  = 0; % ########### 1 does not work yet ##########
