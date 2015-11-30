@@ -129,8 +129,10 @@ elseif isunix
   CATDir = [CATDir '.glnx86'];
 end  
 
-[ST, RS] = system(fullfile(CATDir,'CAT_DumpCurv'));
-if ST
+[ST, RS] = system(fullfile(CATDir,'CAT_DumpCurv -h'));
+% because status will not give 0 for help output we have to check whether we can find the
+% keyword "Usage" in output
+if isempty(findstr(RS,'Usage'));
   if ispc
     [ST, RS] = system('systeminfo.exe');
   else
