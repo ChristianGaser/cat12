@@ -353,7 +353,7 @@ sample.help = {...
  
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
-check_cov.name = 'Check sample homogeneity of CAT data';
+check_cov.name = 'Check sample homogeneity of 3D data';
 check_cov.val  = {sample,qam,gap,transform};
 check_cov.prog = @cat_stat_check_cov;
 check_cov.help  = {
@@ -790,6 +790,26 @@ calcvol.help  = {
 };
 
 %------------------------------------------------------------------------
+iqr_name         = cfg_entry;
+iqr_name.tag     = 'iqr_name';
+iqr_name.name    = 'Output file';
+iqr_name.strtype = 's';
+iqr_name.num     = [1 Inf];
+iqr_name.val     = {'IQR.txt'};
+iqr_name.help    = {
+'The output file is written to current working directory unless a valid full pathname is given'};
+
+iqr       = cfg_exbranch;
+iqr.tag   = 'iqr';
+iqr.name  = 'Get Weighted Overall Image Quality';
+iqr.val   = {data_xml,iqr_name};
+iqr.prog  = @cat_stat_IQR;
+iqr.help  = {
+'This function reads weighted overall image quality from saved xml-files. '
+''
+};
+
+%------------------------------------------------------------------------
 
 field         = cfg_files;
 field.tag     = 'field';
@@ -908,7 +928,7 @@ long    = cat_conf_long;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,calcvol,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,calcvol,iqr,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
 
 stools = cfg_choice;
 stools.name   = 'Surface Tools';
