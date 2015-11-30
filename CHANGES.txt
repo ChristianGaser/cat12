@@ -7815,6 +7815,7 @@ A       cross_compiling.txt
 New: Added notes fro cross-compiling.
 
 ------------------------------------------------------------------------
+r802 | gaser | 2015-11-30 14:47:16 +0100 (Mo, 30 Nov 2015) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7830,5 +7831,16 @@ M       spm_cat12.m
 (2) Fixed: Added check of job.nproc filed in cat_run.m.
 (3) Fixed: clearvars dows not work on all systems.
  
+
 ------------------------------------------------------------------------
-r802 | gaser | 2015-11-30 14:47:12
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+ M      cross_compiling.txt
+M       html/cat.html
+M       spm_cat12.m
+
+Fixed: Check for CAT-binaries in spm_cat12.m 
+------------------------------------------------------------------------
+r803 | gaser | 2015-11-30 15:29:11
