@@ -7833,6 +7833,7 @@ M       spm_cat12.m
  
 
 ------------------------------------------------------------------------
+r803 | gaser | 2015-11-30 15:29:15 +0100 (Mo, 30 Nov 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7842,5 +7843,16 @@ M       html/cat.html
 M       spm_cat12.m
 
 Fixed: Check for CAT-binaries in spm_cat12.m 
+
 ------------------------------------------------------------------------
-r803 | gaser | 2015-11-30 15:29:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+A       cat_stat_IQR.m
+M       cat_stat_check_cov.m
+
+(1) New: Added tool to get IQR from xml-files and save it as file.
+(2) Fixed: Corrected xml-fields in cat_stat_check_cov.m
+------------------------------------------------------------------------
+r804 | gaser | 2015-11-30 16:55:41
