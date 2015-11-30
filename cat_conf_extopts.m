@@ -23,6 +23,18 @@ vox.help    = {
 ''
 };
 
+%---------------------------------------------------------------------
+
+pbtres         = cfg_entry;
+pbtres.tag     = 'pbtres';
+pbtres.name    = 'Voxel size for thickness estimation';
+pbtres.strtype = 'r';
+pbtres.num     = [1 1];
+pbtres.def     = @(val)cat_get_defaults('extopts.pbtres', val{:});
+pbtres.help    = {
+    'Internal isotropic resolution for thickness estimation in mm.'
+''
+};
 
 %---------------------------------------------------------------------
 
@@ -324,7 +336,7 @@ extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if expert==2 % experimental expert options
-  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,print}; 
+  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,print}; 
 elseif expert==1 % working expert options
   extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,print}; 
 else

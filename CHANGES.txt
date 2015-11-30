@@ -7845,6 +7845,7 @@ M       spm_cat12.m
 Fixed: Check for CAT-binaries in spm_cat12.m 
 
 ------------------------------------------------------------------------
+r804 | gaser | 2015-11-30 16:55:44 +0100 (Mo, 30 Nov 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7854,5 +7855,40 @@ M       cat_stat_check_cov.m
 
 (1) New: Added tool to get IQR from xml-files and save it as file.
 (2) Fixed: Corrected xml-fields in cat_stat_check_cov.m
+
 ------------------------------------------------------------------------
-r804 | gaser | 2015-11-30 16:55:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_io_FreeSurfer.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_vol_gradient3.c
+M       cat_vol_pbt.m
+M       compile.m
+M       ds.m
+M       tbx_cfg_cat.m
+D       templates_1.50mm/aal.xml
+D       templates_1.50mm/hammers.xml
+D       templates_1.50mm/ibsr.xml
+A  +    templates_1.50mm/label_dartel_aal.xml
+A  +    templates_1.50mm/label_dartel_hammers.xml
+A  +    templates_1.50mm/label_dartel_ibsr.xml
+A  +    templates_1.50mm/label_dartel_lpba40.xml
+A  +    templates_1.50mm/label_dartel_mori.xml
+A  +    templates_1.50mm/label_dartel_neuromorphometrics.xml
+A  +    templates_1.50mm/lpba40.csv
+D       templates_1.50mm/lpba40.xml
+D       templates_1.50mm/mori.xml
+D       templates_1.50mm/neuromorphometrics.xml
+
+(1)  Changed: Renamed atlas XML files. 
+(2)  New:     Added lpba40 CSV file. 
+(3)  New:     Added pbtres in developer GUI.
+(4)  Fixed:   Figure handling in private slice display function ds. 
+(5)  Fixed:   Error in FreeSurfer curvature read function.
+(6)  New:     Added further tests in compile function.
+  
+------------------------------------------------------------------------
+r805 | dahnke | 2015-11-30 18:54:17

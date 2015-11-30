@@ -93,6 +93,7 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
 
   
   % Final corrections for position map with removing of non brain objects.
+  %   ds('l2','',1,Ymf/3,Ypp>0.5,Ypp,Ygmt/opt.resV,250)
   stime = cat_io_cmd('    Final Corrections: ','g5','',opt.verb,stime);
   Ypp(isnan(Ypp)) = 0; 
   Ypp = cat_vol_median3(Ypp,Ymf>0 & Ymf<3,Ymf>0 & Ymf<3,2);
