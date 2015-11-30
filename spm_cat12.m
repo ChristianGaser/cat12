@@ -59,6 +59,7 @@ switch lower(deffile)
         deffile = deffile{1};
     end
 end
+
 switch lower(deffile)
   case 'human'
     deffile = catdef; 
@@ -93,12 +94,13 @@ if ~exist(deffile,'file')
 end
 
 % set other defaultfile
-% The cat12 global varialbe is created and localy destroyed, because we 
+% The cat12 global variable is created and localy destroyed, because we 
 % want to call the cat12 function. 
 if 1 %nargin>0 %~strcmp(catdef,deffile) 
   oldwkd = cd; 
   cd(deffile_pp);
-  clearvars -global cat12; clear cat12;
+  try clearvars -global cat12; end
+  clear cat12;
   eval(deffile_ff);
   eval('global cat12;'); 
   cd(oldwkd);
@@ -116,6 +118,27 @@ SPMid = spm('FnBanner',mfilename,rev);
 [Finter,Fgraph,CmdLine] = spm('FnUIsetup','CAT12');
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
+
+% check whether CAT binaries will work
+CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
+if ispc
+  CATDir = [CATDir '.w32'];
+elseif ismac
+  CATDir = [CATDir '.maci64'];
+elseif isunix
+  CATDir = [CATDir '.glnx86'];
+end  
+
+[ST, RS] = system(fullfile(CATDir,'CAT_DumpCurv'));
+if ST
+  if ispc
+    [ST, RS] = system('systeminfo.exe');
+  else
+    [ST, RS] = system('uname -a');
+  end
+  cat_io_cmd(sprintf('\nWARNING: Surface processing will not work because CAT-binaries are not compatible to your system:\n%s\n',RS),'warning');
+  fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');
+end
 
 if cat_get_defaults('extopts.gui')
   % command line output
