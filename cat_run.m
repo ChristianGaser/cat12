@@ -32,7 +32,7 @@ function varargout = cat_run(job,arg)
 
   
 % split job and data into separate processes to save computation time
-if job.nproc>0 && (~isfield(job,'process_index'))
+if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   
   cat_io_cprintf('warn',...
     ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
@@ -244,9 +244,9 @@ function vout = run_job(job)
 
   colormap(gray)
   
-  if job.nproc>0 
+  if isfield(job,'nproc') && job.nproc>0 
     fprintf('\n%s',repmat('_',1,72));
-    fprintf('\nCAT12 Segmentation job finished.'\n');
+    fprintf('\nCAT12 Segmentation job finished.\n');
   end
 return
 %_______________________________________________________________________
