@@ -63,7 +63,7 @@ if ~isempty(xml_files)
   end
   
   QM = ones(n_subjects,3);
-  QM_names = char('Noise','Bias','PQ processibility');
+  QM_names = char('Noise','Bias','Weighted overall image quality');
 
   spm_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
@@ -80,8 +80,11 @@ if ~isempty(xml_files)
     end
     
     xml = convert(xmltree(deblank(xml_files(i,:))));
-    QM(i,:) = [str2double(xml.qam.QM.NCR) str2double(xml.qam.QM.ICR) str2double(xml.qam.QM.rms)];
-    
+    try
+      QM(i,:) = [str2double(xml.qualityratings.NCR) str2double(xml.qualityratings.ICR) str2double(xml.qualityratings.IQR)];
+    catch % also try to use old version
+      QM(i,:) = [str2double(xml.QAM.QM.NCR) str2double(xml.QAM.QM.ICR) str2double(xml.QAM.QM.rms)];
+    end
     spm_progress_bar('Set',i);  
   end
   spm_progress_bar('Clear');
