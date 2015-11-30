@@ -141,7 +141,7 @@ best:
       [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80  
       [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45  
 
-fix:
+fixed:
     This options prefers an isotropic voxel size that is controled by the first parameters.  
     The second parameter is used to avoid tiny interpolations for almost correct resolutions. 
     In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 

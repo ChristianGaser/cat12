@@ -7806,11 +7806,29 @@ M       CHANGES.txt
 (2) Changed: Updated Makefile to allow copy of binaries.
 
 ------------------------------------------------------------------------
+r801 | gaser | 2015-11-29 21:37:10 +0100 (So, 29 Nov 2015) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 A       cross_compiling.txt
 
 New: Added notes fro cross-compiling.
+
 ------------------------------------------------------------------------
-r801 | gaser | 2015-11-29 21:37:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_defaults.m
+M       cat_run.m
+M       html/cat.html
+M       spm_cat12.m
+
+(1) New: Added check whether CAT binaries are running in spm_cat12.m that 
+    gives system information in case that it fails.
+(2) Fixed: Added check of job.nproc filed in cat_run.m.
+(3) Fixed: clearvars dows not work on all systems.
+ 
+------------------------------------------------------------------------
+r802 | gaser | 2015-11-30 14:47:12
