@@ -7893,6 +7893,7 @@ D       templates_1.50mm/neuromorphometrics.xml
   
 
 ------------------------------------------------------------------------
+r806 | dahnke | 2015-12-01 10:09:32 +0100 (Di, 01 Dez 2015) | 9 lines
 
 Changed paths:
  M      .
@@ -7902,5 +7903,19 @@ M       cat_run.m
 MM      cat_stat_IQR.m
 
 (1)  Fixed: Corrected pbtres parameter handling
+
 ------------------------------------------------------------------------
-r806 | dahnke | 2015-12-01 10:09:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       compile.m
+
+(1)  Changed: Updated surface output of CAT report by using cat_surf_display.
+(2)  New:     Added new parameters in cat_surf_display for CAT report.
+(3)  New:     Added test function for cat_vol_genus0 and cat_vol_interp3f in
+              compile function.
+------------------------------------------------------------------------
+r807 | dahnke | 2015-12-01 15:10:00

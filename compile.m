@@ -1,4 +1,4 @@
-function ok = compile(comp,test,verb)
+function varargout = compile(comp,test,verb)
 % ______________________________________________________________________
 % $Id$ 
 
@@ -12,6 +12,7 @@ function ok = compile(comp,test,verb)
   d1  = zeros(10,10,10,'single'); d1(3:8,:,:)=1; d1(9:10,:,:)=2; d1(5,5,5) = NaN;      % simple segment image for distance and fitler tests
   dc  = zeros(10,10,10,'single'); for si=3:8; dc(si,:,:)=si-2.5; end; dc(5,5,5) = NaN; % csf distance
   dw  = zeros(10,10,10,'single'); for si=3:8; dw(si,:,:)=8.5-si; end; dw(5,5,5) = NaN; % wm distance
+  dcube = zeros(10,10,10,'single'); dcube(3:end-2,3:end-2,3:end-2) = 1; d1(5,5,5) = NaN;
   
   %% compiling
   if comp==1
@@ -51,7 +52,7 @@ function ok = compile(comp,test,verb)
     s = false(ntests, 1);
     
     rms  = @(x) cat_stat_nanmean( x(:).^2 )^0.5;
-    nstd = @(x) cat_stat_nanstd( x(:) );
+    %nstd = @(x) cat_stat_nanstd( x(:) );
     
     
     % Median 
@@ -119,16 +120,23 @@ function ok = compile(comp,test,verb)
     s(9) = r(9)>=0 & r(9)<0.5;  
     % projection-based thickness
     n{10} = 'cat_vol_pbtp';      
-    [d{10},dpp] = cat_vol_pbtp(d1+1,dw,dc); 
+    [d{10},dpp] = cat_vol_pbtp(d1+1,dw,dc);  %#ok<NASGU>
     r(10) = rms(d{10}(d1==1)) - 5.5; % warum nicht 6?
     s(10) = r(10)<0.05;
 
     
     % interpolation
-    n{11} = 'cat_vol_interp3f';      
-    d{11} = cat_vol_interp3f(d0,d0,d0,d0);  
-    % no test yet
-    s(11) = 1; 
+    n{11} = 'cat_vol_interp3f'; sD = size(d0);        
+    [Rx,Ry,Rz] = meshgrid(single(1.75:0.5:sD(2)),single(1.75:0.5:sD(1)),single(1.75:0.5:sD(3)));
+    d0nan = d0+0; d0nan(isnan(d0)) = 0; 
+    dcl   = cat_vol_interp3f(d0nan,Rx,Ry,Rz,'linear'); 
+    dcc   = cat_vol_interp3f(d0nan,Rx,Ry,Rz,'cubic'); 
+    dml   = interp3(d0nan,Rx,Ry,Rz,'linear'); 
+    dmc   = interp3(d0nan,Rx,Ry,Rz,'cubic'); 
+    d{11}{1} = dcl - dml; 
+    d{11}{2} = dcc - dmc; 
+    r(11) = rms(d{11}{1}) + rms(d{11}{2}) ; 
+    s(11) = rms(d{11}{1})<10^-6 & rms(d{11}{2})<0.04; 
     
     % local values
     n{12} = 'cat_vol_localstat';      
@@ -137,7 +145,7 @@ function ok = compile(comp,test,verb)
     s(12) = r(12)<0.05;
     
     % region growing
-    n{13} = 'cat_vol_simgrow';   
+    n{13} = 'cat_vol_simgrow'; 
     d{13} = cat_vol_simgrow(d0,d0,0.01);    
     % no test yet
     s(13) = 1; 
@@ -149,11 +157,24 @@ function ok = compile(comp,test,verb)
     s(14) = 1;
     
     % surface genersation
+    % Compare a simple cube - vertices should be identical, faces not. 
     n{15} = 'cat_vol_genus0';   
-    [tmp,CS.faces,CS.vertices] = cat_vol_genus0(d0,0.5);
-    % no test yet
-    s(15) = 1; 
-
+    MS    = isosurface(dcube,0.5);
+    [tmp,CS.faces ,CS.vertices ] = cat_vol_genus0(dcube,0.5);
+    r(15) = all(all(sortrows(MS.vertices) == sortrows(CS.vertices) )) & ...
+            all(size(MS.faces) == size(CS.faces)); 
+    s(15) = r(15)==1; 
+    if verb==2
+      % Smoothed version showed differences, because cat_vol_genus does 
+      % not use isovalues. 
+      MSs   = isosurface(cat_vol_smooth3X(dcube,2),0.5);
+      [tmp,CSs.faces,CSs.vertices] = cat_vol_genus0(cat_vol_smooth3X(dcube,2),0.5);
+      figure
+      subplot(2,2,1), patch(CS ,'facecolor',[.8 .7 .6]); axis equal off; lighting phong; view(3); camlight; zoom(1.5)
+      subplot(2,2,2), patch(MS ,'facecolor',[.8 .7 .6]); axis equal off; lighting phong; view(3); camlight; zoom(1.5)
+      subplot(2,2,3), patch(CSs,'facecolor',[.8 .7 .6]); axis equal off; lighting phong; view(3); camlight; zoom(1.8)
+      subplot(2,2,4), patch(MSs,'facecolor',[.8 .7 .6]); axis equal off; lighting phong; view(3); camlight; zoom(1.8)
+    end
     
     % Display results
     if verb
@@ -175,5 +196,5 @@ function ok = compile(comp,test,verb)
     ok = 1;
   end
  
-  
+  if nargout==1, varargout{1}=ok; end
 end
