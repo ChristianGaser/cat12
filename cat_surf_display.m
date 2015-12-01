@@ -12,6 +12,9 @@ function varargout = cat_surf_display(varargin)
 %                   l=left, r=right
 %                   a=anterior, p=posterior
 %                   s=superior, i=inferior
+% job.verb      .. SPM command window report (default = 1)
+% job.readsurf  .. get full surface informtion by loading the image
+%                  (default = 1; see cat_surf_info)
 %
 % job.imgprint.do   .. print image (default = 0)
 % job.imgprint.type .. render image type (default = png)
@@ -20,7 +23,8 @@ function varargout = cat_surf_display(varargin)
 % Examples: 
 %  - Open both hemispheres of one subject S01:
 %   cat_surf_display(struct('data','lh.thickness.S01.gii','multisurf',1))
-%
+%  - Use another scaling of the intensities
+%   cat_surf_display(struct('caxis',[0 10]))
 % ______________________________________________________________________
 % Robert Dahnke
 % $Id$
@@ -56,18 +60,19 @@ function varargout = cat_surf_display(varargin)
   def.imgprint.fdpi  = @(x) ['-r' num2str(x)];
   def.imgprint.do    = 1;
   def.imgprint.close = 0;
-
+  
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;
+  def.verb      = 0;
+  def.readsurf  = 1;  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
   
   job = cat_io_checkinopt(job,def);
   
-  %%
-  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
-  % ... need futher development 
-  readsurf = 1; 
-  sinfo = cat_surf_info(job.data,readsurf);  
-  spm('FnBanner',mfilename,SVNid); 
+  %% ... need futher development 
+  sinfo = cat_surf_info(job.data,job.readsurf);  
+  if job.verb
+    spm('FnBanner',mfilename,SVNid); 
+  end
   for i=1:numel(job.data)
     
     % load multiple surfaces
@@ -83,8 +88,10 @@ function varargout = cat_surf_display(varargin)
     
     
     try
-      fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
-
+      if job.verb
+        fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
+      end
+      
       if ~all(strcmp(Pmesh,Pdata)) && ~isempty(Pdata) && (~job.multisurf || ~all(cellfun('isempty',Pdata)))
         % only gifti surface without texture
         if isfield(job,'parent')
