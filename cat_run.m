@@ -154,6 +154,9 @@ function job = update_job(job)
   if ~isfield(job.extopts,'APP')
     job.extopts.APP =  cat_get_defaults('extopts.APP');
   end
+  if ~isfield(job.extopts,'pbtres')
+    job.extopts.pbtres = cat_get_defaults('extopts.pbtres');
+  end
   if ~isfield(job.output,'ROI')
     job.output.ROI =  cat_get_defaults('output.ROI');
   end
