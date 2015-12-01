@@ -1,4 +1,4 @@
-function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
+function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
 % ______________________________________________________________________
 % Surface creation and thickness estimation.
 %
@@ -51,6 +51,8 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   
   expert = cat_get_defaults('extopts.expertgui');
   
+  Psurf = struct(); 
+  
   % add system dependent extension to CAT folder
   if ispc
     opt.CATDir = [opt.CATDir '.w32'];
@@ -102,6 +104,11 @@ function [Yth1,S]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',opt.surf{si}));      % fsaverage central
     Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));       % fsaverage sphere
 
+    surffile = {'Praw','Psphere0','Pcentral','Pthick','Pgw','Pgww','Psw',...
+      'Pdefects0','Pdefects','Psphere','Pspherereg','Pfsavg','Pfsavgsph'};
+    for sfi=1:numel(surffile)
+      eval(sprintf('Psurf(si).%s = %s;',surffile{sfi},surffile{sfi})); 
+    end
     % reduce for object area
     switch opt.surf{si}
       case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1);

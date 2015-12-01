@@ -1766,7 +1766,7 @@ if job.output.surface
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
   try
-    [Yth1,S] = cat_surf_createCS(res.image(1),Ymm,Yl1,YMF,...
+    [Yth1,S,Psurf] = cat_surf_createCS(res.image(1),Ymm,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres)); % clear Ymm YMF  % VT0 - without interpolation
   catch
     surferr = lasterror; %#ok<LERR>
@@ -1786,14 +1786,16 @@ if job.output.surface
   end
 
   % metadata
-  if expert  1
+  if expert 
     if isfield(S,'lh'), th=S.lh.th1; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th1]; end
     dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
     if isfield(S,'lh'), th=S.lh.th2; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th2]; end
     dist_thickness{2} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
     if isfield(S,'lh'), th=S.lh.th3; else th=[]; end; if isfield(S,'lh'), th=[th, S.lh.th3]; end
     dist_thickness{3} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  else th = []; end
+  else
+    th = [];
+  end
 
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));
@@ -2165,16 +2167,15 @@ if cat12.print
   
     spm_orthviews('Reposition',[0 0 5]);     % default view with basal structures
 
-    % surface
-    if exist('S','var')
-      CSl.vertices = S.lh.vertices; CSl.faces = S.lh.faces; CSl.facevertexcdata = S.lh.th1;
-      CSr.vertices = S.rh.vertices; CSr.faces = S.rh.faces; CSr.facevertexcdata = S.rh.th1;
-
-      subplot('position',[0.5 0.05 0.5 0.25]);
-      cspl=patch(CSl); set(cspl,'facecolor','interp','edgecolor','none');
-      cspr=patch(CSr); set(cspr,'facecolor','interp','edgecolor','none');
-      view(3), camlight, lighting gouraud, axis equal off;  caxis([0,10])
-    end
+    %% surface
+    if exist('Psurf','var')
+      hCS = subplot('Position',[0.5 0.05 0.5 0.25]); 
+      cat_surf_display(struct('data',{{Psurf.Pthick}},'readsurf',0,...
+        'multisurf',1,'view','s','parent',hCS,'verb',0))
+      annotation('textbox','position',[0.5 0.01 0.5 0.02],'Interpreter','tex','LineStyle','none', ...
+        'FontSize',fontsize*1.2,'parent',ax,'HorizontalAlignment','center','VerticalAlignment','bottom', ...
+        'string','\bfcentral surface with GM thickness (in mm)  ');
+	  end
 
   catch
     cat_io_cprintf('warn','Unspecific print report error.\n');
