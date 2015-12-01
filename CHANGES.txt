@@ -7857,6 +7857,7 @@ M       cat_stat_check_cov.m
 (2) Fixed: Corrected xml-fields in cat_stat_check_cov.m
 
 ------------------------------------------------------------------------
+r805 | dahnke | 2015-11-30 18:54:48 +0100 (Mo, 30 Nov 2015) | 33 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7890,5 +7891,16 @@ D       templates_1.50mm/neuromorphometrics.xml
 (5)  Fixed:   Error in FreeSurfer curvature read function.
 (6)  New:     Added further tests in compile function.
   
+
 ------------------------------------------------------------------------
-r805 | dahnke | 2015-11-30 18:54:17
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run.m
+MM      cat_stat_IQR.m
+
+(1)  Fixed: Corrected pbtres parameter handling
+------------------------------------------------------------------------
+r806 | dahnke | 2015-12-01 10:09:26
