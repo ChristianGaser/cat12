@@ -3,7 +3,7 @@ function cat_stat_IQR(p)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_IQR.m 791 2015-11-27 10:57:52Z gaser $
+% $Id$
 
 fid = fopen(p.iqr_name,'w');
 
