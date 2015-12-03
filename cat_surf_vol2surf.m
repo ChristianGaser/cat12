@@ -126,13 +126,32 @@ function varargout = cat_surf_vol2surf(varargin)
             'dataname',job.datafieldname);
 
         % map values
-        cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
-          mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
-        [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
-        
-        if job.verb
-          fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
+        if job.origin==0 && job.length==0 && res==1 
+          %%
+          V  = spm_vol(P.vol{vi});
+          Y  = spm_read_vols(V); 
+          CS = gifti(job.(sside{si})(vi).Pmesh);
+      
+          vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
+          vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
+ 
+          CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+          facevertexcdata = isocolors2(Y,CS.vertices); 
+          cat_io_FreeSurfer('write_surf_data',strrep(P.data{vi,si},'.gii',''),facevertexcdata);
+          if job.verb
+            fprintf('Display %s\n',spm_file(strrep(P.data{vi,si},'.gii',''),'link','cat_surf_display(''%s'')'));
+          end
+        else
+          cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
+            mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
+          [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
+          
+          if job.verb
+            fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
+          end
         end
+        
+      
       end
     
       
@@ -146,3 +165,54 @@ function varargout = cat_surf_vol2surf(varargin)
   spm_progress_bar('Clear');
 
 end
+%=======================================================================
+% Temporary experimental code to find / work around the problem of
+% having the correct orientation of the surface 
+%   start 20151203 Robert
+%=======================================================================
+
+
+
+
+%=======================================================================
+function V = isocolors2(R,V,opt)
+% ______________________________________________________________________
+% calculates a linear interpolated value of a vertex in R  
+% We have to calculate everything with double, thus larger images will 
+% cause memory issues.
+% ______________________________________________________________________
+  
+  if isempty(V), return; end
+  if ndims(R)~=3,  error('MATLAB:isocolor2:dimsR','Only 2 or 3 dimensional input of R.'); end
+  if ~exist('opt','var'), opt=struct(); end
+  
+  def.interp = 'linear';
+  opt = cat_io_checkinopt(opt,def);
+  
+  if  isa(R,'double'), R = single(R); end
+  if ~isa(V,'double'), V = double(V); VD=0; else VD=1; end
+  
+  nV   = size(V,1);
+  ndim = size(V,2);
+  
+  switch opt.interp
+    case 'nearest'
+      V = max(1,min(round(V),repmat(ndim,nV,1))); 
+      V = R(sub2ind(size(R),V(:,2),V(:,1),V(:,3)));
+    case 'linear'
+      nb  = repmat(shiftdim(double([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]'),-1),nV,1);  
+      enb = repmat(shiftdim((ones(8,1,'double')*[size(R,2),size(R,1),size(R,3)])',-1),nV,1);  
+
+      % calculate the weight of a neigbor (volume of the other corner) and
+      w8b = reshape(repmat(V,1,2^ndim),[nV,ndim,2^ndim]); clear V;
+      % if the streamline ist near the boundery of the image you could be out of range if you add 1 
+      n8b = min(floor(w8b) + nb,enb); clear enb
+      n8b = max(n8b,1);
+      w8b = flipdim(prod(abs(n8b - w8b),2),3);        
+
+      % multiply this with the intensity-value of R
+      V = sum(R(sub2ind(size(R),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))) .* w8b,3);
+  end  
+  if ~VD, V = single(V); end
+end
+                   

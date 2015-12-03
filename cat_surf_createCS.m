@@ -40,10 +40,12 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   if ~exist('opt','var'), opt=struct(); end
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   
+  def.verb      = 2; 
   def.debug     = cat_get_defaults('extopts.debug');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.interpV   = max(0.25,min([min(vx_vol),opt.interpV,1]));
   def.reduceCS  = 100000;  
+  %def.reduceCS  = 20000;  
   opt           = cat_io_updateStruct(def,opt);
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
@@ -120,7 +122,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     %% thickness estimation
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
-    stime = cat_io_cmd('  Thickness estimation');
+    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
 
     [Ymfs,BB]   = cat_vol_resize(Ymfs,'reduceBrain',vx_vol,4,Ymfs>1);   % removing background
     [Ymfs,resI] = cat_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
@@ -183,7 +185,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
 
     %% surface coordinate transformations
-    stime = cat_io_cmd('  Create initial surface'); fprintf('\n');
+    stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); fprintf('\n');
     vmatBBV = spm_imatrix(V.mat);
 
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
@@ -196,12 +198,15 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
     CS.vertices = CS.vertices + repmat( BB.BB([3,1,5]) - 1,size(CS.vertices,1),1); 
 
+    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
+    
     % correct the number of vertices depending on the number of major objects
     if opt.reduceCS>0, 
       switch opt.surf{si}
         case {'B','brain'}, CS = reducepatch(CS,opt.reduceCS*2); 
         otherwise,          CS = reducepatch(CS,opt.reduceCS);
       end
+      stime = cat_io_cmd(sprintf('  Reduce surface to %d faces:',size(CS.faces,1)),'g5','',opt.verb); 
     end
     
     % transform coordinates
@@ -210,7 +215,8 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
 
     % after reducepatch many triangles have very large area which causes isses for resampling
     % RefineMesh addds triangles in those areas
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" 2',Praw,Praw); 
+    meshres = 2 * 100000/opt.reduceCS; 
+    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,meshres); 
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
 
     % remove some unconnected meshes
@@ -228,11 +234,11 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Praw,Pdefects0,Pdefects);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
     end
-    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
-
+   
     %% topology correction and surface refinement 
-    stime = cat_io_cmd('  Topology correction and surface refinement'); fprintf('\n');
-    cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 1.5 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
+    if opt.reduceCS < 81920; meshnum = opt.reduceCS; else meshnum = 81920; end
+    cmd = sprintf('CAT_FixTopology -deform -n %d -refine_length %0.2f "%s" "%s" "%s"',meshnum,meshres,Praw,Psphere0,Pcentral);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
     
     if opt.usePPmap
@@ -248,26 +254,22 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
     else
       % surface refinement by simple smoothing
-      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" 2',Pcentral,Pcentral);
+      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %0.2f',Pcentral,Pcentral,meshres);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
     end
-    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
-
-
+    
     %% spherical surface mapping 2 of corrected surface
-    stime = cat_io_cmd('  Spherical mapping with areal smoothing'); fprintf('\n');
+    stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 10',Pcentral,Psphere);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
-    fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
-
+    
     % spherical registration to fsaverage template
-    stime = cat_io_cmd('  Spherical registration');
+    stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
     cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
-    fprintf('%4.0fs\n',etime(clock,stime)); 
-
+    
     % read final surface and map thickness data
-    stime = cat_io_cmd('  Thickness / Depth mapping');
+    stime = cat_io_cmd('  Thickness / Depth mapping','g5','',opt.verb,stime);
     CS = gifti(Pcentral);
     CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
     facevertexcdata = isocolors2(Yth1,CS.vertices); 
@@ -289,9 +291,9 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
       facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
       facevertexcdata3 = max(0,facevertexcdata3 - facevertexcdata/2); 
       cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
-      fprintf('%4.0fs\n',etime(clock,stime)); 
     end
-
+    fprintf('%4.0fs\n',etime(clock,stime)); 
+    
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
 
