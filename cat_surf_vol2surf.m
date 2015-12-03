@@ -15,6 +15,9 @@ function varargout = cat_surf_vol2surf(varargin)
     error('Only batch mode possible'); 
   end
   
+  def.verb = 1; 
+  
+  job = cat_io_checkinopt(job,def);
   
   %%
   side  = {'data_mesh_lh','data_mesh_rh'};
@@ -126,6 +129,10 @@ function varargout = cat_surf_vol2surf(varargin)
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
           mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
+        
+        if job.verb
+          fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
+        end
       end
     
       

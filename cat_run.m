@@ -135,8 +135,7 @@ function job = update_job(job)
              'print',     job.extopts.print,...
              'ngaus',     cat_get_defaults('opts.ngaus'),...
              'reg',       cat_get_defaults('opts.warpreg'),...
-             'bb',        cat_get_defaults('extopts.bb'),...
-             'vox',       cat_get_defaults('extopts.vox'));
+             'bb',        cat_get_defaults('extopts.bb'));
 
   if isfield(job.extopts,'restype')
     cat12.restype = char(fieldnames(job.extopts.restype));
@@ -147,6 +146,9 @@ function job = update_job(job)
   end
   if isfield(job.extopts,'sanlm')
     cat12.sanlm = job.extopts.sanlm;
+  end
+  if ~isfield(cat12,'vox')
+    cat12.vox = cat_get_defaults('extopts.vox');
   end
   if ~isfield(job.extopts,'verb')
     job.extopts.verb =  cat_get_defaults('extopts.verb');

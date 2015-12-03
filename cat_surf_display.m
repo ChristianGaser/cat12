@@ -55,15 +55,16 @@ function varargout = cat_surf_display(varargin)
   def.caxis    = []; % default/auto, range
   
   % print options ... just a quick output > cat_surf_print as final function 
-  def.imgprint.type  = '-dpng';
+  def.imgprint.type  = 'png';
   def.imgprint.dpi   = 600;
   def.imgprint.fdpi  = @(x) ['-r' num2str(x)];
-  def.imgprint.do    = 1;
+  def.imgprint.ftype = @(x) ['-d' num2str(x)];
+  def.imgprint.do    = 0;
   def.imgprint.close = 0;
   
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;
-  def.verb      = 0;
+  def.verb      = 1;
   def.readsurf  = 1;  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
   
   job = cat_io_checkinopt(job,def);
@@ -204,7 +205,7 @@ function varargout = cat_surf_display(varargin)
     if job.imgprint.do 
       %%
       pfname = fullfile(sinfo(i).pp,sprintf('%s%s.%s',sinfo(i).ff,viewname,job.imgprint.type(3:end)));
-      print(h.figure , job.imgprint.type , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 
+      print(h.figure , def.imgprint.ftype(job.imgprint.type) , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 
       
       if job.imgprint.close
         close(h.figure);
