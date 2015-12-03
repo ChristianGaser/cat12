@@ -215,6 +215,7 @@ function varargout = cat_tst_qa(action,varargin)
         Yo  = single(spm_read_vols(Vo));    
         Ym  = varargin{3}; 
         res = varargin{4};
+        V   = res.image;
         cat_warnings = varargin{5};
         species = varargin{6};
         % opt = varargin{end} in line 96)
@@ -364,8 +365,8 @@ function varargout = cat_tst_qa(action,varargin)
             end
           end
         catch  %#ok<CTCH> ... normal "catch err" does not work for MATLAB 2007a
-          try
-          e = lasterror; %#ok<LERR> ... normal "catch err" does not work for MATLAB 2007a
+          try %#ok<TRYNC>
+            e = lasterror; %#ok<LERR> ... normal "catch err" does not work for MATLAB 2007a
          
             switch e.identifier
               case {'cat_tst_qa:noYo','cat_tst_qa:noYm','cat_tst_qa:badSegmentation'}
@@ -582,8 +583,9 @@ function varargout = cat_tst_qa(action,varargin)
       %% inti, volumina, resolution, boundary box
       %  ---------------------------------------------------------------
       QAS.software.cat_qa_warnings = struct('identifier',{},'message',{});
-      vx_vol = sqrt(sum(Vo.mat(1:3,1:3).^2));
-      Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+      vx_vol  = sqrt(sum(Vo.mat(1:3,1:3).^2));
+      vx_voli = sqrt(sum(V.mat(1:3,1:3).^2));
+      Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
       
       %  volumina 
       QAS.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
@@ -595,6 +597,9 @@ function varargout = cat_tst_qa(action,varargin)
       
       %  resolution 
       QAS.qualitymeasures.res_vx_vol    = vx_vol;
+      if 1 % CAT internal resolution
+        QAS.qualitymeasures.res_vx_voli = vx_voli;
+      end
       %QAS.qualitymeasures.res_isotropy  = max(vx_vol)./min(vx_vol);
       %QAS.qualitymeasures.res_vol       = prod(abs(vx_vol));
       QAS.qualitymeasures.res_RMS       = mean(vx_vol.^2).^0.5;

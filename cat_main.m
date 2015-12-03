@@ -1756,7 +1756,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  ... add Ywmh later ... 
 %
 if job.output.surface
-  stime = cat_io_cmd('Surface and thickness estimation'); 
+  stime = cat_io_cmd('Surface and thickness estimation');; 
   % brain masking 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   Ymm = Ym  .* (Yp0>0.5) .* Yb;
@@ -1781,7 +1781,7 @@ if job.output.surface
     
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:createCS',...
-      sprintf('Surfaceceation error! %s',message));
+      sprintf('Surface ceation error! %s',message));
 
   end
 
@@ -1943,7 +1943,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %% display and print result if possible
 %  ---------------------------------------------------------------------
 QMC   = cat_io_colormaps('marks+',17);
-color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);;
 if cat12.print
   
   warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
@@ -1981,18 +1981,21 @@ if cat12.print
   str = [str struct('name', 'NCstr / LASstr / GCUTstr / CLEANUPstr:','value',...
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
+  if job.output.surface
+    str = [str struct('name', ' Voxel resolution (original > intern > PBT):',...
+           'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
+           qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
+  else
+    str = [str struct('name', ' Voxel resolution (original > intern):',...
+           'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s', ...
+           qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179)))];
+  end       
 % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',cat12.vox))]; % does not work yet 
-% intern interpolation?
-% pbt resolution
 
          
   % Image Quality measures:
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
-  str2 = [str2 struct('name', ' Voxel resolution:','value',sprintf('%sx%sx%s mm%s', ...
-                sprintf('%4.2f',qa.qualitymeasures.res_vx_vol(1)),...
-                sprintf('%4.2f',qa.qualitymeasures.res_vx_vol(2)),...
-                sprintf('%4.2f',qa.qualitymeasures.res_vx_vol(3)),char(179)))];
   str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,sprintf('%5.2f',qa.qualityratings.res_RMS)))];
   str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,sprintf('%5.2f',qa.qualityratings.NCR)))];
   %str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,sprintf('%5.2f',qa.qualityratings.ICR)))]; % not important and more confussing 
@@ -2036,7 +2039,7 @@ if cat12.print
   end
   
   % Rating scala
-  str4 = struct('name',sprintf('Ratingcolors: \n  %s, %s, %s, \n  %s, %s, %s', ...
+  str4 = struct('name',sprintf('  \bfRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
         mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
         mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
         mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
@@ -2060,7 +2063,7 @@ if cat12.print
     
     fg = spm_figure('FindWin','Graphics'); 
     set(0,'CurrentFigure',fg)
-    if isempty(fg), fg = spm_figure('Create','Graphics'); end
+    if isempty(fg), if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end; end
     set(fg,'windowstyle','normal'); 
 	  spm_figure('Clear','Graphics'); 
     switch computer
@@ -2110,15 +2113,14 @@ if cat12.print
 		  htext(2,i,1) = text(0.01,0.45-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
 		  htext(2,i,2) = text(0.25,0.45-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
+    % qa-scala
+    htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     for i=1:size(str3,2)  % subject-measurements
 		  htext(3,i,1) = text(0.51,0.45-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
 		  htext(3,i,2) = text(0.80,0.45-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
-    for i=1:size(str3,2)  % subject-measurements
-		  htext(4,i,1) = text(0.51,0.45-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  htext(4,i,2) = text(0.80,0.45-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-    htext(5,1,1) = text(0.01,0.0,str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+
+    
 	  
 	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
@@ -2205,7 +2207,7 @@ if cat12.print
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-  fprintf('Print ''Grphics'' figure to: \n  %s\n',job.imgprint.fname);
+  fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
   
   %% reset colormap
   % remove old legends
