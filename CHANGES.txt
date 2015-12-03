@@ -7905,6 +7905,7 @@ MM      cat_stat_IQR.m
 (1)  Fixed: Corrected pbtres parameter handling
 
 ------------------------------------------------------------------------
+r807 | dahnke | 2015-12-01 15:10:24 +0100 (Di, 01 Dez 2015) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7917,5 +7918,38 @@ M       compile.m
 (2)  New:     Added new parameters in cat_surf_display for CAT report.
 (3)  New:     Added test function for cat_vol_genus0 and cat_vol_interp3f in
               compile function.
+
 ------------------------------------------------------------------------
-r807 | dahnke | 2015-12-01 15:10:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_surf_vol2surf.m
+A       internal/cat_vol_atlas.m
+ M      templates_1.50mm
+
+New:     Added internal cat_vol_atlas function to normalize, optimize and merge
+         common atlas datasets such as AAL, IBSR, HAMMERS, ANATOMY, MORI, LPBA40,
+         Neuromorphometrics,  ... 
+         The function optimize, normalize and merge the atlas ROIs of one or 
+         multiple subjects as 4D probability map to create a single 3D atlas map. 
+         It use CAT preprocessing and median filtering to optimize and normalize
+         the individual atlas ROIs and try to rename the ROI names given by the 
+         CSV Files by a dictionary. 
+         The function is still in development, the principle idea works, but 
+         the naming is not correct for all regions. 
+Changed: Replace SPM PS by MATLAB print function to write CAT report as PDF, 
+         because the PS is outdated and does not work with surfaces.  
+Changed: Common print structure in cat_surf_display and cat_main.
+Changed: Added SPM command line link for cat_surf_vol2surf output, if job.verb 
+         is >0.  
+Fixed:   Corrected surface colormap and scaling after changing to SPM gray.
+Fixed:   Double surface output in CAT report.
+Fixed:   Changed thickness field estimation and fixed writing in XML file. 
+Comment: Added ;; in MATLAB code to mark special lines to jump in the editor. 
+
+------------------------------------------------------------------------
+r808 | dahnke | 2015-12-03 10:19:24
