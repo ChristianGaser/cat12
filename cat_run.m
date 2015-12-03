@@ -84,10 +84,10 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     if ispc
       % prepare system specific path for matlab
       export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
-
       system_cmd = [export_cmd ' & start matlab.bat -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
     else
-      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodisplay -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
+      % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?
+      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
     end
 
     [status,result] = system(system_cmd);

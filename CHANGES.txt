@@ -7920,6 +7920,7 @@ M       compile.m
               compile function.
 
 ------------------------------------------------------------------------
+r808 | dahnke | 2015-12-03 10:19:36 +0100 (Do, 03 Dez 2015) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7951,5 +7952,26 @@ Fixed:   Double surface output in CAT report.
 Fixed:   Changed thickness field estimation and fixed writing in XML file. 
 Comment: Added ;; in MATLAB code to mark special lines to jump in the editor. 
 
+
 ------------------------------------------------------------------------
-r808 | dahnke | 2015-12-03 10:19:24
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run.m
+M       cat_surf_createCS.m
+M       cat_surf_vol2surf.m
+M       cat_tst_qa.m
+M       templates_animals/cat_defaults_monkey_oldworld.m
+
+Changed:  Update CAT report by moving vx_vol to the parameter part and adding 
+          the internal resolution and the PBT resolution (in case of surface
+          processing). Added the internal resolution also to CAT XML file.
+Changed:  Set -nodesktop for system call in cat_run with nproc>0 to allow 
+          printing of figure such as the CAT report.
+Fixed:    Workaround in cat_surf_vol2surf with MATLAB value extraction in case
+          of simple readout at CS position.    
+Fixed:    Command Line output in cat_surf_createCS.
+
+------------------------------------------------------------------------
+r809 | dahnke | 2015-12-03 15:51:30
