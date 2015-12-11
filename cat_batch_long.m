@@ -12,6 +12,7 @@ end
 
 fid = fopen(namefile,'r');
 names = textscan(fid,'%s');
+names = names{:};
 fclose(fid);
 
 n = length(names);
@@ -28,7 +29,7 @@ for i=1:n
   matlabbatch{1}.spm.tools.cat.tools.long.subj.mov{i} = names{i};
 end
 
-matlabbatch{1}.spm.tools.cat.tools.long.modulate = 2;
+matlabbatch{1}.spm.tools.cat.tools.long.modulate = 1;
 
 % always deselect print option
 matlabbatch{1}.spm.tools.cat.tools.long.extopts.print = 0;

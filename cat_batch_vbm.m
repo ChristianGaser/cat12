@@ -40,6 +40,7 @@ cat12.extopts.print = 0;
 
 fid = fopen(namefile,'r');
 names = textscan(fid,'%s');
+names = names{:};
 fclose(fid);
 n = length(names);
 

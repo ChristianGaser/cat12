@@ -243,7 +243,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     if opt.usePPmap
       % surface refinement by surface deformation based on the PP map
-      th = 128;
+      th = 0.5;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
                      'avg -0.15 0.15 .1 .1 15 0 "%g" "%g" n 0 0 0 250 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
