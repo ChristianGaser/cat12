@@ -7954,6 +7954,7 @@ Comment: Added ;; in MATLAB code to mark special lines to jump in the editor.
 
 
 ------------------------------------------------------------------------
+r809 | dahnke | 2015-12-03 15:51:39 +0100 (Do, 03 Dez 2015) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7973,5 +7974,19 @@ Fixed:    Workaround in cat_surf_vol2surf with MATLAB value extraction in case
           of simple readout at CS position.    
 Fixed:    Command Line output in cat_surf_createCS.
 
+
 ------------------------------------------------------------------------
-r809 | dahnke | 2015-12-03 15:51:30
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_long.m
+M       cat_batch_vbm.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Fixed: CAT_NiftiIO now correctly reads nifti-files (affects mapping using
+    CAT_3dVol2Surf and CAT_Deform).
+(2) Fixed: Update of longitudinal batch to consider new matlab versions.
+------------------------------------------------------------------------
+r810 | gaser | 2015-12-11 16:57:06
