@@ -49,7 +49,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   opt           = cat_io_updateStruct(def,opt);
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
-  opt.usePPmap  = 0; % ########### 1 does not work yet ##########
+  opt.usePPmap  = 1; % ########### 1 does not work yet ##########
   
   expert = cat_get_defaults('extopts.expertgui');
   
@@ -189,9 +189,13 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     vmatBBV = spm_imatrix(V.mat);
 
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
-    vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
+    vmati = inv([vmat; 0 0 0 1]); vmati(4,:) = [];    
 
-    [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,0.5);
+    % if we can use the PP map we start with a surface that is close to WM surface because this will minimize severe
+    % topology defects. Otherwise we use a threshold of 0.5 which is the central surface
+    if opt.usePPmap th_initial = 0.99; else th_initial = 0.5; end
+    [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
+    
     clear Yppi;
 
     % correction for the boundary box used within the surface creation process 
@@ -242,6 +246,15 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
     
     if opt.usePPmap
+      % we use thickness values to get from the initial (white matter) surface to the central surface
+      % the extent depends on the inital threshold of the surface creation
+      extent = th_initial - 0.5;
+      if extent ~= 0
+        cmd = sprintf(['CAT_Central2Pial "%s" "%s" "%s" "%g"'], ...
+                     Pcentral,Pthick,Pcentral,extent);
+        [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
+      end
+      
       % surface refinement by surface deformation based on the PP map
       th = 0.5;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
