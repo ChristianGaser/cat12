@@ -58,7 +58,7 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
   % values in WM area to limit the Ycsfd to the maximum value that
   % is possible within the cortex.
   stime = cat_io_cmd('    CSF distance: ','g5','',opt.verb,stime);
-  Ywmm = cat_vol_morph(Ymf>2.5,'d');
+  Ywmm = cat_vol_morph(Ymf>2.5,'e'); % this was dilate???
   YM = max(0,min(1,(2-Ymf))); YM(Ywmm)=nan; Ycsfd = cat_vol_eidist(YM,max(0,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug); 
   YM = max(0,min(1,(3-Ymf))); YM(Ywmm)=nan; Ywmdc = cat_vol_eidist(YM,max(0,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug);   
   YM = Ymf>2.5 & ~Ywmm; Ycsfd(YM) = Ycsfd(YM) - Ywmdc(YM); Ycsfd(isinf(-Ycsfd)) = 0; clear Ywmdc;

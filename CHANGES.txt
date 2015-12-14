@@ -7991,6 +7991,7 @@ M       html/cat.html
 (2) Fixed: Update of longitudinal batch to consider new matlab versions.
 
 ------------------------------------------------------------------------
+r811 | gaser | 2015-12-12 01:05:47 +0100 (Sa, 12 Dez 2015) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8001,5 +8002,43 @@ M       cat_surf_createCS.m
     estimate a preliminary central surface that is finally refined using
     surface deformation.
 (2) Added: function to install atlases in SPM.
+
 ------------------------------------------------------------------------
-r811 | gaser | 2015-12-12 01:05:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_vol_atlas.m
+M       cat_vol_pbt.m
+M       cat_vol_sanlm.m
+M       compile.m
+ M      internal
+A       internal/cat_surf_reduceAvgSurf.m
+MM      internal/cat_vol_atlas.m
+A       internal/cat_vol_cMRegularizarNLM3D.c
+A       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+A       internal/cat_vol_cMRegularizarNLM3Dw.c
+A       internal/cat_vol_nlmus.m
+ M      templates_surfaces
+
+Fixed:    Small, but severe error in the thickness and surface position 
+          estimation of PBT2x.
+Fixed:    Corrected errors in internal cat_vol_atlas.  
+Fixed:    Corrected thickness projection problem in low resolution data. 
+Fixed:    Corrected copy&paste-error of global thickness report. 
+Changed:  Added some code, if only one surface is available. 
+New:      Added Non-local-means upsampling (NLMUS) function cat_vol_nlmus.
+          NLMUS is relatively slow (~10 minutes for 1x1x3 NIH image, ~40 minutes
+          for 0.6x0.6x1.8 reduced Winterburn image), but I think it do a great
+          job especially for anisotropic data. It does not work in label images
+          such as the p0*.nii or atlas maps.
+New:      Added internal c-function for NLMUS for mac/linux (working) and 
+          windows (not yet tested). Added code in compile function.
+New:      Added internal function to reduce template surfaces for faster tests. 
+          Although the reduction works correct, moste surface processing
+          functions were not faster.
+          
+------------------------------------------------------------------------
+r812 | dahnke | 2015-12-14 10:56:28

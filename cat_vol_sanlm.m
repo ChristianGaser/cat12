@@ -56,7 +56,7 @@ for i = 1:numel(job.data)
     V(i).descrip = sprintf('%s SANLM filtered',V(i).descrip);
     
     % use at least float precision
-    if  V(i).dt(1)<16 V(i).dt(1) = 16; end 
+    if  V(i).dt(1)<16, V(i).dt(1) = 16; end 
     spm_write_vol(V(i), src);
     spm_progress_bar('Set',i);
 end

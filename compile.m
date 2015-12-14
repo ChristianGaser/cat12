@@ -1,11 +1,40 @@
 function varargout = compile(comp,test,verb)
 % ______________________________________________________________________
+% Function to compile and test cat12 c-functions. 
+% Testing include a standard call of the function with simple image and
+% small a small test of the eximated values. 
+% 
+%   [ok] = compile([comp,test,verb])
+%   
+%   comp = [0|1]: compile functions; default 1
+%   test = [0|1]: test compiled functions; default 1
+%   verb = [0|1]: display progress; default 1
+%
+%   ok = [0|1]: all functions compoled | tested successfull
+% ______________________________________________________________________
 % $Id$ 
+
+% developer help
+% ______________________________________________________________________
+%  
+%   [ok,s,r] = compile([comp,test,verb]
+% 
+%   s and r are only available for test==1
+%
+%   s  = vector of the test results of each function
+%   r  = vecotr of the RMS error of the tests (the error gives no
+%        information about the accuracy of the function, as far as
+%        comparison function do somethimes only similar things)
+% ______________________________________________________________________
 
   if ~exist('comp','var'), comp=1; end
   if ~exist('test','var'); test=1; end
   if ~exist('verb','var'); verb=1; end
 
+  wkdir   = cd; 
+  catdir  = fullfile(spm(dir),'toolbox','cat12'); 
+  catidir = fullfile(catdir,'internal');  
+  
   %% testdata rand('state',0);
   % ds('d2','',1,d0,d1/2,dw/6 + 0.5/6,dc/6 + 0.5/6,5)
   d0  = single(rand(10,10,10)); d0(5,5,5) = NaN;
@@ -14,15 +43,18 @@ function varargout = compile(comp,test,verb)
   dw  = zeros(10,10,10,'single'); for si=3:8; dw(si,:,:)=8.5-si; end; dw(5,5,5) = NaN; % wm distance
   dcube = zeros(10,10,10,'single'); dcube(3:end-2,3:end-2,3:end-2) = 1; d1(5,5,5) = NaN;
   
-  %% compiling
+  
+  %% compiling c-functions
   if comp==1
-    
+    cd(catdir);
+  
     if strcmp(mexext,'mexmaci64')
       mexflag='-Dchar16_t=UINT16_T CFLAGS=''$CFLAGS -Wall -ansi -pedantic -Wextra'' CPPLAGS=''$CPPFLAGS -Wall -ansi -pedantic -Wextra''';
     else
       mexflag='';
     end
 
+    % main c-functions
     eval(['mex ' mexflag ' -O cat_amap.c Kmeans.c Amap.c MrfPrior.c Pve.c vollib.c'])
     eval(['mex ' mexflag ' -O cat_vol_median3.c'])
     eval(['mex ' mexflag ' -O cat_vol_median3c.c'])
@@ -39,10 +71,27 @@ function varargout = compile(comp,test,verb)
     eval(['mex ' mexflag ' -O cat_vbdist.c'])
     eval(['mex ' mexflag ' -O cat_ornlm.c ornlm_float.c'])
     eval(['mex ' mexflag ' -O cat_sanlm.c sanlm_float.c'])
+      
+    % internal c-functions
+    cd(catidir);
+    if strcmp(mexext,'mexw64')
+      eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
+      movefile('cat_vol_cMRegularizarNLM3Dw.mexw32','cat_vol_cMRegularizarNLM3D.mexw32');
+    elseif strcmp(mexext,'mexw64')
+      eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
+      movefile('cat_vol_cMRegularizarNLM3Dw.mexw64','cat_vol_cMRegularizarNLM3D.mexw64');
+    elsecd(catidir);
+      eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3D.c']);
+    end
+    
+    cd(wkdir);
   end
   
   
-  %% test functions
+  
+  %% test c-functions
+  r = []; 
+  s = []; 
   if test==1
   
     ntests = 15;
@@ -176,6 +225,14 @@ function varargout = compile(comp,test,verb)
       subplot(2,2,4), patch(MSs,'facecolor',[.8 .7 .6]); axis equal off; lighting phong; view(3); camlight; zoom(1.8)
     end
     
+    % NLM upsampling 
+    % c-fuction used iterative based on an interpolated image
+    n{16} = 'cat_vol_cMRegularizarNLM3D';   
+    dnc   = cat_vol_cMRegularizarNLM3D(dcc,3,1,std(d0nan(:))/2,[2 2 2]);
+    d{16} = dcl - dnc; 
+    r(16) = rms(d{16}); 
+    s(16) = rms(d{16})<0.05; 
+    
     % Display results
     if verb
       for si=1:numel(s)
@@ -191,10 +248,12 @@ function varargout = compile(comp,test,verb)
     disp(['save ' debugname]);
     save(debugname,'d','CS');
     
-    ok = all(s==0);
+    ok = all(s==1);
   else
     ok = 1;
   end
  
-  if nargout==1, varargout{1}=ok; end
+  if nargout>0, varargout{1}=ok; end
+  if nargout>1, varargout{2}=s;  end  
+  if nargout>2, varargout{3}=r;  end  
 end

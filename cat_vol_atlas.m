@@ -75,7 +75,7 @@ function cat_vol_atlas(atlas,refinei)
   end
   if isempty(P) || isempty(PA), return; end
   
-  
+  nlabel  = 1;
   recalc  = 0; 
   mode    = 0; % modulation of each label map? .. do not work yet ... see cat_vol_defs
   if mode, modm='m'; else modm=''; end %#ok<UNRCH>
@@ -154,9 +154,9 @@ function cat_vol_atlas(atlas,refinei)
       end
     end
     if refine
-      ROIavg(Pwp0,Pwa,Pws,Pcsv,Ptxt,atlas,resdir,Pxml);
+      ROIavg(Pwp0,Pwa,Pws,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel);
     else
-      ROIavg(Pwp0,PwA,Pws,Pcsv,Ptxt,atlas,resdir,Pxml);
+      ROIavg(Pwp0,PwA,Pws,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel);
     end
 
     
@@ -275,9 +275,9 @@ function cat_vol_atlas(atlas,refinei)
     % create the final probability ROI map as a 4D dataset, the simplyfied 
     % atlas map for the CAT toolbox and a mean p0 images
     if refine
-      subROIavg(Pwp0,Pwa,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
+      subROIavg(Pwp0,Pwa,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     else
-      subROIavg(Pwp0,PwA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
+      subROIavg(Pwp0,PwA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     end
   end
 end
@@ -599,7 +599,7 @@ function calldefs(Py,PA,interp,modulate)
   end
   warning on; 
 end
-function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
+function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
 % atlas map for the CAT toolbox and a mean p0 images
@@ -616,11 +616,11 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
     csv = cat_io_csv(Pcsv{1});
   
     % normalization of ROI-names ...
-    csv=translateROI(csv,atlas);
+    csv=translateROI(csv,atlas,nlabel);
   
     if size(csv,2)<3, for ROIi=2:size(csv,1), csv{ROIi,3} = csv{ROIi,2}; end; end
     if isnumeric(csv{1}) || (ischar(csv{1}) && isempty(str2double(csv{1})))
-      header = {'ROIidO','ROInameO','ROIname','ROIabbr','ROIn','ROIs'};
+      header = {'ROIidO','ROInameO','ROIname','ROIabbr','ROIn','ROIs','ROIidOall','ROInameOall'};
       csv = [header;csv]; 
     end
     dsc = atlas; for ROIi=2:size(csv,1), dsc = sprintf('%s,%s-%s',dsc,csv{ROIi,1},csv{ROIi,3}); end
@@ -671,30 +671,36 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   H    = hist(single(max(hb(1),min(hb(2),Y(:)))),single(datarange)); H(hb(1)+1)=0; 
   cod  = repmat(datarange',1,4);
   if hb(2)>0
-    codi=cod(H>0,1);
+    if nlabel, codi=cod(H>0,1); else codi=[csv{2:end,1}]'; end
     for codii=1:numel(codi), codi(codii) = csv{1+find([csv{2:end,1}]==codi(codii)),6}; end
-    cod(H>0,4) = codi; 
+    if nlabel, cod(H>0,4) = codi; else cod([csv{2:end,1}],4) = codi; end
 
-    codi=cod(H>0,2);
+    if nlabel,codi=cod(H>0,2); else codi=[csv{2:end,1}]'; end
     for codii=1:numel(codi), codi(codii) = csv{1+find([csv{2:end,1}]==codi(codii)),5}; end
-    cod(H>0,2) = codi;
-    
+    if nlabel, cod(H>0,2) = codi; else cod([csv{2:end,1}],4) = codi; end
+
     % nicht alle alten strukturen sind doppel zu nehmen...
     [ia,ib,ic] = unique(codi); 
     cod(H>0,3) = ic*2; 
-    
     del  = setdiff([csv{2:end,1}],[csv{2:end,5}]); 
     codi = setdiff(codi,del);
     
-    csvx = {'ROIid' 'ROIappr' 'ROIname' 'ROIbase'; 0 'BG' 'Background' 'Background'};
+    csvx = {'ROIid' 'ROIappr' 'ROIname' 'ROIbaseid' 'ROIbasename'; 0 'BG' 'Background' '[0]' 'Background'};
     for ri=1:numel(codi)
       id = find([csv{2:end,5}]==codi(ri),'1','first');
-      csvx{(ri*2)+1,1} = (ri*2)-1;   
+      csvx{(ri*2)+1,1} = (ri*2)-1;    % ROIid
       csvx{(ri*2)+2,1} = (ri*2); 
-      csvx{(ri*2)+1,2} = csv{id+1,4}; csvx{(ri*2)+1,3} = csv{id+1,3}; csvx{(ri*2)+1,4} = csv{id+1,2}; 
-      csvx{(ri*2)+2,2} = csv{id+1,4}; csvx{(ri*2)+2,3} = csv{id+1,3}; csvx{(ri*2)+2,4} = csv{id+1,2}; 
+      csvx{(ri*2)+1,2} = csv{id+1,4}; % ROIappr 
+      csvx{(ri*2)+2,2} = csv{id+1,4};  
+      csvx{(ri*2)+1,3} = csv{id+1,3}; % ROIname
+      csvx{(ri*2)+2,3} = csv{id+1,3};
+      csvx{(ri*2)+1,4} = sprintf('[ %s]',sprintf('%d ',csv{id+1,7})); % ROIbaseid = ROIidO
+      csvx{(ri*2)+2,4} = sprintf('[ %s]',sprintf('%d ',csv{id+1,7})); 
+      csvx{(ri*2)+1,5} = csv{id+1,2}; % ROIbase = ROInameO
+      csvx{(ri*2)+2,5} = csv{id+1,2}; 
     end
     
+    %%
 %     %for idi=1:2:numel(ia); id(idi) = find([csv{2:end,5}]==idi,1,'first'); end
 %     csvx(:,1)  = [{'ROIid'};num2cell((0:numel(ia)*2)')];
 %     csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat((1+ia)',2,1),2*numel(ia),1),4)];
@@ -712,6 +718,9 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
       else             csvx{si,2} = ['r',csvx{si,2}]; csvx{si,3} = ['Right ',csvx{si,3}];
       end
     end
+    for ri=2:size(csvx,1)
+      csvx{ri,4} = strjoin(unique(strsplit(csvx{ri,4},{'-','_',' '})));
+    end  
   end
   if max([csv{5,:}]) %max(round(cod(H>0,3)))<256 
     dt2='uint8';
@@ -738,7 +747,12 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   % 1) liegt kein links rechts vor, dann mist
   % 2) ist links rechts mist, dann bleibts mist
   % x) seitenzuweisung ist irgendwie qatsch
-  for j=1:(N.dat.dim(4))
+  for j=1:min(max([csv{2:end,1}]),(N.dat.dim(4)))
+    if j==1
+      stime = cat_io_cmd(sprintf(' Label %d',j),'g5','',1);
+    else
+      stime = cat_io_cmd(sprintf(' Label %d',j),'g5','',1,stime);
+    end
     Y = zeros(VA(1).dim,dt2);
     for i=1:numel(PA)
       Yi = spm_read_vols(VA(i));
@@ -785,6 +799,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   
   %% p0-mean map
   % --------------------------------------------------------------------
+  stime = cat_io_cmd('p0-mean map','n','',1,stime);
   N             = nifti;
   N.dat         = file_array(fullfile(resdir,['p0' atlas '.nii']),...
                   VC(1).private.dat.dim(1:3),[spm_type(dt2) spm_platform('bigend')],0,3/255,0);
@@ -802,6 +817,8 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
   
   %% 3d-label map
   % --------------------------------------------------------------------
+  stime = cat_io_cmd('3d-label map','n','',1,stime);
+  
   M = smooth3(cat_vol_morph((Y/numel(P))>0.1,'labclose',1))>0.2; 
   
   N             = nifti;
@@ -867,7 +884,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
   end
 end
-function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
+function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
 % ----------------------------------------------------------------------
 % create the final probability ROI map as a 4D dataset, the simplyfied 
 % atlas map for the CAT toolbox and a mean p0 images
@@ -881,7 +898,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
     csv = cat_io_csv(Pcsv{1});
   
     % normalization of ROI-names ...
-    csv=translateROI(csv,atlas);
+    csv=translateROI(csv,atlas,nlabel);
     
     
     if size(csv,2)<3, for ROIi=2:size(csv,1), csv{ROIi,3} = csv{ROIi,2}; end; end
@@ -1063,7 +1080,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml)
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']));
   end
 end
-function csv=translateROI(csv,atlas)
+function csv=translateROI(csv,atlas,nlabel)
 %% ---------------------------------------------------------------------
 %  Translate the string by some key words definied in dict.
 %  ---------------------------------------------------------------------
@@ -1076,7 +1093,7 @@ function csv=translateROI(csv,atlas)
   end
   if size(csv,2)>3, csv(:,3:end) = []; end % remove other stuff
   
-  csv(:,5) = csv(:,1); %num2cell((1:size(csv,1))'); %
+  csv(:,5) = num2cell((1:size(csv,1))'); %csv(:,1); %
   dict  = ROIdict;
   
   for i=1:size(csv,1)
@@ -1093,7 +1110,7 @@ function csv=translateROI(csv,atlas)
       for pi=1:numel(dict.sides{di,3})
         nsid = strfind(lower(csv{i,2}),lower(dict.sides{di,3}{pi})); 
         if indi(di) && ~isempty(nsid) && numel(nsid)>=numel(sid)
-          indi(di) = 0; pi
+          indi(di) = 0; 
         end
       end
     end
@@ -1129,7 +1146,7 @@ function csv=translateROI(csv,atlas)
       [x,indi] = find(indi);
       for indii=1:numel(indi)
         if ~isempty(indi)
-          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5}>0
+          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5}>0 && nlabel
             csv{i,4} = '';
             csv{i,3} = '';
             csv{i,5} = 0;
@@ -1167,7 +1184,7 @@ function csv=translateROI(csv,atlas)
       [x,indi] = find(indi);
       for indii=1:numel(indi)
         if ~isempty(indi)
-          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5}
+          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5} && nlabel
             csv{i,4}='';
             csv{i,3}='';
             csv{i,5}=0;  
@@ -1189,25 +1206,66 @@ function csv=translateROI(csv,atlas)
       csv{i,4} = csv{i,4}(rmside+1:end);
     end
   end
-  
-  % reset label for structures with similar appreservations
-  for i=1:size(csv,1)
-    sids=strcmp(csv(:,4),csv{i,4});
-    if sum(sids(:))>1
-      fset=find(sids); fset=sort(fset);
-      minv=min(cell2mat(csv(sids,5))); 
-      for si=fset', csv{si,5}   = minv; end  % set other to first
-      if minv>0,
-        for si=fset(2:end)' 
-          if isempty(strfind(csv{fset(1),2},csv{si,2}))
-            csv{fset(1),2} = [csv{fset(1),2} ' & ' csv{si,2}]; 
-          end
-        end % add other labels 
+ 
+  %% 
+  if ~nlabel
+    for i=1:size(csv,1)
+      if csv{i,4}=='B'
+        tmp = deblank(csv{i,2}); 
+        tmp = strrep(strrep(strrep(tmp,' ','-'),'_','-'),'.','-'); 
+        tmp = strrep(strrep(tmp,'Left-',''),'Right-','');
+        tmp = strrep(strrep(tmp,'_L',''),'_R','');
+        csv{i,3} = tmp; 
+        csv{i,4} = tmp; 
       end
-      for si=fset', csv{si,2} = csv{fset(1),2}; end
     end
   end
   
+  %% reset label for structures with similar appreservations
+  for i=1:size(csv,1)
+    sids=strcmp(csv(:,4),csv{i,4});
+
+    fset = find(sids); fset=unique(fset); 
+    csv{i,7} = [csv{fset',1}]; tmp = cell(1);
+    if nlabel
+      if i==1 
+        csv{i,5}=1;
+      else
+        if min(fset) == i
+          csv{i,5} = max([csv{1:i-1,5}])+1;
+        else
+          csv{i,5} = csv{fset(1),5};
+        end
+      end
+    else
+      csv{i,5} = fset(1);
+    end
+    
+    LRB = zeros(size(fset));
+    for ii=1:numel(fset); 
+      LRB(ii) = csv{fset(ii),6};
+      tmp{ii} = deblank(csv{fset(ii),2}); 
+      tmp{ii} = strrep(strrep(strrep(tmp{ii},' ','-'),'_','-'),'.','-'); 
+      tmp{ii} = strrep(strrep(tmp{ii},'Left-',''),'Right-','');
+      tmp{ii} = strrep(strrep(tmp{ii},'_L',''),'_R','');
+    end
+    if any(LRB==1) && any(LRB==2) && all(LRB~=3) 
+      csv{i,8} = ['Left/Right:' strjoin(unique(tmp))];
+    elseif any(LRB==1) && any(LRB==2) && any(LRB==3) 
+      csv{i,8} = ['Left/Right/Both:' strjoin(unique(tmp))];
+    elseif all(LRB==1) 
+      csv{i,8} = ['Left:' strjoin(unique(tmp))];
+    elseif all(LRB==2) 
+      csv{i,8} = ['Right:' strjoin(unique(tmp))];
+    elseif all(LRB==3) 
+      csv{i,8} = ['Both:' strjoin(unique(tmp))];
+    else
+      csv{i,8} = ['Unk:' strjoin(unique(tmp))];
+    end
+    csv{i,8} = strrep(csv{i,8},' ','.');
+  end
+
+    
   
   
 end
@@ -1250,9 +1308,11 @@ function dict=ROIdict()
     'Ext'            {'Exterior'} {}
   };
   dict.structures = { ... % unspecific multiple cases
+    '1st'            {'First','1st'} {}
+    '2nd'            {'Sencond','2nd'} {}
     '3th'            {'Third','3rd'} {}
     '4th'            {'Fourth','4th'} {}
-    '5th'            {'Fourth','5th'} {}
+    '5th'            {'Fifth','5th'} {}
     ...
     'BG'             {'Background'} {}
     'C'              {'Capsule' 'Capsula'} {}
@@ -1279,7 +1339,7 @@ function dict=ROIdict()
     'Pro'            {'Proper'} {}
     'Ped'            {'Peduncle'} {}    
     'Ver'            {'Vermis'} {}    
-    ''               {'Unknown' 'undetermine'} {}
+    'Ukn'            {'Unknown' 'undetermine'} {'Background'}
     'Bone'           {'Bone'} {}
     'Fat'            {'Fat'} {}
     'BV'             {'Bloodvessel' 'blood' 'vessel'} {}
@@ -1353,8 +1413,8 @@ function dict=ROIdict()
     'B'               {'Brain' 'pOg'} {'brainstem' 'brain-stem'}  
     'B'               {'Brain' 'Porg'} {'brainstem' 'brain-stem'}
     'B'               {'Brain' 'Aorg'} {'brainstem' 'brain-stem'}
-    ''                {'Background' 'Bright-Unknown'} {}
-    ''                {'Background' 'Dark_Unknown'} {}
+    'BG'              {'Background' 'Bright-Unknown'} {}
+    'BG'              {'Background' 'Dark_Unknown'} {}
   };
   dict.aala = {
     'SMA'            {'SMA'} {}
@@ -1770,3 +1830,279 @@ function create_spm_atlas_xml(fname,csv,opt)
   fprintf(fid,[xml.header,xml.data,xml.footer]);
   fclose(fid);
 end
+% newer maltab functions
+%--------------------------------------------------------------------------
+function [c, matches] = strsplit(str, aDelim, varargin)
+%STRSPLIT  Split string at delimiter
+%   C = STRSPLIT(S) splits the string S at whitespace into the cell array
+%   of strings C.
+%
+%   C = STRSPLIT(S, DELIMITER) splits S at DELIMITER into C. DELIMITER can
+%   be a string or a cell array of strings. If DELIMITER is a cell array of
+%   strings, STRSPLIT splits S along the elements in DELIMITER, in the
+%   order in which they appear in the cell array.
+%
+%   C = STRSPLIT(S, DELIMITER, PARAM1, VALUE1, ... PARAMN, VALUEN) modifies
+%   the way in which S is split at DELIMITER.
+%   Valid parameters are:
+%     'CollapseDelimiters' - If true (default), consecutive delimiters in S
+%       are treated as one. If false, consecutive delimiters are treated as
+%       separate delimiters, resulting in empty string '' elements between
+%       matched delimiters.
+%     'DelimiterType' - DelimiterType can have the following values:
+%       'Simple' (default) - Except for escape sequences, STRSPLIT treats
+%         DELIMITER as a literal string.
+%       'RegularExpression' - STRSPLIT treats DELIMITER as a regular
+%         expression.
+%       In both cases, DELIMITER can include the following escape
+%       sequences:
+%           \\   Backslash
+%           \0   Null
+%           \a   Alarm
+%           \b   Backspace
+%           \f   Form feed
+%           \n   New line
+%           \r   Carriage return
+%           \t   Horizontal tab
+%           \v   Vertical tab
+%
+%   [C, MATCHES] = STRSPLIT(...) also returns the cell array of strings
+%   MATCHES containing the DELIMITERs upon which S was split. Note that
+%   MATCHES always contains one fewer element than C.
+%
+%   Examples:
+%
+%       str = 'The rain in Spain stays mainly in the plain.';
+%
+%       % Split on all whitespace.
+%       strsplit(str)
+%       % {'The', 'rain', 'in', 'Spain', 'stays',
+%       %  'mainly', 'in', 'the', 'plain.'}
+%
+%       % Split on 'ain'.
+%       strsplit(str, 'ain')
+%       % {'The r', ' in Sp', ' stays m', 'ly in the pl', '.'}
+%
+%       % Split on ' ' and on 'ain' (treating multiple delimiters as one).
+%       strsplit(str, {' ', 'ain'})
+%       % ('The', 'r', 'in', 'Sp', 'stays',
+%       %  'm', 'ly', 'in', 'the', 'pl', '.'}
+%
+%       % Split on all whitespace and on 'ain', and treat multiple
+%       % delimiters separately.
+%       strsplit(str, {'\s', 'ain'}, 'CollapseDelimiters', false, ...
+%                     'DelimiterType', 'RegularExpression')
+%       % {'The', 'r', '', 'in', 'Sp', '', 'stays',
+%       %  'm', 'ly', 'in', 'the', 'pl', '.'}
+%
+%   See also REGEXP, STRFIND, STRJOIN.
+
+%   Copyright 2012 The MathWorks, Inc.
+%   $Revision$  $Date$
+
+%narginchk(1, Inf);
+
+% Initialize default values.
+collapseDelimiters = true;
+delimiterType = 'Simple';
+
+% Check input arguments.
+if nargin < 2
+    delimiterType = 'RegularExpression';
+    aDelim = '\s';
+end
+if ~isString(str)
+    error(message('MATLAB:strsplit:InvalidStringType'));
+end
+if isString(aDelim)
+    aDelim = {aDelim};
+elseif ~isCellString(aDelim)
+    error(message('MATLAB:strsplit:InvalidDelimiterType'));
+end
+if nargin > 2
+    funcName = mfilename;
+    p = inputParser;
+    p.FunctionName = funcName;
+    p.addParamValue('CollapseDelimiters', collapseDelimiters);
+    p.addParamValue('DelimiterType', delimiterType);
+    p.parse(varargin{:});
+    collapseDelimiters = verifyScalarLogical(p.Results.CollapseDelimiters, ...
+        funcName, 'CollapseDelimiters');
+    delimiterType = validatestring(p.Results.DelimiterType, ...
+        {'RegularExpression', 'Simple'}, funcName, 'DelimiterType');
+end
+
+% Handle DelimiterType.
+if strcmp(delimiterType, 'Simple')
+    % Handle escape sequences and translate.
+    aDelim = strescape(aDelim);
+    aDelim = regexptranslate('escape', aDelim);
+else
+    % Check delimiter for regexp warnings.
+    regexp('', aDelim, 'warnings');
+end
+
+% Handle multiple delimiters.
+aDelim = strjoin(aDelim, '|');
+
+% Handle CollapseDelimiters.
+if collapseDelimiters
+    aDelim = ['(?:', aDelim, ')+'];
+end
+
+% Split.
+[c, matches] = regexp(str, aDelim, 'split', 'match');
+
+end
+function tf = verifyScalarLogical(tf, funcName, parameterName)
+
+if isscalar(tf) && isnumeric(tf) && any(tf == [0, 1])
+    tf = logical(tf);
+else
+    validateattributes(tf, {'logical'}, {'scalar'}, funcName, parameterName);
+end
+
+end
+%--------------------------------------------------------------------------
+function joinedStr = strjoin(c, aDelim)
+%STRJOIN  Join cell array of strings into single string
+%   S = STRJOIN(C) constructs the string S by linking each string within
+%   cell array of strings C together with a space.
+%
+%   S = STRJOIN(C, DELIMITER) constructs S by linking each element of C
+%   with the elements of DELIMITER. DELIMITER can be either a string or a
+%   cell array of strings having one fewer element than C.
+%
+%   If DELIMITER is a string, then STRJOIN forms S by inserting DELIMITER
+%   between each element of C. DELIMITER can include any of these escape
+%   sequences:
+%       \\   Backslash
+%       \0   Null
+%       \a   Alarm
+%       \b   Backspace
+%       \f   Form feed
+%       \n   New line
+%       \r   Carriage return
+%       \t   Horizontal tab
+%       \v   Vertical tab
+%
+%   If DELIMITER is a cell array of strings, then STRJOIN forms S by
+%   interleaving the elements of DELIMITER and C. In this case, all
+%   characters in DELIMITER are inserted as literal text, and escape
+%   characters are not supported.
+%
+%   Examples:
+%
+%       c = {'one', 'two', 'three'};
+%
+%       % Join with space.
+%       strjoin(c)
+%       % 'one two three'
+%
+%       % Join as a comma separated list.
+%       strjoin(c, ', ')
+%       % 'one, two, three'
+%
+%       % Join with a cell array of strings DELIMITER.
+%       strjoin(c, {' + ', ' = '})
+%       % 'one + two = three'
+%
+%   See also STRCAT, STRSPLIT.
+
+%   Copyright 2012 The MathWorks, Inc.
+%   $Revision$  $Date$
+
+%narginchk(1, 2);
+
+% Check input arguments.
+if ~isCellString(c)
+    error(message('MATLAB:strjoin:InvalidCellType'));
+end
+if nargin < 2
+    aDelim = ' ';
+end
+
+% Allocate a cell to join into - the first row will be C and the second, D.
+numStrs = numel(c);
+joinedCell = cell(2, numStrs);
+joinedCell(1, :) = reshape(c, 1, numStrs);
+if isString(aDelim)
+    if numStrs < 1
+        joinedStr = '';
+        return;
+    end
+    escapedDelim = strescape(aDelim);
+    joinedCell(2, 1:numStrs-1) = {escapedDelim};
+elseif isCellString(aDelim)
+    numDelims = numel(aDelim);
+    if numDelims ~= numStrs - 1
+        error(message('MATLAB:strjoin:WrongNumberOfDelimiterElements'));
+    end
+    joinedCell(2, 1:numDelims) = aDelim(:);
+else
+    error(message('MATLAB:strjoin:InvalidDelimiterType'));
+end
+
+% Join.
+joinedStr  = [joinedCell{:}];
+
+end
+function y=isString(x)
+  y = ischar(x);
+end
+function y=isCellString(x)
+  y = 0; 
+  if iscell(x)
+    for i=1:numel(x)
+      if ~ischar(x{i}), return; end
+    end
+  else
+    return 
+  end
+  y = 1; 
+end
+function escapedStr = strescape(str)
+%STRESCAPE  Escape control character sequences in a string.
+%   STRESCAPE(STR) converts the escape sequences in a string to the values
+%   they represent.
+%
+%   Example:
+%
+%       strescape('Hello World\n')
+%
+%   See also SPRINTF.
+
+%   Copyright 2012 The MathWorks, Inc.
+%   $Revision$  $Date$
+
+escapeFcn = @escapeChar;                                        %#ok<NASGU>
+escapedStr = regexprep(str, '\\(.|$)', '${escapeFcn($1)}');
+
+end
+%--------------------------------------------------------------------------
+function c = escapeChar(c)
+    switch c
+    case '0'  % Null.
+        c = char(0);
+    case 'a'  % Alarm.
+        c = char(7);
+    case 'b'  % Backspace.
+        c = char(8);
+    case 'f'  % Form feed.
+        c = char(12);
+    case 'n'  % New line.
+        c = char(10);
+    case 'r'  % Carriage return.
+        c = char(13);
+    case 't'  % Horizontal tab.
+        c = char(9);
+    case 'v'  % Vertical tab.
+        c = char(11);
+    case '\'  % Backslash.
+    case ''   % Unescaped trailing backslash.
+        c = '\';
+    otherwise
+        warning(message('MATLAB:strescape:InvalidEscapeSequence', c, c));
+    end
+end
+
