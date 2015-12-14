@@ -1919,13 +1919,13 @@ qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.cat.species, ...
 if job.output.surface && exist('S','var')
   % metadata
   if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
-  if isfield(S,'lh') && isfield(S.lh,'th1'), th=[th, S.lh.th1]; end
+  if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th, S.rh.th1]; end
   qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
-  if isfield(S,'lh') && isfield(S.lh,'th2'), th=[th, S.lh.th2]; end
+  if isfield(S,'rh') && isfield(S.lh,'rh2'), th=[th, S.rh.th2]; end
   qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
-  if isfield(S,'lh') && isfield(S.lh,'th3'), th=[th, S.lh.th3]; end
+  if isfield(S,'rh') && isfield(S.lh,'rh3'), th=[th, S.rh.th3]; end
   qa.subjectmeasures.dist_CSFdepth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   
   %qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
@@ -1982,11 +1982,11 @@ if cat12.print
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
   if job.output.surface
-    str = [str struct('name', ' Voxel resolution (original > intern > PBT):',...
+    str = [str struct('name', 'Voxel resolution (original > intern > PBT):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
            qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
   else
-    str = [str struct('name', ' Voxel resolution (original > intern):',...
+    str = [str struct('name', 'Voxel resolution (original > intern):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s', ...
            qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179)))];
   end       
@@ -2039,7 +2039,7 @@ if cat12.print
   end
   
   % Rating scala
-  str4 = struct('name',sprintf('  \bfRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
+  str4 = struct('name',sprintf(' \bRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
         mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
         mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
         mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  

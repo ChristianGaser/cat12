@@ -30,6 +30,7 @@ function varargout = cat_surf_display(varargin)
 % $Id$
 
   SVNid = '$Rev$';
+  if nargout>0, varargout{1}{1} = []; end   
 
   if nargin>0
     if isstruct(varargin{1})
@@ -81,19 +82,23 @@ function varargout = cat_surf_display(varargin)
       if strcmp(sinfo(i).side,'rh'), oside = 'lh'; else oside = 'rh'; end
       Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)];
       Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
+      for im=numel(Pmesh):-1:1
+        if ~exist(Pmesh{im},'file'), Pmesh(im) = []; end
+        if ~exist(Pdata{im},'file'), Pdata(im) = []; end
+      end
+      if numel(Pmesh)==1; Pmesh=char(Pmesh); end
+      if numel(Pdata)==1; Pdata=char(Pdata); end
     else
       Pmesh = sinfo(i).Pmesh;
       Pdata = sinfo(i).Pdata; 
     end
-    
-    
     
     try
       if job.verb
         fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
       end
       
-      if ~all(strcmp(Pmesh,Pdata)) && ~isempty(Pdata) && (~job.multisurf || ~all(cellfun('isempty',Pdata)))
+      if ~all(strcmp(Pmesh,Pdata)) && ~isempty(Pdata) 
         % only gifti surface without texture
         if isfield(job,'parent')
           h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
@@ -171,7 +176,7 @@ function varargout = cat_surf_display(varargin)
       try
         h = cat_surf_render(job.data{i});
       catch %#ok<CTCH>
-        cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s.\n',job.data{i})); 
+        cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
       end
       continue
     end

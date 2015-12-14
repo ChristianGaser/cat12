@@ -46,7 +46,7 @@ function cat_vol_atlas(atlas,refinei)
 %   handeln!
 %     - Region-Teilregion
 %_______________________________________________________________________
-% $Id: cat_vol_atlas.m 706 2015-08-03 14:40:47Z dahnke $
+% $Id$
 
 %#ok<*ASGLU,*WNOFF,*WNON,*TRYNC>
   
@@ -543,7 +543,7 @@ function callvbm(P)
 % This function call VBM segmenation to estimate the normalization
 % parameters for the atlas map.
 % ----------------------------------------------------------------------
-% Job saved on 28-Oct-2013 14:37:37 by cfg_util (rev $Rev: 706 $)
+% Job saved on 28-Oct-2013 14:37:37 by cfg_util (rev $Rev$)
 % spm SPM - SPM12b (5298)
 % cfg_basicio BasicIO - Unknown
 % ----------------------------------------------------------------------
