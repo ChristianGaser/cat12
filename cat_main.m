@@ -1781,7 +1781,7 @@ if job.output.surface
     
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:createCS',...
-      sprintf('Surface ceation error! %s',message));
+      sprintf('Surface creation error! %s',message));
 
   end
 

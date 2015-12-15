@@ -114,6 +114,10 @@ float fpow(float x, float y) {
   return (float) pow((double) x,(double) y); 
 }
 
+float fsqr(float x) {
+  return x*x; 
+}
+
 float fsqrt(float x) {
   return (float) sqrt((double) x); 
 }
@@ -248,7 +252,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    * other variables 
    */
   float dinu, dinv, dinw, dcf, WMu, WMv, WMw, WM, DIN;  /* distance and intensity variables */
-  int   i,n,ii,ni,u,v,w,nu,nv,nw,iu,iv,iw;              /* nL and index-values of a voxel, one neighbor and the nearest boundary voxel */
+  int   i,n,ni,u,v,w,nu,nv,nw,iu,iv,iw;                 /* nL and index-values of a voxel, one neighbor and the nearest boundary voxel */
   int   nC=sL[0]*sL[1]*sL[2], nCo=INT_MAX;              /* runtime variables */
   int   kll=0;                                          /* runtime variables */
   int   fast=1;                                         /* stop if number of unvisited points stay constant */
@@ -309,7 +313,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   /* 
    * Eikonal distance initialization:
-   * In 3D this can be really complex, especially for anisotripic volumes. 
+   * In 3D this can be really complex, especially for anisotropic volumes. 
    * So only a simple approximation by the PVE of a voxel is used. 
    */ 
   if ( verb ) printf("  Initialize Eikonal distance estimation and index alignment \n");
@@ -318,10 +322,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
       if ( B[i]>=0.5 ) {
         D[i] = 0.0; 
-      
+        ind2sub(i,&u,&v,&w,nL,xy,x);
+        
         for (n=0;n<26;n++) {
           ni = i + NI[n];
-          ind2sub(i,&u,&v,&w,nL,xy,x);
           ind2sub(ni,&nu,&nv,&nw,nL,xy,x); 
 
           if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || 
@@ -351,7 +355,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     nCo=nC;
     nC=0;
     
-    
     /*
      * Forward direction:
      */
@@ -359,8 +362,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       if ( D[i]<=0.0 && mxIsNaN(D[i])==0) { 
         if ( D[i]<0.0 && mxIsInf(D[i])==0 ) D[i]*=-1.0; /* mark voxel as visited */
         
-        ii=(int)i;
-        ind2sub(ii,&u,&v,&w,nL,xy,x);
+        ind2sub(i,&u,&v,&w,nL,xy,x);
 
         for (n=0;n<26;n++) {
           ni = i + NI[n];
@@ -372,7 +374,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
            * only if L is lower (to avoid region-growing over sulci)! 
            */
           if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || 
-               (abs(nw-w)>1) || (ni==ii) || mxIsNaN(D[ni]) || B[ni]>=0.5 )==0 &&
+               (abs(nw-w)>1) || (ni==i) || mxIsNaN(D[ni]) || B[ni]>=0.5 )==0 &&
                ( csf==0 || L[ni]<=(L[i]+0.1) ) ) { 
 
             /* new distance */
@@ -399,8 +401,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       if ( D[i]<=0.0 && mxIsNaN(D[i])==0) { 
         if ( D[i]<0.0 && mxIsInf(D[i])==0 ) D[i]*=-1.0; /* mark voxel as visited */
       
-        ii=(int)i;
-        ind2sub(ii,&u,&v,&w,nL,xy,x);
+        ind2sub(i,&u,&v,&w,nL,xy,x);
 
         for (n=0;n<26;n++) {
           ni = i + NI[n];
@@ -411,7 +412,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
            * only if L is lower (to avoid region-growing over sulci)! 
            */
           if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || 
-               (abs(nw-w)>1) || (ni==ii) || mxIsNaN(D[ni]) || B[ni]>=0.5 )==0 && 
+               (abs(nw-w)>1) || (ni==i) || mxIsNaN(D[ni]) || B[ni]>=0.5 )==0 && 
                ( csf==0 || L[ni]<=(L[i]+0.1) ) ) { 
 
             /* new distance */
@@ -468,14 +469,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         dinu = (float)iu-(float)nu; dinu *= s1;
         dinv = (float)iv-(float)nv; dinv *= s2;
         dinw = (float)iw-(float)nw; dinw *= s3;
-        DIN  = fsqrt(fpow(dinu,2) + fpow(dinv,2) + fpow(dinw,2)); 
+        DIN  = fsqrt(fsqr(dinu) + fsqr(dinv) + fsqr(dinw)); 
 
         
         /* For voxels that are not too close to the object the exact 
          * Euclidean distance should be estimated. For closer points
          * the previous distance value is good enough.
          */
-        if ( 1 || DIN>s123 ) {
+        if ( DIN>s123 ) {
           /* Estimation of the exact PVE boundary by estimation of a point
            * next to the boundary voxel.
            */
@@ -498,7 +499,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             /* new exact distance to interpolated boundary */ 
             if ( WM>0.4 && WM<0.6 ) {
               dinu = iu-WMu; dinv = iv-WMv; dinw = iw-WMw;
-              DIN  = fsqrt(fpow(dinu*s1,2) + fpow(dinv*s2,2) + fpow(dinw*s3,2));   
+              DIN  = fsqrt(fsqr(dinu*s1) + fsqr(dinv*s2) + fsqr(dinw*s3));   
 
               if ( DIN>0.0 && mxIsNaN(DIN)==0 && mxIsInf(DIN)==0 )
                 D[i] = DIN;
