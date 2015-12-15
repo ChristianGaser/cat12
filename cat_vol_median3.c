@@ -8,8 +8,8 @@
  *  M = vbm_vol_median3(D[,Bi,Bn,sf,Bi_low,Bi_high,Bn_low,Bn_high])
  *
  *  D      (single)   3d matrix for filter process 
- *  Bi     (logical)  3d matrix that mark voxel that should be filtered
- *  Bn     (logical)  3d matrix that mark voxel that are used as neighbors 
+ *  Bi     (logical)  3d matrix that marks voxels that should be filtered
+ *  Bn     (logical)  3d matrix that marks voxels that are used as neighbors 
  *  sf     (double)   threshold that is used to filter the result
  *                      sf=0: no filter
  *                      sf<0: only smaller changes
@@ -20,7 +20,7 @@
  *  Bn_high (double)  high threshold in D for neighbors (add to Bn)
  *
  * Used slower quicksort for median calculation, because the faster median 
- * of the median application implemenation leads to wrong results. 
+ * of the median application implementation leads to wrong results. 
  *
  * TODO: check all input elements... 
  * _____________________________________________________________________________
