@@ -8043,6 +8043,7 @@ New:      Added internal function to reduce template surfaces for faster tests.
           
 
 ------------------------------------------------------------------------
+r813 | gaser | 2015-12-15 16:37:18 +0100 (Di, 15 Dez 2015) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8057,5 +8058,16 @@ M       html/cat.html
 (1) Changed: Better use of PP map and optimized parameters
     for surface deformations.
 (2) Changed: Cleaned some c-code (without affecting outputs).
+
 ------------------------------------------------------------------------
-r813 | gaser | 2015-12-15 16:37:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+(1) Fixed: Removed testing functions in cat_surf_createCS.m
+(2) Changed: Topology correction was not improved by using an initial threshold
+    close to WM surface. Thus, we again use an inital threshold of 0.5 for 
+    the central surface and so some surface deformation.
+------------------------------------------------------------------------
+r814 | gaser | 2015-12-17 00:43:52
