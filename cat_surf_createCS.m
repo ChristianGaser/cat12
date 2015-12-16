@@ -194,10 +194,10 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:) = [];    
 
-    Pcentral   = fullfile(pp,sprintf('%s.central.%s.%d.gii',opt.surf{si},ff,iii));          % fiducial
-    % if we can use the PP map we start with a surface that is close to WM surface because this will minimize severe
-    % topology defects. Otherwise we use a threshold of 0.5 which is the central surface
-    if opt.usePPmap, th_initial = 0.99; else th_initial = 0.5; end
+    % if we can use the PP map we can start with a surface that is close to WM surface because this might minimize severe
+    % topology defects. Otherwise we use a threshold of 0.5 which is the central surface.
+    % However, this approach did not really improved topology correction, thus we again use a value of 0.5
+    if opt.usePPmap, th_initial = 0.5; else th_initial = 0.5; end
     [~,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
     clear Yppi;
 
@@ -263,7 +263,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
       % surface refinement by surface deformation based on the PP map
       th = 0.5;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.01 0.01 .1 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0'], ...
+                     'avg -0.01 0.01 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
       
@@ -272,7 +272,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
       
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
-                     'avg -0.1 0.1 .1 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0'], ...
+                     'avg -0.1 0.1 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
     else
