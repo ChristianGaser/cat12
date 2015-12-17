@@ -51,7 +51,7 @@ function cat_vol_nlmus(varargin)
 %                                                                         
 %   Copyright (C) 2010 Jose V. Manjon and Pierrick Coupe      
 %_______________________________________________________________________
-% $Id: cat_vol_sanlm.m 772 2015-11-18 11:02:01Z gaser $
+% $Id$
 
 %   job.rf        = round the initial interpolation (10^-2);
 %   job.intmeth   = {'spline'|'cubic','linear'} (default = 'spline')
@@ -359,7 +359,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_vol_isarnlm.m 772 2015-11-18 11:02:01Z gaser $
+% $Id$
 % ______________________________________________________________________
 
   if ~exist('opt','var'), opt = struct(); end

@@ -30,12 +30,8 @@ end
 r = 0;
 
 % get current release number
-A = ver;
-for i=1:length(A)
-  if strcmp(A(i).Name,'Computational Anatomy Toolbox')
-    r = str2double(A(i).Version);
-  end
-end
+[n, r] = cat_version;
+r = str2double(r);
 
 % get new release numbers
 [s,sts] = urlread(url);

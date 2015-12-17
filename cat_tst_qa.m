@@ -69,22 +69,11 @@ function varargout = cat_tst_qa(action,varargin)
 % $Id$
 % ______________________________________________________________________
 
-% ______________________________________________________________________
-% - Um einen RMS test mit dem mT zu machen, könnten man ggf. später mal
-%   soweit korrekte bilder mit einem störbias versehen und dann 
-%   anschließend gucken wie gut man wieder zum original kommt ...
-% - Auflösungstest wie bei dicke?
-% ______________________________________________________________________
-
 %#ok<*ASGLU>
 
   % get current release number
-  A = ver;
-  for i=1:length(A)
-    if strcmp(A(i).Name,'Computational Anatomy Toolbox')
-      rev = str2double(A(i).Version);
-    end
-  end
+  [n, r] = cat_version;
+  rev = str2double(r);
 
   % init output
   QAS = struct(); QAM = struct(); 
@@ -495,11 +484,10 @@ function varargout = cat_tst_qa(action,varargin)
 
       % software, parameter and job information
       % ----------------------------------------------------------------
+      [nam,rev] = cat_version;
+      AS.software.version_spm = rev;
       A = ver;
       for i=1:length(A)
-        if strcmp(A(i).Name,'Statistical Parametric Mapping')
-          QAS.software.version_spm    = A(i).Version; 
-        end
         if strcmp(A(i).Name,'MATLAB'),
           QAS.software.version_matlab = A(i).Version; 
         end
@@ -550,11 +538,10 @@ function varargout = cat_tst_qa(action,varargin)
 
       % software, parameter and job information
       % ----------------------------------------------------------------
+      [nam,rev] = cat_version;
+      QAS.software.version_spm = rev;
       A = ver;
       for i=1:length(A)
-        if strcmp(A(i).Name,'Statistical Parametric Mapping')
-          QAS.software.version_spm    = A(i).Version; 
-        end
         if strcmp(A(i).Name,'MATLAB'),
           QAS.software.version_matlab = A(i).Version; 
         end
