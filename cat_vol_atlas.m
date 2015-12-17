@@ -22,7 +22,8 @@ function cat_vol_atlas(atlas,refinei)
 % - anatomy (some ROIs)
 % - aal (subcortical,cortical)
 % - lpba40
-% - broadmann (Colins?)    
+% - broadmann (Colins?) 
+% - neuromorphometrics
 %
 % ROI description should be available as csv-file:
 %   ROInr; ROIname [; ROInameid]
@@ -324,6 +325,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
       PA     = cat_vol_findfiles(mdir,'VOIalex.img');
       Ps     = {''};
       Pcsv   = cat_vol_findfiles(mdir,'VOIalex.csv'); 
+      %Pcsv   = cat_vol_findfiles(mdir,'hammers.csv'); % bad structure
       Ptxt   = cat_vol_findfiles(mdir,'hammers.txt'); 
       refine = 1;
       Pxml.ver = 1.0;
@@ -665,7 +667,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   end
   
   
-
+  %%
   hb = [intmin(dt) intmax(dt)];
   datarange = hb(1):hb(2); 
   H    = hist(single(max(hb(1),min(hb(2),Y(:)))),single(datarange)); H(hb(1)+1)=0; 
@@ -694,10 +696,10 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
       csvx{(ri*2)+2,2} = csv{id+1,4};  
       csvx{(ri*2)+1,3} = csv{id+1,3}; % ROIname
       csvx{(ri*2)+2,3} = csv{id+1,3};
-      csvx{(ri*2)+1,4} = sprintf('[ %s]',sprintf('%d ',csv{id+1,7})); % ROIbaseid = ROIidO
-      csvx{(ri*2)+2,4} = sprintf('[ %s]',sprintf('%d ',csv{id+1,7})); 
-      csvx{(ri*2)+1,5} = csv{id+1,2}; % ROIbase = ROInameO
-      csvx{(ri*2)+2,5} = csv{id+1,2}; 
+      csvx{(ri*2)+1,4} = sprintf('[ %s]',sprintf('%d ',unique([csv{id+1,7}]))); % ROIbaseid = ROIidO
+      csvx{(ri*2)+2,4} = sprintf('[ %s]',sprintf('%d ',unique([csv{id+1,7}]))); 
+      csvx{(ri*2)+1,5} = csv{id+1,8}; % ROIbase = ROInameO
+      csvx{(ri*2)+2,5} = csv{id+1,8}; 
     end
     
     %%
@@ -718,142 +720,170 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
       else             csvx{si,2} = ['r',csvx{si,2}]; csvx{si,3} = ['Right ',csvx{si,3}];
       end
     end
-    for ri=2:size(csvx,1)
-      csvx{ri,4} = strjoin(unique(strsplit(csvx{ri,4},{'-','_',' '})));
-    end  
+   
   end
   if max([csv{5,:}]) %max(round(cod(H>0,3)))<256 
     dt2='uint8';
   else
     dt2='uint16';
   end
-
   
-  %% 4D-probability map
-  % --------------------------------------------------------------------
-  % Here we create the probability map for each label with the optimized
-  % labeling cod.
-  % --------------------------------------------------------------------
-  N             = nifti;
-  N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VC(1).dim(1:3) ...
-                  max(round(cod(H>0,3)))+1],[spm_type(dt2) spm_platform('bigend')],0,1,0);
-  N.mat         = VC(1).mat;
-  N.mat0        = VC(1).private.mat0;
-  N.descrip     = dsc;
-  create(N);       
+ 
+  Pa4D = fullfile(resdir,['a4D' atlas '.nii']);
+  Pa3D = fullfile(resdir,[atlas '.nii']); 
+  Pp0  = fullfile(resdir,['p0' atlas '.nii']);
+  
+  recalc = 0; 
+  
+  if ~exist(Pa4D,'file') || ~exist(Pa3D,'file') || ~exist(Pp0,'file')  || recalc 
+    %% 4D-probability map
+    % --------------------------------------------------------------------
+    % Here we create the probability map for each label with the optimized
+    % labeling cod.
+    % --------------------------------------------------------------------
+    N             = nifti;
+    N.dat         = file_array(fullfile(resdir,['a4D' atlas '.nii']),[VC(1).dim(1:3) ...
+                    max(round(cod(H>0,3)))+1],[spm_type(dt2) spm_platform('bigend')],0,1,0);
+    N.mat         = VC(1).mat;
+    N.mat0        = VC(1).private.mat0;
+    N.descrip     = dsc;
+    create(N);       
 
 
-  % hier gehen noch zwei sachen schief...
-  % 1) liegt kein links rechts vor, dann mist
-  % 2) ist links rechts mist, dann bleibts mist
-  % x) seitenzuweisung ist irgendwie qatsch
-  for j=1:min(max([csv{2:end,1}]),(N.dat.dim(4)))
-    if j==1
-      stime = cat_io_cmd(sprintf(' Label %d',j),'g5','',1);
-    else
-      stime = cat_io_cmd(sprintf(' Label %d',j),'g5','',1,stime);
-    end
-    Y = zeros(VA(1).dim,dt2);
-    for i=1:numel(PA)
-      Yi = spm_read_vols(VA(i));
-      if ~isempty(Yi==j)
-        % optimize label
-        switch dt
-          case 'uint8'
-            Ys = single(intlut(uint8(Yi),uint8(cod(:,4)')));
-            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
-            Yi = intlut(uint8(Yi),uint8(cod(:,3)'));
-          case 'uint16'
-            Ys = single(intlut(uint16(Yi),uint16(cod(:,4)')));
-            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
-            Yi = intlut(uint16(Yi),uint16(cod(:,3)'));
-          case 'int8'
-            Ys = single(intlut(int8(Yi),int8(cod(:,4)')));
-            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
-            Yi = intlut(int8(Yi),int8(cod(:,3)'));
-          case 'int16'
-            Ys = single(intlut(int16(Yi),int16(cod(:,4)')));
-            Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
-            Yi = intlut(int16(Yi),int16(cod(:,3)'));
-        end
-        % flip LR
-        [x,y,z]=ind2sub(size(Ys),find(Ys==1)); %#ok<NASGU>
-        if mean(x)>(size(Ys,1)/2), Ys(Ys==1)=1.5; Ys(Ys==2)=1; Ys(Ys==1.5)=2; end
-         % add case j 
-        switch dt2
-          case 'uint8'
-            Y  = Y + uint8(Yi==(ceil(j/2)*2) & (Ys)==(mod(j,2)+1));
-          case 'uint16'        
-            Y  = Y + uint16(Yi==(ceil(j/2)*2) & (Ys)==(mod(j,2)+1));
-          case 'int8'
-            Y  = Y + int8(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j,2)+1));
-          case 'int16'     
-            Y  = Y + int16(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j,2)+1)); % mod(j+1,2)+1 mit seitenfehler
+    % hier gehen noch zwei sachen schief...
+    % 1) liegt kein links rechts vor, dann mist
+    % 2) ist links rechts mist, dann bleibts mist
+    % x) seitenzuweisung ist irgendwie qatsch
+    for j=1:min(max([csv{2:end,1}]),(N.dat.dim(4)))
+      if j==1
+        stime = cat_io_cmd(sprintf(' Label %d',j),'g5','',1);
+      else
+        stime = cat_io_cmd(sprintf(' Label %d',j),'g5','',1,stime);
+      end
+      Y = zeros(VA(1).dim,dt2);
+      for i=1:numel(PA)
+        Yi = spm_read_vols(VA(i));
+        if ~isempty(Yi==j)
+          % optimize label
+          switch dt
+            case 'uint8'
+              Ys = single(intlut(uint8(Yi),uint8(cod(:,4)')));
+              Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
+              Yi = intlut(uint8(Yi),uint8(cod(:,3)'));
+            case 'uint16'
+              Ys = single(intlut(uint16(Yi),uint16(cod(:,4)')));
+              Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
+              Yi = intlut(uint16(Yi),uint16(cod(:,3)'));
+            case 'int8'
+              Ys = single(intlut(int8(Yi),int8(cod(:,4)')));
+              Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
+              Yi = intlut(int8(Yi),int8(cod(:,3)'));
+            case 'int16'
+              Ys = single(intlut(int16(Yi),int16(cod(:,4)')));
+              Ys(Ys==0)=nan; Ys(Ys==3)=1.5; Ys=round(cat_vol_laplace3R(Ys,Ys==1.5,0.01));
+              Yi = intlut(int16(Yi),int16(cod(:,3)'));
+          end
+          % flip LR
+          [x,y,z]=ind2sub(size(Ys),find(Ys==1)); %#ok<NASGU>
+          if mean(x)>(size(Ys,1)/2), Ys(Ys==1)=1.5; Ys(Ys==2)=1; Ys(Ys==1.5)=2; end
+           % add case j 
+          switch dt2
+            case 'uint8'
+              Y  = Y + uint8(Yi==(ceil(j/2)*2) & (Ys)==(mod(j,2)+1));
+            case 'uint16'        
+              Y  = Y + uint16(Yi==(ceil(j/2)*2) & (Ys)==(mod(j,2)+1));
+            case 'int8'
+              Y  = Y + int8(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j,2)+1));
+            case 'int16'     
+              Y  = Y + int16(Yi==(ceil(j/2)*2)  & (Ys)==(mod(j,2)+1)); % mod(j+1,2)+1 mit seitenfehler
+          end
         end
       end
+      clear Ps;
+      N.dat(:,:,:,j) = Y;
     end
-    clear Ps;
-    N.dat(:,:,:,j) = Y;
-  end
-  
-  
-  %% p0-mean map
-  % --------------------------------------------------------------------
-  stime = cat_io_cmd('p0-mean map','n','',1,stime);
-  N             = nifti;
-  N.dat         = file_array(fullfile(resdir,['p0' atlas '.nii']),...
-                  VC(1).private.dat.dim(1:3),[spm_type(dt2) spm_platform('bigend')],0,3/255,0);
-  N.mat         = VC(1).mat;
-  N.mat0        = VC(1).private.mat0;                
-  N.descrip     = ['p0 ' atlas]; 
-  create(N);  
-  Y = zeros(VA(1).dim,'single');
-  for i=1:numel(P)
-    Y = Y + spm_read_vols(spm_vol(P{i})); 
-  end
-  N.dat(:,:,:)  = double(Y/numel(P));  
-  
-  
-  
-  %% 3d-label map
-  % --------------------------------------------------------------------
-  stime = cat_io_cmd('3d-label map','n','',1,stime);
-  
-  M = smooth3(cat_vol_morph((Y/numel(P))>0.1,'labclose',1))>0.2; 
-  
-  N             = nifti;
-  N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VC(1).dim(1:3),...
-                  [spm_type(dt2) spm_platform('bigend')],0,1,0);
-  N.mat         = VC(1).mat;
-  N.mat0        = VC(1).private.mat0;    
-  N.descrip     = dsc;
-  create(N);       
-  Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
-  Y             = cat(4,~max(Y,[],4),Y); % add background class
-  [maxx,Y]      = max(Y,[],4); clear maxx; Y = Y-1;
-  for xi=1:3, Y = cat_vol_localstat(single(Y),M,1,7); end
 
-  % restor old labeling or use optimized
-  if 0
-    switch dt
-      case 'uint8',  Y = intlut(uint8(Y.*M),uint8(cod(:,1)'));
-      case 'uint16', Y = intlut(uint16(Y.*M),uint16(cod(:,1)'));
-      case 'int8',   Y = intlut(int8(Y.*M),int8(cod(:,1)'));
-      case 'int16',  Y = intlut(int16(Y.*M),int16(cod(:,1)'));
+
+    %% p0-mean map
+    % --------------------------------------------------------------------
+    stime = cat_io_cmd('p0-mean map','n','',1,stime);
+    N             = nifti;
+    N.dat         = file_array(fullfile(resdir,['p0' atlas '.nii']),...
+                    VC(1).private.dat.dim(1:3),[spm_type(dt2) spm_platform('bigend')],0,3/255,0);
+    N.mat         = VC(1).mat;
+    N.mat0        = VC(1).private.mat0;                
+    N.descrip     = ['p0 ' atlas]; 
+    create(N);  
+    Y = zeros(VA(1).dim,'single');
+    for i=1:numel(P)
+      Y = Y + spm_read_vols(spm_vol(P{i})); 
     end
-  else
-    Y = Y.*M;
-  end
-  switch dt2
-    case 'uint8',  Y = uint8(Y);
-    case 'uint16', Y = uint16(Y);
-    case 'int8',   Y = int8(Y);
-    case 'int16',  Y = int16(Y);
-  end
-  N.dat(:,:,:)  = Y;
+    N.dat(:,:,:)  = double(Y/numel(P));  
 
 
- 
+
+    %% 3d-label map
+    % --------------------------------------------------------------------
+    stime = cat_io_cmd('3d-label map','n','',1,stime);
+
+    M = smooth3(cat_vol_morph((Y/numel(P))>0.1,'labclose',1))>0.2; 
+
+    N             = nifti;
+    N.dat         = file_array(fullfile(resdir,[atlas '.nii']),VC(1).dim(1:3),...
+                    [spm_type(dt2) spm_platform('bigend')],0,1,0);
+    N.mat         = VC(1).mat;
+    N.mat0        = VC(1).private.mat0;    
+    N.descrip     = dsc;
+    create(N);       
+    Y             = single(spm_read_vols(spm_vol(fullfile(resdir,['a4D' atlas '.nii'])))); 
+    Y             = cat(4,~max(Y,[],4),Y); % add background class
+    [maxx,Y]      = max(Y,[],4); clear maxx; Y = Y-1;
+    for xi=1:3, Y = cat_vol_localstat(single(Y),M,1,7); end
+
+    % restor old labeling or use optimized
+    if 0
+      switch dt
+        case 'uint8',  Y = intlut(uint8(Y.*M),uint8(cod(:,1)'));
+        case 'uint16', Y = intlut(uint16(Y.*M),uint16(cod(:,1)'));
+        case 'int8',   Y = intlut(int8(Y.*M),int8(cod(:,1)'));
+        case 'int16',  Y = intlut(int16(Y.*M),int16(cod(:,1)'));
+      end
+    else
+      Y = Y.*M;
+    end
+    switch dt2
+      case 'uint8',  Y = uint8(Y);
+      case 'uint16', Y = uint16(Y);
+      case 'int8',   Y = int8(Y);
+      case 'int16',  Y = int16(Y);
+    end
+    N.dat(:,:,:)  = Y;
+  end 
+  
+  Va3D = spm_vol(Pa3D);
+  Ya3D = single(spm_read_vols(Va3D));
+  
+  vx_vol = sqrt(sum(Va3D.mat(1:3,1:3).^2));
+  matx = spm_imatrix(Va3D.mat);
+  vox  = hist(Ya3D(:),0:max(Ya3D(:)));
+  vol  = vox .* prod(vx_vol)/1000; 
+  xyz  = cell(max(Ya3D(:))+1,1);
+  for i=0:max(Ya3D(:))
+    ind = find(Ya3D==i); 
+    [x,y,z]=ind2sub(size(Ya3D),ind);
+    
+    xyz{i+1,1} = sprintf('%0.2f,%0.2f,%0.2f', ...
+                 [matx(1) + mean(x)*matx(7)  ...
+                  matx(2) + mean(y)*matx(8)  ...
+                  matx(3) + mean(z)*matx(9) ]);
+    
+  end
+  csvx = [csvx ['Voxel'  ; mat2cell(num2str(vox','%0.0f'),ones(1,size(csvx,1)-1))] ...
+               ['Volume' ; mat2cell(num2str(vol','%0.2f'),ones(1,size(csvx,1)-1))] ...
+               ['XYZ'    ; xyz] ...
+               ]; 
+  
+  
   % filling????
   % --------------------------------------------------------------------
   % At this point it would be possible to dilate the maps. But this cannot 
@@ -867,8 +897,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   % multiple atlas maps.
   
   
-  
-  % csv and txt data
+  %% csv and txt data
   % --------------------------------------------------------------------
   if ~isempty(Pcsv) && exist(Pcsv{1},'file')
     if exist('csvx','var')
@@ -878,11 +907,12 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     end
   end
   
-  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv,Pxml);
+  create_spm_atlas_xml(fullfile(resdir,[atlas '.xml']),csv,csvx,Pxml);
    
   if ~isempty(Ptxt) && exist(Ptxt{1},'file')
     copyfile(Ptxt{1},fullfile(resdir,[atlas '.txt']),'f');
-  end
+  end  
+  
 end
 function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
 % ----------------------------------------------------------------------
@@ -1152,7 +1182,7 @@ function csv=translateROI(csv,atlas,nlabel)
             csv{i,5} = 0;
           else
             if strcmp(fn{fni},'regions') && indii>1
-              csv{i,4} = [csv{i,4} 'a'     dict.(fn{fni}){indi(indii),1}]; 
+              csv{i,4} = [csv{i,4} '+'     dict.(fn{fni}){indi(indii),1}]; 
               csv{i,3} = [csv{i,3} ' and ' dict.(fn{fni}){indi(indii),2}{1}];
             else
               csv{i,4} = [csv{i,4}     dict.(fn{fni}){indi(indii),1}];
@@ -1277,31 +1307,32 @@ function dict=ROIdict()
   dict.directions = { 
     ...
     'Ant'            {'Anterior' 'ant_' 'ant-' 'ant ' 'antarior'} {}
-    'Inf'            {'Inferior ' 'inf_' 'inf-' 'inf '} {}
+    'Inf'            {'Inferior ' 'inf_' 'inf-' 'inf ' 'Infero'} {}
     'Pos'            {'Posterior' 'pos_' 'pos-' 'pos ' 'poss_'} {}
     'Sup'            {'Superior' 'sup_' 'sup-' 'sup ' 'supp_'} {}
     ...
     'Med'            {'Medial' 'med_' 'med-' 'mid '} {}
     'Mid'            {'Middle' 'mid_' 'mid-' 'mid '} {}
-    'Cen'            {'Central'} {}
+    'Cen'            {'Central'} {'Precentral' 'Pre-central' 'Postcentral' 'Post-central'}
     ...
     'Sag'            {'Sagital' 'sag_' 'sag-' 'sag ' 'sagittal'} {}
-    'Fro'            {'Frontal'} {'Orbito-Frontal' 'Frontal-Orbito' 'Prefrontal' 'Fronto-Occupital' 'Occipito-Frontal'}
+    'Fro'            {'Frontal'} {'Lobe' 'Orbito-Frontal' 'Frotono-Orbital' 'Orbitofrontal' ...
+                                  'Occipito-Frontal' 'Fronto-Occupital'}
     'Bas'            {'Basal'} {}
     'Lat'            {'Lateral' 'lat_' 'lat-' 'lat '} {}
     'Lon'            {'Longitudinal'} {}
-    'Occ'            {'Occipital' '_orb'} {'Fronto-Occupital'}
-    'OrbFro'         {'Orbito-Frontal' 'Frotono-Orbital'} {};             
-    'Orb'            {'Orbital'} {'Frotono-Orbital'}
+    'Occ'            {'Occipital'} {'Fronto-Occupital' 'Occupital-Frontal' 'Lobe'}
+    'OrbFro'         {'Orbito-Frontal' 'Frotono-Orbital' 'Orbitofrontal'} {};             
+    'Orb'            {'Orbital' '_orb' '-orb'} {'Frotono-Orbital' 'Orbitofrontal'}
     'FroOcc'         {'Fronto-Occupital' 'Occipito-Frontal'} {}
     ...
-    'Par'            {'Parietal' 'Pariatal'} {}
+    'Par'            {'Parietal' 'Pariatal'} {'Lobe'}
     'Pac'            {'Paracentral'} {}
     'PoC'            {'Postcentral'} {}
     'PrFro'          {'Prefrontal'} {}
     'PrMot'          {'Premotor'} {}
     'Prc'            {'Precentral'} {}
-    'Tem'            {'Temporal'} {}
+    'Tem'            {'Temporal'} {'Lobe'}
     'Tra'            {'Transverse'} {}
     'Ven'            {'Ventral'} {}
     ...
@@ -1314,24 +1345,32 @@ function dict=ROIdict()
     '4th'            {'Fourth','4th'} {}
     '5th'            {'Fifth','5th'} {}
     ...
+    'TeLo'           {'Temporal Lobe'  'Temporal Lobe'} {}
+    'PaLo'           {'Pariatal Lobe'  'Pariatal Lobe' 'Parietal Lobe' 'Parietal-Lobe'} {}
+    'OcLo'           {'Occipital Lobe' 'Occipital Lobe'} {}
+    'FrLo'           {'Frontal Lobe'   'Frontal Lobe'} {}
+    ...
     'BG'             {'Background'} {}
-    'C'              {'Capsule' 'Capsula'} {}
-    'G'              {'Gyrus'} {}
-    'G'              {'Gyri'} {}
-    'P'              {'Pole'} {}
-    'S'              {'Sulcus'} {}
-    'S'              {'Sulci'} {}
-    'L'              {'Lobe'} {'Lobes'}
-    'L'              {'Lobule'} {}
-    'L'              {'Lobes'} {'Lobe'}
-    'F'              {'Fasiculus'} {}
-    'F'              {'Fascicle'} {}
-    'F'              {'Fiber'} {}
-    'V'              {'Ventricle' 'Vent'} {}
-    'V'              {'Ventricles'} {}
+    'Cap'            {'Capsule' 'Capsula'} {}
+    'Gy'             {'Gyrus'} {}
+    'Gy'             {'Gyri'} {}
+    'Po'             {'Pole'} {}
+    'Su'             {'Sulcus'} {}
+    'Su'             {'Sulci'} {}
+    'Lo'             {'Lobe'} {'Lobes' 'Pariatal-lobe'  'Pariatal Lobe' 'Parietal Lobe' 'Parietal-Lobe' ...
+                                       'Temporal-lobe'  'Temporal Lobe' ...
+                                       'Occipital-lobe' 'Occipital Lobe' ...
+                                       'Frontal-lobe'   'Frontal Lobe'}
+    'Lo'             {'Lobule'} {}
+    'Lo'             {'Lobes'} {'Lobe'}
+    'Fa'             {'Fasiculus'} {}
+    'Fas'            {'Fascicle'} {}
+    'Fib'            {'Fiber'} {}
+    'Ven'            {'Ventricle' 'Vent'} {}
+    'Ven'            {'Ventricles'} {}
     'Les'            {'Lesion'} {}
     'Les'            {'Lesions'} {}
-    'Nuc'            {'Nucleus'} {}
+    'Nuc'            {'Nucleus'} {'Red-Nucleus' 'red_nucleus'}
     'Nuc'            {'Nucli'} {}
     'Ope'            {'Operculum' 'Oper_'} {}
     'Ple'            {'Plexus'} {}
@@ -1342,7 +1381,7 @@ function dict=ROIdict()
     'Ukn'            {'Unknown' 'undetermine'} {'Background'}
     'Bone'           {'Bone'} {}
     'Fat'            {'Fat'} {}
-    'BV'             {'Bloodvessel' 'blood' 'vessel'} {}
+    'BV'             {'Blood-vessel' 'blood' 'vessel'} {}
     'OC'             {'Optic Chiasm'} {}
   };
   dict.regions = { ... % specific - one case
@@ -1354,8 +1393,9 @@ function dict=ROIdict()
     'Bst'            {'Brainstem' 'Brain-Stem' 'Brain Stem'} {}
     'Cal'            {'Calcarine'} {}
     'Cbe'            {'Cerebellum' 'cerebelum'} {}
-    'Cbr'            {'Cerebral'} {}
-    'CBe'            {'Cerebellar'} {}
+    'Cbe'            {'Cerebellar'} {}
+    'Cbr'            {'Cerebrum' 'Brain' 'Cortex' 'White-Matter' 'Exterior'} {'Cerebellum' 'Cerebellar' 'Stem' 'Midbrain'}
+    'Cbr'            {'Cerebral'} {'Brain' 'Cortex' 'White-Matter' 'Exterior' 'Midbrain'}
     'Cin'            {'Cinguli' 'cinuli'} {}
     'Cin'            {'Cingulus' 'cinulus'} {}
     'Cin'            {'Cingulate'} {}
@@ -1369,7 +1409,7 @@ function dict=ROIdict()
     'Fob'            {'Forebrain'} {}
     'Gen'            {'geniculate'} {}
     'Hes'            {'Heschl' 'heschls'} {}
-    'Hip'            {'Hippocampus'} {'Parahippocampus'}                       
+    'Hip'            {'Hippocampus'} {'Parahippocampus' 'Parahippocampal'}                       
     'Ins'            {'Insula'} {}
     'Lin'            {'Lingual'} {}
     'Lem'            {'Lemniscus'} {}
@@ -1378,7 +1418,8 @@ function dict=ROIdict()
     'Rec'            {'Rectus'} {}
     'Rol'            {'Rolandic'} {}
     'Pal'            {'Pallidum'} {}
-    'ParHip'         {'Parahippocampus' 'Parahippocampal'} {}
+    'ParHip'         {'Parahippocampus' 'Parahippocampal'} {'Parahippocampus'}
+    'ParHip'         {'Parahippocampal' 'Parahippocampus'} {'Parahippocampal'}
     'Pla'            {'Planum Polare'} {}
     'Put'            {'Putamen'} {}
     'Rec'            {'Rectal'} {}
@@ -1399,22 +1440,20 @@ function dict=ROIdict()
     'Spe'            {'(Splenium)'} {}
   };
   dict.ibsr = {
-    'B'               {'Brain' 'Cortex'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'White-Matter'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'Exterior'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'Line-1'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'Line-2'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'Line-3'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'CSF'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'F3orb'} {'brainstem' 'brain-stem'}     
-    'B'               {'Brain' 'lOg'} {'brainstem' 'brain-stem'}          
-    'B'               {'Brain' 'aOg'} {'brainstem' 'brain-stem'}          
-    'B'               {'Brain' 'mOg'} {'brainstem' 'brain-stem'}                
-    'B'               {'Brain' 'pOg'} {'brainstem' 'brain-stem'}  
-    'B'               {'Brain' 'Porg'} {'brainstem' 'brain-stem'}
-    'B'               {'Brain' 'Aorg'} {'brainstem' 'brain-stem'}
-    'BG'              {'Background' 'Bright-Unknown'} {}
-    'BG'              {'Background' 'Dark_Unknown'} {}
+    'Cbr'            {'Cerebrum' 'Exterior'} {'brainstem' 'brain-stem'}
+    'Cbr'            {'Cerebrum' 'Line-1'} {'brainstem' 'brain-stem'}
+    'Cbr'            {'Cerebrum' 'Line-2'} {'brainstem' 'brain-stem'}
+    'Cbr'            {'Cerebrum' 'Line-3'} {'brainstem' 'brain-stem'}
+    'Cbr'            {'Cerebrum' 'CSF'} {'brainstem' 'brain-stem'}
+    'Cbr'            {'Cerebrum' 'F3orb'} {'brainstem' 'brain-stem'}     
+    'Cbr'            {'Cerebrum' 'lOg'} {'brainstem' 'brain-stem'}          
+    'Cbr'            {'Cerebrum' 'aOg'} {'brainstem' 'brain-stem'}          
+    'Cbr'            {'Cerebrum' 'mOg'} {'brainstem' 'brain-stem'}                
+    'Cbr'            {'Cerebrum' 'pOg'} {'brainstem' 'brain-stem'}  
+    'Cbr'            {'Cerebrum' 'Porg'} {'brainstem' 'brain-stem'}
+    'Cbr'            {'Cerebrum' 'Aorg'} {'brainstem' 'brain-stem'}
+    'BG'             {'Background' 'Bright-Unknown'} {}
+    'BG'             {'Background' 'Dark_Unknown'} {}
   };
   dict.aala = {
     'SMA'            {'SMA'} {}
@@ -1505,7 +1544,7 @@ function dict=ROIdict()
     'BF_Ch4'         {'BF (Ch 4)'} {}
     'CST'            {'Corticospinal tract'} {}
     'EC'             {'Entorhinal Cortex'} {}
-    'F'              {'Fornix'} {}
+    'Fo'             {'Fornix'} {}
     ...'HATA'           {'HATA Region'} {} %  Hipp HATA
     'OR'             {'Optic radiation'} {}
     'SC'             {'Subiculum'} {}
@@ -1604,7 +1643,7 @@ function dict=ROIdict()
                       'OFuG','OpIFG','PCgG','PCu','PHG','PIns','PO','PoG',...
                       'POrG','PP','PrG','PT','SCA','SFG','SMC','SMG','SOG',...
                       'SPL','STG','TMP','TrIFG','TTG'} {}
-    'B'             {'Brain'} {'brainstem' 'brain-stem' 'brain stem'} 
+    'Br'            {'Brain'} {'brainstem' 'brain-stem' 'brain stem'} 
     'WM'            {'White Matter'} {};
     'CSF'           {'CSF'} {};
   };
@@ -1772,11 +1811,11 @@ function create_cat_atlas(A,C,LAB)
   end
   
 end
-function create_spm_atlas_xml(fname,csv,opt)
+function create_spm_atlas_xml(fname,csv,csvx,opt)
 % create an spm12 compatible xml version of the csv data
   if ~exist('opt','var'), opt = struct(); end
 
-  [pp,ff] = spm_fileparts(fname); 
+  [pp,ff,ee] = spm_fileparts(fname); 
 
   def.name   = ff;
   def.desc   = '';
@@ -1807,26 +1846,33 @@ function create_spm_atlas_xml(fname,csv,opt)
     '  <data>\n' ...
     '    <!-- could also include short_name, RGBA, XYZmm -->\n' ...
     ];
+  %sidel = {'Left ' 'Right ' 'Bothside '};
+  %sides = {'l' 'r' 'b'};
+  %sidev = [1 2 1];
+  %xml.data = sprintf(['    <label><index>%d</index>'...
+  %    '<short_name>%s</short_name><name>%s</name>' ...
+  %    '<RGBA></RGBA><XYZmm></XYZmm></label>\n'],0,'BG','Background');
   xml.data = '';
-  sidel = {'Left ','Right ','Bothside '};
-  sides = {'l','r','b'};
-  for di = 2:size(csv,1);
+  for di = 2:size(csvx,1);
     % index      = label id
     % name       = long name SIDE STRUCTURE TISSUE 
     % short_name = short name 
     % RGBA       = RGB color
     % XYZmm      = XYZ coordinate
-    xml.data = [xml.data sprintf(['    <label><index>%d</index>'...
+    xml.data = sprintf('%s%s\n',xml.data,sprintf(['    <label><index>%d</index>'...
       '<short_name>%s</short_name><name>%s</name>' ...
-      '<RGBA></RGBA><XYZmm></XYZmm></label>\\n'],...
-      csv{di,1},[sides{csv{di,6}} csv{di,4}],[sidel{csv{di,6}} csv{di,3}])];
+      '<RGBA></RGBA><XYZmm>%s</XYZmm></label>'],...
+      csvx{di,1}, csvx{di,2},csvx{di,3},csvx{di,8}));
+    %  (csvx{di,5}-1)*2 + sidev(csv{di,6}),...
+    %  [sides{csv{di,6}} csv{di,4}],...
+    %  [sidel{csv{di,6}} csv{di,3}]));
   end
   xml.footer = [ ...
     '  </data>\n' ...
     '</atlas>\n' ...
     ];
   
-  fid = fopen(fname,'w');
+  fid = fopen(fullfile(pp,['labels_dartel_' ff ee]),'w');
   fprintf(fid,[xml.header,xml.data,xml.footer]);
   fclose(fid);
 end

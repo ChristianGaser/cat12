@@ -8099,11 +8099,54 @@ MM      internal/cat_vol_nlmus.m
 
 
 ------------------------------------------------------------------------
+r816 | gaser | 2015-12-17 15:01:54 +0100 (Do, 17 Dez 2015) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_tst_qa.m
 
 Fixed: Correct version for SPM and CAT in cat_tst_qa.m.
+
 ------------------------------------------------------------------------
-r816 | gaser | 2015-12-17 15:01:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_install_atlases.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_vol_atlas.m
+M       cat_vol_resize.m
+M       templates_1.50mm/aal.csv
+M       templates_1.50mm/aal.txt
+M       templates_1.50mm/hammers.csv
+M       templates_1.50mm/hammers.nii
+M       templates_1.50mm/hammers.txt
+M       templates_1.50mm/ibsr.csv
+M       templates_1.50mm/ibsr.nii
+M       templates_1.50mm/ibsr.txt
+D       templates_1.50mm/label_dartel_aal.xml
+D       templates_1.50mm/label_dartel_hammers.xml
+D       templates_1.50mm/label_dartel_ibsr.xml
+D       templates_1.50mm/label_dartel_lpba40.xml
+D       templates_1.50mm/label_dartel_mori.xml
+D       templates_1.50mm/label_dartel_neuromorphometrics.xml
+A       templates_1.50mm/labels_dartel_aal.xml
+A       templates_1.50mm/labels_dartel_hammers.xml
+A       templates_1.50mm/labels_dartel_ibsr.xml
+A       templates_1.50mm/labels_dartel_lpba40.xml
+A       templates_1.50mm/labels_dartel_mori.xml
+A       templates_1.50mm/labels_dartel_neuromorphometrics.xml
+M       templates_1.50mm/mori.csv
+M       templates_1.50mm/mori.nii
+M       templates_1.50mm/mori.txt
+M       templates_1.50mm/neuromorphometrics.csv
+M       templates_1.50mm/neuromorphometrics.nii
+M       templates_1.50mm/neuromorphometrics.txt
+
+Fixed:    Corrections in WM/CSF width estimation. 
+Fixed:    Corrected interpolation error in case of complete reduction of voxel 
+          resolution.
+Fixed:    Corrected XML labeling in cat_vol_atlas and update atlas maps.
+New:      Added ROI XYZ Coordinates (center of mass) in XML files.
+------------------------------------------------------------------------
+r817 | dahnke | 2015-12-17 15:27:15

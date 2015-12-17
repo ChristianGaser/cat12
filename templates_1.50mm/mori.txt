@@ -1,7 +1,7 @@
 Mori atlas:
 --------------------------------------------------------------------------------
 This atlas based on the "Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II" atlas (A)
-of Version 2010-05. The T1 and label data was segmented and normalized by CAT12 
+of Version 2010-05. The T1 and label data was segmented and normalized by VBM12 
 to projected the atlas to IXI550 template space.
 If you use these atlases, please cite the references below.
 
