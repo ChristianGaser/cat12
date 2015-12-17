@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- This is a temporary file format -->
+  <atlas version="2.0">
+    <header>
+      <name>neuromorphometrics</name>
+      <version>1.0</version>
+      <description></description>
+      <url>https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details</url>
+      <licence>CC BY-NC</licence>
+      <coordinate_system>MNI</coordinate_system>
+      <type>Label</type>
+      <images>
+        <imagefile>neuromorphometrics.nii</imagefile>
+      </images>
+    </header>
+  <data>
+    <!-- could also include short_name, RGBA, XYZmm -->
+    <label><index>0</index><short_name>BG</short_name><name>Background</name><RGBA></RGBA><XYZmm>-0.13,-16.85,20.71</XYZmm></label>
+    <label><index>1</index><short_name>l</short_name><name>Left </name><RGBA></RGBA><XYZmm>-29.77,-16.63,17.99</XYZmm></label>
+    <label><index>2</index><short_name>r</short_name><name>Right </name><RGBA></RGBA><XYZmm>31.54,-14.31,17.76</XYZmm></label>
+    <label><index>3</index><short_name>lAcc</short_name><name>Left Accumbens</name><RGBA></RGBA><XYZmm>-9.27,11.88,-6.55</XYZmm></label>
+    <label><index>4</index><short_name>rAcc</short_name><name>Right Accumbens</name><RGBA></RGBA><XYZmm>9.55,12.18,-6.00</XYZmm></label>
+    <label><index>5</index><short_name>lAmy</short_name><name>Left Amygdala</name><RGBA></RGBA><XYZmm>-21.64,-5.23,-19.39</XYZmm></label>
+    <label><index>6</index><short_name>rAmy</short_name><name>Right Amygdala</name><RGBA></RGBA><XYZmm>21.94,-4.37,-19.24</XYZmm></label>
+    <label><index>7</index><short_name>lBst</short_name><name>Left Brainstem</name><RGBA></RGBA><XYZmm>-5.38,-30.03,-30.58</XYZmm></label>
+    <label><index>8</index><short_name>rBst</short_name><name>Right Brainstem</name><RGBA></RGBA><XYZmm>5.83,-30.28,-33.49</XYZmm></label>
+    <label><index>9</index><short_name>lCau</short_name><name>Left Caudate</name><RGBA></RGBA><XYZmm>-12.93,8.97,10.26</XYZmm></label>
+    <label><index>10</index><short_name>rCau</short_name><name>Right Caudate</name><RGBA></RGBA><XYZmm>13.95,10.21,10.94</XYZmm></label>
+    <label><index>11</index><short_name>lExtCbe</short_name><name>Left Exterior Cerebellum</name><RGBA></RGBA><XYZmm>-24.87,-62.27,-38.36</XYZmm></label>
+    <label><index>12</index><short_name>rExtCbe</short_name><name>Right Exterior Cerebellum</name><RGBA></RGBA><XYZmm>25.00,-62.16,-38.06</XYZmm></label>
+    <label><index>13</index><short_name>lCbeWM</short_name><name>Left Cerebellum White Matter</name><RGBA></RGBA><XYZmm>-17.45,-51.62,-35.48</XYZmm></label>
+    <label><index>14</index><short_name>rCbeWM</short_name><name>Right Cerebellum White Matter</name><RGBA></RGBA><XYZmm>17.85,-51.00,-35.16</XYZmm></label>
+    <label><index>15</index><short_name>lCbrWM</short_name><name>Left Cerebral White Matter</name><RGBA></RGBA><XYZmm>-26.89,-15.54,16.49</XYZmm></label>
+    <label><index>16</index><short_name>rCbrWM</short_name><name>Right Cerebral White Matter</name><RGBA></RGBA><XYZmm>27.23,-13.86,16.92</XYZmm></label>
+    <label><index>17</index><short_name>lCSF</short_name><name>Left CSF</name><RGBA></RGBA><XYZmm>-1.54,-25.55,8.30</XYZmm></label>
+    <label><index>18</index><short_name>rCSF</short_name><name>Right CSF</name><RGBA></RGBA><XYZmm>3.20,-25.78,8.47</XYZmm></label>
+    <label><index>19</index><short_name>lPal</short_name><name>Left Pallidum</name><RGBA></RGBA><XYZmm>-19.65,-3.31,-2.23</XYZmm></label>
+    <label><index>20</index><short_name>rPal</short_name><name>Right Pallidum</name><RGBA></RGBA><XYZmm>20.63,-2.40,-1.89</XYZmm></label>
+    <label><index>21</index><short_name>lPut</short_name><name>Left Putamen</name><RGBA></RGBA><XYZmm>-24.84,0.93,0.01</XYZmm></label>
+    <label><index>22</index><short_name>rPut</short_name><name>Right Putamen</name><RGBA></RGBA><XYZmm>25.75,2.17,0.03</XYZmm></label>
+    <label><index>23</index><short_name>lThaPro</short_name><name>Left Thalamus Proper</name><RGBA></RGBA><XYZmm>-11.51,-18.49,6.40</XYZmm></label>
+    <label><index>24</index><short_name>rThaPro</short_name><name>Right Thalamus Proper</name><RGBA></RGBA><XYZmm>12.22,-17.51,6.51</XYZmm></label>
+    <label><index>25</index><short_name>lCbeLoCbe1-5</short_name><name>Left Cerebellar Lobule Cerebellar Vermal Lobules I-V</name><RGBA></RGBA><XYZmm>-2.84,-53.07,-11.18</XYZmm></label>
+    <label><index>26</index><short_name>rCbeLoCbe1-5</short_name><name>Right Cerebellar Lobule Cerebellar Vermal Lobules I-V</name><RGBA></RGBA><XYZmm>4.05,-53.37,-11.48</XYZmm></label>
+    <label><index>27</index><short_name>lCbeLoCbe6-7</short_name><name>Left Cerebellar Lobule Cerebellar Vermal Lobules VI-VII</name><RGBA></RGBA><XYZmm>-1.48,-70.81,-22.79</XYZmm></label>
+    <label><index>28</index><short_name>rCbeLoCbe6-7</short_name><name>Right Cerebellar Lobule Cerebellar Vermal Lobules VI-VII</name><RGBA></RGBA><XYZmm>3.01,-70.61,-21.97</XYZmm></label>
+    <label><index>29</index><short_name>lCbeLoCbe8-10</short_name><name>Left Cerebellar Lobule Cerebellar Vermal Lobules VIII-X</name><RGBA></RGBA><XYZmm>-2.06,-62.71,-39.58</XYZmm></label>
+    <label><index>30</index><short_name>rCbeLoCbe8-10</short_name><name>Right Cerebellar Lobule Cerebellar Vermal Lobules VIII-X</name><RGBA></RGBA><XYZmm>3.22,-62.40,-39.18</XYZmm></label>
+    <label><index>31</index><short_name>lr</short_name><name>Left  Brain</name><RGBA></RGBA><XYZmm>-13.65,4.20,-15.52</XYZmm></label>
+    <label><index>32</index><short_name>rr</short_name><name>Right  Brain</name><RGBA></RGBA><XYZmm>13.31,4.95,-14.41</XYZmm></label>
+    <label><index>33</index><short_name>lInfOccGy</short_name><name>Left Inferior Occipital Gyrus</name><RGBA></RGBA><XYZmm>-40.18,-82.26,-4.38</XYZmm></label>
+    <label><index>34</index><short_name>rInfOccGy</short_name><name>Right Inferior Occipital Gyrus</name><RGBA></RGBA><XYZmm>42.71,-78.79,-2.04</XYZmm></label>
+    <label><index>35</index><short_name>lLinGy</short_name><name>Left Lingual Gyrus</name><RGBA></RGBA><XYZmm>-10.80,-68.27,-6.95</XYZmm></label>
+    <label><index>36</index><short_name>rLinGy</short_name><name>Right Lingual Gyrus</name><RGBA></RGBA><XYZmm>12.62,-66.99,-6.24</XYZmm></label>
+    <label><index>37</index><short_name>lInfFroOrbGy</short_name><name>Left Inferior Frontal Orbital Gyrus</name><RGBA></RGBA><XYZmm>-44.71,29.79,-9.12</XYZmm></label>
+    <label><index>38</index><short_name>rInfFroOrbGy</short_name><name>Right Inferior Frontal Orbital Gyrus</name><RGBA></RGBA><XYZmm>46.24,30.50,-8.85</XYZmm></label>
+  </data>
+</atlas>

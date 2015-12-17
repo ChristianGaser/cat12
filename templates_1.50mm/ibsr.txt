@@ -2,7 +2,7 @@ IBSR atlas:
 --------------------------------------------------------------------------------
 This atlas, based on the IBSR datasets (A,B). 
 
-CAT12 was used to segment the T1 data (Collins brain) and to estimate the 
+VBM12 was used to segment the T1 data (Collins brain) and to estimate the 
 normalization parameter to project the probability maps each cytoarchitectonic 
 regions of Simon Eickhoffs Anatomy Toolbox (A) to IXI550 space. 
 A 3D median filter was used to remove outliers in the label map. ROI-IDs 

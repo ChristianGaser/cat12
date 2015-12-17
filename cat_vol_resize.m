@@ -346,26 +346,28 @@ function varargout=cat_vol_resize(T,operation,varargin)
       hdrO   = hdr; 
       sizeO  = size(T);
 
-      if all(res>0) && any(resV>res)
-        % final size of the interpolated image
-        [Dx,Dy,Dz]=meshgrid(single(res(2) / resV(2) : res(2)/resV(2) : size(T,2)),...
-                            single(res(1) / resV(1) : res(1)/resV(1) : size(T,1)),...
-                            single(res(3) / resV(3) : res(3)/resV(3) : size(T,3))); 
-        %T = spm_sample_vol(T,Dx,Dy,Dz,method);
-        T = cat_vol_interp3f(T,Dx,Dy,Dz,method);
-        clear Dx Dy Dz;
-        
-        hdr.dim=size(T);
-        %hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
-      elseif all(res>0) && any(resV<=res)
-        d = single(res./resV);
-        [Rx,Ry,Rz]=meshgrid(d(1):d(1):size(T,2),d(2):d(2):size(T,1),d(3):d(3):size(T,3));
-        T = cat_vol_interp3f(T,Rx,Ry,Rz,method);
-        clear Rx Ry Rz;
-        
-        hdr.dim=size(T);
-       % hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
-    %    hdr.mat([1,6,11])  = sign(hdr.mat([1,6,11]))  .* res;
+      if all(res>0)
+        if 1% any(resV>res)
+          % final size of the interpolated image
+          [Dx,Dy,Dz]=meshgrid(single(res(2) / resV(2) : res(2)/resV(2) : size(T,2)),...
+                              single(res(1) / resV(1) : res(1)/resV(1) : size(T,1)),...
+                              single(res(3) / resV(3) : res(3)/resV(3) : size(T,3))); 
+          %T = spm_sample_vol(T,Dx,Dy,Dz,method);
+          T = cat_vol_interp3f(T,Dx,Dy,Dz,method);
+          clear Dx Dy Dz;
+
+          hdr.dim=size(T);
+          %hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
+        else
+          d = single(res./resV);
+          [Rx,Ry,Rz]=meshgrid(d(1):d(1):size(T,2),d(2):d(2):size(T,1),d(3):d(3):size(T,3));
+          T = cat_vol_interp3f(T,Rx,Ry,Rz,method);
+          clear Rx Ry Rz;
+
+          hdr.dim=size(T);
+         % hdr.mat([1,2,3,5,6,7,9,10,11]) = hdr.mat([1,2,3,5,6,7,9,10,11]) .* res(1);
+      %    hdr.mat([1,6,11])  = sign(hdr.mat([1,6,11]))  .* res;
+        end
       end
       vmat = spm_imatrix(hdr.mat);
       vmat(7:9) = sign(vmat(7:9)).*res(1:3);
@@ -392,7 +394,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
         % for interpolation of partial defined maps like the cortical
         % thickness... finally 'nearest' interpolation is often good 
         % enought and much faster 
-        if all(res>0) && any(round(abs(res)*100)/100>resV)
+        if all(res>0) %&& any(round(abs(res)*100)/100>resV)
           d = single(res./resV);
           %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
           [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
@@ -405,7 +407,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
           clear Rx Ry Rz;
         end
       else
-        if all(res>0) && any(round(abs(res)*100)/100>resV)
+        if all(res>0) %&& any(round(abs(res)*100)/100>resV)
           d = single(res./resV);
           %[Rx,Ry,Rz]=meshgrid(0.5:d(1):size(D,2),0.5:d(2):size(D,1),0.5:d(3):size(D,3));
           [Rx,Ry,Rz]=meshgrid(d(2):d(2):size(T,2),d(1):d(1):size(T,1),d(3):d(3):size(T,3));
