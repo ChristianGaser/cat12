@@ -72,8 +72,7 @@ function varargout = cat_tst_qa(action,varargin)
 %#ok<*ASGLU>
 
   % get current release number
-  [n, r] = cat_version;
-  rev = str2double(r);
+  [n, rev_cat] = cat_version;
 
   % init output
   QAS = struct(); QAM = struct(); 
@@ -298,7 +297,7 @@ function varargout = cat_tst_qa(action,varargin)
       if opt.verb>1
         fprintf('\n%s\n\n%s\n%s\n', ...
           sprintf('CAT Preprocessing T1 Quality Assurance (%s):',...
-          sprintf('Rev: %d',rev)), Theader,repmat('-',size(Theader)));  
+          sprintf('Rev: %s',rev_cat)), Theader,repmat('-',size(Theader)));  
       end
 
       qamat   = nan(numel(Po),numel(QMAfn));
@@ -484,8 +483,8 @@ function varargout = cat_tst_qa(action,varargin)
 
       % software, parameter and job information
       % ----------------------------------------------------------------
-      [nam,rev] = cat_version;
-      AS.software.version_spm = rev;
+      [nam,rev_spm] = spm('Ver');
+      AS.software.version_spm = rev_spm;
       A = ver;
       for i=1:length(A)
         if strcmp(A(i).Name,'MATLAB'),
@@ -493,7 +492,7 @@ function varargout = cat_tst_qa(action,varargin)
         end
       end
       clear A
-      QAS.software.version_cat  = sprintf('%d',rev);
+      QAS.software.version_cat  = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
@@ -538,8 +537,8 @@ function varargout = cat_tst_qa(action,varargin)
 
       % software, parameter and job information
       % ----------------------------------------------------------------
-      [nam,rev] = cat_version;
-      QAS.software.version_spm = rev;
+      [nam,rev_spm] = spm('Ver');
+      QAS.software.version_spm = rev_spm;
       A = ver;
       for i=1:length(A)
         if strcmp(A(i).Name,'MATLAB'),
@@ -547,7 +546,7 @@ function varargout = cat_tst_qa(action,varargin)
         end
       end
       clear A
-      QAS.software.version_cat  = sprintf('%d',rev);
+      QAS.software.version_cat  = rev_cat;
       QAS.software.function     = which('cat_vol_qa');
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 

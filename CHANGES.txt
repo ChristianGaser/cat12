@@ -8072,6 +8072,7 @@ M       cat_surf_createCS.m
     the central surface and so some surface deformation.
 
 ------------------------------------------------------------------------
+r815 | gaser | 2015-12-17 12:54:26 +0100 (Do, 17 Dez 2015) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8096,5 +8097,13 @@ MM      internal/cat_vol_nlmus.m
 (2) Changed: replaced checks for CAT version using "ver" and use cat_version 
     throughout.
 
+
 ------------------------------------------------------------------------
-r815 | gaser | 2015-12-17 12:54:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_tst_qa.m
+
+Fixed: Correct version for SPM and CAT in cat_tst_qa.m.
+------------------------------------------------------------------------
+r816 | gaser | 2015-12-17 15:01:49
