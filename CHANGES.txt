@@ -8060,6 +8060,7 @@ M       html/cat.html
 (2) Changed: Cleaned some c-code (without affecting outputs).
 
 ------------------------------------------------------------------------
+r814 | gaser | 2015-12-17 00:43:56 +0100 (Do, 17 Dez 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8069,5 +8070,31 @@ M       cat_surf_createCS.m
 (2) Changed: Topology correction was not improved by using an initial threshold
     close to WM surface. Thus, we again use an inital threshold of 0.5 for 
     the central surface and so some surface deformation.
+
 ------------------------------------------------------------------------
-r814 | gaser | 2015-12-17 00:43:52
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+MM      cat_install_atlases.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_tst_qa.m
+M       cat_update.m
+A       cat_version.m
+M       html/cat.html
+MM      internal/cat_surf_reduceAvgSurf.m
+ M      internal/cat_vol_cMRegularizarNLM3D.c
+ M      internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+ M      internal/cat_vol_cMRegularizarNLM3Dw.c
+MM      internal/cat_vol_nlmus.m
+
+(1) Added: cat_version.m that is reading the Content.txt that can be also read
+    if SPM is in deployed mode (using the compiled version that prevents to 
+    read *.m files.
+(2) Changed: replaced checks for CAT version using "ver" and use cat_version 
+    throughout.
+
+------------------------------------------------------------------------
+r815 | gaser | 2015-12-17 12:54:20
