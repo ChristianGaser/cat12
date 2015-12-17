@@ -3,7 +3,7 @@ function cat_install_atlases
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_install_atlases.m 791 2015-11-27 10:57:52Z gaser $
+% $Id$
 
 atlas = cat_get_defaults('extopts.atlas');
 

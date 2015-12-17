@@ -13,7 +13,7 @@ function cat_surf_reduceAvgSurf(P)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 809 2015-12-03 14:51:39Z dahnke $ 
+% $Id$ 
 
   
   if ~isfield('job','P') || isempty(P)

@@ -10,7 +10,7 @@ TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 
 STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/cat12
 
-MATLAB_FILES=Contents.m cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m
+MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c cat_*.mex* vollib.c genus0.[ch] tricases.h
 MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt templates_1.50mm html templates_surfaces cat12.* CAT.* distribute_to_server.sh cat_*.sh
 
@@ -37,8 +37,9 @@ help:
 update:
 	-@svn update
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
-	-@echo '% Version ' ${VERSION} ' (CAT12) ' ${DATE} >> Contents.m
+	-@echo '% Version' ${VERSION}' (CAT12)' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
+	-@cp Contents.m Contents.txt
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
 	-@echo '% Version ' ${VERSION} ' (CAT12) ' ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt

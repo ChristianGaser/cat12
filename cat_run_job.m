@@ -1,18 +1,17 @@
 function cat_run_job(job,tpm,subj)
+% run CAT 
+%
+%_______________________________________________________________________
+% Christian Gaser
+% $Id$
+
 %#ok<*WNOFF,*WNON>
 
     stime = clock;
 
     %% print current CAT release number and subject file
-    A = ver; r = 0;
-    for i=1:length(A)
-        if strcmp(A(i).Name,'Computational Anatomy Toolbox')
-            r = str2double(A(i).Version);
-        end
-    end
-    clear A 
-
-    str  = sprintf('CAT12 r%d',r);
+    [n,r] = cat_version;
+    str  = sprintf('CAT12 r%s',r);
     str2 = spm_str_manip(job.channel(1).vols{subj},['a' num2str(70 - length(str))]);
     cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
           repmat('-',1,72),str,...
