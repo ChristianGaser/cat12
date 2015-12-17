@@ -1919,14 +1919,14 @@ qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.cat.species, ...
 if job.output.surface && exist('S','var')
   % metadata
   if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
-  if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th, S.rh.th1]; end
+  if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
   qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
-  if isfield(S,'rh') && isfield(S.lh,'rh2'), th=[th, S.rh.th2]; end
-  qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
+  qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
-  if isfield(S,'rh') && isfield(S.lh,'rh3'), th=[th, S.rh.th3]; end
-  qa.subjectmeasures.dist_CSFdepth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
+  qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
   
   %qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
  
@@ -2017,6 +2017,14 @@ if cat12.print
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
     str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
            qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
+    if isfield(qa.subjectmeasures,'dist_gyruswidth')
+      str3 = [str3 struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
+             qa.subjectmeasures.dist_gyruswidth{1}(1),177,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
+    end
+    if isfield(qa.subjectmeasures,'dist_sulcuswidth')
+      str3 = [str3 struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
+             qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
+    end
   end
   
   % Warnings
