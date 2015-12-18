@@ -318,8 +318,8 @@ app.labels = { ...
   'none (only SPM preprocessing)' ... the old default 
     'APP (light bias correction, no brain masking)' ... just to test it ... the second BC should be much more exact and stable
     'APP (full  bias correction, no brain masking)' ... just to test it ... the hard skull-stripping can lead to problems if brain tissue is missing, but actual it seams to work very well
-    'APP (without initial registraton)' ... I expect that this is only important for animals and can maybe controlled by the species parameter
-  'APP full' ... if APP works correct without exceptions this could maybe the new default 
+    'APP (without initial registration)' ... I expect that this is only important for animals and can maybe controlled by the species parameter
+  'APP full' ... if APP works correctly without exceptions this could maybe the new default 
   };
 app.values = {0 1 2 3 4};
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});

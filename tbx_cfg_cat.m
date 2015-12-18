@@ -255,7 +255,7 @@ modulated.def = @(val)cat_get_defaults('output.WMH.mod',    val{:});
 dartel.def    = @(val)cat_get_defaults('output.WMH.dartel', val{:});
 wmh           = cfg_branch;
 wmh.tag       = 'WMH';
-wmh.name      = 'White matter hyperintensity (WMH)';
+wmh.name      = 'White matter hyperintensities (WMH)';
 wmh.val       = {native warped modulated dartel};
 wmh.help      = {'Options to produce WMH images, if WMHC==3: p7*.img, wp7*.img and m[0]wp7*.img.'
 ''
@@ -281,7 +281,7 @@ warped.def   = @(val)cat_get_defaults('output.pc.warped', val{:});
 dartel.def   = @(val)cat_get_defaults('output.pc.dartel', val{:});
 pc           = cfg_branch;
 pc.tag       = 'pc';
-pc.name      = 'preprocessing change map';
+pc.name      = 'Preprocessing change map';
 pc.val       = {native warped dartel};
 pc.help      = {
   'WARNING: The preprocessing documentation map is under development!\n\nThis is the option to save a map that protocol the canges that were necessary to segment your image. In example the removement of blood vessels or the adaption for local GM intensity will result in strong modifications of the orignal image. Although this corrections normaly helps to improve segmenation quality they can fail. As a result higher values describe regions where error are more likely than in other regions. '
@@ -295,7 +295,7 @@ warped.def   = @(val)cat_get_defaults('output.te.warped', val{:});
 dartel.def   = @(val)cat_get_defaults('output.te.dartel', val{:});
 te           = cfg_branch;
 te.tag       = 'te';
-te.name      = 'tissue expectation map';
+te.name      = 'Tissue expectation map';
 te.val       = {native warped dartel};
 te.help      = {
   'WARNING: The preprocessing documentation map is under development!\n\nDifference image of the atlas map in subject space and the segmentation.' };
