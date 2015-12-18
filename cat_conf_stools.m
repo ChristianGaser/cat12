@@ -456,7 +456,7 @@ function stools = cat_conf_stools(expert)
   sc.cdata.tag     = 'cdata';
   sc.cdata.name    = 'Surface Data Files';
   sc.cdata.filter  = 'any';
-  sc.cdata.ufilter = '^s.mm.*';
+  sc.cdata.ufilter = '[rl]h.*';
   sc.cdata.num     = [1 Inf];
   sc.cdata.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
   
@@ -512,7 +512,7 @@ function stools = cat_conf_stools(expert)
   sc.expression.name    = 'Expression';
   sc.expression.strtype = 's';
   sc.expression.num     = [1 Inf];
-  sc.expression.val     = {' '};
+  sc.expression.val     = {'s1'};
   sc.expression.help    = {
     'Example expressions (f):'
     '  * Mean of six surface textures (select six texture files)'
@@ -602,7 +602,7 @@ function stools = cat_conf_stools(expert)
   fwhm.num     = [1 1];
   fwhm.val     = {15};
   fwhm.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm.'};
+    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm. For no filtering use a value of 0.'};
   
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';

@@ -108,7 +108,9 @@ function [varargout] = cat_surf_info(P,read)
     % side
     if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
     elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
-    else                          sinfo(i).side='';   sidei = 0;
+    else
+      sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+      sidei = strfind(noname,[sinfo(i).side '.']);
     end
     if sidei>0
       sinfo(i).preside = noname(1:sidei-1);
