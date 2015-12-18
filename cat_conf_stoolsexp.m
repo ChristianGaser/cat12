@@ -115,31 +115,6 @@ function stoolsexp = cat_conf_stoolsexp
 
 
 
-%% resample surface (mesh and data)
-%-----------------------------------------------------------------------
-  resample.data         = cfg_files;
-  resample.data.tag     = 'data';
-  resample.data.name    = 'Surface Data Files';
-  resample.data.filter  = 'any';
-  resample.data.ufilter = '^[rl]h.(?!cent|sphe|defe).*';
-  resample.data.num     = [1 Inf];
-  resample.data.help    = {'Select surfaces files for resampling to template space.'};
-
-  resample.main         = cfg_exbranch;
-  resample.main.tag     = 'surfresamp';
-  resample.main.name    = 'Resample Surface Data';
-  resample.main.val     = {
-    resample.data
-    };
-  resample.main.vfiles  = @vfiles_resample;
-  resample.main.prog    = @cat_surf_resample;
-  resample.main.help    = {
-    'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
-
-
-
-
-
 %% Toolset
 %-----------------------------------------------------------------------
   
@@ -147,7 +122,6 @@ function stoolsexp = cat_conf_stoolsexp
   stoolsexp.name   = 'Surface Expert Tools';
   stoolsexp.tag    = 'stoolsexp';
   stoolsexp.values = {...
-    resample.main, ...
     smooth.main, ...
     avg.main, ...
     };
@@ -163,14 +137,6 @@ function vf = vfiles_smooth(job)
   sinfo = cat_surf_info(job.data);
   for i=1:numel(vf)
     vf(i) = cat_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',job.fwhm,sinfo(i).dataname));
-  end
-return;
-function vf = vfiles_resample(job)
-  vf    = job.data; 
-  sinfo = cat_surf_info(job.data);
-  for i=1:numel(vf)
-    sinfo(i).resampled = 1; 
-    vf(i) = cat_surf_rename(sinfo(i));
   end
 return;
 function vf = vfiles_avg(job)

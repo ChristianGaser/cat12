@@ -58,6 +58,7 @@ for i=1:size(Psubj,1)
     Pvalue     = fullfile(dname,[hemi '.' pname '.resampled']);
     Pfwhm      = fullfile(outdir,[sprintf('s%gmm.',fwhm) hemi '.' pname '.resampled.' name]);
     Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
+    Pmask      = fullfile(opt.fsavgDir,[hemi '.mask.txt']);
   
     fprintf('Resample %s in %s\n',hemi,deblank(Psubj(i,:)));
 
@@ -70,7 +71,7 @@ for i=1:size(Psubj,1)
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
 
     % smooth resampled values
-    cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,fwhm,Pvalue);
+    cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm,Pvalue,Pmask);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
 
     % add values to resampled surf and save as gifti

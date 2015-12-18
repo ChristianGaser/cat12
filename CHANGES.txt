@@ -8108,6 +8108,7 @@ M       cat_tst_qa.m
 Fixed: Correct version for SPM and CAT in cat_tst_qa.m.
 
 ------------------------------------------------------------------------
+r817 | dahnke | 2015-12-17 15:27:24 +0100 (Do, 17 Dez 2015) | 40 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8148,5 +8149,30 @@ Fixed:    Corrected interpolation error in case of complete reduction of voxel
           resolution.
 Fixed:    Corrected XML labeling in cat_vol_atlas and update atlas maps.
 New:      Added ROI XYZ Coordinates (center of mass) in XML files.
+
 ------------------------------------------------------------------------
-r817 | dahnke | 2015-12-17 15:27:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_conf_stoolsexp.m
+M       cat_surf_info.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+MM      cat_version.m
+A       templates_surfaces/lh.mask.txt
+A       templates_surfaces/lh.rois.a2009s.txt
+A       templates_surfaces/rh.mask.txt
+A       templates_surfaces/rh.rois.a2009s.txt
+A       templates_surfaces/rois.a2009s.txt
+A       templates_surfaces/templates_surfaces.man
+
+(1) Changed: Added support for NaN values for smoothing after resampling.
+    This utilizez masked smoothing and skipping those areas from
+    statistical analysis.
+(2) Changed: Removed call of redundant cat_surf_resample.m.
+(3) Changed: Added spm-input option if no hemisphere information can be found
+    in cat_surf_display.m (e.g. for results of statistical analysis).
+
+------------------------------------------------------------------------
+r818 | gaser | 2015-12-18 14:39:14

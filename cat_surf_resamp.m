@@ -11,7 +11,8 @@ if nargin == 1
   P = char(vargin.data_surf);
   fwhm = vargin.fwhm;
 else
-  error('Not enough parameters.');
+  spm_clf('Interactive'); 
+  P = cellstr(spm_select([1 inf],'any','Select surface data'));
 end
 
 opt.debug     = cat_get_defaults('extopts.debug');
@@ -49,6 +50,7 @@ for i=1:size(P,1)
   Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
   Pcentral   = fullfile(pp,Pcentral);
   Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
+  Pmask      = fullfile(opt.fsavgDir,[hemi '.mask.txt']);
   
   %fprintf('Resample %s\n',deblank(P(i,:)));
   fprintf('Display resampled %s\n',spm_file([Pfwhm '.gii'],'link','cat_surf_display(''%s'')'));
@@ -58,7 +60,7 @@ for i=1:size(P,1)
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
   
   % smooth resampled values
-  cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Presamp,Pfwhm,fwhm,Pvalue);
+  cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm,Pvalue,Pmask);
   [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
 
   % add values to resampled surf and save as gifti
@@ -67,6 +69,6 @@ for i=1:size(P,1)
   
   delete(Presamp);
   delete(Pfwhm);
-  delete(Pvalue);
+  if fwhm > 0, delete(Pvalue); end
 
 end
