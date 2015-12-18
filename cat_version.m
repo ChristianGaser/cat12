@@ -7,7 +7,7 @@ function [CATrel, CATver]  = cat_version
 % modified version of spm_version.m
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_version.m 774 2015-11-18 15:53:05Z gaser $
+% $Id$
 
 persistent CAT_VER;
 v = CAT_VER;
