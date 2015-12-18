@@ -8151,6 +8151,7 @@ Fixed:    Corrected XML labeling in cat_vol_atlas and update atlas maps.
 New:      Added ROI XYZ Coordinates (center of mass) in XML files.
 
 ------------------------------------------------------------------------
+r818 | gaser | 2015-12-18 14:39:20 +0100 (Fr, 18 Dez 2015) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8174,5 +8175,22 @@ A       templates_surfaces/templates_surfaces.man
 (3) Changed: Added spm-input option if no hemisphere information can be found
     in cat_surf_display.m (e.g. for results of statistical analysis).
 
+
 ------------------------------------------------------------------------
-r818 | gaser | 2015-12-18 14:39:14
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+ M      templates_1.50mm/labels_dartel_aal.xml
+ M      templates_1.50mm/labels_dartel_hammers.xml
+ M      templates_1.50mm/labels_dartel_ibsr.xml
+ M      templates_1.50mm/labels_dartel_lpba40.xml
+ M      templates_1.50mm/labels_dartel_mori.xml
+ M      templates_1.50mm/labels_dartel_neuromorphometrics.xml
+
+Changed: Some minor typo correction.
+------------------------------------------------------------------------
+r819 | gaser | 2015-12-18 16:26:12
