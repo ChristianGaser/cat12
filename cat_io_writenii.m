@@ -1,4 +1,4 @@
-function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform,YM,YMth)
+function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,transform,YM,YMth)
 % ______________________________________________________________________
 % Write an image Y with the properties described by V with the datatype 
 % spmtype for a specific range. Add the prefix pre and the description 
@@ -9,6 +9,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
 %   Y       = input volume
 %   V       = input volume structure
 %   VO      = ouput volume structure
+%   folder  = subfolder for writing data (default='')
 %   pre     = prefix for filename (default='')
 %   desc    = description that is added to the origin description (default='')
 %   spmtype = spm image type (default given by the class of Y)
@@ -73,10 +74,14 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     end
   end
   
+  if ~exist('folder','var')
+    folder = '';
+  end
+  
   % write native file
   % ____________________________________________________________________
   if write(1)==1
-    fname = cat_io_handle_pre(V.fname,pre,'');
+    fname = io_handle_pre(V.fname,pre,'',folder);
     if exist('transform','var') && isfield(transform,'native')
       if any(size(Y)~=transform.native.Vo.dim)
         nV = transform.native.Vi;
@@ -171,7 +176,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
   if write(2)
     pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
     
-    fname = cat_io_handle_pre(V.fname,pre2,'');
+    fname = io_handle_pre(V.fname,pre2,'',folder);
     if exist(fname,'file'), delete(fname); end
     if labelmap==0
       [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3));
@@ -238,7 +243,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     end
 
     
-    fname = cat_io_handle_pre(V.fname,pre3,'');
+    fname = io_handle_pre(V.fname,pre3,'',folder);
     if exist(fname,'file'), delete(fname); end
     
     [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
@@ -283,7 +288,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     if     write(3)==1, pre3 = ['mw'   pre]; desc3 = [desc '(Jac. sc. warped)'];
     elseif write(3)==2, pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; end
     
-    fname = cat_io_handle_pre(V.fname,pre3,'');
+    fname = io_handle_pre(V.fname,pre3,'',folder);
     if exist(fname,'file'), delete(fname); end
 
     [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3));
@@ -352,7 +357,7 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
     end
 
     if exist('pre4','var')
-      fname = cat_io_handle_pre(V.fname,pre4,post);
+      fname = io_handle_pre(V.fname,pre4,post,folder);
       if exist(fname,'file'), delete(fname); end
       VraT = struct('fname',fname,'dim',transf.odim,...
            'dt',   [spm_type(spmtype) spm_platform('bigend')],...
@@ -400,10 +405,10 @@ function varargout = cat_io_writenii(V,Y,pre,desc,spmtype,range,writes,transform
   
 end
 
-function FO = cat_io_handle_pre(F,pre,post)
+function FO = io_handle_pre(F,pre,post,folder)
 % Remove all known cat prefix types from a filename (and check if this file exist). 
   [pp,ff,ee] = spm_fileparts(F); 
 
   % always use .nii as extension
-  FO = fullfile(pp,[pre ff post '.nii']);
+  FO = fullfile(pp,folder,[pre ff post '.nii']);
 end

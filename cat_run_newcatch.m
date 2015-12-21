@@ -20,6 +20,12 @@ function cat_run_newcatch(job,tpm,subj)
       caterr = addCause(caterr,adderr);
     end
     
+    if cat_get_defaults('extopts.subfolders')
+      mrifolder = 'mri';
+    else
+      mrifolder = '';
+    end
+
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
       repmat('-',1,72),caterr.identifier,...
       spm_str_manip(job.channel(1).vols{subj},'a60'),...
@@ -36,9 +42,9 @@ function cat_run_newcatch(job,tpm,subj)
     % delete template files 
     [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
     % delete noise corrected image
-    if exist(fullfile(pth,['n' nam ext]),'file')
+    if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
       try %#ok<TRYNC>
-        delete(fullfile(pth,['n' nam ext]));
+        delete(fullfile(pth,mrifolder,['n' nam ext]));
       end
     end
 

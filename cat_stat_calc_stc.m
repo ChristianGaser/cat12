@@ -1,7 +1,7 @@
 function [vbmSTC,Ystc,stctype] = cat_stat_calc_stc(Yp0,VT0,trans,te,res)
 % Subject Template  (TE)
 % ----------------------------------------------------------------------
-% This measure shoold describe the difference between our expectation
+% This measure should describe the difference between our expectation
 % from the mean group probability map and the subject. Strong variation
 % can represent 
 %   (1) strong anatomical variations of this subject, and 
@@ -89,10 +89,15 @@ function [vbmSTC,Ystc,stctype] = cat_stat_calc_stc(Yp0,VT0,trans,te,res)
   spm_smooth(Ystc,Ystc,8);  % we are only interessed on larger changes
 
   if strcmp(stctype(1:4),'temp')
-    cat_io_writenii(VT0,Ystc,'te', ...
+    if cat_get_defaults('extopts.subfolders')
+      mrifolder = 'mri';
+    else
+      mrifolder = '';
+    end
+    cat_io_writenii(VT0,Ystc,mrifolder,'te', ...
       ['group expectation map (matching of template after normalization) - ' stctype], ...
       'uint8',[0,1/255],min([1 0 0 0],cell2mat(struct2cell(te)')),trans);
-    cat_io_writenii(VT0,Ystc,'te', ...
+    cat_io_writenii(VT0,Ystc,mrifolder,'te', ...
       ['group expectation map (matching of template after normalization) - ' stctype]', ...
       'uint8',[0,1/255],min([0 1 2 2],cell2mat(struct2cell(te)')),trans);
   end

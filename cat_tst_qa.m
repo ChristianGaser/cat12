@@ -80,6 +80,13 @@ function varargout = cat_tst_qa(action,varargin)
   cat_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
 
+  if cat_get_defaults('extopts.subfolders')
+    mrifolder = 'mri';
+    reportfolder = 'report';
+  else
+    mrifolder = '';
+    reportfolder = '';
+  end
    
   % no input and setting of default options
   if nargin==0, action='p0'; end 
@@ -452,9 +459,9 @@ function varargout = cat_tst_qa(action,varargin)
         % --------------------------------------------------------------
         if opt.write_csv
           pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_marks.csv']),QATm);
         end
       end 
@@ -473,8 +480,8 @@ function varargout = cat_tst_qa(action,varargin)
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
       QAS.filedata.fname  = opt.job.data{1};
       QAS.filedata.F      = opt.job.data{1}; 
-      QAS.filedata.Fm     = fullfile(pp,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,['p0' ff ee]);
+      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
+      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                        spm_str_manip(ff,sprintf('k%d',...
@@ -514,7 +521,7 @@ function varargout = cat_tst_qa(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
       end
       
     case 'cat12'
@@ -527,8 +534,8 @@ function varargout = cat_tst_qa(action,varargin)
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
       QAS.filedata.fname  = Vo.fname;
       QAS.filedata.F      = Vo.fname; 
-      QAS.filedata.Fm     = fullfile(pp,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,['p0' ff ee]);
+      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
+      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                        spm_str_manip(ff,sprintf('k%d',...
@@ -799,7 +806,7 @@ function varargout = cat_tst_qa(action,varargin)
         QAS.qualityratings = QAM.qualitymeasures;
        % QAS.subjectratings = QAM.subjectmeasures;
         
-        cat_io_xml(fullfile(pp,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
 
       clear Yi Ym Yo Yos Ybc

@@ -8177,6 +8177,7 @@ A       templates_surfaces/templates_surfaces.man
 
 
 ------------------------------------------------------------------------
+r819 | gaser | 2015-12-18 16:26:17 +0100 (Fr, 18 Dez 2015) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8192,5 +8193,29 @@ M       tbx_cfg_cat.m
  M      templates_1.50mm/labels_dartel_neuromorphometrics.xml
 
 Changed: Some minor typo correction.
+
 ------------------------------------------------------------------------
-r819 | gaser | 2015-12-18 16:26:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_stat_calc_stc.m
+M       cat_surf_createCS.m
+M       cat_tst_qa.m
+ M      templates_surfaces/lh.mask.txt
+ M      templates_surfaces/lh.rois.a2009s.txt
+ M      templates_surfaces/rh.mask.txt
+ M      templates_surfaces/rh.rois.a2009s.txt
+ M      templates_surfaces/rois.a2009s.txt
+ M      templates_surfaces/templates_surfaces.man
+
+Changed: Added option to save results in subfolders such as mri, surf, label
+and report. All resp. files were changed to allow subfolders.
+------------------------------------------------------------------------
+r820 | gaser | 2015-12-21 15:16:41
