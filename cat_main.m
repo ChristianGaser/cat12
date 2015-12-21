@@ -82,6 +82,15 @@ for fni=1:numel(FN)
   end
 end
 
+if cat_get_defaults('extopts.subfolders')
+  mrifolder = 'mri';
+  reportfolder = 'report';
+  labelfolder = 'label';
+else
+  mrifolder = '';
+  reportfolder = '';
+  labelfolder = '';
+end
 
 if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
     tpm = spm_load_priors8(tpm);
@@ -146,14 +155,14 @@ end
 VT  = res.image(1);  % denoised/interpolated n*.nii
 VT0 = res.image0(1); % original 
 fname0 = VT0.fname;
-[pth,nam] = spm_fileparts(res.image0(1).fname); 
+[pth,nam] = spm_fileparts(VT0.fname); 
 
 % delete old xml file 
-oldxml = fullfile(pth,['cat_' nam '.xml']);  
+oldxml = fullfile(pth,reportfolder,['cat_' nam '.xml']);  
 if exist(oldxml,'file'), delete(oldxml); end
 clear oldxml
 
-d    = res.image(1).dim(1:3);
+d    = VT.dim(1:3);
 
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
 x3  = 1:d(3);
@@ -207,7 +216,7 @@ for n=1:N,
 
     if bf(n,1),
         chan(n).Nc      = nifti;
-        chan(n).Nc.dat  = file_array(fullfile(pth1,['m', nam1, '.nii']),...
+        chan(n).Nc.dat  = file_array(fullfile(pth1,mrifolder,['m', nam1, '.nii']),...
                                  res.image(n).dim(1:3),...
                                  [spm_type('float32') spm_platform('bigend')],...
                                  0,1,0);
@@ -239,19 +248,19 @@ do_defs = do_defs || do_cls;
 if do_defs,
     if df(2),
         Ndef      = nifti;
-        Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),...
-                               [res.image(1).dim(1:3),1,3],...
+        Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam1, '.nii']),...
+                               [VT.dim(1:3),1,3],...
                                [spm_type('float32') spm_platform('bigend')],...
                                0,1,0);
-        Ndef.mat  = res.image(1).mat;
-        Ndef.mat0 = res.image(1).mat;
+        Ndef.mat  = VT.mat;
+        Ndef.mat0 = VT.mat;
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
 end
 
 spm_progress_bar('init',length(x3),['Working on ' nam],'Planes completed');
-M = M1\res.Affine*res.image(1).mat;
+M = M1\res.Affine*VT.mat;
 
 if do_cls
     Q = zeros([d(1:3),Kb],'single');
@@ -339,7 +348,7 @@ for z=1:length(x3),
         
         % initialize Yy only at first slice
         if z==1
-            Yy = zeros([res.image(1).dim(1:3),3],'single');
+            Yy = zeros([VT.dim(1:3),3],'single');
         end
         Yy(:,:,z,1) = t1;
         Yy(:,:,z,2) = t2;
@@ -353,10 +362,10 @@ spm_progress_bar('clear');
 % load bias corrected image
 % restrict bias field to maximum of 3 and a minimum of 0.1
 % (sometimes artefacts at the borders can cause huge values in bias field)
-Ybf  = zeros(res.image(1).dim(1:3),'single');
-Ysrc = zeros(res.image(1).dim(1:3),'single');
-%Vsrc = spm_vol(res.image(1).fname);
-Vsrc = res.image(1); 
+Ybf  = zeros(VT.dim(1:3),'single');
+Ysrc = zeros(VT.dim(1:3),'single');
+%Vsrc = spm_vol(VT.fname);
+Vsrc = VT; 
 for z=1:length(x3),
     f = spm_sample_vol(Vsrc,x1,x2,o*x3(z),0);
     bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
@@ -392,7 +401,7 @@ if do_cls
         %   brain mask)...
         % - its faster
         
-        vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
+        vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));
       
         sQ = (sum(Q,4)+eps)/255; P = zeros([d(1:3),Kb],'uint8');
         for k1=1:size(Q,4)
@@ -530,7 +539,7 @@ if do_cls
         nmrf_its = 0; % 10 interation better to get full probability in thin GM areas 
         spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
         G   = ones([Kb,1],'single')*mrf_spm;
-        vx2 = single(sum(res.image(1).mat(1:3,1:3).^2));
+        vx2 = single(sum(VT.mat(1:3,1:3).^2));
         % P = zeros([d(1:3),Kb],'uint8');
         % P = spm_mrf(P,Q,G,vx2); % init: transfer data from Q to P 
         if 0
@@ -567,7 +576,7 @@ if job.extopts.debug==2
   % registration > check 'res.image.mat' and 'res.Affine'
   [pth,nam] = spm_fileparts(res.image0(1).fname); 
   tpmci  = 1;
-  tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
+  tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
   save(tmpmat,'res','tc','bf','df','lb','jc','cat','tpm','job','Ysrc','Ybf','Ycls');
 end
 
@@ -577,7 +586,7 @@ end
 % responsible for missing areas (temporal lobe), but also for to large
 % segmentations (also temporal lobe). Therefore, the GM extimation has
 % to be a little bit more complexe and we ignore surrounding CSF.
-vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));
+vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));
 vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));
 if ~exist('Yb','var')
   T3th      = [mean(res.mn(res.lkp==3 & res.mg'>0.1)) ...
@@ -600,7 +609,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
 % for fast debuging...
 if job.extopts.debug==2
-  tmpmat = fullfile(pth,[nam '_tmp.mat']); save(tmpmat);
+  tmpmat = fullfile(pth,reportfolder,[nam '_tmp.mat']); save(tmpmat);
 end
 
 
@@ -650,7 +659,7 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
   
   if job.extopts.debug==2
     tpmci  = tpmci + 1;
-    tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
+    tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
     save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
   end
   
@@ -713,13 +722,13 @@ else
   stime = cat_io_cmd('Global intensity correction');
   
   % interpolation 
-  cat_vol_imcalc(VT0,res.image(1),'i1',struct('interp',6,'verb',0));
+  cat_vol_imcalc(VT0,VT,'i1',struct('interp',6,'verb',0));
 
   % bias correction 
-  Ybf  = zeros(res.image(1).dim(1:3),'single');
-  Yo   = zeros(res.image(1).dim(1:3),'single');
+  Ybf  = zeros(VT.dim(1:3),'single');
+  Yo   = zeros(VT.dim(1:3),'single');
   for z=1:length(x3),
-      f = spm_sample_vol(res.image(1),x1,x2,o*x3(z),0);
+      f = spm_sample_vol(VT,x1,x2,o*x3(z),0);
       bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
       bf1(bf1>3) = 3; bf1(bf1<0.2) = 0.2;
       Yo(:,:,z)  = single(bf1 .* f);
@@ -748,10 +757,10 @@ else
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
-  if job.extopts.debug==2
-                                  tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preLAS'));
-                                  save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','Tth','vx_vol','ornlmstr');
-  end
+if job.extopts.debug==2
+  tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preLAS'));
+  save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','Tth','vx_vol','ornlmstr');
+end
   
   
   
@@ -765,7 +774,7 @@ end
 
 
 if job.extopts.debug==2
-  tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
+  tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
   save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
 end
 
@@ -1265,7 +1274,7 @@ if do_cls && do_defs
    
   if job.extopts.debug==2
     Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255; %#ok<NASGU>
-    tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ym','T3th','vx_vol','Yl1');
     clear Yp0;
   end
@@ -1612,13 +1621,13 @@ elseif do_dartel==2 %&& any([tc(2:end),bf(2:end),df,lb(1:end),jc])
     fn = {'GM','WM','CSF'};
     for clsi=1:2
       %%
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[1 1 0 1],trans);
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 2],trans);
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 1 0],trans);
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 2 0],trans);  
     end
     %}
@@ -1643,10 +1652,10 @@ Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255;
 
 % bias and noise corrected without masking for subject space and with 
 % masking for other spaces 
-cat_io_writenii(VT0,Ym,'m', ...
+cat_io_writenii(VT0,Ym,mrifolder,'m', ...
   'bias and noise corrected, intensity normalized', ...
   'uint16',[0,0.0001],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),trans);
-cat_io_writenii(VT0,Ym.*(Yp0>0.1),'m', ...
+cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ...
   'bias and noise corrected, intensity normalized (masked due to normalization)', ...
   'uint16',[0,0.0001],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),trans);
   
@@ -1654,31 +1663,31 @@ cat_io_writenii(VT0,Ym.*(Yp0>0.1),'m', ...
 if job.extopts.WMHC==3 && ~opt.inv_weighting; 
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
-cat_io_writenii(VT0,Yp0,'p0','Yp0b map','uint8',[0,4/255],job.output.label,trans);
+cat_io_writenii(VT0,Yp0,mrifolder,'p0','Yp0b map','uint8',[0,4/255],job.output.label,trans);
 clear Yp0; 
 
 %% partitioning
-cat_io_writenii(VT0,Yl1,'a1','brain atlas map for major structures and sides',...
+cat_io_writenii(VT0,Yl1,mrifolder,'a1','brain atlas map for major structures and sides',...
   'uint8',[0,1],job.output.atlas,trans);
 
 
 %% class maps
 fn = {'GM','WM','CSF','head','head','background'};
 for clsi=1:3
-  cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+  cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
     min([1 1 0 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
-  cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+  cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
     min([0 0 2 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
 end
 
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
-    cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+    cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
       min([1 1 0 2],cell2mat(struct2cell(job.output.TPMC)')),trans);
-    cat_io_writenii(VT0,single(Ycls{clsi})/255,sprintf('p%d',clsi),...
+    cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
       min([0 0 2 0],cell2mat(struct2cell(job.output.TPMC)')),trans);
   end
@@ -1686,9 +1695,9 @@ end
 
 %% write WMH class maps
 if job.extopts.WMHC==3 && ~opt.inv_weighting;
-  cat_io_writenii(VT0,single(Ywmh)/255,'p7','WMH tissue map','uint8',[0,1/255],...
+  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
     min([1 1 0 2],cell2mat(struct2cell(job.output.WMH)')),trans); % 1 0 0 0
-  cat_io_writenii(VT0,single(Ywmh)/255,'p7','WMH tissue map','uint16',[0,1/255],...
+  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
     min([0 0 2 0],cell2mat(struct2cell(job.output.WMH)')),trans); % 0 1 2 2
 end  
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
@@ -1698,7 +1707,7 @@ if jc
   [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
   clear y0
   N      = nifti;
-  N.dat  = file_array(fullfile(pth,['j_', nam, '.nii']),trans.warped.odim(1:3),...
+  N.dat  = file_array(fullfile(pth,mrifolder,['j_', nam, '.nii']),trans.warped.odim(1:3),...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
   N.mat  = M1;
   N.mat0 = M1;
@@ -1711,7 +1720,7 @@ end
 if df(1)
     Yy        = spm_diffeo('invdef',trans.warped.y,odim,eye(4),M0);
     N         = nifti;
-    N.dat     = file_array(fullfile(pth,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
+    N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = M1;
     N.mat0    = M1;
     N.descrip = 'Deformation';
@@ -1727,7 +1736,7 @@ if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
   Vdef = rmfield(Vdef,'private');
   Vdef.dat = zeros(size(Vdef.dim),'single');
   Vdef.pinfo(3) = 0; 
-  Vdef.fname = fullfile(pth,['iy2_r', nam1, '.nii']);
+  Vdef.fname = fullfile(pth,mrifolder,['iy2_r', nam1, '.nii']);
   Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
   Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
   for i=1:3
@@ -1737,7 +1746,7 @@ if df(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
   clear Vt Vdef Vyy
   %% write new output
   Ndef      = nifti;
-  Ndef.dat  = file_array(fullfile(pth,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...
+  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...
               [spm_type('float32') spm_platform('bigend')],0,1,0);
   Ndef.mat  = res.image0(1).mat;
   Ndef.mat0 = res.image0(1).mat;
@@ -1766,7 +1775,7 @@ if job.output.surface
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
   try
-    [Yth1,S,Psurf] = cat_surf_createCS(res.image(1),Ymm,Yl1,YMF,...
+    [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymm,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine)); % clear Ymm YMF  % VT0 - without interpolation
   catch
     surferr = lasterror; %#ok<LERR>
@@ -1892,13 +1901,13 @@ if job.output.ROI && do_cls
           end
 
           % csv-export and xml-export (later) 
-          cat_io_csv(fullfile(pth,['catROI' normalize '_' atlas '_' nam '.csv']),...
+          cat_io_csv(fullfile(pth,labelfolder,['catROI' normalize '_' atlas '_' nam '.csv']),...
             csv,'','',struct('delimiter',',','komma','.'));
           % not in "cat_*.xml"
           %ROI.([normalize '_' atlas]) = csv;
-          %cat_io_xml(fullfile(pth,['cat_' nam '.xml']),struct('ROI',ROI),'write+'); 
+          %cat_io_xml(fullfile(pth,labelfolder,['cat_' nam '.xml']),struct('ROI',ROI),'write+'); 
         else
-          stime2 = cat_io_cmd(sprintf('  ROI estimation failed. Atals ''%s'' not exist.',atlas),'g5','',verb,stime2);
+          stime2 = cat_io_cmd(sprintf('  ROI estimation failed. Atlas ''%s'' not exist.',atlas),'g5','',verb,stime2);
         end
       end
     end
@@ -1930,7 +1939,7 @@ if job.output.surface && exist('S','var')
   
   %qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
  
-  cat_io_xml(fullfile(pth,['cat_' nam '.xml']),struct(...
+  cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
     ... 'subjectratings',QAM.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures),'write+'); % here we have to use the write+!
 
@@ -2192,7 +2201,7 @@ if cat12.print
   fprintf(1,'\n'); spm_print;
 
   % print subject report file as SPM standard PS file
-  %psf  = fullfile(pth,['catreport_' nam '.ps']);
+  %psf  = fullfile(pth,reportfolder,['catreport_' nam '.ps']);
   %if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
   
   
@@ -2201,7 +2210,7 @@ if cat12.print
   job.imgprint.dpi   = 600;
   job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
   job.imgprint.ftype = @(x) ['-d' num2str(x)];
-  job.imgprint.fname     = fullfile(pth,['catreport_' nam '.' job.imgprint.type]); 
+  job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
 
   fgold.PaperPositionMode = get(fg,'PaperPositionMode');
   fgold.PaperPosition     = get(fg,'PaperPosition');
@@ -2503,7 +2512,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
  
   if debug==2
     [pth,nam] = spm_fileparts(res.image0(1).fname);
-    tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm00'));
+    tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm00'));
     save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','T3thx','Yg','Ym','noise');
   end
   
@@ -2668,7 +2677,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     end
    
     if debug==2
-      tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm01'));
+      tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm01'));
       save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','Yg','Ydiv','Ym',...
        'Yb2','gth','Ybm','BMth','Ywm','Ygm','Ycm','Ybg','T3th_cls','T3th_spm','noise');
     end
@@ -3105,7 +3114,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
  if debug>1
     try %#ok<TRYNC> 
       [pth,nam] = spm_fileparts(res.image0(1).fname); tpmci=0;
-      tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'prepeaks'));
+      tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'prepeaks'));
       save(tmpmat);
     end
   end
@@ -3182,7 +3191,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   
   if debug>1
     try %#ok<TRYNC> % windows requires this... i don't know why ... maybe the file size
-      tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'prepeaks'));
+      tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'prepeaks'));
       save(tmpmat);
     end
   end
@@ -3302,7 +3311,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   %%
   if debug>1
     try %#ok<TRYNC> % windows requires this... i don't know why
-      tpmci=tpmci+1; tmpmat = fullfile(pth,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'postpeaks'));
+      tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'postpeaks'));
       save(tmpmat);
     end
   end
@@ -3569,7 +3578,7 @@ function Ylai = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job)
 
   %% write images to any space
   [pp,ff,ee] = fileparts(FA{ai,1}); [pp,pph] = fileparts(pp);
-  cat_io_writenii(VT0,Ylai,sprintf('l%d',ai+1),...
+  cat_io_writenii(VT0,Ylai,mrifolder,sprintf('l%d',ai+1),...
     sprintf('brain atlas map of %s map',fullfile(pph,ff,ee)),...
     'uint8',[0,1],job,trans);
   clear Ymm;

@@ -19,6 +19,22 @@ function cat_run_job(job,tpm,subj)
           repmat('-',1,72));
     clear r str str2
 
+    pth = spm_fileparts(job.channel(1).vols{subj}); 
+
+    % create subfolders if not exist
+    if cat_get_defaults('extopts.subfolders')
+      folders = char('mri','surf','report','label');
+      for i=1:size(folders,1)
+        if ~exist(fullfile(pth,deblank(folders(i,:))),'dir')
+          mkdir(pth,deblank(folders(i,:)));
+        end
+      end
+      mrifolder = 'mri';
+      reportfolder = 'report';
+    else
+      mrifolder = '';
+      reportfolder = '';
+    end
 
     %  -----------------------------------------------------------------
     %  check resolution properties
@@ -84,7 +100,7 @@ function cat_run_job(job,tpm,subj)
                   fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
                 end
             end
-            Vn = cat_io_writenii(V,Y,'n','noise corrected','float32',[0,1],[1 0 0]);
+            Vn = cat_io_writenii(V,Y,mrifolder,'n','noise corrected','float32',[0,1],[1 0 0]);
             job.channel(n).vols{subj} = Vn.fname;
             clear Y V Vn;
         end
@@ -97,7 +113,7 @@ function cat_run_job(job,tpm,subj)
          for n=1:numel(job.channel) 
            [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
            ofname  = fullfile(pp,[ff ee]); 
-           nfname  = fullfile(pp,['n' ff '.nii']); 
+           nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
            copyfile(ofname,nfname); 
            job.channel(n).vols{subj} = nfname;
          end
@@ -151,12 +167,12 @@ function cat_run_job(job,tpm,subj)
         if ~(job.cat.sanlm && job.extopts.NCstr)
           % if no noise correction we have to add the 'n' prefix here
           [pp,ff,ee] = spm_fileparts(Vn.fname);
-          Vi.fname = fullfile(pp,['n' ff ee]);
+          Vi.fname = fullfile(pp,mrifolder,['n' ff ee]);
           job.channel(n).vols{subj} = Vi.fname;
         end
         if job.cat.sanlm==0
           [pp,ff,ee,dd] = spm_fileparts(Vn.fname); 
-          Vi.fname = fullfile(pp,['n' ff ee dd]);
+          Vi.fname = fullfile(pp,mrifolder,['n' ff ee dd]);
           job.channel(n).vols{subj} = Vi.fname;
         end
         cat_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
@@ -225,7 +241,7 @@ function cat_run_job(job,tpm,subj)
        
     Affine  = eye(4);
     [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
-    Pbt = fullfile(pp,['brainmask_' ff '.nii']);
+    Pbt = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
     Pb  = char(cat_get_defaults('extopts.brainmask'));
     Pt1 = char(cat_get_defaults('extopts.T1'));
     if ~isempty(job.cat.affreg)      
@@ -445,7 +461,7 @@ function cat_run_job(job,tpm,subj)
     if cat_get_defaults('extopts.debug')==2
         % save information for debuging and OS test
         [pth,nam] = spm_fileparts(job.channel(1).vols0{subj}); 
-        tmpmat = fullfile(pth,sprintf('%s_%s_%s.mat',nam,'runjob','postpreproc8')); 
+        tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s_%s.mat',nam,'runjob','postpreproc8')); 
         save(tmpmat,'obj','res','Affine','Affine0','Affine1','Affine3');      
     end 
         

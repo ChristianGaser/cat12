@@ -16,6 +16,13 @@ function cat_run_oldcatch(job,tpm,subj)
     try
       cat_run_job(job,tpm,subj); %#ok<NASGU>
     catch
+    
+      if cat_get_defaults('extopts.subfolders')
+        mrifolder = 'mri';
+      else
+        mrifolder = '';
+      end
+      
       caterr = lasterror;  %#ok<LERR>,
       cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
         repmat('-',1,72),caterr.identifier,...
@@ -37,9 +44,9 @@ function cat_run_oldcatch(job,tpm,subj)
       % delete template files 
       [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
       % delete noise corrected image
-      if exist(fullfile(pth,['n' nam ext]),'file')
+      if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
         try %#ok<TRYNC>
-          delete(fullfile(pth,['n' nam ext]));
+          delete(fullfile(pth,mrifolder,['n' nam ext]));
         end
       end
       
@@ -53,9 +60,9 @@ function cat_run_oldcatch(job,tpm,subj)
       cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
       
       % delete noise corrected image
-      if exist(fullfile(pth,['n' nam(2:end) ext]),'file')
+      if exist(fullfile(pth,mrifolder,['n' nam(2:end) ext]),'file')
         try %#ok<TRYNC>
-          delete(fullfile(pth,['n' nam(2:end) ext]));
+          delete(fullfile(pth,mrifolder,['n' nam(2:end) ext]));
         end
       end
     end

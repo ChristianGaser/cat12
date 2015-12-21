@@ -50,7 +50,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   def.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   opt           = cat_io_updateStruct(def,opt);
-  
+
   Psurf = struct(); 
   
   % add system dependent extension to CAT folder
@@ -64,6 +64,16 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
 
   % correction for 'n' prefix for noise corrected and/or interpolated files
   [pp,ff]   = spm_fileparts(V.fname);
+
+  if cat_get_defaults('extopts.subfolders')
+    surffolder = 'surf';
+    mrifolder = 'mri';
+    pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
+  else
+    surffolder = '';
+    mrifolder = '';
+  end
+
   if ff(1)=='n'
     if (exist(fullfile(pp,[ff(2:end) '.nii']), 'file')) || (exist(fullfile(pp,[ff(2:end) '.img']), 'file'))
       ff = ff(2:end);
@@ -90,17 +100,17 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   for si=1:numel(opt.surf)
    
     % surface filenames
-    Praw       = fullfile(pp,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
-    Psphere0   = fullfile(pp,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
-    Pcentral   = fullfile(pp,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
-    Pthick     = fullfile(pp,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness
-    Pgw        = fullfile(pp,sprintf('%s.gyruswidth.%s',opt.surf{si},ff));           % gyrus width
-    Pgww       = fullfile(pp,sprintf('%s.gyruswidthWM.%s',opt.surf{si},ff));         % gyrus witdh of the WM 
-    Psw        = fullfile(pp,sprintf('%s.sulcuswidth.%s',opt.surf{si},ff));          % sulcus width
-    Pdefects0  = fullfile(pp,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
-    Pdefects   = fullfile(pp,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
-    Psphere    = fullfile(pp,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
-    Pspherereg = fullfile(pp,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
+    Praw       = fullfile(pp,surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
+    Psphere0   = fullfile(pp,surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
+    Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
+    Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness
+    Pgw        = fullfile(pp,surffolder,sprintf('%s.gyruswidth.%s',opt.surf{si},ff));           % gyrus width
+    Pgww       = fullfile(pp,surffolder,sprintf('%s.gyruswidthWM.%s',opt.surf{si},ff));         % gyrus witdh of the WM 
+    Psw        = fullfile(pp,surffolder,sprintf('%s.sulcuswidth.%s',opt.surf{si},ff));          % sulcus width
+    Pdefects0  = fullfile(pp,surffolder,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
+    Pdefects   = fullfile(pp,surffolder,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
+    Psphere    = fullfile(pp,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
+    Pspherereg = fullfile(pp,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
     Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',opt.surf{si}));      % fsaverage central
     Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));       % fsaverage sphere    
 
@@ -172,11 +182,11 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     if opt.usePPmap
       Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
       Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-      Vpp  = cat_io_writenii(V,Yppt,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+      Vpp  = cat_io_writenii(V,Yppt,mrifolder,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
       clear Yppt;
 
       Vpp1 = Vpp; 
-      Vpp1.fname    = fullfile(pp,['pp1' ff '.nii']);
+      Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
       vmat2         = spm_imatrix(Vpp1.mat);
       Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
       vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
