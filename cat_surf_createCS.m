@@ -182,7 +182,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     if opt.usePPmap
       Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
       Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-      Vpp  = cat_io_writenii(V,Yppt,mrifolder,'pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+      Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
       clear Yppt;
 
       Vpp1 = Vpp; 
