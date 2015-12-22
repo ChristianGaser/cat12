@@ -227,6 +227,8 @@ switch lower(action)
         setappdata(H.axis,'handles',H);
         set(H.patch,'Visible','on');
         
+        setappdata(H.patch,'clip',[false NaN NaN]);
+
         %-Add context menu
         %------------------------------------------------------------------
         cat_surf_render('ContextMenu',H);
@@ -294,6 +296,8 @@ switch lower(action)
         uimenu(c, 'Label','Black',     'Callback', {@myBackgroundColor, H, [0 0 0]});
         uimenu(c, 'Label','Custom...', 'Callback', {@myBackgroundColor, H, []});
         
+        uimenu(cmenu, 'Label','Slider', 'Checked', 'off', 'Callback', {@myAddslider, H});
+
         uimenu(cmenu, 'Label','Save As...', 'Separator', 'on', ...
             'Callback', {@mySave, H});
         
@@ -381,6 +385,21 @@ switch lower(action)
         end
         c(1:size(col,1),1,1:size(col,2)) = col;
         ic = findobj(H.colourbar,'Type','image');
+        clim = getappdata(H.patch, 'clim');
+        if isempty(clim), clim = [false NaN NaN]; end
+
+        % Update colorbar colors if clipping is used
+        clip = getappdata(H.patch, 'clip');
+        if ~isempty(clip)
+            if ~isnan(clip(2)) && ~isnan(clip(3))
+                ncol = length(col);
+                col_step = (clim(3) - clim(2))/ncol;
+                cmin = max([1,ceil((clip(2)-clim(2))/col_step)]);
+                cmax = min([ncol,floor((clip(3)-clim(2))/col_step)]);
+                col(cmin:cmax,:) = repmat([0.5 0.5 0.5],(cmax-cmin+1),1);
+                c(1:size(col,1),1,1:size(col,2)) = col;
+            end
+        end
         if size(d,1) > 1
             set(ic,'CData',c(1:size(d,1),:,:));
             set(ic,'YData',[1 size(d,1)]);
@@ -429,6 +448,26 @@ switch lower(action)
             updateTexture(H,d);
         end
         
+    %-CLip
+    %======================================================================
+    case 'clip'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        if length(varargin) == 1
+            c = getappdata(H.patch,'clip');
+            if ~isempty(c), c = c(2:3); end
+            varargout = { c };
+            return;
+        else
+            if isempty(varargin{2}) || any(~isfinite(varargin{2}))
+                setappdata(H.patch,'clip',[false NaN NaN]);
+            else
+                setappdata(H.patch,'clip',[true varargin{2}]);
+            end
+            d = getappdata(H.patch,'data');
+            updateTexture(H,d);
+        end
+        
     %-Register
     %======================================================================
     case 'register'
@@ -440,6 +479,26 @@ switch lower(action)
         set(hs,'UserData',hReg);
         spm_XYZreg('Add2Reg',hReg,hs,@myCrossBar);
         
+    %-Slider
+    %======================================================================
+    case 'slider'
+        if isempty(varargin), varargin{1} = gca; end
+        if length(varargin) == 1, varargin{2} = 'on'; end
+        H = getHandles(varargin{1});
+        if strcmpi(varargin{2},'off')
+            if isfield(H,'slider') && ishandle(H.slider)
+                delete(H.slider);
+                H = rmfield(H,'slider');
+                setappdata(H.axis,'handles',H);
+            end
+            return;
+        else
+            if ~isempty(H.cdata)
+                AddSliders(H);
+            end
+        end
+        setappdata(H.axis,'handles',H);
+
     %-Otherwise...
     %======================================================================
     otherwise
@@ -453,6 +512,71 @@ end
 varargout = {H};
 
 
+%==========================================================================
+function AddSliders(H)
+
+c = getappdata(H.patch,'clim');
+mn = c(2);
+mx = c(3);
+
+% allow slider a more extended range
+mnx = 1.5*max([-mn mx]);
+
+sliderPanel(...
+        'Parent'  , H.figure, ...
+        'Title'   , 'Overlay min', ...
+        'Position', [0.01 0.01 0.2 0.17], ...
+        'Backgroundcolor', [1 1 1],...
+        'Min'     , -mnx, ...
+        'Max'     , mnx, ...
+        'Value'   , mn, ...
+        'FontName', 'Verdana', ...
+        'FontSize', 8, ...
+        'NumFormat', '%f', ...
+        'Callback', @slider_clim_min);
+
+sliderPanel(...
+        'Parent'  , H.figure, ...
+        'Title'   , 'Overlay max', ...
+        'Position', [0.21 0.01 0.2 0.17], ...
+        'Backgroundcolor', [1 1 1],...
+        'Min'     , -mnx, ...
+        'Max'     , mnx, ...
+        'Value'   , mx, ...
+        'FontName', 'Verdana', ...
+        'FontSize', 8, ...
+        'NumFormat', '%f', ...
+        'Callback', @slider_clim_max);
+
+sliderPanel(...
+        'Parent'  , H.figure, ...
+        'Title'   , 'Clip min', ...
+        'Position', [0.01 0.83 0.2 0.17], ...
+        'Backgroundcolor', [1 1 1],...
+        'Min'     , -mnx, ...
+        'Max'     , mnx, ...
+        'Value'   , mn, ...
+        'FontName', 'Verdana', ...
+        'FontSize', 8, ...
+        'NumFormat', '%f', ...
+        'Callback', @slider_clip_min);
+
+sliderPanel(...
+        'Parent'  , H.figure, ...
+        'Title'   , 'Clip max', ...
+        'Position', [0.21 0.83 0.2 0.17], ...
+        'Backgroundcolor', [1 1 1],...
+        'Min'     , -mnx, ...
+        'Max'     , mnx, ...
+        'Value'   , mn, ...
+        'FontName', 'Verdana', ...
+        'FontSize', 8, ...
+        'NumFormat', '%f', ...
+        'Callback', @slider_clip_max);
+
+setappdata(H.patch,'clip',[true mn mn]);
+setappdata(H.patch,'clim',[true mn mx]);
+        
 %==========================================================================
 function O = getOptions(varargin)
 O = [];
@@ -498,6 +622,20 @@ else
     set(h,'Checked','off');
 end
 
+h = findobj(obj,'Label','Slider');
+if isempty(H.cdata), set(h,'Enable','off'); else set(h,'Enable','on'); end
+
+if isfield(H,'slider')
+    if ishandle(H.slider)
+        set(h,'Checked','on');
+    else
+        H = rmfield(H,'slider');
+        set(h,'Checked','off');
+    end
+else
+    set(h,'Checked','off');
+end
+
 if numel(findobj('Tag','CATSurfRender','Type','Patch')) > 1
     h = findobj(obj,'Tag','SynchroMenu');
     set(h,'Visible','on');
@@ -506,6 +644,7 @@ end
 h = findobj(obj,'Label','Colorbar');
 d = getappdata(H.patch,'data');
 if isempty(d) || ~any(d(:)), set(h,'Enable','off'); else set(h,'Enable','on'); end
+
 if isfield(H,'colourbar')
     if ishandle(H.colourbar)
         set(h,'Checked','on');
@@ -625,11 +764,16 @@ axis(H.axis,'image');
 %==========================================================================
 function myColourbar(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
-cat_surf_render('Colourbar',H,toggle(get(obj,'Checked')));
+render('Colourbar',H,toggle(get(obj,'Checked')));
 
 %==========================================================================
 function myColourmap(obj,evt,H)
 cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+
+%==========================================================================
+function myAddslider(obj,evt,H)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+cat_surf_render('Slider',H,toggle(get(obj,'Checked')));
 
 %==========================================================================
 function mySynchroniseViews(obj,evt,H)
@@ -685,34 +829,34 @@ end
 
 %==========================================================================
 function mySavePNG(obj,evt,H,filename)
-    [pth,nam,ext] = fileparts(filename);
-                    filename = fullfile(pth,[filename '.png']);
-            u  = get(H.axis,'units');
-            set(H.axis,'units','pixels');
-            p  = get(H.axis,'Position');
-            r  = get(H.figure,'Renderer');
-            hc = findobj(H.figure,'Tag','SPMMeshRenderBackground');
-            if isempty(hc)
-                c = get(H.figure,'Color');
-            else
-                c = get(hc,'Color');
-            end
-            h = figure('Position',p+[0 0 10 10], ...
+[pth,nam,ext] = fileparts(filename);
+filename = fullfile(pth,[filename '.png']);
+u  = get(H.axis,'units');
+set(H.axis,'units','pixels');
+p  = get(H.axis,'Position');
+r  = get(H.figure,'Renderer');
+hc = findobj(H.figure,'Tag','SPMMeshRenderBackground');
+if isempty(hc)
+    c = get(H.figure,'Color');
+else
+    c = get(hc,'Color');
+end
+h = figure('Position',p+[0 0 10 10], ...
                 'InvertHardcopy','off', ...
                 'Color',c, ...
                 'Renderer',r);
-            copyobj(H.axis,h);
-            set(H.axis,'units',u);
-            set(get(h,'children'),'visible','off');
-            %a = get(h,'children');
-            %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
-            if isdeployed
-                deployprint(h, '-dpng', '-opengl', fullfile(pth, filename));
-            else
-                print(h, '-dpng', '-opengl', fullfile(pth, filename));
-            end
-            close(h);
-            set(getappdata(obj,'fig'),'renderer',r);
+copyobj(H.axis,h);
+set(H.axis,'units',u);
+set(get(h,'children'),'visible','off');
+%a = get(h,'children');
+%set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
+if isdeployed
+    deployprint(h, '-dpng', '-opengl', fullfile(pth, filename));
+else
+    print(h, '-dpng', '-opengl', fullfile(pth, filename));
+end
+close(h);
+set(getappdata(obj,'fig'),'renderer',r);
 
 %==========================================================================
 function mySave(obj,evt,H)
@@ -1014,4 +1158,65 @@ set(H.patch, 'FaceVertexCData',C, 'FaceColor','interp');
 %--------------------------------------------------------------------------
 if isfield(H,'colourbar')
     cat_surf_render('Colourbar',H);
+end
+
+%==========================================================================
+function slider_clim_min(hObject, evt)
+
+val = get(hObject, 'Value');
+H = getHandles(gcf);
+c = getappdata(H.patch,'clim');
+setappdata(H.patch,'clim',[true val c(3)]);
+d = getappdata(H.patch,'data');
+updateTexture(H,d);
+H2 = getHandles(gca);
+if isfield(H2,'colourbar') && ishandle(H2.colourbar)
+  cat_surf_render('ColourBar',gca, 'on');
+end
+
+%==========================================================================
+function slider_clim_max(hObject, evt)
+
+val = get(hObject, 'Value');
+H = getHandles(gcf);
+c = getappdata(H.patch,'clim');
+setappdata(H.patch,'clim',[true c(2) val]);
+d = getappdata(H.patch,'data');
+updateTexture(H,d);
+H2 = getHandles(gca);
+if isfield(H2,'colourbar') && ishandle(H2.colourbar)
+  cat_surf_render('ColourBar',gca, 'on');
+end
+
+%==========================================================================
+function slider_clip_min(hObject, evt)
+
+val = get(hObject, 'Value');
+H = getHandles(gcf);
+c = getappdata(H.patch,'clip');
+setappdata(H.patch,'clip',[true val c(3)]);
+c = getappdata(H.patch,'clim');
+setappdata(H.patch,'clim',[true c(2) c(3)]);
+d = getappdata(H.patch,'data');
+updateTexture(H,d);
+H2 = getHandles(gca);
+if isfield(H2,'colourbar') && ishandle(H2.colourbar)
+  cat_surf_render('ColourBar',gca, 'on');
+end
+
+
+%==========================================================================
+function slider_clip_max(hObject, evt)
+
+val = get(hObject, 'Value');
+H = getHandles(gcf);
+c = getappdata(H.patch,'clip');
+setappdata(H.patch,'clip',[true c(2) val]);
+c = getappdata(H.patch,'clim');
+setappdata(H.patch,'clim',[true c(2) c(3)]);
+d = getappdata(H.patch,'data');
+updateTexture(H,d);
+H2 = getHandles(gca);
+if isfield(H2,'colourbar') && ishandle(H2.colourbar)
+  cat_surf_render('ColourBar',gca, 'on');
 end

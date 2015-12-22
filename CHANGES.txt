@@ -8230,6 +8230,7 @@ Fixed: Removed bug in cat_surf_createCS.m where the pp* files were not
 correctly saved in the mri subfolder.
 
 ------------------------------------------------------------------------
+r822 | gaser | 2015-12-22 12:20:23 +0100 (Di, 22 Dez 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8239,5 +8240,16 @@ A       node.m
 (1) Added: Some preliminary functions fpr circular draws.
 (2) Added: CAT_Vol2Surf to save filled volume inside a surface.
 (3) Changed: Recompiled code.
+
 ------------------------------------------------------------------------
-r822 | gaser | 2015-12-22 12:20:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_render.m
+M       html/cat.html
+
+Added: Options to clip cdata abd to allow slider context menu in 
+cat_surf_render.m
+------------------------------------------------------------------------
+r823 | gaser | 2015-12-22 16:37:00
