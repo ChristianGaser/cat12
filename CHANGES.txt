@@ -8220,6 +8220,7 @@ Changed: Added option to save results in subfolders such as mri, surf, label
 and report. All resp. files were changed to allow subfolders.
 
 ------------------------------------------------------------------------
+r821 | gaser | 2015-12-22 09:03:22 +0100 (Di, 22 Dez 2015) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8227,5 +8228,16 @@ M       cat_surf_createCS.m
 
 Fixed: Removed bug in cat_surf_createCS.m where the pp* files were not 
 correctly saved in the mri subfolder.
+
 ------------------------------------------------------------------------
-r821 | gaser | 2015-12-22 09:03:18
+
+Changed paths:
+M       CHANGES.txt
+A       circularGraph.m
+A       node.m
+
+(1) Added: Some preliminary functions fpr circular draws.
+(2) Added: CAT_Vol2Surf to save filled volume inside a surface.
+(3) Changed: Recompiled code.
+------------------------------------------------------------------------
+r822 | gaser | 2015-12-22 12:20:18
