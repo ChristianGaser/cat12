@@ -8242,6 +8242,7 @@ A       node.m
 (3) Changed: Recompiled code.
 
 ------------------------------------------------------------------------
+r823 | gaser | 2015-12-22 16:37:06 +0100 (Di, 22 Dez 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8251,5 +8252,17 @@ M       html/cat.html
 
 Added: Options to clip cdata abd to allow slider context menu in 
 cat_surf_render.m
+
 ------------------------------------------------------------------------
-r823 | gaser | 2015-12-22 16:37:00
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+ M      circularGraph.m
+M       html/cat.html
+ M      node.m
+
+Added: Options to clip cdata abd to allow slider context menu in 
+cat_surf_render.m
+------------------------------------------------------------------------
+r824 | gaser | 2015-12-22 16:47:37
