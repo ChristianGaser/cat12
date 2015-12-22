@@ -8254,6 +8254,7 @@ Added: Options to clip cdata abd to allow slider context menu in
 cat_surf_render.m
 
 ------------------------------------------------------------------------
+r824 | gaser | 2015-12-22 16:47:40 +0100 (Di, 22 Dez 2015) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8264,5 +8265,16 @@ M       html/cat.html
 
 Added: Options to clip cdata abd to allow slider context menu in 
 cat_surf_render.m
+
 ------------------------------------------------------------------------
-r824 | gaser | 2015-12-22 16:47:37
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_render.m
+M       html/cat.html
+
+Added: Options to clip cdata abd to allow slider context menu in 
+cat_surf_render.m
+------------------------------------------------------------------------
+r825 | gaser | 2015-12-22 16:50:32
