@@ -84,10 +84,10 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   NS = @(Ys,s) Ys==s | Ys==s+1; 
     
   % filling
-  Ymf  = max(Ym,min(1,YMF)); 
+  Ymf  = max(Ym,min(0.95,YMF)); 
   Ymfs = cat_vol_smooth3X(Ymf,1); 
   Ytmp = cat_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
-  Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs YMF Ym; 
+  Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs YMF; 
   Ymf = Ymf*3;
     
   % removing blood vessels, and other regions
@@ -127,15 +127,16 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
       case {'C','cerebellum'}, Ymfs = Ymf .* (Ya>0) .* NS(Ya,3);
       case {'B','brain'},      Ymfs = Ymf .* (Ya>0);
     end 
-
+    Ymfs = max(1,Ymfs); % avoid underestimated thickness in gyris
+    
     %% thickness estimation
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
-
-    [Ymfs,BB]   = cat_vol_resize(Ymfs,'reduceBrain',vx_vol,4,Ymfs>1);   % removing background
-    [Ymfs,resI] = cat_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
-
+    
+    [Ymfs,Ymr,BB] = cat_vol_resize({Ymfs,Ym},'reduceBrain',vx_vol,4,Ymfs>1.1); % removing background
+    [Ymfs,resI]   = cat_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
+   
     % pbt calculation
     [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('resV',opt.interpV));
     if ~opt.expert, clear Ymfs; end
@@ -149,23 +150,45 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     %% PBT estimation of the gyrus and sulcus width 
     if opt.expert > 1
+
       stime = cat_io_cmd('  Gyrus width estimation');
+      [Yar,Ymr,BB] = cat_vol_resize({Ya,Ym},'reduceBrain',vx_vol,BB.BB);    % removing background
+      Yar   = uint8(cat_vol_resize(Yar,'interp',V,opt.interpV,'nearest'));  % interpolate volume
+      Ymr   = cat_vol_resize(Ymr,'interp',V,opt.interpV);                   % interpolate volume
+      switch opt.surf{si}
+        case {'L','lh'},         Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13) | NS(Yar,5) | NS(Yar,9) | NS(Yar,15)) .* (mod(Yar,2)==1);
+        case {'R','rh'},         Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13) | NS(Yar,5) | NS(Yar,9) | NS(Yar,15)) .* (mod(Yar,2)==0);      
+        case {'C','cerebellum'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
+        case {'B','brain'},      Ymr = Ymr .* (Yar>0);
+      end 
+      
       Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
-      Ywdt  = cat_vbdist(1-Yppis);
+      distmethod = 1; 
+      if distmethod
+        Ywdt  = cat_vbdist(1-Yppis,Ymr>0);
+      else
+        Ywdt  = cat_vol_eidist(1-Yppis,max(0,min(1,Ymr)),[1 1 1],1,1,0,opt.debug); 
+        Ywdt  = cat_vol_median3(Ywdt,Ywdt>0,Ywdt>eps);
+      end
       Ywdt  = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
-      [D,I] = cat_vbdist(Ywdt); Ywdt = Ywdt(I); clear D I;               % add further values around the cortex
+      [D,I] = cat_vbdist(single(Ywdt>0)); Ywdt = Ywdt(I); clear D I;               % add further values around the cortex
       Ywdt  = cat_vol_median3(Ywdt,Ywdt>0); Ywdt = smooth3(Ywdt);       % smoothing
       Ywdt  = cat_vol_resize(Ywdt,'deinterp',resI); 
       Ywdt  = cat_vol_resize(Ywdt,'dereduceBrain',BB);                  % adding background
       Ywd   = max(Ywd,Ywdt); 
       clear Ywdt;
+      
       fprintf('%4.0fs\n',etime(clock,stime)); 
-    
       stime = cat_io_cmd('  Sulcus width estimation');
-      Ycdt  = cat_vbdist(Yppis,Ymfs>0.5); 
-      Ycdt  = cat_vol_pbtp(max(2,  Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
-      Ycdt(Ymfs<=0.5)=0;
-      [D,I] = cat_vbdist(Ycdt); Ycdt = Ycdt(I); clear D I;              % add further values around the cortex
+      if distmethod
+        Ycdt  = cat_vbdist(Yppis,Ymfs>0.95); 
+      else
+        Ycdt  = cat_vol_eidist(Yppis,max(0,min(1,Ymfs>0.9)),[1 1 1],1,1,0,opt.debug);
+        Ycdt  = cat_vol_median3(Ycdt,Ycdt>0,Ycdt>eps);
+      end
+      Ycdt  = cat_vol_pbtp(max(2,Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
+      Ycdt(Ymfs<=0.95)=0;
+      [D,I] = cat_vbdist(single(Ycdt>0)); Ycdt = Ycdt(I); clear D I;              % add further values around the cortex
       Ycdt  = cat_vol_median3(Ycdt,Ycdt>0); Ycdt = smooth3(Ycdt);       % smoothing
       Ycdt  = cat_vol_resize(Ycdt,'deinterp',resI); 
       Ycdt  = cat_vol_resize(Ycdt,'dereduceBrain',BB); 

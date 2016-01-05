@@ -35,7 +35,7 @@ function varargout = compile(comp,test,verb)
   catdir  = fullfile(spm(dir),'toolbox','cat12'); 
   catidir = fullfile(catdir,'internal');  
   
-  %% testdata rand('state',0);
+  %% testdata 
   % ds('d2','',1,d0,d1/2,dw/6 + 0.5/6,dc/6 + 0.5/6,5)
   d0  = single(rand(10,10,10)); d0(5,5,5) = NaN;
   d1  = zeros(10,10,10,'single'); d1(3:8,:,:)=1; d1(9:10,:,:)=2; d1(5,5,5) = NaN;      % simple segment image for distance and fitler tests
