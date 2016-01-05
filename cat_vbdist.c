@@ -53,12 +53,12 @@ void ind2sub(int i, int *x, int *y, int *z, int sxy, int sy) {
 
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<1)                                       mexErrMsgTxt("ERROR:vbdist: not enought input elements\n");
-  if (nlhs>3)                                       mexErrMsgTxt("ERROR:vbdist: to many output elements.\n");
-  if (mxIsSingle(prhs[0])==0)                       mexErrMsgTxt("ERROR:vbdist: first  input must be an 3d single matrix\n");
-  if (nrhs==2 && mxIsLogical(prhs[1])==0)           mexErrMsgTxt("ERROR:vbdist: second input must be an 3d logical matrix\n");
-  if (nrhs==3 && mxIsDouble(prhs[2])==0)            mexErrMsgTxt("ERROR:vbdist: third input must be an double matrix\n");
-  if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3) mexErrMsgTxt("ERROR:vbdist: third input must have 3 Elements"); 
+  if (nrhs<1)                                       mexErrMsgTxt("ERROR:cat_vbdist: not enought input elements\n");
+  if (nlhs>3)                                       mexErrMsgTxt("ERROR:cat_vbdist: to many output elements.\n");
+  if (mxIsSingle(prhs[0])==0)                       mexErrMsgTxt("ERROR:cat_vbdist: first  input must be an 3d single matrix\n");
+  if (nrhs==2 && mxIsLogical(prhs[1])==0)           mexErrMsgTxt("ERROR:cat_vbdist: second input must be an 3d logical matrix\n");
+  if (nrhs==3 && mxIsDouble(prhs[2])==0)            mexErrMsgTxt("ERROR:cat_vbdist: third input must be an double matrix\n");
+  if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3) mexErrMsgTxt("ERROR:cat_vbdist: third input must have 3 Elements"); 
   
   /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
@@ -99,13 +99,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
   float         *V = (float*)mxGetPr(prhs[0]);
   bool          *R; if (nrhs>1) R=(bool *)mxGetPr(prhs[1]); 
-
+  bool e255 = false; 
   
   /* intitialisation */
   for (i=0;i<nL;i++) 
   {
     if (V[i]>0.5) D[i]=0.0; else D[i]=FLT_MAX; 
-    if (V[i]>255.0) printf("Warning: First parameter of vbdist > 255!\n"); 
+    if (V[i]>255.0)  
+    {
+      if (e255==false) 
+      {
+        printf("Warning: First parameter of vbdist > 255!\n"); 
+        e255 = true;
+      }
+      V[i] = 255;
+      
+    }
     L[i]=(unsigned char) ceil(V[i]);
     I[i]=(unsigned int)i;
   }

@@ -733,7 +733,7 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
   Pa3D = fullfile(resdir,[atlas '.nii']); 
   Pp0  = fullfile(resdir,['p0' atlas '.nii']);
   
-  recalc = 0; 
+  recalc = 1; 
   
   if ~exist(Pa4D,'file') || ~exist(Pa3D,'file') || ~exist(Pp0,'file')  || recalc 
     %% 4D-probability map
@@ -1195,7 +1195,7 @@ function csv=translateROI(csv,atlas,nlabel)
     % atlas specific
   end 
   
-  % atlas specific structures
+  %% atlas specific structures
   for i=1:size(csv,1)
     fn = {atlas};
     for fni=1:numel(fn) 
@@ -1214,10 +1214,12 @@ function csv=translateROI(csv,atlas,nlabel)
       [x,indi] = find(indi);
       for indii=1:numel(indi)
         if ~isempty(indi)
-          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5} && nlabel
+          if isempty( dict.(fn{fni}){indi(indii),1} ) && csv{i,5}
             csv{i,4}='';
             csv{i,3}='';
             csv{i,5}=0;  
+          elseif isempty( deblank(dict.(fn{fni}){indi(indii),1}) ) 
+            % do not remove completelly, but do not add something
           else     
             csv{i,4}=[csv{i,4}     dict.(fn{fni}){indi(indii),1}];
             csv{i,3}=[csv{i,3} ' ' dict.(fn{fni}){indi(indii),2}{1}];
@@ -1225,6 +1227,8 @@ function csv=translateROI(csv,atlas,nlabel)
         end
       end
     end 
+    csv{i,2} = deblank(csv{i,2});
+    csv{i,4} = deblank(csv{i,4});
   end
   for i=1:size(csv,1), csv{i,3}=strrep(csv{i,3},'  ',' '); end
 
@@ -1632,12 +1636,13 @@ function dict=ROIdict()
     'CalMam'         {'Callosal body  & Mamillary body'} {}
    };
   dict.neuromorphometrics = {
-    'Ventricle'      {'Ventricle'} {}
+    ' '              {'Ventricle'} {}
     'Cbe1-5'         {'Cerebellar Vermal Lobules I-V'} {}
     'Cbe6-7'         {'Cerebellar Vermal Lobules VI-VII'} {}
     'Cbe8-10'        {'Cerebellar Vermal Lobules VIII-X'} {}
     'Forb'           {'Forbrain'} {}
-    ''               {'ACgG','AIns','AOrG','AnG','Calc','CO','Cun','Ent',...
+    ... replace abbreviations by an empty space
+    ' '              {'ACgG','AIns','AOrG','AnG','Calc','CO','Cun','Ent',...
                       'FO','FRP','FuG','GRe','LOrG','MCgG','MFC','MFG',...
                       'MOG','MOrG','MPoG','MPrG','MSFG','MTG','OCP',...
                       'OFuG','OpIFG','PCgG','PCu','PHG','PIns','PO','PoG',...

@@ -41,39 +41,83 @@
         Further atlas options can be found in the <i>cg_cat_defauls-file</i>.
         -->
       </p>
+      <p>
+        To use the atlas maps with SPM atlas functions, you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once.
+        By default only Neuromorphometics, LPBA40, and Hammers atlas maps were used. 
+      </p>
+      <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii');
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii'); 
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii'); 
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii'); 
+        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii');}} ) )">Display all atlas maps.</a> 
+         
       <h4>List of atlas maps in CAT12</h4>
       <ul>
         <li>
-          <h5>Hammers</h5>
+          <h5>Neuromorphometics</h5>
           <p>
-            20 Subjects, good alignment
+            Maximum probability tissue labels derived from the "MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling" 
+            (<a href="https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details">Challenge_Details</a>). 
+            These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. 
+            Users should credit the MRI scans as originating from the <a href="http://www.oasis-brains.org/">OASIS project</a> and the labeled data as <i>"provided by Neuromorphometrics, Inc. <a href="http://Neuromorphometrics.com/">(http://Neuromorphometrics.com/)</a> under academic subscription" </i>. 
+            These references should be included in all workshop and final publications.
           </p>
+          <p>
+           <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">Display LPBA40 atlas.</a> 
+         </p>
         </li>
         <li>
-          <h5>Mori</h5>
+          <h5>LPBA40</h5>
           <p>
-            just one subject, but WM regions
+            The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions [Shattuck:2008]. 
+            These maps were produced from a set of whole-head MRI of 40 human volunteers. 
+            Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. 
+            These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. 
+            The original MRI data were also transformed into the atlas space.
+          </p>
+          <p>
+           <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">Display LPBA40 atlas.</a> 
+         </p>
+        </li><li>
+          <h5>Hammers atlas:</h5>
+          <p>
+            This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 [Hammers:2003,Gousias:2008]. 
+          </p>
+          <p>
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')}}))">Display Hammers atlas.</a> 
           </p>
         </li>
         <li>
           <h5>IBSR</h5>
           <p>
-            18 subjectes of the IBSR v2 dataset, with low quality T1 data, but good labels maps. 
+            18 subjectes of the <a href="http://www.nitrc.org/projects/ibsr">IBSR V2</a> dataset, with low quality T1 data, but good labels maps. 
+            See IBSR terms in "IBSR.txt" for use. 
           </p>
-        </li>
-        <!--
-        <li>
-          <h5>AAL</h5>
           <p>
-            one subject, bad alignment
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">Display IBSR atlas.</a>
           </p>
         </li>
         <li>
-          <h5>LPBA40</h5>
+          <h5>Mori atlas</h5>
           <p>
+            This atlas based on the <a href="http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 [Oishi:]. 
+          </p>
+          <p>
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')}}))">Display Mori atlas.</a> 
           </p>
         </li>
-        -->
+        <li>
+          <h5>AAL (AUTOMATED ANATOMICAL LABELING) atlas:</h5>
+          <p>
+            Combining probabilistic cytoarchitectonic maps and functional imaging data aligned on Collins brain [Collins:1998,Tzourio-Mazoyer:2002].
+          </p>
+          <p>            
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')}}))">Display AAL atlas.</a> 
+          </p>
+        </li>
       </ul>
       
       <h4>Atlas creation with original data (Hammers, IBSR, Mori)</h4>
@@ -87,7 +131,63 @@
         ...
       </p>
       -->
+      <h4>References:</h4>
+      <ul>
+        <li>
+          <b>Collins:1998</b>
+          <p>
+            Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, et al. </br>
+            Design and construction of a realistic digital brain phantom. </br>
+            IEEE Transactions on Medical Imaging 1998; 17: 463-68.
+          </p>
+        </li>
+        <li>
+          <b>Hammers:2003</b>
+          <p>
+            Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS. </br>
+            Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe. </br>
+            Hum Brain Mapp 2003, 19: 224-247. 
+          </p>
+        </li>
+        <li>
+          <b>Gousias:2008</b>
+          <p>
+            Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, Hammers A. </br>
+            Automatic segmentation of brain MRIs of 2-year-olds into 83 regions of interest. </br>
+            Neuroimage 2008 Apr 1;40(2):672-684. 
+          </p>
+        </li>
+        <li>
+          <b>Oishi:</b>
+          <p>
+            Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S.
+            Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer'sdisease participants. </br>
+          </p>
+        </li>
+        <li>
+          <b>Shattuck:2008</b>
+          <p>
+            Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW.  </br>
+            Construction of a 3D Probabilistic Atlas of Human Cortical Structures. </br>
+            NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031. </br>
+            <a href="http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12"> </br>
+            <a href="http://www.loni.usc.edu/atlases/Atlas_Methods.php?atlas_id=12"> </br>
+            <a href="http://shattuck.bmap.ucla.edu/resources/lpba40/">  
+          </p>
+        </li>
+        <li>
+          <b>Tzourio-Mazoyer:2002</b>
+          <p>
+            Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, et al. </br>
+            Automated anatomical labelling of activations in spm using a macroscopic anatomical parcellation of the MNI MRI single subject brain. </br>
+            Neuroimage 2002; 15: 273-289.
+          </p>
+        </li>
+        
+       
+      </ul>
       
+       
     </div>  
   
     

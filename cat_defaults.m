@@ -197,7 +197,7 @@ cat12.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report a
 cat12.extopts.atlas       = { ... 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'gm'    {'csf','gm'};       ... % atlas based on 35 subjects
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')  'brain'    {'gm'};       ... % atlas based on 40 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'brain' {'gm'};             ... % atlas based on 40 subjects
  %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammers, 18 subjects, low T1 image quality
  %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... % ROIs requires further work >> use Anatomy toolbox
  %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
