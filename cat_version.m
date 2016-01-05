@@ -14,7 +14,7 @@ v = CAT_VER;
 if isempty(CAT_VER)
     v = struct('Name','','Version','','Release','','Date','');
     try
-        vfile = fullfile(spm('Dir'),'toolbox','cat12','Contents.txt');
+        vfile = fullfile(spm('Dir'),'toolbox','cat12','Contents.m');
         fid = fopen(vfile,'rt');
         if fid == -1, error('Can''t open %s.',vfile); end
         l1 = fgetl(fid); l2 = fgetl(fid);

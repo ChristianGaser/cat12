@@ -1,4 +1,24 @@
 function varargout=cat_io_FreeSurfer(action,varargin)
+% ______________________________________________________________________
+% 
+% Read/Write FreeSurfer Data. 
+% Use FreeSurfer in/output functions by Burce Fischl and Doug Greve.
+%
+%   varargout = cat_io_FreeSurfer(action,varargin)
+%
+%   cat_io_FreeSurfer('write_surf',fname,vertices,faces);
+%   S = cat_io_FreeSurfer('read_surf',fname);
+%   cat_io_FreeSurfer('write_surf_data',fname,cdata);
+%   cdata = cat_io_FreeSurfer('read_surf_data',fname);
+%
+% ______________________________________________________________________
+%
+%   Robert Dahnke (robert.dahnke@uni-jena.de)
+%   Structural Brain Mapping Group (http://dbm.neuro.uni-jena.de/)
+%   Department of Neurology
+%   University Jena
+% ______________________________________________________________________
+% $Id$ 
 
   switch action
     case 'write_surf'

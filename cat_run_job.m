@@ -333,8 +333,18 @@ function cat_run_job(job,tpm,subj)
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
        
             stime = cat_io_cmd(sprintf('APP%d: fine bias correction',job.extopts.APP),'','',1,stime); 
+            
+            if 0
+              %%
+              for cutstr=0:0.5:1
+                [Ym1{cutstr*2+1},Yp01{cutstr*2+1},Yb1{cutstr*2+1}] = ...
+                  APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),...
+                  Ym,Yb,Ybg,vx_vol,cutstr,job.extopts.verb);
+              end
+            end            
+            
             [Ym,Yp0,Yb] = APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),...
-                Ym,Yb,Ybg,vx_vol,job.extopts.verb);
+                Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
             stime = cat_io_cmd('Affine registration','','',1,stime); 
                                   
             %% msk T1 & TPM
@@ -511,7 +521,7 @@ return
 %=======================================================================
 
 %=======================================================================
-function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
+function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,verb)
 %  ---------------------------------------------------------------------
 %  rough scull-stripping:
 %  The affine registration, especially spm_preproc8 requires a very good masking!
@@ -528,19 +538,19 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   Ybg = Ybg>0.5;
   
   Yg   = cat_vol_grad(Ym,resT3.vx_volr) ./ max(eps,Ym); 
-  Ydiv = cat_vol_div(Ym,resT3.vx_volr)./Ym;
+  Ydiv = cat_vol_div(Ym,resT3.vx_volr) ./ Ym;
   Ygs  = smooth3(Yg);
   
-  % greater mask
+  % greater mask - distance based brain radius (brad)
   [dilmsk,resT2] = cat_vol_resize(Yb,'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
   dilmsk  = cat_vbdist(dilmsk,true(size(dilmsk)))*mean(resT2.vx_volr); %resT2.vx_volr);
   dilmsk  = dilmsk - cat_vbdist(single(dilmsk>0),true(size(dilmsk)))*mean(resT2.vx_volr); %,resT2.vx_volr);
   dilmsk  = cat_vol_resize(smooth3(dilmsk),'dereduceV',resT2); 
-  headradius = -min(dilmsk(:));
-  dilmsk  = dilmsk / headradius; 
+  brad    = -min(dilmsk(:));
+  dilmsk  = dilmsk / brad; 
 
-  voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
-  brad = voli(sum(Yb(:)>0).*prod(vx_vol)/1000); 
+  voli  = @(v) (v ./ (pi * 4./3)).^(1/3);                        % volume > radius
+  brad  = double(mean([brad,voli(sum(Yb(:)>0).*prod(vx_vol))])); % distance and volume based brain radius (brad)
   
   % thresholds
   rf   = 10^6; 
@@ -552,46 +562,56 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   
   
   %% Skull-Stripping
+  % intensity parameter
+  gc.h = 1.3  - 0.20*gcutstr; % upper tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
+  gc.l = 0.6  + 0.20*gcutstr; % lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
+  gc.o = 0.1  + 0.10*gcutstr; % BG tissue intensity (for high contrast CSF=BG=0!) - lower value > more "tissue"
+  % distance parameter
+  gc.d = (brad*4 - brad*2*gcutstr)/mean(vx_vol);   % distance  parameter for downcut   - higher > more tissue
+  gc.c = (0.01 - 0.02*gcutstr)*mean(vx_vol);         % growing  parameter for downcut    - higher > more tissue
+  gc.f = (brad/5 - brad/10*gcutstr)/mean(vx_vol);    % closing   parameter               - higher > more tissue (higher as in gcut2, because of unkown ventricle)
+  % smoothing paramter
+  gc.s = -0.1 + 0.20*gcutstr;         % smoothing parameter                   - higher > less tissue
+
   stime = cat_io_cmd('  Skull-Stripping','g5','',verb,stime);
-  Yb = (dilmsk<0.2 & Ym<1.1) & (Ym>(GMth*0.7+0.3)) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<1.1; Yb(smooth3(Yb)<0.5)=0; 
-  Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.5); 
+  Yb = (dilmsk<0.5 & Ym<1.1) & (Ym>(GMth*gc.l + (1-gc.l))) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<gc.h; Yb(smooth3(Yb)<0.5)=0; 
+  Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.5 + gc.s); 
   [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
   dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk2)))*mean(resT2.vx_volr); %resT2.vx_volr);
   dilmsk2  = dilmsk2 - cat_vbdist(single(dilmsk2>0),true(size(dilmsk2)))*mean(resT2.vx_volr); %,resT2.vx_volr);
   dilmsk2  = cat_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
-  dilmsk2  = dilmsk2 / headradius; 
-  %% WM growing
+  dilmsk2  = dilmsk2 / brad; 
+  % WM growing
   Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.05); 
-  Yb(isnan(Yb))=0; Yb((YD)<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0;
-  Yb = smooth3(Yb)>0.2; 
+  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
+  Yb = smooth3(Yb)>0.2 + gc.s; 
   % ventricle closing
   [Ybr,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
-  Ybr = cat_vol_morph(Ybr>0.5,'lc',brad/2/mean(resT2.vx_volr));
-  Ybr = cat_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5; 
+  Ybr = cat_vol_morph(Ybr>0,'lc',2*gc.f/mean(resT2.vx_volr));
+  Ybr = cat_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5 + gc.s; 
   Yb = single(Yb | (Ym<1.2 & Ybr));
   % GWM growing
-  Yb(Yb<0.5 & (dilmsk2>0.2  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01); 
-  Yb(isnan(Yb))=0; Yb((YD)<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0;
-  Yb = smooth3(Yb)>0.5; 
-  Yb = single(Yb | (Ym>0.2 & Ym<1.2 & cat_vol_morph(Yb,'lc',2)));
+  Yb(Yb<0.5 & (dilmsk2>0.4  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01 + gc.c); 
+  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
+  Yb = smooth3(Yb)>0.5 + gc.s; 
+  Yb = single(Yb | (Ym>0.2 & Ym<1.2 & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f)))));
   % GM growing
-  Yb(Yb<0.5 & (dilmsk2>0.2  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.00);
-  Yb(isnan(Yb))=0; Yb((YD)<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
-  Yb(smooth3(Yb)<0.5)=0;
-  Yb = single(Yb | (Ym>0.1 & Ym<1.1 & cat_vol_morph(Yb,'lc',4)));
+  Yb(Yb<0.5 & (dilmsk2>0.5  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.00 + gc.c);
+  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
+  Yb(smooth3(Yb)<0.5 + gc.s)=0;
+  Yb = single(Yb | (Ym>0.1 & Ym<1.1 & cat_vol_morph(Yb,'lc',max(1,min(3,0.1*gc.f)))));
   % CSF growing (add some tissue around the brain)
-  Yb(Yb<0.5 & (dilmsk2>0.3  | Ym<0.1 | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.01); Yb(isnan(Yb))=0; 
-  Yb(isnan(Yb))=0; Yb(YD<20/mean(resT3.vx_volr)*headradius)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
-  Yb(smooth3(Yb)<0.7)=0;
-  Yb  = single(cat_vol_morph(Yb,'lab'));
-  Yb  = Yb | (Ym>0.2 & Ym<0.6 & cat_vol_morph(Yb,'lc',2));
-  Yb  = cat_vol_smooth3X(Yb,2)>0.3;
+  Yb(Yb<0.5 & (dilmsk2>0.6  | Ym< gc.o | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.01 + gc.c); Yb(isnan(Yb))=0; 
+  Yb(isnan(Yb))=0; Yb(YD<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
+  Yb(smooth3(Yb)<0.7 + gc.s)=0;
+  Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f))));
+  Yb  = Yb | (Ym>0.2 & Ym<0.5 & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f))));
+  Yb  = cat_vol_smooth3X(Yb,2)>0.3 + gc.s;
   Ymo = Ym; 
-
 
   %% ---------------------------------------------------------
   %  improve bias correction:
@@ -614,7 +634,7 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
           Ym<1.3 & Yg<0.6 & Ygs<0.9 & Yb & Ydiv<0.1 & Ydiv>-0.5; 
   Ywm  = smooth3(Ywm)>0.5;      
   % subcotical GM 
-  Ybm  = ((Ym-max(0,(Ydiv+0.01))*10)<0.98) & Ym<0.98 & dilmsk<-headradius*0.3 & ... 
+  Ybm  = ((Ym-max(0,(Ydiv+0.01))*10)<0.98) & Ym<0.98 & dilmsk<-brad*0.3 & ... 
          Ym>(GMth*0.6+0.4) & Yb & Ygs<0.2 & Yg<0.2 & ... Ydiv<0.1 & Ydiv>-0.02 & ... Yg<0.1 & 
          ~(Ydiv./Yg<0.5 & ((Ym>0.9 & Yg>0.1 & Ydiv<0) | (Ym>0.95)) & Ym<1.2);
        %& ~Ywm;  
@@ -624,7 +644,7 @@ function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,verb)
   Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm & ~Ywm; % & (Ym-Ydiv*2)<GMth;  
   Ygm(smooth3(Ygm)<0.3)=0;
   % CSF
-  Ycm  = Ym<(CMth*0.5+0.5*GMth) & Yg<0.1 & Yb & ~Ygm & dilmsk<-headradius*0.3; 
+  Ycm  = Ym<(CMth*0.5+0.5*GMth) & Yg<0.1 & Yb & ~Ygm & dilmsk<-brad*0.3; 
   Ycm  = smooth3(Ycm)>0.5;
   % head tissue
   Yhm  = Ym>max(mean([CMth,GMth]),Hth*0.2) & Ym<1.2 & Yg<0.8 & cat_vol_smooth3X(Yb,2)<0.1 & Ydiv<0.6 & Ydiv>-0.6;

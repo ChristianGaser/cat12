@@ -8267,6 +8267,7 @@ Added: Options to clip cdata abd to allow slider context menu in
 cat_surf_render.m
 
 ------------------------------------------------------------------------
+r825 | gaser | 2015-12-22 16:50:35 +0100 (Di, 22 Dez 2015) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8276,5 +8277,48 @@ M       html/cat.html
 
 Added: Options to clip cdata abd to allow slider context menu in 
 cat_surf_render.m
+
 ------------------------------------------------------------------------
-r825 | gaser | 2015-12-22 16:50:32
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_io_FreeSurfer.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_vbdist.c
+M       cat_vbdist.mexmaci64
+M       cat_version.m
+M       cat_vol_atlas.m
+A       cat_vol_display_label.m
+M       compile.m
+M       html/cat_methods_RBM.html
+M       templates_1.50mm/labels_dartel_neuromorphometrics.xml
+M       templates_1.50mm/neuromorphometrics.csv
+M       templates_1.50mm/neuromorphometrics.nii
+
+Fixed:    Corrected GCUT (GUI) parameter input.
+Fixed:    Labeling of Neuromorphometics atlas map.
+Fixed:    >255 warning only once in cat_vbdist.
+Fixed:    Corrected subdir writing error.
+Changed:  Added APP ... gcut parameter 
+Changed:  Cleanup resolution threshold to 2.2 mm. 
+Changed:  Preliminary update of skull-stripping functions:
+          * Added the gcut-parameter in APP. 
+            APP should create a wide mask that have to include the brain in 
+            any case and in cost of including head tissue!
+          * Replaced initial skull-stripping after SPM segmentation by GCUT2.
+          * Updated gcut subparamters with head and relative volume information.
+            E.g. smaller heads (primates) required a smaller closing whereas
+            older brains with big ventricle requires a larger closing.
+          * Extensive tests are still required!
+Changed:  Added help in cat_io_FreeSurfer
+New:      cat_vol_display_label function based on cg_addtruecolorimage, for one
+          background and multiple overlay images. Added calls in CAT help
+          (CAT12 > Methods > Atlas creation and ROI based analysis).
+          
+              
+------------------------------------------------------------------------
+r826 | dahnke | 2016-01-05 10:56:31
