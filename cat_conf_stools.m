@@ -6,6 +6,27 @@ function stools = cat_conf_stools(expert)
 % $Id$
 %_______________________________________________________________________
 
+% try to estimate number of processor cores
+try
+  numcores = max(feature('numcores'),1);
+catch
+  numcores = 1;
+end
+
+%_______________________________________________________________________
+nproc         = cfg_entry;
+nproc.tag     = 'nproc';
+nproc.name    = 'Split job into separate processes';
+nproc.strtype = 'w';
+nproc.val     = {numcores};
+nproc.num     = [1 1];
+nproc.help    = {
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
+    ''
+    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
+    ''
+    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
+  };
 
 
 %% Surface correlation and quality check
@@ -603,11 +624,25 @@ function stools = cat_conf_stools(expert)
   fwhm.val     = {15};
   fwhm.help    = {
     'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm. For no filtering use a value of 0.'};
-  
+ 
+  lazy         = cfg_entry;
+  lazy.tag     = 'lazy';
+  lazy.name    = 'Lazy processing';
+  lazy.strtype = 'w';
+  lazy.val     = {0};
+  lazy.num     = [1 1];
+  lazy.help    = {
+    'Do not process data if the result exist. '
+  };
+
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-  surfresamp.val  = {data_surf,fwhm};
+  if expert > 1
+    surfresamp.val  = {data_surf,fwhm,nproc,lazy};
+  else
+    surfresamp.val  = {data_surf,fwhm,nproc};
+  end
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.help = {
   'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};

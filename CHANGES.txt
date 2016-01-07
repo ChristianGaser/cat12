@@ -8279,6 +8279,7 @@ Added: Options to clip cdata abd to allow slider context menu in
 cat_surf_render.m
 
 ------------------------------------------------------------------------
+r826 | dahnke | 2016-01-05 10:56:41 +0100 (Di, 05 Jan 2016) | 41 lines
 
 Changed paths:
  M      .
@@ -8320,5 +8321,27 @@ New:      cat_vol_display_label function based on cg_addtruecolorimage, for one
           (CAT12 > Methods > Atlas creation and ROI based analysis).
           
               
+
 ------------------------------------------------------------------------
-r826 | dahnke | 2016-01-05 10:56:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_conf_stools.m
+M       cat_run.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_resamp.m
+M       cat_surf_resample.m
+M       cat_surf_smooth.m
+MM      cat_vol_display_label.m
+
+Fixed:    Corrected WM width correction.
+Changed:  Added progress bar, output variable with result files, linked command 
+          line output, verb option, and parallel processing to 
+          cat_surf_resample, cat_surf_smooth, and cat_surf_resamp.
+Changed:  Set logdate to YYYYmmdd_HHMMSS to have time ordered log-files.
+Changed:  Automatic delay for opening of parallel processing log files.
+------------------------------------------------------------------------
+r827 | dahnke | 2016-01-07 16:58:19

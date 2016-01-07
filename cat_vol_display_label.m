@@ -7,7 +7,7 @@ function cat_vol_display_label(job)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 820 2015-12-21 14:16:48Z gaser $ 
+% $Id$ 
 
 %
 % based on cg_addtruecolorimage.m
@@ -17,7 +17,7 @@ function cat_vol_display_label(job)
 %  - display atlas rois of multiple atlas maps
 %
 
-  SVNid = '$Rev: 6245 $';
+  SVNid = '$Rev$';
   
   if ~exist('job','var'), job = struct(); end
 

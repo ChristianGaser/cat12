@@ -406,8 +406,8 @@ function cdata = correctWMdepth(CS,cdata)
   
 
   SEd = cdata(SE(:,1))<5; SE(SEd,:)=[];
-  i=0; cdatac = cdata; lengthfactor = 2;
-  while i<10 && sum((cdatac(SE(:,1)) - SEL(SE(:,1))*lengthfactor)  >= cdata(SE(:,2)))>size(CS.vertices,1)/20;
+  i=0; cdatac = cdata; lengthfactor = 1;
+  while i<20 && sum((cdatac(SE(:,1)) - SEL(SE(:,1))*lengthfactor)  >= cdata(SE(:,2)))>size(CS.vertices,1)/200;
     i=i+1; 
     cdatac = cdata;
     

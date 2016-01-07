@@ -158,6 +158,9 @@ function varargout = cat_surf_display(varargin)
               'sulcuswidth'   [0.0  3.0]  [0.0  3.0]
               'gyrification'  [0.0  1.0]  [0.0  0.5]
               'logsulc'       [0.0  1.5]  [0.0  1.5]
+              'WMdepth'       [1.0  6.0]  [1.0  5.0]
+              'GWMdepth'      [1.5 10.0]  [1.5  9.0]
+              'CSFdepth'      [0.5  2.0]  [0.5  2.0]
             };
 
             texturei = find(cellfun('isempty',strfind(ranges(:,1),sinfo(i).texture))==0,1,'first');
@@ -173,10 +176,12 @@ function varargout = cat_surf_display(varargin)
         cat_surf_render('clim',h.axis,job.caxis);
       end
     catch %#ok<CTCH>
-      try
-        h = cat_surf_render(job.data{i});
-      catch %#ok<CTCH>
-        cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
+      if ~exist('h','var')
+        try
+          h = cat_surf_render(job.data{i});
+        catch %#ok<CTCH>
+          cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
+        end
       end
       continue
     end
@@ -231,7 +236,7 @@ function clim = iscaling(cdata,plim)
   range   = bcdata(1):diff(bcdata)/1000:bcdata(2);
   hst     = hist(cdata,range);
   clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
-  clim(2) = range(min(numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')));
+  clim(2) = range(min([numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')]));
 end
 
 

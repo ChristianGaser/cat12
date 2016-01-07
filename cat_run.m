@@ -58,7 +58,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   end
 
   tmp_array = cell(job.nproc,1);
-  logdate   = [datestr(now,1) '_' strrep(datestr(now,15),':','_')]; 
+  logdate   = datestr(now,'YYYYmmdd_HHMMSS');
   for i=1:job.nproc
     fprintf('Running job %d:\n',i);
     for fi=1:numel(job_data(job.process_index{i}))
@@ -78,7 +78,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
-    log_name = ['log' sprintf('%02d',i) '_' logdate '.txt'];
+    log_name = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
 
     % call matlab with command in the background
     if ispc
@@ -91,7 +91,21 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     end
 
     [status,result] = system(system_cmd);
-    if ~ispc, pause(1); end % call editor for non-windows systems after 1s
+    
+    test = 0; lim = 10; ptime = 0.5;
+    while test<lim
+      if ~exist(log_name,'file')
+        pause(ptime); 
+        test = test + ptime; 
+        if test>=lim
+          cat_io_cprintf('warn','"%s" not exist after %d seconds! Proceed! \n',log_name,lim)
+        end
+      else 
+        test = inf; 
+        edit(log_name);
+      end
+    end
+
     edit(log_name);
     fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
     fprintf('_______________________________________________________________\n');
