@@ -137,7 +137,7 @@ function [varargout] = cat_surf_info(P,read)
     
     % special datatypes
     FN = {'thickness','central','sphere','defects','gyrification','logsulc','frac',...
-          'gyruswidth','gyruswidthWM','sulcuswidth',...
+          'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
           'hulldist'};
     sinfo(i).texture = '';
     for fi=1:numel(FN)
@@ -179,7 +179,7 @@ function [varargout] = cat_surf_info(P,read)
         case {'central','sphere'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
-        case {'thickness','gyrification','frac','logsulc',...
+        case {'thickness','gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
              'gyruswidth','gyruswidthWM','sulcuswidth'} % only thickness
           sinfo(i).Pdata = sinfo(i).fname;
       end
