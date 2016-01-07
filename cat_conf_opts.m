@@ -5,6 +5,7 @@ function opts = cat_conf_opts
 % $Id$
 %#ok<*AGROW>
 
+
 %_______________________________________________________________________
 tpm         = cfg_files;
 tpm.tag     = 'tpm';
