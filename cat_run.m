@@ -300,7 +300,12 @@ label  = {};
 wlabel = {};
 rlabel = {};
 alabel = {};
-%jacobian = {};
+
+if cat_get_defaults('extopts.subfolders')
+  mrifolder = 'mri';
+else
+  mrifolder = '';
+end
 
 for j=1:n,
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
@@ -309,42 +314,42 @@ end
 if job.bias(1),
     biascorr = cell(n,1);
     for j=1:n
-        biascorr{j} = fullfile(parts{j,1},['m',parts{j,2},'.nii']);
+        biascorr{j} = fullfile(parts{j,1},mrifolder,['m',parts{j,2},'.nii']);
     end
 end
 
 if job.bias(2),
     wbiascorr = cell(n,1);
     for j=1:n
-        wbiascorr{j} = fullfile(parts{j,1},['wm',parts{j,2},'.nii']);
+        wbiascorr{j} = fullfile(parts{j,1},mrifolder,['wm',parts{j,2},'.nii']);
     end
 end
 
 if job.label(1),
     label = cell(n,1);
     for j=1:n
-        label{j} = fullfile(parts{j,1},['p0',parts{j,2},'.nii']);
+        label{j} = fullfile(parts{j,1},mrifolder,['p0',parts{j,2},'.nii']);
     end
 end
 
 if job.label(2),
     wlabel = cell(n,1);
     for j=1:n
-        wlabel{j} = fullfile(parts{j,1},['wp0',parts{j,2},'.nii']);
+        wlabel{j} = fullfile(parts{j,1},mrifolder,['wp0',parts{j,2},'.nii']);
     end
 end
 
 if job.label(3),
     rlabel = cell(n,1);
     for j=1:n
-        rlabel{j} = fullfile(parts{j,1},['rp0',parts{j,2},'.nii']);
+        rlabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'.nii']);
     end
 end
 
 if job.label(4),
     alabel = cell(n,1);
     for j=1:n
-        alabel{j} = fullfile(parts{j,1},['rp0',parts{j,2},'_affine.nii']);
+        alabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -358,37 +363,37 @@ for i=1:numel(job.tissue),
     if job.tissue(i).native(1),
         tiss(i).c = cell(n,1);
         for j=1:n
-            tiss(i).c{j} = fullfile(parts{j,1},['p',num2str(i),parts{j,2},'.nii']);
+            tiss(i).c{j} = fullfile(parts{j,1},mrifolder,['p',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(2),
         tiss(i).rc = cell(n,1);
         for j=1:n
-            tiss(i).rc{j} = fullfile(parts{j,1},['rp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).rc{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(3),
         tiss(i).rca = cell(n,1);
         for j=1:n
-            tiss(i).rca{j} = fullfile(parts{j,1},['rp',num2str(i),parts{j,2},'_affine.nii']);
+            tiss(i).rca{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_affine.nii']);
         end
     end
     if job.tissue(i).warped(1),
         tiss(i).wc = cell(n,1);
         for j=1:n
-            tiss(i).wc{j} = fullfile(parts{j,1},['wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).wc{j} = fullfile(parts{j,1},mrifolder,['wp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(2),
         tiss(i).mwc = cell(n,1);
         for j=1:n
-            tiss(i).mwc{j} = fullfile(parts{j,1},['mwp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).mwc{j} = fullfile(parts{j,1},mrifolder,['mwp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(3),
         tiss(i).m0wc = cell(n,1);
         for j=1:n
-            tiss(i).m0wc{j} = fullfile(parts{j,1},['m0wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).m0wc{j} = fullfile(parts{j,1},mrifolder,['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
@@ -396,7 +401,7 @@ end
 if job.cat.warps(1),
     fordef = cell(n,1);
     for j=1:n
-        fordef{j} = fullfile(parts{j,1},['y_',parts{j,2},'.nii']);
+        fordef{j} = fullfile(parts{j,1},mrifolder,['y_',parts{j,2},'.nii']);
     end
 else
     fordef = {};
@@ -405,7 +410,7 @@ end
 if job.cat.warps(2),
     invdef = cell(n,1);
     for j=1:n
-        invdef{j} = fullfile(parts{j,1},['iy_',parts{j,2},'.nii']);
+        invdef{j} = fullfile(parts{j,1},mrifolder,['iy_',parts{j,2},'.nii']);
     end
 else
     invdef = {};

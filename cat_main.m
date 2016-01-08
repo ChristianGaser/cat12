@@ -1911,7 +1911,7 @@ if job.output.ROI && do_cls
               stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb,stime2);
             end  
             normalize = 's';
-            Ya = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job.output.atlas);
+            Ya = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,mrifolder,trans,ai,job.output.atlas);
 
             csv = cat_vol_ROIestimate(Yp0,Ya,Yp0 ,vx_vol,ai,'V',[] ,tissue);
             csv = cat_vol_ROIestimate(Yp0,Ya,Ym  ,vx_vol,ai,'I',csv,tissue);
@@ -3542,11 +3542,11 @@ return
 %=======================================================================
 
 %=======================================================================
-function Ylai = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,trans,ai,job)
+function Ylai = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,mrifolder,trans,ai,job)
 % ----------------------------------------------------------------------
 % Transfer the normalized atlas to subject space and further refinements
 %
-%   Ylai = cat_vol_ROIsub(Yp0,Ym,Yl1,trans,ai,job)
+%   Ylai = cat_vol_ROIsub(Yp0,Ym,Yl1,mrifolder,trans,ai,job)
 % 
 %
 % ----------------------------------------------------------------------
