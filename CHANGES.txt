@@ -8323,6 +8323,7 @@ New:      cat_vol_display_label function based on cg_addtruecolorimage, for one
               
 
 ------------------------------------------------------------------------
+r827 | dahnke | 2016-01-07 16:58:40 +0100 (Do, 07 Jan 2016) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8343,5 +8344,24 @@ Changed:  Added progress bar, output variable with result files, linked command
           cat_surf_resample, cat_surf_smooth, and cat_surf_resamp.
 Changed:  Set logdate to YYYYmmdd_HHMMSS to have time ordered log-files.
 Changed:  Automatic delay for opening of parallel processing log files.
+
 ------------------------------------------------------------------------
-r827 | dahnke | 2016-01-07 16:58:19
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_multi_run.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_version.m
+M       html/cat.html
+A       templates_1.50mm/cobra.csv
+A       templates_1.50mm/cobra.nii
+A       templates_1.50mm/labels_dartel_cobra.xml
+
+(1) Changed: cat_version.m should search for Contents.txt to conisder
+    compiled code.
+(2) Fixed: Longitudinal mode was not yet prepared for subfolders.
+------------------------------------------------------------------------
+r828 | gaser | 2016-01-08 10:20:27
