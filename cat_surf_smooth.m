@@ -22,6 +22,7 @@ function varargout = cat_surf_smooth(varargin)
     fwhm  = varargin{1}.fwhm;
     job   = varargin{1}; 
   else
+    job   = struct();
     spm_clf('Interactive'); 
     Pdata = cellstr(spm_select([1 inf],'any','Select surface data','','','[rl]h.(?!cent|sphe|defe).*'));
     fwhm  = spm_input('Smoothing filter size in fwhm',1,'r',15);
@@ -156,11 +157,9 @@ function varargout = cat_surf_smooth(varargin)
   sinfo  = cat_surf_info(Pdata);
   for i=1:numel(Pdata)
     %% new file name
-    if job.verb
-      Psdata(i) = cat_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',fwhm,sinfo(i).dataname));
-    end
+    Psdata(i) = cat_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',round(fwhm),sinfo(i).dataname));
     
-    if exist(Psdata(i),'file') && job.lazy  
+    if exist(Psdata{i},'file') && job.lazy  
       fprintf('Display allready smoothed %s\n',Psdata{i},'link','cat_surf_display(''%s'')');
     else
       % assure gifty output
@@ -181,7 +180,7 @@ function varargout = cat_surf_smooth(varargin)
       end
   
       if job.verb
-        fprintf('Display resampled %s\n',Psdata{i},'link','cat_surf_display(''%s'')');
+        fprintf('Display resampled %s\n',spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
       end
     end
     

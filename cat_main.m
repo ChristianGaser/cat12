@@ -451,53 +451,12 @@ if do_cls
         end
         Yb = cat_pre_gcut2(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
           struct('gcutstr',job.extopts.gcutstr,'verb',job.extopts.verb,'debug',job.extopts.debug));
-
-        
         
         [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
         Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
         Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
         Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
-         %{
-        Ybo  = cat_vol_morph(smooth3(Yp0)>0.5,'lc',2); 
         
-        Ybw  = cat_vol_morph(Ybo,'e',2/mean(vx_vol)); %'d',brad/2/mean(vx_vol)); 
-        BVth = diff(T3th(1:2:3))/T3th(3)*1.5; 
-        RGth = double(-0.02 + noise/2 + (0.5-job.extopts.gcutstr)/10); 
-       
-        gc.s = 0.1 - 0.2*job.extopts.gcutstr;
-        
-        %%
-        Yb   = single(cat_vol_morph(smooth3((Yp0>2/3 & Ybw) | (Ybw & Ysrcb>(T3th(2)*0.5 + 0.5*T3th(3)) & Ysrcb<T3th(3)*1.2) & Yp0>0.8)>0.5+gc.s,'lo',0)); 
-        Yb   = Yb | cat_vol_morph(smooth3(Yp0>0.5/3 & Yp0<1.5/3 & Ysrcb<mean(T3th(1:2)) & Ysrcb>0.1)>0.8,'lo',1);
-        [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); 
-        Ybr = Ybr | (Ymr<1.1 & cat_vol_morph(Ybr,'lc',brad)); % large ventricle closing
-        Yb  = single(Yb | cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.7 & Yp0>0.2); 
-        Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',2)));
-        %% region-growing GM 1
-        Yb(~Yb & (~Ybo | Ysrcb<mean(T3th(2:3)) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
-        [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/2); Yb(isnan(Yb))=0; Yb(YD<10*brad/mean(vx_vol))=1; 
-        Yb(smooth3(Yb)<0.6)=0; 
-        Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
-        %% region-growing GM 2
-        Yb(~Yb & (~Ybo | Ysrcb<T3th(2) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
-        [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<40*brad/mean(vx_vol))=1; 
-        Yb(smooth3(Yb)<0.6)=0; Yb = cat_vol_morph(Yb,'lo');
-        Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
-        %% region-growing GM 3
-        Yb(~Yb & (~Ybo | Ysrcb<T3th(1)) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth)=nan;
-        [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<40*brad/mean(vx_vol))=1; 
-        Yb(smooth3(Yb)<0.6)=0; Yb = cat_vol_morph(Yb,'lo',1);
-        %% ventrile closing
-        [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); 
-        Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',brad)); % large ventricle closing
-        Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
-        Yb  = Yb | cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.7; 
-        Yb  = smooth3(Yb)>0.5; 
-        Ybb = cat_vol_smooth3X(Yb,2); 
-        Yb   = cat_vol_resize(Yb ,'dereduceBrain',BB);
-        
-                %}
         Yb   = smooth3(Yb)>0.5; 
         Ybb  = cat_vol_smooth3X(Yb,2); 
         Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
@@ -1714,7 +1673,7 @@ cat_io_writenii(VT0,Yp0,mrifolder,'p0','Yp0b map','uint8',[0,4/255],job.output.l
 clear Yp0; 
 
 %% partitioning
-cat_io_writenii(VT0,Yl1,mrifolder,'a1','brain atlas map for major structures and sides',...
+cat_io_writenii(VT0,Yl1,mrifolder,'a0','brain atlas map for major structures and sides',...
   'uint8',[0,1],job.output.atlas,trans);
 
 
@@ -1858,106 +1817,83 @@ end
 %  ways to estimate them - (1) in subject space, and (2) in normalized 
 %  space. Estimation in normalized space is more direct an avoid further
 %  transformations. The way over the subject space have the advantage 
-%  that indivdiual anatomical refinients are possible. Furthermore, 
-%  the subjectspace can be usefull for further operations and measures
-%  like for DTI and allows export to all other spaces. Finaly, some 
-%  atlas datasets (Hammers2002,IBSR,LPBA40) can be used for validation.
-%  Some measures like GM thickness are only defined for special regions.
-%  Although most ROIs are defined only for one tissue class, the ROI can
-%  contrain other classes. Therefore, standard tissue ranges (>50%) where
-%  used.  
+%  that indivdiual anatomical refinients are possible, but the this has
+%  to be done and evalutated for each atlas. 
 %  ---------------------------------------------------------------------
 if job.output.ROI && do_cls 
   stime = cat_io_cmd('ROI estimation');   
-
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  if verb, fprintf('\n'); end; 
   
-  Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
-  
-  ROIt = job.output.ROI; 
-  ROIt = [(ROIt==1 | ROIt==3) (ROIt==2 | ROIt==3)];
   FA   = job.extopts.atlas; 
   verb = job.extopts.verb-1;
- 
-  if verb, fprintf('\n'); firsttime=1; end; 
-   
-  % map atlas to RAW space
-  if ROIt(2)
-    stime2 = cat_io_cmd('  ROI mapping to normalized space','g5','',verb); firsttime=0;
-    wYp0   = cat_vol_ROInorm(Yp0,trans,1,0);
-    wYcls  = cat_vol_ROInorm(Ycls,trans,1,1); for ci=1:3; wYcls{ci} = wYcls{ci} * prod(vx_vol); end  % volume
-    wYm    = cat_vol_ROInorm(Ym,trans,1,0);  % intensity
-    if exist('Yth1','var')
-      Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
-      Ymm    = single(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
-      wYmm   = cat_vol_ROInorm(Ymm,trans,1,0)>0.5;
-      wYth1  = cat_vol_ROInorm(Yth1x,trans,1,0);
-    end
+  
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  
+  % map data to actual template space
+  stime2   = cat_io_cmd('  Data mapping to normalized space','g5','',verb); firsttime=0;
+  wYp0     = cat_vol_ROInorm(Yp0,trans,1,0);
+  wYcls    = cat_vol_ROInorm(Ycls,trans,1,1);
+  wYcls{4} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),trans,1,0)); 
+  for ci=1:numel(wYcls); wYcls{ci} = wYcls{ci} * prod(vx_vol); end      % volume
+  wYm      = cat_vol_ROInorm(Ym,trans,1,0);                             % intensity
+  if exist('Yth1','var')
+    % ROI based thickness of all GM voxels per ROI
+    Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+    Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
+    Ymm    = single(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
+    wYmm   = cat_vol_ROInorm(Ymm,trans,1,0)>0.5;
+    wYth1  = cat_vol_ROInorm(Yth1x,trans,1,0);
   end
   
   %%
   for ai=1:size(FA,1)
-    for si=1:2 % spaces
-      if ROIt(si)
-        tissue = FA{ai,3};
-        [px,atlas] = fileparts(FA{ai,1}); 
-        if exist(FA{ai,1},'file')
-          if si==1 
-          %% subject space
-            if firsttime
-              stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb);
-              firsttime=0;
-            else
-              stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' in subject space',atlas),'g5','',verb,stime2);
-            end  
-            normalize = 's';
-            Ya = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,mrifolder,trans,ai,job.output.atlas);
+    tissue = FA{ai,3};
+    [px,atlas] = fileparts(FA{ai,1}); 
+    if exist(FA{ai,1},'file')
+    % ds('l2','',1.5,wYm,round(wYp0),wYm,single(wYa)/50 .* (wYp0<2.5),70)
+      stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s'' atlas',atlas),'g5','',verb,stime2);
+      
+      % map atlas to actual template space
+      wYa   = cat_vol_ROInorm([],trans,ai,0);
 
-            csv = cat_vol_ROIestimate(Yp0,Ya,Yp0 ,vx_vol,ai,'V',[] ,tissue);
-            csv = cat_vol_ROIestimate(Yp0,Ya,Ym  ,vx_vol,ai,'I',csv,tissue);
-            if exist('Yth1','var'),
-            % for thickness we need special correction to avoid values 
-            % in bad map ROIs that comes to the GM
-              Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
-              Ymm    = smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5;
-              csv    = cat_vol_ROIestimate(Yp0,Ya,Yth1x.*Ymm,vx_vol,ai,'T',csv,tissue);
-              csvth1 = cat_vol_ROIestimate(Yp0,Ya,Yp0  .*Ymm,vx_vol,ai,'V',[],{'gm'});
-              corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
-              csv(2:end,end) = num2cell(corth1);
-              clear Yth1x Ymm csvth1 corth1;
-            end
-          else
-          %% normalized space
-            % ds('l2','',1.5,wYv,wYp0,wYv,single(wYa)/50 .* (wYp0<2.5),70)
-            normalize = 'w';
-            wYa   = cat_vol_ROInorm([],trans,ai,0);
+      csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue);  % volume
+      csv   = cat_vol_ROIestimate(wYp0,wYa,wYm  ,ai,'I',csv,tissue); % intensity
 
-            stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s-atlas'' to group space',atlas),'g5','',verb,stime2);
-            csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,[],ai,'V',[],tissue);  % volume
-            csv   = cat_vol_ROIestimate(wYp0,wYa,wYm  ,[],ai,'I',csv,tissue); % intensity
-            % thickness
-            if exist('Yth1','var'),
-            % for thickness we need special correction to avoid values 
-            % in bad map ROIs that comes to the GM
-              csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmm,[],ai,'T',csv,tissue);
-              csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmm,[],ai,'V',[] ,{''});
-              corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
-              csv(2:end,end) = num2cell(corth1);
-              clear Yth1x
-            end
-          end
-
-          % csv-export and xml-export (later) 
-          cat_io_csv(fullfile(pth,labelfolder,['catROI' normalize '_' atlas '_' nam '.csv']),...
-            csv,'','',struct('delimiter',',','komma','.'));
-          % not in "cat_*.xml"
-          %ROI.([normalize '_' atlas]) = csv;
-          %cat_io_xml(fullfile(pth,labelfolder,['cat_' nam '.xml']),struct('ROI',ROI),'write+'); 
-        else
-          stime2 = cat_io_cmd(sprintf('  ROI estimation failed. Atlas ''%s'' not exist.',atlas),'g5','',verb,stime2);
-        end
+      % thickness
+      if exist('Yth1','var'),
+      % for thickness we need special correction to avoid values 
+      % in bad map ROIs that comes to the GM
+        csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmm,ai,'T',csv,tissue);
+        csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmm,ai,'V',[] ,{''});
+        corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
+        csv(2:end,end) = num2cell(corth1);
+        clear Yth1x
       end
+
+      if any(cell2mat(struct2cell(job.output.atlas)'))
+        %% map to template space
+        Vlai = spm_vol(FA{ai,1});
+        Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.atlas.Yy(:,:,:,1)),...
+          double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
+        Ylai = reshape(Ylai,size(Yp0)); 
+
+        % write map
+        cat_io_writenii(VT0,Ylai,mrifolder,sprintf('a%d',ai),[atlas],...
+          'uint8',[0,1],job.output.atlas,trans);
+        clear Vlai Ylai;
+      end
+
+      % csv-export one for each atlas (this is a table) 
+      cat_io_csv(fullfile(pth,labelfolder,['catROI_' atlas '_' nam '.csv']),...
+        csv,'','',struct('delimiter',',','komma','.'));
+      % xml-export one file for all (this is a structure)
+      ROI.(atlas) = csv;
+      cat_io_xml(fullfile(pth,labelfolder,['catROIs_' nam '.xml']),struct('ROI',ROI),'write+'); 
+
+    else
+      stime2 = cat_io_cmd(sprintf('  ROI estimation failed. Atlas ''%s'' not exist.',atlas),'g5','',verb,stime2);
     end
+
   end 
   cat_io_cmd(' ','g5','',verb,stime2);
   cat_io_cmd('','n','',1,stime);
@@ -2307,7 +2243,7 @@ if cat12.print
   cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
     'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
   cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); %#ok<NASGU>
+    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
   
   if exist('hSD','var')
     cat_surf_render('ColourMap',hSD{1}.axis,gray(128)); 
@@ -2955,26 +2891,6 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
 
 return
 %=======================================================================
-function noise = estimateNoiseLevel(T,M)
-  T   = single(T);
-  if ~exist('M','var')
-    TS  = smooth3(T); 
-    [gx,gy,gz] = cat_vol_gradient3(TS);
-    G   = abs(gx)+abs(gy)+abs(gz); clear gx gy gz; %G=G./T; 
-    Gth = cat_stat_nanmean(G(:));
-    M   =  TS>0 & (TS<0.3 | G<Gth);
-%    M   = cat_vol_morph(cat_vol_morph(TS<0.3 | G<Gth,'open'),'close');
-  else
-%    M   = M & TS>0 & (TS<0.3 | G<Gth);
-%   M   = M & cat_vol_morph(cat_vol_morph(TS<0.3 | G<Gth,'open'),'close');
-  end
-  
-  TSD = cat_vol_localstat(T,M,2,4); noise  = cat_stat_nanmean(TSD(TSD(:)>0)); 
-return
-%=======================================================================
-
-
-%=======================================================================
 function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,PA,template)
 % ----------------------------------------------------------------------
 % Local Adaptive Segmentation (LAS):
@@ -3516,7 +3432,7 @@ function [Yb,Yl1] = cat_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Ybs = single(Yb); spm_smooth(Ybs,Ybs,4*gc.s./vx_vol); Yb   = Yb | (Ybs>(gc.s-0.25) & Ym<1.25/3);
   
   %% filling of ventricles and smooth mask
-  stime = cat_io_cmd('  Ventricle closing','g5','',opt.verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd('  Ventricle closing','g5','',opt.verb,stime); dispc=dispc+1; %#ok<*NASGU>
   Yb  = Yb | (cat_vol_morph(Yb ,'labclose',vxd*gc.f) & ...
     Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
   Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f* (rvol(1)/0.4) ))));
@@ -3542,113 +3458,6 @@ return
 %=======================================================================
 
 %=======================================================================
-function Ylai = cat_vol_ROIsub(VT0,Yp0,Ym,Yl1,mrifolder,trans,ai,job)
-% ----------------------------------------------------------------------
-% Transfer the normalized atlas to subject space and further refinements
-%
-%   Ylai = cat_vol_ROIsub(Yp0,Ym,Yl1,mrifolder,trans,ai,job)
-% 
-%
-% ----------------------------------------------------------------------
-% Individual space:  
-% ----------------------------------------------------------------------
-% Although, the subject space have great potentials for further
-% refinements, it is not so easy and takes to much time.
-% Therefore, only a simple solution should come here, and a few 
-% comment for future work.
-%
-% The are different ROIs that allow different optimation:
-%  1) gyri and sulci - region growing allows good separation
-%     between different structures (ie start in WM for gyri)
-%  2) CSF, GM and WM areas - boundaries by intensity distance
-%  3) mixed structure
-%     a) ROI by other structures: 
-%        ie XY is defient as intersetion of x-gyrus and y-sulcus
-%     b) without rule
-% This ROI types can be set automaticly by tissue probabilities:
-% Gyris should have a mix of GM and WM, Sulci a mix of GM and CSF.
-% Other structures should only consist one class. Type 3 is not
-% allowed.
-%
-% Most ROIs are GM areas that belongs to a special gyri. In this
-% case Yl1 can be used to use special operations.
-%
-% I try to use only the biggest segment of a ROI, but I do not 
-% work for most cases although I used a skeleton etc. and takes
-% around 30-120s. This may works perfect on a surface, but bad 
-% for volume space. Here, the median filter idea works better.  
-%
-% Gyri and Sulci are defiened on the ... sulcal depth growing ROIs
-% ----------------------------------------------------------------------
-% ROI maps from different sources mapped to VBM-space [IXI555]
-%  { filename , refinement , mask , sidessep , [roi space] }
-%  filename    = path to the ROI-file
-%  refinement  = [B|G|N]=[brain,GM,none] 
-%                refinemnt of ROIs in subject space
-%  mask        = [C|G|W|B|T|N]=[CSF,GM,WM,Brain,tisue=GM+WM,none] 
-%                set the tissue classes for volume estimation
-%  sidesep     = [0|1]
-%                set 1 for maps with different ROIs pers side, 0
-%                for symetric maps with identical labes on both sides
-%  [roi space] = estimate values in subject space (1) and/or in template space (2)
-% ----------------------------------------------------------------------
-
-% map atlas to individual space and smooth it a little bit
-  FA = cat_get_defaults('extopts.atlas'); 
-  Vlai = spm_vol(FA{ai,1});
-  Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.atlas.Yy(:,:,:,1)),...
-    double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
-  Ylai = reshape(Ylai,size(Yp0)); %YlaiA=Ylai;
-
-  %% refinement 
-  switch FA{ai,2}(1:min(size(FA{ai,2}),2))
-    case {'B','brain'} % very simple full brain refinemnt  
-      Ylai = cat_vol_localstat(single(Ylai),Ylai>0,2,7);
-      Ylai(Ylai==0 & Yp0<1)=nan; [YA,YD]=cat_vol_downcut(Ylai,Ym,0.1); Ylai(YD<50)=YA(YD<50);  clear YA YD;
-      for xi=1:3, Ylai=cat_vol_localstat(single(Ylai),Ylai>0,2,7); end
-      [YD,YI,Ylai]=cat_vbdist(single(Ylai),smooth3(Yp0)>0); clear YD YI;
-    case {'G','gm'} % more complex GM refinement for gyri based GM-ROI
-      % set inital area (upper GM and WM to start from the gyris)
-      Ylai = cat_vol_localstat(single(Ylai),Ylai>0,2,7);
-      Ymm2 = max(0,Yp0-2); Ymm2(Yp0<0.1)=nan; YwmD = cat_vol_eidist(Ymm2,Ym); clear Ymm2;
-      [gx,gy,gz]=cat_vol_gradient3(single(YwmD)); Ydiv=single(divergence(gy,gx,gz)); clear gx gy gz; % highres
-      YGW = Yp0>2 & Ym>2.2/3 & ~cat_vol_morph(Ym>2.5/3,'erode') & (Ydiv>-0.1)>0.5;
-      YG  = Yp0<3 & cat_vol_morph(Ym>1.5/3 & ((Yl1>2 & Yl1<7) | (Yl1>8 & Yl1<15) | Yl1==19 | Yl1==20 ),'d',3)>0.5;
-      YV  = cat_vol_morph((Yl1==15 | Yl1==16) & Yp0<1.5,'dilate')>0.5; 
-      YV  = cat_vol_morph(YV | (cat_vol_morph(YV,'d',2) & Yp0>2.5),'c')>0.5;
-      YS  = cat_vol_morph(mod(Yl1,2)==1,'d',3) & cat_vol_morph(mod(Yl1,2)==0,'d',3)>0.5;
-      Ymm = Yp0>1.0 & ~YV & ((YGW & ~YS) | YG); %clear YwmD
-      Ym2 = Yp0>1.0 & ~YV & (YGW | YG); clear YGW YS;
-      % apply mask and remove bad side alignments
-      Ylai = single(Ylai) .* Ymm; % .* (Ymm & mod(Ylai,2)~=mod(Yl1,2));
-      % correct gyri
-      for xi=1:3, Ylai2=cat_vol_localstat(single(Ylai),Ylai>0 & ~YG,5 & ~YV,7); Ylai(Ylai2>0)=Ylai2(Ylai2>0); end
-      for xi=1:3, Ylai2=cat_vol_localstat(single(Ylai),Ylai>0 & ~YG,3 & ~YV,7); Ylai(Ylai2>0)=Ylai2(Ylai2>0); end
-      Ylai2=Ylai; Ylai2(Ylai2==0 & (~Ym2 | YV))=nan; Ylai2 = cat_vol_downcut(Ylai2,Ym,1); Ylai(Ylai2>0)=Ylai2(Ylai2>0); 
-      Ylai(Ylai==0)=nan; 
-      % region growing
-      Ylai(isnan(Ylai) & Yp0>2 & Yp0<3 & ~YV)=0; [YA,YD]=cat_vol_downcut(Ylai,Ym,0.02); Ylai(YD<100)=YA(YD<100); clear YA YD;
-      Ylai(isnan(Ylai) & Yp0>1 & Yp0<3 & ~YV)=0; [YA,YD]=cat_vol_downcut(Ylai,Ym,0.20); Ylai(YD<100)=YA(YD<100); clear YA YD;
-      % smoothing and final filling
-      for xi=1:3, Ylai=cat_vol_localstat(single(Ylai),Ylai>0,2,7); end
-      [YD,YI,Ylai]=cat_vbdist(single(Ylai),smooth3(Yp0)>0); clear YD YI;
-    %case {'N','none'}
-      % no refinement 
-    %otherwise, error('MATLAB:cat_main:atlas','Unknown mask %s',FA{ai,2});     
-  end
-
- 
-
-  %% write images to any space
-  [pp,ff,ee] = fileparts(FA{ai,1}); [pp,pph] = fileparts(pp);
-  cat_io_writenii(VT0,Ylai,mrifolder,sprintf('l%d',ai+1),...
-    sprintf('brain atlas map of %s map',fullfile(pph,ff,ee)),...
-    'uint8',[0,1],job,trans);
-  clear Ymm;
-return
-%=======================================================================
-
-%=======================================================================
 function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
 % ----------------------------------------------------------------------
 % normalized space:  
@@ -3657,39 +3466,43 @@ function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
 % a masking based on the tissue map can be used
 % ----------------------------------------------------------------------
  
-  FA = cat_get_defaults('extopts.atlas'); 
-
   % load mask (and complete undefiended parts)
   if isempty(Yv)
-    
+    % no input - load atlas
+    FA = cat_get_defaults('extopts.atlas'); 
+   
     if ~exist(FA{ai,1},'file')
-      error('cat:cat_main:missAtlas','Miss cat Atlas-File ''%s''!',FA{ai,1});
+      error('cat:cat_main:missAtlas','Miss cat atlas-file ''%s''!',FA{ai,1});
     end
+    % try multiple times, because of read error in parallel processing
     for i=1:5
       try
         wVv = spm_vol(FA{ai,1});
+        wYv = spm_read_vols(wVv);
         break
       catch 
-        % read error in parallel processing
-        pause(1)
+        pause(0.5)
       end
     end
-    wYv = spm_read_vols(wVv);
+    
+    % resample atlas, if the atlas resolution differ from the actual template resolution
     if wVv.mat(1) ~= trans.warped.M1(1)
-      %wVv = rmfield(wVv,'private');
       wVv2 = wVv; wVv2.mat = trans.warped.M1; wVv2.dim = trans.warped.odim; 
       [t,wYv] = cat_vol_imcalc(wVv,wVv2,'i1',struct('interp',0,'verb',0));
     end
     wYv = cat_vol_ctype(wYv,wVv(1).private.dat.dtype);
  
-    %if FA{ai,2}, [D,I] = cat_vbdist(single(wYlai)); wYlai(:) = wYlai(I(:)); clear D I; end
+    % complete atlas maps ... 
+    %if strcmp(FA{ai,2},'gm'), [D,I] = cat_vbdist(single(wYv)); wYv(:) = wYv(I(:)); clear D I; end
   else
+    % map image to atlas space
+    
     if mod==0
       [wYv,w] = spm_diffeo('push',Yv,trans.warped.y,trans.warped.odim(1:3)); spm_field('boundary',1);
       wYv = spm_field(w,wYv,[sqrt(sum(trans.warped.M1(1:3,1:3).^2)) 1e-6 1e-4 0  3 2]);
     elseif mod==1 && iscell(Yv) % tissue case
       for i=1:3
-        [wYv{i},wr] = spm_diffeo('push',single(Yv{i})/255,trans.warped.y,trans.warped.odim(1:3));  %#ok<NASGU,AGROW>
+        [wYv{i},wr] = spm_diffeo('push',single(Yv{i})/255,trans.warped.y,trans.warped.odim(1:3));  %#ok<AGROW>
       end
     else
       error('unknown case');
@@ -3701,7 +3514,7 @@ return
 %=======================================================================
 
 %=======================================================================
-function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,vx_vol,ai,name,csv,tissue)
+function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue)
 % ----------------------------------------------------------------------
 % estimate values
 % ----------------------------------------------------------------------
@@ -3736,148 +3549,36 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,vx_vol,ai,name,csv,tissue)
   
   
   % volume case
- 
   Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
   % other maps with masks
   for ti=1:numel(tissue)
     switch name(1)
-      case 'V'
+      case 'V' % volume
         csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
-    
-        for ri=2:size(csv,1)
-          if ~isempty(vx_vol) 
-          % volumes in subject space... here we have the p0 map
-            switch lower(tissue{ti})
-              case 'csf',   Ymm=Yp0toC(Yp0,1) .* single(Ya==csv{ri,1});
-              case 'gm',    Ymm=Yp0toC(Yp0,2) .* single(Ya==csv{ri,1});
-              case 'wm',    Ymm=Yp0toC(Yp0,3) .* single(Ya==csv{ri,1});
-              case 'brain', Ymm=Yp0>0.5 .* single(Ya==csv{ri,1});
-              case '',      Ymm=single(Ya==csv{ri,1});
-            end
-            csv{ri,end} = prod(vx_vol)/1000 * sum(Ymm(:));
-          else
-            switch lower(tissue{ti})
-              case 'csf',   Ymm=single(Yv{3}) .* single(Ya==csv{ri,1});
-              case 'gm',    Ymm=single(Yv{1}) .* single(Ya==csv{ri,1});
-              case 'wm',    Ymm=single(Yv{2}) .* single(Ya==csv{ri,1});
-              case 'brain', Ymm=single(Yv{1} + Yv{2} + Yv{3}) .* single(Ya==csv{ri,1});
-              case '',      Ymm=single(Ya==csv{ri,1});
-            end
-            csv{ri,end} = 1/1000 * sum(Ymm(:));
-          end
-        end
-      case 'T'
-        switch lower(tissue{ti})
-          case 'csf'   
-          case 'gm'
-            csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
-            Ymm=Yp0>1.5 & Yp0<2.5;
-            
-            for ri=2:size(csv,1)
-              csv{ri,end} = cat_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
-            end
-          case 'wm'   
-          case 'brain'
-          case ''  
-        end
-      otherwise
-        csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
-    
         for ri=2:size(csv,1)
           switch lower(tissue{ti})
-            case 'csf',   Ymm=Yp0>0.5 & Yp0<1.5;
-            case 'gm',    Ymm=Yp0>1.5 & Yp0<2.5;
-            case 'wm',    Ymm=Yp0>2.5 & Yp0<3.5;
-            case 'brain', Ymm=Yp0>0.5;
-            case '',      Ymm=true(size(Yp0));
+            case 'csf',   Ymm=single(Yv{3}) .* single(Ya==csv{ri,1});
+            case 'gm',    Ymm=single(Yv{1}) .* single(Ya==csv{ri,1});
+            case 'wm',    Ymm=single(Yv{2}) .* single(Ya==csv{ri,1});
+            case 'wmh',   Ymm=single(Yv{2}) .* single(Ya==csv{ri,1}); 
+            case 'brain', Ymm=single(Yv{1} + Yv{2} + Yv{3}) .* single(Ya==csv{ri,1});
+            case '',      Ymm=single(Ya==csv{ri,1});
           end
+          csv{ri,end} = 1/1000 * sum(Ymm(:));
+        end
+      otherwise % 
+        csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
+        switch lower(tissue{ti})
+          case 'csf',   Ymm=Yp0toC(Yp0,1); 
+          case 'gm',    Ymm=Yp0toC(Yp0,2); 
+          case 'wm',    Ymm=Yp0toC(Yp0,3); 
+          case 'wmh',   Ymm=Yp0toC(Yp0,4); 
+          case 'brain', Ymm=Yp0>0.5;
+          case '',      Ymm=true(size(Yp0));
+        end
+        for ri=2:size(csv,1)
           csv{ri,end} = cat_stat_nanmean(Yv(Ya(:)==csv{ri,1} & Ymm(:)));
-       end
-    end
-  end
-  
-return  
-%=======================================================================
-
-
-%=======================================================================
-function csv = cat_vol_ROIestimateNew(Yp0,Ya,Yv,vx_vol,ai,name,csv,tissue)
-% ----------------------------------------------------------------------
-% estimate values
-% ----------------------------------------------------------------------
-
-
-% load atlas-csv-file
-  FA = cat_get_defaults('extopts.atlas'); 
-
-  [pp,ff] = fileparts(FA{ai,1});
-  csvf = fullfile(pp,[ff '.csv']);
-
-  if isempty(csv) 
-    if exist(csvf,'file')
-      csv = cat_io_csv(csvf); 
-    else
-      csv = [num2cell((1:max(Ya(:)))') ...
-        cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')]) ...
-        cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')])];
-    end
-    
-    % remove empty rows and prepare structure names
-    if size(csv,2)>2, csv(:,3:end)=[]; end
-    for ri=size(csv,1):-1:1
-      if isempty(csv{ri,1}) || isempty(csv{ri,2}); 
-        csv(ri,:)=[];
-      elseif csv{ri,1}==0
-        csv(ri,:)=[];
-      end       
-    end
-  end
-  name = genvarname(strrep(strrep(name,'-','_'),' ','_'));
-  
-  
-  % volume case
- 
-  Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
-  % other maps with masks
-  for ti=1:numel(tissue)
-    switch name(1)
-      case 'V'
-        csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
-        
-        if ~isempty(vx_vol) 
-        % volumes in subject space... here we have the p0 map
-          switch lower(tissue{ti})
-            case 'csf',   [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,Yp0toC(Yp0,1));
-            case 'gm',    [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,Yp0toC(Yp0,2));
-            case 'wm',    [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,Yp0toC(Yp0,3));
-            case 'brain', [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,min(Yp0,1));
-            case '',      [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,single(Ya>0));
-          end
-          for si=1:sx, csv{si+1,end} = prod(vx_vol)/1000.*rsum(si); end 
-        else
-          switch lower(tissue{ti})
-            case 'csf',   [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,Yv{3});   
-            case 'gm',    [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,Yv{1}); 
-            case 'wm',    [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,Yv{2});  
-            case 'brain', [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,(Yv{1} + Yv{2} + Yv{3}));   
-            case '',      [rmn,rstd,rmin,rmax,rsum] = cat_vol_ROIval(Ya,single(Ya>0)); 
-          end
-          sx=min(size(csv,1)-1,numel(rmn));
-          for si=1:sx, csv{si+1,end} = rsum(si); end
         end
-        clear rmn rstd rmin rmax rsum;
-      case {'T','I'}
-        switch lower(tissue{ti})
-          case 'csf',   rmn = cat_vol_ROIval(Ya,Yv .* Yp0toC(Yp0,1));
-          case 'gm',    rmn = cat_vol_ROIval(Ya,Yv .* Yp0toC(Yp0,2));
-          case 'wm',    rmn = cat_vol_ROIval(Ya,Yv .* Yp0toC(Yp0,3));
-          case 'brain', rmn = cat_vol_ROIval(Ya,Yv .* min(Yp0,1));
-          case '',      rmn = cat_vol_ROIval(Ya,Yv);
-        end
-        sx=min(size(csv,1)+1,numel(rmn));
-        for si=1:sx, csv{si+1,end} = rmn(si); end
-        clear rmn
-      otherwise
     end
   end
   
@@ -3968,36 +3669,6 @@ for i=1:d(3),
     x(:,:,i,2) = x2;
     x(:,:,i,3) = single(i);
 end
-%=======================================================================
-function reset_st
-global st
-fig     = spm_figure('FindWin','Graphics');
-bb      = []; %[ [-78 78]' [-112 76]' [-50 85]' ];
-st      = struct('n', 0, 'vols',[], 'bb',bb,'Space',eye(4),'centre',[0 0 0],'callback',';','xhairs',1,'hld',1,'fig',fig,'mode',1,'plugins',{{}},'snap',[]);
-st.vols = cell(24,1);
-
-xTB = spm('TBs');
-if ~isempty(xTB)
-    pluginbase = {spm('Dir') xTB.dir};
-else
-    pluginbase = {spm('Dir')};
-end
-for k = 1:numel(pluginbase)
-    pluginpath = fullfile(pluginbase{k},'spm_orthviews');
-    if isdir(pluginpath)
-        pluginfiles = dir(fullfile(pluginpath,'spm_ov_*.m'));
-        if ~isempty(pluginfiles)
-            if ~isdeployed, addpath(pluginpath); end
-            % fprintf('spm_orthviews: Using Plugins in %s\n', pluginpath);
-            for l = 1:numel(pluginfiles)
-                [p, pluginname, e, v] = spm_fileparts(pluginfiles(l).name);
-                st.plugins{end+1} = strrep(pluginname, 'spm_ov_','');
-                % fprintf('%s\n',st.plugins{k});
-            end;
-        end;
-    end;
-end;
-return;
 %==========================================================================
 % function [P] = clean_gwc(P,level)
 %==========================================================================

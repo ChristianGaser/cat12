@@ -51,7 +51,7 @@ cat12.opts.samp      = 3;                       % Sampling distance      - small
 cat12.output.surface     = 0;     % surface and thickness creation
 
 % save ROI values
-cat12.output.ROI         = 2;     % write csv-files with ROI data: 1 - subject space; 2 - normalized space; 3 - both (default 2)
+cat12.output.ROI         = 1;     % write xml-file and csv-files with ROI data (0 - none, 1 - default, 2 - optimized (not ready))
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
 cat12.output.bias.native = 0;
@@ -172,9 +172,7 @@ cat12.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmas
 cat12.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
 % surface options
-cat12.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm: 
-                                  % 1   - normal resolution
-                                  % 0.5 - high res (default) 
+cat12.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
 
 % visualisation, print and debugging options
 cat12.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -189,19 +187,20 @@ cat12.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report a
 
 % expert options - ROIs
 %=======================================================================
-% ROI maps from different sources mapped to Dartel VBM-space of IXI-template
+% ROI maps from different sources mapped to Dartel CAT-space of IXI-template
 %  { filename , refinement , tissue }
 %  filename    = ''                                                     - path to the ROI-file
-%  refinement  = ['brain','gm','none']                                  - refinement of ROIs in subject space
-%  tissue      = {['csf','gm','wm','brain','none','']}                  - tissue classes for volume estimation
+%  refinement  = ['brain','tissue','gm','none']                         - not working                  
+%  tissue      = {['csf','gm','wm','brain','none']}                     - tissue classes for volume estimation
 cat12.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'gm'    {'csf','gm','wm'} ; ... % atlas based on 20 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'gm'    {'csf','gm'};       ... % atlas based on 35 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'brain' {'gm'};             ... % atlas based on 40 subjects
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')     'brain' {'gm'}            ; ... % less regions than hammers, 18 subjects, low T1 image quality
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')  'none'  {'gm','wm'}       ; ... % ROIs requires further work >> use Anatomy toolbox
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')      'gm'    {'gm'}            ; ... % only one subject 
- %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')     'brain' {'gm'}            ; ... % only one subject, but with WM regions
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'none'      {'csf','gm','wm'}; ... % atlas based on 20 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'none'      {'csf','gm'};      ... % atlas based on 35 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'none'      {'gm'};            ... % atlas based on 40 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                'none'      {'csf','gm'};      ... % less regions than hammers, 18 subjects, low T1 image quality
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 'none'      {'gm'};            ... % only one subject 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               'none'      {'gm'};            ... % only one subject 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                'none'      {'gm','wm'};       ... % only one subject, but with WM regions
+  %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             'none'      {'gm','wm'};      ... % ROIs requires further work >> use Anatomy toolbox
   }; 
 
 

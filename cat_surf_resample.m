@@ -163,7 +163,7 @@ function varargout = cat_surf_resample(varargin)
       Pfsavg    = fullfile(job.fsavgDir,[sinfo(i).side '.sphere.freesurfer.gii']);
 
       if job.verb
-        fprintf('Display resampled %s\n',Pdata{i},'link','cat_surf_display(''%s'')');
+        fprintf('Display resampled %s\n',spm_file(Pdata{i},'link','cat_surf_display(''%s'')'));
       end
       
       % resample mesh and values
