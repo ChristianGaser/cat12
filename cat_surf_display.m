@@ -161,6 +161,10 @@ function varargout = cat_surf_display(varargin)
               'WMdepth'       [1.0  6.0]  [1.0  5.0]
               'GWMdepth'      [1.5 10.0]  [1.5  9.0]
               'CSFdepth'      [0.5  2.0]  [0.5  2.0]
+              'depthWM'       [0.0  4.0]  [0.0  3.0]
+              'depthWMg'      [0.0  1.0]  [0.0  0.5]
+              'depthGWM'      [0.5  5.0]  [2.5  6.0]
+              'depthCSF'      [0.5  2.0]  [0.5  2.0]  
             };
 
             texturei = find(cellfun('isempty',strfind(ranges(:,1),sinfo(i).texture))==0,1,'first');

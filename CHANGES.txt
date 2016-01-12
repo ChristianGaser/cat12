@@ -8346,6 +8346,7 @@ Changed:  Set logdate to YYYYmmdd_HHMMSS to have time ordered log-files.
 Changed:  Automatic delay for opening of parallel processing log files.
 
 ------------------------------------------------------------------------
+r828 | gaser | 2016-01-08 10:20:30 +0100 (Fr, 08 Jan 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8363,5 +8364,33 @@ A       templates_1.50mm/labels_dartel_cobra.xml
 (1) Changed: cat_version.m should search for Contents.txt to conisder
     compiled code.
 (2) Fixed: Longitudinal mode was not yet prepared for subfolders.
+
 ------------------------------------------------------------------------
-r828 | gaser | 2016-01-08 10:20:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_resamp.m
+M       cat_surf_resample.m
+M       cat_surf_smooth.m
+M       cat_vol_pbt.m
+M       tbx_cfg_cat.m
+
+Removed:    Removed subject space ROI analysis, because (i) it was to specific 
+            for some atlas maps, (ii) the missing systematic evaluation, (iii)
+            only small improvement that did not correct major hinds of some 
+            atlas maps. 
+Removed:    Deleted other old code segments and functions. 
+Updated:    ROI analysis text.
+Changed:    Changed CSF/WM depth measures (span/width/thickness of CSF/WM), 
+            because of problems showed up after the last major corrections.  
+Changed:    Changed handling of background in PBT to avoid surface mapping 
+            problems.
+Fixed:      Corrected smaller errors in cat_surf_resamp/resample/smooth.
+
+------------------------------------------------------------------------
+r829 | dahnke | 2016-01-12 12:38:51

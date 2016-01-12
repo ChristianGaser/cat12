@@ -23,6 +23,7 @@ function varargout = cat_surf_resamp(varargin)
   else
     spm_clf('Interactive'); 
     P = cellstr(spm_select([1 inf],'any','Select surface data'));
+    job = struct();
   end
 
   def.nprog     = 0; 
@@ -203,7 +204,7 @@ function varargout = cat_surf_resamp(varargin)
         if fwhm > 0, delete(Pvalue); end
 
         if job.verb
-          fprintf('(%s s) Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+          fprintf('(%3.0f s) Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
         end
       catch
         cat_io_cprintf('error','Processing error %s\n',Psdata{i});

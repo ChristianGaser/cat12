@@ -97,16 +97,20 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Ycd  = zeros(size(Ymf),'single'); 
   end
   
+  [D,I] = cat_vbdist(single(Ya>0)); Ya = Ya(I); % for sides
+  
   for si=1:numel(opt.surf)
    
     % surface filenames
     Praw       = fullfile(pp,surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp,surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp,surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % fiducial
-    Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness
-    Pgw        = fullfile(pp,surffolder,sprintf('%s.gyruswidth.%s',opt.surf{si},ff));           % gyrus width
-    Pgww       = fullfile(pp,surffolder,sprintf('%s.gyruswidthWM.%s',opt.surf{si},ff));         % gyrus witdh of the WM 
-    Psw        = fullfile(pp,surffolder,sprintf('%s.sulcuswidth.%s',opt.surf{si},ff));          % sulcus width
+    Pthick     = fullfile(pp,surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % thickness / GM depth
+    Pgwo       = fullfile(pp,surffolder,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
+    Pgw        = fullfile(pp,surffolder,sprintf('%s.depthGWM.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
+    Pgww       = fullfile(pp,surffolder,sprintf('%s.depthWM.%s',opt.surf{si},ff));              % gyrus witdh of the WM / WM depth
+    Pgwwg      = fullfile(pp,surffolder,sprintf('%s.depthWMg.%s',opt.surf{si},ff));             % gyrus witdh of the WM / WM depth
+    Psw        = fullfile(pp,surffolder,sprintf('%s.depthCSF.%s',opt.surf{si},ff));             % sulcus width / CSF depth / sulcal span
     Pdefects0  = fullfile(pp,surffolder,sprintf('%s.defects.%s',opt.surf{si},ff));              % defects temporary file
     Pdefects   = fullfile(pp,surffolder,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
     Psphere    = fullfile(pp,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
@@ -122,26 +126,26 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % reduce for object area
     switch opt.surf{si}
-      case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1);
-      case {'R','rh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==0);      
-      case {'C','cerebellum'}, Ymfs = Ymf .* (Ya>0) .* NS(Ya,3);
-      case {'B','brain'},      Ymfs = Ymf .* (Ya>0);
+      case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
+      case {'R','rh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,3) | NS(Ya,7) | NS(Ya,11) | NS(Ya,13)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
+      case {'C','cerebellum'}, Ymfs = Ymf .* (Ya>0) .* NS(Ya,3); Yside = NS(Ya,3)>0;
+      case {'B','brain'},      Ymfs = Ymf .* (Ya>0); Yside = true(size(Ya));
     end 
-    Ymfs = max(1,Ymfs); % avoid underestimated thickness in gyris
     
     %% thickness estimation
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
     
-    [Ymfs,Ymr,BB] = cat_vol_resize({Ymfs,Ym},'reduceBrain',vx_vol,4,Ymfs>1.1); % removing background
-    [Ymfs,resI]   = cat_vol_resize(Ymfs,'interp',V,opt.interpV);          % interpolate volume
+    [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,Ymfs>1.1); % removing background
+    [Ymfs,resI]     = cat_vol_resize(Ymfs,'interp',V,opt.interpV);                  % interpolate volume
+    Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0.5;             % interpolate volume
    
     % pbt calculation
-    [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('resV',opt.interpV));
+    [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyris
     if ~opt.expert, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
-    [D,I] = cat_vbdist(Yth1i); Yth1i = Yth1i(I); clear D I;             % add further values around the cortex
+    [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
     Yth1t = cat_vol_resize(Yth1i,'deinterp',resI); clear Yth1i;         % back to original resolution
     Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
     Yth1  = max(Yth1,Yth1t);                                            % save on main image
@@ -150,51 +154,65 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     %% PBT estimation of the gyrus and sulcus width 
     if opt.expert > 1
-
-      stime = cat_io_cmd('  Gyrus width estimation');
+      %% gyrus width / WM depth
+      %  For the WM depth estimation it is better to use the L4 boundary
+      %  and correct later for thickness, because the WM is very thin in
+      %  gyral regions and will cause bad values. 
+      %  On the other side we do not want the whole filled block of the 
+      %  Yppi map and so we have to mix both the original WM map and the
+      %  Yppi map. 
+      %  As far as there is no thickness in pure WM regions there will
+      %  be no correction. 
+      %
+      %    figure, isosurface(smooth3(Yppi),0.5,Yth1i), axis equal off
+      stime = cat_io_cmd('  WM depth estimation');
       [Yar,Ymr,BB] = cat_vol_resize({Ya,Ym},'reduceBrain',vx_vol,BB.BB);    % removing background
       Yar   = uint8(cat_vol_resize(Yar,'interp',V,opt.interpV,'nearest'));  % interpolate volume
       Ymr   = cat_vol_resize(Ymr,'interp',V,opt.interpV);                   % interpolate volume
       switch opt.surf{si}
-        case {'L','lh'},         Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13) | NS(Yar,5) | NS(Yar,9) | NS(Yar,15)) .* (mod(Yar,2)==1);
-        case {'R','rh'},         Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13) | NS(Yar,5) | NS(Yar,9) | NS(Yar,15)) .* (mod(Yar,2)==0);      
+        case {'L','lh'}, 
+          Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13)) .* (mod(Yar,2)==1);
+          Ynw = smooth3(cat_vol_morph(NS(Yar,5) | NS(Yar,9) | NS(Yar,15) | NS(Yar,23),'d',2) | ...
+                 (cat_vol_morph(Yppi==1,'e',2) & Ymr>1.7/3 & Ymr<2.5/3) & (mod(Yar,2)==1)); 
+        case {'R','rh'},
+          Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13)) .* (mod(Yar,2)==0);    
+          Ynw = smooth3(cat_vol_morph(NS(Yar,5) | NS(Yar,9) | NS(Yar,15) | NS(Yar,23),'d',2) | ...
+                 (cat_vol_morph(Yppi==1,'e',2) & Ymr>1.7/3 & Ymr<2.5/3) & (mod(Yar,2)==0)); 
         case {'C','cerebellum'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
         case {'B','brain'},      Ymr = Ymr .* (Yar>0);
       end 
-      
-      Yppis = Yppi; Yppis(isnan(Yppis))=0; Yppis = smooth3(Yppis);
-      distmethod = 1; 
-      if distmethod
-        Ywdt  = cat_vbdist(1-Yppis,Ymr>0);
-      else
-        Ywdt  = cat_vol_eidist(1-Yppis,max(0,min(1,Ymr)),[1 1 1],1,1,0,opt.debug); 
-        Ywdt  = cat_vol_median3(Ywdt,Ywdt>0,Ywdt>eps);
-      end
+     % clear Yar; 
+      %%
+      Yppis = Yppi .* (1-Ynw) + max(0,min(1,Ymr*3-2)) .* Ynw;           % adding real WM map 
+      Ywdt  = cat_vbdist(1-Yppis);                                      % estimate distance map to central/WM surface
       Ywdt  = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
-      [D,I] = cat_vbdist(single(Ywdt>0)); Ywdt = Ywdt(I); clear D I;               % add further values around the cortex
-      Ywdt  = cat_vol_median3(Ywdt,Ywdt>0); Ywdt = smooth3(Ywdt);       % smoothing
+      [D,I] = cat_vbdist(single(Ywdt>0),Yside); Ywdt = Ywdt(I); clear D I;    % add further values around the cortex
+      %%
+      Ywdt  = cat_vol_median3(Ywdt); Ywdt = smooth3(Ywdt);              % smoothing
       Ywdt  = cat_vol_resize(Ywdt,'deinterp',resI); 
       Ywdt  = cat_vol_resize(Ywdt,'dereduceBrain',BB);                  % adding background
       Ywd   = max(Ywd,Ywdt); 
       clear Ywdt;
       
+      %% sulcus width / CSF depth
+      %  for the CSF depth we cannot use the origal data, because of
+      %  sulcal blurring, but we got the PP map at half distance and
+      %  correct later for half thickness
       fprintf('%4.0fs\n',etime(clock,stime)); 
-      stime = cat_io_cmd('  Sulcus width estimation');
-      if distmethod
-        Ycdt  = cat_vbdist(Yppis,Ymfs>0.95); 
-      else
-        Ycdt  = cat_vol_eidist(Yppis,max(0,min(1,Ymfs>0.9)),[1 1 1],1,1,0,opt.debug);
-        Ycdt  = cat_vol_median3(Ycdt,Ycdt>0,Ycdt>eps);
-      end
+      stime = cat_io_cmd('  CSF depth estimation');
+      YM    = smooth3(cat_vol_morph(Ymfs>0.5,'o',4))>0.5;               % smooth CSF/background-skull boundary 
+      Yppis = min(Ymr,Yppi); Yppis(isnan(Yppis))=0;                     % we want also CSF within the ventricle (for tests)
+      Ycdt  = cat_vbdist(Yppis,YM); clear Yppis                         % distance to the cental/CSF-GM boundary
       Ycdt  = cat_vol_pbtp(max(2,Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
-      Ycdt(Ymfs<=0.95)=0;
-      [D,I] = cat_vbdist(single(Ycdt>0)); Ycdt = Ycdt(I); clear D I;              % add further values around the cortex
-      Ycdt  = cat_vol_median3(Ycdt,Ycdt>0); Ycdt = smooth3(Ycdt);       % smoothing
+      Ycdt(~YM)=0;
+      [D,I] = cat_vbdist(single(Ycdt>0),Yside); Ycdt = Ycdt(I); clear D I;    % add further values around the cortex
+      Ycdt  = cat_vol_median3(Ycdt); Ycdt = smooth3(Ycdt);              % smoothing
       Ycdt  = cat_vol_resize(Ycdt,'deinterp',resI); 
       Ycdt  = cat_vol_resize(Ycdt,'dereduceBrain',BB); 
       Ycd   = max(Ycd,Ycdt); 
       clear Ycdt;
       fprintf('%4.0fs\n',etime(clock,stime));
+      clear Ymr;
     end
     clear Ymfs;
     
@@ -337,19 +355,30 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % map WM and CSF width data (corrected by thickness)
     if opt.expert > 1
-      facevertexcdata2 = isocolors2(Ywd,CS.vertices); 
-      facevertexcdata2 = correctWMdepth(CS,facevertexcdata2);
-      facevertexcdata2 = max(0,facevertexcdata2 + facevertexcdata/2);
-      cat_io_FreeSurfer('write_surf_data',Pgw,facevertexcdata2); % gyrus width (WM and GM)
-      facevertexcdata2 = max(0,facevertexcdata2 - facevertexcdata/2);
-      cat_io_FreeSurfer('write_surf_data',Pgww,facevertexcdata2); % gyrus width WM only
-    % just a test ... problem with other species ...
+      %%
+      facevertexcdata2  = isocolors2(Ywd,CS.vertices); 
+      facevertexcdata2c = max(eps,facevertexcdata2 - facevertexcdata/2);
+      cat_io_FreeSurfer('write_surf_data',Pgwo,facevertexcdata2c); % gyrus width WM only
+      facevertexcdata2c = correctWMdepth(CS,facevertexcdata2c,100,0.2);
+      cat_io_FreeSurfer('write_surf_data',Pgww,facevertexcdata2c); % gyrus width WM only
+      facevertexcdata3c = facevertexcdata2c + facevertexcdata; % );
+      cat_io_FreeSurfer('write_surf_data',Pgw,facevertexcdata3c); % gyrus width (WM and GM)
+      facevertexcdata4 = estimateWMdepthgradient(CS,facevertexcdata2c);
+      cat_io_FreeSurfer('write_surf_data',Pgwwg,facevertexcdata4); % gyrus width WM only > gradient
+      % smooth resampled values
+      try
+        cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pcentral,Pgwwg,3,Pgwwg);
+        [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
+      end
+      %%
+      %clear facevertexcdata2 facevertexcdata2c facevertexcdata3c facevertexcdata4; 
+      % just a test ... problem with other species ...
       %norm = sum(Ymf(:)>0.5) / prod(vx_vol) / 1000 / 1400;
       %norm = mean([2 1 1].*diff([min(CS.vertices);max(CS.vertices)])); 
       %norm = mean([2 1 1].*std(CS.vertices)); % maybe the hull surface is better...
  
       facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
-      facevertexcdata3 = max(0,facevertexcdata3 - facevertexcdata/2); 
+      facevertexcdata3 = max(eps,facevertexcdata3 - facevertexcdata/2); 
       cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
     end
     fprintf('%4.0fs\n',etime(clock,stime)); 
@@ -391,32 +420,42 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
 end
 
 %=======================================================================
-function cdata = correctWMdepth(CS,cdata)
+function [cdata,i] = correctWMdepth(CS,cdata,iter,lengthfactor)
 % ______________________________________________________________________
 % Correct deep WM depth values that does not fit to the local thickness 
 % of the local gyri.
+% 
+% lengthfactor should be between 0.2 and 0.4
 % ______________________________________________________________________
 
-%%
+  if ~exist('lengthfactor','var'), lengthfactor = 1/3; end
+  if ~exist('iter','var'), iter = 100; end
+
+  %%
   SV  = CS.vertices;                                                          % Surface Vertices 
   SE  = unique([CS.faces(:,1:2);CS.faces(:,2:3);CS.faces(:,3:-2:1)],'rows');  % Surface Edges
   SEv = single(diff(cat(3,SV(SE(:,1),:),SV(SE(:,2),:)),1,3));                 % Surface Edge Vector
   SEL = sum(SEv.^2,2).^0.5;                                                   % Surface Edge Length  
   clear SEv
-  
 
-  SEd = cdata(SE(:,1))<5; SE(SEd,:)=[];
-  i=0; cdatac = cdata; lengthfactor = 1;
-  while i<20 && sum((cdatac(SE(:,1)) - SEL(SE(:,1))*lengthfactor)  >= cdata(SE(:,2)))>size(CS.vertices,1)/200;
-    i=i+1; 
-    cdatac = cdata;
+  
+  %%
+  i=0; cdatac = cdata+1; pc = 1; oc = 0; 
+  while i<iter && pc~=oc; 
+  %%
+    pc = sum( abs(cdata - cdatac)>0.05 ); 
+    i=i+1; cdatac = cdata;
     
-    for j=1:size(SE,1)
-      if cdata(SE(j,2))>3 && ( cdata(SE(j,1)) - SEL(SE(j,1))*lengthfactor ) > cdata(SE(j,2))
-        cdata(SE(j,1)) = cdata(SE(j,2)) + SEL(SE(j,1))*0.5; 
-      end
-    end
+    M  = (cdatac(SE(:,1)) - SEL(SE(:,1))*lengthfactor ) > cdatac(SE(:,2)); 
+    cdata(SE(M,1)) = cdatac(SE(M,2)) + SEL(SE(M,1))*lengthfactor; 
+    M  = (cdata(SE(:,2)) - SEL(SE(:,2))*lengthfactor ) > cdatac(SE(:,1));
+    cdata(SE(M,2)) = cdatac(SE(M,1)) + SEL(SE(M,1))*lengthfactor; 
+    oc = sum( abs(cdata - cdatac)>0.05 );
+    
+    %fprintf('%d - %8.2f - %d\n',i,sum( abs(cdata - cdatac)>0.05 ),pc~=oc)
+    
   end
+  
 end
 %=======================================================================
 function V = isocolors2(R,V,opt)
@@ -459,4 +498,34 @@ function V = isocolors2(R,V,opt)
   end  
   if ~VD, V = single(V); end
 end
-                   
+     %=======================================================================
+function cdata = estimateWMdepthgradient(CS,cdata)
+% ______________________________________________________________________
+% Estimates the maximum local gradient of a surface. 
+% Major use is the WM depth that grows with increasing sulcal depth. 
+% It measures the amount of WM behind the cortex, but more relevant is
+% the amout of WM fibers that this reagion will add to the WM depth. 
+% The width of the street next to a house gives not the connectivity of
+% this house, but the width of the entrance does!
+% This measure can be improved by furhter information of sulcal depth.
+% ______________________________________________________________________
+
+  %%
+  SV  = CS.vertices;                                                          % Surface Vertices 
+  SE  = unique([CS.faces(:,1:2);CS.faces(:,2:3);CS.faces(:,3:-2:1)],'rows');  % Surface Edges
+  SEv = single(diff(cat(3,SV(SE(:,1),:),SV(SE(:,2),:)),1,3));                 % Surface Edge Vector
+  SEL = sum(SEv.^2,2).^0.5;                                                   % Surface Edge Length  
+  clear SEv
+
+  
+  %%
+  cdata_l = inf(size(cdata),'single'); 
+  cdata_h = zeros(size(cdata),'single'); 
+  for i=1:size(SE,1)
+    val = (cdata(SE(i,2)) - cdata(SE(i,1)))*SEL(SE(i,1));
+    cdata_l(SE(i,1)) = min([cdata_l(SE(i,1)),val]);
+    cdata_h(SE(i,1)) = max([cdata_h(SE(i,2)),val]);
+  end
+  cdata = cdata_h - cdata_l; 
+end
+              
