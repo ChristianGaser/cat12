@@ -51,7 +51,7 @@ cat12.opts.samp      = 3;                       % Sampling distance      - small
 cat12.output.surface     = 0;     % surface and thickness creation
 
 % save ROI values
-cat12.output.ROI         = 1;     % write xml-file and csv-files with ROI data (0 - none, 1 - default, 2 - optimized (not ready))
+cat12.output.ROI         = 0;     % write xml-file and csv-files with ROI data (0 - none, 1 - default, 2 - optimized (not ready))
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
 cat12.output.bias.native = 0;
@@ -196,10 +196,10 @@ cat12.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'none'      {'csf','gm','wm'}; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'none'      {'csf','gm'};      ... % atlas based on 35 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'none'      {'gm'};            ... % atlas based on 40 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                'none'      {'csf','gm'};      ... % less regions than hammers, 18 subjects, low T1 image quality
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 'none'      {'gm'};            ... % only one subject 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               'none'      {'gm'};            ... % only one subject 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                'none'      {'gm','wm'};       ... % only one subject, but with WM regions
+%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                'none'      {'csf','gm'};      ... % less regions than hammers, 18 subjects, low T1 image quality
+%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 'none'      {'gm'};            ... % only one subject 
+%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               'none'      {'gm'};            ... % only one subject 
+%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                'none'      {'gm','wm'};       ... % only one subject, but with WM regions
   %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             'none'      {'gm','wm'};      ... % ROIs requires further work >> use Anatomy toolbox
   }; 
 
