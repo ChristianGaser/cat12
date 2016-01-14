@@ -8366,6 +8366,7 @@ A       templates_1.50mm/labels_dartel_cobra.xml
 (2) Fixed: Longitudinal mode was not yet prepared for subfolders.
 
 ------------------------------------------------------------------------
+r829 | dahnke | 2016-01-12 12:39:00 +0100 (Di, 12 Jan 2016) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8392,5 +8393,20 @@ Changed:    Changed handling of background in PBT to avoid surface mapping
             problems.
 Fixed:      Corrected smaller errors in cat_surf_resamp/resample/smooth.
 
+
 ------------------------------------------------------------------------
-r829 | dahnke | 2016-01-12 12:38:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_surf_render.m
+M       cat_surf_vol2surf.m
+M       tbx_cfg_cat.m
+ M      templates_1.50mm/cobra.csv
+ M      templates_1.50mm/cobra.nii
+ M      templates_1.50mm/labels_dartel_cobra.xml
+
+(1) Changed: defaults for atlases.
+(2) Fixed: number of regions for lpba40 is 56.
+------------------------------------------------------------------------
+r830 | gaser | 2016-01-14 11:44:33

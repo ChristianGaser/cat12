@@ -126,7 +126,7 @@ function varargout = cat_surf_vol2surf(varargin)
             'dataname',job.datafieldname);
 
         % map values
-        if job.origin==0 && job.length==0 && res==1 
+        if job.origin==0 && job.length==0 && job.res==1 
           %%
           V  = spm_vol(P.vol{vi});
           Y  = spm_read_vols(V); 

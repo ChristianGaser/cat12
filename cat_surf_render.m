@@ -341,7 +341,11 @@ switch lower(action)
 
         v = varargin{2};
         if ischar(v)
-          try, spm_vol(v); catch, v = gifti(v); end;
+          [p,n,e] = fileparts(v);
+          if ~strcmp(e,'.mat') & ~strcmp(e,'.nii') & ~strcmp(e,'.gii') & ~strcmp(e,'.img') % freesurfer format
+            v = cat_io_FreeSurfer('read_surf_data',v);
+          else
+            try, spm_vol(v); catch, v = gifti(v); end;
         end
         if isa(v,'gifti')
           v = v.cdata;
@@ -772,7 +776,7 @@ axis(H.axis,'image');
 %==========================================================================
 function myColourbar(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
-render('Colourbar',H,toggle(get(obj,'Checked')));
+cat_surf_render('Colourbar',H,toggle(get(obj,'Checked')));
 
 %==========================================================================
 function myColourmap(obj,evt,H)
@@ -952,7 +956,7 @@ set(ancestor(obj,'figure'),'Renderer',renderer);
 
 %==========================================================================
 function myOverlay(obj,evt,H)
-[P, sts] = spm_select(1,'\.img|\.nii|\.gii|\.mat','Select file to overlay');
+[P, sts] = spm_select(1,'any','Select file to overlay');
 if ~sts, return; end
 cat_surf_render('Overlay',H,P);
 
@@ -984,92 +988,6 @@ hold(H.axis,'off');
 axis(H.axis,'image');
 
 %==========================================================================
-function C = updateTexturex(H,v,col)
-
-%-Get colourmap
-%--------------------------------------------------------------------------
-if nargin<3, col = getappdata(H.patch,'colourmap'); end
-if isempty(col), col = hot(256); end
-setappdata(H.patch,'colourmap',col);
-
-%-Get curvature
-%--------------------------------------------------------------------------
-curv = getappdata(H.patch,'curvature');
-if size(curv,2) == 1
-    curv = 0.5 * repmat(curv,1,3) + 0.3 * repmat(~curv,1,3);
-end
-    
-%-Project data onto surface mesh
-%--------------------------------------------------------------------------
-if nargin < 2, v = []; end
-if ischar(v)
-    [p,n,e] = fileparts(v);
-    if strcmp([n e],'SPM.mat')
-        swd = pwd;
-        spm_figure('GetWin','Interactive');
-        [SPM,v] = spm_getSPM(struct('swd',p));
-        cd(swd);
-    else
-        try, spm_vol(v); catch, v = gifti(v); end;
-    end
-end
-if isa(v,'gifti'), v = v.cdata; end
-if isa(v,'file_array'), v = v(); end
-if isempty(v)
-    v = zeros(size(curv))';
-elseif ischar(v) || iscellstr(v) || isstruct(v)
-    v = spm_mesh_project(H.patch,v);
-elseif isnumeric(v) || islogical(v)
-    if size(v,2) == 1
-        v = v';
-    end
-else
-    error('Unknown data type.');
-end
-v(isinf(v)) = NaN;
-
-setappdata(H.patch,'data',v);
-
-%-Create RGB representation of data according to colourmap
-%--------------------------------------------------------------------------
-C = zeros(size(v,2),3);
-clim = getappdata(H.patch, 'clim');
-if isempty(clim), clim = [false NaN NaN]; end
-mi = clim(2); ma = clim(3);
-if any(v(:))
-    if size(col,1)>3 && size(col,1) ~= size(v,1)
-        if size(v,1) == 1
-            if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
-            C = squeeze(ind2rgb(floor(((v(:)-mi)/(ma-mi))*size(col,1)),col));
-        elseif isequal(size(v),[size(curv,1) 3])
-            C = v; v = v';
-        else
-            if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
-            for i=1:size(v,1)
-                C = C + squeeze(ind2rgb(floor(((v(i,:)-mi)/(ma-mi))*size(col,1)),col));
-            end
-        end
-    else
-        if ~clim(1), ma = max(v(:)); end
-        for i=1:size(v,1)
-            C = C + v(i,:)'/ma * col(i,:);
-        end
-    end
-end
-setappdata(H.patch, 'clim', [false mi ma]);
-
-%-Build texture by merging curvature and data
-%--------------------------------------------------------------------------
-C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
-
-set(H.patch, 'FaceVertexCData',C, 'FaceColor','interp');
-
-%-Update the colourbar
-%--------------------------------------------------------------------------
-if isfield(H,'colourbar')
-    cat_surf_render('Colourbar',H);
-end
-%==========================================================================
 function C = updateTexture(H,v,col)
 
 %-Get colourmap
@@ -1095,13 +1013,17 @@ end
 if nargin < 2, v = []; end
 if ischar(v)
     [p,n,e] = fileparts(v);
-    if strcmp([n e],'SPM.mat')
+    if ~strcmp(e,'.mat') & ~strcmp(e,'.nii') & ~strcmp(e,'.gii') & ~strcmp(e,'.img') % freesurfer format
+      v = cat_io_FreeSurfer('read_surf_data',v);
+    else
+      if strcmp([n e],'SPM.mat')
         swd = pwd;
         spm_figure('GetWin','Interactive');
         [SPM,v] = spm_getSPM(struct('swd',p));
         cd(swd);
-    else
+      else
         try, spm_vol(v); catch, v = gifti(v); end;
+      end
     end
 end
 if isa(v,'gifti'), v = v.cdata; end
