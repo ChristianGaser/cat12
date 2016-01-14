@@ -8411,6 +8411,7 @@ M       tbx_cfg_cat.m
 (2) Fixed: number of regions for lpba40 is 56.
 
 ------------------------------------------------------------------------
+r831 | gaser | 2016-01-14 15:00:03 +0100 (Do, 14 Jan 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8420,5 +8421,17 @@ M       html/cat.html
 
 Changed: added violin-plot for cat_plot_boxplot.m and added and changed
 some defaults.
+
 ------------------------------------------------------------------------
-r831 | gaser | 2016-01-14 15:00:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_boxplot.m
+A       cat_plot_circular.m
+D       circularGraph.m
+D       node.m
+
+(1) Added: New circular plot cat_plot_circular.m.
+(2) Deleted: circularGraph.m and node.m
+------------------------------------------------------------------------
+r832 | gaser | 2016-01-14 17:08:40
