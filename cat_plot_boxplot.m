@@ -18,6 +18,9 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %                                     in a group [inactive]
 %  opt.ylim        = [-inf inf];    % y-axis scaling
 %  opt.ygrid       = 1;             % activate y-grid-lines
+%  opt.box         = 1;             % plot box
+%  opt.outliers    = 1;             % plot outliers
+%  opt.violin      = 0;             % plot violin-plot
 %  opt.boxwidth    = 0.8;           % width of box
 %  opt.groupcolor  = [R G B];       % matrix with (group)-bar-color(s) 
 %                                     use jet(numel(data)) 
