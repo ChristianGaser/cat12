@@ -18,6 +18,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %                                     in a group [inactive]
 %  opt.ylim        = [-inf inf];    % y-axis scaling
 %  opt.ygrid       = 1;             % activate y-grid-lines
+%  opt.boxwidth    = 0.8;           % width of box
 %  opt.groupcolor  = [R G B];       % matrix with (group)-bar-color(s) 
 %                                     use jet(numel(data)) 
 %                                     or other color functions
@@ -47,7 +48,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 % opt.notched = ['x','*'] points between 1.5 and 3 times the IQR is marked with
 % 'x' and points outside 3 times IQR with '*'.
 % opt.vertical = 0 makes the boxes horizontal, by default opt.vertical = 1.
-% maxwhisker defines the length of the whiskers as a function of the IQR
+% maxwhisker defines the length of the wh^1iskers as a function of the IQR
 % (default = 1.5). If maxwhisker = 0 then boxplot displays all data  
 % values outside the box using the plotting opt.notched for points that lie
 % outside 3 times the IQR.   
@@ -67,7 +68,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %   title("Grade 3 heights");
 %   tics("x",1:2,["girls";"boys"]);
 %   axis([0,3]);
-%   boxplot({randn(10,1)*5+140, randn(13,1)*8+135});
+%   cat_plot_boxplot({randn(10,1)*5+140, randn(13,1)*8+135});
 %
 % _________________________________________________________________________
 %
@@ -106,18 +107,21 @@ function [out,s] = cat_plot_boxplot(data,opt)
   def.sort        = 0; 
   def.names       = num2str( (1:numel(data))' );
   def.fill        = 1;
-  def.groupcolor  = repmat([0.6 0.6 0.8],numel(data),1);
+  def.groupcolor  = jet(numel(data));
   def.symbolcolor = 'r';
-  def.groupnum    = 1;
+  def.groupnum    = 0;
   def.groupmin    = 5;
-  def.ylim        = [-inf inf];
-  def.ygrid       = 1;  
+  def.ylim        = [];
+  def.ygrid       = 0;  
+  def.boxwidth    = 0.8;  
+  def.box         = 1;
+  def.outliers    = 1;
+  def.violin      = 0;  
   def.fontsize    = []; % empty = default font size
   
 
   opt = cat_io_checkinopt(opt,def);
   opt.notched = max(0,min(1,opt.notched));
-  %opt.ylim = opt.ylim + sign(opt.ylim) .* [eps -eps];
   
   % figure out how many data sets we have
   if iscell(data), 
@@ -145,7 +149,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
   groupnr = cellfun(@(x) sum(~isnan(x)),data);
   out.sortj = 1:length(data);
   rmdata = zeros(1,nc);
-  % remove groups with to few elemnts
+  % remove groups with too few elemnts
   % ... require addaption for many other fields like names, color, ...
   if 0 && opt.groupmin>0
     rmdata=cellfun('isempty',data) | groupnr<opt.groupmin;
@@ -203,7 +207,6 @@ function [out,s] = cat_plot_boxplot(data,opt)
   a = 1-opt.notched;
 
   
-  
   %% anova, if statistical toolbox exist
   %{
   if exist('kruskalwallis','file') 
@@ -253,19 +256,25 @@ function [out,s] = cat_plot_boxplot(data,opt)
   outliers_y  = [];
   outliers2_x = [];
   outliers2_y = [];
-
+  
   for i=1:nc
     % Get the next data set from the array or cell array
-    if iscell(data)
-      col = data{i}(:);
-    else
-      col = data(:,i);
-    end
+    if iscell(data) col = data{i}(:);
+    else col = data(:,i); end
+    
     % Skip missing data
     col(isnan(col)) = [];
     % Remember the data length
     nd = length(col);
     box(i) = nd;
+    
+    if opt.violin
+      [f, u] = ksdensity(col);
+      f = (f/max(f)*0.3)'; %normalize
+      F(:,i) = f;
+      U(:,i) = u;
+    end
+    
     if (nd > 1)
       % min,max and quartiles
       s(1:5,i) = [min(col) prctile(col,[25 50 75]) max(col)]';
@@ -330,7 +339,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 
   % Draw a box around the quartiles, with width proportional to the number of
   % items in the box. Draw notches if desired.
-  box = 0.15 + box*(0.30/max(box));
+  box = box*(opt.boxwidth/2/max(box));
   quartile_x = ones(11,1)*[1:nc] + [-a;-1;-1;1;1;a;1;1;-1;-1;-a]*box;
   quartile_y = s([3,7,4,4,7,3,6,2,2,6,3],:);
 
@@ -351,52 +360,49 @@ function [out,s] = cat_plot_boxplot(data,opt)
   cap_x(1,:) = cap_x(1,:) - 0.1;
   cap_x(2,:) = cap_x(2,:) + 0.1;
   cap_y = whisker_y([1,1],:);
-
-  
-  
   
   
   %% Do the plot
   children0=get(gca,'Children');
   
+  qn = size(quartile_x,2);
+  
   if opt.vertical
-    if opt.fill
-      qn=size(quartile_x,2);
-      for i=1:qn
-        fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',1-max(0,(1-opt.groupcolor(i,:))/3),'EdgeColor',[0 0 0.5]); 
+  
+    for i=1:qn
+      % violin plot
+      if opt.violin
+        h(i) = fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor','none');
+        if i==1, hold on; end
+      end
+  
+      if opt.box
+        if opt.fill
+          fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',1-max(0,(1-opt.groupcolor(i,:))/3),'EdgeColor',[0 0 0.5]); 
+        else
+          plot(quartile_x(:,i), quartile_y(:,i),'b-'); 
+        end
         if i==1, hold on; end
         plot(cap_x(:,[i i+qn]), cap_y(:,[i i+qn]),'Color',[0 0 0.5]); %max(0,opt.groupcolor(i,:)-0.5))
         plot(whisker_x(:,[i i+qn]), whisker_y(:,[i i+qn]),'Color',[0 0 0.5]); %max(0,opt.groupcolor(i,:)-0.5))
-        if opt.groupcolor(i,1)>0.2 && opt.groupcolor(i,2)<0.5 && opt.groupcolor(i,3)<0.5
-          plot(median_x(:,i), median_y(:,i),'Color',[0.5 0 0])
-        else
-          plot(median_x(:,i), median_y(:,i),'Color',[1 0 0])
-        end
         plot(quartile_x(:,i), quartile_y(:,i),'Color',[0 0 0.5]); 
       end
-      if opt.symbol(1)~=' '
-        plot(outliers_x,  min(opt.ylim(2),max(opt.ylim(1),outliers_y)) ,'MarkerSize',...
-          max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none')
+  
+      if opt.groupcolor(i,1)>0.2 && opt.groupcolor(i,2)<0.5 && opt.groupcolor(i,3)<0.5
+        plot(median_x(:,i), median_y(:,i),'Color',[0.5 0 0])
+      else
+        plot(median_x(:,i), median_y(:,i),'Color',[1 0 0])
       end
-      if opt.symbol(2)~=' '
-        plot(outliers2_x, min(opt.ylim(2),max(opt.ylim(1),outliers2_y)),'MarkerSize',...
-          max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none');
-      end
-    else
-      plot(quartile_x, quartile_y, 'b-')
-      hold on
-      plot(whisker_x, whisker_y, 'b-')
-      plot(cap_x, cap_y, 'b-')
-      plot(median_x, median_y, 'r-')
-      if opt.symbol(1)~=' '
-        plot(outliers_x,  min(opt.ylim(2),max(opt.ylim(1),outliers_y)) , [opt.symbol(1),opt.symbolcolor])
-      end
-      if opt.symbol(2)~=' '
-        plot(outliers2_x, min(opt.ylim(2),max(opt.ylim(1),outliers2_y)), [opt.symbol(2),opt.symbolcolor]);
-      end
-      plot(median_x, median_y, 'r-') % yes, two times... otherwise the last median is below the box ...
+  
     end
-    
+    if opt.symbol(1)~=' ' & opt.outliers
+      plot(outliers_x,  outliers_y ,'MarkerSize',...
+          max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none')
+    end
+    if opt.symbol(2)~=' ' & opt.outliers
+      plot(outliers2_x, outliers2_y,'MarkerSize',...
+        max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none');
+    end
     
     % add labels
     linecolor = [0.8 0.8 0.8];
@@ -419,38 +425,38 @@ function [out,s] = cat_plot_boxplot(data,opt)
       uistack(h1,'bottom')
     end
 
+  else % horizontal
 
-  else
-    if opt.fill
-      qn=size(quartile_x,2);
-      for i=1:qn
-        fill(quartile_y(:,i), quartile_x(:,i),'b-','FaceColor',1-max(0,(1-opt.groupcolor(i,:))/3),'EdgeColor',[0 0 0.5]); 
+    for i=1:qn
+      % violin plot
+      if opt.violin
+        h(i) = fill([U(:,i);flipud(U(:,i))],[F(:,i)+i;flipud(i-F(:,i))],opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor','none');
+        if i==1, hold on; end
+      end
+      
+      if opt.box
+        if opt.fill
+          fill(quartile_y(:,i), quartile_x(:,i),'b-','FaceColor',1-max(0,(1-opt.groupcolor(i,:))/3),'EdgeColor',[0 0 0.5]); 
+        else
+          plot(quartile_y, quartile_x, 'b-')
+        end
         if i==1, hold on; end
         plot(cap_y(:,[i i+qn]), cap_x(:,[i i+qn]),'Color',[0 0 0.5]);
         plot(whisker_y(:,[i i+qn]), whisker_x(:,[i i+qn]),'Color',[0 0 0.5]); 
-        if opt.groupcolor(i,1)>0.2 && opt.groupcolor(i,2)<0.5 && opt.groupcolor(i,3)<0.5
-          plot(median_y(:,i), median_x(:,i),'Color',[0.5 0 0])
-        else
-          plot(median_y(:,i), median_x(:,i),'Color',[1 0 0])
-        end
         plot(quartile_y(:,i), quartile_x(:,i),'Color',[0 0 0.5]); 
       end
-      plot(min(opt.ylim(2),max(opt.ylim(1),outliers_y)) , outliers_x ,'MarkerSize',...
-        max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor','r','LineStyle','none')
-      plot(min(opt.ylim(2),max(opt.ylim(1),outliers2_y)), outliers2_x ,'MarkerSize',...
-        max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor','r','LineStyle','none');
-      
-    else
-      plot(quartile_y, quartile_x, 'b-')
-      hold on
-      plot(whisker_y, whisker_x, 'b-')
-      plot(cap_y, cap_x, 'b-')
-      plot(median_x, median_y, 'r-')
-      plot(min(opt.ylim(2),max(opt.ylim(1),outliers_y)),  outliers_x,  [opt.symbol(1),'r'])
-      plot(min(opt.ylim(2),max(opt.ylim(1),outliers2_y)), outliers2_x, [opt.symbol(2),'r']);
-      plot(median_y, median_x, 'r-')     
-    end
-    
+      if opt.groupcolor(i,1)>0.2 && opt.groupcolor(i,2)<0.5 && opt.groupcolor(i,3)<0.5
+        plot(median_y(:,i), median_x(:,i),'Color',[0.5 0 0])
+      else
+        plot(median_y(:,i), median_x(:,i),'Color',[1 0 0])
+      end
+      if opt.outliers
+        plot(outliers_y, outliers_x ,'MarkerSize',...
+          max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor','r','LineStyle','none')
+        plot(outliers2_y, outliers2_x ,'MarkerSize',...
+          max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor','r','LineStyle','none');
+      end
+    end 
     
     % add labels
     linecolor = [0.8 0.8 0.8];

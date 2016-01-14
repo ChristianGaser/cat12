@@ -8395,6 +8395,7 @@ Fixed:      Corrected smaller errors in cat_surf_resamp/resample/smooth.
 
 
 ------------------------------------------------------------------------
+r830 | gaser | 2016-01-14 11:44:36 +0100 (Do, 14 Jan 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8408,5 +8409,16 @@ M       tbx_cfg_cat.m
 
 (1) Changed: defaults for atlases.
 (2) Fixed: number of regions for lpba40 is 56.
+
 ------------------------------------------------------------------------
-r830 | gaser | 2016-01-14 11:44:33
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_plot_boxplot.m
+M       html/cat.html
+
+Changed: added violin-plot for cat_plot_boxplot.m and added and changed
+some defaults.
+------------------------------------------------------------------------
+r831 | gaser | 2016-01-14 15:00:00
