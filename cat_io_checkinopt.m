@@ -17,7 +17,7 @@ function res = cat_io_checkinopt(opt, def, cond)
   if numel(opt)>1, error('ERROR:checkinopt:optsize','ERROR: the size of the parameter struct ''opt'' should be 1!'); end
   if numel(def)>1, error('ERROR:checkinopt:optsize','ERROR: the size of the parameter struct ''def'' should be 1!'); end
   
-  % only elments of def will be in res... do not check for subfields!
+  % only elements of def will be in res... do not check for subfields!
   %fields = intersect(fieldnames(opt),fieldnames(def)); 
   res = cat_io_updateStruct(def,opt,1);
   
