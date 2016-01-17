@@ -8423,6 +8423,7 @@ Changed: added violin-plot for cat_plot_boxplot.m and added and changed
 some defaults.
 
 ------------------------------------------------------------------------
+r832 | gaser | 2016-01-14 17:08:42 +0100 (Do, 14 Jan 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8433,5 +8434,21 @@ D       node.m
 
 (1) Added: New circular plot cat_plot_circular.m.
 (2) Deleted: circularGraph.m and node.m
+
 ------------------------------------------------------------------------
-r832 | gaser | 2016-01-14 17:08:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_checkinopt.m
+M       cat_plot_circular.m
+M       cat_version.m
+M       cat_vol_defs.m
+
+(1) Fixed: Correct handling of filetypes and 4D-data in cat_vol_defs.m
+(2) Fixed: If Contents.txt does not exist serach for Contens.m in cat_version.m
+(3) Fixed: Correct handling of outputs in cat_conf_tools.m for applying
+    deformations.
+(4) Added some more features in cat_plot_circular.
+------------------------------------------------------------------------
+r833 | gaser | 2016-01-17 23:23:26
