@@ -52,31 +52,57 @@ function apply_def(Def,mat,fnames,intrp,modulate)
 % Warp an image or series of images according to a deformation field
 
 intrp = [intrp*[1 1 1], 0 0 0];
-ofnames = cell(size(fnames,1),1);
 
 for i=1:size(fnames,1),
-    V = spm_vol(fnames(i,:));
-    M = inv(V.mat);
+
+    % Generate headers etc for output images
+    %----------------------------------------------------------------------
     [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:))); ext = '.nii'; 
+    NI = nifti(fullfile(pth,[nam ext]));
+    j_range = 1:size(NI.dat,4);
+    k_range = 1:size(NI.dat,5);
+    l_range = 1:size(NI.dat,6);
+    if ~isempty(num),
+        num = sscanf(num,',%d');
+        if numel(num)>=1, j_range = num(1); end
+        if numel(num)>=2, k_range = num(2); end
+        if numel(num)>=3, l_range = num(3); end
+    end
+
+    M    = inv(NI.mat);
+    NO = NI;
+
+    % use float for modulated images
+    if modulate
+        NO.dat.scl_slope = 1.0;
+        NO.dat.scl_inter = 0.0;
+        NO.dat.dtype     = 'float32-le';
+    end
+
+    dim            = size(Def);
+    dim            = dim(1:3);
+    NO.dat.dim     = [dim NI.dat.dim(4:end)];
+    NO.dat.offset  = 0; % For situations where input .nii images have an extension.
+    NO.mat         = mat;
+    NO.mat0        = mat;
+    NO.mat_intent  = 'Aligned';
+    NO.mat0_intent = 'Aligned';
+
     switch modulate
     case 0
-        ofnames{i} = fullfile(pth,['w',nam,ext]);
+        NO.dat.fname = fullfile(pth,['w',nam,ext]);
+        NO.descrip   = sprintf('Warped');
     case 1
-        ofnames{i} = fullfile(pth,['mw',nam,ext]);
+        NO.dat.fname = fullfile(pth,['mw',nam,ext]);
+        NO.descrip   = sprintf('Warped & Jac scaled');
     case 2
-        ofnames{i} = fullfile(pth,['m0w',nam,ext]);
+        NO.dat.fname = fullfile(pth,['m0w',nam,ext]);
+        NO.descrip   = sprintf('Warped & Jac scaled (nonlinear only)');
     end
-    Vo = struct('fname',ofnames{i},...
-                'dim',[size(Def(:,:,:,1),1) size(Def(:,:,:,1),2) size(Def(:,:,:,1),3)],...
-                'dt',[spm_type('uint16') spm_platform('bigend')],...
-                'pinfo',[1/255 0 0]',...
-                'mat',mat,...
-                'n',V.n,...
-                'descrip',V.descrip);
-    ofnames{i} = [ofnames{i} num];
-    C  = spm_bsplinc(V,intrp);
-    Vo = spm_create_vol(Vo);
     
+    NO.extras      = [];
+    create(NO);
+
     if modulate
       dt = spm_diffeo('def2det',Def)/det(mat(1:3,1:3));
       dt(:,:,[1 end]) = NaN;
@@ -86,26 +112,50 @@ for i=1:size(fnames,1),
       % for modulation of non-linear parts only we have to remove the affine part
       % of the jacobian determinant
       if modulate == 2
-        M1  = Vo.mat;
         [x1,x2,x3] = ndgrid(single(1:size(Def,1)),single(1:size(Def,2)),single(1:size(Def,3)));
         X = cat(4,x1,x2,x3);
         Ma = spm_get_closest_affine(X,Def);
-        M3 = Ma\M1;
+        M3 = Ma\mat;
         dt = dt*abs(det(M3));
       end
     
     end
     
-    for j=1:size(Def(:,:,:,1),3)
-      d0    = {double(Def(:,:,j,1)), double(Def(:,:,j,2)),double(Def(:,:,j,3))};
-      d{1}  = M(1,1)*d0{1}+M(1,2)*d0{2}+M(1,3)*d0{3}+M(1,4);
-      d{2}  = M(2,1)*d0{1}+M(2,2)*d0{2}+M(2,3)*d0{3}+M(2,4);
-      d{3}  = M(3,1)*d0{1}+M(3,2)*d0{2}+M(3,3)*d0{3}+M(3,4);
-      dat   = spm_bsplins(C,d{:},intrp);
-      if modulate
-        dat = dat.*dt(:,:,j);
-      end
-      Vo    = spm_write_plane(Vo,dat,j);
-    end;
+    for j=j_range
+
+        M0 = NI.mat;
+        if ~isempty(NI.extras) && isstruct(NI.extras) && isfield(NI.extras,'mat')
+            M1 = NI.extras.mat;
+            if size(M1,3) >= j && sum(sum(M1(:,:,j).^2)) ~=0
+                M0 = M1(:,:,j);
+            end
+        end
+        M  = inv(M0);
+        % Generate new deformation (if needed)
+        Y     = affine(Def,M);
+        oM = M;
+        % Write the warped data for this time point
+        %------------------------------------------------------------------
+        for k=k_range
+            for l=l_range
+                C   = spm_diffeo('bsplinc',single(NI.dat(:,:,:,j,k,l)),intrp);
+                dat = spm_diffeo('bsplins',C,Y,intrp);
+                if modulate
+                  dat = dat.*double(dt);
+                end
+                NO.dat(:,:,:,j,k,l) = dat;
+            end
+        end
+    end
+
 end;
 return;
+
+%==========================================================================
+% function Def = affine(y,M)
+%==========================================================================
+function Def = affine(y,M)
+Def          = zeros(size(y),'single');
+Def(:,:,:,1) = y(:,:,:,1)*M(1,1) + y(:,:,:,2)*M(1,2) + y(:,:,:,3)*M(1,3) + M(1,4);
+Def(:,:,:,2) = y(:,:,:,1)*M(2,1) + y(:,:,:,2)*M(2,2) + y(:,:,:,3)*M(2,3) + M(2,4);
+Def(:,:,:,3) = y(:,:,:,1)*M(3,1) + y(:,:,:,2)*M(3,2) + y(:,:,:,3)*M(3,3) + M(3,4);

@@ -946,16 +946,16 @@ PI = job.images;
 
 vf = cell(numel(PI),1);
 for i=1:numel(PU),
-    pth = spm_fileparts(PU{i});
     for m=1:numel(PI),
-        [pth1,nam,ext] = spm_fileparts(PI{m});
+        [pth,nam,ext,num] = spm_fileparts(PI{m});
+        
         switch job.modulate
         case 2
-            fname = fullfile(pth,['m0w' nam ext]);
+            fname = fullfile(pth,['m0w' nam ext num]);
         case 1
-            fname = fullfile(pth,['mw' nam ext]);
+            fname = fullfile(pth,['mw' nam ext num]);
         case 0
-            fname = fullfile(pth,['w' nam ext]);
+            fname = fullfile(pth,['w' nam ext num]);
         end;
         vf{m} = fname;
     end
@@ -971,16 +971,16 @@ PI = job.images;
 
 vf = cell(numel(PU),numel(PI));
 for i=1:numel(PU),
-    [pth,nam] = spm_fileparts(PU{i});
     for m=1:numel(PI),
-        [pth1,nam,ext] = spm_fileparts(PI{m}{i});
+        [pth,nam,ext,num] = spm_fileparts(PI{m}{i});
+        
         switch job.modulate
         case 2
-            fname = fullfile(pth,['m0w' nam ext]);
+            fname = fullfile(pth,['m0w' nam ext num]);
         case 1
-            fname = fullfile(pth,['mw' nam ext]);
+            fname = fullfile(pth,['mw' nam ext num]);
         case 0
-            fname = fullfile(pth,['w' nam ext]);
+            fname = fullfile(pth,['w' nam ext num]);
         end;
         vf{i,m} = fname;
     end

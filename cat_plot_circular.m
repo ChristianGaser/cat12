@@ -4,13 +4,13 @@ function h = cat_plot_circular(data, opt)
 %
 % usage: vargout = cat_plot_boxplot(data,opt);
 %
-%   cat_plot_curcular(data) data is a square numeric matrix with values in [0,1].
+%   cat_plot_circular(data) data is a square numeric matrix with values in [0,1].
 %
 %                 NOTE: only the off-diagonal lower triangular section of data is
 %                       considered, i.e. tril(data,-1).
 %                                               
-%     opt.lbls      Plot a cat_plot_circular with custom labels at each node.
-%                   LBLS is either a cellstring of length M, where
+%     opt.label     Plot a cat_plot_circular with custom labels at each node.
+%                   LABEL is either a cellstring of length M, where
 %                   M = size(r,1), or a M by N char array, where each
 %                   row is a label.
 %
@@ -22,6 +22,7 @@ function h = cat_plot_circular(data, opt)
 %
 %     opt.ncolor    Change color of the nodes with an RGB triplet.
 %
+%     opt.saveas    Save figure as image (e.g. png or pdf).
 %
 %   H = cat_plot_curcular(...) Returns a structure with handles to the graphic objects
 %
@@ -56,14 +57,6 @@ function h = cat_plot_circular(data, opt)
 %   set(h.l(~isnan(h.l)), 'LineWidth',1.2)
 %   set(h.s, 'MarkerEdgeColor','red','LineWidth',2,'SizeData',100)
 %
-%
-% Additional features:
-% - <a href="matlab: web('http://www.mathworks.com/matlabcentral/fileexchange/42279-schemaball','-browser')">FEX schemaball page</a>
-% - <a href="matlab: web('http://www.stackoverflow.com/questions/17038377/how-to-visualize-correlation-matrix-as-a-schemaball-in-matlab/17111675','-browser')">Origin: question on Stackoverflow.com</a>
-% - <a href="matlab: web('https://github.com/GuntherStruyf/matlab-tools/blob/master/schemaball.m','-browser')">Schemaball by Gunther Struyf</a>
-%
-% See also: CORR, CORRPLOT
-%
 % modified version of schemaball.m
 % Author: Oleg Komarov (oleg.komarov@hotmail.it)
 % Tested on R2013a Win7 64 and Vista 32
@@ -76,13 +69,10 @@ N      = 20;
 
 % Points in [0, 1] for bezier curves: leave space at the extremes to detach a bit the nodes. 
 % Smaller step will use more points to plot the curves.
-t      = (0.025: 0.05 :1)';
+t      = (0.01: 0.005 :0.99)';
 
 % Nodes edge color
 ecolor = [.25 .103922 .012745];
-
-% Text color
-tcolor = [.7 .7 .7];
 
 % Some defaults
 if nargin < 1 || isempty(data);        data      = (rand(50)*2-1).^29;                                  end
@@ -90,25 +80,31 @@ sz = size(data);
 
 % default parameter
 if ~exist('opt','var'), opt = struct(''); end
-def.ncolor         = [0 0 1];
-def.maxlinewidth   = 3;
-def.lbls           = cellstr(reshape(sprintf('%-4d',1:sz(1)),4,sz(1))');
+def.ncolor         = jet(sz(1));    % node color (doughnut)
+def.maxlinewidth   = 5;             % maximal line width for connections
+def.label          = cellstr(reshape(sprintf('%-4d',1:sz(1)),4,sz(1))');    % label
+def.doughnut       = [];            % value of doughnut chart
+def.saveas         = '';            % save image
+def.tcolor         = [0.0 0.0 0.0]; % text color
+def.bcolor         = [1.0 1.0 1.0]; % background color
 def.ccolor         = hsv2rgb([[linspace(.8333, .95, N); ones(1, N); linspace(1,0,N)],...
                               [linspace(.03, .1666, N); ones(1, N); linspace(0,1,N)]]');
   
 opt = cat_io_checkinopt(opt,def);
 
+sz2 = length(opt.doughnut);
+
 % data
 if ~isnumeric(data) || any(abs(data(:)) > 1) || sz(1) ~= sz(2) || numel(sz) > 2 || sz(1) == 1
-    error('cat_plot_circular:validR','data should be a square numeric matrix with values in [0, 1].')
+    error('cat_plot_circular:validR','data should be a square numeric matrix with values in [-1, 1].')
 end
 
-% lbls
-if (~ischar(opt.lbls) || size(opt.lbls,1) ~= sz(1)) && (~iscellstr(opt.lbls) || ~isvector(opt.lbls) || length(opt.lbls) ~= sz(1))
+% label
+if (~ischar(opt.label) || size(opt.label,1) ~= sz(1)) && (~iscellstr(opt.label) || ~isvector(opt.label) || length(opt.label) ~= sz(1))
     error('cat_plot_circular:validLbls','LBLS should either be an M by N char array or a cellstring of length M, where M is size(R,1).')
 end
-if ischar(opt.lbls)
-    opt.lbls = cellstr(opt.lbls);
+if ischar(opt.label)
+    opt.label = cellstr(opt.label);
 end
 
 % ccolor
@@ -131,14 +127,19 @@ end
 
 % ncolor
 szN = size(opt.ncolor);
-if ~isnumeric(opt.ncolor) || szN(2) ~= 3  || szN(1) > 1
-    error('cat_plot_circular:validNcolor','NCOLOR should be a single RGB color, i.e. a numeric row triplet.')
+if ~isnumeric(opt.ncolor) || szN(2) ~= 3 
+        error('cat_plot_circular:validCcolor','NCOLOR should be a 1 by 3, 2 by 3 or N by 3 numeric matrix with RGB colors.')
 end
-opt.ncolor = rgb2hsv(opt.ncolor);
+if szN(1) < 3
+    opt.ncolor = rgb2hsv(opt.ncolor);
+    opt.ncolor = hsv2rgb([repmat(opt.ncolor(1,1:2),N,1), linspace(opt.ncolor(1,end),0,N)';
+                          repmat(opt.ncolor(2,1:2),N,1), linspace(0,opt.ncolor(2,end),N)']);
+end
+
 %% Engine
 
 % Create figure
-figure('renderer','zbuffer','visible','off')
+figure('renderer','painters','visible','off')
 axes('NextPlot','add')
 
 % Index only low triangular matrix without main diag
@@ -166,6 +167,13 @@ theta = -.25*tau : step : .75*tau - step;
 % Get cartesian x-y coordinates of the nodes
 x     = cos(theta);
 y     = sin(theta);
+
+if ~isempty(opt.doughnut)
+  step2  = tau/sz2;
+  theta2 = -.25*tau : step2 : .75*tau - step2;
+  x2     = cos(theta2);
+  y2     = sin(theta2);
+end
 
 % PLOT BEZIER CURVES 
 % Calculate Bx and By positions of quadratic Bezier curves with P1 at (0,0)
@@ -197,15 +205,31 @@ col(iswap) = tmp;
 % Plot in brighter color those nodes which on average are more absolutely correlated
 [Z,isrt]   = sort(accumarray(subs,abs(data( row + (col-1)*sz(1) )),[],@mean));
 Z          = (Z-min(Z)+0.01)/(max(Z)-min(Z)+0.01);
-opt.ncolor = hsv2rgb([repmat(opt.ncolor(1:2), sz(1),1) Z*opt.ncolor(3)]);
-s.s        = scatter(x(isrt),y(isrt),[], opt.ncolor,'fill','MarkerEdgeColor',ecolor,'LineWidth',1);
+
+text_offset = 1.08;
+if ~isempty(opt.doughnut)
+  data = opt.doughnut;
+  if iscell(data)
+    text_offset = 1.0 + + 0.08*numel(data);
+    for i=1:numel(data)
+      s.s = doughnut(data{i},i);
+      colormap(opt.ncolor)
+    end
+  else
+    s.s = doughnut(data);
+    colormap(opt.ncolor)
+  end
+else
+%  opt.ncolor = hsv2rgb([repmat(opt.ncolor(1:2), sz(1),1) Z*opt.ncolor(3)]);
+  s.s        = scatter(x(isrt),y(isrt),[], opt.ncolor,'fill','MarkerEdgeColor',ecolor,'LineWidth',1);
+end
 
 % PLACE TEXT LABELS such that you always read 'left to right'
 ipos       = x > 0;
 s.t        = zeros(sz(1),1);
-s.t( ipos) = text(x( ipos)*1.1, y( ipos)*1.1, opt.lbls( ipos),'Color',tcolor);
+s.t( ipos) = text(x( ipos)*text_offset, y( ipos)*text_offset, opt.label( ipos),'Color',opt.tcolor);
 set(s.t( ipos),{'Rotation'}, num2cell(theta(ipos)'/tau*360))
-s.t(~ipos) = text(x(~ipos)*1.1, y(~ipos)*1.1, opt.lbls(~ipos),'Color',tcolor);
+s.t(~ipos) = text(x(~ipos)*text_offset, y(~ipos)*text_offset, opt.label(~ipos),'Color',opt.tcolor);
 set(s.t(~ipos),{'Rotation'}, num2cell(theta(~ipos)'/tau*360 - 180),'Horiz','right')
 
 % ADJUST FIGURE height width to fit text labels
@@ -228,11 +252,135 @@ posfa(1,4) = (( diff(ylims)/2 - 1)*posfa(2,4) + 1) * posfa(1,4);
 posfa(1,2) = 100;
 
 % Axis settings
-set(gca, 'Xlim',xlims,'Ylim',ylims, 'color', 'k', 'layer','bottom', 'Xtick',[],'Ytick',[])
+set(gca, 'Xlim',xlims,'Ylim',ylims, 'color', opt.bcolor, 'layer','bottom', 'Xtick',[],'Ytick',[])
 set(gcf, 'pos' ,posfa(1,:),'Visible','on')
 axis equal
 
 if nargout == 1
     h = s;
 end
+
+% save image if defined
+if ~isempty(opt.saveas)
+  [pth,nam,ext] = fileparts(opt.saveas);
+  print(gcf,sprintf('-d%s',ext(2:end)), '-r600', opt.saveas)
 end
+
+function hh = doughnut(varargin)
+%DOUGHNUT    doughnut chart.
+%   DOUGHNUT(X) draws a pie plot of the data in the vector X.  The values in X
+%   are normalized via X/SUM(X) to determine the area of each slice of pie.
+%   If SUM(X) <= 1.0, the values in X directly specify the area of the pie
+%   slices.  Only a partial pie will be drawn if SUM(X) < 1.
+%
+%   DOUGHNUT(...,LABELS) is used to label each pie slice with cell array LABELS.
+%   LABELS must be the same size as X and can only contain strings.
+%
+%   DOUGHNUT(AX,...) plots into AX instead of GCA.
+%
+%   H = DOUGHNUT(...) returns a vector containing patch and text handles.
+%
+%   Example
+%      doughnut_plot([2 4 3 5],{'North','South','East','West'})
+%
+%   based on pie.m
+%   Clay M. Thompson 3-3-94
+%   Copyright 1984-2005 The MathWorks, Inc.
+%   $Revision: 1.16.4.8 $  $Date: 2005/10/28 15:54:38 $
+
+% Parse possible Axes input
+[cax,args,nargs] = axescheck(varargin{:});
+error(nargchk(1,3,nargs,'struct'));
+
+x = args{1}(:); % Make sure it is a vector
+args = args(2:end);
+
+nonpositive = (x <= 0);
+if all(nonpositive)
+    error('MATLAB:doughnut:NoPositiveData',...
+        'Must have positive data in the doughnut chart.');
+end
+if any(nonpositive)
+  warning('MATLAB:doughnut:NonPositiveData',...
+          'Ignoring non-positive data in doughnut chart.');
+  x(nonpositive) = [];
+end
+xsum = sum(x);
+if xsum > 1+sqrt(eps), x1 = x/xsum; end
+
+% check whether x consists of integers only
+if any(double(int8(x)) - double(x))
+    error('MATLAB:doughnut:NoIntegerData',...
+        'Must have positive integer data in the doughnut chart.');
+else
+  % maximum value should not exceed length of x
+  if max(x) > length(x)
+    error('MATLAB:doughnut:NoIntegerData',...
+        'Must have positive integer data with maximum value <= length of data.');
+  end
+end
+
+for i=1:length(x)
+  txtlabels{i} = '';
+end
+
+order = 1;
+
+% Look for labels
+if nargs>1 && iscell(args{end})
+  txtlabels = args{end};
+  if any(nonpositive)
+    txtlabels(nonpositive) = [];
+  end
+  args(end) = [];
+else
+  order = args{end};
+end
+
+if length(txtlabels)~=0 && length(x)~=length(txtlabels),
+  error(id('StringLengthMismatch'),'Cell array of strings must be the same length as X.');
+end
+
+cax = newplot(cax);
+next = lower(get(cax,'NextPlot'));
+hold_state = ishold(cax);
+
+maxpts = 400;
+theta0 = -pi/2 - pi/(length(x));
+
+h = [];
+xold = x(1);
+x0 = 1/length(x);
+
+for i=1:length(x)
+  n = max(1,ceil(maxpts*x0));
+  if xold ~= x(i) | i==1
+    r = [1.04*ones(n,1);0.985*ones(n,1)] + 0.07*(order - 1);
+    theta = theta0 + [x0*(1:n)'/n;flipud(x0*(1:n)'/n)]*2*pi;
+  else
+    r = [1.04*ones(n+1,1);0.985*ones(n+1,1)] + 0.07*(order - 1);
+    theta = theta0 + [x0*(0:n)'/n;flipud(x0*(0:n)'/n)]*2*pi;
+  end
+  [xtext,ytext] = pol2cart(theta0 + x0*pi,1.2);
+  [xx,yy] = pol2cart(theta,r);
+  theta0 = max(theta);
+  
+  xold = x(i);
+    
+  h = [h,patch('XData',xx,'YData',yy,'CData',x(i)*ones(size(xx)), ...
+               'FaceColor','Flat','parent',cax,'EdgeColor','black'), ...
+         text(xtext,ytext,txtlabels{i},...
+              'HorizontalAlignment','center','parent',cax)];
+end
+
+if ~hold_state, 
+  view(cax,2); set(cax,'NextPlot',next); 
+  axis(cax,'equal','off',[-1.2 1.2 -1.2 1.2])
+end
+
+if nargout>0, hh = h; end
+
+% Register handles with m-code generator
+
+function str=id(str)
+str = ['CAT:dougnut:' str];
