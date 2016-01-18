@@ -8453,6 +8453,7 @@ M       cat_vol_defs.m
 (4) Added some more features in cat_plot_circular.
 
 ------------------------------------------------------------------------
+r834 | gaser | 2016-01-18 14:26:38 +0100 (Mo, 18 Jan 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8464,5 +8465,16 @@ M       cat_surf_render.m
 (2) Fixed: Wrong order of tissues in cat_stat_TIV.m (thanks to Nikolaos
     Koutsouleris for pointing to that issues)
 (3) Changed: Added some more functionality to cat_plot_circular.m
+
 ------------------------------------------------------------------------
-r834 | gaser | 2016-01-18 14:26:31
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      cat_plot_circular.m
+A       cat_stat_cva_ui.m
+M       html/cat.html
+
+New: Function for CVA.
+------------------------------------------------------------------------
+r835 | gaser | 2016-01-18 22:52:43
