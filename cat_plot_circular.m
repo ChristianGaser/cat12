@@ -62,7 +62,7 @@ function h = cat_plot_circular(data, opt)
 % Tested on R2013a Win7 64 and Vista 32
 % 15 jun 2013 - Created
 % _________________________________________________________________________
-% $Id: cat_plot_boxplot.m 831 2016-01-14 14:00:03Z gaser $
+% $Id$
 
 % Number of color shades/buckets (large N simply creates many perceptually indifferent color shades)
 N      = 20;
@@ -296,7 +296,7 @@ function hh = doughnut(data,opt)
 %   based on pie.m
 %   Clay M. Thompson 3-3-94
 %   Copyright 1984-2005 The MathWorks, Inc.
-%   $Revision: 1.16.4.8 $  $Date: 2005/10/28 15:54:38 $
+%   $Revision$  $Date$
 
 
 % go trough all data
