@@ -55,7 +55,6 @@ function varargout = cat_surf_render(action,varargin)
 % based on spm_mesh_render.m
 % $Id$
 
-
 %-Input parameters
 %--------------------------------------------------------------------------
 if ~nargin, action = 'Disp'; end
@@ -346,6 +345,7 @@ switch lower(action)
             v = cat_io_FreeSurfer('read_surf_data',v);
           else
             try, spm_vol(v); catch, v = gifti(v); end;
+          end
         end
         if isa(v,'gifti')
           v = v.cdata;

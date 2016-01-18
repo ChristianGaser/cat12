@@ -8436,6 +8436,7 @@ D       node.m
 (2) Deleted: circularGraph.m and node.m
 
 ------------------------------------------------------------------------
+r833 | gaser | 2016-01-17 23:23:32 +0100 (So, 17 Jan 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8450,5 +8451,18 @@ M       cat_vol_defs.m
 (3) Fixed: Correct handling of outputs in cat_conf_tools.m for applying
     deformations.
 (4) Added some more features in cat_plot_circular.
+
 ------------------------------------------------------------------------
-r833 | gaser | 2016-01-17 23:23:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_circular.m
+M       cat_stat_TIV.m
+M       cat_surf_render.m
+
+(1) Fixed: Issue with missing "ned" in cat_surf_render.m.
+(2) Fixed: Wrong order of tissues in cat_stat_TIV.m (thanks to Nikolaos
+    Koutsouleris for pointing to that issues)
+(3) Changed: Added some more functionality to cat_plot_circular.m
+------------------------------------------------------------------------
+r834 | gaser | 2016-01-18 14:26:31

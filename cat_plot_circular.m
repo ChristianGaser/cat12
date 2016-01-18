@@ -80,10 +80,12 @@ sz = size(data);
 
 % default parameter
 if ~exist('opt','var'), opt = struct(''); end
-def.ncolor         = jet(sz(1));    % node color (doughnut)
+def.ncolor(:,:,:)  = [hot(sz(1)); jet(sz(1))];    % node colors (doughnut)
 def.maxlinewidth   = 5;             % maximal line width for connections
 def.label          = cellstr(reshape(sprintf('%-4d',1:sz(1)),4,sz(1))');    % label
 def.doughnut       = [];            % value of doughnut chart
+def.gap            = [];            % gap between doughnut chart
+def.mwidth         = [];            % multiply width of doughnut chart
 def.saveas         = '';            % save image
 def.tcolor         = [0.0 0.0 0.0]; % text color
 def.bcolor         = [1.0 1.0 1.0]; % background color
@@ -91,8 +93,6 @@ def.ccolor         = hsv2rgb([[linspace(.8333, .95, N); ones(1, N); linspace(1,0
                               [linspace(.03, .1666, N); ones(1, N); linspace(0,1,N)]]');
   
 opt = cat_io_checkinopt(opt,def);
-
-sz2 = length(opt.doughnut);
 
 % data
 if ~isnumeric(data) || any(abs(data(:)) > 1) || sz(1) ~= sz(2) || numel(sz) > 2 || sz(1) == 1
@@ -132,8 +132,7 @@ if ~isnumeric(opt.ncolor) || szN(2) ~= 3
 end
 if szN(1) < 3
     opt.ncolor = rgb2hsv(opt.ncolor);
-    opt.ncolor = hsv2rgb([repmat(opt.ncolor(1,1:2),N,1), linspace(opt.ncolor(1,end),0,N)';
-                          repmat(opt.ncolor(2,1:2),N,1), linspace(0,opt.ncolor(2,end),N)']);
+    opt.ncolor = hsv2rgb([repmat(opt.ncolor(1,1:2),sz(1),1), linspace(opt.ncolor(1,end),0,sz(1))']);
 end
 
 %% Engine
@@ -169,7 +168,14 @@ x     = cos(theta);
 y     = sin(theta);
 
 if ~isempty(opt.doughnut)
-  step2  = tau/sz2;
+  % transpose if necessary
+  if length(data) ~= size(opt.doughnut,1)
+    opt.doughnut = opt.doughnut'
+  end
+  if length(data) ~= size(opt.doughnut,1)
+    error('cat_plot_circular:validDoughnut','Size if data and doughnut differs.');
+  end
+  step2  = tau/size(opt.doughnut,1);
   theta2 = -.25*tau : step2 : .75*tau - step2;
   x2     = cos(theta2);
   y2     = sin(theta2);
@@ -206,19 +212,23 @@ col(iswap) = tmp;
 [Z,isrt]   = sort(accumarray(subs,abs(data( row + (col-1)*sz(1) )),[],@mean));
 Z          = (Z-min(Z)+0.01)/(max(Z)-min(Z)+0.01);
 
-text_offset = 1.08;
+text_offset = 1.06;
 if ~isempty(opt.doughnut)
-  data = opt.doughnut;
-  if iscell(data)
-    text_offset = 1.0 + + 0.08*numel(data);
-    for i=1:numel(data)
-      s.s = doughnut(data{i},i);
-      colormap(opt.ncolor)
-    end
-  else
-    s.s = doughnut(data);
-    colormap(opt.ncolor)
+
+  % estimate text offset according to length of data
+  text_offset = 1.0 + 0.06*size(opt.doughnut,2);
+  
+  % consider gap between charts
+  if isfield(opt,'gap')
+    text_offset = text_offset + 0.02*sum(opt.gap);
   end
+  
+  % consider larger width
+  if isfield(opt,'mwidth')
+    text_offset = text_offset + 0.06*sum(opt.mwidth-1);
+  end
+
+  s.s = doughnut(opt.doughnut,opt);
 else
 %  opt.ncolor = hsv2rgb([repmat(opt.ncolor(1:2), sz(1),1) Z*opt.ncolor(3)]);
   s.s        = scatter(x(isrt),y(isrt),[], opt.ncolor,'fill','MarkerEdgeColor',ecolor,'LineWidth',1);
@@ -266,7 +276,7 @@ if ~isempty(opt.saveas)
   print(gcf,sprintf('-d%s',ext(2:end)), '-r600', opt.saveas)
 end
 
-function hh = doughnut(varargin)
+function hh = doughnut(data,opt)
 %DOUGHNUT    doughnut chart.
 %   DOUGHNUT(X) draws a pie plot of the data in the vector X.  The values in X
 %   are normalized via X/SUM(X) to determine the area of each slice of pie.
@@ -281,106 +291,95 @@ function hh = doughnut(varargin)
 %   H = DOUGHNUT(...) returns a vector containing patch and text handles.
 %
 %   Example
-%      doughnut_plot([2 4 3 5],{'North','South','East','West'})
+%      doughnut([2 4 3 5],{'North','South','East','West'})
 %
 %   based on pie.m
 %   Clay M. Thompson 3-3-94
 %   Copyright 1984-2005 The MathWorks, Inc.
 %   $Revision: 1.16.4.8 $  $Date: 2005/10/28 15:54:38 $
 
-% Parse possible Axes input
-[cax,args,nargs] = axescheck(varargin{:});
-error(nargchk(1,3,nargs,'struct'));
 
-x = args{1}(:); % Make sure it is a vector
-args = args(2:end);
+% go trough all data
+for k=1:size(data,2)
 
-nonpositive = (x <= 0);
-if all(nonpositive)
+  opt.order = k;
+
+  x = data(:,k);
+  sz = size(x);
+
+  def.ncolor(:,:,:) = [hot(sz(1)); jet(sz(1))];    % node color 
+  def.border        = zeros(sz(1),1);    
+  def.gap           = zeros(size(data,2),1);    
+  def.mwidth        = ones(sz(1),1);    
+  
+  opt = cat_io_checkinopt(opt,def);
+
+  nonpositive = (x <= 0);
+  if all(nonpositive)
     error('MATLAB:doughnut:NoPositiveData',...
         'Must have positive data in the doughnut chart.');
-end
-if any(nonpositive)
-  warning('MATLAB:doughnut:NonPositiveData',...
+  end
+  if any(nonpositive)
+    warning('MATLAB:doughnut:NonPositiveData',...
           'Ignoring non-positive data in doughnut chart.');
-  x(nonpositive) = [];
-end
-xsum = sum(x);
-if xsum > 1+sqrt(eps), x1 = x/xsum; end
+    x(nonpositive) = [];
+  end
+  xsum = sum(x);
+  if xsum > 1+sqrt(eps), x1 = x/xsum; end
 
-% check whether x consists of integers only
-if any(double(int8(x)) - double(x))
+  % check whether x consists of integers only
+  if any(double(int8(x)) - double(x))
     error('MATLAB:doughnut:NoIntegerData',...
         'Must have positive integer data in the doughnut chart.');
-else
-  % maximum value should not exceed length of x
-  if max(x) > length(x)
-    error('MATLAB:doughnut:NoIntegerData',...
-        'Must have positive integer data with maximum value <= length of data.');
-  end
-end
-
-for i=1:length(x)
-  txtlabels{i} = '';
-end
-
-order = 1;
-
-% Look for labels
-if nargs>1 && iscell(args{end})
-  txtlabels = args{end};
-  if any(nonpositive)
-    txtlabels(nonpositive) = [];
-  end
-  args(end) = [];
-else
-  order = args{end};
-end
-
-if length(txtlabels)~=0 && length(x)~=length(txtlabels),
-  error(id('StringLengthMismatch'),'Cell array of strings must be the same length as X.');
-end
-
-cax = newplot(cax);
-next = lower(get(cax,'NextPlot'));
-hold_state = ishold(cax);
-
-maxpts = 400;
-theta0 = -pi/2 - pi/(length(x));
-
-h = [];
-xold = x(1);
-x0 = 1/length(x);
-
-for i=1:length(x)
-  n = max(1,ceil(maxpts*x0));
-  if xold ~= x(i) | i==1
-    r = [1.04*ones(n,1);0.985*ones(n,1)] + 0.07*(order - 1);
-    theta = theta0 + [x0*(1:n)'/n;flipud(x0*(1:n)'/n)]*2*pi;
   else
-    r = [1.04*ones(n+1,1);0.985*ones(n+1,1)] + 0.07*(order - 1);
-    theta = theta0 + [x0*(0:n)'/n;flipud(x0*(0:n)'/n)]*2*pi;
+    % maximum value should not exceed length of x
+    if max(x) > length(x)
+      error('MATLAB:doughnut:NoIntegerData',...
+        'Must have positive integer data with maximum value <= length of data.');
+    end
   end
-  [xtext,ytext] = pol2cart(theta0 + x0*pi,1.2);
-  [xx,yy] = pol2cart(theta,r);
-  theta0 = max(theta);
-  
-  xold = x(i);
+
+  cax = newplot;
+  next = lower(get(cax,'NextPlot'));
+  hold_state = ishold(cax);
+
+  maxpts = 400;
+  theta0 = -pi/2 - pi/(length(x));
+
+  h = [];
+  xold = x(1);
+  x0 = 1/length(x);
+
+  for i=1:length(x)
+    n = max(1,ceil(maxpts*x0));
     
-  h = [h,patch('XData',xx,'YData',yy,'CData',x(i)*ones(size(xx)), ...
-               'FaceColor','Flat','parent',cax,'EdgeColor','black'), ...
-         text(xtext,ytext,txtlabels{i},...
-              'HorizontalAlignment','center','parent',cax)];
+    if opt.border(i) start = 1;
+    else start = 0; end
+    
+    width = opt.mwidth(k)*0.05;
+
+    gap = (0.05 + 0.02*opt.gap(k))*(opt.order - 1);
+        
+    r = [(0.985+width)*ones(n + (1-start),1);0.985*ones(n + (1 - start),1)] + gap;
+    theta = theta0 + [x0*(start:n)'/n;flipud(x0*(start:n)'/n)]*2*pi;
+    [xx,yy] = pol2cart(theta,r);
+    theta0 = max(theta);
+  
+    xold = x(i);
+    if size(opt.ncolor,3) > 1
+      cc = opt.ncolor(x(i),:,k);
+    else
+      cc = opt.ncolor(x(i),:);
+    end
+    h = [h,patch('XData',xx,'YData',yy,'Facecolor',cc, ...
+               'parent',cax,'EdgeColor','black')];
+  end
+
+  if ~hold_state, 
+    view(cax,2); set(cax,'NextPlot',next); 
+    axis(cax,'equal','off',[-1.2 1.2 -1.2 1.2])
+  end
+
+  hh = h;
+
 end
-
-if ~hold_state, 
-  view(cax,2); set(cax,'NextPlot',next); 
-  axis(cax,'equal','off',[-1.2 1.2 -1.2 1.2])
-end
-
-if nargout>0, hh = h; end
-
-% Register handles with m-code generator
-
-function str=id(str)
-str = ['CAT:dougnut:' str];
