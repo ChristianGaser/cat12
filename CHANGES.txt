@@ -8467,6 +8467,7 @@ M       cat_surf_render.m
 (3) Changed: Added some more functionality to cat_plot_circular.m
 
 ------------------------------------------------------------------------
+r835 | gaser | 2016-01-18 22:52:48 +0100 (Mo, 18 Jan 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8476,5 +8477,16 @@ A       cat_stat_cva_ui.m
 M       html/cat.html
 
 New: Function for CVA.
+
 ------------------------------------------------------------------------
-r835 | gaser | 2016-01-18 22:52:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_boxplot.m
+M       cat_stat_check_cov.m
+M       cat_stat_cva_ui.m
+
+Fixed: Violine plot in cat_plot_boxplot will be only used if Statistics
+Toolbox is found.
+------------------------------------------------------------------------
+r836 | gaser | 2016-01-20 20:48:09

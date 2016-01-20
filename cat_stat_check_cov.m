@@ -520,15 +520,24 @@ end
 
 hold on
 
-opt = struct('groupnum',0,'ygrid',0,'groupcolor',jet(n_samples));
+% check whether ksdensity function from Statistic Toolbox was found and enable violine plot
+if exist('ksdensity')
+  opt = struct('groupnum',0,'ygrid',0,'violin',1,...
+   'box',0,'groupcolor',jet(n_samples));
+  ylim_add = 0.15;
+else
+  opt = struct('groupnum',0,'ygrid',0,'violin',0,...
+   'box',1,'groupcolor',jet(n_samples));
+  ylim_add = 0.075;
+end
 
 cat_plot_boxplot(data,opt);
 
 set(gca,'XTick',[],'XLim',[-.25 n_samples+1.25]);
 if max(data_boxp) > min(data_boxp)
   yamp = max(data_boxp) - min(data_boxp);
-  ylim_min = min(data_boxp) - 0.05*yamp;
-  ylim_max = max(data_boxp) + 0.05*yamp;
+  ylim_min = min(data_boxp) - ylim_add*yamp;
+  ylim_max = max(data_boxp) + ylim_add*yamp;
   set(gca,'YLim',[ylim_min ylim_max]);
 end
 

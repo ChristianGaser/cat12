@@ -272,10 +272,17 @@ function [out,s] = cat_plot_boxplot(data,opt)
     box(i) = nd;
     
     if opt.violin
-      [f, u] = ksdensity(col);
-      f = (f/max(f)*0.3)'; %normalize
-      F(:,i) = f;
-      U(:,i) = u;
+      % try ksdensity from stat-toolbox
+      try
+        [f, u] = ksdensity(col);
+        f = (f/max(f)*0.3)'; %normalize
+        F(:,i) = f;
+        U(:,i) = u;
+      catch
+        warning('Disable violin plot because Statistic Toolbox was not found.');
+        opt.box = 1;
+        opt.violin = 0;
+      end
     end
     
     if (nd > 1)
