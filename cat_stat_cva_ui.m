@@ -82,11 +82,11 @@ function [CVA] = cat_stat_cva_ui(action,varargin)
 % Copyright (C) 2008-2014 Wellcome Trust Centre for Neuroimaging
 
 %
-% $Id: cat_stat_cva_ui.m 6242 2014-10-14 11:16:02Z guillaume $
+% $Id$
 %
 % modified version of
 % Karl Friston
-% $Id: spm_cva_ui.m 6242 2014-10-14 11:16:02Z guillaume $
+% spm_cva_ui.m 6242 2014-10-14 11:16:02Z guillaume 
 
 
 %-Get figure handles
