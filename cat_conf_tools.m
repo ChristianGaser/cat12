@@ -281,12 +281,6 @@ c.help    = {'Vector of nuisance values'};
 c.strtype = 'r';
 c.num     = [Inf 1];
 
-nuisance       = cfg_branch;
-nuisance.tag   = 'nuisance';
-nuisance.name  = 'Nuisance variable';
-nuisance.val   = {c};
-nuisance.help  = {'Add a nuisance parameter to be removed from data'};
-
 slice         = cfg_entry;
 slice.tag     = 'slice';
 slice.name    = 'Selected slice (in mm)?';
@@ -312,12 +306,12 @@ scale.values = {0 1};
 scale.val    = {0};
 scale.help   = {'This option should be only used if image intensity is not scaled (e.g. T1 images) or if images have to be scaled during statistical analysis (e.g. modulated images).'};
 
-transform         = cfg_repeat;
-transform.tag     = 'transform';
-transform.name    = 'Nuisance variable';
-transform.values  = {c};
-transform.num     = [0 Inf];
-transform.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
+nuisance         = cfg_repeat;
+nuisance.tag     = 'nuisance';
+nuisance.name    = 'Nuisance variable';
+nuisance.values  = {c};
+nuisance.num     = [0 Inf];
+nuisance.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age.'};
 
 data_xml = cfg_files;
 data_xml.name = 'XML files';
@@ -354,7 +348,7 @@ sample.help = {...
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
 check_cov.name = 'Check sample homogeneity of 3D data';
-check_cov.val  = {sample,qam,gap,transform};
+check_cov.val  = {sample,qam,gap,nuisance};
 check_cov.prog = @cat_stat_check_cov;
 check_cov.help  = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
@@ -679,7 +673,7 @@ sample.help = {...
 check_mesh_cov      = cfg_exbranch;
 check_mesh_cov.tag  = 'check_mesh_cov';
 check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-check_mesh_cov.val  = {sample,qam,transform};
+check_mesh_cov.val  = {sample,qam,nuisance};
 check_mesh_cov.prog = @cat_stat_check_cov;
 check_mesh_cov.help = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'

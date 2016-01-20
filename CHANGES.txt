@@ -8479,6 +8479,7 @@ M       html/cat.html
 New: Function for CVA.
 
 ------------------------------------------------------------------------
+r836 | gaser | 2016-01-20 20:48:14 +0100 (Mi, 20 Jan 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8488,5 +8489,15 @@ M       cat_stat_cva_ui.m
 
 Fixed: Violine plot in cat_plot_boxplot will be only used if Statistics
 Toolbox is found.
+
 ------------------------------------------------------------------------
-r836 | gaser | 2016-01-20 20:48:09
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+MM      cat_stat_cva_ui.m
+M       html/cat_instruction_FN.html
+
+Changed: Help text in cat_conf_tools.m and html/cat_instruction_FN.html.
+------------------------------------------------------------------------
+r837 | gaser | 2016-01-20 21:31:42
