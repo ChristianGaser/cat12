@@ -210,6 +210,12 @@ switch lower(action)
 %        CVA   = spm_cva(Y, X, X0, c, U);
         CVA   = spm_cva(Y, X, X0, c);
         
+        % check for inverted effects
+        if any(sign(CVA.C)-sign(c))
+          CVA.C = -CVA.C;
+          CVA.V = -CVA.V;
+        end
+        
         % scale canonical variates to SD of 1
         for j=1:size(CVA.V,2)
           v = CVA.V(:,j);
