@@ -1216,7 +1216,7 @@ if do_cls && do_defs
     %
     Ywmh = single(max(0,min(1,Ywmh.*Ywmh2 - smooth3(cat_vol_morph(NS(Yl1,LAB.VT),'d',2) & Ym<0.66) ))*255);
    
-    %% WMH as seperate class 
+    %% WMH as separate class 
     Yclso = Ycls;
     Yclssum = max(eps,single(Ycls{1})+single(Ycls{2})+single(Ycls{3}));
     Ycls{1} = cat_vol_ctype(single(Ycls{1}) - Ywmh .* (single(Ycls{1})./Yclssum));

@@ -186,7 +186,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       % we can use modulated data throughout the following steps because the final maximum probability function
       % will be the same for modulated and unmodulated data
       wT = zeros([transform.warped.odim(1:3),max(Y(:))],'uint8'); 
-      % interpolate each label seperately
+      % interpolate each label separately
       for yi=1:max(Y(:)); 
         wTi  = spm_diffeo('push',single(Y==yi),transform.warped.y,transform.warped.odim(1:3)); %#ok<NASGU>
         wT(:,:,:,yi) = uint8(wTi*100); 
