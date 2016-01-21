@@ -53,7 +53,7 @@ nproc.help    = {
   sample_cov.values  = {data_surf_cov};
   sample_cov.num     = [1 Inf];
   sample_cov.help = {...
-  'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.'};
+  'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
 
   qam         = cfg_repeat;
   qam.tag     = 'qam';
@@ -69,19 +69,18 @@ nproc.help    = {
   c.strtype = 'r';
   c.num     = [Inf 1];
 
-  transform         = cfg_repeat;
-  transform.tag     = 'transform';
-  transform.name    = 'Nuisance variable';
-  transform.values  = {c};
-  transform.num     = [0 Inf];
-  transform.help    = {...
-  'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance ',...
-  'explained by age will be removed prior to the calculation of the correlation.'};
+  nuisance         = cfg_repeat;
+  nuisance.tag     = 'nuisance';
+  nuisance.name    = 'Nuisance variable';
+  nuisance.values  = {c};
+  nuisance.num     = [0 Inf];
+  nuisance.help    = {...
+  'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be age. In this case the variance explained by age will be removed prior to the calculation of the correlation.'};
 
   check_mesh_cov      = cfg_exbranch;
   check_mesh_cov.tag  = 'check_mesh_cov';
   check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-  check_mesh_cov.val  = {sample_cov,qam,transform};
+  check_mesh_cov.val  = {sample_cov,qam,nuisance};
   check_mesh_cov.prog = @cat_stat_check_cov;
   check_mesh_cov.help = {
   'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces measures have to be resampled to the template space (e.g. normalized data). The idea of this tool is to check the correlation of all files across the sample.'
@@ -611,7 +610,7 @@ nproc.help    = {
   if expert > 1
     data_surf.ufilter = '^[lr]h.';
   else
-    data_surf.ufilter = '[lr]h.(?!cent|sphe|defe|gyrus|sulcuswidth).*';
+    data_surf.ufilter = '[lr]h.(?!thick|gyri|fractal|logsulc|depth|logarea|area).*';
   end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select Surfaces Data Files for Resampling to Template Space.'};
