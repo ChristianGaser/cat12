@@ -215,7 +215,7 @@ function writecsv(filename,C,sheet,pos,opt)
 end
 function [Cpos,ijpos]=readC(C,pos)
   i=strfind(pos,':'); if ~isempty(i), pos(i)=[]; end                       % remove double points
-  tmp=textscan(pos,'%[^1234567890]%d'); colum=tmp{1}; row=tmp{2};          % seperate colum and row in pos-string
+  tmp=textscan(pos,'%[^1234567890]%d'); colum=tmp{1}; row=tmp{2};          % separate colum and row in pos-string
   if size(row,1)>2, row(3:end,1)=[]; colum(3:end,1)=[]; end                % remove to positions if there are to many
   ijpos(:,1)=sort(cell2mat(base27dec(colum)));                                  % convert to ij-position
   ijpos(:,2)=sort(double(row));

@@ -296,7 +296,7 @@ gap.strtype = 'n';
 gap.num     = [1 1];
 gap.val     = {3};
 gap.help    = {
-  'To speed up calculations you can define that only every x voxel correlation is estimated. Smaller sampling distances gives slightly more accurate correlations, but will be much slower.'};
+  'To speed up calculations you can define that covariance is estimated only every x voxel. Smaller values give slightly more accurate covariance, but will be much slower.'};
 
 scale        = cfg_menu;
 scale.tag    = 'scale';
@@ -311,7 +311,7 @@ nuisance.tag     = 'nuisance';
 nuisance.name    = 'Nuisance variable';
 nuisance.values  = {c};
 nuisance.num     = [0 Inf];
-nuisance.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age.'};
+nuisance.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age.'};
 
 data_xml = cfg_files;
 data_xml.name = 'XML files';
@@ -342,7 +342,7 @@ sample.name    = 'Data';
 sample.values  = {data_vol };
 sample.num     = [1 Inf];
 sample.help = {...
-'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.'};
+'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
 
  
 check_cov      = cfg_exbranch;
@@ -354,15 +354,6 @@ check_cov.help  = {
 'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
 ''
 'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups. Furthermore this is also useful for fMRI images which can be also used with this tool. The proportional scaling option should be only used if image intensity is not scaled (e.g. T1 images) or if images have to be scaled during statistical analysis (e.g. modulated images).'};
-
-
-data_surf         = cfg_files;
-data_surf.tag     = 'data_surf';
-data_surf.name    = 'Sample';
-data_surf.filter  = 'gifti';
-data_surf.ufilter = '^[lr]h.central';
-data_surf.num     = [1 Inf];
-data_surf.help    = {'Select surfaces to extract values.'};
 
 GI        = cfg_menu;
 GI.name   = 'Gyrification index';
@@ -605,80 +596,6 @@ outdir.help    = {'Select a directory where files are written.'};
   % complex:
   %   set of surface 
   %   operation string
-
-surfextract      = cfg_exbranch;
-surfextract.tag  = 'surfextract';
-surfextract.name = 'Extract surface parameters';
-surfextract.val  = {data_surf,GI,FD,SD};
-surfextract.prog = @cat_surf_parameters;
-surfextract.help = {'Using this option several surface parameters can be extracted that can be further analyzed.'};
-
-data_surf         = cfg_files;
-data_surf.tag     = 'data_surf';
-data_surf.name    = 'Surfaces parameters';
-data_surf.filter  = 'any';
-data_surf.ufilter = '^[lr]h.[tgfl][hyro][irag][cias]';
-data_surf.num     = [1 Inf];
-data_surf.help    = {'Select surfaces parameter files for resampling to template space.'};
-
-fwhm         = cfg_entry;
-fwhm.tag     = 'fwhm';
-fwhm.name    = 'Smoothing filter size in fwhm';
-fwhm.strtype = 'r';
-fwhm.num     = [1 1];
-fwhm.val     = {15};
-fwhm.help    = {
-'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm.'};
-
-surfresamp      = cfg_exbranch;
-surfresamp.tag  = 'surfresamp';
-surfresamp.name = 'Resample and smooth surface parameters';
-surfresamp.val  = {data_surf,fwhm};
-surfresamp.prog = @cat_surf_resamp;
-surfresamp.help = {
-'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
-
-data_fs         = cfg_files;
-data_fs.tag     = 'data_fs';
-data_fs.name    = 'Freesurfer subject directories';
-data_fs.filter  = 'dir';
-data_fs.ufilter = '.*';
-data_fs.num     = [1 Inf];
-data_fs.help    = {'Select subject folders of freesurfer data to resample thickness data.'};
-
-surfresamp_fs      = cfg_exbranch;
-surfresamp_fs.tag  = 'surfresamp_fs';
-surfresamp_fs.name = 'Resample and smooth existing freesurfer thickness data';
-surfresamp_fs.val  = {data_fs,fwhm,outdir};
-surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
-surfresamp_fs.help = {
-'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
-
-data_surf         = cfg_files;
-data_surf.tag     = 'data_surf';
-data_surf.name    = 'Sample';
-data_surf.filter  = 'gifti';
-data_surf.ufilter = 'resampled';
-data_surf.num     = [1 Inf];
-data_surf.help    = {'Select resample surfaces parameter files.'};
-
-sample         = cfg_repeat;
-sample.tag     = 'sample';
-sample.name    = 'Data';
-sample.values  = {data_surf };
-sample.num     = [1 Inf];
-sample.help = {...
-'Specify data for each sample. If you specify different samples the mean correlation is displayed in seperate boxplots for each sample.'};
-
-check_mesh_cov      = cfg_exbranch;
-check_mesh_cov.tag  = 'check_mesh_cov';
-check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-check_mesh_cov.val  = {sample,qam,nuisance};
-check_mesh_cov.prog = @cat_stat_check_cov;
-check_mesh_cov.help = {
-'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces have to be resampled to the template space (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
-''
-'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
 
 %------------------------------------------------------------------------
 
@@ -923,11 +840,6 @@ tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
 tools.values = {showslice,check_cov,calcvol,iqr,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
-
-stools = cfg_choice;
-stools.name   = 'Surface Tools';
-stools.tag    = 'stools';
-stools.values = {check_mesh_cov,surfextract,surfresamp,surfresamp_fs}; %,surfcalc,avg_surf
 
 return
 

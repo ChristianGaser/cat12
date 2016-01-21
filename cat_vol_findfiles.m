@@ -28,7 +28,7 @@ function [filesfound,numberfound] = cat_cat_vol_findfiles(varargin)
 %       number      1x1 number of files found
 %
 % when used as a command, multiple opts can be given as multiple arguments,
-% seperated by spaces (' '):
+% separated by spaces (' '):
 %
 % cat_vol_findfiles /search/folder *mypattern*.txt depth=3 oneperdir=1 relative=./
 %
