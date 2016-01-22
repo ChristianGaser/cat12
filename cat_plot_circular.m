@@ -87,6 +87,7 @@ def.doughnut       = [];            % value of doughnut chart
 def.gap            = [];            % gap between doughnut chart
 def.mwidth         = [];            % multiply width of doughnut chart
 def.saveas         = '';            % save image
+def.fontsize       = 8;             % Fontsize
 def.tcolor         = [0.0 0.0 0.0]; % text color
 def.bcolor         = [1.0 1.0 1.0]; % background color
 def.ccolor         = hsv2rgb([[linspace(.8333, .95, N); ones(1, N); linspace(1,0,N)],...
@@ -230,16 +231,17 @@ if ~isempty(opt.doughnut)
 
   s.s = doughnut(opt.doughnut,opt);
 else
-%  opt.ncolor = hsv2rgb([repmat(opt.ncolor(1:2), sz(1),1) Z*opt.ncolor(3)]);
-  s.s        = scatter(x(isrt),y(isrt),[], opt.ncolor,'fill','MarkerEdgeColor',ecolor,'LineWidth',1);
+  ncolor = rgb2hsv([0 0 1]);
+  ncolor = hsv2rgb([repmat(ncolor(1:2), sz(1),1) Z*ncolor(3)]);
+  s.s        = scatter(x(isrt),y(isrt),[], ncolor,'fill','MarkerEdgeColor',ecolor,'LineWidth',1);
 end
 
 % PLACE TEXT LABELS such that you always read 'left to right'
 ipos       = x > 0;
 s.t        = zeros(sz(1),1);
-s.t( ipos) = text(x( ipos)*text_offset, y( ipos)*text_offset, opt.label( ipos),'Color',opt.tcolor);
+s.t( ipos) = text(x( ipos)*text_offset, y( ipos)*text_offset, opt.label( ipos),'Color',opt.tcolor,'FontSize',opt.fontsize);
 set(s.t( ipos),{'Rotation'}, num2cell(theta(ipos)'/tau*360))
-s.t(~ipos) = text(x(~ipos)*text_offset, y(~ipos)*text_offset, opt.label(~ipos),'Color',opt.tcolor);
+s.t(~ipos) = text(x(~ipos)*text_offset, y(~ipos)*text_offset, opt.label(~ipos),'Color',opt.tcolor,'FontSize',opt.fontsize);
 set(s.t(~ipos),{'Rotation'}, num2cell(theta(~ipos)'/tau*360 - 180),'Horiz','right')
 
 % ADJUST FIGURE height width to fit text labels
@@ -328,7 +330,7 @@ for k=1:size(data,2)
   if xsum > 1+sqrt(eps), x1 = x/xsum; end
 
   % check whether x consists of integers only
-  if any(double(int8(x)) - double(x))
+  if any(double(int16(x)) - double(x))
     error('MATLAB:doughnut:NoIntegerData',...
         'Must have positive integer data in the doughnut chart.');
   else
