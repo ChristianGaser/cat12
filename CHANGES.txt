@@ -8502,6 +8502,7 @@ M       html/cat_instruction_FN.html
 Changed: Help text in cat_conf_tools.m and html/cat_instruction_FN.html.
 
 ------------------------------------------------------------------------
+r838 | gaser | 2016-01-22 00:32:47 +0100 (Fr, 22 Jan 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8515,5 +8516,20 @@ M       cat_vol_findfiles.m
 (1) Fixed: Some typos in help textes.
 (2) Removed: Unnecessary fields in cat_conf_tools.m that are already
     included in cat_conf_stools.m.
+
 ------------------------------------------------------------------------
-r838 | gaser | 2016-01-22 00:32:39
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_plot_circular.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+
+(1) Changed: Added font size option to cat_plot_circular.m
+(2) Changed: Changed use of log-transformation to sqrt-transformation for
+    estimating sulcus depth. Changed all filenames from logsulc to sqrtsulc.
+------------------------------------------------------------------------
+r839 | gaser | 2016-01-22 11:59:09
