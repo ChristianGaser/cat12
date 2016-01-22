@@ -8518,6 +8518,7 @@ M       cat_vol_findfiles.m
     included in cat_conf_stools.m.
 
 ------------------------------------------------------------------------
+r839 | gaser | 2016-01-22 11:59:17 +0100 (Fr, 22 Jan 2016) | 13 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -8531,5 +8532,61 @@ M       cat_surf_parameters.m
 (1) Changed: Added font size option to cat_plot_circular.m
 (2) Changed: Changed use of log-transformation to sqrt-transformation for
     estimating sulcus depth. Changed all filenames from logsulc to sqrtsulc.
+
 ------------------------------------------------------------------------
-r839 | gaser | 2016-01-22 11:59:09
+
+Changed paths:
+M       CHANGES.txt
+M       cat_check_system_output.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_io_FreeSurfer.m
+M       cat_io_writenii.m
+M       cat_main.m
+A       cat_parallelize.m
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_surf_calc.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render.m
+M       cat_surf_resamp.m
+M       cat_surf_resample.m
+M       cat_surf_smooth.m
+M       cat_surf_vol2surf.m
+M       internal/cat_vol_atlas.m
+M       tbx_cfg_cat.m
+
+Added:      Created cat_parallelize as common function to create separate 
+            processes on one computer (default GUI).
+Added:      Parallelized cat_surf_parameter and add further parameter.
+Updated:    cat_surf_resamp/resample/smooth/parameters and cat_main
+            for new cat_parallelize function.
+            
+Added:      Create a subfolder 'err' for failed preprocessing with copies of 
+            the cat-xml and cat_report to identify problematic datasets in 
+            cat_run_newcatch/cat_run_oldcatch.
+Added:      Added display option rather create error in cat_check_system_ouput.
+Added:      Folder creation in cat_io_writenii, if a result directory not exist.
+
+Added:      FreeSurfer annotation input in cat_io_FreeSurfer.
+Added:      Display of Freesurfer annotation display in cat_surf_display/
+            cat_surf_render.
+Added:      Output of atlas maps in cat_main.
+Added:      Optional use of fsaverage mesh in cat_surf_calc.
+Added:      Added GIFTI to FreeSurfer and FreeSurfer to GIFTI convertation in 
+            cat_io_FreeSurfer.
+            
+Updated:    Improved scaling function in cat_plot_boxplot.
+
+            
+            
+
+  
+  
+
+------------------------------------------------------------------------
+r840 | dahnke | 2016-01-22 16:06:46

@@ -1830,15 +1830,16 @@ if job.output.ROI && do_cls
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
   % map data to actual template space
-  stime2   = cat_io_cmd('  Data mapping to normalized space','g5','',verb); firsttime=0;
+  stime2   = cat_io_cmd('  Data mapping to normalized space','g5','',verb); 
   wYp0     = cat_vol_ROInorm(Yp0,trans,1,0);
   wYcls    = cat_vol_ROInorm(Ycls,trans,1,1);
   wYcls{4} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),trans,1,0)); 
   for ci=1:numel(wYcls); wYcls{ci} = wYcls{ci} * prod(vx_vol); end      % volume
   wYm      = cat_vol_ROInorm(Ym,trans,1,0);                             % intensity
+  wYmf     = cat_vol_morph(cat_vol_ROInorm(YMF,trans,1,0)>0.5,'d');  
+  Yp0toC   = @(Yp0,c) 1-min(1,abs(Yp0-c));
   if exist('Yth1','var')
     % ROI based thickness of all GM voxels per ROI
-    Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
     Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
     Ymm    = single(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
     wYmm   = cat_vol_ROInorm(Ymm,trans,1,0)>0.5;
@@ -1851,11 +1852,28 @@ if job.output.ROI && do_cls
     [px,atlas] = fileparts(FA{ai,1}); 
     if exist(FA{ai,1},'file')
     % ds('l2','',1.5,wYm,round(wYp0),wYm,single(wYa)/50 .* (wYp0<2.5),70)
+
       stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s'' atlas',atlas),'g5','',verb,stime2);
       
-      % map atlas to actual template space
+      % map atlas to actual template space 
       wYa   = cat_vol_ROInorm([],trans,ai,0);
-
+      
+      % write output
+      if any(cell2mat(struct2cell(job.output.atlas)'))
+        % map atlas in native space
+        Vlai = spm_vol(FA{ai,1});
+        Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.atlas.Yy(:,:,:,1)),...
+          double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
+        Ylai = reshape(Ylai,size(Yp0)); 
+        
+        % write map (mri as tissue subforder and mri_atals as ROI subfolder)
+        if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
+        cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...
+          'uint8',[0,1],job.output.atlas,trans);
+        clear Vlai Ylai;
+      end
+      
+      % extract ROI data
       csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue);  % volume
       csv   = cat_vol_ROIestimate(wYp0,wYa,wYm  ,ai,'I',csv,tissue); % intensity
 
@@ -1868,19 +1886,6 @@ if job.output.ROI && do_cls
         corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
         csv(2:end,end) = num2cell(corth1);
         clear Yth1x
-      end
-
-      if any(cell2mat(struct2cell(job.output.atlas)'))
-        %% map to template space
-        Vlai = spm_vol(FA{ai,1});
-        Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.atlas.Yy(:,:,:,1)),...
-          double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
-        Ylai = reshape(Ylai,size(Yp0)); 
-
-        % write map
-        cat_io_writenii(VT0,Ylai,mrifolder,sprintf('a%d',ai),[atlas],...
-          'uint8',[0,1],job.output.atlas,trans);
-        clear Vlai Ylai;
       end
 
       % csv-export one for each atlas (this is a table) 
@@ -3493,6 +3498,7 @@ function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
     wYv = cat_vol_ctype(wYv,wVv(1).private.dat.dtype);
  
     % complete atlas maps ... 
+    
     %if strcmp(FA{ai,2},'gm'), [D,I] = cat_vbdist(single(wYv)); wYv(:) = wYv(I(:)); clear D I; end
   else
     % map image to atlas space
@@ -3566,6 +3572,8 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue)
           end
           csv{ri,end} = 1/1000 * sum(Ymm(:));
         end
+      case 'c'
+        return
       otherwise % 
         csv{1,end+1} = [name tissue{ti}];  %#ok<AGROW>
         switch lower(tissue{ti})

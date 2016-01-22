@@ -23,17 +23,16 @@ function cat_run_job(job,tpm,subj)
 
     % create subfolders if not exist
     if cat_get_defaults('extopts.subfolders')
-      folders = char('mri','surf','report','label');
       folders = char('mri','report');
       for i=1:size(folders,1)
         if ~exist(fullfile(pth,deblank(folders(i,:))),'dir')
           mkdir(pth,deblank(folders(i,:)));
         end
       end
-      if ~exist(fullfile(pth,'surf'),'dir') & job.output.surface
+      if ~exist(fullfile(pth,'surf'),'dir') && job.output.surface
         mkdir(pth,'surf');
       end
-      if ~exist(fullfile(pth,'label'),'dir') & job.output.ROI
+      if ~exist(fullfile(pth,'label'),'dir') && job.output.ROI
         mkdir(pth,'label');
       end
       
@@ -43,7 +42,7 @@ function cat_run_job(job,tpm,subj)
       mrifolder = '';
       reportfolder = '';
     end
-
+    
     %  -----------------------------------------------------------------
     %  check resolution properties
     %  -----------------------------------------------------------------

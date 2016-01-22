@@ -59,6 +59,35 @@ function cat_run_oldcatch(job,tpm,subj)
       end
       cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
       
+      
+      if cat_get_defaults('extopts.subfolders')
+        reportfolder = 'report';
+      else
+        reportfolder = '';
+      end
+      % create an error directory with errortype subdirectory for all failed datasets
+      % copy the cat*.xml and catreport_*pdf 
+      % create a symbolic link of the original file
+      if cat_get_defaults('extopts.subfolders')
+        %%
+        errfolder    = 'err';
+        suberrfolder = sprintf('%s_%d_%s',caterr.stack(1).name,caterr.stack(1).line,strrep(caterr.message,' ','_')); 
+        if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
+        catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
+        repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
+        p0file  = fullfile(pth,mrifolder,['p0' nam '.nii']);
+        p1file  = fullfile(pth,mrifolder,['p1' nam '.nii']);
+        if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder)); end
+        if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder)); end
+        if exist(p0file,'file'),  copyfile(p0file,fullfile(pth,errfolder,suberrfolder)); end
+        if ismac || isunix
+          [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
+            fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
+            cat_check_system_output(ST,RS,cat_get_defaults('extopts.debug'));
+        end  
+
+      end
+      
       % delete noise corrected image
       if exist(fullfile(pth,mrifolder,['n' nam(2:end) ext]),'file')
         try %#ok<TRYNC>
