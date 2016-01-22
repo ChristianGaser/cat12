@@ -82,8 +82,8 @@ surface.help   = {
 ROI        = cfg_menu;
 ROI.tag    = 'ROI';
 ROI.name   = 'ROI analyis';
-ROI.labels = {'No ROI analyis','ROI analysis'}; %,'optimzed ROI analysis'};
-ROI.values = {0 1 2};
+ROI.labels = {'No ROI analyis','ROI analysis'};
+ROI.values = {0 1};
 ROI.def    = @(val)cat_get_defaults('output.ROI', val{:});
 ROI.help   = {
   'Export of ROI data of volume, intensity, and thickness to a xml and csv-files. '

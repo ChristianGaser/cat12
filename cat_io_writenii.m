@@ -74,9 +74,10 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     end
   end
   
-  if ~exist('folder','var')
-    folder = '';
-  end
+  pp = fileparts(V.fname); 
+  if ~exist('folder','var'), folder = ''; end
+  if ~exist(fullfile(pp,folder),'dir'), mkdir(fullfile(pp,folder)); end
+  
   
   % write native file
   % ____________________________________________________________________

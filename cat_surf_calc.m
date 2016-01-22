@@ -1,4 +1,4 @@
-function varargout = cat_surf_calc(varargin)
+function varargout = cat_surf_calc(job)
 % ______________________________________________________________________
 % Texture Calculation Tool - Only batch mode available. 
 %
@@ -16,11 +16,13 @@ function varargout = cat_surf_calc(varargin)
 % Robert Dahnke
 % $Id$
 
-  assuregifti = 1;
+  
 
   if nargin == 1
     def.verb = 0;
-    job = varargin{1}; 
+    def.usefsaverage = 1; 
+    def.assuregifti  = 1;
+    def.fsaverage    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
     job = cat_io_checkinopt(job,def);
   else
     error('Only batch mode'); 
@@ -30,7 +32,7 @@ function varargout = cat_surf_calc(varargin)
   sinfo = cat_surf_info(job.dataname); 
   if ~strcmp(sinfo.ee,'.gii'), ff = [sinfo.ff sinfo.ee]; end 
   if ~isempty(sinfo.pp), outdir = sinfo.pp; else outdir = job.outdir{1}; end  
-  ee = sinfo.ee; if assuregifti, ee = '.gii'; end
+  ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
 
   
   % single or multi subject calculation
@@ -185,7 +187,13 @@ function surfcalc(job)
       
       %% evaluate mesh 
       if sinfo1.datatype==3
-        vdata(1,range,:) = mean(V,1);
+        if job.usefsaverage
+          [pp,ff,ee] = spm_fileparts(job.fsaverage); 
+          CS = gifti(fullfile(pp,sprintf('%s.%s%s',sinfo1.side,ff(4:end),ee))); 
+          vdata(1,range,:) = CS.vertices;  
+        else
+          vdata(1,range,:) = mean(V,1);
+        end
       end
       
       if job.verb

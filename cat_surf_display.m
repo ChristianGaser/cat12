@@ -62,6 +62,7 @@ function varargout = cat_surf_display(varargin)
   def.imgprint.ftype = @(x) ['-d' num2str(x)];
   def.imgprint.do    = 0;
   def.imgprint.close = 0;
+  def.imgprint.dir   = '';
   
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;
@@ -113,7 +114,7 @@ function varargout = cat_surf_display(varargin)
           h = cat_surf_render(Pmesh);
         end
       end
-      
+      if sinfo(i).label, continue; end
       
       %% textur handling
       set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
@@ -152,19 +153,20 @@ function varargout = cat_surf_display(varargin)
             %%
             ranges = {
               ... name single group
-              'thickness'     [0.5  4.0]  [0.5  4.0]
-              'gyruswidthWM'  [0.5  8.0]  [1.0  7.0]
-              'gyruswidth'    [1.0 12.0]  [1.5 11.0]
-              'sulcuswidth'   [0.0  3.0]  [0.0  3.0]
-              'gyrification'  [0.0  1.0]  [0.0  0.5]
-              'sqrtsulc'      [0.0  1.5]  [0.0  1.5]
-              'WMdepth'       [1.0  6.0]  [1.0  5.0]
-              'GWMdepth'      [1.5 10.0]  [1.5  9.0]
-              'CSFdepth'      [0.5  2.0]  [0.5  2.0]
-              'depthWM'       [0.0  4.0]  [0.0  3.0]
-              'depthWMg'      [0.0  1.0]  [0.0  0.5]
-              'depthGWM'      [0.5  5.0]  [2.5  6.0]
-              'depthCSF'      [0.5  2.0]  [0.5  2.0]  
+              'thickness'         [0.5  5.0]  [0.5  5.0]
+              'gyruswidthWM'      [0.5  8.0]  [1.0  7.0]
+              'gyruswidth'        [1.0 12.0]  [1.5 11.0]
+              'fractaldimension'  [0.0  4.0]  [1.0  4.0]
+              'sulcuswidth'       [0.0  3.0]  [0.0  3.0]
+              'gyrification'      [ 15   35]  [ 15   35]
+              'sqrtsulc'          [0.0  1.5]  [0.0  1.5]
+              'WMdepth'           [1.0  6.0]  [1.0  5.0]
+              'GWMdepth'          [1.5 10.0]  [1.5  9.0]
+              'CSFdepth'          [0.5  2.0]  [0.5  2.0]
+              'depthWM'           [0.0  4.0]  [0.0  3.0]
+              'depthWMg'          [0.0  1.0]  [0.0  0.5]
+              'depthGWM'          [0.5  5.0]  [2.5  6.0]
+              'depthCSF'          [0.5  2.0]  [0.5  2.0]  
             };
 
             texturei = find(cellfun('isempty',strfind(ranges(:,1),sinfo(i).texture))==0,1,'first');
@@ -182,6 +184,7 @@ function varargout = cat_surf_display(varargin)
     catch %#ok<CTCH>
       if ~exist('h','var')
         try
+          cat_io_cprintf('err',sprintf('Texture error. Display surface only.'));
           h = cat_surf_render(job.data{i});
         catch %#ok<CTCH>
           cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
@@ -218,7 +221,9 @@ function varargout = cat_surf_display(varargin)
     %% print
     if job.imgprint.do 
       %%
-      pfname = fullfile(sinfo(i).pp,sprintf('%s%s.%s',sinfo(i).ff,viewname,job.imgprint.type(3:end)));
+      if isempty(job.imgprint.dir), ppp = sinfo(i).pp; else  ppp=job.imgprint.dir;  end
+      if ~exist(ppp,'dir'), mkdir(ppp); end
+      pfname = fullfile(ppp,sprintf('%s%s.%s',sinfo(i).ff,viewname,job.imgprint.type));
       print(h.figure , def.imgprint.ftype(job.imgprint.type) , job.imgprint.fdpi(job.imgprint.dpi) , pfname ); 
       
       if job.imgprint.close

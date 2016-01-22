@@ -47,6 +47,7 @@ function [varargout] = cat_surf_info(P,read)
     'datatype','',...   % datatype [0=nosurf/file|1=mesh|2=data|3=surf] with surf=mesh+data
     'dataname','',...   % datafieldname [central|thickness|s3thickness...]
     'texture','',...    % textureclass [central|sphere|thickness|...]
+    'label','',...      % labelmap
     'resampled','',...  % dataspace
     'template','',...   % individual surface or tempalte
     'nvertices',[],...  % number vertices
@@ -79,6 +80,23 @@ function [varargout] = cat_surf_info(P,read)
         sinfo(i).ftype = 1;
         if sinfo(i).exist && read
           S = gifti(P{i});
+        end
+      case '.annot'
+        sinfo(i).ff = ff;
+        sinfo(i).ee = ee;
+        sinfo(i).ftype = 0;
+        sinfo(i).label = 1; 
+        if sinfo(i).exist && read
+          clear S; 
+          try
+            S = cat_io_FreeSurfer('read_surf',P{1}); 
+          end
+          try
+            S.cdata = cat_io_FreeSurfer('read_surf_data',P{1}); 
+          end
+        end
+        if exist('S','var')
+          sinfo(i).ftype = 2;
         end
       otherwise
         sinfo(i).ff = [ff ee];
