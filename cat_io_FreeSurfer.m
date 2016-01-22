@@ -6,11 +6,25 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 %
 %   varargout = cat_io_FreeSurfer(action,varargin)
 %
+% * surface meshs:
 %   cat_io_FreeSurfer('write_surf',fname,vertices,faces);
 %   S = cat_io_FreeSurfer('read_surf',fname);
+%
+% * surface data:
 %   cat_io_FreeSurfer('write_surf_data',fname,cdata);
 %   cdata = cat_io_FreeSurfer('read_surf_data',fname);
 %
+%   [vertices, label, colortable] = 
+%      cat_io_FreeSurfer('read_annotation',fname);
+%
+% * GIFTI FS 
+%   [P] = cat_io_FreeSurfer('gii2fs',fname);
+%   [P] = cat_io_FreeSurfer('gii2fs',...
+%           struct('data',{fnames},'delete',[0|1]));
+%
+%   [P] = cat_io_FreeSurfer('fs2gii',fname);
+%   [P] = cat_io_FreeSurfer('fs2gii',...
+%           struct('data',{fnames},'delete',[0|1]));
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
@@ -20,7 +34,29 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 % ______________________________________________________________________
 % $Id$ 
 
+  if nargin==0, varargin{1} = struct(); end
+
   switch action
+    %case 'FSatlas2cat'
+    %  varargout{1} = cat_surf_FSannotation2CAT(varargin{1});
+    case 'gii2fs'
+      if nargout>0
+        varargout{1} = gii2fs(varargin{1}); 
+      else
+        gii2fs(varargin{1})
+      end
+    case 'fs2gii'
+      if nargout>0
+        varargout{1} = fs2gii(varargin{1}); 
+      else
+        fs2gii(varargin{1})
+      end
+    case 'read_annotation'
+      if nargin==2
+       [varargout{1}, varargout{2}, varargout{3}] = Read_Brain_Annotation(varargin{1}); 
+      else
+       [varargout{1}, varargout{2}, varargout{3}] = Read_Brain_Annotation(varargin{1}, varargin(2:end)); 
+      end
     case 'write_surf'
       write_surf(varargin{1}, varargin{2}.vertices, varargin{2}.faces);
     case 'read_surf'
@@ -31,9 +67,132 @@ function varargout=cat_io_FreeSurfer(action,varargin)
     case 'read_surf_data'
       [varargout{1},varargout{2}] = read_curv(varargin{1});
     otherwise
-      error('cat_io_FreeSurfer:unknownAction','Unknown action ''%s''!',action);
+      error(['cat_io_FreeSurfer:unknownAction','Unknown action ''%s''!\n' ...
+             'Use ''write_surf'',''read_surf'',''write_surf_data'',''read_surf_data'',''gii2fs'',''fs2gii.\n'],action);
   end
 
+end
+
+function job = getjob(job0,sel)
+  if isstruct(job0)
+    job = job0; 
+  else 
+    job.data = job0;
+  end
+  if ~isfield(job,'data') || isempty(job.data)
+    job.data = spm_select(inf,'any','Select surface','','',sel);
+  end
+  if isempty(job.data), return; end
+  job.data = cellstr(job.data); 
+  
+  def.verb    = 0; 
+  def.defelte = 0; 
+  job.merge   = 0;
+  
+  job = cat_io_checkinopt(job,def);
+end
+function varargout = gii2fs(varargin)
+% convert gifti surfaces to FreeSurfer 
+  job = getjob(varargin,'[lr]h.*.gii');
+  
+  surfname = cell(numel(job.data),1); 
+  curfname = cell(numel(job.data),1); 
+  for si=1:numel(job.data)
+    [pp,ff] = spm_fileparts(job.data{si});
+    sinfo  = cat_surf_info(job.data{si}); 
+    
+    CS = gifti(job.data{si});
+    if isfield(CS,'vertices') && isfield(CS,'faces')
+      surfname{si} =  cat_surf_rename(sinfo,'dataname','surface');
+      
+      write_surf(surfname{si}, CS.vertices , CS .faces);
+    else
+      surfname{si} = ''; 
+    end
+    if isfield(CS,'cdata')
+      curfname{si} = fullfile(pp,ff);
+      
+      write_curv(curfname{si}, CS.cdata);
+    else
+      curfname{si} = ''; 
+    end
+    
+    if job.delete
+      delete(job.data{si}); 
+    end
+  end
+  
+  if nargout>0
+    varargout{1} = surfname;
+  end
+  if nargout>1
+    varargout{2} = curfname;
+  end
+    
+end
+
+function varargout = fs2gii(varargin)
+% convert FreeSurfer surfaces meshes/data files to a gifti
+  job = getjob(varargin,'[lr]h.*');
+  
+  fname = cell(size(job.data,1),1);
+  for di=1:numel(job.data)
+    [pp,ff] = spm_fileparts(job.data{si});
+  
+    fname{di} = fullfile(pp,ff); 
+    try
+      cdata = read_curv(varargin{1});       
+      save(fname{di},gifti(struct('cdata',cdata))); 
+    catch
+      [vertices,faces] = read_surf(varargin{1}); 
+      
+      save(fname{di},gifti(struct('vertices',vertices,'faces',faces))); 
+    end
+    
+    if job.delete
+      delete(job.data{si});
+    end
+  end
+  
+  if nargout>0
+    varargout{1} = fname{di};
+  end
+end
+
+function annots = cat_surf_FSannotation2CAT(job)
+% -- in development --
+% Read FreeSurfer average atlas maps and save them as texture with csv 
+% and xml data.
+% > convertation to SPM ROI format ...
+
+  def.trerr     = 0; 
+  def.verb      = cat_get_defaults('extopts.verb'); 
+  def.debug     = cat_get_defaults('extopts.debug');
+  def.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
+  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+  if ismac
+    def.FSDir   = cat_vol_findfiles('/Applications','Freesurfer*',struct('depth',1,'dirs',1));
+    def.FSDir   = def.FSDir{end};
+  end
+  def.FSsub     = cat_vol_findfiles(fullfile(def.FSDir,'subjects'),'fsaverage',struct('depth',1,'dirs',1));
+  job = cat_io_checkinopt(job,def);
+  
+  for FSsubi=1:numel(job.FSsub)
+    annots{FSsubi} = cat_vol_findfiles(fullfile(job.FSsub{FSsubi},'label'),'*.annot');
+     
+    for annotsi=1:numel(annots{FSsubi})
+      %%
+      [pp,ff,ee] = fileparts(annots{FSsubi}{annotsi}); side=ff(1:2);
+      [vertices, label, colortable] = cat_io_FreeSurfer('read_annotation',annots{FSsubi}{annotsi}); 
+    
+      Pfsavg = fullfile(def.fsavgDir,sprintf('%s.central.freesurfer.gii',side));      % fsaverage central
+      
+      CS = gifti(Pfsavg);
+    
+    end
+    
+  end
+  
 end
 
 function write_surf(fname, vert, face)
@@ -408,5 +567,190 @@ else
   curv = fread(fid, vnum, 'int32') ./ 100 ; 
   fclose(fid) ;
 end
+
+end
+
+function [vertices, label, colortable] = Read_Brain_Annotation(filename, varargin)
+%
+% NAME
+%
+%       function [vertices, label, colortable] = ...
+%                                       read_annotation(filename [, verbosity])
+%
+% ARGUMENTS
+% INPUT
+%       filename        string          name of annotation file to read
+%
+% OPTIONAL
+%       verbosity       int             if true (>0), disp running output
+%                                       + if false (==0), be quiet and do not
+%                                       + display any running output
+%
+% OUTPUT
+%       vertices        vector          vector with values running from 0 to
+%                                       + size(vertices)-1
+%       label           vector          lookup of annotation values for 
+%                                       + corresponding vertex index.
+%       colortable      struct          structure of annotation data
+%                                       + see below
+%       
+% DESCRIPTION
+%
+%       This function essentially reads in a FreeSurfer annotation file
+%       <filename> and returns structures and vectors that together 
+%       assign each index in the surface vector to one of several 
+%       structure names.
+%       
+% COLORTABLE STRUCTURE
+% 
+%       Consists of the following fields:
+%       o numEntries:   number of entries
+%       o orig_tab:     filename of original colortable file
+%       o struct_names: cell array of structure names
+%       o table:        n x 5 matrix
+%                       Columns 1,2,3 are RGB values for struct color
+%                       Column 4 is a flag (usually 0)
+%                       Column 5 is the structure ID, calculated from
+%                       R + G*2^8 + B*2^16 + flag*2^24
+%                       
+% LABEL VECTOR
+% 
+%       Each component of the <label> vector has a structureID value. To
+%       match the structureID value with a structure name, lookup the row
+%       index of the structureID in the 5th column of the colortable.table
+%       matrix. Use this index as an offset into the struct_names field
+%       to match the structureID with a string name.      
+%
+% PRECONDITIONS
+%
+%       o <filename> must be a valid FreeSurfer annotation file.
+%       
+% POSTCONDITIONS
+%
+%       o <colortable> will be an empty struct if not embedded in a
+%         FreeSurfer annotation file. 
+%       
+
+%
+% read_annotation.m
+% Original Author: Bruce Fischl
+% CVS Revision Info:
+%    $Author$
+%    $Date$
+%    $Revision$
+%
+% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+%
+% Terms and conditions for use, reproduction, distribution and contribution
+% are found in the 'FreeSurfer Software License Agreement' contained
+% in the file 'LICENSE' found in the FreeSurfer distribution, and here:
+%
+% https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferSoftwareLicense
+%
+% Reporting: freesurfer@nmr.mgh.harvard.edu
+%
+
+fp = fopen(filename, 'r', 'b');
+
+verbosity = 1;
+if length(varargin)
+    verbosity       = varargin{1};  
+end;
+
+if(fp < 0)
+   if verbosity, disp('Annotation file cannot be opened'); end;
+   return;
+end
+
+A = fread(fp, 1, 'int');
+
+tmp = fread(fp, 2*A, 'int');
+vertices = tmp(1:2:end);
+label = tmp(2:2:end);
+
+bool = fread(fp, 1, 'int');
+if(isempty(bool)) %means no colortable
+   if verbosity, disp('No Colortable found.'); end;
+   colortable = struct([]);
+   fclose(fp);
+   return; 
+end
+
+if(bool)
+    
+    %Read colortable
+    numEntries = fread(fp, 1, 'int');
+
+    if(numEntries > 0)
+        
+        if verbosity, disp(['Reading from Original Version']); end;
+        colortable.numEntries = numEntries;
+        len = fread(fp, 1, 'int');
+        colortable.orig_tab = fread(fp, len, '*char')';
+        colortable.orig_tab = colortable.orig_tab(1:end-1);
+
+        colortable.struct_names = cell(numEntries,1);
+        colortable.table = zeros(numEntries,5);
+        for i = 1:numEntries
+            len = fread(fp, 1, 'int');
+            colortable.struct_names{i} = fread(fp, len, '*char')';
+            colortable.struct_names{i} = colortable.struct_names{i}(1:end-1);
+            colortable.table(i,1) = fread(fp, 1, 'int');
+            colortable.table(i,2) = fread(fp, 1, 'int');
+            colortable.table(i,3) = fread(fp, 1, 'int');
+            colortable.table(i,4) = fread(fp, 1, 'int');
+            colortable.table(i,5) = colortable.table(i,1) + colortable.table(i,2)*2^8 + colortable.table(i,3)*2^16 + colortable.table(i,4)*2^24;
+        end
+        if verbosity
+            disp(['colortable with ' num2str(colortable.numEntries) ' entries read (originally ' colortable.orig_tab ')']);
+        end
+    else
+        version = -numEntries;
+        if verbosity
+          if(version~=2)    
+            disp(['Error! Does not handle version ' num2str(version)]);
+          else
+            disp(['Reading from version ' num2str(version)]);
+          end
+        end
+        numEntries = fread(fp, 1, 'int');
+        colortable.numEntries = numEntries;
+        len = fread(fp, 1, 'int');
+        colortable.orig_tab = fread(fp, len, '*char')';
+        colortable.orig_tab = colortable.orig_tab(1:end-1);
+        
+        colortable.struct_names = cell(numEntries,1);
+        colortable.table = zeros(numEntries,5);
+        
+        numEntriesToRead = fread(fp, 1, 'int');
+        for i = 1:numEntriesToRead
+            structure = fread(fp, 1, 'int')+1;
+            if (structure < 0)
+              if verbosity, disp(['Error! Read entry, index ' num2str(structure)]); end;
+            end
+            if(~isempty(colortable.struct_names{structure}))
+              if verbosity, disp(['Error! Duplicate Structure ' num2str(structure)]); end;
+            end
+            len = fread(fp, 1, 'int');
+            colortable.struct_names{structure} = fread(fp, len, '*char')';
+            colortable.struct_names{structure} = colortable.struct_names{structure}(1:end-1);
+            colortable.table(structure,1) = fread(fp, 1, 'int');
+            colortable.table(structure,2) = fread(fp, 1, 'int');
+            colortable.table(structure,3) = fread(fp, 1, 'int');
+            colortable.table(structure,4) = fread(fp, 1, 'int');
+            colortable.table(structure,5) = colortable.table(structure,1) + colortable.table(structure,2)*2^8 + colortable.table(structure,3)*2^16 + colortable.table(structure,4)*2^24;       
+        end
+        if verbosity 
+          disp(['colortable with ' num2str(colortable.numEntries) ' entries read (originally ' colortable.orig_tab ')']);
+        end
+    end    
+else
+    if verbosity
+        disp('Error! Should not be expecting bool = 0');    
+    end;
+end
+
+fclose(fp);
+
 
 end

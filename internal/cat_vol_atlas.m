@@ -1777,3 +1777,71 @@ function create_spm_atlas_xml(fname,csv,opt)
   fprintf(fid,[xml.header,xml.data,xml.footer]);
   fclose(fid);
 end
+% improve ROIs (especialy Neuromorphometrics) 
+%{
+   
+      % Optimize ROI:
+      % Simple optimization function for atlas maps with incomplete labels
+      % in WM/CSF regions such as Neuroinformatics, LPBA40, and AAL.
+      % * It set defined tissues labels to zero and use a intensity based 
+      %   tissue growing to assign the neighbor labels. 
+      % * Optimization has less effects in complete atlas maps such as 
+      %   Hammers or Mori and may only add values next to the skull. 
+      % * It can not be used in incomplete/sparse atlas maps such as anatomy,
+      %   cobra or ibsr. E.g. in IBSR only subcortical regions can be align.
+      % * File output (for evaluation) is controlled by the output.atlas 
+      %   parameter and will create '[space][atlasname]_[filename].nii'
+      %   files in the original folder or in the subfolder 'mri_atlas' 
+      %   (optimized maps) and 'mri_atlas_orig'.
+      % * Filled regions (ventricle, WMHs, subcortical ROIs) will be ignored.  
+      % 
+      % * There are at least three major problems... 
+      %   - ROIs will vary per subject 
+      %      > not critical for GM volumes, because they still vary by modulation
+      %      > but may for WM, where the WMHs will be ignored (what is correct)
+      %   - alignment of WM sturctures, especial in subcortical ROIs 
+      %     venricular PVE problem 
+      %      > optimization only for definend regions? > to complex
+      %      > avoid special regions > masking with YMF
+      %    >>>> what is about the Hippocampus and similar regions
+      %      > there must be a list of regions that were ignored!!
+      %   - handling of WMHs > by segmentation? > masking with YMF
+      %
+      % >>> Maybe it is better to improve the main atlas map
+ 
+
+      if ~isempty(FA{ai,2}) && ~strcmp(FA{ai,2},'none') %&& ...
+        %any(strcmp({'neuromorphometrics','lpba40','aal','mori','hammers'},atlas));
+     
+        stime2 = cat_io_cmd(sprintf('  Optimized ROI estimation of ''%s'' atlas',atlas),'g5','',verb,stime2);
+      
+        try 
+          %% map atlas to actual template space 
+          wYa   = cat_vol_ROInorm([],trans,ai,0);
+          
+          %csvx = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'csv',[],tissue);
+          NBGid = find(cellfun('isempty',strfind([csvx(:,2)],'CbrWM'))==0); 
+          for NBGidi=1:numel(NBGid), wYa(wYa(:)==csvx{NBGid(NBGidi),1} & ~wYmf(:))=0; end
+          wYa=single(wYa);
+          wYa(wYp0<0.2 | (wYa>0 & ~wYmf(:)))=nan;
+          wYa = cat_vol_downcut(wYa,1-wYm,0.8);
+          %[D,I,wYa2] = cat_vbdist(wYa,~isnan(wYa)); wYa(D<10) = wYa2(D<10); clear D I wYa2; 
+          wYa(isnan(wYa))=0; wYa = cat_vol_ctype(wYa); 
+          
+          % write output
+          if any(cell2mat(struct2cell(job.output.atlas)'))
+            %% map to template space
+            Vlai = spm_vol(FA{ai,1}); Vlai.dat(:,:,:) = uint8(wYa); Vlai.pinfo(3) = 0;
+            Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.atlas.Yy(:,:,:,1)),...
+              double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
+            Ylai = reshape(Ylai,size(Yp0)); 
+
+            % write map
+            if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
+            cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' optimized'],...
+              'uint8',[0,1],job.output.atlas,trans);
+          end
+        catch
+          wYa   = cat_vol_ROInorm([],trans,ai,0);
+        end
+%}      

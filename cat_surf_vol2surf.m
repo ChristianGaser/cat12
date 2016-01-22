@@ -15,7 +15,8 @@ function varargout = cat_surf_vol2surf(varargin)
     error('Only batch mode possible'); 
   end
   
-  def.verb = 1; 
+  def.verb  = 1; 
+  def.gifti = 1;  
   
   job = cat_io_checkinopt(job,def);
   
@@ -34,6 +35,7 @@ function varargout = cat_surf_vol2surf(varargin)
   % Mapping commando 
   % --------------------------------------------------------------------
   MFN = fieldnames(job.mapping);
+  relmap = {'thickness','depthWM','depthCSF'}; 
   switch MFN{1}
     case 'boundary'
       job.mappingstr = 'max';
@@ -46,45 +48,33 @@ function varargout = cat_surf_vol2surf(varargin)
       job.res        = job.mapping.boundaryrange.stepsize; 
       job.length     = job.mapping.boundaryrange.length; 
     case 'tissue'
-     job.mappingstr = 'avg';
-      switch job.mapping.tissue.class % ...
-        case 1, job.origin =  0 .* (job.mapping.tissue.pos-0.5);
-        case 2, job.origin = -2 .* (job.mapping.tissue.pos-0.5);
-        case 3, job.origin =  2 .* (job.mapping.tissue.pos-0.5);
-      end
-      job.res    = 1; 
-      job.length = 1;
-    case 'tissuerange'
-      job.mappingstr = job.mapping.tissuerange.sample{1};
-      switch job.mapping.tissuerange.class % thickness + absolute position
-        case 1, job.origin =  0 - 2*job.mapping.tissuerange.stepsize;
-        case 2, job.origin = -2 - 2*job.mapping.tissuerange.stepsize;
-        case 3, job.origin =  2 - 2*job.mapping.tissuerange.stepsize;
-      end
-      job.res    = job.mapping.tissuerange.stepsize; 
-      job.length = 5;
+      job.origin     = min(job.mapping.tissue.range) - 0.5;
+      job.length     = diff([min(job.mapping.tissue.range),max(job.mapping.tissue.range)]); 
+      job.res        = job.mapping.tissue.stepsize; 
+      job.mappingstr = job.mapping.tissue.sample{1};
+      job.relmap     = relmap{job.mapping.tissue.class}; 
   end  
-  job.origin = -job.origin;
+  
       
   % Interpolation options:
   if ~isfield(job,'interp') || isempty(job.interp), job.interp = 'linear'; end
   
   
-  mappingstr = sprintf('-%s -%s -res %0.4f -origin %0.4f -length %d',...
+  mappingstr = sprintf('-%s -%s -res "%0.4f" -origin "%0.4f" -length "%d"',...
            job.interp{1},job.mappingstr,job.res,job.origin,job.length); 
                   
   % cat
-  opt.debug     = cat_get_defaults('extopts.debug');
-  opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
-  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  job.debug     = cat_get_defaults('extopts.debug');
+  job.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
+  job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
 
   % add system dependent extension to CAT folder
   if ispc
-    opt.CATDir = [opt.CATDir '.w32'];
+    job.CATDir = [job.CATDir '.w32'];
   elseif ismac
-    opt.CATDir = [opt.CATDir '.maci64'];
+    job.CATDir = [job.CATDir '.maci64'];
   elseif isunix
-    opt.CATDir = [opt.CATDir '.glnx86'];
+    job.CATDir = [job.CATDir '.glnx86'];
   end  
 
         
@@ -92,6 +82,9 @@ function varargout = cat_surf_vol2surf(varargin)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data_vol),'Extracted Volumes','Volumes Complete');
   P.data = cell(numel(job.data_vol),2);
+  P.relmap = cell(numel(job.data_vol),2);
+  P.thick = cell(numel(job.data_vol),2);
+  
   if template
     for vi=1:numel(job.data_vol)
       [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
@@ -99,12 +92,20 @@ function varargout = cat_surf_vol2surf(varargin)
       
       for si=1:numel(side)
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(1),...
-          'preside','','pp',ppv,'name',sprintf('%s.%s',job.(sside{si}).name,ffv));
+          'preside','','pp',ppv,'dataname',job.datafieldname,'name',job.(sside{si}).name);
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
           mappingstr, job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
-        [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
+        [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug);
+        
+        if job.gifti==0
+          cat_io_FreeSurfer('gii2fs',struct('data',P.data{vi,si},'delete',1)); 
+        end
+        
+        if job.verb
+          fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
+        end
       end
       
       spm_progress_bar('Set',vi);
@@ -121,36 +122,53 @@ function varargout = cat_surf_vol2surf(varargin)
       end
       
       for si=1:numel(side)
-        P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi).fname,...
-            'preside','','pp',ppv,...
-            'dataname',job.datafieldname);
-
-        % map values
-        if job.origin==0 && job.length==0 && job.res==1 
+        if 0
           %%
-          V  = spm_vol(P.vol{vi});
-          Y  = spm_read_vols(V); 
-          CS = gifti(job.(sside{si})(vi).Pmesh);
-      
-          vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
-          vmati = inv([vmat; 0 0 0 1]); vmati(4,:)=[];    
- 
-          CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-          facevertexcdata = isocolors2(Y,CS.vertices); 
-          cat_io_FreeSurfer('write_surf_data',strrep(P.data{vi,si},'.gii',''),facevertexcdata);
-          if job.verb
-            fprintf('Display %s\n',spm_file(strrep(P.data{vi,si},'.gii',''),'link','cat_surf_display(''%s'')'));
+          if si==1
+            sinfo = cat_surf_info(job.data_mesh_lh);
+          else
+            sinfo = cat_surf_info(job.data_mesh_rh);
           end
+
+          P.data(vi,si) = cat_surf_rename(sinfo,...
+              'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
+              'dataname',job.datafieldname);
+
+          switch MFN{1}
+            case 'boundary'
+              cmaps = sprintf('');
+            case 'tissue' 
+
+              P.relmap(vi,si) = strrep(cat_surf_rename(sinfo,...
+                'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
+                'dataname',job.relmap),'.gii','');
+              P.thick(vi,si) = strrep(cat_surf_rename(sinfo,...
+                'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
+                'dataname','thickness'),'.gii','');
+
+              cmaps = sprintf('-thickness "%s"',P.thick{vi,si});  %,P.relmap); 
+          end
+
+          %job.(sside{si})(vi).
+          cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s" ',...
+            mappingstr,cmaps,sinfo.fname, P.vol{vi}, P.data{vi,si});
+          [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug);
+
         else
+          P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
+              'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
+              'dataname',job.datafieldname);
+            
           cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
             mappingstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
-          [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
-          
-          if job.verb
-            fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
-          end
+          [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug);
         end
-        
+
+
+        if job.verb
+          fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
+        end
+
       
       end
     
@@ -165,54 +183,3 @@ function varargout = cat_surf_vol2surf(varargin)
   spm_progress_bar('Clear');
 
 end
-%=======================================================================
-% Temporary experimental code to find / work around the problem of
-% having the correct orientation of the surface 
-%   start 20151203 Robert
-%=======================================================================
-
-
-
-
-%=======================================================================
-function V = isocolors2(R,V,opt)
-% ______________________________________________________________________
-% calculates a linear interpolated value of a vertex in R  
-% We have to calculate everything with double, thus larger images will 
-% cause memory issues.
-% ______________________________________________________________________
-  
-  if isempty(V), return; end
-  if ndims(R)~=3,  error('MATLAB:isocolor2:dimsR','Only 2 or 3 dimensional input of R.'); end
-  if ~exist('opt','var'), opt=struct(); end
-  
-  def.interp = 'linear';
-  opt = cat_io_checkinopt(opt,def);
-  
-  if  isa(R,'double'), R = single(R); end
-  if ~isa(V,'double'), V = double(V); VD=0; else VD=1; end
-  
-  nV   = size(V,1);
-  ndim = size(V,2);
-  
-  switch opt.interp
-    case 'nearest'
-      V = max(1,min(round(V),repmat(ndim,nV,1))); 
-      V = R(sub2ind(size(R),V(:,2),V(:,1),V(:,3)));
-    case 'linear'
-      nb  = repmat(shiftdim(double([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]'),-1),nV,1);  
-      enb = repmat(shiftdim((ones(8,1,'double')*[size(R,2),size(R,1),size(R,3)])',-1),nV,1);  
-
-      % calculate the weight of a neigbor (volume of the other corner) and
-      w8b = reshape(repmat(V,1,2^ndim),[nV,ndim,2^ndim]); clear V;
-      % if the streamline ist near the boundery of the image you could be out of range if you add 1 
-      n8b = min(floor(w8b) + nb,enb); clear enb
-      n8b = max(n8b,1);
-      w8b = flipdim(prod(abs(n8b - w8b),2),3);        
-
-      % multiply this with the intensity-value of R
-      V = sum(R(sub2ind(size(R),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))) .* w8b,3);
-  end  
-  if ~VD, V = single(V); end
-end
-                   

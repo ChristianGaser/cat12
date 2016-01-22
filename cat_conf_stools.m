@@ -6,26 +6,40 @@ function stools = cat_conf_stools(expert)
 % $Id$
 %_______________________________________________________________________
 
-% try to estimate number of processor cores
-try
-  numcores = max(feature('numcores'),1);
-catch
-  numcores = 1;
-end
+  % try to estimate number of processor cores
+  try
+    numcores = max(feature('numcores'),1);
+  catch
+    numcores = 1;
+  end
 
-%_______________________________________________________________________
-nproc         = cfg_entry;
-nproc.tag     = 'nproc';
-nproc.name    = 'Split job into separate processes';
-nproc.strtype = 'w';
-nproc.val     = {numcores};
-nproc.num     = [1 1];
-nproc.help    = {
-    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
-    ''
-    'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
-    ''
-    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
+  % parallelize
+  % ____________________________________________________________________
+  nproc         = cfg_entry;
+  nproc.tag     = 'nproc';
+  nproc.name    = 'Split job into separate processes';
+  nproc.strtype = 'w';
+  nproc.val     = {numcores};
+  nproc.num     = [1 1];
+  nproc.help    = {
+      'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
+      ''
+      'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
+      ''
+      'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
+    };
+ 
+  
+  % do not process, if result allready exist
+  % ____________________________________________________________________
+  lazy         = cfg_entry;
+  lazy.tag     = 'lazy';
+  lazy.name    = 'Lazy processing';
+  lazy.strtype = 'w';
+  lazy.val     = {0};
+  lazy.num     = [1 1];
+  lazy.help    = {
+    'Do not process data if the result exist. '
   };
 
 
@@ -152,7 +166,11 @@ nproc.help    = {
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
-  surfextract.val  = {data_surf_extract,GI,FD,SD};
+  if expert > 1
+    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc,lazy};
+  else
+    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
+  end
   surfextract.prog = @cat_surf_parameters;
   surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};
 
@@ -239,7 +257,7 @@ nproc.help    = {
   v2s.boundaryrange_sample.name    = 'Sample Function';
   v2s.boundaryrange_sample.labels  = {'Mean','Maximum','Minimum','Absolute maximum'};
   v2s.boundaryrange_sample.values  = {{'avg'},{'max'},{'min'},{'maxabs'}};
-  v2s.boundaryrange_sample.val     = {{'max'}};
+  v2s.boundaryrange_sample.val     = {{'avg'}};
   v2s.boundaryrange_sample.help    = {
     'Sample function to combine values.'
   };
@@ -264,24 +282,45 @@ nproc.help    = {
   v2s.tissue_class         = cfg_menu;
   v2s.tissue_class.tag     = 'class';
   v2s.tissue_class.name    = 'Tissue Class';
-  v2s.tissue_class.labels  = {'GM','WM'};
-  v2s.tissue_class.values  = {1 2};
+  if expert
+    v2s.tissue_class.labels  = {'GM','WM','CSF'};
+    v2s.tissue_class.values  = {1 2 3};
+  else
+    v2s.tissue_class.labels  = {'GM'};
+    v2s.tissue_class.values  = {1};
+  end
   v2s.tissue_class.val     = {1};
   v2s.tissue_class.help    = {
     'Tissue class for which the relative positions are estimated.'
   };
 
   v2s.tissue_pos         = cfg_entry;
-  v2s.tissue_pos.tag     = 'pos';
-  v2s.tissue_pos.name    = 'Relative Position';
+  v2s.tissue_pos.tag     = 'range';
+  v2s.tissue_pos.name    = 'Relative Range';
   v2s.tissue_pos.strtype = 'r';
-  v2s.tissue_pos.val     = {0};
-  v2s.tissue_pos.num     = [1 1];
-  v2s.tissue_pos.help    = {
-    'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
-    'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
-    'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
-  };
+  v2s.tissue_pos.val     = {[0 1]};
+  v2s.tissue_pos.num     = [2 2];
+  if expert
+    v2s.tissue_pos.help    = {
+      'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
+      'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
+      'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
+    };
+  else
+    v2s.tissue_pos.help    = {
+      'Relative position within the tissue class, where 1 describe the WM/GM interface and 0 the CSF/GM interface.'
+    };
+  end
+  
+  v2s.tissue_stepsize         = cfg_entry;
+  v2s.tissue_stepsize.tag     = 'stepsize';
+  v2s.tissue_stepsize.name    = 'Stepsize';
+  v2s.tissue_stepsize.strtype = 'r';
+  v2s.tissue_stepsize.val     = {1/6}; 
+  v2s.tissue_stepsize.num     = [1 1];
+  v2s.tissue_stepsize.help    = {
+    'Relative stepsize of the grid, e.g. for range [0 1] the stepsize of 1/6 will generat 7 equidistant sample points that divide the tissue into 6 layer.'
+  }; % middle point of cortical layer >> pos = [1/12 11/12], stepsize 1/6 ...
   
   v2s.tissue         = cfg_branch;
   v2s.tissue.tag     = 'tissue';
@@ -289,6 +328,8 @@ nproc.help    = {
   v2s.tissue.val     = {
     v2s.tissue_class ...
     v2s.tissue_pos ...
+    v2s.tissue_stepsize ...
+    v2s.boundaryrange_sample ...
     };
   v2s.tissue.help    = {
     'Map volumetric data from a relative position within a tissue class.'
@@ -296,52 +337,52 @@ nproc.help    = {
 
   %% -- tissue sample --
   
-  v2s.tissuerange_stepsize         = cfg_entry;
-  v2s.tissuerange_stepsize.tag     = 'stepsize';
-  v2s.tissuerange_stepsize.name    = 'Stepsize';
-  v2s.tissuerange_stepsize.strtype = 'r';
-  v2s.tissuerange_stepsize.val     = {0.1};
-  v2s.tissuerange_stepsize.num     = [1 1];
-  v2s.tissuerange_stepsize.help    = {
-    'Relative stepsize of the sample points centered around 0.5.  For example a stepsize of 0.3 will result in 3 sample points at a relative position of 0.2, 0.5 and 0.8, '
-    'while a stepsize of 0.1 will result in sample points 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0.' 
-  };
-
-  v2s.tissuerange_sample         = cfg_menu;
-  v2s.tissuerange_sample.tag     = 'sample';
-  v2s.tissuerange_sample.name    = 'Sample Function';
-  v2s.tissuerange_sample.labels  = {'mean','max','min',}; %,'median','std'
-  v2s.tissuerange_sample.values  = {{'average'},{'max'},{'min'}}; %,{'median'},{'std'}
-  v2s.tissuerange_sample.val     = {{'average'}};
-  v2s.tissuerange_sample.help    = {
-    'Tissue boundary used for distance description.'
-  };
-  
-  v2s.tissuerange         = cfg_branch;
-  v2s.tissuerange.tag     = 'tissuerange';
-  v2s.tissuerange.name    = 'Sample Across Several Relative Positions Within a Tissue Class';
-  v2s.tissuerange.val     = {
-    v2s.tissue_class ...
-    v2s.tissuerange_stepsize ...
-    v2s.tissuerange_sample ...
-    };
-  v2s.boundary.help    = {
-    'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, min, or max.'
-  };
+%   v2s.tissuerange_stepsize         = cfg_entry;
+%   v2s.tissuerange_stepsize.tag     = 'stepsize';
+%   v2s.tissuerange_stepsize.name    = 'Stepsize';
+%   v2s.tissuerange_stepsize.strtype = 'r';
+%   v2s.tissuerange_stepsize.val     = {0.1};
+%   v2s.tissuerange_stepsize.num     = [1 1];
+%   v2s.tissuerange_stepsize.help    = {
+%     'Relative stepsize of the sample points centered around 0.5.  For example a stepsize of 0.3 will result in 3 sample points at a relative position of 0.2, 0.5 and 0.8, '
+%     'while a stepsize of 0.1 will result in sample points 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0.' 
+%   };
+% 
+%   v2s.tissuerange_sample         = cfg_menu;
+%   v2s.tissuerange_sample.tag     = 'sample';
+%   v2s.tissuerange_sample.name    = 'Sample Function';
+%   v2s.tissuerange_sample.labels  = {'mean','max','min',}; %,'median','std'
+%   v2s.tissuerange_sample.values  = {{'average'},{'max'},{'min'}}; %,{'median'},{'std'}
+%   v2s.tissuerange_sample.val     = {{'average'}};
+%   v2s.tissuerange_sample.help    = {
+%     'Tissue boundary used for distance description.'
+%   };
+%   
+%   v2s.tissuerange         = cfg_branch;
+%   v2s.tissuerange.tag     = 'tissuerange';
+%   v2s.tissuerange.name    = 'Sample Across Several Relative Positions Within a Tissue Class';
+%   v2s.tissuerange.val     = {
+%     v2s.tissue_class ...
+%     v2s.tissuerange_stepsize ...
+%     v2s.tissuerange_sample ...
+%     };
+%   v2s.boundary.help    = {
+%     'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, min, or max.'
+%   };
 
   %% -- boundary sample? 
-  
-  v2s.tissue_pos         = cfg_entry;
-  v2s.tissue_pos.tag     = 'pos';
-  v2s.tissue_pos.name    = 'Relative Position';
-  v2s.tissue_pos.strtype = 'r';
-  v2s.tissue_pos.val     = {0};
-  v2s.tissue_pos.num     = [1 1];
-  v2s.tissue_pos.help    = {
-    'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
-    'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
-    'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
-  };
+%   
+%   v2s.tissue_pos         = cfg_entry;
+%   v2s.tissue_pos.tag     = 'pos';
+%   v2s.tissue_pos.name    = 'Relative Position';
+%   v2s.tissue_pos.strtype = 'r';
+%   v2s.tissue_pos.val     = {0};
+%   v2s.tissue_pos.num     = [1 1];
+%   v2s.tissue_pos.help    = {
+%     'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
+%     'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
+%     'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
+%   };
 
   %% -- Mapping function
 
@@ -350,7 +391,7 @@ nproc.help    = {
   v2s.mapping.name    = 'Mapping Function';
   v2s.mapping.values  = {
 ...      v2s.tissuerange ...
-...      v2s.tissue ...
+    v2s.tissue ...
     v2s.boundaryrange ...
     v2s.boundary ...
   }; 
@@ -623,16 +664,6 @@ nproc.help    = {
   fwhm.val     = {15};
   fwhm.help    = {
     'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm. For no filtering use a value of 0.'};
- 
-  lazy         = cfg_entry;
-  lazy.tag     = 'lazy';
-  lazy.name    = 'Lazy processing';
-  lazy.strtype = 'w';
-  lazy.val     = {0};
-  lazy.num     = [1 1];
-  lazy.help    = {
-    'Do not process data if the result exist. '
-  };
 
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';

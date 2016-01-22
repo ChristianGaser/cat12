@@ -51,7 +51,7 @@ cat12.opts.samp      = 3;                       % Sampling distance      - small
 cat12.output.surface     = 0;     % surface and thickness creation
 
 % save ROI values
-cat12.output.ROI         = 0;     % write xml-file and csv-files with ROI data (0 - none, 1 - default, 2 - optimized (not ready))
+cat12.output.ROI         = 0;     % write xml-file and csv-files with ROI data (0 - no, 1 - yes (default))
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
 cat12.output.bias.native = 0;
@@ -223,7 +223,7 @@ cat12.output.TPMC.warped = 0;
 cat12.output.TPMC.mod    = 0;
 cat12.output.TPMC.dartel = 0;
 
-% partitioning atlas maps (cat12 atlas)
+% partitioning atlas maps (for evaluation)
 cat12.output.atlas.native = 0; 
 cat12.output.atlas.warped = 0; 
 cat12.output.atlas.dartel = 0; 

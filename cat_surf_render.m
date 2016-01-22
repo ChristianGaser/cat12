@@ -119,6 +119,27 @@ switch lower(action)
                 if strcmp(ee,'.gii')
                     Mt = gifti(O.pcdata);
                     M.cdata = Mt.cdata;
+                elseif strcmp(ee,'.annot')
+                  %%
+                    [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata); %clear fsv;
+                    [sentry,id] = sort(colortable.table(:,5));
+                    M.cdata = cdata; nid=1;
+                    for sentryi = 1:numel(sentry)
+                      ROI = round(cdata)==sentry(sentryi); 
+                      if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
+                        (sentryi==1 || sentry(sentryi)~=sentry(sentryi+1))), 
+                        M.cdata(round(cdata)==sentry(sentryi)) = nid;  
+                        labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255;
+                        labelnam(nid)   = colortable.struct_names(id(sentryi));
+                        nid=nid+1;
+                        ROIv(nid) = sum(ROI); 
+                      end
+                    end
+                    %labelmap = colortable.table(id,1:3)/255;
+                    % addition maximum element
+                    M.cdata(M.cdata>=colortable.numEntries)=0; %colortable.numEntries+1;  
+                    labelmapclim = [min(M.cdata),max(M.cdata)];
+                    %labelnam = colortable.struct_names(id);
                 else
                     M.cdata = cat_io_FreeSurfer('read_surf_data',O.pcdata);
                 end
@@ -236,6 +257,16 @@ switch lower(action)
         
         setappdata(H.patch,'clip',[false NaN NaN]);
 
+        if exist('labelmap','var')
+          setappdata(H.patch,'colourmap',labelmap);
+          cat_surf_render('clim',H.axis,labelmapclim - [0 1]);
+          
+          H = cat_surf_render('ColorBar',H.axis,'on'); 
+          labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
+          ytick = labelmapclim(1):max(1,round(diff(labelmapclim)/80)):labelmapclim(2);
+          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:max(1,round(diff(labelmapclim)/30)):end)); 
+        end
+        
         %-Add context menu
         %------------------------------------------------------------------
         cat_surf_render('ContextMenu',H);
@@ -439,6 +470,22 @@ switch lower(action)
             d = getappdata(H.patch,'data');
             updateTexture(H,d);
         end
+        
+%         
+%     %-ColourMap
+%     %======================================================================
+%     case {'labelmap'}
+%         if isempty(varargin), varargin{1} = gca; end
+%         H = getHandles(varargin{1});
+%         if length(varargin) == 1
+%             varargout = { getappdata(H.patch,'labelmap') };
+%             return;
+%         else
+%             setappdata(H.patch,'labelmap',varargin{2});
+%             d = getappdata(H.patch,'data');
+%             updateTexture(H,d,getappdata(H.patch,'labelmap'),'flat');
+%         end     
+        
     
     %-CLim
     %======================================================================
@@ -988,12 +1035,13 @@ hold(H.axis,'off');
 axis(H.axis,'image');
 
 %==========================================================================
-function C = updateTexture(H,v,col)
+function C = updateTexture(H,v,col)%$,FaceColor)
 
 %-Get colourmap
 %--------------------------------------------------------------------------
-if nargin<3, col = getappdata(H.patch,'colourmap'); end
+if ~exist('col','var'), col = getappdata(H.patch,'colourmap'); end
 if isempty(col), col = hot(256); end
+if ~exist('FaceColor','var') || isempty(FaceColor), FaceColor = 'interp'; end
 setappdata(H.patch,'colourmap',col);
 
 %-Get curvature
@@ -1082,7 +1130,7 @@ setappdata(H.patch, 'clim', [false mi ma]);
 %--------------------------------------------------------------------------
 C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
 
-set(H.patch, 'FaceVertexCData',C, 'FaceColor','interp');
+set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
 %-Update the colourbar
 %--------------------------------------------------------------------------
