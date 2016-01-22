@@ -130,9 +130,9 @@ nproc.help    = {
   SD.values = {0,1};
   SD.val    = {1};
   SD.help   = {
-    'Extract log10-transformed sulcus depth based on the euclidian distance between the central surface and its convex hull.'
+    'Extract sqrt-transformed sulcus depth based on the euclidian distance between the central surface and its convex hull.'
     ''
-    'Log-transformation is used to render the data more normally distributed.'
+    'Transformation with sqrt-function is used to render the data more normally distributed.'
     ''
   };
 

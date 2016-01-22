@@ -38,7 +38,7 @@ for i=1:size(P,1)
   
   PGI     = fullfile(pp,strrep(ff,'central','gyrification'));
   PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
-  PSD     = fullfile(pp,strrep(ff,'central','logsulc'));
+  PSD     = fullfile(pp,strrep(ff,'central','sqrtsulc'));
   PSA     = fullfile(pp,strrep(ff,'central','logarea'));
   Psphere = fullfile(pp,strrep(name,'central','sphere'));
   
@@ -51,7 +51,7 @@ for i=1:size(P,1)
   
   if SD
     %% sulcus depth
-    cmd = sprintf('CAT_SulcusDepth -log "%s" "%s" "%s"',deblank(P(i,:)),Psphere,PSD);
+    cmd = sprintf('CAT_SulcusDepth -sqrt "%s" "%s" "%s"',deblank(P(i,:)),Psphere,PSD);
     [ST, RS] = system(fullfile(opt.CATDir,cmd)); cat_check_system_output(ST,RS,opt.debug);
   end
 
