@@ -3,7 +3,7 @@ function varargout = cat_parallelize(job,func,datafield)
 % Function to parallelize other functions with job structure, by the 
 % following call:
 % 
-%   SVNid = '$Rev: 829 $';
+%   SVNid = '$Rev$';
 % 
 %   ... further initialization code
 %  
@@ -32,7 +32,7 @@ function varargout = cat_parallelize(job,func,datafield)
 %   ... main code
 % ______________________________________________________________________
 % Christian Gaser, Robert Dahnke
-% $Id: cat_surf_smooth.m 829 2016-01-12 11:39:00Z dahnke $
+% $Id$
 
   def.verb      = cat_get_defaults('extopts.verb'); 
   def.lazy      = 0; % reprocess exist results
