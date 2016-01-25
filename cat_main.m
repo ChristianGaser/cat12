@@ -3471,7 +3471,7 @@ function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
 % a masking based on the tissue map can be used
 % ----------------------------------------------------------------------
  
-  % load mask (and complete undefiended parts)
+  % load mask (and complete undefined parts)
   if isempty(Yv)
     % no input - load atlas
     FA = cat_get_defaults('extopts.atlas'); 
@@ -3490,7 +3490,7 @@ function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
       end
     end
     
-    % resample atlas, if the atlas resolution differ from the actual template resolution
+    % resample atlas, if the atlas resolution differs from the actual template resolution
     if wVv.mat(1) ~= trans.warped.M1(1)
       wVv2 = wVv; wVv2.mat = trans.warped.M1; wVv2.dim = trans.warped.odim; 
       [t,wYv] = cat_vol_imcalc(wVv,wVv2,'i1',struct('interp',0,'verb',0));
@@ -3515,7 +3515,6 @@ function wYv = cat_vol_ROInorm(Yv,trans,ai,mod)
     end
   end
   
-  %vx_volw = sqrt(sum(wVlai.mat(1:3,1:3).^2));
 return
 %=======================================================================
 
@@ -3590,7 +3589,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue)
     end
   end
   
-return  
+return
 %=======================================================================
 
 %=======================================================================
@@ -3656,6 +3655,7 @@ for k=1:K,
     d      = bsxfun(@minus,cr,mn(:,k)')*(chol(vr(:,:,k))\1);
     p(:,k) = amp*exp(-0.5*sum(d.*d,2)) + eps;
 end
+return;
 %=======================================================================
 
 %=======================================================================
@@ -3666,6 +3666,7 @@ for d=1:3,
     y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,2)*M(d,2);
     y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,3)*M(d,3) + M(d,4);
 end
+return;
 %=======================================================================
 
 %=======================================================================
@@ -3677,6 +3678,7 @@ for i=1:d(3),
     x(:,:,i,2) = x2;
     x(:,:,i,3) = single(i);
 end
+return;
 %==========================================================================
 % function [P] = clean_gwc(P,level)
 %==========================================================================
@@ -3756,4 +3758,5 @@ for i=1:size(b,3)
     end 
 end
 spm_progress_bar('Clear');
-return
+return;
+

@@ -65,7 +65,7 @@ function varargout = cat_surf_resample(varargin)
     job.CATDir = [job.CATDir '.glnx86'];
   end  
   
-  % dispaly something
+  % display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(Pdata),'Resample Surfaces','Surfaces Completed');
   

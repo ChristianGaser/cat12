@@ -15,11 +15,8 @@
     </header>
   <data>
     <!-- could also include short_name, RGBA, XYZmm -->
-    <label><index>1</index><short_name>rHCA1</short_name><name>Right Hippocampus CA1</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>2</index><short_name>rHSub</short_name><name>Right Hippocampus Subiculum</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>1</index><short_name>rHCA1_2_3_Strat</short_name><name>Right Hippocampus CA1/CA2/Ca3/Subiculum/Stratum</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>4</index><short_name>rHCA4</short_name><name>Right Hippocampus CA4/Dentate Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>5</index><short_name>rHCA2_3</short_name><name>Right Hippocampus CA2/CA3</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>6</index><short_name>rHStrat</short_name><name>Right Stratum Radiatum/Lacunosum/Moleculare</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>11</index><short_name>lAntCerebLI_II</short_name><name>Left Anterior Cerebellar Lobule I-II</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>12</index><short_name>lAntCerebLIII</short_name><name>Left Anterior Cerebellar Lobule III</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>13</index><short_name>lAntCerebLIV</short_name><name>Left Anterior Cerebellar Lobule IV</name><RGBA></RGBA><XYZmm></XYZmm></label>
@@ -34,11 +31,8 @@
     <label><index>22</index><short_name>lInfPostCerebLX</short_name><name>Left Inferior Posterior Cerebellar Lobule X</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>23</index><short_name>lAntCerebWM</short_name><name>Left Cerebellar White Matter</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>26</index><short_name>lAmy</short_name><name>Left Amygdala</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>101</index><short_name>lHCA1</short_name><name>Left Hippocampus CA1</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>102</index><short_name>lHSub</short_name><name>Left Hippocampus Subiculum</name><RGBA></RGBA><XYZmm></XYZmm></label>
+    <label><index>101</index><short_name>lHCA1_2_3_Strat</short_name><name>Left Hippocampus CA1/CA2/Ca3/Subiculum/Stratum</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>104</index><short_name>lHCA4</short_name><name>Left Hippocampus CA4/Dentate Gyrus</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>105</index><short_name>lHCA2_3</short_name><name>Left Hippocampus CA2/CA3</name><RGBA></RGBA><XYZmm></XYZmm></label>
-    <label><index>106</index><short_name>lHStrat</short_name><name>Left Stratum Radiatum/Lacunosum/Moleculare</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>111</index><short_name>rAntCerebLI_II</short_name><name>Right Anterior Cerebellar Lobule I-II</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>112</index><short_name>rAntCerebLIII</short_name><name>Right Anterior Cerebellar Lobule III</name><RGBA></RGBA><XYZmm></XYZmm></label>
     <label><index>113</index><short_name>rAntCerebLIV</short_name><name>Right Anterior Cerebellar Lobule IV</name><RGBA></RGBA><XYZmm></XYZmm></label>
