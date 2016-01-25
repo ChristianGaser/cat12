@@ -8591,6 +8591,7 @@ Updated:    Improved scaling function in cat_plot_boxplot.
 
 
 ------------------------------------------------------------------------
+r841 | gaser | 2016-01-25 14:53:04 +0100 (Mo, 25 Jan 2016) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8615,5 +8616,20 @@ M       templates_1.50mm/labels_dartel_cobra.xml
 (3) Changed: Merged some hippocampus subfields (CA1/CA2/CA3/Stratum/Subiculum) in cobra.atlas.
 (4) Added: Option for changing underlying geometry in cat_surf_render.m
 
+
 ------------------------------------------------------------------------
-r841 | gaser | 2016-01-25 14:52:55
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_batch_vbm.m
+M       cat_defaults.m
+D       cat_stat_spm.m
+M       spm_cat12.m
+
+(1) Removed: cat_stat_spm.m because we now always use spm_spm.m and modify
+    SPM.mat according to underlying fsaverage surface from freesurfer.
+(2) Removed: Field extopts.gui because we will always use CAT12 in GUI mode.
+(3) Changed: All files that are affected by the above mentioned changes.
+------------------------------------------------------------------------
+r842 | gaser | 2016-01-25 22:17:10

@@ -138,7 +138,33 @@ for i=1:size(P,1)
     swd      = spm_file(P(i,:),'fpath');
     load(fullfile(swd,'SPM.mat'));
     SPM.swd  = swd;
-    cat_stat_spm(SPM);
+    spm_spm(SPM);
+    
+    % workaround to use fsaverage surface for display
+    load(fullfile(swd,'SPM.mat'));
+    fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    
+    % check that folder exist and number of vertices fits
+    if exist(fsavgDir) == 7 && SPM.xVol.DIM(1) == 163842
+      [pp,ff]   = spm_fileparts(SPM.xY.VY(1).fname);
+      
+      % find lh|rh string
+      hemi_ind = [];
+      hemi_ind = [hemi_ind strfind(ff,'lh')];
+      hemi_ind = [hemi_ind strfind(ff,'rh')];
+      hemi = ff(hemi_ind:hemi_ind+1);
+      if ~isempty(hemi)
+        SPM.xVol.G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii']);
+        
+        % remove memory demanding faces and vertices which are not necessary
+        for i=1:length(SPM.xY.VY)
+          SPM.xY.VY(i).private.faces = [];
+          SPM.xY.VY(i).private.vertices = [];
+        end
+        
+        save(fullfile(swd,'SPM.mat'),'SPM');
+      end
+    end
 end
 
 % --- Executes on button press in pushbutton6.
