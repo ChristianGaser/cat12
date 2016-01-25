@@ -651,7 +651,7 @@ function stools = cat_conf_stools(expert)
   if expert > 1
     data_surf.ufilter = '^[lr]h.';
   else
-    data_surf.ufilter = '[lr]h.(?!thick|gyri|fractal|logsulc|depth|logarea|area).*';
+    data_surf.ufilter = '[lr]h.(?!cent|sphe|defe).*';
   end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select Surfaces Data Files for Resampling to Template Space.'};

@@ -29,7 +29,7 @@
         <li>Check data quality using <a href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">sample homogeneity</a> for VBM data</li>
         <li><a href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data</li>
         <li>Estimate <a href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> in order to correct for different head size and volume</li>
-        <li>Build <a href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data and use TIV as covariate</li>
+        <li>Build <a href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data and use TIV as covariate and threshold masking with an absolute value of 0.1</li>
         <li><a href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model</li>
         <li>Optionally <a href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">transform and threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps</li>
         <li>Optionally <a href="matlab:cat_vol_slice_overlay;">overlay selected slices</a></li>

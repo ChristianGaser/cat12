@@ -53,7 +53,7 @@ function varargout = cat_surf_parameters(job)
   end  
 
 
-  % dispaly something
+  % display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',size(P,1),'Processed surfaces','Surfaces Completed');
   
