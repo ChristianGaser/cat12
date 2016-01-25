@@ -8534,6 +8534,7 @@ M       cat_surf_parameters.m
     estimating sulcus depth. Changed all filenames from logsulc to sqrtsulc.
 
 ------------------------------------------------------------------------
+r840 | dahnke | 2016-01-22 16:06:59 +0100 (Fr, 22 Jan 2016) | 54 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8588,5 +8589,31 @@ Updated:    Improved scaling function in cat_plot_boxplot.
   
   
 
+
 ------------------------------------------------------------------------
-r840 | dahnke | 2016-01-22 16:06:46
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_stat_spm.m
+M       cat_surf_parameters.m
+M       cat_surf_render.m
+M       cat_surf_resamp.m
+M       cat_surf_resample.m
+M       cat_surf_smooth.m
+M       html/cat.html
+M       html/cat_starting.html
+M       templates_1.50mm/cobra.csv
+M       templates_1.50mm/cobra.nii
+A       templates_1.50mm/cobra.txt
+M       templates_1.50mm/labels_dartel_cobra.xml
+
+(1) Fixed: Added metadata field with filename in CAT-gifti functions.
+(2) Fixed: Some typos in cat_main.m
+(3) Changed: Merged some hippocampus subfields (CA1/CA2/CA3/Stratum/Subiculum) in cobra.atlas.
+(4) Added: Option for changing underlying geometry in cat_surf_render.m
+
+------------------------------------------------------------------------
+r841 | gaser | 2016-01-25 14:52:55

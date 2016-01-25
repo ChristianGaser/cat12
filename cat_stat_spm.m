@@ -268,7 +268,8 @@ function SPM = cat_stat_spm(SPM)
 % Copyright (C) 1994-2012 Wellcome Trust Centre for Neuroimaging
 
 % based on:
-% spm_spm.m 6015 2014-05-23 15:46:19Z guillaume
+% Karl Friston & Guillaume Flandin
+% $Id$
 %
 % $Id$
 
@@ -329,8 +330,11 @@ DIM     = VY(1).dim;
 YNaNrep = spm_type(VY(1).dt(1),'nanrep');
 if spm_mesh_detect(VY)
     file_ext = '.gii';
+    g        = VY(1).private;
+    metadata = {g.private.metadata(1).name, g.private.metadata(1).value};
 else
     file_ext = spm_file_ext;
+    metadata = {};
 end
 
 %-Delete files from previous analyses
@@ -461,7 +465,8 @@ VM = struct(...
     'dt',      [spm_type('uint8') spm_platform('bigend')],...
     'mat',     M,...
     'pinfo',   [1 0 0]',...
-    'descrip', 'spm_spm:resultant analysis mask');
+    'descrip', 'spm_spm:resultant analysis mask',...
+    metadata{:});
 VM = spm_data_hdr_write(VM);
 
 %-Initialise beta files
@@ -472,7 +477,8 @@ Vbeta(1:nBeta) = deal(struct(...
     'dt',      [spm_type('float32') spm_platform('bigend')],...
     'mat',     M,...
     'pinfo',   [1 0 0]',...
-    'descrip', 'spm_spm:beta'));
+    'descrip', 'spm_spm:beta',...
+    metadata{:}));
 
 for i = 1:nBeta
     Vbeta(i).fname   = [sprintf('beta_%04d',i) file_ext];
@@ -488,7 +494,8 @@ VResMS = struct(...
     'dt',      [spm_type('float64') spm_platform('bigend')],...
     'mat',     M,...
     'pinfo',   [1 0 0]',...
-    'descrip', 'spm_spm:Residual sum-of-squares');
+    'descrip', 'spm_spm:Residual sum-of-squares',...
+    metadata{:});
 VResMS = spm_data_hdr_write(VResMS);
 
 %-Initialise standardised residual images
@@ -501,7 +508,8 @@ VResI(1:nSres) = deal(struct(...
     'dt',      [spm_type('float64') spm_platform('bigend')],...
     'mat',     M,...
     'pinfo',   [1 0 0]',...
-    'descrip', 'spm_spm:StandardisedResiduals'));
+    'descrip', 'spm_spm:StandardisedResiduals',...
+    metadata{:}));
 if resInMem, for i=1:nSres, VResI(i).dat = zeros(VResI(i).dim); end; end
 
 for i = 1:nSres
@@ -654,7 +662,8 @@ else
         'dt',      [spm_type('float64') spm_platform('bigend')],...
         'mat',     M,...
         'pinfo',   [1 0 0]',...
-        'descrip', 'spm_spm: resels per voxel');
+        'descrip', 'spm_spm: resels per voxel',...
+        metadata{:});
     VRpv = spm_data_hdr_write(VRpv);
     ResI = zeros(prod(DIM),numel(VResI));
     for i=1:numel(VResI)
@@ -676,13 +685,18 @@ else
         g = gifti(fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
       end
     else
-      g = g.private.metadata(1).value;
+      g = metadata{2};
       if isempty(spm_file(g,'path'))
         g = fullfile(spm_file(VY(1).fname,'path'),g);
       end
     end
     
-    [R, RPV] = spm_mesh_resels(gifti(g),mask,ResI);
+    try % new spm_mesh_resels function in r6685
+      [R, RPV] = spm_mesh_resels(gifti(g),mask,ResI,[nScan erdf]);
+    catch
+      [R, RPV] = spm_mesh_resels(gifti(g),mask,ResI);
+    end
+    
     RPV(~mask) = NaN;
     VRpv = spm_data_write(VRpv,RPV);
     FWHM = [1 1 1] * (1/mean(RPV(mask))).^(1/3);

@@ -69,7 +69,7 @@ function varargout = cat_surf_smooth(varargin)
     job.CATDir = [job.CATDir '.glnx86'];
   end  
   
-  % dispaly something
+  % display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Completed');
   

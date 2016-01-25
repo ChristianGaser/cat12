@@ -66,7 +66,7 @@ function varargout = cat_surf_resamp(varargin)
     job.CATDir = [job.CATDir '.glnx86'];
   end  
   
-  % dispaly something
+  % display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed');
 
