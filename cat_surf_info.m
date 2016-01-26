@@ -84,7 +84,7 @@ function [varargout] = cat_surf_info(P,read)
       case '.annot'
         sinfo(i).ff = ff;
         sinfo(i).ee = ee;
-        sinfo(i).ftype = 0;
+        sinfo(i).ftype = 1;
         sinfo(i).label = 1; 
         if sinfo(i).exist && read
           clear S; 
@@ -130,6 +130,7 @@ function [varargout] = cat_surf_info(P,read)
       sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
       sidei = strfind(noname,[sinfo(i).side '.']);
     end
+      if isempty(sidei), sidei = strfind(noname,sinfo(i).side); end
     if sidei>0
       sinfo(i).preside = noname(1:sidei-1);
       sinfo(i).posside = noname(sidei+numel(sinfo(i).side)+1:end);

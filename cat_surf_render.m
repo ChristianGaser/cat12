@@ -120,6 +120,8 @@ switch lower(action)
                     Mt = gifti(O.pcdata);
                     M.cdata = Mt.cdata;
                 elseif strcmp(ee,'.annot')
+                  labelmap = zeros(0); labelnam = cell(0); ROIv = zeros(0);
+            
                   %%
                     [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata); %clear fsv;
                     [sentry,id] = sort(colortable.table(:,5));
@@ -151,6 +153,27 @@ switch lower(action)
                 [pp,ff,ee] = fileparts(O.pcdata{mi});
                 if strcmp(ee,'.gii')
                     M = gifti(O.pcdata{1});
+                 elseif strcmp(ee,'.annot')
+                  %%
+                    [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata{1}); %clear fsv;
+                    [sentry,id] = sort(colortable.table(:,5));
+                    M.cdata = cdata; nid=1;
+                    for sentryi = 1:numel(sentry)
+                      ROI = round(cdata)==sentry(sentryi); 
+                      if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
+                        (sentryi==1 || sentry(sentryi)~=sentry(sentryi+1))), 
+                        M.cdata(round(cdata)==sentry(sentryi)) = nid;  
+                        labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255;
+                        labelnam(nid)   = colortable.struct_names(id(sentryi));
+                        nid=nid+1;
+                        ROIv(nid) = sum(ROI); 
+                      end
+                    end
+                    %labelmap = colortable.table(id,1:3)/255;
+                    % addition maximum element
+                    M.cdata(M.cdata>colortable.numEntries)=0; %colortable.numEntries+1;  
+                    labelmapclim = [min(M.cdata),max(M.cdata)];
+                    %labelnam = colortable.struct_names(id);
                 else
                     M.cdata = cat_io_FreeSurfer('read_surf_data',O.pcdata{1});
                 end
@@ -158,10 +181,31 @@ switch lower(action)
                     [pp,ff,ee] = fileparts(O.pcdata{mi});
                     if strcmp(ee,'.gii')
                         Mt = gifti(O.pcdata{mi});
+                    elseif strcmp(ee,'.annot')
+                      %%
+                        [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata{mi}); %clear fsv;
+                        [sentry,id] = sort(colortable.table(:,5));
+                        Mt.cdata = cdata; 
+                        for sentryi = 1:numel(sentry)
+                          ROI = round(cdata)==sentry(sentryi); 
+                          if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
+                            (sentryi==1 || sentry(sentryi)~=sentry(sentryi+1))), 
+                            Mt.cdata(round(cdata)==sentry(sentryi)) = nid;  
+                            labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255;
+                            labelnam(nid)   = colortable.struct_names(id(sentryi));
+                            nid=nid+1;
+                            ROIv(nid) = sum(ROI); 
+                          end
+                        end
+                        %labelmap = colortable.table(id,1:3)/255;
+                        % addition maximum element
+                        Mt.cdata(Mt.cdata>=colortable.numEntries + labelmapclim(2))=0; %colortable.numEntries+1;  
+                        %labelnam = colortable.struct_names(id);
                     else
                         Mt.cdata = cat_io_FreeSurfer('read_surf_data',O.pcdata{mi});
                     end
                     M.cdata = [M.cdata;Mt.cdata];
+                    labelmapclim = [min(M.cdata),max(M.cdata)];
                 end
                 if size(M.vertices,1)~=numel(M.cdata); 
                   warning('cat_surf_render:multisurfcdata',...
@@ -923,8 +967,8 @@ set(getappdata(obj,'fig'),'renderer',r);
 %==========================================================================
 function mySave(obj,evt,H)
 [filename, pathname, filterindex] = uiputfile({...
-    '*.gii' 'GIfTI files (*.gii)'; ...
     '*.png' 'PNG files (*.png)';...
+    '*.gii' 'GIfTI files (*.gii)'; ...
     '*.dae' 'Collada files (*.dae)';...
     '*.idtf' 'IDTF files (*.idtf)'}, 'Save as');
 if ~isequal(filename,0) && ~isequal(pathname,0)
