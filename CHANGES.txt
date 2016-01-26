@@ -8634,6 +8634,7 @@ M       spm_cat12.m
 (3) Changed: All files that are affected by the above mentioned changes.
 
 ------------------------------------------------------------------------
+r843 | gaser | 2016-01-25 22:17:34 +0100 (Mo, 25 Jan 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8643,5 +8644,61 @@ MM      cat_parallelize.m
     SPM.mat according to underlying fsaverage surface from freesurfer.
 (2) Removed: Field extopts.gui because we will always use CAT12 in GUI mode.
 (3) Changed: All files that are affected by the above mentioned changes.
+
 ------------------------------------------------------------------------
-r843 | gaser | 2016-01-25 22:17:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_rename.m
+M       cat_surf_render.m
+A       html/CAT_surf_atlas_DKT40.png
+A       html/CAT_surf_atlas_Deskan-Killiany.png
+A       html/CAT_surf_atlas_PALS-B12-Brodmann.png
+A       html/CAT_surf_atlas_PALS-B12-Lobes.png
+A       html/CAT_surf_atlas_aal.png
+A       html/CAT_surf_atlas_hammers.png
+A       html/CAT_surf_atlas_lpba40.png
+A       html/CAT_surf_atlas_mori.png
+A       html/CAT_surf_atlas_neuromorphometics.png
+M       html/cat_methods_RBM.html
+A       templates_surfaces/lh.PALS_B12_Brodmann.freesurfer.annot
+A       templates_surfaces/lh.PALS_B12_Lobes.freesurfer.annot
+A       templates_surfaces/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+A       templates_surfaces/lh.PALS_B12_Visuotopic.freesurfer.annot
+A       templates_surfaces/lh.aal.Template_T1_IXI555_MNI152
+A       templates_surfaces/lh.aparc.freesurfer.annot
+A       templates_surfaces/lh.aparcDKT40.freesurfer.annot
+A       templates_surfaces/lh.aparcDKT40JT.freesurfer.annot
+A       templates_surfaces/lh.aparc_a2005s.freesurfer.annot
+A       templates_surfaces/lh.aparc_a2009s.freesurfer.annot
+A       templates_surfaces/lh.hammers.Template_T1_IXI555_MNI152
+A       templates_surfaces/lh.lpba40.Template_T1_IXI555_MNI152
+A       templates_surfaces/lh.mori.Template_T1_IXI555_MNI152
+A       templates_surfaces/lh.neuromorphometrics.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.PALS_B12_Brodmann.freesurfer.annot
+A       templates_surfaces/rh.PALS_B12_Lobes.freesurfer.annot
+A       templates_surfaces/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+A       templates_surfaces/rh.PALS_B12_Visuotopic.freesurfer.annot
+A       templates_surfaces/rh.aal.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.aparc.freesurfer.annot
+A       templates_surfaces/rh.aparcDKT40.freesurfer.annot
+A       templates_surfaces/rh.aparcDKT40JT.freesurfer.annot
+A       templates_surfaces/rh.aparc_a2005s.freesurfer.annot
+A       templates_surfaces/rh.aparc_a2009s.freesurfer.annot
+A       templates_surfaces/rh.hammers.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.lpba40.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.mori.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.neuromorphometrics.Template_T1_IXI555_MNI152
+
+Added:      Added FreeSurfer surface atlas maps (annotation maps).
+Added:      Added CAT12 volume-based surface atlas maps (gifti) as FS data files.
+Updated:    Added temporary colormaps for visualization of volume atlas maps in 
+            cat_surf_display.
+Changed:    Set PNG as standard "save as" in cat_surf_display.
+Changed:    Added further informations, images and links in ROI XML help.
+
+
+------------------------------------------------------------------------
+r844 | dahnke | 2016-01-26 15:13:23

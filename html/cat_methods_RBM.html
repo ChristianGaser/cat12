@@ -57,7 +57,7 @@
       <h4>List of atlas maps in CAT12</h4>
       <ul>
         <li>
-          <h5>Neuromorphometics</h5>
+          <h5>Neuromorphometics (2012)</h5>
           <p>
             Maximum probability tissue labels derived from the "MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling" 
             (<a href="https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details">Challenge_Details</a>). 
@@ -66,11 +66,21 @@
             These references should be included in all workshop and final publications.
           </p>
           <p>
-           <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">Display LPBA40 atlas.</a> 
-         </p>
-        </li>
-        <li>
-          <h5>LPBA40</h5>
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')}}))">Display neuromorphometrics atlas.</a> 
+          </p><p>
+            Display Neuromorphometics atlas on DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>)  
+            ), or FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
+            ). 
+          </p>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_neuromorphometics.png" width=90% height=auto alt="Neuromorphometics (2012)" ><p>
+        </li><li>
+          <h5>LPBA40 (2008)</h5>
           <p>
             The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions [Shattuck:2008]. 
             These maps were produced from a set of whole-head MRI of 40 human volunteers. 
@@ -79,18 +89,39 @@
             The original MRI data were also transformed into the atlas space.
           </p>
           <p>
-           <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">Display LPBA40 atlas.</a> 
-         </p>
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">Display LPBA40 atlas.</a> 
+          </p><p>
+            Display LPBA40 atlas on DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>)  
+            ), or FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
+            ). 
+          </p>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_lpba40.png" width=90% height=auto alt="LPBA40 [Shattuck:2008]" ><p>
         </li><li>
-          <h5>Hammers atlas:</h5>
+          <h5>Hammers (2003)</h5>
           <p>
             This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 [Hammers:2003,Gousias:2008]. 
           </p>
           <p>
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')}}))">Display Hammers atlas.</a> 
+          </p><p>
+            Display Hammers atlas on DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>)  
+            ), or FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
+            ). 
           </p>
-        </li>
-        <li>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_hammers.png" width=90% height=auto alt="Hammers [Hammers:2003]" ><p>
+        </li><li>
           <h5>IBSR</h5>
           <p>
             18 subjectes of the <a href="http://www.nitrc.org/projects/ibsr">IBSR V2</a> dataset, with low quality T1 data, but good labels maps. 
@@ -98,25 +129,47 @@
           </p>
           <p>
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">Display IBSR atlas.</a>
+          </p><p>
+            No surface version available because the IBSR atlas does not contain cortical regions. 
           </p>
-        </li>
-        <li>
-          <h5>Mori atlas</h5>
+        </li><li>
+          <h5>Mori</h5>
           <p>
-            This atlas based on the <a href="http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 [Oishi:]. 
+            This atlas based on the <a href="http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 [Oishi:20xx]. 
           </p>
           <p>
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')}}))">Display Mori atlas.</a> 
+          </p><p>
+            Display Mori atlas on DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
+            ), or FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ). 
           </p>
-        </li>
-        <li>
-          <h5>AAL (AUTOMATED ANATOMICAL LABELING) atlas:</h5>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_mori.png" width=90% height=auto alt="Mori [Oishi:20xx]" ><p>
+        </li><li>
+          <h5>AAL (AUTOMATED ANATOMICAL LABELING)</h5>
           <p>
             Combining probabilistic cytoarchitectonic maps and functional imaging data aligned on Collins brain [Collins:1998,Tzourio-Mazoyer:2002].
           </p>
           <p>            
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')}}))">Display AAL atlas.</a> 
+          </p><p>
+            Display AAL atlas on DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
+            ), or FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ). 
           </p>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_aal.png" width=90% height=auto alt="AAL [Tzourio-Mazoyer:2002]" ><p>
         </li>
       </ul>
       
@@ -131,7 +184,136 @@
         ...
       </p>
       -->
-      <h4>References:</h4>
+      
+      
+      
+      
+      <h4>List of FreeSurfer atlas maps</h4>
+      <p>
+        See <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation">Freesurfer WIKI</a>.
+      </p>
+      <ul>
+        <li>
+          <h5>Deskan-Killiany (DKT40) Atlas (2010)</h5>
+          <p>
+            This atlas is also known as the 'Desikan-Killiany-Tourville' (DKT) cortical atlas. 
+            It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci [Deskan-Killiany-Tourville:2006]. 
+            That is, a gyrus includes the part visible on the pial view + adjacent banks of the sulci limiting this gyrus. 
+          </p><p>
+            Display Deskan-killiany atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparcDKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparcDKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+          <!--
+          <p>
+            Display Deskan-killiany atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40JT.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparcDKT40JT.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40JT.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40JT.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparcDKT40JT.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40JT.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+          -->
+          <p style="text-align:center;"><img src="CAT_surf_atlas_DKT40.png" width=90% height=auto alt="Deskan-Killiany-Tourville:2010" ><p>
+        </li>
+        <li>
+          <h5>Deskan-Killiany Atlas (2006)</h5>
+          <p>
+            This atlas is also known as the 'Desikan-Killiany' cortical atlas. 
+            It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci [Deskan-Killiany:2006]. 
+            That is, a gyrus includes the part visible on the pial view + adjacent banks of the sulci limiting this gyrus. 
+          </p><p>
+            Display Deskan-killiany atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_Deskan-Killiany.png" width=90% height=auto alt="Deskan-Killiany:2006" ><p>
+        </li>
+        <!--
+        <li>
+          <h5>Destrieux Atlas (2005)</h5>
+          <p>
+            Display Destrieux atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2005s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc_a2005s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2005s.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2005s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc_a2005s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2005s.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+        </li>
+        -->
+        <li>
+          <h5>Destrieux Atlas (2009)</h5>
+          <p>
+            This atlas is also known as the 'Destrieux' cortical atlas [Fischl:2004].
+            It is based on a parcellation scheme that first divided the cortex into gyral and sulcal regions, the limit between both being given by the curvature value of the surface. 
+            A gyrus only includes the cortex visible on the pial view, the hidden cortex (banks of sulci) are marked sulcus.
+          </p><p>
+            Display Destrieux atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+        </li><li>
+          <h5>PALS B12 Brodman</h5>
+          <p>
+            Display PALS B12 Brodman atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_PALS-B12-Brodmann.png" width=90% height=auto alt="PALS B12 Brodmann" ><p>
+        </li><li>
+          <h5>Lobes</h5>
+          <p>
+            Display Lobes atlas on FreeSurfer average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>  
+            ), or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
+            ). 
+          </p>
+          <p style="text-align:center;"><img src="CAT_surf_atlas_PALS-B12-Lobes.png" width=90% height=auto alt="PALS B12 Lobes" ><p>
+        </li>
+      </ul>
+      
+      
+      
+      
+      
+      
+      <h2>References:</h2>
       <ul>
         <li>
           <b>Collins:1998</b>
@@ -139,6 +321,21 @@
             Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, et al. </br>
             Design and construction of a realistic digital brain phantom. </br>
             IEEE Transactions on Medical Imaging 1998; 17: 463-68.
+          </p>
+        </li>
+         <li>
+          <b>Deskan-Killiany-Tourville:2006</b>
+          <p>
+            Desikan et al. </br>
+            An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest. </br>
+            NeuroImage 2006, 31(3):968-80.
+         </p>
+        </li>
+        </li>
+         <li>
+          <b>Fischl:2004</b>
+          <p>
+            Fischl et al. </br>
           </p>
         </li>
         <li>
