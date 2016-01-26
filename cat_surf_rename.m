@@ -59,6 +59,7 @@ function [PO,sinfo] = cat_surf_rename(P,varargin)
       sinfo(i).name,...
       sinfo(i).ee));
     
+    if isempty(strfind(sinfo(i).ff,'..')), PO{i} = strrep(PO{i},'..','.'); end
   end
   
 end

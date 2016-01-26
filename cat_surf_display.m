@@ -8,6 +8,8 @@ function varargout = cat_surf_display(varargin)
 % job.colormap  .. colormap
 % job.caxis     .. range of the colormap
 % job.multisurf .. load both sides, if possible  
+% job.usefsaverage .. use average surface (for resampled data only)
+%                  (default = 0)
 % job.view      .. view 
 %                   l=left, r=right
 %                   a=anterior, p=posterior
@@ -53,6 +55,12 @@ function varargout = cat_surf_display(varargin)
   
   % scaling options for textures
   def.colormap = '';
+  def.fsaverage    = {
+    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
+    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
+    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii');  
+    };
+  def.usefsaverage = 0; 
   def.caxis    = []; % default/auto, range
   
   % print options ... just a quick output > cat_surf_print as final function 
@@ -77,6 +85,9 @@ function varargout = cat_surf_display(varargin)
     spm('FnBanner',mfilename,SVNid); 
   end
   for i=1:numel(job.data)
+    if job.usefsaverage
+      sinfo(i).Pmesh = cat_surf_rename(job.fsaverage{job.usefsaverage},'side',sinfo(i).side); 
+    end
     
     % load multiple surfaces
     if job.multisurf
@@ -122,11 +133,37 @@ function varargout = cat_surf_display(varargin)
       if ~job.multisurf && strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
       
       
-      % colormap
-      if isempty(job.colormap)
-        cat_surf_render('ColourMap',h.axis,jet(256)); 
+      % temporary colormap
+      if any(strcmpi({'neuromorphometrics','lpba40','ibsr','hammers','mori','aal'},sinfo(i).dataname))
+        %%
+        switch lower(sinfo(i).dataname)
+          case 'neuromorphometrics', rngid=3; 
+          case 'lpba40',             rngid=12; 
+          case 'ibsr',               rngid=1; 
+          case 'hammers',            rngid=5;  
+          case 'mori',               rngid=3; 
+          case 'aal',                rngid=11; 
+          otherwise,                 rngid=1; 
+        end
+        
+        sideids = ceil(max(h.cdata(:))/2)*2;  
+        rng('default'); rng(rngid);  
+        cmap = colorcube(ceil((sideids/2) * 8/7)); % greater to avoid grays
+        cmap(ceil(sideids/2):end,:)=[]; % remove grays
+        cmap(sum(cmap,2)<0.3,:) = min(1,max(0.1,cmap(sum(cmap,2)<0.3,:)+0.2)); % not to dark
+        cmap = cmap(randperm(size(cmap,1)),:); % random 
+        cmap = reshape(repmat(cmap',2,1),3,size(cmap,1)*2)'; 
+       
+        cat_surf_render('ColourMap',h.axis,cmap);
+        
+        %%
+        continue
       else
-        cat_surf_render('ColourMap',h.axis,eval(job.colormap));
+        if isempty(job.colormap)
+          cat_surf_render('ColourMap',h.axis,jet(256)); 
+        else
+          cat_surf_render('ColourMap',h.axis,eval(job.colormap));
+        end
       end
       
       % scaling
