@@ -8646,6 +8646,7 @@ MM      cat_parallelize.m
 (3) Changed: All files that are affected by the above mentioned changes.
 
 ------------------------------------------------------------------------
+r844 | dahnke | 2016-01-26 15:13:34 +0100 (Di, 26 Jan 2016) | 54 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8700,5 +8701,17 @@ Changed:    Set PNG as standard "save as" in cat_surf_display.
 Changed:    Added further informations, images and links in ROI XML help.
 
 
+
 ------------------------------------------------------------------------
-r844 | dahnke | 2016-01-26 15:13:23
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat12.m
+MM      templates_1.50mm/cobra.txt
+
+(1) Fixed: Issue with fixed filename in metadata field in cat12.m.
+(2) Changed: Updated manual which is not yet finished.
+------------------------------------------------------------------------
+r845 | gaser | 2016-01-27 13:04:03
