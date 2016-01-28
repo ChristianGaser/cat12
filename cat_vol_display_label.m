@@ -40,7 +40,8 @@ function cat_vol_display_label(job)
     for i=2:numel(V) 
       [mni(i),mxi(i)] = mn_mx_val(V(i));
     end
-    mn = nanmin(mni); mx = nanmax(mxi);
+    mn = cat_stat_nanstat1d(mni,'nanmin');
+    mx = cat_stat_nanstat1d(mxi,'nanmax');
     if mn < 0
       mn = min([-mn mx]);
       mx = mn;

@@ -8703,6 +8703,7 @@ Changed:    Added further informations, images and links in ROI XML help.
 
 
 ------------------------------------------------------------------------
+r845 | gaser | 2016-01-27 13:04:22 +0100 (Mi, 27 Jan 2016) | 10 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -8713,5 +8714,27 @@ MM      templates_1.50mm/cobra.txt
 
 (1) Fixed: Issue with fixed filename in metadata field in cat12.m.
 (2) Changed: Updated manual which is not yet finished.
+
 ------------------------------------------------------------------------
-r845 | gaser | 2016-01-27 13:04:03
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_update.m
+M       cat_vol_display_label.m
+A  +    html/CAT_surf_atlas_Desikan-Killiany.png
+D       html/CAT_surf_atlas_Deskan-Killiany.png
+M       html/cat.html
+M       html/cat_instruction_PP.html
+M       html/cat_methods_RBM.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Moved some options from tbx_cfg_cat.m to expert mode.
+(2) Fixed: Deskan->Desikan in html
+(3) Fixed: Many, many typos.
+(4) Fixed: Reoplaced nanmax/nanmin in cat_vol_display_label.m 
+
+------------------------------------------------------------------------
+r846 | gaser | 2016-01-28 14:23:36

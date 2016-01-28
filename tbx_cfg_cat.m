@@ -160,8 +160,12 @@ warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
 dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
 bias        = cfg_branch;
 bias.tag    = 'bias';
-bias.name   = 'Bias, noise and intensity corrected';
-bias.val    = {native warped dartel};
+bias.name   = 'Bias, noise and intensity corrected T1 image';
+if expert
+  bias.val    = {native warped dartel};
+else
+  bias.val    = {warped};
+end
 bias.help   = {
   'This is the option to save a bias, noise, and (local) intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
 ''
@@ -220,8 +224,12 @@ dartel.def    = @(val)cat_get_defaults('output.GM.dartel', val{:});
 grey          = cfg_branch;
 grey.tag      = 'GM';
 grey.name     = 'Grey matter';
-grey.val      = {native warped modulated dartel};
-grey.help     = {'Options to produce grey matter images: p1*.img, wp1*.img and m[0]wp1*.img.'
+if expert
+  grey.val      = {native warped modulated dartel};
+else
+  grey.val      = {modulated dartel};
+end
+grey.help     = {'Options to produce grey matter images.'
 ''
 };
 
@@ -232,8 +240,12 @@ dartel.def    = @(val)cat_get_defaults('output.WM.dartel', val{:});
 white         = cfg_branch;
 white.tag     = 'WM';
 white.name    = 'White matter';
-white.val     = {native warped modulated dartel};
-white.help    = {'Options to produce white matter images: p2*.img, wp2*.img and m[0]wp2*.img.'
+if expert
+  white.val      = {native warped modulated dartel};
+else
+  white.val      = {modulated dartel};
+end
+white.help    = {'Options to produce white matter images.'
 ''
 };
 
@@ -245,7 +257,7 @@ csf           = cfg_branch;
 csf.tag       = 'CSF';
 csf.name      = 'Cerebro-Spinal Fluid (CSF)';
 csf.val       = {native warped modulated dartel};
-csf.help      = {'Options to produce CSF images: p3*.img, wp3*.img and m[0]wp3*.img.'
+csf.help      = {'Options to produce CSF images.'
 ''
 };
 
@@ -340,7 +352,7 @@ if expert==2
 elseif expert==1
   output.val  = {surface grey white csf wmh label bias jacobian warps};
 else
-  output.val  = {surface grey white csf label bias jacobian warps};
+  output.val  = {surface grey white bias jacobian warps};
 end
 output.help = {
 'There are a number of options about what data you would like the routine to produce. The routine can be used for producing images of tissue classes, as well as bias corrected images. The native space option will produce a tissue class image (p*) that is in alignment with the original image. You can also produce spatially normalised versions - both with (m[0]wp*) and without (wp*) modulation. In the cat toolbox, the voxel size of the spatially normalised versions is 1.5 x 1.5 x 1.5mm as default. The produced images of the tissue classes can directly be used for doing voxel-based morphometry (both un-modulated and modulated). All you need to do is smooth them and do the stats (which means no more questions on the mailing list about how to do "optimized VBM").'
@@ -399,10 +411,17 @@ function dep = vout(job)
 
 opts  = job.output;
 
-tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
-tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
-tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
-tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
+if isfield(opts.GM,'native')
+  tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
+  tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
+  tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
+  tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
+else
+  tissue(1).warped = [0  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
+  tissue(1).native = [0  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
+  tissue(2).warped = [0  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
+  tissue(2).native = [0  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
+end
 if isfield(opts,'CSF')
   tissue(3).warped = [opts.CSF.warped (opts.CSF.modulated==1) (opts.CSF.modulated==2)];
   tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
@@ -418,11 +437,13 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
 
 
 % bias corrected
-if opts.bias.native,
+if isfield(opts.bias,'native')
+  if opts.bias.native,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Bias Corr Images';
     cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
 end;
 if opts.bias.warped,
     cdep(end+1)          = cfg_dep;

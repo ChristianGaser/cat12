@@ -57,11 +57,11 @@
         <li>      
           <h4>Extended options</h4>
           <p>
-            CAT12 uses adaptive denoising methods to allow an exact and stable segmentation for different levels of noise.
+            CAT12 uses adaptive denoising methods to allow an reliable segmentation for different levels of noise.
           </p>
           <p>
-            For the denoising, the Local Adaptive Segmentation, the Skull-Stripping, and of the Cleanup function a strength parameter allows simple modifications, if the default segmentation does not fit for your requirements. 
-            Setting the strength to 0 will deactivate the method. 
+            For the denoising, the Local Adaptive Segmentation, the Skull-Stripping, and the Cleanup function a strength parameter allows simple modifications if the default segmentation does not fit for your requirements. 
+            Setting the strength to 0 will deactivate the respective method. 
             Values smaller than the default value of 0.5 will run the functions with less strength, whereas higher values (maximum=1) will increase the strength.
           </p>
           <p>
@@ -70,9 +70,9 @@
             Be aware of problems with the ROI analysis, because the CAT12 atlas maps are optimized for CAT12 IXI555 template!
           </p>
           <p>
+            <!--
             For regional analysis the Hammers atlas in IXI555 template space allows extraction of values such as thickness.
             Results were stored in the <i>cat_*.XML</i> and a csv-file <i>catROI*.csv</i> files. 
-            <!--
             <i>catROI[SPACE]_[ATLAS]_*.csv</i> for each atlas map <i>ATLAS</i> and its estimation space [SPACE] (<i>s</i> for subject space and <i>w</i> for normalized space).
             -->
             <!--
@@ -84,8 +84,8 @@
             
           </p>
           <p>
-            CAT12 also allows the creation of the central cortical surface and the estimation of thickness and folding parameters.
-            Surface processing will take around 2 times longer as segmentation only preprocessing (around 1 hour for a standard dataset on a computer of the year 2013).
+            CAT12 also allows the creation of the central cortical surface and the estimation of thickness and several folding parameters.
+            Surface processing will take around 2-3 times longer as segmentation only preprocessing (around 1 hour for a standard dataset on a computer of the year 2013).
           </p>
         </li>
         <li>
@@ -93,9 +93,9 @@
           <p>
             CAT12 allows to write the results of the preprocessing in different spaces - native/subject space, normalized space, modulated normalized space, and DARTEL export. 
             For most CAT analysis the <i>modulated normalized</i> space is the best choice.
-            DARTEL export is only required for special analysis (Brain<i>AGE</i>) or for DARTEL template generation. 
+            DARTEL export is only required for DARTEL template generation. 
           </p>
-          <p>There are the following map types:</p>
+          <p>The following maps can be saved:</p>
           <ul>
             <li>
               <h5>GM, WM, and CSF class maps (p1, p2, and p3 maps)</h5>
