@@ -541,7 +541,7 @@ if do_cls
 %         P = Pp; clear Pp Ybb;
 
         % Used spm_mrf help and tested the probability TPM map for Q without good results.         
-        nmrf_its = 0; % 10 interation better to get full probability in thin GM areas 
+        nmrf_its = 0; % 10 interations better to get full probability in thin GM areas 
         spm_progress_bar('init',nmrf_its,['MRF: Working on ' nam],'Iterations completed');
         G   = ones([Kb,1],'single')*mrf_spm;
         vx2 = single(sum(VT.mat(1:3,1:3).^2));
