@@ -520,16 +520,8 @@ end
 
 hold on
 
-% check whether ksdensity function from Statistic Toolbox was found and enable violine plot
-if exist('ksdensity')
-  opt = struct('groupnum',0,'ygrid',0,'violin',1,...
-   'box',0,'groupcolor',jet(n_samples));
-  ylim_add = 0.15;
-else
-  opt = struct('groupnum',0,'ygrid',0,'violin',0,...
-   'box',1,'groupcolor',jet(n_samples));
-  ylim_add = 0.075;
-end
+opt = struct('groupnum',0,'ygrid',0,'violin',0,'box',1,'groupcolor',jet(n_samples));
+ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);
 
