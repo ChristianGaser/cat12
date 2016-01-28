@@ -8716,6 +8716,7 @@ MM      templates_1.50mm/cobra.txt
 (2) Changed: Updated manual which is not yet finished.
 
 ------------------------------------------------------------------------
+r846 | gaser | 2016-01-28 14:23:42 +0100 (Do, 28 Jan 2016) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8736,5 +8737,17 @@ M       tbx_cfg_cat.m
 (3) Fixed: Many, many typos.
 (4) Fixed: Reoplaced nanmax/nanmin in cat_vol_display_label.m 
 
+
 ------------------------------------------------------------------------
-r846 | gaser | 2016-01-28 14:23:36
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_stat_check_cov.m
+M       html/cat_methods_VBM.html
+
+(1) Changed: Updated manual.
+(2) Changed: Removed violin plot from cat_stat_check_cov.m
+------------------------------------------------------------------------
+r847 | gaser | 2016-01-28 21:41:47
