@@ -8752,6 +8752,7 @@ M       html/cat_methods_VBM.html
 (2) Changed: Removed violin plot from cat_stat_check_cov.m
 
 ------------------------------------------------------------------------
+r848 | gaser | 2016-01-29 15:50:48 +0100 (Fr, 29 Jan 2016) | 37 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8789,5 +8790,32 @@ M       html/cat.html
  M      templates_surfaces/rh.neuromorphometrics.Template_T1_IXI555_MNI152
 
 Changed: Updated batch mode.
+
 ------------------------------------------------------------------------
-r848 | gaser | 2016-01-29 15:50:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_stat_marks.m
+M       cat_surf_vol2surf.m
+M       cat_tst_qa.m
+M       cat_vol_resize.m
+
+Changed:    Added APP0 (SPM default) intensity limits (2%-98%) to avoid problems
+            for untypical (high) intensities in synthetical T1 images.
+Corrected:  Corrected CSF brain extraction threshold of SPM segments background
+            as CSF that was finally the larges component and cause removing of
+            the brain rather noise background segments.
+Corrected:  Optimized error directory output name in cat_run_[old|new]catch.
+Corrected:  First QA update.
+Corrected:  Problem in LAS for negative CSF intensities.  
+Removed:    Removed old uncommented code.
+Updated:    Native-space Vol2surf GUI and function. 
+
+
+------------------------------------------------------------------------
+r849 | dahnke | 2016-01-29 18:09:43

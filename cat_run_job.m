@@ -266,7 +266,6 @@ function cat_run_job(job,tpm,subj)
         VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
         VG.pinfo(1:2,:) = VG.pinfo(1:2,:)/spm_global(VG);
 
-          
         % APP step 1 rough bias correction 
         %   ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
         if job.extopts.APP>0  
@@ -288,7 +287,18 @@ function cat_run_job(job,tpm,subj)
             VG1  = spm_smoothto8bit(VG,resa);
         else
             stime = cat_io_cmd('Coarse Affine registration'); 
-            
+
+            % the major problem were untypical high intensies that will
+            % lead to bad scaling in uint8 or to overpropotional weighting 
+            % after smoothing 
+            %   ds('l2','',vx_vol,double(VF.dat)/255,double(VF.dat)/255,double(VF.private.dat)/max(VF.private.dat(:)),double(VF.dat)/255,80)
+            [h,hv] = hist(VF.private.dat(:),[min(VF.private.dat(:)):std(VF.private.dat(:))/10:max(VF.private.dat(:))]);
+            hrange = [hv(find( cumsum(h)/sum(h)>0.005 ,1,'first')),hv(find( cumsum(h)/sum(h)<0.98 ,1,'last'))];
+            % write data to VF
+            VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
+            VF.dat(:,:,:) = cat_vol_ctype( ( double(VF.private.dat) + hrange(1)) / diff(hrange) * 255 ); 
+            VF.pinfo      = repmat([1;0],1,size(VF.dat,3));
+
           % old approach with static resa value and no VG smoothing
             resa = 8;
             VF1  = spm_smoothto8bit(VF,resa);
@@ -424,6 +434,19 @@ function cat_run_job(job,tpm,subj)
           obj.msk.dat(:,:,:) = uint8(Yb); 
           obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
           clear Ysrc; 
+      else
+        % histrogram limit
+        Ysrc                 = single(obj.image.private.dat(:,:,:)); 
+        obj.image.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
+        obj.image.pinfo      = repmat([1;0],1,size(Ysrc,3));
+
+        obj.image.dat(:,:,:) =  max(hrange(1),min(hrange(2),Ysrc));
+       
+        obj.msk              = VF; 
+        obj.msk.pinfo        = repmat([255;0],1,size(Ysrc,3));
+        obj.msk.dt           = [spm_type('uint8') spm_platform('bigend')];
+        obj.msk.dat(:,:,:)   = uint8( Ysrc>(hrange(1) + diff(hrange)*0.3) & Ysrc>(hrange(2) + diff(hrange)*0.1)); 
+        obj.msk              = spm_smoothto8bit(obj.msk,0.1); 
       end
 
     if job.extopts.APP
