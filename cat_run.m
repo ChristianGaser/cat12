@@ -200,10 +200,17 @@ function job = update_job(job)
   end
 
   % write tissue class 1-3              
-  tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
-  tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
-  tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
-  tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
+  if isfield(job.output.GM,'native')
+    tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
+    tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
+    tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
+    tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
+  else
+    tissue(1).warped = [0  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
+    tissue(1).native = [0  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
+    tissue(2).warped = [0  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
+    tissue(2).native = [0  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
+  end
   if isfield(job.output,'CSF')
     tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
     tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
@@ -218,7 +225,8 @@ function job = update_job(job)
     tissue(i).native = [0 0 0];
   end
 
-  job.bias     = [job.output.bias.native  job.output.bias.warped job.output.bias.dartel];
+  job.bias     = [cat_get_defaults('output.bias.native')  cat_get_defaults('output.bias.warped') cat_get_defaults('output.bias.dartel')];
+  
   if isfield(job.output,'label')
     job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
   else
