@@ -35,9 +35,6 @@ else
 end
 global defaults cat12 matlabbatch %#ok<NUSED>
 
-% always deselect print option
-cat12.extopts.print = 0;
-
 fid = fopen(namefile,'r');
 names = textscan(fid,'%s');
 names = names{:};
@@ -51,7 +48,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
 
 tmp_fields = char('darteltpm','gcutstr','cleanupstr','mrf','NCstr','BVCstr','LASstr','restype','resval','species',...
               'WMHC','WMHCstr','pbtres','INV','colormap','atlas','print','debug','verb','ignoreErrors',...
-              'QAcleanup','QAcleanupth','LAB','vox','bb','cat12atlas','sanlm','expertgui','brainmask','T1','APP');
+              'QAcleanup','QAcleanupth','LAB','vox','bb','cat12atlas','sanlm','expertgui','brainmask','T1','APP','subfolders');
               
 for i=1:size(tmp_fields,1)
   try
@@ -67,7 +64,7 @@ for i=1:size(tmp_fields,1)
 end
 
 
-tmp_fields = char('opts','bias','realign','defs');
+tmp_fields = char('opts','bias','realign','defs','nproc');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,deblank(tmp_fields(i,:)));
@@ -79,6 +76,21 @@ try
   matlabbatch{1}.spm.tools.cat.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.WM,'mod');
   matlabbatch{1}.spm.tools.cat.estwrite.output.CSF = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.CSF,'mod');
 end
+
+try 
+  matlabbatch{1}.spm.tools.cat.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.GM,'native');
+  matlabbatch{1}.spm.tools.cat.estwrite.output.GM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.GM,'warped');
+  matlabbatch{1}.spm.tools.cat.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.WM,'native');
+  matlabbatch{1}.spm.tools.cat.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.WM,'warped');
+  matlabbatch{1}.spm.tools.cat.estwrite.output.bias  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.bias,'native');
+  matlabbatch{1}.spm.tools.cat.estwrite.output.bias  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.bias,'dartel');
+  matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,'CSF');
+  matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,'label');
+  matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'estwrite');
+end
+
+% deselect multithreading for batch
+matlabbatch{1}.spm.tools.cat.estwrite.nproc = 0;
 
 try
   spm_jobman('initcfg');

@@ -8739,6 +8739,7 @@ M       tbx_cfg_cat.m
 
 
 ------------------------------------------------------------------------
+r847 | gaser | 2016-01-28 21:42:23 +0100 (Do, 28 Jan 2016) | 10 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -8749,5 +8750,44 @@ M       html/cat_methods_VBM.html
 
 (1) Changed: Updated manual.
 (2) Changed: Removed violin plot from cat_stat_check_cov.m
+
 ------------------------------------------------------------------------
-r847 | gaser | 2016-01-28 21:41:47
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_vbm.m
+M       cat_run.m
+M       html/cat.html
+ M      templates_surfaces/lh.PALS_B12_Brodmann.freesurfer.annot
+ M      templates_surfaces/lh.PALS_B12_Lobes.freesurfer.annot
+ M      templates_surfaces/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M      templates_surfaces/lh.PALS_B12_Visuotopic.freesurfer.annot
+ M      templates_surfaces/lh.aal.Template_T1_IXI555_MNI152
+ M      templates_surfaces/lh.aparc.freesurfer.annot
+ M      templates_surfaces/lh.aparcDKT40.freesurfer.annot
+ M      templates_surfaces/lh.aparcDKT40JT.freesurfer.annot
+ M      templates_surfaces/lh.aparc_a2005s.freesurfer.annot
+ M      templates_surfaces/lh.aparc_a2009s.freesurfer.annot
+ M      templates_surfaces/lh.hammers.Template_T1_IXI555_MNI152
+ M      templates_surfaces/lh.lpba40.Template_T1_IXI555_MNI152
+ M      templates_surfaces/lh.mori.Template_T1_IXI555_MNI152
+ M      templates_surfaces/lh.neuromorphometrics.Template_T1_IXI555_MNI152
+ M      templates_surfaces/rh.PALS_B12_Brodmann.freesurfer.annot
+ M      templates_surfaces/rh.PALS_B12_Lobes.freesurfer.annot
+ M      templates_surfaces/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+ M      templates_surfaces/rh.PALS_B12_Visuotopic.freesurfer.annot
+ M      templates_surfaces/rh.aal.Template_T1_IXI555_MNI152
+ M      templates_surfaces/rh.aparc.freesurfer.annot
+ M      templates_surfaces/rh.aparcDKT40.freesurfer.annot
+ M      templates_surfaces/rh.aparcDKT40JT.freesurfer.annot
+ M      templates_surfaces/rh.aparc_a2005s.freesurfer.annot
+ M      templates_surfaces/rh.aparc_a2009s.freesurfer.annot
+ M      templates_surfaces/rh.hammers.Template_T1_IXI555_MNI152
+ M      templates_surfaces/rh.lpba40.Template_T1_IXI555_MNI152
+ M      templates_surfaces/rh.mori.Template_T1_IXI555_MNI152
+ M      templates_surfaces/rh.neuromorphometrics.Template_T1_IXI555_MNI152
+
+Changed: Updated batch mode.
+------------------------------------------------------------------------
+r848 | gaser | 2016-01-29 15:50:40
