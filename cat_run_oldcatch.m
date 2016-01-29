@@ -71,20 +71,19 @@ function cat_run_oldcatch(job,tpm,subj)
       if cat_get_defaults('extopts.subfolders')
         %%
         errfolder    = 'err';
-        suberrfolder = sprintf('%s_%d_%s',caterr.stack(1).name,caterr.stack(1).line,strrep(caterr.message,' ','_')); 
+        [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
+        suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.message); 
+        suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
         if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
         catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
         repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
-        p0file  = fullfile(pth,mrifolder,['p0' nam '.nii']);
-        p1file  = fullfile(pth,mrifolder,['p1' nam '.nii']);
         if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder)); end
         if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder)); end
-        if exist(p0file,'file'),  copyfile(p0file,fullfile(pth,errfolder,suberrfolder)); end
         if ismac || isunix
           [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
             fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
             cat_check_system_output(ST,RS,cat_get_defaults('extopts.debug'));
-        end  
+        end
 
       end
       

@@ -1,4 +1,3 @@
-
 function varargout = cat_stat_marks(action,uselevel,varargin) 
 % ______________________________________________________________________
 % 
@@ -30,8 +29,6 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %#ok<*NASGU,*STRNU>
 
   rev = '$Rev$';
-
-  if ~exist('uselevel','var'), uselevel=0; end
   
   
 % used measures and marks:

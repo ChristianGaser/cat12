@@ -205,184 +205,109 @@ function stools = cat_conf_stools(expert)
     ''
   };
   
-  
-  %% -- absolute position from a boundary --
-    
-  v2s.boundary         = cfg_entry;
-  v2s.boundary.tag     = 'boundary';
-  v2s.boundary.name    = 'Absolute Position From a Surface Boundary';
-  v2s.boundary.strtype = 'r';
-  v2s.boundary.val     = {0};
-  v2s.boundary.num     = [1 1];
-  v2s.boundary.help    = {
-    'Map volumetric data at an absolute position from a surface in mm.'
-    'A value of -1 from the central surface will map GM values at a position of 1 mm inwards to the central surface. '
-    'A value of 1 from the central surface will map GM values at a position of 1 mm outwards to the central surface. '
+  % sample function 
+  v2s.sample         = cfg_menu;
+  v2s.sample.tag     = 'sample';
+  v2s.sample.name    = 'Sample Function';
+  v2s.sample.labels  = {'Mean','Maximum','Minimum','Absolute maximum'};
+  v2s.sample.values  = {{'avg'},{'max'},{'min'},{'maxabs'}};
+  v2s.sample.val     = {{'avg'}};
+  v2s.sample.help    = {
+    'Sample function to combine the values of the grid along the surface normals.'
   };
 
-  %% -- set of absolute position from a boundary --
-
-  v2s.boundaryrange_origin         = cfg_entry;
-  v2s.boundaryrange_origin.tag     = 'origin';
-  v2s.boundaryrange_origin.name    = 'Origin';
-  v2s.boundaryrange_origin.strtype = 'r';
-  v2s.boundaryrange_origin.val     = {0};
-  v2s.boundaryrange_origin.num     = [1 1];
-  v2s.boundaryrange_origin.help    = {
-    'Origin (start point) of grid along normals [mm]. Give negative values for origin outside the surface.'
-  };
+  %% -- sampling points and average function
  
-  v2s.boundaryrange_stepsize         = cfg_entry;
-  v2s.boundaryrange_stepsize.tag     = 'stepsize';
-  v2s.boundaryrange_stepsize.name    = 'Stepsize';
-  v2s.boundaryrange_stepsize.strtype = 'r';
-  v2s.boundaryrange_stepsize.val     = {0.5};
-  v2s.boundaryrange_stepsize.num     = [1 1];
-  v2s.boundaryrange_stepsize.help    = {
-    'Absolute stepsize (resolution) of the grid beginning from the origin. '
+  % startpoint
+  v2s.abs_startpoint         = cfg_entry;
+  v2s.abs_startpoint.tag     = 'startpoint';
+  v2s.abs_startpoint.name    = 'Startpoint';
+  v2s.abs_startpoint.strtype = 'r';
+  v2s.abs_startpoint.val     = {-0.5};
+  v2s.abs_startpoint.num     = [1 1];
+  v2s.abs_startpoint.help    = {
+    'Absolut position of the startpoint of the grid along the surface normals in mm. Give negative value for a startpoint outside the surface (CSF direction). '
   };
-
-  v2s.boundaryrange_length         = cfg_entry;
-  v2s.boundaryrange_length.tag     = 'length';
-  v2s.boundaryrange_length.name    = 'Length';
-  v2s.boundaryrange_length.strtype = 'r';
-  v2s.boundaryrange_length.val     = {3};
-  v2s.boundaryrange_length.num     = [1 1];
-  v2s.boundaryrange_length.help    = {
-    'Length of grid along normals [mm].'
-  };
-
-  v2s.boundaryrange_sample         = cfg_menu;
-  v2s.boundaryrange_sample.tag     = 'sample';
-  v2s.boundaryrange_sample.name    = 'Sample Function';
-  v2s.boundaryrange_sample.labels  = {'Mean','Maximum','Minimum','Absolute maximum'};
-  v2s.boundaryrange_sample.values  = {{'avg'},{'max'},{'min'},{'maxabs'}};
-  v2s.boundaryrange_sample.val     = {{'avg'}};
-  v2s.boundaryrange_sample.help    = {
-    'Sample function to combine values.'
+  v2s.rel_startpoint = v2s.abs_startpoint;
+  v2s.rel_startpoint.help    = {
+    'Relative position of the startpoint of the grid along the surface normals from the center of a tissue class. Give negative value for a startpoint outside the surface (CSF direction). '
   };
   
-  v2s.boundaryrange         = cfg_branch;
-  v2s.boundaryrange.tag     = 'boundaryrange';
-  v2s.boundaryrange.name    = 'Range of Absolute Position From a Tissue Boundary)';
-  v2s.boundaryrange.val     = {
-    v2s.boundaryrange_origin ...
-    v2s.boundaryrange_stepsize ...
-    v2s.boundaryrange_length ...
-    v2s.boundaryrange_sample ...
-    };
-  v2s.boundary.help    = {
-    'Extract a set of values around a tissue boundary with a specified absolute sample distance and merge these values by mean, minimum, maximum or absolute maximum. '
-    ''
-    'Example: if origin is -1, step size is 0.5, length is 2 and the sample function is maximum, then the maximal value at the sample points -1 -0.5 0 0.5 1 mm is used. While negative values represent values outside the surface boundary, positive values point inwards the surface boundary.'
+  % stepsize
+  v2s.abs_stepsize         = cfg_entry;
+  v2s.abs_stepsize.tag     = 'stepsize';
+  v2s.abs_stepsize.name    = 'Stepsize';
+  v2s.abs_stepsize.strtype = 'r';
+  v2s.abs_stepsize.val     = {0.5};
+  v2s.abs_stepsize.num     = [1 1];
+  v2s.abs_stepsize.help    = {
+    'Absolute stepsize in mm of the grid along the surface beginning from the startpoint. '
+  };
+  v2s.rel_stepsize = v2s.abs_stepsize; 
+  v2s.rel_stepsize.help    = {
+    'Relative stepsize based on the thickness/depth of the tissue class of the grid along the surface beginning from the startpoint. '
   };
 
-  %% -- relative position within a tissue class
-   
-  v2s.tissue_class         = cfg_menu;
-  v2s.tissue_class.tag     = 'class';
-  v2s.tissue_class.name    = 'Tissue Class';
-  if expert
-    v2s.tissue_class.labels  = {'GM','WM','CSF'};
-    v2s.tissue_class.values  = {1 2 3};
-  else
-    v2s.tissue_class.labels  = {'GM'};
-    v2s.tissue_class.values  = {1};
-  end
-  v2s.tissue_class.val     = {1};
-  v2s.tissue_class.help    = {
+  % endpoint
+  v2s.abs_endpoint         = cfg_entry;
+  v2s.abs_endpoint.tag     = 'endpoint';
+  v2s.abs_endpoint.name    = 'Endpoint';
+  v2s.abs_endpoint.strtype = 'r';
+  v2s.abs_endpoint.val     = {+0.5};
+  v2s.abs_endpoint.num     = [1 1];
+  v2s.abs_endpoint.help    = {
+    'Absolut position of the endpoint of the grid along the surface normals in mm. Give negative value for a startpoint outside the surface (CSF direction). '
+  };
+  v2s.rel_endpoint = v2s.abs_endpoint;
+  v2s.rel_endpoint.help    = {
+    'Relative position of the endpoint of the grid along the surface normals from the center of a tissue class. Give negative value for a startpoint outside the surface (CSF direction). '
+  };
+
+  % tissue class
+  v2s.abs_class         = cfg_menu;
+  v2s.abs_class.tag     = 'class';
+  v2s.abs_class.name    = 'Tissue Class';
+  v2s.abs_class.labels  = {'GM','WM','CSF'};
+  v2s.abs_class.values  = {'GM','WM','CSF'};
+  v2s.abs_class.val     = {1};
+  v2s.abs_class.help    = {
     'Tissue class for which the relative positions are estimated.'
   };
-
-  v2s.tissue_pos         = cfg_entry;
-  v2s.tissue_pos.tag     = 'range';
-  v2s.tissue_pos.name    = 'Relative Range';
-  v2s.tissue_pos.strtype = 'r';
-  v2s.tissue_pos.val     = {[0 1]};
-  v2s.tissue_pos.num     = [2 2];
-  if expert
-    v2s.tissue_pos.help    = {
-      'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
-      'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
-      'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
-    };
-  else
-    v2s.tissue_pos.help    = {
-      'Relative position within the tissue class, where 1 describe the WM/GM interface and 0 the CSF/GM interface.'
-    };
+  v2s.rel_class = v2s.abs_class; 
+  if ~expert
+    v2s.abs_class.labels  = {'GM'};
+    v2s.abs_class.values  = {1};
+    v2s.rel_class.labels  = {'GM'};
+    v2s.rel_class.values  = {1};
   end
   
-  v2s.tissue_stepsize         = cfg_entry;
-  v2s.tissue_stepsize.tag     = 'stepsize';
-  v2s.tissue_stepsize.name    = 'Stepsize';
-  v2s.tissue_stepsize.strtype = 'r';
-  v2s.tissue_stepsize.val     = {1/6}; 
-  v2s.tissue_stepsize.num     = [1 1];
-  v2s.tissue_stepsize.help    = {
-    'Relative stepsize of the grid, e.g. for range [0 1] the stepsize of 1/6 will generat 7 equidistant sample points that divide the tissue into 6 layer.'
-  }; % middle point of cortical layer >> pos = [1/12 11/12], stepsize 1/6 ...
-  
-  v2s.tissue         = cfg_branch;
-  v2s.tissue.tag     = 'tissue';
-  v2s.tissue.name    = 'Relative Position Within a Tissue Class';
-  v2s.tissue.val     = {
-    v2s.tissue_class ...
-    v2s.tissue_pos ...
-    v2s.tissue_stepsize ...
-    v2s.boundaryrange_sample ...
-    };
+  % absolute position
+  v2s.abs_mapping         = cfg_branch;
+  v2s.abs_mapping.tag     = 'abs_mapping';
+  v2s.abs_mapping.name    = 'Absolution Position From a Tissue Boundary';
+  v2s.abs_mapping.val   = {
+    v2s.abs_class ...
+    v2s.abs_startpoint ...
+    v2s.abs_stepsize ...
+    v2s.abs_endpoint ...
+  }; 
   v2s.tissue.help    = {
-    'Map volumetric data from a relative position within a tissue class.'
+    'Map volumetric data from abolute position(s) from a tissue boundary.'
   };
-
-  %% -- tissue sample --
   
-%   v2s.tissuerange_stepsize         = cfg_entry;
-%   v2s.tissuerange_stepsize.tag     = 'stepsize';
-%   v2s.tissuerange_stepsize.name    = 'Stepsize';
-%   v2s.tissuerange_stepsize.strtype = 'r';
-%   v2s.tissuerange_stepsize.val     = {0.1};
-%   v2s.tissuerange_stepsize.num     = [1 1];
-%   v2s.tissuerange_stepsize.help    = {
-%     'Relative stepsize of the sample points centered around 0.5.  For example a stepsize of 0.3 will result in 3 sample points at a relative position of 0.2, 0.5 and 0.8, '
-%     'while a stepsize of 0.1 will result in sample points 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0.' 
-%   };
-% 
-%   v2s.tissuerange_sample         = cfg_menu;
-%   v2s.tissuerange_sample.tag     = 'sample';
-%   v2s.tissuerange_sample.name    = 'Sample Function';
-%   v2s.tissuerange_sample.labels  = {'mean','max','min',}; %,'median','std'
-%   v2s.tissuerange_sample.values  = {{'average'},{'max'},{'min'}}; %,{'median'},{'std'}
-%   v2s.tissuerange_sample.val     = {{'average'}};
-%   v2s.tissuerange_sample.help    = {
-%     'Tissue boundary used for distance description.'
-%   };
-%   
-%   v2s.tissuerange         = cfg_branch;
-%   v2s.tissuerange.tag     = 'tissuerange';
-%   v2s.tissuerange.name    = 'Sample Across Several Relative Positions Within a Tissue Class';
-%   v2s.tissuerange.val     = {
-%     v2s.tissue_class ...
-%     v2s.tissuerange_stepsize ...
-%     v2s.tissuerange_sample ...
-%     };
-%   v2s.boundary.help    = {
-%     'Extract a set of values within a tissue class with a specified relative sample distance and average these values by mean, min, or max.'
-%   };
-
-  %% -- boundary sample? 
-%   
-%   v2s.tissue_pos         = cfg_entry;
-%   v2s.tissue_pos.tag     = 'pos';
-%   v2s.tissue_pos.name    = 'Relative Position';
-%   v2s.tissue_pos.strtype = 'r';
-%   v2s.tissue_pos.val     = {0};
-%   v2s.tissue_pos.num     = [1 1];
-%   v2s.tissue_pos.help    = {
-%     'Relative position within the tissue class, where 1 describe the deepest position and 0 the outer position.'
-%     'For GM a value of 0 describes the GM/CSF interface and a value of 1 describes the GM/WM interface.'
-%     'For WM a value of 0 describes the WM/GM interface and a value of 1 describes the WM centerline or skeleton as a thinned version of the WM.'
-%   };
+  %% relative mapping
+  v2s.rel_mapping         = cfg_branch;
+  v2s.rel_mapping.tag     = 'rel_mapping';
+  v2s.rel_mapping.name    = 'Relative Position Within a Tissue Class';
+  v2s.rel_mapping.val   = {
+    v2s.rel_class ...
+    v2s.rel_startpoint ...
+    v2s.rel_stepsize ...
+    v2s.rel_endpoint ...
+  };
+  v2s.rel_mapping.help    = {
+    'Map volumetric data from relative positions from the center of a tissue class.'
+  };
 
   %% -- Mapping function
 
@@ -390,27 +315,21 @@ function stools = cat_conf_stools(expert)
   v2s.mapping.tag     = 'mapping';
   v2s.mapping.name    = 'Mapping Function';
   v2s.mapping.values  = {
-...      v2s.tissuerange ...
-    v2s.tissue ...
-    v2s.boundaryrange ...
-    v2s.boundary ...
+    v2s.abs_mapping ...
+    v2s.rel_mapping ...
   }; 
   v2s.mapping.help    = {
     'Volume extration type. '
-    '  tissue-range:'
-    '    extract a set of values within a tissue class with a specified relative sample '
-    '    distance and average these values by mean, minimum, maximum or absolute maximum'
-    '  tissue-based:' 
-    '    extract one value with a specified relative position within a tissue class'
-    '  boundary-range:' 
-    '    extract a set of values within a tissue class with a specified relative sample'
-    '    distance and average these values by mean, minimum, maximum or absolute maximum'
-    '  boundary-based: '
-    '    extract one value from a specified absolute distance from a tissue interface'
+    '  Absolution Position From a Tissue Boundary:'
+    '    Extract a set of values around a tissue boundary with a specified absolute sample '
+    '    distance and combine these values.'
+    '  Relative Position Within a Tissue Class:' 
+    '    Extract a set of values around the center of a tissue class with a specified relative sample'
+    '    distance and combine these values.'
     '' 
   };
-  v2s.mapping.val     = {v2s.boundary};
-  
+  v2s.mapping.val = {v2s.rel_mapping};
+
 
 
 % extract volumetric data in individual space
@@ -439,13 +358,24 @@ function stools = cat_conf_stools(expert)
   v2s.vol2surf      = cfg_exbranch;
   v2s.vol2surf.tag  = 'vol2surf';
   v2s.vol2surf.name = 'Map Volume (Native Space) to Individual Surface';
-  v2s.vol2surf.val = {
+  if expert
+    v2s.vol2surf.val = {
+      v2s.data_sub ...
+      v2s.data_surf_sub_lh ...
+      v2s.sample ...
+      v2s.interp ...
+      v2s.datafieldname ...
+      v2s.mapping ...
+      };
+  else
+    v2s.vol2surf.val = {
     v2s.data_sub ...
     v2s.data_surf_sub_lh ...
+    v2s.sample ...
     v2s.datafieldname ...
-    v2s.interp ...
     v2s.mapping ...
     };
+  end
   v2s.vol2surf.prog = @cat_surf_vol2surf;
   v2s.vol2surf.help = {
     'Map volume (native space) to individual surface.'
