@@ -53,15 +53,6 @@ if ~isfield(job.output,'TPMC')
                            'mod'   ,cat_get_defaults('output.TPMC.mod'), ...
                            'dartel',cat_get_defaults('output.TPMC.dartel'));
 end
-%{
-if job.extopts.APP>=3 && any(cell2mat(struct2cell(job.output.TPMC)')==0)
-  job.output.TPMC = struct('native',0, ...
-                           'warped',0, ...
-                           'mod'   ,0, ...
-                           'dartel',0);
-  cat_io_cprintf('warn',sprintf('Disable TPMC output due to skull-stripped SPM input (APP=%d)!\n',job.extopts.APP));                      
-end
-%}
 
 if ~isfield(job.output,'ROI')
   job.output.ROI = cat_get_defaults('output.ROI');
@@ -108,7 +99,6 @@ bb(~isfinite(bb)) = bb1(~isfinite(bb));
 if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
 bb(1,:) = vx.*round(bb(1,:)./vx);
 bb(2,:) = vx.*round(bb(2,:)./vx);
-%odim    = abs(round((bb(2,1:3)-bb(1,1:3))./vx))+1;
 odim = d1;
 clear vx vx1 bb1   
 
@@ -423,7 +413,7 @@ if do_cls
         %% create a new brainmask
         %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
         Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
-        Yp0(smooth3(cat_vol_morph(Yp0>1/6,'lo'))<0.5)=0;
+        Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
         
         voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
      %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
@@ -431,9 +421,9 @@ if do_cls
        
         Vl1 = spm_vol(job.cat.cat12atlas);
         Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-        Yl1 = reshape(Yl1,size(Ysrc));     
+        Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
         
-        T3ths = [0,T3th,T3th(3) + mean(diff(T3th))];
+        T3ths = [mean(mean(mean(single(P(:,:,:,6)>128)))),T3th,T3th(3) + mean(diff(T3th))];
         T3thx = [0,1,2,3,4];
         [T3ths,si] = sort(T3ths);
         T3thx     = T3thx(si);
@@ -445,13 +435,13 @@ if do_cls
         M  = Ysrc>=T3ths(end); 
         Ym(M(:)) = numel(T3ths)/6 + (Ysrc(M(:)) - T3ths(i))/diff(T3ths(end-1:end))*diff(T3thx(i-1:i));    
         Ym = Ym / 3; 
-        %%
+
         for k1=1:3
             Ycls{k1} = P(:,:,:,k1);
         end
         Yb = cat_pre_gcut2(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
-          struct('gcutstr',job.extopts.gcutstr,'verb',job.extopts.verb,'debug',job.extopts.debug));
-        
+          struct('gcutstr',job.extopts.gcutstr/2,'verb',0,'debug',job.extopts.debug));
+        %%
         [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
         Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
         Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
@@ -695,7 +685,7 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
     %[Yw,Yg] = cat_vol_resize({Yms.*(Ycls1>240),Yms.*(Ycls2>240)},'reduceV',vx_vol,3,32,'meanm');
     %Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
     %min(1/6,cat_stat_nanmean(Yn(Yn(:)>0)));
-    ornlmstr = max(0.05,min(0.3,noise * job.extopts.NCstr / 3)); % *2 because of NCstr=0.5, /3 to get the SNR for ornlm-filter! 
+    ornlmstr = max(0.02,min(0.2,noise * job.extopts.NCstr / 3)); % *2 because of NCstr=0.5, /3 to get the SNR for ornlm-filter! 
     ornlmstr = round(ornlmstr*10^6)/10^6;
     clear Yn Ycls1 Ycls2;
 
@@ -961,21 +951,11 @@ if do_cls && do_defs
 
   % adaptive mrf noise 
   if job.extopts.mrf>=1 || job.extopts.mrf<0; 
-    %Yg     = cat_vol_grad(Ym,vx_vol);
-    % the image was NLM corrected, therefore we can use Yg<0.05
-    %Ytmp   = Ycls{2}>128 & ~YMF & cat_vol_morph(Yg<0.1,'c');
-    %noise2 = double(std(Yg(Ytmp(:)))); % typischerweise im WM 
-    %mrf    = min(0.25,max(0.03,noise2));
-    
     % estimate noise
     [Yw,Yg] = cat_vol_resize({Ym.*(Ycls{1}>240),Ym.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
     Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
     job.extopts.mrf = double(min(0.6,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * job.extopts.NCstr * 2; 
     clear Yn Ycls1 Ycls2;
-
-    %noise3  = double(std(Ym(cat_vol_morph(Ycls{2}>64,'e'))));
-    %job.extopts.mrf = min(0.6,max(0.03,(noise3*100)^2/100*3)); %1.5
-    clear Ytmp noise2 noise3;
   end
   
   % display something
@@ -1910,22 +1890,29 @@ clear wYp0 wYcls wYv
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
 stime = cat_io_cmd('Quality check');
-Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
+Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; qa2=qa;
 qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.cat.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job));
+% WMH updates? ... has to be done within cat_tst_qa?!
+%qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
+%qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
+%qa.subjectmeasures.vol_rel_CGW    = qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
 if job.output.surface && exist('S','var')
   % metadata
   if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
   if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
   qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
-  if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
-  qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
-  if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
-  qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  if expert>0
+    if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
+    if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
+    qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
+    if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
+    qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  end
   
-  %qam = cat_stat_marks('eval',opt.cati,qa,'cat12');;
+  qam = cat_stat_marks('eval',opt.cati,qa,'cat12');
+  
  
   cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
     ... 'subjectratings',QAM.subjectmeasures, ... not ready
@@ -1995,7 +1982,7 @@ if cat12.print
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,sprintf('%5.2f',qa.qualityratings.res_RMS)))];
   str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,sprintf('%5.2f',qa.qualityratings.NCR)))];
-  %str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,sprintf('%5.2f',qa.qualityratings.ICR)))]; % not important and more confussing 
+  str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,sprintf('%5.2f',qa.qualityratings.ICR)))]; % not important and more confussing 
   str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,sprintf('%5.2f',qa.qualityratings.IQR)))];
 
       
@@ -2719,177 +2706,6 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1);
   end
     
-%   elseif 0 %INV>0
-%   %  -------------------------------------------------------------------
-%   %  The preprocessing of inverse contrast in CAT is provided by an 
-%   %  intensity inverations for images with clearly completelly inverse 
-%   %  contrast. For other images a artificial images based on SPM 
-%   %  segmentation can be created. 
-%   %  Anyway a waringing will be displayed.
-%   %  -------------------------------------------------------------------
-%     Tth.T3th  = [0 1 2 3 4];
-%     Tth.T3thx = [0 1 2 3 4];
-%     inv_weighting = 1;
-%     if INV==1 
-%       if T3thn(1)>T3thn(2) && T3thn(2)>T3thn(3) 
-%         cat_warnings = cat_io_addwarning(cat_warnings,...
-%           'CAT:inverse_weighting1',...
-%           ['Segmentation of PD/T2 weighted images is no standard CAT preprocessing.\n'...
-%           'Invert T1 image (INV==1). Check your results!'],numel(cat_warnings)==0);
-%         inv_weighting = 1;
-% 
-%         % For most normal cases SPM works very well, but if SPM failed
-%         % (BWP_3_40A) we inherit the problems in the SPM peak values, but
-%         % also the segments. 
-%         % I.e. if large WM regions were part of the GM segment then 
-%         % GM peak is to high (often peak of subcortical GM) and most GM
-%         % areas will fade to CSF! 
-%         if 1  
-%           %T3th_spm = [min(res.mn(res.lkp==3)) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
-%           
-%           %Ym    = Ysrc ./ median(Ysrc(Ycls{2}(:)>128)); 
-%           %Yg    = cat_vol_grad(Ym,vx_vol);
-%           %noise = estimateNoiseLevel(Ysrc/median(Ysrc(Ycls{2}(:)>192 & Yg(:)<0.3)),Ycls{2});
-%           Ysrcr  = round( Ysrc.*10^5 ) / 10^5;
-%           
-%           Ym    = double(Ysrcr+0); spm_smooth(Ym,Ym,double(100/3*noise./vx_vol));
-%           Ym    = single(Ym) ./ median(Ysrcr(Ycls{2}(:)>128));
-%           Ym    = round(Ym*10^5)/10^5; 
-%           %%
-%           Yg    = cat_vol_grad(Ym,vx_vol);
-%           Ydiv  = cat_vol_div(Ym,vx_vol);
-%           
-%           gth   = max(0.06,min(0.3,noise*6));
-%           Ywm   = smooth3((Ycls{2}>128 & Yg<gth) | (Ym-Ydiv)<1.05 & (Ym-Ydiv)>0.95 & Yb)>0.6; % intensity | structure
-%           Ycm   = smooth3(Ycls{3}>128 & Yg<gth*2 & Ysrc>median(Ysrcr(Ycls{3}(:)>192)))>0.7; % & Yg<gth & cat_vol_morph(Yb,'e',8))>0.7;
-%           if isempty(Ywm) || isempty(Ycm) 
-%             Ycm   = smooth3((Ycls{3}>240) & cat_vol_morph(Yb,'e',8))>0.5;
-%             if isempty(Ywm) || isempty(Ycm) 
-%               error('CAT:cat_main:cat_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
-%             end
-%           end
-%           
-%           %% bias correction
-%           Ywmx  = smooth3((Ycls{2}>192 & Yg<gth*2) | (Ym-Ydiv)<1.1 & (Ym-Ydiv)>0.90 & Yb & Yg<gth*2 & Ycls{3}<0)>0.5;
-%           [Yi,resT2] = cat_vol_resize(Ysrcr.*Ywmx,'reduceV',vx_vol,1,16,'min');
-%           for xi=1:1, Yi = cat_vol_localstat(Yi,Yi>0,2,1); end
-%           Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = cat_vol_smooth3X(Yi,4); 
-%           Yi = cat_vol_resize(Yi,'dereduceV',resT2);  
-%           
-%           %%
-%           WMth  = median(Ysrcr(Ywm(:))); % kmeans3D(Ysrc(Ycls{2}(:)>192 & Yg(:)<gth),1); % GM/WM WM
-%           CSFth = median(Ysrcr(Ycm(:))); % kmeans3D(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
-%           CWcon = CSFth - WMth;
-%           if WMth==0|| CSFth==0
-%             error('CAT:cat_main:cat_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
-%           end
-%           Ybg   = cat_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*mean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
-%           Ygm   = smooth3(Yg<gth*CSFth/WMth & ~Ywm & ~Ycm & Yb & abs(Ydiv)<gth/2*CSFth/WMth & ~Ybg & ...
-%                     Ym<(CSFth-CWcon*0.1)/WMth & Ym>(WMth+CWcon*0.1)/WMth)>0.6;
-%           GMth  = cat_stat_nanmedian(Ysrcr(Ygm(:)));
-%           Ygm   = smooth3(Yg<gth*CSFth/WMth & ~Ywm & ~Ycm & Yb & abs(Ydiv)<gth/2*CSFth/WMth & ~Ybg & ...
-%                     Ym<mean([CSFth,GMth])/WMth & Ym>mean([WMth,GMth])/WMth)>0.6;
-%           GMth  = cat_stat_nanmedian(Ysrcr(Ygm(:)));
-%           if isempty(Ygm) 
-%             error('CAT:cat_main:cat_pre_gintnorm:nobrain','Bad SPM-Segmentation. Check image orientation!');
-%           end
-%           T3th = round([CSFth(1) GMth(1) WMth(1)]*10^4)/10^4;
-% 
-%         else  
-%           %T3th = [median(Ysrc(Ycls{3}(:)>192)) median(Ysrc(Ycls{1}(:)>192)) median(Ysrc(Ycls{2}(:)>192))];
-%           T3th = [min(res.mn(res.lkp==3)) max(res.mn(res.lkp==1)) max(res.mn(res.lkp==2))];
-%         end
-% 
-%         %% peaks and inveration
-%         T3th  = [round(max(Ysrcr(:))) T3th T3th(3)+diff(T3th(1:3))];
-%         T3thx = [0:1/3:4/3];
-% 
-%         Ym = Ysrc./Yi; 
-%         isc = 1;
-%         T3th  = interp1(T3th,1:1/isc:numel(T3th)*isc,'spline');  %pchip');
-%         T3thx = interp1(T3thx,1:1/isc:numel(T3th)*isc,'spline'); %pchip');
-% 
-%         for i=2:numel(T3th)
-%           YM = Ysrc>min(T3th(i-1:i)) & Ysrc<=max(T3th(i-1:i));
-%           Ym(YM(:)) = T3thx(i) - (min(T3th(i-1:i))-Ysrc(YM(:))) / diff(T3th(i-1:i))*diff(T3thx(i-1:i));
-%         end
-%         YM  = Ysrc<T3th(4)/1.2; 
-%         Ym(YM(:)) = Ysrc(YM(:)) / (T3th(4)/1.2);    
-%         YM  = (smooth3(Ysrc<T3th(4)/1.2) & smooth3(Ysrc>T3th(3))) | Ym>2; 
-%         Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1);
-%         Yms = smooth3(Ym); Ym(YM & Ym>0.5)=Yms(YM & Ym>0.5);
-%         clear YM; 
-%        
-%         
-%         %% reestimation of brain mask
-%         Yb  = Ym>0.8 & Ym<1.2 & (Ycls{5}<64); Yb  = single(cat_vol_morph(Yb,'lo',1));
-%         [Ybr,Ymr,Ycls5,resT2] = cat_vol_resize({single(Yb),Ym,single(Ycls{5})/255},'reduceV',vx_vol,2,32); 
-%         Ybr(~Ybr & (Ymr<2.5/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
-%         [Ybr1,Ydr] = cat_vol_downcut(Ybr,Ymr,0.03); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
-%         Ybr(~Ybr & (Ymr<1.9/3 | Ymr>3.2/3 | Ycls5>0.5))=nan; 
-%         [Ybr1,Ydr] = cat_vol_downcut(Ybr,Ymr,0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
-%         Ybr(~Ybr & (Ymr<1/3 | Ymr>2.5/3 | Ycls5>0.5))=nan; 
-%         [Ybr1,Ydr] = cat_vol_downcut(Ybr,Ymr,-0.01); Ybr(Ydr<100)=1; Ybr(isnan(Ybr))=0;
-%         Ybr = Ybr>0 | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6) & Ycls5<0.02); % large ventricle closing
-%         Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
-%         Yb  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.4; 
-%         clear Ybr Ymr;
-% 
-%         %% WM cleanup 
-% 
-% 
-%         %% reset of Ycls
-%         if 0  
-%           Ydiv = cat_vol_div(max(0.33,Ym),vx_vol);
-%           Ywm  = (Ym>0.95 & Ym<1.05 & Yb) | (Ym-Ydiv>0.98 & Ym-Ydiv<1.1 & Yb); 
-%           Ywm(smooth3(Ywm)<0.5)=0;
-%           Ywm  = cat_vol_morph(Ywm,'lc'); 
-%           clear Ydiv;
-% 
-%           Yp0  = Ym .* Yb;
-%           Yp0(Ywm)=1;
-%           Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
-%           Ycls{1} = uint8(Yp0toC(Yp0*3,2)*255);
-%           Ycls{2} = uint8(Yp0toC(Yp0*3,3)*255);
-%           Ycls{3} = uint8(Yp0toC(Yp0*3,1)*255); 
-%           clear Ywm Yp0;
-%         end
-%       else 
-%         
-%         if exist('cat_warnings','var')
-%           cat_warnings = cat_io_addwarning(cat_warnings,...
-%             'CAT:inverse_weighting2',...
-%             ['Segmentation of PD/T2 weighted images is no standard CAT preprocessing.\n'...
-%              'Synthesize T1 image from SPM segmentation, ' ...
-%              'due to low tissue contrast (INV==2). Check your results!'],numel(cat_warnings)==0);
-%         end
-%         
-%         Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
-%         T3th3 = 1/3:1/3:3;
-%       end
-%     else
-%       if exist('cat_warnings','var')
-%         cat_warnings = cat_io_addwarning(cat_warnings,...
-%           'CAT:inverse_weighting_LQ',...
-%           ['Segmentation of PD/T2 weighted images is no standard CAT preprocessing.\n'...
-%            'Synthesize T1 image from SPM segmentation (INV==2). Check your results!'],numel(cat_warnings)==0);
-%       end
-%       
-%       Ym    = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
-%       T3th3 = 1/3:1/3:3;
-%
-%    end
-%   else
-%     fprintf('\n');
-%     error('CAT:cat_main:BadImageProperties', ...
-%         ['CAT12 is designed to work only on highres T1 images.\n' ...
-%          'T2/PD preprocessing can be forced on your own risk by setting \n' ...
-%          '''cat12.extopts.INV=1'' in the cat default file. If this was a highres \n' ...
-%          'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
-%          'by alignment problems (check image orientation).'],numel(cat_warnings)==0);   
-%   end
-%   
-
   
   %% if there was a warning we need a new line 
   if nargout==7 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
@@ -3182,7 +2998,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ygw3 = Ycls{3}>128 & Yg<0.05 & ~Ywm & ~Ygm; 
   [Yi,resT2] = cat_vol_resize(Ysrcm,'reduceV',vx_vol,mres,32,'max'); % maximum reduction for the WM
   %%
-  Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))) + Ysrc.*Ygw3*T3th(3)/T3th(1),'reduceV',vx_vol,mres,32,'meanm'); clear Ygw2; % mean for other tissues
+  Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))) + Ysrc.*Ygw3*T3th(3)/mean(Ysrc(Ygw3(:))),'reduceV',vx_vol,mres,32,'meanm'); clear Ygw2; % mean for other tissues
   for xi=1:2*LASi, Ygi = cat_vol_localstat(Ygi,Ygi>0,2,1); end; Ygi(smooth3(Ygi>0)<0.3)=0;
   Yi = cat_vol_localstat(Yi,Yi>0,1,3); % one maximum for stabilization of small WM structures
   Yi(Yi==0 & Ygi>0)=Ygi(Yi==0 & Ygi>0);

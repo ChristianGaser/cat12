@@ -593,9 +593,10 @@ function varargout = cat_tst_qa(action,varargin)
       if 1 % CAT internal resolution
         QAS.qualitymeasures.res_vx_voli = vx_voli;
       end
+      QAS.qualitymeasures.res_RMS       = mean(vx_vol.^2).^0.5;
+      % futher unused measure (just for test/comparison)
       %QAS.qualitymeasures.res_isotropy  = max(vx_vol)./min(vx_vol);
       %QAS.qualitymeasures.res_vol       = prod(abs(vx_vol));
-      QAS.qualitymeasures.res_RMS       = mean(vx_vol.^2).^0.5;
       %QAS.qualitymeasures.res_MVR       = mean(vx_vol);
       
       % boundary box - brain tissue next to image boundary
@@ -712,7 +713,7 @@ function varargout = cat_tst_qa(action,varargin)
       Yw  = Yw ./WI; Yw  = round(Yw *1000)/1000;
       clear WIs ;
       
-      Ywb = Ywb .* (mean(Yo(Yp0(:)>2))/mean(Ymi(Yp0(:)>2)));
+      Ywb = Ywb ./ mean(Ywb(Yp0(:)>2));
      
       % tissue segments for contrast estimation etc. 
       CSFth = mean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
