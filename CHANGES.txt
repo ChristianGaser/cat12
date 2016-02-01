@@ -8792,6 +8792,7 @@ M       html/cat.html
 Changed: Updated batch mode.
 
 ------------------------------------------------------------------------
+r849 | dahnke | 2016-01-29 18:09:48 +0100 (Fr, 29 Jan 2016) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8817,5 +8818,26 @@ Removed:    Removed old uncommented code.
 Updated:    Native-space Vol2surf GUI and function. 
 
 
+
 ------------------------------------------------------------------------
-r849 | dahnke | 2016-01-29 18:09:43
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_vbm.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       html/cat.html
+
+(1) Changed: Updated batch mode to consider expert mode.
+(2) Fixed: Replaced std with cat_stat_nanstd and fixed wrong data-field 
+    in cat_run_job.m.
+(3) Fixed: Updated cat_run.m to consider fields that are only available
+    in expert mode.
+(4) Changed: Cleared many unnecessary variables with large memory demand.
+(5): Changed: Updated CAT12-Manual.
+------------------------------------------------------------------------
+r850 | gaser | 2016-02-01 16:29:33

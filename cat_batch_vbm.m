@@ -56,7 +56,7 @@ for i=1:size(tmp_fields,1)
   end
 end
 
-tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC');
+tmp_fields = char('atlas','te','pc','WMH','ROI','TPMC','label','CSF');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,deblank(tmp_fields(i,:)));
@@ -84,8 +84,6 @@ try
   matlabbatch{1}.spm.tools.cat.estwrite.output.WM  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.WM,'warped');
   matlabbatch{1}.spm.tools.cat.estwrite.output.bias  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.bias,'native');
   matlabbatch{1}.spm.tools.cat.estwrite.output.bias  = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output.bias,'dartel');
-  matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,'CSF');
-  matlabbatch{1}.spm.tools.cat.estwrite.output = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.output,'label');
   matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'estwrite');
 end
 
