@@ -178,6 +178,22 @@ function job = update_job(job)
     job.output.ROI =  cat_get_defaults('output.ROI');
   end
            
+  if ~isfield(job.output,'CSF')
+    job.output.CSF =  struct('modulated',cat_get_defaults('output.CSF.mod'),'dartel',cat_get_defaults('output.CSF.dartel'),...
+                             'warped',cat_get_defaults('output.CSF.warped'),'native',cat_get_defaults('output.CSF.native'));
+  end
+
+  if ~isfield(job.output,'label')
+    job.output.label =  cat_get_defaults('output.label');
+  end
+
+  % deselect ROI output and print warning if darte template was changed
+  [pth,nam,ext] = spm_fileparts(cat12.darteltpm);
+  if ~strcmp(nam,'Template_1_IXI555_MNI152')
+    warning('Dartel template was changed: Please be aware that ROI analysis and other template-specific options cannot be used.');
+    job.output.ROI = 0;
+  end
+  
   % set cat12.bb and vb.vox by Dartel template properties
   Vd       = spm_vol([cat12.darteltpm ',1']);
   [bb,vox] = spm_get_bbox(Vd, 'old');  
@@ -200,24 +216,17 @@ function job = update_job(job)
   end
 
   % write tissue class 1-3              
-  if isfield(job.output.GM,'native')
-    tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
-    tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
-    tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
-    tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
-  else
-    tissue(1).warped = [0  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
-    tissue(1).native = [0  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
-    tissue(2).warped = [0  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
-    tissue(2).native = [0  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
+  if ~isfield(job.output.GM,'native')
+    job.output.GM.warped  = 0;  job.output.GM.native  = 0;
+    job.output.WM.warped  = 0;  job.output.WM.native  = 0;
+    job.output.CSF.warped = 0;  job.output.CSF.native = 0;
   end
-  if isfield(job.output,'CSF')
-    tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
-    tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
-  else
-    tissue(3).warped = [cat_get_defaults('output.CSF.warped') (cat_get_defaults('output.CSF.mod')==1)    (cat_get_defaults('output.CSF.mod')==2)];
-    tissue(3).native = [cat_get_defaults('output.CSF.native') (cat_get_defaults('output.CSF.dartel')==1) (cat_get_defaults('output.CSF.dartel')==2)];
-  end
+  tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
+  tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
+  tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
+  tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
+  tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
+  tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
   % never write class 4-6
   for i=4:6;
@@ -226,14 +235,8 @@ function job = update_job(job)
   end
 
   job.bias     = [cat_get_defaults('output.bias.native')  cat_get_defaults('output.bias.warped') cat_get_defaults('output.bias.dartel')];
-  
-  if isfield(job.output,'label')
-    job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
-  else
-    job.label    = [cat_get_defaults('output.label.native') cat_get_defaults('output.label.warped') (cat_get_defaults('output.label.dartel')==1) (cat_get_defaults('output.label.dartel')==2)];
-  end
+  job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
   job.jacobian = job.output.jacobian.warped;
-
   job.biasreg  = cat_get_defaults('opts.biasreg');
   job.biasfwhm = cat_get_defaults('opts.biasfwhm');
   job.channel  = struct('vols',{job.data});
