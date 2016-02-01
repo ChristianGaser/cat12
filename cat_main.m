@@ -371,7 +371,7 @@ if cat12.sanlm~=5
   clear chan o x1 x2 x3 bf1 f z
 end
 
-
+clear Vsrc
 mrf_spm = 1; 
 Ycls = {zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8') ...
         zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8')};
@@ -401,7 +401,7 @@ if do_cls
         for k1=1:size(Q,4)
           P(:,:,:,k1) = cat_vol_ctype(round(Q(:,:,:,k1)./sQ));
         end
-      
+        clear sQ
         % median in case of WMHs!
         WMth = double(max(mean(res.mn(res.lkp==2 & res.mg'>0.1)),...
                 cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)))))); 
@@ -423,6 +423,7 @@ if do_cls
         Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
         Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
         
+        clear D I
         T3ths = [mean(mean(mean(single(P(:,:,:,6)>128)))),T3th,T3th(3) + mean(diff(T3th))];
         T3thx = [0,1,2,3,4];
         [T3ths,si] = sort(T3ths);
@@ -519,14 +520,8 @@ if do_cls
         P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
         P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
         P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
-        %Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+        clear sumP
 
-        %%
-        sP = max(1,single(sum(P,4)))/255; Pp = zeros([d(1:3),Kb],'uint8');
-        for k1=1:size(P,4)
-          Pp(:,:,:,k1) = cat_vol_ctype(round(single(P(:,:,:,k1))./sP));
-        end
-      
         %% MRF
 %         P = Pp; clear Pp Ybb;
 
@@ -557,7 +552,7 @@ if do_cls
         end
     end
 
-    clear Q
+    clear Q P
 end
 
 clear q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
@@ -644,7 +639,7 @@ debug = 1; % this is a manual debugging option for matlab debugging mode
 if ~(cat12.sanlm==5 && job.extopts.NCstr)
   stime = cat_io_cmd('Global intensity correction');
   [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
-  if debug, Ym2=Ym; end %#ok<NASGU>
+
   % update in inverse case
   if opt.inv_weighting
     Ysrc = Ym; 
@@ -787,7 +782,7 @@ stime = cat_io_cmd('ROI segmentation (partitioning)');
 [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,job.cat.cat12atlas,tpm.V,noise);
 fprintf('%4.0fs\n',etime(clock,stime));
 
-
+clear YBG
 
 
 %  ---------------------------------------------------------------------
@@ -1203,7 +1198,7 @@ if do_cls && do_defs
     Ycls{2} = cat_vol_ctype(single(Ycls{2}) - Ywmh .* (single(Ycls{2})./Yclssum));
     Ycls{3} = cat_vol_ctype(single(Ycls{3}) - Ywmh .* (single(Ycls{3})./Yclssum));
     Ywmh    = cat_vol_ctype(Yclssum - single(Ycls{1}) - single(Ycls{2}) - single(Ycls{3}));
-    clear Yclssum;  
+    clear Yclssum Ywmh2;  
     
     %% if the segmentation should be corrected later...
     if job.extopts.WMHC>1
@@ -1309,7 +1304,7 @@ Affine = spm_affreg(VG, VF, aflags, res.Affine);
 rf=10^6; Affine    = fix(Affine * rf)/rf;
 res.Affine         = Affine;
 
-clear VG VF cid %Affine 
+clear VG VF cid tpm 
 
 %  ---------------------------------------------------------------------
 %  Deformation
@@ -1377,7 +1372,7 @@ trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
 % old spm normalization used for atlas map
 trans.atlas.Yy = Yy; 
 
-
+clear x
 %%
 % dartel spatial normalization to given template
 if do_dartel==1 %&& any([tc(2:end),bf(2:end),df,lb(1:end),jc])
@@ -1649,6 +1644,7 @@ cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ...
 if job.extopts.WMHC==3 && ~opt.inv_weighting; 
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
+
 cat_io_writenii(VT0,Yp0,mrifolder,'p0','Yp0b map','uint8',[0,4/255],job.output.label,trans);
 clear Yp0; 
 
@@ -1826,6 +1822,7 @@ if job.output.ROI && do_cls
     wYth1  = cat_vol_ROInorm(Yth1x,trans,1,0);
   end
   
+  clear YMF
   %%
   for ai=1:size(FA,1)
     tissue = FA{ai,3};
@@ -1850,7 +1847,7 @@ if job.output.ROI && do_cls
         if isempty(mrifolder), amrifolder = ''; else amrifolder = 'mri_atlas'; end
         cat_io_writenii(VT0,Ylai,amrifolder,[atlas '_'],[atlas ' original'],...
           'uint8',[0,1],job.output.atlas,trans);
-        clear Vlai Ylai;
+        clear Vlai Ylai trans;
       end
       
       % extract ROI data
@@ -2154,7 +2151,8 @@ if cat12.print
     cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.02 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
   
-
+    clear VT
+    
     % surface
     if exist('Psurf','var')
       hCS = subplot('Position',[0.5 0.05 0.5 0.25],'visible','off'); 
@@ -3082,7 +3080,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Yca = cat_vol_smooth3X(Yca,LASfs); 
   Ylab{3} = cat_vol_smooth3X(cat_vol_resize(Yca,'dereduceV',resT2).*Ylab{2},LASfs*2);  
   Ylab{6} = cat_vol_smooth3X(cat_vol_resize(Yxa,'dereduceV',resT2).*Ylab{2},LASfs*2);
-  clear Yxa Yca Yx Yc Y
+  clear Yxa Yca Yx Yc Y Ydiv
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------
@@ -3199,6 +3197,8 @@ function [Yb,Yl1] = cat_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
     single(Ycls{3})/255,single(Ycls{5})/255,Yb},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb);
   vxd  = max(1,1/mean(vx_vol)); 
   Ymg = Ymg>0.05 & Ym<0.45; 
+  
+  clear Ycls
   
   %% initial WM+ region
   YHDr = cat_vol_morph(Yl1>20 | Yl1<=0,'e',vxd*2);

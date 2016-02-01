@@ -292,11 +292,11 @@ function cat_run_job(job,tpm,subj)
             % lead to bad scaling in uint8 or to overpropotional weighting 
             % after smoothing 
             %   ds('l2','',vx_vol,double(VF.dat)/255,double(VF.dat)/255,double(VF.private.dat)/max(VF.private.dat(:)),double(VF.dat)/255,80)
-            [h,hv] = hist(VF.private.dat(:),[min(VF.private.dat(:)):std(VF.private.dat(:))/10:max(VF.private.dat(:))]);
+            [h,hv] = hist(VF.private.dat(:),[min(VF.private.dat(:)):cat_stat_nanstd(VF.private.dat(:))/10:max(VF.private.dat(:))]);
             hrange = [hv(find( cumsum(h)/sum(h)>0.005 ,1,'first')),hv(find( cumsum(h)/sum(h)<0.98 ,1,'last'))];
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
-            VF.dat(:,:,:) = cat_vol_ctype( ( double(VF.private.dat) + hrange(1)) / diff(hrange) * 255 ); 
+            VF.dat(:,:,:) = cat_vol_ctype( ( double(VF.private.dat(:,:,:)) + hrange(1)) / diff(hrange) * 255 ); 
             VF.pinfo      = repmat([1;0],1,size(VF.dat,3));
 
           % old approach with static resa value and no VG smoothing
