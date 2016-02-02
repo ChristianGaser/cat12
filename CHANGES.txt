@@ -8820,6 +8820,7 @@ Updated:    Native-space Vol2surf GUI and function.
 
 
 ------------------------------------------------------------------------
+r850 | gaser | 2016-02-01 16:29:38 +0100 (Mo, 01 Feb 2016) | 19 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -8839,5 +8840,33 @@ M       html/cat.html
     in expert mode.
 (4) Changed: Cleared many unnecessary variables with large memory demand.
 (5): Changed: Updated CAT12-Manual.
+
 ------------------------------------------------------------------------
-r850 | gaser | 2016-02-01 16:29:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_stat_marks.m
+A       cat_surf_surf2roi.m
+M       cat_vol_resize.m
+
+Corrected:      Fixed error "spm_affreg.line474.insufficient image overlap" 
+                caused by bad scaling of MT data in cat_run_job.
+Corrected:      Fixed error "cat_main.line1812.cleared variable."
+Corrected:      Structure order output error.
+Updated:        Modified histogram-based intensity limitation. 
+Updated:        Removed QA rating defaults from CAT report.
+                Added APP, WMHC, WMHCstr parameter to CAT expert report.
+                Moved expert warnings to QA side.               
+Updated:        Corrected bias worst case value.     
+Changed:        Lower ORNLM noise setting. Set cat_defaults extopts.sanlm=1
+                (only sanlm filtering, but multiple times).           
+Added:          Prepared cat_surf_surf2roi function and GUI.
+
+
+
+------------------------------------------------------------------------
+r851 | dahnke | 2016-02-02 14:57:00
