@@ -680,7 +680,7 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
     %[Yw,Yg] = cat_vol_resize({Yms.*(Ycls1>240),Yms.*(Ycls2>240)},'reduceV',vx_vol,3,32,'meanm');
     %Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
     %min(1/6,cat_stat_nanmean(Yn(Yn(:)>0)));
-    ornlmstr = max(0.02,min(0.2,noise * job.extopts.NCstr / 3)); % *2 because of NCstr=0.5, /3 to get the SNR for ornlm-filter! 
+    ornlmstr = max(0.01,min(0.05,noise * job.extopts.NCstr / 3 / 2)); % *2 because of NCstr=0.5, /3 to get the SNR for ornlm-filter! 
     ornlmstr = round(ornlmstr*10^6)/10^6;
     clear Yn Ycls1 Ycls2;
 
@@ -1634,11 +1634,11 @@ Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255;
 % bias and noise corrected without masking for subject space and with 
 % masking for other spaces 
 cat_io_writenii(VT0,Ym,mrifolder,'m', ...
-  'bias and noise corrected, intensity normalized', ...
-  'uint16',[0,0.0001],min([1 0 2],cell2mat(struct2cell(job.output.bias)')),trans);
-cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ...
-  'bias and noise corrected, intensity normalized (masked due to normalization)', ...
-  'uint16',[0,0.0001],min([0 1 0],cell2mat(struct2cell(job.output.bias)')),trans);
+  'bias and noise corrected, intensity normalized','uint16',[0,0.0001], ... 
+  min([1 0 2],[job.output.bias.native job.output.bias.warped job.output.bias.dartel]),trans);
+cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ... 
+  'bias and noise corrected, intensity normalized (masked due to normalization)','uint16',[0,0.0001], ...
+  min([0 1 0],[job.output.bias.native job.output.bias.warped job.output.bias.dartel]),trans);
   
 % Yp0b maps
 if job.extopts.WMHC==3 && ~opt.inv_weighting; 
@@ -1657,30 +1657,36 @@ cat_io_writenii(VT0,Yl1,mrifolder,'a0','brain atlas map for major structures and
 fn = {'GM','WM','CSF','head','head','background'};
 for clsi=1:3
   cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
-    sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
-    min([1 1 0 2],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
+    sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...cell2mat(struct2cell(job.output.(fn{clsi}))')
+    min([1 1 0 2],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+    job.output.(fn{clsi}).modulated job.output.(fn{clsi}).dartel]),trans);
   cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-    min([0 0 2 0],cell2mat(struct2cell(job.output.(fn{clsi}))')),trans);
+    min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+    job.output.(fn{clsi}).modulated job.output.(fn{clsi}).dartel]),trans);
 end
 
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
-      min([1 1 0 2],cell2mat(struct2cell(job.output.TPMC)')),trans);
+      min([1 1 0 2],[job.output.TPMC.native job.output.TPMC.warped ...
+      job.output.TPMC.modulated job.output.TPMC.dartel]),trans);
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-      min([0 0 2 0],cell2mat(struct2cell(job.output.TPMC)')),trans);
+      min([0 0 2 0],[job.output.TPMC.native job.output.TPMC.warped ...
+      job.output.TPMC.modulated job.output.TPMC.dartel]),trans);
   end
 end
 
 %% write WMH class maps
 if job.extopts.WMHC==3 && ~opt.inv_weighting;
   cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
-    min([1 1 0 2],cell2mat(struct2cell(job.output.WMH)')),trans); % 1 0 0 0
+    min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
+    job.output.WMH.modulated job.output.WMH.dartel]),trans); % 1 0 0 0
   cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
-    min([0 0 2 0],cell2mat(struct2cell(job.output.WMH)')),trans); % 0 1 2 2
+    min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
+    job.output.WMH.modulated job.output.WMH.dartel]),trans); % 0 1 2 2
 end  
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
@@ -1809,7 +1815,9 @@ if job.output.ROI && do_cls
   stime2   = cat_io_cmd('  Data mapping to normalized space','g5','',verb); 
   wYp0     = cat_vol_ROInorm(Yp0,trans,1,0);
   wYcls    = cat_vol_ROInorm(Ycls,trans,1,1);
-  wYcls{4} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),trans,1,0)); 
+  if exist('Ywmh','var')
+    wYcls{7} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),trans,1,0));
+  end
   for ci=1:numel(wYcls); wYcls{ci} = wYcls{ci} * prod(vx_vol); end      % volume
   wYm      = cat_vol_ROInorm(Ym,trans,1,0);                             % intensity
   wYmf     = cat_vol_morph(cat_vol_ROInorm(YMF,trans,1,0)>0.5,'d');  
@@ -1962,6 +1970,11 @@ if cat12.print
   str = [str struct('name', 'NCstr / LASstr / GCUTstr / CLEANUPstr:','value',...
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
          job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
+  if expert
+    str = [str struct('name', 'APP / WMHC / WMHCstr:','value',...
+           sprintf('%d / %d / %0.2f ',...
+           job.extopts.APP,job.extopts.WMHC,job.extopts.WMHCstr))]; 
+  end  
   if job.output.surface
     str = [str struct('name', 'Voxel resolution (original > intern > PBT):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
@@ -2010,8 +2023,8 @@ if cat12.print
   
   % Warnings
   if numel(cat_warnings)>0 && expert>0
-    str3 = [str3 struct('name', '','value','')]; 
-    str3 = [str3 struct('name', '\bfWarnings:','value','')]; 
+    str2 = [str2 struct('name', '','value','')]; 
+    str2 = [str2 struct('name', '\bfWarnings:','value','')]; 
     for wi=1:numel(cat_warnings)
       shorter = cat_warnings(wi).identifier;
       % remove leading MATLAB, SPM or CAT elements
@@ -2023,15 +2036,15 @@ if cat12.print
       shorter = spm_str_manip(shorter,'l40');
       shorter = marks2str(4,shorter);
       shorter = strrep(shorter,'_','\_');
-      str3    = [str3 struct('name',shorter,'value','')];  %#ok<AGROW>
+      str2    = [str2 struct('name',shorter,'value','')];  %#ok<AGROW>
     end
   end
   
-  % Rating scala
-  str4 = struct('name',sprintf(' \bRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
-        mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
-        mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
-        mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
+  % Rating scala - removed 20160202
+  %str4 = struct('name',sprintf(' \bRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
+  %      mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
+  %      mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
+  %      mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
   
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
@@ -2043,9 +2056,9 @@ if cat12.print
   for si=1:numel(str3)
     str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
   end
-  for si=1:numel(str4)
-    str4(si).name  = [str4(si).name '  '];  str4(si).value = [str4(si).value '  '];
-  end    
+  %for si=1:numel(str4) - removed 20160202
+  %  str4(si).name  = [str4(si).name '  '];  str4(si).value = [str4(si).value '  '];
+  %end    
  
   try 
     
@@ -2099,14 +2112,14 @@ if cat12.print
 		  htext(1,i,2) = text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
 	  end
 	  for i=1:size(str2,2)  % qa-measurements
-		  htext(2,i,1) = text(0.01,0.45-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  htext(2,i,2) = text(0.25,0.45-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  htext(2,i,1) = text(0.01,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  htext(2,i,2) = text(0.25,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
     % qa-scala
-    htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     for i=1:size(str3,2)  % subject-measurements
-		  htext(3,i,1) = text(0.51,0.45-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  htext(3,i,2) = text(0.80,0.45-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  htext(3,i,1) = text(0.51,0.42-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+		  htext(3,i,2) = text(0.80,0.42-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
 
     

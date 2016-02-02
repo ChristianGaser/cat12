@@ -45,7 +45,7 @@ function stools = cat_conf_stools(expert)
 
 %% Surface correlation and quality check
 %-----------------------------------------------------------------------
-  data_surf_cov         = cfg_files;
+  data_surf_cov         = cfg_files;;
   data_surf_cov.tag     = 'data_surf';
   data_surf_cov.name    = 'Sample';
   data_surf_cov.filter  = 'gifti';
@@ -179,7 +179,7 @@ function stools = cat_conf_stools(expert)
 
 %% map volumetric data
 %-----------------------------------------------------------------------  
-  v2s.datafieldname         = cfg_entry;
+  v2s.datafieldname         = cfg_entry;;
   v2s.datafieldname.tag     = 'datafieldname';
   v2s.datafieldname.name    = 'Texture Name';
   v2s.datafieldname.strtype = 's';
@@ -229,6 +229,7 @@ function stools = cat_conf_stools(expert)
     'Absolut position of the startpoint of the grid along the surface normals in mm. Give negative value for a startpoint outside the surface (CSF direction). '
   };
   v2s.rel_startpoint = v2s.abs_startpoint;
+  v2s.rel_startpoint.val     = {0};
   v2s.rel_startpoint.help    = {
     'Relative position of the startpoint of the grid along the surface normals from the center of a tissue class. Give negative value for a startpoint outside the surface (CSF direction). '
   };
@@ -259,6 +260,7 @@ function stools = cat_conf_stools(expert)
     'Absolut position of the endpoint of the grid along the surface normals in mm. Give negative value for a startpoint outside the surface (CSF direction). '
   };
   v2s.rel_endpoint = v2s.abs_endpoint;
+  v2s.rel_endpoint.val     = {1};
   v2s.rel_endpoint.help    = {
     'Relative position of the endpoint of the grid along the surface normals from the center of a tissue class. Give negative value for a startpoint outside the surface (CSF direction). '
   };
@@ -438,10 +440,116 @@ function stools = cat_conf_stools(expert)
   };
 
 
-% surface calculations 
-% ----------------------------------------------------------------------
-% estimation per subject (individual and group sampling):
-% g groups with i datafiles and i result datafile
+%% surface to ROI (in template space)
+%  ---------------------------------------------------------------------
+%  * CxN  cdata files [ thickness , curvature , ... any other file ] in template space [ resampled ]
+%  * M    atlas files [ choose files ]
+%  * average measures [ mean , std , median , max , min , mean95p ]
+% 
+%  - csv export (multiple files) > catROIs_ATLAS_SUBJECT
+%  - xml export (one file)       > catROIs_ATLAS_SUBJECT
+%  ---------------------------------------------------------------------
+%  surface ROIs have sidewise index?!
+%  ---------------------------------------------------------------------
+
+% set of cdata files
+  s2r.cdata         = cfg_files;;
+  s2r.cdata.tag     = 'cdata';
+  s2r.cdata.name    = '(Left) Surface Data Files';
+  s2r.cdata.filter  = 'any';
+  s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe).*';
+  s2r.cdata.num     = [1 Inf];
+  s2r.cdata.help    = {'Surface data sample. Both sides will processed'};
+   
+  s2r.cdata_sample         = cfg_repeat;
+  s2r.cdata_sample.tag     = 'cdata_sub.';
+  s2r.cdata_sample.name    = 'Surface Data Sample';
+  s2r.cdata_sample.values  = {s2r.cdata};
+  s2r.cdata_sample.num     = [1 Inf];
+  s2r.cdata_sample.help = {...
+    'Specify data for each sample. All samples must have the same size and same order.'};
+
+% ROI files
+  s2r.ROIs         = cfg_files;
+  s2r.ROIs.tag     = 'ROIs';
+  s2r.ROIs.name    = '(Left) ROI atlas files';
+  s2r.ROIs.filter  = 'any';
+  s2r.ROIs.ufilter = 'lh.*';
+  s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'); 
+  s2r.ROIs.num     = [1 Inf];
+  s2r.ROIs.help    = {'These are the ROI atlas files. Both sides will processed.'};
+  
+%% average mode within a ROI  
+  % mean
+  s2r.avg.mean         = cfg_menu;
+  s2r.avg.mean.tag     = 'mean';
+  s2r.avg.mean.name    = 'Mean Estimation?';
+  s2r.avg.mean.labels  = {'no','yes'};
+  s2r.avg.mean.values  = {0,1};
+  s2r.avg.mean.val     = {1}; 
+  s2r.avg.mean.help    = {'Set mean value estimation per ROI.'}; 
+  % std
+  s2r.avg.std         = cfg_menu;
+  s2r.avg.std.tag     = 'std';
+  s2r.avg.std.name    = 'STD Estimation?';
+  s2r.avg.std.labels  = {'no','yes'};
+  s2r.avg.std.values  = {0,1};
+  s2r.avg.std.val     = {1}; 
+  s2r.avg.std.help    = {'Set standard deviation estimation per ROI.'}; 
+  % min
+  s2r.avg.min         = cfg_menu;
+  s2r.avg.min.tag     = 'min';
+  s2r.avg.min.name    = 'Minimum Estimation?';
+  s2r.avg.min.labels  = {'no','yes'};
+  s2r.avg.min.values  = {0,1};
+  s2r.avg.min.val     = {0}; 
+  s2r.avg.min.help    = {'Set minimum estimation per ROI.'};   
+  % max
+  s2r.avg.max         = cfg_menu;
+  s2r.avg.max.tag     = 'max';
+  s2r.avg.max.name    = 'Maximum Estimation?';
+  s2r.avg.max.labels  = {'no','yes'};
+  s2r.avg.max.values  = {0,1};
+  s2r.avg.max.val     = {0}; 
+  s2r.avg.max.help    = {'Set maximum estimation per ROI.'};   
+  % median
+  s2r.avg.median         = cfg_menu;
+  s2r.avg.median.tag     = 'median';
+  s2r.avg.median.name    = 'Median Estimation?';
+  s2r.avg.median.labels  = {'no','yes'};
+  s2r.avg.median.values  = {0,1};
+  s2r.avg.median.val     = {0}; 
+  s2r.avg.median.help    = {'Set median estimation per ROI.'};   
+  % all functions
+  s2r.avg.main         = cfg_branch;
+  s2r.avg.main.tag     = 'avg';
+  s2r.avg.main.name    = 'Average Functions';
+  s2r.avg.main.val     = {
+    s2r.avg.mean ...
+    s2r.avg.std ...
+    s2r.avg.min ...
+    s2r.avg.max ...
+    s2r.avg.median ...
+  };
+
+%% main function
+  surf2roi      = cfg_exbranch;
+  surf2roi.tag  = 'surf2roi';
+  surf2roi.name = 'Map surface data to ROIs';
+  surf2roi.val  = {s2r.cdata_sample,s2r.ROIs,s2r.avg.main};
+  surf2roi.prog = @cat_surf_resamp_freesurfer;
+  surf2roi.help = {
+  ''};
+
+
+
+  
+  
+
+%% surface calculations 
+%  ---------------------------------------------------------------------
+%  estimation per subject (individual and group sampling):
+%  g groups with i datafiles and i result datafile
  
   sc.cdata         = cfg_files;
   sc.cdata.tag     = 'cdata';
@@ -654,7 +762,8 @@ function stools = cat_conf_stools(expert)
     v2s.vol2surf, ...
     v2s.vol2tempsurf, ...
     surfcalc, ...
-    surfcalcsub ...
+    surfcalcsub, ...
+    surf2roi, ...
     };
 
 return
