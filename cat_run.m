@@ -30,10 +30,8 @@ function varargout = cat_run(job,arg)
 
 %rev = '$Rev$';
 
-  
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
-  
+if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   cat_io_cprintf('warn',...
     ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
      '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
@@ -110,7 +108,6 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
     fprintf('_______________________________________________________________\n');
 
-
   end
 
   job = update_job(job);
@@ -120,20 +117,7 @@ end
 
 job = update_job(job);
 
-if nargin == 1, arg = 'run'; end
-
-switch lower(arg)
-    case 'run'
-       varargout{1} = run_job(job);
-    case 'check'
-        varargout{1} = check_job(job);
-    case 'vfiles'
-        varargout{1} = vfiles_job(job);
-    case 'vout'
-        varargout{1} = vout_job(job);
-    otherwise
-        error('Unknown argument ("%s").', arg);
-end
+varargout{1} = run_job(job);
 
 return
 %_______________________________________________________________________
@@ -187,7 +171,7 @@ function job = update_job(job)
     job.output.label =  cat_get_defaults('output.label');
   end
 
-  % deselect ROI output and print warning if darte template was changed
+  % deselect ROI output and print warning if dartel template was changed
   [pth,nam,ext] = spm_fileparts(cat12.darteltpm);
   if ~strcmp(nam,'Template_1_IXI555_MNI152')
     warning('Dartel template was changed: Please be aware that ROI analysis and other template-specific options cannot be used.');
@@ -215,12 +199,14 @@ function job = update_job(job)
     tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
   end
 
-  % write tissue class 1-3              
+  % check whether native field is defined (only defined for expert mode)              
   if ~isfield(job.output.GM,'native')
-    job.output.GM.warped  = 0;  job.output.GM.native  = 0;
-    job.output.WM.warped  = 0;  job.output.WM.native  = 0;
-    job.output.CSF.warped = 0;  job.output.CSF.native = 0;
+    job.output.bias.dartel = 0; job.output.bias.native = 0;
+    job.output.GM.warped   = 0; job.output.GM.native   = 0;
+    job.output.WM.warped   = 0; job.output.WM.native   = 0;
+    job.output.CSF.warped  = 0; job.output.CSF.native  = 0;
   end
+  
   tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
   tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
   tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
@@ -282,24 +268,6 @@ function vout = run_job(job)
 return
 %_______________________________________________________________________
 
-%_______________________________________________________________________
-function msg = check_job(job)
-msg = {};
-if numel(job.channel) >1,
-    k = numel(job.channel(1).vols);
-    for i=2:numel(job.channel),
-        if numel(job.channel(i).vols)~=k,
-            msg = {['Incompatible number of images in channel ' num2str(i)]};
-            break
-        end
-    end
-elseif numel(job.channel)==0,
-    msg = {'No data'};
-end
-return
-%_______________________________________________________________________
-
-%_______________________________________________________________________
 function vout = vout_job(job)
 
 n     = numel(job.channel(1).vols);
@@ -369,7 +337,7 @@ for j=1:n
     param{j} = fullfile(parts{j,1},['cat12_',parts{j,2},'.mat']);
 end
 
-tiss = struct('c',{},'rc',{},'rca',{},'wc',{},'mwc',{},'m0wc',{});
+tiss = struct('p',{},'rp',{},'rpa',{},'wp',{},'mwp',{},'m0wp',{});
 for i=1:numel(job.tissue),
     if job.tissue(i).native(1),
         tiss(i).c = cell(n,1);
@@ -439,32 +407,6 @@ end
 vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'alabel',{alabel},...
                'biascorr',{biascorr},'wbiascorr',{wbiascorr},'param',{param},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian});
-%_______________________________________________________________________
-
-%_______________________________________________________________________
-function vf = vfiles_job(job)
-vout = vout_job(job);
-vf   = vout.param;
-if ~isempty(vout.invdef),     vf = [vf vout.invdef]; end
-if ~isempty(vout.fordef),     vf = [vf, vout.fordef]; end
-if ~isempty(vout.jacobian),   vf = [vf, vout.jacobian]; end
-
-if ~isempty(vout.biascorr),   vf = [vf, vout.biascorr]; end
-if ~isempty(vout.wbiascorr),  vf = [vf, vout.wbiascorr]; end
-if ~isempty(vout.label),      vf = [vf, vout.label]; end
-if ~isempty(vout.wlabel),     vf = [vf, vout.wlabel]; end
-if ~isempty(vout.rlabel),     vf = [vf, vout.rlabel]; end
-if ~isempty(vout.alabel),     vf = [vf, vout.alabel]; end
-
-for i=1:numel(vout.tiss)
-    if ~isempty(vout.tiss(i).c),   vf = [vf vout.tiss(i).c];   end 
-    if ~isempty(vout.tiss(i).rc),  vf = [vf vout.tiss(i).rc];  end 
-    if ~isempty(vout.tiss(i).rca), vf = [vf vout.tiss(i).rca]; end
-    if ~isempty(vout.tiss(i).wc),  vf = [vf vout.tiss(i).wc];  end
-    if ~isempty(vout.tiss(i).mwc), vf = [vf vout.tiss(i).mwc]; end
-    if ~isempty(vout.tiss(i).m0wc),vf = [vf vout.tiss(i).m0wc];end
-end
-vf = reshape(vf,numel(vf),1);
 %_______________________________________________________________________
 
 %=======================================================================
