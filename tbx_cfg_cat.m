@@ -422,6 +422,7 @@ else
   tissue(2).warped = [0  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
   tissue(2).native = [0  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 end
+
 if isfield(opts,'CSF')
   tissue(3).warped = [opts.CSF.warped (opts.CSF.modulated==1) (opts.CSF.modulated==2)];
   tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
@@ -565,7 +566,6 @@ if isfield(opts,'te')
   end;
 end
 
-
 % jacobian
 if opts.jacobian.warped,
     cdep(end+1)          = cfg_dep;
@@ -593,37 +593,37 @@ for i=1:numel(tissue),
     if tissue(i).native(1),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('p%d Images',i);
-        cdep(end).src_output = substruct('.','tiss','()',{i},'.','c','()',{':'});
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','p','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).native(2),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('rp%d rigid Images',i);
-        cdep(end).src_output = substruct('.','tiss','()',{i},'.','rc','()',{':'});
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','rp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).native(3),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('rp%d affine Images',i);
-        cdep(end).src_output = substruct('.','tiss','()',{i},'.','rca','()',{':'});
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','rpa','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).warped(1),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('wp%d Images',i);
-        cdep(end).src_output = substruct('.','tiss','()',{i},'.','wc','()',{':'});
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','wp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).warped(2),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('mwp%d Images',i);
-        cdep(end).src_output = substruct('.','tiss','()',{i},'.','mwc','()',{':'});
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','mwp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).warped(3),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('m0wp%d Images',i);
-        cdep(end).src_output = substruct('.','tiss','()',{i},'.','m0wc','()',{':'});
+        cdep(end).src_output = substruct('.','tiss','()',{i},'.','m0wp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
 end
