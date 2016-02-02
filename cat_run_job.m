@@ -288,7 +288,7 @@ function cat_run_job(job,tpm,subj)
         else
             stime = cat_io_cmd('Coarse Affine registration'); 
       
-            %% histrogram limit
+            %% histogram limit
             %  the major problem were untypical high intensies that will
             %  lead to bad scaling in uint8 or to overpropotional weighting 
             %  after smoothing ... for lower limit test MT images!
@@ -474,8 +474,6 @@ function cat_run_job(job,tpm,subj)
             obj.msk.dat(:,:,:) = uint8(Yb); 
             obj.msk = spm_smoothto8bit(obj.msk,0.1); 
           
-%           % hard masking for non human
-
         end
     end
     obj.Affine = Affine;

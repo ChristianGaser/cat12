@@ -8842,6 +8842,7 @@ M       html/cat.html
 (5): Changed: Updated CAT12-Manual.
 
 ------------------------------------------------------------------------
+r851 | dahnke | 2016-02-02 14:57:08 +0100 (Di, 02 Feb 2016) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8868,5 +8869,18 @@ Added:          Prepared cat_surf_surf2roi function and GUI.
 
 
 
+
 ------------------------------------------------------------------------
-r851 | dahnke | 2016-02-02 14:57:00
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+Changed: Some minor bug fixes and edits.
+------------------------------------------------------------------------
+r852 | gaser | 2016-02-02 17:33:25
