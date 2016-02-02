@@ -277,7 +277,8 @@ function varargout=cat_vol_resize(T,operation,varargin)
       if numel(d)==1, d=d(1).*(ones(1,6)); 
       elseif numel(d)~=6, error('ERROR:reduceBrain: d has to have one or six elements.'); 
       elseif any(d([2,4,6])>(size(T{1})/2)), BB=d; d=[1 1 1 1 1 1]; % ????
-      else error('ERROR:reduceBrain: unknown error using d.');
+      else
+        error('ERROR:reduceBrain: unknown error using d.');
       end
       d = round(d./[vx_vol vx_vol]);
       
@@ -428,7 +429,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
     % OTHERWISE
     % __________________________________________________________________
     otherwise
-      error('ERROR: cat_vol_resolution: unknown operation ''%s''!\n',operation);
+      error('ERROR: cat_vol_resolution: unknown operation "%s"!\n',operation);
   end
 end  
 function D2=imageExpand(D,d)

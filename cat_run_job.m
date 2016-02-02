@@ -287,16 +287,22 @@ function cat_run_job(job,tpm,subj)
             VG1  = spm_smoothto8bit(VG,resa);
         else
             stime = cat_io_cmd('Coarse Affine registration'); 
-
-            % the major problem were untypical high intensies that will
-            % lead to bad scaling in uint8 or to overpropotional weighting 
-            % after smoothing 
+      
+            %% histrogram limit
+            %  the major problem were untypical high intensies that will
+            %  lead to bad scaling in uint8 or to overpropotional weighting 
+            %  after smoothing ... for lower limit test MT images!
             %   ds('l2','',vx_vol,double(VF.dat)/255,double(VF.dat)/255,double(VF.private.dat)/max(VF.private.dat(:)),double(VF.dat)/255,80)
             [h,hv] = hist(VF.private.dat(:),[min(VF.private.dat(:)):cat_stat_nanstd(VF.private.dat(:))/10:max(VF.private.dat(:))]);
-            hrange = [hv(find( cumsum(h)/sum(h)>0.005 ,1,'first')),hv(find( cumsum(h)/sum(h)<0.98 ,1,'last'))];
+            hrange = [hv(find( cumsum(h)/sum(h)>0.01 ,1,'first')),hv(find( cumsum(h)/sum(h)<0.90,1,'last'))];
+            if hrange(1)<0
+              hrange = hrange .* [1.2 1.2]; % increase upper limit for inhomogeneities
+            else
+              hrange = hrange .* [0.5 1.2]; % increase upper limit for inhomogeneities
+            end
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
-            VF.dat(:,:,:) = cat_vol_ctype( ( double(VF.private.dat(:,:,:)) + hrange(1)) / diff(hrange) * 255 ); 
+            VF.dat(:,:,:) = cat_vol_ctype( ( double(VF.private.dat(:,:,:)) - hrange(1)) / diff(hrange) * 255 ); 
             VF.pinfo      = repmat([1;0],1,size(VF.dat,3));
 
           % old approach with static resa value and no VG smoothing
@@ -350,15 +356,6 @@ function cat_run_job(job,tpm,subj)
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
        
             stime = cat_io_cmd(sprintf('APP%d: fine bias correction',job.extopts.APP),'','',1,stime); 
-            
-            if 0
-              %%
-              for cutstr=0:0.5:1
-                [Ym1{cutstr*2+1},Yp01{cutstr*2+1},Yb1{cutstr*2+1}] = ...
-                  APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),...
-                  Ym,Yb,Ybg,vx_vol,cutstr,job.extopts.verb);
-              end
-            end            
             
             [Ym,Yp0,Yb] = APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),...
                 Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
@@ -435,12 +432,12 @@ function cat_run_job(job,tpm,subj)
           obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
           clear Ysrc; 
       else
-        % histrogram limit
+        %% histrogram limit
         Ysrc                 = single(obj.image.private.dat(:,:,:)); 
         obj.image.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
         obj.image.pinfo      = repmat([1;0],1,size(Ysrc,3));
 
-        obj.image.dat(:,:,:) =  max(hrange(1),min(hrange(2),Ysrc));
+        obj.image.dat(:,:,:) = max(hrange(1),min(hrange(2)*1.5,Ysrc));
        
         obj.msk              = VF; 
         obj.msk.pinfo        = repmat([255;0],1,size(Ysrc,3));

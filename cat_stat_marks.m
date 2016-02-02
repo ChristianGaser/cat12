@@ -44,7 +44,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolut  expected tickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
   NM=[0.0466 0.3949]; %NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];  
-  BM=[0.2178 1.1169]; %BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
+  BM=[0.2178 1.1169*2]; %BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
   %CM=[1/3    1/12];   CM = [CM(1)-CM(2)/2 CM(2)-CM(2)/2];
   CM=[1/2 1/6]; CM = [CM(1)+diff(CM)/12 CM(2)+diff(CM)/12];
   def.QS        = { 
@@ -123,7 +123,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   def.wstm    = 6;      % worst mark
   def.wstmn   = 8.624;  % worst mark to get a 4 for values with std 
   def.bstl    = 0.5+eps*2; % highest rating ... 0.5 because of rounding values
-  def.wstl    = 9.5-eps*2; % lowest rating  ... to have only values with 1 digit
+  def.wstl    = 10.5-eps*2; % lowest rating  ... to have only values with 1 digit .. but % scaling...
   
   
   % mark functions
