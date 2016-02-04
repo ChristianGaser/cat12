@@ -22,7 +22,7 @@ function varargout = cat_tst_qa(action,varargin)
 %     [QAS,QAM] = cat_vol_qa('c#',Pcsf,Pgm,Pwm,[,opt]) - no GUI call
 %
 %
-% 2) Use GUI interface to choose all images like for other segmenations
+% 2) Use GUI interface to choose all images like for other segmentations
 %    and modalities with a similar focus of CSF, GM, and WM tissue 
 %    contrast such as PD, T2, or FLASH. 
 %     [QAS,QAM] = cat_vol_qa('p0+'[,opt])     - p0 class image  
@@ -34,7 +34,7 @@ function varargout = cat_tst_qa(action,varargin)
 %     [QAS,QAM] = cat_vol_qa('c#+',Pc1,Pc2,Pc3,Po[,Pm,opt]) - no GUI call
 %
 % 
-% 3) Use GUI interface to choose all images. I.e. for other segmenations
+% 3) Use GUI interface to choose all images. I.e. for other segmentations
 %    and modalities without focus of GM-WM contrast such as DTI MTI. 
 %     [ not implemented yet ]
 %

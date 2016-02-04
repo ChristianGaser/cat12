@@ -2262,6 +2262,19 @@ fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
   cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %0.1f\n',qa.qualityratings.IQR));
+  
+  % print subfolders
+  if cat_get_defaults('extopts.subfolders')
+    fprintf('Segmentations are saved in %s\n',fullfile(pth,'mri'));
+    fprintf('Reports are saved in %s\n',fullfile(pth,'report'));
+    if job.output.ROI
+      fprintf('Labels are saved in %s\n',fullfile(pth,'label'));
+    end
+    if job.output.surface
+      fprintf('Surface measurements are saved in %s\n',fullfile(pth,'surf'));
+    end
+  end
+  
   fprintf('%s\n\n',repmat('-',1,72));
  
 clear C c Ym Ymf
@@ -2458,7 +2471,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
   else    
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:UnknownContrast',...
-      sprintf(['Unknown tissue contrast - use SPM segmenation as T1 map! ' ...
+      sprintf(['Unknown tissue contrast - use SPM segmentation as T1 map! ' ...
            '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0);
    
     Tth.T3th  = 0:5;
@@ -3217,6 +3230,12 @@ function [Yb,Yl1] = cat_pre_gcut2(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   YHDr = cat_vol_morph(Yl1>20 | Yl1<=0,'e',vxd*2);
   Yb  = Yb>0.25 & Ym>2.5/3 & Ym<gc.h/3 & Yl1<21 & Yb;  % init WM 
   Yb  = cat_vol_morph(Yb,'l'); 
+  
+  % if no largest object could be find it is very likeli that initial normalization failed
+  if isempty(Yb)
+          error('cat:cat_main:largestWM','No largest WM cluster could be found: Please try to set origin (AC) and run preprocessing again because it is very likeli that spatial normalization failed.');
+  end
+  
   Yb  = Yb | (Ym>2.5/3  & Ym<gc.h/3 & Yb) | NS(Yl1,LAB.HI) | NS(Yl1,LAB.VT);          % init further WM 
   Yb  = smooth3(Yb)>gc.s;
   Yb(smooth3(single(Yb))<0.5)=0;                          % remove small dots
@@ -3480,8 +3499,7 @@ end
 p  = ones(numel(f{1}),K);
 for k=1:K,
     amp    = mg(k)/sqrt((2*pi)^N * det(vr(:,:,k)));
-    %d      = bsxfun(@minus,cr,mn(:,k)')*inv(chol(vr(:,:,k)));
-    d      = bsxfun(@minus,cr,mn(:,k)')*(chol(vr(:,:,k))\1);
+    d      = bsxfun(@minus,cr,mn(:,k)')*inv(chol(vr(:,:,k)));
     p(:,k) = amp*exp(-0.5*sum(d.*d,2)) + eps;
 end
 return;
