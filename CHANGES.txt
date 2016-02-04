@@ -8871,6 +8871,7 @@ Added:          Prepared cat_surf_surf2roi function and GUI.
 
 
 ------------------------------------------------------------------------
+r852 | gaser | 2016-02-02 17:33:30 +0100 (Di, 02 Feb 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8882,5 +8883,23 @@ M       html/cat.html
 M       tbx_cfg_cat.m
 
 Changed: Some minor bug fixes and edits.
+
 ------------------------------------------------------------------------
-r852 | gaser | 2016-02-02 17:33:25
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_tst_qa.m
+M       cat_vol_atlas.m
+M       cat_vol_morph.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Fixed: Some typos.
+(2) Changed: If lab in cat_vol_morph.m fails then return empty parameter to 
+    inidicate that something failed.
+(3) Changed: Stop if lab in cat_vol_morph.m fails and give error message
+    that normalization likeli failed.
+------------------------------------------------------------------------
+r853 | gaser | 2016-02-04 10:27:49

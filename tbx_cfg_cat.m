@@ -310,7 +310,7 @@ pc.tag       = 'pc';
 pc.name      = 'Preprocessing change map';
 pc.val       = {native warped dartel};
 pc.help      = {
-  'WARNING: The preprocessing documentation map is under development!\n\nThis is the option to save a map that protocol the canges that were necessary to segment your image. In example the removement of blood vessels or the adaption for local GM intensity will result in strong modifications of the orignal image. Although this corrections normaly helps to improve segmenation quality they can fail. As a result higher values describe regions where error are more likely than in other regions. '
+  'WARNING: The preprocessing documentation map is under development!\n\nThis is the option to save a map that protocol the canges that were necessary to segment your image. In example the removement of blood vessels or the adaption for local GM intensity will result in strong modifications of the orignal image. Although this corrections normaly helps to improve segmentation quality they can fail. As a result higher values describe regions where error are more likely than in other regions. '
 ''
 };
 

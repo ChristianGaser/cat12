@@ -87,7 +87,7 @@ function cat_vol_atlas(atlas,refinei)
   % for the anatomy toolbox we got a different input...
   % --------------------------------------------------------------------
   
-    % use CAT to create a segmenation and mapping
+    % use CAT to create a segmentation and mapping
     Pp0=P; Pwp0=P; Py=P;
     for fi = 1:numel(P);
       [pp1,ff1] = spm_fileparts(P{fi});
@@ -230,7 +230,7 @@ function cat_vol_atlas(atlas,refinei)
         Py{fi}  = fullfile(pp ,sprintf('%s%s.nii','y_',ff ));
       end
       
-      % use CAT to create a segmenation and mapping
+      % use CAT to create a segmentation and mapping
       if recalc || ~exist(Pp0{fi},'file') || ~exist(Py{fi},'file')
         call_cat(P{fi});
       end
@@ -536,7 +536,7 @@ function [P,PA,Pcsv,Ps,Ptxt,resdir,refine,Pxml] = mydata(atlas)
 end
 function call_cat(P)
 % ----------------------------------------------------------------------
-% This function call CAT segmenation to estimate the normalization
+% This function call CAT segmentation to estimate the normalization
 % parameters for the atlas map.
 % ----------------------------------------------------------------------
 % Job saved on 28-Oct-2013 14:37:37 by cfg_util (rev $Rev$)
