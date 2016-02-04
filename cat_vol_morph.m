@@ -115,6 +115,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       [tmp0,num] = max(num(:)); clear tmp;
       vol       = ROI==num;	
     catch %#ok<CTCH>
+      vol = [];
       warning('MATLAB:cat_vol_morph:NoObject','WARNING: cat_vol_morph - lab - no object!');
     end 
 
