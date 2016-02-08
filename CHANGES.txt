@@ -8885,6 +8885,7 @@ M       tbx_cfg_cat.m
 Changed: Some minor bug fixes and edits.
 
 ------------------------------------------------------------------------
+r853 | gaser | 2016-02-04 10:27:56 +0100 (Do, 04 Feb 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8901,5 +8902,58 @@ M       tbx_cfg_cat.m
     inidicate that something failed.
 (3) Changed: Stop if lab in cat_vol_morph.m fails and give error message
     that normalization likeli failed.
+
 ------------------------------------------------------------------------
-r853 | gaser | 2016-02-04 10:27:49
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_amap.mexmaci64
+M       cat_amap.mexw64
+M       cat_ornlm.mexmaci64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexmaci64
+M       cat_sanlm.mexw64
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexmaci64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.c
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexmaci64
+M       cat_vol_simgrow.mexw64
+M       compile.m
+M       html/cat.html
+M       sanlm_float.c
+
+(1) Fixed: Some typos.
+(2) Fixed: Wrong brackest in cat_vol_gradient3.c.
+(3) Changed: Makefile
+(4) Changed: Commented out output of # of processors in sanlm_float.c
+(5) Fixed: compile.m that was using Robert-specific code
+------------------------------------------------------------------------
+r854 | gaser | 2016-02-08 09:04:34

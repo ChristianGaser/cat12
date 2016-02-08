@@ -10,7 +10,7 @@ function varargout = compile(comp,test,verb)
 %   test = [0|1]: test compiled functions; default 1
 %   verb = [0|1]: display progress; default 1
 %
-%   ok = [0|1]: all functions compoled | tested successfull
+%   ok = [0|1]: all functions compiled | tested successfull
 % ______________________________________________________________________
 % $Id$ 
 
@@ -32,7 +32,7 @@ function varargout = compile(comp,test,verb)
   if ~exist('verb','var'); verb=1; end
 
   wkdir   = cd; 
-  catdir  = fullfile(spm(dir),'toolbox','cat12'); 
+  catdir  = fullfile(spm('dir'),'toolbox','cat12'); 
   catidir = fullfile(catdir,'internal');  
   
   %% testdata 
@@ -73,18 +73,20 @@ function varargout = compile(comp,test,verb)
     eval(['mex ' mexflag ' -O cat_sanlm.c sanlm_float.c'])
       
     % internal c-functions
-    cd(catidir);
-    if strcmp(mexext,'mexw64')
-      eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
-      movefile('cat_vol_cMRegularizarNLM3Dw.mexw32','cat_vol_cMRegularizarNLM3D.mexw32');
-    elseif strcmp(mexext,'mexw64')
-      eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
-      movefile('cat_vol_cMRegularizarNLM3Dw.mexw64','cat_vol_cMRegularizarNLM3D.mexw64');
-    elsecd(catidir);
-      eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3D.c']);
+    try
+      cd(catidir);
+      if strcmp(mexext,'mexw64')
+        eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
+        movefile('cat_vol_cMRegularizarNLM3Dw.mexw32','cat_vol_cMRegularizarNLM3D.mexw32');
+      elseif strcmp(mexext,'mexw64')
+        eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
+        movefile('cat_vol_cMRegularizarNLM3Dw.mexw64','cat_vol_cMRegularizarNLM3D.mexw64');
+      elsecd(catidir);
+        eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3D.c']);
+      end
     end
-    
     cd(wkdir);
+      
   end
   
   
@@ -190,7 +192,7 @@ function varargout = compile(comp,test,verb)
     % local values
     n{12} = 'cat_vol_localstat';      
     d{12} = cat_vol_localstat(d0,d1==1,8,1);
-    r(12) = rms(nanmean(d0(d1(:)==0)) - d{12}(d1(:)==1));
+    r(12) = rms(cat_stat_nanmean(d0(d1(:)==0)) - d{12}(d1(:)==1));
     s(12) = r(12)<0.05;
     
     % region growing
@@ -227,11 +229,13 @@ function varargout = compile(comp,test,verb)
     
     % NLM upsampling 
     % c-fuction used iterative based on an interpolated image
-    n{16} = 'cat_vol_cMRegularizarNLM3D';   
-    dnc   = cat_vol_cMRegularizarNLM3D(dcc,3,1,std(d0nan(:))/2,[2 2 2]);
-    d{16} = dcl - dnc; 
-    r(16) = rms(d{16}); 
-    s(16) = rms(d{16})<0.05; 
+    try
+      n{16} = 'cat_vol_cMRegularizarNLM3D';   
+      dnc   = cat_vol_cMRegularizarNLM3D(dcc,3,1,std(d0nan(:))/2,[2 2 2]);
+      d{16} = dcl - dnc; 
+      r(16) = rms(d{16}); 
+      s(16) = rms(d{16})<0.05; 
+    end
     
     % Display results
     if verb

@@ -11,7 +11,7 @@ TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/cat12
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m
-C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c cat_*.mex* vollib.c genus0.[ch] tricases.h
+C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h
 MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt templates_1.50mm html templates_surfaces cat12.* CAT.* distribute_to_server.sh cat_*.sh
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
