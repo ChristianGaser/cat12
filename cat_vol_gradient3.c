@@ -86,11 +86,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       G1[i] = ( I[n2i] - I[n1i] ) / 2;
     }
     else {
-      if ( M[n1i] && M[n2i] ) {
+      if ( M[n1i] && M[n2i] ) 
         G1[i] = ( I[n2i] - I[n1i] ) / 2;
       else
         G1[i] = 0;  
-      }  
     }
     
     n1i=i-x; ind2sub(n1i,&nu,&nv,&nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) n1i=i;
