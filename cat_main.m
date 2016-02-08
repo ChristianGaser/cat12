@@ -457,11 +457,10 @@ if do_cls
       
         %% Update probability maps
         % background vs. head - important for noise background such as in MT weighting
-        if sum(sum(sum(P(:,:,:,6)>240)))>10000
+        if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<mean(T3th(1:2)))))>10000
           Ybg = P(:,:,:,6); 
         else
-          Ybg = uint8(255*(1 - Ysrc/max(T3th(3)*0.2,mean(T3th(1:2))))); % case of skull-stripped input
-          Ybg = cat_vol_morph(Ybg>128,'lo',1);
+          Ybg = uint8(255*(1 - Ysrc/max(T3th(3)*0.1,mean([min(Ysrc(:)),T3th(1)])))); % case of skull-stripped input
         end
         [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
         warning('off','MATLAB:cat_vol_morph:NoObject'); 
@@ -1878,7 +1877,7 @@ if job.output.ROI && do_cls
         csv,'','',struct('delimiter',',','komma','.'));
       % xml-export one file for all (this is a structure)
       ROI.(atlas) = csv;
-      cat_io_xml(fullfile(pth,labelfolder,['catROIs_' nam '.xml']),struct('ROI',ROI),'write+'); 
+      cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),struct('ROI',ROI),'write+'); 
 
     else
       stime2 = cat_io_cmd(sprintf('  ROI estimation failed. Atlas ''%s'' not exist.',atlas),'g5','',verb,stime2);

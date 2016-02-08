@@ -289,16 +289,32 @@ function cat_run_job(job,tpm,subj)
             stime = cat_io_cmd('Coarse Affine registration'); 
       
             %% histogram limit
-            %  the major problem were untypical high intensies that will
-            %  lead to bad scaling in uint8 or to overpropotional weighting 
-            %  after smoothing ... for lower limit test MT images!
-            %   ds('l2','',vx_vol,double(VF.dat)/255,double(VF.dat)/255,double(VF.private.dat)/max(VF.private.dat(:)),double(VF.dat)/255,80)
-            [h,hv] = hist(VF.private.dat(:),[min(VF.private.dat(:)):cat_stat_nanstd(VF.private.dat(:))/10:max(VF.private.dat(:))]);
-            hrange = [hv(find( cumsum(h)/sum(h)>0.01 ,1,'first')),hv(find( cumsum(h)/sum(h)<0.90,1,'last'))];
+            %  Very untypical low/high values can cause problems in
+            %  alginment, e.g. by overweighting of head tissue.
+            %  On the other side it is important to avoid overmasking 
+            %  that will trouble the bias correction.
+            %    ds('l2','',vx_vol,double(VF.dat)/255,Ysrc>objth & Yg<2/3,Yg,double(VF.dat)/255,80)
+            Ysrc   = single(VF.private.dat(:,:,:)); 
+            Yg     = cat_vol_grad(Ysrc,vx_vol/2) ./ max(eps,Ysrc); 
+            YM     = smooth3(Yg<2/3)>0.7; 
+            objth  = cat_stat_nanmean(Ysrc(YM(:)));
+            Yb     = Ysrc(Ysrc<objth);          Yb = Yb(:); % background
+            Yo     = Ysrc(Ysrc>objth & Yg<2/3); Yo = Yo(:); % object
+            [hb,hvb] = hist(Yb,[min(Yb):cat_stat_nanstd(Yb)/10:max(Yb)]);
+            [ho,hvo] = hist(Yo,[min(Yo):cat_stat_nanstd(Yo)/10:max(Yo)]);
+            %%
+            hrange = [ min([ hvb(find( cumsum(hb)/sum(hb)>0.01,1,'first')),... lowest value in the approximated background area
+                             hvo(find( cumsum(ho)/sum(ho)>0.01,1,'first')),... lowest value in the approximated object area
+                             ]), ...
+                       max([ hvb(find( cumsum(hb)/sum(hb)<0.90,1,'last' )),... highest value in the background (check for MT data)
+                             hvo(find( cumsum(ho)/sum(ho)<0.60,1,'last' ))*1.4,... 
+                             hvo(find( cumsum(ho)/sum(ho)<0.90,1,'last' ))*1.2,...
+                             hvo(find( cumsum(ho)/sum(ho)<0.95,1,'last' ))*1.0,...
+                             ]) ];
             if hrange(1)<0
-              hrange = hrange .* [1.2 1.2]; % increase upper limit for inhomogeneities
+              hrange = hrange .* [1.2 1.0]; % increase upper limit for inhomogeneities
             else
-              hrange = hrange .* [0.5 1.2]; % increase upper limit for inhomogeneities
+              hrange = hrange .* [0.8 1.0]; % increase upper limit for inhomogeneities
             end
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
@@ -433,16 +449,19 @@ function cat_run_job(job,tpm,subj)
           clear Ysrc; 
       else
         %% histrogram limit
+        %    ds('l2','',vx_vol,double(VF.dat)/255,obj.msk.dat(:,:,:),Yg,double(VF.dat)/255,140)
         Ysrc                 = single(obj.image.private.dat(:,:,:)); 
         obj.image.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
         obj.image.pinfo      = repmat([1;0],1,size(Ysrc,3));
 
-        obj.image.dat(:,:,:) = max(hrange(1),min(hrange(2)*1.5,Ysrc));
+        % here we can use a higher limit as far as the priors SPM should eliminate problems
+        obj.image.dat(:,:,:) = max(hrange(1),min(hrange(2)*2,Ysrc));
        
         obj.msk              = VF; 
         obj.msk.pinfo        = repmat([255;0],1,size(Ysrc,3));
         obj.msk.dt           = [spm_type('uint8') spm_platform('bigend')];
-        obj.msk.dat(:,:,:)   = uint8( Ysrc>(hrange(1) + diff(hrange)*0.3) & Ysrc>(hrange(2) + diff(hrange)*0.1)); 
+        obj.msk.dat(:,:,:)   = uint8( cat_vol_morph( (Ysrc>(hrange(1) + diff(hrange)*0.2) & Ysrc<(hrange(2) + diff(hrange)*2)) ,'lc',2) & ...
+                                 Ysrc<(hrange(2) + diff(hrange)*2) ); % headmask
         obj.msk              = spm_smoothto8bit(obj.msk,0.1); 
       end
 

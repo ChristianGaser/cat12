@@ -38,7 +38,7 @@ function cat_surf_surf2roi(job)
       
       % set column
       cfunct = 'mean'; % mean, min, max, median, std
-      cname  = sinfo(1).dataname; 
+      %cname  = sinfo(1).dataname; 
       cfname = [cfunct '(' cname ')']; 
       cid    = find();
             
@@ -47,8 +47,12 @@ function cat_surf_surf2roi(job)
         csv(:,cid) = 1; 
       end
         
-      % write csf-file for each atlas
-    
+      % csv-export one for each atlas (this is a table) 
+      cat_io_csv(fullfile(pth,labelfolder,['catROI_' atlas '_' nam '.csv']),...
+        csv,'','',struct('delimiter',',','komma','.'));
+      % xml-export one file for all (this is a structure)
+      ROI.(atlas) = csv;
+      cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),struct('ROI',ROI),'write+'); 
       
       % create maps of each atlas
       % create gifti
