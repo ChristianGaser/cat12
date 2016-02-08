@@ -671,7 +671,7 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
   Nthreads = dims[2]<8?dims[2]:8;
   if(Nthreads<1) Nthreads=1;
 
-  if(Nthreads>1) printf("Using %d processors\n",Nthreads);fflush(stdout);
+/*  if(Nthreads>1) printf("Using %d processors\n",Nthreads);fflush(stdout); */
 
 
 #if defined(_WIN32)
