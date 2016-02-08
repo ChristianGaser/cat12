@@ -8904,6 +8904,7 @@ M       tbx_cfg_cat.m
     that normalization likeli failed.
 
 ------------------------------------------------------------------------
+r854 | gaser | 2016-02-08 09:04:43 +0100 (Mo, 08 Feb 2016) | 51 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -8955,5 +8956,24 @@ M       sanlm_float.c
 (3) Changed: Makefile
 (4) Changed: Commented out output of # of processors in sanlm_float.c
 (5) Fixed: compile.m that was using Robert-specific code
+
 ------------------------------------------------------------------------
-r854 | gaser | 2016-02-08 09:04:34
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat_main.m
+M       cat_run_job.m
+M       cat_surf_surf2roi.m
+M       compile.m
+
+Added:      Added functions test in for cat_vol_simgrow.c and cat_vol_downcut.c
+            in compile.m function.
+Update:     Modified histogram limitation in APP==0 (default) processing.
+            Try to correct errors in background estimation for masked data 
+            ("Only nonempty 3D volumes!" error in cat_main line ~468).
+Added:      Added Help call in GUI>Internet/Help that (re)open CAT Help in
+            SPM Graphics window.
+
+------------------------------------------------------------------------
+r855 | dahnke | 2016-02-08 16:54:01
