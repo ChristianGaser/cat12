@@ -8958,6 +8958,7 @@ M       sanlm_float.c
 (5) Fixed: compile.m that was using Robert-specific code
 
 ------------------------------------------------------------------------
+r855 | dahnke | 2016-02-08 16:54:14 +0100 (Mo, 08 Feb 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8975,5 +8976,13 @@ Update:     Modified histogram limitation in APP==0 (default) processing.
 Added:      Added Help call in GUI>Internet/Help that (re)open CAT Help in
             SPM Graphics window.
 
+
 ------------------------------------------------------------------------
-r855 | dahnke | 2016-02-08 16:54:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_slice_overlay.m
+
+Fixed: Issue with && operator in cat_vol_slice_overlay.m
+------------------------------------------------------------------------
+r856 | gaser | 2016-02-09 23:52:46
