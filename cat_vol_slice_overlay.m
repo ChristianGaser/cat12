@@ -268,7 +268,7 @@ slice_overlay
 
 
 % change labels of colorbar for log-scale
-if (SO.cbar == 2) && logP
+if (SO.cbar == 2) & logP
   H = gca;
   YTick = get(H,'YTick');
   mn = floor(min(YTick));
