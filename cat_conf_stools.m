@@ -453,37 +453,68 @@ function stools = cat_conf_stools(expert)
 %  ---------------------------------------------------------------------
 
 % set of cdata files
-  s2r.cdata         = cfg_files;;
-  s2r.cdata.tag     = 'cdata';
-  s2r.cdata.name    = '(Left) Surface Data Files';
-  s2r.cdata.filter  = 'any';
-  s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe).*';
-  s2r.cdata.num     = [1 Inf];
-  s2r.cdata.help    = {'Surface data sample. Both sides will processed'};
-   
+  if expert && 0 % this is not ready now
+    s2r.cdata         = cfg_files;;
+    s2r.cdata.tag     = 'cdata';
+    s2r.cdata.name    = '(Left) Surface Data Files';
+    s2r.cdata.filter  = 'any';
+    s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe).*';
+    s2r.cdata.num     = [1 Inf];
+    s2r.cdata.help    = {'Surface data sample. Both sides will processed'};
+  else % only smoothed/resampled
+    s2r.cdata         = cfg_files;
+    s2r.cdata.tag     = 'cdata';
+    s2r.cdata.name    = '(Left) Surface Data Files';
+    s2r.cdata.filter  = 'any';
+    s2r.cdata.ufilter = 's.*';
+    s2r.cdata.num     = [1 Inf];
+    s2r.cdata.help    = {'Surface data sample. Both sides will processed'};
+  end
+  
   s2r.cdata_sample         = cfg_repeat;
   s2r.cdata_sample.tag     = 'cdata_sub.';
   s2r.cdata_sample.name    = 'Surface Data Sample';
   s2r.cdata_sample.values  = {s2r.cdata};
   s2r.cdata_sample.num     = [1 Inf];
-  s2r.cdata_sample.help = {...
-    'Specify data for each sample. All samples must have the same size and same order.'};
+  s2r.cdata_sample.help = {[...
+    'Specify data for each sample (i.e. thickness, curvature, ...). ' ...
+    'All samples must have the same size and same order. ' ...
+    ''
+  ]};
 
 % ROI files
   s2r.ROIs         = cfg_files;
-  s2r.ROIs.tag     = 'ROIs';
+  s2r.ROIs.tag     = 'rdata';
   s2r.ROIs.name    = '(Left) ROI atlas files';
   s2r.ROIs.filter  = 'any';
   s2r.ROIs.ufilter = 'lh.*';
   s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'); 
   s2r.ROIs.num     = [1 Inf];
   s2r.ROIs.help    = {'These are the ROI atlas files. Both sides will processed.'};
+
+% ROI area
+  s2r.area         = cfg_menu;
+  s2r.area.tag     = 'area';
+  s2r.area.name    = 'Estimate ROI Area';
+  s2r.area.labels  = {'no','yes'};
+  s2r.area.values  = {0,1};
+  s2r.area.val     = {1}; 
+  s2r.area.help    = {'Estimate area of each Roi.'};
+ 
+% ROI area
+  s2r.vernum         = cfg_menu;
+  s2r.vernum.tag     = 'vernum';
+  s2r.vernum.name    = 'Count ROI Vertices';
+  s2r.vernum.labels  = {'no','yes'};
+  s2r.vernum.values  = {0,1};
+  s2r.vernum.val     = {1}; 
+  s2r.vernum.help    = {'Count vertices of each ROI.'};
   
 %% average mode within a ROI  
   % mean
   s2r.avg.mean         = cfg_menu;
   s2r.avg.mean.tag     = 'mean';
-  s2r.avg.mean.name    = 'Mean Estimation?';
+  s2r.avg.mean.name    = 'Mean Estimation';
   s2r.avg.mean.labels  = {'no','yes'};
   s2r.avg.mean.values  = {0,1};
   s2r.avg.mean.val     = {1}; 
@@ -491,7 +522,7 @@ function stools = cat_conf_stools(expert)
   % std
   s2r.avg.std         = cfg_menu;
   s2r.avg.std.tag     = 'std';
-  s2r.avg.std.name    = 'STD Estimation?';
+  s2r.avg.std.name    = 'STD Estimation';
   s2r.avg.std.labels  = {'no','yes'};
   s2r.avg.std.values  = {0,1};
   s2r.avg.std.val     = {1}; 
@@ -499,7 +530,7 @@ function stools = cat_conf_stools(expert)
   % min
   s2r.avg.min         = cfg_menu;
   s2r.avg.min.tag     = 'min';
-  s2r.avg.min.name    = 'Minimum Estimation?';
+  s2r.avg.min.name    = 'Minimum Estimation';
   s2r.avg.min.labels  = {'no','yes'};
   s2r.avg.min.values  = {0,1};
   s2r.avg.min.val     = {0}; 
@@ -507,7 +538,7 @@ function stools = cat_conf_stools(expert)
   % max
   s2r.avg.max         = cfg_menu;
   s2r.avg.max.tag     = 'max';
-  s2r.avg.max.name    = 'Maximum Estimation?';
+  s2r.avg.max.name    = 'Maximum Estimation';
   s2r.avg.max.labels  = {'no','yes'};
   s2r.avg.max.values  = {0,1};
   s2r.avg.max.val     = {0}; 
@@ -515,7 +546,7 @@ function stools = cat_conf_stools(expert)
   % median
   s2r.avg.median         = cfg_menu;
   s2r.avg.median.tag     = 'median';
-  s2r.avg.median.name    = 'Median Estimation?';
+  s2r.avg.median.name    = 'Median Estimation';
   s2r.avg.median.labels  = {'no','yes'};
   s2r.avg.median.values  = {0,1};
   s2r.avg.median.val     = {0}; 
@@ -523,7 +554,7 @@ function stools = cat_conf_stools(expert)
   % all functions
   s2r.avg.main         = cfg_branch;
   s2r.avg.main.tag     = 'avg';
-  s2r.avg.main.name    = 'Average Functions';
+  s2r.avg.main.name    = 'ROI Average Functions';
   s2r.avg.main.val     = {
     s2r.avg.mean ...
     s2r.avg.std ...
@@ -536,8 +567,13 @@ function stools = cat_conf_stools(expert)
   surf2roi      = cfg_exbranch;
   surf2roi.tag  = 'surf2roi';
   surf2roi.name = 'Map surface data to ROIs';
-  surf2roi.val  = {s2r.cdata_sample,s2r.ROIs,s2r.avg.main};
-  surf2roi.prog = @cat_surf_resamp_freesurfer;
+  surf2roi.val  = {
+    s2r.cdata_sample, ...
+    s2r.ROIs, ...
+    s2r.vernum, ...
+    ... s2r.area, ... does not work yet
+    s2r.avg.main};
+  surf2roi.prog = @cat_surf_surf2roi;
   surf2roi.help = {
   ''};
 
@@ -754,7 +790,20 @@ function stools = cat_conf_stools(expert)
   stools = cfg_choice;
   stools.name   = 'Surface Tools';
   stools.tag    = 'stools';
-  stools.values = { ...
+  if expert
+    stools.values = { ...
+      check_mesh_cov, ...
+      surfextract, ...
+      surfresamp, ...
+      surfresamp_fs,...
+      v2s.vol2surf, ...
+      v2s.vol2tempsurf, ...
+      surfcalc, ...
+      surfcalcsub, ...
+      surf2roi, ...
+      };
+  else
+      stools.values = { ...
     check_mesh_cov, ...
     surfextract, ...
     surfresamp, ...
@@ -763,9 +812,8 @@ function stools = cat_conf_stools(expert)
     v2s.vol2tempsurf, ...
     surfcalc, ...
     surfcalcsub, ...
-    surf2roi, ...
     };
-
+  end
 return
 
 

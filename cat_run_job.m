@@ -104,7 +104,7 @@ function cat_run_job(job,tpm,subj)
                   if job.extopts.verb>1, cat_io_cmd(' '); end
                 else
                   cat_sanlm(Y,3,1,0);          % use multi-threaded version
-                  fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
+                  %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
                 end
             end
             Vn = cat_io_writenii(V,Y,mrifolder,'n','noise corrected','float32',[0,1],[1 0 0]);
@@ -287,44 +287,12 @@ function cat_run_job(job,tpm,subj)
             VG1  = spm_smoothto8bit(VG,resa);
         else
             stime = cat_io_cmd('Coarse Affine registration'); 
-      
-            %% histogram limit
-            %  Very untypical low/high values can cause problems in
-            %  alginment, e.g. by overweighting of head tissue.
-            %  On the other side it is important to avoid overmasking 
-            %  that will trouble the bias correction.
-            %    ds('l2','',vx_vol,double(VF.dat)/255,Ysrc>objth & Yg<2/3,Yg,double(VF.dat)/255,80)
-            Ysrc   = single(VF.private.dat(:,:,:)); 
-            Yg     = cat_vol_grad(Ysrc,vx_vol/2) ./ max(eps,Ysrc); 
-            YM     = smooth3(Yg<2/3)>0.7; 
-            objth  = cat_stat_nanmean(Ysrc(YM(:)));
-            Yb     = Ysrc(Ysrc<objth);          Yb = Yb(:); % background
-            Yo     = Ysrc(Ysrc>objth & Yg<2/3); Yo = Yo(:); % object
-            [hb,hvb] = hist(Yb,[min(Yb):cat_stat_nanstd(Yb)/10:max(Yb)]);
-            [ho,hvo] = hist(Yo,[min(Yo):cat_stat_nanstd(Yo)/10:max(Yo)]);
-            %%
-            hrange = [ min([ hvb(find( cumsum(hb)/sum(hb)>0.01,1,'first')),... lowest value in the approximated background area
-                             hvo(find( cumsum(ho)/sum(ho)>0.01,1,'first')),... lowest value in the approximated object area
-                             ]), ...
-                       max([ hvb(find( cumsum(hb)/sum(hb)<0.90,1,'last' )),... highest value in the background (check for MT data)
-                             hvo(find( cumsum(ho)/sum(ho)<0.60,1,'last' ))*1.4,... 
-                             hvo(find( cumsum(ho)/sum(ho)<0.90,1,'last' ))*1.2,...
-                             hvo(find( cumsum(ho)/sum(ho)<0.95,1,'last' ))*1.0,...
-                             ]) ];
-            if hrange(1)<0
-              hrange = hrange .* [1.2 1.0]; % increase upper limit for inhomogeneities
-            else
-              hrange = hrange .* [0.8 1.0]; % increase upper limit for inhomogeneities
-            end
-            % write data to VF
-            VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
-            VF.dat(:,:,:) = cat_vol_ctype( ( double(VF.private.dat(:,:,:)) - hrange(1)) / diff(hrange) * 255 ); 
-            VF.pinfo      = repmat([1;0],1,size(VF.dat,3));
-
-          % old approach with static resa value and no VG smoothing
+            
+            % old approach with static resa value and no VG smoothing
             resa = 8;
             VF1  = spm_smoothto8bit(VF,resa);
             VG1  = VG; 
+            
         end
           
         %% prepare affine parameter 
@@ -340,7 +308,17 @@ function cat_run_job(job,tpm,subj)
         end
         if doregistration
             warning off 
-            [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
+            try 
+              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
+            catch
+              affscale = 0; 
+            end
+            if affscale>3 || affscale<0.5
+              aflags     = struct('sep',resa,'regtype','subj','WG',[],'WF',[],'globnorm',1); % subject + globnorm!
+              aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
+              aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
+              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
+            end
             warning on
         end
           
@@ -363,7 +341,7 @@ function cat_run_job(job,tpm,subj)
             %  The mask has to be a little bit wider and it is important
             %  that the brain is complete!
             %  ---------------------------------------------------------
-            %  ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
+            %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
             
             % apply (first affine) registration on the default brain mask
             VFa = VF; 
@@ -394,7 +372,7 @@ function cat_run_job(job,tpm,subj)
             % old approach ... only smoothing of the VF with 2 mm
             stime = cat_io_cmd('Affine registration','','',1,stime); 
             VF1 = spm_smoothto8bit(VF,aflags.sep/2);
-            VG1 = VG; 
+            VG1 = spm_smoothto8bit(VG,0.5); 
         end
 
           
@@ -405,70 +383,58 @@ function cat_run_job(job,tpm,subj)
             spm_chi2_plot('Init','Coarse Affine Registration 2','Mean squared difference','Iteration');
         end
         warning off
-        [Affine1,affscale] = spm_affreg(VG1, VF1, aflags, Affine, affscale);   
+        [Affine1,affscale] = spm_affreg(VG1, VF1, aflags, Affine, affscale);    %#ok<NASGU>
         warning on
         if ~any(isnan(Affine1(1:3,:))), Affine = Affine1; end
         clear VG1 VF1
     end
-      if job.extopts.APP && dobiascorrection
-          Ysrc = single(obj.image.private.dat(:,:,:)); 
-          obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
-          obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
+    
+    
+    %%
+    if job.extopts.APP && dobiascorrection
+        Ysrc = single(obj.image.private.dat(:,:,:)); 
+        obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
+        obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
 
-          % rewrite bias correctd, but not skull-stripped image
-          %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
-          % add temporary skull-stripped images
-          if doskullstripping
+        % rewrite bias correctd, but not skull-stripped image
+        %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+        % add temporary skull-stripped images
+        if doskullstripping
+            th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
+                 cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
+            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); % .* Yb))); 
+        else
+            if exist('Yb','var')
               th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
                    cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
-              obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); % .* Yb))); 
-          else
-              if exist('Yb','var')
-                th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
-                     cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
-              else % only initial bias correction
-                th = WMth;
-              end
-              obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
-              VFa = VF; 
-              if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
-              if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-              [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
-          end
-          if job.extopts.APP==3
-              Ybd = cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); % be shure that all brain tissue is included
-              %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
-              obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); 
-              obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); 
-          end
-          obj.msk       = VF; 
-          obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
-          obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
-          obj.msk.dat(:,:,:) = uint8(Yb); 
-          obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
-          clear Ysrc; 
-      else
-        %% histrogram limit
-        %    ds('l2','',vx_vol,double(VF.dat)/255,obj.msk.dat(:,:,:),Yg,double(VF.dat)/255,140)
-        Ysrc                 = single(obj.image.private.dat(:,:,:)); 
-        obj.image.dt         = [spm_type('FLOAT32') spm_platform('bigend')];
-        obj.image.pinfo      = repmat([1;0],1,size(Ysrc,3));
+            else % only initial bias correction
+              th = WMth;
+            end
+            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+            VFa = VF; 
+            if doregistration, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); end
+            if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
+        end
+        if job.extopts.APP==3
+            Ybd = cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); % be shure that all brain tissue is included
+            %obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); 
+            obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); 
+        end
+        obj.msk       = VF; 
+        obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
+        obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
+        obj.msk.dat(:,:,:) = uint8(Yb); 
+        obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
+        clear Ysrc; 
+    end
 
-        % here we can use a higher limit as far as the priors SPM should eliminate problems
-        obj.image.dat(:,:,:) = max(hrange(1),min(hrange(2)*2,Ysrc));
-       
-        obj.msk              = VF; 
-        obj.msk.pinfo        = repmat([255;0],1,size(Ysrc,3));
-        obj.msk.dt           = [spm_type('uint8') spm_platform('bigend')];
-        obj.msk.dat(:,:,:)   = uint8( cat_vol_morph( (Ysrc>(hrange(1) + diff(hrange)*0.2) & Ysrc<(hrange(2) + diff(hrange)*2)) ,'lc',2) & ...
-                                 Ysrc<(hrange(2) + diff(hrange)*2) ); % headmask
-        obj.msk              = spm_smoothto8bit(obj.msk,0.1); 
-      end
 
     if job.extopts.APP
-        stime = cat_io_cmd(sprintf('SPM preprocessing 1 (APP=%d):',job.extopts.APP),'','',1,stime);
+      stime = cat_io_cmd(sprintf('SPM preprocessing 1 (APP=%d):',job.extopts.APP),'','',1,stime);
     else
-        stime = cat_io_cmd('SPM preprocessing 1:','','',1,stime);
+      stime = cat_io_cmd('SPM preprocessing 1:','','',1,stime);
     end
         
         
@@ -482,7 +448,7 @@ function cat_run_job(job,tpm,subj)
         warning on  
         if ~any(isnan(Affine3(1:3,:))), Affine = Affine3; end
           
-        if ~doskullstripping
+        if job.extopts.APP>0 && ~doskullstripping
             VFa = VF; 
             if doregistration, VFa.mat = Affine3 * VF.mat; else Affine = eye(4); end
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end

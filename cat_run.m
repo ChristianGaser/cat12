@@ -229,7 +229,7 @@ function job = update_job(job)
   job.cat      = cat12;
   job.warps    = job.output.warps;
   job.tissue   = tissue;
-
+  job.ignoreErrors = cat_get_defaults('extopts.ignoreErrors');
 return;
 
 %_______________________________________________________________________
@@ -249,13 +249,16 @@ function vout = run_job(job)
     % Both functions finally call cat_run_job.
     % See also cat_run_newcatch and cat_run_newcatch.
     % __________________________________________________________________
-    matlabversion = version; 
-    points = strfind(matlabversion,'.');
-    if str2double(matlabversion(1:points(1)-1))<=7 && ...
-       str2double(matlabversion(points(1)+1:points(2)-1))<=5
-      cat_run_oldcatch(job,tpm,subj);
+    if job.ignoreErrors
+      if cat_io_matlabversion>20072 
+        cat_run_newcatch(job,tpm,subj); 
+      else
+        % inactive because of unclear error messages
+        %cat_run_oldcatch(job,tpm,subj);
+        cat_run_job(job,tpm,subj);
+      end
     else
-      cat_run_newcatch(job,tpm,subj);
+      cat_run_job(job,tpm,subj);
     end
   end
 

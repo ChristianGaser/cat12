@@ -25,64 +25,58 @@
     <div id="content">  
       <h2>CAT report and quality control (in development):</h2>
       <p>
-        Besides the used preprocessing parameters CAT now also print image quality measurements and global subject measurements. 
-        All measurements were graded (1 - very good, 2 - good, 3 - acceptable, 4 - marginal, >5 - problematic). 
-        Measures and/or grading are under development and should help to identify problematic datasets. 
-        Although, the preprocessing routines try to correct image interferences like noise or inhomogeneities, stronger interferences require stronger corrections that reduce spacial resolution or maybe fail. 
-        To describe the quality of a dataset different aspects are interesting - the image quality, the processing quality and subject averageness.
-      </p> 
-    
+        Besides the used preprocessing parameters CAT now also print image quality measurements <a href="#Dahnke:2016">(Dahnke:2016)</a> and major global subjects pecific measures.
+        The data is further saved in the "cat12_*.xml" files of each subject that can be read by <a class="function" href="matlab:cat_io_xml">cat_io_xml</a>.  
+      </p>
+      
       <h3>Image quality measures</h3>
       <p>
-        Image quality measures describe the properties of the image, but not the processing. 
-        The CAT12 image quality were estimated based on the tissue segmentation and were widely independent of subject sex and health status. 
-        Only age has a small influence (+0.02 per 10 years), because the WM segment undergoes small changes in lifetime.
-        The WM is used rather than the background, because the background can be influenced by anonymization routines or include interferences that does not effect the brain.
+        Due to the wide range of rating and marking systems, the rating was defined for a percentage range and a numerical scaling that allows mapping to nominal numbers or letters with chromatic variants ("+" and "-") shown in table below. 
+        The obtained quality ratings range form 0.5 (100 rating points (rps)) to 10.5 (0 rps) with values around 1 and 2 describing (very) good image quality (grad A and B) and values around 5 (grad E) and higher (grad F, < 50 rps) indicating problematic images.
+        The scaling of the QMs was performed on the basis of theoretical aspects and the analysis of synthetic and real MRI data especially the BWP (Brain Web Phantom; <a href="#Collins:1998">Collins:1998</a>).
+      </p> 
+      <p style="text-align:center;"><img src="cat_qa_rating-table.jpg" width=90% height=auto alt="Quality rating" ><p>
+      <p>
+        The Image quality measures describe the properties of the image, but not of the processing. 
+        They were estimated by using the tissue segmentation and were (nearly) independent of subject sex and health status. 
       </p>
       <ul>
         <li>
           <h4>NCR (Noise Contrast Ratio):</h4>
           <p>
-            The NCR measures the local standard deviation in the WM segment and scaled by the minimum tissue contrast.
+            The NCR measures the local standard deviation in the optimized WM segment and scaled by the minimum tissue contrast.
           </p>
         </li>
         <li>
           <h4>ICR  (Inhomogeneity Contrast Ratio):</h4>
           <p>
-            The ICR is measured as the global standard deviation in the WM segment and scaled by the minimum tissue contrast. 
-            Also for the ICR only the WM segment is used, because the GM is strongly effected by the <i>PVE</i> and has varying intensities like in the basal ganglia, the motor cortex or the occipital lobe.
+            The ICR is measured as the global standard deviation within the optimized WM segment and scaled by the minimum tissue contrast. 
           </p>
         </li> 
         <li>
-          <h4>MVR (Mean Voxel Resolution):</h4>
+          <h4>RES (RMS resolution):</h4>
           <p>
-            To describe the resolution of an image, the average voxel size is used. 
+            To describe the resolution of an image, the RMS value of the voxel size is used. 
+            Outliers with exceptionally low resolutions in one of the <it>x y z</it> dimensions are weighted much stronger than outliers with high resolutions, resulting in an asymmetric penalization. 
           </p>
         </li>
       </ul>
       <p>
-        The results were scaled and validated using the BWP and real data.
-        A NCR mark of 1 equal to 1% BWP T1 noise, and a NCR mark 5 fits the 9% image, so that a reduction of 1 mark is similar to 2% higher noise in the BWP.
-        For ICR mark 1 is defined by 0% inhomogeneity, whereas the mark 6 is described by the 100% BWP inhomogeneity.
-        The scaling of the resolution was fixed for 0.5 (mark 1) to 3 mm (mark 6) to describe the practical range of images.
+        The resulting ratings were combined as weighted average image quality rating <b>IQR</b> <a href="#Dahnke:2016">(Dahnke:2016)</a>. 
+        Tests of different projects such as ADNI, IXI, INDI, OASIS, PPMI etc. showed that published data overall got good quality ratings. 
+        Please note that <it>excellent</it> ratings is defined for extraordinary good images that were acquired for a very
+        small number of subjects by repeated long-time scans with ultra high resolution on high field systems (e.g. <a href="#Winterburn:2013">Winterburn:2013</a>), 
+        and that typical scientific (clinical) data is expected to get just <it>good</it> to <it>satisfactory</it> ratings.
       </p>
-      
-      <h3>Processing quality measures</h3>
+      <p style="text-align:center;"><img src="cat_qa_rating-distribution.png" width=80% height=auto alt="Quality distribution of large projects" ><p>
       <p>
-        Although, the result of all preprocessing methods depend strongly on the input data, they can show a very different behavior by processing the data. 
-        Some methods may have a very high accuracy, but were not very robust against image interferences, whereas other are very robust but have lower accuracy in the best cases. 
-        For averaging the different QM in one preprocessing mark, a least squares approach was used to solve the equation "k = QM * s" with k as vector of the reconstruction quality of CAT12 (mean Kappa of all tissues), QM as matrix of quality measures, and w as weighting that was estimated.
-        To get a better solution it was necessary to normalize the measures for specific kappa boundaries (kappa of 0.925 = mark 1, kappa of 0.8 = mark 6) by a function <i>f</i>. 
-        As far as good aspects of an image can often not compensate the bad ones  ......  sshheeiiﬂﬂ  ttaassttaattuurr  ......  jjeettzztt  ggeehheenn  nnuurr  nnoocchh  zzwweeii  zzeeiicchheenn  aauuff  eeiinnmmaall!!!!!!!!
+        Low image quality can lead to underestimation of the GM in most preprocessings <a href="#Reuter:2015">(Reuter:2015</a>, <a href="#Dahnke:2016">Dahnke:2016)</a>.
+        The following figure shows the effect of motion artifacts on IQR and the relative GM volume rGMV of a children dataset processed by 5 different tissue segmentations.
+      </p> 
+      <p style="text-align:center;"><img src="cat_qa_expert.png" width=90% height=auto alt="Quality rating" ><p>
         
-        
-        ( f(QM)^s * w)^(1/s)
-        For CAT12 inhomogeneity plays nearly no role and the final results are best characterized by noise and resolution.
-        For images with a mark>4 a Kappa value below 0.8 can be expected.
-        Outliers with very low rating should be removed e.g. if your scans have an average rating of 2.12, scans with ratings below 4 are often affected by motion artifacts.       
-      </p>
-      
-      <h3>Subject averageness:</h3>
+      <!--
+      <h3>Subject measures</h3>
       <p>
         Besides the image quality also the anatomy of a subject influence the result.
         Subjects with average properties have a better chance of a good preprocessing. 
@@ -96,13 +90,55 @@
         <li><b> Cortical thickness:</b><br />Mean cortical thickness and its standard deviation. Only available, if cortical thickness was processed.</p></li>
         <li><b> Absolute curvature:</b><br />Mean absolute curvature and its standard deviation. Only available, if cortical thickness was processed.</p></li>
       </ul>
-    
+      -->
         
       <!--
       <h3>Result images:</h3>
       <p>CAT result images depending on the export options. The first row displays the intensity normalized, noise and bias corrected T1 image on the left side and the label map p0 on the right. The second row shows the GM (left)  and WM (right) segment. All images where displayed in normalized spaces, if the were available, otherwise the native space is used.<br />Therefore, the figure can contain images of different spaces, so don't  wonder, if the crosshair doesn't show the same structures.</p>
       <p> WARNING: The scaling of the color is normally fixed, but interactive use of the result figure can produce errors. </p>
       -->
+      
+      <h3>References:</h3>
+      <ul>
+        <li>
+          <b id="Collins:1998">Collins:1998</b>
+          <p>
+            Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, Evans AC. 
+            Design and construction of a realistic digital brain phantom.
+            <a href="http://doi.org/10.1109/42.712135">
+              IEEE Transactions on Medical Imaging 1998;  17(3), 463-468.
+            </a>
+          </p>
+        </li>
+        <li>
+          <b id="Dahnke:2016">Dahnke:2016</b>
+          <p>
+            Dahnke R, Ziegler G, Groﬂkreutz J, Gaser C. 
+            Retrospective quality assurance in T1 images. 
+            Not publish yet.
+          </p>
+        </li>
+        <li>
+          <b id="Reuter:2015">Reuter:2015</b>
+          <p>
+            Reuter M, Tisdall MD, Qureshi A, Buckner RL, van der Kouwe AJW, Fischl B. 
+            Head motion during MRI acquisition reduces gray matter volume and thickness estimates. 
+            <a href="http://doi.org/10.1016/j.neuroimage.2014.12.006">
+              NeuroImage 2015, 107, 107-115.
+            </a>
+          </p>
+        </li>
+        <li>
+          <b id="Winterburn:2014">Winterburn:2013</b>
+          <p>
+            Winterburn JL, Pruessner JC, Chavez S, Schira, MM, Lobaugh NJ, Voineskos AN, Chakravarty MM. 
+            A novel in vivo atlas of human hippocampal subfields using high-resolution 3 T magnetic resonance imaging. 
+            <a href="http://doi.org/10.1016/j.neuroimage.2013.02.003">
+              NeuroImage 2013, 74, 254-265. 
+            </a>
+          </p>
+        </li>
+      <\ul>
     </div>
   
     <div id="content"><a href="cat_methods.html">< Methods</a></div>    

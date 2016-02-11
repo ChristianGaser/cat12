@@ -137,6 +137,10 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
     (min(def.wstl,max(def.bstl,(sign(wst-bst)*x - sign(wst-bst)*bst) ./ abs(diff([wst ,bst])) .* abs(diff([def.bstm,def.wstm])) + def.bstm)));
   evalnormal = @(x,bst,wstd) setnan(isnan(x)+1) .* ...
     (min(def.wstl,max(def.bstl,(1 - nv(x,bst,wstd)) .* abs(diff([def.bstm,def.wstmn])) + def.bstm)));  
+ 
+  mark2rps    = @(mark) min(100,max(0,105 - mark*10));
+  grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
+  mark2grads  = @(mark) grades{min(numel(grades),max(1,round((mark+0.5)*3-3)))};
   
   rms         = @(a,fact)   max(0,cat_stat_nanmean(a.^fact).^(1/fact));
   rmsw        = @(a,fact,w) max(0,(cat_stat_nansum((a.*w).^fact)/cat_stat_nansum(w)).^(1/fact));
