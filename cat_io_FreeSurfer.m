@@ -53,10 +53,12 @@ function varargout=cat_io_FreeSurfer(action,varargin)
       end
     case 'read_annotation'
       if nargin==2
-       [varargout{1}, varargout{2}, varargout{3}] = Read_Brain_Annotation(varargin{1}); 
+        [varargout{1}, varargout{2}, varargout{3}] = Read_Brain_Annotation(varargin{1}); 
       else
-       [varargout{1}, varargout{2}, varargout{3}] = Read_Brain_Annotation(varargin{1}, varargin(2:end)); 
+        [varargout{1}, varargout{2}, varargout{3}] = Read_Brain_Annotation(varargin{1}, varargin(2:end)); 
       end
+      varargout{4} = [{'ROIid'},{'ROIname'};num2cell(varargout{3}.table(1:end,5)),varargout{3}.struct_names];
+      
     case 'write_surf'
       write_surf(varargin{1}, varargin{2}.vertices, varargin{2}.faces);
     case 'read_surf'
@@ -652,7 +654,7 @@ function [vertices, label, colortable] = Read_Brain_Annotation(filename, varargi
 
 fp = fopen(filename, 'r', 'b');
 
-verbosity = 1;
+verbosity = 0;
 if length(varargin)
     verbosity       = varargin{1};  
 end;

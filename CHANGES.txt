@@ -9012,6 +9012,7 @@ M       tbx_cfg_cat.m
 (6) Changed: Updated CAT12-Manual.
 
 ------------------------------------------------------------------------
+r858 | gaser | 2016-02-11 16:00:12 +0100 (Do, 11 Feb 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9021,5 +9022,51 @@ M       html/cat_instruction_templates.html
 
 Fixed: Some broken links and calls in html-pages.
 
+
 ------------------------------------------------------------------------
-r858 | gaser | 2016-02-11 16:00:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_io_FreeSurfer.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_stat_marks.m
+M       cat_surf_surf2roi.m
+M       html/cat.txt
+A  +    html/cat_methods_CAT.html
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+A       html/cat_qa_expert.png
+A       html/cat_qa_rating-distribution.png
+A       html/cat_qa_rating-table.jpg
+
+Changed*:     Removed histogram scaling. Its working in principle, but it to 
+              strong depend on the data and requires further knowledge that 
+              turns it into another APP processing.   
+Changed*:     Commented gcut2 skull-stripping after second SPM preprocessing
+              because it requires further adaptions and tests.
+Changed*:     Catch errors only if extopts.debug>0 and for MATLAB>2007b and 
+              call cat_run_job directly.
+Changed:      Update QA help text and added some figures.
+Changed:      Removed CAT:cat_main:NCR error message because this is part of the
+              QA and not required here anymore.
+Changed:      Changed CAT:cat_main:UnknownContrast from warning to error
+              because the resulting segmentation will differ to strongly from 
+              the standard CAT pipeline.  
+Changed:      Further preparation of cat_surf2roi (expert only) that runs now 
+              on a basic level.
+Changed:      Updated QA rating in the CAT report. Display now the percentage
+              rating points (rps) and the letter grad with .               
+Corrected*:   Added check of the initial affine registration with fall back to 
+              default registration to correct problems especially in skull-
+              stripped images.
+Corrected:    Changed CSF proportion (res.mg) from 10 to 30 percent for mean CSF
+              peak estimation because of problems in images with high amount of 
+              blood vessels. Corrected initial Ym background value estimation.
+Corrected:    CAT report Yo scaling failed in 5-10% of test cases, because the 
+              SPM peaks of Ym differ to much.
+------------------------------------------------------------------------
+r859 | dahnke | 2016-02-11 17:42:50
