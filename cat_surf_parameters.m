@@ -1,7 +1,7 @@
 function varargout = cat_surf_parameters(job)
 % ______________________________________________________________________
 %
-%cat_surf_extract to extract surface parameters such as
+%cat_surf_parameters to extract surface parameters such as
 % gyrification and cortical complexity.
 %_______________________________________________________________________
 % Christian Gaser
@@ -65,7 +65,7 @@ function varargout = cat_surf_parameters(job)
 
     PGI     = fullfile(pp,strrep(ff,'central','gyrification'));         
     PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
-    PSD     = fullfile(pp,strrep(ff,'central','logsulc'));
+    PSD     = fullfile(pp,strrep(ff,'central','sqrtsulc'));
     PSA     = fullfile(pp,strrep(ff,'central','logarea'));
     Psphere = fullfile(pp,strrep(name,'central','sphere'));
  

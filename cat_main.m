@@ -460,7 +460,7 @@ if do_cls
         if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<mean(T3th(1:2)))))>10000
           Ybg = P(:,:,:,6); 
         else
-          Ybg = uint8(255*(1 - Ysrc/max(T3th(3)*0.1,mean([min(Ysrc(:)),T3th(1)])))); % case of skull-stripped input
+          Ybg = uint8(round(255*(1 - Ysrc/max(T3th(3)*0.1,mean([min(Ysrc(:)),T3th(1)]))))); % case of skull-stripped input
         end
         [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
         warning('off','MATLAB:cat_vol_morph:NoObject'); 

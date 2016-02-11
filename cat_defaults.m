@@ -179,7 +179,7 @@ cat12.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormap
 cat12.extopts.print        = 1;     % Display and print results
 cat12.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
 cat12.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
-cat12.extopts.ignoreErrors = 1;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
+cat12.extopts.ignoreErrors = 0;     % catching preprocessing errors: 1 - catch errors (default); 0 - stop with error 
 cat12.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
 cat12.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report and label to organize your data 
 
