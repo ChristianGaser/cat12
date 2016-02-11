@@ -1,5 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+  
     <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
@@ -20,24 +21,29 @@
         <a href="cat.html">CAT12</a> > <a href="cat_instruction.html">Instruction manual</a> > <a href="cat_instruction_FN.html">Filenames</a>
       </div>
     </div>
-  
     
     <!-- TEXT --> 
     <div id="content">
       <h2>Naming convention of output files</h2>
       
-      <h3>Images:</h3>
+      <p>
+        Please note that the resulting files of CAT12 are organized in separate subfolders (e.g. mri, report, surf, label). If you don't want to use
+        subfolders you can change the option "cat12.extopts.subfolders" in <a href="matlab:cat_set_cat_defaults">cat_defaults.m</a> to "0".
+      </p>
+      
+      <h3>Images (saved in subfolder "mri")</h3>
       <table width="540" border="0">
         <tr>
           <td width="203">Segmented Images:</td>
           <td width="88">#p[0123]*</td>
-          <td width="235">[m[0]w]p[0123]*[_affine]</td>
+          <td width="235">[m[0]w]p[0123]*[_affine].nii</td>
         </tr>
         <tr>
-          <td>Local Intensity Normalized:</td>
+          <td>Bias, noise and intensity corrected T1 image:</td>
           <td>#m*</td>
-          <td>[w]m*</td>
+          <td>[w]m*.nii</td>
         </tr>
+<!-- 
         <tr>
           <td>Atlas Maps:</td>
           <td>#a*</td>
@@ -53,6 +59,7 @@
           <td>#te*</td>
           <td>[mw]te*</td>
         </tr>
+-->
       </table>
       <br />
       <table border="0">
@@ -74,7 +81,7 @@
         </tr>
         <tr>
           <td>m0</td>
-          <td>modulated non-linear only</td>
+          <td>modulated non-linear only (expert mode only)</td>
         </tr>
         <tr>
           <td>w</td>
@@ -94,11 +101,11 @@
         </tr>
         <tr>
           <td>p</td>
-          <td>partial volume segmentation</td>
+          <td>partial volume (PV) segmentation</td>
         </tr>
         <tr>
           <td>0</td>
-          <td>PVE label</td>
+          <td>PV label</td>
         </tr>
         <tr>
           <td>1</td>
@@ -113,8 +120,8 @@
           <td>CSF</td>
         </tr>
       </table>
-      <h3>Surfaces:</h3>
-      <p>SURF.TYPE.*</p>
+      <h3>Surfaces in native space (saved in subfolder "surf")</h3>
+      <p>SURF.TYPE.*.gii</p>
       <table border="0">
          <tr>
           <td width="70">SURF</td>
@@ -122,7 +129,7 @@
         </tr>
         <tr>
           <td>TYPE</td>
-          <td>surface data file [ central | sphere | thickness | logsulc | ... ]</td>
+          <td>surface data file [ central | sphere | thickness | gyrification | ... ]</td>
         </tr>
         <tr>
           <td></td>
@@ -144,7 +151,7 @@
         </tr>
         <tr>
           <td></td>
-          <td>logsulc - log10-transformed values of sulcul depth based on the euclidian distance between the central surface and its convex hull</td>
+          <td>sqrtsulc - sqrt-transformed values of sulcul depth based on the euclidian distance between the central surface and its convex hull</td>
         </tr>
         <tr>
           <td></td>
@@ -157,15 +164,57 @@
         </tr>
       </table>
       
-      <h3>Additional data:</h3>
+      <h3>Surfaces in (normalized) template space (after resampling and smoothing; saved in subfolder "surf")</h3>
+      <p>FWHM.SURF.TYPE.resampled.*.gii</p>
+      <table border="0">
+         <tr>
+          <td width="70">FWHM</td>
+          <td width="400">filtersize in FWHM after smoothing</td>
+        </tr>
+         <tr>
+          <td width="70">SURF</td>
+          <td width="400">left, right hemisphere [ lh | rh ] </td>
+        </tr>
+        <tr>
+          <td>TYPE</td>
+          <td>surface data file [ thickness | gyrification | fractaldimension | ... ]</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>thickness - thickness values of the surface</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>sqrtsulc - sqrt-transformed values of sulcul depth based on the euclidian distance between the central surface and its convex hull</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>gyrification - gyrification values based on absolute mean curvature</td>
+        </tr>
+        <tr>
+        <tr>
+          <td></td>
+          <td>fractaldimension - fractal dimension values (cortical complexity)</td>
+        </tr>
+      </table>
+
+      <h3>Images and surface of longitudinal data</h3>
       <p>
-        Extracted data, global morphometric measure and image quality measures are stored in the <em class="var">cat_*.xml</em> file. <br /> 
-        You can use the <a href="matlab:cat_io_xml;" class="function">cat_io_xml</a> function to read data from xml-files. <br />
-        ROI data is also saved as csv-file <em>catROI[SPACE]_[ATLAS]_*.csv</em>.</p>  
+        After processing longitudinal data the filenames additionally contain an "r" between the original filename and the other 
+        prefixes to indicate the additional registration step. Please also note that only the bias, noise and intensity 
+        corrected average image of all time points for each subject is saved.</p>  
+
+      <h3>Reports (saved in subfolder "report")</h3>
+      <p>
+        Global morphometric and image quality measures are stored in the <em class="var">cat_*.xml</em> file. This file also contains 
+        other useful information about software versions and the used options for preprocessing the data. You can use the 
+        <a href="matlab:cat_io_xml;" class="function">cat_io_xml</a> function to read data from xml-files.
+        Furthermore, a report for each data set is saved as pdf-file <em class="var">catreport_*.pdf</em>.</p>  
       
-  
+      <h3>Regions of interest (ROI) data (saved in subfolder "label")</h3>
+      <p>
+        ROI data is optionally saved as csv-file <em>catROI_[ATLASNAME]_*.csv</em>.</p>  
     </div>
-  
   
     <div id="content"><a href="cat_instruction.html">< Instruction manual</a></div>  
     <div id="footer">

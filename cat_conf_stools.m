@@ -22,7 +22,7 @@ function stools = cat_conf_stools(expert)
   nproc.val     = {numcores};
   nproc.num     = [1 1];
   nproc.help    = {
-      'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be splitted into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
+      'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
       ''
       'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
       ''
@@ -108,7 +108,7 @@ function stools = cat_conf_stools(expert)
 %-----------------------------------------------------------------------  
   data_surf_extract         = cfg_files;
   data_surf_extract.tag     = 'data_surf';
-  data_surf_extract.name    = 'Sample';
+  data_surf_extract.name    = 'Central Surfaces';
   data_surf_extract.filter  = 'gifti';
   data_surf_extract.ufilter = '^[lr]h.central';
   data_surf_extract.num     = [1 Inf];
@@ -144,7 +144,7 @@ function stools = cat_conf_stools(expert)
   SD.values = {0,1};
   SD.val    = {1};
   SD.help   = {
-    'Extract sqrt-transformed sulcus depth based on the euclidian distance between the central surface and its convex hull.'
+    'Extract sqrt-transformed sulcus depth based on the euclidean distance between the central surface and its convex hull.'
     ''
     'Transformation with sqrt-function is used to render the data more normally distributed.'
     ''
