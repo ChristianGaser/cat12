@@ -355,50 +355,6 @@ check_cov.help  = {
 ''
 'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups. Furthermore this is also useful for fMRI images which can be also used with this tool. The proportional scaling option should be only used if image intensity is not scaled (e.g. T1 images) or if images have to be scaled during statistical analysis (e.g. modulated images).'};
 
-GI        = cfg_menu;
-GI.name   = 'Gyrification index';
-GI.tag    = 'GI';
-GI.labels = {'none','yes'};
-GI.values = {0,1};
-GI.val    = {1};
-GI.help   = {'Extract gyrification index (GI) based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'};
-
-FD        = cfg_menu;
-FD.name   = 'Cortical complexity (fractal dimension)';
-FD.tag    = 'FD';
-FD.labels = {'none','yes'};
-FD.values = {0,1};
-FD.val    = {0};
-FD.help   = {'Extract Cortical complexity (fractal dimension) which is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
-             ''
-             'Warning: Estimation of cortical complexity is very slow!'
-''
-};
-
-SD        = cfg_menu;
-SD.name   = 'Sulcus depth';
-SD.tag    = 'SD';
-SD.labels = {'none','yes'};
-SD.values = {0,1};
-SD.val    = {1};
-SD.help   = {'Extract log10-transformed sulcus depth based on the euclidian distance between the central surface and its convex hull.'
-             ''
-             'Log-transformation is used to render the data more normally distributed.'
-''
-};
-
-SA        = cfg_menu;
-SA.name   = 'Surface area';
-SA.tag    = 'SA';
-SA.labels = {'none','yes'};
-SA.values = {0,1};
-SA.val    = {1};
-SA.help   = {'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428–1443, 2012.',
-             ''
-             'Log-transformation is used to render the data more normally distributed.'
-''
-};
-
 outdir         = cfg_files;
 outdir.tag     = 'outdir';
 outdir.name    = 'Output directory';

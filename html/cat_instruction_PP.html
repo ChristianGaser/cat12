@@ -43,29 +43,29 @@
       
       <ul>
         <li>
-          <h4>Estimation options</h4>
+          <h4>Options for initial SPM12 affine registration</h4>
           <p>
-            Although CAT12 uses SPM12 preprocessing it uses an independent segmentation approach and the SPM12 segmentation is only used as starting estimate. 
+            Although CAT12 relies on SPM12 preprocessing it uses an independent segmentation approach and the SPM12 segmentation is only used as starting estimate. 
             Thus, most parameters were set to SPM default and removed from the GUI. 
             Modification should be made only by expert users via <a href="matlab:open cat_defaults;">cat_defaults</a> file.
-            Please choose the SPM "Tissue Probability Map" and "Affine Registration" for your data.
+            Please choose the SPM "Tissue Probability Map" and "Affine Registration" for your data if necessary.
             <!-- 
             For non human TPM see <a href="cat_stuff.html">Links, sources, and recommendations</a>.
             -->
           </p>
         </li>
         <li>      
-          <h4>Extended options</h4>
+          <h4>Extended options for CAT12 segmentation</h4>
           <p>
             CAT12 uses adaptive denoising methods to allow an reliable segmentation for different levels of noise.
           </p>
           <p>
-            For the denoising, the Local Adaptive Segmentation, the Skull-Stripping, and the Cleanup function a strength parameter allows simple modifications if the default segmentation does not fit for your requirements. 
+            For the denoising, the Local Adaptive Segmentation, the Skull-Stripping, and the Cleanup function a strength parameter allows simple modifications if the default segmentation does not fit to your requirements. 
             Setting the strength to 0 will deactivate the respective method. 
             Values smaller than the default value of 0.5 will run the functions with less strength, whereas higher values (maximum=1) will increase the strength.
           </p>
           <p>
-            For children data you may need a special Dartel template.
+            For children data you may need a customized Dartel template.
             <!-- (see <a>Own CAT12 templates</a>) --> 
             Be aware of problems with the ROI analysis, because the CAT12 atlas maps are optimized for CAT12 IXI555 template!
           </p>
@@ -85,7 +85,7 @@
           </p>
           <p>
             CAT12 also allows the creation of the central cortical surface and the estimation of thickness and several folding parameters.
-            Surface processing will take around 2-3 times longer as segmentation only preprocessing (around 1 hour for a standard dataset on a computer of the year 2013).
+            Surface processing will take around 2-3 times longer as segmentation only preprocessing (around 40 min for a standard dataset on a computer of the year 2016).
           </p>
         </li>
         <li>
@@ -115,7 +115,7 @@
             <li>
               <h5>Bias corrected (m maps)</h5>
               <p>
-                Before segmentation CAT12 preprocessing removes image interferences such as noise and inhomogeneity from the images. 
+                Before segmentation CAT12 preprocessing removes image interferences such as noise and inhomogeneities from the images. 
                 Furthermore, global and local tissue intensities were normalized (background=0, CSF=1/3, GM=2/3, and WM=1) to allow CAT analysis.
                 The optimized T1-image contains more local information, such as small changes in the WM. 
               </p>
@@ -128,7 +128,11 @@
               <h5>Deformation fields</h5>
               <p>
                 These fields contain the information to map images from native to MNI space (forward), or from MNI to native space (backward).
-                Use the <i>Deformation Utility</i> to apply deformations to a subject.
+                Use <a href="matlab:spm_jobman('interactive','','spm.spatial.normalise.write');">Normalise write</a> to apply deformations to a subject without
+                modulation (e.g. for fMRI data). Here you can also change the bounding box and voxel size. If you want to apply deformations to VBM data (e.g. segmentations)
+                you can use the functions <a href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.defs');">Apply deformations (many images)</a> or
+                <a href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.defs2');">Apply deformations (many subjects)</a> depending on whether you have 
+                many subjects or many images to apply the deformations.
               </p>
             </li>
           </ul>
@@ -139,7 +143,7 @@
         <li>      
           <h4>Expert options</h4>
           <p> 
-            Further options and parameter such as the SPM12 parameter used for preprocessing are available for expert users via <a href="matlab:open cat_defaults;">cat_defaults</a> file.
+            Further options and parameter such as the SPM12 parameters used for preprocessing are available for expert users by setting the option "cat12.extopts.expertgui" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> to "1".
           </p>
         </li>
       </ul>

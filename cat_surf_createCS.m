@@ -253,8 +253,8 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     % topology defects. Otherwise we use a threshold of 0.5 which is the central surface.
     % However, this approach did not really improved topology correction, thus we again use a value of 0.5
     if opt.usePPmap, th_initial = 0.5; else th_initial = 0.5; end
-    [~,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
-    clear Yppi;
+    [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
+    clear tmp Yppi;
 
     % correction for the boundary box used within the surface creation process 
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
