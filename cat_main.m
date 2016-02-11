@@ -406,7 +406,7 @@ if do_cls
         WMth = double(max(mean(res.mn(res.lkp==2 & res.mg'>0.1)),...
                 cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)))))); 
         T3th = [ min([  mean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([mean(res.mn(res.lkp==1 & res.mg'>0.1)),...
-                 WMth]) ,mean(res.mn(res.lkp==3 & res.mg'>0.1))]) ...
+                 WMth]) ,mean(res.mn(res.lkp==3 & res.mg'>0.3))]) ...
                  mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
                  WMth];
         
@@ -416,43 +416,85 @@ if do_cls
         Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
         
         voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
-     %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
-     %   noise = nanstd(Ysrc(cat_vol_morph(Yp0>0.8,'o') & Yp0>0.99)/diff(T3th(2:3))); 
-       
-        Vl1 = spm_vol(job.cat.cat12atlas);
-        Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-        Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
         
-        clear D I
-        T3ths = [mean(mean(mean(single(P(:,:,:,6)>128)))),T3th,T3th(3) + mean(diff(T3th))];
-        T3thx = [0,1,2,3,4];
-        [T3ths,si] = sort(T3ths);
-        T3thx     = T3thx(si);
-        Ym = Ysrc+0; 
-        for i=2:numel(T3ths)
-          M = Ysrc>T3ths(i-1) & Ysrc<=T3ths(i);
-          Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3ths(i-1))/diff(T3ths(i-1:i))*diff(T3thx(i-1:i));
-        end
-        M  = Ysrc>=T3ths(end); 
-        Ym(M(:)) = numel(T3ths)/6 + (Ysrc(M(:)) - T3ths(i))/diff(T3ths(end-1:end))*diff(T3thx(i-1:i));    
-        Ym = Ym / 3; 
+        if job.extopts.debug>3
+        % use gcut2
+          
+          %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
+          %   noise = nanstd(Ysrc(cat_vol_morph(Yp0>0.8,'o') & Yp0>0.99)/diff(T3th(2:3))); 
+        
+          Vl1 = spm_vol(job.cat.cat12atlas);
+          Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+          Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
 
-        for k1=1:3
-            Ycls{k1} = P(:,:,:,k1);
+          clear D I
+          T3ths = [mean(mean(mean(single(Ysrc(P(:,:,:,6)>128))))),T3th,T3th(3) + mean(diff(T3th))];
+          T3thx = [0,1,2,3,4];
+          [T3ths,si] = sort(T3ths);
+          T3thx     = T3thx(si);
+          Ym = Ysrc+0; 
+          for i=2:numel(T3ths)
+            M = Ysrc>T3ths(i-1) & Ysrc<=T3ths(i);
+            Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3ths(i-1))/diff(T3ths(i-1:i))*diff(T3thx(i-1:i));
+          end
+          M  = Ysrc>=T3ths(end); 
+          Ym(M(:)) = numel(T3ths)/6 + (Ysrc(M(:)) - T3ths(i))/diff(T3ths(end-1:end))*diff(T3thx(i-1:i));    
+          Ym = Ym / 3; 
+
+          for k1=1:3
+              Ycls{k1} = P(:,:,:,k1);
+          end
+          %%
+          Yb = cat_pre_gcut2(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
+            struct('gcutstr',job.extopts.gcutstr/2,'verb',0,'debug',job.extopts.debug));
+          %%
+          [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
+          Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
+          Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
+          Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
+
+          Yb   = smooth3(Yb)>0.5; 
+          Ybb  = cat_vol_smooth3X(Yb,2); 
+          Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
+          Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
+          clear Ybo;
+        else
+          % old skull-stripping
+          brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
+          
+          [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
+          Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
+          Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
+          Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
+          Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
+          BVth = diff(T3th(1:2:3))/T3th(3)*1.5; 
+          RGth = diff(T3th(2:3))/T3th(3)*0.1; 
+          Yb   = single(cat_vol_morph((Yp0>2/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5),'lo')); 
+          %% region-growing GM 1
+          Yb(~Yb & (~Ybo | Ysrcb<mean(T3th(2)) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
+          [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
+          Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
+          % region-growing GM 2
+          Yb(~Yb & (~Ybo | Ysrcb<T3th(1) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
+          [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/2); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
+          Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
+          % region-growing GM 3
+          Yb(~Yb & (~Ybo | Ysrcb<T3th(1)/2) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth)=nan;
+          [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
+          Yb(smooth3(Yb)<0.5)=0; 
+          % ventrile closing
+          [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); 
+          Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
+          Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
+          Yb  = Yb | cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.7; 
+          Yb  = smooth3(Yb)>0.5; 
+          Ybb = cat_vol_smooth3X(Yb,2); 
+          Yb   = cat_vol_resize(Yb ,'dereduceBrain',BB);
+          Ybb  = cat_vol_resize(Ybb,'dereduceBrain',BB);
+          Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
+          Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
+          clear Ybo;
         end
-        Yb = cat_pre_gcut2(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
-          struct('gcutstr',job.extopts.gcutstr/2,'verb',0,'debug',job.extopts.debug));
-        %%
-        [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
-        Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
-        Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
-        Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
-        
-        Yb   = smooth3(Yb)>0.5; 
-        Ybb  = cat_vol_smooth3X(Yb,2); 
-        Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
-        Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
-        clear Ybo;
 
       
         %% Update probability maps
@@ -578,7 +620,7 @@ end
 vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));
 vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));
 if ~exist('Yb','var')
-  T3th      = [mean(res.mn(res.lkp==3 & res.mg'>0.1)) ...
+  T3th      = [mean(res.mn(res.lkp==3 & res.mg'>0.3)) ...
                mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
                mean(res.mn(res.lkp==2 & res.mg'>0.1))];
   Yb = cat_vol_morph( (Ysrc>T3th(2)) & Ycls{1}>16 & (Ysrc<T3th(2)*1.1) | ...
@@ -637,7 +679,7 @@ end
 debug = 1; % this is a manual debugging option for matlab debugging mode
 if ~(cat12.sanlm==5 && job.extopts.NCstr)
   stime = cat_io_cmd('Global intensity correction');
-  [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res); 
+  [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
 
   % update in inverse case
   if opt.inv_weighting
@@ -657,7 +699,7 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
   % variance of the tissue, a further harder noise correction is meaningful.
   % Finally, a stronger NLM-filter is better than a strong MRF filter!
   if cat12.sanlm>0 && cat12.sanlm<3 && job.extopts.NCstr
-    stime = cat_io_cmd('Noise correction after global intensity correction');
+    stime = cat_io_cmd('SANLM noise correction after global intensity correction');
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
       if (cat12.sanlm==1) || (cat12.sanlm==2), cat_sanlm(Yms,3,1,0); end
@@ -683,7 +725,7 @@ if ~(cat12.sanlm==5 && job.extopts.NCstr)
     ornlmstr = round(ornlmstr*10^6)/10^6;
     clear Yn Ycls1 Ycls2;
 
-    stime = cat_io_cmd(sprintf('NLM-Filter after global intensity correction (ORNLMstr=%0.2f)',ornlmstr));
+    stime = cat_io_cmd(sprintf('ORNLM noise correction after global intensity correction (ORNLMstr=%0.2f)',ornlmstr));
     if ~any(cell2mat(struct2cell(job.output.bias)'))
       if ornlmstr>0.01,
         Ymss = cat_ornlm(Yms,3,1,ornlmstr); % double???
@@ -726,7 +768,7 @@ else
   clear chan o x1 x2 x3 bf1 f z
   
   % intensity scaling
-  [Ym,Yb,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Yo,Ycls,Yb,vx_vol,res); 
+  [Ym,Yb2,T3th,Tth,opt.inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Yo,Ycls,Yb,vx_vol,res); 
   
   % estimate noise
   %[Yms,Ycls1,Ycls2] = cat_vol_resize({Ym,Ycls{1},Ycls{2}},'reduceBrain',vx_vol,2,Yb); 
@@ -962,7 +1004,7 @@ if do_cls && do_defs
   % reorder probability maps according to spm order
   prob = prob(:,:,:,[2 3 1]);
   clear vol %Ymb
-  fprintf(sprintf('%s',repmat('\b',1,94)));
+  fprintf(sprintf('%s',repmat('\b',1,94+4)));
   fprintf('%4.0fs\n',etime(clock,stime));
 
   
@@ -1939,7 +1981,10 @@ if cat12.print
   
   mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-	
+	mark2rps    = @(mark) min(100,max(0,105 - mark*10));
+  grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
+  mark2grad   = @(mark) grades{min(numel(grades),max(1,round((mark+0.5)*3-3)))};
+  
     
   % CAT GUI parameter:
   % --------------------------------------------------------------------
@@ -1989,10 +2034,14 @@ if cat12.print
   % Image Quality measures:
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
-  str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,sprintf('%5.2f',qa.qualityratings.res_RMS)))];
-  str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,sprintf('%5.2f',qa.qualityratings.NCR)))];
-  str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,sprintf('%5.2f',qa.qualityratings.ICR)))]; % not important and more confussing 
-  str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,sprintf('%5.2f',qa.qualityratings.IQR)))];
+  str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
+    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
+  str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
+    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
+  str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
+    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
+  str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
+    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
 
       
   % Subject Measures
@@ -2127,20 +2176,24 @@ if cat12.print
            0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
 	  spm_orthviews('Reset');
     
-    % BB box is not optimal for all images...
+    %% BB box is not optimal for all images...
     % @Christian: no nice solution... better ideas?
     aff = spm_imatrix(res.Affine); scale = aff(7:9); rotscale = 1 + abs(aff(4:6)); 
     spm_orthviews('BB', (cat12.bb - [aff(1:3);aff(1:3)]) ./ mean(scale) ./ mean(rotscale)); % mean(scale)
     spm_orthviews('Reposition',[0 0 voli(qa.subjectmeasures.vol_TIV)]); % default view with basal structures
     
     % Yo - original image in original space
+    % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity  
     hho = spm_orthviews('Image',VT0,pos(1,:)); 
     spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hho,[0 mean(res.mn(res.lkp==2 & res.mg'>0.1))*cmmax]); caxis([0,2]);
+    Yo  = single(VT.private.dat(:,:,:)); 
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
+    spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
     cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
        'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
     
-    % Ym - normalized image in original space
+    %% Ym - normalized image in original space
     Vm        = spm_vol(VT.fname);
     Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
     Vm.dat(:,:,:) = single(Ym); 
@@ -2151,8 +2204,8 @@ if cat12.print
     cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
       'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
    
-    % Yo - segmentation in original space
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    %% Yo - segmentation in original space
+    % Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
     VO        = spm_vol(VT.fname);
     VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
     VO.dat(:,:,:) = single(Yp0/3); 
@@ -2175,42 +2228,40 @@ if cat12.print
         'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
 	  end
 
+    % print group report file 
+    fg = spm_figure('FindWin','Graphics');
+    set(0,'CurrentFigure',fg)
+    fprintf(1,'\n'); spm_print;
+
+    % print subject report file as SPM standard PS file
+    %psf  = fullfile(pth,reportfolder,['catreport_' nam '.ps']);
+    %if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
+
+
+    %% print subject report file as standard PDF/PNG/... file
+    job.imgprint.type  = 'pdf';
+    job.imgprint.dpi   = 600;
+    job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
+    job.imgprint.ftype = @(x) ['-d' num2str(x)];
+    job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
+
+    fgold.PaperPositionMode = get(fg,'PaperPositionMode');
+    fgold.PaperPosition     = get(fg,'PaperPosition');
+    fgold.resize            = get(fg,'resize');
+
+    % it is necessary to change some figure properties especialy the fontsizes 
+    set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
+    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
+    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
+    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
+    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
+    set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
+    fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
   catch
     cat_io_cprintf('warn','Unspecific print report error.\n');
   end
 
-  
-  %% print group report file 
-  fg = spm_figure('FindWin','Graphics');
-  set(0,'CurrentFigure',fg)
-  fprintf(1,'\n'); spm_print;
-
-  % print subject report file as SPM standard PS file
-  %psf  = fullfile(pth,reportfolder,['catreport_' nam '.ps']);
-  %if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
-  
-  
-  % print subject report file as standard PDF/PNG/... file
-  job.imgprint.type  = 'pdf';
-  job.imgprint.dpi   = 600;
-  job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
-  job.imgprint.ftype = @(x) ['-d' num2str(x)];
-  job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-
-  fgold.PaperPositionMode = get(fg,'PaperPositionMode');
-  fgold.PaperPosition     = get(fg,'PaperPosition');
-  fgold.resize            = get(fg,'resize');
-  
-  % it is necessary to change some figure properties especialy the fontsizes 
-  set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
-  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
-  print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
-  set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-  fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
-  
   %% reset colormap
   % remove old legends
   for ci=1:3, try set(cc{ci},'visible','off'); end; end %#ok<TRYNC>
@@ -2364,7 +2415,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
   
   
   %% initial thresholds and intensity scaling
-  T3th3 = [mean(res.mn(res.lkp==3 & res.mg'>0.1)) ...
+  T3th3 = [mean(res.mn(res.lkp==3 & res.mg'>0.3)) ...
            mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
            mean(res.mn(res.lkp==2 & res.mg'>0.1))];
   T3th3 = round(T3th3*10^5)/10^5; 
@@ -2376,7 +2427,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
            '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0);
     
     % first initial scaling for gradients and divergence
-    T3th3 = [max( res.mn(res.lkp==3 & res.mg'>0.1)) ...
+    T3th3 = [max( res.mn(res.lkp==3 & res.mg'>0.3)) ...
              mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
              min( res.mn(res.lkp==2 & res.mg'>0.1))];
     T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
@@ -2427,7 +2478,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     if debug==0, clear Yg Ydiv Yn Yi; end
     
     %% final thresholds
-    T3th3 = [max( res.mn(res.lkp==3 & res.mg'>0.1)) ...
+    T3th3 = [max( res.mn(res.lkp==3 & res.mg'>0.3)) ...
              mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
              min( res.mn(res.lkp==2 & res.mg'>0.1))];
     T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) ...
@@ -2453,7 +2504,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
     BGcon = max([BGmin*1.1,T3th3(1) - mean(diff(T3th3)),median(Ysrc(Ycls{6}(:)>128))]);
     
-    T3th3 = [max(max(res.mn(res.lkp==2 & res.mg'>0.1))*0.05,min(res.mn(res.lkp==3 & res.mg'>0.1))) ...
+    T3th3 = [max(max(res.mn(res.lkp==2 & res.mg'>0.1))*0.05,min(res.mn(res.lkp==3 & res.mg'>0.3))) ...
              max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
              max(res.mn(res.lkp==2 & res.mg'>0.1))];
     T3th  = [BGmin ... minimum
@@ -2468,6 +2519,11 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     Tth.T3th  = T3th;
     Tth.T3thx = T3thx;
   else    
+    error('CAT:cat_main:UnknownContrast',...
+      sprintf(['Unknown tissue contrast - use SPM segmentation as T1 map! ' ...
+           '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0); %#ok<SPERR>
+      
+    %{
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:UnknownContrast',...
       sprintf(['Unknown tissue contrast - use SPM segmentation as T1 map! ' ...
@@ -2484,7 +2540,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
     noise = 0.01;
     if nargout==7 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
     return
-   
+    %}
+           
   end
 
   %% intensity scalling for gradient estimation
@@ -2532,12 +2589,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
       sprintf(['The contrast between the tissues is extremely low! ' ...
            '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th(1),T3th(2),T3th(3)),numel(cat_warnings)==0);
   end
-  if noise>1/2 && exist('cat_warnings','var') % contrast relation
-    cat_warnings = cat_io_addwarning(cat_warnings,...
-      'CAT:cat_main:LowNCR',...
-      sprintf('Low contrast-to-noise ratio (NCR~%0.2f)!',noise),numel(cat_warnings)==0);
-  end
-
+  
 
   %  -------------------------------------------------------------------
   %  check modality (contrast part 2)
@@ -2560,7 +2612,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
   %  -------------------------------------------------------------------
  
     % spm tissue peaks
-    T3th_spm = [min(res.mn(res.lkp==3 & res.mg'>0.1)) ...
+    T3th_spm = [min(res.mn(res.lkp==3 & res.mg'>0.3)) ...
                 max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
                 max(res.mn(res.lkp==2 & res.mg'>0.1))];
     
@@ -2665,12 +2717,12 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_pre_gintnorm(Y
          cat_warnings = cat_io_addwarning(cat_warnings,...
           'CAT:cat_main:DiffTissuePeaks',...
           sprintf(['Peaks of SPM segmentation do not fit to average segmentation intensity!\\n '...
-            'spm[%3.2f,%3.2f,%3.2f] ~= [%3.2f,%3.2f,%3.2f]median]'],...
+            'spm[%3.2f,%3.2f,%3.2f] ~= [%3.2f,%3.2f,%3.2f]median'],...
             T3th_spm/max(T3th_spm),T3th_cls/max(T3th_cls)),numel(cat_warnings)==0);
       end
       %T3th3 = T3th_cls;
     else
-      if max(res.mn(res.lkp==5 & res.mg'>0.1)) < mean(res.mn(res.lkp==3 & res.mg'>0.1)), fprintf('\n'); end
+      if max(res.mn(res.lkp==5 & res.mg'>0.1)) < mean(res.mn(res.lkp==3 & res.mg'>0.3)), fprintf('\n'); end
       %T3th3 = T3th_spm;
     end
    
@@ -3124,7 +3176,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_pre_LAS2(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   end
   
   %% fill up CSF in the case of a skull stripped image 
-  if max(res.mn(res.lkp==5 & res.mg'>0.1)) < mean(res.mn(res.lkp==3 & res.mg'>0.1))
+  if max(res.mn(res.lkp==5 & res.mg'>0.1)) < mean(res.mn(res.lkp==3 & res.mg'>0.3))
     YM   = cat_vol_morph(Yb,'d'); 
     Ymls = smooth3(max(Yml,YM*0.5));
     Yml(YM & Yml<0.5)=Ymls(YM & Yml<0.5); 
