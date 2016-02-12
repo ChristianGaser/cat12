@@ -510,7 +510,7 @@ function stools = cat_conf_stools(expert)
   s2r.vernum.val     = {1}; 
   s2r.vernum.help    = {'Count vertices of each ROI.'};
   
-%% average mode within a ROI  
+% average mode within a ROI  
   % mean
   s2r.avg.mean         = cfg_menu;
   s2r.avg.mean.tag     = 'mean';
@@ -568,10 +568,11 @@ function stools = cat_conf_stools(expert)
   surf2roi.tag  = 'surf2roi';
   surf2roi.name = 'Map surface data to ROIs';
   surf2roi.val  = {
-    s2r.cdata_sample, ...
-    s2r.ROIs, ...
-    s2r.vernum, ...
-    ... s2r.area, ... does not work yet
+    s2r.cdata_sample ...
+    s2r.ROIs ...
+    nproc ... 
+    s2r.vernum ...
+    ... s2r.area ... does not work yet
     s2r.avg.main};
   surf2roi.prog = @cat_surf_surf2roi;
   surf2roi.help = {
