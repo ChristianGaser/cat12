@@ -1,107 +1,153 @@
 function cat_surf_surf2roi(job)
-% concept
+% ______________________________________________________________________
+% Function to read surface data for atlas maps and create ROI files.
+% The function create CSV, as well as XML files.
+% Each atlas requires its own CSV file and existing files will actual  
+% be overwriten. 
+% In the XML file a structure is used to save the ROIs that allow 
+% updating of the data.
+%
+%   cat_surf_surf2roi(job)
+% 
+%   job.cdata   .. cell of cells with the left surface cdata files
+%                  (same number and order of subjects required)
+%   job.rdata   .. cell of left atlas maps
+%   job.verb    .. verbose level (default = 1) 
+%   job.avg     .. paraemter what averaging is use for each ROI
+%                  struct('mean',1,'std',1,'min',0,'max','median',1);  
+%   job.area    .. estiamte area of each ROI (default = 1)
+%   job.vernum  .. estiamte number of vertices of each ROI (default = 0)
+%
+% ______________________________________________________________________
+% Robert Dahnke
 
 
-%% first ... only GUI
-% surfaces
-  %job.cdata = cellstr(job.cdata);
-  
-% atlas maps  
-  %job.rdata = job.ROIs; 
-  
-% parameter 
+% ______________________________________________________________________
+% ToDo:
+% * CSV export by overwrite existing columns and add new one.
+% * read of resampled 
+% * area estimation
+% * create output (average) maps???
+%   > not for calcuation, because of redundant data and this is maybe 
+%     a separate function (or use excel) > cat_roi_calc?
+%   > not for surface displaying, because this a separate function 
+%     cat_roi_display?
+% ______________________________________________________________________
+
+
+  %#ok<*AGROW,*NASGU,*PREALL>>
+
+  % parameter 
   def.verb    = 1; 
   def.avg     = struct('mean',1,'std',1,'min',0,'max','median',1);  % mean, min, max, median, std
-  def.plot    = 0;
+  def.plot    = 0; % not ready
+  def.nprog   = 0; % not ready
   def.area    = 1;
-  def.vernum  = 0;
   job = cat_io_checkinopt(job,def);
   
-  ri=1; si=1; ti=1;
   
-%% processing
-% * hier stellt sie die frage was mit alten files passiert und wie ich 
-%   daten dranhänge
-%    > existierende Felder werden überschrieben, sonst wird erweitert
-% 
-
+  % split job and data into separate processes to save computation time
+  if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+     cat_parallelize(job,mfilename,'cat_surf_surf2roi');
+     return
+  end  
+  
+  % display something
+  spm_clf('Interactive'); 
+  spm_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Completed');
+  
+  % processing
   for ri=1:numel(job.rdata)
     %% load atlas map
+    %  load the cdata that describe the ROIs of each hemisphere and
+    %  read the ROIs IDs and names from the csv or annot files
     rinfo = cat_surf_info(job.rdata{ri},0); 
     
-    [rpp,rff,ree] = spm_fileparts(job.rdata{ri});
-    switch ree
+    switch rinfo.ee
       case '.annot'
+        % FreeSurfer annotation files
         [vertices, lrdata, colortable, lrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
         [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
-        
-        clear vertices;
+        clear vertices colortable;
       case 'gii';
-        rrdata = gifti(job.rdata{ri}); %#ok<NASGU>
-        lrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); %#ok<NASGU>
-      otherwise
-        lrdata = cat_io_FreeSurfer('read_surf_data',job.rdata{ri}); %#ok<NASGU>
-        rrdata = cat_io_FreeSurfer('read_surf_data',char(cat_surf_rename(rinfo,'side','rh'))); %#ok<NASGU>
+        % gifti and csv-files
+        rrdata = gifti(job.rdata{ri});
+        lrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 
+        
         rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'templates_surfaces','templates_1.50mm'),[rinfo.dataname '*.csv']);
         if ~isempty(rdatacsv{1})
           rcsv=cat_io_csv(rdatacsv{1});
         end
+      otherwise
+        % FreeSurfer and csv-files
+        lrdata = cat_io_FreeSurfer('read_surf_data',job.rdata{ri});
+        rrdata = cat_io_FreeSurfer('read_surf_data',char(cat_surf_rename(rinfo,'side','rh'))); 
         
+        rdatacsv = cat_vol_findfiles(strrep(rinfo.pp,'templates_surfaces','templates_1.50mm'),[rinfo.dataname '*.csv']);
+        if ~isempty(rdatacsv{1})
+          rcsv=cat_io_csv(rdatacsv{1});
+        end
     end
     
     
-    %%
+    %% process the cdata files of each subject
     for si=1:numel(job.cdata{1}) % for each subject
       for ti=1:numel(job.cdata)  % for each texture
 
         % check for kind of surface ... not yet only s*.gii
         sinfo = cat_surf_info(job.cdata{ti,si},0);  
 
-        % load surface
-        lCS = gifti(job.cdata{ti}{si});
-        rCS = gifti(cat_surf_rename(sinfo,'side','rh')); 
-
+        % load surface cdata 
+        switch sinfo.ee
+          case '.gii'
+            lCS = gifti(job.cdata{ti}{si});
+            rCS = gifti(cat_surf_rename(sinfo,'side','rh')); 
+          otherwise
+            lCS = cat_io_FreeSurfer('read_surf_data',job.cdata{ti}{si});
+            rCS = cat_io_FreeSurfer('read_surf_data',cat_surf_rename(sinfo,'side','rh')); 
+        end
+        
         % basic entries
         clear ccsv; 
-        switch ree
+        switch rinfo.ee
           case '.annot'
             ccsv(1,:) = rrcsv(1,1:2);
             ccsv(1:2:size(rcsv,1)*2-1,:) = rrcsv(1:end,1:2);
             ccsv(2:2:size(rcsv,1)*2-1,:) = lrcsv(2:end,1:2);
-            for roii=1:2:size(ccsv,1), ccsv{roii,2} = ['l' ccsv{roii,2}]; end %#ok<AGROW>
-            for roii=2:2:size(ccsv,1), ccsv{roii,2} = ['r' ccsv{roii,2}]; end %#ok<AGROW>
+            for roii=1:2:size(ccsv,1), ccsv{roii,2} = ['l' ccsv{roii,2}]; end 
+            for roii=2:2:size(ccsv,1), ccsv{roii,2} = ['r' ccsv{roii,2}]; end 
           otherwise
             ccsv = rcsv(1:end,1:2);
         end
         
         % count number of vertices
         if job.vernum
-          ccsv{1,end+1}='num_vertices'; %#ok<AGROW>
-          lCSarea = ones(size(lCS.vertices)); %#ok<NASGU> 
-          rCSarea = ones(size(rCS.vertices)); %#ok<NASGU> 
+          ccsv{1,end+1}='num_vertices'; 
+          lCSarea = ones(size(lCS.vertices));  
+          rCSarea = ones(size(rCS.vertices)); 
           for roii=2:size(ccsv,1)
             switch ccsv{roii,2}(1)
-              case 'l', ccsv{roii,end} = eval(sprintf('sum(lCSarea(lrdata==ccsv{roii,1}))')); %#ok<AGROW>
-              case 'r', ccsv{roii,end} = eval(sprintf('sum(rCSarea(rrdata==ccsv{roii,1}))')); %#ok<AGROW>
+              case 'l', ccsv{roii,end} = eval(sprintf('sum(lCSarea(lrdata==ccsv{roii,1}))'));
+              case 'r', ccsv{roii,end} = eval(sprintf('sum(rCSarea(rrdata==ccsv{roii,1}))')); 
               case 'b', ccsv{roii,end} = eval(sprintf(['sum(lCSarea(lrdata==ccsv{roii,1})) + ' ...
-                                                       'sum(rCSarea(rrdata==ccsv{roii,1}))'])); %#ok<AGROW>
-              otherwise, ccsv{roii,end} = nan; %#ok<AGROW>
+                                                       'sum(rCSarea(rrdata==ccsv{roii,1}))'])); 
+              otherwise, ccsv{roii,end} = nan; 
             end
           end
         end
         
         % estimate ROI area
         if job.area
-          ccsv{1,end+1}='num_vertices'; %#ok<AGROW>
-          lCSarea = ones(size(lCS.vertices)); %#ok<NASGU> 
-          rCSarea = ones(size(rCS.vertices)); %#ok<NASGU> 
+          ccsv{1,end+1}='num_vertices';
+          lCSarea = ones(size(lCS.vertices)); 
+          rCSarea = ones(size(rCS.vertices)); 
           for roii=2:size(ccsv,1)
             switch ccsv{roii,2}(1)
-              case 'l', ccsv{roii,end} = eval(sprintf('sum(lCSarea(lrdata==ccsv{roii,1}))')); %#ok<AGROW>
-              case 'r', ccsv{roii,end} = eval(sprintf('sum(rCSarea(rrdata==ccsv{roii,1}))')); %#ok<AGROW>
+              case 'l', ccsv{roii,end} = eval(sprintf('sum(lCSarea(lrdata==ccsv{roii,1}))')); 
+              case 'r', ccsv{roii,end} = eval(sprintf('sum(rCSarea(rrdata==ccsv{roii,1}))'));
               case 'b', ccsv{roii,end} = eval(sprintf(['sum(lCSarea(lrdata==ccsv{roii,1})) + ' ...
-                                                       'sum(rCSarea(rrdata==ccsv{roii,1}))'])); %#ok<AGROW>
-              otherwise, ccsv{roii,end} = nan; %#ok<AGROW>
+                                                       'sum(rCSarea(rrdata==ccsv{roii,1}))'])); 
+              otherwise, ccsv{roii,end} = nan; 
             end
           end
         end
@@ -110,18 +156,18 @@ function cat_surf_surf2roi(job)
         FN = fieldnames(job.avg);
         for ai=1:numel(FN)
           if job.avg.(FN{ai})
-            ccsv{1,end+1}=sprintf('%s_%s',FN{ai},sinfo.dataname); %#ok<AGROW>
+            ccsv{1,end+1}=sprintf('%s_%s',FN{ai},sinfo.dataname);
             switch FN{ai}
               case {'min','max'}, nanfunc = ''; 
               case {'mean','median','std'}, nanfunc = 'cat_stat_nan';
             end
             for roii=2:size(ccsv,1)
               switch ccsv{roii,2}(1)
-                case 'l', ccsv{roii,end} = eval(sprintf('%s%s(lCS.cdata(lrdata==ccsv{roii,1}))',nanfunc,FN{ai})); %#ok<AGROW>
-                case 'r', ccsv{roii,end} = eval(sprintf('%s%s(rCS.cdata(rrdata==ccsv{roii,1}))',nanfunc,FN{ai})); %#ok<AGROW>
+                case 'l', ccsv{roii,end} = eval(sprintf('%s%s(lCS.cdata(lrdata==ccsv{roii,1}))',nanfunc,FN{ai})); 
+                case 'r', ccsv{roii,end} = eval(sprintf('%s%s(rCS.cdata(rrdata==ccsv{roii,1}))',nanfunc,FN{ai})); 
                 case 'b', ccsv{roii,end} = eval(sprintf(['%s%s(lCS.cdata(lrdata==ccsv{roii,1})) + ' ...
-                                                         '%s%s(rCS.cdata(rrdata==ccsv{roii,1}))'],nanfunc,FN{ai},nanfunc,FN{ai})); %#ok<AGROW>
-                otherwise, ccsv{roii,end} = nan; %#ok<AGROW>
+                                                         '%s%s(rCS.cdata(rrdata==ccsv{roii,1}))'],nanfunc,FN{ai},nanfunc,FN{ai}));
+                otherwise, ccsv{roii,end} = nan; 
               end
             end
           end
@@ -145,11 +191,6 @@ function cat_surf_surf2roi(job)
       ROI.(rinfo.dataname) = ccsv;
       cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
         ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write+'); 
-
-      % create maps of each atlas
-      lCS.cdata = r
-      % create gifti
-      
       
     end
   end

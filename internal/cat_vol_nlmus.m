@@ -37,6 +37,7 @@ function cat_vol_nlmus(varargin)
 %       'interp','linear');
 %
 %_______________________________________________________________________
+%
 %   Robert Dahnke - robert.dahnke@uni-jena.de
 %   Center of Neuroimaging 
 %   Department of Psychiatry and Psychotherapy 

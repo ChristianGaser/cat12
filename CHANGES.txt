@@ -9071,6 +9071,7 @@ Corrected:    CAT report Yo scaling failed in 5-10% of test cases, because the
               SPM peaks of Ym differ to much.
 
 ------------------------------------------------------------------------
+r860 | gaser | 2016-02-12 16:45:25 +0100 (Fr, 12 Feb 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9084,5 +9085,46 @@ M       tbx_cfg_cat.m
     problems in longitudinal batch.
 (2) Updated: Longitudinal mode.
 
+
 ------------------------------------------------------------------------
-r860 | gaser | 2016-02-12 16:45:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+A       cat_io_addwarning.m
+M       cat_main.m
+A       cat_main_LAS.m
+A       cat_main_gcut.m
+A       cat_main_gintnorm.m
+A       cat_main_gintnormi.m
+M       cat_run_job.m
+M       cat_surf_resamp.m
+M       cat_surf_surf2roi.m
+A       cat_vol_div.m
+A       cat_vol_grad.m
+M       html/cat.html
+M       html/cat.txt
+D       html/cat_instruction.html
+D       html/cat_instruction_FF.html
+D       html/cat_instruction_FN.html
+D       html/cat_instruction_MS.html
+D       html/cat_instruction_PP.html
+D       html/cat_instruction_QA.html
+D       html/cat_instruction_ST.html
+!       html/cat_instruction_templates.html
+M       html/cat_methods.html
+A  +    html/cat_methods_FN.html
+M       html/cat_methods_LP.html
+A       html/cat_methods_MS.html
+M       html/cat_starting.html
+A  +    html/cat_tools.html
+A       html/cat_tools_FF.html
+A  +    html/cat_tools_SBM.html
+M       internal/cat_vol_nlmus.m
+
+Changed*:     Outsourced cat_main subfunctions and add some header comments.
+Changed*:     Updated CAT help structure.
+Changed:      Added comments in cat_surf_surf2roi.
+
+------------------------------------------------------------------------
+r861 | dahnke | 2016-02-12 17:49:29

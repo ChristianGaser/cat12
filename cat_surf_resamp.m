@@ -1,6 +1,6 @@
 function varargout = cat_surf_resamp(varargin)
 % ______________________________________________________________________
-% Fucntion to resample parameters to template space and smooth it.
+% Function to resample parameters to template space and smooth it.
 %
 % [Psdata] = cat_surf_resamp(job)
 % 
