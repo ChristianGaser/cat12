@@ -227,7 +227,7 @@ grey.name     = 'Grey matter';
 if expert
   grey.val      = {native warped modulated dartel};
 else
-  grey.val      = {modulated dartel};
+  grey.val      = {native modulated dartel};
 end
 grey.help     = {'Options to produce grey matter images.'
 ''
@@ -243,7 +243,7 @@ white.name    = 'White matter';
 if expert
   white.val      = {native warped modulated dartel};
 else
-  white.val      = {modulated dartel};
+  white.val      = {native modulated dartel};
 end
 white.help    = {'Options to produce white matter images.'
 ''
@@ -411,16 +411,16 @@ function dep = vout(job)
 
 opts  = job.output;
 
-if isfield(opts.GM,'native')
+if isfield(opts.GM,'warped')
   tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
   tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
   tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 else
-  tissue(1).warped = [0  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
-  tissue(1).native = [0  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
-  tissue(2).warped = [0  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
-  tissue(2).native = [0  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
+  tissue(1).warped = [0               (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
+  tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
+  tissue(2).warped = [0               (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
+  tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 end
 
 if isfield(opts,'CSF')
