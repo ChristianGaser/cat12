@@ -9024,6 +9024,7 @@ Fixed: Some broken links and calls in html-pages.
 
 
 ------------------------------------------------------------------------
+r859 | dahnke | 2016-02-11 17:42:59 +0100 (Do, 11 Feb 2016) | 44 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9068,5 +9069,20 @@ Corrected:    Changed CSF proportion (res.mg) from 10 to 30 percent for mean CSF
               blood vessels. Corrected initial Ym background value estimation.
 Corrected:    CAT report Yo scaling failed in 5-10% of test cases, because the 
               SPM peaks of Ym differ to much.
+
 ------------------------------------------------------------------------
-r859 | dahnke | 2016-02-11 17:42:50
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_main.m
+M       cat_run.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Added again "native" field for GM/WM because it caused many 
+    problems in longitudinal batch.
+(2) Updated: Longitudinal mode.
+
+------------------------------------------------------------------------
+r860 | gaser | 2016-02-12 16:45:18
