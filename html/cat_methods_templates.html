@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('research.jpg') right;">
+      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT12</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_templates.html">Additional Functions</a>
+      </div>
+    </div>
+	
+  
+    <div id="content">
+      <h2>Templates</h2>
+      <p>
+        CAT12 contains different templates to process special human groups and other species. 
+        The templates can be changed by running the <a class="function" href="matlab:open cat_defaults;">cat_set_cat_defaults</a> routine before the preprocessing. 
+      </p>
+      <p>
+        The <a href="cat_methods_templates.thml">template creation process</a> is still under development and the templates were on an early stage (alpha). 
+        The contain a TPM map for the tissue segmentation, T1/PD and a brain mask for registration, a species specific version of the CAT atlas map. 
+      </p>     
+      </p> 
+        The following templates are available:
+        <ul>
+          <li><b>primate400</b> for chimpanzees, bonobos, orang-utan, and gorillas</li>
+          <li><b>primate130</b> for baboons and macaque monkeys</li>
+          <li><b>primate45</b> for gibbons</li>
+          <li><b>primate15</b> for squirrels</li>
+        </ul>
+      </p>
+      <p>
+        The primates templates based on the Rilling dataset (Rilling19xx), and due to the low number of subjects we mixed some species with similar brain size for the templates.
+        This is not so critical because CAT use an AMAP segmentation for final tissue classification and was finally the best way to start with this topic. 
+        Therefore, we recommend to create further Dartel templates based on the affine CAT output. 
+        The TPM maps can also be used for SPM preprocessing. 
+      </p>
+      <p>
+        Rilling ...
+      </p>
+    </div>
+  
+  
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

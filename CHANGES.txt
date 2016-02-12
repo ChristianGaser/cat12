@@ -9087,6 +9087,7 @@ M       tbx_cfg_cat.m
 
 
 ------------------------------------------------------------------------
+r861 | dahnke | 2016-02-12 17:49:37 +0100 (Fr, 12 Feb 2016) | 39 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9126,5 +9127,17 @@ Changed*:     Outsourced cat_main subfunctions and add some header comments.
 Changed*:     Updated CAT help structure.
 Changed:      Added comments in cat_surf_surf2roi.
 
+
 ------------------------------------------------------------------------
-r861 | dahnke | 2016-02-12 17:49:29
+
+Changed paths:
+M       CHANGES.txt
+ M      html/cat_methods_MS.html
+A       html/cat_methods_templates.html
+ M      html/cat_tools_FF.html
+A       html/cat_tools_ROI.html
+A       html/cat_tools_VBM.html
+
+Changed:    Some further HTLM help pages.    
+------------------------------------------------------------------------
+r862 | dahnke | 2016-02-12 17:51:00
