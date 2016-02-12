@@ -122,6 +122,7 @@ varargout{1} = run_job(job);
 return
 %_______________________________________________________________________
 function job = update_job(job)
+
   cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.species,...
              'cat12atlas',cat_get_defaults('extopts.cat12atlas'), ... 
              'darteltpm', job.extopts.darteltpm{1}, ...
@@ -200,11 +201,11 @@ function job = update_job(job)
   end
 
   % check whether native field is defined (only defined for expert mode)              
-  if ~isfield(job.output.GM,'native')
-    job.output.bias.dartel = 0; job.output.bias.native = 0;
-    job.output.GM.warped   = 0; job.output.GM.native   = 0;
-    job.output.WM.warped   = 0; job.output.WM.native   = 0;
-    job.output.CSF.warped  = 0; job.output.CSF.native  = 0;
+  if ~isfield(job.output.GM,'warped')
+    job.output.bias.dartel = 0;
+    job.output.bias.native = 0;
+    job.output.GM.warped   = 0;
+    job.output.WM.warped   = 0; 
   end
   
   tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
