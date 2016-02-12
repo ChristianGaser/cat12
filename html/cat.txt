@@ -26,27 +26,41 @@
       <hr />
     
       <h2>Description</h2>
-      <p>This toolbox is a an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12/')">SPM12</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry, deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html')">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version.</p>
-        
-      <ol>
+      <p>This toolbox is a an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12/')">SPM12</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry, deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html')">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version.
+      </p>
+      <p>
+        This documentation contain <a class="function">interaktive MATLAB links</a> that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">LPBA40 volume map</a> or the 
+          <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left LPBA40 surface</a>.
+      </p>
+       <ol>
         <li><a href=cat_starting.html>Quick start guide</a></li>         
-        <li><a href=cat_introduction.html>Introduction</a></li>               <!-- Why we do all this -->
-        <li><a href=cat_instruction.html>Instruction manual</a></li>          <!-- How to use this toolbox an some special functions - GUI view & control -->
+        <li><a href=cat_introduction.html>Introduction</a></li>              
+        <!-- Why we do all this -->
+        <!--
         <ul>
-          <li><a href=cat_instruction_PP.html>Preprocessing</a></li>
-          <li><a href=cat_instruction_QA.html>Quality assurance</a></li>
-          <li><a href=cat_instruction_MS.html>Model specification</a></li>
-          <li><a href=cat_instruction_ST.html>Surface tools</a></li>
-          <li><a href=cat_instruction_FN.html>Filenames</a></li>
-          <li><a href=cat_instruction_FF.html>Additional functions</a></li>
+          <li><a href=cat_instruction_anatomy.html>Anatomy</a></li>
+          <li><a href=cat_instruction_development.html>Development</a></li>
+          <li><a href=cat_instruction_plastisity.html>Plasticity</a></li>
+          <li><a href=cat_instruction_aging.html>Aging</a></li>
+          <li><a href=cat_instruction_folding.html>Folding Models</a></li>
         </ul>
-        <li><a href=cat_methods.html>Methods</a></li>                         <!-- Basic and detailed ideas of the methods - default file & paper view -->
+        -->
+        <li><a href=cat_methods.html>CAT methods</a></li>                         
         <ul>
-          <li><a href=cat_methods_VBM.html>Segmentation</a></li>
-          <li><a href=cat_methods_SBM.html>Cortical surface and thickness estimation</a></li>
-          <li><a href=cat_methods_RBM.html>Atlas creation and ROI based analysis</a></li>
+          <li><a href=cat_methods_VBM.html>VBM preprocessing and analysis</a></li>
+          <li><a href=cat_methods_SBM.html>SBM preprocessing and analysis</a></li>
+          <li><a href=cat_methods_RBM.html>ROI preprocessing and analysis</a></li>
+          <li><a href=cat_methods_LP.html>Longitudinal preprocessing and analysis</a></li>
+          <li><a href=cat_methods_MS.html>Model specification</a></li>
           <li><a href=cat_methods_QA.html>Quality assurance</a></li>
-          <li><a href=cat_methods_LP.html><i>Longitudinal pipeline</i></a></li>
+          <li><a href=cat_methods_FN.html>Filenames</a></li>
+        </ul>
+        <li><a href=cat_tools.html>CAT tools</a></li>
+        <ul>
+          <li><a href=cat_tools_VBM.html>VBM tools</a></li>
+          <li><a href=cat_tools_SBM.html>SBM tools</a></li>
+          <li><a href=cat_tools_ROI.html>ROI tools</a></li>
+          <li><a href=cat_tools_FF.html>Other tools</a></li>
         </ul>
         <li><a href=cat_FAQ.html>FAQ</a></li>
         <li><a href=cat_stuff.html>Links, sources & recommendations</a></li>
