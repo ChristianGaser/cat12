@@ -83,13 +83,13 @@ if nargin == 1
 
     if isfield(vargin.conversion.threshdesc,'fwe')
         adjustment = 1;
-        u0  = vargin.conversion.threshdesc.fwe.thresh;
+        u0  = vargin.conversion.threshdesc.fwe.thresh05;
     elseif isfield(vargin.conversion.threshdesc,'fdr')
         adjustment = 2;
-        u0  = vargin.conversion.threshdesc.fdr.thresh;
+        u0  = vargin.conversion.threshdesc.fdr.thresh05;
     elseif isfield(vargin.conversion.threshdesc,'uncorr')
         adjustment = 0;
-        u0  = vargin.conversion.threshdesc.uncorr.thresh2;
+        u0  = vargin.conversion.threshdesc.uncorr.thresh001;
     elseif isfield(vargin.conversion.threshdesc,'none')
         adjustment = -1;
         u0  = -Inf;
@@ -97,12 +97,12 @@ if nargin == 1
     
     if isfield(vargin.conversion.cluster,'fwe2')
         extent_FWE = 1;
-        pk  = vargin.conversion.cluster.fwe2.thresh;
+        pk  = vargin.conversion.cluster.fwe2.thresh05;
         noniso = vargin.conversion.cluster.fwe2.noniso;
-    elseif isfield(vargin.conversion.cluster,'uncorr2')
+    elseif isfield(vargin.conversion.cluster,'kuncorr')
         extent_FWE = 0;
-        pk  = vargin.conversion.cluster.uncorr2.thresh;
-        noniso = vargin.conversion.cluster.uncorr2.noniso;
+        pk  = vargin.conversion.cluster.kuncorr.thresh05;
+        noniso = vargin.conversion.cluster.kuncorr.noniso;
     elseif isfield(vargin.conversion.cluster,'k')
         extent_FWE = 0;
         pk  = vargin.conversion.cluster.k.kthresh;
@@ -121,15 +121,8 @@ if nargin == 1
     
 end
 
-spm2 = 0;
-if strcmp(spm('ver'),'SPM2'), spm2 = 1; end
-
 if nargin < 1
-    if spm2
-        P = spm_get(Inf,'spmT*.img','Select T-images');
-    else
-        P = spm_select(Inf,'^spmT.*\.img$','Select T-images');
-    end
+    P = spm_select(Inf,'^spmT.*(img|gii|nii)$','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
     '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
 
@@ -185,9 +178,7 @@ otherwise  %-NB: no threshold
 end
 
 for i=1:size(P,1)
-    spmT = deblank(P(i,:));
-    Vspm = spm_vol(spmT);   
-    [pth,nm] = spm_fileparts(spmT);
+    [pth,nm] = spm_fileparts(deblank(P(i,:)));
 
     SPM_name = fullfile(pth, 'SPM.mat');
     
@@ -206,18 +197,22 @@ for i=1:size(P,1)
     xCon = SPM.xCon;
     df   = [xCon(Ic).eidf SPM.xX.erdf];
     STAT = xCon(Ic).STAT;
-    R    = SPM.xVol.R;          %-search Volume {resels}
-    S    = SPM.xVol.S;          %-search Volume {voxels}
-    XYZ  = SPM.xVol.XYZ;            %-XYZ coordinates
+    R    = SPM.xVol.R;                  %-search Volume {resels}
+    R    = R(1:find(R~=0,1,'last'));    % eliminate null resel counts
+    S    = SPM.xVol.S;                  %-search Volume {voxels}
+    XYZ  = SPM.xVol.XYZ;                %-XYZ coordinates
     FWHM = SPM.xVol.FWHM;
-    v2r  = 1/prod(FWHM(~isinf(FWHM)));          %-voxels to resels
+    v2r  = 1/prod(FWHM(~isinf(FWHM)));  %-voxels to resels
+
+    Vspm   = cat(1,xCon(Ic).Vspm);
+    Vspm.fname = fullfile(pth,Vspm.fname);
 
     if ~isfield(SPM.xVol,'VRpv')
         noniso = 0;
     end
 
     if noniso
-        SPM.xVol.VRpv = spm_vol(fullfile(pth,SPM.xVol.VRpv.fname));
+        SPM.xVol.VRpv.fname = fullfile(pth,SPM.xVol.VRpv.fname);
     end
 
     switch adjustment
@@ -239,7 +234,7 @@ for i=1:size(P,1)
        end
     end
 
-    Z = spm_get_data(Vspm,XYZ);
+    Z = spm_data_read(Vspm.fname,'xyz',XYZ);
 
     %-Calculate height threshold filtering
     %-------------------------------------------------------------------    
@@ -291,12 +286,26 @@ for i=1:size(P,1)
         
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
-        A     = spm_clusters(XYZ);
+        if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
+            A = spm_clusters(XYZ);
+        else
+            T = false(SPM.xVol.DIM');
+            T(XYZ(1,:)) = true;
+            G = export(gifti(SPM.xVol.G),'patch');
+            A = spm_mesh_clusters(G,T)';
+            A = A(XYZ(1,:));
+        end
+
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
 
             Q     = [];
-            [N2 Z2 XYZ2 A2 L2] = spm_max(Z,XYZ);
+            if isfield(SPM.xVol,'G') % mesh detected?
+                [N2,Z2,XYZ2,A2,L2]  = spm_mesh_max(Z,XYZ,gifti(SPM.xVol.G));
+            else
+                [N2,Z2,XYZ2,A2,L2]  = spm_max(Z,XYZ);
+            end
+
             if max(A) ~= max(A2)
                  error('Number of clusters does not much in spm_max and spm_clusters!');
             end
@@ -304,7 +313,7 @@ for i=1:size(P,1)
             for i2 = 1:max(A2)
                 %-Get LKC for voxels in i-th region
                 %----------------------------------------------------------
-                LKC  = spm_get_data(SPM.xVol.VRpv,L2{i2});
+                LKC = spm_data_read(SPM.xVol.VRpv.fname,'xyz',L2{i2});
                 
                 %-Compute average of valid LKC measures for i-th region
                 %----------------------------------------------------------
@@ -317,7 +326,7 @@ for i=1:size(P,1)
                 
                 %-Intrinsic volume (with surface correction)
                 %----------------------------------------------------------
-                IV   = spm_resels([1 1 1],L2{i2},'V');
+                IV   = spm_resels([1 1 1],L2{i2},'V'); % only for volumes
                 IV   = IV*[1/2 2/3 2/3 1]';
                 k_noniso = IV*LKC/v2r;
 
@@ -333,8 +342,7 @@ for i=1:size(P,1)
                             end
                         end
                     end
-                end
-                
+                end                
             end
         else
             Q     = [];
@@ -344,13 +352,12 @@ for i=1:size(P,1)
             end
         end
 
-
         % ...eliminate voxels
         %-------------------------------------------------------------------
         Z     = Z(:,Q);
         XYZ   = XYZ(:,Q);
         if isempty(Q)
-            fprintf('No voxels survived extent threshold k=%0.2g\n',k);
+            fprintf('No voxels survived extent threshold k=%3.1f\n',k);
         end
 
     else
@@ -400,33 +407,33 @@ for i=1:size(P,1)
     
        if neg_results
             neg_str = '_bi'; 
-       else
-            neg_str = '';
-       end
+       else neg_str = ''; end
        
+       if isfield(SPM.xVol,'G')
+            ext = '.gii';
+       else ext = '.nii'; end
+         
        if u0 > -Inf
-           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
+           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
        else
-           name = [t2x_name str_num '.nii'];
+           name = [t2x_name str_num ext];
        end
-       fprintf('Save %s\n', name);
-    
+
        out = deblank(fullfile(pth,name));
+       fprintf('Save %s\n', out);    
 
        %-Reconstruct (filtered) image from XYZ & Z pointlist
        %-----------------------------------------------------------------------
-       Y      = zeros(Vspm.dim(1:3));
+       Y      = zeros(Vspm.dim);
        OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
        Y(OFF) = t2x;
 
        VO = Vspm;
        VO.fname = out;
-       if spm2
-            VO.dim(4) = spm_type('float32');
-       else
-            VO.dt = [spm_type('float32') spm_platform('bigend')];
-       end
-       spm_write_vol(VO,Y);
+       VO.dt = [spm_type('float32') spm_platform('bigend')];
+       VO = spm_data_hdr_write(VO);
+       spm_data_write(VO,Y);
     
     end
 end
+
