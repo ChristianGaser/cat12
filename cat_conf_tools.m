@@ -21,8 +21,8 @@ data.help    = {
 data_T2x         = cfg_files;
 data_T2x.tag     = 'data_T2x';
 data_T2x.name    = 'Volumes';
-data_T2x.filter  = 'image';
-data_T2x.ufilter = '^spmT.*\.[in][im][gi]$';
+data_T2x.filter  = 'any';
+data_T2x.ufilter = '^spmT.*(gii|nii|img)';
 data_T2x.num     = [1 Inf];
 data_T2x.help    = {'Select spmT-images to transform or convert.'};
 
@@ -34,21 +34,21 @@ sel.values = {1,2,3,4,5};
 sel.val    = {2};
 sel.help   = {'Select conversion of t-value'};
 
-thresh         = cfg_entry;
-thresh.tag     = 'thresh';
-thresh.name    = 'Threshold';
-thresh.help    = {''};
-thresh.strtype = 'r';
-thresh.num     = [1 1];
-thresh.val     = {0.05};
+thresh05         = cfg_entry;
+thresh05.tag     = 'thresh05';
+thresh05.name    = 'Threshold';
+thresh05.help    = {''};
+thresh05.strtype = 'r';
+thresh05.num     = [1 1];
+thresh05.val     = {0.05};
 
-thresh2         = cfg_entry;
-thresh2.tag     = 'thresh2';
-thresh2.name    = 'Threshold';
-thresh2.help    = {''};
-thresh2.strtype = 'r';
-thresh2.num     = [1 1];
-thresh2.val     = {0.001};
+thresh001         = cfg_entry;
+thresh001.tag     = 'thresh001';
+thresh001.name    = 'Threshold';
+thresh001.help    = {''};
+thresh001.strtype = 'r';
+thresh001.num     = [1 1];
+thresh001.val     = {0.001};
 
 kthresh         = cfg_entry;
 kthresh.tag     = 'kthresh';
@@ -81,32 +81,32 @@ k.help    = {''};
 fwe         = cfg_branch;
 fwe.tag     = 'fwe';
 fwe.name    = 'FWE';
-fwe.val     = {thresh };
+fwe.val     = {thresh05 };
 fwe.help    = {''};
 
 fdr         = cfg_branch;
 fdr.tag     = 'fdr';
 fdr.name    = 'FDR';
-fdr.val     = {thresh };
+fdr.val     = {thresh05 };
 fdr.help    = {''};
 
 fwe2         = cfg_branch;
 fwe2.tag     = 'fwe2';
 fwe2.name    = 'FWE';
-fwe2.val     = {thresh, noniso };
+fwe2.val     = {thresh05, noniso };
 fwe2.help    = {''};
 
 uncorr         = cfg_branch;
 uncorr.tag     = 'uncorr';
 uncorr.name    = 'uncorrected';
-uncorr.val     = {thresh2 };
+uncorr.val     = {thresh001 };
 uncorr.help    = {''};
 
-uncorr2         = cfg_branch;
-uncorr2.tag     = 'uncorr2';
-uncorr2.name    = 'uncorrected';
-uncorr2.val     = {thresh2, noniso };
-uncorr2.help    = {''};
+kuncorr         = cfg_branch;
+kuncorr.tag     = 'kuncorr';
+kuncorr.name    = 'uncorrected';
+kuncorr.val     = {thresh05, noniso };
+kuncorr.help    = {''};
 
 En         = cfg_branch;
 En.tag     = 'En';
@@ -132,7 +132,7 @@ threshdesc.help   = {'Select method for voxel threshold'};
 cluster        = cfg_choice;
 cluster.name   = 'Cluster extent threshold';
 cluster.tag    = 'cluster';
-cluster.values = {none k En uncorr2 fwe2};
+cluster.values = {none k En kuncorr fwe2};
 cluster.val    = {none};
 cluster.help   = {'Select method for extent threshold'};
 
@@ -198,8 +198,8 @@ T2x.help = {
 data_F2x         = cfg_files;
 data_F2x.tag     = 'data_F2x';
 data_F2x.name    = 'Volumes';
-data_F2x.filter  = 'image';
-data_F2x.ufilter = '^spmF.*\.[in][im][gi]$';
+data_F2x.filter  = 'any';
+data_F2x.ufilter = '^spmF.*(gii|nii|img)';
 data_F2x.num     = [1 Inf];
 data_F2x.help    = {'Select spmF-images to select.'};
 
@@ -220,7 +220,7 @@ none.help    = {'No threshold'};
 cluster        = cfg_choice;
 cluster.name   = 'Cluster extent threshold';
 cluster.tag    = 'cluster';
-cluster.values = {none k};
+cluster.values = {none k En kuncorr fwe2};
 cluster.val    = {none};
 cluster.help  = {'Select method for extent threshold'};
 
