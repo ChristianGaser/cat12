@@ -9129,6 +9129,7 @@ Changed:      Added comments in cat_surf_surf2roi.
 
 
 ------------------------------------------------------------------------
+r862 | dahnke | 2016-02-12 17:51:08 +0100 (Fr, 12 Feb 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9139,5 +9140,15 @@ A       html/cat_tools_ROI.html
 A       html/cat_tools_VBM.html
 
 Changed:    Some further HTLM help pages.    
+
 ------------------------------------------------------------------------
-r862 | dahnke | 2016-02-12 17:51:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_stat_spmF2x.m
+M       cat_stat_spmT2x.m
+
+Fixed: Issues with correction for non-isotropy in cat_stat_spm[TF].m
+------------------------------------------------------------------------
+r863 | gaser | 2016-02-17 23:11:42
