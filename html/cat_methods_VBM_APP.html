@@ -8,7 +8,7 @@
   </head>
   
   <body>
-    <div id="header" style="background: black url('images/research.jpg') right;">
+    <div id="header" style="background: black url('images/contact.jpg') right;">
       <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
           <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
@@ -17,29 +17,34 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_instruction_MS.html">Model specification</a>
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_CAT.html">Voxel-based Preprocessing Methods</a> > <a href="cat_methods_CAT_APP.html">Affine PreProcessing</a>
       </div>
     </div>
-	
-  
+      
     <div id="content">
-      <h2>Model specification</h2>
-      <p></p>
-      <!-- Hier wäre es gut einige vorbereitete Datensätze zu laden, z.B. ein kleiner 0815 Gruppenvergleich (OASIS?), Aging (IXI / NKI), ... die Daten könnten man als zusätzliche ZIP File bereitstellen mit 10x10 Datensätzen, die beispielsweise auf 1.5 mm reduziert wurden. -->
-      <ul>
-        <li>
-          <h4><a class="function" <!--href="matlab:spm('PopUpCB',gcbo);"--><i>Basic models</i></a></h4>
-          <p></p>
-        </li>
-        <li>
-          <h4><a class="function" href="matlab:cat_stat_spm;">Estimate surface model</a></h4>
-          <p></p>
-        </li>
-      </ul>
+      <h2>Affine PreProcessing:</h2>
+
+      <p>
+        APP was developed to process animal data with the standard CAT pipeline.
+        
+        It include an simple initial inhomogeneity correction to improve the first initial affine registration to start with a skull-stripping that is required as mask in the initial SPM preprocessing.
+        The skull-stripping also includes a second finer inhomogeneity correction that is further used in the preprocessing.
+        
+        There are four options: 
+        <ul>
+          <li>APP0: no APP and only standard preprocessing (default)</li>
+          <li>APP1: </li>
+          <li>APP2: full without affine scaling (that caused problems in smaller primates)</li>
+          <li>APP3: full</li>
+        </ul>
+      </p>  
+    
+    
+    
     </div>
-  
-  
-    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+
+    
+    <div id="content"><a href="cat_methods.html">< Methods</a> > <a href="cat_methods_CAT.html">Voxel-based Preprocessing Methods</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
     </div>

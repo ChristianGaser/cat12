@@ -8,7 +8,7 @@
   </head>
   
   <body>
-    <div id="header" style="background: black url('research.jpg') right;">
+    <div id="header" style="background: black url('images/research.jpg') right;">
       <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
           <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
@@ -17,18 +17,37 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT12</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_FF.html">ROI Tools</a>
+        <a href="cat.html">CAT</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_ROI.html">ROI Tools</a>
       </div>
     </div>
 	
   
     <div id="content">
-      <h2>ROI Tools</h2>
+      <h2>ROI Tools (in development)</h2>
       <p>
-    
+        CAT ROI processing extract volume/surface data for specific <a href="cat_methods_ROI.html">atlas maps</a> and write the results to CSV and XML-Files (see <a href="cat_tools_FF.html">CAT further Tools</a> for readout functions).
+        Volume-based ROI data extraction is part of the CAT preprocessing pipeline were different volume-based <a href="cat_methods_ROI.html">atlas maps</a> can be used to estimate volume, intensity, and thickness information.
+      </p>
+      <p>  
+        For further measures <!--a volume-based and--> a surface-based functions can be used to estimate further values from <!--normalized volumes and--> individual/normalized surfaces. 
+        Use the 
       </p>
       <ul>
-        <li>Map surface data to ROIs</li>
+        <!-- This function does not exist yet!
+        <li>
+          <h4><a class="function" href="matlab:spm_jobman('interactive','','spm.tool.cat.vol2roi');">Map surface data to ROIs</a></h4>
+          <p> 
+            This function extract volumetric data of specific atlas maps in template space. 
+            Use the transformation files (output of the segmentation) to map further images from subject to template space.
+          </p>
+        </li>
+        -->
+        <li>
+          <h4><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.surf2roi');">Map surface data to ROIs</a></h4>
+          <p>
+            This function extract ROI-based surface data by specific <a href="cat_methods_ROI.html">atlas maps</a>.
+          </p>
+        </li>
       </ul>
 
     </div>

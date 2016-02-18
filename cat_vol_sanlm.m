@@ -1,5 +1,6 @@
 function cat_vol_sanlm(varargin)
-% Spatial Adaptive Non Local Means Denoising Filter
+% Spatial Adaptive Non Local Means (SANLM) Denoising Filter
+%_______________________________________________________________________
 % Filter a set of images and add the prefix 'sanlm_'.
 % Missing input will call GUI or/and use defaults. 
 %
@@ -31,6 +32,7 @@ if ~isfield(job,'data') || isempty(job.data)
 else
    job.data = cellstr(job.data);
 end
+if isempty(char(job.data)); return; end
 
 if ~isfield(job,'prefix')
     job.prefix = 'sanlm_';

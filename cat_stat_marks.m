@@ -16,7 +16,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %   'eval'      .. evaluates fields of a input structure QS
 %   'help'      .. output the help informations for QS
 %
-% hier wird noch eine zusammenfassung/vereinfachung der maﬂe gebraucht
+% hier wird noch eine zusammenfassung/vereinfachung der ma√üe gebraucht
 % QM: res + noise + bias + contrast
 % QS: vol 
 % ______________________________________________________________________
@@ -25,7 +25,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 % University Jena
 %  
 % $Id$
-% ______________________________________________________________________
+
 %#ok<*NASGU,*STRNU>
 
   rev = '$Rev$';
