@@ -9,12 +9,12 @@
   
   <body>
     <div id="header" style="background: black url('contact.jpg') right;">
-      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
-          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
-          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
-          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
-          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
         <a href="cat.html">CAT12</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_SBM.html">Surface-based preprocessing</a>
@@ -28,28 +28,34 @@
     <div id="content">
       <h2>Cortical surface and thickness estimation (in development):</h2>
       <p>
-        CAT12 also include the estimation of the cortical thickness and central surface of the left and right hemispheres based on the PBT method <a href="http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf">(Dahnke et al. 2012)</a>. 
-        Furthermore, the surface pipeline uses topology correction <a href="http://dbm.neuro.uni-jena.de/pdf-files/Yotter-HBM10.pdf">(Yotter et al. 2011a)</a>, spherical mapping <a href="http://dbm.neuro.uni-jena.de/pdf-files/Yotter-JoN10.pdf">(Yotter et al. 2011b)</a> and estimation of local surface complexity <a href="http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf">(Yotter et al. 2011c)</a> and local gyrification <a href="http://dbm.neuro.uni-jena.de/pdf-files/Luders-NI06.pdf">(Luders et al. 2006)</a>.
+        CAT12 also includes the estimation of the cortical thickness and central surface of the left and right hemispheres based on the projection-based thickness (PBT) method <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf','-browser');">(Dahnke et al. 2012)</a>. 
+        Furthermore, the surface pipeline uses topology correction <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-HBM10.pdf','-browser');">(Yotter et al. 2011a)</a>, spherical mapping <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-JoN10.pdf','-browser');">(Yotter et al. 2011b)</a> and estimation of local surface complexity <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-NI11.pdf','-browser');">(Yotter et al. 2011c)</a> and local gyrification <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Luders-NI06.pdf','-browser');">(Luders et al. 2006)</a>.
       </p> 
       
       <p>Major aspects are:</p>
       <ol>
         <li>
-          <h4>PBT (Projection-based Thickness)</h4>
+          <h4>Cortical thickness and central surface estimation</h4>
           <p>
-            The PBT approach use ...</p> 
+            We use a fully automated method that allows for measurement of cortical thickness and reconstructions of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance, then projects the local maxima (which is equal to the cortical thickness) to other gray matter voxels by using a neighbor relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Dahnke-NI12.pdf','-browser');">(Dahnke et al. 2012)</a></p> 
         </li>
         <li>
           <h4>Topology Correction</h4>
           <p>
-            Although, the initial PBT surface might look quite good, it often contains small defects (handles and holes) in problematic regions such as the hypocampus that have to be removed for a correct spherical projection to the average surface. 
-            CAT12 uses a topology correction that is based on spherical harmonics to replace affected regions by low bandwidth representations of these regions.
+            The initial central surface usually contains small topology defects (handles and holes) in problematic regions such as the medial temporal lobe that have to be removed for a correct spherical projection to the average surface. 
+            In order to repair topological defects we use a novel method that relies on spherical harmonics <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-HBM10.pdf','-browser');">(Yotter et al. 2011a)</a>. First, the original MRI intensity values are used as a basis to select either a "fill" or "cut" operation for each topological defect. We modify the spherical map of the uncorrected brain surface mesh, such that certain triangles are favored while searching for the bounding triangle during reparameterization. Then, a low-pass filltered alternative reconstruction based on spherical harmonics is patched into the reconstructed surface in areas that previously contained defects
           </p>
         </li>
         <li>
           <h4>Spherical Mapping</h4>
           <p>
-            ... 
+            A spherical map of a cortical surface is usually necessary to reparameterize the surface mesh into a common coordinate system to allow inter-subject analysis. We use a fast algorithm to reduce area distortion resulting in an improved reparameterization of the cortical surface mesh <a href="matlab:web('http://dbm.neuro.uni-jena.de/pdf-files/Yotter-JoN10.pdf','-browser');">(Yotter et al. 2011b)</a>.
+          </p>
+        </li>
+        <li>
+          <h4>Spherical Registration</h4>
+          <p>
+            We have adapted the volume-based diffeomorphic Dartel algorithm to the surface <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2007.07.007','-browser');">(Ashburner 2007)</a> to work with spherical maps <a href="matlab:web('http://dbm.neuro.uni-jena.de/HBM2011/Yotter02.pdf','-browser');">(Yotter et al. 2011d)</a>. We apply a multi-grid approach that uses reparameterized values of sulcal depth and shape index defined on the sphere to estimate a flow field that allows deforming a spherical grid
           </p>
         </li>
         <li>
@@ -69,12 +75,14 @@
               <p>
                 ...
               </p>
+    <!-- TEXT 
             <li>
               <h5>Local Laplacian Gyrification</h5>
               <p>
                 ...
               </p>
             </li>
+    --> 
           </ul>
         </li>
       </ol>

@@ -9,12 +9,12 @@
   
   <body>
     <div id="header" style="background: black url('contact.jpg') right;">
-      <h1><a href="http://dbm.neuro.uni-jena.de/">Structural Brain Mapping Group</a></h1>
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
-          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');" target="_blank">Christian Gaser</a> |
-          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');" target="_blank">Department of Neurology</a> | 
-          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');" target="_blank">Department of Psychiatry</a> | 
-          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');" target="_blank">University of Jena</a>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
         <a href="cat.html">CAT12</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_CAT.html">Voxel-based Preprocessing Methods</a>
@@ -34,7 +34,7 @@
           <h4>AMAP Segmentation</h4>
           <p>
             The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for <i>a priori</i> information about tissue probabilities.  
-            That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach <a>(Ashburner et. al. 2005)</a>, but only for spatial normalization and the initial skull-stripping.  
+            That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization and the initial skull-stripping.  
             The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions <a>(Rajapakse et al. 1997)</a>.  
             This not only accounts for intensity inhomogeneities but also for other local variations of intensity.
           </p>
@@ -42,7 +42,7 @@
         <li> 
           <h4>Mixed Model</h4>
           <p>
-            Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types <a>(Tohka et al. 2004)</a>.  
+            Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2004.05.007','-browser');">(Tohka et al. 2004)</a>.  
             We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation.  
             The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF.  
             This results in an estimation of the amount (or fraction) of each pure tissue type present in every voxel (as single voxels - given by their size - probably contain more than one tissue type) and thus provides a more accurate segmentation.
@@ -51,19 +51,19 @@
         <li>
           <h4>Noise Filter</h4>
           <p>
-            Furthermore, we apply three denoising methods.  The first method is an block-wise adaptive Non-Local Means (SANLM) denoising filter 
-            <a>(Manjón et al. 2010)</a>.  
-            After global intensity correction an block-wise optimized non-local means (ORNLM) denoising filter is applied <a>(Coupe et al. 2008)</a>.  
+            Furthermore, we apply three denoising methods. The first method is an block-wise adaptive Non-Local Means (SANLM) denoising filter 
+            <a href="matlab:web('http://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
+            After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('http://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
             These filters remove noise while preserving edges and are implemented as preprocessing step.  
-            The third method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a>(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
+            The third method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
             The strength of the ORNLM and MRF filter are automatically obtained by estimating the remaining noise in the image.
           </p>
         </li>
         <li>
           <h4>Dartel Normalisation</h4> 
           <p>
-            Another important extension to the SPM12 segmentation is the integration of the Dartel normalisation <a>(Ashburner 2007)</a> into the toolbox by an already existing Dartel template in MNI space.  
-            This template was derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org)','-browser');">(http://www.brain-development.org)</a> and provides the six Dartel iterations.  
+            Another important extension to the SPM12 segmentation is the integration of the Dartel normalisation <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2007.07.007','-browser');">(Ashburner 2007)</a> into the toolbox by an already existing Dartel template in MNI space.  
+            This template was derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and provides the six Dartel iterations.  
             Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.
           </p> 
         </li>
@@ -80,7 +80,7 @@
           <h4>Skull-Stripping</h4>
           <p>
             CAT12 contains a revised graph-cut based skull-stripping with a arbitrary strength, with 0 for a more liberal and wider brain masks and 1 for a more
-          aggressive skull-stripping.  The default is 0.5 and was successfully tested on a variety of different images.
+          aggressive skull-stripping. The default is 0.5 and was successfully tested on a variety of different images.
           </p> 
           <p>The strength parameter affects multiple internal parameters:</p>
           <ul>
@@ -97,7 +97,7 @@
         <li>
           <h4>Cleanup</h4>
           <p>
-            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation.  The strength of the cleanup is controlled by the <i>cleanupstr</i> parameter, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
+            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation. The strength of the cleanup is controlled by the <i>cleanupstr</i> parameter, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
           </p>
         </li>
         <li>
