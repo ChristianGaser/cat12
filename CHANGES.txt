@@ -9142,6 +9142,7 @@ A       html/cat_tools_VBM.html
 Changed:    Some further HTLM help pages.    
 
 ------------------------------------------------------------------------
+r863 | gaser | 2016-02-17 23:11:48 +0100 (Mi, 17 Feb 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9150,5 +9151,41 @@ M       cat_stat_spmF2x.m
 M       cat_stat_spmT2x.m
 
 Fixed: Issues with correction for non-isotropy in cat_stat_spm[TF].m
+
 ------------------------------------------------------------------------
-r863 | gaser | 2016-02-17 23:11:42
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       html/cat.html
+M       html/cat_FAQ.html
+M       html/cat_ackknowledgement.html
+M       html/cat_instruction_templates.html
+M       html/cat_introduction.html
+M       html/cat_methods.html
+M       html/cat_methods_CAT.html
+M       html/cat_methods_FN.html
+M       html/cat_methods_LP.html
+M       html/cat_methods_MS.html
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_SBM.html
+M       html/cat_methods_VBM.html
+M       html/cat_methods_templates.html
+ M      html/cat_qa_expert.png
+ M      html/cat_qa_rating-distribution.png
+ M      html/cat_qa_rating-table.jpg
+M       html/cat_starting.html
+M       html/cat_stuff.html
+M       html/cat_tools.html
+M       html/cat_tools_FF.html
+M       html/cat_tools_ROI.html
+M       html/cat_tools_SBM.html
+M       html/cat_tools_VBM.html
+
+Changed: Updated html-files:
+ - Removed target="blank" that unnecessarily opens a matlab window
+ - Use of matlab browser command throughout the pages
+------------------------------------------------------------------------
+r864 | gaser | 2016-02-18 10:16:22
