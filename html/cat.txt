@@ -21,7 +21,7 @@
     <div id="content">
       <br />
       <p align="center">This is <b>CAT12 RELNUMBER (DATE)</b><br />You can update your copy of CAT12 here: <a href="matlab:spm('alert',evalc('cat_update(1)'),'CAT Update');">Check for update</a>.<br />If you happen to find any bug, please report them at <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>.</p>
-      <h1 style="text-align:center;"><img src="CAT.png" width=40% height=auto alt="CAT" ></h1>
+      <h1 style="text-align:center;"><img src="image/CAT.png" width=40% height=auto alt="CAT" ></h1>
     
       <hr />
     
@@ -32,10 +32,13 @@
         This documentation contain <a class="function">interaktive MATLAB links</a> that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">LPBA40 volume map</a> or the 
           <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left LPBA40 surface</a>.
       </p>
-       <ol>
+      <ol>
         <li><a href=cat_starting.html>Quick start guide</a></li>         
         <li><a href=cat_introduction.html>Introduction</a></li>              
-        <!-- Why we do all this -->
+        <!-- Why we do all this 
+             This should be a CAT unspecific overview with general aspects, 
+             whereas the "CAT methods" should introduce our specific pipeline and special measures.
+        -->
         <!--
         <ul>
           <li><a href=cat_instruction_anatomy.html>Anatomy</a></li>
@@ -43,6 +46,8 @@
           <li><a href=cat_instruction_plastisity.html>Plasticity</a></li>
           <li><a href=cat_instruction_aging.html>Aging</a></li>
           <li><a href=cat_instruction_folding.html>Folding Models</a></li>
+          <li><a href=cat_instruction_preprocessing.html>Preprocessing</a></li> 
+          <li><a href=cat_instruction_surface_measures.html>Surfaces Measures</a></li>
         </ul>
         -->
         <li><a href=cat_methods.html>CAT methods</a></li>                         
@@ -50,7 +55,11 @@
           <li><a href=cat_methods_VBM.html>VBM preprocessing and analysis</a></li>
           <li><a href=cat_methods_SBM.html>SBM preprocessing and analysis</a></li>
           <li><a href=cat_methods_RBM.html>ROI preprocessing and analysis</a></li>
+          <!-- expert processing GUI etc. -->
           <li><a href=cat_methods_LP.html>Longitudinal preprocessing and analysis</a></li>
+          <!--
+          <li><a href=cat_methods_LP.html>Animal preprocessing</a></li>
+          -->
           <li><a href=cat_methods_MS.html>Model specification</a></li>
           <li><a href=cat_methods_QA.html>Quality assurance</a></li>
           <li><a href=cat_methods_FN.html>Filenames</a></li>

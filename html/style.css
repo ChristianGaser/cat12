@@ -12,7 +12,7 @@ body {
 
 /* --- Header */
 #header {
-	background: black url('home.jpg') right;
+	background: black url('images/home.jpg') right;
 	background-repeat: no-repeat;
 	width: 100%;
 	position: relative;

@@ -9153,6 +9153,7 @@ M       cat_stat_spmT2x.m
 Fixed: Issues with correction for non-isotropy in cat_stat_spm[TF].m
 
 ------------------------------------------------------------------------
+r864 | gaser | 2016-02-18 10:16:31 +0100 (Do, 18 Feb 2016) | 34 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -9187,5 +9188,106 @@ M       html/cat_tools_VBM.html
 Changed: Updated html-files:
  - Removed target="blank" that unnecessarily opens a matlab window
  - Use of matlab browser command throughout the pages
+
 ------------------------------------------------------------------------
-r864 | gaser | 2016-02-18 10:16:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_stat_marks.m
+M       cat_vol_sanlm.m
+ M      html
+D       html/CAT.png
+D       html/CAT_surf_atlas_DKT40.png
+D       html/CAT_surf_atlas_Desikan-Killiany.png
+D       html/CAT_surf_atlas_PALS-B12-Brodmann.png
+D       html/CAT_surf_atlas_PALS-B12-Lobes.png
+D       html/CAT_surf_atlas_aal.png
+D       html/CAT_surf_atlas_hammers.png
+D       html/CAT_surf_atlas_lpba40.png
+D       html/CAT_surf_atlas_mori.png
+D       html/CAT_surf_atlas_neuromorphometics.png
+D       html/analyse_methods.png
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_FAQ.html
+M       html/cat_instruction_templates.html
+M       html/cat_introduction.html
+M       html/cat_methods.html
+M       html/cat_methods_CAT.html
+M       html/cat_methods_FN.html
+M       html/cat_methods_LP.html
+M       html/cat_methods_MS.html
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_SBM.html
+M       html/cat_methods_VBM.html
+A  +    html/cat_methods_VBM_APP.html
+A       html/cat_methods_catreport.html
+M       html/cat_methods_templates.html
+D       html/cat_qa_expert.png
+D       html/cat_qa_rating-distribution.png
+D       html/cat_qa_rating-table.jpg
+M       html/cat_starting.html
+M       html/cat_stuff.html
+M       html/cat_tools.html
+M       html/cat_tools_FF.html
+M       html/cat_tools_ROI.html
+M       html/cat_tools_SBM.html
+M       html/cat_tools_VBM.html
+D       html/contact.jpg
+D       html/cortical_measures.png
+D       html/gyrification_index.png
+D       html/home.jpg
+D       html/human_brain.en.jpg
+D       html/human_brain.png
+A       html/images
+A  +    html/images/CAT.png
+A  +    html/images/CAT_surf_atlas_DKT40.png
+A  +    html/images/CAT_surf_atlas_Desikan-Killiany.png
+A  +    html/images/CAT_surf_atlas_PALS-B12-Brodmann.png
+A  +    html/images/CAT_surf_atlas_PALS-B12-Lobes.png
+A  +    html/images/CAT_surf_atlas_aal.png
+A  +    html/images/CAT_surf_atlas_hammers.png
+A  +    html/images/CAT_surf_atlas_lpba40.png
+A  +    html/images/CAT_surf_atlas_mori.png
+A  +    html/images/CAT_surf_atlas_neuromorphometics.png
+A  +    html/images/analyse_methods.png
+A       html/images/background_biasreal.png
+A       html/images/background_morphops.png
+A       html/images/background_noise.png
+A       html/images/cat_extract_addition_surface_parameter.png
+A  +    html/images/cat_qa_expert.png
+A  +    html/images/cat_qa_rating-distribution.png
+A  +    html/images/cat_qa_rating-table.jpg
+A       html/images/catreport_Collins.jpg
+A  +    html/images/contact.jpg
+A  +    html/images/cortical_measures.png
+A  +    html/images/gyrification_index.png
+A  +    html/images/home.jpg
+A  +    html/images/human_brain.png
+A  +    html/images/images.jpg
+A  +    html/images/people.jpg
+A       html/images/preprocessing.png
+A  +    html/images/research.jpg
+A  +    html/images/vbm.jpg
+D       html/images.jpg
+D       html/people.jpg
+D       html/research.jpg
+D       html/rqa01-intro-bwp-real.png
+M       html/style.css
+D       html/vbm.jpg
+!       html/vbm_vol_correct_slice_scaling_768.png
+
+Changed*:   Set cat_defaults extopts.BVCstr to 0, because of problems in 
+            untypical subjects, where artifacts were detected as BV and parts 
+            of the GM were removed.
+Changed:    Added BVCstr parameter in expert GUI.
+Changed:    Updated HTLM Help of VBM-Tools, SBM-Tools.
+Changed:    Added HTML subdirectory for images.
+Changed:    Renamed "CAT12" HTML breadcrumbs to "CAT".
+------------------------------------------------------------------------
+r865 | dahnke | 2016-02-18 16:18:13

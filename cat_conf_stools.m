@@ -157,7 +157,7 @@ function stools = cat_conf_stools(expert)
   SA.values = {0,1};
   SA.val    = {1};
   SA.help   = {
-    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428–1443, 2012.'
+    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
     ''
     'Log-transformation is used to render the data more normally distributed.'
     ''
@@ -576,7 +576,8 @@ function stools = cat_conf_stools(expert)
     s2r.avg.main};
   surf2roi.prog = @cat_surf_surf2roi;
   surf2roi.help = {
-  ''};
+    ''
+  };
 
 
 
@@ -711,7 +712,7 @@ function stools = cat_conf_stools(expert)
   surfcalcsub.prog = @cat_surf_calc;
   surfcalcsub.help = {
     'Mathematical operations for surface data sets (textures).'
-    'In contrast to the ''Surface Calculator'' it allows the definition of datasets sets ''si'' for multiple subjects.  Therefore, each sample requires surface data of the same subjects to evalute the expression for each subject.'
+    'In contrast to the ''Surface Calculator'' it allows the definition of datasets sets ''si'' for multiple subjects.  Therefore, each sample requires surface data of the same subjects to evaluate the expression for each subject.'
   };
 
 

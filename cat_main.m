@@ -1682,7 +1682,7 @@ cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ...
   min([0 1 0],[job.output.bias.native job.output.bias.warped job.output.bias.dartel]),trans);
   
 % Yp0b maps
-if job.extopts.WMHC==3 && ~opt.inv_weighting; 
+if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~opt.inv_weighting; 
   Yp0 = Yp0 + single(Ywmh)/255; 
 end
 
@@ -1721,7 +1721,7 @@ if any(cell2mat(struct2cell(job.output.TPMC)'))
 end
 
 %% write WMH class maps
-if job.extopts.WMHC==3 && ~opt.inv_weighting;
+if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~opt.inv_weighting;
   cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
     min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.modulated job.output.WMH.dartel]),trans); % 1 0 0 0
