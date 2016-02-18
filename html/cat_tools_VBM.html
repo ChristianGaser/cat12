@@ -8,7 +8,7 @@
   </head>
   
   <body>
-    <div id="header" style="background: black url('research.jpg') right;">
+    <div id="header" style="background: black url('images/research.jpg') right;">
       <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
           <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
@@ -17,16 +17,161 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT12</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_VBM.html">Additional volume-based functions</a>
+        <a href="cat.html">CAT</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_VBM.html">Additional volume-based functions</a>
       </div>
     </div>
 	
   
     <div id="content">
+    
       <h2>Additional volume-based Functions</h2>
-    </div>
-  
-  
+
+      <ul>
+        <li><a href="#SANLM">NLM noise filter</a></li>
+        <!--
+        <li><a href="#ISARNLM">ISARNLM noise filter</a>/li>
+        <li><a href="#NLMUS">NLM Upsampling</a>/li>
+        -->
+        <li><a href="#cat_vol_correct_slice_scaling">Correction of slice-artifacts</a></li>
+        <li><a href="#morphops">Morphological operations</a></li>
+        <li><a href="#calc_kappa">Kappa and RMS error estimation for test and ground truth images</a></li>
+        
+      </ul>
+    
+    
+        
+      <h3><a id="SANLM" class="function" href="matlab:cat_vol_sanlm;">NLM noise filter</a></h3>
+      <p>
+        The Spatial Adaptive Non Local Means (SANLM) <a  href="#Manjón:2008">(Manjón:2008)</a> is part of the CAT preprocessing but can also be used for other image modalities. 
+        Also noise correction works very well and stabilize most processing pipelines, the images will loose anatomical details (see <a href="cat_methods_QA.html">Quality Control</a>).
+      </p><p>
+        You can use the SANLM filter by calling the <a class="function" href="matlab:cat_vol_sanlm;">cat_vol_sanlm</a> function. 
+        See <a class="function" href="matlab:help cat_vol_sanlm;">help cat_vol_sanlm</a> for further options.
+      </p>
+      <p style="text-align:center;"><img src="images/background_noise.png" width=80% height=auto alt="Noise and its reduction" ><p>
+               
+      <!--
+        Für den ISARNLM Filter müssten hier ein Bild rein. 
+        Auch müsste ein Paper/Poster dazu erstellt werden (HBM2015?)
+        Zur Evaluation kann man das BWP als Basis nehmen, was kaum zugewinne erlauben sollte. 
+        Der eigentlichen Vorteil kommt erst bei realen Daten mit paralleler Bildgebung > SRS-Test und Einzelfälle.  
+      -->
+      <!--
+      <h3><a id="#ISARNLM" class="function" href="matlab:cat_vol_sanlm;">ISARNLM noise filter</a></h3>
+      <p>
+        The Iterative Spatial Adaptive Resolution Non Local Means (ISARNLM) applies the SANLM filter for multiple iterations and resolution levels to reduce parallel imaging artifacts. <br /> 
+        You can use it by calling the <a class="function" href="matlab:cat_vol_isarnlm;">cat_vol_isarnlm</a> function. <br />
+        See <a class="function" href="matlab:help cat_vol_isarnlm;">help cat_vol_isarnlm</a> for further options.
+      </p>
+      <p>
+        ... image ...
+      </p>
+      -->
+        
+      <!-- 
+        Internal function that requires c-functions and is just tested on MAC right now.
+      -->
+      <!--
+      <li>
+        <h4><a class="function" href="matlab:cat_vol_sanlm;">NLM Filter</a></h4>
+        <p>
+          The Non Local Means UpSampling (NLMUS) <a  href="#Manjón:2010">(Manjón:2010)</a> is not part of the standard CAT preprocessing. 
+        </p><p>
+          You can use the NLMUS by calling the <a class="function" href="matlab:cat_vol_nlmus;">cat_vol_nlmus</a> function. 
+          See <a class="function" href="matlab:help cat_vol_nlmus;">help cat_vol_nlmus</a> for further options.
+        </p>
+      </li>
+      <br />
+      -->
+        
+      <h3 id="cat_vol_correct_slice_scaling">Correction of slice-artifacts</h3>
+      <p>
+        For images with slice-artifacts use the <a class="function" href="matlab:cat_vol_correct_slice_scaling;">CAT slice corrections</a> (see image).
+        You can specify the filter direction and the strength of the filtering. 
+        Try to correct only the affected direction. 
+        Do not use this correction, if you does not have such kind of artifacts, because it may introduce errors in this case!
+      </p>
+      <p style="text-align:center;"><img src="images/cat_vol_correct_slice_scaling_768.png" width=80% height=auto alt="Noise and its reduction" ><p>
+        
+        
+      <h3 id="morphops">Morphological operations</h43<>
+      <p>
+        Morphological operations like erosion, dilation, closing and opening of a binary image are available with the <i>cat_vol_morph</i> function. 
+        See <a class="function" href="matlab:help cat_vol_morph;">help cat_vol_morph</a> for further informations.
+      </p>
+      <p style="text-align:center;"><img src="images/background_morphops.png" width=80% height=auto alt="Noise and its reduction" ><p>
+        
+        
+        <!--
+        <li>
+          <h4>Voxeldistance</h4>
+          <p>
+            Simple voxelbased distance function to replace MATLAB Image Processing Toolbox <i>bwdist</i> function. See <i>help vbdist</i> for help.
+          </p><p>
+            ... image ... 
+          </p>
+        </li>
+        
+        
+        <li>
+          <h4>3D median filter</h4>
+          <p>
+            See <i>help cat_vol_median3</i> for help.
+          </p><p>
+            ... image ... 
+          </p>
+        </li>
+        
+        
+        
+        <li>
+          <h4>3d Laplacian filter. </h4>
+          <p>
+            See <i>help cat_vol_laplace3</i> and <i>help cat_vol_laplace3R</i> for help.
+          </p><p>
+            ... image ... 
+          </p>
+        </li>
+        -->
+
+      <h3 id="calc_kappa">Kappa and RMS error estimation for test and ground truth images</h3>
+      <p>
+        The function <a class="function" href="matlab:cat_tst_calc_kappa;">cat_tst_calc_kappa</a> allows the estimation of Cohen's Kappa measure <a  href="#Cohen:1960">(Cohen:1960)</a> and of the RMS error for a set of images with one (e.g. brain mask) or three classes (segment image <i>Yp0</i>). 
+        The first input is given by a set of test images, whereas the second input has to be one ground truth image for all or for each test image.
+        The output is also saved as <i>*.csv</i> file. <br />
+        See <a href="matlab:help cat_tst_calc_kappa;">help cat_tst_calc_kappa</a> for further informations.
+      <p>
+      <!-- Other functions such as ... simgrow, downcut, resize, etc. are not for public use -->
+    
+    
+      <h3>References:</h3>
+      <ul>
+        <li>
+          <b id="Manjón:2008">Manjón:2008</b>
+          <p>
+            Manjón JV, Carbonell-Caballero J, Lull JJ, García-Martí G, Martí-Bonmatí L, Robles M.
+            MRI denoising using non-local means. 
+            <a href="matlab:web('http://doi.org/10.1016/j.media.2008.02.004')">Medical Image Analysis, 2008, 12(4), 514-523.</a>
+          </p>
+        </li>
+        <!--
+        <li>
+          <b id="Manjón:2010">Manjón:2010</b>
+          <p>
+            Manjón JV, Carbonell-Caballero J, Lull JJ, García-Martí G, Martí-Bonmatí L, Robles M.
+            MRI denoising using non-local means. 
+            <a href="matlab:web('http://doi.org/10.1016/j.media.2008.02.004')">Medical Image Analysis, 2008, 12(4), 514-523.</a>
+          </p>
+        </li>
+        -->
+        <li>
+          <b id="Cohen:1960">Cohen:1960</b>
+          <p>
+            Cohen J. A Coefficient of Agreement for Nominal Scales. Educational and Psychological Measurement, April 1960, Vol. 20 No. 1 37-46.
+          </p>
+        </li>
+      </ul>
+    
     <div id="content"><a href="cat_tools.html">< Tools</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>

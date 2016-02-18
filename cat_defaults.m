@@ -32,7 +32,7 @@ global cat12
 cat12.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
 cat12.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
 cat12.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
-cat12.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see Dartel instructions
+cat12.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see SPM segment instructions
 cat12.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
 cat12.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
 cat12.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
@@ -107,7 +107,7 @@ cat12.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          
 cat12.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - SANLM + ORNLM filter; 5 - only ORNLM filter for the final result
 cat12.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
 cat12.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
-cat12.extopts.BVCstr       = 0.5;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
+cat12.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
 cat12.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
                                   %                                           2 - also correct segmentation (to WM); 3 - handle as separate class
 cat12.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)

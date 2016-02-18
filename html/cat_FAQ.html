@@ -8,7 +8,7 @@
   </head>
   
   <body>
-    <div id="header" style="background: black url('research.jpg') right;">
+    <div id="header" style="background: black url('images/research.jpg') right;">
       <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
           <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
@@ -32,17 +32,9 @@
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
             Low frequency corrections for inhomogeneity e.g. the N3 algorithm are unproblematic, but not required for most datasets.  
-            Only for very strong inhomogeneities (ICR>0.5) of scanner high-field scanners (>6 Tesla), a further preprocessing might be helpful if CAT12 shows any problems.  
-          </p>
-          <p>
+            Only for very strong inhomogeneities (ICR lower than 50, grade E or F) of high-field scanners (greater 3 Tesla), a further preprocessing might be helpful if CAT12 shows any problems.  
             Try to avoid high frequency corrections or resampling of the data, because this will reduce the ability of the NLM filters. 
-          </p>
-          <p>
-            For images with slice-artifacts use the <a class="function" href="matlab:cat_vol_correct_slice_scaling;">CAT slice corrections</a> (see image).
-            You can specify the filter direction and the strength of the filtering. 
-            Try to correct only the affected direction. 
-            Do not use this correction, if you does not have such kind of artifacts, because it may introduce errors in this case!
-            <img src="cat_vol_correct_slice_scaling_768.png" class="center" alt="CAT slice correction for 2 datasets"/>
+            For images with slice-artifacts try the <a href="cat_tools_VBM.html#cat_vol_correct_slice_scaling">Slice scaling correction tool</a>.
           </p>
         </li>
         <li>
@@ -128,10 +120,22 @@
           <p>Check segmentation (check report file)...</p>
         </li>
       </ul>
+      
+      <!--
+      <h3>Other errors</h3>
+      <ul>
+        <li>
+          <h4>Cat processing errors</h4>
+          <p>
+            Please send us an email with the "cat_*.xml" of the failed image, that contain error informations. 
+          </p>
+        </li>
+      </ul>
+      -->
     
     </div>
   
-    <div id="content"><a href="cat.html">< CAT12</a></div>  
+    <div id="content"><a href="cat.html">< CAT</a></div>  
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
     </div>

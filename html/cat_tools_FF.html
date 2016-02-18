@@ -8,7 +8,7 @@
   </head>
   
   <body>
-    <div id="header" style="background: black url('research.jpg') right;">
+    <div id="header" style="background: black url('images/research.jpg') right;">
       <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
           <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT12</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_FF.html">Additional Functions</a>
+        <a href="cat.html">CAT</a> > <a href="cat_tools.html">Tools</a> > <a href="cat_tools_FF.html">Additional Functions</a>
       </div>
     </div>
 	
@@ -57,49 +57,12 @@
       <h3>Image functions</h3>
       <ul>
         <li>
-          <h4>NLM Filter</h4>
-          <p>
-            The local adaptive Non Local Means (sanNLM) works also very well on other image modalities. <br /> 
-            You can use it by calling the <a class="function" href="matlab:cat_vol_sanlm;">cat_vol_sanlm</a> function. <br />
-            See <a href="matlab:help cat_vol_sanlm;">help cat_vol_sanlm</a> for further options.</p>
-        </li>
-        <li>
           <h4>Statistical functions</h4>
           <p>
             Replacements of MATLAB Statistical Toolbox functions to ignore NaN values: <br />
             <i>cat_stat_nanmean, cat_stat_nanmedian, cat_stat_nansum, cat_stat_nanstd</i>
           </p>
         </li>
-        <li>
-          <h4>Morphological operations</h4>
-          <p>
-            Morphological operations like erosion, dilation, closing and opening of a binary image are available with the <i>cat_vol_morph</i> function. <br />
-            See <a href="matlab:help cat_vol_morph;">help cat_vol_morph</a> for further informations.
-          <p>
-        </li>
-        <li>
-          <h4>Kappa and RMS error estimation for test and ground truth images</h4>
-          <p>
-            The function <a class="function" href="matlab:cat_tst_calc_kappa;">cat_tst_calc_kappa</a> allows the estimation of the Kappa measure and of the RMS error for a set of images with one (e.g. brain mask) or three classes (segment image <i>Yp0</i>). 
-            The first input is given by a set of test images, whereas the second input has to be one ground truth image for all or for each test image.
-            The output is also saved as <i>*.csv</i> file. <br />
-            See <a href="matlab:help cat_tst_calc_kappa;">help cat_tst_calc_kappa</a> for further informations.
-          <p>
-        </li>
-        <!--
-        <li>
-          <h4>Voxeldistand</h4>
-          <p>Simple voxelbased distance function to replace MATLAB Image Processing Toolbox <i>bwdist</i> function. See <i>help vbdist</i> for help.</p>
-        </li>
-        <li>
-          <h4>3D median filter</h4>
-          <p>See <i>help cat_vol_median3</i> for help.</p>
-        </li>
-        <li>
-          <h4>3d Laplacian filter. </h4>
-          <p>See <i>help cat_vol_laplace3</i> and <i>help cat_vol_laplace3R</i> for help.</p>
-        </li>
-        -->
       </ul>
     </div>
   

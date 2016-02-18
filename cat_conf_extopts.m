@@ -214,6 +214,21 @@ NCstr.help    = {
 };
 
 %------------------------------------------------------------------------
+% Blood Vessel Correction
+%------------------------------------------------------------------------
+
+BVCstr        = cfg_entry;
+BVCstr.tag    = 'BVCstr';
+BVCstr.name    = 'Strength of Blood Vessel Corrections';
+BVCstr.strtype = 'r';
+BVCstr.num     = [1 1];
+BVCstr.def     = @(val)cat_get_defaults('extopts.BVCstr', val{:});
+BVCstr.help    = {
+  'Strengh of the Blood Vessel Correction. The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+  ''
+};
+
+%------------------------------------------------------------------------
 % Local Adapative Segmentation
 %------------------------------------------------------------------------
 
@@ -336,7 +351,7 @@ extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if expert==2 % experimental expert options
-  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,print}; 
+  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,print}; 
 elseif expert==1 % working expert options
   extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,print}; 
 else
