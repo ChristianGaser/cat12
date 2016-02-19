@@ -1,4 +1,4 @@
-function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,PA,template)
+function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts) 
 % This is an exclusive subfunction of cat_main.
 % ______________________________________________________________________
 %
@@ -66,15 +66,15 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
-  debug   = cat_get_defaults('extopts.debug'); %debug =1;
-  verb    = cat_get_defaults('extopts.verb')-1;
+  debug   = extopts.debug; %debug =1;
+  verb    = extopts.verb-1;
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);
   NS      = @(Ys,s) Ys==s | Ys==s+1;                                    % function to ignore brain hemisphere coding
-  LASstr  = max(eps,min(1,cat_get_defaults('extopts.LASstr')));      % LAS strenght (for GM/WM threshold)3
-  LAB     = cat_get_defaults('extopts.LAB');                         % atlas labels
+  LASstr  = max(eps,min(1,extopts.LASstr));      % LAS strenght (for GM/WM threshold)3
+  LAB     = extopts.LAB;                         % atlas labels
   LABl1   = 1;                                                          % use atlas map
-  cleanupstr  = min(1,max(0,cat_get_defaults('extopts.gcutstr')));   % required to avoid critical regions
+  cleanupstr  = min(1,max(0,extopts.gcutstr));   % required to avoid critical regions
   cleanupdist = min(3,max(1,1 + 2*cleanupstr));
     
   
@@ -122,7 +122,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     % map atlas to RAW space
     for i=1:5
       try
-        Vl1A = spm_vol(PA);
+        Vl1A = spm_vol(extopts.atlas{1});
         break
       catch 
         % read error in parallel processing
@@ -134,8 +134,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     
     % load WM of the TPM or Dartel/Shooting Template for WMHs
     %Ywtpm = cat_vol_ctype(spm_sample_vol(res.tpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
-    template = template{end}; 
-    Vtemplate = spm_vol(template); 
+    Vtemplate = spm_vol(extopts.templates{end}); 
     Ywtpm = cat_vol_ctype(spm_sample_vol(Vtemplate(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
     Ywtpm = reshape(Ywtpm,dsize); spm_smooth(Ywtpm,Ywtpm,2*vxv);
     Ywtpm = single(Ywtpm)/255;

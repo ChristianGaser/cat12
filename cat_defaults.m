@@ -9,33 +9,33 @@ function cat_defaults
 %_______________________________________________________________________
 % $Id$
 
-if exist('cat12','var'), clear cat12; end 
-global cat12
+if exist('cat','var'), clear cat; end 
+global cat
 
 % Important fields for the processing of animal data
 %=======================================================================
-% - cat12.opts.tpm 
-% - cat12.extopts.darteltpm
-% - cat12.extopts.cat12atlas
-% - cat12.extopts.brainmask
-% - cat12.extopts.bb         > [-inf -inf -inf; inf inf inf] 
-% - cat12.extopts.vox        > inf
-% - cat12.opts.affreg        > subj
-% - cat12.opts.biasreg       > 0.00001
-% - cat12.opts.biasfwhm      > 40
-% - cat12.opts.samp          > 2 mm
+% - cat.opts.tpm 
+% - cat.extopts.darteltpm
+% - cat.extopts.cat12atlas
+% - cat.extopts.brainmask
+% - cat.extopts.bb         > [-inf -inf -inf; inf inf inf] 
+% - cat.extopts.vox        > inf
+% - cat.opts.affreg        > subj
+% - cat.opts.biasreg       > 0.00001
+% - cat.opts.biasfwhm      > 40
+% - cat.opts.samp          > 2 mm
 %=======================================================================
 
 
 % Options for inital SPM12 segmentation that is used as starting point for CAT12
 %=======================================================================
-cat12.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-cat12.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
-cat12.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
-cat12.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see SPM segment instructions
-cat12.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
-cat12.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
-cat12.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
+cat.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
+cat.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
+cat.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
+cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see SPM segment instructions
+cat.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
+cat.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
+cat.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
 
                                               
 % Writing options
@@ -48,75 +48,75 @@ cat12.opts.samp      = 3;                       % Sampling distance      - small
 %   dartel    0/1/2/3 (none/rigid/affine/both)
 
 % save surface and thickness
-cat12.output.surface     = 0;     % surface and thickness creation
+cat.output.surface     = 0;     % surface and thickness creation
 
 % save ROI values
-cat12.output.ROI         = 0;     % write xml-file and csv-files with ROI data (0 - no, 1 - yes (default))
+cat.output.ROI         = 0;     % write xml-file and csv-files with ROI data (0 - no, 1 - yes (default))
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
-cat12.output.bias.native = 0;
-cat12.output.bias.warped = 1;
-cat12.output.bias.dartel = 0;
+cat.output.bias.native = 0;
+cat.output.bias.warped = 1;
+cat.output.bias.dartel = 0;
 
 % GM tissue maps
-cat12.output.GM.native  = 0;
-cat12.output.GM.warped  = 0;
-cat12.output.GM.mod     = 1;
-cat12.output.GM.dartel  = 0;
+cat.output.GM.native  = 0;
+cat.output.GM.warped  = 0;
+cat.output.GM.mod     = 1;
+cat.output.GM.dartel  = 0;
 
 % WM tissue maps
-cat12.output.WM.native  = 0;
-cat12.output.WM.warped  = 0;
-cat12.output.WM.mod     = 1;
-cat12.output.WM.dartel  = 0;
+cat.output.WM.native  = 0;
+cat.output.WM.warped  = 0;
+cat.output.WM.mod     = 1;
+cat.output.WM.dartel  = 0;
  
 % CSF tissue maps
-cat12.output.CSF.native = 0;
-cat12.output.CSF.warped = 0;
-cat12.output.CSF.mod    = 0;
-cat12.output.CSF.dartel = 0;
+cat.output.CSF.native = 0;
+cat.output.CSF.warped = 0;
+cat.output.CSF.mod    = 0;
+cat.output.CSF.dartel = 0;
 
 % WMH tissue maps (only for opt.extopts.WMHC==3) - in development
-cat12.output.WMH.native  = 0;
-cat12.output.WMH.warped  = 0;
-cat12.output.WMH.mod     = 0;
-cat12.output.WMH.dartel  = 0;
+cat.output.WMH.native  = 0;
+cat.output.WMH.warped  = 0;
+cat.output.WMH.mod     = 0;
+cat.output.WMH.dartel  = 0;
 
 % label 
 % background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extropts.WMHC==3)
-cat12.output.label.native = 0; 
-cat12.output.label.warped = 0;
-cat12.output.label.dartel = 0;
+cat.output.label.native = 0; 
+cat.output.label.warped = 0;
+cat.output.label.dartel = 0;
 
 % jacobian determinant 0/1 (none/yes)
-cat12.output.jacobian.warped = 0;
+cat.output.jacobian.warped = 0;
 
 % deformations
 % order is [forward inverse]
-cat12.output.warps        = [0 0];
+cat.output.warps        = [0 0];
 
 
 % Expert options
 %=======================================================================
 
 % skull-stripping options
-cat12.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
-cat12.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
+cat.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
+cat.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
 
 % segmentation options
-cat12.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - SANLM + ORNLM filter; 5 - only ORNLM filter for the final result
-cat12.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
-cat12.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
-cat12.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
-cat12.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
+cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - SANLM + ORNLM filter; 5 - only ORNLM filter for the final result
+cat.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
+cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
+cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
+cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
                                   %                                           2 - also correct segmentation (to WM); 3 - handle as separate class
-cat12.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
-cat12.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
-cat12.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
+cat.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
+cat.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
+cat.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
 
 % resolution options:
-cat12.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
-cat12.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
+cat.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
+cat.extopts.resval       = [1.00 0.10];   % resolution value and its variance for the 'fixed' and 'best' restype
 
 %{
 native:
@@ -160,28 +160,28 @@ fixed:
 
 % registration and normalization options 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
-cat12.extopts.species      = 'human';  
+cat.extopts.species      = 'human';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
-cat12.extopts.APP          = 0;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
-cat12.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
-cat12.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
-cat12.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
-%cat12.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0)
-cat12.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat12.nii')};                     % CAT atlas with major regions for VBM, SBM & ROIs
-cat12.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
-cat12.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
+cat.extopts.APP          = 0;   % 0 - none (default); 1 - APP with init. affreg; 2 - APP without init. affreg (standard in non human); 
+cat.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
+cat.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
+cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
+%cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0)
+cat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat.nii')};                     % CAT atlas with major regions for VBM, SBM & ROIs
+cat.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
+cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
 % surface options
-cat12.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
+cat.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
 
 % visualisation, print and debugging options
-cat12.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
-cat12.extopts.print        = 1;     % Display and print results
-cat12.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
-cat12.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
-cat12.extopts.ignoreErrors = 0;     % catching preprocessing errors: 1 - catch errors (default,requires MATLAB 2008 or higher); 0 - stop with error 
-cat12.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
-cat12.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report and label to organize your data 
+cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
+cat.extopts.print        = 1;     % Display and print results
+cat.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
+cat.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
+cat.extopts.ignoreErrors = 0;     % catching preprocessing errors: 1 - catch errors (default,requires MATLAB 2008 or higher); 0 - stop with error 
+cat.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
+cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report and label to organize your data 
 
 
 % expert options - ROIs
@@ -191,7 +191,7 @@ cat12.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report a
 %  filename    = ''                                                     - path to the ROI-file
 %  refinement  = ['brain','tissue','gm','none']                         - not working                  
 %  tissue      = {['csf','gm','wm','brain','none']}                     - tissue classes for volume estimation
-cat12.extopts.atlas       = { ... 
+cat.extopts.atlas       = { ... 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'none'      {'csf','gm','wm'}; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'none'      {'csf','gm'};      ... % atlas based on 35 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'none'      {'gm'};            ... % atlas based on 40 subjects
@@ -217,42 +217,42 @@ cat12.extopts.atlas       = { ...
 % further maps
 %=======================================================================
 % Tissue classes 4-6 to create own TPMs
-cat12.output.TPMC.native = 0; 
-cat12.output.TPMC.warped = 0;
-cat12.output.TPMC.mod    = 0;
-cat12.output.TPMC.dartel = 0;
+cat.output.TPMC.native = 0; 
+cat.output.TPMC.warped = 0;
+cat.output.TPMC.mod    = 0;
+cat.output.TPMC.dartel = 0;
 
 % partitioning atlas maps (for evaluation)
-cat12.output.atlas.native = 0; 
-cat12.output.atlas.warped = 0; 
-cat12.output.atlas.dartel = 0; 
+cat.output.atlas.native = 0; 
+cat.output.atlas.warped = 0; 
+cat.output.atlas.dartel = 0; 
 
 % preprocessing changes map
 % this is the map that include local changes by preprocessing   
-cat12.output.pc.native = 0;
-cat12.output.pc.warped = 0;
-cat12.output.pc.mod    = 0;
-cat12.output.pc.dartel = 0;
+cat.output.pc.native = 0;
+cat.output.pc.warped = 0;
+cat.output.pc.mod    = 0;
+cat.output.pc.dartel = 0;
 
 % tissue expectation map
 % this is a map that describes that difference to the TPM
-cat12.output.te.native = 0;
-cat12.output.te.warped = 0;
-cat12.output.te.mod    = 0; % meaningfull?
-cat12.output.te.dartel = 0;
+cat.output.te.native = 0;
+cat.output.te.warped = 0;
+cat.output.te.mod    = 0; % meaningfull?
+cat.output.te.dartel = 0;
 
-% IDs of the ROIs in the cat12 atlas map (cat12.nii). Do not change this!
-cat12.extopts.LAB.NB =  0; % no brain 
-cat12.extopts.LAB.CT =  1; % cortex
-cat12.extopts.LAB.CB =  3; % Cerebellum
-cat12.extopts.LAB.BG =  5; % BasalGanglia 
-cat12.extopts.LAB.BV =  7; % Blood Vessels
-cat12.extopts.LAB.TH =  9; % Hypothalamus 
-cat12.extopts.LAB.ON = 11; % Optical Nerve
-cat12.extopts.LAB.MB = 13; % MidBrain
-cat12.extopts.LAB.BS = 13; % BrainStem
-cat12.extopts.LAB.VT = 15; % Ventricle
-cat12.extopts.LAB.NV = 17; % no Ventricle
-cat12.extopts.LAB.HC = 19; % Hippocampus 
-cat12.extopts.LAB.HD = 21; % Head
-cat12.extopts.LAB.HI = 23; % WM hyperintensities
+% IDs of the ROIs in the cat atlas map (cat.nii). Do not change this!
+cat.extopts.LAB.NB =  0; % no brain 
+cat.extopts.LAB.CT =  1; % cortex
+cat.extopts.LAB.CB =  3; % Cerebellum
+cat.extopts.LAB.BG =  5; % BasalGanglia 
+cat.extopts.LAB.BV =  7; % Blood Vessels
+cat.extopts.LAB.TH =  9; % Hypothalamus 
+cat.extopts.LAB.ON = 11; % Optical Nerve
+cat.extopts.LAB.MB = 13; % MidBrain
+cat.extopts.LAB.BS = 13; % BrainStem
+cat.extopts.LAB.VT = 15; % Ventricle
+cat.extopts.LAB.NV = 17; % no Ventricle
+cat.extopts.LAB.HC = 19; % Hippocampus 
+cat.extopts.LAB.HD = 21; % Head
+cat.extopts.LAB.HI = 23; % WM hyperintensities

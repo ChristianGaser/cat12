@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise)
+function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -95,18 +95,19 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,PA,Vtpm,noise
 %   LAB.HD = 21; % head
 %   LAB.HI = 23; % WM hyperintensities
 
-  LAB     = cat_get_defaults('extopts.LAB');
-  BVCstr  = cat_get_defaults('extopts.BVCstr'); 
-  WMHCstr = cat_get_defaults('extopts.WMHCstr'); 
+  LAB     = extopts.LAB;
+  BVCstr  = extopts.BVCstr; 
+  WMHCstr = extopts.WMHCstr; 
+  verb    = extopts.verb-1;
+  debug   = extopts.debug;
+  PA      = extopts.cat12atlas;
   vx_res  = mean([max(vx_vol) min(vx_vol)]); % cat_get_defaults('extopts.vx_res'); 
-  verb    = cat_get_defaults('extopts.verb')-1;
-  debug   = cat_get_defaults('extopts.debug');
   
 
   %% map atlas to RAW space
   if verb, fprintf('\n'); end
   stime = cat_io_cmd('  Atlas -> subject space','g5','',verb); dispc=1;
-  VA = spm_vol(PA);
+  VA = spm_vol(PA{1});
   YA = cat_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   YA = reshape(YA,size(Ym));
  % clear Yy;

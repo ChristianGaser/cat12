@@ -22,20 +22,21 @@
     </div>
       
     <div id="content">
-      <h2>Affine PreProcessing:</h2>
+      <h2>Affine PreProcessing (APP) (in development):</h2>
 
       <p>
-        APP was developed to process animal data with the standard CAT pipeline.
-        
-        It include an simple initial inhomogeneity correction to improve the first initial affine registration to start with a skull-stripping that is required as mask in the initial SPM preprocessing.
-        The skull-stripping also includes a second finer inhomogeneity correction that is further used in the preprocessing.
+        APP was developed to process animal data with the standard CAT pipeline, because this data requires a good brain mask for SPM preprocessing. 
+        It include a simple inhomogeneity correction to improve the affine registration and to allow an initial skull-stripping that can be used as mask in the SPM preprocessing.
+        APP can also help in standard human data, if the affine registration got problems by strong inhomogeneities. 
+        Using of brain masked data also reduce calculation times of the SPM preprocessing and it further helps in case of synthetic images.
         
         There are four options: 
         <ul>
           <li>APP0: no APP and only standard preprocessing (default)</li>
-          <li>APP1: </li>
-          <li>APP2: full without affine scaling (that caused problems in smaller primates)</li>
-          <li>APP3: full</li>
+          <!-- <li>APP1: light APP with simple bias correction </li> APP1 = no APP, but brainmask? -->
+          <li>APP2: full APP but without brain mask </li>
+          <li>APP3: full APP with brain mask, but without initial affine registration for other species (AC-PC has to be correct!)</li>
+          <li>APP4: full APP with brain mask </li>
         </ul>
       </p>  
     

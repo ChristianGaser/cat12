@@ -1,31 +1,26 @@
-function varargout = cat_run(job,arg)
+function varargout = cat_run(job)
 % Segment a bunch of images
-% FORMAT cat_run(job)
-% job.channel(n).vols{m}
-% job.channel(n).biasreg
-% job.channel(n).biasfwhm
-% job.channel(n).write
-% job.tissue(k).tpm
-% job.tissue(k).ngaus
-% job.tissue(k).native
-% job.tissue(k).warped
-% job.cat.affreg
-% job.cat.reg
-% job.cat.samp
-% job.cat.warps
-% job.cat.darteltpm
-% job.cat.print
+% ______________________________________________________________________
+%
+%   FORMAT cat_run(job)
+%
+%   job.channel(n).vols{m}
+%   job.channel(n).biasreg
+%   job.channel(n).biasfwhm
+%   job.channel(n).write
+%   job.tissue(k).tpm
+%   job.tissue(k).ngaus
+%   job.tissue(k).native
+%   job.tissue(k).warped
 %
 % See the user interface for a description of the fields.
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
-
+%
 % based on John Ashburners version of
 % spm_preproc8_run.m 2281 2008-10-01 12:52:50Z john $
-%
+% ______________________________________________________________________
 % Christian Gaser
 % $Id$
-%
+
 %#ok<*AGROW>
 
 %rev = '$Rev$';
@@ -87,8 +82,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?
       system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name ' 2>&1 & '];
     end
-
-    [status,result] = system(system_cmd);
+    [status,result] = system(system_cmd); 
+    cat_check_system_output(status,result);
     
     test = 0; lim = 10; ptime = 0.5;
     while test<lim
@@ -123,96 +118,54 @@ return
 %_______________________________________________________________________
 function job = update_job(job)
 
-  cat12 = struct('species', cat_get_defaults('extopts.species'), ... job.extopts.species,...
-             'cat12atlas',cat_get_defaults('extopts.cat12atlas'), ... 
-             'darteltpm', job.extopts.darteltpm{1}, ...
-             'brainmask', cat_get_defaults('extopts.brainmask'), ...
-             'affreg',    job.opts.affreg,...
-             'samp',      cat_get_defaults('opts.samp'),...
-             'warps',     job.output.warps,...
-             'sanlm',     cat_get_defaults('extopts.sanlm'),... % job.extopts.sanlm,...
-             'print',     job.extopts.print,...
-             'subfolders',cat_get_defaults('extopts.subfolders'),...
-             'ngaus',     cat_get_defaults('opts.ngaus'),...
-             'reg',       cat_get_defaults('opts.warpreg'),...
-             'bb',        cat_get_defaults('extopts.bb'));
-
-  if isfield(job.extopts,'restype')
-    cat12.restype = char(fieldnames(job.extopts.restype));
-    cat12.resval  = job.extopts.restype.(cat12.restype); 
-  else
-    cat12.restype = cat_get_defaults('extopts.restype');
-    cat12.resval  = cat_get_defaults('extopts.resval');
-  end
-  if isfield(job.extopts,'sanlm')
-    cat12.sanlm = job.extopts.sanlm;
-  end
-  if ~isfield(cat12,'vox')
-    cat12.vox = cat_get_defaults('extopts.vox');
-  end
-  if ~isfield(job.extopts,'verb')
-    job.extopts.verb =  cat_get_defaults('extopts.verb');
-  end
-  if ~isfield(job.extopts,'APP')
-    job.extopts.APP =  cat_get_defaults('extopts.APP');
-  end
-  if ~isfield(job.extopts,'pbtres')
-    job.extopts.pbtres = cat_get_defaults('extopts.pbtres');
-  end
-  if ~isfield(job.output,'ROI')
-    job.output.ROI =  cat_get_defaults('output.ROI');
-  end
-           
-  if ~isfield(job.output,'CSF')
-    job.output.CSF =  struct('modulated',cat_get_defaults('output.CSF.mod'),'dartel',cat_get_defaults('output.CSF.dartel'),...
-                             'warped',cat_get_defaults('output.CSF.warped'),'native',cat_get_defaults('output.CSF.native'));
-  end
-
-  if ~isfield(job.output,'label')
-    job.output.label =  cat_get_defaults('output.label');
+  % get defaults
+  def = cat_get_defaults;
+  def.opts.fwhm = 1;
+  job = cat_io_checkinopt(job,def);
+  
+  % check range of str variables
+  FN = {'NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
+  for fni=1:numel(FN)
+    if ~isfield(job.extopts,FN{fni})  
+      job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));
+    end
   end
 
   % deselect ROI output and print warning if dartel template was changed
-  [pth,nam,ext] = spm_fileparts(cat12.darteltpm);
+  [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
   if ~strcmp(nam,'Template_1_IXI555_MNI152')
-    warning('Dartel template was changed: Please be aware that ROI analysis and other template-specific options cannot be used.');
+    warning('DARTEL:template:change',...
+      'Dartel template was changed: Please be aware that ROI analysis and other template-specific options cannot be used.');
     job.output.ROI = 0;
   end
   
   % set cat12.bb and vb.vox by Dartel template properties
-  Vd       = spm_vol([cat12.darteltpm ',1']);
+  Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
   [bb,vox] = spm_get_bbox(Vd, 'old');  
-  if cat12.bb(1)>cat12.bb(2), bbt=cat12.bb(1); cat12.bb(1)=cat12.bb(2); cat12.bb(2)=bbt; clear bbt; end
+  if job.extopts.bb(1)>job.extopts.bb(2), bbt=job.extopts.bb(1); job.extopts.bb(1)=job.extopts.bb(2); job.extopts.bb(2)=bbt; clear bbt; end
   if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-  cat12.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
-                min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
+  job.extopts.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
+                      min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
           
-  if isinf(cat12.vox) || isnan(cat12.vox)
-    cat12.vox = abs(vox);
+  if isinf(job.extopts.vox) || isnan(job.extopts.vox)
+    job.extopts.vox = abs(vox);
   end
-
+  
+  
   % prepare tissue priors and number of gaussians for all 6 classes
   [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
   clsn = numel(spm_vol(fullfile(pth,[nam ext]))); 
   tissue = struct();
   for i=1:clsn;
-    tissue(i).ngaus = cat12.ngaus(i);
+    tissue(i).ngaus = job.opts.ngaus(i);
     tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
   end
-
-  % check whether native field is defined (only defined for expert mode)              
-  if ~isfield(job.output.GM,'warped')
-    job.output.bias.dartel = 0;
-    job.output.bias.native = 0;
-    job.output.GM.warped   = 0;
-    job.output.WM.warped   = 0; 
-  end
   
-  tissue(1).warped = [job.output.GM.warped  (job.output.GM.modulated==1)  (job.output.GM.modulated==2) ];
+  tissue(1).warped = [job.output.GM.warped  (job.output.GM.mod==1)        (job.output.GM.mod==2)       ];
   tissue(1).native = [job.output.GM.native  (job.output.GM.dartel==1)     (job.output.GM.dartel==2)    ];
-  tissue(2).warped = [job.output.WM.warped  (job.output.WM.modulated==1)  (job.output.WM.modulated==2) ];
+  tissue(2).warped = [job.output.WM.warped  (job.output.WM.mod==1)        (job.output.WM.mod==2)       ];
   tissue(2).native = [job.output.WM.native  (job.output.WM.dartel==1)     (job.output.WM.dartel==2)    ];
-  tissue(3).warped = [job.output.CSF.warped (job.output.CSF.modulated==1) (job.output.CSF.modulated==2)];
+  tissue(3).warped = [job.output.CSF.warped (job.output.CSF.mod==1)       (job.output.CSF.mod==2)      ];
   tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
   % never write class 4-6
@@ -221,23 +174,13 @@ function job = update_job(job)
     tissue(i).native = [0 0 0];
   end
 
-  job.bias     = [cat_get_defaults('output.bias.native')  cat_get_defaults('output.bias.warped') cat_get_defaults('output.bias.dartel')];
-  job.label    = [job.output.label.native job.output.label.warped (job.output.label.dartel==1) (job.output.label.dartel==2)];
-  job.jacobian = job.output.jacobian.warped;
-  job.biasreg  = cat_get_defaults('opts.biasreg');
-  job.biasfwhm = cat_get_defaults('opts.biasfwhm');
   job.channel  = struct('vols',{job.data});
-  job.cat      = cat12;
-  job.warps    = job.output.warps;
   job.tissue   = tissue;
-  job.ignoreErrors = cat_get_defaults('extopts.ignoreErrors');
 return;
 
 %_______________________________________________________________________
 function vout = run_job(job)
   vout   = vout_job(job);
-
-  if ~isfield(job.cat,'fwhm'),    job.cat.fwhm    =  1; end
 
   % load tpm priors 
   tpm = char(cat(1,job.tissue(:).tpm));
@@ -250,7 +193,7 @@ function vout = run_job(job)
     % Both functions finally call cat_run_job.
     % See also cat_run_newcatch and cat_run_newcatch.
     % __________________________________________________________________
-    if job.ignoreErrors
+    if job.extopts.ignoreErrors
       if cat_io_matlabversion>20072 
         cat_run_newcatch(job,tpm,subj); 
       else
@@ -273,18 +216,21 @@ return
 %_______________________________________________________________________
 
 function vout = vout_job(job)
+% ----------------------------------------------------------------------
+% create output structure for SPM batch mode
+% ----------------------------------------------------------------------
 
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
 
 biascorr  = {};
 wbiascorr = {};
-label  = {};
-wlabel = {};
-rlabel = {};
-alabel = {};
+label     = {};
+wlabel    = {};
+rlabel    = {};
+alabel    = {};
 
-if cat_get_defaults('extopts.subfolders')
+if job.extopts.subfolders
   mrifolder = 'mri';
 else
   mrifolder = '';
@@ -294,53 +240,78 @@ for j=1:n,
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
 end
 
-if job.bias(1),
+
+% bias
+% ----------------------------------------------------------------------
+if job.output.bias.native,
     biascorr = cell(n,1);
     for j=1:n
         biascorr{j} = fullfile(parts{j,1},mrifolder,['m',parts{j,2},'.nii']);
     end
 end
 
-if job.bias(2),
+if job.output.bias.warped,
     wbiascorr = cell(n,1);
     for j=1:n
         wbiascorr{j} = fullfile(parts{j,1},mrifolder,['wm',parts{j,2},'.nii']);
     end
 end
 
-if job.label(1),
+if job.output.bias.dartel==1,
+    rbiascorr = cell(n,1);
+    for j=1:n
+        rbiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'.nii']);
+    end
+end
+
+if job.output.bias.dartel==2,
+    abiascorr = cell(n,1);
+    for j=1:n
+        abiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'_affine.nii']);
+    end
+end
+
+
+% label
+% ----------------------------------------------------------------------
+if job.output.label.native,
     label = cell(n,1);
     for j=1:n
         label{j} = fullfile(parts{j,1},mrifolder,['p0',parts{j,2},'.nii']);
     end
 end
 
-if job.label(2),
+if job.output.label.warped,
     wlabel = cell(n,1);
     for j=1:n
         wlabel{j} = fullfile(parts{j,1},mrifolder,['wp0',parts{j,2},'.nii']);
     end
 end
 
-if job.label(3),
+if job.output.label.dartel==1,
     rlabel = cell(n,1);
     for j=1:n
         rlabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'.nii']);
     end
 end
 
-if job.label(4),
+if job.output.label.dartel==2,
     alabel = cell(n,1);
     for j=1:n
         alabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'_affine.nii']);
     end
 end
 
+
+% ----------------------------------------------------------------------
 param = cell(n,1);
 for j=1:n
     param{j} = fullfile(parts{j,1},['cat12_',parts{j,2},'.mat']);
 end
 
+
+% tissues
+% ----------------------------------------------------------------------
 tiss = struct('p',{},'rp',{},'rpa',{},'wp',{},'mwp',{},'m0wp',{});
 for i=1:numel(job.tissue),
     if job.tissue(i).native(1),
@@ -381,7 +352,10 @@ for i=1:numel(job.tissue),
     end
 end
 
-if job.cat.warps(1),
+
+% warping fields
+% ----------------------------------------------------------------------
+if job.output.warps(1),
     fordef = cell(n,1);
     for j=1:n
         fordef{j} = fullfile(parts{j,1},mrifolder,['y_',parts{j,2},'.nii']);
@@ -390,7 +364,7 @@ else
     fordef = {};
 end
 
-if job.cat.warps(2),
+if job.output.warps(2),
     invdef = cell(n,1);
     for j=1:n
         invdef{j} = fullfile(parts{j,1},mrifolder,['iy_',parts{j,2},'.nii']);
@@ -399,7 +373,10 @@ else
     invdef = {};
 end
 
-if job.jacobian,
+
+% jacobian
+% ----------------------------------------------------------------------
+if job.output.jacobian.warped,
     jacobian = cell(n,1);
     for j=1:n
         jacobian{j} = '';
@@ -408,6 +385,8 @@ else
     jacobian = {};
 end
 
+
+% ----------------------------------------------------------------------
 vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'alabel',{alabel},...
                'biascorr',{biascorr},'wbiascorr',{wbiascorr},'param',{param},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian});

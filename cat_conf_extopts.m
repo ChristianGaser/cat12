@@ -108,7 +108,7 @@ resfixed.help   = {
 
 
 restype        = cfg_choice;
-restype.tag    = 'restype';
+restype.tag    = 'restypes';
 restype.name   = 'Internal resampling for preprocessing';
 switch cat_get_defaults('extopts.restype')
   case 'native', restype.val = {resnative};

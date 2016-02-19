@@ -100,7 +100,7 @@ varargout{1} = handles.output;
 % This creates the 'background' image
 ha = axes('units','normalized','position',[0 0.87 1 0.13]);
 uistack(ha,'bottom');
-I = imread(fullfile(spm('dir'),'toolbox','cat12','html','contact.jpg'));
+I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact.jpg'));
 hi = imagesc(I);
 text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',20,'Fontweight','bold');
 set(ha,'handlevisibility','off','visible','off');
