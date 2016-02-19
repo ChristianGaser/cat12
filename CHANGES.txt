@@ -9190,6 +9190,7 @@ Changed: Updated html-files:
  - Use of matlab browser command throughout the pages
 
 ------------------------------------------------------------------------
+r865 | dahnke | 2016-02-18 16:18:22 +0100 (Do, 18 Feb 2016) | 99 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9289,5 +9290,38 @@ Changed:    Added BVCstr parameter in expert GUI.
 Changed:    Updated HTLM Help of VBM-Tools, SBM-Tools.
 Changed:    Added HTML subdirectory for images.
 Changed:    Renamed "CAT12" HTML breadcrumbs to "CAT".
+
 ------------------------------------------------------------------------
-r865 | dahnke | 2016-02-18 16:18:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_get_defaults.m
+M       cat_io_updateStruct.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run.m
+M       cat_run_job.m
+A       cat_run_job_APP_final.m
+A       cat_run_job_APP_init.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_surf_parameters.m
+M       cat_vol_partvol.m
+M       html/cat_methods_VBM_APP.html
+A       html/images/cat_vol_correct_slice_scaling_768.png
+M       internal/cat_vol_nlmus.m
+M       tbx_cfg_cat.m
+A  +    templates_1.50mm/cat.nii
+D       templates_1.50mm/cat12.nii
+
+Changed*:    Major changes of the CAT parameter handling in the segmentation
+             function cat_run, cat_run_job and cat_main.
+             Bundle all parameters in the job variable.
+Changed:     Added some help comments. 
+Changed:     Outsourced APP functions. 
+------------------------------------------------------------------------
+r866 | dahnke | 2016-02-19 17:36:20

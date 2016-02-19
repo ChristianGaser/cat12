@@ -23,8 +23,9 @@ function cat_vol_nlmus(varargin)
 %   job.prefix    = 'nlmus_';
 %   job.sanlmiter = iteration of sanlm noise correction (default = 1)
 %   job.verb      = display interations 
-%   job.interp    = 1x1 integer gives upsampling value (factor 2)
+%   job.interp    = 1x1 integer gives upsampling value 
 %                   1x3 float values gives goal resolution
+%                   (default = [1 1 1]); 
 %   job.maxiter   = maximum number of iterations (default = 0 = auto)
 %   job.writeinit = write simple interpolated image for comparison
 %
@@ -74,17 +75,18 @@ function cat_vol_nlmus(varargin)
   def.intmeth   = 'spline';
   def.sanlmiter = 1;
   def.verb      = 1;
-  def.interp    = 1; 
+  def.interp    = [1 1 1]; 
   def.maxiter   = 0;
   def.rician    = 1; 
-  def.rf        = 0.05;
+  def.rf        = 0.00001;
   def.writeinit = 0; 
   def.isarnlm   = 1;
 
   job = cat_io_checkinopt(job,def);
 
   V = spm_vol(char(job.data));
-
+  %V = rmfield(V,'private');
+ 
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for i = 1:numel(job.data)
@@ -258,6 +260,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [bima]=InitialInterpolation(nima1,lf,intmeth,roundfactor)
+
   warning off; 
   
   s   = size(nima1).*lf;

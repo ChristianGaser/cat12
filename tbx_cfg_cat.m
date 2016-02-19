@@ -201,7 +201,7 @@ label.help  = {
 %------------------------------------------------------------------------
 
 modulated        = cfg_menu;
-modulated.tag    = 'modulated';
+modulated.tag    = 'mod';
 modulated.name   = 'Modulated normalized';
 if expert
   modulated.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
@@ -412,19 +412,19 @@ function dep = vout(job)
 opts  = job.output;
 
 if isfield(opts.GM,'warped')
-  tissue(1).warped = [opts.GM.warped  (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
+  tissue(1).warped = [opts.GM.warped  (opts.GM.mod==1)        (opts.GM.mod==2)       ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
-  tissue(2).warped = [opts.WM.warped  (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
+  tissue(2).warped = [opts.WM.warped  (opts.WM.mod==1)        (opts.WM.mod==2)       ];
   tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 else
-  tissue(1).warped = [0               (opts.GM.modulated==1)  (opts.GM.modulated==2) ];
+  tissue(1).warped = [0               (opts.GM.mod==1)        (opts.GM.mod==2)       ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
-  tissue(2).warped = [0               (opts.WM.modulated==1)  (opts.WM.modulated==2) ];
+  tissue(2).warped = [0               (opts.WM.mod==1)        (opts.WM.mod==2)       ];
   tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
 end
 
 if isfield(opts,'CSF')
-  tissue(3).warped = [opts.CSF.warped (opts.CSF.modulated==1) (opts.CSF.modulated==2)];
+  tissue(3).warped = [opts.CSF.warped (opts.CSF.mod==1)       (opts.CSF.mod==2)      ];
   tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
 end
 
