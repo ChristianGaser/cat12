@@ -20,7 +20,7 @@ function cat_run_newcatch(job,tpm,subj)
       caterr = addCause(caterr,adderr);
     end
     
-    if cat_get_defaults('extopts.subfolders')
+    if job.extopts.subfolders
       mrifolder = 'mri';
     else
       mrifolder = '';
@@ -58,7 +58,7 @@ function cat_run_newcatch(job,tpm,subj)
     
     cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
     
-    if cat_get_defaults('extopts.subfolders')
+    if job.extopts.subfolders
       reportfolder = 'report';
     else
       reportfolder = '';
@@ -66,7 +66,7 @@ function cat_run_newcatch(job,tpm,subj)
     % create an error directory with errortype subdirectory for all failed datasets
     % copy the cat*.xml and catreport_*pdf 
     % create a symbolic link of the original file
-    if cat_get_defaults('extopts.subfolders')
+    if job.extopts.subfolders
       %%
       errfolder    = 'err';
       [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
@@ -80,13 +80,13 @@ function cat_run_newcatch(job,tpm,subj)
       if ismac || isunix
         [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
           fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
-          cat_check_system_output(ST,RS,cat_get_defaults('extopts.debug'));
+          cat_check_system_output(ST,RS,job.extopts.debug);
       end  
 
     end
     
     % rethrow error 
-    if ~cat_get_defaults('extopts.ignoreErrors')
+    if ~job.extopts.ignoreErrors
       rethrow(caterr); 
     end 
   end

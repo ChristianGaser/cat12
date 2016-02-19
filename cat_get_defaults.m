@@ -19,13 +19,13 @@ function varargout = cat_get_defaults(defstr, varargin)
 % spm_get_defaults
 % $Id$
 
-global cat12;
-if isempty(cat12)
+global cat;
+if isempty(cat)
     cat_defaults;
 end
 
 if nargin == 0
-    varargout{1} = cat12;
+    varargout{1} = cat;
     return
 end
 
@@ -34,7 +34,7 @@ tags = textscan(defstr,'%s', 'delimiter','.');
 subs = struct('type','.','subs',tags{1}');
 
 if nargin == 1
-    varargout{1} = subsref(cat12, subs);
+    varargout{1} = subsref(cat, subs);
 else
-    cat12 = subsasgn(cat12, subs, varargin{1});
+    cat = subsasgn(cat, subs, varargin{1});
 end

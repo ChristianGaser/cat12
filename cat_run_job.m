@@ -1,7 +1,24 @@
 function cat_run_job(job,tpm,subj)
 % run CAT 
+% ______________________________________________________________________
 %
-%_______________________________________________________________________
+% Initialization function of the CAT preprocessing. 
+%  * creation of the subfolder structure (if active)
+%  * check of image resolution (avoid scans with very low resolution)
+%  * noise correction (ISARNLM)
+%  * interpolation 
+%  * affine preprocessing (APP)
+%    >> cat_run_job_APP_init
+%    >> cat_run_job_APP_final
+%  * affine registration
+%  * initial SPM preprocessing
+%
+%   cat_run_job(job,tpm,subj)
+% 
+%   job  .. SPM job structure with main parameter
+%   tpm  .. tissue probability map (hdr structure)
+%   subj .. file name
+% ______________________________________________________________________
 % Christian Gaser
 % $Id$
 
@@ -9,7 +26,8 @@ function cat_run_job(job,tpm,subj)
 
     stime = clock;
 
-    %% print current CAT release number and subject file
+    
+    % print current CAT release number and subject file
     [n,r] = cat_version;
     str  = sprintf('CAT12 r%s',r);
     str2 = spm_str_manip(job.channel(1).vols{subj},['a' num2str(70 - length(str))]);
@@ -19,10 +37,10 @@ function cat_run_job(job,tpm,subj)
           repmat('-',1,72));
     clear r str str2
 
-    pth = spm_fileparts(job.channel(1).vols{subj}); 
-
+    
     % create subfolders if not exist
-    if cat_get_defaults('extopts.subfolders')
+    pth = spm_fileparts(job.channel(1).vols{subj}); 
+    if job.extopts.subfolders
       folders = char('mri','report');
       for i=1:size(folders,1)
         if ~exist(fullfile(pth,deblank(folders(i,:))),'dir')
@@ -36,18 +54,19 @@ function cat_run_job(job,tpm,subj)
         mkdir(pth,'label');
       end
       
-      mrifolder = 'mri';
+      mrifolder    = 'mri';
       reportfolder = 'report';
     else
-      mrifolder = '';
+      mrifolder    = '';
       reportfolder = '';
     end
+    
     
     %  -----------------------------------------------------------------
     %  check resolution properties
     %  -----------------------------------------------------------------
     %  There were some images that should not be processed. So we have  
-    %  to check for high slice thickness, low resolution.
+    %  to check for high slice thickness andlow resolution.
     %  -----------------------------------------------------------------
     for n=1:numel(job.channel) 
       V = spm_vol(job.channel(n).vols{subj});
@@ -82,10 +101,13 @@ function cat_run_job(job,tpm,subj)
       job.channel(n).vols0{subj} = job.channel(n).vols{subj};
     end
     
-    % noise-correction
-    if job.cat.sanlm && job.extopts.NCstr
+    
+    
+    %  noise-correction
+    %  -----------------------------------------------------------------
+    if job.extopts.sanlm && job.extopts.NCstr
 
-        switch job.cat.sanlm
+        switch job.extopts.sanlm
           case {1,2,3,4}, stime = cat_io_cmd('NLM-filter with multi-threading');
           case {5},       stime = cat_io_cmd('Temporary NLM-filter with multi-threading');
         end
@@ -95,10 +117,10 @@ function cat_run_job(job,tpm,subj)
             V = spm_vol(job.channel(n).vols{subj});
             Y = single(spm_read_vols(V));
             Y(isnan(Y)) = 0;
-            switch job.cat.sanlm
+            switch job.extopts.sanlm
               case {1,2,3,4,5},  
                 % use isarnlm-filter only if voxel size <= 0.7mm
-                if any(round(vx_vol*100)/100<=0.70) && strcmp(job.cat.species,'human')
+                if any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
                   if job.extopts.verb>1, fprintf('\n'); end
                   Y = cat_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
                   if job.extopts.verb>1, cat_io_cmd(' '); end
@@ -114,7 +136,7 @@ function cat_run_job(job,tpm,subj)
 
         fprintf('%4.0fs\n',etime(clock,stime));     
     else
-       if job.extopts.APP>0 || ~strcmp(job.cat.species,'human')
+       if job.extopts.APP>0 || ~strcmp(job.extopts.species,'human')
          % this is necessary because of the real masking of the T1 data 
          % for spm_preproc8 that include rewriting the image!
          for n=1:numel(job.channel) 
@@ -130,32 +152,37 @@ function cat_run_job(job,tpm,subj)
       
     
     %% Interpolation
-    % The interpolation can help to reduce problems for morphological
-    % operations for low resolutions and strong isotropic images. 
-    % Especially for Dartel registration a native resolution higher than the Dartel 
-    % resolution helps to reduce normalization artifacts of the
-    % deformations. Furthermore, even if artifacts can be reduced by the final smoothing
-    % it is much better to avoid them.  
-    Vt      = tpm.V(1); 
-    vx_vold = min(cat_get_defaults('extopts.vox'),sqrt(sum(Vt.mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
+    %  -----------------------------------------------------------------
+    %  The interpolation can help to reduce problems for morphological
+    %  operations for low resolutions and strong isotropic images. 
+    %  Especially for Dartel registration a native resolution higher than the Dartel 
+    %  resolution helps to reduce normalization artifacts of the
+    %  deformations. Furthermore, even if artifacts can be reduced by the final smoothing
+    %  it is much better to avoid them.  
+    vx_vold = min(job.extopts.vox,sqrt(sum(tpm.V(1).mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
     for n=1:numel(job.channel) 
 
       % prepare header of resampled volume
       Vi        = spm_vol(job.channel(n).vols{subj}); 
       vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
-      switch job.cat.restype 
+  
+      % we have to look for the name of the field due to the GUI job struct generation! 
+      restype   = char(fieldnames(job.extopts.restypes));
+      switch restype
         case 'native'
           vx_voli  = vx_vol;
         case 'fixed', 
-          vx_voli  = min(vx_vol ,job.cat.resval(1) ./ ((vx_vol > (job.cat.resval(1)+job.cat.resval(2)))+eps));
-          vx_voli  = max(vx_voli,job.cat.resval(1) .* (vx_vol < (job.cat.resval(1)-job.cat.resval(2))));
+          vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
+                     ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
+          vx_voli  = max(vx_voli,job.extopts.restypes.(restype)(1) .* ...
+                     ( vx_vol < (job.extopts.restypes.(restype)(1)-job.extopts.restypes.(restype)(2))));
         case 'best'
-          vx_voli  = min(vx_vol ,job.cat.resval(1) ./ ((vx_vol > (job.cat.resval(1)+job.cat.resval(2)))+eps));
+          vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
+                     ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
           vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
         otherwise 
           error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
       end
-      
       
       
       % interpolation 
@@ -171,13 +198,13 @@ function cat_run_job(job,tpm,subj)
 
         Vn = spm_vol(job.channel(n).vols{subj}); 
         Vn = rmfield(Vn,'private'); 
-        if ~(job.cat.sanlm && job.extopts.NCstr)
+        if ~(job.extopts.sanlm && job.extopts.NCstr)
           % if no noise correction we have to add the 'n' prefix here
           [pp,ff,ee] = spm_fileparts(Vn.fname);
           Vi.fname = fullfile(pp,mrifolder,['n' ff ee]);
           job.channel(n).vols{subj} = Vi.fname;
         end
-        if job.cat.sanlm==0
+        if job.extopts.sanlm==0
           [pp,ff,ee,dd] = spm_fileparts(Vn.fname); 
           Vi.fname = fullfile(pp,mrifolder,['n' ff ee dd]);
           job.channel(n).vols{subj} = Vi.fname;
@@ -191,7 +218,7 @@ function cat_run_job(job,tpm,subj)
     end
     
     
-    % 
+    %  prepare SPM preprocessing structure 
     images = job.channel(1).vols{subj};
     for n=2:numel(job.channel)
         images = char(images,job.channel(n).vols{subj});
@@ -200,10 +227,10 @@ function cat_run_job(job,tpm,subj)
     obj.image    = spm_vol(images);
     spm_check_orientations(obj.image);
 
-    obj.fwhm     = job.cat.fwhm;
+    obj.fwhm     = job.opts.fwhm;
     obj.fudge    = 5;
-    obj.biasreg  = cat(1,job.biasreg);
-    obj.biasfwhm = cat(1,job.biasfwhm);
+    obj.biasreg  = cat(1,job.opts.biasreg);
+    obj.biasfwhm = cat(1,job.opts.biasfwhm);
     obj.tpm      = tpm;
     obj.lkp      = [];
     if all(isfinite(cat(1,job.tissue.ngaus))),
@@ -211,18 +238,18 @@ function cat_run_job(job,tpm,subj)
             obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
         end;
     end
-    obj.reg      = job.cat.reg;
-    obj.samp     = job.cat.samp;              
+    obj.reg      = job.opts.warpreg;
+    obj.samp     = job.opts.samp;              
        
 
 
     %% Initial affine registration.
-        
-    % APP option with subparameter
-    % Skull-stripping is helpful for correcting affine registration of neonates and other species. 
-    % Bias correction is important for the affine registration.
-    % However, the first registation can fail,
-    if ~strcmp(job.cat.species,'human'), job.extopts.APP=3; end
+    %  -----------------------------------------------------------------
+    %  APP option with subparameter
+    %  Skull-stripping is helpful for correcting affine registration of neonates and other species. 
+    %  Bias correction is important for the affine registration.
+    %  However, the first registation can fail,
+    if ~strcmp(job.extopts.species,'human'), job.extopts.APP=3; end
     switch job.extopts.APP
         case 0 % no APP
             doskullstripping = 0;
@@ -246,12 +273,14 @@ function cat_run_job(job,tpm,subj)
             doregistration   = 1;
     end
        
+    
+    
     Affine  = eye(4);
     [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
     Pbt = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
-    Pb  = char(cat_get_defaults('extopts.brainmask'));
-    Pt1 = char(cat_get_defaults('extopts.T1'));
-    if ~isempty(job.cat.affreg)      
+    Pb  = char(job.extopts.brainmask);
+    Pt1 = char(job.extopts.T1);
+    if ~isempty(job.opts.affreg)      
           
         %% first affine registration (with APP)
         try 
@@ -266,11 +295,17 @@ function cat_run_job(job,tpm,subj)
         VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
         VG.pinfo(1:2,:) = VG.pinfo(1:2,:)/spm_global(VG);
 
+        
         % APP step 1 rough bias correction 
-        %   ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
+        % --------------------------------------------------------------
+        % Already for the rought initial affine registration a simple  
+        % bias corrected and intensity scaled image is required, because
+        % high head intensities can disturb the whole process.
+        % --------------------------------------------------------------
+        % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
         if job.extopts.APP>0  
             stime = cat_io_cmd('APP1: rough bias correction'); 
-            [Ym,Yt,Ybg,WMth] = APP_initial_bias_correction(single(obj.image.private.dat(:,:,:)),...
+            [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(single(obj.image.private.dat(:,:,:)),...
                 vx_vol,job.extopts.verb);
             
             stime = cat_io_cmd('Coarse Affine registration','','',1,stime); 
@@ -282,21 +317,20 @@ function cat_run_job(job,tpm,subj)
             clear WI; 
             
             % smoothing
-            resa = obj.samp*3; % definine smoothing by sample size
-            VF1  = spm_smoothto8bit(VF,resa);
-            VG1  = spm_smoothto8bit(VG,resa);
+            resa  = obj.samp*3; % definine smoothing by sample size
+            VF1   = spm_smoothto8bit(VF,resa);
+            VG1   = spm_smoothto8bit(VG,resa);
         else
+            % standard approach with static resa value and no VG smoothing
             stime = cat_io_cmd('Coarse Affine registration'); 
-            
-            % old approach with static resa value and no VG smoothing
-            resa = 8;
-            VF1  = spm_smoothto8bit(VF,resa);
-            VG1  = VG; 
+            resa  = 8;
+            VF1   = spm_smoothto8bit(VF,resa);
+            VG1   = VG; 
             
         end
           
-        %% prepare affine parameter 
-        aflags     = struct('sep',resa,'regtype',job.cat.affreg,'WG',[],'WF',[],'globnorm',0);
+        % prepare affine parameter 
+        aflags     = struct('sep',resa,'regtype',job.opts.affreg,'WG',[],'WF',[],'globnorm',0);
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
@@ -313,6 +347,11 @@ function cat_run_job(job,tpm,subj)
             catch
               affscale = 0; 
             end
+            % if we get totaly strange values (very small/large brains) 
+            % that we got problematic data or more often the affine
+            % registration found something else more interesting that 
+            % the brain. So we used the standard parameter with the two
+            % major differences: regtype=subj and globnorm = 1
             if affscale>3 || affscale<0.5
               aflags     = struct('sep',resa,'regtype','subj','WG',[],'WF',[],'globnorm',1); % subject + globnorm!
               aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
@@ -333,15 +372,15 @@ function cat_run_job(job,tpm,subj)
           
           
         %% APP step 2 - brainmasking and second tissue separated bias correction  
+        %  ---------------------------------------------------------
+        %  The second part of APP maps a brainmask to native space and 
+        %  refines it by morphologic operations and region-growing to
+        %  adapt for worse initial affine alignments. It is important
+        %  that the mask covers the whole brain, whereas additional
+        %  masked head is here less problematic.
+        %  ---------------------------------------------------------
+        %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
         if job.extopts.APP>1
-            %  ---------------------------------------------------------
-            %  The second part of APP maps a brainmask to native space 
-            %  and refines this mask by morphologic operations and
-            %  region-growing to adapt for bad affine alignments. 
-            %  The mask has to be a little bit wider and it is important
-            %  that the brain is complete!
-            %  ---------------------------------------------------------
-            %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
             
             % apply (first affine) registration on the default brain mask
             VFa = VF; 
@@ -351,11 +390,11 @@ function cat_run_job(job,tpm,subj)
        
             stime = cat_io_cmd(sprintf('APP%d: fine bias correction',job.extopts.APP),'','',1,stime); 
             
-            [Ym,Yp0,Yb] = APP_final_bias_correction(single(obj.image.private.dat(:,:,:)),...
+            [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)),...
                 Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
             stime = cat_io_cmd('Affine registration','','',1,stime); 
                                   
-            %% msk T1 & TPM
+            % msk T1 & TPM
             VF.dat(:,:,:) =  cat_vol_ctype(Ym*200 .* Yb); 
             VF1 = spm_smoothto8bit(VF,aflags.sep/2);
             
@@ -363,13 +402,13 @@ function cat_run_job(job,tpm,subj)
             VG1.dat = VG1.dat .* uint8(spm_read_vols(spm_vol(Pb))>0.5); 
             VG1 = spm_smoothto8bit(VG1,aflags.sep/2);
         elseif job.extopts.APP==1
-            %% msk T1 & TPM
+            % msk T1 & TPM
             stime = cat_io_cmd('Affine registration','','',1,stime); 
             VF.dat(:,:,:) =  cat_vol_ctype(Ym*200); 
             VF1 = spm_smoothto8bit(VF,aflags.sep/2);
             VG1 = spm_smoothto8bit(VG1,aflags.sep/2);
         else
-            % old approach ... only smoothing of the VF with 2 mm
+            % standard approach 
             stime = cat_io_cmd('Affine registration','','',1,stime); 
             VF1 = spm_smoothto8bit(VF,aflags.sep/2);
             VG1 = spm_smoothto8bit(VG,0.5); 
@@ -440,11 +479,11 @@ function cat_run_job(job,tpm,subj)
         
         
     %% Fine Affine Registration with 3 mm sampling distance
-    % This does not work for non human (or very small brains)
-    if strcmp('human',cat_get_defaults('extopts.species')) % job.extopts.APP==0
+    %  This does not work for non human (or very small brains)
+    if strcmp('human',job.extopts.species) % job.extopts.APP==0
         spm_plot_convergence('Init','Fine Affine Registration','Mean squared difference','Iteration');
         warning off 
-        Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.cat.affreg);
+        Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fudge,obj.tpm,Affine,job.opts.affreg);
         warning on  
         if ~any(isnan(Affine3(1:3,:))), Affine = Affine3; end
           
@@ -465,12 +504,12 @@ function cat_run_job(job,tpm,subj)
         
         
     %% SPM preprocessing 1
-    % ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
+    %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
     warning off 
     try 
         res = spm_preproc8(obj);
     catch
-        if (job.cat.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.cat.species,'human') 
+        if (job.extopts.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
             [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
             delete(fullfile(pp,[ff,ee]));
         end
@@ -478,7 +517,7 @@ function cat_run_job(job,tpm,subj)
     end
     warning on 
         
-    if cat_get_defaults('extopts.debug')==2
+    if job.extopts.debug==2
         % save information for debuging and OS test
         [pth,nam] = spm_fileparts(job.channel(1).vols0{subj}); 
         tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s_%s.mat',nam,'runjob','postpreproc8')); 
@@ -486,6 +525,7 @@ function cat_run_job(job,tpm,subj)
     end 
         
     fprintf('%4.0fs\n',etime(clock,stime));   
+    
     
     %% check contrast
     Tgw = [mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))]; 
@@ -496,7 +536,7 @@ function cat_run_job(job,tpm,subj)
     ];
     
     % inactive preprocessing of inverse images (PD/T2) 
-    if cat_get_defaults('extopts.INV')==0 && any(diff(Tth)<=0)
+    if job.extopts.INV==0 && any(diff(Tth)<=0)
       error('CAT:cat_main:BadImageProperties', ...
       ['CAT12 is designed to work only on highres T1 images.\n' ...
        'T2/PD preprocessing can be forced on your own risk by setting \n' ...
@@ -505,18 +545,14 @@ function cat_run_job(job,tpm,subj)
        'by alignment problems (check image orientation).']);    
     end
             
-    %% Final iteration, so write out the required data.
-    tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
-    bf = job.bias;
-    df = job.cat.warps;
-    lb = job.label;
-    jc = job.jacobian;
-    res.stime = stime;
+    
+    %% call main processing
+    res.stime  = stime;
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
-    cat_main(res, tc, bf, df, lb, jc, job.cat, obj.tpm, job);
+    cat_main(res,obj.tpm,job);
     
     % delete denoised/interpolated image
-    if (job.cat.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.cat.species,'human') 
+    if (job.extopts.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
       [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
       delete(fullfile(pp,[ff,ee]));
     end
@@ -527,346 +563,5 @@ return
 %=======================================================================
 function r = roundx(r,rf)
   r(:) = round(r(:) * rf) / rf;
-return
-%=======================================================================
-
-%=======================================================================
-function  [Ym,Yp0,Yb] = APP_final_bias_correction(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,verb)
-%  ---------------------------------------------------------------------
-%  rough scull-stripping:
-%  The affine registration, especially spm_preproc8 requires a very good masking!
-%  Because we it is also required for the Unified Segmenation
-%  a wider mask with a complete brain is important
-%    ds('l2','m',0.5,Ym*0.7+0.3,Yb,Ysrc/WMth,Ym,80)
-%  ---------------------------------------------------------------------
-  if verb, fprintf('\n'); end
-  stime = cat_io_cmd('  Initialize','g5','',verb);
-  msize = 222; %round(222 ./ max(size(Ysrco).*vx_vol) .* min(size(Ysrco).*vx_vol));  
-  
-  [Ysrc,Ym,resT3] = cat_vol_resize({Ysrco,Ym},'reduceV',vx_vol,min(1.5,min(vx_vol)*2),msize,'meanm'); 
-  [Yb,Ybg]        = cat_vol_resize({single(Yb),single(Ybg)},'reduceV',vx_vol,min(1.5,min(vx_vol)*2),msize,'meanm'); 
-  Ybg = Ybg>0.5;
-  
-  Yg   = cat_vol_grad(Ym,resT3.vx_volr) ./ max(eps,Ym); 
-  Ydiv = cat_vol_div(Ym,resT3.vx_volr) ./ Ym;
-  Ygs  = smooth3(Yg);
-  
-  % greater mask - distance based brain radius (brad)
-  [dilmsk,resT2] = cat_vol_resize(Yb,'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
-  dilmsk  = cat_vbdist(dilmsk,true(size(dilmsk)))*mean(resT2.vx_volr); %resT2.vx_volr);
-  dilmsk  = dilmsk - cat_vbdist(single(dilmsk>0),true(size(dilmsk)))*mean(resT2.vx_volr); %,resT2.vx_volr);
-  dilmsk  = cat_vol_resize(smooth3(dilmsk),'dereduceV',resT2); 
-  brad    = -min(dilmsk(:));
-  dilmsk  = dilmsk / brad; 
-
-  voli  = @(v) (v ./ (pi * 4./3)).^(1/3);                        % volume > radius
-  brad  = double(mean([brad,voli(sum(Yb(:)>0).*prod(vx_vol))])); % distance and volume based brain radius (brad)
-  
-  % thresholds
-  rf   = 10^6; 
-  Hth  = roundx(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
-  GMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.2 & Ym(:)<0.9  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
-  CMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.1 & Ym(:)<GMth*0.7 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)),rf);  % first guess of the CSF intensity
-  %WMth = cat_stat_nanmean(Ym(Ym(:)>0.8 & Ym(:)<1.2 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)); 
-  BGth = roundx(cat_stat_nanmean(Ym(Ybg(:))),rf); 
-  
-  
-  %% Skull-Stripping
-  % intensity parameter
-  gc.h = 1.3  - 0.20*gcutstr; % upper tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
-  gc.l = 0.6  + 0.20*gcutstr; % lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
-  gc.o = 0.1  + 0.10*gcutstr; % BG tissue intensity (for high contrast CSF=BG=0!) - lower value > more "tissue"
-  % distance parameter
-  gc.d = (brad*4 - brad*2*gcutstr)/mean(vx_vol);   % distance  parameter for downcut   - higher > more tissue
-  gc.c = (0.01 - 0.02*gcutstr)*mean(vx_vol);         % growing  parameter for downcut    - higher > more tissue
-  gc.f = (brad/5 - brad/10*gcutstr)/mean(vx_vol);    % closing   parameter               - higher > more tissue (higher as in gcut2, because of unkown ventricle)
-  % smoothing paramter
-  gc.s = -0.1 + 0.20*gcutstr;         % smoothing parameter                   - higher > less tissue
-
-  stime = cat_io_cmd('  Skull-Stripping','g5','',verb,stime);
-  Yb = (dilmsk<0.5 & Ym<1.1) & (Ym>(GMth*gc.l + (1-gc.l))) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<gc.h; Yb(smooth3(Yb)<0.5)=0; 
-  Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.5 + gc.s); 
-  [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
-  dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk2)))*mean(resT2.vx_volr); %resT2.vx_volr);
-  dilmsk2  = dilmsk2 - cat_vbdist(single(dilmsk2>0),true(size(dilmsk2)))*mean(resT2.vx_volr); %,resT2.vx_volr);
-  dilmsk2  = cat_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
-  dilmsk2  = dilmsk2 / brad; 
-  % WM growing
-  Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.05); 
-  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
-  Yb = smooth3(Yb)>0.2 + gc.s; 
-  % ventricle closing
-  [Ybr,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
-  Ybr = cat_vol_morph(Ybr>0,'lc',2*gc.f/mean(resT2.vx_volr));
-  Ybr = cat_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5 + gc.s; 
-  Yb = single(Yb | (Ym<1.2 & Ybr));
-  % GWM growing
-  Yb(Yb<0.5 & (dilmsk2>0.4  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01 + gc.c); 
-  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
-  Yb = smooth3(Yb)>0.5 + gc.s; 
-  Yb = single(Yb | (Ym>0.2 & Ym<1.2 & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f)))));
-  % GM growing
-  Yb(Yb<0.5 & (dilmsk2>0.5  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.00 + gc.c);
-  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
-  Yb(smooth3(Yb)<0.5 + gc.s)=0;
-  Yb = single(Yb | (Ym>0.1 & Ym<1.1 & cat_vol_morph(Yb,'lc',max(1,min(3,0.1*gc.f)))));
-  % CSF growing (add some tissue around the brain)
-  Yb(Yb<0.5 & (dilmsk2>0.6  | Ym< gc.o | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.01 + gc.c); Yb(isnan(Yb))=0; 
-  Yb(isnan(Yb))=0; Yb(YD<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
-  Yb(smooth3(Yb)<0.7 + gc.s)=0;
-  Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f))));
-  Yb  = Yb | (Ym>0.2 & Ym<0.5 & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f))));
-  Yb  = cat_vol_smooth3X(Yb,2)>0.3 + gc.s;
-  Ymo = Ym; 
-
-  %% ---------------------------------------------------------
-  %  improve bias correction:
-  %  Also here it is important that the bias field is very smooth
-  %  to avoid overcorrections. In contrast to the first
-  %  correction we will try to separate between tissues...
-  %  ---------------------------------------------------------
-  stime = cat_io_cmd('  Tissue classification','g5','',verb,stime);
-  Ym   = Ymo;
-  Yg   = cat_vol_grad(Ym,vx_vol);%./max(eps,Ym)
-  Ygs  = smooth3(Yg);
-  Ydiv = cat_vol_div(Ym,vx_vol);
-
-      % WM Skeleton:  Ydiv./Yg<-1    
-% nicht WM: Ydiv.*Yg<-0.02
-
-  %% tissue classes WM, GM, subcortical GM (Ybm), CSF, head tissue (Yhm) 
-  Ywm  = ((Ym-max(0,(Ydiv+0.01))*10)>(GMth*0.1+0.9) | Ym>(GMth*0.1+0.9) | ...
-          (Ydiv./Yg<0.5 & ((Ym>0.9 & Yg>0.1 & Ydiv<0) | (Ym>0.9)) & Ym<1.2) ) & ...
-          Ym<1.3 & Yg<0.6 & Ygs<0.9 & Yb & Ydiv<0.1 & Ydiv>-0.5; 
-  Ywm  = smooth3(Ywm)>0.5;      
-  % subcotical GM 
-  Ybm  = ((Ym-max(0,(Ydiv+0.01))*10)<0.98) & Ym<0.98 & dilmsk<-brad*0.3 & ... 
-         Ym>(GMth*0.6+0.4) & Yb & Ygs<0.2 & Yg<0.2 & ... Ydiv<0.1 & Ydiv>-0.02 & ... Yg<0.1 & 
-         ~(Ydiv./Yg<0.5 & ((Ym>0.9 & Yg>0.1 & Ydiv<0) | (Ym>0.95)) & Ym<1.2);
-       %& ~Ywm;  
-  Ybm  = smooth3(Ybm)>0.5;
-  Ybm  = cat_vol_morph(Ybm,'o',1);
-  % cortical GM 
-  Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm & ~Ywm; % & (Ym-Ydiv*2)<GMth;  
-  Ygm(smooth3(Ygm)<0.3)=0;
-  % CSF
-  Ycm  = Ym<(CMth*0.5+0.5*GMth) & Yg<0.1 & Yb & ~Ygm & dilmsk<-brad*0.3; 
-  Ycm  = smooth3(Ycm)>0.5;
-  % head tissue
-  Yhm  = Ym>max(mean([CMth,GMth]),Hth*0.2) & Ym<1.2 & Yg<0.8 & cat_vol_smooth3X(Yb,2)<0.1 & Ydiv<0.6 & Ydiv>-0.6;
-  Yhm  = smooth3(Yhm)>0.5;
-
-  %% refine
-  %Ygm  = Ygm | (cat_vol_morph(Ywm,'d',3) & ~Ybm & ~Ywm & (Ym-Ydiv*2)<GMth & ...
-  %   ~Ycm & smooth3((Ym + Yg)<(CMth*0.8+0.2*GMth))<0.5) & Ym>(CMth*0.9+0.1*GMth) & Ym<(GMth*0.2+0.8);;
-  
-  %% masking of the original values and local filtering
-  stime = cat_io_cmd('  Filtering','g5','',verb,stime);
-  fi   = round(max(3,min(resT3.vx_volr)*3)/3); 
-  Ywm  = Ysrc .* Ywm; Ywm  = cat_vol_localstat(Ywm,Ywm>0,1,3); % PVE
-  Ycm  = Ysrc .* Ycm; Ycm  = cat_vol_localstat(Ycm,Ycm>0,1,2);
-  for i=1:fi-1, Ywm = cat_vol_localstat(Ywm,Ywm>0,2,1); end
-  for i=1:fi-1, Ycm = cat_vol_localstat(Ycm,Ycm>0,2,1); end
-  Ybm  = Ysrc .* Ybm; for i=1:fi, Ybm = cat_vol_localstat(Ybm,Ybm>0,2,1); end
-  Ygm  = Ysrc .* Ygm; for i=1:fi, Ygm = cat_vol_localstat(Ygm,Ygm>0,2,1); end
-  Yhm  = Ysrc .* Yhm; for i=1:fi, Yhm = cat_vol_localstat(Yhm,Yhm>0,2,1); end
-
-  % estimate intensity difference bettween the tissues
-  Ywmr = cat_vol_resize(Ywm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
-  Ybmr = cat_vol_resize(Ybm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
-  Ygmr = cat_vol_resize(Ygm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
-  Ycmr = cat_vol_resize(Ycm,'reduceV',resT3.vx_volr,8,16,'meanm'); 
-  bmth = mean(Ybmr(Ybmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ybmr(:)>0 & Ywmr(:)>0));
-  gmth = mean(Ygmr(Ygmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ygmr(:)>0 & Ywmr(:)>0));
-  cmth = mean(Ycmr(Ycmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ycmr(:)>0 & Ywmr(:)>0));
-  Ywmr = cat_vol_resize(Ywm,'reduceV',resT3.vx_volr,16,8,'meanm'); 
-  Yhmr = cat_vol_resize(Yhm,'reduceV',resT3.vx_volr,16,8,'meanm'); 
-  hmth = mean(Yhmr(Yhmr(:)>0 & Ywmr(:)>0))/mean(Ywmr(Ywmr(:)>0 & Ywmr(:)>0));
-  hmth = min(max(hmth,mean([cmth,gmth])),mean([gmth,1]));
-  % if something failed use global thresholds
-  if isnan(bmth), bmth = GMth; end
-  if isnan(gmth), gmth = GMth; end
-  if isnan(cmth), cmth = CMth; end
-  if isnan(hmth), hmth = GMth; end
-  clear Ywmr Ybmr Ygmr Yhmr Ycmr; 
-
-  Yhm = Yhm .* (dilmsk>20);  % to avoid near skull tissue
-  
-  %% estimate bias fields
-  stime = cat_io_cmd('  Bias correction','g5','',verb,stime);
-  Ywi = sum( cat(4,Ywm,Ygm/gmth,Ybm/bmth,Ycm/cmth,Yhm/hmth),4) ./ sum( cat(4,Ywm>0,Ybm>0,Ygm>0,Ycm>0,Yhm>0),4 );
-  [Ywi,resT2]  = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,min(4,min(resT3.vx_volr)*2),32,'meanm'); 
-  for i=1:4, Ywi=cat_vol_localstat(Ywi,Ywi>0,2,1); end
-  Ywi   = cat_vol_approx(Ywi,'nn',resT2.vx_volr,2);
-  Ywi   = cat_vol_smooth3X(Ywi,4.*mean(vx_vol)); 
-  Ywi   = cat_vol_resize(Ywi,'dereduceV',resT2);
-
-  %% background noise
-  stime = cat_io_cmd('  Background correction','g5','',verb,stime);
-  %Ybc  = cat_vol_morph(smooth3(Ym<mean([BGth,CMth]) & Ym<CMth & Ygs<0.05 & ~Yb & dilmsk2>8)>0.5,'lo',3); 
-  [Ybc,resT2] = cat_vol_resize(Ysrc .* Ybg,'reduceV',resT2.vx_volr,max(8,max(16,cat_stat_nanmean(resT2.vx_volr)*4)),16,'min'); 
-  Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,2);
-  for i=1:1, Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,1); end
-  %Ybc2 = cat_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the backgound!  
-  %Ybc2 = cat_vol_smooth3X(Ybc2,4);
-  Ybc  = cat_vol_smooth3X(Ybc,2);
-  Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2); 
-  %Ybc2 = cat_vol_resize(Ybc2,'dereduceV',resT2); 
-
-  %% back to original size
-  stime = cat_io_cmd('  Final scaling','g5','',verb,stime);
-  [Ywi,Ybc] = cat_vol_resize({Ywi,Ybc},'dereduceV',resT3); 
-  %Ybc2 = cat_vol_resize({Ybc2},'dereduceV',resT3); 
-  [Yg,Ygs]  = cat_vol_resize({Yg,Ygs},'dereduceV',resT3); 
-  Yb   = cat_vol_resize(Yb,'dereduceV',resT3)>0.5; 
-  Yp0 = cat_vol_resize(((Ywm>0)*3 + (Ygm>0)*2 + (Ybm>0)*2.3 + (Ycm>0)*1 + (Yhm>0)*2.7 + (Ybg>0)*0.5)/3,'dereduceV',resT3);
-  Ysrc = Ysrco; clear Ysrco;
-
-  %%  Final intensity scaling
-  Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc); % correct for noise only in background
- % Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc2 + Ybc); % correct for noise only in background
-  Wth  = single(cat_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.9))); 
-  [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>GMth & Ym(:)<Wth*1.2),0:0.01:2);
-  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = roundx(WMv(WIth),rf);  
-  [BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
-  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = roundx(BMv(BIth),rf);  
-  Ym   = (Ym - BIth) ./ (WIth - BIth); 
-  
-  cat_io_cmd(' ','','',verb,stime); 
- 
-return
-%=======================================================================
-
-%=======================================================================
-function [Ym,Yt,Ybg,WMth] = APP_initial_bias_correction(Ysrco,vx_vol,verb)
-%% ---------------------------------------------------------------------
-%  rough bias correction:
-%  All tissues (low gradient) should have a similar intensity.
-%  A strong smoothing of this approximation is essential to 
-%  avoid anatomical filtering between WM and GM that can first 
-%  be seen in overfitting of the subcortical structures!
-%  However, this filtering will overcorrect head tissue with
-%  a typical intensity around GM.
-%    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)
-%  ---------------------------------------------------------------------
-  rf = 10^6; 
-  bfsmoothness = 3; 
-  if verb, fprintf('\n'); end
-  
-  stime = cat_io_cmd('  Initialize','g5','',verb);
-  msize = 222; %round(222 ./ max(size(Ysrco).*vx_vol) .* min(size(Ysrco).*vx_vol));  
-
-  [Ysrc,resT3] = cat_vol_resize(Ysrco,'reduceV',vx_vol,min(1.2,cat_stat_nanmean(vx_vol)*2),msize,'meanm'); 
-
-  % correction for negative backgrounds (MT weighting)
-  WMth = roundx(single(cat_stat_nanmedian(Ysrc(Ysrc(:)>cat_stat_nanmean( ...
-          Ysrc(Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
-  [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.5)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
-  BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
-
-  Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth;
-  Yg   = cat_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
-  Ydiv = cat_vol_div(Ysrc,resT3.vx_volr) ./ Ysrc;
-
-  WMth = roundx(single(cat_stat_nanmedian(Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean( ...
-           Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
-  [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.2)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
-  BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
-  BGth = max(BGth*WMth*4,WMth*0.2); % * 2 to get the CSF
-  Ym   = (Ysrc - BGth) ./ (WMth - BGth);
-
-  
-  % background
-  stime = cat_io_cmd('  Estimate background','g5','',verb,stime);
-  Ybg = ((Yg.*Ym)<cat_vol_smooth3X(Ym,2)*1.2) & Ym>0.1; 
-  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg(smooth3(Ybg)<0.5)=0;
-  [Ybg,resT2] = cat_vol_resize(single(Ybg),'reduceV',resT3.vx_volr,2,32,'meanm'); 
-  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
-  Ybg  = cat_vol_morph(Ybg,'lc',8);
-  Ybg  = cat_vol_smooth3X(Ybg,2); 
-  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
-  BGth = roundx(mean(Ysrc(Ybg(:))),rf);
-  Ym   = (Ysrc - BGth) ./ (WMth - BGth);
-  
-  %% first WM inhomogeneity with low tissue boundary (may include CSF > strong filtering for IXI175)
-  stime = cat_io_cmd('  Initial correction','g5','',verb,stime);
-  Yms  = cat_vol_smooth3X( min(2 .* ~Ybg,Ym .* (Ydiv>-0.2) .* ~Ybg .* (Ym>0.1)),16*mean(vx_vol));     % this map is to avoid CSF in the mask!
-  Yms  = (Yms ./ mean(Yms(~Ybg(:)))) * WMth;
-  Yms  = cat_vol_smooth3X( min(Yms*1.5 .* ~Ybg,Ysrc .* ~Ybg),16*mean(vx_vol));
-  Yms  = (Yms ./ mean(Yms(~Ybg(:)))) * WMth;
-  Yt   = Ysrc>max(BGth,Yms*0.3) & Ysrc<Yms*2 & Ysrc<WMth*(1+Yms/WMth*2) & Yg<0.9 & Ydiv<0.2 & ...
-         Ydiv>-0.6 & smooth3(Ysrc./Yms.*Yg.*Ydiv<-0.2)<0.3 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
-  Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
-  [Ywi,resT2] = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
-  for i=1:1, Ywi = cat_vol_localstat(Ywi,Ywi>0,2,3); end % only one iteration!
-  for i=1:4, Ywi = cat_vol_localstat(Ywi,Ywi>0,2,1); end
-  Ywi  = cat_vol_approx(Ywi,'nn',resT2.vx_volr,4);
-  Ywi  = cat_vol_smooth3X(Ywi,bfsmoothness.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
-  Ywi  = cat_vol_resize(Ywi,'dereduceV',resT2);    
-  Ybc  = Ysrc./Ywi;
-  WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
-  Ywi  = Ywi * WMt2;
-  
-  %% background update
-  stime = cat_io_cmd('  Refine background','g5','',verb,stime);
-  Ybg = ((Yg.*(Ysrc./Ywi))<cat_vol_smooth3X(Ysrc./Ywi,2)*1.2) & Ysrc./Ywi>0.2; 
-  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg(smooth3(Ybg)<0.5)=0;
-  [Ybg,resT2] = cat_vol_resize(single(Ybg),'reduceV',resT3.vx_volr,2,32,'meanm'); 
-  Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
-  Ybg  = cat_vol_morph(Ybg,'lc',8);
-  Ybg  = cat_vol_smooth3X(Ybg,2); 
-  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
-
-  %% second WM inhomogeneity with improved Yt with higher lower threshold (avoid CSF and less filtering)
-  stime = cat_io_cmd('  Final correction','g5','',verb,stime);
-  Yt   = Ysrc>max(BGth,Yms*0.3)  & Ysrc./Ywi>0.2 & Ysrc./Ywi<1.2 & Ysrc./Ywi<Yms/WMth*2 & Yg<0.9 & Ydiv<0.2 & Ydiv>-0.6 & ...
-         smooth3(Ysrc./Yms.*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
-  Yt   = Yt | (~Ybg & Ysrc>BGth/2 & Ysrc>Yms*0.5 & Ysrc<Yms*1.2 & Ydiv./Yg<0.5 & ((Ysrc./Ywi>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ysrc./Ywi>0.6)) & Ysrc./Ywi<1.2); 
-  Yt(smooth3(Yt)<0.7)=0;
-  Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
-  [Ywi,resT2] = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
-  for i=1:1, Ywi = cat_vol_localstat(Ywi,Ywi>0,2,3); end % only one iteration!
-  for i=1:4, Ywi = cat_vol_localstat(Ywi,Ywi>0,2,1); end
-  Ywi  = cat_vol_approx(Ywi,'nn',resT2.vx_volr,4);
-  Ywi  = cat_vol_smooth3X(Ywi,bfsmoothness.*mean(vx_vol)); %.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
-  Ywi  = cat_vol_resize(Ywi,'dereduceV',resT2);    
-  Ybc  = Ysrc./Ywi;
-  WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
-  Ywi  = Ywi * WMt2;
-
-  
-  %% BG inhomogeneity (important for normalization of the background noise)
-  %[Ybc,Ygr,resT2] = cat_vol_resize({Ysrc./Ywi,Yg},'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*4,16,'meanm'); 
-  %Ybc  = cat_vol_morph(Ybc<BGth/WMth*2 & Ygr<0.05,'lc',2);
-  %Ybc  = cat_vol_resize(smooth3(Ybc),'dereduceV',resT2)>0.5; 
-  stime = cat_io_cmd('  Background correction','g5','',verb,stime);
-  [Ybc,resT2] = cat_vol_resize(single(Ysrc .* Ybg),'reduceV',resT3.vx_volr,max(8,min(16,cat_stat_nanmean(resT3.vx_volr)*4)),16,'min'); 
-  Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,2);
-  Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,1);
-  %Ybc  = cat_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the background! 
-  Ybc  = cat_vol_smooth3X(Ybc,4);
-  Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2); 
-
-
-  %% back to original size
-  stime = cat_io_cmd('  Final scaling','g5','',verb,stime);
-  [Ywi,Ybc] = cat_vol_resize({Ywi,Ybc},'dereduceV',resT3); 
-  Yg        = cat_vol_resize(Yg,'dereduceV',resT3); 
-  [Yt,Ybg]  = cat_vol_resize({single(Yt),single(Ybg)},'dereduceV',resT3); Yt = Yt>0.5; Ybg = Ybg>0.5;
-  Ysrc      = Ysrco; clear Ysrco;
-
-  %% intensity normalization (Ybc is the average background noise)
-  % in data with strong inhomogeneities (7T) the signal can trop below the noise level 
-  Ym   = (Ysrc - min(Ybc/2,Ywi/20)) ./ (Ywi - min(Ybc/2,Ywi/20)); 
-  Wth  = single(cat_stat_nanmedian(Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean( Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean(Ym(:))))))); 
-  [WIth,WMv] = hist(Ym(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
-  WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = roundx(WMv(WIth),rf); 
-  Ym   = Ym ./ WIth; 
-
-  cat_io_cmd(' ','','',verb,stime); 
 return
 %=======================================================================

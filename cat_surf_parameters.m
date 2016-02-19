@@ -1,7 +1,7 @@
 function varargout = cat_surf_parameters(job)
 % ______________________________________________________________________
 %
-%cat_surf_parameters to extract surface parameters such as
+% cat_surf_parameters to extract surface parameters such as
 % gyrification and cortical complexity.
 %_______________________________________________________________________
 % Christian Gaser
