@@ -9292,6 +9292,7 @@ Changed:    Added HTML subdirectory for images.
 Changed:    Renamed "CAT12" HTML breadcrumbs to "CAT".
 
 ------------------------------------------------------------------------
+r866 | dahnke | 2016-02-19 17:36:45 +0100 (Fr, 19 Feb 2016) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9323,5 +9324,31 @@ Changed*:    Major changes of the CAT parameter handling in the segmentation
              Bundle all parameters in the job variable.
 Changed:     Added some help comments. 
 Changed:     Outsourced APP functions. 
+
 ------------------------------------------------------------------------
-r866 | dahnke | 2016-02-19 17:36:20
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_long_main.m
+M       cat_run_job.m
+MM      cat_run_job_APP_final.m
+MM      cat_run_job_APP_init.m
+ M      html/cat_methods_catreport.html
+ M      html/cat_tools_VBM.html
+ M      html/images/background_biasreal.png
+ M      html/images/background_morphops.png
+ M      html/images/background_noise.png
+ M      html/images/cat_extract_addition_surface_parameter.png
+ M      html/images/cat_vol_correct_slice_scaling_768.png
+ M      html/images/catreport_Collins.jpg
+ M      html/images/preprocessing.png
+
+(1) Fixed: Updated manual where still the old modulation was mentioned.
+(2) Fixed: @Robert: Did you really tested your last version that crashed
+    because restype/resval was not correctly handled?
+(3) Fixed: Issue in longitudinal batch that caused stopping after inital
+    registration.
+------------------------------------------------------------------------
+r867 | gaser | 2016-02-20 01:03:05
