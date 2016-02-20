@@ -7,7 +7,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
 %  a wider mask with a complete brain is important.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_surf_rename.m 844 2016-01-26 14:13:34Z dahnke $
+%  $Id$
 
 % ds('l2','m',0.5,Ym*0.7+0.3,Yb,Ysrc/WMth,Ym,80)
 

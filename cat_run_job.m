@@ -167,21 +167,20 @@ function cat_run_job(job,tpm,subj)
       vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
   
       % we have to look for the name of the field due to the GUI job struct generation! 
-      restype   = char(fieldnames(job.extopts.restypes));
-      switch restype
+      switch job.extopts.restype
         case 'native'
           vx_voli  = vx_vol;
         case 'fixed', 
-          vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
-                     ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
-          vx_voli  = max(vx_voli,job.extopts.restypes.(restype)(1) .* ...
-                     ( vx_vol < (job.extopts.restypes.(restype)(1)-job.extopts.restypes.(restype)(2))));
+          vx_voli  = min(vx_vol ,job.extopts.resval(1) ./ ...
+                     ((vx_vol > (job.extopts.resval(1)+job.extopts.resval(2)))+eps));
+          vx_voli  = max(vx_voli,job.extopts.resval(1) .* ...
+                     ( vx_vol < (job.extopts.resval(1)-job.extopts.resval(2))));
         case 'best'
-          vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
-                     ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
+          vx_voli  = min(vx_vol ,job.extopts.resval(1) ./ ...
+                     ((vx_vol > (job.extopts.resval(1)+job.extopts.resval(2)))+eps));
           vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
         otherwise 
-          error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
+          error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',job.extopts.restype)
       end
       
       
