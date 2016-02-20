@@ -10,7 +10,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 %  a typical intensity around GM.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_surf_rename.m 844 2016-01-26 14:13:34Z dahnke $
+%  $Id$
 
 
 %    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)
