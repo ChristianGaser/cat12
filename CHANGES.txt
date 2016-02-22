@@ -9326,6 +9326,7 @@ Changed:     Added some help comments.
 Changed:     Outsourced APP functions. 
 
 ------------------------------------------------------------------------
+r867 | gaser | 2016-02-20 01:03:08 +0100 (Sa, 20 Feb 2016) | 24 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -9350,5 +9351,23 @@ MM      cat_run_job_APP_init.m
     because restype/resval was not correctly handled?
 (3) Fixed: Issue in longitudinal batch that caused stopping after inital
     registration.
+
 ------------------------------------------------------------------------
-r867 | gaser | 2016-02-20 01:03:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_main_LAS.m
+M       cat_main_gintnorm.m
+M       cat_run_job.m
+M       cat_run_job_APP_final.m
+M       cat_run_job_APP_init.m
+M       tbx_cfg_cat.m
+
+Corrected*:  Corrected atlas variable in LAS function.
+Corrected:   Moved rounding help function from cat_run_job to cat_run_job_APP*.
+Changed:     Added inactivated opts parameter GUI fields to expert GUI.
+Changed:     Updated cat_main_gintnorm error message.
+
+------------------------------------------------------------------------
+r868 | dahnke | 2016-02-22 11:31:37
