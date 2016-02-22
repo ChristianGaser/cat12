@@ -210,3 +210,8 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   
   cat_io_cmd(' ','','',verb,stime); 
 end
+%=======================================================================
+function r = roundx(r,rf)
+  r(:) = round(r(:) * rf) / rf;
+end
+%=======================================================================

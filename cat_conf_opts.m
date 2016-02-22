@@ -1,10 +1,13 @@
-function opts = cat_conf_opts
+function opts = cat_conf_opts(expert)
 % Configuration file for CAT options
 %
 % Christian Gaser
 % $Id$
 %#ok<*AGROW>
 
+if ~exist('expert','var')
+  expert = 0; % switch to de/activate further GUI options
+end
 
 %_______________________________________________________________________
 tpm         = cfg_files;
@@ -114,7 +117,11 @@ samp.help   = {
 opts      = cfg_branch;
 opts.tag  = 'opts';
 opts.name = 'Options for initial SPM12 affine registration';
-opts.val  = {tpm,affreg};
+if expert
+  opts.val  = {tpm,ngaus,biasreg,biasfwhm,warpreg,affreg,samp};
+else
+  opts.val  = {tpm,affreg};
+end
 opts.help = {
   'Various options can be adjusted in order to improve the performance of the initial SPM12 registration that is used as starting point for the CAT12 segmentation. Knowing what works best should be a matter of empirical exploration. However, most of the option work very well for a large variety of data and only for of high-field MR scanner bias regularization might be adapted to a lower value in the file cat_defaults.m. Furthermore, for children data I strongly recommend to use customized TPMs created using the Template-O-Matic toolbox.'};
 
