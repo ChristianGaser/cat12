@@ -113,7 +113,7 @@ ROI.help   = {
   '    http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html'
   ''
   '(6) MORI (128 GM/WM ROIs of 1 subject, 2009):'
-  '   Oishi et al. Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer''s disease participants. 2009'
+  '    Oishi et al. Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer''s disease participants. 2009'
   ... ''
   ... '() Anatomy ():
   ... '() COBRA ():'
@@ -366,7 +366,7 @@ output.help = {
 
 
 %% ------------------------------------------------------------------------
-tools      = cat_conf_tools;             % volume tools
+tools      = cat_conf_tools(expert);     % volume tools
 stools     = cat_conf_stools(expert);    % surface tools
 if expert 
   stoolsexp  = cat_conf_stoolsexp;       % surface expert tools

@@ -131,3 +131,8 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 
   cat_io_cmd(' ','','',verb,stime); 
 end
+%=======================================================================
+function r = roundx(r,rf)
+  r(:) = round(r(:) * rf) / rf;
+end
+%=======================================================================

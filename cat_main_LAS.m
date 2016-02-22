@@ -122,7 +122,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     % map atlas to RAW space
     for i=1:5
       try
-        Vl1A = spm_vol(extopts.atlas{1});
+        Vl1A = spm_vol(extopts.cat12atlas{1});
         break
       catch 
         % read error in parallel processing
