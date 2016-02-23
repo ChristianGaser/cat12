@@ -48,6 +48,9 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   vxv    = 1/mean(vx_vol);
   res.mn = round(res.mn*10^5)/10^5; 
   
+  if cat_get_defaults('extopts.subfolders')
+       reportfolder  = 'report';
+  else reportfolder  = ''; end
   
   %% initial thresholds and intensity scaling
   T3th3 = [mean(res.mn(res.lkp==3 & res.mg'>0.3)) ...

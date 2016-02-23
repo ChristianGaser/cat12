@@ -575,7 +575,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   if(!pve) beta[0] /= 20.0;
   
   /* Iterative Conditional Mode */
-  if(niters_ICM > 0) {
+  if(niters_ICM > 0) && (weight_MRF > 0) {
     if(weight_MRF != 1.0) {
       beta[0] *= weight_MRF;
       printf("Weighted MRF beta %3.3f\n",beta[0]);
