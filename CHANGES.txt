@@ -9353,6 +9353,7 @@ MM      cat_run_job_APP_init.m
     registration.
 
 ------------------------------------------------------------------------
+r868 | dahnke | 2016-02-22 11:31:48 +0100 (Mo, 22 Feb 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9369,5 +9370,16 @@ Corrected:   Moved rounding help function from cat_run_job to cat_run_job_APP*.
 Changed:     Added inactivated opts parameter GUI fields to expert GUI.
 Changed:     Updated cat_main_gintnorm error message.
 
+
 ------------------------------------------------------------------------
-r868 | dahnke | 2016-02-22 11:31:37
+
+Changed paths:
+M       Amap.c
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_gintnorm.m
+M       tbx_cfg_cat.m
+
+Fixed: Some smaller bugs from last release...
+------------------------------------------------------------------------
+r869 | gaser | 2016-02-23 14:08:57
