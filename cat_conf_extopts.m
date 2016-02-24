@@ -331,17 +331,17 @@ app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
 app.labels = { ...
   'none (only SPM preprocessing)' ... the old default 
-    'APP (light bias correction, no brain masking)' ... just to test it ... the second BC should be much more exact and stable
-    'APP (full  bias correction, no brain masking)' ... just to test it ... the hard skull-stripping can lead to problems if brain tissue is missing, but actual it seams to work very well
-    'APP (without initial registration)' ... I expect that this is only important for animals and can maybe controlled by the species parameter
-  'APP full' ... if APP works correctly without exceptions this could maybe the new default 
-  };
+  'APP1 (fast bias correction only for affine registration)' ... just to test it ... the second BC should be much more exact and stable
+  'APP2 (fast bias correction)' ... just to test it ... the second BC should be much more exact and stable
+  'APP3 (fine bias correction)' ... just to test it ... the hard skull-stripping can lead to problems if brain tissue is missing, but actual it seams to work very well
+  'APP4 (fine bias correction, skull-stripping, no initial registration)' ... I expect that this is only important for animals and can maybe controlled by the species parameter
+};
 app.values = {0 1 2 3 4};
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
 app.help   = {
   'Affine alignment and SPM preprocessing can fail in untypical subjects with deviating anatomy (other species/neonates) or in images  with strong signal inhomogeneities. ' ...
   'An initial rough bias correction and the extraction of the brain can reduce problems (APP = Affine PreProcessing). ' ...
-  'Because the first affine registration that is required for the brain mask can also fail in non-humans the option "without initial registation" is available that requires excact AD-PC alignment by the user (i.e. by SPM Display). ' ... 
+  'Because the first affine registration that is required for the brain mask can also fail in non-humans the option (APP3) without initial registation is available that requires excact AD-PC alignment by the user (i.e. by SPM Display). ' ... 
   ''
 };
 

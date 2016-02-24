@@ -12,6 +12,9 @@ function stools = cat_conf_stools(expert)
   catch
     numcores = 1;
   end
+  if ~exist('expert','var')
+    expert = 0; % switch to de/activate further GUI options
+  end
 
   % parallelize
   % ____________________________________________________________________

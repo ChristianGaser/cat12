@@ -22,6 +22,8 @@ function spm_cat12(varargin)
 % ______________________________________________________________________
 
 rev = '$Rev$';
+try clearvars -global deffile; end %#ok<TRYNC>
+global deffile
 
 % start cat with different default file
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
@@ -99,7 +101,7 @@ end
 if 1 %nargin>0 %~strcmp(catdef,deffile) 
   oldwkd = cd; 
   cd(deffile_pp);
-  try clearvars -global cat12; end
+  try clearvars -global cat12; end %#ok<TRYNC>
   clear cat12;
   eval(deffile_ff);
   eval('global cat12;'); 
@@ -114,8 +116,8 @@ if 1 %nargin>0 %~strcmp(catdef,deffile)
   clear cat12;
 end
 
-SPMid = spm('FnBanner',mfilename,rev);
-[Finter,Fgraph,CmdLine] = spm('FnUIsetup','CAT12');
+spm('FnBanner',mfilename,rev);
+[Finter,Fgraph] = spm('FnUIsetup','CAT12');
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
@@ -132,7 +134,7 @@ end
 [ST, RS] = system(fullfile(CATDir,'CAT_DumpCurv -h'));
 % because status will not give 0 for help output we have to check whether we can find the
 % keyword "Usage" in output
-if isempty(findstr(RS,'Usage'));
+if isempty(strfind(RS,'Usage'));
   if ispc
     [ST, RS] = system('systeminfo.exe');
   else

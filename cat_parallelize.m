@@ -84,6 +84,7 @@ function varargout = cat_parallelize(job,func,datafield)
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
+    def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
     global defaults cat12; %#ok<NUSED,TLEV>
     save(tmp_name,'job','defaults','cat12');
     clear defaults cat12;
