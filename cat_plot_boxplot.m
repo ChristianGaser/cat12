@@ -372,9 +372,10 @@ function [out,s] = cat_plot_boxplot(data,opt)
   cap_x(1,:) = cap_x(1,:) - 0.1;
   cap_x(2,:) = cap_x(2,:) + 0.1;
   cap_y = whisker_y([1,1],:);
-  vp = 10^(1+round(abs(diff([min(cell2mat(data(:))),max(cell2mat(data(:)))]))^(1/10) )); 
-  if isempty(opt.ylim) || isinf(opt.ylim(1)), opt.ylim(1) = floor((min(cell2mat(data(:))) - abs(diff([min(cell2mat(data(:))),max(cell2mat(data(:)))]))/10) * vp)/vp; end
-  if numel(opt.ylim)<2 || isinf(opt.ylim(2)), opt.ylim(2) = ceil((max(cell2mat(data(:)))  + abs(diff([min(cell2mat(data(:))),max(cell2mat(data(:)))]))/10) * vp)/vp; end
+  datac = cell2mat(data(:)); 
+  vp = 10^(1+round(abs(diff([min(datac(:)),max(datac(:))]))^(1/10) )); 
+  if isempty(opt.ylim) || isinf(opt.ylim(1)), opt.ylim(1) = floor((min(datac(:)) - abs(diff([min(datac(:)),max(datac(:))]))/10) * vp)/vp; end
+  if numel(opt.ylim)<2 || isinf(opt.ylim(2)), opt.ylim(2) = ceil((max(datac(:))  + abs(diff([min(datac(:)),max(datac(:))]))/10) * vp)/vp; end
   
   
   %% Do the plot

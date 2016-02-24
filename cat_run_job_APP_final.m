@@ -114,6 +114,8 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   Ywm  = ((Ym-max(0,(Ydiv+0.01))*10)>(GMth*0.1+0.9) | Ym>(GMth*0.1+0.9) | ...
           (Ydiv./Yg<0.5 & ((Ym>0.9 & Yg>0.1 & Ydiv<0) | (Ym>0.9)) & Ym<1.2) ) & ...
           Ym<1.3 & Yg<0.6 & Ygs<0.9 & Yb & Ydiv<0.1 & Ydiv>-0.5; 
+  CSFD = cat_vbdist(single(Ym<(CMth*0.5+0.5*GMth)),Yb,vx_vol);
+  Ywm  = Ywm & CSFD>2;
   Ywm  = smooth3(Ywm)>0.5;      
   % subcotical GM 
   Ybm  = ((Ym-max(0,(Ydiv+0.01))*10)<0.98) & Ym<0.98 & dilmsk<-brad*0.3 & ... 
@@ -124,7 +126,8 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   Ybm  = cat_vol_morph(Ybm,'o',1);
   % cortical GM 
   Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm & ~Ywm; % & (Ym-Ydiv*2)<GMth;  
-  Ygm(smooth3(Ygm)<0.3)=0;
+  Ygm(smooth3(Ygm)<0.3 | ~cat_vol_morph(Ywm,'d',3/mean(vx_vol)))=0;
+  Ygm(CSFD<3 & Ym>(CMth*0.5+0.5*GMth) & ~Ywm & Ym<(CMth*0.5+0.5*GMth)); 
   % CSF
   Ycm  = Ym<(CMth*0.5+0.5*GMth) & Yg<0.1 & Yb & ~Ygm & dilmsk<-brad*0.3; 
   Ycm  = smooth3(Ycm)>0.5;
