@@ -372,7 +372,7 @@ if expert
   stoolsexp  = cat_conf_stoolsexp;       % surface expert tools
 end
 extopts    = cat_conf_extopts(expert);   
-opts       = cat_conf_opts; 
+opts       = cat_conf_opts(expert); 
 %------------------------------------------------------------------------
 
 estwrite        = cfg_exbranch;

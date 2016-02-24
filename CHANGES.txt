@@ -9372,6 +9372,7 @@ Changed:     Updated cat_main_gintnorm error message.
 
 
 ------------------------------------------------------------------------
+r869 | gaser | 2016-02-23 14:09:03 +0100 (Di, 23 Feb 2016) | 9 lines
 
 Changed paths:
 M       Amap.c
@@ -9381,5 +9382,39 @@ M       cat_main_gintnorm.m
 M       tbx_cfg_cat.m
 
 Fixed: Some smaller bugs from last release...
+
 ------------------------------------------------------------------------
-r869 | gaser | 2016-02-23 14:08:57
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_main.m
+A       cat_main_cleanup.m
+M       cat_main_gcut.m
+A       cat_main_gcut_DEV.m
+M       cat_parallelize.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_final.m
+M       html/cat_methods_VBM_APP.html
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+Changed*:   Added development-version of GCUT with parameter and smoothing 
+            update that increase impact of gcutstr.
+Changed*:   Update APP control variable: 
+              APP0 - no APP, default preprocessing
+              APP1 - light bias correction only for registration
+              APP2 - light bias correction
+              APP3 - fine bias correction
+              APP4 - fine bias correction, skull-stripping, no affreg (primates)
+Changed:    Outsourced cat_main_cleanup. 
+Corrected:  Small GUI call errors.
+Corrected:  Reseted job.extopts.restypes in cat_run_job to get expert GUI variable.
+Corrected:  Passing of a complete job variable in parallel processing.
+------------------------------------------------------------------------
+r870 | dahnke | 2016-02-24 20:38:56

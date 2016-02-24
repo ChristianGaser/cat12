@@ -62,12 +62,13 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
+    def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
     global defaults cat12; %#ok<NUSED,TLEV>
     save(tmp_name,'job','defaults','cat12');
     clear defaults cat12;
     
     % matlab command          
-    matlab_cmd = sprintf('"addpath %s %s %s %s;load %s; cat_run(job); "',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+    matlab_cmd = sprintf('"addpath %s %s %s %s; load %s; cat_run(job); "',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
