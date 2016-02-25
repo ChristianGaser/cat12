@@ -104,8 +104,8 @@ cat.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 
 cat.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
 
 % segmentation options
-cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - SANLM + ORNLM filter; 5 - only ORNLM filter for the final result
-cat.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.5)
+cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - ISARNLM
+cat.extopts.NCstr        = 0.8;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.8)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
 cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 

@@ -41,7 +41,7 @@ function [Yb,Yl1] = cat_main_gcut_DEV(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 861 2016-02-12 16:49:37Z dahnke $
+% $Id$
 
   LAB  = opt.LAB;
   NS   = @(Ys,s) Ys==s | Ys==s+1;

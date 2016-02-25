@@ -594,120 +594,55 @@ end
 %  allows up to 20 colors
 %  ---------------------------------------------------------------------
 debug = 1; % this is a manual debugging option for matlab debugging mode
-if ~(job.extopts.sanlm==5 && job.extopts.NCstr)
-  stime = cat_io_cmd('Global intensity correction');
-  [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
 
-  % update in inverse case
-  if job.inv_weighting
-    Ysrc = Ym; 
-    T3th = 1/3:1/3:1;
-  end
-  fprintf('%4.0fs\n',etime(clock,stime));
-  
-  if job.extopts.debug==2
-    tpmci  = tpmci + 1;
-    tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
-    save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
-  end
-  
-  
-  %% After the intensity scaling and with correct information about the
-  % variance of the tissue, a further harder noise correction is meaningful.
-  % Finally, a stronger NLM-filter is better than a strong MRF filter!
-  if job.extopts.sanlm>0 && job.extopts.sanlm<3 && job.extopts.NCstr
-    stime = cat_io_cmd('SANLM noise correction after global intensity correction');
-    if ~any(cell2mat(struct2cell(job.output.bias)'))
-      [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
-      if (job.extopts.sanlm==1) || (job.extopts.sanlm==2), cat_sanlm(Yms,3,1,0); end
-      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
-    else
-      if (job.extopts.sanlm==1) || (job.extopts.sanlm==2), cat_sanlm(Ym,3,1,0); end
-    end
-    if job.inv_weighting
-      Ysrc = Ym;
-    else
-      Ysrc = cat_main_gintnormi(Ym,Tth);
-    end
-    clear Yms BB;
-    fprintf('%4.0fs\n',etime(clock,stime));  
-  elseif job.extopts.sanlm>2 && job.extopts.sanlm<5 && job.extopts.NCstr
-    [Yms,Ycls1,Ycls2,BB] = cat_vol_resize({Ym,Ycls{1},Ycls{2}},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+stime = cat_io_cmd('Global intensity correction');
+[Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
 
-    % estimate noise
-    %[Yw,Yg] = cat_vol_resize({Yms.*(Ycls1>240),Yms.*(Ycls2>240)},'reduceV',vx_vol,3,32,'meanm');
-    %Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
-    %min(1/6,cat_stat_nanmean(Yn(Yn(:)>0)));
-    ornlmstr = max(0.01,min(0.05,noise * job.extopts.NCstr / 3 / 2)); % *2 because of NCstr=0.5, /3 to get the SNR for ornlm-filter! 
-    ornlmstr = round(ornlmstr*10^6)/10^6;
-    clear Yn Ycls1 Ycls2;
-
-    stime = cat_io_cmd(sprintf('ORNLM noise correction after global intensity correction (ORNLMstr=%0.2f)',ornlmstr));
-    if ~any(cell2mat(struct2cell(job.output.bias)'))
-      if ornlmstr>0.01,
-        Ymss = cat_ornlm(Yms,3,1,ornlmstr); % double???
-        Yms(Yms<1.1) = Ymss(Yms<1.1); clear Ymss;  % avoid filtering of blood vessels; 
-      end
-      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = Yms;
-    else
-      if ornlmstr>0.01,
-        Yms = cat_ornlm(Ym,3,1,ornlmstr);
-        Ym(Ym<1.1) = Yms(Ym<1.1);   % avoid filtering of blood vessels; 
-      end
-    end
-    if job.inv_weighting
-      Ysrc = Ym; 
-    else
-      Ysrc = cat_main_gintnormi(Ym,Tth);
-    end
-    clear Yms BB;
-    fprintf('%4.0fs\n',etime(clock,stime));
-  else
-    ornlmstr = 0;
-  end
-else
-% use only ornlm e.g. for magnetisation transfer images ...
-  stime = cat_io_cmd('Global intensity correction');
-  
-  % interpolation 
-  cat_vol_imcalc(VT0,VT,'i1',struct('interp',6,'verb',0));
-
-  % bias correction 
-  Ybf  = zeros(VT.dim(1:3),'single');
-  Yo   = zeros(VT.dim(1:3),'single');
-  for z=1:length(x3),
-      f = spm_sample_vol(VT,x1,x2,o*x3(z),0);
-      bf1 = exp(transf(chan(1).B1,chan(1).B2,chan(1).B3(z,:),chan(1).T));
-      bf1(bf1>3) = 3; bf1(bf1<0.2) = 0.2;
-      Yo(:,:,z)  = single(bf1 .* f);
-      Ybf(:,:,z) = single(bf1 .* ones(size(f)));
-  end
-  clear chan o x1 x2 x3 bf1 f z
-  
-  % intensity scaling
-  [Ym,Yb2,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Yo,Ycls,Yb,vx_vol,res); 
-  
-  % estimate noise
-  %[Yms,Ycls1,Ycls2] = cat_vol_resize({Ym,Ycls{1},Ycls{2}},'reduceBrain',vx_vol,2,Yb); 
-  %[Yw,Yg] = cat_vol_resize({Yms.*(Ycls1>240),Yms.*(Ycls2>240)},'reduceV',vx_vol,3,32,'meanm');
-  %Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
-  ornlmstr = max(0.05,min(0.3,noise * job.extopts.NCstr / 3)); %min(1/6,2*cat_stat_nanmean(Yn(Yn(:)>0))) * job.extopts.NCstr * 2; 
-  ornlmstr = round(ornlmstr*10^6)/10^6;
-  clear Yn Ycls1 Ycls2 Yms BB;
-  fprintf('%4.0fs\n',etime(clock,stime));
-  
-  % filtering
-  stime = cat_io_cmd(sprintf('ORNLM-Filter (ORNLMstr=%0.2f)',ornlmstr));
-  if ornlmstr>0.01, Yms = cat_ornlm(Ym,3,1,ornlmstr); end
-  Ym(Ym<1.3) = Yms(Ym<1.3); clear Yms;  % avoid filtering of blood vessels; 
-  Ysrc = cat_main_gintnormi(Ym,Tth);
-  clear Yms BB;
-  fprintf('%4.0fs\n',etime(clock,stime));
+% update in inverse case
+if job.inv_weighting
+  Ysrc = Ym; 
+  T3th = 1/3:1/3:1;
 end
+fprintf('%4.0fs\n',etime(clock,stime));
 
 if job.extopts.debug==2
-  tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preLAS'));
-  save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','Tth','vx_vol');
+  tpmci  = tpmci + 1;
+  tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
+  save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
+end
+
+
+%% After the intensity scaling and with correct information about the
+% variance of the tissue, a further harder noise correction is meaningful.
+% Finally, a stronger NLM-filter is better than a strong MRF filter!
+if job.extopts.sanlm>0 && job.extopts.NCstr  
+  if ~any(cell2mat(struct2cell(job.output.bias)'))
+    [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+
+    % apply NLM filter
+    if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
+      stime = cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2d)',job.extopts.NCstr));
+      if job.extopts.verb>1, fprintf('\n'); end
+      Yms = cat_vol_isarnlm(Yms,V,job.extopts.verb>1);  
+      if job.extopts.verb>1, cat_io_cmd(' '); end
+    else
+      stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2d)',job.extopts.NCstr));
+      cat_sanlm(Yms,3,1,0);
+    end
+    
+    % mix original and noise corrected image and go back to original resolution
+    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+      job.extopts.NCstr * Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) + ...
+      (1-job.extopts.NCstr) * Yms;
+    clear Yms BB;
+  end
+  if job.inv_weighting
+    Ysrc = Ym;
+  else
+    Ysrc = cat_main_gintnormi(Ym,Tth);
+  end
+  
+  fprintf('%4.0fs\n',etime(clock,stime));  
 end
   
   
@@ -798,11 +733,17 @@ end
 if job.extopts.gcutstr>0
   %  -----------------------------------------------------------------
   %  gcut+: skull-stripping using graph-cut
-  %    ds('d2','',vx_vol,(YbS01 + YbS05+YbS10)/3,Ym.*(0.2+0.8*YbS01),Ym.*(0.2+0.8*YbS10),Ym.*(0.2+0.8*YbS05),50)
   %  -----------------------------------------------------------------
   try 
     stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));;
     [Yb,Yl1] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+    if 0
+      %% just for manual debuging / development
+      job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
+      job.extopts.gcutstr=0.1; [Yb01,Yl101] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
+      job.extopts.gcutstr=0.9; [Yb09,Yl109] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+      ds('d2','',vx_vol,(Yb01 + Yb05+Yb09)/3,Ym.*(0.2+0.8*Yb01),Ym.*(0.2+0.8*Yb05),Ym.*(0.2+0.8*Yb09),50)
+    end
   catch %#ok<CTCH>
     fprintf('%4.0fs\n',etime(clock,stime));
     job.extopts.gcutstr = 0;
@@ -1771,18 +1712,14 @@ if job.extopts.print
   str = [str struct('name', 'Affine regularization:','value',sprintf('%s',job.opts.affreg))];
   if job.extopts.sanlm==0 || job.extopts.NCstr==0
     str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
-  elseif job.extopts.sanlm>0 && job.extopts.sanlm<3
+  elseif job.extopts.sanlm==1
     str = [str struct('name', 'Noise reduction:','value',...
            sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(job.extopts.sanlm>0))),...
            char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
-  elseif job.extopts.sanlm>2 && job.extopts.sanlm<5
+  elseif job.extopts.sanlm==2
     str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(job.extopts.sanlm>0))),...
-           spm_str_manip(sprintf(' ORNLM(%0.2f) +',ornlmstr),sprintf('f%d',14*(job.extopts.sanlm>2))),...
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip('ISARNLM +',sprintf('f%d',7*(job.extopts.sanlm>0))),...
            char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
-  elseif job.extopts.sanlm==5
-    str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('ORNLM(%0.2f) + MRF(%0.2f)',ornlmstr,job.extopts.mrf))];   
   end
   str = [str struct('name', 'NCstr / LASstr / GCUTstr / CLEANUPstr:','value',...
          sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
