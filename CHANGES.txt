@@ -9384,6 +9384,7 @@ M       tbx_cfg_cat.m
 Fixed: Some smaller bugs from last release...
 
 ------------------------------------------------------------------------
+r870 | dahnke | 2016-02-24 20:39:12 +0100 (Mi, 24 Feb 2016) | 32 lines
 
 Changed paths:
  M      .
@@ -9416,5 +9417,35 @@ Changed:    Outsourced cat_main_cleanup.
 Corrected:  Small GUI call errors.
 Corrected:  Reseted job.extopts.restypes in cat_run_job to get expert GUI variable.
 Corrected:  Passing of a complete job variable in parallel processing.
+
 ------------------------------------------------------------------------
-r870 | dahnke | 2016-02-24 20:38:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+ M      cat_main_cleanup.m
+M       cat_main_gcut.m
+MM      cat_main_gcut_DEV.m
+M       cat_run.m
+M       cat_run_job.m
+
+Changed*:   Updated gcut procedure.
+Changed*:   Temporary inactivated initial SANLM noise correction, because SPM
+            seamed to be more stable with noisier images.
+Changed*:   Removed ORNLM noise correction.
+Changed*:   Updated extopts.sanlm parameter:
+              0 .. no denoising
+              1 .. SANLM denoising (default)
+              2 .. ISARNLM denoising 
+Changed*:   Used extopts.NCstr to weighted also the noise correction and set 
+            it to 0.8 because 0.5 (halt power than usual) looks to noise.  
+Changed*:   Added ISARNLM filter in cat_main as third option besides 
+            no-denoising and SANLM denoising. 
+            
+              ATTENTION: Denoising is only applied within the brain mask yet! 
+
+Changed:    Corrected extopts.restypes initialization in cat_run.
+------------------------------------------------------------------------
+r871 | dahnke | 2016-02-25 16:45:35

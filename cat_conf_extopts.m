@@ -174,32 +174,15 @@ gcutstr.help    = {
 sanlm        = cfg_menu;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Use SANLM de-noising filter';
-% sanlm.labels = {'No denoising','SANLM denoising','SANLM denoising (multi-threaded)',...
-%      'SANLM denoising + ORNLM','SANLM denoising (multi-threaded) + ORNLM','ORNLM denoising'
-% };
-% sanlm.values = {0 1 2 3 4 5};
-% sanlm.help   = {
-%     'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Optionally, a second ORNLM filter is  used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
-%     'The following options are available: '
-%     '  0) No noise correction '
-%     '  1) SANLM '
-%     '  2) SANLM (multi-threaded) '
-%     '  3) SANLM + ORNLM '
-%     '  4) SANLM (multi-threaded) + ORNLM'
-%     '  5) Only ORNLM (with temporarily SANLM filter, but only one final noise correction of the original data)' 
-% };
-sanlm.labels = {'No denoising','SANLM denoising',...
-    'SANLM denoising + ORNLM','ORNLM denoising'
-};
-sanlm.values = {0 1 3 5};
+sanlm.labels = {'No denoising','SANLM denoising','ISARNLM denoising'};
+sanlm.values = {0 1 2};
 sanlm.def    = @(val)cat_get_defaults('extopts.sanlm', val{:});
 sanlm.help   = {
-    'This function applies an spatial adaptive non local means (SANLM) denoising filter to the data. This filter will remove noise while preserving edges. The smoothing filter size is automatically estimated based on the local variance in the image. Optionally, a second ORNLM filter is  used after inhomogeneity correction and intensity scaling in order to remove increased noise after local scaling. Using an option with ORNLM filter allows further modification of the strength of the noise correction. '
+    'This function applies an spatial adaptive non local means (SANLM) or the iterative spatial resolution adaptive non local means (ISARNLM) denoising filter to the data. Using the ISARNLM filter is only required for high resolution data with parallel image artifacts or strong noise. Both filter will remove noise while preserving edges. Further modification of the strength of the noise correction is possible by the NCstr parameter. '
     'The following options are available: '
     '  * No noise correction '
     '  * SANLM '
-    '  * SANLM + ORNLM ' 
-    '  * Only ORNLM (with temporarily SANLM filter) ' 
+    '  * ISARNLM ' 
 };
 
 NCstr         = cfg_entry;
