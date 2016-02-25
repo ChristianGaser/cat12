@@ -41,17 +41,17 @@ function cat_run_job(job,tpm,subj)
     % create subfolders if not exist
     pth = spm_fileparts(job.channel(1).vols{subj}); 
     if job.extopts.subfolders
-      folders = char('mri','report');
-      for i=1:size(folders,1)
-        if ~exist(fullfile(pth,deblank(folders(i,:))),'dir')
-          mkdir(pth,deblank(folders(i,:)));
+      folders = {'mri','report'};
+      for i=1:numel(folders)
+        if ~exist(fullfile(pth,folders{i}),'dir')
+          mkdir(fullfile(pth,folders{i}));
         end
       end
       if ~exist(fullfile(pth,'surf'),'dir') && job.output.surface
-        mkdir(pth,'surf');
+        mkdir(fullfile(pth,'surf'));
       end
       if ~exist(fullfile(pth,'label'),'dir') && job.output.ROI
-        mkdir(pth,'label');
+        mkdir(fullfile(pth,'label'));
       end
       
       mrifolder    = 'mri';
@@ -106,35 +106,30 @@ function cat_run_job(job,tpm,subj)
     %  noise-correction
     %  -----------------------------------------------------------------
     if job.extopts.sanlm && job.extopts.NCstr
-
-        switch job.extopts.sanlm
-          case {1,2,3,4}, stime = cat_io_cmd('NLM-filter with multi-threading');
-          case {5},       stime = cat_io_cmd('Temporary NLM-filter with multi-threading');
-        end
-
+      %{
+        stime = cat_io_cmd('NLM-filter');
+      %} 
 
         for n=1:numel(job.channel) 
             V = spm_vol(job.channel(n).vols{subj});
             Y = single(spm_read_vols(V));
             Y(isnan(Y)) = 0;
-            switch job.extopts.sanlm
-              case {1,2,3,4,5},  
-                % use isarnlm-filter only if voxel size <= 0.7mm
-                if any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
-                  if job.extopts.verb>1, fprintf('\n'); end
-                  Y = cat_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
-                  if job.extopts.verb>1, cat_io_cmd(' '); end
-                else
-                  cat_sanlm(Y,3,1,0);          % use multi-threaded version
-                  %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
-                end
+          %{
+            % use isarnlm-filter only if voxel size <= 0.7mm
+            if any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
+                if job.extopts.verb>1, fprintf('\n'); end
+                Y = cat_vol_isarnlm(Y,V,job.extopts.verb>1);   % use iterative multi-resolution multi-threaded version
+                if job.extopts.verb>1, cat_io_cmd(' '); end
+            else
+                cat_sanlm(Y,3,1,0);          % use multi-threaded version
             end
+           %}
             Vn = cat_io_writenii(V,Y,mrifolder,'n','noise corrected','float32',[0,1],[1 0 0]);
             job.channel(n).vols{subj} = Vn.fname;
             clear Y V Vn;
         end
 
-        fprintf('%4.0fs\n',etime(clock,stime));     
+%        fprintf('%4.0fs\n',etime(clock,stime));     
     else
        if job.extopts.APP>0 || ~strcmp(job.extopts.species,'human')
          % this is necessary because of the real masking of the T1 data 
@@ -199,7 +194,7 @@ function cat_run_job(job,tpm,subj)
 
         Vn = spm_vol(job.channel(n).vols{subj}); 
         Vn = rmfield(Vn,'private'); 
-        if ~(job.extopts.sanlm && job.extopts.NCstr)
+        if ~(job.extopts.sanlm && job.extopts.NCstr) 
           % if no noise correction we have to add the 'n' prefix here
           [pp,ff,ee] = spm_fileparts(Vn.fname);
           Vi.fname = fullfile(pp,mrifolder,['n' ff ee]);
