@@ -62,7 +62,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   % distance parameter
   gc.d = brad*(5 - 4*opt.gcutstr)/mean(vx_vol);               % 3.0;    distance  parameter for downcut - higher > more tissue
   gc.c = max(-0.01,(0.01 - 0.03*opt.gcutstr)*mean(vx_vol));             % -0.005; growing   parameter for downcut - higher > more tissue
-  gc.f = max(1,min(3,(brad/200 / (0.7-0.4*opt.gcutstr) * rvol(1)/0.10)/mean(vx_vol))); % closing parameter   - higher > more tissue ... 8
+  gc.f = max(1,min(4,(brad/200 / (0.7-0.4*opt.gcutstr) * rvol(1)/0.10)/mean(vx_vol))); % closing parameter   - higher > more tissue ... 8
   gc.gd = 1 + 2*opt.gcutstr;
   gc.bd = 3 + 2*opt.gcutstr; 
   % smoothing parameter
@@ -141,10 +141,12 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   
   %% filling of ventricles and smooth mask
   stime = cat_io_cmd('  Ventricle closing','g5','',opt.verb,stime); dispc=dispc+1; %#ok<*NASGU>
-  Yb  = Yb | (cat_vol_morph(Yb ,'labclose',vxd*gc.f) & ...
-    Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
+  [Ybr,resT3] = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(1,cat_stat_nanmean(vx_vol)*2),32,'meanm'); 
+  Ybr = cat_vol_morph(Ybr>0.5,'labclose',gc.f/mean(resT3.vx_volr));
+  Ybr = cat_vol_resize(Ybr,'dereduceV',resT3)>0.5; 
+  Yb  = Yb | Ybr; clear Ybr;   % & Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
   Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f* (rvol(1)/0.4) ))));
-  Yb  = Yb | (cat_vol_morph(Yb ,'labclose',vxd) & Ym<1.1);
+  Yb  = Yb | (cat_vol_morph(Yb ,'labclose',vxd*2) & Ym<1.1);
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,3./vx_vol); Yb = Yb>0.5 | (max(Yb,Ybs)>0.3 & Ym<0.4); % how wide
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,2./vx_vol); Yb = max(Yb,Ybs)>0.4; % final smoothing
  

@@ -9419,6 +9419,7 @@ Corrected:  Reseted job.extopts.restypes in cat_run_job to get expert GUI variab
 Corrected:  Passing of a complete job variable in parallel processing.
 
 ------------------------------------------------------------------------
+r871 | dahnke | 2016-02-25 16:45:42 +0100 (Do, 25 Feb 2016) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9447,5 +9448,20 @@ Changed*:   Added ISARNLM filter in cat_main as third option besides
               ATTENTION: Denoising is only applied within the brain mask yet! 
 
 Changed:    Corrected extopts.restypes initialization in cat_run.
+
 ------------------------------------------------------------------------
-r871 | dahnke | 2016-02-25 16:45:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gcut.m
+
+Corrected:   Solved LAS problems for images with low intensity CSF range.
+Corrected:   Increased closing area of gcut. 
+Changed:     Removed cat.extopts.print.
+Changed:     Added further background variables to expert GUI.
+------------------------------------------------------------------------
+r872 | dahnke | 2016-02-26 17:39:06

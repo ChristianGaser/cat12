@@ -176,7 +176,6 @@ cat.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation
 
 % visualisation, print and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
-cat.extopts.print        = 1;     % Display and print results
 cat.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
 cat.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
 cat.extopts.ignoreErrors = 0;     % catching preprocessing errors: 1 - catch errors (default,requires MATLAB 2008 or higher); 0 - stop with error 
