@@ -335,7 +335,8 @@ else % use spm_mrf to denoise segmentations
     %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
     Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
-
+    Yp0  = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
+    
     voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
 
     if job.extopts.debug>3
@@ -649,7 +650,6 @@ end
   
 %% Local Intensity Correction 
 if job.extopts.LASstr>0
-  % Ysrc2 = spm_read_vols(spm_vol(res.image.fname));
   stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
   [Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts);
   fprintf('%4.0fs\n',etime(clock,stime));

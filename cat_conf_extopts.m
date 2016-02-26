@@ -48,6 +48,40 @@ bb.help    = {'The bounding box (in mm) of the volume which is to be written (re
 ''
 };
 
+%------------------------------------------------------------------------
+% special expert and developer fileds 
+%------------------------------------------------------------------------
+
+ignoreErrors        = cfg_menu;
+ignoreErrors.tag    = 'ignoreErrors';
+ignoreErrors.name   = 'Ignore errors';
+ignoreErrors.labels = {'No','Yes'};
+ignoreErrors.values = {0 1};
+ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
+ignoreErrors.help   = {
+  'Catch preprocessing errors and go on with the next subject'
+};
+
+verb         = cfg_menu;
+verb.tag     = 'verb';
+verb.name    = 'Verbose processing level';
+verb.labels  = {'none','default','details'};
+verb.values  = {0 1 2};
+verb.def     = @(val)cat_get_defaults('extopts.verb', val{:});
+verb.help    = {
+  'Verbose processing.'
+};
+
+debug         = cfg_menu;
+debug.tag     = 'debug';
+debug.name    = 'Debuging level';
+debug.labels  = {'none','light','details'};
+debug.values  = {0 1 2};
+debug.def     = @(val)cat_get_defaults('extopts.debug', val{:});
+debug.help    = {
+  'Debuging processing.'
+};
+
 
 %---------------------------------------------------------------------
 % Resolution
@@ -333,11 +367,11 @@ app.help   = {
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
-if expert==2 % experimental expert options
-  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,print}; 
+if expert>2 % experimental expert options
+  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb,subfolders}; 
 elseif expert==1 % working expert options
-  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,print}; 
+  extopts.val   = {sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
 else
-  extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,vox,print}; 
+  extopts.val   = {NCstr,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
 end
 extopts.help  = {'Using the extended options you can adjust special parameter or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};
