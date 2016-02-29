@@ -48,7 +48,7 @@ function stools = cat_conf_stools(expert)
 
 %% Surface correlation and quality check
 %-----------------------------------------------------------------------
-  data_surf_cov         = cfg_files;;
+  data_surf_cov         = cfg_files;
   data_surf_cov.tag     = 'data_surf';
   data_surf_cov.name    = 'Sample';
   data_surf_cov.filter  = 'gifti';
@@ -182,7 +182,7 @@ function stools = cat_conf_stools(expert)
 
 %% map volumetric data
 %-----------------------------------------------------------------------  
-  v2s.datafieldname         = cfg_entry;;
+  v2s.datafieldname         = cfg_entry;
   v2s.datafieldname.tag     = 'datafieldname';
   v2s.datafieldname.name    = 'Texture Name';
   v2s.datafieldname.strtype = 's';
@@ -457,7 +457,7 @@ function stools = cat_conf_stools(expert)
 
 % set of cdata files
   if expert && 0 % this is not ready now
-    s2r.cdata         = cfg_files;;
+    s2r.cdata         = cfg_files;
     s2r.cdata.tag     = 'cdata';
     s2r.cdata.name    = '(Left) Surface Data Files';
     s2r.cdata.filter  = 'any';

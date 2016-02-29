@@ -120,7 +120,7 @@ fs = FS(12);
 if n>20, fs = FS(8); end
 if n>60, fs = FS(6);  end
 
-[tmp names] = spm_str_manip(char(V.fname),'C');
+[tmp, names] = spm_str_manip(char(V.fname),'C');
 
 fprintf('Compressed filenames: %s\n',tmp);
 

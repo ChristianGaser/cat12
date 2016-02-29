@@ -101,7 +101,7 @@ varargout{1} = handles.output;
 ha = axes('units','normalized','position',[0 0.87 1 0.13]);
 uistack(ha,'bottom');
 I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact.jpg'));
-hi = imagesc(I);
+imagesc(I);
 text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',20,'Fontweight','bold');
 set(ha,'handlevisibility','off','visible','off');
 
@@ -142,7 +142,7 @@ for i=1:size(P,1)
     fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
     
     % check that folder exist and number of vertices fits
-    if exist(fsavgDir) == 7 & SPM.xY.VY(1).dim(1) == 163842
+    if exist(fsavgDir,'dir') == 7 && SPM.xY.VY(1).dim(1) == 163842
       [pp,ff]   = spm_fileparts(SPM.xY.VY(1).fname);
       
       % find lh|rh string

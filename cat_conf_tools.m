@@ -619,7 +619,7 @@ sanlm.prog   = @cat_vol_sanlm;
 sanlm.vfiles = @vfiles_sanlm;
 sanlm.help   = {
 'This function applies an spatial adaptive non-local means denoising filter to the data. This filter will remove noise while preserving edges. The filter strength is automatically estimated based on the standard deviation of the noise. '
-'',
+''
 'This filter is internally used in the segmentation procedure anyway. Thus, it is not neccessary (and not recommended) to apply the filter before segmentation.'
 ''
 };
@@ -854,7 +854,7 @@ return;
 function vf = vfiles_sanlm(job)
 vf = {};
 
-s  = strvcat(job.data);
+s  = char(job.data);
 for i=1:size(s,1),
     [pth,nam,ext,num] = spm_fileparts(s(i,:));
     vf = {vf{:}, fullfile(pth,[job.prefix,nam,ext,num])};

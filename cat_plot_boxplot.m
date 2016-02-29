@@ -262,7 +262,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
   
   for i=1:nc
     % Get the next data set from the array or cell array
-    if iscell(data) col = data{i}(:);
+    if iscell(data), col = data{i}(:);
     else col = data(:,i); end
     
     % Skip missing data
@@ -411,11 +411,11 @@ function [out,s] = cat_plot_boxplot(data,opt)
       end
   
     end
-    if opt.symbol(1)~=' ' & opt.outliers
+    if opt.symbol(1)~=' ' && opt.outliers
       plot(outliers_x,  outliers_y ,'MarkerSize',...
           max(4,min(8,80/nc)),'Marker',opt.symbol(1),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none')
     end
-    if opt.symbol(2)~=' ' & opt.outliers
+    if opt.symbol(2)~=' ' && opt.outliers
       plot(outliers2_x, outliers2_y,'MarkerSize',...
         max(4,min(8,80/nc)),'Marker',opt.symbol(2),'MarkerEdgeColor',opt.symbolcolor,'LineStyle','none');
     end

@@ -655,7 +655,7 @@ function [vertices, label, colortable] = Read_Brain_Annotation(filename, varargi
 fp = fopen(filename, 'r', 'b');
 
 verbosity = 0;
-if length(varargin)
+if ~isempty(varargin)
     verbosity       = varargin{1};  
 end;
 
@@ -685,7 +685,7 @@ if(bool)
 
     if(numEntries > 0)
         
-        if verbosity, disp(['Reading from Original Version']); end;
+        if verbosity, disp('Reading from Original Version'); end;
         colortable.numEntries = numEntries;
         len = fread(fp, 1, 'int');
         colortable.orig_tab = fread(fp, len, '*char')';
