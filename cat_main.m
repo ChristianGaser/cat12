@@ -333,7 +333,7 @@ else % use spm_mrf to denoise segmentations
 
     %% create a new brainmask
     %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
-    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
+    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
     Yp0  = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
     
@@ -597,7 +597,7 @@ end
 debug = 1; % this is a manual debugging option for matlab debugging mode
 
 stime = cat_io_cmd('Global intensity correction');
-[Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
+[Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);
 
 % update in inverse case
 if job.inv_weighting
@@ -735,7 +735,7 @@ if job.extopts.gcutstr>0
   %  gcut+: skull-stripping using graph-cut
   %  -----------------------------------------------------------------
   try 
-    stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));;
+    stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
     [Yb,Yl1] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
     if 0
       %% just for manual debuging / development
@@ -844,7 +844,11 @@ end
 
 % Amap parameters 
 n_iters = 16; sub = 16; n_classes = 3; pve = 5; 
-iters_icm = 1; bias_fwhm = 60; init_kmeans = 0; 
+bias_fwhm = 60; init_kmeans = 0; 
+
+if job.extopts.mrf~=0
+     iters_icm = 50;
+else iters_icm = 0; end
 
 % adaptive mrf noise 
 if job.extopts.mrf>=1 || job.extopts.mrf<0; 
@@ -1509,7 +1513,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  ... add Ywmh later ... 
 %
 if job.output.surface
-  stime = cat_io_cmd('Surface and thickness estimation');; 
+  stime = cat_io_cmd('Surface and thickness estimation');
   % brain masking 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   Ymm = Ym  .* (Yp0>0.5) .* Yb;
@@ -1687,8 +1691,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %% display and print result if possible
 %  ---------------------------------------------------------------------
 QMC   = cat_io_colormaps('marks+',17);
-color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);;
-if job.extopts.print
+color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   
   warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
         
@@ -2016,7 +2019,6 @@ if job.extopts.print
   
   warning on;  %#ok<WNON>
   
-end
   
 % command window output
 fprintf('\n%s',repmat('-',1,72));

@@ -76,7 +76,7 @@ if ~isempty(xml_files)
     
     % check for filenames
     if isempty(strfind(data_name,xml_name))
-      warning(sprintf('Please check file names because of deviating subject names\n: %s vs. %s\n',P(i,:),xml_files(i,:)));
+      warning('Please check file names because of deviating subject names\n: %s vs. %s\n',P(i,:),xml_files(i,:));
     end
     
     xml = convert(xmltree(deblank(xml_files(i,:))));
@@ -254,7 +254,7 @@ fname_tmp = cell(n_samples,1);
 fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
 for i=1:n_samples
-  [tmp fname_tmp{i}] = spm_str_manip(char(P(sample == i,:)),'C');
+  [tmp, fname_tmp{i}] = spm_str_manip(char(P(sample == i,:)),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
   fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
@@ -307,7 +307,7 @@ set(H.figure,'MenuBar','none','Position',pos.fig,...
     
 cm = datacursormode(H.figure);
 set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
-try, set(cm,'NewDataCursorOnClick',false); end
+try set(cm,'NewDataCursorOnClick',false); end
 
 show_matrix(YpY, sorted);
 
@@ -535,7 +535,7 @@ end
 
 % add colored labels and title
 if n_samples > 1
-  [tmp  tmp2] = spm_str_manip(char(fname.s),'C');
+  [tmp,  tmp2] = spm_str_manip(char(fname.s),'C');
   title_str = sprintf('Boxplot: %s  \n%s ',name, strrep(tmp,tmp2.s,''));
   fprintf('\nCommon filename: %s\n',tmp);
 else

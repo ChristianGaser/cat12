@@ -171,15 +171,13 @@ y     = sin(theta);
 if ~isempty(opt.doughnut)
   % transpose if necessary
   if length(data) ~= size(opt.doughnut,1)
-    opt.doughnut = opt.doughnut'
+    opt.doughnut = opt.doughnut';
   end
   if length(data) ~= size(opt.doughnut,1)
     error('cat_plot_circular:validDoughnut','Size if data and doughnut differs.');
   end
   step2  = tau/size(opt.doughnut,1);
   theta2 = -.25*tau : step2 : .75*tau - step2;
-  x2     = cos(theta2);
-  y2     = sin(theta2);
 end
 
 % PLOT BEZIER CURVES 
@@ -327,8 +325,7 @@ for k=1:size(data,2)
     x(nonpositive) = [];
   end
   xsum = sum(x);
-  if xsum > 1+sqrt(eps), x1 = x/xsum; end
-
+  
   % check whether x consists of integers only
   if any(double(int16(x)) - double(x))
     error('MATLAB:doughnut:NoIntegerData',...
@@ -349,13 +346,12 @@ for k=1:size(data,2)
   theta0 = -pi/2 - pi/(length(x));
 
   h = [];
-  xold = x(1);
   x0 = 1/length(x);
 
   for i=1:length(x)
     n = max(1,ceil(maxpts*x0));
     
-    if opt.border(i) start = 1;
+    if opt.border(i), start = 1;
     else start = 0; end
     
     width = opt.mwidth(k)*0.05;
@@ -367,7 +363,6 @@ for k=1:size(data,2)
     [xx,yy] = pol2cart(theta,r);
     theta0 = max(theta);
   
-    xold = x(i);
     if size(opt.ncolor,3) > 1
       cc = opt.ncolor(x(i),:,k);
     else

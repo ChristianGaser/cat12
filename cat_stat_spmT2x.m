@@ -188,7 +188,7 @@ for i=1:size(P,1)
     end
 
     if strcmp(nm(1:6),'spmT_0') 
-        Ic = str2num(nm(length(nm)-2:length(nm)));
+        Ic = str2double(nm(length(nm)-2:length(nm)));
     else
         error('Only spmT_0* files can be used');
     end
@@ -262,7 +262,7 @@ for i=1:size(P,1)
                 k = 0;
                 while (Pk >= pk && k<S)
                     k = k + 1;
-                    [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
+                    [Pk, Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
                 end
                 p_extent_str = ['_pkFWE' num2str(pk*100)];
             else
@@ -270,13 +270,13 @@ for i=1:size(P,1)
                 k = 0;
                 while (Pn >= pk && k<S)
                     k = k + 1;
-                    [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
+                    [Pk, Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
                 end
                 p_extent_str = ['_pk' num2str(pk*100)];
             end
         elseif (pk < 0)
             k = 0;
-            [P2 Pn2 Em En] = spm_P(1,k,u,df,STAT,R,1,S);
+            [P2, Pn2, Em, En] = spm_P(1,k,u,df,STAT,R,1,S);
             k = ceil(En/v2r);
             p_extent_str = '_En';
         else
