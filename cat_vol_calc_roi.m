@@ -5,7 +5,7 @@ atlas = round(spm_read_vols(Vatlas));
 
 fid = fopen('Dartel_v17.txt','r');
 S = textscan(fid,'%d%s','Delimiter','\t');
-fclose(fid)
+fclose(fid);
 
 for i=1:length(S{1})
     fprintf('%2d\t%s\n',S{1}(i),char(S{2}(i,:)));

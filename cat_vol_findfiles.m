@@ -1,4 +1,4 @@
-function [filesfound,numberfound] = cat_cat_vol_findfiles(varargin)
+function [filesfound,numberfound] = cat_vol_findfiles(varargin)
 % cat_vol_findfiles  - Linux/UNIX-like find command/function
 % ______________________________________________________________________
 %

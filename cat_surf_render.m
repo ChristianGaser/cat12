@@ -387,8 +387,8 @@ switch lower(action)
             'Callback', {@mySave, H});
         
         set(H.rotate3d,'enable','off');
-        try, set(H.rotate3d,'uicontextmenu',cmenu); end
-        try, set(H.patch,   'uicontextmenu',cmenu); end
+        try set(H.rotate3d,'uicontextmenu',cmenu); end
+        try set(H.patch,   'uicontextmenu',cmenu); end
         set(H.rotate3d,'enable','on');
         
         dcm_obj = datacursormode(H.figure);
@@ -422,7 +422,7 @@ switch lower(action)
           if ~strcmp(e,'.mat') & ~strcmp(e,'.nii') & ~strcmp(e,'.gii') & ~strcmp(e,'.img') % freesurfer format
             v = cat_io_FreeSurfer('read_surf_data',v);
           else
-            try, spm_vol(v); catch, v = gifti(v); end;
+            try spm_vol(v); catch, v = gifti(v); end;
           end
         end
         if isa(v,'gifti')
@@ -1045,7 +1045,7 @@ end
 
 %==========================================================================
 function myDeleteFcn(obj,evt,renderer)
-try, rotate3d(get(obj,'parent'),'off'); end
+try rotate3d(get(obj,'parent'),'off'); end
 set(ancestor(obj,'figure'),'Renderer',renderer);
 
 %==========================================================================
@@ -1128,7 +1128,7 @@ if ischar(v)
         [SPM,v] = spm_getSPM(struct('swd',p));
         cd(swd);
       else
-        try, spm_vol(v); catch, v = gifti(v); end;
+        try spm_vol(v); catch, v = gifti(v); end;
       end
     end
 end

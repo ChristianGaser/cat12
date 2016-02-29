@@ -17,7 +17,7 @@ fclose(fid);
 
 n = length(names);
 
-if n == 0, error(sprintf('No file found in %s.\n',namefile)); end
+if n == 0, error('No file found in %s.\n',namefile); end
 
 spm_get_defaults;
 cat_get_defaults;

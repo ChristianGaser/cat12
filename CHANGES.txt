@@ -9450,6 +9450,7 @@ Changed*:   Added ISARNLM filter in cat_main as third option besides
 Changed:    Corrected extopts.restypes initialization in cat_run.
 
 ------------------------------------------------------------------------
+r872 | dahnke | 2016-02-26 17:39:14 +0100 (Fr, 26 Feb 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9463,5 +9464,30 @@ Corrected:   Solved LAS problems for images with low intensity CSF range.
 Corrected:   Increased closing area of gcut. 
 Changed:     Removed cat.extopts.print.
 Changed:     Added further background variables to expert GUI.
+
 ------------------------------------------------------------------------
-r872 | dahnke | 2016-02-26 17:39:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_batch_long.m
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_io_FreeSurfer.m
+M       cat_main.m
+M       cat_plot_boxplot.m
+M       cat_plot_circular.m
+M       cat_stat_check_cov.m
+M       cat_stat_showslice_all.m
+M       cat_stat_spmF2x.m
+M       cat_stat_spmT2x.m
+M       cat_surf_render.m
+M       cat_vol_calc_roi.m
+M       cat_vol_defs.m
+M       cat_vol_findfiles.m
+
+(1) Fixed: Use of iters_icm with regard to mrf.
+(2) Fixed: Some typos and code analyzer suggestions.
+------------------------------------------------------------------------
+r873 | gaser | 2016-02-29 15:29:03

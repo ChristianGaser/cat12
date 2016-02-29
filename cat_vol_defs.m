@@ -69,7 +69,6 @@ for i=1:size(fnames,1),
         if numel(num)>=3, l_range = num(3); end
     end
 
-    M    = inv(NI.mat);
     NO = NI;
 
     % use float for modulated images
@@ -133,7 +132,6 @@ for i=1:size(fnames,1),
         M  = inv(M0);
         % Generate new deformation (if needed)
         Y     = affine(Def,M);
-        oM = M;
         % Write the warped data for this time point
         %------------------------------------------------------------------
         for k=k_range

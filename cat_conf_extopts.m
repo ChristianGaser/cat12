@@ -49,7 +49,7 @@ bb.help    = {'The bounding box (in mm) of the volume which is to be written (re
 };
 
 %------------------------------------------------------------------------
-% special expert and developer fileds 
+% special expert and developer options 
 %------------------------------------------------------------------------
 
 ignoreErrors        = cfg_menu;
