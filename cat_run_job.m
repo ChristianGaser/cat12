@@ -345,7 +345,7 @@ function cat_run_job(job,tpm,subj)
         if job.extopts.APP>2
             % apply (first affine) registration on the default brain mask
             VFa = VF; 
-            if job.extopts.APP~=3, VFa.mat = Affine0 * VF.mat; else Affine = eye(4); affscale = 1; end
+            if job.extopts.APP~=4, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
             [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
        
@@ -404,7 +404,7 @@ function cat_run_job(job,tpm,subj)
     
     
     %%
-    if job.extopts.APP>1
+    if job.extopts.APP>0
         % rewrite bias correctd, but not skull-stripped image
         % obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
         % add temporary skull-stripped images
@@ -422,15 +422,17 @@ function cat_run_job(job,tpm,subj)
             obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
             obj.msk.dat(:,:,:) = uint8(Yb); 
             obj.msk       = spm_smoothto8bit(obj.msk,0.1); 
-        else
-            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
         end
         if job.extopts.APP==4
             Ybd = cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); % be shure that all brain tissue is included
             obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); % masking in dat 
             obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th .* Ybd))); % masking in the file
+        elseif job.extopts.APP==1
+            obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*th,Ysrc))); 
+            obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*th,Ysrc))); 
         else
             obj.image.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
+            obj.image.private.dat(:,:,:) = single(max(-WMth*0.1,min(4*WMth,Ym * th))); 
         end
         obj.image.dt    = [spm_type('FLOAT32') spm_platform('bigend')];
         obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
@@ -458,9 +460,9 @@ function cat_run_job(job,tpm,subj)
     obj.Affine = Affine;
 
     % set original non-bias corrected image
-    if job.extopts.APP==1
-      obj.image = spm_vol(images);
-    end
+    %if job.extopts.APP==1
+    % obj.image = spm_vol(images);
+    %end
     
     %% SPM preprocessing 1
     %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
