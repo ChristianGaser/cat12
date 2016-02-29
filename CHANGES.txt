@@ -9466,6 +9466,7 @@ Changed:     Removed cat.extopts.print.
 Changed:     Added further background variables to expert GUI.
 
 ------------------------------------------------------------------------
+r873 | gaser | 2016-02-29 15:29:10 +0100 (Mo, 29 Feb 2016) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9489,5 +9490,20 @@ M       cat_vol_findfiles.m
 
 (1) Fixed: Use of iters_icm with regard to mrf.
 (2) Fixed: Some typos and code analyzer suggestions.
+
 ------------------------------------------------------------------------
-r873 | gaser | 2016-02-29 15:29:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_vol_isarnlm.m
+
+Changed:    Removed old skull-striping that was applied if gcut was off.
+            gcut=0 will do no skull-stripping and can be used for already       
+            stripped data.
+            The filter is only applied within the brain mask!
+Changed:    Removed old code in cat_main.
+Corrected:  Error that avoid noise correction at all. 
+Corrected:  Small update of filter limits in cat_vol_isarnlm.
+------------------------------------------------------------------------
+r874 | dahnke | 2016-02-29 17:01:13

@@ -207,7 +207,8 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     %  if the currect resolution is high enought
     %  important is a previous NLM on the main resolution to avoid 
     %  filtering of fine anatomical structures on lower resolutions
-    if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.1)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
+    %if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.1)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
+    if opt.red && all(vx_vol<1.5) && sum(vx_vol<0.75)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
       %%
       Yi = Ys + 0;
     
