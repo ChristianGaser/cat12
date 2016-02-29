@@ -289,6 +289,7 @@ Ycls = {zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8') ...
         zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8')};
 
 vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));
+vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));
 
 sQ = (sum(Q,4)+eps)/255; P = zeros([d(1:3),Kb],'uint8');
 for k1=1:size(Q,4)

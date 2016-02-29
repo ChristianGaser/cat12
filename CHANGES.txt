@@ -9492,6 +9492,7 @@ M       cat_vol_findfiles.m
 (2) Fixed: Some typos and code analyzer suggestions.
 
 ------------------------------------------------------------------------
+r874 | dahnke | 2016-02-29 17:01:20 +0100 (Mo, 29 Feb 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9505,5 +9506,15 @@ Changed:    Removed old skull-striping that was applied if gcut was off.
 Changed:    Removed old code in cat_main.
 Corrected:  Error that avoid noise correction at all. 
 Corrected:  Small update of filter limits in cat_vol_isarnlm.
+
 ------------------------------------------------------------------------
-r874 | dahnke | 2016-02-29 17:01:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run_job.m
+
+Corrected: 	Removed small error in cat_main.
+
+------------------------------------------------------------------------
+r875 | dahnke | 2016-02-29 18:53:58
