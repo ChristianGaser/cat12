@@ -21,7 +21,12 @@ end
 
 % try to estimate number of processor cores
 try
-  numcores = max(feature('numcores'),1);
+  numcores = feature('numcores');
+  % because of poor memory management use only half of the cores for windows
+  if ispc
+    numcores = round(numcores/2);
+  end
+  numcores = max(numcores,1);
 catch
   numcores = 1;
 end
