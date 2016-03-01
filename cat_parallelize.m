@@ -42,9 +42,6 @@ function varargout = cat_parallelize(job,func,datafield)
  
   job = cat_io_checkinopt(job,def);
 
-  
-
-
   if ~exist('datafield','var'), datafield = 'data'; end
 
   cat_io_cprintf('warn',...
@@ -98,7 +95,8 @@ function varargout = cat_parallelize(job,func,datafield)
     % call matlab with command in the background
     if ispc
       % prepare system specific path for matlab
-      %export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
+      export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
+      [status,result] = system(export_cmd);
       system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name];
     else
       % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?

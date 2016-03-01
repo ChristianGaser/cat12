@@ -9519,6 +9519,7 @@ Corrected: 	Removed small error in cat_main.
 
 
 ------------------------------------------------------------------------
+r876 | gaser | 2016-03-01 16:39:22 +0100 (Di, 01 Mär 2016) | 26 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9545,5 +9546,14 @@ D       templates_surfaces/rh.mask.txt
     management.
 (4) Changed: Some typos and wrong links in html code
 (5) Fixed: Issue with *.mask.txt that was not readable under windows. 
+
 ------------------------------------------------------------------------
-r876 | gaser | 2016-03-01 16:39:16
+
+Changed paths:
+M       CHANGES.txt
+M       cat_parallelize.m
+M       cat_run.m
+
+Changed: Some minor issue swith windows and backgorund processes.
+------------------------------------------------------------------------
+r877 | gaser | 2016-03-01 17:08:28
