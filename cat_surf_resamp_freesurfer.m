@@ -58,7 +58,7 @@ for i=1:size(Psubj,1)
     Pvalue     = fullfile(dname,[hemi '.' pname '.resampled']);
     Pfwhm      = fullfile(outdir,[sprintf('s%gmm.',fwhm) hemi '.' pname '.resampled.' name]);
     Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
-    Pmask      = fullfile(opt.fsavgDir,[hemi '.mask.txt']);
+    Pmask      = fullfile(opt.fsavgDir,[hemi '.mask']);
   
     fprintf('Resample %s in %s\n',hemi,deblank(Psubj(i,:)));
 
