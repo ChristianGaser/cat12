@@ -101,10 +101,10 @@ end
 if 1 %nargin>0 %~strcmp(catdef,deffile) 
   oldwkd = cd; 
   cd(deffile_pp);
-  try clearvars -global cat12; end %#ok<TRYNC>
-  clear cat12;
+  try clearvars -global cat; end %#ok<TRYNC>
+  clear cat;
   eval(deffile_ff);
-  eval('global cat12;'); 
+  eval('global cat;'); 
   cd(oldwkd);
   
   % initialize SPM 

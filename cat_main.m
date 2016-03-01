@@ -76,11 +76,7 @@ if do_dartel
   end
 end
 
-if job.extopts.APP>0
-  stime = cat_io_cmd(sprintf('SPM preprocessing 2 (APP=%d)',job.extopts.APP));
-else
-  stime = cat_io_cmd('SPM preprocessing 2');
-end
+stime = cat_io_cmd('SPM preprocessing 2');
 
 % remove noise/interpolation prefix
 VT  = res.image(1);  % denoised/interpolated n*.nii
@@ -328,19 +324,20 @@ if job.extopts.debug>3
   Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
 
   clear D I
-  T3ths = [mean(mean(mean(single(Ysrc(P(:,:,:,6)>128))))),T3th,T3th(3) + mean(diff(T3th))];
-  T3thx = [0,1,2,3,4];
+  T3ths = [min(min(min(single(Ysrc(P(:,:,:,6)>128))))),...
+           mean(mean(mean(single(Ysrc(P(:,:,:,6)>128))))),T3th,T3th(3) + mean(diff(T3th))];
+  T3thx = [0,0.05,1,2,3,4];
   [T3ths,si] = sort(T3ths);
   T3thx     = T3thx(si);
   Ym = Ysrc+0; 
-  for i=2:numel(T3ths)
+  for i=numel(T3ths):-1:2
     M = Ysrc>T3ths(i-1) & Ysrc<=T3ths(i);
     Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3ths(i-1))/diff(T3ths(i-1:i))*diff(T3thx(i-1:i));
   end
   M  = Ysrc>=T3ths(end); 
   Ym(M(:)) = numel(T3ths)/6 + (Ysrc(M(:)) - T3ths(i))/diff(T3ths(end-1:end))*diff(T3thx(i-1:i));    
   Ym = Ym / 3; 
-
+  
   for k1=1:3
       Ycls{k1} = P(:,:,:,k1);
   end
@@ -575,12 +572,12 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
 
   % apply NLM filter
   if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
-    stime = cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2d)',job.extopts.NCstr));
+    stime = cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     if job.extopts.verb>1, fprintf('\n'); end
     Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1);  
     if job.extopts.verb>1, cat_io_cmd(' '); end
   else
-    stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2d)',job.extopts.NCstr));
+    stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     cat_sanlm(Yms,3,1,0);
   end
 
@@ -1672,13 +1669,13 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
-    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
+    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
   str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
-    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
+    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
   str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
+    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
   str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
-    sprintf('%5.2f rps (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
+    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
 
       
   % Subject Measures
