@@ -105,7 +105,7 @@ cat.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 
 
 % segmentation options
 cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - ISARNLM
-cat.extopts.NCstr        = 0.8;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.8)
+cat.extopts.NCstr        = 0.5;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.8)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
 cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
@@ -162,7 +162,7 @@ fixed:
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 cat.extopts.species      = 'human';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
-cat.extopts.APP          = 1;   % 0 - none; 1 - APP with fast biascorrection only for registration (default); 2 - APP with fine biascorrection; 3 - APP with fine biascorrection, skull-stripping and no affine registration (for non-human); 
+cat.extopts.APP          = 1;   % 0 - none; 1 - light; 2 - medium; 3 - strong; 4 - heavy
 cat.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
 cat.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)

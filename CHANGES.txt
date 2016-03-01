@@ -9548,6 +9548,7 @@ D       templates_surfaces/rh.mask.txt
 (5) Fixed: Issue with *.mask.txt that was not readable under windows. 
 
 ------------------------------------------------------------------------
+r877 | gaser | 2016-03-01 17:08:30 +0100 (Di, 01 Mär 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9555,5 +9556,22 @@ M       cat_parallelize.m
 M       cat_run.m
 
 Changed: Some minor issue swith windows and backgorund processes.
+
 ------------------------------------------------------------------------
-r877 | gaser | 2016-03-01 17:08:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run_job.m
+M       spm_cat12.m
+ M      templates_1.50mm
+
+Changed*:   Readded subvariables to control APP. 
+Changed:    Set default NCstr=0.5.
+Corrected: 	Corrected problems do to variable name changes from cat12 to cat.
+Corrected:  Small errors.
+
+------------------------------------------------------------------------
+r878 | dahnke | 2016-03-01 17:36:28
