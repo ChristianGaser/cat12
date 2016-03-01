@@ -29,7 +29,7 @@ function varargout = cat_surf_smooth(varargin)
   end
 
   def.trerr       = 0; 
-  def.nprog       = 0; 
+  def.nproc       = 0; 
   def.assuregifti = 0;
   def.verb        = cat_get_defaults('extopts.verb'); 
   def.lazy        = 0; % reprocess exist results

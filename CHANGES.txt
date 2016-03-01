@@ -9508,6 +9508,7 @@ Corrected:  Error that avoid noise correction at all.
 Corrected:  Small update of filter limits in cat_vol_isarnlm.
 
 ------------------------------------------------------------------------
+r875 | dahnke | 2016-02-29 18:55:44 +0100 (Mo, 29 Feb 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9516,5 +9517,33 @@ M       cat_run_job.m
 
 Corrected: 	Removed small error in cat_main.
 
+
 ------------------------------------------------------------------------
-r875 | dahnke | 2016-02-29 18:53:58
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_surf_parameters.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_surf_resample.m
+M       cat_surf_smooth.m
+M       cat_surf_surf2roi.m
+M       html/cat.txt
+M       html/cat_tools_ROI.html
+M       tbx_cfg_cat.m
+A       templates_surfaces/lh.mask
+D       templates_surfaces/lh.mask.txt
+A       templates_surfaces/rh.mask
+D       templates_surfaces/rh.mask.txt
+
+(1) Fixed: wrong parameter nprog instead of nproc in several files.
+(2) Fixed: Many issues with Matlab 2015 and Windows.
+(3) Changed: Use only half of cores under windows because of poor memory
+    management.
+(4) Changed: Some typos and wrong links in html code
+(5) Fixed: Issue with *.mask.txt that was not readable under windows. 
+------------------------------------------------------------------------
+r876 | gaser | 2016-03-01 16:39:16

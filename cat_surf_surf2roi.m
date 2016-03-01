@@ -41,7 +41,7 @@ function cat_surf_surf2roi(job)
   def.verb    = 1; 
   def.avg     = struct('mean',1,'std',1,'min',0,'max','median',1);  % mean, min, max, median, std
   def.plot    = 0; % not ready
-  def.nprog   = 0; % not ready
+  def.nproc   = 0; % not ready
   def.area    = 1;
   job = cat_io_checkinopt(job,def);
   
