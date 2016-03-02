@@ -142,7 +142,14 @@ function cat_run_job(job,tpm,subj)
         [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
         ofname  = fullfile(pp,[ff ee]); 
         nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
-        copyfile(ofname,nfname); 
+        if strcmp(ee,'.nii')
+          copyfile(ofname,nfname); 
+        elseif strcmp(ee,'.img')
+          V = spm_vol(job.channel(n).vols{subj});
+          Y = spm_read_vols(V);
+          V.fname = nfname; 
+          spm_write_vol(V,Y);
+        end
         job.channel(n).vols{subj} = nfname;
     end
   %  end
