@@ -534,7 +534,7 @@ function cat_run_job(job,tpm,subj)
       mean(res.mn(res.lkp==2)) ... wm 
     ];
     if 0
-        %%
+        %% this part is just to check APP and SPM initialization
         T3th  = Tth;
         Ysrc  = single(obj.image.private.dat(:,:,:));
         if exist('Ybg','var')
@@ -561,14 +561,7 @@ function cat_run_job(job,tpm,subj)
           ds('l2','',vx_vol,Ysrc./T3th(3),Ym2,Ysrc./T3th(3),Ym2,round(size(Ym2,3)/5*3))
         end
     end  
-    
-  
-    %% If SPM get another that the expected WM threshold something went
-    %  wrong... 
-    if Tth(3)<th*2/3|| Tth(3)>th*3/2
-      error('CAT:cat_main:BadPreprocessing','APP WM peak differ strongly from SPM WM peak');
-    end
-  
+   
   
     % inactive preprocessing of inverse images (PD/T2) 
     if job.extopts.INV==0 && any(diff(Tth)<=0)
