@@ -1621,7 +1621,7 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
 	mark2rps    = @(mark) min(100,max(0,105 - mark*10));
   grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grad   = @(mark) grades{min(numel(grades),max(1,round((mark+0.5)*3-3)))};
+  mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
   
     
   % CAT GUI parameter:
@@ -1669,13 +1669,13 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
   str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
-    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
   str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
-    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
   str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
   str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
-    sprintf('%5.2f %% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
+    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
 
       
   % Subject Measures
@@ -1945,7 +1945,8 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
 fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
-  cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %0.1f\n',qa.qualityratings.IQR));
+  cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
+    mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR)));
   
   % print subfolders
   if job.extopts.subfolders
