@@ -140,7 +140,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
  
   mark2rps    = @(mark) min(100,max(0,105 - mark*10));
   grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grads  = @(mark) grades{min(numel(grades),max(1,round((mark+0.5)*3-3)))};
+  mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
   
   rms         = @(a,fact)   max(0,cat_stat_nanmean(a.^fact).^(1/fact));
   rmsw        = @(a,fact,w) max(0,(cat_stat_nansum((a.*w).^fact)/cat_stat_nansum(w)).^(1/fact));

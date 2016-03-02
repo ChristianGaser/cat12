@@ -9576,6 +9576,7 @@ Corrected:  Small errors.
 
 
 ------------------------------------------------------------------------
+r879 | dahnke | 2016-03-02 14:02:55 +0100 (Mi, 02 Mär 2016) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9598,5 +9599,25 @@ Fixed:     Corrected user specific GUI initialization problems.
 Fixed:     Corrected problem with analyze input images.   
 
 
+
 ------------------------------------------------------------------------
-r879 | dahnke | 2016-03-02 14:02:47
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_stat_marks.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods_LP.html
+M       html/cat_methods_MS.html
+M       html/cat_methods_VBM.html
+
+Fixed:      Removed incorrect error message in cat_run_job
+Fixed:      Corrected quality grading function for NaN input. 
+Changed:    Replaced QA marks with percentage rating and grade in command line report. 
+Changed:    Updated HTML help.
+
+------------------------------------------------------------------------
+r880 | dahnke | 2016-03-02 20:06:25
