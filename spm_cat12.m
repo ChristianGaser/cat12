@@ -22,18 +22,22 @@ function spm_cat12(varargin)
 % ______________________________________________________________________
 
 rev = '$Rev$';
-try clearvars -global deffile; end %#ok<TRYNC>
-global deffile
+global deffile;
+%try clearvars -global deffile;  end %#ok<TRYNC>
+
 
 % start cat with different default file
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
 catdef = fullfile(catdir,'cat_defaults.m');
-if nargin==0
+if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
   deffile = catdef; 
-  restartspm = 0; 
-else 
+  restartspm = 0;
+elseif nargin==1 
   deffile = varargin{1}; 
-  restartspm = 1; 
+  restartspm = 1;
+else
+  deffile = catdef; 
+  restartspm = 1;
 end
 
 

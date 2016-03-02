@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_CAT.html">Voxel-based Preprocessing Methods</a>
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_VBM.html">Voxel-based Preprocessing Methods</a>
       </div>
     </div>
       
@@ -49,37 +49,57 @@
           </p>
         </li>
         <li>
-          <h4>Noise Filter</h4>
+          <h4>Affine PreProcessing (APP)</h4>
           <p>
-            Furthermore, we apply three denoising methods. The first method is an block-wise adaptive Non-Local Means (SANLM) denoising filter 
-            <a href="matlab:web('http://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
-            After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('http://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
-            These filters remove noise while preserving edges and are implemented as preprocessing step.  
-            The third method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
-            The strength of the ORNLM and MRF filter are automatically obtained by estimating the remaining noise in the image.
+            To improve the initial SPM segmentation a initial affine registration on a bias-corrected image is applied and the intensity range is limited to avoid problems in special protocols. 
+            If preprocessing failed an harder version is available that applied the bias correction, use harder intensity limits and masked/removed the background/skull.
+            For further information see <a href="cat_methods_VBM_APP.html">APP</a>.
           </p>
         </li>
         <li>
-          <h4>Dartel Normalisation</h4> 
+          <h4>Noise Filter</h4>
           <p>
-            Another important extension to the SPM12 segmentation is the integration of the Dartel normalisation <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2007.07.007','-browser');">(Ashburner 2007)</a> into the toolbox by an already existing Dartel template in MNI space.  
+            Furthermore, we apply two denoising methods. 
+            The first method is an block-wise adaptive Non-Local Means (SANLM) denoising filter that is applied after the intensity normalization. 
+            <a href="matlab:web('http://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
+            <!--After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('http://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
+            These filters remove noise while preserving edges and are implemented as preprocessing step.  
+            -->
+            The second method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation and controlled by reminding image noise. 
+            The strength of the denoising can be controlled by the <i><b>NCstr</b></i> parameter, with 0 for no noise correction at all, small values (0.01-0.5) for small denoising, 0.5 for average denoising (default), and higher values (0.5-1) for strong denoising.
+          </p>
+        </li>
+        <li>
+          <h4>Dartel Normalization</h4> 
+          <p>
+            Another important extension to the SPM12 segmentation is the integration of the Dartel normalization <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2007.07.007','-browser');">(Ashburner 2007)</a> into the toolbox by an already existing Dartel template in MNI space.  
             This template was derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and provides the six Dartel iterations.  
             Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.
           </p> 
         </li>
+        <!--
+        <li>
+          <h4>Shooting Normalisation</h4> 
+          <p>
+            Another important extension to the SPM12 segmentation is the integration of the Shooting normalisation <a href="matlab:web('','-browser');">(Ashburner 20XX)</a> into the toolbox by an already existing Shooting template in MNI space.  
+            This template was derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and provides the four Shooting iterations.  
+            Thus, for the majority of studies the creation of sample-specific Shooting templates is not necessary anymore.
+          </p> 
+        </li>
+        -->
         <li>
           <h4>Local Adaptive Segmentation (LAS)</h4>
           <p>
             Beside WM-inhomogeneities, also the GM intensity can vary for different regions like the motor cortex, the basal ganglia, or the occipital lobe.  
             Although, these changes have an anatomical background (e.g. iron content, myelenization), they depend on the MR-protocol and often lead to GM-underestimations for higher intensities and CSF-overestimations for lower intensities.  
             Therefore, a local intensity transformation of all tissue classes is used to reduce this effects in the <i>m*-image</i> before the final AMAP segmentation. 
-            The strength of the changes is controlled by the <i>LASstr</i> parameter, with 0 for no LAS, small values (0.01-0.5) for small adaptations, 0.5 for average adaptation (default), and higher values (0.5-1) for strong adaptations.
+            The strength of the changes is controlled by the <i><b>LASstr</b></i> parameter, with 0 for no LAS, small values (0.01-0.5) for small adaptations, 0.5 for average adaptation (default), and higher values (0.5-1) for strong adaptations.
           </p>
         </li>
         <li> 
           <h4>Skull-Stripping</h4>
           <p>
-            CAT12 contains a revised graph-cut based skull-stripping with a arbitrary strength, with 0 for a more liberal and wider brain masks and 1 for a more
+            CAT12 contains a revised graph-cut based skull-stripping with a arbitrary strength (<i><b>gcutstr</b></i>), with 0 for a more liberal and wider brain masks and 1 for a more
           aggressive skull-stripping. The default is 0.5 and was successfully tested on a variety of different images.
           </p> 
           <p>The strength parameter affects multiple internal parameters:</p>
@@ -97,14 +117,14 @@
         <li>
           <h4>Cleanup</h4>
           <p>
-            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation. The strength of the cleanup is controlled by the <i>cleanupstr</i> parameter, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
+            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation. The strength of the cleanup is controlled by the <i><b>cleanupstr</b></i> parameter, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
           </p>
         </li>
         <li>
           <h4>Interpolation</h4>
           <p>
-            CAT12 uses an internal interpolation in order to allow more relaible results also for low resolution images. 
-            Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artefacts in modulated images are strongly diminished. 
+            CAT12 uses an internal interpolation in order to allow more reliable results also for low resolution images. 
+            Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artifacts in modulated images are strongly diminished. 
           </p>       
         </li>
       </ol>
