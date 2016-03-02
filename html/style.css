@@ -140,6 +140,28 @@ a.function:hover {
 li {
 	margin-bottom: 0.2em;
 	}
+
+table {
+  background-color: #ffeda0;
+  barder-collapse: collapse;
+  border: none;
+}
+thead {
+  background-color: #f3c600;
+  /*
+  border-top: 1px solid #999;
+  border-bottom: 1px solid #999;
+  */
+}
+tfood {
+  background-color: #F7F1D4;
+  font-size: 80%;
+  border-top: 1px solid #999;
+}
+td, th {
+  text-align: left; 
+  padding: 0.2em 1em;
+}
 	
 img.center {
   text-align: center;

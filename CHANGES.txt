@@ -9558,6 +9558,7 @@ M       cat_run.m
 Changed: Some minor issue swith windows and backgorund processes.
 
 ------------------------------------------------------------------------
+r878 | dahnke | 2016-03-01 17:36:37 +0100 (Di, 01 Mär 2016) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9573,5 +9574,29 @@ Changed:    Set default NCstr=0.5.
 Corrected: 	Corrected problems do to variable name changes from cat12 to cat.
 Corrected:  Small errors.
 
+
 ------------------------------------------------------------------------
-r878 | dahnke | 2016-03-01 17:36:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_run_job.m
+D       html/cat_methods_CAT.html
+M       html/cat_methods_LP.html
+M       html/cat_methods_VBM.html
+M       html/cat_methods_VBM_APP.html
+M       html/cat_starting.html
+M       html/cat_tools_VBM.html
+M       html/style.css
+M       spm_cat12.m
+ M      templates_surfaces/lh.mask
+ M      templates_surfaces/rh.mask
+
+Changed:   Updated APP GUI and help.
+Changed:   Updated noise help.
+Fixed:     Corrected user specific GUI initialization problems.
+Fixed:     Corrected problem with analyze input images.   
+
+
+------------------------------------------------------------------------
+r879 | dahnke | 2016-03-02 14:02:47
