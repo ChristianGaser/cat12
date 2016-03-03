@@ -9601,6 +9601,7 @@ Fixed:     Corrected problem with analyze input images.
 
 
 ------------------------------------------------------------------------
+r880 | dahnke | 2016-03-02 20:06:35 +0100 (Mi, 02 Mär 2016) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9619,5 +9620,20 @@ Fixed:      Corrected quality grading function for NaN input.
 Changed:    Replaced QA marks with percentage rating and grade in command line report. 
 Changed:    Updated HTML help.
 
+
 ------------------------------------------------------------------------
-r880 | dahnke | 2016-03-02 20:06:25
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       cat_surf_parameters.m
+M       html/cat.html
+M       html/cat.txt
+
+(1) Changed: mrf filter is now independent from NCstr and is limited to <=0.15
+(2) Fixed: Issue with old use of log rather than sqrt for slucus depth 
+    estimation
+(3) Fixed: Browser commands in cat.txt
+------------------------------------------------------------------------
+r881 | gaser | 2016-03-03 11:41:22
