@@ -87,7 +87,7 @@ function varargout = cat_surf_parameters(job)
       if exist(PSD,'file') && job.lazy  
         if job.verb==1, fprintf('  Display allready resampled %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
       else
-        cmd = sprintf('CAT_SulcusDepth -log "%s" "%s" "%s"',deblank(P(i,:)),Psphere,PSD); %-sqrt
+        cmd = sprintf('CAT_SulcusDepth -sqrt "%s" "%s" "%s"',deblank(P(i,:)),Psphere,PSD); %-sqrt
         [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug,job.trerr);
         if nargout==1, varargout{1}.PSD{i} = PSD; end  
         if job.verb==1, fprintf('  Display resampled %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end

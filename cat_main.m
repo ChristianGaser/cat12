@@ -776,7 +776,7 @@ if job.extopts.mrf>=1 || job.extopts.mrf<0;
   % estimate noise
   [Yw,Yg] = cat_vol_resize({Ym.*(Ycls{1}>240),Ym.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
   Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
-  job.extopts.mrf = double(min(0.6,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * job.extopts.NCstr * 2; 
+  job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
   clear Yn Ycls1 Ycls2;
 end
 
