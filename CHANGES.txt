@@ -9622,6 +9622,7 @@ Changed:    Updated HTML help.
 
 
 ------------------------------------------------------------------------
+r881 | gaser | 2016-03-03 11:41:28 +0100 (Do, 03 Mär 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9635,5 +9636,32 @@ M       html/cat.txt
 (2) Fixed: Issue with old use of log rather than sqrt for slucus depth 
     estimation
 (3) Fixed: Browser commands in cat.txt
+
 ------------------------------------------------------------------------
-r881 | gaser | 2016-03-03 11:41:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_tst_qa.m
+M       html/cat_methods.html
+M       html/cat_methods_VBM.html
+
+Changed*:   Further test of the affine registration for untypical scaling and 
+            switching to the default registration option that seems to be more 
+            robust. 
+            *** This part is experimental and required further work and tests!
+Fixed:      Corrected error in cat_main line 1920 - missed variable hhm.
+Fixed:      Corrected error in cat_tst_qa line 646 - interpolation error due to 
+            bad V.pinfo field.
+Fixed:      Corrected error due to bad background estimation in cat_main line 411.
+Changed:    Added an error message if SPM Segmentation is empty. 
+Changed:    Used error identifier rather that error message for the name of the
+            error subdirectory created in the catch block in cat_run_[new|old]catch
+Changed:    Updated contrast checks and error message in cat_main_gintnorm.
+ 
+------------------------------------------------------------------------
+r882 | dahnke | 2016-03-03 18:14:07

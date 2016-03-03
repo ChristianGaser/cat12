@@ -220,18 +220,18 @@ function varargout = cat_tst_qa(action,varargin)
         if any(size(Yp0)~=Vo.dim)
           if isfield(Vo,'private'), Vo = rmfield(Vo,'private'); end
           if isfield(Vo,'mat0'),    Vo = rmfield(Vo,'mat0');    end
-          Vo.dat = zeros(Vo.dim,'single'); Vo.dt(1) = 16; Vo.pinfo(3) = 0;
+          Vo.dat = zeros(Vo.dim,'single'); Vo.dt(1) = 16; Vo.pinfo = [1;0;0];
           
           Vp0t          = res.image;
           if isfield(Vp0t,'private'), Vp0t = rmfield(Vp0t,'private'); end
           if isfield(Vp0t,'mat0'),    Vp0t = rmfield(Vp0t,'mat0'); end
           Vp0t.dt(1)    = 16;
-          Vp0t.pinfo(3) = 0;
+          Vp0t.pinfo    = [1;0;0];
           Vp0t.dat      = Yp0;
 
           % resampling and corrections of the Yp0
          % Vp0t       = spm_write_vol(Vp0t,double(Yp0));
-          [Vtpm,Yp0] = cat_vol_imcalc(Vp0t,Vo,'i1',struct('interp',6,'verb',0));
+          [Vtpm,Yp0] = cat_vol_imcalc(Vp0t,Vo,'i1',struct('interp',2,'verb',0));
           rf         = 50;
           Yp0        = single(Yp0);
           Yp0r       = round(Yp0*rf)/rf;
