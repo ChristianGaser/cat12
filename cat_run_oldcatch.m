@@ -72,7 +72,7 @@ function cat_run_oldcatch(job,tpm,subj)
         %%
         errfolder    = 'err';
         [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
-        suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.message); 
+        suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
         suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
         if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
         catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
