@@ -308,6 +308,12 @@ T3th = [ min([  mean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([mean(res.mn(res.l
 
 %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
 Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
+if sum(Yp0(:)>0.3)<100
+  BGth = mean(res.mn(res.lkp==6 & res.mg'>0.3));
+  error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
+    'Empty Segmentation error (B=%0.2f, C=%0.2f, G=%0.2f, W=%0.2f)\n',...
+      BGth,T3th(1),T3th(2),T3th(3)); 
+end
 Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
 Yp0  = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
 
@@ -407,9 +413,8 @@ else
   if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<mean(T3th(1:2)))))>10000
     Ybg = P(:,:,:,6); 
     [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
-    warning('off','MATLAB:cat_vol_morph:NoObject'); 
-    Ybgr = cat_vol_morph(cat_vol_morph(Ybgr & cat_vol_morph(Ybgr>128,'d') & Ysrcr<T3th(1),'lo',1),'lc',1);
-    warning('on','MATLAB:cat_vol_morph:NoObject'); 
+    Ybgrth = max(mean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
+    Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
     Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
   else
     Ybg = ~Yb;
@@ -690,7 +695,7 @@ if job.extopts.gcutstr>0
     stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
     [Yb,Yl1] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
     if 0
-      %% just for manual debuging / development
+      %% just for manual debuging / development - 201603 > remove this in 201609?
       job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
       job.extopts.gcutstr=0.1; [Yb01,Yl101] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
       job.extopts.gcutstr=0.9; [Yb09,Yl109] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
@@ -1916,9 +1921,9 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   caxis(GMthicknessaxis);
   
   % new colorscale
-  spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); 
-  spm_orthviews('window',hhm ,[0 WMfactor]); 
-  spm_orthviews('window',hhp0,[0 WMfactor]); 
+  if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
+  if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
+  if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
   
   % setup new legend 
   % @Christian: It is unclear to me, why the axis scalling differs between the cases with and without surface. 

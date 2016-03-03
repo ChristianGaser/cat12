@@ -49,8 +49,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   res.mn = round(res.mn*10^5)/10^5; 
   
   if cat_get_defaults('extopts.subfolders')
-       reportfolder  = 'report';
-  else reportfolder  = ''; end
+    reportfolder  = 'report';
+  else
+    reportfolder  = '';
+  end
   
   %% initial thresholds and intensity scaling
   T3th3 = [mean(res.mn(res.lkp==3 & res.mg'>0.3)) ...
@@ -58,7 +60,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
            mean(res.mn(res.lkp==2 & res.mg'>0.1))];
   T3th3 = round(T3th3*10^5)/10^5; 
   
-  if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) % invers (T2 / PD)
+  if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % invers (T2 / PD)
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:InverseContrast',...
       sprintf(['Inverse tissue contrast! ' ...
@@ -157,9 +159,9 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     Tth.T3th  = T3th;
     Tth.T3thx = T3thx;
   else    
-    error('CAT:cat_main:UnknownContrast',...
-      sprintf(['Unknown tissue contrast - use SPM segmentation as T1 map! ' ...
-           '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0); %#ok<SPERR>
+    error('CAT:cat_main:badTissueContrast',...
+      sprintf('Bad tissue contrast (C=%0.2f, G=%0.2f, W=%0.2f)\n',...
+        T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0); %#ok<SPERR>
       
     %{
     cat_warnings = cat_io_addwarning(cat_warnings,...
