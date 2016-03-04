@@ -9638,6 +9638,7 @@ M       html/cat.txt
 (3) Fixed: Browser commands in cat.txt
 
 ------------------------------------------------------------------------
+r882 | dahnke | 2016-03-03 18:14:22 +0100 (Do, 03 Mär 2016) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9663,5 +9664,17 @@ Changed:    Used error identifier rather that error message for the name of the
             error subdirectory created in the catch block in cat_run_[new|old]catch
 Changed:    Updated contrast checks and error message in cat_main_gintnorm.
  
+
 ------------------------------------------------------------------------
-r882 | dahnke | 2016-03-03 18:14:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_tst_qa.m
+
+Fixed:    Corrected error in CAT.XML due to the usage of cat_get_defaults rather
+          than using the job structure.
+Fixed:    Corrected wrong use of job.extopts.NCstr parameter in cat_main.
+Changed:  Memory optimization of SPM preprocessing.
+------------------------------------------------------------------------
+r883 | dahnke | 2016-03-04 12:00:08
