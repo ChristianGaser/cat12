@@ -265,7 +265,12 @@ for z=1:length(x3),
 
     spm_progress_bar('set',z);
 end
-spm_progress_bar('clear');
+sQ = (sum(Q,4)+eps)/255; P = zeros([d(1:3),Kb],'uint8');
+for k1=1:size(Q,4)
+  P(:,:,:,k1) = cat_vol_ctype(round(Q(:,:,:,k1)./sQ));
+end
+clear sQ Qspm_progress_bar('clear');
+
 
 % load bias corrected image
 % restrict bias field to maximum of 3 and a minimum of 0.1
@@ -284,14 +289,12 @@ clear chan o x1 x2 x3 bf1 f z
 Ycls = {zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8') ...
         zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8')};
 
-vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));
-vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));
+vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
+vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image 
+vx_volp = prod(vx_vol)/1000;
+voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
 
-sQ = (sum(Q,4)+eps)/255; P = zeros([d(1:3),Kb],'uint8');
-for k1=1:size(Q,4)
-  P(:,:,:,k1) = cat_vol_ctype(round(Q(:,:,:,k1)./sQ));
-end
-clear sQ
+
 
 
    
@@ -309,15 +312,20 @@ T3th = [ min([  mean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([mean(res.mn(res.l
 %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
 Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;;
 if sum(Yp0(:)>0.3)<100
+  % this error often depends on a failed affine registration, where SPM
+  % have to find the brain in the head or background
   BGth = mean(res.mn(res.lkp==6 & res.mg'>0.3));
   error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
-    'Empty Segmentation error (B=%0.2f, C=%0.2f, G=%0.2f, W=%0.2f)\n',...
-      BGth,T3th(1),T3th(2),T3th(3)); 
+   ['Empty Segmentation: \n ' ...
+    'Possibly the affine registration failed. Pleace check image orientation.\n' ...
+    ' Volume:      B=%0.2f, C=%0.2f, G=%0.2f, W=%0.2f\n' ...
+    ' Intensities: B=%0.2f, C=%0.2f, G=%0.2f, W=%0.2f\n'],...
+    [sum(P(:,:,:,6)>128),sum(P(:,:,:,3)>128),sum(P(:,:,:,1)>128),sum(P(:,:,:,2)>128)]*vx_volp, ...
+    BGth,T3th(1),T3th(2),T3th(3)); 
 end
 Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
 Yp0  = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
 
-voli = @(v) (v ./ (pi * 4./3)).^(1/3);               % volume > radius
 
 if job.extopts.debug>3
 % use gcut2
@@ -498,7 +506,7 @@ end
 % cleanup
 P = clean_gwc(P,1);
 spm_progress_bar('clear');
-for k1=1:size(Q,4)
+for k1=1:size(P,4)
     Ycls{k1} = P(:,:,:,k1);
 end
 clear Q P q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
@@ -590,8 +598,8 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
   Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
   Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
     Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-    job.extopts.NCstr .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-    (1-job.extopts.NCstr) .* Yms .* Ybr;
+    (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+    job.extopts.NCstr .* Yms .* Ybr;
   clear Yms Ybr BB;
 
   if job.inv_weighting
