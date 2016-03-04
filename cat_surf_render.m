@@ -88,7 +88,7 @@ switch lower(action)
             for mi = 2:numel(MS)
                 try
                     MI         = gifti(MS{mi});
-                    M.faces    = [M.faces; MI.faces + size(M.vertices,1)];   % further faces with increased vertices ids
+                    M.faces    = [double(M.faces); double(MI.faces) + size(M.vertices,1)];   % further faces with increased vertices ids
                     M.vertices = [M.vertices; MI.vertices];                 % further points at the end of the list
                     if isfield(M,'cdata');
                         M.cdata  = [M.cdata; MI.cdata];                     % further texture values at the end of the list
@@ -242,7 +242,7 @@ switch lower(action)
         
         %-Patch
         %------------------------------------------------------------------
-        P = struct('vertices',M.vertices, 'faces',M.faces);
+        P = struct('vertices',M.vertices, 'faces',double(M.faces));
         H.patch = patch(P,...
             'FaceColor',        [0.6 0.6 0.6],...
             'EdgeColor',        'none',...
