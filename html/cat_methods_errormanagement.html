@@ -1,0 +1,49 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/contact.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_management.html">CAT error management</a>
+      </div>
+    </div>
+  
+    
+    <!-- TEXT --> 
+    <div id="content">
+      <h2>CAT error management</h2>
+      <p>
+        To avoid preprocessing stops in large datasets by single errors, CAT allows to catch preprocessing errors of on subject (<i>cat.extopts.ignoreErrors</i> in <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;"> cat_defaults</a>). 
+        It creates an error directory "err" within the folder of the file and creates a error specific subdirectory "FUNCTION.LINE.IDENTIFIER" with the information where the LAST error occurred and its identification.
+        The CAT-XML file with preprocessing parameters, error and system information are written in this directory. 
+        Furthermore, the CAT-report (if exist) is copied and a symbolic link to the original file is created (only MAC/Linux) to check the original image.  
+      </p><p> 
+        Although, the LAST error terminates the processing it is often not the major problem. 
+        E.g. an error in the <i>cat_vol_morph</i> for an empty image, can occur in the preprocessing function <i>cat_main</i>, but is caused much early by a bad affine registration, failed corrections or miss classifications. 
+        Therefore, the XML file is essential to identify the real error. 
+      </p><p> 
+        Failed preprocessing is often related to a failed affine registration that was caused by a bad image orientation.
+        So if your preprocessing failed, please checkt first the image orientation, correct it (if is was bad) and try again. 
+        If also this failed, you can sending us the XML-file (and the original image) to help us to identify the problem and correct the error.
+      </p>
+    </div>  
+    
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

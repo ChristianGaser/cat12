@@ -142,7 +142,9 @@ li {
 	}
 
 table {
-  background-color: #ffeda0;
+  /*
+    background-color: #ffeda0;
+  */
   barder-collapse: collapse;
   border: none;
 }
@@ -161,6 +163,11 @@ tfood {
 td, th {
   text-align: left; 
   padding: 0.2em 1em;
+}
+em, tt, strong {
+  font-style: normal;
+  font-weight: 500;
+  color: #886666; 
 }
 	
 img.center {

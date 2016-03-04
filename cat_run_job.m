@@ -257,6 +257,7 @@ function cat_run_job(job,tpm,subj)
             [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
             
             % correct AC if it is to far away from the image center 
+            % ... this code does not work - 20160303 ... remove it after 201609 
             %{
             VFimat = spm_imatrix(VF.mat); nf = 8;
             VFacvx = VFimat(1:3) ./ VFimat(7:9);
@@ -296,7 +297,7 @@ function cat_run_job(job,tpm,subj)
         
           
         % prepare affine parameter 
-        aflags     = struct('sep',obj.samp,'regtype',job.opts.affreg,'WG',[],'WF',[],'globnorm',0);
+        aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); 
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
@@ -312,20 +313,6 @@ function cat_run_job(job,tpm,subj)
               [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
             catch
               affscale = 0; 
-            end
-            % if we get totally strange values (very small/large brains) 
-            % then we obtain problematic data or more often the affine
-            % registration found something else more interesting than 
-            % the brain. So we used the standard parameter with two
-            % major differences: regtype=subj and globnorm = 1
-            if affscale>3 || affscale<0.5
-              if job.extopts.verb>0,
-                 stime = cat_io_cmd('Coarse affine registration failed. Try regtype=subj and globnorm=1.','','',1,stime); 
-              end
-              aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); % subject + globnorm!
-              aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
-              aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, eye(4)); Affine = Affine0; 
             end
             if affscale>3 || affscale<0.5
               stime  = cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);
@@ -392,16 +379,7 @@ function cat_run_job(job,tpm,subj)
         warning off
         [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);  
         warning on
-        if affscale1>2 || affscale1<0.5
-          if job.extopts.verb>0, 
-            stime = cat_io_cmd('Affine registration failed, Try regtype=subj and globnorm=1.','','',1,stime);  
-          end
-          aflags     = struct('sep',resa,'regtype','subj','WG',[],'WF',[],'globnorm',1); % subject + globnorm!
-          aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
-          aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-          [Affine1,affscale] = spm_affreg(VG1, VF1, aflags, Affine, affscale); 
-        end
-        if ~any(any(isnan(Affine1(1:3,:)))) && affscale>3 && affscale<0.5, Affine = Affine1; end
+        if ~any(any(isnan(Affine1(1:3,:)))) && affscale>0.5 && affscale<3, Affine = Affine1; end
         clear VG1 VF1
     end
     
