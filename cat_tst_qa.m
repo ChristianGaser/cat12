@@ -491,7 +491,7 @@ function varargout = cat_tst_qa(action,varargin)
       % software, parameter and job information
       % ----------------------------------------------------------------
       [nam,rev_spm] = spm('Ver');
-      AS.software.version_spm = rev_spm;
+      QAS.software.version_spm = rev_spm;
       A = ver;
       for i=1:length(A)
         if strcmp(A(i).Name,'MATLAB'),
@@ -515,7 +515,9 @@ function varargout = cat_tst_qa(action,varargin)
       
       %opt.job  = rmfield(opt.job,{'data','channel','output'}); 
       %QAS.parameter             = opt.job; 
-      QAS.parameter.vbm         = rmfield(cat_get_defaults,'output');
+      QAS.parameter.opts        = opt.job.opts;
+      QAS.parameter.extopts     = opt.job.extopts;
+      %QAS.parameter.output      = opt.job.output;
       QAS.parameter.caterr      = opt.caterr; 
       QAS.error                 = opt.caterrtxt; 
       
@@ -563,8 +565,10 @@ function varargout = cat_tst_qa(action,varargin)
       % @Christian: Do we only want the cat parameter or is it important to have further information? 
       %             I think cat defaults would be enought for the beginning.  
       %             Furhter data will only be excess baggage for the cat*.xml file. 
-      %QAS.parameter.spm = spm_get_defaults;
-      QAS.parameter.vbm =  rmfield(cat_get_defaults,'output');
+      %QAS.parameter             = opt.job; 
+      QAS.parameter.opts        = opt.job.opts;
+      QAS.parameter.extopts     = opt.job.extopts;
+      %QAS.parameter.output      = opt.job.output;
       if exist('res','var');
         rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
         for rfi=1:numel(rf)
