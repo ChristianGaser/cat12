@@ -9666,6 +9666,7 @@ Changed:    Updated contrast checks and error message in cat_main_gintnorm.
  
 
 ------------------------------------------------------------------------
+r883 | dahnke | 2016-03-04 12:00:18 +0100 (Fr, 04 Mär 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9676,5 +9677,17 @@ Fixed:    Corrected error in CAT.XML due to the usage of cat_get_defaults rather
           than using the job structure.
 Fixed:    Corrected wrong use of job.extopts.NCstr parameter in cat_main.
 Changed:  Memory optimization of SPM preprocessing.
+
 ------------------------------------------------------------------------
-r883 | dahnke | 2016-03-04 12:00:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_surf_display.m
+M       cat_surf_render.m
+
+(1) Fixed: Wrong weighting of NCstr in cat_main.m
+(2) Changed: Use try for call of cat_surf_display and cat_surf_render because of
+    weird error in Matlkab 2015a with non-double values for Faces.
+------------------------------------------------------------------------
+r884 | gaser | 2016-03-04 12:11:09

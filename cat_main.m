@@ -464,7 +464,8 @@ P(:,:,:,2:6)     = P(:,:,:,2:6)     .* repmat(1-Ygmc,[1,1,1,5]);
 P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
 P(:,:,:,2)       = max(P(:,:,:,2),255*Ywmc);
 Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-clear Ygmc Ywmc;
+clear Ygmc Ywmc Yg Ydiv;
+
 % head to GM
 Ygm = uint8(cat_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>mean(T3th(2:3))) & Yp0<2/3);
 P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
@@ -473,6 +474,7 @@ P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
 P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
 Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
 clear Ywm Ygm;
+
 %% remove brain tissues outside the brainmask ...
 % tissues > skull (within the brainmask)
 Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>0.2) - Yp0 )>0.5); 
@@ -480,7 +482,7 @@ sumP = sum(P(:,:,:,1:3),4);
 P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
 P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
 P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
-clear sumP
+clear sumP Ybb
 
 %% MRF
 % Used spm_mrf help and tested the probability TPM map for Q without good results.         
@@ -523,6 +525,7 @@ if job.extopts.debug==2
   save(tmpmat,'res','tpm','job','Ysrc','Ybf','Ycls');
 end
 
+clear Ybf
 fprintf('%4.0fs\n',etime(clock,stime));
 
 
@@ -640,7 +643,7 @@ stime = cat_io_cmd('ROI segmentation (partitioning)');
 [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
 fprintf('%4.0fs\n',etime(clock,stime));
 
-clear YBG
+clear YBG Ysrc;
 
 
 %  ---------------------------------------------------------------------
@@ -654,7 +657,6 @@ clear YBG
 %  ---------------------------------------------------------------------
 if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2); 
   stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
-  clear Ysrc;
   
   Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
     ( ...smooth3(Ycls{3}<10 & Ycls{2}<10) & ... correct for possible changes by bias corrections
@@ -790,7 +792,7 @@ if job.extopts.mrf>=1 || job.extopts.mrf<0;
   [Yw,Yg] = cat_vol_resize({Ym.*(Ycls{1}>240),Ym.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
   Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
   job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
-  clear Yn Ycls1 Ycls2;
+  clear Yn Ycls1 Ycls2 Yg;
 end
 
 % display something
@@ -1409,6 +1411,8 @@ if job.output.warps(1)
     N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim(1:3),1,3]);
 end
 
+clear Yy;
+
 % deformation iy - subject > dartel
 if job.output.warps(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
   %% update job.output.warps(2) for interpolated images
@@ -1617,7 +1621,7 @@ if job.output.surface && exist('S','var')
     'subjectmeasures',qa.subjectmeasures),'write+'); % here we have to use the write+!
 
 end  
-clear Yo Ybf Yp0 qas;
+clear Yo Yp0 qas;
 fprintf('%4.0fs\n',etime(clock,stime));
 
 
@@ -1868,12 +1872,14 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
     % surface
     if exist('Psurf','var')
       hCS = subplot('Position',[0.5 0.05 0.5 0.25],'visible','off'); 
-      hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
-        'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-      axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
-      htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
+      try
+        hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
+          'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+        axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
+        htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
         'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
-	  end
+      end
+    end
 
     % print group report file 
     fg = spm_figure('FindWin','Graphics');
@@ -1947,8 +1953,10 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
     'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
   
   if exist('hSD','var')
-    cat_surf_render('ColourMap',hSD{1}.axis,gray(128)); 
-    cat_surf_render('clim',hSD{1}.axis,GMthicknessaxis); 
+    try
+      cat_surf_render('ColourMap',hSD{1}.axis,gray(128)); 
+      cat_surf_render('clim',hSD{1}.axis,GMthicknessaxis); 
+    end
   end
   
   warning on;  %#ok<WNON>
