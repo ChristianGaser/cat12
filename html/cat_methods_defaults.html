@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/contact.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_defaults.html">CAT defaults and user modes</a>
+      </div>
+    </div>
+  
+    
+    <!-- TEXT --> 
+    <div id="content">
+      <h2>CAT defaults and user modes</h2>
+      <p>
+        CAT uses different user modes to avoid overpacking of the GUI by unimportant preprocessing parameter that are irrelevant for most user. 
+        All CAT parameter were stored in the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;">cat_defaults</a> file, that allow permanent changes of specific parameters.
+        Furthermore, it is possible to use your own default files, by creating a copy of the <em>cat_defaults</em> file, change its parameters and load it from command line by <a class="function" href="matlab:cat12('select');">cat12('select');</a> or <em>cat12('cat_defaults_mydefs')</em> or <em>cat12('mypath/cat_defaults_mydefs')</em>.
+      </p><p>
+        It is also possible to switch to the expert GUI mode that contain more options by setting the <em>cat.extopts.expertgui = 1; </em> and restart SPM/CAT.
+      </p>
+    </div>  
+    
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>

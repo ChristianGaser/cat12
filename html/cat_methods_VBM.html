@@ -83,7 +83,8 @@
             These filters remove noise while preserving edges and are implemented as preprocessing step.  
             -->
             The second method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation and controlled by reminding image noise. 
-            The strength of the denoising can be controlled by the <i><b>"Strength of Noise Correction"</b></i> parameter (<i>cat.extopts.NCstr</i>), with 0 for no noise correction at all, small values (0.01-0.5) for small denoising, 0.5 for average denoising (default), and higher values (0.5-1) for strong denoising.
+            The strength of the denoising can be controlled by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults), with 0 for no noise correction at all, small values (0.01-0.5) for small denoising, 0.5 for average denoising (default), and higher values (0.5-1) for strong denoising.
+            Default setting is 0.5 to avoid over filtering that may reduce statistical power.
           </p>
         </li>
         
@@ -115,8 +116,8 @@
           <p>
             Beside WM-inhomogeneities, also the GM intensity can vary for different regions like the motor cortex, the basal ganglia, or the occipital lobe.  
             Although, these changes have an anatomical background (e.g. iron content, myelination), they depend on the MR-protocol and often lead to GM-underestimations for higher intensities and CSF-overestimations for lower intensities.  
-            Therefore, a local intensity transformation of all tissue classes is used to reduce this effects in the <i>m*-image</i> before the final AMAP segmentation. 
-            The strength of the changes is controlled by the <i><b>"Strength of Local Adaptive Segmentation"</b></i> parameter <i>(cat.extopts.LASstr)</i>, with 0 for no LAS, small values (0.01-0.5) for small adaptations, 0.5 for average adaptation (default), and higher values (0.5-1) for strong adaptations.
+            Therefore, a local intensity transformation of all tissue classes is used to reduce this effects in the <em>m*-image</em> before the final AMAP segmentation. 
+            The strength of the changes is controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter (<em>cat.extopts.LASstr</em> in cat_defaults), with 0 for no LAS, small values (0.01-0.5) for small adaptations, 0.5 for average adaptation (default), and higher values (0.5-1) for strong adaptations.
           </p>
         </li>
         
@@ -124,7 +125,7 @@
         <li> 
           <h4 id="SS">Skull-Stripping</h4>
           <p>
-            CAT12 contains a revised graph-cut based skull-stripping with a <i><b>"Strength of Skull-Stripping"</b></i> parameter <i>(cat.extopts.gcutstr)</i>, with 0 for a more liberal and wider brain masks and 1 for a more
+            CAT12 contains a revised graph-cut based skull-stripping with a <em>"Strength of Skull-Stripping"</em> parameter (<em>cat.extopts.gcutstr</em> in cat_defaults), with 0 for a more liberal and wider brain masks and 1 for a more
           aggressive skull-stripping. The default is 0.5 and was successfully tested on a variety of different images.
           </p> 
           <p>The strength parameter affects multiple internal parameters:</p>
@@ -155,7 +156,7 @@
         <li>
           <h4 id="Cleanup">Cleanup</h4>
           <p>
-            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation. The strength of the cleanup is controlled by the <i><b>"Strength of Final Clean Up"</b></i> parameter <i><b>gcutstr</b></i>, with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
+            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation. The strength of the cleanup is controlled by the <em>"Strength of Final Clean Up"</em> parameter (<em>gcutstr</em> in cat_defaults), with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
           </p>
         </li>
         
