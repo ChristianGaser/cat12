@@ -9692,6 +9692,7 @@ M       cat_surf_render.m
     weird error in Matlkab 2015a with non-double values for Faces.
 
 ------------------------------------------------------------------------
+r885 | dahnke | 2016-03-04 16:11:00 +0100 (Fr, 04 Mär 2016) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9707,5 +9708,22 @@ M       html/style.css
 Changed:    Use only default parameter for initial affine registration.
 Added:      Wrote error-management help. 
 Added       Wrote cat_defaults and user-modes help.
+
 ------------------------------------------------------------------------
-r885 | dahnke | 2016-03-04 16:10:52
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Updated manual.
+(2) Changed: Changed some help text.
+(3) Fixed: Some out of range errors and divs by zeros
+(4) Changed: Default NCstr is now 0.75
+------------------------------------------------------------------------
+r886 | gaser | 2016-03-04 16:36:00

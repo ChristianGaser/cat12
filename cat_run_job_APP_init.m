@@ -32,7 +32,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 
   Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth;
   Yg   = cat_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
-  Ydiv = cat_vol_div(Ysrc,resT3.vx_volr) ./ Ysrc;
+  Ydiv = cat_vol_div(Ysrc,resT3.vx_volr) ./ (Ysrc+eps);
 
   WMth = roundx(single(cat_stat_nanmedian(Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean( ...
            Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
@@ -61,7 +61,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   Yms  = cat_vol_smooth3X( min(Yms*1.5 .* ~Ybg,Ysrc .* ~Ybg),16*mean(vx_vol));
   Yms  = (Yms ./ mean(Yms(~Ybg(:)))) * WMth;
   Yt   = Ysrc>max(BGth,Yms*0.3) & Ysrc<Yms*2 & Ysrc<WMth*(1+Yms/WMth*2) & Yg<0.9 & Ydiv<0.2 & ...
-         Ydiv>-0.6 & smooth3(Ysrc./Yms.*Yg.*Ydiv<-0.2)<0.3 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
+         Ydiv>-0.6 & smooth3(Ysrc./(Yms+eps).*Yg.*Ydiv<-0.2)<0.3 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
   Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
   [Ywi,resT2] = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
   for i=1:1, Ywi = cat_vol_localstat(Ywi,Ywi>0,2,3); end % only one iteration!
@@ -85,9 +85,9 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 
   %% second WM inhomogeneity with improved Yt with higher lower threshold (avoid CSF and less filtering)
   stime = cat_io_cmd('  Final correction','g5','',verb,stime);
-  Yt   = Ysrc>max(BGth,Yms*0.3)  & Ysrc./Ywi>0.2 & Ysrc./Ywi<1.2 & Ysrc./Ywi<Yms/WMth*2 & Yg<0.9 & Ydiv<0.2 & Ydiv>-0.6 & ...
-         smooth3(Ysrc./Yms.*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
-  Yt   = Yt | (~Ybg & Ysrc>BGth/2 & Ysrc>Yms*0.5 & Ysrc<Yms*1.2 & Ydiv./Yg<0.5 & ((Ysrc./Ywi>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ysrc./Ywi>0.6)) & Ysrc./Ywi<1.2); 
+  Yt   = Ysrc>max(BGth,Yms*0.3)  & Ysrc./(Ywi+eps)>0.2 & Ysrc./(Ywi+eps)<1.2 & Ysrc./(Ywi+eps)<Yms/WMth*2 & Yg<0.9 & Ydiv<0.2 & Ydiv>-0.6 & ...
+         smooth3(Ysrc./(Yms+eps).*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
+  Yt   = Yt | (~Ybg & Ysrc>BGth/2 & Ysrc>Yms*0.5 & Ysrc<Yms*1.2 & Ydiv./(Yg+eps)<0.5 & ((Ysrc./(Ywi+eps)>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ysrc./(Ywi+eps)>0.6)) & Ysrc./(Ywi+eps)<1.2); 
   Yt(smooth3(Yt)<0.7)=0;
   Ywi  = (Ysrc .* Yt) ./ max(eps,Yt);  
   [Ywi,resT2] = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
