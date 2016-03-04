@@ -279,7 +279,7 @@ function cat_run_job(job,tpm,subj)
             
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
-            VF.dat(:,:,:) = uint8(Ym * 200); 
+            VF.dat(:,:,:) = cat_vol_ctype(Ym * 200,'uint8'); 
             VF.pinfo      = repmat([1;0],1,size(Ym,3));
             clear WI; 
             
