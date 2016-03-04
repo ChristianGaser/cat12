@@ -273,6 +273,7 @@ function varargout = cat_surf_display(varargin)
     end   
   end
 end
+
 function clim = iscaling(cdata,plim)
 %%
   ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
