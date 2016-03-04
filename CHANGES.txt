@@ -9679,6 +9679,7 @@ Fixed:    Corrected wrong use of job.extopts.NCstr parameter in cat_main.
 Changed:  Memory optimization of SPM preprocessing.
 
 ------------------------------------------------------------------------
+r884 | gaser | 2016-03-04 12:11:12 +0100 (Fr, 04 Mär 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9689,5 +9690,22 @@ M       cat_surf_render.m
 (1) Fixed: Wrong weighting of NCstr in cat_main.m
 (2) Changed: Use try for call of cat_surf_display and cat_surf_render because of
     weird error in Matlkab 2015a with non-double values for Faces.
+
 ------------------------------------------------------------------------
-r884 | gaser | 2016-03-04 12:11:09
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run_job.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods.html
+M       html/cat_methods_VBM.html
+A       html/cat_methods_defaults.html
+A       html/cat_methods_errormanagement.html
+M       html/style.css
+
+Changed:    Use only default parameter for initial affine registration.
+Added:      Wrote error-management help. 
+Added       Wrote cat_defaults and user-modes help.
+------------------------------------------------------------------------
+r885 | dahnke | 2016-03-04 16:10:52
