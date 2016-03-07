@@ -9728,6 +9728,7 @@ M       tbx_cfg_cat.m
 (4) Changed: Default NCstr is now 0.75
 
 ------------------------------------------------------------------------
+r887 | dahnke | 2016-03-07 08:57:04 +0100 (Mo, 07 Mär 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9742,5 +9743,18 @@ M       html/cat_methods_RBM.html
 M       spm_cat12.m
 
 Changed:    Use affine aligned image in CAT report.
+
 ------------------------------------------------------------------------
-r887 | dahnke | 2016-03-07 08:56:42
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_cprintf.m
+M       cat_parallelize.m
+M       cat_run.m
+ M      html/cat_methods_defaults.html
+ M      html/cat_methods_errormanagement.html
+M       spm_cat12.m
+
+Fixed:    Corrected error by cprintferror in parallel processing. 
+------------------------------------------------------------------------
+r888 | dahnke | 2016-03-07 11:01:03
