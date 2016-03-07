@@ -45,6 +45,9 @@ end
 switch lower(deffile) 
   case {'select','choose'}
     deffile = spm_select(1,'batch','Select CAT default file!','',catdir);
+    if isempty(deffile) 
+      return
+    end
   case 'gui'
     deffile = spm_input('Species class',1,'human|ape|monkey',...
       {'human','ape','monkey'},1);
