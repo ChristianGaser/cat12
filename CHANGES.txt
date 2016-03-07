@@ -9745,6 +9745,7 @@ M       spm_cat12.m
 Changed:    Use affine aligned image in CAT report.
 
 ------------------------------------------------------------------------
+r888 | dahnke | 2016-03-07 11:01:12 +0100 (Mo, 07 Mär 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9756,5 +9757,21 @@ M       cat_run.m
 M       spm_cat12.m
 
 Fixed:    Corrected error by cprintferror in parallel processing. 
+
 ------------------------------------------------------------------------
-r888 | dahnke | 2016-03-07 11:01:03
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_main.m
+M       html/cat.html
+M       html/cat_methods_RBM.html
+M       spm_cat12.m
+
+(1) Changed: Updated manual.
+(2) Fixed: Some typos.
+------------------------------------------------------------------------
+r889 | gaser | 2016-03-07 17:01:50

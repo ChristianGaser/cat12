@@ -8,7 +8,9 @@ DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 
-STARGET=dbm.neuro.uni-jena.de:/Applications/xampp/htdocs/cat12
+STARGET_HOST=dbm.neuro.uni-jena.de
+STARGET_FOLDER=/Applications/xampp/htdocs/cat12
+STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h
@@ -55,6 +57,7 @@ zip: update
 scp: zip
 	-@echo scp to http://dbm.neuro.uni-jena.de/cat12/${ZIPFILE}
 	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
+	-@bash -c "ssh ${STARGET_HOST} ln -Fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 	
 cp_binaries: 
 	-@echo copy binaries
