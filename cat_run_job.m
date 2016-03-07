@@ -338,7 +338,7 @@ function cat_run_job(job,tpm,subj)
         aflags.sep = obj.samp/2; 
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
-        if app.bias>2 || app.msk>2 %job.extopts.APP>2
+        if app.bias>2 || app.msk>2 
             % apply (first affine) registration on the default brain mask
             VFa = VF; 
             if app.aff, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
@@ -356,7 +356,7 @@ function cat_run_job(job,tpm,subj)
             VF.dat(:,:,:) =  cat_vol_ctype(Ym*200); 
             VF1 = spm_smoothto8bit(VF,aflags.sep);
             VG1 = spm_smoothto8bit(VG,aflags.sep);
-        elseif app.bias || app.msk %job.extopts.APP==1 || job.extopts.APP==2
+        elseif app.bias || app.msk 
             % smooth data
             stime = cat_io_cmd('Affine registration','','',1,stime); 
             VF.dat(:,:,:) =  cat_vol_ctype(Ym*200); 
@@ -494,7 +494,7 @@ function cat_run_job(job,tpm,subj)
     %% check contrast
     Tgw = [mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))]; 
     Tth = [
-      min(res.mn(res.lkp==6 & res.mg'>0.3)) ... % background
+      ... min(res.mn(res.lkp==6 & res.mg'>0.3)) ... % bg; ignore the background, because of "R" weighted images  
       max( min( mean(res.mn(res.lkp==3 & res.mg'>0.2)) , ...
         max(Tgw)+abs(diff(Tgw))) , min(Tgw)-abs(diff(Tgw)) ) ... % csf with limit for T2!
       mean(res.mn(res.lkp==1 & res.mg'>0.3)) ... gm

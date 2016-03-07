@@ -10,8 +10,13 @@ function varargout=cat_io_cgw2seg(c,g,w,mode,d)
 % ______________________________________________________________________
 % $Revision$  $Date$
 
-  opt.verb = 0;
-
+  if ~exist('opt','var'); opt = struct(); end
+  
+  def.verb = 1;
+  def.mode = 'SPM';
+  def.d    = 0;
+  opt = cat_io_checkinopt(opt,def);
+  
   % if there is no input, select files
   if ~exist('c','var') || ~exist('g','var') || ~exist('w','var') || isempty(c) || isempty(g) || isempty(w)
     if ~exist('mode','var') || isempty(mode)
@@ -105,7 +110,11 @@ function varargout=cat_io_cgw2seg(c,g,w,mode,d)
         case 'FSL', hc.fname = fullfile(h,['p0' f(1:end-6) '.nii']);
         otherwise,  hc.fname = fullfile(h,['p0' f          '.nii']);
       end
-      hc.dt(1) = 16;
+      %hc.dt(1) = 16;
+      hc.dt(1) = spm_type('uint8');
+      hc.pinfo = [3/255;0;1];
+      hc.descript = 'label map';
+      if exist(hc.fname,'file'),delete(hc.fname); end
       spm_write_vol(hc,SEG);
 
       if nargout>0, varargout{1}{n} = hc.fname; end

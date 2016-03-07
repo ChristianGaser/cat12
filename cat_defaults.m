@@ -105,7 +105,7 @@ cat.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 
 
 % segmentation options
 cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 3 - ISARNLM
-cat.extopts.NCstr        = 0.75;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.75)
+cat.extopts.NCstr        = 0.75;  % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections (default = 0.75)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
 cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
@@ -255,3 +255,4 @@ cat.extopts.LAB.NV = 17; % no Ventricle
 cat.extopts.LAB.HC = 19; % Hippocampus 
 cat.extopts.LAB.HD = 21; % Head
 cat.extopts.LAB.HI = 23; % WM hyperintensities
+ 

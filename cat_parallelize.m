@@ -86,8 +86,8 @@ function varargout = cat_parallelize(job,func,datafield)
     save(tmp_name,'job','defaults','cat12');
     clear defaults cat12;
 
-    % matlab command          
-    matlab_cmd = sprintf('"addpath %s %s; load %s; %s(job); "',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),tmp_name,func);
+    % matlab command, cprintferror=1 for simple printing        
+    matlab_cmd = sprintf('"global cprintferror=1; addpath %s %s; load %s; %s(job); "',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),tmp_name,func);
 
     % log-file for output
     log_name = ['log_' func '_' logdate '_' sprintf('%02d',i) '.txt'];

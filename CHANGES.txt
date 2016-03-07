@@ -9710,6 +9710,7 @@ Added:      Wrote error-management help.
 Added       Wrote cat_defaults and user-modes help.
 
 ------------------------------------------------------------------------
+r886 | gaser | 2016-03-04 16:36:03 +0100 (Fr, 04 Mär 2016) | 15 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -9725,5 +9726,21 @@ M       tbx_cfg_cat.m
 (2) Changed: Changed some help text.
 (3) Fixed: Some out of range errors and divs by zeros
 (4) Changed: Default NCstr is now 0.75
+
 ------------------------------------------------------------------------
-r886 | gaser | 2016-03-04 16:36:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_io_cgw2seg.m
+M       cat_io_cprintf.m
+M       cat_main.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_run_job.m
+M       html/cat_methods_RBM.html
+M       spm_cat12.m
+
+Changed:    Use affine aligned image in CAT report.
+------------------------------------------------------------------------
+r887 | dahnke | 2016-03-07 08:56:42
