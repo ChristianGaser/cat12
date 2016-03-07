@@ -25,6 +25,7 @@ function varargout = cat_run(job)
 
 %rev = '$Rev$';
 
+
 % split job and data into separate processes to save computation time
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   cat_io_cprintf('warn',...
@@ -68,7 +69,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     clear defaults cat12;
     
     % matlab command, cprintferror=1 for simple printing         
-    matlab_cmd = sprintf('"global cprintferror=1; addpath %s %s %s %s; load %s; cat_run(job); "',spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+    matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s %s %s; load %s; cat_run(job); "',...
+      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output

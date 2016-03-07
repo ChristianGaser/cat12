@@ -148,7 +148,7 @@ function count = cat_io_cprintf(style,format,varargin)
     if nargout
         count = count1;
     end 
-    else
+  else
 
     warning off; 
 
