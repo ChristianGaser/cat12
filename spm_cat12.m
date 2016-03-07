@@ -23,8 +23,8 @@ function spm_cat12(varargin)
 
 rev = '$Rev$';
 global deffile;
+global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 %try clearvars -global deffile;  end %#ok<TRYNC>
-
 
 % start cat with different default file
 catdir = fullfile(spm('dir'),'toolbox','cat12'); 
@@ -105,23 +105,29 @@ end
 % set other defaultfile
 % The cat12 global variable is created and localy destroyed, because we 
 % want to call the cat12 function. 
-if 1 %nargin>0 %~strcmp(catdef,deffile) 
-  oldwkd = cd; 
-  cd(deffile_pp);
-  try clearvars -global cat; end %#ok<TRYNC>
-  clear cat;
-  eval(deffile_ff);
-  eval('global cat;'); 
-  cd(oldwkd);
-  
-  % initialize SPM 
-  eval('global defaults;'); 
-  if isempty(defaults) || (nargin==2 && varargin{2}==1) || restartspm
-    clear defaults; 
-    spm_jobman('initcfg');
-  end
-  clear cat12;
+%if 1 %nargin>0 %~strcmp(catdef,deffile) 
+oldwkd = cd; 
+cd(deffile_pp);
+try clearvars -global cat; end %#ok<TRYNC>
+clear cat;
+eval(deffile_ff);
+eval('global cat;'); 
+cd(oldwkd);
+
+% initialize SPM 
+eval('global defaults;'); 
+if isempty(defaults) || (nargin==2 && varargin{2}==1) || restartspm
+  clear defaults; 
+  spm_jobman('initcfg');
 end
+clear cat;
+%end
+
+% temporary, because of JAVA errors in cat_io_cprintf ... 20160307
+if cat_get_defaults('extopts.expertgui')<2
+  cprintferror=1;
+end
+
 
 spm('FnBanner',mfilename,rev);
 [Finter,Fgraph] = spm('FnUIsetup','CAT12');
