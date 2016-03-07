@@ -1013,11 +1013,11 @@ M0 = res.image.mat;
 
 % prepare transformations 
 
-% resoltion changes:
+% resolution changes:
 tpmres = abs(M1(1)); newres = job.extopts.vox; 
 if isinf(newres), newres = tpmres; end
 M1d = M1; M1([1,6,11])=M1([1,6,11]) .* newres/tpmres; 
-odim=floor(odim*tpmres/newres);
+odim = floor(odim*tpmres/newres);
 
 
 % to write a correct x=-1 output image, we have to be sure that the x
