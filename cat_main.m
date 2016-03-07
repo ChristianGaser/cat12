@@ -780,11 +780,13 @@ end
 
 % Amap parameters 
 n_iters = 16; sub = 16; n_classes = 3; pve = 5; 
-iters_icm = 1; bias_fwhm = 60; init_kmeans = 0; 
+bias_fwhm = 60; init_kmeans = 0; 
 
 if job.extopts.mrf~=0
-     iters_icm = 50;
-else iters_icm = 0; end
+  iters_icm = 50;
+else
+  iters_icm = 0; 
+end
 
 % adaptive mrf noise 
 if job.extopts.mrf>=1 || job.extopts.mrf<0; 
@@ -997,6 +999,7 @@ VF = spm_smoothto8bit(VF,job.opts.samp/2); % smoothing, because of the TPM smoot
 %% affreg registration for one tissue segment
 Affine = spm_affreg(VG, VF, aflags, res.Affine); 
 rf=10^6; Affine    = fix(Affine * rf)/rf;
+res.Affine0        = res.Affine;
 res.Affine         = Affine;
 
 clear VG VF cid tpm 
@@ -1063,6 +1066,7 @@ Mr      = M0\inv(R)*M1*vx2/vx3;
 mat0r   = R\M1*vx2/vx3;
 matr    = mm/vx3;
 trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
+res.rigid = M0\inv(R); 
 
 % old spm normalization used for atlas map
 trans.atlas.Yy = Yy; 
@@ -1628,26 +1632,26 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
 %% display and print result if possible
 %  ---------------------------------------------------------------------
-QMC   = cat_io_colormaps('marks+',17);
-color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-  
+  QMC   = cat_io_colormaps('marks+',17);
+  color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
+
   warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
-        
-  
+
+
   %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
   marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-	mark2rps    = @(mark) min(100,max(0,105 - mark*10));
+  mark2rps    = @(mark) min(100,max(0,105 - mark*10));
   grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
-  
-    
+
+
   % CAT GUI parameter:
   % --------------------------------------------------------------------
   SpaNormMeth = {'None','Dartel','Shooting'}; 
-	str = [];
-	str = [str struct('name', 'Versions Matlab / SPM12 / CAT12:','value',...
+  str = [];
+  str = [str struct('name', 'Versions Matlab / SPM12 / CAT12:','value',...
     sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
-	str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
+  str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(job.extopts.darteltpm{1},'k40d'))];
   str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
   str = [str struct('name', 'Affine regularization:','value',sprintf('%s',job.opts.affreg))];
@@ -1679,9 +1683,9 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s', ...
            qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179)))];
   end       
-% str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
+  % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
 
-         
+
   % Image Quality measures:
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
@@ -1694,10 +1698,10 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
 
-      
+
   % Subject Measures
   % --------------------------------------------------------------------
-  
+
   % Volume measures
   str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
   str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f %5.0f cm%s', ...
@@ -1705,7 +1709,7 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
           qa.subjectmeasures.vol_rel_CGW(1)*100,qa.subjectmeasures.vol_rel_CGW(2)*100,qa.subjectmeasures.vol_rel_CGW(3)*100,qa.subjectmeasures.vol_rel_CGW(4)*100))];
   str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
-  
+
   % Surface measures - Thickness, (Curvature, Depth, ...)
   if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
     str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
@@ -1719,7 +1723,7 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
              qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
     end
   end
-  
+
   % Warnings
   if numel(cat_warnings)>0 && job.extopts.expertgui>0
     str2 = [str2 struct('name', '','value','')]; 
@@ -1738,13 +1742,13 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
       str2    = [str2 struct('name',shorter,'value','')];  %#ok<AGROW>
     end
   end
-  
+
   % Rating scala - removed 20160202
   %str4 = struct('name',sprintf(' \bRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
   %      mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
   %      mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
   %      mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
-  
+
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
     str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
@@ -1758,162 +1762,176 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   %for si=1:numel(str4) - removed 20160202
   %  str4(si).name  = [str4(si).name '  '];  str4(si).value = [str4(si).value '  '];
   %end    
- 
-  try 
-    
-    
-    fg = spm_figure('FindWin','Graphics'); 
-    set(0,'CurrentFigure',fg)
-    if isempty(fg), if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end; end
-    set(fg,'windowstyle','normal'); 
-	  spm_figure('Clear','Graphics'); 
-    switch computer
-      case {'PCWIN','PCWIN64'}, fontsize = 8;
-      case {'GLNXA','GLNXA64'}, fontsize = 8;
-      case {'MACI','MACI64'},   fontsize = 9.5;
-      otherwise,                fontsize = 9.5;
-    end
-    ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
-	  
-    text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
-      'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
-    
-    cm = job.extopts.colormap; 
-    
-    % check colormap name
-    switch lower(cm)
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
-          'gray','bone','copper','pink','bcgwhw','bcgwhn'}
-      otherwise
-        cat_io_cprintf(job.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
-        cm = 'gray';
-    end
-    
-    switch lower(cm)
-      case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
-        ytick       = [1,5:5:60];
-        yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
-        yticklabelo = {' BG',' ','    ','    ','   ','     ',' average WM  ',' ',' ',' ',' ',' ',' BV / HD '};
-        colormap(cat_io_colormaps(cm,60));
-        cmmax = 2;
-      case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-        ytick       = [1 20 40 60]; 
-        yticklabel  = {' BG',' CSF',' GM',' WM'};
-        yticklabelo = {' BG','    ','   ',' WM'};
-        colormap(cm);
-        cmmax = 1;
-    end
-    spm_orthviews('Redraw');
-    
-    htext = zeros(5,2,2);
-    for i=1:size(str,2)   % main parameter
-		  htext(1,i,1) = text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
-		  htext(1,i,2) = text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
-	  end
-	  for i=1:size(str2,2)  % qa-measurements
-		  htext(2,i,1) = text(0.01,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  htext(2,i,2) = text(0.25,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-    % qa-scala
-    %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    for i=1:size(str3,2)  % subject-measurements
-		  htext(3,i,1) = text(0.51,0.42-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-		  htext(3,i,2) = text(0.80,0.42-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    end
-
-    
-	  
-	  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
-           0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
-	  spm_orthviews('Reset');
-    
-    %% BB box is not optimal for all images...
-    % @Christian: no nice solution... better ideas?
-    aff = spm_imatrix(res.Affine); scale = aff(7:9); rotscale = 1 + abs(aff(4:6)); 
-    spm_orthviews('BB', (job.extopts.bb - [aff(1:3);aff(1:3)]) ./ mean(scale) ./ mean(rotscale)); % mean(scale)
-    spm_orthviews('Reposition',[0 0 voli(qa.subjectmeasures.vol_TIV)]); % default view with basal structures
-    
-    % Yo - original image in original space
-    % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity  
-    hho = spm_orthviews('Image',VT0,pos(1,:)); 
-    spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
-    Yo  = single(VT.private.dat(:,:,:)); 
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-    WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
-    spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-    cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-       'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
-    
-    %% Ym - normalized image in original space
-    Vm        = spm_vol(VT.fname);
-    Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
-    Vm.dat(:,:,:) = single(Ym); 
-    Vm.pinfo = repmat([1;0],1,size(Ym,3));
-    hhm = spm_orthviews('Image',Vm,pos(2,:));
-    spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-    cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-   
-    %% Yo - segmentation in original space
-    % Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-    VO        = spm_vol(VT.fname);
-    VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
-    VO.dat(:,:,:) = single(Yp0/3); 
-    VO.pinfo = repmat([1;0],1,size(Yp0,3));
-    hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
-    spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
-    spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
-    cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.02 0.02 0.15], ...
-      'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-  
-    clear VT
-    
-    % surface
-    if exist('Psurf','var')
-      hCS = subplot('Position',[0.5 0.05 0.5 0.25],'visible','off'); 
-      try
-        hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
-          'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-        axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
-        htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
-        'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
-      end
-    end
-
-    % print group report file 
-    fg = spm_figure('FindWin','Graphics');
-    set(0,'CurrentFigure',fg)
-    fprintf(1,'\n'); spm_print;
-
-    % print subject report file as SPM standard PS file
-    %psf  = fullfile(pth,reportfolder,['catreport_' nam '.ps']);
-    %if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
 
 
-    %% print subject report file as standard PDF/PNG/... file
-    job.imgprint.type  = 'pdf';
-    job.imgprint.dpi   = 600;
-    job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
-    job.imgprint.ftype = @(x) ['-d' num2str(x)];
-    job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-
-    fgold.PaperPositionMode = get(fg,'PaperPositionMode');
-    fgold.PaperPosition     = get(fg,'PaperPosition');
-    fgold.resize            = get(fg,'resize');
-
-    % it is necessary to change some figure properties especialy the fontsizes 
-    set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
-    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-    for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
-    set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-    fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
-  catch
-    cat_io_cprintf('warn','Unspecific print report error.\n');
+  %%
+  fg = spm_figure('FindWin','Graphics'); 
+  set(0,'CurrentFigure',fg)
+  if isempty(fg), if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end; end
+  set(fg,'windowstyle','normal'); 
+  spm_figure('Clear','Graphics'); 
+  switch computer
+    case {'PCWIN','PCWIN64'}, fontsize = 8;
+    case {'GLNXA','GLNXA64'}, fontsize = 8;
+    case {'MACI','MACI64'},   fontsize = 9.5;
+    otherwise,                fontsize = 9.5;
   end
+  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
+
+  text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
+    'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
+
+  cm = job.extopts.colormap; 
+
+  % check colormap name
+  switch lower(cm)
+    case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
+        'gray','bone','copper','pink','bcgwhw','bcgwhn'}
+    otherwise
+      cat_io_cprintf(job.color.warning,'WARNING:Unknown Colormap - use default.\n'); 
+      cm = 'gray';
+  end
+
+  switch lower(cm)
+    case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
+      ytick       = [1,5:5:60];
+      yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
+      yticklabelo = {' BG',' ','    ','    ','   ','     ',' average WM  ',' ',' ',' ',' ',' ',' BV / HD '};
+      colormap(cat_io_colormaps(cm,60));
+      cmmax = 2;
+    case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
+      ytick       = [1 20 40 60]; 
+      yticklabel  = {' BG',' CSF',' GM',' WM'};
+      yticklabelo = {' BG','    ','   ',' WM'};
+      colormap(cm);
+      cmmax = 1;
+  end
+  spm_orthviews('Redraw');
+
+  htext = zeros(5,2,2);
+  for i=1:size(str,2)   % main parameter
+    htext(1,i,1) = text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
+    htext(1,i,2) = text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
+  end
+  for i=1:size(str2,2)  % qa-measurements
+    htext(2,i,1) = text(0.01,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,2) = text(0.25,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+  end
+  % qa-scala
+  %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+  for i=1:size(str3,2)  % subject-measurements
+    htext(3,i,1) = text(0.51,0.42-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,2) = text(0.80,0.42-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+  end
+
+
+
+  pos = [0.01 0.38 0.48 0.36; 0.51 0.38 0.48 0.36; ...
+         0.01 0.01 0.48 0.36; 0.51 0.01 0.48 0.36];
+  spm_orthviews('Reset');
+
+
+    
+    
+  %% BB box is not optimal for all images
+  disptype = 'affine'; 
+  switch disptype
+    case 'affine'
+      dispmat = res.Affine; 
+      spm_orthviews('BB', job.extopts.bb*0.95 );
+    case 'ridid'
+      % this does not work so good... AC has a little offset ...
+      aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
+      spm_orthviews('BB', job.extopts.bb ./ mean(scale));
+      dispmat = R; 
+  end
+  
+
+  % Yo - original image in original space
+  % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
+  Yo  = single(VT.private.dat(:,:,:)); 
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
+  
+  VT0x = VT0;
+  VT0x.mat = dispmat * VT0x.mat; 
+  hho = spm_orthviews('Image',VT0x,pos(1,:)); 
+  spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
+  spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
+  cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
+     'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+
+  % Ym - normalized image in original space
+  Vm        = spm_vol(VT.fname);
+  Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
+  Vm.dat(:,:,:) = single(Ym); 
+  Vm.pinfo  = repmat([1;0],1,size(Ym,3));
+  Vm.mat    = dispmat * Vm.mat; 
+  hhm = spm_orthviews('Image',Vm,pos(2,:));
+  spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
+  spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
+  cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
+    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+
+  % Yo - segmentation in original space
+  % Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  VO        = spm_vol(VT.fname);
+  VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
+  VO.dat(:,:,:) = single(Yp0/3); 
+  VO.pinfo = repmat([1;0],1,size(Yp0,3));
+  VO.mat    = dispmat * VO.mat; 
+  hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
+  spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
+  spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
+  cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.02 0.02 0.15], ...
+    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
+
+  spm_orthviews('Reposition',[0 0 0]); 
+
+  
+  %% surface
+  if exist('Psurf','var')
+    hCS = subplot('Position',[0.5 0.05 0.5 0.25],'visible','off'); 
+    try
+      hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
+        'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+      axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
+      htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
+      'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
+    end
+  end
+
+  % print group report file 
+  fg = spm_figure('FindWin','Graphics');
+  set(0,'CurrentFigure',fg)
+  fprintf(1,'\n'); spm_print;
+
+  % print subject report file as SPM standard PS file
+  %psf  = fullfile(pth,reportfolder,['catreport_' nam '.ps']);
+  %if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
+
+
+  %% print subject report file as standard PDF/PNG/... file
+  job.imgprint.type  = 'pdf';
+  job.imgprint.dpi   = 600;
+  job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
+  job.imgprint.ftype = @(x) ['-d' num2str(x)];
+  job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
+
+  fgold.PaperPositionMode = get(fg,'PaperPositionMode');
+  fgold.PaperPosition     = get(fg,'PaperPosition');
+  fgold.resize            = get(fg,'resize');
+
+  % it is necessary to change some figure properties especialy the fontsizes 
+  set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
+  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
+  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize*0.8); end;
+  print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+  for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
+  for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
+  set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
+  fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
+
 
   
   %% reset colormap
@@ -1962,8 +1980,8 @@ color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   warning on;  %#ok<WNON>
   
   
-% command window output
-fprintf('\n%s',repmat('-',1,72));
+  % command window output
+  fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
   cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
@@ -1983,7 +2001,7 @@ fprintf('\n%s',repmat('-',1,72));
   
   fprintf('%s\n\n',repmat('-',1,72));
  
-clear C c Ym Ymf
+  clear C c Ym Ymf
 
 %%
 
