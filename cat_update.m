@@ -42,10 +42,10 @@ if ~sts
   return
 end
 
-n = regexp(s,'cat12_r(\d.*?)\.zip','tokens');
+n = regexp(s,'cat12_r(\d.*?)\.zip','tokens','once');
 if isempty(n)
   sts= Inf;
-  msg = 'There are no new releases available yet.';
+  msg = 'There are no updates available yet.';
   if ~nargout, fprintf([blanks(9) msg '\n']);
   else varargout = {sts, msg}; end
   return;
@@ -74,6 +74,7 @@ end
 
 if update
     d = fullfile(spm('Dir'),'toolbox'); 
+    delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
     overwrite = spm_input('Update',1,'yes|no',[1 0],1);
     if overwrite
       try
@@ -93,7 +94,7 @@ if update
         rehash
         rehash toolboxcache;
         toolbox_path_cache
-        eval(['spm fmri']);
+        eval(['spm fmri;clear cat_version;spm_cat12']);
       catch
         le = lasterror;
         switch le.identifier

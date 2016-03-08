@@ -373,8 +373,9 @@ void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, do
 
     rel_changed /= (double)sum_voxel;
 #if !defined(_WIN32)
-    printf("ICM: %d relative change: %2.4f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter+1, 100.0*rel_changed);
+/*    printf("ICM: %d relative change: %2.4f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iter+1, 100.0*rel_changed);
     fflush(stdout);
+*/
 #endif
     if(rel_changed < TH_CHANGE) break;
   }   
@@ -483,8 +484,9 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
     ll /= (double)vol;
     change_ll = (ll_old - ll)/fabs(ll);
 #if !defined(_WIN32)
-    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters+1, ll);
+/*    printf("iters:%3d log-likelihood: %7.5f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",iters+1, ll);
     fflush(stdout);
+*/
 #endif
     ll_old = ll;
     
@@ -575,7 +577,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   if(!pve) beta[0] /= 20.0;
   
   /* Iterative Conditional Mode */
-  if(niters_ICM > 0) && (weight_MRF > 0) {
+  if((niters_ICM > 0) && (weight_MRF > 0)) {
     if(weight_MRF != 1.0) {
       beta[0] *= weight_MRF;
       printf("Weighted MRF beta %3.3f\n",beta[0]);
