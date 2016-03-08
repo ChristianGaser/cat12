@@ -320,39 +320,39 @@ end
 tiss = struct('p',{},'rp',{},'rpa',{},'wp',{},'mwp',{},'m0wp',{});
 for i=1:numel(job.tissue),
     if job.tissue(i).native(1),
-        tiss(i).c = cell(n,1);
+        tiss(i).p = cell(n,1);
         for j=1:n
-            tiss(i).c{j} = fullfile(parts{j,1},mrifolder,['p',num2str(i),parts{j,2},'.nii']);
+            tiss(i).p{j} = fullfile(parts{j,1},mrifolder,['p',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(2),
-        tiss(i).rc = cell(n,1);
+        tiss(i).rp = cell(n,1);
         for j=1:n
-            tiss(i).rc{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(3),
-        tiss(i).rca = cell(n,1);
+        tiss(i).rpa = cell(n,1);
         for j=1:n
-            tiss(i).rca{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_affine.nii']);
+            tiss(i).rpa{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_affine.nii']);
         end
     end
     if job.tissue(i).warped(1),
-        tiss(i).wc = cell(n,1);
+        tiss(i).wp = cell(n,1);
         for j=1:n
-            tiss(i).wc{j} = fullfile(parts{j,1},mrifolder,['wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).wp{j} = fullfile(parts{j,1},mrifolder,['wp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(2),
-        tiss(i).mwc = cell(n,1);
+        tiss(i).mwp = cell(n,1);
         for j=1:n
-            tiss(i).mwc{j} = fullfile(parts{j,1},mrifolder,['mwp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).mwp{j} = fullfile(parts{j,1},mrifolder,['mwp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(3),
-        tiss(i).m0wc = cell(n,1);
+        tiss(i).m0wp = cell(n,1);
         for j=1:n
-            tiss(i).m0wc{j} = fullfile(parts{j,1},mrifolder,['m0wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).m0wp{j} = fullfile(parts{j,1},mrifolder,['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
