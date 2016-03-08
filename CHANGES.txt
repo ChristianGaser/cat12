@@ -9759,6 +9759,7 @@ M       spm_cat12.m
 Fixed:    Corrected error by cprintferror in parallel processing. 
 
 ------------------------------------------------------------------------
+r889 | gaser | 2016-03-07 17:01:59 +0100 (Mo, 07 Mär 2016) | 14 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -9773,5 +9774,22 @@ M       spm_cat12.m
 
 (1) Changed: Updated manual.
 (2) Fixed: Some typos.
+
 ------------------------------------------------------------------------
-r889 | gaser | 2016-03-07 17:01:50
+
+Changed paths:
+M       Amap.c
+M       CHANGES.txt
+M       Contents.m
+M       Kmeans.c
+M       cat_amap.mexa64
+M       cat_amap.mexmaci64
+M       cat_run.m
+M       cat_update.m
+M       html/cat.html
+
+(1) Changed: Update function to solve some issues.
+(2) Fixed: Nasty java error by not using "\b" in c-files anymore.
+(3) Fixed: Issue with longitzudinal batch.
+------------------------------------------------------------------------
+r890 | gaser | 2016-03-08 15:43:11

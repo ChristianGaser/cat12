@@ -341,9 +341,9 @@ double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, in
       last_err = e;
     
 #if !defined(_WIN32)
-      printf("iters: %2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*(double)n_clusters/(double)vol);
+/*      printf("iters: %2d error: %7.2f\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",j+1, e*(double)n_clusters/(double)vol);
       fflush(stdout);
-#endif    
+*/#endif    
     
     }    
   } else {
