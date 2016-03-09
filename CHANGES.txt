@@ -9776,6 +9776,7 @@ M       spm_cat12.m
 (2) Fixed: Some typos.
 
 ------------------------------------------------------------------------
+r890 | gaser | 2016-03-08 15:43:19 +0100 (Di, 08 Mär 2016) | 15 lines
 
 Changed paths:
 M       Amap.c
@@ -9791,5 +9792,36 @@ M       html/cat.html
 (1) Changed: Update function to solve some issues.
 (2) Fixed: Nasty java error by not using "\b" in c-files anymore.
 (3) Fixed: Issue with longitzudinal batch.
+
 ------------------------------------------------------------------------
-r890 | gaser | 2016-03-08 15:43:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_io_colormaps.m
+M       cat_io_csv.m
+A       cat_io_report.m
+M       cat_main.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_vol_isarnlm.m
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_defaults.html
+M       html/cat_methods_errormanagement.html
+A       html/images/CAT_surf_atlas_Destrieux.png
+A       internal/cat_vol_increaseAtlasGMregion.m
+M       templates_1.50mm/neuromorphometrics.nii
+
+Fixed*:   Corrected problems in the processing of T2/PD data.
+Fixed:    Corrected neuromorphometrics atlas for lower GM probability threshold.
+Fixed:    Corrected variable error in the ROI processing.
+Changed:  Visuell update of the CAT Report colormap that the indicated colors
+          fits better to the defined tissues. 
+Changed:  Update of some HTML help pages.
+Added:    Small internal function for the neuromorphometrics optimization.
+Added:    Prepared first version of CAT error export.
+
+------------------------------------------------------------------------
+r891 | dahnke | 2016-03-09 11:38:52

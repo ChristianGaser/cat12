@@ -1,4 +1,4 @@
-function varargout = cat_vol_isarnlm(varargin) %#ok<STOUT>
+function varargout = cat_vol_isarnlm(varargin) 
 % Ys = cat_vol_isarnlm(varargin)
 % ______________________________________________________________________
 % Iterative Spatial Adaptive mulit-Resolution Non Local Means (ISARNLM) 

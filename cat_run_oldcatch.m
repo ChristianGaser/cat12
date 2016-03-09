@@ -34,10 +34,12 @@ function cat_run_oldcatch(job,tpm,subj)
       %  repmat('-',1,72)));  
 
       % write error report
-      caterrtxt = cell(numel(caterr.stack),1);
+      caterrtxt = cell(numel(caterr.stack)+2,1);
+      caterrtxt{1} = sprintf('%s (cat_run_oldcatch!)\n',caterr.identifier);
+      caterrtxt{2} = sprintf('%s\n',caterr.message); 
       for si=1:numel(caterr.stack)
         cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name));  
-        caterrtxt{si} = sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
+        caterrtxt{si+2} = sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
       end
       cat_io_cprintf('err',sprintf('%s\n',repmat('-',1,72)));  
 
@@ -57,8 +59,8 @@ function cat_run_oldcatch(job,tpm,subj)
         caterrstruct(si).name = caterr.stack(si).name;  
         caterrstruct(si).file = caterr.stack(si).file;  
       end
-      cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
-      
+      qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
+      cat_io_report(job,qa)
       
       if job.extopts.subfolders
         reportfolder = 'report';

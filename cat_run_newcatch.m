@@ -9,7 +9,7 @@ function cat_run_newcatch(job,tpm,subj)
   try
     cat_run_job(job,tpm,subj); 
   catch caterr 
-    % add further information for special errors
+    %% add further information for special errors
     if isempty(caterr.identifier)
       switch caterr.message
         case 'insufficient image overlap'
@@ -32,10 +32,12 @@ function cat_run_newcatch(job,tpm,subj)
       repmat('-',1,72),caterr.message,repmat('-',1,72)));  
 
     % write error report
-    caterrtxt = cell(numel(caterr.stack),1);
+    caterrtxt = cell(numel(caterr.stack)+2,1);
+    caterrtxt{1} = sprintf('%s\n',caterr.identifier);
+    caterrtxt{2} = sprintf('%s\n',caterr.message); 
     for si=1:numel(caterr.stack)
       cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name));  
-      caterrtxt{si} = sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
+      caterrtxt{si+2} = sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
     end
     cat_io_cprintf('err',sprintf('%s\n',repmat('-',1,72)));  
 
@@ -56,7 +58,8 @@ function cat_run_newcatch(job,tpm,subj)
       caterrstruct(si).file = caterr.stack(si).file;  
     end
     
-    cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
+    qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
+    cat_io_report(job,qa)
     
     if job.extopts.subfolders
       reportfolder = 'report';
@@ -82,10 +85,9 @@ function cat_run_newcatch(job,tpm,subj)
           fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
           cat_check_system_output(ST,RS,job.extopts.debug);
       end  
-
     end
     
-    % rethrow error 
+    %% rethrow error 
     if ~job.extopts.ignoreErrors
       rethrow(caterr); 
     end 
