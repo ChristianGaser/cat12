@@ -48,6 +48,8 @@ switch lower(deffile)
     if isempty(deffile) 
       return
     end
+  %{
+  % GUI for primates requires updates of the default files and some tests  
   case 'gui'
     deffile = spm_input('Species class',1,'human|ape|monkey',...
       {'human','ape','monkey'},1);
@@ -67,6 +69,7 @@ switch lower(deffile)
           {'monkey_oldworld','monkey_newworld','other'},1);
         deffile = deffile{1};
     end
+    %}
 end
 
 switch lower(deffile)

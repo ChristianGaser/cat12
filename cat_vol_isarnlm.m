@@ -41,15 +41,21 @@ function varargout = cat_vol_isarnlm(varargin)
   elseif nargin == 1 && isstruct(varargin{1})
       job = varargin{1};
       if nargout>0, error('No output availailable. '); end
-  elseif (nargin == 2 || nargin == 3) && isstruct(varargin{2}) && nargout==1
+  elseif (nargin == 2 || nargin == 3 || nargin == 4) && isstruct(varargin{2}) && nargout==1
+    stime = clock;
     if isstruct(varargin{2})
       V = varargin{2}; 
       vx_vol  = sqrt(sum(V.mat(1:3,1:3).^2));
     else
       vx_vol = varargin{2};
     end
-    if nargin == 3, verb=varargin{3}; else verb=1; end
-    varargout{1} = cat_vol_sanlmX(varargin{1},'',vx_vol,struct('verb',verb));
+    if nargin >= 3, verb=varargin{3};  else verb=1;  end
+    if nargin == 4, NCstr=varargin{4}; else NCstr=1; end
+    varargout{1} = cat_vol_sanlmX(varargin{1},'',vx_vol,struct('verb',verb,'NCstr',NCstr));
+    if verb>1
+      cat_io_cmd(' ','','',1); 
+      fprintf('%4.0fs\n',etime(clock,stime));
+    end
     return
   else
     if nargin>3 && isfield(varargin{4},'verb'), verb = varargin{4}.verb; else verb = 1; end 
@@ -165,6 +171,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.fast   = 0;     % masking background?
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
   def.level  = 1;     % just for display
+  def.NCstr  = 1; 
   opt        = cat_io_checkinopt(opt,def);
   opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
   opt.cstr   = max(0,min(1,opt.cstr));  % range 0-1
@@ -189,19 +196,19 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     
     
     %% SANLM filtering
-    if opt.verb, fprintf('%2d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
+    if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm.  ',opt.level,iter+1,vx_vol); stime = clock; end
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
     cat_sanlm(Ys,3,1,opt.rician); 
+    Ys = (1-job.NCstr) .* Yi  + job.NCstr .* Ys; % main weighting
     %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
-    fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
+    %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
     noiser = 1 - (cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
     if noiser<0, noiser = noiser+1; end
     noise  = cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
     
-    if opt.verb, fprintf('  noise = %4.4f;  noiser: %4.4f;  time = %4.0fs\n',noise,noiser,etime(clock,stime)); end
+    if opt.verb, fprintf('  noise = %4.3f > %4.3f;               %5.0fs\n',noise,noiser,etime(clock,stime)); end
 
-    
     
     %% filtering of lower resolution level
     %  if the currect resolution is high enought
@@ -354,4 +361,6 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   if opt.fast
     Y0(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6))=Ys; Ys = Y0;
   end
+  
+ 
 end

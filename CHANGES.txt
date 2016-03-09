@@ -9794,6 +9794,7 @@ M       html/cat.html
 (3) Fixed: Issue with longitzudinal batch.
 
 ------------------------------------------------------------------------
+r891 | dahnke | 2016-03-09 11:39:00 +0100 (Mi, 09 Mär 2016) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9823,5 +9824,32 @@ Changed:  Update of some HTML help pages.
 Added:    Small internal function for the neuromorphometrics optimization.
 Added:    Prepared first version of CAT error export.
 
+
 ------------------------------------------------------------------------
-r891 | dahnke | 2016-03-09 11:38:52
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_defaults.m
+A       cat_defaults_expert.m
+M       cat_io_report.m
+M       cat_main.m
+A       cat_roi_roi2surf.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_vol_isarnlm.m
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+Fixed:    Correction NaN thickness error in CAT report.
+Added:    New expert function to project ROI data from XML and CSV files to the  
+          surface (cat_surf_roi2surf).
+Added:    cat_defaults_expert.m for GUI and processing tests such as 
+          surface and ROI processing with ignoreErrors=1.  
+
+          
+
+------------------------------------------------------------------------
+r892 | dahnke | 2016-03-09 18:57:14
