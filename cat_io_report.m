@@ -1,14 +1,18 @@
 function cat_io_report(job,qa)
-
-  % from cat_main
-  
-  % ... histogram / kleine statistik, isnan?, isinf?
-  % ... datentypen, orientierung ...
-  
+% ______________________________________________________________________
+% CAT error report to write the main processing parameter, the error
+% message, some image parameter and add a pricture of the original 
+% image centered by its AC.
+% ______________________________________________________________________
+% Robert Dahnke 
+% $Revision: 891 $  $Date: 2016-03-09 11:39:00 +0100 (Mi, 09 Mär 2016) $
+    
   if job.extopts.subfolders
     reportfolder = 'report';
+    surffolder   = 'surf';
   else
     reportfolder = '';
+    surffolder   = '';
   end
   
   [pp,ff,ee] = spm_fileparts(job.data{1});
@@ -31,7 +35,6 @@ function cat_io_report(job,qa)
       job.output.surface || job.output.ROI || ...
       any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
     if ~need_dartel
-      %fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
       do_dartel = 0;
     end
   end
@@ -39,17 +42,7 @@ function cat_io_report(job,qa)
   
 %% display and print result if possible
 %  ---------------------------------------------------------------------
-  QMC   = cat_io_colormaps('marks+',17);
-  color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-
   warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
-
-
-  %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
-  marks2str = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,mark),str);
-  mark2rps    = @(mark) min(100,max(0,105 - mark*10));
-  grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
-  mark2grad   = @(mark) grades{min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3)))};
 
 
   % CAT GUI parameter:
@@ -81,61 +74,21 @@ function cat_io_report(job,qa)
            sprintf('%d / %d / %0.2f / %0.2f ',...
            job.extopts.APP,job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr))]; 
   end  
-  if isfield(qa,'qualitymeasures')
-    if job.output.surface 
-      str = [str struct('name', 'Voxel resolution (original > intern > PBT):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
-    else
-      str = [str struct('name', 'Voxel resolution (original > intern):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179)))];
-    end       
-    % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
-
-
-    % Image Quality measures:
-    % --------------------------------------------------------------------
-    str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
-    str2 = [str2 struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
-    str2 = [str2 struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
-    str2 = [str2 struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confussing 
-    str2 = [str2 struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
   
-
-    % Subject Measures
-    % --------------------------------------------------------------------
-
-    % Volume measures
-    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
-    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f %5.0f cm%s', ...
-            qa.subjectmeasures.vol_abs_CGW(1),qa.subjectmeasures.vol_abs_CGW(2),qa.subjectmeasures.vol_abs_CGW(3),qa.subjectmeasures.vol_abs_CGW(4),char(179)))];
-    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
-            qa.subjectmeasures.vol_rel_CGW(1)*100,qa.subjectmeasures.vol_rel_CGW(2)*100,qa.subjectmeasures.vol_rel_CGW(3)*100,qa.subjectmeasures.vol_rel_CGW(4)*100))];
-    str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
-
-    % Surface measures - Thickness, (Curvature, Depth, ...)
-    if isfield(qa.subjectmeasures,'dist_thickness') && ~isempty(qa.subjectmeasures.dist_thickness)
-      str3 = [str3 struct('name', '\bfThickness:','value',sprintf('%5.2f%s%5.2f mm', ...
-             qa.subjectmeasures.dist_thickness{1}(1),177,qa.subjectmeasures.dist_thickness{1}(2)))];
-      if isfield(qa.subjectmeasures,'dist_gyruswidth')
-        str3 = [str3 struct('name', '\bfGyruswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-               qa.subjectmeasures.dist_gyruswidth{1}(1),177,qa.subjectmeasures.dist_gyruswidth{1}(2)))];
-      end
-      if isfield(qa.subjectmeasures,'dist_sulcuswidth')
-        str3 = [str3 struct('name', '\bfSulcuswidth:','value',sprintf('%5.2f%s%5.2f mm', ...
-               qa.subjectmeasures.dist_sulcuswidth{1}(1),177,qa.subjectmeasures.dist_sulcuswidth{1}(2)))];
-      end
-    end
-  else
-    str2 = struct('name','','value','');
-    str3 = struct('name','','value','');
-  end
-
+  % image parameter
+  % --------------------------------------------------------------------
+  Ysrc = spm_read_vols(VT0); 
+  imat = spm_imatrix(VT0.mat); 
+  str2 = [];
+  str2 = [str2 struct('name','\bfImagedata','value','')];
+  str2 = [str2 struct('name','  Datatype','value',spm_type(VT0.dt(1)))];
+  str2 = [str2 struct('name','  AC','value',sprintf('%5.1f  %5.1f  %5.1f',imat([1:3])))];
+  str2 = [str2 struct('name','  Rotation (radians)','value',sprintf('%5.2f  %5.2f  %5.2f',imat([4:6])))];
+  str2 = [str2 struct('name','  Voxel size','value',sprintf('%5.2f  %5.2f  %5.2f',imat([7:9])))];
+  str2 = [str2 struct('name','  min | max','value',sprintf('%0.3f | %0.3f',min(Ysrc(:)),max(Ysrc(:))))];
+  str2 = [str2 struct('name','  mean | std','value',sprintf('%0.3f | %0.3f',cat_stat_nanmean(Ysrc(:)),cat_stat_nanstd(Ysrc(:))))];
+  str2 = [str2 struct('name','  isinf | isnan','value',sprintf('%d | %d',sum(isinf(Ysrc(:))),sum(isnan(Ysrc(:)))))];
+  
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
     str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
@@ -143,17 +96,18 @@ function cat_io_report(job,qa)
   for si=1:numel(str2)
     str2(si).name  = [str2(si).name '  '];  str2(si).value = [str2(si).value '  '];
   end
-  for si=1:numel(str3)
-    str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
-  end
  
   
 
   %%
   fg = spm_figure('FindWin','Graphics'); 
-  set(0,'CurrentFigure',fg)
-  if isempty(fg), if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end; end
-  set(fg,'windowstyle','normal'); 
+  set(0,'CurrentFigure',fg) 
+  if isempty(fg)
+    if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end;
+  else
+    if job.nproc, set(fg,'Visible','off'); end
+  end
+  set(fg,'windowstyle','normal');
   spm_figure('Clear','Graphics'); 
   switch computer
     case {'PCWIN','PCWIN64'}, fontsize = 8;
@@ -188,36 +142,40 @@ function cat_io_report(job,qa)
     htext(1,i,1) = text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
     htext(1,i,2) = text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
   end
-  for i=1:size(str2,2)  % qa-measurements
-    htext(2,i,1) = text(0.01,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(2,i,2) = text(0.25,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+  for i=1:size(qa.error,1) % error message
+    errtxt = strrep([qa.error{i} '  '],'_','\_');
+    htext(2,i,1) = text(0.01,0.42-(0.055*i), errtxt ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax,'Color',[0.8 0 0]);
   end
-  % qa-scala
-  %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-  for i=1:size(str3,2)  % subject-measurements
-    htext(2,i,1) = text(0.01,0.42-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(2,i,2) = text(0.25,0.42-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+  for i=1:size(str2,2) % image-parameter
+    htext(2,i,1) = text(0.51,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,2) = text(0.75,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
-  for i=1:size(qa.error,1)  % subject-measurements
-    errtxt = strrep(qa.error{i},'_','\_');
-    htext(2,i,1) = text(0.51,0.42-(0.055*(i+size(str2,2)-1)), errtxt ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax,'Color',[0.8 0 0]);
-  end
-  pos = [0.01 0.31 0.48 0.30; 0.51 0.31 0.48 0.30; ...
-         0.01 0.01 0.48 0.30; 0.51 0.01 0.48 0.30];
+  pos = [0.01 0.34 0.48 0.33; 0.51 0.34 0.48 0.33; ...
+         0.01 0.01 0.48 0.33; 0.51 0.01 0.48 0.33];
   spm_orthviews('Reset');
 
     
-  %% BB box is not optimal for all images
  
   % Yo - original image in original space
   % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
   hho = spm_orthviews('Image',VT0,pos(1,:)); 
   spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
+  axes('Position',[pos(1,1:2) + [pos(1,3)*0.56 -0.01],pos(1,3:4)*0.41] ); 
+  Ysrcs = single(Ysrc+0); spm_smooth(Ysrcs,Ysrcs,repmat(0.5,1,3));
+  [x,y] = hist(Ysrcs(:),100); 
+  x = min(x,max(x(2:end))); % ignore background
+  bar(y,x,'b','EdgeColor','b');
   
   % Ym - normalized image in original space
   if exist(Pm,'file')
     hhm = spm_orthviews('Image',spm_vol(Pm),pos(2,:));
     spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
+    Ym = spm_read_vols(spm_vol(Pm));
+    axes('Position',[pos(2,1:2) + [pos(2,3)*0.56 -0.01],pos(2,3:4)*0.41] );
+    Yms = single(Ym+0); spm_smooth(Yms,Yms,repmat(0.5,1,3));
+    [x,y] = hist(Yms(:),100); 
+    x = min(x,max(x(2:end))); % ignore background
+    bar(y,x,'b','EdgeColor','b');
   end
   
   % Yo - segmentation in original space
@@ -229,27 +187,29 @@ function cat_io_report(job,qa)
   spm_orthviews('Zoom',100);
   
   
-  %% surface
-  %{
-  Pthick = 
-  if exist('Psurf','var')
-    hCS = subplot('Position',[0.5 0.05 0.5 0.25],'visible','off'); 
-    try
-      hSD = cat_surf_display(struct('data',Pthick,'readsurf',0,...
+  %% surface or histogram
+  Pthick = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
+  fdata = dir(Pthick);
+  if exist(Pthick,'file') && etime(clock,datevec(fdata.datenum))/3600 < 2 % only surface that are 
+    try 
+      hCS = subplot('Position',[0.5 0.05 0.5 0.22],'visible','off'); 
+      cat_surf_display(struct('data',Pthick,'readsurf',0,...
         'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
       axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
       htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
-      'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
+        'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
+    catch
+      fprintf('Can''t display surface');
     end
   end
-  %}
+  
 
-  % print group report file 
+  %% print group report file 
   fg = spm_figure('FindWin','Graphics');
   set(0,'CurrentFigure',fg)
   fprintf(1,'\n'); spm_print;
 
-  %% print subject report file as standard PDF/PNG/... file
+  % print subject report file as standard PDF/PNG/... file
   job.imgprint.type  = 'pdf';
   job.imgprint.dpi   = 600;
   job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
@@ -267,8 +227,6 @@ function cat_io_report(job,qa)
   for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
   fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
-
     
-  spm_figure('Clear','Graphics'); 
-  
+  %spm_figure('Clear','Graphics');   
 end

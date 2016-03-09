@@ -404,8 +404,10 @@ estwrite.help   = {
 cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
-if expert
+if expert==2
   cat.values = {estwrite tools stools stoolsexp};
+elseif expert==1
+  cat.values = {estwrite tools stools};
 else
   cat.values = {estwrite tools stools}; 
 end

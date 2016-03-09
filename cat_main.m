@@ -607,19 +607,23 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
   if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
     stime = cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     if job.extopts.verb>1, fprintf('\n'); end
-    Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1);  
-    if job.extopts.verb>1, cat_io_cmd(' '); end
+    Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,job.extopts.NCstr); 
+    
+    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
+    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+      Yms .* Ybr;
   else
     stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     cat_sanlm(Yms,3,1,0);
+    
+    % mix original and noise corrected image and go back to original resolution
+    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
+    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+      (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+      job.extopts.NCstr .* Yms .* Ybr;
   end
-
-  % mix original and noise corrected image and go back to original resolution
-  Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
-  Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-    (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-    job.extopts.NCstr .* Yms .* Ybr;
   clear Yms Ybr BB;
 
   if job.inv_weighting
@@ -1483,7 +1487,8 @@ if job.output.surface
   % creation without interruption of standard cat processing.
   try
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymm,Yl1,YMF,...
-      struct('interpV',job.extopts.pbtres,'Affine',res.Affine)); % clear Ymm YMF  % VT0 - without interpolation
+      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,...
+      'debug',job.extopts.debug,'expertgui',job.extopts.expertgui)); % clear Ymm YMF  % VT0 - without interpolation
   catch
     surferr = lasterror; %#ok<LERR>
     message =  sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
@@ -1497,7 +1502,7 @@ if job.output.surface
     
     cat_warnings = cat_io_addwarning(cat_warnings,...
       'CAT:cat_main:createCS',...
-      sprintf('Surface creation error! %s',message));
+      sprintf('\nSurface creation error! %s',message));
 
   end
 
@@ -1625,7 +1630,7 @@ if job.output.surface && exist('S','var')
   if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
   if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
   qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-  if job.extopts.expertgui>0
+  if job.extopts.expertgui>1
     if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
     if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
     qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
@@ -1784,7 +1789,11 @@ fprintf('%4.0fs\n',etime(clock,stime));
   %%
   fg = spm_figure('FindWin','Graphics'); 
   set(0,'CurrentFigure',fg)
-  if isempty(fg), if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end; end
+  if isempty(fg)
+    if job.nproc, fg = spm_figure('Create','Graphics','visible','off'); else fg = spm_figure('Create','Graphics'); end;
+  else
+    if job.nproc, set(fg,'visible','off'); end
+  end
   set(fg,'windowstyle','normal'); 
   spm_figure('Clear','Graphics'); 
   switch computer
@@ -1962,8 +1971,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
   fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
-
-
+  
   
   %% reset colormap
   % remove old legends
@@ -1974,12 +1982,12 @@ fprintf('%4.0fs\n',etime(clock,stime));
   WMfactor         = 4/3;
   GMthicknessaxis  = [0 6]; 
 
-  if  exist('hSD','var')
+  %if  exist('hSD','var')
     SPMgraficscaling = GMthicknessaxis(2); 
-  else
+ % else
 %    cax = get(gca,'clim');
-    SPMgraficscaling = 60; %cax(2); 
-  end
+ %   SPMgraficscaling = 60; %cax(2); 
+  %end
   colormap('gray'); 
   caxis(GMthicknessaxis);
   
@@ -1988,11 +1996,18 @@ fprintf('%4.0fs\n',etime(clock,stime));
   if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
   if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
   
-  % setup new legend 
-  % @Christian: It is unclear to me, why the axis scalling differs between the cases with and without surface. 
-  ytick       = SPMgraficscaling/WMfactor*[1/SPMgraficscaling 1/3 2/3 3/3 WMfactor];
-  yticklabel  = {' BG',' CSF',' GM',' WM',' '};
-  yticklabelo = {' BG','    ','   ',' average WM  ', ' '};
+  if exist('hSD','var')
+    try %#ok<TRYNC>
+      cat_surf_render('ColourMap',hSD{1}.axis,gray(128)); 
+      cat_surf_render('clim',hSD{1}.axis,GMthicknessaxis); 
+    end
+  end
+  
+  %% setup new legend 
+  ytick       = SPMgraficscaling/WMfactor*[1/60 1/3 2/3 3/3 WMfactor];
+  yticklabel  = {' BG',' CSF',' GM',' WM',' BV / HD'};
+  yticklabelo = {' BG','    ','   ',' average WM  ', ' BV / HD'};
+  
   % create new legend 
   colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
     'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold'); 
@@ -2001,17 +2016,10 @@ fprintf('%4.0fs\n',etime(clock,stime));
   colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
     'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
   
-  if exist('hSD','var')
-    try
-      cat_surf_render('ColourMap',hSD{1}.axis,gray(128)); 
-      cat_surf_render('clim',hSD{1}.axis,GMthicknessaxis); 
-    end
-  end
-  
   warning on;  %#ok<WNON>
   
   
-  % command window output
+  %% command window output
   fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
