@@ -620,28 +620,10 @@ function stools = cat_conf_stools(expert)
   r2s.surf.tag    = 'surf';
   r2s.surf.labels = {'FS average','Dartel average','subject'};
   r2s.surf.values = {'freesurfer','dartel','subject'};
-  r2s.surf.val    = {1};
+  r2s.surf.val    = {'freesurfer'};
   r2s.surf.help   = {'Surface type for value projection. '};
  
-% average function
-  % median
-  r2s.avg.none         = cfg_const;
-  r2s.avg.none.tag     = 'none';
-  r2s.avg.none.name    = 'none';
-  r2s.avg.none.val     = 'none';
-  r2s.avg.none.help    = {'No averaging, just process map data of each subject to the choosen surface. '};   
-  % all functions
-  r2s.avg.main         = cfg_branch;
-  r2s.avg.main.tag     = 'avg';
-  r2s.avg.main.name    = 'ROI Average Functions';
-  r2s.avg.main.val     = {
-    r2s.avg.none ...
-    s2r.avg.mean ...
-    s2r.avg.std ...
-    s2r.avg.min ...
-    s2r.avg.max ...
-    s2r.avg.median ...
-  };
+% average function? - not required 
  
 %% main function
   roi2surf      = cfg_exbranch;
@@ -652,10 +634,8 @@ function stools = cat_conf_stools(expert)
     r2s.atlas ...
     r2s.data ...
     r2s.surf ...
-    s2r.avg.main ...
-    nproc ... 
     };
-  roi2surf.prog = @cat_surf_roi2surf;
+  roi2surf.prog = @cat_roi_roi2surf;
   roi2surf.help = {
     ''
   };

@@ -50,6 +50,7 @@ function [varargout] = cat_surf_info(P,read)
     'label','',...      % labelmap
     'resampled','',...  % dataspace
     'template','',...   % individual surface or tempalte
+    'roi','',...        % roi data
     'nvertices',[],...  % number vertices
     'nfaces',[],...     % number faces
     ...
@@ -157,7 +158,7 @@ function [varargout] = cat_surf_info(P,read)
     % special datatypes
     FN = {'thickness','central','sphere','defects','gyrification','sqrtsulc','frac',...
           'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
-          'depthWM','depthGWM','depthCSF','depthWMg',...
+          'depthWM','depthGWM','depthCSF','depthWMg','ROI',...
           'hulldist'};
     sinfo(i).texture = '';
     for fi=1:numel(FN)
@@ -171,6 +172,8 @@ function [varargout] = cat_surf_info(P,read)
     sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
     if sinfo(i).template,  sinfo(i).resampled = 1; end
     
+    % ROI
+    sinfo(i).roi = ~isempty(strfind(sinfo(i).posside,'.ROI'));
     
     
     

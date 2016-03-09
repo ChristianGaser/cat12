@@ -41,8 +41,6 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   if ~exist('opt','var'), opt=struct(); end
   def.verb      = 2; 
-  def.debug     = cat_get_defaults('extopts.debug');
-  def.expert    = cat_get_defaults('extopts.expertgui');
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.interpV   = max(0.25,min([min(vx_vol),opt.interpV,1]));
   def.reduceCS  = 100000;  
@@ -92,7 +90,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
   % removing blood vessels, and other regions
   Yth1 = zeros(size(Ymf),'single'); 
-  if opt.expert > 1
+  if opt.expertgui > 1
     Ywd  = zeros(size(Ymf),'single'); 
     Ycd  = zeros(size(Ymf),'single'); 
   end
@@ -143,7 +141,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
    
     % pbt calculation
     [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyris
-    if ~opt.expert, clear Ymfs; end
+    if ~opt.expertgui, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
     Yth1t = cat_vol_resize(Yth1i,'deinterp',resI); clear Yth1i;         % back to original resolution
@@ -153,7 +151,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
-    if opt.expert > 1
+    if opt.expertgui > 1
       %% gyrus width / WM depth
       %  For the WM depth estimation it is better to use the L4 boundary
       %  and correct later for thickness, because the WM is very thin in
@@ -354,7 +352,7 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
     
     % map WM and CSF width data (corrected by thickness)
-    if opt.expert > 1
+    if opt.expertgui > 1
       %%
       facevertexcdata2  = isocolors2(Ywd,CS.vertices); 
       facevertexcdata2c = max(eps,facevertexcdata2 - facevertexcdata/2);
@@ -391,8 +389,8 @@ function [Yth1,S,Psurf]=cat_surf_createCS(V,Ym,Ya,YMF,opt)
     S.(opt.surf{si}).faces    = CS.faces;
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;
-    if opt.expert > 1
-      S.(opt.surf{si}).th1    = facevertexcdata;
+    S.(opt.surf{si}).th1    = facevertexcdata;
+    if opt.expertgui > 1
       S.(opt.surf{si}).th2    = facevertexcdata2;
       S.(opt.surf{si}).th3    = facevertexcdata3;
     end

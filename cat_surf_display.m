@@ -169,6 +169,14 @@ function varargout = cat_surf_display(varargin)
       % scaling
       if isempty(job.caxis)
         switch sinfo(i).texture
+          case {'ROI'}
+            %%
+            if     strfind(sinfo(i).posside,'-Igm.ROI'),  clim = [2/3 2/3] .* [0.9 1.1];        % balanced PVE
+            elseif strfind(sinfo(i).posside,'-Iwm.ROI'),  clim = [0.85 1.05];                   % below 1 because of a lot of GM/WM PVE
+            elseif strfind(sinfo(i).posside,'-Icsf.ROI'), clim = [1.33/3 1.33/3] .* [0.8 1.2];  % higher 1/3 because of a lot of GM/CSF PVE
+            else                                          clim = iscaling(h.cdata);
+            end
+            cat_surf_render('clim',h.axis,clim);
           case {'defects','sphere'}
             % no texture
           case {'central'}
