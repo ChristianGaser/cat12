@@ -26,10 +26,11 @@
     <div id="content">
       <h2>Atlas creation and ROI based analysis (in development)</h2>
       <p>
-        CAT12 allows estimation of tissue volume [, intensity, and thickness] for different atlas maps.
-        The results are stored in a csv-file <em>catROI[SPACE]_[ATLAS]_*.csv</em> for each atlas map <em>ATLAS</em> and in the <em>cat_*.XML</em> file. 
-        <em>SPACE</em> describes the space of the value estimation and can be <em>s</em> for surface ROIs and <em>w</em> for volume ROIs.
-        You can use external software like Excel for analysis or the <a class="function" href="matlab:cat_io_csv">cat_io_csv</a> function to read the data as table, or the <a class="function" href="matlab:cat_io_xml">cat_io_xml</a>.
+        CAT12 allows estimation of tissue volume [, intensity, and thickness] for different volume and surface-based atlas maps.
+        The results are stored as CSV and XML files in the <em>label</em> directory. 
+        The XML file <em>cat_*.XML</em> contain all atlas as data structure, whereas 
+        the multiple one CSV file <em>catROI[SPACE]_[ATLAS]_*.csv</em> is required to store the data of an atlas <em>ATLAS</em>, where <em>SPACE</em> describes the type of value estimation with <em>w</em> for volume ROIs and <em>s</em> for surface ROIs.
+        You can use external software like Excel or SPSS for analysis or the CAT MATLAB functions <a class="function" href="matlab:cat_io_csv">cat_io_csv</a> to read the CSV data as cell, or the CAT function <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> to read the XML data as structure.
       </p>
       <p>
         In order too use the atlas maps with <em>SPM atlas functions</em>, you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once.
@@ -37,181 +38,196 @@
       </p>
          
       <ul>
-        <li><a href="#volrois">List of atlas maps in CAT12</a></li>
+        <li><a href="#volrois">List of atlas maps</a></li>
         <ul>
           <li><a href="#Neuromorphometics">Neuromorphometics</a></li>
           <li><a href="#LPBA">LPBA</a></li>
           <li><a href="#Hammers">Hammers</a></li>
+          <li><a href="#AAL">AAL</a></li>
         </ul>  
         <li><a href="#surfrois">List of FreeSurfer atlas maps</a></li>
+        <ul>
+          <li><a href="#FS_DKT40">DKT40</a></li>
+          <li><a href="#FS_Desikan2006">Desikan</a></li>
+          <li><a href="#FS_Destrieux2009">Destrieux</a></li>
+          <li><a href="#FS_Brodman">Brodman</a></li>
+          <li><a href="#FS_Lobes">Lobes</a></li>
+        </ul>  
       </ul>
 
 
       <h3 id="volrois">List of atlas maps in CAT12</h3>
       <p>
         We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <em>templates_1.50mm</em> directory. 
-        For each atlas you can find a csv-file with the ROI IDs, short and full names. 
+        For each atlas you can find a CSV file with the ROI IDs, short and full names. 
         The txt-file contain further informations, terms of use, and the name of the original publications and websites. 
+        If original T1 maps and subject label maps were available we used CAT to preprocess the data and map them to common space. 
+        The subject dependent labels were translated to the CAT name system.            
+      </p>
+      <p>
         <!--
         Further atlas options can be found in the <i>cg_cat_defauls-file</i>.
         -->
+        <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii');}} ) )">Display all six volumetric atlas maps.</a> 
       </p>
-     
-      <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii');
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii'); 
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii'); 
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii'); 
-        fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii');}} ) )">Display all atlas maps.</a> 
-
+ 
       <ul>
         <li>
           <h5 id="Neuromorphometics">Neuromorphometics (2012)</h5>
           <p>
             Maximum probability tissue labels derived from the "MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling" 
-            (<a href="matlab:web('https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details','-browser');">Challenge_Details</a>). 
+            (<a href="matlab:web('https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details','-browser');">Details</a>). 
             These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. 
-            Users should credit the MRI scans as originating from the <a href="matlab:web('http://www.oasis-brains.org/','-browser');">OASIS project</a> and the labeled data as <i>"provided by Neuromorphometrics, Inc. <a href="matlab:web('http://Neuromorphometrics.com/','-browser');">(http://Neuromorphometrics.com/)</a> under academic subscription" </i>. 
-            These references should be included in all workshop and final publications.
-          </p>
-          <p>
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')}}))">Display neuromorphometrics atlas.</a> 
+            Users should credit the MRI scans as originating from the <a href="matlab:web('http://www.oasis-brains.org/','-browser');">OASIS project</a> and the labeled data as <i>"provided by Neuromorphometrics, Inc. <i href="matlab:web('http://Neuromorphometrics.com/','-browser');">(http://Neuromorphometrics.com/)</i> under academic subscription"</i>. 
+            <!--These references should be included in all workshop and final publications.-->
           </p><p>
-            Display Neuromorphometics atlas on DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>)  
-            ), or FreeSurfer average surface (
+            Display Neuromorphometics atlas as 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')}}))">volume map</a>, on the FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
-            ). 
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a> )  
+            or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> ). 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_neuromorphometics.png" width=90% height=auto alt="Neuromorphometics (2012)" ><p>
-        </li><li>
+        </li>
+        <br />
+        <br />
+        
+        
+        <li>
           <h5 id="LPBA">LPBA40 (2008)</h5>
           <p>
-            The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions [Shattuck:2008]. 
+            The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions <a href="Shattuck2008">(Shattuck et al. 2008)</a>. 
             These maps were produced from a set of whole-head MRI of 40 human volunteers. 
             Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. 
             These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. 
             The original MRI data were also transformed into the atlas space.
-          </p>
-          <p>
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">Display LPBA40 atlas.</a> 
           </p><p>
-            Display LPBA40 atlas on DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>)  
-            ), or FreeSurfer average surface (
+            Display LPBA40 atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')}}))">volume map</a>, on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
-            ). 
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a> )  
+            or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> ). 
           </p>
-          <p style="text-align:center;"><img src="images/CAT_surf_atlas_lpba40.png" width=90% height=auto alt="LPBA40 [Shattuck:2008]" ><p>
-        </li><li>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_lpba40.png" width=90% height=auto alt="LPBA40 (Shattuck et al. 2008)" ><p>
+        </li>
+        <br />
+        <br />
+        
+        
+        <li>
           <h5 id="Hammers">Hammers (2003)</h5>
           <p>
-            This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 [Hammers:2003,Gousias:2008]. 
-          </p>
-          <p>
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')}}))">Display Hammers atlas.</a> 
+            This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 <a href="Hammers2003">(Hammers et al. 2003</a>,<a href="Gousias2008">Gousias et al. 2008)</a>. 
           </p><p>
-            Display Hammers atlas on DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>)  
-            ), or FreeSurfer average surface (
+            Display Hammers atlas as 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')}}))">volume map</a>, on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>)  
-            ). 
+            or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.hammers.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> ). 
           </p>
-          <p style="text-align:center;"><img src="images/CAT_surf_atlas_hammers.png" width=90% height=auto alt="Hammers [Hammers:2003]" ><p>
-        </li><li>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_hammers.png" width=90% height=auto alt="Hammers (Hammers et al. 2003)" ><p>
+        </li>
+        <br />
+        <br />
+       
+        
+        <!-- removed because it is old and have only some subcortical regions -->
+        <!--
+        <li>
           <h5 id="IBSR">IBSR</h5>
           <p>
             18 subjectes of the <a href="matlab:web('http://www.nitrc.org/projects/ibsr','-browser');">IBSR V2</a> dataset, with low quality T1 data, but good labels maps. 
             See IBSR terms in "IBSR.txt" for use. 
           </p>
           <p>
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">Display IBSR atlas.</a>
-          </p><p>
-            No surface version available because the IBSR atlas does not contain cortical regions. 
+            Display IBSR atlas as 
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">volume map</a>. 
+            No surface version are available because the IBSR atlas does not have any cortical regions. 
           </p>
-        </li><li>
+        </li>
+        </ br>
+        -->
+        
+        <!-- removed because it based on only one subject and is not completely defined (update possible), but has WM tracts!!! -->
+        <!--        
+        <li>
           <h5 id="Mori">Mori</h5>
           <p>
-            This atlas based on the <a href="matlab:web('http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels','-browser');">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 [Oishi:20xx]. 
+            This atlas based on the <a href="matlab:web('http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels','-browser');">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 <a href="Oishi20xx">(Oishi et al. 20xx)</a>. 
           </p>
           <p>
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')}}))">Display Mori atlas.</a> 
-          </p><p>
-            Display Mori atlas on DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
-            ), or FreeSurfer average surface (
+            Display Mori atlas as
+            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')}}))">volume map</a>, on the FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            )
+            or on the DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.mori.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.mori.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
             ). 
           </p>
-          <p style="text-align:center;"><img src="images/CAT_surf_atlas_mori.png" width=90% height=auto alt="Mori [Oishi:20xx]" ><p>
-        </li><li>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_mori.png" width=90% height=auto alt="Mori (Oishi et al. 20xx)" ><p>
+        </li>
+        -->
+        
+        <!-- not removed yet because even it is only on subject it well known -->
+        <li>
           <h5 id="AAL">AAL (AUTOMATED ANATOMICAL LABELING)</h5>
           <p>
-            Combining probabilistic cytoarchitectonic maps and functional imaging data aligned on Collins brain [Collins:1998,Tzourio-Mazoyer:2002].
+            Combining probabilistic cytoarchitectonic maps and functional imaging data aligned on Collins brain <a href="Collins1998">(Collins et al. 1998,</a><a href="Tzourio2002">Tzourio-Mazoyer et al. 2002)</a>.
           </p>
           <p>            
-            <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')}}))">Display AAL atlas.</a> 
-          </p><p>
-            Display AAL atlas on DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
-            ), or FreeSurfer average surface (
+            Display AAL atlas as <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')}}))">volume map</a>, on the FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>
+            ), or on the DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aal.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aal.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a>
             ). 
           </p>
-          <p style="text-align:center;"><img src="images/CAT_surf_atlas_aal.png" width=90% height=auto alt="AAL [Tzourio-Mazoyer:2002]" ><p>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_aal.png" width=90% height=auto alt="AAL (Tzourio-Mazoyer et al. 2002)" ><p>
         </li>
       </ul>
+      <br />
+            
       
-      <h4>Atlas creation with original data (Hammers, IBSR, Mori)</h4>
+      
+      
+      <h3 id="surfrois">List of FreeSurfer atlas maps</h3>
       <p>
-        If original T1 maps and subject label maps were available we used CAT12 to preprocess the data and map them to common space. 
-        The subject dependent labels were translated to the CAT12 name system.            
-      </p>
-      <!--
-      <h4>Atlas creation of general maps (AAL)</h4>
-      <p>
-        ...
-      </p>
-      -->
-      
-      
-      
-      
-      <h3>List of FreeSurfer atlas maps</h3>
-      <p>
-        See <a href="matlab:web('https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation','-browser');">Freesurfer WIKI</a>.
+        See <a href="matlab:web('https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation','-browser');">Freesurfer WIKI</a> for further information.
       </p>
       <ul>
         <li>
-          <h5>Desikan-Killiany (DKT40) Atlas (2010)</h5>
+          <h5 id="FS_DKT40">Desikan-Killiany (DKT40) Atlas (2010)</h5>
           <p>
             This atlas is also known as the 'Desikan-Killiany-Tourville' (DKT) cortical atlas. 
-            It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci [Desikan-Killiany-Tourville:2006]. 
-            That is, a gyrus includes the part visible on the pial view + adjacent banks of the sulci limiting this gyrus. 
+            It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci <a href="DKT2010">(Desikan Killiany Tourville et al. 2010)</a>. 
+            That is, a gyrus includes the part visible on the Pial view + adjacent banks of the sulci limiting this gyrus. 
           </p><p>
-            Display Desikan-killiany atlas on FreeSurfer average surface (
+            Display DKT40 atlas on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparcDKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparcDKT40.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
@@ -234,16 +250,20 @@
             ). 
           </p>
           -->
-          <p style="text-align:center;"><img src="images/CAT_surf_atlas_DKT40.png" width=90% height=auto alt="Desikan-Killiany-Tourville:2010" ><p>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_DKT40.png" width=90% height=auto alt="Desikan Killiany Tourville et al. 2010" ><p>
         </li>
+        <br />
+        <br />
+        
+        
         <li>
-          <h5>Desikan-Killiany Atlas (2006)</h5>
+          <h5 id="FS_Desikan2006">Desikan-Killiany Atlas (2006)</h5>
           <p>
             This atlas is also known as the 'Desikan-Killiany' cortical atlas. 
-            It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci [Desikan-Killiany:2006]. 
+            It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci <a href="DK2006">(Desikan Killiany et al. 2006)</a>. 
             That is, a gyrus includes the part visible on the pial view + adjacent banks of the sulci limiting this gyrus. 
           </p><p>
-            Display Desikan-killiany atlas on FreeSurfer average surface (
+            Display Desikan-Killiany atlas on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.aparc.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
@@ -253,8 +273,11 @@
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
             ). 
           </p>
-          <p style="text-align:center;"><img src="images/CAT_surf_atlas_Desikan-Killiany.png" width=90% height=auto alt="Desikan-Killiany:2006" ><p>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_Desikan-Killiany.png" width=90% height=auto alt="Desikan Killiany et al. 2006" ><p>
         </li>
+        <br />
+        <br />
+        
         <!--
         <li>
           <h5>Destrieux Atlas (2005)</h5>
@@ -271,12 +294,14 @@
           </p>
         </li>
         -->
+        
+        
         <li>
-          <h5>Destrieux Atlas (2009)</h5>
+          <h5 id="FS_Destrieux2009">Destrieux Atlas (2009)</h5>
           <p>
-            This atlas is also known as the 'Destrieux' cortical atlas [Fischl:2004].
+            This atlas is also known as the 'Destrieux' cortical atlas <a>(Fischl et al. 2004)</a>.
             It is based on a parcellation scheme that first divided the cortex into gyral and sulcal regions, the limit between both being given by the curvature value of the surface. 
-            A gyrus only includes the cortex visible on the pial view, the hidden cortex (banks of sulci) are marked sulcus.
+            A gyrus only includes the cortex visible on the Pial view, the hidden cortex (banks of sulci) are marked sulcus.
           </p><p>
             Display Destrieux atlas on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
@@ -288,8 +313,15 @@
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
             ). 
           </p>
-        </li><li>
-          <h5>PALS B12 Brodman</h5>
+          <p style="text-align:center;"><img src="images/CAT_surf_atlas_Destrieux.png" width=90% height=auto alt="Destrieux 2009" ><p>
+        </li>
+        <br />
+        <br />
+        
+        
+        
+        <li>
+          <h5 id="FS_Brodman">PALS B12 Brodman</h5>
           <p>
             Display PALS B12 Brodman atlas on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Brodmann.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
@@ -302,8 +334,14 @@
             ). 
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_PALS-B12-Brodmann.png" width=90% height=auto alt="PALS B12 Brodmann" ><p>
-        </li><li>
-          <h5>Lobes</h5>
+        </li>
+        <br />
+        <br />
+        
+        
+        
+        <li>
+          <h5 id="FS_Lobes">Lobes</h5>
           <p>
             Display Lobes atlas on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.PALS_B12_Lobes.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
@@ -318,7 +356,7 @@
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_PALS-B12-Lobes.png" width=90% height=auto alt="PALS B12 Lobes" ><p>
         </li>
       </ul>
-      
+      <br />
       
       
       
@@ -327,68 +365,72 @@
       <h3>References:</h3>
       <ul>
         <li>
-          <b>Collins:1998</b>
+          <b id="Collins1998">Collins et al. 1998</b>
           <p>
             Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, et al. </br>
             Design and construction of a realistic digital brain phantom. </br>
-            IEEE Transactions on Medical Imaging 1998; 17: 463-68.
+            <a href="matlab:web('http://doi.org/10.1109/42.712135','-browser')">IEEE Transactions on Medical Imaging 1998; 17: 463-68</a>.
           </p>
         </li>
-         <li>
-          <b>Desikan-Killiany-Tourville:2006</b>
+        <li>
+          <b id="DKT2006">Desikan-Killiany-Tourville et al. 2006</b>
           <p>
-            Desikan et al. </br>
+            Desikan RS, Ségonne F, Fischl B, Quinn BT, Dickerson BC, Blacker D, et al. (2006) </br>
             An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest. </br>
-            NeuroImage 2006, 31(3):968-80.
+            <a href="matlab:web('http://doi.org/10.1016/j.neuroimage.2006.01.021','-browser')">NeuroImage 2006, 31(3):968-80.</a>
          </p>
         </li>
         </li>
          <li>
-          <b>Fischl:2004</b>
+          <b id="Fischl2004">Fischl et al. 2004</b>
           <p>
-            Fischl et al. </br>
+            Fischl BR, van der Kouwe AJW, Destrieux C, Halgren E, Ségonne F, Salat DH, et al. (2004). </br>
+            Automatically parcellating the human cerebral cortex. </br>
+            Cerebral Cortex (New York, NY : 1991), 14(1), 11-22.
           </p>
         </li>
         <li>
-          <b>Hammers:2003</b>
+          <b id="Hammers2003">Hammers et al. 2003</b>
           <p>
             Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS. </br>
             Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe. </br>
-            Hum Brain Mapp 2003, 19: 224-247. 
+            <a href="matlab:web('http://doi.org/10.1002/hbm.10123','-browser')">Human Brain Mapping, 19(4), 224-247.<a>
           </p>
         </li>
         <li>
-          <b>Gousias:2008</b>
+          <b id="Gousias2008">Gousias et al. 2008</b>
           <p>
             Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, Hammers A. </br>
             Automatic segmentation of brain MRIs of 2-year-olds into 83 regions of interest. </br>
             Neuroimage 2008 Apr 1;40(2):672-684. 
           </p>
         </li>
+        <!--
         <li>
-          <b>Oishi:</b>
+          <b id="Oishi">Oishi et al. </b>
           <p>
             Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S.
-            Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer'sdisease participants. </br>
+            Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer's disease participants. </br>
           </p>
         </li>
+        -->
         <li>
-          <b>Shattuck:2008</b>
+          <b id="Shattuck2008">Shattuck et al. 2008</b>
           <p>
             Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW.  </br>
             Construction of a 3D Probabilistic Atlas of Human Cortical Structures. </br>
-            NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031. </br>
+            <a href="matlab:web('<http://doi.org/10.1016/j.neuroimage.2007.09.031','-browser')">NeuroImage 39 (3): 1064-1070.</a> </br>
             <a href="matlab:web('http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12','-browser');"> </br>
             <a href="matlab:web('http://www.loni.usc.edu/atlases/Atlas_Methods.php?atlas_id=12','-browser');"> </br>
             <a href="matlab:web('http://shattuck.bmap.ucla.edu/resources/lpba40/','-browser');">  
           </p>
         </li>
         <li>
-          <b>Tzourio-Mazoyer:2002</b>
+          <b id="Tzourio2002">Tzourio-Mazoyer et. al 2002</b>
           <p>
             Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, et al. </br>
-            Automated anatomical labelling of activations in spm using a macroscopic anatomical parcellation of the MNI MRI single subject brain. </br>
-            Neuroimage 2002; 15: 273-289.
+            Automated anatomical labelling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single subject brain. </br>
+            <a href="matlab:web('http://doi.org/10.1006/nimg.2001.0978','-browser');">Neuroimage 2002; 15: 273-289</a>.
           </p>
         </li>
         

@@ -99,17 +99,32 @@ template = strrep(job.extopts.darteltpm{1},',1','');
 [templatep,templatef,templatee] = spm_fileparts(template);
 numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
 if isempty(numpos)
-  error('Could not find ''Template_1'' that indicates the first Dartel/Shooting template in cat_defaults.');
+  error('CAT:cat_main:TemplateNameError', ...
+  ['Could not find the string "Template_1" (Dartel) or "Template_0" (Shooting) \n'...
+   'that indicates the first file of the Dartel/Shooting template. \n' ...
+   'The given filename is "%s" \n' ...
+   ],templatef);
 end
 job.extopts.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
 job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
 [template1p,template1f] = spm_fileparts(job.extopts.templates{1});
 if do_dartel 
   if (numel(job.extopts.templates)==6 || numel(job.extopts.templates)==7)
+    % Dartel template
     if ~isempty(strfind(template1f,'Template_0')), job.extopts.templates(1) = []; end   
     do_dartel=1;
-  else
+  elseif numel(job.extopts.templates)==5 
+    % Shooting template
     do_dartel=2; 
+  else
+    templates = '';
+    for ti=1:numel(job.extopts.templates)
+      templates = sprintf('%s  %s\n',templates,job.extopts.templates{ti});
+    end
+    error('CAT:cat_main:TemplateFileError', ...
+     ['Could not find the expected number of template. Dartel requires 6 Files (Template 1 to 6),\n' ...
+      'whereas Shooting needs 5 files (Template 0 to 4). %d templates found: \n%s'],...
+      numel(job.extopts.templates),templates);
   end
 end
 % run dartel registration to GM/WM dartel template
@@ -327,13 +342,13 @@ Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI sca
 Yp0  = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
 
 
-if job.extopts.debug>3
+if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))))
 % use gcut2
 
   %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
   %   noise = nanstd(Ysrc(cat_vol_morph(Yp0>0.8,'o') & Yp0>0.99)/diff(T3th(2:3))); 
 
-  Vl1 = spm_vol(job.extopts.cat12atlas);
+  Vl1 = spm_vol(job.extopts.cat12atlas{1});
   Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
 
@@ -357,7 +372,7 @@ if job.extopts.debug>3
   end
   %%
   Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
-    struct('gcutstr',job.extopts.gcutstr/2,'verb',0,'debug',job.extopts.debug));
+    struct('gcutstr',0.1,'verb',0,'debug',job.extopts.debug,'LAB',job.extopts.LAB,'LASstr',0));
   %%
   [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
   Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
@@ -413,76 +428,78 @@ if job.extopts.gcutstr==0
 end
 
 
-%% Update probability maps
-% background vs. head - important for noisy backgrounds such as in MT weighting
-if job.extopts.gcutstr==0
-  Ybg = ~Yb; 
-else
-  if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<mean(T3th(1:2)))))>10000
-    Ybg = P(:,:,:,6); 
-    [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
-    Ybgrth = max(mean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
-    Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
-    Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
+if ~(job.extopts.INV && any(sign(diff(T3th))))
+  %% Update probability maps
+  % background vs. head - important for noisy backgrounds such as in MT weighting
+  if job.extopts.gcutstr==0
+    Ybg = ~Yb; 
   else
-    Ybg = ~Yb;
+    if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<mean(T3th(1:2)))))>10000
+      Ybg = P(:,:,:,6); 
+      [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
+      Ybgrth = max(mean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
+      Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
+      Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
+    else
+      Ybg = ~Yb;
+    end
   end
+  P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
+  P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
+  P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+  P(:,:,:,4) = P4;
+  P(:,:,:,5) = P5;
+  P(:,:,:,6) = P6;
+  clear P4 P5 P6;
+
+  %% correct probability maps to 100% 
+  sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));
+  P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>mean(T3th(1:2)) & Ysrc<mean(T3th(2:3)));
+  P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=mean(T3th(2:3)));
+  P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=mean(T3th(1:2)));
+  P(:,:,:,4) = P(:,:,:,4) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc<T3th(2));
+  P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
+  P(:,:,:,6) = P(:,:,:,6) + sumP .* uint8( Ybg>=0.5 & ~Yb );
+  clear Ybg;
+
+  %% head to WM 
+  % Undercorrection of strong inhomogeneities in high field scans 
+  % (>1.5T) can cause missalignments of the template and therefore 
+  % miss classifications of the tissues that finally avoid further 
+  % corrections in by LAS. 
+  % Typically the alginment failed in this cases because the high 
+  % intensities next to the head that were counted as head and not
+  % corrected by SPM.
+  % e.g. HR075, Magdeburg7T, SRS_SRS_Jena_DaRo81_T1_20150320-191509_MPR-08mm-G2-bw330-nbc.nii, ...
+  Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<0.5 | (P(:,:,:,1)>128 & abs(Ysrc/T3th(3)-2/3)<1/3) | Ydiv>0.03) = nan;
+  [Ywm1,YD] = cat_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0; clear Ywm1 YD;
+  Ywmc = uint8(smooth3(Ywm)>0.7);
+  Ygmc = uint8(cat_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & cat_vol_smooth3X(Yb,8)<0.9);
+  P(:,:,:,[1,3:6]) = P(:,:,:,[1,3:6]) .* repmat(1-Ywmc,[1,1,1,5]);
+  P(:,:,:,2:6)     = P(:,:,:,2:6)     .* repmat(1-Ygmc,[1,1,1,5]);
+  P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
+  P(:,:,:,2)       = max(P(:,:,:,2),255*Ywmc);
+  Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+  clear Ygmc Ywmc Yg Ydiv;
+
+  % head to GM
+  Ygm = uint8(cat_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>mean(T3th(2:3))) & Yp0<2/3);
+  P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
+  P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
+  P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
+  P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
+  Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+  clear Ywm Ygm;
+
+  %% remove brain tissues outside the brainmask ...
+  % tissues > skull (within the brainmask)
+  Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>0.2) - Yp0 )>0.5); 
+  sumP = sum(P(:,:,:,1:3),4); 
+  P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
+  P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
+  P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
+  clear sumP Ybb
 end
-P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
-P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
-P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
-P(:,:,:,4) = P4;
-P(:,:,:,5) = P5;
-P(:,:,:,6) = P6;
-clear P4 P5 P6;
-
-%% correct probability maps to 100% 
-sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));
-P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>mean(T3th(1:2)) & Ysrc<mean(T3th(2:3)));
-P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=mean(T3th(2:3)));
-P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=mean(T3th(1:2)));
-P(:,:,:,4) = P(:,:,:,4) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc<T3th(2));
-P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
-P(:,:,:,6) = P(:,:,:,6) + sumP .* uint8( Ybg>=0.5 & ~Yb );
-clear Ybg;
-
-%% head to WM 
-% Undercorrection of strong inhomogeneities in high field scans 
-% (>1.5T) can cause missalignments of the template and therefore 
-% miss classifications of the tissues that finally avoid further 
-% corrections in by LAS. 
-% Typically the alginment failed in this cases because the high 
-% intensities next to the head that were counted as head and not
-% corrected by SPM.
-% e.g. HR075, Magdeburg7T, SRS_SRS_Jena_DaRo81_T1_20150320-191509_MPR-08mm-G2-bw330-nbc.nii, ...
-Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<0.5 | (P(:,:,:,1)>128 & abs(Ysrc/T3th(3)-2/3)<1/3) | Ydiv>0.03) = nan;
-[Ywm1,YD] = cat_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0; clear Ywm1 YD;
-Ywmc = uint8(smooth3(Ywm)>0.7);
-Ygmc = uint8(cat_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & cat_vol_smooth3X(Yb,8)<0.9);
-P(:,:,:,[1,3:6]) = P(:,:,:,[1,3:6]) .* repmat(1-Ywmc,[1,1,1,5]);
-P(:,:,:,2:6)     = P(:,:,:,2:6)     .* repmat(1-Ygmc,[1,1,1,5]);
-P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
-P(:,:,:,2)       = max(P(:,:,:,2),255*Ywmc);
-Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-clear Ygmc Ywmc Yg Ydiv;
-
-% head to GM
-Ygm = uint8(cat_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>mean(T3th(2:3))) & Yp0<2/3);
-P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
-P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
-P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
-P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
-Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-clear Ywm Ygm;
-
-%% remove brain tissues outside the brainmask ...
-% tissues > skull (within the brainmask)
-Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>0.2) - Yp0 )>0.5); 
-sumP = sum(P(:,:,:,1:3),4); 
-P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
-P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
-P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
-clear sumP Ybb
 
 %% MRF
 % Used spm_mrf help and tested the probability TPM map for Q without good results.         
@@ -730,7 +747,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  -------------------------------------------------------------------
 
 % correct for harder brain mask to avoid meninges in the segmentation
-Ymb = Ym; Ymb(~Yb) = 0; 
+Ymb = Ym; Ymb(~Yb) = 0; %Ymb = double(VT.private.dat(:,:,:)); Ymb(~Yb) = 0; 
 rf = 10^4; Ymb = round(Ymb*rf)/rf;
 
 %  prepare data for segmentation
@@ -804,7 +821,7 @@ stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter s
 prob = cat_amap(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
   job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
 
-% reorder probability maps according to spm order
+%% reorder probability maps according to spm order
 prob = prob(:,:,:,[2 3 1]);
 clear vol %Ymb
 fprintf(sprintf('%s',repmat('\b',1,94+4)));
@@ -1514,21 +1531,21 @@ if job.output.ROI
   
   % map data to actual template space
   stime2   = cat_io_cmd('  Data mapping to normalized space','g5','', job.extopts.verb-1); 
-  wYp0     = cat_vol_ROInorm(Yp0,trans,1,0,extopts.atlas);
-  wYcls    = cat_vol_ROInorm(Ycls,trans,1,1,extopts.atlas);
+  wYp0     = cat_vol_ROInorm(Yp0,trans,1,0,job.extopts.atlas);
+  wYcls    = cat_vol_ROInorm(Ycls,trans,1,1,job.extopts.atlas);
   if exist('Ywmh','var')
-    wYcls{7} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),trans,1,0,extopts.atlas));
+    wYcls{7} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),trans,1,0,job.extopts.atlas));
   end
   for ci=1:numel(wYcls); wYcls{ci} = wYcls{ci} * prod(vx_vol); end      % volume
-  wYm      = cat_vol_ROInorm(Ym,trans,1,0,extopts.atlas);                             % intensity
+  wYm      = cat_vol_ROInorm(Ym,trans,1,0,job.extopts.atlas);                             % intensity
   %wYmf     = cat_vol_morph(cat_vol_ROInorm(YMF,trans,1,0)>0.5,'d');  
   Yp0toC   = @(Yp0,c) 1-min(1,abs(Yp0-c));
   if exist('Yth1','var')
     % ROI based thickness of all GM voxels per ROI
     Yth1x  = Yth1; Yth1x(Yp0toC(Yp0,2)<0.5)=nan;
     Ymm    = single(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
-    wYmm   = cat_vol_ROInorm(Ymm,trans,1,0,extopts.atlas)>0.5;
-    wYth1  = cat_vol_ROInorm(Yth1x,trans,1,0,extopts.atlas);
+    wYmm   = cat_vol_ROInorm(Ymm,trans,1,0,job.extopts.atlas)>0.5;
+    wYth1  = cat_vol_ROInorm(Yth1x,trans,1,0,job.extopts.atlas);
   end
   
   clear YMF
@@ -1542,7 +1559,7 @@ if job.output.ROI
       stime2 = cat_io_cmd(sprintf('  ROI estimation of ''%s'' atlas',atlas),'g5','', job.extopts.verb-1,stime2);
       
       % map atlas to actual template space 
-      wYa   = cat_vol_ROInorm([],trans,ai,0,extopts.atlas);
+      wYa   = cat_vol_ROInorm([],trans,ai,0,job.extopts.atlas);
       
       % write output
       if any(cell2mat(struct2cell(job.output.atlas)'))
@@ -1560,15 +1577,15 @@ if job.output.ROI
       end
       
       % extract ROI data
-      csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue,extopts.atlas);  % volume
-      csv   = cat_vol_ROIestimate(wYp0,wYa,wYm  ,ai,'I',csv,tissue,extopts.atlas); % intensity
+      csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue,job.extopts.atlas);  % volume
+      csv   = cat_vol_ROIestimate(wYp0,wYa,wYm  ,ai,'I',csv,tissue,job.extopts.atlas); % intensity
 
       % thickness
       if exist('Yth1','var'),
       % for thickness we need special correction to avoid values 
       % in bad map ROIs that comes to the GM
-        csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmm,ai,'T',csv,tissue,extopts.atlas);
-        csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmm,ai,'V',[] ,{''},extopts.atlas);
+        csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmm,ai,'T',csv,tissue,job.extopts.atlas);
+        csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmm,ai,'V',[] ,{''},job.extopts.atlas);
         corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
         csv(2:end,end) = num2cell(corth1);
         clear Yth1x
@@ -1783,7 +1800,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   cm = job.extopts.colormap; 
 
-  % check colormap name
+  %% check colormap name
   switch lower(cm)
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
         'gray','bone','copper','pink','bcgwhw','bcgwhn'}
@@ -1792,12 +1809,16 @@ fprintf('%4.0fs\n',etime(clock,stime));
       cm = 'gray';
   end
 
+  % SPM_orthviews seams to allow only 60 values
+  % It further requires a modified colormaps with lower values that the
+  % colorscale and small adaption for the values. 
   switch lower(cm)
     case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
       ytick       = [1,5:5:60];
       yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
       yticklabelo = {' BG',' ','    ','    ','   ','     ',' average WM  ',' ',' ',' ',' ',' ',' BV / HD '};
-      colormap(cat_io_colormaps(cm,60));
+      %colormap(cat_io_colormaps(cm,60));
+      colormap(cat_io_colormaps([cm 'ov'],60));
       cmmax = 2;
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
       ytick       = [1 20 40 60]; 
@@ -1851,12 +1872,22 @@ fprintf('%4.0fs\n',etime(clock,stime));
   % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
   Yo  = single(VT.private.dat(:,:,:)); 
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
+  if job.inv_weighting
+    WMth = min([...
+      cat_stat_nanmedian(Yo(Yp0(:)>0.8 & Yp0(:)<1.2))*2,...
+      cat_stat_nanmedian(Yo(Yp0(:)>1.8 & Yp0(:)<2.2))*1.5,...
+      ]);
+    T1txt = '*.nii (Original PD/T2)'; 
+  else
+    WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
+    T1txt = '*.nii (Original T1)'; 
+  end
+  clear Yo; 
   
   VT0x = VT0;
   VT0x.mat = dispmat * VT0x.mat; 
   hho = spm_orthviews('Image',VT0x,pos(1,:)); 
-  spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
+  spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
   spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
   cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
      'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
@@ -2078,7 +2109,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
 
   if isempty(csv) 
     if exist(csvf,'file')
-      csv = cat_io_csv(csvf); 
+      csv = cat_io_csv(csvf,'','',struct('delimiter',';')); 
     else
       csv = [num2cell((1:max(Ya(:)))') ...
         cellstr([repmat('ROI',max(Ya(:)),1) num2str((1:max(Ya(:)))','%03d')]) ...
@@ -2098,7 +2129,7 @@ function csv = cat_vol_ROIestimate(Yp0,Ya,Yv,ai,name,csv,tissue,FA)
   name = genvarname(strrep(strrep(name,'-','_'),' ','_'));
   
   
-  % volume case
+  %% volume case
   Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));   
   % other maps with masks
   for ti=1:numel(tissue)
