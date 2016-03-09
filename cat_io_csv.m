@@ -52,8 +52,8 @@ function varargout = cat_io_csv(filename,varargin)
   if nargin < 3+(nargout==0), pos   = '';       else pos   = varargin{3-(nargout>0)}; end
   if nargin < 4+(nargout==0), opt   = struct(); else opt   = varargin{4-(nargout>0)}; end  
   
-  def.delimiter       = ';';
-  def.komma           = ','; 
+  def.delimiter       = ',';
+  def.komma           = '.'; 
   def.linedelimiter   = '\n'; 
   def.format          = '%0.4f';
   def.finaldelimiter  = 0;
@@ -76,7 +76,7 @@ function C=readcsv(filename,sheet,pos,opt)
 % __________________________________________________________________________________________________
   
   % set filename and load if it exist
-  if ~exist(filename,'file'), C={}; return; end
+  if ~exist(filename,'file'), fprintf('File "%s" does not exist./n',filename); C={}; return; end
 
   % read file and convert from string to cell
   fid = fopen(filename);

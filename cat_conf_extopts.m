@@ -337,8 +337,8 @@ darteltpm.ufilter = '_1';
 darteltpm.def     = @(val)cat_get_defaults('extopts.darteltpm', val{:});
 darteltpm.num     = [1 1];
 darteltpm.help    = {
-   'Selected Dartel/Shooting template must be in multi-volume nifti format and should contain GM and WM segmentations. The template of the first iteration (indicated by "_1") must be selected, but the templates of all iterations must be present.'
-''
+  'Selected Dartel/Shooting template must be in multi-volume nifti format and should contain GM and WM segmentations. The template of the first iteration (indicated by "Template_1" for Dartel and "Template_0" for Shooting) must be selected, but the templates of all iterations must be present.'
+  ''
 };
 
 %------------------------------------------------------------------------

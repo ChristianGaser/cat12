@@ -17,7 +17,7 @@
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
       </p>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_management.html">CAT error management</a>
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_errormanagement.html">CAT error management</a>
       </div>
     </div>
   
@@ -26,10 +26,10 @@
     <div id="content">
       <h2>CAT error management</h2>
       <p>
-        To avoid preprocessing stops in large datasets by single errors, CAT allows to catch preprocessing errors of on subject (<i>cat.extopts.ignoreErrors</i> in <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;"> cat_defaults</a>). 
+        To avoid preprocessing stops in large datasets by single errors, CAT allows to catch preprocessing errors of on subject (<em>cat.extopts.ignoreErrors</em> in <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;"> cat_defaults</a>). 
         It creates an error directory "err" within the folder of the file and creates a error specific subdirectory "FUNCTION.LINE.IDENTIFIER" with the information where the LAST error occurred and its identification.
-        The CAT-XML file with preprocessing parameters, error and system information are written in this directory. 
-        Furthermore, the CAT-report (if exist) is copied and a symbolic link to the original file is created (only MAC/Linux) to check the original image.  
+        The CAT XML file with preprocessing parameters, error and system information are written in this directory. 
+        Furthermore, the CAT report (if exist) is copied and a symbolic link to the original file is created (only MAC/Linux) to check the original image.  
       </p><p> 
         Although, the LAST error terminates the processing it is often not the major problem. 
         E.g. an error in the <i>cat_vol_morph</i> for an empty image, can occur in the preprocessing function <i>cat_main</i>, but is caused much early by a bad affine registration, failed corrections or miss classifications. 
