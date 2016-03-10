@@ -28,10 +28,10 @@
         This toolbox is an extension of the default segmentation in SPM12, but uses a completely different segmentation with a lot of support functions (listed in processing order with details below):
       </p>
       <ol>
-        <li><a href="#Interp">Intern Interpolation</a></li>
-        <li><a href="#APP">Affine PreProcessing (APP)</a></li>
+        <li><a href="#Interp">Internal Interpolation</a></li>
+        <li><a href="#APP">Affine Preprocessing (APP)</a></li>
         <li><a href="#MM">Mixed Model</a></li>
-        <li><a href="#NC">Noise Filter</a></li>
+        <li><a href="#NC">Denoising</a></li>
         <li><a href="#AMAP">AMAP Segmentation</a></li>
         <li><a href="#Dartel">Dartel Normalization</a></li>
          <!--li><a href="#Dartel">Dartel/Shooting Normalization</a></li-->
@@ -53,7 +53,7 @@
         
         
         <li>
-          <h4 id="APP">Affine PreProcessing (APP)</h4>
+          <h4 id="APP">Affine Preprocessing (APP)</h4>
           <p>
             To improve the initial SPM segmentation a initial affine registration on a bias-corrected image is applied and the intensity range is limited to avoid problems in special protocols. 
             If preprocessing failed a more aggressive version is available that applied the bias correction to the image and mask the brain/head and removed the background/skull.
@@ -63,7 +63,7 @@
         
         
         <li> 
-          <h4 id="MM">Mixed Model</h4>
+          <h4 id="MM">Partial Volume Segmentation</h4>
           <p>
             Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2004.05.007','-browser');">(Tohka et al. 2004)</a>.  
             We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation.  
@@ -74,7 +74,7 @@
         
         
         <li>
-          <h4 id="NC">Noise Filter</h4>
+          <h4 id="NC">Denoising</h4>
           <p>
             Furthermore, we apply two denoising methods. 
             The first method is an block-wise adaptive Non-Local Means (SANLM) denoising filter that is applied after the intensity normalization. 
@@ -84,7 +84,7 @@
             -->
             The second method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation and controlled by reminding image noise. 
             The strength of the denoising can be controlled by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults), with 0 for no noise correction at all, small values (0.01-0.5) for small denoising, 0.5 for average denoising (default), and higher values (0.5-1) for strong denoising.
-            Default setting is 0.5 to avoid over filtering that may reduce statistical power.
+            Default setting is 0.75 to avoid over-filtering that may reduce statistical power.
           </p>
         </li>
         
@@ -156,7 +156,7 @@
         <li>
           <h4 id="Cleanup">Cleanup</h4>
           <p>
-            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove reminding meninges from the final segmentation. The strength of the cleanup is controlled by the <em>"Strength of Final Clean Up"</em> parameter (<em>gcutstr</em> in cat_defaults), with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
+            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove remaining meninges from the final segmentation. The strength of the cleanup is controlled by the <em>"Strength of Final Clean Up"</em> parameter (<em>gcutstr</em> in cat_defaults), with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
           </p>
         </li>
         
