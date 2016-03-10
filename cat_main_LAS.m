@@ -66,7 +66,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
-  debug   = extopts.debug; %debug =1;
+  debug   = extopts.debug; %debug = 1;
   verb    = extopts.verb-1;
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);
@@ -260,13 +260,13 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
     Ygm = Ygm & ~Ywmtpm & ~Ybvv; % no WMH area
     Ywm = (Ywm & ~Yss & ~Ybv2  & ~Ynw) | Ycwm | Ybwm; %& ~NS(Yl1,LAB.BG)
     Ywmtpm(smooth3(Ywmtpm & Ym<11/12)<0.5)=0;
-    Ywm = Ywm & ~Ywmtpm & ~Ybvv; % no WM area
+    Ywm = Ywm & ~Ywmtpm & ~Ybvv & ~Yss; % no WM area
     Ycm = Ycm | ( (Ycx | Yccm | Ybcm) & Yg<0.2 & Ym>0 & Ydiv>-0.05 & Ym<0.3 & Yb ) | Ybvv;
     if ~debug, clear Ycwm Yccm Ycd; end
     % mapping of the brainstem to the WM (well there were some small GM
     % structures, but the should not effect the local segmentation to much.
     Ybs = cat_vol_morph(NS(Yl1,LAB.BS) & Ym<1.2 & Ym>0.9 & Yp0>2.5,'c',2*vxv) & Ym<1.2 & Ym>0.9 & Yp0>1.5;
-    Ygm = Ygm & ~Ybs & ~Ybv2 & ~Ywm;
+    Ygm = (Ygm & ~Ybs & ~Ybv2 & ~Ywm) | Yss;
     Ywm = Ywm | (Ybs & Ym<1.1 & Ym>0.9 & Yp0>1.5) ; 
     if ~debug, clear Ycx; end
   end
@@ -304,7 +304,8 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ysrcm = round(Ysrcm*T3th3)/T3th3;
   Ygw2 = Ycls{1}>128 & Ym>2/3-0.04 & Ym<2/3+0.04 & Ygm .*Ydiv>0.01;
   Ygw2 = Ygw2 | (Ycls{1}>128 & Yg<0.05 & abs(Ydiv)<0.05 & ~Ywm & Ym<3/4); % large stable GM areas - like the BWP cerebellum
-  Ygw3 = Ycls{3}>128 & Yg<0.05 & ~Ywm & ~Ygm; 
+  Ygw3 = Ycls{3}>128 & Yg<0.05 & ~Ywm & ~Ygm & Ywd<3; 
+  Ygw3(smooth3(Ygw3)<0.5)=0;
   [Yi,resT2] = cat_vol_resize(Ysrcm,'reduceV',vx_vol,mres,32,'max'); % maximum reduction for the WM
   %%
   if mean(Ym(Ygw3))>0.1, % not in images with to low CSF intensity (error in skull-stripped)

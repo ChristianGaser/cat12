@@ -38,18 +38,16 @@ function cat_run_oldcatch(job,tpm,subj)
       caterrtxt{1} = sprintf('%s (cat_run_oldcatch!)\n',caterr.identifier);
       caterrtxt{2} = sprintf('%s\n',caterr.message); 
       for si=1:numel(caterr.stack)
-        cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name));  
-        caterrtxt{si+2} = sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
+        cat_io_cprintf('err',sprintf('% 5d - %s\n',caterr.stack(si).line,caterr.stack(si).name));  
+        caterrtxt{si+2} = sprintf('% 5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
       end
       cat_io_cprintf('err',sprintf('%s\n',repmat('-',1,72)));  
 
-      % delete template files 
-      [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
-      % delete noise corrected image
-      if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
-        try %#ok<TRYNC>
-          delete(fullfile(pth,mrifolder,['n' nam ext]));
-        end
+      % better to have the res that the opt field
+      if isfield(cat_err_res,'res')
+        job.SPM.res = cat_err_res.res;
+      elseif isfield(cat_err_res,'obj')
+        job.SPM.opt = cat_err_res.obj;
       end
       
       % save cat xml file
@@ -61,6 +59,16 @@ function cat_run_oldcatch(job,tpm,subj)
       end
       qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
       cat_io_report(job,qa)
+      
+      
+      % delete template files 
+      [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
+      % delete noise corrected image
+      if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
+        try %#ok<TRYNC>
+          delete(fullfile(pth,mrifolder,['n' nam ext]));
+        end
+      end
       
       if job.extopts.subfolders
         reportfolder = 'report';
