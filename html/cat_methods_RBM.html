@@ -28,12 +28,12 @@
       <p>
         CAT12 allows estimation of tissue volume [, intensity, and thickness] for different volume and surface-based atlas maps.
         The results are stored as CSV and XML files in the <em>label</em> directory. 
-        The XML file <em>cat_*.XML</em> contain all atlas as data structure, whereas 
-        the multiple one CSV file <em>catROI[SPACE]_[ATLAS]_*.csv</em> is required to store the data of an atlas <em>ATLAS</em>, where <em>SPACE</em> describes the type of value estimation with <em>w</em> for volume ROIs and <em>s</em> for surface ROIs.
+        The XML file <em>cat_*.XML</em> contains information of all atlases as data structure, whereas 
+        the multiple CSV files <em>catROI[SPACE]_[ATLAS]_*.csv</em> is required to store the data of an atlas <em>ATLAS</em>, where <em>SPACE</em> describes the type of value estimation with <em>w</em> for volume ROIs and <em>s</em> for surface ROIs.
         You can use external software like Excel or SPSS for analysis or the CAT MATLAB functions <a class="function" href="matlab:cat_io_csv">cat_io_csv</a> to read the CSV data as cell, or the CAT function <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> to read the XML data as structure.
       </p>
       <p>
-        In order too use the atlas maps with <em>SPM atlas functions</em>, you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once.
+        In order to use the atlas maps with <em>SPM atlas functions</em>, you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once.
         By default only Neuromorphometics, LPBA40, and Hammers atlas maps are used. 
       </p>
          
@@ -160,7 +160,7 @@
           <p>
             Display IBSR atlas as 
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')}}))">volume map</a>. 
-            No surface version are available because the IBSR atlas does not have any cortical regions. 
+            No surface version is available because the IBSR atlas does not have any cortical regions. 
           </p>
         </li>
         </ br>
