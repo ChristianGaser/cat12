@@ -5,20 +5,25 @@ function cat_io_report(job,qa)
 % image centered by its AC.
 % ______________________________________________________________________
 % Robert Dahnke 
-% $Revision: 891 $  $Date: 2016-03-09 11:39:00 +0100 (Mi, 09 MÃ¤r 2016) $
+% $Revision$  $Date$
     
+	global cat_err_res; 
+
   if job.extopts.subfolders
+    mrifolder    = 'mri'; 
     reportfolder = 'report';
     surffolder   = 'surf';
   else
+    mrifolder    = '';
     reportfolder = '';
     surffolder   = '';
   end
   
-  [pp,ff,ee] = spm_fileparts(job.data{1});
+  [pp,ff] = spm_fileparts(job.data{1});
 
-  Pm  = fullfile(pp,['m' ff ee]); 
-  Pp0 = fullfile(pp,['p0' ff ee]); 
+  Pn  = fullfile(pp,mrifolder,['n' ff '.nii']); 
+  Pm  = fullfile(pp,mrifolder,['m' ff '.nii']); 
+  Pp0 = fullfile(pp,mrifolder,['p0' ff '.nii']); 
 
   VT0 = spm_vol(job.data{1}); % original 
   [pth,nam] = spm_fileparts(VT0.fname); 
@@ -39,6 +44,40 @@ function cat_io_report(job,qa)
     end
   end
   
+  % Find all templates and distinguish between Dartel and Shooting 
+  % written to match for Template_1 or Template_0 as first template.  
+  template = strrep(job.extopts.darteltpm{1},',1','');
+  [templatep,templatef,templatee] = spm_fileparts(template);
+  numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
+  if isempty(numpos)
+    error('CAT:cat_main:TemplateNameError', ...
+    ['Could not find the string "Template_1" (Dartel) or "Template_0" (Shooting) \n'...
+     'that indicates the first file of the Dartel/Shooting template. \n' ...
+     'The given filename is "%s" \n' ...
+     ],templatef);
+  end
+  job.extopts.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
+  job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
+  [template1p,template1f] = spm_fileparts(job.extopts.templates{1});
+  if do_dartel 
+    if (numel(job.extopts.templates)==6 || numel(job.extopts.templates)==7)
+      % Dartel template
+      if ~isempty(strfind(template1f,'Template_0')), job.extopts.templates(1) = []; end   
+      do_dartel=1;
+    elseif numel(job.extopts.templates)==5 
+      % Shooting template
+      do_dartel=2; 
+    else
+      templates = '';
+      for ti=1:numel(job.extopts.templates)
+        templates = sprintf('%s  %s\n',templates,job.extopts.templates{ti});
+      end
+      error('CAT:cat_main:TemplateFileError', ...
+       ['Could not find the expected number of template. Dartel requires 6 Files (Template 1 to 6),\n' ...
+        'whereas Shooting needs 5 files (Template 0 to 4). %d templates found: \n%s'],...
+        numel(job.extopts.templates),templates);
+    end
+  end
   
 %% display and print result if possible
 %  ---------------------------------------------------------------------
@@ -82,12 +121,45 @@ function cat_io_report(job,qa)
   str2 = [];
   str2 = [str2 struct('name','\bfImagedata','value','')];
   str2 = [str2 struct('name','  Datatype','value',spm_type(VT0.dt(1)))];
-  str2 = [str2 struct('name','  AC','value',sprintf('%5.1f  %5.1f  %5.1f',imat([1:3])))];
-  str2 = [str2 struct('name','  Rotation (radians)','value',sprintf('%5.2f  %5.2f  %5.2f',imat([4:6])))];
-  str2 = [str2 struct('name','  Voxel size','value',sprintf('%5.2f  %5.2f  %5.2f',imat([7:9])))];
-  str2 = [str2 struct('name','  min | max','value',sprintf('%0.3f | %0.3f',min(Ysrc(:)),max(Ysrc(:))))];
-  str2 = [str2 struct('name','  mean | std','value',sprintf('%0.3f | %0.3f',cat_stat_nanmean(Ysrc(:)),cat_stat_nanstd(Ysrc(:))))];
-  str2 = [str2 struct('name','  isinf | isnan','value',sprintf('%d | %d',sum(isinf(Ysrc(:))),sum(isnan(Ysrc(:)))))];
+  str2 = [str2 struct('name','  AC (mm)','value',sprintf('% 10.1f  % 10.1f  % 10.1f ',imat([1:3])))];
+  str2 = [str2 struct('name','  Rotation (rad)','value',sprintf('% 10.2f°  % 10.2f° % 10.2f° ',imat([4:6]) ./ (pi/180)))];
+  str2 = [str2 struct('name','  Voxel size (mm)','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',imat([7:9])))];
+  if isfield(cat_err_res,'res')
+    %str2 = [str2 struct('name','  HDl | HDh | BG )','value',sprintf('% 10.2f  % 10.2f  % 10.2f', ...
+    %  mean(cat_err_res.res.mn(cat_err_res.res.lkp==4 & cat_err_res.res.mg'>0.3)), ...
+    %  mean(cat_err_res.res.mn(cat_err_res.res.lkp==5 & cat_err_res.res.mg'>0.3)), ...
+    %  mean(cat_err_res.res.mn(cat_err_res.res.lkp==6 & cat_err_res.res.mg'>0.4))) )];
+    iaffine = spm_imatrix(cat_err_res.res.Affine); 
+    str2 = [str2 struct('name','\bfAffine','value','')];
+    str2 = [str2 struct('name','  Translation (mm)','value',sprintf('% 10.1f  % 10.1f  % 10.1f ',iaffine([1:3])))];
+    str2 = [str2 struct('name','  Rotation','value',sprintf('% 10.2f° % 10.2f° % 10.2f° ',iaffine([4:6]) ./ (pi/180)))];
+    str2 = [str2 struct('name','  Scaling','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',iaffine([7:9])))];
+    str2 = [str2 struct('name','  Shear','value',sprintf('% 10.2f  % 10.2f  % 10.2f' ,iaffine([10:12])))];
+    str2 = [str2 struct('name','\bfSPM tissues peaks','value','')];
+    str2 = [str2 struct('name','  CSF | GM | WM ','value',sprintf('% 10.2f  % 10.2f  % 10.2f', ...
+      cat_stat_nanmean(cat_err_res.res.mn(cat_err_res.res.lkp==3 & cat_err_res.res.mg'>0.3)), ...
+      cat_stat_nanmean(cat_err_res.res.mn(cat_err_res.res.lkp==1 & cat_err_res.res.mg'>0.3)), ...
+      cat_stat_nanmean(cat_err_res.res.mn(cat_err_res.res.lkp==2 & cat_err_res.res.mg'>0.3))) )];
+    str2 = [str2 struct('name','  HDl | HDh | BG ','value',sprintf('% 10.2f  % 10.2f  % 10.2f', ...
+      cat_stat_nanmean(cat_err_res.res.mn(cat_err_res.res.lkp==4 & cat_err_res.res.mg'>0.3)), ...
+      cat_stat_nanmean(cat_err_res.res.mn(cat_err_res.res.lkp==5 & cat_err_res.res.mg'>0.3)), ...
+      cat_stat_nanmean(cat_err_res.res.mn(cat_err_res.res.lkp==6 & cat_err_res.res.mg'>0.4))) )];
+  elseif isfield(cat_err_res,'obj')
+    iaffine = spm_imatrix(cat_err_res.obj.Affine); 
+    str2 = [str2 struct('name','\bfAffine','value','')];
+    str2 = [str2 struct('name','  Translation','value',sprintf('% 10.1f  % 10.1f  % 10.1f ',iaffine([1:3])))];
+    str2 = [str2 struct('name','  Rotation','value',sprintf('% 10.2f° % 10.2f° % 10.2f° ',iaffine([4:6]) ./ (pi/180)))];
+    str2 = [str2 struct('name','  Scaling','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',iaffine([7:9])))];
+    str2 = [str2 struct('name','  Shear','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',iaffine([10:12])))];
+    str2 = [str2 struct('name','\bfIntensities','value','')];
+    str2 = [str2 struct('name','  min | max','value',sprintf('% 10.2f  % 10.2f ',min(Ysrc(:)),max(Ysrc(:))))];
+    str2 = [str2 struct('name','  mean | std','value',sprintf('% 10.2f  % 10.2f ',cat_stat_nanmean(Ysrc(:)),cat_stat_nanstd(Ysrc(:))))];
+  else
+    str2 = [str2 struct('name','\bfIntensities','value','')];
+    str2 = [str2 struct('name','  min | max','value',sprintf('% 10.2f  % 10.2f ',min(Ysrc(:)),max(Ysrc(:))))];
+    str2 = [str2 struct('name','  mean | std','value',sprintf('% 10.2f  % 10.2f ',cat_stat_nanmean(Ysrc(:)),cat_stat_nanstd(Ysrc(:))))];
+    str2 = [str2 struct('name','  isinf | isnan','value',sprintf('%d | %d ',sum(isinf(Ysrc(:))),sum(isnan(Ysrc(:)))))];
+  end  
   
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
@@ -129,11 +201,11 @@ function cat_io_report(job,qa)
   % colorscale and small adaption for the values. 
   switch lower(cm)
     case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
-      colormap(cat_io_colormaps([cm 'ov'],60));
+      colormap(cat_io_colormaps([cm 'ov'],60)); mlt = 2; 
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-      colormap(cm);
+      colormap(cm); mlt = 1; 
     otherwise
-      colormap(cm);
+      colormap(cm); mlt = 1; 
   end
   spm_orthviews('Redraw');
 
@@ -150,8 +222,8 @@ function cat_io_report(job,qa)
     htext(2,i,1) = text(0.51,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     htext(2,i,2) = text(0.75,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
-  pos = [0.01 0.34 0.48 0.33; 0.51 0.34 0.48 0.33; ...
-         0.01 0.01 0.48 0.33; 0.51 0.01 0.48 0.33];
+  pos = [0.01 0.34 0.48 0.32; 0.51 0.34 0.48 0.32; ...
+         0.01 0.01 0.48 0.32; 0.51 0.01 0.48 0.32];
   spm_orthviews('Reset');
 
     
@@ -160,37 +232,52 @@ function cat_io_report(job,qa)
   % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
   hho = spm_orthviews('Image',VT0,pos(1,:)); 
   spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
-  axes('Position',[pos(1,1:2) + [pos(1,3)*0.56 -0.01],pos(1,3:4)*0.41] ); 
+  axes('Position',[pos(1,1:2) + [pos(1,3)*0.55 -0.01],pos(1,3:4)*0.41] ); 
   Ysrcs = single(Ysrc+0); spm_smooth(Ysrcs,Ysrcs,repmat(0.5,1,3));
-  [x,y] = hist(Ysrcs(:),100); 
-  x = min(x,max(x(2:end))); % ignore background
-  bar(y,x,'b','EdgeColor','b');
+  [x,y] = hist(Ysrcs(:),1000); clear Ysrcs;
+  ch = cumsum(x)/sum(x); bd = [find(ch>0.02,1,'first'),find(ch>0.98,1,'first')];
+  spm_orthviews('window',hho,[y(find(ch>0.02,1,'first')),y(find(ch>0.90,1,'first'))*mlt]);
+  bar(y,x,'FaceColor',[0.0 0.2 0.7],'EdgeColor',[0.0 0.2 0.7]); 
+  ylim([0,max(x(round(numel(x)*0.05):end))]*1.5); xlim(y(bd));
+  grid
+  
+  spm_orthviews('Zoom',100);
+  spm_orthviews('Reposition',[0 0 0]); 
+  spm_orthviews('Redraw');
+  
   
   % Ym - normalized image in original space
-  if exist(Pm,'file')
+  mtxt = 'm*.nii (part. processed.)'; 
+  if exist(Pn,'file'), Pndata = dir(Pn); Pndata = etime(clock,datevec(Pndata.datenum))/3600 < 2; else Pndata = 0; end
+  if exist(Pm,'file'), Pmdata = dir(Pm); Pmdata = etime(clock,datevec(Pmdata.datenum))/3600 < 2; else Pmdata = 0; end
+  if ~Pmdata && Pndata, Pm = Pn; Pmdata = Pndata; mtxt = 'n*.nii (part. processed.)'; end
+  if Pmdata
     hhm = spm_orthviews('Image',spm_vol(Pm),pos(2,:));
-    spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
-    Ym = spm_read_vols(spm_vol(Pm));
-    axes('Position',[pos(2,1:2) + [pos(2,3)*0.56 -0.01],pos(2,3:4)*0.41] );
-    Yms = single(Ym+0); spm_smooth(Yms,Yms,repmat(0.5,1,3));
-    [x,y] = hist(Yms(:),100); 
+    spm_orthviews('Caption',hhm,{mtxt},'FontSize',fontsize,'FontWeight','Bold');
+    axes('Position',[pos(2,1:2) + [pos(2,3)*0.55 -0.01],pos(2,3:4)*0.41] );
+    Yms = spm_read_vols(spm_vol(Pm)); spm_smooth(Yms,Yms,repmat(0.5,1,3));
+    [x,y] = hist(Yms(:),1000); clear Yms;
     x = min(x,max(x(2:end))); % ignore background
-    bar(y,x,'b','EdgeColor','b');
+    ch = cumsum(x)/sum(x); bd = [find(ch>0.02,1,'first'),find(ch>0.98,1,'first')];
+    spm_orthviews('window',hhm,[y(find(ch>0.02,1,'first')),y(find(ch>0.90,1,'first'))*mlt]);
+    bar(y,x,'FaceColor',[0.0 0.2 0.7],'EdgeColor',[0.0 0.2 0.7]);
+    ylim([0,max(x(round(numel(x)*0.05):end))*1.5]); xlim(y(bd));
+    grid
   end
   
   % Yo - segmentation in original space
-  if exist(Pp0,'file')
-    hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
+  if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < 2; else Pp0data = 0; end
+  if Pp0data
+    hhp0 = spm_orthviews('Image',spm_vol(Pp0),pos(3,:)); 
     spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('window',hhp0,[0,6]);
   end
-  spm_orthviews('Reposition',[0 0 0]); 
-  spm_orthviews('Zoom',100);
   
-  
+ 
   %% surface or histogram
   Pthick = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
-  fdata = dir(Pthick);
-  if exist(Pthick,'file') && etime(clock,datevec(fdata.datenum))/3600 < 2 % only surface that are 
+  fdata = dir(Pthick); fdata = etime(clock,datevec(fdata.datenum))/3600 < 2;
+  if exist(Pthick,'file') && fdata % only surface that are 
     try 
       hCS = subplot('Position',[0.5 0.05 0.5 0.22],'visible','off'); 
       cat_surf_display(struct('data',Pthick,'readsurf',0,...

@@ -35,12 +35,12 @@ function stools = cat_conf_stools(expert)
   
   % do not process, if result allready exist
   % ____________________________________________________________________
-  lazy         = cfg_entry;
+  lazy         = cfg_menu;
   lazy.tag     = 'lazy';
   lazy.name    = 'Lazy processing';
-  lazy.strtype = 'w';
+  lazy.labels  = {'yes','no'};
+  lazy.values  = {1,0};
   lazy.val     = {0};
-  lazy.num     = [1 1];
   lazy.help    = {
     'Do not process data if the result exist. '
   };

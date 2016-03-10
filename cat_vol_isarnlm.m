@@ -52,7 +52,7 @@ function varargout = cat_vol_isarnlm(varargin)
     if nargin >= 3, verb=varargin{3};  else verb=1;  end
     if nargin == 4, NCstr=varargin{4}; else NCstr=1; end
     varargout{1} = cat_vol_sanlmX(varargin{1},'',vx_vol,struct('verb',verb,'NCstr',NCstr));
-    if verb>1
+    if verb>0
       cat_io_cmd(' ','','',1); 
       fprintf('%4.0fs\n',etime(clock,stime));
     end
@@ -200,15 +200,15 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
     cat_sanlm(Ys,3,1,opt.rician); 
-    Ys = (1-job.NCstr) .* Yi  + job.NCstr .* Ys; % main weighting
+    Ys = (1-opt.NCstr) .* Yi  + opt.NCstr .* Ys; % main weighting
     %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
     %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
     noiser = 1 - (cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
     if noiser<0, noiser = noiser+1; end
     noise  = cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
     
-    if opt.verb, fprintf('  noise = %4.3f > %4.3f;               %5.0fs\n',noise,noiser,etime(clock,stime)); end
-
+    if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+ 
     
     %% filtering of lower resolution level
     %  if the currect resolution is high enought
