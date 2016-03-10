@@ -11,7 +11,7 @@ function varargout = cat_roi_roi2surf(job)
 %
 % ______________________________________________________________________
 % Robert Dahnke
-% $Id: cat_parallelize.m 888 2016-03-07 10:01:12Z dahnke $
+% $Id$
   
   if nargin == 1
     def.verb = 1;

@@ -9854,6 +9854,7 @@ Added:    cat_defaults_expert.m for GUI and processing tests such as
 
 
 ------------------------------------------------------------------------
+r893 | gaser | 2016-03-10 09:49:52 +0100 (Do, 10 Mär 2016) | 13 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -9867,5 +9868,30 @@ M       html/cat_methods_VBM.html
 (1) Fixed: Some typos in html code.
 (2) Changed: Updated manual.
 
+
 ------------------------------------------------------------------------
-r893 | gaser | 2016-03-10 09:49:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+MM      cat_defaults_expert.m
+MM      cat_io_report.m
+M       cat_main.m
+M       cat_main_LAS.m
+MM      cat_roi_roi2surf.m
+M       cat_run_job.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_vol_isarnlm.m
+ M      html/images/CAT_surf_atlas_Destrieux.png
+MM      internal/cat_vol_increaseAtlasGMregion.m
+
+Changed:    Updated CAT error report, improved image display, histogram range
+            and added a global error variable to print basic SPM parameter 
+            created in the preprocessing.
+Fixed*:     Corrected problems in LAS processing.
+    
+          
+
+------------------------------------------------------------------------
+r894 | dahnke | 2016-03-10 14:49:19

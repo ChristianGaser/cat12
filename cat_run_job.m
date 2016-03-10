@@ -24,6 +24,8 @@ function cat_run_job(job,tpm,subj)
 
 %#ok<*WNOFF,*WNON>
 
+    global cat_err_res; % for CAT error report
+
     stime = clock;
 
     
@@ -457,6 +459,7 @@ function cat_run_job(job,tpm,subj)
     if job.extopts.APP==1
       obj.image = spm_vol(images);
     end
+    cat_err_res.obj = obj; 
     
     
     %% SPM preprocessing 1
@@ -478,13 +481,14 @@ function cat_run_job(job,tpm,subj)
     end
     warning on 
         
+    
     if job.extopts.debug==2
         % save information for debuging and OS test
         [pth,nam] = spm_fileparts(job.channel(1).vols0{subj}); 
         tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s_%s.mat',nam,'runjob','postpreproc8')); 
         save(tmpmat,'obj','res','Affine','Affine0','Affine1','Affine3');     
     end 
-       
+    cat_err_res.res = res;   
         
     fprintf('%4.0fs\n',etime(clock,stime));   
     
@@ -492,15 +496,16 @@ function cat_run_job(job,tpm,subj)
     
     
     %% check contrast
-    Tgw = [mean(res.mn(res.lkp==1)) mean(res.mn(res.lkp==2))]; 
+    Tgw = [cat_stat_nanmean(res.mn(res.lkp==1)) cat_stat_nanmean(res.mn(res.lkp==2))]; 
     Tth = [
       ... min(res.mn(res.lkp==6 & res.mg'>0.3)) ... % bg; ignore the background, because of "R" weighted images  
       max( min( mean(res.mn(res.lkp==3 & res.mg'>0.2)) , ...
         max(Tgw)+abs(diff(Tgw))) , min(Tgw)-abs(diff(Tgw)) ) ... % csf with limit for T2!
-      mean(res.mn(res.lkp==1 & res.mg'>0.3)) ... gm
-      mean(res.mn(res.lkp==2 & res.mg'>0.3)) ... wm 
+      cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)) ... gm
+      cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.3)) ... wm 
     ];
-   
+    
+
     % inactive preprocessing of inverse images (PD/T2) 
     if job.extopts.INV==0 && any(diff(Tth)<=0)
       error('CAT:cat_main:BadImageProperties', ...

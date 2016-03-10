@@ -7,7 +7,7 @@ function cat_vol_increaseAtlasGMregion
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_vol_isarnlm.m 874 2016-02-29 16:01:20Z dahnke $
+% $Id$
 % ______________________________________________________________________
 
   Pt = spm_select([1 1],'image','select TPM');

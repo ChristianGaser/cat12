@@ -605,7 +605,7 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
 
   % apply NLM filter
   if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
-    stime = cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+    cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     if job.extopts.verb>1, fprintf('\n'); end
     Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,job.extopts.NCstr); 
     
@@ -616,6 +616,7 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
   else
     stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     cat_sanlm(Yms,3,1,0);
+    fprintf('%4.0fs\n',etime(clock,stime));  
     
     % mix original and noise corrected image and go back to original resolution
     Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
@@ -632,7 +633,6 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
     Ysrc = cat_main_gintnormi(Ym,Tth);
   end
   
-  fprintf('%4.0fs\n',etime(clock,stime));  
 end
   
   
