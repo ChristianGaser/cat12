@@ -9826,6 +9826,7 @@ Added:    Prepared first version of CAT error export.
 
 
 ------------------------------------------------------------------------
+r892 | dahnke | 2016-03-09 18:57:21 +0100 (Mi, 09 Mär 2016) | 25 lines
 
 Changed paths:
  M      .
@@ -9851,5 +9852,20 @@ Added:    cat_defaults_expert.m for GUI and processing tests such as
 
           
 
+
 ------------------------------------------------------------------------
-r892 | dahnke | 2016-03-09 18:57:14
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_VBM.html
+
+(1) Fixed: Some typos in html code.
+(2) Changed: Updated manual.
+
+------------------------------------------------------------------------
+r893 | gaser | 2016-03-10 09:49:43
