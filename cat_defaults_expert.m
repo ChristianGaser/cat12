@@ -1,4 +1,4 @@
-function cat_defaults_rd
+function cat_defaults_expert
 % Sets the defaults for CAT
 % FORMAT cat_defaults
 %_______________________________________________________________________
