@@ -204,7 +204,7 @@ function varargout = cat_surf_display(varargin)
               'fractaldimension'  [0.0  4.0]  [1.0  4.0]
               'sulcuswidth'       [0.0  3.0]  [0.0  3.0]
               'gyrification'      [ 15   35]  [ 15   35]
-              'sqrtsulc'          [0.0  1.5]  [0.0  1.5]
+              'sqrtsulc'          [0.0  5.0]  [0.0  5.0]
               'WMdepth'           [1.0  6.0]  [1.0  5.0]
               'GWMdepth'          [1.5 10.0]  [1.5  9.0]
               'CSFdepth'          [0.5  2.0]  [0.5  2.0]
