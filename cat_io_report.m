@@ -88,8 +88,8 @@ function cat_io_report(job,qa)
   % --------------------------------------------------------------------
   SpaNormMeth = {'None','Dartel','Shooting'}; 
   str = [];
-  str = [str struct('name', 'Versions Matlab / SPM12 / CAT12:','value',...
-    sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
+  str = [str struct('name', 'Versions: System /Matlab / SPM12 / CAT12:','value',...
+    sprintf('%s / %s / %s / %s',computer,qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
   str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(job.opts.tpm,'k40d'))];
   str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(job.extopts.darteltpm{1},'k40d'))];
   str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
@@ -298,7 +298,7 @@ function cat_io_report(job,qa)
 
   % print subject report file as standard PDF/PNG/... file
   job.imgprint.type  = 'pdf';
-  job.imgprint.dpi   = 600;
+  job.imgprint.dpi   = 100;
   job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
   job.imgprint.ftype = @(x) ['-d' num2str(x)];
   job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 

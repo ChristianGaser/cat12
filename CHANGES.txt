@@ -9912,6 +9912,7 @@ M       spm_cat12.m
 
 
 ------------------------------------------------------------------------
+r896 | gaser | 2016-03-11 17:27:05 +0100 (Fr, 11 Mär 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9921,5 +9922,27 @@ M       html/cat.html
 
 Fixed: Added toolbox folders to addpath in cat_main.m again.
 
+
 ------------------------------------------------------------------------
-r896 | gaser | 2016-03-11 17:26:58
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_io_xml.m
+M       cat_main.m
+M       cat_main_gcut.m
+M       cat_vol_partvol.m
+M       html/cat_methods_errormanagement.html
+M       html/cat_tools_ROI.html
+A       html/images/CAT_Error_Report.jpg
+A       html/images/CAT_Report.jpg
+
+Fixed:    Corrected initial skull-stripping problem in large ventricle subjects.
+Fixed:    Sign error to choose skull-stripping for T2/PD processing.
+Fixed:    Corrected display error for long filenames in cat_io_xml.
+Changed:  Updated CAT error report. 
+Added:    First version of error mail report.
+
+
+------------------------------------------------------------------------
+r897 | dahnke | 2016-03-11 18:04:44

@@ -87,7 +87,10 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   YBD  = cat_vbdist(max(0,1-Yp0*3),true(size(Yb)),vx_vol); % brain depth, (simple) sulcal depth
   Yb   = Yb>0.25 & Ym>2.5/3 & Ym<gc.h/3 & Yl1<21 & Yb & YGD>gc.gd & YBD>gc.bd;  % init WM 
   Yb   = Yb | (Ym>2/3 & Ym<gc.h/3 & (YBD>10 | (YBD>2 & (NS(Yl1,LAB.CB) | NS(Yl1,LAB.HI)))));
-  Yb   = cat_vol_morph(Yb,'l'); 
+  [Ybr,Ymr,resT2] = cat_vol_resize({single(Yb),Ym},'reduceV',1,4,32); 
+  Ybr  = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',2)); % large ventricle closing
+  Ybr  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.9; 
+  Yb   = cat_vol_morph(Yb,'l') | (Ybr & Yp0<1.5 & Ym<1.5); 
   
   % if no largest object could be find it is very likeli that initial normalization failed
   if isempty(Yb)
@@ -98,10 +101,9 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb(smooth3(single(Yb))<0.5)=0;                          % remove small dots
   Yb  = single(cat_vol_morph(Yb,'labclose',gc.f));         % one WM object to remove vbs
   
-  
-  % region growing GM/WM (here we have to get all WM gyris!)
+  %% region growing GM/WM (here we have to get all WM gyris!)
   stime = cat_io_cmd('  GM region growing','g5','',opt.verb,stime); dispc=dispc+1;
-  Yb(~Yb & (YHDr | Ym<gc.g/3 | Ym>gc.h/3 | (Ywm + Ygm)<0.5) | YGD<(gc.gd-1) | YBD<(gc.bd-3))=nan; %clear Ywm Ygm; 
+  Yb(~Yb & (YHDr | Ym<gc.g/3 | Ym>gc.h/3 | (Ywm + Ygm)<0.5 | YGD<(gc.gd-1) | YBD<(gc.bd-3)))=nan; %clear Ywm Ygm; 
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01+gc.c); % this have to be not to small... 
   Yb(isnan(Yb) | YD>gc.d*vxd*2)=0; Yb(Yb1>0 & YD<gc.d*vxd*2)=1;
   Yb(smooth3(single(Yb))<gc.s)=0;
