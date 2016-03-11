@@ -69,8 +69,9 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     clear defaults cat12;
     
     % matlab command, cprintferror=1 for simple printing         
-    matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s; load %s; cat_run(job); "',...
-      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),tmp_name);
+    matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s %s %s; load %s; cat_run(job); "',...
+      spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
+        fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
     % log-file for output
     log_name = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
