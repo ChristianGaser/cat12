@@ -72,7 +72,9 @@ function varargout = cat_io_xml(file,varargin)
       error('MATLAB:cat_io_xml','ERROR: To many inputs.\n');
     end
   end
-  if numel(file)>200, verbose = 1; end
+  if (iscell(file) && numel(file)>100) || (ischar(file) && size(file,1)>100) 
+    verbose = 1; 
+  end
   
   % multi-file read 
   if strcmp(action,'read')
