@@ -9870,6 +9870,7 @@ M       html/cat_methods_VBM.html
 
 
 ------------------------------------------------------------------------
+r894 | dahnke | 2016-03-10 14:50:04 +0100 (Do, 10 Mär 2016) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9893,5 +9894,20 @@ Fixed*:     Corrected problems in LAS processing.
     
           
 
+
 ------------------------------------------------------------------------
-r894 | dahnke | 2016-03-10 14:49:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults_expert.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       spm_cat12.m
+
+(1) Fixed: Issues with spaces in folder names under windows.
+(2) Changed: Some typos.
+
+------------------------------------------------------------------------
+r895 | gaser | 2016-03-11 17:07:02

@@ -95,6 +95,18 @@ function varargout = cat_parallelize(job,func,datafield)
 
     % call matlab with command in the background
     if ispc
+      % check for spaces in filenames that will not work with windows systems and background jobs
+      if strfind(spm('dir'),' ')
+        cat_io_cprintf('warn',...
+            ['\nWARNING: No background processes possible because your SPM installation is located in \n' ...
+             '         a folder that contains spaces. Please set the number of processes in the GUI \n'...
+             '         to ''0''. In order to split your job into different processes,\n' ...
+             '         please do not use spaces in folder names!.\n\n']);
+         job.nproc = 0;
+         job = update_job(job);
+         varargout{1} = run_job(job);
+         return; 
+      end
       % prepare system specific path for matlab
       export_cmd = ['set PATH=' fullfile(matlabroot,'bin')];
       [status,result] = system(export_cmd);
