@@ -123,7 +123,9 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   [Ym,YA,Yp0,Yb,Yp0A,BB] = cat_vol_resize({Ym,YA,Yp0,Yb,Yp0A},'reduceBrain',vx_vol,2,Yb);
   [Ym,Yp0,Yb,Yp0A,resTr] = cat_vol_resize({Ym,Yp0,Yb,Yp0A},'reduceV',vx_vol,vx_res,64);
   [YA]              = cat_vol_resize(YA ,'reduceV',vx_vol,vx_res,64,'nearest'); 
- 
+  
+  spm_smooth(Ym,Ym,0.9./vx_vol);
+  
   vx_vol = resTr.vx_volr; 
   vxd    = 1/mean(vx_vol); 
   

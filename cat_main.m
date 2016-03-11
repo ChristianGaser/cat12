@@ -12,6 +12,8 @@ function Ycls = cat_main(res,tpm,job)
 
 %#ok<*ASGLU>
 
+global cat_err_res; % for CAT error report
+
 tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
 
 
@@ -339,10 +341,22 @@ if sum(Yp0(:)>0.3)<100
     BGth,T3th(1),T3th(2),T3th(3)); 
 end
 Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
-Yp0  = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
+Yp0     = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
+Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
 
+% some error management
+cat_err_res.init.T3th = T3th; 
+cat_err_res.init.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
+                                                prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ... GM 
+                                                prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),3)), ... WM
+                                                prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),4))];  % WMH
+cat_err_res.init.subjectmeasures.vol_TIV     =  sum(cat_err_res.init.subjectmeasures.vol_abs_CGW); 
+cat_err_res.init.subjectmeasures.vol_rel_CGW =  cat_err_res.init.subjectmeasures.vol_abs_CGW ./ ...
+                                                cat_err_res.init.subjectmeasures.vol_TIV;
+[cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
+cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
 
-if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))))
+if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))==-1))
 % use gcut2
 
   %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
@@ -371,8 +385,15 @@ if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))))
       Ycls{k1} = P(:,:,:,k1);
   end
   %%
+  
+  [Ybr,Ymr,resT2] = cat_vol_resize({Yp0>0.1,Ym},'reduceV',vx_vol,2,32); 
+  Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
+  Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
+  Yb  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.7; 
+  %%
   Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
     struct('gcutstr',0.1,'verb',0,'debug',job.extopts.debug,'LAB',job.extopts.LAB,'LASstr',0));
+  
   %%
   [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
   Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
@@ -1942,14 +1963,11 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
 
   % print group report file 
-  fg = spm_figure('FindWin','Graphics');
-  set(0,'CurrentFigure',fg)
-  fprintf(1,'\n'); spm_print;
+  %fg = spm_figure('FindWin','Graphics'); 
+  %set(0,'CurrentFigure',fg)
+  fprintf(1,'\n'); % spm_print; % no spm ps print 
 
-  % print subject report file as SPM standard PS file
-  %psf  = fullfile(pth,reportfolder,['catreport_' nam '.ps']);
-  %if exist(psf,'file'), delete(psf); end; spm_print(psf); clear psf 
-
+  
 
   %% print subject report file as standard PDF/PNG/... file
   job.imgprint.type  = 'pdf';
