@@ -9896,6 +9896,7 @@ Fixed*:     Corrected problems in LAS processing.
 
 
 ------------------------------------------------------------------------
+r895 | gaser | 2016-03-11 17:07:09 +0100 (Fr, 11 Mär 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9909,5 +9910,16 @@ M       spm_cat12.m
 (1) Fixed: Issues with spaces in folder names under windows.
 (2) Changed: Some typos.
 
+
 ------------------------------------------------------------------------
-r895 | gaser | 2016-03-11 17:07:02
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run.m
+M       html/cat.html
+
+Fixed: Added toolbox folders to addpath in cat_main.m again.
+
+------------------------------------------------------------------------
+r896 | gaser | 2016-03-11 17:26:58
