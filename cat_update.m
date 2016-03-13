@@ -42,7 +42,7 @@ if ~sts
   return
 end
 
-n = regexp(s,'cat12_r(\d.*?)\.zip','tokens','once');
+n = regexp(s,'cat12_r(\d.*?)\.zip','tokens');
 if isempty(n)
   sts= Inf;
   msg = 'There are no updates available yet.';
