@@ -9959,6 +9959,7 @@ Fixed: Added missing cat_system.m
 
 
 ------------------------------------------------------------------------
+r899 | gaser | 2016-03-13 16:51:12 +0100 (Sun, 13 Mar 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9970,5 +9971,17 @@ M       html/cat.html
 
 Fixed: Wrong update function.
 
+
 ------------------------------------------------------------------------
-r899 | gaser | 2016-03-13 16:51:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      cat_system.m
+M       cat_update.m
+M       html/cat.html
+
+Fixed: Wrong update function.
+
+------------------------------------------------------------------------
+r900 | gaser | 2016-03-13 17:06:08

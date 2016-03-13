@@ -6,9 +6,9 @@ function [ST, RS] = cat_system(varargin)
 % from this folder.
 % ______________________________________________________________________
 % Christian Gaser
-% $Id: cat_system.m 892 2016-03-09 17:57:21Z dahnke $
+% $Id$
 
-rev = '$Rev: 892 $';
+rev = '$Rev$';
 
 if nargin == 0
   error('Argument is missing');
