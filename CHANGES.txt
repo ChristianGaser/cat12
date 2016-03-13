@@ -9947,6 +9947,7 @@ Added:    First version of error mail report.
 
 
 ------------------------------------------------------------------------
+r898 | gaser | 2016-03-13 16:44:00 +0100 (Sun, 13 Mar 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9956,5 +9957,18 @@ M       html/cat.html
 
 Fixed: Added missing cat_system.m
 
+
 ------------------------------------------------------------------------
-r898 | gaser | 2016-03-13 16:43:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_update.m
+M       html/cat.html
+ M      html/images/CAT_Error_Report.jpg
+ M      html/images/CAT_Report.jpg
+
+Fixed: Wrong update function.
+
+------------------------------------------------------------------------
+r899 | gaser | 2016-03-13 16:51:09
