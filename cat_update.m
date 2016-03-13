@@ -73,12 +73,11 @@ else
 end
 
 if update
-    d = fullfile(spm('Dir'),'toolbox'); 
-    delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
     overwrite = spm_input('Update',1,'yes|no',[1 0],1);
+    d0 = spm('Dir');
+    d = fullfile(spm('Dir'),'toolbox'); 
     if overwrite
       try
-        lastwarn('');
         % list mex-files and delete these files to prevent that old
         % compiled files are used
         mexfiles = dir(fullfile(d,'cat12','*.mex*'));
@@ -86,11 +85,14 @@ if update
           name = fullfile(d,'cat12',mexfiles(i).name);
           spm_unlink(name);
         end
+        lastwarn('');
+        delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
         m = '          Download and install CAT12...\n';
         if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
         s = unzip([url sprintf('cat12_r%d.zip',rnew)], d);
         m = sprintf('         Success: %d files have been updated.\n',numel(s));
         if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
+        addpath(d0);
         rehash
         rehash toolboxcache;
         toolbox_path_cache
