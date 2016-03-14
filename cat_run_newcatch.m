@@ -85,6 +85,7 @@ function cat_run_newcatch(job,tpm,subj)
       [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
       suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
       suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
+      suberrfolder = strrep(suberrfolder,' ','_');
       if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
       catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
       repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);

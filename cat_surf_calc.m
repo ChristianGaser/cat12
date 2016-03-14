@@ -51,7 +51,7 @@ function varargout = cat_surf_calc(job)
     fprintf('Output %s\n',spm_file(job.output,'link','cat_surf_display(''%s'')'));
   else  
     spm_progress_bar('Init',numel(job.cdata{1}),...
-      sprintf('Texture Calculator\n%s',numel(job.cdata{1})),'Subjects Completed'); 
+      sprintf('Texture Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
     
     for si = 1:numel(job.cdata{1}) % for subjects
       sjob = job; 
