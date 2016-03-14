@@ -9986,6 +9986,7 @@ Fixed: Wrong update function.
 
 
 ------------------------------------------------------------------------
+r901 | gaser | 2016-03-14 16:51:57 +0100 (Mo, 14 Mär 2016) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10004,5 +10005,25 @@ Fixed: Slider option is added after overlay in cat_surf_render.m.
 Fixed: Surface mapping for WM/CSF is not yet wiorking, moved to exp-mode 2.
 Fixed: Underlying surface after cat12-call (estimate) was not correct.
 
+
 ------------------------------------------------------------------------
-r901 | gaser | 2016-03-14 16:51:49
+
+Changed paths:
+M       CHANGES.txt
+A       cat_io_senderrormail.m
+M       cat_io_xml.m
+M       cat_run_newcatch.m
+M       cat_surf_calc.m
+A       html/cat_methods_caterrorreporthelp.html
+A       html/cat_methods_catreporthelp.html
+M       html/style.css
+
+Added:    Added function to send error messages (cat_io_senderrormail) that
+          open a new email with the mailto function with standard text with 
+          system and error information.
+          Does not work under Linux were the error message is just printed as
+          webpage in the browser.
+Fixed:    Corrected some small errors.
+
+------------------------------------------------------------------------
+r902 | dahnke | 2016-03-14 18:03:57
