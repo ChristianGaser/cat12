@@ -76,6 +76,7 @@ function varargout = cat_surf_resamp(varargin)
     [pp,ff,ex]   = spm_fileparts(deblank(P(i,:)));
 
     name = [ff ex];
+    name      = strrep(name,'.gii',''); % remove .gii extension
     hemi = ff(1:2);
 
     k = strfind(name,'.');

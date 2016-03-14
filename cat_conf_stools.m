@@ -272,18 +272,16 @@ function stools = cat_conf_stools(expert)
   v2s.abs_class         = cfg_menu;
   v2s.abs_class.tag     = 'class';
   v2s.abs_class.name    = 'Tissue Class';
-  v2s.abs_class.labels  = {'GM','WM','CSF'};
-  v2s.abs_class.values  = {'GM','WM','CSF'};
+  v2s.abs_class.labels  = {'GM'};
+  v2s.abs_class.values  = {'GM'};
   v2s.abs_class.val     = {1};
   v2s.abs_class.help    = {
     'Tissue class for which the relative positions are estimated.'
   };
   v2s.rel_class = v2s.abs_class; 
-  if ~expert
-    v2s.abs_class.labels  = {'GM'};
-    v2s.abs_class.values  = {1};
-    v2s.rel_class.labels  = {'GM'};
-    v2s.rel_class.values  = {1};
+  if expert==2
+    v2s.abs_class.labels  = {'GM','WM','CSF'};
+    v2s.abs_class.values  = {'GM','WM','CSF'};
   end
   
   % absolute position
