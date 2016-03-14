@@ -20,7 +20,7 @@ data.help    = {
 
 data_T2x         = cfg_files;
 data_T2x.tag     = 'data_T2x';
-data_T2x.name    = 'Volumes';
+data_T2x.name    = 'Data';
 data_T2x.filter  = 'any';
 data_T2x.ufilter = '^spmT.*(gii|nii|img)';
 data_T2x.num     = [1 Inf];
@@ -197,7 +197,7 @@ T2x.help = {
 
 data_F2x         = cfg_files;
 data_F2x.tag     = 'data_F2x';
-data_F2x.name    = 'Volumes';
+data_F2x.name    = 'Data';
 data_F2x.filter  = 'any';
 data_F2x.ufilter = '^spmF.*(gii|nii|img)';
 data_F2x.num     = [1 Inf];
