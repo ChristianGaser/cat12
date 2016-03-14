@@ -82,6 +82,7 @@ function varargout = cat_surf_vol2surf(varargin)
       for si=1:numel(side)
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(1),...
           'preside','','pp',ppv,'dataname',job.datafieldname,'name',job.(sside{si}).name);
+        P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
@@ -115,6 +116,7 @@ function varargout = cat_surf_vol2surf(varargin)
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
             'dataname',job.datafieldname);
+        P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
         P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
             'dataname','thickness','ee','');
@@ -131,15 +133,15 @@ function varargout = cat_surf_vol2surf(varargin)
           case 'abs_mapping'
             switch job.mapping.(mapping).class
               case {1,'GM'},  offset = ''; 
-              case {2,'WM'},  offset = spirntf(' -WMoffset  "%s"',P.thickness{vi,si}); % - half thickness
-              case {3,'CSF'}, offset = spirntf(' -CSFoffset "%s"',P.thickness{vi,si}); % + half thickness 
+              case {2,'WM'},  offset = sprintf(' -WMoffset  "%s"',P.thickness{vi,si}); % - half thickness
+              case {3,'CSF'}, offset = sprintf(' -CSFoffset "%s"',P.thickness{vi,si}); % + half thickness 
             end
             thickness = '';
           case 'rel_mapping'
             switch job.mapping.(mapping).class
               case {1,'GM'},  thickness = sprintf(' -thickness "%s" ',P.thickness{vi,si}); 
-              case {2,'WM'},  thickness = spirntf(' -thickness "%s" ',P.thickness{vi,si});  % - half thickness
-              case {3,'CSF'}, thickness = spirntf(' -thickness "%s" ',P.thickness{vi,si}); % + half thickness 
+              case {2,'WM'},  thickness = sprintf(' -thickness "%s" ',P.thickness{vi,si});  % - half thickness
+              case {3,'CSF'}, thickness = sprintf(' -thickness "%s" ',P.thickness{vi,si}); % + half thickness 
             end
             offset = ''; 
         end

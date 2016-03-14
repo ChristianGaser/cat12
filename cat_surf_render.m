@@ -381,7 +381,7 @@ switch lower(action)
         uimenu(c, 'Label','Black',     'Callback', {@myBackgroundColor, H, [0 0 0]});
         uimenu(c, 'Label','Custom...', 'Callback', {@myBackgroundColor, H, []});
         
-        uimenu(cmenu, 'Label','Slider', 'Checked', 'off', 'Callback', {@myAddslider, H});
+        uimenu(cmenu, 'Label','Slider', 'Callback', {@myAddslider, H});
 
         uimenu(cmenu, 'Label','Save As...', 'Separator', 'on', ...
             'Callback', {@mySave, H});
@@ -599,9 +599,7 @@ switch lower(action)
             end
             return;
         else
-            if ~isempty(H.cdata)
-                AddSliders(H);
-            end
+            AddSliders(H);
         end
         setappdata(H.axis,'handles',H);
 
@@ -729,7 +727,8 @@ else
 end
 
 h = findobj(obj,'Label','Slider');
-if isempty(H.cdata), set(h,'Enable','off'); else set(h,'Enable','on'); end
+d = getappdata(H.patch,'data');
+if isempty(d) || ~any(d(:)), set(h,'Enable','off'); else set(h,'Enable','on'); end
 
 if isfield(H,'slider')
     if ishandle(H.slider)
