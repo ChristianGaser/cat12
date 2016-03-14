@@ -80,8 +80,9 @@ function varargout = cat_io_xml(file,varargin)
   if strcmp(action,'read')
     varargout{1} = struct();
     if verbose, fprintf('% 6d/% 6d',0,numel(file)); end
-    
     if iscell(file) && numel(file)>1 
+      spm_progress_bar('Init',numel(file),...
+        sprintf('read XML\n%d',numel(file)),'Files Completed'); 
       for fi=1:numel(file)
         try
           tmp = cat_io_xml(file{fi});
@@ -92,11 +93,16 @@ function varargout = cat_io_xml(file,varargin)
           clear tmp;
         end
         if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b% 6d/% 6d',fi,numel(file)); end
+        spm_progress_bar('Set',fi);
       end
+
+      spm_progress_bar('Clear');
       if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b             \b\b\b\b\b\b\b\b\b\b\b\b\b'); end
       return
    
     elseif ischar(file) && size(file,1)>1
+      spm_progress_bar('Init',size(file,1),...
+        sprintf('read XML\n%s',size(file,1)),'Files Completed'); 
       for fi=1:numel(file)
         try
           tmp = cat_io_xml(file(fi,:));
@@ -107,12 +113,16 @@ function varargout = cat_io_xml(file,varargin)
           clear tmp;
         end
         if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b% 6d/% 6d',fi,numel(file)); end
+        spm_progress_bar('Set',fi);
       end
+
+      spm_progress_bar('Clear');
       if verbose, fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b             \b\b\b\b\b\b\b\b\b\b\b\b\b'); end
       return
     end
-
   end
+  
+  if iscell(file) && size(file,1), file = char(file); end
   
   [pp,ff,ee] = fileparts(file); if ~strcmp(ee,'.xml'), file = [file '.xml']; end
   
@@ -158,7 +168,9 @@ function varargout = cat_io_xml(file,varargin)
     % 
       if exist(file,'file')
         try 
+          warning off
           S = xml_read(file);
+          warning on
         catch 
           verror('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
