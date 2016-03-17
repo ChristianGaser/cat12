@@ -311,9 +311,6 @@ vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image
 vx_volp = prod(vx_vol)/1000;
 voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
 
-
-
-
    
 %% create a new brainmask
 
@@ -356,6 +353,18 @@ cat_err_res.init.subjectmeasures.vol_rel_CGW =  cat_err_res.init.subjectmeasures
 [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
 cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
 
+
+if isfield(res,'msk')
+  Ybg = ~res.msk.dat; 
+  P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg==0) + single(P(:,:,:,4)) .* (Ybg<1) ); % remove air in head
+  P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg==0) + single(P(:,:,:,5)) .* (Ybg<1) ); % remove air in head
+  P6  = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg==1) + single(P(:,:,:,6)) .* (Ybg>0) ); % add objects/artifacts to background
+  P(:,:,:,4) = P4;
+  P(:,:,:,5) = P5;
+  P(:,:,:,6) = P6;
+  clear P4 P5 P6; 
+end
+
 if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))==-1))
 % use gcut2
 
@@ -384,13 +393,7 @@ if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))==-1))
   for k1=1:3
       Ycls{k1} = P(:,:,:,k1);
   end
-  %%
   
-  [Ybr,Ymr,resT2] = cat_vol_resize({Yp0>0.1,Ym},'reduceV',vx_vol,2,32); 
-  Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
-  Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
-  Yb  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.7; 
-  %%
   Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
     struct('gcutstr',0.1,'verb',0,'debug',job.extopts.debug,'LAB',job.extopts.LAB,'LASstr',0));
   
@@ -602,7 +605,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 debug = 1; % this is a manual debugging option for matlab debugging mode
 
 stime = cat_io_cmd('Global intensity correction');
-[Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);
+[Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
 
 % update in inverse case
 if job.inv_weighting
@@ -623,7 +626,7 @@ end
 % Finally, a stronger NLM-filter is better than a strong MRF filter!
 if job.extopts.sanlm>0 && job.extopts.NCstr  
   [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
-
+  
   % apply NLM filter
   if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
     cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
@@ -635,8 +638,16 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
       Yms .* Ybr;
   else
-    stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+    if isinf(job.extopts.NCstr);
+      stime = cat_io_cmd(sprintf('SANLM noise correction'));
+      Ymo = Yms + 0;
+    else
+      stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+    end
     cat_sanlm(Yms,3,1,0);
+    if isinf(job.extopts.NCstr);
+      job.extopts.NCstr = min(1,max(0,mean(abs(Yms(:) - Ymo(:)))*10)); 
+    end
     fprintf('%4.0fs\n',etime(clock,stime));  
     
     % mix original and noise corrected image and go back to original resolution
@@ -1039,7 +1050,9 @@ VF.dat(indx,indy,indz) = Yp0b;
 VF = spm_smoothto8bit(VF,job.opts.samp/2); % smoothing, because of the TPM smoothness!
 
 %% affreg registration for one tissue segment
+warning off;  %#ok<WNOFF>
 Affine = spm_affreg(VG, VF, aflags, res.Affine); 
+warning on;  %#ok<WNON>
 rf=10^6; Affine    = fix(Affine * rf)/rf;
 res.Affine0        = res.Affine;
 res.Affine         = Affine;
@@ -1406,7 +1419,58 @@ for clsi=1:3
     min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
     job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
 end
-
+%%
+job.extopts.intsegments = job.extopts.expertgui>1;
+if job.extopts.intsegments && (any(tc(:)) || ...
+    job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
+  %%
+  Yclsi = cell(1,3);
+  for clsi=1:3
+    clsid = [2 3 1];
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    Yclsi{clsi} = Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),clsid(clsi));
+    switch clsi
+      case 1
+        Yclsi{clsi} = Yclsi{clsi} .* (Ycls{clsi}>0) + ...
+          Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),3) .* (Ycls{2}==0 & (Ycls{1}>0));
+      case 2 
+        Yclsi{clsi} = Yclsi{clsi} .* (Ycls{clsi}>0) +  ...
+          Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2) .* (Ycls{2}==255 & ~cat_vol_morph(Ycls{2}>192,'e'));
+        Ywmhp = cat_vol_ctype( Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2) .* cat_vol_morph(Ycls{2}>192,'e') * 255);
+      case 3 
+        Yclsi{clsi} = Yclsi{clsi} + ...
+          (Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2)) .* (Ycls{1}==0 & (Ycls{3}>0)) + ...
+          (Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),3)) .* (Ycls{2}==0 & (Ycls{3}>0));
+    end
+    Yclsi{clsi} = cat_vol_ctype(Yclsi{clsi} * 255);
+  end
+  clear Yp0; 
+  % class 1-3
+  %Yclss = single(Yclsi{1} + Yclsi{2} + Yclsi{3} + Ywmhp + Ywmh)/255; % + single(Ywmh)/255;
+  for clsi=1:3
+    cat_io_writenii(VT0,single(Yclsi{clsi})/255,mrifolder,sprintf('pi%d',clsi),...
+      sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
+      min([1 1 0 3],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+      job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
+    cat_io_writenii(VT0,single(Yclsi{clsi})/255,mrifolder,sprintf('pi%d',clsi),...
+      sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
+      min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+      job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
+  end
+  clear Yclsi; 
+  %% write WMH class maps
+  if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+    cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
+      'p7','WMH tissue map','uint8',[0,1/255],...
+      min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
+      job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
+    cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
+      'p7','WMH tissue map','uint16',[0,1/255],...
+      min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
+      job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
+  end 
+  clear Ywmhp;
+end
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...

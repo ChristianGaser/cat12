@@ -463,6 +463,7 @@ function cat_run_job(job,tpm,subj)
     
     
     %% SPM preprocessing 1
+    %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
     %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
     warning off 
     try 
@@ -504,7 +505,7 @@ function cat_run_job(job,tpm,subj)
       cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)) ... gm
       cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.3)) ... wm 
     ];
-    
+    if isfield(obj,'msk'), res.msk = obj.msk; end
 
     % inactive preprocessing of inverse images (PD/T2) 
     if job.extopts.INV==0 && any(diff(Tth)<=0)

@@ -1,4 +1,4 @@
-function cat_vol_nlmus(varargin)
+function varargout = cat_vol_nlmus(varargin)
 % Non Local Means UpSampling (NLMUS) with Spatial Adaptive Non Local 
 % Means (SANLM) Filter.
 %
@@ -87,6 +87,7 @@ function cat_vol_nlmus(varargin)
   V = spm_vol(char(job.data));
   %V = rmfield(V,'private');
  
+  fnames = cell(size(job.data));
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for i = 1:numel(job.data)
@@ -107,12 +108,12 @@ function cat_vol_nlmus(varargin)
         stime = cat_io_cmd('  ISARNLM-Filtering','g5',''); fprintf('\n'); 
         src = cat_vol_sanlmX(src,'',vx_vol,job); % here are further options possible
       end
-    else
+    elseif job.isarnlm==2
       if job.sanlmiter>0 && job.verb, stime = cat_io_cmd('  SANLM-Filtering','g5',''); end
       for sanlmiter=1:job.sanlmiter, cat_sanlm(src,3,1,job.rician); end 
     end
     
-    
+    %job.interp = job.interp .* 1./round(job.interp./min(job.interp));
     
     
     %% write spline interpolation image for comparison
@@ -135,7 +136,7 @@ function cat_vol_nlmus(varargin)
         error('Error cat_vol_nlmus ''job.interp'' has to be 1 element (interpolation factor) or 3 elements (goal resolution).');
       end
       
-      % spline interpolation
+      %% spline interpolation
       Vx = V(i); 
       if any(lf3~=1)
         src2 = InitialInterpolation(src,lf3,job.intmeth,job.rf);
@@ -169,6 +170,7 @@ function cat_vol_nlmus(varargin)
     else
       error('Error cat_vol_nlmus ''job.interp'' has to be 1 element (interpolation factor) or 3 elements (goal resolution).');
     end
+    %%
     if any(lf>1)
       if exist('stime','var')
         stime = cat_io_cmd('  Initial Interpolation','g5','',job.verb,stime); 
@@ -247,6 +249,7 @@ function cat_vol_nlmus(varargin)
     
     V(i).fname = fullfile(pth,[job.prefix nm '.nii' vr]);
     spm_write_vol(V(i), src);
+    fnames{i} = V(i).fname; 
     
     if job.verb, cat_io_cmd(' ','n','',job.verb,stime); end
     fprintf('%4.0fs\n',etime(clock,stimei));
@@ -254,6 +257,10 @@ function cat_vol_nlmus(varargin)
     
   end
   spm_progress_bar('Clear');
+  
+  if nargout>=1, varargout{1} = fnames; end
+  if nargout>=2, varargout{2} = V; end
+  
 end
 
 
@@ -275,6 +282,7 @@ function [bima]=InitialInterpolation(nima1,lf,intmeth,roundfactor)
     bima2 = round(bima2/roundfactor)*roundfactor;
   end
   
+  s = round(s);
   % deal with extreme slices
   for i=1:floor(lf(1)/2)
     bima2(i,:,:) = bima2(floor(lf(1)/2)+1,:,:);

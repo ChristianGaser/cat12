@@ -103,6 +103,7 @@ function varargout = cat_parallelize(job,func,datafield)
              '         to ''0''. In order to split your job into different processes,\n' ...
              '         please do not use spaces in folder names!.\n\n']);
          job.nproc = 0;
+         job.printPID = 1; 
          job = update_job(job);
          varargout{1} = run_job(job);
          return; 
@@ -137,8 +138,13 @@ function varargout = cat_parallelize(job,func,datafield)
 
 
   end
-
+  if isfield(job,'printPID') && ~ispc
+    [t,pid] = system('echo $$');
+    fprintf('CAT parallel processing with MATLAB PID: %s\n',pid);
+  end
+  
   %job = update_job(job);
-  varargout{1} = job; %vout_job(job);
+  varargout{1} = job; 
+  %vout_job(job);
 
 end

@@ -10007,6 +10007,7 @@ Fixed: Underlying surface after cat12-call (estimate) was not correct.
 
 
 ------------------------------------------------------------------------
+r902 | dahnke | 2016-03-14 18:04:09 +0100 (Mo, 14 Mär 2016) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10025,5 +10026,29 @@ Added:    Added function to send error messages (cat_io_senderrormail) that
           webpage in the browser.
 Fixed:    Corrected some small errors.
 
+
 ------------------------------------------------------------------------
-r902 | dahnke | 2016-03-14 18:03:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_gintnorm.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_vol_isarnlm.m
+M       cat_vol_sanlm.m
+M       internal/cat_vol_nlmus.m
+
+Added*:   Update SANLM filter with a (automatic) global strength parameter.
+Fixed*:   Corrected error in gintnorm for small values.
+Fixed:    Corrected rounding error in nlmus.
+Fixed:    Corrected background problem if msk field is used in the SPM
+          preprocessing.
+Added:    Parallel output of Ym class maps pi#*.nii in developer mode (expertgui>1) 
+Added:    Output of PID in parallel processing to kill zombies. 
+
+------------------------------------------------------------------------
+r903 | dahnke | 2016-03-17 19:10:20

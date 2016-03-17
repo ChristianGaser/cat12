@@ -42,6 +42,12 @@ if ~isfield(job,'rician')
     job.rician = spm_input('Rician noise?',1,'yes|no',[1,0],2);
 end
 
+if ~isfield(job,'NCstr')
+    job.NCstr = inf;
+else
+    job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr);
+end
+
 V = spm_vol(char(job.data));
 
 spm_clf('Interactive'); 
@@ -52,10 +58,21 @@ for i = 1:numel(job.data)
     src = single(spm_read_vols(V(i)));
     % prevent NaN
     src(isnan(src)) = 0;
+
+    if job.NCstr>0, srco = src + 0; end
+
     cat_sanlm(src,3,1,job.rician);
 
+    % adaptive global denoising 
+    if isinf(job.NCstr);
+      job.NCstr = min(1,max(0,mean(abs(src(:) - srco(:)))*10)); 
+    end
+    
+    % mix original and noise corrected image and go back to original resolution
+    src = srco*(1-job.NCstr) + src*job.NCstr; 
+    
     V(i).fname = fullfile(pth,[job.prefix nm '.nii' vr]);
-    V(i).descrip = sprintf('%s SANLM filtered',V(i).descrip);
+    V(i).descrip = sprintf('%s SANLM filtered (NCstr=%d)',V(i).descrip,job.NCstr);
     
     % use at least float precision
     if  V(i).dt(1)<16, V(i).dt(1) = 16; end 
