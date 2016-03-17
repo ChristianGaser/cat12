@@ -24,7 +24,7 @@ function varargout = cat_vol_isarnlm(varargin)
 %   job.data   = set of images 
 %   job.prefix = prefix for filtered images (default = 'isarnlm_') 
 %   job.rician = noise distribution
-%   opt.cstr   = correction strength (1=full,0=none)
+%   job.cstr   = correction strength (1=full,0=none)
 % Example:
 %   cat_vol_sanlm(struct('data','','prefix','n','rician',0));
 %
@@ -165,7 +165,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.iter   = 3;     % maximum number of iterations
   def.iter1  = 2;     % maximum number of iterations at full resolution
   def.rician = 0;     % noise type 
-  def.cstr   = 1;     % correction strength 
+  def.cstr   = 0.5;   % correction strength 
   def.SANFM  = 1;     % spatial adaptive noise filter modification 
   def.Nth    = 0.01;  % noise threshold (filter only  
   def.fast   = 0;     % masking background?
@@ -174,7 +174,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.NCstr  = 1; 
   opt        = cat_io_checkinopt(opt,def);
   opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
-  opt.cstr   = max(0,min(1,opt.cstr));  % range 0-1
+  opt.cstr   = max(0,min(1,opt.cstr)) + isinf(opt.cstr);  % range 0-1
 
   if isempty(YM), YM = true(size(Y)); end 
   YM = YM>0.5;
@@ -185,11 +185,12 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     Y0=Y; 
     [Y,YM,BB] = cat_vol_resize({Y,YM},'reduceBrain',vx_vol,4,Y>Tth*0.2);
   end
-  
+  Yo = Y; 
   Yi = Y .* YM;
   % just for display
   % ds('d2','',vx_vol,Y/Tth*0.95,Yi/Tth*0.95,Ys/Tth*0.95,abs(Yi-Ys)./max(Tth*0.2,Ys),90)
   
+   
   iter = 0; noise = inf; Ys = Yi; noiser=1;
   while ((iter < opt.iter && opt.level>1) || (iter < opt.iter1 && opt.level==1)) && ...
       noise>opt.Nth && (opt.level<3 || noiser>1/4) && (iter==0 || mean(vx_vol)<1.5) 
@@ -209,7 +210,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     
     if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
  
-    
+
     %% filtering of lower resolution level
     %  if the currect resolution is high enought
     %  important is a previous NLM on the main resolution to avoid 
@@ -351,7 +352,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   end
   
   % final mixing
-  Ys = Y*(1-opt.cstr) + Ys*opt.cstr;
+  Ys = Yo*(1-opt.cstr) + Ys*opt.cstr;
   
   % garantie positive values
   if min(Y(:))>-0.001 && sum(Y(:)<0)>0.01*numel(Y(:));
