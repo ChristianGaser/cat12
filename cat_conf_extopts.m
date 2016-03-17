@@ -226,7 +226,7 @@ NCstr.strtype = 'r';
 NCstr.num     = [1 1];
 NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
 NCstr.help    = {
-  'Strengh of the SANLM noise correction. The default of 0.75 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+  'Strengh of the SANLM noise correction. The default "inf" use an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
 ''
 };
 
@@ -436,6 +436,6 @@ elseif expert==2 % experimental expert options
 elseif expert==1 % working expert options
   extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
 else
-  extopts.val   = {applight,NCstr,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
+  extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};

@@ -322,7 +322,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     BMth  = BGcon; %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
     Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*mean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
     Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.45)>0.5; % important to avoid PVE!
-    
+
     % If SPM get totaly wrong maps due to bad image orientations our 
     % segment were incorrect too (or empty) and peak estimation fail.
     % I try to use the kmeans, but in WM it is affected by WMHs, in 
@@ -332,7 +332,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     % were much more images with smaller problems ...
     Ysrcr  = round( Ysrc.*10^5 ) / 10^5;
     WMth   = cat_stat_nanmedian(Ysrcr(Ywm(:))); % kmeans3D(Ysrc(Ycls{2}(:)>192 & Yg(:)<gth),1); % GM/WM WM  
-    CSFth  = max(0.05,cat_stat_nanmedian(Ysrcr(Ycm(:)))); % kmeans3D(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
+    CSFth  = cat_stat_nanmedian(Ysrcr(Ycm(:))); % kmeans3D(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
       %  0.05 <<<<< BMth + 4*cat_stat_nanstd(Ysrc(Ybm(:)))
     Ybg    = cat_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*mean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
     Ygm    = ~Ybg & Yg<0.4 & Ysrc<(WMth+0.9*diff([CSFth,WMth])) & Yg<gth*2 & ...

@@ -51,7 +51,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     job.process_index{i} = [job.process_index{i} n_subjects-i+1];
   end
 
-  tmp_array = cell(job.nproc,1);
+  tmp_array = cell(job.nproc,1); job.printPID = 1; 
+    
   logdate   = datestr(now,'YYYYmmdd_HHMMSS');
   for i=1:job.nproc
     fprintf('Running job %d:\n',i);
@@ -59,7 +60,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
     end
     job.data = job_data(job.process_index{i});
-
+         
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
@@ -85,7 +86,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
              '         a folder that contains spaces. Please set the number of processes in the GUI \n'...
              '         to ''0''. In order to split your job into different processes,\n' ...
              '         please do not use spaces in folder names!.\n\n']);
-         job.nproc = 0;
+         job.nproc = 0; 
          job = update_job(job);
          varargout{1} = run_job(job);
          return; 
@@ -126,6 +127,23 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   return
 end
 
+if isfield(job,'printPID') && job.printPID 
+  if ispc
+    %%
+    pid = []; pidi = 0; 
+    while isempty(pid) && pidi<100 
+      s = pidi; 
+      [t,pids] = system(sprintf(['tasklist /FO TABLE /NH /FI "imagename eq MATLAB.exe" ' ...
+        '/FI "CPUTime lt 00:%02d:%02d" /FI "MemUsage lt 500000"'],round(s/60),mod(s,60)));
+      pid = textscan(pids,'MATLAB.exe %d Console'); 
+      if ~isempty(pid); pid = pid{1}; end
+      pidi = pidi+1;
+    end
+  else
+    [t,pid] = system('echo $$');
+  end
+  fprintf('CAT parallel processing with MATLAB PID: %s\n',pid);
+end
 job = update_job(job);
 
 varargout{1} = run_job(job);
@@ -210,7 +228,7 @@ function vout = run_job(job)
     % Both functions finally call cat_run_job.
     % See also cat_run_newcatch and cat_run_newcatch.
     % __________________________________________________________________
-    if job.extopts.ignoreErrors
+    %if job.extopts.ignoreErrors
       if cat_io_matlabversion>20072 
         cat_run_newcatch(job,tpm,subj); 
       else
@@ -218,9 +236,9 @@ function vout = run_job(job)
         %cat_run_oldcatch(job,tpm,subj);
         cat_run_job(job,tpm,subj);
       end
-    else
-      cat_run_job(job,tpm,subj);
-    end
+    %else
+    %  cat_run_job(job,tpm,subj);
+    %end
   end
 
   colormap(gray)
