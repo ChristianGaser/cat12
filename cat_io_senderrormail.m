@@ -5,7 +5,7 @@ function cat_io_senderrormail(job)
 % It extract XML and PDF files of failed preprocessings.
 % ______________________________________________________________________
 % Robert Dahnke 
-% $Revision: 894 $  $Date: 2016-03-10 14:50:04 +0100 (Do, 10 Mär 2016) $
+% $Revision$  $Date$
 
 %#ok<*TRYNC>
 

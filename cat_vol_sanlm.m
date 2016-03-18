@@ -34,19 +34,15 @@ else
 end
 if isempty(char(job.data)); return; end
 
-if ~isfield(job,'prefix')
-    job.prefix = 'sanlm_';
-end
+def.verb   = 1;         % be verbose
+def.prefix = 'sanlm_';  % prefix
+def.NCstr  = inf;       % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
+def.rician = 0;         % use inf for GUI
+def.local  = 0;         % local weighing (only auto NCstr); 
+job = cat_io_checkinopt(job,def);
 
-if ~isfield(job,'rician') 
-    job.rician = spm_input('Rician noise?',1,'yes|no',[1,0],2);
-end
-
-if ~isfield(job,'NCstr')
-    job.NCstr = inf;
-else
-    job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr);
-end
+job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;           % garanty values from 0 to 1 or inf
+if isinf(job.rician), spm_input('Rician noise?',1,'yes|no',[1,0],2); end  % GUI
 
 V = spm_vol(char(job.data));
 
@@ -64,15 +60,29 @@ for i = 1:numel(job.data)
     cat_sanlm(src,3,1,job.rician);
 
     % adaptive global denoising 
-    if isinf(job.NCstr);
-      job.NCstr = min(1,max(0,mean(abs(src(:) - srco(:)))*10)); 
+    if isinf(job.NCstr) || sign(job.NCstr)==-1;
+      Yh     = src>mean(src(:)); % object
+      Tth    = mean(src(Yh(:)));
+      NCstr  = min(1,max(0, mean( abs(src(Yh(:)) - srco(Yh(:))) ./ Tth ) * 8 * min(2,max(0,abs(job.NCstr))) ));
+      NCs    = abs(src - srco) / Tth * 8 * min(2,max(0,abs(job.NCstr))); spm_smooth(NCs,NCs,2);
+      NCs    = max(0,min(1,NCs));
+    else 
+      NCstr  = job.NCstr;
     end
     
-    % mix original and noise corrected image and go back to original resolution
-    src = srco*(1-job.NCstr) + src*job.NCstr; 
+    % mix original and noise corrected image
+    if job.local
+      src = srco.*(1-NCs) + src.*NCs; 
+    else
+      src = srco*(1-NCstr) + src*NCstr; 
+    end
     
     V(i).fname = fullfile(pth,[job.prefix nm '.nii' vr]);
     V(i).descrip = sprintf('%s SANLM filtered (NCstr=%d)',V(i).descrip,job.NCstr);
+    
+    if job.verb
+      fprintf('NCstr = %0.2f: Output %s\n',NCstr,spm_file(V(i).fname,'link','spm_display(''%s'')'));
+    end
     
     % use at least float precision
     if  V(i).dt(1)<16, V(i).dt(1) = 16; end 

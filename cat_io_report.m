@@ -276,20 +276,22 @@ function cat_io_report(job,qa)
  
   %% surface or histogram
   Pthick = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
-  fdata = dir(Pthick); fdata = etime(clock,datevec(fdata.datenum))/3600 < 2;
-  if exist(Pthick,'file') && fdata % only surface that are 
-    try 
-      hCS = subplot('Position',[0.5 0.05 0.5 0.22],'visible','off'); 
-      cat_surf_display(struct('data',Pthick,'readsurf',0,...
-        'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-      axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
-      htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
-        'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
-    catch
-      fprintf('Can''t display surface');
+  fdata = dir(Pthick);
+  if exist(Pthick,'file')
+    fdata = etime(clock,datevec(fdata.datenum))/3600 < 2;
+    if fdata % only surface that are 
+      try 
+        hCS = subplot('Position',[0.5 0.05 0.5 0.22],'visible','off'); 
+        cat_surf_display(struct('data',Pthick,'readsurf',0,...
+          'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+        axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
+        htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
+          'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
+      catch
+        fprintf('Can''t display surface');
+      end
     end
   end
-  
 
   %% print group report file 
   fg = spm_figure('FindWin','Graphics');

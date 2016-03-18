@@ -638,6 +638,7 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
       Yms .* Ybr;
   else
+    %%
     if isinf(job.extopts.NCstr);
       stime = cat_io_cmd(sprintf('SANLM noise correction'));
       Ymo = Yms + 0;
@@ -645,17 +646,28 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
       stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     end
     cat_sanlm(Yms,3,1,0);
-    if isinf(job.extopts.NCstr);
-      job.extopts.NCstr = min(1,max(0,mean(abs(Yms(:) - Ymo(:)))*10)); 
+    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
+    if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1;
+      job.extopts.NCstr = min(1,max(0,mean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 8 * min(2,max(0,abs(job.extopts.NCstr))) )); 
+      NCs  = abs(Yms - Ymo) * 8 * min(2,max(0,abs(job.extopts.NCstr))); spm_smooth(NCs,NCs,2);%./vx_vol);
+      NCs  = max(0,min(1,NCs));
     end
     fprintf('%4.0fs\n',etime(clock,stime));  
     
     % mix original and noise corrected image and go back to original resolution
-    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
-    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-      (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-      job.extopts.NCstr .* Yms .* Ybr;
+    local = 1; 
+    if local
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+        Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+        (1-NCs) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+        NCs .* Yms .* Ybr;
+    else
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+        Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+        (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+        job.extopts.NCstr .* Yms .* Ybr;
+    end    
+    
   end
   clear Yms Ybr BB;
 
@@ -672,7 +684,33 @@ end
 %% Local Intensity Correction 
 if job.extopts.LASstr>0
   stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
+  if job.extopts.NCstr>0, Ymo = Ym; end 
   [Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts);
+  %Ymoc = Ym+0; 
+  if job.extopts.NCstr>0
+    %%
+    [Yms,Ymor,BB]  = cat_vol_resize({Ym,Ymo},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+    Yc = abs(Yms - Ymor); Yc = Yc * 6 * min(2,max(0,abs(job.extopts.NCstr))); 
+    spm_smooth(Yc,Yc,2./vx_vol); Yc = max(0,min(1,Yc)); clear Ymor; 
+    
+    if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
+      if job.extopts.verb>1, cat_io_cmd(sprintf('  ISARNLM noise correction for LAS')); fprintf('\n'); end
+      Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,inf); 
+    else
+      stime2 = cat_io_cmd(sprintf('  SANLM noise correction for LAS'));
+      cat_sanlm(Yms,3,1,0);
+      if job.extopts.verb>1, fprintf('%4.0fs\n',etime(clock,stime2)); end 
+    end
+    % mix original and noise corrected image and go back to original resolution
+    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
+    Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
+      Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
+      (1-Yc) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
+      Yc .* Yms .* Ybr;
+    
+  end
+  clear Yms Ymo;
+  %clear Ymoc; 
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
