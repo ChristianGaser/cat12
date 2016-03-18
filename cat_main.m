@@ -315,11 +315,11 @@ voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
 %% create a new brainmask
 
 % median in case of WMHs!
-WMth = double(max(mean(res.mn(res.lkp==2 & res.mg'>0.1)),...
+WMth = double(max(cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.1)),...
         cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)))))); 
-T3th = [ min([  mean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([mean(res.mn(res.lkp==1 & res.mg'>0.1)),...
-         WMth]) ,mean(res.mn(res.lkp==3 & res.mg'>0.3))]) ...
-         mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
+T3th = [ min([  cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)),...
+         WMth]) ,cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))]) ...
+         cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
          WMth];
 
 
@@ -328,7 +328,7 @@ Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2)
 if sum(Yp0(:)>0.3)<100
   % this error often depends on a failed affine registration, where SPM
   % have to find the brain in the head or background
-  BGth = mean(res.mn(res.lkp==6 & res.mg'>0.3));
+  BGth = cat_stat_nanmean(res.mn(res.lkp==6 & res.mg'>0.3));
   error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
    ['Empty Segmentation: \n ' ...
     'Possibly the affine registration failed. Pleace check image orientation.\n' ...
@@ -377,7 +377,7 @@ if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))==-1))
 
   clear D I
   T3ths = [min(min(min(single(Ysrc(P(:,:,:,6)>128))))),...
-           mean(mean(mean(single(Ysrc(P(:,:,:,6)>128))))),T3th,T3th(3) + mean(diff(T3th))];
+           cat_stat_nanmean(cat_stat_nanmean(cat_stat_nanmean(single(Ysrc(P(:,:,:,6)>128))))),T3th,T3th(3) + cat_stat_nanmean(diff(T3th))];
   T3thx = [0,0.05,1,2,3,4];
   [T3ths,si] = sort(T3ths);
   T3thx     = T3thx(si);
@@ -421,15 +421,15 @@ else
   RGth = diff(T3th(2:3))/T3th(3)*0.1; 
   Yb   = single(cat_vol_morph((Yp0>2/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5),'lo')); 
   %% region-growing GM 1
-  Yb(~Yb & (~Ybo | Ysrcb<mean(T3th(2)) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
+  Yb(~Yb & (~Ybo | Ysrcb<cat_stat_nanmean(T3th(2)) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
   Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
   % region-growing GM 2
-  Yb(~Yb & (~Ybo | Ysrcb<T3th(1) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth))=nan;
+  Yb(~Yb & (~Ybo | Ysrcb<T3th(1) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/2); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
   Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
   % region-growing GM 3
-  Yb(~Yb & (~Ybo | Ysrcb<T3th(1)/2) | Ysrcb>mean(T3th(3)*1.2) | Yg>BVth)=nan;
+  Yb(~Yb & (~Ybo | Ysrcb<T3th(1)/2) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth)=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
   Yb(smooth3(Yb)<0.5)=0; 
   % ventrile closing
@@ -458,10 +458,10 @@ if ~(job.extopts.INV && any(sign(diff(T3th))))
   if job.extopts.gcutstr==0
     Ybg = ~Yb; 
   else
-    if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<mean(T3th(1:2)))))>10000
+    if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
       Ybg = P(:,:,:,6); 
       [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
-      Ybgrth = max(mean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
+      Ybgrth = max(cat_stat_nanmean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
       Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
       Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
     else
@@ -478,9 +478,9 @@ if ~(job.extopts.INV && any(sign(diff(T3th))))
 
   %% correct probability maps to 100% 
   sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));
-  P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>mean(T3th(1:2)) & Ysrc<mean(T3th(2:3)));
-  P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=mean(T3th(2:3)));
-  P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=mean(T3th(1:2)));
+  P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>cat_stat_nanmean(T3th(1:2)) & Ysrc<cat_stat_nanmean(T3th(2:3)));
+  P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=cat_stat_nanmean(T3th(2:3)));
+  P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=cat_stat_nanmean(T3th(1:2)));
   P(:,:,:,4) = P(:,:,:,4) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc<T3th(2));
   P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
   P(:,:,:,6) = P(:,:,:,6) + sumP .* uint8( Ybg>=0.5 & ~Yb );
@@ -507,7 +507,7 @@ if ~(job.extopts.INV && any(sign(diff(T3th))))
   clear Ygmc Ywmc Yg Ydiv;
 
   % head to GM
-  Ygm = uint8(cat_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>mean(T3th(2:3))) & Yp0<2/3);
+  Ygm = uint8(cat_vol_morph(Ywm>0.5,'d',2) & Ywm<0.9 & (Ysrc>cat_stat_nanmean(T3th(2:3))) & Yp0<2/3);
   P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
   P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
   P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
@@ -624,8 +624,9 @@ end
 %% After the intensity scaling and with correct information about the
 % variance of the tissue, a further harder noise correction is meaningful.
 % Finally, a stronger NLM-filter is better than a strong MRF filter!
-if job.extopts.sanlm>0 && job.extopts.NCstr  
-  [Yms,BB]  = cat_vol_resize(Ym,'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
+%Ymox=Ym; 
+if job.extopts.sanlm>0 && job.extopts.NCstr~=0  
+  [Yms,Ybr,BB]  = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
   
   % apply NLM filter
   if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
@@ -633,30 +634,32 @@ if job.extopts.sanlm>0 && job.extopts.NCstr
     if job.extopts.verb>1, fprintf('\n'); end
     Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,job.extopts.NCstr); 
     
-    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
     Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
       Yms .* Ybr;
   else
     %%
-    if isinf(job.extopts.NCstr);
+    Ymo = Yms + 0;
+    if isinf(job.extopts.NCstr) 
       stime = cat_io_cmd(sprintf('SANLM noise correction'));
-      Ymo = Yms + 0;
     else
       stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
     end
+    
+    % filter
     cat_sanlm(Yms,3,1,0);
-    Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
-    if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1;
-      job.extopts.NCstr = min(1,max(0,mean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 8 * min(2,max(0,abs(job.extopts.NCstr))) )); 
-      NCs  = abs(Yms - Ymo) * 8 * min(2,max(0,abs(job.extopts.NCstr))); spm_smooth(NCs,NCs,2);%./vx_vol);
+    
+    % merging
+    if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
+      job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 8 * min(1,max(0,abs(job.extopts.NCstr))) )); 
+      NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 8 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
+      NCs    = NC+0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
       NCs  = max(0,min(1,NCs));
     end
     fprintf('%4.0fs\n',etime(clock,stime));  
     
     % mix original and noise corrected image and go back to original resolution
-    local = 1; 
-    if local
+    if exist('NCs','var');
       Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
         Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
         (1-NCs) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
@@ -694,12 +697,19 @@ if job.extopts.LASstr>0
     spm_smooth(Yc,Yc,2./vx_vol); Yc = max(0,min(1,Yc)); clear Ymor; 
     
     if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
-      if job.extopts.verb>1, cat_io_cmd(sprintf('  ISARNLM noise correction for LAS')); fprintf('\n'); end
+      if job.extopts.verb>1
+        cat_io_cmd(sprintf('  ISARNLM noise correction for LAS'));
+        fprintf('\n');
+      end
       Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,inf); 
     else
-      stime2 = cat_io_cmd(sprintf('  SANLM noise correction for LAS'));
+      if job.extopts.verb>1
+        stime2 = cat_io_cmd(sprintf('  SANLM noise correction for LAS')); 
+      end
       cat_sanlm(Yms,3,1,0);
-      if job.extopts.verb>1, fprintf('%4.0fs\n',etime(clock,stime2)); end 
+      if job.extopts.verb>1
+        cat_io_cmd(' ','','',job.extopts.verb,stime2); 
+      end 
     end
     % mix original and noise corrected image and go back to original resolution
     Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
