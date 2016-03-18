@@ -46,7 +46,7 @@
         <li>
           <h4 id="Interp">Interpolation</h4>
           <p>
-            CAT12 uses an internal interpolation in order to allow more reliable results also for low resolution images. 
+            CAT12 uses an internal interpolation in order to allow more reliable results also for low resolution images and anisotropic spatial resolutions. 
             Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artifacts in modulated images are strongly diminished. 
           </p>       
         </li>
@@ -55,8 +55,8 @@
         <li>
           <h4 id="APP">Affine Preprocessing (APP)</h4>
           <p>
-            To improve the initial SPM segmentation a initial affine registration on a bias-corrected image is applied and the intensity range is limited to avoid problems in special protocols. 
-            If preprocessing failed a more aggressive version is available that applied the bias correction to the image and mask the brain/head and removed the background/skull.
+            To improve the initial SPM segmentation an initial affine registration on a bias-corrected image is applied and the intensity range is limited to avoid problems in special protocols. 
+            If preprocessing fails a more aggressive version is available that applies a rough bias correction and removes non-brain parts the brain before the initial affine registration.
             For further information see <a href="cat_methods_VBM_APP.html">APP</a>.
           </p>
         </li>
@@ -77,7 +77,7 @@
           <h4 id="NC">Denoising</h4>
           <p>
             Furthermore, we apply two denoising methods. 
-            The first method is an block-wise adaptive Non-Local Means (SANLM) denoising filter that is applied after the intensity normalization. 
+            The first method is a spatial-adaptive adaptive Non-Local Means (SANLM) denoising filter that is applied after the intensity normalization. 
             <a href="matlab:web('http://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
             <!--After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('http://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
             These filters remove noise while preserving edges and are implemented as preprocessing step.  

@@ -38,7 +38,7 @@ function varargout = cat12(varargin)
 
 % Edit the above title to modify the response to help cat12
 
-% Last Modified by GUIDE v2.5 21-Nov-2015 23:32:29
+% Last Modified by GUIDE v2.5 18-Mar-2016 16:24:37
 
 if nargin==0 
   spm_cat12;
@@ -257,3 +257,8 @@ end
 % --- Executes on button press in pushbutton169.
 function pushbutton169_Callback(hObject, eventdata, handles)
 spm_jobman('interactive','','spm.tools.cat.tools.calcvol');
+
+
+% --- Executes on button press in pushbutton170.
+function pushbutton170_Callback(hObject, eventdata, handles)
+cat_io_senderrormail;
