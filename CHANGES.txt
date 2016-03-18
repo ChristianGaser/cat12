@@ -10071,6 +10071,7 @@ Added:    Verbose output in cat_vol_sanlm.
 Fixed:    Error in error report generation.
 
 ------------------------------------------------------------------------
+r905 | gaser | 2016-03-18 16:34:50 +0100 (Fr, 18 Mär 2016) | 18 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -10089,5 +10090,17 @@ Changed: Updated html text.
 Changed: Updated manual.
 Changed: Added "Send Error" button to GUI.
 
+
 ------------------------------------------------------------------------
-r905 | gaser | 2016-03-18 16:34:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_parallelize.m
+M       cat_vol_isarnlm.m
+M       cat_vol_sanlm.m
+
+Fixed:  Problems with sanlm filter strength.
+------------------------------------------------------------------------
+r906 | dahnke | 2016-03-18 18:22:57

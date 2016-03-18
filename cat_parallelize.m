@@ -77,7 +77,7 @@ function varargout = cat_parallelize(job,func,datafield)
     end
     job.(datafield) = job_data(job.process_index{i});
     job.verb        = 1; 
-
+    job.printPID    = 1; 
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
@@ -103,7 +103,6 @@ function varargout = cat_parallelize(job,func,datafield)
              '         to ''0''. In order to split your job into different processes,\n' ...
              '         please do not use spaces in folder names!.\n\n']);
          job.nproc = 0;
-         job.printPID = 1; 
          job = update_job(job);
          varargout{1} = run_job(job);
          return; 

@@ -76,7 +76,7 @@ function varargout = cat_vol_isarnlm(varargin)
   def.postfix = '';  
   def.NCstr   = inf;         % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
   def.rician  = 0;           % use inf for GUI
-  def.local   = 0;           % local weighing (only auto NCstr); 
+  def.local   = 1;           % local weighing (only auto NCstr); 
   job = cat_io_checkinopt(job,def);
 
   job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;          % garanty values from 0 to 1 or inf
@@ -109,7 +109,7 @@ function varargout = cat_vol_isarnlm(varargin)
   end
   spm_progress_bar('Clear');
 end
-function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
+function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 % Ys = cat_vol_sanlmX(Y,YM,vx_vol)
 % ______________________________________________________________________
 % Adaptive iterative multiresolution NLM noise correction for highres 
@@ -173,6 +173,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
   def.level  = 1;     % just for display
   def.NCstr  = 1; 
+  def.local  = 1; 
   opt        = cat_io_checkinopt(opt,def);
   opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
   opt.NCstr  = max(0,min(1,opt.NCstr)) + isinf(opt.NCstr)*opt.NCstr;  % range 0-1
@@ -186,7 +187,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     Y0=Y; 
     [Y,YM,BB] = cat_vol_resize({Y,YM},'reduceBrain',vx_vol,4,Y>Tth*0.2);
   end
-  Yo = Y; 
+  %Yo = Y; 
   Yi = Y .* YM;
   % just for display
   % ds('d2','',vx_vol,Y/Tth*0.95,Yi/Tth*0.95,Ys/Tth*0.95,abs(Yi-Ys)./max(Tth*0.2,Ys),90)
@@ -208,7 +209,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
       Yh     = Ys>mean(Ys(:)); % object
       Tth    = mean(Ys(Yh(:)));
       NCstr  = min(1,max(0, mean( abs(Ys(Yh(:)) - Yi(Yh(:))) ./ Tth ) * 8 * min(2,max(0,abs(opt.NCstr))) ));
-      NCs    = abs(Ys - Yi) / Tth * 8 * min(2,max(0,abs(opt.NCstr))); spm_smooth(NCs,NCs,2);
+      NCs    = abs(Ys - Yi) ./ max(eps,Ys) * 8 * min(2,max(0,abs(opt.NCstr))); spm_smooth(NCs,NCs,2);
       NCs    = max(0,min(1,NCs));
     else 
       NCstr  = opt.NCstr;
@@ -235,8 +236,8 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     %  if the currect resolution is high enought
     %  important is a previous NLM on the main resolution to avoid 
     %  filtering of fine anatomical structures on lower resolutions
-    %if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.1)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
-    if opt.red && all(vx_vol<1.5) && sum(vx_vol<0.75)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
+    if opt.red && all(vx_vol<2.1) && sum(vx_vol<1.1)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
+    %if opt.red && all(vx_vol<1.5) && sum(vx_vol<0.75)>1 && (noise>opt.Nth || iter==0) %&& def.red>0 && noiser>1/4  && iter<1
       %%
       Yi = Ys + 0;
     
@@ -359,10 +360,8 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
         YRcr  = cat_vol_approx(YRcr,'nn',resr.vx_volr(1),1);
         YRcr  = cat_vol_smooth3X(YRcr,2/mean(resr.vx_volr));
         YRc   = cat_vol_resize(YRcr,'dereduceV',resr,'linear');
-        lowf  = 0.5 + 0.5*min(1,max(0,mean(2 - vx_vol))); % reduce filtering on anatical frequency
-        Ys    = Yi + (Ys - Yi) .* (YM>0) .* max(0,min(1,...
-          YRc .* ...                     % local filter strength weighting
-          lowf));                                         % resolution weighting
+        lowf  = 1; %0.5 + 0.5*min(1,max(0,mean(2 - vx_vol))); % reduce filtering on anatical frequency
+        Ys    = Yi + (Ys - Yi) .* (YM>0) .* max(0.2,min(1,YRc .* lowf));  % local filter strength weighting
       end
     end
 
