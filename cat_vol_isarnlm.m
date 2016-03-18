@@ -59,9 +59,9 @@ function varargout = cat_vol_isarnlm(varargin)
     return
   else
     if nargin>3 && isfield(varargin{4},'verb'), verb = varargin{4}.verb; else verb = 1; end 
-    if verb, fprintf('amrnlm:\n'); stime=clock; end
+    if verb, fprintf('isarnlm:\n'); stime=clock; end
     eval(sprintf('varargout{1} = cat_vol_sanlmX(varargin{1}%s);',sprintf(',varargin{%d}',2:nargin)));
-    if verb, fprintf('amrnlm done in %0.0fs.\n',etime(clock,stime)); end
+    if verb, fprintf('isarnlm done in %0.0fs.\n',etime(clock,stime)); end
     return
   end
   if ~isfield(job,'data') || isempty(job.data)
@@ -71,15 +71,16 @@ function varargout = cat_vol_isarnlm(varargin)
   end
   if isempty(job.data), return; end
 
-  def.prefix  = 'isarnlm_';
+  def.verb    = 1;           % be verbose
+  def.prefix  = 'isarnlm_';  % prefix
   def.postfix = '';  
-  def.verb    = 1;
+  def.NCstr   = inf;         % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
+  def.rician  = 0;           % use inf for GUI
+  def.local   = 0;           % local weighing (only auto NCstr); 
   job = cat_io_checkinopt(job,def);
-  
-  if ~isfield(job,'rician') 
-      job.rician = spm_input('Rician noise?',1,'yes|no',[1,0],2);
-  end
-  
+
+  job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;          % garanty values from 0 to 1 or inf
+  if isinf(job.rician), spm_input('Rician noise?',1,'yes|no',[1,0],2); end  % GUI
   
   V = spm_vol(char(job.data));
 
@@ -90,7 +91,7 @@ function varargout = cat_vol_isarnlm(varargin)
       vx_vol  = sqrt(sum(V(i).mat(1:3,1:3).^2));
  
       if any(strfind(nm,job.prefix)==1), continue; end
-      if job.verb, fprintf('amrnlm %s:\n',spm_str_manip(deblank(V(i).fname),'a60')); stime=clock; end
+      if job.verb, fprintf('isarnlm %s:\n',spm_str_manip(deblank(V(i).fname),'a60')); stime=clock; end
       
       src = single(spm_read_vols(V(i)));
       % prevent NaN
@@ -103,7 +104,7 @@ function varargout = cat_vol_isarnlm(varargin)
       % use at least float precision
       if V(i).dt(1)<16, V(i).dt(1) = 16; end 
       spm_write_vol(V(i), src);
-      if job.verb, fprintf('amrnlm done in %0.0fs.\n',etime(clock,stime)); end
+      if job.verb, fprintf('isarnlm done in %0.0fs.\n',etime(clock,stime)); end
       spm_progress_bar('Set',i);
   end
   spm_progress_bar('Clear');
@@ -128,7 +129,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 %   opt.red    .. maximum number of resolution reduction (default = 2)
 %   opt.iter   .. maximum number of iterations (default = 3) 
 %   opt.rician .. noise type (default = 0) 
-%   opt.cstr   .. correction strength (1=full,0=none)
+%   opt.NCstr   .. correction strength (1=full,0=none)
 %   opt.SANFM  .. spatial adaptive noise filter modification (default=1)
 %                 resolution and spation noise pattern depending
 %                 filter strength (opt.Sth)
@@ -174,7 +175,7 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.NCstr  = 1; 
   opt        = cat_io_checkinopt(opt,def);
   opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
-  opt.cstr   = max(0,min(1,opt.cstr)) + isinf(opt.cstr);  % range 0-1
+  opt.NCstr  = max(0,min(1,opt.NCstr)) + isinf(opt.NCstr)*opt.NCstr;  % range 0-1
 
   if isempty(YM), YM = true(size(Y)); end 
   YM = YM>0.5;
@@ -197,11 +198,30 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     
     
     %% SANLM filtering
-    if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm.  ',opt.level,iter+1,vx_vol); stime = clock; end
+    if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
     cat_sanlm(Ys,3,1,opt.rician); 
-    Ys = (1-opt.NCstr) .* Yi  + opt.NCstr .* Ys; % main weighting
+    
+    % adaptive global denoising 
+    if isinf(opt.NCstr) || sign(opt.NCstr)==-1;
+      Yh     = Ys>mean(Ys(:)); % object
+      Tth    = mean(Ys(Yh(:)));
+      NCstr  = min(1,max(0, mean( abs(Ys(Yh(:)) - Yi(Yh(:))) ./ Tth ) * 8 * min(2,max(0,abs(opt.NCstr))) ));
+      NCs    = abs(Ys - Yi) / Tth * 8 * min(2,max(0,abs(opt.NCstr))); spm_smooth(NCs,NCs,2);
+      NCs    = max(0,min(1,NCs));
+    else 
+      NCstr  = opt.NCstr;
+    end
+    
+    % mix original and noise corrected image
+    if opt.local
+      Ys = Yi.*(1-NCs) + Ys.*NCs; 
+    else
+      Ys = Yi*(1-NCstr) + Ys*NCstr; 
+    end
+    
+    %Ys = (1-opt.NCstr) .* Yi  + opt.NCstr .* Ys; % main weighting
     %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
     %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
     noiser = 1 - (cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
@@ -317,7 +337,9 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
       end
     end
     
+     
     
+
     
     %% SANFM = spatial adaptive noise filter modification 
     % - the strength filter depend on the resolution and we have to 
@@ -325,18 +347,22 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     % - the noise vary typically with low frequency and outlier 
     %   mostly describe anatomical structures (opt.Sth)
     if def.SANFM 
-      YRc   = abs(Yi - Ys); 
+      Yh     = Ys>mean(Ys(:)); % object
+      Tth    = mean(Ys(Yh(:)));
+      YRc    = abs(Yi - Ys) / Tth * 8 * min(2,max(0,abs(opt.cstr))); spm_smooth(YRc,YRc,2);
+      YRc    = max(0,min(1,YRc));
+
       if sum(YRc)>0
         YRc   = max(0.2*max(YRc(:)),min(mean(YRc(YM(:)>0.5))*3,YRc));
+        
         [YRcr,resr] = cat_vol_resize(YRc,'reduceV',vx_vol,vx_vol*4,16,'meanm');
         YRcr  = cat_vol_approx(YRcr,'nn',resr.vx_volr(1),1);
         YRcr  = cat_vol_smooth3X(YRcr,2/mean(resr.vx_volr));
         YRc   = cat_vol_resize(YRcr,'dereduceV',resr,'linear');
         lowf  = 0.5 + 0.5*min(1,max(0,mean(2 - vx_vol))); % reduce filtering on anatical frequency
-        Ys    = Yi + (Ys - Yi) .* (YM>0) .* max(0.2,max(Ys<max(Ys(:))*0.9,...
-          (YRc ./ max(YRc(:))) .* ...                     % local filter strength weighting
-          (abs(Ys - Yi)<8*YRc) .* ...                     % structur weighting
-          lowf));                                           % resolution weighting
+        Ys    = Yi + (Ys - Yi) .* (YM>0) .* max(0,min(1,...
+          YRc .* ...                     % local filter strength weighting
+          lowf));                                         % resolution weighting
       end
     end
 
@@ -352,7 +378,10 @@ function Ys = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   end
   
   % final mixing
-  Ys = Yo*(1-opt.cstr) + Ys*opt.cstr;
+  %if isinf(opt.NCstr)
+  %  opt.NCstr = mean(abs(Yi(:) - Ys(:)))*10;
+  %end
+  %Ys = Yo*(1-opt.NCstr) + Ys*opt.NCstr;
   
   % garantie positive values
   if min(Y(:))>-0.001 && sum(Y(:)<0)>0.01*numel(Y(:));

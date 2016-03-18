@@ -10028,6 +10028,7 @@ Fixed:    Corrected some small errors.
 
 
 ------------------------------------------------------------------------
+r903 | dahnke | 2016-03-17 19:10:34 +0100 (Do, 17 Mär 2016) | 22 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10050,5 +10051,22 @@ Fixed:    Corrected background problem if msk field is used in the SPM
 Added:    Parallel output of Ym class maps pi#*.nii in developer mode (expertgui>1) 
 Added:    Output of PID in parallel processing to kill zombies. 
 
+
 ------------------------------------------------------------------------
-r903 | dahnke | 2016-03-17 19:10:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_io_report.m
+MM      cat_io_senderrormail.m
+M       cat_main.m
+M       cat_vol_isarnlm.m
+M       cat_vol_sanlm.m
+ M      html/cat_methods_caterrorreporthelp.html
+ M      html/cat_methods_catreporthelp.html
+
+Changed:  Refined noise estimation in cat_vol_sanlm and cat_main. 
+Added:    Verbose output in cat_vol_sanlm.
+Fixed:    Error in error report generation.
+------------------------------------------------------------------------
+r904 | dahnke | 2016-03-18 13:50:10
