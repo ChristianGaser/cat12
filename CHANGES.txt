@@ -10053,6 +10053,7 @@ Added:    Output of PID in parallel processing to kill zombies.
 
 
 ------------------------------------------------------------------------
+r904 | dahnke | 2016-03-18 13:50:19 +0100 (Fr, 18 Mär 2016) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10068,5 +10069,25 @@ M       cat_vol_sanlm.m
 Changed:  Refined noise estimation in cat_vol_sanlm and cat_main. 
 Added:    Verbose output in cat_vol_sanlm.
 Fixed:    Error in error report generation.
+
 ------------------------------------------------------------------------
-r904 | dahnke | 2016-03-18 13:50:10
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       cat12.m
+M       cat_io_senderrormail.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods_QA.html
+M       html/cat_methods_VBM.html
+
+Changed: Updated html text.
+Changed: Updated manual.
+Changed: Added "Send Error" button to GUI.
+
+------------------------------------------------------------------------
+r905 | gaser | 2016-03-18 16:34:43

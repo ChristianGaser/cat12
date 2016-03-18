@@ -233,7 +233,7 @@ function cat_io_senderrormail(job)
   end
   
   % final creation of the mail 
-  recipients = 'christian.gaser@uni-jena.de';
+  recipients = 'vbmweb@gmail.com';
   
   % 
   mainBodyHTML = strrep(mainBody,'\n','<br />');
