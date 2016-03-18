@@ -439,12 +439,13 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   
   %%
   Yml = Yml/3;
-  if debug
-    cat_io_cmd(' ','','',verb,stime); 
-  else
-    cat_io_cmd(' ','','',verb,stime);   
+  cat_io_cmd('','','',verb,stime);
+ % if debug
+ %   cat_io_cmd(' ','','',verb,stime); 
+ % else
+ %   cat_io_cmd(' ','','',verb,stime);   
  %   cat_io_cmd('cleanup',dispc,'',verb);
-  end
+ % end
 
 %%
 end
