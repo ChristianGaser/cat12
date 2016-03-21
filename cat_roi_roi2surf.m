@@ -102,7 +102,7 @@ function varargout = cat_roi_roi2surf(job)
     for ai = 1:numel(atlas)
       
       % load ROI data
-      Proi = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'),['*' atlas{ai} '*']);
+      Proi = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),['*' atlas{ai} '*']);
       for si=1:2
         [ppr,ffr,eer] = spm_fileparts(Proi{si});
         switch eer

@@ -10115,6 +10115,7 @@ M       cat_vol_sanlm.m
 Changed: Increased filter strength for adaptive NLM-filtering.
 
 ------------------------------------------------------------------------
+r908 | gaser | 2016-03-21 13:01:27 +0100 (Mo, 21 Mär 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10129,5 +10130,94 @@ M       html/cat_tools_SBM.html
 M       html/cat_tools_VBM.html
 
 Changed: Updated html code.
+
 ------------------------------------------------------------------------
-r908 | gaser | 2016-03-21 13:01:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+A       atlases_surfaces
+A       atlases_surfaces/a2005s.txt
+A       atlases_surfaces/a2009s.txt
+A       atlases_surfaces/dkt40.txt
+A  +    atlases_surfaces/lh.PALS_B12_Brodmann.freesurfer.annot
+A  +    atlases_surfaces/lh.PALS_B12_Lobes.freesurfer.annot
+A  +    atlases_surfaces/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+A  +    atlases_surfaces/lh.PALS_B12_Visuotopic.freesurfer.annot
+A  +    atlases_surfaces/lh.aal.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/lh.aparc.freesurfer.annot
+A  +    atlases_surfaces/lh.aparcDKT40.freesurfer.annot
+A  +    atlases_surfaces/lh.aparcDKT40JT.freesurfer.annot
+A  +    atlases_surfaces/lh.aparc_a2005s.freesurfer.annot
+A  +    atlases_surfaces/lh.aparc_a2009s.freesurfer.annot
+A  +    atlases_surfaces/lh.hammers.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/lh.lpba40.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/lh.mori.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/lh.neuromorphometrics.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/lh.rois.a2009s.txt
+A       atlases_surfaces/pals.txt
+A  +    atlases_surfaces/rh.PALS_B12_Brodmann.freesurfer.annot
+A  +    atlases_surfaces/rh.PALS_B12_Lobes.freesurfer.annot
+A  +    atlases_surfaces/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+A  +    atlases_surfaces/rh.PALS_B12_Visuotopic.freesurfer.annot
+A  +    atlases_surfaces/rh.aal.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/rh.aparc.freesurfer.annot
+A  +    atlases_surfaces/rh.aparcDKT40.freesurfer.annot
+A  +    atlases_surfaces/rh.aparcDKT40JT.freesurfer.annot
+A  +    atlases_surfaces/rh.aparc_a2005s.freesurfer.annot
+A  +    atlases_surfaces/rh.aparc_a2009s.freesurfer.annot
+A  +    atlases_surfaces/rh.hammers.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/rh.lpba40.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/rh.mori.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/rh.neuromorphometrics.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces/rh.rois.a2009s.txt
+A  +    atlases_surfaces/rois.a2009s.txt
+M       cat_roi_roi2surf.m
+M       cat_surf_surf2roi.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods_RBM.html
+M       templates_1.50mm/aal.txt
+M       templates_1.50mm/anatomy.txt
+M       templates_1.50mm/hammers.txt
+M       templates_1.50mm/ibsr.txt
+M       templates_1.50mm/lpba40.txt
+M       templates_1.50mm/mori.txt
+D       templates_surfaces/lh.PALS_B12_Brodmann.freesurfer.annot
+D       templates_surfaces/lh.PALS_B12_Lobes.freesurfer.annot
+D       templates_surfaces/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+D       templates_surfaces/lh.PALS_B12_Visuotopic.freesurfer.annot
+D       templates_surfaces/lh.aal.Template_T1_IXI555_MNI152
+D       templates_surfaces/lh.aparc.freesurfer.annot
+D       templates_surfaces/lh.aparcDKT40.freesurfer.annot
+D       templates_surfaces/lh.aparcDKT40JT.freesurfer.annot
+D       templates_surfaces/lh.aparc_a2005s.freesurfer.annot
+D       templates_surfaces/lh.aparc_a2009s.freesurfer.annot
+D       templates_surfaces/lh.hammers.Template_T1_IXI555_MNI152
+D       templates_surfaces/lh.lpba40.Template_T1_IXI555_MNI152
+D       templates_surfaces/lh.mori.Template_T1_IXI555_MNI152
+D       templates_surfaces/lh.neuromorphometrics.Template_T1_IXI555_MNI152
+D       templates_surfaces/lh.rois.a2009s.txt
+D       templates_surfaces/rh.PALS_B12_Brodmann.freesurfer.annot
+D       templates_surfaces/rh.PALS_B12_Lobes.freesurfer.annot
+D       templates_surfaces/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+D       templates_surfaces/rh.PALS_B12_Visuotopic.freesurfer.annot
+D       templates_surfaces/rh.aal.Template_T1_IXI555_MNI152
+D       templates_surfaces/rh.aparc.freesurfer.annot
+D       templates_surfaces/rh.aparcDKT40.freesurfer.annot
+D       templates_surfaces/rh.aparcDKT40JT.freesurfer.annot
+D       templates_surfaces/rh.aparc_a2005s.freesurfer.annot
+D       templates_surfaces/rh.aparc_a2009s.freesurfer.annot
+D       templates_surfaces/rh.hammers.Template_T1_IXI555_MNI152
+D       templates_surfaces/rh.lpba40.Template_T1_IXI555_MNI152
+D       templates_surfaces/rh.mori.Template_T1_IXI555_MNI152
+D       templates_surfaces/rh.neuromorphometrics.Template_T1_IXI555_MNI152
+D       templates_surfaces/rh.rois.a2009s.txt
+D       templates_surfaces/rois.a2009s.txt
+M       templates_surfaces/templates_surfaces.man
+
+Changed: Surface atlases are now in a separate folder atlases_surfaces
+Added: Info files for Freesurfer atlases.
+------------------------------------------------------------------------
+r909 | gaser | 2016-03-21 15:56:36
