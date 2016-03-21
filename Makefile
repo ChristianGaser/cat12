@@ -9,6 +9,7 @@ TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 
 STARGET_HOST=dbm.neuro.uni-jena.de
+STARGET_HTDOCS=${STARGET_HOST}:/Applications/xampp/htdocs/
 STARGET_FOLDER=/Applications/xampp/htdocs/cat12
 STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
@@ -57,7 +58,13 @@ zip: update
 scp: zip
 	-@echo scp to http://dbm.neuro.uni-jena.de/cat12/${ZIPFILE}
 	-@scp -P 2222 CHANGES.txt CAT12-Manual.pdf ${ZIPFILE} ${STARGET}
-    -@scp -r -P 2222 html ${STARGET}/cat12-html
+	-@test ! -d cat12-html || rm -r cat12-html
+	-@cp -R html cat12-html
+	-@perl -p -i -e "s/\','-browser'\);//g" cat12-html/*.html
+	-@perl -p -i -e "s/\','-browser'\)//g" cat12-html/*.html
+	-@perl -p -i -e "s/matlab:web\(\'//g" cat12-html/*.html
+	-@cp cat12-html/cat.html cat12-html/index.html
+	-@scp -r -P 2222 cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh ${STARGET_HOST} ln -Fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 	
 cp_binaries: 

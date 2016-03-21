@@ -13,4 +13,4 @@ References:
 Destrieux, C. Fischl, B. Dale, A., Halgren, E. A sulcal depth-based anatomical parcellation of the cerebral cortex. Human Brain Mapping (HBM) Congress 2009, Poster #541
 
 --------------------------------------------------------------------------------
-$Id: a2009s.txt 817 2015-12-17 14:27:24Z gaser $
+$Id$

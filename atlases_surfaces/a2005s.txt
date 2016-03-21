@@ -15,4 +15,4 @@ system for subdividing the human cerebral cortex on MRI scans into gyral based
 regions of interest. Neuroimage. 2006 Jul 1;31(3):968-80. 
 
 --------------------------------------------------------------------------------
-$Id: a2005s.txt 817 2015-12-17 14:27:24Z gaser $
+$Id$

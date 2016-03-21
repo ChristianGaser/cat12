@@ -14,7 +14,7 @@
 % Surfaces based on freesurfer fsaverage
 % These surfaces are internally used for spherical registration, resampling
 % and can be used to overlay maps and results in template space (e.g. after
-% spherical registzration and resampling).
+% spherical registration and resampling).
 % The central surface is estimated by averaging the white and pial surface.
 %
 % ?h.mask.txt

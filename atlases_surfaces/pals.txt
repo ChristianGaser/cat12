@@ -21,4 +21,4 @@ van Essen, D. A Population-Average, Landmark- and Surface-based (PALS) atlas of
 human cerebral cortex. Neuroimage. 2005 Nov 15;28(3):635-62.
 
 --------------------------------------------------------------------------------
-$Id: pals.txt 817 2015-12-17 14:27:24Z gaser $
+$Id$
