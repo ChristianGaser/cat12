@@ -10105,6 +10105,7 @@ M       cat_vol_sanlm.m
 Fixed:  Problems with sanlm filter strength.
 
 ------------------------------------------------------------------------
+r907 | gaser | 2016-03-21 10:20:04 +0100 (Mo, 21 Mär 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10112,5 +10113,21 @@ M       cat_main.m
 M       cat_vol_sanlm.m
 
 Changed: Increased filter strength for adaptive NLM-filtering.
+
 ------------------------------------------------------------------------
-r907 | gaser | 2016-03-21 10:19:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat_FAQ.html
+M       html/cat_ackknowledgement.html
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+M       html/cat_tools_ROI.html
+M       html/cat_tools_SBM.html
+M       html/cat_tools_VBM.html
+
+Changed: Updated html code.
+------------------------------------------------------------------------
+r908 | gaser | 2016-03-21 13:01:18
