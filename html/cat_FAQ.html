@@ -47,7 +47,7 @@
         </li>
         <li>
           <h4>The normalized images have striped artifacts.</h4>
-          <p>This depend on the input resolution of our files. Smooth the images or interpolate the original files by using ... </p>
+          <p>This depend on the input resolution of our files and will be largely diminished after smoothing. Usually, the internal interpolation ensures isotropic voxel size and a minimum spatial resolution and tries to prevent this kind of artifacts. </p>
         </li>
         <li>
           <h4>Parts of the brain are missing, or a wider brain mask is required.</h4>
@@ -67,30 +67,32 @@
         </li>
         <li>
           <h4>There are blood vessels in the tissue segmentation that were classified as WM.</h4>
-          <p>Correction of blood vessels with similar intensity like the WM is problematic. Try to increase the <i>BVCstr</i> parameter.</p>
+          <p>Correction of blood vessels with similar intensity like the WM is always problematic. Nevertheless, you can try to increase the <i>BVCstr</i> parameter.</p>
         </li>
+      <!--
         <li>
           <h4>The segmentation of the subcortical structures... </h4>
           <p>Modify <i>LASstr</i> parameter.</p>
         </li>
+-->
       </ul>
 
       <h3>Surface reconstruction and thickness estimation</h3>
       <ul>
         <li>
           <h4>Incomplete surface or bubble surfaces</h4>
-          <p>check segmentation (check report file)...</p>
+          <p>Check segmentation (check report file)...</p>
         </li>
         <li>
           <h4>Unexpected thickness values </h4>
-          <p>check segmentation (check report file)...</p>
+          <p>Check segmentation (check report file)...</p>
         </li>
         <li>
           <h4>Is there a thickness map that allows a voxel-based analysis?</h4>
           <p>
             No. Although the PBT approach creates such a map, it is only used for mapping thickness to the surface and for ROI analysis. 
-            A voxel-based analysis of such a map is not meaningful because the standard statistical processing is not optimized for this type of data. 
-            Simple Gaussian smoothing is not recommended (it will alter the values) and the varying width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. 
+            A voxel-based analysis of such a map might be not meaningful because the standard statistical processing is not optimized for this type of data. 
+            Simple Gaussian smoothing is not recommended (it will alter the values) and the varying width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. Therefore, the analysis of cortical thickness is only available for the surface-based analysis.
           </p>
       </ul>
      
@@ -100,16 +102,16 @@
           <h4>Some of my images get a low rating - can I use them anyway?</h4>
           <p>
             Outliers of image quality are often caused by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
-            Best praxis is to remove strong outliers (e.g. > 2 standard deviations), if the problems depend on the image quality and not other subject properties.  
+            Best praxis is to remove strong outliers (e.g. > 2 standard deviations, but not necessarily), if the problems depend on the image quality and not other subject properties.  
             If you have only a small number of images, you can also evaluate the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.  
-            Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.showslice');">Check data homogeneity</a> to proof that the segmentation of these subjects were correct. <br />
+            Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.showslice');">Check data homogeneity</a> to proof that the segmentation of these subjects were correct. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. However, this will not always mean that you have to remove these data from your sample, but should be checked more carefully.<br />
             Have a look to the <a href="cat_methods_QA.html">quality assurance methods</a> for further information. 
           </p>
         </li>
         <li>
           <h4>My whole data get a low average rating - can I use it?</h4>
           <p>
-            Yes, but you have to check for preprocessing problem. Low rating depend on low resolution and/or higher noise/artifacts and is typical for very short sequences that are required e.g. for children.  
+            Yes, but you have to check for any preprocessing problems. Low rating depends on low resolution and/or higher noise/artifacts and is typical for very short sequences that are required e.g. for children.  
             Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance.  
             Overall segmentation and reconstruction quality will be lower than for high quality data (Kappa < 0.9) and you have to check if the cortex was segmented correctly.<br />
             Use the <i>Check data homogeneity</i> and/or have a look to the segmentations in subject space by checking the <i>cat12*report.ps</i> or by using the <i>Display one slice for all images</i> tool.
