@@ -37,14 +37,14 @@ if isempty(char(job.data)); return; end
 def.verb    = 1;         % be verbose
 def.prefix  = 'sanlm_';  % prefix
 def.postfix = ''; 
-def.NCstr   = inf;       % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
+def.NCstr   = Inf;       % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
 def.rician  = 0;         % use inf for GUI
 def.local   = 1;         % local weighing (only auto NCstr); 
 job = cat_io_checkinopt(job,def);
 
-if job.NCstr==0, fprintf('HAHA. Nothing to do.\n'); end
+if job.NCstr==0, fprintf('Nothing to do.\n'); end
 if strcmp(job.postfix,'NCstr'), job.postfix = sprintf('_NCstr%0.2f',job.NCstr); end
-job.NCstr = max(-2,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;           % garanty values from 0 to 1 or inf
+job.NCstr = max(-2,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;           % guarantee values from 0 to 1 or inf
 if isinf(job.rician), spm_input('Rician noise?',1,'yes|no',[1,0],2); end  % GUI
 
 V = spm_vol(char(job.data));
@@ -70,11 +70,10 @@ for i = 1:numel(job.data)
     if isinf(job.NCstr) || sign(job.NCstr)==-1
       Yh     = src>mean(src(:)); % object
       Tth    = mean(src(Yh(:)));
-      NCstr  = min(1,max(0, mean( abs(src(Yh(:)) - srco(Yh(:))) ./ Tth ) * 10 * min(1,max(0,abs(job.NCstr))) ));
-      NC     = min(2,abs(src - srco) ./ max(eps,src) * 10 * min(2,max(0,abs(job.NCstr))));
-      NCs    = NC+0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Yh(:))) / cat_stat_nanmean(NC(Yh(:)));
-      NCs    = max(0,min(1,NCs));
-      
+      NCstr = min(1,max(0,cat_stat_nanmean(abs(src(Yh(:)) - srco(Yh(:)))) * 15 * min(1,max(0,abs(job.NCstr))) )); 
+      NC     = min(2,abs(src - srco) ./ max(eps,src) * 15 * 2 * min(1,max(0,abs(job.NCstr)))); 
+      NCs    = NC+ 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Yh(:))) / cat_stat_nanmean(NC(Yh(:)));
+      NCs  = max(0,min(1,NCs));      
     else 
       NCstr  = job.NCstr;
     end

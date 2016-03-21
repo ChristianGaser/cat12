@@ -651,9 +651,9 @@ if job.extopts.sanlm>0 && job.extopts.NCstr~=0
     
     % merging
     if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-      job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 8 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-      NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 8 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
-      NCs    = NC+0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
+      job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
+      NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
+      NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
       NCs  = max(0,min(1,NCs));
     end
     fprintf('%4.0fs\n',etime(clock,stime));  
