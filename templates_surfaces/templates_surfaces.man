@@ -18,12 +18,9 @@
 % The central surface is estimated by averaging the white and pial surface.
 %
 % ?h.mask.txt
-% ?h.rois.a2009s.txt
-% rois.a2009s.txt
 % ---------------------------------
-% Labels and masks based on the Destrieux Atlas of freesurfer
-% The labels of 76 ROIS are saved in ?h.rois.a2009s.txt while the ROI names
-% are defined in rois.a2009s.txt. The mask file was created by masking out
+% Mask based on the Destrieux Atlas of freesurfer
+% The mask file was created by masking out
 % region 0 (Unkown) and region 67 (S_pericallosal). This mask file is 
 % internally used to set values to NaN in these regions. These NaN values are 
 % ignored if data during smoothing (masked smoothing) and in the statistical
