@@ -10222,11 +10222,30 @@ Changed: Surface atlases are now in a separate folder atlases_surfaces
 Added: Info files for Freesurfer atlases.
 
 ------------------------------------------------------------------------
+r910 | gaser | 2016-03-21 15:56:55 +0100 (Mo, 21 Mär 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 
 Changed: Surface atlases are now in a separate folder atlases_surfaces
 Added: Info files for Freesurfer atlases.
+
 ------------------------------------------------------------------------
-r910 | gaser | 2016-03-21 15:56:51
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+MM      atlases_surfaces/a2005s.txt
+MM      atlases_surfaces/a2009s.txt
+MM      atlases_surfaces/dkt40.txt
+MM      atlases_surfaces/pals.txt
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_tools_SBM.html
+M       html/cat_tools_VBM.html
+M       templates_surfaces/templates_surfaces.man
+
+Changed: Some updates to html-code.
+------------------------------------------------------------------------
+r911 | gaser | 2016-03-21 17:26:10
