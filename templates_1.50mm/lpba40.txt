@@ -8,7 +8,7 @@ A) http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12
 B) http://www.loni.usc.edu/atlases/Atlas_Methods.php?atlas_id=12
 C) http://shattuck.bmap.ucla.edu/resources/lpba40/
 
-Papers:
+References:
 1) Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031
 
 This paper should be referenced in any works that use the data provided here.

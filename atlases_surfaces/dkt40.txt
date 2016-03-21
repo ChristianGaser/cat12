@@ -1,0 +1,81 @@
+DKT40 atlas:
+--------------------------------------------------------------------------------
+FreeSurfer atlas from 40 of the Mindboggle-101 participants (2012)
+
+If you use these atlases, please cite the references below.
+
+
+Websites:    
+A) http://www.mindboggle.info/data.html#mindboggle-101-atlases
+B) https://surfer.nmr.mgh.harvard.edu/fswiki/PALS_B12
+C) https://www.synapse.org/#!Synapse:syn3218329/wiki/160644
+
+References:
+Klein, A., Tourville, J. 101 labeled brain images and a consistent human cortical 
+labeling protocol. Frontiers in Brain Imaging Methods. 2012, 6:171. 
+dx.doi.org/10.3389/fnins.2012.00171 
+
+--------------------------------------------------------------------------------
+Thank you for your interest in the Mindboggle-101 dataset (http://mindboggle.info/data/)!
+This first release includes manually labeled anatomical brain regions for 101 healthy subjects,
+following the Desikan-Killiany-Tourville protocol.  
+
+The 40 subjects shown below were selected from that set of 101 subjects for use in composing
+the DKT40 atlas included with FreeSurfer.
+
+Please cite the following article and website when making use of these data or the labeling protocol:
+
+"101 labeled brain images and a consistent human cortical labeling protocol"
+Arno Klein, Jason Tourville. Frontiers in Brain Imaging Methods. 6:171. DOI: 10.3389/fnins.2012.00171
+http://www.frontiersin.org/Brain_Imaging_Methods/10.3389/fnins.2012.00171/full
+
+Copyright 2012,  Mindboggle team (http://mindboggle.info), Creative Commons License
+(http://creativecommons.org/licenses/by-nc-sa/3.0/deed.en_US)
+
+For questions, please contact Arno Klein (arno@mindboggle.info).
+
+Mindboggle101, M/F, R/L, Age, Source
+------------------------------------
+MMRR-21-1, M, -, 25, KKI2009-11
+MMRR-21-2, M, -, 38, KKI2009-14
+MMRR-21-3, M, R, 34, KKI2009-15
+MMRR-21-11, M, R, 25, KKI2009-25
+MMRR-21-15, F, R, 28, KKI2009-33
+MMRR-21-16, M, R, 30, KKI2009-34
+MMRR-21-17, F, L, 23, KKI2009-36
+MMRR-21-18, F, R, 61, KKI2009-37
+MMRR-21-19, M, R, 32, KKI2009-40
+MMRR-21-20, F, R, 22, KKI2009-41
+MMRR-21-21, M, R, 26, KKI2009-42
+OASIS-TRT-20-1, F, R, 20, OAS1_0061_MR1
+OASIS-TRT-20-2, F, R, 25, OAS1_0080_MR1
+OASIS-TRT-20-3, M, R, 22, OAS1_0092_MR1
+OASIS-TRT-20-4, M, R, 23, OAS1_0111_MR1
+OASIS-TRT-20-5, M, R, 25, OAS1_0117_MR1
+OASIS-TRT-20-6, M, R, 34, OAS1_0145_MR1
+OASIS-TRT-20-7, F, R, 20, OAS1_0150_MR1
+OASIS-TRT-20-8, F, R, 20, OAS1_0156_MR1
+OASIS-TRT-20-9, F, R, 21, OAS1_0191_MR1
+OASIS-TRT-20-10, F, R, 23, OAS1_0202_MR1
+OASIS-TRT-20-11, F, R, 19, OAS1_0230_MR1
+OASIS-TRT-20-12, F, R, 20, OAS1_0236_MR1
+OASIS-TRT-20-14, F, R, 28, OAS1_0249_MR1
+OASIS-TRT-20-15, M, R, 20, OAS1_0285_MR1
+OASIS-TRT-20-16, M, R, 22, OAS1_0368_MR1
+OASIS-TRT-20-17, F, R, 20, OAS1_0379_MR1
+OASIS-TRT-20-18, F, R, 26, OAS1_0395_MR1
+OASIS-TRT-20-19, M, R, 29, OAS1_0101_MR2
+OASIS-TRT-20-20, M, R, 22, OAS1_0353_MR2
+HLN-12-1, M, R, 29, plos_CJ_700_3_1
+HLN-12-4, F, R, 25, plos_Ding_1035_3_1
+HLN-12-5, M, R, 29, plos_Ding_1042_3_1
+HLN-12-6, F, R, 26, plos_Ding_1050_3_1
+HLN-12-7, F, R, 29, plos_Ding_1052_3_1
+HLN-12-8, M, R, 23, plos_Language_587_3_1
+HLN-12-9, M, R, 23, plos_Language_795_3_1
+HLN-12-10, F, R, 24, plos_Language_820_3_1
+HLN-12-11, F, R, 29, plos_Language_886_3_1
+HLN-12-12, M, R, 34, plos_Language_888_3_1
+
+--------------------------------------------------------------------------------
+$Id: dkt40.txt 817 2015-12-17 14:27:24Z gaser $
