@@ -125,13 +125,12 @@ function cat_io_senderrormail(job)
       xml   = xml(errornri);
     end
     if job.verb, fprintf('%d files remain',numel(files)); end
-    switch computer
-      case 'PCWIN'
-        for i=numel(files):-1:1
-          if any(strfind(files{i},' '))
-             files(i) = [];
-          end
+    if ispc
+      for i=numel(files):-1:1
+        if any(strfind(files{i},' '))
+          files(i) = [];
         end
+      end
     end
     
     
@@ -263,14 +262,14 @@ function cat_io_senderrormail(job)
   
   % create mail
   switch computer
-    case {'MACI64' 'MACI32'}
+    case {'MACI64','MACI32'}
       % here we need the " for each field
       fprintf('\nBEGIN MESSAGE:\n\n%s\n\nEND MESSAGE.\n\n',mainBodyMac);
       web(sprintf('mailto:"%s"?subject="%s"&body="%s"',recipients,emailSubject,mainBodyMac));
-    case 'PCWIN'
+    case {'PCWIN','PCWIN64'}
       % it look strange, but it required only one " at the begining
       fprintf('\nBEGIN MESSAGE:\n\n%s\n\nEND MESSAGE.\n\n',mainBodyWinD);
-      web(sprintf('mailto:"%s?subject=%s&body=%s',recipients,emailSubject,mainBody),'-browser');
+      web(sprintf('mailto:"%s"?subject="%s"&body="%s"',recipients,emailSubject,mainBody),'-browser');
     otherwise %case {'GLNXA64'}
       %%
       fprintf('\nBEGIN MESSAGE:\n\n%s\n\nEND MESSAGE.\n\n',mainBodyMac);
