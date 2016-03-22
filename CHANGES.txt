@@ -10231,6 +10231,7 @@ Changed: Surface atlases are now in a separate folder atlases_surfaces
 Added: Info files for Freesurfer atlases.
 
 ------------------------------------------------------------------------
+r911 | gaser | 2016-03-21 17:26:16 +0100 (Mo, 21 Mär 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10247,5 +10248,30 @@ M       html/cat_tools_VBM.html
 M       templates_surfaces/templates_surfaces.man
 
 Changed: Some updates to html-code.
+
 ------------------------------------------------------------------------
-r911 | gaser | 2016-03-21 17:26:10
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_io_senderrormail.m
+M       cat_main.m
+M       cat_parallelize.m
+M       cat_surf_avg.m
+M       cat_surf_createCS.m
+M       cat_surf_parameters.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_surf_smooth.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+
+(1) Fixed: Issue with sendmail under windows.
+(2) Changed: Replaced cat_system with system because of errors under
+    windows.
+(3) Changed: Commented out try and catch part for surface creation in 
+    cat_main.m because no real error messages can be obtained. 
+(4) Fixed: System calls are now made in the folder of the binaries to
+    prevent issues with spaces in filenames and folders under windows. 
+------------------------------------------------------------------------
+r912 | gaser | 2016-03-22 23:53:52

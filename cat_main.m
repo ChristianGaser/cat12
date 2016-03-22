@@ -1618,26 +1618,26 @@ if job.output.surface
   % surface creation and thickness estimation
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
-  try
+%  try
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymm,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,...
       'debug',job.extopts.debug,'expertgui',job.extopts.expertgui)); % clear Ymm YMF  % VT0 - without interpolation
-  catch
-    surferr = lasterror; %#ok<LERR>
-    message =  sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
-      repmat('-',1,72),surferr.identifier,...
-      spm_str_manip(res.image0(1).fname,'a60'),...
-      repmat('-',1,72),surferr.message,repmat('-',1,72));  
-    for si=1:numel(surferr.stack)
-      message = sprintf('%s%5d - %s\n',message,surferr.stack(si).line,surferr.stack(si).name);  
-    end
-    message = sprintf('%s%s\n',message,repmat('-',1,72));  
+%  catch
+%    surferr = lasterror; %#ok<LERR>
+%    message =  sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
+%      repmat('-',1,72),surferr.identifier,...
+%      spm_str_manip(res.image0(1).fname,'a60'),...
+%      repmat('-',1,72),surferr.message,repmat('-',1,72));  
+%    for si=1:numel(surferr.stack)
+%      message = sprintf('%s%5d - %s\n',message,surferr.stack(si).line,surferr.stack(si).name);  
+%    end
+%    message = sprintf('%s%s\n',message,repmat('-',1,72));  
     
-    cat_warnings = cat_io_addwarning(cat_warnings,...
-      'CAT:cat_main:createCS',...
-      sprintf('\nSurface creation error! %s',message));
-
-  end
+%    cat_warnings = cat_io_addwarning(cat_warnings,...
+%      'CAT:cat_main:createCS',...
+%      sprintf('\nSurface creation error! %s',message));
+%
+%  end
 
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));

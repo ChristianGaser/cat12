@@ -69,6 +69,9 @@ function varargout = cat_surf_smooth(varargin)
     job.CATDir = [job.CATDir '.glnx86'];
   end  
   
+  olddir = pwd;
+  cd(job.CATDir);
+  
   % display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',numel(Pdata),'Smoothed Surfaces','Surfaces Completed');
@@ -91,12 +94,12 @@ function varargout = cat_surf_smooth(varargin)
 
       % smooth values
       cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
-      [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug);
+      [ST, RS] = system(cmd); cat_check_system_output(ST,RS,job.debug);
 
       % if gifti output, check if there is surface data in the original gifti and add it
       if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
-        [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug,def.trerr);
+        [ST, RS] = system(cmd); cat_check_system_output(ST,RS,job.debug,def.trerr);
       end
   
       if job.verb
@@ -116,5 +119,7 @@ function varargout = cat_surf_smooth(varargin)
     varargout{1} = Psdata; 
   end
 
+  cd(olddir),
+  
   spm_progress_bar('Clear');
 end
