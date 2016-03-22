@@ -66,6 +66,9 @@ function varargout = cat_surf_resamp(varargin)
     job.CATDir = [job.CATDir '.glnx86'];
   end  
   
+  olddir = pwd;
+  cd(job.CATDir);
+  
   % display something
   spm_clf('Interactive'); 
   spm_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed');
@@ -109,15 +112,15 @@ function varargout = cat_surf_resamp(varargin)
         
         % resample values using warped sphere 
         cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
-        [ST, RS] = system(fullfile(job.CATDir,cmd)); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         % smooth resampled values
         cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm,Pvalue,Pmask);
-        [ST, RS] = system(fullfile(job.CATDir,cmd)); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         % add values to resampled surf and save as gifti
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
-        [ST, RS] = system(fullfile(job.CATDir,cmd)); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         if exist([Pfwhm '.gii'],'file'), Psdata{i} = [Pfwhm '.gii']; end
 
@@ -140,6 +143,8 @@ function varargout = cat_surf_resamp(varargin)
     fprintf('Done\n'); 
   end
     
+  cd(olddir);
+  
   if nargout==1
     varargout{1} = Psdata; 
   end
