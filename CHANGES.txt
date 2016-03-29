@@ -10276,6 +10276,7 @@ M       html/cat.html
     prevent issues with spaces in filenames and folders under windows. 
 
 ------------------------------------------------------------------------
+r913 | gaser | 2016-03-29 02:17:14 +0200 (Tue, 29 Mar 2016) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10296,5 +10297,16 @@ M       html/cat.html
 
 Fixed: Issue with cat_system (hopefully).
 
+
 ------------------------------------------------------------------------
-r913 | gaser | 2016-03-29 02:17:00
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_system.m
+M       html/cat.html
+
+Fixed: Issue with cat_system (hopefully).
+
+------------------------------------------------------------------------
+r914 | gaser | 2016-03-29 02:46:18
