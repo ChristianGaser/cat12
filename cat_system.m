@@ -23,8 +23,12 @@ elseif isunix
   CATDir = [CATDir '.glnx86'];
 end  
 
-olddir = pwd;
-cd(CATDir);
-[ST, RS] = system(varargin{1});
-cd(olddir);
-
+if ispc
+  olddir = pwd;
+  cd(CATDir);
+  [ST, RS] = system(varargin{1});
+  cd(olddir);
+else
+  cmd = fullfile(CATDir,varargin{1});
+  [ST, RS] = system(cmd);
+end
