@@ -122,7 +122,7 @@ if nargin == 1
 end
 
 if nargin < 1
-    P = spm_select(Inf,'^spmT.*(img|gii|nii)$','Select T-images');
+    P = spm_select(Inf,'^spmT.*\.img$','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
     '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
 
@@ -178,7 +178,9 @@ otherwise  %-NB: no threshold
 end
 
 for i=1:size(P,1)
-    [pth,nm] = spm_fileparts(deblank(P(i,:)));
+    spmT = deblank(P(i,:));
+    Vspm = spm_vol(spmT);   
+    [pth,nm] = spm_fileparts(spmT);
 
     SPM_name = fullfile(pth, 'SPM.mat');
     
@@ -188,7 +190,7 @@ for i=1:size(P,1)
     end
 
     if strcmp(nm(1:6),'spmT_0') 
-        Ic = str2double(nm(length(nm)-2:length(nm)));
+        Ic = str2num(nm(length(nm)-2:length(nm)));
     else
         error('Only spmT_0* files can be used');
     end
@@ -204,15 +206,8 @@ for i=1:size(P,1)
     FWHM = SPM.xVol.FWHM;
     v2r  = 1/prod(FWHM(~isinf(FWHM)));  %-voxels to resels
 
-    Vspm   = cat(1,xCon(Ic).Vspm);
-    Vspm.fname = fullfile(pth,Vspm.fname);
-
     if ~isfield(SPM.xVol,'VRpv')
         noniso = 0;
-    end
-
-    if noniso
-        SPM.xVol.VRpv.fname = fullfile(pth,SPM.xVol.VRpv.fname);
     end
 
     switch adjustment
@@ -234,7 +229,7 @@ for i=1:size(P,1)
        end
     end
 
-    Z = spm_data_read(Vspm.fname,'xyz',XYZ);
+    Z = spm_data_read(Vspm,'xyz',XYZ);
 
     %-Calculate height threshold filtering
     %-------------------------------------------------------------------    
@@ -252,6 +247,47 @@ for i=1:size(P,1)
         fprintf('No voxels survive height threshold u=%0.2g\n',u);
     end
 
+    if isfield(SPM.xVol,'G') % mesh detected?
+        [N,Z2,XYZ2,A2,L]  = spm_mesh_max(Z,XYZ,SPM.xVol.G);
+    else
+        [N,Z2,XYZ2,A2,L]  = spm_max(Z,XYZ);
+    end
+    
+    %-Convert cluster sizes from voxels (N) to resels (K)
+    %----------------------------------------------------------------------
+    c              = max(A2);                           %-Number of clusters
+
+    % estimate correction factor for cluster size according to local smoothness in RPV
+    K      = ones(c,1);
+    if noniso
+        fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
+        for i  = 1:c
+                
+            %-Get LKC for voxels in i-th region
+            %----------------------------------------------------------
+            LKC = spm_data_read(fullfile(pth,SPM.xVol.VRpv.fname),'xyz',L{i});
+                
+            %-Compute average of valid LKC measures for i-th region
+            %----------------------------------------------------------
+            valid = ~isnan(LKC);
+            if any(valid)
+                LKC = sum(LKC(valid)) / sum(valid);
+            else
+                LKC = v2r; % fall back to whole-brain resel density
+            end
+                
+            %-Intrinsic volume (with surface correction)
+            %----------------------------------------------------------
+            IV   = spm_resels([1 1 1],L{i},'V'); % only for volumes
+            IV   = IV*[1/2 2/3 2/3 1]';
+            K(i) = IV*LKC;
+                
+        end
+        
+        % finally correct with N*v2r
+        K = K(A2)./(N*v2r);
+    end
+
     %-Extent threshold
     %-----------------------------------------------------------------------
     if ~isempty(XYZ)
@@ -262,7 +298,7 @@ for i=1:size(P,1)
                 k = 0;
                 while (Pk >= pk && k<S)
                     k = k + 1;
-                    [Pk, Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
+                    [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
                 end
                 p_extent_str = ['_pkFWE' num2str(pk*100)];
             else
@@ -270,13 +306,13 @@ for i=1:size(P,1)
                 k = 0;
                 while (Pn >= pk && k<S)
                     k = k + 1;
-                    [Pk, Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
+                    [Pk Pn] = spm_P(1,k*v2r,u,df,STAT,R,1,S);
                 end
                 p_extent_str = ['_pk' num2str(pk*100)];
             end
         elseif (pk < 0)
             k = 0;
-            [P2, Pn2, Em, En] = spm_P(1,k,u,df,STAT,R,1,S);
+            [P2 Pn2 Em En] = spm_P(1,k,u,df,STAT,R,1,S);
             k = ceil(En/v2r);
             p_extent_str = '_En';
         else
@@ -286,78 +322,23 @@ for i=1:size(P,1)
         
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
-        if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
-            A = spm_clusters(XYZ);
-        else
-            T = false(SPM.xVol.DIM');
-            T(XYZ(1,:)) = true;
-            G = export(gifti(SPM.xVol.G),'patch');
-            A = spm_mesh_clusters(G,T)';
-            A = A(XYZ(1,:));
+        A     = spm_clusters(XYZ);
+        
+        Q     = [];
+        for i = 1:max(A)
+            j = find(A == i);
+            N(j(1))
+            k/K(i)
+            if N(j(1)) >= k/K(i); Q = [Q j]; end
         end
 
-        if noniso
-            fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
-
-            Q     = [];
-            if isfield(SPM.xVol,'G') % mesh detected?
-                [N2,Z2,XYZ2,A2,L2]  = spm_mesh_max(Z,XYZ,gifti(SPM.xVol.G));
-            else
-                [N2,Z2,XYZ2,A2,L2]  = spm_max(Z,XYZ);
-            end
-
-            if max(A) ~= max(A2)
-                 error('Number of clusters does not much in spm_max and spm_clusters!');
-            end
-
-            for i2 = 1:max(A2)
-                %-Get LKC for voxels in i-th region
-                %----------------------------------------------------------
-                LKC = spm_data_read(SPM.xVol.VRpv.fname,'xyz',L2{i2});
-                
-                %-Compute average of valid LKC measures for i-th region
-                %----------------------------------------------------------
-                valid = ~isnan(LKC);
-                if any(valid)
-                    LKC = sum(LKC(valid)) / sum(valid);
-                else
-                    LKC = v2r; % fall back to whole-brain resel density
-                end
-                
-                %-Intrinsic volume (with surface correction)
-                %----------------------------------------------------------
-                IV   = spm_resels([1 1 1],L2{i2},'V'); % only for volumes
-                IV   = IV*[1/2 2/3 2/3 1]';
-                k_noniso = IV*LKC/v2r;
-
-                % find corresponding cluster in spm_clusters if cluster exceeds threshold
-                if k_noniso >= k
-                    ind2 = find(A2==i2);
-                    for i = 1:max(A)
-                        j = find(A == i);
-                        if length(j)==N2(ind2)
-                            if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
-                                Q = [Q j];
-                                break
-                            end
-                        end
-                    end
-                end                
-            end
-        else
-            Q     = [];
-            for i = 1:max(A)
-                j = find(A == i);
-                if length(j) >= k; Q = [Q j]; end
-            end
-        end
 
         % ...eliminate voxels
         %-------------------------------------------------------------------
         Z     = Z(:,Q);
         XYZ   = XYZ(:,Q);
         if isempty(Q)
-            fprintf('No voxels survived extent threshold k=%3.1f\n',k);
+            fprintf('No voxels survived extent threshold k=%0.2g\n',k);
         end
 
     else
@@ -407,32 +388,29 @@ for i=1:size(P,1)
     
        if neg_results
             neg_str = '_bi'; 
-       else neg_str = ''; end
-       
-       if isfield(SPM.xVol,'G')
-            ext = '.gii';
-       else ext = '.nii'; end
-         
-       if u0 > -Inf
-           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
        else
-           name = [t2x_name str_num ext];
+            neg_str = '';
        end
-
+       
+       if u0 > -Inf
+           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
+       else
+           name = [t2x_name str_num '.nii'];
+       end
+       fprintf('Save %s\n', name);
+    
        out = deblank(fullfile(pth,name));
-       fprintf('Save %s\n', out);    
 
        %-Reconstruct (filtered) image from XYZ & Z pointlist
        %-----------------------------------------------------------------------
-       Y      = zeros(Vspm.dim);
+       Y      = zeros(Vspm.dim(1:3));
        OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
        Y(OFF) = t2x;
 
        VO = Vspm;
        VO.fname = out;
        VO.dt = [spm_type('float32') spm_platform('bigend')];
-       VO = spm_data_hdr_write(VO);
-       spm_data_write(VO,Y);
+       spm_write_vol(VO,Y);
     
     end
 end

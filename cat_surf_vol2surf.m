@@ -54,20 +54,7 @@ function varargout = cat_surf_vol2surf(varargin)
 
   % cat
   job.debug     = cat_get_defaults('extopts.debug');
-  job.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-
-  % add system dependent extension to CAT folder
-  if ispc
-    job.CATDir = [job.CATDir '.w32'];
-  elseif ismac
-    job.CATDir = [job.CATDir '.maci64'];
-  elseif isunix
-    job.CATDir = [job.CATDir '.glnx86'];
-  end  
-
-  olddir = pwd;
-  cd(job.CATDir);
   
   %% display something
   spm_clf('Interactive'); 
@@ -89,7 +76,7 @@ function varargout = cat_surf_vol2surf(varargin)
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
           mappingstr, job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
-        [ST, RS] = system(cmd); cat_check_system_output(ST,RS,job.debug);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
         if job.gifti==0
           cat_io_FreeSurfer('gii2fs',struct('data',P.data{vi,si},'delete',1)); 
@@ -150,7 +137,7 @@ function varargout = cat_surf_vol2surf(varargin)
         
         cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
           mappingstr,thickness, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
-        [ST, RS] = system(cmd); cat_check_system_output(ST,RS,job.debug);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
         if vi==1 && si==1 && job.verb 
           fprintf('%s\n%s\n',mappingstr,RS);
@@ -167,9 +154,7 @@ function varargout = cat_surf_vol2surf(varargin)
       spm_progress_bar('Set',vi);
     end
   end
-  
-  cd(olddir);
-  
+    
   if nargout>0
     varargout{1} = P.data;
   end

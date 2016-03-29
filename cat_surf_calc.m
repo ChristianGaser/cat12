@@ -102,17 +102,7 @@ end
 function surfcalc(job)
     
   opt.debug     = cat_get_defaults('extopts.debug');
-  opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-
-  % add system dependent extension to CAT folder
-  if ispc
-    opt.CATDir = [opt.CATDir '.w32'];
-  elseif ismac
-    opt.CATDir = [opt.CATDir '.maci64'];
-  elseif isunix
-    opt.CATDir = [opt.CATDir '.glnx86'];
-  end  
 
   %% calculation 
   [sinfo1,S1] = cat_surf_info(job.cdata{1},1);

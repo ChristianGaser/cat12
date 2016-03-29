@@ -14,12 +14,17 @@ if nargin == 0
   error('Argument is missing');
 end
 
+CATDir      = fullfile(spm('dir'),'toolbox','cat12','CAT');
 if ispc
-    olddir = pwd;
-    [pth, nam] = fileparts(varargin{1}); 
-    cd(pth);
-    [ST, RS] = system(nam);
-    cd(olddir);
-else
-    [ST, RS] = system(varargin{1});
-end
+  CATDir = [CATDir '.w32'];
+elseif ismac
+  CATDir = [CATDir '.maci64'];
+elseif isunix
+  CATDir = [CATDir '.glnx86'];
+end  
+
+olddir = pwd;
+cd(CATDir);
+[ST, RS] = system(varargin{1});
+cd(olddir);
+
