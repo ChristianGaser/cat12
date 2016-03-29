@@ -15,16 +15,7 @@ function varargout = cat_surf_avg(varargin)
  % add system dependent extension to CAT folder
   opt.debug     = 0;
   opt.delete    = 0;
-  opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');  
   opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-
-  if ispc
-    opt.CATDir = [opt.CATDir '.w32'];
-  elseif ismac
-    opt.CATDir = [opt.CATDir '.maci64'];
-  elseif isunix
-    opt.CATDir = [opt.CATDir '.glnx86'];
-  end  
 
   if nargin == 0, job = struct(); else job = varargin{1}; end
 
@@ -33,9 +24,6 @@ function varargout = cat_surf_avg(varargin)
   else
     outdir = job.outdir{1};
   end
-  
-  olddir = pwd;
-  cd(opt.CATDir);
   
   %%
   side  = {'lh','rh'}; 
@@ -95,7 +83,7 @@ function varargout = cat_surf_avg(varargin)
         % resample values using warped sphere 
         if 1 %~exist(Presamp,'file')
           cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
-          [ST, RS] = system(cmd); cat_check_system_output(ST,RS,opt.debug);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
         end
 
         % read surfaces
@@ -121,25 +109,23 @@ function varargout = cat_surf_avg(varargin)
           save(gifti(struct('faces',FSavg.(side{si}).faces,'vertices',...
             Savg.(side{si}).vertices)),fname{si,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si,smi},fname{si,smi},job.meshsmooth(smi));
-          [ST, RS] = system(cmd); cat_check_system_output(ST,RS,0);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
         else
           save(gifti(struct('faces',FSavg.(side{si}).faces,'vertices',...
             [-Savg.(side{si}).vertices(:,1),FSavg.(side{si}).vertices(:,2:3)])),fname{si,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si,smi},fname{si,smi},job.meshsmooth(smi));
-          [ST, RS] = system(cmd); cat_check_system_output(ST,RS,0);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
           
           save(gifti(struct('vertices',Savg.(side{si}).vertices,'faces',...
             [FSavg.(side{si}).faces(:,2),FSavg.(side{si}).faces(:,1),FSavg.(side{si}).faces(:,3)])),fname{si+1,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si+1,smi},fname{si+1,smi},job.meshsmooth(smi));
-          [ST, RS] = system(cmd); cat_check_system_output(ST,RS,0);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
         end
         nfi = nfi + 1; spm_progress_bar('Set',nfi);
       end
     end
   end
- 
-  cd(olddir);
-  
+   
   if nargout>0
     varargout{1} = fname{si,smi};
   end

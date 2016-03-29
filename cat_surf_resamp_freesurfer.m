@@ -16,22 +16,9 @@ else
 end
 
 opt.debug     = cat_get_defaults('extopts.debug');
-opt.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
 opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   
-% add system dependent extension to CAT folder
-if ispc
-  opt.CATDir = [opt.CATDir '.w32'];
-elseif ismac
-  opt.CATDir = [opt.CATDir '.maci64'];
-elseif isunix
-  opt.CATDir = [opt.CATDir '.glnx86'];
-end  
-
 hemi_str = char('lh','rh');
-
-olddir = pwd:
-cd(opt.catDir);
 
 for i=1:size(Psubj,1)
 
@@ -67,24 +54,22 @@ for i=1:size(Psubj,1)
 
     % resample values using warped sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Psmoothwm,Pspherereg,Pfsavg,Presamp,Pmeasure,Pvalue);
-    [ST, RS] = system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
   
     % resample surface using sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Psmoothwm,Psphere,Pfsavg,Presamp);
-    [ST, RS] = system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
 
     % smooth resampled values
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm,Pvalue,Pmask);
-    [ST, RS] = system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
 
     % add values to resampled surf and save as gifti
     cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
-    [ST, RS] = system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
   
     delete(Presamp);
     delete(Pfwhm);
     delete(Pvalue);
  end
 end
-
-cd(olddir);

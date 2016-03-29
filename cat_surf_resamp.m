@@ -31,13 +31,10 @@ function varargout = cat_surf_resamp(varargin)
   def.verb      = cat_get_defaults('extopts.verb'); 
   def.lazy      = 0; % reprocess exist results
   def.debug     = cat_get_defaults('extopts.debug');
-  def.CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   %def.subfolders = cat_get_defaults('extopts.subfolders'); 
 
   job = cat_io_checkinopt(job,def);
-
-  
 
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
@@ -49,25 +46,11 @@ function varargout = cat_surf_resamp(varargin)
      return
   end  
   
-
-  
   % normal processing
   % ____________________________________________________________________
   
   % new banner
   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
-  
-  % add system dependent extension to CAT folder
-  if ispc
-    job.CATDir = [job.CATDir '.w32'];
-  elseif ismac
-    job.CATDir = [job.CATDir '.maci64'];
-  elseif isunix
-    job.CATDir = [job.CATDir '.glnx86'];
-  end  
-  
-  olddir = pwd;
-  cd(job.CATDir);
   
   % display something
   spm_clf('Interactive'); 
@@ -112,15 +95,15 @@ function varargout = cat_surf_resamp(varargin)
         
         % resample values using warped sphere 
         cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
-        [ST, RS] = system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         % smooth resampled values
         cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm,Pvalue,Pmask);
-        [ST, RS] = system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         % add values to resampled surf and save as gifti
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
-        [ST, RS] = system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         if exist([Pfwhm '.gii'],'file'), Psdata{i} = [Pfwhm '.gii']; end
 
@@ -142,9 +125,7 @@ function varargout = cat_surf_resamp(varargin)
   if isfield(job,'process_index')
     fprintf('Done\n'); 
   end
-    
-  cd(olddir);
-  
+      
   if nargout==1
     varargout{1} = Psdata; 
   end
