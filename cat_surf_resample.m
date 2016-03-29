@@ -30,7 +30,6 @@ function varargout = cat_surf_resample(varargin)
   def.verb        = cat_get_defaults('extopts.verb'); 
   def.lazy        = 0; % reprocess exist results
   def.debug       = cat_get_defaults('extopts.debug');
-  def.CATDir      = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   def.fsavgDir    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
 
   job = cat_io_checkinopt(job,def);
@@ -55,15 +54,6 @@ function varargout = cat_surf_resample(varargin)
   
   % new banner
   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
-  
-  % add system dependent extension to CAT folder
-  if ispc
-    job.CATDir = [job.CATDir '.w32'];
-  elseif ismac
-    job.CATDir = [job.CATDir '.maci64'];
-  elseif isunix
-    job.CATDir = [job.CATDir '.glnx86'];
-  end  
   
   % display something
   spm_clf('Interactive'); 
@@ -90,7 +80,7 @@ function varargout = cat_surf_resample(varargin)
       % resample mesh and values
       cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',...
           sinfo(i).Pmesh,sinfo(i).Psphere,Pfsavg,Prmesh{i},Pdata{i},Prdata{i});
-      [ST, RS] = system(fullfile(job.CATDir,cmd)); cat_check_system_output(ST,RS,job.debug,def.trerr);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,def.trerr);
     end
     spm_progress_bar('Set',i);
   end

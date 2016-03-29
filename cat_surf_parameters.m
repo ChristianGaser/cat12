@@ -24,7 +24,6 @@ function varargout = cat_surf_parameters(job)
   def.verb        = cat_get_defaults('extopts.verb'); 
   def.lazy        = 0; % reprocess exist results
   def.debug       = cat_get_defaults('extopts.debug');
-  def.CATDir      = fullfile(spm('dir'),'toolbox','cat12','CAT');   
   
   job = cat_io_checkinopt(job,def);
 
@@ -40,18 +39,6 @@ function varargout = cat_surf_parameters(job)
 
   % new banner
   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
-  
-  % add system dependent extension to CAT folder
-  if ispc
-    job.CATDir = [job.CATDir '.w32'];
-  elseif ismac
-    job.CATDir = [job.CATDir '.maci64'];
-  elseif isunix
-    job.CATDir = [job.CATDir '.glnx86'];
-  end  
-
-  olddir = pwd;
-  cd(job.CATDIR);
   
   % display something
   spm_clf('Interactive'); 
@@ -76,7 +63,7 @@ function varargout = cat_surf_parameters(job)
         if job.verb==1, fprintf('  Display allready resampled %s\n',spm_file(PGI,'link','cat_surf_display(''%s'')')); end
       else
         cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',deblank(P(i,:)),PGI);
-        [ST, RS] = system(cmd; cat_check_system_output(ST,RS,job.debug,job.trerr);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
         if nargout==1, varargout{1}.PGI{i} = PGI; end  
         if job.verb==1, fprintf('  Display resampled %s\n',spm_file(PGI,'link','cat_surf_display(''%s'')')); end
       end
@@ -88,7 +75,7 @@ function varargout = cat_surf_parameters(job)
         if job.verb==1, fprintf('  Display allready resampled %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
       else
         cmd = sprintf('CAT_SulcusDepth -sqrt "%s" "%s" "%s"',deblank(P(i,:)),Psphere,PSD); %-sqrt
-        [ST, RS] = system(cmd; cat_check_system_output(ST,RS,job.debug,job.trerr);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
         if nargout==1, varargout{1}.PSD{i} = PSD; end  
         if job.verb==1, fprintf('  Display resampled %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
       end
@@ -101,7 +88,7 @@ function varargout = cat_surf_parameters(job)
   %      if job.verb==1, fprintf('  Display allready resampled %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
   %    else 
   %      cmd = sprintf('CAT_DumpSurfArea -log -sphere "%s" "%s" "%s"',Psphere,deblank(P(i,:)),PSA);
-  %      [ST, RS] = system(cmd); cat_check_system_output(ST,RS,job.debug);
+  %      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
   %      if nargout==1, varargout{1}.PSA{i} = PSA; end  
   %      if job.verb==1, fprintf('  Display resampled %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
   %    end
@@ -113,7 +100,7 @@ function varargout = cat_surf_parameters(job)
         if job.verb==1, fprintf('  Display allready resampled %s\n',spm_file(PFD,'link','cat_surf_display(''%s'')')); end
       else
         cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,deblank(P(i,:)),Psphere,PFD);
-        [ST, RS] = system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,job.trerr);
         if nargout==1, varargout{1}.PFD{i} = PFD; end  
         if job.verb==1, fprintf('  Display resampled %s\n',spm_file(PFD,'link','cat_surf_display(''%s'')')); end
       end
@@ -121,8 +108,6 @@ function varargout = cat_surf_parameters(job)
 
     spm_progress_bar('Set',i);
   end
-
-  cd(olddir);
   
   if isfield(job,'process_index')
     fprintf('Done\n');
