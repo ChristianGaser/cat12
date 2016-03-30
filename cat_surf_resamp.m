@@ -69,7 +69,7 @@ function varargout = cat_surf_resamp(varargin)
     pname = ff(k(1)+1:k(2)-1);
     Pcentral   = [strrep(name,pname,'central') '.gii'];
     Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
-    Presamp    = fullfile(pp,strrep(Pcentral,'central','resampled'));
+    Presamp    = fullfile(pp,strrep(Pcentral,'central',[pname 'tmp.resampled']));
     Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
     Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
     if job.fwhm > 0
