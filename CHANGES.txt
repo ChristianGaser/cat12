@@ -10311,6 +10311,7 @@ Fixed: Issue with cat_system (hopefully).
 
 
 ------------------------------------------------------------------------
+r915 | gaser | 2016-03-30 15:57:12 +0200 (Mi, 30 Mär 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10321,5 +10322,17 @@ M       html/cat.html
 
 Fixed: Issue with cat_surf_resamp in parallel mode with same filenames 
 
+
 ------------------------------------------------------------------------
-r915 | gaser | 2016-03-30 15:57:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       spm_cat12.m
+
+Fixed: Error in spm_cat12 that gives wrong warnig about not compatible
+       binaries for surface processing.
+
+------------------------------------------------------------------------
+r916 | gaser | 2016-04-04 15:27:09

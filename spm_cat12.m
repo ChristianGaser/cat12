@@ -137,17 +137,7 @@ spm('FnBanner',mfilename,rev);
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
-% check whether CAT binaries will work
-CATDir    = fullfile(spm('dir'),'toolbox','cat12','CAT');   
-if ispc
-  CATDir = [CATDir '.w32'];
-elseif ismac
-  CATDir = [CATDir '.maci64'];
-elseif isunix
-  CATDir = [CATDir '.glnx86'];
-end  
-
-[ST, RS] = cat_system(fullfile(CATDir,'CAT_DumpCurv -h'));
+[ST, RS] = cat_system('CAT_DumpCurv -h');
 % because status will not give 0 for help output we have to check whether we can find the
 % keyword "Usage" in output
 if isempty(strfind(RS,'Usage'));
