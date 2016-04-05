@@ -110,9 +110,15 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     
     % final masking after transformation
     if exist('YM','var')
-      N.dat(:,:,:) = double(Y) .* (smooth3(YM)>YMth); 
+      switch spmtype
+        case 'float32', N.dat(:,:,:) = double(Y) .* (smooth3(YM)>YMth); 
+        otherwise,      N.dat(:,:,:) = max(range(1),min(range(1) + range(2)*double(intmax(spmtype)),double(Y)  .* (smooth3(YM)>YMth)));
+      end
     else
-      N.dat(:,:,:) = double(Y);
+      switch spmtype
+        case 'float32', N.dat(:,:,:) = double(Y);
+        otherwise,      N.dat(:,:,:) = max(range(1),min(range(1) + range(2)*double(intmax(spmtype)),double(Y)));
+      end
     end
 
     Vn = spm_vol(fname); 
@@ -347,13 +353,13 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     for wi=1:sum(w4)
       if wi==1 && isfield(transform,'rigid')
         transf=transform.rigid; 
-        pre4=['r' pre]; post=''; desc4 = [desc '(rigid)'];
+        pre4=['r' pre]; post='_rigid'; desc4 = [desc '(rigid)'];
       elseif wi==2 && isfield(transform,'affine')
         transf=transform.affine;   
         pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];
       elseif isfield(transform,'rigid')
         transf=transform.rigid; 
-        pre4=['r' pre]; post=''; desc4 = [desc '(rigid)'];
+        pre4=['r' pre]; post='_rigid'; desc4 = [desc '(rigid)'];
       elseif isfield(transform,'affine')
         transf=transform.affine;   
         pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];      

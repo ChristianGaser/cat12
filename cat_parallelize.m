@@ -15,7 +15,9 @@ function varargout = cat_parallelize(job,func,datafield)
 %       cat_parallelize(job,mfilename,'data_surf');
 %     end
 %     return
-%   end
+%   elseif isfield(job,'printPID') && job.printPID 
+%     cat_display_matlab_PID
+%   end 
 %  
 %   % new banner
 %   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
@@ -51,7 +53,11 @@ function varargout = cat_parallelize(job,func,datafield)
 
   % rescue original subjects
   job_data = job.(datafield);
-  n_subjects = numel(job.(datafield));
+  if iscell(job.(datafield){1})
+    n_subjects = numel(job.(datafield){1});
+  else
+    n_subjects = numel(job.(datafield));
+  end
   if job.nproc > n_subjects
     job.nproc = n_subjects;
   end
@@ -71,11 +77,20 @@ function varargout = cat_parallelize(job,func,datafield)
   tmp_array = cell(job.nproc,1);
   logdate   = datestr(now,'YYYYmmdd_HHMMSS');
   for i=1:job.nproc
-    fprintf('Running job %d:\n',i);
-    for fi=1:numel(job_data(job.process_index{i}))
-      fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
+    fprintf('Running job %d (with datafield 1):\n',i);
+    if iscell(job.(datafield){1})
+      for fi=1:numel(job_data{1}(job.process_index{i}))
+        fprintf('  %s\n',spm_str_manip(char(job_data{1}(job.process_index{i}(fi))),'a78')); 
+      end
+      for ix=1:numel(job_data)
+        job.(datafield){ix} = job_data{ix}(job.process_index{i});
+      end
+    else
+      for fi=1:numel(job_data(job.process_index{i}))
+        fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
+      end
+      job.(datafield) = job_data(job.process_index{i});
     end
-    job.(datafield) = job_data(job.process_index{i});
     job.verb        = 1; 
     job.printPID    = 1; 
     % temporary name for saving job information
@@ -137,10 +152,7 @@ function varargout = cat_parallelize(job,func,datafield)
 
 
   end
-  if isfield(job,'printPID') && ~ispc
-    [t,pid] = system('echo $$');
-    fprintf('CAT parallel processing with MATLAB PID: %s\n',pid);
-  end
+
   
   %job = update_job(job);
   varargout{1} = job; 

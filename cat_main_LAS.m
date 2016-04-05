@@ -103,7 +103,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   % brain segmentation can be restricted to the brain to save time 
   
   Yclso=Ycls; Ysrco=Ysrc;
-  [Ysrc,Ym,Yb,BB] = cat_vol_resize({Ysrc,Ym,Yb0},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb0);
+  [Ysrc,Ym,Yb,BB] = cat_vol_resize({Ysrc,Ym,Yb0},'reduceBrain',vx_vol,round(10/mean(vx_vol)),Yb0);
   for i=1:6, Ycls{i} = cat_vol_resize(Ycls{i},'reduceBrain',vx_vol,BB.BB); end
   
   
@@ -327,7 +327,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ygm(Ysrc./Ylab{2}>(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3))=0; % correct GM mean(T3th([2:3,3]))/T3th(3) 
   Ygm(Ysrc./Ylab{2}<(T3th(2) + 0.75*diff(T3th(2:3)))/T3th(3) & ...
       Ysrc./Ylab{2}<(T3th(2) - 0.75*diff(T3th(2:3)))/T3th(3) & ...
-      Ydiv<0.3 & Ydiv>-0.3 & Ybb & ~Ywm & ~Yvt & ~Ybv2)=1;
+      Ydiv<0.3 & Ydiv>-0.3 & Ybb & ~Ywm & ~Yvt & ~Ybv2 & Ycls{1}>48)=1;
   Ywmd2 = cat_vbdist(single(Ywm),Yb);
   Ygx = Ywmd2-Ym+Ydiv>0.5 & Ym+0.5-Ydiv-Yg-Ywmd2/10>1/3 & ~Ybv2 & ... low intensity tissue
     ~(Ym-min(0.2,Yg+Ywmd2/10-Ydiv)<1/4) & Yg<Ylab{2}/T3th(3)*0.3 & Ysrc<Ylab{2}*0.9; % no real csf
@@ -336,7 +336,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ygx = (single(Ycls{1})/255 - abs(Ydiv) + min(0,Ydiv) - Yg)>0.5 & ~Ywm;
   Ygx(smooth3(Ygx)<0.5)=0; 
   Ygm = Ygm | Ygx; % correct gm (spm based)
-  
+  %%
   Ycm = ~Ygm & ~Ywm & ~Ybv2 & (Ycm | (Yb & (Ysrc./Ylab{2}-max(0,Ydiv))<mean(T3th(1:2)/T3th(3)))); 
   %
   Ycp = (Ycls{2}<128 & Ydiv>0 & Yp0<2.1 & Ysrc./Ylab{2}<mean(T3th(2)/T3th(3))) | Ycm | ...                 % typcial CSF
@@ -368,6 +368,9 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
  % Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); % ????
   Yi(Ybs)  = Ysrc(Ybs)./Ylab{2}(Ybs)   .* T3th(2)/T3th(3); 
   Yi = cat_vol_median3(Yi,Yi>0.5,Yi>0.5); 
+  Ycmx = smooth3(Ycm & Ysrc<(T3th(1)*0.9+T3th(1)*0.1))>0.9; Tcmx = mean(Ysrc(Ycmx(:))./Ylab{2}(Ycmx(:)))*T3th(3);
+  Yi(Ycmx) = Ysrc(Ycmx)./Ylab{2}(Ycmx)  .* T3th(2)/Tcmx; 
+  %Yii =  Ysrc./Ylab{2} .* Ycm * T3th(2) / cat_stat_nanmedian(Ysrc(Ycm(:))); 
   [Yi,Yii,resT2] = cat_vol_resize({Yi,Ylab{2}/T3th(3)},'reduceV',vx_vol,1,32,'meanm');
   for xi=1:2*LASi, Yi = cat_vol_localstat(Yi,Yi>0,3,1); end
   Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); 
