@@ -19,9 +19,11 @@ function varargout = cat_surf_calc(job)
   
 
   if nargin == 1
-    def.verb = 0;
+    def.nproc = 0;
+    def.verb  = 0;
+    def.lazy  = 0; 
     def.usefsaverage = 1; 
-    def.assuregifti  = 1;
+    def.assuregifti  = 0;
     def.fsaverage    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
     job = cat_io_checkinopt(job,def);
   else
@@ -29,11 +31,16 @@ function varargout = cat_surf_calc(job)
   end
   
   % prepare output filename
-  sinfo = cat_surf_info(job.dataname); 
+  if iscellstr(job.cdata)
+    sinfo = cat_surf_info(job.cdata{1});
+  else
+    sinfo = cat_surf_info(job.cdata{1}{1});
+  end
   if ~strcmp(sinfo.ee,'.gii'), ff = [sinfo.ff sinfo.ee]; end 
   if ~isempty(sinfo.pp), outdir = sinfo.pp; else outdir = job.outdir{1}; end  
   ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
 
+  
   
   % single or multi subject calculation
   if iscellstr(job.cdata)
@@ -49,50 +56,64 @@ function varargout = cat_surf_calc(job)
       surfcalc(job);
     end
     fprintf('Output %s\n',spm_file(job.output,'link','cat_surf_display(''%s'')'));
-  else  
-    spm_progress_bar('Init',numel(job.cdata{1}),...
-      sprintf('Texture Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
     
-    for si = 1:numel(job.cdata{1}) % for subjects
-      sjob = job; 
-      sjob.verb = 0;
-      
-      % subject data 
-      sjob.cdata = {};
-      for ti = 1:numel(job.cdata) % for textures
-        sjob.cdata{ti} = job.cdata{ti}{si};
-      end
-      %sinfo = cat_surf_info(sjob.cdata{ti});
-     
-      % set output filename,
+    
+  
+  else  
+  % multisubject  
+    for si = 1:numel(job.cdata{1}) 
       if ~isempty(outdir)
         soutdir = outdir;
       else
-        soutdir = fileparts(sjob.cdata{1});
+        soutdir = fileparts(job.cdata{1}{si});
       end
 
-      job.output{si} = char(cat_surf_rename(sjob.cdata{1},...
+      job.output{si} = char(cat_surf_rename(job.cdata{1}{si},...
         'preside','','pp',soutdir,'dataname',job.dataname,'ee',ee));
-      %[sjob.outdir{1},sjob.dataname,ee2] = fileparts(job.output{si});
-      %sjob.dataname = [sjob.dataname ee2];
-      sjob.output   = job.output{si}; 
-      fprintf('Process: %s',job.output{si});
+    end
+
+    % split job and data into separate processes to save computation time
+    if job.nproc>0 && (~isfield(job,'process_index'))
+      cat_parallelize(job,mfilename,'cdata');
+      return
+    elseif isfield(job,'printPID') && job.printPID 
+      cat_display_matlab_PID
+    end 
+    
+    if job.nproc==0 
+      spm_progress_bar('Init',numel(job.cdata{1}),...
+        sprintf('Texture Calculator\n%d',numel(job.cdata{1})),'Subjects Completed'); 
+    end
+    
+    for si = 1:numel(job.cdata{1}) % for subjects
+      sjob = rmfield(job,'cdata');
+      sjob.verb = 0;
+      
+      % subject data 
+      for ti = 1:numel(job.cdata) % for textures
+        sjob.cdata{ti} = job.cdata{ti}{si};
+      end
+      
+      sjob.output   = job.output{si};
       try
         if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
           copyfile(sjob.cdata{1},job.output{si});
         else
           surfcalc(sjob);
         end
-        fprintf('Output %s\n',spm_file(sjob.output{si},'link','cat_surf_display(''%s'')'));
-        fprintf(' done \n');
+        fprintf('Output %s\n',spm_file(sjob.output,'link','cat_surf_display(''%s'')'));
       catch
-        fprintf('Output %s failed\n',sjob.output{si});
+        fprintf('Output %s failed\n',sjob.output);
       end
         
-      spm_progress_bar('Set',si);
+      if job.nproc==0 
+        spm_progress_bar('Set',si);
+      end
     end
     
-    spm_progress_bar('Clear');
+    if job.nproc==0 
+      spm_progress_bar('Clear');
+    end
   end
   
   if nargout

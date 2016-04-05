@@ -70,7 +70,7 @@ for i = 1:numel(job.data)
     if isinf(job.NCstr) || sign(job.NCstr)==-1
       Yh     = src>mean(src(:)); % object
       Tth    = mean(src(Yh(:)));
-      NCstr = min(1,max(0,cat_stat_nanmean(abs(src(Yh(:)) - srco(Yh(:)))) * 15 * min(1,max(0,abs(job.NCstr))) )); 
+      NCstr  = -min(1,max(0,cat_stat_nanmean(abs(src(Yh(:)) - srco(Yh(:)))) * 15 * min(1,max(0,abs(job.NCstr))) )); 
       NC     = min(2,abs(src - srco) ./ max(eps,src) * 15 * 2 * min(1,max(0,abs(job.NCstr)))); 
       NCs    = NC+ 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Yh(:))) / cat_stat_nanmean(NC(Yh(:)));
       NCs  = max(0,min(1,NCs));      

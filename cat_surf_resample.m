@@ -44,7 +44,9 @@ function varargout = cat_surf_resample(varargin)
       cat_parallelize(job,mfilename);
     end
     return
-  end  
+  elseif isfield(job,'printPID') && job.printPID 
+    cat_display_matlab_PID
+  end 
 
   
   
