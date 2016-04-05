@@ -10324,6 +10324,7 @@ Fixed: Issue with cat_surf_resamp in parallel mode with same filenames
 
 
 ------------------------------------------------------------------------
+r916 | gaser | 2016-04-04 15:27:19 +0200 (Mo, 04 Apr 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10334,5 +10335,38 @@ M       spm_cat12.m
 Fixed: Error in spm_cat12 that gives wrong warnig about not compatible
        binaries for surface processing.
 
+
 ------------------------------------------------------------------------
-r916 | gaser | 2016-04-04 15:27:09
+
+Changed paths:
+M       CHANGES.txt
+A       cat_display_matlab_PID.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gintnorm.m
+M       cat_parallelize.m
+M       cat_run.m
+M       cat_surf_calc.m
+M       cat_surf_info.m
+M       cat_surf_resample.m
+M       cat_surf_surf2roi.m
+M       cat_vol_isarnlm.m
+M       cat_vol_sanlm.m
+ M      internal
+A       internal/cat_tst_BWPres.m
+M       internal/cat_vol_nlmus.m
+A       internal/cat_vol_reduceRes.m
+ M      templates_1.50mm
+
+Fixed:    Corrected error for undefined job.nprog of GUI without nprog parameter.
+Fixed:    Peak estimation problem in subjects with very large ventricle. 
+Fixed:    Further problems of LAS for large ventricle.
+Changed:  Removed Peak-Waring.
+
+
+ 
+
+
+------------------------------------------------------------------------
+r917 | dahnke | 2016-04-05 17:43:23

@@ -90,10 +90,7 @@ function [varargout] = cat_surf_info(P,read)
         if sinfo(i).exist && read
           clear S; 
           try
-            S = cat_io_FreeSurfer('read_surf',P{1}); 
-          end
-          try
-            S.cdata = cat_io_FreeSurfer('read_surf_data',P{1}); 
+            S = cat_io_FreeSurfer('read_annotation',P{1}); 
           end
         end
         if exist('S','var')
@@ -107,9 +104,15 @@ function [varargout] = cat_surf_info(P,read)
           clear S; 
           try
             S = cat_io_FreeSurfer('read_surf',P{1}); 
+            if size(S.faces,2)~=3 || size(S.faces,1)<10000
+              clear S; 
+            end
           end
           try
             S.cdata = cat_io_FreeSurfer('read_surf_data',P{1}); 
+            if size(S.face,2)==3 || size(S.face,1)<10000
+              S = rmfield(S,'cdata'); 
+            end
           end
         end
         if exist('S','var')

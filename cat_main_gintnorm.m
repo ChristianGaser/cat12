@@ -57,7 +57,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   %% initial thresholds and intensity scaling
   T3th3 = [mean(res.mn(res.lkp==3 & res.mg'>0.3)) ...
            mean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
-           mean(res.mn(res.lkp==2 & res.mg'>0.1))];
+           mean(res.mn(res.lkp==2 & res.mg'>0.2))];
   T3th3 = round(T3th3*10^5)/10^5; 
   
   if T3th3(1)>T3th3(3) && T3th3(2)>T3th3(3) && T3th3(1)>T3th3(2) % invers (T2 / PD)
@@ -162,26 +162,6 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     error('CAT:cat_main:badTissueContrast',...
       sprintf('Bad tissue contrast (C=%0.2f, G=%0.2f, W=%0.2f)\n',...
         T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0); %#ok<SPERR>
-      
-    %{
-    cat_warnings = cat_io_addwarning(cat_warnings,...
-      'CAT:cat_main:UnknownContrast',...
-      sprintf(['Unknown tissue contrast - use SPM segmentation as T1 map! ' ...
-           '(C=%0.2f, G=%0.2f, W=%0.2f)\n'],T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0);
-   
-    Tth.T3th  = 0:5;
-    Tth.T3thx = 0:5;
-    
-    inv_weighting = 1;
- 
-    Ym = single(Ycls{1})/255*2/3 + single(Ycls{2})/255*3/3 + single(Ycls{3})/255*1/3 + ...
-         Ysrc./mean(res.mn(res.lkp==5 & res.mg'>0.1)) .* single(Ycls{5})/255;
-    
-    noise = 0.01;
-    if nargout==7 && numel(cat_warnings)>1, fprintf('\n'); cat_io_cmd(' ','','',1); end
-    return
-    %}
-           
   end
 
   %% intensity scalling for gradient estimation
@@ -351,8 +331,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     
    
     % print a warning for strong variation in the peaks
+    % deactivated 2016-04-06 ... remove in final version
+    %{
     T3th_diff = min(T3th_spm,T3th_cls) ./ max(T3th_spm,T3th_cls);
-    if any(T3th_diff < [0.8 0.8 0.95]) 
+    if any(T3th_diff < [0.5 0.5 0.95]) 
       if exist('cat_warnings','var')
          cat_warnings = cat_io_addwarning(cat_warnings,...
           'CAT:cat_main:DiffTissuePeaks',...
@@ -365,6 +347,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
       if max(res.mn(res.lkp==5 & res.mg'>0.1)) < mean(res.mn(res.lkp==3 & res.mg'>0.3)), fprintf('\n'); end
       %T3th3 = T3th_spm;
     end
+    %} 
    
     if debug==2
       tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm01'));

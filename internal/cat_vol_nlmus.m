@@ -80,7 +80,7 @@ function varargout = cat_vol_nlmus(varargin)
   def.rician    = 1; 
   def.rf        = 0.00001;
   def.writeinit = 0; 
-  def.isarnlm   = 1;
+  def.isarnlm   = 2;
 
   job = cat_io_checkinopt(job,def);
 
@@ -92,7 +92,7 @@ function varargout = cat_vol_nlmus(varargin)
   spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
   for i = 1:numel(job.data)
     [pth,nm,xt,vr] = spm_fileparts(deblank(V(i).fname));
-    if job.verb, stimei = cat_io_cmd(sprintf('Filtering ''%s''',nm),'n','',job.verb); fprintf('\n'); end
+    if job.verb, stimei = cat_io_cmd(sprintf('Process ''%s''',nm),'n','',job.verb); fprintf('\n'); end
     
     % load and prepare data
     src = single(spm_read_vols(V(i)));
@@ -186,8 +186,7 @@ function varargout = cat_vol_nlmus(varargin)
       level = sigma/2;         
       tol   = 0.002*sigma;             
       v     = 3;                        
-      F     = double(src);                     
-      last  = F;
+      last  = src;
       ii    = 1;
       iii   = 1;
       if job.maxiter>0
@@ -200,10 +199,10 @@ function varargout = cat_vol_nlmus(varargin)
       while ii<=maxiter
         stime = cat_io_cmd(sprintf('  Iteration %d',ii),'g5','',job.verb,stime);
 
-        F2 = cat_vol_cMRegularizarNLM3D(F,v,1,level,lf);
-        F2(isnan(F2)) = F(isnan(F2)); % label maps generate NaNs in the worst case, but there are no changes in other regions
+        F2 = single(cat_vol_cMRegularizarNLM3D(double(src),v,1,level,lf));
+        F2(isnan(F2)) = src(isnan(F2)); % label maps generate NaNs in the worst case, but there are no changes in other regions
 
-        d(ii) = mean(abs(F(:)-F2(:))); %#ok<AGROW>
+        d(ii) = mean(abs(src(:)-F2(:))); %#ok<AGROW>
 
         if(d(ii)<tol) 
           level = level/2;
@@ -211,24 +210,28 @@ function varargout = cat_vol_nlmus(varargin)
           dss(iii) = mean(abs(last(:)-F2(:))); %#ok<AGROW>
           if(dss(iii)<tol), break; end; 
           last = F2;
-          iii = iii+1;  
+          iii  = iii+1;  
         end
 
-        F=F2;
-        ii=ii+1;
+        src = F2; clear F2;
+        ii  = ii + 1;
         
         spm_progress_bar('Set',i+ii/job.maxiter);
       end
-      src = F2;
+      clear last dss iii ii tol F2; 
       
       if numel(job.interp)==3
         % final interpolation
         lf2 = vx_vol ./ lf ./ job.interp;
-        src = InitialInterpolation(src,lf2,job.intmeth,job.rf);
+        if any(lf2~=1)
+          stime = cat_io_cmd('Final Interpolation','g5','',job.verb,stime);
+          src = InitialInterpolation(src,lf2,job.intmeth,job.rf);
+        end
       else
         lf2 = 1; 
       end
         
+      stime = cat_io_cmd(sprintf('  Write Result'),'g5','',job.verb,stime);
       mat = spm_imatrix(V(i).mat); mat(7:9) = mat(7:9)./lf./lf2; 
       V(i).mat = spm_matrix(mat); 
       V(i).dim = size(src);
@@ -266,7 +269,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [bima]=InitialInterpolation(nima1,lf,intmeth,roundfactor)
+function [nima1]=InitialInterpolation(nima1,lf,intmeth,roundfactor)
 
   warning off; 
   
@@ -276,34 +279,33 @@ function [bima]=InitialInterpolation(nima1,lf,intmeth,roundfactor)
   % reconstruc using spline interpolation
   [x,y,z] = ndgrid( ori(1):lf(1):1-ori(1)+s(1),ori(2):lf(2):1-ori(2)+s(2),ori(3):lf(3):1-ori(3)+s(3));
   [xi,yi,zi] = ndgrid(1:s(1),1:s(2),1:s(3));
-  bima2 = interpn(x,y,z,nima1,xi,yi,zi,intmeth); 
+  nima1 = interpn(x,y,z,nima1,xi,yi,zi,intmeth); 
   
   if roundfactor>0
-    bima2 = round(bima2/roundfactor)*roundfactor;
+    nima1 = round(nima1/roundfactor)*roundfactor;
   end
   
   s = round(s);
   % deal with extreme slices
   for i=1:floor(lf(1)/2)
-    bima2(i,:,:) = bima2(floor(lf(1)/2)+1,:,:);
+    nima1(i,:,:) = nima1(floor(lf(1)/2)+1,:,:);
   end
   for i=1:floor(lf(2)/2)
-    bima2(:,i,:) = bima2(:,floor(lf(2)/2)+1,:);
+    nima1(:,i,:) = nima1(:,floor(lf(2)/2)+1,:);
   end
   for i=1:floor(lf(3)/2)
-    bima2(:,:,i) = bima2(:,:,floor(lf(3)/2)+1);
+    nima1(:,:,i) = nima1(:,:,floor(lf(3)/2)+1);
   end
 
   for i=1:floor(lf(1)/2)
-    bima2(s(1)-i+1,:,:) = bima2(s(1)-floor(lf(1)/2),:,:);
+    nima1(s(1)-i+1,:,:) = nima1(s(1)-floor(lf(1)/2),:,:);
   end
   for i=1:floor(lf(2)/2)
-    bima2(:,s(2)-i+1,:) = bima2(:,s(2)-floor(lf(2)/2),:);  
+    nima1(:,s(2)-i+1,:) = nima1(:,s(2)-floor(lf(2)/2),:);  
   end
   for i=1:floor(lf(3)/2)
-    bima2(:,:,s(3)-i+1) = bima2(:,:,s(3)-floor(lf(3)/2));
+    nima1(:,:,s(3)-i+1) = nima1(:,:,s(3)-floor(lf(3)/2));
   end
-  bima=bima2;
 
  
   % mean correction

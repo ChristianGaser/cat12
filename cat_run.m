@@ -128,21 +128,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 end
 
 if isfield(job,'printPID') && job.printPID 
-  if ispc
-    %%
-    pid = []; pidi = 0; 
-    while isempty(pid) && pidi<100 
-      s = pidi; 
-      [t,pids] = system(sprintf(['tasklist /FO TABLE /NH /FI "imagename eq MATLAB.exe" ' ...
-        '/FI "CPUTime lt 00:%02d:%02d" /FI "MemUsage lt 500000"'],round(s/60),mod(s,60)));
-      pid = textscan(pids,'MATLAB.exe %d Console'); 
-      if ~isempty(pid); pid = pid{1}; end
-      pidi = pidi+1;
-    end
-  else
-    [t,pid] = system('echo $$');
-  end
-  fprintf('CAT parallel processing with MATLAB PID: %s\n',pid);
+  cat_display_matlab_PID
 end
 job = update_job(job);
 
@@ -156,6 +142,7 @@ function job = update_job(job)
   def = cat_get_defaults;
   def.extopts.restypes.(cat_get_defaults('extopts.restype')) = cat_get_defaults('extopts.resval');
   def.opts.fwhm = 1;
+  def.nprog     = 0; 
   job = cat_io_checkinopt(job,def);
   
   % check range of str variables

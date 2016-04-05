@@ -48,9 +48,11 @@ function cat_surf_surf2roi(job)
   
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
-     cat_parallelize(job,mfilename,'cat_surf_surf2roi');
-     return
-  end  
+    cat_parallelize(job,mfilename,'cat_surf_surf2roi');
+    return
+  elseif isfield(job,'printPID') && job.printPID 
+    cat_display_matlab_PID
+  end 
   
   % display something
   spm_clf('Interactive'); 
