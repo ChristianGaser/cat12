@@ -686,6 +686,7 @@ if job.extopts.sanlm>0 && job.extopts.NCstr~=0
       Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,job.extopts.NCstr); 
     else
       Ymo = Ym + 0;
+      
       if isinf(job.extopts.NCstr) 
         stime = cat_io_cmd(sprintf('SANLM noise correction'));
       else
@@ -697,8 +698,8 @@ if job.extopts.sanlm>0 && job.extopts.NCstr~=0
 
       % merging
       if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-        job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-        NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
+        job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Ym(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
+        NC     = min(2,abs(Ym - Ymo) ./ max(eps,Ym) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
         NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
         NCs  = max(0,min(1,NCs));
       end
@@ -706,9 +707,9 @@ if job.extopts.sanlm>0 && job.extopts.NCstr~=0
 
       % mix original and noise corrected image and go back to original resolution
       if exist('NCs','var');
-        Ym = (1-NCs) .* Ym  +  NCs .* Yms ;
+        Ym = (1-NCs) .* Ymo  +  NCs .* Ym ;
       else
-        Ym = (1-job.extopts.NCstr) .* Ym + job.extopts.NCstr .* Yms;
+        Ym = (1-job.extopts.NCstr) .* Ymo + job.extopts.NCstr .* Ym;
       end    
     end
   end
@@ -960,7 +961,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %     Yp0o  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o(indx,indy,indz) = Yp0o; 
 %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
 %  -------------------------------------------------------------------
-if job.extopts.cleanupstr>0 && max(vx_volr)<=5; %2.2; %1.6;
+if job.extopts.cleanupstr>0 && max(vx_volr)<=1.9; %2.2; %1.6;
   [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ym(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
 else
   if job.extopts.cleanupstr>0
