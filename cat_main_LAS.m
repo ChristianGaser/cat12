@@ -368,7 +368,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
  % Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); % ????
   Yi(Ybs)  = Ysrc(Ybs)./Ylab{2}(Ybs)   .* T3th(2)/T3th(3); 
   Yi = cat_vol_median3(Yi,Yi>0.5,Yi>0.5); 
-  Ycmx = smooth3(Ycm & Ysrc<(T3th(1)*0.9+T3th(1)*0.1))>0.9; Tcmx = mean(Ysrc(Ycmx(:))./Ylab{2}(Ycmx(:)))*T3th(3);
+  Ycmx = smooth3(Ycm & Ysrc<(T3th(1)*0.8+T3th(2)*0.2))>0.9; Tcmx = mean(Ysrc(Ycmx(:))./Ylab{2}(Ycmx(:)))*T3th(3);
   Yi(Ycmx) = Ysrc(Ycmx)./Ylab{2}(Ycmx)  .* T3th(2)/Tcmx; 
   %Yii =  Ysrc./Ylab{2} .* Ycm * T3th(2) / cat_stat_nanmedian(Ysrc(Ycm(:))); 
   [Yi,Yii,resT2] = cat_vol_resize({Yi,Ylab{2}/T3th(3)},'reduceV',vx_vol,1,32,'meanm');

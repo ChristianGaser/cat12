@@ -55,8 +55,8 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   %% set different paremeters to modifiy the stength of the skull-stripping 
   %gc.n = max(0.05,min(0.1,noise));
   % intensity parameter
-  gc.h = 3.5 - 0.5*opt.gcutstr + 0.25*opt.LASstr; % 3.25; upper tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
-  gc.g = 1.9 + 0.2*opt.gcutstr; % 1.50; lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
+  gc.h = 3.5 - 0.4*opt.gcutstr + 0.2*opt.LASstr; % 3.25; upper tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
+  gc.g = 1.9 + 0.1*opt.gcutstr; % 1.50; lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
   gc.l = 1.1 + 0.8*opt.gcutstr; % 1.50; lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
   gc.o = 0.2 + 0.8*opt.gcutstr; % 0.50; BG tissue intensity (for high contrast CSF=BG=0!) - lower value > more "tissue"
   % distance parameter
@@ -66,7 +66,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   gc.gd = 1 + 2*opt.gcutstr;
   gc.bd = 3 + 2*opt.gcutstr; 
   % smoothing parameter
-  gc.s = 0.2  + 0.60*min(0.6,opt.gcutstr);                   % 0.5;    smoothing parameter   - higher > less tissue
+  gc.s = 0.2  + 0.30*min(0.6,opt.gcutstr);                   % 0.5;    smoothing parameter   - higher > less tissue
   
   if opt.verb, fprintf('\n'); end
   stime = cat_io_cmd('  WM initialisation','g5','',opt.verb); dispc=1;
@@ -84,7 +84,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb=Ybo;
   YHDr = cat_vol_morph(Yl1>20 | Yl1<=0,'e',vxd*2);
   YGD  = cat_vbdist(max(0,1-Yp0),true(size(Yb)),vx_vol);   % something like the GWM depth/thickness
-  YBD  = cat_vbdist(max(0,1-Yp0*3),true(size(Yb)),vx_vol); % brain depth, (simple) sulcal depth
+  YBD  = cat_vbdist(max(0,1-Yp0*3),true(size(Yb)),vx_vol./mean(vx_vol)); % brain depth, (simple) sulcal depth
   Yb   = Yb>0.25 & Ym>2.5/3 & Ym<gc.h/3 & Yl1<21 & Yb & YGD>gc.gd & YBD>gc.bd;  % init WM 
   Yb   = Yb | (Ym>2/3 & Ym<gc.h/3 & (YBD>10 | (YBD>2 & (NS(Yl1,LAB.CB) | NS(Yl1,LAB.HI)))));
   [Ybr,Ymr,resT2] = cat_vol_resize({single(Yb),Ym},'reduceV',1,4,32); 
@@ -104,7 +104,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   %% region growing GM/WM (here we have to get all WM gyris!)
   stime = cat_io_cmd('  GM region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Yb(~Yb & (YHDr | Ym<gc.g/3 | Ym>gc.h/3 | (Ywm + Ygm)<0.5 | YGD<(gc.gd-1) | YBD<(gc.bd-3)))=nan; %clear Ywm Ygm; 
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01+gc.c); % this have to be not to small... 
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.03+gc.c); % this have to be not to small... 
   Yb(isnan(Yb) | YD>gc.d*vxd*2)=0; Yb(Yb1>0 & YD<gc.d*vxd*2)=1;
   Yb(smooth3(single(Yb))<gc.s)=0;
   Yb = single(Yb | (cat_vol_morph(Yb,'labclose',vxd) & Ym<1.1));
@@ -112,34 +112,34 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   
   %% region growing CSF/GM 
   stime = cat_io_cmd('  GM-CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
-  Yb(~Yb & (YHDr | Ym<gc.l/3 | Ym>gc.h/3) | Ymg | YBD<1)=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.005+gc.c);
+  Yb(~Yb & (YHDr | Ym<gc.l/3 | Ym>gc.h/3) | Ymg)=nan; % | YBD<1
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01+gc.c);
   Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d)=1; 
   for i=1:2, Yb(smooth3(single(Yb))<gc.s)=0; end
   Yb  = single(cat_vol_morph(Yb,'o',1));
   Yb  = single(Yb | (cat_vol_morph(Yb ,'labclose',1) & Ym<1.1));
   
   %% region growing - add CSF
-  Yb(~Yb & (YHDr | Ym<1/3 | Ym>gc.h/3) | Ymg)=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.02+gc.c);
+  Yb(~Yb & (YHDr | Ym<1/3 | Ym>gc.h/3) | Ymg)=nan; 
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.00+gc.c);
   Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d)=1; 
   for i=1:2, Yb(smooth3(single(Yb))<gc.s)=0; end
   Yb  = single(cat_vol_morph(Yb,'o',1));
   Yb  = single(Yb | (cat_vol_morph(Yb ,'labclose',1) & Ym<1.1));
-  
+  Ybox = Yb; 
   %% region growing - add CSF regions   
   stime = cat_io_cmd('  CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
-  Ygr = cat_vol_grad(Ym,vx_vol);
-  Yb(~Yb & smooth3(cat_vol_morph(smooth3(Ym<0.75/3 | (Ym>1.25/3 & ~Yb) | ...
-    (Ygr>0.05 & ~Yb))>0.5,'lc',vxd*2) | Ymg )>0.5)=nan; 
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.02+gc.c); 
-  Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d*2 & YD>0)=1;
-  for i=1:2, Yb(cat_vol_smooth3X(Yb,2)<(gc.s - 0.25))=0; end
+  Ygr = cat_vol_grad(Ym,vx_vol); CSFth = mean(Ym(Ycsf(:)>0.8 & Ygr(:)<0.1));
+  Yb(~Yb & smooth3( cat_vol_morph( smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.5,'lc',vxd))>0.6 )=nan;
+  Yb(isnan(Yb) & cat_vol_morph(Yb>=0,'lc',2))=0;
+  [Yb1,YD] = cat_vol_downcut(Yb,smooth3(Ym),+0.01+gc.c); 
+  Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d*4 & YD>0)=1;
+  for i=1:2, Yb(cat_vol_smooth3X(Yb,2)<max(0.05,(gc.s - 0.2)))=0; end
   Yb  = single(cat_vol_morph(Yb,'o',2));
   Yb = Yb | YMF; 
   
   % smooth / low dilated boundary 
-  Ybs = single(Yb); spm_smooth(Ybs,Ybs,4*gc.s./vx_vol); Yb   = Yb | (Ybs>(gc.s-0.25) & Ym<1.25/3);
+  Ybs = single(Yb); spm_smooth(Ybs,Ybs,4*gc.s./vx_vol); Yb   = Yb | (Ybs>(gc.s-0.2) & Ym<1.25/3);
   
   %% filling of ventricles and smooth mask
   stime = cat_io_cmd('  Ventricle closing','g5','',opt.verb,stime); dispc=dispc+1; %#ok<*NASGU>
@@ -149,6 +149,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb  = Yb | Ybr; clear Ybr;   % & Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
   Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f* (rvol(1)/0.4) ))));
   Yb  = Yb | (cat_vol_morph(Yb ,'labclose',vxd*2) & Ym<1.1);
+  Yb  = cat_vol_morph(Yb ,'labclose');
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,3./vx_vol); Yb = Yb>0.5 | (max(Yb,Ybs)>0.3 & Ym<0.4); % how wide
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,2./vx_vol); Yb = max(Yb,Ybs)>0.4; % final smoothing
  
