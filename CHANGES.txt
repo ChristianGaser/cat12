@@ -10337,6 +10337,7 @@ Fixed: Error in spm_cat12 that gives wrong warnig about not compatible
 
 
 ------------------------------------------------------------------------
+r917 | dahnke | 2016-04-05 17:43:37 +0200 (Di, 05 Apr 2016) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10368,5 +10369,21 @@ Changed:  Removed Peak-Waring.
  
 
 
+
 ------------------------------------------------------------------------
-r917 | dahnke | 2016-04-05 17:43:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gcut.m
+
+Fixed:    Corrected Yms error.
+Fixed:    Corrected further problems of LAS in large ventricles.
+Changed:  Less agressive skull-stripping.
+Changed:  More CSF in skull-stripping.
+Changed:  Cleanup only for voxel <1.9.
+
+
+------------------------------------------------------------------------
+r918 | dahnke | 2016-04-07 19:20:43
