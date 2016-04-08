@@ -10402,6 +10402,7 @@ M       html/cat.html
 Changed: Corrected some typos and changed help text.
 
 ------------------------------------------------------------------------
+r920 | gaser | 2016-04-08 16:24:27 +0200 (Fr, 08 Apr 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10412,5 +10413,13 @@ MM      internal/cat_vol_reduceRes.m
 
 Fixed: Issue in cat_stat_surf. Thanks to Christoph Hofstetter for pointing
        to that issue.
+
 ------------------------------------------------------------------------
-r920 | gaser | 2016-04-08 16:24:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat_display_matlab_PID.m
+
+Fixed:    Corrected PID display function.
+------------------------------------------------------------------------
+r921 | dahnke | 2016-04-08 16:57:15
