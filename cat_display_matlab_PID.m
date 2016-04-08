@@ -11,7 +11,7 @@ function varagout = cat_display_matlab_PID
 %   Department of Psychiatry and Psychotherapy 
 %   University Hostpital Jena
 % ______________________________________________________________________
-% $Id: cat_parallelize.m 912 2016-03-22 22:54:01Z gaser $
+% $Id$
 
   % get PID
   if ispc

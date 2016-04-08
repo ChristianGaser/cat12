@@ -9,7 +9,7 @@ function varargout = cat_vol_reduceRes(varargin)
 % job.data = cell of filename, use GUI if empty
 % ______________________________________________________________________
 % Robert Dahnke
-% $Id: cat_surf_calc.m 741 2015-10-07 18:23:28Z dahnke $
+% $Id$
 
   if nargin == 0 
       job.data = cellstr(spm_select([1 Inf],'image','select images to reduce'));

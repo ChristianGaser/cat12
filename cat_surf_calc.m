@@ -36,7 +36,11 @@ function varargout = cat_surf_calc(job)
   else
     sinfo = cat_surf_info(job.cdata{1}{1});
   end
-  if ~strcmp(sinfo.ee,'.gii'), ff = [sinfo.ff sinfo.ee]; end 
+  if ~strcmp(sinfo.ee,'.gii')
+    ff = [sinfo.ff sinfo.ee];
+  else
+    ff = sinfo.ff;
+  end 
   if ~isempty(sinfo.pp), outdir = sinfo.pp; else outdir = job.outdir{1}; end  
   ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
 
