@@ -14,21 +14,7 @@ function varagout = cat_display_matlab_PID
 % $Id$
 
   % get PID
-  if ispc
-    pid = []; pidi = 0; 
-    while isempty(pid) && pidi<100 
-      s = pidi; 
-      [t,pids] = system(sprintf(['tasklist /FO TABLE /NH /FI "imagename eq MATLAB.exe" ' ...
-        '/FI "CPUTime lt 00:%02d:%02d" /FI "MemUsage lt 500000"'],round(s/60),mod(s,60)));
-      pid = textscan(pids,'MATLAB.exe %d Console'); 
-      if ~isempty(pid); pid = pid{1}; end
-      pidi = pidi+1;
-    end
-  else
-    [t,pid] = system('echo $$'); 
-  end
-  pids = pid; 
-  pid = str2double(pid);
+  pid = feature('getpid'); 
   
   % display PID
   if nargout==0
@@ -38,11 +24,7 @@ function varagout = cat_display_matlab_PID
       fprintf('CAT parallel processing with MATLAB PID: unknown %s PID %d\n',computer,pids);
     end
   else 
-    if isnumeric(pid) && ~isempty(pid)
-      varagout{1} = pid; 
-    else
-      varagout{1} = pids; 
-    end  
+    varagout{1} = pid; 
   end
   
 end
