@@ -191,7 +191,7 @@ function stools = cat_conf_stools(expert)
   v2s.datafieldname.help    = {
     'Name of the texture as part of the filename.'
     ''
-    '  [rh|lh].TEXTURENAME[.resampled|].subjectname[.gii]' 
+    '  [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]' 
     };
  
   v2s.interp         = cfg_menu;
@@ -648,15 +648,15 @@ function stools = cat_conf_stools(expert)
   sc.cdata.filter  = 'any';
   sc.cdata.ufilter = '[rl]h.*';
   sc.cdata.num     = [1 Inf];
-  sc.cdata.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
+  sc.cdata.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
   
   sc.cdata_sub         = cfg_files;
   sc.cdata_sub.tag     = 'cdata';
   sc.cdata_sub.name    = 'Surface Data Files';
   sc.cdata_sub.filter  = 'any';
-  sc.cdata_sub.ufilter = '[rl]h.(?!cent|sphe|defe).*';
+  sc.cdata_sub.ufilter = '[rl]h.(?!cent|sphe|defe).*gii';
   sc.cdata_sub.num     = [1 Inf];
-  sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order that they are specified.'};
+  sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
    
   sc.cdata_sample         = cfg_repeat;
   sc.cdata_sample.tag     = 'cdata_sub.';
@@ -694,7 +694,7 @@ function stools = cat_conf_stools(expert)
   sc.dataname.help    = {
     'Name of the texture as part of the filename.'
     ''
-    '  [rh|lh].TEXTURENAME[.resampled|].subjectname[.gii]' 
+    '  [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]' 
   };
 
   sc.expression         = cfg_entry;
@@ -748,7 +748,7 @@ function stools = cat_conf_stools(expert)
   surfcalc.prog = @cat_surf_calc;
   surfcalc.help = {
     'Mathematical operations for surface data (textures).'
-    'It works similar to ''spm_imcalc''.  The input surface data must have the same number of entries.  This means that the must came from same hemisphere of a subject, or the have to be resampled.'
+    'It works similar to ''spm_imcalc''.  The input surface data must have the same number of entries (e.g. data of the same hemisphere of a subject or resampled data).'
   };
 
 
@@ -765,7 +765,7 @@ function stools = cat_conf_stools(expert)
   surfcalcsub.prog = @cat_surf_calc;
   surfcalcsub.help = {
     'Mathematical operations for surface data sets (textures).'
-    'In contrast to the ''Surface Calculator'' it allows the definition of datasets sets ''si'' for multiple subjects.  Therefore, each sample requires surface data of the same subjects to evaluate the expression for each subject.'
+    'In contrast to the ''Surface Calculator'' it allows to apply the same expression to multiple subjects. Please note that a fixed name structure is expected: [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]. Here TEXTURENAME will be replaced by the output name.'
   };
 
 

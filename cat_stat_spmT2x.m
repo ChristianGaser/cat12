@@ -327,9 +327,7 @@ for i=1:size(P,1)
         Q     = [];
         for i = 1:max(A)
             j = find(A == i);
-            N(j(1))
-            k/K(i)
-            if N(j(1)) >= k/K(i); Q = [Q j]; end
+            if length(j) >= k/K(i); Q = [Q j]; end
         end
 
 
