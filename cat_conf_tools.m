@@ -316,7 +316,7 @@ nuisance.help    = {'This option allows for the specification of nuisance effect
 data_xml = cfg_files;
 data_xml.name = 'XML files';
 data_xml.tag  = 'data_xml';
-data_xml.filter = 'xml';
+data_xml.filter = '^cat_.*xml';
 data_xml.num  = [1 Inf];
 data_xml.help   = {...
 'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files.'};
