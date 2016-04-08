@@ -10388,6 +10388,7 @@ Changed:  Cleanup only for voxel <1.9.
 
 
 ------------------------------------------------------------------------
+r919 | gaser | 2016-04-08 12:38:28 +0200 (Fr, 08 Apr 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10399,5 +10400,17 @@ M       cat_stat_spmT2x.m
 M       html/cat.html
 
 Changed: Corrected some typos and changed help text.
+
 ------------------------------------------------------------------------
-r919 | gaser | 2016-04-08 12:38:19
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_display_matlab_PID.m
+M       cat_surf_calc.m
+ M      internal/cat_tst_BWPres.m
+MM      internal/cat_vol_reduceRes.m
+
+Fixed: Issue in cat_stat_surf. Thanks to Christoph Hofstetter for pointing
+       to that issue.
+------------------------------------------------------------------------
+r920 | gaser | 2016-04-08 16:24:19
