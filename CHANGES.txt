@@ -10454,11 +10454,25 @@ Changed:   Added possible output variable to cat_stat_check_cov.
 Changed:   Modified brain mask threshold to include CSF in cat_tst_calc_kappa.
 
 ------------------------------------------------------------------------
+r923 | dahnke | 2016-04-13 15:35:13 +0200 (Mi, 13 Apr 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_run_job.m
 
 Fixed:    Corrected small errors by wrong data-type due to noise-correction.
+
 ------------------------------------------------------------------------
-r923 | dahnke | 2016-04-13 15:35:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run.m
+
+Fixed:    Corrected small error and warnings unter Windows and Linux.
+
+------------------------------------------------------------------------
+r924 | dahnke | 2016-04-13 17:38:12

@@ -308,7 +308,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Ygw3(smooth3(Ygw3)<0.5)=0;
   [Yi,resT2] = cat_vol_resize(Ysrcm,'reduceV',vx_vol,mres,32,'max'); % maximum reduction for the WM
   %%
-  if mean(Ym(Ygw3))>0.1, % not in images with to low CSF intensity (error in skull-stripped)
+  if cat_stat_nanmean(Ym(Ygw3))>0.1, % not in images with to low CSF intensity (error in skull-stripped)
     Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))) + Ysrc.*Ygw3*T3th(3)/mean(Ysrc(Ygw3(:))),'reduceV',vx_vol,mres,32,'meanm'); clear Ygw2; % mean for other tissues
   else
     Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))),'reduceV',vx_vol,mres,32,'meanm'); clear Ygw2; % mean for other tissues

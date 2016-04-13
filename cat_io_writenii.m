@@ -130,8 +130,9 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       Vo.dt    = Vn.dt; 
       Vo.pinfo = Vn.pinfo;
       if strcmp(ff(1:2),'p0')
-        [Vn,Yn] = cat_vol_imcalc(Vn,Vo,'i1',struct('interp',6,'verb',0)); 
-        % correction for interpolation artifacts
+        [Vn,Yn] = cat_vol_imcalc(Vn,Vo,'i1',struct('interp',5,'verb',0)); 
+        % For Yp0 linear should be better, to avoid interpolation artifacts, but 
+        % some single test showed that rounding produce better results.
         rf  = 100;
         Ynr = round(Yn*rf)/rf;
         YMR = false(size(Yn));

@@ -140,11 +140,16 @@ function job = update_job(job)
 
   % get defaults
   def = cat_get_defaults;
-  def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
-  def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
+  if isfield(job.extopts,'restypes')
+    def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
+    def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
+  end
   def.opts.fwhm = 1;
-  def.nprog     = 0; 
+  def.nproc     = 0; 
   job = cat_io_checkinopt(job,def);
+  if ~isfield(job.extopts,'restypes')
+    job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
+  end
   
   % check range of str variables
   FN = {'NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
