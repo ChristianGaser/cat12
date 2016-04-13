@@ -10463,6 +10463,7 @@ M       cat_run_job.m
 Fixed:    Corrected small errors by wrong data-type due to noise-correction.
 
 ------------------------------------------------------------------------
+r924 | dahnke | 2016-04-13 17:38:28 +0200 (Mi, 13 Apr 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10474,5 +10475,13 @@ M       cat_run.m
 
 Fixed:    Corrected small error and warnings unter Windows and Linux.
 
+
 ------------------------------------------------------------------------
-r924 | dahnke | 2016-04-13 17:38:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_writenii.m
+
+Fixed:    Corrected writing of rigid and affine output.
+------------------------------------------------------------------------
+r925 | dahnke | 2016-04-13 17:52:12
