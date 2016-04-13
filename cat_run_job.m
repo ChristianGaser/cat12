@@ -119,8 +119,22 @@ function cat_run_job(job,tpm,subj)
           spm_write_vol(V,Y);
         end
         job.channel(n).vols{subj} = nfname;
+        
+        
+        % noise correction
+        if job.extopts.NCstr>0
+          if job.extopts.sanlm==1
+            stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
+            cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
+          elseif job.extopts.sanlm==2
+            stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
+            cat_vol_isarnlm(struct('data',nfname,'verb',0,'prefix','')); 
+          end
+          fprintf('%4.0fs\n',etime(clock,stime));   
+        end
     end
   
+    
     
     
     %% Interpolation

@@ -202,7 +202,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 
           for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
           c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))>=c)+1), 2); 
-          bth=1;     kappa_all(1,5) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
+          bth=0.5;   kappa_all(1,5) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
           kappa_all(1,4) = mean(kappa_all(1,1:3)); 
 
           rms = calcRMS(vol1,vol2); rms = [rms(1:3) mean(rms(1:3)) rms(4)];

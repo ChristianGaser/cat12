@@ -296,7 +296,8 @@ function cat_io_report(job,qa)
   %% print group report file 
   fg = spm_figure('FindWin','Graphics');
   set(0,'CurrentFigure',fg)
-  fprintf(1,'\n'); spm_print;
+  fprintf(1,'\n'); 
+  %spm_print;
 
   % print subject report file as standard PDF/PNG/... file
   job.imgprint.type  = 'pdf';

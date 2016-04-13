@@ -249,54 +249,69 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   % There can also be deep GM Hyperintensities! 
   % ####################################################################
   % ds('l2','',vx_vol,Ym,Ywmh,Ym/3,Ym/3,90)
-  stime = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
   try 
-  Yp0e = Yp0.*cat_vol_morph(Yb,'e',2); 
-  vols = mean([sum(round(Yp0e(:))==1) sum(round(Yp0e(:))==1 & Yvt(:))] / sum(round(Yp0e(:))>0.5));
-  
-  Yvto = cat_vol_morph(Yvt,'o',3/mean(vx_vol)); 
-  Ywmh = single(smooth3(cat_vol_morph(Yvto,'d',2/mean(vx_vol)) & Ym<2.25 & cat_vol_morph(YA==LAB.CT,'e',2) &...
-    ~(cat_vol_morph(YA==LAB.HC & Ym>1.5,'d',4*vxd) & Ym>1.5))>0.5); % ventricle
-  Ywmh(smooth3((Ym.*Yp0A - Ym.*Ym)>2-WMHCstr/5+0.05-vols+noise & Ym<2.8 & Ym>2.8)>0.5 & cat_vol_morph(YA==LAB.CT,'e',2))=1; % WMH
-  Ywmh(smooth3(~cat_vol_morph(~(Yp0>2.2 | Yvt),'lo',0) & Yp0<2.8 & Ym<2.8 & Yp0>1.5 & Ym>1.5)>0.6)=1; % WMH wholes
-  Ywmh((Ywmh==0 & Ym>2.8) | Ya1==LAB.BG | YA==LAB.BG | Ya1==LAB.TH | YA==LAB.TH)=-inf;
-  Ywmh(Yvt2>1.75 & Yvt2<2.2 | (Ywmh==0 & Ym<1.5 & ~cat_vol_morph(Yvt,'d',2)))=2;
-  
-  % == dieser abschnitt ist noch in der entwicklung ==
- % Ywmh( smooth3((smooth3(~cat_vol_morph(Yp0<2.5,'lc',1))>0.5 | smooth3(Yp0 + Yp0A - Ym - Yg*2)>=(2.5+0.05-vols+noise)) & ... 
- %   Ym>2 & Ym<max(2.5,2.9-noise) & cat_vol_morph(YA==LAB.CT,'e',2))>0.5)=1;
-  Ygmd = cat_vbdist(single( (Ym<=2 & Yp0<=2 & ~cat_vol_morph(Yp0>2.5,'lc')) | Yp0<1),Yp0>=1,vx_vol); % abstand zum CSF/GM bereich
-  Ywmm = cat_vol_localstat(Ym,cat_vol_morph(Yp0>2.2,'lc'),2,3); % lokaler wm threshold 
-  Ywmm = cat_vol_localstat(Ywmm,Ywmm>0,1,1); 
-  Ywmhsm = cat_vol_smooth3X( ((Ywmm - Ym)>max(0.15,min(0.5,noise/2))) &  Ygmd>3  & cat_vol_morph(YA==LAB.CT,'e',2) & ...
-   (cat_vol_morph(~cat_vol_morph(Yp0<2.5,'l'),'e') | cat_vol_morph(cat_vol_morph(~cat_vol_morph(Yp0<2.9,'e'),'l'),'e',2)) & ...
-   cat_vol_morph(YA==LAB.CT,'e',2),0.6)>0.5;  % kleine wmhs
-  Ywmh(Ywmhsm)=1; 
-  %%  
-  Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.65 - vols(1) - noise)=0; % more WMHs if lot of CSF and less noise 
-  Ywmh((Ywmh==0 & Ym>2.25) | Ya1==LAB.BG | Ya1==LAB.TH)=-inf;
-  %
-  Ywmh = cat_vol_downcut(Ywmh,(3-Ym)/3,noise*WMHCstr/2,vx_vol); 
-  Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.1+WMHCstr/2)=0;
-  Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.1+WMHCstr/2)=0;
-  Ywmh(Ywmh<0 & (YA==LAB.CT | Ya1==LAB.CT) & Ym<2.95)=0;
-  Ywmh = cat_vol_downcut(Ywmh,(3-Ym)/3,noise*WMHCstr/2,vx_vol); 
+    Yp0e = Yp0.*cat_vol_morph(Yb,'e',2); 
+    vols = mean([sum(round(Yp0e(:))==1) sum(round(Yp0e(:))==1 & Yvt(:))] / sum(round(Yp0e(:))>0.5));
 
-  %%
-  Ywmh(isinf(Ywmh))=0;
-  Ywmh((Ywmh==0 & Ym>2.75) | Ya1==LAB.BG | Ya1==LAB.TH)=nan; Ywmh(Ywmh==0)=1.5;
-  Ywmh = cat_vol_laplace3R(Ywmh,Ywmh==1.5,0.005);
-  Ywmh(cat_vol_morph(YS==1,'d',3*vxd) & cat_vol_morph(YS==0,'d',3*vxd))=2; % not for the CC
-  Ynwmh = ~smooth3(cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.TH | Ya1==LAB.BG,'c',4))>0.5;
-  Ywmh = smooth3(Ywmh<1.1+WMHCstr/4 & Ya1~=LAB.VT & Ynwmh)>0.75-WMHCstr/2;
-  Ywmh = smooth3(cat_vol_morph(cat_vol_morph(Ywmh,'o',1),'c',1) & Ym<2.95)>(0.75-WMHCstr/2);
-  Ywmh(Ywmhsm)=1; 
-  %% entfernen zu kleiner wmhs
-  [Ywmhl,num] = spm_bwlabel(double(Ywmh>0));
-  lhst = hist(Ywmhl(:),1:num); lhstind = 1:num; lhstind(lhst>9)=[];
-  for lhsti=1:numel(lhstind), Ywmh(Ywmhl==lhstind(lhsti))=0; end
-  %%
-  Ya1(Ywmh)=LAB.HI;
+    % only if there is a lot of CSF and not to much noise
+    if vols(1)>0.15 && noise<0.10 
+      stime = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
+      
+      YBG2 = cat_vol_morph(Ya1==LAB.BG,'d',2); 
+      
+      Yvto = cat_vol_morph(Yvt,'o',3/mean(vx_vol)); 
+      Ywmh = single(smooth3(cat_vol_morph(Yvto,'d',2/mean(vx_vol)) & Ym<2.25 & cat_vol_morph(YA==LAB.CT,'e',2) &...
+        ~(cat_vol_morph(YA==LAB.HC & Ym>1.5,'d',4*vxd) & Ym>1.5))>0.5); % ventricle
+      Ywmh(smooth3((Ym.*Yp0A - Ym.*Ym)>2-WMHCstr/5+0.05-vols+noise & Ym<2.8 & Ym>2.8)>0.5 & cat_vol_morph(YA==LAB.CT,'e',2))=1; % WMH
+      Ywmh(smooth3(~cat_vol_morph(~(Yp0>2.2 | Yvt),'lo',0) & Yp0<2.8 & Ym<2.8 & Yp0>1.5 & Ym>1.5)>0.6)=1; % WMH wholes
+      Ywmh((Ywmh==0 & Ym>2.8) | YBG2 | YA==LAB.BG | Ya1==LAB.TH | YA==LAB.TH)=-inf;
+      Ywmh(Yvt2>1.75 & Yvt2<2.2 | (Ywmh==0 & Ym<1.5 & ~cat_vol_morph(Yvt,'d',2)))=2;
+
+      %% == dieser abschnitt ist noch in der entwicklung ==
+     % Ywmh( smooth3((smooth3(~cat_vol_morph(Yp0<2.5,'lc',1))>0.5 | smooth3(Yp0 + Yp0A - Ym - Yg*2)>=(2.5+0.05-vols+noise)) & ... 
+     %   Ym>2 & Ym<max(2.5,2.9-noise) & cat_vol_morph(YA==LAB.CT,'e',2))>0.5)=1;
+      if mean(vx_vol)<1.5
+        Ygmd = cat_vbdist(single( (Ym<=2 & Yp0<=2 & ~cat_vol_morph(Yp0>2.5,'lc')) | Yp0<1),Yp0>=1,vx_vol); % abstand zum CSF/GM bereich
+        Ywmm = cat_vol_localstat(Ym,cat_vol_morph(Yp0>2.2,'lc'),2,3); % lokaler wm threshold 
+        Ywmm = cat_vol_localstat(Ywmm,Ywmm>0,1,1); 
+        Ywmhsm = cat_vol_smooth3X( ((Ywmm - Ym)>max(0.15,min(0.5,noise/2))) &  Ygmd>3  & cat_vol_morph(YA==LAB.CT,'e',2) & ...
+         (cat_vol_morph(~cat_vol_morph(Yp0<2.5,'l'),'e') | cat_vol_morph(cat_vol_morph(~cat_vol_morph(Yp0<2.9,'e'),'l'),'e',2)) & ...
+         cat_vol_morph(YA==LAB.CT,'e',2),0.6)>0.5;  % kleine wmhs
+        Ywmh(Ywmhsm)=1; 
+      end
+      %%  
+      Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.65 - vols(1) - noise)=0; % more WMHs if lot of CSF and less noise 
+      Ywmh((Ywmh==0 & Ym>2.25) | YBG2 | Ya1==LAB.TH)=-inf;
+      %
+      Ywmh = cat_vol_downcut(Ywmh,(3-Ym)/3,noise*WMHCstr/2,vx_vol); 
+      Ywmh(Ywmh==2 & smooth3(Ywmh==2)<0.1+WMHCstr/2)=0;
+      Ywmh(Ywmh==1 & smooth3(Ywmh==1)<0.1+WMHCstr/2)=0;
+      Ywmh(Ywmh<0 & (YA==LAB.CT | Ya1==LAB.CT) & Ym<2.95)=0;
+      Ywmh = cat_vol_downcut(Ywmh,(3-Ym)/3,noise*WMHCstr/2,vx_vol); 
+
+      %%
+      Ywmh(isinf(Ywmh))=0;
+      Ywmh((Ywmh==0 & Ym>2.75) | YBG2 | Ya1==LAB.TH)=nan; Ywmh(Ywmh==0)=1.5;
+      Ywmh = cat_vol_laplace3R(Ywmh,Ywmh==1.5,0.005);
+      Ywmh(cat_vol_morph(YS==1,'d',3*vxd) & cat_vol_morph(YS==0,'d',3*vxd))=2; % not for the CC
+      Ynwmh = ~smooth3(cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.TH | YBG2,'c',4))>0.5;
+      Ywmh = smooth3(Ywmh<1.1+WMHCstr/4 & Ya1~=LAB.VT & Ynwmh)>0.75-WMHCstr/2;
+      Ywmh = smooth3(cat_vol_morph(cat_vol_morph(Ywmh,'o',1),'c',1) & Ym<2.95)>(0.75-WMHCstr/2);
+      Ywmh(Ywmhsm)=1; 
+      %% entfernen zu kleiner wmhs
+      [Ywmhl,num] = spm_bwlabel(double(Ywmh>0));
+      lhst = hist(Ywmhl(:),1:num); lhstind = 1:num; lhstind(lhst>9)=[];
+      for lhsti=1:numel(lhstind), Ywmh(Ywmhl==lhstind(lhsti))=0; end
+      %%
+      Ya1(Ywmh)=LAB.HI;
+    elseif vols(1)<0.15 
+      stime = cat_io_cmd(sprintf('  NO WMH detection (to less CSF ~%0.0f%%%%)',vols(1)*100),'g5','',verb,stime); dispc=dispc+1;
+    elseif noise>0.10 
+      stime = cat_io_cmd(sprintf('  NO WMH detection (to noisy ~%0.2f)',noise),'g5','',verb,stime); dispc=dispc+1;
+    else
+      stime = cat_io_cmd(sprintf('  NO WMH detection (to less CSF ~%0.0f%%%% and to noisy ~%0.2f)',...
+        vols(1)*100,noise),'g5','',verb,stime); dispc=dispc+1;
+    end
   end
   %{
    Yvt2(Yvt2>1.45 & Yvt2<1.55)=inf; Yvt2=round(Yvt2);

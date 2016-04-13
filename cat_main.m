@@ -946,6 +946,7 @@ prob = cat_amap(Ymb, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
   job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
 
 %% reorder probability maps according to spm order
+
 prob = prob(:,:,:,[2 3 1]);
 clear vol %Ymb
 fprintf(sprintf('%s',repmat('\b',1,94+4)));
@@ -961,7 +962,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %     Yp0o  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o(indx,indy,indz) = Yp0o; 
 %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
 %  -------------------------------------------------------------------
-if job.extopts.cleanupstr>0 && max(vx_volr)<=1.9; %2.2; %1.6;
+if job.extopts.cleanupstr>0  %2.2; %1.6;
+  %prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
   [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ym(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
 else
   if job.extopts.cleanupstr>0
@@ -974,7 +976,7 @@ else
      Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
   end
 end;
-if debug; clear probo; end; clear prob
+clear prob
 
 
 
@@ -2492,6 +2494,7 @@ if niter2 > 0,
 end
 
 th = 0.05;
+
 for i=1:size(b,3)
     slices = cell(1,size(P,4));
     for k1=1:size(P,4),
@@ -2507,7 +2510,9 @@ for i=1:size(b,3)
         cp        = ((cp>th).*(slices{1}+slices{2}+slices{3}))>th;
         slices{3} = slices{3}.*cp;
     end
-    slices{5} = slices{5}+1e-4; % Add a little to the soft tissue class
+    if numel(slices)>=5
+      slices{5} = slices{5}+1e-4; % Add a little to the soft tissue class
+    end
     tot       = zeros(size(bp))+eps;
     for k1=1:size(P,4),
         tot   = tot + slices{k1};
@@ -2516,6 +2521,7 @@ for i=1:size(b,3)
         P(:,:,i,k1) = cat_vol_ctype(round(slices{k1}./tot*255));
     end 
 end
+
 spm_progress_bar('Clear');
 return;
 

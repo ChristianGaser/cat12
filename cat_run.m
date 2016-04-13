@@ -140,7 +140,8 @@ function job = update_job(job)
 
   % get defaults
   def = cat_get_defaults;
-  def.extopts.restypes.(cat_get_defaults('extopts.restype')) = cat_get_defaults('extopts.resval');
+  def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
+  def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
   def.opts.fwhm = 1;
   def.nprog     = 0; 
   job = cat_io_checkinopt(job,def);

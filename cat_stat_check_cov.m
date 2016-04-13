@@ -1,4 +1,4 @@
-function cat_stat_check_cov(vargin)
+function varargout = cat_stat_check_cov(vargin)
 %cat_stat_check_cov to check covriance across sample
 %
 % Images have to be in the same orientation with same voxel size
@@ -296,6 +296,15 @@ if ~isempty(n_thresholded)
   for i=n_thresholded:n_subjects
     fprintf('%s: %3.3f\n',P(ind_sorted(i),:),mean_cov_sorted(i));
   end
+end
+
+if nargout>0
+  varargout{1} = struct('table',[cellstr(P),num2cell(mean_cov)],...
+                        'covmat',YpY,...
+                        'sorttable',[cellstr(P(ind_sorted,:)),num2cell(mean_cov_sorted)],...
+                        'sortcovmat',YpYsorted, ...
+                        'cov',mean_cov,...
+                        'threshold_cov',threshold_cov);
 end
 
 % create figure
