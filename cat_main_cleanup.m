@@ -49,7 +49,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 %     Ybvx(smooth3(Ybvx)<0.7)=0; Ybvx(smooth3(Ybvx)<0.5)=0; Ybvx(Ywm & Ybvx==0)=2; Ybvx(Yp0==0)=nan;
 %     Ybvx = cat_vol_downcut(Ybvx,Ymb,0.05);
 
-  if ~debug, clear Ycbp Ycbn Ylhp; end
+  if ~debug, clear Ycbp Ycbn Ylhp; Yp0o=Yp0; end
 
   %% roi to change GM or WM to CSF or background
   stime = cat_io_cmd('  Level 1 cleanup (brain masking)','g5','',extopts.verb,stime); dispc=dispc+1;
@@ -78,7 +78,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 
 
 
-  % cleanup of meninges
+  %% cleanup of meninges
   % ------------------------------------------------------------------
   % This removes meninges next to the brain... works quite well.
   clear Yrg Yrw Yroi
@@ -86,14 +86,14 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   Yp0 = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
   YM  = single(cat_vol_morph((prob(:,:,:,1) + prob(:,:,:,2))>(160 + 32*cleanupstr) & ...
          ~cat_vol_morph(Yp0>1 & Yp0<1.5+cleanupstr/2,'o',vxv)  ,'l')); 
-  YM2 = cat_vol_morph(YM,'o',min(1,1.5/max(vx_vol)));
+  YM2 = cat_vol_morph(YM,'o',min(1,0.7/max(vx_vol)));
   YM(NS(Yl1b,1) & YM2==0)=0;
   spm_smooth(YM,YM,0.6./vx_vol); % anisotropic smoothing!
-  YM  = ( (YM<0.2*cleanupstr) ) & Ybb & ~Yvt & Ymb>0.25;
+  YM  = ( (YM<0.1*cleanupstr) ) & Ybb & ~Yvt & Ymb>0.25;
   prob(:,:,:,1)=min(prob(:,:,:,1),uint8(~YM*255));
   prob(:,:,:,2)=min(prob(:,:,:,2),uint8(~YM*255));
   prob(:,:,:,3)=max(prob(:,:,:,3),uint8( (YM | (Ybb & Yp0==0))*255));
-
+  Yp0 = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
 
 
 
@@ -112,7 +112,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 
 
 
-
+%%
   % ------------------------------------------------------------------
   % cleanup in regions with PVE between WM and CSF without GM
   % ------------------------------------------------------------------
