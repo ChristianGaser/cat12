@@ -963,7 +963,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
 %  -------------------------------------------------------------------
 if job.extopts.cleanupstr>0  %2.2; %1.6;
-  %prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
+  prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
   [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ym(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
 else
   if job.extopts.cleanupstr>0
