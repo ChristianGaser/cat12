@@ -351,58 +351,60 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   % ____________________________________________________________________
   if write(4)
     for wi=1:2
-      if (write(4)==1 || write(4)==3) && isfield(transform,'rigid')
+      if (write(4)==1 || write(4)==3) && wi==1 && isfield(transform,'rigid')
         transf=transform.rigid; 
-        pre4=['r' pre]; post='_rigid'; desc4 = [desc '(rigid)'];
-      elseif (write(4)==2 || write(4)==3) && isfield(transform,'affine')
+        pre4=['r' pre]; post='_rigid'; desc4 = [desc ' (rigid)'];
+      elseif (write(4)==2 || write(4)==3) && wi==2 && isfield(transform,'affine')
         transf=transform.affine;   
-        pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];      
+        pre4=['r' pre]; post='_affine'; desc4 = [desc ' (affine)'];
+      else 
+        continue
       end
 
-      if exist('pre4','var')
-        fname = io_handle_pre(V.fname,pre4,post,folder);
-        if exist(fname,'file'), delete(fname); end
-        VraT = struct('fname',fname,'dim',transf.odim,...
-             'dt',   [spm_type(spmtype) spm_platform('bigend')],...
-             'pinfo',[range(2) range(1)]','mat',transf.mat);%[1.0 0]'
-        VraT = spm_create_vol(VraT);
+     
+      fname = io_handle_pre(V.fname,pre4,post,folder);
+      if exist(fname,'file'), delete(fname); end
+      VraT = struct('fname',fname,'dim',transf.odim,...
+           'dt',   [spm_type(spmtype) spm_platform('bigend')],...
+           'pinfo',[range(2) range(1)]','mat',transf.mat);%[1.0 0]'
+      VraT = spm_create_vol(VraT);
 
-        N  = nifti(VraT.fname);
+      N  = nifti(VraT.fname);
 
-        % do not change mat0 - 20150612
-        % the mat0 contain the rigid transformation for the deformation tools!
-        % get rid of the QFORM0 rounding warning
-        warning off
-        N.mat   = transf.mat; 
-        N.mat0  = transf.mat0; 
-        warning on
+      % do not change mat0 - 20150612
+      % the mat0 contain the rigid transformation for the deformation tools!
+      % get rid of the QFORM0 rounding warning
+      warning off
+      N.mat   = transf.mat; 
+      N.mat0  = transf.mat0; 
+      warning on
 
-        %N.mat_intent  = 'Aligned';
-        %N.mat0_intent = 'Aligned';
-        if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc4 ' < ' V.descrip]; end
-        create(N);
+      %N.mat_intent  = 'Aligned';
+      %N.mat0_intent = 'Aligned';
+      if isempty(V.descrip), N.descrip = desc; else  N.descrip = [desc4 ' < ' V.descrip]; end
+      create(N);
 
-        for i=1:transf.odim(3),
-          if labelmap
-            tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
-          else
-            tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
-          end
-          if exist('YM','var')  % final masking after transformation
-            if labelmap
-              tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
-            else
-              tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
-            end
-            tmpM = smooth3(repmat(tmpM,1,1,3))>YMth;
-            tmp  = tmp .* tmpM(:,:,2); clear tmpM; 
-          end
-          VraT = spm_write_plane(VraT,tmp,i);
+      for i=1:transf.odim(3),
+        if labelmap
+          tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
+        else
+          tmp  = spm_slice_vol(double(Y) ,transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
         end
-
-        if nargout>0, varargout{1}(4) = spm_vol(fname); end
-        if nargout>1, varargout{2}{4} = []; end
+        if exist('YM','var')  % final masking after transformation
+          if labelmap
+            tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),0);
+          else
+            tmpM = spm_slice_vol(double(YM),transf.M*spm_matrix([0 0 i]),transf.odim(1:2),[1,NaN]);
+          end
+          tmpM = smooth3(repmat(tmpM,1,1,3))>YMth;
+          tmp  = tmp .* tmpM(:,:,2); clear tmpM; 
+        end
+        VraT = spm_write_plane(VraT,tmp,i);
       end
+
+      if nargout>0, varargout{1}(4) = spm_vol(fname); end
+      if nargout>1, varargout{2}{4} = []; end
+
       
     end
   end
