@@ -117,6 +117,7 @@ function cat_run_job(job,tpm,subj)
           Y = spm_read_vols(V);
           V.fname = nfname; 
           spm_write_vol(V,Y);
+          clear Y; 
         end
         job.channel(n).vols{subj} = nfname;
         
@@ -130,6 +131,7 @@ function cat_run_job(job,tpm,subj)
             stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
             cat_vol_isarnlm(struct('data',nfname,'verb',0,'prefix','')); 
           end
+          V = spm_vol(job.channel(n).vols{subj});
           fprintf('%4.0fs\n',etime(clock,stime));   
         end
     end
