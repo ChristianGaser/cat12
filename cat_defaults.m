@@ -126,7 +126,7 @@ native:
     Examples:
       native resolution       internal resolution 
        0.95 0.95 1.05     >     0.95 0.95 1.05
-       0.45 0.45 1.70     >     0.45 0.45 1.50 (if voxel size for normalized images is 1.50 mm)
+       0.45 0.45 1.70     >     0.45 0.45 1.70 
 
 best:
     Preprocessing with the best (minimal) voxel dimension of the native image.'
