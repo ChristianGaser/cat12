@@ -15,7 +15,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 
 %    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)
 
-  rf = 10^6; 
+  rf = 10^9; 
   bfsmoothness = 3; 
   if verb, fprintf('\n'); end
   
@@ -30,7 +30,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.5)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
   BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
 
-  Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth;
+  Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth; BGth2 = BGth; 
   Yg   = cat_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
   Ydiv = cat_vol_div(Ysrc,resT3.vx_volr) ./ (Ysrc+eps);
 
@@ -128,7 +128,11 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   [WIth,WMv] = hist(Ym(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
   WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = roundx(WMv(WIth),rf); 
   Ym   = Ym ./ WIth; 
-
+  % update WMth
+  Ysrc = Ysrc + BGth2;
+  [WIth,WMv] = hist(Ysrc(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),1000);
+  WMth = find(cumsum(WIth)/sum(WIth)>0.7,1,'first'); WMth = roundx(WMv(WMth),rf); 
+  
   cat_io_cmd(' ','','',verb,stime); 
 end
 %=======================================================================

@@ -10415,11 +10415,41 @@ Fixed: Issue in cat_stat_surf. Thanks to Christoph Hofstetter for pointing
        to that issue.
 
 ------------------------------------------------------------------------
+r921 | dahnke | 2016-04-08 16:57:33 +0200 (Fr, 08 Apr 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_display_matlab_PID.m
 
 Fixed:    Corrected PID display function.
+
 ------------------------------------------------------------------------
-r921 | dahnke | 2016-04-08 16:57:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_io_writenii.m
+M       cat_io_xml.m
+M       cat_main.m
+M       cat_main_cleanup.m
+M       cat_main_gcut.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       cat_stat_check_cov.m
+M       cat_tst_calc_kappa.m
+M       cat_vol_partvol.m
+
+Fixed*:    Corrected APP1 WMth estimation error for low value longitudinal data.
+Fixed*:    Corrected problems with to strong WMHC in images with low resolution,
+           high noise and increase neutral zone around the basal ganglia.
+Fixed:     Skull-striping warnings in low resolution images.
+Fixed:     Corrected error in GUI resolution variable.
+Fixed:     Corrected error in cat_io_xml.
+Fixed:     Deactivated spm_DATE.ps output in case of error.
+Changed*:  Updated cleanup Function.
+Changed*:  Added initial noise correction.
+Changed:   Added possible output variable to cat_stat_check_cov.
+Changed:   Modified brain mask threshold to include CSF in cat_tst_calc_kappa.
+------------------------------------------------------------------------
+r922 | dahnke | 2016-04-13 14:37:38

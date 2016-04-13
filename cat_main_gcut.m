@@ -87,10 +87,11 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   YBD  = cat_vbdist(max(0,1-Yp0*3),true(size(Yb)),vx_vol./mean(vx_vol)); % brain depth, (simple) sulcal depth
   Yb   = Yb>0.25 & Ym>2.5/3 & Ym<gc.h/3 & Yl1<21 & Yb & YGD>gc.gd & YBD>gc.bd;  % init WM 
   Yb   = Yb | (Ym>2/3 & Ym<gc.h/3 & (YBD>10 | (YBD>2 & (NS(Yl1,LAB.CB) | NS(Yl1,LAB.HI)))));
-  [Ybr,Ymr,resT2] = cat_vol_resize({single(Yb),Ym},'reduceV',1,4,32); 
+  [Ybr,Ymr,resT2] = cat_vol_resize({single(Yb),Ym},'reduceV',1,4./vx_vol,32); 
   Ybr  = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',2)); % large ventricle closing
   Ybr  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.9; 
-  Yb   = cat_vol_morph(Yb,'l') | (Ybr & Yp0<1.5 & Ym<1.5); 
+  Yb   = cat_vol_morph(Yb & mod(Yl1,2)==0,'l') | ...
+         cat_vol_morph(Yb & mod(Yl1,2)==1,'l') | (Ybr & Yp0<1.5 & Ym<1.5); 
   
   % if no largest object could be find it is very likeli that initial normalization failed
   if isempty(Yb)
@@ -130,8 +131,11 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   %% region growing - add CSF regions   
   stime = cat_io_cmd('  CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Ygr = cat_vol_grad(Ym,vx_vol); CSFth = mean(Ym(Ycsf(:)>0.8 & Ygr(:)<0.1));
-  Yb(~Yb & smooth3( cat_vol_morph( smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.5,'lc',vxd))>0.6 )=nan;
-  Yb(isnan(Yb) & cat_vol_morph(Yb>=0,'lc',2))=0;
+  Ybb = smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.5; 
+  if std(Ybb(:))>0 % no ROI in low res images 
+    Yb(~Yb & smooth3( cat_vol_morph( Ybb,'lc',vxd))>0.6 )=nan;
+    Yb(isnan(Yb) & cat_vol_morph(Yb>=0,'lc',2))=0;
+  end
   [Yb1,YD] = cat_vol_downcut(Yb,smooth3(Ym),+0.01+gc.c); 
   Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d*4 & YD>0)=1;
   for i=1:2, Yb(cat_vol_smooth3X(Yb,2)<max(0.05,(gc.s - 0.2)))=0; end
@@ -147,7 +151,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Ybr = cat_vol_morph(Ybr>0.5,'labclose',gc.f/mean(resT3.vx_volr));
   Ybr = cat_vol_resize(Ybr,'dereduceV',resT3)>0.5; 
   Yb  = Yb | Ybr; clear Ybr;   % & Ym>=gc.o/3 & Ym<1.25/3 & ~Ymg & Ycsf>0.75);
-  Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f* (rvol(1)/0.4) ))));
+  Yb  = single(cat_vol_morph(Yb,'o',max(1,min(3,4 - 0.2*gc.f* (rvol(1)/0.4) ))./cat_stat_nanmean(vx_vol)));
   Yb  = Yb | (cat_vol_morph(Yb ,'labclose',vxd*2) & Ym<1.1);
   Yb  = cat_vol_morph(Yb ,'labclose');
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,3./vx_vol); Yb = Yb>0.5 | (max(Yb,Ybs)>0.3 & Ym<0.4); % how wide

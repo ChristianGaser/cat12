@@ -349,18 +349,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   % write dartel files
   % ____________________________________________________________________
   if write(4)
-    w4 = [(write(4)==1 || write(4)==3) (write(4)==2 || write(4)==3)];
-    for wi=1:sum(w4)
-      if wi==1 && isfield(transform,'rigid')
+    for wi=1:2
+      if (write(4)==1 || write(4)==3) && isfield(transform,'rigid')
         transf=transform.rigid; 
         pre4=['r' pre]; post='_rigid'; desc4 = [desc '(rigid)'];
-      elseif wi==2 && isfield(transform,'affine')
-        transf=transform.affine;   
-        pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];
-      elseif isfield(transform,'rigid')
-        transf=transform.rigid; 
-        pre4=['r' pre]; post='_rigid'; desc4 = [desc '(rigid)'];
-      elseif isfield(transform,'affine')
+      elseif (write(4)==2 || write(4)==3) && isfield(transform,'affine')
         transf=transform.affine;   
         pre4=['r' pre]; post='_affine'; desc4 = [desc '(affine)'];      
       end
