@@ -27,22 +27,22 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   % correction for negative backgrounds (MT weighting)
   WMth = roundx(single(cat_stat_nanmedian(Ysrc(Ysrc(:)>cat_stat_nanmean( ...
           Ysrc(Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
-  [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.5)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
-  BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
+  BGth = max( min(Ysrc(:))*0.7 + 0.3*WMth ,...
+    cat_stat_nanmean(Ysrc(Ysrc(:)<cat_stat_nanmean(Ysrc(:))))); BGth = roundx(BGth,rf); 
 
   Ysrc = Ysrc - BGth; Ysrco = Ysrco - BGth; BGth2 = BGth; 
   Yg   = cat_vol_grad(Ysrc,resT3.vx_volr) ./ max(eps,Ysrc); 
-  Ydiv = cat_vol_div(Ysrc,resT3.vx_volr) ./ (Ysrc+eps);
-
+  
   WMth = roundx(single(cat_stat_nanmedian(Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean( ...
            Ysrc(Yg(:)<0.2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:))))))),rf); 
-  [BGth,BGv] = hist(Ysrc(Ysrc(:)<WMth*0.2)/WMth,min(Ysrc(:)/WMth):0.05:max(Ysrc(:)/WMth));
-  BGth = find(cumsum(BGth)/sum(BGth)>0.05,1,'first'); BGth = roundx(BGv(BGth),rf); 
-  BGth = max(BGth*WMth*4,WMth*0.2); % * 2 to get the CSF
+  BGth = max( min(Ysrc(:))*0.7 + 0.3*cat_stat_nanmean(Ysrc(:)) ,...
+    cat_stat_nanmean(Ysrc(Ysrc(:)<cat_stat_nanmean(Ysrc(:))))); BGth = roundx(BGth,rf); 
   Ym   = (Ysrc - BGth) ./ (WMth - BGth);
-
   
-  % background
+  Ydiv = cat_vol_div(Ym,resT3.vx_volr/2) ./ (Ym+eps); % lower resolution is 8 times faster 
+  
+  
+  %% background
   stime = cat_io_cmd('  Estimate background','g5','',verb,stime);
   Ybg = ((Yg.*Ym)<cat_vol_smooth3X(Ym,2)*1.2) & Ym>0.1; 
   Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg(smooth3(Ybg)<0.5)=0;
@@ -81,7 +81,8 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   Ybg([1,end],:,:)=0; Ybg(:,[1,end],:)=0; Ybg(:,:,[1,end])=0; Ybg = Ybg>0.5;
   Ybg  = cat_vol_morph(Ybg,'lc',8);
   Ybg  = cat_vol_smooth3X(Ybg,2); 
-  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5;    
+  Ybg  = cat_vol_resize(Ybg,'dereduceV',resT2)<0.5 & Ysrc<min(WMth*0.2,BGth*0.8+0.2*WMth);
+  Ybg  = cat_vol_morph(Ybg,'lo');
 
   %% second WM inhomogeneity with improved Yt with higher lower threshold (avoid CSF and less filtering)
   stime = cat_io_cmd('  Final correction','g5','',verb,stime);
@@ -123,7 +124,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 
   %% intensity normalization (Ybc is the average background noise)
   % in data with strong inhomogeneities (7T) the signal can trop below the noise level 
-  Ym   = (Ysrc - min(Ybc/2,Ywi/20)) ./ (Ywi - min(Ybc/2,Ywi/20)); 
+  Ym   = (Ysrc - min(BGth,min(Ybc/2,Ywi/20))) ./ (Ywi - min(BGth,min(Ybc/2,Ywi/20))); 
   Wth  = single(cat_stat_nanmedian(Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean( Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean(Ym(:))))))); 
   [WIth,WMv] = hist(Ym(Yg(:)<0.2 & Ym(:)>Wth*0.5 & Ym(:)<Wth*1.5),0:0.01:2);
   WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = roundx(WMv(WIth),rf); 
