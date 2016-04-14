@@ -10477,11 +10477,22 @@ Fixed:    Corrected small error and warnings unter Windows and Linux.
 
 
 ------------------------------------------------------------------------
+r925 | dahnke | 2016-04-13 17:52:20 +0200 (Mi, 13 Apr 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_io_writenii.m
 
 Fixed:    Corrected writing of rigid and affine output.
+
 ------------------------------------------------------------------------
-r925 | dahnke | 2016-04-13 17:52:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run_job_APP_init.m
+
+Fixed*:    Corrected initial APP for small (negative) values.
+New*:      APP for longitudinal pipeline.
+
+------------------------------------------------------------------------
+r926 | dahnke | 2016-04-14 16:15:55
