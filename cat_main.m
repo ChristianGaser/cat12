@@ -602,8 +602,6 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  slice. The images were scaled in a range of 0 to 1. The overlay 
 %  allows up to 20 colors
 %  ---------------------------------------------------------------------
-debug = 1; % this is a manual debugging option for matlab debugging mode
-
 stime = cat_io_cmd('Global intensity correction');
 [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
 
@@ -628,10 +626,10 @@ end
 if job.extopts.sanlm>0 && job.extopts.NCstr~=0  
 
   % use a boundary box (BB) of the brain to speed up denoising
-  useBB = 0; %job.extopts.output.bias.native; 
+  useBB = 1; %job.extopts.output.bias.native; 
   
   if useBB
-    [Yms,Ybr,BB]  = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
+    [Yms,Ybr,BB] = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
 
 
     % apply NLM filter
@@ -680,7 +678,7 @@ if job.extopts.sanlm>0 && job.extopts.NCstr~=0
     end
     clear Yms Ybr BB;
   else
-    if job.extopts.sanlm>1
+    if job.extopts.sanlm>1 
       cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
       if job.extopts.verb>1, fprintf('\n'); end
       Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,job.extopts.NCstr); 
@@ -959,11 +957,11 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  There is one major parameter to controll the strength of the cleanup.
 %  As far as the cleanup has a strong relation to the skull-stripping, 
 %  cleanupstr is controlled by the gcutstr. 
-%     Yp0o  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o(indx,indy,indz) = Yp0o; 
+%     Yp0ox = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 
 %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
 %  -------------------------------------------------------------------
 if job.extopts.cleanupstr>0  %2.2; %1.6;
-  prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
+  %prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
   [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ym(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
 else
   if job.extopts.cleanupstr>0
@@ -1115,36 +1113,36 @@ end
 %  can not be used here, due to special TPM image for chrildren or other
 %  species!
 %  ---------------------------------------------------------------------
-
-% parameter
-aflags = struct('sep',job.opts.samp,'regtype',job.opts.affreg,'WG',[],'WF',[],'globnorm',0);
-
-% VG template
-cid = [2 3 1]; 
-VG = tpm.V(1); VG.dat = zeros(VG.dim,'uint8'); VG.dt = [2 0]; VG.pinfo(3) = 0;
-for ci=1:3 
-  Yt = spm_read_vols(tpm.V(ci)); 
-  VG.dat = VG.dat + cat_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt 
-end
-
-% VF image
-VF = VT; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
-VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; 
-VF.dat(indx,indy,indz) = Yp0b; 
-
-% just brain mask - this improves affine registration but lead to worse
-% resultes in dartel normalization .. retry later without CSF
-% VG.dat = uint8(VG.dat>85)*255; VF.dat = uint8(VF.dat>85)*255;
-
-% smooth source with job.opts.samp mm
-VF = spm_smoothto8bit(VF,job.opts.samp/2); % smoothing, because of the TPM smoothness!
-
-%% affreg registration for one tissue segment
 if 0
+  % parameter
+  aflags = struct('sep',job.opts.samp,'regtype',job.opts.affreg,'WG',[],'WF',[],'globnorm',0);
+
+  % VG template
+  cid = [2 3 1]; 
+  VG = tpm.V(1); VG.dat = zeros(VG.dim,'uint8'); VG.dt = [2 0]; VG.pinfo(3) = 0;
+  for ci=1:3 
+    Yt = spm_read_vols(tpm.V(ci)); 
+    VG.dat = VG.dat + cat_vol_ctype(Yt * 255 * cid(ci)/3,'uint8'); clear Yt 
+  end
+
+  % VF image
+  VF = VT; VF.fname = [tempname '.nii']; VF = rmfield(VF,'private'); VF.pinfo(3)=0;
+  VF.dat = zeros(d,'uint8'); VF.dt = [2 0]; 
+  VF.dat(indx,indy,indz) = Yp0b; 
+
+  % just brain mask - this improves affine registration but lead to worse
+  % resultes in dartel normalization .. retry later without CSF
+  % VG.dat = uint8(VG.dat>85)*255; VF.dat = uint8(VF.dat>85)*255;
+
+  % smooth source with job.opts.samp mm
+  VF = spm_smoothto8bit(VF,job.opts.samp/2); % smoothing, because of the TPM smoothness!
+
+  %% affreg registration for one tissue segment
+
   % deactivated on 20160405 because something failed in the logitudinal process 
-  warning off;  %#ok<WNOFF>
+  warning off;  
   Affine = spm_affreg(VG, VF, aflags, res.Affine); 
-  warning on;  %#ok<WNON>
+  warning on; 
   rf=10^6; Affine    = fix(Affine * rf)/rf;
 else
   Affine = res.Affine; 
@@ -1946,12 +1944,6 @@ fprintf('%4.0fs\n',etime(clock,stime));
     end
   end
 
-  % Rating scala - removed 20160202
-  %str4 = struct('name',sprintf(' \bRatingcolors: \n    %s, %s, %s, \n    %s, %s, %s', ...
-  %      mark2str2(1,'%s','0.5-1.5 perfect'),mark2str2(2,'%s','1.5-2.5 good'), ...
-  %      mark2str2(3,'%s','2.5-3.5 average'),mark2str2(4,'%s','3.5-4.5 poor'), ...
-  %      mark2str2(5,'%s','4.5-5.5 critical'),mark2str2(6,'%s','>5.5 unacceptable')),'value','');  
-
   % adding one space for correct printing of bold fonts
   for si=1:numel(str)
     str(si).name   = [str(si).name  '  '];  str(si).value  = [str(si).value  '  '];
@@ -1962,9 +1954,6 @@ fprintf('%4.0fs\n',etime(clock,stime));
   for si=1:numel(str3)
     str3(si).name  = [str3(si).name '  '];  str3(si).value = [str3(si).value '  '];
   end
-  %for si=1:numel(str4) - removed 20160202
-  %  str4(si).name  = [str4(si).name '  '];  str4(si).value = [str4(si).value '  '];
-  %end    
 
 
   %%
@@ -2060,28 +2049,34 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   % Yo - original image in original space
   % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
-  Yo  = single(VT.private.dat(:,:,:)); 
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  if job.inv_weighting
-    WMth = min([...
-      cat_stat_nanmedian(Yo(Yp0(:)>0.8 & Yp0(:)<1.2))*2,...
-      cat_stat_nanmedian(Yo(Yp0(:)>1.8 & Yp0(:)<2.2))*1.5,...
-      ]);
-    T1txt = '*.nii (Original PD/T2)'; 
-  else
-    WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
-    T1txt = '*.nii (Original T1)'; 
-  end
-  clear Yo; 
+  try
+    Yo  = single(VT.private.dat(:,:,:)); 
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+    if job.inv_weighting
+      WMth = min([...
+        cat_stat_nanmedian(Yo(Yp0(:)>0.8 & Yp0(:)<1.2))*2,...
+        cat_stat_nanmedian(Yo(Yp0(:)>1.8 & Yp0(:)<2.2))*1.5,...
+        ]);
+      T1txt = '*.nii (Original PD/T2)'; 
+    else
+      WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
+      T1txt = '*.nii (Original T1)'; 
+    end
+    clear Yo; 
   
-  VT0x = VT0;
-  VT0x.mat = dispmat * VT0x.mat; 
-  hho = spm_orthviews('Image',VT0x,pos(1,:)); 
-  spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
-  spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
+    VT0x = VT0;
+    VT0x.mat = dispmat * VT0x.mat; 
+    hho = spm_orthviews('Image',VT0x,pos(1,:)); 
+    spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
+    spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
+  catch
+    cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
+  end
+  
   cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-     'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
+    'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
 
+  
   % Ym - normalized image in original space
   Vm        = spm_vol(VT.fname);
   Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
@@ -2099,7 +2094,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   VO        = spm_vol(VT.fname);
   VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
   VO.dat(:,:,:) = single(Yp0/3); 
-  VO.pinfo = repmat([1;0],1,size(Yp0,3));
+  VO.pinfo  = repmat([1;0],1,size(Yp0,3));
   VO.mat    = dispmat * VO.mat; 
   hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
   spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
@@ -2123,10 +2118,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
 
   % print group report file 
-  %fg = spm_figure('FindWin','Graphics'); 
-  %set(0,'CurrentFigure',fg)
-  fprintf(1,'\n'); % spm_print; % no spm ps print 
-
+  %fg = spm_figure('FindWin','Graphics'); set(0,'CurrentFigure',fg); spm_print; fprintf(1,'\n'); % no spm ps print 
+  
   
 
   %% print subject report file as standard PDF/PNG/... file
@@ -2158,14 +2151,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
   get(gca,'clim');
   
   WMfactor         = 4/3;
-  GMthicknessaxis  = [0 6]; 
-
-  %if  exist('hSD','var')
-    SPMgraficscaling = GMthicknessaxis(2); 
- % else
-%    cax = get(gca,'clim');
- %   SPMgraficscaling = 60; %cax(2); 
-  %end
+  GMthicknessaxis  = [0 60]; 
+  SPMgraficscaling = GMthicknessaxis(2); 
   colormap('gray'); 
   caxis(GMthicknessaxis);
   
