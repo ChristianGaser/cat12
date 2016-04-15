@@ -10486,6 +10486,7 @@ M       cat_io_writenii.m
 Fixed:    Corrected writing of rigid and affine output.
 
 ------------------------------------------------------------------------
+r926 | dahnke | 2016-04-14 16:16:11 +0200 (Do, 14 Apr 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10494,5 +10495,14 @@ M       cat_run_job_APP_init.m
 Fixed*:    Corrected initial APP for small (negative) values.
 New*:      APP for longitudinal pipeline.
 
+
 ------------------------------------------------------------------------
-r926 | dahnke | 2016-04-14 16:15:55
+
+Changed paths:
+M       CHANGES.txt
+A       cat_long_APP.m
+
+New*:      APP for longitudinal pipeline.
+
+------------------------------------------------------------------------
+r927 | dahnke | 2016-04-15 09:31:08
