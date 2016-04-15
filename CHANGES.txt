@@ -10497,6 +10497,7 @@ New*:      APP for longitudinal pipeline.
 
 
 ------------------------------------------------------------------------
+r927 | dahnke | 2016-04-15 09:32:26 +0200 (Fr, 15 Apr 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10504,5 +10505,21 @@ A       cat_long_APP.m
 
 New*:      APP for longitudinal pipeline.
 
+
 ------------------------------------------------------------------------
-r927 | dahnke | 2016-04-15 09:31:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_APP.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_version.m
+
+Fixed:    Use CHANGES.txt for a second CAT version estimation.
+Fixed:    Report colormap scaling.
+Fixed:    Updated help of cat_long_APP.
+Changed:  Removed old code.
+
+
+------------------------------------------------------------------------
+r928 | dahnke | 2016-04-15 17:08:11
