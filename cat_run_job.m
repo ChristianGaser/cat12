@@ -167,7 +167,7 @@ function cat_run_job(job,tpm,subj)
         case 'best'
           vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
                      ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
-          vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
+          vx_voli  = max(min(vx_vol),min(vx_vold,vx_voli)); % guarantee Dartel resolution
         otherwise 
           error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
       end

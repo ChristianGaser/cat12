@@ -2,14 +2,23 @@ function [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 % Preprocessing for longitudinal pipeline based on the cat_run_job
 % APP pipeline.
 %
-% [Ym,Yb,Yp0,WMth] = cat_long_run_APP(Ysrc,Ybi,opt)
+% [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 % 
-% Ysrc  .. original image
-% Ybi   .. initial mask 
-% opt   .. parameter (see code)
-% Ym    .. bias corrected image
-% Yb    .. new brain mask
-% Yp0   .. rought segmentation 
+% PF    .. original image
+% PG    .. t1 template for affine registration
+% PB    .. initial template mask
+%
+% opt         .. parameter (see code)
+% opt.verb    .. be verbose (0 - no, 1 - less, 2 - more)
+% opt.gcutstr .. strength of skullstripping (0-less,1-strong,def.=0.5)
+% opt.vx_vol  .. voxel resolution (def.=ones(1,3)) 
+% opt.samp    .. sampling distance of affine registration (def.=3); 
+%  
+% Ym     .. bias corrected image
+% Yb     .. new brain mask
+% Yp0    .. rought segmentation (only save areas for error detection) 
+% WMth   .. WM threshold of the original image
+% Affine .. Affine registration matrix
 %
 % Call in cat_run_job:
 %   [Ym,Yb,Yp0,WMth] = cat_long_run_APP(job.channel(1).vols{subj},...
