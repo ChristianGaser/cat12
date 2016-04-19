@@ -11,17 +11,18 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
 % b_settings - regularisation settings for nonuniformity field.
 % ord        - degree of B-spline interpolation used for sampling images.
 %
-% This function requires an obscene amount of memory.  If it crashes
-% with an "Out of memory" error, then do not be too surprised.
-%
 %_______________________________________________________________________
 % Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
 %
-% modified version of
+% modified version (added masked rergistration) of
 % John Ashburner
 % spm_groupwise_ls.m 6008 2014-05-22 12:08:01Z john
 %
 % $Id cat_vol_groupwise_ls.m $
+
+% Use brainmask to obtain better registration
+%-----------------------------------------------------------------------
+use_brainmask = 1;
 
 % Get handles to NIfTI data
 %-----------------------------------------------------------------------
@@ -72,7 +73,6 @@ for i=1:numel(Nii),
     dm = [size(Nii(i).dat) 1];
     d  = max(d, dm(1:3));
 end
-%d = prod(d-2)^(1/3);
 d  = min(d);
 
 % Specify highest resolution data
@@ -211,6 +211,29 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
             %-----------------------------------------------------------------------
             [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
             % for i=1:numel(param), fprintf('  %12.5g %12.5g %12.5g', prec(i)*ss(i), param(i).eb, param(i).ev); end; fprintf('  0\n');
+            
+            % create mask at final level to obtain masked registration
+            if (level == 1) && (iter == 1) && use_brainmask
+                PG = fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii');
+                PB = fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii');
+
+                [pth,nam]   = fileparts(Nii(1).dat.fname);
+                nam         = fullfile(pth,['avg_' nam '.nii']);
+                Nio         = nifti;
+                Nio.dat     = file_array(nam,size(mu),'float32',0,1,0);
+                Nio.mat     = M_avg;
+                Nio.mat0    = Nio.mat;
+                Nio.mat_intent  = 'Aligned';
+                Nio.mat0_intent = Nio.mat_intent;
+                Nio.descrip = sprintf('Average of %d', numel(param));
+                create(Nio);
+                Nio.dat(:,:,:) = mu;
+
+                PF = nam;
+
+                [Ym, brainmask] = cat_long_APP(PF,PF,PB);
+                clear Ym
+            end
 
             % Compute objective function (approximately)
             %-----------------------------------------------------------------------
@@ -246,7 +269,11 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
 
                     b     = f-mu(:,:,m).*ebias;
 
-                    msk   = isfinite(b);
+                    if (level == 1) && use_brainmask
+                      msk = brainmask(:,:,m) > 0.25;
+                    else
+                      msk   = isfinite(b);
+                    end
                     ebias = ebias(msk);
                     b     = b(msk);
                     dt    = dt(msk);
@@ -400,7 +427,7 @@ if need_wimg,
         [pth,nam]   = fileparts(Nii(i).dat.fname);
         nam         = fullfile(pth,['r' nam '.nii']);
         Nio         = nifti;
-        Nio.dat     = file_array(nam,size(img),'int16',0,max(max(img(:))/32767,-min(img(:))/32768),0);
+        Nio.dat     = file_array(nam,size(img),'float32',0,1,0);
         Nio.mat     = M_avg;
         Nio.mat0    = Nio.mat;
         Nio.mat_intent  = 'Aligned';

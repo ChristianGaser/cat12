@@ -1,8 +1,8 @@
-function [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
+function [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 % Preprocessing for longitudinal pipeline based on the cat_run_job
 % APP pipeline.
 %
-% [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
+% [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 % 
 % PF    .. original image
 % PG    .. t1 template for affine registration
@@ -15,13 +15,12 @@ function [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 % opt.samp    .. sampling distance of affine registration (def.=3); 
 %  
 % Ym     .. bias corrected image
-% Yb     .. new brain mask
-% Yp0    .. rought segmentation (only save areas for error detection) 
+% Yb     .. new (smooth) brain mask with a range 0..1 (needs to be thresholded)
 % WMth   .. WM threshold of the original image
 % Affine .. Affine registration matrix
 %
 % Call in cat_run_job:
-%   [Ym,Yb,Yp0,WMth] = cat_long_run_APP(job.channel(1).vols{subj},...
+%   [Ym,Yb,WMth] = cat_long_run_APP(job.channel(1).vols{subj},...
 %     job.extopts.T1,job.extopts.brainmask)
 %
 % Display result
@@ -45,7 +44,7 @@ function [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
   opt = cat_io_checkinopt(opt,def);
 
   if opt.verb
-    stime = cat_io_cmd('APP:'); 
+    stime = cat_io_cmd('APP'); 
   end
   
   % Rescale images so that globals are better conditioned
@@ -60,7 +59,7 @@ function [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
   VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
   VF.dat(:,:,:) = cat_vol_ctype(Ym * 200,'uint8'); 
   VF.pinfo      = repmat([1;0],1,size(Ym,3));
-  clear WI; 
+  clear Yt; 
 
   % smoothing
   resa  = opt.samp*2; % definine smoothing by sample size
@@ -89,11 +88,8 @@ function [Ym,Yb,Yp0,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
   VFa = VF; VFa.mat = Affine * VF.mat; 
   if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
   [pp,ff] = spm_fileparts(PF); Pbt = fullfile(pp,['brainmask_' ff '.nii']);
-  [Vmsk,Yb]   = cat_vol_imcalc([VFa,VB],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5;
-  
-  % fine APP
-  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrc,Ym,Yb,Ybg,opt.vx_vol,opt.gcutstr,opt.verb-1);
-  
+  [Vmsk,Yb]   = cat_vol_imcalc([VFa,VB],Pbt,'i2',struct('interp',3,'verb',0));
+    
   if opt.verb
     fprintf('%4.0fs\n',etime(clock,stime)); 
   end
