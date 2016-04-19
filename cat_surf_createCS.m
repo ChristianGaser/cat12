@@ -44,6 +44,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
   def.interpV   = max(0.25,min([min(vx_vol),opt.interpV,1]));
   def.reduceCS  = 100000;  
+  def.tca       = 1;  
   def.usePPmap  = 1; 
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   opt           = cat_io_updateStruct(def,opt);
@@ -130,7 +131,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0.5;             % interpolate volume
    
     % pbt calculation
-    [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyris
+    [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyri
     if ~opt.expertgui, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
@@ -241,6 +242,26 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     % topology defects. Otherwise we use a threshold of 0.5 which is the central surface.
     % However, this approach did not really improved topology correction, thus we again use a value of 0.5
     if opt.usePPmap, th_initial = 0.5; else th_initial = 0.5; end
+    
+    % apply TCA from BrainSuite for initial intensity-based topology correction
+    if opt.tca
+      VN = resI.hdrN;
+      VN.dt(1) = 2;
+      VN.fname = fullfile(pp,mrifolder,['tca_' ff '.nii']);
+      spm_write_vol(VN,255*(Yppi>th_initial));
+      cmd = sprintf('tca -m 2500 -n 0 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+ 
+      % load topology corrected image in the correct orientation
+      VN2 = spm_vol(VN.fname);
+      for z=1:size(Yppi,3)
+	    B = spm_matrix([0 0 -z 0 0 0 1 1 1]);
+        Yppi(:,:,z) = single(spm_slice_vol(VN2,VN2.mat\VN.mat*inv(B),VN.dim(1:2),0));    
+      end
+      Yppi = Yppi/255;
+      delete(VN.fname);
+    end
+    
     [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
     clear tmp Yppi;
 
@@ -263,14 +284,16 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
 
-    % after reducepatch many triangles have very large area which causes isses for resampling
-    % RefineMesh addds triangles in those areas
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2); 
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
-
-    % remove some unconnected meshes
-    cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon works here
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    if opt.reduceCS>0, 
+      % after reducepatch many triangles have very large area which causes isses for resampling
+      % RefineMesh adds triangles in those areas
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2); 
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    
+      % remove some unconnected meshes
+      cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Praw,Praw); % CAT_SeparatePolygon works here
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    end
 
     % spherical surface mapping 1 of the uncorrected surface for topology correction
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Praw,Psphere0);
@@ -285,9 +308,15 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
    
     %% topology correction and surface refinement 
-    stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
-    cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    if ~opt.tca || opt.reduceCS>0
+      stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
+      cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    else
+      stime = cat_io_cmd('  Resampling and surface refinement','g5','',opt.verb,stime);
+      cmd = sprintf('CAT_ResampleSphericalSurf "%s" "%s" "%s" 327680',Praw,Psphere0,Pcentral);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    end
     
     if opt.usePPmap
       % we use thickness values to get from the initial (white matter) surface to the central surface
