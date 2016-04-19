@@ -10507,6 +10507,7 @@ New*:      APP for longitudinal pipeline.
 
 
 ------------------------------------------------------------------------
+r928 | dahnke | 2016-04-15 17:08:32 +0200 (Fr, 15 Apr 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10521,5 +10522,17 @@ Fixed:    Updated help of cat_long_APP.
 Changed:  Removed old code.
 
 
+
 ------------------------------------------------------------------------
-r928 | dahnke | 2016-04-15 17:08:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_APP.m
+M       cat_surf_createCS.m
+M       cat_vol_groupwise_ls.m
+
+Changed: Added masked registration to longitudinal pipeline.
+Changed: Initial intensity-based topology correction using tca from BrainSuite.
+
+------------------------------------------------------------------------
+r929 | gaser | 2016-04-19 12:09:57
