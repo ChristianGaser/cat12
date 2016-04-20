@@ -173,6 +173,7 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 
 % surface options
 cat.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
+cat.extopts.tca          = 1;     % optionally use tca topology correction from BrainSuite 
 
 % visualisation, print and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
