@@ -27,7 +27,7 @@ function [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 %   ds('l2','',vx_vol,Ym,Yb,Yp0,Ym,160)
 % ______________________________________________________________________
 % Robert Dahnke
-% $Id: cat_parallelize.m 917 2016-04-05 15:43:37Z dahnke $
+% $Id$
 
 %#ok<*WNOFF,*WNON>
 
