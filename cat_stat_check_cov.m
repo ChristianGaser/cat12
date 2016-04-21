@@ -100,15 +100,18 @@ if issurf
   spm_progress_bar('Init',n_subjects,'Load surfaces','subjects completed')
 
   V = gifti(deblank(P(1,:)));
+  if isa(V.cdata,'file_array'), V.cdata = V.cdata(); end
   sz = length(V.cdata);
 
   Y = zeros(n_subjects,sz);
   tmp = V.cdata;
+
   tmp(isnan(tmp)) = 0;
   Y(1,:) = tmp';
 
   for i = 2:n_subjects
     V = gifti(deblank(P(i,:)));
+    if isa(V.cdata,'file_array'), V.cdata = V.cdata(); end
     if length(V.cdata) ~= sz
       error(sprintf('File %s has different surface size than %',P(i,:),P(1,:)));
     end
@@ -437,7 +440,7 @@ list2 = list(1:number,:);
 if issurf
   % display single meshes and correct colorscale of colorbar
   for i=1:number
-    h = spm_mesh_render(deblank(list2(i,:)));
+    h = spm_mesh_render('Disp',deblank(list2(i,:)));
     
     % shift each figure slightly
     if i==1
