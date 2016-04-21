@@ -46,7 +46,12 @@ for i=1:size(Psubj,1)
     Pmeasure   = fullfile(dname,[hemi '.' pname]);
     Presamp    = fullfile(dname,[hemi '.smoothwm.resampled']);
     Pvalue     = fullfile(dname,[hemi '.' pname '.resampled']);
-    Pfwhm      = fullfile(outdir,[sprintf('s%gmm.',fwhm) hemi '.' pname '.resampled.' name]);
+    if fwhm > 0
+        Pfwhm      = fullfile(outdir,[sprintf('s%gmm.',fwhm) hemi '.' pname '.resampled.' name]);
+    else
+        Pfwhm      = fullfile(outdir,[hemi '.' pname '.resampled.' name]);
+    end
+
     Pfsavg     = fullfile(opt.fsavgDir,[hemi '.sphere.freesurfer.gii']);
     Pmask      = fullfile(opt.fsavgDir,[hemi '.mask']);
   
@@ -58,7 +63,7 @@ for i=1:size(Psubj,1)
   
     % resample surface using sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Psmoothwm,Psphere,Pfsavg,Presamp);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+%    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
 
     % smooth resampled values
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm,Pvalue,Pmask);
@@ -70,6 +75,6 @@ for i=1:size(Psubj,1)
   
     delete(Presamp);
     delete(Pfwhm);
-    delete(Pvalue);
+    if fwhm > 0, delete(Pvalue); end
  end
 end
