@@ -289,11 +289,8 @@ for i=1:size(P,1)
                 [N2,F2,XYZ2,A2,L2]  = spm_max(F,XYZ);
             end
 
-            if max(A) ~= max(A2)
-                 error('Number of clusters does not much in spm_max and spm_clusters!');
-            end
-
-            for i2 = 1:max(A2)
+            % sometimes max of A and A2 differ, thus we have to use the smaller value
+            for i2 = 1:min([max(A) max(A2)])
                 %-Get LKC for voxels in i-th region
                 %----------------------------------------------------------
                 LKC = spm_data_read(SPM.xVol.VRpv.fname,'xyz',L2{i2});
@@ -316,7 +313,7 @@ for i=1:size(P,1)
                 % find corresponding cluster in spm_clusters if cluster exceeds threshold
                 if k_noniso >= k
                     ind2 = find(A2==i2);
-                    for i = 1:max(A)
+                    for i = 1:min([max(A) max(A2)])
                         j = find(A == i);
                         if length(j)==N2(ind2)
                             if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
@@ -329,7 +326,7 @@ for i=1:size(P,1)
             end
         else
             Q     = [];
-            for i = 1:max(A)
+            for i = 1:min([max(A) max(A2)])
                 j = find(A == i);
                 if length(j) >= k; Q = [Q j]; end
             end

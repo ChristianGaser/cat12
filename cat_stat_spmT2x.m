@@ -325,7 +325,9 @@ for i=1:size(P,1)
         A     = spm_clusters(XYZ);
         
         Q     = [];
-        for i = 1:max(A)
+        
+        % sometimes max of A and A2 differ, thus we have to use the smaller value
+        for i = 1:min([max(A) max(A2)])
             j = find(A == i);
             if length(j) >= k/K(i); Q = [Q j]; end
         end

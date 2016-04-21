@@ -17,6 +17,10 @@
 % spherical registration and resampling).
 % The central surface is estimated by averaging the white and pial surface.
 %
+% ?h.mc.central.freesurfer.gii
+% ---------------------------------
+% Mean curvature for display purposes (e.g. underlying texture)
+%
 % ?h.mask.txt
 % ---------------------------------
 % Mask based on the Destrieux Atlas of freesurfer

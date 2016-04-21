@@ -32,7 +32,6 @@ function varargout = cat_surf_resamp(varargin)
   def.lazy      = 0; % reprocess exist results
   def.debug     = cat_get_defaults('extopts.debug');
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-  %def.subfolders = cat_get_defaults('extopts.subfolders'); 
 
   job = cat_io_checkinopt(job,def);
 
