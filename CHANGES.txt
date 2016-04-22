@@ -10551,6 +10551,7 @@ Changed: Initial intensity-based topology correction using tca set as default.
 
 
 ------------------------------------------------------------------------
+r931 | gaser | 2016-04-21 16:28:56 +0200 (Do, 21 Apr 2016) | 23 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -10574,5 +10575,17 @@ M       templates_surfaces/templates_surfaces.man
 (4) Fixed: Crashes if cluster extent threshold was selected for some cases
     in cat_stat_spmT2x.m and cat_stat_spmF2x.m.
 
+
 ------------------------------------------------------------------------
-r931 | gaser | 2016-04-21 16:28:40
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_main.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+
+Fixed: Error in longitudinal pipeline where the mask for registration was 
+       not correct.
+------------------------------------------------------------------------
+r932 | gaser | 2016-04-22 13:11:37
