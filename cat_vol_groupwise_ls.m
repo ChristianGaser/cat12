@@ -231,7 +231,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
 
                 PF = nam;
 
-                [Ym, brainmask] = cat_long_APP(PF,PF,PB);
+                [Ym, brainmask] = cat_long_APP(PF,PG,PB);
                 clear Ym
             end
 
