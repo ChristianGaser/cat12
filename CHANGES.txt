@@ -10577,6 +10577,7 @@ M       templates_surfaces/templates_surfaces.man
 
 
 ------------------------------------------------------------------------
+r932 | gaser | 2016-04-22 13:11:51 +0200 (Fr, 22 Apr 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10587,5 +10588,24 @@ M       html/cat.html
 
 Fixed: Error in longitudinal pipeline where the mask for registration was 
        not correct.
+
 ------------------------------------------------------------------------
-r932 | gaser | 2016-04-22 13:11:37
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+M       cat_surf_calc.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_rename.m
+M       cat_surf_render.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods.html
+M       html/style.css
+
+Fixed:    Corrected HTML style for MATLAB 2016a.
+Fixed:    Corrected colormap surface display problems for MATLAB 2016a.
+Fixed:    Corrected cat_surf_calc naming problem and prepared further tests.
+------------------------------------------------------------------------
+r933 | dahnke | 2016-04-25 14:57:56

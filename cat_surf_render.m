@@ -228,8 +228,7 @@ switch lower(action)
             figure(H.figure); axes(H.axis);
         else
             H.figure = figure('Color',[1 1 1]);
-            H.axis   = axes('Parent',H.figure);
-            set(H.axis,'Visible','off');
+            H.axis   = axes('Parent',H.figure,'Visible','off');
         end
         renderer = get(H.figure,'Renderer');
         set(H.figure,'Renderer','OpenGL');
@@ -517,7 +516,9 @@ switch lower(action)
             d = getappdata(H.patch,'data');
             updateTexture(H,d);
         end
-        
+        if nargin>1
+            colormap(varargin{2});
+        end
 %         
 %     %-ColourMap
 %     %======================================================================
@@ -552,6 +553,9 @@ switch lower(action)
             end
             d = getappdata(H.patch,'data');
             updateTexture(H,d);
+        end
+        if nargin>1
+            caxis(varargin{2});
         end
         
     %-CLip

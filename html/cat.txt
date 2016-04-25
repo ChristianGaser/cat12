@@ -8,10 +8,10 @@
   </head>
   
   <body>
-    <div id="header">
-      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+    <div id="header" style="background: black url('images/home.jpg') right;">
+      <h1><a href="matlab:web('http://dbm.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
       <p>
-          <a href="matlab:web('http://www.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
           <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
           <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
           <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
