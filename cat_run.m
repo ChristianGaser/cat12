@@ -102,7 +102,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     [status,result] = system(system_cmd); 
     cat_check_system_output(status,result);
     
-    test = 0; lim = 10; ptime = 0.5;
+    test = 0; lim = 20; ptime = 0.5;
     while test<lim
       if ~exist(log_name,'file')
         pause(ptime); 

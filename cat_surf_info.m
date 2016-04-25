@@ -1,4 +1,4 @@
-function [varargout] = cat_surf_info(P,read)
+function [varargout] = cat_surf_info(P,read,gui)
 % ______________________________________________________________________
 % Extact surface information from filename.
 %
@@ -29,6 +29,7 @@ function [varargout] = cat_surf_info(P,read)
   if isempty(P) && nargout>0, varargout{1} = {}; return; end
   
   if nargin<2, read = 0; end
+  if nargin<3, gui  = 0; end
 
   P = cellstr(P);
   
@@ -131,7 +132,11 @@ function [varargout] = cat_surf_info(P,read)
     if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
     elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
     else
-      sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+      if gui
+        sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+      else
+        sinfo(i).side = ''; 
+      end
       sidei = strfind(noname,[sinfo(i).side '.']);
     end
       if isempty(sidei), sidei = strfind(noname,sinfo(i).side); end
@@ -240,12 +245,19 @@ function [varargout] = cat_surf_info(P,read)
       if isfield(S,'vertices'), 
         sinfo(i).nvertices = size(S.vertices,1);
       else
-        if ~isempty(sinfo(i).Pmesh)
+        if ~isempty(sinfo(i).Pmesh) && exist(sinfo(i).Pmesh,'file')
           S2 = gifti(sinfo(i).Pmesh);
+          if ~isstruct(S), clear S; end
           if isfield(S2,'vertices'), S.vertices = S2.vertices; else S.vertices = []; end
           if isfield(S2,'faces'),    S.faces    = S2.faces;    else S.faces = []; end
         end
-        sinfo(i).nvertices = size(S.vertices,1);
+        if isfield(S,'vertices'),
+          sinfo(i).nvertices = size(S.vertices,1);
+        elseif isfield(S,'cdata'),
+          sinfo(i).nvertices = size(S.cdata,1);
+        else 
+          sinfo(i).nvertices = nan;
+        end
       end
       if isfield(S,'faces'),    sinfo(i).nfaces    = size(S.faces,1); end
       if isfield(S,'cdata'),    sinfo(i).ncdata    = size(S.cdata,1); end
