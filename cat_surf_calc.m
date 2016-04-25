@@ -6,7 +6,7 @@ function varargout = cat_surf_calc(job)
 %
 % job.cdata      .. cellstr or cell of cellstr for multi-subject
 %                   processing
-% job.dataname   .. output name
+% job.dataname   .. output name (def = 'ouput')
 % job.outdir     .. output directory (if empty first subject directory) 
 % job.expression .. texture calculation expression 
 %                     's1 + s2' for dmtx==0
@@ -16,15 +16,19 @@ function varargout = cat_surf_calc(job)
 % Robert Dahnke
 % $Id$
 
+  if strcmp(job,'selftest')
+    cat_surf_calc_selftest;
+  end
   
-
   if nargin == 1
-    def.nproc = 0;
-    def.verb  = 0;
-    def.lazy  = 0; 
-    def.usefsaverage = 1; 
-    def.assuregifti  = 0;
-    def.fsaverage    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
+    def.nproc           = 0; % multiple threads
+    def.verb            = 0; % dispaly something
+    def.lazy            = 0; % do not process anything if output exist (expert)
+    def.usefsaverage    = 1; % 
+    def.assuregifti     = 0; % write gii output
+    def.dataname        = 'output'; 
+    def.usetexturefield = 0;
+    def.fsaverage       = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
     job = cat_io_checkinopt(job,def);
   else
     error('Only batch mode'); 
@@ -36,22 +40,21 @@ function varargout = cat_surf_calc(job)
   else
     sinfo = cat_surf_info(job.cdata{1}{1});
   end
-  if ~strcmp(sinfo.ee,'.gii')
-    ff = [sinfo.ff sinfo.ee];
-  else
-    ff = sinfo.ff;
-  end 
+     
   if ~isempty(sinfo.pp), outdir = sinfo.pp; else outdir = job.outdir{1}; end  
   ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
 
-  
   
   % single or multi subject calculation
   if iscellstr(job.cdata)
     if isempty(outdir), outdir = fileparts(job.cdata{1}); end
 
-    job.output = fullfile(outdir,[ff,ee]); 
-      
+    if job.usetexturefield 
+      job.output = char(cat_surf_rename(job.cdata{1},...
+        'preside','','pp',outdir,'name','','dataname',job.dataname,'ee',ee));  
+    else
+      job.output = fullfile(outdir,[job.dataname,ee]); 
+    end
     
     % call surfcalc
     if strcmp(strrep(job.expression,' ',''),'s1') % this is just a copy
@@ -233,6 +236,7 @@ function surfcalc(job)
   
 
   %% save texture
+  ppn = fileparts(job.output); if ~exist(ppn,'dir'), mkdir(ppn); end
   if sinfo1.datatype==3 || strcmp(job.output(end-3:end),'.gii')
     if ~strcmp(job.output(end-3:end),'.gii'), job.output = [job.output '.gii']; end
     if sinfo1.datatype==3
@@ -249,3 +253,50 @@ function surfcalc(job)
   end
 end
 
+function cat_surf_calc_selftest
+  % creation of a test directory with syntect (resampled) simple surface (cubes)
+  %
+  %   s15mm.[rl]h.thickness.resampled.C01.gii  % full gifti resampled
+  %   s15mm.[rl]h.thickness.resampled.C02.gii  % full gifti resampled
+  %   [rl]h.thickness.C01                      % FS texture > error 
+  %   [rl]h.thickness.resampled.C01            % FS resampled texture 
+  %
+  %   [rl]h/beta0815.gii                       %  
+  %   [rl]h/mask0815.gii                       %
+  %
+  % GUI - Parameter structure with(out) side handling 
+  %
+  % job cases:
+  % - standard imcalc with a mix of GII and FS surfases 
+  %   - different outputs (PATH,FS-FILE,GII-File)
+  %   - only texture, both, use AVG, ...
+  %   - different expressions with and without datamatrix  
+  % 
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  

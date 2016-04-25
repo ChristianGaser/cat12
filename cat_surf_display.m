@@ -80,7 +80,7 @@ function varargout = cat_surf_display(varargin)
   job = cat_io_checkinopt(job,def);
   
   %% ... need futher development 
-  sinfo = cat_surf_info(job.data,job.readsurf);  
+  sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage);  
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
   end
@@ -222,7 +222,7 @@ function varargout = cat_surf_display(varargin)
               clim = iscaling(h.cdata);  
               cat_surf_render('clim',h.axis,round(clim));
             end
-        end     
+        end    
       else
         cat_surf_render('clim',h.axis,job.caxis);
       end

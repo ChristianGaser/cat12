@@ -3,7 +3,9 @@ img {
 	}
 
 body {
-	font: 110% 'Lucida Grande', Verdana, Arial, Sans-Serif; /* Resets 1em to 10px 'Lucida Grande', Verdana, Arial, Sans-Serif;  */ 
+    font: 16px 'Lucida Grande', Verdana, Arial, Sans-Serif; 
+    /* we need to set the pixel size for different MATLAB versions */
+	 /* font: 100% 'Lucida Grande', Verdana, Arial, Sans-Serif; /* Resets 1em to 10px 'Lucida Grande', Verdana, Arial, Sans-Serif;  */ 
 	color: #444;
 	margin: 0px;
 	padding: 0px;
@@ -16,7 +18,7 @@ body {
 	background-repeat: no-repeat;
 	width: 100%;
 	position: relative;
-	height: 200px;
+	height: 115px; /* in MATLAB 2016a high without padding */
 	padding: 85px 0px 0px 20px;
 	margin: 0px 0px 0px 0px; 
 	}
@@ -40,7 +42,7 @@ body {
 #breadcrumbs { 
 	width: 100%;
 	Color: FFFFFF;
-	margin: 39px 0px 0px 20px;
+	margin: 35px 0px 0px 20px;
 	padding: 0px 0px 0px  0px;
 	}
 	
@@ -66,7 +68,7 @@ body {
 	border-top-style: solid;
 	border-top-color: #000000;
 	border-top-width: 1px;
-  padding: 5px 20px 20px 20px;
+    padding: 5px 20px 20px 20px;
 	font-size:0.85em;
 	font-weight: normal;
 	}
@@ -74,10 +76,21 @@ body {
 /* Content */
 #content {
 	padding: 5px 20px 20px 20px;
-	font-size: 110%; 
+	font-size: 100%; 
 	}
 	
-	
+
+#center {
+  text-align: center;
+  width: 95%;
+  position: relative;
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+		
 #content p {
 	text-align:justify;
 	}
@@ -164,16 +177,16 @@ td, th {
   text-align: left; 
   padding: 0.2em 1em;
 }
-em, tt, strong {
+em, tt, strong {
   font-style: normal;
   font-weight: 500;
   color: #886666; 
 }
-	
+
 img.center {
   text-align: center;
-	width: 95%;
-	position: relative;
+  width: 95%;
+  position: relative;
 	display: block;
 	margin-top: 20px;
 	margin-bottom: 20px;
