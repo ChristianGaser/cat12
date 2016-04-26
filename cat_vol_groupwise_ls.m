@@ -47,14 +47,16 @@ if numel(prec)       ==1, prec       = repmat(prec,1,numel(Nii));       end
 
 % Determine noise estimates when unknown
 for i=find(~isfinite(prec)),
-    prec(i) = 1/spm_noise_estimate(Nii(i)).^2;
+    prec0 = spm_noise_estimate(Nii(i));
+    if isfinite(prec0)
+      prec(i) = 1/prec0.^2;
+    end
 end
 
-% set all values of average if NaN values were found in noise estimation
+% set all values to constant if NaN values were found in noise estimation
 ind_nan = find(~isfinite(prec));
 if ~isempty(ind_nan)
-  mean_prec = mean(prec(isfinite(prec)));
-  prec(:) = mean_prec;
+    prec(ind_nan) = 1;
 end
 
 % Basis functions for algebra of rigid-body transform

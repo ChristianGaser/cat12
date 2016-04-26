@@ -86,6 +86,12 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% enable/disable GUI for TFCE
+if exist(fullfile(spm('dir'),'toolbox','TFCE'))
+    set(handles.popupmenu2,'enable','on');
+else
+    set(handles.popupmenu2,'enable','off');
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = cat12_OutputFcn(hObject, eventdata, handles) 
