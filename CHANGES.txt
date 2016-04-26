@@ -10590,6 +10590,7 @@ Fixed: Error in longitudinal pipeline where the mask for registration was
        not correct.
 
 ------------------------------------------------------------------------
+r933 | dahnke | 2016-04-25 14:58:08 +0200 (Mo, 25 Apr 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10607,5 +10608,21 @@ M       html/style.css
 Fixed:    Corrected HTML style for MATLAB 2016a.
 Fixed:    Corrected colormap surface display problems for MATLAB 2016a.
 Fixed:    Corrected cat_surf_calc naming problem and prepared further tests.
+
 ------------------------------------------------------------------------
-r933 | dahnke | 2016-04-25 14:57:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+ M      templates_surfaces/lh.mc.central.freesurfer.gii
+ M      templates_surfaces/rh.mc.central.freesurfer.gii
+
+(1) Fixed: TFCE option is now disabled if toolbox is not found.
+(2) Changed: Noise estimation is set to "1" for all files if one file receives
+    a NaN.
+
+------------------------------------------------------------------------
+r934 | gaser | 2016-04-26 11:16:06
