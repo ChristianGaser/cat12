@@ -38,24 +38,31 @@ function [PO,sinfo] = cat_surf_rename(P,varargin)
       end
     end
     
-    if sinfo(i).resampled==1
-      if sinfo(i).template==1
-        templateresampled=''; %.template';
-      else
-        templateresampled='.resampled';
-      end
+    if any(~cellfun('isempty',strfind(FN,'templateresampled')))
+      sinfo(i).resampled = 1;
+      templateresampled  = PN.templateresampled; 
     else
-      templateresampled='';
+      if sinfo(i).resampled==1
+        if sinfo(i).template==1
+          templateresampled=''; %.template';
+        else
+          templateresampled='.resampled';
+        end
+      else
+        templateresampled='';
+      end
     end
     
     if isempty(sinfo(i).name), namedot=''; else namedot='.'; end
     if isempty(sinfo(i).side), sidedot=''; else sidedot='.'; end
+    if isempty(templateresampled), tempdot=''; else tempdot='.'; end
     
     PO{i} = fullfile(sinfo(i).pp,sprintf('%s%s%s%s%s%s%s%s',...
       sinfo(i).preside,...
       sinfo(i).side,...
       sidedot, ...
       sinfo(i).dataname,...
+      tempdot, ...
       templateresampled,...
       namedot,...
       sinfo(i).name,...

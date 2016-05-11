@@ -189,7 +189,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   
   %% final tissue maps:  Ycm = CSF, Ygm = GM, Ywm = WM 
   Ysc = Ycp & Yb & Ycls{3}>192 & ~Ybv & Ym<0.45 & Yg<0.1;
-  Ycm = Ycp & Yb & Ycls{3}>192 & ~Ybv & Ym<0.45 & Yg<0.15 & Ym>0; % & Ydiv>-0.05;
+  Ycm = Ycp & Yb & Ycls{3}>192 & ~Ybv & (Yb | Ym>1/6) & Ym<0.5 & Yg<0.15 & Ym>0; % & Ydiv>-0.05;
   %Ycm = Ycm | (Yb & (Ym-max(0,Ydiv))<0.5); 
   Ywm = (Ysw | Ycls{2}>252 | ((Ycd-Ydiv)>2 & Ydiv<0 & Ym>0.9+LASstr*0.05 & Yb) | ... % save WM 
         ((Ycd-Ydiv.*Ycd)>4 & (Ydiv<-0.01) & Yb & Ym>0.5 & Ybd<20 & Ycd>2) ) & ...
@@ -204,7 +204,7 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   %Ygw = Ygm & smooth3(Ywm)<0.1 & smooth3(Ycm)<0.4 & Ycd>0 & Ycd<2 & Ydiv<0.4 & Ydiv>-0.3 & Yg<0.1; %& (Ydiv>-0.4 | Ycd>1.5)
   if ~debug, clear Ybv  Ycp; end %Ycd
 
- if debug>1
+  if debug>1
     try %#ok<TRYNC> 
       [pth,nam] = spm_fileparts(res.image0(1).fname); tpmci=0;
       tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'LAS',tpmci,'prepeaks'));
