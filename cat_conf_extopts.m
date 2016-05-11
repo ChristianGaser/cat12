@@ -426,13 +426,23 @@ app.help   = { ...
 
 %------------------------------------------------------------------------
 
+lazy         = cfg_menu;
+lazy.tag     = 'lazy';
+lazy.name    = 'Lazy processing';
+lazy.labels  = {'yes','no'};
+lazy.values  = {1,0};
+lazy.val     = {0};
+lazy.help    = {
+  'Do not process data if the result exist. '
+};
+
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if expert>2      % developtment options
-  extopts.val   = {appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb}; 
+  extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb}; 
 elseif expert==2 % experimental expert options
-  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb}; 
+  extopts.val   = {lazy,app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb}; 
 elseif expert==1 % working expert options
   extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
 else

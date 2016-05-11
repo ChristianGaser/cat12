@@ -242,23 +242,31 @@ function varargout = cat_surf_display(varargin)
     
     
     %% view
-    viewname = '';
-    if isfield(job,'view')
-      switch lower(job.view)
-        case {'r','right'},                 view([  90   0]); viewname = '.r';
-        case {'l','left'},                  view([ -90   0]); viewname = '.l';
-        case {'t','s','top','superior'},    view([   0  90]); viewname = '.s';
-        case {'b','i','bottom','inferior'}, view([-180 -90]); viewname = '.i'; 
-        case {'f','a','front','anterior'},  view([-180   0]); viewname = '.a';
-        case {'p','back','posterior'},      view([   0   0]); viewname = '.p';
-        otherwise
-          if isnumeric(job.view) && size(job.view)==2
-            view(job.view); viewname = sprintf('.%04dx%04d',mod(job.view,360));
-          else
-            error('Unknown view.\n')
-          end
+    
+    if ~isfield(job,'view')
+      if strcmp(sinfo.side,'lh') && ~job.multisurf
+        job.view = 'left'; 
+      elseif strcmp(sinfo.side,'rh') && ~job.multisurf
+        job.view = 'right';
+      else
+        job.view = 'top';
       end
-    end    
+    end
+    
+    switch lower(job.view)
+      case {'r','right'},                 cat_surf_render('view',h,[  90   0]); viewname = '.r';
+      case {'l','left'},                  cat_surf_render('view',h,[ -90   0]); viewname = '.l'; 
+      case {'t','s','top','superior'},    cat_surf_render('view',h,[   0  90]); viewname = '.s';
+      case {'b','i','bottom','inferior'}, cat_surf_render('view',h,[-180 -90]); viewname = '.i'; 
+      case {'f','a','front','anterior'},  cat_surf_render('view',h,[-180   0]); viewname = '.a';
+      case {'p','back','posterior'},      cat_surf_render('view',h,[   0   0]); viewname = '.p';
+      otherwise
+        if isnumeric(job.view) && size(job.view)==2
+          view(job.view); viewname = sprintf('.%04dx%04d',mod(job.view,360));
+        else
+          error('Unknown view.\n')
+        end
+    end
     
     
     
