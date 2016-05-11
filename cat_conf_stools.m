@@ -835,8 +835,26 @@ function stools = cat_conf_stools(expert)
   surfresamp_fs.help = {
   'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
 
+%% Flipsides
+%-----------------------------------------------------------------------
+  flip.cdata         = cfg_files;
+  flip.cdata.tag     = 'cdata';
+  flip.cdata.name    = 'Surface Data Files';
+  flip.cdata.filter  = 'any';
+  flip.cdata.ufilter = '^s.*mm\.lh.*';
+  flip.cdata.num     = [1 Inf];
+  flip.cdata.help    = {'Texture maps that should be flipped/mirrored from right to left.'};
+  
 
-
+  flipsides      = cfg_exbranch;
+  flipsides.tag  = 'flipsides';
+  flipsides.name = 'Flip right to left hemisphere';
+  flipsides.val  = {flip.cdata};
+  flipsides.prog = @cat_surf_flipsides;
+  flipsides.help = {
+  'This function flip the right hemisphere to the left side, to allow side'
+  ''
+  ''};
 
 
 %% Toolset
@@ -857,6 +875,7 @@ function stools = cat_conf_stools(expert)
       surfcalcsub, ...
       surf2roi, ...
       roi2surf, ...
+      flipsides, ...
       ... roicalc, ...
       };    
   elseif expert==1
@@ -871,6 +890,7 @@ function stools = cat_conf_stools(expert)
       surfcalcsub, ...
       ... surf2roi, ...
       ... roi2surf, ...
+      flipsides, ...
       ... roicalc, ...
       };
   else

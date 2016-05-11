@@ -239,17 +239,16 @@ switch lower(action)
           H.cdata = []; 
         end
         
-        %-Patch
+        %% -Patch
         %------------------------------------------------------------------
         P = struct('vertices',M.vertices, 'faces',double(M.faces));
         H.patch = patch(P,...
             'FaceColor',        [0.6 0.6 0.6],...
             'EdgeColor',        'none',...
-            'FaceLighting',     'gouraud',... phong got print problems
+            'FaceLighting',     'gouraud',...
             'SpecularStrength', 0.0,... 0.7
             'AmbientStrength',  0.4,... 0.1
             'DiffuseStrength',  0.6,... 0.7
-            'BackFaceLighting', 'unlit', ... for inner light 
             'SpecularExponent', 10,...
             'Clipping',         'off',...
             'DeleteFcn',        {@myDeleteFcn, renderer},...
@@ -281,9 +280,25 @@ switch lower(action)
         %------------------------------------------------------------------
         axis(H.axis,'image');
         axis(H.axis,'off');
-        view(H.axis,[-90 0]);
+        view(H.axis,[90 0]);
         material(H.figure,'dull');
-        H.light = light('Position',[0 0 0]); %camlight; set(H.light,'Parent',H.axis);
+        
+        % default lighting
+        if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
+        %H.catLighting = 'cam';
+        
+        H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
+        switch H.catLighting
+          case 'inner'
+            % switch off local light (camlight)
+            caml = findall(gcf,'Type','light','Style','local');     
+            set(caml,'visible','off');
+            
+            % set inner light
+            H.light(2) = light('Position',[0 0 0]); 
+            set(H.patch,'BackFaceLighting','unlit');
+        end
+        
         
         H.rotate3d = rotate3d(H.axis);
         set(H.rotate3d,'Enable','on');
@@ -292,6 +307,8 @@ switch lower(action)
         %    setAllowAxesRotate(H.rotate3d, ...
         %        setxor(findobj(H.figure,'Type','axes'),H.axis), false);
         %end
+        
+      
         
         %-Store handles
         %------------------------------------------------------------------
@@ -309,6 +326,7 @@ switch lower(action)
           ytick = labelmapclim(1):max(1,round(diff(labelmapclim)/80)):labelmapclim(2);
           set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:max(1,round(diff(labelmapclim)/30)):end)); 
         end
+       
         
         %-Add context menu
         %------------------------------------------------------------------
@@ -347,7 +365,7 @@ switch lower(action)
         
         uimenu(cmenu, 'Label','Synchronise Views', 'Visible','off', ...
             'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseViews, H});
-        
+          
         c = uimenu(cmenu, 'Label','View');
         uimenu(c, 'Label','Go to Y-Z view (right)',  'Callback', {@myView, H, [90 0]});
         uimenu(c, 'Label','Go to Y-Z view (left)',   'Callback', {@myView, H, [-90 0]});
@@ -358,6 +376,13 @@ switch lower(action)
         
         uimenu(cmenu, 'Label','Colorbar', 'Callback', {@myColourbar, H});
         
+        c = uimenu(cmenu, 'Label','Colorrange');
+        uimenu(c, 'Label','min-max',  'Callback', {@myCaxis, H, 'auto'});
+        uimenu(c, 'Label','5-95 %%',  'Callback', {@myCaxis, H, '5p'});
+        uimenu(c, 'Label','Custom...','Callback', {@myCaxis, H, 'custom'});
+        uimenu(c, 'Label','Synchronise Views', 'Visible','off', ...
+            'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
+        
         c = uimenu(cmenu, 'Label','Colormap');
         clrmp = {'hot' 'jet' 'gray' 'hsv' 'bone' 'copper' 'pink' 'white' ...
             'flag' 'lines' 'colorcube' 'prism' 'cool' 'autumn' ...
@@ -365,6 +390,33 @@ switch lower(action)
         for i=1:numel(clrmp)
             uimenu(c, 'Label', clrmp{i}, 'Callback', {@myColourmap, H});
         end
+        
+        c = uimenu(cmenu, 'Label','Lighting'); 
+        macon = {'on' 'off'}; isinner = strcmp(H.catLighting,'inner'); 
+        uimenu(c, 'Label','cam',    'Checked',macon{isinner+1}, 'Callback', {@myLighting, H,'cam'});
+        if ismac
+          uimenu(c, 'Label','inner',  'Checked',macon{2-isinner}, 'Callback', {@myLighting, H,'inner'});
+        end
+        uimenu(c, 'Label','set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'});
+        uimenu(c, 'Label','set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
+        uimenu(c, 'Label','set3',   'Checked','off', 'Callback', {@myLighting, H,'set3'});
+        uimenu(c, 'Label','top',    'Checked','off', 'Callback', {@myLighting, H,'top'});
+        uimenu(c, 'Label','bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
+        uimenu(c, 'Label','left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
+        uimenu(c, 'Label','right',  'Checked','off', 'Callback', {@myLighting, H,'right'});
+        uimenu(c, 'Label','front',  'Checked','off', 'Callback', {@myLighting, H,'front'});
+        uimenu(c, 'Label','back',   'Checked','off', 'Callback', {@myLighting, H,'back'});
+        uimenu(c, 'Label','grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'});
+        uimenu(c, 'Label','none',   'Checked','off', 'Callback', {@myLighting, H,'none'});
+        
+        c = uimenu(cmenu, 'Label','Material');
+        uimenu(c, 'Label','dull',     'Checked','on',  'Callback', {@myMaterial, H,'dull'});
+        uimenu(c, 'Label','shiny',    'Checked','off', 'Callback', {@myMaterial, H,'shiny'});
+        uimenu(c, 'Label','metal',    'Checked','off', 'Callback', {@myMaterial, H,'metal'});
+        uimenu(c, 'Label','plastic',  'Checked','off', 'Callback', {@myMaterial, H,'plastic'});
+        uimenu(c, 'Label','greasy',   'Checked','off', 'Callback', {@myMaterial, H,'greasy'});
+        %uimenu(c, 'Label','grid',     'Checked','off', 'Callback', {@myMaterial, H,'grid'});
+        uimenu(c, 'Label','Custom...','Checked','off', 'Callback', {@myMaterial, H,'custom'});
         
         c = uimenu(cmenu, 'Label','Transparency');
         uimenu(c, 'Label','0%',  'Checked','on',  'Callback', {@myTransparency, H});
@@ -448,6 +500,21 @@ switch lower(action)
         H = getHandles(varargin{1});
         if nargin < 3, varargin{2} = []; end
         renderSlices(H,varargin{2:end});
+        
+    %-Material
+    %======================================================================
+    case 'material'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        if nargin < 3, varargin{2} = []; end
+       
+    %-Lighting
+    %======================================================================
+    case 'lighting'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        if nargin < 3, varargin{2} = []; end
+ 
     
     %-ColourBar
     %======================================================================
@@ -546,16 +613,20 @@ switch lower(action)
             varargout = { c };
             return;
         else
-            if isempty(varargin{2}) || any(~isfinite(varargin{2}))
+            if strcmp(varargin{2},'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
                 setappdata(H.patch,'clim',[false NaN NaN]);
             else
                 setappdata(H.patch,'clim',[true varargin{2}]);
             end
             d = getappdata(H.patch,'data');
             updateTexture(H,d);
+          
         end
-        if nargin>1
-            caxis(varargin{2});
+        
+        if nargin>1 && isnumeric(varargin{2}) && numel(varargin{2})==2
+            caxis(H.axis,varargin{2});
+        else
+            caxis(H.axis,[min(d),max(d)])
         end
         
     %-CLip
@@ -770,11 +841,11 @@ setappdata(H.axis,'handles',H);
 function myPostCallback(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
 if numel(P) == 1
-    %camlight(H.light);
+  if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
 else
     for i=1:numel(P)
         H = getappdata(ancestor(P(i),'axes'),'handles');
-        %camlight(H.light);
+        if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
     end
 end
 
@@ -868,12 +939,144 @@ end
 function myView(obj,evt,H,varargin)
 view(H.axis,varargin{1});
 axis(H.axis,'image');
-%camlight(H.light);
+if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
 
 %==========================================================================
 function myColourbar(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
 cat_surf_render('Colourbar',H,toggle(get(obj,'Checked')));
+
+
+%==========================================================================
+function myLighting(obj,evt,H,newcatLighting)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+% set old lights
+H.catLighting = newcatLighting;
+delete(findall(gcf,'Type','light','Style','infinite')); % remove old infinite lights
+caml = findall(gcf,'Type','light','Style','local');     % switch off local light (camlight)
+
+% new lights
+lighting gouraud
+set(caml,'visible','off');
+set(H.patch,'BackFaceLighting','reverselit');
+switch H.catLighting
+  case 'none'
+  case 'inner'
+    H.light(2) = light('Position',[0 0 0]); 
+    ks = get(H.patch,'SpecularStrength'); set(H.patch,'SpecularStrength',min(0.1,ks));
+    n  = get(H.patch,'SpecularExponent'); set(H.patch,'SpecularExponent',max(2,n)); 
+    set(H.patch,'BackFaceLighting','unlit');
+  case 'top'
+    H.light(2) = light('Position',[ 0  0  1],'Color',repmat(1,1,3));    %#ok<*REPMAT>
+  case 'bottom'
+    H.light(2) = light('Position',[ 0  0 -1],'Color',repmat(1,1,3));   
+  case 'left'
+    H.light(2) = light('Position',[-1  0  0],'Color',repmat(1,1,3));   
+  case 'right'
+    H.light(2) = light('Position',[ 1  0  0],'Color',repmat(1,1,3));   
+  case 'front'
+    H.light(2) = light('Position',[ 0  1  0],'Color',repmat(1,1,3));   
+  case 'back'
+    H.light(2) = light('Position',[ 0 -1  0],'Color',repmat(1,1,3));   
+  case 'set1'
+    H.light(2) = light('Position',[ 1  0  .5],'Color',repmat(0.8,1,3)); 
+    H.light(3) = light('Position',[-1  0  .5],'Color',repmat(0.8,1,3)); 
+    H.light(4) = light('Position',[ 0  1 -.5],'Color',repmat(0.2,1,3));
+    H.light(5) = light('Position',[ 0 -1 -.5],'Color',repmat(0.2,1,3)); 
+  case 'set2'
+    H.light(2) = light('Position',[ 1  0  1],'Color',repmat(0.7,1,3)); 
+    H.light(3) = light('Position',[-1  0  1],'Color',repmat(0.7,1,3)); 
+    H.light(4) = light('Position',[ 0  1  .5],'Color',repmat(0.3,1,3));
+    H.light(5) = light('Position',[ 0 -1  .5],'Color',repmat(0.3,1,3)); 
+    H.light(5) = light('Position',[ 0  0 -1],'Color',repmat(0.2,1,3)); 
+  case 'set3'
+    H.light(2) = light('Position',[ 1  0  0],'Color',repmat(0.8,1,3)); 
+    H.light(3) = light('Position',[-1  0  0],'Color',repmat(0.8,1,3)); 
+    H.light(4) = light('Position',[ 0  1  1],'Color',repmat(0.2,1,3));
+    H.light(5) = light('Position',[ 0 -1  1],'Color',repmat(0.2,1,3)); 
+    H.light(6) = light('Position',[ 0  0 -1],'Color',repmat(0.1,1,3));   
+  case 'grid'
+    set(H.patch,'LineStyle','-','EdgeColor',[0 0 0]);
+    set(H.patch,'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
+  case 'cam'
+    set(caml,'visible','on');
+end
+set(get(get(obj,'parent'),'children'),'Checked','off');
+set(obj,'Checked','on');
+
+%==========================================================================
+function myMaterial(obj,evt,H,mat)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+set(H.patch,'LineStyle','none');
+switch mat
+  case 'shiny'
+    material shiny;
+  case 'dull'
+    material dull;
+  case 'metal'
+    material metal;
+  case 'grid'
+    set(H.patch,'LineStyle','-','EdgeColor',[0 0 0]);
+    set(H.patch,'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
+  case 'greasy'
+    set(H.patch,'AmbientStrength',0.2,'DiffuseStrength',0.5,'SpecularStrength',0.3,'SpecularExponent',0.6);
+  case 'plastic'
+    set(H.patch,'AmbientStrength',0.1,'DiffuseStrength',0.6,'SpecularStrength',0.3,'SpecularExponent',2);
+  case 'metal'
+    set(H.patch,'AmbientStrength',0.4,'DiffuseStrength',0.9,'SpecularStrength',0.1,'SpecularExponent',1);
+  case 'default'
+    set(H.patch,'AmbientStrength',0.4,'DiffuseStrength',0.6,'SpecularStrength',0.0,'SpecularExponent',10);
+  case 'custom' 
+    spm_figure('getwin','Interactive'); 
+    % actual values
+    ka = get(H.patch,'AmbientStrength');
+    kd = get(H.patch,'DiffuseStrength');
+    ks = get(H.patch,'SpecularStrength');
+    n  = get(H.patch,'SpecularExponent'); 
+    % new values
+    ka = spm_input('AmbientStrength',1,'r',ka,[1,1]);
+    kd = spm_input('DiffuseStrength',2,'r',kd,[1,1]);
+    ks = spm_input('SpecularStrength',3','r',ks,[1,1]);
+    n  = spm_input('SpecularExponent',4,'r',n,[1,1]);
+    set(H.patch,'AmbientStrength',ka,'DiffuseStrength',kd,'SpecularStrength',ks,'SpecularExponent',n);
+  otherwise
+    set(H.patch,'AmbientStrength',0.2,'DiffuseStrength',0.9,'SpecularStrength',0.8,'SpecularExponent',10);
+end
+set(get(get(obj,'parent'),'children'),'Checked','off');
+set(obj,'Checked','on');
+
+
+
+%==========================================================================
+function myCaxis(obj,evt,H,rangetype)
+d = getappdata(H.patch,'data');
+switch rangetype
+    case 'min-max', 
+        range = [min(d) max(d)]; 
+    case '5-95'
+        range = [min(d) max(d)]; 
+    case 'custom'
+        fc = gcf;
+        spm_figure('getwin','Interactive'); 
+        d = spm_input('intensity range','1','r',[min(d) max(d)],[2,1]);
+        figure(fc); 
+        range = [min(d) max(d)];
+  	otherwise
+        range = [min(d) max(d)]; 
+end
+cat_surf_render('Clim',H,range);
+set(get(get(obj,'parent'),'children'),'Checked','off');
+set(obj,'Checked','on');
+
+%==========================================================================
+function mySynchroniseCaxis(obj,evt,H)
+P = findobj('Tag','CATSurfRender','Type','Patch');
+range = caxis; 
+for i=1:numel(P)
+    H = getappdata(ancestor(P(i),'axes'),'handles');
+    cat_surf_render('Clim',H,range);
+    %axis(H.axis,'image');
+end
 
 %==========================================================================
 function myColourmap(obj,evt,H)
@@ -892,7 +1095,7 @@ for i=1:numel(P)
     H = getappdata(ancestor(P(i),'axes'),'handles');
     set(H.axis,'cameraposition',v);
     axis(H.axis,'image');
-    %camlight(H.light);
+    if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
 end
 
 %==========================================================================
@@ -932,9 +1135,14 @@ end
 h = findobj(H.figure,'Tag','SPMMeshRenderBackground');
 if isempty(h)
     set(H.figure,'Color',c);
+    whitebg(H.figure,c);
+    set(H.figure,'Color',c);
 else
     set(h,'Color',c);
+    whitebg(h,c);
+    set(h,'Color',c);
 end
+
 
 %==========================================================================
 function mySavePNG(obj,evt,H,filename)

@@ -25,6 +25,21 @@ function varargout = cat_run(job)
 
 %rev = '$Rev$';
 
+%  -----------------------------------------------------------------
+%  Lazy processing (expert feature)
+%  -----------------------------------------------------------------
+%  If N>10000 files were processed the crash of one of J jobs by 
+%  small errors makes it hard to find the unprocess files. 
+%  The lazy processing will only process files, if one of the output
+%  is missed and if the same preprocessing options were used before.
+%  -----------------------------------------------------------------
+if isfield(job.extopts,'lazy') && job.extopts.lazy && (~isfield(job,'process_index'))  
+  jobl      = update_job(job);
+  jobl.vout = vout_job(jobl);
+  job.data  = remove_allready_processed(jobl); 
+end
+
+
 
 % split job and data into separate processes to save computation time
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
@@ -102,6 +117,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     [status,result] = system(system_cmd); 
     cat_check_system_output(status,result);
     
+    
+  
     test = 0; lim = 20; ptime = 0.5;
     while test<lim
       if ~exist(log_name,'file')
@@ -120,6 +137,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     fprintf('\nCheck %s for logging information.\n',spm_file(log_name,'link','edit(''%s'')'));
     fprintf('_______________________________________________________________\n');
 
+    % starting many large jobs can cause servere MATLAB errors
+    pause(1 + rand(1) + job.nproc + numel(job.data)/100);
   end
 
   job = update_job(job);
@@ -144,8 +163,9 @@ function job = update_job(job)
     def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
     def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
   end
-  def.opts.fwhm = 1;
-  def.nproc     = 0; 
+  def.extopts.lazy  = 0;
+  def.opts.fwhm     = 1;
+  def.nproc         = 0; 
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
@@ -259,9 +279,15 @@ rlabel    = {};
 alabel    = {};
 
 if job.extopts.subfolders
-  mrifolder = 'mri';
+  %roifolder    = 'label';
+  %surffolder   = 'surf';
+  mrifolder    = 'mri';
+  reportfolder = 'report';
 else
-  mrifolder = '';
+  %roifolder    = '';
+  %surffolder   = '';
+  mrifolder    = '';
+  reportfolder = '';
 end
 
 for j=1:n,
@@ -332,9 +358,15 @@ end
 
 
 % ----------------------------------------------------------------------
-param = cell(n,1);
+%param = cell(n,1);
+%for j=1:n
+%    param{j} = fullfile(parts{j,1},['cat12_',parts{j,2},'.mat']);
+%end
+
+% ----------------------------------------------------------------------
+xml = cell(n,1);
 for j=1:n
-    param{j} = fullfile(parts{j,1},['cat12_',parts{j,2},'.mat']);
+    xml{j} = fullfile(parts{j,1},reportfolder,['cat_',parts{j,2},'.xml']);
 end
 
 
@@ -416,8 +448,176 @@ end
 
 % ----------------------------------------------------------------------
 vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'alabel',{alabel},...
-               'biascorr',{biascorr},'wbiascorr',{wbiascorr},'param',{param},...
+               'biascorr',{biascorr},'wbiascorr',{wbiascorr},'xml',{xml},...'param',{param},...
                'invdef',{invdef},'fordef',{fordef},'jacobian',{jacobian});
 %_______________________________________________________________________
+return
 
 %=======================================================================
+function data = remove_allready_processed(job)
+  remove = []; 
+  cat_io_cprintf('warn','Lazy processing: \n');
+  for subj = 1:numel(job.data)
+    if checklazy(job,subj)
+      remove = [remove subj];
+    end
+  end
+  cat_io_cprintf('warn','  Skip %d subjects!\n',numel(remove));
+  data = job.data(setxor(1:numel(job.data),remove)); 
+return
+%=======================================================================
+function lazy = checklazy(job,subj)
+  if job.extopts.subfolders
+    roifolder    = 'label';
+    surffolder   = 'surf';
+    %mrifolder    = 'mri';
+    reportfolder = 'report';
+  else
+    roifolder    = '';
+    surffolder   = '';
+    %mrifolder    = '';
+    reportfolder = '';
+  end
+
+  lazy = 0;
+  verb = 0; 
+  
+  [pp,ff] = spm_fileparts(job.data{subj}); 
+  catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
+  
+  if exist(catxml,'file')
+
+    xml         = cat_io_xml(catxml);
+    
+    FNopts      = fieldnames(job.opts); 
+    FNextopts   = fieldnames(job.extopts);
+    FNok        = 1; 
+    FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','atlas'});
+   
+    %% check opts
+    for fni=1:numel(FNopts)
+      if ~isfield(xml.parameter.opts,FNopts{fni})
+        FNok = 2; break
+      end
+      if ischar(xml.parameter.opts.(FNopts{fni}))
+        if ischar(job.opts.(FNopts{fni}))
+          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}))
+            FNok = 3; break
+          end
+        else
+          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}){1})
+            FNok = 4; break
+          end
+        end
+      else
+        if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+          FNok = 5; break
+        end
+      end
+    end
+    if FNok~=1 % different opts
+      return
+    end
+
+    %% check extopts
+    for fni=1:numel(FNextopts)
+      if ~isfield(xml.parameter.extopts,FNextopts{fni})
+        FNok = 6; break
+      end
+      if ischar(xml.parameter.extopts.(FNextopts{fni}))
+        if ischar(job.extopts.(FNextopts{fni}))
+          if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}))
+            FNok = 7; break
+          end
+        else
+          if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}){1})
+            FNok = 8; break
+          end
+        end
+      elseif iscell(xml.parameter.extopts.(FNextopts{fni}))
+        if numel(xml.parameter.extopts.(FNextopts{fni}))~=numel(job.extopts.(FNextopts{fni}))
+          FNok = 9; break
+        end
+        for fnic = 1:numel(xml.parameter.extopts.(FNextopts{fni}))
+          if iscell(xml.parameter.extopts.(FNextopts{fni}){fnic})
+            for fnicc = 1:numel(xml.parameter.extopts.(FNextopts{fni}){fnic})
+              if xml.parameter.extopts.(FNextopts{fni}){fnic}{fnicc} ~= job.extopts.(FNextopts{fni}){fnic}{fnicc}
+                FNok = 10; break
+              end
+            end
+            if FNok==10; break; end
+          else
+            if xml.parameter.extopts.(FNextopts{fni}){fnic} ~= job.extopts.(FNextopts{fni}){fnic}
+              FNok = 11; break
+            end
+            if FNok==11; break; end
+          end
+          if FNok==11 || FNok==10; break; end
+        end
+      elseif isstruct(xml.parameter.extopts.(FNextopts{fni}))
+        FNX = fieldnames(xml.parameter.extopts.(FNextopts{fni}));
+        for fnic = 1:numel(FNX)
+          if xml.parameter.extopts.(FNextopts{fni}).(FNX{fnic}) ~= job.extopts.(FNextopts{fni}).(FNX{fnic})
+            FNok = 12; break
+          end
+          if FNok==12; break; end
+        end
+      else
+        if xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni})
+          FNok = 13; break
+        end
+      end
+    end
+    if FNok~=1 % different extopts
+      return
+    end
+    
+
+    % check output
+    
+    % surface
+    if job.output.surface && exist(fullfile(pp,surffolder),'dir')
+      Pcentral = cat_vol_findfiles(fullfile(pp,surffolder),['*h.central.' ff '.gii']);
+      if  numel(Pcentral)==1 % miss ROI xml
+        return
+      end
+    end
+    
+    % rois
+    if job.output.ROI && exist(fullfile(pp,roifolder),['cat_ROI_' ff '.xml'])  % miss ROI xml
+      return
+    end
+      
+    %% volumes 
+    FNO = fieldnames(job.vout);
+    for fnoi = 1:numel(FNO)
+      if isempty(job.vout.(FNO{fnoi}))
+        continue
+      elseif iscell(job.vout.(FNO{fnoi}))
+         if ~exist(job.vout.(FNO{fnoi}){subj},'file')
+           FNok = 14; break
+         end
+      elseif isstruct(job.vout.(FNO{fnoi}))
+        FNOS = fieldnames(job.vout.(FNO{fnoi})); 
+        for fnosi = 1:numel(FNOS)
+          if isempty(job.vout.(FNO{fnoi}).(FNOS{fnosi}))
+            continue
+          elseif ~exist(job.vout.(FNO{fnoi}).(FNOS{fnosi}){subj},'file')
+            FNok = 14; break
+          end
+        end
+      end
+      if FNok==14 % miss volumes
+        return
+      end
+    end
+    %%
+    
+    lazy = FNok==1; 
+      
+  end
+ 
+  if lazy 
+    cat_io_cprintf('warn',' "%s"\n',job.data{subj});
+  end
+return
