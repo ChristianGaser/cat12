@@ -10610,6 +10610,7 @@ Fixed:    Corrected colormap surface display problems for MATLAB 2016a.
 Fixed:    Corrected cat_surf_calc naming problem and prepared further tests.
 
 ------------------------------------------------------------------------
+r934 | gaser | 2016-04-26 11:16:32 +0200 (Di, 26 Apr 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10624,5 +10625,72 @@ M       html/cat.html
 (2) Changed: Noise estimation is set to "1" for all files if one file receives
     a NaN.
 
+
 ------------------------------------------------------------------------
-r934 | gaser | 2016-04-26 11:16:06
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexa64
+M       cat_amap.mexmaci64
+M       cat_amap.mexw64
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexmaci64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexmaci64
+M       cat_sanlm.mexw64
+M       cat_surf_createCS.m
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexmaci64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.c
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_groupwise_ls.m
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexmaci64
+M       cat_vol_simgrow.mexw64
+M       compile.m
+M       html/cat.html
+M       internal/cat_vol_cMRegularizarNLM3Dw.c
+
+(1) Fixed: Error in genus0.c and cat_vol_genus0.c if function fails and no 
+    output is returned.
+(2) Changed: Added a more refined final bias correction between scans to
+    longitudinal pipeline.
+(3) Fixed: Some compilation issues under windows.
+
+------------------------------------------------------------------------
+r935 | gaser | 2016-05-11 14:17:44

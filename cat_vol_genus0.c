@@ -76,7 +76,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   if (nlhs==3) g0->return_surface = 1;
 
-  if (genus0(g0)) return; /* check for error */
+  /* in case of error return empty variables */
+  if (genus0(g0)) {
+    int dims[2];
+
+    dims[0] = 0; dims[1] = 0;
+    plhs[1] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
+
+    dims[0] = 0; dims[1] = 0;
+    plhs[2] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
+        
+    return;
+  }
 
   for (i=0; i<sz; i++) 
     M[i] = (float)g0->output[i];

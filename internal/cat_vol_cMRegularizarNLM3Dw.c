@@ -39,7 +39,7 @@ typedef struct{
 
 double distancia(double* ima,int x,int y,int z,int nx,int ny,int nz,int f,int sx,int sy,int sz)
 {
-double d,acu,distancetotal,inc;
+double d,acu,distancetotal;
 int i,j,k,ni1,nj1,ni2,nj2,nk1,nk2;
 
 distancetotal=0;
@@ -166,11 +166,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
 /*Declarations*/
-mxArray *xData;
+const mxArray *xData;
 double *ima, *fima,*pesos,*lf;
-mxArray *Mxmedias,*Mxpesos,*xtmp;
+const mxArray *Mxmedias,*Mxpesos,*xtmp;
 double *medias,*tmp;
-mxArray *pv;
+const mxArray *pv;
 double off,h,media,th,hh;
 int ini,fin,i,j,k,ii,jj,kk,ni,nj,nk,v,ndim,indice,f,Nthreads,rc,ft;
 const int  *dims;
@@ -183,7 +183,7 @@ HANDLE *ThreadList; // Handles to the worker threads
 if(nrhs<5) 
 {
     printf("Wrong number of arguments!!!\r");
-    exit;
+    return;
 }
 
 /*Copy input pointer x*/
@@ -296,8 +296,8 @@ for (i=0; i<Nthreads; i++)
     ThreadArgs[i].fin=fin;
     ThreadArgs[i].radio=v;  
     ThreadArgs[i].f=f;      
-    ThreadArgs[i].th=th;    
-    ThreadArgs[i].sigma=hh;    
+    ThreadArgs[i].th=(int)th;    
+    ThreadArgs[i].sigma=(int)hh;    
 	
     ThreadList[i] = (HANDLE)_beginthreadex( NULL, 0, &ThreadFunc, &ThreadArgs[i] , 0, NULL );
   }
