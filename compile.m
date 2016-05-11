@@ -30,10 +30,6 @@ function varargout = compile(comp,test,verb)
   if ~exist('comp','var'), comp=1; end
   if ~exist('test','var'); test=1; end
   if ~exist('verb','var'); verb=1; end
-
-  wkdir   = cd; 
-  catdir  = fullfile(spm('dir'),'toolbox','cat12'); 
-  catidir = fullfile(catdir,'internal');  
   
   %% testdata 
   % ds('d2','',1,d0,d1/2,dw/6 + 0.5/6,dc/6 + 0.5/6,5)
@@ -47,7 +43,6 @@ function varargout = compile(comp,test,verb)
   
   %% compiling c-functions
   if comp==1
-    cd(catdir);
   
     if strcmp(mexext,'mexmaci64')
       mexflag='-Dchar16_t=UINT16_T CFLAGS=''$CFLAGS -Wall -ansi -pedantic -Wextra'' CPPLAGS=''$CPPFLAGS -Wall -ansi -pedantic -Wextra''';
@@ -75,7 +70,7 @@ function varargout = compile(comp,test,verb)
       
     % internal c-functions
     try
-      cd(catidir);
+      cd('internal');
       if strcmp(mexext,'mexw64')
         eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3Dw.c']);
         movefile('cat_vol_cMRegularizarNLM3Dw.mexw32','cat_vol_cMRegularizarNLM3D.mexw32');
@@ -86,7 +81,7 @@ function varargout = compile(comp,test,verb)
         eval(['mex ' mexflag ' -O cat_vol_cMRegularizarNLM3D.c']);
       end
     end
-    cd(wkdir);
+    cd ..
       
   end
   
@@ -203,7 +198,8 @@ function varargout = compile(comp,test,verb)
     %    ds('l2','',1,d1 + (d0-0.5)/10,dsg,d1,(d1 + (d0-0.5)/10)/2,d{13}{2}*5,10)
     n{13} = 'cat_vol_simgrow'; 
     dsg   = single(cat_vol_morph(d1>1,'d')); dsg(d1==0) = nan; 
-    [d{13}{1},d{13}{2}] = cat_vol_simgrow(dsg,d1 + (d0-0.5)/10,0.05);    
+    [tmp1 tmp2] = cat_vol_simgrow(dsg,d1 + (d0-0.5)/10,0.05);    
+    d{13}{1} = tmp1; d{13}{2} = tmp2;
     % no test yet
     r(13) = rms((d1>0.5) - d{13}{1});
     s(13) = r(12)<0.05;
@@ -212,7 +208,8 @@ function varargout = compile(comp,test,verb)
     %    ds('l2','',1,d1 + (d0-0.5)/10,dsg,(d1 + (d0-0.5)/10)/2,d{14}{2}/200,10)
     n{14} = 'cat_vol_downcut';
     dsg   = single(cat_vol_morph(d1>1,'d')); dsg(d1==0) = nan; 
-    [d{14}{1},d{14}{2}] = cat_vol_downcut(dsg,d1 + (d0-0.5)/10,0.1); 
+    [tmp1 tmp2] = cat_vol_downcut(dsg,d1 + (d0-0.5)/10,0.1); 
+    d{14}{1} = tmp1; d{14}{2} = tmp2;
     r(14) = rms((d1>0.5) - d{14}{1});
     s(14) = 1;
     

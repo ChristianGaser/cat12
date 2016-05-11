@@ -245,6 +245,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % apply TCA from BrainSuite for initial intensity-based topology correction
     if opt.tca
+      Yppi0 = Yppi;
       VN = resI.hdrN;
       VN.dt(1) = 2;
       VN.fname = fullfile(pp,mrifolder,['tca_' ff '.nii']);
@@ -263,7 +264,14 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
     
     [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
-    clear tmp Yppi;
+    
+    % check whether tca+genus0 was successful, otherwise run genus0 with original data
+    if empty(CS.faces) && opt.tca
+      [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi0,th_initial);
+      opt.tca = 0;
+    end
+    
+    clear tmp Yppi Yppi0;
 
     % correction for the boundary box used within the surface creation process 
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
