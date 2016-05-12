@@ -804,6 +804,12 @@ B1bias  = spm_dctmtx(d(1),d3(1));
 lmRb    = speye(size(Cbias))*prod(d)*reg2;
 Tbias   = zeros(d3);
 
+% correct global scaling
+thG = mean(volG(isfinite(volG)))/8; thG = mean(volG(volG>thG));
+thF = mean(volF(isfinite(volF)))/8; thF = mean(volF(volF>thF));
+volF = volF*thG/thF;
+thF = mean(volF(isfinite(volF)))/8; thF = mean(volF(volF>thF));
+
 ll = Inf;
 try
     spm_plot_convergence('Init','Bias Correction','- Log-likelihood','Iteration');
@@ -824,7 +830,7 @@ for subit=1:nits,
         f1o(~isfinite(f1o)) = 0;
         f2o(~isfinite(f2o)) = 0;
         if ~isempty(brainmask)
-          msk = (f1o==0) & (f2o==0) & (brainmask <= 0.25);
+          msk = (f1o==0) & (f2o==0) & (brainmask(:,:,z) < 0.25);
         else
           msk = (f1o==0) & (f2o==0);
         end
@@ -832,7 +838,7 @@ for subit=1:nits,
         f2o(msk) = 0;
         ro       = transf(B1bias,B2bias,B3bias(z,:),Tbias);
         if ~isempty(brainmask)
-          msk      = (abs(ro)>0.01) & (brainmask > 0.25); 
+          msk      = (abs(ro)>0.01) & (brainmask(:,:,z) > 0.25); 
         else
           msk      = abs(ro)>0.01; 
         end
