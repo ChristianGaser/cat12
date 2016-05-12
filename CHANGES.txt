@@ -10695,6 +10695,7 @@ M       internal/cat_vol_cMRegularizarNLM3Dw.c
 
 
 ------------------------------------------------------------------------
+r936 | dahnke | 2016-05-11 17:59:17 +0200 (Mi, 11 Mai 2016) | 35 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10730,5 +10731,24 @@ Fixed:    Some HTML help layout problems.
 Fixed:    Small changes for CSF thresholds in cat_main_gintnorm and cat_main_LAS.
 
 
+
 ------------------------------------------------------------------------
-r936 | dahnke | 2016-05-11 17:58:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+A       cat_conf_fmri.m
+M       cat_conf_tools.m
+A       cat_fmri_main.m
+A       cat_fmri_multi_run.m
+M       cat_surf_createCS.m
+M       cat_vol_groupwise_ls.m
+M       html/cat.html
+
+(1) Fixed: Error in cat_surf_createCS.m where range of temporarily saved files
+    was wrong.
+(2) Fixed: Error in longitudinal pipeline for masked registration.
+(3) Added: Experimental code for fMRI batch.
+
+------------------------------------------------------------------------
+r937 | gaser | 2016-05-12 10:56:10
