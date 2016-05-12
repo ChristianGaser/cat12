@@ -248,6 +248,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       Yppi0 = Yppi;
       VN = resI.hdrN;
       VN.dt(1) = 2;
+      VN.pinfo(1) = 1;
       VN.fname = fullfile(pp,mrifolder,['tca_' ff '.nii']);
       spm_write_vol(VN,255*(Yppi>th_initial));
       cmd = sprintf('tca -m 2500 -n 0 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
@@ -266,7 +267,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
     
     % check whether tca+genus0 was successful, otherwise run genus0 with original data
-    if empty(CS.faces) && opt.tca
+    if isempty(CS.faces) && opt.tca
       [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi0,th_initial);
       opt.tca = 0;
     end
