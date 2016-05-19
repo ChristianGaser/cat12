@@ -62,7 +62,7 @@ function stools = cat_conf_stools(expert)
   data_xml.filter = 'xml';
   data_xml.num  = [1 Inf];
   data_xml.help   = {
-  'These are the xml-files that are saved during segmentation. Please note, that the order of the xml-files must be the same as the other data files..'};
+  'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files..'};
 
   sample_cov         = cfg_repeat;
   sample_cov.tag     = 'sample';

@@ -41,9 +41,9 @@
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">extract additional surface parameters</a> (e.g. suclus depth, gyrification index, cortical complexity)</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data</li>
         <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">sample homogeneity</a> for surface data</li>
-        <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
+        <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model for each hemisphere seperately</a>: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
         <li><a class="function" href="matlab:P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');for i=1:size(P,1),swd = spm_file(P(i,:),'fpath'); load(fullfile(swd,'SPM.mat')); SPM.swd  = swd; cat_stat_spm(SPM); end
-;">Estimate</a> surface model</li>
+;">Estimate</a> surface model for each hemisphere</li>
       </ul>
 
     </div>  

@@ -10733,6 +10733,7 @@ Fixed:    Small changes for CSF thresholds in cat_main_gintnorm and cat_main_LAS
 
 
 ------------------------------------------------------------------------
+r937 | gaser | 2016-05-12 10:56:23 +0200 (Do, 12 Mai 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10750,5 +10751,23 @@ M       html/cat.html
 (2) Fixed: Error in longitudinal pipeline for masked registration.
 (3) Added: Experimental code for fMRI batch.
 
+
 ------------------------------------------------------------------------
-r937 | gaser | 2016-05-12 10:56:10
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_check_cov.m
+MM      cat_surf_flipsides.m
+M       html/cat.html
+M       html/cat_starting.html
+
+(1) Changed: Mahalanobis distance can be now displayed in cat_stat_check_cov.m
+(2) Changed: Updated manual regarding homogeneity check.
+
+------------------------------------------------------------------------
+r938 | gaser | 2016-05-19 10:35:31

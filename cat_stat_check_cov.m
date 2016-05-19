@@ -9,7 +9,8 @@ function varargout = cat_stat_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY YpYsorted data_array pos ind_sorted mean_cov FS P issurf mn_data mx_data V sample xml_files sorted
+global fname H YpY YpYsorted data_array pos ind_sorted mean_cov FS P X issurf mn_data mx_data V ...
+       sample isxml sorted isscatter MD show_name bplot
 rev = '$Rev$';
 
 % show data by fileorder
@@ -58,6 +59,7 @@ end
 
 if ~isempty(xml_files)
 
+  isxml = 1;
   if size(xml_files,1) ~= n_subjects
     error('XML-files must have the same number as sample size');
   end
@@ -88,8 +90,9 @@ if ~isempty(xml_files)
     spm_progress_bar('Set',i);  
   end
   spm_progress_bar('Clear');
-
+  
 else
+  isxml = 0;
   QM_names = '';
 end
 
@@ -155,10 +158,12 @@ pos = struct(...
     'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
     'cbar',  [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
     'corr',  [-0.02 0.050 0.825 0.825],... % correlation matrix
-    'close', [0.775 0.900 0.200 0.050],... % close button
-    'show',  [0.775 0.850 0.200 0.050],... % button to show worst cases
-    'boxp',  [0.775 0.795 0.200 0.050],... % button to display boxplot
-    'sort',  [0.775 0.750 0.200 0.050],... % button to enable ordered matrix
+    'scat',  [0.050 0.050 0.700 0.825],... % correlation matrix
+    'close', [0.775 0.925 0.200 0.050],... % close button
+    'show',  [0.775 0.875 0.200 0.050],... % button to show worst cases
+    'boxp',  [0.775 0.820 0.200 0.050],... % button to display boxplot
+    'sort',  [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
+    'chbox', [0.775 0.750 0.250 0.050],... % two single images according to position of mouse pointer
     'text',  [0.775 0.550 0.200 0.200],... % textbox
     'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
     'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
@@ -231,7 +236,6 @@ else
   spm_progress_bar('Clear');
 end
 
-
 % normalize YpY
 d      = sqrt(diag(YpY)); % sqrt first to avoid under/overflow
 dd     = d*d';
@@ -301,6 +305,7 @@ if ~isempty(n_thresholded)
   end
 end
 
+
 if nargout>0
   varargout{1} = struct('table',[cellstr(P),num2cell(mean_cov)],...
                         'covmat',YpY,...
@@ -315,24 +320,25 @@ H.figure = figure(2);
 clf(H.figure);
 
 set(H.figure,'MenuBar','none','Position',pos.fig,...
-    'Name','Click in correlation matrix to display slices','NumberTitle','off');
+    'Name','Click in image to display slices','NumberTitle','off');
     
 cm = datacursormode(H.figure);
 set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
 try set(cm,'NewDataCursorOnClick',false); end
 
+% add colorbar
+H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
+image((1:64));
+
+isscatter = 0;
 show_matrix(YpY, sorted);
 
 % create two colormaps
 cmap = [hot(64); gray(64)];
 colormap(cmap)
 
-% add colorbar
-axes('Position',pos.cbar,'Parent',H.figure);
-image((1:64));
-
 % display YTick with 5 values (limit accuracy for floating numbers)
-set(gca,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
+set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
   round(100*linspace(min(YpY(:)),max(YpY(:)),5))/100,'TickLength',[0 0]);
 
 % add button for closing all windows
@@ -353,18 +359,26 @@ H.show = uicontrol(H.figure,...
         'ToolTipString','Display worst files',...
         'Interruptible','on','Enable','on');
 
+show_name = 0;
 % create popoup menu 
-if isempty(xml_files)
-  str  = { 'Boxplot...','Mean correlation','Mean squared error'};
+if isxml
+
+  % estimate Mahalanobis distance between mean corr. and weighted overall quality
+  X = [mean_cov, QM(:,3)]; % mean correlation and IQR
+  S = cov(X);
+  mu = mean(X);
+  MD = (X-repmat(mu,[length(X),1]))*inv(S)*(X-repmat(mu,[length(X),1]))';
+  MD = diag(MD);
+  
+  str  = { 'Boxplot...','Mean correlation',QM_names,'Mahalanobis distance'};
   tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
-           {@show_mean_boxplot, MSE, 'Mean squared error', -1} };
-else
-  str  = { 'Boxplot...','Mean correlation','Mean squared error',QM_names};
-  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
-           {@show_mean_boxplot, MSE, 'Mean squared error', -1},...;
            {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
            {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
-           {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1} };
+           {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
+           {@show_mean_boxplot, MD, 'Mahalanobis distance', -1} };
+else
+  str  = { 'Boxplot...','Mean correlation'};
+  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1} };
 end
 
 H.boxp = uicontrol(H.figure,...
@@ -375,9 +389,16 @@ H.boxp = uicontrol(H.figure,...
         'ToolTipString','Display boxplot',...
         'Interruptible','on','Visible','on');
 
-str  = { 'Correlation matrix...','Order by selected filename','Sorted by mean correlation'};
-tmp  = { {@show_matrix, YpY, 0},...
-         {@show_matrix, YpYsorted, 1} };
+if isxml
+  str  = { 'Image...','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Mahalanobis distance'};
+  tmp  = { {@show_matrix, YpY, 0},...
+           {@show_matrix, YpYsorted, 1},...
+           {@show_mahalanobis, X} };
+else
+  str  = { 'Correlation matrix...','Order by selected filename','Sorted by mean correlation'};
+  tmp  = { {@show_matrix, YpY, 0},...
+           {@show_matrix, YpYsorted, 1} };
+end
 
 H.sort = uicontrol(H.figure,...
         'string',str,'Units','normalized',...
@@ -387,9 +408,17 @@ H.sort = uicontrol(H.figure,...
         'ToolTipString','Sort matrix',...
         'Interruptible','on','Visible','on');
 
+H.chbox = uicontrol(H.figure,...
+        'string','Show filenames in boxplot','Units','normalized',...
+        'position',pos.chbox,...
+        'style','CheckBox','HorizontalAlignment','center',...
+        'callback',{@checkbox_names},...
+        'ToolTipString','Sort matrix',...
+        'Interruptible','on','Visible','on');
+
 H.text = uicontrol(H.figure,...
         'Units','normalized','position',pos.text,...
-        'String','Click in correlation matrix to display slices',...
+        'String','Click in image to display slices',...
         'style','text','HorizontalAlignment','center',...
         'ToolTipString','Select slice for display');
 
@@ -413,8 +442,16 @@ for i=1:n_subjects
   for j=1:n_subjects
     if (i>j) && (mean_cov(i) == mean_cov(j))
       try
-        s = unix(['diff ' P(i,:) ' ' P(j,:)]);
-        if (s==0), fprintf(['\nWarning: ' P(i,:) ' and ' P(j,:) ' are same files?\n']); end
+        nami = deblank(P(i,:));
+        namj = deblank(P(j,:));
+        if strcmp(nami(end-1:end),',1')
+          nami = nami(1:end-2);
+        end 
+        if strcmp(namj(end-1:end),',1')
+          namj = namj(1:end-2);
+        end 
+        s = unix(['diff ' nami ' ' namj]);
+        if (s==0), fprintf(['\nWarning: ' nami ' and ' namj ' are same files?\n']); end
       end
     end
   end
@@ -426,7 +463,7 @@ end
 %-----------------------------------------------------------------------
 function check_worst_data(obj, event_obj)
 %-----------------------------------------------------------------------
-global P ind_sorted issurf mn_data mx_data H
+global P ind_sorted issurf mn_data mx_data data_array H
 
 n = size(P,1);
 number = min([n 24]);
@@ -457,21 +494,82 @@ if issurf
     spm_mesh_render('CLim',h,[mn_data mx_data]);
   end
 else
-  spm_check_registration(list2)
+  spm_check_registration(list2);
+  spm_orthviews('Resolution',0.2);
   set(H.boxp,'Visible','on');
 end
 return
 
 %-----------------------------------------------------------------------
+function checkbox_names(obj, event_obj)
+%-----------------------------------------------------------------------
+global H show_name data_boxp name_boxp quality_order
+
+  show_name = get(H.chbox,'Value');
+  show_mean_boxplot;
+  
+return
+        
+%-----------------------------------------------------------------------
+function show_mahalanobis(X)
+%-----------------------------------------------------------------------
+global H FS pos isscatter ind_sorted MD
+
+% clear larger area and set background color to update labels and title
+H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.figure);
+cla(H.ax);
+set(H.ax,'Color',[0.8 0.8 0.8]);
+
+H.ax = axes('Position',pos.scat,'Parent',H.figure);
+
+cmap = [jet(64); gray(64)];
+
+S = cov(X);
+mu = mean(X);
+MD = (X-repmat(mu,[length(X),1]))*inv(S)*(X-repmat(mu,[length(X),1]))';
+MD = diag(MD);
+
+% because we use a splitted colormap we have to set the color
+% values explicitely
+MD2 = 63*MD/max(MD);
+C = zeros(length(MD),3);
+for i=1:length(MD)
+  C(i,:) = cmap(round(MD2(i))+1,:);
+end
+%scatter(X(:,1),X(:,2),30,C,'*','Linewidth',2);
+scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
+
+xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS(8),'FontWeight','Bold');
+ylabel('<----- Best ---      Weighted overall image quality      --- Worst ------>  ','FontSize',FS(8),'FontWeight','Bold');
+title('<--- Best -- Mahalanobis distance -- Worst ---->  ','FontSize',FS(10),'FontWeight','Bold');
+
+% add colorbar
+H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
+image((1:64));
+
+% display YTick with 5 values (limit accuracy for floating numbers)
+set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
+  round(100*linspace(min(MD),max(MD),5))/100,'TickLength',[0 0]);
+
+% update index of worst files
+[tmp, ind_sorted] = sort(MD,'ascend');
+
+colormap(cmap)
+
+isscatter = 1;
+
+return
+
+%-----------------------------------------------------------------------
 function show_matrix(data, order)
 %-----------------------------------------------------------------------
-global H FS pos sorted
+global H FS pos sorted YpY isscatter
 
 % get sorting order
 sorted = order;
 
 % clear larger area and set background color to update labels and title
-H.ax = axes('Position',[-.1 -.1 0.75 1],'Parent',H.figure);
+H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.figure);
 cla(H.ax);
 set(H.ax,'Color',[0.8 0.8 0.8]);
 
@@ -500,13 +598,31 @@ else
   title('Sample Correlation Matrix','FontSize',FS(10),'FontWeight','Bold');
 end
 
+H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
+image((1:64));
+
+% display YTick with 5 values (limit accuracy for floating numbers)
+set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel',...
+  round(100*linspace(min(YpY(:)),max(YpY(:)),5))/100,'TickLength',[0 0]);
+
+cmap = [hot(64); gray(64)];
+colormap(cmap)
+
+isscatter = 0;
+
 return
 
 %-----------------------------------------------------------------------
-function show_mean_boxplot(data_boxp, name, quality_order)
+function show_mean_boxplot(data_boxp, name_boxp, quality_order)
 %-----------------------------------------------------------------------
-global fname FS sample ind_sorted
- 
+global fname FS sample ind_sorted show_name bp
+
+if nargin == 0
+  data_boxp = bp.data;
+  name_boxp = bp.name;
+  quality_order = bp.order;
+end
+
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
 
@@ -515,6 +631,7 @@ n_samples = max(sample);
 xpos = cell(1,n_samples);
 data = cell(1,n_samples);
 
+hold on
 for i=1:n_samples
   ind = find(sample == i);
   data{i} = data_boxp(ind);
@@ -526,11 +643,13 @@ for i=1:n_samples
   end
 
   for j=1:length(ind)
-    text(xpos{i}(j),data{i}(j),fname.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
+    if show_name
+      text(xpos{i}(j),data{i}(j),fname.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
+    else
+      plot(xpos{i}(j),data{i}(j),'.');
+    end
   end
 end
-
-hold on
 
 opt = struct('groupnum',0,'ygrid',0,'violin',0,'box',1,'groupcolor',jet(n_samples));
 ylim_add = 0.075;
@@ -548,10 +667,10 @@ end
 % add colored labels and title
 if n_samples > 1
   [tmp,  tmp2] = spm_str_manip(char(fname.s),'C');
-  title_str = sprintf('Boxplot: %s  \n%s ',name, strrep(tmp,tmp2.s,''));
+  title_str = sprintf('Boxplot: %s  \n%s ',name_boxp, strrep(tmp,tmp2.s,''));
   fprintf('\nCommon filename: %s\n',tmp);
 else
-  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name,spm_file(char(fname.s),'short25'));
+  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name_boxp,spm_file(char(fname.s),'short25'));
 end
 title(title_str,'FontSize',FS(8),'FontWeight','Bold');
 xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),...
@@ -571,7 +690,7 @@ if (length(data_boxp) > 2)
     text(xpos, ylim_min,'<----- High rating (good quality)','Color','green','Rotation',...
         90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
   end
-  text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name),'Color','black','Rotation',...
+  text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
         90,'HorizontalAlignment','center','FontSize',FS(10),'FontWeight','Bold')
 end
 
@@ -585,12 +704,14 @@ else
   
 end
 
+bp = struct('data',data_boxp,'name',name_boxp,'order',quality_order);
+
 return
 
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global V fname data_array H YpY pos sorted ind_sorted
+global V fname data_array H YpY pos sorted ind_sorted isscatter
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -625,26 +746,38 @@ data_array = 64*((data_array - mn)/(mx-mn));
 if sorted
   if isfield(pos,'x')
     x = ind_sorted(pos.x);
-    y = ind_sorted(pos.y);
+    if ~isscatter
+      y = ind_sorted(pos.y);
+    end
   end
 else
   if isfield(pos,'x')
     x = pos.x;
-    y = pos.y;
+    if ~isscatter
+      y = pos.y;
+    end
   end
 end
 
 % check whether mouse position is defined
 if isfield(pos,'x')
-  img = [data_array(:,:,y) data_array(:,:,x)]';
-
+  if isscatter
+    img = [data_array(:,:,x) zeros(size(data_array,1), size(data_array,2))]';
+  else
+    img = [data_array(:,:,y) data_array(:,:,x)]';
+  end
+  
   % use gray scale colormap for values > 64
   axes('Position',pos.slice);
   image(65 + flipud(img))
   set(gca,'XTickLabel','','YTickLabel','');
 
-  txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(fname.m{x},'short25')],...
+  if isscatter
+    txt = {sprintf('%s',spm_file(fname.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+  else
+    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(fname.m{x},'short25')],...
       ['Bottom: ',spm_file(fname.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+  end
   set(H.text,'String',txt);
 end
 
@@ -653,81 +786,127 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global fname sample H YpY data_array pos issurf ind_sorted sorted
+global fname sample H X YpY data_array pos issurf ind_sorted sorted isscatter
 
 pos_mouse = get(event_obj, 'Position');
 
-% check for valid mouse position
-if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(sample) || pos_mouse(2)>length(sample)
-  txt = {''};
-  return
-end
-
-% save position of mouse
-pos.x = pos_mouse(1);
-pos.y = pos_mouse(2);
-
-if sorted
-  if isfield(pos,'x')
-    x = ind_sorted(pos.x);
-    y = ind_sorted(pos.y);
+if isscatter
+  pos.x = find(X(:,1) == pos_mouse(1));
+  if isempty(pos.x)
+    pos.x = find(X(:,2) == pos_mouse(2));
   end
-else
-  if isfield(pos,'x')
-    x = pos.x;
-    y = pos.y;
-  end
-end
 
-% text info for data cursor window
-if issurf
-  txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',fname.m{x}],...
-    ['Right: ',fname.m{y}]};
-else
-  txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',fname.m{x}],...
-    ['Bottom: ',fname.m{y}]};
-end
+  % text info for data cursor window
+  txt = {sprintf('%s',fname.m{pos.x})};
 
-% text info for textbox
-if issurf
-  txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Left: ',...
-    spm_file(fname.m{x},'short25')],['Right: ',spm_file(fname.m{y},'short25')]};
-else
-  txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
-    spm_file(fname.m{x},'short25')],['Bottom: ',spm_file(fname.m{y},'short25')],...
-    [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
-end      
+  % text info for textbox
+  txt2 = {sprintf('%s',spm_file(fname.m{pos.x},'short25'))};
 
-set(H.text,'String',txt2);
-axes('Position',pos.slice);
+  set(H.text,'String',txt2);
+  axes('Position',pos.slice);
 
-if issurf 
-  % use indexed 2D-sheet to display surface data as image
-  % check surface size to use indexed 2D map
-  if (length(data_array(:,x)) == 163842)
-    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-    img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-    img = circshift(img,128);
-  else
-    img = [data_array(:,y) data_array(:,x)]';
-  end
+  if issurf 
+    % use indexed 2D-sheet to display surface data as image
+    % check surface size to use indexed 2D map
+    if (length(data_array(:,pos.x)) == 163842)
+      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+      img = [reshape(data_array(ind,pos.x),[256,128])];
+      img = circshift(img,128);
+    else
+      img = [data_array(:,x)]';
+    end
   
-  % scale img to 0..64
-  mn = min(data_array(:));
-  mx = max(data_array(:));
-  img = 64*((img - mn)/(mx-mn));
+    % scale img to 0..64
+    mn = min(data_array(:));
+    mx = max(data_array(:));
+    img = 64*((img - mn)/(mx-mn));
+  else
+    % add slider for colume data
+    set(H.mm,'Visible','on');
+    img = [data_array(:,:,pos.x) zeros(size(data_array,1), size(data_array,2))]';
+  end
+
+  % display image with 2nd colorbar (gray)
+  image(65+flipud(img));
+  set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+
+  if issurf
+    xlabel('2D surface maps');
+  end
+
 else
-  % add slider for colume data
-  set(H.mm,'Visible','on');
-  img = [data_array(:,:,y) data_array(:,:,x)]';
+  % check for valid mouse position
+  if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(sample) || pos_mouse(2)>length(sample)
+    txt = {''};
+    return
+  end
+
+  % save position of mouse
+  pos.x = pos_mouse(1);
+  pos.y = pos_mouse(2);
+
+  if sorted
+    if isfield(pos,'x')
+      x = ind_sorted(pos.x);
+      y = ind_sorted(pos.y);
+    end
+  else
+    if isfield(pos,'x')
+      x = pos.x;
+      y = pos.y;
+    end
+  end
+
+  % text info for data cursor window
+  if issurf
+    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',fname.m{x}],...
+      ['Right: ',fname.m{y}]};
+  else
+    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',fname.m{x}],...
+      ['Bottom: ',fname.m{y}]};
+  end
+
+  % text info for textbox
+  if issurf
+    txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Left: ',...
+      spm_file(fname.m{x},'short25')],['Right: ',spm_file(fname.m{y},'short25')]};
+  else
+    txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
+      spm_file(fname.m{x},'short25')],['Bottom: ',spm_file(fname.m{y},'short25')],...
+      [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+  end      
+
+  set(H.text,'String',txt2);
+  axes('Position',pos.slice);
+
+  if issurf 
+    % use indexed 2D-sheet to display surface data as image
+    % check surface size to use indexed 2D map
+    if (length(data_array(:,x)) == 163842)
+      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
+      img = circshift(img,128);
+    else
+      img = [data_array(:,y) data_array(:,x)]';
+    end
+  
+    % scale img to 0..64
+    mn = min(data_array(:));
+    mx = max(data_array(:));
+    img = 64*((img - mn)/(mx-mn));
+  else
+    % add slider for colume data
+    set(H.mm,'Visible','on');
+    img = [data_array(:,:,y) data_array(:,:,x)]';
+  end
+
+  % display image with 2nd colorbar (gray)
+  image(65 + flipud(img));
+  set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+
+  if issurf
+    xlabel('2D surface maps');
+  end
+
 end
-
-% display image with 2nd colorbar (gray)
-image(65 + flipud(img));
-set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
-
-if issurf
-  xlabel('2D surface maps');
-end
-
 return

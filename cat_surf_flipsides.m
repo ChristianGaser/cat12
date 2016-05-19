@@ -19,7 +19,7 @@ function Prdata = cat_surf_flipsides(job)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_LAS.m 924 2016-04-13 15:38:28Z dahnke $
+% $Id$
 
 
 
