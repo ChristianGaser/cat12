@@ -25,7 +25,7 @@ function stools = cat_conf_stools(expert)
   nproc.val     = {numcores};
   nproc.num     = [1 1];
   nproc.help    = {
-      'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you don not want to run processes in the background then set this value to 0.'
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
       ''
       'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
       ''
@@ -461,15 +461,15 @@ function stools = cat_conf_stools(expert)
     s2r.cdata.filter  = 'any';
     s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe).*';
     s2r.cdata.num     = [1 Inf];
-    s2r.cdata.help    = {'Surface data sample. Both sides will processed'};
+    s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
   else % only smoothed/resampled
     s2r.cdata         = cfg_files;
     s2r.cdata.tag     = 'cdata';
     s2r.cdata.name    = '(Left) Surface Data Files';
     s2r.cdata.filter  = 'any';
-    s2r.cdata.ufilter = 's.*';
+    s2r.cdata.ufilter = '^lh.(?!cent|sphe|defe).*';
     s2r.cdata.num     = [1 Inf];
-    s2r.cdata.help    = {'Surface data sample. Both sides will processed'};
+    s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
   end
   
   s2r.cdata_sample         = cfg_repeat;
@@ -488,8 +488,8 @@ function stools = cat_conf_stools(expert)
   s2r.ROIs.tag     = 'rdata';
   s2r.ROIs.name    = '(Left) ROI atlas files';
   s2r.ROIs.filter  = 'any';
-  s2r.ROIs.ufilter = 'lh.*';
-  s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'); 
+  s2r.ROIs.ufilter = 'lh.[aparc|PALS].*'; % not yet working for all atlases
+  s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
   s2r.ROIs.num     = [1 Inf];
   s2r.ROIs.help    = {'These are the ROI atlas files. Both sides will processed.'};
 
@@ -567,19 +567,29 @@ function stools = cat_conf_stools(expert)
 %% main function
   surf2roi      = cfg_exbranch;
   surf2roi.tag  = 'surf2roi';
-  surf2roi.name = 'Map surface data to ROIs';
+  surf2roi.name = 'Extract ROI-based surface values';
   surf2roi.val  = {
+    s2r.cdata_sample ...
+    s2r.ROIs};
+  surf2roi.prog = @cat_surf_surf2roi;
+  surf2roi.help = {
+    ''
+  };
+
+  surf2roi_ext      = cfg_exbranch;
+  surf2roi_ext.tag  = 'surf2roi_ext';
+  surf2roi_ext.name = 'Map surface data to ROIs';
+  surf2roi_ext.val  = {
     s2r.cdata_sample ...
     s2r.ROIs ...
     nproc ... 
     s2r.vernum ...
     ... s2r.area ... does not work yet
     s2r.avg.main};
-  surf2roi.prog = @cat_surf_surf2roi;
-  surf2roi.help = {
+  surf2roi_ext.prog = @cat_surf_surf2roi;
+  surf2roi_ext.help = {
     ''
   };
-
 
 %% roi to surface  
 %  ---------------------------------------------------------------------
@@ -873,7 +883,7 @@ function stools = cat_conf_stools(expert)
       v2s.vol2tempsurf, ...
       surfcalc, ...
       surfcalcsub, ...
-      surf2roi, ...
+      surf2roi_ext, ...
       roi2surf, ...
       flipsides, ...
       ... roicalc, ...
@@ -899,6 +909,7 @@ function stools = cat_conf_stools(expert)
       surfextract, ...
       surfresamp, ...
       surfresamp_fs,...
+      surf2roi, ...
       v2s.vol2surf, ...
       v2s.vol2tempsurf, ...
       surfcalc, ...
