@@ -38,7 +38,7 @@ function varargout = cat12(varargin)
 
 % Edit the above title to modify the response to help cat12
 
-% Last Modified by GUIDE v2.5 18-Mar-2016 16:24:37
+% Last Modified by GUIDE v2.5 25-Apr-2016 15:19:36
 
 if nargin==0 
   spm_cat12;
@@ -268,3 +268,13 @@ spm_jobman('interactive','','spm.tools.cat.tools.calcvol');
 % --- Executes on button press in pushbutton170.
 function pushbutton170_Callback(hObject, eventdata, handles)
 cat_io_senderrormail;
+
+
+% --- Executes on selection change in popupmenu2.
+function popupmenu2_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu2

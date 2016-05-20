@@ -10,16 +10,15 @@ T1.tag  = 'T1';
 T1.filter = 'image';
 T1.num  = [1 1];
 T1.help   = {...
-'This is the T1 data of the subject.'};
+'This is the T1 data of the subject that is used as source image in order to be co-registered to the fMRI data.'};
 %------------------------------------------------------------------------
-
 EPI0 = cfg_files;
-EPI0.name = 'fMRI source image for co-registration';
+EPI0.name = 'fMRI target image';
 EPI0.tag  = 'EPI0';
 EPI0.filter = 'image';
 EPI0.num  = [1 1];
 EPI0.help   = {...
-'This is the fMRI source image for co-registration.'};
+'This is the fMRI image that is used as target for co-registration.'};
 %------------------------------------------------------------------------
 
 EPI = cfg_files;

@@ -39,7 +39,7 @@ nproc.strtype = 'w';
 nproc.val     = {numcores};
 nproc.num     = [1 1];
 nproc.help    = {
-    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you do not want to run processes in the background then set this value to 0.'
+    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
     ''
     'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate  number of processes.'
     ''
