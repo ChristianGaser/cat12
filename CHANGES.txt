@@ -10772,6 +10772,7 @@ M       html/cat_starting.html
 
 
 ------------------------------------------------------------------------
+r939 | gaser | 2016-05-21 01:01:27 +0200 (Sa, 21 Mai 2016) | 37 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -10809,5 +10810,16 @@ M       tbx_cfg_cat.m
 (3) Changed: Removed some redundant atlas files and renames aparc atlases.
 (4) Changed: Renamed original cat_surf_surf2roi.m function into 
     cat_surf_surf2roi_resampled.m (for resampled data only).
+
 ------------------------------------------------------------------------
-r939 | gaser | 2016-05-21 01:01:15
+
+Changed paths:
+M       CHANGES.txt
+
+(1) Changed: Prepared surf2roi function with internal resampling.
+(2) Changed: Updated manual (splitting of processes)
+(3) Changed: Removed some redundant atlas files and renames aparc atlases.
+(4) Changed: Renamed original cat_surf_surf2roi.m function into 
+    cat_surf_surf2roi_resampled.m (for resampled data only).
+------------------------------------------------------------------------
+r940 | gaser | 2016-05-21 01:01:44
