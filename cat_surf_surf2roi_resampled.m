@@ -44,9 +44,9 @@ function cat_surf_surf2roi(job)
   def.nproc   = 0; % not ready
   def.area    = 0;
   def.vernum  = 0;
-  def.resamp  = 1; % resample native data to atlas space (without smoothing)
   job = cat_io_checkinopt(job,def);
-    
+  
+  
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     cat_parallelize(job,mfilename,'cat_surf_surf2roi');
@@ -96,23 +96,17 @@ function cat_surf_surf2roi(job)
     %% process the cdata files of each subject
     for si=1:numel(job.cdata{1}) % for each subject
       for ti=1:numel(job.cdata)  % for each texture
-      
-        % check for kind of surface
+        % check for kind of surface ... not yet only s*.gii
         sinfo = cat_surf_info(job.cdata{ti}{si},0);
 
         % load surface cdata 
-        if job.resamp % do temporary resampling
-          lCS = get_resampled_values(job.cdata{ti}{si});
-          rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh')); 
-        else
-          switch sinfo.ee
-            case '.gii'
-              lCS = gifti(job.cdata{ti}{si});
-              rCS = gifti(cat_surf_rename(sinfo,'side','rh')); 
-            otherwise
-              lCS = cat_io_FreeSurfer('read_surf_data',job.cdata{ti}{si});
-              rCS = cat_io_FreeSurfer('read_surf_data',cat_surf_rename(sinfo,'side','rh')); 
-          end
+        switch sinfo.ee
+          case '.gii'
+            lCS = gifti(job.cdata{ti}{si});
+            rCS = gifti(cat_surf_rename(sinfo,'side','rh')); 
+          otherwise
+            lCS = cat_io_FreeSurfer('read_surf_data',job.cdata{ti}{si});
+            rCS = cat_io_FreeSurfer('read_surf_data',cat_surf_rename(sinfo,'side','rh')); 
         end
         
         % basic entries
@@ -131,8 +125,8 @@ function cat_surf_surf2roi(job)
         % count number of vertices
         if job.vernum
           ccsv{1,end+1}='num_vertices'; 
-          lCSarea = ones(size(lCS.cdata));  
-          rCSarea = ones(size(rCS.cdata)); 
+          lCSarea = ones(size(lCS.vertices));  
+          rCSarea = ones(size(rCS.vertices)); 
           for roii=2:size(ccsv,1)
             switch ccsv{roii,2}(1)
               case 'l', ccsv{roii,end} = eval(sprintf('sum(lCSarea(lrdata==ccsv{roii,1}))'));
@@ -147,8 +141,8 @@ function cat_surf_surf2roi(job)
         % estimate ROI area
         if job.area
           ccsv{1,end+1}='num_vertices';
-          lCSarea = ones(size(lCS.cdata)); 
-          rCSarea = ones(size(rCS.cdata)); 
+          lCSarea = ones(size(lCS.vertices)); 
+          rCSarea = ones(size(rCS.vertices)); 
           for roii=2:size(ccsv,1)
             switch ccsv{roii,2}(1)
               case 'l', ccsv{roii,end} = eval(sprintf('sum(lCSarea(lrdata==ccsv{roii,1}))')); 
@@ -204,56 +198,4 @@ function cat_surf_surf2roi(job)
     spm_progress_bar('Set',ri);
   end
   spm_progress_bar('Clear');
-  
-  % delete temporary resampled files
-  if job.resamp
-    for si=1:numel(job.cdata{1}) % for each subject
-      for ti=1:numel(job.cdata)  % for each texture
-      
-        % check for kind of surface
-        sinfo = cat_surf_info(job.cdata{ti}{si},0);
-
-        delete(char(cat_surf_rename(sinfo,'dataname',[sinfo.dataname '.tmp'])));
-        delete(char(cat_surf_rename(sinfo,'dataname',[sinfo.dataname '.tmp'],'side','rh')));
-      end
-    end
-  end
-
-end
-
-function resamp = get_resampled_values(P)
-
-  fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
-  P = deblank(char(P));
-
-  [pp,ff,ex]   = spm_fileparts(P);
-
-  name = [ff ex];
-  name      = strrep(name,'.gii',''); % remove .gii extension
-  hemi = ff(1:2);
-
-  k = strfind(name,'.');
-  pname = ff(k(1)+1:k(2)-1);
-  Pcentral   = [strrep(name,pname,'central') '.gii'];
-  Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
-  Presamp    = fullfile(pp,strrep(Pcentral,'central',[pname 'tmp.resampled']));
-  Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.tmp']));
-  Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
-  Pcentral   = fullfile(pp,Pcentral);
-  Pfsavg     = fullfile(fsavgDir,[hemi '.sphere.freesurfer.gii']);
-  Pmask      = fullfile(fsavgDir,[hemi '.mask']);
-
-  % check whether temporary resampled file already exists
-  if ~exist(Pvalue,'file')
-        
-    % resample values using warped sphere 
-    cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
-    [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,cat_get_defaults('extopts.debug'),0);
-    delete(Presamp);
-
-  end
-
-  % get surface values
-  resamp.cdata = cat_io_FreeSurfer('read_surf_data',Pvalue);
-
 end
