@@ -2,7 +2,7 @@ function out = cat_fmri_multi_run(job)
 % Call cat_fmri_main for multiple subjects
 %
 % Christian Gaser
-% $Id: cat_fmri_multi_run.m 828 2016-01-08 09:20:30Z gaser $
+% $Id$
 
 global opts extopts output
 

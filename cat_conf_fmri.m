@@ -2,7 +2,7 @@ function fmri = cat_conf_fmri
 % Configuration file for fmri data
 %
 % Christian Gaser
-% $Id: cat_conf_fmri.m 789 2015-11-27 09:19:15Z gaser $
+% $Id$
 
 T1 = cfg_files;
 T1.name = 'T1 data';
