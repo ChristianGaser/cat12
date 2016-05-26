@@ -10812,6 +10812,7 @@ M       tbx_cfg_cat.m
     cat_surf_surf2roi_resampled.m (for resampled data only).
 
 ------------------------------------------------------------------------
+r940 | gaser | 2016-05-21 01:01:48 +0200 (Sa, 21 Mai 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10821,5 +10822,21 @@ M       CHANGES.txt
 (3) Changed: Removed some redundant atlas files and renames aparc atlases.
 (4) Changed: Renamed original cat_surf_surf2roi.m function into 
     cat_surf_surf2roi_resampled.m (for resampled data only).
+
 ------------------------------------------------------------------------
-r940 | gaser | 2016-05-21 01:01:44
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+MM      cat_conf_fmri.m
+MM      cat_fmri_main.m
+MM      cat_fmri_multi_run.m
+M       html/cat_starting.html
+
+Changed: Updated manual.
+
+
+------------------------------------------------------------------------
+r941 | gaser | 2016-05-26 11:31:21
