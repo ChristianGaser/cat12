@@ -57,6 +57,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     ...
     'Pmesh','',...      % meshfile
     'Psphere','',...    % meshfile
+    'Pspherereg','',... % meshfile
     'Pdefects','',...   % meshfile
     'Pdata',''...       % datafile
   );
@@ -166,7 +167,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     % special datatypes
     FN = {'thickness','central','sphere','defects','gyrification','sqrtsulc','frac',...
           'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
-          'depthWM','depthGWM','depthCSF','depthWMg','ROI',...
+          'depthWM','depthGWM','depthCSF','depthWMg','ROI','hull',...
           'hulldist'};
     sinfo(i).texture = '';
     for fi=1:numel(FN)
@@ -207,7 +208,7 @@ function [varargout] = cat_surf_info(P,read,gui)
         case {'defects'} % surf
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = sinfo(i).fname;
-        case {'central','sphere'} % only mesh
+        case {'central','sphere','hull'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
         case {'thickness','gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
@@ -236,6 +237,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     
     [ppm,ffm,eem] = fileparts(sinfo(i).Pmesh);
     sinfo(i).Psphere  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
+    sinfo(i).Pspherereg  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.reg.'));
     sinfo(i).Pdefects = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));
     if ~exist(sinfo(i).Psphere ,'file'), sinfo(i).Psphere  = ''; end
     if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end

@@ -1,4 +1,4 @@
-function mu = kmeans3D(y,k)
+function [mu,su,nu]= kmeans3D(y,k)
 % K-means clustering
 % FORMAT mu = kmeans3D (y,k)
 % 
@@ -23,7 +23,9 @@ seeds=ceil(cumsum(seeds));
 
 last_i=ones(1,N);
 mu=x(seeds);
-for loops=1:100,  
+su=zeros(size(mu));
+nu=zeros(size(mu));
+for loops=1:1000,  
  for j=1:k,
    d(j,:)=(y-mu(j)).^2;
  end
@@ -35,6 +37,8 @@ for loops=1:100,
    % Recompute centres
    for j=1:k,
      mu(j)=mean(y(i==j));
+     su(j)=std(y(i==j));
+     nu(j)=sum(i==j)./numel(y(:));
    end
    last_i=i;
  end

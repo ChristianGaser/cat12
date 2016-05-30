@@ -10824,6 +10824,7 @@ M       CHANGES.txt
     cat_surf_surf2roi_resampled.m (for resampled data only).
 
 ------------------------------------------------------------------------
+r941 | gaser | 2016-05-26 11:31:32 +0200 (Do, 26 Mai 2016) | 14 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -10838,5 +10839,42 @@ M       html/cat_starting.html
 Changed: Updated manual.
 
 
+
 ------------------------------------------------------------------------
-r941 | gaser | 2016-05-26 11:31:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_io_updateStruct.m
+M       cat_stat_marks.m
+A       cat_surf_GI3D.m
+A       cat_surf_epivolsurf.m
+A       cat_surf_fun.m
+A       cat_surf_gyrification.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render.m
+M       cat_tst_qa.m
+A       internal/cat_io_volctype.m
+M       kmeans3D.m
+
+Fixed:    Small corrections in cat_tst_qa and cat_stat_marks for direct calls 
+          e.g. for other input segmentations.
+Fixed:    Corrected small errors in cat_io_updateStruct.
+Changed:  Small updates of cat_surf_info for display hull surface.
+Changed:  Further output of kmeans3D.
+Changed:  Added expert GI functions in cat_surf_parameter.
+New:      Added cat_surf_gyrification as collection of different surface 
+          relation based gyrification measures. 
+          (central vs. sphere/inflate/average/laplace). 
+New:      Added cat_surf_fun as collection of small surface functions that are 
+          required for further cortical measures such as the GI, that include
+          area estimation, hull creation for surfaces, and volume rendering. 
+New:      Added Laplacian GI with subfunctions cat_surf_GI3D and 
+          cat_surf_epivolsurf.
+New:      Added internal function cat_io_volctype to convert data to other 
+          datatypes, e.g. to save disk memory.
+          
+          
+------------------------------------------------------------------------
+r942 | dahnke | 2016-05-30 14:49:22

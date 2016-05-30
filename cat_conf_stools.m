@@ -127,6 +127,62 @@ function stools = cat_conf_stools(expert)
     'Extract gyrification index (GI) based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'
   };
 
+
+  if expert
+    area        = cfg_menu;
+    area.name   = 'surface area';
+    area.tag    = 'area';
+    area.labels = {'none','yes'};
+    area.values = {0,1};
+    area.val    = {1};
+    area.help   = {
+      'WARNING: This GI measures is still in development and not varified yet!\n\n It extract the average gyrification index (AGI) as local area relation between the individual central and group average surface (FS average).'
+    };
+  
+    % Two cases ... one with the stardard average surface and one were
+    % another average surface metric file "area" of a group can be choosen.
+    GIA        = cfg_menu;
+    GIA.name   = 'Average gyrification index (only resampled output)';
+    GIA.tag    = 'GIA';
+    GIA.labels = {'none','yes'};
+    GIA.values = {0,1};
+    GIA.val    = {1};
+    GIA.help   = {
+      'WARNING: This GI measures is still in development and not varified yet!\n\n It extract the average gyrification index (AGI) as local area relation between the individual central and group average surface (FS average).'
+    };
+  
+    GII        = cfg_menu;
+    GII.name   = 'Inflating gyrification index ';
+    GII.tag    = 'GII';
+    GII.labels = {'none','yes'};
+    GII.values = {0,1};
+    GII.val    = {1};
+    GII.help   = {
+      'WARNING: This GI measures is still in development and not varified yet!\n\n It extract a inflating gyrification index (IGI) as local area relation between the individual central and an inflated version of it.'
+    };
+  
+    GIS        = cfg_menu;
+    GIS.name   = 'Spherical gyrification index (only resampled output)';
+    GIS.tag    = 'GIS';
+    GIS.labels = {'none','yes'};
+    GIS.values = {0,1};
+    GIS.val    = {1};
+    GIS.help   = {
+      'WARNING: This GI measures is still in development and not varified yet!\n\n It extract a spherical mapping based gyrification index (SGI) as local area relation between the individual central and the hull surface.'
+    };
+    
+    GIL        = cfg_menu;
+    GIL.name   = 'Laplacian gyrification index';
+    GIL.tag    = 'GIL';
+    GIL.labels = {'none','yes'};
+    GIL.values = {0,1};
+    GIL.val    = {1};
+    GIL.help   = {
+      'WARNING: This GI measures is still in development and not varified yet!\n\n Extract Laplacian gyrification index (LGI) as local area relation between the individual central and the hull surface [Dahnke:2010].'
+    };
+  end
+
+  
   FD        = cfg_menu;
   FD.name   = 'Cortical complexity (fractal dimension)';
   FD.tag    = 'FD';
@@ -170,7 +226,7 @@ function stools = cat_conf_stools(expert)
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert > 1
-    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc,lazy};
+    surfextract.val  = {data_surf_extract,GI,GIA,GII,GIL,GIS,FD,SD,nproc,lazy};
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end

@@ -75,7 +75,7 @@ function varargout = cat_tst_qa(action,varargin)
   [n, rev_cat] = cat_version;
 
   % init output
-  QAS = struct(); QAM = struct(); 
+  QAS = struct(); QAR = struct(); 
   cat_qa_warnings = struct('identifier',{},'message',{});
   cat_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
@@ -118,14 +118,16 @@ function varargout = cat_tst_qa(action,varargin)
           Po = Pp0; Pm = Pp0;
           for fi=1:numel(Pp0)
             [pp,ff,ee] = spm_fileparts(Pp0{fi});
+            [ppa,ppb] = spm_fileparts(pp); 
+            if strcmp(ppb,'mri'), ppo = ppa; else ppo = pp; end 
 
-            Po{fi} = fullfile(pp,[ff(3:end) ee]); 
+            Po{fi} = fullfile(ppo,[ff(3:end) ee]); 
             Pm{fi} = fullfile(pp,[opt.mprefix  ff(3:end) ee]);
-            Pmv{fi} = fullfile(pp,['m' ff(3:end) ee]); %#ok<AGROW>
-            if ~exist(Pm{fi},'file') && strcmp(opt.mprefix,'nm') && exist(Pmv{fi},'file')
-              fprintf('Preparing %s.\n',Pmv{fi});
-              cat_vol_sanlm(Pmv{fi},'n');
-            end
+            %Pmv{fi} = fullfile(pp,['m' ff(3:end) ee]); %#ok<AGROW>
+            %if ~exist(Pm{fi},'file') && strcmp(opt.mprefix,'nm') && exist(Pmv{fi},'file')
+            %  fprintf('Preparing %s.\n',Pmv{fi});
+            %  cat_vol_sanlm(Pmv{fi},'n');
+            %end
 
             if ~exist(Po{fi},'file'), Po{fi}=''; end
             if ~exist(Pm{fi},'file'), Pm{fi}=''; end
@@ -312,7 +314,7 @@ function varargout = cat_tst_qa(action,varargin)
       mqamatm = 9.9*ones(numel(Po),1);
     
       
-      QAS = struct(); QAM = struct(); 
+      QAS = struct(); QAR = struct(); 
       
       for fi=1:numel(Pp0)
         try
@@ -329,19 +331,20 @@ function varargout = cat_tst_qa(action,varargin)
             error('cat_tst_qa:noYm','No corrected image.');
           end
   
-          [QASfi,QAMfi,cat_qa_warnings{fi}] = cat_tst_qa('cat12',Yp0,Vo,Ym,'',cat_warnings,species,opt);
+          res.image = spm_vol(Pp0{fi}); 
+          [QASfi,QAMfi,cat_qa_warnings{fi}] = cat_tst_qa('cat12',Yp0,Vo,Ym,res,cat_warnings,species,opt);
 
      
           QAS = cat_io_updateStruct(QAS,QASfi,0,fi);
-          QAM = cat_io_updateStruct(QAM,QAMfi,0,fi);
+          QAR = cat_io_updateStruct(QAR,QAMfi,0,fi);
         
           
           % color for the differen mark cases (opt.process)
           for fni=1:numel(QMAfn)
             qamat(fi,fni)  = QAS(fi).qualitymeasures.(QMAfn{fni});
-            qamatm(fi,fni) = QAM(fi).qualitymeasures.(QMAfn{fni});
+            qamatm(fi,fni) = QAR(fi).qualityratings.(QMAfn{fni});
           end
-          mqamatm(fi) = QAM(fi).qualitymeasures.rms;
+          mqamatm(fi) = QAR(fi).qualityratings.IQR;
           mqamatm(fi) = max(0,min(9.5, mqamatm(fi)));
           
           
@@ -566,16 +569,17 @@ function varargout = cat_tst_qa(action,varargin)
       %             I think cat defaults would be enought for the beginning.  
       %             Furhter data will only be excess baggage for the cat*.xml file. 
       %QAS.parameter             = opt.job; 
-      QAS.parameter.opts        = opt.job.opts;
-      QAS.parameter.extopts     = opt.job.extopts;
-      %QAS.parameter.output      = opt.job.output;
-      if exist('res','var');
-        rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
-        for rfi=1:numel(rf)
-          if isfield(res,rf{rfi}), QAS.parameter.spm.(rf{rfi}) = res.(rf{rfi}); end
+      if isfield(opt,'job')
+        QAS.parameter.opts        = opt.job.opts;
+        QAS.parameter.extopts     = opt.job.extopts;
+        %QAS.parameter.output      = opt.job.output;
+        if exist('res','var');
+          rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
+          for rfi=1:numel(rf)
+            if isfield(res,rf{rfi}), QAS.parameter.spm.(rf{rfi}) = res.(rf{rfi}); end
+          end
         end
       end
-
      
       %% inti, volumina, resolution, boundary box
       %  ---------------------------------------------------------------
@@ -758,8 +762,8 @@ function varargout = cat_tst_qa(action,varargin)
       %   of the relative contrast
       contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(3:4)))) ./ (max([WMth,GMth])); % default contrast
       contrast = contrast + min(0,13/36 - contrast)*1.2;                      % avoid overoptimsization
-      %QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
-      %QAS.qualitymeasures.contrastr = contrast;
+      QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
+      QAS.qualitymeasures.contrastr = contrast;
 
       
       
@@ -804,12 +808,12 @@ function varargout = cat_tst_qa(action,varargin)
       
   
       %% marks
-      QAM = cat_stat_marks('eval',1,QAS);
+      QAR = cat_stat_marks('eval',1,QAS);
 
       % export 
       if opt.write_xml
-        QAS.qualityratings = QAM.qualitymeasures;
-       % QAS.subjectratings = QAM.subjectmeasures;
+        QAS.qualityratings = QAR.qualityratings;
+        QAS.subjectratings = QAR.subjectratings;
         
         cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
@@ -820,7 +824,7 @@ function varargout = cat_tst_qa(action,varargin)
   end
 
   if nargout>2, varargout{3} = cat_qa_warnings; end
-  if nargout>1, varargout{2} = QAM; end
+  if nargout>1, varargout{2} = QAR; end
   if nargout>0, varargout{1} = QAS; end 
 
 end
