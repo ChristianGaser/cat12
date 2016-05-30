@@ -181,14 +181,16 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
                 for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
                   eval(sprintf(['QAM.%s.%s(ij) = cat_stat_nanmean(eval%s(' ...
                    'QA.%s.%s(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2)));'], ...
-                   def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
+                   strrep(def.QS{QSi,1},'measures','ratings'),...
+                   def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                 end
               end
             else
               for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}))
                 eval(sprintf(['QAM.%s.%s(ij) = cat_stat_nanmean(eval%s(' ...
                  'QA.%s.%s(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2)));'], ...
-                 def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
+                 strrep(def.QS{QSi,1},'measures','ratings'),...
+                 def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
               end
             end
           else
@@ -199,14 +201,16 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
                   for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
                     eval(sprintf(['QAM.%s.%s{ci}(ij) = cat_stat_nanmean(eval%s(' ...
                      'QA.%s.%s{ci}(ij),def.QS{QSi,4}(ij,1),def.QS{QSi,4}(ij,2)));'], ...
-                     def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
+                     strrep(def.QS{QSi,1},'measures','ratings'),...
+                     def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                   end
                 end
               else
                 for ij=1:numel(QA.(def.QS{QSi,1}).(def.QS{QSi,2}){ci})
                   eval(sprintf(['QAM.%s.%s{ci}(ij) = cat_stat_nanmean(eval%s(' ...
                    'QA.%s.%s{ci}(ij),def.QS{QSi,4}(1),def.QS{QSi,4}(2)));'], ...
-                   def.QS{QSi,1},def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
+                   strrep(def.QS{QSi,1},'measures','ratings'),...
+                   def.QS{QSi,2},def.QS{QSi,3},def.QS{QSi,1},def.QS{QSi,2}));
                 end
               end
             end
@@ -222,8 +226,8 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      QAM.qualitymeasures.IQR = rms([QAM.qualitymeasures.NCR QAM.qualitymeasures.res_RMS],8);
-      QAM.subjectmeasures.SQR = rms([QAM.subjectmeasures.vol_rel_CGW],8);
+      QAM.qualityratings.IQR = rms([QAM.qualityratings.NCR QAM.qualityratings.res_RMS],8);
+      QAM.subjectratings.SQR = rms([QAM.subjectratings.vol_rel_CGW],8);
       
       varargout{1} = QAM;
     case 'init',    % ausgabe einer leeren struktur
