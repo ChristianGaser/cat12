@@ -80,11 +80,26 @@ switch lower(action)
             M = varargin{1};
         end
         if ischar(M) || isstruct(M) % default - one surface
-            M  = gifti(M); 
+            [pp,ff,ee] = spm_fileparts(M); 
+            switch ee
+                case '.gii'
+                    M  = gifti(M); 
+                otherwise
+                    M  = cat_io_FreeSurfer('read_surf',M);
+                    M  = gifti(M);
+            end
+            
         elseif iscellstr(M) % multiple surfaces
           %%
             MS = M; % save filelist 
-            M  = gifti(MS{1}); 
+            [pp,ff,ee] = spm_fileparts(MS{1}); 
+            switch ee
+                case '.gii'
+                    M  = gifti(MS{1}); 
+                otherwise
+                    M  = cat_io_FreeSurfer('read_surf',MS{1}); 
+                    M  = gifti(M);
+            end
             for mi = 2:numel(MS)
                 try
                     MI         = gifti(MS{mi});
@@ -271,6 +286,8 @@ switch lower(action)
         %------------------------------------------------------------------
         if isfield(M,'facevertexcdata')
             T = M.facevertexcdata;
+        elseif isfield(M,'cdata')
+            T = M.cdata;
         else
             T = [];
         end

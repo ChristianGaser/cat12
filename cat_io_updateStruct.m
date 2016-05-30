@@ -37,13 +37,13 @@ function S=cat_io_updateStruct(S,SN,RepByEmpty,ind)
           if isstruct(SN.(fnS{fnSi})) 
             % if the field is a structure too, cat_io_updateStruct has
             % to be used recursive
-            if ~isstruct(S.(fnS{fnSi}))
+            if ~isstruct(S(1).(fnS{fnSi}))
               S = rmfield(S,fnS{fnSi});
             end
             if numel(S)<ind
               % if the field does not exist yet, we use the first
               % element for initialization 
-              S(1).(fnS{fnSi})   = cat_io_updateStruct(S(1).(fnS{fnSi}),SN.(fnS{fnSi}),0);
+              S(ind).(fnS{fnSi})   = cat_io_updateStruct(S(1).(fnS{fnSi}),SN.(fnS{fnSi}),0);
             else
               S(ind).(fnS{fnSi}) = cat_io_updateStruct(S(ind).(fnS{fnSi}),SN.(fnS{fnSi}),RepByEmpty);
             end
