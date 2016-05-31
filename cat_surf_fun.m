@@ -41,6 +41,7 @@ function D = cat_surf_dist(S)
        sum( (S.vertices(S.faces(:,3),:) - S.vertices(S.faces(:,1),:)).^2 , 2) .^ 0.5]; 
      
 end
+
 function [AV,AF] = cat_surf_area(S)
 % Calculate surface area of the faces AF (Horonsche Form) and map it to the
 % vertices AV.
@@ -50,13 +51,14 @@ function [AV,AF] = cat_surf_area(S)
   facesp = sum(D,2) / 2;  % s = (a + b + c) / 2;
   AF = (facesp .* (facesp - D(:,1)) .* (facesp - D(:,2)) .* (facesp - D(:,3))).^0.5; % area=sqrt(s*(s-a)*(s-b)*(s-c));
   
-  % numberical (to small point diffences) and mapping broblems (crossing of streamlines)
-  % -> correction because this is theoretical not possible (laplace field theorie)
+  % numerical (to small point diffences) and mapping problems (crossing of streamlines)
+  % -> correction because this is theoretical not possible (laplace field theory)
   AF(AF==0) = eps; % to small values
   AF = abs(AF);    % streamline-crossing
     
   AV = cat_surf_F2V(S,AF);
 end
+
 function data = cat_surf_F2V(S,odata)
 %% mapping of facedata to vertices
 
@@ -68,6 +70,7 @@ function data = cat_surf_F2V(S,odata)
 
   data = data / size(S.vertices,2); % Schwerpunkt... besser Voronoi, aber wie bei ner Oberfl?che im Raum???
 end
+
 function [SH,V] = cat_surf_hull(S)
 %% hull creation
 
@@ -79,7 +82,7 @@ function [SH,V] = cat_surf_hull(S)
   V(I) = 1; clear I; 
   
   % 
-  V  = cat_vol_morph(V,'lc',8);  % closeing 
+  V  = cat_vol_morph(V,'lc',8);  % closing 
   V  = cat_vol_smooth3X(V,2);    % smoothing
   SH = isosurface(V,0.4);        % create hull 
   V  = V>0.4;
@@ -87,6 +90,7 @@ function [SH,V] = cat_surf_hull(S)
   SH.vertices = [SH.vertices(:,2) SH.vertices(:,1) SH.vertices(:,3)]; % matlab flip
   SH.vertices = SH.vertices + repmat(min(S.vertices),size(SH.vertices,1),1) - 5;
 end
+
 function [V,vmat,vmati] = cat_surf_surf2vol(S,opt)
 %% render inner surface area 
 %  Render the volume V with V==1 within the surface. 

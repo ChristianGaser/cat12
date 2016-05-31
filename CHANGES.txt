@@ -10841,6 +10841,7 @@ Changed: Updated manual.
 
 
 ------------------------------------------------------------------------
+r942 | dahnke | 2016-05-30 14:49:42 +0200 (Mo, 30 Mai 2016) | 35 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10876,5 +10877,18 @@ New:      Added internal function cat_io_volctype to convert data to other
           datatypes, e.g. to save disk memory.
           
           
+
 ------------------------------------------------------------------------
-r942 | dahnke | 2016-05-30 14:49:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_display.m
+M       cat_surf_fun.m
+M       cat_surf_gyrification.m
+
+(1) Changed: Corrected many typos from last release.
+(2) Fixed: Error in cat_surf_display for dispolaying multiple surfaces.
+
+
+------------------------------------------------------------------------
+r943 | gaser | 2016-05-31 12:04:59
