@@ -1,7 +1,7 @@
 function PSgi = cat_surf_gyrification(type,PS,opt)
 % Collection of gyrification measures
 % ______________________________________________________________________
-% This function include surface relation measures to describe the 
+% This function includes surface relation measures to describe the 
 % cortical folding by the folded original central surface and a second
 % unfolded version of it.
 %
@@ -33,13 +33,13 @@ function PSgi = cat_surf_gyrification(type,PS,opt)
 %  ---------------------------------------------------------------------
 %
 %  Sphere:
-%   GI as the arearelation between the central surface and the sphere. 
+%   GI as the area-relation between the central surface and the sphere. 
 %   This shows were regions have to be compressed in the registration 
 %   process, but give no information about the anatomical relation. 
 %
 %
 %  Inflate:
-%   GI as the arearelation between the central surface and a smooth 
+%   GI as the area-relation between the central surface and a smooth 
 %   (areanormalized) version of it. High GI regions are the occupital 
 %   and temporal lobe because these structures are overall much thinner 
 %   than other parts of the brain. Subcortical structures on the other 
@@ -118,12 +118,13 @@ function PSgi = cat_surf_gyrification(type,PS,opt)
       error('cat_surf_gyrification:unknown_type','Unknown type "%s".\n"',type);
   end
 end
+
 function Psgi = cat_surf_SGI_sphere(sinfo,opt) 
 %% central vs. sphere
 %  ---------------------------------------------------------------------
-%  GI as the arearelation between the central surface and the sphere. 
+%  GI as the area-relation between the central surface and the sphere. 
 %  This shows were regions have to be compressed in the registration 
-%  process, but give no information about the anatomical relation. 
+%  process, but gives no information about the anatomical relation. 
 %  ---------------------------------------------------------------------
   Psgi  = char(cat_surf_rename(sinfo,'resampled',0,'dataname','SGI','ee',''));
 
@@ -142,11 +143,12 @@ function Psgi = cat_surf_SGI_sphere(sinfo,opt)
   cat_io_FreeSurfer('write_surf_data',Psgi,GI);
 
 end                      % central vs. sphere (work, but useless)
+
 function Psgi = cat_surf_SGI_inflate(sinfo,opt)
 %% central vs. inflate
 %  ---------------------------------------------------------------------
-%  GI as the arearelation between the central surface and a smooth 
-%  version of it. High GI regions are the occupital and temporal lobe 
+%  GI as the area-relation between the central surface and a smooth 
+%  version of it. High GI regions are the occipital and temporal lobe 
 %  because these structures are overall much thinner than other parts 
 %  of the brain. Subcortical structures on the other side show folding
 %  below 1. 
@@ -186,10 +188,11 @@ function Psgi = cat_surf_SGI_inflate(sinfo,opt)
     delete(Pinflate);
   end
 end                      % central vs. inflate (work)
+
 function Psgigii = cat_surf_SGI_average(sinfo,opt)
 %% central vs. fs average
 %  ---------------------------------------------------------------------
-%  GI as the arealelation between the central surface and an average
+%  GI as the area-relation between the central surface and an average
 %  surface. This will code the individual local volume increasement.
 %  ---------------------------------------------------------------------
 %  does not work yet ... only template space
@@ -242,11 +245,12 @@ function Psgigii = cat_surf_SGI_average(sinfo,opt)
  
 
 end                      % central vs. fs average (work, but only resampled output)
+
 function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
 %% central vs. hull
 %  ---------------------------------------------------------------------
-%  GI as the arealelation between the central surface and hull. 
-%  The hull is generated as separate surface and has to be maped to the
+%  GI as the area-relation between the central surface and hull. 
+%  The hull is generated as separate surface and has to be mapped to the
 %  individual surface mesh. 
 %  ---------------------------------------------------------------------
 
@@ -315,6 +319,7 @@ function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
     delete(PhullR); 
   end
 end                  % central vs. hull (work, but only resampled output)
+
 function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
 %% central vs. hull
 %  ---------------------------------------------------------------------
@@ -363,6 +368,7 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   end
   
 end                    % central vs. hull (work)
+
 function A = cat_surf_smootharea(S,smooth)
 %  create smooth area texture files
 %  ---------------------------------------------------------------------
@@ -390,6 +396,7 @@ function A = cat_surf_smootharea(S,smooth)
   % delete temporary file
   delete(Parea);
 end
+
 function GI = cat_surf_estimateGI(Scs,ASsc,ASsp,normalize)
   % estimate GI - normalization by area is not required (done by Surf2Sphere) 
   if normalize==0 % no normalization

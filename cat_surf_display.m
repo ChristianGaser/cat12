@@ -80,7 +80,7 @@ function varargout = cat_surf_display(varargin)
   job = cat_io_checkinopt(job,def);
   
   %% ... need futher development 
-  sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage);  
+  sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage); 
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
   end
@@ -244,9 +244,9 @@ function varargout = cat_surf_display(varargin)
     %% view
     
     if ~isfield(job,'view')
-      if strcmp(sinfo.side,'lh') && ~job.multisurf
+      if strcmp(sinfo(i).side,'lh') && ~job.multisurf
         job.view = 'left'; 
-      elseif strcmp(sinfo.side,'rh') && ~job.multisurf
+      elseif strcmp(sinfo(i).side,'rh') && ~job.multisurf
         job.view = 'right';
       else
         job.view = 'top';
