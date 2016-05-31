@@ -48,6 +48,21 @@ switch lower(deffile)
     if isempty(deffile) 
       return
     end
+  case 'default'
+    mycat  = cat_get_defaults; 
+    mycat.extopts.expertgui = 0;
+    restartspm = 1;
+    deffile = catdef; 
+  case 'expert'
+    mycat  = cat_get_defaults; 
+    mycat.extopts.expertgui = 1;
+    restartspm = 1;
+    deffile = catdef; 
+  case 'developer'
+    mycat  = cat_get_defaults; 
+    mycat.extopts.expertgui = 2;
+    restartspm = 1;
+    deffile = catdef; 
   %{
   % GUI for primates requires updates of the default files and some tests  
   case 'gui'
@@ -72,6 +87,7 @@ switch lower(deffile)
     %}
 end
 
+
 switch lower(deffile)
   case 'human'
     deffile = catdef; 
@@ -85,37 +101,42 @@ switch lower(deffile)
     deffile = fullfile(catdir,'templates_animals','cat_defaults_ape_lesser.m');
 end
 
-% lazy input - no extension 
-[deffile_pp,deffile_ff,deffile_ee] = fileparts(deffile);
-if isempty(deffile_ee)
-  deffile_ee = '.m';
-end
-% lazy input - no directory
-if isempty(deffile_pp) 
-  if exist(fullfile(pwd,deffile_ff,deffile_ee),'file') 
-    deffile_pp = pwd; 
-  else
-    deffile_pp = fullfile(spm('dir'),'toolbox','cat12'); 
+if exist('mycat','var') 
+  try clearvars -global cat; end %#ok<TRYNC>
+  eval('global cat; cat = mycat;'); 
+else
+  % lazy input - no extension 
+  [deffile_pp,deffile_ff,deffile_ee] = fileparts(deffile);
+  if isempty(deffile_ee)
+    deffile_ee = '.m';
   end
-end
-deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
+  % lazy input - no directory
+  if isempty(deffile_pp) 
+    if exist(fullfile(pwd,deffile_ff,deffile_ee),'file') 
+      deffile_pp = pwd; 
+    else
+      deffile_pp = fullfile(spm('dir'),'toolbox','cat12'); 
+    end
+  end
+  deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
 
-% check if file exist
-if ~exist(deffile,'file')
-  error('CAT:miss_cat_default_file','Can''t find CAT default file "%"','deffile'); 
-end
+  % check if file exist
+  if ~exist(deffile,'file')
+    error('CAT:miss_cat_default_file','Can''t find CAT default file "%"','deffile'); 
+  end
 
-% set other defaultfile
-% The cat12 global variable is created and localy destroyed, because we 
-% want to call the cat12 function. 
-%if 1 %nargin>0 %~strcmp(catdef,deffile) 
-oldwkd = cd; 
-cd(deffile_pp);
-try clearvars -global cat; end %#ok<TRYNC>
-clear cat;
-eval(deffile_ff);
-eval('global cat;'); 
-cd(oldwkd);
+  % set other defaultfile
+  % The cat12 global variable is created and localy destroyed, because we 
+  % want to call the cat12 function. 
+  %if 1 %nargin>0 %~strcmp(catdef,deffile) 
+  oldwkd = cd; 
+  cd(deffile_pp);
+  try clearvars -global cat; end %#ok<TRYNC>
+  clear cat;
+  eval(deffile_ff);
+  eval('global cat;'); 
+  cd(oldwkd);
+end
 
 % initialize SPM 
 eval('global defaults;'); 
@@ -124,7 +145,6 @@ if isempty(defaults) || (nargin==2 && varargin{2}==1) || restartspm
   spm_jobman('initcfg');
 end
 clear cat;
-%end
 
 % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 if cat_get_defaults('extopts.expertgui')<2
@@ -150,11 +170,16 @@ if isempty(strfind(RS,'Usage'));
   fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');
 end
 
-% command line output
+%% command line output
+switch cat_get_defaults('extopts.expertgui')
+  case 0, expertguitext = '';
+  case 1, expertguitext = 'Expert Mode';
+  case 2, expertguitext = 'Developer Mode';
+end
 cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
     '\n' ...
     '   _______  ___  _______    \n' ...
-    '  |  ____/ / _ \\\\ \\\\_   _/   \n' ...
+    '  |  ____/ / _ \\\\ \\\\_   _/   ' expertguitext '\n' ...
     '  | |___  / /_\\\\ \\\\  | |     Computational Anatomy Toolbox\n' ...
     '  |____/ /_/   \\\\_\\\\ |_|     CAT12 - http://www.neuro.uni-jena.de\n\n']));
 cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile); 

@@ -38,20 +38,24 @@
       </p>
          
       <ul>
-        <li><a href="#volrois">List of atlas maps</a></li>
+        <li><a href="#volrois">List of volume-based atlas maps</a></li>
         <ul>
           <li><a href="#Neuromorphometics">Neuromorphometics</a></li>
           <li><a href="#LPBA">LPBA</a></li>
           <li><a href="#Hammers">Hammers</a></li>
-          <li><a href="#AAL">AAL</a></li>
+          <!--
+            <li><a href="#AAL">AAL</a></li>
+          -->
         </ul>  
-        <li><a href="#surfrois">List of FreeSurfer atlas maps</a></li>
+        <li><a href="#surfrois">List of surface-based atlas maps (FreeSurfer)</a></li>
         <ul>
           <li><a href="#FS_DKT40">DKT40</a></li>
-          <li><a href="#FS_Desikan2006">Desikan</a></li>
           <li><a href="#FS_Destrieux2009">Destrieux</a></li>
-          <li><a href="#FS_Brodman">Brodman</a></li>
-          <li><a href="#FS_Lobes">Lobes</a></li>
+          <!--
+            <li><a href="#FS_Desikan2006">Desikan</a></li>
+            <li><a href="#FS_Brodman">Brodman</a></li>
+            <li><a href="#FS_Lobes">Lobes</a></li>
+          -->
         </ul>  
       </ul>
 
@@ -67,7 +71,6 @@
       <p>
         <!--
         Further atlas options can be found in the <i>cg_cat_defauls-file</i>.
-        -->
         <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
@@ -76,6 +79,14 @@
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii'); 
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii'); 
           fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii');}} ) )">Display all six volumetric atlas maps.</a> 
+          -->
+      </p>
+      
+      <a class="function" href="matlab:cat_vol_display_label(struct('data',{{
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); 
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii');
+          fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
       </p>
  
       <ul>
@@ -92,8 +103,8 @@
             <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_T1_IXI555_MNI152.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')}}))">volume map</a>, on the FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a> )  
-            or DARTEL average surface (
+            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1,'usefsaverage',1))">both sides</a>   
+            ) or DARTEL average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',0))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.neuromorphometrics.Template_T1_IXI555_MNI152')}},'multisurf',1))">both sides</a> ). 
@@ -188,9 +199,9 @@
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_mori.png" width=90% height=auto alt="Mori (Oishi et al. 20xx)" ><p>
         </li>
-        -->
         
-        <!-- not removed yet because even it is only on subject it well known -->
+        
+        <!- not removed yet because even if it is only on subject, it is well known ... removed because we got to many atlas maps->
         <li>
           <h5 id="AAL">AAL (AUTOMATED ANATOMICAL LABELING)</h5>
           <p>
@@ -211,11 +222,11 @@
         </li>
       </ul>
       <br />
-            
+      -->      
       
       
       
-      <h3 id="surfrois">List of FreeSurfer atlas maps</h3>
+      <h3 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h3>
       <p>
         See <a href="matlab:web('https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation','-browser');">Freesurfer WIKI</a> for further information.
       </p>
@@ -255,7 +266,7 @@
         <br />
         <br />
         
-        
+        <!--
         <li>
           <h5 id="FS_Desikan2006">Desikan-Killiany Atlas (2006)</h5>
           <p>
@@ -278,7 +289,7 @@
         <br />
         <br />
         
-        <!--
+        
         <li>
           <h5>Destrieux Atlas (2005)</h5>
           <p>
@@ -319,7 +330,8 @@
         <br />
         
         
-        
+        <!-- removed because we got to many atlas maps -->
+        <!--
         <li>
           <h5 id="FS_Brodman">PALS B12 Brodman</h5>
           <p>
@@ -355,6 +367,7 @@
           </p>
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_PALS-B12-Lobes.png" width=90% height=auto alt="PALS B12 Lobes" ><p>
         </li>
+        -->
       </ul>
       <br />
       
@@ -364,6 +377,7 @@
       
       <h3>References:</h3>
       <ul>
+        <!--
         <li>
           <b id="Collins1998">Collins et al. 1998</b>
           <p>
@@ -372,6 +386,16 @@
             <a href="matlab:web('http://doi.org/10.1109/42.712135','-browser')">IEEE Transactions on Medical Imaging 1998; 17: 463-68</a>.
           </p>
         </li>
+        -->
+        <li>
+          <b id="DKT2010">Desikan-Killiany-Tourville et al. 2010</b>
+          <p>
+            Klein A, Tourvill J.</br>
+            101 labeled brain images and a consistent human cortical labeling protocol. </br>
+            <a href="matlab:web('http://dx.doi.org/10.3389/fnins.2012.00171','-browser')">Front. Neurosci., 05 December 2012.</a>
+         </p> 
+        </li>
+        <!--
         <li>
           <b id="DKT2006">Desikan-Killiany-Tourville et al. 2006</b>
           <p>
@@ -380,6 +404,8 @@
             <a href="matlab:web('http://doi.org/10.1016/j.neuroimage.2006.01.021','-browser')">NeuroImage 2006, 31(3):968-80.</a>
          </p>
         </li>
+        -->
+        <!--
         </li>
          <li>
           <b id="Fischl2004">Fischl et al. 2004</b>
@@ -389,6 +415,7 @@
             <a href="matlab:web('http://doi.org/10.1093/cercor/bhg087','-browser')">Cerebral Cortex 2004, 14(1), 11-22.</a>
           </p>
         </li>
+        -->
         <li>
           <b id="Hammers2003">Hammers et al. 2003</b>
           <p>
@@ -426,6 +453,7 @@
 -->
           </p>
         </li>
+        <!--
         <li>
           <b id="Tzourio2002">Tzourio-Mazoyer et. al 2002</b>
           <p>
@@ -442,7 +470,7 @@
             <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.06.058','-browser');">Neuroimage 2005; 28: 635-662</a>.
           </p>
         </li>
-        
+        -->
        
       </ul>
       
