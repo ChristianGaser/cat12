@@ -10879,6 +10879,7 @@ New:      Added internal function cat_io_volctype to convert data to other
           
 
 ------------------------------------------------------------------------
+r943 | gaser | 2016-05-31 12:05:09 +0200 (Di, 31 Mai 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10890,5 +10891,19 @@ M       cat_surf_gyrification.m
 (2) Fixed: Error in cat_surf_display for dispolaying multiple surfaces.
 
 
+
 ------------------------------------------------------------------------
-r943 | gaser | 2016-05-31 12:04:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+D       cat_defaults_expert.m
+M       html/cat_methods_RBM.html
+M       html/cat_methods_defaults.html
+M       spm_cat12.m
+
+Changed:  Removed cat_defaults_expert file.
+Changed:  Reduced atlas files in HTML help.
+Changed:  Improved call and display of default/expert/developer GUI. 
+------------------------------------------------------------------------
+r944 | dahnke | 2016-05-31 17:05:38

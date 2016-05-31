@@ -52,7 +52,7 @@ elseif nargin==2 && ~strcmp(varargin{1},'fig')
 end
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 1; 
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @cat12_OpeningFcn, ...
@@ -81,7 +81,7 @@ function cat12_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to cat12 (see VARARGIN)
 
 % Choose default command line output for cat12
-handles.output = hObject;
+handles.output = hObject; 
 
 % Update handles structure
 guidata(hObject, handles);
@@ -103,13 +103,28 @@ function varargout = cat12_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+expert = cat_get_defaults('extopts.expertgui'); 
+switch expert
+  case 1, set(handles.CAT,'color', [0.85 0.85 0.85]);
+  case 2, set(handles.CAT,'color', [0.93 0.93 0.93]); 
+end
+
 % This creates the 'background' image
-ha = axes('units','normalized','position',[0 0.87 1 0.13]);
-uistack(ha,'bottom');
+handles.ha = axes('units','normalized','position',[0 0.87 1 0.13]);
 I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact.jpg'));
 imagesc(I);
+axis off; 
 text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',20,'Fontweight','bold');
-set(ha,'handlevisibility','off','visible','off');
+switch expert
+  case 1, text(80,90,'Expert Mode'   ,'Color',[0.1 0.7 1.0],'Fontsize',16,'Fontweight','bold'); 
+  case 2, text(80,90,'Developer Mode','Color',[1.0 0.0 0.0],'Fontsize',16,'Fontweight','bold');
+end
+guidata(hObject, handles);
+
+
+
+
+
 
 
 % --- Executes during object creation, after setting all properties.

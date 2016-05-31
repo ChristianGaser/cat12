@@ -26,11 +26,11 @@
     <div id="content">
       <h2>CAT defaults and user modes</h2>
       <p>
-        CAT uses different user modes to avoid overpacking of the GUI by unimportant preprocessing parameter that are irrelevant for most user. 
-        All CAT parameter were stored in the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;">cat_defaults</a> file, that allow permanent changes of specific parameters.
-        Furthermore, it is possible to use your own default files, by creating a copy of the cat_defaults file, change its parameters and load it from command line by <a class="function" href="matlab:cat12('select')">cat12('select')</a>, <em>cat12('cat_defaults_mydefs')</em> or <em>cat12('mypath/cat_defaults_mydefs')</em>.
+        CAT uses different user modes to avoid overpacking of the GUI by unimportant parameters that are irrelevant for most user. 
+        You can switch to default/expert mode by the commands <a class="function" href="matlab:cat12('default')">cat12('default')</a>/<a class="function" href="matlab:cat12('expert')">cat12('expert')</a>. 
       </p><p>
-        It is also possible to switch to the expert GUI mode that contain more options by setting the <em>cat.extopts.expertgui = 1; </em> in <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;">cat_defaults</a> file and restart SPM/CAT with the command <a class="function" href="matlab:cat12">cat12</a>.
+        All CAT default parameter were stored in the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;">cat_defaults</a> file, that allow permanent changes of specific parameters.
+        Furthermore, it is possible to use your own default files, by creating a copy of the cat_defaults file, change its parameters and load it from command line by <a class="function" href="matlab:cat12('select')">cat12('select')</a>, <em>cat12('cat_defaults_mydefs')</em> or <em>cat12('mypath/cat_defaults_mydefs')</em>.
       </p>
     </div>  
     
