@@ -10908,6 +10908,7 @@ Changed:  Reduced atlas files in HTML help.
 Changed:  Improved call and display of default/expert/developer GUI. 
 
 ------------------------------------------------------------------------
+r945 | gaser | 2016-06-06 08:54:56 +0200 (Mo, 06 Jun 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10924,5 +10925,14 @@ MM      internal/cat_io_volctype.m
 (2) Fixed: Typos and wrong file subversion IDs.
 
 
+
 ------------------------------------------------------------------------
-r945 | gaser | 2016-06-06 08:54:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+
+Fixed: TFCE call from GUI
+------------------------------------------------------------------------
+r946 | gaser | 2016-06-06 17:17:35
