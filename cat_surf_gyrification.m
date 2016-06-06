@@ -78,7 +78,7 @@ function PSgi = cat_surf_gyrification(type,PS,opt)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 937 2016-05-12 08:56:23Z gaser $ 
+% $Id$ 
 
   sinfo = cat_surf_info(PS);
   

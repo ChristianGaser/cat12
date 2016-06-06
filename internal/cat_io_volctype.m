@@ -9,7 +9,7 @@ function cat_io_volctype(varargin)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: vbm_tst_calc_kappa.m 652 2014-11-20 16:09:10Z dahnke $
+% $Id$
 
 %% choose images
   
