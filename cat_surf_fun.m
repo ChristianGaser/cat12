@@ -1,5 +1,5 @@
 function varargout = cat_surf_fun(action,S,varargin)
-% Function to collect small surface functions.
+% Function to collect surface functions.
 % 
 % varargout = cat_surf_fun(action,S)
 %
@@ -12,7 +12,7 @@ function varargout = cat_surf_fun(action,S,varargin)
 % Structural Brain Mapping Group
 % University Jena
 % ______________________________________________________________________
-% $Id: cat_surf_createCS.m 937 2016-05-12 08:56:23Z gaser $ 
+% $Id$ 
 
   switch action
     case 'distance'

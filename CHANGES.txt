@@ -10893,6 +10893,7 @@ M       cat_surf_gyrification.m
 
 
 ------------------------------------------------------------------------
+r944 | dahnke | 2016-05-31 17:06:45 +0200 (Di, 31 Mai 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10905,5 +10906,23 @@ M       spm_cat12.m
 Changed:  Removed cat_defaults_expert file.
 Changed:  Reduced atlas files in HTML help.
 Changed:  Improved call and display of default/expert/developer GUI. 
+
 ------------------------------------------------------------------------
-r944 | dahnke | 2016-05-31 17:05:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat_roi_roi2surf.m
+ M      cat_surf_GI3D.m
+ M      cat_surf_epivolsurf.m
+MM      cat_surf_fun.m
+MM      cat_surf_gyrification.m
+M       cat_surf_parameters.m
+MM      internal/cat_io_volctype.m
+
+(1) Fixed: Check of flag for new surface parameters are only available in 
+    expert mode.
+(2) Fixed: Typos and wrong file subversion IDs.
+
+
+------------------------------------------------------------------------
+r945 | gaser | 2016-06-06 08:54:43
