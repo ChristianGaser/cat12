@@ -293,3 +293,13 @@ function popupmenu2_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenu2
+% --- Executes during object creation, after setting all properties.
+
+% Determine the selected data set.
+switch get(hObject,'Value');
+case 2 
+   spm_jobman('interactive','','spm.tools.tfce_estimate');
+case 3 
+   cg_tfce_results('Setup');
+end
+
