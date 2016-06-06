@@ -77,6 +77,7 @@ function varargout = cat_surf_parameters(job)
 % These approaches are still in development. 
 % See cat_surf_gyrification for further information.
 % ----------------------------------------------------------------------
+  if cat_get_defaults('extopts.expertgui') > 1
     if job.GIA
       %% gyrification index based on average surface
       %  basic idea is to find local increase/decreasment of surface area
@@ -131,6 +132,21 @@ function varargout = cat_surf_parameters(job)
         if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PGIL,'link','cat_surf_display(''%s'')')); end
       end
     end
+    
+    if job.SA
+      %% local surface area
+      fprintf('Not yet working.');
+  %    if exist(PSA,'file') && job.lazy  
+  %      if job.verb>=1, fprintf('  Display allready processed %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
+  %    else 
+  %      cmd = sprintf('CAT_DumpSurfArea -log -sphere "%s" "%s" "%s"',Psphere,deblank(P(i,:)),PSA);
+  %      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+  %      if nargout==1, varargout{1}.PSA{i} = PSA; end  
+  %      if job.verb>=1, fprintf('  Display %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
+  %    end
+    end
+
+  end
 % ----------------------------------------------------------------------
 % ----------------------------------------------------------------------
    
@@ -147,19 +163,6 @@ function varargout = cat_surf_parameters(job)
         if nargout==1, varargout{1}.PSD{i} = PSD; end  
         if job.verb>=1, fprintf('  Display %s\n',spm_file(PSD,'link','cat_surf_display(''%s'')')); end
       end
-    end
-
-    if job.SA
-      %% local surface area
-      fprintf('Not yet working.');
-  %    if exist(PSA,'file') && job.lazy  
-  %      if job.verb>=1, fprintf('  Display allready processed %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
-  %    else 
-  %      cmd = sprintf('CAT_DumpSurfArea -log -sphere "%s" "%s" "%s"',Psphere,deblank(P(i,:)),PSA);
-  %      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
-  %      if nargout==1, varargout{1}.PSA{i} = PSA; end  
-  %      if job.verb>=1, fprintf('  Display %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
-  %    end
     end
 
     if job.FD

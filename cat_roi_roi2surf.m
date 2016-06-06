@@ -18,7 +18,7 @@ function varargout = cat_roi_roi2surf(job)
     def.usefsaverage  = 1; 
     def.assuregifti   = 1;
     def.fsaverage     = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
-    def.infalted      = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
+    def.inflated      = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
     def.dartelaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii');    
     
     job = cat_io_checkinopt(job,def);
@@ -31,7 +31,7 @@ function varargout = cat_roi_roi2surf(job)
 
   switch job.surf
     case 'freesurfer', surf = job.fsaverage;
-    case 'infalted',   surf = job.infalted;
+    case 'inflated',   surf = job.inflated;
     case 'dartel',     surf = job.dartelaverage;
     case 'subject',    surf = '';
   end
