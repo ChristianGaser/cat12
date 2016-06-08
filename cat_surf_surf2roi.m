@@ -20,6 +20,8 @@ function cat_surf_surf2roi(job)
 %
 % ______________________________________________________________________
 % Robert Dahnke
+% ______________________________________________________________________
+% $Id$ 
 
 
 % ______________________________________________________________________
@@ -229,7 +231,7 @@ function resamp = get_resampled_values(P)
   [pp,ff,ex]   = spm_fileparts(P);
 
   name = [ff ex];
-  name      = strrep(name,'.gii',''); % remove .gii extension
+  name = strrep(name,'.gii',''); % remove .gii extension
   hemi = ff(1:2);
 
   k = strfind(name,'.');

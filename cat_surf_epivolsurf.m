@@ -71,7 +71,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
   end
   if opt.layer<=2, error('You need at least 3 points'); end                % proof usefull number of layer    
 
-  % if there are to many and to less streampoints you have to divide the streamline ...
+  % if there are too many and not enough streampoints you have to divide the streamline ...
   if ~isfield(opt,'streamopt') || numel(opt.streamopt)~=2
     opt.streamopt(1)  = 0.1;                                               % point distance 0.05
     opt.streamopt(2)  = 1/opt.streamopt(1)*10000;                         % max number of points in a stream 
