@@ -16,6 +16,7 @@ function cat_io_senderrormail(job)
   else
     job.errdirs = cellstr(job.errdirs);
   end
+  if isempty(job.errdirs), fprinft('Nothing to do. No input directory! \n'); return; end
   
   def.verb        = 1; % display progress
   def.optimize    = 1; % only unique errors
