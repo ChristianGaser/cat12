@@ -1,4 +1,4 @@
-function cat_surf_surf2roi(job)
+function cat_surf_surf2roi_resampled(job)
 % ______________________________________________________________________
 % Function to read surface data for atlas maps and create ROI files.
 % The function create CSV, as well as XML files.
@@ -20,6 +20,8 @@ function cat_surf_surf2roi(job)
 %
 % ______________________________________________________________________
 % Robert Dahnke
+% ______________________________________________________________________
+% $Id$ 
 
 
 % ______________________________________________________________________
