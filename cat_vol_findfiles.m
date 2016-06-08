@@ -706,7 +706,7 @@ end
 if strcmpi(opt.return(:)', 'chararr')
 	filesfound = char(filesfound);
 end
-
+end
 % - end of cat_vol_findfiles(...)
 
 
@@ -847,151 +847,272 @@ if sdepth == 0 || ...
     found = found(:);
 end
 % end of function findsubfiles
-
+end
 % findsubdirs
 function found = findsubdirs(path, patterns, adepth, sdepth, mdepth, mnage, mxage, operdir, relative)
 
-% start with zero dirs found
-nfound = 0;
-found = cell(0, 1);
-mfilesep = filesep;
+  % start with zero dirs found
+  nfound = 0;
+  found = cell(0, 1);
+  mfilesep = filesep;
 
-% first, recursively handle all subfolders, if depth is still valid
-if mdepth == 0 || ...
-    adepth < mdepth
+  % first, recursively handle all subfolders, if depth is still valid
+  if mdepth == 0 || ...
+      adepth < mdepth
 
-    % get list of files and folders, and size of list
-    ilist = dir(path);
-    slist = numel(ilist);
+      % get list of files and folders, and size of list
+      ilist = dir(path);
+      slist = numel(ilist);
 
-    % get isdir flag into array
-    [ilistd(1:slist)] = [ilist(:).isdir];
+      % get isdir flag into array
+      [ilistd(1:slist)] = [ilist(:).isdir];
 
-    % find indices of dirs
-    ilistd = find(ilistd > 0);
+      % find indices of dirs
+      ilistd = find(ilistd > 0);
 
-    % check items
-    for count = ilistd
+      % check items
+      for count = ilistd
 
-        % don't heed . and ..
-        if strcmp(ilist(count).name, '.') || ...
-            strcmp(ilist(count).name, '..')
-            continue;
-        end
+          % don't heed . and ..
+          if strcmp(ilist(count).name, '.') || ...
+              strcmp(ilist(count).name, '..')
+              continue;
+          end
 
-        % iterate over subdirs
-        filestoadd = findsubdirs([path ilist(count).name mfilesep], ...
-            patterns, adepth + 1, sdepth, mdepth, ...
-            mnage, mxage, operdir, [relative ilist(count).name mfilesep]);
-        sfound = numel(filestoadd);
+          % iterate over subdirs
+          filestoadd = findsubdirs([path ilist(count).name mfilesep], ...
+              patterns, adepth + 1, sdepth, mdepth, ...
+              mnage, mxage, operdir, [relative ilist(count).name mfilesep]);
+          sfound = numel(filestoadd);
 
-        % if dirs founds
-        if sfound > 0
-            nfoundfrm = nfound + 1;
-            nfoundnew = nfound + sfound;
-            found(nfoundfrm:nfoundnew, 1) = filestoadd(:);
-            nfound = nfoundnew;
-        end
-    end
-end
+          % if dirs founds
+          if sfound > 0
+              nfoundfrm = nfound + 1;
+              nfoundnew = nfound + sfound;
+              found(nfoundfrm:nfoundnew, 1) = filestoadd(:);
+              nfound = nfoundnew;
+          end
+      end
+  end
 
-% then, if depth is valid, add folders to the output
-if sdepth == 0 || ...
-    sdepth <= adepth
+  % then, if depth is valid, add folders to the output
+  if sdepth == 0 || ...
+      sdepth <= adepth
 
-    % only get time if needed
-    if any([mnage, mxage]>=0)
-        rnow = now;
-    end;
+      % only get time if needed
+      if any([mnage, mxage]>=0)
+          rnow = now;
+      end;
 
-    % number of patterns
-    spatt = numel(patterns);
-    for pcount = 1:spatt
+      % number of patterns
+      spatt = numel(patterns);
+      for pcount = 1:spatt
 
-        % no "*" or "?" pattern
-        if ~any(patterns{pcount} == '*') && ...
-           ~any(patterns{pcount} == '?')
-            if exist([path patterns{pcount}], 'dir') == 7
-                nfound = nfound + 1;
-                found{nfound} = [relative patterns{pcount}];
-            end
-            continue;
+          % no "*" or "?" pattern
+          if ~any(patterns{pcount} == '*') && ...
+             ~any(patterns{pcount} == '?')
+              if exist([path patterns{pcount}], 'dir') == 7
+                  nfound = nfound + 1;
+                  found{nfound} = [relative patterns{pcount}];
+              end
+              continue;
 
-        % "?" pattern/s
-        elseif any(patterns{pcount} == '?')
-            ilist = dir([path strrep(strrep(patterns{pcount}, '?', '*'), '**', '*')]);
-            ilistn = {ilist(:).name};
-            ilist(cellfun('isempty', regexp(ilistn, ...
-                [strrep(strrep(strrep(patterns{pcount}, '.', '\.'), ...
-                '?', '.'), '*', '.*') '$']))) = [];
+          % "?" pattern/s
+          elseif any(patterns{pcount} == '?')
+              ilist = dir([path strrep(strrep(patterns{pcount}, '?', '*'), '**', '*')]);
+              ilistn = {ilist(:).name};
+              ilist(cellfun('isempty', regexp(ilistn, ...
+                  [strrep(strrep(strrep(patterns{pcount}, '.', '\.'), ...
+                  '?', '.'), '*', '.*') '$']))) = [];
 
-        % "*" pattern/s
-        else
-            ilist = dir([path patterns{pcount}]);
-        end
+          % "*" pattern/s
+          else
+              ilist = dir([path patterns{pcount}]);
+          end
 
-        % get matching entries
-        slist = numel(ilist);
+          % get matching entries
+          slist = numel(ilist);
 
-        % get isdir flag into array and remove files from list
-        ilistd = [];
-        [ilistd(1:slist)] = [ilist(:).isdir];
-        ilist(~ilistd) = [];
-        slist = numel(ilist);
+          % get isdir flag into array and remove files from list
+          ilistd = [];
+          [ilistd(1:slist)] = [ilist(:).isdir];
+          ilist(~ilistd) = [];
+          slist = numel(ilist);
 
-        % if only one per dir
-        if operdir == 1
-            count = 1;
+          % if only one per dir
+          if operdir == 1
+              count = 1;
 
-            % reject all non-matching entries
-            while count <= slist && ...
-                 ((mnage >= 0 && (rnow - datenum(ilist(count).date)) < mnage) || ...
-                  (mxage >= 0 && (rnow - datenum(ilist(count).date)) > mxage))
-                count = count + 1;
-            end
-
-            % find next entry
-            while count <= slist
-
-                % still reject . and ..
-                if  strcmp(ilist(count).name, '.') || ...
-                    strcmp(ilist(count).name, '..')
-                    count = count + 1;
-                    continue;
-                end
-
-                % get next entry
-                nfound = nfound + 1;
-                found{nfound, 1} = [relative ilist(count).name];
-                break;
-            end
-
-        % otherwise check all
-        else
-
-            % iterate over all
-            for count = 1:slist
-
-                % reject non-matching
-                if ((mnage >= 0 && (rnow - datenum(ilist(count).date)) < mnage) || ...
+              % reject all non-matching entries
+              while count <= slist && ...
+                   ((mnage >= 0 && (rnow - datenum(ilist(count).date)) < mnage) || ...
                     (mxage >= 0 && (rnow - datenum(ilist(count).date)) > mxage))
-                    continue;
-                end
+                  count = count + 1;
+              end
 
-                % reject . and ..
-                if strcmp(ilist(count).name, '.') || ...
-                    strcmp(ilist(count).name, '..')
-                    continue;
-                end
+              % find next entry
+              while count <= slist
 
-                % accept others
-                nfound = nfound + 1;
-                found{nfound, 1} = [relative ilist(count).name];
-            end
-        end
-    end
+                  % still reject . and ..
+                  if  strcmp(ilist(count).name, '.') || ...
+                      strcmp(ilist(count).name, '..')
+                      count = count + 1;
+                      continue;
+                  end
 
-    % linearize found
-    found = found(:);
+                  % get next entry
+                  nfound = nfound + 1;
+                  found{nfound, 1} = [relative ilist(count).name];
+                  break;
+              end
+
+          % otherwise check all
+          else
+
+              % iterate over all
+              for count = 1:slist
+
+                  % reject non-matching
+                  if ((mnage >= 0 && (rnow - datenum(ilist(count).date)) < mnage) || ...
+                      (mxage >= 0 && (rnow - datenum(ilist(count).date)) > mxage))
+                      continue;
+                  end
+
+                  % reject . and ..
+                  if strcmp(ilist(count).name, '.') || ...
+                      strcmp(ilist(count).name, '..')
+                      continue;
+                  end
+
+                  % accept others
+                  nfound = nfound + 1;
+                  found{nfound, 1} = [relative ilist(count).name];
+              end
+          end
+      end
+
+      % linearize found
+      found = found(:);
+  end
+  % end of function findsubdirs
 end
-% end of function findsubdirs
+function [linetocell,cellcount] = splittocell(varargin)
+% splittocell  - split a delimited string into a cell array
+%
+% usage is straight forward:
+%
+% FORMAT:         [outcell,count] = splittocell(string[,delimiters,multi])
+%
+% Input fields:
+%    string       string to split
+%    delimiters   char array containing one or more delimiters
+%                 if left empty -> char(9) == <TAB>
+%    multi        must be '1' (numeric) to be effective, if set
+%                 multiple delimiters will be treated as one
+%
+% Output fields:
+%    outcell      cell array containing the tokens after split
+%    count        number of tokens in result
+
+  % no arguments -> help me!
+  if nargin == 0, help(mfilename); return; end
+
+  % initialize return values and varargin{3}
+  linetocell=cell(0);
+  cellcount =0;
+  multidelim=0;
+
+
+
+  % do we have useful input ?
+  if ~ischar(varargin{1}) | length(varargin{1})==0, return; end
+  line=varargin{1};
+  if size(line,2) ~= prod(size(line))
+      dispdebug('splittocell: input must be a 1xN shaped char array!',4);
+      return;
+  end
+
+  % are any other arguments specified
+  if nargin < 2 | ~ischar(varargin{2})
+      delimiter = char(9);
+  else
+      delimiter = reshape(varargin{2},1,prod(size(varargin{2})));
+      if nargin > 2 & isnumeric(varargin{3}) & varargin{3} ~= 0, multidelim = 1; end
+  end
+
+  % multi-delimitting requested ?
+  if multidelim == 0
+
+      % set initial parameters
+      ldelim=size(delimiter,2);
+      lline =size(line,2);
+
+      % find occurences of delimiter
+      if ldelim==1
+          cpos=[(1-ldelim),find(line==delimiter)];
+      else
+          cpos=[(1-ldelim),findstr(line,delimiter)];
+      end
+      lcpos =size(cpos,2);
+
+      % any delimiter found at all ?
+      if lcpos==1, cellcount=1; linetocell={line}; return; end
+
+      % large array?
+      if lcpos < 4096
+
+          % line doesn't end with delimiter ?
+          if cpos(lcpos) <= (lline-ldelim)
+              % then make it look like it was...
+              cpos =[cpos lline+1];
+              lcpos=lcpos+1;
+          end
+
+          % extract substrings
+          for dpos=1:(lcpos-1)
+              linetocell{end+1} = line(cpos(dpos)+ldelim:cpos(dpos+1)-1);
+          end
+
+      else
+
+          % get good rate
+          crate = min(384,floor(lcpos^0.666));
+
+          % iterate over parts
+          linetocell={};
+          for cmpos = 1:crate:(lcpos-crate)
+              linetocell = [linetocell,splittocell(line(cpos(cmpos)+ldelim:cpos(cmpos+crate)-1),delimiter,multidelim)];
+          end
+          linetocell = [linetocell,splittocell(line(cpos(cmpos+crate)+ldelim:cpos(end)-1),delimiter,multidelim)];
+
+      end
+
+  else
+
+      % set initial parameters
+      ldelim=size(delimiter,2);
+      lline =size(line,2);
+
+      % find occurences of delimiter
+      pdelim = [0];
+      for cdelim=1:ldelim
+          pdelim = union(pdelim,find(line==delimiter(cdelim)));
+      end
+      if pdelim(end) ~= lline, pdelim(end+1)=lline+1; end
+      lpdel = size(pdelim,2);
+
+      % extract substrings
+      if pdelim(2)==1, linetocell{end+1} = ''; end
+      for ppdel=1:(lpdel-1)
+          if (pdelim(ppdel+1)-1) ~= pdelim(ppdel)
+              linetocell{end+1} = line(pdelim(ppdel)+1:pdelim(ppdel+1)-1);
+          end
+      end
+
+  end
+
+  cellcount=length(linetocell);
+end
+
+
+

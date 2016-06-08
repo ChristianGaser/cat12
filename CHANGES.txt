@@ -10927,6 +10927,7 @@ MM      internal/cat_io_volctype.m
 
 
 ------------------------------------------------------------------------
+r946 | gaser | 2016-06-06 17:17:45 +0200 (Mo, 06 Jun 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10934,5 +10935,20 @@ M       cat12.fig
 M       cat12.m
 
 Fixed: TFCE call from GUI
+
 ------------------------------------------------------------------------
-r946 | gaser | 2016-06-06 17:17:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_senderrormail.m
+M       cat_plot_boxplot.m
+A       cat_tst_qa_cleaner.m
+M       cat_vol_findfiles.m
+
+New:      Added a function cat_tst_qa_cleaner to estimate a sample specific QA 
+          threshold of a set of quality ratings. It used the kmeans function to
+          find the first peak and the average variation to get a sample specific
+          QA rating with 2 major levels (passed/failed) and 2 refinements (+/-).
+          
+------------------------------------------------------------------------
+r947 | dahnke | 2016-06-08 16:42:22

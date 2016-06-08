@@ -129,6 +129,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
   % figure out how many data sets we have
   if iscell(data), 
     nc = length(data);
+    for nci=1:nc, data{nci}=data{nci}(:); end
   else
     if isvector(data), data = data(:); end
     nc = columns(data);
@@ -422,7 +423,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
     
     % add labels
     linecolor = [0.8 0.8 0.8];
-    set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0.3 numel(opt.names)+0.5]);
+    set(gca,'XTick',1:numel(opt.names),'XTickLabel',opt.names,'TickLength',[0 0],'xlim',[0.5 numel(opt.names)+0.5]);
     if ~isempty(opt.ylim)
       ylim(gca,opt.ylim);
     end
