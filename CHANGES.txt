@@ -10937,6 +10937,7 @@ M       cat12.m
 Fixed: TFCE call from GUI
 
 ------------------------------------------------------------------------
+r947 | dahnke | 2016-06-08 16:42:37 +0200 (Mi, 08 Jun 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10950,5 +10951,28 @@ New:      Added a function cat_tst_qa_cleaner to estimate a sample specific QA
           find the first peak and the average variation to get a sample specific
           QA rating with 2 major levels (passed/failed) and 2 refinements (+/-).
           
+
 ------------------------------------------------------------------------
-r947 | dahnke | 2016-06-08 16:42:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_surf_createCS.m
+M       cat_surf_epivolsurf.m
+M       cat_surf_surf2roi.m
+M       cat_surf_surf2roi_resampled.m
+M       cat_vol_partvol.m
+M       html/cat_methods_RBM.html
+
+(1) Fixed: Some typos and missing svn ID fields in header
+(2) Changed: Surface creation is now starting with the good old topology 
+    correction and will check whether the Hausdorff distance in the 
+    parahippocampal gyrus will be too large. In that case a new run with
+    BrainSuite topology correction (tca) is made to prevent large cuts in that 
+    gyrus.
+(3) Changed: Topology correction is now also internally using criteria of 
+    Haussdorff distance multiplied with mean curvature to decide whether
+    the defect is a hole or handle.
+------------------------------------------------------------------------
+r948 | gaser | 2016-06-08 17:01:51

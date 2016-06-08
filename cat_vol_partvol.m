@@ -305,11 +305,11 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
       %%
       Ya1(Ywmh)=LAB.HI;
     elseif vols(1)<0.15 
-      stime = cat_io_cmd(sprintf('  NO WMH detection (to less CSF ~%0.0f%%%%)',vols(1)*100),'g5','',verb,stime); dispc=dispc+1;
+      stime = cat_io_cmd(sprintf('  NO WMH detection (CSF ~%0.0f%%%%)',vols(1)*100),'g5','',verb,stime); dispc=dispc+1;
     elseif noise>0.10 
-      stime = cat_io_cmd(sprintf('  NO WMH detection (to noisy ~%0.2f)',noise),'g5','',verb,stime); dispc=dispc+1;
+      stime = cat_io_cmd(sprintf('  NO WMH detection (too noisy ~%0.2f)',noise),'g5','',verb,stime); dispc=dispc+1;
     else
-      stime = cat_io_cmd(sprintf('  NO WMH detection (to less CSF ~%0.0f%%%% and to noisy ~%0.2f)',...
+      stime = cat_io_cmd(sprintf('  NO WMH detection (CSF ~%0.0f%%%% and too noisy ~%0.2f)',...
         vols(1)*100,noise),'g5','',verb,stime); dispc=dispc+1;
     end
   end
