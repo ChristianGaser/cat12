@@ -221,24 +221,10 @@ cat.output.TPMC.warped = 0;
 cat.output.TPMC.mod    = 0;
 cat.output.TPMC.dartel = 0;
 
-% partitioning atlas maps (for evaluation)
+% atlas maps (for evaluation)
 cat.output.atlas.native = 0; 
 cat.output.atlas.warped = 0; 
 cat.output.atlas.dartel = 0; 
-
-% preprocessing changes map
-% this is the map that include local changes by preprocessing   
-cat.output.pc.native = 0;
-cat.output.pc.warped = 0;
-cat.output.pc.mod    = 0;
-cat.output.pc.dartel = 0;
-
-% tissue expectation map
-% this is a map that describes that difference to the TPM
-cat.output.te.native = 0;
-cat.output.te.warped = 0;
-cat.output.te.mod    = 0; % meaningfull?
-cat.output.te.dartel = 0;
 
 % IDs of the ROIs in the cat atlas map (cat.nii). Do not change this!
 cat.extopts.LAB.NB =  0; % no brain 

@@ -220,20 +220,6 @@ cat12.output.atlas.native = 0;
 cat12.output.atlas.warped = 0; 
 cat12.output.atlas.dartel = 0; 
 
-% preprocessing changes map
-% this is the map that include local changes by preprocessing   
-cat12.output.pc.native = 0;
-cat12.output.pc.warped = 0;
-cat12.output.pc.mod    = 0;
-cat12.output.pc.dartel = 0;
-
-% tissue expectation map
-% this is a map that describes that difference to the TPM
-cat12.output.te.native = 0;
-cat12.output.te.warped = 0;
-cat12.output.te.mod    = 0; % meaningfull?
-cat12.output.te.dartel = 0;
-
 % IDs of the ROIs in the cat12 atlas map (cat12.nii). Do not change this!
 cat12.extopts.LAB.NB =  0; % no brain 
 cat12.extopts.LAB.CT =  1; % cortex
