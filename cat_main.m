@@ -71,7 +71,7 @@ if do_dartel
     job.output.label.warped || job.output.label.dartel || ...
     any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
     job.output.surface || job.output.ROI || ...
-    any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
+    any([job.output.atlas.warped]);
   if ~need_dartel
     %fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
     do_dartel = 0;
@@ -1500,8 +1500,7 @@ clear Yp0;
 cat_io_writenii(VT0,Yl1,mrifolder,'a0','brain atlas map for major structures and sides',...
   'uint8',[0,1],job.output.atlas,trans);
 
-
-%% class maps
+% class maps 1-3
 fn = {'GM','WM','CSF','head','head','background'};
 for clsi=1:3
   cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
@@ -1513,58 +1512,82 @@ for clsi=1:3
     min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
     job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
 end
-%%
-job.extopts.intsegments = job.extopts.expertgui>1;
-if job.extopts.intsegments && (any(tc(:)) || ...
-    job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
-  %%
-  Yclsi = cell(1,3);
-  for clsi=1:3
-    clsid = [2 3 1];
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-    Yclsi{clsi} = Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),clsid(clsi));
-    switch clsi
-      case 1
-        Yclsi{clsi} = Yclsi{clsi} .* (Ycls{clsi}>0) + ...
-          Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),3) .* (Ycls{2}==0 & (Ycls{1}>0));
-      case 2 
-        Yclsi{clsi} = Yclsi{clsi} .* (Ycls{clsi}>0) +  ...
-          Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2) .* (Ycls{2}==255 & ~cat_vol_morph(Ycls{2}>192,'e'));
-        Ywmhp = cat_vol_ctype( Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2) .* cat_vol_morph(Ycls{2}>192,'e') * 255);
-      case 3 
-        Yclsi{clsi} = Yclsi{clsi} + ...
-          (Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2)) .* (Ycls{1}==0 & (Ycls{3}>0)) + ...
-          (Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),3)) .* (Ycls{2}==0 & (Ycls{3}>0));
+
+% write WMH class maps
+if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
+    min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
+    job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
+  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
+    min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
+    job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
+end 
+
+
+% developer - intensity scaled tissue classe maps
+% ----------------------------------------------------------------------
+% The strong normalization of the T1 data can directly be used as tissue
+% segmentation. The Ym images is scaled to get similar maps for each 
+% tissue class, with good vissible differences in the sulci.
+job.extopts.intsegments = job.extopts.expertgui>2;
+if job.extopts.intsegments
+  if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
+
+    % intensity scaled tissue maps
+    Yclsi = cell(1,3);
+    for clsi=1:3
+      clsid = [2 3 1];
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+      Yclsi{clsi} = Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),clsid(clsi));
+      switch clsi
+        case 1
+          Yclsi{clsi} = Yclsi{clsi} .* (Ycls{clsi}>0) + ...
+            Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),3) .* (Ycls{2}==0 & (Ycls{1}>0));
+        case 2 
+          Yclsi{clsi} = Yclsi{clsi} .* (Ycls{clsi}>0) +  ...
+            Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2) .* (Ycls{2}==255 & ~cat_vol_morph(Ycls{2}>192,'e'));
+          Ywmhp = cat_vol_ctype( Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2) .* cat_vol_morph(Ycls{2}>192,'e') * 255);
+        case 3 
+          Yclsi{clsi} = Yclsi{clsi} + ...
+            (Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),2)) .* (Ycls{1}==0 & (Ycls{3}>0)) + ...
+            (Yp0toC(max(1/3,min(1,Ym)) * 3 .* (Yp0>0),3)) .* (Ycls{2}==0 & (Ycls{3}>0));
+      end
+      Yclsi{clsi} = cat_vol_ctype(Yclsi{clsi} * 255);
     end
-    Yclsi{clsi} = cat_vol_ctype(Yclsi{clsi} * 255);
+    clear Yp0; 
+    
+    % class maps 1-3
+    % Yclss = single(Yclsi{1} + Yclsi{2} + Yclsi{3} + Ywmhp + Ywmh)/255; % + single(Ywmh)/255;
+    for clsi=1:3
+      cat_io_writenii(VT0,single(Yclsi{clsi})/255,mrifolder,sprintf('pi%d',clsi),...
+        sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
+        min([1 1 0 3],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+        job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
+      cat_io_writenii(VT0,single(Yclsi{clsi})/255,mrifolder,sprintf('pi%d',clsi),...
+        sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
+        min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+        job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
+    end
+    clear Yclsi; 
+    
+    % write WMH class maps
+    if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+      cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
+        'pi7','WMH tissue map','uint8',[0,1/255],...
+        min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
+        job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
+      cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
+        'pi7','WMH tissue map','uint16',[0,1/255],...
+        min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
+        job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
+    end 
+    clear Ywmhp;
   end
-  clear Yp0; 
-  % class 1-3
-  %Yclss = single(Yclsi{1} + Yclsi{2} + Yclsi{3} + Ywmhp + Ywmh)/255; % + single(Ywmh)/255;
-  for clsi=1:3
-    cat_io_writenii(VT0,single(Yclsi{clsi})/255,mrifolder,sprintf('pi%d',clsi),...
-      sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
-      min([1 1 0 3],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
-      job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
-    cat_io_writenii(VT0,single(Yclsi{clsi})/255,mrifolder,sprintf('pi%d',clsi),...
-      sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-      min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
-      job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
-  end
-  clear Yclsi; 
-  %% write WMH class maps
-  if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
-    cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
-      'p7','WMH tissue map','uint8',[0,1/255],...
-      min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
-      job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
-    cat_io_writenii(VT0,(single(Ywmhp) + single(Ywmh))/255,mrifolder,...
-      'p7','WMH tissue map','uint16',[0,1/255],...
-      min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
-      job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
-  end 
-  clear Ywmhp;
 end
+% ----------------------------------------------------------------------
+
+
+% classe maps 4-6 (for full TPM/template creation, e.g. for apes)
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
@@ -1577,19 +1600,9 @@ if any(cell2mat(struct2cell(job.output.TPMC)'))
       job.output.TPMC.mod job.output.TPMC.dartel]),trans);
   end
 end
-
-%% write WMH class maps
-if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
-  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
-    min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
-    job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
-  cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
-    min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
-    job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
-end  
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
-%% write jacobian determinant
+% write jacobian determinant
 if job.output.jacobian.warped
   [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
   clear y0
@@ -1619,7 +1632,7 @@ clear Yy;
 
 % deformation iy - subject > dartel
 if job.output.warps(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
-  %% update job.output.warps(2) for interpolated images
+  % update job.output.warps(2) for interpolated images
   Vdef = res.image0(1);
   Vdef.dt(1) = spm_type('float32');
   Vdef = rmfield(Vdef,'private');

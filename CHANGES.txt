@@ -10953,6 +10953,7 @@ New:      Added a function cat_tst_qa_cleaner to estimate a sample specific QA
           
 
 ------------------------------------------------------------------------
+r948 | gaser | 2016-06-08 17:01:56 +0200 (Mi, 08 Jun 2016) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10974,5 +10975,24 @@ M       html/cat_methods_RBM.html
 (3) Changed: Topology correction is now also internally using criteria of 
     Haussdorff distance multiplied with mean curvature to decide whether
     the defect is a hole or handle.
+
 ------------------------------------------------------------------------
-r948 | gaser | 2016-06-08 17:01:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_tst_qa.m
+M       cat_tst_qa_cleaner.m
+M       tbx_cfg_cat.m
+M       templates_animals/cat_defaults_ape_greater.m
+M       templates_animals/cat_defaults_ape_lesser.m
+M       templates_animals/cat_defaults_monkey_newworld.m
+M       templates_animals/cat_defaults_monkey_oldworld.m
+
+(1) Changed:  Updated comments of intensity-based tissue class output maps (pi*)
+              (developer mode).
+(2) Changed:  Removed TE (tissue expectation) and PC (preprocessing change) maps
+              completely.  
+------------------------------------------------------------------------
+r949 | dahnke | 2016-06-13 15:24:33

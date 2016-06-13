@@ -8,16 +8,20 @@ function varargout = cat_tst_qa_cleaner(data,opt)
 %  higher values for softer thresholds (more passed images).
 %
 %  This tool is still in development:
-%   * the combination of different sites is not complete and/or logical 
+%   * the combination of different sites is not final
 %   * the bar plot is better, but does not work correctly (more than to 
 %     bars will lead to problems in the axis scaling)
 %   * multiside output required a 'stacked' output
 %
-%  [Pth,Fth,markth] = cat_tst_qa_remover(data[,opt])
+%  [Pth,Fth,markth,markths,marthsc] = cat_tst_qa_remover(data[,opt])
 %
 %    Pth      .. threshold for passed images
 %    Fth      .. threshold for failed images
 %    markth   .. thresholds between grads
+%    markths  .. thresholds between grads of each input
+%                 - site depending
+%    markthsc .. thresholds between grads of each input
+%                 - site depending, global corrected
 %    data     .. array of quality ratings or xml-files
 %    opt      .. option structure
 %     .grads  .. number of grads
@@ -117,14 +121,14 @@ function varargout = cat_tst_qa_cleaner(data,opt)
       [Sth,Fth,markth(si,:) ] = cat_tst_qa_cleaner(data(sdatai),opts);
       markths(sdatai,:) = repmat(markth(si,:),numel(sdatai),1); 
     end
-    markths2=markths;
     % estimate global threshold
     markthss = sortrows(markth);
     th = mean(markthss(max(1,min(numel(sites),round(numel(sites)*opt.siteavgperc(1)))):...
                        max(1,min(numel(sites),round(numel(sites)*opt.siteavgperc(2)))),:),1); 
     % modify local rating based on the global one                 
-    markths = min(markths,1.2*repmat(th,size(markths,1),1)); % low ratings 
-    markths = max(markths,0.8*repmat(th,size(markths,1),1));
+    markths2=markths;
+    markths2 = min(markths2,1.2*repmat(th,size(markths2,1),1)); % higher thresholds even for sides with low rating 
+    markths2 = max(markths2,0.8*repmat(th,size(markths2,1),1)); % lower  thresholds even for sides with high rating 
     d  = data; 
 
   else
@@ -408,7 +412,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
     
     
-    %% colored main grads
+    % colored main grads
     FS = get(gca,'Fontsize')*1.3;
     set(gca,'XTick',0.5:1:6.5,'XTickLabel',{'100','90','80','70','60','50','45'},'TickLength',[0.02 0.02]);
     % further color axis objects...
@@ -423,33 +427,61 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     set(axF,'YTick',[],'XTickLabel',{},'XTick',6,'XColor',color(QMC,6),'Color','none','XTicklabel','F','TickLength',[0 0],'Fontsize',FS,'Fontweight','bold');
     hold off; 
     
-    title(sprintf('Histogram (cf=%0.2f)',opt.cf),'Fontsize',FS);
+    if numel(sites>1);
+      title(sprintf('Histogram (cf=%0.2f) - global treshold for multisite output (n=%d)',opt.cf,numel(sites)),'Fontsize',FS);
+    else
+      title(sprintf('Histogram (cf=%0.2f)',opt.cf),'Fontsize',FS);
+    end
     xlabel('IQR (rps)','Fontsize',FS); 
     ylabel('number of scans','Fontsize',FS); 
   end
   %%
   MarkColor = cat_io_colormaps('marks+',40); 
+  if numel(sites)>1, globcorr = ' (global corrected)'; else globcorr = ''; end
   if exist('P','var')
-    fprintf('PASSED:\n')
-    files = P(data<=markths(:,3)); 
-    iqrs  = [xml(data<=markths(:,3)).qualityratings];
-
-    for fi=1:numel(files)
-      cat_io_cprintf(MarkColor(max(1,round( iqrs(fi).IQR/9.5 * size(MarkColor,1))),:),'  %s\n',files{fi,1});
+    files = P(data<=markths2(:,3)); 
+    fprintf('PASSED%s: %0.2f%%\n',globcorr,numel(files)/numel(data)*100)
+    if 0
+      iqrs  = [xml(data<=markths2(:,3)).qualityratings];
+      for fi=1:numel(files)
+        cat_io_cprintf(MarkColor(max(1,round( iqrs(fi).IQR/9.5 * size(MarkColor,1))),:),'  %s\n',files{fi,1});
+      end
+    else
+      
     end
     
-    fprintf('FAILED:\n')
-    files = P(data>markths(:,3)); 
-    iqrs  = [xml(data>markths(:,3)).qualityratings];
-
-    for fi=1:numel(files)
-      cat_io_cprintf(MarkColor(max(1,round( iqrs(fi).IQR/9.5 * size(MarkColor,1))),:),'  %s\n',files{fi,1});
+    % bad files ...
+    files = P(data>markths2(:,3) & data<=markths2(:,4)); 
+    fprintf('FAILED+%s: %0.2f%%\n',globcorr,numel(files)/numel(data)*100)
+    if 1
+      iqrs  = [xml(data>markths2(:,3) & data<=markths2(:,4)).qualityratings];
+      for fi=1:numel(files)
+        cat_io_cprintf(MarkColor(max(1,round( iqrs(fi).IQR/9.5 * size(MarkColor,1))),:),'  %s\n',files{fi,1});
+      end
+    end
+    files = P(data>markths2(:,4) & data<=markths2(:,5)); 
+    iqrs  = [xml(data>markths2(:,4) & data<=markths2(:,5)).qualityratings];
+    if 1
+      fprintf('FAILED%s: %0.2f%%\n',globcorr,numel(files)/numel(data)*100)
+      for fi=1:numel(files)
+        cat_io_cprintf(MarkColor(max(1,round( iqrs(fi).IQR/9.5 * size(MarkColor,1))),:),'  %s\n',files{fi,1});
+      end
+    end
+    files = P(data>markths2(:,5)); 
+    fprintf('FAILED-%s: %0.2f%%\n',globcorr,numel(files)/numel(data)*100)
+    if 1
+      iqrs  = [xml(data>markths2(:,5)).qualityratings];
+      for fi=1:numel(files)
+        cat_io_cprintf(MarkColor(max(1,round( iqrs(fi).IQR/9.5 * size(MarkColor,1))),:),'  %s\n',files{fi,1});
+      end
     end
   end
-  %%
+  
+  
+  %% create output
   if nargout>=1, varargout{1} = th(floor(opt.grads/2)); end
   if nargout>=2, varargout{2} = th(ceil(opt.grads/2)); end
   if nargout>=3, varargout{3} = th; end
-  if nargout>=4 && isfield(opt,'site'), varargout{3} = markths; end
-  
+  if nargout>=4 && isfield(opt,'site'), varargout{4} = markths;  end
+  if nargout>=5 && isfield(opt,'site'), varargout{5} = markths2; end
 end
