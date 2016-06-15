@@ -343,6 +343,48 @@ darteltpm.help    = {
 
 %------------------------------------------------------------------------
 
+% for other species
+cat12atlas         = cfg_files;
+cat12atlas.tag     = 'cat12atlas';
+cat12atlas.name    = 'CAT12 ROI atlas';
+cat12atlas.filter  = 'image';
+cat12atlas.ufilter = '_1';
+cat12atlas.def     = @(val)cat_get_defaults('extopts.cat12atlas', val{:});
+cat12atlas.num     = [1 1];
+cat12atlas.help    = {
+  'CAT12 atlas file to handle major regions.'
+};
+
+%------------------------------------------------------------------------
+
+% for other species
+brainmask         = cfg_files;
+brainmask.tag     = 'brainmask';
+brainmask.name    = 'Brainmask';
+brainmask.filter  = 'image';
+brainmask.ufilter = '_1';
+brainmask.def     = @(val)cat_get_defaults('extopts.brainmask', val{:});
+brainmask.num     = [1 1];
+brainmask.help    = {
+  'Initial brainmask.'
+};
+
+%------------------------------------------------------------------------
+
+% for other species
+T1         = cfg_files;
+T1.tag     = 'T1';
+T1.name    = 'T1';
+T1.filter  = 'image';
+T1.ufilter = '_1';
+T1.def     = @(val)cat_get_defaults('extopts.T1', val{:});
+T1.num     = [1 1];
+T1.help    = {
+  'Affine registration template.'
+};
+
+%------------------------------------------------------------------------
+
 appfull          = cfg_entry;
 appfull.tag      = 'APP';
 appfull.name     = 'Affine Preprocessing (APP) code';
@@ -439,10 +481,10 @@ lazy.help    = {
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
-if expert>2      % developtment options
-  extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb}; 
-elseif expert==2 % experimental expert options
-  extopts.val   = {lazy,app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,darteltpm,restype,vox,pbtres,ignoreErrors,debug,verb}; 
+if expert>=2 % experimental expert options
+  extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,...
+                   darteltpm,cat12atlas,brainmask,T1,...
+                   restype,vox,pbtres,ignoreErrors,debug,verb}; 
 elseif expert==1 % working expert options
   extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
 else

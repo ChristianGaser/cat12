@@ -357,7 +357,7 @@ function cat_run_job(job,tpm,subj)
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
         if app.bias>2 || app.msk>2 
-            % apply (first affine) registration on the default brain mask
+            %% apply (first affine) registration on the default brain mask
             VFa = VF; 
             if app.aff, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
@@ -370,10 +370,21 @@ function cat_run_job(job,tpm,subj)
                 Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
             stime = cat_io_cmd('Affine registration','','',1,stime); 
   
-            % smooth data
+            
+            %% smooth data
             VF.dat(:,:,:) =  cat_vol_ctype(Ym*200); 
             VF1 = spm_smoothto8bit(VF,aflags.sep);
             VG1 = spm_smoothto8bit(VG,aflags.sep);
+            
+            if 1 % brain masking for affine registration 
+              VB  = spm_vol(Pb);
+              Ybt = spm_read_vols(VB); 
+              VG1.dat(:,:,:) =  cat_vol_ctype(single(VG1.dat(:,:,:)) .* smooth3(Ybt));
+              VF1.dat(:,:,:) =  cat_vol_ctype(single(VF1.dat(:,:,:)) .* smooth3(Yb));
+            end   
+            
+            % using brain volume for affine scaling???
+            %   cat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)
         elseif app.bias || app.msk 
             % smooth data
             stime = cat_io_cmd('Affine registration','','',1,stime); 
@@ -388,7 +399,7 @@ function cat_run_job(job,tpm,subj)
         end
 
           
-        % fine affine registration 
+        %% fine affine registration 
         try
             spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
         catch
@@ -528,7 +539,7 @@ function cat_run_job(job,tpm,subj)
       error('CAT:cat_main:BadImageProperties', ...
       ['CAT12 is designed to work only on highres T1 images.\n' ...
        'T2/PD preprocessing can be forced on your own risk by setting \n' ...
-       '''cat12.extopts.INV=1'' in the cat default file. If this was a highres \n' ...
+       '"cat12.extopts.INV=1" in the cat default file. If this was a highres \n' ...
        'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
        'by alignment problems (check image orientation).']);    
     end

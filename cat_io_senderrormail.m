@@ -36,7 +36,7 @@ function cat_io_senderrormail(job)
   %% check errdirs
   %  -------------------------------------------------------------------
   if ~isempty(job.errdirs) && ~isempty(job.errdirs{1})
-    if job.verb, fprintf('\nSeach subdirs .. '); end
+    if job.verb, fprintf('\nSeach for subdirectories .. '); end
     % remove twice entries
     job.errdirs = unique(job.errdirs);
 
@@ -73,7 +73,7 @@ function cat_io_senderrormail(job)
       fprintf('No errors directories "err" found.\n');
     end
   end
-  
+  if job.verb, fprintf('%d error directories found\n',numel(job.errdirs)); end 
   
   
   %% check for files

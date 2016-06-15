@@ -1,25 +1,27 @@
 function spm_cat12(varargin)
 % ______________________________________________________________________
-% CAT12 Toolbox wrapper to call CAT functions.
+% CAT12 Toolbox wrapper to start CAT with different user modes or 
+% default files.  Changing the user mode requires restarting of CAT and
+% SPM.  The expert user mode allows to control further parameters and  
+% semi-evaluated functions, whereas the developer mode contain parameter
+% for internal tests and unsafe functions.
 % 
-%   spm_cat12 
-%     .. start with CAT default parameter file
-%   spm_cat12('gui')
-%     .. start with default file of another species (in development)
-%   spm_cat12(species) 
-%     .. start with default file of another species (in development)
-%        species = ['oldwoldmonkey'|'newwoldmonkey'|'greaterape'|'lesserape']
-%   spm_cat12('mypath/cat_defaults_mydefaults') 
-%     .. start CAT with another default parameter file
+%   cat12(action)
+%   
+%   CAT user modes:
+%     action = ['default','expert','developer'] 
+%
+%   CAT default files for other species (in development):
+%     action = ['oldwoldmonkeys'|'greaterapes']
+%
+%   CAT start with own default files:
+%     action = 'select' 
+%     action = 'mypath/cat_defaults_mydefaults'
+%
 % ______________________________________________________________________
 % Christian Gaser
 % $Id$
 
-% ______________________________________________________________________
-% Development:
-%   spm_cat12('mypath/cat_defaults_mydefaults',1) 
-%     .. restart SPM for GUI updates
-% ______________________________________________________________________
 
 rev = '$Rev$';
 global deffile;
@@ -35,20 +37,40 @@ if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
 elseif nargin==1 
   deffile = varargin{1}; 
   restartspm = 1;
+elseif nargin==2
+  deffile = varargin{1};
+  catdef  = varargin{2};
+  restartspm = 1;
 else
   deffile = catdef; 
   restartspm = 1;
 end
 
 
-% choose files
+% choose filesspecies 
+speciesdisp = '';
+switch cat_get_defaults('extopts.species')
+  case {'select','human','default','expert','developer'}
+    % nothing to do
+  otherwise
+    % load default to remove animal settings
+    try clearvars -global cat; end %#ok<TRYNC>
+    [deffile_pp,deffile_ff] = fileparts(catdef);
+    oldwkd = cd; 
+    cd(deffile_pp);
+    try clearvars -global cat; end %#ok<TRYNC>
+    clear cat;
+    eval(deffile_ff);
+    eval('global cat;'); 
+    cd(oldwkd);
+end
 switch lower(deffile) 
-  case {'select','choose'}
+  case 'select'
     deffile = spm_select(1,'batch','Select CAT default file!','',catdir);
     if isempty(deffile) 
       return
     end
-  case 'default'
+  case {'default','human'}
     mycat  = cat_get_defaults; 
     mycat.extopts.expertgui = 0;
     restartspm = 1;
@@ -63,72 +85,79 @@ switch lower(deffile)
     mycat.extopts.expertgui = 2;
     restartspm = 1;
     deffile = catdef; 
-  %{
-  % GUI for primates requires updates of the default files and some tests  
-  case 'gui'
-    deffile = spm_input('Species class',1,'human|ape|monkey',...
-      {'human','ape','monkey'},1);
-    deffile = deffile{1}; 
-    
+  case {'greaterapes','lesserapes','oldworldmonkeys','newworldmonkeys','mammals',...
+        'greaterape' ,'lesserape' ,'oldworldmonkey' ,'newworldmonkey', 'mammal'}
     switch lower(deffile)
-      %case 'human'
-      %  deffile = spm_input('Species class','+1','adult|child|neonate|fetus|other',...
-      %    {'human_adult','human_child','human_neonate','human_fetus','human_other'},1); 
-      %  deffile = deffile{1};
-      case 'ape'
-        deffile = spm_input('Species class','+1','greater|lesser|other',...
-          {'ape_greater','ape_lesser','other'},1);
-        deffile = deffile{1};
-      case 'monkey'
-        deffile = spm_input('Species class','+1','old world|new world|other',...
-          {'monkey_oldworld','monkey_newworld','other'},1);
-        deffile = deffile{1};
+      case {'greaterapes','greaterape'},          species = 'ape_greater';     speciesdisp = ' (greater apes)';
+      %case {'lesserapes','lesserape'},            species = 'ape_lesser';      speciesdisp = ' (lesser apes)';
+      case {'oldworldmonkeys','oldworldmonkey'},  species = 'monkey_oldworld'; speciesdisp = ' (oldworld monkeys)';
+      %case {'newworldmonkeys','newworldmonkey'},  species = 'monkey_newworld'; speciesdisp = ' (newworld monkeys)';
+      %case {'mammals','mammal'},                  species = 'mammal';          speciesdisp = ' (mammal)';
+      otherwise
+        error('CAT:unreadySpecies','Templates of species "%s" are not ready yet.\n',deffile);
+    end  
+    
+    mycat                      = cat_get_defaults;
+    % change TPM and user higher resolution and expect stronger bias
+    mycat.opts.tpm             = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_TPM.nii'])};
+    mycat.opts.biasreg         = 0.001;                                 % less regularisation 
+    mycat.opts.biasfwhm        = 50;                                    % stronger fields 
+    mycat.opts.samp            = 2;                                     % smaller resampling
+    % use species specific templates, higher resolution, stronger corrections and less affine registration (by SPM) 
+    mycat.extopts.species      = species;  
+    mycat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)
+    mycat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_Template_1.nii'])}; % Indicate first Dartel template
+    mycat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_vbm12.nii'])};      % VBM atlas with major regions for VBM, SBM & ROIs
+    mycat.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_brainmask.nii'])};  % brainmask for affine registration
+    mycat.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_T1.nii'])};         % T1 for affine registration
+    mycat.extopts.sanlm        = 2;                                     % ISARNLM for stronger corrections
+    mycat.extopts.restype      = 'best';        
+    mycat.extopts.resval       = [0.70 0.30];                           % higher interal resolution 
+    mycat.extopts.APP          = 3;                                     % less affine registration, but full corrections (by SPM)
+    mycat.extopts.vox          = 1.00;                                  % voxel size for normalized data 
+    mycat.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];      % template default
+    mycat.extopts.expertgui    = 2;                                     % set to expert later ...
+    mycat.extopts.ignoreErrors = 1;  
+    switch species
+      case 'monkey_oldworld'
+        mycat.extopts.atlas = { ... 
+          fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_oldworld_atlas_inia19NeuroMaps.nii') 'none' {'csf','gm','wm'}; 
+          };
+      otherwise
+        mycat.extopts.atlas = {}; 
+        mycat.output.ROI    = 0;
     end
-    %}
+    
+    restartspm = 1;
+    deffile    = catdef; 
+  otherwise
+    % lazy input - no extension 
+    [deffile_pp,deffile_ff,deffile_ee] = fileparts(deffile);
+    if isempty(deffile_ee)
+      deffile_ee = '.m';
+    end
+    % lazy input - no directory
+    if isempty(deffile_pp) 
+      if exist(fullfile(pwd,deffile_ff,deffile_ee),'file') 
+        deffile_pp = pwd; 
+      else
+        deffile_pp = fullfile(spm('dir'),'toolbox','cat12'); 
+      end
+    end
+    deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
+
+    if isemtpy(deffile) || ~exist(deffile,'file')
+      error('CAT:unknownDefaultFile','Unknown action or nonexisting default file "%s".\n',deffile);
+    end
 end
 
 
-switch lower(deffile)
-  case 'human'
-    deffile = catdef; 
-  case {'monkey_oldworld','oldwoldmonkey','cat_defaults_monkey_oldworld','cat_defaults_monkey_oldworld.m'}
-    deffile = fullfile(catdir,'templates_animals','cat_defaults_monkey_oldworld.m');
-  case {'monkey_newworld','newworldmonkey','cat_defaults_monkey_newworld','cat_defaults_monkey_newworld.m'}
-    deffile = fullfile(catdir,'templates_animals','cat_defaults_monkey_newworld.m');
-  case {'ape_greater','greaterape','cat_defaults_ape_greater','cat_defaults_ape_greater.m'}
-    deffile = fullfile(catdir,'templates_animals','cat_defaults_ape_greater.m');
-  case {'ape_lesser','lesserape','cat_defaults_ape_lesser','cat_defaults_ape_lesser.m'}
-    deffile = fullfile(catdir,'templates_animals','cat_defaults_ape_lesser.m');
-end
-
+% The cat12 global variable is created and localy destroyed, because we want to call the cat12 function. 
 if exist('mycat','var') 
   try clearvars -global cat; end %#ok<TRYNC>
   eval('global cat; cat = mycat;'); 
 else
-  % lazy input - no extension 
-  [deffile_pp,deffile_ff,deffile_ee] = fileparts(deffile);
-  if isempty(deffile_ee)
-    deffile_ee = '.m';
-  end
-  % lazy input - no directory
-  if isempty(deffile_pp) 
-    if exist(fullfile(pwd,deffile_ff,deffile_ee),'file') 
-      deffile_pp = pwd; 
-    else
-      deffile_pp = fullfile(spm('dir'),'toolbox','cat12'); 
-    end
-  end
-  deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
-
-  % check if file exist
-  if ~exist(deffile,'file')
-    error('CAT:miss_cat_default_file','Can''t find CAT default file "%"','deffile'); 
-  end
-
   % set other defaultfile
-  % The cat12 global variable is created and localy destroyed, because we 
-  % want to call the cat12 function. 
-  %if 1 %nargin>0 %~strcmp(catdef,deffile) 
   oldwkd = cd; 
   cd(deffile_pp);
   try clearvars -global cat; end %#ok<TRYNC>
@@ -140,7 +169,7 @@ end
 
 % initialize SPM 
 eval('global defaults;'); 
-if isempty(defaults) || (nargin==2 && varargin{2}==1) || restartspm
+if restartspm 
   clear defaults; 
   spm_jobman('initcfg');
 end
@@ -173,8 +202,8 @@ end
 %% command line output
 switch cat_get_defaults('extopts.expertgui')
   case 0, expertguitext = '';
-  case 1, expertguitext = 'Expert Mode';
-  case 2, expertguitext = 'Developer Mode';
+  case 1, expertguitext = ['Expert Mode' speciesdisp];
+  case 2, expertguitext = ['Developer Mode' speciesdisp];
 end
 cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
     '\n' ...
