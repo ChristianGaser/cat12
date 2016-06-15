@@ -1,0 +1,65 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_starting.html">Quick start guide</a> > <a href="cat_orthogonality.html">Orthogonality</a>
+      </div>
+    </div>
+  
+    
+    <div id="content">
+      <h2>Orthogonality of total intracranial volume (TIV) to other parameters</h2>
+      
+      <p>
+        If you have modeled TIV as confounding parameter it is necessary to check that TIV will be orthogonal (in other words independent) to any other
+        parameter of interest in your analysis (e.g. parameters you are testing for). That means that TIV should not correlate with any other parameter 
+        of interest, otherwise not only the variance explained by TIV will be removed from your data, but also parts of the variance of your
+        parameter of interest. 
+      </p>
+      <p>
+        In order to check for design orthogonality you can use the <a class="function" href="matlab:spm_DesRep;">Review </a> 
+        function in the SPM GUI. Select the SPM.mat file and choose Design -> Design orthogonality from the menu to display
+        the design orthogonality. Gray boxes between the parameters point to a correlation: the darker the box the larger the correlation
+        (which also holds for inverse correlations). If you click in the box the colinearity between the parameters will be displayed.
+      <img src="images/non_orthogonal.png" class="center" alt="non_orthogonal.png" />
+      </p>
+      <p>
+        The larger the correlation between TIV and any parameter of interest the more the need to not use TIV as confound. In that case an alternative
+        approach is to use global scaling with TIV. Apply the following settings for this approach: 
+        <ul>
+          <li>Global calculation -> User -> Global values <- Define here the TIV values</li>
+          <li>Global normalisation -> Overall grand mean scaling -> Yes</li>
+          <li>Normalisation -> User -> Proportional</li>
+        </ul>
+      </p>
+      <p>
+        Please note that the global normalisation will also affect the absolute threshold for the masking because your images will be now scaled to a global 
+        value of 50. While usually an absolute threshold of 0.1..0.25 is recommended, the scaled values will be now smaller by a factor of around 30:
+        <ul>
+          <li>If the mean TIV is 1500 all images are globally scaled to a value of 50. Thus, the overall scaling is 50/1500 = 1/30</li>
+          <li>To get the (old) absolute threshold of 0.1 (0.2) now use 0.1/30 (0.2/30)</li>
+        </ul>
+      </p>
+    </div>
+
+    <div id="content"><a href="cat.html">< CAT</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+    </div>
+  </body>
+</html>
