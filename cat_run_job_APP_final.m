@@ -56,14 +56,21 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   gc.s = -0.1 + 0.20*gcutstr;         % smoothing parameter                   - higher > less tissue
 
   stime = cat_io_cmd('  Skull-Stripping','g5','',verb,stime);
-  Yb = (dilmsk<0.5 & Ym<1.1) & (Ym>(GMth*gc.l + (1-gc.l))) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<gc.h; Yb(smooth3(Yb)<0.5)=0; 
-  Yb = single(smooth3(cat_vol_morph(Yb,'l'))>0.5 + gc.s); 
+  Yb = (dilmsk<0.5 & Ym<1.8) & (Ym>(GMth*gc.l + (1-gc.l))) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<gc.h; Yb(smooth3(Yb)<0.5)=0; 
+  % the hull is required to remove large scull tissues such as muscle in apes\monkeys 
+  [hull,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
+  hull  = cat_vol_morph(hull,'labclose',2); 
+  hull  = cat_vbdist(single(hull<=0),true(size(hull)))*mean(resT2.vx_volr);
+  hull  = cat_vol_resize(smooth3(hull),'dereduceV',resT2); 
+  %%
+  Yb2 = single(smooth3(cat_vol_morph(cat_vol_morph(Yb & hull/max(hull(:))>0.3,'l')>0,'d',max(hull(:))*0.3) )>0.5 + gc.s); clear hull; 
+  Yb  = single(smooth3(cat_vol_morph(Yb & Yb2,'l'))>0.5 + gc.s); 
   [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
   dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk2)))*mean(resT2.vx_volr); %resT2.vx_volr);
   dilmsk2  = dilmsk2 - cat_vbdist(single(dilmsk2>0),true(size(dilmsk2)))*mean(resT2.vx_volr); %,resT2.vx_volr);
   dilmsk2  = cat_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
   dilmsk2  = dilmsk2 / brad; 
-  % WM growing
+  %% WM growing
   Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.05); 
   Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;

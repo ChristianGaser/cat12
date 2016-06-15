@@ -179,9 +179,9 @@ function job = update_job(job)
     end
   end
 
-  % deselect ROI output and print warning if dartel template was changed
+  % deselect ROI output and print warning if ROI output is true and dartel template was changed
   [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
-  if ~strcmp(nam,'Template_1_IXI555_MNI152')
+  if ~strcmp(nam,'Template_1_IXI555_MNI152') && strcmp(job.extopts.species,'human') && cat.output.ROI; 
     warning('DARTEL:template:change',...
       'Dartel template was changed: Please be aware that ROI analysis and other template-specific options cannot be used.');
     job.output.ROI = 0;

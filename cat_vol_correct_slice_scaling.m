@@ -184,8 +184,8 @@ function cat_vol_correct_slice_scaling(varargin)
     %Ythw = cat_stat_nanmedian(Y(Ywm(:))); 
      
     % estimate slice error to find the affected slice  
-    calc1 = cat_stat_nanmean([ abs(gx(Ywm(:))),abs(gy(Ywm(:))),abs(gz(Ywm(:)))]) / ...
-            cat_stat_nanmean([ abs(gx(Ywm(:)));abs(gy(Ywm(:)));abs(gz(Ywm(:)))]);
+    calc1 = cat_stat_nanmean(abs([ gx(Ywm(:)),gy(Ywm(:)),gz(Ywm(:)) ])) / ...
+            cat_stat_nanmean(abs([ gx(Ywm(:));gy(Ywm(:));gz(Ywm(:)) ]));
     calc3 = calc1; calc5 = calc1; 
     calc  = (calc1 > 1.01) & (calc1==max(calc1));
     clear gx gy gz;

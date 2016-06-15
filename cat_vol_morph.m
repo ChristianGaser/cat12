@@ -69,7 +69,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     error('MATLAB:cat_vol_morph:vx_vol', ...
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
   end
-  no=n; n=round(n); 
+  no=n; n=round(double(n)); 
   switch lower(action)
     case {'l' 'lc' 'lo' 'labclose' 'labopen'}
       % not return in this case

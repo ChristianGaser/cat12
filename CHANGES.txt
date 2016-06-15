@@ -11012,11 +11012,47 @@ A       html/images/non_orthogonal.png
 (2) Added: html page about design orthogonality
 
 ------------------------------------------------------------------------
+r951 | gaser | 2016-06-15 13:33:16 +0200 (Mi, 15 Jun 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 
 (1) Changed: Added description about design orthogonality to CAT12 manual.
 (2) Added: html page about design orthogonality
+
 ------------------------------------------------------------------------
-r951 | gaser | 2016-06-15 13:33:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_io_senderrormail.m
+M       cat_main_gcut.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_final.m
+M       cat_vol_correct_slice_scaling.m
+M       cat_vol_morph.m
+M       spm_cat12.m
+D       templates_animals/ape_lesser_T1.nii
+D       templates_animals/ape_lesser_T2.nii
+D       templates_animals/ape_lesser_TPM.nii
+D       templates_animals/ape_lesser_brainmask.nii
+D       templates_animals/cat_defaults_ape_greater.m
+D       templates_animals/cat_defaults_ape_lesser.m
+D       templates_animals/cat_defaults_monkey_newworld.m
+D       templates_animals/cat_defaults_monkey_oldworld.m
+D       templates_animals/monkey_newworld_T1.nii
+D       templates_animals/monkey_newworld_T2.nii
+D       templates_animals/monkey_newworld_TPM.nii
+D       templates_animals/monkey_newworld_brainmask.nii
+
+(1) Changed:  Updated help of spm_cat12.
+(2) Changed:  Updated main head classification in final APP increase the chance 
+              to remove the scull and not the brain in species with thick muscles.
+(3) Changed:  Small corrections.
+(4) Deleted:  Removed species specific default files and set parameter in spm_cat12.
+(5) Deleted:  Removed incomplete species templates.
+
+------------------------------------------------------------------------
+r952 | dahnke | 2016-06-15 14:14:48

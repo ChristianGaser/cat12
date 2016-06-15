@@ -132,8 +132,11 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   stime = cat_io_cmd('  CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Ygr = cat_vol_grad(Ym,vx_vol); CSFth = mean(Ym(Ycsf(:)>0.8 & Ygr(:)<0.1));
   Ybb = smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.5; 
-  if std(Ybb(:))>0 % no ROI in low res images 
-    Yb(~Yb & smooth3( cat_vol_morph( Ybb,'lc',vxd))>0.6 )=nan;
+  if std(Ybb(:))>0  % no ROI in low res images 
+    if sum(Ybb(:)>0.5)>0
+      Ybb = cat_vol_morph( Ybb,'lc',vxd);
+      Yb(~Yb & smooth3( Ybb )>0.6 ) = nan;
+    end % Ybb is maybe empty 
     Yb(isnan(Yb) & cat_vol_morph(Yb>=0,'lc',2))=0;
   end
   [Yb1,YD] = cat_vol_downcut(Yb,smooth3(Ym),+0.01+gc.c); 
