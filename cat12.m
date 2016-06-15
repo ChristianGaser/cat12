@@ -103,7 +103,8 @@ function varargout = cat12_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-expert = cat_get_defaults('extopts.expertgui'); 
+expert  = cat_get_defaults('extopts.expertgui'); 
+species = cat_get_defaults('extopts.species'); 
 switch expert
   case 1, set(handles.CAT,'color', [0.85 0.85 0.85]);
   case 2, set(handles.CAT,'color', [0.93 0.93 0.93]); 
@@ -115,9 +116,16 @@ I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact.jpg'))
 imagesc(I);
 axis off; 
 text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',20,'Fontweight','bold');
+switch species
+  case 'human',           speciesdisp = ''; 
+  case 'ape_greater',     speciesdisp = ' (greater apes)';
+  case 'ape_lesser',      speciesdisp = ' (lesser apes)';
+  case 'monkey_oldworld', speciesdisp = ' (oldworld monkeys)'; 
+  case 'monkey_newworld', speciesdisp = ' (newworld monkeys)'; 
+end
 switch expert
-  case 1, text(80,90,'Expert Mode'   ,'Color',[0.1 0.7 1.0],'Fontsize',16,'Fontweight','bold'); 
-  case 2, text(80,90,'Developer Mode','Color',[1.0 0.0 0.0],'Fontsize',16,'Fontweight','bold');
+  case 1, text(80,90,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',16,'Fontweight','bold'); 
+  case 2, text(80,90,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',16,'Fontweight','bold');
 end
 guidata(hObject, handles);
 
