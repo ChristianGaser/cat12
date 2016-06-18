@@ -1,4 +1,4 @@
-ROIid;ROIappr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
+ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 0;BG;Background;[0];Background;1712045;5778.15;-0.11,-16.82,19.73
 1;lPrc;Left Precentral;[ 2001 2002 ];Left/Right:Precentral-L.Precentral-R;   8163;  27.55;-39.00,-7.28,48.27
 2;rPrc;Right Precentral;[ 2001 2002 ];Left/Right:Precentral-L.Precentral-R;   7844;  26.47;38.44,-6.67,50.12

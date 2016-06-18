@@ -1,4 +1,4 @@
-ROIid;ROIappr;ROIname;ROIbase
+ROIid;ROIabbr;ROIname;ROIbase
 0;BG;Background;Background
 1;rHCA1_2_3_Strat;Right Hippocampus CA1/CA2/Ca3/Subiculum/Stratum;
 4;rHCA4;Right Hippocampus CA4/Dentate Gyrus;

@@ -94,6 +94,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
 %   LAB.NB =  0; % no brain 
 %   LAB.HD = 21; % head
 %   LAB.HI = 23; % WM hyperintensities
+%   LAB.PH = 25; % Gyrus parahippocampalis
 
   LAB     = extopts.LAB;
   BVCstr  = extopts.BVCstr; 
@@ -351,7 +352,8 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   %% complete map
   [tmp0,tmp1,Ya1] = cat_vbdist(Ya1,Yb); clear tmp0 tmp1;
   
-  
+  % consider gyrus parahippocampalis
+  Ya1(YA==LAB.PH) = LAB.PH;
   
   %% side aligment using laplace to correct for missalignments due to the normalization
   stime = cat_io_cmd('  Side alignment','g5','',verb,stime); dispc=dispc+1;

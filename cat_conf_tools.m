@@ -625,6 +625,34 @@ sanlm.help   = {
 };
 
 %------------------------------------------------------------------------
+roi_xml = cfg_files;
+roi_xml.name = 'XML files';
+roi_xml.tag  = 'roi_xml';
+roi_xml.filter = '^catROI.*xml';
+roi_xml.num  = [1 Inf];
+roi_xml.help   = {...
+'These are the xml-files that are saved in the label folder.'};
+
+calcroi_name         = cfg_entry;
+calcroi_name.tag     = 'calcroi_name';
+calcroi_name.name    = 'Output file';
+calcroi_name.strtype = 's';
+calcroi_name.num     = [1 Inf];
+calcroi_name.val     = {'ROI.csv'};
+calcroi_name.help    = {
+'The output file is written to the current working directory unless a valid full pathname is given. The output file will also include the name of the atlas and the measure (e.g. Vgm). The file is using tabstops to separate values in order to easily import the file into Excel or SPSS or any other software for subsequent analysis.'};
+
+calcroi       = cfg_exbranch;
+calcroi.tag   = 'calcroi';
+calcroi.name  = 'Estimate mean values inside ROI';
+calcroi.val   = {roi_xml,calcroi_name};
+calcroi.prog  = @cat_stat_ROI;
+calcroi.help  = {
+'This function reads mean values inside a ROIs from different atlases and saves values for all data in a csv-file. '
+''
+};
+
+%------------------------------------------------------------------------
 calcvol_name         = cfg_entry;
 calcvol_name.tag     = 'calcvol_name';
 calcvol_name.name    = 'Output file';
@@ -632,7 +660,7 @@ calcvol_name.strtype = 's';
 calcvol_name.num     = [1 Inf];
 calcvol_name.val     = {'TIV.txt'};
 calcvol_name.help    = {
-'The output file is written to current working directory unless a valid full pathname is given'};
+'The output file is written to current working directory unless a valid full pathname is given.'};
 
 calcvol_TIV         = cfg_menu;
 calcvol_TIV.tag     = 'calcvol_TIV';
@@ -796,7 +824,7 @@ fmri    = cat_conf_fmri;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,calcvol,iqr,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
 
 return
 

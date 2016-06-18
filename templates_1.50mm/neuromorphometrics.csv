@@ -1,4 +1,4 @@
-ROIid;ROIappr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
+ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 0;BG;Background;[0];Background;1608701;5429.37;-0.13,-16.84,20.71
 1;l3thVen;Left Third Ventricle;[ 4 ];Both:3rd-Ventricle;    152;   0.51;-0.38,-8.42,-4.07
 2;r3thVen;Right Third Ventricle;[ 4 ];Both:3rd-Ventricle;    111;   0.37;1.68,-9.22,-4.08
