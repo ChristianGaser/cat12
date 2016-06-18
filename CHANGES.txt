@@ -11021,6 +11021,7 @@ M       CHANGES.txt
 (2) Added: html page about design orthogonality
 
 ------------------------------------------------------------------------
+r952 | dahnke | 2016-06-15 14:15:01 +0200 (Mi, 15 Jun 2016) | 33 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11054,5 +11055,55 @@ D       templates_animals/monkey_newworld_brainmask.nii
 (4) Deleted:  Removed species specific default files and set parameter in spm_cat12.
 (5) Deleted:  Removed incomplete species templates.
 
+
 ------------------------------------------------------------------------
-r952 | dahnke | 2016-06-15 14:14:48
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+D       atlases_surfaces/lh.aparc_DKT40.freesurfer.annot
+D       atlases_surfaces/rh.aparc_DKT40.freesurfer.annot
+M       cat12.fig
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+A       cat_stat_ROI.m
+M       cat_surf_createCS.m
+M       cat_surf_surf2roi.m
+D       cat_surf_surf2roi_resampled.m
+M       cat_surf_vol2surf.m
+M       cat_vol_atlas.m
+M       cat_vol_partvol.m
+M       html/cat_methods_RBM.html
+ M      html/cat_orthogonality.html
+ M      html/images/non_orthogonal.png
+M       internal/cat_vol_atlas.m
+M       spm_cat12.m
+M       templates_1.50mm/aal.csv
+M       templates_1.50mm/anatomy.csv
+M       templates_1.50mm/cat.nii
+M       templates_1.50mm/cobra.csv
+M       templates_1.50mm/hammers.csv
+M       templates_1.50mm/ibsr.csv
+M       templates_1.50mm/lpba40.csv
+M       templates_1.50mm/mori.csv
+M       templates_1.50mm/neuromorphometrics.csv
+
+(1) Changed: Changed again topology correction that now uses tca in gyrus
+    parahippocampalis and hippocampus as default.
+(2) Changed: Updated CAT12 manual and html code (ROI analysis)
+(3) Added: ROI extraction and estimation
+(4) Removed: DKT40 atlas (DKT40JT is updated version).
+(5) Changed: Added gyrus parahippocampalis to cat-atlas.
+(6) Fixed: Bug in spm_cat12 with isempty
+(7) Fixed: Bug in cat_surf_vol2surf with mapping flag.
+(8) Removed: cat_surf_surf2roi_resampled.m 
+(9) Fixed: Bug in cat_surf_surf2roi with rdata field
+(10) Changed: Removed csv output of ROIs for each dataset (only one xml file
+     are saved)
+------------------------------------------------------------------------
+r953 | gaser | 2016-06-18 14:52:18

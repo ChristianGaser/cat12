@@ -687,12 +687,12 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     del  = setdiff([csv{2:end,1}],[csv{2:end,5}]); 
     codi = setdiff(codi,del);
     
-    csvx = {'ROIid' 'ROIappr' 'ROIname' 'ROIbaseid' 'ROIbasename'; 0 'BG' 'Background' '[0]' 'Background'};
+    csvx = {'ROIid' 'ROIabbr' 'ROIname' 'ROIbaseid' 'ROIbasename'; 0 'BG' 'Background' '[0]' 'Background'};
     for ri=1:numel(codi)
       id = find([csv{2:end,5}]==codi(ri),'1','first');
       csvx{(ri*2)+1,1} = (ri*2)-1;    % ROIid
       csvx{(ri*2)+2,1} = (ri*2); 
-      csvx{(ri*2)+1,2} = csv{id+1,4}; % ROIappr 
+      csvx{(ri*2)+1,2} = csv{id+1,4}; % ROIabbr 
       csvx{(ri*2)+2,2} = csv{id+1,4};  
       csvx{(ri*2)+1,3} = csv{id+1,3}; % ROIname
       csvx{(ri*2)+2,3} = csv{id+1,3};
@@ -705,12 +705,12 @@ function subROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     %%
 %     %for idi=1:2:numel(ia); id(idi) = find([csv{2:end,5}]==idi,1,'first'); end
 %     csvx(:,1)  = [{'ROIid'};num2cell((0:numel(ia)*2)')];
-%     csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat((1+ia)',2,1),2*numel(ia),1),4)];
+%     csvx(:,2)  = [{'ROIabbr';'BG'};csv(reshape(repmat((1+ia)',2,1),2*numel(ia),1),4)];
 %     csvx(:,3)  = [{'ROIname';'Background'};csv(reshape(repmat((1+ib)',2,1),2*numel(ia),1),3)];
 %     csvx(:,4)  = [{'ROIoname';'Background'};csv(reshape(repmat((1+ib)',2,1),2*numel(ia),1),2)];
 %     
      %{
-      csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),4)];
+      csvx(:,2)  = [{'ROIabbr';'BG'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),4)];
       csvx(:,3)  = [{'ROIname';'Background'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),3)];
       csvx(:,4)  = [{'ROIoname';'Background'};csv(reshape(repmat((1+cod(ia+1,3)/2)',2,1),2*numel(ia),1),2)];
     %}
@@ -989,7 +989,7 @@ function ROIavg(P,PA,Ps,Pcsv,Ptxt,atlas,resdir,Pxml,nlabel)
     cod(H>0,3) = ic*2; 
 
     csvx(:,1)  = [{'ROIid'};num2cell((0:numel(ia)*2)')];
-    csvx(:,2)  = [{'ROIappr';'BG'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),4)];
+    csvx(:,2)  = [{'ROIabbr';'BG'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),4)];
     csvx(:,3)  = [{'ROIname';'Background'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),3)];
     csvx(:,4)  = [{'ROIoname';'Background'};csv(reshape(repmat(1+ia',2,1),2*numel(ia),1),2)];
     

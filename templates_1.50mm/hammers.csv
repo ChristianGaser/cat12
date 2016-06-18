@@ -1,4 +1,4 @@
-ROIid;ROIappr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
+ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 0;BG;Background;[0];Background;1605484;5418.51;-0.18,-16.65,20.71
 1;lHip;Left Hippocampus;[ 1 2 ];Left/Right:Hippocampus;    850;   2.87;-25.67,-18.26,-17.09
 2;rHip;Right Hippocampus;[ 1 2 ];Left/Right:Hippocampus;    916;   3.09;27.49,-17.24,-17.11

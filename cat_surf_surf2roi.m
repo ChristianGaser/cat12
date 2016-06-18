@@ -59,6 +59,12 @@ function cat_surf_surf2roi(job)
   
   % display something
   spm_clf('Interactive'); 
+  
+  % if rdata is not defined use default atlases
+  if ~isfield(job,'rdata')
+    job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_a2009s.*','lh.aparc_DKT40JT.*'});
+  end
+  
   spm_progress_bar('Init',numel(job.rdata),'Atlases','Atlases Completed');
   
   % processing
@@ -173,7 +179,7 @@ function cat_surf_surf2roi(job)
             end
             for roii=2:size(ccsv,1)
               switch ccsv{roii,2}(1)
-                case 'l', ccsv{roii,end} = eval(sprintf('%s%s(lCS.cdata(lrdata==ccsv{roii,1}))',nanfunc,FN{ai})); 
+                case 'l', ccsv{roii,end} = eval(sprintf('%s%s(lCS.cdata(lrdata==ccsv{roii,1}))',nanfunc,FN{ai}));
                 case 'r', ccsv{roii,end} = eval(sprintf('%s%s(rCS.cdata(rrdata==ccsv{roii,1}))',nanfunc,FN{ai})); 
                 case 'b', ccsv{roii,end} = eval(sprintf(['%s%s(lCS.cdata(lrdata==ccsv{roii,1})) + ' ...
                                                          '%s%s(rCS.cdata(rrdata==ccsv{roii,1}))'],nanfunc,FN{ai},nanfunc,FN{ai}));
@@ -183,7 +189,7 @@ function cat_surf_surf2roi(job)
           end
         end
       end
-      
+
       %% write results
       if cat_get_defaults('extopts.subfolders')
         surffolder  = 'surf';
@@ -192,12 +198,9 @@ function cat_surf_surf2roi(job)
         surffolder  = '';
         labelfolder = '';
       end 
-      
-      % csv-export one for each atlas (this is a table) 
-      cat_io_csv(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
-        ['catROIs_' rinfo.dataname '_' sinfo.name '.csv']),ccsv,'','',struct('delimiter',',','komma','.'));
-      
+              
       % xml-export one file for all (this is a structure)
+      clear ROI
       ROI.(rinfo.dataname) = ccsv;
       cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
         ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write+'); 

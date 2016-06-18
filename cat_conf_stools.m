@@ -59,10 +59,10 @@ function stools = cat_conf_stools(expert)
   data_xml = cfg_files;
   data_xml.name = 'XML files';
   data_xml.tag  = 'data_xml';
-  data_xml.filter = 'xml';
+  data_xml.filter = '^cat_.*xml';
   data_xml.num  = [1 Inf];
   data_xml.help   = {
-  'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files..'};
+  'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files.'};
 
   sample_cov         = cfg_repeat;
   sample_cov.tag     = 'sample';
@@ -476,7 +476,9 @@ function stools = cat_conf_stools(expert)
   v2s.vol2tempsurf.val  = {
     v2s.data_norm ...
     v2s.data_surf_avg_lh ...
+    v2s.sample ...
     v2s.interp ...
+    v2s.datafieldname ...
     v2s.mapping ...
   };
   v2s.vol2tempsurf.prog = @cat_surf_vol2surf;
@@ -534,7 +536,7 @@ function stools = cat_conf_stools(expert)
   s2r.cdata_sample.values  = {s2r.cdata};
   s2r.cdata_sample.num     = [1 Inf];
   s2r.cdata_sample.help = {[...
-    'Specify data for each sample (i.e. thickness, curvature, ...). ' ...
+    'Specify data for each sample (i.e. thickness, gyrification, ...). ' ...
     'All samples must have the same size and same order. ' ...
     ''
   ]};
@@ -544,10 +546,14 @@ function stools = cat_conf_stools(expert)
   s2r.ROIs.tag     = 'rdata';
   s2r.ROIs.name    = '(Left) ROI atlas files';
   s2r.ROIs.filter  = 'any';
-  s2r.ROIs.ufilter = 'lh.[aparc|PALS].*'; % not yet working for all atlases
+  if expert 
+    s2r.ROIs.ufilter = 'lh.aparc.*';
+  else
+    s2r.ROIs.ufilter = 'lh.aparc_[a2009s|DKT40JT].*'; % not yet working for all atlases
+  end
   s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
   s2r.ROIs.num     = [1 Inf];
-  s2r.ROIs.help    = {'These are the ROI atlas files. Both sides will processed.'};
+  s2r.ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
 
 % ROI area
   s2r.area         = cfg_menu;
@@ -556,7 +562,7 @@ function stools = cat_conf_stools(expert)
   s2r.area.labels  = {'no','yes'};
   s2r.area.values  = {0,1};
   s2r.area.val     = {1}; 
-  s2r.area.help    = {'Estimate area of each Roi.'};
+  s2r.area.help    = {'Estimate area of each ROI.'};
  
 % ROI area
   s2r.vernum         = cfg_menu;
@@ -624,27 +630,29 @@ function stools = cat_conf_stools(expert)
   surf2roi      = cfg_exbranch;
   surf2roi.tag  = 'surf2roi';
   surf2roi.name = 'Extract ROI-based surface values';
-  surf2roi.val  = {
-    s2r.cdata_sample ...
-    s2r.ROIs};
+  switch expert
+  case 2
+    surf2roi.val  = {
+      s2r.cdata_sample ...
+      s2r.ROIs ...
+      nproc ... 
+      ... s2r.vernum ... 
+      ... s2r.area ... does not work yet
+      s2r.avg.main};
+  case 1
+    surf2roi.val  = {
+      s2r.cdata_sample ...
+      s2r.ROIs};
+  case 0
+    surf2roi.val  = {s2r.cdata_sample};
+  end
   surf2roi.prog = @cat_surf_surf2roi;
   surf2roi.help = {
+    'While ROI-based values for VBM (volume) data are automatically saved in the label folder as XML file it is necessary to additionally extract these values for surface data. This has to be done after preprocessing the data and creating cortical surfaces. '
     ''
-  };
-
-  surf2roi_ext      = cfg_exbranch;
-  surf2roi_ext.tag  = 'surf2roi_ext';
-  surf2roi_ext.name = 'Map surface data to ROIs';
-  surf2roi_ext.val  = {
-    s2r.cdata_sample ...
-    s2r.ROIs ...
-    nproc ... 
-    s2r.vernum ...
-    ... s2r.area ... does not work yet
-    s2r.avg.main};
-  surf2roi_ext.prog = @cat_surf_surf2roi;
-  surf2roi_ext.help = {
+    'You can extract ROI-based values for cortical thickness but also for any other surface parameter that was extracted using the ''Extract Additional Surface Parameters'' function.'
     ''
+    'Please note that these values are extracted from data in native space without any smoothing. As default the mean inside a ROI is calculated and saved as XML file in the label folder.'
   };
 
 %% roi to surface  
@@ -940,7 +948,6 @@ function stools = cat_conf_stools(expert)
       surfcalc, ...
       surfcalcsub, ...
       surf2roi, ...
-      surf2roi_ext, ...
       roi2surf, ...
       flipsides, ...
       ... roicalc, ...

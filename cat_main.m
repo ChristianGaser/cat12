@@ -1788,9 +1788,6 @@ if job.output.ROI
         clear Yth1x
       end
 
-      % csv-export one for each atlas (this is a table) 
-      cat_io_csv(fullfile(pth,labelfolder,['catROI_' atlas '_' nam '.csv']),...
-        csv,'','',struct('delimiter',',','komma','.'));
       % xml-export one file for all (this is a structure)
       ROI.(atlas) = csv;
       cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),struct('ROI',ROI),'write+'); 
