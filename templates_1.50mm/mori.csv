@@ -1,4 +1,4 @@
-ROIid;ROIappr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
+ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 0;BG;Background;[0];Background;1670969;5639.52;-0.35,-16.74,19.89
 1;lSupParLo;Left Superior Parietal Lobule;[ 1 66 ];Unk:SUPERIOR-PARIETAL-LOBULE-left.SUPERIOR-PARIETAL-LOBULE-right;   7409;  25.01;-23.50,-52.94,51.76
 2;rSupParLo;Right Superior Parietal Lobule;[ 1 66 ];Unk:SUPERIOR-PARIETAL-LOBULE-left.SUPERIOR-PARIETAL-LOBULE-right;   8216;  27.73;23.65,-51.63,51.92

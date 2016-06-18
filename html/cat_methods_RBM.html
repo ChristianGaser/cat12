@@ -24,17 +24,29 @@
     
     <!-- TEXT --> 
     <div id="content">
-      <h2>Atlas creation and ROI based analysis (in development)</h2>
+      <h2>Atlas creation and ROI based analysis</h2>
       <p>
-        CAT12 allows estimation of tissue volume [, intensity, and thickness] for different volume and surface-based atlas maps.
-        The results are stored as CSV and XML files in the <em>label</em> directory. 
-        The XML file <em>cat_*.XML</em> contains information of all atlases as data structure, whereas 
-        the multiple CSV files <em>catROI[SPACE]_[ATLAS]_*.csv</em> is required to store the data of an atlas <em>ATLAS</em>, where <em>SPACE</em> describes the type of value estimation with <em>w</em> for volume ROIs and <em>s</em> for surface ROIs.
-        You can use external software like Excel or SPSS for analysis or the CAT MATLAB functions <a class="function" href="matlab:cat_io_csv">cat_io_csv</a> to read the CSV data as cell, or the CAT function <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> to read the XML data as structure.
+        CAT12 allows estimation of tissue volumes (and additional surface parameters such as cortical thickness) for different volume and surface-based atlas maps.
+        The results are stored as XML files in the <em>label</em> directory. 
+        The XML file <em>catROI[s]_*.xml</em> contains information of all atlases as data structure for one dataset and the optional <em>s</em> indicates surface atlases. 
+        Please note that in the beta version of CAT12 these XML files were not automatically saved because the option for ROI analysis was disabled. 
+        If the option "cat12.output.ROI" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> is set to "0" no ROI XML files are saved and you have to set this parameter to "1" and preprocess the data again if you are interested in ROI analysis of volume data (for surface data these XML files are always extracted after preprocessing).
+        You can use the CAT function <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> to read the XML data as structure.
       </p>
       <p>
-        In order to use the atlas maps with <em>SPM atlas functions</em>, you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once.
-        By default only Neuromorphometics, LPBA40, and Hammers atlas maps are used. 
+        While ROI-based values for VBM (volume) data are automatically saved in the <em>label</em> folder as XML file it is necessary to additionally extract these values for surface data. This has to be done after preprocessing the data and creating cortical surfaces. 
+        You can extract ROI-based values for cortical thickness but also for any other surface parameter that was extracted using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract Additional Surface Parameters</a> function.   
+      </p>
+      <p>
+        Finally, the XML files of several subjects can be combined and saved for further analysis as CSV file using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcroi');">Estimate Mean Values inside ROI</a> function. 
+        For each measure (e.g. ''Vgm'' for gray matter volume) and each atlas a separate CSF file is written. This works for both volume as well as surface data, but volume and surface data has to be processed separately using this function (surface-based ROI values are indicated by an additional <em>s</em>, e.g. ''catROIs_'').    
+        You can use external software such as Excel or SPSS to read the resulting CSV files for further analysis.
+      </p>
+      <p>
+        Moreover, you can use the volume-based atlases that are provided with CAT also as atlas maps with <em>SPM atlas functions</em>. This is especially helpful if you have used the default VBM processing pipeline because the CAT12 atlas maps are then in the same DARTEL space as your data. 
+        Thus, if you have used the default VBM processing pipeline it is recommended to use the CAT12 atlases in DARTEL space rather than the SPM Neuromorphometrics atlas.
+        In order to use CAT12 atlases you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once that will copy the atlases to SPM.
+        By default only Neuromorphometics, LPBA40, and Hammers atlas maps are used and are indicated in the name by a leading ''dartel_''.
       </p>
          
       <ul>
@@ -239,18 +251,6 @@
             That is, a gyrus includes the part visible on the Pial view + adjacent banks of the sulci limiting this gyrus. 
           </p><p>
             Display DKT40 atlas on FreeSurfer average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
-            ), or DARTEL average surface (
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DKT40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
-            <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
-            ). 
-          </p>
-          <!--
-          <p>
-            Display Desikan-killiany atlas on FreeSurfer average surface (
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40JT.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DKT40JT.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40JT.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
@@ -260,7 +260,6 @@
             <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DKT40JT.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
             ). 
           </p>
-          -->
           <p style="text-align:center;"><img src="images/CAT_surf_atlas_DKT40.png" width=90% height=auto alt="Desikan Killiany Tourville et al. 2010" ><p>
         </li>
         <br />

@@ -146,7 +146,7 @@ switch lower(deffile)
     end
     deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
 
-    if isemtpy(deffile) || ~exist(deffile,'file')
+    if isempty(deffile) || ~exist(deffile,'file')
       error('CAT:unknownDefaultFile','Unknown action or nonexisting default file "%s".\n',deffile);
     end
 end

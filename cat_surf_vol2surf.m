@@ -35,7 +35,7 @@ function varargout = cat_surf_vol2surf(varargin)
   
   %% Mapping commando 
   % --------------------------------------------------------------------
-  if isfield('abs_mapping',job), mapping = 'abs_mapping'; else mapping = 'rel_mapping'; end
+  if isfield(job.mapping,'abs_mapping'), mapping = 'abs_mapping'; else mapping = 'rel_mapping'; end
 
   switch mapping
     case 'abs_mapping'

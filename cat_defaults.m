@@ -51,7 +51,7 @@ cat.opts.samp      = 3;                       % Sampling distance      - smaller
 cat.output.surface     = 0;     % surface and thickness creation
 
 % save ROI values
-cat.output.ROI         = 0;     % write xml-file and csv-files with ROI data (0 - no, 1 - yes (default))
+cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))
 
 % bias and noise corrected, (locally - if LAS>0) intensity normalized
 cat.output.bias.native = 0;
@@ -108,13 +108,13 @@ cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 2
 cat.extopts.NCstr        = inf;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections; inf - auto (default = inf)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
-cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no (VBM8); 1 - only for Dartel (default); 
+cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no correction; 1 - only for Dartel (default); 
                                   %                                           2 - also correct segmentation (to WM); 3 - handle as separate class
 cat.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
 cat.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
 cat.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
 
-% resolution options:
+% resolution options
 cat.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
 cat.extopts.resval       = [1.00 0.30];   % resolution value and its variance for the 'fixed' and 'best' restype
 
@@ -173,6 +173,7 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 
 % surface options
 cat.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
+cat.extopts.tca          = 1;     % initial tca topology correction from BrainSuite: 0 - no tca correction; 1 - tca in parahippocampal gyrus and hippocampus; 2 - global tca correction 
 
 % visualisation, print and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -194,26 +195,19 @@ cat.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'none'      {'csf','gm','wm'}; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'none'      {'csf','gm'};      ... % atlas based on 35 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'none'      {'gm'};            ... % atlas based on 40 subjects
-%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                'none'      {'csf','gm'};      ... % less regions than hammers, 18 subjects, low T1 image quality
-%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 'none'      {'gm'};            ... % only one subject 
-%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               'none'      {'gm'};            ... % only one subject 
-%  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                'none'      {'gm','wm'};       ... % only one subject, but with WM regions
-  %fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             'none'      {'gm','wm'};      ... % ROIs requires further work >> use Anatomy toolbox
-  }; 
-
-
-
-
-
-
-
+% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                'none'      {'csf','gm'};      ... % less regions than hammers, 18 subjects, low T1 image quality
+% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 'none'      {'gm'};            ... % only one subject 
+% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               'none'      {'gm'};            ... % 5 subjects, 0.33mm voxel size 
+% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                'none'      {'gm','wm'};       ... % only one subject, but with WM regions
+% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             'none'      {'gm','wm'};      ... % ROIs requires further work >> use Anatomy toolbox
+}; 
 
 %=======================================================================
 % PRIVATE PARAMETER (NOT FOR GENERAL USE)
 %=======================================================================
 
 
-% further maps
+% additional maps
 %=======================================================================
 % Tissue classes 4-6 to create own TPMs
 cat.output.TPMC.native = 0; 
@@ -241,4 +235,5 @@ cat.extopts.LAB.NV = 17; % no Ventricle
 cat.extopts.LAB.HC = 19; % Hippocampus 
 cat.extopts.LAB.HD = 21; % Head
 cat.extopts.LAB.HI = 23; % WM hyperintensities
+cat.extopts.LAB.PH = 25; % Gyrus parahippocampalis
  
