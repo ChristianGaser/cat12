@@ -37,7 +37,7 @@ function varargout = cat_surf_display(varargin)
   if nargin>0
     if isstruct(varargin{1})
       job = varargin{1};
-      if ~isfield(job,'data')
+      if ~isfield(job,'data') || isempty(job.data)
         job.data = spm_select([1 24],'any','Select surface','','','[lr]h.*');
         job.imgprint.do    = 0;
         job.imgprint.close = 0;  
@@ -92,7 +92,9 @@ function varargout = cat_surf_display(varargin)
     % load multiple surfaces
     if job.multisurf
       if strcmp(sinfo(i).side,'rh'), oside = 'lh'; else oside = 'rh'; end
-      Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)];
+      if ~job.usefsaverage, 
+        Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
+      end
       Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       for im=numel(Pmesh):-1:1
         if ~exist(Pmesh{im},'file'), Pmesh(im) = []; end
@@ -160,9 +162,9 @@ function varargout = cat_surf_display(varargin)
         continue
       else
         if isempty(job.colormap)
-          cat_surf_render('ColourMap',h.axis,jet(256)); 
+          h = cat_surf_render('ColourMap',h.axis,jet(256)); 
         else
-          cat_surf_render('ColourMap',h.axis,eval(job.colormap));
+          h = cat_surf_render('ColourMap',h.axis,eval(job.colormap));
         end
       end
       

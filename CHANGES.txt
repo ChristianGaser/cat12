@@ -11057,6 +11057,7 @@ D       templates_animals/monkey_newworld_brainmask.nii
 
 
 ------------------------------------------------------------------------
+r953 | gaser | 2016-06-18 14:52:36 +0200 (Sa, 18 Jun 2016) | 48 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -11105,5 +11106,20 @@ M       templates_1.50mm/neuromorphometrics.csv
 (9) Fixed: Bug in cat_surf_surf2roi with rdata field
 (10) Changed: Removed csv output of ROIs for each dataset (only one xml file
      are saved)
+
 ------------------------------------------------------------------------
-r953 | gaser | 2016-06-18 14:52:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stoolsexp.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_surf_display.m
+M       cat_surf_render.m
+M       cat_tst_qa_cleaner.m
+
+(1) Fixed:   Corrected CAT report colormap problem (blue brain) in case of 
+             surface reconstruction.
+(2) Changed: Color histogram in error report.
+------------------------------------------------------------------------
+r954 | dahnke | 2016-06-20 12:43:51

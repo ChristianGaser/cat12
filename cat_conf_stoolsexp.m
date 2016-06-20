@@ -119,7 +119,7 @@ function stoolsexp = cat_conf_stoolsexp
 %-----------------------------------------------------------------------
   
   stoolsexp = cfg_choice;
-  stoolsexp.name   = 'Surface Expert Tools';
+  stoolsexp.name   = 'Surface Developer Tools';
   stoolsexp.tag    = 'stoolsexp';
   stoolsexp.values = {...
     smooth.main, ...

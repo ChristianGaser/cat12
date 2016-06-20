@@ -203,12 +203,13 @@ function cat_io_report(job,qa)
     % colorscale and small adaption for the values. 
     switch lower(cm)
       case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
-        colormap(cat_io_colormaps([cm 'ov'],60)); mlt = 2; 
+         cmap = [cat_io_colormaps([cm 'ov'],60);flip(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)];  mlt = 2; 
       case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-        colormap(cm); mlt = 1; 
+        cmap = [eval(sprintf('%s(60)',cm));flip(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; mlt = 1; 
       otherwise
-        colormap(cm); mlt = 1; 
+        cmap = [eval(sprintf('%s(60)',cm));flip(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; mlt = 1; 
     end
+    colormap(cmap); 
     spm_orthviews('Redraw');
 
     htext = zeros(5,2,2);
@@ -229,19 +230,34 @@ function cat_io_report(job,qa)
     spm_orthviews('Reset');
 
 
-
+    lasthours = 20; % only display data 
     % Yo - original image in original space
     % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
     hho = spm_orthviews('Image',VT0,pos(1,:)); 
     spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
     axes('Position',[pos(1,1:2) + [pos(1,3)*0.55 -0.01],pos(1,3:4)*0.41] ); 
     Ysrcs = single(Ysrc+0); spm_smooth(Ysrcs,Ysrcs,repmat(0.5,1,3));
-    [x,y] = hist(Ysrcs(:),1000); clear Ysrcs;
-    ch = cumsum(x)/sum(x); bd = [find(ch>0.02,1,'first'),find(ch>0.98,1,'first')];
-    spm_orthviews('window',hho,[y(find(ch>0.02,1,'first')),y(find(ch>0.90,1,'first'))*mlt]);
-    bar(y,x,'FaceColor',[0.0 0.2 0.7],'EdgeColor',[0.0 0.2 0.7]); 
+    [x,y] = hist(Ysrcs(:),200); %clear Ysrcs;
+    if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < lasthours; else Pp0data = 0; end
+    if Pp0data
+      Yp0 = spm_read_vols(spm_vol(Pp0));
+      mth = round(2*cat_stat_nanmean(Ysrcs(Yp0(:)>2.7 & Yp0(:)<3.3))); 
+      ch  = cumsum(x)/sum(x); bd = [find(ch>0.02,1,'first'), mth];
+      spm_orthviews('window',hho,[y(find(ch>0.02,1,'first')),mth]); hold on;
+    else
+      ch  = cumsum(x)/sum(x); mth = find(ch>0.98,1,'first'); bd = [find(ch>0.02,1,'first'),mth];
+      spm_orthviews('window',hho,[y(find(ch>0.02,1,'first')),mth]); hold on;
+    end
+    
+    %[x,y] = hist(Ysrcs(:),bd(1):diff(bd)/200:bd(2)); %clear Ysrcs;
+    %bar(y,x,'FaceColor',[0.0 0.2 0.7],'EdgeColor',[0.0 0.2 0.7]); 
+    for i=1:numel(y)
+     %  bar(y(i),x(i),180/numel(y),'FaceColor',[0.0 0.2 0.7],'EdgeColor',[0.0 0.2 0.7]);  
+       bar(y(i),x(i),180/numel(y),'FaceColor',cmap(max(1,min(size(cmap,1),round( i /2))),:),...
+                                  'EdgeColor',cmap(max(1,min(size(cmap,1),round( i /2))),:));
+    end
     ylim([0,max(x(round(numel(x)*0.05):end))]*1.5); xlim(y(bd));
-    grid
+    box on; 
 
     spm_orthviews('Zoom',100);
     spm_orthviews('Reposition',[0 0 0]); 
@@ -250,29 +266,48 @@ function cat_io_report(job,qa)
 
     % Ym - normalized image in original space
     mtxt = 'm*.nii (part. processed.)'; 
-    if exist(Pn,'file'), Pndata = dir(Pn); Pndata = etime(clock,datevec(Pndata.datenum))/3600 < 2; else Pndata = 0; end
-    if exist(Pm,'file'), Pmdata = dir(Pm); Pmdata = etime(clock,datevec(Pmdata.datenum))/3600 < 2; else Pmdata = 0; end
+    if exist(Pn,'file'), Pndata = dir(Pn); Pndata = etime(clock,datevec(Pndata.datenum))/3600 < lasthours; else Pndata = 0; end
+    if exist(Pm,'file'), Pmdata = dir(Pm); Pmdata = etime(clock,datevec(Pmdata.datenum))/3600 < lasthours; else Pmdata = 0; end
     if ~Pmdata && Pndata, Pm = Pn; Pmdata = Pndata; mtxt = 'n*.nii (part. processed.)'; end
     if Pmdata
-      hhm = spm_orthviews('Image',spm_vol(Pm),pos(2,:));
-      spm_orthviews('Caption',hhm,{mtxt},'FontSize',fontsize,'FontWeight','Bold');
-      axes('Position',[pos(2,1:2) + [pos(2,3)*0.55 -0.01],pos(2,3:4)*0.41] );
-      Yms = spm_read_vols(spm_vol(Pm)); spm_smooth(Yms,Yms,repmat(0.5,1,3));
-      [x,y] = hist(Yms(:),1000); clear Yms;
-      x = min(x,max(x(2:end))); % ignore background
-      ch = cumsum(x)/sum(x); bd = [find(ch>0.02,1,'first'),find(ch>0.98,1,'first')];
-      spm_orthviews('window',hhm,[y(find(ch>0.02,1,'first')),y(find(ch>0.90,1,'first'))*mlt]);
-      bar(y,x,'FaceColor',[0.0 0.2 0.7],'EdgeColor',[0.0 0.2 0.7]);
-      ylim([0,max(x(round(numel(x)*0.05):end))*1.5]); xlim(y(bd));
-      grid
+      try
+        hhm = spm_orthviews('Image',spm_vol(Pm),pos(2,:));
+        spm_orthviews('Caption',hhm,{mtxt},'FontSize',fontsize,'FontWeight','Bold');
+        axes('Position',[pos(2,1:2) + [pos(2,3)*0.55 -0.01],pos(2,3:4)*0.41] );
+        Yms = spm_read_vols(spm_vol(Pm)); spm_smooth(Yms,Yms,repmat(0.5,1,3));
+        [x,y] = hist(Yms(:),0:1/60:2); clear Yms;
+        x = min(x,max(x(2:end))); % ignore background
+        ch = cumsum(x)/sum(x); 
+        spm_orthviews('window',hhm,[y(find(ch>0.02,1,'first')),y(find(ch>0.90,1,'first'))*mlt]); hold on;
+        for i=1:numel(y)
+          bar(y(i),x(i),1/30,'FaceColor',cmap(max(1,round(i/2)),:),'EdgeColor',cmap(max(1,round(i/2)),:));
+        end
+        ylim([0,max(x(round(numel(x)*0.05):end))*1.5]); xlim([0 2]);
+        set(gca,'XTick',[0:1/3:2],'XTickLabel',{'BG','CSF','GM','WM','','','BV/HD'},'YTickLabel','','YTick',[],'TickLength',[0 0]);
+        box on; 
+      end
     end
 
-    % Yo - segmentation in original space
-    if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < 2; else Pp0data = 0; end
+    % Yp0 - segmentation in original space
+    if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < lasthours; else Pp0data = 0; end
     if Pp0data
-      hhp0 = spm_orthviews('Image',spm_vol(Pp0),pos(3,:)); 
-      spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
-      spm_orthviews('window',hhp0,[0,6]);
+      try
+        hhp0 = spm_orthviews('Image',spm_vol(Pp0),pos(3,:)); 
+        spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
+        spm_orthviews('window',hhp0,[0,6]);
+        axes('Position',[pos(3,1:2) + [pos(3,3)*0.55 0],pos(1,3:4)*0.41] );
+        Yp0s = spm_read_vols(spm_vol(Pp0)); spm_smooth(Yp0s,Yp0s,repmat(0.5,1,3));
+        [x,y] = hist(Yp0s(:),0:1/30:4.5); clear Yms;
+        x = min(x,max(x(2:end))); % ignore background
+        ch = cumsum(x)/sum(x); 
+        spm_orthviews('window',hhp0,[y(find(ch>0.02,1,'first')),y(find(ch>0.90,1,'first'))*mlt]); hold on;
+        for i=1:numel(y)
+          bar(y(i),x(i),1/30,'FaceColor',cmap(max(1,round(i/1.5/2)),:),'EdgeColor',cmap(max(1,round(i/1.5/2)),:));
+        end
+        set(gca,'XTick',[0:1:4],'XTickLabel',{'BG','CSF','GM','WM','BV/HD'},'YTickLabel','','YTick',[],'TickLength',[0 0]);
+        ylim([0,max(x(round(numel(x)*0.05):end))*1.5]); xlim([0 4.5]);
+        box on; 
+      end
     end
 
 
@@ -280,21 +315,23 @@ function cat_io_report(job,qa)
     Pthick = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
     fdata = dir(Pthick);
     if exist(Pthick,'file')
-      fdata = etime(clock,datevec(fdata.datenum))/3600 < 2;
+      fdata = etime(clock,datevec(fdata.datenum))/3600 < lasthours;
       if fdata % only surface that are 
+        hCS = subplot('Position',[0.5 0.05 0.55 0.25],'visible','off'); 
         try 
-          hCS = subplot('Position',[0.5 0.05 0.5 0.22],'visible','off'); 
-          cat_surf_display(struct('data',Pthick,'readsurf',0,...
+          hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
             'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-          axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
-          htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
-            'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
+          colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
+          cc{3} = axes('Position',[0.6 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
+          set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+            'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
         catch
           fprintf('Can''t display surface');
         end
       end
     end
 
+    
     %% print group report file 
     fg = spm_figure('FindWin','Graphics');
     set(0,'CurrentFigure',fg)
@@ -321,6 +358,26 @@ function cat_io_report(job,qa)
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
 
     %spm_figure('Clear','Graphics');   
+    
+    
+    %% reset colormap to the simple SPM like gray60 colormap
+    WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
+
+    % new colorscale
+    if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
+    if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
+    if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
+
+    warning on;  %#ok<WNON>
+    if exist('hSD','var')
+      % if there is a surface than we have to use the gray colormap also here
+      % because the colorbar change!
+      try %#ok<TRYNC>
+        cat_surf_render('ColourMap',hSD{1}.axis,gray(128));
+      end
+    end
+
+    
   catch
     fprintf('Unknown cat_io_report error!\n');
   end
