@@ -4,6 +4,15 @@ function long = cat_conf_long
 % Christian Gaser
 % $Id$
 
+try
+  expert = cat_get_defaults('extopts.expertgui');
+catch %#ok<CTCH>
+  expert = 0; 
+end
+if isempty(expert) 
+  expert = 0;
+end  
+
 mov = cfg_files;
 mov.name = 'Longitudinal data for this subject';
 mov.tag  = 'mov';
@@ -62,6 +71,25 @@ modulate.help = {
 };
 
 %------------------------------------------------------------------------
+dartel        = cfg_menu;
+dartel.tag    = 'dartel';
+dartel.name   = 'DARTEL export of average image';
+if expert
+  dartel.labels = {'No','Rigid (SPM12 default)','Affine','Both'};
+  dartel.values = {0 1 2 3};
+else
+  dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
+  dartel.values = {0 1 2};
+end
+dartel.val    = {0};
+dartel.help   = {
+'This option is to export data into a form that can be used with DARTEL. The SPM default is to only apply rigid body transformation. However, a more appropriate option is to apply affine transformation, because the additional scaling of the images requires less deformations to non-linearly register brains to the template.'
+''
+'Please note, that this option is only useful if you intend to create a customized DARTEl template for your longittudinal data. The DARTEL exported segmentations is saved for the the average image of all time points for one subject and can be used in order to create a customized template with the DARTEL toolbox. The resulting flow fields can be finally applied to the respective native segmentations (e.g. p1/p2 images) to obtain normalized segmentations according to the newly created DARTEL template.'
+''
+};
+
+%------------------------------------------------------------------------
 output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
@@ -79,7 +107,7 @@ opts    = cat_conf_opts;
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
-long.val  = {esubjs,opts,extopts,output,modulate};
+long.val  = {esubjs,opts,extopts,output,modulate,dartel};
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;
 long.help = {

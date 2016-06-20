@@ -4,7 +4,7 @@
 % $Id$
 %-----------------------------------------------------------------------
 
-global opts extopts output modulate
+global opts extopts output modulate dartel
 
 warning('off','MATLAB:DELETE:FileNotFound');
 matlabbatch{1}.spm.tools.cat.tools.series.data = '<UNDEFINED>';
@@ -28,15 +28,19 @@ if exist('modulate','var')
   matlabbatch{4}.spm.tools.cat.tools.defs.modulate = modulate;
 end
 
+% dartel export option
+if exist('dartel','var')
+  matlabbatch{2}.spm.tools.cat.estwrite.output.GM.dartel = dartel;
+  matlabbatch{2}.spm.tools.cat.estwrite.output.WM.dartel = dartel;
+end
+
 matlabbatch{1}.spm.tools.cat.tools.series.bparam = 1000000;
 matlabbatch{2}.spm.tools.cat.estwrite.data(1) = cfg_dep('Longitudinal Rigid Registration: Midpoint Average', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','avg', '()',{':'}));
 matlabbatch{2}.spm.tools.cat.estwrite.output.surface = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.GM.native = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.GM.mod = 0;
-matlabbatch{2}.spm.tools.cat.estwrite.output.GM.dartel = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.WM.native = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.WM.mod = 0;
-matlabbatch{2}.spm.tools.cat.estwrite.output.WM.dartel = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.bias.warped = 1;
 matlabbatch{2}.spm.tools.cat.estwrite.output.jacobian.warped = 0;
 matlabbatch{2}.spm.tools.cat.estwrite.output.warps = [1 0];
@@ -55,6 +59,8 @@ matlabbatch{4}.spm.tools.cat.tools.defs.images(1) = cfg_dep('CAT12: Segmentation
 matlabbatch{4}.spm.tools.cat.tools.defs.images(2) = cfg_dep('CAT12: Segmentation: p2 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
 matlabbatch{4}.spm.tools.cat.tools.defs.interp = 4;
 matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('CAT12: Segmentation: Deformation Field', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','fordef', '()',{':'}));
-matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(2) = cfg_dep('CAT12: Segmentation: p1 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','p', '()',{':'}));
-matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(3) = cfg_dep('CAT12: Segmentation: p2 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
+if ~exist('dartel','var')
+  matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(2) = cfg_dep('CAT12: Segmentation: p1 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','p', '()',{':'}));
+  matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.files(3) = cfg_dep('CAT12: Segmentation: p2 Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','p', '()',{':'}));
+end
 matlabbatch{5}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;

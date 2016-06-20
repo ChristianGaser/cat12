@@ -4,7 +4,7 @@ function out = cat_long_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global opts extopts output modulate
+global opts extopts output modulate dartel
 
 warning off;
 
@@ -13,6 +13,7 @@ opts     = job.opts;
 extopts  = job.extopts;
 output   = job.output;
 modulate = job.modulate;
+dartel   = job.dartel;
 
 jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
