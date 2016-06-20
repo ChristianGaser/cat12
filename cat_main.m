@@ -1989,7 +1989,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   cm = job.extopts.colormap; 
 
-  %% check colormap name
+  % check colormap name
   switch lower(cm)
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter',...
         'gray','bone','copper','pink','bcgwhw','bcgwhn'}
@@ -2001,23 +2001,25 @@ fprintf('%4.0fs\n',etime(clock,stime));
   % SPM_orthviews seams to allow only 60 values
   % It further requires a modified colormaps with lower values that the
   % colorscale and small adaption for the values. 
+  surfcolors = 128; 
   switch lower(cm)
     case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
       ytick       = [1,5:5:60];
       yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
-      yticklabelo = {' BG',' ','    ','    ','   ','     ',' average WM  ',' ',' ',' ',' ',' ',' BV / HD '};
+      yticklabelo = {' BG',' ','    ','    ','   ','     ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
       %colormap(cat_io_colormaps(cm,60));
-      colormap(cat_io_colormaps([cm 'ov'],60));
+      cmap = [cat_io_colormaps([cm 'ov'],60);flip(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
       cmmax = 2;
     case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
       ytick       = [1 20 40 60]; 
       yticklabel  = {' BG',' CSF',' GM',' WM'};
       yticklabelo = {' BG','    ','   ',' WM'};
-      colormap(cm);
+      cmap = [eval(sprintf('%s(60)',cm));flip(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
       cmmax = 1;
   end
+  colormap(cmap);
   spm_orthviews('Redraw');
-
+  
   htext = zeros(5,2,2);
   for i=1:size(str,2)   % main parameter
     htext(1,i,1) = text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
@@ -2043,7 +2045,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
     
     
-  %% BB box is not optimal for all images
+  % BB box is not optimal for all images
   disptype = 'affine'; 
   switch disptype
     case 'affine'
@@ -2059,8 +2061,10 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   % Yo - original image in original space
   % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
-  try
+  try %#ok<TRYNC>
     Yo  = single(VT.private.dat(:,:,:)); 
+  end
+  if exist('Yo','var')
     Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
     if job.inv_weighting
       WMth = min([...
@@ -2073,19 +2077,19 @@ fprintf('%4.0fs\n',etime(clock,stime));
       T1txt = '*.nii (Original T1)'; 
     end
     clear Yo; 
-  
+
     VT0x = VT0;
     VT0x.mat = dispmat * VT0x.mat; 
     hho = spm_orthviews('Image',VT0x,pos(1,:)); 
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
-  catch
+    cc{1} = axes('Position',[pos(1,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
+    set(cc{1},'YTick',ytick,'YTickLabel',flip(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+  else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
   end
   
-  cc{1} = colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold');
-
   
   % Ym - normalized image in original space
   Vm        = spm_vol(VT.fname);
@@ -2096,9 +2100,11 @@ fprintf('%4.0fs\n',etime(clock,stime));
   hhm = spm_orthviews('Image',Vm,pos(2,:));
   spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
   spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
-  cc{2} = colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-
+  cc{2} = axes('Position',[pos(2,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
+  set(cc{2},'YTick',ytick,'YTickLabel',flip(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+    'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+  
+  
   % Yo - segmentation in original space
   % Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   VO        = spm_vol(VT.fname);
@@ -2109,21 +2115,24 @@ fprintf('%4.0fs\n',etime(clock,stime));
   hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
   spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
   spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
-  cc{3} = colorbar('location','west','position',[pos(3,1) + 0.30 0.02 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold');
-
+  cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image((60:-1:1)');
+  set(cc{3},'YTick',ytick,'YTickLabel',flip(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+    'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
   spm_orthviews('Reposition',[0 0 0]); 
 
   
-  %% surface
+  % surface
   if exist('Psurf','var')
-    hCS = subplot('Position',[0.5 0.05 0.5 0.25],'visible','off'); 
     try
+      hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
       hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
         'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-      axt = axes('Position',[0.5 0.02 0.5 0.02],'Visible','off','Parent',fg);
-      htext(6,1,1) = text(0.2,0, '\bfcentral surface with GM thickness (in mm)    '  , ...
-      'FontSize',fontsize*1.2, 'Interpreter','tex','Parent',axt);
+      colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
+      cc{3} = axes('Position',[0.6 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
+      set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+        'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
+    catch
+      cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
     end
   end
 
@@ -2154,45 +2163,24 @@ fprintf('%4.0fs\n',etime(clock,stime));
   fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
   
   
-  %% reset colormap
-  % remove old legends
-  for ci=1:3, try set(cc{ci},'visible','off'); end; end %#ok<TRYNC>
-  
-  get(gca,'clim');
-  
-  WMfactor         = 4/3;
-  GMthicknessaxis  = [0 60]; 
-  SPMgraficscaling = GMthicknessaxis(2); 
-  colormap('gray'); 
-  caxis(GMthicknessaxis);
+  %% reset colormap to the simple SPM like gray60 colormap
+  WMfactor = 4/3;
+  cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
   
   % new colorscale
   if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
   if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
   if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
   
+  warning on;  %#ok<WNON>
   if exist('hSD','var')
+    % if there is a surface than we have to use the gray colormap also here
+    % because the colorbar change!
     try %#ok<TRYNC>
-      cat_surf_render('ColourMap',hSD{1}.axis,gray(128)); 
-      cat_surf_render('clim',hSD{1}.axis,GMthicknessaxis); 
+      cat_surf_render('ColourMap',hSD{1}.axis,gray(128));
     end
   end
-  
-  %% setup new legend 
-  ytick       = SPMgraficscaling/WMfactor*[1/60 1/3 2/3 3/3 WMfactor];
-  yticklabel  = {' BG',' CSF',' GM',' WM',' BV / HD'};
-  yticklabelo = {' BG','    ','   ',' average WM  ', ' BV / HD'};
-  
-  % create new legend 
-  colorbar('location','west','position',[pos(1,1) + 0.30 0.38 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabelo,'FontSize',fontsize,'FontWeight','Bold'); 
-  colorbar('location','west','position',[pos(2,1) + 0.30 0.38 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
-  colorbar('location','west','position',[pos(3,1) + 0.30 0.01 0.02 0.15], ...
-    'YTick',ytick,'YTickLabel',yticklabel,'FontSize',fontsize,'FontWeight','Bold'); 
-  
-  warning on;  %#ok<WNON>
-  
+
   
   %% command window output
   fprintf('\n%s',repmat('-',1,72));
