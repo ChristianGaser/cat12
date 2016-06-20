@@ -330,7 +330,7 @@ function stools = cat_conf_stools(expert)
   v2s.abs_class.name    = 'Tissue Class';
   v2s.abs_class.labels  = {'GM'};
   v2s.abs_class.values  = {'GM'};
-  v2s.abs_class.val     = {1};
+  v2s.abs_class.val     = {'GM'};
   v2s.abs_class.help    = {
     'Tissue class for which the relative positions are estimated.'
   };

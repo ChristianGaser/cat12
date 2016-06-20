@@ -11108,6 +11108,7 @@ M       templates_1.50mm/neuromorphometrics.csv
      are saved)
 
 ------------------------------------------------------------------------
+r954 | dahnke | 2016-06-20 12:44:20 +0200 (Mo, 20 Jun 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11121,5 +11122,19 @@ M       cat_tst_qa_cleaner.m
 (1) Fixed:   Corrected CAT report colormap problem (blue brain) in case of 
              surface reconstruction.
 (2) Changed: Color histogram in error report.
+
 ------------------------------------------------------------------------
-r954 | dahnke | 2016-06-20 12:43:51
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_long.m
+M       cat_conf_stools.m
+M       cat_defaults.m
+M       cat_long_main.m
+M       cat_long_multi_run.m
+M       cat_main.m
+
+Changed: Added option to save dartel exported images in longitudinal batch.
+------------------------------------------------------------------------
+r955 | gaser | 2016-06-20 22:39:00
