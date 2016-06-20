@@ -393,13 +393,6 @@ switch lower(action)
         
         uimenu(cmenu, 'Label','Colorbar', 'Callback', {@myColourbar, H});
         
-        c = uimenu(cmenu, 'Label','Colorrange');
-        uimenu(c, 'Label','min-max',  'Callback', {@myCaxis, H, 'auto'});
-        uimenu(c, 'Label','5-95 %%',  'Callback', {@myCaxis, H, '5p'});
-        uimenu(c, 'Label','Custom...','Callback', {@myCaxis, H, 'custom'});
-        uimenu(c, 'Label','Synchronise Views', 'Visible','off', ...
-            'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
-        
         c = uimenu(cmenu, 'Label','Colormap');
         clrmp = {'hot' 'jet' 'gray' 'hsv' 'bone' 'copper' 'pink' 'white' ...
             'flag' 'lines' 'colorcube' 'prism' 'cool' 'autumn' ...
@@ -407,6 +400,13 @@ switch lower(action)
         for i=1:numel(clrmp)
             uimenu(c, 'Label', clrmp{i}, 'Callback', {@myColourmap, H});
         end
+        
+        c = uimenu(cmenu, 'Label','Colorrange');
+        uimenu(c, 'Label','min-max',  'Callback', {@myCaxis, H, 'auto'});
+        uimenu(c, 'Label','5-95 %%',  'Callback', {@myCaxis, H, '5p'});
+        uimenu(c, 'Label','Custom...','Callback', {@myCaxis, H, 'custom'});
+        uimenu(c, 'Label','Synchronise Views', 'Visible','off', ...
+            'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
         
         c = uimenu(cmenu, 'Label','Lighting'); 
         macon = {'on' 'off'}; isinner = strcmp(H.catLighting,'inner'); 
@@ -601,7 +601,7 @@ switch lower(action)
             updateTexture(H,d);
         end
         if nargin>1
-            colormap(varargin{2});
+            H.colormap = colormap(varargin{2});
         end
 %         
 %     %-ColourMap

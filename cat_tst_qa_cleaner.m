@@ -68,7 +68,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   def.cf        = 1;  % normalization factor for rating 
   def.grads     = 6;  % number of grads (default = 6)
   def.model     = 2;  % model used for rating
-  def.figure    = 1;  % figure=2 for new/own figure
+  def.figure    = 2;  % figure=2 for new/own figure
   def.smooth    = 0; 
   def.siterf    = 1000000; % we
   def.siteavgperc = [0.10 0.90]; 
@@ -256,6 +256,12 @@ function varargout = cat_tst_qa_cleaner(data,opt)
         % use the first peak and the average peak width to create the raging 
         hx = hist(d,0.5:1:5.5); peaks = sum(hx>(max(hx)/5))*3;
         [thx,sdx] = kmeans3D(d,peaks); sdx = sdx./thx;
+        for i=1:peaks/2
+          if sum(d<thx(i))/numel(d) < 0.20
+            thx(1) = []; 
+            sdx(1) = []; 
+          end
+        end
         sd = mean(sdx(1:min(3,numel(sdx))))*2;
         sd = min(1/3,max(1/6,sd)); sd = sd*3/4;
         sd = sd * opt.cf;
@@ -427,7 +433,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     set(axF,'YTick',[],'XTickLabel',{},'XTick',6,'XColor',color(QMC,6),'Color','none','XTicklabel','F','TickLength',[0 0],'Fontsize',FS,'Fontweight','bold');
     hold off; 
     
-    if numel(sites>1);
+    if isfield(opt,'site') && numel(sites>1);
       title(sprintf('Histogram (cf=%0.2f) - global treshold for multisite output (n=%d)',opt.cf,numel(sites)),'Fontsize',FS);
     else
       title(sprintf('Histogram (cf=%0.2f)',opt.cf),'Fontsize',FS);
@@ -437,7 +443,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   end
   %%
   MarkColor = cat_io_colormaps('marks+',40); 
-  if numel(sites)>1, globcorr = ' (global corrected)'; else globcorr = ''; end
+  if isfield(opt,'site') && numel(sites)>1, globcorr = ' (global corrected)'; else globcorr = ''; end
   if exist('P','var')
     files = P(data<=markths2(:,3)); 
     fprintf('PASSED%s: %0.2f%%\n',globcorr,numel(files)/numel(data)*100)
