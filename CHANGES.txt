@@ -11124,6 +11124,7 @@ M       cat_tst_qa_cleaner.m
 (2) Changed: Color histogram in error report.
 
 ------------------------------------------------------------------------
+r955 | gaser | 2016-06-20 22:39:15 +0200 (Mo, 20 Jun 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11136,5 +11137,19 @@ M       cat_long_multi_run.m
 M       cat_main.m
 
 Changed: Added option to save dartel exported images in longitudinal batch.
+
 ------------------------------------------------------------------------
-r955 | gaser | 2016-06-20 22:39:00
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+MM      cat_stat_ROI.m
+M       html/cat_methods_RBM.html
+M       tbx_cfg_cat.m
+
+Changed: Updated html text and manual.
+------------------------------------------------------------------------
+r956 | gaser | 2016-06-21 10:27:03
