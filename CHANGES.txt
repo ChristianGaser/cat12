@@ -11154,6 +11154,7 @@ M       tbx_cfg_cat.m
 Changed: Updated html text and manual.
 
 ------------------------------------------------------------------------
+r957 | gaser | 2016-06-21 13:10:46 +0200 (Di, 21 Jun 2016) | 11 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -11165,5 +11166,15 @@ M       html/cat_methods_RBM.html
 
 (1) Changed: Updated manual.
 (2) Fixed: Error with flipped colorbars.
+
 ------------------------------------------------------------------------
-r957 | gaser | 2016-06-21 13:10:32
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_check_system_output.m
+
+Fixed: Error in cat_check_system_output.m due to special characters 
+       under windows.
+------------------------------------------------------------------------
+r958 | gaser | 2016-06-21 17:22:23
