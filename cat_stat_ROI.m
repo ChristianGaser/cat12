@@ -3,7 +3,7 @@ function cat_stat_ROI(p)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_ROI.m 834 2016-01-18 13:26:38Z gaser $
+% $Id$
 
 % ROI measures to search for
 ROI_measures = char('Vgm','Vwm','Vcsf','mean_thickness');

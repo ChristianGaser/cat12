@@ -30,7 +30,7 @@
         The results are stored as XML files in the <em>label</em> directory. 
         The XML file <em>catROI[s]_*.xml</em> contains information of all atlases as data structure for one dataset and the optional <em>s</em> indicates surface atlases. 
         Please note that in the beta version of CAT12 these XML files were not automatically saved because the option for ROI analysis was disabled. 
-        If the option "cat12.output.ROI" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> is set to "0" no ROI XML files are saved and you have to set this parameter to "1" and preprocess the data again if you are interested in ROI analysis of volume data (for surface data these XML files are always extracted after preprocessing).
+        If the option "cat12.output.ROI" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> is set to "0" no ROI XML files are saved and you have to set this parameter to "1" and preprocess the data again if you are interested in ROI analysis of volume data (for surface data these XML files are always extracted after preprocessing, thus it is not necessary to do this for surface data).
         You can use the CAT function <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> to read the XML data as structure.
       </p>
       <p>
@@ -39,8 +39,8 @@
       </p>
       <p>
         Finally, the XML files of several subjects can be combined and saved for further analysis as CSV file using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcroi');">Estimate Mean Values inside ROI</a> function. 
-        For each measure (e.g. ''Vgm'' for gray matter volume) and each atlas a separate CSF file is written. This works for both volume as well as surface data, but volume and surface data has to be processed separately using this function (surface-based ROI values are indicated by an additional <em>s</em>, e.g. ''catROIs_'').    
-        You can use external software such as Excel or SPSS to read the resulting CSV files for further analysis.
+        For each measure (e.g. ''Vgm'' for gray matter volume) and each atlas a separate CSV file is written. This works for both volume as well as surface data, but volume and surface data has to be processed separately using this function (surface-based ROI values are indicated by an additional <em>s</em>, e.g. ''catROIs_'').    
+        You can use external software such as Excel or SPSS to read the resulting CSV files for further analysis. Take also care of the different interpretation between <em>.</em> and <em>,</em> depending on your region and language settings on your system.
       </p>
       <p>
         Moreover, you can use the volume-based atlases that are provided with CAT also as atlas maps with <em>SPM atlas functions</em>. This is especially helpful if you have used the default VBM processing pipeline because the CAT12 atlas maps are then in the same DARTEL space as your data. 
