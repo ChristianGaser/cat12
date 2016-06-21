@@ -91,7 +91,7 @@ ROI.labels = {'No ROI analyis','ROI analysis'};
 ROI.values = {0 1};
 ROI.def    = @(val)cat_get_defaults('output.ROI', val{:});
 ROI.help   = {
-  'Export of ROI data of volume, intensity, and thickness to a xml and csv-files. '
+  'Export of ROI data of volume, intensity, and thickness to a xml-files. '
   'For further information see atlas specific text files in "templates_1.50mm" CAT12 subdir. '
   ''
   'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
