@@ -45,7 +45,7 @@ function varargout = cat_io_xml(file,varargin)
     return;
   end
   if ~exist('file','var'),
-    file = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^cat12.*.xml');
+    file = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^cat.*.xml');
     if isempty(file)
       if nargout>0, varargout{1}=struct(); end
       return;

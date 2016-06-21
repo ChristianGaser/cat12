@@ -2014,7 +2014,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
       ytick       = [1 20 40 60]; 
       yticklabel  = {' BG',' CSF',' GM',' WM'};
       yticklabelo = {' BG','    ','   ',' WM'};
-      cmap = [eval(sprintf('%s(60)',cm));(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
+      cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
       cmmax = 1;
   end
   colormap(cmap);
@@ -2084,7 +2084,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
     cc{1} = axes('Position',[pos(1,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
-    set(cc{1},'YTick',ytick,'YTickLabel',(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+    set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
       'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
   else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
@@ -2101,7 +2101,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   spm_orthviews('Caption',hhm,{'m*.nii (Int. Norm.)'},'FontSize',fontsize,'FontWeight','Bold');
   spm_orthviews('window',hhm,[0 cmmax]); caxis([0,2]);
   cc{2} = axes('Position',[pos(2,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
-  set(cc{2},'YTick',ytick,'YTickLabel',(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+  set(cc{2},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
     'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
   
   
@@ -2116,7 +2116,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
   spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image((60:-1:1)');
-  set(cc{3},'YTick',ytick,'YTickLabel',(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+  set(cc{3},'YTick',ytick,'YTickLabel',fliplr(yticklabel),'XTickLabel','','XTick',[],'TickLength',[0 0],...
     'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
   spm_orthviews('Reposition',[0 0 0]); 
 
