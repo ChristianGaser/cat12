@@ -11168,6 +11168,7 @@ M       html/cat_methods_RBM.html
 (2) Fixed: Error with flipped colorbars.
 
 ------------------------------------------------------------------------
+r958 | gaser | 2016-06-21 17:22:38 +0200 (Di, 21 Jun 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11176,5 +11177,23 @@ M       cat_check_system_output.m
 
 Fixed: Error in cat_check_system_output.m due to special characters 
        under windows.
+
 ------------------------------------------------------------------------
-r958 | gaser | 2016-06-21 17:22:23
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_check_system_output.m
+M       cat_conf_stools.m
+M       cat_run.m
+M       cat_surf_render.m
+M       cat_surf_surf2roi.m
+M       tbx_cfg_cat.m
+
+(1) Fixed: Error in cat_surf_surf2roi.m because of missing fieldname.
+(2) Fixed: Parallel mode is disabled in deploayed mode.
+(3) Changed: Added underlay function and some more functionality to
+    cat_surf_render.m
+(4) Fixed: Missing filed in cat_run.m if other DARTEl template was chosen.
+------------------------------------------------------------------------
+r959 | gaser | 2016-06-23 11:23:18

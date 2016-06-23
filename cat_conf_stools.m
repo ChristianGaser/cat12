@@ -10,8 +10,11 @@ function stools = cat_conf_stools(expert)
   try
     numcores = max(feature('numcores'),1);
   catch
-    numcores = 1;
+    numcores = 0;
   end
+  
+  if isdeployed, numcores = 0; end
+  
   if ~exist('expert','var')
     expert = 0; % switch to de/activate further GUI options
   end

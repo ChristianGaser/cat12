@@ -28,8 +28,10 @@ try
   end
   numcores = max(numcores,1);
 catch
-  numcores = 1;
+  numcores = 0;
 end
+
+if isdeployed, numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
