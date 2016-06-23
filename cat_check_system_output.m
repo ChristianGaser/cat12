@@ -30,7 +30,7 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
     end
   end
   if nargin > 2
-    if debugON, disp(result); end
+    if debugON & ~strcmp(result,''), disp(result); end
   end
 end
 
@@ -38,8 +38,8 @@ function str = genstrarray(stritem)
 % generate a string of properly quoted strings 
 
   str = strrep(stritem, '''', '''''');
-  if ~any(str  == char(0)) &&  ~any(str  == char(9)) && ~any(str  == char(10))
-    str  = sprintf('''%s''', str );
+  if ~any(str  == char(0)) &&  ~any(str  == char(9)) && ~any(str  == char(10)) && ~strcmp(str,'')
+    str  = sprintf('''%s''', str )
   else
     % first, quote sprintf special chars % and \
     % second, replace special characters by sprintf equivalents
