@@ -364,10 +364,13 @@ switch lower(action)
         uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', ...
             'Callback',{@myOverlay, H});
         
+        uimenu(cmenu, 'Label','Underlay (Texture)...', 'Interruptible','off', ...
+            'Callback',{@myUnderlay, H});
+
         uimenu(cmenu, 'Label','Image Sections...', 'Interruptible','off', ...
             'Callback',{@myImageSections, H});
         
-        uimenu(cmenu, 'Label','Change geometry...', 'Interruptible','off', ...
+        uimenu(cmenu, 'Label','Change underlying mesh...', 'Interruptible','off', ...
             'Callback',{@myChangeGeometry, H});
         
         c = uimenu(cmenu, 'Label', 'Connected Components', 'Interruptible','off');
@@ -403,9 +406,9 @@ switch lower(action)
         
         c = uimenu(cmenu, 'Label','Colorrange');
         uimenu(c, 'Label','min-max',  'Callback', {@myCaxis, H, 'auto'});
-        uimenu(c, 'Label','5-95 %%',  'Callback', {@myCaxis, H, '5p'});
+%        uimenu(c, 'Label','5-95 %%',  'Callback', {@myCaxis, H, '5p'});
         uimenu(c, 'Label','Custom...','Callback', {@myCaxis, H, 'custom'});
-        uimenu(c, 'Label','Synchronise Views', 'Visible','off', ...
+        uimenu(c, 'Label','Synchronise Colorranges', 'Visible','off', ...
             'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
         
         c = uimenu(cmenu, 'Label','Lighting'); 
@@ -495,12 +498,12 @@ switch lower(action)
         end
         if isa(v,'gifti')
           v = v.cdata;
-        else
-          error('File has to be gifti-format');
         end
 
         setappdata(H.patch,'curvature',v);
         setappdata(H.axis,'handles',H);
+        d = getappdata(H.patch,'data');
+        updateTexture(H,d);
 
     %-Overlay
     %======================================================================
@@ -582,8 +585,10 @@ switch lower(action)
             set(ic,'CData',c);
             clim = getappdata(H.patch,'clim');
             if isempty(clim), clim = [false min(d) max(d)]; end
-            set(ic,'YData',clim(2:3));
-            set(H.colourbar,'YLim',clim(2:3));
+            if clim(3) > clim(2)
+              set(ic,'YData',clim(2:3));
+              set(H.colourbar,'YLim',clim(2:3));
+            end
         end
         setappdata(H.axis,'handles',H);
         
@@ -1088,11 +1093,12 @@ set(obj,'Checked','on');
 %==========================================================================
 function mySynchroniseCaxis(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
-range = caxis; 
+range = getappdata(H.patch, 'clim');
+range = range(2:3);
+
 for i=1:numel(P)
     H = getappdata(ancestor(P(i),'axes'),'handles');
     cat_surf_render('Clim',H,range);
-    %axis(H.axis,'image');
 end
 
 %==========================================================================
@@ -1283,6 +1289,12 @@ if ~sts, return; end
 cat_surf_render('Overlay',H,P);
 
 %==========================================================================
+function myUnderlay(obj,evt,H)
+[P, sts] = spm_select(1,'any','Select texture file to underlay',{},fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'),'[lr]h.mc.*');
+if ~sts, return; end
+cat_surf_render('Underlay',H,P);
+
+%==========================================================================
 function myImageSections(obj,evt,H)
 [P, sts] = spm_select(1,'image','Select image to render');
 if ~sts, return; end
@@ -1293,11 +1305,13 @@ function myChangeGeometry(obj,evt,H)
 [P, sts] = spm_select(1,'mesh','Select new geometry mesh');
 if ~sts, return; end
 G = gifti(P);
-if size(H.patch.Vertices,1) ~= size(G.vertices,1)
+
+if size(get(H.patch,'Vertices'),1) ~= size(G.vertices,1)
     error('Number of vertices must match.');
 end
-H.patch.Vertices = G.vertices;
-H.patch.Faces = G.faces;
+set(H.patch,'Vertices',G.vertices)
+set(H.patch,'Faces',G.faces)
+view(H.axis,[-90 0]);
 
 %==========================================================================
 function renderSlices(H,P,pls)
@@ -1414,6 +1428,14 @@ setappdata(H.patch, 'clim', [false mi ma]);
 
 %-Build texture by merging curvature and data
 %--------------------------------------------------------------------------
+if size(curv,1) == 1
+  curv = repmat(curv,3,1)';
+end
+
+if size(C,1) ~= size(curv,1)
+  error('Colordata does not fit to underlying mesh.');
+end
+
 C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
 
 set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor);
