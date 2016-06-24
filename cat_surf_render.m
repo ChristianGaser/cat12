@@ -361,18 +361,32 @@ switch lower(action)
         set(H.patch,'Visible','on');
         
         setappdata(H.patch,'clip',[false NaN NaN]);
-
+        %set(H.axis,'Position',[0.1 0.1 0.8 0.8]);
         if exist('labelmap','var')
-          setappdata(H.patch,'colourmap',labelmap);
-          cat_surf_render('clim',H.axis,labelmapclim - [0 1]);
-          
+          %%
+          setappdata(H.patch,'colourmap',labelmap); 
+          cat_surf_render('clim',H.axis,labelmapclim - 1); 
+          colormap(labelmap); caxis(labelmapclim - [1 0]);
           H = cat_surf_render('ColorBar',H.axis,'on'); 
           labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
-          ytick = labelmapclim(1):max(1,round(diff(labelmapclim)/80)):labelmapclim(2);
-          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:max(1,round(diff(labelmapclim)/30)):end));
-          set(H.colourbar,'Position',[.85 0.05 0.02 0.9]);
+          labelnam2(end+1) = {''}; labelnam2(end+1) = {''}; 
+          labellength = min(100,max(cellfun('length',labelnam2))); 
+          ss = max(1,round(diff(labelmapclim+1)/30)); 
+          ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
+          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
+            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
+            'TickLabelInterpreter','none');
+          set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
+          H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
+          setappdata(H.axis,'handles',H);
         end
-               
+       
+        % annotation with filename
+        %if ~H.issubfigure
+        %  [pp,ff,ee] = fileparts(H.filename{1}); 
+        %  H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
+        %end
+
         %-Add context menu
         %------------------------------------------------------------------
         cat_surf_render('ContextMenu',H);
@@ -588,12 +602,25 @@ switch lower(action)
         col = getappdata(H.patch,'colourmap');
         if strcmpi(varargin{2},'off')
             if isfield(H,'colourbar') && ishandle(H.colourbar)
-                delete(H.colourbar);
-                H = rmfield(H,'colourbar');
-                setappdata(H.axis,'handles',H);
+               %set(H.colourbar,'visible','off')  
+               set(H.axis,'Position',[0.10 0.10 0.8 0.8]);
+               delete(H.colourbar); 
+               H = rmfield(H,'colourbar');
+               setappdata(H.axis,'handles',H);
             end
             return;
         end
+        %{
+        if strcmpi(varargin{2},'on')
+          if isfield(H,'colourbar') && ishandle(H.colourbar)
+            set(H.colourbar,'visible','on')  
+            labelnam2 = get(H.colourbar,'yticklabel');
+            labellength = min(100,max(cellfun('length',labelnam2))); 
+            set(H.axis,'Position',[0.03 0.03 min(0.94,0.98-0.008*labellength - 0.06) 0.94])
+            return
+          end
+        end
+        %}
         if isempty(d) || ~any(d(:)), varargout = {H}; return; end
         if isempty(col), col = hot(256); end
         if ~isfield(H,'colourbar') || ~ishandle(H.colourbar)
@@ -631,6 +658,14 @@ switch lower(action)
               set(ic,'YData',clim(2:3));
               set(H.colourbar,'YLim',clim(2:3));
             end
+        end
+        if isfield(H,'labelmap')
+          labellength = min(100,max(cellfun('length',H.labelmap.labelnam2))); 
+          ss = diff(H.labelmap.ytick(1:2)); 
+          set(H.colourbar,'ytick',H.labelmap.ytick,'yticklabel',H.labelmap.labelnam2(1:ss:end),...
+            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
+            'TickLabelInterpreter','none');
+          set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
         end
         setappdata(H.axis,'handles',H);
         
@@ -935,9 +970,23 @@ if numel(findobj('Tag','CATSurfRender','Type','Patch')) > 1
     set(h,'Visible','on');
 end
 
-h = findobj(obj,'Label','Colorbar');
+h  = findobj(obj,'Label','Colorbar');
+hx = findobj(obj,'Label','Colormap');
+hr = findobj(obj,'Label','Colorrange');
 d = getappdata(H.patch,'data');
-if isempty(d) || ~any(d(:)), set(h,'Enable','off'); else set(h,'Enable','on'); end
+if isempty(d) || ~any(d(:)), 
+  set(h ,'Enable','off'); 
+  set(hx,'Enable','off'); 
+  set(hr,'Enable','off'); 
+else
+  set(h ,'Enable','on');
+  set(hx,'Enable','on');
+  set(hr,'Enable','on');
+end
+if isfield(H,'labelmap')
+  set(hx,'Enable','off'); 
+  set(hr,'Enable','off'); 
+end
 
 if isfield(H,'colourbar')
     if ishandle(H.colourbar)
@@ -1057,8 +1106,10 @@ if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
 
 %==========================================================================
 function myColourbar(obj,evt,H)
-y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')}; 
 cat_surf_render('Colourbar',H,toggle(get(obj,'Checked')));
+set(obj,'Checked',toggle(get(obj,'Checked')));
+
 
 
 %==========================================================================
@@ -1342,7 +1393,7 @@ function mySavePNG(obj,evt,H,filename)
   colorbar('Position',[.93 0.2 0.02 0.6]); 
   colormap(getappdata(H.patch,'colourmap'));
   [pp,ff,ee] = fileparts(H.filename{1}); 
-  H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');    
+  %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');    
   %a = get(h,'children');
   %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
   if isdeployed
@@ -1429,7 +1480,8 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             set(get(h,'children'),'visible','off');
             colorbar('Position',[.93 0.2 0.02 0.6]); 
             colormap(getappdata(H.patch,'colourmap'));
-
+            [pp,ff,ee] = fileparts(H.filename{1}); 
+            %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
             %a = get(h,'children');
             %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
             if isdeployed

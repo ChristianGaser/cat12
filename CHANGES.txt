@@ -11214,6 +11214,7 @@ M       cat_surf_render.m
 
 
 ------------------------------------------------------------------------
+r961 | gaser | 2016-06-24 11:30:22 +0200 (Fr, 24 Jun 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11221,5 +11222,14 @@ M       Contents.m
 M       cat_surf_render.m
 
 Changed: Removed filename in windows in cat_surf_render.m 
+
 ------------------------------------------------------------------------
-r961 | gaser | 2016-06-24 11:30:10
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_render.m
+
+(1) Fixed:    Updated cat_surf_render function.
+
+------------------------------------------------------------------------
+r962 | dahnke | 2016-06-24 13:30:52
