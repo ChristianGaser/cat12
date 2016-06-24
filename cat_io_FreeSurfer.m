@@ -302,11 +302,11 @@ function [vertex_coords, faces] = read_surf(fname)
   QUAD_FILE_MAGIC_NUMBER =  16777215 ;
 
   if ~exist(fname,'file')
-    error('MATLAB:cat_io_FreeSurfer:read_surf','curvature file %s does not exist.', fname) ;
+    error('MATLAB:cat_io_FreeSurfer:read_surf','mesh file %s does not exist.', fname) ;
   end
   fid = fopen(fname, 'rb', 'b') ;
   if (fid < 0)
-    error('MATLAB:cat_io_FreeSurfer:read_surf','could not open curvature file %s.', fname) ;
+    error('MATLAB:cat_io_FreeSurfer:read_surf','could not open mesh file %s.', fname) ;
   end
   magic = fread3(fid) ;
 

@@ -75,7 +75,7 @@ function varargout = cat_surf_display(varargin)
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;
   def.verb      = 1;
-  def.readsurf  = 1;  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
+  def.readsurf  = 0;  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
   
   job = cat_io_checkinopt(job,def);
   
@@ -94,6 +94,8 @@ function varargout = cat_surf_display(varargin)
       if strcmp(sinfo(i).side,'rh'), oside = 'lh'; else oside = 'rh'; end
       if ~job.usefsaverage, 
         Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
+      else
+        Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
       end
       Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       for im=numel(Pmesh):-1:1
@@ -107,7 +109,7 @@ function varargout = cat_surf_display(varargin)
       Pdata = sinfo(i).Pdata; 
     end
     
-    try
+    %try
       if job.verb
         fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
       end
@@ -128,7 +130,7 @@ function varargout = cat_surf_display(varargin)
         end
       end
       if sinfo(i).label, continue; end
-      
+   try   
       %% textur handling
       set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
       cat_surf_render('ColourBar',h.axis,'on');
@@ -231,7 +233,7 @@ function varargout = cat_surf_display(varargin)
     catch %#ok<CTCH>
       if ~exist('h','var')
         try
-          cat_io_cprintf('err',sprintf('Texture error. Display surface only.'));
+          cat_io_cprintf('err',sprintf('Texture error. Display surface only.\n'));
           h = cat_surf_render(job.data{i});
         catch %#ok<CTCH>
           cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 

@@ -11179,6 +11179,7 @@ Fixed: Error in cat_check_system_output.m due to special characters
        under windows.
 
 ------------------------------------------------------------------------
+r959 | gaser | 2016-06-23 11:23:32 +0200 (Do, 23 Jun 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11195,5 +11196,20 @@ M       tbx_cfg_cat.m
 (3) Changed: Added underlay function and some more functionality to
     cat_surf_render.m
 (4) Fixed: Missing filed in cat_run.m if other DARTEl template was chosen.
+
 ------------------------------------------------------------------------
-r959 | gaser | 2016-06-23 11:23:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_FreeSurfer.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_render.m
+
+(1) Fixed*:   Updated SPM segmentation handling in cat_main. 
+(2) Fixed:    Updated cat_surf_render function.
+
+------------------------------------------------------------------------
+r960 | dahnke | 2016-06-24 09:50:47

@@ -203,11 +203,11 @@ function cat_io_report(job,qa)
     % colorscale and small adaption for the values. 
     switch lower(cm)
       case {'bcgwhw','bcgwhn'} % cat colormaps with larger range
-         cmap = [cat_io_colormaps([cm 'ov'],60);flip(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)];  mlt = 2; 
+         cmap = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)];  mlt = 2; 
       case {'jet','hsv','hot','cool','spring','summer','autumn','winter','gray','bone','copper','pink'}
-        cmap = [eval(sprintf('%s(60)',cm));flip(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; mlt = 1; 
+        cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; mlt = 1; 
       otherwise
-        cmap = [eval(sprintf('%s(60)',cm));flip(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; mlt = 1; 
+        cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; mlt = 1; 
     end
     colormap(cmap); 
     spm_orthviews('Redraw');
@@ -283,7 +283,7 @@ function cat_io_report(job,qa)
           bar(y(i),x(i),1/30,'FaceColor',cmap(max(1,round(i/2)),:),'EdgeColor',cmap(max(1,round(i/2)),:));
         end
         ylim([0,max(x(round(numel(x)*0.05):end))*1.5]); xlim([0 2]);
-        set(gca,'XTick',[0:1/3:2],'XTickLabel',{'BG','CSF','GM','WM','','','BV/HD'},'YTickLabel','','YTick',[],'TickLength',[0 0]);
+        set(gca,'XTick',[0:1/3:2],'XTickLabel',fliplr({'BG','CSF','GM','WM','','','BV/HD'}),'YTickLabel','','YTick',[],'TickLength',[0 0]);
         box on; 
       end
     end
@@ -304,7 +304,7 @@ function cat_io_report(job,qa)
         for i=1:numel(y)
           bar(y(i),x(i),1/30,'FaceColor',cmap(max(1,round(i/1.5/2)),:),'EdgeColor',cmap(max(1,round(i/1.5/2)),:));
         end
-        set(gca,'XTick',[0:1:4],'XTickLabel',{'BG','CSF','GM','WM','BV/HD'},'YTickLabel','','YTick',[],'TickLength',[0 0]);
+        set(gca,'XTick',[0:1:4],'XTickLabel',fliplr({'BG','CSF','GM','WM','BV/HD'}),'YTickLabel','','YTick',[],'TickLength',[0 0]);
         ylim([0,max(x(round(numel(x)*0.05):end))*1.5]); xlim([0 4.5]);
         box on; 
       end
@@ -361,21 +361,23 @@ function cat_io_report(job,qa)
     
     
     %% reset colormap to the simple SPM like gray60 colormap
-    WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
-
+    if exist('hSD','var')
+      % if there is a surface than we have to use the gray colormap also here
+      % because the colorbar change!
+      try %#ok<TRYNC>
+        cat_surf_render('ColourMap',hSD{1}.axis,cmap); 
+      end
+    end
+    
+    WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]);
+    
     % new colorscale
     if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
     if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
     if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
 
     warning on;  %#ok<WNON>
-    if exist('hSD','var')
-      % if there is a surface than we have to use the gray colormap also here
-      % because the colorbar change!
-      try %#ok<TRYNC>
-        cat_surf_render('ColourMap',hSD{1}.axis,gray(128));
-      end
-    end
+    
 
     
   catch
