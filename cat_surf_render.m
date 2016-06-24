@@ -372,12 +372,7 @@ switch lower(action)
           set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:max(1,round(diff(labelmapclim)/30)):end));
           set(H.colourbar,'Position',[.85 0.05 0.02 0.9]);
         end
-       
-        if ~H.issubfigure
-          [pp,ff,ee] = fileparts(H.filename{1}); 
-          H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
-        end
-        
+               
         %-Add context menu
         %------------------------------------------------------------------
         cat_surf_render('ContextMenu',H);
@@ -1434,8 +1429,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             set(get(h,'children'),'visible','off');
             colorbar('Position',[.93 0.2 0.02 0.6]); 
             colormap(getappdata(H.patch,'colourmap'));
-            [pp,ff,ee] = fileparts(H.filename{1}); 
-            H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
+
             %a = get(h,'children');
             %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
             if isdeployed
