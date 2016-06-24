@@ -55,6 +55,11 @@ function varargout = cat_surf_render(action,varargin)
 % based on spm_mesh_render.m
 % $Id$
 
+%#ok<*ASGLU>
+%#ok<*INUSL>
+%#ok<*INUSD>
+%#ok<*TRYNC>
+ 
 %-Input parameters
 %--------------------------------------------------------------------------
 if ~nargin, action = 'Disp'; end
@@ -79,8 +84,12 @@ switch lower(action)
         else
             M = varargin{1};
         end
+        
+        
+        %-load mesh data
         if ischar(M) || isstruct(M) % default - one surface
-            [pp,ff,ee] = spm_fileparts(M); 
+            [pp,ff,ee] = spm_fileparts(M);  
+            H.filename{1} = M; 
             switch ee
                 case '.gii'
                     M  = gifti(M); 
@@ -92,6 +101,7 @@ switch lower(action)
         elseif iscellstr(M) % multiple surfaces
           %%
             MS = M; % save filelist 
+            H.filename = MS; 
             [pp,ff,ee] = spm_fileparts(MS{1}); 
             switch ee
                 case '.gii'
@@ -112,14 +122,16 @@ switch lower(action)
                     error('cat_surf_render:multisurf','Error adding surface %d: ''%s''.\n',mi,MS{mi});
                 end
             end
+        else
+          H.filename = {''}; 
         end
+        
+        
         if ~isfield(M,'vertices')
             try
                 MM = M;
                 M  = gifti(MM.private.metadata(1).value);
-                try %#ok<TRYNC>
-                    M.cdata = MM.cdata();
-                end
+                try, M.cdata = MM.cdata(); end
             catch
                 error('Cannot find a surface mesh to be displayed.');
             end
@@ -131,6 +143,7 @@ switch lower(action)
         elseif isfield(O,'pcdata') % single file input 
             if ischar(O.pcdata)
                 [pp,ff,ee] = fileparts(O.pcdata);
+                H.filename{1} = O.pcdata; 
                 if strcmp(ee,'.gii')
                     Mt = gifti(O.pcdata);
                     M.cdata = Mt.cdata;
@@ -165,10 +178,19 @@ switch lower(action)
                     error('cat_surf_render:multisurfcdata',...
                       'Number of meshes and texture files must be equal.\n');
                 end
-                [pp,ff,ee] = fileparts(O.pcdata{mi});
+                for mi=1:numel(O.pcdata)
+                  [pp,ff,ee] = fileparts(O.pcdata{mi});
+                  if strcmp(ee,'.gii')
+                    H.filename{mi} = fullfile(pp,ff); 
+                  else
+                    H.filename{mi} = O.pcdata{mi}; 
+                  end
+                end
+                [pp,ff,ee] = fileparts(O.pcdata{1});
                 if strcmp(ee,'.gii')
-                    M = gifti(O.pcdata{1});
-                 elseif strcmp(ee,'.annot')
+                    MC = gifti(O.pcdata{1});
+                    M.cdata = MC.cdata;
+                elseif strcmp(ee,'.annot')
                   %%
                     [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata{1}); %clear fsv;
                     [sentry,id] = sort(colortable.table(:,5));
@@ -178,10 +200,10 @@ switch lower(action)
                       if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
                         (sentryi==1 || sentry(sentryi)~=sentry(sentryi+1))), 
                         M.cdata(round(cdata)==sentry(sentryi)) = nid;  
-                        labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255;
-                        labelnam(nid)   = colortable.struct_names(id(sentryi));
+                        labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255; %#ok<AGROW>
+                        labelnam(nid)   = colortable.struct_names(id(sentryi)); %#ok<AGROW>
                         nid=nid+1;
-                        ROIv(nid) = sum(ROI); 
+                        ROIv(nid) = sum(ROI); %#ok<AGROW> 
                       end
                     end
                     %labelmap = colortable.table(id,1:3)/255;
@@ -206,7 +228,7 @@ switch lower(action)
                           if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
                             (sentryi==1 || sentry(sentryi)~=sentry(sentryi+1))), 
                             Mt.cdata(round(cdata)==sentry(sentryi)) = nid;  
-                            labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255;
+                            labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255; 
                             labelnam(nid)   = colortable.struct_names(id(sentryi));
                             nid=nid+1;
                             ROIv(nid) = sum(ROI); 
@@ -228,6 +250,10 @@ switch lower(action)
                   M = rmfield(M,'cdata');
                 end
             end 
+        else
+          % with values you can colorize the surface and have not the
+          % standard lighting ... 20160623
+          % M.cdata = 0.5*ones(size(M.vertices,1),1);
         end
         if ~isfield(M,'vertices') || ~isfield(M,'faces')
             error('cat_surf_render:nomesh','ERROR:cat_surf_render: No input mesh in ''%s''', varargin{1});
@@ -238,10 +264,12 @@ switch lower(action)
         %-Figure & Axis
         %------------------------------------------------------------------
         if isfield(O,'parent')
+            H.issubfigure = 1; 
             H.axis   = O.parent;
             H.figure = ancestor(H.axis,'figure');
             figure(H.figure); axes(H.axis);
         else
+            H.issubfigure = 0;
             H.figure = figure('Color',[1 1 1]);
             H.axis   = axes('Parent',H.figure,'Visible','off');
         end
@@ -341,9 +369,14 @@ switch lower(action)
           H = cat_surf_render('ColorBar',H.axis,'on'); 
           labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
           ytick = labelmapclim(1):max(1,round(diff(labelmapclim)/80)):labelmapclim(2);
-          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:max(1,round(diff(labelmapclim)/30)):end)); 
+          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:max(1,round(diff(labelmapclim)/30)):end));
+          set(H.colourbar,'Position',[.85 0.05 0.02 0.9]);
         end
        
+        if ~H.issubfigure
+          [pp,ff,ee] = fileparts(H.filename{1}); 
+          H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
+        end
         
         %-Add context menu
         %------------------------------------------------------------------
@@ -401,13 +434,30 @@ switch lower(action)
             'flag' 'lines' 'colorcube' 'prism' 'cool' 'autumn' ...
              'spring' 'winter' 'summer'};
         for i=1:numel(clrmp)
-            uimenu(c, 'Label', clrmp{i}, 'Callback', {@myColourmap, H});
+          if i==2
+            uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H});
+          else
+            uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H});
+          end
         end
+        clrmp = {'CAThot','CAThotinv','CATcold','CATcoldinv','CATtissues','CATcold&hot'};
+        for i=1:numel(clrmp)
+          if i==1
+            uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H}, 'Separator', 'on');
+          else
+            uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H});
+          end
+        end
+        % custom does not work, as far as I can not update from the
+        % colormapeditor yet 
+        %uimenu(c, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myColourmap, H, 'custom'}, 'Separator', 'on');
         
         c = uimenu(cmenu, 'Label','Colorrange');
-        uimenu(c, 'Label','min-max',  'Callback', {@myCaxis, H, 'auto'});
-%        uimenu(c, 'Label','5-95 %%',  'Callback', {@myCaxis, H, '5p'});
-        uimenu(c, 'Label','Custom...','Callback', {@myCaxis, H, 'custom'});
+        uimenu(c, 'Label','min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'});
+        uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
+        uimenu(c, 'Label','5-95 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '5p'});
+        uimenu(c, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myCaxis, H, 'custom'});
+        uimenu(c, 'Label','Custom %...', 'Checked','off', 'Callback', {@myCaxis, H, 'customp'});
         uimenu(c, 'Label','Synchronise Colorranges', 'Visible','off', ...
             'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
         
@@ -420,13 +470,13 @@ switch lower(action)
         uimenu(c, 'Label','set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'});
         uimenu(c, 'Label','set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
         uimenu(c, 'Label','set3',   'Checked','off', 'Callback', {@myLighting, H,'set3'});
-        uimenu(c, 'Label','top',    'Checked','off', 'Callback', {@myLighting, H,'top'});
+        uimenu(c, 'Label','top',    'Checked','off', 'Callback', {@myLighting, H,'top'}, 'Separator', 'on');
         uimenu(c, 'Label','bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
         uimenu(c, 'Label','left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
         uimenu(c, 'Label','right',  'Checked','off', 'Callback', {@myLighting, H,'right'});
         uimenu(c, 'Label','front',  'Checked','off', 'Callback', {@myLighting, H,'front'});
         uimenu(c, 'Label','back',   'Checked','off', 'Callback', {@myLighting, H,'back'});
-        uimenu(c, 'Label','grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'});
+        uimenu(c, 'Label','grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'}, 'Separator', 'on');
         uimenu(c, 'Label','none',   'Checked','off', 'Callback', {@myLighting, H,'none'});
         
         c = uimenu(cmenu, 'Label','Material');
@@ -445,17 +495,17 @@ switch lower(action)
         uimenu(c, 'Label','60%', 'Checked','off', 'Callback', {@myTransparency, H});
         uimenu(c, 'Label','80%', 'Checked','off', 'Callback', {@myTransparency, H});
         
-        uimenu(cmenu, 'Label','Data Cursor', 'Callback', {@myDataCursor, H});
-        
         c = uimenu(cmenu, 'Label','Background Color');
-        uimenu(c, 'Label','White',     'Callback', {@myBackgroundColor, H, [1 1 1]});
-        uimenu(c, 'Label','Black',     'Callback', {@myBackgroundColor, H, [0 0 0]});
-        uimenu(c, 'Label','Custom...', 'Callback', {@myBackgroundColor, H, []});
+        uimenu(c, 'Label','White',     'Checked','on', 'Callback', {@myBackgroundColor, H, [1 1 1]});
+        uimenu(c, 'Label','Black',     'Checked','off', 'Callback', {@myBackgroundColor, H, [0 0 0]});
+        uimenu(c, 'Label','Custom...', 'Checked','off', 'Callback', {@myBackgroundColor, H, []});
+        
+        uimenu(cmenu, 'Label','Data Cursor', 'Callback', {@myDataCursor, H});
         
         uimenu(cmenu, 'Label','Slider', 'Callback', {@myAddslider, H});
 
         uimenu(cmenu, 'Label','Save As...', 'Separator', 'on', ...
-            'Callback', {@mySave, H});
+            'Callback', {@mySave, H,H.filename{1}});
         
         set(H.rotate3d,'enable','off');
         try set(H.rotate3d,'uicontextmenu',cmenu); end
@@ -490,7 +540,7 @@ switch lower(action)
         v = varargin{2};
         if ischar(v)
           [p,n,e] = fileparts(v);
-          if ~strcmp(e,'.mat') & ~strcmp(e,'.nii') & ~strcmp(e,'.gii') & ~strcmp(e,'.img') % freesurfer format
+          if ~strcmp(e,'.mat') && ~strcmp(e,'.nii') && ~strcmp(e,'.gii') && ~strcmp(e,'.img') % freesurfer format
             v = cat_io_FreeSurfer('read_surf_data',v);
           else
             try spm_vol(v); catch, v = gifti(v); end;
@@ -526,16 +576,13 @@ switch lower(action)
     case 'material'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        if nargin < 3, varargin{2} = []; end
        
     %-Lighting
     %======================================================================
     case 'lighting'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        if nargin < 3, varargin{2} = []; end
- 
-    
+       
     %-ColourBar
     %======================================================================
     case {'colourbar', 'colorbar'}
@@ -555,8 +602,8 @@ switch lower(action)
         if isempty(d) || ~any(d(:)), varargout = {H}; return; end
         if isempty(col), col = hot(256); end
         if ~isfield(H,'colourbar') || ~ishandle(H.colourbar)
-            H.colourbar = colorbar('peer',H.axis);
-            set(H.colourbar,'Tag','');
+            H.colourbar = colorbar('peer',H.axis); %'EastOutside');
+            set(H.colourbar,'Tag','','Position',[.93 0.2 0.02 0.6]);
             set(get(H.colourbar,'Children'),'Tag','');
         end
         c(1:size(col,1),1,1:size(col,2)) = col;
@@ -608,7 +655,37 @@ switch lower(action)
         if nargin>1
             H.colormap = colormap(varargin{2});
         end
-%         
+        set(H.colourbar,'YLim',get(H.axis,'clim')); 
+ 
+        %{
+  switch varargin{1}
+    case 'onecolor'
+      dx= spm_input('Color','1','r',[0.7 0.7 0.7],[3,1]);
+      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),1));
+      
+      if isempty(varargin{1})
+          c = uisetcolor(H.figure, ...
+              'Pick a background color...');
+          if numel(c) == 1, return; end
+      else
+          c = varargin{1};
+      end
+      h = findobj(H.figure,'Tag','SPMMeshRenderBackground');
+      if isempty(h)
+          set(H.figure,'Color',c);
+          whitebg(H.figure,c);
+          set(H.figure,'Color',c);
+      else
+          set(h,'Color',c);
+          whitebg(h,c);
+          set(h,'Color',c);
+      end
+    case 'colormapeditor'
+      colormapeditor
+      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+  end  
+       %} 
+        
 %     %-ColourMap
 %     %======================================================================
 %     case {'labelmap'}
@@ -649,7 +726,27 @@ switch lower(action)
             caxis(H.axis,varargin{2});
         else
             caxis(H.axis,[min(d),max(d)])
+            %varargin{2} = [min(d),max(d)];
         end
+        
+        %{
+        if isfield(H,'colourbar')
+          set(H.colourbar','ticksmode','auto','LimitsMode','auto')
+          tick      = get(H.colourbar,'ticks');
+          ticklabel = get(H.colourbar,'ticklabels');
+          if ~isnan(str2double(ticklabel{1}))
+            tickdiff = mean(diff(tick));
+            if tick(1)~=varargin{2}(1)   && diff([min(d),varargin{2}(1)])>tickdiff*0.05
+              tick = [varargin{2}(1),tick]; ticklabel = [sprintf('%0.3f',varargin{2}(1)); ticklabel]; 
+            end
+            if tick(end)~=varargin{2}(2) && diff([tick(1),varargin{2}(2)])>tickdiff*0.05, 
+              tick = [tick,varargin{2}(2)]; ticklabel = [ticklabel; sprintf('%0.3f',varargin{2}(2))];
+            end
+            set(H.colourbar,'ticks',tick); %,'ticklabels',ticklabel);
+          end
+          set(H.colourbar','ticksmode','manual','LimitsMode','manual')
+        end
+        %}
         
     %-CLip
     %======================================================================
@@ -981,6 +1078,7 @@ caml = findall(gcf,'Type','light','Style','local');     % switch off local light
 lighting gouraud
 set(caml,'visible','off');
 set(H.patch,'BackFaceLighting','reverselit');
+set(H.patch,'LineStyle','-','EdgeColor','none');
 switch H.catLighting
   case 'none'
   case 'inner'
@@ -1072,21 +1170,34 @@ set(obj,'Checked','on');
 %==========================================================================
 function myCaxis(obj,evt,H,rangetype)
 d = getappdata(H.patch,'data');
-switch rangetype
-    case 'min-max', 
-        range = [min(d) max(d)]; 
-    case '5-95'
-        range = [min(d) max(d)]; 
-    case 'custom'
-        fc = gcf;
-        spm_figure('getwin','Interactive'); 
-        d = spm_input('intensity range','1','r',[min(d) max(d)],[2,1]);
-        figure(fc); 
-        range = [min(d) max(d)];
-  	otherwise
-        range = [min(d) max(d)]; 
+if mean(d(:))>0 && std(d(:),1)>0
+  switch rangetype
+      case 'min-max', 
+          range = [min(d) max(d)]; 
+      case '2p'
+          range = iscaling(d,[0.02 0.98]);
+      case '5p'
+          range = iscaling(d,[0.05 0.95]);
+      case 'custom'
+          fc = gcf;
+          spm_figure('getwin','Interactive'); 
+          range = iscaling(d,[0.02 0.98]);
+          d = spm_input('intensity range','1','r',range,[2,1]);
+          figure(fc); 
+          range = [min(d) max(d)];
+      case 'customp'
+          fc = gcf;
+          spm_figure('getwin','Interactive'); 
+          dx= spm_input('percentual intensity range','1','r',[2 98],[2,1]);
+          range = iscaling(d,dx/100);
+          figure(fc); 
+      otherwise
+          range = [min(d) max(d)]; 
+  end
+  if range(1)==range(2), range = range + [-eps eps]; end
+  if range(1)>range(2), range = fliplr(range); end
+  cat_surf_render('Clim',H,range);
 end
-cat_surf_render('Clim',H,range);
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
 
@@ -1102,8 +1213,38 @@ for i=1:numel(P)
 end
 
 %==========================================================================
-function myColourmap(obj,evt,H)
-cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+function myColourmap(obj,evt,H,varargin)
+if ~isempty(varargin)
+  switch varargin{1}
+    case 'color'
+      c = uisetcolor(H.figure,'Pick a surface color...');
+      H = cat_surf_render('Colourmap',H,c);
+    case 'custom'
+      c = colormap; clow = c(1:4:256,:);
+      H = cat_surf_render('Colourmap',H,clow,16); colormap(clow);
+      colormapeditor;
+      %cn = colormap; [GX,GY] = meshgrid(0.5+eps:size(cn,1)/256:size(cn,1)+.5-eps,1:3); 
+      %cnhigh = interp2(cn,GY,GX); 
+      %H = cat_surf_render('Colourmap',H,cnhigh); colormap(cnhigh);
+    otherwise
+      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+  end
+else
+  switch get(obj,'Label')
+    case {'CAThot','CAThotinv','CATcold','CATcoldinv'}
+      catcm = get(obj,'Label'); catcm(1:3) = []; 
+      H=cat_surf_render('Colourmap',H,cat_io_colormaps(catcm,256));
+    case 'CATtissues'
+      H=cat_surf_render('Colourmap',H,cat_io_colormaps('BCGWHw',256));
+    case 'CATcold&hot'
+      H=cat_surf_render('Colourmap',H,cat_io_colormaps('BWR',256));
+    otherwise 
+      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+  end
+end
+set(get(get(obj,'parent'),'children'),'Checked','off');
+if isfield(H,'colourbar'),H=cat_surf_render('Clim',H,H.colourbar.Limits); end
+set(obj,'Checked','on');
 
 %==========================================================================
 function myAddslider(obj,evt,H)
@@ -1169,42 +1310,72 @@ end
 
 %==========================================================================
 function mySavePNG(obj,evt,H,filename)
-[pth,nam,ext] = fileparts(filename);
-filename = fullfile(pth,[filename '.png']);
-u  = get(H.axis,'units');
-set(H.axis,'units','pixels');
-p  = get(H.axis,'Position');
-r  = get(H.figure,'Renderer');
-hc = findobj(H.figure,'Tag','SPMMeshRenderBackground');
-if isempty(hc)
-    c = get(H.figure,'Color');
-else
-    c = get(hc,'Color');
-end
-h = figure('Position',p+[0 0 10 10], ...
-                'InvertHardcopy','off', ...
-                'Color',c, ...
-                'Renderer',r);
-copyobj(H.axis,h);
-set(H.axis,'units',u);
-set(get(h,'children'),'visible','off');
-%a = get(h,'children');
-%set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
-if isdeployed
-    deployprint(h, '-dpng', '-opengl', fullfile(pth, filename));
-else
-    print(h, '-dpng', '-opengl', fullfile(pth, filename));
-end
-close(h);
-set(getappdata(obj,'fig'),'renderer',r);
+  %%
+  if ~exist('filename','var')
+    filename = uiputfile({...
+      '*.png' 'PNG files (*.png)'}, 'Save as');
+  else
+    [pth,nam,ext] = fileparts(filename);
+    if isempty(pth), pth = cd; end
+    if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
+    if isempty(nam)
+      filename = uiputfile({...
+        '*.png' 'PNG files (*.png)'}, 'Save as',nam);
+    else
+      filename = fullfile(pth,[nam '.png']);
+    end
+  end
+  
+  u  = get(H.axis,'units');
+  set(H.axis,'units','pixels');
+  p  = get(H.figure,'Position');
+  r  = get(H.figure,'Renderer');
+  hc = findobj(H.figure,'Tag','SPMMeshRenderBackground');
+  if isempty(hc)
+      c = get(H.figure,'Color');
+  else
+      c = get(hc,'Color');
+  end
+  h = figure('Position',p+[0 0 0 0], ...
+                  'InvertHardcopy','off', ...
+                  'Color',c, ...
+                  'Renderer',r);
+  copyobj(H.axis,h);
+  copyobj(H.axis,h);
+  set(H.axis,'units',u);
+  set(get(h,'children'),'visible','off');
+  colorbar('Position',[.93 0.2 0.02 0.6]); 
+  colormap(getappdata(H.patch,'colourmap'));
+  [pp,ff,ee] = fileparts(H.filename{1}); 
+  H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');    
+  %a = get(h,'children');
+  %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
+  if isdeployed
+      deployprint(h, '-dpng', '-opengl', fullfile(pth, filename));
+  else
+      print(h, '-dpng', '-opengl', fullfile(pth, filename));
+  end
+  close(h);
+  set(getappdata(obj,'fig'),'renderer',r);
 
 %==========================================================================
-function mySave(obj,evt,H)
-[filename, pathname, filterindex] = uiputfile({...
-    '*.png' 'PNG files (*.png)';...
-    '*.gii' 'GIfTI files (*.gii)'; ...
-    '*.dae' 'Collada files (*.dae)';...
-    '*.idtf' 'IDTF files (*.idtf)'}, 'Save as');
+function mySave(obj,evt,H,filename)
+  if ~exist('filename','var')
+    [filename, pathname, filterindex] = uiputfile({...
+      '*.png' 'PNG files (*.png)';...
+      '*.gii' 'GIfTI files (*.gii)'; ...
+      '*.dae' 'Collada files (*.dae)';...
+      '*.idtf' 'IDTF files (*.idtf)'}, 'Save as');
+  else
+    [pth,nam,ext] = fileparts(filename);
+    if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
+    [filename, pathname, filterindex] = uiputfile({...
+      '*.png' 'PNG files (*.png)';...
+      '*.gii' 'GIfTI files (*.gii)'; ...
+      '*.dae' 'Collada files (*.dae)';...
+      '*.idtf' 'IDTF files (*.idtf)'}, 'Save as',nam);
+  end
+
 if ~isequal(filename,0) && ~isequal(pathname,0)
     [pth,nam,ext] = fileparts(filename);
     switch ext
@@ -1246,7 +1417,7 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
         case 2
             u  = get(H.axis,'units');
             set(H.axis,'units','pixels');
-            p  = get(H.axis,'Position');
+            p  = get(H.figure,'Position'); % axis
             r  = get(H.figure,'Renderer');
             hc = findobj(H.figure,'Tag','SPMMeshRenderBackground');
             if isempty(hc)
@@ -1254,13 +1425,17 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             else
                 c = get(hc,'Color');
             end
-            h = figure('Position',p+[0 0 10 10], ...
+            h = figure('Position',p+[0 0 0 0], ... [0 0 10 10]
                 'InvertHardcopy','off', ...
                 'Color',c, ...
                 'Renderer',r);
             copyobj(H.axis,h);
             set(H.axis,'units',u);
             set(get(h,'children'),'visible','off');
+            colorbar('Position',[.93 0.2 0.02 0.6]); 
+            colormap(getappdata(H.patch,'colourmap'));
+            [pp,ff,ee] = fileparts(H.filename{1}); 
+            H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
             %a = get(h,'children');
             %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
             if isdeployed
@@ -1279,7 +1454,7 @@ end
 
 %==========================================================================
 function myDeleteFcn(obj,evt,renderer)
-try rotate3d(get(obj,'parent'),'off'); end
+try rotate3d(get(obj,'parent'),'off'); end 
 set(ancestor(obj,'figure'),'Renderer',renderer);
 
 %==========================================================================
@@ -1341,7 +1516,7 @@ function C = updateTexture(H,v,col)%$,FaceColor)
 %--------------------------------------------------------------------------
 if ~exist('col','var'), col = getappdata(H.patch,'colourmap'); end
 if isempty(col), col = hot(256); end
-if ~exist('FaceColor','var') || isempty(FaceColor), FaceColor = 'interp'; end
+if ~exist('FaceColor','var'), FaceColor = 'interp'; end
 setappdata(H.patch,'colourmap',col);
 
 %-Get curvature
@@ -1361,7 +1536,7 @@ end
 if nargin < 2, v = []; end
 if ischar(v)
     [p,n,e] = fileparts(v);
-    if ~strcmp(e,'.mat') & ~strcmp(e,'.nii') & ~strcmp(e,'.gii') & ~strcmp(e,'.img') % freesurfer format
+    if ~strcmp(e,'.mat') && ~strcmp(e,'.nii') && ~strcmp(e,'.gii') && ~strcmp(e,'.img') % freesurfer format
       v = cat_io_FreeSurfer('read_surf_data',v);
     else
       if strcmp([n e],'SPM.mat')
@@ -1492,8 +1667,7 @@ end
 
 
 %==========================================================================
-function slider_clip_max(hObject, evt)
-
+function slider_clip_max(hObject, evt) 
 val = get(hObject, 'Value');
 H = getHandles(gcf);
 c = getappdata(H.patch,'clip');
@@ -1505,4 +1679,18 @@ updateTexture(H,d);
 H2 = getHandles(gca);
 if isfield(H2,'colourbar') && ishandle(H2.colourbar)
   cat_surf_render('ColourBar',gca, 'on');
+end
+function clim = iscaling(cdata,plim)
+%%
+ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
+if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
+
+bcdata  = [min(cdata) max(cdata)]; 
+if bcdata(1) == bcdata(2)
+  clim = bcdata + [-eps eps];
+else
+  range   = bcdata(1):diff(bcdata)/1000:bcdata(2);
+  hst     = hist(cdata,range);
+  clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
+  clim(2) = range(min([numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')]));
 end

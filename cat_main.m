@@ -288,6 +288,9 @@ for k1=1:size(Q,4)
 end
 clear sQ Qspm_progress_bar('clear');
 
+% cleanup
+P = clean_gwc(P,1);
+
 
 % load bias corrected image
 % restrict bias field to maximum of 3 and a minimum of 0.1
@@ -410,8 +413,8 @@ if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))==-1))
   clear Ybo;
 else
   % old skull-stripping
-  brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
-
+  brad = voli(sum(Yp0(:)>0.5).*prod(vx_vol)/1000); 
+  Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
   [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
   Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
   Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
@@ -452,7 +455,7 @@ if job.extopts.gcutstr==0
 end
 
 
-if ~(job.extopts.INV && any(sign(diff(T3th))))
+if ~(job.extopts.INV && any(sign(diff(T3th))==-1))
   %% Update probability maps
   % background vs. head - important for noisy backgrounds such as in MT weighting
   if job.extopts.gcutstr==0
@@ -547,7 +550,7 @@ for iter=1:nmrf_its,
     spm_progress_bar('set',iter);
 end
 % cleanup
-P = clean_gwc(P,1);
+%P = clean_gwc(P,1);
 spm_progress_bar('clear');
 for k1=1:size(P,4)
     Ycls{k1} = P(:,:,:,k1);
@@ -2164,23 +2167,27 @@ fprintf('%4.0fs\n',etime(clock,stime));
   
   
   %% reset colormap to the simple SPM like gray60 colormap
-  WMfactor = 4/3;
-  cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
-  
-  % new colorscale
-  if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
-  if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
-  if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
-  
-  warning on;  %#ok<WNON>
   if exist('hSD','var')
     % if there is a surface than we have to use the gray colormap also here
     % because the colorbar change!
     try %#ok<TRYNC>
       cat_surf_render('ColourMap',hSD{1}.axis,gray(128));
+      cat_surf_render('Clim',hSD{1}.axis,[0 6]);
+      axes(cc{3}); image(0:60);
+      set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+        'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
     end
   end
+  
+  WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
+  
+  % new colorscale
+  if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
+  if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
+  if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
 
+  warning on;  %#ok<WNON>
+  
   
   %% command window output
   fprintf('\n%s',repmat('-',1,72));

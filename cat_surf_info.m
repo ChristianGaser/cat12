@@ -165,7 +165,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     sinfo(i).dataname  = strrep(sinfo(i).posside,'.resampled','');
     
     % special datatypes
-    FN = {'thickness','central','sphere','defects','gyrification','sqrtsulc','frac',...
+    FN = {'thickness','central','inner','outer','sphere','defects','gyrification','sqrtsulc','frac',...
           'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
           'depthWM','depthGWM','depthCSF','depthWMg','ROI','hull',...
           'hulldist'};
@@ -203,12 +203,12 @@ function [varargout] = cat_surf_info(P,read,gui)
       sinfo(i).Pdata = sinfo(i).fname;
     end
     % if the dataname is central we got a mesh or surf datafile
-    if isempty(sinfo(i).Pdata) 
+    if isempty(sinfo(i).Pdata) || isempty(sinfo(i).Pmesh) 
       switch sinfo(i).texture
         case {'defects'} % surf
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = sinfo(i).fname;
-        case {'central','sphere','hull'} % only mesh
+        case {'central','inner','outer','sphere','hull'} % only mesh
           sinfo(i).Pmesh = sinfo(i).fname;
           sinfo(i).Pdata = '';
         case {'thickness','gyrification','frac','logsulc','GWMdepth','WMdepth','CSFdepth',...
