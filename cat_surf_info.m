@@ -42,7 +42,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     'fdata','',...      % datainfo (filesize)
     'ftype','',...      % filetype [0=no surface,1=gifti,2=freesurfer]
     ...
-    'statready',0,...   % ready for statistik (^s#mm.*.gii)
+    'statready',0,...   % ready for statistic (^s#mm.*.gii)
     'side','',...       % hemishphere
     'name','',...       % subject/template name
     'datatype','',...   % datatype [0=nosurf/file|1=mesh|2=data|3=surf] with surf=mesh+data
@@ -133,14 +133,27 @@ function [varargout] = cat_surf_info(P,read,gui)
     if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
     elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
     else
-      if gui
-        sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+      % if SPM.mat exist use that for side information
+      if exist(fullfile(pp,'SPM.mat'),'file')
+        load(fullfile(pp,'SPM.mat'));
+        [pp2,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);
+      
+        % find lh|rh string
+        hemi_ind = [];
+        hemi_ind = [hemi_ind strfind(ff2,'lh')];
+        hemi_ind = [hemi_ind strfind(ff2,'rh')];
+        sinfo(i).side = ff2(hemi_ind:hemi_ind+1);
+        sidei=[];
       else
-        sinfo(i).side = ''; 
+        if gui
+          sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+        else
+          sinfo(i).side = ''; 
+        end
+        sidei = strfind(noname,[sinfo(i).side '.']);
       end
-      sidei = strfind(noname,[sinfo(i).side '.']);
     end
-      if isempty(sidei), sidei = strfind(noname,sinfo(i).side); end
+    if isempty(sidei), sidei = strfind(noname,sinfo(i).side); end
     if sidei>0
       sinfo(i).preside = noname(1:sidei-1);
       sinfo(i).posside = noname(sidei+numel(sinfo(i).side)+1:end);
