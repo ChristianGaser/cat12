@@ -11245,6 +11245,7 @@ M       html/cat.txt
 Fixed: Wrong (old) release number was shwon in html pages. 
 
 ------------------------------------------------------------------------
+r964 | dahnke | 2016-07-20 15:42:29 +0200 (Mi, 20 Jul 2016) | 47 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11292,5 +11293,20 @@ M       tbx_cfg_cat.m
                and vol2surf.
 (8) Add:       In preparation: ROI output for surface measures.
 
+
 ------------------------------------------------------------------------
-r964 | dahnke | 2016-07-20 15:42:14
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_spmF2x.m
+M       cat_stat_spmT2x.m
+M       cat_surf_info.m
+M       html/cat.html
+
+(1) Fixed: cat_stat_spmT2x.m did not worked for surfaces.
+(2) Changed: Added check for existing SPM.mat to cat_surf_info.m to get
+    side info.
+(3) Fixed: H.colourbar.Limits did not exist in cat_surf_render.m
+------------------------------------------------------------------------
+r965 | gaser | 2016-07-20 15:44:04

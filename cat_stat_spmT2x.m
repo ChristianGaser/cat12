@@ -122,7 +122,7 @@ if nargin == 1
 end
 
 if nargin < 1
-    P = spm_select(Inf,'^spmT.*\.img$','Select T-images');
+    P = spm_select(Inf,'^spmT.*(img|nii|gii)','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
     '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
 
@@ -178,9 +178,7 @@ otherwise  %-NB: no threshold
 end
 
 for i=1:size(P,1)
-    spmT = deblank(P(i,:));
-    Vspm = spm_vol(spmT);   
-    [pth,nm] = spm_fileparts(spmT);
+    [pth,nm] = spm_fileparts(deblank(P(i,:)));
 
     SPM_name = fullfile(pth, 'SPM.mat');
     
@@ -190,7 +188,7 @@ for i=1:size(P,1)
     end
 
     if strcmp(nm(1:6),'spmT_0') 
-        Ic = str2num(nm(length(nm)-2:length(nm)));
+        Ic = str2double(nm(length(nm)-2:length(nm)));
     else
         error('Only spmT_0* files can be used');
     end
@@ -206,8 +204,15 @@ for i=1:size(P,1)
     FWHM = SPM.xVol.FWHM;
     v2r  = 1/prod(FWHM(~isinf(FWHM)));  %-voxels to resels
 
+    Vspm   = cat(1,xCon(Ic).Vspm);
+    Vspm.fname = fullfile(pth,Vspm.fname);
+
     if ~isfield(SPM.xVol,'VRpv')
         noniso = 0;
+    end
+
+    if noniso
+        SPM.xVol.VRpv.fname = fullfile(pth,SPM.xVol.VRpv.fname);
     end
 
     switch adjustment
@@ -229,7 +234,7 @@ for i=1:size(P,1)
        end
     end
 
-    Z = spm_data_read(Vspm,'xyz',XYZ);
+    Z = spm_data_read(Vspm.fname,'xyz',XYZ);
 
     %-Calculate height threshold filtering
     %-------------------------------------------------------------------    
@@ -320,27 +325,30 @@ for i=1:size(P,1)
             p_extent_str = '';
         end
         
-        %-Calculate extent threshold filtering
-        %-------------------------------------------------------------------
-        A     = spm_clusters(XYZ);
+        if pk ~= 0
+          %-Calculate extent threshold filtering
+          %-------------------------------------------------------------------
+          A     = spm_clusters(XYZ);
         
-        Q     = [];
-        
-        % sometimes max of A and A2 differ, thus we have to use the smaller value
-        for i = 1:min([max(A) max(A2)])
+          Q     = [];
+         
+          % sometimes max of A and A2 differ, thus we have to use the smaller value
+          for i = 1:min([max(A) max(A2)])
             j = find(A == i);
             if length(j) >= k/K(i); Q = [Q j]; end
-        end
+          end
 
 
-        % ...eliminate voxels
-        %-------------------------------------------------------------------
-        Z     = Z(:,Q);
-        XYZ   = XYZ(:,Q);
-        if isempty(Q)
+          % ...eliminate voxels
+          %-------------------------------------------------------------------
+          Z     = Z(:,Q);
+          XYZ   = XYZ(:,Q);
+          if isempty(Q)
             fprintf('No voxels survived extent threshold k=%0.2g\n',k);
-        end
-
+          end
+        else
+          Q = 1:size(Z,2);
+        end  
     else
 
         k = 0;
@@ -392,8 +400,12 @@ for i=1:size(P,1)
             neg_str = '';
        end
        
+      if isfield(SPM.xVol,'G')
+            ext = '.gii';
+       else ext = '.nii'; end
+
        if u0 > -Inf
-           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str '.nii'];
+           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
        else
            name = [t2x_name str_num '.nii'];
        end
@@ -403,14 +415,15 @@ for i=1:size(P,1)
 
        %-Reconstruct (filtered) image from XYZ & Z pointlist
        %-----------------------------------------------------------------------
-       Y      = zeros(Vspm.dim(1:3));
+       Y      = zeros(Vspm.dim);
        OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
        Y(OFF) = t2x;
 
        VO = Vspm;
        VO.fname = out;
        VO.dt = [spm_type('float32') spm_platform('bigend')];
-       spm_write_vol(VO,Y);
+       VO = spm_data_hdr_write(VO);
+       spm_data_write(VO,Y);
     
     end
 end
