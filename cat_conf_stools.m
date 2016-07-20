@@ -225,13 +225,28 @@ function stools = cat_conf_stools(expert)
     ''
   };
 
+% surface ROI files
+  ROIs         = cfg_files;
+  ROIs.tag     = 'rdata';
+  ROIs.name    = '(Left) ROI atlas files';
+  ROIs.filter  = 'any';
+  if expert 
+    ROIs.ufilter = 'lh.aparc.*';
+  else
+    ROIs.ufilter = 'lh.aparc_[a2009s|DKT40JT].*'; % not yet working for all atlases
+  end
+  ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
+  ROIs.num     = [1 Inf];
+  ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
+
+
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert > 1
-    surfextract.val  = {data_surf_extract,GI,GIA,GII,GIL,GIS,FD,SD,nproc,lazy};
+    surfextract.val  = {data_surf_extract,GI,GIA,GII,GIL,GIS,FD,SD,ROIs,nproc,lazy};
   else
-    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
+    surfextract.val  = {data_surf_extract,GI,FD,SD,ROIs,nproc};
   end
   surfextract.prog = @cat_surf_parameters;
   surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};

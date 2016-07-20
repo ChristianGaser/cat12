@@ -1,5 +1,20 @@
 function varargout = cat_surf_vol2surf(varargin)
 % P = cat_surf_vol2surf(job)
+% 
+% job.data_mesh_lh  .. lh mesh files
+% job.data_vol      .. volume for mapping
+% job.verb          .. verbose (default: 1)
+% job.gifti         .. output gifti (default: 1)
+% job.interp        .. interpolation type (default 'linear')
+% job.mapping       .. mapping type 
+%   .abs_mapping    .. absolute mapping distance
+%     .length       .. length of the vector (
+%     .stepsize     .. stepsize in mm (default 0.5)
+%   .rel_mapping    .. relative mapping distance
+%     .length       .. length of the vector (default 
+%     .stepsize     .. stepsize in mm (default: 0.5)
+% job.datafieldname .. new fieldname
+% 
 % ______________________________________________________________________
 % 
 % Project volume data to a surface and create a texture file.
@@ -16,9 +31,12 @@ function varargout = cat_surf_vol2surf(varargin)
   end
   
   def.verb  = 1; 
-  def.gifti = 1;  
-  def.interp = 'linear';
-    
+  def.gifti = 1; 
+  def.debug = 0; 
+  def.interp{1} = 'linear'; 
+  def.sample{1} = 'avg'; 
+  def.datafieldname = 'intensity';
+  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   job = cat_io_checkinopt(job,def);
   
   %%
@@ -48,13 +66,12 @@ function varargout = cat_surf_vol2surf(varargin)
     job.mapping.(mapping).length   = 0.5;
     job.mapping.(mapping).stepsize = 1;
   end
+  mapdef.class = 'GM';
+  job.mapping.(mapping) = cat_io_checkinopt( job.mapping.(mapping),mapdef);
  
   mappingstr = sprintf('-%s -%s -res "%0.4f" -origin "%0.4f" -length "%0.4f"',...
        job.interp{1},job.sample{1}, job.mapping.(mapping).stepsize, job.mapping.(mapping).startpoint , job.mapping.(mapping).length);   
-
-  % cat
-  job.debug     = cat_get_defaults('extopts.debug');
-  job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  
   
   %% display something
   spm_clf('Interactive'); 
@@ -139,8 +156,14 @@ function varargout = cat_surf_vol2surf(varargin)
           mappingstr,thickness, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
-        if vi==1 && si==1 && job.verb 
-          fprintf('%s\n%s\n',mappingstr,RS);
+        if vi==1 && si==1 
+          
+          if job.debug 
+            fprintf('\n%s\n',RS);
+          end
+          if job.debug 
+            fprintf('\nMappingstring: %s\n',mappingstr);
+          end
         end
         
         if job.verb

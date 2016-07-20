@@ -11234,6 +11234,7 @@ M       cat_surf_render.m
 
 
 ------------------------------------------------------------------------
+r963 | gaser | 2016-07-18 15:48:14 +0200 (Mo, 18 Jul 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11242,5 +11243,54 @@ M       html/cat.html
 M       html/cat.txt
 
 Fixed: Wrong (old) release number was shwon in html pages. 
+
 ------------------------------------------------------------------------
-r963 | gaser | 2016-07-18 15:48:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat_check_system_output.m
+M       cat_conf_stools.m
+M       cat_get_defaults.m
+M       cat_io_FreeSurfer.m
+A       cat_io_mergeStruct.m
+M       cat_surf_display.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render.m
+M       cat_surf_smooth.m
+M       cat_surf_surf2roi.m
+M       cat_surf_vol2surf.m
+M       cat_version.m
+M       cat_vol_isarnlm.m
+A       internal/cat_example_surfsmooth.m
+A       internal/cat_tst_prepareManualSegmentation.m
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+
+(1) Changed*:  Updated cat_surf_render:
+               - Changed menu field order and field names.
+               - Add print resolution option (DPI).
+               - Corrected CAM lighting. 
+               - Added texture menu to load other maps of the same subject.
+               - Added mesh menu to load other meshes of the same subject/average.
+               - Reduced number of colormaps, but added an invertation function. 
+(2) Add*:      Added the internal script cat_tst_prepareManualSegmentation that 
+               prepare an initial tissue classification for manual corrections 
+               to obtain ground truth data.
+               It creates images that are corrected for noise, inhomogeneity 
+               and contrast, and writes a volume with a set of slices with an
+               initial labeling based on the corrected input image.
+(3) Fixed*:    Updated cat_surf_smooth for GIFTI input and alternative smoothing 
+               (spm_mesh_smooth) in cat_surf_smooth. Added internal script 
+               cat_example_surfsmooth to compare volume and surface smoothing.
+(4) Fixed:     Corrected small errors in cat_check_system_output, 
+               cat_io_FreeSurfer, cat_surf_display, cat_surf_info.
+(5) Changed:   Delete functions and output for cat_get_defaults.    
+(6) Changed:   Added CAT banner in cat_versions.
+(7) Changed:   Added some further comments in cat_surf_surf2roi, tbx_cfg_cat 
+               and vol2surf.
+(8) Add:       In preparation: ROI output for surface measures.
+
+------------------------------------------------------------------------
+r964 | dahnke | 2016-07-20 15:42:14
