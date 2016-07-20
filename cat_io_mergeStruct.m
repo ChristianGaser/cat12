@@ -10,7 +10,7 @@ function S=cat_io_mergeStruct(S,SN,ri)
 %   many subcases and here only a simple alignment is used!
 %
 % _________________________________________________________________________
-% $Id: cat_io_updateStruct.m 942 2016-05-30 12:49:42Z dahnke $
+% $Id$
 
   % check input
   maxri = 20; 

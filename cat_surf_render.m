@@ -1787,7 +1787,7 @@ end
 set(setdiff(get(get(obj,'parent'),'children'),...
   [findobj(get(obj,'parent'),'Label','Colorbar'),...
    findobj(get(obj,'parent'),'Label','Invert Colormap')]),'Checked','off');
-if isfield(H,'colourbar'),cat_surf_render('Clim',H,H.colourbar.Limits); end
+%if isfield(H,'colourbar'),cat_surf_render('Clim',H,H.colourbar.Limits); end
 set(obj,'Checked','on');
 
 %==========================================================================

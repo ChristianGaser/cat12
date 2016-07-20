@@ -11295,6 +11295,7 @@ M       tbx_cfg_cat.m
 
 
 ------------------------------------------------------------------------
+r965 | gaser | 2016-07-20 15:44:09 +0200 (Mi, 20 Jul 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11308,5 +11309,17 @@ M       html/cat.html
 (2) Changed: Added check for existing SPM.mat to cat_surf_info.m to get
     side info.
 (3) Fixed: H.colourbar.Limits did not exist in cat_surf_render.m
+
 ------------------------------------------------------------------------
-r965 | gaser | 2016-07-20 15:44:04
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_io_mergeStruct.m
+M       cat_stat_ROI.m
+M       cat_surf_render.m
+ M      internal/cat_example_surfsmooth.m
+MM      internal/cat_tst_prepareManualSegmentation.m
+
+Fixed: cat_stat_ROI.m can now handle volume and surface data at the same time.
+------------------------------------------------------------------------
+r966 | gaser | 2016-07-20 16:40:10

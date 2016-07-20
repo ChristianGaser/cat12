@@ -17,7 +17,7 @@ function cat_tst_prepareManualSegmentation
 %
 % _________________________________________________________________________
 % Robert Dahnke
-% $Id: cat_defaults.m 955 2016-06-20 20:39:15Z gaser $
+% $Id$
 
 
   % select images and result directory
