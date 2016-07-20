@@ -5,22 +5,44 @@ function cat_stat_ROI(p)
 % Christian Gaser
 % $Id$
 
+n_data = length(p.roi_xml);
+
+% first divide data into volume and surface data because they have to be handled separately
+i_vol = 0; i_surf = 0; roi_vol = {}; roi_surf = {};
+for i=1:n_data        
+  if ~isempty(strfind(p.roi_xml{i},'catROI_'))
+    i_vol = i_vol + 1;
+    roi_vol{i_vol,1} = p.roi_xml{i};
+  elseif ~isempty(strfind(p.roi_xml{i},'catROIs_'))
+    i_surf = i_surf + 1;
+    roi_surf{i_surf,1} = p.roi_xml{i};
+  end
+end
+
+save_ROI(p,roi_vol);
+save_ROI(p,roi_surf);
+
+%_______________________________________________________________________
+function save_ROI(p,roi)
+% save mean values inside ROI
+
 % ROI measures to search for
 ROI_measures = char('Vgm','Vwm','Vcsf','mean_thickness');
 n_ROI_measures = size(ROI_measures,1);
-n_data = length(p.roi_xml);
 
 [path, roi_name, ext] = fileparts(p.calcroi_name);
 
+n_data = length(roi);
+
 for i=1:n_data        
-  xml = convert(xmltree(deblank(p.roi_xml{i})));
+  xml = convert(xmltree(deblank(roi{i})));
 
   if ~isfield(xml,'ROI')
     error('XML file contains no ROI information.');
   end
 
   % remove leading catROI*_ part from name
-  [path2, ID] = fileparts(p.roi_xml{i});
+  [path2, ID] = fileparts(roi{i});
   ind = strfind(ID,'_');
   ID = ID(ind(1)+1:end);
 
