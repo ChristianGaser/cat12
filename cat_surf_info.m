@@ -149,6 +149,13 @@ function [varargout] = cat_surf_info(P,read,gui)
       sinfo(i).posside = noname;
     end
     
+    % smoothed
+    if isempty(sinfo(i).preside)
+      sinfo(i).smoothed = 0; 
+    else
+      sinfo(i).smoothed = max([0,double(cell2mat(textscan(sinfo(i).preside,'s%dmm.')))]);
+    end
+
     % datatype
     if sinfo(i).exist && read
       switch num2str([isfield(S,'vertices'),isfield(S,'cdata')],'%d%d')
@@ -220,11 +227,16 @@ function [varargout] = cat_surf_info(P,read,gui)
     % if we still dont know what kind of datafile, we can try to find a
     % mesh surface
     if isempty(sinfo(i).Pmesh) 
-      % template mesh handling !!!
-      Pmesh = char(cat_surf_rename(sinfo(i),'dataname','central','ee','.gii'));
-      if exist(Pmesh,'file')
-        sinfo(i).Pmesh = Pmesh;
+      if strcmp(ee,'.gii') && isempty(sinfo(i).side)
+        sinfo(i).Pmesh = sinfo(i).fname;
         sinfo(i).Pdata = sinfo(i).fname;
+      else
+        % template mesh handling !!!
+        Pmesh = char(cat_surf_rename(sinfo(i),'dataname','central','ee','.gii'));
+        if exist(Pmesh,'file')
+          sinfo(i).Pmesh = Pmesh;
+          sinfo(i).Pdata = sinfo(i).fname;
+        end
       end
     end
     % if we got still no mesh than we can find an average mesh

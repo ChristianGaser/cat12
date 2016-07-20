@@ -181,7 +181,7 @@ if cat_get_defaults('extopts.expertgui')<2
 end
 
 
-spm('FnBanner',mfilename,rev);
+spm('FnBanner',mfilename,cat_version);
 [Finter,Fgraph] = spm('FnUIsetup','CAT12');
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');

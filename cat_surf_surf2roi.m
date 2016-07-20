@@ -14,7 +14,7 @@ function cat_surf_surf2roi(job)
 %   job.rdata   .. cell of left atlas maps
 %   job.verb    .. verbose level (default = 1) 
 %   job.avg     .. parameter what averaging is use for each ROI
-%                  struct('mean',1,'std',1,'min',0,'max','median',1);  
+%                  struct('mean',1,'std',1,'min',0,'max',0,'median',1);  
 %   job.area    .. estimate area of each ROI (default = 0)
 %   job.vernum  .. estimate number of vertices of each ROI (default = 0)
 %

@@ -1,7 +1,9 @@
-function [CATrel, CATver]  = cat_version
+function [CATrel, CATver]  = cat_version(varargin)
 % check for CAT revision
 %
 % FORMAT [CATrel, CATver] = cat_version
+% FORMAT CATver = cat_version % short version
+% FORMAT cat_version('[ss]fnbanner'[,str,ver]) % display banner
 % 
 % This function will retrieve the CAT release and version and is a
 % modified version of spm_version.m
@@ -47,6 +49,46 @@ if isempty(CAT_VER)
         error('Can''t obtain CAT Revision information.');
     end
     CAT_VER = v;
+end
+if nargin>0, Action = varargin{1}; else Action = ''; end
+switch Action
+  case {'fnbanner','sfnbanner','ssfnbanner'}  %-Text banners for functions
+    %=======================================================================
+    % SPMid = spm('FnBanner', Fn,FnV)
+    % SPMid = spm('SFnBanner',Fn,FnV)
+    % SPMid = spm('SSFnBanner',Fn,FnV)
+    %-----------------------------------------------------------------------
+    time = spm('time');
+    str  = sprintf('%s(%s)',v.Release,v.Version); %spm('Ver');
+    if nargin>=2, str = [str,': ',varargin{2}]; end
+    if nargin>=3 
+        v = regexp(varargin{3},'\$Rev: (\d*) \$','tokens','once');
+        if ~isempty(v)
+            str = [str,' (v',v{1},')'];
+        else
+            str = [str,' (v',varargin{3},')'];
+        end
+    end
+
+    switch lower(Action)
+    case 'fnbanner'
+        tab = '';
+        wid = 72;
+        lch = '=';
+    case 'sfnbanner'
+        tab = sprintf('\t');
+        wid = 72-8;
+        lch = '-';
+    case 'ssfnbanner'
+        tab = sprintf('\t\t');
+        wid = 72-2*8;
+        lch = '-';
+    end
+
+    fprintf('\n%s%s',tab,str)
+    fprintf('%s',repmat(' ',1,wid-length([str,time])))
+    fprintf('%s\n%s',time,tab)
+    fprintf('%s',repmat(lch,1,wid)),fprintf('\n')
 end
 CATrel = v.Release;
 CATver = v.Version;

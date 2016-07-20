@@ -100,7 +100,7 @@ function varargout = cat_surf_display(varargin)
       Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       for im=numel(Pmesh):-1:1
         if ~exist(Pmesh{im},'file'), Pmesh(im) = []; end
-        if ~exist(Pdata{im},'file'), Pdata(im) = []; end
+        if ~isempty(Pdata) && ~exist(Pdata{im},'file'), Pdata(im) = []; end
       end
       if numel(Pmesh)==1; Pmesh=char(Pmesh); end
       if numel(Pdata)==1; Pdata=char(Pdata); end
@@ -114,7 +114,7 @@ function varargout = cat_surf_display(varargin)
         fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
       end
       
-      if ~all(strcmp(Pmesh,Pdata)) && ~isempty(Pdata) 
+      if ~isempty(Pdata) && ~all(strcmp(Pmesh,Pdata)) 
         % only gifti surface without texture
         if isfield(job,'parent')
           h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);

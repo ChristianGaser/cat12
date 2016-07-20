@@ -12,6 +12,14 @@ function varargout = cat_get_defaults(defstr, varargin)
 % * modules in batch jobs that have not been saved yet
 % This value will not be saved for future sessions of SPM. To make
 % persistent changes, edit cat_defaults.m.
+%
+% FORMAT cat_get_defaults(defstr, 'rmfield')
+% Removes last field of defstr eg. defstr = 'opts.sopt.myfield' will remove 
+% 'myfield'. 
+%
+% FORMAT cat_get_defaults(defstr, 'rmentry')
+% Removes last field of defstr eg. defstr = 'opts.sopt.myfield' will remove 
+% 'sopt' with all all subfield. 
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
@@ -34,7 +42,30 @@ tags = textscan(defstr,'%s', 'delimiter','.');
 subs = struct('type','.','subs',tags{1}');
 
 if nargin == 1
+    % default output
     varargout{1} = subsref(cat, subs);
-else
-    cat = subsasgn(cat, subs, varargin{1});
+    return;
+elseif nargin == 2
+    switch varargin{1}
+        case 'rmfield'
+          % remove the last field of the given defstr
+            mainfield = tags{1}{1}; 
+            for ti=2:numel(tags{1})-1
+                mainfield = [mainfield '.' tags{1}{ti}]; %#ok<AGROW>
+            end
+            subfield  = tags{1}{end};  
+            fprintf('Remove field "%s" in "cat.%s"!\n',subfield,mainfield);
+            eval(sprintf('cat.%s = rmfield(cat.%s,subfield);',mainfield,mainfield));
+        case 'rmentry'
+          % removes the complete entry of the given defstr
+            fprintf('Remove entry "%s" "cat"!\n',tags{1}{1});
+            cat = rmfield(cat,defstr); 
+        otherwise
+          % add an new entry
+            cat = subsasgn(cat, subs, varargin{1});
+    end
+end
+if nargout == 1
+  % output in case changes in cat
+    varargout{1} = cat;
 end
