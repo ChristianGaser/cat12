@@ -326,7 +326,7 @@ for i=1:size(P,1)
             end
         else
             Q     = [];
-            for i = 1:min([max(A) max(A2)])
+            for i = 1:min(max(A))
                 j = find(A == i);
                 if length(j) >= k; Q = [Q j]; end
             end
