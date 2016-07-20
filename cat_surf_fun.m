@@ -22,6 +22,12 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'hull'
       if nargout==1, varargout{1} = cat_surf_hull(S); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_hull(S); end
+    case 'inner'
+      if nargout==1, varargout{1} = cat_surf_inner(S); end
+      if nargout==2, [varargout{1},varargout{2}] = cat_surf_inner(S); end
+    case 'outer'
+      if nargout==1, varargout{1} = cat_surf_outer(S); end
+      if nargout==2, [varargout{1},varargout{2}] = cat_surf_outer(S); end
     case 'surf2vol'
       if nargin>2
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin);

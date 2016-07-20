@@ -40,9 +40,10 @@ function varargout=cat_io_FreeSurfer(action,varargin)
     %case 'FSatlas2cat'
     %  varargout{1} = cat_surf_FSannotation2CAT(varargin{1});
     case 'gii2fs'
-      if nargout>0
+      if nargout==1
         varargout{1} = gii2fs(varargin{1}); 
-      else
+      elseif nargout==2
+        [varargout{1},varargout{2}] = gii2fs(varargin{1}); 
         gii2fs(varargin{1})
       end
     case 'fs2gii'
@@ -88,7 +89,7 @@ function job = getjob(job0,sel)
   job.data = cellstr(job.data); 
   
   def.verb    = 0; 
-  def.defelte = 0; 
+  def.delete  = 0; 
   job.merge   = 0;
   
   job = cat_io_checkinopt(job,def);
@@ -107,18 +108,17 @@ function varargout = gii2fs(varargin)
     if isfield(CS,'vertices') && isfield(CS,'faces')
       surfname{si} =  cat_surf_rename(sinfo,'dataname','surface');
       
-      write_surf(surfname{si}, CS.vertices , CS .faces);
+      write_surf(char(surfname{si}), CS.vertices , CS.faces);
     else
       surfname{si} = ''; 
     end
     if isfield(CS,'cdata')
       curfname{si} = fullfile(pp,ff);
       
-      write_curv(curfname{si}, CS.cdata);
+      write_curv(curfname{si}, double(CS.cdata));
     else
       curfname{si} = ''; 
     end
-    
     if job.delete
       delete(job.data{si}); 
     end

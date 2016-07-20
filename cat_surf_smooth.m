@@ -25,6 +25,7 @@ function varargout = cat_surf_smooth(varargin)
     job   = struct();
     spm_clf('Interactive'); 
     Pdata = cellstr(spm_select([1 inf],'any','Select surface data','','','[rl]h.(?!cent|sphe|defe).*'));
+    if isempty(Pdata), return; end
     fwhm  = spm_input('Smoothing filter size in fwhm',1,'r',15);
   end
 
@@ -35,7 +36,7 @@ function varargout = cat_surf_smooth(varargin)
   def.lazy        = 0; % reprocess exist results
   def.debug       = cat_get_defaults('extopts.debug');
   def.fsavgDir    = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-
+  def.catblur     = 1; 
   job = cat_io_checkinopt(job,def);
   
   % split job and data into separate processes to save computation time
@@ -68,6 +69,8 @@ function varargout = cat_surf_smooth(varargin)
     if exist(Psdata{i},'file') && job.lazy  
       fprintf('Display allready smoothed %s\n',Psdata{i},'link','cat_surf_display(''%s'')');
     else
+      stime = clock; 
+      
       % assure gifty output
       if job.assuregifti && ~strcmp(sinfo(i).ee,'.gii')
         cdata = cat_io_FreeSurfer('read_surf_data',Pdata{i}); 
@@ -76,17 +79,41 @@ function varargout = cat_surf_smooth(varargin)
       end
 
       % smooth values
-      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
-
-      % if gifti output, check if there is surface data in the original gifti and add it
-      if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
-        cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,def.trerr);
+      [pp,ff,ee] = fileparts(Pdata{i});
+      if strcmp(ee,'.gii')
+        % smoothing of gifti data
+        if job.catblur
+          [PS,PC]  =  cat_io_FreeSurfer('gii2fs',Pdata{i});
+          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,PC{1});
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
+        else
+          %%
+          M = gifti(sinfo(i).Pmesh); 
+          T = gifti(Pdata{i}); 
+          T = spm_mesh_smooth(struct('vertices',double(M.vertices),'faces',double(M.faces)), double(T.cdata), fwhm*100);
+          save(gifti(struct('cdata',T)),Psdata{i}); 
+        end
+        
+      else
+        % smoothing of FreeSurfer data
+        cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',sinfo(i).Pmesh,Psdata{i},fwhm,Pdata{i});
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
       end
-  
+      
+      % if gifti output, check if there is surface data in the original gifti and add it
+      if job.catblur
+        if sinfo(i).statready || strcmp(sinfo(i).ee,'.gii')
+          cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Pdata{i},Psdata{i},Psdata{i});
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug,def.trerr);
+        end
+      
+        % remove temporary FreeSurfer data
+        if exist('PS','var'), for pi=1:numel(PS), for pii=1:numel(PS{pi}), delete(PS{pi}{pii}); end; end; clear PS; end
+        if exist('PC','var'), for pi=1:numel(PC), delete(PC{pi}); end; clear PC; end
+      end
+      
       if job.verb
-        fprintf('Display resampled %s\n',spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+        fprintf('%4.0fs. Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
       end
     end
     

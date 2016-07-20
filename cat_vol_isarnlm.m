@@ -27,7 +27,8 @@ function varargout = cat_vol_isarnlm(varargin)
 %   job.cstr   = correction strength (1=full,0=none)
 % Example:
 %   cat_vol_sanlm(struct('data','','prefix','n','rician',0));
-%
+%   Ys = cat_vol_sanlm(Yo,Vm,[,verb,NCstr]); 
+% 
 %_______________________________________________________________________
 % Christian Gaser, Robert Dahnke 
 % Structural Brain Mapping Group
