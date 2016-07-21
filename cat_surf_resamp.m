@@ -57,11 +57,17 @@ function varargout = cat_surf_resamp(varargin)
 
   Psdata = cell(size(P,1),1);
   for i=1:size(P,1)
-
+    
     [pp,ff,ex]   = spm_fileparts(deblank(P(i,:)));
-
+    if any([strfind(ff,'.sphere.'),strfind(ff,'.central.')])
+      if job.verb
+        fprintf('Can not process "%s"!\n',deblank(P(i,:)));
+      end
+      continue; 
+    end
+    
     name = [ff ex];
-    name      = strrep(name,'.gii',''); % remove .gii extension
+    name = strrep(name,'.gii',''); % remove .gii extension
     hemi = ff(1:2);
 
     k = strfind(name,'.');

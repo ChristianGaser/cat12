@@ -60,6 +60,20 @@ function varargout = cat_surf_render(action,varargin)
 %#ok<*INUSD>
 %#ok<*TRYNC>
  
+
+% we need to hide some options ...
+expert = cat_get_defaults('extopts.expertgui'); 
+try
+  cat_get_defaults('print.dpi');  
+catch
+  cat_get_defaults('print.dpi',150); 
+end
+try
+  cat_get_defaults('print.type');  
+catch
+  cat_get_defaults('print.type','.png'); 
+end
+
 %-Input parameters
 %--------------------------------------------------------------------------
 if ~nargin, action = 'Disp'; end
@@ -85,7 +99,157 @@ switch lower(action)
             M = varargin{1};
         end
         
-        
+%{       
+        %%
+        %-Figure & Axis
+        %------------------------------------------------------------------
+        O = getOptions(varargin{2:end});
+        if isfield(O,'parent')
+            H.issubfigure = 1; 
+            H.axis   = O.parent;
+            H.figure = ancestor(H.axis,'figure');
+            figure(H.figure); axes(H.axis);
+        else
+            H.issubfigure = 0;
+            H.figure = figure('Color',[1 1 1]);
+            H.axis   = axes('Parent',H.figure,'Visible','off');
+        end
+        renderer = get(H.figure,'Renderer');
+        set(H.figure,'Renderer','OpenGL');
+
+        % surface info
+        sinfo = cat_surf_info(varargin{3}); % später eins
+
+        for pi=1:numel(sinfo)
+
+            H.filename{pi} = sinfo(pi).fname; 
+
+            % load mesh
+            [pp,ff,ee] = spm_fileparts(sinfo(pi).Pmesh);
+            switch ee
+                case '.gii'
+                    S  = gifti(sinfo(pi).Pmesh); 
+                otherwise
+                    S  = gifti(cat_io_FreeSurfer('read_surf',sinfo(pi).Pmesh));
+            end
+            
+            % load texture
+            [pp,ff,ee] = spm_fileparts(sinfo(pi).Pdata);
+            switch sinfo(pi).ee
+                case '.gii'
+                    St  = gifti(sinfo(pi).Pdata); 
+                case '.annot' 
+                otherwise
+                    St = gifti(struct('cdata',cat_io_FreeSurfer('read_surf_data',sinfo(pi).Pdata)));
+            end
+            S.cdata = St.cdata; clear St; 
+            S = export(S,'patch');
+            
+            % Patch
+            %  ----------------------------------------------------------
+            P(pi) = struct('vertices',S.vertices, 'faces',double(S.faces));
+            H.patch(pi) = patch(P(pi),...
+              'FaceColor',        [0.6 0.6 0.6],...
+              'EdgeColor',        'none',...
+              'FaceLighting',     'gouraud',...
+              'SpecularStrength', 0.0,... 0.7
+              'AmbientStrength',  0.4,... 0.1
+              'DiffuseStrength',  0.6,... 0.7
+              'SpecularExponent', 10,...
+              'Clipping',         'off',...
+              'DeleteFcn',        {@myDeleteFcn, renderer},...
+              'Visible',          'off',...
+              'Tag',              'CATSurfRender',...
+              'Parent',           H.axis);
+            setappdata(H.patch(pi),'patch',P(pi));
+
+            %% -Label connected components of the mesh
+            %------------------------------------------------------------------
+            C = spm_mesh_label(P(pi));
+            setappdata(H.patch(pi),'cclabel',C);
+
+            %-Compute mesh curvature
+            %------------------------------------------------------------------
+            curv = spm_mesh_curvature(P(pi)); %$ > 0;
+            setappdata(H.patch(pi),'curvature',curv);
+
+            %-Apply texture to mesh
+            %------------------------------------------------------------------
+            if isfield(M,'facevertexcdata')
+                T = S.facevertexcdata;
+            elseif isfield(M,'cdata')
+                T = S.cdata;
+            else
+                T = [];
+            end
+            updateTexture(H,T);
+        end
+
+
+
+
+
+       
+
+
+
+
+        %-Set viewpoint, light and manipulation options
+        %------------------------------------------------------------------
+        axis(H.axis,'image');
+        axis(H.axis,'off');
+        view(H.axis,[90 0]);
+        material(H.figure,'dull');
+
+        % default lighting
+        if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
+
+        H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
+        switch H.catLighting
+          case 'inner'
+            % switch off local light (camlight)
+            caml = findall(gcf,'Type','light','Style','local');     
+            set(caml,'visible','off');
+
+            % set inner light
+            H.light(2) = light('Position',[0 0 0]); 
+            set(H.patch,'BackFaceLighting','unlit');
+        end
+
+        H.rotate3d = rotate3d(H.axis);
+        set(H.rotate3d,'Enable','on');
+        set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
+
+
+
+        %-Store handles
+        %------------------------------------------------------------------
+        setappdata(H.axis,'handles',H);
+        set(H.patch,'Visible','on');
+
+        setappdata(H.patch,'clip',[false NaN NaN]);
+        %set(H.axis,'Position',[0.1 0.1 0.8 0.8]);
+        if exist('labelmap','var')
+          %%
+          setappdata(H.patch,'colourmap',labelmap); 
+          cat_surf_render('clim',H.axis,labelmapclim - 1); 
+          colormap(labelmap); caxis(labelmapclim - [1 0]);
+          H = cat_surf_render('ColorBar',H.axis,'on'); 
+          labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
+          labelnam2(end+1) = {''}; labelnam2(end+1) = {''}; 
+          labellength = min(100,max(cellfun('length',labelnam2))); 
+          ss = max(1,round(diff(labelmapclim+1)/30)); 
+          ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
+          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
+            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
+            'TickLabelInterpreter','none');
+          set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
+          H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
+          setappdata(H.axis,'handles',H);
+        end
+%}
+
+
         %-load mesh data
         if ischar(M) || isstruct(M) % default - one surface
             [pp,ff,ee] = spm_fileparts(M);  
@@ -97,7 +261,7 @@ switch lower(action)
                     M  = cat_io_FreeSurfer('read_surf',M);
                     M  = gifti(M);
             end
-            
+
         elseif iscellstr(M) % multiple surfaces
           %%
             MS = M; % save filelist 
@@ -125,8 +289,8 @@ switch lower(action)
         else
           H.filename = {''}; 
         end
-        
-        
+
+
         if ~isfield(M,'vertices')
             try
                 MM = M;
@@ -137,7 +301,7 @@ switch lower(action)
             end
         end
         O = getOptions(varargin{2:end});
-        
+
         if isfield(O,'cdata') % data input
             M.cdata = O.cdata; 
         elseif isfield(O,'pcdata') % single file input 
@@ -149,7 +313,7 @@ switch lower(action)
                     M.cdata = Mt.cdata;
                 elseif strcmp(ee,'.annot')
                   labelmap = zeros(0); labelnam = cell(0); ROIv = zeros(0);
-            
+
                   %%
                     [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata); %clear fsv;
                     [sentry,id] = sort(colortable.table(:,5));
@@ -202,8 +366,8 @@ switch lower(action)
                         M.cdata(round(cdata)==sentry(sentryi)) = nid;  
                         labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255; %#ok<AGROW>
                         labelnam(nid)   = colortable.struct_names(id(sentryi)); %#ok<AGROW>
-                        nid=nid+1;
                         ROIv(nid) = sum(ROI); %#ok<AGROW> 
+                        nid=nid+1;
                       end
                     end
                     %labelmap = colortable.table(id,1:3)/255;
@@ -217,12 +381,11 @@ switch lower(action)
                 for mi = 2:numel(MS)
                     [pp,ff,ee] = fileparts(O.pcdata{mi});
                     if strcmp(ee,'.gii')
-                        Mt = gifti(O.pcdata{mi});
+                        Mt = gifti(O.pcdata{mi}); 
                     elseif strcmp(ee,'.annot')
-                      %%
                         [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata{mi}); %clear fsv;
                         [sentry,id] = sort(colortable.table(:,5));
-                        Mt.cdata = cdata; 
+                        Mt.cdata = cdata; nid=1; % weiterlaufenlassen
                         for sentryi = 1:numel(sentry)
                           ROI = round(cdata)==sentry(sentryi); 
                           if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
@@ -230,14 +393,16 @@ switch lower(action)
                             Mt.cdata(round(cdata)==sentry(sentryi)) = nid;  
                             labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255; 
                             labelnam(nid)   = colortable.struct_names(id(sentryi));
-                            nid=nid+1;
                             ROIv(nid) = sum(ROI); 
+                            nid=nid+1;
                           end
                         end
                         %labelmap = colortable.table(id,1:3)/255;
                         % addition maximum element
+                        Mt.cdata(Mt.cdata>colortable.numEntries)=0; 
                         Mt.cdata(Mt.cdata>=colortable.numEntries + labelmapclim(2))=0; %colortable.numEntries+1;  
                         %labelnam = colortable.struct_names(id);
+
                     else
                         Mt.cdata = cat_io_FreeSurfer('read_surf_data',O.pcdata{mi});
                     end
@@ -255,12 +420,18 @@ switch lower(action)
           % standard lighting ... 20160623
           % M.cdata = 0.5*ones(size(M.vertices,1),1);
         end
+
+
         if ~isfield(M,'vertices') || ~isfield(M,'faces')
             error('cat_surf_render:nomesh','ERROR:cat_surf_render: No input mesh in ''%s''', varargin{1});
         end
-        
+
+
+
         M = export(M,'patch');
-        
+
+
+
         %-Figure & Axis
         %------------------------------------------------------------------
         if isfield(O,'parent')
@@ -275,13 +446,15 @@ switch lower(action)
         end
         renderer = get(H.figure,'Renderer');
         set(H.figure,'Renderer','OpenGL');
-        
+
         if isfield(M,'facevertexcdata')
           H.cdata = M.facevertexcdata;
         else
           H.cdata = []; 
         end
-        
+
+
+
         %% -Patch
         %------------------------------------------------------------------
         P = struct('vertices',M.vertices, 'faces',double(M.faces));
@@ -299,17 +472,17 @@ switch lower(action)
             'Tag',              'CATSurfRender',...
             'Parent',           H.axis);
         setappdata(H.patch,'patch',P);
-        
+
         %-Label connected components of the mesh
         %------------------------------------------------------------------
         C = spm_mesh_label(P);
         setappdata(H.patch,'cclabel',C);
-        
+
         %-Compute mesh curvature
         %------------------------------------------------------------------
         curv = spm_mesh_curvature(P); %$ > 0;
         setappdata(H.patch,'curvature',curv);
-        
+
         %-Apply texture to mesh
         %------------------------------------------------------------------
         if isfield(M,'facevertexcdata')
@@ -320,51 +493,51 @@ switch lower(action)
             T = [];
         end
         updateTexture(H,T);
-        
-        %-Set viewpoint, light and manipulation options
+%}
+        %% -Set viewpoint, light and manipulation options
         %------------------------------------------------------------------
         axis(H.axis,'image');
         axis(H.axis,'off');
         view(H.axis,[90 0]);
         material(H.figure,'dull');
-        
+
         % default lighting
         if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
-        %H.catLighting = 'cam';
-        
+
         H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
         switch H.catLighting
           case 'inner'
             % switch off local light (camlight)
             caml = findall(gcf,'Type','light','Style','local');     
             set(caml,'visible','off');
-            
+
             % set inner light
             H.light(2) = light('Position',[0 0 0]); 
-            set(H.patch,'BackFaceLighting','unlit');
+            for pi=1:numel(H.patch)
+              set(H.patch(pi),'BackFaceLighting','unlit');
+            end
         end
-        
-        
+
         H.rotate3d = rotate3d(H.axis);
         set(H.rotate3d,'Enable','on');
         set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
-        %try
-        %    setAllowAxesRotate(H.rotate3d, ...
-        %        setxor(findobj(H.figure,'Type','axes'),H.axis), false);
-        %end
-        
-      
-        
+
+
+
         %-Store handles
         %------------------------------------------------------------------
         setappdata(H.axis,'handles',H);
-        set(H.patch,'Visible','on');
-        
-        setappdata(H.patch,'clip',[false NaN NaN]);
-        %set(H.axis,'Position',[0.1 0.1 0.8 0.8]);
+        for pi=1:numel(H.patch)
+          set(H.patch(pi),'Visible','on');
+          setappdata(H.patch(pi),'clip',[false NaN NaN]);
+        end
+
+        %% set(H.axis,'Position',[0.1 0.1 0.8 0.8]);
         if exist('labelmap','var')
           %%
-          setappdata(H.patch,'colourmap',labelmap); 
+          for pi=1:numel(H.patch)
+            setappdata(H.patch(pi),'colourmap',labelmap); 
+          end
           cat_surf_render('clim',H.axis,labelmapclim - 1); 
           colormap(labelmap); caxis(labelmapclim - [1 0]);
           H = cat_surf_render('ColorBar',H.axis,'on'); 
@@ -380,7 +553,7 @@ switch lower(action)
           H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
           setappdata(H.axis,'handles',H);
         end
-       
+
         % annotation with filename
         %if ~H.issubfigure
         %  [pp,ff,ee] = fileparts(H.filename{1}); 
@@ -389,67 +562,271 @@ switch lower(action)
 
         %-Add context menu
         %------------------------------------------------------------------
-        cat_surf_render('ContextMenu',H);
-        
+        try
+          cat_surf_render('ContextMenu',H);
+        catch
+          warning('cat_surf_render:menu','Menu creation failed'); 
+        end
     %-Context Menu
     %======================================================================
     case 'contextmenu'
+        
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        if ~isempty(get(H.patch,'UIContextMenu')), return; end
+        sinfo1 = cat_surf_info(H.filename{1});
+        if ~isempty(get(H.patch(1),'UIContextMenu')), return; end
         
         cmenu = uicontextmenu('Callback',{@myMenuCallback, H});
+        checked = {'off','on'};
         
-        uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', ...
-            'Callback',{@myInflate, H});
+        %% -- Textures --   
+        c = uimenu(cmenu, 'Label', 'Textures');
+        if sinfo1.resampled
+          tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
+          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot'}; 
+          for i=1:numel(sfiles)
+            tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+          end
+        else
+          tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
+          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot'}; 
+          for i=1:numel(sfiles)
+            tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+          end
+        end
+        %%
+        H.textures = cell(numel(tfiles),2);
+        if numel(tfiles)
+          for i=1:numel(tfiles)
+            H.textures{i,2} = cat_surf_info(tfiles{i});
+            H.textures{i,1} = H.textures{i,2}.dataname; 
+          end
+          usetexture = cellfun('isempty',strfind(tfiles,H.filename{1}))==0; 
+          uimenu(c, 'Label', H.textures{1,1},'Interruptible','off','Checked',checked{usetexture(1)+1},'Callback',{@myChangeTexture, H});
+          for i=2:numel(tfiles)
+            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{usetexture(i)+1},'Callback',{@myChangeTexture, H});
+          end
+          if i>1, uimenu(c, 'Label','none', 'Interruptible','off','Separator',checked{usetexture(i)+1}, 'Callback',{@myChangeTexture, H}); end
+        end
+        uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','off', 'Callback',{@myUnderlay, H});
         
-        uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', ...
-            'Callback',{@myOverlay, H});
         
-        uimenu(cmenu, 'Label','Underlay (Texture)...', 'Interruptible','off', ...
-            'Callback',{@myUnderlay, H});
+        %% -- Atlas textures ---
+        if sinfo1.resampled || strcmp(sinfo1.ee,'.annot') 
+          c = uimenu(cmenu, 'Label', 'Atlases');
+          if expert
+            vatlas = {
+              'Neuromorphometrics' 'neuromorphometrics';
+              'LPBA40'             'lpba40';
+              'Hammers'            'hammers';
+              'Mori'               'mori';
+              'AAL'                'aal';
+              };
+            satlas = {
+              'DKT40JT'   'aparc_DKT40JT';
+              'Destrieux' 'aparc_a2009s';
+              'Bordmann'  'PALS_B12_Brodmann';
+              'Lobes'     'PALS_B12_Lobes';
+              };
+          else
+            vatlas = {
+              'Neuromorphometrics' 'neuromorphometrics';
+              'LPBA40'             'lpba40';
+              'Hammers'            'hammers';
+              };
+            satlas = {
+              'DKT40JT'   'aparc_DKT40JT';
+              'Destrieux' 'aparc_a2009s';
+              };
+          end
+          % ... it would be better to use the cat_defaults ...
+          %catatlases = cat_get_defaults('extopts.atlas');
+          %for i=1:size(catatlases,1), 
+          %  [ppa,ffa] = spm_fileparts(catatlases{i,1}); 
+          %end
 
-        uimenu(cmenu, 'Label','Image Sections...', 'Interruptible','off', ...
-            'Callback',{@myImageSections, H});
+          vafiles = vatlas(:,1); safiles = satlas(:,1); 
+          for ai = 1:size(vatlas,1)
+            vafiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
+              sprintf('%s.%s.Template_T1_IXI555_MNI152',sinfo1.side,vatlas{ai,2}));
+          end
+          for ai = 1:size(satlas,1)
+            safiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
+              sprintf('%s.%s.freesurfer.annot',sinfo1.side,satlas{ai,2}));
+          end
+          ntextures = size(H.textures,1);
+          for i=1:size(satlas,1)
+            H.textures{ntextures + i,2} = cat_surf_info(safiles{i,1});
+            H.textures{ntextures + i,1} = satlas{i,1}; %H.textures{ntextures + i,2}.dataname; 
+          end
+
+          %useatlas = zeros(size(H.textures,1),1); 
+          %useatlas(ntextures + max([0,find(cellfun('isempty',strfind(safiles,H.filename{1}))==0)])) = 1;
+          useatlas = [zeros(ntextures,1); cellfun('isempty',strfind(safiles,H.filename{1}))==0];
+          for i=ntextures+1:size(H.textures,1)
+            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas(i)+1},'Callback',{@myChangeTexture, H});
+          end
+         
+          ntextures2 = size(H.textures,1);
+          for i = 1:size(vatlas,1)
+            H.textures{ntextures2 + i,2} = cat_surf_info(vatlas{i,1});
+            H.textures{ntextures2 + i,1} = H.textures{ntextures2 + i,2}.dataname; 
+          end
+          %useatlas2 = zeros(size(H.textures,1),1); 
+          %useatlas2(ntextures2 + max([0,find(cellfun('isempty',strfind(vafiles,H.filename{1}))==0)])) = 1;
+          useatlas2 = [zeros(ntextures2,1); cellfun('isempty',strfind(vafiles,H.filename{1}))==0];
+          uimenu(c, 'Label', H.textures{ntextures2+1,1},'Interruptible','off',...
+            'Checked',checked{useatlas2(ntextures2+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
+          for i=ntextures2+2:size(H.textures,1)
+            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas2(ntextures2+1)+1},'Callback',{@myChangeTexture, H});
+          end
+          uimenu(c, 'Label','none', 'Interruptible','off','Separator','on', 'Callback',{@myChangeTexture, H});
+          uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','off', 'Callback',{@myUnderlay, H});
+        end
+       
         
-        uimenu(cmenu, 'Label','Change underlying mesh...', 'Interruptible','off', ...
-            'Callback',{@myChangeGeometry, H});
         
+        %% -- ROIs --
+        % ROI auswertung noch unklar 
+        % - bei vols wäre das xml einer person mit verschiedenen atlaten
+        %   (subject als auch subject template)
+        %   >> auswahl von xml-files? ... gibt ja nur eins! .. wobei es ja
+        %   beliebig ist...
+        % - bei csv hätte man dann einen atlas für mehrere personen, was 
+        %   nur bei resampled sinnvoll wäre 
+        %   >> auwahl von csv-files 
+    %{    
+        if sinfo1.resampled || strcmp(sinfo1.ee,'.annot') 
+          % volume-based atlas data
+          if cat_get_defaults('extopts.subfolders')
+            labeldir = strrep(sinfo1(1).pp,[filesep 'surf'],[filesep 'label']);
+          else
+            labeldir = sinfo1(1).pp;
+          end
+          labelfile = cat_vol_findfiles(labeldir,sprintf('catROI_%s.xml',sinfo1(1).name));
+          if isempty(labelfile) % older version ... just for my test ... remove in 2017
+            labelfile = cat_vol_findfiles(labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name));
+          end
+          H.labelfile = labelfile;
+
+          c = uimenu(cmenu, 'Label', 'ROIs');
+          for i=ntextures+1:ntextures+1
+            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas(i)+1},'Callback',{@myChangeROI, H});
+          end
+          uimenu(c, 'Label', H.textures{ntextures2+1,1},'Interruptible','off',...
+            'Checked',checked{useatlas2(ntextures2+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
+          for i=ntextures2+2:size(H.textures,1)
+            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas2(ntextures2+1)+1},'Callback',{@myChangeROI, H});
+          end
+          uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','off', 'Callback',{@myUnderlay, H});
+        end
+     %}   
+        %ROI = cat_io_xml(labelfile);
+        %if isfield(ROI,'ROI'), ROI = ROI.ROI; end 
+        
+        
+        %% -- Meshes --   
+        c = uimenu(cmenu, 'Label', 'Meshes');
+        if sinfo1.resampled
+          H.meshs = { 
+              'Individual', H.patch(1).Vertices 
+              'Average'   , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.freesurfer.gii']);    
+              'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);   
+              'Sphere'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.sphere.freesurfer.gii']);  
+              'Dartel'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.Template_T1_IXI555_MNI152.gii']);  
+              ...'Hull'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.hull.freesurfer.gii']);  
+              'Custom'    ,'';    
+            };
+          
+          uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H});
+          uimenu(c, 'Label','Average',    'Checked','off', 'Callback',{@myChangeMesh, H});
+          uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H});
+          uimenu(c, 'Label','Dartel',     'Checked','off', 'Callback',{@myChangeMesh, H});
+          uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
+          %uimenu(c, 'Label','Hull',     'Checked','off', 'Callback',{@myChangeGeometry, H});
+        else
+          H.meshs = { 
+              'Individual', H.patch(1).Vertices 
+              ...'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);   
+              'Sphere'    , sinfo1.Psphere;  
+              ...'Hull'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.hull.freesurfer.gii']);  
+              'Custom'    ,'';    
+            };
+          
+          uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H});
+          %uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H});
+          uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
+          %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H});
+          %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H});
+          %uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H});
+        end 
+        uimenu(c, 'Label','Custom...', 'Interruptible','off', 'Callback',{@myChangeGeometry, H});
+        
+       
+        
+        % -- Components --
+        % this is a nice idea ... I need name the patches
         c = uimenu(cmenu, 'Label', 'Connected Components', 'Interruptible','off');
-        C = getappdata(H.patch,'cclabel');
+        C = getappdata(H.patch(1),'cclabel');
         for i=1:length(unique(C))
             uimenu(c, 'Label',sprintf('Component %d',i), 'Checked','on', ...
                 'Callback',{@myCCLabel, H});
         end
         
-        uimenu(cmenu, 'Label','Rotate', 'Checked','on', 'Separator','on', ...
-            'Callback',{@mySwitchRotate, H});
         
-        uimenu(cmenu, 'Label','Synchronise Views', 'Visible','off', ...
-            'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseViews, H});
-          
-        c = uimenu(cmenu, 'Label','View');
-        uimenu(c, 'Label','Go to Y-Z view (right)',  'Callback', {@myView, H, [90 0]});
-        uimenu(c, 'Label','Go to Y-Z view (left)',   'Callback', {@myView, H, [-90 0]});
-        uimenu(c, 'Label','Go to X-Y view (top)',    'Callback', {@myView, H, [0 90]});
-        uimenu(c, 'Label','Go to X-Y view (bottom)', 'Callback', {@myView, H, [-180 -90]});
-        uimenu(c, 'Label','Go to X-Z view (front)',  'Callback', {@myView, H, [-180 0]});
-        uimenu(c, 'Label','Go to X-Z view (back)',   'Callback', {@myView, H, [0 0]});
         
-        uimenu(cmenu, 'Label','Colorbar', 'Callback', {@myColourbar, H});
+        % this should render a xyz slice that can further configurated
+        % there have to be something to switch it off
+        % there has to be another colormap
+        % you may need a transparent color
+        uimenu(cmenu, 'Label','Volume Sections...', 'Interruptible','off', 'Callback',{@myImageSections, H});
+       
         
+        
+        % ???
+        uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', 'Callback',{@myOverlay, H});
+        
+        
+        
+        % Inflation off ... to slow and unimportant
+        % uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', 'Callback',{@myInflate, H});
+        
+         
+        
+        %% ----------------------------------------------------------------  
+       
+        
+        
+        % -- Views --   
+        c = uimenu(cmenu, 'Label','View','Separator','on');
+        uimenu(c, 'Label', 'Synchronise Views', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseViews, H});
+        uimenu(c, 'Label', 'Right',  'Callback', {@myView, H, [90 0]});
+        uimenu(c, 'Label', 'Left',   'Callback', {@myView, H, [-90 0]});
+        uimenu(c, 'Label', 'Top',    'Callback', {@myView, H, [0 90]});
+        uimenu(c, 'Label', 'Bottom', 'Callback', {@myView, H, [-180 -90]});
+        uimenu(c, 'Label', 'Front',  'Callback', {@myView, H, [-180 0]});
+        uimenu(c, 'Label', 'Back',   'Callback', {@myView, H, [0 0]});
+        
+        
+        
+        
+        % -- Colormaps --   
         c = uimenu(cmenu, 'Label','Colormap');
-        clrmp = {'hot' 'jet' 'gray' 'hsv' 'bone' 'copper' 'pink' 'white' ...
-            'flag' 'lines' 'colorcube' 'prism' 'cool' 'autumn' ...
-             'spring' 'winter' 'summer'};
+        % only limited version ...
+        % clrmp = {'hot' 'jet' 'gray' 'hsv' 'bone' 'copper' 'pink' 'white' ...
+        %          'flag' 'lines' 'colorcube' 'prism' 'cool' 'autumn' 'spring' 'winter' 'summer'};
+        clrmp = {'jet' 'hsv' 'hot' 'winter' 'summer' 'pink' 'gray'};          
+        uimenu(c, 'Label','Colorbar','Checked','off', 'Callback', {@myColourbar, H});
+        uimenu(c, 'Label','Invert Colormap','Checked','off', 'Callback', {@myInvColourmap, H});
         for i=1:numel(clrmp)
-          if i==2
-            uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H});
+          if i==1
+            uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H}, 'Separator', 'on');
           else
             uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H});
           end
         end
-        clrmp = {'CAThot','CAThotinv','CATcold','CATcoldinv','CATtissues','CATcold&hot'};
+        % some further own colormaps
+        clrmp = {'CAThot','CATcold','CATtissues','CATcold&hot'};
         for i=1:numel(clrmp)
           if i==1
             uimenu(c, 'Label', clrmp{i}, 'Checked','off', 'Callback', {@myColourmap, H}, 'Separator', 'on');
@@ -461,8 +838,11 @@ switch lower(action)
         % colormapeditor yet 
         %uimenu(c, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myColourmap, H, 'custom'}, 'Separator', 'on');
         
+                
+        
+        % -- Colorrange --   
         c = uimenu(cmenu, 'Label','Colorrange');
-        uimenu(c, 'Label','min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'});
+        uimenu(c, 'Label','Min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'});
         uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
         uimenu(c, 'Label','5-95 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '5p'});
         uimenu(c, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myCaxis, H, 'custom'});
@@ -470,60 +850,105 @@ switch lower(action)
         uimenu(c, 'Label','Synchronise Colorranges', 'Visible','off', ...
             'Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseCaxis, H});
         
+          
+          
+        % -- Lighting --   
         c = uimenu(cmenu, 'Label','Lighting'); 
         macon = {'on' 'off'}; isinner = strcmp(H.catLighting,'inner'); 
         uimenu(c, 'Label','cam',    'Checked',macon{isinner+1}, 'Callback', {@myLighting, H,'cam'});
         if ismac
           uimenu(c, 'Label','inner',  'Checked',macon{2-isinner}, 'Callback', {@myLighting, H,'inner'});
         end
-        uimenu(c, 'Label','set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'});
-        uimenu(c, 'Label','set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
-        uimenu(c, 'Label','set3',   'Checked','off', 'Callback', {@myLighting, H,'set3'});
-        uimenu(c, 'Label','top',    'Checked','off', 'Callback', {@myLighting, H,'top'}, 'Separator', 'on');
-        uimenu(c, 'Label','bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
-        uimenu(c, 'Label','left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
-        uimenu(c, 'Label','right',  'Checked','off', 'Callback', {@myLighting, H,'right'});
-        uimenu(c, 'Label','front',  'Checked','off', 'Callback', {@myLighting, H,'front'});
-        uimenu(c, 'Label','back',   'Checked','off', 'Callback', {@myLighting, H,'back'});
-        uimenu(c, 'Label','grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'}, 'Separator', 'on');
-        uimenu(c, 'Label','none',   'Checked','off', 'Callback', {@myLighting, H,'none'});
+        uimenu(c, 'Label','Set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'});
+        uimenu(c, 'Label','Set2',   'Checked','off', 'Callback', {@myLighting, H,'set2'});
+        uimenu(c, 'Label','Set3',   'Checked','off', 'Callback', {@myLighting, H,'set3'});
+        if expert
+          uimenu(c, 'Label','Top',    'Checked','off', 'Callback', {@myLighting, H,'top'}, 'Separator', 'on');
+          uimenu(c, 'Label','Bottom', 'Checked','off', 'Callback', {@myLighting, H,'bottom'});
+          uimenu(c, 'Label','Left',   'Checked','off', 'Callback', {@myLighting, H,'left'});
+          uimenu(c, 'Label','Right',  'Checked','off', 'Callback', {@myLighting, H,'right'});
+          uimenu(c, 'Label','Front',  'Checked','off', 'Callback', {@myLighting, H,'front'});
+          uimenu(c, 'Label','Back',   'Checked','off', 'Callback', {@myLighting, H,'back'});
+          uimenu(c, 'Label','Grid',   'Checked','off', 'Callback', {@myLighting, H,'grid'}, 'Separator', 'on');
+        end
+        uimenu(c, 'Label','None',   'Checked','off', 'Callback', {@myLighting, H,'none'});
         
+
+        
+        % -- Material -- 
         c = uimenu(cmenu, 'Label','Material');
-        uimenu(c, 'Label','dull',     'Checked','on',  'Callback', {@myMaterial, H,'dull'});
-        uimenu(c, 'Label','shiny',    'Checked','off', 'Callback', {@myMaterial, H,'shiny'});
-        uimenu(c, 'Label','metal',    'Checked','off', 'Callback', {@myMaterial, H,'metal'});
-        uimenu(c, 'Label','plastic',  'Checked','off', 'Callback', {@myMaterial, H,'plastic'});
-        uimenu(c, 'Label','greasy',   'Checked','off', 'Callback', {@myMaterial, H,'greasy'});
+        uimenu(c, 'Label','Dull',     'Checked','on',  'Callback', {@myMaterial, H,'dull'});
+        uimenu(c, 'Label','Shiny',    'Checked','off', 'Callback', {@myMaterial, H,'shiny'});
+        uimenu(c, 'Label','Metal',    'Checked','off', 'Callback', {@myMaterial, H,'metal'});
+        uimenu(c, 'Label','Plastic',  'Checked','off', 'Callback', {@myMaterial, H,'plastic'});
+        uimenu(c, 'Label','Greasy',   'Checked','off', 'Callback', {@myMaterial, H,'greasy'});
         %uimenu(c, 'Label','grid',     'Checked','off', 'Callback', {@myMaterial, H,'grid'});
-        uimenu(c, 'Label','Custom...','Checked','off', 'Callback', {@myMaterial, H,'custom'});
+        if expert
+          uimenu(c, 'Label','Custom...','Checked','off', 'Callback', {@myMaterial, H,'custom'});
+        end      
         
-        c = uimenu(cmenu, 'Label','Transparency');
-        uimenu(c, 'Label','0%',  'Checked','on',  'Callback', {@myTransparency, H});
-        uimenu(c, 'Label','20%', 'Checked','off', 'Callback', {@myTransparency, H});
-        uimenu(c, 'Label','40%', 'Checked','off', 'Callback', {@myTransparency, H});
-        uimenu(c, 'Label','60%', 'Checked','off', 'Callback', {@myTransparency, H});
-        uimenu(c, 'Label','80%', 'Checked','off', 'Callback', {@myTransparency, H});
         
+        % -- Transparency --
+        if expert
+          c = uimenu(cmenu, 'Label','Transparency'); tlevel = 0:20:80; 
+          uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(1)), 'Checked','on',  'Callback', {@myTransparency, H});
+          for ti=2:numel(tlevel)
+            uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked','off', 'Callback', {@myTransparency, H});
+          end
+        end
+        
+        
+        
+        % -- Background Color --
         c = uimenu(cmenu, 'Label','Background Color');
-        uimenu(c, 'Label','White',     'Checked','on', 'Callback', {@myBackgroundColor, H, [1 1 1]});
+        uimenu(c, 'Label','White',     'Checked','on',  'Callback', {@myBackgroundColor, H, [1 1 1]});
         uimenu(c, 'Label','Black',     'Checked','off', 'Callback', {@myBackgroundColor, H, [0 0 0]});
         uimenu(c, 'Label','Custom...', 'Checked','off', 'Callback', {@myBackgroundColor, H, []});
         
-        uimenu(cmenu, 'Label','Data Cursor', 'Callback', {@myDataCursor, H});
         
-        uimenu(cmenu, 'Label','Slider', 'Callback', {@myAddslider, H});
+        
+        % -- Interaction --
+        c = uimenu(cmenu, 'Label','Interaction');
+        uimenu(c, 'Label','Rotate', 'Checked','on', 'Callback',{@mySwitchRotate, H});
+        uimenu(c, 'Label','Data Cursor', 'Callback', {@myDataCursor, H});
+        uimenu(c, 'Label','Slider', 'Callback', {@myAddslider, H});
 
-        uimenu(cmenu, 'Label','Save As...', 'Separator', 'on', ...
-            'Callback', {@mySave, H,H.filename{1}});
         
+        
+        %% ----------------------------------------------------------------  
+        
+        
+        % print resolution 
+        if expert  
+          c = uimenu(cmenu, 'Label','Print resolution','Separator', 'on');
+          printres = [75 150 300 600];
+          onoff = {'off','on'};  myres = printres==cat_get_defaults('print.dpi'); 
+          for ri = 1:numel(printres)
+            uimenu(c, 'Label',sprintf('%0.0f',printres(ri)), 'Checked',onoff{myres(ri)+1},...
+              'Callback', {@myPrintResolution, H, printres(ri)});
+          end
+        end
+        
+        % print
+        uimenu(cmenu, 'Label','Save As...',  ...
+            'Callback', {@mySave, H});
+             
+          
         set(H.rotate3d,'enable','off');
         try set(H.rotate3d,'uicontextmenu',cmenu); end
-        try set(H.patch,   'uicontextmenu',cmenu); end
+        try set(H.patch(1),   'uicontextmenu',cmenu); end
         set(H.rotate3d,'enable','on');
         
         dcm_obj = datacursormode(H.figure);
         set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
             'DisplayStyle','Window', 'Updatefcn',{@myDataCursorUpdate, H});
+    
+    %-printresolution
+    %======================================================================
+    case 'printresolution'
+        if isempty(varargin), varargin{1} = gca; end
+        H = getHandles(varargin{1});
+        cat_get_defaults('print.dpi',varargin{3});  
         
     %-View
     %======================================================================
@@ -537,7 +962,7 @@ switch lower(action)
     case 'saveas'
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
-        mySavePNG(H.patch,[],H, varargin{2});
+        mySavePNG(H.patch(1),[],H, varargin{2});
 
     %-Underlay
     %======================================================================
@@ -559,9 +984,9 @@ switch lower(action)
           v = v.cdata;
         end
 
-        setappdata(H.patch,'curvature',v);
+        setappdata(H.patch(1),'curvature',v);
         setappdata(H.axis,'handles',H);
-        d = getappdata(H.patch,'data');
+        d = getappdata(H.patch(1),'data');
         updateTexture(H,d);
 
     %-Overlay
@@ -598,8 +1023,8 @@ switch lower(action)
         if isempty(varargin), varargin{1} = gca; end
         if length(varargin) == 1, varargin{2} = 'on'; end
         H   = getHandles(varargin{1});
-        d   = getappdata(H.patch,'data');
-        col = getappdata(H.patch,'colourmap');
+        d   = getappdata(H.patch(1),'data');
+        col = getappdata(H.patch(1),'colourmap');
         if strcmpi(varargin{2},'off')
             if isfield(H,'colourbar') && ishandle(H.colourbar)
                %set(H.colourbar,'visible','off')  
@@ -630,11 +1055,11 @@ switch lower(action)
         end
         c(1:size(col,1),1,1:size(col,2)) = col;
         ic = findobj(H.colourbar,'Type','image');
-        clim = getappdata(H.patch, 'clim');
+        clim = getappdata(H.patch(1), 'clim');
         if isempty(clim), clim = [false NaN NaN]; end
 
         % Update colorbar colors if clipping is used
-        clip = getappdata(H.patch, 'clip');
+        clip = getappdata(H.patch(1), 'clip');
         if ~isempty(clip)
             if ~isnan(clip(2)) && ~isnan(clip(3))
                 ncol = length(col);
@@ -645,27 +1070,42 @@ switch lower(action)
                 c(1:size(col,1),1,1:size(col,2)) = col;
             end
         end
-        if size(d,1) > 1
+        if 0% size(d,1) > 1
             set(ic,'CData',c(1:size(d,1),:,:));
             set(ic,'YData',[1 size(d,1)]);
             set(H.colourbar,'YLim',[1 size(d,1)]);
             set(H.colourbar,'YTickLabel',[]);
         else
             set(ic,'CData',c);
-            clim = getappdata(H.patch,'clim');
+            clim = getappdata(H.patch(1),'clim');
             if isempty(clim), clim = [false min(d) max(d)]; end
             if clim(3) > clim(2)
               set(ic,'YData',clim(2:3));
               set(H.colourbar,'YLim',clim(2:3));
             end
         end
-        if isfield(H,'labelmap')
+        
+        objatlases = findobj(H.patch(1),'Label','Atlases');
+        if isfield(H,'labelmap') && ~isempty(findobj(get(objatlases,'children'),'Checked','on'))
           labellength = min(100,max(cellfun('length',H.labelmap.labelnam2))); 
           ss = diff(H.labelmap.ytick(1:2)); 
           set(H.colourbar,'ytick',H.labelmap.ytick,'yticklabel',H.labelmap.labelnam2(1:ss:end),...
             'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
             'TickLabelInterpreter','none');
           set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
+        else
+%           % delete old colorbar
+%          set(H.axis,'Position',[0.10 0.10 0.8 0.8]);
+%          setappdata(H.axis,'handles',H);
+%           %delete(H.colourbar); 
+%           %H = rmfield(H,'colourbar');
+%           
+%           
+%           if 0
+%             H.colourbar = colorbar('peer',H.axis); %'EastOutside');
+%             set(H.colourbar,'Tag','','Position',[.93 0.2 0.02 0.6]);
+%             set(get(H.colourbar,'Children'),'Tag','');
+%           end
         end
         setappdata(H.axis,'handles',H);
         
@@ -675,18 +1115,20 @@ switch lower(action)
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
         if length(varargin) == 1
-            varargout = { getappdata(H.patch,'colourmap') };
+            varargout = { getappdata(H.patch(1),'colourmap') };
             return;
         else
-            setappdata(H.patch,'colourmap',varargin{2});
-            d = getappdata(H.patch,'data');
+            setappdata(H.patch(1),'colourmap',varargin{2});
+            d = getappdata(H.patch(1),'data');
             updateTexture(H,d);
         end
         if nargin>1
             H.colormap = colormap(varargin{2});
         end
-        set(H.colourbar,'YLim',get(H.axis,'clim')); 
- 
+        if isfield(H,'colourbar')
+          set(H.colourbar,'YLim',get(H.axis,'clim')); 
+        end
+        
         %{
   switch varargin{1}
     case 'onecolor'
@@ -722,12 +1164,12 @@ switch lower(action)
 %         if isempty(varargin), varargin{1} = gca; end
 %         H = getHandles(varargin{1});
 %         if length(varargin) == 1
-%             varargout = { getappdata(H.patch,'labelmap') };
+%             varargout = { getappdata(H.patch(1),'labelmap') };
 %             return;
 %         else
-%             setappdata(H.patch,'labelmap',varargin{2});
-%             d = getappdata(H.patch,'data');
-%             updateTexture(H,d,getappdata(H.patch,'labelmap'),'flat');
+%             setappdata(H.patch(1),'labelmap',varargin{2});
+%             d = getappdata(H.patch(1),'data');
+%             updateTexture(H,d,getappdata(H.patch(1),'labelmap'),'flat');
 %         end     
         
     
@@ -737,17 +1179,17 @@ switch lower(action)
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
         if length(varargin) == 1
-            c = getappdata(H.patch,'clim');
+            c = getappdata(H.patch(1),'clim');
             if ~isempty(c), c = c(2:3); end
             varargout = { c };
             return;
         else
             if strcmp(varargin{2},'on') || isempty(varargin{2}) || any(~isfinite(varargin{2}))
-                setappdata(H.patch,'clim',[false NaN NaN]);
+                setappdata(H.patch(1),'clim',[false NaN NaN]);
             else
-                setappdata(H.patch,'clim',[true varargin{2}]);
+                setappdata(H.patch(1),'clim',[true varargin{2}]);
             end
-            d = getappdata(H.patch,'data');
+            d = getappdata(H.patch(1),'data');
             updateTexture(H,d);
           
         end
@@ -784,17 +1226,17 @@ switch lower(action)
         if isempty(varargin), varargin{1} = gca; end
         H = getHandles(varargin{1});
         if length(varargin) == 1
-            c = getappdata(H.patch,'clip');
+            c = getappdata(H.patch(1),'clip');
             if ~isempty(c), c = c(2:3); end
             varargout = { c };
             return;
         else
             if isempty(varargin{2}) || any(~isfinite(varargin{2}))
-                setappdata(H.patch,'clip',[false NaN NaN]);
+                setappdata(H.patch(1),'clip',[false NaN NaN]);
             else
-                setappdata(H.patch,'clip',[true varargin{2}]);
+                setappdata(H.patch(1),'clip',[true varargin{2}]);
             end
-            d = getappdata(H.patch,'data');
+            d = getappdata(H.patch(1),'data');
             updateTexture(H,d);
         end
         
@@ -833,7 +1275,7 @@ switch lower(action)
         try
             H = cat_surf_render('Disp',action,varargin{:});
         catch
-            error('Unknown action.');
+            error('Unknown action "%s".',action);
         end
 end
 
@@ -843,7 +1285,7 @@ varargout = {H};
 %==========================================================================
 function AddSliders(H)
 
-c = getappdata(H.patch,'clim');
+c = getappdata(H.patch(1),'clim');
 mn = c(2);
 mx = c(3);
 
@@ -902,8 +1344,8 @@ sliderPanel(...
         'NumFormat', '%f', ...
         'Callback', @slider_clip_max);
 
-setappdata(H.patch,'clip',[true mn mn]);
-setappdata(H.patch,'clim',[true mn mx]);
+setappdata(H.patch(1),'clip',[true mn mn]);
+setappdata(H.patch(1),'clim',[true mn mx]);
         
 %==========================================================================
 function O = getOptions(varargin)
@@ -929,7 +1371,7 @@ if ishandle(H) && ~isappdata(H,'handles')
     a = H; clear H;
     H.axis     = a;
     H.figure   = ancestor(H.axis,'figure');
-    H.patch    = findobj(H.axis,'type','patch');
+    H.patch(1)    = findobj(H.axis,'type','patch');
     H.light    = findobj(H.axis,'type','light');
     H.rotate3d = rotate3d(H.figure);
     setappdata(H.axis,'handles',H);
@@ -951,7 +1393,7 @@ else
 end
 
 h = findobj(obj,'Label','Slider');
-d = getappdata(H.patch,'data');
+d = getappdata(H.patch(1),'data');
 if isempty(d) || ~any(d(:)), set(h,'Enable','off'); else set(h,'Enable','on'); end
 
 if isfield(H,'slider')
@@ -968,35 +1410,64 @@ end
 if numel(findobj('Tag','CATSurfRender','Type','Patch')) > 1
     h = findobj(obj,'Tag','SynchroMenu');
     set(h,'Visible','on');
-end
-
-h  = findobj(obj,'Label','Colorbar');
-hx = findobj(obj,'Label','Colormap');
-hr = findobj(obj,'Label','Colorrange');
-d = getappdata(H.patch,'data');
-if isempty(d) || ~any(d(:)), 
-  set(h ,'Enable','off'); 
-  set(hx,'Enable','off'); 
-  set(hr,'Enable','off'); 
+    % set view separator
+    objview = get(findobj('Label','View'),'children'); 
+    if numel(objview)==1
+      set(findobj(objview,'Label','Right'),'Separator','on'); 
+    else
+      for ovi=1:numel(objview)
+        set(findobj(objview{ovi},'Label','Right'),'Separator','on'); 
+      end
+    end
+    % set caxis separator
+    set(findobj('Label','Synchronise Colorranges','Tag','CATSurfRender','Type','Patch'),'Separator','on'); 
 else
-  set(h ,'Enable','on');
-  set(hx,'Enable','on');
-  set(hr,'Enable','on');
-end
-if isfield(H,'labelmap')
-  set(hx,'Enable','off'); 
-  set(hr,'Enable','off'); 
+    h = findobj(obj,'Tag','SynchroMenu');
+    set(h,'Visible','off');
+    % set view separator
+    objview = get(findobj('Label','View'),'children'); 
+    if numel(objview)==1
+      set(findobj(objview,'Label','Right'),'Separator','on'); 
+    else
+      for ovi=1:numel(objview)
+        set(findobj(objview{ovi},'Label','Right'),'Separator','off'); 
+      end
+    end
+    % set caxis separator
+    set(findobj('Label','Synchronise Colorranges','Tag','CATSurfRender','Type','Patch'),'Separator','off'); 
 end
 
+
+% enable texture elements
+objtextures = findobj(obj,'Label','Textures');
+objatlases  = findobj(obj,'Label','Atlases');
+objcbar     = findobj(obj,'Label','Colorbar');
+objcmap     = findobj(obj,'Label','Colormap');
+objcrange   = findobj(obj,'Label','Colorrange');
+d = getappdata(H.patch(1),'data');
+if isempty(d) || ~isempty(findobj(get(objatlases,'children'),'Checked','on')) || ...
+  ~isempty(findobj(findobj(get(objtextures,'children'),'Label','none'),'Checked','on')) || ...
+  ~isempty(findobj(findobj(get(objatlases,'children'),'Label','none'),'Checked','on'))
+  set(objcbar  ,'Enable','off'); 
+  set(objcmap  ,'Enable','off'); 
+  set(objcrange,'Enable','off'); 
+else
+  set(objcbar  ,'Enable','on');
+  set(objcmap  ,'Enable','on');
+  set(objcrange,'Enable','on');
+end
+
+
+%
 if isfield(H,'colourbar')
     if ishandle(H.colourbar)
-        set(h,'Checked','on');
+        set(objcbar,'Checked','on');
     else
         H = rmfield(H,'colourbar');
-        set(h,'Checked','off');
+        set(objcbar,'Checked','off');
     end
 else
-    set(h,'Checked','off');
+    set(objcbar,'Checked','off');
 end
 setappdata(H.axis,'handles',H);
 
@@ -1004,11 +1475,11 @@ setappdata(H.axis,'handles',H);
 function myPostCallback(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
 if numel(P) == 1
-  if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+  if strcmp(H.light(1).Visible,'on') && ~isempty(H.light), camlight(H.light(1)); end
 else
     for i=1:numel(P)
         H = getappdata(ancestor(P(i),'axes'),'handles');
-        if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
+        if strcmp(H.light(1).Visible,'on') && ~isempty(H.light), camlight(H.light(1)); end
     end
 end
 
@@ -1045,22 +1516,27 @@ end
 
 %==========================================================================
 function myInflate(obj,evt,H)
-spm_mesh_inflate(H.patch,Inf,1);
+spm_mesh_inflate(H.patch(1),Inf,1);
+axis(H.axis,'image');
+
+%==========================================================================
+function myDataSmooth(obj,evt,H)
+spm_mesh_smooth(H.patch(1),H.patch(1).FaceVertexAlphaData,1);
 axis(H.axis,'image');
 
 %==========================================================================
 function myCCLabel(obj,evt,H)
-C   = getappdata(H.patch,'cclabel');
-F   = get(H.patch,'Faces');
+C   = getappdata(H.patch(1),'cclabel');
+F   = get(H.patch(1),'Faces');
 ind = sscanf(get(obj,'Label'),'Component %d');
-V   = get(H.patch,'FaceVertexAlphaData');
-Fa  = get(H.patch,'FaceAlpha');
+V   = get(H.patch(1),'FaceVertexAlphaData');
+Fa  = get(H.patch(1),'FaceAlpha');
 if ~isnumeric(Fa)
     if ~isempty(V), Fa = max(V); else Fa = 1; end
     if Fa == 0, Fa = 1; end
 end
 if isempty(V) || numel(V) == 1
-    Ve = get(H.patch,'Vertices');
+    Ve = get(H.patch(1),'Vertices');
     if isempty(V) || V == 1
         V = Fa * ones(size(Ve,1),1);
     else
@@ -1074,17 +1550,17 @@ else
     V(reshape(F(C==ind,:),[],1)) = Fa;
     set(obj,'Checked','on');
 end
-set(H.patch, 'FaceVertexAlphaData', V);
+set(H.patch(1), 'FaceVertexAlphaData', V);
 if all(V)
-    set(H.patch, 'FaceAlpha', Fa);
+    set(H.patch(1), 'FaceAlpha', Fa);
 else
-    set(H.patch, 'FaceAlpha', 'interp');
+    set(H.patch(1), 'FaceAlpha', 'interp');
 end
 
 %==========================================================================
 function myTransparency(obj,evt,H)
 t = 1 - sscanf(get(obj,'Label'),'%d%%') / 100;
-set(H.patch,'FaceAlpha',t);
+set(H.patch(1),'FaceAlpha',t);
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
 
@@ -1123,15 +1599,15 @@ caml = findall(gcf,'Type','light','Style','local');     % switch off local light
 % new lights
 lighting gouraud
 set(caml,'visible','off');
-set(H.patch,'BackFaceLighting','reverselit');
-set(H.patch,'LineStyle','-','EdgeColor','none');
+set(H.patch(1),'BackFaceLighting','reverselit');
+set(H.patch(1),'LineStyle','-','EdgeColor','none');
 switch H.catLighting
   case 'none'
   case 'inner'
     H.light(2) = light('Position',[0 0 0]); 
-    ks = get(H.patch,'SpecularStrength'); set(H.patch,'SpecularStrength',min(0.1,ks));
-    n  = get(H.patch,'SpecularExponent'); set(H.patch,'SpecularExponent',max(2,n)); 
-    set(H.patch,'BackFaceLighting','unlit');
+    ks = get(H.patch(1),'SpecularStrength'); set(H.patch(1),'SpecularStrength',min(0.1,ks));
+    n  = get(H.patch(1),'SpecularExponent'); set(H.patch(1),'SpecularExponent',max(2,n)); 
+    set(H.patch(1),'BackFaceLighting','unlit');
   case 'top'
     H.light(2) = light('Position',[ 0  0  1],'Color',repmat(1,1,3));    %#ok<*REPMAT>
   case 'bottom'
@@ -1162,8 +1638,8 @@ switch H.catLighting
     H.light(5) = light('Position',[ 0 -1  1],'Color',repmat(0.2,1,3)); 
     H.light(6) = light('Position',[ 0  0 -1],'Color',repmat(0.1,1,3));   
   case 'grid'
-    set(H.patch,'LineStyle','-','EdgeColor',[0 0 0]);
-    set(H.patch,'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
+    set(H.patch(1),'LineStyle','-','EdgeColor',[0 0 0]);
+    set(H.patch(1),'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
   case 'cam'
     set(caml,'visible','on');
 end
@@ -1173,7 +1649,7 @@ set(obj,'Checked','on');
 %==========================================================================
 function myMaterial(obj,evt,H,mat)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
-set(H.patch,'LineStyle','none');
+set(H.patch(1),'LineStyle','none');
 switch mat
   case 'shiny'
     material shiny;
@@ -1182,31 +1658,31 @@ switch mat
   case 'metal'
     material metal;
   case 'grid'
-    set(H.patch,'LineStyle','-','EdgeColor',[0 0 0]);
-    set(H.patch,'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
+    set(H.patch(1),'LineStyle','-','EdgeColor',[0 0 0]);
+    set(H.patch(1),'AmbientStrength',0.7,'DiffuseStrength',0.1,'SpecularStrength',0.6,'SpecularExponent',10);
   case 'greasy'
-    set(H.patch,'AmbientStrength',0.2,'DiffuseStrength',0.5,'SpecularStrength',0.3,'SpecularExponent',0.6);
+    set(H.patch(1),'AmbientStrength',0.2,'DiffuseStrength',0.5,'SpecularStrength',0.3,'SpecularExponent',0.6);
   case 'plastic'
-    set(H.patch,'AmbientStrength',0.1,'DiffuseStrength',0.6,'SpecularStrength',0.3,'SpecularExponent',2);
+    set(H.patch(1),'AmbientStrength',0.1,'DiffuseStrength',0.6,'SpecularStrength',0.3,'SpecularExponent',2);
   case 'metal'
-    set(H.patch,'AmbientStrength',0.4,'DiffuseStrength',0.9,'SpecularStrength',0.1,'SpecularExponent',1);
+    set(H.patch(1),'AmbientStrength',0.4,'DiffuseStrength',0.9,'SpecularStrength',0.1,'SpecularExponent',1);
   case 'default'
-    set(H.patch,'AmbientStrength',0.4,'DiffuseStrength',0.6,'SpecularStrength',0.0,'SpecularExponent',10);
+    set(H.patch(1),'AmbientStrength',0.4,'DiffuseStrength',0.6,'SpecularStrength',0.0,'SpecularExponent',10);
   case 'custom' 
     spm_figure('getwin','Interactive'); 
     % actual values
-    ka = get(H.patch,'AmbientStrength');
-    kd = get(H.patch,'DiffuseStrength');
-    ks = get(H.patch,'SpecularStrength');
-    n  = get(H.patch,'SpecularExponent'); 
+    ka = get(H.patch(1),'AmbientStrength');
+    kd = get(H.patch(1),'DiffuseStrength');
+    ks = get(H.patch(1),'SpecularStrength');
+    n  = get(H.patch(1),'SpecularExponent'); 
     % new values
     ka = spm_input('AmbientStrength',1,'r',ka,[1,1]);
     kd = spm_input('DiffuseStrength',2,'r',kd,[1,1]);
     ks = spm_input('SpecularStrength',3','r',ks,[1,1]);
     n  = spm_input('SpecularExponent',4,'r',n,[1,1]);
-    set(H.patch,'AmbientStrength',ka,'DiffuseStrength',kd,'SpecularStrength',ks,'SpecularExponent',n);
+    set(H.patch(1),'AmbientStrength',ka,'DiffuseStrength',kd,'SpecularStrength',ks,'SpecularExponent',n);
   otherwise
-    set(H.patch,'AmbientStrength',0.2,'DiffuseStrength',0.9,'SpecularStrength',0.8,'SpecularExponent',10);
+    set(H.patch(1),'AmbientStrength',0.2,'DiffuseStrength',0.9,'SpecularStrength',0.8,'SpecularExponent',10);
 end
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
@@ -1215,11 +1691,14 @@ set(obj,'Checked','on');
 
 %==========================================================================
 function myCaxis(obj,evt,H,rangetype)
-d = getappdata(H.patch,'data');
-if mean(d(:))>0 && std(d(:),1)>0
+%% d = get(H.patch(1),'FaceVertexCData');
+d = getappdata(H.patch(1),'data'); d(isnan(d) | isinf(d)) = []; 
+if cat_stat_nanmean(d(:))>0 && cat_stat_nanstd(d(:),1)>0
   switch rangetype
       case 'min-max', 
           range = [min(d) max(d)]; 
+      case '1p'
+          range = iscaling(d,[0.01 0.99]);
       case '2p'
           range = iscaling(d,[0.02 0.98]);
       case '5p'
@@ -1250,16 +1729,24 @@ set(obj,'Checked','on');
 %==========================================================================
 function mySynchroniseCaxis(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
-range = getappdata(H.patch, 'clim');
+range = getappdata(H.patch(1), 'clim');
 range = range(2:3);
 
 for i=1:numel(P)
     H = getappdata(ancestor(P(i),'axes'),'handles');
     cat_surf_render('Clim',H,range);
 end
+%==========================================================================
+function myInvColourmap(obj,evt,H,varargin)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')}; 
+col = getappdata(H.patch(1),'colourmap');
+setappdata(H.patch(1),'colourmap',flipud(col)); 
+cat_surf_render('Colourmap',H,flipud(col));
+set(obj,'Checked',toggle(get(obj,'Checked')));
 
 %==========================================================================
 function myColourmap(obj,evt,H,varargin)
+inv = strcmp(get(findobj(get(obj,'parent'),'Label','Invert Colormap'),'Checked'),'on');
 if ~isempty(varargin)
   switch varargin{1}
     case 'color'
@@ -1273,23 +1760,34 @@ if ~isempty(varargin)
       %cnhigh = interp2(cn,GY,GX); 
       %H = cat_surf_render('Colourmap',H,cnhigh); colormap(cnhigh);
     otherwise
-      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+      if inv
+        H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+      else
+        H=cat_surf_render('Colourmap',H,flipud(feval(get(obj,'Label'),256)));
+      end
   end
 else
   switch get(obj,'Label')
     case {'CAThot','CAThotinv','CATcold','CATcoldinv'}
-      catcm = get(obj,'Label'); catcm(1:3) = []; 
-      H=cat_surf_render('Colourmap',H,cat_io_colormaps(catcm,256));
+      catcm = get(obj,'Label'); catcm(1:3) = [];
+      cm = cat_io_colormaps(catcm,256); 
     case 'CATtissues'
-      H=cat_surf_render('Colourmap',H,cat_io_colormaps('BCGWHw',256));
+      cm = cat_io_colormaps('BCGWHw',256);
     case 'CATcold&hot'
-      H=cat_surf_render('Colourmap',H,cat_io_colormaps('BWR',256));
+      cm = cat_io_colormaps('BWR',256);
     otherwise 
-      H=cat_surf_render('Colourmap',H,feval(get(obj,'Label'),256));
+      cm = feval(get(obj,'Label'),256);
+  end
+  if inv
+    H=cat_surf_render('Colourmap',H,flipud(cm)); 
+  else
+    H=cat_surf_render('Colourmap',H,cm); 
   end
 end
-set(get(get(obj,'parent'),'children'),'Checked','off');
-if isfield(H,'colourbar'),H=cat_surf_render('Clim',H,H.colourbar.Limits); end
+set(setdiff(get(get(obj,'parent'),'children'),...
+  [findobj(get(obj,'parent'),'Label','Colorbar'),...
+   findobj(get(obj,'parent'),'Label','Invert Colormap')]),'Checked','off');
+%if isfield(H,'colourbar'),cat_surf_render('Clim',H,H.colourbar.Limits); end
 set(obj,'Checked','on');
 
 %==========================================================================
@@ -1320,9 +1818,9 @@ pos = get(evt,'Position');
 txt = {['X: ',num2str(pos(1))],...
        ['Y: ',num2str(pos(2))],...
        ['Z: ',num2str(pos(3))]};
-i = ismember(get(H.patch,'vertices'),pos,'rows');
+i = ismember(get(H.patch(1),'vertices'),pos,'rows');
 txt = {['Node: ' num2str(find(i))] txt{:}};
-d = getappdata(H.patch,'data');
+d = getappdata(H.patch(1),'data');
 if ~isempty(d) && any(d(:))
     if any(i), txt = {txt{:} ['T: ',num2str(d(i))]}; end
 end
@@ -1352,7 +1850,24 @@ else
     whitebg(h,c);
     set(h,'Color',c);
 end
+set(get(get(obj,'parent'),'children'),'Checked','off'); % deactivate all 
+set(obj,'Checked','on');
 
+%==========================================================================
+function myPrintResolution(obj,evt,H,varargin)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+cat_surf_render('printresolution',H,toggle(get(obj,'Checked')),varargin{1});
+
+obji = findobj('Tag','','type','uimenu','label','Print resolution'); 
+for i=1:numel(obji)
+    set(get(obji(i),'children'),'Checked','off'); % deactivate all 
+    
+    % active the one 
+    objj = findobj(get(obji(i),'children'),'label',obj.Label); 
+    for j=1:numel(objj)
+        set(objj(j),'Checked','on');
+    end
+end
 
 %==========================================================================
 function mySavePNG(obj,evt,H,filename)
@@ -1391,7 +1906,7 @@ function mySavePNG(obj,evt,H,filename)
   set(H.axis,'units',u);
   set(get(h,'children'),'visible','off');
   colorbar('Position',[.93 0.2 0.02 0.6]); 
-  colormap(getappdata(H.patch,'colourmap'));
+  colormap(getappdata(H.patch(1),'colourmap'));
   [pp,ff,ee] = fileparts(H.filename{1}); 
   %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');    
   %a = get(h,'children');
@@ -1405,22 +1920,16 @@ function mySavePNG(obj,evt,H,filename)
   set(getappdata(obj,'fig'),'renderer',r);
 
 %==========================================================================
-function mySave(obj,evt,H,filename)
-  if ~exist('filename','var')
-    [filename, pathname, filterindex] = uiputfile({...
-      '*.png' 'PNG files (*.png)';...
-      '*.gii' 'GIfTI files (*.gii)'; ...
-      '*.dae' 'Collada files (*.dae)';...
-      '*.idtf' 'IDTF files (*.idtf)'}, 'Save as');
-  else
-    [pth,nam,ext] = fileparts(filename);
-    if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
-    [filename, pathname, filterindex] = uiputfile({...
-      '*.png' 'PNG files (*.png)';...
-      '*.gii' 'GIfTI files (*.gii)'; ...
-      '*.dae' 'Collada files (*.dae)';...
-      '*.idtf' 'IDTF files (*.idtf)'}, 'Save as',nam);
-  end
+function mySave(obj,evt,H)
+  filename = get(H.figure,'Name'); 
+
+  [pth,nam,ext] = fileparts(filename);
+  if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
+  [filename, pathname, filterindex] = uiputfile({...
+    '*.png' 'PNG files (*.png)';...
+    '*.gii' 'GIfTI files (*.gii)'; ...
+    '*.dae' 'Collada files (*.dae)';...
+    '*.idtf' 'IDTF files (*.idtf)'}, 'Save as',nam);
 
 if ~isequal(filename,0) && ~isequal(pathname,0)
     [pth,nam,ext] = fileparts(filename);
@@ -1445,12 +1954,12 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
     end
     switch filterindex
         case 1
-            G = gifti(H.patch);
+            G = gifti(H.patch(1));
             [p,n,e] = fileparts(filename);
             [p,n,e] = fileparts(n);
             switch lower(e)
                 case '.func'
-                    save(gifti(getappdata(H.patch,'data')),...
+                    save(gifti(getappdata(H.patch(1),'data')),...
                         fullfile(pathname, filename));
                 case '.surf'
                     save(gifti(struct('vertices',G.vertices,'faces',G.faces)),...
@@ -1479,22 +1988,24 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             set(H.axis,'units',u);
             set(get(h,'children'),'visible','off');
             colorbar('Position',[.93 0.2 0.02 0.6]); 
-            colormap(getappdata(H.patch,'colourmap'));
+            colormap(getappdata(H.patch(1),'colourmap'));
             [pp,ff,ee] = fileparts(H.filename{1}); 
             %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
             %a = get(h,'children');
-            %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);       
+            %set(a,'Position',get(a,'Position').*[0 0 1 1]+[10 10 0 0]);     
+            if get(H.patch(1),'LineWidth')>0; set(H.patch(1),'LineWidth',0.125); end % thin mesh lines, if mesh is visible
             if isdeployed
-                deployprint(h, '-dpng', '-opengl', fullfile(pathname, filename));
+                deployprint(h, '-dpng', '-opengl',sprintf('-r%d',cat_get_defaults('print.dpi')), fullfile(pathname, filename));
             else
-                print(h, '-dpng', '-opengl', fullfile(pathname, filename));
+                print(h, '-dpng', '-opengl', sprintf('-r%d',cat_get_defaults('print.dpi')), fullfile(pathname, filename));
             end
+            if get(H.patch(1),'LineWidth')>0; set(H.patch(1),'LineWidth',0.5); end % restore mesh default 
             close(h);
             set(getappdata(obj,'fig'),'renderer',r);
         case 3
-            save(gifti(H.patch),fullfile(pathname, filename),'collada');
+            save(gifti(H.patch(1)),fullfile(pathname, filename),'collada');
         case 4
-            save(gifti(H.patch),fullfile(pathname, filename),'idtf');
+            save(gifti(H.patch(1)),fullfile(pathname, filename),'idtf');
     end
 end
 
@@ -1508,6 +2019,119 @@ function myOverlay(obj,evt,H)
 [P, sts] = spm_select(1,'any','Select file to overlay');
 if ~sts, return; end
 cat_surf_render('Overlay',H,P);
+
+%==========================================================================
+function myChangeMesh(obj,evt,H)
+set(get(get(obj,'parent'),'children'),'Checked','off');
+set(obj,'Checked','on');
+id = find(cellfun('isempty',strfind(H.meshs(:,1),obj.Label))==0); 
+if ischar(H.meshs{id,2})
+  [pp,ff,ee] = spm_fileparts(H.meshs{id,2});  
+  switch ee
+      case '.gii'
+          M  = gifti(H.meshs{id,2}); 
+      otherwise
+          M  = cat_io_FreeSurfer('read_surf',H.meshs{id,2});
+          M  = gifti(M);
+  end
+  H.patch(1).Vertices = M.vertices; 
+else
+  H.patch(1).Vertices = H.meshs{id,2}; 
+end
+%==========================================================================
+function myChangeROI(obj,evt,H)
+
+
+%==========================================================================
+function myChangeTexture(obj,evt,H)
+% set checks
+objTextures = findobj(get(get(obj,'parent'),'parent'),'Label','Textures'); 
+objAtlases  = findobj(get(get(obj,'parent'),'parent'),'Label','Atlases'); 
+set(get(objTextures,'children'),'Checked','off');
+set(get(objAtlases,'children'),'Checked','off');
+set(obj,'Checked','on');
+
+% update colormap and colorange
+objcmap     = findobj(get(get(obj,'parent'),'parent'),'Label','Colormap'); 
+objcrange   = findobj(get(get(obj,'parent'),'parent'),'Label','Colorrange'); 
+if strcmp(get(get(obj,'parent'),'Label'),'Textures')
+  set(objcmap,'Enable','on');
+  set(objcrange,'Enable','on');
+  myColourmap(findobj(get(objcmap,'children'),'Label','jet'),evt,H)
+elseif strcmp(get(get(obj,'parent'),'Label'),'Atlases')
+  set(objcmap,'Enable','off');
+  set(objcrange,'Enable','off'); 
+end
+
+id = find(strcmp(H.textures(:,1),obj.Label)); 
+if isempty(id)
+  updateTexture(H,[]); 
+  cat_surf_render('Colourbar',H,'off');
+  set(objcmap,'Enable','off');
+  set(objcrange,'Enable','off'); 
+  return
+end
+if isstruct(H.textures{id,2})
+  [pp,ff,ee] = spm_fileparts(H.textures{id,2}.fname);  
+  switch ee
+      case '.gii'
+          M  = gifti(H.textures{id,2}.fname); 
+      case '.annot'
+          %%
+          set(H.figure,'Name',spm_file(H.textures{id,2}.fname,'short80'));
+          [fsv,cdata,colortable] = cat_io_FreeSurfer('read_annotation',H.textures{id,2}.fname); %clear fsv;
+          [sentry,id] = sort(colortable.table(:,5));
+          M.cdata = cdata; nid=1;
+          for sentryi = 1:numel(sentry)
+            ROI = round(cdata)==sentry(sentryi); 
+            if sum(ROI)>0 && ( (sentryi==numel(sentry)) || sentry(sentryi)~=sentry(sentryi+1) && ...
+              (sentryi==1 || sentry(sentryi)~=sentry(sentryi+1))), 
+              M.cdata(round(cdata)==sentry(sentryi)) = nid;  
+              labelmap(nid,:) = colortable.table(id(sentryi),1:3)/255; %#ok<AGROW>
+              labelnam(nid)   = colortable.struct_names(id(sentryi)); %#ok<AGROW>
+              nid=nid+1;
+              ROIv(nid) = sum(ROI); %#ok<AGROW> 
+            end
+          end
+          %labelmap = colortable.table(id,1:3)/255;
+          % addition maximum element
+          M.cdata(M.cdata>colortable.numEntries)=0; %colortable.numEntries+1;  
+          labelmapclim = [min(M.cdata),max(M.cdata)];
+          setappdata(H.patch(1),'data',M.cdata);
+          
+        
+          %%
+          setappdata(H.patch(1),'colourmap',labelmap); 
+          cat_surf_render('clim',H.axis,labelmapclim - 1); 
+          colormap(labelmap); caxis(labelmapclim - [1 0]);
+          H = cat_surf_render('ColorBar',H.axis,'on'); 
+          labelnam2 = labelnam; for lni=1:numel(labelnam2),labelnam2{lni} = [' ' labelnam2{lni} ' ']; end
+          labelnam2(end+1) = {''}; labelnam2(end+1) = {''}; 
+          labellength = min(100,max(cellfun('length',labelnam2))); 
+          ss = max(1,round(diff(labelmapclim+1)/30)); 
+          ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
+          set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
+            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
+            'TickLabelInterpreter','none');
+          set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
+          H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
+          setappdata(H.axis,'handles',H);
+          return
+          %labelnam = colortable.struct_names(id);    
+      otherwise
+          M  = cat_io_FreeSurfer('read_surf_data',H.textures{id,2}.fname);
+          M  = gifti(M);
+  end
+  setappdata(H.patch(1),'data',M.cdata);
+  cat_surf_render('Colourbar',H,'off');
+  cat_surf_render('Colourbar',H,'on');
+  if H.textures{id,2}.smoothed==0
+    myCaxis(obj,evt,H,'1p')
+  else
+    myCaxis(obj,evt,H,'min-max')
+  end
+  set(H.figure,'Name',spm_file(H.textures{id,2}.fname,'short80'));
+end
 
 %==========================================================================
 function myUnderlay(obj,evt,H)
@@ -1527,11 +2151,11 @@ function myChangeGeometry(obj,evt,H)
 if ~sts, return; end
 G = gifti(P);
 
-if size(get(H.patch,'Vertices'),1) ~= size(G.vertices,1)
+if size(get(H.patch(1),'Vertices'),1) ~= size(G.vertices,1)
     error('Number of vertices must match.');
 end
-set(H.patch,'Vertices',G.vertices)
-set(H.patch,'Faces',G.faces)
+set(H.patch(1),'Vertices',G.vertices)
+set(H.patch(1),'Faces',G.faces)
 view(H.axis,[-90 0]);
 
 %==========================================================================
@@ -1558,16 +2182,17 @@ axis(H.axis,'image');
 %==========================================================================
 function C = updateTexture(H,v,col)%$,FaceColor)
 
+for pi=1:numel(H.patch)
 %-Get colourmap
 %--------------------------------------------------------------------------
-if ~exist('col','var'), col = getappdata(H.patch,'colourmap'); end
+if ~exist('col','var'), col = getappdata(H.patch(pi),'colourmap'); end
 if isempty(col), col = hot(256); end
 if ~exist('FaceColor','var'), FaceColor = 'interp'; end
-setappdata(H.patch,'colourmap',col);
+setappdata(H.patch(pi),'colourmap',col);
 
 %-Get curvature
 %--------------------------------------------------------------------------
-curv = getappdata(H.patch,'curvature');
+curv = getappdata(H.patch(pi),'curvature');
 
 if size(curv,2) == 1
     th = 0.15;
@@ -1600,7 +2225,7 @@ if isa(v,'file_array'), v = v(); end
 if isempty(v)
     v = zeros(size(curv))';
 elseif ischar(v) || iscellstr(v) || isstruct(v)
-    v = spm_mesh_project(H.patch,v);
+    v = spm_mesh_project(H.patch(pi),v);
 elseif isnumeric(v) || islogical(v)
     if size(v,2) == 1
         v = v';
@@ -1610,12 +2235,12 @@ else
 end
 v(isinf(v)) = NaN;
 
-setappdata(H.patch,'data',v);
+setappdata(H.patch(pi),'data',v);
 
 %-Create RGB representation of data according to colourmap
 %--------------------------------------------------------------------------
 C = zeros(size(v,2),3);
-clim = getappdata(H.patch, 'clim');
+clim = getappdata(H.patch(pi), 'clim');
 if isempty(clim), clim = [false NaN NaN]; end
 mi = clim(2); ma = clim(3);
 if any(v(:))
@@ -1639,13 +2264,13 @@ if any(v(:))
     end
 end
 
-clip = getappdata(H.patch, 'clip');
+clip = getappdata(H.patch(pi), 'clip');
 if ~isempty(clip)
     v(v>clip(2) & v<clip(3)) = NaN;
-    setappdata(H.patch, 'clip', [true clip(2) clip(3)]);
+    setappdata(H.patch(pi), 'clip', [true clip(2) clip(3)]);
 end
 
-setappdata(H.patch, 'clim', [false mi ma]);
+setappdata(H.patch(pi), 'clim', [false mi ma]);
 
 %-Build texture by merging curvature and data
 %--------------------------------------------------------------------------
@@ -1659,12 +2284,13 @@ end
 
 C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
 
-set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor);
+set(H.patch(pi), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
 %-Update the colourbar
 %--------------------------------------------------------------------------
 if isfield(H,'colourbar')
     cat_surf_render('Colourbar',H);
+end
 end
 
 %==========================================================================
@@ -1672,9 +2298,9 @@ function slider_clim_min(hObject, evt)
 
 val = get(hObject, 'Value');
 H = getHandles(gcf);
-c = getappdata(H.patch,'clim');
-setappdata(H.patch,'clim',[true val c(3)]);
-d = getappdata(H.patch,'data');
+c = getappdata(H.patch(1),'clim');
+setappdata(H.patch(1),'clim',[true val c(3)]);
+d = getappdata(H.patch(1),'data');
 updateTexture(H,d);
 H2 = getHandles(gca);
 if isfield(H2,'colourbar') && ishandle(H2.colourbar)
@@ -1686,9 +2312,9 @@ function slider_clim_max(hObject, evt)
 
 val = get(hObject, 'Value');
 H = getHandles(gcf);
-c = getappdata(H.patch,'clim');
-setappdata(H.patch,'clim',[true c(2) val]);
-d = getappdata(H.patch,'data');
+c = getappdata(H.patch(1),'clim');
+setappdata(H.patch(1),'clim',[true c(2) val]);
+d = getappdata(H.patch(1),'data');
 updateTexture(H,d);
 H2 = getHandles(gca);
 if isfield(H2,'colourbar') && ishandle(H2.colourbar)
@@ -1700,11 +2326,11 @@ function slider_clip_min(hObject, evt)
 
 val = get(hObject, 'Value');
 H = getHandles(gcf);
-c = getappdata(H.patch,'clip');
-setappdata(H.patch,'clip',[true val c(3)]);
-c = getappdata(H.patch,'clim');
-setappdata(H.patch,'clim',[true c(2) c(3)]);
-d = getappdata(H.patch,'data');
+c = getappdata(H.patch(1),'clip');
+setappdata(H.patch(1),'clip',[true val c(3)]);
+c = getappdata(H.patch(1),'clim');
+setappdata(H.patch(1),'clim',[true c(2) c(3)]);
+d = getappdata(H.patch(1),'data');
 updateTexture(H,d);
 H2 = getHandles(gca);
 if isfield(H2,'colourbar') && ishandle(H2.colourbar)
@@ -1716,11 +2342,11 @@ end
 function slider_clip_max(hObject, evt) 
 val = get(hObject, 'Value');
 H = getHandles(gcf);
-c = getappdata(H.patch,'clip');
-setappdata(H.patch,'clip',[true c(2) val]);
-c = getappdata(H.patch,'clim');
-setappdata(H.patch,'clim',[true c(2) c(3)]);
-d = getappdata(H.patch,'data');
+c = getappdata(H.patch(1),'clip');
+setappdata(H.patch(1),'clip',[true c(2) val]);
+c = getappdata(H.patch(1),'clim');
+setappdata(H.patch(1),'clim',[true c(2) c(3)]);
+d = getappdata(H.patch(1),'data');
 updateTexture(H,d);
 H2 = getHandles(gca);
 if isfield(H2,'colourbar') && ishandle(H2.colourbar)
@@ -1728,6 +2354,7 @@ if isfield(H2,'colourbar') && ishandle(H2.colourbar)
 end
 function clim = iscaling(cdata,plim)
 %%
+cdata(isnan(cdata) | isinf(cdata)) = []; 
 ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
 if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
 

@@ -40,6 +40,31 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
 % ______________________________________________________________________
 % $Id$
 
+  if isstruct(Ycls)
+    
+    %% final peaks and intesity scaling
+    %  -----------------------------------------------------------------
+    T3th  = Ycls.T3th;
+    T3thx = Ycls.T3thx;
+
+
+    % intensity scalling
+    Ym    = Ysrc; 
+    isc   = 1;
+    %T3th  = interp1(T3th,1:1/isc:numel(T3th)*isc,'spline');  %pchip');
+    %T3thx = interp1(T3thx,1:1/isc:numel(T3th)*isc,'spline'); %pchip');
+
+    for i=2:numel(T3th)
+      M = Ysrc>T3th(i-1) & Ysrc<=T3th(i);
+      Ym(M(:)) = T3thx(i-1) + (Ysrc(M(:)) - T3th(i-1))/diff(T3th(i-1:i))*diff(T3thx(i-1:i));
+    end
+    M  = Ysrc>=T3th(end); 
+    Ym(M(:)) = numel(T3th)/isc/6 + (Ysrc(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
+    Ym = Ym / 3; 
+
+    return
+  end
+    
   debug = cat_get_defaults('extopts.debug');
   inv_weighting = 0;
   if nargout==7
