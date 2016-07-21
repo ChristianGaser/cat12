@@ -34,7 +34,11 @@ function cat_tst_prepareManualSegmentation
   
   % use smoothing to create softer segments in case of noisy data
   mysmooth = {
-    'mWB01_T1' 1,
+    'mWB01_T1'                                  1.0;
+    'mWB02_T1'                                  1.0;
+    'mWB03_T1'                                  1.0;
+    'mWB04_T1'                                  1.0;
+    'mWB05_T1'                                  1.0;
   };
   
   % skull-stripped data may failed
@@ -48,39 +52,47 @@ function cat_tst_prepareManualSegmentation
   
   % manual intensity values
   myint    = { % filename [background CSF lowGM highGM WM]; ignore if [x,y,z] is empty
-    'mBUSS_2002_1YO_t1'                       [0.03  0.40  0.70  0.80  1.00] *   214.9821;
-    'mINDI_HC_AAa_sub04111_T1_SD000000-RS00'  [0.03  0.30  0.65  0.80  1.00] *   570.7427;
-    'mINDI_HC_AAb_sub00306_T1_SD000000-RS00'  [0.03  0.30  0.60  0.80  1.00] *   757.8686;
-    'mINDI_HC_LPZ_sub00321_T1_SD000000-RS00'  [0.03  0.30  0.65  0.83  1.00] *   203.9154;
-    'mINDI_HC_DAL_sub04288_T1_SD000000-RS00'  [0.03  0.30  0.55  0.85  1.05] * 3.8388e+03;
-    'mINDI_HC_MLb_sub00917_T1_SD000000-RS00'  [0.06  0.20  0.60  0.70  1.00] * 1.2759e+03;
-    'mINDI_HC_NHa_sub10033_T1_SD000000-RS00'  [0.00  0.40  0.65  0.80  1.00] *   354.9029;
-    'mINDI_HC_NHb_sub01183_T1_SD000000-RS00'  [0.00  0.20  0.50  0.75  1.00] *   302.5603;
-    'mINDI_HC_NWK_sub13411_T1_SD000000-RS00'  [0.00  0.15  0.55  0.75  1.00] *   263.5865;
-    'mINDI_HC_OGB_sub05191_T1_SD000000-RS00'  [0.00  0.30  0.80  1.00  1.15] * 2.7279e+03;
-    'mINDI_HC_OUL_sub01077_T1_SD000000-RS00'  [0.00  0.15  0.45  0.75  1.00] *   895.8569;
-    'mINDI_HC_PAL_sub04856_T1_SD000000-RS00'  [0.06  0.25  0.45  0.80  1.00] * 4.5968e+03;
-    'mINDI_HC_PIT_sub01891_T1_SD000000-RS00'  [0.00  0.30  0.70  0.88  1.00] *   338.0128;
+    'mBUSS_2002_1YO_t1'                           [0.03  0.40  0.70  0.80  1.00] *   214.9821;
+    'mINDI_HC_AAa_sub04111_T1_SD000000-RS00'      [0.03  0.30  0.65  0.80  1.00] *   570.7427;
+    'mINDI_HC_AAb_sub00306_T1_SD000000-RS00'      [0.03  0.30  0.60  0.80  1.00] *   757.8686;
+    'mINDI_HC_LPZ_sub00321_T1_SD000000-RS00'      [0.03  0.30  0.65  0.83  1.00] *   203.9154;
+    'mINDI_HC_DAL_sub04288_T1_SD000000-RS00'      [0.03  0.30  0.55  0.85  1.05] * 3.8388e+03;
+    'mINDI_HC_MLb_sub00917_T1_SD000000-RS00'      [0.06  0.20  0.60  0.70  1.00] * 1.2759e+03;
+    'mINDI_HC_NHa_sub10033_T1_SD000000-RS00'      [0.00  0.40  0.65  0.80  1.00] *   354.9029;
+    'mINDI_HC_NHb_sub01183_T1_SD000000-RS00'      [0.00  0.20  0.50  0.75  1.00] *   302.5603;
+    'mINDI_HC_NWK_sub13411_T1_SD000000-RS00'      [0.00  0.15  0.55  0.75  1.00] *   263.5865;
+    'mINDI_HC_OGB_sub05191_T1_SD000000-RS00'      [0.00  0.30  0.80  1.00  1.15] * 2.7279e+03;
+    'mINDI_HC_OUL_sub01077_T1_SD000000-RS00'      [0.00  0.15  0.45  0.75  1.00] *   895.8569;
+    'mINDI_HC_PAL_sub04856_T1_SD000000-RS00'      [0.06  0.25  0.45  0.80  1.00] * 4.5968e+03;
+    'mINDI_HC_PIT_sub01891_T1_SD000000-RS00'      [0.00  0.30  0.70  0.88  1.00] *   338.0128;
+    'mCT06_anat'                                  [0.00  0.10  0.45  0.80  1.00] * 2.2003e+04;
+    'mCollins'                                    [0.00  0.25  0.70  0.87  1.03] *   110.0315;
+    'mMagdeburg7T_skc73'                          [0.00  0.15  0.50  0.85  1.03] *   272.1541;
+    'mMagdeburg7T_skc73_bc'                       [0.00  0.15  0.50  0.85  1.00] *   278.0238;
     }; 
   
   % manual AC correction 
   mypoints = { % filename [x y z]; ignore if [x,y,z] is empty
-    'mHR075_MPRAGE'                           []; 
-    'm4397-tfl'                               slicepoints + repmat([  0   0  20],nslicepoints,1); % [ 27 -45  25];
-    'mINDI_HC_AAa_sub04111_T1_SD000000-RS00'  slicepoints + repmat([  0   0   5],nslicepoints,1);
-    'mINDI_HC_BNG_sub00031_T1_SD000000-RS00'  slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45  10];
-    'mINDI_HC_CAM_sub00156_T1_SD000000-RS00'  slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45   5];
-    'mINDI_HC_DAL_sub04288_T1_SD000000-RS00'  slicepoints + repmat([ -2   5  15],nslicepoints,1); % [ 25 -40  20]; 
-    'mINDI_HC_LDa_sub01553_T1_SD000000-RS00'  slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45  10];  
-    'mINDI_HC_LDb_sub01787_T1_SD000000-RS00'  slicepoints + repmat([ -3   0   4],nslicepoints,1); % [ 24 -45  10]; 
-    'mINDI_HC_LPZ_sub00321_T1_SD000000-RS00'  slicepoints + repmat([ -4   3  10],nslicepoints,1); % [ 23 -42  15];
-    'mINDI_HC_MLb_sub00917_T1_SD000000-RS00'  slicepoints + repmat([ -5   0  10],nslicepoints,1); % [ 22 -45  15];
-    'mINDI_HC_NHa_sub10033_T1_SD000000-RS00'  slicepoints + repmat([ -2  -5   5],nslicepoints,1); % [ 25 -50  10];
-    'mINDI_HC_NHb_sub01183_T1_SD000000-RS00'  slicepoints + repmat([-37  25 -55],nslicepoints,1); % [-10 -20 -50];
-    'mINDI_HC_NWK_sub13411_T1_SD000000-RS00'  slicepoints + repmat([ -5   5  20],nslicepoints,1); % [ 22 -40  25];
-    'mINDI_HC_NYa_sub01912_T1_SD000000-RS00'  slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45  10]; 
-    'mINDI_HC_OGB_sub05191_T1_SD000000-RS00'  slicepoints + repmat([ -5   0  60],nslicepoints,1); % [ 22 -45  65]; 
-    'mINDI_HC_STL_sub02115_T1_SD000000-RS00'  slicepoints + repmat([  0   0  05],nslicepoints,1); % [ 22 -45  65]; 
+    'mHR075_MPRAGE'                               []; 
+    'm4397-tfl'                                   slicepoints + repmat([  0   0  20],nslicepoints,1); % [ 27 -45  25];
+    'mINDI_HC_AAa_sub04111_T1_SD000000-RS00'      slicepoints + repmat([  0   0   5],nslicepoints,1);
+    'mINDI_HC_BNG_sub00031_T1_SD000000-RS00'      slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45  10];
+    'mINDI_HC_CAM_sub00156_T1_SD000000-RS00'      slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45   5];
+    'mINDI_HC_DAL_sub04288_T1_SD000000-RS00'      slicepoints + repmat([ -2   5  15],nslicepoints,1); % [ 25 -40  20]; 
+    'mINDI_HC_LDa_sub01553_T1_SD000000-RS00'      slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45  10];  
+    'mINDI_HC_LDb_sub01787_T1_SD000000-RS00'      slicepoints + repmat([ -3   0   4],nslicepoints,1); % [ 24 -45  10]; 
+    'mINDI_HC_LPZ_sub00321_T1_SD000000-RS00'      slicepoints + repmat([ -4   3  10],nslicepoints,1); % [ 23 -42  15];
+    'mINDI_HC_MLb_sub00917_T1_SD000000-RS00'      slicepoints + repmat([ -5   0  10],nslicepoints,1); % [ 22 -45  15];
+    'mINDI_HC_NHa_sub10033_T1_SD000000-RS00'      slicepoints + repmat([ -2  -5   5],nslicepoints,1); % [ 25 -50  10];
+    'mINDI_HC_NHb_sub01183_T1_SD000000-RS00'      slicepoints + repmat([-37  25 -55],nslicepoints,1); % [-10 -20 -50];
+    'mINDI_HC_NWK_sub13411_T1_SD000000-RS00'      slicepoints + repmat([ -5   5  20],nslicepoints,1); % [ 22 -40  25];
+    'mINDI_HC_NYa_sub01912_T1_SD000000-RS00'      slicepoints + repmat([  0   0   5],nslicepoints,1); % [ 27 -45  10]; 
+    'mINDI_HC_OGB_sub05191_T1_SD000000-RS00'      slicepoints + repmat([ -5   0  60],nslicepoints,1); % [ 22 -45  65]; 
+    'mINDI_HC_STL_sub02115_T1_SD000000-RS00'      slicepoints + repmat([  0   0  05],nslicepoints,1); % [ 22 -45  65]; 
+    'mM017'                                       slicepoints + repmat([  0   0  05],nslicepoints,1); % [ 22 -45  65]; 
+    'mNISALS_UTR_SP30T_als2_T1w-T1w_0000000126'   slicepoints + repmat([  0   0  10],nslicepoints,1); % [ 22 -45  65]; 
+    'mNISALS_UTR_SP30T_als3_T1w-T1w_0000000125'   slicepoints + repmat([  0   0  10],nslicepoints,1); % [ 22 -45  65]; 
+    'mOAS1_0031_MR1_mpr_n4_anon_sbj_111'          slicepoints + repmat([  0   0  20],nslicepoints,1); % [ 22 -45  65]; 
     };
   
   
@@ -155,15 +167,13 @@ function cat_tst_prepareManualSegmentation
     
     
     % ISARNLM noise correction and creation of output image
-    fprintf('ISAR1 .. ',ff);
-    if job.isarnlm, Ysrc = cat_vol_isarnlm(Ysrc,Vm,0,inf); end
+    if job.isarnlm, fprintf('ISAR1 .. ',ff); Ysrc = cat_vol_isarnlm(Ysrc,Vm,0,inf); end
     Vm2 = Vm; Vm2.fname = fullfile(rpp,sprintf('m%s.nii',ff(2:end)));
     spm_write_vol(Vm2,Ysrc); 
 
     
     % ISARNLM noise correction and creation of output image
-    fprintf('ISAR2 .. ',ff);
-    if job.isarnlm, Ym = cat_vol_isarnlm(Ym,Vm,0,inf); end
+    if job.isarnlm, fprintf('ISAR2 .. ',ff); Ym = cat_vol_isarnlm(Ym,Vm,0,inf); end
     Vm2 = Vm; Vm2.fname = fullfile(rpp,sprintf('n%s.nii',ff(2:end)));
     spm_write_vol(Vm2,Ym); 
 
@@ -188,24 +198,29 @@ function cat_tst_prepareManualSegmentation
       Yslicemask(:,slicepointsubject(2),:) = true;
       Yslicemask(:,:,slicepointsubject(3)) = true;
     end
-
-    % intensity-based segmentation 
+    
+    % display
+    try
+      ds('l2','',vx_vol,Ym/3,Yp0 +3 * Yslicemask,Ysrc/T3ths(end-2),round(Ym)/3,slicepointsubject(3)+1);
+      T3ths/T3ths(end-2), T3ths(end-2)
+    end
+    
+    %% intensity-based segmentation 
     id = find(cellfun('isempty',strfind(mysmooth(:,1),ff))==0);
     if isempty(id) || isempty(mysmooth{id,2})
-      Yp0pm = cat_vol_smooth3X(Ym,mysmooth{id,2}/mean(vx_vol));
-      Yp0pm = round( max(1, Yp0pm ) ); 
-    else
       Yp0pm = round( max(1, Ym ) ); 
+    else
+      Yp0pm = cat_vol_smooth3X(Ym,mysmooth{id,2}); %/mean(vx_vol)
+      Yp0pm = round( max(1, Yp0pm ) ); 
     end
-    Yp0pm(Yp0pm>3.2 | ~Yb) = 0; 
+    Yp0pm(Yp0pm>3.5 | ~Yb) = 0; 
     Vp0m = Vm; Vp0m.fname = fullfile(rpp,sprintf('p0m%s.nii',ff(2:end)));
     spm_write_vol(Vp0m,Yp0pm); 
-    Yp0pm(~Yslicemask ) = 0; 
     Vp0m = Vm; Vp0m.fname = fullfile(rpp,sprintf('p0s%s.nii',ff(2:end)));
     spm_write_vol(Vp0m,Yp0pm.*Yslicemask); 
     
-    % display
-    ds('l2','',vx_vol,Ym/3,Yb+6*Yslicemask,Ysrc/T3ths(end-2),round(Ym)/3,slicepointsubject(3)+1);
+    %% display
+    ds('l2','',vx_vol,Ym/3,Yp0pm +3 * Yslicemask,Ysrc/T3ths(end-2),round(Ym)/3,slicepointsubject(3)+1);
     T3ths/T3ths(end-2), T3ths(end-2)
     
     %%
