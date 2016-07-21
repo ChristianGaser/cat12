@@ -11311,6 +11311,7 @@ M       html/cat.html
 (3) Fixed: H.colourbar.Limits did not exist in cat_surf_render.m
 
 ------------------------------------------------------------------------
+r966 | gaser | 2016-07-20 16:40:20 +0200 (Mi, 20 Jul 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11321,5 +11322,19 @@ M       cat_surf_render.m
 MM      internal/cat_tst_prepareManualSegmentation.m
 
 Fixed: cat_stat_ROI.m can now handle volume and surface data at the same time.
+
 ------------------------------------------------------------------------
-r966 | gaser | 2016-07-20 16:40:10
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_spmT2x.m
+M       cat_surf_display.m
+M       cat_surf_render.m
+M       html/cat.html
+
+(1) Fixed: cat_stat_spmT2x.m failed in reading RPV.gii.
+(2) Changed: Added differentation for expert mode in cat_surf_display to only
+    show .gii files for non-experts.
+------------------------------------------------------------------------
+r967 | gaser | 2016-07-21 10:49:56
