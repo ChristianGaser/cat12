@@ -53,10 +53,15 @@ cat.output.surface     = 0;     % surface and thickness creation
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))
 
-% bias and noise corrected, (locally - if LAS>0) intensity normalized
+% bias and noise corrected, global intensity normalized
 cat.output.bias.native = 0;
 cat.output.bias.warped = 1;
 cat.output.bias.dartel = 0;
+
+% bias and noise corrected, (locally - if LAS>0) intensity normalized
+cat.output.las.native = 0;
+cat.output.las.warped = 0;
+cat.output.las.dartel = 0;
 
 % GM tissue maps
 cat.output.GM.native  = 0;

@@ -1,4 +1,4 @@
-function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts) 
+function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vol,extopts,Tth) 
 % This is an exclusive subfunction of cat_main.
 % ______________________________________________________________________
 %
@@ -409,6 +409,12 @@ function [Yml,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,vx_vo
   Yml = Yml + ( (Ysrc>=Ylab{3} & Ysrc<Ylab{1} ) .* (1 + (Ysrc-Ylab{3}) ./ max(eps,Ylab{1}-Ylab{3})) );
   Yml = Yml + ( (Ysrc< Ylab{3}                ) .* (    (Ysrc-Ylab{6}) ./ max(eps,Ylab{3}-Ylab{6})) );
   Yml(isnan(Yml) | Yml<0)=0; Yml(Yml>10)=10;
+  
+  
+  % global
+  Ymg = max(eps,Ysrc./Ylab{2});
+  Ymg = cat_main_gintnorm(Ymg*Tth.T3th(5),Tth); 
+  
   %%
   if debug>1
     try %#ok<TRYNC> % windows requires this... i don't know why

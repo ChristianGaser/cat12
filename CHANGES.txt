@@ -11324,6 +11324,7 @@ MM      internal/cat_tst_prepareManualSegmentation.m
 Fixed: cat_stat_ROI.m can now handle volume and surface data at the same time.
 
 ------------------------------------------------------------------------
+r967 | gaser | 2016-07-21 10:50:05 +0200 (Do, 21 Jul 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11336,5 +11337,58 @@ M       html/cat.html
 (1) Fixed: cat_stat_spmT2x.m failed in reading RPV.gii.
 (2) Changed: Added differentation for expert mode in cat_surf_display to only
     show .gii files for non-experts.
+
 ------------------------------------------------------------------------
-r967 | gaser | 2016-07-21 10:49:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gintnorm.m
+M       cat_surf_createCS.m
+M       cat_surf_render.m
+M       cat_surf_resamp.m
+M       internal/cat_tst_prepareManualSegmentation.m
+M       tbx_cfg_cat.m
+M       templates_animals/ape_greater_T1.nii
+M       templates_animals/ape_greater_T2.nii
+M       templates_animals/ape_greater_TPM.nii
+M       templates_animals/ape_greater_TPMt.nii
+M       templates_animals/ape_greater_Template_1.nii
+M       templates_animals/ape_greater_Template_2.nii
+M       templates_animals/ape_greater_Template_3.nii
+M       templates_animals/ape_greater_Template_4.nii
+M       templates_animals/ape_greater_Template_5.nii
+M       templates_animals/ape_greater_Template_6.nii
+M       templates_animals/ape_greater_brainmask.nii
+M       templates_animals/ape_greater_vbm12.nii
+M       templates_animals/monkey_oldworld_T1.nii
+M       templates_animals/monkey_oldworld_T2.nii
+M       templates_animals/monkey_oldworld_TPM.nii
+M       templates_animals/monkey_oldworld_Template_1.nii
+M       templates_animals/monkey_oldworld_Template_2.nii
+M       templates_animals/monkey_oldworld_Template_3.nii
+M       templates_animals/monkey_oldworld_Template_4.nii
+M       templates_animals/monkey_oldworld_Template_5.nii
+M       templates_animals/monkey_oldworld_Template_6.nii
+M       templates_animals/monkey_oldworld_brainmask.nii
+M       templates_animals/monkey_oldworld_vbm12.nii
+
+(1) Changed:    Separate the bias, noise and intensity corrected image (Ym)  
+                into two subversion with global (Ym) and local (Ymi) intensity 
+                normalization. The Ym is more reasonable for myelination 
+                analysis, whereas the Ymi more sensible for the tissue classes.
+                Also for Ym LAS is used to correct reminding WM inhomogeneities.
+                The output of the local normalized image is only assessable via
+                cat_defaults (cat.output.las) and expert GUI.
+                The CAT ROIs will extract the intensities of the Ym rather of 
+                the Ymi. The CAT report now shows the Ym rather than the Ymi.
+(2) Changed:    Added ROI menu to expert GUI.
+(3) Fixed:      Volume creation error in TCA part of cat_surf_createCS.
+(4) Fixed:      Update version of cat_surf_render.
+(5) Changed:    Added surface type check in cat_surf_resamp to ignore
+                '.central.' and '.sphere.'.                
+(6) Fixed:      Fast correction of side flip in animal atlas maps. 
+------------------------------------------------------------------------
+r968 | dahnke | 2016-07-21 14:31:38

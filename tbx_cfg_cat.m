@@ -167,16 +167,29 @@ warped.def  = @(val)cat_get_defaults('output.bias.warped', val{:});
 dartel.def  = @(val)cat_get_defaults('output.bias.dartel', val{:});
 bias        = cfg_branch;
 bias.tag    = 'bias';
-bias.name   = 'Bias, noise and intensity corrected T1 image';
+bias.name   = 'Bias, noise and global intensity corrected T1 image';
 if expert
   bias.val    = {native warped dartel};
 else
   bias.val    = {warped};
 end
 bias.help   = {
-  'This is the option to save a bias, noise, and (local) intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+  'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
 ''
 };
+
+native.def  = @(val)cat_get_defaults('output.las.native', val{:});
+warped.def  = @(val)cat_get_defaults('output.las.warped', val{:});
+dartel.def  = @(val)cat_get_defaults('output.las.dartel', val{:});
+las        = cfg_branch;
+las.tag    = 'las';
+las.name   = 'Bias, noise and local intensity corrected T1 image';
+las.val    = {native warped dartel};
+las.help   = {
+  'This is the option to save a bias, noise, and local intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
+''
+};
+
 
 %------------------------------------------------------------------------
 
@@ -329,9 +342,9 @@ output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 if expert==2
-  output.val  = {ROI surface grey white csf wmh tpmc atlas label bias jacobian warps}; 
+  output.val  = {ROI surface grey white csf wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {surface grey white csf wmh label bias jacobian warps};
+  output.val  = {ROI surface grey white csf wmh label bias las jacobian warps};
 else
   output.val  = {surface grey white bias jacobian warps};
 end
@@ -436,6 +449,21 @@ if opts.bias.warped,
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 
+% bias corrected
+if isfield(opts.las,'native')
+  if opts.las.native,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Bias Corr Images';
+    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+end;
+if opts.las.warped,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Warped Bias Corr Images';
+    cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end;
 
 % label
 if isfield(opts,'label')
