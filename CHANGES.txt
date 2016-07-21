@@ -11339,6 +11339,7 @@ M       html/cat.html
     show .gii files for non-experts.
 
 ------------------------------------------------------------------------
+r968 | dahnke | 2016-07-21 14:32:02 +0200 (Do, 21 Jul 2016) | 51 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11390,5 +11391,14 @@ M       templates_animals/monkey_oldworld_vbm12.nii
 (5) Changed:    Added surface type check in cat_surf_resamp to ignore
                 '.central.' and '.sphere.'.                
 (6) Fixed:      Fast correction of side flip in animal atlas maps. 
+
 ------------------------------------------------------------------------
-r968 | dahnke | 2016-07-21 14:31:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+(1) Fixed:      Volume creation error in TCA part of cat_surf_createCS (part 2).
+
+------------------------------------------------------------------------
+r969 | dahnke | 2016-07-21 14:34:04
