@@ -270,7 +270,7 @@ for i=1:size(P,1)
                 
             %-Get LKC for voxels in i-th region
             %----------------------------------------------------------
-            LKC = spm_data_read(fullfile(pth,SPM.xVol.VRpv.fname),'xyz',L{i});
+            LKC = spm_data_read(SPM.xVol.VRpv.fname,'xyz',L{i});
                 
             %-Compute average of valid LKC measures for i-th region
             %----------------------------------------------------------

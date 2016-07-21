@@ -38,7 +38,11 @@ function varargout = cat_surf_display(varargin)
     if isstruct(varargin{1})
       job = varargin{1};
       if ~isfield(job,'data') || isempty(job.data)
-        job.data = spm_select([1 24],'any','Select surface','','','[lr]h.*');
+        if cat_get_defaults('extopts.expertgui')
+          job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr]h.*');
+        else
+          job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
+        end
         job.imgprint.do    = 0;
         job.imgprint.close = 0;  
       end
@@ -46,7 +50,11 @@ function varargout = cat_surf_display(varargin)
       job.data = varargin{1};
     end
   else
-    job.data = spm_select([1 24],'any','Select surface','','','[lr]h.*');
+    if cat_get_defaults('extopts.expertgui')
+        job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr]h.*');
+    else
+        job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
+    end
     job.imgprint.do    = 0;
     job.imgprint.close = 0;  
   end
