@@ -11403,6 +11403,7 @@ M       cat_surf_createCS.m
 
 
 ------------------------------------------------------------------------
+r970 | gaser | 2016-07-22 12:56:01 +0200 (Fr, 22 Jul 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11412,5 +11413,15 @@ M       html/cat.html
 
 Fixed: cat_surf_render did not work properly for all matlab version, now use
 old version again.
+
 ------------------------------------------------------------------------
-r970 | gaser | 2016-07-22 12:55:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run.m
+M       tbx_cfg_cat.m
+
+Fixed: Corrected handling and fields for las output.
+------------------------------------------------------------------------
+r971 | gaser | 2016-07-22 14:34:45
