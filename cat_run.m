@@ -271,12 +271,16 @@ function vout = vout_job(job)
 n     = numel(job.channel(1).vols);
 parts = cell(n,4);
 
-biascorr  = {};
-wbiascorr = {};
-label     = {};
-wlabel    = {};
-rlabel    = {};
-alabel    = {};
+biascorr   = {};
+wbiascorr  = {};
+ibiascorr  = {};
+wibiascorr = {};
+ribiascorr = {};
+aibiascorr = {};
+label      = {};
+wlabel     = {};
+rlabel     = {};
+alabel     = {};
 
 if job.extopts.subfolders
   %roifolder    = 'label';
@@ -322,6 +326,36 @@ if job.output.bias.dartel==2,
     abiascorr = cell(n,1);
     for j=1:n
         abiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'_affine.nii']);
+    end
+end
+
+% intensity corrected bias
+% ----------------------------------------------------------------------
+if job.output.las.native,
+    ibiascorr = cell(n,1);
+    for j=1:n
+        ibiascorr{j} = fullfile(parts{j,1},mrifolder,['mi',parts{j,2},'.nii']);
+    end
+end
+
+if job.output.las.warped,
+    wibiascorr = cell(n,1);
+    for j=1:n
+        wibiascorr{j} = fullfile(parts{j,1},mrifolder,['wmi',parts{j,2},'.nii']);
+    end
+end
+
+if job.output.las.dartel==1,
+    ribiascorr = cell(n,1);
+    for j=1:n
+        ribiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'.nii']);
+    end
+end
+
+if job.output.las.dartel==2,
+    aibiascorr = cell(n,1);
+    for j=1:n
+        aibiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'_affine.nii']);
     end
 end
 

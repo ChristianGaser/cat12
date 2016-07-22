@@ -450,19 +450,31 @@ if opts.bias.warped,
 end;
 
 % bias corrected
-if isfield(opts.las,'native')
+if isfield(opts,'las')
   if opts.las.native,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Bias Corr Images';
-    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
+    cdep(end).src_output = substruct('()',{1}, '.','ibiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end
-end;
-if opts.las.warped,
+  if opts.las.warped,
     cdep(end+1)          = cfg_dep;
     cdep(end).sname      = 'Warped Bias Corr Images';
-    cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
+    cdep(end).src_output = substruct('()',{1}, '.','wibiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.las.dartel==1,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Rigid Registered Bias Corr Images';
+    cdep(end).src_output = substruct('()',{1}, '.','ribiascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+  if opts.las.dartel==2,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Affine Registered Bias Corr Images';
+    cdep(end).src_output = substruct('()',{1}, '.','aibiascorr','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
 end;
 
 % label
