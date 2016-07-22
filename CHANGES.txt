@@ -11393,6 +11393,7 @@ M       templates_animals/monkey_oldworld_vbm12.nii
 (6) Fixed:      Fast correction of side flip in animal atlas maps. 
 
 ------------------------------------------------------------------------
+r969 | dahnke | 2016-07-21 14:34:10 +0200 (Do, 21 Jul 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11400,5 +11401,16 @@ M       cat_surf_createCS.m
 
 (1) Fixed:      Volume creation error in TCA part of cat_surf_createCS (part 2).
 
+
 ------------------------------------------------------------------------
-r969 | dahnke | 2016-07-21 14:34:04
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_render.m
+M       html/cat.html
+
+Fixed: cat_surf_render did not work properly for all matlab version, now use
+old version again.
+------------------------------------------------------------------------
+r970 | gaser | 2016-07-22 12:55:49
