@@ -11426,6 +11426,7 @@ M       tbx_cfg_cat.m
 Fixed: Corrected handling and fields for las output.
 
 ------------------------------------------------------------------------
+r972 | gaser | 2016-07-25 11:30:44 +0200 (Mo, 25 Jul 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11436,5 +11437,15 @@ M       html/cat.html
 
 Fixed: Metadata after resampling and smoothing now only contain name and not 
 path of the filename to allow that files can be moved before stat. analysis.
+
 ------------------------------------------------------------------------
-r972 | gaser | 2016-07-25 11:30:30
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       html/cat.html
+
+Fixed: Normalized Jacobian dets were just named j_* without leading "w".
+------------------------------------------------------------------------
+r973 | gaser | 2016-07-25 11:58:25
