@@ -61,10 +61,6 @@ for i=1:size(Psubj,1)
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Psmoothwm,Pspherereg,Pfsavg,Presamp,Pmeasure,Pvalue);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
   
-    % resample surface using sphere 
-    cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Psmoothwm,Psphere,Pfsavg,Presamp);
-%    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
-
     % smooth resampled values
     cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm,Pvalue,Pmask);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
@@ -73,6 +69,11 @@ for i=1:size(Psubj,1)
     cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
   
+    % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
+    [pp2,ff2,ex2]   = spm_fileparts([Pfwhm '.gii']);
+    g = gifti([Pfwhm '.gii']);
+    g.private.metadata = struct('name','Name','value',[ff2 ex2]);
+
     delete(Presamp);
     delete(Pfwhm);
     if fwhm > 0, delete(Pvalue); end
