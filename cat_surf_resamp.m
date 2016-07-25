@@ -111,6 +111,11 @@ function varargout = cat_surf_resamp(varargin)
         [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
         if exist([Pfwhm '.gii'],'file'), Psdata{i} = [Pfwhm '.gii']; end
+        
+        % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
+        [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
+        g = gifti(Psdata{i});
+        g.private.metadata = struct('name','Name','value',[ff2 ex2]);
 
         delete(Presamp);
         delete(Pfwhm);

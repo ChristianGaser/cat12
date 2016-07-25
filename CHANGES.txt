@@ -11415,6 +11415,7 @@ Fixed: cat_surf_render did not work properly for all matlab version, now use
 old version again.
 
 ------------------------------------------------------------------------
+r971 | gaser | 2016-07-22 14:34:56 +0200 (Fr, 22 Jul 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11423,5 +11424,17 @@ M       cat_run.m
 M       tbx_cfg_cat.m
 
 Fixed: Corrected handling and fields for las output.
+
 ------------------------------------------------------------------------
-r971 | gaser | 2016-07-22 14:34:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       html/cat.html
+
+Fixed: Metadata after resampling and smoothing now only contain name and not 
+path of the filename to allow that files can be moved before stat. analysis.
+------------------------------------------------------------------------
+r972 | gaser | 2016-07-25 11:30:30
