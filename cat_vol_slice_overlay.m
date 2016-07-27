@@ -474,7 +474,7 @@ for i = 1:nimgs
     SO.img(i).prop = Inf;
     SO.cbar = [SO.cbar i];
     SO.img(i).cmap = return_cmap('Colormap:', 'jet');
-    SO.img(i).range = spm_input('Img val range for colormap','+1', 'e', [mn mx], 2);
+    SO.img(i).range = spm_input('Img val range for colormap','+1', 'e', [mn mx], 2)';
 
     define_slices = spm_input('Slices','+1','m','Estimate slices with local maxima|Define slices',[0 1],1);
     if ~define_slices

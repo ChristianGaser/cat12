@@ -11439,6 +11439,7 @@ Fixed: Metadata after resampling and smoothing now only contain name and not
 path of the filename to allow that files can be moved before stat. analysis.
 
 ------------------------------------------------------------------------
+r973 | gaser | 2016-07-25 11:58:38 +0200 (Mo, 25 Jul 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11447,5 +11448,17 @@ M       cat_main.m
 M       html/cat.html
 
 Fixed: Normalized Jacobian dets were just named j_* without leading "w".
+
 ------------------------------------------------------------------------
-r973 | gaser | 2016-07-25 11:58:25
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_vol_slice_overlay.m
+M       html/cat.html
+
+Fixed: Range in cat_vol_slice_overlay.m was not correctly handled.
+------------------------------------------------------------------------
+r974 | gaser | 2016-07-27 11:04:54
