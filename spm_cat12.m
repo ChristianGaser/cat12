@@ -19,7 +19,7 @@ function spm_cat12(varargin)
 %     action = 'mypath/cat_defaults_mydefaults'
 %
 % ______________________________________________________________________
-% Christian Gaser
+% Christian Gaser, Robert Dahnke
 % $Id$
 
 
@@ -147,6 +147,7 @@ switch lower(deffile)
     deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
 
     if isempty(deffile) || ~exist(deffile,'file')
+      help spm_cat12;
       error('CAT:unknownDefaultFile','Unknown action or nonexisting default file "%s".\n',deffile);
     end
 end

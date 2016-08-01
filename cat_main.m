@@ -1900,7 +1900,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   if job.output.surface
     str = [str struct('name', 'Voxel resolution (original > intern > PBT):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
-           qa.qualitYmieasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
+           qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
   else
     str = [str struct('name', 'Voxel resolution (original > intern):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s', ...
@@ -2137,7 +2137,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   if exist('Psurf','var')
     try
       hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-      hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,...
+      hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
         'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
       colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
       cc{3} = axes('Position',[0.6 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
@@ -2180,8 +2180,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
     % if there is a surface than we have to use the gray colormap also here
     % because the colorbar change!
     try %#ok<TRYNC>
-      cat_surf_render('ColourMap',hSD{1}.axis,gray(128));
-      cat_surf_render('Clim',hSD{1}.axis,[0 6]);
+      cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
+      cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
       axes(cc{3}); image(0:60);
       set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
         'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
