@@ -17,6 +17,7 @@ function varargout = cat_surf_display(varargin)
 % job.verb      .. SPM command window report (default = 1)
 % job.readsurf  .. get full surface informtion by loading the image
 %                  (default = 1; see cat_surf_info)
+% job.parent    .. axis handle to print in other (sub)figures
 %
 % job.imgprint.do   .. print image (default = 0)
 % job.imgprint.type .. render image type (default = png)
@@ -70,6 +71,7 @@ function varargout = cat_surf_display(varargin)
     };
   def.usefsaverage = 0; 
   def.caxis    = []; % default/auto, range
+  def.expert   = cat_get_defaults('extopts.expertgui'); 
   
   % print options ... just a quick output > cat_surf_print as final function 
   def.imgprint.type  = 'png';
@@ -117,31 +119,58 @@ function varargout = cat_surf_display(varargin)
       Pdata = sinfo(i).Pdata; 
     end
     
-    %try
-      if job.verb
-        fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
-      end
-      
-      if ~isempty(Pdata) && ~all(strcmp(Pmesh,Pdata)) 
-        % only gifti surface without texture
-        if isfield(job,'parent')
+
+    if job.verb
+      fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
+    end
+
+    if job.expert>1
+      fprintf('Developer display mode!\n');
+    end
+
+    if ~isempty(Pdata) && ~all(strcmp(Pmesh,Pdata)) 
+      % only gifti surface without texture
+      if isfield(job,'parent')
+        if job.expert<2
           h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
         else
-          h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata);
-        end  
+          h = cat_surf_render2('disp',Pmesh,'Pcdata',Pdata,'parent',job.parent);
+        end
       else
-        % only gifti surface without texture
-        if isfield(job,'ah')
+        if job.expert<2
+          h = cat_surf_render('disp',Pmesh,'Pcdata',Pdata);
+        else
+          h = cat_surf_render2('disp',Pmesh,'Pcdata',Pdata);
+        end
+      end  
+    else
+      % only gifti surface without texture
+      if isfield(job,'parent')
+        if job.expert<2
           h = cat_surf_render(Pmesh,'parent',job.parent);
         else
+          h = cat_surf_render2(Pmesh,'parent',job.parent);
+        end
+      else
+        if job.expert<2
           h = cat_surf_render(Pmesh);
+        else
+          h = cat_surf_render2(Pmesh);
         end
       end
-      if sinfo(i).label, continue; end
-   try   
+    end
+    if sinfo(i).label, continue; end
+
+      
+      
+   % try   
       %% textur handling
       set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
-      cat_surf_render('ColourBar',h.axis,'on');
+      if job.expert<2
+        cat_surf_render('ColourBar',h.axis,'on');
+      else
+        cat_surf_render2('ColourBar',h.axis,'on');
+      end
       if ~job.multisurf && strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
       
       
@@ -166,15 +195,26 @@ function varargout = cat_surf_display(varargin)
         cmap = cmap(randperm(size(cmap,1)),:); % random 
         cmap = reshape(repmat(cmap',2,1),3,size(cmap,1)*2)'; 
        
-        cat_surf_render('ColourMap',h.axis,cmap);
-        
+        if job.expert<2
+          cat_surf_render('ColourMap',h.axis,cmap);
+        else
+          cat_surf_render2('ColourMap',h.axis,cmap);
+        end
         %%
         continue
       else
         if isempty(job.colormap)
-          h = cat_surf_render('ColourMap',h.axis,jet(256)); 
+          if job.expert<2
+            h = cat_surf_render('ColourMap',h.axis,jet(256)); 
+          else
+            h = cat_surf_render2('ColourMap',h.axis,jet(256)); 
+          end
         else
-          h = cat_surf_render('ColourMap',h.axis,eval(job.colormap));
+          if job.expert<2
+            h = cat_surf_render('ColourMap',h.axis,eval(job.colormap));
+          else
+            h = cat_surf_render2('ColourMap',h.axis,eval(job.colormap));
+          end
         end
       end
       
@@ -188,7 +228,11 @@ function varargout = cat_surf_display(varargin)
             elseif strfind(sinfo(i).posside,'-Icsf.ROI'), clim = [1.33/3 1.33/3] .* [0.8 1.2];  % higher 1/3 because of a lot of GM/CSF PVE
             else                                          clim = iscaling(h.cdata);
             end
-            cat_surf_render('clim',h.axis,clim);
+            if job.expert<2
+              cat_surf_render('clim',h.axis,clim);
+            else
+              cat_surf_render2('clim',h.axis,clim);
+            end
           case {'defects','sphere'}
             % no texture
           case {'central'}
@@ -200,11 +244,23 @@ function varargout = cat_surf_display(varargin)
               clim = iscaling(h.cdata);
               if clim(1)<0
                 clim = [-max(abs(clim)) max(abs(clim))];
-                cat_surf_render('ColourMap',h.axis,cat_io_colormaps('BWR',128)); 
+                if job.expert<2
+                  cat_surf_render('ColourMap',h.axis,cat_io_colormaps('BWR',128)); 
+                  cat_surf_render('clim',h.axis,clim);
+                else
+                  cat_surf_render2('ColourMap',h.axis,cat_io_colormaps('BWR',128));
+                  cat_surf_render2('clim',h.axis,clim);
+                end
               else
-                cat_surf_render('ColourMap',h.axis,cat_io_colormaps('hotinv',128)); 
+                if job.expert<2
+                  cat_surf_render('ColourMap',h.axis,cat_io_colormaps('hotinv',128)); 
+                  cat_surf_render('clim',h.axis,clim);
+                else
+                  cat_surf_render2('ColourMap',h.axis,cat_io_colormaps('hotinv',128)); 
+                  cat_surf_render2('clim',h.axis,clim);
+                end
               end
-              cat_surf_render('clim',h.axis,clim);
+              
             end
           otherwise
             %%
@@ -229,26 +285,38 @@ function varargout = cat_surf_display(varargin)
             texturei = find(cellfun('isempty',strfind(ranges(:,1),sinfo(i).texture))==0,1,'first');
 
             if ~isempty(texturei)
-              cat_surf_render('clim',h.axis,ranges{texturei,3});
+              if job.expert<2
+                cat_surf_render('clim',h.axis,ranges{texturei,3});
+              else
+                cat_surf_render2('clim',h.axis,ranges{texturei,3});
+              end
             else
               clim = iscaling(h.cdata);  
-              cat_surf_render('clim',h.axis,round(clim));
+              if job.expert<2
+                cat_surf_render('clim',h.axis,round(clim));
+              else
+                cat_surf_render2('clim',h.axis,round(clim));
+              end
             end
         end    
       else
-        cat_surf_render('clim',h.axis,job.caxis);
-      end
-    catch %#ok<CTCH>
-      if ~exist('h','var')
-        try
-          cat_io_cprintf('err',sprintf('Texture error. Display surface only.\n'));
-          h = cat_surf_render(job.data{i});
-        catch %#ok<CTCH>
-          cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
+        if job.expert<2
+          cat_surf_render('clim',h.axis,job.caxis);
+        else
+          cat_surf_render2('clim',h.axis,job.caxis);
         end
       end
-      continue
-    end
+%     catch %#ok<CTCH>
+%       if ~exist('h','var')
+%         try
+%           cat_io_cprintf('err',sprintf('Texture error. Display surface only.\n'));
+%           h = cat_surf_render(job.data{i});
+%         catch %#ok<CTCH>
+%           cat_io_cprintf('err',sprintf('ERROR: Can''t display surface %s\n',job.data{i})); 
+%         end
+%       end
+%       continue
+%     end
     
     
     

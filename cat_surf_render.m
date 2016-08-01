@@ -1659,7 +1659,7 @@ end
 
 C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
 
-set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor);
+set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor ,'CData', v);
 
 %-Update the colourbar
 %--------------------------------------------------------------------------
