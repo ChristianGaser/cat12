@@ -1512,12 +1512,12 @@ set(obj,'Checked',toggle(get(obj,'Checked')));
 function myLighting(obj,evt,H,newcatLighting)
 switch newcatLighting
   case 'brighter'
-    l1 = findall(H.axis,'Type','light','Style','infinite'); 
+    l1 = findall(H.axis,'Type','light'); 
     for li = 1:numel(l1)
       set(l1(li),'Color',min(ones(1,3),get(l1(li),'Color')*10/9)); 
     end
   case 'darker'
-    l1 = findall(H.axis,'Type','light','Style','infinite'); 
+    l1 = findall(H.axis,'Type','light'); 
     for li = 1:numel(l1)
       set(l1(li),'Color',max(zeros(1,3),get(l1(li),'Color')*9/10)); 
     end
