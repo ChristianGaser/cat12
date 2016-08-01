@@ -37,8 +37,9 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   % thresholds
   rf   = 10^6; 
   Hth  = roundx(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
-  GMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.2 & Ym(:)<0.9  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
-  CMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.1 & Ym(:)<GMth*0.7 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)),rf);  % first guess of the CSF intensity
+  if isnan(Hth), Hth = 0.8; end
+  GMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.2  & Ym(:)<0.9      & Ygs(:)<0.2 & Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
+  CMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.05 & Ym(:)<GMth*0.5 & Ygs(:)>2.0 & Yb(:) & Ydiv(:)>-0.10)),rf);  % first guess of the CSF intensity
   %WMth = cat_stat_nanmean(Ym(Ym(:)>0.8 & Ym(:)<1.2 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)); 
   BGth = roundx(cat_stat_nanmean(Ym(Ybg(:))),rf); 
   
@@ -71,6 +72,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   dilmsk2  = cat_vol_resize(smooth3(dilmsk2),'dereduceV',resT2); 
   dilmsk2  = dilmsk2 / brad; 
   %% WM growing
+  Yb = cat_vol_morph(Yb,'d');
   Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.05); 
   Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
@@ -80,20 +82,20 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   Ybr = cat_vol_morph(Ybr>0,'lc',2*gc.f/mean(resT2.vx_volr));
   Ybr = cat_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5 + gc.s; 
   Yb = single(Yb | (Ym<1.2 & Ybr));
-  % GWM growing
-  Yb(Yb<0.5 & (dilmsk2>0.4  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01 + gc.c); 
+  %% GWM growing
+  Yb(Yb<0.5 & (dilmsk2>0.4  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.8))=nan;
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.02 + gc.c); 
   Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
   Yb = smooth3(Yb)>0.5 + gc.s; 
   Yb = single(Yb | (Ym>0.2 & Ym<1.2 & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f)))));
-  % GM growing
-  Yb(Yb<0.5 & (dilmsk2>0.5  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.00 + gc.c);
+  %% GM growing
+  Yb(Yb<0.5 & (dilmsk2>0.5  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.9))=nan;
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01 + gc.c);
   Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
   Yb(smooth3(Yb)<0.5 + gc.s)=0;
   Yb = single(Yb | (Ym>0.1 & Ym<1.1 & cat_vol_morph(Yb,'lc',max(1,min(3,0.1*gc.f)))));
-  % CSF growing (add some tissue around the brain)
-  Yb(Yb<0.5 & (dilmsk2>0.6  | Ym< gc.o | Ym>1.1 | (Yg.*Ym)>0.5))=nan;
+  %% CSF growing (add some tissue around the brain)
+  Yb(Yb<0.5 & (dilmsk2>0.6  | Ym< gc.o | Ym>1.1 | (Yg.*Ym)>0.9))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.01 + gc.c); Yb(isnan(Yb))=0; 
   Yb(isnan(Yb))=0; Yb(YD<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
   Yb(smooth3(Yb)<0.7 + gc.s)=0;

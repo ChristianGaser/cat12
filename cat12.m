@@ -1,18 +1,25 @@
 function varargout = cat12(varargin)
 % ______________________________________________________________________
-% CAT12 Toolbox wrapper to call CAT functions.
+% CAT12 Toolbox wrapper to start CAT with different user modes or 
+% default files.  Changing the user mode requires restarting of CAT and
+% SPM.  The expert user mode allows to control further parameters and  
+% semi-evaluated functions, whereas the developer mode contain parameter
+% for internal tests and unsafe functions.
 % 
-%   cat12 
-%     .. start with CAT default parameter file
-%   cat12('gui')
-%     .. start with default file of another species (in development)
-%   cat12(species) 
-%     .. start with default file of another species (in development)
-%        species = ['oldwoldmonkey'|'newwoldmonkey'|'greaterape'|'lesserape']
-%   cat12('mypath/cat_defaults_mydefaults') 
-%     .. start CAT with another default parameter file
+%   cat12(action)
+%   
+%   CAT user modes:
+%     action = ['default','expert','developer'] 
+%
+%   CAT default files for other species (in development):
+%     action = ['oldwoldmonkeys'|'greaterapes']
+%
+%   CAT start with own default files:
+%     action = 'select' 
+%     action = 'mypath/cat_defaults_mydefaults'
+%
 % ______________________________________________________________________
-% Christian Gaser
+% Christian Gaser, Robert Dahnke
 % $Id$
 
 % CAT12 M-file for cat12.fig

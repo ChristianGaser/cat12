@@ -361,7 +361,7 @@ function cat_run_job(job,tpm,subj)
             VFa = VF; 
             if app.aff, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
             if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5; 
+            [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5 & ~Ybg; 
        
             stime = cat_io_cmd('APP: Fine bias correction and skull-stripping','','',1,stime); 
    
