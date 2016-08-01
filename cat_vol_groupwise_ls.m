@@ -54,10 +54,7 @@ for i=find(~isfinite(prec)),
 end
 
 % set all values to constant if NaN values were found in noise estimation
-ind_nan = find(~isfinite(prec));
-if ~isempty(ind_nan)
-    prec(ind_nan) = 1;
-end
+prec(find(~isfinite(prec))) = 1;
 
 % Basis functions for algebra of rigid-body transform
 %-----------------------------------------------------------------------
@@ -360,7 +357,6 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                         ebias       = exp(spm_diffeo('samp',param(i).bias,y));
 
                         msk         = isfinite(f) & isfinite(ebias);
-
                         smu         = mu(:,:,m).*ebias;
                         f(~msk)     = 0;
                         smu(~msk)   = 0;
@@ -760,6 +756,12 @@ mx    = ceil(mx);
 mn    = floor(mn);
 d     = (mx-mn+7)';
 M_avg = M_avg * [eye(3) mn-4; 0 0 0 1];
+
+% check whether entry for x-voxel-size is positive and correct it
+[mx, ind] = max(abs(M_avg(1,1:3)));
+if (M_avg(1,ind) > 0)
+  M_avg(1,:) = -M_avg(1,:);
+end
 return;
 %_______________________________________________________________________
 
