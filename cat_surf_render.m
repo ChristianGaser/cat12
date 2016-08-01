@@ -685,8 +685,10 @@ switch lower(action)
         if nargin>1
             H.colormap = colormap(varargin{2});
         end
-        set(H.colourbar,'YLim',get(H.axis,'clim')); 
- 
+        if isfield(H,'colourmap')
+          set(H.colourbar,'YLim',get(H.axis,'clim')); 
+        end
+        
         %{
   switch varargin{1}
     case 'onecolor'
@@ -1659,7 +1661,7 @@ end
 
 C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
 
-set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor ,'CData', v);
+set(H.patch, 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
 %-Update the colourbar
 %--------------------------------------------------------------------------

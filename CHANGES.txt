@@ -11463,6 +11463,7 @@ M       html/cat.html
 Fixed: Range in cat_vol_slice_overlay.m was not correctly handled.
 
 ------------------------------------------------------------------------
+r975 | dahnke | 2016-08-01 17:49:47 +0200 (Mo, 01 Aug 2016) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11491,5 +11492,14 @@ M       spm_cat12.m
 (6) Changed:    Improved volume render function in cat_surf_render.                
 (7) Added:      Added FreeSurfer annot-export function.
 
+
 ------------------------------------------------------------------------
-r975 | dahnke | 2016-08-01 17:49:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_render.m
+M       cat_surf_render2.m
+
+(1) Changed:    Corrected error in old cat_surf_render function.
+------------------------------------------------------------------------
+r976 | dahnke | 2016-08-01 18:14:54
