@@ -68,8 +68,8 @@
     <label><index>50</index><short_name>r3thVen</short_name><name>Right Third Ventricle</name><RGBA></RGBA><XYZmm>1.70,-7.54,-5.78</XYZmm></label>
     <label><index>51</index><short_name>lPrcGy</short_name><name>Left Precentral Gyrus</name><RGBA></RGBA><XYZmm>-31.61,-10.78,43.58</XYZmm></label>
     <label><index>52</index><short_name>rPrcGy</short_name><name>Right Precentral Gyrus</name><RGBA></RGBA><XYZmm>32.36,-9.08,44.50</XYZmm></label>
-    <label><index>53</index><short_name>lRecGy</short_name><name>Left Rectus Gyrus</name><RGBA></RGBA><XYZmm>-4.34,27.27,-21.03</XYZmm></label>
-    <label><index>54</index><short_name>rRecGy</short_name><name>Right Rectus Gyrus</name><RGBA></RGBA><XYZmm>5.63,26.96,-20.78</XYZmm></label>
+    <label><index>53</index><short_name>lRecGy</short_name><name>Left Gyrus Rectus</name><RGBA></RGBA><XYZmm>-4.34,27.27,-21.03</XYZmm></label>
+    <label><index>54</index><short_name>rRecGy</short_name><name>Right Gyrus Rectus</name><RGBA></RGBA><XYZmm>5.63,26.96,-20.78</XYZmm></label>
     <label><index>55</index><short_name>lOrbFroGy</short_name><name>Left Orbito-Frontal Gyri</name><RGBA></RGBA><XYZmm>-23.28,36.46,-16.76</XYZmm></label>
     <label><index>56</index><short_name>rOrbFroGy</short_name><name>Right Orbito-Frontal Gyri</name><RGBA></RGBA><XYZmm>24.66,38.42,-16.46</XYZmm></label>
     <label><index>57</index><short_name>lInfFroGy</short_name><name>Left Inferior Frontal Gyrus</name><RGBA></RGBA><XYZmm>-45.51,21.76,6.84</XYZmm></label>

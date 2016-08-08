@@ -11514,6 +11514,7 @@ Fixed: Realigned images using cat_vol_groupwise_ls.m have now correct (flipped)
 x-voxel size (thanks to Paul Schmidt for pointing to that issue).
 
 ------------------------------------------------------------------------
+r978 | gaser | 2016-08-08 11:32:11 +0200 (Mo, 08 Aug 2016) | 11 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -11525,5 +11526,23 @@ M       html/images/non_orthogonal.png
 
 (1) Changed: Moved some options to expert mode
 (2) Fixed: Non-orthogonality image is now fixed in manual and help.
+
 ------------------------------------------------------------------------
-r978 | gaser | 2016-08-08 11:31:57
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_main.m
+M       cat_surf_resamp.m
+M       html/cat.html
+M       templates_1.50mm/hammers.csv
+M       templates_1.50mm/labels_dartel_hammers.xml
+M       templates_1.50mm/labels_dartel_mori.xml
+M       templates_1.50mm/labels_dartel_neuromorphometrics.xml
+M       templates_1.50mm/mori.csv
+M       templates_1.50mm/neuromorphometrics.csv
+
+(1) Changed: Resampled surfaces have less artefacts due to resampling.
+(2) Fixed: Corrected some anatomical names in atlases.
+------------------------------------------------------------------------
+r979 | gaser | 2016-08-08 16:21:03
