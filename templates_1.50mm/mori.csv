@@ -44,8 +44,8 @@ ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 42;rMidOrbGy;Right Middle Orbital Gyrus;[ 22 87 ];Unk:MIDDLE-FRONTO-ORBITAL-GYRUS.MIDDLE-FRONTO-ORBITAL-GYRUS-right;   1566;   5.29;14.73,39.81,-19.80
 43;lSupMarGy;Left Supramarginal Gyrus;[ 23 88 ];Unk:SUPRAMARGINAL-GYRUS.SUPRAMARGINAL-GYRUS-right;   5760;  19.44;-49.54,-33.48,28.81
 44;rSupMarGy;Right Supramarginal Gyrus;[ 23 88 ];Unk:SUPRAMARGINAL-GYRUS.SUPRAMARGINAL-GYRUS-right;   5812;  19.62;52.19,-31.64,34.52
-45;lRecGy;Left Rectus Gyrus;[ 24 89 ];Both:GYRUS-RECTUS.GYRUS-RECTUS-right;   2686;   9.07;-4.13,38.29,-17.60
-46;rRecGy;Right Rectus Gyrus;[ 24 89 ];Both:GYRUS-RECTUS.GYRUS-RECTUS-right;   1543;   5.21;7.64,38.84,-15.05
+45;lRecGy;Left Gyrus Rectus;[ 24 89 ];Both:GYRUS-RECTUS.GYRUS-RECTUS-right;   2686;   9.07;-4.13,38.29,-17.60
+46;rRecGy;Right Gyrus Rectus;[ 24 89 ];Both:GYRUS-RECTUS.GYRUS-RECTUS-right;   1543;   5.21;7.64,38.84,-15.05
 47;lIns;Left Insula;[ 25 90 ];Unk:INSULAR.INSULAR-right;   2966;  10.01;-34.71,1.87,-1.85
 48;rIns;Right Insula;[ 25 90 ];Unk:INSULAR.INSULAR-right;   3104;  10.48;37.98,4.44,-2.50
 49;lAmy;Left Amygdala;[ 26 91 ];Unk:AMYGDALA.AMYGDALA-right;    377;   1.27;-14.50,-1.99,-23.35

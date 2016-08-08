@@ -60,8 +60,8 @@
     <label><index>42</index><short_name>rMidOrbGy</short_name><name>Right Middle Orbital Gyrus</name><RGBA></RGBA><XYZmm>14.73,39.81,-19.80</XYZmm></label>
     <label><index>43</index><short_name>lSupMarGy</short_name><name>Left Supramarginal Gyrus</name><RGBA></RGBA><XYZmm>-49.54,-33.48,28.81</XYZmm></label>
     <label><index>44</index><short_name>rSupMarGy</short_name><name>Right Supramarginal Gyrus</name><RGBA></RGBA><XYZmm>52.19,-31.64,34.52</XYZmm></label>
-    <label><index>45</index><short_name>lRecGy</short_name><name>Left Rectus Gyrus</name><RGBA></RGBA><XYZmm>-4.13,38.29,-17.60</XYZmm></label>
-    <label><index>46</index><short_name>rRecGy</short_name><name>Right Rectus Gyrus</name><RGBA></RGBA><XYZmm>7.64,38.84,-15.05</XYZmm></label>
+    <label><index>45</index><short_name>lRecGy</short_name><name>Left Gyrus Rectus</name><RGBA></RGBA><XYZmm>-4.13,38.29,-17.60</XYZmm></label>
+    <label><index>46</index><short_name>rRecGy</short_name><name>Right Gyrus Rectus</name><RGBA></RGBA><XYZmm>7.64,38.84,-15.05</XYZmm></label>
     <label><index>47</index><short_name>lIns</short_name><name>Left Insula</name><RGBA></RGBA><XYZmm>-34.71,1.87,-1.85</XYZmm></label>
     <label><index>48</index><short_name>rIns</short_name><name>Right Insula</name><RGBA></RGBA><XYZmm>37.98,4.44,-2.50</XYZmm></label>
     <label><index>49</index><short_name>lAmy</short_name><name>Left Amygdala</name><RGBA></RGBA><XYZmm>-14.50,-1.99,-23.35</XYZmm></label>

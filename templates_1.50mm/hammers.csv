@@ -52,8 +52,8 @@ ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 50;r3thVen;Right Third Ventricle;[ 49 ];Both:Third-ventricle;    293;   0.99;1.70,-7.54,-5.78
 51;lPrcGy;Left Precentral Gyrus;[ 50 51 ];Left/Right:Precentral-gyrus;  14734;  49.73;-31.61,-10.78,43.58
 52;rPrcGy;Right Precentral Gyrus;[ 50 51 ];Left/Right:Precentral-gyrus;  14595;  49.26;32.36,-9.08,44.50
-53;lRecGy;Left Rectus Gyrus;[ 52 53 ];Left/Right:Gyrus-rectus;   1672;   5.64;-4.34,27.27,-21.03
-54;rRecGy;Right Rectus Gyrus;[ 52 53 ];Left/Right:Gyrus-rectus;   1622;   5.47;5.63,26.96,-20.78
+53;lRecGy;Left Gyrus Rectus;[ 52 53 ];Left/Right:Gyrus-rectus;   1672;   5.64;-4.34,27.27,-21.03
+54;rRecGy;Right Gyrus Rectus;[ 52 53 ];Left/Right:Gyrus-rectus;   1622;   5.47;5.63,26.96,-20.78
 55;lOrbFroGy;Left Orbito-Frontal Gyri;[ 54 55 ];Left/Right:Orbitofrontal-gyri;   8628;  29.12;-23.28,36.46,-16.76
 56;rOrbFroGy;Right Orbito-Frontal Gyri;[ 54 55 ];Left/Right:Orbitofrontal-gyri;   9469;  31.96;24.66,38.42,-16.46
 57;lInfFroGy;Left Inferior Frontal Gyrus;[ 56 57 ];Left/Right:Inferior-frontal-gyrus;   6949;  23.45;-45.51,21.76,6.84
