@@ -91,8 +91,13 @@ warpreg.help    = {
 affreg        = cfg_menu;
 affreg.tag    = 'affreg';
 affreg.name   = 'Affine Regularisation';
-affreg.labels = {'No Affine Registration','ICBM space template - European brains','ICBM space template - East Asian brains','Average sized template','No regularisation'};
-affreg.values = {'','mni','eastern','subj','none'};
+if expert
+  affreg.labels = {'No Affine Registration','ICBM space template - European brains','ICBM space template - East Asian brains','Average sized template','No regularisation'};
+  affreg.values = {'','mni','eastern','subj','none'};
+else
+  affreg.labels = {'ICBM space template - European brains','ICBM space template - East Asian brains','Average sized template','No regularisation'};
+  affreg.values = {'mni','eastern','subj','none'};
+end
 affreg.def    = @(val)cat_get_defaults('opts.affreg', val{:});
 affreg.help   = {
   'The procedure is a local optimisation, so it needs reasonable initial starting estimates. Images should be placed in approximate alignment using the Display function of SPM before beginning. A Mutual Information affine registration with the tissue probability maps (D''Agostino et al, 2004) is used to achieve approximate alignment. Note that this step does not include any model for intensity non-uniformity. This means that if the procedure is to be initialised with the affine registration, then the data should not be too corrupted with this artifact.If there is a lot of intensity non-uniformity, then manually position your image in order to achieve closer starting estimates, and turn off the affine registration.Affine registration into a standard space can be made more robust by regularisation (penalising excessive stretching or shrinking).  The best solutions can be obtained by knowing the approximate amount of stretching that is needed (e.g. ICBM templates are slightly bigger than typical brains, so greater zooms are likely to be needed). For example, if registering to an image in ICBM/MNI space, then choose this option.  If registering to a template that is close in size, then select the appropriate option for this.'
