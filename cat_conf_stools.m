@@ -246,7 +246,7 @@ function stools = cat_conf_stools(expert)
   if expert > 1
     surfextract.val  = {data_surf_extract,GI,GIA,GII,GIL,GIS,FD,SD,ROIs,nproc,lazy};
   else
-    surfextract.val  = {data_surf_extract,GI,FD,SD,ROIs,nproc};
+    surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end
   surfextract.prog = @cat_surf_parameters;
   surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};

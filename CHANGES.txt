@@ -11504,6 +11504,7 @@ M       cat_surf_render2.m
 (1) Changed:    Corrected error in old cat_surf_render function.
 
 ------------------------------------------------------------------------
+r977 | gaser | 2016-08-01 19:14:38 +0200 (Mo, 01 Aug 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11511,5 +11512,18 @@ M       cat_vol_groupwise_ls.m
 
 Fixed: Realigned images using cat_vol_groupwise_ls.m have now correct (flipped)
 x-voxel size (thanks to Paul Schmidt for pointing to that issue).
+
 ------------------------------------------------------------------------
-r977 | gaser | 2016-08-01 19:14:31
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_conf_stools.m
+M       html/images/non_orthogonal.png
+
+(1) Changed: Moved some options to expert mode
+(2) Fixed: Non-orthogonality image is now fixed in manual and help.
+------------------------------------------------------------------------
+r978 | gaser | 2016-08-08 11:31:57
