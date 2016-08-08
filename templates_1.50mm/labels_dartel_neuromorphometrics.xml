@@ -82,8 +82,8 @@
     <label><index>64</index><short_name>rFroPo</short_name><name>Right Frontal Pole</name><RGBA></RGBA><XYZmm>13.95,65.43,-0.35</XYZmm></label>
     <label><index>65</index><short_name>lFusGy</short_name><name>Left Fusiform Gyrus</name><RGBA></RGBA><XYZmm>-34.50,-35.67,-24.73</XYZmm></label>
     <label><index>66</index><short_name>rFusGy</short_name><name>Right Fusiform Gyrus</name><RGBA></RGBA><XYZmm>35.05,-33.09,-25.22</XYZmm></label>
-    <label><index>67</index><short_name>lRecGy</short_name><name>Left Rectus Gyrus</name><RGBA></RGBA><XYZmm>-3.99,38.86,-22.43</XYZmm></label>
-    <label><index>68</index><short_name>rRecGy</short_name><name>Right Rectus Gyrus</name><RGBA></RGBA><XYZmm>4.47,39.72,-22.86</XYZmm></label>
+    <label><index>67</index><short_name>lRecGy</short_name><name>Left Gyrus Rectus</name><RGBA></RGBA><XYZmm>-3.99,38.86,-22.43</XYZmm></label>
+    <label><index>68</index><short_name>rRecGy</short_name><name>Right Gyrus Rectus</name><RGBA></RGBA><XYZmm>4.47,39.72,-22.86</XYZmm></label>
     <label><index>69</index><short_name>lInfOccGy</short_name><name>Left Inferior Occipital Gyrus</name><RGBA></RGBA><XYZmm>-40.35,-81.53,-4.44</XYZmm></label>
     <label><index>70</index><short_name>rInfOccGy</short_name><name>Right Inferior Occipital Gyrus</name><RGBA></RGBA><XYZmm>43.04,-77.76,-1.69</XYZmm></label>
     <label><index>71</index><short_name>lInfTemGy</short_name><name>Left Inferior Temporal Gyrus</name><RGBA></RGBA><XYZmm>-50.12,-31.56,-27.45</XYZmm></label>

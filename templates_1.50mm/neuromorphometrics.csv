@@ -66,8 +66,8 @@ ROIid;ROIabbr;ROIname;ROIbaseid;ROIbasename;Voxel;Volume;XYZ
 64;rFroPo;Right Frontal Pole;[ 120 121 ];Left/Right:FRP-frontal-pole;   2044;   6.90;13.95,65.43,-0.35
 65;lFusGy;Left Fusiform Gyrus;[ 122 123 ];Left/Right:FuG-fusiform-gyrus;   3242;  10.94;-34.50,-35.67,-24.73
 66;rFusGy;Right Fusiform Gyrus;[ 122 123 ];Left/Right:FuG-fusiform-gyrus;   3310;  11.17;35.05,-33.09,-25.22
-67;lRecGy;Left Rectus Gyrus;[ 124 125 ];Left/Right:GRe-gyrus-rectus;    983;   3.32;-3.99,38.86,-22.43
-68;rRecGy;Right Rectus Gyrus;[ 124 125 ];Left/Right:GRe-gyrus-rectus;    992;   3.35;4.47,39.72,-22.86
+67;lRecGy;Left Gyrus Rectus;[ 124 125 ];Left/Right:GRe-gyrus-rectus;    983;   3.32;-3.99,38.86,-22.43
+68;rRecGy;Right Gyrus Rectus;[ 124 125 ];Left/Right:GRe-gyrus-rectus;    992;   3.35;4.47,39.72,-22.86
 69;lInfOccGy;Left Inferior Occipital Gyrus;[ 128 129 ];Left/Right:IOG-inferior-occipital-gyrus;   3028;  10.22;-40.35,-81.53,-4.44
 70;rInfOccGy;Right Inferior Occipital Gyrus;[ 128 129 ];Left/Right:IOG-inferior-occipital-gyrus;   3143;  10.61;43.04,-77.76,-1.69
 71;lInfTemGy;Left Inferior Temporal Gyrus;[ 132 133 ];Left/Right:ITG-inferior-temporal-gyrus;   5158;  17.41;-50.12,-31.56,-27.45
