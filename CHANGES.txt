@@ -11558,6 +11558,7 @@ M       html/cat.html
 Fixed: Order of filenames after switching plot is now correct.
 
 ------------------------------------------------------------------------
+r981 | gaser | 2016-08-09 15:04:05 +0200 (Di, 09 Aug 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11565,5 +11566,31 @@ M       cat_surf_resamp.m
 
 Fixed: Path of filename in gifti-metadata is now removed after resampling.
 This alllows to move the resampled files.
+
 ------------------------------------------------------------------------
-r981 | gaser | 2016-08-09 15:03:53
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_cprintf.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run_job.m
+M       cat_surf_fun.m
+M       cat_surf_render2.m
+M       cat_tst_calc_kappa.m
+M       cat_vol_isarnlm.m
+M       spm_cat12.m
+
+(1) Fixed*:     Corrected error in ISARNLM filter that avoid filtering low 
+                resolution filtering of ultra-highres images.
+(2) Fixed*:     Corrected problems in LAS in ultra-highres images.
+(3) Fixed*:     Corrected AMAP problem in  ultra-highres images by resolution
+                adaptive sub-parameter and improved CSF background. 
+(4) Fixed*:     Corrected call of 3rd noise correction after LAS.   
+(5) Changed:    Updated cat_tst_calc_kappa for GM expert segment data.            
+(5) Changed:    Added CAT main directories in SPM directory list.
+(6) Changed:    Added manual reset of color output in cat_io_cprintf.
+
+
+------------------------------------------------------------------------
+r982 | dahnke | 2016-08-09 17:17:45

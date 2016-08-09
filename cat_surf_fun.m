@@ -34,8 +34,23 @@ function varargout = cat_surf_fun(action,S,varargin)
       else
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S);
       end
+    case 'graph2edge'
+      varargout{1} = cat_surf_edges(S); 
+    case 'surfaceNeighborVertices' 
   end
     
+end
+
+function E = cat_surf_edges(T)
+  if isstruct(T) && isfield(T,'faces')
+    T = T.faces;
+  end
+
+  T = sort(T,2); E = []; 
+  for i=1:size(T,2)-1
+    E = [E; T(:,[i i+1])]; %#ok<AGROW>
+  end
+  E = unique(E,'rows');
 end
 
 function D = cat_surf_dist(S)
