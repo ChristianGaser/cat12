@@ -11528,6 +11528,7 @@ M       html/images/non_orthogonal.png
 (2) Fixed: Non-orthogonality image is now fixed in manual and help.
 
 ------------------------------------------------------------------------
+r979 | gaser | 2016-08-08 16:21:16 +0200 (Mo, 08 Aug 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11544,5 +11545,15 @@ M       templates_1.50mm/neuromorphometrics.csv
 
 (1) Changed: Resampled surfaces have less artefacts due to resampling.
 (2) Fixed: Corrected some anatomical names in atlases.
+
 ------------------------------------------------------------------------
-r979 | gaser | 2016-08-08 16:21:03
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_check_cov.m
+M       html/cat.html
+
+Fixed: Order of filenames after switching plot is now correct.
+------------------------------------------------------------------------
+r980 | gaser | 2016-08-09 12:01:35
