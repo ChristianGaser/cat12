@@ -11547,6 +11547,7 @@ M       templates_1.50mm/neuromorphometrics.csv
 (2) Fixed: Corrected some anatomical names in atlases.
 
 ------------------------------------------------------------------------
+r980 | gaser | 2016-08-09 12:01:46 +0200 (Di, 09 Aug 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11555,5 +11556,14 @@ M       cat_stat_check_cov.m
 M       html/cat.html
 
 Fixed: Order of filenames after switching plot is now correct.
+
 ------------------------------------------------------------------------
-r980 | gaser | 2016-08-09 12:01:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_resamp.m
+
+Fixed: Path of filename in gifti-metadata is now removed after resampling.
+This alllows to move the resampled files.
+------------------------------------------------------------------------
+r981 | gaser | 2016-08-09 15:03:53
