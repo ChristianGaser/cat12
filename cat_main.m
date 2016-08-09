@@ -732,7 +732,7 @@ if job.extopts.LASstr>0
   [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
   
   %Ymioc = Ymi+0; 
-  if job.extopts.NCstr>0
+  if job.extopts.NCstr>0 && job.extopts.sanlm>0
     %% noise correction of the local normalized image Ymi, whereas only small changes are expected in Ym by the WM bias correction
     [Ymis,Ymior,BB]  = cat_vol_resize({Ymi,Ymo},'reduceBrain',vx_vol,round(2/mean(vx_vol)),Yb);
     Yc = abs(Ymis - Ymior); Yc = Yc * 6 * min(2,max(0,abs(job.extopts.NCstr))); 
@@ -759,9 +759,9 @@ if job.extopts.LASstr>0
       Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
       (1-Yc) .* Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
       Yc .* Ymis .* Ybr;
-    
+  
+    clear Ymis Ymo;
   end
-  clear Ymis Ymio;
   %clear Ymioc; 
   fprintf('%4.0fs\n',etime(clock,stime));
 end
@@ -873,7 +873,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  -------------------------------------------------------------------
 
 % correct for harder brain mask to avoid meninges in the segmentation
-Ymib = Ymi; Ymib(~Yb) = 0; %Ymib = double(VT.private.dat(:,:,:)); Ymib(~Yb) = 0; 
+Ymib = Ymi; Ymib(~Yb) = 0; 
 rf = 10^4; Ymib = round(Ymib*rf)/rf;
 
 %  prepare data for segmentation
@@ -908,21 +908,29 @@ indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
 % Yb source image because Amap needs a skull stripped image
 % set Yp0b and source inside outside Yb to 0
 Yp0b = Yp0(indx,indy,indz); %clear Yp0
-Ymib  = double(Ymib(indx,indy,indz)); 
+Ymib = Ymib(indx,indy,indz); 
 
 
 % remove non-brain tissue with a smooth mask and set values inside the
 % brain at least to CSF to avoid wholes for images with CSF==BG.
 if job.extopts.LASstr>0 
+  Ywmstd = cat_vol_localstat(single(Ymib),Yp0b==3,1,4); 
+  CSFnoise(1) = cat_stat_nanmean(Ywmstd(Ywmstd(:)>0))/mean(vx_vol); 
+  Ywmstd = cat_vol_localstat(cat_vol_resize(single(Ymib),'reduceV',vx_vol,vx_vol*2,16,'meanm'),...
+    cat_vol_resize(Yp0==3,'reduceV',vx_vol,vx_vol*2,16,'meanm')>0.5,1,4); 
+  CSFnoise(2) = cat_stat_nanmean(Ywmstd(Ywmstd(:)>0))/mean(vx_vol); 
   Ycsf = double(0.33 * Yb(indx,indy,indz)); spm_smooth(Ycsf,Ycsf,0.6*vx_vol);
-  Ymib  = max(Ycsf,Ymib); 
+  Ycsf = Ycsf + cat_vol_smooth3X(randn(size(Ycsf)),0.5) * max(0.005,min(0.2,CSFnoise(1)/4)); % high-frequency noise
+  Ycsf = Ycsf + cat_vol_smooth3X(randn(size(Ycsf)),1.0) * max(0.005,min(0.2,CSFnoise(2)*1)); % high-frequency noise
+  Ymib = max(Ycsf*0.8 .* cat_vol_smooth3X(Ycsf>0,2),Ymib); 
   clear Ycsf; 
   % Yb is needed for surface reconstruction
 %     if ~job.output.surface, clear Yb; end
 end
+Ymib = double(Ymib); 
 
 % Amap parameters 
-n_iters = 16; sub = 16; n_classes = 3; pve = 5; 
+n_iters = 16; sub = round(16/min(vx_vol)); n_classes = 3; pve = 5; % default sub=16 lead to errors in highres data!
 bias_fwhm = 60; init_kmeans = 0; 
 
 if job.extopts.mrf~=0
@@ -931,24 +939,25 @@ else
   iters_icm = 0; 
 end
 
+
 % adaptive mrf noise 
 if job.extopts.mrf>=1 || job.extopts.mrf<0; 
   % estimate noise
   [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
   Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
   job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
-  clear Yn Ycls1 Ycls2 Yg;
+  %clear Yn Ycls1 Ycls2 Yg;
 end
 
 % display something
 stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
-% do segmentation  
+%% do segmentation  
 prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
   job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
 
 %% reorder probability maps according to spm order
-
+clear Yp0b Ymib; 
 prob = prob(:,:,:,[2 3 1]);
 clear vol %Ymib
 fprintf(sprintf('%s',repmat('\b',1,94+4)));
@@ -1058,7 +1067,7 @@ if job.extopts.WMHC && job.extopts.WMHCstr>0 && ~job.inv_weighting;
     Yl1b = Yl1(indx,indy,indz);
     Ymib  = Ymi(indx,indy,indz);
 
-    Ybs  = NS(Yl1b,LAB.BS) & Ymib>2/3;
+    Ybs  = NS(Yl1b,LAB.BS) & Ymib>2/3; clear Ymib; 
     YpveVB = cat_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
     YpveCC = cat_vol_morph(Yl1b==1,'d',3*vxv) & cat_vol_morph(Yl1b==2,'d',3*vxv) & ...
              cat_vol_morph(NS(Yl1b,LAB.VT),'d',2);                      % corpus callosum

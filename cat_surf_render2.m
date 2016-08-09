@@ -134,8 +134,12 @@ switch lower(action)
         labelmap = zeros(0); labelnam = cell(0); labelmapclim = zeros(1,2); labeloid = zeros(0); labelid = zeros(0); nid=1;
         for pi=1:numel(sinfo)
 
+            if ~exist(sinfo(pi).fname,'file')
+              error('cat_surf_render:nofile','The file "%s" does not exist!',sinfo(pi).fname); 
+            end
+            
             H.filename{pi} = sinfo(pi).fname; 
-
+            
             % load mesh
             [pp,ff,ee] = spm_fileparts(sinfo(pi).Pmesh);
             switch ee
@@ -151,6 +155,21 @@ switch lower(action)
               switch sinfo(pi).ee
                   case '.gii'
                       cdata = gifti(O.pcdata{pi}); 
+                      if isfield(cdata,'cdata')
+                        if isnumeric(cdata.cdata)
+                          cdata = cdata.cdata; 
+                        else
+                          fname = cdata.cdata.fname; 
+                          fid = fopen(fname, 'r', 'b') ;
+                          if (fid < 0)
+                             str = sprintf('could not open curvature file %s', fname) ;
+                             error(str) ;
+                          end
+                          cdata = fread(fid, 'double') ;
+                          fclose(fid);
+                        
+                        end
+                      end
                       labelmapclim = [min(cdata) max(cdata)];
                   case '.annot' 
                       %%
