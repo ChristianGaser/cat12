@@ -124,6 +124,7 @@ function varargout = cat_surf_resamp(varargin)
         [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
         g = gifti(Psdata{i});
         g.private.metadata = struct('name','Name','value',[ff2 ex2]);
+        save(g, Psdata{i}, 'Base64Binary');
 
         delete(Presamp);
         delete(Pfwhm);
