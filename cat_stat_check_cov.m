@@ -9,7 +9,7 @@ function varargout = cat_stat_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY YpYsorted data_array pos ind_sorted mean_cov FS P X issurf mn_data mx_data V ...
+global fname H YpY YpYsorted data_array pos ind_sorted ind_sorted_display mean_cov FS P X issurf mn_data mx_data V ...
        sample isxml sorted isscatter MD show_name bplot
 rev = '$Rev$';
 
@@ -294,6 +294,8 @@ end
 [mean_cov_sorted, ind_sorted] = sort(mean_cov,'descend');
 YpYsorted = YpY(ind_sorted,ind_sorted);
 
+ind_sorted_display = ind_sorted;
+
 threshold_cov = mean(mean_cov) - 2*std(mean_cov);
 n_thresholded = min(find(mean_cov_sorted < threshold_cov));
 
@@ -463,7 +465,7 @@ end
 %-----------------------------------------------------------------------
 function check_worst_data(obj, event_obj)
 %-----------------------------------------------------------------------
-global P ind_sorted issurf mn_data mx_data data_array H
+global P ind_sorted_display issurf mn_data mx_data data_array H
 
 n = size(P,1);
 number = min([n 24]);
@@ -471,7 +473,7 @@ number = spm_input('How many files ?',1,'e',number);
 number = min([number 24]);
 number = min([number size(P,1)]);
   
-list = char(P(ind_sorted(n:-1:1),:));
+list = char(P(ind_sorted_display(n:-1:1),:));
 list2 = list(1:number,:);
 
 if issurf
@@ -513,7 +515,7 @@ return
 %-----------------------------------------------------------------------
 function show_mahalanobis(X)
 %-----------------------------------------------------------------------
-global H FS pos isscatter ind_sorted MD
+global H FS pos isscatter ind_sorted_display MD
 
 % clear larger area and set background color to update labels and title
 H.ax = axes('Position',[-.1 -.1 1.1 1.1],'Parent',H.figure);
@@ -552,7 +554,7 @@ set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel
   round(100*linspace(min(MD),max(MD),5))/100,'TickLength',[0 0]);
 
 % update index of worst files
-[tmp, ind_sorted] = sort(MD,'ascend');
+[tmp, ind_sorted_display] = sort(MD,'ascend');
 
 colormap(cmap)
 
@@ -615,7 +617,7 @@ return
 %-----------------------------------------------------------------------
 function show_mean_boxplot(data_boxp, name_boxp, quality_order)
 %-----------------------------------------------------------------------
-global fname FS sample ind_sorted show_name bp
+global fname FS sample ind_sorted_display show_name bp
 
 if nargin == 0
   data_boxp = bp.data;
@@ -698,9 +700,9 @@ hold off
 
 % estimate sorted index new for displaying worst files
 if quality_order > 0
-  [tmp, ind_sorted] = sort(data_boxp,'descend');
+  [tmp, ind_sorted_display] = sort(data_boxp,'descend');
 else
-  [tmp, ind_sorted] = sort(data_boxp,'ascend');
+  [tmp, ind_sorted_display] = sort(data_boxp,'ascend');
   
 end
 
