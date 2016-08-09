@@ -142,6 +142,12 @@ function count = cat_io_cprintf(style,format,varargin)
   
   global cprintferror; 
   if isempty(cprintferror), cprintferror=0; end
+  if strcmp(style,'reset')
+    cprintferror = 0;
+    style  = [0.0 0.5 0.0]; 
+    cat_io_cprintf(style,'Color output active!\n');
+    return
+  end
 
   if cprintferror
     count1 = fprintf(format,varargin{:});
@@ -152,7 +158,7 @@ function count = cat_io_cprintf(style,format,varargin)
 
     warning off; 
 
-    try
+    
       persistent majorVersion minorVersion
       if isempty(majorVersion)
           %v = version; if str2double(v(1:3)) <= 7.1
@@ -204,7 +210,9 @@ function count = cat_io_cprintf(style,format,varargin)
       if nargin<2, format = style; style='text';  end
       %error(nargchk(2, inf, nargin, 'struct'));
       %str = sprintf(format,varargin{:});
-
+      
+      
+    try
       % In compiled mode
       try useDesktop = usejava('desktop'); catch, useDesktop = false; end
       if isdeployed | ~useDesktop %#ok<OR2> - for Matlab 6 compatibility

@@ -196,14 +196,14 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
    
   iter = 0; noise = inf; Ys = Yi; noiser=1;
   while ((iter < opt.iter && opt.level>1) || (iter < opt.iter1 && opt.level==1)) && ...
-      noise>opt.Nth && (opt.level<3 || noiser>1/4) && (iter==0 || mean(vx_vol)<1.5) 
+      noise>opt.Nth && (opt.level<4 || noiser>1/4) && (iter==0 || mean(vx_vol)<1.5) 
     
     
     %% SANLM filtering
     if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
     Ys  = Yi+0;
     YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
-    if opt.level~=1 && any(vx_vol>0.75)
+    if opt.level~=1
       cat_sanlm(Ys,3,1,opt.rician); 
     
       % adaptive global denoising 
