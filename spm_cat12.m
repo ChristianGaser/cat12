@@ -203,18 +203,6 @@ end
 
 %% add some directories 
 spm_select('PrevDirs',{fullfile(spm('dir'),'toolbox','cat12')});
-spm_select('PrevDirs',{fullfile(spm('dir'),'toolbox','cat12','template_surfaces')});
-
-% my database dirs > maybe as cat_defaults variable?
-dirlist = {
-  fullfile('/','Volumes','vbmDB','MRData','vbm12tst','results','deffiles');
-  };
-for di=1:numel(dirlist)
-  if exist(dirlist{di},'dir')
-    spm_select('PrevDirs',dirlist(di));
-  end
-end
-
 
 %% command line output
 switch cat_get_defaults('extopts.expertgui')
