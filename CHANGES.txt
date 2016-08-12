@@ -11568,6 +11568,7 @@ Fixed: Path of filename in gifti-metadata is now removed after resampling.
 This alllows to move the resampled files.
 
 ------------------------------------------------------------------------
+r982 | dahnke | 2016-08-09 17:18:00 +0200 (Di, 09 Aug 2016) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11592,5 +11593,14 @@ M       spm_cat12.m
 (6) Changed:    Added manual reset of color output in cat_io_cprintf.
 
 
+
 ------------------------------------------------------------------------
-r982 | dahnke | 2016-08-09 17:17:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       spm_cat12.m
+
+Changed: Removed some (only internally used) paths form the dirlist in spm_cat12.m.
+------------------------------------------------------------------------
+r983 | gaser | 2016-08-12 08:29:41
