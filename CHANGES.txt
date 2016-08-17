@@ -11595,6 +11595,7 @@ M       spm_cat12.m
 
 
 ------------------------------------------------------------------------
+r983 | gaser | 2016-08-12 08:29:53 +0200 (Fr, 12 Aug 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11602,5 +11603,16 @@ M       cat_main.m
 M       spm_cat12.m
 
 Changed: Removed some (only internally used) paths form the dirlist in spm_cat12.m.
+
 ------------------------------------------------------------------------
-r983 | gaser | 2016-08-12 08:29:41
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+
+Changed: Updated CAT12-manual.
+------------------------------------------------------------------------
+r984 | gaser | 2016-08-17 12:39:31
