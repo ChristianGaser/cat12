@@ -202,9 +202,11 @@ function cat_surf_surf2roi(job)
       % xml-export one file for all (this is a structure)
       clear ROI
       if isfield(rinfo,'dataname')
-        ROI.(rinfo.dataname) = ccsv;      
+        ROI.(rinfo.dataname) = [];
+        ROI.(rinfo.dataname).(sinfo.dataname) = ccsv;     
       else
-        ROI.(rinfo.name) = ccsv;      
+        ROI.(rinfo.name) = [];
+        ROI.(rinfo.name).(sinfo.dataname) = ccsv;      
       end
       cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
         ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write+'); 
