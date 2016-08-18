@@ -11605,6 +11605,7 @@ M       spm_cat12.m
 Changed: Removed some (only internally used) paths form the dirlist in spm_cat12.m.
 
 ------------------------------------------------------------------------
+r984 | gaser | 2016-08-17 12:39:46 +0200 (Mi, 17 Aug 2016) | 9 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -11614,5 +11615,16 @@ M       Contents.m
 M       html/cat.html
 
 Changed: Updated CAT12-manual.
+
 ------------------------------------------------------------------------
-r984 | gaser | 2016-08-17 12:39:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat_stat_ROI.m
+M       cat_surf_surf2roi.m
+
+(1) Fixed: Corrected typos in cat12-GUI.
+(2) Fixed: Updated ROI tools that now also work for surfaces correctly.
+------------------------------------------------------------------------
+r985 | gaser | 2016-08-18 10:08:24

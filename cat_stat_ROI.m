@@ -27,7 +27,7 @@ function save_ROI(p,roi)
 % save mean values inside ROI
 
 % ROI measures to search for
-ROI_measures = char('Vgm','Vwm','Vcsf','mean_thickness');
+ROI_measures = char('Vgm','Vwm','Vcsf','mean_thickness','mean_fractaldimension','mean_amc','mean_gyrification','mean_sqrtsulc');
 n_ROI_measures = size(ROI_measures,1);
 
 [path, roi_name, ext] = fileparts(p.calcroi_name);
@@ -50,48 +50,60 @@ for i=1:n_data
   n_atlases = numel(atlases);
   
   for j=1:n_atlases
+    measures = fieldnames(xml.ROI.(atlases{j}));
     if ~isfield(xml.ROI.(atlases{j}),'tr')
-      error('Missing mandatory tr-field in XML file.');
-    end
-  
-    n_ROIs = numel(xml.ROI.(atlases{j}).tr) - 1; % ignore header
-    hdr = xml.ROI.(atlases{j}).tr{1}.td;
+      n_measures = numel(measures);
+      if ~isfield(xml.ROI.(atlases{j}).(measures{1}),'tr')
+        error('Missing mandatory tr-field in XML file.');
+      end
+    else n_measures = 1; end
     
-    for k=1:numel(hdr)
-      for l=1:n_ROI_measures
+    for m=1:n_measures
+      
+      if n_measures==1
+        tr = xml.ROI.(atlases{j}).tr;
+      else
+        tr = xml.ROI.(atlases{j}).(measures{m}).tr;
+      end
+      n_ROIs = numel(tr) - 1; % ignore header
+      hdr = tr{1}.td;
+    
+      for k=1:numel(hdr)
+        for l=1:n_ROI_measures
 
-        % check for field with ROI names
-        if strcmp(hdr{k},'ROIappr') || strcmp(hdr{k},'ROIabbr') || strcmp(hdr{k},'lROIname') || strcmp(hdr{k},'rROIname')
-          name_index = k;  
-        end
+          % check for field with ROI names
+          if strcmp(hdr{k},'ROIappr') || strcmp(hdr{k},'ROIabbr') || strcmp(hdr{k},'lROIname') || strcmp(hdr{k},'rROIname')
+            name_index = k;
+          end
 
-        % look for pre-defined ROI measures
-        if strcmp(hdr{k},deblank(ROI_measures(l,:)))
+          % look for pre-defined ROI measures
+          if strcmp(hdr{k},deblank(ROI_measures(l,:)))
         
-          % create filename with information about atlas and measures and print ROI name
-          if (i==1) 
-            out_name = fullfile(path,[ roi_name '_' deblank(atlases{j}) '_' hdr{k} '.csv']);
-            fid{j,k} = fopen(out_name,'w');
-            fprintf('Save values in %s\n',out_name);
+            % create filename with information about atlas and measures and print ROI name
+            if (i==1) 
+              out_name = fullfile(path,[ roi_name '_' deblank(atlases{j}) '_' hdr{k} '.csv']);
+              fid{j,k,m} = fopen(out_name,'w');
+              fprintf('Save values in %s\n',out_name);
 
-            fprintf(fid{j,k},'Name\t');
-            for m=1:n_ROIs
-              fprintf(fid{j,k},'%s\t',char(xml.ROI.(atlases{j}).tr{m+1}.td(name_index)));
+              fprintf(fid{j,k,m},'Name\t');
+              for r=1:n_ROIs
+                fprintf(fid{j,k,m},'%s\t',char(tr{r+1}.td(name_index)));
+              end
             end
-          end
 
-          % print ROI values
-          fprintf(fid{j,k},'\n%s\t',ID);
-          for m=1:n_ROIs
-            fprintf(fid{j,k},'%s\t',char(xml.ROI.(atlases{j}).tr{m+1}.td(k)));
-          end
+            % print ROI values
+            fprintf(fid{j,k,m},'\n%s\t',ID);
+            for r=1:n_ROIs
+              fprintf(fid{j,k,m},'%s\t',char(tr{r+1}.td(k)));
+            end
           
-          % close files after last dataset
-          if (i==n_data)
-            fclose(fid{j,k});
-          end
+            % close files after last dataset
+            if (i==n_data)
+              fclose(fid{j,k,m});
+            end
                               
-        end        
+          end        
+        end
       end
     end
   end
