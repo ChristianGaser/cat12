@@ -85,11 +85,11 @@ function varargout = cat_surf_display(varargin)
   % multi-surface output for one subject 
   def.multisurf = 0; % 0 - no; 1 - both hemispheres;
   def.verb      = 1;
-  def.readsurf  = 0;  % readsurf=1 for individual average surface (e.g. appes); readsurf=0 for group average surface 
+  def.readsurf  = 0;  % readsurf=1 for individual average surface (e.g. apes); readsurf=0 for group average surface 
   
   job = cat_io_checkinopt(job,def);
   
-  %% ... need futher development 
+  %% ... need further development 
   sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage); 
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
@@ -245,7 +245,6 @@ function varargout = cat_surf_display(varargin)
               if clim(1)<0
                 clim = [-max(abs(clim)) max(abs(clim))];
                 if job.expert<2
-                  cat_surf_render('ColourMap',h.axis,cat_io_colormaps('BWR',128)); 
                   cat_surf_render('clim',h.axis,clim);
                 else
                   cat_surf_render2('ColourMap',h.axis,cat_io_colormaps('BWR',128));
@@ -253,7 +252,6 @@ function varargout = cat_surf_display(varargin)
                 end
               else
                 if job.expert<2
-                  cat_surf_render('ColourMap',h.axis,cat_io_colormaps('hotinv',128)); 
                   cat_surf_render('clim',h.axis,clim);
                 else
                   cat_surf_render2('ColourMap',h.axis,cat_io_colormaps('hotinv',128)); 
