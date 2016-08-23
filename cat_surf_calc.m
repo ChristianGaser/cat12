@@ -41,10 +41,9 @@ function varargout = cat_surf_calc(job)
     sinfo = cat_surf_info(job.cdata{1}{1});
   end
      
-  if ~isempty(sinfo.pp), outdir = sinfo.pp; else outdir = job.outdir{1}; end  
+  if ~isempty(job.outdir{1}), outdir = job.outdir{1}; else outdir=sinfo.pp; end  
   ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
 
-  
   % single or multi subject calculation
   if iscellstr(job.cdata)
     if isempty(outdir), outdir = fileparts(job.cdata{1}); end
