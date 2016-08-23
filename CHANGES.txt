@@ -11617,6 +11617,7 @@ M       html/cat.html
 Changed: Updated CAT12-manual.
 
 ------------------------------------------------------------------------
+r985 | gaser | 2016-08-18 10:08:34 +0200 (Do, 18 Aug 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11626,5 +11627,17 @@ M       cat_surf_surf2roi.m
 
 (1) Fixed: Corrected typos in cat12-GUI.
 (2) Fixed: Updated ROI tools that now also work for surfaces correctly.
+
 ------------------------------------------------------------------------
-r985 | gaser | 2016-08-18 10:08:24
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+M       cat_surf_display.m
+
+Changed: Corrected typos in cat_surf_display and changed default colormap 
+to jet for non-expert mode.
+
+------------------------------------------------------------------------
+r986 | gaser | 2016-08-23 16:40:31
