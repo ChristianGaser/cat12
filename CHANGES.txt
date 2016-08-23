@@ -11629,6 +11629,7 @@ M       cat_surf_surf2roi.m
 (2) Fixed: Updated ROI tools that now also work for surfaces correctly.
 
 ------------------------------------------------------------------------
+r986 | gaser | 2016-08-23 16:40:46 +0200 (Di, 23 Aug 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11639,5 +11640,13 @@ M       cat_surf_display.m
 Changed: Corrected typos in cat_surf_display and changed default colormap 
 to jet for non-expert mode.
 
+
 ------------------------------------------------------------------------
-r986 | gaser | 2016-08-23 16:40:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_calc.m
+
+Fixed: Defined outdir was not used in cat_surf_calc.m.
+------------------------------------------------------------------------
+r987 | gaser | 2016-08-23 16:49:52
