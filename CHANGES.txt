@@ -11642,11 +11642,25 @@ to jet for non-expert mode.
 
 
 ------------------------------------------------------------------------
+r987 | gaser | 2016-08-23 16:49:59 +0200 (Di, 23 Aug 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_calc.m
 
 Fixed: Defined outdir was not used in cat_surf_calc.m.
+
 ------------------------------------------------------------------------
-r987 | gaser | 2016-08-23 16:49:52
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+A       cat_surf_results.m
+M       html/cat.html
+M       templates_surfaces/lh.inflated.freesurfer.gii
+M       templates_surfaces/rh.inflated.freesurfer.gii
+
+(1) Added: cat_surf_results for overlaying surface results with multiple views.
+(2) Fixed: Left and right inflated hemispheres overlapped spatially.
+------------------------------------------------------------------------
+r988 | gaser | 2016-08-26 17:44:56
