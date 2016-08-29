@@ -6,7 +6,7 @@ function cat_surf_results(action,varargin)
 % Christian Gaser
 % $Id: cat_surf_results.m 938 2016-05-19 08:35:43Z gaser $
 
-global pos H S clip
+global H
 
 %-Input parameters
 %--------------------------------------------------------------------------
@@ -20,7 +20,7 @@ if ~ischar(action)
 end
 
 varargout = {[]};
-clip = [];
+H.clip = [];
 
 %-Action
 %--------------------------------------------------------------------------
@@ -34,7 +34,8 @@ switch lower(action)
         ws = spm('Winsize','Graphics');
         FS = spm('FontSizes');
         
-        pos{1} = struct(...
+        % figure and 5 views
+        H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
             'cbar',  [0.400 0.550 0.200 0.300],... % colorbar for correlation matrix
             'view1', [0.075 0.450 0.325 0.325],... % surface view
@@ -43,34 +44,46 @@ switch lower(action)
             'view4', [0.600 0.050 0.325 0.325],... % surface view
             'view5', [0.300 0.200 0.400 0.400]);   % surface view   
 
-
-        pos{2} = struct(...
+        H.pos{2} = struct(...
             'fig',   [2*ws(3)+10  10  0.3*ws(3) ws(3)],...   % figure
             'left',  [0.100 0.925 0.800 0.050],... % select left hemisphere
             'right', [0.100 0.875 0.800 0.050],... % select right hemisphere
             'surf',  [0.100 0.805 0.800 0.050],... % 
-            'thresh',[0.100 0.765 0.800 0.050],... % 
-            'save',  [0.100 0.725 0.800 0.050],... % 
-            'close', [0.100 0.600 0.800 0.050],... % close button
-            'text',  [0.100 0.550 0.800 0.200]);   % textbox   
+            'thresh',[0.100 0.750 0.800 0.050],... % 
+            'tview', [0.100 0.700 0.800 0.050],... % 
+            'nocbar',[0.100 0.650 0.800 0.050],... % 
+            'inv',   [0.100 0.600 0.800 0.050],... % 
+            'ovmin', [0.100 0.400 0.800 0.150],... % 
+            'ovmax', [0.100 0.250 0.800 0.150],... % 
+            'save',  [0.100 0.100 0.800 0.050],... % 
+            'close', [0.100 0.050 0.800 0.050],... % close button
+            'text',  [0.100 0.150 0.800 0.200]);   % textbox   
+
+        % 4 views
+        H.pos{3} = struct(...
+            'cbar',  [0.400 0.550 0.200 0.300],... % colorbar for correlation matrix
+            'view1', [0.150 0.450 0.325 0.325],... % surface view
+            'view2', [0.150 0.050 0.325 0.325],... % surface view
+            'view3', [0.525 0.450 0.325 0.325],... % surface view
+            'view4', [0.525 0.050 0.325 0.325]);   % surface view   
 
         % create figures
         for i=1:2
           H.figure(i) = figure(i+1);
           clf(H.figure(i));
         
-          set(H.figure(i),'MenuBar','none','Position',pos{i}.fig,...
+          set(H.figure(i),'MenuBar','none','Position',H.pos{i}.fig,...
             'Name','Results','NumberTitle','off');
         end
         
         % define S
-        S{1}.name  = ''; S{1}.side = 'lh';
-        S{2}.name = '';  S{2}.side = 'rh';
+        H.S{1}.name  = ''; H.S{1}.side = 'lh';
+        H.S{2}.name = '';  H.S{2}.side = 'rh';
         
         % add button for closing all windows
         H.close = uicontrol(H.figure(2),...
                 'string','Close','Units','normalized',...
-                'position',pos{2}.close,...
+                'position',H.pos{2}.close,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback','for i=2:26, try close(i); end; end;',...
                 'ToolTipString','Close windows',...
@@ -79,7 +92,7 @@ switch lower(action)
         % select results
         H.left = uicontrol(H.figure(2),...
                 'string','Select left hemisphere data','Units','normalized',...
-                'position',pos{2}.left,...
+                'position',H.pos{2}.left,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,1},...
                 'ToolTipString','Select resulst for left hemisphere',...
@@ -87,24 +100,11 @@ switch lower(action)
         
         H.right = uicontrol(H.figure(2),...
                 'string','Select right hemisphere data','Units','normalized',...
-                'position',pos{2}.right,...
+                'position',H.pos{2}.right,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,2},...
                 'ToolTipString','Select resulst for right hemisphere',...
                 'Interruptible','on','Enable','on');
-        
-        str  = { 'Threshold...','P<0.05','P<0.01','P<0.001'};
-        tmp  = { {@select_thresh, 1.3},...
-                 {@select_thresh, 2},...
-                 {@select_thresh, 3}};
-        
-        H.thresh = uicontrol(H.figure(2),...
-                'string',str,'Units','normalized',...
-                'position',pos{2}.thresh,'UserData',tmp,...
-                'style','PopUp','HorizontalAlignment','center',...
-                'callback','spm(''PopUpCB'',gcbo)',...
-                'ToolTipString','Threshold',...
-                'Interruptible','on','Visible','off');
         
         str  = { 'Underlying surface...','central','inflated','Dartel'};
         tmp  = { {@select_surf, 1},...
@@ -113,30 +113,87 @@ switch lower(action)
         
         H.surf = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
-                'position',pos{2}.surf,'UserData',tmp,...
+                'position',H.pos{2}.surf,'UserData',tmp,...
                 'style','PopUp','HorizontalAlignment','center',...
                 'callback','spm(''PopUpCB'',gcbo)',...
                 'ToolTipString','Underlying surface',...
                 'Interruptible','on','Enable','off');
 
+        str  = { 'Threshold...','P<0.05','P<0.01','P<0.001'};
+        tmp  = { {@select_thresh, 1.3},...
+                 {@select_thresh, 2},...
+                 {@select_thresh, 3}};
+        
+        H.thresh = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.thresh,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Threshold',...
+                'Interruptible','on','Visible','off');
+        
+        H.tview = uicontrol(H.figure(2),...
+                'string','Disable top view','Units','normalized',...
+                'position',H.pos{2}.tview,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_tview},...
+                'ToolTipString','Disable top view in the image center',...
+                'Interruptible','on','Visible','off');
+
+        H.inv = uicontrol(H.figure(2),...
+                'string','Invert results','Units','normalized',...
+                'position',H.pos{2}.inv,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_inv},...
+                'ToolTipString','Invert results',...
+                'Interruptible','on','Visible','off');
+
+        H.nocbar = uicontrol(H.figure(2),...
+                'string','Disable colorbar','Units','normalized',...
+                'position',H.pos{2}.nocbar,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_nocbar},...
+                'ToolTipString','Disable colorbar',...
+                'Interruptible','on','Visible','off');
+
         H.save = uicontrol(H.figure(2),...
                 'string','Save','Units','normalized',...
-                'position',pos{2}.save,...
+                'position',H.pos{2}.save,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@save_image},...
                 'ToolTipString','Save png image',...
                 'Interruptible','on','Enable','off');
 
         if nargin == 3
-          S{1}.name = varargin{1};
-          S{2}.name = varargin{2};
+          H.S{1}.name = varargin{1};
+          H.S{2}.name = varargin{2};
+          H.logP = 1;
+          
           for ind=1:2
-            S{ind}.Y    = spm_data_read(spm_data_hdr_read(S{ind}.name));
-            S{ind}.info = cat_surf_info(S{ind}.name,1); 
+            H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+            H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+            
+            % check whether name contains 'log' tha indicates a logP file
+            for i=1:size(H.S{ind}.name,1)
+              if isempty(strfind(H.S{ind}.info(i).ff,'log'))
+                H.logP = 0;
+              end
+            end
           end
+          H.disable_tview = 0;
+          H.show_inv = 0;
+          H.inverted = 0;
+          H.disable_cbar = 0;
+
+          display_results_all;
+
           set(H.surf,'Enable','on');
           set(H.save,'Enable','on');
-          display_results_all;
+          set(H.tview,'Visible','on');
+          set(H.nocbar,'Visible','on');
+          if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
+            set(H.inv,'Visible','on');
+          end
         end
 
     %-ColourBar
@@ -171,13 +228,13 @@ switch lower(action)
         if size(d,1) > size(d,2), d = d'; end
 
         % Update colorbar colors if clipping is used
-        clip = getappdata(H.patch(1), 'clip')
-        if ~isempty(clip)
-            if ~isnan(clip(2)) && ~isnan(clip(3))
+        H.clip = getappdata(H.patch(1), 'clip')
+        if ~isempty(H.clip)
+            if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
                 ncol = length(col);
                 col_step = (clim(3) - clim(2))/ncol;
-                cmin = max([1,ceil((clip(2)-clim(2))/col_step)]);
-                cmax = min([ncol,floor((clip(3)-clim(2))/col_step)]);
+                cmin = max([1,ceil((H.clip(2)-clim(2))/col_step)]);
+                cmax = min([ncol,floor((H.clip(3)-clim(2))/col_step)]);
                 col(cmin:cmax,:) = repmat([0.5 0.5 0.5],(cmax-cmin+1),1);
                 c(1:size(col,1),1,1:size(col,2)) = col;
             end
@@ -271,35 +328,33 @@ switch lower(action)
 %-----------------------------------------------------------------------
 function H = select_thresh(thresh)
 %-----------------------------------------------------------------------
-global H clip
+global H
 
-clip = [true -thresh thresh];
-for ind=1:5
-  try
-    setappdata(H.patch(ind),'clip',clip);
-    d = getappdata(H.patch(ind),'data');
-    H = updateTexture(H,ind,d);
-  end
+H.clip = [true -thresh thresh];
+for ind=1:(5 - H.disable_tview)
+  setappdata(H.patch(ind),'clip',H.clip);
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d);
 end
 
 %-----------------------------------------------------------------------
 function H = select_surf(surf)
 %-----------------------------------------------------------------------
-global H S
+global H
 
 for ind=1:2
   switch surf
   case 1
-    S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[S{ind}.info(1).side '.central.freesurfer.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.central.freesurfer.gii']);
   case 2
-    S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[S{ind}.info(1).side '.inflated.freesurfer.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
   case 3
-    S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152.gii']);
   end
 end
 
 display_results_all;
-for ind = 1:5
+for ind = 1:(5 - H.disable_tview)
   setappdata(H.patch(ind),'clip',[true NaN NaN]);
   d = getappdata(H.patch(ind),'data');
   H = updateTexture(H,ind,d);
@@ -308,7 +363,11 @@ end
 %-----------------------------------------------------------------------
 function display_results_all(obj, event_obj)
 %-----------------------------------------------------------------------
-global pos H S
+global H
+
+if (size(H.S{1}.Y) > 1 | size(H.S{2}.Y) > 1) & min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
+  disp('Warning: Only results with positive values are displayed!');
+end
 
 % clear larger area and set background color to update labels and title
 H.axis = axes('Parent',H.figure(1),'Position',[-.1 -.1 1.1 1.1],'Color',[1 1 1]);
@@ -319,77 +378,149 @@ set(H.figure(1),'Renderer','OpenGL');
 
 %-Compute mesh curvature
 %------------------------------------------------------------------
-g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[S{1}.info(1).side '.mc.central.freesurfer.gii']));
-S{1}.curv = g.cdata;
-g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[S{2}.info(1).side '.mc.central.freesurfer.gii']));
-S{2}.curv = g.cdata;
+g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{1}.info(1).side '.mc.central.freesurfer.gii']));
+H.S{1}.curv = g.cdata;
+g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{2}.info(1).side '.mc.central.freesurfer.gii']));
+H.S{2}.curv = g.cdata;
 
-display_results(1, pos{1}.view1, [ 90 0]);
-display_results(2, pos{1}.view2, [-90 0]);
-display_results(3, pos{1}.view3, [-90 0]);
-display_results(4, pos{1}.view4, [ 90 0]);
-display_results(5, pos{1}.view5, [ 0 90]);
+if ~H.disable_tview
+  ind = 1;
+  display_results(5, H.pos{1}.view5, [ 0 90]);
+else
+  ind = 3;
+end
+display_results(1, H.pos{ind}.view1, [ 90 0]);
+display_results(2, H.pos{ind}.view2, [-90 0]);
+display_results(3, H.pos{ind}.view3, [-90 0]);
+display_results(4, H.pos{ind}.view4, [ 90 0]);
 
 % add colorbar
-%H.cbar = axes('Position',pos{1}.cbar,'Parent',H.figure);
+%H.cbar = axes('Position',H.pos{1}.cbar,'Parent',H.figure);
 %cat_surf_results('Colourbar', H); 
 
-S{1}.thresh = min(S{1}.Y(S{1}.Y(:)>0));
-S{1}.thresh = min(S{1}.thresh,min(S{2}.Y(S{2}.Y(:)>0)));
+H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
+H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
 
-S{1}.min = min(min(S{1}.Y(:),S{2}.Y(:)));
-S{1}.max = max(max(S{1}.Y(:),S{2}.Y(:)));
+H.S{1}.min = min(min(H.S{1}.Y(:),H.S{2}.Y(:)));
+H.S{1}.max = max(max(H.S{1}.Y(:),H.S{2}.Y(:)));
 
-if S{1}.min < 0
-  mnx = max(abs([S{1}.min,S{1}.max]));
-  S{1}.min = -mnx;
-  S{1}.max =  mnx;
+if H.S{1}.min < 0
+  mnx = max(abs([H.S{1}.min,H.S{1}.max]));
+  H.S{1}.min = -mnx;
+  H.S{1}.max =  mnx;
 end
 
-if S{1}.thresh < 0.1 
+H.S{1}.max = round(1.1*H.S{1}.max);
+if H.S{1}.min < 0
+  H.S{1}.min = round(1.1*H.S{1}.min);
+else
+  H.S{1}.min = round(0.9*H.S{1}.min);
+end
+
+if H.logP 
   set(H.thresh,'Visible','on');
 end
 
-for ind=1:5
-  setappdata(H.patch(ind), 'clim', [true S{1}.min S{1}.max]);
+for ind=1:(5 - H.disable_tview)
+  setappdata(H.patch(ind), 'clim', [true H.S{1}.min H.S{1}.max]);
   d = getappdata(H.patch(ind),'data');
   H = updateTexture(H,ind,d);
 end
 
-if numel(S{1}.info) == 1
-  H.cbar = axes('Parent',H.figure(1),'Position',pos{1}.cbar,'Color',[0.5 0.5 0.5],'Visible','off');
-  axis(H.cbar,'off'); caxis([S{1}.min,S{1}.max]); title('p-value');
-  H.colourbar = colorbar('peer',H.cbar,'Northoutside');
-  colormap(getappdata(H.patch(ind),'col'));
-  
-  XTick = get(H.colourbar,'XTick');
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
 
-  XTickLabel = [];
-  for i=1:length(XTick)
-    if XTick(i) > 0
-      XTickLabel = char(XTickLabel,remove_zeros(sprintf('%.g',10^(-XTick(i)))));
-    elseif XTick(i) < 0
-      XTickLabel = char(XTickLabel,remove_zeros(sprintf('-%.g',10^(XTick(i)))));
-    else
-      XTickLabel = char(XTickLabel,'');
+% show slider for range of results
+if size(d,1)==1
+
+  % allow slider a more extended range
+  mnx = 1.5*max(abs([H.S{1}.min H.S{1}.max]));
+
+  sliderPanel(...
+        'Parent'  , H.figure(2), ...
+        'Title'   , 'Result min', ...
+        'Position', H.pos{2}.ovmin, ...
+        'Backgroundcolor', [0.8 0.8 0.8],...
+        'Min'     , -mnx, ...
+        'Max'     , mnx, ...
+        'Value'   , H.S{1}.min, ...
+        'FontName', 'Verdana', ...
+        'FontSize', 8, ...
+        'NumFormat', '%f', ...
+        'Callback', @slider_clim_min);
+
+  sliderPanel(...
+        'Parent'  , H.figure(2), ...
+        'Title'   , 'Result max', ...
+        'Position', H.pos{2}.ovmax, ...
+        'Backgroundcolor', [0.8 0.8 0.8],...
+        'Min'     , -mnx, ...
+        'Max'     , mnx, ...
+        'Value'   , H.S{1}.max, ...
+        'FontName', 'Verdana', ...
+        'FontSize', 8, ...
+        'NumFormat', '%f', ...
+        'Callback', @slider_clim_max);
+end
+
+%-----------------------------------------------------------------------
+function H = show_colorbar(H)
+%-----------------------------------------------------------------------
+
+% show colorbar
+figure(H.figure(1))
+if numel(H.S{1}.info) == 1
+  H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar,'Color',[0.5 0.5 0.5],'Visible','off');
+  clim = getappdata(H.patch(1), 'clim');
+  axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
+  if H.logP, title('p-value');end
+  H.colourbar = colorbar('peer',H.cbar,'Northoutside');
+  colormap(getappdata(H.patch(1),'col'));
+  
+  if H.logP
+    XTick = get(H.colourbar,'XTick');
+
+    XTickLabel = [];
+    for i=1:length(XTick)
+      if XTick(i) > 0
+        XTickLabel = char(XTickLabel,remove_zeros(sprintf('%.g',10^(-XTick(i)))));
+      elseif XTick(i) < 0
+        XTickLabel = char(XTickLabel,remove_zeros(sprintf('-%.g',10^(XTick(i)))));
+      else
+        XTickLabel = char(XTickLabel,'');
+      end
     end
+    set(H.colourbar,'XTickLabel',XTickLabel(2:end,:),'XTick',XTick);
   end
-  set(H.colourbar,'XTickLabel',XTickLabel(2:end,:),'XTick',XTick);
+else
+  H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar+[0 0.10 0 0],'Color',[0.5 0.5 0.5],'Visible','off');
+  if numel(H.S{1}.info) ==3
+    cb = [7 1 1 4 2 2 7;...
+          7 1 6 7 5 2 7;...
+          7 7 3 3 3 7 7];
+  else
+    cb = [7 1 1 4 2 2 7;...
+          7 1 1 4 2 2 7];
+  end
+  imagesc(cb);
+  colormap([1 0 0; 0 1 0; 0 0 1; 1 1 0; 0 1 1; 1 0 1; 1 1 1])
+  axis(H.cbar,'off'); axis('image');  
 end
 
 %-----------------------------------------------------------------------
 function display_results(ind, win, vw)
 %-----------------------------------------------------------------------
-global H S clip
+global H
 
 if ind < 5
-  M  = gifti(S{round(ind/2)}.info(1).Pmesh);
-  Mc.cdata = S{round(ind/2)}.Y;
+  M  = gifti(H.S{round(ind/2)}.info(1).Pmesh);
+  Mc.cdata = H.S{round(ind/2)}.Y;
 else
-  Ml = gifti(S{1}.info(1).Pmesh);
-  Mr = gifti(S{2}.info(1).Pmesh);
-  Mcl.cdata = S{1}.Y;
-  Mcr.cdata = S{2}.Y;
+  Ml = gifti(H.S{1}.info(1).Pmesh);
+  Mr = gifti(H.S{2}.info(1).Pmesh);
+  Mcl.cdata = H.S{1}.Y;
+  Mcr.cdata = H.S{2}.Y;
   M.faces = [Ml.faces; Mr.faces + size(Ml.vertices,1)];
   M.vertices = [Ml.vertices; Mr.vertices];
   M.mat = Ml.mat;
@@ -437,9 +568,9 @@ setappdata(H.patch(ind),'patch',P);
 %-Compute mesh curvature
 %------------------------------------------------------------------
 if ind < 5
-  curv = S{round(ind/2)}.curv;
+  curv = H.S{round(ind/2)}.curv;
 else
-  curv = [S{1}.curv; S{2}.curv];
+  curv = [H.S{1}.curv; H.S{2}.curv];
 end
 
 setappdata(H.patch(ind),'curvature',curv);
@@ -479,8 +610,6 @@ camlight(H.light(1))
 %==========================================================================
 function [H, C] = updateTexture(H,ind,v,col)
 
-global clip
-
 %-Project data onto surface mesh
 %--------------------------------------------------------------------------
 if size(v,2) < size(v,1)
@@ -498,8 +627,8 @@ if ~exist('col','var')
   else
     % use RGB colormap
     col = zeros(256,3,size(v,1));
-    for i=1:size(v,1)
-      col(:,i,i) = (1:256)/256;
+    for i=1:3
+      col(:,i,i) = 1;
     end
   end
 end
@@ -515,8 +644,8 @@ curv = getappdata(H.patch(ind),'curvature');
 
 if size(curv,2) == 1
     th = 0.15;
-    curv((curv<-th)) = -th;
-    curv((curv>th))  =  th;
+    curv((curv<-th)) = -1.5*th;
+    curv((curv>th))  =  0.1*th;
     curv = 0.5*(curv + th)/(2*th);
     curv = 0.5 + repmat(curv,1,3);
 end
@@ -529,22 +658,40 @@ if isempty(clim), clim = [false NaN NaN]; end
 mi = clim(2); ma = clim(3);
 if any(v(:))
     if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
+    % don't allow negative values for multiple maps
+    if size(v,1) > 1 & mi < 0
+      if ~isempty(H.clip)
+        H.clip(2) = -Inf;
+      else
+        H.clip = [true -Inf 0];
+      end
+    end
     for i=1:size(v,1)
         C = C + squeeze(ind2rgb(floor(((v(i,:)-mi)/(ma-mi))*size(col,1)),col(:,:,i)));
     end
 end
 
-%clip = getappdata(H.patch(ind), 'clip');
-if ~isempty(clip)
-    v(v>clip(2) & v<clip(3)) = NaN;
-    setappdata(H.patch(ind), 'clip', [true clip(2) clip(3)]);
+%H.clip = getappdata(H.patch(ind), 'clip');
+if ~isempty(H.clip)
+    v(v>H.clip(2) & v<H.clip(3)) = NaN;
+    setappdata(H.patch(ind), 'clip', [true H.clip(2) H.clip(3)]);
 end
 
 setappdata(H.patch(ind), 'clim', [true mi ma]);
 
 %-Build texture by merging curvature and data
 %--------------------------------------------------------------------------
-C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
+if size(v,1) > 1 % RGB
+  for i=1:size(v,1)
+    C(:,i) = any(v(i,:),1)' .* C(:,i);
+  end
+else
+  C = repmat(any(v,1),3,1)' .* C;
+end
+
+% replace regions below threshold by curvature
+ind0 = repmat(~any(v,1),3,1)';
+C(ind0) = curv(ind0);
 
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
@@ -557,9 +704,9 @@ end
 %-----------------------------------------------------------------------
 function select_data(obj, event_obj, ind)
 %-----------------------------------------------------------------------
-global H S
+global H
 
-if isempty(S{2}.name)
+if isempty(H.S{2}.name)
   str = 'log';
 else
   str = 'log';
@@ -568,34 +715,95 @@ end
 side = '';
 str_side = {'left','right'};
 
-while ~strcmp(side,S{ind}.side)
-  S{ind}.name = spm_select([1 3],'mesh',['Select log P map for ' str_side{ind} ' hemisphere'],'','',str);
-  S{ind}.Y    = spm_data_read(spm_data_hdr_read(S{ind}.name));
-  S{ind}.info = cat_surf_info(S{ind}.name,1); 
-  side = S{ind}.side;
-  for i=1:size(S{ind}.name,1)
-    if ~strcmp(S{ind}.info(i).side,S{ind}.side)
-      fprintf('%s does not contain %s hemisphere data.\n',S{ind}.name(i,:),str_side{ind});
+H.logP = 1;
+
+while ~strcmp(side,H.S{ind}.side)
+  H.S{ind}.name = spm_select([1 3],'mesh',['Select log P map for ' str_side{ind} ' hemisphere'],'','',str);
+  H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+  H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+  side = H.S{ind}.side;
+  for i=1:size(H.S{ind}.name,1)
+    % check whether name contains 'log' tha indicates a logP file
+    if isempty(strfind(H.S{ind}.info(i).ff,'log'))
+      H.logP = 0;
+    end
+    if ~strcmp(H.S{ind}.info(i).side,H.S{ind}.side)
+      fprintf('%s does not contain %s hemisphere data.\n',H.S{ind}.name(i,:),str_side{ind});
       side = '';
     end
   end
 end
 
+H.show_inv = 0;
+H.disable_tview = 0;
+H.inverted = 0;
+H.disable_cbar = 0;
+H.clip = [false NaN NaN];
+
 % enable display button if both sides are defined
-if ~isempty(S{1}.name) & ~isempty(S{2}.name)
+if ~isempty(H.S{1}.name) & ~isempty(H.S{2}.name)
+  display_results_all;
   set(H.surf,'Enable','on');
   set(H.save,'Enable','on');
-  display_results_all;
+  set(H.tview,'Visible','on');
+  set(H.nocbar,'Visible','on');
+  if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
+    set(H.inv,'Visible','on');
+  end
 end
 
 %==========================================================================
 function save_image(obj,event_obj,filename)
+
 global H
   %%
   
   if ~exist('filename','var')
+
+    nm = H.S{1}.info(1).ff;
+    filename = [nm '.png'];
+    
+    % end with _0???.ext?
+    if length(nm) > 4
+      if strcmp(nm(length(nm)-4:length(nm)-3),'_0') 
+    
+        SPM_name = fullfile(H.S{1}.info(1).pp, 'SPM.mat');
+    
+        % SPM.mat exist?
+        if exist(SPM_name,'file')
+          load(SPM_name);
+          xCon = SPM.xCon;
+          Ic = str2double(nm(length(nm)-3:length(nm)));
+          str_num = deblank(xCon(Ic).name);
+
+          % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
+          str_num(strfind(str_num,' ')) = '_';
+          strpos = strfind(str_num,' > ');
+          if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
+          strpos = strfind(str_num,' < ');
+          if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
+          strpos = strfind(str_num,'>');
+          if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
+          strpos = strfind(str_num,'<');
+          if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
+          str_num = spm_str_manip(str_num,'v');
+        
+          if ~isempty(H.clip)
+            if isnan(H.clip(3))
+              str_thresh = '_';
+            else
+              str_thresh = sprintf('P%g_',round(1000*10^(-H.clip(3)))/10);
+            end
+          else
+            str_thresh = '_';
+          end
+          filename = ['logP_' str_thresh str_num '.png'];
+        end
+      end
+    end
+
     filename = uiputfile({...
-      '*.png' 'PNG files (*.png)'}, 'Save as');
+      '*.png' 'PNG files (*.png)'}, 'Save as', filename);
   else
     [pth,nam,ext] = fileparts(filename);
     if isempty(pth), pth = cd; end
@@ -627,6 +835,96 @@ global H
   if changed_font
     set(H.colourbar,'FontUnits',FU,'FontSize',FS);
   end
+
+%==========================================================================
+function slider_clim_min(hObject, evt)
+global H
+
+figure(H.figure(1))
+val = get(hObject, 'Value');
+c = getappdata(H.patch(1),'clim');
+for ind = 1:(5 - H.disable_tview)
+  setappdata(H.patch(ind),'clim',[true val c(3)]);
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d);
+end
+
+% delete colorbar and display again
+set(get(H.cbar,'Title'),'Visible','off')
+if size(d,1) == 1
+  set(H.colourbar,'Visible','off');
+  if ~H.disable_cbar
+    H = show_colorbar(H);
+  end
+end
+
+%==========================================================================
+function slider_clim_max(hObject, evt)
+global H
+
+figure(H.figure(1))
+val = get(hObject, 'Value');
+c = getappdata(H.patch(1),'clim');
+for ind = 1:(5 - H.disable_tview)
+  setappdata(H.patch(ind),'clim',[true c(2) val]);
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d);
+end
+
+% delete colorbar and display again
+set(get(H.cbar,'Title'),'Visible','off')
+if size(d,1) == 1
+  set(H.colourbar,'Visible','off');
+  if ~H.disable_cbar
+    H = show_colorbar(H);
+  end
+end
+
+%==========================================================================
+function checkbox_tview(obj, event_obj)
+global H
+  
+H.disable_tview = get(H.tview,'Value');
+display_results_all;
+
+%==========================================================================
+function checkbox_inv(obj, event_obj)
+global H
+  
+H.show_inv = get(H.inv,'Value');
+
+if H.show_inv & ~H.inverted
+  H.S{1}.Y = -H.S{1}.Y;
+  H.S{2}.Y = -H.S{2}.Y;
+  H.inverted = 1;
+end
+
+if ~H.show_inv & H.inverted
+  H.S{1}.Y = -H.S{1}.Y;
+  H.S{2}.Y = -H.S{2}.Y;
+  H.inverted = 0;
+end
+display_results_all;
+
+%==========================================================================
+function checkbox_nocbar(obj, event_obj)
+global H
+  
+H.disable_cbar = get(H.nocbar,'Value');
+
+if H.disable_cbar
+  d = getappdata(H.patch(1),'data');
+
+  % delete colorbar and title
+  if size(d,1) == 1
+    set(get(H.cbar,'Title'),'Visible','off')
+    set(H.colourbar,'Visible','off')
+  else % delete only axis
+    cla(H.cbar);
+  end
+else
+  H = show_colorbar(H);
+end
 
 %==========================================================================
 function H = getHandles(H)
