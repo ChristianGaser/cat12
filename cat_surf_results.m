@@ -4,7 +4,7 @@ function cat_surf_results(action,varargin)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_surf_results.m 938 2016-05-19 08:35:43Z gaser $
+% $Id$
 
 global H
 
@@ -12,15 +12,16 @@ global H
 %--------------------------------------------------------------------------
 if ~nargin, action = 'Disp'; end
 
-pos = cell(2,1);
-
 if ~ischar(action)
     varargin = {action varargin{:}};
     action   = 'Disp';
 end
 
-varargout = {[]};
 H.clip = [];
+H.clim = [];
+H.bkg_col = [1 1 1];
+H.transp = 0;
+H.data_sel = 0;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -34,38 +35,38 @@ switch lower(action)
         ws = spm('Winsize','Graphics');
         FS = spm('FontSizes');
         
-        % figure and 5 views
+        % different positions for views with 4 and 5 images
+        H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.450 0.325 0.325],...
+                     [0.075 0.050 0.325 0.325;  0.150 0.050 0.325 0.325],...
+                     [0.600 0.450 0.325 0.325;  0.525 0.450 0.325 0.325],...
+                     [0.600 0.050 0.325 0.325;  0.525 0.050 0.325 0.325],...
+                     [0.300 0.200 0.400 0.400;  0.300 2.000 0.400 0.400]};
+
+        % figure 1
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
-            'cbar',  [0.400 0.550 0.200 0.300],... % colorbar for correlation matrix
-            'view1', [0.075 0.450 0.325 0.325],... % surface view
-            'view2', [0.075 0.050 0.325 0.325],... % surface view
-            'view3', [0.600 0.450 0.325 0.325],... % surface view
-            'view4', [0.600 0.050 0.325 0.325],... % surface view
-            'view5', [0.300 0.200 0.400 0.400]);   % surface view   
+            'cbar',  [0.400 0.550 0.200 0.300; 0.440 0.700 0.120 0.120]);   % colorbar   
 
+        % figure 2
         H.pos{2} = struct(...
-            'fig',   [2*ws(3)+10  10  0.3*ws(3) ws(3)],...   % figure
-            'left',  [0.100 0.925 0.800 0.050],... % select left hemisphere
-            'right', [0.100 0.875 0.800 0.050],... % select right hemisphere
-            'surf',  [0.100 0.805 0.800 0.050],... % 
-            'thresh',[0.100 0.750 0.800 0.050],... % 
-            'tview', [0.100 0.700 0.800 0.050],... % 
-            'nocbar',[0.100 0.650 0.800 0.050],... % 
-            'inv',   [0.100 0.600 0.800 0.050],... % 
-            'ovmin', [0.100 0.400 0.800 0.150],... % 
-            'ovmax', [0.100 0.250 0.800 0.150],... % 
-            'save',  [0.100 0.100 0.800 0.050],... % 
-            'close', [0.100 0.050 0.800 0.050],... % close button
-            'text',  [0.100 0.150 0.800 0.200]);   % textbox   
-
-        % 4 views
-        H.pos{3} = struct(...
-            'cbar',  [0.400 0.550 0.200 0.300],... % colorbar for correlation matrix
-            'view1', [0.150 0.450 0.325 0.325],... % surface view
-            'view2', [0.150 0.050 0.325 0.325],... % surface view
-            'view3', [0.525 0.450 0.325 0.325],... % surface view
-            'view4', [0.525 0.050 0.325 0.325]);   % surface view   
+            'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],...   % figure
+            'left',  [0.050 0.925 0.425 0.050],... % select left hemisphere
+            'right', [0.525 0.925 0.425 0.050],... % select right hemisphere
+            'surf',  [0.050 0.855 0.425 0.050],... % 
+            'atlas', [0.525 0.855 0.425 0.050],... % 
+            'thresh',[0.525 0.800 0.425 0.050],... % 
+            'cmap',  [0.050 0.800 0.425 0.050],... % 
+            'tview', [0.050 0.750 0.425 0.050],... % 
+            'nocbar',[0.050 0.700 0.425 0.050],... % 
+            'bkg',   [0.525 0.750 0.425 0.050],... % 
+            'transp',[0.525 0.700 0.425 0.050],... % 
+            'inv',   [0.525 0.650 0.425 0.050],... % 
+            'info',  [0.050 0.650 0.425 0.050],... % 
+            'ovmin', [0.050 0.450 0.425 0.150],... % 
+            'ovmax', [0.525 0.450 0.425 0.150],... % 
+            'save',  [0.050 0.050 0.425 0.050],... % 
+            'close', [0.525 0.050 0.425 0.050],... % close button
+            'text',  [0.050 0.150 0.425 0.200]);   % textbox   
 
         % create figures
         for i=1:2
@@ -95,7 +96,7 @@ switch lower(action)
                 'position',H.pos{2}.left,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,1},...
-                'ToolTipString','Select resulst for left hemisphere',...
+                'ToolTipString','Select results for left hemisphere (log-p maps)',...
                 'Interruptible','on','Enable','on');
         
         H.right = uicontrol(H.figure(2),...
@@ -103,7 +104,7 @@ switch lower(action)
                 'position',H.pos{2}.right,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,2},...
-                'ToolTipString','Select resulst for right hemisphere',...
+                'ToolTipString','Select results for right hemisphere (log-p maps)',...
                 'Interruptible','on','Enable','on');
         
         str  = { 'Underlying surface...','central','inflated','Dartel'};
@@ -119,8 +120,9 @@ switch lower(action)
                 'ToolTipString','Underlying surface',...
                 'Interruptible','on','Enable','off');
 
-        str  = { 'Threshold...','P<0.05','P<0.01','P<0.001'};
-        tmp  = { {@select_thresh, 1.3},...
+        str  = { 'Threshold...','No threshold','P<0.05','P<0.01','P<0.001'};
+        tmp  = { {@select_thresh, 0},...
+                 {@select_thresh, 1.3},...
                  {@select_thresh, 2},...
                  {@select_thresh, 3}};
         
@@ -132,12 +134,38 @@ switch lower(action)
                 'ToolTipString','Threshold',...
                 'Interruptible','on','Visible','off');
         
+        str  = { 'Colormap...','jet','hot','hsv','cold-hot'};
+        tmp  = { {@select_cmap, 1},...
+                 {@select_cmap, 2},...
+                 {@select_cmap, 3},...
+                 {@select_cmap, 4}};
+        
+        H.cmap = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.cmap,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Threshold',...
+                'Interruptible','on','Visible','off');
+
+        str  = { 'Atlas labeling...','Desikan-Killiany DKT40','Destrieux 2009'};
+        tmp  = { {@select_atlas, 1},...
+                 {@select_atlas, 2}};
+        
+        H.atlas = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.atlas,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Atlas Labeling',...
+                'Interruptible','on','Visible','off');
+
         H.tview = uicontrol(H.figure(2),...
-                'string','Disable top view','Units','normalized',...
+                'string','Hide top view','Units','normalized',...
                 'position',H.pos{2}.tview,...
                 'style','CheckBox','HorizontalAlignment','center',...
                 'callback',{@checkbox_tview},...
-                'ToolTipString','Disable top view in the image center',...
+                'ToolTipString','Hide top view in the image center',...
                 'Interruptible','on','Visible','off');
 
         H.inv = uicontrol(H.figure(2),...
@@ -148,12 +176,36 @@ switch lower(action)
                 'ToolTipString','Invert results',...
                 'Interruptible','on','Visible','off');
 
+        H.bkg = uicontrol(H.figure(2),...
+                'string','Black background','Units','normalized',...
+                'position',H.pos{2}.bkg,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_bkg},...
+                'ToolTipString','Black background',...
+                'Interruptible','on','Visible','off');
+
+        H.transp = uicontrol(H.figure(2),...
+                'string','Transparent overlay','Units','normalized',...
+                'position',H.pos{2}.transp,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_transp},...
+                'ToolTipString','Transparent overlay',...
+                'Interruptible','on','Visible','off');
+
+        H.info = uicontrol(H.figure(2),...
+                'string','Show filename','Units','normalized',...
+                'position',H.pos{2}.info,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_info},...
+                'ToolTipString','Show file information in image',...
+                'Interruptible','on','Visible','off');
+
         H.nocbar = uicontrol(H.figure(2),...
-                'string','Disable colorbar','Units','normalized',...
+                'string','Hide colorbar','Units','normalized',...
                 'position',H.pos{2}.nocbar,...
                 'style','CheckBox','HorizontalAlignment','center',...
                 'callback',{@checkbox_nocbar},...
-                'ToolTipString','Disable colorbar',...
+                'ToolTipString','Hide colorbar',...
                 'Interruptible','on','Visible','off');
 
         H.save = uicontrol(H.figure(2),...
@@ -167,33 +219,82 @@ switch lower(action)
         if nargin == 3
           H.S{1}.name = varargin{1};
           H.S{2}.name = varargin{2};
-          H.logP = 1;
           
-          for ind=1:2
-            H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-            H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+          [pth{1},nm1,ext1] = spm_fileparts(varargin{1});
+          [pth{2},nm2,ext2] = spm_fileparts(varargin{2});
+          
+          % SPM.mat found for both hemispheres
+          if strcmp([nm1 ext1],'SPM.mat') && strcmp([nm2 ext2],'SPM.mat')
+            H.logP = 0;
             
-            % check whether name contains 'log' tha indicates a logP file
-            for i=1:size(H.S{ind}.name,1)
-              if isempty(strfind(H.S{ind}.info(i).ff,'log'))
-                H.logP = 0;
+            for ind=1:2
+              swd1 = pwd;
+              spm_figure('GetWin','Interactive');
+              cd(pth{ind})
+              xSPM.swd = pwd;
+              [xSPM,v] = spm_getSPM(xSPM);
+              cd(swd1);
+              
+              dat = struct('XYZ', v.XYZ,...
+                        't',   v.Z',...
+                        'mat', v.M,...
+                        'dim', v.DIM,...
+                        'dat', v.Z');
+              
+              H.S{ind}.info = cat_surf_info(H.S{ind}.name,0); 
+              g = gifti(H.S{ind}.info.Pmesh);
+
+        mat    = v.M;
+        V = g.vertices;
+    XYZ        = double(inv(mat)*[V';ones(1,size(V,1))]);
+%
+    H.S{ind}.Y     = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
+
+              H.S{ind}.Y = spm_mesh_project(g.vertices,dat)';
+            end
+          else
+          
+            H.logP = 1;
+          
+            for ind=1:2
+              H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+              H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+            
+              % check whether name contains 'log' tha indicates a logP file
+              for i=1:size(H.S{ind}.name,1)
+                if isempty(strfind(H.S{ind}.info(i).ff,'log'))
+                  H.logP = 0;
+                end
               end
+            
             end
           end
+          
           H.disable_tview = 0;
-          H.show_inv = 0;
-          H.inverted = 0;
+          H.show_neg = 1;
           H.disable_cbar = 0;
-
+          H.show_transp = 0;
+          H.black_bkg = 0;
+          H.show_info = 0;
+          
           display_results_all;
-
+          
           set(H.surf,'Enable','on');
           set(H.save,'Enable','on');
           set(H.tview,'Visible','on');
           set(H.nocbar,'Visible','on');
+          set(H.bkg,'Visible','on');
+          set(H.transp,'Visible','on');
+          set(H.info,'Visible','on');
+        
           if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
             set(H.inv,'Visible','on');
           end
+          
+          if (size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) == 1)
+            set(H.cmap,'Visible','on');
+          end
+          
         end
 
     %-ColourBar
@@ -228,7 +329,7 @@ switch lower(action)
         if size(d,1) > size(d,2), d = d'; end
 
         % Update colorbar colors if clipping is used
-        H.clip = getappdata(H.patch(1), 'clip')
+        H.clip = getappdata(H.patch(1), 'clip');
         if ~isempty(H.clip)
             if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
                 ncol = length(col);
@@ -239,10 +340,10 @@ switch lower(action)
                 c(1:size(col,1),1,1:size(col,2)) = col;
             end
         end
-        if size(d,1) > 1
-            set(ic,'CData',c(1:size(d,1),:,:));
-            set(ic,'YData',[1 size(d,1)]);
-            set(H.colourbar,'YLim',[1 size(d,1)]);
+        if numel(H.S{1}.info) > 1
+            set(ic,'CData',c(1:numel(H.S{1}.info),:,:));
+            set(ic,'YData',[1 numel(H.S{1}.info)]);
+            set(H.colourbar,'YLim',[1 numel(H.S{1}.info)]);
             set(H.colourbar,'YTickLabel',[]);
         else
             set(ic,'CData',c);
@@ -330,11 +431,188 @@ function H = select_thresh(thresh)
 %-----------------------------------------------------------------------
 global H
 
-H.clip = [true -thresh thresh];
-for ind=1:(5 - H.disable_tview)
+H.thresh_value = thresh;
+
+if H.show_neg
+  H.clip = [true -thresh thresh];
+else
+  H.clip = [true 0 thresh];
+end
+
+% rather use NaN values for zero threshold
+if thresh == 0
+  H.clip = [false NaN NaN];
+end
+
+for ind=1:5
   setappdata(H.patch(ind),'clip',H.clip);
+  col = getappdata(H.patch(ind),'col');
   d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,d);
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+set(H.atlas,'Visible','on');
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
+%-----------------------------------------------------------------------
+function H = select_cmap(cmap)
+%-----------------------------------------------------------------------
+global H
+
+switch cmap
+  case 1
+    col = jet(256);
+  case 2
+    col = hot(256);
+  case 3
+    col = hsv(256);
+  case 4
+    col = [1-hot(128);(hot(128))];
+end
+
+for ind=1:5
+  setappdata(H.patch(ind),'col',col);
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
+%-----------------------------------------------------------------------
+function H = select_atlas(atlas)
+%-----------------------------------------------------------------------
+global H
+
+% get threshold from clipping
+thresh = [0 0];
+if ~isempty(H.clip)
+  if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+    thresh = [H.clip(2:3)];
+  end
+end
+
+for ind = [1 3]
+  if atlas == 1 % DKT40 atlas
+    atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{round(ind/2)}.info(1).side ....
+      '.aparc_DKT40JT.freesurfer.annot']);
+  else % Destrieux
+    atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{round(ind/2)}.info(1).side ...
+      '.aparc_a2009s.freesurfer.annot']);
+  end
+  [vertices, rdata, colortable, rcsv] = cat_io_FreeSurfer('read_annotation',atlas_name);
+
+  M = getappdata(H.patch(ind),'patch');
+  A       = spm_mesh_adjacency(M.faces);
+  A       = A + speye(size(A));
+  d = getappdata(H.patch(ind),'data');
+
+  % apply thresholds
+  dp = d > thresh(2); indp = find(dp);
+  dn = d < thresh(1); indn = find(dn);
+  
+  % atlas name
+  if atlas == 1
+    atlas_name = 'Desikan-Killiany DKT40 Atlas';
+  elseif atlas == 2
+    atlas_name = 'Destrieux 2009 Atlas';
+  end
+
+  % go through pos. effects
+  if ~isempty(indp)
+  
+    C = find_connected_component(A, dp);
+    C = C(indp);
+    rdata2 = rdata(indp);
+  
+    fprintf('\n\n______________________________________________________\n');
+    fprintf('%s: Positive effects in %s',atlas_name,H.S{round(ind/2)}.info(1).side);
+    fprintf('\n______________________________________________________\n\n');
+  
+    if H.logP, fprintf('%7s\t%8s\t%s\n','P-value','Size','Overlap of atlas region');
+    else,      fprintf('%7s\t%8s\t%s\n','Value  ','Size','Overlap of atlas region'); end
+
+    for i = 1:max(C)
+      N = find(C == i);
+      k = length(N);
+    
+      dmax = d(indp); dmax = max(dmax(N));
+      
+      if H.logP, fprintf('\n%1.5f\t%8d',10^(-dmax),k);
+      else,      fprintf('\n%6.1f\t%8d',dmax,k); end
+      
+      Nrdata = rdata2(N);
+      roi_size = zeros(size(rcsv,1)-1,1);
+      
+      for j=2:size(rcsv,1)
+        ind3 = find(Nrdata == rcsv{j,1});
+        roi_size(j-1) = 100*length(ind3)/k;
+      end
+
+      % sort wrt size
+      [ii, jj] = sort(roi_size,'descend');
+      jj(ii==0) = [];
+      
+      for j=1:length(jj)
+        if roi_size(jj(j)) > 1
+          if j==1, fprintf('\t%3.1f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
+          else,    fprintf('%7s\t%8s\t%3.1f%s\t%s\n','       ','        ',...
+                roi_size(jj(j)),'%',rcsv{jj(j)+1,2}); 
+          end
+        end
+      end
+
+    end
+  end
+      
+  % go through neg. effects
+  if ~isempty(indn)
+
+    C = find_connected_component(A, dn);
+    C = C(indn);
+    rdata2 = rdata(indn);
+
+    fprintf('\n\n______________________________________________________\n');
+    fprintf('%s: Negative effects in %s',atlas_name,H.S{round(ind/2)}.info(1).side);
+    fprintf('\n______________________________________________________\n\n');
+  
+    if H.logP, fprintf('%7s\t%8s\t%s\n','P-value','Size','Overlap of atlas region');
+    else,      fprintf('%7s\t%8s\t%s\n','Value  ','Size','Overlap of atlas region'); end
+
+    for i = 1:max(C)
+      N = find(C == i);
+      k = length(N);
+    
+      dmin = d(indn); dmin = min(dmin(N));
+      if H.logP, fprintf('\n%1.5f\t%8d',10^(dmin),k);
+      else,      fprintf('\n%6.1f\t%8d',-dmin,k); end
+
+      Nrdata = rdata2(N);
+      roi_size = zeros(size(rcsv,1)-1,1);
+      for j=2:size(rcsv,1)
+        ind3 = find(Nrdata == rcsv{j,1});
+        roi_size(j-1) = 100*length(ind3)/k;
+      end
+
+      % sort wrt size
+      [ii, jj] = sort(roi_size,'descend');
+      jj(ii==0) = [];
+      
+      for j=1:length(jj)
+        if roi_size(jj(j)) > 1
+          if j==1, fprintf('\t%3.1f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
+          else,    fprintf('%7s\t%8s\t%3.1f%s\t%s\n','       ','        ',...
+                roi_size(jj(j)),'%',rcsv{jj(j)+1,2}); 
+          end
+        end
+      end
+      
+    end
+  end
 end
 
 %-----------------------------------------------------------------------
@@ -353,11 +631,20 @@ for ind=1:2
   end
 end
 
-display_results_all;
-for ind = 1:(5 - H.disable_tview)
-  setappdata(H.patch(ind),'clip',[true NaN NaN]);
-  d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,d);
+g{1} = gifti(H.S{1}.info(1).Pmesh);
+g{2} = gifti(H.S{2}.info(1).Pmesh);
+
+for ind = 1:5
+  if ind < 5
+    M  = g{round(ind/2)};
+  else
+    M.faces = [g{1}.faces; g{2}.faces + size(g{1}.vertices,1)];
+    M.vertices = [g{1}.vertices; g{2}.vertices];
+    M.mat = g{1}.mat;
+  end
+
+  set(H.patch(ind),'Vertices',M.vertices);
+  set(H.patch(ind),'Faces',M.faces);
 end
 
 %-----------------------------------------------------------------------
@@ -370,8 +657,8 @@ if (size(H.S{1}.Y) > 1 | size(H.S{2}.Y) > 1) & min(min(H.S{1}.Y(:),H.S{2}.Y(:)))
 end
 
 % clear larger area and set background color to update labels and title
-H.axis = axes('Parent',H.figure(1),'Position',[-.1 -.1 1.1 1.1],'Color',[1 1 1]);
-cla(H.axis);
+H.Ha = axes('Parent',H.figure(1),'Position',[-.1 -.1 1.1 1.1],'Color',H.bkg_col);
+cla(H.Ha);
 
 H.renderer = get(H.figure(1),'Renderer');
 set(H.figure(1),'Renderer','OpenGL');
@@ -383,20 +670,10 @@ H.S{1}.curv = g.cdata;
 g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{2}.info(1).side '.mc.central.freesurfer.gii']));
 H.S{2}.curv = g.cdata;
 
-if ~H.disable_tview
-  ind = 1;
-  display_results(5, H.pos{1}.view5, [ 0 90]);
-else
-  ind = 3;
+vv = [90 0; -90 0; -90 0; 90 0; 0 90];
+for ind = 1:5
+  display_results(ind, H.viewpos{ind}(H.disable_tview+1,:), vv(ind,:));
 end
-display_results(1, H.pos{ind}.view1, [ 90 0]);
-display_results(2, H.pos{ind}.view2, [-90 0]);
-display_results(3, H.pos{ind}.view3, [-90 0]);
-display_results(4, H.pos{ind}.view4, [ 90 0]);
-
-% add colorbar
-%H.cbar = axes('Position',H.pos{1}.cbar,'Parent',H.figure);
-%cat_surf_results('Colourbar', H); 
 
 H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
 H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
@@ -417,14 +694,24 @@ else
   H.S{1}.min = round(0.9*H.S{1}.min);
 end
 
-if H.logP 
+H.clim = [true H.S{1}.min H.S{1}.max];
+for ind=1:5
+  setappdata(H.patch(ind), 'clim', [true H.S{1}.min H.S{1}.max]);
+  col = getappdata(H.patch(ind), 'col');
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+% only show threshold popup if log-name was found and minimal value > 0 is lt 1.3
+if H.logP && (H.S{1}.thresh < 1.3)
   set(H.thresh,'Visible','on');
 end
 
-for ind=1:(5 - H.disable_tview)
-  setappdata(H.patch(ind), 'clim', [true H.S{1}.min H.S{1}.max]);
-  d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,d);
+if numel(H.S{1}.info)==1
+  % get sure that image is thresholded and there are at least 20% zero/NaN areas
+  if (sum(d~=0)/numel(d) < 0.8)         
+    set(H.atlas,'Visible','on');
+  end
 end
 
 if ~H.disable_cbar
@@ -432,14 +719,14 @@ if ~H.disable_cbar
 end
 
 % show slider for range of results
-if size(d,1)==1
+if numel(H.S{1}.info)==1
 
   % allow slider a more extended range
   mnx = 1.5*max(abs([H.S{1}.min H.S{1}.max]));
 
   sliderPanel(...
         'Parent'  , H.figure(2), ...
-        'Title'   , 'Result min', ...
+        'Title'   , 'Overlay min', ...
         'Position', H.pos{2}.ovmin, ...
         'Backgroundcolor', [0.8 0.8 0.8],...
         'Min'     , -mnx, ...
@@ -452,7 +739,7 @@ if size(d,1)==1
 
   sliderPanel(...
         'Parent'  , H.figure(2), ...
-        'Title'   , 'Result max', ...
+        'Title'   , 'Overlay max', ...
         'Position', H.pos{2}.ovmax, ...
         'Backgroundcolor', [0.8 0.8 0.8],...
         'Min'     , -mnx, ...
@@ -471,11 +758,13 @@ function H = show_colorbar(H)
 % show colorbar
 figure(H.figure(1))
 if numel(H.S{1}.info) == 1
-  H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar,'Color',[0.5 0.5 0.5],'Visible','off');
+  if ~isfield(H,'cbar') || ~ishandle(H.cbar)
+    H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(1,:),'Color',[0.5 0.5 0.5],'Visible','off');
+    H.colourbar = colorbar('peer',H.cbar,'Northoutside');
+  end
+  if H.logP, title('p-value','Color',1-H.bkg_col);end
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
-  if H.logP, title('p-value');end
-  H.colourbar = colorbar('peer',H.cbar,'Northoutside');
   colormap(getappdata(H.patch(1),'col'));
   
   if H.logP
@@ -493,18 +782,39 @@ if numel(H.S{1}.info) == 1
     end
     set(H.colourbar,'XTickLabel',XTickLabel(2:end,:),'XTick',XTick);
   end
+  set(H.colourbar,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
+  
+  % Update colorbar colors if clipping is used
+  clip = getappdata(H.patch(1), 'clip');
+  col = getappdata(H.patch(1), 'col');
+  if ~isempty(clip)
+    if ~isnan(clip(2)) && ~isnan(clip(3))
+      ncol = length(col);
+      col_step = (clim(3) - clim(2))/ncol;
+      cmin = max([1,ceil((clip(2)-clim(2))/col_step)]);
+      cmax = min([ncol,floor((clip(3)-clim(2))/col_step)]);
+      col(cmin:cmax,:) = repmat([0.5 0.5 0.5],(cmax-cmin+1),1);
+      colormap(col);
+    end
+  end
+
 else
-  H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar+[0 0.10 0 0],'Color',[0.5 0.5 0.5],'Visible','off');
+
+  if ~isfield(H,'cbar') || ~ishandle(H.cbar)
+    H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(2,:),'Color',[0.5 0.5 0.5],'Visible','off');
+  end
+  
+  % RGB colorbar
   if numel(H.S{1}.info) ==3
-    cb = [7 1 1 4 2 2 7;...
-          7 1 6 7 5 2 7;...
-          7 7 3 3 3 7 7];
-  else
-    cb = [7 1 1 4 2 2 7;...
-          7 1 1 4 2 2 7];
+    cb = [8 1 1 4 2 2 8;...
+          8 1 6 7 5 2 8;...
+          8 8 3 3 3 8 8];
+  else %RG colorbar
+    cb = [8 1 1 4 2 2 8;...
+          8 1 1 4 2 2 8];
   end
   imagesc(cb);
-  colormap([1 0 0; 0 1 0; 0 0 1; 1 1 0; 0 1 1; 1 0 1; 1 1 1])
+  colormap([1 0 0; 0 1 0; 0 0 1; 1 1 0; 0 1 1; 1 0 1; 1 1 1; H.bkg_col])
   axis(H.cbar,'off'); axis('image');  
 end
 
@@ -512,6 +822,13 @@ end
 function display_results(ind, win, vw)
 %-----------------------------------------------------------------------
 global H
+
+% rescue old color before a new H.patch is created
+try
+  col = getappdata(H.patch(ind), 'col');
+catch
+  col = [];
+end
 
 if ind < 5
   M  = gifti(H.S{round(ind/2)}.info(1).Pmesh);
@@ -564,6 +881,7 @@ H.patch(ind) = patch(P,...
             'Tag',              'CATSurfRender',...
             'Parent',           H.axis);
 setappdata(H.patch(ind),'patch',P);
+setappdata(H.patch(ind),'axis',H.axis);
 
 %-Compute mesh curvature
 %------------------------------------------------------------------
@@ -584,7 +902,12 @@ elseif isfield(M,'cdata')
 else
   T = [];
 end
-H = updateTexture(H,ind,T);
+
+if isempty(col)
+  H = updateTexture(H,ind,T);
+else
+  H = updateTexture(H,ind,T,col);
+end
 
 axis(H.axis,'image');
 axis(H.axis,'off');
@@ -608,7 +931,7 @@ set(H.patch(ind),'Visible','on');
 camlight(H.light(1))
 
 %==========================================================================
-function [H, C] = updateTexture(H,ind,v,col)
+function [H, C] = updateTexture(H,ind,v,col,transp)
 
 %-Project data onto surface mesh
 %--------------------------------------------------------------------------
@@ -616,8 +939,6 @@ if size(v,2) < size(v,1)
   v = v';
 end
 v(isinf(v)) = NaN;
-
-setappdata(H.patch(ind),'data',v);
 
 %-Get colourmap
 %--------------------------------------------------------------------------
@@ -633,10 +954,10 @@ if ~exist('col','var')
   end
 end
 
+setappdata(H.patch(ind),'data',v);
 setappdata(H.patch(ind),'col',col);
 
 if ~exist('FaceColor','var') || isempty(FaceColor), FaceColor = 'interp'; end
-%setappdata(H.colourmap,'colourmap',col);
 
 %-Get curvature
 %--------------------------------------------------------------------------
@@ -644,10 +965,11 @@ curv = getappdata(H.patch(ind),'curvature');
 
 if size(curv,2) == 1
     th = 0.15;
-    curv((curv<-th)) = -1.5*th;
+    curv((curv<-th)) = -2*th;
     curv((curv>th))  =  0.1*th;
     curv = 0.5*(curv + th)/(2*th);
     curv = 0.5 + repmat(curv,1,3);
+    curv = curv/max(curv(:));
 end
 
 %-Create RGB representation of data according to colourmap
@@ -659,7 +981,7 @@ mi = clim(2); ma = clim(3);
 if any(v(:))
     if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
     % don't allow negative values for multiple maps
-    if size(v,1) > 1 & mi < 0
+    if size(v,1) > 1 && mi < 0
       if ~isempty(H.clip)
         H.clip(2) = -Inf;
       else
@@ -671,13 +993,13 @@ if any(v(:))
     end
 end
 
-%H.clip = getappdata(H.patch(ind), 'clip');
 if ~isempty(H.clip)
     v(v>H.clip(2) & v<H.clip(3)) = NaN;
     setappdata(H.patch(ind), 'clip', [true H.clip(2) H.clip(3)]);
 end
 
 setappdata(H.patch(ind), 'clim', [true mi ma]);
+H.clim = [true mi ma];
 
 %-Build texture by merging curvature and data
 %--------------------------------------------------------------------------
@@ -689,17 +1011,18 @@ else
   C = repmat(any(v,1),3,1)' .* C;
 end
 
+% add curvature pattern if transparency is defined
+if nargin > 4
+  if transp
+    C = (0.5+0.5*curv) .* C;
+  end
+end
+
 % replace regions below threshold by curvature
 ind0 = repmat(~any(v,1),3,1)';
 C(ind0) = curv(ind0);
 
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
-
-%-Update the colourbar
-%--------------------------------------------------------------------------
-if isfield(H,'colourbar')
-%    H = cat_surf_results('Colourbar',H);
-end
 
 %-----------------------------------------------------------------------
 function select_data(obj, event_obj, ind)
@@ -719,37 +1042,64 @@ H.logP = 1;
 
 while ~strcmp(side,H.S{ind}.side)
   H.S{ind}.name = spm_select([1 3],'mesh',['Select log P map for ' str_side{ind} ' hemisphere'],'','',str);
-  H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
   H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+  try
+    H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+  catch
+    error('No cdata found.');
+  end
+  
   side = H.S{ind}.side;
+  
   for i=1:size(H.S{ind}.name,1)
+
     % check whether name contains 'log' tha indicates a logP file
     if isempty(strfind(H.S{ind}.info(i).ff,'log'))
       H.logP = 0;
     end
+
     if ~strcmp(H.S{ind}.info(i).side,H.S{ind}.side)
       fprintf('%s does not contain %s hemisphere data.\n',H.S{ind}.name(i,:),str_side{ind});
       side = '';
     end
   end
+
 end
 
-H.show_inv = 0;
-H.disable_tview = 0;
-H.inverted = 0;
-H.disable_cbar = 0;
-H.clip = [false NaN NaN];
+% increase counter for selected data
+H.data_sel = H.data_sel + 1;
 
-% enable display button if both sides are defined
-if ~isempty(H.S{1}.name) & ~isempty(H.S{2}.name)
+H.disable_tview = 0;
+H.disable_cbar = 0;
+H.show_neg = 1;
+H.clip = [false NaN NaN];
+H.show_transp = 0;
+H.black_bkg = 0;
+H.show_info = 0;
+
+% display if both sides are defined
+if ~isempty(H.S{1}.name)  &&  ~isempty(H.S{2}.name) && H.data_sel == 2
+
   display_results_all;
   set(H.surf,'Enable','on');
   set(H.save,'Enable','on');
   set(H.tview,'Visible','on');
   set(H.nocbar,'Visible','on');
+  set(H.bkg,'Visible','on');
+  set(H.transp,'Visible','on');
+  set(H.info,'Visible','on');
+
   if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
     set(H.inv,'Visible','on');
   end
+
+  if (size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) == 1)
+    set(H.cmap,'Visible','on');
+  end
+
+  % reset counter for selected data
+  H.data_sel = 0;
+
 end
 
 %==========================================================================
@@ -820,11 +1170,14 @@ global H
     FS = get(H.colourbar,'FontSize');
     FU = get(H.colourbar,'FontUnits');
  
-    set(H.colourbar,'FontUnits','Normalized','FontSize',0.1);
+    set(H.colourbar,'FontUnits','Normalized','FontSize',0.15);
     changed_font = 1;
   catch
     changed_font = 0;
   end
+  
+  % keep background color
+  set(H.figure(1),'InvertHardcopy','off');
   
   if isdeployed
       deployprint(H.figure(1), '-dpng', '-opengl', filename);
@@ -843,20 +1196,19 @@ global H
 figure(H.figure(1))
 val = get(hObject, 'Value');
 c = getappdata(H.patch(1),'clim');
-for ind = 1:(5 - H.disable_tview)
+for ind = 1:5
   setappdata(H.patch(ind),'clim',[true val c(3)]);
+  col = getappdata(H.patch(ind),'col');
   d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,d);
+  H = updateTexture(H,ind,d,col,H.show_transp);
 end
 
-% delete colorbar and display again
-set(get(H.cbar,'Title'),'Visible','off')
-if size(d,1) == 1
-  set(H.colourbar,'Visible','off');
-  if ~H.disable_cbar
-    H = show_colorbar(H);
-  end
+% update colorbar 
+if numel(H.S{1}.info) == 1 && ~H.disable_cbar
+  H = show_colorbar(H);
 end
+
+H.clim = [true val c(3)];
 
 %==========================================================================
 function slider_clim_max(hObject, evt)
@@ -865,27 +1217,30 @@ global H
 figure(H.figure(1))
 val = get(hObject, 'Value');
 c = getappdata(H.patch(1),'clim');
-for ind = 1:(5 - H.disable_tview)
+for ind = 1:5
   setappdata(H.patch(ind),'clim',[true c(2) val]);
+  col = getappdata(H.patch(ind),'col');
   d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,d);
+  H = updateTexture(H,ind,d,col,H.show_transp);
 end
 
-% delete colorbar and display again
-set(get(H.cbar,'Title'),'Visible','off')
-if size(d,1) == 1
-  set(H.colourbar,'Visible','off');
-  if ~H.disable_cbar
-    H = show_colorbar(H);
-  end
+% update colorbar 
+if numel(H.S{1}.info) == 1 && ~H.disable_cbar
+  H = show_colorbar(H);
 end
+
+H.clim = [true c(2) val];
 
 %==========================================================================
 function checkbox_tview(obj, event_obj)
 global H
   
 H.disable_tview = get(H.tview,'Value');
-display_results_all;
+
+for ind = 1:5
+  Ha = getappdata(H.patch(ind),'axis');
+  set(Ha,'position',H.viewpos{ind}(H.disable_tview+1,:));
+end
 
 %==========================================================================
 function checkbox_inv(obj, event_obj)
@@ -893,18 +1248,112 @@ global H
   
 H.show_inv = get(H.inv,'Value');
 
-if H.show_inv & ~H.inverted
-  H.S{1}.Y = -H.S{1}.Y;
-  H.S{2}.Y = -H.S{2}.Y;
-  H.inverted = 1;
+for ind=1:5
+  setappdata(H.patch(ind),'clip',H.clip);
+  col = getappdata(H.patch(ind),'col');
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,-d,col,H.show_transp);
 end
 
-if ~H.show_inv & H.inverted
-  H.S{1}.Y = -H.S{1}.Y;
-  H.S{2}.Y = -H.S{2}.Y;
-  H.inverted = 0;
+%==========================================================================
+function checkbox_transp(obj, event_obj)
+global H
+  
+H.show_transp = get(H.transp,'Value');
+
+for ind=1:5
+  col = getappdata(H.patch(ind),'col');
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d,col,H.show_transp);
 end
-display_results_all;
+
+% update colorbar 
+if numel(H.S{1}.info) == 1 && ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
+%==========================================================================
+function checkbox_bkg(obj, event_obj)
+global H
+  
+H.black_bkg = get(H.bkg,'Value');
+
+if H.black_bkg
+  H.bkg_col = [0 0 0];
+else
+  H.bkg_col = [1 1 1];
+end
+
+set(H.Ha,'Color',H.bkg_col);
+set(get(H.cbar,'Title'),'Color',1-H.bkg_col);
+
+if H.show_info
+  set(get(getappdata(H.patch(1),'axis'),'Title'),'Color',1-H.bkg_col);
+  set(get(getappdata(H.patch(3),'axis'),'Title'),'Color',1-H.bkg_col);
+end
+
+if numel(H.S{1}.info) == 1
+  set(H.colourbar,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
+end
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
+%==========================================================================
+function checkbox_info(obj, event_obj)
+global H
+  
+H.show_info = get(H.info,'Value');
+
+if H.show_info
+  set(get(getappdata(H.patch(1),'axis'),'Title'),'String',...
+      spm_str_manip(H.S{1}.name,'k50d'),'Interpreter', 'none','Color',1-H.bkg_col)
+  set(get(getappdata(H.patch(3),'axis'),'Title'),'String',...
+      spm_str_manip(H.S{2}.name,'k50d'),'Interpreter', 'none','Color',1-H.bkg_col)
+else
+  set(get(getappdata(H.patch(1),'axis'),'Title'),'String','')
+  set(get(getappdata(H.patch(3),'axis'),'Title'),'String','')
+end
+
+%==========================================================================
+function checkbox_noneg(obj, event_obj)
+global H
+  
+H.show_neg = 1 - get(H.noneg,'Value');
+
+clim = getappdata(H.patch(1), 'clim');
+
+if H.show_neg
+  if isfield(H,'thresh_value')
+  tmp = H.thresh_value
+    H.clip = [true -H.thresh_value H.thresh_value];
+  else
+    H.clip = [true -Inf -Inf];
+  end
+else
+  if ~isempty(H.clip)
+    if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+      H.clip(3) = 0;
+    else
+      H.clip(3) = 0;
+    end
+  else
+    H.clip = [true -Inf 0];
+  end
+end
+
+for ind=1:5
+  setappdata(H.patch(ind),'clim',clim);
+  setappdata(H.patch(ind),'clip',H.clip);
+  col = getappdata(H.patch(ind),'col');
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
 
 %==========================================================================
 function checkbox_nocbar(obj, event_obj)
@@ -913,17 +1362,20 @@ global H
 H.disable_cbar = get(H.nocbar,'Value');
 
 if H.disable_cbar
-  d = getappdata(H.patch(1),'data');
-
   % delete colorbar and title
-  if size(d,1) == 1
+  if numel(H.S{1}.info) == 1
+    set(H.colourbar,'Visible','off')  
     set(get(H.cbar,'Title'),'Visible','off')
-    set(H.colourbar,'Visible','off')
   else % delete only axis
     cla(H.cbar);
   end
 else
-  H = show_colorbar(H);
+  if numel(H.S{1}.info) == 1
+    set(get(H.cbar,'Title'),'Visible','on')
+    set(H.colourbar,'Visible','on')  
+  else
+    H = show_colorbar(H);
+  end
 end
 
 %==========================================================================
@@ -959,3 +1411,43 @@ while pos>1
   else break
   end
 end
+
+%==========================================================================
+function C = find_connected_component(A, T);
+% find connected components 
+% FORMAT C = find_connected_component(A,T)
+% A        - a [nxn[ (reduced) adjacency matrix
+% T        - a [nx1] data vector (using NaNs or logicals), n = #vertices
+%
+% C        - a [nx1] vector of cluster indices
+%
+% modified version from spm_mesh_clusters.m 5065 2012-11-16 20:00:21Z guillaume
+%
+
+
+%-Input parameters
+%--------------------------------------------------------------------------
+if ~islogical(T)
+  T   = ~isnan(T);
+end
+  
+A1 = A;
+A1(~T,:) = [];
+A1(:,~T) = [];
+
+%-And perform Dulmage-Mendelsohn decomposition to find connected components
+%--------------------------------------------------------------------------
+[p,q,r] = dmperm(A1);
+N       = diff(r);
+CC      = zeros(size(A1,1),1);
+for i = 1:length(r)-1
+  CC(p(r(i):r(i+1)-1)) = i;
+end
+C       = NaN(numel(T),1);
+C(T)    = CC;
+
+%-Sort connected component labels according to their size
+%--------------------------------------------------------------------------
+[N,ni]  = sort(N(:), 1, 'descend');
+[ni,ni] = sort(ni);
+C(T)    = ni(C(T));
