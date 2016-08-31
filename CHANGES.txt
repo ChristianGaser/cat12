@@ -11665,6 +11665,7 @@ M       templates_surfaces/rh.inflated.freesurfer.gii
 (2) Fixed: Left and right inflated hemispheres overlapped spatially.
 
 ------------------------------------------------------------------------
+r989 | gaser | 2016-08-29 13:41:13 +0200 (Mo, 29 Aug 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11673,5 +11674,19 @@ M       cat_surf_results.m
 M       html/cat.html
 
 Changed: Updated cat_surf_results with more options.
+
 ------------------------------------------------------------------------
-r989 | gaser | 2016-08-29 13:41:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+M       cat_stat_check_cov.m
+MM      cat_surf_results.m
+
+(1) Changed: Updated cat_surf_results with many more options.
+(2) Changed: Threshold for equal data in cat_stat_check_cov.m is now 
+    increased to 09.25.
+(3) Added: Added surface results tool to GUI.
+------------------------------------------------------------------------
+r990 | gaser | 2016-08-31 14:16:10
