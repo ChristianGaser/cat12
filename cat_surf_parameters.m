@@ -71,10 +71,10 @@ function varargout = cat_surf_parameters(job)
     
     
     roijob.cdata  = P; 
-    roijob.rdata  = job.rdata;
+%    roijob.rdata  = job.rdata; % works only for developer mode
     roijob.verb   = job.verb;
     roijob.avg    = struct('mean',1,'std',0,'min',0,'max',0,'median',0);  
-    roijob.area   = 0; % seperate function 
+    roijob.area   = 0; % separate function 
     roijob.vernum = 0; 
     
     
