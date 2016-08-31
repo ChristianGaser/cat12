@@ -269,9 +269,9 @@ end
 
 fname = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
 
-% print suspecious files with cov>0.9
+% print suspecious files with cov>0.925
 YpY_tmp = YpY - tril(YpY);
-[indx, indy] = find(YpY_tmp>0.9);
+[indx, indy] = find(YpY_tmp>0.925);
 
 % if more than 25% of the data this points to longitudinal data of one subject
 % and no warning will appear

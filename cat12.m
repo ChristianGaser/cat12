@@ -45,7 +45,7 @@ function varargout = cat12(varargin)
 
 % Edit the above title to modify the response to help cat12
 
-% Last Modified by GUIDE v2.5 23-Aug-2016 13:12:07
+% Last Modified by GUIDE v2.5 31-Aug-2016 14:05:50
 
 if nargin==0 
   spm_cat12;
@@ -220,10 +220,6 @@ spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');
 function pushbutton8_Callback(hObject, eventdata, handles)
 cat_surf_display;
 
-% --- Executes on button press in pushbutton9.
-function pushbutton9_Callback(hObject, eventdata, handles)
-cat_vol_slice_overlay;
-
 % --- Executes on button press in pushbutton10.
 function pushbutton10_Callback(hObject, eventdata, handles)
 F = spm_figure('FindWin','Menu');
@@ -232,17 +228,6 @@ if isempty(F)
   spm('Quit')
 end
 close(gcf);
-
-
-% --- Executes on selection change in popupmenu9.
-function popupmenu9_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu9 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu9 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu9
-
 
 % --- Executes on selection change in popupmenu11.
 function popupmenu11_Callback(hObject, eventdata, handles)
@@ -385,3 +370,26 @@ function pushbutton8_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to pushbutton8 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in popupmenu17.
+function popupmenu17_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu17 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu17
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu17_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
