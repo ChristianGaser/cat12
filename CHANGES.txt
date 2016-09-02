@@ -11691,6 +11691,7 @@ MM      cat_surf_results.m
 (3) Added: Added surface results tool to GUI.
 
 ------------------------------------------------------------------------
+r991 | gaser | 2016-08-31 22:29:40 +0200 (Wed, 31 Aug 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11698,5 +11699,17 @@ M       cat_surf_parameters.m
 
 Fixed: Error in cat_surf_parameter due to developer options.
 
+
 ------------------------------------------------------------------------
-r991 | gaser | 2016-08-31 22:29:29
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_surf2roi.m
+M       html/cat.html
+
+Fixed: Error in cat_surf_surf2roi.m that was caused due to wrong writing flag.
+
+
+------------------------------------------------------------------------
+r992 | gaser | 2016-09-02 11:42:29
