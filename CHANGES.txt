@@ -11701,6 +11701,7 @@ Fixed: Error in cat_surf_parameter due to developer options.
 
 
 ------------------------------------------------------------------------
+r992 | gaser | 2016-09-02 11:42:40 +0200 (Fri, 02 Sep 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11711,5 +11712,18 @@ M       html/cat.html
 Fixed: Error in cat_surf_surf2roi.m that was caused due to wrong writing flag.
 
 
+
 ------------------------------------------------------------------------
-r992 | gaser | 2016-09-02 11:42:29
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_ROI.m
+M       html/cat.html
+
+Fixed: Error in cat_stat_ROI.m that was caused due to wrong compatibility
+to older versions.
+
+
+------------------------------------------------------------------------
+r993 | gaser | 2016-09-02 18:37:50
