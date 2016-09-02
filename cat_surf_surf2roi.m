@@ -208,8 +208,13 @@ function cat_surf_surf2roi(job)
         ROI.(rinfo.name) = [];
         ROI.(rinfo.name).(sinfo.dataname) = ccsv;      
       end
-      cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
-        ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write+'); 
+      if exist(['catROIs_' sinfo.name '.xml'],'file')
+        cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
+          ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write+'); 
+      else
+        cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
+          ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write'); 
+      end
       
     end
     spm_progress_bar('Set',ri);
