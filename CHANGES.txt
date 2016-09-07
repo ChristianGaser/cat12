@@ -11714,6 +11714,7 @@ Fixed: Error in cat_surf_surf2roi.m that was caused due to wrong writing flag.
 
 
 ------------------------------------------------------------------------
+r993 | gaser | 2016-09-02 18:38:40 +0200 (Fri, 02 Sep 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11725,5 +11726,69 @@ Fixed: Error in cat_stat_ROI.m that was caused due to wrong compatibility
 to older versions.
 
 
+
 ------------------------------------------------------------------------
-r993 | gaser | 2016-09-02 18:37:50
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+D       atlases_surfaces/a2005s.txt
+D       atlases_surfaces/dkt40.txt
+D       atlases_surfaces/lh.PALS_B12_Brodmann.freesurfer.annot
+D       atlases_surfaces/lh.PALS_B12_Lobes.freesurfer.annot
+D       atlases_surfaces/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+D       atlases_surfaces/lh.PALS_B12_Visuotopic.freesurfer.annot
+D       atlases_surfaces/lh.aal.Template_T1_IXI555_MNI152
+D       atlases_surfaces/lh.aparc_DKT40JT.freesurfer.annot
+D       atlases_surfaces/lh.aparc_a2005s.freesurfer.annot
+D       atlases_surfaces/lh.hammers.Template_T1_IXI555_MNI152
+D       atlases_surfaces/lh.lpba40.Template_T1_IXI555_MNI152
+D       atlases_surfaces/lh.mori.Template_T1_IXI555_MNI152
+D       atlases_surfaces/lh.neuromorphometrics.Template_T1_IXI555_MNI152
+D       atlases_surfaces/rh.PALS_B12_Brodmann.freesurfer.annot
+D       atlases_surfaces/rh.PALS_B12_Lobes.freesurfer.annot
+D       atlases_surfaces/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+D       atlases_surfaces/rh.PALS_B12_Visuotopic.freesurfer.annot
+D       atlases_surfaces/rh.aal.Template_T1_IXI555_MNI152
+D       atlases_surfaces/rh.aparc_DKT40JT.freesurfer.annot
+D       atlases_surfaces/rh.aparc_a2005s.freesurfer.annot
+D       atlases_surfaces/rh.hammers.Template_T1_IXI555_MNI152
+D       atlases_surfaces/rh.lpba40.Template_T1_IXI555_MNI152
+D       atlases_surfaces/rh.mori.Template_T1_IXI555_MNI152
+D       atlases_surfaces/rh.neuromorphometrics.Template_T1_IXI555_MNI152
+A       atlases_surfaces_not_distributed
+A  +    atlases_surfaces_not_distributed/DKT40JT.txt
+A  +    atlases_surfaces_not_distributed/a2005s.txt
+A  +    atlases_surfaces_not_distributed/lh.PALS_B12_Brodmann.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/lh.PALS_B12_Lobes.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/lh.PALS_B12_OrbitoFrontal.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/lh.PALS_B12_Visuotopic.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/lh.aal.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/lh.aparc_DKT40JT.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/lh.aparc_a2005s.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/lh.hammers.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/lh.lpba40.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/lh.mori.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/lh.neuromorphometrics.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/rh.PALS_B12_Brodmann.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/rh.PALS_B12_Lobes.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/rh.PALS_B12_OrbitoFrontal.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/rh.PALS_B12_Visuotopic.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/rh.aal.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/rh.aparc_DKT40JT.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/rh.aparc_a2005s.freesurfer.annot
+A  +    atlases_surfaces_not_distributed/rh.hammers.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/rh.lpba40.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/rh.mori.Template_T1_IXI555_MNI152
+A  +    atlases_surfaces_not_distributed/rh.neuromorphometrics.Template_T1_IXI555_MNI152
+M       cat_conf_stools.m
+M       cat_surf_surf2roi.m
+M       html/cat.html
+
+(1) Changed: Moved most atlases to a folder that is not distributed.
+(2) Changed: Use aparc_freesurfer instead of aparc_DKT40JT until inconsistencies
+    between the regions (banksst) are corrected.
+
+
+------------------------------------------------------------------------
+r994 | gaser | 2016-09-07 04:29:08
