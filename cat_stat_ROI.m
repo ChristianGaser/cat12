@@ -79,6 +79,11 @@ for i=1:n_data
             if (i==1) 
               out_name = fullfile(path,[ roi_name '_' deblank(atlases{j}) '_' hdr{k} '.csv']);
               fid{j,k,m} = fopen(out_name,'w');
+              
+              if fid{j,k,m} < 0
+                error(sprintf('Writing error for file %s\nCheck that you have writing permissions.',out_name));
+              end
+              
               fprintf('Save values in %s\n',out_name);
 
               fprintf(fid{j,k,m},'Name\t');
