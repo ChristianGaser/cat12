@@ -1,6 +1,6 @@
-function cat_surf_results(action,varargin)
+function y = cat_surf_results(action,varargin)
 
-%cat_surf_results to visualize results based on log P-maps
+%cat_surf_results to visualize results (preferable on log P-maps)
 %
 %_______________________________________________________________________
 % Christian Gaser
@@ -19,9 +19,13 @@ end
 
 H.clip = [];
 H.clim = [];
-H.bkg_col = [1 1 1];
+H.bkg_col = [0 0 0];
 H.transp = 0;
 H.data_sel = 0;
+H.data_n = [1 3];
+H.cursor_mode = 1;
+H.XTick = [];
+y = [];
 
 %-Action
 %--------------------------------------------------------------------------
@@ -35,6 +39,7 @@ switch lower(action)
         ws = spm('Winsize','Graphics');
         FS = spm('FontSizes');
         
+if 0
         % different positions for views with 4 and 5 images
         H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.450 0.325 0.325],...
                      [0.075 0.050 0.325 0.325;  0.150 0.050 0.325 0.325],...
@@ -46,31 +51,41 @@ switch lower(action)
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
             'cbar',  [0.400 0.550 0.200 0.300; 0.440 0.700 0.120 0.120]);   % colorbar   
+else
+
+        % different positions for views with 4 and 5 images
+        H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.550 0.325 0.325],...
+                     [0.075 0.050 0.325 0.325;  0.150 0.150 0.325 0.325],...
+                     [0.600 0.450 0.325 0.325;  0.525 0.550 0.325 0.325],...
+                     [0.600 0.050 0.325 0.325;  0.525 0.150 0.325 0.325],...
+                     [0.300 0.250 0.400 0.400;  0.300 2.000 0.400 0.400]};
+        % figure 1
+        H.pos{1} = struct(...
+            'fig',   [10  10  2*ws(3) ws(3)],...   % figure
+            'cbar',  [0.400 -0.150 0.200 0.300; 0.440 0.050 0.120 0.120]);   % colorbar   
+end
+
 
         % figure 2
         H.pos{2} = struct(...
-            'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],...   % figure
-            'left',  [0.050 0.925 0.425 0.050],... % select left hemisphere
-            'right', [0.525 0.925 0.425 0.050],... % select right hemisphere
-            'surf',  [0.050 0.855 0.425 0.050],... % 
-            'atlas', [0.525 0.855 0.425 0.050],... % 
-            'thresh',[0.525 0.800 0.425 0.050],... % 
-            'cmap',  [0.050 0.800 0.425 0.050],... % 
-            'tview', [0.050 0.750 0.425 0.050],... % 
-            'nocbar',[0.050 0.700 0.425 0.050],... % 
-            'bkg',   [0.525 0.750 0.425 0.050],... % 
-            'transp',[0.525 0.700 0.425 0.050],... % 
-            'inv',   [0.525 0.650 0.425 0.050],... % 
-            'info',  [0.050 0.650 0.425 0.050],... % 
-            'ovmin', [0.050 0.450 0.425 0.150],... % 
-            'ovmax', [0.525 0.450 0.425 0.150],... % 
-            'save',  [0.050 0.050 0.425 0.050],... % 
-            'close', [0.525 0.050 0.425 0.050],... % close button
-            'text',  [0.050 0.150 0.425 0.200]);   % textbox   
+          'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
+          'left',  [0.050 0.925 0.425 0.050],'right', [0.525 0.925 0.425 0.050],...
+          'surf',  [0.050 0.855 0.425 0.050],'atlas', [0.525 0.855 0.425 0.050],... 
+          'cursor',[0.050 0.800 0.425 0.050],'thresh',[0.525 0.800 0.425 0.050],... 
+          'cmap',  [0.050 0.750 0.425 0.050],...
+          'tview', [0.050 0.700 0.425 0.050],'bkg',   [0.525 0.700 0.425 0.050],... 
+          'nocbar',[0.050 0.650 0.425 0.050],'transp',[0.525 0.650 0.425 0.050],... 
+          'info',  [0.050 0.600 0.425 0.050],'inv',   [0.525 0.600 0.425 0.050],... 
+          'ovmin', [0.050 0.400 0.425 0.150],'ovmax', [0.525 0.400 0.425 0.150],... 
+          'save',  [0.050 0.050 0.425 0.050],'close', [0.525 0.050 0.425 0.050]);   
+
+        % figure 3
+        H.pos{3} = struct(...
+            'fig',   [10  30+ws(3)  ws(3) 0.5*ws(3)]);
 
         % create figures
         for i=1:2
-          H.figure(i) = figure(i+1);
+          H.figure(i) = figure(i+11);
           clf(H.figure(i));
         
           set(H.figure(i),'MenuBar','none','Position',H.pos{i}.fig,...
@@ -96,7 +111,7 @@ switch lower(action)
                 'position',H.pos{2}.left,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,1},...
-                'ToolTipString','Select results for left hemisphere (log-p maps)',...
+                'ToolTipString','Select results (up to 3) for left hemisphere (log-p maps)',...
                 'Interruptible','on','Enable','on');
         
         H.right = uicontrol(H.figure(2),...
@@ -104,7 +119,7 @@ switch lower(action)
                 'position',H.pos{2}.right,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,2},...
-                'ToolTipString','Select results for right hemisphere (log-p maps)',...
+                'ToolTipString','Select results (up to 3) for right hemisphere (log-p maps)',...
                 'Interruptible','on','Enable','on');
         
         str  = { 'Underlying surface...','central','inflated','Dartel'};
@@ -118,7 +133,7 @@ switch lower(action)
                 'style','PopUp','HorizontalAlignment','center',...
                 'callback','spm(''PopUpCB'',gcbo)',...
                 'ToolTipString','Underlying surface',...
-                'Interruptible','on','Enable','off');
+                'Interruptible','on','Visible','off');
 
         str  = { 'Threshold...','No threshold','P<0.05','P<0.01','P<0.001'};
         tmp  = { {@select_thresh, 0},...
@@ -148,7 +163,7 @@ switch lower(action)
                 'ToolTipString','Threshold',...
                 'Interruptible','on','Visible','off');
 
-        str  = { 'Atlas labeling...','Desikan-Killiany DKT40','Destrieux 2009'};
+        str  = { 'Atlas labeling...','Desikan-Killiany DK40','Destrieux 2009'};
         tmp  = { {@select_atlas, 1},...
                  {@select_atlas, 2}};
         
@@ -158,6 +173,22 @@ switch lower(action)
                 'style','PopUp','HorizontalAlignment','center',...
                 'callback','spm(''PopUpCB'',gcbo)',...
                 'ToolTipString','Atlas Labeling',...
+                'Interruptible','on','Visible','off');
+
+        str  = { 'Data Cursor...','Nothing','Desikan-Killiany DK40',...
+                 'Destrieux 2009','Plot data at vertex','Plot mean data inside cluster'};
+        tmp  = { {@select_cursor, 0},...
+                 {@select_cursor, 1},...
+                 {@select_cursor, 2},...
+                 {@select_cursor, 3},...
+                 {@select_cursor, 4}};
+        
+        H.cursor = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.cursor,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Data Cursor Mode',...
                 'Interruptible','on','Visible','off');
 
         H.tview = uicontrol(H.figure(2),...
@@ -177,11 +208,11 @@ switch lower(action)
                 'Interruptible','on','Visible','off');
 
         H.bkg = uicontrol(H.figure(2),...
-                'string','Black background','Units','normalized',...
+                'string','White background','Units','normalized',...
                 'position',H.pos{2}.bkg,...
                 'style','CheckBox','HorizontalAlignment','center',...
                 'callback',{@checkbox_bkg},...
-                'ToolTipString','Black background',...
+                'ToolTipString','White background',...
                 'Interruptible','on','Visible','off');
 
         H.transp = uicontrol(H.figure(2),...
@@ -214,14 +245,34 @@ switch lower(action)
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@save_image},...
                 'ToolTipString','Save png image',...
-                'Interruptible','on','Enable','off');
+                'Interruptible','on','Visible','off');
 
         if nargin == 3
+        
           H.S{1}.name = varargin{1};
           H.S{2}.name = varargin{2};
           
-          [pth{1},nm1,ext1] = spm_fileparts(varargin{1});
-          [pth{2},nm2,ext2] = spm_fileparts(varargin{2});
+          % check that filenames are the same for lh and rh
+          for i=1:size(H.S{1}.name,1)
+            [pth1,name1] = spm_fileparts(H.S{1}.name(i,:));
+            [pth2,name2] = spm_fileparts(H.S{2}.name(i,:));
+            
+            if ~strcmp(name1,name2)
+              alert_str = sprintf(['Warning: Check that you have selected the same results for '...
+                'left and right hemisphere because filenames differ:\nleft: %s\nright: %s'],...
+                 name1,name2);
+              spm('alert!',alert_str)
+            end
+            
+          end
+
+          % check number of files for lh and rh
+          if size(H.S{1}.name,1) ~= size(H.S{2}.name,1)
+            error('Number of files for left and right hemisphere should be the same.');
+          end
+          
+          [pth{1},nm1,ext1] = spm_fileparts(H.S{1}.name(1,:));
+          [pth{2},nm2,ext2] = spm_fileparts(H.S{2}.name(1,:));
           
           % SPM.mat found for both hemispheres
           if strcmp([nm1 ext1],'SPM.mat') && strcmp([nm2 ext2],'SPM.mat')
@@ -244,12 +295,10 @@ switch lower(action)
               H.S{ind}.info = cat_surf_info(H.S{ind}.name,0); 
               g = gifti(H.S{ind}.info.Pmesh);
 
-        mat    = v.M;
-        V = g.vertices;
-    XYZ        = double(inv(mat)*[V';ones(1,size(V,1))]);
-%
-    H.S{ind}.Y     = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
-
+              mat    = v.M;
+              V = g.vertices;
+              XYZ        = double(inv(mat)*[V';ones(1,size(V,1))]);
+              H.S{ind}.Y     = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
               H.S{ind}.Y = spm_mesh_project(g.vertices,dat)';
             end
           else
@@ -257,7 +306,12 @@ switch lower(action)
             H.logP = 1;
           
             for ind=1:2
-              H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+              try
+                H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+              catch
+                error('No cdata found.');
+              end
+    
               H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
             
               % check whether name contains 'log' tha indicates a logP file
@@ -266,7 +320,6 @@ switch lower(action)
                   H.logP = 0;
                 end
               end
-            
             end
           end
           
@@ -274,18 +327,19 @@ switch lower(action)
           H.show_neg = 1;
           H.disable_cbar = 0;
           H.show_transp = 0;
-          H.black_bkg = 0;
+          H.white_bgk = 0;
           H.show_info = 0;
           
           display_results_all;
           
-          set(H.surf,'Enable','on');
-          set(H.save,'Enable','on');
+          set(H.surf,'Visible','on');
+          set(H.save,'Visible','on');
           set(H.tview,'Visible','on');
           set(H.nocbar,'Visible','on');
           set(H.bkg,'Visible','on');
           set(H.transp,'Visible','on');
           set(H.info,'Visible','on');
+          set(H.cursor,'Visible','on');
         
           if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
             set(H.inv,'Visible','on');
@@ -294,8 +348,27 @@ switch lower(action)
           if (size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) == 1)
             set(H.cmap,'Visible','on');
           end
-          
-        end
+        
+          H.rdata{1} = [];
+          H.rdata{2} = [];
+          for ind = 1:2
+            atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
+              '.aparc_freesurfer.annot']);
+            [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation',atlas_name);
+            H.rdata{1} = [H.rdata{1} rdata0];
+            atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
+              '.aparc_a2009s.freesurfer.annot']);
+            [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation',atlas_name);
+            H.rdata{2} = [H.rdata{2} rdata0];
+          end
+          H.rcsv{1} = rcsv1;
+          H.rcsv{2} = rcsv2;
+
+          H.dcm_obj = datacursormode(H.figure(1));
+          set(H.dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
+            'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas, H});
+        
+      end    
 
     %-ColourBar
     %======================================================================
@@ -496,15 +569,18 @@ if ~isempty(H.clip)
   end
 end
 
+% atlas name
+if atlas == 1
+  atlas_name = 'Desikan-Killiany DK40 Atlas';
+elseif atlas == 2
+  atlas_name = 'Destrieux 2009 Atlas';
+end
+
 for ind = [1 3]
-  if atlas == 1 % DKT40 atlas
-    atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{round(ind/2)}.info(1).side ....
-      '.aparc_DKT40JT.freesurfer.annot']);
-  else % Destrieux
-    atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{round(ind/2)}.info(1).side ...
-      '.aparc_a2009s.freesurfer.annot']);
-  end
-  [vertices, rdata, colortable, rcsv] = cat_io_FreeSurfer('read_annotation',atlas_name);
+
+  % atlas data
+  rcsv = H.rcsv{atlas};
+  rdata = H.rdata{atlas}(:,round(ind/2));
 
   M = getappdata(H.patch(ind),'patch');
   A       = spm_mesh_adjacency(M.faces);
@@ -515,13 +591,6 @@ for ind = [1 3]
   dp = d > thresh(2); indp = find(dp);
   dn = d < thresh(1); indn = find(dn);
   
-  % atlas name
-  if atlas == 1
-    atlas_name = 'Desikan-Killiany DKT40 Atlas';
-  elseif atlas == 2
-    atlas_name = 'Destrieux 2009 Atlas';
-  end
-
   % go through pos. effects
   if ~isempty(indp)
   
@@ -762,27 +831,10 @@ if numel(H.S{1}.info) == 1
     H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(1,:),'Color',[0.5 0.5 0.5],'Visible','off');
     H.colourbar = colorbar('peer',H.cbar,'Northoutside');
   end
-  if H.logP, title('p-value','Color',1-H.bkg_col);end
+  if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col);end
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
   colormap(getappdata(H.patch(1),'col'));
-  
-  if H.logP
-    XTick = get(H.colourbar,'XTick');
-
-    XTickLabel = [];
-    for i=1:length(XTick)
-      if XTick(i) > 0
-        XTickLabel = char(XTickLabel,remove_zeros(sprintf('%.g',10^(-XTick(i)))));
-      elseif XTick(i) < 0
-        XTickLabel = char(XTickLabel,remove_zeros(sprintf('-%.g',10^(XTick(i)))));
-      else
-        XTickLabel = char(XTickLabel,'');
-      end
-    end
-    set(H.colourbar,'XTickLabel',XTickLabel(2:end,:),'XTick',XTick);
-  end
-  set(H.colourbar,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
   
   % Update colorbar colors if clipping is used
   clip = getappdata(H.patch(1), 'clip');
@@ -798,6 +850,44 @@ if numel(H.S{1}.info) == 1
     end
   end
 
+  if H.logP
+    XTick = get(H.colourbar,'XTick');
+    
+    % save original XTick values
+    if isempty(H.XTick), H.XTick = XTick; end
+
+    % if threshold is 1.3 (p<0.05) change XTick accordingly and correct by 0.3
+    if ~isempty(clip)
+      if clip(3) == 1.3
+        XTick_step = round((clim(3)-clim(2))/5);
+        if clip(2) == -1.3
+          XTick = [(round(clim(2))-0.3):XTick_step:-1.3 0 1.3:XTick_step:(round(clim(3))+0.3)];
+        else
+          XTick = [0 1.3:XTick_step:(round(clim(3))+0.3)];
+        end
+      end
+    else
+      % rescue original XThick values if clipping is changed
+      if ~isempty(H.XTick), XTick = H.XTick; end
+    end
+    
+    % change XTickLabel
+    XTickLabel = [];
+    for i=1:length(XTick)
+      if XTick(i) > 0
+        XTickLabel = char(XTickLabel,remove_zeros(sprintf('%.g',10^(-XTick(i)))));
+      elseif XTick(i) < 0
+        XTickLabel = char(XTickLabel,remove_zeros(sprintf('-%.g',10^(XTick(i)))));
+      else
+        XTickLabel = char(XTickLabel,'');
+      end
+    end
+    set(H.colourbar,'XTickLabel',XTickLabel(2:end,:),'XTick',XTick);
+    
+  end % end H.logP
+  
+  set(H.colourbar,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
+  
 else
 
   if ~isfield(H,'cbar') || ~ishandle(H.cbar)
@@ -1029,11 +1119,8 @@ function select_data(obj, event_obj, ind)
 %-----------------------------------------------------------------------
 global H
 
-if isempty(H.S{2}.name)
-  str = 'log';
-else
-  str = 'log';
-end
+if isempty(H.S{2}.name), str = 'log';
+else, str = 'log'; end
 
 side = '';
 str_side = {'left','right'};
@@ -1041,19 +1128,14 @@ str_side = {'left','right'};
 H.logP = 1;
 
 while ~strcmp(side,H.S{ind}.side)
-  H.S{ind}.name = spm_select([1 3],'mesh',['Select log P map for ' str_side{ind} ' hemisphere'],'','',str);
+  H.S{ind}.name = spm_select(H.data_n,'mesh',['Select up to 3 log P maps for ' str_side{ind} ' hemisphere'],'','',str);
   H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
-  try
-    H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-  catch
-    error('No cdata found.');
-  end
   
   side = H.S{ind}.side;
   
   for i=1:size(H.S{ind}.name,1)
 
-    % check whether name contains 'log' tha indicates a logP file
+    % check whether name contains 'log' that indicates a logP file
     if isempty(strfind(H.S{ind}.info(i).ff,'log'))
       H.logP = 0;
     end
@@ -1068,38 +1150,15 @@ end
 
 % increase counter for selected data
 H.data_sel = H.data_sel + 1;
-
-H.disable_tview = 0;
-H.disable_cbar = 0;
-H.show_neg = 1;
-H.clip = [false NaN NaN];
-H.show_transp = 0;
-H.black_bkg = 0;
-H.show_info = 0;
+H.data_n = size(H.S{ind}.name,1);
 
 % display if both sides are defined
 if ~isempty(H.S{1}.name)  &&  ~isempty(H.S{2}.name) && H.data_sel == 2
-
-  display_results_all;
-  set(H.surf,'Enable','on');
-  set(H.save,'Enable','on');
-  set(H.tview,'Visible','on');
-  set(H.nocbar,'Visible','on');
-  set(H.bkg,'Visible','on');
-  set(H.transp,'Visible','on');
-  set(H.info,'Visible','on');
-
-  if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
-    set(H.inv,'Visible','on');
-  end
-
-  if (size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) == 1)
-    set(H.cmap,'Visible','on');
-  end
+  cat_surf_results('disp',H.S{1}.name, H.S{2}.name);
 
   % reset counter for selected data
   H.data_sel = 0;
-
+  H.data_n = [1 3];
 end
 
 %==========================================================================
@@ -1276,12 +1335,12 @@ end
 function checkbox_bkg(obj, event_obj)
 global H
   
-H.black_bkg = get(H.bkg,'Value');
+H.white_bgk = get(H.bkg,'Value');
 
-if H.black_bkg
-  H.bkg_col = [0 0 0];
-else
+if H.white_bgk
   H.bkg_col = [1 1 1];
+else
+  H.bkg_col = [0 0 0];
 end
 
 set(H.Ha,'Color',H.bkg_col);
@@ -1396,6 +1455,287 @@ else
 end
 
 %==========================================================================
+function select_cursor(mode)
+
+global H y
+
+H.cursor_mode = mode;
+
+dcm_obj = datacursormode(H.figure(1));
+switch H.cursor_mode
+
+  case 0 % disable and delete datatip
+    set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
+        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
+    figure(H.figure(1))
+    delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+    try, close(H.figure(3)); end
+    
+  case {1,2}
+    set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
+        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
+    try, close(H.figure(3)); end
+        
+  case {3,4}
+    figure(H.figure(1))
+    try
+      delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+    end
+    
+    H.figure(3) = figure(3+11);
+    set(H.figure(3),'MenuBar','none','Position',H.pos{3}.fig,...
+        'Name','Plot','NumberTitle','off');
+    
+    SPM_found = 1;
+    for i=1:2
+      SPM_name = fullfile(H.S{i}.info(1).pp, 'SPM.mat');
+    
+      % SPM.mat exist?
+      if exist(SPM_name,'file')
+        load(SPM_name);
+        H.SPM{i} = SPM;
+        if i==1
+          H.Ic = spm_input('Which contrast?',1,'m',{SPM.xCon.name});
+          str   = 'predicted or adjusted values?';
+          H.predicted = spm_input(str,2,'b',{'predicted','adjusted'},[1 0]);
+        end
+      else
+        SPM_found = 0;
+        spm('alert!','No SPM.mat file found.\nPlease check that you have not moved your files.',1);
+      end
+    end
+    if SPM_found
+      set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
+        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorCluster,H.cursor_mode-3});
+    end
+
+
+end
+
+%==========================================================================
+function txt = myDataCursorCluster(obj,evt,plot_mean)
+global H y
+
+pos = get(evt,'Position');
+
+i = ismember(get(H.patch(1),'vertices'),pos,'rows');
+node = find(i);
+ind = 1;
+node_list = 1:numel(get(H.patch(1),'vertices'));
+
+if isempty(node)
+  i = ismember(get(H.patch(3),'vertices'),pos,'rows');
+  node = find(i);
+  ind = 3;
+  node_list = 1:numel(get(H.patch(3),'vertices'));
+end
+
+% get threshold from clipping
+thresh = [0 0];
+if ~isempty(H.clip)
+  if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+    thresh = [H.clip(2:3)];
+  end
+end
+
+if plot_mean
+  
+  found_node = [];
+  cluster_number = 0;
+  cluster_side = 0;
+
+if ~isfield(H,'A')
+    M = getappdata(H.patch(ind),'patch');
+    A       = spm_mesh_adjacency(M.faces);
+    A       = A + speye(size(A));
+    H.A = A;
+else
+    A = H.A;
+    d = getappdata(H.patch(ind),'data');
+
+    % apply thresholds
+    dp = d > thresh(2); indp = find(dp);
+    dn = d < thresh(1); indn = find(dn);
+    
+    % go through pos. effects
+    if ~isempty(indp)
+  
+      C = find_connected_component(A, dp);
+      C = C(indp);
+      node_list2 = node_list(indp);
+      
+      for i = 1:max(C)
+        N = find(C == i);          
+        XYZ = node_list2(N);
+        found_node = find(XYZ == node);
+        if ~isempty(found_node)
+          cluster_number = i;
+          cluster_side = ind;
+          break;
+        end
+      end
+    end
+  
+    % go through neg. effects if no node was found
+    if ~isempty(indn) && ~isempty(found_node)
+
+      C = find_connected_component(A, dn);
+      C = C(indn);
+      node_list2 = node_list(indp);
+  
+      for i = 1:max(C)
+        N = find(C == i);          
+        XYZ = node_list2(N);
+        found_node = find(XYZ == node);
+        if ~isempty(found_node)
+          cluster_number = i;
+          cluster_side = ind;
+          break;
+        end
+      end
+    end
+  end
+
+  if isempty(found_node)
+    txt = {'Cursor outside of cluster'};
+  else
+    if cluster_side == 1
+      txt = {sprintf('lh: Cluster %d',cluster_number)};
+    else
+      txt = {sprintf('rh: Cluster %d',cluster_number)};
+    end
+  end
+else
+  % use single node as region 
+  XYZ = node;
+  txt = {sprintf('Node %d',node)};
+end
+
+y = get_cluster_data(H,XYZ,ind);
+figure(H.figure(3))
+if plot_mean
+  y = mean(y,2);
+  if isempty(found_node)
+    y(:) = 0;
+  end
+end
+plot(y)
+
+%==========================================================================
+function y = get_cluster_data(H,XYZ, ind)
+
+SPM = H.SPM{round(ind/2)};
+Ic = H.Ic;
+predicted = H.predicted;
+
+% get raw data and whiten
+y = spm_data_read(SPM.xY.VY,'xyz',XYZ);
+y = spm_filter(SPM.xX.K,SPM.xX.W*y);
+R   = spm_sp('r',SPM.xX.xKXs,y);
+
+beta   = spm_data_read(SPM.Vbeta,'xyz',XYZ);
+ResMS = spm_data_read(SPM.VResMS,'xyz',XYZ);
+
+% compute contrast of parameter estimates and 90% C.I.
+%------------------------------------------------------------------
+cbeta = SPM.xCon(Ic).c'*beta;
+
+% predicted or adjusted response
+%------------------------------------------------------------------
+if predicted
+
+  % fitted (predicted) data (Y = X1*beta)
+  %--------------------------------------------------------------
+  % this should be SPM.xX.xKXs.X instead of SPM.xX.X below
+  Y = SPM.xX.X*SPM.xCon(Ic).c*pinv(SPM.xCon(Ic).c)*beta;
+else
+
+  % fitted (corrected)  data (Y = X1o*beta)
+  %--------------------------------------------------------------
+  Y = spm_FcUtil('Yc',SPM.xCon(Ic),SPM.xX.xKXs,beta);
+
+end
+
+% adjusted data
+%------------------------------------------------------------------
+y     = Y + R;
+
+if 0
+H.y{i} = H.y{i} - SPM.xX.xKXs.X * beta;
+X0     = SPM.xX.xKXs.X(:,[SPM.xX.iB SPM.xX.iG]);
+X0     = X0(:,any(X0));
+        %-Compute regional response in terms of first eigenvariate
+        %--------------------------------------------------------------------------
+        [m,n]   = size(H.y{i});
+        if m > n
+          [v,s,v] = svd(H.y{i}'*H.y{i});
+          s       = diag(s);
+          v       = v(:,1);
+          u       = y*v/sqrt(s(1));
+        else
+          [u,s,u] = svd(H.y{i}*H.y{i}');
+          s       = diag(s);
+          u       = u(:,1);
+          v       = y'*u/sqrt(s(1));
+        end
+        d       = sign(sum(v));
+        u       = u*d;
+        v       = v*d;
+        Y       = u*sqrt(s(1)/n); 
+          
+        %-Set in structure
+        %--------------------------------------------------------------------------
+        xY.y    = y;
+        xY.u    = Y;
+        xY.v    = v;
+        xY.s    = s;
+ 
+        display_VOI(xY,i);
+        
+end
+
+%==========================================================================
+function txt = myDataCursorAtlas(obj,evt,H)
+
+pos = get(evt,'Position');
+
+if H.cursor_mode == 1
+  txt = {'Desikan DK40'};
+else
+  txt = {'Destrieux 2009'};
+end
+
+i = ismember(get(H.patch(1),'vertices'),pos,'rows');
+node = find(i);
+ind = 1;
+
+if isempty(node)
+  i = ismember(get(H.patch(3),'vertices'),pos,'rows');
+  node = find(i);
+  ind = 2;
+end
+
+rdata_pos = H.rdata{H.cursor_mode}(node,ind);
+
+rcsv = H.rcsv{H.cursor_mode};
+
+for j=2:size(rcsv,1)
+  if rdata_pos == rcsv{j,1}
+    txt = {txt{:} [H.S{ind}.side ' ' rcsv{j,2}]};
+    j = size(rcsv,1);
+  end
+end
+
+if 0
+hMe = findobj(H.axis,'Tag','CrossBar');
+if ~isempty(hMe)
+    ws = warning('off');
+    spm_XYZreg('SetCoords',pos,get(hMe,'UserData'));
+    warning(ws);
+end
+end
+
+%==========================================================================
 function myDeleteFcn(obj,evt,renderer)
 try rotate3d(get(obj,'parent'),'off'); end
 set(ancestor(obj,'figure'),'Renderer',renderer);
@@ -1404,9 +1744,9 @@ set(ancestor(obj,'figure'),'Renderer',renderer);
 function s=remove_zeros(s)
 
 pos = length(s);
-while pos>1
+while pos > 1
   if strcmp(s(pos),'0')
-    s(pos)='';
+    s(pos)=''
     pos = pos-1;
   else break
   end
