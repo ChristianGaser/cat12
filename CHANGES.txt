@@ -11817,6 +11817,7 @@ Changed: Updated cat_surf_results.m to also show plots of fitted data.
 
 
 ------------------------------------------------------------------------
+r997 | gaser | 2016-09-07 07:59:07 +0200 (Wed, 07 Sep 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11834,5 +11835,16 @@ M       html/cat.html
 (2) Fixed: ROI estimation for surfaces was not yet correctly working.
 (3) Changed: Renamed aparc_freesurfer atlas to aparc_DK40 atlas.
 
+
 ------------------------------------------------------------------------
-r997 | gaser | 2016-09-07 07:58:58
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_ROI.m
+M       html/cat.html
+
+Fixed: Added check for writing permissions in cat_stat_ROI.m.
+
+------------------------------------------------------------------------
+r998 | gaser | 2016-09-07 08:38:17
