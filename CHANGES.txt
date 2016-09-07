@@ -11808,11 +11808,31 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r996 | gaser | 2016-09-07 06:53:36 +0200 (Wed, 07 Sep 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 
 Changed: Updated cat_surf_results.m to also show plots of fitted data.
 
+
 ------------------------------------------------------------------------
-r995 | gaser | 2016-09-07 06:53:28
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+A  +    atlases_surfaces/lh.aparc_DK40.freesurfer.annot
+D       atlases_surfaces/lh.aparc_freesurfer.annot
+A  +    atlases_surfaces/rh.aparc_DK40.freesurfer.annot
+D       atlases_surfaces/rh.aparc_freesurfer.annot
+M       cat_conf_stools.m
+M       cat_surf_surf2roi.m
+M       cat_update.m
+M       html/cat.html
+
+(1) Changed: Also delete old atlas files during update.
+(2) Fixed: ROI estimation for surfaces was not yet correctly working.
+(3) Changed: Renamed aparc_freesurfer atlas to aparc_DK40 atlas.
+
+------------------------------------------------------------------------
+r997 | gaser | 2016-09-07 07:58:58
