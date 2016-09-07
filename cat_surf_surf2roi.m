@@ -62,7 +62,7 @@ function cat_surf_surf2roi(job)
   
   % if rdata is not defined use default atlases
   if ~isfield(job,'rdata')
-    job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_a2009s.*','lh.aparc_freesurfer.*'});
+    job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_a2009s.*','lh.aparc_DK40.*'});
   end
   
   spm_progress_bar('Init',numel(job.rdata),'Atlases','Atlases Completed');
@@ -208,13 +208,8 @@ function cat_surf_surf2roi(job)
         ROI.(rinfo.name) = [];
         ROI.(rinfo.name).(sinfo.dataname) = ccsv;      
       end
-      if exist(['catROIs_' sinfo.name '.xml'],'file')
-        cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
+      cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
           ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write+'); 
-      else
-        cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
-          ['catROIs_' sinfo.name '.xml']),struct('ROI',ROI),'write'); 
-      end
       
     end
     spm_progress_bar('Set',ri);

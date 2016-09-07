@@ -85,6 +85,14 @@ if update
           name = fullfile(d,'cat12',mexfiles(i).name);
           spm_unlink(name);
         end
+        
+        % delete old atlas files
+        atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces','*.*'));
+        for i=1:length(atlasfiles)
+          name = fullfile(d,'cat12','atlases_surfaces',atlasfiles(i).name);
+          spm_unlink(name);
+        end
+
         lastwarn('');
         delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
         m = '          Download and install CAT12...\n';
