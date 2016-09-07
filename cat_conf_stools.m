@@ -233,7 +233,7 @@ function stools = cat_conf_stools(expert)
   if expert 
     ROIs.ufilter = 'lh.aparc.*';
   else
-    ROIs.ufilter = 'lh.aparc_[a2009s|DKT40JT].*'; % not yet working for all atlases
+    ROIs.ufilter = 'lh.aparc_(freesurfer|a2009s).*'; % not yet working for all atlases
   end
   ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
   ROIs.num     = [1 Inf];
@@ -567,7 +567,7 @@ function stools = cat_conf_stools(expert)
   if expert 
     s2r.ROIs.ufilter = 'lh.aparc.*';
   else
-    s2r.ROIs.ufilter = 'lh.aparc_[a2009s|DKT40JT].*'; % not yet working for all atlases
+    s2r.ROIs.ufilter = 'lh.aparc_(freesurfer|a2009s).*'; % not yet working for all atlases
   end
   s2r.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
   s2r.ROIs.num     = [1 Inf];

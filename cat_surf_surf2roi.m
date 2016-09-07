@@ -62,7 +62,7 @@ function cat_surf_surf2roi(job)
   
   % if rdata is not defined use default atlases
   if ~isfield(job,'rdata')
-    job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_a2009s.*','lh.aparc_DKT40JT.*'});
+    job.rdata = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'),{'lh.aparc_a2009s.*','lh.aparc_freesurfer.*'});
   end
   
   spm_progress_bar('Init',numel(job.rdata),'Atlases','Atlases Completed');
