@@ -11837,6 +11837,7 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r998 | gaser | 2016-09-07 08:39:01 +0200 (Wed, 07 Sep 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11846,5 +11847,16 @@ M       html/cat.html
 
 Fixed: Added check for writing permissions in cat_stat_ROI.m.
 
+
 ------------------------------------------------------------------------
-r998 | gaser | 2016-09-07 08:38:17
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       html/cat.html
+
+Changed: Added option to deselect APP in default mode.
+
+------------------------------------------------------------------------
+r999 | gaser | 2016-09-08 04:26:21
