@@ -11849,6 +11849,7 @@ Fixed: Added check for writing permissions in cat_stat_ROI.m.
 
 
 ------------------------------------------------------------------------
+r999 | gaser | 2016-09-08 04:26:32 +0200 (Thu, 08 Sep 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11858,5 +11859,14 @@ M       html/cat.html
 
 Changed: Added option to deselect APP in default mode.
 
+
 ------------------------------------------------------------------------
-r999 | gaser | 2016-09-08 04:26:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_defs.m
+
+Fixed: In cat_vol_defs now also img files can be processed and not only nii.
+
+------------------------------------------------------------------------
+r1000 | gaser | 2016-09-09 15:10:26
