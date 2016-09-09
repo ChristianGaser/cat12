@@ -57,7 +57,7 @@ for i=1:size(fnames,1),
 
     % Generate headers etc for output images
     %----------------------------------------------------------------------
-    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:))); ext = '.nii'; 
+    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:)));
     NI = nifti(fullfile(pth,[nam ext]));
     j_range = 1:size(NI.dat,4);
     k_range = 1:size(NI.dat,5);
@@ -70,6 +70,7 @@ for i=1:size(fnames,1),
     end
 
     NO = NI;
+    ext = '.nii'; 
 
     % use float for modulated images
     if modulate
