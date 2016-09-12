@@ -93,11 +93,11 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-% enable/disable GUI for TFCE
+% enable/disable different menus if TFCE is installed or not
 if exist(fullfile(spm('dir'),'toolbox','TFCE'))
-    set(handles.popupmenu2,'enable','on');
+    set(handles.popupmenu2,'String',{'Treshold-Free Cluster Enhancement...','Estimate','Results'});
 else
-    set(handles.popupmenu2,'enable','off');
+    set(handles.popupmenu2,'String',{'Treshold-Free Cluster Enhancement...','Install Toolbox'});
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -298,7 +298,18 @@ function popupmenu2_Callback(hObject, eventdata, handles)
 % Determine the selected data set.
 switch get(hObject,'Value');
 case 2 
-   spm_jobman('interactive','','spm.tools.tfce_estimate');
+    if exist(fullfile(spm('dir'),'toolbox','TFCE'))    
+        spm_jobman('interactive','','spm.tools.tfce_estimate');
+    else % install TFCE toolbox
+        d0 = spm('Dir');
+        d = fullfile(spm('Dir'),'toolbox'); 
+        s = unzip('http://www.neuro.uni-jena.de/tfce/tfce_latest.zip', d);
+        addpath(d0);
+        rehash
+        rehash toolboxcache;
+        toolbox_path_cache
+        eval(['spm fmri;clear cat_version;spm_cat12']);
+    end
 case 3 
    cg_tfce_results('Setup');
 end

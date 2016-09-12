@@ -234,6 +234,8 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                 spm_plot_convergence('Clear');
                 spm_plot_convergence('Init',['Optimising (level ' num2str(level) ')'],'Objective Function','Step');
                 clear Ym
+            else 
+              brainmask = [];
             end
 
             % Compute objective function (approximately)
