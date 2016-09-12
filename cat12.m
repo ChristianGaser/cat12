@@ -95,9 +95,9 @@ guidata(hObject, handles);
 
 % enable/disable different menus if TFCE is installed or not
 if exist(fullfile(spm('dir'),'toolbox','TFCE'))
-    set(handles.popupmenu2,'String',{'Treshold-Free Cluster Enhancement...','Estimate','Results'});
+    set(handles.popupmenu2,'String',{'Treshold-Free Cluster Enhancement...','Call TFCE Toolbox'});
 else
-    set(handles.popupmenu2,'String',{'Treshold-Free Cluster Enhancement...','Install Toolbox'});
+    set(handles.popupmenu2,'String',{'Treshold-Free Cluster Enhancement...','Install TFCE Toolbox'});
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -296,10 +296,10 @@ function popupmenu2_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 
 % Determine the selected data set.
-switch get(hObject,'Value');
-case 2 
-    if exist(fullfile(spm('dir'),'toolbox','TFCE'))    
-        spm_jobman('interactive','','spm.tools.tfce_estimate');
+if get(hObject,'Value') == 2
+    if exist(fullfile(spm('dir'),'toolbox','TFCE'))
+        % call TFCE toolbox 
+        spm_TFCE;
     else % install TFCE toolbox
         d0 = spm('Dir');
         d = fullfile(spm('Dir'),'toolbox'); 
@@ -310,8 +310,6 @@ case 2
         toolbox_path_cache
         eval(['spm fmri;clear cat_version;spm_cat12']);
     end
-case 3 
-   cg_tfce_results('Setup');
 end
 
 
