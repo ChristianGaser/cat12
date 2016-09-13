@@ -11884,6 +11884,7 @@ M       cat_vol_groupwise_ls.m
     was used.
 
 ------------------------------------------------------------------------
+r1002 | gaser | 2016-09-12 10:18:35 +0200 (Mon, 12 Sep 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11894,5 +11895,16 @@ M       html/cat.html
 Fixed: Changed call of TFCE toolbox that sometimes prevented use 
 functionality of results section.
 
+
 ------------------------------------------------------------------------
-r1002 | gaser | 2016-09-12 10:18:24
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_ROI.m
+M       html/cat.html
+
+Fixed: Removed again compatibility issues in cat_stat_ROI.m
+
+------------------------------------------------------------------------
+r1003 | gaser | 2016-09-13 04:25:29

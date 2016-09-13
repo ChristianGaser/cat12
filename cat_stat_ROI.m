@@ -60,7 +60,12 @@ for i=1:n_data
     
     for m=1:n_measures
       
-      tr = xml.ROI.(atlases{j}).(measures{m}).tr;
+      try
+        tr = xml.ROI.(atlases{j}).(measures{m}).tr;
+      catch
+        tr = xml.ROI.(atlases{j}).tr;
+      end
+      
       n_ROIs = numel(tr) - 1; % ignore header
       hdr = tr{1}.td;
     
