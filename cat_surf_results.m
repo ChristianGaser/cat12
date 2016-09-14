@@ -353,7 +353,7 @@ end
           H.rdata{2} = [];
           for ind = 1:2
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
-              '.aparc_freesurfer.annot']);
+              '.aparc_DK40.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{1} = [H.rdata{1} rdata0];
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....

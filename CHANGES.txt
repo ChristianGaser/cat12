@@ -11897,6 +11897,7 @@ functionality of results section.
 
 
 ------------------------------------------------------------------------
+r1003 | gaser | 2016-09-13 04:25:42 +0200 (Tue, 13 Sep 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11906,5 +11907,16 @@ M       html/cat.html
 
 Fixed: Removed again compatibility issues in cat_stat_ROI.m
 
+
 ------------------------------------------------------------------------
-r1003 | gaser | 2016-09-13 04:25:29
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Fixed: Wrong atlas name was used in cat_surf_results.m because atlas names chaged.
+
+------------------------------------------------------------------------
+r1004 | gaser | 2016-09-14 04:00:59
