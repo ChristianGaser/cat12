@@ -77,6 +77,10 @@ for i=1:n_data
             name_index = k;
           end
 
+          if strcmp(hdr{k},'ROIid')
+            ROIid = k;
+          end
+
           % look for pre-defined ROI measures
           if strcmp(hdr{k},deblank(ROI_measures(l,:)))
         
@@ -95,6 +99,12 @@ for i=1:n_data
               for r=1:n_ROIs
                 fprintf(fid{j,k,m},'%s\t',char(tr{r+1}.td(name_index)));
               end
+
+              fprintf(fid{j,k,m},'\nROIid\t');
+              for r=1:n_ROIs
+                fprintf(fid{j,k,m},'%s\t',char(tr{r+1}.td(ROIid)));
+              end
+
             end
 
             % print ROI values
