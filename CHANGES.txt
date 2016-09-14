@@ -11921,6 +11921,7 @@ Fixed: Wrong atlas name was used in cat_surf_results.m because atlas names chage
 
 
 ------------------------------------------------------------------------
+r1005 | gaser | 2016-09-14 13:50:17 +0200 (Wed, 14 Sep 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11933,5 +11934,17 @@ M       html/cat.html
 (2) Changed: Changed enabling of threshold selection slightly to allow more
     flexibility.
 
+
 ------------------------------------------------------------------------
-r1005 | gaser | 2016-09-14 13:50:05
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat_surf_results.m
+
+(1) Fixed: Empty output by calling cat_surf_results.m is now prevented.
+(2) Changed: Added flag to disable warning about filenames in 
+    cat_surf_results.m
+
+------------------------------------------------------------------------
+r1006 | gaser | 2016-09-15 00:11:29

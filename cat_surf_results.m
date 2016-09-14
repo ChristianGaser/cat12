@@ -1,7 +1,12 @@
 function y = cat_surf_results(action,varargin)
-
-%cat_surf_results to visualize results (preferable on log P-maps)
+% Visualise results for both hemispheres of surface-based analysis (preferable on log P-maps)
 %
+% FORMAT y = cat_surf_results('Disp',leftSurface,rightSurface,[show_warning])
+% leftSurface  - a GIfTI filename/object or patch structure
+% rightSurface - a GIfTI filename/object or patch structure
+% show_warning - (default 1) show warning if filenames differ (it is very likely that they are in different folder
+%                for each hemisphere and have the same name)
+% y            - adjusted or predicted response
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -39,32 +44,16 @@ switch lower(action)
         ws = spm('Winsize','Graphics');
         FS = spm('FontSizes');
         
-if 0
-        % different positions for views with 4 and 5 images
-        H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.450 0.325 0.325],...
-                     [0.075 0.050 0.325 0.325;  0.150 0.050 0.325 0.325],...
-                     [0.600 0.450 0.325 0.325;  0.525 0.450 0.325 0.325],...
-                     [0.600 0.050 0.325 0.325;  0.525 0.050 0.325 0.325],...
-                     [0.300 0.200 0.400 0.400;  0.300 2.000 0.400 0.400]};
-
-        % figure 1
-        H.pos{1} = struct(...
-            'fig',   [10  10  2*ws(3) ws(3)],...   % figure
-            'cbar',  [0.400 0.550 0.200 0.300; 0.440 0.700 0.120 0.120]);   % colorbar   
-else
-
         % different positions for views with 4 and 5 images
         H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.550 0.325 0.325],...
                      [0.075 0.050 0.325 0.325;  0.150 0.150 0.325 0.325],...
                      [0.600 0.450 0.325 0.325;  0.525 0.550 0.325 0.325],...
                      [0.600 0.050 0.325 0.325;  0.525 0.150 0.325 0.325],...
-                     [0.300 0.250 0.400 0.400;  0.300 2.000 0.400 0.400]};
+                     [0.300 0.180 0.400 0.400;  0.300 2.000 0.400 0.400]};
         % figure 1
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
-            'cbar',  [0.400 -0.150 0.200 0.300; 0.440 0.050 0.120 0.120]);   % colorbar   
-end
-
+            'cbar',  [0.400 -0.180 0.200 0.300; 0.440 0.050 0.120 0.120]);   % colorbar   
 
         % figure 2
         H.pos{2} = struct(...
@@ -247,17 +236,23 @@ end
                 'ToolTipString','Save png image',...
                 'Interruptible','on','Visible','off');
 
-        if nargin == 3
+        if nargin >= 3
         
           H.S{1}.name = varargin{1};
           H.S{2}.name = varargin{2};
+          
+          if nargin > 3
+            warn_if_names_differ = varargin{3};
+          else
+            warn_if_names_differ = 1;
+          end
           
           % check that filenames are the same for lh and rh
           for i=1:size(H.S{1}.name,1)
             [pth1,name1] = spm_fileparts(H.S{1}.name(i,:));
             [pth2,name2] = spm_fileparts(H.S{2}.name(i,:));
             
-            if ~strcmp(name1,name2)
+            if ~strcmp(name1,name2) & warn_if_names_differ
               alert_str = sprintf(['Warning: Check that you have selected the same results for '...
                 'left and right hemisphere because filenames differ:\nleft: %s\nright: %s'],...
                  name1,name2);
