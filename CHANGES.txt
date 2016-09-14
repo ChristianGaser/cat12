@@ -11909,6 +11909,7 @@ Fixed: Removed again compatibility issues in cat_stat_ROI.m
 
 
 ------------------------------------------------------------------------
+r1004 | gaser | 2016-09-14 04:01:12 +0200 (Wed, 14 Sep 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11918,5 +11919,19 @@ M       html/cat.html
 
 Fixed: Wrong atlas name was used in cat_surf_results.m because atlas names chaged.
 
+
 ------------------------------------------------------------------------
-r1004 | gaser | 2016-09-14 04:00:59
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_ROI.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Changed: Added ROIid to ROI stat.
+(2) Changed: Changed enabling of threshold selection slightly to allow more
+    flexibility.
+
+------------------------------------------------------------------------
+r1005 | gaser | 2016-09-14 13:50:05

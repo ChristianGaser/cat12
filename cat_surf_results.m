@@ -314,7 +314,7 @@ end
     
               H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
             
-              % check whether name contains 'log' tha indicates a logP file
+              % check whether name contains 'log' that indicates a logP file
               for i=1:size(H.S{ind}.name,1)
                 if isempty(strfind(H.S{ind}.info(i).ff,'log'))
                   H.logP = 0;
@@ -771,8 +771,8 @@ for ind=1:5
   H = updateTexture(H,ind,d,col,H.show_transp);
 end
 
-% only show threshold popup if log-name was found and minimal value > 0 is lt 1.3
-if H.logP && (H.S{1}.thresh < 1.3)
+% only show threshold popup if log-name was found and minimal value > 0 is lt 2
+if H.logP && (H.S{1}.thresh < 2)
   set(H.thresh,'Visible','on');
 end
 
