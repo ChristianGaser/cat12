@@ -26,27 +26,37 @@
     <div id="content">
       <h2>Atlas creation and ROI based analysis</h2>
       <p>
-        CAT12 allows estimation of tissue volumes (and additional surface parameters such as cortical thickness) for different volume and surface-based atlas maps.
+        CAT12 allows estimation of tissue volumes (and additional surface parameters such as cortical thickness, gyrification or fractal dimension) for different volume and surface-based atlas maps.
         The results are stored as XML files in the <em>label</em> directory. 
         The XML file <em>catROI[s]_*.xml</em> contains information of all atlases as data structure for one dataset and the optional <em>s</em> indicates surface atlases. 
         Please note that in the beta version of CAT12 these XML files were not automatically saved because the option for ROI analysis was disabled. 
         If the option "cat12.output.ROI" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> is set to "0" no ROI XML files are saved and you have to set this parameter to "1" and preprocess the data again if you are interested in ROI analysis of volume data (for surface data these XML files are always extracted after preprocessing, thus it is not necessary to do this for surface data).
-        You can use the CAT function <a class="function" href="matlab:cat_io_xml">cat_io_xml</a> to read the XML data as structure.
       </p>
+      <h4 id="Analysis">Additional steps for surface data</h4>
       <p>
         While ROI-based values for VBM (volume) data are automatically saved in the <em>label</em> folder as XML file it is necessary to additionally extract these values for surface data. This has to be done after preprocessing the data and creating cortical surfaces. 
         You can extract ROI-based values for cortical thickness but also for any other surface parameter that was extracted using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract Additional Surface Parameters</a> function.   
       </p>
+      <h4 id="Analysis">Statistical analysis of ROI data</h4>
       <p>
-        Finally, the XML files of several subjects can be combined and saved for further analysis as CSV file using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcroi');">Estimate Mean Values inside ROI</a> function. 
+        Finally, the XML files of several subjects can be analyzed using an already existing SPM design with <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file is used in order to get information about all respective label files, but also about your design (including all covariates/confounds you have modeled). Thus, the same statistical analysis that is saved in the SPM.mat file is applied to your ROI data. You can then select a contrast, threshold and a measures to analyze (e.g. Vgm, Vwm, thickness, gyrification...) and can choose between different atlas maps. The results will be printed and saved as thresholded log-p volume or surface map. These maps can be optionally visualized using <a class="function" href="matlab:cat_vol_slice_overlay;">overlay selected slices</a></li> for volume maps or <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> for surface maps.<br/>
+        In order to analyze different measures (e.g. Vgm/Vwm for volumes or thickness/gyrification for surfaces) you can use any existing volume-based analysis to extract different volume measures or any existing surface-based analysis to extract different surface measures. To give an example: An existing SPM.mat file with a VBM analysis of GM allows you to analyze ROI measures for both, GM as well as WM. Thus, it is not necessary to have a SPM.mat file of a VBM analysis of WM. The same holds for surface-based analysis. If you have an existing SPM.mat for the analysis of cortical thickness you can also estimate ROI analysis for gyrification or fractal dimension. However, it is necessary to extract before ROI-based measures for each subject using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract Additional Surface Parameters</a>.<br/>    
+        For ROI analysis of surfaces you can select the SPM.mat file of the analysis either for the left or right hemisphere. The design should be the same and the ROI results will be always estimated for both hemispheres.<br/>
+        Please note, that if you have moved your data after estimating your original voxel- or surfaced-based statistics the needed ROI files cannot be found.
+      </p>
+      <h4 id="Extraction">Optional extraction of ROI data</h4>
+      <p>
+        Optionally, the XML files of several subjects can be also combined and saved for further analysis as CSV file using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcroi');">Estimate Mean Values inside ROI</a> function. 
         For each measure (e.g. ''Vgm'' for gray matter volume) and each atlas a separate CSV file is written. This works for both volume as well as surface data, but volume and surface data has to be processed separately using this function (surface-based ROI values are indicated by an additional <em>s</em>, e.g. ''catROIs_'').    
         You can use external software such as Excel or SPSS to read the resulting CSV files for further analysis. Take also care of the different interpretation between "." and "," depending on your region and language settings on your system.
       </p>
+      <h4 id="Atlas">Use of atlas maps</h4>
       <p>
         Moreover, you can use the volume-based atlases that are provided with CAT also as atlas maps with <em>SPM atlas functions</em>. This is especially helpful if you have used the default VBM processing pipeline because the CAT12 atlas maps are then in the same DARTEL space as your data. 
         Thus, if you have used the default VBM processing pipeline it is recommended to use the CAT12 atlases in DARTEL space rather than the SPM Neuromorphometrics atlas.
         In order to use CAT12 atlases you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once that will copy the atlases to SPM.
-        By default only Neuromorphometics, LPBA40, and Hammers atlas maps are used and are indicated in the name by a leading ''dartel_''.
+        By default only Neuromorphometics, LPBA40, and Hammers atlas maps are used and are indicated in the name by a leading ''dartel_''.<br/>
+        Atlas maps for surfaces can be used with <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a>. Here, the data cursor function allows you to display atlas regions under the cursor. Furthermore, you can use the ''Atlas labeling'' function to print a list of atlas regions of the resulting clusters.
       </p>
          
       <ul>
@@ -72,7 +82,7 @@
       </ul>
 
 
-      <h3 id="volrois">List of atlas maps in CAT12</h3>
+      <h3 id="volrois">List of volume-based atlas maps in CAT12</h3>
       <p>
         We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <em>templates_1.50mm</em> directory. 
         For each atlas you can find a CSV file with the ROI IDs, short and full names. 
