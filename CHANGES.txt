@@ -11970,6 +11970,7 @@ M       html/cat_starting.html
 (3) Changed: Added hint to center TIV as covariate.
 
 ------------------------------------------------------------------------
+r1008 | gaser | 2016-09-19 01:18:24 +1000 (Mo, 19 Sep 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11982,5 +11983,18 @@ M       html/cat_starting.html
 (1) Added: Function to analyze ROI data cat_stat_analyze_ROIs.m.
 (2) Changed: GUI to add ROI analysis.
 (3) Changed: Updated comments and functionality of cat_surf_results.m.
+
 ------------------------------------------------------------------------
-r1008 | gaser | 2016-09-19 01:17:54
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat_orthogonality.html
+M       html/cat_starting.html
+
+Changed: Updated quick starting guide wrt. to new ROI analysis.
+
+------------------------------------------------------------------------
+r1009 | gaser | 2016-09-19 01:41:04

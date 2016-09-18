@@ -52,6 +52,9 @@
         <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a> for each hemisphere separately: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
         <li><a class="function" href="matlab:P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');for i=1:size(P,1),swd = spm_file(P(i,:),'fpath'); load(fullfile(swd,'SPM.mat')); SPM.swd  = swd; cat_stat_spm(SPM); end
 ;">Estimate</a> surface model for each hemisphere</li>
+        <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> for both hemispheres. Select results (preferably saved as log-p maps using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">transform and threshold SPM-maps</a>) for left and right hemisphere in order to show render views of your results</li>
+        <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> such as thickness, gyrification or fractal dimension to provide ROI analysis.</li>
+        <li>Additionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the  SPM.mat file of an already estimated statistical design will be used.</li>
       </ul>
 
     </div>  
