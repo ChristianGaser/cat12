@@ -3,7 +3,7 @@ function cat_stat_analyze_ROIs
 %
 %__________________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_analyze_ROIs.m 995 2016-09-07 04:52:40Z gaser $
+% $Id$
 
 spmmat = spm_select(1,'SPM.mat','Select SPM.mat file to get design');
 load(spmmat);
