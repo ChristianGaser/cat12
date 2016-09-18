@@ -4,8 +4,9 @@ function y = cat_surf_results(action,varargin)
 % FORMAT y = cat_surf_results('Disp',leftSurface,rightSurface,[show_warning])
 % leftSurface  - a GIfTI filename/object or patch structure
 % rightSurface - a GIfTI filename/object or patch structure
-% show_warning - (default 1) show warning if filenames differ (it is very likely that they are in different folder
-%                for each hemisphere and have the same name)
+% show_warning - (default 1) show warning if filenames differ (it is very likely that even if they are 
+%                in different folders for each hemisphere and have the same name)
+%
 % y            - adjusted or predicted response
 %_______________________________________________________________________
 % Christian Gaser
@@ -22,15 +23,16 @@ if ~ischar(action)
     action   = 'Disp';
 end
 
-H.clip = [];
-H.clim = [];
-H.bkg_col = [0 0 0];
-H.transp = 0;
+% set start values
+H.clip     = [];
+H.clim     = [];
+H.bkg_col  = [0 0 0];
+H.transp   = 1;
 H.data_sel = 0;
-H.data_n = [1 3];
+H.data_n   = [1 3];
 H.cursor_mode = 1;
-H.XTick = [];
-y = [];
+H.XTick    = [];
+y          = [];
 
 %-Action
 %--------------------------------------------------------------------------
@@ -44,18 +46,19 @@ switch lower(action)
         ws = spm('Winsize','Graphics');
         FS = spm('FontSizes');
         
-        % different positions for views with 4 and 5 images
-        H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.550 0.325 0.325],...
-                     [0.075 0.050 0.325 0.325;  0.150 0.150 0.325 0.325],...
-                     [0.600 0.450 0.325 0.325;  0.525 0.550 0.325 0.325],...
-                     [0.600 0.050 0.325 0.325;  0.525 0.150 0.325 0.325],...
-                     [0.300 0.180 0.400 0.400;  0.300 2.000 0.400 0.400]};
-        % figure 1
+        % result window with 5 surface views and alternative positions without top view
+        H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.550 0.325 0.325],... % lh medial
+                     [0.075 0.050 0.325 0.325;  0.150 0.150 0.325 0.325],... % lh lateral
+                     [0.600 0.450 0.325 0.325;  0.525 0.550 0.325 0.325],... % rh medial
+                     [0.600 0.050 0.325 0.325;  0.525 0.150 0.325 0.325],... % rh lateral
+                     [0.300 0.180 0.400 0.400;  0.300 2.000 0.400 0.400]};   % lh+rh top
+                     
+        % figure 1 with result window
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
             'cbar',  [0.400 -0.180 0.200 0.300; 0.440 0.050 0.120 0.120]);   % colorbar   
 
-        % figure 2
+        % figure 2 with GUI
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'left',  [0.050 0.925 0.425 0.050],'right', [0.525 0.925 0.425 0.050],...
@@ -68,11 +71,11 @@ switch lower(action)
           'ovmin', [0.050 0.400 0.425 0.150],'ovmax', [0.525 0.400 0.425 0.150],... 
           'save',  [0.050 0.050 0.425 0.050],'close', [0.525 0.050 0.425 0.050]);   
 
-        % figure 3
+        % figure 3 with data plot
         H.pos{3} = struct(...
             'fig',   [10  30+ws(3)  ws(3) 0.5*ws(3)]);
 
-        % create figures
+        % create figures 1+2
         for i=1:2
           H.figure(i) = figure(i+11);
           clf(H.figure(i));
@@ -81,11 +84,11 @@ switch lower(action)
             'Name','Results','NumberTitle','off');
         end
         
-        % define S
-        H.S{1}.name  = ''; H.S{1}.side = 'lh';
-        H.S{2}.name = '';  H.S{2}.side = 'rh';
+        % define S structure that contains information for lh and rh
+        H.S{1}.name = ''; H.S{1}.side = 'lh';
+        H.S{2}.name = ''; H.S{2}.side = 'rh';
         
-        % add button for closing all windows
+        % closing all windows
         H.close = uicontrol(H.figure(2),...
                 'string','Close','Units','normalized',...
                 'position',H.pos{2}.close,...
@@ -94,18 +97,19 @@ switch lower(action)
                 'ToolTipString','Close windows',...
                 'Interruptible','on','Enable','on');
         
-        % select results
+        % select results for lh
         H.left = uicontrol(H.figure(2),...
                 'string','Select left hemisphere data','Units','normalized',...
-                'position',H.pos{2}.left,...
+                'position',H.pos{2}.left, 'ForegroundColor', [0.5 0 0],...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,1},...
                 'ToolTipString','Select results (up to 3) for left hemisphere (log-p maps)',...
                 'Interruptible','on','Enable','on');
         
+        % select results for rh
         H.right = uicontrol(H.figure(2),...
                 'string','Select right hemisphere data','Units','normalized',...
-                'position',H.pos{2}.right,...
+                'position',H.pos{2}.right, 'ForegroundColor', [0.5 0 0],...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',{@select_data,2},...
                 'ToolTipString','Select results (up to 3) for right hemisphere (log-p maps)',...
@@ -116,6 +120,7 @@ switch lower(action)
                  {@select_surf, 2},...
                  {@select_surf, 3}};
         
+        % underlying surface
         H.surf = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.surf,'UserData',tmp,...
@@ -130,6 +135,7 @@ switch lower(action)
                  {@select_thresh, 2},...
                  {@select_thresh, 3}};
         
+        % threshold
         H.thresh = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.thresh,'UserData',tmp,...
@@ -144,6 +150,7 @@ switch lower(action)
                  {@select_cmap, 3},...
                  {@select_cmap, 4}};
         
+        % colormap
         H.cmap = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.cmap,'UserData',tmp,...
@@ -156,6 +163,7 @@ switch lower(action)
         tmp  = { {@select_atlas, 1},...
                  {@select_atlas, 2}};
         
+        % atla for labeling
         H.atlas = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.atlas,'UserData',tmp,...
@@ -164,7 +172,7 @@ switch lower(action)
                 'ToolTipString','Atlas Labeling',...
                 'Interruptible','on','Visible','off');
 
-        str  = { 'Data Cursor...','Nothing','Desikan-Killiany DK40',...
+        str  = { 'Plot Data...','Nothing','Desikan-Killiany DK40',...
                  'Destrieux 2009','Plot data at vertex','Plot mean data inside cluster'};
         tmp  = { {@select_cursor, 0},...
                  {@select_cursor, 1},...
@@ -172,6 +180,7 @@ switch lower(action)
                  {@select_cursor, 3},...
                  {@select_cursor, 4}};
         
+        % data cursor for data plotting and atlas names
         H.cursor = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.cursor,'UserData',tmp,...
@@ -180,6 +189,7 @@ switch lower(action)
                 'ToolTipString','Data Cursor Mode',...
                 'Interruptible','on','Visible','off');
 
+        % disable top view
         H.tview = uicontrol(H.figure(2),...
                 'string','Hide top view','Units','normalized',...
                 'position',H.pos{2}.tview,...
@@ -188,6 +198,7 @@ switch lower(action)
                 'ToolTipString','Hide top view in the image center',...
                 'Interruptible','on','Visible','off');
 
+        % invert results
         H.inv = uicontrol(H.figure(2),...
                 'string','Invert results','Units','normalized',...
                 'position',H.pos{2}.inv,...
@@ -196,6 +207,7 @@ switch lower(action)
                 'ToolTipString','Invert results',...
                 'Interruptible','on','Visible','off');
 
+        % white background
         H.bkg = uicontrol(H.figure(2),...
                 'string','White background','Units','normalized',...
                 'position',H.pos{2}.bkg,...
@@ -204,12 +216,13 @@ switch lower(action)
                 'ToolTipString','White background',...
                 'Interruptible','on','Visible','off');
 
+        % transparent view
         H.transp = uicontrol(H.figure(2),...
-                'string','Transparent overlay','Units','normalized',...
+                'string','Disable transparency','Units','normalized',...
                 'position',H.pos{2}.transp,...
                 'style','CheckBox','HorizontalAlignment','center',...
                 'callback',{@checkbox_transp},...
-                'ToolTipString','Transparent overlay',...
+                'ToolTipString','Disable transparent overlay',...
                 'Interruptible','on','Visible','off');
 
         H.info = uicontrol(H.figure(2),...
@@ -302,7 +315,7 @@ switch lower(action)
           
             for ind=1:2
               try
-                H.S{ind}.Y    = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+                H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
               catch
                 error('No cdata found.');
               end
@@ -319,11 +332,11 @@ switch lower(action)
           end
           
           H.disable_tview = 0;
-          H.show_neg = 1;
-          H.disable_cbar = 0;
-          H.show_transp = 0;
-          H.white_bgk = 0;
-          H.show_info = 0;
+          H.show_neg      = 1;
+          H.disable_cbar  = 0;
+          H.show_transp   = 1;
+          H.white_bgk     = 0;
+          H.show_info     = 0;
           
           display_results_all;
           
@@ -767,7 +780,7 @@ for ind=1:5
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is lt 2
-if H.logP && (H.S{1}.thresh < 2)
+if H.logP & (H.S{1}.thresh < 2)
   set(H.thresh,'Visible','on');
 end
 
@@ -786,7 +799,7 @@ end
 if numel(H.S{1}.info)==1
 
   % allow slider a more extended range
-  mnx = 1.5*max(abs([H.S{1}.min H.S{1}.max]));
+  mnx = 2*max(abs([H.S{1}.min H.S{1}.max]));
 
   sliderPanel(...
         'Parent'  , H.figure(2), ...
@@ -1140,6 +1153,12 @@ while ~strcmp(side,H.S{ind}.side)
       side = '';
     end
   end
+  
+  if ind==1
+    set(H.left, 'ForegroundColor',[0 0.5 0]);
+  else
+    set(H.right,'ForegroundColor',[0 0.5 0]);
+  end
 
 end
 
@@ -1151,9 +1170,11 @@ H.data_n = size(H.S{ind}.name,1);
 if ~isempty(H.S{1}.name)  &&  ~isempty(H.S{2}.name) && H.data_sel == 2
   cat_surf_results('disp',H.S{1}.name, H.S{2}.name);
 
-  % reset counter for selected data
+  % reset counter for selected data and change font color
   H.data_sel = 0;
   H.data_n = [1 3];
+  set(H.left, 'ForegroundColor',[0.5 0 0]);
+  set(H.right,'ForegroundColor',[0.5 0 0]);
 end
 
 %==========================================================================
@@ -1313,7 +1334,7 @@ end
 function checkbox_transp(obj, event_obj)
 global H
   
-H.show_transp = get(H.transp,'Value');
+H.show_transp = ~get(H.transp,'Value');
 
 for ind=1:5
   col = getappdata(H.patch(ind),'col');
@@ -1380,7 +1401,6 @@ clim = getappdata(H.patch(1), 'clim');
 
 if H.show_neg
   if isfield(H,'thresh_value')
-  tmp = H.thresh_value
     H.clip = [true -H.thresh_value H.thresh_value];
   else
     H.clip = [true -Inf -Inf];
@@ -1496,7 +1516,7 @@ switch H.cursor_mode
         end
       else
         SPM_found = 0;
-        spm('alert!','No SPM.mat file found.\nPlease check that you have not moved your files.',1);
+        spm('alert!','No SPM.mat file found.\nPlease check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.',1);
       end
     end
     if SPM_found
