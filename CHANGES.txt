@@ -11949,6 +11949,7 @@ M       cat_surf_results.m
 
 
 ------------------------------------------------------------------------
+r1007 | gaser | 2016-09-19 01:08:03 +1000 (Mo, 19 Sep 2016) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11967,5 +11968,19 @@ M       html/cat_starting.html
 (1) Fixed: Updated html code for atlases according to DK40 atlas.
 (2) Changed: Added description for DK40 atlas to atlas_surfaces.
 (3) Changed: Added hint to center TIV as covariate.
+
 ------------------------------------------------------------------------
-r1007 | gaser | 2016-09-19 01:07:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+A       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+M       html/cat_starting.html
+
+(1) Added: Function to analyze ROI data cat_stat_analyze_ROIs.m.
+(2) Changed: GUI to add ROI analysis.
+(3) Changed: Updated comments and functionality of cat_surf_results.m.
+------------------------------------------------------------------------
+r1008 | gaser | 2016-09-19 01:17:54
