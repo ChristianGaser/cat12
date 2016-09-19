@@ -11999,6 +11999,7 @@ Changed: Updated quick starting guide wrt. to new ROI analysis.
 
 
 ------------------------------------------------------------------------
+r1010 | gaser | 2016-09-19 03:13:49 +1000 (Mo, 19 Sep 2016) | 10 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -12009,5 +12010,16 @@ M       html/cat_methods_RBM.html
 
 Changed: Updated html and manual for ROI analysis.
 
+
 ------------------------------------------------------------------------
-r1010 | gaser | 2016-09-19 03:11:58
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       html/cat_starting.html
+
+Changed: Slightly updated html and manual for ROI analysis.
+
+------------------------------------------------------------------------
+r1011 | gaser | 2016-09-19 11:48:19
