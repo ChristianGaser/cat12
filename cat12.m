@@ -201,7 +201,7 @@ for i=1:size(P,1)
           SPM.xY.VY(i).private.vertices = [];
         end
         
-        save(fullfile(swd,'SPM.mat'),'SPM');
+        save(fullfile(swd,'SPM.mat'),'SPM', spm_get_defaults('mat.format'));
       end
     end
     

@@ -12012,6 +12012,7 @@ Changed: Updated html and manual for ROI analysis.
 
 
 ------------------------------------------------------------------------
+r1011 | gaser | 2016-09-19 11:48:41 +1000 (Mo, 19 Sep 2016) | 9 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -12021,5 +12022,14 @@ M       html/cat_starting.html
 
 Changed: Slightly updated html and manual for ROI analysis.
 
+
 ------------------------------------------------------------------------
-r1011 | gaser | 2016-09-19 11:48:19
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+
+Fixed: Save SPM with default spm mat format.
+
+------------------------------------------------------------------------
+r1012 | gaser | 2016-09-20 00:14:16
