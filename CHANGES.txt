@@ -12074,6 +12074,7 @@ M       internal/cat_example_surfsmooth.m
 
 
 ------------------------------------------------------------------------
+r1015 | gaser | 2016-09-23 02:01:50 +1000 (Fr, 23 Sep 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12085,5 +12086,15 @@ M       cat_vol_groupwise_ls.m
 (2) Changed: Increased size of potential artefacts for TCA topology
     correction.
 
+
 ------------------------------------------------------------------------
-r1015 | gaser | 2016-09-23 02:01:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spmF2x.m
+M       cat_stat_spmT2x.m
+
+Fixed: Transforming T-maps were not using an extent threshold for
+surfaces (thanks to Michael Skeide for pointing to that bug).
+------------------------------------------------------------------------
+r1016 | gaser | 2016-09-23 03:04:41
