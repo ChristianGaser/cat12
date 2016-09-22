@@ -69,7 +69,22 @@
           <h4>There are blood vessels in the tissue segmentation that were classified as WM.</h4>
           <p>Correction of blood vessels with similar intensity like the WM is always problematic. Nevertheless, you can try to increase the <i>BVCstr</i> parameter.</p>
         </li>
-      <!--
+        <li>
+          <h4>I got file writing errors (under Windows).</h4>
+          <p>E.g. "Error: Permission denied. There was a problem writing to the header of ..." </p>
+          <p>We are working on this topic. Try to use simpler paths and filenames without special characters.</p>
+        </li>  
+<!--             
+        <li>
+          <h4>I got MATLAB Java-Script errors... </h4>
+          <p>Ignore them or try to restart MATLAB.</p>
+        </li>
+-->
+        <li>
+          <h4>The parallel processing failed and CAT just open empty preprocessing files or these files include multiple different strange errors ... </h4>
+          <p>You work to long with MATLAB and it may open to many files that were not closed correctly (e.g., by killing read/write routines). You have to restart SYSTEM. Until now this error only occurs in developer that kill processes with file read/write processes. </p>
+        </li>
+<!--
         <li>
           <h4>The segmentation of the subcortical structures... </h4>
           <p>Modify <i>LASstr</i> parameter.</p>
