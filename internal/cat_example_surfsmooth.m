@@ -5,7 +5,7 @@ resdir = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/tmp';
 %S = '/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cat_defaults_rd/BO/surf/lh.central.Collins.gii'; 
 %S = '/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cat_defaults_rd/BO/surf/s15mm.lh.thickness.resampled.Collins.gii'; 
 S = '/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cat_defaults_rd/BO/surf/s15mm.rh.thickness.resampled.Collins.gii'; 
-P = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_1.50mm/Template_T1_IXI555_MNI152.nii';
+%P = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_1.50mm/Template_T1_IXI555_MNI152.nii';
 
 if ~exist(resdir,'dir'), mkdir(resdir); end
 
@@ -20,7 +20,7 @@ ROI.vertex = [138036,96286,62104]; % superior temporal lobe
 ROI.xyz    = SG.vertices(ROI.vertex,:);
 sinfo = cat_surf_info(S);
 
-% -- Volume smoothing ----------------------------------------------------
+%% -- Volume smoothing ----------------------------------------------------
 % smooth volume
 V = spm_vol(P); 
 Y = zeros(V.dim,'single');
@@ -42,11 +42,10 @@ job.data_vol      = {V.fname};
 job.mapping.abs_mapping.startpoint = -0.5; 
 job.mapping.abs_mapping.endpoint   = +0.5; 
 job.mapping.abs_mapping.stepsize   = 1; 
-if sinfo.resampled, res = 'resampled.'; else res = ''; end
 job.datafieldname = sprintf('cat_example_volsurfsmooth_v%0.0fs%0.0f_vol',ROI.vertex(1),s);
 cat_surf_vol2surf(job);
 
-% -- Surface smoothing ---------------------------------------------------
+%% -- Surface smoothing ---------------------------------------------------
 % create mapping
 copyfile(S,resdir);
 copyfile(sinfo.Psphere,resdir);

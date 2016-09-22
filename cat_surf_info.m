@@ -240,7 +240,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     % if we still dont know what kind of datafile, we can try to find a
     % mesh surface
     if isempty(sinfo(i).Pmesh) 
-      if strcmp(ee,'.gii') && isempty(sinfo(i).side)
+      if strcmp(ee,'.gii') %&& isempty(sinfo(i).side)
         sinfo(i).Pmesh = sinfo(i).fname;
         sinfo(i).Pdata = sinfo(i).fname;
       else
@@ -260,10 +260,11 @@ function [varargout] = cat_surf_info(P,read,gui)
       sinfo(i).Pdata = sinfo(i).fname;
     end
     
-    [ppm,ffm,eem] = fileparts(sinfo(i).Pmesh);
-    sinfo(i).Psphere  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
+    [ppm,ffm,eem]        = fileparts(sinfo(i).Pmesh);
+    sinfo(i).Phull       = fullfile(ppm,strrep(strrep([ffm eem],'.central.','.hull.'),'.gii',''));
+    sinfo(i).Psphere     = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.'));
     sinfo(i).Pspherereg  = fullfile(ppm,strrep([ffm eem],'.central.','.sphere.reg.'));
-    sinfo(i).Pdefects = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));
+    sinfo(i).Pdefects    = fullfile(ppm,strrep([ffm eem],'.central.','.defects.'));
     if ~exist(sinfo(i).Psphere ,'file'), sinfo(i).Psphere  = ''; end
     if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end
 

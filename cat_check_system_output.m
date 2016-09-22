@@ -22,15 +22,17 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
   if status || ...
      ~isempty(strfind(result,'ERROR')) || ...
      ~isempty(strfind(result,'Segmentation fault'))
-   if nargout>0, varargout{1} = true; end
+    if nargout>0, varargout{1} = true; end
     if trerr
       error('CAT:system_error',result); 
     else
-      cat_io_cprintf('err','CAT:system_error\n');
+      cat_io_cprintf('warn','CAT:system_error:%s',sprintf(result)); 
     end
   end
   if nargin > 2
-    if debugON && ~strcmp(result,''), disp(result); end
+    if debugON && ~strcmp(result,'')
+      cat_io_cprintf('warn','CAT:system_error:%s',sprintf(result)); 
+    end
   end
 end
 
