@@ -504,12 +504,12 @@ function lazy = checklazy(job,subj)
   if job.extopts.subfolders
     roifolder    = 'label';
     surffolder   = 'surf';
-    %mrifolder    = 'mri';
+    mrifolder    = 'mri';
     reportfolder = 'report';
   else
     roifolder    = '';
     surffolder   = '';
-    %mrifolder    = '';
+    mrifolder    = '';
     reportfolder = '';
   end
 
@@ -544,8 +544,14 @@ function lazy = checklazy(job,subj)
           end
         end
       else
-        if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
-          FNok = 5; break
+        if isnumeric(job.opts.(FNopts{fni}))
+          if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+            FNok = 5; break
+          end
+        elseif ischar(job.opts.(FNopts{fni}))
+          if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})); 
+            FNok = 5; break
+          end
         end
       end
     end
@@ -618,7 +624,7 @@ function lazy = checklazy(job,subj)
     end
     
     % rois
-    if job.output.ROI && exist(fullfile(pp,roifolder),['cat_ROI_' ff '.xml'])  % miss ROI xml
+    if job.output.ROI && ~exist(fullfile(pp,roifolder,['catROI_' ff '.xml']),'file')  % miss ROI xml
       return
     end
       
@@ -632,12 +638,14 @@ function lazy = checklazy(job,subj)
            FNok = 14; break
          end
       elseif isstruct(job.vout.(FNO{fnoi}))
-        FNOS = fieldnames(job.vout.(FNO{fnoi})); 
-        for fnosi = 1:numel(FNOS)
-          if isempty(job.vout.(FNO{fnoi}).(FNOS{fnosi}))
-            continue
-          elseif ~exist(job.vout.(FNO{fnoi}).(FNOS{fnosi}){subj},'file')
-            FNok = 14; break
+        for si = numel(job.vout.(FNO{fnoi}))
+          FNOS = fieldnames(job.vout.(FNO{fnoi})); 
+          for fnosi = 1:numel(FNOS)
+            if isempty([job.vout.(FNO{fnoi})(si).(FNOS{fnosi})])
+              continue
+            elseif ~exist(job.vout.(FNO{fnoi})(si).(FNOS{fnosi}){subj},'file')
+              FNok = 14; break
+            end
           end
         end
       end

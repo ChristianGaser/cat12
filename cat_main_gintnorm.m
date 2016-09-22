@@ -206,9 +206,10 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   T3th  = [median(Ysrcr(Ycls{3}(:)>192 & Yg(:)<0.20 & Ym(:)<0.45)) ...
            median(Ysrcr(Ycls{1}(:)>192 & Yg(:)<0.20)) ...
            median(Ysrcr(Ycls{2}(:)>192 & Yg(:)<0.10))];
-  Yn    = cat_vol_localstat(Ysrc,Ycls{1}>192,2,4) + cat_vol_localstat(Ysrc,Ycls{2}>192,2,4); 
-  noise = round(cat_stat_nanmean(Yn(Yn(:)>0)) / min(abs(diff(T3th(1:3)))) * 10^6)/10^6; 
-  
+  Ynw   = cat_vol_localstat(Ysrc,Ycls{3}>192,2,4);
+  Ync   = cat_vol_localstat(Ysrc,Ycls{2}>192,2,4); 
+  noise = round(min(cat_stat_nanmean(Ynw(Ynw(:)>0)),cat_stat_nanmean(Ync(Ync(:)>0))) / min(abs(diff(T3th(1:3)))) * 10^6)/10^6; 
+  clear Ynw Ync;
  
   if debug==2
     [pth,nam] = spm_fileparts(res.image0(1).fname);
