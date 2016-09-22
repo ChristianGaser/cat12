@@ -1,59 +1,77 @@
 function varargout = cat_tst_qa_cleaner(data,opt)
 %% _____________________________________________________________________
-%  Estimate quality grades of given rating of one (or more) protocolls
-%  with 2 to 6 grads to seperate passed, (unassignable) and failed 
-%  images, by finding the first peak in the image quality histgram and 
-%  using its width (standard deviation) in a limited range. 
-%  The range can be variated by opt.cf with lower values for harder and
-%  higher values for softer thresholds (more passed images).
+%  Estimate quality grades of given rating of one (or more) protocols
+%  with 2 to 6 grads to separate passed, (unassignable) and failed 
+%  images, by finding the first peak in the image quality histogram  
+%  and using its width (standard deviation) in a limited range. 
+%  If multiple protocols are used, than use the site variable opt.site 
+%  and use the site depending output rths.
 %
-%  This tool is still in development:
-%   * the combination of different sites is not final
-%   * the bar plot is better, but does not work correctly (more than to 
-%     bars will lead to problems in the axis scaling)
+%  The passed range can be variated by opt.cf with lower values for harder 
+%  and higher values for softer thresholds (more passed images), where 
+%  opt.cf=1, describes a range that is similar to about 1% BWP noise that 
+%  is equal to 5 rps.
+%  ROC evaluation showed that opt.cf=0.72 allows the best separation of 
+%  images without and with artifacts, but if the majority of your data 
+%  include light artifacts (e.g., by movements in young children) that 
+%  a softer weighing, e.g., opt.cf=2, is preferable (maximum is 4). 
+%
+%  Use the selftest with randomly generated data to get a first impression:
+%    cat_tst_qa_cleaner('test')
+% _____________________________________________________________________
+%
+%  This tool is still in development / undert test:
+%   * the combination of different sites is not finished
 %   * multiside output required a 'stacked' output
 %
-%  [Pth,Fth,markth,markths,marthsc] = cat_tst_qa_remover(data[,opt])
+%  [Pth,rth,sq,rths,rthsc,sqs] = cat_tst_qa_remover(data[,opt])
 %
-%    Pth      .. threshold for passed images
-%    Fth      .. threshold for failed images
-%    markth   .. thresholds between grads
-%    markths  .. thresholds between grads of each input
-%                 - site depending
-%    markthsc .. thresholds between grads of each input
-%                 - site depending, global corrected
+%    Pth      .. global threshold for passed images 
+%                (for odd grades this is in the middle of the unassignable)
+%    rth      .. all global threshold(s) between grads
+%    sq       .. estimated first peak and its std, where the std depend on
+%                the number of grades!
+%    rths     .. site depending thresholds between grads of each input 
+%    rthsc    .. site depending thresholds between grads of each input 
+%                (global corrected, removed further low quality data)
+%    sqs      .. site depending first peaks and stds of passed data 
+%
 %    data     .. array of quality ratings or xml-files
 %    opt      .. option structure
-%     .grads  .. number of grads
-%     .model  .. model to estimate thresholds
-%     .cf     .. factor for harder/softer thresholds (1=defaults)
+%     .grads  .. number of grads (2:6, default=6, see below)
+%     .cf     .. factor for harder/softer thresholds (defaults=0.72)
 %     .figure .. display histogramm with colored ranges of grads
+%                 1 - use current figure
+%                 2 - create new figure (default)
+%                 3 - use one test figure (default in the selftest)
+% _____________________________________________________________________
 %
-%  2 grads:
-%    P   passed
-%    F   failed
-%  3 grads:
-%    P   passed
-%    U   unassignable
-%    F   failed
-%  4 grads:
-%    P+  clear passed 
-%    P-  just passed
-%    F+  just failed
-%    F-  clear failed
-%  5 grads:
-%    P+  clear passed 
-%    P-  just passed
-%    U   unassignable
-%    F+  just failed
-%    F-  clear failed
-%  6 grads (default):
-%    P+  clear passed 
-%    P   passed 
-%    P-  just passed
-%    F+  just failed
-%    F   failed
-%    F-  clear failed
+%  Grades:
+%    2 grads:
+%      P   passed
+%      F   failed
+%    3 grads:
+%      P   passed
+%      U   unassignable
+%      F   failed
+%    4 grads:
+%      P+  clear passed 
+%      P-  just passed
+%      F+  just failed
+%      F-  clear failed
+%    5 grads:
+%      P+  clear passed 
+%      P-  just passed
+%      U   unassignable
+%      F+  just failed
+%      F-  clear failed
+%    6 grads (default):
+%      P+  clear passed 
+%      P   passed 
+%      P-  just passed
+%      F+  just failed
+%      F   failed
+%      F-  clear failed
 %
 % ______________________________________________________________________
 % Robert Dahnke 
@@ -65,35 +83,44 @@ function varargout = cat_tst_qa_cleaner(data,opt)
 
   clear th; 
   if ~exist('opt','var'), opt = struct(); end
-  def.cf        = 1;  % normalization factor for rating 
-  def.grads     = 6;  % number of grads (default = 6)
-  def.model     = 2;  % model used for rating
-  def.figure    = 2;  % figure=2 for new/own figure
-  def.smooth    = 0; 
-  def.siterf    = 1000000; % we
-  def.siteavgperc = [0.10 0.90]; 
+  def.cf        = 0.72;                 % normalization factor for rating 
+  def.grads     = 6;                    % number of grads (default = 6)
+  def.model     = 1;                    % model used for rating
+  def.figure    = 2;                    % figure=2 for new/own figure
+  def.smooth    = 0;                    % smoothing of output data
+  def.siterf    = 1000000;              % round factor to identify similar resolution level 
+  def.siteavgperc = [0.10 0.90];        % ?
   opt = cat_io_checkinopt(opt,def); 
-  opt.cf = max(0,min(10,opt.cf)); 
+  opt.cf = max( 0 , min( 4 , opt.cf )); % limit of cf
   
   % test options
   %opt.model = 2;
   %opt.grads = 6;
   
-  
   % if no intput is given use SPM select to get some xml-files
   if ~exist('data','var') || isempty(data)
     data = cellstr(spm_select(inf,'XML','select qa XML-files',{},pwd,'^cat_.*')); 
-    opt.figure = 2;
+  elseif ischar(data)
+    data = cellstr(data);
   end
-  if isempty(data), return; end
-  if iscell(data)
+  if isempty(data) || (iscell(data) && all(cellfun('isempty',data)))
+    if nargout>=1, varargout{1} = 3; end
+    if nargout>=2, varargout{2} = 3; end
+    if nargout>=3, varargout{3} = [2.5 0.5]; end
+    if nargout>=4, varargout{4} = 3*ones(size(data)); end
+    if nargout>=5, varargout{5} = 3*ones(size(data)); end
+    if nargout>=6, varargout{6} = repmat([2.5 0.5],numel(data),1); end
+
+    return;
+  end
+  if iscell(data) && ~strcmp(data{1},'test')
     fprintf('Load XML data');
     P = data; 
     xml = cat_io_xml(data,struct(),'read',1); clear data; 
     for di=1:numel(xml)
       opt.site(di,1) = xml(di).qualityratings.res_RMS; 
       data(di,1)     = xml(di).qualityratings.NCR; 
-    end
+    end,
   end
   
 
@@ -113,20 +140,24 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     sites    = unique(opt.site); 
     markth   = zeros(numel(sites),opt.grads-1); 
     markths  = zeros(numel(data),opt.grads-1); 
+    siteth   = zeros(numel(data),2); 
     for si=1:numel(sites)
       sdatai = find(opt.site==sites(si));
       opts = opt; 
       opts = rmfield(opts,'site');
       opts.figure = 0; 
-      [Sth,Fth,markth(si,:) ] = cat_tst_qa_cleaner(data(sdatai),opts);
+      [Sth,markth(si,:),out{1:4}] = cat_tst_qa_cleaner(data(sdatai),opts); %#ok<ASGLU>
       markths(sdatai,:) = repmat(markth(si,:),numel(sdatai),1); 
+      siteth(sdatai,:)  = out{4}; 
     end
     % estimate global threshold
     markthss = sortrows(markth);
-    th = mean(markthss(max(1,min(numel(sites),round(numel(sites)*opt.siteavgperc(1)))):...
-                       max(1,min(numel(sites),round(numel(sites)*opt.siteavgperc(2)))),:),1); 
+    th = cat_stat_nanmean(markthss(max(1,min(numel(sites),round(numel(sites)*opt.siteavgperc(1)))):...
+                                   max(1,min(numel(sites),round(numel(sites)*opt.siteavgperc(2)))),:),1); 
+    sd  = out{3}; 
+    thx = out{4}; 
     % modify local rating based on the global one                 
-    markths2=markths;
+    markths2 = markths;
     markths2 = min(markths2,1.2*repmat(th,size(markths2,1),1)); % higher thresholds even for sides with low rating 
     markths2 = max(markths2,0.8*repmat(th,size(markths2,1),1)); % lower  thresholds even for sides with high rating 
     d  = data; 
@@ -136,15 +167,18 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     %  Simulate data, if no data is given by several normal distributed
     %  random numbers.
     %  -----------------------------------------------------------------
-    if exist('data','var')
+    if exist('data','var') && ~(iscell(data) && strcmp(data{1},'test'))
       d = data; 
       if numel(d)==0, 
         if nargout>=1, varargout{1} = nan; end
-        if nargout>=2, varargout{2} = nan; end
-        if nargout>=3, varargout{3} = nan(1,opt.grads); end
+        if nargout>=2, varargout{2} = nan(1,opt.grads); end
+        if nargout>=3, varargout{3} = nan(1,2); end
+        if nargout>=4, varargout{4} = nan(size(data)); end
+        if nargout>=5, varargout{5} = nan(size(data)); end
+        if nargout>=6, varargout{6} = nan(size(data)); end
         return;
       end
-    else
+    elseif iscell(data) && strcmp(data{1},'test')
       % Testcases with different quality ratings
       scans      = 100; % number of scans (per site) for simulation
       testcase   = round(rand(1)*10);
@@ -211,6 +245,9 @@ function varargout = cat_tst_qa_cleaner(data,opt)
       % remove high quality outlier and set them to normal
       cor = max(1,median(d)-std(d)/2);
       md= d<(cor); d(md) = cor + 0.05*randn(1,sum(md));
+      
+      % set selftest figure
+      opt.figure = 3; 
     end
 
     
@@ -226,84 +263,66 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   %  of the rating scale in +,o, and - (e.g. B+,B,B-) we got a subrange 
   %  of 3.33 rps (1/3 mark points) that gives some kind of upper limit.
   %  -------------------------------------------------------------------
-    th = zeros(1,opt.grads-1);
+    thx = nan; sd = nan; th = zeros(1,opt.grads-1); 
     switch opt.model
       case 0
         % only global thresholding ... 
         % this is just to use the color bar output 
-        th = 1.5:1:100;
+        thx = 3; 
+        sd  = 1; 
+        th  = 1.5:1:100;
         th(6:end) = []; 
-      case 1
-        % ok
-        % first peak by kmeans
-        % sd by difference between peak and first
-        hx     = hist(d,0.5:1:5.5); peaks = sum(hx>(max(hx)/5))*3;
-        Qfirst = kmeans3D(d(1:min(numel(d),5)),peaks); 
-        Qpeak  = kmeans3D(d(d<Qfirst(1) * 1.2),1); 
-        sd     = max(1/12,min(1/6,Qpeak - Qfirst(1)));                  % difference between peak and first
-        sd     = sd * opt.cf;
-        th(1)  = max(Qfirst(1) + 1*sd,Qpeak+sd);
-        for i=2:opt.grads-1
-          th(i) = th(i-1) + (2+i) * sd;
-        end
-        if opt.grads==2
-          th(1) = th(1) + (3) * sd;
-        end
-      case 2 
-        %% ok
+      case 1 
         % kmeans model:
-        % estimate peaks based on the histogram
-        % use the first peak and the average peak width to create the raging 
-        hx = hist(d,0.5:1:5.5); peaks = sum(hx>(max(hx)/5))*3;
+        % * estimate peaks based on the histogram
+        % * mix the first and second peak until it fits to 30% of the data 
+        %   or until the number of loops is similar the number of peaks 
+        % * use the std give by one BWP noise level (0.5) to describe the 
+        %   variance the passed interval.
+        
+        hx = hist(d,0.5:1:5.5);
+        peaks = sum(hx>(max(hx)/5))*3;
         [thx,sdx] = kmeans3D(d,peaks); sdx = sdx./thx;
-        for i=1:peaks/2
-          if sum(d<thx(i))/numel(d) < 0.20
-            thx(1) = []; 
-            sdx(1) = []; 
+        for i=1:peaks
+          if sum(d<thx(i))/numel(d) < 0.3
+            thx(1) = cat_stat_nanmean(thx(1:2));
+            sdx(1) = cat_stat_nanstd(d(d<thx(1)));
           end
         end
-        sd = mean(sdx(1:min(3,numel(sdx))))*2;
-        sd = min(1/3,max(1/6,sd)); sd = sd*3/4;
-        sd = sd * opt.cf;
-        th(1) = mean([thx(1) + sd(1),min(thx(1) + sd(1)*1.5,thx(2) + sd(1))]); %-sd;%,thx(3)-sd(1)]); 
-        for i=2:opt.grads-1
+        sd    = 0.25 / (opt.grads/2) * opt.cf; % 0.5 = 1% BWP noise
+        th(1) = thx(1) - sdx(1) + 2*sd(1); %- mean(sdx(1:min(3,numel(sdx)))) 
+        for i = 2:opt.grads-1
+          th(i) = th(i-1) + 2*sd(1); % 
+        end
+      case 2
+        % similar to case 1, but with std optimization based on the data 
+        % ... surprisingly the simple model 1 works better
+        
+        hx = hist(d,0.5:1:5.5); 
+        %for i=1:1, hx(2:end-1) = cat_stat_nanmean(cat(1,hx(1:end-2),hx(2:end-1),hx(3:end)),1); end
+        peaks = sum(hx>(max(hx)/5))*3;
+        [thx,sdx] = kmeans3D(d,peaks); sdx = sdx./thx;
+        for i=1:peaks
+          %if numel(thx)>i && sum(d<thx(i))/numel(d) < 0.05
+          %  thx(1) = []; sdx(1) = [];
+          if sum(d<thx(i))/numel(d) < 0.3 %numel(thx)>i && 
+            thx(1) = cat_stat_nanmean(thx(1:2)); 
+            sdx(1) = cat_stat_nanstd(d(d<thx(1)));
+          end
+        end
+        sdx(1) = cat_stat_nanstd(d(d<thx(1)));
+        [thx,sdx] = kmeans3D(d(d<=(max([min(d),thx(1)+sdx(1)]))),3); thx=thx(2); sdx=sdx(2);  %sdx = sdx./thx;
+        sd    = min(1/3,max(1/6,sdx(1))) / (opt.grads/2) * opt.cf; % 0.5 = 1% BWP noise*16
+        th(1) = thx(1) - sdx(1) + 2*sd(1);
+        for i = 2:opt.grads-1
           th(i) = th(i-1) + 2*sd(1); % 2*2/3*
         end
-        if opt.grads==2
-          th(1) = th(1) +  2*sd(1);
-        end
-      case 3
-        % naja...
-        ds   = sort(d); 
-        for i=1, ds(2:end-1) = mean(cat(1,ds(1:end-2),ds(2:end-1),ds(3:end)),1); end
-
-        mds  = max(1,round(numel(ds)*0.05)); 
-        thx1 = kmeans3D(ds( mds : find(ds>(ds(mds)+1),1,'first')),3); 
-        thx2 = kmeans3D(ds( min(numel(ds)-2,find(ds>(ds(mds)+1),1,'first')) : ...
-          min(numel(ds),find(ds>max(max(ds)-1,(ds(mds)+1)),1,'first'))),3); 
-        switch opt.grads
-          case 2
-            th(1) = thx1(2) + max(0.2,min(1,(thx1(2)-ds(mds))));
-          case 3
-            th(1) = thx1(2) + max(0.2,min(1,(thx1(2)-ds(mds))));
-            th(3) = thx2(1) + max(0.2,min(1,(thx2(1)-ds(mds))));
-          case 4
-            th(1) = thx1(1) + max(0.2,min(1,(thx1(1)-ds(mds))));
-            th(2) = thx1(2) + max(0.2,min(1,(thx1(2)-ds(mds))));
-            th(3) = thx2(1) + max(0.2,min(1,(thx2(1)-ds(mds))));
-          case 5
-            th(1) = thx1(1) + max(0.2,min(1,(thx1(1)-ds(mds))));
-            th(2) = thx1(2) + max(0.2,min(1,(thx1(2)-ds(mds))));
-            th(3) = thx2(1) + max(0.2,min(1,(thx2(1)-ds(mds))));
-            th(4) = thx2(2) + max(0.2,min(1,(thx2(2)-ds(mds))));
-          case 6
-            th(1) = thx1(1) + max(0.2,min(1,(thx1(1)-ds(mds))));
-            th(2) = thx1(2) + max(0.2,min(1,(thx1(2)-ds(mds))));
-            th(3) = thx1(3) + max(0.2,min(1,(thx2(3)-ds(mds))));
-            th(4) = thx2(1) + max(0.2,min(1,(thx2(1)-ds(mds))));
-            th(5) = thx2(2) + max(0.2,min(1,(thx2(2)-ds(mds))));
-        end   
+      
     end
+    
+    markths  = repmat(mean(th(floor(opt.grads/2):ceil(opt.grads/2))),size(data));
+    markths2 = markths;
+    siteth   = repmat([thx(1) sd],numel(data),1); 
   end
   
   
@@ -314,16 +333,19 @@ function varargout = cat_tst_qa_cleaner(data,opt)
 %  of images in each group.
 %  ---------------------------------------------------------------------
   if opt.figure
-    if opt.figure>1
-      f=figure;
-      box on;
+    if opt.figure==2
+      f = figure;
       set(f,'color','w')
+    elseif opt.figure==3
+      f = findobj('type','figure','name','qa_cleaner_test');
+      if isempty(f), figure('name','qa_cleaner_test'); else figure(f(1)); clf(f(1)); end
     end
+    box on;
     
     %figure
     ss = 0.05; 
     [h,r]  = hist(d,0.5:ss:10.5); 
-    for i=1:opt.smooth, h(2:end-1) = mean(cat(1,h(1:end-2),h(2:end-1),h(3:end)),1); end
+    for i=1:opt.smooth, h(2:end-1) = cat_stat_nanmean(cat(1,h(1:end-2),h(2:end-1),h(3:end)),1); end
     sh = 1; %sum(h);
     
     % background histogram (all data)
@@ -420,7 +442,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
     
     % colored main grads
     FS = get(gca,'Fontsize')*1.3;
-    set(gca,'XTick',0.5:1:6.5,'XTickLabel',{'100','90','80','70','60','50','45'},'TickLength',[0.02 0.02]);
+    set(gca,'XTick',0.5:1:6.5,'XTickLabel',{'100','90','80','70','60','50','40'},'TickLength',[0.02 0.02]);
     % further color axis objects...
     axA = copyobj(gca,gcf); axB = copyobj(axA,gcf); axC = copyobj(gca,gcf); 
     axD = copyobj(gca,gcf); axE = copyobj(gca,gcf); axF = copyobj(gca,gcf);
@@ -485,9 +507,10 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   
   
   %% create output
-  if nargout>=1, varargout{1} = th(floor(opt.grads/2)); end
-  if nargout>=2, varargout{2} = th(ceil(opt.grads/2)); end
-  if nargout>=3, varargout{3} = th; end
-  if nargout>=4 && isfield(opt,'site'), varargout{4} = markths;  end
-  if nargout>=5 && isfield(opt,'site'), varargout{5} = markths2; end
+  if nargout>=1, varargout{1} = mean(th(floor(opt.grads/2):ceil(opt.grads/2))); end
+  if nargout>=2, varargout{2} = th; end
+  if nargout>=3, varargout{3} = [thx(1) sd(1)]; end
+  if nargout>=4, varargout{4} = markths;  end
+  if nargout>=5, varargout{5} = markths2; end
+  if nargout>=6, varargout{6} = siteth; end
 end

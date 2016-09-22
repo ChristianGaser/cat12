@@ -12034,6 +12034,7 @@ Fixed: Save SPM with default spm mat format.
 
 
 ------------------------------------------------------------------------
+r1013 | dahnke | 2016-09-22 13:49:13 +0200 (Do, 22 Sep 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12051,5 +12052,24 @@ M       internal/cat_example_surfsmooth.m
 (4)  Changed:   Updated internal "cat_tst_qa_cleaner".
 (5)  Changed:   Updated "cat_FAQ.html".
 
+
 ------------------------------------------------------------------------
-r1013 | dahnke | 2016-09-22 13:48:58
+
+Changed paths:
+M       CHANGES.txt
+M       cat_check_system_output.m
+M       cat_io_FreeSurfer.m
+M       cat_surf_info.m
+M       cat_surf_smooth.m
+M       cat_tst_qa_cleaner.m
+M       internal/cat_example_surfsmooth.m
+
+(1)  Fixed:      Corrected output of "cat_check_system_output". 
+(2)  Fixed:      Different processing for resampled data in "cat_surf_smooth".          
+(3)  Changed:    Updated help, parameter, and functions of "cat_tst_qa_cleaner". 
+(4)  Changed:    Updated "cat_surf_info" for hull surfaces (of GI measures).
+(5)  Changed:    Updated help, error messages, and "gii2fs" and "fs2gii" 
+                 subfunctions in "cat_io_FreeSurfer".
+
+------------------------------------------------------------------------
+r1014 | dahnke | 2016-09-22 16:28:02
