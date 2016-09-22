@@ -269,14 +269,14 @@ for i=1:size(P,1)
 
         %-Calculate extent threshold filtering
         %-------------------------------------------------------------------
-        if  ~spm_mesh_detect(xCon(Ic(1)).Vspm)
-            A = spm_clusters(XYZ);
-        else
+        if  isfield(SPM.xVol,'G') % mesh detected?
             T = false(SPM.xVol.DIM');
             T(XYZ(1,:)) = true;
             G = export(gifti(SPM.xVol.G),'patch');
             A = spm_mesh_clusters(G,T)';
             A = A(XYZ(1,:));
+        else
+            A = spm_clusters(XYZ);
         end
 
         if noniso
