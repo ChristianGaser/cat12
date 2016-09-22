@@ -295,10 +295,10 @@ switch lower(action)
               cd(swd1);
               
               dat = struct('XYZ', v.XYZ,...
-                        't',   v.Z',...
-                        'mat', v.M,...
-                        'dim', v.DIM,...
-                        'dat', v.Z');
+                             't', v.Z',...
+                           'mat', v.M,...
+                           'dim', v.DIM,...
+                           'dat', v.Z');
               
               H.S{ind}.info = cat_surf_info(H.S{ind}.name,0); 
               g = gifti(H.S{ind}.info.Pmesh);
@@ -1455,7 +1455,7 @@ end
 %==========================================================================
 function H = getHandles(H)
 if ~nargin || isempty(H), H = gca; end
-if ishandle(H) && ~isappdata(H,'handles')
+if ishandle(H) & ~isappdata(H,'handles')
     a = H; clear H;
     H.axis     = a;
     H.figure(1)   = ancestor(H.axis,'figure');
