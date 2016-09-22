@@ -29,7 +29,7 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 %
 %   [P] = cat_io_FreeSurfer('fs2gii',fname);
 %   [P] = cat_io_FreeSurfer('fs2gii',...
-%           struct('data',{fnames},'delete',[0|1]));
+%           struct('data',{fnames},'cdata',{cfnames},'delete',[0|1]));
 % ______________________________________________________________________
 %
 %   Robert Dahnke (robert.dahnke@uni-jena.de)
@@ -39,8 +39,9 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 % ______________________________________________________________________
 % $Id$ 
 
+  if ~exist('action','var'), help cat_io_FreeSurfer; return; end
   if nargin==0, varargin{1} = struct(); end
-
+  
   switch action
     %case 'FSatlas2cat'
     %  varargout{1} = cat_surf_FSannotation2CAT(varargin{1});
@@ -49,7 +50,8 @@ function varargout=cat_io_FreeSurfer(action,varargin)
         varargout{1} = gii2fs(varargin{1}); 
       elseif nargout==2
         [varargout{1},varargout{2}] = gii2fs(varargin{1}); 
-        gii2fs(varargin{1})
+      else
+        gii2fs(varargin{1})  
       end
     case 'fs2gii'
       if nargout>0
@@ -94,11 +96,26 @@ function job = getjob(job0,sel)
     job.data = spm_select(inf,'any','Select surface','','',sel);
   end
   if isempty(job.data), return; end
-  job.data = cellstr(job.data); 
+  
+  job.data  = cellstr(job.data);
+  if isfield(job,'cdata'), job.cdata = cellstr(job.cdata); end
+  if isfield(job,'cdata') && isfield(job,'data') && ...
+      numel(job.cdata) ~= numel(job.data)
+    error('cat_io_FreeSurfer:getjob:data','Number of surface meshes and textures have to be equivalent'); 
+  end
+  
+  for si=1:numel(job.data)
+    if isfield(job,'cdata')
+      [pp,ff,ee] = spm_fileparts(job.cdata{si});
+    else
+      [pp,ff,ee] = spm_fileparts(job.data{si});
+    end
+    def.fname{si} = strrep(fullfile(pp,[ff ee]),'.gii',''); 
+  end
   
   def.verb    = 0; 
   def.delete  = 0; 
-  job.merge   = 0;
+  def.merge   = 0;
   
   job = cat_io_checkinopt(job,def);
 end
@@ -114,7 +131,7 @@ function varargout = gii2fs(varargin)
     
     CS = gifti(job.data{si});
     if isfield(CS,'vertices') && isfield(CS,'faces')
-      surfname{si} =  cat_surf_rename(sinfo,'dataname','surface');
+      surfname{si} = char(cat_surf_rename(sinfo,'dataname','surface','ee',''));
       
       write_surf(char(surfname{si}), CS.vertices , CS.faces);
     else
@@ -143,21 +160,31 @@ end
 
 function varargout = fs2gii(varargin)
 % convert FreeSurfer surfaces meshes/data files to a gifti
-  job = getjob(varargin,'[lr]h.*');
+  job = getjob(varargin{1},'[lr]h.*');
   
-  fname = cell(size(job.data,1),1);
-  for di=1:numel(job.data)
-    [pp,ff] = spm_fileparts(job.data{si});
-  
-    fname{di} = fullfile(pp,ff); 
-    try
-      cdata = read_curv(varargin{1});       
-      save(fname{di},gifti(struct('cdata',cdata))); 
-    catch
-      [vertices,faces] = read_surf(varargin{1}); 
-      
-      save(fname{di},gifti(struct('vertices',vertices,'faces',faces))); 
+  for si=1:numel(job.data)
+    [pp,ff,ee] = spm_fileparts(job.data{si}); %#ok<ASGLU>
+    switch ee
+      case '.gii'
+        S = gifti(job.data{si});
+      otherwise
+        if isfield(job,'cdata') 
+          [vertices,faces] = read_surf(job.data); 
+          S.vertices = vertices; 
+          S.faces    = faces; 
+        else
+          try %#ok<TRYNC>
+            S.cdata = read_curv(job.cdata{si});   
+          end
+        end
+    end  
+    
+    if isfield(job,'cdata') 
+      S.cdata = read_curv(job.cdata{si});     
     end
+    
+    job.fname{si} = [job.fname{si} '.gii'];
+    save(gifti(S),job.fname{si}); 
     
     if job.delete
       delete(job.data{si});
@@ -165,7 +192,7 @@ function varargout = fs2gii(varargin)
   end
   
   if nargout>0
-    varargout{1} = fname{di};
+    varargout{1} = job.fname;
   end
 end
 
@@ -556,10 +583,12 @@ function [curv, fnum] = read_curv(fname)
 %curv = all(5, :)' ;
 
 % open it as a big-endian file
+if ~exist(fname,'file')
+  error('cat_io_FreeSurfer:read_curv','Curvature file "%s" does not exist!\n', fname);
+end
 fid = fopen(fname, 'r', 'b') ;
 if (fid < 0)
-	 str = sprintf('could not open curvature file %s', fname) ;
-	 error(str) ;
+	 error('cat_io_FreeSurfer:read_curv','Could not open curvature file "%s"!\n', fname);
 end
 vnum = fread3(fid) ;
 NEW_VERSION_MAGIC_NUMBER = 16777215;
