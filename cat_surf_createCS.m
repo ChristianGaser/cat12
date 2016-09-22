@@ -258,7 +258,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       if isfield(VN,'pinfo'), VN = rmfield(VN,'pinfo'); end
       if isfield(VN,'dat'), VN = rmfield(VN,'dat'); end
       spm_write_vol(VN,255*(Yppi>th_initial));
-      cmd = sprintf('tca -m 2500 -n 0 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
+      cmd = sprintf('tca -m 10000 -n 0 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
  
       % load topology corrected image in the correct orientation

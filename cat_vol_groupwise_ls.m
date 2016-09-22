@@ -272,8 +272,8 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
 
                     b     = f-mu(:,:,m).*ebias;
 
-                    if (level == 1) && use_brainmask
-                      msk = (isfinite(b) & (brainmask(:,:,m) > 0.25));
+                    if (level == 1) && use_brainmask && ~isempty(brainmask)
+                      msk = isfinite(b) & (brainmask(:,:,m) > 0.25);
                     else
                       msk = isfinite(b);
                     end
