@@ -448,7 +448,7 @@ function cat_run_job(job,tpm,subj)
         end
         
         % add and write bias corrected (, skull-stripped) image
-        if app.bias==0
+        if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and will cause errors in the BWP cerebellum, if used further! 
             Ymc = single(max(bth,min(4*th,Ysrc))); % just limit the image intensities
         else
             Ymc = single(max(bth,min(4*th,Ym * th))); % use the bias corrected image
