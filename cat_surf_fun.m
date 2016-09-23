@@ -3,10 +3,18 @@ function varargout = cat_surf_fun(action,S,varargin)
 % 
 % varargout = cat_surf_fun(action,S)
 %
+%   D   = cat_surf_fun('dist',S);     % Estimate the distance between the 
+%                                       vertices of the faces of S.
 %   A   = cat_surf_fun('area',S);     % estimate surface area (faces)
 %   V   = cat_surf_F2V(S,F);          % map facedata to vertices
 %   HS  = cat_surf_fun('hull',S);     % estimate (optimized) hull surface
-%   V   = cat_surf_surf2vol(S,varargin{1}); % render surface in a volume
+%   V   = cat_surf_fun('surf2vol',S,varargin{1}); % render surface in a volume
+%   E   = cat_surf_fun('graph2edge',T); % get edges of a triangulation T
+%
+%  * cdata mapping:
+%    Mapping of textures from S2 to S1.
+%    C   = cat_surf_fun('cdatamapping',S1,S2,cdata[,opt]); 
+%
 % ______________________________________________________________________
 % Robert Dahnke 
 % Structural Brain Mapping Group
@@ -15,7 +23,7 @@ function varargout = cat_surf_fun(action,S,varargin)
 % $Id$ 
 
   switch action
-    case 'distance'
+    case {'dist','distance'}
       varargout{1} = cat_surf_dist(S);
     case 'area'
       varargout{1} = cat_surf_area(S);
@@ -36,9 +44,206 @@ function varargout = cat_surf_fun(action,S,varargin)
       end
     case 'graph2edge'
       varargout{1} = cat_surf_edges(S); 
-    case 'surfaceNeighborVertices' 
+    case 'cdatamappingtst'
+      cat_surf_cdatamapping;
+    case 'cdatamapping' 
+      if nargin<3, varargin{3} = ''; end
+      if nargin<4, varargin{4} = struct(); end
+      if nargout>1
+        [varargout{1},varargout{2}] = cat_surf_cdatamapping(S,varargin{1},varargin{2},varargin{3});
+      else
+        varargout{1} = cat_surf_cdatamapping(S,varargin{1},varargin{2},varargin{3});
+      end  
   end
     
+end
+function cat_surf_cdatamappingtst
+
+%% Testdata
+   Psubcentral  = ['/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cg_vbm_defaults_template/template_NKI/'...
+     'surf/lh.central.NKI_HC_NKI_1013090_T1_SD000000-RS00.gii'];
+   PsubsphereA  = strrep(Psubcentral,'central','sphere.reg');              
+   Psubthick    = strrep(strrep(Psubcentral,'central','thickness'),'.gii','');               
+   Psubthickres = strrep(strrep(Psubcentral,'central','thickness.resampled'),'lh.','s15mm.lh.'); 
+   Psubtmp      = strrep(Psubcentral,'central','tmp'); 
+   Pavgtmp      = strrep(strrep(Psubcentral,'central','tmp.resampled'),'lh.','s15mm.lh.'); 
+ 
+   Pavgcentral  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.central.freesurfer.gii'; 
+   PavgsphereA  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.sphere.freesurfer.gii'; 
+   PavgDKT40    = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/atlases_surfaces/lh.aparc_DKT40JT.freesurfer.annot';
+   
+   
+%% Test 1 - avg2sub - ok
+   Ssub = gifti(PsubsphereA);
+   Savg = gifti(PavgsphereA); 
+   [vertices, label, colortable]  = cat_io_FreeSurfer('read_annotation',PavgDKT40); 
+   Savg.cdata = label; 
+   
+   S3 = gifti(Psubcentral); 
+   S3.cdata = cat_surf_fun('cdatamapping',Ssub,Savg,'nearest');
+   save(gifti(S3),Psubtmp);
+   
+%% Test2 - sub2avg - ok
+   Savg = gifti(PavgsphereA); 
+   Ssub = gifti(PsubsphereA);
+   %Ssub.cdata = cat_io_FreeSurfer('read_surf_data',Psubthick); 
+   Ssub.cdata = cat_surf_fun('area',gifti(Psubcentral));
+   
+   S3 = gifti(Psubthickres); 
+   mapping = {'directed'}; %,'undirected'}; %'nearest',
+   for mi = 1:numel(mapping)
+     S3.cdata  = cat_surf_fun('cdatamapping',Savg,Ssub,mapping{mi},1);
+     S3.cdata  = spm_mesh_smooth(struct('vertices',S3.vertices,'faces',S3.faces),double(S3.cdata'),5);
+     fprintf('mapping = %10s: A(sub) = %0.2f vs. A(avg) = %0.2f\n',mapping{mi},sum(Ssub.cdata(:)),sum(S3.cdata(:))); 
+     save(gifti(S3),Pavgtmp); cat_surf_display(Pavgtmp)
+   end
+   
+end
+% nearest connection between to surfaces
+function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt) 
+  if ischar(S1), P1 = S1; S1 = gifti(S1); end
+  if ischar(S2), P2 = S2; S2 = gifti(S2); end
+  if ischar(cdata),
+    Pcdata = cdata;
+    [pp,ff,ee] = spm_fileparts(cdata); 
+    switch ee
+      case '.annot'
+        [vertices, cdata]  = cat_io_FreeSurfer('read_annotation',Pcdata); 
+        clear vertices
+      case '.gii'
+        Scdata = gifti(S2); 
+        if isfield(Scdata,'cdata')
+          cdata = SX.cdata;
+        else
+          error('noTexture','No texture found in "%s"!\n',Pcdata);
+        end
+      otherwise
+        cdata =  cat_io_FreeSurfer('read_surf_data',Pcdata);   
+    end
+  end
+  
+  if ~exist('cdata','var') || isempty(cdata)
+    if isfield(S2,'cdata'), cdata = S2.cdata; end
+  end
+  
+  if ~exist('opt','var'), opt = struct(); end
+  def.method = 'nearest';
+  def.verb   = 0; 
+  def.smooth = 0; 
+  opt        = cat_io_checkinopt(opt,def);
+  
+  if opt.verb, stime1 = cat_io_cmd(sprintf('Data-mapping (%s)',method)); fprintf('\n'); end
+  
+  % prepare vertices
+  S1.vertices = S1.vertices ./ repmat(max(S1.vertices),size(S1.vertices,1),1)*1.1; % *100 
+  S2.vertices = S2.vertices ./ repmat(max(S2.vertices),size(S2.vertices,1),1); 
+  verticesS1  = double(S1.vertices - repmat(mean(S1.vertices),size(S1.vertices,1),1)); 
+  verticesS2  = double(S2.vertices - repmat(mean(S2.vertices),size(S2.vertices,1),1)); 
+  
+  
+  % estimate mapping
+  switch opt.method
+    case {'nearest'}
+      [varargout{2},varargout{3}] = dsearchn([verticesS2;inf(1,3)],double([S2.faces ones(size(S2.faces,1),1)*(size(S2.vertices,1)+1)]),verticesS1);
+      varargout{1} = cdata(varargout{2}); 
+    case {'undirected','directed'}
+      %% use the surface as delauny graph
+      switch opt.method 
+        case 'directed'
+          if opt.verb,  stime = cat_io_cmd('  Edge-Estimation (Nearest)','g5',''); end
+          nextS2fromS1 = dsearchn([verticesS2;inf(1,3)],double([S2.faces ones(size(S2.faces,1),1)*(size(S2.vertices,1)+1)]),verticesS1);
+          nextS1fromS2 = dsearchn([verticesS1;inf(1,3)],double([S1.faces ones(size(S1.faces,1),1)*(size(S1.vertices,1)+1)]),verticesS2);
+          tmp = nextS1fromS2; nextS1fromS2 = nextS2fromS1; nextS2fromS1 = tmp;
+          nearestedges = [ (1:numel(nextS2fromS1))', nextS2fromS1; nextS1fromS2 , (1:numel(nextS1fromS2))' ]; 
+          nearestedges = unique(nearestedges,'rows');
+        case 'undirected'
+          if opt.verb,  stime = cat_io_cmd('  Edge-Estimation (Delaunay','g5',''); end
+          % nearest is required too
+          nextS2fromS1 = dsearchn([verticesS2;inf(1,3)],double([S2.faces ones(size(S2.faces,1),1)*(size(S2.vertices,1)+1)]),verticesS1);
+          nextS1fromS2 = dsearchn([verticesS1;inf(1,3)],double([S1.faces ones(size(S1.faces,1),1)*(size(S1.vertices,1)+1)]),verticesS2);
+          tmp = nextS1fromS2; nextS1fromS2 = nextS2fromS1; nextS2fromS1 = tmp;
+          nearestedges  = [ (1:numel(nextS2fromS1))', nextS2fromS1; nextS1fromS2 , (1:numel(nextS1fromS2))' ]; 
+          nearestedges1 = unique(nearestedges,'rows');
+          % delauany
+          triangulation = delaunayn([verticesS2;verticesS1]);              % delaunay triangulation
+          nearestedges  = cat_surf_fun('graph2edge',triangulation);        % get edges 
+          nearestedges(sum(nearestedges<=size(verticesS2,1),2)~=1,:)=[];   % only edges between S1 and S2
+          nearestedges(:,2) = nearestedges(:,2) - size(verticesS2,1); 
+          nearestedges = unique([nearestedges;nearestedges1],'rows');
+      end
+      if opt.verb, stime = cat_io_cmd('  Weighting','g5','',1,stime); end
+      
+      if 0
+        %% my little testset
+        nextS1fromS2 = [1; 1; 3; 4; 4; 4; 5; 5]; 
+        nextS2fromS1 = [1; 3; 3; 5; 8; 8];
+        cdata        = [1 1 1 1 1 1]';
+        nearestedges = [ (1:numel(nextS2fromS1))', nextS2fromS1; nextS1fromS2 , (1:numel(nextS1fromS2))' ]; 
+        nearestedges = unique(nearestedges,'rows');
+      end
+      
+      
+      %% simplify edges 1
+      if 0
+        % simpler, but much slower 
+        nearestedges = [nearestedges, ones(size(nearestedges,1),1)]; % default weight
+        [NeighborsS1,NidS1]  = hist(nearestedges(:,1),1:1:max(nearestedges(:,1)));
+        for ni=NidS1(NeighborsS1>1)
+          NumNi = nearestedges(:,1)==ni; 
+          nearestedges(NumNi,3) =  nearestedges(NumNi,3) ./ sum(NumNi);
+        end
+      else
+        % faster 
+        %nearestedges = [nearestedges, ones(size(nearestedges,1),1)]; % default weight
+        dist = sum( (S2.vertices(nearestedges(:,1),:) - S1.vertices(nearestedges(:,2),:)).^2 , 2) .^ 0.5; 
+        nearestedges = [nearestedges, dist]; % default weight
+        list = [1; find(nearestedges(1:end-1,1)~=nearestedges(2:end,1))+1; size(nearestedges,1)]; 
+        for ni=1:numel(list)-1
+          %nearestedges(list(ni):list(ni+1)-1,3) = nearestedges(list(ni):list(ni+1)-1,3) ./ (list(ni+1) - list(ni)); 
+          nearestedges(list(ni):list(ni+1)-1,3) = nearestedges(list(ni):list(ni+1)-1,3) ./ sum(nearestedges(list(ni):list(ni+1)-1,3)); 
+        end
+      end
+      if opt.verb, stime = cat_io_cmd('  Mapping','g5','',1,stime); end
+
+      %%
+      if 0
+        % correct & simple, but very slow
+        varargout{1} = zeros(1,max(nearestedges(:,2)));
+        for ni=1:size(nearestedges,1)
+          varargout{1}(nearestedges(ni,2)) = varargout{1}(nearestedges(ni,2)) + ...
+            cdata(nearestedges(ni,1))' .* nearestedges(ni,3)';
+        end
+      else
+        varargout{1} = zeros(1,max(nearestedges(:,2)));
+        if 0
+          list = [1; find(nearestedges(1:end-1,2)~=nearestedges(2:end,2))+1; size(nearestedges,1)+1]; 
+          for ni=1:numel(list)-1
+            varargout{1}(nearestedges(list(ni),2)) = varargout{1}(nearestedges(list(ni),2)) + ...
+              sum(cdata(nearestedges(list(ni):list(ni+1)-1,1)) .*  nearestedges(list(ni):list(ni+1)-1,3));
+          end
+        else
+          nearestedges2 = sortrows([nearestedges(:,2) nearestedges(:,1) nearestedges(:,3)]);  
+          list = [1; find(nearestedges2(1:end-1,1)~=nearestedges2(2:end,1))+1; size(nearestedges2,1)+1]; 
+          for ni=1:numel(list)-1
+            varargout{1}(nearestedges2(list(ni),1)) = varargout{1}(nearestedges2(list(ni),1)) + ...
+              sum(cdata(nearestedges2(list(ni):list(ni+1)-1,2)) .*  nearestedges2(list(ni):list(ni+1)-1,3));
+          end
+        end
+      end
+      if numel(varargout{1})<20, varargout{1}, end
+      if opt.verb, cat_io_cmd(' ','g5','',1,stime); end
+  end
+  
+  % default smoothing???
+  if opt.smooth
+    varargout{1}  = spm_mesh_smooth(struct('vertices',S3.vertices,'faces',S3.faces),double(varargout{1}'),opt.smooth);
+  end
+  
+  if isfield(opt,'fname')
+    save(gifti(struct('vertices',S1.vertices,'faces',S1.faces,'cdata',varargout{1})),opt.fname); 
+  end
+  
+  if opt.verb, cat_io_cmd('','','',1,stime1); end
 end
 
 function E = cat_surf_edges(T)

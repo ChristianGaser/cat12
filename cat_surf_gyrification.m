@@ -99,7 +99,7 @@ function PSgi = cat_surf_gyrification(type,PS,opt)
   def.GIpresmooth    = 60; % laplacian only: shoold to be greater than 20 .. vary by brain size? 
   def.GIstreamopt(1) = 0.01; % 0.05 
   def.GIstreamopt(2) = 1000 ./ def.GIstreamopt(1);
-  def.GIwritehull    = 0;  % write laplace laplacian hull surface
+  def.GIwritehull    = 1;  % write laplace laplacian hull surface
   
   def.avgsurf   = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',sinfo.side));      % fsaverage central
   def.Pfsavg    = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',sinfo.side));      % fsaverage central
