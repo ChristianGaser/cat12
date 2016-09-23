@@ -142,6 +142,7 @@ function count = cat_io_cprintf(style,format,varargin)
   
   global cprintferror; 
   if isempty(cprintferror), cprintferror=0; end
+  if nargin==0, help cat_io_cprintf; return; end
   if strcmp(style,'reset')
     cprintferror = 0;
     style  = [0.0 0.5 0.0]; 

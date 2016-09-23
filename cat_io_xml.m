@@ -1,10 +1,9 @@
 function varargout = cat_io_xml(file,varargin)
+% ______________________________________________________________________
 % Import/export of a matlab structure from/to a xml file. Use functions 
 % from Jaroslaw Tuszynski on MATLAB Central (xml_io_tools_2010_11_05). 
-% I also tried the "struct2xml" and "xml2struct" functions of Wouter 
-% Falkena, but there were some problems for multi-element structures, 
-% and fields where set as struct too and the only char is supported for
-% datastoring.
+% Because the XML decoding is very slow, the data is further stored and 
+% loaded (if available) as MATLAB MAT-file.
 % 
 %   cat_io_xml(file,S)      export structure to a xml-file
 %   S = cat_io_xml(file)    import structure from a xml-file
@@ -36,6 +35,16 @@ function varargout = cat_io_xml(file,varargin)
 % POSSIBILITY OF SUCH DAMAGE.
 % ______________________________________________________________________
 % $Id$
+
+
+% Further comments:
+% ______________________________________________________________________
+% I also tried the "struct2xml" and "xml2struct" functions of Wouter 
+% Falkena, but there were some problems for multi-element structures, 
+% and fields where set as struct too and the only char is supported for
+% datastoring.
+% ______________________________________________________________________
+
 
   verbose = 0;
   if usejava('jvm')==0
@@ -122,16 +131,19 @@ function varargout = cat_io_xml(file,varargin)
     end
   end
   
-  if iscell(file) && size(file,1), file = char(file); end
+  if iscell(file) && size(file,1)<=1, file = char(file); end
   
   [pp,ff,ee] = fileparts(file); if ~strcmp(ee,'.xml'), file = [file '.xml']; end
+  if isempty(ff), return; end
   
+  mfile = [file(1:end-4) '.mat']; 
   switch action
     case 'write'
     % ------------------------------------------------------------------  
       try
         S=orderfields(S);
         xml_write(file,S);
+        save(mfile,'S');
       catch %#ok<*NASGU> % can write xml file??
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end
@@ -142,7 +154,10 @@ function varargout = cat_io_xml(file,varargin)
     % WARNING: THIS ACTION NEED MUCH MORE WORK!!! 
     % ------------------------------------------------------------------  
       SN = orderfields(S); 
-      if exist(file,'file')
+      
+      if exist(mfile,'file')
+        load(mfile,'S');
+      elseif exist(file,'file')
         try
           S = xml_read(file);
         catch 
@@ -158,6 +173,7 @@ function varargout = cat_io_xml(file,varargin)
       
       try
         xml_write(file,S);
+        save(mfile,'S');
       catch 
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end 
@@ -166,7 +182,9 @@ function varargout = cat_io_xml(file,varargin)
     case 'read'
     % ------------------------------------------------------------------
     % 
-      if exist(file,'file')
+      if exist(mfile,'file')
+        load(mfile,'S');
+      elseif exist(file,'file') 
         try 
           warning off
           S = xml_read(file);
@@ -174,8 +192,11 @@ function varargout = cat_io_xml(file,varargin)
         catch 
           verror('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
+        if ~exist(mfile,'file')
+          save(mfile,'S');
+        end
       else
-        error('MATLAB:cat_io_xml','''%s'' does not exist!\n',file);
+        error('MATLAB:cat_io_xml','"%s" does not exist!\n',file);
       end
     otherwise 
       error('MATLAB:cat_io_xml:read','Unknown action ''%s''!\n',action');
@@ -391,6 +412,83 @@ function [tree, RootName, DOMnode] = xml_read(xmlfile, Pref)
     RootName = GlobalTextNodes;
   end
 end
+
+% -- begin of mathworks code that is equaly slow ... delete this later --
+          function theStruct = parseXML(filename)
+            % PARSEXML Convert XML file to a MATLAB structure.
+            try
+               tree = xmlread(filename);
+            catch
+               error('Failed to read XML file %s.',filename);
+            end
+
+            % Recurse over child nodes. This could run into problems 
+            % with very deeply nested trees.
+            try
+               theStruct = parseChildNodes(tree);
+            catch
+               error('Unable to parse XML file %s.',filename);
+            end
+          end
+
+          % ----- Local function PARSECHILDNODES -----
+          function children = parseChildNodes(theNode)
+            % Recurse over node children.
+            children = [];
+            if theNode.hasChildNodes
+               childNodes = theNode.getChildNodes;
+               numChildNodes = childNodes.getLength;
+               allocCell = cell(1, numChildNodes);
+
+               children = struct(             ...
+                  'Name', allocCell, 'Attributes', allocCell,    ...
+                  'Data', allocCell, 'Children', allocCell);
+
+                for count = 1:numChildNodes
+                    theChild = childNodes.item(count-1);
+                    children(count) = makeStructFromNode(theChild);
+                end
+            end
+          end
+
+          % ----- Local function MAKESTRUCTFROMNODE -----
+          function nodeStruct = makeStructFromNode(theNode)
+            % Create structure of node info.
+
+            nodeStruct = struct(                        ...
+               'Name', char(theNode.getNodeName),       ...
+               'Attributes', parseAttributes(theNode),  ...
+               'Data', '',                              ...
+               'Children', parseChildNodes(theNode));
+
+            if any(strcmp(methods(theNode), 'getData'))
+               nodeStruct.Data = char(theNode.getData); 
+            else
+               nodeStruct.Data = '';
+            end
+          end
+
+          % ----- Local function PARSEATTRIBUTES -----
+          function attributes = parseAttributes(theNode)
+            % Create attributes structure.
+
+            attributes = [];
+            if theNode.hasAttributes
+               theAttributes = theNode.getAttributes;
+               numAttributes = theAttributes.getLength;
+               allocCell = cell(1, numAttributes);
+               attributes = struct('Name', allocCell, 'Value', ...
+                                   allocCell);
+
+               for count = 1:numAttributes
+                  attrib = theAttributes.item(count-1);
+                  attributes(count).Name = char(attrib.getName);
+                  attributes(count).Value = char(attrib.getValue);
+               end
+            end
+          end
+          % -- end of mathworks code --
+
 
   % =======================================================================
   %  === DOMnode2struct Function ===========================================
