@@ -59,6 +59,7 @@ function varargout = cat_io_csv(filename,varargin)
   def.finaldelimiter  = 0;
   
   opt = cat_io_checkinopt(opt,def);
+  if opt.komma==',' && opt.komma == opt.delimiter, opt.delimiter = ';'; end
 
   switch action
     case {'write','w'}
@@ -193,7 +194,7 @@ function writecsv(filename,C,sheet,pos,opt)
         else
           switch opt.komma
             case '.',   M{i}=[M{i} num2str(C{i,j},opt.format) opt.delimiter];
-            otherwise,  M{i}=[M{i} strrep(num2str(C{i,j},opt.format),'.',',') opt.delimiter]; 
+            otherwise,  M{i}=[M{i} strrep(num2str(C{i,j},opt.format),'.',opt.komma) opt.delimiter]; 
           end
         end
       else
