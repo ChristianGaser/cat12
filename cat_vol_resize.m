@@ -26,6 +26,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
 % ______________________________________________________________________
 % $Id$ 
   
+  if nargin==0, help cat_vol_resize; return; end
   if ndims(T)>2, TI=T; clear T; T{1}=TI; end %else varargout{1}=T; end 
   if nargin<2, error('ERROR: cat_vol_resolution: not enought input!\n'); end
 

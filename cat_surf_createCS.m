@@ -73,14 +73,36 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
     
+  
   % filling
   Ymf  = max(Ym,min(0.95,YMF)); 
   Ymfs = cat_vol_smooth3X(Ymf,1); 
   Ytmp = cat_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs YMF; 
   Ymf = Ymf*3;
+  
+
+  % noise reduction for higher resolutions (>=1 mm full correction, 1.5 mm as lower limit)
+  % (added 20160920 ~R1010 due to servere sulcus reconstruction problems with 1.5 Tesla data)
+  Ymfs = Ymf + 0; cat_sanlm(Ymfs,3,1);
+  %Ymfs  = cat_vol_isarnlm(Ymf,V,opt.verb>1,1); % isarnlm?
+  Ymf  = min(1,max(0,1.5-mean(vx_vol))) * Ymfs  +  min(1,max(0,mean(vx_vol)-0.5)) * Ymf;
     
-  % removing blood vessels, and other regions
+  % reduction of artifact, blood vessel, and meninges next to the cortex
+  % (are often visible as very thin structures that were added to the WM 
+  % or removed from the brain)
+  Ycsfd = cat_vbdist(single(Ymf<1.5),Ymf>1,vx_vol);
+  Yctd  = cat_vbdist(single(Ymf<0.5),Ymf>0,vx_vol); 
+  Ysroi = Ymf>2  &  Yctd<10  & Ycsfd>0 & Ycsfd<2 & ...
+          cat_vol_morph(~NS(Ya,opt.LAB.HC) & ~NS(Ya,opt.LAB.HI) & ...
+            ~NS(Ya,opt.LAB.PH) & ~NS(Ya,opt.LAB.VT),'erode',4); 
+  Ymfs  = cat_vol_median3(Ymf,Ysroi,Ymf>eps,0.1); % median filter
+  %Ymfs  = Ymfs.*(~Ysroi) + Ysroi*cat_vol_smooth3X(Ymfs,0.25/mean(vx_vol)); % gaussian filter? 
+  Ymf   = min(1,max(0,1.5-mean(vx_vol))) * Ymfs  +  min(1,max(0,mean(vx_vol)-0.5)) * Ymf;
+  clear Ysroi Ywmd Ymfs;
+
+  
+  
   Yth1 = zeros(size(Ymf),'single'); 
   if opt.expertgui > 1
     Ywd  = zeros(size(Ymf),'single'); 
@@ -135,7 +157,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0.5;             % interpolate volume
     mask_parahipp      = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;        % interpolate volume
 
-    % pbt calculation
+    %% pbt calculation
     [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyri
     if ~opt.expertgui, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
@@ -398,7 +420,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       facevertexcdata = isocolors2(Yth1,CS.vertices); 
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
     end
-    
+   
     % map WM and CSF width data (corrected by thickness)
     if opt.expertgui > 1
       %%
