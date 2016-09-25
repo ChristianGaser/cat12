@@ -12099,6 +12099,7 @@ Fixed: Transforming T-maps were not using an extent threshold for
 surfaces (thanks to Michael Skeide for pointing to that bug).
 
 ------------------------------------------------------------------------
+r1017 | dahnke | 2016-09-23 07:55:23 +0200 (Fr, 23 Sep 2016) | 23 lines
 
 Changed paths:
  M      .
@@ -12122,5 +12123,27 @@ M       cat_surf_gyrification.m
 (6)  Changed:   Display help in case of empty input for "cat_io_cprintf".
 (7)  Changed:   Corrected print string in "cat_check_system_output".
    
+
 ------------------------------------------------------------------------
-r1017 | dahnke | 2016-09-23 07:55:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_surf_createCS.m
+M       cat_surf_render2.m
+M       cat_vol_pbt.m
+M       cat_vol_resize.m
+A       development
+
+(1) Fixed:    Switched to a more selective filtering in "cat_vol_pbt" and added 
+              further noise reduction in "cat_vol_createCS" to reduce blurring 
+              of very small sulci.
+(2) Fixed:    Removed tissue segmentation refinement by LAS that troubles the  
+              WMHC detection in "cat_main". 
+(3) Fixed:    Corrected error of the local intensity scaling in cat_main_LAS.            
+(4) Fixed:    Corrected problems in "cat_surf_render2".
+(5) New:      Added "ROI" and "MenuBar" fields in "cat_surf_render2".
+
+------------------------------------------------------------------------
+r1018 | dahnke | 2016-09-25 13:25:28

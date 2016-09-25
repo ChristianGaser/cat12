@@ -24,7 +24,7 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
 %   Department of Neurology
 %   University Jena
 %
-%   Version: 1.10 © 2014/02
+%   Version: 1.10 ï¿½ 2014/02
 % ______________________________________________________________________
 % $Id$ 
 
@@ -38,10 +38,6 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
   opt  = cat_io_checkinopt(opt,def);
   opt.resV = mean(opt.resV);
 
-  
-  % rounding of values for simpler projection
-  %Ymf  = round(Ymf*20)/20; 
-  
    
   %% Estimate WM distance Ywmd and the outer CSF distance Ycsfdc to correct
   %  values in CSF area to limit the Ywmd to the maximum value that is 
@@ -87,14 +83,13 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
     Ygmt2(Ygmt2<=0.5 & Ygmt1>0) = Ygmt1(Ygmt2<=0.5 & Ygmt1>0);
     [Ygmt,Yi] = min(cat(4,Ygmt1,Ygmt2+0.25*mean(opt.resV)),[],4); 
     Ygmt  = cat_vol_median3(Ygmt,Ygmt>eps,Ygmt>eps);    
-    %Yi = round(cat_vol_smooth3X(Yi,2)); 
     
     %% Estimation of a mixed percentual possion map Ypp.
     Ypp=zeros(size(Ymf),'single');
     YM=Ymf>1.5 & Ymf<=2;  Ypp(YM) =   (Ygmt1(YM) - Ywmd(YM)) ./ (Ygmt1(YM) + eps); 
     YM=Ymf>2.0 & Ymf<2.5; Ypp(YM) = ( (Ygmt1(YM) - Ywmd(YM)).*(Yi(YM)==1) + Ycsfd(YM).*(Yi(YM)==2) ) ./ (Ygmt(YM) + eps); 
     Ypp(Ymf>2.5 | (Ymf>2 & Ygmt<=1))=1;
-    Ypp = cat_vol_median3(Ypp,Ymf>0,Ymf>0);
+    Ypp = cat_vol_median3(Ypp,Ymf>0 & Ygmt>2/opt.resV,Ymf>0 & Ygmt>2/opt.resV);
   else
     % Estimation of thickness map Ygmt and percentual position map Ypp.
     stime = cat_io_cmd('    PBT2 thickness: ','g5','',opt.verb,stime);
@@ -103,11 +98,11 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
   clear Ywmd Ycsfd;
 
   
-  % Final corrections for position map with removing of non brain objects.
+  %% Final corrections for position map with removing of non brain objects.
   %   ds('l2','',1,Ymf/3,Ypp>0.5,Ypp,Ygmt/opt.resV,250)
   stime = cat_io_cmd('    Final Corrections: ','g5','',opt.verb,stime);
   Ypp(isnan(Ypp)) = 0; 
-  Ypp = cat_vol_median3(Ypp,Ymf>0 & Ymf<3,Ymf>0 & Ymf<3,0.3);
+  Ypp = cat_vol_median3(Ypp,Ymf>0 & Ymf<3 & Ygmt>2/opt.resV,Ymf>0 & Ymf<3 & Ygmt>2/opt.resV,0.3);
   YM  = Ypp>=0.5 & ~cat_vol_morph(Ypp>=0.5,'labopen',1);  
   Ypp(YM) = 0.5-eps; clear YM
   
@@ -115,7 +110,7 @@ function [Ygmt,Ypp] = cat_vol_pbt(Ymf,opt)
   % Final corrections for thickness map with thickness limit of 10 mm. 
   % Resolution correction of the thickness map after all other operations, 
   % because PBT actually works only with the voxel-distance (isotropic 1 mm)
-  [tmp0,Yi] = cat_vbdist(single(Ygmt>eps),cat_vol_morph(Ygmt>eps | (Ymf>1.5 & Ymf<2.5),'d',2)); Ygmt=Ygmt(Yi); clear Yi tmp0;
+  [tmp0,Yi] = cat_vbdist(single(Ygmt>eps),cat_vol_morph(Ygmt>eps | (Ymf>1.5 & Ymf<2.5),'d',2)); Ygmt=Ygmt(Yi); clear Yi tmp0; %#ok<ASGLU>
   Ygmt = cat_vol_median3(Ygmt,Ymf>0 & Ymf<3,Ygmt>eps,0.25);
   Ygmt = cat_vol_median3(Ygmt,Ymf>0 & Ymf<3,Ygmt>eps);
   Ygmt = Ygmt*opt.resV; 

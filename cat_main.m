@@ -729,7 +729,7 @@ end
 if job.extopts.LASstr>0
   stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
   if job.extopts.NCstr>0, Ymo = Ym; end 
-  [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
+  [Ymi,Ym,Yclsi] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); % use Yclsi after cat_vol_partvol
   
   %Ymioc = Ymi+0; 
   if job.extopts.NCstr>0 && job.extopts.sanlm>0
@@ -782,11 +782,14 @@ end
 %  But for bias correction the ROIs are important too, to avoid over
 %  corrections in special regions like the cerbellum and subcortex. 
 %  ---------------------------------------------------------------------
+NS = @(Ys,s) Ys==s | Ys==s+1; 
 stime = cat_io_cmd('ROI segmentation (partitioning)');
 [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
+Ycr = cat_vol_morph(~NS(Yl1,job.extopts.LAB.HI) & ~NS(Yl1,job.extopts.LAB.VT),'e'); 
+if exist('Yclsi','var'), for i=1:6, Ycls{i}(Ycr) = Yclsi{i}(Ycr); end; clear Yclsi; end % new Ycls from LAS
 fprintf('%4.0fs\n',etime(clock,stime));
 
-clear YBG Ysrc;
+clear YBG Ysrc Ycr;
 
 
 %  ---------------------------------------------------------------------
@@ -1000,7 +1003,6 @@ clear prob
 %  closing can lead to problems with small gyri. So keep it simple here 
 %  and maybe add further refinements in the partitioning function.
 %  -------------------------------------------------------------------
-NS   = @(Ys,s) Ys==s | Ys==s+1; 
 LAB  = job.extopts.LAB;
 vxv  = 1/max(vx_vol);
 
@@ -1164,7 +1166,7 @@ end
 res.Affine0        = res.Affine;
 res.Affine         = Affine;
 
-clear VG VF cid tpm 
+clear VG VF cid %tpm 
 
 %% ---------------------------------------------------------------------
 %  Deformation
