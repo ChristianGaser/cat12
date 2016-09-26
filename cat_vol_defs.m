@@ -16,12 +16,15 @@ catch
   many_images = 1;
 end
 
-PI = job.images;
+def.verb = cat_get_defaults('extopts.verb'); 
+job      = cat_io_checkinopt(job,def);
+
+PI   = job.images;
 intp = job.interp;
 
 for i=1:numel(PU),
 
-  [pth,nam,ext,num] = spm_fileparts(PU{i});
+  [pth,nam,ext] = spm_fileparts(PU{i});
   PU{i} = fullfile(pth,[nam ext]);
 
   [Def,mat] = get_def(PU{i});
@@ -29,9 +32,14 @@ for i=1:numel(PU),
   for m=1:numel(PI)
     
     if many_images % many images
-      apply_def(Def,mat,char(PI{m}),intp,job.modulate);
+      PIi = char(PI{m}); 
     else % many subjects
-      apply_def(Def,mat,char(PI{m}{i}),intp,job.modulate);
+      PIi = char(PI{m}{i}); 
+    end
+    PIri = apply_def(Def,mat,PIi,intp,job.modulate);
+    
+    if job.verb
+      fprintf('Display resampled %s\n',spm_file(PIri,'link','spm_image(''Display'',''%s'')'));
     end
   end
 end
@@ -48,7 +56,7 @@ Def = reshape(Def,[d(1:3) d(5)]);
 mat = Nii.mat;
 
 %_______________________________________________________________________
-function apply_def(Def,mat,fnames,intrp,modulate)
+function fname = apply_def(Def,mat,fnames,intrp,modulate)
 % Warp an image or series of images according to a deformation field
 
 intrp = [intrp*[1 1 1], 0 0 0];
@@ -57,7 +65,7 @@ for i=1:size(fnames,1),
 
     % Generate headers etc for output images
     %----------------------------------------------------------------------
-    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:)));
+    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:))); ext = '.nii';  %#ok<ASGLU>
     NI = nifti(fullfile(pth,[nam ext]));
     j_range = 1:size(NI.dat,4);
     k_range = 1:size(NI.dat,5);
@@ -99,6 +107,7 @@ for i=1:size(fnames,1),
         NO.dat.fname = fullfile(pth,['m0w',nam,ext]);
         NO.descrip   = sprintf('Warped & Jac scaled (nonlinear only)');
     end
+    fname = NO.dat.fname; 
     
     NO.extras      = [];
     create(NO);
