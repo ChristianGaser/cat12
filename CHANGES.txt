@@ -12148,6 +12148,7 @@ A       development
 
 
 ------------------------------------------------------------------------
+r1019 | dahnke | 2016-09-26 08:41:05 +0200 (Mo, 26 Sep 2016) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12165,5 +12166,26 @@ M       cat_vol_partvol.m
 (4) Changed:  Changed ROI export in "cat_main" and "cat_stat_ROI". 
 (5) Changed:  Updated "cat_surf_surf2roi"
 
+
 ------------------------------------------------------------------------
-r1019 | dahnke | 2016-09-26 08:40:52
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_report.m
+M       cat_main_LAS.m
+M       cat_surf_vol2surf.m
+M       cat_vol_defs.m
+A  +    development/cat.nii
+A       development/cat_main_LAS.m
+
+≈(1) Changed*:   Update LAS cortex segmentation in "cat_main_LAS". 
+                Added further comments.
+(2) Changed:    Added comments and verbose output in CAT deformation tool 
+                "cat_vol_defs". Refined regular expression of deformation 
+                file selector.
+(3) Changed:    Refined ROI csv export  
+(4) Changed:    Small corrections in "cat_surf_vol2surf".
+
+------------------------------------------------------------------------
+r1020 | dahnke | 2016-09-26 14:46:08
