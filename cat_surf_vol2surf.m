@@ -1,4 +1,6 @@
 function varargout = cat_surf_vol2surf(varargin)
+% Project volume data to a surface and create a texture file.
+% ______________________________________________________________________
 % P = cat_surf_vol2surf(job)
 % 
 % job.data_mesh_lh  .. lh mesh files
@@ -16,9 +18,6 @@ function varargout = cat_surf_vol2surf(varargin)
 % job.datafieldname .. new fieldname
 % 
 % ______________________________________________________________________
-% 
-% Project volume data to a surface and create a texture file.
-% ______________________________________________________________________
 % Robert Dahnke
 % $Id$
  
@@ -27,7 +26,7 @@ function varargout = cat_surf_vol2surf(varargin)
   if nargin == 1
     job = varargin{1};
   else 
-    error('Only batch mode possible'); 
+    help cat_surf_vol2surf; return
   end
   
   def.verb  = 1; 
@@ -132,8 +131,6 @@ function varargout = cat_surf_vol2surf(varargin)
         P.depthCSF(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
             'dataname','depthCSF','ee','');
-
-          
           
         switch mapping
           case 'abs_mapping'
@@ -156,6 +153,10 @@ function varargout = cat_surf_vol2surf(varargin)
           mappingstr,thickness, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
+        if job.gifti==1
+          P.data{vi,si} = char(cat_io_FreeSurfer('fs2gii',struct('data',job.(sside{si})(vi).Pmesh,'cdata',P.data{vi,si},'delete',0)));
+        end
+        
         if vi==1 && si==1 
           
           if job.debug 
@@ -165,6 +166,7 @@ function varargout = cat_surf_vol2surf(varargin)
             fprintf('\nMappingstring: %s\n',mappingstr);
           end
         end
+        
         
         if job.verb
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));

@@ -245,7 +245,7 @@ function cat_io_report(job,qa)
     spm_orthviews('Reset');
 
    
-    lasthours = 20; % only display data 
+    lasthours = 10; % only display data 
     % Yo - original image in original space
     % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
     hho = spm_orthviews('Image',VT0,pos(1,:)); 

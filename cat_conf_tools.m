@@ -360,7 +360,7 @@ outdir.tag     = 'outdir';
 outdir.name    = 'Output directory';
 outdir.filter  = 'dir';
 outdir.ufilter = '.*';
-outdir.num     = [1 1];
+outdir.num     = [0 1];
 outdir.help    = {'Select a directory where files are written.'};
 
 %{
@@ -633,23 +633,54 @@ roi_xml.num  = [1 Inf];
 roi_xml.help   = {...
 'These are the xml-files that are saved in the label folder.'};
 
+usefolder         = cfg_menu;
+usefolder.tag     = 'folder';
+usefolder.name    = 'Use foldername';
+usefolder.labels  = {'Yes' 'No'};
+usefolder.values  = {1 0};
+usefolder.val     = {0};
+usefolder.help    = {
+'Use foldername to describe the subject.'};
+
+decimal_point         = cfg_menu;
+decimal_point.tag     = 'point';
+decimal_point.name    = 'decimal point';
+decimal_point.labels  = {',','.'};
+decimal_point.values  = {',','.'};
+decimal_point.val     = {'.'};
+decimal_point.help    = {
+'Decimal point.'};  % that has to be unequal to the column delimiter.'};
+
+% tab "\t" does not work and so we automatically swith in case of decimal 
+% point "," to delimiter ";".
+%{
+delimiter         = cfg_menu;
+delimiter.tag     = 'delimiter';
+delimiter.name    = 'column delimiter';
+delimiter.labels  = {',',';',' '};
+delimiter.values  = {',',';',' '};
+delimiter.val     = {','};
+delimiter.help    = {
+'Delimiter between columns.'};
+%}
+
 calcroi_name         = cfg_entry;
 calcroi_name.tag     = 'calcroi_name';
 calcroi_name.name    = 'Output file';
 calcroi_name.strtype = 's';
 calcroi_name.num     = [1 Inf];
-calcroi_name.val     = {'ROI.csv'};
+calcroi_name.val     = {'ROI'};
 calcroi_name.help    = {
 'The output file is written to the current working directory unless a valid full pathname is given. The output file will also include the name of the atlas and the measure (e.g. Vgm). The file is using tabstops to separate values in order to easily import the file into Excel or SPSS or any other software for subsequent analysis.'};
 
 calcroi       = cfg_exbranch;
 calcroi.tag   = 'calcroi';
 calcroi.name  = 'Estimate mean values inside ROI';
-calcroi.val   = {roi_xml,calcroi_name};
+calcroi.val   = {roi_xml,usefolder,decimal_point,outdir,calcroi_name}; 
 calcroi.prog  = @cat_stat_ROI;
 calcroi.help  = {
 'This function reads mean values inside a ROIs from different atlases and saves values for all data in a csv-file. '
-''
+'Missed values were replaced by NaN.'
 };
 
 %------------------------------------------------------------------------
@@ -710,19 +741,25 @@ field         = cfg_files;
 field.tag     = 'field';
 field.name    = 'Deformation Field';
 field.filter  = 'image';
-field.ufilter = '.*y_.*\.nii$';
+field.ufilter = '^(i)?y_.*\.nii$'; % '.*y_.*\.nii$';
 field.num     = [1 Inf];
-field.help    = {
-'Deformations can be thought of as vector fields. These can be represented by three-volume images.'};
+field.help    = {[
+'Deformations can be thought of as vector fields. These can be represented by three-volume images.' ...
+'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
+'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag (no written by default).' ... 
+]};
 
 field1         = cfg_files;
 field1.tag     = 'field1';
 field1.name    = 'Deformation Field';
 field1.filter  = 'image';
-field1.ufilter = '.*y_.*\.nii$';
+field1.ufilter = '^(i)?y_.*\.nii$'; % '.*y_.*\.nii$';
 field1.num     = [1 1];
-field1.help    = {
-'Deformations can be thought of as vector fields. These can be represented by three-volume images.'};
+field1.help    = {[
+'Deformations can be thought of as vector fields. These can be represented by three-volume images.' ...
+'Use the "y_*.nii" to project data from subject to template space, and the "iy_*.nii" to map data from template to individual space.' ...
+'Both deformation maps can be created in the CAT preprocessing by setting the "Deformation Field" flag (no written by default).' ... 
+]};
 
 images1         = cfg_files;
 images1.tag     = 'images';
@@ -751,7 +788,7 @@ interp.help   = {
 'The method by which the images are sampled when being written in a different space.'
 '    Nearest Neighbour:     - Fastest, but not normally recommended.'
 '    Bilinear Interpolation:     - OK for PET, or realigned fMRI.'
-'    B-spline Interpolation:     - Better quality (but slower) interpolation/* \cite{thevenaz00a}*/, especially       with higher degree splines.  Do not use B-splines when       there is any region of NaN or Inf in the images. '
+'    B-spline Interpolation:     - Better quality (but slower) interpolation/* \cite{thevenaz00a}*/, especially with higher degree splines.  Do not use B-splines when there is any region of NaN or Inf in the images. '
 }';
 
 modulate        = cfg_menu;
@@ -766,8 +803,8 @@ modulate.help = {
 '% Correction   Interpretation'
 '% ----------   --------------'
 '% nothing      absolute volume'
-'% globals 	     relative volume after correcting for total GM or TIV (multiplicative effects)'
-'% AnCova 	      relative volume that can not be explained by total GM or TIV (additive effects)'
+'% globals 	    relative volume after correcting for total GM or TIV (multiplicative effects)'
+'% AnCova 	    relative volume that can not be explained by total GM or TIV (additive effects)'
 ''
 'Modulated images can be optionally saved by correcting for non-linear warping only. Volume changes due to affine normalisation will be not considered and this equals the use of default modulation and globally scaling data according to the inverse scaling factor due to affine normalisation. I recommend this option if your hypothesis is about effects of relative volumes which are corrected for different brain sizes. This is a widely used hypothesis and should fit to most data. The idea behind this option is that scaling of affine normalisation is indeed a multiplicative (gain) effect and we rather apply this correction to our data and not to our statistical model. These modulated images are indicated by "m0" instead of "m". '
 ''
