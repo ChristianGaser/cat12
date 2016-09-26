@@ -12125,6 +12125,7 @@ M       cat_surf_gyrification.m
    
 
 ------------------------------------------------------------------------
+r1018 | dahnke | 2016-09-25 13:25:41 +0200 (So, 25 Sep 2016) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12145,5 +12146,24 @@ A       development
 (4) Fixed:    Corrected problems in "cat_surf_render2".
 (5) New:      Added "ROI" and "MenuBar" fields in "cat_surf_render2".
 
+
 ------------------------------------------------------------------------
-r1018 | dahnke | 2016-09-25 13:25:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_stat_ROI.m
+M       cat_surf_surf2roi.m
+M       cat_vol_partvol.m
+
+(1) Fixed:    Removed noise threshold for WMHC due to severe problems in SBM of 
+              OASIS_31.
+(2) New:      GUI definition in "cat_conf_stools" for "cat_roi_parameter" to 
+              extract surface-based ROI measures.
+(3) Changed:  Small corrections in "cat_conf_stools".
+(4) Changed:  Changed ROI export in "cat_main" and "cat_stat_ROI". 
+(5) Changed:  Updated "cat_surf_surf2roi"
+
+------------------------------------------------------------------------
+r1019 | dahnke | 2016-09-26 08:40:52
