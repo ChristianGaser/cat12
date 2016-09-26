@@ -5,6 +5,14 @@ function cat_stat_ROI(p)
 % Christian Gaser
 % $Id$
 
+cat_roi_fun('exportSample',p); 
+return
+
+% old function part
+%_______________________________________________________________________
+
+
+
 n_data = length(p.roi_xml);
 
 % first divide data into volume and surface data because they have to be handled separately

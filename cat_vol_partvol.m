@@ -255,7 +255,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
     vols = mean([sum(round(Yp0e(:))==1) sum(round(Yp0e(:))==1 & Yvt(:))] / sum(round(Yp0e(:))>0.5));
 
     % only if there is a lot of CSF and not to much noise
-    if vols(1)>0.15 && noise<0.10 
+    if vols(1)>0.15 %&& noise<0.10 
       stime = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
       
       YBG2 = cat_vol_morph(Ya1==LAB.BG,'d',2); 
