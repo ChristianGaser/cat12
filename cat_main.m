@@ -785,8 +785,8 @@ end
 NS = @(Ys,s) Ys==s | Ys==s+1; 
 stime = cat_io_cmd('ROI segmentation (partitioning)');
 [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
-Ycr = cat_vol_morph(~NS(Yl1,job.extopts.LAB.HI) & ~NS(Yl1,job.extopts.LAB.VT),'e'); 
-if exist('Yclsi','var'), for i=1:6, Ycls{i}(Ycr) = Yclsi{i}(Ycr); end; clear Yclsi; end % new Ycls from LAS
+%Ycr = cat_vol_morph(~NS(Yl1,job.extopts.LAB.HI) & ~NS(Yl1,job.extopts.LAB.VT),'e'); 
+%if exist('Yclsi','var'), for i=1:6, Ycls{i}(Ycr) = Yclsi{i}(Ycr); end; clear Yclsi; end % new Ycls from LAS
 fprintf('%4.0fs\n',etime(clock,stime));
 
 clear YBG Ysrc Ycr;
@@ -1813,13 +1813,16 @@ if job.output.ROI
 
       % xml-export one file for all (this is a structure)
       ROI.(atlas) = csv;
-      cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),struct('ROI',ROI),'write+'); 
-
     else
       stime2 = cat_io_cmd(sprintf('  ROI estimation failed. Atlas ''%s'' not exist.',atlas),'g5','', job.extopts.verb-1,stime2);
     end
-
+    
   end 
+  
+  % write results
+  catROI = cat_roi_fun('csvtab2xmlroi',ROI);
+  cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write+'); 
+
   cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
   cat_io_cmd('','n','',1,stime);
 end
