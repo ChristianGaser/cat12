@@ -117,14 +117,14 @@ function cat_surf_surf2roi(job)
         if all(~cell2mat(strfind({'central','hull','sphere','sphere.reg','resampledBySurf2roi'},sinfo.dataname)))
 
           % load surface cdata 
-          if job.resamp % do temporary resampling
+          if job.resamp && sinfo.resampled==0 % do temporary resampling
             lCS = get_resampled_values(job.cdata{ti}{si});
             rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh')); 
           else
             switch sinfo.ee
               case '.gii'
                 lCS = gifti(job.cdata{ti}{si});
-                rCS = gifti(cat_surf_rename(sinfo,'side','rh')); 
+                rCS = gifti(char(cat_surf_rename(sinfo,'side','rh'))); 
               otherwise
                 lCS = cat_io_FreeSurfer('read_surf_data',job.cdata{ti}{si});
                 rCS = cat_io_FreeSurfer('read_surf_data',cat_surf_rename(sinfo,'side','rh')); 
@@ -242,6 +242,7 @@ function resamp = get_resampled_values(P)
   end
 
   % get surface values
+  %resamp.cdata = gifti(Pvalue);
   resamp.cdata = cat_io_FreeSurfer('read_surf_data',Pvalue);
 
 end

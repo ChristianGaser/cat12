@@ -30,7 +30,7 @@ function varargout = cat_surf_vol2surf(varargin)
   end
   
   def.verb  = 1; 
-  def.gifti = 1; 
+  def.gifti = 0; 
   def.debug = 0; 
   def.interp{1} = 'linear'; 
   def.sample{1} = 'avg'; 

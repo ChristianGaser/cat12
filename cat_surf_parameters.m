@@ -140,9 +140,9 @@ function varargout = cat_surf_parameters(job)
         end
       end
 
-      if job.SA
-        %% local surface area
-        fprintf('Not yet working.');
+    %  if job.SA
+    %    %% local surface area
+    %    fprintf('Not yet working.');
     %    if exist(PSA,'file') && job.lazy  
     %      if job.verb>=1, fprintf('  Display allready processed %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
     %    else 
@@ -151,7 +151,7 @@ function varargout = cat_surf_parameters(job)
     %      if nargout==1, varargout{1}.PSA{i} = PSA; end  
     %      if job.verb>=1, fprintf('  Display %s\n',spm_file(PSA,'link','cat_surf_display(''%s'')')); end
     %    end
-      end
+    %  end
 
     end
   % ----------------------------------------------------------------------
