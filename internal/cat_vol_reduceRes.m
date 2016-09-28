@@ -22,7 +22,7 @@ function varargout = cat_vol_reduceRes(varargin)
   else
      job.data = cellstr(job.data);
   end
-  if isempty(job.data)
+  if isempty(job.data) || isempty(job.data{1})
     fprintf('No data!\n');  
     return;
   end

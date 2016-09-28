@@ -165,7 +165,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ymi = interp3(Ym,1); 
     Ybi = interp3(single(Yb),1)>0.5;
   else
-    Ymi = Ym; Ybi = Yb; 
+    Ymi = Ym; 
+    Ybi = Yb; 
+    Yli = Yl1; 
   end
    
   % PBT thickness and percentage position estimation 

@@ -33,7 +33,8 @@ function varargout = cat_run(job)
 %  The lazy processing will only process files, if one of the output
 %  is missed and if the same preprocessing options were used before.
 %  -----------------------------------------------------------------
-if isfield(job.extopts,'lazy') && job.extopts.lazy && (~isfield(job,'process_index'))  
+if isfield(job.extopts,'lazy') && job.extopts.lazy && (~isfield(job,'process_index')) && ...
+   isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   jobl      = update_job(job);
   jobl.vout = vout_job(jobl);
   job.data  = remove_allready_processed(jobl); 
@@ -528,7 +529,12 @@ function lazy = checklazy(job,subj)
     FNok        = 1; 
     FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','atlas'});
    
+   
     %% check opts
+    if isempty(FNopts) || isempty(FNextopts) || ...
+       ~isfield(xml.parameter,'opts') || ~isfield(xml.parameter,'extopts')
+      return
+    end
     for fni=1:numel(FNopts)
       if ~isfield(xml.parameter.opts,FNopts{fni})
         FNok = 2; break
@@ -587,8 +593,12 @@ function lazy = checklazy(job,subj)
             end
             if FNok==10; break; end
           else
-            if xml.parameter.extopts.(FNextopts{fni}){fnic} ~= job.extopts.(FNextopts{fni}){fnic}
-              FNok = 11; break
+            try
+              if any(xml.parameter.extopts.(FNextopts{fni}){fnic} ~= job.extopts.(FNextopts{fni}){fnic})
+                FNok = 11; break
+              end
+            catch
+                FNok = 11;
             end
             if FNok==11; break; end
           end
@@ -597,13 +607,13 @@ function lazy = checklazy(job,subj)
       elseif isstruct(xml.parameter.extopts.(FNextopts{fni}))
         FNX = fieldnames(xml.parameter.extopts.(FNextopts{fni}));
         for fnic = 1:numel(FNX)
-          if xml.parameter.extopts.(FNextopts{fni}).(FNX{fnic}) ~= job.extopts.(FNextopts{fni}).(FNX{fnic})
+          if any(xml.parameter.extopts.(FNextopts{fni}).(FNX{fnic}) ~= job.extopts.(FNextopts{fni}).(FNX{fnic}))
             FNok = 12; break
           end
           if FNok==12; break; end
         end
       else
-        if xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni})
+        if any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
           FNok = 13; break
         end
       end

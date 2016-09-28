@@ -1,0 +1,102 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/research.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_starting.html">Quick start guide</a>
+      </div>
+    </div>
+	
+    <div id="content">
+      <h2>CAT test:</h2>
+      <p>
+        SPM delivers a 2 mm version of the Collins brain that can be processed by the <a class="function" href="matlab:cat_tst_cattest;">cat_tst_cattest</a> batch script 
+          that creates the <i>cattest/CAT#_R#</i> subdirectory and runs an example preprocessing that allows basic testing of the CAT main preprocessing functions. 
+        The subscripts of the different processing steps are located in the 
+        <a class="function" href="matlab:
+          f=uigetfile(fullfile(spm('dir'),'toolbox','cat12','batches','cattest'),'cattest batch files','','MultiSelect','on'); 
+          if iscell(f), for fi=1:numel(f); open(f{fi}); end; end
+          ">batchtes/cattest</a>
+        subdirectory and can be used as example for batch processing. 
+        The include VBM as well as SBM preprocessing and further functions to generate, extract, import, export, and combine further VBM, SBM, and VBM measures.  
+        Please keep in mind that the data has only 2 mm resolution that is acceptable for basic tests.
+      </p>
+      <p>
+        This script is still in development!
+      </p>
+        
+      <h4>Subscipts:</h4>
+      <ul>
+        <li>
+          <p>
+            <a class="function" href="matlab:open cat12_SBM_101_segment;">cat12_SBM_101_segment</a>, <a class="function" href="matlab:open cat12_SBM_102_segment_greaterapes;">cat12_SBM_103_segment_greaterapes</a>, <a class="function" href="matlab:open cat12_SBM_103_segment;">cat12_SBM_103_segment_oldworldmonkeys</a>
+          </p><p> 
+            Preprocessing scripts of the menu entry <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment Data</a> that create (a) tissue classifications, (b) spatial registrations to the IXI555 Dartel template, (c) central surfaces with cortical thickness, (d) spacial registrations to the surface template, (e) RBM measurements, and finally (f) quality assessments. 
+          </p>
+        </li>
+        <li>
+          <p>
+            <a class="function" href="matlab:open cat12_SBM_201_extractAddSurfPara;">cat12_SBM_201_extractAddSurfPara</a>
+          </p><p>
+            Call of the GUI function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> to extract further surface measures such as gyrification or fractal dimension. 
+          </p>
+        </li>
+        <li>
+          <p>
+            <a class="function" href="matlab:open cat12_SBM_203_MapVol2IndSurf;">cat12_SBM_203_MapVol2IndSurf</a>
+          </p><p>
+            Map volume data from the individual volume to the individual surface.
+          </p>
+        </li>
+        <li>
+          <p>
+            <a class="function" href="matlab:open cat12_SBM_204_ResampAndSmooth;">cat12_SBM_204_ResampAndSmooth</a>
+          <p></p>
+            This script calls the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> GUI function to prepare the  surface data for statistical processing.
+          </p>
+        </li>
+        <li>
+          <p>
+            <a class="function" href="matlab:open cat12_SBM_301_Surf2ROI;">cat12_SBM_301_Surf2ROI</a>
+          </p><p>
+            Map single SBM measures to RBM. <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> 
+          </p>  
+        </li>
+        <li>
+          </p>
+            <a class="function" href="matlab:open cat12_SBM_302_exportRBM;">cat12_SBM_302_exportRBM</a>
+          </p><p>
+            Create a CSV-file (a table with ROIs columns and subject rows) for each voxel/surface-based RBM measures saved in the XML-files of multiple subjects.
+          </p>
+        </li>
+        <li>
+          </p>
+            <a class="function" href="matlab:open cat12_SBM_A202_MapNormVol2AvgSurf;">cat12_SBM_A202_MapNormVol2AvgSurf</a>
+          </p><p>
+            Map volume data to the IXI555 Dartel surface template, e.g., to show VBM results on the surface.
+          </p>
+        </li>
+      </ul>
+ 
+    </div>  
+  
+    <div id="content"><a href="cat_starting.html">< Quick start guide</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>
