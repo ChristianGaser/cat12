@@ -18,8 +18,9 @@ function cat_io_volctype(varargin)
   else
       job = varargin{1};
   end
-  def.prefix = ''; 
-  def.force  = 0; 
+  def.prefix    = ''; 
+  def.force     = 0; 
+  def.overwrite = 1;
   job = cat_io_checkinopt(job,def); 
 
   if ~isfield(job,'data') || isempty(job.data)
@@ -49,7 +50,7 @@ function cat_io_volctype(varargin)
   
 % stepsize
   if ~isfield(job,'cvals')
-    job.cvals = spm_input(sprintf('stepsize (max=4.2f):',max(Y(:))),'+1','r',cvals,1);
+    job.cvals = spm_input(sprintf('stepsize (0=auto;min:%4.2f;max:%4.2f):',min(Y(:)),max(Y(:))),'+1','r',0,1);
   else
     if isempty(job.cvals)
       job.cvals = cvals; 
@@ -64,16 +65,17 @@ function cat_io_volctype(varargin)
       job.overwrite = spm_input('Overwrite?','+1','y/n','',1);
   end
   
-  %%
+ 
   
-  if job.overwrite==1 || job.overwrite=='y'
-  % convert
-    for si=1:numel(job.data)
-      V = spm_vol(job.data{si});
-      Y = spm_read_vols(V);
-      if V.dt(1)~=ctype 
-        V.dt(1) = ctype;
-        [pp,ff,ee] = spm_fileparts(V.fname);
+  %% convert
+  for si=1:numel(job.data)
+    V = spm_vol(job.data{si});
+    Y = spm_read_vols(V);
+    if V.dt(1)~=ctype 
+      V.dt(1) = ctype;
+      [pp,ff,ee] = spm_fileparts(V.fname);
+      
+      if job.cvals~=0
         V.pinfo(1) = job.cvals;
         if si==1
           V.fname    = fullfile(pp,['test' ff ee]);
@@ -88,17 +90,47 @@ function cat_io_volctype(varargin)
           else
             proceed = 1;  
           end
+          
           delete(V.fname);
           if proceed=='n', return; end
           spm_clf('Interactive'); 
           spm_progress_bar('Init',numel(job.data),'Set datatype:','Volumes Complete');
         end
-        V.fname    = fullfile(pp,[job.prefix ff ee]);
-        if exist(V.fname,'file'), delete(V.fname); end
-        spm_write_vol(V,Y);
+      else
+        clim = iscaling(Y(:),[0.02 0.999]); rf = 1000; 
+        switch ctype
+          case [2,256], V.pinfo(1) = round( rf*((clim(2) - clim(1)) / 256)   )/rf;
+          case [4,512], V.pinfo(1) = round( rf*((clim(2) - clim(1)) / 256^2) )/rf;
+        end
       end
-      spm_progress_bar('Set',si);
+      
+      if isempty(job.prefix) && (job.overwrite==1 || job.overwrite=='y')
+        prefix = [spm_type(ctype) '_'];
+      else
+        prefix = job.prefix; 
+      end
+      
+      V.fname    = fullfile(pp,[prefix ff ee]);
+      if exist(V.fname,'file'), delete(V.fname); end
+      spm_write_vol(V,Y);
     end
-    spm_progress_bar('Clear');
+    spm_progress_bar('Set',si);
+  end
+  spm_progress_bar('Clear');
+end
+function clim = iscaling(cdata,plim)
+  %%
+  cdata(isnan(cdata) | isinf(cdata)) = []; 
+  ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
+  if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
+
+  bcdata  = [min(cdata) max(cdata)]; 
+  if bcdata(1) == bcdata(2)
+    clim = bcdata + [-eps eps];
+  else
+    range   = bcdata(1):diff(bcdata)/1000:bcdata(2);
+    hst     = hist(cdata,range);
+    clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
+    clim(2) = range(min([numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')]));
   end
 end

@@ -12168,6 +12168,7 @@ M       cat_vol_partvol.m
 
 
 ------------------------------------------------------------------------
+r1020 | dahnke | 2016-09-26 14:46:28 +0200 (Mo, 26 Sep 2016) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12187,5 +12188,40 @@ A       development/cat_main_LAS.m
 (3) Changed:    Refined ROI csv export  
 (4) Changed:    Small corrections in "cat_surf_vol2surf".
 
+
 ------------------------------------------------------------------------
-r1020 | dahnke | 2016-09-26 14:46:08
+
+Changed paths:
+M       CHANGES.txt
+A       batches
+A       batches/cattest
+A       batches/cattest/cat12_SBM_101_segment.m
+A       batches/cattest/cat12_SBM_102_segment_greaterapes.m
+A       batches/cattest/cat12_SBM_103_segment_oldworldmonkeys.m
+A       batches/cattest/cat12_SBM_201_extractAddSurfPara.m
+A       batches/cattest/cat12_SBM_202_MapNormVol2AvgSurf.m
+A       batches/cattest/cat12_SBM_203_MapVol2IndSurf.m
+A       batches/cattest/cat12_SBM_204_ResampAndSmooth.m
+A       batches/cattest/cat12_SBM_301_Surf2ROI.m
+A       batches/cattest/cat12_SBM_302_exportRBM.m
+M       cat_main_LAS.m
+M       cat_run.m
+M       cat_surf_parameters.m
+M       cat_surf_surf2roi.m
+M       cat_surf_vol2surf.m
+A       cat_tst_cattest.m
+A       cattest
+M       development/cat_main_LAS.m
+A       html/cat_starting_cattest.html
+M       internal/cat_io_volctype.m
+M       internal/cat_vol_reduceRes.m
+
+(1) Changed:  Small correction for in "cat_run" and "cat_vol_reduceRes".
+(2) Changed:  Automatic intensity scaling in "cat_io_volctype".
+(3) New:      Added CAT processing example and test script "cat_tst_cattest"
+              that used the SPM 2 mm Collins example scan for basic preprocessing. 
+(4) New:      Added "batches/cattest" directory that include the cattest scripts.
+(5) New:      Prepared an unlinked HTML help page for "cat_tst_cattest".
+(6) Fixed:    Corrected small error in "cat_main_LAS".
+------------------------------------------------------------------------
+r1021 | dahnke | 2016-09-28 16:10:16
