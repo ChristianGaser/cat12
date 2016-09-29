@@ -240,7 +240,7 @@ function [varargout] = cat_surf_info(P,read,gui)
     % if we still dont know what kind of datafile, we can try to find a
     % mesh surface
     if isempty(sinfo(i).Pmesh) 
-      if strcmp(ee,'.gii') %&& isempty(sinfo(i).side)
+      if strcmp(ee,'.gii') && isempty(sinfo(i).side)
         sinfo(i).Pmesh = sinfo(i).fname;
         sinfo(i).Pdata = sinfo(i).fname;
       else
