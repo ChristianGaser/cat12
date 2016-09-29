@@ -1,4 +1,4 @@
-function varargout = cat_surf_vol2surf(varargin)
+function out = cat_surf_vol2surf(varargin)
 % Project volume data to a surface and create a texture file.
 % ______________________________________________________________________
 % P = cat_surf_vol2surf(job)
@@ -61,16 +61,18 @@ function varargout = cat_surf_vol2surf(varargin)
     case 'rel_mapping';
       job.mapping.(mapping).length = diff([job.mapping.(mapping).startpoint,job.mapping.(mapping).endpoint]); 
   end
+  
   if job.mapping.(mapping).stepsize==0
     job.mapping.(mapping).length   = 0.5;
     job.mapping.(mapping).stepsize = 1;
   end
+  
   mapdef.class = 'GM';
   job.mapping.(mapping) = cat_io_checkinopt( job.mapping.(mapping),mapdef);
  
   mappingstr = sprintf('-%s -%s -res "%0.4f" -origin "%0.4f" -length "%0.4f"',...
-       job.interp{1},job.sample{1}, job.mapping.(mapping).stepsize, job.mapping.(mapping).startpoint , job.mapping.(mapping).length);   
-  
+       job.interp{1},job.sample{1}, job.mapping.(mapping).stepsize, job.mapping.(mapping).startpoint,...
+       job.mapping.(mapping).length);   
   
   %% display something
   spm_clf('Interactive'); 
@@ -116,6 +118,7 @@ function varargout = cat_surf_vol2surf(varargin)
         cat_io_cprintf('warn',sprintf('Surface and volume matching error.\n'))
         continue
       end
+      
       %%
       for si=1:numel(side)
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
@@ -171,18 +174,17 @@ function varargout = cat_surf_vol2surf(varargin)
         if job.verb
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
         end
-
       
       end
     
-      
       spm_progress_bar('Set',vi);
     end
   end
-    
-  if nargout>0
-    varargout{1} = P.data;
-  end
+  
+  % prepare output
+  out.lh = P.data(:,1);
+  out.rh = P.data(:,2);
+
   spm_progress_bar('Clear');
 
 end

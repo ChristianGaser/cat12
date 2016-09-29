@@ -28,7 +28,7 @@ H.clip     = [];
 H.clim     = [];
 H.bkg_col  = [0 0 0];
 H.transp   = 1;
-H.data_sel = 0;
+H.data_sel = [0 0];
 H.data_n   = [1 3];
 H.cursor_mode = 1;
 H.XTick    = [];
@@ -61,7 +61,7 @@ switch lower(action)
         % figure 2 with GUI
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
-          'left',  [0.050 0.925 0.425 0.050],'right', [0.525 0.925 0.425 0.050],...
+          'sel',   [0.290 0.930 0.425 0.060],...
           'surf',  [0.050 0.855 0.425 0.050],'atlas', [0.525 0.855 0.425 0.050],... 
           'cursor',[0.050 0.800 0.425 0.050],'thresh',[0.525 0.800 0.425 0.050],... 
           'cmap',  [0.050 0.750 0.425 0.050],...
@@ -96,25 +96,16 @@ switch lower(action)
                 'callback','for i=2:26, try close(i); end; end;',...
                 'ToolTipString','Close windows',...
                 'Interruptible','on','Enable','on');
-        
-        % select results for lh
-        H.left = uicontrol(H.figure(2),...
-                'string','Select left hemisphere data','Units','normalized',...
-                'position',H.pos{2}.left, 'ForegroundColor', [0.5 0 0],...
+
+        % select results for lh and rh
+        H.sel = uicontrol(H.figure(2),...
+                'string','Select surface data','Units','normalized',...
+                'position',H.pos{2}.sel,...
                 'style','Pushbutton','HorizontalAlignment','center',...
-                'callback',{@select_data,1},...
-                'ToolTipString','Select results (up to 3) for left hemisphere (log-p maps)',...
+                'callback',@select_data,...
+                'ToolTipString','Select results (up to 3) for both hemispheres (e.g. log-p maps)',...
                 'Interruptible','on','Enable','on');
-        
-        % select results for rh
-        H.right = uicontrol(H.figure(2),...
-                'string','Select right hemisphere data','Units','normalized',...
-                'position',H.pos{2}.right, 'ForegroundColor', [0.5 0 0],...
-                'style','Pushbutton','HorizontalAlignment','center',...
-                'callback',{@select_data,2},...
-                'ToolTipString','Select results (up to 3) for right hemisphere (log-p maps)',...
-                'Interruptible','on','Enable','on');
-        
+                
         str  = { 'Underlying surface...','central','inflated','Dartel'};
         tmp  = { {@select_surf, 1},...
                  {@select_surf, 2},...
@@ -254,31 +245,6 @@ switch lower(action)
           H.S{1}.name = varargin{1};
           H.S{2}.name = varargin{2};
           
-          if nargin > 3
-            warn_if_names_differ = varargin{3};
-          else
-            warn_if_names_differ = 1;
-          end
-          
-          % check that filenames are the same for lh and rh
-          for i=1:size(H.S{1}.name,1)
-            [pth1,name1] = spm_fileparts(H.S{1}.name(i,:));
-            [pth2,name2] = spm_fileparts(H.S{2}.name(i,:));
-            
-            if ~strcmp(name1,name2) & warn_if_names_differ
-              alert_str = sprintf(['Warning: Check that you have selected the same results for '...
-                'left and right hemisphere because filenames differ:\nleft: %s\nright: %s'],...
-                 name1,name2);
-              spm('alert!',alert_str)
-            end
-            
-          end
-
-          % check number of files for lh and rh
-          if size(H.S{1}.name,1) ~= size(H.S{2}.name,1)
-            error('Number of files for left and right hemisphere should be the same.');
-          end
-          
           [pth{1},nm1,ext1] = spm_fileparts(H.S{1}.name(1,:));
           [pth{2},nm2,ext2] = spm_fileparts(H.S{2}.name(1,:));
           
@@ -306,7 +272,7 @@ switch lower(action)
               mat    = v.M;
               V = g.vertices;
               XYZ        = double(inv(mat)*[V';ones(1,size(V,1))]);
-              H.S{ind}.Y     = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
+              H.S{ind}.Y = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
               H.S{ind}.Y = spm_mesh_project(g.vertices,dat)';
             end
           else
@@ -314,14 +280,23 @@ switch lower(action)
             H.logP = 1;
           
             for ind=1:2
+
+              H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+
+              % cdata found?
               try
                 H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
               catch
-                error('No cdata found.');
+                if ind == 1
+                  H.S{ind}.Y = zeros(size(H.S{2}.Y));
+                else
+                  H.S{ind}.Y = zeros(size(H.S{1}.Y));
+                end
+                
+                % reset name
+                H.S{ind}.name = '';
               end
-    
-              H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
-            
+                
               % check whether name contains 'log' that indicates a logP file
               for i=1:size(H.S{ind}.name,1)
                 if isempty(strfind(H.S{ind}.info(i).ff,'log'))
@@ -349,7 +324,7 @@ switch lower(action)
           set(H.info,'Visible','on');
           set(H.cursor,'Visible','on');
         
-          if min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
+          if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0
             set(H.inv,'Visible','on');
           end
           
@@ -729,7 +704,7 @@ function display_results_all(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
-if (size(H.S{1}.Y) > 1 | size(H.S{2}.Y) > 1) & min(min(H.S{1}.Y(:),H.S{2}.Y(:))) < 0
+if (size(H.S{1}.Y) > 1 | size(H.S{2}.Y) > 1) & min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0
   disp('Warning: Only results with positive values are displayed!');
 end
 
@@ -755,8 +730,8 @@ end
 H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
 H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
 
-H.S{1}.min = min(min(H.S{1}.Y(:),H.S{2}.Y(:)));
-H.S{1}.max = max(max(H.S{1}.Y(:),H.S{2}.Y(:)));
+H.S{1}.min = min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:)));
+H.S{1}.max = max(max(H.S{1}.Y(:)),max(H.S{2}.Y(:)));
 
 if H.S{1}.min < 0
   mnx = max(abs([H.S{1}.min,H.S{1}.max]));
@@ -936,6 +911,16 @@ else
   Mr = gifti(H.S{2}.info(1).Pmesh);
   Mcl.cdata = H.S{1}.Y;
   Mcr.cdata = H.S{2}.Y;
+  
+  % check whether number of data for lh/rh differ and fill with zeros
+  diff_size_Y = size(H.S{1}.Y,2) - size(H.S{2}.Y,2);
+  if diff_size_Y > 0
+    Mcr.cdata = [Mcr.cdata zeros(size(H.S{2}.Y,1),1)];
+  end
+  if diff_size_Y < 0
+    Mcl.cdata = [Mcl.cdata; zeros(size(H.S{1}.Y,1),1)];
+  end
+  
   M.faces = [Ml.faces; Mr.faces + size(Ml.vertices,1)];
   M.vertices = [Ml.vertices; Mr.vertices];
   M.mat = Ml.mat;
@@ -1123,59 +1108,45 @@ C(ind0) = curv(ind0);
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
 %-----------------------------------------------------------------------
-function select_data(obj, event_obj, ind)
+function select_data(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
-if isempty(H.S{2}.name), str = 'log';
-else, str = 'log'; end
-
-side = '';
-str_side = {'left','right'};
-
 H.logP = 1;
+lh = []; rh = [];
 
-while ~strcmp(side,H.S{ind}.side)
-  H.S{ind}.name = spm_select(H.data_n,'mesh',['Select up to 3 log P maps for ' str_side{ind} ' hemisphere'],'','',str);
-  H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
-  
-  side = H.S{ind}.side;
-  
-  for i=1:size(H.S{ind}.name,1)
+P = spm_select([1 6],'mesh',['Select up to 3 (log P) maps for left and right hemisphere']);
+info = cat_surf_info(P);
 
-    % check whether name contains 'log' that indicates a logP file
-    if isempty(strfind(H.S{ind}.info(i).ff,'log'))
-      H.logP = 0;
-    end
+n = size(P,1);
 
-    if ~strcmp(H.S{ind}.info(i).side,H.S{ind}.side)
-      fprintf('%s does not contain %s hemisphere data.\n',H.S{ind}.name(i,:),str_side{ind});
-      side = '';
-    end
-  end
-  
-  if ind==1
-    set(H.left, 'ForegroundColor',[0 0.5 0]);
-  else
-    set(H.right,'ForegroundColor',[0 0.5 0]);
+for i=1:n
+
+  % check whether name contains 'log' that indicates a logP file
+  if isempty(strfind(info(i).ff,'log'))
+    H.logP = 0;
   end
 
+  % check where left and right hemisphere data were found
+  if strcmp(info(i).side, 'lh')
+    lh = [lh i];
+  elseif strcmp(info(i).side, 'rh')
+    rh = [rh i];
+  end
 end
 
-% increase counter for selected data
-H.data_sel = H.data_sel + 1;
-H.data_n = size(H.S{ind}.name,1);
+H.S{1}.name = P(lh,:);
+H.S{2}.name = P(rh,:);
+H.S{1}.info = cat_surf_info(H.S{1}.name,1); 
+H.S{2}.info = cat_surf_info(H.S{2}.name,1); 
 
-% display if both sides are defined
-if ~isempty(H.S{1}.name)  &&  ~isempty(H.S{2}.name) && H.data_sel == 2
-  cat_surf_results('disp',H.S{1}.name, H.S{2}.name);
-
-  % reset counter for selected data and change font color
-  H.data_sel = 0;
-  H.data_n = [1 3];
-  set(H.left, 'ForegroundColor',[0.5 0 0]);
-  set(H.right,'ForegroundColor',[0.5 0 0]);
+if isempty(H.S{2}.name)
+  H.S{2}.name = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
+elseif isempty(H.S{1}.name)
+  H.S{1}.name = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');
 end
+
+cat_surf_results('disp',H.S{1}.name, H.S{2}.name);
 
 %==========================================================================
 function save_image(obj,event_obj,filename)
@@ -1463,10 +1434,8 @@ if ishandle(H) & ~isappdata(H,'handles')
     H.light    = findobj(H.axis,'type','light');
     H.rotate3d = rotate3d(H.figure(1));
     setappdata(H.axis,'handles',H);
-elseif ishandle(H)
-    H = getappdata(H,'handles');
 else
-    H = getappdata(H.axis,'handles');
+    H = getappdata(H,'handles');
 end
 
 %==========================================================================

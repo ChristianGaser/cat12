@@ -5,7 +5,7 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
 % cat_check_system_output(status,result,debugON,trerr)
 %
 % status, result .. system call outputs [status,result] = system('...');
-% debugON        .. dipslay result
+% debugON        .. display result
 % trerr          .. trough an error message (default), else just display 
 %                   error
 %_______________________________________________________________________
@@ -49,7 +49,8 @@ function str = genstrarray(stritem)
         '\', '\\'; ...
         char(0), '\0'; ...
         char(9), '\t'; ...
-        char(10), '\n'};
+        char(10), '\n';...
+        '\S', ''};
     for cr = 1:size(replacements, 1)
         str  = strrep(str , replacements{cr,:});
     end

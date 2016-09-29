@@ -362,10 +362,9 @@ for i=1:size(P,1)
 
         k = 0;
 
-    end % (if ~isempty(XYZ))
+    end % (if ~isempty(XYZ))    
 
     if ~isempty(Q)
-    
        switch sel
        case 1
           t2x = 1-spm_Tcdf(Z,df(2));

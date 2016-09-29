@@ -12190,6 +12190,7 @@ A       development/cat_main_LAS.m
 
 
 ------------------------------------------------------------------------
+r1021 | dahnke | 2016-09-28 16:10:32 +0200 (Mi, 28 Sep 2016) | 33 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12223,5 +12224,24 @@ M       internal/cat_vol_reduceRes.m
 (4) New:      Added "batches/cattest" directory that include the cattest scripts.
 (5) New:      Prepared an unlinked HTML help page for "cat_tst_cattest".
 (6) Fixed:    Corrected small error in "cat_main_LAS".
+
 ------------------------------------------------------------------------
-r1021 | dahnke | 2016-09-28 16:10:16
+
+Changed paths:
+M       CHANGES.txt
+M       cat_check_system_output.m
+M       cat_conf_fmri.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_spmT2x.m
+M       cat_surf_info.m
+M       cat_surf_results.m
+M       cat_surf_vol2surf.m
+
+(1) Changed: Updated cat_surf_results to allow more flexible file selection.
+(2) Fixed: cat_surf_vol2surf.m gives now correct output names for batch mode.
+(3) Fixed: cat_surf_info.m failed in getting an underlying mesh.
+(4) Changed: Changed step size for vol2surf mapping.
+
+------------------------------------------------------------------------
+r1022 | gaser | 2016-09-29 23:10:25
