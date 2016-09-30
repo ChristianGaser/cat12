@@ -1223,13 +1223,13 @@ if mean(d(:))>0 && std(d(:),1)>0
       case 'min-max', 
           range = [min(d) max(d)]; 
       case '2p'
-          range = iscaling(d,[0.02 0.98]);
+          range = cat_vol_iscaling(d,[0.02 0.98]);
       case '5p'
-          range = iscaling(d,[0.05 0.95]);
+          range = cat_vol_iscaling(d,[0.05 0.95]);
       case 'custom'
           fc = gcf;
           spm_figure('getwin','Interactive'); 
-          range = iscaling(d,[0.02 0.98]);
+          range = cat_vol_iscaling(d,[0.02 0.98]);
           d = spm_input('intensity range','1','r',range,[2,1]);
           figure(fc); 
           range = [min(d) max(d)];
@@ -1237,7 +1237,7 @@ if mean(d(:))>0 && std(d(:),1)>0
           fc = gcf;
           spm_figure('getwin','Interactive'); 
           dx= spm_input('percentual intensity range','1','r',[2 98],[2,1]);
-          range = iscaling(d,dx/100);
+          range = cat_vol_iscaling(d,dx/100);
           figure(fc); 
       otherwise
           range = [min(d) max(d)]; 
@@ -1727,18 +1727,4 @@ updateTexture(H,d);
 H2 = getHandles(gca);
 if isfield(H2,'colourbar') && ishandle(H2.colourbar)
   cat_surf_render('ColourBar',gca, 'on');
-end
-function clim = iscaling(cdata,plim)
-%%
-ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
-if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
-
-bcdata  = [min(cdata) max(cdata)]; 
-if bcdata(1) == bcdata(2)
-  clim = bcdata + [-eps eps];
-else
-  range   = bcdata(1):diff(bcdata)/1000:bcdata(2);
-  hst     = hist(cdata,range);
-  clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
-  clim(2) = range(min([numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')]));
 end
