@@ -1,51 +1,66 @@
 function cat_tst_cattest(job)
-%  _____________________________________________________________________
 %  CAT test script. 
+%  _____________________________________________________________________
+%  
+%  The idea is to create a common test script that can be run by any user.
+%  It include the processing routines of important CAT GUI and background
+%  functions with default (and modified) parameters for one (non)human 
+%  subject (or multiple) subjects.
 % 
 %   cat_tst_cattest(job)
 %   
+%  Data:
+%  1) Human:
+%   * Adult:            single_T1subj  (Collins brain)
+%                       Tohoku,CG,...? 
+%   * Old:              OASIS31        (with WMHs)
+%                       IXI?           (without WMHs)
+%   * Infant:           Berlin? 
+%                       IXI?
+%   * Tumor:            tb09
+%                       tp01
+%  2) Primates (~1.5 mm resolution):
+%   * Greater Apes:     chimpanzee_laz
+%                       gorilla_kekla
+%   * Lesser Apes:      gibbon_cleo (use oldworld monkey template)
+%   * Oldworld Monkey:  rhesus_caretF99 (atlas)
+%                       baboon_F3S12 / mangabey_fso
+%
 %  _____________________________________________________________________
 %  Robert Dahnke
 %  $Id: cat_run_job.m 1013 2016-09-22 11:49:13Z dahnke $
- 
+
+
+
 %  _____________________________________________________________________
-%  The idea is to create a common test script that can be run by any user.
-%  Different handling of user mode, i.e., the default user does not need 
-%  to test expert functions? 
-%   - Better to test all, because default users maybe switch to experts!
-%   - Better to avoid the full expert output!
-%   > GUI switch?
 %
 %  Development framework / versions:
 %  ---------------------------------------------------------------------
-%  V1:    processing of important CAT GUI functions with default parameter
-%         for one subject
-%         1) VBM/SBM preprocessing
-%         2) Volume mapping from template to surface space
-%            Volume mapping from surface to template space
-%         3) Surface parameter estimation 
-%            Volume to surface mapping (individual surface)
-%            Volume to surface mapping (template surface)
-%            Resample and smooth of surface data
-%            S
-%         4) Mapping tools 
-%         ...
-%  V2:    GUI with:
-%           [job.resdir]   > cattestdir is ok 
+%  Further scripts:
+%    *) Volume mapping from template to surface space
+%       Volume mapping from surface to template space
+%    *) Volume to surface mapping (individual surface)
+%       Volume to surface mapping (template surface)
+%    *) Projection tools 
+%    *) Longitudinal Processing >> Data
+%
+%  Further functionality:
+%    *) GUI with:
+%           [job.resdir]   > cattestdir is ok ... not in general
 %           job.userlevel  [ default | expert | developer ] 
 %                          > maybe create a hard copy for the default user at least for preprocessing?
 %           job.datalevel  [ basic | multisubject | long | non-human | full ]
-%           job.paralevel  [ basic | enhanced | ... ]
-%                          ... focus on cat_main paramter ...
-%  V3:    processing of primate data 
-%  V4:    processing with different important parameters
+%           job.paralevel  [ basic | enhanced | ... ] >> userlevel
+%    *) processing with different important parameters
 %         (e.g., NCstr, LASstr, gcutstr, cleanupstr, WHMC(str), vox)
-%  V5:    statistical functions >> required futher data 
+%  	 *) Help Skripts, e.g., Volume vs. Surface Smoothing
+%
+%  Large extensions
+%  V2:    statistical functions >> required futher data 
 %          - we can add some further low res images
 %          - we can link some sources that allow fast and simple access
 %            and have good quality (IXI, OASIS)
-%  V6:    Volume vs. Surface Smoothing
-%  V*:    bad paramter input as internal test function to test error
+%  V3:    bad paramter input as internal test function to test error
 %         handling
 %
 %  Planed data extensions:
@@ -73,21 +88,30 @@ function cat_tst_cattest(job)
 
   if ~exist('job','var'), job=struct(); end
   [cv,rv] = cat_version;
-
+  
   % defaults
-  def.userlevel = 1; % [ default | expert | developer ] 
-  def.datalevel = 1; % [ basic | multisubject | long | non-human | full ]
-  def.paralevel = 1; % [ basic | enhanced | ... ]
+  def.userlevel = ''; % [ default | expert | developer ] 
+  def.datalevel = ''; % [ basic | human | long | ape | monkey | full ]
   def.resdir    = fullfile(spm('dir'),'toolbox','cat12','cattest',[cv 'R' rv]);
   def.batchdir  = fullfile(spm('dir'),'toolbox','cat12','batches','cattest');
-  % human test data
+
+  % testdata definition
+  % --------------------------------------------------------------------
+  % single run human test data
   def.data_human = {
     fullfile(spm('dir'),'canonical','single_subj_T1.nii'); 
     fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_4397-tfl.nii'); 
     fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_BUSS_2002_1YO_t1.nii'); 
     fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_OAS1_0031_MR1_mpr_n4_anon_sbj_111.nii'); 
+    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x1_human_tumor_tb09.nii'); 
+    fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x1_human_tumor_tp01.nii'); 
     };
-  def.data_human = {};
+  % longitudinal test data 
+  def.data_human_long = {
+    };
+  % dataset for tests of statistical functions  
+  def.data_human_group = {
+  };
   % primate test data
   def.data_greaterapes = {
     fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_chimpanzee_kenge.nii'); 
@@ -103,28 +127,75 @@ function cat_tst_cattest(job)
     fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_rhesus_caretF99.nii');
     fullfile(spm('dir'),'toolbox','cat12','data','uint8_lowresR2x2x2_primate_rhesus_research.nii');
     };
-  job = cat_io_checkinopt(job,def);
-
-  job.para = {
+  % test parameter
+  def.para = {
     ... scipt, testlevel, variable, further values
-    'cat12_SBM_101_segment' 2 'spm.tools.cat.estwrite.extopts.APP'          {0}; 
-    'cat12_SBM_101_segment' 1 'spm.tools.cat.estwrite.extopts.sanlm'        {0 2}; 
-    'cat12_SBM_101_segment' 1 'spm.tools.cat.estwrite.extopts.NCstr'        {0 0.5 1}; 
-    'cat12_SBM_101_segment' 1 'spm.tools.cat.estwrite.extopts.LASstr'       {0 1}; 
-    'cat12_SBM_101_segment' 2 'spm.tools.cat.estwrite.extopts.gcutstr'      {0 1}; 
-    'cat12_SBM_101_segment' 2 'spm.tools.cat.estwrite.extopts.cleanupstr'   {0 1}; 
-    'cat12_SBM_101_segment' 3 'spm.tools.cat.estwrite.extopts.BVCstr'       {0.5 1}; 
-    'cat12_SBM_101_segment' 3 'spm.tools.cat.estwrite.extopts.WMHCstr'      {0 1}; 
-    'cat12_SBM_101_segment' 3 'spm.tools.cat.estwrite.extopts.WMHC'         {0 2}; 
-    'cat12_SBM_101_segment' 2 'spm.tools.cat.estwrite.extopts.vox'          {1}; 
-    'cat12_SBM_101_segment' 2 'spm.tools.cat.estwrite.extopts.pbtres'       {0.25 1};   
+    ''                      1  0 ''                                           ''           {0}; % default
+    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.APP'         'APP'        {0}; 
+    'cat12_SBM_101_segment' 1  1 'spm.tools.cat.estwrite.extopts.sanlm'       'sanlm'      {0 2}; 
+    'cat12_SBM_101_segment' 1  1 'spm.tools.cat.estwrite.extopts.NCstr'       'NCstr'      {0 0.5 1}; 
+    'cat12_SBM_101_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'      'LASstr'     {0 1}; 
+    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.gcutstr'     'gcutstr'    {0 1}; 
+    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.cleanupstr'  'cleanupstr' {0 1}; 
+    'cat12_SBM_101_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'      'BVCstr'     {0.5 1}; 
+    'cat12_SBM_101_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'     'WMHCcstr'   {0 1}; 
+    'cat12_SBM_101_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHC'        'WMHCstr'    {0 2}; 
+    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.vox'         'vox'        {1}; 
+    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.pbtres'      'pbtres'     {0.25 1};   
   };
-    
-  % add batch dir
-  addpath(job.batchdir); 
+  job = cat_io_checkinopt(job,def);
+  
+  
+  % choose datalevel
+  % --------------------------------------------------------------------
+  if isempty(job.datalevel)
+    job.datalevel = char(spm_input('Datalevel',1,'min|basic|human|prim|all', ...
+      {'minimal','basic','human','primates','all'},1));
+  end
+  switch job.datalevel
+    case 'minimal'
+      job.data_human            = job.data_human(5:6);
+      job.data_human_long       = {};
+      job.data_human_group      = {};
+      job.data_greaterapes      = {};
+      job.data_oldworldmonkeys  = {}; 
+    case 'basic'
+      job.data_human            = job.data_human(1); 
+      job.data_human_long       = {};
+      job.data_human_group      = {};
+      job.data_greaterapes      = job.data_greaterapes(1); 
+      job.data_oldworldmonkeys  = job.data_oldworldmonkeys(1); 
+    case 'human'
+      job.data_greaterapes      = {};
+      job.data_oldworldmonkeys  = {};
+    case 'long'
+      job.data_human            = {};
+      job.data_human_group      = {};
+      job.data_greaterapes      = {};
+      job.data_oldworldmonkeys  = {};
+    case 'group'
+      job.data_human            = {};
+      job.data_human_long       = {};
+      job.data_greaterapes      = {};
+      job.data_oldworldmonkeys  = {};
+    case 'ape'
+      job.data_human            = {};
+      job.data_human_long       = {};
+      job.data_human_group      = {};
+      job.data_oldworldmonkeys  = {};
+    case 'monkey'
+      job.data_human            = {};
+      job.data_human_long       = {};
+      job.data_human_group      = {};
+      job.data_greaterapes      = {};
+    case 'primates'
+      job.data_human            = {};
+      job.data_human_long       = {};
+      job.data_human_group      = {};
+  end
   
   % check input files
-  species = {'data_human','data_greaterapes','data_oldworldmonkeys'}; 
+  species = {'data_human','data_human_long','data_human_group','data_greaterapes','data_oldworldmonkeys'}; 
   for si = 1:numel(species)
     for j = numel(job.(species{si})):-1:1
       if ~exist(job.(species{si}){j},'file'), 
@@ -134,71 +205,128 @@ function cat_tst_cattest(job)
     end  
   end
   
-  % create output directory and copy files
-  % the different species required another preprocessing, but the following
-  % routines are identical!
-  if ~exist(job.resdir,'dir'), mkdir(job.resdir); end 
-  for si = 1:numel(species)
-    eval(sprintf('files_%s = {};',species{si}(6:end)));  
-    for j = numel(job.(species{si})):-1:1
-      copyfile(job.(species{si}){j},job.resdir); 
-      [pp,ff,ee] = fileparts(job.(species{si}){j});
-      eval(sprintf('files_%s{j,1} = fullfile(job.resdir,[ff ee]);',species{si}(6:end)));  
-    end
+  
+  
+  
+  % choose userlevel
+  % --------------------------------------------------------------------
+  userlevels = {'default','expert','developer'};
+  if isempty(job.userlevel)
+    job.userlevel = spm_input('Userlevel',1,'Default|Expert|Developer',[0,1,2],1);
   end
-  files = [files_human; files_greaterapes; files_oldworldmonkeys]; 
-  if isempty(files), return; end
-  
- 
-  % subdirs
-  if cat_get_defaults('extopts.subfolders')
-    mridir    = 'mri';
-    surfdir   = 'surf';
-    roidir    = 'label';
-    reportdir = 'report';
-  else
-    mridir    = '';
-    surfdir   = '';
-    roidir    = '';
-    reportdir = '';
-  end  
-  
-  % get batches 
-  batches = cat_vol_findfiles(job.batchdir,'*.m'); 
+  for pi = size(job.para,1):-1:1
+    if job.para{pi,3}>job.userlevel, job.para(pi,:) = []; end
+  end
+  exp = job.userlevel; 
+  if cat_get_defaults('extopts.expertgui')~=job.userlevel
+    cat12(userlevels{job.userlevel+1});
+  end
+      
+    
+  for pi=1:size(job.para)
+    for ppi=1:numel(job.para{pi,6})
+      % create output directory and copy files
+      % the different species required another preprocessing, but the following
+      % routines are identical!
+      if ~exist([job.resdir job.para{pi,5}],'dir'), mkdir([job.resdir job.para{pi,5}]); end 
 
-  % load batches and create maun batch
-  mainbatch   = {};
-  batchname   = {}; 
-  for bi = 1:numel(batches)
-    matlabbatch = {};
-    [pp,ffbi]  = fileparts(batches{bi}); 
-    
-    % load batch
-    eval(ffbi);
-    
-    if ~isempty(matlabbatch)
-      for mbi = 1:numel(matlabbatch)
-        mainbatch{end+1,1} = matlabbatch{mbi}; 
-        batchname{end+1,1} = ffbi;
-        batchname{end,2}   = mbi; 
-        batchname{end,3}   = size(batchname,1);  
+      for si = 1:numel(species)
+        eval(sprintf('files_%s = {};',species{si}(6:end)));  
+        for j = numel(job.(species{si})):-1:1
+          copyfile(job.(species{si}){j},[job.resdir job.para{pi,5}]); 
+          [pp,ff,ee] = fileparts(job.(species{si}){j});
+          eval(sprintf('files_%s{j,1} = fullfile([job.resdir job.para{pi,5}],[ff ee]);',species{si}(6:end)));  
+        end
+      end
+      files = [files_human; files_greaterapes; files_oldworldmonkeys]; 
+      if isempty(files), return; end
+
+
+      % cat subdirs
+      if cat_get_defaults('extopts.subfolders')
+        mridir    = 'mri';
+        surfdir   = 'surf';
+        roidir    = 'label';
+        reportdir = 'report';
+      else
+        mridir    = '';
+        surfdir   = '';
+        roidir    = '';
+        reportdir = '';
+      end  
+
+      % add batch dir & get batches 
+      addpath(job.batchdir); 
+      batches = cat_vol_findfiles(job.batchdir,'*.m'); 
+
+      % load batches and create main batch
+      mainbatch{pi}{ppi} = {};
+      batchname         = {}; 
+      for bi = 1:numel(batches)
+        matlabbatch = {};
+        [pp,ffbi]  = fileparts(batches{bi}); 
+
+        % load batch
+        eval(ffbi);
+
+        if strcmp(job.para{pi,1},ffbi)
+          if isnumeric(job.para{pi,6}{ppi})
+            eval(sprintf('matlabbatch{%d}.%s = %f;',job.para{pi,2},job.para{pi,4},job.para{pi,6}{ppi}));
+          else
+            error('bad parameter ... coding required')
+          end
+        end
+        if ~isempty(matlabbatch)
+          for mbi = 1:numel(matlabbatch)
+            mainbatch{pi}{ppi}{end+1,1} = matlabbatch{mbi};
+            
+            batchname{end+1,1} = ffbi;
+            batchname{end,2}   = mbi; 
+            batchname{end,3}   = size(batchname,1);  
+          end
+        end
       end
     end
   end
   
   
   
-  %% process mainbatch
+  
+  %% process main batch
   spm_jobman('initcfg');
-  for mbi = 2 %numel(mainbatch)
-    %%
-    try
-      spm_jobman('run',mainbatch(mbi));  
-    catch e
-      [mbi batchname(mbi,:)],
-      rethrow(e);
+  perror = {}; 
+  for pi=1:size(job.para)
+    for ppi=1:numel(job.para{pi,6})
+      perror{pi}{ppi} = 2*ones(numel(mainbatch{pi}{ppi}),1);
+      for mbi = 3:numel(mainbatch{pi}{ppi})
+        try 
+          spm_jobman('run',mainbatch{pi}{ppi}(mbi));  
+          perror{pi}{ppi}(mbi)=0;
+        catch
+          perror{pi}{ppi}(mbi)=1;
+        end
+      end
     end
-      
+  end
+
+  
+  
+  
+  %% status report
+  for pi=1:size(job.para)
+    for ppi=1:numel(job.para{pi,6})
+      fprintf('\n%45s: %s\n',sprintf('Script %s %0.2f',job.para{pi,5},job.para{pi,6}{ppi}),'Status');
+      for mbi = 1:numel(perror{pi}{ppi})
+        fprintf('%2d)%40s%02d: ',batchname{mbi,3},batchname{mbi,1},batchname{mbi,2}); 
+        if perror{pi}{ppi}(mbi)==2
+          cat_io_cprintf([1.0 0.5 0.0],'unprocessed\n'); 
+        elseif perror{pi}{ppi}(mbi)==1
+          cat_io_cprintf([0.8 0.0 0.0],'FAILED\n'); 
+        else
+          cat_io_cprintf([0.0 0.6 0.0],'OK\n'); 
+        end    
+      end
+    end
   end
 end
 

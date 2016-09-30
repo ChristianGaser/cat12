@@ -233,12 +233,12 @@ function cat_run_job(job,tpm,subj)
     if ~strcmp(job.extopts.species,'human'), job.extopts.APP='nonhuman'; end
     
     switch job.extopts.APP
-      case {0,'none'},   app.bias=0; app.msk=0; app.aff=1; % old default
-      case {1,'light'},  app.bias=1; app.msk=1; app.aff=1; % affreg with BC; thresholding and head masking for SPM
-      case {2,'medium'}, app.bias=2; app.msk=1; app.aff=1; % no-affreg; BC and head masking for SPM  
-      case {3,'strong'}, app.bias=2; app.msk=1; app.aff=0; % no-affreg; BC and head masking for SPM  
-      case {4,'heavy'},  app.bias=4; app.msk=3; app.aff=0; % no-affreg; BC and brain masking for SPM  
-      case {'nonhuman'}, app.bias=4; app.msk=4; app.aff=0; % no-affreg; BC and brain masking for SPM  
+      case {0,'none'},     app.bias=0; app.msk=0; app.aff=1; % old default
+      case {1,'light'},    app.bias=1; app.msk=1; app.aff=1; % affreg with BC; thresholding and head masking for SPM
+      case {2,'medium'},   app.bias=2; app.msk=1; app.aff=1; % no-affreg; BC and head masking for SPM  
+      case {3,'strong'},   app.bias=2; app.msk=1; app.aff=0; % no-affreg; BC and head masking for SPM  
+      case {4,'heavy'},    app.bias=4; app.msk=3; app.aff=0; % no-affreg; BC and brain masking for SPM  
+      case {5,'nonhuman'}, app.bias=4; app.msk=4; app.aff=0; % no-affreg; BC and brain masking for SPM  
       otherwise
     end
     
@@ -319,7 +319,7 @@ function cat_run_job(job,tpm,subj)
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
-        % affine resistration
+        %% affine resistration
         try
             spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
         catch

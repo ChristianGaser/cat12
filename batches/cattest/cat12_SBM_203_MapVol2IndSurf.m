@@ -6,13 +6,22 @@
 
 % prepare filename
 % ----------------------------------------------------------------------
-vols = files; surfs = files; 
 if exist('files','var') 
+  vols  = files; 
+  surfs = files; 
   for fi = 1:numel(files)
     [pp,ff] = spm_fileparts(files{fi}); 
-    vols{fi,1}  = fullfile( pp , mridir  , ['m' ff '.nii'] );
+    if exp
+      vols{fi,1}  = fullfile( pp , mridir  , ['m' ff '.nii'] );
+    else
+      vols{fi,1}  = fullfile( pp , [ff '.nii'] ); % no m*.nii user original
+    end
     surfs{fi,1} = fullfile( pp , surfdir , ['lh.central.' ff '.gii'] ); 
   end
+else
+  vols  = {''};
+  surfs = {''};  
+  exp   = cat_get_defaults('extopts.expertgui'); 
 end  
 
 % batch
@@ -22,8 +31,8 @@ end
 matlabbatch{1}.spm.tools.cat.stools.vol2surf.data_vol                           = vols; 
 matlabbatch{1}.spm.tools.cat.stools.vol2surf.data_mesh_lh                       = surfs;
 matlabbatch{1}.spm.tools.cat.stools.vol2surf.sample                             = {'avg'};
-matlabbatch{1}.spm.tools.cat.stools.vol2surf.interp                             = {'linear'};
-matlabbatch{1}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'T1GMavg3';
+if exp, matlabbatch{1}.spm.tools.cat.stools.vol2surf.interp                     = {'linear'}; end
+matlabbatch{1}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'GM-T1-intensity';
 matlabbatch{1}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.class          = 'GM';
 matlabbatch{1}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.startpoint     = 0;
 matlabbatch{1}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.stepsize       = 0.5;
@@ -33,8 +42,8 @@ matlabbatch{1}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.endpoint       
 matlabbatch{2}.spm.tools.cat.stools.vol2surf.data_vol                           = vols;
 matlabbatch{2}.spm.tools.cat.stools.vol2surf.data_mesh_lh                       = surfs; 
 matlabbatch{2}.spm.tools.cat.stools.vol2surf.sample                             = {'avg'};
-matlabbatch{2}.spm.tools.cat.stools.vol2surf.interp                             = {'linear'};
-matlabbatch{2}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'T1EL0';
+if exp, matlabbatch{2}.spm.tools.cat.stools.vol2surf.interp                     = {'linear'}; end
+matlabbatch{2}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'EquiDist-Layer0-Intensity';
 matlabbatch{2}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.class          = 'GM';
 matlabbatch{2}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.startpoint     = 1/13;
 matlabbatch{2}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.stepsize       = 0;
@@ -43,8 +52,8 @@ matlabbatch{2}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.endpoint       
 matlabbatch{3}.spm.tools.cat.stools.vol2surf.data_vol                           = vols;
 matlabbatch{3}.spm.tools.cat.stools.vol2surf.data_mesh_lh                       = surfs; 
 matlabbatch{3}.spm.tools.cat.stools.vol2surf.sample                             = {'avg'};
-matlabbatch{3}.spm.tools.cat.stools.vol2surf.interp                             = {'linear'};
-matlabbatch{3}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'T1EL4';
+if exp, matlabbatch{3}.spm.tools.cat.stools.vol2surf.interp                     = {'linear'}; end
+matlabbatch{3}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'EquiDist-Layer4-Intensity';
 matlabbatch{3}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.class          = 'GM';
 matlabbatch{3}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.startpoint     = 7/13;
 matlabbatch{3}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.stepsize       = 0;
@@ -53,8 +62,8 @@ matlabbatch{3}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.endpoint       
 matlabbatch{4}.spm.tools.cat.stools.vol2surf.data_vol                           = vols;
 matlabbatch{4}.spm.tools.cat.stools.vol2surf.data_mesh_lh                       = surfs; 
 matlabbatch{4}.spm.tools.cat.stools.vol2surf.sample                             = {'avg'};
-matlabbatch{4}.spm.tools.cat.stools.vol2surf.interp                             = {'linear'};
-matlabbatch{4}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'T1L6';
+if exp, matlabbatch{4}.spm.tools.cat.stools.vol2surf.interp                     = {'linear'}; end
+matlabbatch{4}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'EquiDist-Layer6-Intensity';
 matlabbatch{4}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.class          = 'GM';
 matlabbatch{4}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.startpoint     = 12/13;
 matlabbatch{4}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.stepsize       = 0;
@@ -64,8 +73,8 @@ matlabbatch{4}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.endpoint       
 matlabbatch{5}.spm.tools.cat.stools.vol2surf.data_vol                           = vols;
 matlabbatch{5}.spm.tools.cat.stools.vol2surf.data_mesh_lh                       = surfs; 
 matlabbatch{5}.spm.tools.cat.stools.vol2surf.sample                             = {'avg'};
-matlabbatch{5}.spm.tools.cat.stools.vol2surf.interp                             = {'linear'};
-matlabbatch{5}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'T1WM';
+if exp, matlabbatch{5}.spm.tools.cat.stools.vol2surf.interp                     = {'linear'}; end
+matlabbatch{5}.spm.tools.cat.stools.vol2surf.datafieldname                      = 'WM-Intensity-at150percentCT';
 matlabbatch{5}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.class          = 'GM';
 matlabbatch{5}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.startpoint     = 1.5;
 matlabbatch{5}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.stepsize       = 0;

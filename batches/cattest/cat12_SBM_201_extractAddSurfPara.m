@@ -14,6 +14,9 @@ if exist('files','var')
     surfs{fi*2-1,1} = fullfile( pp , surfdir , ['lh.central.' ff '.gii'] );  
     surfs{fi*2  ,1} = fullfile( pp , surfdir , ['rh.central.' ff '.gii'] );  
   end
+else
+  surfs = {''}; 
+  exp = cat_get_defaults('extopts.expertgui'); 
 end  
 
 % batch
@@ -24,9 +27,11 @@ matlabbatch{1}.spm.tools.cat.stools.surfextract.FD        = 1; % fractal dimenti
 matlabbatch{1}.spm.tools.cat.stools.surfextract.SD        = 1; % sulcal depth
 matlabbatch{1}.spm.tools.cat.stools.surfextract.nproc     = 0; % multi processes (not for this script)
 % expert options that are stil in development
-matlabbatch{1}.spm.tools.cat.stools.surfextract.area      = 1; % EXPERT
-matlabbatch{1}.spm.tools.cat.stools.surfextract.GIA       = 0; % EXPERT 
-matlabbatch{1}.spm.tools.cat.stools.surfextract.GII       = 0; % EXPERT 
-matlabbatch{1}.spm.tools.cat.stools.surfextract.GIL       = 1; % EXPERT laplacican GI
-matlabbatch{1}.spm.tools.cat.stools.surfextract.GIS       = 0; % EXPERT sperical GI 
-matlabbatch{1}.spm.tools.cat.stools.surfextract.lazy      = 0; % EXPERT
+if exp
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.area      = 1; % EXPERT
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.GIA       = 0; % EXPERT 
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.GII       = 0; % EXPERT 
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.GIL       = 1; % EXPERT laplacican GI
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.GIS       = 0; % EXPERT sperical GI 
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.lazy      = 0; % EXPERT
+end
