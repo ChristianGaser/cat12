@@ -96,9 +96,9 @@ function out = cat_surf_vol2surf(varargin)
           mappingstr, job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
-        if job.gifti==0
-          cat_io_FreeSurfer('gii2fs',struct('data',P.data{vi,si},'delete',1)); 
-        end
+        %if job.gifti==0
+        %  cat_io_FreeSurfer('gii2fs',struct('data',P.data{vi,si},'delete',1)); 
+        %end
         
         if job.verb
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));

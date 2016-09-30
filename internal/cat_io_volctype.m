@@ -28,9 +28,10 @@ function cat_io_volctype(varargin)
   else
      job.data = cellstr(job.data);
   end
-  if isempty(job.data), return; end
+  if isempty(job.data) || isempty(job.data{1}), return; end
   
 % choose output format
+  spm_clf('Interactive'); 
   if isfield(job,'ctype')
     if ischar(job.ctype)
       ctype = spm_type(job.ctype);
@@ -97,10 +98,10 @@ function cat_io_volctype(varargin)
           spm_progress_bar('Init',numel(job.data),'Set datatype:','Volumes Complete');
         end
       else
-        clim = iscaling(Y(:),[0.02 0.999]); rf = 1000; 
+        clim = cat_vol_iscaling(Y(:),[0.02 0.98]); rf = 1; 
         switch ctype
-          case [2,256], V.pinfo(1) = round( rf*((clim(2) - clim(1)) / 256)   )/rf;
-          case [4,512], V.pinfo(1) = round( rf*((clim(2) - clim(1)) / 256^2) )/rf;
+          case {2,256}, V.pinfo(1) = ceil( rf*((clim(2) - clim(1)) / 256)   )/rf;
+          case {4,512}, V.pinfo(1) = ceil( rf*((clim(2) - clim(1)) / 256^2) )/rf;
         end
       end
       
@@ -117,20 +118,4 @@ function cat_io_volctype(varargin)
     spm_progress_bar('Set',si);
   end
   spm_progress_bar('Clear');
-end
-function clim = iscaling(cdata,plim)
-  %%
-  cdata(isnan(cdata) | isinf(cdata)) = []; 
-  ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
-  if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
-
-  bcdata  = [min(cdata) max(cdata)]; 
-  if bcdata(1) == bcdata(2)
-    clim = bcdata + [-eps eps];
-  else
-    range   = bcdata(1):diff(bcdata)/1000:bcdata(2);
-    hst     = hist(cdata,range);
-    clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
-    clim(2) = range(min([numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')]));
-  end
 end

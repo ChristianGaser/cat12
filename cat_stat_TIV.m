@@ -6,7 +6,7 @@ function cat_stat_TIV(p)
 % $Id$
 
 if ~p.calcvol_TIV
-  fprintf('%50s\t%5s\t%5s\t%5s\t%5s\t%5s\n','Name','Total','GM','WM','CSF','WMH');
+  fprintf('%60s\t%7s\t%7s\t%7s\t%7s\t%7s\n','Name','Total','GM','WM','CSF','WMH');
 end
 fid = fopen(p.calcvol_name,'w');
 
@@ -16,18 +16,20 @@ end
 
 spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
 for i=1:length(p.data_xml)
-    xml = convert(xmltree(deblank(p.data_xml{i})));
-    tmp = eval(xml.subjectmeasures.vol_abs_CGW);
-
+    xml = cat_io_xml(deblank(p.data_xml{i})); 
+    %xml = convert(xmltree(deblank(p.data_xml{i})));
+    %tmp = eval(xml.subjectmeasures.vol_abs_CGW);
+    tmp  = xml.subjectmeasures.vol_abs_CGW; 
+    
     name = spm_str_manip(xml.filedata.fname,'a50');
 
     % only save TIV
     if p.calcvol_TIV
-        fprintf(fid,'%3.2f\n',sum(tmp));
-        fprintf('%50s\t%5.2f\n',name,sum(tmp));
+        fprintf(fid,'%7.2f\n',sum(tmp));
+        fprintf('%60s\t%7.2f\n',spm_str_manip(name,'l60'),sum(tmp));
     else % also save GM/WM/CSF 
-        fprintf(fid,'%3.2f\t%3.2f\t%3.2f\t%3.2f\t%3.2f\n',sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
-        fprintf('%50s\t%5.2f\t%5.2f\t%5.2f\t%5.2f\t%5.2f\n',name,sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
+        fprintf(fid,'%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
+        fprintf('%60s\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n',spm_str_manip(name,'l60'),sum(tmp),tmp(2),tmp(3),tmp(1),tmp(4));
     end
     spm_progress_bar('Set',i);  
 end

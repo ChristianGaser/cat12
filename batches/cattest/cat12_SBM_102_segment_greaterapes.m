@@ -5,12 +5,16 @@
 % Robert Dahnke
 % $Id: cat_run_job.m 1013 2016-09-22 11:49:13Z dahnke $
 
-if isempty(files_greaterapes), return; end
+if ~exist('files_greaterapes','var')
+  files_greaterapes = {'<UNDEFINED>'}; 
+elseif isempty(files_greaterapes)
+  return;
+end
 
 % batch
 % -- opts --------------------------------------------------------------
 matlabbatch{1}.spm.tools.cat.estwrite.data                    = files_greaterapes;
-matlabbatch{1}.spm.tools.cat.estwrite.nproc                   = 4;
+matlabbatch{1}.spm.tools.cat.estwrite.nproc                   = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.opts.tpm                = { fullfile( spm('dir') , 'toolbox' , 'cat12' , 'templates_animals' , 'ape_greater_TPM.nii' ) };
 matlabbatch{1}.spm.tools.cat.estwrite.opts.ngaus              = [3 3 2 3 4 2];
 matlabbatch{1}.spm.tools.cat.estwrite.opts.biasreg            = 0.001;
@@ -20,7 +24,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg             = 'mni';
 matlabbatch{1}.spm.tools.cat.estwrite.opts.samp               = 2;
 % -- extopts -----------------------------------------------------------
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.lazy            = 0;         % EXPERT
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.APP             = 3;        
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.APP             = 5;        
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.sanlm           = 2;         % noise filter
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.NCstr           = Inf;       % noise filter strength 
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.LASstr          = 0.5;       % EXPERT

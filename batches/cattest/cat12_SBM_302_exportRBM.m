@@ -10,15 +10,22 @@
 % prepare filenames
 % ---------------------------------------------------------------------
 if exist('files','var') 
-  xmls  = {}; sxmls = {};
+  xmls  = {}; 
+  sxmls = {};
   for fi = 1:numel(files)
     [pp,ff] = spm_fileparts(files{fi}); 
     xmls{end+1,1}  = fullfile( pp , roidir , ['catROI_'  ff '.xml'] ); 
     sxmls{end+1,1} = fullfile( pp , roidir , ['catROIs_' ff '.xml'] ); 
   end
+  outdir = {fullfile( job.resdir , 'RBMexport' )};
+else
+  xmls   = {''}; 
+  sxmls  = {''};   
+  outdir = {'<UNDEFINED>'};  
 end  
 
-outdir = {fullfile( job.resdir , 'RBMexport' )};
+
+
 
 % batch
 % ---------------------------------------------------------------------

@@ -226,7 +226,7 @@ function varargout = cat_surf_display(varargin)
             if     strfind(sinfo(i).posside,'-Igm.ROI'),  clim = [2/3 2/3] .* [0.9 1.1];        % balanced PVE
             elseif strfind(sinfo(i).posside,'-Iwm.ROI'),  clim = [0.85 1.05];                   % below 1 because of a lot of GM/WM PVE
             elseif strfind(sinfo(i).posside,'-Icsf.ROI'), clim = [1.33/3 1.33/3] .* [0.8 1.2];  % higher 1/3 because of a lot of GM/CSF PVE
-            else                                          clim = iscaling(h.cdata);
+            else                                          clim = cat_vol_iscaling(h.cdata);
             end
             if job.expert<2
               cat_surf_render('clim',h.axis,clim);
@@ -241,7 +241,7 @@ function varargout = cat_surf_display(varargin)
           case ''
             % no texture name
             if ~isempty(h.cdata)
-              clim = iscaling(h.cdata);
+              clim = cat_vol_iscaling(h.cdata);
               if clim(1)<0
                 clim = [-max(abs(clim)) max(abs(clim))];
                 if job.expert<2
@@ -289,7 +289,7 @@ function varargout = cat_surf_display(varargin)
                 cat_surf_render2('clim',h.axis,ranges{texturei,3});
               end
             else
-              clim = iscaling(h.cdata);  
+              clim = cat_vol_iscaling(h.cdata);  
               if job.expert<2
                 cat_surf_render('clim',h.axis,round(clim));
               else
@@ -366,18 +366,6 @@ function varargout = cat_surf_display(varargin)
       varargout{1}{i} = h;
     end   
   end
-end
-
-function clim = iscaling(cdata,plim)
-%%
-  ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
-  if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
-
-  bcdata  = [min(cdata) max(cdata)]; 
-  range   = bcdata(1):diff(bcdata)/1000:bcdata(2);
-  hst     = hist(cdata,range);
-  clim(1) = range(max(1,find(cumsum(hst)/sum(hst)>plim(1),1,'first')));
-  clim(2) = range(min([numel(range),find(cumsum(hst)/sum(hst)>plim(2),1,'first')]));
 end
 
 
