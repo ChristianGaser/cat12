@@ -28,7 +28,7 @@ function cat_tst_cattest(job)
 %
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job.m 1013 2016-09-22 11:49:13Z dahnke $
+%  $Id$
 
 
 
@@ -313,6 +313,17 @@ function cat_tst_cattest(job)
   
   
   %% status report
+  fprintf('CAT Test:\n')
+  fprintf('  userlevel:  %s\n',userlevels{job.userlevel+1});
+  fprintf('  datalevel:  %s\n',job.datalevel);
+  for fi=1:numel(files)
+    fprintf('    %s\n',files{fi});
+  end
+  fprintf('  paralevel: %s\n',job.paralevel);
+  for fi=1:numel(files)
+    fprintf('    %s\n',files{fi});
+  end
+  fprintf('\n');
   for pi=1:size(job.para)
     for ppi=1:numel(job.para{pi,6})
       fprintf('\n%45s: %s\n',sprintf('Script %s %0.2f',job.para{pi,5},job.para{pi,6}{ppi}),'Status');
