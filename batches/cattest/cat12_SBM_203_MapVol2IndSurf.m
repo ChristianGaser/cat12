@@ -2,7 +2,7 @@
 % Test batch for volume to surface mapping of cat_tst_cattest.
 % ---------------------------------------------------------------------
 % Robert Dahnke
-% $Id: cat_io_volctype.m 945 2016-06-06 06:54:56Z gaser $
+% $Id$
 
 % prepare filename
 % ----------------------------------------------------------------------
