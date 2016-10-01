@@ -12246,6 +12246,7 @@ M       cat_surf_vol2surf.m
 
 
 ------------------------------------------------------------------------
+r1023 | dahnke | 2016-09-30 17:19:46 +0200 (Fr, 30 Sep 2016) | 31 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12277,5 +12278,34 @@ M       templates_1.50mm/cat.nii
 (3) Changed:  Added GUI, parameter test, and status report in "cat_tst_cattest".
 (4) Checked:  All cattest batches can be loaded as matlab batch.
 (5) Fixed:    Corrected miss-labeled regions in cat atlas.
+
 ------------------------------------------------------------------------
-r1023 | dahnke | 2016-09-30 17:19:32
+
+Changed paths:
+M       CHANGES.txt
+MM      batches/cattest/cat12_SBM_101_segment.m
+MM      batches/cattest/cat12_SBM_102_segment_greaterapes.m
+MM      batches/cattest/cat12_SBM_103_segment_oldworldmonkeys.m
+MM      batches/cattest/cat12_SBM_201_extractAddSurfPara.m
+MM      batches/cattest/cat12_SBM_202_MapNormVol2AvgSurf.m
+MM      batches/cattest/cat12_SBM_203_MapVol2IndSurf.m
+MM      batches/cattest/cat12_SBM_204_ResampAndSmooth.m
+MM      batches/cattest/cat12_SBM_301_Surf2ROI.m
+MM      batches/cattest/cat12_SBM_302_exportRBM.m
+M       cat_main_LAS.m
+M       cat_surf_createCS.m
+MM      cat_tst_cattest.m
+M       development/cat_main_LAS.m
+ M      html/cat_starting_cattest.html
+ M      templates_1.50mm
+M       templates_animals/ape_greater_vbm12.nii
+
+(1) Changed:  Increased LAS GM sensitivity in "cat_main_LAS".
+              This update will avoid blurred sulci in surface reconstruction 
+              but may lead to cuts in the parahippocampal gyrus!
+(2) Changed:  Refined smoothing in "cat_surf_createCS" to reduce artifacts 
+              in noise data or by meninges.
+(3) Changed:  Refined greater apes CAT atlas. 
+
+------------------------------------------------------------------------
+r1024 | dahnke | 2016-10-01 18:37:08

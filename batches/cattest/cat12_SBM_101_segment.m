@@ -3,7 +3,7 @@
 % cat_tst_cattest.
 % ---------------------------------------------------------------------
 % Robert Dahnke
-% $Id: cat_run_job.m 1013 2016-09-22 11:49:13Z dahnke $
+% $Id$
 
 if ~exist('files_human','var')
   files_human = {'<UNDEFINED>'};

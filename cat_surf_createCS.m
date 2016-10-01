@@ -73,7 +73,16 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   % get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
     
-  
+  % noise reduction for higher resolutions (>=1 mm full correction, 1.5 mm as lower limit)
+  % (added 20160920 ~R1010 due to servere sulcus reconstruction problems with 1.5 Tesla data)
+  Yms = Ym + 0; cat_sanlm(Yms,3,1);
+  %Yms = cat_vol_isarnlm(Ym,V,opt.verb>1,1); % isarnlm version?
+  %noise = std(Yms(Yms(:)>0) - Ym(Yms(:)>0)); % more selective filtering?
+  %vx_vol = [0.5;0.75;1;1.25;1.5;2]; [vx_vol
+  %min(1,max(0,3-2*mean(vx_vol,2))) min(1,max(0,1-mean(vx_vol,2))/2) 0.5*min(1,max(0,1.5-mean(vx_vol,2)))] % filter test 
+  mf  = min(1,max(0,3-2*mean(vx_vol,2))); 
+  Ym  = mf * Yms  +  (1-mf) * Ym;
+   
   % filling
   Ymf  = max(Ym,min(0.95,YMF)); 
   Ymfs = cat_vol_smooth3X(Ymf,1); 
@@ -81,12 +90,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs YMF; 
   Ymf = Ymf*3;
   
-
-  % noise reduction for higher resolutions (>=1 mm full correction, 1.5 mm as lower limit)
-  % (added 20160920 ~R1010 due to servere sulcus reconstruction problems with 1.5 Tesla data)
-  Ymfs = Ymf + 0; cat_sanlm(Ymfs,3,1);
-  %Ymfs  = cat_vol_isarnlm(Ymf,V,opt.verb>1,1); % isarnlm?
-  Ymf  = min(1,max(0,1.5-mean(vx_vol))) * Ymfs  +  min(1,max(0,mean(vx_vol)-0.5)) * Ymf;
     
   % reduction of artifact, blood vessel, and meninges next to the cortex
   % (are often visible as very thin structures that were added to the WM 
@@ -97,8 +100,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
           cat_vol_morph(~NS(Ya,opt.LAB.HC) & ~NS(Ya,opt.LAB.HI) & ...
             ~NS(Ya,opt.LAB.PH) & ~NS(Ya,opt.LAB.VT),'erode',4); 
   Ymfs  = cat_vol_median3(Ymf,Ysroi,Ymf>eps,0.1); % median filter
-  %Ymfs  = Ymfs.*(~Ysroi) + Ysroi*cat_vol_smooth3X(Ymfs,0.25/mean(vx_vol)); % gaussian filter? 
-  Ymf   = min(1,max(0,1.5-mean(vx_vol))) * Ymfs  +  min(1,max(0,mean(vx_vol)-0.5)) * Ymf;
+  Ymf   = mf * Ymfs  +  (1-mf) * Ymf;
+  
+  % gaussian filter? ... only in tissue regions
+  Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
+  Ymf(Ymf>1) = Ymfs(Ymf>1);
+
   clear Ysroi Ywmd Ymfs;
 
   
@@ -152,7 +159,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%s:\n',opt.surf{si});
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
     
-    [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,Ymfs>1.1); % removing background
+    [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,Ymfs>0.5); % removing background
     [Ymfs,resI]     = cat_vol_resize(Ymfs,'interp',V,opt.interpV);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0.5;             % interpolate volume
     mask_parahipp      = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;        % interpolate volume
