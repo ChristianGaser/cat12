@@ -319,7 +319,7 @@ function cat_run_job(job,tpm,subj)
         aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
         aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
-        %% affine resistration
+        %% affine registration
         try
             spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
         catch

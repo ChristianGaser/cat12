@@ -17,8 +17,6 @@ end
 spm_progress_bar('Init',length(p.data_xml),'Load xml-files','subjects completed')
 for i=1:length(p.data_xml)
     xml = cat_io_xml(deblank(p.data_xml{i})); 
-    %xml = convert(xmltree(deblank(p.data_xml{i})));
-    %tmp = eval(xml.subjectmeasures.vol_abs_CGW);
     tmp  = xml.subjectmeasures.vol_abs_CGW; 
     
     name = spm_str_manip(xml.filedata.fname,'a50');
