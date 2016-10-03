@@ -43,7 +43,7 @@ n_ROI_measures = size(ROI_measures,1);
 n_data = length(roi);
 
 for i=1:n_data        
-  xml = convert(xmltree(deblank(roi{i})));
+  xml = cat_io_xml(deblank(roi{i}));
 
   if ~isfield(xml,'ROI')
     error('XML file contains no ROI information.');

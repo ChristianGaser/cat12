@@ -32,7 +32,7 @@ function varargout = cat_roi_fun(action,varargin)
 %       .([SUBMEASURE_]MEASURE) = r x 1 numerical matrix
 % ______________________________________________________________________
 % Robert Dahnke 2016
-% $Id: cat_io_xml.m 957 2016-06-21 11:10:46Z gaser $
+% $Id$
 
   switch action
     case 'exportSample'
@@ -49,6 +49,7 @@ function varargout = cat_roi_fun(action,varargin)
       help cat_roi_fun;
   end
 end
+
 function [catTAB,catROI] = cat_roi_xmlroi2csvtabtest
 % This is just a simple test function. 
 
@@ -76,8 +77,8 @@ function [catTAB,catROI] = cat_roi_xmlroi2csvtabtest
   catTAB  = cat_roi_fun('xmlroi2csvtab',catROI);
   catROIr = cat_roi_fun('csvtab2xmlroi',catTAB);
   
-  
 end
+
 function mcsvtab = cat_roi_exportSample(job)
 %% 
 
@@ -158,16 +159,17 @@ function mcsvtab = cat_roi_exportSample(job)
             mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}),'','',struct('delimiter',job.delimiter,'komma',job.point));
 
         end
-
-        
+ 
       end
 
     end    
   end
 end
+
 function varargout = cat_roi_importSample(varargin)
 
 end
+
 function csvtab = cat_roi_xmlroi2csvtab(varargin)
 % This function convertes the CAT XML ROI structure to the CAT CSV tables.
 
@@ -243,8 +245,9 @@ function csvtab = cat_roi_xmlroi2csvtab(varargin)
     csvtab = csvtab.atlas; 
   end
 end
+
 function xmlroi = cat_roi_csvtab2xmlroi(varargin)
-% This function convertes the CAT CSV tables to the CAT XML ROI structure.
+% This function converts the CAT CSV tables to the CAT XML ROI structure.
   [CATrel, CATver] = cat_version;
  
   if iscell(varargin{1})

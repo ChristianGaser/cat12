@@ -81,7 +81,7 @@ if ~isempty(xml_files)
       warning('Please check file names because of deviating subject names\n: %s vs. %s\n',P(i,:),xml_files(i,:));
     end
     
-    xml = convert(xmltree(deblank(xml_files(i,:))));
+    xml = cat_io_xml(deblank(xml_files(i,:)));
     try
       QM(i,:) = [str2double(xml.qualityratings.NCR) str2double(xml.qualityratings.ICR) str2double(xml.qualityratings.IQR)];
     catch % also try to use old version

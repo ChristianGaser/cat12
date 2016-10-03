@@ -288,7 +288,11 @@ switch lower(action)
                 H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
               catch
                 if ind == 1
-                  H.S{ind}.Y = zeros(size(H.S{2}.Y));
+                  try
+                    H.S{ind}.Y = zeros(size(H.S{2}.Y));
+                  catch
+                    error('No data in surfaces found.');
+                  end
                 else
                   H.S{ind}.Y = zeros(size(H.S{1}.Y));
                 end
