@@ -112,7 +112,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Yg    = cat_vol_grad(Ym,vx_vol);                                                  % mean gradient map
   Ydiv  = cat_vol_div(max(0.33,Ym),vx_vol);                                         % divergence map 
   Yp0   = single(Yclsr{1})/255*2 + single(Yclsr{2})/255*3 + single(Yclsr{3})/255;   % tissue label map
-  Yb    = smooth3(Yb | cat_vol_morph(Yb,'d',2*vxv) & Ym<0.8 & Yg<0.3 & Ym>0)>0.5;   % increase brain mask, for missing GM 
+  Yb    = smooth3(Yb | (cat_vol_morph(Yb,'d',2*vxv) & Ym<0.8 & Yg<0.3 & Ym>0 & Yp0>0.2))>0.5;   % increase brain mask, for missing GM 
   
   
   
@@ -161,25 +161,34 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   %  It is further unclear who to handle subcortical regions ...
   PBTinterpol = mean(vx_vol)>0.9; 
   if PBTinterpol
-    Yli = interp3(Yl1,1,'nearest'); 
-    Ymi = interp3(Ym,1); 
-    Ybi = interp3(single(Yb),1)>0.5;
+    Yli     = interp3(Yl1,1,'nearest'); 
+    Ymi     = interp3(Ym,1); 
+    Ybi     = interp3(single(Yb),1)>0.5;
+    Ywtpmi  = interp3(Ywtpm,1); 
+    Ydivi   = interp3(Ydiv,1);
+    vx_voli = vx_vol/2; 
   else
-    Yli = Yl1; 
-    Ymi = Ym; 
-    Ybi = Yb; 
+    Yli     = Yl1; 
+    Ymi     = cat_vol_smooth3X(Ym,0.5/mean(vx_vol)); 
+    Ybi     = Yb; 
+    Ywtpmi  = Ywtpm; 
+    Ydivi   = Ydiv; 
+    vx_voli = vx_vol; 
   end
    
   % PBT thickness and percentage position estimation 
-  Ybgc  = cat_vol_smooth3X(Ymi>0.7 & Ymi<0.95 & (NS(Yli,LAB.BG) | NS(Yli,LAB.TH)),2/mean(vx_vol)); % correction for subcortical structures
+  Ybgc  = cat_vol_smooth3X(Ymi>0.7 & Ymi<0.95 & (NS(Yli,LAB.BG) | NS(Yli,LAB.TH)),2/mean(vx_voli)); % correction for subcortical structures
   Ybgc  = (Ymi-2/3) .* (Ymi>2/3 & Ybgc>0.3);
   Ycsfd = cat_vbdist(2-Ybi-Ymi,(Ymi-Ybgc)<2.5/3);
-  Ywmd  = cat_vbdist(((Ymi-Ybgc).*Ybi)*3-2,Ybi);
-  Ygmt  = cat_vol_pbtp((Ymi-Ybgc).*Ybi*3,Ywmd,Ycsfd); 
+  Ywmh  = cat_vol_morph((((Ymi-Ybgc+((Ywtpmi - Ydivi*0.1)>0.98)).*Ybi)*3-2)>0.5,'lc',1/mean(vx_voli)); % WM hyperintensity 
+  Ywmd  = cat_vbdist(((Ymi-Ybgc+Ywmh).*Ybi)*3-2,Ybi);
+  Ygmt  = cat_vol_pbtp((Ymi-Ybgc+Ywmh).*Ybi*3,Ywmd,Ycsfd); 
   for i=1:1, Ygmt = cat_vol_localstat(Ygmt,Ygmt>0,1,1); end
   Ypp = zeros(size(Ybi)); 
   Ypp(Ygmt>0) = min(Ybi(Ygmt>0),min(Ycsfd(Ygmt>0),Ygmt(Ygmt>0)-Ywmd(Ygmt>0))./max(eps,Ygmt(Ygmt>0))); 
   Ypp((Ymi>5/6 & Ybi & ~(NS(Yli,LAB.BG) | NS(Yli,LAB.TH))) | (Ymi>0.95 & Ybi)) = 1;
+  Ypp((((Ymi-Ybgc+Ywmh).*Ybi)*3-2)>0.5)=1;
+  Ypp = cat_vol_smooth3X(Ypp,0.5/mean(vx_voli));
   
   % thickness correction and back to original resolution
   Ygmt = Ygmt*mean(vx_vol); Ygmt(Ygmt>10 | isnan(Ygmt)) = 0;
@@ -193,7 +202,6 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   % subcortical structures
   %Ypp( NS(Yl1,LAB.BG) & Ym>2.1/3 & Ym<2.9/3 )=0.5;
   %Ypp   = cat_vol_median3(Ypp,Ypp<0.1 & Ym>=1.9/3 & Yb,true(size(Ym))); 
-  
   
   
   

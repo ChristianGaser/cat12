@@ -12280,6 +12280,7 @@ M       templates_1.50mm/cat.nii
 (5) Fixed:    Corrected miss-labeled regions in cat atlas.
 
 ------------------------------------------------------------------------
+r1024 | dahnke | 2016-10-01 18:37:22 +0200 (Sa, 01 Okt 2016) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12307,5 +12308,30 @@ M       templates_animals/ape_greater_vbm12.nii
               in noise data or by meninges.
 (3) Changed:  Refined greater apes CAT atlas. 
 
+
 ------------------------------------------------------------------------
-r1024 | dahnke | 2016-10-01 18:37:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_LAS.m
+M       cat_surf_createCS.m
+M       development/cat_main_LAS.m
+A  +    development/cat_surf_createCS.m
+M       templates_1.50mm/cat.nii
+M       templates_animals/ape_greater_T1.nii
+M       templates_animals/ape_greater_T2.nii
+!       templates_animals/ape_greater_TPMt.nii
+M       templates_animals/ape_greater_brainmask.nii
+M       templates_animals/ape_greater_vbm12.nii
+M       templates_animals/monkey_oldworld_vbm12.nii
+
+(1) Changed:  Refined human CAT atlas.
+(2) Changed:  Refined greater apes CAT atlas. 
+(3) Changed:  Refined oldworld monkey CAT atlas. 
+(4) Changed:  Corrected Ypp estimation in "cat_main_LAS" to reduce problems 
+              with low quality images and old subjects.
+(5) Changed:  Added further WMH correction in "development/cat_surf_createCS".
+
+
+------------------------------------------------------------------------
+r1025 | dahnke | 2016-10-03 20:31:45
