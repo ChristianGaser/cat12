@@ -12310,6 +12310,7 @@ M       templates_animals/ape_greater_vbm12.nii
 
 
 ------------------------------------------------------------------------
+r1025 | dahnke | 2016-10-03 20:32:01 +0200 (Mo, 03 Okt 2016) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12333,5 +12334,22 @@ M       templates_animals/monkey_oldworld_vbm12.nii
 (5) Changed:  Added further WMH correction in "development/cat_surf_createCS".
 
 
+
 ------------------------------------------------------------------------
-r1025 | dahnke | 2016-10-03 20:31:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      cat_roi_fun.m
+M       cat_run_job.m
+M       cat_stat_IQR.m
+M       cat_stat_ROI.m
+M       cat_stat_TIV.m
+M       cat_stat_check_cov.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Changed: Check in cat_surf_results.m for empty cdata.
+(2) Changed: Replaced xmltree by cat_io_xml in all functions.
+------------------------------------------------------------------------
+r1026 | gaser | 2016-10-03 22:44:36
