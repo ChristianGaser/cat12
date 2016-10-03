@@ -101,6 +101,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
             ~NS(Ya,opt.LAB.PH) & ~NS(Ya,opt.LAB.VT),'erode',4); 
   Ymfs  = cat_vol_median3(Ymf,Ysroi,Ymf>eps,0.1); % median filter
   Ymf   = mf * Ymfs  +  (1-mf) * Ymf;
+ 
+  % closing of small WMHs 
+  vols = [sum(round(Ymf(:))==1) sum(round(Ymf(:))==2)  sum(round(Ymf(:))==3)] / sum(round(Ymf(:))>0); 
+  Ywmh = cat_vol_morph(Ymf>max(2.2,2.6-vols(1)*2),'lc',min(1,(0.5 + vols(1)*4)/mean(vx_vol))); 
+  Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
   
   % gaussian filter? ... only in tissue regions
   Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
