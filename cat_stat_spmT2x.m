@@ -251,20 +251,23 @@ for i=1:size(P,1)
     if isempty(Q)
         fprintf('No voxels survive height threshold u=%0.2g\n',u);
     end
-
-    if isfield(SPM.xVol,'G') % mesh detected?
-        [N,Z2,XYZ2,A2,L]  = spm_mesh_max(Z,XYZ,SPM.xVol.G);
-    else
-        [N,Z2,XYZ2,A2,L]  = spm_max(Z,XYZ);
+    
+    if u0 > -Inf
+        if isfield(SPM.xVol,'G') % mesh detected?
+            [N,Z2,XYZ2,A2,L]  = spm_mesh_max(Z,XYZ,gifti(SPM.xVol.G));
+        else
+            [N,Z2,XYZ2,A2,L]  = spm_max(Z,XYZ);
+        end
     end
     
-    %-Convert cluster sizes from voxels (N) to resels (K)
-    %----------------------------------------------------------------------
-    c              = max(A2);                           %-Number of clusters
-
-    % estimate correction factor for cluster size according to local smoothness in RPV
-    K      = ones(c,1);
     if noniso
+        %-Convert cluster sizes from voxels (N) to resels (K)
+        %----------------------------------------------------------------------
+        c              = max(A2);                           %-Number of clusters
+
+        % estimate correction factor for cluster size according to local smoothness in RPV
+        K      = ones(c,1);
+        
         fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
         for i  = 1:c
                 
@@ -415,7 +418,7 @@ for i=1:size(P,1)
        if u0 > -Inf
            name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
        else
-           name = [t2x_name str_num '.nii'];
+           name = [t2x_name str_num ext];
        end
        fprintf('Save %s\n', name);
     
@@ -430,6 +433,7 @@ for i=1:size(P,1)
        VO = Vspm;
        VO.fname = out;
        VO.dt = [spm_type('float32') spm_platform('bigend')];
+
        VO = spm_data_hdr_write(VO);
        spm_data_write(VO,Y);
     

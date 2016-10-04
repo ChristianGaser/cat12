@@ -54,6 +54,10 @@ for i=1:numel(P)
     pth_label = pth;
   end
   
+  if ~exist(pth_label,'dir')
+    error(sprintf('Folder %s was not found.\n',pth_label));
+  end
+  
   % check that name of ROI fits to SPM data for 1st file
   if i==1
     % check for catROI*-files

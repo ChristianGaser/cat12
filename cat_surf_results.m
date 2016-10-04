@@ -492,7 +492,7 @@ function H = select_thresh(thresh)
 global H
 
 H.thresh_value = thresh;
-
+thresh
 if H.show_neg
   H.clip = [true -thresh thresh];
 else
@@ -732,7 +732,14 @@ for ind = 1:5
 end
 
 H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
-H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
+if ~isempty(H.S{1}.thresh)
+  min2 = min(H.S{2}.Y(H.S{2}.Y(:)>0));
+  if ~isempty(min2)
+    H.S{1}.thresh = min(H.S{1}.thresh,min2);
+  end
+else
+  H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:)>0));
+end
 
 H.S{1}.min = min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:)));
 H.S{1}.max = max(max(H.S{1}.Y(:)),max(H.S{2}.Y(:)));
@@ -751,7 +758,9 @@ else
 end
 
 H.clim = [true H.S{1}.min H.S{1}.max];
+H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
 for ind=1:5
+  setappdata(H.patch(ind),'clip',H.clip);
   setappdata(H.patch(ind), 'clim', [true H.S{1}.min H.S{1}.max]);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind),'data');
@@ -1364,44 +1373,6 @@ if H.show_info
 else
   set(get(getappdata(H.patch(1),'axis'),'Title'),'String','')
   set(get(getappdata(H.patch(3),'axis'),'Title'),'String','')
-end
-
-%==========================================================================
-function checkbox_noneg(obj, event_obj)
-global H
-  
-H.show_neg = 1 - get(H.noneg,'Value');
-
-clim = getappdata(H.patch(1), 'clim');
-
-if H.show_neg
-  if isfield(H,'thresh_value')
-    H.clip = [true -H.thresh_value H.thresh_value];
-  else
-    H.clip = [true -Inf -Inf];
-  end
-else
-  if ~isempty(H.clip)
-    if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
-      H.clip(3) = 0;
-    else
-      H.clip(3) = 0;
-    end
-  else
-    H.clip = [true -Inf 0];
-  end
-end
-
-for ind=1:5
-  setappdata(H.patch(ind),'clim',clim);
-  setappdata(H.patch(ind),'clip',H.clip);
-  col = getappdata(H.patch(ind),'col');
-  d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,d,col,H.show_transp);
-end
-
-if ~H.disable_cbar
-  H = show_colorbar(H);
 end
 
 %==========================================================================
