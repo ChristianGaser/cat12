@@ -677,7 +677,7 @@ calcroi       = cfg_exbranch;
 calcroi.tag   = 'calcroi';
 calcroi.name  = 'Estimate mean values inside ROI';
 calcroi.val   = {roi_xml,usefolder,decimal_point,outdir,calcroi_name}; 
-calcroi.prog  = @cat_stat_ROI;
+calcroi.prog  = @(job)cat_roi_fun('exportSample',job);
 calcroi.help  = {
 'This function reads mean values inside a ROIs from different atlases and saves values for all data in a csv-file. '
 'Missed values were replaced by NaN.'

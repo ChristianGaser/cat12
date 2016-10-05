@@ -83,9 +83,9 @@ if ~isempty(xml_files)
     
     xml = cat_io_xml(deblank(xml_files(i,:)));
     try
-      QM(i,:) = [str2double(xml.qualityratings.NCR) str2double(xml.qualityratings.ICR) str2double(xml.qualityratings.IQR)];
+      QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
     catch % also try to use old version
-      QM(i,:) = [str2double(xml.QAM.QM.NCR) str2double(xml.QAM.QM.ICR) str2double(xml.QAM.QM.rms)];
+      QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
     spm_progress_bar('Set',i);  
   end
@@ -158,12 +158,12 @@ pos = struct(...
     'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
     'cbar',  [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
     'corr',  [-0.02 0.050 0.825 0.825],... % correlation matrix
-    'scat',  [0.050 0.050 0.700 0.825],... % correlation matrix
+    'scat',  [0.050 0.050 0.700 0.825],... % scatter plot
     'close', [0.775 0.925 0.200 0.050],... % close button
     'show',  [0.775 0.875 0.200 0.050],... % button to show worst cases
     'boxp',  [0.775 0.820 0.200 0.050],... % button to display boxplot
     'sort',  [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
-    'chbox', [0.775 0.750 0.250 0.050],... % two single images according to position of mouse pointer
+    'chbox', [0.775 0.750 0.200 0.050],... % show filenames?
     'text',  [0.775 0.550 0.200 0.200],... % textbox
     'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
     'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
