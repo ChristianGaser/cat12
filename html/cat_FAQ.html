@@ -24,16 +24,22 @@
     
     <div id="content">
       <h2>FAQ</h2>
+      <ul>
+        <li><a href="#Segmentation">Segmentation</a></li>
+        <li><a href="#Surfaces">Surface reconstruction and thickness estimation</a></li>
+        <li><a href="#QA">Quality control / assurance</a></li>
+      </ul>
       
-      <h3>Segmentation</h3>
+        
+      <h3 id="Segmentation">Segmentation</h3>
       <ul>
         <li>
           <h4>Do I need further noise or bias corrections?</h4>
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
-            Low frequency corrections for inhomogeneity e.g. the N3 algorithm are unproblematic, but not required for most datasets.  
-            Only for very strong inhomogeneities (ICR lower than 50, grade E or F) of high-field scanners (greater 3 Tesla), a further preprocessing might be helpful if CAT12 shows any problems.  
-            Try to avoid high frequency corrections or resampling of the data, because this will reduce the ability of the NLM filters. 
+            Low frequency corrections for inhomogeneity, e.g., the N3 algorithm, are unproblematic but not required for most datasets.  
+            Only for very strong inhomogeneities (ICR lower than 50, grade E or F) of high-field scanners (greater 3 Tesla) further preprocessing might be helpful if CAT12 shows any problems.  
+            Try to avoid high frequency corrections or resampling of the data because this will reduce the ability of the noise filters. 
             For images with slice-artifacts try the <a href="cat_tools_VBM.html#cat_vol_correct_slice_scaling">Slice scaling correction tool</a>.
           </p>
         </li>
@@ -92,7 +98,13 @@
 -->
       </ul>
 
-      <h3>Surface reconstruction and thickness estimation</h3>
+
+
+
+
+
+
+      <h3 id="Surfaces">Surface reconstruction and thickness estimation</h3>
       <ul>
         <li>
           <h4>Incomplete surface or bubble surfaces</h4>
@@ -103,15 +115,56 @@
           <p>Check segmentation (check report file)...</p>
         </li>
         <li>
+          <h4>Blurred sulci </h4>
+          <p>
+            The blurring of sulci (or incorrect reconstruction) depend on the resolution (more blurring for lower resolutions), the contrast (more blurring for lower GM/WM contrast), the age of the subject (more blurring for younger subjects), and finally the image quality (more blurring for lower quality).
+            It often occurred in occipital regions due to higher myelinization and decreased GM/WM contrast.
+            In this case, the problems depend more on the tissue segmentation (at most LAS) and less on the surface reconstruction (PBT).
+            In case of WM hyperintensities the internal correction can fill gyri as the lesser of two evils (otherwise gyri often broke over large areas). 
+          </p>
+          <p style="text-align:center;">
+            <img src="images/Sulcal_blurring.png" width=90% height=auto alt="Sulcal blurring" >
+          </p>
+        </li>
+        <li>
+          <h4>Blurred and broken gyri</h4>
+          <p> 
+            Similar to the sulci also gyri especially there crones can be blurred.
+            Besides low resolution (more blurring) and image quality, especially the age plays an important role.
+            In very young subjects the WM is often not clear visible and lead to very thick cortex and in bad cases to broken gyri. 
+            But also in very old subject problems can occur by strong WM atrophy and WM hyperintensities. 
+          </p>
+          <p style="text-align:center;">
+            <img src="images/Gyral_blurring.png" width=90% height=auto alt="Blurred/broken gyri" >
+          </p>
+        </li>
+        <li>
           <h4>Is there a thickness map that allows a voxel-based analysis?</h4>
           <p>
             No. Although the PBT approach creates such a map, it is only used for mapping thickness to the surface and for ROI analysis. 
             A voxel-based analysis of such a map might be not meaningful because the standard statistical processing is not optimized for this type of data. 
             Simple Gaussian smoothing is not recommended (it will alter the values) and the varying width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. Therefore, the analysis of cortical thickness is only available for the surface-based analysis.
           </p>
+        </li>
+        <li>
+          <h4>Known problems in ultra high-field data (7 Tesla)</h4>
+          <p>
+            Images on ultra high-field scanner often have strong inhomogeneity with large intensity changes and highly increased spatial frequency compared to 3 Tesla.
+            The intensity changes influence the processing quality whereas low signal areas are extremely noisy and often lead to problems with CSF/GM segmentation with GM underestimation (see next figure A);  
+            But the more serious problem is given by the spatial frequency that reduce the ability of the tissue classification that is required for bias correction. 
+            Without further corrections, e.g., by division by contrast free images with the same bias, problems based on insufficient cranial bias correction with GM miss classification as WM are typical that lead to local thickness underestimations (see next figure B).            
+          </p>
+          <p style="text-align:center;">
+            <img src="images/Problems_in_7_Tesla.png" width=90% height=auto alt="Problems in 7 Tesla data" >
+          </p>
       </ul>
      
-      <h3>Quality control / assurance</h3>
+     
+     
+     
+     
+     
+      <h3 id="QA">Quality control / assurance</h3>
       <ul>
         <li>
           <h4>Some of my images get a low rating - can I use them anyway?</h4>
