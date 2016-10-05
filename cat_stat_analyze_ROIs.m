@@ -26,7 +26,8 @@ end
 [Ic,xCon] = spm_conman(SPM,'T&F',1,'Select contrast',' ',1);
 
 % threshold for p-values
-alpha = spm_input('p value',1,'r',0.05,1,[0,1]);
+spm_clf('Interactive');
+alpha = spm_input('p-value',1,'r',0.05,1,[0,1]);
 
 % mesh detected?
 if isfield(SPM.xVol,'G')
@@ -55,9 +56,9 @@ for i=1:numel(P)
   end
   
   if ~exist(pth_label,'dir')
-    error(sprintf('Folder %s was not found.\n',pth_label));
+    error(sprintf('Label folder %s was not found.\n',pth_label));
   end
-  
+
   % check that name of ROI fits to SPM data for 1st file
   if i==1
     % check for catROI*-files
@@ -70,7 +71,7 @@ for i=1:numel(P)
     % remove catROI[s]_ from first xml file
     tmp_name(1:length(pattern)) = [];
 
-    % check wheter first filename in SPM.mat and xml-file are from the same subject
+    % check whether first filename in SPM.mat and xml-file are from the same subject
     ind = strfind(nam,tmp_name);
     if isempty(ind)
       error(sprintf('Label file %s does nit fit to analyzed file %s. Please check that you have not moved your data\n'),tmp_name,nam);
@@ -90,72 +91,25 @@ for i=1:numel(P)
   % get ROI name for all files and check whether the files are found
   roi_names{i} = fullfile(pth_label,[pattern nam(ind:end) '.xml']);
   if ~exist(roi_names{i},'file')
-      error(sprintf('Label file %s not found. Please check that you have not moved your data\n',roi_names{i}));
+      error(sprintf('Label file %s not found. Please check that you have not moved your data.\n',roi_names{i}));
   end
 end
 
 % use 1st xml file to get the available atlases
-xml = convert(xmltree(roi_names{1}));
-if ~isfield(xml,'ROI')
-  error('XML file %s contains no ROI information.',roi_names{1});
-end
+% xml-reading is here using old style to be compatible to old xml-files and functions
+xml = convert(xmltree(deblank(roi_names{i})));
 
-atlases = fieldnames(xml.ROI);
-n_atlases = numel(atlases);
-
-% select one atlas
-sel_atlas = spm_input('Select atlas','+1','m',atlases);
-atlas = atlases{sel_atlas};
-
-% measure names to search for
-measure_names = char('Vgm','Vwm','Vcsf','mean_thickness','mean_fractaldimension','mean_amc','mean_gyrification','mean_sqrtsulc');
-n_measure_names = size(measure_names,1);
-
-% get header of selected atlas
-measures = fieldnames(xml.ROI.(atlas));
-if ~isfield(xml.ROI.(atlas),'tr')
-  n_measures = numel(measures);
-  if ~isfield(xml.ROI.(atlas).(measures{1}),'tr')
-    error('Missing mandatory tr-field in XML file.');
-  end
-else n_measures = 1; end
-
-% filed name for measure can be "tr" for surfaces
-if strcmp(measures,'tr')
-  hdr = xml.ROI.(atlas).tr{1}.td;
-
-  found_measure_names = [];
-  ind_measure_names = [];
-  for k=1:numel(hdr)
-    for l=1:n_measure_names
-      if strcmp(hdr{k},deblank(measure_names(l,:)))
-        found_measure_names = char(found_measure_names,hdr{k});
-        ind_measure_names = [ind_measure_names k];
-      end
-    end
-  end
-  % remove 1st empty entry
-  found_measure_names = found_measure_names(2:end,:);
+if isfield(xml,'ROI')
+  % get selected atlas and measure
+  [sel_atlas, measure, atlas] = get_atlas_measure_old(xml, mesh_detected);
+  % get names IDs and values of selected atlas and measure inside ROIs
+  [ROInames ROIids ROIvalues] = get_ROI_measure_old(roi_names, sel_atlas, measure);
 else
-  found_measure_names = measures;
+  % get selected atlas and measure
+  [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
+  % get names IDs and values of selected atlas and measure inside ROIs
+  [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure);
 end
-
-% select a measure
-if size(found_measure_names,1) > 1
-  sel_measure = spm_input('Select measure','+1','m',found_measure_names);
-else
-  sel_measure = 1;
-end
-measure = found_measure_names(sel_measure,:);
-
-% for surfaces add prepending "mean_" to field name
-if mesh_detected, measure = ['mean_' measure{1}]; end
-
-% remove spaces
-measure = deblank(measure);
-
-% get names IDs and values of selected atlas and measure inside ROIs
-[ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, measure);
 
 % get name of contrast
 str_con = deblank(xCon(Ic).name);
@@ -412,7 +366,6 @@ else
 
   pKX = pinv(X);
   trRV = n - rank(X);
-
   Beta = pKX * Y;
   ResSS = sum((X*Beta - Y).^2);
 
@@ -429,16 +382,162 @@ else
 end
 
 %_______________________________________________________________________
-function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, measure_name)
+function [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml)
+% get selected atlas and measure
+%
+% FORMAT [sel_atlas, sel_measure, atlas, measure] = get_atlas_measure(xml);
+% xml    - xml structure
+%
+% sel_atlas    - index of selected atlas
+% sel_measure  - index of selected measure
+% atlas        - name of selected atlas
+% measure      - name of selected measure
+
+atlases = fieldnames(xml);
+n_atlases = numel(atlases);
+
+% select one atlas
+sel_atlas = spm_input('Select atlas','+1','m',atlases);
+atlas = atlases{sel_atlas};
+
+% get header of selected atlas
+measures = fieldnames(xml.(atlas).data);
+n_measures = numel(measures);
+
+% select a measure
+if size(measures,1) > 1
+  sel_measure = spm_input('Select measure','+1','m',measures);
+else
+  sel_measure = 1;
+end
+measure = measures{sel_measure};
+
+% remove spaces
+measure = deblank(measure);
+
+%_______________________________________________________________________
+function [sel_atlas, measure, atlas] = get_atlas_measure_old(xml, mesh_detected)
+% get selected atlas and measure of older xml-files (<r1023)
+%
+% FORMAT [sel_atlas, measure] = get_atlas_measure_old(xml);
+% xml    - xml structure
+%
+% sel_atlas    - index of selected atlas
+% measure      - name of selected measure
+% atlas        - name of selected atlas
+
+xml = xml.ROI;
+
+atlases = fieldnames(xml);
+n_atlases = numel(atlases);
+
+% select one atlas
+sel_atlas = spm_input('Select atlas','+1','m',atlases);
+atlas = atlases{sel_atlas};
+
+% measure names to search for
+measure_names = char('Vgm','Vwm','Vcsf','mean_thickness','mean_fractaldimension','mean_amc','mean_gyrification','mean_sqrtsulc');
+n_measure_names = size(measure_names,1);
+
+% get header of selected atlas
+if iscell(xml.(atlas))
+  xml.(atlas) = cell2struct(xml.(atlas));
+end
+
+measures = fieldnames(xml.(atlas));
+
+if ~isfield(xml.(atlas),'tr')
+  n_measures = numel(measures);
+  if ~isfield(xml.(atlas).(measures{1}),'tr')
+    error('Missing mandatory tr-field in XML file.');
+  end
+else n_measures = 1; end
+
+% field name for measure can be "tr" for surfaces
+if strcmp(measures,'tr')
+  hdr = xml.(atlas).tr{1}.td;
+
+  found_measure_names = [];
+  ind_measure_names = [];
+  for k=1:numel(hdr)
+    for l=1:n_measure_names
+      if strcmp(hdr{k},deblank(measure_names(l,:)))
+        found_measure_names = char(found_measure_names,hdr{k});
+        ind_measure_names = [ind_measure_names k];
+      end
+    end
+  end
+  % remove 1st empty entry
+  found_measure_names = found_measure_names(2:end,:);
+else
+  found_measure_names = measures;
+end
+
+% select a measure
+if size(found_measure_names,1) > 1
+  sel_measure = spm_input('Select measure','+1','m',found_measure_names);
+else
+  sel_measure = 1;
+end
+measure = found_measure_names(sel_measure,:);
+
+% for surfaces add prepending "mean_" to field name
+if mesh_detected, measure = ['mean_' measure{1}]; end
+
+% remove spaces
+measure = deblank(measure);
+
+%_______________________________________________________________________
+function [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure)
 % get names, IDs and values inside ROI for a selected atlas
+%
+% FORMAT [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, sel_measure);
+% roi_names    - cell of ROI xml files
+% sel_atlas    - index of selected atlas
+% sel_measure  - index of selected measure
+%
+% ROInames     - array 2*rx1 of ROI names (r - # of ROIs)
+% ROIids       - array 2*rx1 of ROI IDs for left and right hemipshere
+% ROIvalues    - cell nxr of values inside ROI (n - # of data)
+
+n_data = length(roi_names);
+
+spm_progress_bar('Init',n_data,'Load xml-files','subjects completed')
+for i=1:n_data        
+
+  xml = cat_io_xml(deblank(roi_names{i}));
+
+  % remove leading catROI*_ part from name
+  [path2, ID] = fileparts(roi_names{i});
+  ind = strfind(ID,'_');
+  ID = ID(ind(1)+1:end);
+
+  atlases = fieldnames(xml);
+  
+  measures = fieldnames(xml.(atlases{sel_atlas}).data);
+  ROInames = xml.(atlases{sel_atlas}).names;
+  ROIids = xml.(atlases{sel_atlas}).ids;
+  val = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
+  if i==1
+    ROIvalues = zeros(n_data, numel(val));
+  end
+  ROIvalues(i,:) = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
+
+  spm_progress_bar('Set',i);  
+end
+spm_progress_bar('Clear');
+
+%_______________________________________________________________________
+function [ROInames ROIids ROIvalues] = get_ROI_measure_old(roi_names, sel_atlas, measure_name)
+% get names, IDs and values inside ROI for a selected atlas (old xml-files)
 %
 % FORMAT [ROInames ROIids ROIvalues] = get_ROI_measure(roi_names, sel_atlas, measure_name);
 % roi_names    - cell of ROI xml files
 % sel_atlas    - index of selected atlas
 % measure_name - name of selected measure
 %
-% ROInames     - cell rx1 of ROI names (r - # of ROIs)
-% ROIids       - cell rx2 of ROI IDs for left and right hemipshere
+% ROInames     - array 2*rx1 of ROI names (r - # of ROIs)
+% ROIids       - array 2*rx1 of ROI IDs for left and right hemipshere
 % ROIvalues    - cell nxr of values inside ROI (n - # of data)
 
 n_data = length(roi_names);

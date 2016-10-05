@@ -1798,12 +1798,11 @@ if job.output.ROI
       
       % extract ROI data
       csv   = cat_vol_ROIestimate(wYp0,wYa,wYcls,ai,'V',[],tissue,job.extopts.atlas);  % volume
-      csv   = cat_vol_ROIestimate(wYp0,wYa,wYm  ,ai,'I',csv,tissue,job.extopts.atlas); % intensity
 
       % thickness
       if exist('Yth1','var'),
-      % for thickness we need special correction to avoid values 
-      % in bad map ROIs that comes to the GM
+      % for thickness we need special corrections to avoid values 
+      % in poor ROIs that contribute to GM
         csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmim,ai,'T',csv,tissue,job.extopts.atlas);
         csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmim,ai,'V',[] ,{''},job.extopts.atlas);
         corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
@@ -1821,7 +1820,7 @@ if job.output.ROI
   
   % write results
   catROI = cat_roi_fun('csvtab2xmlroi',ROI);
-  cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write+'); 
+  cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write'); 
 
   cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
   cat_io_cmd('','n','',1,stime);
