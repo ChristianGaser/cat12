@@ -12368,6 +12368,7 @@ M       cat_surf_results.m
 
 
 ------------------------------------------------------------------------
+r1028 | gaser | 2016-10-05 15:06:52 +0200 (Mi, 05 Okt 2016) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12386,5 +12387,30 @@ D       cat_vol_calc_roi.m
 (4) Changed: Updated cat_stat_analyze_ROIs.m to deal with old and new xml-files.
 (5) Removed: cat_stat_ROI, that is replaced by cat_roi_fun.m.
 (6) Removed: cat_vol_calc_roi.m
+
 ------------------------------------------------------------------------
-r1028 | gaser | 2016-10-05 15:06:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_LAS.m
+M       cat_surf_createCS.m
+M       cat_tst_cattest.m
+M       development/cat_main_LAS.m
+M       development/cat_surf_createCS.m
+M       html/cat_FAQ.html
+A       html/images/Gyral_blurring.png
+A       html/images/Problems_in_7_Tesla.png
+A       html/images/Sulcal_blurring.png
+ M      internal
+ M      templates_1.50mm
+M       templates_1.50mm/cat.nii
+ M      templates_animals
+
+(1) Changed:  Refined human CAT atlas.
+(2) Changed:  Corrections in "cat_main_LAS" to avoid gyral blurring.
+(3) Changed:  Added further WMH correction in "cat_surf_createCS".
+(4) Changed:  Added 3 comments in "cat_FAQ.html" for blurred sulci/gyri and
+              unsolved problems in 7 Tesla images with strong inhomogeneities.
+
+------------------------------------------------------------------------
+r1029 | dahnke | 2016-10-05 16:57:15
