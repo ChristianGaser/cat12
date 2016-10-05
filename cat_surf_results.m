@@ -311,7 +311,6 @@ switch lower(action)
           end
           
           H.disable_tview = 0;
-          H.show_neg      = 1;
           H.disable_cbar  = 0;
           H.show_transp   = 1;
           H.white_bgk     = 0;
@@ -492,23 +491,33 @@ function H = select_thresh(thresh)
 global H
 
 H.thresh_value = thresh;
-thresh
-if H.show_neg
-  H.clip = [true -thresh thresh];
-else
-  H.clip = [true 0 thresh];
-end
+H.clip = [true -thresh thresh];
 
 % rather use NaN values for zero threshold
 if thresh == 0
   H.clip = [false NaN NaN];
 end
 
+% get min value for both hemispheres
+min_d = min(min(getappdata(H.patch(1),'data'),getappdata(H.patch(3),'data')));
+
 for ind=1:5
+  % correct lower clim to "0" if no values are exceeding threshold
+  if min_d > -thresh
+    clim = getappdata(H.patch(1), 'clim');
+    setappdata(H.patch(ind),'clim',[true 0 clim(3)]);
+  end
+  
   setappdata(H.patch(ind),'clip',H.clip);
   col = getappdata(H.patch(ind),'col');
   d = getappdata(H.patch(ind),'data');
+  min_d = min(min_d, min(d));
   H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+% correct value of slider if no values are exceeding threshold
+if min_d > -thresh && numel(H.S{1}.info)==1
+  set(H.slider_min,'Value',0);
 end
 
 set(H.atlas,'Visible','on');
@@ -758,9 +767,14 @@ else
 end
 
 H.clim = [true H.S{1}.min H.S{1}.max];
-H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
+if H.S{1}.thresh > 0.00015
+  H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
+end
+
 for ind=1:5
-  setappdata(H.patch(ind),'clip',H.clip);
+  if H.S{1}.thresh > 0.00015
+    setappdata(H.patch(ind),'clip',H.clip);
+  end
   setappdata(H.patch(ind), 'clim', [true H.S{1}.min H.S{1}.max]);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind),'data');
@@ -789,7 +803,7 @@ if numel(H.S{1}.info)==1
   % allow slider a more extended range
   mnx = 2*max(abs([H.S{1}.min H.S{1}.max]));
 
-  sliderPanel(...
+  H.slider_min = sliderPanel(...
         'Parent'  , H.figure(2), ...
         'Title'   , 'Overlay min', ...
         'Position', H.pos{2}.ovmin, ...
@@ -802,7 +816,7 @@ if numel(H.S{1}.info)==1
         'NumFormat', '%f', ...
         'Callback', @slider_clim_min);
 
-  sliderPanel(...
+  H.slider_max = sliderPanel(...
         'Parent'  , H.figure(2), ...
         'Title'   , 'Overlay max', ...
         'Position', H.pos{2}.ovmax, ...
@@ -827,6 +841,7 @@ if numel(H.S{1}.info) == 1
     H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(1,:),'Color',[0.5 0.5 0.5],'Visible','off');
     H.colourbar = colorbar('peer',H.cbar,'Northoutside');
   end
+  
   if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col);end
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
