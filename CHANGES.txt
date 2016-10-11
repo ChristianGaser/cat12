@@ -12415,6 +12415,7 @@ M       templates_1.50mm/cat.nii
 
 
 ------------------------------------------------------------------------
+r1030 | dahnke | 2016-10-05 17:37:43 +0200 (Mi, 05 Okt 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12422,5 +12423,19 @@ A       cat_vol_iscaling.m
 
 (1) New:   Addend forgotten "cat_vol_iscaling".  
 
+
 ------------------------------------------------------------------------
-r1030 | dahnke | 2016-10-05 17:37:27
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_surf_results.m
+M       html/cat.html
+M       html/cat_FAQ.html
+
+(1) Changed: Some changes to cat_surf_results to better deal with thresholds.
+(2) Fixed: estroi was not defined in expert mode in cat_conf_stools.m and is 
+    currently commented out and not used.
+------------------------------------------------------------------------
+r1031 | gaser | 2016-10-11 10:39:41
