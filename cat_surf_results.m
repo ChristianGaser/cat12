@@ -43,8 +43,13 @@ switch lower(action)
     case 'disp'
 
         % positions & font size
-        ws = spm('Winsize','Graphics');
         FS = spm('FontSizes');
+        ws = spm('Winsize','Graphics');
+        ss = get(0,'Screensize');
+        if 2.6*ws(3) > ss(3)
+            ws(3) = ws(3)/(2.6*ws(3)/ss(3));  
+        end
+        
         
         % result window with 5 surface views and alternative positions without top view
         H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.550 0.325 0.325],... % lh medial
@@ -500,12 +505,14 @@ end
 
 % get min value for both hemispheres
 min_d = min(min(getappdata(H.patch(1),'data'),getappdata(H.patch(3),'data')));
+clim = getappdata(H.patch(1), 'clim');
 
 for ind=1:5
   % correct lower clim to "0" if no values are exceeding threshold
   if min_d > -thresh
-    clim = getappdata(H.patch(1), 'clim');
     setappdata(H.patch(ind),'clim',[true 0 clim(3)]);
+  elseif thresh == 0
+    setappdata(H.patch(ind),'clim',[true -clim(3) clim(3)]);
   end
   
   setappdata(H.patch(ind),'clip',H.clip);
@@ -876,12 +883,14 @@ if numel(H.S{1}.info) == 1
         else
           XTick = [0 1.3:XTick_step:(round(clim(3))+0.3)];
         end
+      else
+if ~isempty(H.XTick), XTick = H.XTick; end
       end
     else
       % rescue original XThick values if clipping is changed
       if ~isempty(H.XTick), XTick = H.XTick; end
     end
-    
+
     % change XTickLabel
     XTickLabel = [];
     for i=1:length(XTick)
