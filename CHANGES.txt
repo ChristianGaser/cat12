@@ -12425,6 +12425,7 @@ A       cat_vol_iscaling.m
 
 
 ------------------------------------------------------------------------
+r1031 | gaser | 2016-10-11 10:39:54 +0200 (Di, 11 Okt 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12437,5 +12438,13 @@ M       html/cat_FAQ.html
 (1) Changed: Some changes to cat_surf_results to better deal with thresholds.
 (2) Fixed: estroi was not defined in expert mode in cat_conf_stools.m and is 
     currently commented out and not used.
+
 ------------------------------------------------------------------------
-r1031 | gaser | 2016-10-11 10:39:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Changed: Added optional bottom view to cat_surf_results.m.
+------------------------------------------------------------------------
+r1032 | gaser | 2016-10-14 01:54:06
