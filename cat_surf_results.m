@@ -24,15 +24,16 @@ if ~ischar(action)
 end
 
 % set start values
+y          = [];
 H.clip     = [];
 H.clim     = [];
-H.bkg_col  = [0 0 0];
-H.transp   = 1;
+H.XTick    = [];
 H.data_sel = [0 0];
 H.data_n   = [1 3];
-H.cursor_mode = 1;
-H.XTick    = [];
-y          = [];
+H.bkg_col  = [0 0 0];
+H.show_inv = 0;
+H.transp   = 1;
+H.cursor_mode  = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -67,12 +68,12 @@ switch lower(action)
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.060],...
-          'surf',  [0.050 0.855 0.425 0.050],'atlas', [0.525 0.855 0.425 0.050],... 
+          'surf',  [0.050 0.855 0.425 0.050],'mview', [0.525 0.855 0.425 0.050],... 
           'cursor',[0.050 0.800 0.425 0.050],'thresh',[0.525 0.800 0.425 0.050],... 
-          'cmap',  [0.050 0.750 0.425 0.050],...
-          'tview', [0.050 0.700 0.425 0.050],'bkg',   [0.525 0.700 0.425 0.050],... 
+          'cmap',  [0.050 0.750 0.425 0.050],'atlas', [0.525 0.750 0.425 0.050],...
+          'info',  [0.050 0.700 0.425 0.050],'bkg',   [0.525 0.700 0.425 0.050],... 
           'nocbar',[0.050 0.650 0.425 0.050],'transp',[0.525 0.650 0.425 0.050],... 
-          'info',  [0.050 0.600 0.425 0.050],'inv',   [0.525 0.600 0.425 0.050],... 
+          'inv',   [0.050 0.600 0.425 0.050],... 
           'ovmin', [0.050 0.400 0.425 0.150],'ovmax', [0.525 0.400 0.425 0.150],... 
           'save',  [0.050 0.050 0.425 0.050],'close', [0.525 0.050 0.425 0.050]);   
 
@@ -159,7 +160,7 @@ switch lower(action)
         tmp  = { {@select_atlas, 1},...
                  {@select_atlas, 2}};
         
-        % atla for labeling
+        % atlas for labeling
         H.atlas = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.atlas,'UserData',tmp,...
@@ -185,13 +186,18 @@ switch lower(action)
                 'ToolTipString','Data Cursor Mode',...
                 'Interruptible','on','Visible','off');
 
-        % disable top view
-        H.tview = uicontrol(H.figure(2),...
-                'string','Hide top view','Units','normalized',...
-                'position',H.pos{2}.tview,...
-                'style','CheckBox','HorizontalAlignment','center',...
-                'callback',{@checkbox_tview},...
-                'ToolTipString','Hide top view in the image center',...
+        str  = { 'View...','with top view','with bottom view','Only lateral and medial views'};
+        tmp  = { {@select_view, 1},...
+                 {@select_view, 2},...
+                 {@select_view, 0}};
+        
+        % colormap
+        H.mview = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.mview,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Select View',...
                 'Interruptible','on','Visible','off');
 
         % invert results
@@ -253,7 +259,7 @@ switch lower(action)
           [pth{1},nm1,ext1] = spm_fileparts(H.S{1}.name(1,:));
           [pth{2},nm2,ext2] = spm_fileparts(H.S{2}.name(1,:));
           
-          % SPM.mat found for both hemispheres
+          % SPM.mat found for both hemispheres (not working yet)
           if strcmp([nm1 ext1],'SPM.mat') && strcmp([nm2 ext2],'SPM.mat')
             H.logP = 0;
             
@@ -315,7 +321,7 @@ switch lower(action)
             end
           end
           
-          H.disable_tview = 0;
+          H.view          = 1; % allow top view
           H.disable_cbar  = 0;
           H.show_transp   = 1;
           H.white_bgk     = 0;
@@ -325,7 +331,7 @@ switch lower(action)
           
           set(H.surf,'Visible','on');
           set(H.save,'Visible','on');
-          set(H.tview,'Visible','on');
+          set(H.mview,'Visible','on');
           set(H.nocbar,'Visible','on');
           set(H.bkg,'Visible','on');
           set(H.transp,'Visible','on');
@@ -336,7 +342,8 @@ switch lower(action)
             set(H.inv,'Visible','on');
           end
           
-          if (size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) == 1)
+          if ((size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) < 2)) || ...
+          ((size(H.S{2}.name,1) == 1) && (size(H.S{1}.name,1) < 2))
             set(H.cmap,'Visible','on');
           end
         
@@ -742,30 +749,44 @@ H.S{1}.curv = g.cdata;
 g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{2}.info(1).side '.mc.central.freesurfer.gii']));
 H.S{2}.curv = g.cdata;
 
-vv = [90 0; -90 0; -90 0; 90 0; 0 90];
+if H.view == 1 % top view
+  vv = [90 0; -90 0; -90 0; 90 0; 0 90];
+else % bottom view
+  vv = [90 0; -90 0; -90 0; 90 0; 0 -90];
+end
+
 for ind = 1:5
-  display_results(ind, H.viewpos{ind}(H.disable_tview+1,:), vv(ind,:));
+  display_results(ind, H.viewpos{ind}(~H.view+1,:), vv(ind,:));
 end
 
-H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
-if ~isempty(H.S{1}.thresh)
-  min2 = min(H.S{2}.Y(H.S{2}.Y(:)>0));
-  if ~isempty(min2)
-    H.S{1}.thresh = min(H.S{1}.thresh,min2);
-  end
-else
+% check whether data for left or right hemipshere are all non-zero
+ind1 = find(H.S{1}.Y(:)~=0);
+ind2 = find(H.S{2}.Y(:)~=0);
+
+% estimate min value > 0 and min/max values
+if ~isempty(ind1) && ~isempty(ind2)
+  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
+  H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
+  H.S{1}.min = min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:)));
+  H.S{1}.max = max(max(H.S{1}.Y(:)),max(H.S{2}.Y(:)));
+elseif isempty(ind1)
   H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:)>0));
+  H.S{1}.min = min(H.S{2}.Y(:));
+  H.S{1}.max = max(H.S{2}.Y(:));
+elseif isempty(ind2)
+  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
+  H.S{1}.min = min(H.S{1}.Y(:));
+  H.S{1}.max = max(H.S{1}.Y(:));
 end
 
-H.S{1}.min = min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:)));
-H.S{1}.max = max(max(H.S{1}.Y(:)),max(H.S{2}.Y(:)));
-
+% deal with neg. values
 if H.S{1}.min < 0
   mnx = max(abs([H.S{1}.min,H.S{1}.max]));
   H.S{1}.min = -mnx;
   H.S{1}.max =  mnx;
 end
 
+% add 10% to min/max values
 H.S{1}.max = round(1.1*H.S{1}.max);
 if H.S{1}.min < 0
   H.S{1}.min = round(1.1*H.S{1}.min);
@@ -774,6 +795,8 @@ else
 end
 
 H.clim = [true H.S{1}.min H.S{1}.max];
+
+% only apply thresholds that are slightly larger than zero
 if H.S{1}.thresh > 0.00015
   H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
 end
@@ -788,8 +811,8 @@ for ind=1:5
   H = updateTexture(H,ind,d,col,H.show_transp);
 end
 
-% only show threshold popup if log-name was found and minimal value > 0 is lt 2
-if H.logP & (H.S{1}.thresh < 2)
+% only show threshold popup if log-name was found and minimal value > 0 is < 1
+if H.logP && (H.S{1}.thresh < 1)
   set(H.thresh,'Visible','on');
 end
 
@@ -852,11 +875,11 @@ if numel(H.S{1}.info) == 1
   if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col);end
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
-  colormap(getappdata(H.patch(1),'col'));
+  col = getappdata(H.patch(1), 'col');
+  colormap(col);
   
   % Update colorbar colors if clipping is used
   clip = getappdata(H.patch(1), 'clip');
-  col = getappdata(H.patch(1), 'col');
   if ~isempty(clip)
     if ~isnan(clip(2)) && ~isnan(clip(3))
       ncol = length(col);
@@ -884,7 +907,7 @@ if numel(H.S{1}.info) == 1
           XTick = [0 1.3:XTick_step:(round(clim(3))+0.3)];
         end
       else
-if ~isempty(H.XTick), XTick = H.XTick; end
+        if ~isempty(H.XTick), XTick = H.XTick; end
       end
     else
       % rescue original XThick values if clipping is changed
@@ -1315,17 +1338,6 @@ end
 H.clim = [true c(2) val];
 
 %==========================================================================
-function checkbox_tview(obj, event_obj)
-global H
-  
-H.disable_tview = get(H.tview,'Value');
-
-for ind = 1:5
-  Ha = getappdata(H.patch(ind),'axis');
-  set(Ha,'position',H.viewpos{ind}(H.disable_tview+1,:));
-end
-
-%==========================================================================
 function checkbox_inv(obj, event_obj)
 global H
   
@@ -1334,8 +1346,13 @@ H.show_inv = get(H.inv,'Value');
 for ind=1:5
   setappdata(H.patch(ind),'clip',H.clip);
   col = getappdata(H.patch(ind),'col');
+  setappdata(H.patch(ind),'col',flipud(col));
   d = getappdata(H.patch(ind),'data');
-  H = updateTexture(H,ind,-d,col,H.show_transp);
+  H = updateTexture(H,ind,d,flipud(col),H.show_transp);
+end
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
 end
 
 %==========================================================================
@@ -1417,6 +1434,7 @@ else
   if numel(H.S{1}.info) == 1
     set(get(H.cbar,'Title'),'Visible','on')
     set(H.colourbar,'Visible','on')  
+    H = show_colorbar(H);
   else
     H = show_colorbar(H);
   end
@@ -1435,6 +1453,28 @@ if ishandle(H) & ~isappdata(H,'handles')
     setappdata(H.axis,'handles',H);
 else
     H = getappdata(H,'handles');
+end
+
+%==========================================================================
+function select_view(view)
+global H
+
+% check that view changed
+if view ~= H.view
+
+  if view == 1 % top view
+    vv = [90 0; -90 0; -90 0; 90 0; 0 90];
+  else  % bottom view
+    vv = [90 0; -90 0; -90 0; 90 0; 0 -90];
+  end
+
+  for ind = 1:5
+    Ha = getappdata(H.patch(ind),'axis');
+    set(Ha,'position',H.viewpos{ind}(~view+1,:),'View',vv(ind,:));
+  end
+  
+  % save view
+  H.view = view;
 end
 
 %==========================================================================
@@ -1707,15 +1747,6 @@ for j=2:size(rcsv,1)
     txt = {txt{:} [H.S{ind}.side ' ' rcsv{j,2}]};
     j = size(rcsv,1);
   end
-end
-
-if 0
-hMe = findobj(H.axis,'Tag','CrossBar');
-if ~isempty(hMe)
-    ws = warning('off');
-    spm_XYZreg('SetCoords',pos,get(hMe,'UserData'));
-    warning(ws);
-end
 end
 
 %==========================================================================
