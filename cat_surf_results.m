@@ -169,13 +169,14 @@ switch lower(action)
                 'ToolTipString','Atlas Labeling',...
                 'Interruptible','on','Visible','off');
 
-        str  = { 'Plot Data...','Nothing','Desikan-Killiany DK40',...
-                 'Destrieux 2009','Plot data at vertex','Plot mean data inside cluster'};
+        str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
+                 'Atlas regions: Destrieux 2009','Plot data at vertex','Plot mean data inside cluster','Enable/Disable rotate3d'};
         tmp  = { {@select_cursor, 0},...
                  {@select_cursor, 1},...
                  {@select_cursor, 2},...
                  {@select_cursor, 3},...
-                 {@select_cursor, 4}};
+                 {@select_cursor, 4},...
+                 {@select_cursor, 5}};
         
         % data cursor for data plotting and atlas names
         H.cursor = uicontrol(H.figure(2),...
@@ -186,7 +187,7 @@ switch lower(action)
                 'ToolTipString','Data Cursor Mode',...
                 'Interruptible','on','Visible','off');
 
-        str  = { 'View...','with top view','with bottom view','Only lateral and medial views'};
+        str  = { 'View...','Show top view','Show bottom view','Show only lateral and medial views'};
         tmp  = { {@select_view, 1},...
                  {@select_view, 2},...
                  {@select_view, 0}};
@@ -1492,6 +1493,7 @@ switch H.cursor_mode
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
     figure(H.figure(1))
     delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+    rotate3d off;
     try, close(H.figure(3)); end
     
   case {1,2}
@@ -1531,8 +1533,13 @@ switch H.cursor_mode
       set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorCluster,H.cursor_mode-3});
     end
-
-
+  case 5 % enable/disable rotate3d
+    set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
+        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
+    figure(H.figure(1))
+    delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+    rotate3d;
+    disp('Use mouse to rotate views.');
 end
 
 %==========================================================================
