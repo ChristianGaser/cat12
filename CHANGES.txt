@@ -12440,11 +12440,24 @@ M       html/cat_FAQ.html
     currently commented out and not used.
 
 ------------------------------------------------------------------------
+r1032 | gaser | 2016-10-14 01:54:19 +0200 (Fr, 14 Okt 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_results.m
 
 Changed: Added optional bottom view to cat_surf_results.m.
+
 ------------------------------------------------------------------------
-r1032 | gaser | 2016-10-14 01:54:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+ M      cat_vol_iscaling.m
+ M      html/images/Gyral_blurring.png
+ M      html/images/Problems_in_7_Tesla.png
+ M      html/images/Sulcal_blurring.png
+
+Changed: Added option to rotate views in cat_surf_results.m.
+------------------------------------------------------------------------
+r1033 | gaser | 2016-10-14 23:22:53
