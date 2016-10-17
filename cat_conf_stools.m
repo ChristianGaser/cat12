@@ -421,17 +421,18 @@ function stools = cat_conf_stools(expert)
   v2s.data_surf_sub_lh.num     = [1 Inf];
   v2s.data_surf_sub_lh.help    = {
     'Select left subject surface files (do not select the *.nofix.* surface).'
-    'Right side will automatically processed.'
+    'Right side will be automatically processed.'
     };
    
   v2s.data_sub         = cfg_files; 
   v2s.data_sub.tag     = 'data_vol';
-  v2s.data_sub.name    = 'Volumes in Native Space';
+  v2s.data_sub.name    = '(Co-registered) Volumes in Native Space';
   v2s.data_sub.filter  = 'image';
   v2s.data_sub.ufilter = '^(?!wm|wp|m0wp|mwp|wc).*'; % no normalized images
   v2s.data_sub.num     = [1 Inf];
   v2s.data_sub.help    = {
     'Select volumes in native (subject) space.'
+    'Please note that these images have to be in the same space as the T1-image that was used to extract the cortical surface. An optional co-registration might be necessary if you have functional or structual data that are not yet aligned to the T1-image.'
   };
 
   v2s.vol2surf      = cfg_exbranch;
@@ -476,7 +477,7 @@ function stools = cat_conf_stools(expert)
   v2s.data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','cat12');
   v2s.data_surf_avg_lh.help    = {
     'Select left template surface file. '
-    'Right hemisphere will automatically processed.'
+    'Right hemisphere will be automatically processed.'
     };
     
   v2s.data_norm         = cfg_files; 
@@ -532,7 +533,7 @@ if expert>1
     ROI.sdata         = cfg_files;
     ROI.sdata.tag     = 'sdata';
     ROI.sdata.name    = '(Left) Surface Data Files';
-    ROI.sdata.filter  = 'any';
+    ROI.sdata.filter  = 'gifti';
     ROI.sdata.ufilter = 'lh.central.*';
     ROI.sdata.num     = [1 Inf];
     ROI.sdata.help    = {'Surface data sample. Both sides will be processed'};
@@ -628,7 +629,7 @@ end
     s2r.cdata         = cfg_files;
     s2r.cdata.tag     = 'cdata';
     s2r.cdata.name    = '(Left) Surface Data Files';
-    s2r.cdata.filter  = 'any';
+    s2r.cdata.filter  = 'gifti';
     s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
     s2r.cdata.num     = [1 Inf];
     s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
@@ -636,7 +637,7 @@ end
     s2r.cdata         = cfg_files;
     s2r.cdata.tag     = 'cdata';
     s2r.cdata.name    = '(Left) Surface Data Files';
-    s2r.cdata.filter  = 'any';
+    s2r.cdata.filter  = 'gifti';
     s2r.cdata.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
     s2r.cdata.num     = [1 Inf];
     s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
@@ -837,7 +838,7 @@ end
   sc.cdata_sub         = cfg_files;
   sc.cdata_sub.tag     = 'cdata';
   sc.cdata_sub.name    = 'Surface Data Files';
-  sc.cdata_sub.filter  = 'any';
+  sc.cdata_sub.filter  = 'gifti';
   sc.cdata_sub.ufilter = '[rl]h.(?!cent|sphe|defe|hull).*gii';
   sc.cdata_sub.num     = [1 Inf];
   sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
@@ -960,7 +961,7 @@ end
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
   data_surf.name    = 'Surfaces Data';
-  data_surf.filter  = 'any';
+  data_surf.filter  = 'gifti';
   if expert > 1
     data_surf.ufilter = '^[lr]h.';
   else
@@ -1024,7 +1025,7 @@ end
   flip.cdata         = cfg_files;
   flip.cdata.tag     = 'cdata';
   flip.cdata.name    = 'Surface Data Files';
-  flip.cdata.filter  = 'any';
+  flip.cdata.filter  = 'gifti';
   flip.cdata.ufilter = '^s.*mm\.lh.*';
   flip.cdata.num     = [1 Inf];
   flip.cdata.help    = {'Texture maps that should be flipped/mirrored from right to left.'};

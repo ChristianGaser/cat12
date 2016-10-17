@@ -1,0 +1,38 @@
+Requirements
+-----------------------------------------
+- Matlab with mcc compiler
+- Matlab Runtime Library with same version 
+
+Some more information
+-----------------------------------------
+https://en.wikibooks.org/wiki/SPM/Standalone
+
+Steps for compiling
+-----------------------------------------
+1. Open SPM12
+2. Change into folder spm12/config
+3. Call spm_make_standalone
+
+Install MCR Runtime
+-----------------------------------------
+Download MCR with same version of Matlab that you have used for compiling:
+http://de.mathworks.com/products/compiler/mcr/
+
+If you have an older version than Matlab R2012a you can also find the MCR 
+installer if you call "mcr" at the Matlab prompt. This will point to
+the installation file that has to be called as administrator.
+
+Running SPM12 standalone
+-----------------------------------------
+After compilation there should exist a new folder spm_exec in the same directory 
+as spm12.
+
+Call the run_spm12.sh in that folder where the argument is the path to 
+your MCR installation (with version number):
+./spm_exec/run_spm12.sh /usr/local/MATLAB/MATLAB_Compiler_Runtime/v715/
+
+On Linux/Mac, you can edit the Shell script run_spm12.sh to hardcode the 
+location of the MCR installation, thus removing the need of providing it on the 
+command line.
+
+On Windows systems simply double-click on spm12_wxx.exe.
