@@ -12449,6 +12449,7 @@ M       cat_surf_results.m
 Changed: Added optional bottom view to cat_surf_results.m.
 
 ------------------------------------------------------------------------
+r1033 | gaser | 2016-10-14 23:23:17 +0200 (Fr, 14 Okt 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12459,5 +12460,17 @@ M       cat_surf_results.m
  M      html/images/Sulcal_blurring.png
 
 Changed: Added option to rotate views in cat_surf_results.m.
+
 ------------------------------------------------------------------------
-r1033 | gaser | 2016-10-14 23:22:53
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_surf_vol2surf.m
+A       compile_standalone.txt
+M       html/cat.html
+
+Fixed: Always use "gifti" as filter for surface data in cat_conf_stools.m.
+------------------------------------------------------------------------
+r1034 | gaser | 2016-10-17 11:37:18

@@ -84,6 +84,12 @@ function out = cat_surf_vol2surf(varargin)
   if template
     for vi=1:numel(job.data_vol)
       [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
+      
+      % replace '.img' extension by '.hdr' extension to work with CAT
+      if strcmp(eev,'.img')
+        eev = '.hdr';
+      end
+      
       P.vol{vi} = fullfile(ppv,[ffv eev]);
       
       for si=1:numel(side)
@@ -112,6 +118,12 @@ function out = cat_surf_vol2surf(varargin)
     for vi=1:numel(job.data_vol)
       
       [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
+      
+      % replace '.img' extension by '.hdr' extension to work with CAT
+      if strcmp(eev,'.img')
+        eev = '.hdr';
+      end
+      
       P.vol{vi} = fullfile(ppv,[ffv eev]);
        
       if ~strfind(ffv,job.(sside{1})(vi).name)
