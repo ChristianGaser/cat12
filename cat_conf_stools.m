@@ -629,7 +629,7 @@ end
     s2r.cdata         = cfg_files;
     s2r.cdata.tag     = 'cdata';
     s2r.cdata.name    = '(Left) Surface Data Files';
-    s2r.cdata.filter  = 'gifti';
+    s2r.cdata.filter  = 'any';
     s2r.cdata.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
     s2r.cdata.num     = [1 Inf];
     s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
@@ -637,7 +637,7 @@ end
     s2r.cdata         = cfg_files;
     s2r.cdata.tag     = 'cdata';
     s2r.cdata.name    = '(Left) Surface Data Files';
-    s2r.cdata.filter  = 'gifti';
+    s2r.cdata.filter  = 'any';
     s2r.cdata.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
     s2r.cdata.num     = [1 Inf];
     s2r.cdata.help    = {'Surface data sample. Both sides will be processed'};
@@ -961,7 +961,7 @@ end
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
   data_surf.name    = 'Surfaces Data';
-  data_surf.filter  = 'gifti';
+  data_surf.filter  = 'any';
   if expert > 1
     data_surf.ufilter = '^[lr]h.';
   else
