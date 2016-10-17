@@ -12462,6 +12462,7 @@ M       cat_surf_results.m
 Changed: Added option to rotate views in cat_surf_results.m.
 
 ------------------------------------------------------------------------
+r1034 | gaser | 2016-10-17 11:37:32 +0200 (Mo, 17 Okt 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12472,5 +12473,13 @@ A       compile_standalone.txt
 M       html/cat.html
 
 Fixed: Always use "gifti" as filter for surface data in cat_conf_stools.m.
+
 ------------------------------------------------------------------------
-r1034 | gaser | 2016-10-17 11:37:18
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+
+Fixed: Always use "gifti" as filter for surface data in cat_conf_stools.m.
+------------------------------------------------------------------------
+r1035 | gaser | 2016-10-17 17:12:53
