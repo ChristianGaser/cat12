@@ -104,7 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /* intitialisation */
   for (i=0;i<nL;i++) 
   {
-    if (V[i]>0.5) D[i]=0.0; else D[i]=FLT_MAX; 
+    if (V[i]>=0.5) D[i]=0.0; else D[i]=FLT_MAX; 
     if (V[i]>255.0)  
     {
       if (e255==false) 

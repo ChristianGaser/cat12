@@ -1,16 +1,22 @@
 function out = cat_stat_nanstd(in, dim)
 % ----------------------------------------------------------------------
 % Standard deviation, not considering NaN values. Similar usage like 
-% mean() or MATLAB nanmedian of the statistic toolbox.
+% std() or MATLAB nanstd of the statistic toolbox. Process input 
+% as double due to errors in large single arrays and set data class 
+% of "out" to the data class of "in" at the end of the processing.
 %
-% out nanmean(in,dim)
+% out = cat_stat_nanstd(in,dim)
 %
-% Example:
+% Example 1:
 %   a = rand(4,6,3); 
 %   a(rand(size(a))>0.5)=nan; 
 %   av = cat_stat_nanstd(a,3); 
 %   am = nanstd(a,0,3); % of the statistical toolbox ...
 %   fprintf('%0.4f %0.4f\n',([av(:),am(:)])');
+%
+% Example 2 - special test call of example 1:
+%   cat_stat_nanstd('test')
+%
 % ----------------------------------------------------------------------
 % Robert Dahnke 
 % Structural Brain Mapping Group
@@ -19,9 +25,19 @@ function out = cat_stat_nanstd(in, dim)
 % $Id$
 
   if nargin < 1
-    help nanmean;
+    help cat_stat_nanstd;
     return;
   end;
+  
+  if ischar(in) && strcmp(in,'test')
+    a = rand(4,6,3); 
+    a(rand(size(a))>0.5)=nan; 
+    av = cat_stat_nanstd(a,3); 
+    am = nanstd(a,0,3); % of the statistical toolbox ...
+    fprintf('%0.4f %0.4f\n',([av(:),am(:)])');
+    out = nanmean(av(:) - am(:)); 
+    return; 
+  end
   
   if nargin < 2
     if size(in,1) ~= 1
@@ -36,15 +52,18 @@ function out = cat_stat_nanstd(in, dim)
   if isempty(in), out = nan; return; end
   
   % estimate mean
-  tmpin = in;
+  tp    = class(in);
+  tmpin = double(in); % single failed in large arrays
   tmpin(isnan(in(:))) = 0;
   mn = cat_stat_nanmean(in,dim);
  
   dm = size(in); dm(setdiff(1:numel(dm),dim)) = 1;
-  tmpmn = repmat(mn,dm);
+  tmpmn = repmat(mn,dm); clear dm; 
   tmpmn(isnan(in(:))) = 0; 
     
   % estimate std
   out = (sum( (tmpin-tmpmn).^2 , dim) ./ max(1,(size(in,dim) - sum(isnan(in),dim))-1)).^0.5;
   out(isnan(mn))=nan;
+  
+  eval(sprintf('out = %s(out);',tp));
 end
