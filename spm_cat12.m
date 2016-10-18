@@ -107,7 +107,7 @@ switch lower(deffile)
     mycat.extopts.species      = species;  
     mycat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)
     mycat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_Template_1.nii'])}; % Indicate first Dartel template
-    mycat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_vbm12.nii'])};      % VBM atlas with major regions for VBM, SBM & ROIs
+    mycat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_cat.nii'])};        % VBM atlas with major regions for VBM, SBM & ROIs
     mycat.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_brainmask.nii'])};  % brainmask for affine registration
     mycat.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_T1.nii'])};         % T1 for affine registration
     mycat.extopts.sanlm        = 2;                                     % ISARNLM for stronger corrections

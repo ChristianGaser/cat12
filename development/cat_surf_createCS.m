@@ -109,8 +109,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   %Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
   
   % gaussian filter? ... only in tissue regions
-  Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
-  Ymf(Ymf>1) = Ymfs(Ymf>1);
+  %Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
+  %Ymf(Ymf>1) = Ymfs(Ymf>1);
 
   clear Ysroi Ywmd Ymfs;
 

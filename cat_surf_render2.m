@@ -206,6 +206,8 @@ switch lower(action)
             elseif isfield(S,'cdata')
               labelmapclim = [min(S.cdata) max(S.cdata)];
             end
+            % flip faces in case of defect surfaces
+            if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
             labelmap = jet; 
             S = export(S,'patch');
             
@@ -252,7 +254,7 @@ switch lower(action)
             H.cdata = T; % remove this later ...
             clear S P; 
         end
-
+        H.sinfo = sinfo; 
 
 
 
@@ -329,15 +331,16 @@ switch lower(action)
         %-Add context menu
         %------------------------------------------------------------------
         if ~isfield(O,'parent')
-          cat_surf_render2('ContextMenu',H);
+          try
+            cat_surf_render2('ContextMenu',H);
+          end
         end
         
         % set default view
-        sinfo1 = cat_surf_info(H.filename{1});
         cat_surf_render2('view',H,[   0  90]);
-        if numel(H.patch>1)
-          if strcmp(sinfo1.side,'lh'); cat_surf_render2('view',H,[ -90   0]);  end
-          if strcmp(sinfo1.side,'rh'); cat_surf_render2('view',H,[  90   0]);  end
+        if numel(H.patch==1)
+          if strcmp(H.sinfo(1).side,'lh'); cat_surf_render2('view',H,[ -90   0]);  end
+          if strcmp(H.sinfo(1).side,'rh'); cat_surf_render2('view',H,[  90   0]);  end
         end 
         
         % remember this zoom level
@@ -359,17 +362,17 @@ switch lower(action)
         
         
         
-        %% -- Textures --   
+        %% -- Textures -- 
         c = uimenu(cmenu, 'Label', 'Textures');
         if sinfo1.resampled
           tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
-          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot'}; 
+          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
           for i=1:numel(sfiles)
             tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
           end
         else
           tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
-          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot'}; 
+          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
           for i=1:numel(sfiles)
             tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
           end
@@ -385,6 +388,7 @@ switch lower(action)
           usetexture = 0; 
         end
         uimenu(c, 'Label','none', 'Interruptible','off','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
+        if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
         if numel(tfiles)
           uimenu(c, 'Label', H.textures{1,1},'Interruptible','off','Separator','on','Checked',checked{usetexture(1)+1},'Callback',{@myChangeTexture, H});
           for i=2:numel(tfiles)
@@ -487,6 +491,7 @@ switch lower(action)
         % atlas menu  
         if sinfo1.resampled || strcmp(sinfo1.ee,'.annot')   
           c = uimenu(cmenu, 'Label', 'Atlases');
+          if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
           uimenu(c, 'Label','none', 'Interruptible','off','Checked','off','Callback',{@myChangeTexture, H});
           uimenu(c, 'Label', H.textures{ntextures+1,1},'Interruptible','off',...
             'Checked',checked{useatlas2(ntextures+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
@@ -517,7 +522,7 @@ switch lower(action)
         % - bei csv hätte man dann einen atlas für mehrere personen, was 
         %   nur bei resampled sinnvoll wäre 
         %   >> auwahl von csv-files 
-
+      try
         % volume/surface-based atlas data
         if cat_get_defaults('extopts.subfolders')
           labeldir = strrep(sinfo1(1).pp,[filesep 'surf'],[filesep 'label']);
@@ -531,7 +536,7 @@ switch lower(action)
         % read xml-files ... this is realy slow for real XMLs >> MAT solution!
         % atlas-names
         % texture-names of volumen/surface ROIs
-      try  
+
         if ~isempty(H.RBM.vlabelfile)
           H.RBM.vcatROI   = cat_io_xml( H.RBM.vlabelfile ); 
           H.RBM.vatlas    = fieldnames( H.RBM.vcatROI ); 
@@ -590,6 +595,7 @@ switch lower(action)
         
         %% -- Meshes --   
         c = uimenu(cmenu, 'Label', 'Meshes');
+        if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
         if sinfo1.resampled
           H.meshs = { 
               'Individual', H.patch(1).Vertices 
@@ -635,6 +641,7 @@ switch lower(action)
         % -- Components --
         % this is a nice idea ... I need name the patches
         c = uimenu(cmenu, 'Label', 'Connected Components', 'Interruptible','off');
+        if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
         C = getappdata(H.patch(1),'cclabel');
         for i=1:length(unique(C))
             uimenu(c, 'Label',sprintf('Component %d',i), 'Checked','on', ...
@@ -729,7 +736,9 @@ switch lower(action)
         % -- Views --   
         c = uimenu(cmenu, 'Label','View','Separator','on');
         uimenu(c, 'Label', 'Synchronise Views', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseViews, H});
-        uimenu(c, 'Label', 'Right',  'Callback', {@myView, H, [90 0]});
+        uimenu(c, 'Label','Zoom in'    , 'Checked'  ,'off', 'Callback',{@myZoom, H,'zoom in'});
+        uimenu(c, 'Label','Zoom out'   , 'Checked'  ,'off', 'Callback',{@myZoom, H,'zoom out'});
+        uimenu(c, 'Label', 'Right',  'Callback', {@myView, H, [90 0]},'Separator','on');
         uimenu(c, 'Label', 'Left',   'Callback', {@myView, H, [-90 0]});
         uimenu(c, 'Label', 'Top',    'Callback', {@myView, H, [0 90]});
         uimenu(c, 'Label', 'Bottom', 'Callback', {@myView, H, [-180 -90]});
@@ -785,7 +794,7 @@ switch lower(action)
         c = uimenu(cmenu, 'Label','Lighting'); 
         macon = {'on' 'off'}; isinner = strcmp(H.catLighting,'inner'); 
         uimenu(c, 'Label','Cam',    'Checked',macon{isinner+1}, 'Callback', {@myLighting, H,'cam'});
-        if ismac
+        if ismac && ~strcmp(H.sinfo(1).texture,'defects')
           uimenu(c, 'Label','Inner',  'Checked',macon{2-isinner}, 'Callback', {@myLighting, H,'inner'});
         end
         uimenu(c, 'Label','Set1',   'Checked','off', 'Callback', {@myLighting, H,'set1'}, 'Separator', 'on');
@@ -819,10 +828,13 @@ switch lower(action)
         % -- Transparency --
         if expert
           c = uimenu(cmenu, 'Label','Transparency'); tlevel = 0:20:80; 
-          uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(1)), 'Checked','on',  'Callback', {@myTransparency, H});
+          uimenu(c, 'Label','TextureTransparency', 'Checked','off',  'Callback', {@myTextureTransparency, H});
+          uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(1)), 'Checked','on',  'Callback', {@myTransparency, H}, 'Separator', 'on');
           for ti=2:numel(tlevel)
             uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked','off', 'Callback', {@myTransparency, H});
           end
+        else
+          uimenu(cmenu, 'Label','TextureTransparency', 'Checked','off',  'Callback', {@myTextureTransparency, H});
         end
         
         
@@ -837,14 +849,12 @@ switch lower(action)
         
         % -- Interaction --
         c = uimenu(cmenu, 'Label','Interaction');
-        uimenu(c, 'Label','Zoom in'    , 'Checked'  ,'off', 'Callback',{@myZoom, H,'zoom in'});
-        uimenu(c, 'Label','Zoom out'   , 'Checked'  ,'off', 'Callback',{@myZoom, H,'zoom out'});
      %{
-        % can not exit this mode from figure directly :/
+        % pan and zoom have there own menu!
         uimenu(c, 'Label','Zoom'       , 'Callback' , {@myZoom, H,'zoom'},'Separator', 'on');
         uimenu(c, 'Label','Pan'        , 'Checked'  ,'off', 'Callback',{@myPan,H});
      %}
-        uimenu(c, 'Label','Rotate'     , 'Checked'  ,'on' , 'Callback',{@mySwitchRotate, H},'Separator', 'on');
+        uimenu(c, 'Label','Rotate'     , 'Checked'  ,'on' , 'Callback',{@mySwitchRotate, H});
         uimenu(c, 'Label','Data Cursor', 'Callback', {@myDataCursor, H});
         uimenu(c, 'Label','Slider', 'Callback', {@myAddslider, H});
 
@@ -1370,15 +1380,29 @@ if numel(findobj('Tag','CATSurfRender','Type','Patch')) > 1
     % set view separator
     objview = get(findobj('Label','View'),'children'); 
     if numel(objview)==1
-      set(findobj(objview,'Label','Right'),'Separator','on'); 
+      set(findobj(objview,'Label','Zoom in'),'Separator','on'); 
     else
       if iscell(objview)
         for ovi=1:numel(objview)
-          set(findobj(objview{ovi},'Label','Right'),'Separator','on'); 
+          set(findobj(objview{ovi},'Label','Zoom in'),'Separator','on'); 
         end
       else
         for ovi=1:numel(objview)
-          set(findobj(objview(ovi),'Label','Right'),'Separator','on'); 
+          set(findobj(objview(ovi),'Label','Zoom in'),'Separator','on'); 
+        end
+      end
+    end
+    objcolr = get(findobj('Label','Colorrange'),'children'); 
+    if numel(objcolr)==1
+      set(findobj(objcolr,'Label','Zoom in'),'Separator','on'); 
+    else
+      if iscell(objcolr)
+        for ovi=1:numel(objcolr)
+          set(findobj(objcolr{ovi},'Label','Min-max'),'Separator','on'); 
+        end
+      else
+        for ovi=1:numel(objcolr)
+         set(findobj(objcolr(ovi),'Label','Min-max'),'Separator','on'); 
         end
       end
     end
@@ -1394,11 +1418,25 @@ else
     else
       if iscell(objview)
         for ovi=1:numel(objview)
-          set(findobj(objview{ovi},'Label','Right'),'Separator','off'); 
+          set(findobj(objview{ovi},'Label','Zoom in'),'Separator','off'); 
         end
       else
         for ovi=1:numel(objview)
-          set(findobj(objview(ovi),'Label','Right'),'Separator','off'); 
+          set(findobj(objview(ovi),'Label','Zoom in'),'Separator','off'); 
+        end
+      end
+    end
+    objcolr = get(findobj('Label','Colorrange'),'children'); 
+    if numel(objcolr)==1
+      set(findobj(objcolr,'Label','Zoom in'),'Separator','off'); 
+    else
+      if iscell(objcolr)
+        for ovi=1:numel(objcolr)
+          set(findobj(objcolr{ovi},'Label','Min-max'),'Separator','off'); 
+        end
+      else
+        for ovi=1:numel(objcolr)
+         set(findobj(objcolr(ovi),'Label','Min-max'),'Separator','off'); 
         end
       end
     end
@@ -1555,6 +1593,11 @@ for pi=1:numel(H.patch)
 end
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
+function myTextureTransparency(obj,evt,H)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+set(obj,'Checked',toggle(get(obj,'Checked')));
+d = getappdata(H.patch(1),'data');
+updateTexture(H,d);
 %==========================================================================
 function mySliceTransparency(obj,evt,H)
 t = 1 - sscanf(get(obj,'Label'),'%d%%') / 100;
@@ -1678,11 +1721,17 @@ switch newcatLighting
       case 'none'
         % nothing to do...
       case 'inner'
+        switch H.sinfo(1).texture
+          case 'defects'
+            mylit = 'lit';
+          otherwise
+            mylit = 'unlit';
+        end            
         H.light(2) = light('Position',[0 0 0],'parent',H.axis,'Style','infinite');
         for pi=1:numel(H.patch)
           ks = get(H.patch(pi),'SpecularStrength'); set(H.patch(pi),'SpecularStrength',min(0.1,ks));
           n  = get(H.patch(pi),'SpecularExponent'); set(H.patch(pi),'SpecularExponent',max(2,n)); 
-          set(H.patch(pi),'BackFaceLighting','unlit');
+          set(H.patch(pi),'BackFaceLighting',mylit);
         end
       case 'top'
         H.light(2) = light('Position',[ 0  0  1],'Color',repmat(1,1,3),'parent',H.axis,'Style','infinite');    %#ok<*REPMAT>
@@ -2065,7 +2114,9 @@ function mySavePNG(obj,evt,H,filename)
   copyobj(H.axis,h);
   set(H.axis,'units',u);
   set(get(h,'children'),'visible','off');
-  colorbar('Position',[.93 0.2 0.02 0.6]); 
+  if ~strcmp(H.sinfo(1).texture,'defects')
+    colorbar('Position',[.93 0.2 0.02 0.6]); 
+  end
   colormap(getappdata(H.patch(1),'colourmap'));
   [pp,ff,ee] = fileparts(H.filename{1}); 
   %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');    
@@ -2147,8 +2198,17 @@ if ~isequal(filename,0) && ~isequal(pathname,0)
             copyobj(H.axis,h);
             set(H.axis,'units',u);
             set(get(h,'children'),'visible','off');
-            colorbar('Position',[.93 0.2 0.02 0.6]); 
-            colormap(getappdata(H.patch(1),'colourmap'));
+            
+            % set colorbar
+            textures = findobj(get(findobj(H.figure,'Label','Textures'),'children'),'checked','on'); 
+            atlases  = findobj(get(findobj(H.figure,'Label','Atlases'),'children'),'checked','on'); 
+            if ~strcmp(H.sinfo(1).texture,'defects') && ...
+                ( (~isempty(textures) && ~strcmp(textures.Label,'none')) || ...
+                  (~isempty(atlases)  && ~strcmp(atlases.Label,'none')))
+              colorbar('Position',[.93 0.2 0.02 0.6]); 
+              colormap(getappdata(H.patch(1),'colourmap'));
+            end
+            
             [pp,ff,ee] = fileparts(H.filename{1}); 
             %H.text = annotation('textbox','string',[ff ee],'position',[0.0,0.97,0.2,0.03],'LineStyle','none','Interpreter','none');
             %a = get(h,'children');
@@ -2674,7 +2734,11 @@ for pi=pis
     error('Colordata does not fit to underlying mesh.');
   end
 
-  C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
+ %C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
+  ttrans = findobj(H.figure,'Label','TextureTransparency');
+  ctrans = ~isempty(ttrans) && strcmp(ttrans.Checked,'on'); 
+  C = repmat(~any(v,1),3,1)' .* curv + ...
+      (repmat(any(v,1),3,1)' .* C .* ((1-ctrans) + curv.*ctrans));
 
   set(H.patch(pi), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 end

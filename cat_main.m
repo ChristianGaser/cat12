@@ -606,7 +606,17 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %  allows up to 20 colors
 %  ---------------------------------------------------------------------
 stime = cat_io_cmd('Global intensity correction');
-[Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
+
+if any(vx_vol ~= min(vx_vol*2,1.4))
+  Ysrcr = cat_vol_resize(Ysrc,'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm');
+  Ybr   = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm')>0.5;
+  Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
+  [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,vx_vol,res);
+  clear Ymr Ybr; 
+  Ym = cat_main_gintnorm(Ysrc,Tth); 
+else
+  [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
+end
 
 % update in inverse case
 if job.inv_weighting
@@ -727,9 +737,15 @@ end
   
 %% Local Intensity Correction 
 if job.extopts.LASstr>0
-  stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
+ 
   if job.extopts.NCstr>0, Ymo = Ym; end 
-  [Ymi,Ym,Yclsi] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); % use Yclsi after cat_vol_partvol
+  if job.extopts.expertgui<2
+    stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
+    [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+  else
+    stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',job.extopts.LASstr));
+    [Ymi,Ym,Yclsi] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,job.extopts); % use Yclsi after cat_vol_partvol
+  end
   
   %Ymioc = Ymi+0; 
   if job.extopts.NCstr>0 && job.extopts.sanlm>0
@@ -764,6 +780,8 @@ if job.extopts.LASstr>0
   end
   %clear Ymioc; 
   fprintf('%4.0fs\n',etime(clock,stime));
+else
+  Ymi = Ym; 
 end
 
 
@@ -785,8 +803,7 @@ end
 NS = @(Ys,s) Ys==s | Ys==s+1; 
 stime = cat_io_cmd('ROI segmentation (partitioning)');
 [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
-%Ycr = cat_vol_morph(~NS(Yl1,job.extopts.LAB.HI) & ~NS(Yl1,job.extopts.LAB.VT),'e'); 
-%if exist('Yclsi','var'), for i=1:6, Ycls{i}(Ycr) = Yclsi{i}(Ycr); end; clear Yclsi; end % new Ycls from LAS
+%if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
 fprintf('%4.0fs\n',etime(clock,stime));
 
 clear YBG Ysrc Ycr;
@@ -1342,7 +1359,7 @@ if do_dartel==1 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.o
     
     % rigid transformation update 
     % erstmal nicht, wird eigentlich anhand der Yy vor Dartel bestimmt 
-    % und kann zu abweichung zw. den Deformationen führen ... 50120921
+    % und kann zu abweichung zw. den Deformationen f??hren ... 50120921
     %{
     if do_dartel==1 && (any(tc(:,2)) || job.output.label(1,3))
         %M0o = res.image0.mat; 
@@ -1691,11 +1708,21 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %
 if job.output.surface
   stime = cat_io_cmd('Surface and thickness estimation');; 
-  % brain masking 
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  Ymim = Ymi  .* (Yp0>0.5) .* Yb;
-  clear Yp0
-
+  % brain masking and correction of blood vessels 
+  Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  Ymim = Ym .* (Yp0>0.5); 
+  %{
+  Ydiv = cat_vol_div(Ymi,vx_vol);   
+  YM   = cat_vol_morph(Yp0>0.5,'d'); 
+  Ymim = (YM & ~(Yp0>0.5 | (YM & Ym<1.5/3)))*1/3 + Ymi .* (Yp0>0.5 | (YM & Ym<1.5/3));
+  YM   = ((Ymim.*(Yp0>1) - Yp0/3)>0.2 & Ymim>0.9) | ((Ymim - Ydiv)>1.3 & Ymim>0 | (YM & Yp0<=1 & Ym>1.5/3)); clear Ydiv; 
+  Ymim(YM) = 1/3; 
+  YM   = cat_vol_morph(YM,'d'); 
+  Ymim = cat_vol_median3(Ymim,YM,Ymim>0); 
+  Ymim = cat_vol_median3(Ymim,YM,Ymim>0); 
+  Ymims = cat_vol_localstat(Ymim,YM,1,1); Ymim(Ymims>0) = Ymims(Ymims>0); clear Ymims YM Yp0;
+  %}
+  
   % surface creation and thickness estimation
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.

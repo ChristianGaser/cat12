@@ -166,10 +166,12 @@ function varargout = cat_surf_display(varargin)
    % try   
       %% textur handling
       set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
-      if job.expert<2
-        cat_surf_render('ColourBar',h.axis,'on');
-      else
-        cat_surf_render2('ColourBar',h.axis,'on');
+      if ~strcmp(h.sinfo(1).texture,'defects')
+        if job.expert<2 
+          cat_surf_render('ColourBar',h.axis,'on');
+        else
+          cat_surf_render2('ColourBar',h.axis,'on');
+        end
       end
       if ~job.multisurf && strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
       

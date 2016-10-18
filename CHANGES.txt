@@ -12475,11 +12475,124 @@ M       html/cat.html
 Fixed: Always use "gifti" as filter for surface data in cat_conf_stools.m.
 
 ------------------------------------------------------------------------
+r1035 | gaser | 2016-10-17 17:13:07 +0200 (Mo, 17 Okt 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_conf_stools.m
 
 Fixed: Always use "gifti" as filter for surface data in cat_conf_stools.m.
+
 ------------------------------------------------------------------------
-r1035 | gaser | 2016-10-17 17:12:53
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       batches/cattest/cat12_SBM_102_segment_greaterapes.m
+M       batches/cattest/cat12_SBM_103_segment_oldworldmonkeys.m
+M       cat_amap.mexa64
+M       cat_amap.mexmaci64
+M       cat_amap.mexw32
+M       cat_amap.mexw64
+M       cat_main.m
+M       cat_main_LAS.m
+A       cat_main_LASs.m
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexmaci64
+M       cat_ornlm.mexw32
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexmaci64
+M       cat_sanlm.mexw32
+M       cat_sanlm.mexw64
+M       cat_stat_nanmean.m
+M       cat_stat_nanmedian.m
+M       cat_stat_nanstat1d.m
+M       cat_stat_nanstd.m
+M       cat_stat_nansum.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_render2.m
+M       cat_tst_cattest.m
+M       cat_vbdist.c
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexmaci64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.c
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_isarnlm.m
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbt.m
+M       cat_vol_pbtp.cpp
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp.mexw64
+A  +    cat_vol_reduceRes.m
+M       cat_vol_sanlm.m
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexmaci64
+M       cat_vol_simgrow.mexw64
+D       cattest
+M       compile.m
+M       development/cat_main_LAS.m
+M       development/cat_surf_createCS.m
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+D       internal/cat_vol_reduceRes.m
+M       spm_cat12.m
+ M      templates_1.50mm
+A  +    templates_animals/ape_greater_cat.nii
+D       templates_animals/ape_greater_vbm12.nii
+A  +    templates_animals/monkey_oldworld_cat.nii
+D       templates_animals/monkey_oldworld_vbm12.nii
+
+(1) Fixed:    "cat_main" updates:
+              - Corrected error in case of LAS=0
+              - Increased masking for surface creation
+              - Limited resolution of global intensity normalization
+(2) Changed:  Renamed animal atlas map "vbm12" to "cat".
+(3) Fixed:    Refined name field in "cat_surf_info".
+(4) Fixed:    "cat_surf_render2" upates:
+              - Corrected display of defect maps
+              - Corrected colorbar handling in save image function 
+              - Added texture transparency to "cat_surf_render2"
+(5) Changed:  Updated "compile" function by further tests. 
+(6) Changed:  Moved "cat_vol_reduceRes" from internal to cat main directory.
+(7) Changed:  Memory optimization of "cat_vol_sanlm" and "cat_vol_isarnlm".
+(8) Fixed:    Corrected single data type error in "cat_stat_nanmean", 
+              "cat_stat_nansum", and "cat_stat_nanstd" and "cat_stat_nanstat1d" 
+              for large arrays. Added help and test case.
+(9) Added:    Prepared "cat_main_LASs" an improved version of "cat_main_LAS".
+              
+
+
+------------------------------------------------------------------------
+r1036 | dahnke | 2016-10-18 16:26:11
