@@ -427,51 +427,83 @@ end
 % This depends on job contents, which may not be present when virtual
 % outputs are calculated.
 
+% CAT report XML file
 cdep = cfg_dep;
-cdep(end).sname      = 'Seg Params';
-cdep(end).src_output = substruct('.','param','()',{':'});
-cdep(end).tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
+cdep(end).sname      = 'CAT Report';
+cdep(end).src_output = substruct('.','catreport','()',{':'});
+cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 
+% lh/rh central surface and thickness
+if isfield(opts,'surface')
+  if opts.surface,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Left Central Surface';
+    cdep(end).src_output = substruct('()',{1}, '.','lhcentral','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Right Central Surface';
+    cdep(end).src_output = substruct('()',{1}, '.','rhcentral','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Left Thickness';
+    cdep(end).src_output = substruct('()',{1}, '.','lhthickness','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'Right Thickness';
+    cdep(end).src_output = substruct('()',{1}, '.','rhthickness','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+  end
+end;
+
+% XML label
+if isfield(opts,'ROI')
+  if opts.ROI,
+    cdep(end+1)          = cfg_dep;
+    cdep(end).sname      = 'ROI XML File';
+    cdep(end).src_output = substruct('()',{1}, '.','roi','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
+  end
+end;
 
 % bias corrected
 if isfield(opts.bias,'native')
   if opts.bias.native,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Bias Corr Images';
+    cdep(end).sname      = 'Native Bias Corr. Image';
     cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end
 end;
 if opts.bias.warped,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Bias Corr Images';
+    cdep(end).sname      = 'Warped Bias Corr. Image';
     cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
 
-% bias corrected
+% LAS bias corrected
 if isfield(opts,'las')
   if opts.las.native,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Bias Corr Images';
+    cdep(end).sname      = 'Native LAS Bias Corr. Image';
     cdep(end).src_output = substruct('()',{1}, '.','ibiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end
   if opts.las.warped,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Bias Corr Images';
+    cdep(end).sname      = 'Warped LAS Bias Corr. Image';
     cdep(end).src_output = substruct('()',{1}, '.','wibiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.las.dartel==1,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Rigid Registered Bias Corr Images';
+    cdep(end).sname      = 'Rigidly Registered LAS Bias Corr. Image';
     cdep(end).src_output = substruct('()',{1}, '.','ribiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.las.dartel==2,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Affine Registered Bias Corr Images';
+    cdep(end).sname      = 'Affine Registered LAS Bias Corr. Image';
     cdep(end).src_output = substruct('()',{1}, '.','aibiascorr','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
@@ -481,25 +513,25 @@ end;
 if isfield(opts,'label')
   if opts.label.native,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Label Images';
+    cdep(end).sname      = 'Native Label Image';
     cdep(end).src_output = substruct('()',{1}, '.','label','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.label.warped,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Label Images';
+    cdep(end).sname      = 'Warped Label Image';
     cdep(end).src_output = substruct('()',{1}, '.','wlabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.label.dartel==1,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Rigid Registered Label Images';
+    cdep(end).sname      = 'Rigidly Registered Label Image';
     cdep(end).src_output = substruct('()',{1}, '.','rlabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.label.dartel==2,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Affine Registered Label Images';
+    cdep(end).sname      = 'Affine Registered Label Image';
     cdep(end).src_output = substruct('()',{1}, '.','alabel','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
@@ -509,25 +541,25 @@ end
 if isfield(opts,'atlas')
   if opts.atlas.native,
       cdep(end+1)          = cfg_dep;
-      cdep(end).sname      = 'Atlas Images';
+      cdep(end).sname      = 'Native Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','atlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.atlas.warped,
       cdep(end+1)          = cfg_dep;
-      cdep(end).sname      = 'Warped Atlas Images';
+      cdep(end).sname      = 'Warped Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','watlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.atlas.dartel==1,
       cdep(end+1)          = cfg_dep;
-      cdep(end).sname      = 'Rigid Registered Atlas Images';
+      cdep(end).sname      = 'Rigidly Registered Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','ratlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
   if opts.atlas.dartel==2,
       cdep(end+1)          = cfg_dep;
-      cdep(end).sname      = 'Affine Registered Atlas Images';
+      cdep(end).sname      = 'Affine Registered Atlas Image';
       cdep(end).src_output = substruct('()',{1}, '.','aatlas','()',{':'});
       cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end;
@@ -536,7 +568,7 @@ end
 % jacobian
 if opts.jacobian.warped,
     cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Jacobian Determinant Images';
+    cdep(end).sname      = 'Jacobian Determinant Image';
     cdep(end).src_output = substruct('()',{1}, '.','jacobian','()',{':'});
     cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end;
@@ -559,37 +591,37 @@ end;
 for i=1:numel(tissue),
     if tissue(i).native(1),
         cdep(end+1)          = cfg_dep;
-        cdep(end).sname      = sprintf('p%d Images',i);
+        cdep(end).sname      = sprintf('p%d Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','p','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).native(2),
         cdep(end+1)          = cfg_dep;
-        cdep(end).sname      = sprintf('rp%d rigid Images',i);
+        cdep(end).sname      = sprintf('rp%d rigid Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','rp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).native(3),
         cdep(end+1)          = cfg_dep;
-        cdep(end).sname      = sprintf('rp%d affine Images',i);
+        cdep(end).sname      = sprintf('rp%d affine Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','rpa','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).warped(1),
         cdep(end+1)          = cfg_dep;
-        cdep(end).sname      = sprintf('wp%d Images',i);
+        cdep(end).sname      = sprintf('wp%d Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','wp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).warped(2),
         cdep(end+1)          = cfg_dep;
-        cdep(end).sname      = sprintf('mwp%d Images',i);
+        cdep(end).sname      = sprintf('mwp%d Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','mwp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
     if tissue(i).warped(3),
         cdep(end+1)          = cfg_dep;
-        cdep(end).sname      = sprintf('m0wp%d Images',i);
+        cdep(end).sname      = sprintf('m0wp%d Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','m0wp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end

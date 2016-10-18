@@ -21,8 +21,8 @@ data.help    = {
 data_T2x         = cfg_files;
 data_T2x.tag     = 'data_T2x';
 data_T2x.name    = 'Data';
-data_T2x.filter  = 'any';
-data_T2x.ufilter = '^spmT.*(gii|nii|img)';
+data_T2x.filter  = {'image','gifti'};
+data_T2x.ufilter = '^spmT.*';
 data_T2x.num     = [1 Inf];
 data_T2x.help    = {'Select spmT-images to transform or convert.'};
 
@@ -198,8 +198,8 @@ T2x.help = {
 data_F2x         = cfg_files;
 data_F2x.tag     = 'data_F2x';
 data_F2x.name    = 'Data';
-data_F2x.filter  = 'any';
-data_F2x.ufilter = '^spmF.*(gii|nii|img)';
+data_F2x.filter  = {'image','gifti'};
+data_F2x.ufilter = '^spmF.*';
 data_F2x.num     = [1 Inf];
 data_F2x.help    = {'Select spmF-images to select.'};
 
@@ -316,7 +316,8 @@ nuisance.help    = {'This option allows for the specification of nuisance effect
 data_xml = cfg_files;
 data_xml.name = 'XML files';
 data_xml.tag  = 'data_xml';
-data_xml.filter = '^cat_.*xml';
+data_xml.filter = 'xml';
+data_xml.ufilter = '^cat_.*';
 data_xml.num  = [1 Inf];
 data_xml.help   = {...
 'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files.'};
@@ -628,7 +629,8 @@ sanlm.help   = {
 roi_xml = cfg_files;
 roi_xml.name = 'XML files';
 roi_xml.tag  = 'roi_xml';
-roi_xml.filter = '^catROI.*xml';
+roi_xml.filter = 'xml';
+roi_xml.ufilter = '^catROI.*';
 roi_xml.num  = [1 Inf];
 roi_xml.help   = {...
 'These are the xml-files that are saved in the label folder.'};
