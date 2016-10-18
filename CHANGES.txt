@@ -12484,6 +12484,7 @@ M       cat_conf_stools.m
 Fixed: Always use "gifti" as filter for surface data in cat_conf_stools.m.
 
 ------------------------------------------------------------------------
+r1036 | dahnke | 2016-10-18 16:26:32 +0200 (Di, 18 Okt 2016) | 110 lines
 
 Changed paths:
  M      .
@@ -12594,5 +12595,19 @@ D       templates_animals/monkey_oldworld_vbm12.nii
               
 
 
+
 ------------------------------------------------------------------------
-r1036 | dahnke | 2016-10-18 16:26:11
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_run.m
+ M      compile_standalone.txt
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+Fixed: Updated dependencies.
+------------------------------------------------------------------------
+r1037 | gaser | 2016-10-18 16:47:43

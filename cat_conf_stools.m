@@ -62,7 +62,8 @@ function stools = cat_conf_stools(expert)
   data_xml = cfg_files;
   data_xml.name = 'XML files';
   data_xml.tag  = 'data_xml';
-  data_xml.filter = '^cat_.*xml';
+  data_xml.filter = 'xml';
+  data_xml.ufilter = '^cat_.*';
   data_xml.num  = [1 Inf];
   data_xml.help   = {
   'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files.'};
@@ -773,11 +774,11 @@ end
   r2s.ROIs         = cfg_files;
   r2s.ROIs.tag     = 'rdata';
   r2s.ROIs.name    = 'ROI atlas files';
-  r2s.ROIs.filter  = 'any';
+  r2s.ROIs.filter  = 'xml';
   r2s.ROIs.ufilter = '.*';
   r2s.ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'); 
   r2s.ROIs.num     = [1 Inf];
-  r2s.ROIs.help    = {'These are the indivudal ROI atlas files from the label directory. Choose CSV or XML files.'};
+  r2s.ROIs.help    = {'These are the indivudal ROI atlas files from the label directory. Choose XML files.'};
 
  % atlas used for extraction .. if xml 
   r2s.atlas         = cfg_entry;
