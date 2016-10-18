@@ -1,16 +1,22 @@
 function out = cat_stat_nanmedian(in, dim)
 % ----------------------------------------------------------------------
 % Median, not considering NaN values. Similar usage like median() or 
-% MATLAB nanmedian of the statistic toolbox.
+% MATLAB nanmedian of the statistic toolbox. Process input as double
+% due to errors in large single arrays and set data class of "out" 
+% to the data class of "in" at the end of the processing,
 %
 % out = cat_stat_nanmedian(in,dim)
 %
-% Example:
+% Example 1:
 %   a = rand(4,6,3); 
 %   a(rand(size(a))>0.5)=nan; 
 %   av = cat_stat_nanmedian(a,3); 
 %   am = nanmedian(a,3); % of the statistical toolbox ...
 %   fprintf('%0.4f %0.4f\n',([av(:),am(:)])');
+%
+% Example 2 - special test call of example 1:
+%   cat_stat_nanmedian('test')
+%
 % ----------------------------------------------------------------------
 % Robert Dahnke 
 % Structural Brain Mapping Group
@@ -22,6 +28,16 @@ function out = cat_stat_nanmedian(in, dim)
     help cat_stat_nanmedian;
     return;
   end;
+  
+  if ischar(in) && strcmp(in,'test')
+    a = rand(4,6,3); 
+    a(rand(size(a))>0.5)=nan; 
+    av = cat_stat_nanmedian(a,3); 
+    am = nanmedian(a,3); % of the statistical toolbox ...
+    fprintf('%0.4f %0.4f\n',([av(:),am(:)])');
+    out = nanmean(av(:) - am(:)); 
+    return; 
+  end
   
   if nargin < 2
     if size(in,1) ~= 1
@@ -36,7 +52,9 @@ function out = cat_stat_nanmedian(in, dim)
   sz  = size(in);
 
   if isempty(in), out = nan; return; end
-  
+  tp = class(in);
+  in = double(in); % single failed in large arrays
+   
   % reduce to 2d matrix
   pm = [dim:max(length(size(in)),dim) 1:dim-1];
   in = reshape(permute(in,pm),size(in,dim),prod(sz)/size(in,dim));
@@ -56,4 +74,6 @@ function out = cat_stat_nanmedian(in, dim)
   
   % correct for permutation
   sz(dim) = 1; out = ipermute(reshape(out,sz(pm)),pm);
+  
+  eval(sprintf('out = %s(out);',tp));
 end

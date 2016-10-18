@@ -65,12 +65,12 @@ function cat_tst_cattest(job)
 %
 %  Planed data extensions:
 %  ---------------------------------------------------------------------
-%  * human example datasets (~ 1.0 MB / subject) 
+%  * human example datasets (~?1.0 MB / subject) 
 %    - anatomy:   very old, very young (Berlin?), WMH (OASIS31?), tumor
 %    ? quality:   strong bias, noisy, artefacts
 %    ? AD:        10x10 subjects
 %    ? aging:     10 subjects
-%  * Adding of primate example datasets (~ 0.5 - 1.5 MB / subject)
+%  * Adding of primate example datasets (~?0.5 - 1.5 MB / subject)
 %    1-? larger (kekla,molek,kenge/lana/laz,lorel)
 %    1-? smaller (cleo, ...)
 %  * Adding of T2/PD exampled datasets
@@ -90,6 +90,7 @@ function cat_tst_cattest(job)
   [cv,rv] = cat_version;
   
   % defaults
+  def.computer  = computer; 
   def.userlevel = ''; % [ default | expert | developer ] 
   def.datalevel = ''; % [ basic | human | long | ape | monkey | full ]
   def.resdir    = fullfile(spm('dir'),'toolbox','cat12','cattest',[cv 'R' rv]);
@@ -154,7 +155,7 @@ function cat_tst_cattest(job)
   end
   switch job.datalevel
     case 'minimal'
-      job.data_human            = job.data_human(5:6);
+      job.data_human            = job.data_human(1);
       job.data_human_long       = {};
       job.data_human_group      = {};
       job.data_greaterapes      = {};
@@ -228,14 +229,19 @@ function cat_tst_cattest(job)
       % create output directory and copy files
       % the different species required another preprocessing, but the following
       % routines are identical!
-      if ~exist([job.resdir job.para{pi,5}],'dir'), mkdir([job.resdir job.para{pi,5}]); end 
+      if isempty(job.para{pi,5})
+        subresdir = [job.resdir '_' job.computer];
+      else
+        subresdir = [job.resdir job.para{pi,5} num2str(job.para{pi,6}{ppi}) '_' job.computer];
+      end  
+      if ~exist(subresdir,'dir'), mkdir(subresdir); end 
 
       for si = 1:numel(species)
         eval(sprintf('files_%s = {};',species{si}(6:end)));  
         for j = numel(job.(species{si})):-1:1
-          copyfile(job.(species{si}){j},[job.resdir job.para{pi,5}]); 
+          copyfile(job.(species{si}){j},subresdir); 
           [pp,ff,ee] = fileparts(job.(species{si}){j});
-          eval(sprintf('files_%s{j,1} = fullfile([job.resdir job.para{pi,5}],[ff ee]);',species{si}(6:end)));  
+          eval(sprintf('files_%s{j,1} = fullfile(subresdir,[ff ee]);',species{si}(6:end)));  
         end
       end
       files = [files_human; files_greaterapes; files_oldworldmonkeys]; 
@@ -288,6 +294,10 @@ function cat_tst_cattest(job)
       end
     end
   end
+  
+  
+  %% test compiled (and other) functions
+  compile(0,1,job.userlevel+1);
   
   
   

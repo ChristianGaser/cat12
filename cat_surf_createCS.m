@@ -167,8 +167,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,6,Ymfs>0.2); % removing background
     [Ymfs,resI]     = cat_vol_resize(Ymfs,'interp',V,opt.interpV);                  % interpolate volume
-    Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0.5;             % interpolate volume
-    mask_parahipp      = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;        % interpolate volume
+    Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;               % interpolate volume (small dilatation)
+    mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;     % interpolate volume
 
     %% pbt calculation
     [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyri

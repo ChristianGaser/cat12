@@ -1,8 +1,17 @@
 function x=cat_stat_nanstat1d(x,action)
+% ----------------------------------------------------------------------
 % replace nan* functions of the stat toolbox for the 1d case 
-  x=x(:); x(isnan(x) | isinf(x))=[];
-  if ~exist('action','var'), action='nanmean'; end
+% use double, because mean error for large single arrays.
+% ----------------------------------------------------------------------
+% Robert Dahnke 
+% Structural Brain Mapping Group
+% University Jena 
+% ----------------------------------------------------------------------
+% $Id$
 
+  x=double(x(:)); x(isnan(x) | isinf(x))=[];
+  if ~exist('action','var'), action='nanmean'; end
+  
   switch lower(action)
     case {'mean'   'nanmean'},   x = mean(x);
     case {'median' 'nanmedian'}, x = median(x);

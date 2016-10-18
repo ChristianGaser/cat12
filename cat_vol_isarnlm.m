@@ -67,6 +67,7 @@ function varargout = cat_vol_isarnlm(varargin)
   end
   if ~isfield(job,'data') || isempty(job.data)
      job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
+     if isempty(job.data) || isempty(job.data{1}), return; end 
   else
      job.data = cellstr(job.data);
   end
@@ -75,12 +76,12 @@ function varargout = cat_vol_isarnlm(varargin)
   def.verb    = 1;           % be verbose
   def.prefix  = 'isarnlm_';  % prefix
   def.postfix = '';  
-  def.NCstr   = inf;         % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
+  def.NCstr   = -inf;         % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
   def.rician  = 0;           % use inf for GUI
   def.local   = 1;           % local weighing (only auto NCstr); 
   job = cat_io_checkinopt(job,def);
-
-  job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;          % garanty values from 0 to 1 or inf
+  if isinf(job.NCstr), job.NCstr = -2; end 
+  %job.NCstr = max(0,min(1,job.NCstr)) + isinf(job.NCstr)*job.NCstr;          % garanty values from 0 to 1 or inf
   if isinf(job.rician), spm_input('Rician noise?',1,'yes|no',[1,0],2); end  % GUI
   
   V = spm_vol(char(job.data));
@@ -164,8 +165,8 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 
   def.verb   = 1;     % display progess
   def.red    = 1;     % maximum number of resolution reduction
-  def.iter   = 3;     % maximum number of iterations
-  def.iter1  = 2;     % maximum number of iterations at full resolution
+  def.iter   = 1;     % maximum number of iterations
+  def.iter1  = 1;     % maximum number of iterations at full resolution
   def.rician = 0;     % noise type 
   def.cstr   = 0.5;   % correction strength 
   def.SANFM  = 1;     % spatial adaptive noise filter modification 
@@ -173,11 +174,11 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   def.fast   = 0;     % masking background?
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
   def.level  = 1;     % just for display
-  def.NCstr  = 1; 
+  def.NCstr  = -1; 
   def.local  = 1; 
   opt        = cat_io_checkinopt(opt,def);
   opt.iter   = max(1,min(10,opt.iter));  % at least one iteration (iter = 0 means no filtering)
-  opt.NCstr  = max(0,min(1,opt.NCstr)) + isinf(opt.NCstr)*opt.NCstr;  % range 0-1
+  %opt.NCstr  = max(0,min(1,opt.NCstr)) + isinf(opt.NCstr)*opt.NCstr;  % range 0-1
 
   if isempty(YM), YM = true(size(Y)); end 
   YM = YM>0.5;
@@ -200,19 +201,47 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     
     
     %% SANLM filtering
-    if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
-    Ys  = Yi+0;
-    YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
     if opt.level~=1
+      if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
+      Ys  = Yi+0;
+      YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
+
       cat_sanlm(Ys,3,1,opt.rician); 
     
+      if opt.NCstr<0
+      % adaptive local denoising 
+        NCstr = opt.NCstr * 15; 
+
+        % prepare local map
+        NCs = abs(Ys - Yi) ./ max(eps,Ys); spm_smooth(NCs,NCs,2);
+        NCs = max(0,min(1,NCs * abs(NCstr))); 
+        opt.NCstr = -cat_stat_nanmean(NCs(:)); 
+
+        % mix original and noise corrected image
+        Ys = Yi.*(1-NCs) + Ys.*NCs; 
+        clear NCs;
+
+      elseif opt.NCstr>0
+      % (adaptive) global denoising  
+
+        NCstr = opt.NCstr * 15; 
+     
+        opt.NCstr = min(1,max(0,opt.NCstr));
+
+        % mix original and noise corrected image
+        Ys   = Yi*(1-opt.NCstr) + Ys*opt.NCstr; 
+      end
+
+    
+      %{
       % adaptive global denoising 
       if isinf(opt.NCstr) || sign(opt.NCstr)==-1;
-        Yh     = Ys>mean(Ys(:)); % object
-        Tth    = mean(Ys(Yh(:)));
-        NCstr  = min(1,max(0, mean( abs(Ys(Yh(:)) - Yi(Yh(:))) ./ Tth ) * 16 * min(2,max(0,abs(opt.NCstr))) ));
+        YM3    = Ys>mean(Ys(:)); % object
+        Tth    = mean(Ys(YM3(:)));
+        NCstr  = min(1,max(0, mean( abs(Ys(YM3(:)) - Yi(YM3(:))) ./ Tth ) * 16 * min(10,max(0,abs(opt.NCstr))) ));
         NCs    = abs(Ys - Yi) ./ max(eps,Ys) * 16 * min(2,max(0,abs(opt.NCstr))); spm_smooth(NCs,NCs,2);
         NCs    = max(0,min(1,NCs));
+        clear YM3; 
       else 
         NCstr  = opt.NCstr;
       end
@@ -221,19 +250,23 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 
       % mix original and noise corrected image
       if opt.local
-        Ys = Yi.*(1-NCs) + Ys.*NCs; 
+        Ys = Yi.*(1-NCs) + Ys.*NCs; clear NCs; 
       else
         Ys = Yi*(1-NCstr) + Ys*NCstr; 
       end
-    end
-    %Ys = (1-opt.NCstr) .* Yi  + opt.NCstr .* Ys; % main weighting
-    %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
-    %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
-    noiser = 1 - (cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
-    if noiser<0, noiser = noiser+1; end
-    noise  = cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
+      %}
     
-    if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+      %Ys = (1-opt.NCstr) .* Yi  + opt.NCstr .* Ys; % main weighting
+      %[i,txt] = feature('numCores'); i=strfind(txt,'MATLAB was assigned:');
+      %fprintf(sprintf('%s',repmat('\b',1,numel('Using 8 processors '))));
+      noiser = 1 - (cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol))) / noise;
+      if noiser<0, noiser = noiser+1; end
+      noise  = cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
+      clear YM2;
+      if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+    else
+      noiser = 1; 
+    end
  
     
 
@@ -252,94 +285,27 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
         optr       = opt;
         optr.red   = opt.red - 1; 
         %optr.iter  = opt.iter - 1;
-        %optr.Nth   = opt.Nth * prod(resr.vx_vol) / prod(resr.vx_volr);
+        optr.Nth   = opt.Nth / 2; %* prod(resr.vx_vol) / prod(resr.vx_volr);
         optr.level = opt.level + 1; 
         YR  = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
         Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
         YRs = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
         Ys  = (Yi - YR) + YRs; 
+        clear YR YRs Yr YRr YRs;
 
         % second block
         [Yr,YMr,resr] = cat_vol_resize({Yi(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
-          'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;
+          'reduceV',vx_vol,min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
         YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
         YR  = Yi; YR(2:end,2:end,2:end) = YRr; 
         Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
         YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
         YRs = Yi; YRs(2:end,2:end,2:end) = YRr; 
         Ys  = Ys + (Yi - YR) + YRs; 
+        clear YR YRs Yr YRr YRs; 
 
         % average both blocks
         Ys = Ys / 2;
-      elseif 0 %all(vx_vol>=1)
-        % first block
-        if all(vx_vol<[2 2 1]*1.1)
-          [Yr,YMr,resr] = cat_vol_resize({Yi,YM},'reduceV',vx_vol,vx_vol.*[1 1 2],32,'meanm'); YMr = YMr>0.5;
-          optr       = opt;
-          optr.red   = opt.red - 1; 
-          optr.level = opt.level + 1; 
-          YR  = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
-          YRs = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          Ys  = (Yi - YR) + YRs; 
-
-          % second block
-          [Yr,YMr,resr] = cat_vol_resize({Yi(1:end,1:end,2:end),YM(1:end,1:end,2:end)},...
-            'reduceV',vx_vol,vx_vol.*[1 1 2],32,'meanm'); YMr = YMr>0.5;
-          YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          YR  = Yi; YR(1:end,1:end,2:end) = YRr; 
-          Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
-          YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          YRs = Yi; YRs(1:end,1:end,2:end) = YRr; 
-          Ys  = Ys + (Yi - YR) + YRs; 
-        end
-        
-        if all(vx_vol<[2 1 2]*1.1)
-          % first block
-          [Yr,YMr,resr] = cat_vol_resize({Yi,YM},'reduceV',vx_vol,vx_vol.*[1 2 1],32,'meanm'); YMr = YMr>0.5;
-          optr       = opt;
-          optr.red   = opt.red - 1; 
-          optr.level = opt.level + 1; 
-          YR  = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
-          YRs = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          Ys  = Ys + (Yi - YR) + YRs; 
-
-          % second block
-          [Yr,YMr,resr] = cat_vol_resize({Yi(1:end,2:end,1:end),YM(1:end,2:end,1:end)},...
-            'reduceV',vx_vol,vx_vol.*[1 2 1],32,'meanm'); YMr = YMr>0.5;
-          YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          YR  = Yi; YR(1:end,2:end,1:end) = YRr; 
-          Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
-          YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          YRs = Yi; YRs(1:end,2:end,1:end) = YRr; 
-          Ys  = Ys + (Yi - YR) + YRs; 
-        end
-        
-        if all(vx_vol<[1 2 2]*1.1)
-          % first block
-          [Yr,YMr,resr] = cat_vol_resize({Yi,YM},'reduceV',vx_vol,vx_vol.*[2 1 1],32,'meanm'); YMr = YMr>0.5;
-          optr       = opt;
-          optr.red   = opt.red - 1; 
-          optr.level = opt.level + 1; 
-          YR  = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
-          YRs = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          Ys  = Ys + (Yi - YR) + YRs; 
-
-          % second block
-          [Yr,YMr,resr] = cat_vol_resize({Yi(2:end,1:end,1:end),YM(2:end,1:end,1:end)},...
-            'reduceV',vx_vol,vx_vol.*[2 1 1],32,'meanm'); YMr = YMr>0.5;
-          YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          YR  = Yi; YR(2:end,1:end,1:end) = YRr; 
-          Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
-          YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
-          YRs = Yi; YRs(2:end,1:end,1:end) = YRr; 
-          Ys  = Ys + (Yi - YR) + YRs; 
-        end
-        
-        % average both blocks
-        Ys = Ys / max(1,all(vx_vol<[2 1 2]*1.1)*2 + all(vx_vol<[2 2 1]*1.1)*2 + all(vx_vol<[1 2 2]*1.1)*2);
       end
     end
     
@@ -399,26 +365,64 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     Yi = Y .* (YM>0);
     iter = iter + 1; 
     
-    
   end
+  clear Y YM ; 
   
   if opt.level==1 %&& any(vx_vol<0.75)
-    Y = Ys; 
+    if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter,vx_vol); stime = clock; end
     
     cat_sanlm(Ys,3,1,opt.rician); 
+
+    YM     = Ys>mean(Ys(:)); % object
+    if opt.NCstr<0
+    % adaptive local denoising 
+        NCstr = opt.NCstr * 15; 
+
+        % prepare local map
+        NCs = abs(Ys - Yi) ./ max(eps,Ys); spm_smooth(NCs,NCs,2);
+        NCs = max(0,min(1,NCs * abs(NCstr))); 
+        opt.NCstr = -cat_stat_nanmean(NCs(:)); 
+
+        % mix original and noise corrected image
+        Ys = Yi.*(1-NCs) + Ys.*NCs; 
+        clear NCs;
+
+    elseif opt.NCstr>0
+    % (adaptive) global denoising  
+
+        NCstr = opt.NCstr * 15; 
+     
+        opt.NCstr = min(1,max(0,opt.NCstr));
+
+        % mix original and noise corrected image
+        Ys   = Yi*(1-opt.NCstr) + Ys*opt.NCstr; 
+    end
+    noiser = 1 - (cat_stat_nanmean(abs(Yi(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol))) / noise;
+    if noiser<0, noiser = noiser+1; end
+    noise  = cat_stat_nanmean(abs(Yi(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol));
+      
+    if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+    clear YM;
     
-     % adaptive global denoising 
+    %{
+    % adaptive global denoising 
     if isinf(opt.NCstr) || sign(opt.NCstr)==-1;
-      Yh     = Ys>mean(Ys(:)); % object
-      Tth    = mean(Ys(Yh(:)));
-      NCstr  = min(1,max(0, mean( abs(Ys(Yh(:)) - Yi(Yh(:))) ./ Tth ) * 16 * min(2,max(0,abs(opt.NCstr))) ));
+      YM     = Ys>mean(Ys(:)); % object
+      Tth    = mean(Ys(YM(:)));
+      NCstr  = min(1,max(0, mean( abs(Ys(YM(:)) - Yi(YM(:))) ./ Tth ) * 16 * min(10,max(0,abs(opt.NCstr))) ));
       NCs    = abs(Ys - Yi) ./ max(eps,Ys) * 16 * min(2,max(0,abs(opt.NCstr))); spm_smooth(NCs,NCs,2);
       NCs    = max(0,min(1,NCs));
     else 
       NCstr  = opt.NCstr;
     end
     NCstr = max( mean(NCstr(:)) - 1*std(NCstr(:)), min ( mean(NCstr(:)) + 1*std(NCstr(:)) , NCstr)); 
-        
+    
+    noiser = 1 - (cat_stat_nanmean(abs(Yi(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol))) / noise;
+    if noiser<0, noiser = noiser+1; end
+    noise  = cat_stat_nanmean(abs(Yi(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol));
+      
+    if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+    clear YM;   
     
     % mix original and noise corrected image
     if opt.local
@@ -426,10 +430,13 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     else
       Ys = Yi*(1-NCstr) + Ys*NCstr; 
     end
+    clear Yi; 
+    %}
+    
   end
 
   % garantie positive values
-  if min(Y(:))>-0.001 && sum(Y(:)<0)>0.01*numel(Y(:));
+  if min(Ys(:))>-0.001 && sum(Ys(:)<0)>0.01*numel(Ys(:));
     Ys = Ys - min(Ys(:)); 
   end
   

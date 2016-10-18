@@ -27,6 +27,32 @@ function [varargout] = cat_surf_info(P,read,gui)
 %#ok<*RGXP1>
 
   if isempty(P) && nargout>0, varargout{1} = {}; return; end
+  if strcmp(P,'selftest')
+    pps = {
+      fullfile(spm('dir'),'toolbox','cat12','template_surfaces')
+      fullfile('User','08.15','T1 T2','subs','mri')
+      };
+    ffs = {
+      'lh.central.freesurfer.gii'
+      'lh.mymask'
+      'output'
+      };
+    ees = {
+      ''
+      '.gii'
+      };
+    varargout = cell(numel(pps),numel(ffs),numel(ees)); 
+    for ppsi = 1:numel(pps)
+      for ffsi = 1:numel(ffs)
+        for eesi = 1:numel(ees)
+          varargout{1}(ppsi,ffsi,eesi) = cat_surf_info(fullfile(pps{ppsi},[ffs{ffsi} ees{eesi}]));
+        end
+      end
+    end
+    return; 
+  end
+  
+  
   
   if nargin<2, read = 0; end
   if nargin<3, gui  = 0; end
@@ -59,7 +85,10 @@ function [varargout] = cat_surf_info(P,read,gui)
     'Psphere','',...    % meshfile
     'Pspherereg','',... % meshfile
     'Pdefects','',...   % meshfile
-    'Pdata',''...       % datafile
+    'Pdata','',...      % datafile
+    ...
+    'preside','', ...
+    'posside','' ...
   );
 
   if isempty(P), return; end
@@ -123,9 +152,11 @@ function [varargout] = cat_surf_info(P,read,gui)
     end
     
     % name
+    % ...this is to simple ... failed in subject with dot such as max.mustermann 
     [tmp,noname,name] = spm_fileparts(sinfo(i).ff); 
-    if isempty(name), name=''; else name = name(2:end); end
-    sinfo(i).name = name;
+    noname = [noname name]; 
+    %if isempty(name), name=''; else name = name(2:end); end
+    %sinfo(i).name = name;
    
     sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)mm\..*')); 
     
@@ -139,10 +170,8 @@ function [varargout] = cat_surf_info(P,read,gui)
         [pp2,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);
       
         % find lh|rh string
-        hemi_ind = [];
-        hemi_ind = [hemi_ind strfind(ff2,'lh')];
-        hemi_ind = [hemi_ind strfind(ff2,'rh')];
-        sinfo(i).side = ff2(hemi_ind:hemi_ind+1);
+        hemi_ind = [strfind(ff2,'lh') strfind(ff2,'rh')];
+        sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
         sidei=[];
       else
         if gui
@@ -158,7 +187,6 @@ function [varargout] = cat_surf_info(P,read,gui)
       sinfo(i).preside = noname(1:sidei-1);
       sinfo(i).posside = noname(sidei+numel(sinfo(i).side)+1:end);
     else
-      sinfo(i).preside = '';
       sinfo(i).posside = noname;
     end
     
@@ -182,18 +210,23 @@ function [varargout] = cat_surf_info(P,read,gui)
     end
     
     % dataname
+    dots = strfind(sinfo(i).posside,'.');
+    if ~isempty(dots)
+      sinfo(i).name    = sinfo(i).posside(dots(1)+1:end); 
+      sinfo(i).posside = sinfo(i).posside(1:dots(1)-1); 
+    end
     sinfo(i).dataname  = strrep(sinfo(i).posside,'.resampled','');
     
     % special datatypes
-    FN = {'thickness','central','inner','outer','sphere','defects','gyrification','sqrtsulc','frac',...
+    FNdata = {'thickness','central','inner','outer','sphere','defects','gyrification','sqrtsulc','frac',...
           'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
           'depthWM','depthGWM','depthCSF','depthWMg','ROI','hull',...
           'hulldist'};
-    sinfo(i).texture = '';
-    for fi=1:numel(FN)
-      if strfind(sinfo(i).dataname,FN{fi}), sinfo(i).texture = FN{fi}; end
+    for fi=1:numel(FNdata)
+      if strfind(sinfo(i).dataname,FNdata{fi}), sinfo(i).texture = FNdata{fi}; end
     end   
-        
+
+    
     % template
     sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
 

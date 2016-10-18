@@ -35,64 +35,59 @@ struct opt_type {
 	// ...
 	} opt;
 
+float min(float a, float b) {
+  if (a<b) return a; else return b; 
+}
 
-// get all values ot the voxels witch are in WMD-range (children of this voxel)  
-void pmax(const float GMT[], const float RPM[], const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA, float & maximum, int & index) {
-  float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0; maximum=WMD; index=0; 
-  
-  for(int i=0;i<=sA;i++) {
-    if (  (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1 && SEGI>1.66)  // vorher ohne // 1.15 und 0.6
-    //if (  (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.65)>WMD) )     
-      { maximum = GMT[i]; index = i; }
+float max(float a, float b) {
+  if (a>b) return a; else return b; 
+}
+
+// get all values of the voxels witch are in WMD-range (children of this voxel)  
+void pmax(const float GMT[], const float RPM[], const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA, float & maximum) {
+  float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0; maximum=WMD; 
+
+  /* the pure maximum */
+  /* (GMT[i]<1e15) && (maximum < GMT[i]) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1 && SEGI>1.66) */
+  for (int i=0;i<=sA;i++) {
+    if (  ( GMT[i] < 1e15 ) && ( maximum < GMT[i] ) &&                  /* thickness/WMD of neighbors should be larger */
+          ( SEG[i] >= 0.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) &&           /* projection range */
+          ( ( ( RPM[i] - ND[i] * 1.2 ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
+          ( ( ( RPM[i] - ND[i] * 0.5 ) >  WMD ) || ( SEG[i]<1.5 ) ) &&  /* lower boundary - minimum distance - their are corrected values outside */
+          ( ( ( (SEGI * max(1.0,min(1.2,SEGI-1)) ) >= SEG[i] ) ) || ( SEG[i]<1.5 ) ) )  /* to high values will project data over sulcal gaps */
+      { maximum = GMT[i]; }
   }
+
+  /* the mean of the highrest values*/
   float maximum2=maximum; float m2n=0; 
-  for(int i=0;i<=sA;i++) {
-    if (  (GMT[i]<1e15) && (GMT[i]>WMD) && ((RPM[i]-ND[i]*1.25)<=WMD) && ((RPM[i]-ND[i]*0.5)>WMD) && (SEGI)>=SEG[i] && SEG[i]>1.00 && SEGI>1.66)   // 1.00 0.5 // 1.50 0.75 && SEG[i]>=1.5 && SEGI>1.5
+  for (int i=0;i<=sA;i++) {
+    if ( ( GMT[i] < 1e15 ) && ( (maximum - 1) < GMT[i] ) && 
+         ( SEG[i] >= 0.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) && 
+         ( ( (RPM[i] - ND[i] * 1.2 ) <= WMD ) ) && 
+         ( ( (RPM[i] - ND[i] * 0.5 ) >  WMD ) || ( SEG[i]<1.5 ) ) &&
+         ( ( ( (SEGI * max(1.0,min(1.2,SEGI-1)) ) >= SEG[i] ) ) || ( SEG[i]<1.5 ) ) ) 
       { maximum2 = maximum2 + GMT[i]; m2n++; } 
   }
-  if ( m2n > 0 )  maximum = (maximum2 - maximum)/m2n; 
-  }
+  if ( m2n > 0 )  maximum = (maximum2 - maximum)/m2n;
+
+}
 
 
 
 
 // estimate x,y,z position of index i in an array size sx,sxy=sx*sy...
-void ind2sub(int i,int &x,int &y, int &z, int sxy, int sy) {
-  z = (int)floor( i / (double)sxy ) +1; 
-  i = i % (sxy);
-  y = (int)floor( i / (double)sy ) +1;        
-  x = i % sy + 1;
-}
-
-int sub2ind(int x,int y, int z, int s[]) {
-  int i=(z-1)*s[0]*s[1] + (y-1)*s[0] + (x-1);
-  if (i<0 || i>s[0]*s[1]*s[2]) i=1;
-  return i;
-}
-
-// read out linear interpolated value of the volume
-float isoval(float*SEG,float x, float y, float z, int sSEG[]){
-  float fx = floor(x),   fy = floor(y),   fz = floor(z);
-  float cx = floor(x+1), cy = floor(y+1), cz = floor(z+1);
+void ind2sub(int i, int *x, int *y, int *z, int snL, int sxy, int sy) {
+  /* not here ... 
+   *  if (i<0) i=0; 
+   *  if (i>=snL) i=snL-1;
+  */
   
-  float wfx = cx-x, wfy = cy-y, wfz = cz-z;
-  float wcx = x-fx, wcy = y-fy, wcz = z-fz;
-
-  // value of the 8 neighbors and there distance weight
-  float N[8], W[8];  
-  N[0]=SEG[sub2ind(int(fx),int(fy),int(fz),sSEG)];  W[0]=wfx * wfy * wfz; 
-  N[1]=SEG[sub2ind(int(cx),int(fy),int(fz),sSEG)];  W[1]=wcx * wfy * wfz;
-  N[2]=SEG[sub2ind(int(fx),int(cy),int(fz),sSEG)];  W[2]=wfx * wcy * wfz;
-  N[3]=SEG[sub2ind(int(cx),int(cy),int(fz),sSEG)];  W[3]=wcx * wcy * wfz;
-  N[4]=SEG[sub2ind(int(fx),int(fy),int(cz),sSEG)];  W[4]=wfx * wfy * wcz;
-  N[5]=SEG[sub2ind(int(cx),int(fy),int(cz),sSEG)];  W[5]=wcx * wfy * wcz;
-  N[6]=SEG[sub2ind(int(fx),int(cy),int(cz),sSEG)];  W[6]=wfx * wcy * wcz; 
-  N[7]=SEG[sub2ind(int(cx),int(cy),int(cz),sSEG)];  W[7]=wcx * wcy * wcz;
-    
-  float seg=0;
-  for (int i=0; i<8; i++) seg = seg + N[i]*W[i];
-  return seg;  
+  *z = (int)floor( (double)i / (double)sxy ) ; 
+   i = i % (sxy);
+  *y = (int)floor( (double)i / (double)sy ) ;        
+  *x = i % sy ;
 }
+
 
 
 // main function
@@ -120,8 +115,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int   sN  = sizeof(NI)/4;  
   float       DN[sN],DI[sN],GMTN[sN],WMDN[sN],SEGN[sN],DNm;
   
-  float 	  du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
-  int         ni,DNi,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
+  float 	    du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
+  int         ni,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
     
   // main volumes - actual without memory optimation ...
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL);
@@ -165,117 +160,77 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 // =============================================================================
   for (int i=0;i<nL;i++) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
-      ind2sub(i,u,v,w,xy,x);
+      ind2sub(i,&u,&v,&w,nL,xy,x);
       
       // read neighbor values
       for (int n=0;n<sN;n++) {
         ni = i + NI[n];
-        ind2sub(ni,nu,nv,nw,xy,x);
+        ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
         if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
         GMTN[n] = GMT[ni]; WMDN[n] = RPM[ni]; SEGN[n] = SEG[ni];
       }
 
       // find minimum distance within the neighborhood
-      pmax(GMTN,WMDN,SEGN,ND,WMD[i],SEG[i],sN,DNm,DNi);
+      pmax(GMTN,WMDN,SEGN,ND,WMD[i],SEG[i],sN,DNm);
       GMT[i] = DNm;
     }
   }
+  
   for (int i=nL-1;i>=0;i--) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
-      ind2sub(i,u,v,w,xy,x);
+      ind2sub(i,&u,&v,&w,nL,xy,x);
       
       // read neighbor values
       for (int n=0;n<sN;n++) {
         ni = i - NI[n];
-        ind2sub(ni,nu,nv,nw,xy,x);
+        ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
         if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
         GMTN[n] = GMT[ni]; WMDN[n] = RPM[ni]; SEGN[n] = SEG[ni];
       }
 
       // find minimum distance within the neighborhood
-      pmax(GMTN,WMDN,SEGN,ND,WMD[i],SEG[i],sN,DNm,DNi);
-      if (GMT[i] < DNm) GMT[i] = DNm;
+      pmax(GMTN,WMDN,SEGN,ND,WMD[i],SEG[i],sN,DNm);
+      if ( GMT[i] < DNm && DNm>0 ) GMT[i] = DNm;
     }
   }
- 
- 
+  
   for (int i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i]=0; //WMD[i]
 
  
   
-  
+
 
 // final setings...
 // =============================================================================
 	float CSFDc = 0, GMTi, CSFDi; // 0.125
 	for (int i=0;i<nL;i++) { 
-		GMT[i] = GMT[i];
+		/* GMT[i] = min(CSFD[i] + WMD[i],GMT[i]); */
 		if (SEG[i]>=opt.LB & SEG[i]<=opt.LB) {
 			GMTi   = CSFD[i] + WMD[i];	
-			CSFDi  = GMT[i] - WMD[i];
+			CSFDi  = GMT[i]  - WMD[i];
 		
 			if ( CSFD[i]>CSFDi )	CSFD[i] = CSFDi; 					
-			else   		 			GMT[i]  = GMTi;
+			else               		GMT[i]  = GMTi;
 		}
 	}
- 
- 
-// median filter
-// =============================================================================
-	if (1) {
-		int n1i,n2i; 
-		for (int i=0;i<nL;i++) 
-		{
-			ind2sub(i,u,v,w,xy,x);
-			n1i=i-1; ind2sub(n1i,nu,nv,nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2 ) n1i=i; 
-			n2i=i+1; ind2sub(n2i,nu,nv,nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2 ) n2i=i;
-			//if (GMT[n1i]==0), n1i=n2i; if (GMT[n2i]==0), n2i=n2i; 
-			if 		( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]<GMT[n2i] ) RPM[i] = GMT[n1i];
-			else if ( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]>GMT[n2i] ) RPM[i] = GMT[n2i];
-			else																RPM[i] = GMT[i];
-		}
-		
-		for (int i=0;i<nL;i++) 
-		{
-			ind2sub(i,u,v,w,xy,x);
-			n1i=i-x; ind2sub(n1i,nu,nv,nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n1i=i;
-			n2i=i+x; ind2sub(n2i,nu,nv,nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n2i=i;
-			if 			( RPM[n1i]>RPM[i] && RPM[i]<RPM[n2i] && RPM[n1i]<RPM[n2i] ) GMT[i] = RPM[n1i];
-			else if ( RPM[n1i]>RPM[i] && RPM[i]<RPM[n2i] && RPM[n1i]>RPM[n2i] )     GMT[i] = RPM[n2i];
-			else																	GMT[i] = RPM[i];
-		}
-		
-		for (int i=0;i<nL;i++) 
-		{
-			ind2sub(i,u,v,w,xy,x);
-			n1i=i-xy; ind2sub(n1i,nu,nv,nw,xy,x); if ( (n1i<0) || (n1i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n1i=i;
-			n2i=i+xy; ind2sub(n2i,nu,nv,nw,xy,x); if ( (n2i<0) || (n2i>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) || SEG[n1i]<2) n2i=i;
-			if 			( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]<GMT[n2i] ) RPM[i] = GMT[n1i];
-			else if ( GMT[n1i]>GMT[i] && GMT[i]<GMT[n2i] && GMT[n1i]>GMT[n2i] )     RPM[i] = GMT[n2i];
-			else																	RPM[i] = GMT[i];
-		}
-		
-		for (int i=0;i<nL;i++) {
-			//if ( (GMT[i]-RPM[i])>-0.25 && (GMT[i]-RPM[i])<0.25 ) 
-			if (SEG[i]>=2) GMT[i]=RPM[i]; 
-		}
-  }
- 
+
  
 // estimate RPM
 // =============================================================================
 	for (int i=0;i<nL;i++) {
-		if ( SEG[i]>=opt.HB ) 	RPM[i]=1.0; 
+		if ( SEG[i]>=opt.HB ) 	
+      RPM[i]=1.0; 
 		else {
-			if ( SEG[i]<=opt.LB || GMT[i]==0.0 ) RPM[i]=0.0;
+			if ( SEG[i]<=opt.LB || GMT[i]==0.0 ) 
+        RPM[i]=0.0;
 			else {
 				RPM[i] = (GMT[i] - WMD[i]) / GMT[i];
-				if (RPM[i]>1) RPM[i]=1;
-				if (RPM[i]<0) RPM[i]=0;	
+				if (RPM[i]>1.0) RPM[i]=1.0;
+				if (RPM[i]<0.0) RPM[i]=0.0;	
 			}
 		} 
 	}
- 
+  
 }
 
 
