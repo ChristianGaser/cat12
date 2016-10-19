@@ -43,7 +43,7 @@ float max(float a, float b) {
   if (a>b) return a; else return b; 
 }
 
-// get all values of the voxels witch are in WMD-range (children of this voxel)  
+// get all values of the voxels which are in WMD-range (children of this voxel)  
 void pmax(const float GMT[], const float RPM[], const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA, float & maximum) {
   float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0; maximum=WMD; 
 
@@ -53,12 +53,12 @@ void pmax(const float GMT[], const float RPM[], const float SEG[], const float N
     if (  ( GMT[i] < 1e15 ) && ( maximum < GMT[i] ) &&                  /* thickness/WMD of neighbors should be larger */
           ( SEG[i] >= 0.0 ) && ( SEGI>1.2 && SEGI<=2.75 ) &&           /* projection range */
           ( ( ( RPM[i] - ND[i] * 1.2 ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
-          ( ( ( RPM[i] - ND[i] * 0.5 ) >  WMD ) || ( SEG[i]<1.5 ) ) &&  /* lower boundary - minimum distance - their are corrected values outside */
-          ( ( ( (SEGI * max(1.0,min(1.2,SEGI-1)) ) >= SEG[i] ) ) || ( SEG[i]<1.5 ) ) )  /* to high values will project data over sulcal gaps */
+          ( ( ( RPM[i] - ND[i] * 0.5 ) >  WMD ) || ( SEG[i]<1.5 ) ) &&  /* lower boundary - minimum distance - corrected values outside */
+          ( ( ( (SEGI * max(1.0,min(1.2,SEGI-1)) ) >= SEG[i] ) ) || ( SEG[i]<1.5 ) ) )  /* for high values will project data over sulcal gaps */
       { maximum = GMT[i]; }
   }
 
-  /* the mean of the highrest values*/
+  /* the mean of the highest values*/
   float maximum2=maximum; float m2n=0; 
   for (int i=0;i<=sA;i++) {
     if ( ( GMT[i] < 1e15 ) && ( (maximum - 1) < GMT[i] ) && 

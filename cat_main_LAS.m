@@ -5,17 +5,17 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 % Local Adaptive Segmentation (LAS):
 %
 % This version of the local adaptive intensity correction includes a  
-% bias correction that based on a maximum filter for the WM and a mean
+% bias correction that is based on a maximum filter for the WM and a mean
 % filter of GM to stabilize the correction in region with less WM.
-% The extension based mostly on the assumption that the tissue next to 
+% The extension is mostly based on the assumption that the tissue next to 
 % the CSF (and high divergence sulci) has to be WM (maximum, high 
 % divergence) or GM. For each tissue a refined logical map is generated 
-% and used to estimate the local intensty threshold.
+% and used to estimate the local intensity threshold.
 % It is important to avoid high intensity blood vessels in the process, 
 % because they will push down local WM and GM intensity - due to the CSF
-% near possition of blood vessels the mostly push down GM. 
-% Based on this values a intensity transformation is used. Compared to 
-% the global correciton this has to be done for each voxel. To save time
+% near possition of blood vessels that mostly push down GM. 
+% Based on these values an intensity transformation is used. Compared to 
+% the global correction this has to be done for each voxel. To save time
 % only a rough linear transformation is used.
 %
 % Finally, a second NLM-filter is used and a refinement of WM structures

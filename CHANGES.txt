@@ -12597,6 +12597,7 @@ D       templates_animals/monkey_oldworld_vbm12.nii
 
 
 ------------------------------------------------------------------------
+r1037 | gaser | 2016-10-18 16:47:52 +0200 (Di, 18 Okt 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12609,5 +12610,28 @@ M       html/cat.html
 M       tbx_cfg_cat.m
 
 Fixed: Updated dependencies.
+
 ------------------------------------------------------------------------
-r1037 | gaser | 2016-10-18 16:47:43
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_LAS.m
+MM      cat_main_LASs.m
+M       cat_run.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_vol_eidist.c
+M       cat_vol_pbt.m
+M       cat_vol_pbtp.cpp
+M       compile.m
+M       html/cat.html
+
+(1) Fixed: Dependencies in cat_run.m were not all defined as cell.
+(2) Fixed: Corrected many typos in help text.
+(3) Fixed: Commented out use of h.sinfo in cat_surf_display that only worked
+    in expert mode.
+(4) Fixed: Commented out cat_check_system_output for TCA in cat_surf_createCS
+    because TCA has some memory issues for very small defect sizes.
+------------------------------------------------------------------------
+r1038 | gaser | 2016-10-19 11:50:52
