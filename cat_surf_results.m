@@ -873,7 +873,7 @@ if numel(H.S{1}.info) == 1
     H.colourbar = colorbar('peer',H.cbar,'Northoutside');
   end
   
-  if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col);end
+  if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col); end
   clim = getappdata(H.patch(1), 'clim');
   axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
   col = getappdata(H.patch(1), 'col');
@@ -948,7 +948,7 @@ else
           8 1 1 4 2 2 8];
   end
   imagesc(cb);
-  colormap([1 0 0; 0 1 0; 0 0 1; 1 1 0; 0 1 1; 1 0 1; 1 1 1; H.bkg_col])
+  colormap([1 0 0; 0 1 0; 0 0 1; 1 1 0; 0 1 1; 1 0 1; 1 1 1; H.bkg_col]);
   axis(H.cbar,'off'); axis('image');  
 end
 
@@ -1303,6 +1303,7 @@ global H
 figure(H.figure(1))
 val = get(hObject, 'Value');
 c = getappdata(H.patch(1),'clim');
+
 for ind = 1:5
   setappdata(H.patch(ind),'clim',[true val c(3)]);
   col = getappdata(H.patch(ind),'col');
@@ -1324,6 +1325,7 @@ global H
 figure(H.figure(1))
 val = get(hObject, 'Value');
 c = getappdata(H.patch(1),'clim');
+
 for ind = 1:5
   setappdata(H.patch(ind),'clim',[true c(2) val]);
   col = getappdata(H.patch(ind),'col');
@@ -1767,7 +1769,7 @@ function s=remove_zeros(s)
 pos = length(s);
 while pos > 1
   if strcmp(s(pos),'0')
-    s(pos)=''
+    s(pos)='';
     pos = pos-1;
   else break
   end
