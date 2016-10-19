@@ -62,7 +62,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_LAS.m 1029 2016-10-05 14:57:30Z dahnke $
+% $Id$
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)

@@ -252,7 +252,7 @@ function varargout = compile(comp,test,verb)
     
     
     %% AMAP
-    %  Test preak estimation
+    %  Test peak estimation
     %  - not only a sulci, we need a brain ...
     %  - amap do not like nans etc...
     %    ds('d2','',1,t1,t1c,seg/3,d{ni}/3,10)
