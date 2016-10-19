@@ -479,7 +479,7 @@ list2 = list(1:number,:);
 if issurf
   % display single meshes and correct colorscale of colorbar
   for i=1:number
-    h = spm_mesh_render('Disp',deblank(list2(i,:)));
+    h = cat_surf_render('Disp',deblank(list2(i,:)));
     
     % shift each figure slightly
     if i==1
@@ -491,9 +491,9 @@ if issurf
     % remove menubar and toolbar, use filename as title
     set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(list2(i,:),'short50'),...
          'NumberTitle','off','Position',pos);
-    spm_mesh_render('ColourMap',h.axis,jet);
-    spm_mesh_render('ColourBar',h.axis,'on');
-    spm_mesh_render('CLim',h,[mn_data mx_data]);
+    cat_surf_render('ColourMap',h.axis,jet);
+    cat_surf_render('ColourBar',h.axis,'on');
+    cat_surf_render('CLim',h,[mn_data mx_data]);
   end
 else
   spm_check_registration(list2);
