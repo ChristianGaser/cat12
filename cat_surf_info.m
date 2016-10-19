@@ -222,6 +222,7 @@ function [varargout] = cat_surf_info(P,read,gui)
           'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
           'depthWM','depthGWM','depthCSF','depthWMg','ROI','hull',...
           'hulldist'};
+    sinfo(i).texture = '';
     for fi=1:numel(FNdata)
       if strfind(sinfo(i).dataname,FNdata{fi}), sinfo(i).texture = FNdata{fi}; end
     end   

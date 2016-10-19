@@ -12612,6 +12612,7 @@ M       tbx_cfg_cat.m
 Fixed: Updated dependencies.
 
 ------------------------------------------------------------------------
+r1038 | gaser | 2016-10-19 11:51:05 +0200 (Mi, 19 Okt 2016) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12633,5 +12634,21 @@ M       html/cat.html
     in expert mode.
 (4) Fixed: Commented out cat_check_system_output for TCA in cat_surf_createCS
     because TCA has some memory issues for very small defect sizes.
+
 ------------------------------------------------------------------------
-r1038 | gaser | 2016-10-19 11:50:52
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_check_cov.m
+M       cat_surf_info.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Fixed: Added again missing initlialization of sinfo.texture in 
+    cat_surf_info.m 
+(2) Changed: Replaced spm_mesh_render by cat_surf_render in 
+    cat_stat_check_cov.m
+
+------------------------------------------------------------------------
+r1039 | gaser | 2016-10-19 15:36:33
