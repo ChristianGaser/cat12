@@ -28,7 +28,6 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 %   Department of Neurology
 %   University Jena
 %
-%   Version: 1.10 ??? 2014/02
 % ______________________________________________________________________
 % $Id$ 
 

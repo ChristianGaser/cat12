@@ -55,7 +55,7 @@
 
 /*
  * ToDo:
- * - check unisotropic distance estimation 
+ * - check anisotropic distance estimation 
  */
  
 
