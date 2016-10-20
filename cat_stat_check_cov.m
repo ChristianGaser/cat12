@@ -9,54 +9,69 @@ function varargout = cat_stat_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY YpYsorted data_array pos ind_sorted ind_sorted_display mean_cov FS P X issurf mn_data mx_data V ...
-       sample isxml sorted isscatter MD show_name bplot
+global fname H YpY YpYsorted data_array pos ind_sorted ind_sorted_display mean_cov FS X issurf mn_data mx_data V Vchanged ...
+       sample isxml sorted isscatter MD show_name bplot names_changed
 rev = '$Rev$';
 
 % show data by fileorder
 sorted = 0;
 
-if nargin == 1
-  P      = [];
-  sample = [];
-  G      = [];
-
-  % read filenames for each sample and indicate sample parameter
-  if isfield(vargin,'data_vol')
-    issurf = 0;
-    n_samples = numel(vargin.data_vol);
-    for i=1:n_samples
-      P = char([P; vargin.data_vol{i}]);
-      sample = [sample, i*ones(1,size(vargin.data_vol{i},1))];
-    end
-    sep = vargin.gap;
-  else
-    issurf = 1;
-    n_samples = numel(vargin.data_surf);
-    for i=1:n_samples
-      P = char([P; vargin.data_surf{i}]);
-      sample = [sample, i*ones(1,size(vargin.data_surf{i},1))];
-    end
-  end
-  
-  n_subjects = size(P,1);
-  
-  if ~isempty(vargin.c)
-    for i=1:numel(vargin.c)
-      G = [G vargin.c{i}];
-    end
-  end
-
-  if isempty(vargin.data_xml)
-    xml_files = [];
-  else
-    xml_files = char(vargin.data_xml{1});
-  end
-  
-else
-  error('No argument give.');
+if nargin == 0
+  error('No argument given.');
 end
 
+sample = [];
+G      = [];
+n_subjects = 0;
+names_changed = 0;
+  
+% read filenames for each sample and indicate sample parameter
+if isfield(vargin,'data_vol')
+  issurf = 0;
+  n_samples = numel(vargin.data_vol);
+  for i=1:n_samples
+    
+    if size(vargin.data_vol{i},1) == 1 % 4D data
+      [pth,nam,ext] = spm_fileparts(char(vargin.data_vol{i}));
+      % remove ",1" at the end
+      vargin.data_vol{i} = fullfile(pth,[nam ext]);
+    end
+    V0 = spm_data_hdr_read(vargin.data_vol{i});
+    n_subjects = n_subjects + length(V0);
+      
+    if i==1, V = V0;
+    else,    V = [V V0]; end
+      
+    sample = [sample, i*ones(1,length(V0))];
+  end
+  sep = vargin.gap;
+else
+  issurf = 1;
+  n_samples = numel(vargin.data_surf);
+  for i=1:n_samples
+    V0 = spm_data_hdr_read(char(vargin.data_surf{i}));
+    n_subjects = n_subjects + length(V0);
+      
+    if i==1, V = V0;
+    else,    V = [V V0]; end
+    sample = [sample, i*ones(1,size(vargin.data_surf{i},1))];
+  end
+end
+    
+if ~isempty(vargin.c)
+  for i=1:numel(vargin.c)
+    G = [G vargin.c{i}];
+  end
+end
+
+if isempty(vargin.data_xml)
+  isxml = 0;
+  QM_names = '';
+  xml_files = [];
+else
+  xml_files = char(vargin.data_xml{1});
+end
+  
 if ~isempty(xml_files)
 
   isxml = 1;
@@ -71,14 +86,14 @@ if ~isempty(xml_files)
   for i=1:n_subjects
     % get basename for xml- and data files
     [pth, xml_name] = fileparts(deblank(xml_files(i,:)));
-    [pth, data_name] = fileparts(deblank(P(i,:)));
+    [pth, data_name] = fileparts(V(i).fname);
     
     % remove leading 'cat_'
     xml_name = xml_name(5:end);
     
     % check for filenames
     if isempty(strfind(data_name,xml_name))
-      warning('Please check file names because of deviating subject names\n: %s vs. %s\n',P(i,:),xml_files(i,:));
+      warning('Please check file names because of deviating subject names\n: %s vs. %s\n',V(i).fname,xml_files(i,:));
     end
     
     xml = cat_io_xml(deblank(xml_files(i,:)));
@@ -91,45 +106,18 @@ if ~isempty(xml_files)
   end
   spm_progress_bar('Clear');
   
-else
-  isxml = 0;
-  QM_names = '';
 end
 
-[pth,nam] = spm_fileparts(deblank(P(1,:)));
+[pth,nam] = spm_fileparts(V(1).fname);
 
 if issurf
   % load surface texture data
   spm_progress_bar('Init',n_subjects,'Load surfaces','subjects completed')
 
-  V = gifti(deblank(P(1,:)));
-  if isa(V.cdata,'file_array'), V.cdata = V.cdata(); end
-  sz = length(V.cdata);
-
-  Y = zeros(n_subjects,sz);
-  tmp = V.cdata;
-
-  tmp(isnan(tmp)) = 0;
-  Y(1,:) = tmp';
-
-  for i = 2:n_subjects
-    V = gifti(deblank(P(i,:)));
-    if isa(V.cdata,'file_array'), V.cdata = V.cdata(); end
-    if length(V.cdata) ~= sz
-      error(sprintf('File %s has different surface size than %',P(i,:),P(1,:)));
-    end
-    tmp = V.cdata;
-    tmp(isnan(tmp)) = 0;
-    Y(i,:) = tmp';
-    spm_progress_bar('Set',i);  
-  end
-
-  spm_progress_bar('Clear');
-
-else
-  % load volume data
-  V = spm_vol(deblank(P));
+  Y = spm_data_read(V)';
+  Y(isnan(Y)) = 0;
   
+else
   % voxelsize and origin
   vx =  sqrt(sum(V(1).mat(1:3,1:3).^2));
   Orig = V(1).mat\[0 0 0 1]';
@@ -172,7 +160,7 @@ if issurf
   % rescue unscaled data min/max
   mn_data = min(Y(:));
   mx_data = max(Y(:));
-  Y = Y - repmat(mean(Y,2), [1 length(V.cdata)]);
+  Y = Y - repmat(mean(Y,2), [1 size(Y,2)]);
 
   % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
   if ~isempty(G) 
@@ -233,6 +221,16 @@ else
 
   end
 
+  % correct filenames for 4D data
+  if V(1).fname == V(2).fname
+    names_changed = 1;
+    Vchanged = V;
+    for i=1:n_subjects
+      [pth,nam,ext] = spm_fileparts(V(i).fname);
+      V(i).fname = fullfile(pth, [nam sprintf('%04d',i) ext]);
+    end
+  end
+  
   spm_progress_bar('Clear');
 end
 
@@ -260,8 +258,9 @@ fname_m = [];
 fname_tmp = cell(n_samples,1);
 fname_s   = cell(n_samples,1);
 fname_e   = cell(n_samples,1);
+
 for i=1:n_samples
-  [tmp, fname_tmp{i}] = spm_str_manip(char(P(sample == i,:)),'C');
+  [tmp, fname_tmp{i}] = spm_str_manip(char(V(sample == i).fname),'C');
   fname_m = [fname_m; fname_tmp{i}.m];
   fname_s{i} = fname_tmp{i}.s;
   fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
@@ -303,15 +302,15 @@ if ~isempty(n_thresholded)
   fprintf('\nThese data have a mean correlation below 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   for i=n_thresholded:n_subjects
-    fprintf('%s: %3.3f\n',P(ind_sorted(i),:),mean_cov_sorted(i));
+    fprintf('%s: %3.3f\n',V(ind_sorted(i)).fname,mean_cov_sorted(i));
   end
 end
 
 
 if nargout>0
-  varargout{1} = struct('table',[cellstr(P),num2cell(mean_cov)],...
+  varargout{1} = struct('table',[cellstr(V.fname),num2cell(mean_cov)],...
                         'covmat',YpY,...
-                        'sorttable',[cellstr(P(ind_sorted,:)),num2cell(mean_cov_sorted)],...
+                        'sorttable',[cellstr(V(ind_sorted).fname),num2cell(mean_cov_sorted)],...
                         'sortcovmat',YpYsorted, ...
                         'cov',mean_cov,...
                         'threshold_cov',threshold_cov);
@@ -444,8 +443,8 @@ for i=1:n_subjects
   for j=1:n_subjects
     if (i>j) && (mean_cov(i) == mean_cov(j))
       try
-        nami = deblank(P(i,:));
-        namj = deblank(P(j,:));
+        nami = deblank(V(i).fname);
+        namj = deblank(V(j).fname);
         if strcmp(nami(end-1:end),',1')
           nami = nami(1:end-2);
         end 
@@ -465,15 +464,15 @@ end
 %-----------------------------------------------------------------------
 function check_worst_data(obj, event_obj)
 %-----------------------------------------------------------------------
-global P ind_sorted_display issurf mn_data mx_data data_array H
+global V ind_sorted_display issurf mn_data mx_data data_array H
 
-n = size(P,1);
+n = length(V);
 number = min([n 24]);
 number = spm_input('How many files ?',1,'e',number);
 number = min([number 24]);
-number = min([number size(P,1)]);
+number = min([number length(V)]);
   
-list = char(P(ind_sorted_display(n:-1:1),:));
+list = char(V(ind_sorted_display(n:-1:1)).fname);
 list2 = list(1:number,:);
 
 if issurf
@@ -713,7 +712,7 @@ return
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global V fname data_array H YpY pos sorted ind_sorted isscatter
+global V Vchanged fname data_array H YpY pos sorted ind_sorted isscatter names_changed
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -721,19 +720,25 @@ else
   slice_mm = 0;
 end
 
-vx   =  sqrt(sum(V(1).mat(1:3,1:3).^2));
-Orig = V(1).mat\[0 0 0 1]';
+if names_changed
+  P = Vchanged;
+else
+  P = V;
+end
+
+vx   =  sqrt(sum(P(1).mat(1:3,1:3).^2));
+Orig = P(1).mat\[0 0 0 1]';
 sl   = round(slice_mm/vx(3)+Orig(3));
 
 % if slice is outside of image use middle slice
-if (sl>V(1).dim(3)) || (sl<1)
-  sl = round(V(1).dim(3)/2);
+if (sl>P(1).dim(3)) || (sl<1)
+  sl = round(P(1).dim(3)/2);
 end
 
 M  = spm_matrix([0 0 sl]);
 
 for i = 1:length(V)
-  img = spm_slice_vol(V(i),M,V(1).dim(1:2),[1 0]);
+  img = spm_slice_vol(P(i),M,P(1).dim(1:2),[1 0]);
   img(isnan(img)) = 0;
   
   % scale image according to mean

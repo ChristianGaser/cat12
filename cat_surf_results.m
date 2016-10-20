@@ -512,7 +512,7 @@ if thresh == 0
 end
 
 % get min value for both hemispheres
-min_d = min(min(getappdata(H.patch(1),'data'),getappdata(H.patch(3),'data')));
+min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
 clim = getappdata(H.patch(1), 'clim');
 
 for ind=1:5
@@ -526,7 +526,7 @@ for ind=1:5
   setappdata(H.patch(ind),'clip',H.clip);
   col = getappdata(H.patch(ind),'col');
   d = getappdata(H.patch(ind),'data');
-  min_d = min(min_d, min(d));
+  min_d = min(min_d, min(d(:)));
   H = updateTexture(H,ind,d,col,H.show_transp);
 end
 
