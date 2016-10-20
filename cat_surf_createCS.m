@@ -296,6 +296,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       cmd = sprintf('tca -m 10000 -n 1 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
       [ST, RS] = cat_system(cmd); 
       % do not check because tca sometimes fails (due to memory issues ?)
+      disp(RS)
       % cat_check_system_output(ST,RS,opt.debug);
  
       % load topology corrected image in the correct orientation

@@ -269,7 +269,9 @@ function vout = vout_job(job)
 % create output structure for SPM batch mode
 % ----------------------------------------------------------------------
 
-parts = cell(1,4); % fileparts
+n     = numel(job.channel(1).vols);
+
+parts = cell(n,4); % fileparts
 
 biascorr    = {};
 wbiascorr   = {};
@@ -303,84 +305,132 @@ else
   reportfolder = '';
 end
 
-[parts{:}] = spm_fileparts(job.channel(1).vols{1});
+for j=1:n,
+    [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
+end
 
 % CAT report XML file
 % ----------------------------------------------------------------------
-catreport{1} = fullfile(parts{1},reportfolder,['cat_',parts{2},'.xml']);
+roi = cell(n,1);
+for j=1:n
+    catreport{j} = fullfile(parts{j,1},reportfolder,['cat_',parts{j,2},'.xml']);
+end
 
 
 % lh/rh central surface and thickness
 % ----------------------------------------------------------------------
 if job.output.surface,
-    lhcentral{1} = fullfile(parts{1},surffolder,['lh.central.',parts{2},'.gii']);
-    rhcentral{1} = fullfile(parts{1},surffolder,['rh.central.',parts{2},'.gii']);
-    lhthickness{1} = fullfile(parts{1},surffolder,['lh.thickness.',parts{2}]);
-    rhthickness{1} = fullfile(parts{1},surffolder,['rh.thickness.',parts{2}]);
+    lhcentral = cell(n,1);
+    rhcentral = cell(n,1);
+    lhthickness = cell(n,1);
+    rhthickness = cell(n,1);
+    for j=1:n
+        lhcentral{j} = fullfile(parts{j,1},surffolder,['lh.central.',parts{j,2},'.gii']);
+        rhcentral{j} = fullfile(parts{j,1},surffolder,['rh.central.',parts{j,2},'.gii']);
+        lhthickness{j} = fullfile(parts{j,1},surffolder,['lh.thickness.',parts{j,2}]);
+        rhthickness{j} = fullfile(parts{j,1},surffolder,['rh.thickness.',parts{j,2}]);
+    end
 end
 
 
 % XML label
 % ----------------------------------------------------------------------
 if job.output.ROI,
-    roi{1} = fullfile(parts{1},roifolder,['catROI_',parts{2},'.xml']);
+    roi = cell(n,1);
+    for j=1:n
+        roi{j} = fullfile(parts{j,1},roifolder,['catROI_',parts{j,2},'.xml']);
+    end
 end
-
 
 % bias
 % ----------------------------------------------------------------------
 if job.output.bias.native,
-    biascorr{1} = fullfile(parts{1},mrifolder,['m',parts{2},'.nii']);
+    biascorr = cell(n,1);
+    for j=1:n
+        biascorr{j} = fullfile(parts{j,1},mrifolder,['m',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.bias.warped,
-    wbiascorr{1} = fullfile(parts{1},mrifolder,['wm',parts{2},'.nii']);
+    wbiascorr = cell(n,1);
+    for j=1:n
+        wbiascorr{j} = fullfile(parts{j,1},mrifolder,['wm',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.bias.dartel==1,
-    rbiascorr{1} = fullfile(parts{1},mrifolder,['rm',parts{2},'.nii']);
+    rbiascorr = cell(n,1);
+    for j=1:n
+        rbiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.bias.dartel==2,
-    abiascorr{1} = fullfile(parts{1},mrifolder,['rm',parts{2},'_affine.nii']);
+    abiascorr = cell(n,1);
+    for j=1:n
+        abiascorr{j} = fullfile(parts{j,1},mrifolder,['rm',parts{j,2},'_affine.nii']);
+    end
 end
-
 
 % intensity corrected bias
 % ----------------------------------------------------------------------
 if job.output.las.native,
-    ibiascorr{1} = fullfile(parts{1},mrifolder,['mi',parts{2},'.nii']);
+    ibiascorr = cell(n,1);
+    for j=1:n
+        ibiascorr{j} = fullfile(parts{j,1},mrifolder,['mi',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.las.warped,
-    wibiascorr{1} = fullfile(parts{1},mrifolder,['wmi',parts{2},'.nii']);
+    wibiascorr = cell(n,1);
+    for j=1:n
+        wibiascorr{j} = fullfile(parts{j,1},mrifolder,['wmi',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.las.dartel==1,
-    ribiascorr{1} = fullfile(parts{1},mrifolder,['rmi',parts{2},'.nii']);
+    ribiascorr = cell(n,1);
+    for j=1:n
+        ribiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.las.dartel==2,
-    aibiascorr{1} = fullfile(parts{1},mrifolder,['rmi',parts{2},'_affine.nii']);
+    aibiascorr = cell(n,1);
+    for j=1:n
+        aibiascorr{j} = fullfile(parts{j,1},mrifolder,['rmi',parts{j,2},'_affine.nii']);
+    end
 end
 
 
 % label
 % ----------------------------------------------------------------------
 if job.output.label.native,
-    label{1} = fullfile(parts{1},mrifolder,['p0',parts{2},'.nii']);
+    label = cell(n,1);
+    for j=1:n
+        label{j} = fullfile(parts{j,1},mrifolder,['p0',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.label.warped,
-    wlabel{1} = fullfile(parts{1},mrifolder,['wp0',parts{2},'.nii']);
+    wlabel = cell(n,1);
+    for j=1:n
+        wlabel{j} = fullfile(parts{j,1},mrifolder,['wp0',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.label.dartel==1,
-    rlabel{1} = fullfile(parts{1},mrifolder,['rp0',parts{2},'.nii']);
+    rlabel = cell(n,1);
+    for j=1:n
+        rlabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'.nii']);
+    end
 end
 
 if job.output.label.dartel==2,
-    alabel{1} = fullfile(parts{1},mrifolder,['rp0',parts{2},'_affine.nii']);
+    alabel = cell(n,1);
+    for j=1:n
+        alabel{j} = fullfile(parts{j,1},mrifolder,['rp0',parts{j,2},'_affine.nii']);
+    end
 end
 
 
@@ -389,22 +439,40 @@ end
 tiss = struct('p',{},'rp',{},'rpa',{},'wp',{},'mwp',{},'m0wp',{});
 for i=1:numel(job.tissue),
     if job.tissue(i).native(1),
-        tiss(i).p{1} = fullfile(parts{1},mrifolder,['p',num2str(i),parts{2},'.nii']);
+        tiss(i).p = cell(n,1);
+        for j=1:n
+            tiss(i).p{j} = fullfile(parts{j,1},mrifolder,['p',num2str(i),parts{j,2},'.nii']);
+        end
     end
     if job.tissue(i).native(2),
-        tiss(i).rp{1} = fullfile(parts{1},mrifolder,['rp',num2str(i),parts{2},'.nii']);
+        tiss(i).rp = cell(n,1);
+        for j=1:n
+            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'.nii']);
+        end
     end
     if job.tissue(i).native(3),
-        tiss(i).rpa{1} = fullfile(parts{1},mrifolder,['rp',num2str(i),parts{2},'_affine.nii']);
+        tiss(i).rpa = cell(n,1);
+        for j=1:n
+            tiss(i).rpa{j} = fullfile(parts{j,1},mrifolder,['rp',num2str(i),parts{j,2},'_affine.nii']);
+        end
     end
     if job.tissue(i).warped(1),
-        tiss(i).wp{1} = fullfile(parts{1},mrifolder,['wp',num2str(i),parts{2},'.nii']);
+        tiss(i).wp = cell(n,1);
+        for j=1:n
+            tiss(i).wp{j} = fullfile(parts{j,1},mrifolder,['wp',num2str(i),parts{j,2},'.nii']);
+        end
     end
     if job.tissue(i).warped(2),
-        tiss(i).mwp{1} = fullfile(parts{1},mrifolder,['mwp',num2str(i),parts{2},'.nii']);
+        tiss(i).mwp = cell(n,1);
+        for j=1:n
+            tiss(i).mwp{j} = fullfile(parts{j,1},mrifolder,['mwp',num2str(i),parts{j,2},'.nii']);
+        end
     end
     if job.tissue(i).warped(3),
-        tiss(i).m0wp{1} = fullfile(parts{1},mrifolder,['m0wp',num2str(i),parts{2},'.nii']);
+        tiss(i).m0wp = cell(n,1);
+        for j=1:n
+            tiss(i).m0wp{j} = fullfile(parts{j,1},mrifolder,['m0wp',num2str(i),parts{j,2},'.nii']);
+        end
     end
 end
 
@@ -412,18 +480,31 @@ end
 % deformation fields
 % ----------------------------------------------------------------------
 if job.output.warps(1),
-    fordef{1} = fullfile(parts{1},mrifolder,['y_',parts{2},'.nii']);
+    fordef = cell(n,1);
+    for j=1:n
+        fordef{j} = fullfile(parts{j,1},mrifolder,['y_',parts{j,2},'.nii']);
+    end
+else
+    fordef = {};
 end
 
 if job.output.warps(2),
-    invdef{1} = fullfile(parts{1},mrifolder,['iy_',parts{2},'.nii']);
+    invdef = cell(n,1);
+    for j=1:n
+        invdef{j} = fullfile(parts{j,1},mrifolder,['iy_',parts{j,2},'.nii']);
+    end
+else
+    invdef = {};
 end
 
 
 % jacobian
 % ----------------------------------------------------------------------
 if job.output.jacobian.warped,
-    jacobian{1} = fullfile(parts{1},mrifolder,['wj_',parts{2},'.nii']);
+    jacobian = cell(n,1);
+    for j=1:n
+        jacobian{j} = fullfile(parts{j,1},mrifolder,['wj_',parts{j,2},'.nii']);
+    end
 end
 
 
