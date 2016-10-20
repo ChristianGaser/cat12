@@ -12636,6 +12636,7 @@ M       html/cat.html
     because TCA has some memory issues for very small defect sizes.
 
 ------------------------------------------------------------------------
+r1039 | gaser | 2016-10-19 15:36:46 +0200 (Mi, 19 Okt 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12650,5 +12651,25 @@ M       html/cat.html
 (2) Changed: Replaced spm_mesh_render by cat_surf_render in 
     cat_stat_check_cov.m
 
+
 ------------------------------------------------------------------------
-r1039 | gaser | 2016-10-19 15:36:33
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_long_main.m
+M       cat_run.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Fixed: Dependencies in cat_run.m were incorrect and ignored multiple
+    files. 
+(2) Changed: Removed unnecessary options in cat_long_main.m.
+(3) Changed: Extended cat_stat_check_conv.m for 4D data.
+(4) Fixed: Threshold function in cat_surf_results was not working with 
+    multiple files per hemisphere.
+
+------------------------------------------------------------------------
+r1040 | gaser | 2016-10-20 16:33:42
