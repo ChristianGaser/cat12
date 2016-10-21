@@ -272,7 +272,7 @@ function cat_run_job(job,tpm,subj)
         % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
         if  app.bias ||  app.msk %job.extopts.APP  
             stime = cat_io_cmd('APP: Rough bias correction'); 
-            [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
+            [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
             
             % correct AC if it is to far away from the image center 
             % ... this code does not work - 20160303 ... remove it after 201609 
@@ -293,7 +293,18 @@ function cat_run_job(job,tpm,subj)
               stime = cat_io_cmd('Coarse affine registration','','',1,stime); 
             end
             %}
-            stime = cat_io_cmd('Coarse affine registration','','',1,stime); 
+            
+            % update SPM parameter - only increasing of resolution paramter 
+            bias = max(0,bias - 0.1);                                       % there will allways be some bias
+            bias = double(bias);                                            % SPM need double!
+            obj.biasreg  = max(0.01,obj.biasreg * 10^round(2*min(1,bias))); % less regularisation in case of bias
+            obj.biasfwhm = max(30,obj.biasfwhm  * min(1,max(0.5,1-bias)));  % reduce bias fwhm in case of bias
+            obj.samp     = obj.samp             * min(1,max(0.5,1-bias));   % increase sample distance in case of bias
+            cat_io_cmd(sprintf('  bias~%0.2f >> biasreg=%0.0e; biasfwhm=%0.2f; samp=%0.2f',...
+              bias,obj.biasreg,obj.biasfwhm,obj.samp),'','',1,stime); 
+            
+            
+            stime = cat_io_cmd('\nCoarse affine registration','','',1); 
             
             % write data to VF
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
@@ -305,6 +316,8 @@ function cat_run_job(job,tpm,subj)
             resa  = obj.samp*2; % definine smoothing by sample size
             VF1   = spm_smoothto8bit(VF,resa);
             VG1   = spm_smoothto8bit(VG,resa);
+
+       
         else
             % standard approach with static resa value and no VG smoothing
             stime = cat_io_cmd('Coarse affine registration'); 
@@ -312,7 +325,7 @@ function cat_run_job(job,tpm,subj)
             VF1   = spm_smoothto8bit(VF,resa);
             VG1   = VG; 
         end
-        
+       
           
         % prepare affine parameter 
         aflags     = struct('sep',obj.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1); 
@@ -341,9 +354,7 @@ function cat_run_job(job,tpm,subj)
           Affine = eye(4); affscale = 1;
         end
           
-
-        
-        
+       
         %% APP step 2 - brainmasking and second tissue separated bias correction  
         %  ---------------------------------------------------------
         %  The second part of APP maps a brainmask to native space and 

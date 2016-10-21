@@ -1,4 +1,4 @@
-function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
+function [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
 %  _____________________________________________________________________
 %  The rough bias correction is a subfunction of cat_run_rob.
 % 
@@ -100,7 +100,7 @@ function [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrco,vx_vol,verb)
   Ybc  = Ysrc./Ywi;
   WMt2 = roundx(cat_stat_nanmedian(Ybc(Yg(:)<0.2 & Ybc(:)>0.9)),rf); 
   Ywi  = Ywi * WMt2;
-
+  bias = std(Ywi(:))/mean(Ywi(:)); 
   
   %% BG inhomogeneity (important for normalization of the background noise)
   %[Ybc,Ygr,resT2] = cat_vol_resize({Ysrc./Ywi,Yg},'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*4,16,'meanm'); 
