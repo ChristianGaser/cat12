@@ -150,17 +150,17 @@ function cat_tst_cattest(job)
   % choose datalevel
   % --------------------------------------------------------------------
   if isempty(job.datalevel)
-    job.datalevel = char(spm_input('Datalevel',1,'min|basic|human|prim|all', ...
-      {'minimal','basic','human','primates','all'},1));
+    job.datalevel = char(spm_input('Datalevel',1,'basic|human|nonhuman|all', ...
+      {'basic','human','primates','all'},1));
   end
   switch job.datalevel
-    case 'minimal'
+    case 'basic'
       job.data_human            = job.data_human(1);
       job.data_human_long       = {};
       job.data_human_group      = {};
       job.data_greaterapes      = {};
       job.data_oldworldmonkeys  = {}; 
-    case 'basic'
+    case 'basica'
       job.data_human            = job.data_human(1); 
       job.data_human_long       = {};
       job.data_human_group      = {};
@@ -179,17 +179,7 @@ function cat_tst_cattest(job)
       job.data_human_long       = {};
       job.data_greaterapes      = {};
       job.data_oldworldmonkeys  = {};
-    case 'ape'
-      job.data_human            = {};
-      job.data_human_long       = {};
-      job.data_human_group      = {};
-      job.data_oldworldmonkeys  = {};
-    case 'monkey'
-      job.data_human            = {};
-      job.data_human_long       = {};
-      job.data_human_group      = {};
-      job.data_greaterapes      = {};
-    case 'primates'
+    case 'nonhuman'
       job.data_human            = {};
       job.data_human_long       = {};
       job.data_human_group      = {};

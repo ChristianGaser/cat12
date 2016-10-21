@@ -12653,6 +12653,7 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r1040 | gaser | 2016-10-20 16:33:54 +0200 (Do, 20 Okt 2016) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12671,5 +12672,33 @@ M       html/cat.html
 (4) Fixed: Threshold function in cat_surf_results was not working with 
     multiple files per hemisphere.
 
+
 ------------------------------------------------------------------------
-r1040 | gaser | 2016-10-20 16:33:42
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+M       cat_main_LASs.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       cat_tst_cattest.m
+M       cat_vol_localstat.c
+M       cat_vol_localstat.mexmaci64
+M       compile.m
+A       data
+A       data/uint8_lowresR2x2x1_human_tumor_tp01.nii
+A       data/uint8_lowresR2x2x2_primate_chimpanzee_laz.nii
+A       data/uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii
+
+(1) Fixed:    Corrected random generator setting in "compile".
+(2) Changed:  Added second output variable "mean" in case of "std" in 
+              "cat_vol_localstat" (required in LASs).
+(3) Changed:  Reduced data setting in cat_tst_cattest.
+(4) Changed:  Added bias depending SPM parameter update in "cat_run_job" and
+              "cat_run_job_APP_init".
+(5) Changed:  Updated and tested LASs routine that work better but still have 
+              smaller problems in the subcortical structures and a little bit 
+              to strong reconstruction by the divergence especial in biased 7T 
+              data with "uncorrected meninges".
+------------------------------------------------------------------------
+r1041 | dahnke | 2016-10-21 09:30:25
