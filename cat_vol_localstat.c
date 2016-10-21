@@ -108,12 +108,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   plhs[0] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M   = (float *) mxGetPr(plhs[0]);
   plhs[1] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M2  = (float *) mxGetPr(plhs[1]);
-  
+  plhs[2] = mxCreateNumericArray(dL,sL,mxSINGLE_CLASS,mxREAL); float *M3  = (float *) mxGetPr(plhs[2]);
+  for (i=0;i<nL;i++) { M2[i] = 0.0; } 
+  for (i=0;i<nL;i++) { M3[i] = 0.0; }  
   for (i=0;i<nL;i++) { 
 		if (D[i]==-FLT_MAX || mxIsNaN(D[i])) D[i]=0.0; 	/* correction of non-visited or other incorrect voxels */
     M[i]  = 0.0;
-    M2[i] = 0.0;
-	} 
+  } 
   
   
   int HISTmax=256; /* HISTmax1=40; HISTmax2=40; (int) (((float) (NVs))/20); if (HISTmax>1000) HISTmax=1000; */ 
@@ -170,6 +171,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /* mean */
       if (st==1) { M[ind]=   0.0; for (nn=0;nn<n;nn++) { M[ind]+=NV[nn]; nx++;}; M[ind]/=nx;};
       
+      /* mean, min, max */
+      if (st==10) {
+        M[ind]=0.0; 
+        M2[ind]=D[ind]; 
+        M3[ind]=D[ind]; 
+        for (nn=0;nn<n;nn++) { 
+          M[ind]+=NV[nn]; nx++;
+          if (NV[nn]<M2[ind]) M2[ind]=NV[nn];
+          if (NV[nn]>M3[ind]) M3[ind]=NV[nn];
+        }
+        M[ind]/=nx;
+      }
+      
       /* minimum */
       if (st==2) { M[ind]=D[ind]; for (nn=0;nn<n;nn++) { if (NV[nn]<M[ind]) M[ind]=NV[nn];};}; 
       
@@ -178,9 +192,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       
       /* standard deviation */
       if (st==4) {
-        M[ind] = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind];
-        NVstd  = 0.0; for (nn=0;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
-        M[ind] = sqrtf((NVstd/(nx-1.0)));
+        M[ind]  = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind];
+        M2[ind] = M[ind];
+        NVstd   = 0.0; for (nn=0;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
+        M[ind]  = sqrtf((NVstd/(nx-1.0)));
       };
      
       /* ===============================================================
