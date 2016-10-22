@@ -107,6 +107,22 @@
       <h3 id="Surfaces">Surface reconstruction and thickness estimation</h3>
       <ul>
         <li>
+          <h4>Is it possible to use SPM segmentation for ROI processing or thickness estimation and surface reconstruction?</h4>
+          <p>
+            As far as CAT focus on T1 data, SPM segmentation based pipeline <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite_spm');">CAT12: SPM Segmentation</a> is available in expert mode that also include DARTEL registration. 
+            It required the processed GM, WM, and, CSF tissue maps in native space and the SPM seg8.mat file.
+            The results cannot mixed with results of the default CAT pipeline because SPM12 segmentation can be biased by the TPM and used a different PVE evaluation.
+            In general, cortical thickness is higher and the thin gyri such as the parahippocampal or temporal gyri show more interruptions (see figure). 
+          </p>
+          <p style="text-align:center;">
+            <img src="images/CAT_PBT_for_SPM.png" width=90% height=auto alt="Surface Processing for SPM segmentation" >
+          </p>
+          </br></br>
+        </li>
+
+        <!--
+        These topics need further explanation, e.g., example images.
+        <li>
           <h4>Incomplete surface or bubble surfaces</h4>
           <p>Check segmentation (check report file)...</p>
         </li>
@@ -114,6 +130,7 @@
           <h4>Unexpected thickness values </h4>
           <p>Check segmentation (check report file)...</p>
         </li>
+        -->
         <li>
           <h4>Blurred sulci </h4>
           <p>
@@ -125,6 +142,7 @@
           <p style="text-align:center;">
             <img src="images/Sulcal_blurring.png" width=90% height=auto alt="Sulcal blurring" >
           </p>
+          </br></br>
         </li>
         <li>
           <h4>Blurred and broken gyri</h4>
@@ -137,6 +155,7 @@
           <p style="text-align:center;">
             <img src="images/Gyral_blurring.png" width=90% height=auto alt="Blurred/broken gyri" >
           </p>
+          </br></br>
         </li>
         <li>
           <h4>Is there a thickness map that allows a voxel-based analysis?</h4>
@@ -145,6 +164,7 @@
             A voxel-based analysis of such a map might be not meaningful because the standard statistical processing is not optimized for this type of data. 
             Simple Gaussian smoothing is not recommended (it will alter the values) and the varying width of the GM ribbon (thick areas will have more representatives than thin areas) are not considered. Therefore, the analysis of cortical thickness is only available for the surface-based analysis.
           </p>
+          </br></br>
         </li>
         <li>
           <h4>Known problems in ultra high-field data (7 Tesla)</h4>
@@ -157,6 +177,8 @@
           <p style="text-align:center;">
             <img src="images/Problems_in_7_Tesla.png" width=90% height=auto alt="Problems in 7 Tesla data" >
           </p>
+          </br></br>
+        </li>
       </ul>
      
      

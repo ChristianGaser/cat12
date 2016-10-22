@@ -60,6 +60,17 @@ data.help     = {
   'Select highres raw data (e.g. T1 images) for segmentation. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not implemented for this method.'};
 data.preview  = @(f) spm_check_registration(char(f));
 
+data_spm          = cfg_files;
+data_spm.tag      = 'data';
+data_spm.name     = 'Volumes';
+data_spm.filter   = 'image';
+data_spm.ufilter  = 'c1.*';
+data_spm.num      = [0 Inf];
+data_spm.help     = {
+  'Select SPM segmenation class 1 volumes'};
+data_spm.preview  = @(f) spm_check_registration(char(f));
+
+
 
 %------------------------------------------------------------------------
 % writing options for data
@@ -244,14 +255,17 @@ dartel.def    = @(val)cat_get_defaults('output.GM.dartel', val{:});
 grey          = cfg_branch;
 grey.tag      = 'GM';
 grey.name     = 'Grey matter';
-if expert
-  grey.val      = {native warped modulated dartel};
-else
-  grey.val      = {native modulated dartel};
-end
 grey.help     = {'Options to produce grey matter images.'
 ''
 };
+grey_spm      = grey;
+if expert
+  grey.val      = {native warped modulated dartel};
+  grey_spm.val  = {warped modulated dartel};
+else
+  grey.val      = {native modulated dartel};
+  grey_spm.val  = {modulated dartel};
+end
 
 native.def    = @(val)cat_get_defaults('output.WM.native', val{:});
 warped.def    = @(val)cat_get_defaults('output.WM.warped', val{:});
@@ -260,14 +274,18 @@ dartel.def    = @(val)cat_get_defaults('output.WM.dartel', val{:});
 white         = cfg_branch;
 white.tag     = 'WM';
 white.name    = 'White matter';
-if expert
-  white.val      = {native warped modulated dartel};
-else
-  white.val      = {native modulated dartel};
-end
 white.help    = {'Options to produce white matter images.'
 ''
 };
+white_spm     = white;
+if expert
+  white.val      = {native warped modulated dartel};
+  white_spm.val  = {warped modulated dartel};
+else
+  white.val      = {native modulated dartel};
+  white_spm.val  = {modulated dartel};
+end
+
 
 native.def    = @(val)cat_get_defaults('output.CSF.native', val{:});
 warped.def    = @(val)cat_get_defaults('output.CSF.warped', val{:});
@@ -276,10 +294,12 @@ dartel.def    = @(val)cat_get_defaults('output.CSF.dartel', val{:});
 csf           = cfg_branch;
 csf.tag       = 'CSF';
 csf.name      = 'Cerebro-Spinal Fluid (CSF)';
-csf.val       = {native warped modulated dartel};
 csf.help      = {'Options to produce CSF images.'
 ''
 };
+csf_spm       = csf;
+csf.val       = {native warped modulated dartel};
+csf_spm.val   = {warped modulated dartel};
 
 % head/background tissue classes
 native.def    = @(val)cat_get_defaults('output.TPMC.native', val{:});
@@ -381,22 +401,50 @@ end
 estwrite.prog   = @cat_run;
 estwrite.vout   = @vout;
 estwrite.help   = {
-'This toolbox is an extension of the default segmentation in SPM12, but uses a completely different segmentation approach.'
+'This toolbox is an extension of the default segmentation in CAT, but uses a completely different segmentation approach.'
 ''
 'The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities. That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach (Ashburner et. al. 2005), but just for spatial normalization. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions (Rajapakse et al. 1997). This not only accounts for intensity inhomogeneities but also for other local variations of intensity.'
 ''
 'Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types (Tohka et al. 2004). We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation. The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF. This results in an estimation of the amount (or fraction) of each pure tissue type present in every voxel (as single voxels - given by their size - probably contain more than one tissue type) and thus provides a more accurate segmentation.'
 ''
-'Another important extension to the SPM12 segmentation is the integration of the Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+'Another important extension to the CAT segmentation is the integration of the Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+
+%------------------------------------------------------------------------
+% CAT surface processing with existing SPM segmentation 
+
+extopts_spm = cat_conf_extopts(expert,1);   
+output_spm  = output; 
+if expert==2
+  output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobian warps}; 
+elseif expert==1
+  output_spm.val  = {ROI surface grey_spm white_spm csf_spm jacobian warps};
+else
+  output_spm.val  = {surface grey_spm white_spm csf_spm jacobian warps};
+end
+
+estwrite_spm        =  cfg_exbranch;
+estwrite_spm.tag    = 'estwrite';
+estwrite_spm.name   = 'CAT12: SPM Segmentation';
+% use multithreading only if availabe
+if feature('numcores') > 1
+  estwrite_spm.val  = {data_spm nproc extopts_spm output_spm};
+else
+  estwrite_spm.val  = {data_spm extopts_spm output_spm};
+end
+estwrite_spm.prog   = @cat_run;
+estwrite_spm.vout   = @vout;
+estwrite_spm.help   = {
+'CAT processing with thickness estimation and surface creation for SPM segmenation input of CSF, GM, and WM with integration of the Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+
 
 %------------------------------------------------------------------------
 cat        = cfg_choice;
 cat.name   = 'CAT12';
 cat.tag    = 'cat';
 if expert==2
-  cat.values = {estwrite tools stools stoolsexp};
+  cat.values = {estwrite estwrite_spm tools stools stoolsexp};
 elseif expert==1
-  cat.values = {estwrite tools stools};
+  cat.values = {estwrite estwrite_spm tools stools};
 else
   cat.values = {estwrite tools stools}; 
 end
@@ -407,11 +455,19 @@ function dep = vout(job)
 
 opts  = job.output;
 
-if isfield(opts.GM,'warped')
+if isfield(opts.GM,'warped') && isfield(opts.GM,'native')
   tissue(1).warped = [opts.GM.warped  (opts.GM.mod==1)        (opts.GM.mod==2)       ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
   tissue(2).warped = [opts.WM.warped  (opts.WM.mod==1)        (opts.WM.mod==2)       ];
   tissue(2).native = [opts.WM.native  (opts.WM.dartel==1)     (opts.WM.dartel==2)    ];
+elseif ~isfield(opts.GM,'native')
+  if isfield(opts.GM,'warped')
+    tissue(1).warped = [opts.GM.warped  (opts.GM.mod==1)        (opts.GM.mod==2)       ];
+    tissue(2).warped = [opts.WM.warped  (opts.WM.mod==1)        (opts.WM.mod==2)       ];
+  else
+    tissue(1).warped = [0               (opts.GM.mod==1)        (opts.GM.mod==2)       ];
+    tissue(2).warped = [0               (opts.WM.mod==1)        (opts.WM.mod==2)       ];
+   end
 else
   tissue(1).warped = [0               (opts.GM.mod==1)        (opts.GM.mod==2)       ];
   tissue(1).native = [opts.GM.native  (opts.GM.dartel==1)     (opts.GM.dartel==2)    ];
@@ -421,7 +477,9 @@ end
 
 if isfield(opts,'CSF')
   tissue(3).warped = [opts.CSF.warped (opts.CSF.mod==1)       (opts.CSF.mod==2)      ];
-  tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
+  if isfield(opts.CSF,'native')
+    tissue(3).native = [opts.CSF.native (opts.CSF.dartel==1)    (opts.CSF.dartel==2)   ];
+  end
 end
 
 % This depends on job contents, which may not be present when virtual
@@ -466,20 +524,22 @@ if isfield(opts,'ROI')
 end;
 
 % bias corrected
-if isfield(opts.bias,'native')
-  if opts.bias.native,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Native Bias Corr. Image';
-    cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-  end
-end;
-if opts.bias.warped,
-    cdep(end+1)          = cfg_dep;
-    cdep(end).sname      = 'Warped Bias Corr. Image';
-    cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-end;
+if isfield(opts,'bias')
+  if isfield(opts.bias,'native')
+    if opts.bias.native,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Native Bias Corr. Image';
+      cdep(end).src_output = substruct('()',{1}, '.','biascorr','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+  end;
+  if opts.bias.warped,
+      cdep(end+1)          = cfg_dep;
+      cdep(end).sname      = 'Warped Bias Corr. Image';
+      cdep(end).src_output = substruct('()',{1}, '.','wbiascorr','()',{':'});
+      cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end;
+end
 
 % LAS bias corrected
 if isfield(opts,'las')
@@ -589,19 +649,19 @@ end;
 
 % tissues
 for i=1:numel(tissue),
-    if tissue(i).native(1),
+    if isfield(tissue(i),'native') && tissue(i).native(1),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('p%d Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','p','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
-    if tissue(i).native(2),
+    if isfield(tissue(i),'native') && tissue(i).native(2),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('rp%d rigid Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','rp','()',{':'});
         cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
     end
-    if tissue(i).native(3),
+    if isfield(tissue(i),'native') && tissue(i).native(3),
         cdep(end+1)          = cfg_dep;
         cdep(end).sname      = sprintf('rp%d affine Image',i);
         cdep(end).src_output = substruct('.','tiss','()',{i},'.','rpa','()',{':'});
