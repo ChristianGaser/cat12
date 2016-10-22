@@ -48,6 +48,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.LAB       = cat_get_defaults('extopts.LAB');
   def.usePPmap  = 1; 
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.SPM       = 0; 
   opt           = cat_io_updateStruct(def,opt);
 
   Psurf = struct(); 
@@ -109,9 +110,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
   
   % gaussian filter? ... only in tissue regions
-  Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
-  Ymf(Ymf>1) = Ymfs(Ymf>1);
-
+  if ~opt.SPM
+    Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
+    Ymf(Ymf>1) = Ymfs(Ymf>1);
+  end
   clear Ysroi Ywmd Ymfs;
 
   
@@ -182,7 +184,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
-    if opt.expertgui > 1
+    if 0%opt.expertgui > 1
       %% gyrus width / WM depth
       %  For the WM depth estimation it is better to use the L4 boundary
       %  and correct later for thickness, because the WM is very thin in
@@ -212,8 +214,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       end 
      % clear Yar; 
       %%
-      Yppis = Yppi .* (1-Ynw) + max(0,min(1,Ymr*3-2)) .* Ynw;           % adding real WM map 
-      Ywdt  = cat_vbdist(1-Yppis);                                      % estimate distance map to central/WM surface
+      Yppis = Yppi .* (1-Ynw) + max(0,min(1,Ymr*3-2)) .* Ynw;              % adding real WM map 
+      Ywdt  = cat_vol_eidist(1-Yppis,ones(size(Yppis),'single'));          % estimate distance map to central/WM surface
       Ywdt  = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
       [D,I] = cat_vbdist(single(Ywdt>0),Yside); Ywdt = Ywdt(I); clear D I;    % add further values around the cortex
       %%
@@ -229,9 +231,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       %  correct later for half thickness
       fprintf('%4.0fs\n',etime(clock,stime)); 
       stime = cat_io_cmd('  CSF depth estimation');
-      YM    = smooth3(cat_vol_morph(Ymfs>0.5,'o',4))>0.5;               % smooth CSF/background-skull boundary 
+      YM    = single(smooth3(cat_vol_morph(Ymfs>0.5,'o',4))<0.5);               % smooth CSF/background-skull boundary 
+      YM(YM==0)=nan; 
       Yppis = min(Ymr,Yppi); Yppis(isnan(Yppis))=0;                     % we want also CSF within the ventricle (for tests)
-      Ycdt  = cat_vbdist(Yppis,YM); clear Yppis                         % distance to the cental/CSF-GM boundary
+      Ycdt  = cat_vol_eidist(Yppis,YM); clear Yppis     % distance to the cental/CSF-GM boundary
       Ycdt  = cat_vol_pbtp(max(2,Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
       Ycdt(~YM)=0;
       [D,I] = cat_vbdist(single(Ycdt>0),Yside); Ycdt = Ycdt(I); clear D I;    % add further values around the cortex

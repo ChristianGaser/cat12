@@ -12674,6 +12674,7 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r1041 | dahnke | 2016-10-21 09:30:41 +0200 (Fr, 21 Okt 2016) | 26 lines
 
 Changed paths:
  M      .
@@ -12700,5 +12701,27 @@ A       data/uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii
               smaller problems in the subcortical structures and a little bit 
               to strong reconstruction by the divergence especial in biased 7T 
               data with "uncorrected meninges".
+
 ------------------------------------------------------------------------
-r1041 | dahnke | 2016-10-21 09:30:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+ M      data/uint8_lowresR2x2x1_human_tumor_tp01.nii
+ M      data/uint8_lowresR2x2x2_primate_chimpanzee_laz.nii
+ M      data/uint8_lowresR2x2x2_primate_gibbon_gibbon4.nii
+M       html/cat_FAQ.html
+M       html/images/Problems_in_7_Tesla.png
+M       tbx_cfg_cat.m
+
+(1) Fixed:    Use SPM parameter update only in developer mode.
+(2) Added:    Prepared CAT preprocessing of SPM segmentation in expert mode that
+              required the *.nii as input data and the already processed 
+              c[1-3]* tissue segments and the *_seg8.mat. Added FAQ entry
+              with figure with the result of both pipelines.
+(3) Fixed:    Added color bars in 7 Tesla figure.
+------------------------------------------------------------------------
+r1042 | dahnke | 2016-10-22 16:27:28
