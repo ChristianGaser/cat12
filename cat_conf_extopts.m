@@ -1,4 +1,4 @@
-function extopts = cat_conf_extopts(expert)
+function extopts = cat_conf_extopts(expert,spm)
 % Configuration file for extended CAT options
 %
 % Christian Gaser
@@ -7,6 +7,9 @@ function extopts = cat_conf_extopts(expert)
 
 if ~exist('expert','var')
   expert = 0; % switch to de/activate further GUI options
+end
+if ~exist('spm','var')
+  spm = 0; % SPM segmentation input
 end
 
 %_______________________________________________________________________
@@ -484,13 +487,23 @@ lazy.help    = {
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
-if expert>=2 % experimental expert options
-  extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,...
-                   darteltpm,cat12atlas,brainmask,T1,...
-                   restype,vox,pbtres,ignoreErrors,debug,verb}; 
-elseif expert==1 % working expert options
-  extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
+if ~spm
+  if expert>=2 % experimental expert options
+    extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,...
+                     darteltpm,cat12atlas,brainmask,T1,...
+                     restype,vox,pbtres,ignoreErrors,debug,verb}; 
+  elseif expert==1 % working expert options
+    extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
+  else
+    extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
+  end
 else
-  extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
+  if expert>=2 % experimental expert options
+    extopts.val   = {lazy,darteltpm,cat12atlas,brainmask,T1,vox,pbtres,ignoreErrors,debug,verb}; 
+  elseif expert==1 % working expert options
+    extopts.val   = {darteltpm,vox,ignoreErrors}; 
+  else
+    extopts.val   = {darteltpm,vox}; 
+  end 
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};
