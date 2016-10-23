@@ -12726,6 +12726,7 @@ M       tbx_cfg_cat.m
 (3) Fixed:    Added color bars in 7 Tesla figure.
 
 ------------------------------------------------------------------------
+r1043 | gaser | 2016-10-23 23:38:27 +0200 (So, 23 Okt 2016) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12746,5 +12747,14 @@ M       tbx_cfg_cat.m
     but multiple volumes. Furthermore, output name is now changed.
 (5) Fixed: New SPM12 update requires SurfaceID as metadata in gifti files
     which is not gifti conform.
+
 ------------------------------------------------------------------------
-r1043 | gaser | 2016-10-23 23:38:15
+
+Changed paths:
+M       CHANGES.txt
+M       spm_spm_changed.m
+
+Changed: Now, rather use average of all surfaces in the design as default
+surface for display.
+------------------------------------------------------------------------
+r1044 | gaser | 2016-10-24 00:20:26
