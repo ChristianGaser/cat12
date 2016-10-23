@@ -171,15 +171,18 @@ spm_jobman('interactive','','spm.stats.factorial_design');
 function pushbutton5_Callback(hObject, eventdata, handles)
 P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');
 for i=1:size(P,1)
-    swd      = spm_file(P(i,:),'fpath');
-    load(fullfile(swd,'SPM.mat'));
-    SPM.swd  = swd;
+  swd      = spm_file(P(i,:),'fpath');
+  load(fullfile(swd,'SPM.mat'));
+  SPM.swd  = swd;
 
+  if 0
     fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
     
     spm_spm(SPM);
 
     load(fullfile(swd,'SPM.mat'));
+
+    % workaround to use fsaverage surface for display
 
     % check that folder exist and number of vertices fits
     if exist(fsavgDir,'dir') == 7 && SPM.xY.VY(1).dim(1) == 163842
@@ -204,8 +207,9 @@ for i=1:size(P,1)
         save(fullfile(swd,'SPM.mat'),'SPM', spm_get_defaults('mat.format'));
       end
     end
-    
-    % workaround to use fsaverage surface for display
+  else
+    spm_spm_changed(SPM);
+  end
 end
 
 % --- Executes on button press in pushbutton6.

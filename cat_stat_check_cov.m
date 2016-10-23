@@ -36,12 +36,12 @@ if isfield(vargin,'data_vol')
       % remove ",1" at the end
       vargin.data_vol{i} = fullfile(pth,[nam ext]);
     end
-    V0 = spm_data_hdr_read(vargin.data_vol{i});
+    V0 = spm_data_hdr_read(char(vargin.data_vol{i}));
     n_subjects = n_subjects + length(V0);
       
     if i==1, V = V0;
     else,    V = [V V0]; end
-      
+
     sample = [sample, i*ones(1,length(V0))];
   end
   sep = vargin.gap;
