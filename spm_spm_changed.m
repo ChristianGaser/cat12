@@ -270,6 +270,7 @@ function SPM = spm_spm(SPM)
 % Karl Friston & Guillaume Flandin
 % $Id: spm_spm.m 6842 2016-07-28 09:02:10Z guillaume $
 
+% modified version of spm_spm.m 6842
 
 SVNid = '$Rev: 6842 $';
 
@@ -327,36 +328,20 @@ DIM     = VY(1).dim;
 YNaNrep = spm_type(VY(1).dt(1),'nanrep');
 if spm_mesh_detect(VY)
     file_ext = '.gii';
-    g        = VY(1).private;
 
-    % workaround to use fsaverage surface for display
+    % workaround to use average surface for display
     % and get rid of the SurfaceID metadata entry
-    
-    % check that number of vertices fits
-    if VY(1).dim(1) == 163842
-      [pp,ff]   = spm_fileparts(VY(1).fname);
-      
-      % find lh|rh string
-      hemi_ind = [];
-      hemi_ind = [hemi_ind strfind(ff,'lh')];
-      hemi_ind = [hemi_ind strfind(ff,'rh')];
-      hemi = ff(hemi_ind:hemi_ind+1);
-      if ~isempty(hemi)
-        fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
-        VY(1).private.private.metadata = struct('name','Name','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
-        G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii']);
-        SPM.xVol.G = gifti(G);
-        metadata = {'SurfaceID', G};
-        
-        % remove redundant faces and vertices which are not necessary
-        for i=1:length(VY)
-          VY(i).private.faces = [];
-          VY(i).private.vertices = [];
-        end
-      end
-    else
-      error('Wrong dimension of gifti file %s.',VY(1).fname);
+    vertices = zeros(size(VY(1).private.vertices));
+    for i=1:length(VY)
+      vertices = vertices + VY(i).private.vertices;
     end
+      
+    VY(1).private.vertices = vertices/length(VY);
+
+    g        = VY(1).private;
+    metadata = {'SurfaceID', VY(1).fname};
+    SPM.xVol.G = g;
+
 else
     file_ext = spm_file_ext;
     metadata = {};
