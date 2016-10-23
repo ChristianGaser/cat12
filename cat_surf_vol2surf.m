@@ -29,6 +29,17 @@ function out = cat_surf_vol2surf(varargin)
     help cat_surf_vol2surf; return
   end
   
+  n_vol  = numel(job.data_vol);
+  n_surf = numel(job.data_mesh_lh);
+  
+  % if only 1 surface but multiple volumes are given then fill
+  % up the missing surface names with the single surface name
+  if (n_surf == 1) && (n_vol > 1)
+    for i=2:n_vol
+      job.data_mesh_lh{i} = job.data_mesh_lh{1};
+    end
+  end
+  
   def.verb  = 1; 
   def.gifti = 0; 
   def.debug = 0; 
@@ -97,6 +108,9 @@ function out = cat_surf_vol2surf(varargin)
           'preside','','pp',ppv,'dataname',job.datafieldname,'name',job.(sside{si}).name);
         P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
 
+        % add volume name to differentiate between multiple volumes
+        P.data(vi,si) = {[char(P.data(vi,si)) '_' ffv]}; 
+
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
           mappingstr, job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
@@ -137,6 +151,10 @@ function out = cat_surf_vol2surf(varargin)
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
             'dataname',job.datafieldname);
         P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
+        
+        % add volume name to differentiate between multiple volumes
+        P.data(vi,si) = {[char(P.data(vi,si)) '_' ffv]}; 
+        
         P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
             'dataname','thickness','ee','');

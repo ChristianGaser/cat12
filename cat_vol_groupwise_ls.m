@@ -250,14 +250,15 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
             for i=1:numel(img),
                 % Gauss-Newton update of logs of rigid-body matrices
                 %-----------------------------------------------------------------------
-                [R,dR]    = spm_dexpm(param(i).r,B);
-                M         = img(i).mat\R*M_avg;
-                [x1a,x2a] = ndgrid(1:d(1),1:d(2));
+                [R,dR]        = spm_dexpm(param(i).r,B);
+                M             = img(i).mat\R*M_avg;
+                dtM           = abs(det(M(1:3,1:3)));
+                [x1a,x2a,x3a] = ndgrid(1:d(1),1:d(2),1);
 
                 Hess = zeros(12);
                 gra  = zeros(12,1);
                 for m=1:d(3)
-                    dt    = ones(d(1:2),'single')*abs(det(M(1:3,1:3)));
+                    dt    = ones(d(1:2),'single');
                     y     = zeros([d(1:2) 1 3],'single');
                     [y(:,:,1),y(:,:,2),y(:,:,3)] = ndgrid(single(1:d(1)),single(1:d(2)),single(m));
                     y     = transform_warp(M,y);
@@ -279,16 +280,19 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                     end
                     ebias = ebias(msk);
                     b     = b(msk);
-                    dt    = dt(msk);
-                    x1    = x1a(msk);
-                    x2    = x2a(msk);
-                    d1    = D{1}(:,:,m);d1 = d1(msk).*ebias;
-                    d2    = D{2}(:,:,m);d2 = d2(msk).*ebias;
-                    d3    = D{3}(:,:,m);d3 = d3(msk).*ebias;
+
+                    % No need to account for the nonlinear warps when estimating
+                    % the rigid body transform.
+                    x1 = x1a(msk);
+                    x2 = x2a(msk);
+                    x3 = x3a(msk)*m;
+                    d1 = D{1}(:,:,m);
+                    d2 = D{2}(:,:,m);
+                    d3 = D{3}(:,:,m);
 
                     A     = [x1(:).*d1(:) x1(:).*d2(:) x1(:).*d3(:) ...
                              x2(:).*d1(:) x2(:).*d2(:) x2(:).*d3(:) ...
-                                  m*d1(:)      m*d2(:)      m*d3(:) ...
+                             x3(:).*d1(:) x3(:).*d2(:) x3(:).*d3(:) ...
                                     d1(:)        d2(:)        d3(:)];
 
                     Hess  = Hess + double(A'*bsxfun(@times,A,dt));

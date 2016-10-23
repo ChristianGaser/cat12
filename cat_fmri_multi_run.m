@@ -12,28 +12,31 @@ warning off;
 opts     = job.opts;
 extopts  = job.extopts;
 output   = job.output;
+coreg    = job.coreg;
 
 jobs = repmat({'cat_fmri_main.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
 
 if cat_get_defaults('extopts.subfolders')
-  mrifolder = 'mri';
+  surffolder = 'surf';
 else
-  mrifolder = '';
+  surffolder = '';
 end
 
 for i=1:numel(job.subj),
-%    out(i).files = cell(numel(job.subj(i).T1),1);
-    inputs{1,i} = job.subj(i).T1;
-    inputs{2,i} = job.subj(i).EPI0;
+    out(i).files = cell(numel(job.subj(i).EPI),1);
     m = numel(job.subj(i).EPI);
+    inputs{1,i} = job.subj(i).EPI;
+    if coreg
+      inputs{2,i} = job.subj(i).EPIref;
+      inputs{3,i} = job.subj(i).T1;
+    end
     data = cell(m,1);
     for j=1:m
         [pth,nam,ext,num] = spm_fileparts(job.subj(i).EPI{j});
         data{j} = job.subj(i).EPI{j};
+        out(i).files{j} = fullfile(pth,surffolder,['lh.', nam, ext]);
     end
-    inputs{3,i} = data;
-    inputs{4,i} = job.subj(i).T1;
 end;
 
 spm_jobman('run',jobs,inputs{:});
