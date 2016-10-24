@@ -137,11 +137,6 @@ end
 guidata(hObject, handles);
 
 
-
-
-
-
-
 % --- Executes during object creation, after setting all properties.
 function CAT_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to CAT (see GCBO)
@@ -170,31 +165,26 @@ spm_jobman('interactive','','spm.stats.factorial_design');
 % --- Executes on button press in pushbutton5.
 function pushbutton5_Callback(hObject, eventdata, handles)
 P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');
-for i=1:size(P,1)
-  swd      = spm_file(P(i,:),'fpath');
-  load(fullfile(swd,'SPM.mat'));
-  SPM.swd  = swd;
 
-  if 0
+% workaround to use fsaverage surface as SurfaceID (for displaying results)
+for i=1:size(P,1)
+    swd      = spm_file(P(i,:),'fpath');
+    load(fullfile(swd,'SPM.mat'));
+    SPM.swd  = swd;
+
     fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
     
-    spm_spm(SPM);
-
-    load(fullfile(swd,'SPM.mat'));
-
-    % workaround to use fsaverage surface for display
-
     % check that folder exist and number of vertices fits
     if exist(fsavgDir,'dir') == 7 && SPM.xY.VY(1).dim(1) == 163842
       [pp,ff]   = spm_fileparts(SPM.xY.VY(1).fname);
       
       % find lh|rh string
       hemi_ind = [];
-      hemi_ind = [hemi_ind strfind(ff,'lh')];
-      hemi_ind = [hemi_ind strfind(ff,'rh')];
+      hemi_ind = [hemi_ind strfind(ff,'lh.')];
+      hemi_ind = [hemi_ind strfind(ff,'rh.')];
       hemi = ff(hemi_ind:hemi_ind+1);
       if ~isempty(hemi)
-        SPM.xY.VY(1).private.private.metadata = struct('name','Name','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
+        SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
         G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii']);
         SPM.xVol.G = gifti(G);
         
@@ -207,9 +197,9 @@ for i=1:size(P,1)
         save(fullfile(swd,'SPM.mat'),'SPM', spm_get_defaults('mat.format'));
       end
     end
-  else
-    spm_spm_changed(SPM);
-  end
+
+    spm_spm(SPM);
+    
 end
 
 % --- Executes on button press in pushbutton6.
