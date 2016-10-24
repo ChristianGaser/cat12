@@ -72,7 +72,8 @@ for i=1:size(Psubj,1)
     % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
     [pp2,ff2,ex2]   = spm_fileparts([Pfwhm '.gii']);
     g = gifti([Pfwhm '.gii']);
-    g.private.metadata = struct('name','Name','value',[ff2 ex2]);
+    g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
+    save(g, [Pfwhm '.gii'], 'Base64Binary');
 
     delete(Presamp);
     delete(Pfwhm);

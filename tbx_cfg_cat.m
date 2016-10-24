@@ -62,14 +62,13 @@ data.preview  = @(f) spm_check_registration(char(f));
 
 data_spm          = cfg_files;
 data_spm.tag      = 'data';
-data_spm.name     = 'Volumes';
+data_spm.name     = 'Segmentations in native space';
 data_spm.filter   = 'image';
-data_spm.ufilter  = 'c1.*';
+data_spm.ufilter  = '^c1.*';
 data_spm.num      = [0 Inf];
 data_spm.help     = {
-  'Select SPM segmenation class 1 volumes'};
+  'Select SPM segmentations for class 1 for all subjects. Names for all other remaining classes 2 and 3 are automatically estimated.'};
 data_spm.preview  = @(f) spm_check_registration(char(f));
-
 
 
 %------------------------------------------------------------------------
@@ -423,7 +422,7 @@ else
 end
 
 estwrite_spm        =  cfg_exbranch;
-estwrite_spm.tag    = 'estwrite';
+estwrite_spm.tag    = 'estwrite_spm';
 estwrite_spm.name   = 'CAT12: SPM Segmentation';
 % use multithreading only if availabe
 if feature('numcores') > 1
@@ -434,7 +433,7 @@ end
 estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;
 estwrite_spm.help   = {
-'CAT processing with thickness estimation and surface creation for SPM segmenation input of CSF, GM, and WM with integration of the Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+'CAT processing with thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM and also integrates Dartel normalisation (Ashburner 2007) into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the six Dartel iteration. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
 
 
 %------------------------------------------------------------------------

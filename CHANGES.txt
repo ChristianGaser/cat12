@@ -12749,6 +12749,7 @@ M       tbx_cfg_cat.m
     which is not gifti conform.
 
 ------------------------------------------------------------------------
+r1044 | gaser | 2016-10-24 00:20:37 +0200 (Mo, 24 Okt 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12756,5 +12757,34 @@ M       spm_spm_changed.m
 
 Changed: Now, rather use average of all surfaces in the design as default
 surface for display.
+
 ------------------------------------------------------------------------
-r1044 | gaser | 2016-10-24 00:20:26
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat12.m
+M       cat_conf_tools.m
+M       cat_long_main.m
+M       cat_main_LASs.m
+M       cat_roi_fun.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       html/cat.html
+A       html/images/CAT_PBT_for_SPM.png
+D       spm_spm_changed.m
+M       tbx_cfg_cat.m
+
+(1) Fixed: Added function to read old xml-files for mean ROI estimation.
+(2) Fixed: Incorrected tag for estwrite_spm.
+(3) Fixed: Added SurfaceID metadata entry for resampled data to be compatible
+    to new SPM12 update.
+(4) Changed: Deselected ROI estimation for long. mode for inital segmentation 
+    of average image.
+(5) Changed: Commented out usefolder tag for ROI estimation and changed
+    name for decimal_point according to its tag name.
+(6) Removed: spm_spm_changed.m that is not necessary anymore.
+------------------------------------------------------------------------
+r1045 | gaser | 2016-10-24 15:22:08

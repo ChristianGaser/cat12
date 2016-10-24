@@ -74,7 +74,7 @@ for i=1:numel(P)
     % check whether first filename in SPM.mat and xml-file are from the same subject
     ind = strfind(nam,tmp_name);
     if isempty(ind)
-      error(sprintf('Label file %s does nit fit to analyzed file %s. Please check that you have not moved your data\n'),tmp_name,nam);
+      error('Label file %s does nit fit to analyzed file %s. Please check that you have not moved your data',tmp_name,nam);
     end
     
     % get prepending pattern 
