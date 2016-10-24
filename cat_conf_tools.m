@@ -644,16 +644,16 @@ usefolder.val     = {0};
 usefolder.help    = {
 'Use foldername to describe the subject.'};
 
-decimal_point         = cfg_menu;
-decimal_point.tag     = 'point';
-decimal_point.name    = 'decimal point';
-decimal_point.labels  = {',','.'};
-decimal_point.values  = {',','.'};
-decimal_point.val     = {'.'};
-decimal_point.help    = {
+point         = cfg_menu;
+point.tag     = 'point';
+point.name    = 'Decimal point';
+point.labels  = {',','.'};
+point.values  = {',','.'};
+point.val     = {'.'};
+point.help    = {
 'Decimal point.'};  % that has to be unequal to the column delimiter.'};
 
-% tab "\t" does not work and so we automatically swith in case of decimal 
+% tab "\t" does not work and so we automatically switch in case of decimal 
 % point "," to delimiter ";".
 %{
 delimiter         = cfg_menu;
@@ -678,7 +678,8 @@ calcroi_name.help    = {
 calcroi       = cfg_exbranch;
 calcroi.tag   = 'calcroi';
 calcroi.name  = 'Estimate mean values inside ROI';
-calcroi.val   = {roi_xml,usefolder,decimal_point,outdir,calcroi_name}; 
+calcroi.val   = {roi_xml,point,outdir,calcroi_name}; 
+%calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
 calcroi.prog  = @(job)cat_roi_fun('exportSample',job);
 calcroi.help  = {
 'This function reads mean values inside a ROIs from different atlases and saves values for all data in a csv-file. '

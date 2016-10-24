@@ -29,7 +29,7 @@ function varargout = cat_surf_resamp(varargin)
   def.fwhm      = 0; 
   def.nproc     = 0; 
   def.verb      = cat_get_defaults('extopts.verb'); 
-  def.lazy      = 0; % reprocess exist results
+  def.lazy      = 0; % overwrite existing results
   def.debug     = cat_get_defaults('extopts.debug');
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
 
@@ -87,15 +87,12 @@ function varargout = cat_surf_resamp(varargin)
     Pfsavg     = fullfile(job.fsavgDir,[hemi '.sphere.freesurfer.gii']);
     Pmask      = fullfile(job.fsavgDir,[hemi '.mask']);
 
-    %fprintf('Resample %s\n',deblank(P(i,:)));
-
     if job.lazy && exist([Pfwhm '.gii'],'file')
       Psdata{i} = [Pfwhm '.gii']; 
       if job.verb
         fprintf('Display allready resampled %s\n',spm_file([Pfwhm '.gii'],'link','cat_surf_display(''%s'')'));
       end
     else
-      %try
         stime = clock; 
         
         % resample values using warped sphere 
@@ -122,8 +119,9 @@ function varargout = cat_surf_resamp(varargin)
         
         % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
         [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
+
         g = gifti(Psdata{i});
-        g.private.metadata = struct('name','Name','value',[ff2 ex2]);
+        g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
         save(g, Psdata{i}, 'Base64Binary');
 
         delete(Presamp);
@@ -133,9 +131,6 @@ function varargout = cat_surf_resamp(varargin)
         if job.verb
           fprintf('(%3.0f s) Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
         end
-      %catch
-      %  cat_io_cprintf('error','Processing error %s\n',Psdata{i});
-      %end
     end
 
     spm_progress_bar('Set',i);
