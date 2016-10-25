@@ -1,25 +1,56 @@
-function cat_stat_spmF2x(vargin)
-%CG_SPMF2X transformation of F-maps to P, -log(P), R2 maps
+function cat_stat_spm2x(vargin)
+%cat_stat_spm2x transformation of
+% t-maps to P, -log(P), r or d-maps
+% F-maps to P, -log(P), R2 maps
 %
-% The following formulas are used:
+% ---------------------------------------------
+% The following equations are used for t-maps:
+% ---------------------------------------------
 %
-% --------------------------------
+% ---------------------------------------------
+% correlation coefficient:
+%
+%          sign(t)
+% r = ------------------
+%            df
+%     sqrt(------ + 1)
+%           t*t
+%
+% ---------------------------------------------
+% effect-size
+%
+%            2t
+% d = ----------------
+%         sqrt(df)
+%
+% ---------------------------------------------
+% p-value
+%
+% p = 1-spm_Tcdf
+%
+% ---------------------------------------------
+% log p-value
+%
+% -log10(1-P) = -log(1-spm_Tcdf)
+%
+% ---------------------------------------------
+% The following equations are used for F-maps:
+% ---------------------------------------------
+%
+% ---------------------------------------------
 % coefficient of determination R2
-% --------------------------------
 %
 %           F*(n-1)
 % R2 = ------------------
 %        n-p + F*(n-1)
 %
-% --------------------------------
+% ---------------------------------------------
 % p-value
-% --------------------------------
 %
 % p = 1-spm_Fcdf
 %
-% --------------------------------
+% ---------------------------------------------
 % log p-value
-% --------------------------------
 %
 % -log10(1-P) = -log(1-spm_Fcdf)
 %
@@ -37,17 +68,20 @@ function cat_stat_spmF2x(vargin)
 % All maps can be thresholded using height and extent thresholds and you can 
 % also apply corrections for multiple comparisons based on family-wise error 
 % (FWE) or false discovery rate (FDR). You can easily threshold and/or 
-% transform a large number of spmF-maps using the same thresholds.
+% transform a large number of spmT/F-maps using the same thresholds.
 %
 % Naming convention of the transformed files:
-%   Type_Contrast_Pheight_K
+%   Type_Contrast_Pheight_Pextent_K_Neg
 %
 %   Type:      P    - p-value
 %              logP - log p-value
+%              R    - correlation coefficient
+%              D    - effect size
+%              T    - t-value
 %              R2   - coefficient of determination
 %              F    - F-value
 %
-%   Contrast:  name used in the contrast manager with replaced none valid 
+%   Contrast:  name used in the contrast manager while replacing none valid 
 %              strings
 %    
 %   Pheight:   p    - uncorrected p-value in % (p<0.05 will coded with "p5")
@@ -59,15 +93,23 @@ function cat_stat_spmF2x(vargin)
 %
 %   K:         extent threshold in voxels
 %
+%   Neg:       image also shows thresholded inverse effects (e.g. neg. 
+%              values) 
 %_______________________________________________________________________
 % Christian Gaser
-% $Id$
-
-rev = '$Rev$';
+% $Id: cat_stat_spm2x.m 1027 2016-10-04 19:27:07Z gaser $
 
 if nargin == 1
-    P = char(vargin.data_F2x);
-
+    if isfield(vargin,'data_T2x')
+      T2x = 1;
+      stat = 'T';
+      P = char(vargin.data_T2x);
+    else
+      T2x = 0;
+      stat = 'F';
+      P = char(vargin.data_F2x);
+    end
+    
     sel = vargin.conversion.sel;
 
     if isfield(vargin.conversion.threshdesc,'fwe')
@@ -105,14 +147,24 @@ if nargin == 1
         pk = 0;
         noniso = 0;
     end
+
+    if T2x
+        neg_results = vargin.conversion.inverse;
+    end
+    
 end
 
 if nargin < 1
-    P = spm_select(Inf,'^spmF.*(img|nii|gii)','Select F-images');
-
-    sel = spm_input('Convert F value to?',1,'m',...
-    '1-p|-log(1-p)|coefficient of determination R^2',1:3, 2);
-
+    if T2x
+        P = spm_select(Inf,'^spmT.*(img|nii|gii)','Select T-images');
+        sel = spm_input('Convert t value to?',1,'m',...
+          '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion',1:5, 2);
+    else
+        P = spm_select(Inf,'^spmF.*(img|nii|gii)','Select F-images');
+        sel = spm_input('Convert F value to?',1,'m',...
+          '1-p|-log(1-p)|coefficient of determination R^2|apply thresholds without conversion',1:4, 2);
+    end
+    
     %-Get height threshold
     %-------------------------------------------------------------------
     str = 'FWE|FDR|uncorr|none';
@@ -128,7 +180,7 @@ if nargin < 1
     case 0  %-NB: no adjustment
         % p for conjunctions is p of the conjunction SPM
         %---------------------------------------------------------------
-        u0  = spm_input('threshold {F or p value}','+0','r',0.001,1);
+        u0  = spm_input(sprintf('threshold {%s or p value}',stat),'+0','r',0.001,1);
     otherwise  %-NB: no threshold
         % p for conjunctions is p of the conjunction SPM
         %---------------------------------------------------------------
@@ -136,12 +188,16 @@ if nargin < 1
     end
 
     if adjustment > -1 
-        pk     = spm_input('extent threshold {k or p-value}','+1','r',0,1);
+        pk = spm_input('extent threshold {k or p-value}','+1','r',0,1);
     else
         pk = 0;
     end
     if (pk < 1) && (pk > 0)
         extent_FWE = spm_input('p value (extent)','+1','b','uncorrected|FWE corrected',[0 1],1);
+    end
+
+    if T2x
+        neg_results = spm_input('Show also inverse effects (e.g. neg. values)','+1','b','yes|no',[1 0],2);
     end
 
     if pk ~= 0
@@ -150,7 +206,6 @@ if nargin < 1
         noniso = 0;
     end
 end
-
 
 switch adjustment
 case 1 % family-wise false positive rate
@@ -173,10 +228,10 @@ for i=1:size(P,1)
        error('SPM.mat not found')
     end
 
-    if strcmp(nm(1:6),'spmF_0') 
+    if strcmp(nm(1:6),sprintf('spm%s_0',stat)) 
         Ic = str2double(nm(length(nm)-2:length(nm)));
     else
-        error('Only spmF_0* files can be used');
+        error('Only spm%s_0* files can be used',stat);
     end
 
     load(SPM_name);
@@ -220,21 +275,24 @@ for i=1:size(P,1)
        end
     end
 
-    F = spm_data_read(Vspm.fname,'xyz',XYZ);
+    Z = spm_data_read(Vspm.fname,'xyz',XYZ);
 
     %-Calculate height threshold filtering
     %-------------------------------------------------------------------    
-    Q      = find(F > u);
+    if T2x && neg_results
+        Q      = find((Z > u) | (Z < -u));
+    else
+        Q      = find(Z > u);
+    end
 
     %-Apply height threshold
     %-------------------------------------------------------------------
-    F      = F(:,Q);
+    Z      = Z(:,Q);
     XYZ    = XYZ(:,Q);
     if isempty(Q)
         fprintf('No voxels survive height threshold u=%0.2g\n',u);
     end
-
-
+    
     %-Extent threshold
     %-----------------------------------------------------------------------
     if ~isempty(XYZ)
@@ -284,9 +342,9 @@ for i=1:size(P,1)
 
             Q     = [];
             if isfield(SPM.xVol,'G') % mesh detected?
-                [N2,F2,XYZ2,A2,L2]  = spm_mesh_max(F,XYZ,gifti(SPM.xVol.G));
+                [N2,Z2,XYZ2,A2,L2]  = spm_mesh_max(abs(Z),XYZ,gifti(SPM.xVol.G));
             else
-                [N2,F2,XYZ2,A2,L2]  = spm_max(F,XYZ);
+                [N2,Z2,XYZ2,A2,L2]  = spm_max(abs(Z),XYZ);
             end
 
             % sometimes max of A and A2 differ, thus we have to use the smaller value
@@ -332,35 +390,60 @@ for i=1:size(P,1)
             end
         end
 
-
         % ...eliminate voxels
         %-------------------------------------------------------------------
-        F     = F(:,Q);
+        Z     = Z(:,Q);
         XYZ   = XYZ(:,Q);
         if isempty(Q)
             fprintf('No voxels survived extent threshold k=%3.1f\n',k);
         end
 
     else
-
         k = 0;
 
     end % (if ~isempty(XYZ))
 
+min(Z(:))
     if ~isempty(Q)
-    
-       switch sel
-       case 1
-          F2x = 1-spm_Fcdf(F,df);
-          F2x_name = 'P_';
-       case 2
-          F2x = -log10(max(eps,1-spm_Fcdf(F,df)));
-          F2x_name = 'logP_';
-       case 3
-    	  	F2x = (df(2)-1)*F./(df(2) - df(1)+F*(df(2) -1));
-		      F2x_name = 'R2_';
+      if T2x
+         switch sel
+         case 1
+          t2x = 1-spm_Tcdf(Z,df(2));
+          t2x_name = 'P_';
+         case 2
+          t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
+          % find neg. T-values
+          ind_neg = find(Z<0);
+          if ~isempty(ind_neg)
+              t2x(ind_neg) = log10(max(eps,spm_Tcdf(Z(ind_neg),df(2))));
+          end
+          t2x_name = 'logP_';
+         case 3
+          t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
+          t2x_name = 'R_';
+         case 4
+          t2x = 2*Z/sqrt(df(2));
+          t2x_name = 'D_';
+         case 5
+          t2x = Z;
+          t2x_name = 'T_';
+         end
+       else
+         switch sel
+         case 1
+          t2x = 1-spm_Fcdf(Z,df);
+          t2x_name = 'P_';
+         case 2
+          t2x = -log10(max(eps,1-spm_Fcdf(Z,df)));
+          t2x_name = 'logP_';
+         case 3
+    	  	t2x = (df(2)-1)*Z./(df(2) - df(1)+Z*(df(2) -1));
+		      t2x_name = 'R2_';
+         case 4
+          t2x = Z;
+          t2x_name = 'F_';
+         end
        end
-
        str_num = deblank(xCon(Ic).name);
 
        % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
@@ -374,31 +457,39 @@ for i=1:size(P,1)
        strpos = strfind(str_num,'<');
        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
        str_num = spm_str_manip(str_num,'v');
-           
-       if isfield(SPM.xVol,'G')
+    
+       if T2x && neg_results
+            neg_str = '_bi'; 
+       else
+            neg_str = '';
+       end
+       
+      if isfield(SPM.xVol,'G')
             ext = '.gii';
        else ext = '.nii'; end
 
        if u0 > -Inf
-           name = [F2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) ext];
+           name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
        else
-           name = [F2x_name str_num ext];
+           name = [t2x_name str_num ext];
        end
        fprintf('Save %s\n', name);
     
        out = deblank(fullfile(pth,name));
 
-       %-Reconstruct (filtered) image from XYZ & F pointlist
+       %-Reconstruct (filtered) image from XYZ & T/Z pointlist
        %-----------------------------------------------------------------------
        Y      = zeros(Vspm.dim);
        OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
-       Y(OFF) = F2x;
+       Y(OFF) = t2x;
 
        VO = Vspm;
        VO.fname = out;
        VO.dt = [spm_type('float32') spm_platform('bigend')];
+
        VO = spm_data_hdr_write(VO);
        spm_data_write(VO,Y);
     
     end
 end
+

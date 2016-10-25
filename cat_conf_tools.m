@@ -146,7 +146,7 @@ T2x      = cfg_exbranch;
 T2x.tag  = 'T2x';
 T2x.name = 'Threshold and transform spmT-maps';
 T2x.val  = {data_T2x,conversion};
-T2x.prog = @cat_stat_spmT2x;
+T2x.prog = @cat_stat_spm2x;
 T2x.help = {
           'This function transforms t-maps to P, -log(P), r or d-maps.'
           'The following formulas are used:'
@@ -206,8 +206,8 @@ data_F2x.help    = {'Select spmF-images to select.'};
 sel        = cfg_menu;
 sel.name   = 'Convert F value to';
 sel.tag    = 'sel';
-sel.labels = {'p','-log(p)','coefficient of determination R^2'};
-sel.values = {1,2,3};
+sel.labels = {'p','-log(p)','coefficient of determination R^2','apply thresholds without conversion'};
+sel.values = {1,2,3,4};
 sel.val    = {2};
 sel.help   = {'Select conversion of F-value'};
 
@@ -234,7 +234,7 @@ F2x      = cfg_exbranch;
 F2x.tag  = 'F2x';
 F2x.name = 'Threshold and transform spmF-maps';
 F2x.val  = {data_F2x,conversion};
-F2x.prog = @cat_stat_spmF2x;
+F2x.prog = @cat_stat_spm2x;
 F2x.help = {
           'This function transforms F-maps to P, -log(P), or R2-maps.'
           'The following formulas are used:'
