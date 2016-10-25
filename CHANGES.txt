@@ -12789,6 +12789,7 @@ M       tbx_cfg_cat.m
 (6) Removed: spm_spm_changed.m that is not necessary anymore.
 
 ------------------------------------------------------------------------
+r1046 | gaser | 2016-10-25 11:39:25 +0200 (Di, 25 Okt 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12797,5 +12798,19 @@ M       cat_vol_groupwise_ls.m
 M       html/cat.html
 
 Fixed: cat_vol_groupwise_ls.m was not working with the updated version.
+
 ------------------------------------------------------------------------
-r1046 | gaser | 2016-10-25 11:39:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+A       cat_stat_spm2x.m
+D       cat_stat_spmF2x.m
+D       cat_stat_spmT2x.m
+M       html/cat.html
+ M      html/images/CAT_PBT_for_SPM.png
+
+Changed: Conversion from spmT/F maps is now done using cat_stat_spm2x.m
+------------------------------------------------------------------------
+r1047 | gaser | 2016-10-25 17:53:46
