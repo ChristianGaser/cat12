@@ -12800,6 +12800,7 @@ M       html/cat.html
 Fixed: cat_vol_groupwise_ls.m was not working with the updated version.
 
 ------------------------------------------------------------------------
+r1047 | gaser | 2016-10-25 17:53:58 +0200 (Di, 25 Okt 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12812,5 +12813,13 @@ M       html/cat.html
  M      html/images/CAT_PBT_for_SPM.png
 
 Changed: Conversion from spmT/F maps is now done using cat_stat_spm2x.m
+
 ------------------------------------------------------------------------
-r1047 | gaser | 2016-10-25 17:53:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spm2x.m
+
+Changed: Conversion from spmT/F maps is now done using cat_stat_spm2x.m
+------------------------------------------------------------------------
+r1048 | gaser | 2016-10-25 18:01:38
