@@ -336,6 +336,17 @@ for i=1:size(P,1)
         else
             A = spm_clusters(XYZ);
         end
+        
+        % atlas measures
+        labk   = cell(max(A)+2,1);
+        Pl     = cell(max(A)+2,1);
+        Zj     = cell(max(A)+2,1);
+        maxZ   = zeros(max(A)+2,1);
+        XYZmmj = cell(max(A)+2,1);
+
+        XYZmm = Vspm.mat(1:3,:)*[XYZ; ones(1,size(XYZ,2))];%-voxel coordinates {mm}
+        atlas_name = 'dartel_neuromorphometrics';
+        xA = spm_atlas('load',atlas_name);
 
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
@@ -346,9 +357,10 @@ for i=1:size(P,1)
             else
                 [N2,Z2,XYZ2,A2,L2]  = spm_max(abs(Z),XYZ);
             end
-
+                        
             % sometimes max of A and A2 differ, thus we have to use the smaller value
             for i2 = 1:min([max(A) max(A2)])
+
                 %-Get LKC for voxels in i-th region
                 %----------------------------------------------------------
                 LKC = spm_data_read(SPM.xVol.VRpv.fname,'xyz',L2{i2});
@@ -376,6 +388,12 @@ for i=1:size(P,1)
                         if length(j)==N2(ind2)
                             if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
                                 Q = [Q j];
+                                
+                                % save atlas measures
+                                [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
+                                Zj{i2} = Z(:,j);
+                                XYZmmj{i2} = XYZmm(:,j);
+                                maxZ(i2) = sign(Zj{i2}(1))*max(abs(Zj{i2}));
                                 break
                             end
                         end
@@ -384,12 +402,68 @@ for i=1:size(P,1)
             end
         else
             Q     = [];
-            for i = 1:min(max(A))
-                j = find(A == i);
-                if length(j) >= k; Q = [Q j]; end
+            for i2 = 1:min(max(A))
+                j = find(A == i2);
+                if length(j) >= k
+                    Q = [Q j];
+                    
+                    % save atlas measures
+                    [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
+                    Zj{i2} = Z(:,j);
+                    XYZmmj{i2} = XYZmm(:,j);
+                    maxZ(i2) = sign(Zj{i2}(1))*max(abs(Zj{i2}));
+                end
             end
         end
 
+        % sort T/F values and print from max to min values
+        [tmp, maxsort] = sort(maxZ,'descend');
+        
+        % use ascending order for neg. values
+        indneg = find(tmp<0);
+        maxsort(indneg) = flipud(maxsort(indneg));
+        
+        if ~isempty(maxsort)
+            found_neg = 0;
+            found_pos = 0;
+            fprintf('\n\n______________________________________________________\n');
+            fprintf('%s\n',atlas_name);
+            for l=1:length(maxsort)
+                j = maxsort(l); 
+                [tmp, indZ] = max(abs(Zj{j}));
+                
+                if ~isempty(indZ)
+                    if maxZ(j) < 0
+                        found_neg = found_neg + 1;
+                    end
+                    if maxZ(j) >= 0
+                        found_pos = found_pos + 1;
+                    end
+                    if found_pos == 1
+                        fprintf('\n______________________________________________________');
+                        fprintf('\nPositive effects');
+                        fprintf('\n______________________________________________________\n\n');
+                        fprintf('%s\t%s\t%s\t%s\n','Value ','Size  ','XYZ               ','Overlap of atlas region');
+                    end
+                    if found_neg == 1
+                        fprintf('\nNegative effects');
+                        fprintf('\n______________________________________________________\n\n');
+                        fprintf('%s\t%s\t%s\t%s\n','Value ','Size  ','XYZ               ','Overlap of atlas region');
+                    end
+
+                    fprintf('%4.2f\t%5d\t%4g %4g %4g',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+                    for m=1:numel(labk{j})
+                        if Pl{j}(m) >= 1,
+                            if m==1, fprintf('\t%s (%.1f%%)\n',labk{j}{m},Pl{j}(m));
+                            else     fprintf('%28s\t%s (%.1f%%)\n','                                  ',...
+                                labk{j}{m},Pl{j}(m)); end
+                        end
+                    end
+                end
+            end
+        end
+        fprintf('\n');
+        
         % ...eliminate voxels
         %-------------------------------------------------------------------
         Z     = Z(:,Q);
