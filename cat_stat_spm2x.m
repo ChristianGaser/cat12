@@ -403,7 +403,6 @@ for i=1:size(P,1)
 
     end % (if ~isempty(XYZ))
 
-min(Z(:))
     if ~isempty(Q)
       if T2x
          switch sel
