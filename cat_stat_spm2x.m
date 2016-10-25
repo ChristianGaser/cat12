@@ -97,7 +97,7 @@ function cat_stat_spm2x(vargin)
 %              values) 
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_spm2x.m 1027 2016-10-04 19:27:07Z gaser $
+% $Id$
 
 if nargin == 1
     if isfield(vargin,'data_T2x')

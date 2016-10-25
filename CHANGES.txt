@@ -12815,11 +12815,21 @@ M       html/cat.html
 Changed: Conversion from spmT/F maps is now done using cat_stat_spm2x.m
 
 ------------------------------------------------------------------------
+r1048 | gaser | 2016-10-25 18:01:41 +0200 (Di, 25 Okt 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_stat_spm2x.m
 
 Changed: Conversion from spmT/F maps is now done using cat_stat_spm2x.m
+
 ------------------------------------------------------------------------
-r1048 | gaser | 2016-10-25 18:01:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat_long_main.m
+MM      cat_stat_spm2x.m
+
+Changed: Added Dartel export for each time point to longitudinal mode.
+------------------------------------------------------------------------
+r1049 | gaser | 2016-10-25 20:41:20
