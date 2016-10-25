@@ -32,6 +32,8 @@ end
 if exist('dartel','var')
   matlabbatch{2}.spm.tools.cat.estwrite.output.GM.dartel = dartel;
   matlabbatch{2}.spm.tools.cat.estwrite.output.WM.dartel = dartel;
+  matlabbatch{3}.spm.tools.cat.estwrite.output.GM.dartel = dartel;
+  matlabbatch{3}.spm.tools.cat.estwrite.output.WM.dartel = dartel;
 end
 
 matlabbatch{1}.spm.tools.cat.tools.series.bparam = 1000000;
