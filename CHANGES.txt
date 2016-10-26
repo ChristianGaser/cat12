@@ -12834,11 +12834,26 @@ MM      cat_stat_spm2x.m
 Changed: Added Dartel export for each time point to longitudinal mode.
 
 ------------------------------------------------------------------------
+r1050 | gaser | 2016-10-26 01:16:31 +0200 (Mi, 26 Okt 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_stat_spm2x.m
 
 Changed: Added atlas output to cat_stat_spm2x.m
+
 ------------------------------------------------------------------------
-r1050 | gaser | 2016-10-26 01:16:19
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       cat_conf_tools.m
+M       cat_stat_spm2x.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Changed: Updated use of atlas labeling in cat_stat_spm2x.m and now 
+differentiates between conversion of images and surfaces in cat12.m
+------------------------------------------------------------------------
+r1051 | gaser | 2016-10-26 11:01:15

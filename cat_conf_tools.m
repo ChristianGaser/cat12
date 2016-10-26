@@ -7,24 +7,14 @@ function tools = cat_conf_tools
 
 %_______________________________________________________________________
 
-data         = cfg_files; 
-data.tag     = 'data';
-data.name    = 'Volumes';
-data.filter  = 'image';
-data.ufilter = '.*';
-data.num     = [1 Inf];
-data.help    = {
-'Select raw data (e.g. T1 images) for processing. This assumes that there is one scan for each subject. Note that multi-spectral (when there are two or more registered images of different contrasts) processing is not yet implemented for this method.'};
-
-%------------------------------------------------------------------------
 
 data_T2x         = cfg_files;
 data_T2x.tag     = 'data_T2x';
 data_T2x.name    = 'Data';
-data_T2x.filter  = {'image','gifti'};
+data_T2x.filter  = {'image'};
 data_T2x.ufilter = '^spmT.*';
 data_T2x.num     = [1 Inf];
-data_T2x.help    = {'Select spmT-images to transform or convert.'};
+data_T2x.help    = {'Select spmT-data to transform or convert.'};
 
 sel        = cfg_menu;
 sel.name   = 'Convert t value to';
@@ -142,10 +132,25 @@ conversion.name    = 'Conversion';
 conversion.val     = {sel threshdesc inverse cluster};
 conversion.help    = {''};
 
+atlas        = cfg_menu;
+atlas.name   = 'Atlas Labeling';
+atlas.tag    = 'atlas';
+list = spm_atlas('List','installed');
+atlas.labels{1} = 'None';
+atlas.values{1} = 'None';
+for i=1:numel(list)
+  atlas.labels{i+1} = list(i).name;
+  atlas.values{i+1} = list(i).name;
+end
+atlas.val    = {'None'};
+atlas.help   = {'Select atlas for labeling. The prepending atlas name ''dartel_'' indicates that this atlas was created using Dartel spatial normalization with the Dartel IXI template as default.'
+''
+'Please note, that you can install additional atlases for CAT12 using the command ''cat_install_atlases''. '};
+
 T2x      = cfg_exbranch;
 T2x.tag  = 'T2x';
-T2x.name = 'Threshold and transform spmT-maps';
-T2x.val  = {data_T2x,conversion};
+T2x.name = 'Threshold and transform spmT images';
+T2x.val  = {data_T2x,conversion,atlas};
 T2x.prog = @cat_stat_spm2x;
 T2x.help = {
           'This function transforms t-maps to P, -log(P), r or d-maps.'
@@ -194,14 +199,22 @@ T2x.help = {
 }';
 
 %------------------------------------------------------------------------
+% Do not use 3D atlases for surfaces
+data_T2x.filter  = {'gifti'};
+T2x_surf      = T2x;
+T2x_surf.val  = {data_T2x,conversion};
+T2x_surf.tag  = 'T2x_surf';
+T2x_surf.name = 'Threshold and transform spmT surfaces';
+
+%------------------------------------------------------------------------
 
 data_F2x         = cfg_files;
 data_F2x.tag     = 'data_F2x';
 data_F2x.name    = 'Data';
-data_F2x.filter  = {'image','gifti'};
+data_F2x.filter  = {'image'};
 data_F2x.ufilter = '^spmF.*';
 data_F2x.num     = [1 Inf];
-data_F2x.help    = {'Select spmF-images to select.'};
+data_F2x.help    = {'Select spmF-data to select.'};
 
 sel        = cfg_menu;
 sel.name   = 'Convert F value to';
@@ -232,8 +245,8 @@ conversion.help    = {''};
 
 F2x      = cfg_exbranch;
 F2x.tag  = 'F2x';
-F2x.name = 'Threshold and transform spmF-maps';
-F2x.val  = {data_F2x,conversion};
+F2x.name = 'Threshold and transform spmF images';
+F2x.val  = {data_F2x,conversion,atlas};
 F2x.prog = @cat_stat_spm2x;
 F2x.help = {
           'This function transforms F-maps to P, -log(P), or R2-maps.'
@@ -270,9 +283,14 @@ F2x.help = {
 }';
 
 %------------------------------------------------------------------------
+% Do not use 3D atlases for surfaces
+data_F2x.filter  = {'gifti'};
+F2x_surf      = F2x;
+F2x_surf.val  = {data_F2x,conversion};
+F2x_surf.tag  = 'F2x_surf';
+F2x_surf.name = 'Threshold and transform spmF surfaces';
 
-data.help = {
-'Select all images. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images)'};
+%------------------------------------------------------------------------
 
 c         = cfg_entry;
 c.tag     = 'c';
@@ -364,198 +382,14 @@ outdir.ufilter = '.*';
 outdir.num     = [0 1];
 outdir.help    = {'Select a directory where files are written.'};
 
-%{
-% average surface 
-% ----------------------------------------------------------------------
-
-  surfname         = cfg_entry;
-  surfname.tag     = 'surfname';
-  surfname.name    = 'Surfname';
-  surfname.strtype = 's';
-  surfname.num     = [1 Inf];
-  surfname.val     = {'average'};
-  surfname.help    = {'Name of the surface.'};
-
-  surfsmooth         = cfg_entry;
-  surfsmooth.tag     = 'surfsmooth';
-  surfsmooth.name    = 'Surface smoothing';
-  surfsmooth.strtype = 'r';
-  surfsmooth.num     = [1 Inf];
-  surfsmooth.val     = {[0 8]};
-  surfsmooth.help    = {
-    'Smoothing of the average surface.'
-    };
-  
-  surfside         = cfg_entry;
-  surfside.tag     = 'surfside';
-  surfside.name    = 'Side handling';
-  surfside.labels  = {'separate','mirror'};
-  surfside.values  = {1,2};
-  surfside.val     = {1};
-  surfside.help    = {
-    'Handling of the cortical hemispheres.'
-    };
-
-  avg_surf      = cfg_exbranch;
-  avg_surf.tag  = 'avg_surf';
-  avg_surf.name = 'Average surfaces';
-  avg_surf.val  = {data_surf,surfsmooth,surfside,surfname,outdir};
-  avg_surf.prog = @cat_surf_avg;
-  avg_surf.help = {''};
-  %}
-  
-% surface calculations
-% ----------------------------------------------------------------------
-  %{
-  data_mesh         = cfg_files;
-  data_mesh.tag     = 'data_mesh';
-  data_mesh.name    = 'Sample';
-  data_mesh.filter  = 'gifti';
-  data_mesh.ufilter = '^[lr]h.central';
-  data_mesh.num     = [2];
-  data_mesh.help    = {'Select lh and rh average surfaces.'};
-
-  surffunction         = cfg_entry;
-  surffunction.tag     = 'surfname';
-  surffunction.name    = 'Surfname';
-  surffunction.strtype = 's';
-  surffunction.num     = [1 Inf];
-  surffunction.val     = {'average'};
-  surffunction.help    = {
-    'Function to evaluate the surfaces.'
-    's1 + s2'
-    'mean(X)'
-    };
-  
-  surfcalc      = cfg_exbranch;
-  surfcalc.tag  = 'surfcalc';
-  surfcalc.name = 'Surface data calculation';
-  surfcalc.val  = {data_mesh,data_surf,surffunction,surfside,surfname,outdir};
-  surfcalc.prog = @cat_surf_avg;
-  surfcalc.help = {''};
-  %}
-  
-  %{
-
-% average surface 
-% ----------------------------------------------------------------------
-  cdata_surf         = cfg_files;
-  cdata_surf.tag     = 'data_surf';
-  cdata_surf.name    = 'Sample';
-  cdata_surf.filter  = 'gifti';
-  cdata_surf.ufilter = '^[s].*[lr]h.*';
-  cdata_surf.num     = [1 Inf];
-  cdata_surf.help    = {
-    'Select resampled surfaces data files to extract values.'
-    'Use ''Resample_Surface'' function to create such files.'
-    };
-  
-  groupname         = cfg_entry;
-  groupname.tag     = 'groupname';
-  groupname.name    = 'Groupname';
-  groupname.strtype = 's';
-  groupname.num     = [1 Inf];
-  groupname.val     = {'group'};
-  groupname.help    = {'Name of the group. Default ''group#''. The filename will further include the hemisphere and the average function'};
-
-  surfname         = cfg_entry;
-  surfname.tag     = 'surfname';
-  surfname.name    = 'Surfname';
-  surfname.strtype = 's';
-  surfname.num     = [1 Inf];
-  surfname.val     = {'group'};
-  surfname.help    = {'Name of the surface.'};
-
-  data_group         = cfg_branch;
-  data_group.tag     = 'data_group';
-  data_group.name    = 'Data group';
-  data_group.val     = {cdata_surf,groupname};
-  data_group.help    = {''};
-  
-  sample_surf         = cfg_repeat;
-  sample_surf.tag     = 'sample';
-  sample_surf.name    = 'Data';
-  sample_surf.values  = {data_group};
-  sample_surf.num     = [1 Inf];
-  sample_surf.help    = {'Specify data for each sample.'};
-
-  surftype        = cfg_entry;
-  surftype.tag    = 'surftype';
-  surftype.name   = 'Surface type';
-  surftype.strtype = 'r';
-  surftype.num     = [1 4];
-  surftype.val     = {[0 1 1 1]};
-  surftype.help   = {
-    'Surface type for final visualisation.'
-    '[ FSavg , IXIavg , GROUPavg , ALLavg ]'
-    ''
-    'FSavg is the FreeSurfer average surface.'
-    'IXIavg is the average IXI555 dataset processed by CAT12.'
-    'GROUPavg is the average of each input group.'
-    'ALLavg is the average of all input datasets.'
-    ''
-    };
-  
-  surfsmooth         = cfg_entry;
-  surfsmooth.tag     = 'surfsmooth';
-  surfsmooth.name    = 'Final surface smoothing';
-  surfsmooth.strtype = 'r';
-  surfsmooth.num     = [1 Inf];
-  surfsmooth.val     = {[0 8]};
-  surfsmooth.help    = {
-    'Final smoothing of the average surface.'
-    };
-  
-  surfstat         = cfg_entry;
-  surfstat.tag     = 'surfstat';
-  surfstat.name    = 'Average function';
-  surfstat.strtype = 'r';
-  surfstat.num     = [1 3];
-  surfstat.val     = {[1 1 1]}; % 0 0 0
-  surfstat.help    = {
-    'Statistikal type for averaging. '
-    '[ mean ,  median , std]' % , var , min , max ]'
-    };
-  
-  surfdiff         = cfg_entry;
-  surfdiff.tag     = 'surfdiff';
-  surfdiff.name    = 'Group differences';
-  surfdiff.strtype = 'r';
-  surfdiff.num     = [1 3];
-  surfdiff.val     = {[1 0 0]};
-  surfdiff.help    = {
-    'Estimate (absolute) difference between neighbor groups g_{i} and g_{i+1} for the average function datasets.'
-    'Difference of [ mean ,  median , std] with 0 for no difference, 1 for difference, and 2 for absolute difference estimation.'
-    };
-  
-  bothside        = cfg_menu;
-  bothside.name   = 'Both hemispheres';
-  bothside.tag    = 'bothside';
-  bothside.labels = {'no','yes'};
-  bothside.values = {0,1};
-  bothside.val    = {1};
-  bothside.help   = {'Calculate both hemispheres.'};
-
-  avg_surf      = cfg_exbranch;
-  avg_surf.tag  = 'avg_surf';
-  avg_surf.name = 'Average surfaces';
-  avg_surf.val  = {sample_surf,surftype,surfsmooth,surfstat,surfname,bothside,outdir}; % surfdiff
-  avg_surf.prog = @cat_surf_avg;
-  avg_surf.help = {''};
-  
-%}
-
-  % surface math
-  % --------------------------------------------------------------------
-  % simple:
-  %   2 surface 
-  %   operation (+,-,*,/,abs)
-  % complex:
-  %   set of surface 
-  %   operation string
-
 %------------------------------------------------------------------------
 
+data         = cfg_files; 
+data.tag     = 'data';
+data.name    = 'Volumes';
+data.filter  = 'image';
+data.ufilter = '.*';
+data.num     = [1 Inf];
 data.help = {
 'Select images for quality assurance.'};
 
@@ -863,7 +697,7 @@ long    = cat_conf_long;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,sanlm,realign,long,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,defs,defs2}; %,qa
 
 return
 
