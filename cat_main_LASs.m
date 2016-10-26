@@ -327,7 +327,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
       % corrections for original intensies 
       Ywm = Ywm & Ymr>2/3 & Ymr<1.3; 
       Ygm = Ygm & Ymr>1/3 & Ymr<1.0; 
-      Ycm = Ycm & Ymr>0.1 & Ymr<1.5/3;
+      Ycm = Ycm & Ymr<1.5/3; % no lower limit here
 
       % add subcortical structures
       Yss = (NS(Yl1,LAB.BG) | NS(Yl1,LAB.TH)) & Ymr>2/3 & Ymr<2.75/3 & Ygr<0.1 & Ydivr>-0.05; 
@@ -408,11 +408,11 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
       if ~debug, clear Yhcg; end
 
       % Ycsf
-      Yngm = Ygm & Ypp<0.2 & Ymr<0.5 & Ygmt<=GMTstat(1) & Ypp<0.1; 
+      Yngm = Ygm & Ypp<0.1 & Ymr<0.5 & Ygmt<=GMTstat(1); 
       Ygm  = Ygm & ~Yngm;
       if ~debug, clear Yngm Ygmt Ypp; end
 
-      % remove sinus (rectus) and brainstem
+      %% remove sinus (rectus) and brainstem
       Ysr = cat_vbdist(single(NS(Yl1,LAB.CB)),NS(Yl1,LAB.CT) | NS(Yl1,LAB.BV),vx_vol)<30 & ...
             cat_vol_morph(NS(Yl1,LAB.BV),'d',10/mvx) & ...
             (NS(Yl1,LAB.CT)) & Ymr>0.5/3 & Ymr<1.8/3 & ~cat_vol_morph(NS(Yl1,LAB.CT) & Ymr>2/3,'d',1);
@@ -420,8 +420,8 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
       Ygm = Ygm & ~Ysr & ~cat_vol_morph(NS(Yl1,LAB.BS),'d',2/mvx); 
       if ~debug, clear Ysr; end
 
-      % non CSF
-      Ycm = Ycm & (Ymr-Ydivr)<.35 & Ymr>0.01 & Yclsr{3}>240 & abs(Ydivr)<0.1 & Ygr<0.2; 
+      %% non CSF
+      Ycm = Ycm & (Ymr-Ydivr)<.35 & Yclsr{3}>240 & abs(Ydivr)<0.1 & Ygr<0.2; 
       Ycm(smooth3(Ycm)<0.5)=0;  
       Ygm = Ygm | (~Ycm & (Ymr-Ydivr)>.4 & Ygr<0.2 & Ymr<0.5 & Yb); 
       Ygm(smooth3(Ygm | Ywm)<0.5)=0;  
@@ -515,19 +515,18 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     Ynb = Ynb & Ysrc~=0; 
     [Yc,resT2] = cat_vol_resize(Ysrc ./ max(eps,Ylab{2}) .* (smooth3(Ycm)>0.5),...
        'reduceV',vx_vol,8,16,'min');% only pure CSF !!!
-    Ynb = cat_vol_resize(Ysrc ./ max(eps,Ylab{2}) .* Ynb,...
+    Ynbr = cat_vol_resize(Ysrc ./ max(eps,Ylab{2}) .* Ynb,...
        'reduceV',vx_vol,8,16,'meanm');
-    Ynb(Yc>0)=0; Yc(Ynb>0)=0;
-    for xi=1:2*LASi, Ynb = cat_vol_localstat(Ynb,Ynb>0,2,1); end
+    Ynbr(Yc>0)=0; Yc(Ynbr>0)=0;
+    for xi=1:2*LASi, Ynbr = cat_vol_localstat(Ynbr,Ynbr>0,2,1); end
     for xi=1:2*LASi, Yc  = cat_vol_localstat(Yc,Yc>0,2,1); end
-    Ynba = cat_vol_approx(Ynb ,'nh',resT2.vx_volr,2); 
-    Yca  = cat_vol_approx(Yc ,'nh',resT2.vx_volr,2); % + min(max( meanYnb + stdYbc , meanYc - stdYbc ),...
-    clear Yc Ynb;
-    if ~debug; clear Ycls; end
-
-    %Yca  = max(Yca,Ynba*1.5); 
+    Ynba = cat_vol_approx(Ynbr,'nh',resT2.vx_volr,2); 
+    Yca  = cat_vol_approx(Yc  ,'nh',resT2.vx_volr,2); % + min(max( meanYnb + stdYbc , meanYc - stdYbc ),...
+    if ~debug; clear Yc Ynbr Ycls; end
+    % Yca  = max(Yca,Ynba*1.5); 
+    Yca   = max(Yca,mean(Tth.T3th(1:2))/T3th(3)); 
     Ynba  = min(Yca/1.5,Ynba); 
-    Yca   = max(Yca,Ynba*1.5); 
+    Yca   = max(Yca,Ynba + 0.01*1.5); 
 
     Ynba = cat_vol_smooth3X(Ynba,LASfs*2); 
     Yca  = cat_vol_smooth3X(Yca,LASfs*2); % * meanYc/mean(Yca(:)); 
@@ -558,7 +557,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     Yml(isnan(Yml) | Yml<0)=0; Yml(Yml>10)=10;
     Yml = Yml/3;
 
-    % global
+    %% global
     Ymg = Ysrc ./ max(eps,Ylab{2}) * Tth.T3th(5);
     Ymg = cat_main_gintnorm(Ymg,Tth); 
     if ~debug, clear Ylab Ysrc; end
