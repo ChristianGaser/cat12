@@ -639,8 +639,8 @@ for ind = [1 3]
       
       for j=1:length(jj)
         if roi_size(jj(j)) > 1
-          if j==1, fprintf('\t%3.1f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
-          else,    fprintf('%7s\t%8s\t%3.1f%s\t%s\n','       ','        ',...
+          if j==1, fprintf('\t%3.0f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
+          else,    fprintf('%7s\t%8s\t%3.0f%s\t%s\n','       ','        ',...
                 roi_size(jj(j)),'%',rcsv{jj(j)+1,2}); 
           end
         end
@@ -684,8 +684,8 @@ for ind = [1 3]
       
       for j=1:length(jj)
         if roi_size(jj(j)) > 1
-          if j==1, fprintf('\t%3.1f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
-          else,    fprintf('%7s\t%8s\t%3.1f%s\t%s\n','       ','        ',...
+          if j==1, fprintf('\t%3.0f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
+          else,    fprintf('%7s\t%8s\t%3.0f%s\t%s\n','       ','        ',...
                 roi_size(jj(j)),'%',rcsv{jj(j)+1,2}); 
           end
         end

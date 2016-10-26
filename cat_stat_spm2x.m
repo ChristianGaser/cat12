@@ -338,15 +338,17 @@ for i=1:size(P,1)
         end
         
         % atlas measures
-        labk   = cell(max(A)+2,1);
-        Pl     = cell(max(A)+2,1);
-        Zj     = cell(max(A)+2,1);
-        maxZ   = zeros(max(A)+2,1);
-        XYZmmj = cell(max(A)+2,1);
+        if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+            labk   = cell(max(A)+2,1);
+            Pl     = cell(max(A)+2,1);
+            Zj     = cell(max(A)+2,1);
+            maxZ   = zeros(max(A)+2,1);
+            XYZmmj = cell(max(A)+2,1);
 
-        XYZmm = Vspm.mat(1:3,:)*[XYZ; ones(1,size(XYZ,2))];%-voxel coordinates {mm}
-        atlas_name = 'dartel_neuromorphometrics';
-        xA = spm_atlas('load',atlas_name);
+            XYZmm = Vspm.mat(1:3,:)*[XYZ; ones(1,size(XYZ,2))]; %-voxel coordinates {mm}
+            atlas_name = vargin.atlas;
+            xA = spm_atlas('load',atlas_name);
+        end
 
         if noniso
             fprintf('Use local RPV values to correct for non-stationary of smoothness.\n');
@@ -389,11 +391,13 @@ for i=1:size(P,1)
                             if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
                                 Q = [Q j];
                                 
-                                % save atlas measures
-                                [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
-                                Zj{i2} = Z(:,j);
-                                XYZmmj{i2} = XYZmm(:,j);
-                                maxZ(i2) = sign(Zj{i2}(1))*max(abs(Zj{i2}));
+                                % save atlas measures for 3D data
+                                if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+                                    [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
+                                    Zj{i2} = Z(:,j);
+                                    XYZmmj{i2} = XYZmm(:,j);
+                                    maxZ(i2) = sign(Zj{i2}(1))*max(abs(Zj{i2}));
+                                end
                                 break
                             end
                         end
@@ -407,62 +411,16 @@ for i=1:size(P,1)
                 if length(j) >= k
                     Q = [Q j];
                     
-                    % save atlas measures
-                    [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
-                    Zj{i2} = Z(:,j);
-                    XYZmmj{i2} = XYZmm(:,j);
-                    maxZ(i2) = sign(Zj{i2}(1))*max(abs(Zj{i2}));
-                end
-            end
-        end
-
-        % sort T/F values and print from max to min values
-        [tmp, maxsort] = sort(maxZ,'descend');
-        
-        % use ascending order for neg. values
-        indneg = find(tmp<0);
-        maxsort(indneg) = flipud(maxsort(indneg));
-        
-        if ~isempty(maxsort)
-            found_neg = 0;
-            found_pos = 0;
-            fprintf('\n\n______________________________________________________\n');
-            fprintf('%s\n',atlas_name);
-            for l=1:length(maxsort)
-                j = maxsort(l); 
-                [tmp, indZ] = max(abs(Zj{j}));
-                
-                if ~isempty(indZ)
-                    if maxZ(j) < 0
-                        found_neg = found_neg + 1;
-                    end
-                    if maxZ(j) >= 0
-                        found_pos = found_pos + 1;
-                    end
-                    if found_pos == 1
-                        fprintf('\n______________________________________________________');
-                        fprintf('\nPositive effects');
-                        fprintf('\n______________________________________________________\n\n');
-                        fprintf('%s\t%s\t%s\t%s\n','Value ','Size  ','XYZ               ','Overlap of atlas region');
-                    end
-                    if found_neg == 1
-                        fprintf('\nNegative effects');
-                        fprintf('\n______________________________________________________\n\n');
-                        fprintf('%s\t%s\t%s\t%s\n','Value ','Size  ','XYZ               ','Overlap of atlas region');
-                    end
-
-                    fprintf('%4.2f\t%5d\t%4g %4g %4g',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
-                    for m=1:numel(labk{j})
-                        if Pl{j}(m) >= 1,
-                            if m==1, fprintf('\t%s (%.1f%%)\n',labk{j}{m},Pl{j}(m));
-                            else     fprintf('%28s\t%s (%.1f%%)\n','                                  ',...
-                                labk{j}{m},Pl{j}(m)); end
-                        end
+                    % save atlas measures for 3D data
+                    if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+                        [labk{i2}, Pl{i2}]  = spm_atlas('query',xA,XYZmm(:,j));
+                        Zj{i2} = Z(:,j);
+                        XYZmmj{i2} = XYZmm(:,j);
+                        maxZ(i2) = sign(Zj{i2}(1))*max(abs(Zj{i2}));
                     end
                 end
             end
         end
-        fprintf('\n');
         
         % ...eliminate voxels
         %-------------------------------------------------------------------
@@ -478,90 +436,139 @@ for i=1:size(P,1)
     end % (if ~isempty(XYZ))
 
     if ~isempty(Q)
-      if T2x
-         switch sel
-         case 1
-          t2x = 1-spm_Tcdf(Z,df(2));
-          t2x_name = 'P_';
-         case 2
-          t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
-          % find neg. T-values
-          ind_neg = find(Z<0);
-          if ~isempty(ind_neg)
+        if T2x
+          switch sel
+          case 1
+            t2x = 1-spm_Tcdf(Z,df(2));
+            t2x_name = 'P_';
+          case 2
+            t2x = -log10(max(eps,1-spm_Tcdf(Z,df(2))));
+            % find neg. T-values
+            ind_neg = find(Z<0);
+            if ~isempty(ind_neg)
               t2x(ind_neg) = log10(max(eps,spm_Tcdf(Z(ind_neg),df(2))));
+            end
+            t2x_name = 'logP_';
+          case 3
+            t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
+            t2x_name = 'R_';
+          case 4
+            t2x = 2*Z/sqrt(df(2));
+            t2x_name = 'D_';
+          case 5
+            t2x = Z;
+            t2x_name = 'T_';
           end
-          t2x_name = 'logP_';
-         case 3
-          t2x = sign(Z).*(1./((df(2)./((Z.*Z)+eps))+1)).^0.5;
-          t2x_name = 'R_';
-         case 4
-          t2x = 2*Z/sqrt(df(2));
-          t2x_name = 'D_';
-         case 5
-          t2x = Z;
-          t2x_name = 'T_';
-         end
-       else
-         switch sel
-         case 1
-          t2x = 1-spm_Fcdf(Z,df);
-          t2x_name = 'P_';
-         case 2
-          t2x = -log10(max(eps,1-spm_Fcdf(Z,df)));
-          t2x_name = 'logP_';
-         case 3
-    	  	t2x = (df(2)-1)*Z./(df(2) - df(1)+Z*(df(2) -1));
+        else
+          switch sel
+          case 1
+            t2x = 1-spm_Fcdf(Z,df);
+            t2x_name = 'P_';
+          case 2
+            t2x = -log10(max(eps,1-spm_Fcdf(Z,df)));
+            t2x_name = 'logP_';
+          case 3
+    	  	  t2x = (df(2)-1)*Z./(df(2) - df(1)+Z*(df(2) -1));
 		      t2x_name = 'R2_';
-         case 4
-          t2x = Z;
-          t2x_name = 'F_';
-         end
-       end
-       str_num = deblank(xCon(Ic).name);
+          case 4
+            t2x = Z;
+            t2x_name = 'F_';
+          end
+        end
+        str_num = deblank(xCon(Ic).name);
 
-       % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
-       str_num(strfind(str_num,' ')) = '_';
-       strpos = strfind(str_num,' > ');
-       if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
-       strpos = strfind(str_num,' < ');
-       if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
-       strpos = strfind(str_num,'>');
-       if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
-       strpos = strfind(str_num,'<');
-       if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
-       str_num = spm_str_manip(str_num,'v');
+        % replace spaces with "_" and characters like "<" or ">" with "gt" or "lt"
+        str_num(strfind(str_num,' ')) = '_';
+        strpos = strfind(str_num,' > ');
+        if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_gt_' str_num(strpos+1:end)]; end
+        strpos = strfind(str_num,' < ');
+        if ~isempty(strpos), str_num = [str_num(1:strpos-1) '_lt_' str_num(strpos+1:end)]; end
+        strpos = strfind(str_num,'>');
+        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'gt' str_num(strpos+1:end)]; end
+        strpos = strfind(str_num,'<');
+        if ~isempty(strpos), str_num = [str_num(1:strpos-1) 'lt' str_num(strpos+1:end)]; end
+        str_num = spm_str_manip(str_num,'v');
     
-       if T2x && neg_results
-            neg_str = '_bi'; 
-       else
+        if T2x && neg_results
+        neg_str = '_bi'; 
+        else
             neg_str = '';
-       end
+        end
        
-      if isfield(SPM.xVol,'G')
+        if isfield(SPM.xVol,'G')
             ext = '.gii';
-       else ext = '.nii'; end
+        else ext = '.nii'; end
 
-       if u0 > -Inf
+        if u0 > -Inf
            name = [t2x_name str_num p_height_str num2str(u0*100) p_extent_str '_k' num2str(k) neg_str ext];
-       else
+        else
            name = [t2x_name str_num ext];
-       end
-       fprintf('Save %s\n', name);
+        end
+        fprintf('Save %s\n', name);
     
-       out = deblank(fullfile(pth,name));
+        out = deblank(fullfile(pth,name));
 
-       %-Reconstruct (filtered) image from XYZ & T/Z pointlist
-       %-----------------------------------------------------------------------
-       Y      = zeros(Vspm.dim);
-       OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
-       Y(OFF) = t2x;
+        % print table for 3D data
+        if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
+            % sort T/F values and print from max to min values
+            [tmp, maxsort] = sort(maxZ,'descend');
+        
+            % use ascending order for neg. values
+            indneg = find(tmp<0);
+            maxsort(indneg) = flipud(maxsort(indneg));
+        
+            if ~isempty(maxsort)
+                found_neg = 0;
+                found_pos = 0;
+                for l=1:length(maxsort)
+                    j = maxsort(l); 
+                    [tmp, indZ] = max(abs(Zj{j}));
+                
+                    if ~isempty(indZ)
+                        if maxZ(j) < 0,  found_neg = found_neg + 1; end
+                        if maxZ(j) >= 0, found_pos = found_pos + 1; end
+                        
+                        % print header if the first pos./neg. result was found
+                        if found_pos == 1
+                            fprintf('\n______________________________________________________');
+                            fprintf('\n%s: Positive effects\n%s',name,atlas_name);
+                            fprintf('\n______________________________________________________\n\n');
+                            fprintf('%1s-%5s\t%7s\t%15s\t%s\n\n',STAT,'Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+                        end
+                        if found_neg == 1
+                            fprintf('\n______________________________________________________');
+                            fprintf('\n%s: Negative effects\n%s',name,atlas_name);
+                            fprintf('\n______________________________________________________\n\n');
+                            fprintf('%1s-%5s\t%7s\t%15s\t%s\n\n',STAT,'Value','   Size','    xyz [mm]   ','Overlap of atlas region');
+                        end
 
-       VO = Vspm;
-       VO.fname = out;
-       VO.dt = [spm_type('float32') spm_platform('bigend')];
+                        fprintf('%7.2f\t%7d\t%4.0f %4.0f %4.0f',maxZ(j),length(Zj{j}),XYZmmj{j}(:,indZ));
+                        for m=1:numel(labk{j})
+                            if Pl{j}(m) >= 1,
+                                if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
+                                else     fprintf('%7s\t%7s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
+                                    Pl{j}(m),labk{j}{m});
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            fprintf('\n');
+        end
 
-       VO = spm_data_hdr_write(VO);
-       spm_data_write(VO,Y);
+        %-Reconstruct (filtered) image from XYZ & T/Z pointlist
+        %-----------------------------------------------------------------------
+        Y      = zeros(Vspm.dim);
+        OFF    = XYZ(1,:) + Vspm.dim(1)*(XYZ(2,:)-1 + Vspm.dim(2)*(XYZ(3,:)-1));
+        Y(OFF) = t2x;
+
+        VO = Vspm;
+        VO.fname = out;
+        VO.dt = [spm_type('float32') spm_platform('bigend')];
+
+        VO = spm_data_hdr_write(VO);
+        spm_data_write(VO,Y);
     
     end
 end
