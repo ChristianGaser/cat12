@@ -302,7 +302,7 @@ function cat_tst_cattest(job)
   for pi=1:size(job.para)
     for ppi=1:numel(job.para{pi,6})
       perror{pi}{ppi} = 2*ones(numel(mainbatch{pi}{ppi}),1);
-      for mbi = 24%:numel(mainbatch{pi}{ppi})
+      for mbi = 1:numel(mainbatch{pi}{ppi})
         cat_io_cprintf([0 0.5 0],sprintf('\n\n% 3d) Batchfile: %s - Batch %d ',...
           batchname{mbi,3},batchname{mbi,1},batchname{mbi,2}));
         try 

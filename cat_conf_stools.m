@@ -220,7 +220,7 @@ function stools = cat_conf_stools(expert)
   SA.values = {0,1};
   SA.val    = {1};
   SA.help   = {
-    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
+    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-????1443, 2012.'
     ''
     'Log-transformation is used to render the data more normally distributed.'
     ''
@@ -530,6 +530,7 @@ function stools = cat_conf_stools(expert)
 %  region-based measures in subject space
 %  ---------------------------------------------------------------------
 if expert>1
+  %%
   % surface files
     ROI.sdata         = cfg_files;
     ROI.sdata.tag     = 'sdata';
@@ -586,7 +587,6 @@ if expert>1
         'Region-wise surface area, normalized by total area.'
       };
     
-    
     % volume ??? comparison to VBM
     % * map all GM/WM/CSF voxel to there closest CS vertex
     % * create inner and outer surface to used delaunay for subregions ...
@@ -607,7 +607,7 @@ if expert>1
       estroi.val{end+1} = nproc; 
       estroi.val{end+1} = lazy;
     end
-    estroi.prog = @cat_roi_parameters;
+    %estroi.prog = @cat_roi_parameters;
     estroi.help = {
       'Surface-based ROI measures that required estimation on the original rather than the template surface mesh, such as the area or the gyrificatino index.'
     };

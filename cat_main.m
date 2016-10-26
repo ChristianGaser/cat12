@@ -1098,7 +1098,7 @@ if ~isfield(res,'spmpp')
       Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
       Yp0  = Yp0(indx,indy,indz);
       Yl1b = Yl1(indx,indy,indz);
-      Ymib  = Ymi(indx,indy,indz);
+      Ymib = Ymi(indx,indy,indz);
 
       Ybs  = NS(Yl1b,LAB.BS) & Ymib>2/3; clear Ymib; 
       YpveVB = cat_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem

@@ -12858,6 +12858,7 @@ Changed: Updated use of atlas labeling in cat_stat_spm2x.m and now
 differentiates between conversion of images and surfaces in cat12.m
 
 ------------------------------------------------------------------------
+r1052 | dahnke | 2016-10-26 16:01:23 +0200 (Mi, 26 Okt 2016) | 44 lines
 
 Changed paths:
  M      .
@@ -12902,5 +12903,23 @@ M       tbx_cfg_cat.m
 (8)  New:     Added silent reset in "cat_io_cprintf" to reset color output.
 (9)  Changed: Cleared further unused variables in "cat_main".
 (10) Fixed:   Corrected error in "cat_stat_showslice_all" in case of one image.
+
 ------------------------------------------------------------------------
-r1052 | dahnke | 2016-10-26 16:01:08
+
+Changed paths:
+M       CHANGES.txt
+MM      batches/cat12batch_RBM_and_SBM_for_SPM.m
+MM      batches/cattest/cat12_SBM_205_SurfCalc.m
+MM      batches/cattest/cat12_SBM_206_tools.m
+MM      batches/cattest/cat12_SBM_401_SBM_and_RBM_for_SPM.m
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_main_LASs.m
+M       cat_tst_cattest.m
+
+(1)  Fixed:   Corrected error in "cat_conf_stools".
+(2)  Fixed:   Corrected small test error in "cat_tst_testcat".
+(3)  Fixed:   Corrected background problems in "cat_main_LASs" that lead to 
+              thickness overestimation in BUSS.
+------------------------------------------------------------------------
+r1053 | dahnke | 2016-10-26 17:43:49
