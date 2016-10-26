@@ -58,7 +58,7 @@ function varargout = compile(comp,test,verb)
   rng('default'); % restore default 
    
   % reset colorfunction
-  cat_io_cprintf('reset')
+  cat_io_cprintf('silentreset')
   
   %% compiling c-functions
   if comp==1

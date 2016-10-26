@@ -38,7 +38,7 @@ rdata = cat_vol_findfiles( fullfile(spm('dir') , 'toolbox' , 'cat12' , 'atlases_
 % batch
 % ---------------------------------------------------------------------
 % original
-matlabbatch{1}.spm.tools.cat.stools.surf2roi.cdata      = {cdata};
+matlabbatch{1}.spm.tools.cat.stools.surf2roi.cdata        = {cdata};
 if exp
   matlabbatch{1}.spm.tools.cat.stools.surf2roi.rdata      = rdata;
   matlabbatch{1}.spm.tools.cat.stools.surf2roi.nproc      = 0;
@@ -50,7 +50,7 @@ if exp
 end
 
 % resampled
-matlabbatch{2}.spm.tools.cat.stools.surf2roi.cdata      = {cdatares};
+matlabbatch{2}.spm.tools.cat.stools.surf2roi.cdata        = {cdatares};
 if exp
   matlabbatch{2}.spm.tools.cat.stools.surf2roi.rdata      = rdata;
   matlabbatch{2}.spm.tools.cat.stools.surf2roi.nproc      = 0;

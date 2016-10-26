@@ -25,16 +25,44 @@
     <div id="content">
       <h2>FAQ</h2>
       <ul>
-        <li><a href="#Segmentation">Segmentation</a></li>
-        <li><a href="#Surfaces">Surface reconstruction and thickness estimation</a></li>
-        <li><a href="#QA">Quality control / assurance</a></li>
+        <li><h4><a href="#Segmentation">Segmentation</a></h4>
+          <ul>
+            <li><a href="#noiseCorrection">Do I need further noise or bias corrections?</a></li>
+            <li><a href="#normStripArt">The normalized images have striped artifacts.</a></li>
+            <li><a href="#badResults">The segmentation or surface reconstruction looks totally wrong.</a></li>
+            <li><a href="#skullstripping1">Parts of the brain are missing, or a wider brain mask is required.</a></li>
+            <li><a href="#skullstripping2">Parts of the head (but not meninges/blood vessels) are within the brain mask, or closer brain mask is required.</a></li>
+            <li><a href="#skullstripping3">Thin brain structures (e.g. in the cerebellum) are missing.</a></li>
+            <li><a href="#skullstripping4">There are too many meninges (but not high intensity blood vessels).</a></li>
+            <li><a href="#BVCstr">There are blood vessels in the tissue segmentation that were classified as WM.</a></li>
+            <li><a href="#writingErr">I got file writing errors (under Windows).</a></li>
+            <li><a href="#strangeErr">The parallel processing failed and CAT just open empty preprocessing files or these files include multiple different strange errors ...</a></li>
+          </ul>
+          </br>
+        </li>
+        <li><h4><a href="#Surfaces">Surface reconstruction and thickness estimation</a></h4></li>
+          <ul>
+            <li><a href="#SPM_RBM_SBM">Is it possible to use the SPM segmentation for ROI processing or thickness estimation and surface reconstruction?</a></li>
+            <li><a href="#burredSulci">Blurred sulci</a></li>
+            <li><a href="#burredGyri">Blurred and broken gyri</a></li>
+            <li><a href="#VBMofGMT">Is there a thickness map that allows a voxel-based analysis?</a></li>
+            <li><a href="#7Tesla">Known problems in ultra high-field data (7 Tesla)</a></li>
+          </ul>
+          </br>
+        <li><h4><a href="#QA">Quality control / assurance</a></h4></li>
+          <ul>
+            <li><a href="#lowQRscans">Some of my images get a low rating - can I use them anyway?</a></li>
+            <li><a href="#lowQRsample">My whole data get a low average rating - can I use it?</a></li>
+            <li><a href="#unexpGMT">Unexpected thickness values</a></li>
+          </ul>
+          </br>
       </ul>
       
         
       <h3 id="Segmentation">Segmentation</h3>
       <ul>
         <li>
-          <h4>Do I need further noise or bias corrections?</h4>
+          <h4 id="noiseCorrection">Do I need further noise or bias corrections?</h4>
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
             Low frequency corrections for inhomogeneity, e.g., the N3 algorithm, are unproblematic but not required for most datasets.  
@@ -44,7 +72,7 @@
           </p>
         </li>
         <li>
-          <h4>The segmentation or surface reconstruction looks totally wrong.</h4>
+          <h4 id="badResults">The segmentation or surface reconstruction looks totally wrong.</h4>
           <p>
             Check orientation and visual image quality of the affected images. 
             The full brain and the major tissue classes should be identifiable.   
@@ -52,31 +80,31 @@
           </p>
         </li>
         <li>
-          <h4>The normalized images have striped artifacts.</h4>
+          <h4 id="normStripArt">The normalized images have striped artifacts.</h4>
           <p>This depend on the input resolution of our files and will be largely diminished after smoothing. Usually, the internal interpolation ensures isotropic voxel size and a minimum spatial resolution and tries to prevent this kind of artifacts. </p>
         </li>
         <li>
-          <h4>Parts of the brain are missing, or a wider brain mask is required.</h4>
+          <h4 id="skullstripping1">Parts of the brain are missing, or a wider brain mask is required.</h4>
           <p>Decrease the <i>Strength of gcut+ Skull-Stripping</i> = <i>gcutstr</i> parameter.</p>
         </li>
         <li>
-          <h4>Parts of the head (but not meninges/blood vessels) are within the brain mask, or closer brain mask is required. </h4>
+          <h4 id="skullstripping2">Parts of the head (but not meninges/blood vessels) are within the brain mask, or closer brain mask is required. </h4>
           <p>Increase the <i>gcutstr</i> parameter.</p>
         </li>        
         <li>
-          <h4>Thin brain structures (e.g. in the cerebellum) are missing.</h4>
+          <h4 id="skullstripping3">Thin brain structures (e.g. in the cerebellum) are missing.</h4>
           <p>Decrease the <i>cleanupstr</i> parameter.</p>
         </li>
         <li>
-          <h4>There are too many meninges (but not high intensity blood vessels).</h4>
+          <h4 id="skullstripping4">There are too many meninges (but not high intensity blood vessels).</h4>
           <p>Increase the <i>cleanupstr</i> parameter.</p>
         </li>
         <li>
-          <h4>There are blood vessels in the tissue segmentation that were classified as WM.</h4>
+          <h4 id="BVCstr">There are blood vessels in the tissue segmentation that were classified as WM.</h4>
           <p>Correction of blood vessels with similar intensity like the WM is always problematic. Nevertheless, you can try to increase the <i>BVCstr</i> parameter.</p>
         </li>
         <li>
-          <h4>I got file writing errors (under Windows).</h4>
+          <h4 id="writingErr">I got file writing errors (under Windows).</h4>
           <p>E.g. "Error: Permission denied. There was a problem writing to the header of ..." </p>
           <p>We are working on this topic. Try to use simpler paths and filenames without special characters.</p>
         </li>  
@@ -86,7 +114,7 @@
           <p>Ignore them or try to restart MATLAB.</p>
         </li>
 -->
-        <li>
+        <li id="strangeErr">
           <h4>The parallel processing failed and CAT just open empty preprocessing files or these files include multiple different strange errors ... </h4>
           <p>You work to long with MATLAB and it may open to many files that were not closed correctly (e.g., by killing read/write routines). You have to restart SYSTEM. Until now this error only occurs in developer that kill processes with file read/write processes. </p>
         </li>
@@ -107,12 +135,14 @@
       <h3 id="Surfaces">Surface reconstruction and thickness estimation</h3>
       <ul>
         <li>
-          <h4>Is it possible to use the SPM segmentation for ROI processing or thickness estimation and surface reconstruction?</h4>
+          <h4 id="SPM_RBM_SBM">Is it possible to use the SPM segmentation for ROI processing or thickness estimation and surface reconstruction?</h4>
           <p>
             SPM segmentation based pipeline <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite_spm');">CAT12: SPM Segmentation</a> is available in expert mode that also implements DARTEL registration. 
-            It requires the processed GM, WM, and, CSF tissue maps in native space and the SPM seg8.mat file.
-            The results cannot be mixed with results of the default CAT pipeline because SPM12 segmentation can be biased by the TPM and uses a different PVE estimation.
+            It requires the processed GM, WM, and, CSF tissue maps in native space, the original image, and the SPM seg8.mat file and was designed to use the original SPM segmentation without further optimization to allow processing of T2/PD images or multimodal segmentation.
+            A full batch script with SANLM filter is available <a class="function" href="matlab:spm_jobman('interactive','','cat12batch_RBM_and_SBM_for_SPM.m');">here</a>. 
+            The results cannot be mixed with results of the default CAT pipeline because SPM12 segmentation no PVE and can be biased by the TPM.
             In general, cortical thickness values are slightly larger and thin gyri such as the parahippocampal or temporal gyri show more interruptions (see figure). 
+            <!-- Other segmentation, e.g., FSL, can be used if they match to the input structure and also include the seg8.mat file that is required for initial template registration. -->  
           </p>
           <p style="text-align:center;">
             <img src="images/CAT_PBT_for_SPM.png" width=90% height=auto alt="Surface Processing for SPM segmentation" >
@@ -132,7 +162,7 @@
         </li>
         -->
         <li>
-          <h4>Blurred sulci </h4>
+          <h4 id="burredSulci">Blurred sulci</h4>
           <p>
             The blurring of sulci (or incorrect reconstruction) depends on the spatial resolution (more blurring for lower resolutions), the contrast (more blurring for lower GM/WM contrast), the age of the subject (more blurring for younger subjects), and finally the image quality (more blurring for lower quality).
             It often occurrs in occipital regions due to higher myelinization and decreased GM/WM contrast.
@@ -145,7 +175,7 @@
           </br></br>
         </li>
         <li>
-          <h4>Blurred and broken gyri</h4>
+          <h4 id="burredGyri">Blurred and broken gyri</h4>
           <p> 
             Similar to the sulci also gyri especially their crones can be blurred.
             Besides low spatial resolution (more blurring) and image quality, especially the age plays an important role.
@@ -158,7 +188,7 @@
           </br></br>
         </li>
         <li>
-          <h4>Is there a thickness map that allows a voxel-based analysis?</h4>
+          <h4 id="VBMofGMT">Is there a thickness map that allows a voxel-based analysis?</h4>
           <p>
             No. Although the PBT approach creates such a map, it is only used for mapping thickness to the surface and for ROI analysis. 
             A voxel-based analysis of such a map might be not meaningful because the standard statistical processing is not optimized for this type of data. 
@@ -167,7 +197,7 @@
           </br></br>
         </li>
         <li>
-          <h4>Known problems in ultra high-field data (7 Tesla)</h4>
+          <h4 id="7Tesla">Known problems in ultra high-field data (7 Tesla)</h4>
           <p>
             Images on ultra high-field scanners often have strong inhomogeneities with large intensity changes and highly increased spatial frequency compared to 3 Tesla.
             The intensity changes influence the processing quality whereas low signal areas are extremely noisy and often lead to problems with CSF/GM segmentation with GM underestimation (see next figure A);  
@@ -189,7 +219,7 @@
       <h3 id="QA">Quality control / assurance</h3>
       <ul>
         <li>
-          <h4>Some of my images get a low rating - can I use them anyway?</h4>
+          <h4 id="lowQRscans">Some of my images get a low rating - can I use them anyway?</h4>
           <p>
             Outliers of image quality are often caused by artifacts e.g. by movements.  Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance. <br />
             Best praxis is to remove strong outliers (e.g. > 2 standard deviations, but not necessarily), if the problems depend on the image quality and not other subject properties.  
@@ -199,7 +229,7 @@
           </p>
         </li>
         <li>
-          <h4>My whole data get a low average rating - can I use it?</h4>
+          <h4 id="lowQRsample">My whole data get a low average rating - can I use it?</h4>
           <p>
             Yes, but you have to check for any preprocessing problems. Low rating depends on low resolution and/or higher noise/artifacts and is typical for very short sequences that are required e.g. for children.  
             Increased noise is also possible for elderly subjects with WMHs, where the fibers become visible and increase local variance.  
@@ -208,7 +238,7 @@
           </p>
         </li>
         <li>
-          <h4>Unexpected thickness values</h4>
+          <h4 id="unexpGMT">Unexpected thickness values</h4>
           <p>Check segmentation (check report file)...</p>
         </li>
       </ul>
