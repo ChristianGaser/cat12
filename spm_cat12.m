@@ -205,6 +205,7 @@ end
 spm_select('PrevDirs',{fullfile(spm('dir'),'toolbox','cat12')});
 
 %% command line output
+cat_io_cprintf('silentreset');
 switch cat_get_defaults('extopts.expertgui')
   case 0, expertguitext = '';
   case 1, expertguitext = ['Expert Mode' speciesdisp];

@@ -446,10 +446,21 @@ prefix.num     = [1 Inf];
 prefix.val     = {'sanlm_'};
 prefix.help    = {'Specify the string to be prepended to the filenames of the smoothed image file(s). Default prefix is ''samlm_''.'};
 
+NCstr         = cfg_entry;
+NCstr.tag     = 'NCstr';
+NCstr.name    = 'Strength of Noise Corrections';
+NCstr.strtype = 'r';
+NCstr.num     = [1 1];
+NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
+NCstr.help    = {
+  'Strengh of the SANLM noise correction. The default "inf" use an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+''
+};
+
 sanlm        = cfg_exbranch;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Spatially adaptive non-local means denoising filter';
-sanlm.val    = {data prefix rician};
+sanlm.val    = {data prefix NCstr rician};
 sanlm.prog   = @cat_vol_sanlm;
 sanlm.vfiles = @vfiles_sanlm;
 sanlm.help   = {
@@ -754,22 +765,18 @@ return;
 %_______________________________________________________________________
 
 function vf = vfiles_sanlm(job)
-vf = {};
-
-s  = char(job.data);
-for i=1:size(s,1),
-    [pth,nam,ext,num] = spm_fileparts(s(i,:));
-    vf = {vf{:}, fullfile(pth,[job.prefix,nam,ext,num])};
+s  = cellstr(char(job.data)); vf = s; 
+for i=1:numel(s),
+    [pth,nam,ext,num] = spm_fileparts(s{i});
+    vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
 end;
 return;
 %_______________________________________________________________________
 function vf = vfiles_qa(job)
-vf = {};
-
-s  = char(job.data);
-for i=1:size(s,1),
-    [pth,nam] = spm_fileparts(s(i,:));
-    vf = {vf{:}, fullfile(pth,['p0',nam,'ext'])};
+s  = cellstr(char(job.data)); vf = s; 
+for i=1:numel(s),
+    [pth,nam,ext,num] = spm_fileparts(s{i});
+    vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
 end;
 return;
 %_______________________________________________________________________
@@ -777,11 +784,11 @@ return;
 %------------------------------------------------------------------------
 function cdep = vout_reslice(job)
 
-cdep(1)          = cfg_dep;
+cdep(1)            = cfg_dep;
 cdep(1).sname      = 'Midpoint Average';
 cdep(1).src_output = substruct('.','avg','()',{':'});
 cdep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-cdep(2)          = cfg_dep;
+cdep(2)            = cfg_dep;
 cdep(2).sname      = 'Realigned images';
 cdep(2).src_output = substruct('.','rimg','()',{':'});
 cdep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});

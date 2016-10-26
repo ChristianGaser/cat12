@@ -12,6 +12,9 @@ function Ycls = cat_main(res,tpm,job)
 
 %#ok<*ASGLU>
 
+% if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
+dbs   = dbstatus; debug = 0; 
+for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_LASs'); debug = 1; break; end; end
 
 
 global cat_err_res; % for CAT error report
@@ -433,18 +436,18 @@ if ~isfield(res,'spmpp')
     Yb   = single(cat_vol_morph((Yp0>2/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5),'lo')); 
     %% region-growing GM 1
     Yb(~Yb & (~Ybo | Ysrcb<cat_stat_nanmean(T3th(2)) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
-    [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
+    [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
     % region-growing GM 2
     Yb(~Yb & (~Ybo | Ysrcb<T3th(1) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
-    [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/2); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
+    [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/2); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
     % region-growing GM 3
     Yb(~Yb & (~Ybo | Ysrcb<T3th(1)/2) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth)=nan;
-    [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; 
+    [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; 
     % ventrile closing
-    [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); 
+    [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); clear Ysrcb
     Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
     Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
     Yb  = Yb | cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.7; 
@@ -475,6 +478,7 @@ if ~isfield(res,'spmpp')
         Ybgrth = max(cat_stat_nanmean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
         Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
         Ybg  = cat_vol_resize(cat_vol_smooth3X(Ybgr,1),'dereduceV',resT2); 
+        clear Ysrcr Ybgr; 
       else
         Ybg = ~Yb;
       end
@@ -533,7 +537,7 @@ if ~isfield(res,'spmpp')
     P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
     P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
     P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
-    clear sumP Ybb
+    clear sumP Ybb Yp0 Yhdc; 
   end
 
   %% MRF
@@ -620,7 +624,7 @@ if ~isfield(res,'spmpp')
     Ybr   = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
     [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,vx_vol,res);
-    clear Ymr Ybr; 
+    clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
     [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
@@ -678,8 +682,8 @@ if ~isfield(res,'spmpp')
         if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
           job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
           NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
-          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
-          NCs  = max(0,min(1,NCs));
+          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:))); clear NC;
+          NCs  = max(0,min(1,NCs)); 
         end
         fprintf('%4.0fs\n',etime(clock,stime));  
 
@@ -695,6 +699,7 @@ if ~isfield(res,'spmpp')
             (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
             job.extopts.NCstr .* Yms .* Ybr;
         end    
+        clear NCs; 
 
       end
       clear Yms Ybr BB;
@@ -784,13 +789,14 @@ if ~isfield(res,'spmpp')
         (1-Yc) .* Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
         Yc .* Ymis .* Ybr;
 
-      clear Ymis Ymo;
+      clear Ymis;
     end
     %clear Ymioc; 
     fprintf('%4.0fs\n',etime(clock,stime));
   else
     Ymi = Ym; 
   end
+  clear Ymo; 
 
 
   if job.extopts.debug==2
@@ -811,7 +817,7 @@ if ~isfield(res,'spmpp')
   NS = @(Ys,s) Ys==s | Ys==s+1; 
   stime = cat_io_cmd('ROI segmentation (partitioning)');
   [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
-  %if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
+  if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
   fprintf('%4.0fs\n',etime(clock,stime));
 
   clear YBG Ysrc Ycr;
@@ -1194,16 +1200,23 @@ if ~isfield(res,'spmpp')
   clear VG VF cid %tpm 
 
 else
-%  -----------------------------------------------------------------
- %% SPM segmentation input  
+%% SPM segmentation input  
+%  ------------------------------------------------------------------------
+%  Here, DARTEL and PBT processing is prepared. 
+%  We simply use the SPM segmentation as it is without further modelling of
+%  a PVE or other refinements. 
+%  ------------------------------------------------------------------------
   
-  vx_vol = sqrt(sum(VT.mat(1:3,1:3).^2));                % voxel size of the processed image
-  cat_warnings = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
-    
-  job.inv_weighting = 1;                                 % inverse weighting allowed 
-
+  % here we need the c1 filename
+  VT0 = res.imagec(1);
+  [pth,nam] = spm_fileparts(VT0.fname); 
+  
+  vx_vol              = sqrt(sum(VT.mat(1:3,1:3).^2));          % voxel size of the processed image
+  cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
+  NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
+  
   % load SPM segments
-  [pp,ff,ee] = spm_fileparts(job.data{1});
+  [pp,ff,ee] = spm_fileparts(res.image0(1).fname);
   Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 
   Ycls{2} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c2' ff ee])))*255); 
   Ycls{3} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c3' ff ee])))*255); 
@@ -1212,35 +1225,41 @@ else
   Yp0  = single(Ycls{3})/3 + single(Ycls{1})/3*2 + single(Ycls{2})/3*3;
   Yb   = Yp0>0.5;
   
-  sz = size(Yb);
-  [indx, indy, indz] = ind2sub(sz,find(Yb>0));
-  indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
-  indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
-  indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
-  Yp0b = Yp0(indx,indy,indz);
-
-
   % load original images and get tissue thresholds
-  Ysrc = spm_read_vols(VT);
+  Ysrc = spm_read_vols(spm_vol(fullfile(pp,[ff ee])));
   WMth = double(max(cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.1)),...
            cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
   T3th = [ min([  cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)),...
            WMth]) ,cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))]) ...
            cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
            WMth];
-
+  if T3th(3)<T3th(2) % inverse weighting allowed 
+    job.inv_weighting   = 1;                                     
+  else
+    job.inv_weighting   = 0; 
+  end
+  
+  % the intensity normalized images are here represented by the segmentation 
   Ym   = Yp0/255;
   Ymi  = Yp0/255; 
   
-  % load atlas map 
+ 
+  % low resolution Yp0b
+  sz = size(Yb);
+  [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+  indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+  indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+  indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+  Yp0b = Yp0(indx,indy,indz);
+  clear Yp0 Yb; 
+  
+  % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
   Vl1 = spm_vol(job.extopts.cat12atlas{1});
   Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
-  NS = @(Ys,s) Ys==s | Ys==s+1; 
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG); 
   
-  clear Yp0 Yb; 
   fprintf('%4.0fs\n',etime(clock,stime));
 end
 
@@ -1559,7 +1578,7 @@ clear Yy u;
     
 
 
-if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting;
+if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting && exist('Yclso','var')
   Ycls = Yclso; clear Yclso;
 end
 
@@ -2119,6 +2138,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
       ytick       = [1,5:5:60];
       yticklabel  = {' BG',' ',' CSF',' CGM',' GM',' GWM',' WM',' ',' ',' ',' ',' ',' BV / HD '};
       yticklabelo = {' BG',' ','    ','    ','   ','     ',' avg WM  ',' ',' ',' ',' ',' ',' BV / HD '};
+      yticklabeli = {' BG',' ','    ','    ','   ','  ','  ',' ',' ',' ',' ',' ',' BV / HD '};
       %colormap(cat_io_colormaps(cm,60));
       cmap = [cat_io_colormaps([cm 'ov'],60);flipud(cat_io_colormaps([cm 'ov'],60));jet(surfcolors)]; 
       cmmax = 2;
@@ -2126,6 +2146,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
       ytick       = [1 20 40 60]; 
       yticklabel  = {' BG',' CSF',' GM',' WM'};
       yticklabelo = {' BG','    ','   ',' WM'};
+      yticklabeli = {' BG','    ','   ','   '};
       cmap = [eval(sprintf('%s(60)',cm));flipud(eval(sprintf('%s(60)',cm)));jet(surfcolors)]; 
       cmmax = 1;
   end
@@ -2190,14 +2211,24 @@ fprintf('%4.0fs\n',etime(clock,stime));
     end
     clear Yo; 
 
-    VT0x = VT0;
+    if isfield(res,'spmpp')
+      VT0x = res.image0(1); 
+    else
+      VT0x = VT0;
+    end
     VT0x.mat = dispmat * VT0x.mat; 
     hho = spm_orthviews('Image',VT0x,pos(1,:)); 
     spm_orthviews('Caption',hho,{T1txt},'FontSize',fontsize,'FontWeight','Bold');
     spm_orthviews('window',hho,[0 WMth*cmmax]); caxis([0,2]);
     cc{1} = axes('Position',[pos(1,1) + 0.30 0.38 0.02 0.15],'Parent',fg); image((60:-1:1)');
-    set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
-      'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+    
+    if job.inv_weighting
+      set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+        'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+    else  
+      set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabelo),'XTickLabel','','XTick',[],'TickLength',[0 0],...
+        'FontSize',fontsize,'FontWeight','Bold','YAxisLocation','right');
+    end
   else
     cat_io_cprintf('warn','WARNING: Can''t display original file "%s"!\n',VT.fname); 
   end
@@ -2292,7 +2323,11 @@ fprintf('%4.0fs\n',etime(clock,stime));
   WMfactor = 4/3; cmap = gray(60); colormap(cmap); caxis([0,numel(cmap)]); 
   
   % new colorscale
-  if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
+  if job.inv_weighting
+    % if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
+  else
+    if exist('hho' ,'var'), spm_orthviews('window',hho ,[0 T3th(3)*WMfactor]); end
+  end
   if exist('hhm' ,'var'), spm_orthviews('window',hhm ,[0 WMfactor]); end
   if exist('hhp0','var'), spm_orthviews('window',hhp0,[0 WMfactor]); end
 

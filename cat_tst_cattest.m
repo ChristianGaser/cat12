@@ -147,10 +147,12 @@ function cat_tst_cattest(job)
   job = cat_io_checkinopt(job,def);
   
   
+  
+  
   % choose datalevel
   % --------------------------------------------------------------------
   if isempty(job.datalevel)
-    job.datalevel = char(spm_input('Datalevel',1,'basic|human|nonhuman|all', ...
+    job.datalevel = char(spm_input('Datalevel',1,'basic|human|animal|all', ...
       {'basic','human','primates','all'},1));
   end
   switch job.datalevel
@@ -225,6 +227,7 @@ function cat_tst_cattest(job)
         subresdir = [job.resdir job.para{pi,5} num2str(job.para{pi,6}{ppi}) '_' job.computer];
       end  
       if ~exist(subresdir,'dir'), mkdir(subresdir); end 
+      cd(subresdir);
 
       for si = 1:numel(species)
         eval(sprintf('files_%s = {};',species{si}(6:end)));  
@@ -279,6 +282,7 @@ function cat_tst_cattest(job)
             batchname{end+1,1} = ffbi;
             batchname{end,2}   = mbi; 
             batchname{end,3}   = size(batchname,1);  
+            batchname{end,4}   = matlabbatch{mbi};
           end
         end
       end
@@ -288,7 +292,7 @@ function cat_tst_cattest(job)
   
   %% test compiled (and other) functions
   compile(0,1,job.userlevel+1);
-  
+  cat_io_cprintf('silentreset');
   
   
   
@@ -298,11 +302,15 @@ function cat_tst_cattest(job)
   for pi=1:size(job.para)
     for ppi=1:numel(job.para{pi,6})
       perror{pi}{ppi} = 2*ones(numel(mainbatch{pi}{ppi}),1);
-      for mbi = 1:numel(mainbatch{pi}{ppi})
+      for mbi = 24%:numel(mainbatch{pi}{ppi})
+        cat_io_cprintf([0 0.5 0],sprintf('\n\n% 3d) Batchfile: %s - Batch %d ',...
+          batchname{mbi,3},batchname{mbi,1},batchname{mbi,2}));
         try 
           spm_jobman('run',mainbatch{pi}{ppi}(mbi));  
           perror{pi}{ppi}(mbi)=0;
-        catch
+        catch e
+          cat_io_cprintf([0.8 0 0],'ERROR\n\n');
+          disp(e)
           perror{pi}{ppi}(mbi)=1;
         end
       end
@@ -326,6 +334,7 @@ function cat_tst_cattest(job)
   fprintf('\n');
   for pi=1:size(job.para)
     for ppi=1:numel(job.para{pi,6})
+        
       fprintf('\n%45s: %s\n',sprintf('Script %s %0.2f',job.para{pi,5},job.para{pi,6}{ppi}),'Status');
       for mbi = 1:numel(perror{pi}{ppi})
         fprintf('%2d)%40s%02d: ',batchname{mbi,3},batchname{mbi,1},batchname{mbi,2}); 

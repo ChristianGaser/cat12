@@ -128,7 +128,7 @@ function count = cat_io_cprintf(style,format,varargin)
 %    2011-03-04: Performance improvement
 %    2010-06-27: Fix for R2010a/b; fixed edge case reported by Sharron; CPRINTF with no args runs the demo
 %    2009-09-28: Fixed edge-case problem reported by Swagat K
-%    2009-05-28: corrected nargout behavior sugegsted by Andreas Gäb
+%    2009-05-28: corrected nargout behavior sugegsted by Andreas G?b
 %    2009-05-13: First version posted on <a href="http://www.mathworks.com/matlabcentral/fileexchange/authors/27420">MathWorks File Exchange</a>
 %
 % See also:
@@ -143,10 +143,12 @@ function count = cat_io_cprintf(style,format,varargin)
   global cprintferror; 
   if isempty(cprintferror), cprintferror=0; end
   if nargin==0, help cat_io_cprintf; return; end
-  if strcmp(style,'reset')
+  if strcmp(style,'reset') || strcmp(style,'silentreset')
     cprintferror = 0;
-    style  = [0.0 0.5 0.0]; 
-    cat_io_cprintf(style,'Color output active!\n');
+    if strcmp(style,'reset') 
+      style  = [0.0 0.5 0.0]; 
+      cat_io_cprintf(style,'Color output active!\n');
+    end
     return
   end
 
