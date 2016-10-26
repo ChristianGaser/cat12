@@ -121,16 +121,17 @@ if n>20, fs = FS(8); end
 if n>60, fs = FS(6);  end
 
 [tmp, names] = spm_str_manip(char(V.fname),'C');
+if isempty(names), names = struct('s',tmp,'m','','e',''); end % case of one images or identical names
 
 fprintf('Compressed filenames: %s\n',tmp);
 
 for i = 1:sizex
-   for j = 1:sizey
-        k = (sizex-i) + sizex*(j-1);
-	if k < n
-	  text(round(sizex*dim_array(1)-((i-1)*dim_array(1)+(i)*dim_array(1))/2),(j-1)*dim_array(2)+fs+2,names.m{k+1},...
-	  	'FontSize',fs,'Color','r','HorizontalAlignment','center');
-	end
+  for j = 1:sizey
+    k = (sizex-i) + sizex*(j-1);
+    if k < n && k>0
+      text(round(sizex*dim_array(1)-((i-1)*dim_array(1)+(i)*dim_array(1))/2),(j-1)*dim_array(2)+fs+2,names.m{k+1},...
+        'FontSize',fs,'Color','r','HorizontalAlignment','center');
+    end
   end
 end
 

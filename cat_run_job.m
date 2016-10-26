@@ -65,22 +65,22 @@ function cat_run_job(job,tpm,subj)
   
     
     %  -----------------------------------------------------------------
-    % separation of full CAT preprocessing and SPM segmentation
-    % preprocessing (running DARTEL and PBT with SPM segmentation)
+    %  separation of full CAT preprocessing and SPM segmentation
+    %  preprocessing (running DARTEL and PBT with SPM segmentation)
     %  -----------------------------------------------------------------
-    [pp,ff,ee,ex] = spm_fileparts(job.data{1}); ff(1:2) = []; % use c1* map for selection 
-    if exist(fullfile(pp,['c1' ff ee]),'file') && ...
-       exist(fullfile(pp,['c2' ff ee]),'file') && ...
-       exist(fullfile(pp,['c3' ff ee]),'file') && ...
-       exist(fullfile(pp,[ff '_seg8.mat']),'file');
+    [pp,ff,ee,ex] = spm_fileparts(job.data{subj}); 
+    if exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
+       exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
+       exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
+       exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file');
        
-        job.data{1}           = fullfile(pp,[ff ee]); 
-        job.channel.vols{1}   = fullfile(pp,[ff ee]); 
+        job.data{subj}          = fullfile(pp,[ff ee]); 
+        job.channel.vols{subj}  = fullfile(pp,[ff ee]); 
 
         % prepare SPM preprocessing structure 
         images = job.channel(1).vols{subj};
         for n=2:numel(job.channel)
-            images = char(images,job.channel(n).vols{subj});
+          images = char(images,job.channel(n).vols{subj});
         end
 
         obj.image    = spm_vol(images);
@@ -99,17 +99,18 @@ function cat_run_job(job,tpm,subj)
         obj.reg      = job.opts.warpreg;
         obj.samp     = job.opts.samp;              
 
-
-        ofname  = fullfile(pp,[ff ee]); 
+        cfname  = fullfile(pp,[ff ee]);
+        ofname  = fullfile(pp,[ff(3:end) ee]); 
         nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
         copyfile(ofname,nfname); 
 
-        res = load(fullfile(pp,[ff '_seg8.mat']));
+        res = load(fullfile(pp,[ff(3:end) '_seg8.mat']));
         job.channel(1).vols{subj}  = [nfname ex];
         job.channel(1).vols0{subj} = [ofname ex];
         res.image  = spm_vol([nfname ex]);
         res.image0 = spm_vol([ofname ex]);
-        res.spmpp = 1; 
+        res.imagec = spm_vol([cfname ex]);
+        res.spmpp  = 1; 
     else
 
         %  -----------------------------------------------------------------

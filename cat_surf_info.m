@@ -151,13 +151,10 @@ function [varargout] = cat_surf_info(P,read,gui)
         end
     end
     
-    % name
-    % ...this is to simple ... failed in subject with dot such as max.mustermann 
-    [tmp,noname,name] = spm_fileparts(sinfo(i).ff); 
-    noname = [noname name]; 
-    %if isempty(name), name=''; else name = name(2:end); end
-    %sinfo(i).name = name;
-   
+    
+    noname = sinfo(i).ff; 
+    
+    % smoothed data
     sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)mm\..*')); 
     
     % side
@@ -209,31 +206,51 @@ function [varargout] = cat_surf_info(P,read,gui)
       sinfo(i).datatype = -1;
     end
     
-    % dataname
-    dots = strfind(sinfo(i).posside,'.');
-    if ~isempty(dots)
-      sinfo(i).name    = sinfo(i).posside(dots(1)+1:end); 
-      sinfo(i).posside = sinfo(i).posside(1:dots(1)-1); 
-    end
-    sinfo(i).dataname  = strrep(sinfo(i).posside,'.resampled','');
+    % resampled
+    sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
     
     % special datatypes
     FNdata = {'thickness','central','inner','outer','sphere','defects','gyrification','sqrtsulc','frac',...
           'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
           'depthWM','depthGWM','depthCSF','depthWMg','ROI','hull',...
+          'aparc_DK40','aparc_a2009s', ...
+          'PALS_B12_Brodmann','aparc_DKT40JT', ...
+          'lpba40','mori','hammers','neuromorphometrics','aal', ...
           'hulldist'};
     sinfo(i).texture = '';
     for fi=1:numel(FNdata)
-      if strfind(sinfo(i).dataname,FNdata{fi}), sinfo(i).texture = FNdata{fi}; end
+      if strfind(sinfo(i).posside,FNdata{fi}), sinfo(i).texture = FNdata{fi}; end
     end   
-
     
     % template
     sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
-
-    % resampled
-    sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
     if sinfo(i).template,  sinfo(i).resampled = 1; end
+    
+    % name
+    % ... name extraction is a problem, because the name can include points
+    % and also the dataname / texture can include points ...
+    resi = [strfind(sinfo(i).posside,'template.'),... 
+            strfind(sinfo(i).posside,'resampled.')]; 
+    if ~isempty(resi)
+      sinfo(i).name = cat_io_strrep(sinfo(i).posside(max(resi):end),...
+        {sinfo(i).texture,'template.','resampled.'},'');
+      if ~isempty(sinfo(i).name) && sinfo(i).name(1)=='.', sinfo(i).name(1)=[]; end
+    else
+      doti = strfind(sinfo(i).posside,'.');
+      if numel(doti)==0 
+      % if not points exist that the string is the name
+        sinfo(i).name = sinfo(i).posside;
+      elseif numel(doti)==1 
+      % if one point exist that the first string is the dataname and the second the subject name 
+        sinfo(i).name = sinfo(i).posside(doti+1:end);
+      else
+      % this is bad
+        sinfo(i).name = sinfo(i).posside(max(doti)+1:end);
+      end
+    end
+    % dataname
+    sinfo(i).dataname  = cat_io_strrep(sinfo(i).posside,{sinfo(i).name,'template.','resampled.'},''); 
+    if ~isempty(sinfo(i).dataname) && sinfo(i).dataname(end)=='.', sinfo(i).dataname(end)=[]; end
     
     % ROI
     sinfo(i).roi = ~isempty(strfind(sinfo(i).posside,'.ROI'));

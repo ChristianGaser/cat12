@@ -417,7 +417,7 @@ if expert==2
   output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobian warps}; 
 elseif expert==1
   output_spm.val  = {ROI surface grey_spm white_spm csf_spm jacobian warps};
-else
+else % also CSF output because it is requiered as input ...
   output_spm.val  = {surface grey_spm white_spm csf_spm jacobian warps};
 end
 

@@ -12843,6 +12843,7 @@ M       cat_stat_spm2x.m
 Changed: Added atlas output to cat_stat_spm2x.m
 
 ------------------------------------------------------------------------
+r1051 | gaser | 2016-10-26 11:01:27 +0200 (Mi, 26 Okt 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12855,5 +12856,51 @@ M       html/cat.html
 
 Changed: Updated use of atlas labeling in cat_stat_spm2x.m and now 
 differentiates between conversion of images and surfaces in cat12.m
+
 ------------------------------------------------------------------------
-r1051 | gaser | 2016-10-26 11:01:15
+
+Changed paths:
+ M      .
+M       CHANGES.txt
+ M      batches
+A       batches/cat12batch_RBM_and_SBM_for_SPM.m
+A       batches/cattest/cat12_SBM_205_SurfCalc.m
+A       batches/cattest/cat12_SBM_206_tools.m
+M       batches/cattest/cat12_SBM_301_Surf2ROI.m
+A       batches/cattest/cat12_SBM_401_SBM_and_RBM_for_SPM.m
+M       cat_conf_tools.m
+M       cat_io_cprintf.m
+M       cat_main.m
+M       cat_main_LASs.m
+M       cat_run_job.m
+M       cat_stat_showslice_all.m
+M       cat_surf_info.m
+M       cat_tst_cattest.m
+M       compile.m
+ M      data
+M       html/cat_FAQ.html
+M       html/images/CAT_PBT_for_SPM.png
+ M      internal
+M       spm_cat12.m
+M       tbx_cfg_cat.m
+ M      templates_animals
+ M      templates_surfaces
+
+(1)  Fixed:   Corrected batch mode error in sanlm output. 
+              Added NCstr in GUI input.
+(2)  Fixed:   Corrected input handling in SPM RBM and SBM preprocessing 
+              pipeline of "cat_main" and "cat_run_job".
+(3)  Fixed:   Corrected subject name error in "cat_surf_info".               
+(4)  Changed: Added resolution reduction for "cat_main_LASs" to save time and 
+              memory. Test was ok, but MUC still have blurred sulci, 7T is ok, 
+              BUSS have very large thickness.
+(5)  New:     Added further cattest scripts "cat12_SBM_205_SurfCalc", 
+              "cat12_SBM_206_tools", and "cat12_SBM_401_SBM_and_RBM_for_SPM".
+(6)  New:     Added table of content in "cat_FAQ.html".
+(7)  New:     Added "cat12batch_RBM_and_SBM_for_SPM" batch with sanlm denoising,
+              SPM segment and CAT SPM segment. 
+(8)  New:     Added silent reset in "cat_io_cprintf" to reset color output.
+(9)  Changed: Cleared further unused variables in "cat_main".
+(10) Fixed:   Corrected error in "cat_stat_showslice_all" in case of one image.
+------------------------------------------------------------------------
+r1052 | dahnke | 2016-10-26 16:01:08
