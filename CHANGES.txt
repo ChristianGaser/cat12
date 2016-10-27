@@ -12967,6 +12967,7 @@ M       CHANGES.txt
     interferences with long. batch mode.
 
 ------------------------------------------------------------------------
+r1057 | gaser | 2016-10-28 00:08:23 +0200 (Fr, 28 Okt 2016) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12986,5 +12987,14 @@ M       html/cat_tools_VBM.html
 MM      internal/cat_vol_flipside.m
 
 Changed: Updated html code and corrected typos and language issues.
+
 ------------------------------------------------------------------------
-r1057 | gaser | 2016-10-28 00:08:07
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+
+Changed: Updated html code and corrected typos and language issues.
+------------------------------------------------------------------------
+r1058 | gaser | 2016-10-28 00:14:59
