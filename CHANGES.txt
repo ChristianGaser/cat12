@@ -12989,6 +12989,7 @@ MM      internal/cat_vol_flipside.m
 Changed: Updated html code and corrected typos and language issues.
 
 ------------------------------------------------------------------------
+r1058 | gaser | 2016-10-28 00:15:12 +0200 (Fr, 28 Okt 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12996,5 +12997,15 @@ M       Contents.m
 M       html/cat.html
 
 Changed: Updated html code and corrected typos and language issues.
+
 ------------------------------------------------------------------------
-r1058 | gaser | 2016-10-28 00:14:59
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat.txt
+
+Changed: Updated html code and corrected typos and language issues.
+------------------------------------------------------------------------
+r1059 | gaser | 2016-10-28 00:39:00
