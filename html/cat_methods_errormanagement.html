@@ -33,20 +33,20 @@
       </p>
       -->
       <p> 
-        If a preprocessing error occurs a error directory "err" with error specific subdirectory is created within the subject directory. 
+        If a preprocessing error occurs an error directory "err" with error specific subdirectories is created within the subject directory. 
         In this directory a copy of the <a href="cat_methods_caterrorreporthelp.html">error report PDF</a> and CAT XML of this subject will be created.
-        But also a complete preprocessing may include problems that can be identified by the standard <a href="cat_methods_catreporthelp.html">report PDF</a>.
+        However, also in a complete preprocessing there might occur problems that can be identified by the standard <a href="cat_methods_catreporthelp.html">report PDF</a>.
         You can find both files "catreport_*.pdf" in the main or report directory of each subject.
       </p>
       <p> 
         Failed preprocessing is often related to failed affine registration that was caused by a bad image orientation.
-        The CAT report of failed processing place place the crosshair at the AC given by the input image without affine registration. 
-        So if your preprocessing failed, please checkt first the image orientation in the CAT error report or the  <a class="function" href="matlab:spm_image">SPM display</a> function and correct it and try again. 
+        In the CAT report of a failed preprocessing the crosshair is placed at the AC in the input image. 
+        Thus, if your preprocessing fails, please check first the image orientation in the CAT error report or the  <a class="function" href="matlab:spm_image">SPM display</a> function and correct it using the "Set Origin" function and try the preprocessing again. 
       </p>
       <p>
-        If also this failed, you can use the <a class="function"  href="matlab:cat_io_senderrormail">send error mail</a> function to choose the error or processing directories. 
-        The function will search for all XML and PDF files that include error message, zip them and create a standard email that is opened in you email client. 
-        Here you have to attach the zipped file by yourself and may enter further informations. 
+        If this also fails, you can use the <a class="function"  href="matlab:cat_io_senderrormail">send error mail</a> function to select the error or processing directories. 
+        The function will search for all XML and PDF files that include error messages, will zip them and create a standard email that is opened in you email client. 
+        Here, you have to attach the zipped file by yourself and may enter additional information. 
       </p>
       <p>
         To avoid break of preprocessing of large datasets by single errors, CAT allows to catch preprocessing errors of each subject (<em>cat.extopts.ignoreErrors</em> in <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','cat_defaults.m'));end;"> cat_defaults</a>). 

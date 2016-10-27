@@ -25,32 +25,32 @@
     <div id="content">  
       <h2>CAT report and quality control (in development):</h2>
       <p>
-        CAT now also prints image quality measurements <a href="#Dahnke:2016">(Dahnke et al. 2016)</a> and major global subjects pecific measures in addition to the used preprocessing parameters.
-        This data is further saved in the "cat12_*.xml" files of each subject that can be read by <a class="function" href="matlab:cat_io_xml">cat_io_xml</a>.  
+        CAT now also prints image quality measurements <a href="#Dahnke:2016">(Dahnke et al. 2016)</a> and major global subjects specific measures in addition to the used preprocessing parameters.
+        These data are further saved in the "cat12_*.xml" files for each subject that can be read by <a class="function" href="matlab:cat_io_xml">cat_io_xml</a>.  
       </p>
       
       <h3>Image quality measures</h3>
       <p>
         Due to the wide range of rating and marking systems, the rating was defined for a percentage range and a numerical scaling that allows mapping to nominal numbers or letters with chromatic variants ("+" and "-") shown in table below. 
-        The obtained quality ratings range form 0.5 (100 rating points (rps)) to 10.5 (0 rps) with values around 1 and 2 describing (very) good image quality (grad A and B) and values around 5 (grad E) and higher (grad F, < 50 rps) indicating problematic images.
-        The scaling of the QMs was performed on the basis of theoretical aspects and the analysis of synthetic and real MRI data especially the BWP (Brain Web Phantom; <a href="#Collins:1998">Collins et al. 1998</a>).
+        The obtained quality ratings range from 0.5 (100 rating points (rps)) to 10.5 (0 rps) with values around 1 and 2 describing (very) good image quality (grad A and B) and values around 5 (grad E) and higher (grad F, < 50 rps) indicating problematic images.
+        The scaling of the QMs was performed on the basis of theoretical aspects and the analysis of synthetic and real MRI data, especially the BWP (Brain Web Phantom; <a href="#Collins:1998">Collins et al. 1998</a>).
       </p> 
       <p style="text-align:center;"><img src="images/cat_qa_rating-table.jpg" width=90% height=auto alt="Quality rating" ><p>
       <p>
-        The Image quality measures describe the properties of the image, but not of the processing. 
+        The image quality measures describe the properties of the image before CAT12 processing. 
         They were estimated by using the tissue segmentation and were (nearly) independent of subject sex and health status. 
       </p>
       <ul>
         <li>
           <h4>NCR (Noise Contrast Ratio):</h4>
           <p>
-            The NCR measures the local standard deviation in the optimized WM segment and scaled by the minimum tissue contrast.
+            The NCR measures the local standard deviation in the optimized WM segment and is scaled by the minimum tissue contrast.
           </p>
         </li>
         <li>
           <h4>ICR  (Inhomogeneity Contrast Ratio):</h4>
           <p>
-            The ICR is measured as the global standard deviation within the optimized WM segment and scaled by the minimum tissue contrast. 
+            The ICR is measured as the global standard deviation within the optimized WM segment and is scaled by the minimum tissue contrast. 
           </p>
         </li> 
         <li>
@@ -63,9 +63,8 @@
       </ul>
       <p>
         The resulting ratings were combined as weighted average image quality rating <b>IQR</b> <a href="#Dahnke:2016">(Dahnke et al. 2016)</a>. 
-        Tests of different projects such as ADNI, IXI, INDI, OASIS, PPMI etc. showed that published data overall got good quality ratings. 
-        Please note that <it>excellent</it> ratings is defined for extraordinary good images that were acquired for a very
-        small number of subjects by repeated long-time scans with ultra high resolution on high field systems (e.g. <a href="#Winterburn:2013">Winterburn et al. 2013</a>), 
+        Tests of different databases such as ADNI, IXI, INDI, OASIS, PPMI etc. demonstrated that published data got good quality ratings in general. 
+        Please note that <it>excellent</it> rating is defined for extraordinary good images that can be achieved by averaging several ultra high resolution scans on high field systems (e.g. <a href="#Winterburn:2013">Winterburn et al. 2013</a>), 
         and that typical scientific (clinical) data is expected to get just <it>good</it> to <it>satisfactory</it> ratings.
       </p>
       <p style="text-align:center;"><img src="images/cat_qa_rating-distribution.png" width=80% height=auto alt="Quality distribution of large projects" ><p>

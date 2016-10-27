@@ -10,7 +10,7 @@ function varargout = cat_vol_flipside(job)
 %  job.verb      .. verbose output
 %_______________________________________________________________________
 % Robert Dahnke
-% $Id: cat_vol_sanlm.m 1036 2016-10-18 14:26:32Z dahnke $
+% $Id$
 
   if ~exist('job','var'), job = struct(); end
   
