@@ -12905,6 +12905,7 @@ M       tbx_cfg_cat.m
 (10) Fixed:   Corrected error in "cat_stat_showslice_all" in case of one image.
 
 ------------------------------------------------------------------------
+r1053 | dahnke | 2016-10-26 17:44:10 +0200 (Mi, 26 Okt 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12921,5 +12922,19 @@ M       cat_tst_cattest.m
 (2)  Fixed:   Corrected small test error in "cat_tst_testcat".
 (3)  Fixed:   Corrected background problems in "cat_main_LASs" that lead to 
               thickness overestimation in BUSS.
+
 ------------------------------------------------------------------------
-r1053 | dahnke | 2016-10-26 17:43:49
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_render2.m
+A       internal/cat_vol_flipside.m
+
+(1)  Fixed:   Corrected setting of PBT resolution between 0.10 and 1.00 mm.
+(2)  New:     Added internal function to manually flip the side of images. 
+(3)  New:     Renamed "cat_surf_render2" GUI functions 'Synchronise Views' to 
+              'Synchronise Views Once' and added 'Synchronise Views' that 
+              synchronise views as long as the field is active. 
+              Added 'Thickness' as intensity range between 0 and 6.
+------------------------------------------------------------------------
+r1054 | dahnke | 2016-10-27 12:10:31
