@@ -124,9 +124,9 @@ switch lower(action)
 
         % surface info
         if nargin>=3
-          sinfo = cat_surf_info(varargin{3}); % später eins
+          sinfo = cat_surf_info(varargin{3}); % sp?ter eins
         elseif nargin>=1
-          sinfo = cat_surf_info(varargin{1}); % später eins
+          sinfo = cat_surf_info(varargin{1}); % sp?ter eins
         else
           sinfo = cat_surf_info(M);
         end
@@ -511,16 +511,16 @@ switch lower(action)
         
         %% -- ROIs --
         % ROI auswertung noch unklar 
-        % - bei vols wäre das xml einer person mit verschiedenen atlaten
+        % - bei vols w?re das xml einer person mit verschiedenen atlaten
         %   (subject als auch subject template)
         %   >> auswahl von xml-files aus dem label dir? 
         %   >> Liste von Atlanten und labels, die den atlasnamen enthalten,
         %      der aus dem atlasdir geladen werden (und gemappt werden)
         %      muss
-        %   >> anschließend müssen die werte der rois auf den atlas
-        %      übertragen werden
-        % - bei csv hätte man dann einen atlas für mehrere personen, was 
-        %   nur bei resampled sinnvoll wäre 
+        %   >> anschlie?end m?ssen die werte der rois auf den atlas
+        %      ?bertragen werden
+        % - bei csv h?tte man dann einen atlas f?r mehrere personen, was 
+        %   nur bei resampled sinnvoll w?re 
         %   >> auwahl von csv-files 
       try
         % volume/surface-based atlas data
@@ -735,6 +735,7 @@ switch lower(action)
         
         % -- Views --   
         c = uimenu(cmenu, 'Label','View','Separator','on');
+        uimenu(c, 'Label', 'Synchronise Views Once', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseViewsOnce, H});
         uimenu(c, 'Label', 'Synchronise Views', 'Visible','off','Checked','off', 'Tag','SynchroMenu', 'Callback',{@mySynchroniseViews, H});
         uimenu(c, 'Label','Zoom in'    , 'Checked'  ,'off', 'Callback',{@myZoom, H,'zoom in'});
         uimenu(c, 'Label','Zoom out'   , 'Checked'  ,'off', 'Callback',{@myZoom, H,'zoom out'});
@@ -785,6 +786,7 @@ switch lower(action)
         uimenu(c, 'Label','Min-max'    , 'Checked','off', 'Callback', {@myCaxis, H, 'auto'},'Separator', 'on');
         uimenu(c, 'Label','2-98 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '2p'});
         uimenu(c, 'Label','5-95 %'     , 'Checked','off', 'Callback', {@myCaxis, H, '5p'});
+        uimenu(c, 'Label','Thickness'  , 'Checked','off', 'Callback', {@myCaxis, H, [0 6]},'Separator', 'on');
         uimenu(c, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myCaxis, H, 'custom'},'Separator', 'on');
         uimenu(c, 'Label','Custom %...', 'Checked','off', 'Callback', {@myCaxis, H, 'customp'});
         
@@ -1496,8 +1498,23 @@ setappdata(H.axis,'handles',H);
 function myPostCallback(obj,evt,H)
 %P = findobj(obj,'Tag','CATSurfRender','Type','Patch');
 %if numel(P) == 1
-  if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
+ 
 
+  if strcmp(get(findobj(obj,'Label','Synchronise Views'),'Checked'),'on')
+    v = get(H.axis,'cameraposition');
+    P = findobj('Tag','CATSurfRender','Type','Patch');
+    P = setxor(H.patch,P); 
+    if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
+    for i=1:numel(P)
+        HP = getappdata(ancestor(P(i),'axes'),'handles');
+        set(HP.axis,'cameraposition',v);
+        axis(HP.axis,'image');
+        if strcmp(HP.catLighting,'cam') && ~isempty(HP.light), camlight(HP.light(1)); end
+    end
+  else
+    if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
+  end  
+  
 %else
 %    for i=1:numel(P)
 %        H = getappdata(ancestor(P(i),'axes'),'handles');
@@ -1901,30 +1918,34 @@ function myCaxis(obj,evt,H,rangetype)
 %% d = get(H.patch(1),'FaceVertexCData');
 d = getappdata(H.patch(1),'data'); d(isnan(d) | isinf(d)) = []; 
 if cat_stat_nanmean(d(:))>0 && cat_stat_nanstd(d(:),1)>0
-  switch rangetype
-      case 'min-max', 
-          range = [min(d) max(d)]; 
-      case '1p'
-          range = cat_vol_iscaling(d,[0.01 0.99]);
-      case '2p'
-          range = cat_vol_iscaling(d,[0.02 0.98]);
-      case '5p'
-          range = cat_vol_iscaling(d,[0.05 0.95]);
-      case 'custom'
-          fc = gcf;
-          spm_figure('getwin','Interactive'); 
-          range = cat_vol_iscaling(d,[0.02 0.98]);
-          d = spm_input('intensity range','1','r',range,[2,1]);
-          figure(fc); 
-          range = [min(d) max(d)];
-      case 'customp'
-          fc = gcf;
-          spm_figure('getwin','Interactive'); 
-          dx= spm_input('percentual intensity range','1','r',[2 98],[2,1]);
-          range = cat_vol_iscaling(d,dx/100);
-          figure(fc); 
-      otherwise
-          range = [min(d) max(d)]; 
+  if isnumeric(rangetype)
+    range = [min(rangetype) max(rangetype)]; 
+  else
+    switch rangetype
+        case 'min-max', 
+            range = [min(d) max(d)]; 
+        case '1p'
+            range = cat_vol_iscaling(d,[0.01 0.99]);
+        case '2p'
+            range = cat_vol_iscaling(d,[0.02 0.98]);
+        case '5p'
+            range = cat_vol_iscaling(d,[0.05 0.95]);
+        case 'custom'
+            fc = gcf;
+            spm_figure('getwin','Interactive'); 
+            range = cat_vol_iscaling(d,[0.02 0.98]);
+            d = spm_input('intensity range','1','r',range,[2,1]);
+            figure(fc); 
+            range = [min(d) max(d)];
+        case 'customp'
+            fc = gcf;
+            spm_figure('getwin','Interactive'); 
+            dx= spm_input('percentual intensity range','1','r',[2 98],[2,1]);
+            range = cat_vol_iscaling(d,dx/100);
+            figure(fc); 
+        otherwise
+            range = [min(d) max(d)]; 
+    end
   end
   if range(1)==range(2), range = range + [-eps*100 eps*100]; end
   if range(1)>range(2), range = fliplr(range); end
@@ -2005,7 +2026,7 @@ y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
 cat_surf_render2('Slider',H,toggle(get(obj,'Checked')));
 
 %==========================================================================
-function mySynchroniseViews(obj,evt,H)
+function mySynchroniseViewsOnce(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
 v = get(H.axis,'cameraposition');
 for i=1:numel(P)
@@ -2014,7 +2035,10 @@ for i=1:numel(P)
     axis(H.axis,'image');
     if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
 end
-
+%==========================================================================
+function mySynchroniseViews(obj,evt,H)
+y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
+set(obj,'Checked',toggle(get(obj,'Checked')));
 %==========================================================================
 function myDataCursor(obj,evt,H)
 dcm_obj = datacursormode(H.figure);
