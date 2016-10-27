@@ -41,8 +41,7 @@
         
       <h3><a id="SANLM" class="function" href="matlab:cat_vol_sanlm;">NLM noise filter</a></h3>
       <p>
-        The Spatial Adaptive Non Local Means (SANLM) <a  href="#Manjón:2008">(Manjón:2008)</a> is part of the CAT preprocessing but can also be used for other image modalities. 
-        Also noise correction works very well and stabilize most processing pipelines, the images will loose anatomical details (see <a href="cat_methods_QA.html">Quality Control</a>).
+        The Spatial Adaptive Non Local Means (SANLM) <a  href="#Manjón:2008">(Manjón:2008)</a> is part of the CAT preprocessing but can also be applied to other image modalities. Moreover, most processing pipelines benefit from the denoising.
       </p><p>
         You can use the SANLM filter by calling the <a class="function" href="matlab:cat_vol_sanlm;">cat_vol_sanlm</a> function. 
         See <a class="function" href="matlab:help cat_vol_sanlm;">help cat_vol_sanlm</a> for further options.
@@ -85,10 +84,10 @@
         
       <h3 id="cat_vol_correct_slice_scaling">Correction of slice-artifacts</h3>
       <p>
-        For images with slice-artifacts use the <a class="function" href="matlab:cat_vol_correct_slice_scaling;">CAT slice corrections</a> (see image).
+        For images with slice-artifacts you can use the <a class="function" href="matlab:cat_vol_correct_slice_scaling;">CAT slice corrections</a> (see image).
         You can specify the filter direction and the strength of the filtering. 
         Try to correct only the affected direction. 
-        Do not use this correction, if you does not have such kind of artifacts, because it may introduce errors in this case!
+        Do not use this correction, if you don't have such kind of artifacts, because it may introduce errors in this case!
       </p>
       <p style="text-align:center;"><img src="images/cat_vol_correct_slice_scaling_768.png" width=80% height=auto alt="Noise and its reduction" ><p>
         

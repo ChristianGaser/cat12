@@ -12955,6 +12955,7 @@ M       tbx_cfg_cat.m
     interferences with long. batch mode.
 
 ------------------------------------------------------------------------
+r1056 | gaser | 2016-10-27 21:49:48 +0200 (Do, 27 Okt 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12964,5 +12965,26 @@ M       CHANGES.txt
     values for writing GM/WM maps.
 (2) Changed: ROI option is now also available in standard mode because of 
     interferences with long. batch mode.
+
 ------------------------------------------------------------------------
-r1055 | gaser | 2016-10-27 21:49:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat_methods_FN.html
+M       html/cat_methods_QA.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_VBM.html
+M       html/cat_methods_VBM_APP.html
+M       html/cat_methods_defaults.html
+M       html/cat_methods_errormanagement.html
+M       html/cat_tools.html
+M       html/cat_tools_ROI.html
+M       html/cat_tools_SBM.html
+M       html/cat_tools_VBM.html
+MM      internal/cat_vol_flipside.m
+
+Changed: Updated html code and corrected typos and language issues.
+------------------------------------------------------------------------
+r1057 | gaser | 2016-10-28 00:08:07
