@@ -12999,6 +12999,7 @@ M       html/cat.html
 Changed: Updated html code and corrected typos and language issues.
 
 ------------------------------------------------------------------------
+r1059 | gaser | 2016-10-28 00:39:05 +0200 (Fr, 28 Okt 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13007,5 +13008,14 @@ M       html/cat.html
 M       html/cat.txt
 
 Changed: Updated html code and corrected typos and language issues.
+
 ------------------------------------------------------------------------
-r1059 | gaser | 2016-10-28 00:39:00
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+
+Changed: Updated CAT12 manual
+------------------------------------------------------------------------
+r1060 | gaser | 2016-10-29 12:02:32
