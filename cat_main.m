@@ -964,7 +964,7 @@ if ~isfield(res,'spmpp')
   Ymib = double(Ymib); 
 
   % Amap parameters 
-  n_iters = 16; sub = round(16/min(vx_vol)); n_classes = 3; pve = 5; % default sub=16 caused errors with highres data!
+  n_iters = 16; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; % default sub=16 caused errors with highres data!
   bias_fwhm = 60; init_kmeans = 0; 
 
   if job.extopts.mrf~=0
