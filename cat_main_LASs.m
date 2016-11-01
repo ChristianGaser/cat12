@@ -503,7 +503,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     [Yir,Ygmr,resT2] = cat_vol_resize({Yi,Ygm},'reduceV',vx_vol,mres,32,'meanm'); if ~debug, clear Yi; end
     Yir = cat_vol_noPVE(Yir,vx_vol,1);
     Yir = cat_vol_approx(Yir,'nh',resT2.vx_volr,2); 
-    Yir = cat_vol_smooth3X(Yir,LASfs*2); 
+    Yir = cat_vol_smooth3X(Yir,LASfs); 
     Ylab{1} = cat_vol_resize(Yir,'dereduceV',resT2).*Ylab{2};   
     if ~debug, clear Yir Ybd Yl1; end
 
@@ -599,7 +599,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
   Ycls{6} = cat_vol_ctype(cat_vol_morph(smooth3(1-max(0,Ymg*3) - Yp0n)>0.75,'lc')*255,'uint8'); 
   Ycls{5} = cat_vol_ctype((Ymg<4/6 & ~Yp0n & ~Ycls{6})*255,'uint8'); 
   Ycls{4} = cat_vol_ctype((Ymg>5/6 & ~Yp0n & ~Ycls{6})*255,'uint8'); 
-  cat_io_cmd(' ','','',verb,stime);
+  cat_io_cmd('','','',verb,stime);
 
 
 end

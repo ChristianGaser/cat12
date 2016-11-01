@@ -41,8 +41,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   if ~exist('opt','var'), opt=struct(); end
   def.verb      = 2; 
-  def.surf      = {'lh','rh'}; % {'lh','rh','cerebellum','brain'}
-  def.interpV   = max(0.25,min([min(vx_vol),opt.interpV,1]));
+  def.surf      = {'lh','rh'}; % {'lh','rh','ch'}
   def.reduceCS  = 100000;  
   def.tca       = cat_get_defaults('extopts.tca');
   def.LAB       = cat_get_defaults('extopts.LAB');
@@ -50,6 +49,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   def.SPM       = 0; 
   opt           = cat_io_updateStruct(def,opt);
+  opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
 
   Psurf = struct(); 
 
@@ -95,22 +95,25 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   % reduction of artifact, blood vessel, and meninges next to the cortex
   % (are often visible as very thin structures that were added to the WM 
   % or removed from the brain)
-  Ycsfd = cat_vbdist(single(Ymf<1.5),Ymf>1,vx_vol);
-  Yctd  = cat_vbdist(single(Ymf<0.5),Ymf>0,vx_vol); 
-  Ysroi = Ymf>2  &  Yctd<10  & Ycsfd>0 & Ycsfd<2 & ...
-          cat_vol_morph(~NS(Ya,opt.LAB.HC) & ~NS(Ya,opt.LAB.HI) & ...
-            ~NS(Ya,opt.LAB.PH) & ~NS(Ya,opt.LAB.VT),'erode',4); 
-  Ymfs  = cat_vol_median3(Ymf,Ysroi,Ymf>eps,0.1); % median filter
-  Ymf   = mf * Ymfs  +  (1-mf) * Ymf;
- 
-  % closing of small WMHs 
-  vols = [sum(round(Ymf(:))==1) sum(round(Ymf(:))==2)  sum(round(Ymf(:))==3)] / sum(round(Ymf(:))>0); 
-  volt = min(1,max(0,mean([ (vols(1)-0.20)*5  (1 - max(0,min(0.3,vols(3)-0.2))*10) ]))); 
-  Ywmh = cat_vol_morph(Ymf>max(2.2,2.5 - 0.3*volt),'lc',volt); 
-  Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
-  
-  % gaussian filter? ... only in tissue regions
   if ~opt.SPM
+    Ydiv  = cat_vol_div(Ymf,vx_vol); 
+    Ycsfd = cat_vbdist(single(Ymf<1.5),Ymf>1,vx_vol);
+    Yctd  = cat_vbdist(single(Ymf<0.5),Ymf>0,vx_vol); 
+    Ysroi = Ymf>2  &  Yctd<10  & Ycsfd>0 & Ycsfd<2 & ...
+            cat_vol_morph(~NS(Ya,opt.LAB.HC) & ~NS(Ya,opt.LAB.HI) & ...
+              ~NS(Ya,opt.LAB.PH) & ~NS(Ya,opt.LAB.VT),'erode',4); 
+    Ybv   = cat_vol_morph(Ymf+Ydiv./max(1,Ymf)>3.5,'d') & Ymf>2; 
+    Ymf(Ybv) = 1.4; 
+    Ymfs  = cat_vol_median3(Ymf,Ysroi | Ybv,Ymf>eps & ~Ybv,0.1); % median filter
+    Ymf   = mf * Ymfs  +  (1-mf) * Ymf;
+
+    % closing of small WMHs 
+    vols = [sum(round(Ymf(:))==1) sum(round(Ymf(:))==2)  sum(round(Ymf(:))==3)] / sum(round(Ymf(:))>0); 
+    volt = min(1,max(0,mean([ (vols(1)-0.20)*5  (1 - max(0,min(0.3,vols(3)-0.2))*10) ]))); 
+    Ywmh = cat_vol_morph(Ymf>max(2.2,2.5 - 0.3*volt),'lc',volt); 
+    Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
+  
+    % gaussian filter? ... only in tissue regions
     Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
     Ymf(Ymf>1) = Ymfs(Ymf>1);
   end
@@ -153,10 +156,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % reduce for object area
     switch opt.surf{si}
-      case {'L','lh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
-      case {'R','rh'},         Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
-      case {'C','cerebellum'}, Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB); Yside = NS(Ya,opt.LAB.CB)>0;
-      case {'B','brain'},      Ymfs = Ymf .* (Ya>0); Yside = true(size(Ya));
+      case {'L','lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
+      case {'R','rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
+      case {'C','ch'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB); Yside = NS(Ya,opt.LAB.CB)>0;
     end 
     
     % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
@@ -184,7 +186,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
-    if 0%opt.expertgui > 1
+    if opt.expertgui > 1
       %% gyrus width / WM depth
       %  For the WM depth estimation it is better to use the L4 boundary
       %  and correct later for thickness, because the WM is very thin in
@@ -209,19 +211,18 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
           Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13)) .* (mod(Yar,2)==0);    
           Ynw = smooth3(cat_vol_morph(NS(Yar,5) | NS(Yar,9) | NS(Yar,15) | NS(Yar,23),'d',2) | ...
                  (cat_vol_morph(Yppi==1,'e',2) & Ymr>1.7/3 & Ymr<2.5/3) & (mod(Yar,2)==0)); 
-        case {'C','cerebellum'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
-        case {'B','brain'},      Ymr = Ymr .* (Yar>0);
+        case {'C','ch'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
       end 
      % clear Yar; 
       %%
-      Yppis = Yppi .* (1-Ynw) + max(0,min(1,Ymr*3-2)) .* Ynw;              % adding real WM map 
-      Ywdt  = cat_vol_eidist(1-Yppis,ones(size(Yppis),'single'));          % estimate distance map to central/WM surface
+      Yppis = Yppi .* (1-Ynw) + max(0,min(1,Ymr*3-2)) .* Ynw;                         % adding real WM map 
+      Ywdt  = cat_vol_eidist(1-Yppis,ones(size(Yppis),'single'));                     % estimate distance map to central/WM surface
       Ywdt  = cat_vol_pbtp(max(2,4-Ymfs),Ywdt,inf(size(Ywdt),'single'))*opt.interpV;
-      [D,I] = cat_vbdist(single(Ywdt>0),Yside); Ywdt = Ywdt(I); clear D I;    % add further values around the cortex
-      %%
-      Ywdt  = cat_vol_median3(Ywdt); Ywdt = smooth3(Ywdt);              % smoothing
-      Ywdt  = cat_vol_resize(Ywdt,'deinterp',resI); 
-      Ywdt  = cat_vol_resize(Ywdt,'dereduceBrain',BB);                  % adding background
+      [D,I] = cat_vbdist(single(Ywdt>0.01),Yppis>0); Ywdt = Ywdt(I); clear D I;       % add further values around the cortex
+      Ywdt  = cat_vol_median3(Ywdt,Ywdt>0.01,Ywdt>0.01);                    
+      Ywdt = cat_vol_localstat(Ywdt,Ywdt>0.1,1,1);     % smoothing
+      Ywdt  = cat_vol_resize(Ywdt,'deinterp',resI);                                   % back to original resolution
+      Ywdt  = cat_vol_resize(Ywdt,'dereduceBrain',BB);                                % adding background
       Ywd   = max(Ywd,Ywdt); 
       clear Ywdt;
       
@@ -231,16 +232,15 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       %  correct later for half thickness
       fprintf('%4.0fs\n',etime(clock,stime)); 
       stime = cat_io_cmd('  CSF depth estimation');
-      YM    = single(smooth3(cat_vol_morph(Ymfs>0.5,'o',4))<0.5);               % smooth CSF/background-skull boundary 
-      YM(YM==0)=nan; 
-      Yppis = min(Ymr,Yppi); Yppis(isnan(Yppis))=0;                     % we want also CSF within the ventricle (for tests)
-      Ycdt  = cat_vol_eidist(Yppis,YM); clear Yppis     % distance to the cental/CSF-GM boundary
-      Ycdt  = cat_vol_pbtp(max(2,Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; 
-      Ycdt(~YM)=0;
-      [D,I] = cat_vbdist(single(Ycdt>0),Yside); Ycdt = Ycdt(I); clear D I;    % add further values around the cortex
-      Ycdt  = cat_vol_median3(Ycdt); Ycdt = smooth3(Ycdt);              % smoothing
-      Ycdt  = cat_vol_resize(Ycdt,'deinterp',resI); 
-      Ycdt  = cat_vol_resize(Ycdt,'dereduceBrain',BB); 
+      YM    = single(smooth3(cat_vol_morph(Ymr<0.1,'o',4))<0.5); YM(YM==0)=nan;       % smooth CSF/background-skull boundary 
+      Yppis = Yppi .* ((Ymr+0.25)>Yppi) + min(1,Ymr*3-1) .* ((Ymr+0.25)<=Yppi);       % we want also CSF within the ventricle (for tests)
+      Ycdt  = cat_vol_eidist(Yppis,YM); clear Yppis                                   % distance to the cental/CSF-GM boundary
+      Ycdt  = cat_vol_pbtp(max(2,Ymfs),Ycdt,inf(size(Ycdt),'single'))*opt.interpV; Ycdt(isnan(Ycdt))=0;
+      [D,I] = cat_vbdist(single(Ycdt>0),Yppis>0 & Yppis<3); Ycdt = Ycdt(I); clear D I; % add further values around the cortex
+      Ycdt  = cat_vol_median3(Ycdt,Ycdt>0.01,Ycdt>0.01);                              % median filtering
+      Ycdt = cat_vol_localstat(Ycdt,Ycdt>0.1,1,1);                                    % smoothing
+      Ycdt  = cat_vol_resize(Ycdt,'deinterp',resI);                                   % back to original resolution
+      Ycdt  = cat_vol_resize(Ycdt,'dereduceBrain',BB);                                % adding background
       Ycd   = max(Ycd,Ycdt); 
       clear Ycdt;
       fprintf('%4.0fs\n',etime(clock,stime));
@@ -296,7 +296,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       if isfield(VN,'pinfo'), VN = rmfield(VN,'pinfo'); end
       if isfield(VN,'dat'), VN = rmfield(VN,'dat'); end
       spm_write_vol(VN,255*(Yppi>th_initial));
-      cmd = sprintf('tca -m 10000 -n 1 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
+      cmd = sprintf('tca -m %d -n 1 --delta 20 -i "%s" -o "%s"',1000,VN.fname,VN.fname);
       [ST, RS] = cat_system(cmd); 
       % do not check because tca sometimes fails (due to memory issues ?)
       disp(RS)

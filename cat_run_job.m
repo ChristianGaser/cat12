@@ -348,7 +348,7 @@ function cat_run_job(job,tpm,subj)
                 if job.extopts.expertgui>1
                   bias = max(0,bias - 0.1);                                       % there will allways be some bias
                   bias = double(bias);                                            % SPM need double!
-                  obj.biasreg  = max(0.01,obj.biasreg * 10^round(2*min(1,bias))); % less regularisation in case of bias
+                  obj.biasreg  = min(0.01,obj.biasreg * 10^round(2*min(1,bias))); % less regularisation in case of bias
                   obj.biasfwhm = max(30,obj.biasfwhm  * min(1,max(0.5,1-bias)));  % reduce bias fwhm in case of bias
                   obj.samp     = obj.samp             * min(1,max(0.5,1-bias));   % increase sample distance in case of bias
                   cat_io_cmd(sprintf('  bias~%0.2f >> biasreg=%0.0e; biasfwhm=%0.2f; samp=%0.2f',...

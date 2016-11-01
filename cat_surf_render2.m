@@ -341,6 +341,7 @@ switch lower(action)
         if numel(H.patch==1)
           if strcmp(H.sinfo(1).side,'lh'); cat_surf_render2('view',H,[ -90   0]);  end
           if strcmp(H.sinfo(1).side,'rh'); cat_surf_render2('view',H,[  90   0]);  end
+          if strcmp(H.sinfo(1).side,'ch'); cat_surf_render2('view',H,[  45  45]);  end
         end 
         
         % remember this zoom level
@@ -1496,32 +1497,33 @@ setappdata(H.axis,'handles',H);
 
 %==========================================================================
 function myPostCallback(obj,evt,H)
-%P = findobj(obj,'Tag','CATSurfRender','Type','Patch');
-%if numel(P) == 1
- 
-
+% lighting and rotation update
   if strcmp(get(findobj(obj,'Label','Synchronise Views'),'Checked'),'on')
-    v = get(H.axis,'cameraposition');
+    cam.pos = get(H.axis,'cameraposition');
+    cam.tag = get(H.axis,'CameraTarget'); 
+    cam.vec = get(H.axis,'CameraUpVector');
+    cam.ang = get(H.axis,'CameraViewAngle');
     P = findobj('Tag','CATSurfRender','Type','Patch');
     P = setxor(H.patch,P); 
     if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
     for i=1:numel(P)
         HP = getappdata(ancestor(P(i),'axes'),'handles');
-        set(HP.axis,'cameraposition',v);
+        set(HP.axis,'cameraposition',cam.pos,'CameraUpVector',cam.vec,...
+          'CameraViewAngle',cam.ang,'CameraTarget',cam.tag);
         axis(HP.axis,'image');
         if strcmp(HP.catLighting,'cam') && ~isempty(HP.light), camlight(HP.light(1)); end
     end
   else
     if strcmp(H.light(1).Visible,'on'), camlight(H.light(1)); end
   end  
-  
+%P = findobj(obj,'Tag','CATSurfRender','Type','Patch');
+%if numel(P) == 1
 %else
 %    for i=1:numel(P)
 %        H = getappdata(ancestor(P(i),'axes'),'handles');
 %        if strcmp(H.light(1).Visible,'on') && ~isempty(H.light), camlight(H.light(1)); end
 %    end
 %end
-
 %==========================================================================
 function varargout = myCrossBar(varargin)
 
@@ -2029,16 +2031,22 @@ cat_surf_render2('Slider',H,toggle(get(obj,'Checked')));
 function mySynchroniseViewsOnce(obj,evt,H)
 P = findobj('Tag','CATSurfRender','Type','Patch');
 v = get(H.axis,'cameraposition');
+a = get(H.axis,'CameraUpVector');
+b = get(H.axis,'CameraViewAngle');
 for i=1:numel(P)
     H = getappdata(ancestor(P(i),'axes'),'handles');
-    set(H.axis,'cameraposition',v);
+    set(H.axis,'cameraposition',v,'CameraUpVector',a,'CameraViewAngle',b);
     axis(H.axis,'image');
     if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1)); end
 end
 %==========================================================================
 function mySynchroniseViews(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
-set(obj,'Checked',toggle(get(obj,'Checked')));
+HP = findobj(obj,'Label','Synchronise Views');
+check = toggle(get(obj,'Checked')); 
+for HPi=1:numel(HP)    
+  set(HP(HPi),'Checked',check);
+end
 %==========================================================================
 function myDataCursor(obj,evt,H)
 dcm_obj = datacursormode(H.figure);
