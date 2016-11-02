@@ -1856,7 +1856,7 @@ if job.output.ROI
   FA  = {}; fai = 1;
   AN  = fieldnames(job.output.atlases);
   for ai = 1:numel(AN)
-    fafi = find(cellfun('isempty',strfind(FAF(:,1),AN{ai}))==0);
+    fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
     if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end
   end
   
@@ -1916,7 +1916,7 @@ if job.output.ROI
     transa.odim = transw.odim;
     wYa   = cat_vol_ROInorm([],transa,ai,0,FA);
 
-    %% write output
+    % write output
     if any(cell2mat(struct2cell(job.output.atlas)'))
       % map atlas in native space
       Vlai = spm_vol(FA{ai,1});
@@ -1957,7 +1957,7 @@ if job.output.ROI
   cat_io_cmd(' ','g5','',job.extopts.verb,stime2);
   cat_io_cmd('','n','',1,stime);
 end
-%clear wYp0 wYcls wYv trans
+clear wYp0 wYcls wYv trans
 
 
 %% ---------------------------------------------------------------------
