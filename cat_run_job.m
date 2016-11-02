@@ -354,8 +354,11 @@ function cat_run_job(job,tpm,subj)
                   cat_io_cmd(sprintf('  bias~%0.2f >> biasreg=%0.0e; biasfwhm=%0.2f; samp=%0.2f',...
                     bias,obj.biasreg,obj.biasfwhm,obj.samp),'','',1,stime); 
                   fprintf('\n');
+                  stime = cat_io_cmd('Coarse affine registration','','',1); 
+                else 
+                  stime = cat_io_cmd('Coarse affine registration','','',1,stime); 
                 end
-                stime = cat_io_cmd('Coarse affine registration','','',1); 
+                
 
                 % write data to VF
                 VF.dt         = [spm_type('UINT8') spm_platform('bigend')];

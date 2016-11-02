@@ -164,9 +164,24 @@ function job = update_job(job)
     def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
     def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
   end
-  def.extopts.lazy  = 0;
-  def.opts.fwhm     = 1;
-  def.nproc         = 0; 
+  def.extopts.lazy   = 0;
+  def.opts.fwhm      = 1;
+  def.nproc          = 0; 
+  
+  % ROI atlas maps
+  atlas   = cat_get_defaults('extopts.atlas'); 
+  for ai = 1:size(atlas,1)
+    if atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && exist(atlas{ai,1},'file')
+      [pp,ff,ee]  = spm_fileparts(atlas{ai,1}); 
+      try
+        cat_get_defaults(['output.atlases.' ff]);
+      catch
+        cat_get_defaults(['output.atlases.' ff], atlas{ai,4})
+      end
+      def.output.atlases.(ff) = cat_get_defaults(['output.atlases.' ff]);
+    end
+  end
+  
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  

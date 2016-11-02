@@ -192,19 +192,21 @@ cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report and
 % expert options - ROIs
 %=======================================================================
 % ROI maps from different sources mapped to Dartel CAT-space of IXI-template
-%  { filename , refinement , tissue }
-%  filename    = ''                                                     - path to the ROI-file
-%  refinement  = ['brain','tissue','gm','none']                         - not working                  
-%  tissue      = {['csf','gm','wm','brain','none']}                     - tissue classes for volume estimation
+%  { filename , GUIlevel , tissue , use }
+%  filename    = ''                                  - path to the ROI-file
+%  GUIlevel    = [ 0 | 1 | 2 ]                       - avaible in GUI level         
+%  tissue      = {['csf','gm','wm','brain','none']}  - tissue classes for volume estimation
+%  use         = [ 0 | 1 ]                           - default setting to use this atlas 
 cat.extopts.atlas       = { ... 
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             'none'      {'csf','gm','wm'}; ... % atlas based on 20 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  'none'      {'csf','gm'};      ... % atlas based on 35 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              'none'      {'gm'};            ... % atlas based on 40 subjects
-% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               'none'      {'gm','wm'};       ... % 5 subjects, 0.33mm voxel size 
-% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                'none'      {'csf','gm'};      ... % less regions than hammers, 18 subjects, low T1 image quality
-% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 'none'      {'gm'};            ... % only one subject 
-% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                'none'      {'gm','wm'};       ... % only one subject, but with WM regions
-% fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             'none'      {'gm','wm'};      ... % ROIs requires further work >> use Anatomy toolbox
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             0      {'csf','gm','wm'}   1; ... % atlas based on 20 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              1; ... % atlas based on 40 subjects
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               1      {'gm','wm'}         0; ... % 5 subjects, 0.33mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobraHR.nii')             1      {'gm','wm'}         0; ... % 5 subjects, 0.33mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                2      {'csf','gm'}        0; ... % less regions than hammers, 18 subjects, low T1 image quality
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 2      {'gm'}              0; ... % only one subject 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                2      {'gm','wm'}         0; ... % only one subject, but with WM regions
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             2      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
 }; 
 
 %=======================================================================
