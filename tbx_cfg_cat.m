@@ -137,6 +137,43 @@ ROI.help   = {
   ''
   ''
 };
+
+if expert
+  %%
+  atlas   = cat_get_defaults('extopts.atlas'); 
+  matlas = {}; mai = 1; 
+  for ai = 1:size(atlas,1)
+    if atlas{ai,2}<=expert && exist(atlas{ai,1},'file')
+      [pp,ff,ee]  = spm_fileparts(atlas{ai,1}); 
+
+      try
+        cat_get_defaults(['output.atlases.' ff]);
+      catch
+        cat_get_defaults(['output.atlases.' ff], atlas{ai,4})
+      end
+      
+      matlas{mai}        = cfg_menu;
+      matlas{mai}.tag    = ff;
+      matlas{mai}.name   = ff; 
+      matlas{mai}.labels = {'No','Yes'};
+      matlas{mai}.values = {0 1};
+      matlas{mai}.def    = @(val)cat_get_defaults(['output.atlases.' ff], val{:});
+      matlas{mai}.help   = {
+        ''
+      };
+      mai = mai+1; 
+    end
+  end
+  
+  atlases        = cfg_branch;
+  atlases.tag      = 'atlases';
+  atlases.name     = 'Atlases';
+  atlases.val      = matlas;
+  atlases.help     = {'Options to produce ROI data.'
+  ''
+  };
+
+end
  
 native        = cfg_menu;
 native.tag    = 'native';
@@ -361,9 +398,9 @@ output      = cfg_branch;
 output.tag  = 'output';
 output.name = 'Writing options';
 if expert==2
-  output.val  = {ROI surface grey white csf wmh tpmc atlas label bias las jacobian warps}; 
+  output.val  = {ROI atlases surface grey white csf wmh tpmc atlas label bias las jacobian warps}; 
 elseif expert==1
-  output.val  = {ROI surface grey white csf wmh label bias las jacobian warps};
+  output.val  = {ROI atlases surface grey white csf wmh label bias las jacobian warps};
 else
   output.val  = {ROI surface grey white bias jacobian warps};
 end
@@ -414,9 +451,9 @@ estwrite.help   = {
 extopts_spm = cat_conf_extopts(expert,1);   
 output_spm  = output; 
 if expert==2
-  output_spm.val  = {ROI surface grey_spm white_spm csf_spm label jacobian warps}; 
+  output_spm.val  = {ROI atlases surface grey_spm white_spm csf_spm label jacobian warps}; 
 elseif expert==1
-  output_spm.val  = {ROI surface grey_spm white_spm csf_spm jacobian warps};
+  output_spm.val  = {ROI atlases surface grey_spm white_spm csf_spm jacobian warps};
 else % also CSF output because it is requiered as input ...
   output_spm.val  = {surface grey_spm white_spm csf_spm jacobian warps};
 end
