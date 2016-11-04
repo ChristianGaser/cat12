@@ -13061,6 +13061,7 @@ M       tbx_cfg_cat.m
 (2)  Changed:  Added atlas selection to expert/developer GUI
 
 ------------------------------------------------------------------------
+r1063 | dahnke | 2016-11-02 17:56:10 +0100 (Mi, 02 Nov 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13068,5 +13069,21 @@ M       cat_main.m
 
 (1)  Fixed:   Corrected small errors in ROI atlas selection.
 
+
 ------------------------------------------------------------------------
-r1063 | dahnke | 2016-11-02 17:55:58
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_main_gcut.m
+M       cat_main_gcut_DEV.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Changed: Added information that ROI estimates are in native space to manual.
+(2) Changed: Replaced "Ventricle closing" by "Ventricle filling"
+(3) Changed: Changed paramter for tca back to 10000 for largest component.
+------------------------------------------------------------------------
+r1064 | gaser | 2016-11-04 13:14:56
