@@ -149,7 +149,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Ybs = single(Yb); spm_smooth(Ybs,Ybs,4*gc.s./vx_vol); Yb   = Yb | (Ybs>(gc.s-0.2) & Ym<1.25/3);
   
   %% filling of ventricles and smooth mask
-  stime = cat_io_cmd('  Ventricle closing','g5','',opt.verb,stime); dispc=dispc+1; %#ok<*NASGU>
+  stime = cat_io_cmd('  Ventricle filling','g5','',opt.verb,stime); dispc=dispc+1; %#ok<*NASGU>
   [Ybr,resT3] = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(1,cat_stat_nanmean(vx_vol)*2),32,'meanm'); 
   Ybr = cat_vol_morph(Ybr>0.5,'labclose',gc.f/mean(resT3.vx_volr));
   Ybr = cat_vol_resize(Ybr,'dereduceV',resT3)>0.5; 
