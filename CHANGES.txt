@@ -13071,6 +13071,7 @@ M       cat_main.m
 
 
 ------------------------------------------------------------------------
+r1064 | gaser | 2016-11-04 13:15:13 +0100 (Fr, 04 Nov 2016) | 14 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -13085,5 +13086,16 @@ M       html/cat.html
 (1) Changed: Added information that ROI estimates are in native space to manual.
 (2) Changed: Replaced "Ventricle closing" by "Ventricle filling"
 (3) Changed: Changed paramter for tca back to 10000 for largest component.
+
 ------------------------------------------------------------------------
-r1064 | gaser | 2016-11-04 13:14:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+(1) Changed: Added new plot to cat_surf_results and changed positions and 
+    saving.
+(2) Changed: Added use of "y" as global variable in cat12.m for calling
+    cat_surf_results.m
+------------------------------------------------------------------------
+r1065 | gaser | 2016-11-05 17:22:06
