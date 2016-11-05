@@ -1,11 +1,9 @@
 function y = cat_surf_results(action,varargin)
 % Visualise results for both hemispheres of surface-based analysis (preferable on log P-maps)
 %
-% FORMAT y = cat_surf_results('Disp',leftSurface,rightSurface,[show_warning])
+% FORMAT y = cat_surf_results('Disp',leftSurface,rightSurface)
 % leftSurface  - a GIfTI filename/object or patch structure
 % rightSurface - a GIfTI filename/object or patch structure
-% show_warning - (default 1) show warning if filenames differ (it is very likely that even if they are 
-%                in different folders for each hemisphere and have the same name)
 %
 % y            - adjusted or predicted response
 %_______________________________________________________________________
@@ -33,6 +31,8 @@ H.data_n   = [1 3];
 H.bkg_col  = [0 0 0];
 H.show_inv = 0;
 H.transp   = 1;
+H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
+H.FS       = spm('FontSizes');
 H.cursor_mode  = 1;
 
 %-Action
@@ -43,22 +43,21 @@ switch lower(action)
     %======================================================================
     case 'disp'
 
-        % positions & font size
-        FS = spm('FontSizes');
+        % positions
         ws = spm('Winsize','Graphics');
         ss = get(0,'Screensize');
         if 2.6*ws(3) > ss(3)
             ws(3) = ws(3)/(2.6*ws(3)/ss(3));  
         end
         
-        
-        % result window with 5 surface views and alternative positions without top view
-        H.viewpos = {[0.075 0.450 0.325 0.325;  0.150 0.550 0.325 0.325],... % lh medial
-                     [0.075 0.050 0.325 0.325;  0.150 0.150 0.325 0.325],... % lh lateral
-                     [0.600 0.450 0.325 0.325;  0.525 0.550 0.325 0.325],... % rh medial
-                     [0.600 0.050 0.325 0.325;  0.525 0.150 0.325 0.325],... % rh lateral
-                     [0.300 0.180 0.400 0.400;  0.300 2.000 0.400 0.400]};   % lh+rh top
-                     
+        % result window with 5 surface views and alternative positions without top view                     
+        H.viewpos = {[0.025 0.450 0.375 0.375;  0.025 0.450 0.375 0.375],... % lh medial
+                     [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375],... % lh lateral
+                     [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375],... % rh medial
+                     [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375],... % rh lateral
+                     [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
+                     [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225]};   % data plot
+
         % figure 1 with result window
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
@@ -76,10 +75,6 @@ switch lower(action)
           'inv',   [0.050 0.600 0.425 0.050],... 
           'ovmin', [0.050 0.400 0.425 0.150],'ovmax', [0.525 0.400 0.425 0.150],... 
           'save',  [0.050 0.050 0.425 0.050],'close', [0.525 0.050 0.425 0.050]);   
-
-        % figure 3 with data plot
-        H.pos{3} = struct(...
-            'fig',   [10  30+ws(3)  ws(3) 0.5*ws(3)]);
 
         % create figures 1+2
         for i=1:2
@@ -366,6 +361,7 @@ switch lower(action)
           H.dcm_obj = datacursormode(H.figure(1));
           set(H.dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
             'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas, H});
+          figure(H.figure(2))
         
       end    
 
@@ -760,6 +756,11 @@ for ind = 1:5
   display_results(ind, H.viewpos{ind}(~H.view+1,:), vv(ind,:));
 end
 
+% add dataplot area which is used later
+H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+H.figure(1) = ancestor(H.dataplot,'figure');
+figure(H.figure(1)); axes(H.dataplot);
+
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:)~=0);
 ind2 = find(H.S{2}.Y(:)~=0);
@@ -768,16 +769,16 @@ ind2 = find(H.S{2}.Y(:)~=0);
 if ~isempty(ind1) && ~isempty(ind2)
   H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
   H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
-  H.S{1}.min = min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:)));
-  H.S{1}.max = max(max(H.S{1}.Y(:)),max(H.S{2}.Y(:)));
+  H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))),min(H.S{2}.Y(~isinf(H.S{2}.Y))));
+  H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y))),max(H.S{2}.Y(~isinf(H.S{2}.Y))));
 elseif isempty(ind1)
   H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:)>0));
-  H.S{1}.min = min(H.S{2}.Y(:));
-  H.S{1}.max = max(H.S{2}.Y(:));
+  H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{1}.Y)));
+  H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y)));
 elseif isempty(ind2)
   H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
-  H.S{1}.min = min(H.S{1}.Y(:));
-  H.S{1}.max = max(H.S{1}.Y(:));
+  H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y)));
+  H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y)));
 end
 
 % deal with neg. values
@@ -1215,6 +1216,13 @@ function save_image(obj,event_obj,filename)
 global H
   %%
   
+  dcm_obj = datacursormode(H.figure(1));
+
+  set(dcm_obj, 'Enable','off');
+  figure(H.figure(1))
+  try
+    delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+  end
   if ~exist('filename','var')
 
     nm = H.S{1}.info(1).ff;
@@ -1272,28 +1280,14 @@ global H
       filename = fullfile(pth,[nam '.png']);
     end
   end
-  
-  try
-    FS = get(H.colourbar,'FontSize');
-    FU = get(H.colourbar,'FontUnits');
- 
-    set(H.colourbar,'FontUnits','Normalized','FontSize',0.15);
-    changed_font = 1;
-  catch
-    changed_font = 0;
-  end
-  
+    
   % keep background color
-  set(H.figure(1),'InvertHardcopy','off');
+  set(H.figure(1),'InvertHardcopy','off','PaperPositionMode','auto');
   
   if isdeployed
       deployprint(H.figure(1), '-dpng', '-opengl', filename);
   else
       print(H.figure(1), '-dpng', '-r300', '-opengl',filename);
-  end
-
-  if changed_font
-    set(H.colourbar,'FontUnits',FU,'FontSize',FS);
   end
 
 %==========================================================================
@@ -1403,6 +1397,10 @@ if ~H.disable_cbar
   H = show_colorbar(H);
 end
 
+if isfield(H,'dataplot')
+  set(H.dataplot,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col,'Color',H.bkg_col);
+end
+
 %==========================================================================
 function checkbox_info(obj, event_obj)
 global H
@@ -1476,6 +1474,8 @@ if view ~= H.view
     set(Ha,'position',H.viewpos{ind}(~view+1,:),'View',vv(ind,:));
   end
   
+  set(H.dataplot,'Position',H.viewpos{6}(~view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+  
   % save view
   H.view = view;
 end
@@ -1491,27 +1491,19 @@ dcm_obj = datacursormode(H.figure(1));
 switch H.cursor_mode
 
   case 0 % disable and delete datatip
-    set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
-        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
-    figure(H.figure(1))
-    delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
     rotate3d off;
-    try, close(H.figure(3)); end
     
+    clearDataCursorPlot(H)
   case {1,2}
+    clearDataCursorPlot(H)
+
     set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
-    try, close(H.figure(3)); end
-        
   case {3,4}
     figure(H.figure(1))
     try
       delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
     end
-    
-    H.figure(3) = figure(3+11);
-    set(H.figure(3),'MenuBar','none','Position',H.pos{3}.fig,...
-        'Name','Plot','NumberTitle','off');
     
     SPM_found = 1;
     for i=1:2
@@ -1526,28 +1518,43 @@ switch H.cursor_mode
           str   = 'predicted or adjusted values?';
           H.predicted = spm_input(str,2,'b',{'predicted','adjusted'},[1 0]);
         end
-      else
+      elseif ~isempty(H.S{i}.name)
         SPM_found = 0;
         spm('alert!','No SPM.mat file found.\nPlease check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.',1);
       end
     end
     if SPM_found
       set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
-        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorCluster,H.cursor_mode-3});
+        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorCluster});
     end
   case 5 % enable/disable rotate3d
-    set(dcm_obj, 'Enable','off', 'SnapToDataVertex','on', ...
-        'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
-    figure(H.figure(1))
-    delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+    clearDataCursorPlot(H)
     rotate3d;
     disp('Use mouse to rotate views.');
 end
 
 %==========================================================================
-function txt = myDataCursorCluster(obj,evt,plot_mean)
-global H y
+function  clearDataCursorPlot(H)
+if isfield(H,'dataplot')
+  cla(H.dataplot)
+  
+  % hide labels and scale
+  set(H.dataplot,'XColor',H.bkg_col,'YColor',H.bkg_col);
+  xlabel(H.dataplot,'                                ')
+  ylabel(H.dataplot,'                                ')
+end
 
+set(dcm_obj, 'Enable','off');
+figure(H.figure(1))
+try
+  delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
+end
+
+%==========================================================================
+function txt = myDataCursorCluster(obj,evt)
+global y H
+
+plot_mean = H.cursor_mode-3;
 pos = get(evt,'Position');
 
 i = ismember(get(H.patch(1),'vertices'),pos,'rows');
@@ -1643,18 +1650,41 @@ else
   txt = {sprintf('Node %d',node)};
 end
 
-y = get_cluster_data(H,XYZ,ind);
-figure(H.figure(3))
-if plot_mean
-  y = mean(y,2);
-  if isempty(found_node)
-    y(:) = 0;
-  end
+[y, cbeta, CI] = get_cluster_data(H,XYZ,ind);
+
+if plot_mean && isempty(found_node)
+  y(:) = 0;
 end
-plot(y)
+
+cla(H.dataplot)
+hold(H.dataplot,'on')
+set(H.dataplot,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
+
+h     = bar(H.dataplot,cbeta);
+set(h,'FaceColor',H.Col(2,:))
+
+% standard error
+%--------------------------------------------------------------
+CI    = CI / 2;
+for j = 1:length(cbeta)
+  line([j j],([CI(j) -CI(j)] + cbeta(j)),'LineWidth',6,'Color',H.Col(3,:),'Parent',H.dataplot)
+end
+
+TTLstr = {H.SPM{round(ind/2)}.xCon(H.Ic).name};
+xlabel(H.dataplot,TTLstr,'FontSize',H.FS(12),'Color',1-H.bkg_col)
+if plot_mean
+  ylabel(H.dataplot,sprintf('contrast estimate\ninside cluster'),'FontSize',H.FS(12),'Color',1-H.bkg_col)
+else
+  ylabel(H.dataplot,'contrast estimate','FontSize',H.FS(12),'Color',1-H.bkg_col)
+end
+
+set(H.dataplot,'XLim',[0.4 (length(cbeta) + 0.6)],'XTicklabel',num2str((1:length(cbeta))'),'XTick',1:length(cbeta))
+hold(H.dataplot,'off')
+rmfield(H,'dataplot');
+
 
 %==========================================================================
-function y = get_cluster_data(H,XYZ, ind)
+function [y, cbeta, CI] = get_cluster_data(H,XYZ, ind)
 
 SPM = H.SPM{round(ind/2)};
 Ic = H.Ic;
@@ -1668,9 +1698,17 @@ R   = spm_sp('r',SPM.xX.xKXs,y);
 beta   = spm_data_read(SPM.Vbeta,'xyz',XYZ);
 ResMS = spm_data_read(SPM.VResMS,'xyz',XYZ);
 
+ResMS = mean(ResMS,2);
+Bcov  = ResMS*SPM.xX.Bcov;
+
 % compute contrast of parameter estimates and 90% C.I.
 %------------------------------------------------------------------
 cbeta = SPM.xCon(Ic).c'*beta;
+cbeta = mean(cbeta,2);
+
+CI    = 1.6449;  % = spm_invNcdf(1 - 0.05);
+SE    = sqrt(diag(SPM.xCon(Ic).c'*Bcov*SPM.xCon(Ic).c));
+CI    = CI*SE;
 
 % predicted or adjusted response
 %------------------------------------------------------------------
@@ -1691,6 +1729,7 @@ end
 % adjusted data
 %------------------------------------------------------------------
 y     = Y + R;
+y = mean(y,2);
 
 if 0
 H.y{i} = H.y{i} - SPM.xX.xKXs.X * beta;
