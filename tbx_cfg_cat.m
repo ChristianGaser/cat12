@@ -158,9 +158,23 @@ if expert
       matlas{mai}.labels = {'No','Yes'};
       matlas{mai}.values = {0 1};
       matlas{mai}.def    = @(val)cat_get_defaults(['output.atlases.' ff], val{:});
-      matlas{mai}.help   = {
-        ''
-      };
+      txtfile = fullfile(pp,[ff '.txt']);
+      if exist(txtfile,'file')
+        fid = fopen(txtfile,'r');
+        txt = textscan(fid,'%s','delimiter','\n');
+        fclose(fid);
+        matlas{mai}.help   = [{ 
+          'Processing flag of this atlas map.'
+          ''
+          }
+          txt{1}];
+      else
+        matlas{mai}.help   = {
+          'Processing flag of this atlas map.'
+          ''
+          ['No atlas readme text file "' textfile '"!']
+        };
+      end
       mai = mai+1; 
     end
   end
@@ -169,7 +183,7 @@ if expert
   atlases.tag      = 'atlases';
   atlases.name     = 'Atlases';
   atlases.val      = matlas;
-  atlases.help     = {'Options to produce ROI data.'
+  atlases.help     = {'Writing options of ROI atlas maps.'
   ''
   };
 

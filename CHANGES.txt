@@ -13100,6 +13100,7 @@ M       cat_surf_results.m
     cat_surf_results.m
 
 ------------------------------------------------------------------------
+r1066 | gaser | 2016-11-07 09:21:32 +0100 (Mo, 07 Nov 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13107,5 +13108,29 @@ M       cat_surf_results.m
 
 (1) Changed: some cosmetic changes to cat_surf_result.m
 
+
 ------------------------------------------------------------------------
-r1066 | gaser | 2016-11-07 09:21:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_surf_createCS.m
+M       cat_surf_gyrification.m
+M       cat_tst_cattest.m
+M       html/cat_FAQ.html
+M       internal/cat_io_volctype.m
+M       tbx_cfg_cat.m
+M       templates_1.50mm/aal.nii
+M       templates_1.50mm/cat.nii
+M       templates_1.50mm/cobra.nii
+D       templates_1.50mm/l1A.nii
+M       templates_1.50mm/lpba40.nii
+
+(1) Fixed:    Updated cobra atlas to HR version. 
+(2) Fixed:    Set aal, lpba40 and cat atlas map to uint8.
+(3) Changed:  Use atlas text file for GUI help of each atlas.
+(4) Fixed:    Small corrections in developer WM depth maps in "cat_surf_createCS".  
+
+------------------------------------------------------------------------
+r1067 | dahnke | 2016-11-07 15:10:48

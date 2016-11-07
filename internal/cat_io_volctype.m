@@ -19,7 +19,7 @@ function cat_io_volctype(varargin)
       job = varargin{1};
   end
   def.prefix    = ''; 
-  def.force     = 0; 
+  def.force     = 1; 
   def.overwrite = 1;
   job = cat_io_checkinopt(job,def); 
 
@@ -105,7 +105,7 @@ function cat_io_volctype(varargin)
         end
       end
       
-      if isempty(job.prefix) && (job.overwrite==1 || job.overwrite=='y')
+      if isempty(job.prefix) && (job.overwrite==0 || job.overwrite=='n')
         prefix = [spm_type(ctype) '_'];
       else
         prefix = job.prefix; 
@@ -113,6 +113,7 @@ function cat_io_volctype(varargin)
       
       V.fname    = fullfile(pp,[prefix ff ee]);
       if exist(V.fname,'file'), delete(V.fname); end
+      V = rmfield(V,'private');
       spm_write_vol(V,Y);
     end
     spm_progress_bar('Set',si);
