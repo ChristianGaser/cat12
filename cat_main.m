@@ -1790,17 +1790,6 @@ if job.output.surface
   % brain masking and correction of blood vessels 
   Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   Ymim = Ymi .* (Yp0>0.5); 
-  %{
-  Ydiv = cat_vol_div(Ymi,vx_vol);   
-  YM   = cat_vol_morph(Yp0>0.5,'d'); 
-  Ymim = (YM & ~(Yp0>0.5 | (YM & Ym<1.5/3)))*1/3 + Ymi .* (Yp0>0.5 | (YM & Ym<1.5/3));
-  YM   = ((Ymim.*(Yp0>1) - Yp0/3)>0.2 & Ymim>0.9) | ((Ymim - Ydiv)>1.3 & Ymim>0 | (YM & Yp0<=1 & Ym>1.5/3)); clear Ydiv; 
-  Ymim(YM) = 1/3; 
-  YM   = cat_vol_morph(YM,'d'); 
-  Ymim = cat_vol_median3(Ymim,YM,Ymim>0); 
-  Ymim = cat_vol_median3(Ymim,YM,Ymim>0); 
-  Ymims = cat_vol_localstat(Ymim,YM,1,1); Ymim(Ymims>0) = Ymims(Ymims>0); clear Ymims YM Yp0;
-  %}
   
   % surface creation and thickness estimation
   % Add a try-catch-block to handle special problems of surface

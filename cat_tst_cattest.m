@@ -144,6 +144,7 @@ function cat_tst_cattest(job)
     'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.vox'         'vox'        {1}; 
     'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.pbtres'      'pbtres'     {0.25 1};   
   };
+  def.paralevel = 0;
   job = cat_io_checkinopt(job,def);
   
   
