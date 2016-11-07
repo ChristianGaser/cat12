@@ -256,32 +256,34 @@ switch lower(action)
           [pth{2},nm2,ext2] = spm_fileparts(H.S{2}.name(1,:));
           
           % SPM.mat found for both hemispheres (not working yet)
-          if strcmp([nm1 ext1],'SPM.mat') && strcmp([nm2 ext2],'SPM.mat')
+          if strcmp([nm1 ext1],'SPM.mat') || strcmp([nm2 ext2],'SPM.mat')
             H.logP = 0;
             
-            for ind=1:2
-              swd1 = pwd;
-              spm_figure('GetWin','Interactive');
-              cd(pth{ind})
-              xSPM.swd = pwd;
-              [xSPM,v] = spm_getSPM(xSPM);
-              cd(swd1);
+            if strcmp([nm1 ext1],'SPM.mat')
+              ind = 1;
+            else ind = 2; end
+            
+            swd1 = pwd;
+            spm_figure('GetWin','Interactive');
+            cd(pth{ind})
+            xSPM.swd = pwd;
+            [xSPM,v] = spm_getSPM(xSPM);
+            cd(swd1);
               
-              dat = struct('XYZ', v.XYZ,...
+            dat = struct('XYZ', v.XYZ,...
                              't', v.Z',...
                            'mat', v.M,...
                            'dim', v.DIM,...
                            'dat', v.Z');
               
-              H.S{ind}.info = cat_surf_info(H.S{ind}.name,0); 
-              g = gifti(H.S{ind}.info.Pmesh);
+            H.S{ind}.info = cat_surf_info(H.S{ind}.name,0); 
+            g = gifti(H.S{ind}.info.Pmesh);
 
-              mat    = v.M;
-              V = g.vertices;
-              XYZ        = double(inv(mat)*[V';ones(1,size(V,1))]);
-              H.S{ind}.Y = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
-              H.S{ind}.Y = spm_mesh_project(g.vertices,dat)';
-            end
+            mat    = v.M;
+            V = g.vertices;
+            XYZ        = double(inv(mat)*[V';ones(1,size(V,1))]);
+            H.S{ind}.Y = spm_sample_vol(Y,XYZ(1,:),XYZ(2,:),XYZ(3,:),0)';
+            H.S{ind}.Y = spm_mesh_project(g.vertices,dat)';
           else
           
             H.logP = 1;
@@ -314,6 +316,7 @@ switch lower(action)
                   H.logP = 0;
                 end
               end
+              
             end
           end
           
@@ -1544,9 +1547,9 @@ if isfield(H,'dataplot')
   ylabel(H.dataplot,'                                ')
 end
 
-set(dcm_obj, 'Enable','off');
 figure(H.figure(1))
 try
+  set(dcm_obj, 'Enable','off');
   delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
 end
 
@@ -1670,8 +1673,17 @@ for j = 1:length(cbeta)
   line([j j],([CI(j) -CI(j)] + cbeta(j)),'LineWidth',6,'Color',H.Col(3,:),'Parent',H.dataplot)
 end
 
-TTLstr = {H.SPM{round(ind/2)}.xCon(H.Ic).name};
-xlabel(H.dataplot,TTLstr,'FontSize',H.FS(12),'Color',1-H.bkg_col)
+Ic = H.Ic;
+nm = H.S{1}.info(1).ff;
+
+% end with _0???.ext?
+if length(nm) > 4
+  if strcmp(nm(length(nm)-4:length(nm)-3),'_0') 
+    Ic = str2double(nm(length(nm)-3:length(nm)));
+  end
+end
+
+xlabel(H.dataplot,H.SPM{round(ind/2)}.xCon(Ic).name,'FontSize',H.FS(12),'Color',1-H.bkg_col)
 if plot_mean
   ylabel(H.dataplot,sprintf('contrast estimate\ninside cluster'),'FontSize',H.FS(12),'Color',1-H.bkg_col)
 else
