@@ -97,8 +97,8 @@ function PSgi = cat_surf_gyrification(type,PS,opt)
   def.normalize = 2;  % inflate only: normalization: 0 - none, 1 - by smooth, 2 - by smoothed and hull
 
   def.GIpresmooth    = 60; % laplacian only: shoold to be greater than 20 .. vary by brain size? 
-  def.GIstreamopt(1) = 0.01; % 0.05 
-  def.GIstreamopt(2) = 1000 ./ def.GIstreamopt(1);
+  def.GIstreamopt(1) = 0.01; % stepsize of streamlines in mm... fast=0.05 - 0.01  
+  def.GIstreamopt(2) = 30 ./ def.GIstreamopt(1); % in mm
   def.GIwritehull    = 1;  % write laplace laplacian hull surface
   
   def.avgsurf   = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',sinfo.side));      % fsaverage central
@@ -357,7 +357,7 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   Ac = cat_surf_smootharea(S,opt.GIpresmooth);
   Ah = cat_surf_smootharea(SH,opt.GIpresmooth);
   
-  GI  = Ac ./ Ah; 
+  GI  = Ac ./ max(eps,Ah); 
   % GI  = Ah ./ Ac; % inverse GI 
   % hist(GI(GI<4 & GI>0.01),0:0.1:4)
   cat_io_FreeSurfer('write_surf_data',Psgi,GI);
