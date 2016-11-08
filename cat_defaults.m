@@ -201,7 +201,7 @@ cat.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','hammers.nii')             0      {'csf','gm','wm'}   1; ... % atlas based on 20 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','neuromorphometrics.nii')  0      {'csf','gm'}        1; ... % atlas based on 35 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              1; ... % atlas based on 40 subjects
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               1      {'gm','wm'}         0; ... % hippocampus-cerebellum, 5 subjects, 0.6 mm voxel size 
+  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               1      {'gm','wm'}         0; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                2      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 2      {'gm'}              0; ... % many regions, but only labeled on one subject 
   ... fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                2      {'gm','wm'}         0; ... % only one subject, but with WM regions

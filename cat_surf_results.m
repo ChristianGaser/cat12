@@ -902,11 +902,11 @@ if numel(H.S{1}.info) == 1
     % save original XTick values
     if isempty(H.XTick), H.XTick = XTick; end
 
-    % if threshold is 1.3 (p<0.05) change XTick accordingly and correct by 0.3
+    % if threshold is between 1.3..1.4 (p<0.05) change XTick accordingly and correct by 0.3
     if ~isempty(clip)
-      if clip(3) == 1.3
+      if clip(3) >= 1.3 && clip(3) <= 1.4 
         XTick_step = round((clim(3)-clim(2))/5);
-        if clip(2) == -1.3
+        if clip(2) <= -1.3 && clip(2) >= -1.4
           XTick = [(round(clim(2))-0.3):XTick_step:-1.3 0 1.3:XTick_step:(round(clim(3))+0.3)];
         else
           XTick = [0 1.3:XTick_step:(round(clim(3))+0.3)];
