@@ -308,7 +308,7 @@ function [SH,V] = cat_surf_hull(S)
   V(I) = 1; clear I; 
   
   % 
-  V  = cat_vol_morph(V,'lc',8);  % closing 
+  V  = cat_vol_morph(V,'lc',mean(size(V))/6); % closing 
   V  = cat_vol_smooth3X(V,2);    % smoothing
   SH = isosurface(V,0.4);        % create hull 
   V  = V>0.4;

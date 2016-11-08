@@ -13147,6 +13147,7 @@ Changed: Fonts should be now hopefully printed correctly while saving images
 in cat_surf_results.m and cat_vol_slice_overlay.m.
 
 ------------------------------------------------------------------------
+r1069 | gaser | 2016-11-08 15:27:45 +0100 (Di, 08 Nov 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13154,5 +13155,21 @@ M       cat_stat_spm2x.m
 
 Changed: Conversion of TFCE log-p maps is now supported in cat_stat_spm2x.m if 
 no conversion is selected.
+
 ------------------------------------------------------------------------
-r1069 | gaser | 2016-11-08 15:27:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_epivolsurf.m
+M       cat_surf_fun.m
+M       cat_surf_gyrification.m
+M       ds.m
+
+(1) Fixed:    Corrected smoothing problem in Laplacian GI estimation in 
+              "cat_surf_gyrification" and "cat_surf_epivolsurf". 
+(2) Fixed:    Corrected error in hull estimation in "cat_surf_fun".
+(3) Changed:  Added surface render to "ds".
+
+
+------------------------------------------------------------------------
+r1070 | dahnke | 2016-11-08 15:41:01

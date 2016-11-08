@@ -24,7 +24,35 @@ function varargout=ds(type,viewtype,DAR,varargin)
     case {2,'a','axial'},  for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); end; DAR=DAR([3 1 2]); 
     case {0,'c','coronal'}
   end
- 
+  
+  if isstruct(varargin{1}) && isfield(varargin{1},'vertices') && isfield(varargin{1},'faces')
+    figure
+    
+    SX.vertices = varargin{1}.vertices; 
+    SX.faces    = varargin{1}.faces;
+    if numel(varargin)>1 && numel(varargin{2})==size(varargin{1}.vertices,1)
+      SX.facevertexcdata = varargin{2};
+    elseif isfield(varargin{1},'cdata')
+      SX.facevertexcdata = varargin{1}.cdata;
+    elseif isfield(varargin{1},'facevertexcdata')
+      SX.facevertexcdata = varargin{1}.facevertexcdata;
+    end
+    
+    pSX = patch(SX);
+    axis equal off
+    set(pSX,'edgecolor','none')
+    if isfield(SX,'facevertexcdata')
+      set(pSX,'facecolor','interp'); 
+    else
+      
+    end
+    camlight; 
+    view(3); 
+    colormap jet; 
+    colorbar;
+    
+    return
+  end
   
   % figure properties
   fhn = 'DisplaySlice';%  if nf, fh=figure; else fh=gcf; end
@@ -40,6 +68,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
   
   if numel(slice)>1, hold on; end
   set(fh,'Color',[1 1 1]); 
+  
   
   %varargin{1}(varargin{1}>3)=3;
   %if nargin>2, varargin{2}=reduce_color(varargin{2}); end
