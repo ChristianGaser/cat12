@@ -13135,6 +13135,7 @@ M       templates_1.50mm/lpba40.nii
 
 
 ------------------------------------------------------------------------
+r1068 | gaser | 2016-11-08 12:42:44 +0100 (Di, 08 Nov 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13144,5 +13145,14 @@ M       cat_vol_slice_overlay.m
 
 Changed: Fonts should be now hopefully printed correctly while saving images
 in cat_surf_results.m and cat_vol_slice_overlay.m.
+
 ------------------------------------------------------------------------
-r1068 | gaser | 2016-11-08 12:42:26
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_spm2x.m
+
+Changed: Conversion of TFCE log-p maps is now supported in cat_stat_spm2x.m if 
+no conversion is selected.
+------------------------------------------------------------------------
+r1069 | gaser | 2016-11-08 15:27:36
