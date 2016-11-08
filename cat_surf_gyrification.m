@@ -96,7 +96,8 @@ function PSgi = cat_surf_gyrification(type,PS,opt)
   def.inflate   = 5;  % inflate only: only cat_surf_SGI_inflate with value from 1 to 10  
   def.normalize = 2;  % inflate only: normalization: 0 - none, 1 - by smooth, 2 - by smoothed and hull
 
-  def.GIpresmooth    = 60; % laplacian only: shoold to be greater than 20 .. vary by brain size? 
+  def.laplaceerr     = 0.0001; 
+  def.GIpresmooth    = 30;    % laplacian only: shoold to be greater than 20 .. vary by brain size? - no, because of surf resamp 
   def.GIstreamopt(1) = 0.01; % stepsize of streamlines in mm... fast=0.05 - 0.01  
   def.GIstreamopt(2) = 30 ./ def.GIstreamopt(1); % in mm
   def.GIwritehull    = 1;  % write laplace laplacian hull surface
@@ -167,8 +168,8 @@ function Psgi = cat_surf_SGI_inflate(sinfo,opt)
   Ssp = gifti(Pinflate);
 
   % area smoothing and GI estimation
-  ASsc = cat_surf_smootharea(Scs,opt.presmooth);
-  ASsp = cat_surf_smootharea(Ssp,opt.presmooth);
+  ASsc = cat_surf_smootharea(Scs,Scs,opt.presmooth);
+  ASsp = cat_surf_smootharea(Scs,Ssp,opt.presmooth);
   
   % estimate GI - normalization by area is not required (done by Surf2Sphere) 
   GI = cat_surf_estimateGI(Scs,ASsc,ASsp,opt.normalize);
@@ -211,8 +212,8 @@ function Psgigii = cat_surf_SGI_average(sinfo,opt)
   Ssp = gifti(opt.avgsurf);
 
   % area smoothing and GI estimation
-  ASsc = cat_surf_smootharea(Scs,opt.presmooth);
-  ASsp = cat_surf_smootharea(Ssp,opt.presmooth);
+  ASsc = cat_surf_smootharea(Scs,Scs,opt.presmooth);
+  ASsp = cat_surf_smootharea(Scs,Ssp,opt.presmooth);
   
   % estimate GI
   GI = cat_surf_estimateGI(Scs,ASsc,ASsp,opt.normalize);
@@ -296,8 +297,8 @@ function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
   Ssp = gifti(PhullR);
 
   % area smoothing and GI estimation
-  ASsc = cat_surf_smootharea(Scs,opt.presmooth);
-  ASsp = cat_surf_smootharea(Ssp,opt.presmooth);
+  ASsc = cat_surf_smootharea(Scs,Scs,opt.presmooth);
+  ASsp = cat_surf_smootharea(Scs,Ssp,opt.presmooth);
   
   % estimate GI
   GI = ASsc ./ ASsp;
@@ -354,8 +355,8 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   end
  
   % area smoothing and GI estimation
-  Ac = cat_surf_smootharea(S,opt.GIpresmooth);
-  Ah = cat_surf_smootharea(SH,opt.GIpresmooth);
+  Ac = cat_surf_smootharea(S,S,opt.GIpresmooth);
+  Ah = cat_surf_smootharea(S,SH,opt.GIpresmooth,cat_surf_smootharea(S,S,3)*2);
   
   GI  = Ac ./ max(eps,Ah); 
   % GI  = Ah ./ Ac; % inverse GI 
@@ -369,7 +370,7 @@ function Psgi = cat_surf_SGI_laplacian(sinfo,opt)
   
 end                    % central vs. hull (work)
 
-function A = cat_surf_smootharea(S,smooth)
+function A = cat_surf_smootharea(S,SA,smooth,Amax)
 %  create smooth area texture files
 %  ---------------------------------------------------------------------
   debug = 0;
@@ -380,8 +381,10 @@ function A = cat_surf_smootharea(S,smooth)
   Parea  = [Pname 'area'];
 
   % estimate areas 
-  A = cat_surf_fun('area',S);
- 
+  SAX.vertices = SA.vertices; SAX.faces = SA.faces; 
+  A = cat_surf_fun('area',SAX);
+  if exist('Amax','var');  A = min(A,Amax); end 
+  
   % write surface and textures
   cat_io_FreeSurfer('write_surf',Pmesh,S);
   cat_io_FreeSurfer('write_surf_data',Parea,A);
