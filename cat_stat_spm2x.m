@@ -219,7 +219,7 @@ otherwise  %-NB: no threshold
 end
 
 for i=1:size(P,1)
-    [pth,nm] = spm_fileparts(deblank(P(i,:)));
+    [pth,nm,ext] = spm_fileparts(deblank(P(i,:)));
 
     SPM_name = fullfile(pth, 'SPM.mat');
     
@@ -231,7 +231,12 @@ for i=1:size(P,1)
     if strcmp(nm(1:6),sprintf('spm%s_0',stat)) 
         Ic = str2double(nm(length(nm)-2:length(nm)));
     else
-        error('Only spm%s_0* files can be used',stat);
+        % conversion needs spmT/F images
+        if sel < 5
+            error('Only spm%s_0* files can be used',stat);
+        else
+            Ic = str2double(nm(length(nm)-2:length(nm)));
+        end
     end
 
     load(SPM_name);
@@ -245,8 +250,7 @@ for i=1:size(P,1)
     FWHM = SPM.xVol.FWHM;
     v2r  = 1/prod(FWHM(~isinf(FWHM)));  %-voxels to resels
 
-    Vspm   = cat(1,xCon(Ic).Vspm);
-    Vspm.fname = fullfile(pth,Vspm.fname);
+    Vspm = spm_vol(deblank(P(i,:)));
 
     if ~isfield(SPM.xVol,'VRpv')
         noniso = 0;
