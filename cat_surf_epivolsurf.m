@@ -36,7 +36,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %   Department of Psychiatry and Psychotherapy 
 %   University hostpital Jena
 %   
-%   Version: 0.2 © 2009/01 
+%   Version: 0.2 Â© 2009/01 
 % _________________________________________________________________________
 
 
@@ -133,6 +133,8 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 % create potential-picture and gradients
 % _________________________________________________________________________
   L  = cat_vol_laplace3R(D,D==2,opt.laplaceerr);
+  L  = smooth3(L); 
+  D  = smooth3(D); 
   if opt.GI
     D(D<0)=0;        
   else
@@ -226,7 +228,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
     streamlength(streamlength==0) = eps('single');
     
     if strcmpi(opt.calctype,'voxelbased')
-      % überarbeiten !!!!!
+      % Ã¼berarbeiten !!!!!
       streampointdist1 = cellfun(@(s) sum(diff(s).^2,2).^0.5,streams1,'UniformOutput',false);
       streamlength1    = cell2mat(cellfun(@(s) single(sum(s,1)),streampointdist1,'UniformOutput',false));
       streamlength1(cellfun('size',streams1,1)==1) = eps('single');
@@ -244,7 +246,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
       streamlayer = cellfun(@(s,s1e,sl) (sl-s1e-cumsum(s,1))/(sl-s1e),streampointdist,mat2cell(stream1err,repmat(1,numel(streamlength),1),1),...
                     mat2cell(streamlength,repmat(1,numel(streamlength),1),1),'UniformOutput',false);  
       S.CP(l:h,:) = cell2mat(cellfun(@(s,sl) s(max([1,find(sl<=0.5,1,'first')]),:),streams,streamlayer,'UniformOutput',false));
-       % funkt net, weil die länge null ist, der steamlayer damit auch null und damit eine leere matrix zugewiesen werden soll...     
+       % funkt net, weil die lÃ¤nge null ist, der steamlayer damit auch null und damit eine leere matrix zugewiesen werden soll...     
 
       S.L(l:h,:,opt.layer+1) = single(cell2mat(cellfun(@(s,sl) s(sl,:),streams,mat2cell(double(cellfun('size',streams,1)),...
         ones(numel(l:h),1),1),'UniformOutput',false)));                             % OS, GM/CSF boundary
