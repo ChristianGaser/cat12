@@ -22,10 +22,12 @@ if nargin == 0
 
 end
 
+FS = spm('FontSizes');
+
 % check filename whether log. scaling was used
 OV.logP = zeros(size(OV.name,1));
 for i=1:size(OV.name,1)
-  if strfind(OV.name(i,:),'logP')
+  if ~isempty(strfind(OV.name(i,:),'logP'))  || ~isempty(strfind(OV.name(i,:),'log_'))
     OV.logP(i) = 1;
   end
 end
@@ -266,14 +268,14 @@ SO.area.units='pixels';
 
 slice_overlay
 
-
 % change labels of colorbar for log-scale
+H = gca;
 if (SO.cbar == 2) & logP
-  H = gca;
   YTick = get(H,'YTick');
   mn = floor(min(YTick));
   mx = ceil(max(YTick));
-  % allow only integer values
+  
+  % only allow integer values
   values = floor(mn:mx);
   pos = get(get(gca,'YLabel'),'position');
   pos(1) = 2.5;
@@ -286,16 +288,17 @@ if (SO.cbar == 2) & logP
     YTickLabel = char(YTickLabel,remove_zeros(sprintf('%.g',10^(-YTick(i)))));
   end
   set(H,'YTickLabel',YTickLabel)
-  set(get(gca,'YLabel'),'string','p-value','position',pos)
-  set(H,'FontSize',0.35*get(H,'FontSize'))
-else
-  H = gca;
-  set(H,'FontSize',0.35*get(H,'FontSize'))
+
+  set(get(gca,'YLabel'),'string','p-value','position',pos,'FontSize',FS(14))
+
 end
+
+set(H,'FontSize',0.8*get(H,'FontSize'))
 
 % save image
 image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf|tif',char('none','png','jpeg','pdf','tiff'),2);
 if ~strcmp(image_ext,'none')
+
   [pt,nm] = spm_fileparts(img);
   
   % use shorter ext for jpeg
@@ -304,21 +307,12 @@ if ~strcmp(image_ext,'none')
   else
     imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.' image_ext]);
   end
-  
-  % prepare print string
-  if ~isfield(OV,'printstr')
-    OV.printstr = 'print -r300 -painters -noui';  
-  end
-  if ~isempty(OV.printstr)
-    OV.printstr = 'print -r300 -painters -noui';
-  end
-  
+    
   % and print
-H  = findobj(get(SO.figure,'Children'),'flat','Type','axes');
-set(H,'Units','normalized')
-
+  H  = findobj(get(SO.figure,'Children'),'flat','Type','axes'); 
+  set(H,'Units','normalized')
+  
   saveas(SO.figure,imaname,image_ext);
-%  slice_overlay('print',imaname,[OV.printstr ' -d' image_ext])
   fprintf('Image %s saved.\n',imaname);
   if n_slice > 0
     imaname = [lower(OV.transform) '_' replace_strings(OV.slices_str(ind,:)) '.' image_ext];
