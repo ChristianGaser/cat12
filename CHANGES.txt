@@ -13174,6 +13174,7 @@ M       ds.m
 
 
 ------------------------------------------------------------------------
+r1071 | gaser | 2016-11-09 14:07:47 +0100 (Mi, 09 Nov 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13183,5 +13184,34 @@ M       cat_surf_epivolsurf.m
 M       html/cat.html
 
 Fixed: Solved error with surfaces caused by last change in cat_stat_spm2x.m
+
 ------------------------------------------------------------------------
-r1071 | gaser | 2016-11-09 14:07:29
+
+Changed paths:
+M       CHANGES.txt
+M       batches/cattest/cat12_SBM_201_extractAddSurfPara.m
+M       batches/cattest/cat12_SBM_302_exportRBM.m
+M       cat_conf_stools.m
+M       cat_io_FreeSurfer.m
+M       cat_main_gcut.m
+M       cat_main_gcut_DEV.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_parameters.m
+M       cat_surf_render.m
+M       cat_surf_render2.m
+M       cat_tst_cattest.m
+M       cat_tst_qa.m
+
+(1) Fixed:    Corrected error message handling in "cat_main_gcut" that now 
+              throws an error if the brain mask is empty. 
+(2) Fixed:    Corrected name/texture handling in "cat_surf_info".
+(3) Fixed:    Small corrections in "cat_surf_render2".
+(4) Fixed:    Corrected errors in "gii2fs" in "cat_surf_FreeSurfer".
+(5) New:      Prepared creation of inner and outer surface in "cat_surf_parameter"
+              and "cat_conf_stools" in developer mode.    
+(6) New:      Added opengl info and data to CAT report in "cat_tst_qa".
+(7) Fixed:    Small corrections in "cat_tst_cattest" and its batches.
+              
+------------------------------------------------------------------------
+r1072 | dahnke | 2016-11-09 16:01:00

@@ -17,7 +17,7 @@ if exist('files','var')
     xmls{end+1,1}  = fullfile( pp , roidir , ['catROI_'  ff '.xml'] ); 
     sxmls{end+1,1} = fullfile( pp , roidir , ['catROIs_' ff '.xml'] ); 
   end
-  outdir = {fullfile( job.resdir , 'RBMexport' )};
+  outdir = {fullfile( pp , 'RBMexport' )};
 else
   xmls   = {''}; 
   sxmls  = {''};   

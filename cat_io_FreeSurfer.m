@@ -131,8 +131,12 @@ function varargout = gii2fs(varargin)
     
     CS = gifti(job.data{si});
     if isfield(CS,'vertices') && isfield(CS,'faces')
-      surfname{si} = char(cat_surf_rename(sinfo,'dataname','surface','ee',''));
-      
+      switch sinfo.texture
+        case {'sphere','central','hull','inner','outer'}
+          surfname{si} = char(cat_surf_rename(sinfo,'ee',''));
+        otherwise
+          surfname{si} = char(cat_surf_rename(sinfo,'dataname',[sinfo.texture '_surface'],'ee',''));
+      end
       write_surf(char(surfname{si}), CS.vertices , CS.faces);
     else
       surfname{si} = ''; 
@@ -168,15 +172,17 @@ function varargout = fs2gii(varargin)
       case '.gii'
         S = gifti(job.data{si});
       otherwise
-        if isfield(job,'cdata') 
-          [vertices,faces] = read_surf(job.data); 
-          S.vertices = vertices; 
-          S.faces    = faces; 
-        else
-          try %#ok<TRYNC>
-            S.cdata = read_curv(job.cdata{si});   
+        %if isfield(job,'cdata') 
+          try
+            [vertices,faces] = read_surf(job.data{si}); 
+            S.vertices = vertices; 
+            S.faces    = faces; 
           end
-        end
+        %else
+        %  try %#ok<TRYNC>
+        %    S.cdata = read_curv(job.cdata{si});   
+        %  end
+        %end
     end  
     
     if isfield(job,'cdata') 
@@ -310,7 +316,7 @@ function [vertex_coords, faces] = read_surf(fname)
   %    $Date$
   %    $Revision$
   %
-  % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+  % Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
   %
   % Terms and conditions for use, reproduction, distribution and contribution
   % are found in the 'FreeSurfer Software License Agreement' contained
@@ -333,8 +339,8 @@ function [vertex_coords, faces] = read_surf(fname)
   %QUAD_FILE_MAGIC_NUMBER =  (-1 & 0x00ffffff) ;
   %NEW_QUAD_FILE_MAGIC_NUMBER =  (-3 & 0x00ffffff) ;
 
-  TRIANGLE_FILE_MAGIC_NUMBER =  16777214 ;
-  QUAD_FILE_MAGIC_NUMBER =  16777215 ;
+  TRIANGLE_FILE_MAGIC_NUMBER  =  16777214 ;
+  QUAD_FILE_MAGIC_NUMBER      =  16777215 ;
 
   if ~exist(fname,'file')
     error('MATLAB:cat_io_FreeSurfer:read_surf','mesh file %s does not exist.', fname) ;
@@ -381,7 +387,7 @@ function fwrite3(fid, val)
 %    $Date$
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained
@@ -417,7 +423,7 @@ function [retval] = fread3(fid)
   %    $Date$
   %    $Revision$
   %
-  % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+  % Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
   %
   % Terms and conditions for use, reproduction, distribution and contribution
   % are found in the 'FreeSurfer Software License Agreement' contained
@@ -457,7 +463,7 @@ function err = write_wfile(fname, w, v)
 %    $Date$
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained
@@ -565,7 +571,7 @@ function [curv, fnum] = read_curv(fname)
 %    $Date$
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained
@@ -823,7 +829,7 @@ function [vertices, label, colortable] = Read_Brain_Annotation(filename, varargi
 %    $Date$
 %    $Revision$
 %
-% Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
+% Copyright ?? 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
 % Terms and conditions for use, reproduction, distribution and contribution
 % are found in the 'FreeSurfer Software License Agreement' contained

@@ -54,6 +54,8 @@ function varargout = cat_surf_parameters(job)
     PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
     PSD     = fullfile(pp,strrep(ff,'central','sqrtsulc'));
     PSA     = fullfile(pp,strrep(ff,'central','logarea'));
+    PIS     = fullfile(pp,strrep(ff,'central','inner'));         
+    POS     = fullfile(pp,strrep(ff,'central','outer'));         
     Psphere = fullfile(pp,strrep(name,'central','sphere'));
  
     fprintf('Extract parameters for %s\n',deblank(P(i,:)));
@@ -156,9 +158,9 @@ function varargout = cat_surf_parameters(job)
     end
   % ----------------------------------------------------------------------
   % ----------------------------------------------------------------------
-   
     
     
+      
     
     if job.SD
       %% sulcus depth
@@ -184,6 +186,34 @@ function varargout = cat_surf_parameters(job)
       end
     end
 
+    
+    
+    
+    %% ----------------------------------------------------------------------
+    %  No measures, but I do not want another script
+    %  ----------------------------------------------------------------------
+    if isfield('IS',job) && job.IS
+      if exist(PIS,'file') && job.lazy  
+        if job.verb>=1, fprintf('  Display allready processed %s\n',spm_file(PIS,'link','cat_surf_display(''%s'')')); end
+      else
+        stime = clock; 
+        PIS = cat_surf_fun('inner',deblank(P(i,:)));
+        if nargout==1, varargout{1}.PIS{i} = PIS; end  
+        if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PIS,'link','cat_surf_display(''%s'')')); end
+      end
+    end
+    
+    if isfield('OS',job) && job.OS
+      if exist(POS,'file') && job.lazy  
+        if job.verb>=1, fprintf('  Display allready processed %s\n',spm_file(POS,'link','cat_surf_display(''%s'')')); end
+      else
+        stime = clock; 
+        POS = cat_surf_fun('outer',deblank(P(i,:)));
+        if nargout==1, varargout{1}.POS{i} = POS; end  
+        if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(POS,'link','cat_surf_display(''%s'')')); end
+      end
+    end
+      
     spm_progress_bar('Set',i);
   end
   
