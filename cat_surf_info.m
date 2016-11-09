@@ -1,4 +1,4 @@
-function [varargout] = cat_surf_info(P,read,gui)
+function [varargout] = cat_surf_info(P,read,gui,verb)
 % ______________________________________________________________________
 % Extact surface information from filename.
 %
@@ -33,19 +33,30 @@ function [varargout] = cat_surf_info(P,read,gui)
       fullfile('User','08.15','T1 T2','subs','mri')
       };
     ffs = {
-      'lh.central.freesurfer.gii'
+      'lh.central.freesurfer'
       'lh.mymask'
       'output'
+      'lh.texture.sub1.sub2'
+      'lh.tex1.tex2.resampled.sub1.sub2'
+      '08.15'
+      's15mm.lh.tex03.33.resampled.S01.mri'
+      's5mm.lh.t1.t2-3_3.resampled.S01_-.kdk.mri'
+      'rh.s33mmtexture.S01.native.mri'
+      'rh'
+      'rh.'
+      'rh.sphere.reg.sub1'
+      'ch.defects.038.37.477'
       };
     ees = {
       ''
-      '.gii'
+      ... '.gii'
+      ... '.annot'
       };
     varargout = cell(numel(pps),numel(ffs),numel(ees)); 
     for ppsi = 1:numel(pps)
       for ffsi = 1:numel(ffs)
         for eesi = 1:numel(ees)
-          varargout{1}(ppsi,ffsi,eesi) = cat_surf_info(fullfile(pps{ppsi},[ffs{ffsi} ees{eesi}]));
+          varargout{1}(ppsi,ffsi,eesi) = cat_surf_info(fullfile(pps{ppsi},[ffs{ffsi} ees{eesi}]),0,0,1);
         end
       end
     end
@@ -56,6 +67,7 @@ function [varargout] = cat_surf_info(P,read,gui)
   
   if nargin<2, read = 0; end
   if nargin<3, gui  = 0; end
+  if nargin<4, verb = 0; end
 
   P = cellstr(P);
   
@@ -206,48 +218,49 @@ function [varargout] = cat_surf_info(P,read,gui)
     else
       sinfo(i).datatype = -1;
     end
+   
     
     % resampled
     sinfo(i).resampled = ~isempty(strfind(sinfo(i).posside,'.resampled'));
-    
-    % special datatypes
-    FNdata = {'thickness','central','inner','outer','sphere','defects','gyrification','sqrtsulc','frac',...
-          'gyruswidth','gyruswidthWM','sulcuswidth','WMdepth','CSFdepth','GWMdepth',...
-          'depthWM','depthGWM','depthCSF','depthWMg','ROI','hull',...
-          'aparc_DK40','aparc_a2009s', ...
-          'PALS_B12_Brodmann','aparc_DKT40JT', ...
-          'lpba40','mori','hammers','neuromorphometrics','aal', ...
-          'hulldist'};
-    sinfo(i).texture = '';
-    for fi=1:numel(FNdata)
-      if strfind(sinfo(i).posside,FNdata{fi}), sinfo(i).texture = FNdata{fi}; end
-    end   
-    
     % template
     sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
     if sinfo(i).template,  sinfo(i).resampled = 1; end
     
-    % name
+
+    % name / texture
+    %  -----------------------------------------------------------------
     % ... name extraction is a problem, because the name can include points
     % and also the dataname / texture can include points ...
     resi = [strfind(sinfo(i).posside,'template.'),... 
-            strfind(sinfo(i).posside,'resampled.')]; 
+            strfind(sinfo(i).posside,'resampled.'),...
+            strfind(sinfo(i).posside,'sphere.reg.')]; 
     if ~isempty(resi)
       sinfo(i).name = cat_io_strrep(sinfo(i).posside(max(resi):end),...
-        {sinfo(i).texture,'template.','resampled.'},'');
+        {'template.','resampled.','sphere.reg'},''); %sinfo(i).posside,
       if ~isempty(sinfo(i).name) && sinfo(i).name(1)=='.', sinfo(i).name(1)=[]; end
+      sinfo(i).texture = sinfo(i).posside(1:min(resi)-2);
     else
+      % without no template/resampled string
       doti = strfind(sinfo(i).posside,'.');
       if numel(doti)==0 
       % if not points exist that the string is the name
-        sinfo(i).name = sinfo(i).posside;
+        sinfo(i).name    = '';
+        sinfo(i).texture = sinfo(i).posside;
       elseif numel(doti)==1 
       % if one point exist that the first string is the dataname and the second the subject name 
-        sinfo(i).name = sinfo(i).posside(doti+1:end);
+        sinfo(i).name    = sinfo(i).posside(doti+1:end);
+        sinfo(i).texture = sinfo(i).posside(1:doti-1);
       else
       % this is bad
-        sinfo(i).name = sinfo(i).posside(max(doti)+1:end);
+        sinfo(i).name    = sinfo(i).posside(min(doti)+1:end);
+        sinfo(i).texture = sinfo(i).posside(1:min(doti)-1);
       end
+    end
+    if verb
+      fprintf('%50s: s%04.1f %2s ',sinfo(i).ff,sinfo(i).smoothed,sinfo(i).side);
+      cat_io_cprintf([0.2 0.2 0.8],'%15s',sinfo(i).texture);
+      cat_io_cprintf([0.0 0.5 0.2],'%15s',sinfo(i).name);
+      fprintf('%4s\n',sinfo(i).ee);
     end
     % dataname
     sinfo(i).dataname  = cat_io_strrep(sinfo(i).posside,{sinfo(i).name,'template.','resampled.'},''); 

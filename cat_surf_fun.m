@@ -30,12 +30,20 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'hull'
       if nargout==1, varargout{1} = cat_surf_hull(S); end
       if nargout==2, [varargout{1},varargout{2}] = cat_surf_hull(S); end
-    case 'inner'
-      if nargout==1, varargout{1} = cat_surf_inner(S); end
-      if nargout==2, [varargout{1},varargout{2}] = cat_surf_inner(S); end
-    case 'outer'
-      if nargout==1, varargout{1} = cat_surf_outer(S); end
-      if nargout==2, [varargout{1},varargout{2}] = cat_surf_outer(S); end
+    case {'inner','outer'}
+      if numel(varargin)==1
+        switch nargout % surface & texture input
+          case 0, cat_surf_GMboundarySurface(action,S,varargin{1});
+          case 1, varargout{1} = cat_surf_GMboundarySurface(action,S,varargin{1}); 
+          case 2, [varargout{1},varargout{2}] = cat_surf_GMboundarySurface(action,S,varargin{1}); 
+        end
+      else % file input
+        switch nargout
+          case 0, cat_surf_GMboundarySurface(action,S);
+          case 1, varargout{1} = cat_surf_GMboundarySurface(action,S); 
+          case 2, [varargout{1},varargout{2}] = cat_surf_GMboundarySurface(action,S); 
+        end
+      end
     case 'surf2vol'
       if nargin>2
         [varargout{1},varargout{2},varargout{3}] = cat_surf_surf2vol(S,varargin);
@@ -45,7 +53,7 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'graph2edge'
       varargout{1} = cat_surf_edges(S); 
     case 'cdatamappingtst'
-      cat_surf_cdatamapping;
+      cat_surf_cdatamappingtst;
     case 'cdatamapping' 
       if nargin<3, varargin{3} = ''; end
       if nargin<4, varargin{4} = struct(); end
@@ -57,18 +65,62 @@ function varargout = cat_surf_fun(action,S,varargin)
   end
     
 end
+function varargout = cat_surf_GMboundarySurface(type,varargin)
+  switch type
+    case 'inner', direction = -0.5;
+    case 'outer', direction =  0.5;
+  end
+  
+  if nargin==2
+    %% use filenames
+    [pp,ff,ee] = spm_fileparts(varargin{1});
+    
+    if strcmp(ee,'')
+      Praw = cat_io_FreeSurfer('fs2gii',varargin{1}); 
+      Praw = Praw{1};
+    else
+      Praw   = varargin{1};
+    end
+    Pthick = cat_io_strrep(Praw,{'central','.gii'},{'thickness',''});
+    Ptype  = cat_io_strrep(Praw,'central',type);
+    
+    cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" %0.2f',Praw,Pthick,Ptype,direction); 
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,1);
+
+    if strcmp(ee,'')
+      Ptype = cat_io_FreeSurfer('gii2fs',Ptype); 
+    end
+    
+    % filename
+    varargout{1} = Ptype; 
+  else
+    % write temp files ...
+    Praw   = 'central.';
+    Pthick = strrep(Praw,'central','thickness');
+    Ptype  = strrep(Praw,'central',type);
+   
+    cmd = sprintf('CAT_Central2Pial "%s" "%s" %0.2f',Praw,Pthick,Ptype,direction); 
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,1);
+    
+    % load surface 
+    varargout{1} = gifti(Ptype); 
+    
+    % delete temp files
+    delete(Praw,Pthick,Ptype);
+  end
+end
 function cat_surf_cdatamappingtst
 
 %% Testdata
    Psubcentral  = ['/Volumes/vbmDB/MRData/vbm12tst/results/deffiles/cg_vbm_defaults_template/template_NKI/'...
      'surf/lh.central.NKI_HC_NKI_1013090_T1_SD000000-RS00.gii'];
    PsubsphereA  = strrep(Psubcentral,'central','sphere.reg');              
-   Psubthick    = strrep(strrep(Psubcentral,'central','thickness'),'.gii','');               
+   %Psubthick    = strrep(strrep(Psubcentral,'central','thickness'),'.gii','');               
    Psubthickres = strrep(strrep(Psubcentral,'central','thickness.resampled'),'lh.','s15mm.lh.'); 
    Psubtmp      = strrep(Psubcentral,'central','tmp'); 
    Pavgtmp      = strrep(strrep(Psubcentral,'central','tmp.resampled'),'lh.','s15mm.lh.'); 
  
-   Pavgcentral  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.central.freesurfer.gii'; 
+   %Pavgcentral  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.central.freesurfer.gii'; 
    PavgsphereA  = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/templates_surfaces/lh.sphere.freesurfer.gii'; 
    PavgDKT40    = '/Users/dahnke/Neuroimaging/spm12/toolbox/cat12/atlases_surfaces/lh.aparc_DKT40JT.freesurfer.annot';
    
@@ -101,8 +153,8 @@ function cat_surf_cdatamappingtst
 end
 % nearest connection between to surfaces
 function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt) 
-  if ischar(S1), P1 = S1; S1 = gifti(S1); end
-  if ischar(S2), P2 = S2; S2 = gifti(S2); end
+  if ischar(S1), S1 = gifti(S1); end
+  if ischar(S2), S2 = gifti(S2); end
   if ischar(cdata),
     Pcdata = cdata;
     [pp,ff,ee] = spm_fileparts(cdata); 
@@ -115,7 +167,7 @@ function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt)
         if isfield(Scdata,'cdata')
           cdata = SX.cdata;
         else
-          error('noTexture','No texture found in "%s"!\n',Pcdata);
+          error('cat_surf_fun:cdatamapping:noTexture','No texture found in "%s"!\n',Pcdata);
         end
       otherwise
         cdata =  cat_io_FreeSurfer('read_surf_data',Pcdata);   
@@ -230,7 +282,7 @@ function varargout = cat_surf_cdatamapping(S1,S2,cdata,opt)
           end
         end
       end
-      if numel(varargout{1})<20, varargout{1}, end
+      if numel(varargout{1})<20, disp(varargout{1}); end
       if opt.verb, cat_io_cmd(' ','g5','',1,stime); end
   end
   

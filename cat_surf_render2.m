@@ -64,7 +64,7 @@ function varargout = cat_surf_render2(action,varargin)
 
 
 % we need to hide some options ...
-expert = cat_get_defaults('extopts.expertgui'); 
+expert = 2; %cat_get_defaults('extopts.expertgui'); 
 try
   cat_get_defaults('print.dpi');  
 catch
@@ -249,7 +249,9 @@ switch lower(action)
             else
                 T = [];
             end
-            updateTexture(H,T,pi);
+            try
+              updateTexture(H,T,pi);
+            end
             
             H.cdata = T; % remove this later ...
             clear S P; 
@@ -821,7 +823,7 @@ switch lower(action)
         c = uimenu(cmenu, 'Label','Material');
         uimenu(c, 'Label','Dull',     'Checked','on',  'Callback', {@myMaterial, H,'dull'});
         uimenu(c, 'Label','Shiny',    'Checked','off', 'Callback', {@myMaterial, H,'shiny'});
-        uimenu(c, 'Label','Metalic',  'Checked','off', 'Callback', {@myMaterial, H,'metalic'});
+        uimenu(c, 'Label','Metalic',  'Checked','off', 'Callback', {@myMaterial, H,'metallic'});
         uimenu(c, 'Label','Edges',    'Checked','off', 'Callback', {@myGrid, H,'grid'}, 'Separator', 'on');
         if expert
           uimenu(c, 'Label','Custom...','Checked','off', 'Callback', {@myMaterial, H,'custom'}, 'Separator', 'on');
@@ -877,11 +879,13 @@ switch lower(action)
             uimenu(c, 'Label',sprintf('%0.0f',printres(ri)), 'Checked',onoff{myres(ri)+1},...
               'Callback', {@myPrintResolution, H, printres(ri)});
           end
+          % print
+          uimenu(cmenu, 'Label','Save As...', 'Callback', {@mySave, H});
+        else
+          % print
+          uimenu(cmenu, 'Label','Save As...','Separator', 'on', 'Callback', {@mySave, H});
         end
         
-        % print
-        uimenu(cmenu, 'Label','Save As...',  ...
-            'Callback', {@mySave, H});
              
           
         set(H.rotate3d,'enable','off');
