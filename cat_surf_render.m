@@ -319,7 +319,9 @@ switch lower(action)
         else
             T = [];
         end
-        updateTexture(H,T);
+        try
+          updateTexture(H,T);
+        end
         
         %-Set viewpoint, light and manipulation options
         %------------------------------------------------------------------

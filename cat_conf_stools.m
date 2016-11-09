@@ -184,6 +184,26 @@ function stools = cat_conf_stools(expert)
     GIL.help   = {
       'WARNING: This GI measures is still in development and not varified yet!\n\n Extract Laplacian gyrification index (LGI) as local area relation between the individual central and the hull surface [Dahnke:2010].'
     };
+  
+    OS        = cfg_menu;
+    OS.name   = 'Outer surface';
+    OS.tag    = 'OS';
+    OS.labels = {'none','yes'};
+    OS.values = {0,1};
+    OS.val    = {1};
+    OS.help   = {
+      'Creates outer surface by moving each CS vertex by its half thickness along the surface normal.'
+    };
+  
+    IS        = cfg_menu;
+    IS.name   = 'Inner surface';
+    IS.tag    = 'IS';
+    IS.labels = {'none','yes'};
+    IS.values = {0,1};
+    IS.val    = {1};
+    IS.help   = {
+      'Creates outer surface by moving each CS vertex by its half thickness along the surface normal.'
+    };
   end
 
   
@@ -246,7 +266,7 @@ function stools = cat_conf_stools(expert)
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
   if expert > 1
-    surfextract.val  = {data_surf_extract,area,GI,GIA,GII,GIL,GIS,FD,SD,nproc,lazy};
+    surfextract.val  = {data_surf_extract,area,GI,GIA,GII,GIL,GIS,FD,SD,IS,OS,nproc,lazy};
   else
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end

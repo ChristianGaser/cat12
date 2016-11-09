@@ -91,8 +91,10 @@ function [Yb,Yl1] = cat_main_gcut_DEV(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb  = cat_vol_morph(Yb,'l'); 
   
   % if no largest object could be find it is very likeli that initial normalization failed
-  if isempty(Yb)
-    error('cat:cat_main:largestWM','No largest WM cluster could be found: Please try to set origin (AC) and run preprocessing again because it is very likeli that spatial normalization failed.');
+  if sum(Yb & mod(Yl1,2)==0)==0 || sum(Yb & mod(Yl1,2)==1)==0
+    error('cat:cat_main:largestWM',['No largest WM cluster could be found: \n'...
+      'Please try to set origin (AC) and run preprocessing again \n' ...
+      'because it is very likeli that spatial normalization failed.']);
   end
   
   Yb  = single(Yb | (Ym>2.5/3  & Ym<gc.h/3 & Yb) | NS(Yl1,LAB.VT) | ...

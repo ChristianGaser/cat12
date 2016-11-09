@@ -36,7 +36,7 @@ function varargout = cat_tst_qa(action,varargin)
 % 
 % 3) Use GUI interface to choose all images. I.e. for other segmentations
 %    and modalities without focus of GM-WM contrast such as DTI MTI. 
-%     [ not implemented yet ]
+%     [ not implemented yet ]
 %
 %
 % 4) CAT12 internal preprocessing interface 
@@ -507,6 +507,8 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      QAS.software.opengl       = opengl('INFO');
+      QAS.software.opengldata   = opengl('DATA');
      
       QAS.hardware.computer     = mexext; 
       try
@@ -563,6 +565,8 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      QAS.software.opengl       = opengl('INFO');
+      QAS.software.opengldata   = opengl('DATA');
       QAS.software.cat_warnings = cat_warnings;
  
       % @Christian: Do we only want the cat parameter or is it important to have further information? 

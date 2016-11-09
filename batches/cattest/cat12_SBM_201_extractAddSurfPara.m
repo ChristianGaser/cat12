@@ -33,5 +33,7 @@ if exp
   matlabbatch{1}.spm.tools.cat.stools.surfextract.GII       = 0; % EXPERT 
   matlabbatch{1}.spm.tools.cat.stools.surfextract.GIL       = 1; % EXPERT laplacican GI
   matlabbatch{1}.spm.tools.cat.stools.surfextract.GIS       = 0; % EXPERT sperical GI 
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.IS        = 1; % EXPERT
+  matlabbatch{1}.spm.tools.cat.stools.surfextract.OS        = 1; % EXPERT
   matlabbatch{1}.spm.tools.cat.stools.surfextract.lazy      = 0; % EXPERT
 end

@@ -90,17 +90,21 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   [Ybr,Ymr,resT2] = cat_vol_resize({single(Yb),Ym},'reduceV',1,4./vx_vol,32); 
   Ybr  = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',2)); % large ventricle closing
   Ybr  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.9; 
-  Yb   = cat_vol_morph(Yb & mod(Yl1,2)==0,'l') | ...
-         cat_vol_morph(Yb & mod(Yl1,2)==1,'l') | (Ybr & Yp0<1.5 & Ym<1.5); 
   
   % if no largest object could be find it is very likeli that initial normalization failed
-  if isempty(Yb)
-    error('cat:cat_main:largestWM','No largest WM cluster could be found: Please try to set origin (AC) and run preprocessing again because it is very likeli that spatial normalization failed.');
+  if sum(Yb & mod(Yl1,2)==0)==0 || sum(Yb & mod(Yl1,2)==1)==0
+    error('cat:cat_main:largestWM',['No largest WM cluster could be found: \n'...
+      'Please try to set origin (AC) and run preprocessing again \n' ...
+      'because it is very likeli that spatial normalization failed.']);
   end
-  
+  Yb   = cat_vol_morph(Yb & mod(Yl1,2)==0,'l') | ...
+         cat_vol_morph(Yb & mod(Yl1,2)==1,'l') | ...
+         (Ybr & Yp0>1.9 & Ym<3.5 & (NS(Yl1,LAB.CB))) | ... 
+         (Ybr & Yp0<1.5 & Ym<1.5); 
   Yb  = smooth3(Yb)>gc.s;
-  Yb(smooth3(single(Yb))<0.5)=0;                          % remove small dots
+  Yb(smooth3(single(Yb))<0.5)=0;                           % remove small dots
   Yb  = single(cat_vol_morph(Yb,'labclose',gc.f));         % one WM object to remove vbs
+  
   
   %% region growing GM/WM (here we have to get all WM gyris!)
   stime = cat_io_cmd('  GM region growing','g5','',opt.verb,stime); dispc=dispc+1;
