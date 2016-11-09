@@ -13157,6 +13157,7 @@ Changed: Conversion of TFCE log-p maps is now supported in cat_stat_spm2x.m if
 no conversion is selected.
 
 ------------------------------------------------------------------------
+r1070 | dahnke | 2016-11-08 15:41:09 +0100 (Di, 08 Nov 2016) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13171,5 +13172,16 @@ M       ds.m
 (3) Changed:  Added surface render to "ds".
 
 
+
 ------------------------------------------------------------------------
-r1070 | dahnke | 2016-11-08 15:41:01
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_spm2x.m
+M       cat_surf_epivolsurf.m
+M       html/cat.html
+
+Fixed: Solved error with surfaces caused by last change in cat_stat_spm2x.m
+------------------------------------------------------------------------
+r1071 | gaser | 2016-11-09 14:07:29
