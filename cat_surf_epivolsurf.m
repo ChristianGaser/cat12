@@ -1,7 +1,7 @@
 function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 % _________________________________________________________________________
 %
-% varargout = epivolsurf05(D,opt,S)
+% varargout = cat_surf_epivolsurf(D,opt,S)
 % IN:
 %   D   ... image with Range 0 to 1
 %   opt ...
@@ -16,9 +16,9 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %   S.L(1..nbstream-1) ??? for streamline ???
 % _________________________________________________________________________
 %
-%      ATTENSION matlab-stream function only work with double!
+%      ATTENTION matlab-stream function only works with double!
 % _________________________________________________________________________
-% TODO: - optimation of memory and data structure
+% TODO: - optimization of memory and data structure
 %       * adaption for GI-algorithm
 %       - layer calculation (7)
 %       - surface- vs. voxelbased 
@@ -26,7 +26,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
 %       - parts-Estimation (memory problem at 100%)
 %       * isocolors for intensity estimation
 %       - zero-streams
-%       - correction of the point removement (half streamstepsize)
+%       - correction of the point removement (half stream-stepsize)
 %       - parfor
 %       * size options for D
 % _________________________________________________________________________
@@ -69,7 +69,7 @@ function varargout = cat_surf_epivolsurf(D,CSFS,opt,S)
     case {'streams0','streams1','streams10'};
     otherwise, error('unknown streamside %s',opt.side);
   end
-  if opt.layer<=2, error('You need at least 3 points'); end                % proof usefull number of layer    
+  if opt.layer<=2, error('You need at least 3 points'); end                % proof useful number of layer    
 
   % if there are too many and not enough streampoints you have to divide the streamline ...
   if ~isfield(opt,'streamopt') || numel(opt.streamopt)~=2

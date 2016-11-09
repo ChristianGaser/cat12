@@ -250,7 +250,7 @@ for i=1:size(P,1)
     FWHM = SPM.xVol.FWHM;
     v2r  = 1/prod(FWHM(~isinf(FWHM)));  %-voxels to resels
 
-    Vspm = spm_vol(deblank(P(i,:)));
+    Vspm = spm_data_hdr_read(deblank(P(i,:)));
 
     if ~isfield(SPM.xVol,'VRpv')
         noniso = 0;
