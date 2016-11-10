@@ -34,6 +34,7 @@ H.transp   = 1;
 H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
 H.FS       = spm('FontSizes');
 H.cursor_mode  = 1;
+H.n_surf   = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -61,7 +62,7 @@ switch lower(action)
         % figure 1 with result window
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
-            'cbar',  [0.400 -0.180 0.200 0.300; 0.440 0.050 0.120 0.120]);   % colorbar   
+            'cbar',  [0.400 -0.180 0.200 0.300; 0.440 0.025 0.120 0.120]);   % colorbar   
 
         % figure 2 with GUI
         H.pos{2} = struct(...
@@ -320,14 +321,33 @@ switch lower(action)
             end
           end
           
-          H.view          = 1; % allow top view
-          H.disable_cbar  = 0;
+          H.n_surf        = max(numel(H.S{1}.info),numel(H.S{2}.info));
+          H.view          = 1;
           H.show_transp   = 1;
+          H.disable_cbar  = 0;
           H.white_bgk     = 0;
           H.show_info     = 0;
           
           display_results_all;
           
+          % Don't allow plot functions for RGB maps
+          if H.n_surf > 1
+            str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
+                 'Atlas regions: Destrieux 2009','Enable/Disable rotate3d'};
+            tmp  = { {@select_cursor, 0},...
+                 {@select_cursor, 1},...
+                 {@select_cursor, 2},...
+                 {@select_cursor, 5}};
+                             
+            H.cursor = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.cursor,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Data Cursor Mode',...
+                'Interruptible','on','Visible','off');
+          end
+
           set(H.surf,'Visible','on');
           set(H.save,'Visible','on');
           set(H.mview,'Visible','on');
@@ -337,12 +357,11 @@ switch lower(action)
           set(H.info,'Visible','on');
           set(H.cursor,'Visible','on');
         
-          if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0
+          if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
             set(H.inv,'Visible','on');
           end
           
-          if ((size(H.S{1}.name,1) == 1) && (size(H.S{2}.name,1) < 2)) || ...
-          ((size(H.S{2}.name,1) == 1) && (size(H.S{1}.name,1) < 2))
+          if H.n_surf == 1
             set(H.cmap,'Visible','on');
           end
         
@@ -530,7 +549,7 @@ for ind=1:5
 end
 
 % correct value of slider if no values are exceeding threshold
-if min_d > -thresh && numel(H.S{1}.info)==1
+if min_d > -thresh && H.n_surf==1
   set(H.slider_min,'Value',0);
 end
 
@@ -586,6 +605,7 @@ elseif atlas == 2
   atlas_name = 'Destrieux 2009 Atlas';
 end
 
+% go trhough left and right hemisphere
 for ind = [1 3]
 
   % atlas data
@@ -595,101 +615,108 @@ for ind = [1 3]
   M = getappdata(H.patch(ind),'patch');
   A       = spm_mesh_adjacency(M.faces);
   A       = A + speye(size(A));
-  d = getappdata(H.patch(ind),'data');
+  d0 = getappdata(H.patch(ind),'data');
 
-  % apply thresholds
-  dp = d > thresh(2); indp = find(dp);
-  dn = d < thresh(1); indn = find(dn);
-  
-  % go through pos. effects
-  if ~isempty(indp)
-  
-    C = find_connected_component(A, dp);
-    C = C(indp);
-    rdata2 = rdata(indp);
-  
-    fprintf('\n\n______________________________________________________\n');
-    fprintf('%s: Positive effects in %s',atlas_name,H.S{round(ind/2)}.info(1).side);
-    fprintf('\n______________________________________________________\n\n');
-  
-    if H.logP, fprintf('%7s\t%8s\t%s\n','P-value','Size','Overlap of atlas region');
-    else,      fprintf('%7s\t%8s\t%s\n','Value  ','Size','Overlap of atlas region'); end
-
-    for i = 1:max(C)
-      N = find(C == i);
-      k = length(N);
+  % go through all surfaces
+  for indsurf = 1:H.n_surf
+    d = d0(indsurf,:);
     
-      dmax = d(indp); dmax = max(dmax(N));
-      
-      if H.logP, fprintf('\n%1.5f\t%8d',10^(-dmax),k);
-      else,      fprintf('\n%6.1f\t%8d',dmax,k); end
-      
-      Nrdata = rdata2(N);
-      roi_size = zeros(size(rcsv,1)-1,1);
-      
-      for j=2:size(rcsv,1)
-        ind3 = find(Nrdata == rcsv{j,1});
-        roi_size(j-1) = 100*length(ind3)/k;
-      end
+    % apply thresholds
+    dp = d > thresh(2); indp = find(dp);
+    dn = d < thresh(1); indn = find(dn);
+  
+    % go through pos. effects
+    if ~isempty(indp)
+  
+      C = find_connected_component(A, dp);
+      C = C(indp);
+      rdata2 = rdata(indp);
+  
+      fprintf('\n\n______________________________________________________\n');
+      fprintf('%s: Positive effects in %s',atlas_name,H.S{round(ind/2)}.info(1).side);
+      fprintf('\n%s',spm_str_manip(H.S{round(ind/2)}.info(indsurf).fname,'k50d'));
+      fprintf('\n______________________________________________________\n\n');
+  
+      if H.logP, fprintf('%7s\t%8s\t%s\n','P-value','Size','Overlap of atlas region');
+      else,      fprintf('%7s\t%8s\t%s\n','Value  ','Size','Overlap of atlas region'); end
 
-      % sort wrt size
-      [ii, jj] = sort(roi_size,'descend');
-      jj(ii==0) = [];
+      for i = 1:max(C)
+        N = find(C == i);
+        k = length(N);
+    
+        dmax = d(indp); dmax = max(dmax(N));
       
-      for j=1:length(jj)
-        if roi_size(jj(j)) > 1
-          if j==1, fprintf('\t%3.0f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
-          else,    fprintf('%7s\t%8s\t%3.0f%s\t%s\n','       ','        ',...
+        if H.logP, fprintf('\n%1.5f\t%8d',10^(-dmax),k);
+        else,      fprintf('\n%6.1f\t%8d',dmax,k); end
+      
+        Nrdata = rdata2(N);
+        roi_size = zeros(size(rcsv,1)-1,1);
+      
+        for j=2:size(rcsv,1)
+          ind3 = find(Nrdata == rcsv{j,1});
+          roi_size(j-1) = 100*length(ind3)/k;
+        end
+
+        % sort wrt size
+        [ii, jj] = sort(roi_size,'descend');
+        jj(ii==0) = [];
+      
+        for j=1:length(jj)
+          if roi_size(jj(j)) > 1
+            if j==1, fprintf('\t%3.0f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
+            else,    fprintf('%7s\t%8s\t%3.0f%s\t%s\n','       ','        ',...
                 roi_size(jj(j)),'%',rcsv{jj(j)+1,2}); 
+            end
           end
         end
-      end
 
+      end
     end
-  end
       
-  % go through neg. effects
-  if ~isempty(indn)
+    % go through neg. effects
+    if ~isempty(indn)
 
-    C = find_connected_component(A, dn);
-    C = C(indn);
-    rdata2 = rdata(indn);
+      C = find_connected_component(A, dn);
+      C = C(indn);
+      rdata2 = rdata(indn);
 
-    fprintf('\n\n______________________________________________________\n');
-    fprintf('%s: Negative effects in %s',atlas_name,H.S{round(ind/2)}.info(1).side);
-    fprintf('\n______________________________________________________\n\n');
+      fprintf('\n\n______________________________________________________\n');
+      fprintf('%s: Negative effects in %s',atlas_name,H.S{round(ind/2)}.info(1).side);
+      fprintf('\n%s',spm_str_manip(H.S{round(ind/2)}.info(indsurf).fname,'k50d'));
+      fprintf('\n______________________________________________________\n\n');
   
-    if H.logP, fprintf('%7s\t%8s\t%s\n','P-value','Size','Overlap of atlas region');
-    else,      fprintf('%7s\t%8s\t%s\n','Value  ','Size','Overlap of atlas region'); end
+      if H.logP, fprintf('%7s\t%8s\t%s\n','P-value','Size','Overlap of atlas region');
+      else,      fprintf('%7s\t%8s\t%s\n','Value  ','Size','Overlap of atlas region'); end
 
-    for i = 1:max(C)
-      N = find(C == i);
-      k = length(N);
+      for i = 1:max(C)
+        N = find(C == i);
+        k = length(N);
     
-      dmin = d(indn); dmin = min(dmin(N));
-      if H.logP, fprintf('\n%1.5f\t%8d',10^(dmin),k);
-      else,      fprintf('\n%6.1f\t%8d',-dmin,k); end
+        dmin = d(indn); dmin = min(dmin(N));
+        if H.logP, fprintf('\n%1.5f\t%8d',10^(dmin),k);
+        else,      fprintf('\n%6.1f\t%8d',-dmin,k); end
 
-      Nrdata = rdata2(N);
-      roi_size = zeros(size(rcsv,1)-1,1);
-      for j=2:size(rcsv,1)
-        ind3 = find(Nrdata == rcsv{j,1});
-        roi_size(j-1) = 100*length(ind3)/k;
-      end
+        Nrdata = rdata2(N);
+        roi_size = zeros(size(rcsv,1)-1,1);
+        for j=2:size(rcsv,1)
+          ind3 = find(Nrdata == rcsv{j,1});
+          roi_size(j-1) = 100*length(ind3)/k;
+        end
 
-      % sort wrt size
-      [ii, jj] = sort(roi_size,'descend');
-      jj(ii==0) = [];
+        % sort wrt size
+        [ii, jj] = sort(roi_size,'descend');
+        jj(ii==0) = [];
       
-      for j=1:length(jj)
-        if roi_size(jj(j)) > 1
-          if j==1, fprintf('\t%3.0f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
-          else,    fprintf('%7s\t%8s\t%3.0f%s\t%s\n','       ','        ',...
+        for j=1:length(jj)
+          if roi_size(jj(j)) > 1
+            if j==1, fprintf('\t%3.0f%s\t%s\n',roi_size(jj(j)),'%',rcsv{jj(j)+1,2});
+            else,    fprintf('%7s\t%8s\t%3.0f%s\t%s\n','       ','        ',...
                 roi_size(jj(j)),'%',rcsv{jj(j)+1,2}); 
+            end
           end
         end
-      end
       
+      end
     end
   end
 end
@@ -776,7 +803,7 @@ if ~isempty(ind1) && ~isempty(ind2)
   H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y))),max(H.S{2}.Y(~isinf(H.S{2}.Y))));
 elseif isempty(ind1)
   H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:)>0));
-  H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{1}.Y)));
+  H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y)));
   H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y)));
 elseif isempty(ind2)
   H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
@@ -821,7 +848,7 @@ if H.logP && (H.S{1}.thresh < 1)
   set(H.thresh,'Visible','on');
 end
 
-if numel(H.S{1}.info)==1
+if H.n_surf==1
   % get sure that image is thresholded and there are at least 20% zero/NaN areas
   if (sum(d~=0)/numel(d) < 0.8)         
     set(H.atlas,'Visible','on');
@@ -833,7 +860,7 @@ if ~H.disable_cbar
 end
 
 % show slider for range of results
-if numel(H.S{1}.info)==1
+if H.n_surf==1
 
   % allow slider a more extended range
   mnx = 2*max(abs([H.S{1}.min H.S{1}.max]));
@@ -871,7 +898,7 @@ function H = show_colorbar(H)
 
 % show colorbar
 figure(H.figure(1))
-if numel(H.S{1}.info) == 1
+if H.n_surf == 1
   if ~isfield(H,'cbar') || ~ishandle(H.cbar)
     H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(1,:),'Color',[0.5 0.5 0.5],'Visible','off');
     H.colourbar = colorbar('peer',H.cbar,'Northoutside');
@@ -943,7 +970,7 @@ else
   end
   
   % RGB colorbar
-  if numel(H.S{1}.info) ==3
+  if H.n_surf ==3
     cb = [8 1 1 4 2 2 8;...
           8 1 6 7 5 2 8;...
           8 8 3 3 3 8 8];
@@ -1204,6 +1231,8 @@ H.S{1}.name = P(lh,:);
 H.S{2}.name = P(rh,:);
 H.S{1}.info = cat_surf_info(H.S{1}.name,1); 
 H.S{2}.info = cat_surf_info(H.S{2}.name,1); 
+
+H.n_surf = max(numel(H.S{1}.info),numel(H.S{2}.info));
 
 if isempty(H.S{2}.name)
   H.S{2}.name = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
