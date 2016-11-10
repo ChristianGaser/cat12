@@ -13186,6 +13186,7 @@ M       html/cat.html
 Fixed: Solved error with surfaces caused by last change in cat_stat_spm2x.m
 
 ------------------------------------------------------------------------
+r1072 | dahnke | 2016-11-09 16:01:16 +0100 (Mi, 09 Nov 2016) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13213,5 +13214,14 @@ M       cat_tst_qa.m
 (6) New:      Added opengl info and data to CAT report in "cat_tst_qa".
 (7) Fixed:    Small corrections in "cat_tst_cattest" and its batches.
               
+
 ------------------------------------------------------------------------
-r1072 | dahnke | 2016-11-09 16:01:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Fixed: Solved error when multiple surfaces were selected for just one hemipshere
+in cat_surf_results.
+------------------------------------------------------------------------
+r1073 | gaser | 2016-11-10 15:57:13
