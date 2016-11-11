@@ -104,9 +104,9 @@ function stools = cat_conf_stools(expert)
   check_mesh_cov.val  = {sample_cov,qam,nuisance};
   check_mesh_cov.prog = @cat_stat_check_cov;
   check_mesh_cov.help = {
-  'If you have a reasonable sample size artefacts are easily overseen. In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces measures have to be resampled to the template space (e.g. normalized data). The idea of this tool is to check the correlation of all files across the sample.'
+  'In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces measures have to be first resampled to the template space (e.g. resampled and smoothed data) and can be then check for each hemisphere separately. Please do not mix data from both hemispehre.'
   ''
-  'The correlation is calculated between all surfaces measures and the mean for each surface measures is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this surface measures from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups.'};
+  'The idea of this tool is to check the correlation of all files across the sample. The correlation is calculated between all surfaces measures and the mean for each surface measure is plotted using a boxplot and optionally the indicated filenames. The smaller the mean correlation the more deviant is this surface measures from the sample mean. In the plot outliers from the sample are usually isolated from the majority of surface measures which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the order of your measures.'};
 
     
   

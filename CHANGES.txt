@@ -13216,6 +13216,7 @@ M       cat_tst_qa.m
               
 
 ------------------------------------------------------------------------
+r1073 | gaser | 2016-11-10 15:57:30 +0100 (Do, 10 Nov 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13223,5 +13224,18 @@ M       cat_surf_results.m
 
 Fixed: Solved error when multiple surfaces were selected for just one hemipshere
 in cat_surf_results.
+
 ------------------------------------------------------------------------
-r1073 | gaser | 2016-11-10 15:57:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_surf_createCS.m
+M       html/cat.html
+M       html/cat_starting.html
+
+Changed: Updated help text and quick starting guide.
+------------------------------------------------------------------------
+r1074 | gaser | 2016-11-11 12:21:37
