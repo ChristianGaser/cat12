@@ -13226,6 +13226,7 @@ Fixed: Solved error when multiple surfaces were selected for just one hemipshere
 in cat_surf_results.
 
 ------------------------------------------------------------------------
+r1074 | gaser | 2016-11-11 12:21:54 +0100 (Fr, 11 Nov 2016) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13237,5 +13238,14 @@ M       html/cat.html
 M       html/cat_starting.html
 
 Changed: Updated help text and quick starting guide.
+
 ------------------------------------------------------------------------
-r1074 | gaser | 2016-11-11 12:21:37
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+
+Changed: Restricted load of xml-files for cat_stat_checkcov.m.
+------------------------------------------------------------------------
+r1075 | gaser | 2016-11-11 12:32:46
