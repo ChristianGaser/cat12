@@ -80,7 +80,7 @@ function stools = cat_conf_stools(expert)
   qam.tag     = 'qam';
   qam.name    = 'Load quality measures';
   qam.values  = {data_xml};
-  qam.num     = [0 Inf];
+  qam.num     = [0 1];
   qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
   c         = cfg_entry;
