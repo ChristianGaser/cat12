@@ -370,9 +370,9 @@ check_cov.name = 'Check sample homogeneity of 3D data';
 check_cov.val  = {sample,qam,gap,nuisance};
 check_cov.prog = @cat_stat_check_cov;
 check_cov.help  = {
-'If you have a reasonable sample size artefacts are easily overseen. In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images). The idea of this tool is to check the correlation of all files across the sample.'
+'In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing). The idea of this tool is to check the correlation of all files across the sample.'
 ''
-'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order. Images are plotted from left to right which is helpful if you have selected the images in the order of different sub-groups. Furthermore this is also useful for fMRI images which can be also used with this tool. The proportional scaling option should be only used if image intensity is not scaled (e.g. T1 images) or if images have to be scaled during statistical analysis (e.g. modulated images).'};
+'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order.'};
 
 outdir         = cfg_files;
 outdir.tag     = 'outdir';

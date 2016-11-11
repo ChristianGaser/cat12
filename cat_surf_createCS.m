@@ -547,7 +547,7 @@ end
 %=======================================================================
 function V = isocolors2(R,V,opt)
 % ______________________________________________________________________
-% calculates a linear interpolated value of a vertex in R  
+% calculates an interpolated value of a vertex in R  
 % We have to calculate everything with double, thus larger images will 
 % cause memory issues.
 % ______________________________________________________________________
@@ -575,17 +575,18 @@ function V = isocolors2(R,V,opt)
 
       % calculate the weight of a neigbor (volume of the other corner) and
       w8b = reshape(repmat(V,1,2^ndim),[nV,ndim,2^ndim]); clear V;
-      % if the streamline ist near the boundery of the image you could be out of range if you add 1 
+      % if the streamline is near the boundery of the image you could be out of range if you add 1 
       n8b = min(floor(w8b) + nb,enb); clear enb
       n8b = max(n8b,1);
       w8b = flipdim(prod(abs(n8b - w8b),2),3);        
 
-      % multiply this with the intensity-value of R
+      % multiply this with the intensity value of R
       V = sum(R(sub2ind(size(R),n8b(:,2,:),n8b(:,1,:),n8b(:,3,:))) .* w8b,3);
   end  
   if ~VD, V = single(V); end
 end
-     %=======================================================================
+    
+%=======================================================================
 function cdata = estimateWMdepthgradient(CS,cdata)
 % ______________________________________________________________________
 % Estimates the maximum local gradient of a surface. 
