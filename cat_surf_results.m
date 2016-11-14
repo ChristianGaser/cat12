@@ -33,8 +33,8 @@ H.show_inv = 0;
 H.transp   = 1;
 H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
 H.FS       = spm('FontSizes');
-H.cursor_mode  = 1;
 H.n_surf   = 1;
+H.cursor_mode = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -1513,13 +1513,13 @@ if view ~= H.view
 end
 
 %==========================================================================
-function select_cursor(mode)
+function select_cursor(cursor_mode)
 
 global H y
 
-H.cursor_mode = mode;
-
 dcm_obj = datacursormode(H.figure(1));
+H.cursor_mode = cursor_mode;
+
 switch H.cursor_mode
 
   case 0 % disable and delete datatip
@@ -1528,7 +1528,6 @@ switch H.cursor_mode
     clearDataCursorPlot(H)
   case {1,2}
     clearDataCursorPlot(H)
-
     set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
   case {3,4}
@@ -1578,6 +1577,7 @@ end
 
 figure(H.figure(1))
 try
+  dcm_obj = datacursormode(H.figure(1));
   set(dcm_obj, 'Enable','off');
   delete(findall(gca,'Type','hggroup','HandleVisibility','off'));
 end
