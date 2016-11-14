@@ -13240,6 +13240,7 @@ M       html/cat_starting.html
 Changed: Updated help text and quick starting guide.
 
 ------------------------------------------------------------------------
+r1075 | gaser | 2016-11-11 12:33:00 +0100 (Fr, 11 Nov 2016) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13247,5 +13248,15 @@ M       cat_conf_stools.m
 M       cat_conf_tools.m
 
 Changed: Restricted load of xml-files for cat_stat_checkcov.m.
+
 ------------------------------------------------------------------------
-r1075 | gaser | 2016-11-11 12:32:46
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Fixed: Datatips were not reset in cat_surf_results.m
+------------------------------------------------------------------------
+r1076 | gaser | 2016-11-14 13:05:45
