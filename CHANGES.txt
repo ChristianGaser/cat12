@@ -13250,6 +13250,7 @@ M       cat_conf_tools.m
 Changed: Restricted load of xml-files for cat_stat_checkcov.m.
 
 ------------------------------------------------------------------------
+r1076 | gaser | 2016-11-14 13:06:04 +0100 (Mo, 14 Nov 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13258,5 +13259,15 @@ M       cat_surf_results.m
 M       html/cat.html
 
 Fixed: Datatips were not reset in cat_surf_results.m
+
 ------------------------------------------------------------------------
-r1076 | gaser | 2016-11-14 13:05:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_plot_circular.m
+M       cat_stat_analyze_ROIs.m
+
+Changed: Prepared comparison of correlation matrices in cat_stat_analyze_ROIs.m
+------------------------------------------------------------------------
+r1077 | gaser | 2016-11-15 21:07:22
