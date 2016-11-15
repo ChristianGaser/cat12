@@ -1,8 +1,8 @@
 function h = cat_plot_circular(data, opt)
 
-% cat_plot_curcular Plots correlation matrix as a cat_plot_circular
+% cat_plot_circular Plots correlation matrix as a cat_plot_circular
 %
-% usage: vargout = cat_plot_boxplot(data,opt);
+% usage: vargout = cat_plot_circular(data,opt);
 %
 %   cat_plot_circular(data) data is a square numeric matrix with values in [0,1].
 %
@@ -24,7 +24,7 @@ function h = cat_plot_circular(data, opt)
 %
 %     opt.saveas    Save figure as image (e.g. png or pdf).
 %
-%   H = cat_plot_curcular(...) Returns a structure with handles to the graphic objects
+%   H = cat_plot_circular(...) Returns a structure with handles to the graphic objects
 %
 %       h.l     handles to the curves (line objects), one per color shade. 
 %               If no curves fall into a color shade that handle will be NaN.
@@ -139,7 +139,7 @@ end
 %% Engine
 
 % Create figure
-figure('renderer','painters','visible','off')
+figure('renderer','opengl','visible','off')
 axes('NextPlot','add')
 
 % Index only low triangular matrix without main diag

@@ -25,6 +25,17 @@ end
 % select contrast
 [Ic,xCon] = spm_conman(SPM,'T&F',1,'Select contrast',' ',1);
 
+% check whether two groups are compared with each other
+c = xCon(Ic).c;
+c_sort_unique = sort(unique(c(find(c~=0))));
+compare_two_samples = 0;
+if numel(c_sort_unique) == 2
+  if all(c_sort_unique==[-1 1]')
+    compare_two_samples = 1;
+  end
+end
+
+% not yet ready to use
 % threshold for p-values
 spm_clf('Interactive');
 alpha = spm_input('p-value',1,'r',0.05,1,[0,1]);
@@ -97,7 +108,7 @@ end
 
 % use 1st xml file to get the available atlases
 % xml-reading is here using old style to be compatible to old xml-files and functions
-xml = convert(xmltree(deblank(roi_names{i})));
+xml = convert(xmltree(deblank(roi_names{1})));
 
 if isfield(xml,'ROI')
   % get selected atlas and measure
@@ -129,6 +140,45 @@ str_con = spm_str_manip(str_con,'v');
 % build X and Y for GLM
 Y = ROIvalues;
 X = SPM.xX.X;
+
+% compare correlation coefficients after Fisher z-transformation
+if compare_two_samples
+  % get two samples according to contrast -1 1
+  Y1 = Y(find(X(:,find(c==-1))),:);
+  Y2 = Y(find(X(:,find(c== 1))),:);
+  
+  % estimate correlation and apply Fisher transformation
+  r1 = corrcoef(Y1); 
+  r2 = corrcoef(Y2); 
+  z1 = atanh(r1);
+  z2 = atanh(r2);
+  
+  Dz = (z1-z2)./sqrt(1/(size(Y1,1)-3)+1/(size(Y2,1)-3));
+  
+  % use only upper half of symmetrical matrix and set NaN to the remaing part
+%  Dz = triu(Dz);   
+%  Dz(find(Dz==0)) = NaN;
+  
+  Pz = (1-spm_Ncdf(abs(Dz)));
+  Pzfdr = spm_P_FDR(Pz);
+  
+  Pz(isnan(Pz)) = 1;
+  Pzfdr(isnan(Pzfdr)) = 1;
+  
+  opt.label = ROInames;
+  
+  ind = (Pzfdr<alpha);
+  if any(ind(:))
+    cat_plot_circular(0.5*ind.*(r1-r2),opt);
+    set(gcf,'Name',sprintf('%s: %s FDR q<%g',atlas,str_con,alpha));
+  end
+  
+  ind = (Pz<alpha);
+  if any(ind(:))
+    cat_plot_circular(0.5*ind.*(r1-r2),opt);
+    set(gcf,'Name',sprintf('%s: %s P<%g',atlas,str_con,alpha));
+  end
+end
 
 % get number of structures
 n_structures = size(Y,2);
@@ -201,8 +251,7 @@ for i = order
   Pcorr{1} = P{i};
   
   % apply FDR correction
-  Pfdr_sorted = spm_P_FDR(Psort);
-  Pcorr{2}(indP) = Pfdr_sorted;
+  Pcorr{2} = spm_P_FDR(P{i});
 
   % apply Holm-Bonferroni correction: correct lowest P by n, second lowest by n-1...
   if n_corr > 2
