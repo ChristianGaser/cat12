@@ -13261,6 +13261,7 @@ M       html/cat.html
 Fixed: Datatips were not reset in cat_surf_results.m
 
 ------------------------------------------------------------------------
+r1077 | gaser | 2016-11-15 21:07:42 +0100 (Di, 15 Nov 2016) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13269,5 +13270,17 @@ M       cat_plot_circular.m
 M       cat_stat_analyze_ROIs.m
 
 Changed: Prepared comparison of correlation matrices in cat_stat_analyze_ROIs.m
+
 ------------------------------------------------------------------------
-r1077 | gaser | 2016-11-15 21:07:22
+
+Changed paths:
+M       CHANGES.txt
+D       cat_conf_fmri.m
+M       cat_conf_stools.m
+D       cat_fmri_main.m
+D       cat_fmri_multi_run.m
+
+(1) Removed: Deleted fmri function that were too complex.
+(2) Changed: Set absmax as default for mapping function cat_surf_vol2surf.m
+------------------------------------------------------------------------
+r1078 | gaser | 2016-11-16 21:21:13

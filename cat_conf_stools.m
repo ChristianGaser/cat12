@@ -297,7 +297,7 @@ function stools = cat_conf_stools(expert)
   v2s.interp.values  = {{'nearest_neighbour'},{'linear'},{'cubic'}};
   v2s.interp.val     = {{'linear'}};
   v2s.interp.help    = {
-    'Volume extration interpolation type. '
+    'Volume extraction interpolation type. '
     ' -linear:            Use linear interpolation (default).'
     ' -nearest_neighbour: Use nearest neighbour interpolation.'
     ' -cubic:             Use cubic interpolation.'
@@ -310,7 +310,7 @@ function stools = cat_conf_stools(expert)
   v2s.sample.name    = 'Sample Function';
   v2s.sample.labels  = {'Mean','Maximum','Minimum','Absolute maximum'};
   v2s.sample.values  = {{'avg'},{'max'},{'min'},{'maxabs'}};
-  v2s.sample.val     = {{'avg'}};
+  v2s.sample.val     = {{'maxabs'}};
   v2s.sample.help    = {
     'Sample function to combine the values of the grid along the surface normals.'
   };
@@ -1062,9 +1062,6 @@ end
   ''
   ''};
 
-%-----------------------------------------------------------------------
-fmri    = cat_conf_fmri;
-%-----------------------------------------------------------------------
 
 %% Toolset
 %-----------------------------------------------------------------------
@@ -1086,7 +1083,6 @@ fmri    = cat_conf_fmri;
       roi2surf, ...
       ... estroi, ...
       flipsides, ...
-      ... fmri, ...
       ... roicalc, ...
       };    
   elseif expert==1
@@ -1103,7 +1099,6 @@ fmri    = cat_conf_fmri;
       ... roi2surf, ...
       ... estroi, ...
       flipsides, ...
-      ... fmri, ...
       ... roicalc, ...
       };
   else
@@ -1117,7 +1112,6 @@ fmri    = cat_conf_fmri;
       v2s.vol2tempsurf, ...
       surfcalc, ...
       surfcalcsub, ...
-      ... fmri, ...
       };
   end
 
