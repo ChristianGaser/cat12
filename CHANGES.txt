@@ -13272,6 +13272,7 @@ M       cat_stat_analyze_ROIs.m
 Changed: Prepared comparison of correlation matrices in cat_stat_analyze_ROIs.m
 
 ------------------------------------------------------------------------
+r1078 | gaser | 2016-11-16 21:21:31 +0100 (Mi, 16 Nov 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13282,5 +13283,13 @@ D       cat_fmri_multi_run.m
 
 (1) Removed: Deleted fmri function that were too complex.
 (2) Changed: Set absmax as default for mapping function cat_surf_vol2surf.m
+
 ------------------------------------------------------------------------
-r1078 | gaser | 2016-11-16 21:21:13
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+Changed: Fine-tuned spherical registration parameters in cat_surf_createCS.m
+------------------------------------------------------------------------
+r1079 | gaser | 2016-11-17 13:53:53
