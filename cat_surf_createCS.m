@@ -428,7 +428,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % spherical registration to fsaverage template
     stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
-    cmd = sprintf('CAT_WarpSurf -type 0 -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+    cmd = sprintf('CAT_WarpSurf -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
     
     % read final surface and map thickness data
