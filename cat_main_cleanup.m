@@ -6,7 +6,8 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 %  menignes occure in the sulci and next to the skull. Therefore we 
 %  use the brainmask and the label map to identify special regions.
 %  -----------------------------------------------------------------
-  debug = 0; 
+  dbs   = dbstatus; debug = 0; 
+  for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_cleanup'); debug = 1; break; end; end
 
   LAB  = extopts.LAB;
   vxv  = 1/max(vx_vol);           % use original voxel size!!!
@@ -17,7 +18,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 
   stimec = cat_io_cmd(sprintf('Final cleanup (gcutstr=%0.2f)',cleanupstr));
   fprintf('\n');
-  stime = cat_io_cmd('  Level 1 cleanup (ROI estimation)','g5','',extopts.verb); dispc=1;
+  stime = cat_io_cmd('  Level 1 cleanup (ROI estimation)','g5','',extopts.verb); %dispc=1;
   
   %% estimate the ROI
   % ------------------------------------------------------------------
@@ -49,10 +50,10 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 %     Ybvx(smooth3(Ybvx)<0.7)=0; Ybvx(smooth3(Ybvx)<0.5)=0; Ybvx(Ywm & Ybvx==0)=2; Ybvx(Yp0==0)=nan;
 %     Ybvx = cat_vol_downcut(Ybvx,Ymb,0.05);
 
-  if ~debug, clear Ycbp Ycbn Ylhp; Yp0o=Yp0; end
+  if ~debug, clear Ycbp Ycbn Ylhp; end
 
   %% roi to change GM or WM to CSF or background
-  stime = cat_io_cmd('  Level 1 cleanup (brain masking)','g5','',extopts.verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd('  Level 1 cleanup (brain masking)','g5','',extopts.verb,stime); %dispc=dispc+1;
   Yrw = Yp0>0 & Yroi & Ymb>0.9+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
   Yrw = Yrw | smooth3(Yrw)>0.3-0.3*cleanupstr;                        % dilate region
   Ygw = cat_vol_morph(Yp0>=2 & ~Yrw,'lo',1); 
@@ -82,7 +83,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   % ------------------------------------------------------------------
   % This removes meninges next to the brain... works quite well.
   clear Yrg Yrw Yroi
-  stime = cat_io_cmd('  Level 2 cleanup (CSF correction)','g5','',extopts.verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd('  Level 2 cleanup (CSF correction)','g5','',extopts.verb,stime); %dispc=dispc+1;
   Yp0 = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
   YM  = single(cat_vol_morph((prob(:,:,:,1) + prob(:,:,:,2))>(160 + 32*cleanupstr) & ...
          ~cat_vol_morph(Yp0>1 & Yp0<1.5+cleanupstr/2,'o',vxv)  ,'l')); 
@@ -93,14 +94,13 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   prob(:,:,:,1)=min(prob(:,:,:,1),uint8(~YM*255));
   prob(:,:,:,2)=min(prob(:,:,:,2),uint8(~YM*255));
   prob(:,:,:,3)=max(prob(:,:,:,3),uint8( (YM | (Ybb & Yp0==0))*255));
-  Yp0 = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
-
+  Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
+  
 
 
   %% cleanup WM 
   % ------------------------------------------------------------------
   % the idea was to close WMH ... but its not stable enough yes
-  Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
   Ywmh = false(size(Yp0)); 
   for p0thi=2.1:0.2:2.9
     Ywmh = Ywmh | ~cat_vol_morph(Yp0<p0thi,'l') & (Yp0<p0thi); 
@@ -116,7 +116,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   % ------------------------------------------------------------------
   % cleanup in regions with PVE between WM and CSF without GM
   % ------------------------------------------------------------------
-  stime = cat_io_cmd('  Level 3 cleanup (CSF/WM PVE)','g5','',extopts.verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd('  Level 3 cleanup (CSF/WM PVE)','g5','',extopts.verb,stime); %dispc=dispc+1;
   Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
   Ybs  = NS(Yl1b,LAB.BS) & Ymb>2/3;
   YpveVB = cat_vol_morph(NS(Yl1b,LAB.VT) | Ybs,'d',2);                % ventricle and brainstem
@@ -130,7 +130,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   clear YpveVB YpveCC Ybs Ynpve;         
   Yncm = (3-Yp0)/2.*Yroi; 
 
-  for i=1:3, Ycls{i}=zeros(size(Ycls{i}),'uint8'); end %#ok<AGROW>
+  for i=1:3, Ycls{i}=zeros(size(Ycls{i}),'uint8'); end
   Ycls{1}(indx,indy,indz) = min(prob(:,:,:,1),uint8(~Yroi*255));
   Ycls{2}(indx,indy,indz) = cat_vol_ctype(single(prob(:,:,:,2)).*~Yroi + (Yroi - Yncm)*255,'uint8');
   Ycls{3}(indx,indy,indz) = cat_vol_ctype(single(prob(:,:,:,3)).*~Yroi + Yncm*255,'uint8');

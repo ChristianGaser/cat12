@@ -9,6 +9,7 @@ function cat_tst_cattest(job)
 % 
 %   cat_tst_cattest(job)
 %   
+%
 %  Data:
 %  1) Human:
 %   * Adult:            single_T1subj  (Collins brain)
@@ -30,7 +31,7 @@ function cat_tst_cattest(job)
 %  Robert Dahnke
 %  $Id$
 
-
+ 
 
 %  _____________________________________________________________________
 %
@@ -84,17 +85,19 @@ function cat_tst_cattest(job)
 
 
 %#ok<*ASGLU,*NASGU,*AGROW>
+  clc
   clear
+  spm_clf('Interactive'); 
+  
 
   if ~exist('job','var'), job=struct(); end
   [cv,rv] = cat_version;
   
   % defaults
   def.computer  = computer; 
-  def.userlevel = ''; % [ default | expert | developer ] 
-  def.datalevel = ''; % [ basic | human | long | ape | monkey | full ]
   def.resdir    = fullfile(spm('dir'),'toolbox','cat12','cattest',[cv 'R' rv]);
   def.batchdir  = fullfile(spm('dir'),'toolbox','cat12','batches','cattest');
+  def.expert    = cat_get_defaults('extopts.expertgui');
 
   % testdata definition
   % --------------------------------------------------------------------
@@ -130,31 +133,61 @@ function cat_tst_cattest(job)
     };
   % test parameter
   def.para = {
-    ... scipt, testlevel, variable, further values
-    ''                      1  0 ''                                           ''           {0}; % default
-    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.APP'         'APP'        {0}; 
-    'cat12_SBM_101_segment' 1  1 'spm.tools.cat.estwrite.extopts.sanlm'       'sanlm'      {0 2}; 
-    'cat12_SBM_101_segment' 1  1 'spm.tools.cat.estwrite.extopts.NCstr'       'NCstr'      {0 0.5 1}; 
-    'cat12_SBM_101_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'      'LASstr'     {0 1}; 
-    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.gcutstr'     'gcutstr'    {0 1}; 
-    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.cleanupstr'  'cleanupstr' {0 1}; 
-    'cat12_SBM_101_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'      'BVCstr'     {0.5 1}; 
-    'cat12_SBM_101_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'     'WMHCcstr'   {0 1}; 
-    'cat12_SBM_101_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHC'        'WMHCstr'    {0 2}; 
-    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.vox'         'vox'        {1}; 
-    'cat12_SBM_101_segment' 1  2 'spm.tools.cat.estwrite.extopts.pbtres'      'pbtres'     {0.25 1};   
-  };
-  def.paralevel = 0;
+    ... 'scriptname', [batchnumber], [testlevel], 'variable', {further values};  % comments
+    ''                      1  0 ''                                           ''           {0};        % default
+    ... == parameter in default GUI ==
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.sanlm'       'sanlm'      {0 2};      % not usefull in single_subj_T1!
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.NCstr'       'NCstr'      {0 0.5 1};  % not usefull in single_subj_T1!
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'      'LASstr'     {0 1};      
+    ... == parameter in expert GUI ==
+ ...   'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.APP'         'APP'        {0}; 
+ ...   'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.gcutstr'     'gcutstr'    {0 1}; 
+ ...   'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.cleanupstr'  'cleanupstr' {0 1};     % not so usefull in 2 mm
+ ...   'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.vox'         'vox'        {0.5 1}; 
+    ...
+    ... the restype and resval variable were used in the GUI to create the restypes structure 
+    ... 'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.restype'     'restype'    {'native' 'fixed' 'best'};
+    ... 'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.resval'      'resval'     {[0.5 0.1] [2.0 0.5]};
+    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.restypes'    'restypes'    ...
+      { struct('fixed',[1.0 0.0]) struct('best',[0.8 0.1]) struct('native',{}) }; 
+...    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.darteltpm'   'shooting'   { ... 
+...    ...{fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')} ... Dartel template (default)
+...    {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')} ... Shooting template
+...      }
+    ... == parameter in developer GUI ==
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.pbtres'      'pbtres'     {1.00}; % required surface reconstruction ... 0.25   
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.mrf'         'mrf'        {0.0 0.5}; 
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.bb'          'bb'         {[[-100 -136 -82];[100 100 118]]}; % +10 mm compared to default 
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'      'BVCstr'     {0.5 1}; 
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'     'WMHCstr'    {0 1}; 
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHC'        'WMHC'       {0 2};  
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.tca'         'tca'        {0}; 
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.subfolders'  'subfolders' {0}; 
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.verb'        'verb'       {0 1};
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.debug'       'debug'      {0 2};
+    ... ignoreErrors
+    };
+  def.userlevel   = ''; 
+  def.datalevel   = ''; 
+  job.paralevel   = ''; 
+  job.segmentonly = 1;
   job = cat_io_checkinopt(job,def);
   
-  
-  
+  %{ 
+  fprintf([
+    'The datalevel controls the number and kind (e.g., animals) of test cases.\n' ... 
+    'The userlevel controls the basic setting of the test parameters,\n' ... 
+    'whereas the parameterlevel controls the definition of test parameters.']),
+  %}
   
   % choose datalevel
   % --------------------------------------------------------------------
+  % if there are multipe subjects an GUI for default user maybe useful
   if isempty(job.datalevel)
-    job.datalevel = char(spm_input('Datalevel',1,'basic|human|animal|all', ...
-      {'basic','human','primates','all'},1));
+    if job.expert
+      job.datalevel = char(spm_input('Datalevel',1,'basic|human|animal|all', ...
+        {'basic','human','primates','all'},1));
+    end
   end
   switch job.datalevel
     case 'basic'
@@ -186,7 +219,14 @@ function cat_tst_cattest(job)
       job.data_human            = {};
       job.data_human_long       = {};
       job.data_human_group      = {};
+    otherwise % basic
+      job.data_human            = job.data_human(1);
+      job.data_human_long       = {};
+      job.data_human_group      = {};
+      job.data_greaterapes      = {};
+      job.data_oldworldmonkeys  = {}; 
   end
+
   
   % check input files
   species = {'data_human','data_human_long','data_human_group','data_greaterapes','data_oldworldmonkeys'}; 
@@ -202,21 +242,61 @@ function cat_tst_cattest(job)
   
   
   
-  % choose userlevel
+  % choose userlevel (only lower or equal level than the actual level)
   % --------------------------------------------------------------------
-  userlevels = {'default','expert','developer'};
+ 
   if isempty(job.userlevel)
-    job.userlevel = spm_input('Userlevel',1,'Default|Expert|Developer',[0,1,2],1);
-  end
-  for pi = size(job.para,1):-1:1
-    if job.para{pi,3}>job.userlevel, job.para(pi,:) = []; end
+    switch job.expert
+      case 2,     userlevelsstr = 'Default|Expert|Developer'; 
+      case 1,     userlevelsstr = 'Default|Expert'; 
+      otherwise   userlevelsstr = 'Default'; 
+    end
+    if job.expert
+      userlevels    = eval(sprintf('{''%s''}',strrep(lower(userlevelsstr),'|',''','''))); 
+      job.userlevel = spm_input('Userlevel','+1',userlevelsstr,0:numel(userlevels)-1,1);
+    else
+      job.userlevel = 0; 
+    end
+  else
+    userlevels = {'Default','Expert','Developer'};   
   end
   exp = job.userlevel; 
   if cat_get_defaults('extopts.expertgui')~=job.userlevel
     cat12(userlevels{job.userlevel+1});
   end
-      
-    
+  
+  
+  % choose parameter test level
+  % --------------------------------------------------------------------
+  % basic       = only defaults
+  % userlevel   = only parameter defined for this userlevel without defaults
+  % full        = all paraemter defined for this and lower userlevels
+  paralevelstr = 'Defaults|Userlevel|Full';
+  if isempty(job.paralevel)
+    paralevels   = eval(sprintf('{''%s''}',strrep(lower(paralevelstr),'|',''','''))); 
+    job.paralevel = spm_input('Parameter test level','+1',paralevelstr,0:numel(paralevels)-1,1);
+  end
+  switch job.paralevel
+    case 0 % just defaults
+      for pi = size(job.para,1):-1:1
+        if job.para{pi,3}>0, job.para(pi,:) = []; end
+      end
+    case 1 
+      for pi = size(job.para,1):-1:1
+        if (job.para{pi,3}-1)~=job.userlevel, job.para(pi,:) = []; end
+      end
+    case 2 
+      for pi = size(job.para,1):-1:1
+        if (job.para{pi,3}-1)>job.userlevel, job.para(pi,:) = []; end
+      end
+  end
+  % 
+  fprintf('Testparameter:\n'); 
+  disp(char(job.para(:,5)));
+  
+  
+  
+  %%  
   for pi=1:size(job.para)
     for ppi=1:numel(job.para{pi,6})
       % create output directory and copy files
@@ -225,11 +305,16 @@ function cat_tst_cattest(job)
       if isempty(job.para{pi,5})
         subresdir = [job.resdir '_' job.computer];
       else
-        subresdir = [job.resdir job.para{pi,5} num2str(job.para{pi,6}{ppi}) '_' job.computer];
+        if isnumeric(job.para{pi,6}{ppi})
+          subresdir = [job.resdir '_' job.computer '_' job.para{pi,5} num2str(job.para{pi,6}{ppi}(1,:))];
+        else
+          subresdir = [job.resdir '_' job.computer '_' job.para{pi,5} num2str(ppi)];
+        end
       end  
       if ~exist(subresdir,'dir'), mkdir(subresdir); end 
       cd(subresdir);
 
+      
       for si = 1:numel(species)
         eval(sprintf('files_%s = {};',species{si}(6:end)));  
         for j = numel(job.(species{si})):-1:1
@@ -261,7 +346,10 @@ function cat_tst_cattest(job)
 
       % load batches and create main batch
       mainbatch{pi}{ppi} = {};
-      batchname         = {}; 
+      batchname{pi}{ppi} = {}; 
+      RBM = 1; 
+      SBM = 1;     
+      
       for bi = 1:numel(batches)
         matlabbatch = {};
         [pp,ffbi]  = fileparts(batches{bi}); 
@@ -271,19 +359,124 @@ function cat_tst_cattest(job)
 
         if strcmp(job.para{pi,1},ffbi)
           if isnumeric(job.para{pi,6}{ppi})
-            eval(sprintf('matlabbatch{%d}.%s = %f;',job.para{pi,2},job.para{pi,4},job.para{pi,6}{ppi}));
+            eval(sprintf('matlabbatch{%d}.%s = [%s];',job.para{pi,2},job.para{pi,4},sprintf('%f ',job.para{pi,6}{ppi})));
+          elseif ischar(job.para{pi,6}{ppi}) 
+            eval(sprintf('matlabbatch{%d}.%s = ''%s'';',job.para{pi,2},job.para{pi,4},job.para{pi,6}{ppi}));
+          elseif iscellstr(job.para{pi,6}{ppi}) 
+            eval(sprintf('matlabbatch{%d}.%s = {''%s''};',job.para{pi,2},job.para{pi,4},job.para{pi,6}{ppi}{1}));
+          elseif isstruct(job.para{pi,6}{ppi})
+            eval(sprintf('matlabbatch{%d}.%s = job.para{pi,6}{ppi};',job.para{pi,2},job.para{pi,4}));
           else
             error('bad parameter ... coding required')
           end
         end
+        
+       
+        % set/unset surface processing
+        if strcmp(job.para{pi,5},'pbtres')
+          for mbi=numel(matlabbatch):-1:1; 
+            % no surface-tools
+            if iscell(matlabbatch{mbi})
+              % SPM surf pipeline does not contrain further test 
+              for smbi=1:numel(matlabbatch{mbi})
+                % deactivate surface processing
+                if isfield(matlabbatch{mbi}{smbi},'spm') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm,'tools') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools,'cat') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools.cat,'estwrite_spm') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm,'output') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.output,'surface') 
+                  matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.extopts.pbtres = job.para{pi,6}{ppi}; 
+                  matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.output.surface = 1; 
+                  SBM = 1; 
+                end
+              end
+           else
+              % deactivate surface processing
+              if isfield(matlabbatch{mbi},'spm') && ...
+                 isfield(matlabbatch{mbi}.spm,'tools') && ...
+                 isfield(matlabbatch{mbi}.spm.tools,'cat') && ...
+                 isfield(matlabbatch{mbi}.spm.tools.cat,'estwrite') && ...
+                 isfield(matlabbatch{mbi}.spm.tools.cat.estwrite,'output') && ...
+                 isfield(matlabbatch{mbi}.spm.tools.cat.estwrite.output,'surface') 
+                matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.pbtres = job.para{pi,6}{ppi}; 
+                matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface = 1; 
+                SBM = 1; 
+              end
+            end
+          end
+        elseif job.segmentonly
+        % to avoid time intensive surface processing ... 
+          %mainbatch{pi}{ppi}{1}.spm.tools.cat.estwrite.output.surface = 0; 
+          for mbi=numel(matlabbatch):-1:1; 
+            % no surface-tools
+            if iscell(matlabbatch{mbi})
+              %{
+              % SPM surf pipeline does not contrain further test ...
+              for smbi=1:numel(matlabbatch{mbi})
+                % deactivate surface processing
+                if isfield(matlabbatch{mbi}{smbi},'spm') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm,'tools') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools,'cat') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools.cat,'estwrite_spm') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm,'output') && ...
+                   isfield(matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.output,'surface') 
+                  matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.output.surface = 0; 
+                  SBM = 0; 
+                end
+              end
+              %}
+           else
+              % deactivate surface processing
+              if isfield(matlabbatch{mbi},'spm') && ...
+                 isfield(matlabbatch{mbi}.spm,'tools') && ...
+                 isfield(matlabbatch{mbi}.spm.tools,'cat') && ...
+                 isfield(matlabbatch{mbi}.spm.tools.cat,'estwrite') && ...
+                 isfield(matlabbatch{mbi}.spm.tools.cat.estwrite,'output') && ...
+                 isfield(matlabbatch{mbi}.spm.tools.cat.estwrite.output,'surface') 
+                matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface = 0; 
+                SBM = 0; 
+              end
+            end
+          end
+        end
+        
+        
+        % no RBM tools if not ROI processing or Shooting
+        for mbi=numel(matlabbatch):-1:1; 
+          if isfield(matlabbatch{mbi},'spm') && ...
+             isfield(matlabbatch{mbi}.spm,'tools') && ...
+             isfield(matlabbatch{mbi}.spm.tools,'cat') && ...
+             isfield(matlabbatch{mbi}.spm.tools.cat,'estwrite') && ...
+             isfield(matlabbatch{mbi}.spm.tools.cat.estwrite,'output') && ...
+             isfield(matlabbatch{mbi}.spm.tools.cat.estwrite.output,'ROI') && ...
+             matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROI==0;
+            RBM = 0; 
+          end
+          if isfield(matlabbatch{mbi},'spm') && ...
+             isfield(matlabbatch{mbi}.spm,'tools') && ...
+             isfield(matlabbatch{mbi}.spm.tools,'cat') && ...
+             isfield(matlabbatch{mbi}.spm.tools.cat,'estwrite') && ...
+             isfield(matlabbatch{mbi}.spm.tools.cat.estwrite,'extopts') && ...
+             isfield(matlabbatch{mbi}.spm.tools.cat.estwrite.output,'darteltpm') && ...
+             strfind(matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.darteltpm,'_GS.nii')
+            matlabbatch{mbi}.spm.tools.cat.estwrite.output.ROI=0; 
+            RBM = 0; 
+          end
+        end
+        
+        % continue if batch required surfaces/ROIs and not surface/ROIs are available
+        if ~SBM && ~isempty(strfind(ffbi,'SBM')); continue; end
+        if ~RBM && ~isempty(strfind(ffbi,'RBM')); continue; end
+        
         if ~isempty(matlabbatch)
           for mbi = 1:numel(matlabbatch)
             mainbatch{pi}{ppi}{end+1,1} = matlabbatch{mbi};
             
-            batchname{end+1,1} = ffbi;
-            batchname{end,2}   = mbi; 
-            batchname{end,3}   = size(batchname,1);  
-            batchname{end,4}   = matlabbatch{mbi};
+            batchname{pi}{ppi}{end+1,1} = ffbi;
+            batchname{pi}{ppi}{end,2}   = mbi; 
+            batchname{pi}{ppi}{end,3}   = size(batchname,1);  
+            batchname{pi}{ppi}{end,4}   = matlabbatch{mbi};
           end
         end
       end
@@ -294,21 +487,57 @@ function cat_tst_cattest(job)
   %% test compiled (and other) functions
   compile(0,1,job.userlevel+1);
   cat_io_cprintf('silentreset');
+  spm_jobman('initcfg'); 
   
   
   
   %% process main batch
-  spm_jobman('initcfg');
+  clc
+  col    = [0.0 0.2 0.6]; 
   perror = {}; 
-  for pi=1:size(job.para)
+  for pi=1:size(job.para,1)
     for ppi=1:numel(job.para{pi,6})
+      %%
+      cat_io_cprintf(col,'\n\n\n------------------------------------------------------------------------\n');
+      cat_io_cprintf(col,sprintf('% 3d/%d) %s = ',pi,size(job.para,1),job.para{pi,5}));
+      if      isnumeric(job.para{pi,6}{ppi}),   cat_io_cprintf(col,sprintf('%0.2f ', job.para{pi,6}{ppi})); 
+      elseif  ischar(job.para{pi,6}{ppi}),      cat_io_cprintf(col,sprintf('%s', job.para{pi,6}{ppi})); 
+      elseif  iscell(job.para{pi,6}{ppi}),      cat_io_cprintf(col,sprintf('%s', job.para{pi,6}{ppi}{1}));  
+      end
+      cat_io_cprintf(col,sprintf(' (%d of %d)',ppi,numel(job.para{pi,6})));
+      cat_io_cprintf(col,'\n------------------------------------------------------------------------\n'); 
+          
+      %%
       perror{pi}{ppi} = 2*ones(numel(mainbatch{pi}{ppi}),1);
-      for mbi = 2:numel(mainbatch{pi}{ppi})
-        cat_io_cprintf([0 0.5 0],sprintf('\n\n% 3d) Batchfile: %s - Batch %d ',...
-          batchname{mbi,3},batchname{mbi,1},batchname{mbi,2}));
+      for mbi = 1:numel(mainbatch{pi}{ppi})
+        cat_io_cprintf([0 0.5 0],sprintf('\n  %s %d ',...
+          batchname{pi}{ppi}{mbi,1}(7:end),batchname{pi}{ppi}{mbi,2}));
         try 
-          spm_jobman('run',mainbatch{pi}{ppi}(mbi));  
-          perror{pi}{ppi}(mbi)=0;
+          if 0
+            % -- debuging code 20161118--
+            try
+              fprintf('\nOutput Surface: %d', mainbatch{pi}{ppi}{mbi}.spm.tools.cat.estwrite.output.surface); 
+            end
+            try
+              fprintf('\nOutput ROI:     %d', mainbatch{pi}{ppi}{mbi}.spm.tools.cat.estwrite.output.ROI);
+            end
+            if iscell(mainbatch{pi}{ppi}{mbi})
+              for ci=1:numel(mainbatch{pi}{ppi}{mbi})
+                try
+                  fprintf('\nOutput Surface: %d', mainbatch{pi}{ppi}{mbi}{ci}.spm.tools.cat.estwrite_spm.output.surface); 
+                end
+              end
+              for ci=1:numel(mainbatch{pi}{ppi}{mbi})
+                try
+                  fprintf('\nOutput ROI:     %d', mainbatch{pi}{ppi}{mbi}{ci}.spm.tools.cat.estwrite_spm.output.ROI);
+                end
+              end
+            end           
+            perror{pi}{ppi}(mbi)=0;
+          else
+            spm_jobman('run',mainbatch{pi}{ppi}(mbi));  
+            perror{pi}{ppi}(mbi)=0;
+          end
         catch e
           cat_io_cprintf([0.8 0 0],'ERROR\n\n');
           disp(e)

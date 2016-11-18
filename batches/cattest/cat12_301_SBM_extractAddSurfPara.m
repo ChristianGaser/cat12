@@ -26,8 +26,8 @@ matlabbatch{1}.spm.tools.cat.stools.surfextract.GI        = 1; % abs mean curvat
 matlabbatch{1}.spm.tools.cat.stools.surfextract.FD        = 1; % fractal dimention
 matlabbatch{1}.spm.tools.cat.stools.surfextract.SD        = 1; % sulcal depth
 matlabbatch{1}.spm.tools.cat.stools.surfextract.nproc     = 0; % multi processes (not for this script)
-% expert options that are stil in development
-if exp
+% expert options that are still in development
+if exp==2 % DEVELOPER
   matlabbatch{1}.spm.tools.cat.stools.surfextract.area      = 1; % EXPERT
   matlabbatch{1}.spm.tools.cat.stools.surfextract.GIA       = 0; % EXPERT 
   matlabbatch{1}.spm.tools.cat.stools.surfextract.GII       = 0; % EXPERT 

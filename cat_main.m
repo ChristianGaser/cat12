@@ -196,7 +196,7 @@ if job.output.warps(2),
                            0,1,0);
     Ndef.mat  = VT.mat;
     Ndef.mat0 = VT.mat;
-    Ndef.descrip = 'Inverse Deformation';
+    Ndef.descrip = 'Inverse SPM Deformation';
     create(Ndef);
 end
 
@@ -882,7 +882,7 @@ if ~isfield(res,'spmpp')
       stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
       [Yb,Yl1] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
       if 0
-        %% just for manual debuging / development - 201603 > remove this in 201609?
+        %% just for manual debuging / development of gcut and gcutstr > remove this in 201709?
         job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
         job.extopts.gcutstr=0.1; [Yb01,Yl101] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
         job.extopts.gcutstr=0.9; [Yb09,Yl109] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
@@ -987,15 +987,26 @@ if ~isfield(res,'spmpp')
   stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
   %% do segmentation  
-  prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ...
-    job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);
-
-  %% reorder probability maps according to spm order
+  amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
+    'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
+  fprintf('%4.0fs\n',etime(clock,stime));
+  % analyse segmenation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
+  amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
+  th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
+  th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
+  th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
+  if th{1}(1)<0 || th{1}(1)>0.5 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1
+    error('cat_main:amap','Error in AMAP tissue classification (or before)');
+  end
+  if job.extopts.verb>1 || job.extopts.debug
+    fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f,%0.2f,%0.2f]\n',th{1}(1),th{2}(1),th{3}(1));
+  end
+  % reorder probability maps according to spm order
   clear Yp0b Ymib; 
   prob = prob(:,:,:,[2 3 1]);
   clear vol %Ymib
-  fprintf(sprintf('%s',repmat('\b',1,94+4)));
-  fprintf('%4.0fs\n',etime(clock,stime));
+  %fprintf(sprintf('%s',repmat('\b',1,94+4)));
+  
 
 
 
@@ -1011,15 +1022,10 @@ if ~isfield(res,'spmpp')
     %prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
     [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ymi(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
   else
-    if job.extopts.cleanupstr>0
-      cat_warnings = cat_io_addwarning(cat_warnings,...
-        'MATLAB:SPM:CAT:cat_main:noCleanup',...
-        sprintf('No cleanup possible, because of too low resolution!'),0);
-      fprintf('\n');
-    end
     for i=1:3
        Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
     end
+    Yp0b = Yb; 
   end;
   clear prob
 
@@ -1464,8 +1470,30 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
     stime = cat_io_cmd('Shooting registration'); fprintf('\n'); 
     
     %% shooting parameter
-    sd      = spm_shoot_defaults;
+    if ~exist('spm_shoot_defaults','file')
+      addpath(spm('dir'),'toolbox','Shoot'); % error in parallel processing 2016/11
+    end
+    sd         = spm_shoot_defaults;
     if 0 % cat12 optimizations
+      %{
+      % shooting parameter (spm_shoot_defaults) 
+      % we need to change parameter for other processing resolutions
+        sd.tname   = 'Template';                % Base file name for templates
+        sd.issym   = false;                     % Use a symmetric template?
+        sd.cyc_its = [2 2];                     % No. multigrid cycles and iterations
+        lam        = 0.5;                       % Decay of coarse to fine schedule
+        inter      = 32;                        % Scaling of parameters at first iteration
+        nits       = 24;                        % No. iterations of Gauss-Newton
+        sd.sched   = (inter-1)*exp(-lam*((1:(nits+1))-1))+1;
+        sd.sched   = sd.sched/sd.sched(end);
+        maxoil     = 8;                         % Maximum number of time steps for integration
+        sd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
+        sd.rparam  = [1e-4 0.001 0.2 0.05 0.2]; % Regularisation parameters for deformation
+        sd.sparam  = [0.0001 0.08 0.8];         % Regularisation parameters for blurring
+        sd.smits   = 16;                        % No. smoothing iterations
+        sd.scale   = 0.8;                       % Fraction of Gauss-Newton update step to use
+        sd.bs_args = [2 2 2 1 1 1];             % B-spline settings for interpolation
+      %}
       % it is maybe possible to reduce the number of iterations, becuase 
       % of the large number of subjects of the IXI555 template
       % Schedule for coarse to fine
@@ -1510,10 +1538,10 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
       f{n1+1} = f{n1+1} - f{k1}; 
     end
     
-    % The actual work
+    %% The actual work
     for it=1:nits,
 
-      % load new template for this iteration
+      %% load new template for this iteration
       if it==1 || (tmpl_no(it)~=tmpl_no(it-1))
         bg = ones(odim,'single');
         for k1=1:n1
@@ -1521,14 +1549,14 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
             g{k1}(:,:,i) = single(spm_slice_vol(tpm2{tmpl_no(it)}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
           end
           bg    = bg - g{k1};
-          g{k1} = spm_bsplinc(log(g{k1}), bs_args);
+          %g{k1} = spm_bsplinc(log(g{k1}), bs_args); %warum?
         end
-        g{n1+1}  = log(max(bg,eps));
+        %g{n1+1}  = log(max(bg,eps)); %warum?
         clear bg
       end
 
 
-      % More regularisation in the early iterations, as well as a
+      %% More regularisation in the early iterations, as well as a
       % a less accurate approximation in the integration.
       prm      = [vxs, rparam*sched(it+1)*prod(vxs)];
       int_args = [eul_its(it), cyc_its]; drawnow
@@ -1543,18 +1571,25 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
 
       if any(~isfinite(dt(:)) | dt(:)>100 | dt(:)<1/100)
         fprintf('Problem with Shooting (dets: %g .. %g)\n', min(dt(:)), max(dt(:)));
-        clear dt
       end
       drawnow
 
     end
-    if ~job.output.jacobian.warped, clear dt; end
-    
+    %yi = spm_diffeo('invdef',y,d,Ms,eye(4)); 
     yi = spm_diffeo('invdef',y,d,Ms,eye(4)); 
     
-    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel);
+    %trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel,'dt',dt);
+    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel,'dt',dt);
     trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr); % require old rigid transformation
-   
+    clear dt y yi;
+    %%
+    T1 = strrep(job.extopts.cat12atlas{1},'cat.nii','Template_T1_IXI555_MNI152.nii'); 
+    Ymx  = reshape(cat_vol_ctype(round(spm_sample_vol(VT,double(y(:,:,:,1)),double(y(:,:,:,2)),double(y(:,:,:,3)),0))),size(dt));
+    Yly  = reshape(spm_sample_vol(spm_vol(T1),double(trans.atlas.Yy(:,:,:,1)),double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0),VT.dim);
+    Ylx  = reshape(spm_sample_vol(spm_vol(T1),double(yi(:,:,:,1)),double(yi(:,:,:,2)),double(yi(:,:,:,3)),0),VT.dim);
+    % ds('l2','a',1,Ym.*Yb,single(Yly),(Ym - single(Yly)) .* Yb,(Ym - single(Ylx)) .* Yb,80)
+    
+    
     %% schneller test
     %%{ 
     % class maps
@@ -1722,8 +1757,12 @@ end
 
 % write jacobian determinant
 if job.output.jacobian.warped
-  [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
-  clear y0
+  if do_dartel==2 % shooting
+    dt = trans.warped.dt; 
+  else %dartel
+   [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+    clear y0
+  end
   N      = nifti;
   N.dat  = file_array(fullfile(pth,mrifolder,['wj_', nam, '.nii']),trans.warped.odim(1:3),...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
@@ -1748,23 +1787,44 @@ end
 
 clear Yy;
 
-% deformation iy - subject > dartel
-if job.output.warps(2) && any(trans.native.Vo.dim~=trans.native.Vi.dim)
-  % update job.output.warps(2) for interpolated images
-  Vdef = res.image0(1);
-  Vdef.dt(1) = spm_type('float32');
-  Vdef = rmfield(Vdef,'private');
-  Vdef.dat = zeros(size(Vdef.dim),'single');
-  Vdef.pinfo(3) = 0; 
-  Vdef.fname = fullfile(pth,mrifolder,['iy2_r', nam1, '.nii']);
-  Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
-  Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
-  for i=1:3
-    Vyy.dat=trans.atlas.Yy(:,:,:,i); 
-    [Vt,Yy2(:,:,:,:,i)] = cat_vol_imcalc(Vyy,Vdef,'i1',struct('interp',6));
-  end
-  clear Vt Vdef Vyy
+%% deformation iy - subject > dartel
+if job.output.warps(2)
+  % transformation from voxel to mm space
+  yn = numel(trans.warped.y); 
+  p  = ones([4,yn/3],'single'); 
+  p(1,:) = trans.warped.y(1:yn/3);
+  p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
+  p(3,:) = trans.warped.y(yn/3*2+1:yn);
+  p      = M1(1:3,:) * p;
   
+  if any(trans.native.Vo.dim~=trans.native.Vi.dim)
+    %% update cat_stat_nanmedian for interpolated images
+    Vdef = res.image0(1);
+    Vdef.dt(1) = spm_type('float32');
+    Vdef = rmfield(Vdef,'private');
+    Vdef.dat = zeros(size(Vdef.dim),'single');
+    Vdef.pinfo(3) = 0; 
+    Vdef.fname = fullfile(pth,mrifolder,['iy2_r', nam1, '.nii']);
+    Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
+    Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
+    Yy1 = zeros([res.image(1).dim(1:3),3],'single'); 
+    Yy1(1:yn/3)        = p(1,:);
+    Yy1(yn/3+1:yn/3*2) = p(2,:);
+    Yy1(yn/3*2+1:yn)   = p(3,:);
+    for i=1:3
+      Vyy.dat=Yy1(:,:,:,i); 
+      [Vt,Yy2(:,:,:,:,i)] = cat_vol_imcalc(Vyy,Vdef,'i1',struct('interp',6));
+    end
+    clear Vt Vdef Vyy
+  else 
+    Yy2 = zeros([res.image0(1).dim(1:3),1,3],'single'); 
+    Yy2(1:yn/3)        = p(1,:);
+    Yy2(yn/3+1:yn/3*2) = p(2,:);
+    Yy2(yn/3*2+1:yn)   = p(3,:);
+  end
+  clear p; 
+  
+  % f2 = spm_diffeo('resize', f1, dim)
   % write new output
   Ndef      = nifti;
   Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...

@@ -442,7 +442,7 @@ function varargout = compile(comp,test,verb)
     %        all(size(MS.faces) == size(CS.faces)); 
     %s(ni) = r(ni)==1; 
     %%
-    if verb==2
+    if verb>2
       % Smoothed version showed differences, because cat_vol_genus does 
       % not use isovalues. 
       MSs   = isosurface(cat_vol_smooth3X(dcube,2),0.5);

@@ -92,7 +92,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Ybr  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.9; 
   
   % if no largest object could be find it is very likeli that initial normalization failed
-  if sum(Yb & mod(Yl1,2)==0)==0 || sum(Yb & mod(Yl1,2)==1)==0
+  if sum(Yb(:) & mod(Yl1(:),2)==0)==0 || sum(Yb(:) & mod(Yl1(:),2)==1)==0
     error('cat:cat_main:largestWM',['No largest WM cluster could be found: \n'...
       'Please try to set origin (AC) and run preprocessing again \n' ...
       'because it is very likeli that spatial normalization failed.']);

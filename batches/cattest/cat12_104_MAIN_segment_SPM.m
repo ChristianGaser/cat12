@@ -18,6 +18,7 @@ if exp
   matlabbatch{1}{1}.spm.tools.cat.tools.sanlm.prefix                   = 'sanlm_';
   matlabbatch{1}{1}.spm.tools.cat.tools.sanlm.NCstr                    = inf;
   matlabbatch{1}{1}.spm.tools.cat.tools.sanlm.rician                   = 0;
+  
   % SPM segment
   matlabbatch{1}{2}.spm.spatial.preproc.channel.vols(1)                = cfg_dep('Spatially adaptive non-local means denoising filter: All Output Files', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','vfiles'));
   matlabbatch{1}{2}.spm.spatial.preproc.channel.biasreg                = 0.001;
@@ -54,6 +55,7 @@ if exp
   matlabbatch{1}{2}.spm.spatial.preproc.warp.fwhm                      = 0;
   matlabbatch{1}{2}.spm.spatial.preproc.warp.samp                      = 3;
   matlabbatch{1}{2}.spm.spatial.preproc.warp.write                     = [0 0];
+  
   % CAT SPM segment
   matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.data(1)                 = cfg_dep('Segment: c1 Images', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
   matlabbatch{1}{3}.spm.tools.cat.estwrite_spm.nproc                   = 0;
