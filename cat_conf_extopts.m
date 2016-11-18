@@ -171,7 +171,7 @@ cleanupstr.strtype = 'r';
 cleanupstr.num     = [1 1];
 cleanupstr.def     = @(val)cat_get_defaults('extopts.cleanupstr', val{:});
 cleanupstr.help    = {
-  'Strengh of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. The default of 0.5 was successfully tested on a variety of scans. Use smaller values (>=0) for small changes and higher values (<=1) for stronger corrections. '
+  'Strength of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. The default of 0.5 was successfully tested on a variety of scans. Use smaller values (>=0) for small changes and higher values (<=1) for stronger corrections. '
   ''
   'The strength changes multiple internal parameters: '
   ' 1) Size of the correction area'
@@ -192,7 +192,7 @@ gcutstr.strtype = 'r';
 gcutstr.num     = [1 1];
 gcutstr.def     = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help    = {
-  'Strengh of skull-stripping before AMAP segmentation, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. The default of 0.5 was ' 
+  'Strength of skull-stripping before AMAP segmentation, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. The default of 0.5 was ' 
   'successfully tested on a variety of scans. '
   ''
   'The strength changes multiple internal parameters: '
@@ -229,7 +229,7 @@ NCstr.strtype = 'r';
 NCstr.num     = [1 1];
 NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
 NCstr.help    = {
-  'Strengh of the SANLM noise correction. The default "inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+  'Strength of the SANLM noise correction. The default "inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
 ''
 };
 
@@ -244,7 +244,7 @@ BVCstr.strtype = 'r';
 BVCstr.num     = [1 1];
 BVCstr.def     = @(val)cat_get_defaults('extopts.BVCstr', val{:});
 BVCstr.help    = {
-  'Strengh of the Blood Vessel Correction. The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+  'Strength of the Blood Vessel Correction. The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
   ''
 };
 
@@ -272,7 +272,7 @@ LASstr.strtype = 'r';
 LASstr.num     = [1 1];
 LASstr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
 LASstr.help    = {
-  'Strengh of the modification by the Local Adaptive Segmentation (LAS). The default 0.5 was successfully tested on a large variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive LAS.'
+  'Strength of the modification by the Local Adaptive Segmentation (LAS). The default 0.5 was successfully tested on a large variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive LAS.'
   ''
 };
 
@@ -313,7 +313,7 @@ WMHCstr.strtype = 'r';
 WMHCstr.num     = [1 1];
 WMHCstr.def     = @(val)cat_get_defaults('extopts.WMHCstr', val{:});
 WMHCstr.help    = {
-  'Strengh of the modification of the WM Hyperintensity Correction (WMHC). The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive WMHC.'
+  'Strength of the modification of the WM Hyperintensity Correction (WMHC). The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive WMHC.'
 ''
 };
 
