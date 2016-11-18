@@ -120,11 +120,13 @@ function cat_io_report(job,qa)
     % --------------------------------------------------------------------
     Ysrc = spm_read_vols(VT0); 
     imat = spm_imatrix(VT0.mat); 
+    deg  = char(176); 
     str2 = [];
     str2 = [str2 struct('name','\bfImagedata','value','')];
     str2 = [str2 struct('name','  Datatype','value',spm_type(VT0.dt(1)))];
     str2 = [str2 struct('name','  AC (mm)','value',sprintf('% 10.1f  % 10.1f  % 10.1f ',imat(1:3)))];
-    str2 = [str2 struct('name','  Rotation (rad)','value',sprintf('% 10.2f°  % 10.2f° % 10.2f° ',imat(4:6) ./ (pi/180)))];
+    str2 = [str2 struct('name','  Rotation (rad)','value',sprintf('% 10.2f%s  % 10.2f%s % 10.2f%s ',...
+      imat(4) ./ (pi/180), deg, imat(5) ./ (pi/180), deg, imat(6) ./ (pi/180), deg ))];
     str2 = [str2 struct('name','  Voxel size (mm)','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',imat(7:9)))];
     if isfield(cat_err_res,'res')
       %str2 = [str2 struct('name','  HDl | HDh | BG )','value',sprintf('% 10.2f  % 10.2f  % 10.2f', ...
@@ -134,7 +136,8 @@ function cat_io_report(job,qa)
       iaffine = spm_imatrix(cat_err_res.res.Affine); 
       str2 = [str2 struct('name','\bfAffine','value','')];
       str2 = [str2 struct('name','  Translation (mm)','value',sprintf('% 10.1f  % 10.1f  % 10.1f ',iaffine(1:3)))];
-      str2 = [str2 struct('name','  Rotation','value',sprintf('% 10.2f° % 10.2f° % 10.2f° ',iaffine(4:6) ./ (pi/180)))];
+      str2 = [str2 struct('name','  Rotation','value',sprintf('% 10.2f%s % 10.2f%s % 10.2f%s ',...
+        iaffine(4) ./ (pi/180), deg, iaffine(5) ./ (pi/180), deg, iaffine(6) ./ (pi/180), deg))];
       str2 = [str2 struct('name','  Scaling','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',iaffine(7:9)))];
       str2 = [str2 struct('name','  Shear','value',sprintf('% 10.2f  % 10.2f  % 10.2f' ,iaffine(10:12)))];
       str2 = [str2 struct('name','\bfSPM tissues peaks','value','')];
@@ -150,7 +153,8 @@ function cat_io_report(job,qa)
       iaffine = spm_imatrix(cat_err_res.obj.Affine); 
       str2 = [str2 struct('name','\bfAffine','value','')];
       str2 = [str2 struct('name','  Translation','value',sprintf('% 10.1f  % 10.1f  % 10.1f ',iaffine(1:3)))];
-      str2 = [str2 struct('name','  Rotation','value',sprintf('% 10.2f° % 10.2f° % 10.2f° ',iaffine(4:6) ./ (pi/180)))];
+      str2 = [str2 struct('name','  Rotation','value',sprintf('% 10.2f%s % 10.2f%s % 10.2f%s ', ...
+        iaffine(4) ./ (pi/180), deg, iaffine(5) ./ (pi/180), deg, iaffine(6) ./ (pi/180), deg))];
       str2 = [str2 struct('name','  Scaling','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',iaffine(7:9)))];
       str2 = [str2 struct('name','  Shear','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',iaffine(10:12)))];
       str2 = [str2 struct('name','\bfIntensities','value','')];

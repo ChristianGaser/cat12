@@ -352,7 +352,11 @@ function [out,s] = cat_plot_boxplot(data,opt)
 
   % Draw a box around the quartiles, with width proportional to the number of
   % items in the box. Draw notches if desired.
-  box = box*(opt.boxwidth/2/max(box));
+  if opt.boxwidth<0
+    box = repmat(abs(opt.boxwidth) * 0.4,1,numel(box));
+  else
+    box = box*(opt.boxwidth/2/max(box));
+  end
   quartile_x = ones(11,1)*[1:nc] + [-a;-1;-1;1;1;a;1;1;-1;-1;-a]*box;
   quartile_y = s([3,7,4,4,7,3,6,2,2,6,3],:);
 

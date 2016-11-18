@@ -38,7 +38,7 @@ matlabbatch{mix}.spm.tools.cat.tools.showslice.orient     = 3;
 matlabbatch{mix}.spm.tools.cat.tools.showslice.slice      = 0;
 
 % covariance ... volume vs. surface ...
-if numel(vols)>1
+if numel(vols)>1 % this can not work ... 
   mix=mix+1;
   matlabbatch{mix}.spm.tools.cat.tools.check_cov.data_vol   = {vols};
   matlabbatch{mix}.spm.tools.cat.tools.check_cov.data_xml   = {};
@@ -61,7 +61,7 @@ if numel(vols)>1
 end
 
 % can not open this part as batch ...
-if numel(xmls)
+if numel(xmls) % and not Shooting ...
   % export IQR 
   mix=mix+1;
   matlabbatch{mix}.spm.tools.cat.tools.iqr.data_xml         = xmls;
