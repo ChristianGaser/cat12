@@ -13285,11 +13285,67 @@ D       cat_fmri_multi_run.m
 (2) Changed: Set absmax as default for mapping function cat_surf_vol2surf.m
 
 ------------------------------------------------------------------------
+r1079 | gaser | 2016-11-17 13:54:11 +0100 (Do, 17 Nov 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_createCS.m
 
 Changed: Fine-tuned spherical registration parameters in cat_surf_createCS.m
+
 ------------------------------------------------------------------------
-r1079 | gaser | 2016-11-17 13:53:53
+
+Changed paths:
+M       CHANGES.txt
+A  +    batches/cattest/cat12_101_MAIN_segment.m
+A  +    batches/cattest/cat12_102_MAIN_segment_greaterapes.m
+A  +    batches/cattest/cat12_103_MAIN_segment_oldworldmonkeys.m
+A  +    batches/cattest/cat12_104_MAIN_segment_SPM.m
+A       batches/cattest/cat12_201_VBM_deformation.m
+A  +    batches/cattest/cat12_202_VBM_tools.m
+A       batches/cattest/cat12_203_VBM_exportRBM.m
+A  +    batches/cattest/cat12_301_SBM_extractAddSurfPara.m
+A  +    batches/cattest/cat12_302_SBM_MapNormVol2AvgSurf.m
+A  +    batches/cattest/cat12_303_SBM_MapVol2IndSurf.m
+A  +    batches/cattest/cat12_304_SBM_ResampAndSmooth.m
+A  +    batches/cattest/cat12_305_SBM_SurfCalc.m
+A  +    batches/cattest/cat12_308_SBM_Surf2ROI.m
+A       batches/cattest/cat12_309_SBM_exportRBM.m
+D       batches/cattest/cat12_SBM_101_segment.m
+D       batches/cattest/cat12_SBM_102_segment_greaterapes.m
+D       batches/cattest/cat12_SBM_103_segment_oldworldmonkeys.m
+D       batches/cattest/cat12_SBM_201_extractAddSurfPara.m
+D       batches/cattest/cat12_SBM_202_MapNormVol2AvgSurf.m
+D       batches/cattest/cat12_SBM_203_MapVol2IndSurf.m
+D       batches/cattest/cat12_SBM_204_ResampAndSmooth.m
+D       batches/cattest/cat12_SBM_205_SurfCalc.m
+D       batches/cattest/cat12_SBM_206_tools.m
+D       batches/cattest/cat12_SBM_301_Surf2ROI.m
+D       batches/cattest/cat12_SBM_302_exportRBM.m
+D       batches/cattest/cat12_SBM_401_SBM_and_RBM_for_SPM.m
+M       cat_conf_extopts.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_cleanup.m
+M       cat_main_gcut.m
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_tst_cattest.m
+M       compile.m
+
+(1) Fixed*:    Corrected iy map output.
+(2) Fixed*:    Corrected error "cat_main_gcut".
+(3) Fixed:     Corrected small print error in "cat_io_report".
+(4) Fixed:     Corrected small error for cleanupstr==0.
+(5) Fixed:     Corrected handling and help text of APPfull parameter.
+(6) Changed:   Updated "cat_tst_cattest", renamed test batches, and added
+               "cat12_201_VBM_deformation" with test of y and iy for SPM and 
+               CAT deformation utilities.
+(7) Changed:   Unfinal modifications of Shooting pipeline. 
+
+
+
+               
+
+------------------------------------------------------------------------
+r1080 | dahnke | 2016-11-18 14:45:25

@@ -202,6 +202,7 @@ function cat_run_job(job,tpm,subj)
           % prepare header of resampled volume
           Vi        = spm_vol(job.channel(n).vols{subj}); 
           vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
+          vx_vol    = round(vx_vol*10^2)/10^2; % avoid small differences 
 
           % we have to look for the name of the field due to the GUI job struct generation! 
           restype   = char(fieldnames(job.extopts.restypes));
@@ -239,6 +240,8 @@ function cat_run_job(job,tpm,subj)
             vx_vol = vx_voli;
 
             fprintf('%4.0fs\n',etime(clock,stime));    
+          else
+            vx_vol = sqrt(sum(Vi.mat(1:3,1:3).^2));
           end
           clear Vi Vn;
         end
@@ -281,15 +284,22 @@ function cat_run_job(job,tpm,subj)
 
         if ~strcmp(job.extopts.species,'human'), job.extopts.APP='nonhuman'; end
 
-        switch job.extopts.APP
-          case {0,'none'},     app.bias=0; app.msk=0; app.aff=1; % old default
-          case {1,'light'},    app.bias=1; app.msk=1; app.aff=1; % affreg with BC; thresholding and head masking for SPM
-          case {2,'medium'},   app.bias=2; app.msk=1; app.aff=1; % no-affreg; BC and head masking for SPM  
-          case {3,'strong'},   app.bias=2; app.msk=1; app.aff=0; % no-affreg; BC and head masking for SPM  
-          case {4,'heavy'},    app.bias=4; app.msk=3; app.aff=0; % no-affreg; BC and brain masking for SPM  
-          case {5,'nonhuman'}, app.bias=4; app.msk=4; app.aff=0; % no-affreg; BC and brain masking for SPM  
-          otherwise
+        if ischar(job.extopts.APP) || (isnumeric(job.extopts.APP) && numel(job.extopts.APP)==1)
+          switch job.extopts.APP
+            case {0,'none'},     app.bias=0; app.msk=0; app.aff=1; % old default
+            case {1,'light'},    app.bias=1; app.msk=1; app.aff=1; % affreg with BC; thresholding and head masking for SPM
+            case {2,'medium'},   app.bias=2; app.msk=1; app.aff=1; % no-affreg; BC and head masking for SPM  
+            case {3,'strong'},   app.bias=2; app.msk=1; app.aff=0; % no-affreg; BC and head masking for SPM  
+            case {4,'heavy'},    app.bias=4; app.msk=3; app.aff=0; % no-affreg; BC and brain masking for SPM  
+            case {5,'nonhuman'}, app.bias=4; app.msk=4; app.aff=0; % no-affreg; BC and brain masking for SPM  
+            otherwise
+              app.bias  = max(0,min(4,round(job.extopts.APP,-2)/100));
+              app.msk   = max(0,min(4,round(mod(job.extopts.APP,100),-1)/10)); 
+              app.msk   = max(0,min(1,mod(job.extopts.APP,10))); 
+          end
         end
+          
+          
 
         Affine  = eye(4);
         [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
@@ -354,9 +364,9 @@ function cat_run_job(job,tpm,subj)
                   cat_io_cmd(sprintf('  bias~%0.2f >> biasreg=%0.0e; biasfwhm=%0.2f; samp=%0.2f',...
                     bias,obj.biasreg,obj.biasfwhm,obj.samp),'','',1,stime); 
                   fprintf('\n');
-                  stime = cat_io_cmd('Coarse affine registration','','',1); 
+                  stime = cat_io_cmd('Coarse affine registration:','','',1); 
                 else 
-                  stime = cat_io_cmd('Coarse affine registration','','',1,stime); 
+                  stime = cat_io_cmd('Coarse affine registration:','','',1,stime); 
                 end
                 
 
@@ -374,7 +384,7 @@ function cat_run_job(job,tpm,subj)
 
             else
                 % standard approach with static resa value and no VG smoothing
-                stime = cat_io_cmd('Coarse affine registration'); 
+                stime = cat_io_cmd('Coarse affine registration:'); 
                 resa  = 8;
                 VF1   = spm_smoothto8bit(VF,resa);
                 VG1   = VG; 
@@ -428,12 +438,12 @@ function cat_run_job(job,tpm,subj)
                 if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
                 [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); Yb = Yb>0.5 & ~Ybg; 
 
-                stime = cat_io_cmd('APP: Fine bias correction and skull-stripping','','',1,stime); 
+                stime = cat_io_cmd('APP: Fine bias correction and skull-stripping:','','',1,stime); 
 
                 % fine APP
                 [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)),...
                     Ym,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
-                stime = cat_io_cmd('Affine registration','','',1,stime); 
+                stime = cat_io_cmd('Affine registration:','','',1,stime); 
 
 
                 %% smooth data
