@@ -105,7 +105,7 @@ cat.output.warps        = [0 0];
 %=======================================================================
 
 % skull-stripping options
-cat.extopts.gcutstr      = 0.5;   % Strengh of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
+cat.extopts.gcutstr      = 0.5;   % Strength of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
 cat.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
 
 % segmentation options
