@@ -3,7 +3,7 @@
 % This batch exports all ROI measures contained in the XML files.
 % ---------------------------------------------------------------------
 % Robert Dahnke
-% $Id: cat12_SBM_302_exportRBM.m 1072 2016-11-09 15:01:16Z dahnke $
+% $Id$
 
 %#ok<*SAGROW>
 
