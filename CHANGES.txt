@@ -13350,6 +13350,7 @@ M       compile.m
 
 
 ------------------------------------------------------------------------
+r1081 | gaser | 2016-11-18 15:07:37 +0100 (Fr, 18 Nov 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13359,5 +13360,16 @@ M       cat_defaults.m
 M       cat_main.m
 
 Changed: Typos...
+
 ------------------------------------------------------------------------
-r1081 | gaser | 2016-11-18 15:07:20
+
+Changed paths:
+M       CHANGES.txt
+MM      batches/cattest/cat12_201_VBM_deformation.m
+MM      batches/cattest/cat12_203_VBM_exportRBM.m
+MM      batches/cattest/cat12_309_SBM_exportRBM.m
+M       cat12.fig
+
+Changed: Interactive help is now called as separate window from CAT12 GUI.
+------------------------------------------------------------------------
+r1082 | gaser | 2016-11-18 15:22:50
