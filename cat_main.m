@@ -990,7 +990,7 @@ if ~isfield(res,'spmpp')
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
   fprintf('%4.0fs\n',etime(clock,stime));
-  % analyse segmenation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
+  % analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
   amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
   th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
   th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 

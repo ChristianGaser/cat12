@@ -13294,6 +13294,7 @@ M       cat_surf_createCS.m
 Changed: Fine-tuned spherical registration parameters in cat_surf_createCS.m
 
 ------------------------------------------------------------------------
+r1080 | dahnke | 2016-11-18 14:45:44 +0100 (Fr, 18 Nov 2016) | 53 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13347,5 +13348,16 @@ M       compile.m
 
                
 
+
 ------------------------------------------------------------------------
-r1080 | dahnke | 2016-11-18 14:45:25
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_main.m
+
+Changed: Typos...
+------------------------------------------------------------------------
+r1081 | gaser | 2016-11-18 15:07:20
