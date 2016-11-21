@@ -35,14 +35,14 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   brad  = double(mean([brad,voli(sum(Yb(:)>0).*prod(vx_vol))])); % distance and volume based brain radius (brad)
   
   % thresholds
-  rf   = 10^6; 
-  Hth  = roundx(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
+  rf   = 6; 
+  Hth  = round(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
   if isnan(Hth), Hth = 0.8; end
-  GMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.2  & Ym(:)<0.9      & Ygs(:)<0.2 & Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
-  CMth = roundx(cat_stat_nanmean(Ym(Ym(:)>0.05 & Ym(:)<GMth*0.5 & Ygs(:)>2.0 & Yb(:) & Ydiv(:)>-0.10)),rf);  % first guess of the CSF intensity
+  GMth = round(cat_stat_nanmean(Ym(Ym(:)>0.2  & Ym(:)<0.9      & Ygs(:)<0.2 & Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
+  CMth = round(cat_stat_nanmean(Ym(Ym(:)>0.05 & Ym(:)<GMth*0.5 & Ygs(:)<0.2 & Yb(:) & Ydiv(:)>-0.10)),rf);  % first guess of the CSF intensity
   %WMth = cat_stat_nanmean(Ym(Ym(:)>0.8 & Ym(:)<1.2 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)); 
-  BGth = roundx(cat_stat_nanmean(Ym(Ybg(:))),rf); 
-  
+  BGth = round(cat_stat_nanmean(Ym(Ybg(:))),rf); 
+  if isnan(CMth), CMth=mean([BGth,GMth]); end
   
   %% Skull-Stripping
   % intensity parameter
@@ -134,7 +134,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   Ybm  = smooth3(Ybm)>0.5;
   Ybm  = cat_vol_morph(Ybm,'o',1);
   % cortical GM 
-  Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm & ~Ywm; % & (Ym-Ydiv*2)<GMth;  
+  Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm; % & (Ym-Ydiv*2)<GMth;  
   Ygm(smooth3(Ygm)<0.3 | ~cat_vol_morph(Ywm,'d',3/mean(vx_vol)))=0;
   Ygm(CSFD<3 & Ym>(CMth*0.5+0.5*GMth) & ~Ywm & Ym<(CMth*0.5+0.5*GMth)); 
   % CSF
@@ -215,15 +215,10 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
  % Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc2 + Ybc); % correct for noise only in background
   Wth  = single(cat_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.9))); 
   [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>GMth & Ym(:)<Wth*1.2),0:0.01:2);
-  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = roundx(WMv(WIth),rf);  
+  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = round(WMv(WIth),rf);  
   [BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
-  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = roundx(BMv(BIth),rf);  
+  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = round(BMv(BIth),rf);  
   Ym   = (Ym - BIth) ./ (WIth - BIth); 
   
   cat_io_cmd(' ','','',verb,stime); 
 end
-%=======================================================================
-function r = roundx(r,rf)
-  r(:) = round(r(:) * rf) / rf;
-end
-%=======================================================================

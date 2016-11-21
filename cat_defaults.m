@@ -105,11 +105,11 @@ cat.output.warps        = [0 0];
 %=======================================================================
 
 % skull-stripping options
-cat.extopts.gcutstr      = 0.5;   % Strength of skull-stripping:               0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
+cat.extopts.gcutstr      = 0.5;   % Strength of skull-stripping:              0 - no gcut; eps - softer and wider; 1 - harder and closer (default = 0.5)
 cat.extopts.cleanupstr   = 0.5;   % Strength of the cleanup process:          0 - no cleanup; eps - soft cleanup; 1 - strong cleanup (default = 0.5) 
 
 % segmentation options
-cat.extopts.sanlm        = 1;     % use SANLM filter: 0 - no SANLM; 1 - SANLM; 2 - ISARNLM
+cat.extopts.sanlm        = 1;     % use SANLM filter:                         0 - no SANLM; 1 - SANLM; 2 - ISARNLM
 cat.extopts.NCstr        = inf;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections; inf - auto (default = inf)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
@@ -117,7 +117,7 @@ cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 
                                   %                                           2 - also correct segmentation (to WM); 3 - handle as separate class
 cat.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
 cat.extopts.mrf          = 1;     % MRF weighting:                            0 - no MRF; 0 > mrf < 1 - manual setting; 1 - auto (default)
-cat.extopts.INV          = 1;     % Invert PD/T2 images for standard preprocessing:  0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
+cat.extopts.INV          = 1;     % Invert PD/T2 images for preprocessing:    0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
 
 % resolution options
 cat.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
@@ -166,12 +166,11 @@ fixed:
 % registration and normalization options 
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 cat.extopts.species      = 'human';  
-% Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) - EXPERIMENTAL  
-cat.extopts.APP          = 1;   % 0 - none; 1 - light; 2 - medium; 3 - strong; 4 - heavy
+% Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
+cat.extopts.APP          = 1;   % 0 - none; 1 - light; 2 - medium; 3 - strong; 4 - heavy, 5 - animal (no affreg)
 cat.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
-cat.extopts.bb           = [[-90 -126 -72];[90 90 108]]; % bounding box for normalized data (not yet working): inf - use Tempate values
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
-%cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0)
+%cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
 cat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat.nii')};                     % CAT atlas with major regions for VBM, SBM & ROIs
 cat.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
 cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
