@@ -408,6 +408,7 @@ if ~isfield(res,'spmpp')
         Ycls{k1} = P(:,:,:,k1);
     end
 
+    %%
     Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
       struct('gcutstr',0.1,'verb',0,'debug',job.extopts.debug,'LAB',job.extopts.LAB,'LASstr',0));
 
@@ -420,8 +421,19 @@ if ~isfield(res,'spmpp')
     Yb   = smooth3(Yb)>0.5; 
     Ybb  = cat_vol_smooth3X(Yb,2); 
     Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
+    Ybb  = cat_vol_resize(Ybb,'dereduceBrain',BB);
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
-    clear Ybo;
+  elseif job.extopts.gcutstr==0
+    % brain mask
+    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+    Yb   = Yp0>0.5/3; 
+    Ybb  = cat_vol_smooth3X(Yb,2); 
+    
+    [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
+    Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
+    Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
+    Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
+    Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
   else
     % old skull-stripping
     brad = voli(sum(Yp0(:)>0.5).*prod(vx_vol)/1000); 
@@ -459,13 +471,9 @@ if ~isfield(res,'spmpp')
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
     clear Ybo;
   end
+	clear Ysrcb
 
-  % no gcut, but we need other variables
-  if job.extopts.gcutstr==0
-    Yb = Ysrc~=0 & ~isnan(Ysrc) & ~isinf(Ysrc);
-  end
-
-
+  
   if ~(job.extopts.INV && any(sign(diff(T3th))==-1))
     %% Update probability maps
     % background vs. head - important for noisy backgrounds such as in MT weighting
@@ -537,8 +545,10 @@ if ~isfield(res,'spmpp')
     P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc<T3th(2)));
     P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=0.05) | Yhdc ) .* (Ysrc>=T3th(2)));
     P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=0.05) | Yhdc ),[1,1,1,3]);
-    clear sumP Ybb Yp0 Yhdc; 
+    clear sumP Yp0 Yhdc; 
   end
+  clear Ybb;
+  
 
   %% MRF
   % Used spm_mrf help and tested the probability TPM map for Q without good results.         
@@ -881,6 +891,7 @@ if ~isfield(res,'spmpp')
     try 
       stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
       [Yb,Yl1] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+      fprintf('%4.0fs\n',etime(clock,stime));
       if 0
         %% just for manual debuging / development of gcut and gcutstr > remove this in 201709?
         job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
@@ -893,8 +904,7 @@ if ~isfield(res,'spmpp')
       job.extopts.gcutstr = 0;
     end
   end
-  fprintf('%4.0fs\n',etime(clock,stime));
-
+  
 
 
 
@@ -990,20 +1000,24 @@ if ~isfield(res,'spmpp')
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
   fprintf('%4.0fs\n',etime(clock,stime));
+  
   % analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
   amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
   th{1}   = cell2mat(textscan(amapres{11},'%f*%f')); 
   th{2}   = cell2mat(textscan(amapres{12},'%f*%f')); 
   th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
+  
+  
   if th{1}(1)<0 || th{1}(1)>0.5 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1
-    error('cat_main:amap','Error in AMAP tissue classification (or before)');
+    error('cat_main:amap','Error in AMAP tissue classification (or earlier)');
   end
   if job.extopts.verb>1 || job.extopts.debug
-    fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f,%0.2f,%0.2f]\n',th{1}(1),th{2}(1),th{3}(1));
+    fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
+      th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
   end
   % reorder probability maps according to spm order
   clear Yp0b Ymib; 
-  prob = prob(:,:,:,[2 3 1]);
+  prob = prob(:,:,:,[2 3 1]); %#ok<NODEF>
   clear vol %Ymib
   %fprintf(sprintf('%s',repmat('\b',1,94+4)));
   
@@ -1025,7 +1039,7 @@ if ~isfield(res,'spmpp')
     for i=1:3
        Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
     end
-    Yp0b = Yb; 
+    Yp0b = Yb(indx,indy,indz); 
   end;
   clear prob
 
@@ -1289,6 +1303,12 @@ odim = floor(odim*tpmres/newres);
 % to write a correct x=-1 output image, we have to be sure that the x
 % value of the bb is negative
 if bb(1)<bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
+if 0
+  bbt = bb;
+else
+  Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
+  [bbt,voxt] = spm_get_bbox(Vd, 'old');  
+end
 
 
 % figure out the mapping from the volumes to create to the original
@@ -1325,8 +1345,8 @@ mata    = mm/vx3;
 trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
 
 % rigid parameters
-x      = affind(rgrid(d),M0);
-y1     = affind(Yy,M1d);     
+x       = affind(rgrid(d),M0);
+y1      = affind(Yy,M1d);     
 [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
 Mr      = M0\inv(R)*M1*vx2/vx3;
 mat0r   = R\M1*vx2/vx3;
@@ -1341,7 +1361,7 @@ clear x
 %%
 % dartel spatial normalization to given template
 if do_dartel==1 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.output.label(1:end),job.output.jacobian.warped])
-    stime = cat_io_cmd('Dartel registration'); 
+    stime = cat_io_cmd('Dartel registration with %0.2f mm',job.extopts.vox); 
     
     % use GM/WM for dartel
     n1 = 2;
@@ -1583,12 +1603,13 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
     trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr); % require old rigid transformation
     clear dt y yi;
     %%
-    T1 = strrep(job.extopts.cat12atlas{1},'cat.nii','Template_T1_IXI555_MNI152.nii'); 
-    Ymx  = reshape(cat_vol_ctype(round(spm_sample_vol(VT,double(y(:,:,:,1)),double(y(:,:,:,2)),double(y(:,:,:,3)),0))),size(dt));
-    Yly  = reshape(spm_sample_vol(spm_vol(T1),double(trans.atlas.Yy(:,:,:,1)),double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0),VT.dim);
-    Ylx  = reshape(spm_sample_vol(spm_vol(T1),double(yi(:,:,:,1)),double(yi(:,:,:,2)),double(yi(:,:,:,3)),0),VT.dim);
-    % ds('l2','a',1,Ym.*Yb,single(Yly),(Ym - single(Yly)) .* Yb,(Ym - single(Ylx)) .* Yb,80)
-    
+    if 0
+      T1 = strrep(job.extopts.cat12atlas{1},'cat.nii','Template_T1_IXI555_MNI152.nii'); 
+      Ymx  = reshape(cat_vol_ctype(round(spm_sample_vol(VT,double(y(:,:,:,1)),double(y(:,:,:,2)),double(y(:,:,:,3)),0))),size(dt));
+      Yly  = reshape(spm_sample_vol(spm_vol(T1),double(trans.atlas.Yy(:,:,:,1)),double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0),VT.dim);
+      Ylx  = reshape(spm_sample_vol(spm_vol(T1),double(yi(:,:,:,1)),double(yi(:,:,:,2)),double(yi(:,:,:,3)),0),VT.dim);
+      % ds('l2','a',1,Ym.*Yb,single(Yly),(Ym - single(Yly)) .* Yb,(Ym - single(Ylx)) .* Yb,80)
+    end 
     
     %% schneller test
     %%{ 
@@ -1740,7 +1761,7 @@ end
 % ----------------------------------------------------------------------
 
 
-% classe maps 4-6 (for full TPM/template creation, e.g. for apes)
+%% classe maps 4-6 (for full TPM/template creation, e.g. for apes)
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
@@ -1755,7 +1776,7 @@ if any(cell2mat(struct2cell(job.output.TPMC)'))
 end
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
-% write jacobian determinant
+%% write jacobian determinant
 if job.output.jacobian.warped
   if do_dartel==2 % shooting
     dt = trans.warped.dt; 
