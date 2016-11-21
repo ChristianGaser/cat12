@@ -203,14 +203,17 @@ function job = update_job(job)
     job.output.ROI = 0;
   end
   
-  % set cat12.bb and vb.vox by Dartel template properties
+  % set boundary box by Template properties if box inf
   Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
   [bb,vox] = spm_get_bbox(Vd, 'old');  
-  if job.extopts.bb(1)>job.extopts.bb(2), bbt=job.extopts.bb(1); job.extopts.bb(1)=job.extopts.bb(2); job.extopts.bb(2)=bbt; clear bbt; end
   if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-  job.extopts.bb  = [ max(bb(1,1:3) , bb(1,1:3) ./ ((isinf(bb(1,1:3)) | isnan(bb(1,1:3)))+eps))
-                      min(bb(2,1:3) , bb(2,1:3) ./ ((isinf(bb(2,1:3)) | isnan(bb(2,1:3)))+eps)) ];
-          
+  % Removed BB defintion in GUI and default file in november 2011, because
+  % it did not work (need changes in Dartel/Shooting processing) and is not required yet.
+  %if job.extopts.bb(1)>job.extopts.bb(2), bbt=job.extopts.bb(1); job.extopts.bb(1)=job.extopts.bb(2); job.extopts.bb(2)=bbt; clear bbt; end
+  %job.extopts.bb(isinf(job.extopts.bb))=nan; 
+  %job.extopts.bb  = [ min(bb(1,1:3) , job.extopts.bb(1,1:3) ) ; max(bb(2,1:3) , job.extopts.bb(2,1:3) ) ];
+  job.extopts.bb = bb; 
+  
   if isinf(job.extopts.vox) || isnan(job.extopts.vox)
     job.extopts.vox = abs(vox);
   end

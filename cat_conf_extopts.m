@@ -41,6 +41,8 @@ pbtres.help    = {
 
 %---------------------------------------------------------------------
 
+% removed 20161121 because it did not work and their was no reason to use it in the last 5 years
+%{
 bb         = cfg_entry;
 bb.tag     = 'bb';
 bb.name    = 'Bounding box';
@@ -50,6 +52,7 @@ bb.def     = @(val)cat_get_defaults('extopts.bb', val{:});
 bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
 ''
 };
+%}
 
 %------------------------------------------------------------------------
 % special expert and developer options 
@@ -159,6 +162,38 @@ restype.help   = {
     'We commend to use ''best'' option to ensure optimal quality for preprocessing. ' 
 }; 
 
+%------------------------------------------------------------------------
+% Cleanup
+%------------------------------------------------------------------------
+
+mrf         = cfg_entry;
+mrf.tag     = 'mrf';
+mrf.name    = 'Strength of MRF noise correction';
+mrf.strtype = 'r';
+mrf.num     = [1 1];
+mrf.def     = @(val)cat_get_defaults('extopts.mrf', val{:});
+mrf.help    = {
+  'Strength of the MRF noise correction of the AMAP segmentation. '
+  ''
+};
+
+%------------------------------------------------------------------------
+% TCA
+%------------------------------------------------------------------------
+
+tca         = cfg_entry;
+tca.tag     = 'tca';
+tca.name    = 'TCA Topology correction';
+tca.strtype = 'r';
+tca.num     = [1 1];
+tca.def     = @(val)cat_get_defaults('extopts.tca', val{:});
+tca.help    = {
+  'Initial TCA topology correction from BrainSuite: '
+  ' 0 - no tca correction '
+  ' 1 - tca in parahippocampal gyrus and hippocampus '
+  ' 2 - global tca correction  '
+  ''
+};
 
 %------------------------------------------------------------------------
 % Cleanup
@@ -497,7 +532,7 @@ extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if ~spm
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,...
+    extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,tca,...
                      darteltpm,cat12atlas,brainmask,T1,...
                      restype,vox,pbtres,ignoreErrors,debug,verb}; 
   elseif expert==1 % working expert options

@@ -13362,6 +13362,7 @@ M       cat_main.m
 Changed: Typos...
 
 ------------------------------------------------------------------------
+r1082 | gaser | 2016-11-18 15:23:06 +0100 (Fr, 18 Nov 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13371,5 +13372,26 @@ MM      batches/cattest/cat12_309_SBM_exportRBM.m
 M       cat12.fig
 
 Changed: Interactive help is now called as separate window from CAT12 GUI.
+
 ------------------------------------------------------------------------
-r1082 | gaser | 2016-11-18 15:22:50
+
+Changed paths:
+M       CHANGES.txt
+M       batches/cattest/cat12_101_MAIN_segment.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run.m
+M       cat_run_job_APP_final.m
+M       cat_tst_cattest.m
+M       cat_vol_pbtp.mexmaci64
+
+(1) Fixed:    Corrected error in case of APP=4 / APP=5 with bad CSF threshold of 
+              low resolution data in "cat_run_job_APP_final".
+(2) Fixed:    Corrected error in case of gcutstr=0 with bad brain mask generation
+              in "cat_main".
+(3) Fixed:    Corrected dim error in case of cleanupstr=0 in "cat_main".
+(4) New:      Added MRF and TCA entries in developer GUI.
+(5) Deleted:  Removed BB in cat_defaults because it is not required anymore.
+------------------------------------------------------------------------
+r1083 | dahnke | 2016-11-21 15:10:46

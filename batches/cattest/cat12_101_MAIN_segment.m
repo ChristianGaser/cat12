@@ -49,6 +49,8 @@ if exp>1 % DEVELOPER
   matlabbatch{1}.spm.tools.cat.estwrite.extopts.lazy             = 0;
   matlabbatch{1}.spm.tools.cat.estwrite.extopts.debug            = 1;         
   matlabbatch{1}.spm.tools.cat.estwrite.extopts.verb             = 2;         
+  matlabbatch{1}.spm.tools.cat.estwrite.extopts.tca              = 1; 
+  matlabbatch{1}.spm.tools.cat.estwrite.extopts.mrf              = 1;  
 end
 % -- output ------------------------------------------------------------
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROI                 = 1;  % RBM preprocessing
