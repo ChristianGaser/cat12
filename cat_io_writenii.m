@@ -174,29 +174,45 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       labelmap = 0;
   end
   
-  % warped
+  %% warped
   % ____________________________________________________________________
   % If we have a label map we have to correct the result, because spm_diffeo
   % and spm_field allows no nearest neigbor deformation. Because the 
   % interpolated values of the boundaries can not be rounded simply (it 
   % maybe generates another label), we need to replace this voxel by 
   % its nearest neighbor value.
+  
+  % interpolation to reduce artifacts if the resolution of the original 
+  % image is similar or worse that the tempalte resolution
+  if write(2) || write(3)
+    vx_vol   = sqrt(sum(transform.warped.M0(1:3,1:3).^2));  
+    vx_volt  = sqrt(sum(transform.warped.M1(1:3,1:3).^2));  
+    interpol = any(vx_vol>vx_volt*0.9) + any(vx_vol>vx_volt*0.4);
+    if interpol
+      YI = interp3(Y,1,'linear'); yI = cat(4,YI,YI,YI); 
+      for i=1:3, yI(:,:,:,i) = interp3(transform.warped.y(:,:,:,i),1,'linear'); end
+    else
+      YI = Y;
+      yI = transform.warped.y; 
+    end
+  end
+  
   if write(2)
     pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
     
     fname = io_handle_pre(V.fname,pre2,'',folder);
     if exist(fname,'file'), delete(fname); end
     if labelmap==0
-      [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3));
+      [wT,w]  = spm_diffeo('push',YI ,yI,transform.warped.odim(1:3));
       % divide by jacdet to get unmodulated data
       wT = wT./(w+0.001); 
     elseif labelmap==1
       % we can use modulated data throughout the following steps because the final maximum probability function
       % will be the same for modulated and unmodulated data
-      wT = zeros([transform.warped.odim(1:3),max(Y(:))],'uint8'); 
+      wT = zeros([transform.warped.odim(1:3),max(YI(:))],'uint8'); 
       % interpolate each label separately
-      for yi=1:max(Y(:)); 
-        wTi  = spm_diffeo('push',single(Y==yi),transform.warped.y,transform.warped.odim(1:3)); 
+      for yi=1:max(YI(:)); 
+        wTi  = spm_diffeo('push',single(YI==yi),yI,transform.warped.odim(1:3)); 
         wT(:,:,:,yi) = uint8(wTi*100); 
       end
       % use maximum probability function to get label again
@@ -206,7 +222,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     
     % final masking after transformation
     if exist('YM','var')
-      [wTM,w] = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3));
+      [wTM,w] = spm_diffeo('push',YM,yI,transform.warped.odim(1:3));
       wTM = wTM./(w+0.001); 
       wTM = round(wTM*100)/100; 
       wT  = wT .* (smooth3(wTM)>YMth);
@@ -254,11 +270,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     fname = io_handle_pre(V.fname,pre3,'',folder);
     if exist(fname,'file'), delete(fname); end
     
-    [wT,wr] = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3)); 
+    [wT,wr] = spm_diffeo('push',YI,yI,transform.warped.odim(1:3)); 
 
     % final masking after transformation
     if exist('YM','var')
-      wTM = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); 
+      wTM = spm_diffeo('push',YM,yI,transform.warped.odim(1:3)); 
       wT = wT .* (smooth3(wTM)>YMth);
     end
     
@@ -299,7 +315,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     fname = io_handle_pre(V.fname,pre3,'',folder);
     if exist(fname,'file'), delete(fname); end
 
-    [wT,w]  = spm_diffeo('push',Y ,transform.warped.y,transform.warped.odim(1:3));
+    [wT,w]  = spm_diffeo('push',YI,yI,transform.warped.odim(1:3));
     
     % divide by jacdet to get unmodulated data
     wT = wT./(w+0.001); 
@@ -308,18 +324,25 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     % thus we use the def2det function of the inverted deformations to obtain the old and 
     % in my view a more appropriate jacobian determinant 
     % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-    Yy = spm_diffeo('invdef',transform.warped.y,transform.warped.odim,eye(4),transform.warped.M0);
+    Yy = spm_diffeo('invdef',yI,transform.warped.odim,eye(4),transform.warped.M0);
     w  = spm_diffeo('def2det',Yy)/det(transform.warped.M0(1:3,1:3));
+    clear Yy
     
     % ensure that jacobian det is positive (no clue why some times the sign is switched)
     if mean(w(~isnan(w))) < 0, w = -w; end 
     w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
     wT = wT.*w;
-
+    clear w
+    
     if exist('YM','var') % final masking after transformation
-      wTM = spm_diffeo('push',YM,transform.warped.y,transform.warped.odim(1:3)); 
+      if interpol
+        YM = interp(YM,1,'linear'); 
+      end
+      wTM = spm_diffeo('push',YM,yI,transform.warped.odim(1:3)); 
       wT = wT .* (smooth3(wTM)>YMth);
+      clear YM;
     end
+    clear yI
         
     % scale the jacobian determinant 
     if write(3)==1
@@ -338,16 +361,17 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     create(N);       
     if isempty(V.descrip), N.descrip = desc3; else  N.descrip = [desc3 ' < ' V.descrip]; end
 
-    N.dat(:,:,:) = double(wT);
+    N.dat(:,:,:) = double(wT) / 8^interpol; %
     clear N;
     
     if nargout>0, varargout{1}(3) = spm_vol(fname); end
     if nargout>1, varargout{2}{3} = wT; end
+    clear wT
   end
   
     
     
-  % write dartel files
+  %% write dartel files
   % ____________________________________________________________________
   if write(4)
     for wi=1:2
