@@ -1687,7 +1687,7 @@ for clsi=1:3
     job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
 end
 
-% write WMH class maps
+%% write WMH class maps
 if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
   cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
     min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
