@@ -192,11 +192,8 @@ function cat_run_job(job,tpm,subj)
         %  -----------------------------------------------------------------
         %  The interpolation can help to reduce problems for morphological
         %  operations for low resolutions and strong isotropic images. 
-        %  Especially for Dartel registration a native resolution higher than the Dartel 
-        %  resolution helps to reduce normalization artifacts of the
-        %  deformations. Furthermore, even if artifacts can be reduced by the final smoothing
-        %  it is much better to avoid them.  
-        vx_vold = min(job.extopts.vox,sqrt(sum(tpm.V(1).mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
+        %  For interpolation from 2 to 1 mm the segmentation show more 
+        %  anatomical details.
         for n=1:numel(job.channel) 
 
           % prepare header of resampled volume
@@ -217,7 +214,7 @@ function cat_run_job(job,tpm,subj)
             case 'best'
               vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
                          ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
-              vx_voli  = max(min(vx_vol),min(vx_vold,vx_voli)); % guarantee Dartel resolution
+              %vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
             otherwise 
               error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
           end
