@@ -77,18 +77,34 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
 
 %------------------------------------------------------------------------
 
-surface        = cfg_menu;
-surface.tag    = 'surface';
-surface.name   = 'Surface and thickness estimation';
-surface.labels = {'No','Yes'};
-surface.values = {0 1};
-surface.def    = @(val)cat_get_defaults('output.surface', val{:});
-surface.help   = {
-  'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
-''
-  'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
-''
-};
+switch expert
+  case { 0 | 1 }
+    surface        = cfg_menu;
+    surface.tag    = 'surface';
+    surface.name   = 'Surface and thickness estimation';
+    surface.labels = {'No','Yes'};
+    surface.values = {0 1};
+    surface.def    = @(val)cat_get_defaults('output.surface', val{:});
+    surface.help   = {
+      'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
+    ''
+      'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
+    ''
+    };
+  case 2
+    surface        = cfg_menu;
+    surface.tag    = 'surface';
+    surface.name   = 'Surface and thickness estimation';
+    surface.labels = {'No','lh + rh','lh + rh + ch','lh'};
+    surface.values = {0 1 2 3};
+    surface.def    = @(val)cat_get_defaults('output.surface', val{:});
+    surface.help   = {
+      'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
+    ''
+      'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
+    ''
+    };
+end
 
 %------------------------------------------------------------------------
 % Parameter to choose between different ways to extract data by ROIs.
