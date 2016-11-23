@@ -177,13 +177,13 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   %% warped
   % ____________________________________________________________________
   % If we have a label map we have to correct the result, because spm_diffeo
-  % and spm_field allows no nearest neigbor deformation. Because the 
-  % interpolated values of the boundaries can not be rounded simply (it 
+  % and spm_field don't allow nearest neigbor deformation. Because the 
+  % interpolated values of the boundaries cannot be simply rounded (it 
   % maybe generates another label), we need to replace this voxel by 
   % its nearest neighbor value.
   
   % interpolation to reduce artifacts if the resolution of the original 
-  % image is similar or worse that the tempalte resolution
+  % image is similar or worse to that of the template resolution
   if write(2) || write(3)
     vx_vol   = sqrt(sum(transform.warped.M0(1:3,1:3).^2));  
     vx_volt  = sqrt(sum(transform.warped.M1(1:3,1:3).^2));  

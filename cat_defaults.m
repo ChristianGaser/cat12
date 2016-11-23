@@ -177,7 +177,12 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 
 % surface options
 cat.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.tca          = 1;     % initial tca topology correction from BrainSuite: 0 - no tca correction; 1 - tca in parahippocampal gyrus and hippocampus; 2 - global tca correction 
+cat.extopts.scale_cortex = 0.7;   % scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued 
+                                  % if you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6)
+                                  % please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus
+cat.extopts.add_parahipp = 0.1;   % increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area
+                                  % will be closer to GM/CSF border)
+                                  % if the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15)
 
 % visualisation, print, developing, and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -185,7 +190,8 @@ cat.extopts.verb         = 2;     % verbose output:        1 - default; 2 - deta
 cat.extopts.ignoreErrors = 0;     % catch errors:          0 - stop with error (default); 1 - catch preprocessing errors (requires MATLAB 2008 or higher); 
 cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus with simple GUI; 1 - expert modus with extended GUI; 2 - development modus with full GUI
 cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
-cat.extopts.experimental = 0;     % experimental function: 0 - default, 1 - call experimental unsave functions
+cat.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
+cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsave functions
 
 
 % Expert options - ROIs

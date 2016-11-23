@@ -392,7 +392,7 @@ function cat_tst_cattest(job)
            
        
         % set/unset surface processing
-        if strcmp(job.para{pi,5},'pbtres') || strcmp(job.para{pi,5},'tca') || isempty(job.para{pi,5})
+        if strcmp(job.para{pi,5},'pbtres') || isempty(job.para{pi,5})
           for mbi=numel(matlabbatch):-1:1; 
             % no surface-tools
             if iscell(matlabbatch{mbi})
@@ -408,7 +408,6 @@ function cat_tst_cattest(job)
                   if job.userlevel > 0
                     switch job.para{pi,5}
                       case 'pbtres',  matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.extopts.pbtres = job.para{pi,6}{ppi}; 
-                      case 'tca',     matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.extopts.tca    = job.para{pi,6}{ppi};
                     end
                   end
                   matlabbatch{mbi}{smbi}.spm.tools.cat.estwrite_spm.output.surface = 1; 
@@ -426,7 +425,6 @@ function cat_tst_cattest(job)
                 if job.userlevel > 0
                   switch job.para{pi,5}
                     case 'pbtres',  matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.pbtres = job.para{pi,6}{ppi};
-                    case 'tca',     matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.tca    = job.para{pi,6}{ppi};
                   end
                 end
                 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface = 1; 
