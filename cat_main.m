@@ -1882,12 +1882,19 @@ if job.output.surface
   Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   Ymim = Ymi .* (Yp0>0.5); 
   
+  % specify surface
+  switch job.output.surface
+    case 1, surf = {'lh','rh'};
+    case 2, surf = {'lh','rh','ch'};
+    case 3, surf = {'lh'};
+  end
+  
   % surface creation and thickness estimation
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
 %  try
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymim,Yl1,YMF,...
-      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,...
+      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},...
       'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
 %  catch
 %    surferr = lasterror; %#ok<LERR>

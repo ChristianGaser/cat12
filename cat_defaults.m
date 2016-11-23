@@ -48,7 +48,7 @@ cat.opts.samp      = 3;                       % Sampling distance      - smaller
 %   dartel    0/1/2/3 (none/rigid/affine/both)
 
 % save surface and thickness
-cat.output.surface     = 0;     % surface and thickness creation
+cat.output.surface     = 0;     % surface and thickness creation (0 - no (default), 1 - lh+rh, 2 - lh+rh+ch, 3 - lh)
 
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))
