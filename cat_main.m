@@ -379,7 +379,7 @@ if ~isfield(res,'spmpp')
     clear P4 P5 P6; 
   end
 
-  if job.extopts.debug>3 || (job.extopts.INV && any(sign(diff(T3th))==-1))
+  if job.extopts.experimental || (job.extopts.INV && any(sign(diff(T3th))==-1))
   % use gcut2
 
     %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
@@ -411,17 +411,15 @@ if ~isfield(res,'spmpp')
     %%
     Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
       struct('gcutstr',0.1,'verb',0,'debug',job.extopts.debug,'LAB',job.extopts.LAB,'LASstr',0));
-
-    %%
+    Ybb  = cat_vol_smooth3X(Yb,2); 
+    
     [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
     Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
     Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
     Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
 
     Yb   = smooth3(Yb)>0.5; 
-    Ybb  = cat_vol_smooth3X(Yb,2); 
     Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
-    Ybb  = cat_vol_resize(Ybb,'dereduceBrain',BB);
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
   elseif job.extopts.gcutstr==0
     % brain mask
@@ -580,7 +578,7 @@ if ~isfield(res,'spmpp')
   clear Q P q q1 Coef b cr s t1 t2 t3 N lkp n wp M k1
 
 
-  if job.extopts.debug==2
+  if job.extopts.verb>2
     % save information for debugging and OS test
     % input variables + bias corrected, bias field, class image
     % strong differences in bias fields can be the result of different 
@@ -647,7 +645,7 @@ if ~isfield(res,'spmpp')
   end
   fprintf('%4.0fs\n',etime(clock,stime));
 
-  if job.extopts.debug==2
+  if job.extopts.verb>2
     tpmci  = tpmci + 1;
     tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
     save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
@@ -762,12 +760,12 @@ if ~isfield(res,'spmpp')
   if job.extopts.LASstr>0
 
     if job.extopts.NCstr>0, Ymo = Ym; end 
-    if job.extopts.expertgui<2
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
-      [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
-    else
+    if job.extopts.experimental
       stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',job.extopts.LASstr));
       [Ymi,Ym,Yclsi] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,job.extopts); % use Yclsi after cat_vol_partvol
+    else
+      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
+      [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
 
     %Ymioc = Ymi+0; 
@@ -809,7 +807,7 @@ if ~isfield(res,'spmpp')
   clear Ymo; 
 
 
-  if job.extopts.debug==2
+  if job.extopts.verb>2
     tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
     save(tmpmat,'Ysrc','Ycls','Ymi','Yb','T3th','vx_vol');
   end
@@ -1011,7 +1009,7 @@ if ~isfield(res,'spmpp')
   if th{1}(1)<0 || th{1}(1)>0.5 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1
     error('cat_main:amap','Error in AMAP tissue classification (or earlier)');
   end
-  if job.extopts.verb>1 || job.extopts.debug
+  if job.extopts.verb>1 
     fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
       th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
   end
@@ -1157,7 +1155,7 @@ if ~isfield(res,'spmpp')
   end
   clear Yclsb;
 
-  if job.extopts.debug==2
+  if job.extopts.verb>2
     Yp0  = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255; %#ok<NASGU>
     tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
@@ -1361,7 +1359,7 @@ clear x
 %%
 % dartel spatial normalization to given template
 if do_dartel==1 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.output.label(1:end),job.output.jacobian.warped])
-    stime = cat_io_cmd('Dartel registration with %0.2f mm',job.extopts.vox); 
+    stime = cat_io_cmd(sprintf('Dartel registration with %0.2f mm',job.extopts.vox)); 
     
     % use GM/WM for dartel
     n1 = 2;
@@ -1487,7 +1485,7 @@ if do_dartel==1 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.o
     
 elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.output.label(1:end),job.output.jacobian.warped])    
 %%  Geodesic Shooting with Template 0 to 4 
-    stime = cat_io_cmd('Shooting registration'); fprintf('\n'); 
+    stime = cat_io_cmd(sprintf('Shooting registration with %0.2f mm',job.extopts.vox)); 
     
     %% shooting parameter
     if ~exist('spm_shoot_defaults','file')
@@ -1520,10 +1518,10 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
       nits      = 12;         % No. iterations of Gauss-Newton - smaller==faster (def. 24)
       lam       = 0.5;        % Decay of coarse to fine schedule - smaller==smoother (def. 0.5)
       inter     = 32;         % Scaling of parameters at first iteration - higher==wider/smoother(def. 32)
-      msd.sched = (inter-1)*exp(-lam*((1:(nits+1))-1))+1;
-      msd.sched = msd.sched/msd.sched(end);
+      sd.sched = (inter-1)*exp(-lam*((1:(nits+1))-1))+1;
+      sd.sched = sd.sched/sd.sched(end);
       maxoil    = 8;                          % Maximum number of time steps for integration
-      msd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
+      sd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
     end
     cyc_its = sd.cyc_its;      % No. multigrid cycles and inerations
     sched   = sd.sched;        % Schedule for coarse to fine
@@ -1534,45 +1532,55 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
     bs_args = sd.bs_args;      % B-spline settings for interpolation
     n1      = 2;               % use GM/WM for shooting
     vxs     = repmat(prod(job.extopts.vox),1,3); % shooting voxel size
-    dm      = max(vx2(1:3,:),[],2)';
+    dm      = floor(max(vx2(1:3,:),[],2))';
     
     % use affine registration as Shooting input is not standard and will
     % lead to problems with the SPM Deformation Utility Toolbox
-    affine = 0; if affine, Ms = Ma; else Ms = Mr; end 
+    %affine = 0; if affine, Ms = Ma; else Ms = Mr; end 
+    Ms = Mr;
     
     % Sort out which template for each iteration
     tmpl_no = round(((1:nits)-1)/(nits-1)*(numel(tpm2)-0.51))+1;
 
     % create shooting files - here the affine images!
-    f = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');ones(odim(1:3),'single')};  % individual [rigid|affine] GM, WM and BG segments 
-    g = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');zeros(odim(1:3),'single')}; % template GM, WM and BG segments
+    f   = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');ones(odim(1:3),'single')};  % individual [rigid|affine] GM, WM and BG segments 
+    g   = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');zeros(odim(1:3),'single')}; % template GM, WM and BG segments
     def = single(reshape(affind(spm_diffeo('Exp',zeros([dm,3],'single'),[0 1]),mat0r),[dm,1,3])); 
-    y = affind(squeeze(def),inv(mat0r)); clear def;                     % deformation field
-    u = zeros([odim(1:3) 3],'single');                                  % flow field
-    dt = ones(odim(1:3),'single');                                      % jacobian
+    y   = affind(squeeze(def),inv(mat0r)); clear def;                     % deformation field
+    u   = zeros([odim(1:3) 3],'single');                                  % flow field
+    dt  = ones(odim(1:3),'single');                                       % jacobian
     for k1=1:n1
       for i=1:odim(3),
         f{k1}(:,:,i) = single(spm_slice_vol(single(Ycls{k1}),Ms*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255); 
       end
+      msk     = ~isfinite(f{k1});
+      f{k1}(msk) = 0;
       f{k1}(isnan(f{k1}) | ~isfinite(f{k1}))=0;
       f{n1+1} = f{n1+1} - f{k1}; 
+      drawnow
     end
+    f{n1+1}(msk) = 0.00001;
     
+%       for k1=1:n1
+%         f{k1}   = spm_bsplinc(log(f{k1}), bs_args); %warum?
+%         f{n1+1} = f{n1+1} - f{k1};
+%       end
+%       f{n1+1} = log(max(f{n1+1},eps)); 
+      
     %% The actual work
     for it=1:nits,
 
       %% load new template for this iteration
       if it==1 || (tmpl_no(it)~=tmpl_no(it-1))
-        bg = ones(odim,'single');
+        g{n1+1} = ones(odim,'double');
         for k1=1:n1
           for i=1:odim(3),
             g{k1}(:,:,i) = single(spm_slice_vol(tpm2{tmpl_no(it)}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
           end
-          bg    = bg - g{k1};
-          %g{k1} = spm_bsplinc(log(g{k1}), bs_args); %warum?
+          g{n1+1} = g{n1+1} - g{k1};
+          g{k1}   = spm_bsplinc(log(g{k1}), bs_args); %warum?
         end
-        %g{n1+1}  = log(max(bg,eps)); %warum?
-        clear bg
+        g{n1+1} = log(max(g{n1+1},eps)); %warum?
       end
 
 
@@ -1595,14 +1603,14 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
       drawnow
 
     end
-    %yi = spm_diffeo('invdef',y,d,Ms,eye(4)); 
-    yi = spm_diffeo('invdef',y,d,Ms,eye(4)); 
+    %
+    yi = spm_diffeo('invdef',y,d,inv(M1\R*M0),eye(4)); 
     
     %trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel,'dt',dt);
-    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel,'dt',dt);
+    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',do_dartel,'dt',dt);
     trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr); % require old rigid transformation
-    clear dt y yi;
     %%
+    clear dt y yi;
     if 0
       T1 = strrep(job.extopts.cat12atlas{1},'cat.nii','Template_T1_IXI555_MNI152.nii'); 
       Ymx  = reshape(cat_vol_ctype(round(spm_sample_vol(VT,double(y(:,:,:,1)),double(y(:,:,:,2)),double(y(:,:,:,3)),0))),size(dt));
@@ -1615,14 +1623,16 @@ elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,j
     %%{ 
     % class maps
     fn = {'GM','WM','CSF'};
-    for clsi=1:2
+    for clsi=1:1
       %%
       cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[1 1 0 1],trans);
       cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 2],trans);
+      %%
       cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 1 0],trans);
+      %%
       cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
         sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 2 0],trans);  
     end
@@ -1703,8 +1713,8 @@ end
 % The strong normalization of the T1 data can directly be used as tissue
 % segmentation. The Ymi images is scaled to get similar maps for each 
 % tissue class, with good vissible differences in the sulci.
-job.extopts.intsegments = job.extopts.expertgui>2;
-if job.extopts.intsegments
+job.output.intsegments = job.extopts.experimental;
+if job.output.intsegments
   if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
 
     % intensity scaled tissue maps
@@ -1878,7 +1888,7 @@ if job.output.surface
 %  try
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymim,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,...
-      'debug',job.extopts.debug,'expertgui',job.extopts.expertgui)); % clear Ymim YMF  % VT0 - without interpolation
+      'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
 %  catch
 %    surferr = lasterror; %#ok<LERR>
 %    message =  sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
@@ -2033,7 +2043,7 @@ clear wYp0 wYcls wYv trans
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
-stime = cat_io_cmd('Quality check');
+stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
 qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job));
@@ -2087,31 +2097,67 @@ fprintf('%4.0fs\n',etime(clock,stime));
   % --------------------------------------------------------------------
   SpaNormMeth = {'None','Dartel','Shooting'}; 
   str = [];
-  str = [str struct('name', 'Versions Matlab / SPM12 / CAT12:','value',...
+  
+  % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
+  str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
     sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
-  str = [str struct('name', 'Tissue Probability Map:','value',spm_str_manip(res.tpm(1).fname,'k40d'))];
-  str = [str struct('name', 'Spatial Normalization Template:','value',spm_str_manip(job.extopts.darteltpm{1},'k40d'))];
-  str = [str struct('name', 'Spatial Normalization Method:','value',SpaNormMeth{do_dartel+1})];
+  if job.extopts.expertgui==1,     str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
+  elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
+  end  
+  if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
+  
+  % 3 lines: TPM, Template, Normalization method with voxel size
+  str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
+  str = [str struct('name', 'Spatial Normalization Template:','value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
+  str = [str struct('name', 'Spatial Normalization Method / vox:','value',sprintf('%s / %0.2f mm',SpaNormMeth{do_dartel+1},job.extopts.vox))];
+  
+  % 1 line: Affine parameter
   str = [str struct('name', 'Affine regularization:','value',sprintf('%s',job.opts.affreg))];
+  if job.extopts.APP
+    str(end).name = [str(end).name(1:end-1) ' / APP:'];  
+    APPstr = {'light','medium','strong','heavy'};
+    if numel(job.extopts.APP)==1
+      str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP})];
+    else    
+      str(end).value = [str(end).value sprintf(' / %d',job.extopts.APP)];
+    end
+  end    
+  
+  % 1 line: SPM Bias parameter
+  if job.extopts.experimental
+     str = [str struct('name', 'SPM parameter: bias / reg / fwhm / samp:','value',...
+       sprintf('~%0.2f / %0.0e / %0.2f / %0.2f',...
+        job.opts.bias,job.opts.biasreg,job.opts.biasfwhm,job.opts.samp))]; 
+  end
+
+  % 1 line: Noise 
   if job.extopts.sanlm==0 || job.extopts.NCstr==0
     str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
   elseif job.extopts.sanlm==1
     str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip('SANLM +',sprintf('f%d',7*(job.extopts.sanlm>0))),...
-           char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('SANLM(%0.2f) +',job.extopts.NCstr),....
+           sprintf('f%d',13*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
   elseif job.extopts.sanlm==2
     str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip('ISARNLM +',sprintf('f%d',7*(job.extopts.sanlm>0))),...
-           char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('ISARNLM(%0.2f) +',job.extopts.NCstr),...
+           sprintf('f%d',15*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
   end
-  str = [str struct('name', 'NCstr / LASstr / GCUTstr / CLEANUPstr:','value',...
-         sprintf('%0.2f / %0.2f / %0.2f / %0.2f',...
-         job.extopts.NCstr,job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
-  if job.extopts.expertgui
-    str = [str struct('name', 'APP / WMHC / WMHCstr / BVCstr:','value',...
-           sprintf('%d / %d / %0.2f / %0.2f ',...
-           job.extopts.APP,job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr))]; 
-  end  
+  
+  % 1-2 line(s): further parameter
+  str = [str struct('name', 'LASstr / GCUTstr / CLEANUPstr:','value',...
+         sprintf('%0.2f / %0.2f / %0.2f',...
+         job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
+  if job.extopts.expertgui 
+    restype = char(fieldnames(job.extopts.restypes));
+    str = [str struct('name', 'WMHC / WMHCstr / BVCstr / restype:','value',...
+           sprintf('%d / %0.2f / %0.2f / %s',...
+          job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr,restype))];
+    if ~strcmp('native',restype)
+      str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restype.(restype))];
+    end; 
+  end
+  
+  % line 8: surfae parameter
   if job.output.surface
     str = [str struct('name', 'Voxel resolution (original > intern > PBT):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
@@ -2123,7 +2169,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end       
   % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
 
-
+ 
   % Image Quality measures:
   % --------------------------------------------------------------------
   str2 =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
@@ -2139,13 +2185,30 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   % Subject Measures
   % --------------------------------------------------------------------
-
   % Volume measures
-  str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
-  str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f %5.0f cm%s', ...
-          qa.subjectmeasures.vol_abs_CGW(1),qa.subjectmeasures.vol_abs_CGW(2),qa.subjectmeasures.vol_abs_CGW(3),qa.subjectmeasures.vol_abs_CGW(4),char(179)))];
-  str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
-          qa.subjectmeasures.vol_rel_CGW(1)*100,qa.subjectmeasures.vol_rel_CGW(2)*100,qa.subjectmeasures.vol_rel_CGW(3)*100,qa.subjectmeasures.vol_rel_CGW(4)*100))];
+  if job.extopts.WMHC>1
+    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f %5.0f cm%s', ...
+            qa.subjectmeasures.vol_abs_CGW(1:4),char(179)))];
+    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
+            qa.subjectmeasures.vol_rel_CGW(1:4)*100))];
+  else
+    str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM')); 
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f cm%s', ...
+            qa.subjectmeasures.vol_abs_CGW(1:3)))];
+    str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
+            qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
+    Ywmhrel = NS(Yl1,23);
+    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; 
+    WMH_rel    = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>0.5); 
+    WMH_WM_rel = 100*sum(Ywmhrel(:)) / sum(Yp0(:)>2.5); 
+    if WMH_rel>3 || WMH_WM_rel>5
+      str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0} WMHs!')];   
+      %str3(end).value = [str3(end).value sprintf('\\bf\\color[rgb]{0.8 0 0}~%0.0f%%WMHs!',WMH_WM_rel)];    
+    end
+    clear Yp0;
+  end
+  %
   str3 = [str3 struct('name', ' TIV:','value', sprintf(['%0.0f cm' char(179)],qa.subjectmeasures.vol_TIV))];  
 
   % Surface measures - Thickness, (Curvature, Depth, ...)
@@ -2162,6 +2225,12 @@ fprintf('%4.0fs\n',etime(clock,stime));
     end
   end
 
+  % Preprocessing Time
+  if job.extopts.experimental || job.extopts.expertgui>0 || 1
+    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%0.0f:%0.0f min:s', ...
+    floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
+  end
+  
   % Warnings
   if numel(cat_warnings)>0 && job.extopts.expertgui>0
     str2 = [str2 struct('name', '','value','')]; 
@@ -2193,7 +2262,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
 
 
-  %%
+  %
   fg = spm_figure('FindWin','Graphics'); 
   set(0,'CurrentFigure',fg)
   if isempty(fg)
@@ -2209,7 +2278,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
     case {'MACI','MACI64'},   fontsize = 9.5;
     otherwise,                fontsize = 9.5;
   end
-  ax=axes('Position',[0.01 0.75 0.98 0.23],'Visible','off','Parent',fg);
+  ax=axes('Position',[0.01 0.75 0.98 0.24],'Visible','off','Parent',fg);
 
   text(0,0.99,  ['Segmentation: ' spm_str_manip(res.image0(1).fname,'k60d') '       '],...
     'FontSize',fontsize+1,'FontWeight','Bold','Interpreter','none','Parent',ax);
@@ -2251,18 +2320,18 @@ fprintf('%4.0fs\n',etime(clock,stime));
   
   htext = zeros(5,2,2);
   for i=1:size(str,2)   % main parameter
-    htext(1,i,1) = text(0.01,0.95-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
-    htext(1,i,2) = text(0.51,0.95-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','none','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.055*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(1,i,2) = text(0.51,0.98-(0.055*i), str(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   for i=1:size(str2,2)  % qa-measurements
-    htext(2,i,1) = text(0.01,0.42-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(2,i,2) = text(0.25,0.42-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,1) = text(0.01,0.40-(0.055*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(2,i,2) = text(0.25,0.40-(0.055*i), str2(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
   % qa-scala
   %htext(5,1,1) = text(0.01,0.45-(0.055*(i+2)),str4(1).name,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   for i=1:size(str3,2)  % subject-measurements
-    htext(3,i,1) = text(0.51,0.42-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
-    htext(3,i,2) = text(0.80,0.42-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,1) = text(0.51,0.40-(0.055*i), str3(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+    htext(3,i,2) = text(0.80,0.40-(0.055*i), str3(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
   end
 
 
@@ -2433,7 +2502,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   %% command window output
   fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
-    floor(etime(clock,res.stime)/60),mod(etime(clock,res.stime),60));
+    floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
   cat_io_cprintf(color(QMC,qa.qualityratings.IQR), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
     mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR)));
   

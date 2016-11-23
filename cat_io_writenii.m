@@ -332,6 +332,12 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     if mean(w(~isnan(w))) < 0, w = -w; end 
     w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
     wT = wT.*w;
+    
+    if interpol
+      %[wTo,wo]  = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));
+      %wT = wT * cat_stat_nansum(wTo(:))/cat_stat_nansum(wT(:)) * sum(Y(:))./sum(YI(:));
+      wT = wT * cat_stat_nansum(Y(:))/cat_stat_nansum(wT(:)); 
+    end
     clear w
     
     if exist('YM','var') % final masking after transformation
@@ -347,7 +353,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     % scale the jacobian determinant 
     if write(3)==1
       wT = wT*abs(det(transform.warped.M0(1:3,1:3))/ ...
-                      det(transform.warped.M1(1:3,1:3)));
+                  det(transform.warped.M1(1:3,1:3)));
     else
       wT = wT*abs(det(transform.warped.M2(1:3,1:3)));
     end
@@ -361,7 +367,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     create(N);       
     if isempty(V.descrip), N.descrip = desc3; else  N.descrip = [desc3 ' < ' V.descrip]; end
 
-    N.dat(:,:,:) = double(wT) / 8^interpol; %
+    N.dat(:,:,:) = double(wT) ; % / 8^interpol; %
     clear N;
     
     if nargout>0, varargout{1}(3) = spm_vol(fname); end

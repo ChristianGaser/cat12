@@ -13396,6 +13396,7 @@ M       cat_vol_pbtp.mexmaci64
 (5) Deleted:  Removed BB in cat_defaults because it is not required anymore.
 
 ------------------------------------------------------------------------
+r1084 | dahnke | 2016-11-22 10:33:32 +0100 (Di, 22 Nov 2016) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13409,5 +13410,33 @@ M       cat_tst_cattest.m
               template.
 (2) Fixed:    Corrected "best" interpolation setting in "cat_run_job".              
               
+
 ------------------------------------------------------------------------
-r1084 | dahnke | 2016-11-22 10:33:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_tst_cattest.m
+
+(1) Deleted:  Removed "debug" variable and added further state to "verb".
+(2) Added:    Added "experimental" variable to control new functions that
+              are still in development.
+(3) Fixed:    Small corrections.
+(4) Changed:  Updated cat PDF report:
+              * removed WMH volume if WMHC<2 (no volume correction)
+                but added red warning string if there are uncorrected WMHs with 
+                more than 3% of TIV or 5% of WM that also create the WMH warning 
+              * added 'e' for expert and 'd' for developer GUI to version number
+              * added 'x' for experimental to version number
+              * added spatial normalization resolution
+              * moved APP to affine registration entry
+              * moved NCstr to noise reduction entry
+              * added SPM bias and sampling parameter (experimental mode only) 
+------------------------------------------------------------------------
+r1085 | dahnke | 2016-11-23 10:23:58
