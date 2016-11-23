@@ -107,6 +107,8 @@ function varargout = cat12_OutputFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+spm_clf('Interactive'); 
+
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 

@@ -352,7 +352,7 @@ function cat_run_job(job,tpm,subj)
 
                 % update SPM parameter - only increasing of resolution paramter 
                 % experimental 20161021
-                if job.extopts.expertgui>1
+                if job.extopts.experimental
                   bias = max(0,bias - 0.1);                                       % there will allways be some bias
                   bias = double(bias);                                            % SPM need double!
                   obj.biasreg  = min(0.01,obj.biasreg * 10^round(2*min(1,bias))); % less regularisation in case of bias
