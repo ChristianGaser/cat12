@@ -58,6 +58,19 @@ bb.help    = {'The bounding box (in mm) of the volume which is to be written (re
 % special expert and developer options 
 %------------------------------------------------------------------------
 
+experimental        = cfg_menu;
+experimental.tag    = 'experimental';
+experimental.name   = 'Use experimental code';
+experimental.labels = {'No','Yes'};
+experimental.values = {0 1};
+experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
+experimental.help   = {
+  'Use experimental code and functions.'
+  ''
+  'WARNING: This parameter is only for developer and call functions that are not save and may change strongly!'
+  ''
+};
+
 ignoreErrors        = cfg_menu;
 ignoreErrors.tag    = 'ignoreErrors';
 ignoreErrors.name   = 'Ignore errors';
@@ -532,9 +545,9 @@ extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if ~spm
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,tca,...
+    extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,tca,...
                      darteltpm,cat12atlas,brainmask,T1,...
-                     restype,vox,pbtres,ignoreErrors,debug,verb}; 
+                     restype,vox,pbtres,ignoreErrors,verb}; 
   elseif expert==1 % working expert options
     extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
   else
@@ -542,7 +555,7 @@ if ~spm
   end
 else
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,darteltpm,cat12atlas,brainmask,T1,vox,pbtres,ignoreErrors,debug,verb}; 
+    extopts.val   = {lazy,darteltpm,cat12atlas,brainmask,T1,vox,pbtres,ignoreErrors,verb}; 
   elseif expert==1 % working expert options
     extopts.val   = {darteltpm,vox,ignoreErrors}; 
   else

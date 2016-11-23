@@ -171,7 +171,7 @@ cat.extopts.APP          = 1;   % 0 - none; 1 - light; 2 - medium; 3 - strong; 4
 cat.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
 %cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
-cat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat.nii')};                     % CAT atlas with major regions for VBM, SBM & ROIs
+cat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat.nii')};                       % CAT atlas with major regions for VBM, SBM & ROIs
 cat.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
 cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration
 
@@ -179,16 +179,16 @@ cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};
 cat.extopts.pbtres       = 0.5;   % internal resolution for thickness estimation in mm (default 0.5) 
 cat.extopts.tca          = 1;     % initial tca topology correction from BrainSuite: 0 - no tca correction; 1 - tca in parahippocampal gyrus and hippocampus; 2 - global tca correction 
 
-% visualisation, print and debugging options
+% visualisation, print, developing, and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
-cat.extopts.verb         = 2;     % Verbose: 1 - default; 2 - details
-cat.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
-cat.extopts.ignoreErrors = 0;     % catching preprocessing errors: 1 - catch errors (default,requires MATLAB 2008 or higher); 0 - stop with error 
-cat.extopts.expertgui    = 0;     % 0 - common user modus; 1 - expert modus with full GUI; 2 - experimental modus with experimental, unsafe functions!
-cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report and label to organize your data 
+cat.extopts.verb         = 2;     % verbose output:        1 - default; 2 - details; 3 - write debugging files 
+cat.extopts.ignoreErrors = 0;     % catch errors:          0 - stop with error (default); 1 - catch preprocessing errors (requires MATLAB 2008 or higher); 
+cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus with simple GUI; 1 - expert modus with extended GUI; 2 - development modus with full GUI
+cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
+cat.extopts.experimental = 0;     % experimental function: 0 - default, 1 - call experimental unsave functions
 
 
-% expert options - ROIs
+% Expert options - ROIs
 %=======================================================================
 % ROI maps from different sources mapped to Dartel CAT-space of IXI-template
 %  { filename , GUIlevel , tissue , use }
@@ -207,12 +207,13 @@ cat.extopts.atlas       = { ...
   ... fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             2      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
 }; 
 
+
 %=======================================================================
 % PRIVATE PARAMETER (NOT FOR GENERAL USE)
 %=======================================================================
 
 
-% additional maps
+% Additional maps
 %=======================================================================
 % Tissue classes 4-6 to create own TPMs
 cat.output.TPMC.native = 0; 

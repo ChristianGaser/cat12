@@ -134,18 +134,19 @@ function cat_tst_cattest(job)
   % test parameter (especially for CAT preprocessing)
   def.para = {
     ... 'scriptname', [batchnumber], [testlevel], 'variable', {further values};  % comments
-    ''                       1  0 ''                                           ''           {0};                  % default
+    ''                       1  0 ''                                             ''           {0};              % default
+    ''                       1  0 'spm.tools.cat.estwrite.extopts.expertimental' 'exp'        {1};              % default
     ... == parameter in default GUI ==
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.vox'         'vox'        {1 2};            % def=1.5;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.APP'         'APP'        {0 4};            % def=1;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'      'LASstr'     {0.0 eps 1.0};    % def=0.5;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.gcutstr'     'gcutstr'    {0.0 eps 1.0};    % def=0.5;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.cleanupstr'  'cleanupstr' {0.0 eps 1.0};    % def=0.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.vox'           'vox'        {1 2};            % def=1.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.APP'           'APP'        {0 4};            % def=1;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'        'LASstr'     {0.0 0.01 1.0};    % def=0.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.gcutstr'       'gcutstr'    {0.0 0.01 1.0};    % def=0.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.cleanupstr'    'cleanupstr' {0.0 0.01 1.0};    % def=0.5;
     ... == parameter in expert GUI ==
-    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.APP'         'APP'        {2 3 5};          % def=1;
-    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.sanlm'       'sanlm'      {0 2};            % def=1; 0=none, 2=ISAR
-    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.NCstr'       'NCstr'      {0.0 eps 1.0};    % def=inf; 
-    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.darteltpm'   'shooting'   { ... 
+    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.APP'           'APP'        {2 3 5};          % def=1;
+    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.sanlm'         'sanlm'      {0 2};            % def=1; 0=none, 2=ISAR
+    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.NCstr'         'NCstr'      {0.0 eps 1.0};    % def=inf; 
+    'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.darteltpm'     'shooting'   { ... 
       {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')}};   % Shooting template
     ... the restype and resval variable were used in the GUI to create the restypes structure that does not exist in the cat_defaults file
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.restypes'    'restypes'   { ...
@@ -154,15 +155,14 @@ function cat_tst_cattest(job)
         struct('best'  ,[0.8 0.1]) ... interpolation to at least to 0.8 mm 
       };       
     ... == parameter in developer GUI ==
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.pbtres'      'pbtres'     {1.00 0.25};      % def=0.5;  
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.mrf'         'mrf'        {0.00 0.30};      % def=1; auto  
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'      'BVCstr'     {0.5 eps 1.0};    % def=0;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'     'WMHCstr'    {0.0 eps 1.0};    % def=0.5;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHC'        'WMHC'       {0 2 3};          % def=1;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.tca'         'tca'        {0 2};            % def=1;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.subfolders'  'subfolders' {0};              % def=1;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.verb'        'verb'       {0 1};            % def=2;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.debug'       'debug'      {0 2};             % def=1;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.pbtres'        'pbtres'     {1.00 0.25};      % def=0.5;  
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.mrf'           'mrf'        {0.00 0.30};      % def=1; auto  
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'        'BVCstr'     {0.5 0.01 1.0};    % def=0;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'       'WMHCstr'    {0.0 0.01 1.0};    % def=0.5;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHC'          'WMHC'       {0 2 3};          % def=1;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.tca'           'tca'        {0 2};            % def=1;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.subfolders'    'subfolders' {0};              % def=1;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.verb'          'verb'       {0 1 3};          % def=2;
     ... ignoreErrors
     };
   def.userlevel   = ''; 
@@ -183,10 +183,8 @@ function cat_tst_cattest(job)
   % --------------------------------------------------------------------
   % if there are multipe subjects an GUI for default user maybe useful
   if isempty(job.datalevel)
-    if job.expert
-      job.datalevel = char(spm_input('Datalevel',1,'basic|human|animal|all', ...
-        {'basic','human','primates','all'},1));
-    end
+    job.datalevel = char(spm_input('Datalevel',1,'basic|human|animal|all', ...
+      {'basic','human','primates','all'},1));
   end
   switch job.datalevel
     case 'basic'
@@ -240,22 +238,12 @@ function cat_tst_cattest(job)
   
   
   
-  
   % choose userlevel (only lower or equal level than the actual level)
   % --------------------------------------------------------------------
- 
   if isempty(job.userlevel)
-    switch job.expert
-      case 2,     userlevelsstr = 'Default|Expert|Developer'; 
-      case 1,     userlevelsstr = 'Default|Expert'; 
-      otherwise   userlevelsstr = 'Default'; 
-    end
-    if job.expert
-      userlevels    = eval(sprintf('{''%s''}',strrep(lower(userlevelsstr),'|',''','''))); 
-      job.userlevel = spm_input('Userlevel','+1',userlevelsstr,0:numel(userlevels)-1,1);
-    else
-      job.userlevel = 0; 
-    end
+    userlevelsstr = 'Default|Expert|Developer'; 
+    userlevels    = eval(sprintf('{''%s''}',strrep(lower(userlevelsstr),'|',''','''))); 
+    job.userlevel = spm_input('Userlevel','+1',userlevelsstr,0:numel(userlevels)-1,1);
   else
     userlevels = {'Default','Expert','Developer'};   
   end
