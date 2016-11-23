@@ -13441,6 +13441,7 @@ M       cat_tst_cattest.m
               * added SPM bias and sampling parameter (experimental mode only) 
 
 ------------------------------------------------------------------------
+r1086 | dahnke | 2016-11-23 11:51:01 +0100 (Mi, 23 Nov 2016) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13453,5 +13454,26 @@ M       tbx_cfg_cat.m
 (1) Fixed:    Added missed bias variable for PDF report (experimental mode).
 (2) New:      Extend surface variable to control the side reconstruction.
 
+
 ------------------------------------------------------------------------
-r1086 | dahnke | 2016-11-23 11:50:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_run_job.m
+M       cat_surf_createCS.m
+M       cat_tst_cattest.m
+M       cat_vol_pbt.m
+
+(1) Changed: Removed tca and replaced this approach by a local change of 
+    intensities for creating the initial surface. In the parahippocampal 
+    area the intensity of the ppi image is inceased. This prevents large 
+    cuts in that area. In the cortex the ppi intensity is decreased which
+    helps in preventing glued gyri/sulci.
+(2) Changed: Added two new parameters to control surface creation in 
+    cortex and parahippocampal gyrus.
+(3) Changed: Typos...
+------------------------------------------------------------------------
+r1087 | gaser | 2016-11-23 13:56:06

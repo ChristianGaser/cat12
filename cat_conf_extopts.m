@@ -191,24 +191,6 @@ mrf.help    = {
 };
 
 %------------------------------------------------------------------------
-% TCA
-%------------------------------------------------------------------------
-
-tca         = cfg_entry;
-tca.tag     = 'tca';
-tca.name    = 'TCA Topology correction';
-tca.strtype = 'r';
-tca.num     = [1 1];
-tca.def     = @(val)cat_get_defaults('extopts.tca', val{:});
-tca.help    = {
-  'Initial TCA topology correction from BrainSuite: '
-  ' 0 - no tca correction '
-  ' 1 - tca in parahippocampal gyrus and hippocampus '
-  ' 2 - global tca correction  '
-  ''
-};
-
-%------------------------------------------------------------------------
 % Cleanup
 %------------------------------------------------------------------------
 
@@ -546,7 +528,7 @@ extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if ~spm
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,tca,...
+    extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,...
                      darteltpm,cat12atlas,brainmask,T1,...
                      restype,vox,pbtres,ignoreErrors,verb}; 
   elseif expert==1 % working expert options

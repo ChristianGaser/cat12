@@ -192,7 +192,7 @@ function cat_run_job(job,tpm,subj)
         %  -----------------------------------------------------------------
         %  The interpolation can help to reduce problems for morphological
         %  operations for low resolutions and strong isotropic images. 
-        %  For interpolation from 2 to 1 mm the segmentation show more 
+        %  For interpolation from 2 to 1 mm the segmentation shows more 
         %  anatomical details.
         for n=1:numel(job.channel) 
 
@@ -586,7 +586,7 @@ function cat_run_job(job,tpm,subj)
         warning on 
 
 
-        if job.extopts.debug==2
+        if job.extopts.experimental
             % save information for debuging and OS test
             [pth,nam] = spm_fileparts(job.channel(1).vols0{subj}); 
             tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s_%s.mat',nam,'runjob','postpreproc8')); 
