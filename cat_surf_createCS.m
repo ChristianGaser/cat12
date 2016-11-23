@@ -43,11 +43,13 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.verb      = 2; 
   def.surf      = {'lh','rh'}; % {'lh','rh','ch'}
   def.reduceCS  = 100000;  
-  def.tca       = cat_get_defaults('extopts.tca');
   def.LAB       = cat_get_defaults('extopts.LAB');
   def.usePPmap  = 1; 
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   def.SPM       = 0; 
+  def.add_parahipp  = cat_get_defaults('extopts.add_parahipp');
+  def.scale_cortex  = cat_get_defaults('extopts.scale_cortex');
+
   opt           = cat_io_updateStruct(def,opt);
   opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
 
@@ -281,56 +283,20 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     vmat  = V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:) = [];    
 
-    % if we can use the PP map we can start with a surface that is close to WM surface because this might minimize severe
-    % topology defects. Otherwise we use a threshold of 0.5 which is the central surface.
-    % However, this approach did not really improved topology correction, thus we again use a value of 0.5
-    if opt.usePPmap, th_initial = 0.5; else th_initial = 0.5; end
-    
-    % apply TCA from BrainSuite for initial intensity-based topology correction
-    if opt.tca
-      Yppi0 = Yppi;
-      VN = resI.hdrN;
-      VN.dt(1) = 2;
-      VN.pinfo(1) = 1;
-      VN.fname = fullfile(pp,mrifolder,['tca_' ff '.nii']);
-      if isfield(VN,'pinfo'), VN = rmfield(VN,'pinfo'); end
-      if isfield(VN,'dat'), VN = rmfield(VN,'dat'); end
-      spm_write_vol(VN,255*(Yppi>th_initial));
-      cmd = sprintf('tca -m 10000 -n 1 --delta 20 -i "%s" -o "%s"',VN.fname,VN.fname);
-      [ST, RS] = cat_system(cmd); 
-      % do not check because tca sometimes fails (due to memory issues ?)
-      disp(RS)
-      % cat_check_system_output(ST,RS,opt.verb);
- 
-      % load topology corrected image in the correct orientation
-      VN2 = spm_vol(VN.fname);
-      Yppi_tca = Yppi;
-      for z=1:size(Yppi,3)
-	    B = spm_matrix([0 0 -z 0 0 0 1 1 1]);
-        Yppi_tca(:,:,z) = single(spm_slice_vol(VN2,VN2.mat\VN.mat*inv(B),VN.dim(1:2),0));    
-      end
-      Yppi_tca = Yppi_tca/255;
-      delete(VN.fname);
-      
-      if opt.tca > 1
-        % use tca-correction
-        Yppi = Yppi_tca;
-      else
-        % use only inside hippocampal mask tca-corrected version
-        Yppi(mask_parahipp) = Yppi_tca(mask_parahipp);
-      end
-      clear Yppi_tca;
-      fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
-    end
-    
+    % smooth mask to have smooth border
+    mask_parahipp_smoothed = zeros(size(mask_parahipp));
+    spm_smooth(double(mask_parahipp),mask_parahipp_smoothed,[8 8 8]);
+
+    % parameters for scaling of Yppi
+    th_initial      = 0.5;
+
+    ind0 = find(Yppi<=0);
+    Yppi  = opt.scale_cortex*Yppi;
+    Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
+    Yppi(ind0) = 0;
+
     [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
-    
-    % check whether tca+genus0 was successful, otherwise run genus0 with original data
-    if isempty(CS.faces) && opt.tca
-      [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi0,th_initial);
-      opt.tca = 0;
-    end
-    
+        
     clear tmp Yppi Yppi0;
 
     % correction for the boundary box used within the surface creation process 
@@ -376,45 +342,32 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
    
     %% topology correction and surface refinement 
-    if ~opt.tca || opt.reduceCS>0
-      stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
-      cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-    else
-      stime = cat_io_cmd('  Resampling and surface refinement','g5','',opt.verb,stime);
-      cmd = sprintf('CAT_ResampleSphericalSurf "%s" "%s" "%s" 327680',Praw,Psphere0,Pcentral);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-    end
+    stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
+    cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     if opt.usePPmap
-      % we use thickness values to get from the initial (white matter) surface to the central surface
-      % the extent depends on the inital threshold of the surface creation
-      extent = th_initial - 0.5;
-      if extent ~= 0
-        CS = gifti(Pcentral);
-        CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-        facevertexcdata = isocolors2(Yth1,CS.vertices); 
-        cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
-
-        cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" "%g"',Pcentral,Pthick,Pcentral,extent);
-        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-      end
-      
       % surface refinement by surface deformation based on the PP map
       th = 0.5;
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
-                     'avg -0.01 0.01 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,th,th);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-      
-      % need some more refinement because some vertices are distorted after CAT_DeformSurf
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-      
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
+      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
                      'avg -0.1 0.1 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+            
+      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
+                     'avg -0.2 0.2 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
+                     Vpp1.fname,Pcentral,Pcentral,th,th);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+
+      % need some more refinement because some vertices are distorted after CAT_DeformSurf
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+
+      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .25 ' ...
+                     'avg -0.75 0.75 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
+                     Vpp1.fname,Pcentral,Pcentral,th,th);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+
     else
       % surface refinement by simple smoothing
       cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %0.2f',Pcentral,Pcentral,2);
@@ -433,12 +386,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % read final surface and map thickness data
     stime = cat_io_cmd('  Thickness / Depth mapping','g5','',opt.verb,stime);
-    if ~opt.usePPmap || ((th_initial - 0.5) == 0)
-      CS = gifti(Pcentral);
-      CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-      facevertexcdata = isocolors2(Yth1,CS.vertices); 
-      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
-    end
+    CS = gifti(Pcentral);
+    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+    facevertexcdata = isocolors2(Yth1,CS.vertices); 
+    cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
    
     % map WM and CSF width data (corrected by thickness)
     if opt.experimental > 1

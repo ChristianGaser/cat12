@@ -37,7 +37,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
   def.resV      = 1;
   def.dmethod   = 'eidist';
-  def.method    = 'pbt2x';  % pbt is worste ... just for tests!
+  def.method    = 'pbt2x';  % pbt is worse ... just for tests!
   def.debug     = 0; %cat_get_defaults('extopts.debug')-1;
   def.verb      = cat_get_defaults('extopts.verb')-1;
   opt           = cat_io_checkinopt(opt,def);
@@ -140,7 +140,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     Ygmts = Ygmt2; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt2(Ygmts>0) = Ygmts(Ygmts>0);
 
     % mix result 
-    % only minimum possible, becasue Ygmt2 is incorrect in blurred sulci 
+    % only minimum possible, because Ygmt2 is incorrect in blurred sulci 
     Ygmt  = min(cat(4,Ygmt1,Ygmt2),[],4); %clear Ygmt1 Ygmt2; 
     Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmts>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0);
   else
@@ -164,7 +164,8 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   Ypp(Ypp>2) = 0;
   YM  = (Ygmt<=opt.resV & Ywmd<=opt.resV & Ygmt>0); Ypp(YM) = (Ymf(YM)-1)/2 - 0.2; % correction of voxel with thickness below voxel resolution
   Ypp(isnan(Ypp)) = 0; 
-
+  Ypp(Ypp<0) = 0; 
+  
   %% Final corrections for position map with removing of non brain objects.
   % ds('d2','',1,Ymf/3,Ywmd/3,Ygmt/5,Ypp,70)
   
