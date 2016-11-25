@@ -187,7 +187,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   if write(2) || write(3)
     vx_vol   = sqrt(sum(transform.warped.M0(1:3,1:3).^2));  
     vx_volt  = sqrt(sum(transform.warped.M1(1:3,1:3).^2));  
-    interpol = any(vx_vol>vx_volt*0.9) + any(vx_vol>vx_volt*0.4);
+	interpol = any(vx_vol>vx_volt) + any(vx_vol/2>vx_volt);
     if interpol
       YI = interp3(Y,1,'linear'); yI = cat(4,YI,YI,YI); 
       for i=1:3, yI(:,:,:,i) = interp3(transform.warped.y(:,:,:,i),1,'linear'); end
