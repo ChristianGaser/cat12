@@ -13456,6 +13456,7 @@ M       tbx_cfg_cat.m
 
 
 ------------------------------------------------------------------------
+r1087 | gaser | 2016-11-23 13:56:20 +0100 (Mi, 23 Nov 2016) | 19 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13475,5 +13476,17 @@ M       cat_vol_pbt.m
 (2) Changed: Added two new parameters to control surface creation in 
     cortex and parahippocampal gyrus.
 (3) Changed: Typos...
+
 ------------------------------------------------------------------------
-r1087 | gaser | 2016-11-23 13:56:06
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_io_writenii.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Interpolation in cat_io_writenii.m was set to previous version.
+(2) Fixed: In tbx_cfg_cat.m the expert case argument was wrong.
+------------------------------------------------------------------------
+r1088 | gaser | 2016-11-25 11:32:58
