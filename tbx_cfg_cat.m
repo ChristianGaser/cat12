@@ -78,7 +78,7 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
 %------------------------------------------------------------------------
 
 switch expert
-  case { 0 | 1 }
+  case { 0, 1 }
     surface        = cfg_menu;
     surface.tag    = 'surface';
     surface.name   = 'Surface and thickness estimation';
