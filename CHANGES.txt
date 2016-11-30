@@ -13513,6 +13513,7 @@ M       cat_surf_createCS.m
 Fixed: Forgot to remove debug flag in cat_surf_createCS.m.
 
 ------------------------------------------------------------------------
+r1091 | gaser | 2016-11-30 12:56:07 +0100 (Mi, 30 Nov 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13522,5 +13523,14 @@ M       cat_conf_tools.m
 M       html/cat.html
 
 Changed: Minimum file number for cat_stat_check_cov.mis now 3.
+
 ------------------------------------------------------------------------
-r1091 | gaser | 2016-11-30 12:55:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+Changed: Surface deformation was optimized in cat_surf_createCS.m.
+
+------------------------------------------------------------------------
+r1092 | gaser | 2016-11-30 13:41:01
