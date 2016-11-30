@@ -348,16 +348,16 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                      'flat -0.25 0.25 .5 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     % need some more refinement because some vertices are distorted after CAT_DeformSurf
     cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
                      'flat -0.5 0.5 .5 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
