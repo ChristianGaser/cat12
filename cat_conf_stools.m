@@ -56,7 +56,7 @@ function stools = cat_conf_stools(expert)
   data_surf_cov.name    = 'Sample';
   data_surf_cov.filter  = 'gifti';
   data_surf_cov.ufilter = 'resampled';
-  data_surf_cov.num     = [1 Inf];
+  data_surf_cov.num     = [3 Inf];
   data_surf_cov.help    = {'Select resampled surfaces parameter files.'};
   
   data_xml = cfg_files;
