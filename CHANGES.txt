@@ -13491,6 +13491,7 @@ M       tbx_cfg_cat.m
 (2) Fixed: In tbx_cfg_cat.m the expert case argument was wrong.
 
 ------------------------------------------------------------------------
+r1089 | gaser | 2016-11-30 11:01:18 +0100 (Mi, 30 Nov 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13501,5 +13502,13 @@ M       cat_surf_createCS.m
 (2) Fixed: In cat_stat_check_cov.m comparison of filenames was not correct
     if length was differing (thanks to Raphael Casseb for correcting this
     error).
+
 ------------------------------------------------------------------------
-r1089 | gaser | 2016-11-30 11:01:04
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+Fixed: Forgot to remove debug flag in cat_surf_createCS.m.
+------------------------------------------------------------------------
+r1090 | gaser | 2016-11-30 11:17:07
