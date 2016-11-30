@@ -44,7 +44,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.surf      = {'lh','rh'}; % {'lh','rh','ch'}
   def.reduceCS  = 100000;  
   def.LAB       = cat_get_defaults('extopts.LAB');
-  def.usePPmap  = 1; 
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   def.SPM       = 0; 
   def.add_parahipp  = cat_get_defaults('extopts.add_parahipp');
@@ -254,27 +253,25 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
     %  because CAT_DeformSurf_ui cannot handle higher resolutions.
-    if opt.usePPmap
-      Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
-      Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
-      Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
-      clear Yppt;
+    Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
+    Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
+    Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+    clear Yppt;
 
-      Vpp1 = Vpp; 
-      Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
-      vmat2         = spm_imatrix(Vpp1.mat);
-      Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
-      vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
-      Vpp1.mat      = spm_matrix(vmat2);
+    Vpp1 = Vpp; 
+    Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
+    vmat2         = spm_imatrix(Vpp1.mat);
+    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
+    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
+    Vpp1.mat      = spm_matrix(vmat2);
 
-      Vpp1 = spm_create_vol(Vpp1); 
-      for x3 = 1:Vpp1.dim(3),
-        M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
-        v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
-        Vpp1 = spm_write_plane(Vpp1,v,x3);
-      end;
-      clear M v x3; 
-    end
+    Vpp1 = spm_create_vol(Vpp1); 
+    for x3 = 1:Vpp1.dim(3),
+      M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
+      v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
+      Vpp1 = spm_write_plane(Vpp1,v,x3);
+    end;
+    clear M v x3; 
 
     %% surface coordinate transformations
     stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); fprintf('\n');
@@ -346,34 +343,22 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     cmd = sprintf('CAT_FixTopology -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
-    if opt.usePPmap
-      % surface refinement by surface deformation based on the PP map
-      th = 0.5;
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .2 ' ...
-                     'avg -0.1 0.1 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
+    % surface refinement by surface deformation based on the PP map
+    th = 0.5;
+    cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                     'flat -0.25 0.25 .5 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-            
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .5 ' ...
-                     'avg -0.2 0.2 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+
+    % need some more refinement because some vertices are distorted after CAT_DeformSurf
+    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+
+    cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                     'flat -0.5 0.5 .5 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
 
-      % need some more refinement because some vertices are distorted after CAT_DeformSurf
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .25 ' ...
-                     'avg -0.75 0.75 .1 .1 5 0 "%g" "%g" n 0 0 0 100 0.01 0.0'], ...
-                     Vpp1.fname,Pcentral,Pcentral,th,th);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-
-    else
-      % surface refinement by simple smoothing
-      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %0.2f',Pcentral,Pcentral,2);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-    end
-    
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
     cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 10',Pcentral,Psphere);
@@ -443,10 +428,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       delete(Pdefects0);  
     end
     delete(Psphere0);
-    if opt.usePPmap
-      delete(Vpp.fname);
-      delete(Vpp1.fname);
-    end
+    delete(Vpp.fname);
+    delete(Vpp1.fname);
     clear CS
   end  
   
