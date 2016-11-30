@@ -13504,11 +13504,23 @@ M       cat_surf_createCS.m
     error).
 
 ------------------------------------------------------------------------
+r1090 | gaser | 2016-11-30 11:17:18 +0100 (Mi, 30 Nov 2016) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_createCS.m
 
 Fixed: Forgot to remove debug flag in cat_surf_createCS.m.
+
 ------------------------------------------------------------------------
-r1090 | gaser | 2016-11-30 11:17:07
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       html/cat.html
+
+Changed: Minimum file number for cat_stat_check_cov.mis now 3.
+------------------------------------------------------------------------
+r1091 | gaser | 2016-11-30 12:55:56
