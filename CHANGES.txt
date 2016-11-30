@@ -13478,6 +13478,7 @@ M       cat_vol_pbt.m
 (3) Changed: Typos...
 
 ------------------------------------------------------------------------
+r1088 | gaser | 2016-11-25 11:33:11 +0100 (Fr, 25 Nov 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13488,5 +13489,17 @@ M       tbx_cfg_cat.m
 
 (1) Changed: Interpolation in cat_io_writenii.m was set to previous version.
 (2) Fixed: In tbx_cfg_cat.m the expert case argument was wrong.
+
 ------------------------------------------------------------------------
-r1088 | gaser | 2016-11-25 11:32:58
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_check_cov.m
+M       cat_surf_createCS.m
+
+(1) Changed: Surface deformation was optimized in cat_surf_createCS.m.
+(2) Fixed: In cat_stat_check_cov.m comparison of filenames was not correct
+    if length was differing (thanks to Raphael Casseb for correcting this
+    error).
+------------------------------------------------------------------------
+r1089 | gaser | 2016-11-30 11:01:04

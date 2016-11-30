@@ -222,7 +222,7 @@ else
   end
 
   % correct filenames for 4D data
-  if V(1).fname == V(2).fname
+  if strcmp(V(1).fname, V(2).fname)
     names_changed = 1;
     Vchanged = V;
     for i=1:n_subjects
