@@ -172,11 +172,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yl1(~Yb)  = 0;
   [tmp0,tmp1,Yl1] = cat_vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
 
-  if opt.debug
-    cat_io_cmd(' ','','',opt.verb,stime); 
-  else
-    cat_io_cmd(' ','','',opt.verb,stime);   
+  cat_io_cmd(' ','','',opt.verb,stime); 
 %    cat_io_cmd('cleanup',dispc,'',opt.verb);
-  end
 
 end

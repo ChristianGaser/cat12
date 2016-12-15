@@ -210,7 +210,7 @@ function annots = cat_surf_FSannotation2CAT(job)
 
   def.trerr     = 0; 
   def.verb      = cat_get_defaults('extopts.verb'); 
-  def.debug     = cat_get_defaults('extopts.debug');
+  def.debug     = cat_get_defaults('extopts.verb')>2;
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
   if ismac
     def.FSDir   = cat_vol_findfiles('/Applications','Freesurfer*',struct('depth',1,'dirs',1));

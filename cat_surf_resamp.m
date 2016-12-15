@@ -30,7 +30,7 @@ function varargout = cat_surf_resamp(varargin)
   def.nproc     = 0; 
   def.verb      = cat_get_defaults('extopts.verb'); 
   def.lazy      = 0; % overwrite existing results
-  def.debug     = cat_get_defaults('extopts.debug');
+  def.debug     = cat_get_defaults('extopts.verb')>2;
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
 
   job = cat_io_checkinopt(job,def);

@@ -481,8 +481,8 @@ function varargout = cat_tst_qa(action,varargin)
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(opt.job.channel.vols{opt.subj});
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      QAS.filedata.fname  = opt.job.data{1};
-      QAS.filedata.F      = opt.job.data{1}; 
+      QAS.filedata.fname  = opt.job.data{opt.subj};
+      QAS.filedata.F      = opt.job.data{opt.subj}; 
       QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
       QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...

@@ -58,7 +58,7 @@ function cat_run_oldcatch(job,tpm,subj)
         caterrstruct(si).file = caterr.stack(si).file;  
       end
       qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
-      cat_io_report(job,qa)
+      cat_io_report(job,qa,subj)
       
       
       % delete template files 
@@ -92,7 +92,7 @@ function cat_run_oldcatch(job,tpm,subj)
         if ismac || isunix
           [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
             fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
-            cat_check_system_output(ST,RS,job.extopts.debug);
+            cat_check_system_output(ST,RS,job.extopts.verb>2);
         end
 
       end

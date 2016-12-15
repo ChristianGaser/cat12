@@ -128,8 +128,9 @@ function varargout = cat_surf_calc(job)
 end
 function surfcalc(job)
     
-  opt.debug     = cat_get_defaults('extopts.debug');
-  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.debug     = cat_get_defaults('extopts.verb')>2;
+  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  job = cat_io_checkinopt(job,def);
 
   %% calculation 
   [sinfo1,S1] = cat_surf_info(job.cdata{1},1);

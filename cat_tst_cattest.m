@@ -27,6 +27,8 @@ function cat_tst_cattest(job)
 %   * Oldworld Monkey:  rhesus_caretF99 (atlas)
 %                       baboon_F3S12 / mangabey_fso
 %
+%  Examples:
+%    cat_tst_cattest(struct('datalevel','basic','paralevel',1,'userlevel',0))
 %  _____________________________________________________________________
 %  Robert Dahnke
 %  $Id$
@@ -86,7 +88,7 @@ function cat_tst_cattest(job)
 
 %#ok<*ASGLU,*NASGU,*AGROW>
   clc
-  clear
+  %clear
   spm_clf('Interactive'); 
   
 
@@ -137,7 +139,7 @@ function cat_tst_cattest(job)
     ''                       1  0 ''                                             ''           {0};              % default
     ''                       1  0 'spm.tools.cat.estwrite.extopts.expertimental' 'exp'        {1};              % default
     ... == parameter in default GUI ==
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.vox'           'vox'        {1 2};            % def=1.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.vox'           'vox'        {2 1};            % def=1.5;
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.APP'           'APP'        {0 4};            % def=1;
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'        'LASstr'     {0.0 0.01 1.0};    % def=0.5;
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.gcutstr'       'gcutstr'    {0.0 0.01 1.0};    % def=0.5;
@@ -279,7 +281,8 @@ function cat_tst_cattest(job)
   end
   % 
   fprintf('Testparameter:\n'); 
-  disp(char(job.para(:,5)));
+  for pi=1:numel(job.para(:,5)), fprintf('  %s\n',job.para{pi,5}); end
+  fprintf('\n');
   
   
   

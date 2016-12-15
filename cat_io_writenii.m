@@ -187,13 +187,13 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   if write(2) || write(3)
     vx_vol   = sqrt(sum(transform.warped.M0(1:3,1:3).^2));  
     vx_volt  = sqrt(sum(transform.warped.M1(1:3,1:3).^2));  
-	interpol = any(vx_vol>vx_volt) + any(vx_vol/2>vx_volt);
+    interpol = any(vx_vol>vx_volt) + any(vx_vol/2>vx_volt);
     if interpol
-      YI = interp3(Y,1,'linear'); yI = cat(4,YI,YI,YI); 
-      for i=1:3, yI(:,:,:,i) = interp3(transform.warped.y(:,:,:,i),1,'linear'); end
+      YI = interp3(Y,interpol,'linear'); %yI = repmat(single(YI),1,1,1,3); 
+      %for i=1:3, yI(:,:,:,i) = interp3(transform.warped.yx(:,:,:,i),1,'linear'); end
     else
       YI = Y;
-      yI = transform.warped.y; 
+      %yI = transform.warped.y; 
     end
   end
   
@@ -203,7 +203,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     fname = io_handle_pre(V.fname,pre2,'',folder);
     if exist(fname,'file'), delete(fname); end
     if labelmap==0
-      [wT,w]  = spm_diffeo('push',YI ,yI,transform.warped.odim(1:3));
+      [wT,w]  = spm_diffeo('push',YI ,transform.warped.yx,transform.warped.odim(1:3));
       % divide by jacdet to get unmodulated data
       wT = wT./(w+0.001); 
     elseif labelmap==1
@@ -212,7 +212,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       wT = zeros([transform.warped.odim(1:3),max(YI(:))],'uint8'); 
       % interpolate each label separately
       for yi=1:max(YI(:)); 
-        wTi  = spm_diffeo('push',single(YI==yi),yI,transform.warped.odim(1:3)); 
+        wTi  = spm_diffeo('push',single(YI==yi),transform.warped.yx,transform.warped.odim(1:3)); 
         wT(:,:,:,yi) = uint8(wTi*100); 
       end
       % use maximum probability function to get label again
@@ -222,7 +222,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     
     % final masking after transformation
     if exist('YM','var')
-      [wTM,w] = spm_diffeo('push',YM,yI,transform.warped.odim(1:3));
+      [wTM,w] = spm_diffeo('push',YM,transform.warped.yx,transform.warped.odim(1:3));
       wTM = wTM./(w+0.001); 
       wTM = round(wTM*100)/100; 
       wT  = wT .* (smooth3(wTM)>YMth);
@@ -270,11 +270,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     fname = io_handle_pre(V.fname,pre3,'',folder);
     if exist(fname,'file'), delete(fname); end
     
-    [wT,wr] = spm_diffeo('push',YI,yI,transform.warped.odim(1:3)); 
+    [wT,wr] = spm_diffeo('push',YI,transform.warped.yx,transform.warped.odim(1:3)); 
 
     % final masking after transformation
     if exist('YM','var')
-      wTM = spm_diffeo('push',YM,yI,transform.warped.odim(1:3)); 
+      wTM = spm_diffeo('push',YM,transform.warped.yx,transform.warped.odim(1:3)); 
       wT = wT .* (smooth3(wTM)>YMth);
     end
     
@@ -315,7 +315,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     fname = io_handle_pre(V.fname,pre3,'',folder);
     if exist(fname,'file'), delete(fname); end
 
-    [wT,w]  = spm_diffeo('push',YI,yI,transform.warped.odim(1:3));
+    [wT,w]  = spm_diffeo('push',YI,transform.warped.yx,transform.warped.odim(1:3));
     
     % divide by jacdet to get unmodulated data
     wT = wT./(w+0.001); 
@@ -324,7 +324,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     % thus we use the def2det function of the inverted deformations to obtain the old and 
     % in my view a more appropriate jacobian determinant 
     % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-    Yy = spm_diffeo('invdef',yI,transform.warped.odim,eye(4),transform.warped.M0);
+    Yy = spm_diffeo('invdef',transform.warped.y,transform.warped.odim,eye(4),transform.warped.M0);
     w  = spm_diffeo('def2det',Yy)/det(transform.warped.M0(1:3,1:3));
     clear Yy
     
@@ -344,11 +344,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       if interpol
         YM = interp(YM,1,'linear'); 
       end
-      wTM = spm_diffeo('push',YM,yI,transform.warped.odim(1:3)); 
+      wTM = spm_diffeo('push',YM,transform.warped.yx,transform.warped.odim(1:3)); 
       wT = wT .* (smooth3(wTM)>YMth);
       clear YM;
     end
-    clear yI
+   % clear yI
         
     % scale the jacobian determinant 
     if write(3)==1

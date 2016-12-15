@@ -15,7 +15,7 @@ else
   error('Not enough parameters.');
 end
 
-opt.debug     = cat_get_defaults('extopts.debug');
+opt.debug     = cat_get_defaults('extopts.verb')>2;
 opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   
 hemi_str = char('lh','rh');

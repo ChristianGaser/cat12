@@ -66,7 +66,6 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
-  %debug   = extopts.debug; % debug = 1;
   verb    = extopts.verb-1;
   dsize   = size(Ysrc);
   NS      = @(Ys,s) Ys==s | Ys==s+1;          % function to ignore brain hemisphere coding
