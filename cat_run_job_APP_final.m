@@ -36,12 +36,12 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   
   % thresholds
   rf   = 6; 
-  Hth  = round(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
+  Hth  = round2(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
   if isnan(Hth), Hth = 0.8; end
-  GMth = round(cat_stat_nanmean(Ym(Ym(:)>0.2  & Ym(:)<0.9      & Ygs(:)<0.2 & Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
-  CMth = round(cat_stat_nanmean(Ym(Ym(:)>0.05 & Ym(:)<GMth*0.5 & Ygs(:)<0.2 & Yb(:) & Ydiv(:)>-0.10)),rf);  % first guess of the CSF intensity
+  GMth = round2(cat_stat_nanmean(Ym(Ym(:)>0.2  & Ym(:)<0.9      & Ygs(:)<0.2 & Yb(:) & Ydiv(:)<0.1 & Ydiv(:)>-0.1)),rf);  % first guess of the GM intensity
+  CMth = round2(cat_stat_nanmean(Ym(Ym(:)>0.05 & Ym(:)<GMth*0.5 & Ygs(:)<0.2 & Yb(:) & Ydiv(:)>-0.10)),rf);  % first guess of the CSF intensity
   %WMth = cat_stat_nanmean(Ym(Ym(:)>0.8 & Ym(:)<1.2 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)); 
-  BGth = round(cat_stat_nanmean(Ym(Ybg(:))),rf); 
+  BGth = round2(cat_stat_nanmean(Ym(Ybg(:))),rf); 
   if isnan(CMth), CMth=mean([BGth,GMth]); end
   
   %% Skull-Stripping
@@ -150,7 +150,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   
   %% masking of the original values and local filtering
   stime = cat_io_cmd('  Filtering','g5','',verb,stime);
-  fi   = round(max(3,min(resT3.vx_volr)*3)/3); 
+  fi   = round2(max(3,min(resT3.vx_volr)*3)/3); 
   Ywm  = Ysrc .* Ywm; Ywm  = cat_vol_localstat(Ywm,Ywm>0,1,3); % PVE
   Ycm  = Ysrc .* Ycm; Ycm  = cat_vol_localstat(Ycm,Ycm>0,1,2);
   for i=1:fi-1, Ywm = cat_vol_localstat(Ywm,Ywm>0,2,1); end
@@ -215,10 +215,14 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
  % Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc2 + Ybc); % correct for noise only in background
   Wth  = single(cat_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.9))); 
   [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>GMth & Ym(:)<Wth*1.2),0:0.01:2);
-  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = round(WMv(WIth),rf);  
+  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = round2(WMv(WIth),rf);  
   [BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
-  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = round(BMv(BIth),rf);  
+  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = round2(BMv(BIth),rf);  
   Ym   = (Ym - BIth) ./ (WIth - BIth); 
   
   cat_io_cmd(' ','','',verb,stime); 
+end
+function X = round2(X,N)
+  if ~exist('N','var'), N = 0; end
+  X = round(X*10^N)/10^N; 
 end

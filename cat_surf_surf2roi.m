@@ -37,6 +37,7 @@ function cat_surf_surf2roi(job)
 
   % parameter 
   def.verb    = 1; 
+  def.debug   = cat_get_defaults('extopts.verb')>2; 
   def.avg     = struct('mean',1,'std',0,'min',0,'max',0,'median',0);  % mean, min, max, median, std
   def.plot    = 0; % not ready
   def.nproc   = 0; % not ready
@@ -236,7 +237,7 @@ function resamp = get_resampled_values(P)
         
     % resample values using warped sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
-    [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,cat_get_defaults('extopts.debug'),0);
+    [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,0);
     delete(Presamp);
 
   end

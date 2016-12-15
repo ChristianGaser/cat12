@@ -33,7 +33,7 @@ function varargout = cat_surf_smooth(varargin)
   end
 
   def.trerr       = 0;  % cat_check_system_output error handling
-  def.debug       = cat_get_defaults('extopts.debug'); % cat_check_system_output error handling
+  def.debug       = cat_get_defaults('extopts.verb')>2; % cat_check_system_output error handling
   def.nproc       = 0;  % parallel processing
   def.assuregifti = 0;  % guarantee gifti output
   def.verb        = cat_get_defaults('extopts.verb'); 

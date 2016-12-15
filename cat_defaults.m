@@ -113,6 +113,8 @@ cat.extopts.sanlm        = 1;     % use SANLM filter:                         0 
 cat.extopts.NCstr        = inf;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections; inf - auto (default = inf)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
+cat.extopts.regstr       = 2;     % Strength of Shooting registration:        1 - Default Shooting; 2 - Optimized Shooting (default); 
+                                  %                                           2 - hard deformations; 3 - average deformations; 4 - soft deformations 
 cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no correction; 1 - only for Dartel (default); 
                                   %                                           2 - also correct segmentation (to WM); 3 - handle as separate class
 cat.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)
@@ -190,7 +192,6 @@ cat.extopts.verb         = 2;     % verbose output:        1 - default; 2 - deta
 cat.extopts.ignoreErrors = 0;     % catch errors:          0 - stop with error (default); 1 - catch preprocessing errors (requires MATLAB 2008 or higher); 
 cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus with simple GUI; 1 - expert modus with extended GUI; 2 - development modus with full GUI
 cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
-cat.extopts.debug        = 1;     % debuging option: 0 - default; 1 - be verbose; 2 - write debugging files 
 cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsave functions
 
 

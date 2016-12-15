@@ -65,7 +65,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     return
   end
     
-  debug = cat_get_defaults('extopts.debug');
+  debug = cat_get_defaults('extopts.verb')>2;
   inv_weighting = 0;
   if nargout==7
     cat_warnings = struct('identifier',{},'message',{});

@@ -19,7 +19,7 @@ function varargout = cat_surf_parameters(job)
   def.nproc       = 0; 
   def.verb        = cat_get_defaults('extopts.verb'); 
   def.lazy        = 0; % reprocess exist results
-  def.debug       = cat_get_defaults('extopts.debug');
+  def.debug       = cat_get_defaults('extopts.verb')>2;
   
   job = cat_io_checkinopt(job,def);
 

@@ -32,7 +32,7 @@ end
 
 % show slices
 mix=1;
-matlabbatch{mix}.spm.tools.cat.tools.showslice.data_vol   = files;
+matlabbatch{mix}.spm.tools.cat.tools.showslice.data_vol   = repmat(files,3,1);
 matlabbatch{mix}.spm.tools.cat.tools.showslice.scale      = 0;
 matlabbatch{mix}.spm.tools.cat.tools.showslice.orient     = 3;
 matlabbatch{mix}.spm.tools.cat.tools.showslice.slice      = 0;

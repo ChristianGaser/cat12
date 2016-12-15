@@ -52,18 +52,18 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
 % Development comments:
 %
 %   Was ist neu im Vergleich zu anderen?
-%   - Zuweisung durch Dartel mit hoher Genauigkeit möglich 
+%   - Zuweisung durch Dartel mit hoher Genauigkeit mÃ¶glich 
 %   - Erweiterung von SPM/VBM durch MainROIs (Seiten, Lappen, ...)
-%   - Verbesserung der SPM/VBM durch bessere Enfernung von unerwünschtem
-%     Gewebe (ON, Blutgefäße ...)
-%   - Blutgefäße könnnen als erweitere Masken für fMRI genutzt werden um
-%     Seiteneffekte besser ausblenden zu können.
-%  [- Beliebige Atlanten können genutzt werden.]
+%   - Verbesserung der SPM/VBM durch bessere Enfernung von unerwÃ¼nschtem
+%     Gewebe (ON, BlutgefÃ¤ÃŸe ...)
+%   - BlutgefÃ¤ÃŸe kÃ¶nnnen als erweitere Masken fÃ¼r fMRI genutzt werden um
+%     Seiteneffekte besser ausblenden zu kÃ¶nnen.
+%  [- Beliebige Atlanten kÃ¶nnen genutzt werden.]
 %
 %  Todo:
 %   - Besserer Atlas
-%   - BV vs. HD - glätten in dilated HD region
-%   - Füllen von CSF lücken bei LAB~=BV und Ym<1.2 und LAB==NV?
+%   - BV vs. HD - glÃ¤tten in dilated HD region
+%   - FÃ¼llen von CSF lÃ¼cken bei LAB~=BV und Ym<1.2 und LAB==NV?
 %
 % ______________________________________________________________________
 
@@ -100,7 +100,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   BVCstr  = extopts.BVCstr; 
   WMHCstr = extopts.WMHCstr; 
   verb    = extopts.verb-1;
-  debug   = extopts.debug;
+  debug   = extopts.verb>2;
   PA      = extopts.cat12atlas;
   vx_res  = mean([max(vx_vol) min(vx_vol)]); % cat_get_defaults('extopts.vx_res'); 
   
