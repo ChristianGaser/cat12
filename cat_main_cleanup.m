@@ -138,6 +138,5 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   Yp0b = cat_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
   Yp0b = Yp0b(indx,indy,indz); 
 
-  %if ~extopts.debug, cat_io_cmd('cleanup',dispc,'',extopts.verb); end
   cat_io_cmd(' ','','',extopts.verb,stime);   
   fprintf('%4.0fs\n',etime(clock,stimec));

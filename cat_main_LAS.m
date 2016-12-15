@@ -66,7 +66,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
-  debug   = extopts.debug; %debug = 1;
+  debug   = extopts.verb>2; %debug = 1;
   verb    = extopts.verb-1;
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);

@@ -269,7 +269,7 @@ function varargout = compile(comp,test,verb)
     vx_vol = 8*[1 1 1]/(ip+1); n_iters = 16; sub = round(16/min(vx_vol));
     bias_fwhm = 60; init_kmeans = 0; mrf = 0.1; iters_icm = 50; n_classes = 3; pve = 5; 
     t1c  = double(t1+0); segc = cat_vol_ctype(seg+0); 
-    prob = cat_amap(t1c,segc, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm);
+    [txt,prob] = evalc('cat_amap(t1c,segc, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm)');
     prob = prob(:,:,:,[1 2 3]);
     d{ni} = single(prob(:,:,:,1))/255 + single(prob(:,:,:,2))/255*2 + single(prob(:,:,:,3))/255*3; 
     r(ni) = rms(seg - d{ni}); 

@@ -22,8 +22,8 @@ vox.strtype = 'r';
 vox.num     = [1 1];
 vox.def     = @(val)cat_get_defaults('extopts.vox', val{:});
 vox.help    = {
-    'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
-''
+  'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
+  ''
 };
 
 %---------------------------------------------------------------------
@@ -35,9 +35,68 @@ pbtres.strtype = 'r';
 pbtres.num     = [1 1];
 pbtres.def     = @(val)cat_get_defaults('extopts.pbtres', val{:});
 pbtres.help    = {
-    'Internal isotropic resolution for thickness estimation in mm.'
-''
+  'Internal isotropic resolution for thickness estimation in mm.'
+  ''
 };
+
+
+%---------------------------------------------------------------------
+
+if expert == 1
+  regstr         = cfg_menu;
+  regstr.tag    = 'regstr';
+  regstr.name   = 'Optimized Shooting Registration';
+  regstr.labels = {
+    'Default Shooting'
+    'Optimized Shooting'
+    };
+  regstr.values = {1 2};
+elseif expert > 1
+  regstr         = cfg_entry;
+  regstr.tag     = 'regstr';
+  regstr.name    = 'Optimized Shooting Registration';
+  regstr.strtype = 'r';
+  regstr.num     = [1 inf];
+end
+regstr.def    = @(val)cat_get_defaults('extopts.regstr', val{:});
+regstr.help   = {
+  'WARNING: This parameter is in development and may change in future and only works for Shooting templates!'
+  ''
+  '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates. '
+  'The "Optimized Shooting" approach use lower resolutions in early iterations and an adaptive stop criteria that allow smoother changes and faster processing at once. '
+  ''
+};
+if expert > 1
+  % allow different registrations settings by using a matrix
+  regstr.help = [regstr.help; { ...
+    ''
+    'In the development modus the deformation levels are set by the following values ...'
+    '  0         .. "Use Dartel" '                                         
+    '  1         .. "Default Shooting"     .. only template resolution'
+    '  2         .. "Optimized Shooting"   .. 3:(3-TP)/4:TP'
+    '  3         .. "Optimized Shooting"   .. TP/2:TP/4:TP'
+    ''
+    ...'  10        .. "Stronger Shooting"       .. max( 0.5 , [2.5:0.5:0.5] )'
+    '  11        .. "Strong Shooting"       .. max( 1.0 , [3.0:0.5:1.0] )'
+    '  12        .. "Medium Shooting"       .. max( 1.5 , [3.0:0.5:1.0] )'
+    '  13        .. "Soft   Shooting"       .. max( 2.0 , [3.0:0.5:1.0] )'
+    ...'  14        .. "Softer Shooting"       .. max( 2.5 , [3.0:0.5:1.0] )'
+    ...'  15        .. "Supersoft Shooting"    .. max( 3.0 , [3.0:0.5:1.0] )'
+    ''
+    ...'  10        .. "Stronger Shooting TR"    .. max( max( 0.5 , TR ) , [2.5:0.5:0.5] )'
+    '  21        .. "Strong Shooting TR"     .. max( max( 1.0 , TR ) , [3.0:0.5:1.0] )'
+    '  22        .. "Medium Shooting TR"     .. max( max( 1.5 , TR ) , [3.0:0.5:1.0] )'
+    '  23        .. "Soft   Shooting TR"     .. max( max( 2.0 , TR ) , [3.0:0.5:1.0] )'
+    ...'  24        .. "Softer Shooting TR"     .. max( max( 2.5 , TR ) , [3.0:0.5:1.0] )'
+    ...'  25        .. "Softer Shooting TR"     .. max( max( 3.0 , TR ) , [3.0:0.5:1.0] )'
+    ''
+    'Double digit variants runs only for a limited resolutions and produce softer maps. '
+    'The cases with TR are further limited by the template resolution and to avoid interpolation. '
+    'For each given value a separate deformation process is run in inverse order and saved in subdirectories. '
+    'The first given value that runs last will be used in the following CAT processing. ' 
+    ''
+    }]; 
+end
 
 %---------------------------------------------------------------------
 
@@ -91,15 +150,6 @@ verb.help    = {
   'Verbose processing.'
 };
 
-debug         = cfg_menu;
-debug.tag     = 'debug';
-debug.name    = 'Debuging level';
-debug.labels  = {'none','light','details'};
-debug.values  = {0 1 2};
-debug.def     = @(val)cat_get_defaults('extopts.debug', val{:});
-debug.help    = {
-  'Debuging processing.'
-};
 
 
 %---------------------------------------------------------------------
@@ -433,6 +483,8 @@ appfull.help     = { ...
   '' ...
   'Enter a number with 3 Digits with the first digit for biascorr, digit 2 for masking, and digit 3 for affreg with:' ...
   '' ...
+  ' APPcode = [biascorr masking affreg]' ...  
+  '' ...
   ' biascorr: ' ...
   '  0 = none '...
   '  1 = initial, only for affine registration (default) '...
@@ -523,16 +575,42 @@ lazy.help    = {
   'Do not process data if the result exist. '
 };
 
+%------------------------------------------------------------------------
+
+scale_cortex         = cfg_entry;
+scale_cortex.tag     = 'scale_cortex';
+scale_cortex.name    = 'Modify cortical surface creation';
+scale_cortex.strtype = 'r';
+scale_cortex.num     = [1 1];
+scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
+scale_cortex.help    = {
+  'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued if you still have glued gyri/sulci (mainly in the occ. lobe).  You can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
+  ''
+};
+
+add_parahipp         = cfg_entry;
+add_parahipp.tag     = 'add_parahipp';
+add_parahipp.name    = 'Modify parahippocampal surface creation';
+add_parahipp.strtype = 'r';
+scale_cortex.num     = [1 1];
+add_parahipp.def     = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
+add_parahipp.help    = {
+  'Increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border if the parahippocampal gyrus is still cut.  You can try to increase this value (start with 0.15).'
+  ''
+};
+
+
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if ~spm
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,...
+    extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,regstr,WMHCstr,wmhc,mrf,...
                      darteltpm,cat12atlas,brainmask,T1,...
-                     restype,vox,pbtres,ignoreErrors,verb}; 
+                     restype,vox,pbtres,scale_cortex,add_parahipp,ignoreErrors,verb}; 
   elseif expert==1 % working expert options
-    extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,darteltpm,restype,vox,ignoreErrors}; 
+    extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,regstr,WMHCstr,wmhc,darteltpm,restype,vox,...
+                     pbtres,scale_cortex,add_parahipp,ignoreErrors}; 
   else
     extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
   end

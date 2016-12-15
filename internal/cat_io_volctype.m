@@ -39,10 +39,10 @@ function cat_io_volctype(varargin)
       ctype = job.ctype;
     end  
   else
-    ctype = spm_input('Datatype',1,'ui8|ui16|i8|i16|s',[2,4,256,512,16],1);
+    ctype = spm_input('Datatype',1,'ui8|ui16|i8|i16|s',[2,512,4,256,16],1);
   end
   if any(ctype==[2 4 256 512])
-    V = spm_vol(job.data{1});
+    V = spm_vol(strrep(job.data{1},',1',''));
     Y = spm_read_vols(V);
     cvals = 1/round(single(intmax(spm_type(ctype))) * diff([min(Y(:)),max(Y(:))]));
   else
@@ -70,49 +70,61 @@ function cat_io_volctype(varargin)
   
   %% convert
   for si=1:numel(job.data)
-    V = spm_vol(job.data{si});
+    V = spm_vol(strrep(job.data{si},',1',''));
     Y = spm_read_vols(V);
-    if V.dt(1)~=ctype 
-      V.dt(1) = ctype;
-      [pp,ff,ee] = spm_fileparts(V.fname);
+ 
+    V(1).dt(1) = ctype;
+    [pp,ff,ee,dd] = spm_fileparts(V(1).fname);
       
-      if job.cvals~=0
-        V.pinfo(1) = job.cvals;
-        if si==1
-          V.fname    = fullfile(pp,['test' ff ee]);
-          spm_write_vol(V,Y);
+    if job.cvals~=0
+      V(1).pinfo(1) = job.cvals;
+      if si==1 && ndims(Y)<4
+        V(1).fname    = fullfile(pp,['test' ff ee]);
+        spm_write_vol(V,Y);
 
-          Vtest = spm_vol(V.fname );
-          Ytest = spm_read_vols(Vtest);
-          err   = nanmean((Y(:) - Ytest(:)).^2).^0.5;
+        Vtest = spm_vol(V(1).fname );
+        Ytest = spm_read_vols(Vtest);
+        err   = nanmean((Y(:) - Ytest(:)).^2).^0.5;
 
-          if ~job.force
-            proceed = spm_input(sprintf('Error %0.4f. Proceed?',err),'+1','y/n','',1);
-          else
-            proceed = 1;  
-          end
-          
-          delete(V.fname);
-          if proceed=='n', return; end
-          spm_clf('Interactive'); 
-          spm_progress_bar('Init',numel(job.data),'Set datatype:','Volumes Complete');
+        if ~job.force
+          proceed = spm_input(sprintf('Error %0.4f. Proceed?',err),'+1','y/n','',1);
+        else
+          proceed = 1;  
         end
-      else
-        clim = cat_vol_iscaling(Y(:),[0.02 0.98]); rf = 1; 
-        switch ctype
-          case {2,256}, V.pinfo(1) = ceil( rf*((clim(2) - clim(1)) / 256)   )/rf;
-          case {4,512}, V.pinfo(1) = ceil( rf*((clim(2) - clim(1)) / 256^2) )/rf;
-        end
+
+        delete(V(1).fname);
+        if proceed=='n', return; end
+        spm_clf('Interactive'); 
+        spm_progress_bar('Init',numel(job.data),'Set datatype:','Volumes Complete');
       end
-      
-      if isempty(job.prefix) && (job.overwrite==0 || job.overwrite=='n')
-        prefix = [spm_type(ctype) '_'];
-      else
-        prefix = job.prefix; 
+    elseif ndims(Y)<4
+      clim = cat_vol_iscaling(Y(:),[0.02 0.98]); rf = 1; 
+      switch ctype
+        case {2,256}, V(1).pinfo(1) = ceil( rf*((clim(2) - clim(1)) / 256)   )/rf;
+        case {4,512}, V(1).pinfo(1) = ceil( rf*((clim(2) - clim(1)) / 256^2) )/rf;
       end
-      
-      V.fname    = fullfile(pp,[prefix ff ee]);
-      if exist(V.fname,'file'), delete(V.fname); end
+    end
+
+    %%
+    if isempty(job.prefix) && (job.overwrite==0 || job.overwrite=='n')
+      prefix = [spm_type(ctype) '_'];
+    else
+      prefix = job.prefix; 
+    end
+     
+    if exist(V(1).fname,'file'), delete(V(1).fname); end
+    if ndims(Y)==4
+      %%
+      N              = nifti;
+      N.dat          = file_array(fullfile(pp,[prefix ff ee]),min([inf inf inf 3],size(Y)),[ctype spm_platform('bigend')],0,job.cvals,0);
+      N.mat          = V(1).mat;
+      N.mat0         = V(1).private.mat0;
+      N.descrip      = V(1).descrip;
+      create(N);    
+      Y(:,:,:,3) = Y(:,:,:,3) + Y(:,:,:,4);
+      N.dat(:,:,:,:) = Y(:,:,:,1:3);
+    else
+      V(1).fname    = fullfile(pp,[prefix ff ee]);
       V = rmfield(V,'private');
       spm_write_vol(V,Y);
     end

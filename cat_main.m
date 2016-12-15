@@ -14,7 +14,7 @@ function Ycls = cat_main(res,tpm,job)
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
 dbs   = dbstatus; debug = 0; 
-for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_LASs'); debug = 1; break; end; end
+for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main'); debug = 1; break; end; end
 
 
 global cat_err_res; % for CAT error report
@@ -54,6 +54,7 @@ bb(~isfinite(bb)) = bb1(~isfinite(bb));
 if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
 bb(1,:) = vx.*round(bb(1,:)./vx);
 bb(2,:) = vx.*round(bb(2,:)./vx);
+res.bb = bb; 
 clear vx vx1 bb1   
 
 if isfield(res,'mg'),
@@ -148,6 +149,8 @@ if do_dartel || job.extopts.LASstr>0
     tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
   end
 end
+res.do_dartel = do_dartel;
+res.tpm2      = tpm2; 
 clear numpos run2 darteltpm
 
 chan(N) = struct('B1',[],'B2',[],'B3',[],'T',[],'Nc',[],'Nf',[],'ind',[]);
@@ -410,7 +413,7 @@ if ~isfield(res,'spmpp')
 
     %%
     Yb = cat_main_gcut(Ym,Yp0>0.1,Ycls,Yl1,false(size(Ym)),vx_vol,...
-      struct('gcutstr',0.1,'verb',0,'debug',job.extopts.debug,'LAB',job.extopts.LAB,'LASstr',0));
+      struct('gcutstr',0.1,'verb',0,'LAB',job.extopts.LAB,'LASstr',0));
     Ybb  = cat_vol_smooth3X(Yb,2); 
     
     [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
@@ -898,8 +901,8 @@ if ~isfield(res,'spmpp')
         ds('d2','',vx_vol,(Yb01 + Yb05+Yb09)/3,Ymi.*(0.2+0.8*Yb01),Ymi.*(0.2+0.8*Yb05),Ymi.*(0.2+0.8*Yb09),50)
       end
     catch %#ok<CTCH>
-      fprintf('%4.0fs\n',etime(clock,stime));
-      job.extopts.gcutstr = 0;
+      fprintf('\n'); cat_warnings = cat_io_addwarning(cat_warnings,'CAT:cat_main_gcut:err99','Unknown error in cat_main_gcut. Use old brainmask.'); fprintf('\n');
+      job.extopts.gcutstr = 99;
     end
   end
   
@@ -1283,367 +1286,11 @@ end
 
 
 %% ---------------------------------------------------------------------
-%  Deformation
+%  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-trans = struct();
-
-M0 = res.image.mat;
-
-% prepare transformations 
-
-% resolution changes:
-tpmres = abs(M1(1)); newres = job.extopts.vox; 
-if isinf(newres), newres = tpmres; end
-M1d = M1; M1([1,6,11])=M1([1,6,11]) .* newres/tpmres; 
-odim = floor(odim*tpmres/newres);
-
-
-% to write a correct x=-1 output image, we have to be sure that the x
-% value of the bb is negative
-if bb(1)<bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
-if 0
-  bbt = bb;
-else
-  Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
-  [bbt,voxt] = spm_get_bbox(Vd, 'old');  
-end
-
-
-% figure out the mapping from the volumes to create to the original
-mm  = [[bb(1,1) bb(1,2) bb(1,3)
-        bb(2,1) bb(1,2) bb(1,3)
-        bb(1,1) bb(2,2) bb(1,3)
-        bb(2,1) bb(2,2) bb(1,3)
-        bb(1,1) bb(1,2) bb(2,3)
-        bb(2,1) bb(1,2) bb(2,3)
-        bb(1,1) bb(2,2) bb(2,3)
-        bb(2,1) bb(2,2) bb(2,3)]'; ones(1,8)];
-
-vx2  = M1\mm;
-vx2d = M1d\mm;
-vx3  = [[1       1       1
-        odim(1) 1       1
-        1       odim(2) 1
-        odim(1) odim(2) 1
-        1       1       odim(3)
-        odim(1) 1       odim(3)
-        1       odim(2) odim(3)
-        odim(1) odim(2) odim(3)]'; ones(1,8)];
-mat    = mm/vx3; 
-
-% individual parameters
-trans.native.Vo = VT0;
-trans.native.Vi = VT;
+[trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);;
     
-% affine parameters
-Mad     = vx2d/vx3; % affine parameter for dartel template M1d\(res.Affine)*
-Ma      = M0\inv(res.Affine)*M1*vx2/vx3;
-mat0a   = res.Affine\M1*vx2/vx3;
-mata    = mm/vx3;
-trans.affine = struct('odim',odim,'mat',mata,'mat0',mat0a,'M',Ma);
-
-% rigid parameters
-x       = affind(rgrid(d),M0);
-y1      = affind(Yy,M1d);     
-[M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255);
-Mr      = M0\inv(R)*M1*vx2/vx3;
-mat0r   = R\M1*vx2/vx3;
-matr    = mm/vx3;
-trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
-res.rigid = M0\inv(R); 
-
-% old spm normalization used for atlas map
-trans.atlas.Yy = Yy; 
-
-clear x
 %%
-% dartel spatial normalization to given template
-if do_dartel==1 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.output.label(1:end),job.output.jacobian.warped])
-    stime = cat_io_cmd(sprintf('Dartel registration with %0.2f mm',job.extopts.vox)); 
-    
-    % use GM/WM for dartel
-    n1 = 2;
-
-    f = zeros([odim(1:3) 2],'single');
-    g = zeros([odim(1:3) 2],'single');
-    u = zeros([odim(1:3) 3],'single');
-    for k1=1:n1
-        for i=1:odim(3),
-            f(:,:,i,k1) = single(spm_slice_vol(single(Ycls{k1}),Ma*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255);
-        end
-    end
-
-    rform = 0;    % regularization form: 0 - Linear Elastic Energy
-    code  = 2;    % multinomial
-    lmreg = 0.01; % LM regularization
-    cyc = 3;      % cycles
-    its = 3;      % relaxation iterations
-
-    for i=1:6
-        param(i).its = 3;         %#ok<AGROW> % inner iterations
-    end
-    
-    param(1).rparam = [4 2 1e-6]; % regularization parameters: mu, lambda, id
-    param(1).K = 0;               % time steps
-    param(2).rparam = [2 1 1e-6];
-    param(2).K = 0;
-    param(3).rparam = [1 0.5 1e-6];
-    param(3).K = 1;
-    param(4).rparam = [0.5 0.25 1e-6];
-    param(4).K = 2;
-    param(5).rparam = [0.25 0.125 1e-6];
-    param(5).K = 4;
-    param(6).rparam = [0.25 0.125 1e-6];
-    param(6).K = 6;
-
-    it0 = 0;
-    for it = 1:numel(param)
-        prm   = [rform, param(it).rparam, lmreg, cyc, its, param(it).K, code];
-        % load new template for this iteration
-        for k1=1:n1
-            for i=1:odim(3),
-                g(:,:,i,k1) = single(spm_slice_vol(tpm2{it}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
-            end
-        end
-
-        for j = 1:param(it).its,
-            it0 = it0 + 1;
-            [u,ll] = dartel3(u,f,g,prm);
-            fprintf('\n%d\t%8.0f %8.0f %8.0f %8.4f',...
-                it0,ll(1),ll(2),ll(1)+ll(2),ll(3));
-        end
-    end
-    
-    y0 = spm_dartel_integrate(reshape(u,[odim(1:3) 1 3]),[0 1], 6);
-    
-    if job.output.jacobian.warped, trans.jc.u = u; end
-    clear f g u
-    
-    [t1,t2] = ndgrid(1:d(1),1:d(2),1);
-    t3 = 1:d(3);
-
-    prm     = [3 3 3 0 0 0];
-    Coef    = cell(1,3);
-    Coef{1} = spm_bsplinc(y0(:,:,:,1),prm);
-    Coef{2} = spm_bsplinc(y0(:,:,:,2),prm);
-    Coef{3} = spm_bsplinc(y0(:,:,:,3),prm);
-    
-    for z=1:d(3)
-        [t11,t22,t33] = defs2(Coef,z,Ma,prm,t1,t2,t3);
-        Yy(:,:,z,1) = t11;
-        Yy(:,:,z,2) = t22;
-        Yy(:,:,z,3) = t33;
-    end
-    clear Coef y0 t1 t2 t3 y1 y2 y3 t11 t22 t33 x1a y1a z1a z k1
-    
-    %fprintf(sprintf('%s',repmat('\b',1,it0*39-9)));
-    fprintf(sprintf('%s',repmat('\b',1,it0*39-8)));
-    %cat_io_cmd(' ','g5','',job.extopts.verb,stime);
-    fprintf('\n%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
-
-    
-    %%
-    
-
-    M = mat\M1;
-    for i=1:size(Yy,3),
-        t1         = Yy(:,:,i,1);
-        t2         = Yy(:,:,i,2);
-        t3         = Yy(:,:,i,3);
-        Yy(:,:,i,1) = M(1,1)*t1 + M(1,2)*t2 + M(1,3)*t3 + M(1,4);
-        Yy(:,:,i,2) = M(2,1)*t1 + M(2,2)*t2 + M(2,3)*t3 + M(2,4);
-        Yy(:,:,i,3) = M(3,1)*t1 + M(3,2)*t2 + M(3,3)*t3 + M(3,4);
-    end
-    %M1 = mat;
-    
-    trans.warped = struct('y',Yy,'odim',odim,'M0',M0,'M1',M1,'M2',M1\res.Affine*M0,'dartel',do_dartel);
-
-    clear Yy t1 t2 t3 M; 
-    
-    % rigid transformation update 
-    % erstmal nicht, wird eigentlich anhand der Yy vor Dartel bestimmt 
-    % und kann zu abweichung zw. den Deformationen f??hren ... 50120921
-    %{
-    if do_dartel==1 && (any(tc(:,2)) || job.output.label(1,3))
-        %M0o = res.image0.mat; 
-
-        x      = affind(rgrid(d),M0);
-        y1     = affind(trans.warped.y,M1d); % required new transformation
-
-        [M3,R]  = spm_get_closest_affine(x,y1,single(Ycls{1})/255); % M3 ist die neue affine matrix !
-        clear x y1
-
-        % rigid parameters
-        Mr      = M0\inv(R)*M1*vx2/vx3;
-        mat0r   = R\M1*vx2/vx3;
-        matr    = mm/vx3;
-  
-        trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr);
-    end
-    %}
-  
-    
-elseif do_dartel==2 %&& any([tc(2:end),job.output.bias(2:end),job.output.warps,job.output.label(1:end),job.output.jacobian.warped])    
-%%  Geodesic Shooting with Template 0 to 4 
-    stime = cat_io_cmd(sprintf('Shooting registration with %0.2f mm',job.extopts.vox)); 
-    
-    %% shooting parameter
-    if ~exist('spm_shoot_defaults','file')
-      addpath(spm('dir'),'toolbox','Shoot'); % error in parallel processing 2016/11
-    end
-    sd         = spm_shoot_defaults;
-    if 0 % cat12 optimizations
-      %{
-      % shooting parameter (spm_shoot_defaults) 
-      % we need to change parameter for other processing resolutions
-        sd.tname   = 'Template';                % Base file name for templates
-        sd.issym   = false;                     % Use a symmetric template?
-        sd.cyc_its = [2 2];                     % No. multigrid cycles and iterations
-        lam        = 0.5;                       % Decay of coarse to fine schedule
-        inter      = 32;                        % Scaling of parameters at first iteration
-        nits       = 24;                        % No. iterations of Gauss-Newton
-        sd.sched   = (inter-1)*exp(-lam*((1:(nits+1))-1))+1;
-        sd.sched   = sd.sched/sd.sched(end);
-        maxoil     = 8;                         % Maximum number of time steps for integration
-        sd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
-        sd.rparam  = [1e-4 0.001 0.2 0.05 0.2]; % Regularisation parameters for deformation
-        sd.sparam  = [0.0001 0.08 0.8];         % Regularisation parameters for blurring
-        sd.smits   = 16;                        % No. smoothing iterations
-        sd.scale   = 0.8;                       % Fraction of Gauss-Newton update step to use
-        sd.bs_args = [2 2 2 1 1 1];             % B-spline settings for interpolation
-      %}
-      % it is maybe possible to reduce the number of iterations, becuase 
-      % of the large number of subjects of the IXI555 template
-      % Schedule for coarse to fine
-      nits      = 12;         % No. iterations of Gauss-Newton - smaller==faster (def. 24)
-      lam       = 0.5;        % Decay of coarse to fine schedule - smaller==smoother (def. 0.5)
-      inter     = 32;         % Scaling of parameters at first iteration - higher==wider/smoother(def. 32)
-      sd.sched = (inter-1)*exp(-lam*((1:(nits+1))-1))+1;
-      sd.sched = sd.sched/sd.sched(end);
-      maxoil    = 8;                          % Maximum number of time steps for integration
-      sd.eul_its = round((0:(nits-1))*(maxoil-0.5001)/(nits-1)+1); % Start with fewer steps
-    end
-    cyc_its = sd.cyc_its;      % No. multigrid cycles and inerations
-    sched   = sd.sched;        % Schedule for coarse to fine
-    nits    = numel(sched)-1;
-    rparam  = sd.rparam;       % Regularisation parameters for deformation
-    eul_its = sd.eul_its;     % Start with fewer steps
-    scale   = sd.scale;        % Fraction of Gauss-Newton update step to use
-    bs_args = sd.bs_args;      % B-spline settings for interpolation
-    n1      = 2;               % use GM/WM for shooting
-    vxs     = repmat(prod(job.extopts.vox),1,3); % shooting voxel size
-    dm      = floor(max(vx2(1:3,:),[],2))';
-    
-    % use affine registration as Shooting input is not standard and will
-    % lead to problems with the SPM Deformation Utility Toolbox
-    %affine = 0; if affine, Ms = Ma; else Ms = Mr; end 
-    Ms = Mr;
-    
-    % Sort out which template for each iteration
-    tmpl_no = round(((1:nits)-1)/(nits-1)*(numel(tpm2)-0.51))+1;
-
-    % create shooting files - here the affine images!
-    f   = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');ones(odim(1:3),'single')};  % individual [rigid|affine] GM, WM and BG segments 
-    g   = {zeros(odim(1:3),'single');zeros(odim(1:3),'single');zeros(odim(1:3),'single')}; % template GM, WM and BG segments
-    def = single(reshape(affind(spm_diffeo('Exp',zeros([dm,3],'single'),[0 1]),mat0r),[dm,1,3])); 
-    y   = affind(squeeze(def),inv(mat0r)); clear def;                     % deformation field
-    u   = zeros([odim(1:3) 3],'single');                                  % flow field
-    dt  = ones(odim(1:3),'single');                                       % jacobian
-    for k1=1:n1
-      for i=1:odim(3),
-        f{k1}(:,:,i) = single(spm_slice_vol(single(Ycls{k1}),Ms*spm_matrix([0 0 i]),odim(1:2),[1,NaN])/255); 
-      end
-      msk     = ~isfinite(f{k1});
-      f{k1}(msk) = 0;
-      f{k1}(isnan(f{k1}) | ~isfinite(f{k1}))=0;
-      f{n1+1} = f{n1+1} - f{k1}; 
-      drawnow
-    end
-    f{n1+1}(msk) = 0.00001;
-    
-%       for k1=1:n1
-%         f{k1}   = spm_bsplinc(log(f{k1}), bs_args); %warum?
-%         f{n1+1} = f{n1+1} - f{k1};
-%       end
-%       f{n1+1} = log(max(f{n1+1},eps)); 
-      
-    %% The actual work
-    for it=1:nits,
-
-      %% load new template for this iteration
-      if it==1 || (tmpl_no(it)~=tmpl_no(it-1))
-        g{n1+1} = ones(odim,'double');
-        for k1=1:n1
-          for i=1:odim(3),
-            g{k1}(:,:,i) = single(spm_slice_vol(tpm2{tmpl_no(it)}(k1),Mad*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
-          end
-          g{n1+1} = g{n1+1} - g{k1};
-          g{k1}   = spm_bsplinc(log(g{k1}), bs_args); %warum?
-        end
-        g{n1+1} = log(max(g{n1+1},eps)); %warum?
-      end
-
-
-      %% More regularisation in the early iterations, as well as a
-      % a less accurate approximation in the integration.
-      prm      = [vxs, rparam*sched(it+1)*prod(vxs)];
-      int_args = [eul_its(it), cyc_its]; drawnow
-
-      fprintf('%-3d\t| ',it);
-
-      % Gauss-Newton iteration to re-estimate deformations for this subject
-      u     = spm_shoot_update(g,f,u,y,dt,prm,bs_args,scale); drawnow
-      [y,J] = spm_shoot3d(u,prm,int_args); drawnow
-      dt    = spm_diffeo('det',J); clear J
-      clear J
-
-      if any(~isfinite(dt(:)) | dt(:)>100 | dt(:)<1/100)
-        fprintf('Problem with Shooting (dets: %g .. %g)\n', min(dt(:)), max(dt(:)));
-      end
-      drawnow
-
-    end
-    %
-    yi = spm_diffeo('invdef',y,d,inv(M1\R*M0),eye(4)); 
-    
-    %trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\inv(Ms)*M0,'dartel',do_dartel,'dt',dt);
-    trans.warped = struct('y',yi,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',do_dartel,'dt',dt);
-    trans.rigid  = struct('odim',odim,'mat',matr,'mat0',mat0r,'M',Mr); % require old rigid transformation
-    %%
-    clear dt y yi;
-    if 0
-      T1 = strrep(job.extopts.cat12atlas{1},'cat.nii','Template_T1_IXI555_MNI152.nii'); 
-      Ymx  = reshape(cat_vol_ctype(round(spm_sample_vol(VT,double(y(:,:,:,1)),double(y(:,:,:,2)),double(y(:,:,:,3)),0))),size(dt));
-      Yly  = reshape(spm_sample_vol(spm_vol(T1),double(trans.atlas.Yy(:,:,:,1)),double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0),VT.dim);
-      Ylx  = reshape(spm_sample_vol(spm_vol(T1),double(yi(:,:,:,1)),double(yi(:,:,:,2)),double(yi(:,:,:,3)),0),VT.dim);
-      % ds('l2','a',1,Ym.*Yb,single(Yly),(Ym - single(Yly)) .* Yb,(Ym - single(Ylx)) .* Yb,80)
-    end 
-    
-    %% schneller test
-    %%{ 
-    % class maps
-    fn = {'GM','WM','CSF'};
-    for clsi=1:1
-      %%
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
-        sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[1 1 0 1],trans);
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
-        sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],[0 0 0 2],trans);
-      %%
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
-        sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 1 0],trans);
-      %%
-      cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
-        sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 2 0],trans);  
-    end
-    %}
-    
-    cat_io_cmd(' ','',''); cat_io_cmd('','','',job.extopts.verb,stime);
-end
-clear Yy u;
-    
-
-
 if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting && exist('Yclso','var')
   Ycls = Yclso; clear Yclso;
 end
@@ -1789,9 +1436,10 @@ end
 %% write jacobian determinant
 if job.output.jacobian.warped
   if do_dartel==2 % shooting
-    dt = trans.warped.dt; 
+    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.jc.odim(1:3) 1 3]),[1 0], 6);
+    clear y0
   else %dartel
-   [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
     clear y0
   end
   N      = nifti;
@@ -1806,14 +1454,14 @@ end
 
 % deformations y - dartel > subject
 if job.output.warps(1)
-    Yy        = spm_diffeo('invdef',trans.warped.y,odim,eye(4),M0);
+    Yy        = spm_diffeo('invdef',trans.warped.y,trans.warped.odim,eye(4),trans.warped.M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = M1;
     N.mat0    = M1;
     N.descrip = 'Deformation';
     create(N);
-    N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim(1:3),1,3]);
+    N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim,1,3]);
 end
 
 clear Yy;
@@ -2053,7 +1701,7 @@ clear wYp0 wYcls wYv trans
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
 qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
-          struct('write_csv',0,'write_xml',1,'method','cat12','job',job));
+          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'reg',reg));
 % WMH updates? ... has to be done within cat_tst_qa?!
 %qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
 %qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
@@ -2122,9 +1770,9 @@ fprintf('%4.0fs\n',etime(clock,stime));
   str = [str struct('name', 'Affine regularization:','value',sprintf('%s',job.opts.affreg))];
   if job.extopts.APP
     str(end).name = [str(end).name(1:end-1) ' / APP:'];  
-    APPstr = {'light','medium','strong','heavy'};
+    APPstr = {'none','light','medium','strong','heavy','animal'};
     if numel(job.extopts.APP)==1
-      str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP})];
+      str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
     else    
       str(end).value = [str(end).value sprintf(' / %d',job.extopts.APP)];
     end
@@ -2160,7 +1808,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
            sprintf('%d / %0.2f / %0.2f / %s',...
           job.extopts.WMHC,job.extopts.WMHCstr,job.extopts.BVCstr,restype))];
     if ~strcmp('native',restype)
-      str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restype.(restype))];
+      str(end).value = [str(end).value sprintf('(%0.2f %0.2f)',job.extopts.restypes.(restype))];
     end; 
   end
   
@@ -2234,7 +1882,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   % Preprocessing Time
   if job.extopts.experimental || job.extopts.expertgui>0 || 1
-    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%0.0f:%0.0f min:s', ...
+    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min:s', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
   end
   
@@ -2442,9 +2090,10 @@ fprintf('%4.0fs\n',etime(clock,stime));
     try
       hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
       hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-        'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+        'multisurf',job.extopts.surf==1 || job.extopts.surf==2,'view','s',...
+        'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
       colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-      cc{3} = axes('Position',[0.6 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
+      cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
       set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
         'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
     catch
@@ -2684,22 +2333,6 @@ return
 %=======================================================================
 
 %=======================================================================
-function [x1,y1,z1] = defs2(sol,z,M,prm,x0,y0,z0)
-iM = inv(M);
-z01 = z0(z)*ones(size(x0));
-
-x1a  = iM(1,1)*x0 + iM(1,2)*y0 + iM(1,3)*z01 + iM(1,4);
-y1a  = iM(2,1)*x0 + iM(2,2)*y0 + iM(2,3)*z01 + iM(2,4);
-z1a  = iM(3,1)*x0 + iM(3,2)*y0 + iM(3,3)*z01 + iM(3,4);
-
-x1 = spm_bsplins(sol{1},x1a,y1a,z1a,prm);
-y1 = spm_bsplins(sol{2},x1a,y1a,z1a,prm);
-z1 = spm_bsplins(sol{3},x1a,y1a,z1a,prm);
-
-return;
-%=======================================================================
-
-%=======================================================================
 function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
 iMT = inv(MT);
 x1  = x0*iMT(1,1)+iMT(1,4);
@@ -2746,29 +2379,8 @@ for k=1:K,
     p(:,k) = amp*exp(-0.5*sum(d.*d,2)) + eps;
 end
 return;
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
-function y1 = affind(y0,M)
-y1 = zeros(size(y0),'single');
-for d=1:3,
-    y1(:,:,:,d) = y0(:,:,:,1)*M(d,1);
-    y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,2)*M(d,2);
-    y1(:,:,:,d) = y1(:,:,:,d) + y0(:,:,:,3)*M(d,3) + M(d,4);
-end
-return;
-%=======================================================================
-
-%=======================================================================
-function x = rgrid(d)
-x = zeros([d(1:3) 3],'single');
-[x1,x2] = ndgrid(single(1:d(1)),single(1:d(2)));
-for i=1:d(3),
-    x(:,:,i,1) = x1;
-    x(:,:,i,2) = x2;
-    x(:,:,i,3) = single(i);
-end
-return;
 %==========================================================================
 % function [P] = clean_gwc(P,level)
 %==========================================================================
@@ -2853,4 +2465,5 @@ end
 
 spm_progress_bar('Clear');
 return;
+%==========================================================================
 
