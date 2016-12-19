@@ -63,7 +63,7 @@ regstr.help   = {
   'WARNING: This parameter is in development and may change in future and only works for Shooting templates!'
   ''
   '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates. '
-  'The "Optimized Shooting" approach use lower resolutions in early iterations and an adaptive stop criteria that allow smoother changes and faster processing at once. '
+  'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stop criteria that allows faster processing. '
   ''
 };
 if expert > 1
