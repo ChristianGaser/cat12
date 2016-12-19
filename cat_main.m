@@ -13,8 +13,7 @@ function Ycls = cat_main(res,tpm,job)
 %#ok<*ASGLU>
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
-dbs   = dbstatus; debug = 0; 
-for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main'); debug = 1; break; end; end
+dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main'); debug = 1; break; end; end
 
 
 global cat_err_res; % for CAT error report
@@ -43,8 +42,6 @@ else
 end
 
 M1   = tpm.M;
-d1   = size(tpm.dat{1});
-odim = d1(1:3);
 
 % Sort out bounding box etc
 [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
@@ -779,11 +776,13 @@ if ~isfield(res,'spmpp')
       spm_smooth(Yc,Yc,2./vx_vol); Yc = max(0,min(1,Yc)); clear Ymior; 
 
       if job.extopts.sanlm>1 %&& any(round(vx_vol*100)/100<=0.70) && strcmp(job.extopts.species,'human')
-        if job.extopts.verb>1
+        if job.extopts.verb
           cat_io_cmd(sprintf('  ISARNLM noise correction for LAS'),'g5');
+        end
+        if job.extopts.verb>1
           fprintf('\n');
         end
-        Ymis = cat_vol_isarnlm(Ymis,res.image,job.extopts.verb>1,inf); 
+        Ymis = cat_vol_isarnlm(Ymis,res.image,(job.extopts.verb>1)*2,inf);
       else
         if job.extopts.verb>1
           stime2 = cat_io_cmd(sprintf('  SANLM noise correction for LAS'),'g5'); 
@@ -792,6 +791,7 @@ if ~isfield(res,'spmpp')
         if job.extopts.verb>1
           cat_io_cmd(' ','','',job.extopts.verb,stime2); 
         end 
+        fprintf('%4.0fs\n',etime(clock,stime));
       end
       % mix original and noise corrected image and go back to original resolution
       Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
@@ -803,18 +803,18 @@ if ~isfield(res,'spmpp')
       clear Ymis;
     end
     %clear Ymioc; 
-    fprintf('%4.0fs\n',etime(clock,stime));
+    
   else
     Ymi = Ym; 
   end
-  clear Ymo; 
+  if ~debug; clear Ysrc Ymo; end
 
 
   if job.extopts.verb>2
     tpmci=tpmci+1; tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
     save(tmpmat,'Ysrc','Ycls','Ymi','Yb','T3th','vx_vol');
   end
-
+  
   %  ---------------------------------------------------------------------
   %  Partitioning: 
   %  --------------------------------------------------------------------- 
@@ -831,7 +831,7 @@ if ~isfield(res,'spmpp')
   if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
   fprintf('%4.0fs\n',etime(clock,stime));
 
-  clear YBG Ysrc Ycr;
+  if ~debug; clear YBG Ycr; end
 
 
   %  ---------------------------------------------------------------------
@@ -972,17 +972,10 @@ if ~isfield(res,'spmpp')
     % Yb is needed for surface reconstruction
   %     if ~job.output.surface, clear Yb; end
   end
-  Ymib = double(Ymib); 
-
-  % Amap parameters 
-  n_iters = 16; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; % default sub=16 caused errors with highres data!
-  bias_fwhm = 60; init_kmeans = 0; 
-
-  if job.extopts.mrf~=0
-    iters_icm = 50;
-  else
-    iters_icm = 0; 
-  end
+  
+  % Amap parameters  - default sub=16 caused errors with highres data!
+  Ymib = double(Ymib); n_iters = 16; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; bias_fwhm = 60; init_kmeans = 0;  %#ok<NASGU>
+  if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
 
 
   % adaptive mrf noise 
@@ -1009,12 +1002,12 @@ if ~isfield(res,'spmpp')
   th{3}   = cell2mat(textscan(amapres{13},'%f*%f')); 
   
   
-  if th{1}(1)<0 || th{1}(1)>0.5 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1
-    error('cat_main:amap','Error in AMAP tissue classification (or earlier)');
-  end
   if job.extopts.verb>1 
     fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
       th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
+  end
+  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1
+    error('cat_main:amap','Error in AMAP tissue classification (or earlier)');
   end
   % reorder probability maps according to spm order
   clear Yp0b Ymib; 
@@ -1259,6 +1252,8 @@ else
   else
     job.inv_weighting   = 0; 
   end
+  if ~debug, clear Ysrc; end
+  
   
   % the intensity normalized images are here represented by the segmentation 
   Ym   = Yp0/255;
@@ -1272,7 +1267,7 @@ else
   indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
   indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
   Yp0b = Yp0(indx,indy,indz);
-  clear Yp0 Yb; 
+  if ~debug, clear Yp0 Yb; end
   
   % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
@@ -1527,8 +1522,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
 if job.output.surface
   stime = cat_io_cmd('Surface and thickness estimation');; 
   % brain masking and correction of blood vessels 
-  Yp0  = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  Ymim = Ymi .* (Yp0>0.5); 
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
+  Ymi = Ymi .* (Yp0>0.5); clear Yp0; 
   
   % specify surface
   switch job.output.surface
@@ -1541,7 +1536,7 @@ if job.output.surface
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
 %  try
-    [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymim,Yl1,YMF,...
+    [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymi,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},...
       'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
 %  catch
@@ -1563,10 +1558,10 @@ if job.output.surface
 
   cat_io_cmd('Surface and thickness estimation');  
   fprintf('%4.0fs\n',etime(clock,stime));
-  clear Ymim Ymi;
-
+  if ~debug; clear YMF; end
+else
+  if ~debug; clear Ymi; end
 end
-
 
 
 
@@ -1633,6 +1628,7 @@ if job.output.ROI
         Ymim   = single(smooth3(Yp0>1.5 & Yp0<2.5 & (Yl1==1 | Yl1==2))>0.5);
         wYmim  = cat_vol_ROInorm(Ymim,transw,1,0,job.extopts.atlas)>0.5;
         wYth1  = cat_vol_ROInorm(Yth1x,transw,1,0,job.extopts.atlas);
+        clear Ymim; 
       end
     end
     

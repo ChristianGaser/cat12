@@ -13591,6 +13591,7 @@ M       templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
 (8) Fixed:    Corrected problems in "cat_io_report".
 
 ------------------------------------------------------------------------
+r1094 | gaser | 2016-12-19 11:45:37 +0100 (Mo, 19 Dez 2016) | 12 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -13603,5 +13604,23 @@ M       html/cat.html
 
 Fixed: Corrected some typos.
 
+
 ------------------------------------------------------------------------
-r1094 | gaser | 2016-12-19 11:45:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_main.m
+A       cat_main_registration.m
+M       cat_run_job.m
+M       cat_vol_isarnlm.m
+
+(1) Fixed:    Further corrections in "cat_io_report".
+(2) Changed:  Added subject number in preprocessing command line report.
+(3) Added:    cat_main_registration.
+(4) Changed:  Corrected command line output of "cat_vol_isarnlm" that also 
+              include changes in "cat_main" and "cat_run_job".
+(5) Changed:  Reformat AMAP parameter and refined error detection based AMAP 
+              output.
+------------------------------------------------------------------------
+r1095 | dahnke | 2016-12-19 12:12:21

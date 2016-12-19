@@ -1,106 +1,157 @@
-function cat_io_report(job,qa,subj)
+function cat_io_report(job,qa,subj,createerr)
 % ______________________________________________________________________
 % CAT error report to write the main processing parameter, the error
 % message, some image parameter and add a pricture of the original 
 % image centered by its AC.
+%
+% This function is called in cat_run_newcatch.
+%
+%   cat_io_report(job,qa,subj[,createerr])
+%
+%   job         .. SPM job structure
+%   qa          .. CAT quality assurance structure
+%   subj        .. subject index
+%
+%
+%   createerr   .. variable that create errors for debugging!
+%                  different try-catch blocks to localize the error
+%                  without using an error variable that is not allowed 
+%                  in old Matlab Versions. 
+%           1   .. early error in data preparation
+%           2   .. preprocessing option error
+%           3   .. preprocessing parameter error
+%           4   .. general figure creation error
+%           5   .. ?
+%           6   .. printing error
+%           7   .. ?
+%           8   .. general figure creation error
+%           9   .. error changing to SPM gray colorbar 
+%       10-11   .. display error of original image / histogram
+%       20-21   .. display error of modified image / histogram
+%       30-31   .. display error of segmented image / histogram
+%       40-41   .. display error of cortical surfaces / colorbar
+%
 % ______________________________________________________________________
 % Robert Dahnke 
 % $Revision$  $Date$
   
-  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_io_report'); debug = 1; break; end; end
+%#ok<*AGROW>
 
-
+  dbs = dbstatus; debug = 0; 
+  for dbsi=1:numel(dbs), 
+    if any(strcmp(dbs(dbsi).name,{'cat_io_report','cat_run_newcatch'}));
+      debug = 1; break; 
+    end;
+  end
+  
+  if ~exist('createerr','var'); createerr = 0; end
+  createerrtxt  = {}; 
+  lasthours     = 10; if debug, lasthours = inf; end % only display data 
+  str           = [];
+  hhist         = zeros(3,1);
+  haxis         = zeros(3,1);
+   
+  warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
   global cat_err_res; 
-  
-  
+ 
+
+  % preparation of specific varialbes that are include in cat_run_job and cat_main
+  % --------------------------------------------------------------------  
   try
-
-    try
-
-      if job.extopts.subfolders
-        mrifolder    = 'mri'; 
-        reportfolder = 'report';
-        surffolder   = 'surf';
-      else
-        mrifolder    = '';
-        reportfolder = '';
-        surffolder   = '';
-      end
-
-
-      [pp,ff] = spm_fileparts(job.data{subj});
-
-      Pn  = fullfile(pp,mrifolder,['n' ff '.nii']); 
-      Pm  = fullfile(pp,mrifolder,['m' ff '.nii']); 
-      Pp0 = fullfile(pp,mrifolder,['p0' ff '.nii']); 
-
-      VT0 = spm_vol(job.data{subj}); % original 
-      [pth,nam] = spm_fileparts(VT0.fname); 
-
-      tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
-
-      % do dartel
-      do_dartel = 1;      % always use dartel/shooting normalization
-      if do_dartel
-        need_dartel = any(job.output.warps) || ...
-          job.output.bias.warped || job.output.bias.dartel || ...
-          job.output.label.warped || job.output.label.dartel || ...
-          any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
-          job.output.surface || job.output.ROI || ...
-          any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
-        if ~need_dartel
-          do_dartel = 0;
-        end
-      end
-
-      % Find all templates and distinguish between Dartel and Shooting 
-      % written to match for Template_1 or Template_0 as first template.  
-      template = strrep(job.extopts.darteltpm{1},',1','');
-      [templatep,templatef,templatee] = spm_fileparts(template);
-      numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
-      if isempty(numpos)
-        error('CAT:cat_main:TemplateNameError', ...
-        ['Could not find the string "Template_1" (Dartel) or "Template_0" (Shooting) \n'...
-         'that indicates the first file of the Dartel/Shooting template. \n' ...
-         'The given filename is "%s" \n' ...
-         ],templatef);
-      end
-      job.extopts.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
-      job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
-      [template1p,template1f] = spm_fileparts(job.extopts.templates{1}); %#ok<ASGLU>
-      if do_dartel 
-        if (numel(job.extopts.templates)==6 || numel(job.extopts.templates)==7)
-          % Dartel template
-          if ~isempty(strfind(template1f,'Template_0')), job.extopts.templates(1) = []; end   
-          do_dartel=1;
-        elseif numel(job.extopts.templates)==5 
-          % Shooting template
-          do_dartel=2; 
-        else
-          templates = '';
-          for ti=1:numel(job.extopts.templates)
-            templates = sprintf('%s  %s\n',templates,job.extopts.templates{ti});
-          end
-          error('CAT:cat_main:TemplateFileError', ...
-           ['Could not find the expected number of template. Dartel requires 6 Files (Template 1 to 6),\n' ...
-            'whereas Shooting needs 5 files (Template 0 to 4). %d templates found: \n%s'],...
-            numel(job.extopts.templates),templates);
-        end
-      end
-    catch
-      
+    % preprocessing subdirectories
+    if job.extopts.subfolders
+      mrifolder    = 'mri'; 
+      reportfolder = 'report';
+      surffolder   = 'surf';
+    else
+      mrifolder    = '';
+      reportfolder = '';
+      surffolder   = '';
     end
     
-  %% display and print result if possible
-  %  ---------------------------------------------------------------------
-    warning off; %#ok<WNOFF> % there is a div by 0 warning in spm_orthviews in linux
+    
+    
+    % setting template files
+    [pp,ff] = spm_fileparts(job.data{subj});
 
+    Pn  = fullfile(pp,mrifolder,['n' ff '.nii']); 
+    Pm  = fullfile(pp,mrifolder,['m' ff '.nii']); 
+    Pp0 = fullfile(pp,mrifolder,['p0' ff '.nii']); 
 
-    %% CAT GUI parameter:
-    % --------------------------------------------------------------------
-    SpaNormMeth = {'None','Dartel','Shooting'}; 
-    str = [];
+    VT0 = spm_vol(job.data{subj}); % original 
+    [pth,nam] = spm_fileparts(VT0.fname); 
 
+    tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
+
+    % do dartel
+    do_dartel = 1;      % always use dartel/shooting normalization
+    if do_dartel
+      need_dartel = any(job.output.warps) || ...
+        job.output.bias.warped || job.output.bias.dartel || ...
+        job.output.label.warped || job.output.label.dartel || ...
+        any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
+        job.output.surface || job.output.ROI || ...
+        any([job.output.te.warped,job.output.pc.warped,job.output.atlas.warped]);
+      if ~need_dartel
+        do_dartel = 0;
+      end
+    end
+
+    if createerr==1, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+    
+    % Find all templates and distinguish between Dartel and Shooting 
+    % written to match for Template_1 or Template_0 as first template.  
+    template = strrep(job.extopts.darteltpm{1},',1','');
+    [templatep,templatef,templatee] = spm_fileparts(template);
+    numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
+    if isempty(numpos)
+      error('CAT:cat_main:TemplateNameError', ...
+      ['Could not find the string "Template_1" (Dartel) or "Template_0" (Shooting) \n'...
+       'that indicates the first file of the Dartel/Shooting template. \n' ...
+       'The given filename is "%s" \n' ...
+       ],templatef);
+    end
+    job.extopts.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
+    job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
+    [template1p,template1f] = spm_fileparts(job.extopts.templates{1}); %#ok<ASGLU>
+    if do_dartel 
+      if (numel(job.extopts.templates)==6 || numel(job.extopts.templates)==7)
+        % Dartel template
+        if ~isempty(strfind(template1f,'Template_0')), job.extopts.templates(1) = []; end   
+        do_dartel=1;
+      elseif numel(job.extopts.templates)==5 
+        % Shooting template
+        do_dartel=2; 
+      else
+        templates = '';
+        for ti=1:numel(job.extopts.templates)
+          templates = sprintf('%s  %s\n',templates,job.extopts.templates{ti});
+        end
+        error('CAT:cat_main:TemplateFileError', ...
+         ['Could not find the expected number of template. Dartel requires 6 Files (Template 1 to 6),\n' ...
+          'whereas Shooting needs 5 files (Template 0 to 4). %d templates found: \n%s'],...
+          numel(job.extopts.templates),templates);
+      end
+    end
+  catch
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:CATpre','Error in cat_io_report data preparation.'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+  end
+    
+    
+    
+  
+  
+    
+%% display and print result if possible
+%  ---------------------------------------------------------------------
+ 
+  
+ 
+  % CAT GUI parameter:
+  % --------------------------------------------------------------------  
+  try  
+    
     % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
     str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
       sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
@@ -110,6 +161,7 @@ function cat_io_report(job,qa,subj)
     if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
 
     % 3 lines: TPM, Template, Normalization method with voxel size
+    SpaNormMeth = {'None','Dartel','Shooting'}; 
     str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(job.opts.tpm,'k40d'),'_','\_'))];
     str = [str struct('name', 'Spatial Normalization Template:','value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
     str = [str struct('name', 'Spatial Normalization Method / vox:','value',sprintf('%s / %0.2f mm',SpaNormMeth{do_dartel+1},job.extopts.vox))];
@@ -132,6 +184,9 @@ function cat_io_report(job,qa,subj)
          sprintf('~%0.2f / %0.0e / %0.2f / %0.2f',...
           job.opts.bias,job.opts.biasreg,job.opts.biasfwhm,job.opts.samp))]; 
     end
+    
+    if createerr==2, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+
 
     % 1 line: Noise 
     if job.extopts.sanlm==0 || job.extopts.NCstr==0
@@ -158,23 +213,29 @@ function cat_io_report(job,qa,subj)
       str(end).value = [str(end).value sprintf(' (%0.2f %0.2f)',job.extopts.restypes.(restype))];
     end; 
     
-    % line 8: surfae parameter
+    % 1 line: surfae parameter
     res_vx_vol  = sqrt(sum(VT0.mat(1:3,1:3).^2));
     if job.output.surface
       str = [str struct('name', 'Voxel resolution (original > PBT):',...
              'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
              res_vx_vol,char(179),job.extopts.pbtres))];
     else
-      str = [str struct('name', 'Voxel resolution (original):',...
+      str = [str struct('name', 'Voxel resolution (original > VBM analyse (vox) ):',...
              'value',sprintf('%4.2fx%4.2fx%4.2f mm%s', ...
              res_vx_vol,char(179)))];
     end       
     % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
-
+  catch
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:CATgui','Error in cat_io_report GUI parameter report creation > incomple CAT parameters.'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+  end
+  
+  
   
 
-    % image parameter
-    % --------------------------------------------------------------------
+  % image parameter
+  % --------------------------------------------------------------------
+  try
     Ysrc = spm_read_vols(VT0); 
     imat = spm_imatrix(VT0.mat); 
     deg  = char(176); 
@@ -185,6 +246,9 @@ function cat_io_report(job,qa,subj)
     str2 = [str2 struct('name','  Rotation (rad)','value',sprintf('% 10.2f%s  % 10.2f%s % 10.2f%s ',...
       imat(4) ./ (pi/180), deg, imat(5) ./ (pi/180), deg, imat(6) ./ (pi/180), deg ))];
     str2 = [str2 struct('name','  Voxel size (mm)','value',sprintf('% 10.2f  % 10.2f  % 10.2f ',imat(7:9)))];
+    
+    if createerr==3, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+
     if isfield(cat_err_res,'res')
       %str2 = [str2 struct('name','  HDl | HDh | BG )','value',sprintf('% 10.2f  % 10.2f  % 10.2f', ...
       %  mean(cat_err_res.res.mn(cat_err_res.res.lkp==4 & cat_err_res.res.mg'>0.3)), ...
@@ -223,6 +287,7 @@ function cat_io_report(job,qa,subj)
       str2 = [str2 struct('name','  mean | std','value',sprintf('% 10.2f  % 10.2f ',cat_stat_nanmean(Ysrc(:)),cat_stat_nanstd(Ysrc(:))))];
       str2 = [str2 struct('name','  isinf | isnan','value',sprintf('% 10.0f  % 10.0f ',sum(isinf(Ysrc(:))),sum(isnan(Ysrc(:)))))];
     end  
+        
 
     % adding one space for correct printing of bold fonts
     for si=1:numel(str)
@@ -231,11 +296,18 @@ function cat_io_report(job,qa,subj)
     for si=1:numel(str2)
       str2(si).name  = [str2(si).name '  '];  str2(si).value = [str2(si).value '  '];
     end
-    lasthours = inf*10; % only display data 
+  catch
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:CATgui','Error in cat_io_report GUI parameter report creation > incomple image parameters.'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+  end
 
-
-    %% Figure
-    % --------------------------------------------------------------------
+  
+  
+  
+ 
+%% Figure
+%  ---------------------------------------------------------------------
+  try
     fg = spm_figure('FindWin','Graphics'); 
     set(0,'CurrentFigure',fg) 
     if isempty(fg)
@@ -294,9 +366,10 @@ function cat_io_report(job,qa,subj)
       htext(1,i,1) = text(0.01,0.98-(0.045*i), str(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
       htext(1,i,2) = text(0.51,0.98-(0.045*i), str(i).value ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     end
+    htext(2,i,1) = text(0.01,0.52-(0.045*1), '\bfCAT preprocessing error:  ','FontSize',fontsize, 'Interpreter','tex','Parent',ax);
     for i=1:size(qa.error,1) % error message
       errtxt = strrep([qa.error{i} '  '],'_','\_');
-      htext(2,i,1) = text(0.01,0.52-(0.045*i), errtxt ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax,'Color',[0.8 0 0]);
+      htext(2,i,1) = text(0.01,0.52-(0.045*(i+1)), errtxt ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax,'Color',[0.8 0 0]);
     end
     for i=1:size(str2,2) % image-parameter
       htext(2,i,1) = text(0.51,0.52-(0.045*i), str2(i).name  ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
@@ -306,12 +379,14 @@ function cat_io_report(job,qa,subj)
            0.01 0.01 0.48 0.32; 0.51 0.01 0.48 0.32];
     spm_orthviews('Reset');
 
-    
+    if createerr==4, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+
     
    
     %% Yo - original image in original space
-    % --------------------------------------------------------------------
-    % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
+    %  -----------------------------------------------------------------
+    %  using of SPM peak values didn't work in some cases (5-10%), 
+    %  so we have to load the image and estimate the WM intensity 
     try
       hho      = spm_orthviews('Image',VT0,pos(1,:)); 
       spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
@@ -319,6 +394,9 @@ function cat_io_report(job,qa,subj)
       haxis(1) = axes('Position',[pos(1,1:2) + [pos(1,3)*0.55 0],pos(1,3)*0.41,pos(1,4)*0.38] ); 
       [y,x]    = hist(Ysrcs(:),hlevel); y = y ./ max(y)*100; %clear Ysrcs;
       if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < lasthours; else Pp0data = 0; end
+
+      if createerr==10, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+
       ch  = cumsum(y)/sum(y); 
       Vp0 = spm_vol(Pp0); 
       if Pp0data && all(Vp0.dim == size(Ysrcs))
@@ -331,21 +409,28 @@ function cat_io_report(job,qa,subj)
       spm_orthviews('Zoom',100);
       spm_orthviews('Reposition',[0 0 0]); 
       spm_orthviews('Redraw');
+      % colorbar
+      try 
+        bd   = [find(ch>0.01,1,'first'),mth];
+        ylims{1} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3];
+        xlims{1} = x(bd) .* [1,4/3]; M = x>=xlims{1}(1) & x<=xlims{1}(2);
+        hdata{1} = [x(M) flip(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
+        hhist(1) = fill(hdata{1}(1,:),hdata{1}(2,:),hdata{1}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
+        if createerr==11, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+        caxis(xlims{1} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+        ylim(ylims{1}); xlim(xlims{1}); box on; grid on; 
+      catch
+        createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYoHist','Error in displaying the color histogram of the original image.'}]; 
+        cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});  
+        if hhist(1)>0, delete(hhist(1)); hhist(1)=0; end
+        xlim([0,1]),ylim([0,1]); grid off; 
+        text(pos(1,1) + pos(1,3)*0.35,pos(1,2) + pos(1,4)*0.55,'HIST ERROR','FontSize',20,'color',[0.8 0 0]);
+      end
     catch
-      cat_io_cprintf('err','Error:cat_io_report:dispYo','Error in displaying the original image.');
+      createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYo','Error in displaying the original image.'}]; 
+      cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
     end
-    % colorbar
-    try 
-      bd   = [find(ch>0.01,1,'first'),mth];
-      ylims{1} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3];
-      xlims{1} = x(bd) .* [1,4/3]; M = x>=xlims{1}(1) & x<=xlims{1}(2);
-      hdata{1} = [x(M) flip(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
-      hhist(1) = fill(hdata{1}(1,:),hdata{1}(2,:),hdata{1}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
-      caxis(xlims{1} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
-      ylim(ylims{1}); xlim(xlims{1}); box on; grid on; 
-    catch
-      cat_io_cprintf('err','Error:cat_io_report:dispYoHist','Error in displaying the color histogram of the original image.');
-    end
+    
 
     
 
@@ -362,6 +447,7 @@ function cat_io_report(job,qa,subj)
         Yms = spm_read_vols(spm_vol(Pm)); spm_smooth(Yms,Yms,repmat(0.2,1,3));
         [y,x] = hist(Yms(:),hlevel);  y = y ./ max(y)*100;
         ch    = cumsum(y)/sum(y); 
+        if createerr==20, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
         if Pp0data && all(Vp0.dim == size(Yms))
           Yp0 = spm_read_vols(spm_vol(Pp0));
           mth = find(x>=cat_stat_nanmean(Yms(Yp0(:)>2.9 & Yp0(:)<3.1)), 1 ,'first');
@@ -371,24 +457,32 @@ function cat_io_report(job,qa,subj)
           spm_orthviews('window',hhm,x([find(ch>0.02,1,'first'),mth]).*[1 mlt] ); hold on;
         end
         clear Yms;
-      catch
-        cat_io_cprintf('err','Error:cat_io_report:dispYm','Error in displaying the processed image.');
-      end
-      try
-        % colorbar
-        bd  = [find(ch>0.01,1,'first'),mth]; 
-        ylims{2} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3]; 
-        xlims{2} = x(bd) .* [1,4/3]; M = x>=xlims{2}(1) & x<=xlims{2}(2);
-        hdata{2} = [x(M) flip(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
-        hhist(2) = fill(hdata{2}(1,:),hdata{2}(2,:),hdata{2}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
-        caxis(xlims{2} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
-        ylim(ylims{2}); xlim(xlims{2}); box on; grid on; 
-        if round(x(mth))==1
-          xlim([0 4/3]); 
-          set(gca,'XTick',0:1/3:4/3,'XTickLabel',{'BG','CSF','GM','WM','BV/HD'});
+        try
+          % colorbar
+          if createerr==21, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+          bd  = [find(ch>0.01,1,'first'),mth]; 
+          ylims{2} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3]; 
+          xlims{2} = x(bd) .* [1,4/3]; M = x>=xlims{2}(1) & x<=xlims{2}(2);
+          hdata{2} = [x(M) flip(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
+          hhist(2) = fill(hdata{2}(1,:),hdata{2}(2,:),hdata{2}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
+          caxis(xlims{2} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+          ylim(ylims{2}); xlim(xlims{2}); box on; grid on; 
+          if round(x(mth))==1
+            xlim([0 4/3]); 
+            set(gca,'XTick',0:1/3:4/3,'XTickLabel',{'BG','CSF','GM','WM','BV/HD'});
+          end
+        catch
+          createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYmHist','Error in displaying the color histogram of the processed image.'}]; 
+          cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+          if hhist(2)>0, delete(hhist(2)); hhist(2)=0; end
+          xlim([0,1]),ylim([0,1]); grid off; 
+          if haxis(2)>0, 
+          else  text(pos(2,1) + pos(2,3)*0.35,pos(2,2) + pos(2,4)*0.55,'HIST ERROR','FontSize',20,'color',[0.8 0 0]);
+          end
         end
       catch
-        cat_io_cprintf('err','Error:cat_io_report:dispYmHist','Error in displaying the color histogram of the processed image.');
+        createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYo','Error in displaying the processed image.'}]; 
+        cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
       end
     end
 
@@ -399,6 +493,7 @@ function cat_io_report(job,qa,subj)
     if Pp0data
       try
         hhp0 = spm_orthviews('Image',spm_vol(Pp0),pos(3,:)); 
+        if createerr==30, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
         spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
         spm_orthviews('window',hhp0,[0,6]);
         haxis(3) = axes('Position',[pos(3,1:2) + [pos(3,3)*0.55 0.01],pos(1,3)*0.41,pos(1,4)*0.38]  );
@@ -407,22 +502,31 @@ function cat_io_report(job,qa,subj)
         y = min(y,max(y(2:end))); % ignore background
         ch = cumsum(y)/sum(y); 
         spm_orthviews('window',hhp0,[x(find(ch>0.02,1,'first')),x(find(ch>0.90,1,'first'))*mlt]); hold on;
+        try
+          % colorbar
+          if createerr==31, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+          xlims{3} = [0 4]; 
+          ylims{3} = [ch(1) ch(end)] .* [1 4/3];  M = x <= xlims{3}(2);
+          hdata{3} = [x(M) flip(x(M)); max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
+          hhist(3) = fill(hdata{3}(1,:),hdata{3}(2,:),hdata{3}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
+          caxis(xlims{3} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+          ylim(ylims{3}); xlim(xlims{3}); box on; grid on; 
+          set(gca,'XTick',0:1:4,'XTickLabel',{'BG','CSF','GM','WM','WMH'});
+        catch
+          createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYp0Hist','Error in displaying the color histogram of the segmented image.'}]; 
+          cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+          if hhist(3)>0, delete(hhist(3)); hhist(3)=0; end
+          xlim([0,1]),ylim([0,1]); grid off;
+          if haxis(3)>0, text(0.5,0.5,'HIST ERROR','FontSize',20,'color',[0.8 0 0]);
+          else text(pos(3,1) + pos(3,3)*0.35,pos(3,2) + pos(3,4)*0.55,'HIST ERROR','FontSize',20,'color',[0.8 0 0]);
+          end
+        end
       catch
-        cat_io_cprintf('err','Error:cat_io_report:dispYp0','Error in displaying the segmented image.');
-      end
-      try
-        % colorbar
-        xlims{3} = [0 4]; 
-        ylims{3} = [ch(1) ch(end)] .* [1 4/3];  M = x <= xlims{3}(2);
-        hdata{3} = [x(M) flip(x(M)); max(eps,min(ylims{3}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
-        hhist(3) = fill(hdata{3}(1,:),hdata{3}(2,:),hdata{3}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
-        caxis(xlims{3} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
-        ylim(ylims{3}); xlim(xlims{3}); box on; grid on; 
-        set(gca,'XTick',0:1:4,'XTickLabel',{'BG','CSF','GM','WM','WMH'});
-      catch
-        cat_io_cprintf('err','Error:cat_io_report:dispYp0Hist','Error in displaying the color histogram of the segmented image.');
+        createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYp0','Error in displaying the segmented image.'}]; 
+        cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
       end
     end
+    if createerr==8, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
 
 
     %% surface or histogram
@@ -433,81 +537,108 @@ function cat_io_report(job,qa,subj)
       try 
         hSD = cat_surf_display(struct('data',{Pthick},'readsurf',0,'expert',2,...
           'multisurf',1,'view','s','parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+        if createerr==40, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
         colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
         cc{3} = axes('Position',[0.62 0.02 0.3 0.01],'Parent',fg); image((volcolors*2+1:1:volcolors*2+surfcolors));
         set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
           'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
       catch
-        cat_io_cprintf('err','Error:cat_io_report:dispS','Error in displaying the cortical surface(s).');
+        createerrtxt = [createerrtxt; {'Error:cat_io_report:dispSurf','Error in displaying the cortical surface(s).'}]; 
+        cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
       end
     end
-
-    
-    %% print group report file 
-    try
-      fg = spm_figure('FindWin','Graphics');
-      set(0,'CurrentFigure',fg)
-      fprintf(1,'\n'); 
-      %spm_print;
-
-      % print subject report file as standard PDF/PNG/... file
-      job.imgprint.type  = 'pdf';
-      job.imgprint.dpi   = 100;
-      job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
-      job.imgprint.ftype = @(x) ['-d' num2str(x)];
-      job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-
-      fgold.PaperPositionMode = get(fg,'PaperPositionMode');
-      fgold.PaperPosition     = get(fg,'PaperPosition');
-      fgold.resize            = get(fg,'resize');
-
-      % it is necessary to change some figure properties especialy the fontsizes 
-      set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
-      for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-      print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-      for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-      set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-      fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
-
-      %spm_figure('Clear','Graphics');   
-    catch
-      cat_io_cprintf('err','Error:cat_io_report:print','Error printing CAT error report.');
-    end
-      
-      
-    %% reset colormap to the simple SPM like gray60 colormap
-    if exist('hSD','var')
-      % if there is a surface than we have to use the gray colormap also here
-      % because the colorbar change!
-      try 
-        cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
-        cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
-        axes(cc{3}); image(0:60); 
-        set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
-      catch
-        cat_io_cprintf('err','Error:cat_io_report:surfcolmap','Error in displaying surface colormap.');
-      end
-    end
-    
-    try
-      cmap = gray(60); colormap(cmap); 
-
-      % update histograms - switch from color to gray
-      if exist('hhist','var');
-        if numel(hhist)>0, set(hhist(1),'cdata',hdata{1}(3,:)'/max(hdata{1}(3,:))*60); caxis(haxis(1),[1,60]); end
-        if numel(hhist)>1, set(hhist(2),'cdata',hdata{2}(3,:)'/max(hdata{2}(3,:))*60); caxis(haxis(2),[1,60]); end
-        if numel(hhist)>2, set(hhist(3),'cdata',hdata{3}(3,:)'/max(hdata{3}(3,:))*60); caxis(haxis(3),[1,60]); end
-      end
-    catch
-      cat_io_cprintf('err','Error:cat_io_report:SPMgray','Error in changing colormap.');
-    end
-      
-    warning on;  %#ok<WNON>
-    
-
     
   catch
-    fprintf('Unknown cat_io_report error!\n');
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:Fig','Error in CAT report figure creation!'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
   end
+  
+  
+  %% report error
+  try 
+    if exist('ax','var') && size(createerrtxt,1)>0
+      %%
+      text(0.01,0.52 - (0.045*(size(qa.error,1)+2)), '\bfcat\_io\_report error:  ' ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax);
+      for i=1:size(createerrtxt,1)
+        createerrtxt2{i,2} = strrep([createerrtxt{i,2} '  '],'_','\_');
+        text(0.01,0.52 - (0.045*(size(qa.error,1)+2)) - (0.045*i), createerrtxt2{i,2} ,'FontSize',fontsize, 'Interpreter','tex','Parent',ax,'Color',[0.8 0 0]);
+      end
+    end
+  catch
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:dispErr','Error in displaying the errors of cat_io_report'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+  end
+  
+    
+  
+  %% print group report file 
+  try
+    fg = spm_figure('FindWin','Graphics');
+    set(0,'CurrentFigure',fg)
+    fprintf(1,'\n'); 
+    %spm_print;
+
+    % print subject report file as standard PDF/PNG/... file
+    job.imgprint.type  = 'pdf';
+    job.imgprint.dpi   = 100;
+    job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
+    job.imgprint.ftype = @(x) ['-d' num2str(x)];
+    job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
+
+    fgold.PaperPositionMode = get(fg,'PaperPositionMode');
+    fgold.PaperPosition     = get(fg,'PaperPosition');
+    fgold.resize            = get(fg,'resize');
+
+    % it is necessary to change some figure properties especialy the fontsizes 
+    if createerr==6, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+    set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
+    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
+    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
+    set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
+    fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
+
+    %spm_figure('Clear','Graphics');   
+  catch
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:print','Error printing CAT error report.'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+  end
+      
+      
+  %% reset colormap to the simple SPM like gray60 colormap
+  if exist('hSD','var')
+    % if there is a surface than we have to use the gray colormap also here
+    % because the colorbar change!
+    try 
+      cat_surf_render2('ColourMap',hSD{1}.axis,gray(128));
+      cat_surf_render2('Clim',hSD{1}.axis,[0 6]);
+      if createerr==41, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+      axes(cc{3}); image(0:60); 
+      set(cc{3},'XTick',max(1,0:10:60),'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+        'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
+    catch
+      createerrtxt = [createerrtxt; {'Error:cat_io_report:surfcolmap','Error in displaying surface colormap.'}]; 
+      cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+    end
+  end
+
+  try
+    cmap = gray(60); colormap(cmap); 
+
+    % update histograms - switch from color to gray
+    if exist('hhist','var');
+      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',hdata{1}(3,:)'/max(hdata{1}(3,:))*60); caxis(haxis(1),[1,60]); end
+      if createerr==9, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',hdata{2}(3,:)'/max(hdata{2}(3,:))*60); caxis(haxis(2),[1,60]); end
+      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',hdata{3}(3,:)'/max(hdata{3}(3,:))*60); caxis(haxis(3),[1,60]); end
+    end
+  catch
+    createerrtxt = [createerrtxt; {'Error:cat_io_report','Error in changing colormap.'}]; 
+    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+  end
+
+  warning on;  %#ok<WNON>
+
+
+  
 end
