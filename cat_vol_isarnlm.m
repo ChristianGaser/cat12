@@ -93,7 +93,8 @@ function varargout = cat_vol_isarnlm(varargin)
       vx_vol  = sqrt(sum(V(i).mat(1:3,1:3).^2));
  
       if any(strfind(nm,job.prefix)==1), continue; end
-      if job.verb, fprintf('isarnlm %s:\n',spm_str_manip(deblank(V(i).fname),'a60')); stime=clock; end
+      if job.verb==1, fprintf('ISARNLM %s:\n',spm_str_manip(deblank(V(i).fname),'a60')); end
+      stime=clock;
       
       src = single(spm_read_vols(V(i)));
       % prevent NaN
@@ -106,7 +107,7 @@ function varargout = cat_vol_isarnlm(varargin)
       % use at least float precision
       if V(i).dt(1)<16, V(i).dt(1) = 16; end 
       spm_write_vol(V(i), src);
-      if job.verb, fprintf('isarnlm done in %0.0fs.\n',etime(clock,stime)); end
+      if job.verb==1, fprintf('isarnlm done in %0.0fs.\n',etime(clock,stime)); end
       spm_progress_bar('Set',i);
   end
   spm_progress_bar('Clear');
@@ -202,7 +203,7 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     
     %% SANLM filtering
     if opt.level~=1
-      if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol); stime = clock; end
+      if opt.verb, cat_io_cprintf('g5',sprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter+1,vx_vol)); stime = clock; end
       Ys  = Yi+0;
       YM2 = YM & Ys>Tth*0.2 & Ys<max(Ys(:))*0.98;
 
@@ -263,7 +264,7 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
       if noiser<0, noiser = noiser+1; end
       noise  = cat_stat_nanmean(abs(Y(YM2(:))-Ys(YM2(:)))./max(Tth*0.2,Ys(YM2(:))))/sqrt(prod(vx_vol));
       clear YM2;
-      if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+      if opt.verb, cat_io_cprintf('g5',sprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime))); end
     else
       noiser = 1; 
     end
@@ -369,7 +370,7 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
   clear Y YM ; 
   
   if opt.level==1 %&& any(vx_vol<0.75)
-    if opt.verb, fprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter,vx_vol); stime = clock; end
+    if opt.verb, cat_io_cprintf('g5',sprintf('%3d.%d) %0.2fx%0.2fx%0.2f mm:  ',opt.level,iter,vx_vol)); stime = clock; end
     
     cat_sanlm(Ys,3,1,opt.rician); 
 
@@ -401,7 +402,7 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
     if noiser<0, noiser = noiser+1; end
     noise  = cat_stat_nanmean(abs(Yi(YM(:))-Ys(YM(:)))./max(Tth*0.2,Ys(YM(:))))/sqrt(prod(vx_vol));
       
-    if opt.verb, fprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime)); end
+    if opt.verb, cat_io_cprintf('g5',sprintf('  noise = %4.3f, noiser = %4.3f        %5.0fs\n',noise,noiser,etime(clock,stime))); end
     clear YM;
     
     %{

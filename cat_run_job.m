@@ -31,8 +31,8 @@ function cat_run_job(job,tpm,subj)
     
     % print current CAT release number and subject file
     [n,r] = cat_version;
-    str  = sprintf('CAT12 r%s',r);
-    str2 = spm_str_manip(job.channel(1).vols{subj},['a' num2str(70 - length(str))]);
+    str  = sprintf('CAT12 r%s: %d/%d',r,subj,numel(job.channel(1).vols));
+    str2 = spm_str_manip(job.channel(1).vols{subj}(1:end-2),['a' num2str(70 - length(str))]);
     cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
           repmat('-',1,72),str,...
           repmat(' ',1,70 - length(str) - length(str2)),str2,...
@@ -178,10 +178,14 @@ function cat_run_job(job,tpm,subj)
                 cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
               elseif job.extopts.sanlm==2
                 stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_isarnlm(struct('data',nfname,'verb',1,'prefix','')); 
+                if job.extopts.verb>1, fprintf('\n'); end
+                cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','')); 
+                if job.extopts.verb>1, cat_io_cmd(' ','',''); end
               end
-              V = spm_vol(job.channel(n).vols{subj});
-              fprintf('%4.0fs\n',etime(clock,stime));   
+              %V = spm_vol(job.channel(n).vols{subj});
+              if job.extopts.sanlm>0
+                fprintf('%4.0fs\n',etime(clock,stime));   
+              end
             end
         end
 
