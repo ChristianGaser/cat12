@@ -13535,6 +13535,7 @@ Changed: Surface deformation was optimized in cat_surf_createCS.m.
 
 
 ------------------------------------------------------------------------
+r1093 | dahnke | 2016-12-15 15:37:27 +0100 (Do, 15 Dez 2016) | 53 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13588,5 +13589,19 @@ M       templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
 (6) Fixed:    Corrected output in case of gcut errors.
 (7) Fixed:    Corrected output of APP and interpolation type in CAT report.
 (8) Fixed:    Corrected problems in "cat_io_report".
+
 ------------------------------------------------------------------------
-r1093 | dahnke | 2016-12-15 15:36:59
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       html/cat.html
+
+Fixed: Corrected some typos.
+
+------------------------------------------------------------------------
+r1094 | gaser | 2016-12-19 11:45:23
