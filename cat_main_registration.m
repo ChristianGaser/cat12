@@ -82,7 +82,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 %   Department of Neurology
 %   University Jena
 % ______________________________________________________________________
-% $Id: cat_main_gcut.m 1080 2016-11-18 13:45:44Z dahnke $
+% $Id$
 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
