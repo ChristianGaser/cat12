@@ -102,14 +102,15 @@ function out = cat_surf_vol2surf(varargin)
       end
       
       P.vol{vi} = fullfile(ppv,[ffv eev]);
+
+      % replace dots in volume name with "_"
+      ffv(strfind(ffv,'.')) = '_';
       
       for si=1:numel(side)
+        % also add volume name to differentiate between multiple volumes
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(1),...
-          'preside','','pp',ppv,'dataname',job.datafieldname,'name',job.(sside{si}).name);
+          'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si}).name);
         P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
-
-        % add volume name to differentiate between multiple volumes
-        P.data(vi,si) = {[char(P.data(vi,si)) '_' ffv]}; 
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
@@ -145,16 +146,19 @@ function out = cat_surf_vol2surf(varargin)
         continue
       end
       
+      % replace dots in volume name with "_"
+      ffv(strfind(ffv,'.')) = '_';
+
+      
       %%
       for si=1:numel(side)
+        % also add volume name to differentiate between multiple volumes
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
-            'dataname',job.datafieldname);
+            'dataname',[job.datafieldname '_' ffv]);
+        tmp=P.data(vi,si)    
         P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
-        
-        % add volume name to differentiate between multiple volumes
-        P.data(vi,si) = {[char(P.data(vi,si)) '_' ffv]}; 
-        
+                
         P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',spm_fileparts(job.(sside{si})(vi).fname),...
             'dataname','thickness','ee','');
