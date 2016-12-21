@@ -351,7 +351,7 @@ data_vol = cfg_files;
 data_vol.name = 'Sample data';
 data_vol.tag  = 'data_vol';
 data_vol.filter = 'image';
-data_vol.num  = [3 Inf];
+data_vol.num  = [1 Inf];
 data_vol.help   = {...
 'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.'};
 

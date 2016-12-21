@@ -13606,6 +13606,7 @@ Fixed: Corrected some typos.
 
 
 ------------------------------------------------------------------------
+r1095 | dahnke | 2016-12-19 12:13:35 +0100 (Mo, 19 Dez 2016) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13622,5 +13623,17 @@ M       cat_vol_isarnlm.m
               include changes in "cat_main" and "cat_run_job".
 (5) Changed:  Reformat AMAP parameter and refined error detection based AMAP 
               output.
+
 ------------------------------------------------------------------------
-r1095 | dahnke | 2016-12-19 12:12:21
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_surf_vol2surf.m
+
+(1) Changed: Changed output names of volume-to-surface mapping.
+(2) Changed: Changed minimum file number for covariance check to allow selection
+    of 4D data.
+
+------------------------------------------------------------------------
+r1096 | gaser | 2016-12-21 13:19:22
