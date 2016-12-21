@@ -13625,6 +13625,7 @@ M       cat_vol_isarnlm.m
               output.
 
 ------------------------------------------------------------------------
+r1096 | gaser | 2016-12-21 13:19:36 +0100 (Mi, 21 Dez 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13635,5 +13636,17 @@ M       cat_surf_vol2surf.m
 (2) Changed: Changed minimum file number for covariance check to allow selection
     of 4D data.
 
+
 ------------------------------------------------------------------------
-r1096 | gaser | 2016-12-21 13:19:22
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_main_registration.m
+M       cat_surf_vol2surf.m
+
+(1) Changed: Changed output names of volume-to-surface mapping.
+(2) Changed: Changed minimum file number for covariance check to allow selection
+    of 4D data.
+
+------------------------------------------------------------------------
+r1097 | gaser | 2016-12-21 13:39:08
