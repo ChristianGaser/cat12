@@ -13638,6 +13638,7 @@ M       cat_surf_vol2surf.m
 
 
 ------------------------------------------------------------------------
+r1097 | gaser | 2016-12-21 13:39:22 +0100 (Mi, 21 Dez 2016) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13648,5 +13649,22 @@ M       cat_surf_vol2surf.m
 (2) Changed: Changed minimum file number for covariance check to allow selection
     of 4D data.
 
+
 ------------------------------------------------------------------------
-r1097 | gaser | 2016-12-21 13:39:08
+
+Changed paths:
+M       CHANGES.txt
+A       templates_1.50mm/Template_0_IXI555_MNI152_GS.nii
+D       templates_1.50mm/Template_0_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_1_IXI555_MNI152_GS.nii
+D       templates_1.50mm/Template_1_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_2_IXI555_MNI152_GS.nii
+D       templates_1.50mm/Template_2_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_3_IXI555_MNI152_GS.nii
+D       templates_1.50mm/Template_3_NKI174_MNI152_GS.nii
+A       templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
+D       templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
+
+Changed: Updated Geodesic Shooting templates using IXI database.
+------------------------------------------------------------------------
+r1098 | gaser | 2016-12-28 12:03:39
