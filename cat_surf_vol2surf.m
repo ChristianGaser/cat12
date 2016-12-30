@@ -110,7 +110,6 @@ function out = cat_surf_vol2surf(varargin)
         % also add volume name to differentiate between multiple volumes
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(1),...
           'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si}).name);
-        P.data(vi,si) = strrep(P.data(vi,si),'.gii',''); % remove .gii extension
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
