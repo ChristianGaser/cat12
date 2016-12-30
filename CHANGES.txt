@@ -13651,6 +13651,7 @@ M       cat_surf_vol2surf.m
 
 
 ------------------------------------------------------------------------
+r1098 | gaser | 2016-12-28 12:04:30 +0100 (Mi, 28 Dez 2016) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13666,5 +13667,16 @@ A       templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
 D       templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
 
 Changed: Updated Geodesic Shooting templates using IXI database.
+
 ------------------------------------------------------------------------
-r1098 | gaser | 2016-12-28 12:03:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_calc.m
+M       cat_surf_vol2surf.m
+
+(1) Changed: Mapped surfaces in template space now always have .gii extension.
+(2) Fixed: Check for doubled .gii extension in output name for calculating 
+    surfaces in cat_surf_calc.m.
+------------------------------------------------------------------------
+r1099 | gaser | 2016-12-30 11:38:46
