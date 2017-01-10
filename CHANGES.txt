@@ -13669,6 +13669,7 @@ D       templates_1.50mm/Template_4_NKI174_MNI152_GS.nii
 Changed: Updated Geodesic Shooting templates using IXI database.
 
 ------------------------------------------------------------------------
+r1099 | gaser | 2016-12-30 11:40:38 +0100 (Fr, 30 Dez 2016) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13678,5 +13679,20 @@ M       cat_surf_vol2surf.m
 (1) Changed: Mapped surfaces in template space now always have .gii extension.
 (2) Fixed: Check for doubled .gii extension in output name for calculating 
     surfaces in cat_surf_calc.m.
+
 ------------------------------------------------------------------------
-r1099 | gaser | 2016-12-30 11:38:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_surf2roi.m
+ M      templates_1.50mm/Template_0_IXI555_MNI152_GS.nii
+ M      templates_1.50mm/Template_1_IXI555_MNI152_GS.nii
+ M      templates_1.50mm/Template_2_IXI555_MNI152_GS.nii
+ M      templates_1.50mm/Template_3_IXI555_MNI152_GS.nii
+ M      templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
+
+Fixed: Surface ROI values for the right hemisphere in cat_surf_surf2ROIs.m
+were not correct. Thanks to René Seiger for pointing to that issue.
+
+------------------------------------------------------------------------
+r1100 | gaser | 2017-01-10 16:23:51

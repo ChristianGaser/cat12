@@ -85,7 +85,7 @@ function cat_surf_surf2roi(job)
       case '.annot'
         % FreeSurfer annotation files
         [vertices, lrdata, colortable, lrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
-        [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
+        [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',char(cat_surf_rename(job.rdata{ri},'side','rh')));
         clear vertices colortable;
       case 'gii';
         % gifti and csv-files
@@ -119,8 +119,8 @@ function cat_surf_surf2roi(job)
 
           % load surface cdata 
           if job.resamp && sinfo.resampled==0 % do temporary resampling
-            lCS = get_resampled_values(job.cdata{ti}{si});
-            rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh')); 
+            lCS = get_resampled_values(job.cdata{ti}{si},job.debug);
+            rCS = get_resampled_values(cat_surf_rename(sinfo,'side','rh'),job.debug); 
           else
             switch sinfo.ee
               case '.gii'
@@ -211,7 +211,7 @@ function cat_surf_surf2roi(job)
   
 end
 
-function resamp = get_resampled_values(P)
+function resamp = get_resampled_values(P,debug)
   fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
   P = deblank(char(P));
 
@@ -237,7 +237,7 @@ function resamp = get_resampled_values(P)
         
     % resample values using warped sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
-    [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,0);
+    [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,debug,0);
     delete(Presamp);
 
   end
