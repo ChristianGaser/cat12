@@ -13,7 +13,7 @@ function Ycls = cat_main(res,tpm,job)
 %#ok<*ASGLU>
 
 % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
-dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main'); debug = 1; break; end; end
+dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
 
 global cat_err_res; % for CAT error report
@@ -331,10 +331,14 @@ if ~isfield(res,'spmpp')
   % median in case of WMHs!
   WMth = double(max(cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.1)),...
           cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)))))); 
-  T3th = [ min([  cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)),...
-           WMth]) ,cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))]) ...
-           cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
-           WMth];
+  if cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))>cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.3)) % invers
+    CMth = cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3)); 
+  else
+    CMth = min( [  cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)) - ...
+                     diff([cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)),WMth]) , ...
+                   cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))]);
+  end
+  T3th = [ CMth, cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)), WMth];
 
 
   %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
@@ -342,14 +346,20 @@ if ~isfield(res,'spmpp')
   if sum(Yp0(:)>0.3)<100
     % this error often depends on a failed affine registration, where SPM
     % have to find the brain in the head or background
-    BGth = cat_stat_nanmean(res.mn(res.lkp==6 & res.mg'>0.3));
+    BGth  = cat_stat_nanmean(res.mn(res.lkp==6 & res.mg'>0.3));
+    HDHth = cat_stat_nanmean(res.mn(res.lkp==5 & res.mg'>0.3));
+    HDLth = cat_stat_nanmean(res.mn(res.lkp==4 & res.mg'>0.3));
+    clsvol = nan(1,6); for ci=1:6, Yct = P(:,:,:,ci)>128; clsvol(ci) = sum(Yct(:))*vx_volp; end; clear Yct; 
+    %%
     error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
-     ['Empty Segmentation: \n ' ...
+     sprintf(['Empty Segmentation: \n ' ...
       'Possibly the affine registration failed. Pleace check image orientation.\n' ...
-      ' Volume:      B=%0.2f, C=%0.2f, G=%0.2f, W=%0.2f\n' ...
-      ' Intensities: B=%0.2f, C=%0.2f, G=%0.2f, W=%0.2f\n'],...
-      [sum(P(:,:,:,6)>128),sum(P(:,:,:,3)>128),sum(P(:,:,:,1)>128),sum(P(:,:,:,2)>128)]*vx_volp, ...
-      BGth,T3th(1),T3th(2),T3th(3)); 
+      ' Tissue class:           %8s%8s%8s%8s%8s%8s\n' ...
+      ' Rel. to image volume:   %8.2f%8.2f%8.2f%8.2f%8.2f%8.2f\n' ...
+      ' Rel. to brain volume:   %8.2f%8.2f%8.2f%8.2f%8.2f%8.2f\n' ...
+      ' Tissue intensity:       %8.2f%8.2f%8.2f%8.2f%8.2f%8.2f'],...
+      'CSF','GM','WM','HDH','HDL','BG', ...
+      [ clsvol([6 3 1 2 4 5])/sum(clsvol)*100, clsvol([6 3 1 2 4 5])/sum(clsvol(1:3))*100, T3th,HDHth,HDLth,BGth]));  %#ok<SPERR>
   end
   Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
   Yp0     = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
@@ -389,12 +399,17 @@ if ~isfield(res,'spmpp')
     Yl1 = cat_vol_ctype(spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
     Yl1 = reshape(Yl1,size(Ysrc)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
 
+    %%
     clear D I
+    Ybg = P(:,:,:,6)>128; 
     T3ths = [min(min(min(single(Ysrc(P(:,:,:,6)>128))))),...
-             cat_stat_nanmean(cat_stat_nanmean(cat_stat_nanmean(single(Ysrc(P(:,:,:,6)>128))))),T3th,T3th(3) + cat_stat_nanmean(diff(T3th))];
+             min( cat_stat_nanmean(Ysrc(Ybg(:))) + 2*cat_stat_nanstd(Ysrc(Ybg(:))) , ...
+              mean([cat_stat_nanmean(Ysrc(Ybg(:))),min(T3th)])), ...
+             T3th, T3th(3) + cat_stat_nanmean(diff(T3th))];
     T3thx = [0,0.05,1,2,3,4];
+    if T3th(1)>T3th(3), T3thx = [0,0.05,1,2,3,2]; T3ths(end) = T3ths(2); end; 
     [T3ths,si] = sort(T3ths);
-    T3thx     = T3thx(si);
+    T3thx      = T3thx(si);
     Ym = Ysrc+0; 
     for i=numel(T3ths):-1:2
       M = Ysrc>T3ths(i-1) & Ysrc<=T3ths(i);
@@ -437,26 +452,27 @@ if ~isfield(res,'spmpp')
     brad = voli(sum(Yp0(:)>0.5).*prod(vx_vol)/1000); 
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
-    Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
-    Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
-    Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
+    %Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
+    BGth = min(res.mn(res.lkp==6 & res.mg'>0.3)); 
+    Yg   = cat_vol_grad((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
+    Ydiv = cat_vol_div((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
-    BVth = diff(T3th(1:2:3))/T3th(3)*1.5; 
-    RGth = diff(T3th(2:3))/T3th(3)*0.1; 
+    BVth = diff(T3th(1:2:3))/abs(T3th(3))*1.5; 
+    RGth = diff(T3th(2:3))/abs(T3th(3))*0.1; 
     Yb   = single(cat_vol_morph((Yp0>2/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5),'lo')); 
     %% region-growing GM 1
     Yb(~Yb & (~Ybo | Ysrcb<cat_stat_nanmean(T3th(2)) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
     [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
-    % region-growing GM 2
+    %% region-growing GM 2
     Yb(~Yb & (~Ybo | Ysrcb<T3th(1) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
     [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/2); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; Yb = single(Yb | (Ysrcb>T3th(1) & Ysrcb<1.2*T3th(3) & cat_vol_morph(Yb,'lc',4)));
-    % region-growing GM 3
-    Yb(~Yb & (~Ybo | Ysrcb<T3th(1)/2) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth)=nan;
+    %% region-growing GM 3
+    Yb(~Yb & (~Ybo | Ysrcb<mean([BGth,T3th(1)]) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
     [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; 
-    % ventrile closing
+    %% ventrile closing
     [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); clear Ysrcb
     Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
     Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
@@ -627,7 +643,8 @@ if ~isfield(res,'spmpp')
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
 
-  if any(vx_vol ~= min(vx_vol*2,1.4))
+  if any( min(vx_vol*2,1.4)./vx_vol >= 2 )
+    %%
     Ysrcr = cat_vol_resize(Ysrc,'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm');
     Ybr   = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
@@ -635,13 +652,13 @@ if ~isfield(res,'spmpp')
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
+    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
   end
 
-  % update in inverse case
+  % update in inverse case ... required for LAS
   if job.inv_weighting
-    Ysrc = Ym; 
-    T3th = 1/3:1/3:1;
+%    Ysrc = Ym * Tth.T3th(5); Tth.T3th = Tth.T3thx * Tth.T3th(5);
+    Ysrc = Ym; Tth.T3thx(3:5) = 1/3:1/3:1; Tth.T3th = Tth.T3thx; T3th = 1/3:1/3:1;
   end
   fprintf('%4.0fs\n',etime(clock,stime));
 
@@ -1432,6 +1449,7 @@ end
 if job.output.jacobian.warped
   if do_dartel==2 % shooting
     [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.jc.odim(1:3) 1 3]),[1 0], 6);
+    dt = 1/max(eps,dt); 
     clear y0
   else %dartel
     [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
@@ -2050,8 +2068,9 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
   
 
-  % Ym - normalized image in original space
+  %% Ym - normalized image in original space
   if ~isfield(res,'spmpp')
+    %%
     Vm        = spm_vol(VT.fname);
     Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
     Vm.dat(:,:,:) = single(Ym); 

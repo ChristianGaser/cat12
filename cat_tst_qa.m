@@ -735,14 +735,31 @@ function varargout = cat_tst_qa(action,varargin)
       
       % estimate background
       [Ymir,resYbg] = cat_vol_resize(Ymi,'reduceV',1,6,32,'meanm'); 
-      warning 'off' 'MATLAB:cat_vol_morph:NoObject'
-      BGCth = min(T3th)/2; 
-      Ybgr = cat_vol_morph(cat_vol_morph(Ymir<BGCth,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Ymir);
-      Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
-      if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
-      warning 'on'  'MATLAB:cat_vol_morph:NoObject'
-      BGth  = cat_stat_nanmedian(Ymi(Ybg(:)));   
- 
+      try
+        warning 'off' 'MATLAB:cat_vol_morph:NoObject'
+        BGCth = min(T3th)/2; 
+        Ybgr = cat_vol_morph(cat_vol_morph(Ymir<BGCth,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Ymir);
+        Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
+        if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
+        warning 'on'  'MATLAB:cat_vol_morph:NoObject'
+        BGth = cat_stat_nanmedian(Ymi(Ybg(:)));   
+      catch
+        warning 'on'  'MATLAB:cat_vol_morph:NoObject'
+        try
+          % non-zero background
+          Ygr  = cat_vol_grad(Ymir); 
+          warning 'off' 'MATLAB:cat_vol_morph:NoObject'
+          Ybgr = cat_vol_morph(cat_vol_morph(Ygr<0.3 & Yp0<0,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Ymir);
+          Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
+          if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
+          warning 'on'  'MATLAB:cat_vol_morph:NoObject'
+          BGth = cat_stat_nanmedian(Ymi(Ybg(:)));   
+        catch
+          warning 'on'  'MATLAB:cat_vol_morph:NoObject'
+          BGth = nan; 
+        end
+      end
+          
       % (relative) average tissue intensity of each class
       QAS.qualitymeasures.tissue_mn  = ([BGth CSFth GMth WMth]);
       QAS.qualitymeasures.tissue_mnr = QAS.qualitymeasures.tissue_mn ./ (max([WMth,GMth])); 

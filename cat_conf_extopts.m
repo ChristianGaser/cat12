@@ -50,7 +50,7 @@ if expert == 1
     'Default Shooting'
     'Optimized Shooting'
     };
-  regstr.values = {1 2};
+  regstr.values = {4 0.5};
 elseif expert > 1
   regstr         = cfg_entry;
   regstr.tag     = 'regstr';
@@ -70,11 +70,12 @@ if expert > 1
   % allow different registrations settings by using a matrix
   regstr.help = [regstr.help; { ...
     ''
-    'In the development modus the deformation levels are set by the following values ...'
-    '  0         .. "Use Dartel" '                                         
-    '  1         .. "Default Shooting"     .. only template resolution'
-    '  2         .. "Optimized Shooting"   .. 3:(3-TP)/4:TP'
-    '  3         .. "Optimized Shooting"   .. TP/2:TP/4:TP'
+    'In the development modus the deformation levels are set by the following values (TR=template resolution) ...'
+    '  0         .. "Use Dartel" '                                     
+    '  eps - 1   .. "Optimized Shooting" with lower (eps; fast) to higher quality (1; slow; default 0.5)'
+    '  2         .. "Optimized Shooting"   .. 3:(3-TR)/4:TR'
+    '  3         .. "Optimized Shooting"   .. TR/2:TR/4:TR'
+    '  4         .. "Default Shooting"     .. only TR'
     ''
     ...'  10        .. "Stronger Shooting"       .. max( 0.5 , [2.5:0.5:0.5] )'
     '  11        .. "Strong Shooting"       .. max( 1.0 , [3.0:0.5:1.0] )'
