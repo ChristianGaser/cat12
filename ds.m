@@ -11,6 +11,7 @@ function varargout=ds(type,viewtype,DAR,varargin)
 % ds('l3','',vx_vol,TSEGF,TSEG,TSEGF,ALAB,SLAB,SLABB,60)
 %#ok<*TRYNC>
 
+  if nargin==0, return; end; 
   if ndims(varargin{end})<=2, slice=varargin{end}; vols=nargin-4;
   else                        slice=80;            vols=nargin-3;
   end

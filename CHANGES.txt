@@ -13681,6 +13681,7 @@ M       cat_surf_vol2surf.m
     surfaces in cat_surf_calc.m.
 
 ------------------------------------------------------------------------
+r1100 | gaser | 2017-01-10 16:24:06 +0100 (Di, 10 Jan 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13694,5 +13695,57 @@ M       cat_surf_surf2roi.m
 Fixed: Surface ROI values for the right hemisphere in cat_surf_surf2ROIs.m
 were not correct. Thanks to René Seiger for pointing to that issue.
 
+
 ------------------------------------------------------------------------
-r1100 | gaser | 2017-01-10 16:23:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_io_FreeSurfer.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_LASs.m
+M       cat_main_gintnorm.m
+M       cat_main_gintnormi.m
+M       cat_main_registration.m
+M       cat_run_job.m
+M       cat_run_job_APP_final.m
+M       cat_run_job_APP_init.m
+M       cat_tst_qa.m
+M       cat_vol_div.m
+M       cat_vol_grad.m
+M       compile.m
+M       ds.m
+
+(1)  Fixed*:  Invert Jacobian determinant in Shooting. 
+(2)  Fixed*:  Corrected problems in "cat_run_APP_init", ("cat_run_APP_final",)
+              "cat_main", "cat_main_gintnorm", "cat_main_LAS", "cat_main_LASs", 
+              and "cat_io_report" for negative T1 values (BWP MS images).
+(3)  Fixed*:  Corrected problems in "cat_run_APP_init", ("cat_run_APP_final",)
+              "cat_main", "cat_main_gintnorm", "cat_main_LAS", "cat_main_LASs", 
+              and "cat_io_report" for images with backgrounds with intensities 
+              like the object, e.g., BG=0.8, CSF=0.0, GM=0.5, WM=1.0. 
+(4)  Fixed:   Corrected rng error of old MATLAB versions in "compile".
+(5)  Fixed:   NaN-uint8 error in "cat_run_job".
+(6)  Fixed:   Corrected reduction condition for cat_main_gintnorm in "cat_main".
+(7)  Fixed:   Improved behaviour for NaN background values in APP.
+(8)  Fixed:   Corrected thresholds in "cat_main_registration". 
+(9)  Fixed:   Corrected creation of SPM-Segmentation error in "cat_main".
+(10) Fixed:   Corrected creation of low-tissue-contrast warning in 
+              "cat_main_gintnorm".  
+(11) Fixed:   Corrected missing field in "cat_surf-surf2roi".
+(12) New:     Added switch to APP4/5 processing in case of failed affine 
+              registration. Switch to APP0 processing in case of failed initial
+              APP processing.
+(13) Changed: Updated "cat.extopts.regstr" with eps (fast) - 1 (accurate) for 
+              optimized Shooting with default=0.5 that takes about ~200 seconds
+              (similar to Dartel). 
+(14) Fixed:   Added file type check for read functions in "cat_io_FreeSurfer" to
+              avoid reading of gifti, nifti, and Matlab files.
+(15) Fixed:   Added NaN-replacement by nearest non NaN value in "cat_vol_grad" 
+              and "cat_vol_div".
+
+------------------------------------------------------------------------
+r1101 | dahnke | 2017-01-11 16:23:11

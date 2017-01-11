@@ -113,7 +113,7 @@ cat.extopts.sanlm        = 1;     % use SANLM filter:                         0 
 cat.extopts.NCstr        = inf;   % Strength of the noise correction:         0 - no noise correction; eps - low correction; 1 - strong corrections; inf - auto (default = inf)
 cat.extopts.LASstr       = 0.5;   % Strength of the local adaption:           0 - no adaption; eps - lower adaption; 1 - strong adaption (default = 0.5)
 cat.extopts.BVCstr       = 0.0;   % Strength of the Blood Vessel Correction:  0 - no correction; eps - low correction; 1 - strong correction (default = 0.5)
-cat.extopts.regstr       = 2;     % Strength of Shooting registration:        1 - Default Shooting; 2 - Optimized Shooting (default); 
+cat.extopts.regstr       = 0.5;   % Strength of Shooting registration:        0 - Dartel, eps - fast Shooting, 1 - high quality Shooting (default = 0.5); 4 - Default Shooting;
 cat.extopts.WMHC         = 1;     % Correction of WM hyperintensities:        0 - no correction; 1 - only for Dartel (default); 
                                   %                                           2 - also correct segmentation (to WM); 3 - handle as separate class
 cat.extopts.WMHCstr      = 0.5;   % Strength of WM hyperintensity correction: 0 - no correction; eps - for lower, 1 for stronger corrections (default = 0.5)

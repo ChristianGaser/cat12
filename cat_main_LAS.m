@@ -66,7 +66,6 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
-  debug   = extopts.verb>2; %debug = 1;
   verb    = extopts.verb-1;
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);
@@ -77,6 +76,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   cleanupstr  = min(1,max(0,extopts.gcutstr));   % required to avoid critical regions
   cleanupdist = min(3,max(1,1 + 2*cleanupstr));
     
+  % set debug = 1 and do not clear temporary variables if there is a breakpoint in this file 
+  dbs   = dbstatus; debug = 0; 
+  for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_LAS'); debug = 1; break; end; end
   
   
 %% ---------------------------------------------------------------------
@@ -167,7 +169,8 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ycp = (Ycls{3}>240 & Ydiv>0 & Yp0<1.1 & Ym<0.5) | ...                 % typcial CSF
         (Ycls{5}>8 & Ycls{2}<32 & Ym<0.6 & Ydiv>0) | ...                % venes
         ((Ym-Ydiv/4<0.4) & Ycls{3}>4 & Ycls{3}>16) | ...                  % sulcal CSF
-        (single(Ycls{6})+single(Ycls{5})+single(Ycls{4}))>192 | ...     % save non-csf 
+        ...(single(Ycls{6})+single(Ycls{5})+single(Ycls{4}))>192 | ...     % save non-csf 
+        (single(Ycls{6})+single(Ycls{4}))>192 | ...     % save non-csf .. class 5 with error for negative t1 values
         ~cat_vol_morph(Ybb,'lc',5) | ...                                % add background
         Ym<0.3;                                                         % but do not trust the brain mask!
   Ywd = cat_vbdist(single(Yp0>2.5),Yp0>0.5,vx_vol);                         % WM distance for skelelton
@@ -289,7 +292,10 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
       save(tmpmat);
     end
   end
-                                              
+            
+  % correction for negative values 
+  srcmin = min(Ysrc(:)); Ysrc = Ysrc - srcmin; T3th = T3th - srcmin; Tthc = Tth; Tthc.T3th = Tth.T3th - srcmin;
+  
 %% --------------------------------------------------------------------- 
 %  Now, we can estimate the local peaks 
 %  ---------------------------------------------------------------------
@@ -407,7 +413,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------
-  Yml = zeros(size(Ysrc));  
+  Yml = zeros(size(Ysrc)); 
   Yml = Yml + ( (Ysrc>=Ylab{2}                ) .* (3 + (Ysrc-Ylab{2}) ./ max(eps,Ylab{2}-Ylab{3})) );
   Yml = Yml + ( (Ysrc>=Ylab{1} & Ysrc<Ylab{2} ) .* (2 + (Ysrc-Ylab{1}) ./ max(eps,Ylab{2}-Ylab{1})) );
   Yml = Yml + ( (Ysrc>=Ylab{3} & Ysrc<Ylab{1} ) .* (1 + (Ysrc-Ylab{3}) ./ max(eps,Ylab{1}-Ylab{3})) );
@@ -416,8 +422,8 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   
   %% global
-  Ymg = max(eps,Ysrc./Ylab{2});
-  Ymg = cat_main_gintnorm(Ymg*Tth.T3th(5),Tth); 
+  Ymg = max(eps,Ysrc./Ylab{2}) * Tth.T3th(5)/(Tth.T3thx(5)/3); 
+  Ymg = cat_main_gintnorm(Ymg,Tth); 
   
   %%
   if debug>1

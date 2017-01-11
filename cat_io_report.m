@@ -388,6 +388,7 @@ function cat_io_report(job,qa,subj,createerr)
     %  using of SPM peak values didn't work in some cases (5-10%), 
     %  so we have to load the image and estimate the WM intensity 
     try
+      %%
       hho      = spm_orthviews('Image',VT0,pos(1,:)); 
       spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
       Ysrcs    = single(Ysrc+0); spm_smooth(Ysrcs,Ysrcs,repmat(0.2,1,3));
@@ -396,16 +397,15 @@ function cat_io_report(job,qa,subj,createerr)
       if exist(Pp0,'file'), Pp0data = dir(Pp0); Pp0data = etime(clock,datevec(Pp0data.datenum))/3600 < lasthours; else Pp0data = 0; end
 
       if createerr==10, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
-
       ch  = cumsum(y)/sum(y); 
-      Vp0 = spm_vol(Pp0); 
+      if Pp0data, Vp0 = spm_vol(Pp0); end
       if Pp0data && all(Vp0.dim == size(Ysrcs))
         Yp0  = spm_read_vols(Vp0);
         mth  = find(x>=cat_stat_nanmean(Ysrcs(Yp0(:)>2.7 & Yp0(:)<3.3)), 1 ,'first');
       else
-        mth = find(ch>0.95,1,'first');
+        mth  = find(ch>0.95,1,'first');
       end
-      spm_orthviews('window',hho,x([find(ch>0.02,1,'first'),mth]).*[1 mlt]); hold on;
+      spm_orthviews('window',hho,[x(find(ch>0.02,1,'first')) x(mth) + (mlt-1)*diff(x([find(ch>0.02,1,'first'),mth]))]); hold on;
       spm_orthviews('Zoom',100);
       spm_orthviews('Reposition',[0 0 0]); 
       spm_orthviews('Redraw');
@@ -413,11 +413,12 @@ function cat_io_report(job,qa,subj,createerr)
       try 
         bd   = [find(ch>0.01,1,'first'),mth];
         ylims{1} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3];
-        xlims{1} = x(bd) .* [1,4/3]; M = x>=xlims{1}(1) & x<=xlims{1}(2);
+        xlims{1} = x(bd) + [0,(4/3-1)*diff(x([find(ch>0.02,1,'first'),mth]))]; M = x>=xlims{1}(1) & x<=xlims{1}(2);
         hdata{1} = [x(M) flip(x(M)); max(eps,min(ylims{1}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
         hhist(1) = fill(hdata{1}(1,:),hdata{1}(2,:),hdata{1}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
         if createerr==11, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
-        caxis(xlims{1} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+        %caxis(xlims{1} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+        caxis(xlims{1} + [0,((2*2*volcolors+surfcolors)/volcolors)*diff(x([find(ch>0.02,1,'first'),mth]))]); %; .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
         ylim(ylims{1}); xlim(xlims{1}); box on; grid on; 
       catch
         createerrtxt = [createerrtxt; {'Error:cat_io_report:dispYoHist','Error in displaying the color histogram of the original image.'}]; 
@@ -448,24 +449,25 @@ function cat_io_report(job,qa,subj,createerr)
         [y,x] = hist(Yms(:),hlevel);  y = y ./ max(y)*100;
         ch    = cumsum(y)/sum(y); 
         if createerr==20, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
+        if Pp0data, Vp0 = spm_vol(Pp0); end
         if Pp0data && all(Vp0.dim == size(Yms))
           Yp0 = spm_read_vols(spm_vol(Pp0));
           mth = find(x>=cat_stat_nanmean(Yms(Yp0(:)>2.9 & Yp0(:)<3.1)), 1 ,'first');
-          spm_orthviews('window',hhm,x([find(ch>0.02,1,'first'),mth]).*[1 mlt] ); hold on;
         else
           mth = find(ch>0.95,1,'first');
-          spm_orthviews('window',hhm,x([find(ch>0.02,1,'first'),mth]).*[1 mlt] ); hold on;
         end
+        spm_orthviews('window',hhm,[x(find(ch>0.02,1,'first')) x(mth) + (mlt-1)*diff(x([find(ch>0.02,1,'first'),mth]))]); hold on;
         clear Yms;
         try
           % colorbar
           if createerr==21, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
           bd  = [find(ch>0.01,1,'first'),mth]; 
           ylims{2} = [min(y(round(numel(y)*0.1):end)),max(y(round(numel(y)*0.1):end)) * 4/3]; 
-          xlims{2} = x(bd) .* [1,4/3]; M = x>=xlims{2}(1) & x<=xlims{2}(2);
+          xlims{2} = x(bd) + [0,(4/3-1)*diff(x([find(ch>0.02,1,'first'),mth]))]; M = x>=xlims{2}(1) & x<=xlims{2}(2);
           hdata{2} = [x(M) flip(x(M)); max(eps,min(ylims{2}(2),y(M))) zeros(1,sum(M)); [x(M) flip(x(M))]];
           hhist(2) = fill(hdata{2}(1,:),hdata{2}(2,:),hdata{2}(3,:),'EdgeColor',[0.0 0.0 1.0],'LineWidth',1);
-          caxis(xlims{2} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+          %caxis(xlims{2} .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
+          caxis(xlims{2} + [0,((2*2*volcolors+surfcolors)/volcolors)*diff(x([find(ch>0.02,1,'first'),mth]))]); %; .* [1,1.5*(2*volcolors+surfcolors)/volcolors]) 
           ylim(ylims{2}); xlim(xlims{2}); box on; grid on; 
           if round(x(mth))==1
             xlim([0 4/3]); 
@@ -627,10 +629,10 @@ function cat_io_report(job,qa,subj,createerr)
 
     % update histograms - switch from color to gray
     if exist('hhist','var');
-      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',hdata{1}(3,:)'/max(hdata{1}(3,:))*60); caxis(haxis(1),[1,60]); end
+      if hhist(1)>0 && haxis(1)>0, set(hhist(1),'cdata',(hdata{1}(3,:)' - min(hdata{1}(3,:))) / diff([min(hdata{1}(3,:)),max(hdata{1}(3,:))])*60*4/5); caxis(haxis(1),[1,60]); end
       if createerr==9, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
-      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',hdata{2}(3,:)'/max(hdata{2}(3,:))*60); caxis(haxis(2),[1,60]); end
-      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',hdata{3}(3,:)'/max(hdata{3}(3,:))*60); caxis(haxis(3),[1,60]); end
+      if hhist(2)>0 && haxis(2)>0, set(hhist(2),'cdata',(hdata{2}(3,:)' - min(hdata{2}(3,:))) / diff([min(hdata{2}(3,:)),max(hdata{2}(3,:))])*60*4/5); caxis(haxis(2),[1,60]); end
+      if hhist(3)>0 && haxis(3)>0, set(hhist(3),'cdata',(hdata{3}(3,:)' - min(hdata{3}(3,:))) / diff([min(hdata{3}(3,:)),max(hdata{3}(3,:))])*60*4/5); caxis(haxis(3),[1,60]); end
     end
   catch
     createerrtxt = [createerrtxt; {'Error:cat_io_report','Error in changing colormap.'}]; 
