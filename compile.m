@@ -22,10 +22,12 @@ function varargout = compile(comp,test,verb)
 % ______________________________________________________________________
 % $Id$ 
 
-%#ok<*NASGU,*ASGLU,*LERR>
+%#ok<*NASGU,*ASGLU,*LERR,*TRYNC>
 
-  rng('default'); rng(13); % fix random numbers
-
+  try % failed in older MATLABs
+    rng('default'); rng(13); % fix random numbers
+  end
+  
   if ~exist('comp','var'), comp=1; end
   if ~exist('test','var'); test=1; end
   if ~exist('verb','var'); verb=2; end
@@ -55,8 +57,10 @@ function varargout = compile(comp,test,verb)
   dcubetr(2,5:7,5) = 1; dcubetr(3,[5,7],5) = 1; % handle
   dcubetr(end-4,end-4:end-3,5) = 0; dcubetr(end-3,end-4,5) = 0; dcubetr(6,1:end,5) = 0; % hole
   
-  rng('default'); % restore default 
-   
+  try
+    rng('default'); % restore default 
+  end
+  
   % reset colorfunction
   cat_io_cprintf('silentreset')
   

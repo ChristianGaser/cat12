@@ -140,7 +140,8 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
  
   Yb = smooth3(Yb | (cat_vol_morph(Yb,'d',2/mvx) & Ym<0.8 & Yg<0.3 & Ym>0 & Yp0>0.2))>0.5;  % increase brain mask, for missing GM 
 
-  
+  % correction for negative (and positive) values
+  srcmin = min(Ysrc(:)); Ysrc = Ysrc - srcmin; Tth.T3th = Tth.T3th - srcmin; T3th = T3th - srcmin; 
   
   %% initial bias correction 
   %  ----------------------------------------------------------------------

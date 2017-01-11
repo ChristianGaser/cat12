@@ -23,8 +23,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 %    job.extopts.regstr ..
 %      * Main cases:
 %        0  .. DARTEL, 
-%        1  .. Default Shooting
-%        2  .. Optimized Shooting
+%        eps - 1  .. Optimized Shooting with low (eps; fast) to high
+%                    to high quality (1; slow) with 0.5 as default
+%        2  .. Optimized Shooting with fixed resolutions (3:(3-TR)/4:TR)
+%        3  .. Optimized Shooting with fixed resolutions (TR/2:TR/4:TR)
+%        4  .. Default Shooting
 % 
 %      * Fixed resolution level with interpolation:
 %        11 .. hard deformations
@@ -106,8 +109,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   if job.extopts.expertgui==2
     job.extopts.multigreg = 1;
     if job.extopts.multigreg==2, job.extopts.vox = [1.5 1.0]; end
-    fast   = inf; %inf;  % to test if processing work in principle 
-    export = 2;           % write files in sub-directories
+    fast   = inf;                   % limit iterations per template level to test if processing work in principle 
+    export = job.extopts.verb>2;    % write files in sub-directories
   else
     fast = inf; 
     export = 0; 
@@ -148,7 +151,14 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
         % Dartel
           res.do_dartel            = 1; 
           reg(regstri).opt.rres    = tpmres; %job.extopts.vox(voxi);
-        elseif job.extopts.regstr(regstri)==1 
+        elseif job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
+        % Optimized Shooting - manuel limit 
+          reg(regstri).opt.stepsize  = (lowres - tpmres)/4;  % stepsize of reduction 
+          reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : tpmres) / tpmres; % reduction factor 
+        
+          reg(regstri).opt.ll1th     = 0.0010 + 0.10*(1-job.extopts.regstr(regstri));   % smaller better/slower
+          reg(regstri).opt.ll3th     = 0.0001 + 0.10*(1-job.extopts.regstr(regstri));   % smaller better/slower 
+        elseif job.extopts.regstr(regstri)==4 
         % Default Shooting  
           reg(regstri).opt.rres        = tpmres;            % registration resolution depending on template resolution 
           reg(regstri).opt.stepsize    = 0;                 % stepsize of reduction 
@@ -215,20 +225,20 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       end
      
 
-      % set default dartel/shooting templates in debug mode 
+      %% set default dartel/shooting templates in debug mode 
       % only in case of the default tempaltes
       job.extopts.templates = templates; 
       if job.extopts.expertgui==2 && ...
          (res.do_dartel==1 && job.extopts.regstr(regstri)>0) || ...
-         (res.do_dartel==2 && job.extopts.regstr(regstri)<1)
-        if res.do_dartel==2 && job.extopts.regstr(regstri)<1
+         (res.do_dartel==2 && job.extopts.regstr(regstri)==0)
+        if res.do_dartel==2 && job.extopts.regstr(regstri)==0
           cat_io_cprintf('warn','Switch to default Dartel Template.\n');
           job.extopts.templates      = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_IXI555_MNI152.nii'); 
           job.extopts.templates(end) = []; 
           reg(regstri).opt.rres = job.extopts.vox(voxi); 
         elseif res.do_dartel==1 && job.extopts.regstr(regstri)>0
           cat_io_cprintf('warn','Switch to default Shooting Template.\n');
-          job.extopts.templates = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_NKI174_MNI152_GS.nii',struct('depth',1)); 
+          job.extopts.templates = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_IXI555_MNI152_GS.nii',struct('depth',1)); 
         end
       end
       res.tpm2 = cell(1,numel(job.extopts.templates)); 
@@ -254,7 +264,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       %M1r    = tpmM; M1r([1,6,11]) = M1r([1,6,11]) .* regres/tpmres;           % for registration 
       imat=spm_imatrix(tpmM); imat(7:9)=imat(7:9) * newres/tpmres; M1=spm_matrix(imat); 
       imat=spm_imatrix(tpmM); imat(7:9)=imat(7:9) * regres/tpmres; M1r=spm_matrix(imat); 
-      if job.extopts.regstr(regstri)<1, M1r=M1; end % Dartel only!
+      if job.extopts.regstr(regstri)==0, M1r=M1; end % Dartel only!
     
       % image dimension 
       VT  = res.image(1);
@@ -263,7 +273,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       %idim = res.image(1).dim(1:3);                                            % input image resolution
       odim = floor(res.tpm(1).dim * tpmres/newres);                            % output image size
       rdim = floor(res.tpm(1).dim * tpmres/regres);                            % registration image size
-      if job.extopts.regstr(regstri)<1, rdim = odim; end % Dartel only!
+      if job.extopts.regstr(regstri)==0, rdim = odim; end % Dartel only!
 
 
       % to write a correct x=-1 output image, we have to be sure that the x value of the bb is negative
@@ -465,7 +475,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             if ri==1, Mys{ri} = eye(4); else Mys{ri}= eye(4); Mys{ri}(1:12) = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1); end;
           end
           if reg(regstri).opt.stepsize>10^-3  
-            stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm',tempres(1),diff(tempres(1:2)),tempres(end))); fprintf('\n');
+            if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
+              stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm (regstr=%0.2f)',tempres(1),diff(tempres(1:2)),tempres(end),job.extopts.regstr(regstri))); fprintf('\n');
+            else
+              stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm',tempres(1),diff(tempres(1:2)),tempres(end))); fprintf('\n');
+            end
           else
             stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f mm',reg(regstri).opt.rres)); fprintf('\n');
           end
@@ -475,7 +489,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           sd = spm_shoot_defaults;           % load shooting defaults
           n1 = 2;                            % use GM and WM for shooting
           if fast, reg(regstri).opt.nits = min(reg(regstri).opt.nits,5*fast); end  % at least 5 iterations to use each tempalte
-          if job.extopts.regstr(regstri)>1
+          if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 
             % need finer schedule for coarse to fine for ll3 adaptive threshold
             nits       = reg(regstri).opt.nits;          % default was 24  
             lam        = 0.5;                          % Decay of coarse to fine schedule
@@ -636,7 +650,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             end
 
             % avoid unneccessary iteration
-            if job.extopts.regstr(regstri)>1 && ( ll(3)<reg(regstri).opt.ll3th(ti) || ( ll(1)<1 && (ll(1)/llo(1))>(1-reg(regstri).opt.ll1th) ) )
+            if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 && ...
+                ( ll(3)<reg(regstri).opt.ll3th(ti) || ...
+                ( ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-reg(regstri).opt.ll1th) ))
               it = max(it+1,find([tmpl_no,nits]>tmpl_no(it),1,'first')); 
               reg(regstri).ll(ti,1:4) = [ll(1)/numel(dt) ll(2)/numel(dt) (ll(1)+ll(2))/numel(dt) ll(2)]; 
               reg(regstri).dtc(ti) = mean(abs(dt(:)-1)); 
@@ -744,13 +760,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 
           if job.extopts.regstr(regstri)==0
             testfolder = sprintf('Dartel_rr%0.1f_default',newres);
-          elseif job.extopts.regstr(regstri)==1
+          elseif job.extopts.regstr(regstri)==4
             testfolder = sprintf('Shooting_rr%0.1f_or%0.1f_default',regres,newres);
           else 
             if reg(regstri).opt.stepsize>10^-3 
-              testfolder = sprintf('Shooting_tr%0.1f_rr%0.1f-%0.1f_or%0.1f_regstr%d%s',tpmres,tempres([1,5]),newres,job.extopts.regstr(regstri));
+              testfolder = sprintf('Shooting_tr%0.1f_rr%0.1f-%0.1f_or%0.1f_regstr%0.1f%s',tpmres,tempres([1,5]),newres,job.extopts.regstr(regstri));
             else
-              testfolder = sprintf('Shooting_tr%0.1f_rr%0.1f_or%0.1f_regstr%d%s',tpmres,regres,newres,job.extopts.regstr(regstri));
+              testfolder = sprintf('Shooting_tr%0.1f_rr%0.1f_or%0.1f_regstr%0.1f%s',tpmres,regres,newres,job.extopts.regstr(regstri));
             end
           end
 
@@ -781,7 +797,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           % write jacobian determinant
           [pth,nam] = spm_fileparts(VT0.fname); 
           if job.extopts.regstr(regstri)>0 % shooting
-            [D,I] = cat_vbdist(single(~isnan(dt2))); dt = dt2(I); 
+            [D,I] = cat_vbdist(single(~isnan(dt2))); 
+            dt = 1/max(eps,dt2(I)); 
           else %dartel
             [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
             clear y0

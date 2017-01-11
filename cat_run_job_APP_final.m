@@ -9,6 +9,11 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
 %  Robert Dahnke
 %  $Id$
 
+
+  % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
+  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_run_job_APP_final'); debug = 1; break; end; end
+  zeroBG = (cat_stat_nanmean(Ysrco(Ybg(:)>0))/cat_stat_nanmean(Ysrco(Yb(:)>0 & Ym(:)>0.9)))<0.4;
+
 % ds('l2','m',0.5,Ym*0.7+0.3,Yb,Ysrc/WMth,Ym,80)
 
   if verb, fprintf('\n'); end
@@ -17,6 +22,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   
   [Ysrc,Ym,resT3] = cat_vol_resize({Ysrco,Ym},'reduceV',vx_vol,min(1.5,min(vx_vol)*2),msize,'meanm'); 
   [Yb,Ybg]        = cat_vol_resize({single(Yb),single(Ybg)},'reduceV',vx_vol,min(1.5,min(vx_vol)*2),msize,'meanm'); 
+  if debug, Ybo = Yb; end %#ok<NASGU>
   Ybg = Ybg>0.5;
   
   Yg   = cat_vol_grad(Ym,resT3.vx_volr) ./ max(eps,Ym); 
@@ -34,6 +40,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   voli  = @(v) (v ./ (pi * 4./3)).^(1/3);                        % volume > radius
   brad  = double(mean([brad,voli(sum(Yb(:)>0).*prod(vx_vol))])); % distance and volume based brain radius (brad)
   
+  
   % thresholds
   rf   = 6; 
   Hth  = round2(cat_stat_nanmean(Ym(Ym(:)>0.4 & Ym(:)<1.2  & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)<0.05 & Ydiv(:)>-0.5 & dilmsk(:)>0 & dilmsk(:)<10)),rf); % average intensity of major head tissues
@@ -43,6 +50,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   %WMth = cat_stat_nanmean(Ym(Ym(:)>0.8 & Ym(:)<1.2 & Ygs(:)<0.2 & ~Yb(:) & Ydiv(:)>-0.05)); 
   BGth = round2(cat_stat_nanmean(Ym(Ybg(:))),rf); 
   if isnan(CMth), CMth=mean([BGth,GMth]); end
+  
   
   %% Skull-Stripping
   % intensity parameter
@@ -57,15 +65,20 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   gc.s = -0.1 + 0.20*gcutstr;         % smoothing parameter                   - higher > less tissue
 
   stime = cat_io_cmd('  Skull-Stripping','g5','',verb,stime);
-  Yb = (dilmsk<0.5 & Ym<1.8) & (Ym>(GMth*gc.l + (1-gc.l))) & Yg<0.5 & Ydiv<0.2 & Ym+Ydiv<gc.h; Yb(smooth3(Yb)<0.5)=0; 
-  % the hull is required to remove large scull tissues such as muscle in apes\monkeys 
+  Yb = (dilmsk<0.5 & Ym<1.5) & (Ym>(GMth*gc.l + (1-gc.l))) & Yg<0.3 & Ydiv<0.2 & Ym+Ydiv<gc.h & ~Ybg & Yb;
+  Yb = cat_vol_morph(Yb & ~Ybg,'l',1); Yb(smooth3(Yb)<0.5)=0; 
+  
+  %% the hull is required to remove large scull tissues such as muscle in apes\monkeys 
   [hull,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
-  hull  = cat_vol_morph(hull,'labclose',2); 
+  hull  = cat_vol_morph(hull,'labclose',3); 
   hull  = cat_vbdist(single(hull<=0),true(size(hull)))*mean(resT2.vx_volr);
-  hull  = cat_vol_resize(smooth3(hull),'dereduceV',resT2); 
+  hull  = cat_vol_resize(cat_vol_smooth3X(hull,2),'dereduceV',resT2); 
   %%
-  Yb2 = single(smooth3(cat_vol_morph(cat_vol_morph(Yb & hull/max(hull(:))>0.3,'l')>0,'d',max(hull(:))*0.3) )>0.5 + gc.s); clear hull; 
-  Yb  = single(smooth3(cat_vol_morph(Yb & Yb2,'l'))>0.5 + gc.s); 
+  Yb2 = single(smooth3(cat_vol_morph(cat_vol_morph(Yb & hull/max(hull(:))>0.2 & ~Ybg,'l')>0,'d',max(hull(:))*0.3) )>0.5 + gc.s); 
+  
+  Yb  = single(smooth3( cat_vol_morph(Yb & Yb2 & ~Ybg,'lo',2) |  cat_vol_morph(Yb & Yb2 & ~Ybg & hull/max(hull(:))>0.2,'lo') | ...
+     cat_vol_morph(Yb & Yb2 & ~Ybg & hull/max(hull(:))>0.4,'l') )>0.5 + gc.s); 
+  %if ~debug, clear hull; end 
   [dilmsk2,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*2,32); 
   dilmsk2  = cat_vbdist(dilmsk2,true(size(dilmsk2)))*mean(resT2.vx_volr); %resT2.vx_volr);
   dilmsk2  = dilmsk2 - cat_vbdist(single(dilmsk2>0),true(size(dilmsk2)))*mean(resT2.vx_volr); %,resT2.vx_volr);
@@ -73,27 +86,32 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   dilmsk2  = dilmsk2 / brad; 
   %% WM growing
   Yb = cat_vol_morph(Yb,'d');
-  Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.1 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
-  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.05); 
-  Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
-  Yb = smooth3(Yb)>0.2 + gc.s; 
-  % ventricle closing
+  Yb(Yb<0.5 & (dilmsk2>0.1 | Ym>1.05 | Ym<mean([1,GMth]) | (Yg.*Ym)>0.5))=nan;
+  [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01); 
+  Yb(isnan(Yb))=0; Yb((YD)<gc.d/2)=1; Yb(isnan(Yb))=0;
+  Yb = smooth3(Yb)>0.2 + gc.s;
+  %% the hull is required to remove large scull tissues such as muscle in apes\monkeys 
+  [hull,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
+  hull  = cat_vol_morph(hull,'labclose',3); 
+  hull  = cat_vbdist(single(hull<=0),true(size(hull)))*mean(resT2.vx_volr);
+  hull  = cat_vol_resize(cat_vol_smooth3X(hull,2),'dereduceV',resT2); 
+  %% ventricle closing
   [Ybr,resT2] = cat_vol_resize(single(Yb),'reduceV',resT3.vx_volr,mean(resT3.vx_volr)*4,32); 
   Ybr = cat_vol_morph(Ybr>0,'lc',2*gc.f/mean(resT2.vx_volr));
   Ybr = cat_vol_resize(smooth3(Ybr),'dereduceV',resT2)>0.5 + gc.s; 
-  Yb = single(Yb | (Ym<1.2 & Ybr));
+  Yb = single(Yb | (Ym<1.2 & Ybr & hull/max(hull(:))>0.3));
   %% GWM growing
-  Yb(Yb<0.5 & (dilmsk2>0.4  | Ym>1.1 | Ym<GMth | (Yg.*Ym)>0.8))=nan;
+  Yb(Yb<0.5 & (dilmsk2>0.4  | Ym>0.95 | Ym<GMth | (Yg.*Ym)>0.8))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.02 + gc.c); 
   Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0;
   Yb = smooth3(Yb)>0.5 + gc.s; 
-  Yb = single(Yb | (Ym>0.2 & Ym<1.2 & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f)))));
+  Yb = single(Yb | (Ym>0.2 & (Ym<0.9 | hull/max(hull(:))<0.2) & cat_vol_morph(Yb,'lc',max(1,min(3,0.2*gc.f)))));
   %% GM growing
-  Yb(Yb<0.5 & (dilmsk2>0.5  | Ym>1.1 | Ym<CMth | (Yg.*Ym)>0.9))=nan;
+  Yb(Yb<0.5 & (dilmsk2>0.5  | Ym>0.9 | Ym<CMth | (Yg.*Ym)>0.9))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,0.01 + gc.c);
   Yb(isnan(Yb))=0; Yb((YD)<gc.d)=1; Yb(isnan(Yb))=0; clear Yb1 YD; 
   Yb(smooth3(Yb)<0.5 + gc.s)=0;
-  Yb = single(Yb | (Ym>0.1 & Ym<1.1 & cat_vol_morph(Yb,'lc',max(1,min(3,0.1*gc.f)))));
+  Yb = single(Yb | (Ym>0.1 & (Ym<0.9 | hull/max(hull(:))<0.2) & cat_vol_morph(Yb,'lc',max(1,min(3,0.1*gc.f)))));
   %% CSF growing (add some tissue around the brain)
   Yb(Yb<0.5 & (dilmsk2>0.6  | Ym< gc.o | Ym>1.1 | (Yg.*Ym)>0.9))=nan;
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.01 + gc.c); Yb(isnan(Yb))=0; 
@@ -136,7 +154,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   % cortical GM 
   Ygm  = Ym<(GMth*0.3+0.7) & Ym>(CMth*0.6+0.4*GMth) & Yg<0.4 & Yb & Ydiv<0.4 & Ydiv>-0.3 & ~Ywm & ~Ybm; % & (Ym-Ydiv*2)<GMth;  
   Ygm(smooth3(Ygm)<0.3 | ~cat_vol_morph(Ywm,'d',3/mean(vx_vol)))=0;
-  Ygm(CSFD<3 & Ym>(CMth*0.5+0.5*GMth) & ~Ywm & Ym<(CMth*0.5+0.5*GMth)); 
+  Ygm(CSFD<3 & Ym>(CMth*0.5+0.5*GMth) & ~Ywm & Ym<(CMth*0.5+0.5*GMth))=0; 
   % CSF
   Ycm  = Ym<(CMth*0.5+0.5*GMth) & Yg<0.1 & Yb & ~Ygm & dilmsk<-brad*0.3; 
   Ycm  = smooth3(Ycm)>0.5;
@@ -183,6 +201,11 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   %% estimate bias fields
   stime = cat_io_cmd('  Bias correction','g5','',verb,stime);
   Ywi = sum( cat(4,Ywm,Ygm/gmth,Ybm/bmth,Ycm/cmth,Yhm/hmth),4) ./ sum( cat(4,Ywm>0,Ybm>0,Ygm>0,Ycm>0,Yhm>0),4 );
+  if ~zeroBG
+    Ybg2 = Ybg(:) & Yg(:)<(cat_stat_nanmean(Yg(Ybg(:))) + 2*(cat_stat_nanstd(Yg(Ybg(:))))); 
+    Ywi(Ybg2) = Ysrc(Ybg2); clear Ybg2;
+  end
+  %%
   [Ywi,resT2]  = cat_vol_resize(Ywi,'reduceV',resT3.vx_volr,min(4,min(resT3.vx_volr)*2),32,'meanm'); 
   for i=1:4, Ywi=cat_vol_localstat(Ywi,Ywi>0,2,1); end
   Ywi   = cat_vol_approx(Ywi,'nn',resT2.vx_volr,2);
@@ -190,20 +213,27 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   Ywi   = cat_vol_resize(Ywi,'dereduceV',resT2);
 
   %% background noise
-  stime = cat_io_cmd('  Background correction','g5','',verb,stime);
-  %Ybc  = cat_vol_morph(smooth3(Ym<mean([BGth,CMth]) & Ym<CMth & Ygs<0.05 & ~Yb & dilmsk2>8)>0.5,'lo',3); 
-  [Ybc,resT2] = cat_vol_resize(Ysrc .* Ybg,'reduceV',resT2.vx_volr,max(8,max(16,cat_stat_nanmean(resT2.vx_volr)*4)),16,'min'); 
-  Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,2);
-  for i=1:1, Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,1); end
-  %Ybc2 = cat_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the backgound!  
-  %Ybc2 = cat_vol_smooth3X(Ybc2,4);
-  Ybc  = cat_vol_smooth3X(Ybc,2);
-  Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2); 
-  %Ybc2 = cat_vol_resize(Ybc2,'dereduceV',resT2); 
+  if zeroBG
+    stime = cat_io_cmd('  Background correction','g5','',verb,stime);
+    %Ybc  = cat_vol_morph(smooth3(Ym<mean([BGth,CMth]) & Ym<CMth & Ygs<0.05 & ~Yb & dilmsk2>8)>0.5,'lo',3); 
+    [Ybc,resT2] = cat_vol_resize(Ysrc .* Ybg,'reduceV',resT2.vx_volr,max(8,max(16,cat_stat_nanmean(resT2.vx_volr)*4)),16,'min'); 
+    Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,2);
+    for i=1:1, Ybc  = cat_vol_localstat(Ybc,Ybc>0,2,1); end
+    %Ybc2 = cat_vol_approx(Ybc,'nn',resT2.vx_volr,4); % no aproximation to correct only in the backgound!  
+    %Ybc2 = cat_vol_smooth3X(Ybc2,4);
+    Ybc  = cat_vol_smooth3X(Ybc,2);
+    Ybc  = cat_vol_resize(Ybc,'dereduceV',resT2); 
+    %Ybc2 = cat_vol_resize(Ybc2,'dereduceV',resT2); 
+  else
+    % correction for negative backgrounds (MT weighting)
+    [x,y]=hist(Ysrc(:),200); cx = cumsum(x)/sum(x);
+    Ybc = y(find(cx<0.0001,1,'last')); 
+  end
 
   %% back to original size
   stime = cat_io_cmd('  Final scaling','g5','',verb,stime);
-  [Ywi,Ybc] = cat_vol_resize({Ywi,Ybc},'dereduceV',resT3); 
+  Ywi   = cat_vol_resize(Ywi,'dereduceV',resT3); 
+  if zeroBG, Ybc = cat_vol_resize(Ybc,'dereduceV',resT3); end
   %Ybc2 = cat_vol_resize({Ybc2},'dereduceV',resT3); 
   [Yg,Ygs]  = cat_vol_resize({Yg,Ygs},'dereduceV',resT3); 
   Yb   = cat_vol_resize(Yb,'dereduceV',resT3)>0.5; 
@@ -213,12 +243,12 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   %%  Final intensity scaling
   Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc); % correct for noise only in background
  % Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc2 + Ybc); % correct for noise only in background
-  Wth  = single(cat_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.9))); 
-  [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>GMth & Ym(:)<Wth*1.2),0:0.01:2);
-  WIth = find(cumsum(WIth)/sum(WIth)>0.90,1,'first'); WIth = round2(WMv(WIth),rf);  
-  [BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
-  BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = round2(BMv(BIth),rf);  
-  Ym   = (Ym - BIth) ./ (WIth - BIth); 
+  Wth  = single(cat_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.95))); 
+  [WIth,WMv] = hist(Ym(Ygs(:)<0.1 &  Yb(:) & Ym(:)>mean([GMth,Wth]) & Ym(:)<Wth*1.1),0:0.01:2);
+  WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth = round2(WMv(WIth),rf);  
+  %[BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
+  %BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = round2(BMv(BIth),rf);  
+  Ym   = Ym ./ WIth; 
   
   cat_io_cmd(' ','','',verb,stime); 
 end

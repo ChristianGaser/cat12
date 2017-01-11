@@ -22,6 +22,8 @@ function Ysrc = cat_main_gintnormi(Ym,Tth)
   T3th  = Tth.T3thx; 
   T3thx = Tth.T3th; 
 
+  if all(T3th==T3thx), Ysrc = Ym; return; end
+  
   [T3th,si] = sort(T3th);
   T3thx = T3thx(si);
   
