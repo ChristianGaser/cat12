@@ -46,7 +46,7 @@ function varargout=cat_io_FreeSurfer(action,varargin)
     case {'fs2gii','read_surf','read_surf_data'}
       [pp,ff,ee] = spm_fileparts(varargin{1}); 
       if any(strcmp({'.gii','.nii','.mat','.m'},ee))
-        error('cat_io_FreeSurfer:WrongInput','FreeSurfer file format only! No filenames that can be GIFTI (*.gii), NIFTI (*.nii), or Matlab (*.mat,*.m) are allowed! ');
+        error('cat_io_FreeSurfer:WrongInput','FreeSurfer file format only! No filenames GIFTI (*.gii), NIFTI (*.nii), or Matlab (*.mat,*.m) are allowed! ');
       end
   end
   

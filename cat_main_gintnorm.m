@@ -47,7 +47,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     T3th  = Ycls.T3th;
     T3thx = Ycls.T3thx;
 
-    % intensity scalling
+    % intensity scaling
     Ym    = Ysrc; 
     
     if all(T3th==T3thx), return; end
@@ -216,7 +216,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
         T3th3(1),T3th3(2),T3th3(3)),numel(cat_warnings)==0); %#ok<SPERR>
   end
 
-  %% intensity scalling for gradient estimation
+  %% intensity scaling for gradient estimation
   Ym = Ysrcr+0; 
   for i=2:numel(T3th)
     M = Ysrcr>T3th(i-1) & Ysrcr<=T3th(i);
@@ -404,7 +404,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     T3thx = [0,0.02,1:5];
 
 
-    % intensity scalling
+    % intensity scaling
     Ym    = Ysrc; 
     isc   = 1;
     %T3th  = interp1(T3th,1:1/isc:numel(T3th)*isc,'spline');  %pchip');
