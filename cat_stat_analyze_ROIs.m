@@ -67,7 +67,9 @@ for i=1:numel(P)
   end
   
   if ~exist(pth_label,'dir')
-    error(sprintf('Label folder %s was not found.\n',pth_label));
+    spm('alert!',sprintf('Label folder %s was not found.\n',pth_label),0);
+    roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
+    break
   end
 
   % check that name of ROI fits to SPM data for 1st file
@@ -75,7 +77,9 @@ for i=1:numel(P)
     % check for catROI*-files
     files = cat_vol_findfiles(pth_label,[pattern '*']);
     if numel(files) == 0
-      error(sprintf('No label files found in folder %s. Please check that you have not moved your data\n',pth_label));
+      spm('alert!',sprintf('No label files found in folder %s. Please check that you have not moved your data\n',pth_label),0);
+      roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
+      break
     end
     [tmp, tmp_name, ext] = fileparts(files{1});
     
@@ -85,7 +89,9 @@ for i=1:numel(P)
     % check whether first filename in SPM.mat and xml-file are from the same subject
     ind = strfind(nam,tmp_name);
     if isempty(ind)
-      error('Label file %s does nit fit to analyzed file %s. Please check that you have not moved your data',tmp_name,nam);
+      spm('alert!',sprintf('Label file %s does not fit to analyzed file %s. Please check that you have not moved your data',tmp_name,nam),0);
+      roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
+      break
     end
     
     % get prepending pattern 
@@ -142,7 +148,8 @@ Y = ROIvalues;
 X = SPM.xX.X;
 
 % compare correlation coefficients after Fisher z-transformation
-if compare_two_samples
+if 0
+%if compare_two_samples
   % get two samples according to contrast -1 1
   Y1 = Y(find(X(:,find(c==-1))),:);
   Y2 = Y(find(X(:,find(c== 1))),:);
@@ -154,11 +161,7 @@ if compare_two_samples
   z2 = atanh(r2);
   
   Dz = (z1-z2)./sqrt(1/(size(Y1,1)-3)+1/(size(Y2,1)-3));
-  
-  % use only upper half of symmetrical matrix and set NaN to the remaing part
-%  Dz = triu(Dz);   
-%  Dz(find(Dz==0)) = NaN;
-  
+    
   Pz = (1-spm_Ncdf(abs(Dz)));
   Pzfdr = spm_P_FDR(Pz);
   
@@ -279,7 +282,7 @@ for i = order
       fprintf('P-value\t\t%s\n',atlas);
       for j=1:length(ind)
         data{c}(data0 == ID{i}(indP(ind(j)))) = -log10(Pcorr{c}(indP(ind(j))));
-        fprintf('%g\t%s\n',Pcorr{c}(indP(ind(j))),N{i}{indP(ind(j))});
+        fprintf('%9g\t%s\n',Pcorr{c}(indP(ind(j))),N{i}{indP(ind(j))});
       end
     end
     
@@ -451,15 +454,24 @@ atlas = atlases{sel_atlas};
 
 % get header of selected atlas
 measures = fieldnames(xml.(atlas).data);
-n_measures = numel(measures);
+
+% get rid of the thickness values that are saved for historical reasons
+count = 0;
+for i=1:numel(measures)
+  if ~strcmp(measures{i}(1),'T')
+    count = count + 1;
+    useful_measures{count} = measures{i};
+  end
+end
+n_measures = numel(useful_measures);
 
 % select a measure
 if size(measures,1) > 1
-  sel_measure = spm_input('Select measure','+1','m',measures);
+  sel_measure = spm_input('Select measure','+1','m',useful_measures);
 else
   sel_measure = 1;
 end
-measure = measures{sel_measure};
+measure = useful_measures{sel_measure};
 
 % remove spaces
 measure = deblank(measure);

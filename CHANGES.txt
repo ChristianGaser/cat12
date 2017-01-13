@@ -13697,6 +13697,7 @@ were not correct. Thanks to René Seiger for pointing to that issue.
 
 
 ------------------------------------------------------------------------
+r1101 | dahnke | 2017-01-11 16:23:32 +0100 (Mi, 11 Jan 2017) | 50 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13747,5 +13748,15 @@ M       ds.m
 (15) Fixed:   Added NaN-replacement by nearest non NaN value in "cat_vol_grad" 
               and "cat_vol_div".
 
+
 ------------------------------------------------------------------------
-r1101 | dahnke | 2017-01-11 16:23:11
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_analyze_ROIs.m
+
+Changed: In cat_stat_analyze_ROIs.m there is now an option to manually select
+missing label files if the files were moved. Furthermore, some measures such
+as thickness of voxel analysis are now deselected.
+------------------------------------------------------------------------
+r1102 | gaser | 2017-01-13 10:04:29
