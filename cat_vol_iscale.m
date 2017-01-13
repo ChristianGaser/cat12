@@ -252,7 +252,7 @@ function [TI,varargout] = cat_vol_iscale(T,action,vx_vol,varargin)
         
       %% Fine correction
       % ----------------------------------------------------------------
-        % tissue segmentation and intensity scalling
+        % tissue segmentation and intensity scaling
         %res1 = 1.6;
         
         %TI = cat_vol_iscale(TS./WI,'gCGW',vx_vol,T3th); 
