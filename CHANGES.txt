@@ -13750,6 +13750,7 @@ M       ds.m
 
 
 ------------------------------------------------------------------------
+r1102 | gaser | 2017-01-13 10:04:42 +0100 (Fr, 13 Jan 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13758,5 +13759,18 @@ M       cat_stat_analyze_ROIs.m
 Changed: In cat_stat_analyze_ROIs.m there is now an option to manually select
 missing label files if the files were moved. Furthermore, some measures such
 as thickness of voxel analysis are now deselected.
+
 ------------------------------------------------------------------------
-r1102 | gaser | 2017-01-13 10:04:29
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_FreeSurfer.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_run_job.m
+M       cat_vol_iscale.m
+M       cat_vol_partvol.m
+
+Changed: Typos...
+------------------------------------------------------------------------
+r1103 | gaser | 2017-01-13 11:01:22

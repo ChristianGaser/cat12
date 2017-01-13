@@ -28,8 +28,6 @@ function cat_run_job(job,tpm,subj)
 
     stime = clock;
 
-%error('0815','CAT error report test');
-
     % print current CAT release number and subject file
     [n,r] = cat_version;
     str  = sprintf('CAT12 r%s: %d/%d',r,subj,numel(job.channel(1).vols));
@@ -346,7 +344,7 @@ function cat_run_job(job,tpm,subj)
                 end
                 zeroBG = cat_stat_nanmean(Ym(Ybg))<1/3;
                 
-                % zeros background is required for images with high intensity background
+                % zero background is required for images with high intensity background
                 Ymc = Ym; if ~zeroBG, Ymc(Ybg) = 0; end
                 
                 % correct AC if it is to far away from the image center 
@@ -476,7 +474,7 @@ function cat_run_job(job,tpm,subj)
                     Ymc,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
                 stime = cat_io_cmd('Affine registration:','','',1,stime); 
 
-                % zeros background is required for images with high intensity background
+                % zero background is required for images with high intensity background
                 Ymc = Ym; if ~zeroBG, Ymc(Ybg) = 0; end
 
                 %% smooth data

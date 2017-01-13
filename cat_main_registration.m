@@ -152,7 +152,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           res.do_dartel            = 1; 
           reg(regstri).opt.rres    = tpmres; %job.extopts.vox(voxi);
         elseif job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
-        % Optimized Shooting - manuel limit 
+        % Optimized Shooting - manual limit 
           reg(regstri).opt.stepsize  = (lowres - tpmres)/4;  % stepsize of reduction 
           reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : tpmres) / tpmres; % reduction factor 
         
@@ -167,7 +167,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           reg(regstri).opt.ll1th       = 0;                 % smaller better/slower
           reg(regstri).opt.ll3th       = 0;                 % smaller better/slower 
         elseif job.extopts.regstr(regstri)==2 
-        % Optimized Shooting - manuel limit 
+        % Optimized Shooting - manual limit 
           reg(regstri).opt.stepsize    = (lowres - tpmres)/4;  % stepsize of reduction 
           reg(regstri).opt.resfac      = (lowres : -reg(regstri).opt.stepsize : tpmres) / tpmres; % reduction factor 
         elseif job.extopts.regstr(regstri)==3
