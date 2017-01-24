@@ -13761,6 +13761,7 @@ missing label files if the files were moved. Furthermore, some measures such
 as thickness of voxel analysis are now deselected.
 
 ------------------------------------------------------------------------
+r1103 | gaser | 2017-01-13 11:01:32 +0100 (Fr, 13 Jan 2017) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13772,5 +13773,41 @@ M       cat_vol_iscale.m
 M       cat_vol_partvol.m
 
 Changed: Typos...
+
 ------------------------------------------------------------------------
-r1103 | gaser | 2017-01-13 11:01:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       cat_tst_calc_kappa.m
+M       cat_tst_cattest.m
+M       html/cat.html
+M       html/cat_methods.html
+A       html/cat_methods_validation.html
+A       html/images/cat_tst_seg_BWP_boxplot.png
+A       html/images/cat_tst_seg_BWP_detail.png
+A       html/images/cat_tst_seg_real_boxplot.png
+A       html/images/cat_tst_seg_real_detail.png
+ M      internal
+
+(1)  Fixed:   Corrected APP GUI type from natural (1..n) to whole (0..n) number.
+(2)  New:     Added "validation" HTML page with BWP and expert segmentation 
+              results of SPM, VBM, and CAT releases.  
+(3)  Fixed:   Updated lazy preprocessing 
+(4)  Changed: Updated axis limitation in "cat_plot_boxplot" to avoid ignoring 
+              of outliers. Further changes to control yticks and ylabels.
+(5)  Changed: Updated lazy processing (developer mode), to rerun batches and 
+              avoid reprocessing of successful processed images in case of 
+              "segmentation violation" errors that killed previous Matlab 
+              instances. 
+(6) Fixed:    Corrected division by zero warnings in "cat_run_job_APP_init".
+(7) Changed:  Updated color range in "cat_tst_calc_kappa" in case of real data.
+(8) Changed:  Added "extops.regstr" parameter in "cat_tst_cattest".
+------------------------------------------------------------------------
+r1104 | dahnke | 2017-01-24 15:05:14

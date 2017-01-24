@@ -629,7 +629,6 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
                 ll(1)/numel(u), ll(2)/numel(u), (ll(1)+ll(2))/numel(u), ll(3)));
               [y,J] = spm_shoot3d(u,prm,int_args); 
               dt    = spm_diffeo('det',J); clear J
-              clear J
             else
               % debugging
               fprintf('%3.0f | %s \n',etime(clock,itime),sprintf('%0.8f ',cat_stat_nanmean(g{1}(:)),cat_stat_nanmean(f{1}(:)),...

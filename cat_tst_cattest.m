@@ -141,26 +141,28 @@ function cat_tst_cattest(job)
     ... == parameter in default GUI ==
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.vox'           'vox'        {2 1};            % def=1.5;
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.APP'           'APP'        {0 4};            % def=1;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'        'LASstr'     {0.0 0.01 1.0};    % def=0.5;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.gcutstr'       'gcutstr'    {0.0 0.01 1.0};    % def=0.5;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.cleanupstr'    'cleanupstr' {0.0 0.01 1.0};    % def=0.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.LASstr'        'LASstr'     {0.0 0.01 1.0};   % def=0.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.gcutstr'       'gcutstr'    {0.0 0.01 1.0};   % def=0.5;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.cleanupstr'    'cleanupstr' {0.0 0.01 1.0};   % def=0.5;
     ... == parameter in expert GUI ==
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.APP'           'APP'        {2 3 5};          % def=1;
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.sanlm'         'sanlm'      {0 2};            % def=1; 0=none, 2=ISAR
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.NCstr'         'NCstr'      {0.0 eps 1.0};    % def=inf; 
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.darteltpm'     'shooting'   { ... 
-      {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')}};   % Shooting template
+      {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_IXI555_MNI152_GS.nii')}};   % Shooting template
     ... the restype and resval variable were used in the GUI to create the restypes structure that does not exist in the cat_defaults file
     'cat12_101_MAIN_segment' 1  2 'spm.tools.cat.estwrite.extopts.restypes'    'restypes'   { ...
         struct('native',{})        ... native resolution - no changes
         struct('fixed' ,[1.0 0.0]) ... interpolation to 1 mm
         struct('best'  ,[0.8 0.1]) ... interpolation to at least to 0.8 mm 
       };       
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.regstr'        'regstr'     {4};              % def=0.5;  
     ... == parameter in developer GUI ==
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.regstr'        'regstr'     {[eps 1 2 3]};    % def=0.5;  
     'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.pbtres'        'pbtres'     {1.00 0.25};      % def=0.5;  
     'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.mrf'           'mrf'        {0.00 0.30};      % def=1; auto  
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'        'BVCstr'     {0.5 0.01 1.0};    % def=0;
-    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'       'WMHCstr'    {0.0 0.01 1.0};    % def=0.5;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.BVCstr'        'BVCstr'     {0.5 0.01 1.0};   % def=0;
+    'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHCstr'       'WMHCstr'    {0.0 0.01 1.0};   % def=0.5;
     'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.WMHC'          'WMHC'       {0 2 3};          % def=1;
     'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.tca'           'tca'        {0 2};            % def=1;
     'cat12_101_MAIN_segment' 1  3 'spm.tools.cat.estwrite.extopts.subfolders'    'subfolders' {0};              % def=1;
@@ -601,10 +603,13 @@ function cat_tst_cattest(job)
       if isnumeric(job.para{pi,6}{ppi}),  parastr = num2str(job.para{pi,6}{ppi});
       elseif ischar(job.para{pi,6}{ppi}), parastr = job.para{pi,6}{ppi};
       end
-      fprintf('\n%42s: %s\n',sprintf('Parameter: %s = %s',job.para{pi,5},parastr),'Status');
-      fprintf('--------------------------------------------------\n');
+      if ppi==1, fprintf('\n%42s: %s\n','Parameter','Status'); end
+      if ppi==1 || ppi==numel(job.para{pi,6})
+        fprintf('--------------------------------------------------\n');
+      end
+      fprintf('\n%42s: \n',sprintf('%s = %s',job.para{pi,5},parastr));
       for mbi = 1:numel(perror{pi}{ppi})
-        fprintf('%40s%02d: ',batchname{pi}{ppi}{mbi,1},batchname{pi}{ppi}{mbi,2}); 
+        %fprintf('%40s%02d: ',batchname{pi}{ppi}{mbi,1},batchname{pi}{ppi}{mbi,2}); 
         if perror{pi}{ppi}(mbi)==2
           cat_io_cprintf([1.0 0.5 0.0],'unprocessed\n'); 
         elseif perror{pi}{ppi}(mbi)==1

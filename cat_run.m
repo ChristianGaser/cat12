@@ -537,19 +537,26 @@ vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'
 return
 
 %=======================================================================
-function data = remove_allready_processed(job)
-  remove = []; 
+function [data,err] = remove_allready_processed(job,verb)
+  if ~exist('verb','var'), verb=0; end
+  remove = []; err = zeros(size(job));
   cat_io_cprintf('warn','Lazy processing: \n');
   for subj = 1:numel(job.data)
-    if checklazy(job,subj)
+    [lazy,err(subj)] = checklazy(job,subj,verb); 
+    if lazy
       remove = [remove subj];
     end
   end
   cat_io_cprintf('warn','  Skip %d subjects!\n',numel(remove));
   data = job.data(setxor(1:numel(job.data),remove)); 
+  cat_io_cprintf([0 0.4 0.6],'\n\nProcess:\n');
+  for subj = 1:numel(data)
+    cat_io_cprintf([0 0.4 0.6],sprintf(' Code%3d: "%s"\n',err(subj),data{subj}));
+  end
+  cat_io_cprintf('warn',sprintf('  Process %d subjects!\n',numel(data)));
 return
 %=======================================================================
-function lazy = checklazy(job,subj)
+function [lazy,FNok] = checklazy(job,subj,verb)
   if job.extopts.subfolders
     roifolder    = 'label';
     surffolder   = 'surf';
@@ -563,11 +570,11 @@ function lazy = checklazy(job,subj)
   end
 
   lazy = 0;
-  verb = 0; 
   
   [pp,ff] = spm_fileparts(job.data{subj}); 
   catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
   
+  FNok = 0;
   if exist(catxml,'file')
 
     xml         = cat_io_xml(catxml);
@@ -575,7 +582,7 @@ function lazy = checklazy(job,subj)
     FNopts      = fieldnames(job.opts); 
     FNextopts   = fieldnames(job.extopts);
     FNok        = 1; 
-    FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','atlas'});
+    FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','atlas','NCstr','resval'});
    
    
     %% check opts
@@ -692,7 +699,7 @@ function lazy = checklazy(job,subj)
       if isempty(job.vout.(FNO{fnoi}))
         continue
       elseif iscell(job.vout.(FNO{fnoi}))
-         if ~exist(job.vout.(FNO{fnoi}){subj},'file')
+         if ~isempty(job.vout.(FNO{fnoi}){subj}) && ~exist(job.vout.(FNO{fnoi}){subj},'file')
            FNok = 14; break
          end
       elseif isstruct(job.vout.(FNO{fnoi}))
@@ -718,6 +725,6 @@ function lazy = checklazy(job,subj)
   end
  
   if lazy 
-    cat_io_cprintf('warn',' "%s"\n',job.data{subj});
+    cat_io_cprintf('warn','  "%s" \n',job.data{subj});
   end
 return

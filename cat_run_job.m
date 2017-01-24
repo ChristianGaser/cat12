@@ -171,7 +171,7 @@ function cat_run_job(job,tpm,subj)
 
 
             % noise correction
-            if job.extopts.NCstr>0
+            if job.extopts.NCstr~=0
               if job.extopts.sanlm==1
                 stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
                 cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
@@ -181,7 +181,6 @@ function cat_run_job(job,tpm,subj)
                 cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','')); 
                 if job.extopts.verb>1, cat_io_cmd(' ','',''); end
               end
-              %V = spm_vol(job.channel(n).vols{subj});
               if job.extopts.sanlm>0
                 fprintf('%4.0fs\n',etime(clock,stime));   
               end
@@ -402,7 +401,7 @@ function cat_run_job(job,tpm,subj)
 
             else
                 % standard approach with static resa value and no VG smoothing
-                stime = cat_io_cmd('Coarse affine registration:'); 
+                stime = cat_io_cmd('Coarse affine registration'); 
                 resa  = 8;
                 VF1   = spm_smoothto8bit(VF,resa);
                 VG1   = VG; 
