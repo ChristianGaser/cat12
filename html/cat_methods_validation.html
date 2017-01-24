@@ -26,18 +26,18 @@
     <div id="content">
       <h2>CAT validation</h2>
       <p> 
-	      Although, we try to test CAT for different parameter settings, OS systems, and MATLAB versions for synthetic and real data, we are currently not able to test everything for each release.
-	      Nevertheless, we are working on this issue to avoid bugs and errors.  
+	      Although, we try to test CAT with different parameter settings, OS systems, and MATLAB versions using synthetic and real data, we are currently not able to test everything for each release.
+	      Nevertheless, we are working on this issue to avoid errors.  
 	    </p><p> 
 	      We currently use 29 synthetic and 125 real datasets for validation of the tissue classification. 
-        The synthetic dataset contain simulated images of the Brain Web Phantom (BWP; <a href="#Collins:1998">Collins et al. 1998</a>) with 6 noise, 6 inhomogeneity, 14 resolution, 3 worst-case examples. The number of BWP images was restricted to important cases due to computation time.
-        The real dataset contains 125 T1 images from different public projects (ADHD200, ADNI, INDI, IXI, NIH, OASIS, PPMI) and private data other facilities for method tests. 
-        The images were acquired on 1.5, 3.0, and 7.0 Tesla scanners manufactured by PHILIPS, GE, and SIEMENS of mostly healthy subjects with age 1 to 90 years.
-        Experts labeled the 3 slices (one per images dimension) based on noise and inhomogeneity corrected images. 
+        The synthetic dataset contains of simulated images of the Brain Web Phantom (BWP; <a href="#Collins:1998">Collins et al. 1998</a>) with 6 noise, 6 inhomogeneity, 14 resolution, 3 worst-case examples. The number of BWP images was restricted to the most important cases due to computation time.
+        The real dataset contains of 125 T1 images from different public projects (ADHD200, ADNI, INDI, IXI, NIH, OASIS, PPMI) and private data from other facilities for method tests. 
+        The images were acquired on 1.5, 3.0, and 7.0 Tesla scanners manufactured by PHILIPS, GE, and SIEMENS of predominately healthy subjects with age from 1 to 90 years.
+        Experts manually labeled  3 orthogonal slices (one per image dimension) based on noise and inhomogeneity corrected images in native space. 
       </p><p>
         For comparison different releases of SPM, VBM, and CAT were processed. 
-        Overall, most improvements take place in real but not synthetic data, where many cases that failed (Kappa<0.6) in early releases work in current versions. 
-        Early versions of VBM12 were more robust but less accurate than VBM8, whereas current versions of CAT allow an accurate and stable preprocessing. Keep in mind that the real datasets were chosen to represent typical public protocols and the variance of human anatomy and outliers in this test represent general problems for this class of protocols or anatomy.  
+        Overall, the improvements between different segmentation methods are more obvious for real but not synthetic data, where many cases that failed (Kappa<0.6) in early releases now work in current versions. 
+        Early versions of VBM12 were more robust but less accurate than VBM8, whereas current versions of CAT allow an accurate and reliable preprocessing. Keep in mind that the real datasets were selected to represent a large variety of typical scanner protocols, but also cover a large variance of human anatomy. Thus, outliers in these tests point to general problems for this type of protocols or anatomy.  
       </p>
       <p style="text-align:center;">
         <img src="images/cat_tst_seg_BWP_boxplot.png" width=40% height=auto alt="Box plot of BWP results" >
@@ -51,12 +51,11 @@
         <h4>BWP testdata</h4>
           <p>
             <!-- SPM --> 
-            SPM8 and SPM12 showed problems in case of increased noise (e.g., <i>pn9</i>) especially for negative inhomogeneity (e.g., <i>rf100nA</i>).  
-            The MRF-Filter in SPM12 helps to stabilise the results in case of strong noise, but we expect that it reduce accuracy in case of low resolution. 
-            BWP data without noise (<i>pn0</i>) are problematic for SPM, especially SPM12, because of missing variance. 
+            SPM8 and SPM12 revealed problems in case of increased noise (e.g., <i>pn9</i>) especially for negative inhomogeneity (e.g., <i>rf100nA</i>).  
+            BWP data without noise (<i>pn0</i>) are problematic for SPM, especially SPM12, because of the missing variance. 
             <!-- VBM and CAT -->
-            In VBM12R555 the processing was limited for resolution better than 2.5 mm to avoid low quality results.
-            This limitation was removed with the upcoming quality assessment in R666. 
+            In VBM12R555 the processing was limited to resolution better than 2.5 mm to avoid low quality results.
+            This limitation was removed with R666. 
             Overall the accuracy of VBM12 revisions was lower than in VBM8, but was improved in CAT12 with exception of CAT12R1001 that was less accurate and robust.
             The filename codes the BWP image properties with <i>WC</i> (worst case), <i>pn#</i> for the BWP noise level, <i>rf###[pn][ABC]</i> for the positive (<i>p</i>) or negative (<i>n</i>) BWP inhomogeneity field <i>A</i>, <i>B</i> or <i>C</i>, and <i>vx###x###x###[ri]</i> as original (<i>r</i>) or interpolated (<i>i</i>) voxel resolution of the <i>x</i>, <i>y</i> and <i>z</i> dimension.            
           </p>
@@ -65,13 +64,13 @@
           </p>
         <h4>Expert testdata</h4>
           <p>
-            Although, VBM8 worked very well on the BWP different problems were observed in special protocols (e.g., extraordinary low or high GM-WM contrast) or untypical anatomy (e.g, heavy atrophy with strongly increased ventricles). 
+            Although, VBM8 worked very well on the BWP different problems were observed in some special protocols (e.g., extraordinary low or high GM-WM contrast) or untypical anatomy (e.g, heavy atrophy with very large ventricles). 
             To improve the preprocessing, further routines were added to VBM12 that lead to a more stable, but at the beginning also less accurate processing that was improved over time. 
-            The problems of CAT12R1001 were also observed for real data and were corrected in the last releases. 
-            Nevertheless, the last release of VBM12 (R754) showed better result than CAT12R1097 for real, but not for the BWP and that further improvements are still possible.   
+            The problems of CAT12R1001 were also observed for real data and were corrected in the later releases. 
+            Nevertheless, the last release of VBM12 (R754) showed slightly better results than CAT12R1097 for real, but not for the BWP data.   
             Besides, VBM and CAT, SPM12 showed strong improvements compared to SPM8.
-            Images with low Kappa in all segmentation partially include artefacts ("INDI_NHb_sub01183") or WM hyperintensities (e.g. "ADNI_033...", "ADNI_073..." and "OASIS1_001_0031"). 
-            The last two dataset "WB01" and "WB02" were not tested for VBM12 and early CAT12 yet because of their computation demands. 
+            Images with low Kappa in all segmentations partially include artefacts ("INDI_NHb_sub01183") or WM hyperintensities (e.g. "ADNI_033...", "ADNI_073..." and "OASIS1_001_0031"). 
+            The last two datasets "WB01" and "WB02" were not tested for VBM12 and early CAT12 yet because of their computational demands (isotropic voxel size 0.3mm). 
           </p>
           <p style="text-align:center;">
             <img src="images/cat_tst_seg_real_detail.png" width=80% height=auto alt="Detailed results of real data" >
@@ -144,7 +143,7 @@
             Table of used expert datasets with image parameters and sources. This table is still in preparation!
           </p>
           <p>
-            MA = movement artefacts; SA = slice artefacts; WMHs = white matter hyperintensities; EV = enlarged ventricle; SGWC = strong GM-WM contrast
+            MA = movement artefacts; SA = slice artefacts; WMHs = white matter hyperintensities; EV = enlarged ventricles; SGWC = strong GM-WM contrast
           </p><p>
             <table align="center" style="font-size: 60%;">
               <thead>
@@ -299,7 +298,7 @@
                 <tr><td>VBM8</td><td>R434</td><td>2014-01-10</td><td></td></tr>
                 <tr><td>VBM12</td><td>R555</td><td>2014-01-10</td><td></td></tr>
                 <tr><td>VBM12</td><td>R666</td><td>2014-12-11</td><td></td></tr>
-                <tr><td>VBM12</td><td>R754</td><td>2015-</td><td>last version before renaming VBM12 to CAT12</td></tr>
+                <tr><td>VBM12</td><td>R754</td><td>2015-10-18</td><td>last version before renaming VBM12 to CAT12</td></tr>
                 <tr><td>CAT12</td><td>R916</td><td>2016-04-04</td><td>first CAT release</td></tr>
                 <tr><td>CAT12</td><td>R1001</td><td>2016-09-21</td><td></td></tr>
                 <tr><td>CAT12</td><td>R1097</td><td>2017-01-14</td><td></td></tr>
@@ -313,7 +312,7 @@
               
       <h3>References</h3>
       <p>
-        This part is still in preparation!
+        This part is still in development!
       </p>
       <ul>
         <li>
@@ -335,7 +334,7 @@
       
       <h3>Image references</h3>
       <p>
-        This part is still in preparation!
+        This part is still in development!
       </p>
       <ul>
         <li>
