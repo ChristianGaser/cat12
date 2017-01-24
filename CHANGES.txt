@@ -13812,6 +13812,7 @@ A       html/images/cat_tst_seg_real_detail.png
 (8) Changed:  Added "extops.regstr" parameter in "cat_tst_cattest".
 
 ------------------------------------------------------------------------
+r1105 | gaser | 2017-01-24 15:51:31 +0100 (Di, 24 Jan 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13820,5 +13821,20 @@ M       html/cat_methods_validation.html
 
 (1) Fixed: Slice for samples 2..n were not displayed in cat_stat_check_cov.m.
 (2) Changed: Updated HTML documentation about segmentation validation.
+
 ------------------------------------------------------------------------
-r1105 | gaser | 2017-01-24 15:51:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_plot_boxplot.m
+ M      html/cat_methods_validation.html
+ M      html/images/cat_tst_seg_BWP_boxplot.png
+ M      html/images/cat_tst_seg_BWP_detail.png
+ M      html/images/cat_tst_seg_real_boxplot.png
+ M      html/images/cat_tst_seg_real_detail.png
+
+Fixed: cat_plot_boxplot.m did not worked correctly if no additional flags were
+defined.
+
+------------------------------------------------------------------------
+r1106 | gaser | 2017-01-24 16:22:14
