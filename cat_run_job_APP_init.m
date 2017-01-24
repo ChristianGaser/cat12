@@ -44,8 +44,8 @@ function [Ym,Yt,Ybg,WMth,bias,Tth] = cat_run_job_APP_init(Ysrco,vx_vol,verb,ical
 
   %% improved WM threshold
   Yg    = cat_vol_grad(Ym,resT3.vx_volr) ./ max(0.3,Ym); 
-  Ydiv  = cat_vol_div(Ym,resT3.vx_volr/2) ./ (Ym+eps); % lower resolution is 8 times faster 
-  Ymsk  = Yg>0 & Yg<mean(Yg(Yg(:)>0))/4 & Yg./abs(Ydiv)<0.5 & ...
+  Ydiv  = cat_vol_div(Ym,resT3.vx_volr/2) ./ (Ym+eps); Ydiv(Ydiv==0)=eps; % lower resolution is 8 times faster 
+  Ymsk  = Yg>0 & Yg<mean(Yg(Yg(:)>0))/4 & Yg./max(eps,abs(Ydiv))<0.5 & ...
            Ym>cat_stat_nanmean(Ym(Yg(:)<0.2 & Ym(:)>cat_stat_nanmean(Ym(:)))) & Ym<3; 
   Ymsk  = cat_vol_morph( Ymsk ,'lo',1); 
   WMth2 = roundx(single(cat_stat_nanmean( Ysrc( Ymsk(:) ) )),rf); if ~debug, clear WMth1 Ymsk, end
@@ -70,7 +70,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth] = cat_run_job_APP_init(Ysrco,vx_vol,verb,ical
   zeroBG = cat_stat_nanmean(Ym(Ybg(:)>0))<0.2;
   if zeroBG, BGth1 = mean(Ysrc(Ybg(:))); end
   
-  WMth3 = WMth2 * roundx(single(cat_stat_nanmedian(Ym(Yg(:)>0 & Yg(:)<mean(Yg(:))/4 & Yg(:)./abs(Ydiv(:))<0.5 & ~Ybg(:) & ...
+  WMth3 = WMth2 * roundx(single(cat_stat_nanmedian(Ym(Yg(:)>0 & Yg(:)<mean(Yg(:))/4 & Yg(:)./max(eps,abs(Ydiv(:)))<0.5 & ~Ybg(:) & ...
            Ym(:)>cat_stat_nanmean(Ym(Yg(:)<0.2 & ~Ybg(:) & Ym(:)>cat_stat_nanmean(Ym(:))))))),rf); if ~debug, clear WMth2, end
   Ym    = (Ysrc - BGth1) ./ (WMth3 - BGth1);
   
@@ -120,7 +120,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth] = cat_run_job_APP_init(Ysrco,vx_vol,verb,ical
   Yt   = Ym>max(0,Yms*0.3) & Ym>0.2 & Ym<1.2 & Ym<Yms*2 & Yg<0.2 & Ydiv<0.2 & Ydiv>-0.6 & ...
          smooth3(Ym./(Yms+eps).*Yg.*Ydiv<-0.1)<0.1 & ~Ybg; Yt(smooth3(Yt)<0.5)=0;
   Yt   = Yt | (~Ybg & Ym>0.1 & Ydiv./(Yg+eps)<0.5 & (Ym>0.3 & Yg>0.1 & Ydiv<0) | (~Ybg & Ym>0.6) & Ym<1.2 & Yg<0.1); 
-  Yt   = Yt & Ym>Yms*0.3 & Ym<Yms*1.2 & ~(-Ydiv.*Ym./Yms>0.15);
+  Yt   = Yt & Ym>Yms*0.3 & Ym<Yms*1.2 & ~(-Ydiv.*Ym./max(eps,Yms)>0.15);
   Yt(smooth3(Yt)<0.5)=0;
   Ywi2 = ( Ym .* Yt) ./ max(eps,Yt);
   % it would be nice to use futher regions, but as far as we did not know
