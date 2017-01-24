@@ -40,7 +40,7 @@ if isfield(vargin,'data_vol')
     n_subjects = n_subjects + length(V0);
       
     if i==1, V = V0;
-    else,    V = [V V0]; end
+    else,    V = [V; V0]; end
 
     sample = [sample, i*ones(1,length(V0))];
   end
