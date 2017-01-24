@@ -4,7 +4,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 % reference image(s) Pref. Use realgignment if image properties does not 
 % match.
 %
-% [txt,val] = cat_tst_calc_kappa(P,Pref,opt)
+%Â [txt,val] = cat_tst_calc_kappa(P,Pref,opt)
 % 
 % P             .. list of images
 % Pref          .. ground truth segmentation
@@ -260,7 +260,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 
               if 0
                 % temporare
-                % bei dem BWP test bei fsl gibts einen ungeklärten versatz
+                % bei dem BWP test bei fsl gibts einen ungeklÃ¤rten versatz
                 if ~isempty(strfind(upper(V(i).fname),'FSL')) && ~isempty(strfind(upper(V(i).fname),'BWP'))
                   vol2(2:end,:,:)=vol2(1:end-1,:,:);
                 end
@@ -295,10 +295,10 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
       
       %%    
       if opt.verb
-        if ncls==1
+        if ncls==1 && ~strcmp(opt.testcase,'slices')
           cat_io_cprintf(MarkColor(round(min(40,max(1,evallinearb(colori,1.00,0.80,6)/10*40))),:),txti); 
         else
-          cat_io_cprintf(MarkColor(round(min(40,max(1,evallinearb(colori,0.90,0.65,6)/10*40))),:),txti); 
+          cat_io_cprintf(MarkColor(round(min(40,max(1,evallinearb(colori,0.95,0.65,6)/10*40))),:),txti); 
         end
       end; 
       txt{2}=[txt{2} txti]; tab=[tab;[{name},num2cell(k(i,:))]]; 

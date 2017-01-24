@@ -2026,13 +2026,13 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
   
 
-  % Yo - original image in original space
+  %% Yo - original image in original space
   % using of SPM peak values didn't work in some cases (5-10%), so we have to load the image and estimate the WM intensity 
   try %#ok<TRYNC>
     Yo  = single(VT.private.dat(:,:,:)); 
   end
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   if exist('Yo','var')
-    Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
     if job.inv_weighting
       WMth = min([...
         cat_stat_nanmedian(Yo(Yp0(:)>0.8 & Yp0(:)<1.2))*2,...
@@ -2043,7 +2043,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
       WMth = cat_stat_nanmedian(Yo(Yp0(:)>2.8 & Yp0(:)<3.2)); clear Yo; 
       T1txt = '*.nii (Original T1)'; 
     end
-    clear Yo; 
+    if ~debug, clear Yo; end
 
     if isfield(res,'spmpp')
       VT0x = res.image0(1); 
@@ -2068,10 +2068,11 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
   
 
-  %% Ym - normalized image in original space
-  if ~isfield(res,'spmpp')
+  % Ym - normalized image in original space
+  if ~isfield(res,'spmpp') 
     %%
-    Vm        = spm_vol(VT.fname);
+    Vm        = res.image(1); 
+    Vm.fname  = ''; 
     Vm.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
     Vm.dat(:,:,:) = single(Ym); 
     Vm.pinfo  = repmat([1;0],1,size(Ym,3));
@@ -2085,13 +2086,13 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end
   
   % Yo - segmentation in original space
-  % Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  VO        = spm_vol(VT.fname);
+  VO        = res.image(1); 
+  VO.fname  = ''; 
   VO.dt     = [spm_type('FLOAT32') spm_platform('bigend')];
   VO.dat(:,:,:) = single(Yp0/3); 
   VO.pinfo  = repmat([1;0],1,size(Yp0,3));
   VO.mat    = dispmat * VO.mat; 
-  hhp0 = spm_orthviews('Image',VO,pos(3,:));  clear Yp0;
+  hhp0 = spm_orthviews('Image',VO,pos(3,:)); if ~debug, clear Yp0; end
   spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontSize',fontsize,'FontWeight','Bold');
   spm_orthviews('window',hhp0,[0 cmmax]); caxis([0,2]);
   cc{3} = axes('Position',[pos(3,1) + 0.30 0.02 0.02 0.15],'Parent',fg); image((60:-1:1)');

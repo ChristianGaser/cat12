@@ -1,0 +1,384 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" type="text/css" href="spm.css" />
+    <link rel="stylesheet" type="text/css" href="../spm.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  
+  <body>
+    <div id="header" style="background: black url('images/contact.jpg') right;">
+      <h1><a href="matlab:web('http://www.neuro.uni-jena.de/','-browser');">Structural Brain Mapping Group</a></h1>
+      <p>
+          <a href="matlab:web('http://dbm.neuro.uni-jena.de/people/christian-gaser','-browser');">Christian Gaser</a> |
+          <a href="matlab:web('http://www.neuro.uniklinikum-jena.de','-browser');">Department of Neurology</a> | 
+          <a href="matlab:web('http://www.psychiatrie.uniklinikum-jena.de','-browser');">Department of Psychiatry</a> | 
+          <a href="matlab:web('http://www.uni-jena.de/en/start_en.html','-browser');">University of Jena</a>
+      </p>
+      <div id="breadcrumbs">
+        <a href="cat.html">CAT</a> > <a href="cat_methods.html">Methods</a> > <a href="cat_methods_validation.html">CAT validation</a>
+      </div>
+    </div>
+  
+    
+    <!-- TEXT --> 
+    <div id="content">
+      <h2>CAT validation</h2>
+      <p> 
+	      Although, we try to test CAT for different parameter settings, OS systems, and MATLAB versions for synthetic and real data, we are currently not able to test everything for each release.
+	      Nevertheless, we are working on this issue to avoid bugs and errors.  
+	    </p><p> 
+	      We currently use 29 synthetic and 125 real datasets for validation of the tissue classification. 
+        The synthetic dataset contain simulated images of the Brain Web Phantom (BWP; <a href="#Collins:1998">Collins et al. 1998</a>) with 6 noise, 6 inhomogeneity, 14 resolution, 3 worst-case examples. The number of BWP images was restricted to important cases due to computation time.
+        The real dataset contains 125 T1 images from different public projects (ADHD200, ADNI, INDI, IXI, NIH, OASIS, PPMI) and private data other facilities for method tests. 
+        The images were acquired on 1.5, 3.0, and 7.0 Tesla scanners manufactured by PHILIPS, GE, and SIEMENS of mostly healthy subjects with age 1 to 90 years.
+        Experts labeled the 3 slices (one per images dimension) based on noise and inhomogeneity corrected images. 
+      </p><p>
+        For comparison different releases of SPM, VBM, and CAT were processed. 
+        Overall, most improvements take place in real but not synthetic data, where many cases that failed (Kappa<0.6) in early releases work in current versions. 
+        Early versions of VBM12 were more robust but less accurate than VBM8, whereas current versions of CAT allow an accurate and stable preprocessing. Keep in mind that the real datasets were chosen to represent typical public protocols and the variance of human anatomy and outliers in this test represent general problems for this class of protocols or anatomy.  
+      </p>
+      <p style="text-align:center;">
+        <img src="images/cat_tst_seg_BWP_boxplot.png" width=40% height=auto alt="Box plot of BWP results" >
+        <img src="images/cat_tst_seg_real_boxplot.png" width=40% height=auto alt="Box plot of real data results" >
+      </p>
+
+        
+
+			<!-- Detailed results --> 
+      <h3>Detailed results</h3>
+        <h4>BWP testdata</h4>
+          <p>
+            <!-- SPM --> 
+            SPM8 and SPM12 showed problems in case of increased noise (e.g., <i>pn9</i>) especially for negative inhomogeneity (e.g., <i>rf100nA</i>).  
+            The MRF-Filter in SPM12 helps to stabilise the results in case of strong noise, but we expect that it reduce accuracy in case of low resolution. 
+            BWP data without noise (<i>pn0</i>) are problematic for SPM, especially SPM12, because of missing variance. 
+            <!-- VBM and CAT -->
+            In VBM12R555 the processing was limited for resolution better than 2.5 mm to avoid low quality results.
+            This limitation was removed with the upcoming quality assessment in R666. 
+            Overall the accuracy of VBM12 revisions was lower than in VBM8, but was improved in CAT12 with exception of CAT12R1001 that was less accurate and robust.
+            The filename codes the BWP image properties with <i>WC</i> (worst case), <i>pn#</i> for the BWP noise level, <i>rf###[pn][ABC]</i> for the positive (<i>p</i>) or negative (<i>n</i>) BWP inhomogeneity field <i>A</i>, <i>B</i> or <i>C</i>, and <i>vx###x###x###[ri]</i> as original (<i>r</i>) or interpolated (<i>i</i>) voxel resolution of the <i>x</i>, <i>y</i> and <i>z</i> dimension.            
+          </p>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_detail.png" width=80% height=auto alt="Detailed results of BWP data" >
+          </p>
+        <h4>Expert testdata</h4>
+          <p>
+            Although, VBM8 worked very well on the BWP different problems were observed in special protocols (e.g., extraordinary low or high GM-WM contrast) or untypical anatomy (e.g, heavy atrophy with strongly increased ventricles). 
+            To improve the preprocessing, further routines were added to VBM12 that lead to a more stable, but at the beginning also less accurate processing that was improved over time. 
+            The problems of CAT12R1001 were also observed for real data and were corrected in the last releases. 
+            Nevertheless, the last release of VBM12 (R754) showed better result than CAT12R1097 for real, but not for the BWP and that further improvements are still possible.   
+            Besides, VBM and CAT, SPM12 showed strong improvements compared to SPM8.
+            Images with low Kappa in all segmentation partially include artefacts ("INDI_NHb_sub01183") or WM hyperintensities (e.g. "ADNI_033...", "ADNI_073..." and "OASIS1_001_0031"). 
+            The last two dataset "WB01" and "WB02" were not tested for VBM12 and early CAT12 yet because of their computation demands. 
+          </p>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_real_detail.png" width=80% height=auto alt="Detailed results of real data" >
+          </p>
+        
+      
+			<!-- Image names and properties --> 
+			<h3>Data references</h3>
+        <h4>BWP testdata</h4>
+          <p>
+            Table of BWP datasets with image parameters.  
+          </p><p>
+            <table align="center" style="font-size: 80%;">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Noise</th><th>Inhomogeneity</th><th>Native resolution</th><th>Interpolation</th>
+                </tr>
+              </thead>
+              <tbody>
+              
+                <tr><td>BWP_WC_HC_T1_pn9_rf100nA_vx100x100x100</td><td>9%</td><td>-100% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_WC_HC_T1_pn9_rf100nB_vx100x100x100</td><td>9%</td><td>-100% field B</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_WC_HC_T1_pn9_rf100nC_vx100x100x100</td><td>9%</td><td>-100% field C</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+              
+                <tr><td>BWP_bias_HC_T1_pn3_rf00000_vx100x100x100</td><td>3%</td><td>  0%        </td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_bias_HC_T1_pn3_rf020nA_vx100x100x100</td><td>3%</td><td> 20% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_bias_HC_T1_pn3_rf040nA_vx100x100x100</td><td>3%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_bias_HC_T1_pn3_rf060nA_vx100x100x100</td><td>3%</td><td> 60% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_bias_HC_T1_pn3_rf080nA_vx100x100x100</td><td>3%</td><td> 80% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_bias_HC_T1_pn3_rf100nA_vx100x100x100</td><td>3%</td><td>100% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+               
+                <tr><td>BWP_noise_HC_T1_pn0_rf040_vx100x100x100</td><td>0%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_noise_HC_T1_pn1_rf040_vx100x100x100</td><td>1%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_noise_HC_T1_pn3_rf040_vx100x100x100</td><td>3%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_noise_HC_T1_pn5_rf040_vx100x100x100</td><td>5%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_noise_HC_T1_pn7_rf040_vx100x100x100</td><td>7%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_noise_HC_T1_pn9_rf040_vx100x100x100</td><td>9%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                
+                <tr><td>BWP_resi_HC_T1_pn3_rf040_vx100x100x100i</td><td>3%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>yes</td></tr>
+                <tr><td>BWP_resi_HC_T1_pn3_rf040_vx150x150x150i</td><td>3%</td><td> 40% field A</td><td>1.50 x 1.50 x 1.50</td><td>yes</td></tr>
+                <tr><td>BWP_resi_HC_T1_pn3_rf040_vx200x200x200i</td><td>3%</td><td> 40% field A</td><td>2.00 x 2.00 x 2.00</td><td>yes</td></tr>
+                <tr><td>BWP_resi_HC_T1_pn3_rf040_vx250x250x250i</td><td>3%</td><td> 40% field A</td><td>2.50 x 2.50 x 2.50</td><td>yes</td></tr>
+                <tr><td>BWP_resi_HC_T1_pn3_rf040_vx300x300x300i</td><td>3%</td><td> 40% field A</td><td>3.00 x 3.00 x 3.00</td><td>yes</td></tr>
+                
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx100x100x100r</td><td>3%</td><td> 40% field A</td><td>1.00 x 1.00 x 1.00</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx100x100x150r</td><td>3%</td><td> 40% field A</td><td>1.50 x 1.50 x 1.50</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx100x100x200r</td><td>3%</td><td> 40% field A</td><td>2.00 x 2.00 x 2.00</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx100x100x250r</td><td>3%</td><td> 40% field A</td><td>2.50 x 2.50 x 2.50</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx100x100x300r</td><td>3%</td><td> 40% field A</td><td>3.00 x 3.00 x 3.00</td><td>no</td></tr>
+                
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx150x150x150r</td><td>3%</td><td> 40% field A</td><td>1.50 x 1.50 x 1.50</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx200x200x200r</td><td>3%</td><td> 40% field A</td><td>2.00 x 2.00 x 2.00</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx250x250x250r</td><td>3%</td><td> 40% field A</td><td>2.50 x 2.50 x 2.50</td><td>no</td></tr>
+                <tr><td>BWP_resr_HC_T1_pn3_rf040_vx300x300x300r</td><td>3%</td><td> 40% field A</td><td>3.00 x 3.00 x 3.00</td><td>no</td></tr>
+                
+              </tbody>
+              <tfoot>
+                <tr><td colspan="3"></td></tr>
+              </tfoot>
+            </table>
+          </p>
+        <h4>Expert testdata</h4>
+        <!-- add resolution -->
+        <!-- add comments -->
+        <!-- add IQR -->
+        <!-- add AGE and SEX column -->
+        <!-- add sources -->
+        <!-- it is maybe possible to give one example dataset? --> 
+          <p>
+            Table of used expert datasets with image parameters and sources. This table is still in preparation!
+          </p>
+          <p>
+            MA = movement artefacts; SA = slice artefacts; WMHs = white matter hyperintensities; EV = enlarged ventricle; SGWC = strong GM-WM contrast
+          </p><p>
+            <table align="center" style="font-size: 60%;">
+              <thead>
+                <tr><th>Name</th><th>Project</th><th>Site</th><th>SID</th><th>Resolution</th><th>Scanner</th><th>public</th><th>Comments</th></tr>
+              </thead>
+              <tbody style="border-collapse: collapse;">
+                <tr><td>ADHD200_BEJ_1050345</td><td>ADHD200</td><td>BEJ</td><td>1050345</td><td>1.00 x 0.50 x 0.50</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADHD200_KKI_1018959</td><td>ADHD200</td><td>KKI</td><td>1018959</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td>SGWC</td></tr>
+                <tr><td>ADHD200_NIS_1017176</td><td>ADHD200</td><td>NIS</td><td>1017176</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADHD200_NYC_0010006</td><td>ADHD200</td><td>NYC</td><td>0010006</td><td>1.33 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADHD200_ORE_1084884</td><td>ADHD200</td><td>ORE</td><td>1084884</td><td>1.10 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADHD200_PIT_0016001</td><td>ADHD200</td><td>PIT</td><td>0016001</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td>light MA</td></tr>
+                <tr><td>ADHD200_STL_0015001</td><td>ADHD200</td><td>STL</td><td>0015001</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td>light MA</td></tr>
+                <tr><td>ADHD200_BBH_0026001</td><td>ADHD200</td><td>BBH</td><td>0026001</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_002_0619_S15145_I48617</td><td>ADNI</td><td>002</td><td>0619</td><td>1.02 x 1.02 x 1.20</td><td></td><td>yes</td><td>light MA</td></tr>
+                <tr><td>ADNI_002_0816_S18402_I40731</td><td>ADNI</td><td>002</td><td>0816</td><td>0.95 x 0.94 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_005_0221_S11958_I72128</td><td>ADNI</td><td>005</td><td>0221</td><td>0.95 x 0.94 x 1.21</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_007_0316_S12583_I36573</td><td>ADNI</td><td>007</td><td>0316</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td>light MA</td></tr>
+                <tr><td>ADNI_013_0592_S18419_I79144</td><td>ADNI</td><td>013</td><td>0592</td><td>1.24 x 1.25 x 1.20</td><td>SI 1.5T</td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_022_0007_S9024_I59366</td><td>ADNI</td><td>022</td><td>0007</td><td>1.25 x 1.26 x 1.20</td><td>SI 1.5T</td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_033_0724_S17337_I42400</td><td>ADNI</td><td>033</td><td>0724</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td>WMHs</td></tr>
+                <tr><td>ADNI_037_0627_S16313_I79831</td><td>ADNI</td><td>037</td><td>0627</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_057_0474_S13990_I34720</td><td>ADNI</td><td>057</td><td>0474</td><td>1.24 x 1.25 x 1.20</td><td>SI 1.5T</td><td>yes</td><td>WMHs</td></tr>
+                <tr><td>ADNI_073_0565_S15762_I39919</td><td>ADNI</td><td>073</td><td>0565</td><td>1.25 x 1.25 x 1.20</td><td>SI 1.5T</td><td>yes</td><td>light MA, WMHs</td></tr>
+                <tr><td>ADNI_098_0149_S11021_I89429</td><td>ADNI</td><td>098</td><td>0149</td><td>0.94 x 0.92 x 1.19</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_100_0743_S17224_I62363</td><td>ADNI</td><td>100</td><td>0743</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td>WMHs, EV</td></tr>
+                <tr><td>ADNI_114_0228_S11697_I49735</td><td>ADNI</td><td>114</td><td>0228</td><td>1.26 x 1.24 x 1.20</td><td>SI 1.5T</td><td>yes</td><td>noisy, EV</td></tr>
+                <tr><td>ADNI_116_0370_S13703_I59777</td><td>ADNI</td><td>116</td><td>0370</td><td>0.94 x 0.94 x 1.21</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_128_0167_S11692_I124936</td><td>ADNI</td><td>128</td><td>0167</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_130_0956_S20667_I39185</td><td>ADNI</td><td>130</td><td>0956</td><td>0.94 x 0.95 x 1.21</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_133_1055_S22386_I40028</td><td>ADNI</td><td>133</td><td>1055</td><td>0.94 x 0.95 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADHD200_NYC_0010005</td><td>ADHD200</td><td>NYC</td><td>0010005</td><td>1.33 x 1.00 x 1.00</td><td></td><td>yes</td><td>MA</td></tr>
+                <tr><td>ADHD200_NYC_0010001</td><td>ADHD200</td><td>NYC</td><td>0010001</td><td>1.33 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADHD200_NYC_0010014</td><td>ADHD200</td><td>NYC</td><td>0010014</td><td>1.33 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_099_S_0533_S14938_I38785</td><td>ADNI</td><td>009</td><td>0533</td><td>1.25 x 1.24 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_002_0559_S14875_I40674</td><td>ADNI</td><td>002</td><td>0559</td><td>0.95 x 0.94 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_002_0559_S15922_I45126</td><td>ADNI</td><td>002</td><td>0559</td><td>1.00 x 1.00 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_100_0015_S9246_I33066</td><td>ADNI</td><td>010</td><td>0015</td><td>0.95 x 0.94 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>ADNI_100_0015_S8833_I33046</td><td>ADNI</td><td>010</td><td>0015</td><td>1.01 x 1.00 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_AAa_sub28433</td><td>INDI</td><td>AAa</td><td>sub28433</td><td>1.40 x 1.00 x 1.00</td><td></td><td>yes</td><td>SA</td></tr>
+                <tr><td>INDI_AAb_sub45569</td><td>INDI</td><td>AAb</td><td>sub45569</td><td>1.00 x 1.00 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_BER_sub57028</td><td>INDI</td><td>BER</td><td>sub57028</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td>noisy</td></tr>
+                <tr><td>INDI_MUN_sub72095</td><td>INDI</td><td>MUN</td><td>sub72095</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_NWK_sub62985</td><td>INDI</td><td>NWK</td><td>sub62985</td><td>0.86 x 0.86 x 2.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_OUL_sub49227</td><td>INDI</td><td>OUL</td><td>sub49227</td><td>0.94 x 0.94 x 1.00</td><td></td><td>yes</td><td><noisy</td></tr>
+                <tr><td>IXI_GU_199</td><td>IXI</td><td>GU</td><td>199<</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_HH_175</td><td>IXI</td><td>HH</td><td>175<</td><td>0.94 x 0.94 x 1.20</td><td></td><td>yes</td><td>MA, atrophy</td></tr>
+                <tr><td>NIH_1_1219</td><td>NIH</td><td>1</td><td>1219<</td><td>1.30 x 1.02 x 1.02</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>NIH_2_1111</td><td>NIH</td><td>2</td><td>1111<</td><td>1.50 x 0.94 x 0.94</td><td></td><td>yes</td><td>MA</td></tr>
+                <tr><td>NIH_4_1454</td><td>NIH</td><td>3</td><td>1454<</td><td>0.98 x 0.98 x 3.00</td><td></td><td>yes</td><td>lowres, very young</td></tr>
+                <tr><td>NIH_5_1394</td><td>NIH</td><td>4</td><td>1394<</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>JJG_C007_6226124_20120302-133831</td><td>JJG</td><td>C007</td><td>6226124</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>JJG_C013_321618437_20130713-120234</td><td>JJG</td><td>C013</td><td>321618437</td><td>1.00 x 1.00 x 1.00</td><td><td>yes</td></td><td></td></tr>
+                <tr><td>JJG_C021_34805986_20121019-125220</td><td>JJG</td><td>C021</td><td>34805986</td><td>1.00 x 1.00 x 1.00</td><td><td>yes</td></td><td></td></tr>
+                <tr><td>JJG_C021_34805986_20121019-125220</td><td>JJG</td><td>C021</td><td>34805986</td><td>1.00 x 1.00 x 1.00</td><td><td>yes</td></td><td></td></tr>
+                <tr><td>JJG_C022_365477100_20100119-104402</td><td>JJG</td><td>C022</td><td>365477100</td><td>1.00 x 1.00 x 1.00</td><td><td>yes</td></td><td></td></tr>
+                <tr><td>OASIS1_001_0021</td><td>OASIS1</td><td>001</td><td>0021</td><td>1.00 x 1.00 x 1.25</td><td></td><td>yes</td><td>noisy, atrophy</td></tr>
+                <tr><td>OASIS1_001_0031</td><td>OASIS1</td><td>001</td><td>0031</td><td>1.00 x 1.00 x 1.25</td><td></td><td>yes</td><td>noisy, atrophy, severe WMHs</td></tr>
+                <tr><td>OASIS1_001_0041</td><td>OASIS1</td><td>001</td><td>0041</td><td>1.00 x 1.00 x 1.25</td><td></td><td>yes</td><td>noisy </td></tr>
+                <tr><td>OASIS1_001_0056</td><td>OASIS1</td><td>001</td><td>0056</td><td>1.00 x 1.00 x 1.25</td><td></td><td>yes</td><td>noisy </td></tr>
+                <tr><td>PPMI_018_3218_S139704_I282780</td><td>PPMI</td><td>018</td><td>3218</td><td>0.43 x 0.43 x 2.00</td><td></td><td>yes</td><td>noisy, anisotropy</td></tr>
+                <tr><td>PPMI_023_3962_S186553_I366330</td><td>PPMI</td><td>023</td><td>3962</td><td>1.20 x 0.94 x 0.94</td><td></td><td>yes</td><td>extreme GM/WM contrast</td></tr>
+                <tr><td>PPMI_034_4051_S178160_I352271</td><td>PPMI</td><td>034</td><td>4051</td><td>1.50 x 0.94 x 0.94</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_AAa_sub04111</td><td>INDI</td><td>AAa</td><td>sub04111</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_AAa_sub16960</td><td>INDI</td><td>AAa</td><td>sub16960</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_AAb_sub00306</td><td>INDI</td><td>AAb</td><td>sub00306</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_ATL_sub00354</td><td>INDI</td><td>ATL</td><td>sub00354</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_BER_sub06204</td><td>INDI</td><td>BER</td><td>sub06204</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_BJG_sub00440</td><td>INDI</td><td>BJG</td><td>sub00440</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_BLT_sub17017</td><td>INDI</td><td>BLT</td><td>sub17017</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_BNG_sub00031</td><td>INDI</td><td>BNG</td><td>sub00031</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_CAM_sub00156</td><td>INDI</td><td>CAM</td><td>sub00156</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_DAL_sub04288</td><td>INDI</td><td>DAL</td><td>sub04288</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_ICB_sub00448</td><td>INDI</td><td>ICB</td><td>sub00448</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_LDa_sub01553</td><td>INDI</td><td>LDa</td><td>sub01553</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_LDb_sub01787</td><td>INDI</td><td>LDb</td><td>sub01787</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_LPZ_sub00321</td><td>INDI</td><td>LPZ</td><td>sub00321</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_MLb_sub00917</td><td>INDI</td><td>MLb</td><td>sub00917</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_NHa_sub10033</td><td>INDI</td><td>NHa</td><td>sub10033</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_NHb_sub01183</td><td>INDI</td><td>NHb</td><td>sub01183</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_NWK_sub13411</td><td>INDI</td><td>NWK</td><td>sub13411</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_NYa_sub01912</td><td>INDI</td><td>NYa</td><td>sub01912</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_OGB_sub05191</td><td>INDI</td><td>OGB</td><td>sub05191</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_OUL_sub01077</td><td>INDI</td><td>OUL</td><td>sub01077</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_OXF_sub02248</td><td>INDI</td><td>OXF</td><td>sub02248</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_PAL_sub04856</td><td>INDI</td><td>PAL</td><td>sub04856</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_PIT_sub01891</td><td>INDI</td><td>PIT</td><td>sub01891</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_QLD_sub02459</td><td>INDI</td><td>QLD</td><td>sub02459</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>INDI_STL_sub02115</td><td>INDI</td><td>STL</td><td>sub02115</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_GU_002</td><td>IXI</td><td>GU</td><td>002</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_GU_185</td><td>IXI</td><td>GU</td><td>185</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_GU_288</td><td>IXI</td><td>GU</td><td>288</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_HH_012</td><td>IXI</td><td>HH</td><td>012</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_HH_448</td><td>IXI</td><td>HH</td><td>448</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_HH_538</td><td>IXI</td><td>HH</td><td>538</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_IO_035</td><td>IXI</td><td>IO</td><td>035</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_IO_464</td><td>IXI</td><td>IO</td><td>464</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>IXI_IO_473</td><td>IXI</td><td>IO</td><td>473</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>LGZ_20160303_NSPNID_10736_00_syn</td><td>LGZ</td><td></td><td>NSPNID_10736</td><td>1.00 x 1.00 x 1.00</td><td></td><td>no</td><td></td></tr>
+                <tr><td>LGZ_20160303_NSPNID_13177_00_syn</td><td>LGZ</td><td></td><td>NSPNID_13177</td><td>1.00 x 1.00 x 1.00</td><td></td><td>no</td><td></td></tr>
+                <tr><td>OASIS1_001_0001</td><td>OASIS1</td><td>001</td><td>0001</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>OASIS1_001_0040</td><td>OASIS1</td><td>001</td><td>0040</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_001_3008_S186511_I366279</td><td>PPMI</td><td>001</td><td>3008</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_006_3069_S124895_I260288</td><td>PPMI</td><td>006</td><td>3069</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_007_3104_S148994_I301552</td><td>PPMI</td><td>007</td><td>3104</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_012_3151_S146607_I296443</td><td>PPMI</td><td>012</td><td>3151</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_018_3213_S139699_I282775</td><td>PPMI</td><td>018</td><td>3213</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td>slice artefacts</td></tr>
+                <tr><td>PPMI_019_3270_S124920_I260324</td><td>PPMI</td><td>019</td><td>3270</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_023_3952_S139752_I282839</td><td>PPMI</td><td>023</td><td>3952</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_028_3301_S149024_I301592</td><td>PPMI</td><td>028</td><td>3301</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_032_3350_S146635_I296478</td><td>PPMI</td><td>032</td><td>3350</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_034_3410_S176099_I348807</td><td>PPMI</td><td>034</td><td>3410</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_040_3464_S128040_I264680</td><td>PPMI</td><td>040</td><td>3464</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_057_3503_S187833_I368579</td><td>PPMI</td><td>057</td><td>3503</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_088_3551_S146654_I296522</td><td>PPMI</td><td>088</td><td>3551</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_089_4079_S186575_I366360</td><td>PPMI</td><td>089</td><td>4079</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_096_3615_S124977_I260391</td><td>PPMI</td><td>098</td><td>3615</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_120_3300_S173516_I344327</td><td>PPMI</td><td>120</td><td>3300</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_154_3656_S124984_I260401</td><td>PPMI</td><td>154</td><td>3656</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_196_3950_S187852_I368601</td><td>PPMI</td><td>196</td><td>3950</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_196_4067_S180862_I356067</td><td>PPMI</td><td>196</td><td>4067</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_289_3750_S179016_I353477</td><td>PPMI</td><td>289</td><td>3750</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_290_3803_S171194_I340756</td><td>PPMI</td><td>290</td><td>3803</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_291_3850_S171231_I340804</td><td>PPMI</td><td>291</td><td>3850</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_304_4085_S193216_I377941</td><td>PPMI</td><td>304</td><td>4085</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>PPMI_327_3700_S186548_I366325</td><td>PPMI</td><td>327</td><td>3700</td><td>1.00 x 1.00 x 1.00</td><td></td><td>yes</td><td></td></tr>
+                <tr><td>mean_m_R0500my_Tohoku_VBM8bo</td><td></td><td></td><td>...</td><td>0.50 x 0.50 x 0.50</td><td>PH 3.0T</td><td>no</td><td>Average of >100 scans</br><a href="#Tohoku"></a></td></tr>
+                <tr><td>mean_m_R0750my_CG_VBM8bo</td><td></td><td></td><td>...</td><td>0.75 x 0.75 x 0.75</td><td>SI 3.0T</td><td>no</td><td>Average of ~30 scans</td></tr>
+                <tr><td>mean_m_R0750my_NIH_VBM12bo</td><td>NIH</td>various<td></td><td>NIH Living Phantom</td><td>0.75 x 0.75 x 0.75</td><td>various</td><td>no</td><td>Average of ~20 scans</td></tr>
+                <tr><td>WB01</td><td></td><td></td><td>WB01</td><td>0.30 x 0.30 x 0.30</td><td></td><td>yes</td><td><a href="#Winterburn">Winterburn et al. </a></td></tr>
+                <tr><td>WB02</td><td></td><td></td><td>WB02</td><td>0.30 x 0.30 x 0.30</td><td></td><td>yes</td><td><a href="#Winterburn">Winterburn et al. </a></td></tr>
+              </tbody>
+              <tfoot>
+                <tr><td colspan="3"></td></tr>
+              </tfoot>
+            </table>
+          </p>
+          
+          
+        <h4>Software Versions</h4>
+          <p>
+            Table of software releases.
+          </p><p>
+            <table align="center" style="font-size: 80%;">
+              <thead>
+                <tr><th>Software</th><th>Release</th><th>Date</th><th>Comment</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>SPM8</td><td>R4290</td><td></td><td>old segment</td></tr>
+                <tr><td>SPM12</td><td>R6908</td><td></td><td>new segment</td></tr>
+                <tr><td>VBM8</td><td>R351</td><td>2010-08-09</td><td></td></tr>
+                <tr><td>VBM8</td><td>R434</td><td>2014-01-10</td><td></td></tr>
+                <tr><td>VBM12</td><td>R555</td><td>2014-01-10</td><td></td></tr>
+                <tr><td>VBM12</td><td>R666</td><td>2014-12-11</td><td></td></tr>
+                <tr><td>VBM12</td><td>R754</td><td>2015-</td><td>last version before renaming VBM12 to CAT12</td></tr>
+                <tr><td>CAT12</td><td>R916</td><td>2016-04-04</td><td>first CAT release</td></tr>
+                <tr><td>CAT12</td><td>R1001</td><td>2016-09-21</td><td></td></tr>
+                <tr><td>CAT12</td><td>R1097</td><td>2017-01-14</td><td></td></tr>
+              </tbody>
+              <tfoot>
+                <tr><td colspan="3"></td></tr>
+              </tfoot>
+            </table>
+          </p>
+        
+              
+      <h3>References</h3>
+      <p>
+        This part is still in preparation!
+      </p>
+      <ul>
+        <li>
+          <b id="Collins:1998">Collins et al. 1998</b>
+          <p>
+            Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, Evans AC. </br>
+            Design and construction of a realistic digital brain phantom.</br>
+            <a href="http://doi.org/10.1109/42.712135">
+              IEEE Transactions on Medical Imaging 1998;  17(3), 463-468.
+            </a>
+          </p>
+        </li>
+        <li>
+          <b id="Winterburn">Winterburn et al. </b>
+          <p>
+          </p>
+        </li>
+      </ul>
+      
+      <h3>Image references</h3>
+      <p>
+        This part is still in preparation!
+      </p>
+      <ul>
+        <li>
+          <b id="ADHD200">ADHD200</b>
+          <p>
+          </p>
+        </li>
+        <li>
+          <b id="ADNI">ADNI</b>
+          <p>
+          </p>
+        </li>
+        <li>
+          <b id="INDI">INDI</b>
+          <p>
+          </p>
+        </li>
+        <li>
+          <b id="NIH">NIH</b>
+          <p>
+          </p>
+        </li>
+        <li>
+          <b id="OASIS">OASIS</b>
+          <p>
+          </p>
+        </li>
+        <li>
+          <b id="PPMI">PPMI</b>
+          <p>
+          </p>
+        </li>
+      </ul>
+
+      <!--
+        [Winterburn:]
+        [Tohoku:]
+      -->  
+    </div>  
+    
+    <div id="content"><a href="cat_methods.html">< Methods</a></div>  
+    <div id="footer">
+      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+    </div>
+  </body>
+</html>
