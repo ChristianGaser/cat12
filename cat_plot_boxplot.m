@@ -343,8 +343,10 @@ function [out,s] = cat_plot_boxplot(data,opt)
       % no statistics if no points
       s(:,i) = NaN;
     end
-    outliers_y  = max(opt.ylim(1),min(opt.ylim(2),outliers_y)); 
-    outliers2_y = max(opt.ylim(1),min(opt.ylim(2),outliers2_y)); 
+    if ~isempty(opt.ylim)
+      outliers_y  = max(opt.ylim(1),min(opt.ylim(2),outliers_y)); 
+      outliers2_y = max(opt.ylim(1),min(opt.ylim(2),outliers2_y)); 
+    end
     
     
   end
@@ -446,9 +448,9 @@ function [out,s] = cat_plot_boxplot(data,opt)
         ytick=get(gca,'YTick');
         if numel(ytick)<5, ytick=interp1(ytick,1:0.5:numel(ytick)); elseif numel(ytick)>10, ytick=ytick(1:2:end); end
       end
+      set(gca,'YTick',ytick); 
+      set(gca,'YTickLabel',num2str(ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
     end
-    set(gca,'YTick',ytick); 
-    set(gca,'YTickLabel',num2str(ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
     if opt.ygrid
       if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
       if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
