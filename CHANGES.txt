@@ -13775,6 +13775,7 @@ M       cat_vol_partvol.m
 Changed: Typos...
 
 ------------------------------------------------------------------------
+r1104 | dahnke | 2017-01-24 15:05:43 +0100 (Di, 24 Jan 2017) | 34 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13809,5 +13810,15 @@ A       html/images/cat_tst_seg_real_detail.png
 (6) Fixed:    Corrected division by zero warnings in "cat_run_job_APP_init".
 (7) Changed:  Updated color range in "cat_tst_calc_kappa" in case of real data.
 (8) Changed:  Added "extops.regstr" parameter in "cat_tst_cattest".
+
 ------------------------------------------------------------------------
-r1104 | dahnke | 2017-01-24 15:05:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_check_cov.m
+M       html/cat_methods_validation.html
+
+(1) Fixed: Slice for samples 2..n were not displayed in cat_stat_check_cov.m.
+(2) Changed: Updated HTML documentation about segmentation validation.
+------------------------------------------------------------------------
+r1105 | gaser | 2017-01-24 15:51:00
