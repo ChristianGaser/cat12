@@ -13823,6 +13823,7 @@ M       html/cat_methods_validation.html
 (2) Changed: Updated HTML documentation about segmentation validation.
 
 ------------------------------------------------------------------------
+r1106 | gaser | 2017-01-24 16:22:20 +0100 (Di, 24 Jan 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13836,5 +13837,13 @@ M       cat_plot_boxplot.m
 Fixed: cat_plot_boxplot.m did not worked correctly if no additional flags were
 defined.
 
+
 ------------------------------------------------------------------------
-r1106 | gaser | 2017-01-24 16:22:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat_tst_qa.m
+
+Changed: Supress opengl warning in cat_tst_qa.m in batch mode. 
+------------------------------------------------------------------------
+r1107 | gaser | 2017-01-25 13:59:56
