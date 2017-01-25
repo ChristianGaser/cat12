@@ -507,9 +507,10 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      warning off
       QAS.software.opengl       = opengl('INFO');
       QAS.software.opengldata   = opengl('DATA');
-     
+      warning on
       QAS.hardware.computer     = mexext; 
       try
         QAS.hardware.numcores = max(feature('numcores'),1);
@@ -565,8 +566,10 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
+      warning off
       QAS.software.opengl       = opengl('INFO');
       QAS.software.opengldata   = opengl('DATA');
+      warning on
       QAS.software.cat_warnings = cat_warnings;
  
       % @Christian: Do we only want the cat parameter or is it important to have further information? 
