@@ -145,9 +145,9 @@ if do_dartel || job.extopts.LASstr>0
     end
     tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
   end
+  res.tpm2 = tpm2; 
 end
 res.do_dartel = do_dartel;
-res.tpm2      = tpm2; 
 clear numpos run2 darteltpm
 
 chan(N) = struct('B1',[],'B2',[],'B3',[],'T',[],'Nc',[],'Nf',[],'ind',[]);
