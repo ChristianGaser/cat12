@@ -13848,11 +13848,26 @@ M       cat_tst_qa.m
 Changed: Supress opengl warning in cat_tst_qa.m in batch mode. 
 
 ------------------------------------------------------------------------
+r1108 | gaser | 2017-01-26 14:09:32 +0100 (Do, 26 Jan 2017) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main.m
 
 Fixed: Missing parameter in cat_main.m for LAS=0 and native segmentation.
+
 ------------------------------------------------------------------------
-r1108 | gaser | 2017-01-26 14:09:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       templates_1.50mm/Template_0_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_1_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_2_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_3_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
+
+Changed: Converted geodesic shooting templates to uint16.
+------------------------------------------------------------------------
+r1109 | gaser | 2017-01-26 14:52:51
