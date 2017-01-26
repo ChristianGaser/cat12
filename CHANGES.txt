@@ -13839,11 +13839,20 @@ defined.
 
 
 ------------------------------------------------------------------------
+r1107 | gaser | 2017-01-25 14:00:10 +0100 (Mi, 25 Jan 2017) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_tst_qa.m
 
 Changed: Supress opengl warning in cat_tst_qa.m in batch mode. 
+
 ------------------------------------------------------------------------
-r1107 | gaser | 2017-01-25 13:59:56
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+
+Fixed: Missing parameter in cat_main.m for LAS=0 and native segmentation.
+------------------------------------------------------------------------
+r1108 | gaser | 2017-01-26 14:09:18
