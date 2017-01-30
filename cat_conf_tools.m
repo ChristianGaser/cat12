@@ -332,20 +332,14 @@ nuisance.num     = [0 Inf];
 nuisance.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age.'};
 
 data_xml = cfg_files;
-data_xml.name = 'XML files';
+data_xml.name = 'XML files (optional)';
 data_xml.tag  = 'data_xml';
 data_xml.filter = 'xml';
 data_xml.ufilter = '^cat_.*';
-data_xml.num  = [1 Inf];
+data_xml.val  = {{''}};
+data_xml.num  = [0 Inf];
 data_xml.help   = {...
-'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files.'};
-
-qam         = cfg_repeat;
-qam.tag     = 'qam';
-qam.name    = 'Load quality measures';
-qam.values  = {data_xml};
-qam.num     = [0 1];
-qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
+'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files must be the same as the other data files.'};
 
 data_vol = cfg_files;
 data_vol.name = 'Sample data';
@@ -367,7 +361,7 @@ sample.help = {...
 check_cov      = cfg_exbranch;
 check_cov.tag  = 'check_cov';
 check_cov.name = 'Check sample homogeneity of 3D data';
-check_cov.val  = {sample,qam,gap,nuisance};
+check_cov.val  = {sample,data_xml,gap,nuisance};
 check_cov.prog = @cat_stat_check_cov;
 check_cov.help  = {
 'In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing). The idea of this tool is to check the correlation of all files across the sample.'
@@ -551,6 +545,9 @@ calcvol_TIV.help    = {'You can save either the total intracranial volume (TIV) 
 ''
 };
 
+data_xml.name = 'XML files';
+data_xml.help   = {...
+'Select xml-files that are saved during segmentation in the report folder.'};
 calcvol       = cfg_exbranch;
 calcvol.tag   = 'calcvol';
 calcvol.name  = 'Estimate TIV and global tissue volumes';
