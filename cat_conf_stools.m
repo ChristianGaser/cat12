@@ -60,13 +60,13 @@ function stools = cat_conf_stools(expert)
   data_surf_cov.help    = {'Select resampled surfaces parameter files.'};
   
   data_xml = cfg_files;
-  data_xml.name = 'XML files';
+  data_xml.name = 'XML files (optional)';
   data_xml.tag  = 'data_xml';
   data_xml.filter = 'xml';
   data_xml.ufilter = '^cat_.*';
-  data_xml.num  = [1 Inf];
-  data_xml.help   = {
-  'These are the xml-files that are saved during segmentation in the report folder. Please note, that the order of the xml-files must be the same as the other data files.'};
+  data_xml.num  = [0 Inf];
+  data_xml.help   = {...
+'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files must be the same as the other data files.'};
 
   sample_cov         = cfg_repeat;
   sample_cov.tag     = 'sample';
@@ -75,13 +75,6 @@ function stools = cat_conf_stools(expert)
   sample_cov.num     = [1 Inf];
   sample_cov.help = {...
   'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
-
-  qam         = cfg_repeat;
-  qam.tag     = 'qam';
-  qam.name    = 'Load quality measures';
-  qam.values  = {data_xml};
-  qam.num     = [0 1];
-  qam.help    = {'This option allows to also load the quality measures that are saved in the xml-files. Please note, that the order of the xml-files must be the same as the other data files.'};
 
   c         = cfg_entry;
   c.tag     = 'c';
@@ -101,7 +94,7 @@ function stools = cat_conf_stools(expert)
   check_mesh_cov      = cfg_exbranch;
   check_mesh_cov.tag  = 'check_mesh_cov';
   check_mesh_cov.name = 'Check sample homogeneity of surfaces';
-  check_mesh_cov.val  = {sample_cov,qam,nuisance};
+  check_mesh_cov.val  = {sample_cov,data_xml,nuisance};
   check_mesh_cov.prog = @cat_stat_check_cov;
   check_mesh_cov.help = {
   'In order to identify surfaces with poor image quality or even artefacts you can use this function. Surfaces measures have to be first resampled to the template space (e.g. resampled and smoothed data) and can be then check for each hemisphere separately. Please do not mix data from both hemispehre.'

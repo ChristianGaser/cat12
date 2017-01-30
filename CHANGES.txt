@@ -13857,6 +13857,7 @@ M       cat_main.m
 Fixed: Missing parameter in cat_main.m for LAS=0 and native segmentation.
 
 ------------------------------------------------------------------------
+r1109 | gaser | 2017-01-26 14:53:13 +0100 (Do, 26 Jan 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13869,5 +13870,19 @@ M       templates_1.50mm/Template_3_IXI555_MNI152_GS.nii
 M       templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
 
 Changed: Converted geodesic shooting templates to uint16.
+
 ------------------------------------------------------------------------
-r1109 | gaser | 2017-01-26 14:52:51
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Added: Surface smoothing w.r.t. local convexity to remove local artifacts.
+(2) Changed: Changed selection of optional xml-files in cat_stat_check_cov.m.
+------------------------------------------------------------------------
+r1110 | gaser | 2017-01-30 16:54:08
