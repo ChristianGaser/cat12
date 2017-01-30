@@ -64,14 +64,14 @@ if ~isempty(vargin.c)
   end
 end
 
-if isempty(vargin.data_xml)
+if isempty(char(vargin.data_xml))
   isxml = 0;
   QM_names = '';
   xml_files = [];
 else
-  xml_files = char(vargin.data_xml{1});
+  xml_files = char(vargin.data_xml);
 end
-  
+
 if ~isempty(xml_files)
 
   isxml = 1;
