@@ -13872,6 +13872,7 @@ M       templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
 Changed: Converted geodesic shooting templates to uint16.
 
 ------------------------------------------------------------------------
+r1110 | gaser | 2017-01-30 16:54:22 +0100 (Mo, 30 Jan 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13884,5 +13885,19 @@ M       html/cat.html
 
 (1) Added: Surface smoothing w.r.t. local convexity to remove local artifacts.
 (2) Changed: Changed selection of optional xml-files in cat_stat_check_cov.m.
+
 ------------------------------------------------------------------------
-r1110 | gaser | 2017-01-30 16:54:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_cva_ui.m
+M       cat_stat_spm2x.m
+M       cat_surf_results.m
+M       cat_vol_groupwise_ls.m
+M       html/cat_starting.html
+
+(1) Changed: Data format registered images for the longitudinal pipeline is now int16.
+(2) Fixed: Wrong "&&" in cat_surf_results.m
+(3) Fixed: Correct path for underlying surface if analysis was made with different SPM installation.
+------------------------------------------------------------------------
+r1111 | gaser | 2017-02-15 12:40:54

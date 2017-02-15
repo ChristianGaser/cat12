@@ -219,7 +219,7 @@ for level=nlevels:-1:1, % Loop over resolutions, starting with the lowest
                 [pth,nam]   = fileparts(Nii(1).dat.fname);
                 nam         = fullfile(pth,['avg_' nam '.nii']);
                 Nio         = nifti;
-                Nio.dat     = file_array(nam,size(mu),'float32',0,1,0);
+                Nio.dat     = file_array(nam,size(mu),'int16-be',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
                 Nio.mat     = M_avg;
                 Nio.mat0    = Nio.mat;
                 Nio.mat_intent  = 'Aligned';
@@ -408,7 +408,7 @@ if need_avg,
         [pth,nam]   = fileparts(Nii(1).dat.fname);
         nam         = fullfile(pth,['avg_' nam '.nii']);
         Nio         = nifti;
-        Nio.dat     = file_array(nam,size(mu),'int16',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
+        Nio.dat     = file_array(nam,size(mu),'int16-be',0,max(max(mu(:))/32767,-min(mu(:))/32768),0);
         Nio.mat     = M_avg;
         Nio.mat0    = Nio.mat;
         Nio.mat_intent  = 'Aligned';
@@ -440,7 +440,7 @@ if need_wimg,
         [pth,nam]   = fileparts(Nii(i).dat.fname);
         nam         = fullfile(pth,['r' nam '.nii']);
         Nio         = nifti;
-        Nio.dat     = file_array(nam,size(img),'float32',0,1,0);
+        Nio.dat     = file_array(nam,size(img),'int16-be',0,max(max(img(:))/32767,-min(img(:))/32768),0);
         Nio.mat     = M_avg;
         Nio.mat0    = Nio.mat;
         Nio.mat_intent  = 'Aligned';

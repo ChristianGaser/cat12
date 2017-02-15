@@ -117,6 +117,12 @@ switch lower(action)
           SPM.swd = swd;
           cd(SPM.swd);
 
+          % correct path for surface if analysis was made with different SPM installation
+          if ~exist(SPM.xVol.G,'file')
+            [SPMpth,SPMname,SPMext] = spm_fileparts(SPM.xVol.G);
+            SPM.xVol.G = fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[SPMname SPMext]);
+          end
+
           %-Check the model has been estimated
           %--------------------------------------------------------------------------
           try

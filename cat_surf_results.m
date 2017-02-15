@@ -844,7 +844,7 @@ for ind=1:5
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP && (H.S{1}.thresh < 1)
+if H.logP & (H.S{1}.thresh < 1)
   set(H.thresh,'Visible','on');
 end
 
