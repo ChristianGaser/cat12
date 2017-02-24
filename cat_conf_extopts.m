@@ -127,7 +127,7 @@ experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
 experimental.help   = {
   'Use experimental code and functions.'
   ''
-  'WARNING: This parameter is only for developer and call functions that are not save and may change strongly!'
+  'WARNING: This parameter is only for developer and will call functions that are not safe and may change strongly!'
   ''
 };
 
@@ -138,7 +138,7 @@ ignoreErrors.labels = {'No','Yes'};
 ignoreErrors.values = {0 1};
 ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
 ignoreErrors.help   = {
-  'Catch preprocessing errors and go on with the next subject'
+  'Catch preprocessing errors and move on with the next subject'
 };
 
 verb         = cfg_menu;

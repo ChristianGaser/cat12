@@ -13887,6 +13887,7 @@ M       html/cat.html
 (2) Changed: Changed selection of optional xml-files in cat_stat_check_cov.m.
 
 ------------------------------------------------------------------------
+r1111 | gaser | 2017-02-15 12:41:08 +0100 (Mi, 15 Feb 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13899,5 +13900,22 @@ M       html/cat_starting.html
 (1) Changed: Data format registered images for the longitudinal pipeline is now int16.
 (2) Fixed: Wrong "&&" in cat_surf_results.m
 (3) Fixed: Correct path for underlying surface if analysis was made with different SPM installation.
+
 ------------------------------------------------------------------------
-r1111 | gaser | 2017-02-15 12:40:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_stat_spm2x.m
+M       cat_surf_results.m
+
+(1) Changed: APP is now disabled by default, because for "normal" data there 
+    seems to be no improvement. Use that option if something fails with your 
+    initial affine registration.
+(2) Changed: Some minor changes in help text.
+(3) Fixed: Check for surface files in cat_stat_spm2x.m
+------------------------------------------------------------------------
+r1112 | gaser | 2017-02-24 12:13:13

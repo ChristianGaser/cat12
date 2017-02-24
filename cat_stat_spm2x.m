@@ -251,7 +251,7 @@ for i=1:size(P,1)
     v2r  = 1/prod(FWHM(~isinf(FWHM)));  %-voxels to resels
 
     % correct path for surface if analysis was made with different SPM installation
-    if ~exist(SPM.xVol.G,'file')
+    if isfield(SPM.xVol,'G') & ~exist(SPM.xVol.G,'file')
       [SPMpth,SPMname,SPMext] = spm_fileparts(SPM.xVol.G);
       SPM.xVol.G = fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[SPMname SPMext]);
     end
