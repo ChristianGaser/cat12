@@ -168,7 +168,7 @@ fixed:
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 cat.extopts.species      = 'human';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
-cat.extopts.APP          = 1;   % 0 - none; 1 - light; 2 - medium; 3 - strong; 4 - heavy, 5 - animal (no affreg)
+cat.extopts.APP          = 0;   % 0 - none; 1 - light; 2 - medium; 3 - strong; 4 - heavy, 5 - animal (no affreg)
 cat.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
 %cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working

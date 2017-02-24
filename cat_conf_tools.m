@@ -332,14 +332,14 @@ nuisance.num     = [0 Inf];
 nuisance.help    = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age.'};
 
 data_xml = cfg_files;
-data_xml.name = 'XML files (optional)';
+data_xml.name = 'Quality measures (optional)';
 data_xml.tag  = 'data_xml';
 data_xml.filter = 'xml';
 data_xml.ufilter = '^cat_.*';
 data_xml.val  = {{''}};
 data_xml.num  = [0 Inf];
 data_xml.help   = {...
-'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files must be the same as the other data files.'};
+'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files should be the same as the other data files.'};
 
 data_vol = cfg_files;
 data_vol.name = 'Sample data';
