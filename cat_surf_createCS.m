@@ -360,8 +360,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     % smooth surface w.r.t. to local convexity
-    cmd = sprintf(['CAT_SmoothConvexity "%s" "%s" 25'],Pcentral,Pcentral);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+%    cmd = sprintf(['CAT_SmoothConvexity "%s" "%s" 25'],Pcentral,Pcentral);
+%    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+% is not working properly
 
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
