@@ -13902,6 +13902,7 @@ M       html/cat_starting.html
 (3) Fixed: Correct path for underlying surface if analysis was made with different SPM installation.
 
 ------------------------------------------------------------------------
+r1112 | gaser | 2017-02-24 12:13:25 +0100 (Fr, 24 Feb 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13917,5 +13918,16 @@ M       cat_surf_results.m
     initial affine registration.
 (2) Changed: Some minor changes in help text.
 (3) Fixed: Check for surface files in cat_stat_spm2x.m
+
 ------------------------------------------------------------------------
-r1112 | gaser | 2017-02-24 12:13:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_createCS.m
+M       html/cat.html
+
+(1) Changed: Removed Convexity Smoothing in cat_surf_createCS.m that wasn't an
+    improvement for many data.
+------------------------------------------------------------------------
+r1113 | gaser | 2017-03-01 15:43:22
