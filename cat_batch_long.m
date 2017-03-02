@@ -30,6 +30,7 @@ for i=1:n
 end
 
 matlabbatch{1}.spm.tools.cat.tools.long.modulate = 1;
+matlabbatch{1}.spm.tools.cat.tools.long.warps = 0;
 
 % always deselect print option
 matlabbatch{1}.spm.tools.cat.tools.long.extopts.print = 0;
