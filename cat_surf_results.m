@@ -1441,9 +1441,9 @@ H.show_info = get(H.info,'Value');
 
 if H.show_info
   set(get(getappdata(H.patch(1),'axis'),'Title'),'String',...
-      spm_str_manip(H.S{1}.name,'k50d'),'Interpreter', 'none','Color',1-H.bkg_col)
+      spm_str_manip(H.S{1}.name,'k70d'),'Interpreter', 'none','Color',1-H.bkg_col)
   set(get(getappdata(H.patch(3),'axis'),'Title'),'String',...
-      spm_str_manip(H.S{2}.name,'k50d'),'Interpreter', 'none','Color',1-H.bkg_col)
+      spm_str_manip(H.S{2}.name,'k70d'),'Interpreter', 'none','Color',1-H.bkg_col)
 else
   set(get(getappdata(H.patch(1),'axis'),'Title'),'String','')
   set(get(getappdata(H.patch(3),'axis'),'Title'),'String','')
@@ -1515,7 +1515,7 @@ end
 %==========================================================================
 function select_cursor(cursor_mode)
 
-global H y
+global H
 
 dcm_obj = datacursormode(H.figure(1));
 H.cursor_mode = cursor_mode;
@@ -1584,7 +1584,7 @@ end
 
 %==========================================================================
 function txt = myDataCursorCluster(obj,evt)
-global y H
+global H y
 
 plot_mean = H.cursor_mode-3;
 pos = get(evt,'Position');
@@ -1719,10 +1719,11 @@ else
   ylabel(H.dataplot,'contrast estimate','FontSize',H.FS(12),'Color',1-H.bkg_col)
 end
 
-set(H.dataplot,'XLim',[0.4 (length(cbeta) + 0.6)],'XTicklabel',num2str((1:length(cbeta))'),'XTick',1:length(cbeta))
+set(H.dataplot,'XLim',[0.4 (length(cbeta) + 0.6)],'XTicklabel','','XTick',[])
 hold(H.dataplot,'off')
 rmfield(H,'dataplot');
 
+assignin('base','y',y);
 
 %==========================================================================
 function [y, cbeta, CI] = get_cluster_data(H,XYZ, ind)

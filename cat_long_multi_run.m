@@ -4,7 +4,7 @@ function out = cat_long_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global opts extopts output modulate dartel
+global opts extopts output modulate dartel warps
 
 warning off;
 
@@ -14,6 +14,7 @@ extopts  = job.extopts;
 output   = job.output;
 modulate = job.modulate;
 dartel   = job.dartel;
+warps    = job.warps;
 
 jobs = repmat({'cat_long_main.m'}, 1, numel(job.subj));
 inputs = cell(1, numel(job.subj));
@@ -25,6 +26,12 @@ else
 end
 
 for i=1:numel(job.subj),
+    if warps
+      out(i).warps = cell(1,1);
+      [pth,nam,ext,num] = spm_fileparts(job.subj(i).mov{1});
+      out(i).warps{1} = fullfile(pth,mrifolder,['y_avg_', nam, ext, num]);
+    end
+
     out(i).files = cell(numel(job.subj(i).mov),1);
     m = numel(job.subj(i).mov);
     data = cell(m,1);

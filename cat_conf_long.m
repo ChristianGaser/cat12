@@ -71,6 +71,18 @@ modulate.help = {
 };
 
 %------------------------------------------------------------------------
+warps        = cfg_menu;
+warps.tag    = 'warps';
+warps.name   = 'Forward deformations (Image->Template)';
+warps.labels = {'No','Yes'};
+warps.values = {0 1};
+warps.val    = {0};
+warps.help = {
+  'Deformation fields can be saved to disk, and used by the Deformations Utility and/or applied to coregistered data from other modalities (e.g. fMRI). Deformations are saved as .nii files, which contain three volumes to encode the x, y and z coordinates.'
+''
+};
+
+%------------------------------------------------------------------------
 dartel        = cfg_menu;
 dartel.tag    = 'dartel';
 dartel.name   = 'DARTEL export of average image';
@@ -95,7 +107,7 @@ output.tag  = 'output';
 output.name = 'Writing options';
 output.val  = {surface};
 output.help = {
-'Additionally to the segmentations the surfacess can be estimated and saved.'
+'In addition to the segmentations the surfacess can be estimated and saved.'
 ''
 };
 
@@ -107,7 +119,7 @@ opts    = cat_conf_opts;
 long = cfg_exbranch;
 long.name = 'Segment longitudinal data';
 long.tag  = 'long';
-long.val  = {esubjs,opts,extopts,output,modulate,dartel};
+long.val  = {esubjs,opts,extopts,output,modulate,warps,dartel};
 long.prog = @cat_long_multi_run;
 long.vout = @vout_long;
 long.help = {
