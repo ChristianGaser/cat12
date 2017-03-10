@@ -60,10 +60,11 @@ function stools = cat_conf_stools(expert)
   data_surf_cov.help    = {'Select resampled surfaces parameter files.'};
   
   data_xml = cfg_files;
-data_xml.name = 'Quality measures (optional)';
+  data_xml.name = 'Quality measures (optional)';
   data_xml.tag  = 'data_xml';
   data_xml.filter = 'xml';
   data_xml.ufilter = '^cat_.*';
+  data_xml.val  = {{''}};
   data_xml.num  = [0 Inf];
   data_xml.help   = {...
 'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This additionally allows to analyze image quality parameters such as noise, and bias. Please note, that the order of the xml-files should be the same as the other data files.'};
