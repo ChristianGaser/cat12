@@ -13932,6 +13932,7 @@ M       html/cat.html
     improvement for many data.
 
 ------------------------------------------------------------------------
+r1114 | gaser | 2017-03-02 11:46:01 +0100 (Do, 02 Mär 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13947,5 +13948,17 @@ M       tbx_cfg_cat.m
 
 Changed: Added option to save deformations in longitudinal pipeline (useful for
 applying the deformations to coregistered data).
+
 ------------------------------------------------------------------------
-r1114 | gaser | 2017-03-02 11:45:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_plot_boxplot.m
+M       cat_stat_check_cov.m
+M       cat_surf_createCS.m
+
+(1) Changed: Parameter for topology corrections are slightly changed to force filling.
+(2) Fixed: Some smaller errors in cat_stat_check_cov.m for surfaces.
+------------------------------------------------------------------------
+r1115 | gaser | 2017-03-10 09:48:57

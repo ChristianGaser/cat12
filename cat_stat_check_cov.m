@@ -53,7 +53,7 @@ else
     n_subjects = n_subjects + length(V0);
       
     if i==1, V = V0;
-    else,    V = [V V0]; end
+    else,    V = [V; V0]; end
     sample = [sample, i*ones(1,size(vargin.data_surf{i},1))];
   end
 end
@@ -626,6 +626,7 @@ end
 
 Fgraph = spm_figure('GetWin','Graphics');
 spm_figure('Clear',Fgraph);
+set(Fgraph,'Renderer','OpenGL');
 
 n_samples = max(sample);
 
@@ -652,7 +653,7 @@ for i=1:n_samples
   end
 end
 
-opt = struct('groupnum',0,'ygrid',0,'violin',0,'box',1,'groupcolor',jet(n_samples));
+opt = struct('groupnum',0,'ygrid',0,'violin',2,'median',2,'groupcolor',jet(n_samples));
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);
