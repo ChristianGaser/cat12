@@ -340,7 +340,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
    
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
-    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -fill -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -laplace_thresh 0.45 -fill -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % surface refinement by surface deformation based on the PP map
@@ -358,11 +358,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
                      'flat -0.5 0.5 .5 .1 5 0 "%g" "%g" n 0 0 0 200 0.01 0.0'], ...
                      Vpp1.fname,Pcentral,Pcentral,th,th);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-
-    % smooth surface w.r.t. to local convexity
-%    cmd = sprintf(['CAT_SmoothConvexity "%s" "%s" 25'],Pcentral,Pcentral);
-%    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-% is not working properly
 
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 

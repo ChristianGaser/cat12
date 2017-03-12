@@ -13950,6 +13950,7 @@ Changed: Added option to save deformations in longitudinal pipeline (useful for
 applying the deformations to coregistered data).
 
 ------------------------------------------------------------------------
+r1115 | gaser | 2017-03-10 09:49:11 +0100 (Fr, 10 Mär 2017) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13960,5 +13961,14 @@ M       cat_surf_createCS.m
 
 (1) Changed: Parameter for topology corrections are slightly changed to force filling.
 (2) Fixed: Some smaller errors in cat_stat_check_cov.m for surfaces.
+
 ------------------------------------------------------------------------
-r1115 | gaser | 2017-03-10 09:48:57
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_createCS.m
+
+Changed: Added option for additional 2D laplace filtering to topology 
+correction to minimize irregularities in coordinate maps for SPH.
+------------------------------------------------------------------------
+r1116 | gaser | 2017-03-12 23:57:01
