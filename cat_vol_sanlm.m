@@ -1,4 +1,4 @@
-function cat_vol_sanlm(varargin)
+function varargout = cat_vol_sanlm(varargin)
 % Spatial Adaptive Non Local Means (SANLM) Denoising Filter
 %_______________________________________________________________________
 % Filter a set of images and add the prefix 'sanlm_'.
@@ -29,10 +29,11 @@ function cat_vol_sanlm(varargin)
 %     "p074" and "n033".
 %     
 %     0                  .. no denoising 
-%     0 < job.NCstr < 1  .. global user weighed correction
-%    -9 < job.NCstr < 0  .. local user weighed correction
+%     1                  .. full denoising (original sanlm)
+%     0 < job.NCstr < 1  .. automatic global correction with user weighing
+%    -9 < job.NCstr < 0  .. automatic local correction with user weighing
 %     inf                .. global automatic correction
-%    -inf                .. lcoal automatic correction
+%    -inf                .. local automatic correction
 %
 % Example:
 %   cat_vol_sanlm(struct('data','','prefix','n','rician',0));
@@ -47,6 +48,10 @@ else
     job = varargin{1};
 end
 
+if nargout > 0
+  varargout{1} = struct();
+end
+
 if ~isfield(job,'data') || isempty(job.data)
    job.data = cellstr(spm_select([1 Inf],'image','select images to filter'));
 else
@@ -54,16 +59,20 @@ else
 end
 if isempty(char(job.data)); return; end
 
+
 def.verb    = 1;         % be verbose
 def.prefix  = 'sanlm_';  % prefix
 def.postfix = '';        % postfix
 def.NCstr   = -Inf;      % 0 - no denoising, eps - light denoising, 1 - maximum denoising, inf = auto; 
 def.rician  = 0;         % use inf for GUI
+def.ares    = [1 1 2.5]; % resolution depending filter strength [active full-correction no-correction]
 job = cat_io_checkinopt(job,def);
+
 
 if strcmp(job.postfix,'NCstr'), job.postfix = sprintf('_NCstr%0.2f',job.NCstr); end
 if ~isinf(job.NCstr), job.NCstr = max(-9.99,min(1,job.NCstr)); end           % guarantee values from -9.99 to 1 or inf
 if isinf(job.rician), spm_input('Rician noise?',1,'yes|no',[1,0],2); end  % GUI
+
 
 %%
 V  = spm_vol(char(job.data));
@@ -92,7 +101,6 @@ for i = 1:numel(job.data)
     % set actural filter rate - limit later!
     % the factor 15 was estimated on the BWP 
     NCstr                         = job.NCstr; 
-    NCstr(NCstr<0)                = NCstr(NCstr<0);     
     NCstr(isinf(NCstr) & NCstr>0) = 15 * NCrate;   
     NCstr(isinf(NCstr) & NCstr<0) = -1;   
     stime2 = clock; 
@@ -106,7 +114,7 @@ for i = 1:numel(job.data)
         if NCstr(NCstri)<0
         % adaptive local denoising 
 
-            %% prepare local map
+            % prepare local map
             % use less filtering for lowres data to avoid anatomical blurring ???
             NCs = max(eps,abs(src - srco)); % ./ mean(NCs(:)); %max(eps,src); 
             NC  = cat_vol_smooth3X(NCs,2/mean(vx_vol)); % spm_smooth(NCs,NCs,2/mean(vx_vol)); % 
@@ -115,22 +123,34 @@ for i = 1:numel(job.data)
             NCs = cat_vol_smooth3X(NCs,2/mean(vx_vol));
             NCs = NCs ./ mean(NCs(:)); 
             NCs = max(0,min(1,NCs * (15*NCrate) * abs(NCstr(NCstri)))); 
+            if job.ares(1), NCs = NCs .* max(0,min(1,1-(mean(vx_vol)-job.ares(2))/diff(job.ares(2:3)))); end
             NCstr(NCstri) = -cat_stat_nanmean(NCs(:)); 
 
-            %% mix original and noise corrected image
+            % mix original and noise corrected image
             srco = srco.*(1-NCs) + src.*NCs; 
             clear NCs;
 
+        elseif NCstr(NCstri)==1
+        % no adaption (original filter)
+           srco   = src; 
+        
         elseif NCstr(NCstri)>0
         % (adaptive) global denoising  
 
+            %if job.ares(1), NCstr(NCstri) = NCstr(NCstri) .* max(0,min(1,1-(mean(vx_vol)-job.ares(2))/diff(job.ares(2:3)))); end
             NCstr(NCstri) = min(1,max(0,NCstr(NCstri)));
-
+            
             % mix original and noise corrected image
             srco   = srco*(1-NCstr(NCstri)) + src*NCstr(NCstri); 
+            
+        else
+        % no denoising ... nothing to do
+            
         end
          
+        
         if numel(job.NCstr)>1
+          % add NCstr to the filename 
             if job.NCstr(NCstri)<0
                 NCstring = sprintf('n%03d_',abs(job.NCstr(NCstri)*100)); 
             else

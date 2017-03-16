@@ -48,8 +48,9 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
 
   %% Distance maps
-
-
+  if (sum(round(Ymf(:))==Ymf(:)) / numel(Ymf))>0.9, bin=1; else bin=0; end
+ %bin=0;
+  
   %  WM distance 
   %  Estimate WM distance Ywmd and the outer CSF distance Ycsfdc to correct
   %  the values in CSF area are to limit the Ywmd to the maximum value that 
@@ -70,15 +71,17 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       YM  = max(0,min(1,(Ymf-1))); Ycsfdc = max(0,cat_vbdist(single(YM>0.5),~YMM)-0.5); 
   end
   clear YMM; 
-  % limit the distance values outside the GM/CSF boudary to the distance possible in the GM
-  YM  = Ywmd>minfdist & Ymf<=1.5; Ywmd(YM) = Ywmd(YM) - Ycsfdc(YM); Ywmd(isinf(Ywmd)) = 0; clear Ycsfdc;
-  % smoothing of distance values inside the GM
-  YM  = Ywmd>minfdist & Ymf> 1.5; YwmdM = Ywmd; YwmdM = cat_vol_localstat(YwmdM,YM,1,1); Ywmd(YM) = YwmdM(YM);
-  % smoothing of distance values outside the GM
-  YM  = Ywmd>minfdist & Ymf<=1.5; YwmdM = Ywmd; for i=1:2, YwmdM = cat_vol_localstat(YwmdM,YM,1,1); end; Ywmd(YM) = YwmdM(YM);
-  % reducing outliers in the GM/CSF area
-  YM  = Ywmd>minfdist & Ymf< 2.0; YwmdM = Ywmd; YwmdM = cat_vol_median3(YwmdM,YM,YM); Ywmd(YM) = YwmdM(YM); clear YwmdM YM;
-
+  if ~bin
+    % limit the distance values outside the GM/CSF boudary to the distance possible in the GM
+    YM  = Ywmd>minfdist & Ymf<=1.5; Ywmd(YM) = Ywmd(YM) - Ycsfdc(YM); Ywmd(isinf(Ywmd)) = 0; clear Ycsfdc;
+    % smoothing of distance values inside the GM
+    YM  = Ywmd>minfdist & Ymf> 1.5; YwmdM = Ywmd; YwmdM = cat_vol_localstat(YwmdM,YM,1,1); Ywmd(YM) = YwmdM(YM);
+    % smoothing of distance values outside the GM
+    YM  = Ywmd>minfdist & Ymf<=1.5; YwmdM = Ywmd; for i=1:2, YwmdM = cat_vol_localstat(YwmdM,YM,1,1); end; Ywmd(YM) = YwmdM(YM);
+    % reducing outliers in the GM/CSF area
+    YM  = Ywmd>minfdist & Ymf< 2.0; YwmdM = Ywmd; YwmdM = cat_vol_median3(YwmdM,YM,YM); Ywmd(YM) = YwmdM(YM); clear YwmdM YM;
+  end
+  
   minfdist = 1; 
   %  CSF distance
   %  Similar to the WM distance, but keep in mind that this map is
@@ -97,11 +100,12 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   end
   Ywmdc = min(Ywmdc,Ywmdx);
   clear YMM;
-  YM = Ycsfd>minfdist & Ymf>=2.5; Ycsfd(YM) = Ycsfd(YM) - Ywmdc(YM); Ycsfd(isinf(-Ycsfd)) = 0; clear Ywmdc;
-  YM = Ycsfd>minfdist & Ymf< 2.5; YcsfdM = Ycsfd; YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); Ycsfd(YM) = YcsfdM(YM);
-  YM = Ycsfd>minfdist & Ymf>=2.5; YcsfdM = Ycsfd; for i=1:2, YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); end; Ycsfd(YM) = YcsfdM(YM);
-  YM = Ycsfd>minfdist & Ymf> 2.0; YcsfdM = Ycsfd;  YcsfdM = cat_vol_median3(YcsfdM,YM,YM); Ycsfd(YM) = YcsfdM(YM); clear YcsfdM YM;
-  
+  if ~bin
+    YM = Ycsfd>minfdist & Ymf>=2.5; Ycsfd(YM) = Ycsfd(YM) - Ywmdc(YM); Ycsfd(isinf(-Ycsfd)) = 0; clear Ywmdc;
+    YM = Ycsfd>minfdist & Ymf< 2.5; YcsfdM = Ycsfd; YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); Ycsfd(YM) = YcsfdM(YM);
+    YM = Ycsfd>minfdist & Ymf>=2.5; YcsfdM = Ycsfd; for i=1:2, YcsfdM = cat_vol_localstat(YcsfdM,YM,1,1); end; Ycsfd(YM) = YcsfdM(YM);
+    YM = Ycsfd>minfdist & Ymf> 2.0; YcsfdM = Ycsfd;  YcsfdM = cat_vol_median3(YcsfdM,YM,YM); Ycsfd(YM) = YcsfdM(YM); clear YcsfdM YM;
+  end  
 
 
   %% PBT thickness mapping 
@@ -155,9 +159,9 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   end
   
   
-  % Estimation of a mixed percentual possion map Ypp.
+  %% Estimation of a mixed percentual possion map Ypp.
   stime = cat_io_cmd('    Final Corrections: ','g5','',opt.verb,stime);
-  YM  = Ymf>=1.5 & Ymf<2.5;
+  YM  = Ymf>=1.5 & Ymf<2.5 & Ygmt>eps;
   Ycsfdc = Ycsfd; Ycsfdc(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)); 
   Ypp = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5)=1;
   Ypp(YM) = Ycsfdc(YM) ./ (Ygmt(YM) + eps); 

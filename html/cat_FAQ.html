@@ -47,6 +47,8 @@
             <li><a href="#burredGyri">Blurred and broken gyri</a></li>
             <li><a href="#VBMofGMT">Is there a thickness map that allows a voxel-based analysis?</a></li>
             <li><a href="#7Tesla">Known problems in ultra high-field data (7 Tesla)</a></li>
+            <li><a href="#inv">Preprocessing of T2/PD data</a></li>
+            <li><a href="#MT">Preprocessing of special contrasts (e.g., MT, T1syn, R1)</a></li>
           </ul>
           </br>
         <li><h4><a href="#QA">Quality control / assurance</a></h4></li>
@@ -202,13 +204,47 @@
             Images on ultra high-field scanners often have strong inhomogeneities with large intensity changes and highly increased spatial frequency compared to 3 Tesla.
             The intensity changes influence the processing quality whereas low signal areas are extremely noisy and often lead to problems with CSF/GM segmentation with GM underestimation (see next figure A);  
             But the more serious problem is given by the spatial frequency that reduces the ability of the tissue classification that is required for bias correction. 
-            Without further corrections, e.g., by division by contrast free images with the same bias, problems based on insufficient cranial bias correction with GM misclassification as WM are typical that lead to local thickness underestimations (see next figure B).            
+            Without further corrections, e.g., by division by contrast free images with the same bias, problems based on insufficient cranial bias correction with GM misclassification as WM are typical that lead to local thickness underestimations (see next figure B).  
+            We recommend to increase the "biasstr" parameter to 0.8 or 1.0 to use a smaller biasfwhm and less regularisation.  
           </p>
           <p style="text-align:center;">
             <img src="images/Problems_in_7_Tesla.png" width=90% height=auto alt="Problems in 7 Tesla data" >
           </p>
           </br></br>
         </li>
+        <li>
+          <h4 id="inv">Preprocessing of T2/PD data</h4>
+          <p>
+            Although, CAT focus on T1 data processing (with CSF&ltGM&ltWM intensity), there is also the possibility to process T2/PD data (with WM&ltGM&ltCSF intensity or GM&ltWM&ltCSF).  Typically, T2/PD data have lower CNR and lower resolution resulting in low quality ratings (IQR) and worse segmentation accuracy (see also <a>Validation</a>).      
+          </p>
+          <!-- 
+          <p style="text-align:center;">
+            <img src="images/neonates.png" width=90% height=auto alt="Processing of T2/PD data" >
+          </p>
+          -->
+          <p>
+            Especially, if in case of GM&ltWM&lt=CSF intensity the correct classification of sulcal CSF is problematic because of the <it>a-priory</it> AMAP segmentation and the partial volume effect (PVE).  CAT use a special region growing process to differentiate between CSF and WM voxel but this process is relative error-prone and require enhances assessment of preprocessing quality and consideration of possible side effects in the data analysis.  
+            The following figure shows the segmentation and surface reconstruction of a T2 TSE scan of a neonate that show classification problems of sulcal CSF in the SPM but not the CAT segmentation.  For this preprocessing the standard TPM was used because the available TPMs (e.g., MANTIS TB) does not fit to the 6 class SPM12 standard TPM.  Moreover, it was necessary to reduce the strength of the SPM inhomogeneity correction (biasstr = 0.1) to avoid miss corrections. 
+          </p>
+          <p style="text-align:center;">
+            <img src="images/neonates.png" width=90% height=auto alt="Processing of neonate T2 TSE scans" >
+          </p>
+          </br></br>
+        </li>
+        <li>
+          <h4 id="MT">Preprocessing of special contrasts (e.g., MT, T1syn, R1)</h4>
+          <p>
+            Synthetical contrast such as MT, T1sys, or R1 often have only a very light bias.  Although, we found the default biasstr value work very well in our test cases, it is possible to reduce the amount of bias-correction to a low non-zero value (e.g., biasstr = eps to 0.2).  
+          </p>
+          <!-- 
+          <p style="text-align:center;">
+            <img src="images/neonates.png" width=90% height=auto alt="Processing of T2/PD data" >
+          </p>
+          -->
+        </br></br>
+        </li>
+
+
       </ul>
      
      

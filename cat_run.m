@@ -194,6 +194,17 @@ function job = update_job(job)
       job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));
     end
   end
+  
+  % the extopts.biasstr controls and overwrite (biasstr>0) the SPM biasreg and biasfwhm paramter
+  %   biasstr  = [0.01  0.25  0.50  0.75  1.00] ... result in ?
+  %   biasreg  = [0.01  0.0032  0.0010  0.0003  0.0001] ? and ?
+  %   biasfwhm = [30 45 60 75 90] for "30 + 60*biasstr? 
+  %     biasfwhm = [30.32  42.65  60  84.39 118.71)] for "10^(5/6 + biasstr/3)?  .. allow lower fields 
+  if job.opts.biasstr>0 % update biasreg and biasfwhm only if biasreg>0
+    % limits only describe the SPM standard range
+    job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
+    job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*job.opts.biasstr ));  
+  end
 
   % deselect ROI output and print warning if ROI output is true and dartel template was changed
   [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
@@ -221,7 +232,7 @@ function job = update_job(job)
   
   % prepare tissue priors and number of gaussians for all 6 classes
   [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
-  clsn = numel(spm_vol(fullfile(pth,[nam ext]))); 
+  clsn = min(6,numel(spm_vol(fullfile(pth,[nam ext])))); 
   tissue = struct();
   for i=1:clsn;
     tissue(i).ngaus = job.opts.ngaus(i);

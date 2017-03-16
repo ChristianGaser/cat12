@@ -92,7 +92,7 @@ function varargout = cat_surf_smooth(varargin)
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         else % spm mesh data smoothing
           T = gifti(Pdata{i});
-          if sinfo.resampled % resampled (with mesh data)
+          if sinfo(i).resampled % resampled (with mesh data)
             M = T; 
             T = spm_mesh_smooth(struct('vertices',double(T.vertices),'faces',double(T.faces)), double(T.cdata(:)) , fwhm * job.spmfactor);
           else % not resampled (load separate mesh data)

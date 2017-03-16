@@ -227,7 +227,7 @@ restype.help   = {
 }; 
 
 %------------------------------------------------------------------------
-% Cleanup
+% AMAP MRF Filter
 %------------------------------------------------------------------------
 
 mrf         = cfg_entry;
@@ -273,8 +273,8 @@ gcutstr.strtype = 'r';
 gcutstr.num     = [1 1];
 gcutstr.def     = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help    = {
-  'Strength of skull-stripping before AMAP segmentation, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. The default of 0.5 was ' 
-  'successfully tested on a variety of scans. '
+  'Strength of skull-stripping before AMAP segmentation, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping.  The default of 0.5 was successfully tested on a variety of scans. '
+  'a^{3}'
   ''
   'The strength changes multiple internal parameters: '
   ' 1) Intensity thresholds to deal with blood-vessels and meninges '
@@ -310,9 +310,12 @@ NCstr.strtype = 'r';
 NCstr.num     = [1 1];
 NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
 NCstr.help    = {
-  'Strength of the SANLM noise correction. The default "inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
-''
+  'Strength of the SANLM noise correction. The default "inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction! '
+  ''
+  'Please note that our test showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
+  ''
 };
+
 
 %------------------------------------------------------------------------
 % Blood Vessel Correction
@@ -616,6 +619,7 @@ if ~spm
     extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
   end
 else
+  % SPM based surface processing and thickness estimation
   if expert>=2 % experimental expert options
     extopts.val   = {lazy,darteltpm,cat12atlas,brainmask,T1,vox,pbtres,ignoreErrors,verb}; 
   elseif expert==1 % working expert options

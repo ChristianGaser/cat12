@@ -9,11 +9,12 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   dbs   = dbstatus; debug = 0; 
   for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_cleanup'); debug = 1; break; end; end
 
+  
   LAB  = extopts.LAB;
   vxv  = 1/max(vx_vol);           % use original voxel size!!!
   NS   = @(Ys,s) Ys==s | Ys==s+1; % remove side alignment from atlas maps
 
-  cleanupstr  = min(1,max(0,extopts.cleanupstr * 1/(inv_weighting+1) ));
+  cleanupstr  = min(1,max(0,extopts.cleanupstr * 1/(inv_weighting+1) / max(1,mean(vx_vol)) ));
   cleanupdist = min(2,max(0,1 + 2*extopts.cleanupstr));
 
   stimec = cat_io_cmd(sprintf('Final cleanup (gcutstr=%0.2f)',cleanupstr));

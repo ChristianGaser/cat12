@@ -29,7 +29,9 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 %    - de | disterode
 %    - dc | distclose
 %    - do | distopen
-%    - l  | lab          largest object/cluster 
+%    - l  | lab          n(1) largest object/cluster with at least 
+%                        n(2) absolute voxels for negative n(2)
+%                             or relative voxels for positive n(2)
 %    - lo | labopen      (disterode  + distdilate + lab)
 %    - lc | labclose     (distdilate + disterode  + lab)
 %
@@ -69,7 +71,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     error('MATLAB:cat_vol_morph:vx_vol', ...
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
   end
-  no=n; n=round(double(n)); 
+  no=n; n(1)=round(double(n(1))); 
   switch lower(action)
     case {'l' 'lc' 'lo' 'labclose' 'labopen'}
       % not return in this case
@@ -109,16 +111,27 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     %===================================================================
     case {'lab' 'l'}
     % try to catch errors, if there is no object
-    try  
-      [ROI,num] = spm_bwlabel(double(vol),6);
-      num       = hist( ROI( ROI(:)>0 ) , 1:num);
-      [tmp0,num] = max(num(:)); clear tmp;
-      vol       = ROI==num;	
-    catch %#ok<CTCH>
-      vol = [];
-      warning('MATLAB:cat_vol_morph:NoObject','WARNING: cat_vol_morph - lab - no object!');
-    end 
+      try  
+        [ROI,num]  = spm_bwlabel(double(vol),6);
+        num        = hist( ROI( ROI(:)>0 ) , 1:num);
+        [num,numi] = sort(num,'descend');
+        vol        = ROI==numi(1);	
+        if exist('n','var') && n(1)>1
+          vol = single(vol); classVol = 'single'; 
+          if numel(n)==1, n(2)=0; end
+          for ni=2:min(numel(num),n(1))
+            if (n(2)<0 && num(ni)>(-n(2))) || ... % absolute vs. 
+               (n(2)>0 && num(ni)/num(1)>(n(2)))  % relative
+              vol(ROI==numi(ni)) = numi(ni);	
+            end
+          end
+        end
+      catch %#ok<CTCH>
+        vol = [];
+        warning('MATLAB:cat_vol_morph:NoObject','WARNING: cat_vol_morph - lab - no object!');
+      end 
 
+      
     
     %===================================================================
     % You have to use the original resolution, because fine structure 

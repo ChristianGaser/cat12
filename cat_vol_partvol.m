@@ -250,13 +250,22 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   % There can also be deep GM Hyperintensities! 
   % ####################################################################
   % ds('l2','',vx_vol,Ym,Ywmh,Ym/3,Ym/3,90)
+  % ####################################################################
+  % UPDATE: 
+  % 1) add fast Shooting (6:1.5:1.5 mm resolution) for better initialization
+  % 2) update values ... seperate detection of ventricular lession and 
+  %    other 
+  % ####################################################################
   try 
     Yp0e = Yp0.*cat_vol_morph(Yb,'e',2); 
     vols = mean([sum(round(Yp0e(:))==1) sum(round(Yp0e(:))==1 & Yvt(:))] / sum(round(Yp0e(:))>0.5));
 
     % only if there is a lot of CSF and not to much noise
-    if vols(1)>0.15 %&& noise<0.10 
+    volth = 0.15; 
+    if vols(1)>volth %&& noise<0.10 
       stime = cat_io_cmd(sprintf('  WMH detection (WMHCstr=%0.02f)',WMHCstr),'g5','',verb,stime); dispc=dispc+1;
+      
+      %WMHCstr = WMHCstr * (1 + (vols(1)-0.10)*2); 
       
       YBG2 = cat_vol_morph(Ya1==LAB.BG,'d',2); 
       
@@ -305,7 +314,7 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
       for lhsti=1:numel(lhstind), Ywmh(Ywmhl==lhstind(lhsti))=0; end
       %%
       Ya1(Ywmh)=LAB.HI;
-    elseif vols(1)<0.15 
+    elseif vols(1)<volth
       stime = cat_io_cmd(sprintf('  NO WMH detection (CSF ~%0.0f%%%%)',vols(1)*100),'g5','',verb,stime); dispc=dispc+1;
     elseif noise>0.10 
       stime = cat_io_cmd(sprintf('  NO WMH detection (too noisy ~%0.2f)',noise),'g5','',verb,stime); dispc=dispc+1;
@@ -367,9 +376,11 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   [tmp0,tmp1,Ys] = cat_vbdist(Ys,Ys==0);
   clear YMF2 Yt YS tmp0 tmp1;
   
-  % YMF for FreeSurfer fsaverage
+  %% YMF for FreeSurfer fsaverage
   Ysm  = cat_vol_morph(Ys==2,'d',1.75*vxd) & cat_vol_morph(Ys==1,'d',1.75*vxd);
   YMF  = cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.HI | (Ya1==LAB.TH & smooth3(Yp0)>2),'c',3) & ~Ysm; 
+  %YMF  = YMF | (cat_vol_morph(YA==LAB.CT & YBG,'c',6) & ~Ysm); 
+  YMF  = Ym<=2.5  & cat_vol_morph(YMF | Ym>2.3,'c',1) & cat_vol_morph(YMF,'d',2);
   YMF  = smooth3(YMF)>0.5;
   clear Ysm; 
   

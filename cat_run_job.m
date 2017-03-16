@@ -171,7 +171,7 @@ function cat_run_job(job,tpm,subj)
 
 
             % noise correction
-            if job.extopts.NCstr~=0
+            if job.extopts.NCstr~=0 && job.extopts.sanlm>0
               if job.extopts.sanlm==1
                 stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
                 cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
@@ -181,9 +181,7 @@ function cat_run_job(job,tpm,subj)
                 cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','')); 
                 if job.extopts.verb>1, cat_io_cmd(' ','',''); end
               end
-              if job.extopts.sanlm>0
-                fprintf('%4.0fs\n',etime(clock,stime));   
-              end
+              fprintf('%4.0fs\n',etime(clock,stime));   
             end
         end
 
@@ -214,8 +212,8 @@ function cat_run_job(job,tpm,subj)
               vx_voli  = max(vx_voli,job.extopts.restypes.(restype)(1) .* ...
                          ( vx_vol < (job.extopts.restypes.(restype)(1)-job.extopts.restypes.(restype)(2))));
             case 'best'
-              vx_voli  = min(vx_vol ,job.extopts.restypes.(restype)(1) ./ ...
-                         ((vx_vol > (job.extopts.restypes.(restype)(1)+job.extopts.restypes.(restype)(2)))+eps));
+              best_vx  = max( min( 1.0 , vx_vol) ,job.extopts.restypes.(restype)(1)); 
+              vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
               %vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
             otherwise 
               error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
@@ -277,25 +275,26 @@ function cat_run_job(job,tpm,subj)
         %  Bias correction is important for the affine registration.
         %  However, the first registation can fail and further control is required   
         % 
-        %  bias = 0-5 = none, light, light threshold, light apply, fine apply (light=only for registration) 
-        %  msk  = 0-4 = none, head msk, head hard, brain msk, brain hard (msk=mask only, hard=remove nonmsk)
-        %  aff  = 0-1 = no affreg, affreg
+        %  bias = 0-5: none, light, light threshold, light apply, fine apply (light=only for registration) 
+        %  msk  = 0-4: none, head msk, head hard, brain msk, brain hard (msk=mask only, hard=remove nonmsk)
+        %  aff  = 0-1: no affreg, affreg
 
         if ~strcmp(job.extopts.species,'human'), job.extopts.APP='nonhuman'; end
 
         if ischar(job.extopts.APP) || (isnumeric(job.extopts.APP) && numel(job.extopts.APP)==1)
           switch job.extopts.APP
             case {0,'none'},     app.bias=0; app.msk=0; app.aff=1; % old default
-            case {1,'light'},    app.bias=1; app.msk=1; app.aff=1; % affreg with BC; thresholding and head masking for SPM
+            case {1,'light'},    app.bias=1; app.msk=0; app.aff=1; % affreg with BC; thresholding and head masking for SPM
             case {2,'medium'},   app.bias=2; app.msk=1; app.aff=1; % no-affreg; BC and head masking for SPM  
-            case {3,'strong'},   app.bias=2; app.msk=1; app.aff=0; % no-affreg; BC and head masking for SPM  
-            case {4,'heavy'},    app.bias=4; app.msk=3; app.aff=0; % no-affreg; BC and brain masking for SPM  
+            case {3,'strong'},   app.bias=2; app.msk=2; app.aff=1; % no-affreg; BC and head masking for SPM  
+            case {4,'heavy'},    app.bias=4; app.msk=3; app.aff=1; % affreg with BC; BC and brain masking for SPM  
             case {5,'nonhuman'}, app.bias=4; app.msk=4; app.aff=0; % no-affreg; BC and brain masking for SPM  
             otherwise
-              app.bias  = max(0,min(4,round(job.extopts.APP,-2)/100));
-              app.msk   = max(0,min(4,round(mod(job.extopts.APP,100),-1)/10)); 
-              app.msk   = max(0,min(1,mod(job.extopts.APP,10))); 
+              app.bias  = max(0,min(4,roundx(job.extopts.APP,-2)/100));
+              app.msk   = max(0,min(4,roundx(mod(job.extopts.APP,100),-1)/10)); 
+              app.aff   = max(0,min(1,mod(job.extopts.APP,10))); 
           end
+          if app.aff==0 && app.bias==1, app.bias=0; end
         end
           
           
@@ -305,7 +304,7 @@ function cat_run_job(job,tpm,subj)
         Pbt = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
         Pb  = char(job.extopts.brainmask);
         Pt1 = char(job.extopts.T1);
-        if ~isempty(job.opts.affreg)      
+        if ~isempty(job.opts.affreg) && (app.aff>0 || app.bias>0 || app.msk>0)  
 
             %% first affine registration (with APP)
             try 
@@ -332,7 +331,7 @@ function cat_run_job(job,tpm,subj)
                 stime = cat_io_cmd('APP: Rough bias correction'); 
                 
                 try
-                  [Ym,Yt,Ybg,WMth,bias,Tth] = cat_run_job_APP_init(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
+                  [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(single(obj.image.private.dat(:,:,:)+0),vx_vol,struct('verb',job.extopts.verb));
                 catch
                   cat_io_cprintf('err','\n  APP failed, try APP=0! \n'); 
                   job2             = job; 
@@ -368,7 +367,7 @@ function cat_run_job(job,tpm,subj)
 
                 % update SPM parameter - only increasing of resolution paramter 
                 % experimental 20161021
-                if job.extopts.experimental
+                if job.extopts.experimental 
                   bias = max(0,bias - 0.1);                                       % there will allways be some bias
                   bias = double(bias);                                            % SPM need double!
                   obj.biasreg  = min(0.01,obj.biasreg * 10^round(2*min(1,bias))); % less regularisation in case of bias
@@ -469,7 +468,7 @@ function cat_run_job(job,tpm,subj)
                 end
   
                 % fine APP
-                [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)),...
+                [Ym,Yp0,Yb] = cat_run_job_APP_final(single(obj.image.private.dat(:,:,:)+0),...
                     Ymc,Yb,Ybg,vx_vol,job.extopts.gcutstr,job.extopts.verb);
                 stime = cat_io_cmd('Affine registration:','','',1,stime); 
 
@@ -543,12 +542,26 @@ function cat_run_job(job,tpm,subj)
             end
             clear VG1 VF1
         end
+        mat1 = spm_imatrix(Affine1); %affscale1 = mean(mat1(7:9)); 
+        if (max(mat1(7:9))/min(mat1(7:9)))>1.2
+           Affine1a = spm_maff8(obj.image(1),obj.samp*8,obj.fwhm*8,obj.tpm,eye(4),job.opts.affreg);
+           mat1a = spm_imatrix(Affine); %affscale1a = mean(mat1a(7:9)); 
+           if (max(mat1a(7:9))/min(mat1a(7:9))) < (max(mat1(7:9))/min(mat1(7:9)))
+             Affine = Affine1a; 
+           end
+        end
+        
+         
+        if job.extopts.verb>2
+          cat_io_cprintf(mean(mat1(7:9)),'  Initial affine scalling: %0.2f %0.2f %0.2f\n',mat1(7:9)); 
+          cat_io_cmd(' ','','',1);
+        end
 
 
         %% APP for spm_maff8
         %  optimize intensity range
         %  we have to rewrite the image, because SPM reads it again 
-        if job.extopts.APP>0
+        if job.extopts.APP>0 && (app.aff>0 || app.bias>0 || app.msk>0)  
             % WM threshold
             Ysrc = single(obj.image.private.dat(:,:,:)); 
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
@@ -604,19 +617,35 @@ function cat_run_job(job,tpm,subj)
             obj.image.pinfo = repmat([1;0],1,size(Ysrc,3));
             clear Ysrc; 
         end
+        
 
-
-
-        %  Fine Affine Registration with 3 mm sampling distance
+        %%  Fine Affine Registration with 3 mm sampling distance
         %  This does not work for non human (or very small brains)
         stime = cat_io_cmd('SPM preprocessing 1:','','',1,stime);
         if strcmp('human',job.extopts.species) 
             spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
-            warning off 
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg); 
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,       obj.tpm,Affine2,job.opts.affreg);
+            warning off
+            Affine2 = spm_maff8(obj.image(1),obj.samp*4,obj.fwhm*4,obj.tpm,Affine ,job.opts.affreg); % *16???
+            mat2 = spm_imatrix(Affine); %affscale2 = mean(mat2(7:9)); 
+            if (max(mat2(7:9))/min(mat2(7:9))) > (max(mat1(7:9))/min(mat1(7:9)))
+              Affine2 = Affine1; 
+            end
+            Affine3 = spm_maff8(obj.image(1),obj.samp  ,obj.fwhm  ,obj.tpm,Affine2,job.opts.affreg);
             warning on  
             if ~any(any(isnan(Affine3(1:3,:)))), Affine = Affine3; end
+            mat3 = spm_imatrix(Affine); affscale3 = mean(mat3(7:9)); 
+            if (max(mat3(7:9))/min(mat3(7:9)))>1.6 || affscale3<0.5 || affscale3>3
+              Affine = Affine1; 
+              if job.extopts.verb>2
+                cat_io_cprintf(mean(mat(7:9)),'\n  Fine affine scalling: %0.2f %0.2f %0.2f*\n',mat1(7:9)); 
+                cat_io_cmd(' ','','',1);
+              end
+            else
+              if job.extopts.verb>2
+                cat_io_cprintf(mean(mat(7:9)),'\n  Fine affine scalling: %0.2f %0.2f %0.2f\n',mat2(7:9)); 
+                cat_io_cmd(' ','','',1);
+              end
+            end
         end
         obj.Affine = Affine;
 
@@ -631,22 +660,51 @@ function cat_run_job(job,tpm,subj)
         %  ds('l2','a',0.5,Ym,Ybg,Ym,Ym,140);
         %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
         warning off 
+        lowngaus = 0; 
         try 
+          
           try
+            % spm preprocessing
             res = spm_preproc8(obj);
+          
+            clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+            if 0 && any([3 3 2 3 3 2]<job.opts.ngaus) && ...
+              (clsint(1)>clsint(2) || clsint(3)>clsint(1) || clsint(3)>clsint(2) || clsint(6)>clsint(3)) % inverse
+              lowngaus = 1; 
+            end
+
           catch
-            obj = rmfield(obj,'msk'); % try without mask ... there was an datatype error ... 
+            lowngaus = 1; 
+            
+            %if job.extopts.verb, cat_io_cprintf('warn','  Error: spm_preproc8 failed, try spm_preproc8 with brainmask.\n'); end
+            %  obj = rmfield(obj,'msk'); % try without mask ... there was an datatype error ... 
+            %  res = spm_preproc8(obj);
+            %end
+          end
+          
+          if lowngaus
+            job.opts.ngaus   = max([3 3 2 3 3 2],job.opts.ngaus); 
+            obj.lkp      = [];
+            for k=1:numel(job.opts.ngaus)
+              job.tissue(k).ngaus = job.opts.ngaus(k);
+              obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
+            end
+            
+            % spm preprocessing with increased number of gaussian classes
             res = spm_preproc8(obj);
           end
+            
         catch
-            if (job.extopts.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
-                [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
-                delete(fullfile(pp,[ff,ee]));
-            end
-            error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
+          if (job.extopts.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
+              [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
+              delete(fullfile(pp,[ff,ee]));
+              error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
+          end
         end
+   
+        
         warning on 
-
+        if exist('ppe','var'), res.ppe = ppe; end
 
         if job.extopts.experimental
             % save information for debuging and OS test
@@ -697,4 +755,7 @@ function cat_run_job(job,tpm,subj)
 %%
 return
 %=======================================================================
-
+function r = roundx(r,rf)
+  r(:) = round(r(:) * rf) / rf;
+return
+%=======================================================================
