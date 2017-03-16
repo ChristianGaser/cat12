@@ -60,7 +60,7 @@ function varargout = cat_vol_flipside(job)
     end
     spm_write_vol(V(vi),Y2);
     
-    if verb
+    if job.verb
       fprintf('Flip %s\n',spm_file(Vs(vi).fname,'link','spm_display(''%s'')'));
     end
   end

@@ -308,71 +308,78 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
  
   %% old code ...
   if write(3)
+    for wi=1:2  
       %% 
-    if     write(3)==1, pre3 = ['mw'   pre]; desc3 = [desc '(Jac. sc. warped)'];
-    elseif write(3)==2, pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; end
-    
-    fname = io_handle_pre(V.fname,pre3,'',folder);
-    if exist(fname,'file'), delete(fname); end
-
-    [wT,w]  = spm_diffeo('push',YI,transform.warped.yx,transform.warped.odim(1:3));
-    
-    % divide by jacdet to get unmodulated data
-    wT = wT./(w+0.001); 
-    
-    % Modulation using spm_diffeo and push introduces aliasing artefacts,
-    % thus we use the def2det function of the inverted deformations to obtain the old and 
-    % in my view a more appropriate jacobian determinant 
-    % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-    Yy = spm_diffeo('invdef',transform.warped.y,transform.warped.odim,eye(4),transform.warped.M0);
-    w  = spm_diffeo('def2det',Yy)/det(transform.warped.M0(1:3,1:3));
-    clear Yy
-    
-    % ensure that jacobian det is positive (no clue why some times the sign is switched)
-    if mean(w(~isnan(w))) < 0, w = -w; end 
-    w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
-    wT = wT.*w;
-    
-    if interpol
-      %[wTo,wo]  = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));
-      %wT = wT * cat_stat_nansum(wTo(:))/cat_stat_nansum(wT(:)) * sum(Y(:))./sum(YI(:));
-      wT = wT * cat_stat_nansum(Y(:))/cat_stat_nansum(wT(:)); 
-    end
-    clear w
-    
-    if exist('YM','var') % final masking after transformation
-      if interpol
-        YM = interp(YM,1,'linear'); 
+      if     (write(3)==1 || write(3)==3) && wi==1
+        pre3 = ['mw'   pre]; desc3 = [desc '(Jac. sc. warped)'];
+      elseif (write(3)==2 || write(3)==3) && wi==2
+        pre3 = ['m0w'  pre]; desc3 = [desc '(Jac. sc. warped non-lin only)']; 
+      else
+        continue
       end
-      wTM = spm_diffeo('push',YM,transform.warped.yx,transform.warped.odim(1:3)); 
-      wT = wT .* (smooth3(wTM)>YMth);
-      clear YM;
-    end
-   % clear yI
-        
-    % scale the jacobian determinant 
-    if write(3)==1
-      wT = wT*abs(det(transform.warped.M0(1:3,1:3))/ ...
-                  det(transform.warped.M1(1:3,1:3)));
-    else
-      wT = wT*abs(det(transform.warped.M2(1:3,1:3)));
-    end
 
-    N         = nifti;
-    N.dat     = file_array(fname,transform.warped.odim, ...
-                    [spm_type(spmtype) spm_platform('bigend')], ...
-                    range(1),range(2),0);
-    N.mat     = transform.warped.M1;
-    N.mat0    = transform.warped.M1; % do not change mat0 - 20150612 - not changing, creating 20150916
-    create(N);       
-    if isempty(V.descrip), N.descrip = desc3; else  N.descrip = [desc3 ' < ' V.descrip]; end
+      fname = io_handle_pre(V.fname,pre3,'',folder);
+      if exist(fname,'file'), delete(fname); end
 
-    N.dat(:,:,:) = double(wT) ; % / 8^interpol; %
-    clear N;
-    
-    if nargout>0, varargout{1}(3) = spm_vol(fname); end
-    if nargout>1, varargout{2}{3} = wT; end
-    clear wT
+      [wT,w]  = spm_diffeo('push',YI,transform.warped.yx,transform.warped.odim(1:3));
+
+      % divide by jacdet to get unmodulated data
+      wT = wT./(w+0.001); 
+
+      % Modulation using spm_diffeo and push introduces aliasing artefacts,
+      % thus we use the def2det function of the inverted deformations to obtain the old and 
+      % in my view a more appropriate jacobian determinant 
+      % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
+      Yy = spm_diffeo('invdef',transform.warped.y,transform.warped.odim,eye(4),transform.warped.M0);
+      w  = spm_diffeo('def2det',Yy)/det(transform.warped.M0(1:3,1:3));
+      clear Yy
+
+      % ensure that jacobian det is positive (no clue why some times the sign is switched)
+      if mean(w(~isnan(w))) < 0, w = -w; end 
+      w(:,:,[1 end]) = NaN; w(:,[1 end],:) = NaN; w([1 end],:,:) = NaN;
+      wT = wT.*w;
+
+      if interpol
+        %[wTo,wo]  = spm_diffeo('push',Y,transform.warped.y,transform.warped.odim(1:3));
+        %wT = wT * cat_stat_nansum(wTo(:))/cat_stat_nansum(wT(:)) * sum(Y(:))./sum(YI(:));
+        wT = wT * cat_stat_nansum(Y(:))/cat_stat_nansum(wT(:)); 
+      end
+      clear w
+
+      if exist('YM','var') % final masking after transformation
+        if interpol
+          YM = interp(YM,1,'linear'); 
+        end
+        wTM = spm_diffeo('push',YM,transform.warped.yx,transform.warped.odim(1:3)); 
+        wT = wT .* (smooth3(wTM)>YMth);
+        clear YM;
+      end
+     % clear yI
+
+      % scale the jacobian determinant 
+      if (write(3)==1 || write(3)==3) && wi==1
+        wT = wT*abs(det(transform.warped.M0(1:3,1:3))/ ...
+                    det(transform.warped.M1(1:3,1:3)));
+      else
+        wT = wT*abs(det(transform.warped.M2(1:3,1:3)));
+      end
+
+      N         = nifti;
+      N.dat     = file_array(fname,transform.warped.odim, ...
+                      [spm_type(spmtype) spm_platform('bigend')], ...
+                      range(1),range(2),0);
+      N.mat     = transform.warped.M1;
+      N.mat0    = transform.warped.M1; % do not change mat0 - 20150612 - not changing, creating 20150916
+      create(N);       
+      if isempty(V.descrip), N.descrip = desc3; else  N.descrip = [desc3 ' < ' V.descrip]; end
+
+      N.dat(:,:,:) = double(wT) ; % / 8^interpol; %
+      clear N;
+
+      if nargout>0, varargout{1}(3) = spm_vol(fname); end
+      if nargout>1, varargout{2}{3} = wT; end
+      clear wT
+    end
   end
   
     

@@ -41,14 +41,51 @@
       </p>
       <p style="text-align:center;">
         <img src="images/cat_tst_seg_BWP_boxplot.png" width=40% height=auto alt="Box plot of BWP results" >
-        <img src="images/cat_tst_seg_real_boxplot.png" width=40% height=auto alt="Box plot of real data results" >
+        <img src="images/cat_tst_seg_exp_boxplot.png" width=40% height=auto alt="Box plot of real data results" >
       </p>
 
-        
+
+
+
+
+      <!-- Table of contents -->
+      <h4 id="Table of contents">Overview</h4>
+      <ul>
+        <li><a href="#detailedResults">Detailed Results</a>
+          <ul>
+            <li><a href="#detailedResultsBWP">BWP testdata</a></li>
+            <li><a href="#detailedResultsExp">Expert testdata</a></li>
+          </ul>
+        </li>
+        <li><a href="#ResultsPara">Parameter tests</a></li>
+          <ul>
+            <li><a href="#ResultsParaS">Default user parameter</a></li>
+            <li><a href="#ResultsParaC">Expert user parameter</a></li>
+            <li><a href="#detailedResultsPara">Detailed Results</a>
+              <ul>
+                <li><a href="#detailedResultsBWPPara">BWP testdata</a></li>
+                <li><a href="#detailedResultsExpPara">Expert testdata</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#dataReferences">Data references</a>
+          <ul>
+            <li><a href="#dataReferencesBWP">BWP testdata</a></li>
+            <li><a href="#dataReferencesExp">Expert testdata</a></li>
+          </ul>
+        </li>
+        <li><a href="#softwareVersions">Software Versions</a></li>
+        <li><a href="#references">References</a></li>
+      </ul>
+
+
+
+
 
 			<!-- Detailed results --> 
-      <h3>Detailed results</h3>
-        <h4>BWP testdata</h4>
+      <h3 id="detailedResults">Detailed results</h3>
+        <h4 id="detailedResultsBWP">BWP testdata</h4>
           <p>
             <!-- SPM --> 
             SPM8 and SPM12 revealed problems in case of increased noise (e.g., <i>pn9</i>) especially for negative inhomogeneity (e.g., <i>rf100nA</i>).  
@@ -62,7 +99,7 @@
           <p style="text-align:center;">
             <img src="images/cat_tst_seg_bwp_detail.png" width=80% height=auto alt="Detailed results of BWP data" >
           </p>
-        <h4>Expert testdata</h4>
+        <h4 id="detailedResultsExp">Expert testdata</h4>
           <p>
             Although, VBM8 worked very well on the BWP different problems were observed in some special protocols (e.g., extraordinary low or high GM-WM contrast) or untypical anatomy (e.g, heavy atrophy with very large ventricles). 
             To improve the preprocessing, further routines were added to VBM12 that lead to a more stable, but at the beginning also less accurate processing that was improved over time. 
@@ -73,13 +110,184 @@
             The last two datasets "WB01" and "WB02" were not tested for VBM12 and early CAT12 yet because of their computational demands (isotropic voxel size 0.3mm). 
           </p>
           <p style="text-align:center;">
-            <img src="images/cat_tst_seg_real_detail.png" width=80% height=auto alt="Detailed results of real data" >
+            <img src="images/cat_tst_seg_exp_detail.png" width=80% height=auto alt="Detailed results of real data" >
           </p>
+          
+               
+       
+       
+       
+      <!-- Parameter tests -->  
+      <h3 id="ResultsPara">Parameter tests</h3>
+        <p>
+          Parameter setting were tested for CAT12 Revision 1109<sup>+</sup>.  The control parameter are designed to allow small adaptions for user specific protocols, e.g., if the default setting are not satisfying, but the changes are also limited to avoid completely fails.  Hence, adaptions can not compensate severe problems with specific protocols or subjects.  The effects depend on protocol and subject anatomy and may seems to be small in average or for some cases.  Before you change parameter, please check the origin of your data and for severe artefacts.  If you have challenging data that can not processed successfully, or observe severe errors/problems please e-mail us. 
+        </p><p>
+          This page is still under construction and the results are partially incomplete!    
+        </p>
+         
+        <!-- default SPM parameter -->  
+        <h4 id="ResultsParaSd">SPM default user parameter</h4> 
+          <!-- 
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_TPM.png" width=40% height=auto alt="SPM TPM parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_TPM.png" width=40% height=auto alt="SPM TPM parameter on real data" >
+          </p><p style="font-size: 80%;">
+            Affine registration parameter: MNI (affm), eastern (affe), subject (affs), rigid (affr), and none (affn).  
+          </p>
+          </br></br>
+          -->
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_aff.png" width=40% height=auto alt="SPM affreg parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_aff.png" width=40% height=auto alt="SPM affreg parameter on real data" >
+          </p><p style="font-size: 80%;">
+            <b>Affreg: </b> 
+            Affine registration parameter with the settings: MNI (affm), eastern (affe), subject (affs), rigid (affr), and none (affn). 
+            Overall we observed quite similar results with the different registration parameter with exception of the 'rigid' registration that failed in some real subjects.
+            (Not all scans were processes due to other problems > needs recalculation.)  
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_bf.png" width=40% height=auto alt="SPM biasfwhm parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_bf.png" width=40% height=auto alt="SPM biasfwhm parameter on real data" >
+            <!--
+          </p><p style="font-size: 80%;">
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            -->
+            <img src="images/cat_tst_seg_bwp_boxplot_para_breg.png" width=40% height=auto alt="SPM biasreg parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_breg.png" width=40% height=auto alt="SPM biasreg parameter on real data" >
+          </p><p style="font-size: 80%;">
+            <b>Biasfwhm, biasreg & biasstr: </b> 
+            Biasstr change the strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  
+            Use smaller values (>0) for small corrections (e.g., in synthetic contrasts without visible bias) and higher values (<=1) for stronger corrections (e.g., in 7 Tesla data). The value 0 used the original SPM biasreg and biasfwhm parameter of the cat_defaults file. 
+          </p><p style="font-size: 80%;">
+            biasreg = min(  10 , max(  0 , 10<sup>-(biasstr*2 + 2)</sup> )) 
+            </br>
+            biasfwhm = min( inf , max( 30 , 30 + 60*biasstr )) 
+          </p><p style="font-size: 80%;">
+            Biasstr = eps results in high regularisation (biasreg = 0.01) and high filter size (biasfwhm = 90 mm), whereas 
+            biasstr = 1 results in low regularisation (biasreg = 0.0001) and low filter size (baiasfwhm = 30 mm). 
+          </p>
+          </br></br>
+          <!--
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_bstr.png" width=40% height=auto alt="SPM biasstr parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_bstr.png" width=40% height=auto alt="SPM biasstr parameter on real data" >
+          </p><p style="font-size: 80%;">
+            biasstr: CAT biasstr parameter that controls SPM biasreg and biasfwhm parameter at once.  
+            Higher values are only required for highfield-scans with strong inhomogeneity. 
+          </p>
+          </br></br>
+          -->
+          
+        <h4 id="ResultsParaSe">SPM expert user parameter</h4>   
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_ng.png" width=40% height=auto alt="SPM ngaus parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_ng.png" width=40% height=auto alt="SPM ngaus parameter on real data" >
+          </p><p style="font-size: 80%;">
+            <b>ngaus</b>Number of Gaussian Curves fitted for each tissue class 
+            (ng<sub>1</sub> = [1 1 2 4 3 2], ng<sub>2</sub> = [2 2 2 4 3 2], ng<sub>3</sub> = [3 3 2 4 3 2], ng<sub>4</sub> = [4 4 2 4 3 2], ng<sub>5</sub> = [4 4 2 4 3 2]).
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_WR.png" width=40% height=auto alt="SPM warpreg parameter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_WR.png" width=40% height=auto alt="SPM warpreg parameter on real data" >
+          </p><p style="font-size: 80%;">
+            <b>warpreg</b>Nonlinear warping parameter of the Unified Segmentation 
+            (WR<sub>1</sub> = [0 0.0001 0.001 0.01 0.1]; WR<sub>2</sub> = [0 0.001  0.01  0.1  0.2]; WR<sub>3</sub> = [0 0.002  0.02  0.2  0.4]; 
+             WR<sub>4</sub> = [0.5 0.4  0.3  0.2  0.1]; WR<sub>5</sub> = [0.8 0.4  0.2  0.1  0.2]). 
+          </p>
+          </br></br>
+                   
+        <!-- default user parameter -->  
+        <h4 id="ResultsParaCd">Default user parameter</h4>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_APP.png" width=40% height=auto alt="APP on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_APP.png" width=40% height=auto alt="APP on real data" >
+          </p><p style="font-size: 80%;">
+            <b>APP: </b> Type of affine preprocessing APP (no no correction, light correction, strong correction).  Although APP worked well for some cases, the overall process did not profit and our test identified to many problems.  It is therefore not active by default but can help in some cases. 
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_LAS.png" width=40% height=auto alt="LASstr on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_LAS.png" width=40% height=auto alt="LASstr on real data" >
+          </p><p style="text-align:center; font-size: 80%;">
+            LASstr: Strength of local adaptive segmentation (LAS) approach LASstr with 0 for no LAS correction, 0.01 for light, 0.50 for average, and 1.00 for strong corrections. 
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_SS.png" width=40% height=auto alt="GCUTstr on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_SS.png" width=40% height=auto alt="GCUTstr on real data" >
+          </p><p style="text-align:center; font-size: 80%;">
+            <b>GCUTstr:</b> Strength of the skull-stripping GCUTstr with 0 for old SPM skull-stripping with cleanup, 0.01 for soft (softer boundary for more tissue), 0.50 for average, and 1.00 for hard skull-stripping (harder boundary with less tissue).
+          </p>
+          </br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_CU.png" width=40% height=auto alt="cleanupstr on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_CU.png" width=40% height=auto alt="cleanupstr on real data" >
+          </p><p style="text-align:center; font-size: 80%;">
+            <b>Cleanupstr:</b> Cleanup (correction of meninges and blood vessels) method (0 - no cleanup, eps to 1 - optimized cleanup, 2 - old cleanup) and strength of the optimized cleanup routine with 0.01 for less, 0.50 for average, and 1.00 for strong corrections.
+          </p>
+          </br>
+          
+          
+          
+        <!-- expert user parameter -->    
+        <h4 id="ResultsParaCe">Expert user parameter</h4>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_res.png" width=40% height=auto alt="REStype and RESval on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_res.png" width=40% height=auto alt="REStype and RESval on real data" >
+          </p><p style="font-size: 80%;">
+            <b>REStype & RESval:</b> Resolution setting for internal interpolation with 
+              res<sub>native</sub> (REStype = 'native'),
+              res<sub>best</sub> (default: REStype = 'best'; RESval = [1.0 0.3]), 
+              res<sub>fixed</sub> (REStype = 'fixed'; RESval = [1.0 0.0];), and 
+              res<sub>high</sub> (REStype = 'fixed'; RESval = [0.5 0.0];).
+            Especially, data with low (slice) resolution can profit by interpolation because some operations work on a voxel level.  Nevertheless, interpolation can not increase the amount of anatomical details and preprocessing did not profit by interpolated data in general and in most cases it only required more memory and processing time.  Therefore, we recommend to avoid unnecessary interpolation and use it only to avoid strong anisotropies.
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_LC.png" width=40% height=auto alt="Lesion correction WMHC=3 on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_LC.png" width=40% height=auto alt="Lesion correction WMHC=3 on real data" >
+          </p><p style="font-size: 80%;">
+            <b>WMHC & WMHCstr:</b> The correction of WM Hyperintensities (WM Lesions) is still in development.  It is controlled by the WMHC parameter (0 - no correction, 1 - only for normalization, 2 - add lesions to WM; 3 - create another class p7*) and by the WMHCstr parameter (0 - off; 0.01 - light, 0.50 - average, 1.00 strong corrections).  The correction is important for the spatial normalization by Dartel/Shooting.
+          </p>
+          </br></br>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_boxplot_para_NLM.png" width=40% height=auto alt="Noise correction with NLM filter on the BWP" >
+            <img src="images/cat_tst_seg_exp_boxplot_para_NLM.png" width=40% height=auto alt="Noise correction with NLM filter on real data" >
+          </p><p style="font-size: 80%;">
+            <b>SANLM & NCstr:</b> The noise correction is controlled by two parameter the filter type and the strength of the filter. 
+            By default an improved SANLM filter NLM<sub>I</sub>is used (SANLM = 1; NCstr = INF), that try to avoid unnecessary filter of the classical SANLM filter NLM<sub>1</sub> (SANLM = 1; NCstr = 1). 
+            Furthermore, a resolution adaptive version ISARNLM (SANLM = 2; NCstr = INF), is available that can help in parallel image artefacts in high resolution data with voxel size below 1 mm (still in development). 
+          </p>
+          
+        
+        
+        
+        <!-- Detailed results --> 
+      <h3 id="detailedResultsPara">Detailed parameter results</h3>
+        <h4 id="detailedResultsBWPPara">BWP testdata</h4>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_bwp_detail_para.png" width=80% height=auto alt="Detailed results of BWP data" >
+          </p>
+        <h4 id="detailedResultsExpPara">Expert testdata</h4>
+          <p style="text-align:center;">
+            <img src="images/cat_tst_seg_exp_detail_para.png" width=80% height=auto alt="Detailed results of real data" >
+          </p>
+
+        
+        
+        
+        
+        
         
       
 			<!-- Image names and properties --> 
-			<h3>Data references</h3>
-        <h4>BWP testdata</h4>
+			<h3 id="dataReferences">Data references</h3>
+        <h4 id="dataReferencesBWP">BWP testdata</h4>
           <p>
             Table of BWP datasets with image parameters.  
           </p><p>
@@ -132,7 +340,7 @@
               </tfoot>
             </table>
           </p>
-        <h4>Expert testdata</h4>
+        <h4 id="dataReferencesExp">Expert testdata</h4>
         <!-- add resolution -->
         <!-- add comments -->
         <!-- add IQR -->
@@ -283,7 +491,7 @@
           </p>
           
           
-        <h4>Software Versions</h4>
+        <h4 id="softwareVersions">Software Versions</h4>
           <p>
             Table of software releases.
           </p><p>
@@ -310,7 +518,7 @@
           </p>
         
               
-      <h3>References</h3>
+      <h3 id="references">References</h3>
       <p>
         This part is still in development!
       </p>

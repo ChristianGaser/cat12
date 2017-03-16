@@ -40,13 +40,15 @@ function [filesfound,numberfound] = cat_vol_findfiles(varargin)
 % NOTE: the minage/maxage feature only fully works when the system
 % returns English-style month in calls to dir. i.e. under Linux, set the
 % LANG environmental setting to 'en_US' before starting up MatLab
-
+%
 % Version:  v0.9d
 % Build:    14071015
 % Date:     Jul-10 2014, 3:28 PM EST
 % Author:   Jochen Weber, SCAN Unit, Columbia University, NYC, NY, USA
 % URL/Info: http://neuroelf.net/
-
+%
+% ______________________________________________________________________
+%
 % Copyright (c) 2010 - 2014, Jochen Weber
 % All rights reserved.
 %
@@ -86,11 +88,14 @@ if nargin < 1 || ...
      isempty(varargin{1}) || ...
      ~ischar(varargin{1}{1}) || ...
      isempty(varargin{1}{1})))
+    help cat_vol_findfiles; return
+    %{
     error( ...
         'neuroelf:TooFewArguments',...
         'Too few arguments. Try ''help %s''.',...
         mfilename ...
     );
+    %}
 end
 
 % for single argument

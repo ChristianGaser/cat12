@@ -104,7 +104,7 @@ function varargout = compile(comp,test,verb)
     ncw  = cell(1,2);   % number of warnings
     
     
-    % compile main c-functions
+    %% compile main c-functions
     for nci=1:numel(nc)
       if verb, fprintf('Compiling c-functions:\n'); end
       for ncj = 1:numel(nc{nci})
@@ -502,6 +502,7 @@ function varargout = compile(comp,test,verb)
     s  = []; 
   end
  
+  %%
   if nargout>0, varargout{1}=ok; end
   if nargout>1, varargout{2}=s;  end  
   if nargout>2, varargout{3}=r;  end  

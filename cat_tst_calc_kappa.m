@@ -4,7 +4,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 % reference image(s) Pref. Use realgignment if image properties does not 
 % match.
 %
-% [txt,val] = cat_tst_calc_kappa(P,Pref,opt)
+%??[txt,val] = cat_tst_calc_kappa(P,Pref,opt)
 % 
 % P             .. list of images
 % Pref          .. ground truth segmentation
@@ -84,12 +84,12 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 % default parameter settings  
   if ~exist('opt','var'), opt=struct(); end
   def.methodname  = ['(' spm_str_manip(spm_str_manip(P(1,:),'h'),'l20') ')'];
-  def.verb        = 1;
+  def.verb        = 2;
   def.realign     = 0;
   def.realignres  = 1.5; 
   def.diffimg     = 0;
   def.testcase    = 'auto';
-  def.spaces      = 50; 
+  def.spaces      = 70; 
   def.finishsound = 0; 
   opt = cat_io_checkinopt(opt,def);
   
@@ -124,20 +124,22 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
     abs(diff([worst,best]))*(marks-1)+1))) + setnan(isnan(x)+1); 
   estr = sprintf('%s\n%s\n\n',spm_str_manip(P(1,:),'h'),Vref(1).fname);
 
-  
+  Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
 % loop  
   for nc=1:(ncls>1 && nargout>2)+1  
     
     
   % create header of output table 
-    fprintf('cat_tst_calc_kappa with %d classes.\n',ncls);
+    if opt.verb>1
+      fprintf('cat_tst_calc_kappa with %d classes.\n',ncls);
+    end
     switch ncls
       case 0, txt{1}='Error ground truth empty!'; continue
       case 1, tab = {['File ' sprintf(sprintf('%%%ds',opt.spaces-4),opt.methodname)],...
-                    'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)'};
-              txt{1} = sprintf(sprintf('\\n%%%ds%%6s%%8s%%8s%%8s%%8s%%8s%%8s%%8s%%8s\\n',opt.spaces),...
-                estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9});
-              k = zeros(n,8);
+                    'kappa','jaacard','dice','sens.','spec.','FP(F)','FN(N)','N/(P+N)','RMS'};
+              txt{1} = sprintf(sprintf('\\n%%%ds%%6s%%8s%%8s%%8s%%8s%%8s%%8s%%8s%%8s%%8s\\n',opt.spaces),...
+                estr,tab{1},tab{2},tab{3},tab{4},tab{5},tab{6},tab{7},tab{8},tab{9},tab{10});
+              k = zeros(n,9);
       case 3, tab = {['File ' sprintf(sprintf('%%%ds',opt.spaces-4),opt.methodname)],...
                     'K(C)','K(G)','K(W)','K(CGW)','K(B)','RMS(C)','RMS(G)','RMS(W)','RMS(CGW)','RMS(B)'};
               txt{1} = sprintf(sprintf('\\n%%%ds%%s%%8s%%8s%%8s%%8s%%8s |%%8s%%8s%%8s%%8s%%8s\\n',opt.spaces),...
@@ -145,9 +147,9 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
               k = zeros(n,10);
     end
     txt{2} = ''; 
-    if opt.verb && ~isempty(txt{1}), fprintf(txt{1}); end
+    if opt.verb && ~isempty(txt{1}) && opt.verb>1, fprintf(txt{1}); end
 
-
+    
   % data evaluation
     for i=1:n 
       %% for all test cases
@@ -164,31 +166,36 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
       if numel(Vref)==numel(V) || i==1
         vol1 = single(spm_read_vols(Vref(Vrefi)));
       end  
+      vx_vol  = sqrt(sum(Vref(Vrefi).mat(1:3,1:3).^2)); 
       
       % realginment
-      if any(V(i).dim ~= Vref(Vrefi).dim) || opt.realign %|| any(V(i).mat(:) ~= Vref(Vrefi).mat(:)) 
+      if any(V(i).dim ~= Vref(Vrefi).dim) %|| any(V(i).mat(:) ~= Vref(Vrefi).mat(:)) 
         [pp,ff,ee] = spm_fileparts(V(i).fname);
-        Vir = [tempname ee];
-        try
-          copyfile(V(i).fname,Vir);
-          spm_realign(char([{Vref(Vrefi).fname};{Vir}]),...
-            struct('sep',opt.realignres,'rtm',0,'interp',4,'graphics',0,'fwhm',opt.realignres));
-          fprintf(repmat('\b',1,73*3+1))
-        catch
-          delete(Vir);
-        end  
+        if opt.realign
+          Vir = [tempname ee];
+          try
+            copyfile(V(i).fname,Vir);
+            spm_realign(char([{Vref(Vrefi).fname};{Vir}]),...
+              struct('sep',opt.realignres,'rtm',0,'interp',4,'graphics',0,'fwhm',opt.realignres));
+            fprintf(repmat('\b',1,73*3+1))
+          catch
+            delete(Vir);
+          end  
+        else
+          Vir = V(i).fname; 
+        end
         [V(i),vol2] = cat_vol_imcalc(Vir,Vref(Vrefi),'i1',struct('interp',6,'verb',0));
       else
         vol2 = single(spm_read_vols(V(i)));
       end
 
       
-      % ds('l2','',1,vol2/ncls,vol1/ncls,vol2/ncls,vol1/ncls,126)
+      %% ds('l2','',1,vol2/ncls,vol1/ncls,vol2/ncls,vol1/ncls,126)
       switch opt.testcase
         case 'slices'
           %%
           vol1 = round(vol1); 
-          vol2 = round(vol2); 
+          %vol2 = round(vol2); 
           
           xsum = shiftdim(sum(sum(vol1,2),3),1); xslices = find(xsum>max(xsum)*.1);
           ysum = sum(sum(vol1,1),3);             yslices = find(ysum>max(ysum)*.1);
@@ -203,19 +210,22 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
               [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion, dice, jaccard] = ...
                 cg_confusion_matrix( uint8(vol1(mask(:))>0) + 1, uint8( round(vol2(mask(:))) == max(vol1(:))-1) + 1, 2);
               
-              FP     = confusion(1,2); FN = confusion(2,1);
-              k(i,:) = [kappa_all,jaccard(1),dice(1),sensit(1),sensit(2),FP,FN,FN/(FN+FP)];
-              txti   = sprintf(sprintf('%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f\\n',opt.spaces),...
-                fnamestr,k(i,:)); 
+              % rms for GM class
+              rms    = sqrt( cat_stat_nanmean( ( (vol1(mask(:))>0) - Yp0toC(vol2(mask(:)),2) ).^2 ) );
 
+              FP     = confusion(1,2); FN = confusion(2,1);
+              k(i,:) = [kappa_all,jaccard(1),dice(1),sensit(1),sensit(2),FP,FN,FN/(FN+FP),rms];
+              txti   = sprintf(sprintf('%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f%%8.4f\\n',opt.spaces),...
+                fnamestr,k(i,:)); 
+              
               val(i).BE  = struct('kappa',kappa_all,'accuracy',accuracy_all, ...
                            'FP',FP,'FN',FN, ...
-                           'sensit_all',sensit_all,'sensit',sensit(1),'specif',specif(1),'dice',dice(1),'jaccard',jaccard(1)); 
+                           'sensit_all',sensit_all,'sensit',sensit(1),'specif',specif(1),'dice',dice(1),'jaccard',jaccard(1),'rms',rms); 
               colori = mean(kappa_all);
             case 3
           end
         otherwise
-          
+          %%
 
 
 
@@ -233,7 +243,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 
 
 
-          % class-based evaluation
+          %% class-based evaluation
           switch ncls
             case 1
               %if length(Vref)==n,  vol1 = spm_read_vols(Vref(i))/255+1;
@@ -245,9 +255,11 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
               [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion, dice, jaccard] = ...
                 cg_confusion_matrix(uint8((round(vol1(:))>0)+1), uint8((round(vol2(:))>0)+1), 2);
 
+              rms    = sqrt( cat_stat_nanmean( ( ( vol1(:) - vol2(:) ).^2 ) ));
+              
               FP     = confusion(1,2); FN = confusion(2,1);
-              k(i,:) = [kappa_all,jaccard(1),dice(1),sensit(1),sensit(2),FP,FN,FN/(FN+FP)];
-              txti   = sprintf(sprintf('%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f\\n',opt.spaces),...
+              k(i,:) = [kappa_all,jaccard(1),dice(1),sensit(1),sensit(2),FP,FN,FN/(FN+FP),rms];
+              txti   = sprintf(sprintf('%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f%%8.4f\\n',opt.spaces),...
                 fnamestr,k(i,:)); 
 
               val(i).BE  = struct('kappa',kappa_all,'accuracy',accuracy_all, ...
@@ -256,11 +268,19 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
               colori = mean(kappa_all);
             case 3
               maxv=max((vol1(:))); 
-              if maxv>4, vol1=round(vol1); vol1=vol1/maxv*3; end
-
+               switch opt.testcase
+                 case 'IBSR'
+                   vol1=round(vol1);
+                   if maxv>3
+                     vol1=round(((vol1-64)/(maxv-64)) * 3);
+                   end
+                 otherwise
+                   if maxv>4, vol1=round(vol1); vol1=vol1/maxv*3; end
+               end
+               
               if 0
                 % temporare
-                % bei dem BWP test bei fsl gibts einen ungeklärten versatz
+                % bei dem BWP test bei fsl gibts einen ungekl??rten versatz
                 if ~isempty(strfind(upper(V(i).fname),'FSL')) && ~isempty(strfind(upper(V(i).fname),'BWP'))
                   vol2(2:end,:,:)=vol2(1:end-1,:,:);
                 end
@@ -306,18 +326,20 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
    
     
     %% conclustion
-    switch ncls
-      case 1, txt{3} = sprintf(sprintf( ...
-                         ['\\n%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f\\n', ...
-                             '%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f\\n\\n'], ...
-                             opt.spaces,opt.spaces),'mean',mean(k,1),'std',std(k,1,1));
-      case 3, txt{3} = sprintf(sprintf( ...
-                         ['\\n%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n' ...
-                             '%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n\\n'], ...
-                             opt.spaces,opt.spaces),'mean',mean(k,1),'std',std(k,1,1));     
+    if numel(n)
+      switch ncls
+        case 1, txt{3} = sprintf(sprintf( ...
+                           ['\\n%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f%%8.4f\\n', ...
+                               '%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f%%8.0f%%8.0f%%8.4f%%8.4f\\n\\n'], ...
+                               opt.spaces,opt.spaces),'mean',mean(k,1),'std',std(k,1,1));
+        case 3, txt{3} = sprintf(sprintf( ...
+                           ['\\n%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n' ...
+                               '%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n\\n'], ...
+                               opt.spaces,opt.spaces),'mean',mean(k,1),'std',std(k,1,1));     
+      end
+      if opt.verb>1 && n>1, fprintf(txt{3}); end; 
+      tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   
     end
-    if opt.verb, fprintf(txt{3}); end; tab = [tab;[{'mean'},num2cell(mean(k,1));'std',num2cell(std(k,1,1))]];                   
- 
     
     % export
     if nc==1

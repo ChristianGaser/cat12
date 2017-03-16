@@ -30,6 +30,9 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.showdata    = 0;             % show data points: 0 - no; 1 - as points; 2 - as short lines (barcode plot)
 %  opt.median      = 2;             % show median: 0 - no; 1 - line; 2 - with different fill colors 
 %  opt.edgecolor   = 'none';        % edge color of box 
+%  opt.edgecolor   = 'none';  
+%  opt.trans       = 0.33;          % transparency of the box
+%  opt.sat         = 0.66;          % satuation of the box
 %
 % The box plot is a graphical display that simultaneously describes several 
 % important features of a data set, such as center, spread, departure from 
@@ -103,6 +106,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 % _________________________________________________________________________
 % $Id$
 
+  if nargin==0, help cat_plot_boxplot; return; end
 
   % default parameter
   if ~exist('opt','var'), opt = struct(''); end
@@ -127,10 +131,12 @@ function [out,s] = cat_plot_boxplot(data,opt)
   def.showdata    = 0;  
   def.median      = 2;  
   def.edgecolor   = 'none';  
-  
+  def.trans       = 0.25; 
+  def.sat         = 0.50;
 
   opt = cat_io_checkinopt(opt,def);
   opt.notched = max(0,min(1,opt.notched));
+  opt.trans   = max(0,min(1,opt.trans * (opt.sat*4) ));
   
   % always use filling for this median plot option
   if opt.median == 2, opt.fill = 1; end
@@ -451,29 +457,37 @@ function [out,s] = cat_plot_boxplot(data,opt)
         
         if opt.fill
           if opt.vertical
-            fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor',opt.edgecolor);
+            if opt.trans, fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],[1 1 1],'FaceAlpha',1-opt.trans,'EdgeColor','none'); end % just a white box as background
+            fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],opt.groupcolor(i,:),'FaceAlpha',opt.sat,'EdgeColor',opt.edgecolor);
           else
-            fill([U(:,i);flipud(U(:,i))],[F(:,i)+i;flipud(i-F(:,i))],opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor',opt.edgecolor);
+            if opt.trans, fill([U(:,i);flipud(U(:,i))],[F(:,i)+i;flipud(i-F(:,i))],[1 1 1],'FaceAlpha',1-opt.trans,'EdgeColor','none'); end
+            fill([U(:,i);flipud(U(:,i))],[F(:,i)+i;flipud(i-F(:,i))],opt.groupcolor(i,:),'FaceAlpha',opt.sat,'EdgeColor',opt.edgecolor);
           end
           if i==1, hold on; end
           if opt.median == 2
             if opt.vertical
+              if opt.trans, fill([F(1:indn,i)+i;flipud(i-F(1:indn,i))],[U(1:indn,i);flipud(U(1:indn,i))],[1 1 1],'FaceAlpha',1-opt.trans,'EdgeColor','none'); end
               fill([F(1:indn,i)+i;flipud(i-F(1:indn,i))],[U(1:indn,i);flipud(U(1:indn,i))],0.5*opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor','none');
             else
+              if opt.trans, fill([U(1:indn,i);flipud(U(1:indn,i))],[F(1:indn,i)+i;flipud(i-F(1:indn,i))],[1 1 1],'FaceAlpha',1-opt.trans,'EdgeColor','none'); end
               fill([U(1:indn,i);flipud(U(1:indn,i))],[F(1:indn,i)+i;flipud(i-F(1:indn,i))],0.5*opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor','none');
             end
           end
         else
           if opt.vertical
+            if opt.trans, plot([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],'Color',[1 1 1]); end
             plot([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],'Color',opt.groupcolor(i,:));
           else
+            if opt.trans, plot([U(:,i);flipud(U(:,i))],[F(:,i)+i;flipud(i-F(:,i))],'Color',[1 1 1]); end
             plot([U(:,i);flipud(U(:,i))],[F(:,i)+i;flipud(i-F(:,i))],'Color',opt.groupcolor(i,:));
           end
           if i==1, hold on; end
           if opt.median == 2
             if opt.vertical
+              if opt.trans, plot([F(1:indn,i)+i;flipud(i-F(1:indn,i))],[U(1:indn,i);flipud(U(1:indn,i))],[1 1 1],[1 1 1]); end
               plot([F(1:indn,i)+i;flipud(i-F(1:indn,i))],[U(1:indn,i);flipud(U(1:indn,i))],0.5*opt.groupcolor(i,:),0.5*opt.groupcolor(i,:));
             else
+              if opt.trans, plot([U(1:indn,i);flipud(U(1:indn,i))],[F(1:indn,i)+i;flipud(i-F(1:indn,i))],[1 1 1],[1 1 1]); end
               plot([U(1:indn,i);flipud(U(1:indn,i))],[F(1:indn,i)+i;flipud(i-F(1:indn,i))],0.5*opt.groupcolor(i,:),0.5*opt.groupcolor(i,:));
             end
           end
@@ -493,7 +507,8 @@ function [out,s] = cat_plot_boxplot(data,opt)
   
       if opt.box
         if opt.fill
-          fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor','none');
+          if opt.trans, fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',[1 1 1],'FaceAlpha',1-opt.trans,'EdgeColor','none'); end
+          fill(quartile_x(:,i), quartile_y(:,i),'b-','FaceColor',opt.groupcolor(i,:),'FaceAlpha',opt.sat,'EdgeColor','none');
           if i==1, hold on; end
           if opt.median == 2
             fill(quartile_xl(:,i), quartile_yl(:,i),'b-','FaceColor',0.5*opt.groupcolor(i,:),'FaceAlpha',0.25,'EdgeColor','none'); 
@@ -573,13 +588,17 @@ function [out,s] = cat_plot_boxplot(data,opt)
       end
       set(gca,'YTick',ytick); 
       set(gca,'YTickLabel',num2str(ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
-    end
-    
-    if opt.ygrid
+
       if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
       if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
       h1=plot(repmat([0;numel(opt.names)+1],1,numel(ytick)),[ytick;ytick],'Color',linecolor);
       uistack(h1,'bottom')
+
+      if opt.ygrid>1
+        ytick2 = ytick1; 
+        h2=plot(repmat([0;numel(opt.names)+1],1,numel(ytick2)),[ytick2;ytick2],'Color',linecolor/2);
+        uistack(h2,'bottom')
+      end
     end
      
   %%

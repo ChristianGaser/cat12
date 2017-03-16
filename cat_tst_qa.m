@@ -75,7 +75,8 @@ function varargout = cat_tst_qa(action,varargin)
   [n, rev_cat] = cat_version;
 
   % init output
-  QAS = struct(); QAR = struct(); 
+  QAS = struct(); 
+  QAR = struct(); 
   cat_qa_warnings = struct('identifier',{},'message',{});
   cat_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
@@ -215,6 +216,10 @@ function varargout = cat_tst_qa(action,varargin)
         V   = res.image;
         cat_warnings = varargin{5};
         species = varargin{6};
+        if isfield(varargin{7},'qa')
+          if isfield(varargin{7}.qa,'qualitymeasures'), QAR.qualitymeasures = cat_io_updateStruct(QAR,varargin{7}.qa.qualitymeasures); end
+          if isfield(varargin{7}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{7}.qa.subjectmeasures); end
+        end
         % opt = varargin{end} in line 96)
         opt.verb = 0;
         
@@ -599,7 +604,8 @@ function varargout = cat_tst_qa(action,varargin)
       QAS.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
                             prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ... GM 
                             prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),3)), ... WM
-                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),4))];  % WMH
+                            QAS.subjectmeasures.WMH_abs]; 
+                            %prod(vx_vol)/1000 .* ]; %sum(Yp0toC(Yp0(:),4))];  % WMH
       QAS.subjectmeasures.vol_TIV     =  sum(QAS.subjectmeasures.vol_abs_CGW); 
       QAS.subjectmeasures.vol_rel_CGW =  QAS.subjectmeasures.vol_abs_CGW ./ QAS.subjectmeasures.vol_TIV;
       

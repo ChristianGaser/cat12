@@ -70,7 +70,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);
   NS      = @(Ys,s) Ys==s | Ys==s+1;                                    % function to ignore brain hemisphere coding
-  LASstr  = max(eps,min(1,extopts.LASstr));      % LAS strenght (for GM/WM threshold)3
+  LASstr  = max(eps,min(1,extopts.LASstr / 2));  % LAS strenght (for GM/WM threshold)3 - manuel correction based on R1109 (2017/02)
   LAB     = extopts.LAB;                         % atlas labels
   LABl1   = 1;                                                          % use atlas map
   cleanupstr  = min(1,max(0,extopts.gcutstr));   % required to avoid critical regions
@@ -422,7 +422,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   
   %% global
-  Ymg = max(eps,Ysrc./Ylab{2}) * Tth.T3th(5)/(Tth.T3thx(5)/3); 
+  Ymg = max(eps,Ysrc./Ylab{2}) * Tth.T3th(5)/(Tth.T3thx(5)); 
   Ymg = cat_main_gintnorm(Ymg,Tth); 
   
   %%
