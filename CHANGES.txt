@@ -13963,6 +13963,7 @@ M       cat_surf_createCS.m
 (2) Fixed: Some smaller errors in cat_stat_check_cov.m for surfaces.
 
 ------------------------------------------------------------------------
+r1116 | gaser | 2017-03-12 23:57:15 +0100 (So, 12 Mär 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13970,5 +13971,154 @@ M       cat_surf_createCS.m
 
 Changed: Added option for additional 2D laplace filtering to topology 
 correction to minimize irregularities in coordinate maps for SPH.
+
 ------------------------------------------------------------------------
-r1116 | gaser | 2017-03-12 23:57:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_cleanup.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_init.m
+M       cat_surf_createCS.m
+M       cat_surf_smooth.m
+M       cat_tst_calc_kappa.m
+M       cat_tst_qa.m
+M       cat_vol_approx.m
+M       cat_vol_findfiles.m
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       cat_vol_pbt.m
+M       cat_vol_sanlm.m
+M       compile.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_FAQ.html
+M       html/cat_methods_validation.html
+M       html/images/CAT_PBT_for_SPM.png
+A       html/images/cat_tst_reg_boxplot.png
+M       html/images/cat_tst_seg_BWP_boxplot.png
+M       html/images/cat_tst_seg_BWP_detail.png
+A       html/images/cat_tst_seg_bwp_ana.png
+A       html/images/cat_tst_seg_bwp_boxplot_para.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_APP.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_CU.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_LAS.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_LC.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_NLM.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_SR.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_SS.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_WR.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_aff.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_bf.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_breg.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_ng.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_other.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_res.png
+A       html/images/cat_tst_seg_bwp_detail_para.png
+A       html/images/cat_tst_seg_exp_boxplot.png
+A       html/images/cat_tst_seg_exp_boxplot_para.png
+A       html/images/cat_tst_seg_exp_boxplot_para_APP.png
+A       html/images/cat_tst_seg_exp_boxplot_para_CU.png
+A       html/images/cat_tst_seg_exp_boxplot_para_LAS.png
+A       html/images/cat_tst_seg_exp_boxplot_para_LC.png
+A       html/images/cat_tst_seg_exp_boxplot_para_NLM.png
+A       html/images/cat_tst_seg_exp_boxplot_para_SR.png
+A       html/images/cat_tst_seg_exp_boxplot_para_SS.png
+A       html/images/cat_tst_seg_exp_boxplot_para_WMH.png
+A       html/images/cat_tst_seg_exp_boxplot_para_WR.png
+A       html/images/cat_tst_seg_exp_boxplot_para_aff.png
+A       html/images/cat_tst_seg_exp_boxplot_para_bf.png
+A       html/images/cat_tst_seg_exp_boxplot_para_breg.png
+A       html/images/cat_tst_seg_exp_boxplot_para_ng.png
+A       html/images/cat_tst_seg_exp_boxplot_para_other.png
+A       html/images/cat_tst_seg_exp_boxplot_para_res.png
+A       html/images/cat_tst_seg_exp_detail.png
+A       html/images/cat_tst_seg_exp_detail_para.png
+D       html/images/cat_tst_seg_real_boxplot.png
+D       html/images/cat_tst_seg_real_detail.png
+A       html/images/cat_tst_seg_sve_boxplot.png
+A       html/images/neonates.png
+M       html/style.css
+M       internal/cat_vol_flipside.m
+
+== New ==
+(1) New*:      Added processing of images with BG<GM<WM<CSF contrast (neonates)
+               as separate case that does not influence the default pipeline.
+(2) New:       Added further preliminary validation results figures that are not
+               linked in the help. 
+   
+== Parameterupdates ==              
+(1) Changed:   opt.ngauss: 
+               Updated SPM ngauss parameter in cat_defaults with only one      
+               rather than three GM and WM classes because it was more stable   
+               onthe BWP and real Datasets.  More than one GM and WM gaussian   
+               peaks seams to bet better in case of inverse data (T2/PD). 
+               Hence, an automatically switch to more than three GM and WM 
+               peaks is added in the cat_run_job. 
+(2) Changed:   extopts.resval & extopts.restype: 
+               Increased the upper limit of the internal interpolation to 0.5 mm  
+               rather than 1.0 mm (resval = [0.5 0.3]) and add 1.0 mm as minimum
+               resolution to improve the results in case of anisotropic high- 
+               resolution data (e.g., 0.5x0.5x1.5 mm) but also of low resolution
+               data of the default interpolation option (restype = 'best'). 
+(3) Changed:   opt.biasreg, opt.biasfwhm & opt.biasstr:
+               Added opts.biasstr parameter to the cat_default-file and to  
+               the GUI to have a simple control parameter for inhomogeneity 
+               correction that controls the SPM preprocessing parameter 
+               opts.biasreg and opts.biasfwhm that were removed at once 
+               from the expert GUI. 
+(4) Changed:   Corrected LASstr parameter to give optimal results for 0.5.               
+(5) Changed:   opts.warpreg:
+               Removed opts.warpreg parameter from expert GUI because our test
+               indicated no useful changes with no general effects and only
+               worse results in single cases.
+(6) Changed:   Added additional sub parameter for lab operation in cat_vol_morph
+               to allow more than one large cluster.
+       
+               
+== Other Updates ==              
+(1) Changed:   Replace old SPM tissue threshold estimation by the @-function 
+               "clsint" in cat_main, cat_main_gintnorm.  
+(2) Changed:   Added transparency and saturation parameter to cat_plot_boxplot. 
+(3) Changed:   Forced low change rate for first Shooting template to improve 
+               Shooting quality of lower regstr values.
+(4) Changed:   Added resolution dependency for cleanup of the initial SPM 
+               segmentation to avoid problems in case of low resolution.
+              
+(5) Changed:   Use realignment in "cat_tst_calc_kappa" in case of different 
+               resolution only if realign parameter is true. Otherwise, imcalc
+               is used directly.
+(6) Changed:   Updated help texts in cat_conf_opts and reduce the amount of 
+               control parameters. 
+(7) Changed:   Added resolution dependency in cat_vol_sanlm to reduce the amout
+               of filtering in low resolution data. 
+
+
+== Bug fixes ==
+(1) Fixed:     Corrected bugs in cat_run_APP_init.
+(2) Fixed:     Corrected Ym intensity scaling problem in cat_main_LAS.
+(3) Fixed:     Corrected index error in cat_surf_smooth.
+               Thanks to Björn Horing for pointing out this bug.
+(4) Fixed:     Corrected WMH volume output in CAT report and XML file.
+               Thanks to M.H.T. Zwartbol for pointing out this bug.
+(5) Fixed:     Corrected simultan output of modulated data in expert mode in 
+               cat_io_writenii and cat_main.
+               Thanks to Felix Hoffstaedter for pointing out this limitation.
+(6) Fixed:     Corrected typo in SPM PBT figure.
+(7) Fixed:     Special case in PBT data processing of binary data.
+
+
+
+
+------------------------------------------------------------------------
+r1117 | dahnke | 2017-03-16 16:30:46

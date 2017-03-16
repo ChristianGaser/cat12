@@ -23,19 +23,25 @@ global cat
 % - cat.opts.affreg        > subj
 % - cat.opts.biasreg       > 0.00001
 % - cat.opts.biasfwhm      > 40
-% - cat.opts.samp          > 2 mm
+% - cat.opts.samp          > 3 mm
 %=======================================================================
 
 
-% Options for inital SPM12 segmentation that is used as starting point for CAT12
+% Options for inital SPM12 segmentation that is used as starting point for CAT12. 
 %=======================================================================
 cat.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-cat.opts.ngaus     = [3 3 2 3 4 2];           % Gaussians per class    - 3 GM and 3 WM classes for robustness
-cat.opts.affreg    = 'mni';                   % Affine regularisation  - '';'mni';'eastern';'subj';'none';'rigid';
-cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation - see SPM segment instructions
-cat.opts.biasreg   = 0.001;                   % Bias regularisation    - smaller values for stronger bias fields
-cat.opts.biasfwhm  = 60;                      % Bias FWHM              - lower values for stronger bias fields, but check for overfitting in subcortical GM (values <50 mm)
-cat.opts.samp      = 3;                       % Sampling distance      - smaller 'better', but slower - maybe useful for >= 7 Tesla 
+cat.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class (SPM12 default)
+cat.opts.affreg    = 'mni';                   % Affine regularisation (SPM12 default) - '';'mni';'eastern';'subj';'none';'rigid'
+cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation (SPM12 default) 
+cat.opts.biasstr   = 0.5;                     % Strength of the bias correction that controls the biasreg and biasfwhm paramter (CAT only!)
+                                              %   0 - use SPM paramter; eps - low correction; 1 - strong corrections
+                                              %   job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
+                                              %   job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*job.opts.biasstr ));  
+cat.opts.biasreg   = 0.001;                   % Bias regularisation (cat.opts.biasstr has to be 0!) - 10,1,0.1,...,0.00001
+                                              %   smaller values for stronger bias fields (cat.opts.biasstr has to be 0!)
+cat.opts.biasfwhm  = 60;                      % Bias FWHM (cat.opts.biasstr has to be 0!) - 30:10:120,inf 
+                                              %   lower values for strong bias fields , but check for overfitting in subcortical GM (values <50 mm)
+cat.opts.samp      = 3;                       % Sampling distance - just for initial processing where higher resolution only increase processing time in most cases
 
                                               
 % Writing options
@@ -122,7 +128,7 @@ cat.extopts.INV          = 1;     % Invert PD/T2 images for preprocessing:    0 
 
 % resolution options
 cat.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
-cat.extopts.resval       = [1.00 0.30];   % resolution value and its variance for the 'fixed' and 'best' restype
+cat.extopts.resval       = [0.50 0.30];   % resolution value and its variance for the 'fixed' and 'best' restype
 
 %{
 native:
@@ -135,7 +141,7 @@ native:
        0.45 0.45 1.70     >     0.45 0.45 1.70 
 
 best:
-    Preprocessing with the best (minimal) voxel dimension of the native image.'
+    Preprocessing with the best (minimal) voxel dimension of the native image or at least 1.0 mm.'
     The first parameters defines the lowest spatial resolution for every dimension, while the second is used to avoid tiny interpolations for almost correct resolutions.
     In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). 
 
@@ -145,6 +151,9 @@ best:
       [1.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 1.00
       [0.75 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.75  
       [0.75 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.80  
+      [0.50 0.10]    0.45 0.45 0.80     >     0.45 0.45 0.50  
+      [0.50 0.30]    0.50 0.50 1.50     >     0.50 0.50 0.50
+      [0.50 0.30]    1.50 1.50 3.00     >     1.00 0.00 1.00 % here the internal minimum of 1.0 mm is important. 
       [0.00 0.10]    0.45 0.45 1.50     >     0.45 0.45 0.45  
 
 fixed:

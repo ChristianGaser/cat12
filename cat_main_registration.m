@@ -87,7 +87,6 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 % ______________________________________________________________________
 % $Id$
 
-
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_registration'); debug = 1; break; end; end
 
@@ -106,11 +105,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   
   % #########
   % this is just for me to create different templates and can be removed in a final version
-  if job.extopts.expertgui==2
+  if job.extopts.expertgui==2 
     job.extopts.multigreg = 1;
     if job.extopts.multigreg==2, job.extopts.vox = [1.5 1.0]; end
     fast   = inf;                   % limit iterations per template level to test if processing work in principle 
-    export = job.extopts.verb>2;    % write files in sub-directories
+    export = job.extopts.verb>2 || numel(job.extopts.regstr)>1;  % write files in sub-directories
   else
     fast = inf; 
     export = 0; 
@@ -118,49 +117,82 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   % #########
   
   
+  % #########
   % It is a little bit problematic to combine the setting given by the
   % normalization template and the regstr parameter. 
   % res.do_dartel is set by the template type and is more important that
   % the regstr parameter
   templates = job.extopts.templates;
   if res.do_dartel && (job.extopts.expertgui==0 || job.extopts.expertgui==1)
-    if res.do_dartel <= 1,  job.extopts.regstr = 0; % use dartel
-    else                    job.extopts.regstr = max(1,min(3,job.extopts.regstr));  % use shooting, but only the simple cases
-    end
+    if res.do_dartel <= 1 && numel(job.extopts.regstr)==1 
+      job.extopts.regstr = 0;
+    elseif res.do_dartel==1 && numel(job.extopts.regstr)>1
+      %res.do_dartel = 2; 
+      export = 1; 
+      if ~any(job.extopts.regstr==0)
+        job.extopts.regstr = [0 job.extopts.regstr]; 
+      end
+    end% use dartel
+      %elseif numel(job.extopts.regstr)>1, job.extopts.regstr = max(0,min(3,job.extopts.regstr));  % use shooting, but only the simple cases
+      %end
   end    
+  % #########
   
   
   % this is the main loop for different parameter
   for regstri = numel(job.extopts.regstr):-1:1;
     for voxi = numel(job.extopts.vox):-1:1; 
-    
+      %% set default dartel/shooting templates in debug mode 
+      % only in case of the default tempaltes
+      job.extopts.templates = templates; 
+      if job.extopts.expertgui==2 && ...
+         (res.do_dartel==1 && job.extopts.regstr(regstri)>0) || ...
+         (res.do_dartel==1 && numel(job.extopts.regstr)>1)  || ...
+         (res.do_dartel==2 && job.extopts.regstr(regstri)==0)
+        if (res.do_dartel==1 && job.extopts.regstr(regstri)==0) || ...
+           (res.do_dartel==1 && numel(job.extopts.regstr)>1 && job.extopts.regstr(regstri)==0)
+          cat_io_cprintf('warn','Switch to default Dartel Template.\n');
+          job.extopts.templates      = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_IXI555_MNI152.nii'); 
+          job.extopts.templates(end) = []; 
+          reg(regstri).opt.rres = job.extopts.vox(voxi); 
+        elseif (res.do_dartel==2 && job.extopts.regstr(regstri)>0) || ...
+               (res.do_dartel==1 && numel(job.extopts.regstr)>1 && job.extopts.regstr(regstri)>0)
+          cat_io_cprintf('warn','Switch to default Shooting Template.\n');
+          job.extopts.templates = cat_vol_findfiles(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm'),'Template_*_IXI555_MNI152_GS.nii',struct('depth',1)); 
+        end
+      end
+      res.tpm2 = cell(1,numel(job.extopts.templates)); 
+      
+      Vtemp = spm_vol(job.extopts.templates{1}); tempM = Vtemp(1).mat; 
      
       % registration main parameter
       lowres                     = 2.5;                   % lowest resolution .. best between 2 and 3 mm 
-      tpmres                     = abs(tpmM(1));          % template resolution 
+      tpmres                     = abs(tpmM(1));          % TPM resolution 
+      tempres                    = abs(tempM(1));         % template resolution 
       reg(regstri).opt.nits      = 64;                    % registration interation (shooting default = 24)
       reg(regstri).opt.vxreg     = tpmres;                % regularisation parameter that original depend on the template resolution
-      reg(regstri).opt.rres      = tpmres;                % final registration resolution 
+      reg(regstri).opt.rres      = tempres;               % final registration resolution 
       reg(regstri).opt.stepsize  = (lowres - reg(regstri).opt.rres)/4;  % stepsize of reduction 
       reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : reg(regstri).opt.rres) / reg(regstri).opt.rres; % reduction factor 
       reg(regstri).opt.ll1th     = 0.01;                 % smaller better/slower
       reg(regstri).opt.ll3th     = 0.02;                 % smaller better/slower 
+      reg(regstri).opt.regstr    = job.extopts.regstr;   
 
-      if res.do_dartel 
+      if res.do_dartel>1 || numel(job.extopts.regstr)>1
         if job.extopts.regstr(regstri)==0
         % Dartel
           res.do_dartel            = 1; 
-          reg(regstri).opt.rres    = tpmres; %job.extopts.vox(voxi);
+          reg(regstri).opt.rres    = tempres; %job.extopts.vox(voxi);
         elseif job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
         % Optimized Shooting - manual limit 
-          reg(regstri).opt.stepsize  = (lowres - tpmres)/4;  % stepsize of reduction 
-          reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : tpmres) / tpmres; % reduction factor 
+          reg(regstri).opt.stepsize  = (lowres - tempres)/4;  % stepsize of reduction 
+          reg(regstri).opt.resfac    = (lowres : -reg(regstri).opt.stepsize : tempres) / tempres; % reduction factor 
         
           reg(regstri).opt.ll1th     = 0.0010 + 0.10*(1-job.extopts.regstr(regstri));   % smaller better/slower
           reg(regstri).opt.ll3th     = 0.0001 + 0.10*(1-job.extopts.regstr(regstri));   % smaller better/slower 
         elseif job.extopts.regstr(regstri)==4 
         % Default Shooting  
-          reg(regstri).opt.rres        = tpmres;            % registration resolution depending on template resolution 
+          reg(regstri).opt.rres        = tempres;            % registration resolution depending on template resolution 
           reg(regstri).opt.stepsize    = 0;                 % stepsize of reduction 
           reg(regstri).opt.nits        = 24;                % Dartel default interation number
           reg(regstri).opt.resfac      = ones(1,5);         % reduction factor 
@@ -168,12 +200,12 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           reg(regstri).opt.ll3th       = 0;                 % smaller better/slower 
         elseif job.extopts.regstr(regstri)==2 
         % Optimized Shooting - manual limit 
-          reg(regstri).opt.stepsize    = (lowres - tpmres)/4;  % stepsize of reduction 
-          reg(regstri).opt.resfac      = (lowres : -reg(regstri).opt.stepsize : tpmres) / tpmres; % reduction factor 
+          reg(regstri).opt.stepsize    = (lowres - tempres)/4;  % stepsize of reduction 
+          reg(regstri).opt.resfac      = (lowres : -reg(regstri).opt.stepsize : tempres) / tempres; % reduction factor 
         elseif job.extopts.regstr(regstri)==3
         % Optimized Shooting - dynamic limit (depending on template resolution)  
-          reg(regstri).opt.stepsize    = (tpmres/2 - tpmres)/4;  % stepsize of reduction 
-          reg(regstri).opt.resfac      = (tpmres/2 : -reg(regstri).opt.stepsize : tpmres) / tpmres; % reduction factor 
+          reg(regstri).opt.stepsize    = (tempres/2 - tempres)/4;  % stepsize of reduction 
+          reg(regstri).opt.resfac      = (tempres/2 : -reg(regstri).opt.stepsize : tempres) / tempres; % reduction factor 
         else
           % futher test cases
           highres = 1.0; % 0.5
@@ -209,6 +241,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
                error('cat_main_registration:incorrectparameter','Incorrect value of "regres".\n');
           end
         end
+      else
+        % Dartel
+        job.extopts.regstr(regstri) = 0; 
+        reg(regstri).opt.rres       = tpmres; %job.extopts.vox(voxi);  
       end
       
       %% manual setting of shooting paramter  
@@ -226,6 +262,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
      
 
       %% set default dartel/shooting templates in debug mode 
+      %{
       % only in case of the default tempaltes
       job.extopts.templates = templates; 
       if job.extopts.expertgui==2 && ...
@@ -242,6 +279,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
         end
       end
       res.tpm2 = cell(1,numel(job.extopts.templates)); 
+      %}
       run2 = struct(); 
       for j=1:numel(res.tpm2)
         for i=1:2, run2(i).tpm = sprintf('%s,%d',job.extopts.templates{j},i);end
@@ -457,7 +495,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           % this part may require further work 
           tempres = reg(regstri).opt.resfac * regres;  % registration resolution
           if numel(reg(regstri).opt.ll3th)~=numel(tempres), reg(regstri).opt.ll3th = repmat(reg(regstri).opt.ll3th(1),numel(tempres)); end
-          rdims   = zeros([numel(reg(regstri).opt.resfac),3]); for ri=1:numel(reg(regstri).opt.resfac), rdims(ri,:) = floor(res.tpm(1).dim * tpmres/regres / reg(regstri).opt.resfac(ri)); end
+          rdims   = zeros([numel(reg(regstri).opt.resfac),3]); 
+          for ri=1:numel(reg(regstri).opt.resfac), rdims(ri,:) = floor(res.tpm(1).dim * tpmres/regres / reg(regstri).opt.resfac(ri)); end
           %Mads    = cell(size(reg(regstri).opt.resfac)); for ri=1:numel(reg(regstri).opt.resfac), Mads{ri}   = Mad;    Mads{ri}(1:12)   = Mad(1:12)   * reg(regstri).opt.resfac(ri); end
           %Mads    = cell(size(reg(regstri).opt.resfac)); for ri=1:numel(reg(regstri).opt.resfac), Mads{ri}   = Mad;    imat=spm_imatrix(Mads{ri}); imat(7:9)=imat(7:9) * reg(regstri).opt.resfac(ri); Mads{ri}=spm_matrix(imat); end
           %Mrregs  = cell(size(reg(regstri).opt.resfac)); for ri=1:numel(reg(regstri).opt.resfac), Mrregs{ri} = Mr;     Mrregs{ri}(1:12) = Mrreg(1:12) * reg(regstri).opt.resfac(ri); end % Mrreg
@@ -470,15 +509,17 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             vx3rr = ones(4,8); vx3rr([5,13,21,29])=rdims(ri,1); vx3rr([10,14,26,30])=rdims(ri,2); vx3rr([19,23,27,31])=rdims(ri,3); % registration image
             Mrregs{ri} = M0\inv(R)*M1rr*vx2rr/vx3rr;    
             %imat=spm_imatrix(vx2rr/vx3rr); imat(7:9)=imat(7:9) * regres/tpmres; Mads{ri}=spm_matrix(imat); 
-            Mads{ri} = (tpmM\mm)/vx3rr; %Mads{ri}(1:12) = Mads{ri}(1:12) * reg(regstri).opt.resfac(ri); 
+            Mads{ri} = (tempM\mm)/vx3rr; %Mads{ri}(1:12) = Mads{ri}(1:12) * reg(regstri).opt.resfac(ri); 
             if ri==1, mat0reg = R\M1rr*vx2rr/vx3rr; end 
             if ri==1, Mys{ri} = eye(4); else Mys{ri}= eye(4); Mys{ri}(1:12) = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1); end;
           end
           if reg(regstri).opt.stepsize>10^-3  
             if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)<=1
-              stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm (regstr=%0.2f)',tempres(1),diff(tempres(1:2)),tempres(end),job.extopts.regstr(regstri))); fprintf('\n');
+              stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm (regstr=%0.2f)',...
+                tempres(1),diff(tempres(1:2)),tempres(end),job.extopts.regstr(regstri))); fprintf('\n');
             else
-              stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm',tempres(1),diff(tempres(1:2)),tempres(end))); fprintf('\n');
+              stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f:%0.2f:%0.2f mm',...
+                tempres(1),diff(tempres(1:2)),tempres(end))); fprintf('\n');
             end
           else
             stime   = cat_io_cmd(sprintf('Shooting registration with %0.2f mm',reg(regstri).opt.rres)); fprintf('\n');
@@ -505,7 +546,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
 
 
-          % The actual work
+          %% The actual work
           % ---------------------------------------------------------------------
           it = 1; reg(regstri).dtc = zeros(1,5); ll  = zeros(1,3);
           while it<=nits; 
@@ -547,7 +588,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
               end
               g{n1+1} = log(max(g{n1+1},eps)); 
 
-              % loading segmentation and creating of images vs. updating these maps
+              %% loading segmentation and creating of images vs. updating these maps
               ll  = zeros(1,3);
               if it==1
                 % create shooting maps
@@ -583,7 +624,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
                 u  = zeros([rdims(ti,:) 3],'single');
                 for k1=1:3
                   for i=1:rdims(ti,3),
-                    u(:,:,i,k1) = single(spm_slice_vol(uo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),rdims(ti,1:2),[1,NaN])) / Mys{ti}(1); % (tempres(ti) / tempres(ti-1))^2; % adapt for res 
+                    u(:,:,i,k1) = single(spm_slice_vol(uo(:,:,:,k1),Mys{ti}*spm_matrix([0 0 i]),...
+                      rdims(ti,1:2),[1,NaN])) / Mys{ti}(1); % (tempres(ti) / tempres(ti-1))^2; % adapt for res 
                   end
                   u(~isfinite(u))=eps;
                 end
@@ -650,6 +692,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 
             % avoid unneccessary iteration
             if job.extopts.regstr(regstri)>0 && job.extopts.regstr(regstri)~=4 && ...
+                ( ti>1 || (ti==1 && ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-0.01) )) && ...
                 ( ll(3)<reg(regstri).opt.ll3th(ti) || ...
                 ( ll(1)/numel(u)<1 && ll(1)/max(eps,llo(1))<1 && ll(1)/max(eps,llo(1))>(1-reg(regstri).opt.ll1th) ))
               it = max(it+1,find([tmpl_no,nits]>tmpl_no(it),1,'first')); 
@@ -704,7 +747,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           else
             % size update y - deformation field
             yx = zeros([odims 3],'single'); 
-            My = eye(4); My(1:12) = My(1:12) * regres/newres;  Mys{ri}    = eye(4); Mys{ri}(1:12)    = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1);
+            My = eye(4); My(1:12) = My(1:12) * regres/newres;  Mys{ri}    = eye(4);
+            Mys{ri}(1:12)    = Mys{ri}(1:12) * reg(regstri).opt.resfac(ri)/reg(regstri).opt.resfac(ri-1);
             for k1=1:3
               for i=1:odims(ti,3),
                 yx(:,:,i,k1) = single(spm_slice_vol(yo(:,:,:,k1),My*spm_matrix([0 0 i]),odims(ti,1:2),[1,NaN])) * regres/newres; % adapt for res
@@ -731,7 +775,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             QMC   = cat_io_colormaps('marks+',17);
             reg(regstri).reldtc = reg(regstri).dtc/max(reg(regstri).dtc); 
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:numel(reg(regstri).dtc), cat_io_cprintf( color(QMC,reg(regstri).reldtc(dti)*6), sprintf('%0.3f ',reg(regstri).reldtc(dti))); end
+            for dti=1:numel(reg(regstri).dtc)
+              cat_io_cprintf( color(QMC,reg(regstri).reldtc(dti)*6),sprintf('%0.3f ',reg(regstri).reldtc(dti))); 
+            end
             cat_io_cprintf( color(QMC,(reg(regstri).dt - 0.05)/0.25 * 6), sprintf(' | %0.6f ',reg(regstri).dt));
             fprintf('\n'); 
 
@@ -739,7 +785,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             QMC   = cat_io_colormaps('marks+',17);
             reg(regstri).relrmsdtc = reg(regstri).rmsdtc/max(reg(regstri).rmsdtc); 
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:numel(reg(regstri).relrmsdtc), cat_io_cprintf( color(QMC,reg(regstri).relrmsdtc(dti)*6), sprintf('%0.3f ',reg(regstri).relrmsdtc(dti))); end
+            for dti=1:numel(reg(regstri).relrmsdtc)
+              cat_io_cprintf( color(QMC,reg(regstri).relrmsdtc(dti)*6),sprintf('%0.3f ',reg(regstri).relrmsdtc(dti))); 
+            end
             cat_io_cprintf( color(QMC,(reg(regstri).rmsdt)/0.5 * 6), sprintf(' | %0.6f ',reg(regstri).rmsdt));
             fprintf('\n'); 
 
@@ -747,7 +795,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             fprintf('%30s','Template Matching: '); 
             QMC   = cat_io_colormaps('marks+',17);
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:size(reg(regstri).ll,1), cat_io_cprintf( color(QMC, (reg(regstri).ll(dti,1) - 0.05) / 0.30 * 6), sprintf('%0.3f ',reg(regstri).ll(dti,1))); end
+            for dti=1:size(reg(regstri).ll,1), 
+              cat_io_cprintf( color(QMC, (reg(regstri).ll(dti,1) - 0.05) / 0.30 * 6),sprintf('%0.3f ',reg(regstri).ll(dti,1))); 
+            end
             cat_io_cprintf( color(QMC,(reg(regstri).ll(end,1) - 0.05)/0.15 * 6), sprintf(' | %0.6f ',reg(regstri).ll(end,1)));
             fprintf('\n'); 
 
@@ -793,15 +843,18 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             %  sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 2 0],trans);  
 
 
-          % write jacobian determinant
+          %% write jacobian determinant
           [pth,nam] = spm_fileparts(VT0.fname); 
           if job.extopts.regstr(regstri)>0 % shooting
-            [D,I] = cat_vbdist(single(~isnan(dt2))); 
-            dt = 1/max(eps,dt2(I)); 
+            %dt2o=dt2;
+            dx = 10; % smaller values are more accurate, but large look better; 
+            [D,I] = cat_vbdist(single(~(isnan(dt2) | dt2<0 | dt2>100) )); D=min(1,D/min(dx,max(D(:)))); 
+            dt2 = dt2(I); dt2 = dt2 .* (1-D) + D; dt2(isnan(dt2))=1; 
           else %dartel
-            [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
+            [y0, dt2] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
             clear y0
           end
+          %%
           N         = nifti;
           N.dat     = file_array(fullfile(pth,mrifolder,testfolder,['wj_', nam, '.nii']),trans.warped.odim(1:3),...
                       [spm_type('float32') spm_platform('bigend')],0,10/256^2,0);
@@ -809,7 +862,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           N.mat0    = M1;
           N.descrip = ['Jacobian' VT0.descrip];
           create(N);
-          N.dat(:,:,:) = dt;
+          N.dat(:,:,:) = dt2;
           cat_io_cmd('','',''); cat_io_cmd('','','',job.extopts.verb,stime); 
         end
       end

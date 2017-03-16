@@ -19,9 +19,12 @@ dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfi
 global cat_err_res; % for CAT error report
 
 tc = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)]; 
-
+clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
 
 %% complete job structure
+defr.ppe = struct(); 
+res = cat_io_checkinopt(res,defr);
+
 
 def.cati            = 0;
 def.color.error     = [0.8 0.0 0.0];
@@ -74,7 +77,8 @@ if do_dartel
     job.output.label.warped || job.output.label.dartel || ...
     any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
     job.output.surface || job.output.ROI || ...
-    any([job.output.atlas.warped]);
+    any([job.output.atlas.warped]) || ...
+    numel(job.extopts.regstr)>1;
   if ~need_dartel
     %fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
     do_dartel = 0;
@@ -299,9 +303,15 @@ if ~isfield(res,'spmpp')
   end
   clear sQ Qspm_progress_bar('clear');
 
-  % cleanup
-  P = clean_gwc(P,1);
+  vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
+  vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image 
+  vx_volp = prod(vx_vol)/1000;
+  voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
 
+  % cleanup for high resolution data
+  if max(vx_vol)<1.5 && mean(vx_vol)<1.3
+    P = clean_gwc(P,1);
+  end
 
   % load bias corrected image
   % restrict bias field to maximum of 3 and a minimum of 0.1
@@ -320,25 +330,19 @@ if ~isfield(res,'spmpp')
   Ycls = {zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8') ...
           zeros(d,'uint8') zeros(d,'uint8') zeros(d,'uint8')};
 
-  vx_vol  = sqrt(sum(VT.mat(1:3,1:3).^2));    % voxel size of the processed image
-  vx_volr = sqrt(sum(VT0.mat(1:3,1:3).^2));   % voxel size of the original image 
-  vx_volp = prod(vx_vol)/1000;
-  voli    = @(v) (v ./ (pi * 4./3)).^(1/3);   % volume > radius
-
+  
 
   %% create a new brainmask
 
   % median in case of WMHs!
-  WMth = double(max(cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.1)),...
+  WMth = double(max( clsint(2),...
           cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(P(:,:,:,2)>192)))))); 
-  if cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))>cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.3)) % invers
-    CMth = cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3)); 
+  if clsint(3)>clsint(2) % invers
+    CMth = clsint(3); 
   else
-    CMth = min( [  cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)) - ...
-                     diff([cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)),WMth]) , ...
-                   cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))]);
+    CMth = min( [  clsint(1) - diff([clsint(1),WMth]) , clsint(3) ]);
   end
-  T3th = [ CMth, cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.3)), WMth];
+  T3th = [ CMth , clsint(2) , WMth];
 
 
   %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
@@ -346,9 +350,9 @@ if ~isfield(res,'spmpp')
   if sum(Yp0(:)>0.3)<100
     % this error often depends on a failed affine registration, where SPM
     % have to find the brain in the head or background
-    BGth  = cat_stat_nanmean(res.mn(res.lkp==6 & res.mg'>0.3));
-    HDHth = cat_stat_nanmean(res.mn(res.lkp==5 & res.mg'>0.3));
-    HDLth = cat_stat_nanmean(res.mn(res.lkp==4 & res.mg'>0.3));
+    BGth  = clsint(6);
+    HDHth = clsint(5);
+    HDLth = clsint(4);
     clsvol = nan(1,6); for ci=1:6, Yct = P(:,:,:,ci)>128; clsvol(ci) = sum(Yct(:))*vx_volp; end; clear Yct; 
     %%
     error('CAT:cat_main:SPMpreprocessing:emptySegmentation', ...
@@ -453,7 +457,7 @@ if ~isfield(res,'spmpp')
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
     %Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
-    BGth = min(res.mn(res.lkp==6 & res.mg'>0.3)); 
+    BGth = clsint(6); 
     Yg   = cat_vol_grad((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ydiv = cat_vol_div((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
@@ -648,17 +652,31 @@ if ~isfield(res,'spmpp')
     Ysrcr = cat_vol_resize(Ysrc,'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm');
     Ybr   = cat_vol_resize(single(Yb),'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,min(vx_vol*2,1.4),32); end
-    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,vx_vol,res);
+    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrcr,Yclsr,Ybr,vx_vol,res,Yy,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm(Ysrc,Tth); 
   else
-    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res);;
+    [Ym,Yb,T3th,Tth,job.inv_weighting,noise,cat_warnings] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_vol,res,Yy,job.extopts);;
   end
 
   % update in inverse case ... required for LAS
   if job.inv_weighting
 %    Ysrc = Ym * Tth.T3th(5); Tth.T3th = Tth.T3thx * Tth.T3th(5);
+    if T3th(1)>T3th(3) && T3th(2)<T3th(3) && T3th(1)>T3th(2)
+      Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
+      %ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,90)
+      Yb2  = cat_vol_morph(Yp0>0.5,'lc',2); 
+      prob = cat(4,cat_vol_ctype(Yb2.*Yp0toC(Ym*3,2)*255),...
+                   cat_vol_ctype(Yb2.*Yp0toC(Ym*3,3)*255),...
+                   cat_vol_ctype(Yb2.*Yp0toC(min(3,Ym*3),1)*255)); 
+      prob = clean_gwc(prob);
+      for ci=1:3, Ycls{ci} = prob(:,:,:,ci); end; 
+      %job.extopts.mrf = 0.3; 
+      clear prob;  
+    end
+ 
     Ysrc = Ym; Tth.T3thx(3:5) = 1/3:1/3:1; Tth.T3th = Tth.T3thx; T3th = 1/3:1/3:1;
+    
   end
   fprintf('%4.0fs\n',etime(clock,stime));
 
@@ -774,14 +792,18 @@ if ~isfield(res,'spmpp')
 
 
   %% Local Intensity Correction 
+  Ymo = Ym;
   if job.extopts.LASstr>0
 
-    if job.extopts.NCstr>0, Ymo = Ym; end 
-    if job.extopts.experimental
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',job.extopts.LASstr));
-      [Ymi,Ym,Yclsi] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,job.extopts); % use Yclsi after cat_vol_partvol
+    %if job.extopts.NCstr>0,  %end 
+    
+    if job.extopts.LASstr>1 %job.extopts.experimental
+      extoptsLAS2 = job.extopts;
+      extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
+      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
+      [Ymi,Ym,Yclsi] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr));
+      stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
       [Ymi,Ym] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
     end
 
@@ -824,7 +846,7 @@ if ~isfield(res,'spmpp')
   else
     Ymi = Ym; 
   end
-  if ~debug; clear Ysrc Ymo; end
+  if ~debug; clear Ysrc ; end
 
 
   if job.extopts.verb>2
@@ -908,13 +930,13 @@ if ~isfield(res,'spmpp')
     %  -----------------------------------------------------------------
     try 
       stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
-      [Yb,Yl1] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+      [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
       fprintf('%4.0fs\n',etime(clock,stime));
       if 0
         %% just for manual debuging / development of gcut and gcutstr > remove this in 201709?
-        job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
-        job.extopts.gcutstr=0.1; [Yb01,Yl101] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
-        job.extopts.gcutstr=0.9; [Yb09,Yl109] = cat_main_gcut(Ymi,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
+        job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
+        job.extopts.gcutstr=0.1; [Yb01,Yl101] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
+        job.extopts.gcutstr=0.9; [Yb09,Yl109] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
         ds('d2','',vx_vol,(Yb01 + Yb05+Yb09)/3,Ymi.*(0.2+0.8*Yb01),Ymi.*(0.2+0.8*Yb05),Ymi.*(0.2+0.8*Yb09),50)
       end
     catch %#ok<CTCH>
@@ -922,7 +944,8 @@ if ~isfield(res,'spmpp')
       job.extopts.gcutstr = 99;
     end
   end
-  
+  %if ~debug; clear Ymo; end
+
 
 
 
@@ -1007,7 +1030,7 @@ if ~isfield(res,'spmpp')
   % display something
   stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
-  %% do segmentation  
+  % do segmentation  
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
   fprintf('%4.0fs\n',etime(clock,stime));
@@ -1023,7 +1046,7 @@ if ~isfield(res,'spmpp')
     fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
       th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
   end
-  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1
+  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1 
     error('cat_main:amap','Error in AMAP tissue classification (or earlier)');
   end
   % reorder probability maps according to spm order
@@ -1043,15 +1066,21 @@ if ~isfield(res,'spmpp')
   %     Yp0ox = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 
   %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   %  -------------------------------------------------------------------
-  if job.extopts.cleanupstr>0  %2.2; %1.6;
+  if job.extopts.cleanupstr>0 && job.extopts.cleanupstr<=1 %2.2; %1.6;
     %prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
-    [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ymi(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
+    [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
   else
+    if job.extopts.cleanupstr == 2 % old cleanup for tests
+      stime = cat_io_cmd('Old cleanup');
+      prob = clean_gwc(prob,1);
+      fprintf('%4.0fs\n',etime(clock,stime));
+    end
     for i=1:3
        Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
     end
     Yp0b = Yb(indx,indy,indz); 
   end;
+  if ~debug; clear Ymo; end
   clear prob
 
 
@@ -1154,7 +1183,7 @@ if ~isfield(res,'spmpp')
       if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
         cat_warnings = cat_io_addwarning(cat_warnings,...
           'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-          sprintf('Uncorrected WM hyperintensities (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_WM_rel),1);
+          sprintf('Uncorrected WM lesions (%2.2f%%%%%%%% of the WM)!',qa.subjectmeasures.WMH_WM_rel),1);
         fprintf('\n'); cat_io_cmd(' ','','',1);
       end
     end
@@ -1163,7 +1192,7 @@ if ~isfield(res,'spmpp')
     if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       cat_warnings = cat_io_addwarning(cat_warnings,...
         'MATLAB:SPM:CAT:cat_main:uncorrectedWMH',...
-        sprintf('Uncorrected WM hyperintensities greater (%2.2f%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
+        sprintf('Uncorrected WM lesions greater (%2.2f%%%%%%%% of the WM)!\\n',qa.subjectmeasures.WMH_rel));
     end
   end
   clear Yclsb;
@@ -1258,12 +1287,9 @@ else
   
   % load original images and get tissue thresholds
   Ysrc = spm_read_vols(spm_vol(fullfile(pp,[ff ee])));
-  WMth = double(max(cat_stat_nanmean(res.mn(res.lkp==2 & res.mg'>0.1)),...
+  WMth = double(max(clsint(2),...
            cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
-  T3th = [ min([  cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) - diff([cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)),...
-           WMth]) ,cat_stat_nanmean(res.mn(res.lkp==3 & res.mg'>0.3))]) ...
-           cat_stat_nanmean(res.mn(res.lkp==1 & res.mg'>0.1)) ...
-           WMth];
+  T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
   if T3th(3)<T3th(2) % inverse weighting allowed 
     job.inv_weighting   = 1;                                     
   else
@@ -1300,7 +1326,7 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-[trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);;
+[trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);;
     
 %%
 if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting && exist('Yclso','var')
@@ -1352,7 +1378,7 @@ for clsi=1:3
     job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
   cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
     sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
-    min([0 0 2 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
+    min([0 0 3 0],[job.output.(fn{clsi}).native job.output.(fn{clsi}).warped ...
     job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
 end
 
@@ -1362,7 +1388,7 @@ if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
     min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.mod job.output.WMH.dartel]),trans); % 1 0 0 0
   cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint16',[0,1/255],...
-    min([0 0 2 0],[job.output.WMH.native job.output.WMH.warped ...
+    min([0 0 3 0],[job.output.WMH.native job.output.WMH.warped ...
     job.output.WMH.mod job.output.WMH.dartel]),trans); % 0 1 2 2
 end 
 
@@ -1555,7 +1581,7 @@ if job.output.surface
   % creation without interruption of standard cat processing.
 %  try
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymi,Yl1,YMF,...
-      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},...
+      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
       'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
 %  catch
 %    surferr = lasterror; %#ok<LERR>
@@ -1715,7 +1741,8 @@ clear wYp0 wYcls wYv trans
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
 qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
-          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'reg',reg));
+          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
+
 % WMH updates? ... has to be done within cat_tst_qa?!
 %qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
 %qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
@@ -1735,11 +1762,10 @@ if job.output.surface && exist('S','var')
   end
   
   qam = cat_stat_marks('eval',job.cati,qa,'cat12');
-  
- 
+   
   cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
-    ... 'subjectratings',QAM.subjectmeasures, ... not ready
-    'subjectmeasures',qa.subjectmeasures),'write+'); % here we have to use the write+!
+    ... 'subjectratings',qam.subjectmeasures, ... not ready
+    'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 
 end  
 clear Yo Yp0 qas;
@@ -1793,7 +1819,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   end    
   
   % 1 line: SPM Bias parameter
-  if job.extopts.experimental
+  if job.extopts.experimental && isfield(job.opts,'bias') 
      str = [str struct('name', 'SPM parameter: bias / reg / fwhm / samp:','value',...
        sprintf('~%0.2f / %0.0e / %0.2f / %0.2f',...
         job.opts.bias,job.opts.biasreg,job.opts.biasfwhm,job.opts.samp))]; 
