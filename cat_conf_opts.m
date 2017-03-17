@@ -25,7 +25,7 @@ tpm.ufilter = '.*';
 tpm.def     =  @(val)cat_get_defaults('opts.tpm', val{:});
 tpm.num     = [1 1];
 tpm.help    = {
-  'Select the tissue probability image that include 6 tissue probability classes for (1) grey matter, (2) white matter, (3) cerebrospinal fluid, (4) bone, (5) non-brain soft tissue, and (6) the background.  CAT use the TPM only for the initial SPM segmentation.  Hence, it is more independent and allows accurate and robust processing with the standard TPM even in case of strong anatomical differences, e.g. very old/young brains.  Nevertheless, for children data we recommend to use customized TPMs created using the Template-O-Matic toolbox. '
+  'Select the tissue probability image that includes 6 tissue probability classes for (1) grey matter, (2) white matter, (3) cerebrospinal fluid, (4) bone, (5) non-brain soft tissue, and (6) the background.  CAT uses the TPM only for the initial SPM segmentation.  Hence, it is more independent and allows accurate and robust processing even with the standard TPM in case of strong anatomical differences, e.g. very old/young brains.  Nevertheless, for children data we recommend to use customized TPMs created using the Template-O-Matic toolbox. '
   ''
   'The default tissue probability maps are modified versions of the ICBM Tissue Probabilistic Atlases.  These tissue probability maps are kindly provided by the International Consortium for Brain Mapping, John C. Mazziotta and Arthur W. Toga. http://www.loni.ucla.edu/ICBM/ICBM_TissueProb.html.'
   ''
@@ -37,9 +37,9 @@ tpm.help    = {
 % ngaus:
 %------------------------------------------------------------------------
 % The default of SPM12 [GM,WM,CSF,bone,head tissue,BG] was [1,1,2,3,4,2]
-% and work very well in average and the segmenation did not profit by 
+% and works very well for most data and the segmentation did not benefit by 
 % more classes. There are no systematic effects for interferences or 
-% special anatomical properties (e.g., WMHs)!
+% special anatomical properties (e.g. WMHs)!
 %------------------------------------------------------------------------
 ngaus         = cfg_entry;
 ngaus.tag     = 'ngaus';
@@ -65,7 +65,7 @@ biasstr.strtype = 'r';
 biasstr.num     = [1 1];
 biasstr.def     = @(val)cat_get_defaults('opts.biasstr', val{:});
 biasstr.help    = {
-  'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modificative this value only if you observe problem!  Use smaller values (>0) for small corrections (e.g., in synthetic contrasts without visible bias) and higher values (<=1) for stronger corrections (e.g., in 7 Tesla data). The value 0 used the original SPM biasreg and biasfwhm parameter of the cat_defaults file! '
+  'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modify this value only if you experience problems!  Use smaller values (>0) for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values (<=1) for stronger corrections (e.g. in 7 Tesla data). The value 0 will use the original SPM biasreg and biasfwhm parameter of the cat_defaults file! '
   ''
   '  biasreg	  =  min(  10 , max(  0 , 10^-(biasstr*2 + 2) )) '
   '  biasfwhm	  =  min( inf , max( 30 , 30 + 60*biasstr )) '
@@ -76,9 +76,9 @@ biasstr.help    = {
 % biasreg: 
 %------------------------------------------------------------------------
 % Test on the BWP and real data demonstrate that 0.001 mm works best in
-% average, whereas some image profit by more regularisation (0.01) and strong
-% bias requires less regularisation (0.0001). There are not special cases
-% that profits by a regularisation >0.01 or <0.0001! Hence, I removed
+% average, whereas some image benefit by more regularisation (0.01) and strong
+% bias requires less regularisation (0.0001). There are no special cases
+% that benefit by a regularisation >0.01 or <0.0001! Hence, I removed
 % these entries (RD 2017-03).
 %------------------------------------------------------------------------
 biasreg        = cfg_menu;
@@ -150,7 +150,7 @@ warpreg.help    = {
 
 % affreg
 %------------------------------------------------------------------------
-% not large differences - mni was most stable
+% no large differences - mni was most stable
 %------------------------------------------------------------------------
 affreg        = cfg_menu;
 affreg.tag    = 'affreg';
@@ -171,8 +171,8 @@ affreg.help   = {
 
 % samp:
 %------------------------------------------------------------------------
-% Funny thing, but there is no systematical advantage in using higher
-% resolution! Only very light in single cases, e.g. 7 Tesla. 
+% Surprisingly, there is no systematical advantage in using higher
+% resolution! Only very slightly in single cases, e.g. 7 Tesla. 
 %------------------------------------------------------------------------
 samp         = cfg_entry;
 samp.tag     = 'samp';
@@ -191,13 +191,13 @@ opts      = cfg_branch;
 opts.tag  = 'opts';
 opts.name = 'Options for initial SPM12 affine registration';
 opts.help = {
-    'CAT use the Unified Segmentation of SPM12 for initial registration, bias correction, and segmentation.  The parameter used here were optimized for a variety of protocols and anatomies.  Only in case of strong inhomogeneity of high-field MR scanner we recommend to increase the biasstr parameter.  For children data we recommend to use customized TPMs created by the Template-O-Matic toolbox. '  
+    'CAT uses the Unified Segmentation of SPM12 for initial registration, bias correction, and segmentation.  The parameters used here were optimized for a variety of protocols and anatomies.  Only in case of strong inhomogeneity of high-field MR scanners we recommend to increase the biasstr parameter.  For children data we recommend to use customized TPMs created by the Template-O-Matic toolbox. '  
     ''
   };
 if expert>1
   opts.val  = {tpm,affreg,biasstr,biasreg,biasfwhm,ngaus,warpreg,samp};
   opts.help = [opts.help; {
-    'Increasing the initial sampling resolution to 1.5 or 1.0 mm may helps in some case of strong inhomogeneity but in general it only increase processing time.'
+    'Increasing the initial sampling resolution to 1.5 or 1.0 mm may help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
     'Strength of the bias correction "biasstr" controls the biasreg and biasfwhm parameter if biasstr>0!'
     ''
@@ -205,7 +205,7 @@ if expert>1
 elseif expert==1
   opts.val  = {tpm,affreg,biasstr,samp};
   opts.help = [opts.help; {
-    'Increasing the initial sampling resolution to 1.5 or 1.0 mm may helps in some case of strong inhomogeneity but in general it only increase processing time.'
+    'Increasing the initial sampling resolution to 1.5 or 1.0 mm ma help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''
   }];
 else

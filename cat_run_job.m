@@ -365,7 +365,7 @@ function cat_run_job(job,tpm,subj)
                 end
                 %}
 
-                % update SPM parameter - only increasing of resolution paramter 
+                % update SPM parameter - only increasing of resolution parameter 
                 % experimental 20161021
                 if job.extopts.experimental 
                   bias = max(0,bias - 0.1);                                       % there will allways be some bias

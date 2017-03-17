@@ -143,7 +143,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   for regstri = numel(job.extopts.regstr):-1:1;
     for voxi = numel(job.extopts.vox):-1:1; 
       %% set default dartel/shooting templates in debug mode 
-      % only in case of the default tempaltes
+      % only in case of the default templates
       job.extopts.templates = templates; 
       if job.extopts.expertgui==2 && ...
          (res.do_dartel==1 && job.extopts.regstr(regstri)>0) || ...
@@ -247,7 +247,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
         reg(regstri).opt.rres       = tpmres; %job.extopts.vox(voxi);  
       end
       
-      %% manual setting of shooting paramter  
+      %% manual setting of shooting parameter  
       if 0
         job.extopts.vox(voxi)          = 1.5;                   %#ok<UNRCH> % output resolution ...
         reg(regstri).opt.stepsize      = max(eps,0.5);          % stepsize of reduction
@@ -263,7 +263,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
 
       %% set default dartel/shooting templates in debug mode 
       %{
-      % only in case of the default tempaltes
+      % only in case of the default templates
       job.extopts.templates = templates; 
       if job.extopts.expertgui==2 && ...
          (res.do_dartel==1 && job.extopts.regstr(regstri)>0) || ...

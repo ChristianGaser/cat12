@@ -48,7 +48,7 @@
             <li><a href="#VBMofGMT">Is there a thickness map that allows a voxel-based analysis?</a></li>
             <li><a href="#7Tesla">Known problems in ultra high-field data (7 Tesla)</a></li>
             <li><a href="#inv">Preprocessing of T2/PD data</a></li>
-            <li><a href="#MT">Preprocessing of special contrasts (e.g., MT, T1syn, R1)</a></li>
+            <li><a href="#MT">Preprocessing of special contrasts (e.g. MT, T1syn, R1)</a></li>
           </ul>
           </br>
         <li><h4><a href="#QA">Quality control / assurance</a></h4></li>
@@ -67,7 +67,7 @@
           <h4 id="noiseCorrection">Do I need further noise or bias corrections?</h4>
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
-            Low frequency corrections for inhomogeneity, e.g., the N3 algorithm, are unproblematic but not required for most datasets.  
+            Low frequency corrections for inhomogeneity, e.g. the N3 algorithm, are unproblematic but not required for most datasets.  
             Only for very strong inhomogeneities (ICR lower than 50, grade E or F) of high-field scanners (greater 3 Tesla) further preprocessing might be helpful if CAT12 shows any problems.  
             Try to avoid high frequency corrections or resampling of the data because this will reduce the ability of the noise filters. 
             For images with slice-artifacts try the <a href="cat_tools_VBM.html#cat_vol_correct_slice_scaling">Slice scaling correction tool</a>.
@@ -117,8 +117,8 @@
         </li>
 -->
         <li id="strangeErr">
-          <h4>The parallel processing failed and CAT just open empty preprocessing files or these files include multiple different strange errors ... </h4>
-          <p>You work to long with MATLAB and it may open to many files that were not closed correctly (e.g., by killing read/write routines). You have to restart your SYSTEM and not only MATLAB. Until now, this error only occurs in developer mode. </p>
+          <h4>The parallel processing failed and CAT just opened empty preprocessing files or these files include multiple different strange errors ... </h4>
+          <p>You work too long with MATLAB and it may open too many files that were not closed correctly (e.g. by killing read/write routines). You have to restart your SYSTEM and not only MATLAB. Until now, this error only occurs in developer mode. </p>
         </li>
 <!--
         <li>
@@ -144,7 +144,7 @@
             A full batch script with SANLM filter is available <a class="function" href="matlab:spm_jobman('interactive','','cat12batch_RBM_and_SBM_for_SPM.m');">here</a>. 
             The results cannot be mixed with results of the default CAT pipeline because SPM12 segmentation no PVE and can be biased by the TPM.
             In general, cortical thickness values are slightly larger and thin gyri such as the parahippocampal or temporal gyri show more interruptions (see figure). 
-            <!-- Other segmentation, e.g., FSL, can be used if they match to the input structure and also include the seg8.mat file that is required for initial template registration. -->  
+            <!-- Other segmentation, e.g. FSL, can be used if they match to the input structure and also include the seg8.mat file that is required for initial template registration. -->  
           </p>
           <p style="text-align:center;">
             <img src="images/CAT_PBT_for_SPM.png" width=90% height=auto alt="Surface Processing for SPM segmentation" >
@@ -153,7 +153,7 @@
         </li>
 
         <!--
-        These topics need further explanation, e.g., example images.
+        These topics need further explanation, e.g. example images.
         <li>
           <h4>Incomplete surface or bubble surfaces</h4>
           <p>Check segmentation (check report file)...</p>
@@ -204,7 +204,7 @@
             Images on ultra high-field scanners often have strong inhomogeneities with large intensity changes and highly increased spatial frequency compared to 3 Tesla.
             The intensity changes influence the processing quality whereas low signal areas are extremely noisy and often lead to problems with CSF/GM segmentation with GM underestimation (see next figure A);  
             But the more serious problem is given by the spatial frequency that reduces the ability of the tissue classification that is required for bias correction. 
-            Without further corrections, e.g., by division by contrast free images with the same bias, problems based on insufficient cranial bias correction with GM misclassification as WM are typical that lead to local thickness underestimations (see next figure B).  
+            Without further corrections, e.g. by division by contrast free images with the same bias, problems based on insufficient cranial bias correction with GM misclassification as WM are typical that lead to local thickness underestimations (see next figure B).  
             We recommend to increase the "biasstr" parameter to 0.8 or 1.0 to use a smaller biasfwhm and less regularisation.  
           </p>
           <p style="text-align:center;">
@@ -215,7 +215,7 @@
         <li>
           <h4 id="inv">Preprocessing of T2/PD data</h4>
           <p>
-            Although, CAT focus on T1 data processing (with CSF&ltGM&ltWM intensity), there is also the possibility to process T2/PD data (with WM&ltGM&ltCSF intensity or GM&ltWM&ltCSF).  Typically, T2/PD data have lower CNR and lower resolution resulting in low quality ratings (IQR) and worse segmentation accuracy (see also <a>Validation</a>).      
+            Although, CAT focuses on T1 data processing (with CSF&ltGM&ltWM intensity), there is also the possibility to process T2/PD data (with WM&ltGM&ltCSF intensity or GM&ltWM&ltCSF).  Typically, T2/PD data have lower CNR and lower resolution resulting in low quality ratings (IQR) and poor segmentation accuracy (see also <a>Validation</a>).      
           </p>
           <!-- 
           <p style="text-align:center;">
@@ -223,8 +223,8 @@
           </p>
           -->
           <p>
-            Especially, if in case of GM&ltWM&lt=CSF intensity the correct classification of sulcal CSF is problematic because of the <it>a-priory</it> AMAP segmentation and the partial volume effect (PVE).  CAT use a special region growing process to differentiate between CSF and WM voxel but this process is relative error-prone and require enhances assessment of preprocessing quality and consideration of possible side effects in the data analysis.  
-            The following figure shows the segmentation and surface reconstruction of a T2 TSE scan of a neonate that show classification problems of sulcal CSF in the SPM but not the CAT segmentation.  For this preprocessing the standard TPM was used because the available TPMs (e.g., MANTIS TB) does not fit to the 6 class SPM12 standard TPM.  Moreover, it was necessary to reduce the strength of the SPM inhomogeneity correction (biasstr = 0.1) to avoid miss corrections. 
+            In particular, in case of GM&ltWM&lt=CSF intensity the correct classification of sulcal CSF is problematic because of the <it>a-priory</it> AMAP segmentation and the partial volume effect (PVE).  CAT uses a special region growing process to differentiate between CSF and WM voxels but this process is relative error-prone in that case.  
+            The following figure shows the segmentation and surface reconstruction of a T2 TSE scan of a neonate that shows classification problems of sulcal CSF in the SPM but not the CAT segmentation.  For this preprocessing the standard TPM was used because the available TPMs (e.g. MANTIS TB) does not fit to the 6 class SPM12 standard TPM.  Moreover, it was necessary to reduce the strength of the SPM inhomogeneity correction (biasstr = 0.1) to avoid false corrections. 
           </p>
           <p style="text-align:center;">
             <img src="images/neonates.png" width=90% height=auto alt="Processing of neonate T2 TSE scans" >
@@ -232,9 +232,9 @@
           </br></br>
         </li>
         <li>
-          <h4 id="MT">Preprocessing of special contrasts (e.g., MT, T1syn, R1)</h4>
+          <h4 id="MT">Preprocessing of special contrasts (e.g. MT, T1syn, R1)</h4>
           <p>
-            Synthetical contrast such as MT, T1sys, or R1 often have only a very light bias.  Although, we found the default biasstr value work very well in our test cases, it is possible to reduce the amount of bias-correction to a low non-zero value (e.g., biasstr = eps to 0.2).  
+            Synthetical contrast such as MT, T1sys, or R1 often have only a very light bias.  Although, we found the default biasstr value work very well in our test cases, it is possible to reduce the amount of bias-correction to a low non-zero value (e.g. biasstr = eps to 0.2).  
           </p>
           <!-- 
           <p style="text-align:center;">

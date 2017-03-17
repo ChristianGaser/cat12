@@ -49,7 +49,6 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
   %% Distance maps
   if (sum(round(Ymf(:))==Ymf(:)) / numel(Ymf))>0.9, bin=1; else bin=0; end
- %bin=0;
   
   %  WM distance 
   %  Estimate WM distance Ywmd and the outer CSF distance Ycsfdc to correct

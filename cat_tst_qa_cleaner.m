@@ -13,8 +13,8 @@ function varargout = cat_tst_qa_cleaner(data,opt)
 %  is equal to 5 rps.
 %  ROC evaluation showed that opt.cf=0.72 allows the best separation of 
 %  images without and with artifacts, but if the majority of your data 
-%  include light artifacts (e.g., by movements in young children) that 
-%  a softer weighing, e.g., opt.cf=2, is preferable (maximum is 4). 
+%  include light artifacts (e.g. by movements in young children) that 
+%  a softer weighing, e.g. opt.cf=2, is preferable (maximum is 4). 
 %
 %  Use the selftest with randomly generated data to get a first impression:
 %    cat_tst_qa_cleaner('test')

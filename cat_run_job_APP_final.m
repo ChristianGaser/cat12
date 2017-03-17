@@ -61,7 +61,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   gc.d = (brad*4 - brad*2*gcutstr)/mean(vx_vol);   % distance  parameter for downcut   - higher > more tissue
   gc.c = (0.01 - 0.02*gcutstr)*mean(vx_vol);         % growing  parameter for downcut    - higher > more tissue
   gc.f = (brad/5 - brad/10*gcutstr)/mean(vx_vol);    % closing   parameter               - higher > more tissue (higher as in gcut2, because of unkown ventricle)
-  % smoothing paramter
+  % smoothing parameter
   gc.s = -0.1 + 0.20*gcutstr;         % smoothing parameter                   - higher > less tissue
 
   stime = cat_io_cmd('  Skull-Stripping','g5','',verb,stime);
