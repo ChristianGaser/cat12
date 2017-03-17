@@ -13973,6 +13973,7 @@ Changed: Added option for additional 2D laplace filtering to topology
 correction to minimize irregularities in coordinate maps for SPH.
 
 ------------------------------------------------------------------------
+r1117 | dahnke | 2017-03-16 16:31:20 +0100 (Do, 16 Mär 2017) | 147 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14120,5 +14121,35 @@ M       internal/cat_vol_flipside.m
 
 
 
+
 ------------------------------------------------------------------------
-r1117 | dahnke | 2017-03-16 16:30:46
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_io_cprintf.m
+M       cat_main_LAS.m
+M       cat_main_LASs.m
+M       cat_main_registration.m
+M       cat_plot_boxplot.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_final.m
+M       cat_run_job_APP_init.m
+M       cat_surf_createCS.m
+M       cat_tst_cattest.m
+M       cat_tst_qa_cleaner.m
+M       cat_vol_correct_slice_scaling.m
+M       cat_vol_pbt.m
+M       cat_vol_sanlm.m
+M       compile.m
+M       html/cat_FAQ.html
+M       html/cat_introduction.html
+M       html/cat_methods_RBM.html
+M       html/cat_methods_validation.html
+M       html/cat_starting_cattest.html
+
+Changed: Updated help text and corrected typos.
+------------------------------------------------------------------------
+r1118 | gaser | 2017-03-17 16:56:45

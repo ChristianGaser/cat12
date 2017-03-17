@@ -25,13 +25,13 @@ function varargout = cat_vol_sanlm(varargin)
 %     A value of -INF is recommend, but you define a set of values (see
 %     example) for further changes depending on your data. Using multiple
 %     values will add the string "[p|n]###_" to the prefix to describe the
-%     ith input of job.NCstr, e.g., job.NCstr=[0.74,-0.33] will result in
+%     ith input of job.NCstr, e.g. job.NCstr=[0.74,-0.33] will result in
 %     "p074" and "n033".
 %     
 %     0                  .. no denoising 
 %     1                  .. full denoising (original sanlm)
-%     0 < job.NCstr < 1  .. automatic global correction with user weighing
-%    -9 < job.NCstr < 0  .. automatic local correction with user weighing
+%     0 < job.NCstr < 1  .. automatic global correction with user weighting
+%    -9 < job.NCstr < 0  .. automatic local correction with user weighting
 %     inf                .. global automatic correction
 %    -inf                .. local automatic correction
 %

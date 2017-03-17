@@ -55,15 +55,15 @@ function cat_tst_cattest(job)
 %           job.datalevel  [ basic | multisubject | long | non-human | full ]
 %           job.paralevel  [ basic | enhanced | ... ] >> userlevel
 %    *) processing with different important parameters
-%         (e.g., NCstr, LASstr, gcutstr, cleanupstr, WHMC(str), vox)
-%  	 *) Help Skripts, e.g., Volume vs. Surface Smoothing
+%         (e.g. NCstr, LASstr, gcutstr, cleanupstr, WHMC(str), vox)
+%  	 *) Help Skripts, e.g. Volume vs. Surface Smoothing
 %
 %  Large extensions
 %  V2:    statistical functions >> required futher data 
 %          - we can add some further low res images
 %          - we can link some sources that allow fast and simple access
 %            and have good quality (IXI, OASIS)
-%  V3:    bad paramter input as internal test function to test error
+%  V3:    bad parameter input as internal test function to test error
 %         handling
 %
 %  Planed data extensions:
@@ -178,7 +178,7 @@ function cat_tst_cattest(job)
   
   %{ 
   fprintf([
-    'The datalevel controls the number and kind (e.g., animals) of test cases.\n' ... 
+    'The datalevel controls the number and kind (e.g. animals) of test cases.\n' ... 
     'The userlevel controls the basic setting of the test parameters,\n' ... 
     'whereas the parameterlevel controls the definition of test parameters.']),
   %}

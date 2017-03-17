@@ -52,7 +52,7 @@ function cat_vol_correct_slice_scaling(varargin)
 %   artifact is in the anatomic x-direction, because the slices around 
 %   the corpus callosum have untpyical high GM tissue. This slices trend 
 %   to be brighter than they should. Using the background as control 
-%   paramter for the WM threshold helps to reduce this problem. 
+%   parameter for the WM threshold helps to reduce this problem. 
 % - The boundaries have to be wide to allow also corrections of block 
 %   artifacts like in IBSR1:5_8 were slice 1-x are normal and x+1 to end 
 %   are 50% brighter.
