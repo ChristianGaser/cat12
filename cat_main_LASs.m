@@ -280,7 +280,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
   %  in cases of failed bias correction, that strongly based on the T1
   %  intensities that were corrected before. So this is main part of LAS.
   %  ----------------------------------------------------------------------
-  if 1;; % also this if is just for the debuging mode and contain the second block the correction of the segmenation 
+  if 1;; % also this if is just for the debuging mode and contain the second block the correction of the segmentation 
     %% brain segmentation can be restricted to the brain to save time 
     stime = cat_io_cmd('  Prepare partitions','g5','',verb,stime); 
     [Ymr,Yb,BB] = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(10/mvx),Yb);

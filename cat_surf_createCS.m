@@ -341,7 +341,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
     try
-      cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -laplace_thresh 0.45 -fill -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+      cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -laplace_thresh 0.01 -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     catch
       cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
@@ -531,7 +531,7 @@ function cdata = estimateWMdepthgradient(CS,cdata)
 % Estimates the maximum local gradient of a surface. 
 % Major use is the WM depth that grows with increasing sulcal depth. 
 % It measures the amount of WM behind the cortex, but more relevant is
-% the amout of WM fibers that this reagion will add to the WM depth. 
+% the amount of WM fibers that this region will add to the WM depth. 
 % The width of the street next to a house gives not the connectivity of
 % this house, but the width of the entrance does!
 % This measure can be improved by furhter information of sulcal depth.

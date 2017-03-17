@@ -91,7 +91,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
              Ym(:)>cat_stat_nanmean(Ym(Yg(:)<0.2 & ~Ybg(:) & Ym(:)>cat_stat_nanmean(Ym(:))))))),rf); if ~debug, clear WMth2, end
   end
   
-  % initial noise reduction by resolution and by amout of variance in the background (multiply by 3 for 3 tissue classes)      
+  % initial noise reduction by resolution and by amount of variance in the background (multiply by 3 for 3 tissue classes)      
   Ywmi  = smooth3(cat_vol_morph( (Ym-Yg)>0.1 & (Ym+Yg)<1.2 & Yg<Ygth & abs(Ydiv)<0.2 , 'l'))>0.5; 
   Ymm   = Ym .* Ywmi; Ymm = cat_vol_resize(Ymm,'reduceV',resT1.vx_volr,resT1.vx_volr*3,16,'max');
   for i=1:1, Ymm = cat_vol_localstat(Ymm,Ymm>0,2,1); end;  
@@ -277,7 +277,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   cat_io_cmd('','','',opt.verb,stime); 
   
   % PQA variable
-  % - input/default paramter
+  % - input/default parameter
   pior.ipara          = opt;            
   % - processing parameter
   pior.ppara.vx_vol   = resT3.vx_vol;   % voxelsize input image

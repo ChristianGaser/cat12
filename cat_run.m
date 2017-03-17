@@ -195,11 +195,11 @@ function job = update_job(job)
     end
   end
   
-  % the extopts.biasstr controls and overwrite (biasstr>0) the SPM biasreg and biasfwhm paramter
+  % the extopts.biasstr controls and overwrites (biasstr>0) the SPM biasreg and biasfwhm parameter
   %   biasstr  = [0.01  0.25  0.50  0.75  1.00] ... result in ?
   %   biasreg  = [0.01  0.0032  0.0010  0.0003  0.0001] ? and ?
   %   biasfwhm = [30 45 60 75 90] for "30 + 60*biasstr? 
-  %     biasfwhm = [30.32  42.65  60  84.39 118.71)] for "10^(5/6 + biasstr/3)?  .. allow lower fields 
+  %   biasfwhm = [30.32  42.65  60  84.39 118.71)] for "10^(5/6 + biasstr/3)?  .. allows lower fields 
   if job.opts.biasstr>0 % update biasreg and biasfwhm only if biasreg>0
     % limits only describe the SPM standard range
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));

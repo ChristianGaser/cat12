@@ -114,7 +114,7 @@ function count = cat_io_cprintf(style,format,varargin)
 %       the last character of an underlined segment is not underlined for
 %       some unknown reason (add an extra space character to make it look better)
 %
-%    5. In old Matlab versions (e.g., Matlab 7.1 R14), multi-line styles
+%    5. In old Matlab versions (e.g. Matlab 7.1 R14), multi-line styles
 %       only affect the first line. Single-line styles work as expected.
 %       R14 also appends a single space after underlined segments.
 %
@@ -423,7 +423,7 @@ function [underlineFlag,boldFlag,style] = processStyleInfo(style)
       end
   end
 
-% Convert a Matlab RGB vector into a known style name (e.g., '[255,37,0]')
+% Convert a Matlab RGB vector into a known style name (e.g. '[255,37,0]')
 function styleName = getColorStyle(rgb)
   intColor  = int32(round(min(255,max(0,rgb*255))));
   javaColor = java.awt.Color(intColor(1), intColor(2), intColor(3));
