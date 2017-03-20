@@ -46,8 +46,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.LAB       = cat_get_defaults('extopts.LAB');
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   def.SPM       = 0; 
-  def.add_parahipp  = cat_get_defaults('extopts.add_parahipp');
-  def.scale_cortex  = cat_get_defaults('extopts.scale_cortex');
+  def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
+  def.scale_cortex    = cat_get_defaults('extopts.scale_cortex');
+  def.close_parahipp  = cat_get_defaults('extopts.close_parahipp');
 
   opt           = cat_io_updateStruct(def,opt);
   opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
@@ -292,9 +293,16 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
     Yppi(ind0) = 0;
 
+    % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large cuts in gyri
+    % after topology correction
+    if opt.close_parahipp
+      tmp = cat_vol_morph(Yppi,'labclose',1);
+      Yppi(mask_parahipp) = tmp(mask_parahipp);
+    end
+
     [tmp,CS.faces,CS.vertices] = cat_vol_genus0(Yppi,th_initial);
         
-    clear tmp Yppi Yppi0;
+    clear tmp Yppi;
 
     % correction for the boundary box used within the surface creation process 
     CS.vertices = CS.vertices .* repmat(abs(opt.interpV ./ vmatBBV([8,7,9])),size(CS.vertices,1),1);
@@ -340,13 +348,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
    
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
-    try
-      cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -laplace_thresh 0.01 -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-    catch
-      cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -deform -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-    end
+    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -laplace 0.01 -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % surface refinement by surface deformation based on the PP map
     th = 0.5;
@@ -419,7 +422,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     S.(opt.surf{si}).faces    = CS.faces;
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;
-    S.(opt.surf{si}).th1    = facevertexcdata;
+    S.(opt.surf{si}).th1      = facevertexcdata;
     if opt.experimental > 1
       S.(opt.surf{si}).th2    = facevertexcdata2;
       S.(opt.surf{si}).th3    = facevertexcdata3;
