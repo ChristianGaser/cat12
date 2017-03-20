@@ -14123,6 +14123,7 @@ M       internal/cat_vol_flipside.m
 
 
 ------------------------------------------------------------------------
+r1118 | gaser | 2017-03-17 16:57:00 +0100 (Fr, 17 Mär 2017) | 28 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14151,5 +14152,42 @@ M       html/cat_methods_validation.html
 M       html/cat_starting_cattest.html
 
 Changed: Updated help text and corrected typos.
+
 ------------------------------------------------------------------------
-r1118 | gaser | 2017-03-17 16:56:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_conf_stools.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_surf_createCS.m
+M       html/cat.html
+M       html/cat_methods_validation.html
+ M      html/images/cat_tst_reg_boxplot.png
+ M      html/images/cat_tst_seg_bwp_ana.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_APP.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_CU.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_SR.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_WR.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_aff.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_bf.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_breg.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_ng.png
+ M      html/images/cat_tst_seg_bwp_detail_para.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_SR.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_WR.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_aff.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_bf.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_breg.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_ng.png
+ M      html/images/cat_tst_seg_sve_boxplot.png
+ M      html/images/neonates.png
+
+(1) Changed: Added option for initial morphological closing in the parahippocampal 
+    area to minimize large cuts after topology correction.
+(2) Changed: Updated CAT_FixToüology to better deal with large topology aretefacts
+(2) Changed: Updated help text.
+------------------------------------------------------------------------
+r1119 | gaser | 2017-03-20 17:00:23
