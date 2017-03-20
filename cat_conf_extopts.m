@@ -572,7 +572,7 @@ app.help   = { ...
 lazy         = cfg_menu;
 lazy.tag     = 'lazy';
 lazy.name    = 'Lazy processing';
-lazy.labels  = {'yes','no'};
+lazy.labels  = {'yes','No'};
 lazy.values  = {1,0};
 lazy.val     = {0};
 lazy.help    = {
@@ -603,6 +603,30 @@ add_parahipp.help    = {
   ''
 };
 
+experimental        = cfg_menu;
+experimental.tag    = 'experimental';
+experimental.name   = 'Use experimental code';
+experimental.labels = {'No','Yes'};
+experimental.values = {0 1};
+experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
+experimental.help   = {
+  'Use experimental code and functions.'
+  ''
+  'WARNING: This parameter is only for developer and will call functions that are not safe and may change strongly!'
+  ''
+};
+
+
+close_parahipp         = cfg_menu;
+close_parahipp.tag     = 'close_parahipp';
+close_parahipp.name    = 'Initial morphological closing of parahippocampus';
+close_parahipp.labels  = {'No','Yes'};
+close_parahipp.values  = {0 1};
+close_parahipp.def     = @(val)cat_get_defaults('extopts.close_parahipp', val{:});
+close_parahipp.help    = {
+  'Apply initial morphological closing inside mask for parahippocampal gyrus to minimize the risk of large cuts of parahippocampal gyrus after topology correction. However, this may also lead to poorer quality of topology correction for other data and should be only used if large cuts in the parahippocampal areas occur.'
+  ''
+};
 
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
@@ -611,10 +635,10 @@ if ~spm
   if expert>=2 % experimental expert options
     extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,regstr,WMHCstr,wmhc,mrf,...
                      darteltpm,cat12atlas,brainmask,T1,...
-                     restype,vox,pbtres,scale_cortex,add_parahipp,ignoreErrors,verb}; 
+                     restype,vox,pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors,verb}; 
   elseif expert==1 % working expert options
     extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,regstr,WMHCstr,wmhc,darteltpm,restype,vox,...
-                     pbtres,scale_cortex,add_parahipp,ignoreErrors}; 
+                     pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors}; 
   else
     extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
   end

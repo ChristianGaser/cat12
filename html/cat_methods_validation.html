@@ -36,7 +36,7 @@
         Experts manually labeled  3 orthogonal slices (one per image dimension) based on noise and inhomogeneity corrected images in native space. 
       </p><p>
         For comparison different releases of SPM, VBM, and CAT were processed. 
-        Overall, the improvements between different segmentation methods are more obvious for real but not synthetic data, where many cases that failed (Kappa<0.6) in early releases now work in current versions. 
+        Overall, the improvements between different segmentation methods are more obvious for real but not synthetic data, where many cases that failed (Kappa &lt 0.6) in early releases now work in current versions. 
         Early versions of VBM12 were more robust but less accurate than VBM8, whereas current versions of CAT allow an accurate and reliable preprocessing. Keep in mind that the real datasets were selected to represent a large variety of typical scanner protocols, but also cover a large variance of human anatomy. Thus, outliers in these tests point to general problems for this type of protocols or anatomy.  
       </p>
       <p style="text-align:center;">
@@ -160,7 +160,7 @@
           </p><p style="font-size: 80%;">
             <b>Biasfwhm, biasreg & biasstr: </b> 
             Biasstr changes the strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameters.  
-            Use smaller values (>0) for small corrections (e.g. in synthetic contrasts without visible bias) and higher values (<=1) for stronger corrections (e.g. in 7 Tesla data). The value 0 uses the original SPM biasreg and biasfwhm parameters of the cat_defaults file. 
+            Use smaller values (>0) for small corrections (e.g. in synthetic contrasts without visible bias) and higher values (&lt=1) for stronger corrections (e.g. in 7 Tesla data). The value 0 uses the original SPM biasreg and biasfwhm parameters of the cat_defaults file. 
           </p><p style="font-size: 80%;">
             biasreg = min(  10 , max(  0 , 10<sup>-(biasstr*2 + 2)</sup> )) 
             </br>
@@ -187,7 +187,7 @@
             <img src="images/cat_tst_seg_bwp_boxplot_para_ng.png" width=40% height=auto alt="SPM ngaus parameter on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_ng.png" width=40% height=auto alt="SPM ngaus parameter on real data" >
           </p><p style="font-size: 80%;">
-            <b>ngaus</b>Number of Gaussian Curves fitted for each tissue class 
+            <b>Ngaus: </b>Number of Gaussian Curves fitted for each tissue class 
             (ng<sub>1</sub> = [1 1 2 4 3 2], ng<sub>2</sub> = [2 2 2 4 3 2], ng<sub>3</sub> = [3 3 2 4 3 2], ng<sub>4</sub> = [4 4 2 4 3 2], ng<sub>5</sub> = [4 4 2 4 3 2]).
           </p>
           </br></br>
@@ -195,7 +195,7 @@
             <img src="images/cat_tst_seg_bwp_boxplot_para_WR.png" width=40% height=auto alt="SPM warpreg parameter on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_WR.png" width=40% height=auto alt="SPM warpreg parameter on real data" >
           </p><p style="font-size: 80%;">
-            <b>warpreg</b>Nonlinear warping parameter of the Unified Segmentation 
+            <b>Warpreg: </b>Nonlinear warping parameter of the Unified Segmentation 
             (WR<sub>1</sub> = [0 0.0001 0.001 0.01 0.1]; WR<sub>2</sub> = [0 0.001  0.01  0.1  0.2]; WR<sub>3</sub> = [0 0.002  0.02  0.2  0.4]; 
              WR<sub>4</sub> = [0.5 0.4  0.3  0.2  0.1]; WR<sub>5</sub> = [0.8 0.4  0.2  0.1  0.2]). 
           </p>
@@ -207,7 +207,7 @@
             <img src="images/cat_tst_seg_bwp_boxplot_para_APP.png" width=40% height=auto alt="APP on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_APP.png" width=40% height=auto alt="APP on real data" >
           </p><p style="font-size: 80%;">
-            <b>APP: </b> Type of affine preprocessing APP (no correction, light correction, strong correction).  Although APP worked well for some cases, the overall process did not benefit and our test identified too many problems.  It is therefore not active by default but can help in some cases. 
+            <b>APP: </b>Type of affine preprocessing APP (no correction, light correction, strong correction).  Although APP worked well for some cases, the overall process did not benefit and our test identified too many problems.  It is therefore not active by default but can help in some cases. 
           </p>
           </br></br>
           <p style="text-align:center;">
@@ -221,14 +221,14 @@
             <img src="images/cat_tst_seg_bwp_boxplot_para_SS.png" width=40% height=auto alt="GCUTstr on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_SS.png" width=40% height=auto alt="GCUTstr on real data" >
           </p><p style="text-align:center; font-size: 80%;">
-            <b>GCUTstr:</b> Strength of the skull-stripping GCUTstr with 0 for old SPM skull-stripping with cleanup, 0.01 for soft (softer boundary for more tissue), 0.50 for average, and 1.00 for hard skull-stripping (harder boundary with less tissue).
+            <b>GCUTstr: </b>Strength of the skull-stripping GCUTstr with 0 for old SPM skull-stripping with cleanup, 0.01 for soft (softer boundary for more tissue), 0.50 for average, and 1.00 for hard skull-stripping (harder boundary with less tissue).
           </p>
           </br>
           <p style="text-align:center;">
             <img src="images/cat_tst_seg_bwp_boxplot_para_CU.png" width=40% height=auto alt="cleanupstr on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_CU.png" width=40% height=auto alt="cleanupstr on real data" >
           </p><p style="text-align:center; font-size: 80%;">
-            <b>Cleanupstr:</b> Cleanup (correction of meninges and blood vessels) method (0 - no cleanup, eps to 1 - optimized cleanup, 2 - old cleanup) and strength of the optimized cleanup routine with 0.01 for less, 0.50 for average, and 1.00 for strong corrections.
+            <b>Cleanupstr: </b>Cleanup (correction of meninges and blood vessels) method (0 - no cleanup, eps to 1 - optimized cleanup, 2 - old cleanup) and strength of the optimized cleanup routine with 0.01 for less, 0.50 for average, and 1.00 for strong corrections.
           </p>
           </br>
           
@@ -240,7 +240,7 @@
             <img src="images/cat_tst_seg_bwp_boxplot_para_res.png" width=40% height=auto alt="REStype and RESval on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_res.png" width=40% height=auto alt="REStype and RESval on real data" >
           </p><p style="font-size: 80%;">
-            <b>REStype & RESval:</b> Resolution setting for internal interpolation with 
+            <b>REStype & RESval: </b>Resolution setting for internal interpolation with 
               res<sub>native</sub> (REStype = 'native'),
               res<sub>best</sub> (default: REStype = 'best'; RESval = [1.0 0.3]), 
               res<sub>fixed</sub> (REStype = 'fixed'; RESval = [1.0 0.0];), and 
@@ -252,14 +252,14 @@
             <img src="images/cat_tst_seg_bwp_boxplot_para_LC.png" width=40% height=auto alt="Lesion correction WMHC=3 on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_LC.png" width=40% height=auto alt="Lesion correction WMHC=3 on real data" >
           </p><p style="font-size: 80%;">
-            <b>WMHC & WMHCstr:</b> The correction of WM Hyperintensities (WM Lesions) is still in development.  It is controlled by the WMHC parameter (0 - no correction, 1 - only for normalization, 2 - add lesions to WM; 3 - create another class p7*) and by the WMHCstr parameter (0 - off; 0.01 - light, 0.50 - average, 1.00 strong corrections).  The correction is important for the spatial normalization by Dartel/Shooting.
+            <b>WMHC & WMHCstr: </b>The correction of WM Hyperintensities (WM Lesions) is still in development.  It is controlled by the WMHC parameter (0 - no correction, 1 - only for normalization, 2 - add lesions to WM; 3 - create another class p7*) and by the WMHCstr parameter (0 - off; 0.01 - light, 0.50 - average, 1.00 strong corrections).  The correction is important for the spatial normalization by Dartel/Shooting.
           </p>
           </br></br>
           <p style="text-align:center;">
             <img src="images/cat_tst_seg_bwp_boxplot_para_NLM.png" width=40% height=auto alt="Noise correction with NLM filter on the BWP" >
             <img src="images/cat_tst_seg_exp_boxplot_para_NLM.png" width=40% height=auto alt="Noise correction with NLM filter on real data" >
           </p><p style="font-size: 80%;">
-            <b>SANLM & NCstr:</b> The noise correction is controlled by two parameters: the filter type and the strength of the filter. 
+            <b>SANLM & NCstr: </b>The noise correction is controlled by two parameters: the filter type and the strength of the filter. 
             By default an improved SANLM filter NLM<sub>I</sub>is used (SANLM = 1; NCstr = INF), that tries to avoid unnecessary filtering if almost no noise can be found in the data.<sub>1</sub> (SANLM = 1; NCstr = 1). 
             Furthermore, a resolution adaptive version ISARNLM (SANLM = 2; NCstr = INF), is available that can help in parallel image artefacts in high resolution data with voxel size below 1 mm (still in development). 
           </p>
