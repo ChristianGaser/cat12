@@ -1099,9 +1099,10 @@ if ~isfield(res,'spmpp')
 
   Yp0 = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   Ywmhrel = NS(Yl1,23);
-  qa.subjectmeasures.WMH_abs    = 100*sum(Ywmhrel(:));                       % absolute WMH volume without PVE
-  qa.subjectmeasures.WMH_rel    = qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
-  qa.subjectmeasures.WMH_WM_rel = qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = sum(Ywmhrel(:));                                            % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(0.5/3*255));   % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = 100*qa.subjectmeasures.WMH_abs / sum(Yp0(:)>(2.5/3*255));   % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = prod(vx_vol)/1000 * qa.subjectmeasures.WMH_abs;             % absolute WMH volume without PVE in cm^3
   clear Ywmhrel Yp0
 
   Yp0b = cat_vol_ctype(single(Ycls{1})*2/3 + single(Ycls{2}) + single(Ycls{3})*1/3,'uint8');
@@ -1854,7 +1855,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
   
   % line 8: surfae parameter
   if job.output.surface
-    str = [str struct('name', 'Voxel resolution (original > intern > PBT):',...
+    str = [str struct('name', 'Voxel resolution (original > internal > PBT):',...
            'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
            qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
   else
@@ -1883,13 +1884,13 @@ fprintf('%4.0fs\n',etime(clock,stime));
   % Volume measures
   if job.extopts.WMHC>1
     str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM','WMH')); 
-    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f %5.0f cm%s', ...
-            qa.subjectmeasures.vol_abs_CGW(1:4),char(179)))];
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f %5.0f cm' char(179)], ...
+            qa.subjectmeasures.vol_abs_CGW(1:4)))];
     str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %5.1f %%', ...
             qa.subjectmeasures.vol_rel_CGW(1:4)*100))];
   else
     str3 = struct('name', '\bfVolumes:','value',sprintf('%5s %5s %5s %5s%s','CSF','GM','WM')); 
-    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf('%5.0f %5.0f %5.0f cm%s', ...
+    str3 = [str3 struct('name', ' Absolute volume:','value',sprintf(['%5.0f %5.0f %5.0f cm' char(179)], ...
             qa.subjectmeasures.vol_abs_CGW(1:3)))];
     str3 = [str3 struct('name', ' Relative volume:','value',sprintf('%5.1f %5.1f %5.1f %%', ...
             qa.subjectmeasures.vol_rel_CGW(1:3)*100))];
@@ -1922,7 +1923,7 @@ fprintf('%4.0fs\n',etime(clock,stime));
 
   % Preprocessing Time
   if job.extopts.experimental || job.extopts.expertgui>0 || 1
-    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min:s', ...
+    str2 = [str2 struct('name','\bfProcessing time:','value',sprintf('%02.0f:%02.0f min', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60)))]; 
   end
   
@@ -2132,8 +2133,8 @@ fprintf('%4.0fs\n',etime(clock,stime));
     try
       hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
       hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-        'multisurf',job.extopts.surf==1 || job.extopts.surf==2,'view','s',...
-        'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+        'multisurf',job.output.surface,'view','s',...
+        'parent',hCS,'verb',0,'caxis',[1 5],'imgprint',struct('do',0)));
       colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
       cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
       set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
