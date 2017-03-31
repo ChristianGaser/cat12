@@ -53,7 +53,7 @@ function [Ym,Yb,WMth,Affine] = cat_long_APP(PF,PG,PB,opt)
 
   % initial APP
   Ysrc = single(VF.private.dat(:,:,:)); 
-  [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrc,opt.vx_vol,opt.verb-1);
+  [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init(Ysrc,opt.vx_vol,struct('verb',opt.verb-1));
   
   % write data to VF
   VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
