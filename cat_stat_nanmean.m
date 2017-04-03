@@ -52,7 +52,7 @@ function out = cat_stat_nanmean(in, dim)
   if isempty(in), out = nan; return; end
   
   % estimate mean
-  tp    = class(in);
+  %tp    = class(in);
   tmpin = double(in); % single failed in large arrays
   tmpin(isnan(in(:))) = 0;
   if sum(~isnan(in),dim)==0
@@ -62,5 +62,5 @@ function out = cat_stat_nanmean(in, dim)
     out(sum(~isnan(in),dim)==0) = nan; 
   end
   
-  eval(sprintf('out = %s(out);',tp));
+  %eval(sprintf('out = %s(out);',tp));
 end
