@@ -70,8 +70,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   end
     
   clsint  = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
-  
-  debug = debug | cat_get_defaults('extopts.verb')>2;
+  clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*inf))']; 
+ 
   inv_weighting = 0;
   if nargout==7
     cat_warnings = struct('identifier',{},'message',{});
@@ -87,7 +87,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   
   %% initial thresholds and intensity scaling
   T3th3 = [clsint(3) clsint(1) clsint(2)];
-  BGth  = clsint(6);
+  BGth  = min(mean(Ysrc(Ycls{6}(:)>192)),clsint(6));
   
   %% -------------------------------------------------------------------
   %  intensity checks and noise contrast ratio (contrast part 1)
@@ -112,21 +112,37 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
       'CAT:cat_main:InverseContrast',...
       sprintf(['Inverse tissue contrast! \n' ...
            '(BG=%0.2f, CSF=%0.2f, GM=%0.2f, WM=%0.2f)\n'],BGth,T3th3(1:3)),numel(cat_warnings)==0);
-        
+    T3th3(1) = max( max(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240)));     
+    
     % first initial scaling for gradients and divergence
-    T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-             min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
-             T3th3 ...
-             ([T3th3(3)*0.3+0.7*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-              cat_stat_nanmean([T3th3(3), BGth ]) ...
-              clsint(2)*0.8 ...
-              max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ...
-              max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
-              max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))))]) ];
-    T3thx = [0,0.05, 1,2,3, 2.9, 2.5, 2.0, 1.0, 0.7];
+    if abs(diff( abs(diff( T3th3/diff(T3th3([3,1])) )) ))>0.4 % %T2
+      T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
+               min( T3th3(3)*0.8+0.2*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
+               T3th3 ...
+               ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
+                cat_stat_nanmean([T3th3(3), BGth ]) ... WM
+                T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
+                max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
+                 ]) ];
+      T3thx = [0,0.05, 1,2,3.2, 1.1, 1.0, 1.75, 0.8]; 
 
-    [T3th,si] = sort(T3th);
-    T3thx     = T3thx(si);
+      [T3th,si] = sort(T3th);
+      T3thx     = T3thx(si);
+    else 
+      T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
+               min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
+               T3th3 ...
+               ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
+                cat_stat_nanmean([T3th3(3), BGth ]) ... WM
+                T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
+                max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
+                max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
+                 max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ) ]) ];
+      T3thx = [0,0.05, 1,2,3, 2.0, 1.0, 1.75, 0.8, 0.2];
+
+      [T3th,si] = sort(T3th);
+      T3thx     = T3thx(si);
+    end
     
     Ym = Ysrc+0; 
     for i=2:numel(T3th)
@@ -136,7 +152,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     M  = Ysrc>=T3th(end); 
     Ym(M(:)) = numel(T3th)/6 + (Ysrc(M(:)) - T3th(i))/diff(T3th(end-1:end))*diff(T3thx(i-1:i));    
     Ym = Ym / 3; 
-    
+    %%
     Yg    = cat_vol_grad(Ym,vx_vol);
     Ydiv  = cat_vol_div(Ym,vx_vol);
     
@@ -164,16 +180,40 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     if debug==0, clear Yg Ydiv Yn Yi; end
     
     %% final thresholds
-    T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
+    if 0  % old 
+      T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
+               min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
+               T3th3 ...
+               ([T3th3(3)*0.3+0.7*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
+                cat_stat_nanmean([T3th3(3),BGth]) ...
+                clsint(2)*0.8 ...
+                max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ...
+                max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
+                max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))))]) ];
+      T3thx = [0,0.05, 1,2,3, 2.9, 2.5, 2.0, 1.0, 0.7];
+    end
+    if abs(diff( abs(diff( T3th3/diff(T3th3([3,1])) )) ))>0.4 % %T2
+      T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
+               min( T3th3(3)*0.8+0.2*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
+               T3th3 ...
+               ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
+                cat_stat_nanmean([T3th3(3), BGth ]) ... WM
+                T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
+                max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
+                 ]) ];
+      T3thx = [0,0.05, 1,2,3.2, 1.1, 1.0, 1.75, 0.8]; 
+    else
+      T3th  = [min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
              min( T3th3(3)*0.2+0.8*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) , BGth ) ...
              T3th3 ...
-             ([T3th3(3)*0.3+0.7*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ...
-              cat_stat_nanmean([T3th3(3),BGth]) ...
-              clsint(2)*0.8 ...
-              max(T3th3) + abs(diff(T3th3([1,numel(T3th3)])/2)) ...
+             ([T3th3(3)*0.5+0.5*min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ... WM
+              cat_stat_nanmean([T3th3(3), BGth ]) ... WM
+              T3th3(2)*0.5 + 0.5*T3th3(1)... % CSF/GM
+              max(T3th3) + abs(diff(T3th3([1,3])/2)) ... % CSF / BG
               max(T3th3(end) + abs(diff(T3th3([1,numel(T3th3)])/2)) , ...
-              max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))))]) ];
-    T3thx = [0,0.05, 1,2,3, 2.9, 2.5, 2.0, 1.0, 0.7];
+               max(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))) ) ]) ];
+      T3thx = [0,0.05, 1,2,3, 2.0, 1.0, 1.75, 0.8, 0.2];
+    end
 
     
     [T3th,si] = sort(T3th);
@@ -185,8 +225,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   elseif T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3) % T1
     %%
     BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
+    T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
     BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{6}(:)>128))]);
-    
     %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
     %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
     %         max(res.mn(res.lkp==1 & res.mg'>0.1)) ...
@@ -391,7 +431,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   %  estimate the median value of the segment that is typcialy more 
   %  stable than the mean value. 
   %  -------------------------------------------------------------------
-     
+   
     % check SPM segmentation
     if exist('cat_warnings','var')
       Ymx = single(Ycls{1})/255*2/3 + single(Ycls{2})/255+ single(Ycls{3})/255*1/3;  
@@ -453,7 +493,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     %Ybm   = cat_vol_morph(Ycls{6}>240 & Ysrc<min(T3th),'lc'); 
     BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
     BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{6}(:)>128))]);
-    BMth  = min(BGcon,T3th(1) - diff(T3th(1:2))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
+    BMth  = max(BGmin,min(BGcon,T3th(1) - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
     Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*cat_stat_nanmean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
     Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.5)>0.5; % important to avoid PVE!
 
@@ -494,7 +534,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     %% final peaks and intesity scaling
     %  -----------------------------------------------------------------
     T3th3 = T3th_cls;
-    T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth BGth T3th3 ...
+    T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth min(BGth,mean([BMth,T3th3(1)])) T3th3 ...
               T3th3(end) + diff(T3th3([1,numel(T3th3)])/2) ... WM+
               max(T3th3(end)+diff(T3th3([1,numel(T3th3)])/2) , ... max
               max(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:))))) ];
@@ -535,7 +575,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     %YM  = Ysrc<Tth.T3th(5)/1.2; 
     %Ym(YM(:)) = Ysrc(YM(:)) / (Tth.T3th(5)/1.2);    
     YM  = (smooth3(Ysrc<Tth.T3th(5)/1.2) & smooth3(Ysrc>Tth.T3th(4))) | Ym>2; 
-    Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1);
+    Ym = cat_vol_median3(Ym,YM,Ym<1.5,0.1); 
+    cat_sanlm(Ym,1,3)
   elseif T3th3(1)>T3th3(3) && T3th3(2)<T3th3(3) && T3th3(1)>T3th3(2)
      %% filtering
     Ybb  = cat_vol_morph(cat_vol_morph(Yp0>0.5/3,'c',4),'d',2);

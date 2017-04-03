@@ -433,11 +433,11 @@ function varargout = cat_tst_qa(action,varargin)
       if opt.verb>1 && numel(Pp0)>1
         fprintf('%s\n',repmat('-',size(Theader)));  
         if opt.orgval 
-          fprintf(Tavg,'mean',cat_stat_nanmean(qamat,1),mean(mqamatm,1));    %#ok<CTPCT>
-          fprintf(Tavg,'std' , cat_stat_nanstd(qamat,1), std(mqamatm,1));    %#ok<CTPCT>  
+          fprintf(Tavg,'mean',cat_stat_nanmean(qamat,1),cat_stat_nanmean(mqamatm,1));    %#ok<CTPCT>
+          fprintf(Tavg,'std' , cat_stat_nanstd(qamat,1), cat_stat_nanstd(mqamatm,1));    %#ok<CTPCT>  
         else
-          fprintf(Tavg,'mean',cat_stat_nanmean(qamatm,1),mean(mqamatm,1));    %#ok<CTPCT>
-          fprintf(Tavg,'std' , cat_stat_nanstd(qamatm,1), std(mqamatm,1));    %#ok<CTPCT>  
+          fprintf(Tavg,'mean',cat_stat_nanmean(qamatm,1),cat_stat_nanmean(mqamatm,1));    %#ok<CTPCT>
+          fprintf(Tavg,'std' , cat_stat_nanstd(qamatm,1), cat_stat_nanstd(mqamatm,1));    %#ok<CTPCT>  
         end 
         %fprintf('%s\n',repmat('-',size(Theader)));  
         %fprintf(Tavg,'mean',mean(qamat,1));  
@@ -614,14 +614,14 @@ function varargout = cat_tst_qa(action,varargin)
       if 1 % CAT internal resolution
         QAS.qualitymeasures.res_vx_voli = vx_voli;
       end
-      QAS.qualitymeasures.res_RMS       = mean(vx_vol.^2).^0.5;
+      QAS.qualitymeasures.res_RMS       = cat_stat_nanmean(vx_vol.^2).^0.5;
       % futher unused measure (just for test/comparison)
       %QAS.qualitymeasures.res_isotropy  = max(vx_vol)./min(vx_vol);
       %QAS.qualitymeasures.res_vol       = prod(abs(vx_vol));
       %QAS.qualitymeasures.res_MVR       = mean(vx_vol);
       
       % boundary box - brain tissue next to image boundary
-      bbth = round(2/mean(vx_vol)); M = true(size(Yp0));
+      bbth = round(2/cat_stat_nanmean(vx_vol)); M = true(size(Yp0));
       M(bbth:end-bbth,bbth:end-bbth,bbth:end-bbth) = 0;
       QAS.qualitymeasures.res_BB = sum(Yp0(:)>1.25 & M(:))*prod(abs(vx_vol)); 
 
@@ -657,31 +657,31 @@ function varargout = cat_tst_qa(action,varargin)
       T1th = [median(Ym(Yp0toC(Yp0(:),1)>0.9)) ...
               median(Ym(Yp0toC(Yp0(:),2)>0.9)) ...
               median(Ym(Yp0toC(Yp0(:),3)>0.9))];
-      noise = max(0,min(1,std(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
+      noise = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
       Yms = Ym+0; spm_smooth(Yms,Yms,repmat(double(noise)*4,1,3));      % smoothing to reduce high frequency noise
             
       % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
       voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
-      rad  = voli( QAS.subjectmeasures.vol_TIV) ./ mean(vx_vol);
+      rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
       Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Yo==0,min(24,max(16,rad*2)));   % fast 'distance' map
-      Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<mean(T1th(1:2)),'e') & ...
+      Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
               Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
-      if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<mean(T1th(1:2)),'e') & Yp0<1.25; end
-      if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<mean(T1th(1:2)) & Yp0<1.25; end
-      %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<mean(T1th(2:3))); % HEBEL      
+      if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
+      if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
+      %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<cat_stat_nanmean(T1th(2:3))); % HEBEL      
       Ygm1 = round(Yp0*10)/10==2;                                       % avoid PVE 1
       Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
       Ygm  = (Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
       Ywm  = cat_vol_morph(Yp0>2.1,'e') & Yp0>2.9 & ...                 % avoid PVE & subcortex
-        Yms>min(mean(T1th(2:3)),(T1th(2) + 2*noise*diff(T1th(2:3))));   % avoid WMHs2
+        Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*diff(T1th(2:3))));   % avoid WMHs2
       clear Ygm1 Ygm2; % Ysc; 
       
       %% further refinements of the tissue maps
       T2th = [median(Yms(Ycm)) median(Yms(Ygm)) median(Yms(Ywm))];
       Ycm  = Ycm & Yms>(T2th(1)-16*noise*diff(T2th(1:2))) & Ysc &...
              Yms<(T2th(1)+0.1*noise*diff(T2th(1:2)));
-      if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<mean(T1th(1:2)),'e') & Yp0<1.25; end
-      if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<mean(T1th(1:2)) & Yp0<1.25; end     
+      if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
+      if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end     
       Ygm  = Ygm & Yms>(T2th(2)-2*noise*diff(T1th(2:3))) & Yms<(T2th(2)+2*noise*diff(T1th(2:3)));
       Ygm(smooth3(Ygm)<0.2) = 0;
       Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid wholes
@@ -721,7 +721,7 @@ function varargout = cat_tst_qa(action,varargin)
       resr.vx_volo = vx_vol; vx_vol=resr.vx_red .* resr.vx_volo;
       
       % intensity scaling for normalized Ym maps like in CAT12
-      Ywc = Ywc .* (mean(Yo(Yp0(:)>2))/mean(Ym(Yp0(:)>2)));
+      Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
       
       %% bias correction for original map, based on the 
       WI  = Yw./max(eps,Ywc); WI(isnan(WI) | isinf(WI)) = 0; 
@@ -734,12 +734,12 @@ function varargout = cat_tst_qa(action,varargin)
       Yw  = Yw ./WI; Yw  = round(Yw *1000)/1000;
       clear WIs ;
       
-      Ywb = Ywb ./ mean(Ywb(Yp0(:)>2));
+      Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2));
      
       % tissue segments for contrast estimation etc. 
-      CSFth = mean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
-      GMth  = mean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
-      WMth  = mean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
+      CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
+      GMth  = cat_stat_nanmean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
+      WMth  = cat_stat_nanmean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
       T3th  = [CSFth GMth WMth];
       
       % estimate background
@@ -747,7 +747,7 @@ function varargout = cat_tst_qa(action,varargin)
       try
         warning 'off' 'MATLAB:cat_vol_morph:NoObject'
         BGCth = min(T3th)/2; 
-        Ybgr = cat_vol_morph(cat_vol_morph(Ymir<BGCth,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Ymir);
+        Ybgr = cat_vol_morph(cat_vol_morph(Ymir<BGCth,'lc',1),'e',2/cat_stat_nanmean(resYbg.vx_volr)) & ~isnan(Ymir);
         Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
         if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
         warning 'on'  'MATLAB:cat_vol_morph:NoObject'
@@ -758,7 +758,7 @@ function varargout = cat_tst_qa(action,varargin)
           % non-zero background
           Ygr  = cat_vol_grad(Ymir); 
           warning 'off' 'MATLAB:cat_vol_morph:NoObject'
-          Ybgr = cat_vol_morph(cat_vol_morph(Ygr<0.3 & Yp0<0,'lc',1),'e',2/mean(resYbg.vx_volr)) & ~isnan(Ymir);
+          Ybgr = cat_vol_morph(cat_vol_morph(Ygr<0.3 & Yp0<0,'lc',1),'e',2/cat_stat_nanmean(resYbg.vx_volr)) & ~isnan(Ymir);
           Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
           if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
           warning 'on'  'MATLAB:cat_vol_morph:NoObject'

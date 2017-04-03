@@ -392,7 +392,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   %% CSF & BG 
   Ynb = cat_vol_morph(smooth3(Ycls{6})>128 | (~Yb & Yg<=0.001),'e',4*vxv); 
-  [Yx,Yc,resT2] = cat_vol_resize({round(Ysrc./Ylab{2} .* Ynb .* ((Ysrc./Ylab{2})<0.1) * rf(2))/rf(2),...
+  [Yx,Yc,resT2] = cat_vol_resize({round(Ysrc./Ylab{2} .* Ynb * rf(2))/rf(2),... .* ((Ysrc./Ylab{2})<T3th(1)/T3th(3))
     round(Ysrc./Ylab{2} .* (smooth3(Ycm | Ysc)>0.5) * rf(2))/rf(2)},'reduceV',vx_vol,8,16,'min');% only pure CSF !!!
   Yx(Yc>0)=0; Yc(Yx>0)=0;
   meanYx = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
@@ -422,7 +422,12 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   
   %% global
-  Ymg = max(eps,Ysrc./Ylab{2}) * Tth.T3th(5)/(Tth.T3thx(5)); 
+  if Tth.T3th(Tth.T3thx==1)==Tth.T3thx(Tth.T3thx==1) %invers
+    Ymg = max(eps,(Ysrc + srcmin)./Ylab{2}); 
+  else
+    Ymg = (Ysrc + srcmin)./max(eps,(Ylab{2} + srcmin)); 
+    Ymg = Ymg * Tth.T3th(Tth.T3thx==3)/(Tth.T3thx(Tth.T3thx==3)/3);
+  end
   Ymg = cat_main_gintnorm(Ymg,Tth); 
   
   %%
