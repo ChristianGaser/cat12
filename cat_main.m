@@ -342,7 +342,7 @@ if ~isfield(res,'spmpp')
   else
     CMth = min( [  clsint(1) - diff([clsint(1),WMth]) , clsint(3) ]);
   end
-  T3th = [ CMth , clsint(2) , WMth];
+  T3th = [ CMth , clsint(1) , WMth];
 
 
   %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
@@ -350,7 +350,7 @@ if ~isfield(res,'spmpp')
   if sum(Yp0(:)>0.3)<100
     % this error often depends on a failed affine registration, where SPM
     % have to find the brain in the head or background
-    BGth  = clsint(6);
+    BGth  = min(cat_stat_nanmean(Ysrc( P(:,:,:,6)>128 )),clsint(6));
     HDHth = clsint(5);
     HDLth = clsint(4);
     clsvol = nan(1,6); for ci=1:6, Yct = P(:,:,:,ci)>128; clsvol(ci) = sum(Yct(:))*vx_volp; end; clear Yct; 
@@ -392,8 +392,10 @@ if ~isfield(res,'spmpp')
     P(:,:,:,6) = P6;
     clear P4 P5 P6; 
   end
+  
 
-  if job.extopts.experimental || (job.extopts.INV && any(sign(diff(T3th))==-1))
+  if (job.extopts.experimental || (job.extopts.INV && any(sign(diff(T3th))==-1))) && job.extopts.gcutstr>0
+   % (sum( abs( (Ysrc(:)==0) - (Yp0(:)<0.5) ) ) / sum(Ysrc(:)==0)) < 0.1  || ...
   % use gcut2
 
     %   brad = voli(sum(Yp0(:)>0).*prod(vx_vol)/1000); 
@@ -457,13 +459,13 @@ if ~isfield(res,'spmpp')
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
     %Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
-    BGth = clsint(6); 
+    BGth = min(cat_stat_nanmean(Ysrc( P(:,:,:,6)>128 )),clsint(6));
     Yg   = cat_vol_grad((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ydiv = cat_vol_div((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
     BVth = diff(T3th(1:2:3))/abs(T3th(3))*1.5; 
     RGth = diff(T3th(2:3))/abs(T3th(3))*0.1; 
-    Yb   = single(cat_vol_morph((Yp0>2/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5),'lo')); 
+    Yb   = single(cat_vol_morph((Yp0>1.9/3) | (Ybo & Ysrcb>mean(T3th(2)) & Ysrcb<T3th(3)*1.5 & Yg<0.5),'lo',max(0,0.6/mean(vx_vol)))); 
     %% region-growing GM 1
     Yb(~Yb & (~Ybo | Ysrcb<cat_stat_nanmean(T3th(2)) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
     [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
@@ -475,7 +477,7 @@ if ~isfield(res,'spmpp')
     %% region-growing GM 3
     Yb(~Yb & (~Ybo | Ysrcb<mean([BGth,T3th(1)]) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
     [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
-    Yb(smooth3(Yb)<0.5)=0; 
+    Yb(smooth3(Yb)<0.5)=0; Yb(Yp0toC(Yp0*3,1)>0.9 & Yg<0.3 & Ysrcb>BGth & Ysrcb<T3th(2)) = 1; 
     %% ventrile closing
     [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); clear Ysrcb
     Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
@@ -788,7 +790,18 @@ if ~isfield(res,'spmpp')
     end
 
   end
-
+  
+  
+  
+  if 0
+    % prepared for improved partitioning - RD20170320
+    job2=job; job2.extopts.regstr=eps; res2=res; res2.do_dartel=2; 
+    [trans,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls,Yy,tpm.M);
+    Yy = trans.warped.y; clear trans job2 res2; 
+  end
+  
+  
+  
 
 
   %% Local Intensity Correction 
@@ -839,6 +852,10 @@ if ~isfield(res,'spmpp')
         (1-Yc) .* Ymi(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
         Yc .* Ymis .* Ybr;
 
+      % extreme background denoising to remove wholes?
+      Ymis = cat_vol_median3(Ymi,Ymi>0 & Ymi<0.4,Ymi<0.4); Ymi = Ymi.*max(0.1,Ymi>0.4) + Ymis.*min(0.9,Ymi<=0.4);
+      Ymis = cat_vol_median3(Ym,Ym>0 & Ym<0.4,Ym<0.4); Ym = Ym.*max(0.1,Ym>0.4) + Ymis.*min(0.9,Ym<=0.4);
+      
       clear Ymis;
     end
     %clear Ymioc; 

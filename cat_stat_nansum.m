@@ -52,10 +52,10 @@ function out = cat_stat_nansum(in, dim)
   if isempty(in), out = 0; return; end
   
   % estimate mean
-  tp    = class(in);
+  %tp    = class(in); 
   tmpin = double(in); % single failed in large arrays
   tmpin(isnan(in(:))) = 0;
   out = sum(tmpin, dim);
   
-  eval(sprintf('out = %s(out);',tp));
+  %eval(sprintf('out = %s(out);',tp)); % haha ... 
 end

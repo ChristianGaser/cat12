@@ -67,7 +67,7 @@ function varargout = compile(comp,test,verb)
   %% compiling c-functions
   if comp==1
   
-    if strcmp(mexext,'mexmaci64')
+    if 0 % strcmp(mexext,'mexmaci64')
       mexflag=['-Dchar16_t=UINT16_T CFLAGS=''$CFLAGS -Wall -ansi -pedantic ' ...
         '-Wextra'' CPPLAGS=''$CPPFLAGS -Wall -ansi -pedantic -Wextra'''];
     else

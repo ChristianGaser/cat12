@@ -30,7 +30,6 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.showdata    = 0;             % show data points: 0 - no; 1 - as points; 2 - as short lines (barcode plot)
 %  opt.median      = 2;             % show median: 0 - no; 1 - line; 2 - with different fill colors 
 %  opt.edgecolor   = 'none';        % edge color of box 
-%  opt.edgecolor   = 'none';  
 %  opt.trans       = 0.25;          % transparency of the box
 %  opt.sat         = 0.50;          % satuation of the box
 %
@@ -129,14 +128,36 @@ function [out,s] = cat_plot_boxplot(data,opt)
   def.violin      = 0;  
   def.fontsize    = []; % empty = default font size
   def.showdata    = 0;  
-  def.median      = 2;  
-  def.edgecolor   = 'none';  
-  def.trans       = 0.25; 
-  def.sat         = 0.50;
-
-  opt = cat_io_checkinopt(opt,def);
-  opt.notched = max(0,min(1,opt.notched));
-  opt.trans   = max(0,min(1,opt.trans * (opt.sat*4) ));
+  def.median      = 2;          % show median: 0 - no; 1 - line; 2 - with different fill colors 
+  def.edgecolor   = 'none';     % edgecolor of boxes
+  def.trans       = 0.25;       % transparency of boxes
+  def.sat         = 0.50;       % saturation of boxes
+  def.subsets     = false(1,numel(data)); 
+  def.hflip       = 0;          % glip x-axis in case of horizontal bars
+  
+  opt             = cat_io_checkinopt(opt,def);
+  opt.notched     = max(0,min(1,opt.notched));
+  opt.trans       = max(0,min(1,opt.trans * (opt.sat*4) ));
+  if max(opt.subsets)>1
+    subsets = zeros(1,numel(data)); 
+    subsets(opt.subsets+1) = 1; 
+    opt.subsets = mod(cumsum(subsets),2); 
+  end
+  
+  % first data box on the top
+  if ~opt.vertical 
+    if opt.hflip
+      for di=1:numel(data), data{di} = -data{di}; end 
+      opt.ylim = flip(-opt.ylim); 
+      if isfield(opt,'ytick'), opt.ytick = flip(-opt.ytick); end
+    else
+      data           = flip(data); 
+      opt.names      = flip(opt.names);
+      opt.groupcolor = flip(opt.groupcolor); 
+      opt.subsets    = flip(opt.subsets); 
+    end
+  end
+  
   
   % always use filling for this median plot option
   if opt.median == 2, opt.fill = 1; end
@@ -382,6 +403,9 @@ function [out,s] = cat_plot_boxplot(data,opt)
     box = box*(opt.boxwidth/2/max(box));
   end
   
+  %subsets_x = ones(11,1)*[1:nc] + [-1;-1;-1;1;1;1;1;1;-1;-1;-1]*box;
+  %subsets_y = ;
+  
   quartile_x = ones(11,1)*[1:nc] + [-a;-1;-1;1;1;a;1;1;-1;-1;-a]*box;
   quartile_y = s([3,7,4,4,7,3,6,2,2,6,3],:);
   
@@ -389,9 +413,14 @@ function [out,s] = cat_plot_boxplot(data,opt)
   quartile_xthin = ones(11,1)*[1:nc] + [-1;-1;-1;1;1;1;1;1;-1;-1;-1]*0.035*ones(1,nc);
 
   % quartiles below median for different filling colors
-  quartile_xl = ones(7,1)*[1:nc] + [a;1;1;-1;-1;-a;a]*box;
-  quartile_yl = s([3,6,2,2,6,3,3],:);
-
+  if ~opt.vertical && opt.hflip
+    quartile_xl = ones(7,1)*[1:nc] + [a;1;1;-1;-1;-a;a]*box;
+    quartile_yl = s([3,7,4,4,7,3,3],:);
+  else
+    quartile_xl = ones(7,1)*[1:nc] + [a;1;1;-1;-1;-a;a]*box;
+    quartile_yl = s([3,6,2,2,6,3,3],:);
+  end
+  
   % Draw a line through the median
   median_x = ones(2,1)*[1:nc] + [-a;+a]*box;
   median_y = s([3,3],:);
@@ -580,25 +609,63 @@ function [out,s] = cat_plot_boxplot(data,opt)
 
     % plot yticks
     if opt.ygrid 
+      %%
+      if opt.vertical, xytick = 'Ytick'; xylab = 'YTickLabel'; else xytick = 'Xtick'; xylab = 'XTickLabel'; end
       if isfield(opt,'ytick')
         ytick = opt.ytick; 
       else
-        ytick=get(gca,'YTick');
+        ytick=get(gca,xytick);
         if numel(ytick)<5, ytick=interp1(ytick,1:0.5:numel(ytick)); elseif numel(ytick)>10, ytick=ytick(1:2:end); end
       end
-      set(gca,'YTick',ytick); 
-      set(gca,'YTickLabel',num2str(ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
-
+      set(gca,xytick,ytick); 
+      if ~opt.vertical && opt.hflip
+        set(gca,xylab,num2str(-ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
+      else
+        set(gca,xylab,num2str( ytick',sprintf('%%0.%df',-str2double(char(regexp(num2str(min(diff(ytick)),'%e'),'[+-]..','match'))) ) ) ); 
+      end
+      
       if ytick(1)<=opt.ylim(1)+eps,   ytick(1)=[];   end
       if ytick(end)>=opt.ylim(2)-eps, ytick(end)=[]; end
-      h1=plot(repmat([0;numel(opt.names)+1],1,numel(ytick)),[ytick;ytick],'Color',linecolor);
+      if opt.vertical
+        h1=plot(repmat([0;numel(opt.names)+1],1,numel(ytick)),[ytick;ytick],'Color',linecolor);
+      else
+        h1=plot([ytick;ytick],repmat([0;numel(opt.names)+1],1,numel(ytick)),'Color',linecolor);
+      end
       uistack(h1,'bottom')
 
+      % subgrid (just a brighter line without value)
       if opt.ygrid>1
-        ytick2 = ytick1; 
-        h2=plot(repmat([0;numel(opt.names)+1],1,numel(ytick2)),[ytick2;ytick2],'Color',linecolor/2);
+        %%
+        ytick1 = get(gca,xytick);
+        ytick2 = ytick1(1):( diff([ytick1(1),ytick1(end)]) / ((numel(ytick1)-1)*opt.ygrid)):ytick1(end);
+        ytick2 = setdiff(ytick2,ytick1);
+
+        if opt.vertical
+          h2=plot(repmat([0;numel(opt.names)+1],1,numel(ytick2)),[ytick2;ytick2],'Color',linecolor*0.25+0.75*ones(1,3));
+        else
+          h2=plot([ytick2;ytick2],repmat([0;numel(opt.names)+1],1,numel(ytick2)),'Color',linecolor*0.25+0.75*ones(1,3));
+        end
         uistack(h2,'bottom')
       end
+    end
+    
+    %% subsets
+    if any(opt.subsets)
+      f2 = [];
+      if opt.vertical
+        %%
+        for i=find(opt.subsets)
+          f2=[f2 fill([i-0.5 i+0.5 i+0.5 i-0.5],sort([ylim ylim]),'b-','FaceColor',[0 0 0],'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
+        end
+      else
+        %%
+        for i=find(opt.subsets)
+          f2=[f2 fill(sort([xlim xlim]),[i-0.5 i+0.5 i+0.5 i-0.5],'b-','FaceColor',[0 0 0],'FaceAlpha',0.04,'EdgeColor','none')]; %#ok<AGROW>
+        end
+      end
+      for i=1:numel(f2), uistack(f2(i),'bottom'); end
+      uistack(h1,'bottom')
+      if opt.ygrid>1, uistack(h2,'bottom'); end
     end
      
   %%

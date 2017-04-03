@@ -426,7 +426,7 @@ darteltpm.num     = [1 1];
 darteltpm.help    = {
   'Selected Dartel/Shooting template must be in multi-volume nifti format and should contain GM and WM segmentations. The template of the first iteration (indicated by "Template_1" for Dartel and "Template_0" for Shooting) must be selected, but the templates of all iterations must be existing.'
   ''
-  'Please note that the use of an own DARTEL template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ.'
+  'Please note that the use of an own DARTEL template will result in deviations and unreliable results for any ROI-based estimations because the atlases wi ll differ.'
   ''
 };
 

@@ -297,7 +297,12 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
                 opt.spaces),fnamestr,k(i,:)); 
 
               val(i).SEG = struct('kappa',kappa_all(1:3),'rms',rms(1:3),'kappaGW',kappa_all(4),'rmsGW',rms(4));
-              colori = kappa_all(4);
+              switch opt.testcase
+                case 'IBSR'
+                  colori = mean(kappa_all(2:3));
+                otherwise
+                  colori = kappa_all(4);
+              end
             otherwise
               if numel(Vref)==numel(V), Vrefi=i; else Vrefi=1; end
               vol1 = single(spm_read_vols(Vref(Vrefi))); 

@@ -14210,6 +14210,7 @@ M       tbx_cfg_cat.m
     cm^3,...)
 
 ------------------------------------------------------------------------
+r1121 | gaser | 2017-03-31 08:54:16 +0200 (Fr, 31 Mär 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14218,5 +14219,113 @@ M       cat_long_APP.m
 M       html/cat.html
 
 Fixed: Initialization of APP for longitudinal batch mode was incorrect.
+
 ------------------------------------------------------------------------
-r1121 | gaser | 2017-03-31 08:54:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_amap.mexmaci64
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_ornlm.mexmaci64
+M       cat_plot_boxplot.m
+M       cat_run_job.m
+M       cat_sanlm.mexmaci64
+A       cat_spm_affreg.m
+M       cat_stat_nanmean.m
+M       cat_stat_nanstd.m
+M       cat_stat_nansum.m
+M       cat_tst_calc_kappa.m
+M       cat_tst_qa.m
+M       cat_vbdist.mexmaci64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+M       html/cat_methods_validation.html
+M       html/images/cat_tst_seg_BWP_boxplot.png
+M       html/images/cat_tst_seg_BWP_detail.png
+M       html/images/cat_tst_seg_bwp_ana.png
+M       html/images/cat_tst_seg_bwp_boxplot_para.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_APP.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_CAT.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_CU.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_LAS.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_LC.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_NLM.png
+A       html/images/cat_tst_seg_bwp_boxplot_para_SPM.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_SR.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_SS.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_WR.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_aff.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_bf.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_breg.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_ng.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_other.png
+D       html/images/cat_tst_seg_bwp_boxplot_para_res.png
+M       html/images/cat_tst_seg_bwp_detail_para.png
+M       html/images/cat_tst_seg_exp_boxplot.png
+D       html/images/cat_tst_seg_exp_boxplot_para.png
+D       html/images/cat_tst_seg_exp_boxplot_para_APP.png
+A       html/images/cat_tst_seg_exp_boxplot_para_CAT.png
+D       html/images/cat_tst_seg_exp_boxplot_para_CU.png
+D       html/images/cat_tst_seg_exp_boxplot_para_LAS.png
+D       html/images/cat_tst_seg_exp_boxplot_para_LC.png
+D       html/images/cat_tst_seg_exp_boxplot_para_NLM.png
+A       html/images/cat_tst_seg_exp_boxplot_para_SPM.png
+D       html/images/cat_tst_seg_exp_boxplot_para_SR.png
+D       html/images/cat_tst_seg_exp_boxplot_para_SS.png
+D       html/images/cat_tst_seg_exp_boxplot_para_WR.png
+D       html/images/cat_tst_seg_exp_boxplot_para_aff.png
+D       html/images/cat_tst_seg_exp_boxplot_para_bf.png
+D       html/images/cat_tst_seg_exp_boxplot_para_breg.png
+D       html/images/cat_tst_seg_exp_boxplot_para_ng.png
+D       html/images/cat_tst_seg_exp_boxplot_para_other.png
+D       html/images/cat_tst_seg_exp_boxplot_para_res.png
+M       html/images/cat_tst_seg_exp_detail.png
+M       html/images/cat_tst_seg_exp_detail_para.png
+A       html/images/cat_tst_seg_ibsr_boxplot.png
+A       html/images/cat_tst_seg_ibsr_detail.png
+M       html/images/cat_tst_seg_sve_boxplot.png
+A       html/images/cat_tst_seg_sve_detail.png
+
+(1)  New:        Added detection of skull-stripped data to improve the affine
+                 registration in cat_run_job. For initial affine registration a 
+                 brain mask is applied to the template. Furthermore, the number 
+                 of gaussian classes is corrected and checkt after the first 
+                 SPM preprocessing. 
+(2)  New:        If the initial affine registration failed and the AC is outside
+                 of the image, than the COM is used to reinitialise the the
+                 registration (cat_run_job). 
+(3)  New:        Added biasfwhm modifier in case of strong inhomogeneities in 
+                 cat_run_job.                
+(4)  Changed:    Refined the fine affine registration in cat_run_job by further 
+                 steps to reduce problems in R1 weighted scans and skull-striped
+                 data. In case of skull-stripped data the brain mask is used. 
+(4)  Changed:    Added cat_spm_affreg to avoid popup error message in case of 
+                 initial affine registration errors that are maybe fixed by 
+                 COM initialisation or spm_maff8. 
+(5)  Changed:    Removed affreg case 'subj' regularisation because the results  
+                 were equivalent with the case 'none' registration.  
+                 Added comments for some parameter in cat_conf_opts. 
+(6)  Fixed:      Corrected problems in cat_main_gintnorm and cat_main_LAS for  
+                 inverse contrasts.
+(7)  Fixed:      Corrected handling of template cases in cat_main_registration.
+(8)  Fixed:      Replaced mean by cat_stat_nanmean in cat_tst_qa.
+(9)  Changed:    Added grouping (gray background blocks) in cat_plot_boxplot.                 
+                 
+------------------------------------------------------------------------
+r1122 | dahnke | 2017-04-03 19:09:22

@@ -19,7 +19,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 %
 % Actions:
 %   Morphological operations with 26-neighborhood (cube):
-%    - d  | dilate 
+%    - d??| dilate 
 %    - e  | erode  
 %    - c  | close  
 %    - o  | open   
@@ -71,7 +71,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     error('MATLAB:cat_vol_morph:vx_vol', ...
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
   end
-  no=n; n(1)=round(double(n(1))); 
+  no=n; n=double(n); n(1)=round(n(1)); 
   switch lower(action)
     case {'l' 'lc' 'lo' 'labclose' 'labopen'}
       % not return in this case
@@ -81,7 +81,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   
   switch lower(action)
     case {'dilate' 'd'}
-      vol = single(vol); 
+      vol = double(vol); 
       k   = ones(1,2*n+1);
       spm_conv_vol(vol,vol,k,k,k,-[n n n]);
       vol = vol>0;   
