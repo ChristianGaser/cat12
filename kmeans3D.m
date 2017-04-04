@@ -8,7 +8,7 @@ function [mu,su,nu]= kmeans3D(y,k)
 % mu         vector of class means 
 %
 % modified version of
-% $Id$
+% spm_kmeans1.m 1143 2008-02-07 19:33:33Z spm $
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
