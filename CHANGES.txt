@@ -14221,6 +14221,7 @@ M       html/cat.html
 Fixed: Initialization of APP for longitudinal batch mode was incorrect.
 
 ------------------------------------------------------------------------
+r1122 | dahnke | 2017-04-03 19:09:48 +0200 (Mo, 03 Apr 2017) | 106 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14327,5 +14328,34 @@ A       html/images/cat_tst_seg_sve_detail.png
 (8)  Fixed:      Replaced mean by cat_stat_nanmean in cat_tst_qa.
 (9)  Changed:    Added grouping (gray background blocks) in cat_plot_boxplot.                 
                  
+
 ------------------------------------------------------------------------
-r1122 | dahnke | 2017-04-03 19:09:22
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+M       cat_amap.mexmaci64
+M       cat_conf_extopts.m
+M       cat_ornlm.mexmaci64
+M       cat_sanlm.mexmaci64
+M       cat_vbdist.mexmaci64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+M       kmeans3D.m
+
+(1) Fixed: Added kmeans3D.m to distribution
+(2) Changed: Changed path of compilation to pwd
+------------------------------------------------------------------------
+r1123 | gaser | 2017-04-04 15:02:45
