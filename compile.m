@@ -32,8 +32,9 @@ function varargout = compile(comp,test,verb)
   if ~exist('test','var'); test=1; end
   if ~exist('verb','var'); verb=2; end
   expert = cat_get_defaults('extopts.expertgui');
-  catdir = fullfile(spm('dir'),'toolbox','cat12'); 
+%  catdir = fullfile(spm('dir'),'toolbox','cat12'); 
   olddir = pwd;
+  catdir = olddir;
   
   % testdata 
   % empty image with a NaN voxel
@@ -194,7 +195,7 @@ function varargout = compile(comp,test,verb)
       for ncj = 1:numel(nc{nci})
         if (nce{nci}(ncj)>0 && verb) || (ncw{nci}(ncj)>0 && verb>1) || verb>2
           cat_io_cprintf([0.6 0.0 0.0],...
-              sprintf('%4d)  Compiling of %s failed! (%d error(s), %d warning(s))\n',...
+              sprintf('%4d)  Compiling of %s with errors or warnings! (%d error(s), %d warning(s))\n',...
               ncj,['"' nc{nci}{ncj} '"'],nce{nci}(ncj),ncw{nci}(ncj)));
           fprintf('%s\n\n',rc{nci}{ncj});
         end
