@@ -14330,6 +14330,7 @@ A       html/images/cat_tst_seg_sve_detail.png
                  
 
 ------------------------------------------------------------------------
+r1123 | gaser | 2017-04-04 15:02:58 +0200 (Di, 04 Apr 2017) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14357,5 +14358,19 @@ M       kmeans3D.m
 
 (1) Fixed: Added kmeans3D.m to distribution
 (2) Changed: Changed path of compilation to pwd
+
 ------------------------------------------------------------------------
-r1123 | gaser | 2017-04-04 15:02:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_registration.m
+M       compile.m
+
+(1) Changed:    Force to use odd image dimension for normalized image dimension 
+                in cat_main_registration (thanks to Xirui Hou for pointing out 
+                this issue).
+(2) Fixed:      Corrected voxel dimension of the transformation and Jacobian 
+                determinant (thanks to Gabriel Ziegler and Felix Hoffstaedter). 
+------------------------------------------------------------------------
+r1124 | dahnke | 2017-04-05 16:35:18

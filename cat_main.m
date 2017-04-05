@@ -365,6 +365,8 @@ if ~isfield(res,'spmpp')
       'CSF','GM','WM','HDH','HDL','BG', ...
       [ clsvol([6 3 1 2 4 5])/sum(clsvol)*100, clsvol([6 3 1 2 4 5])/sum(clsvol(1:3))*100, T3th,HDHth,HDLth,BGth]));  %#ok<SPERR>
   end
+  
+  %%
   Yp0(smooth3(cat_vol_morph(Yp0>0.3,'lo'))<0.5)=0; % not 1/6 because some ADNI scans have large "CSF" areas in the background 
   Yp0     = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
   Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
@@ -393,7 +395,7 @@ if ~isfield(res,'spmpp')
     clear P4 P5 P6; 
   end
   
-
+  %%
   if (job.extopts.experimental || (job.extopts.INV && any(sign(diff(T3th))==-1))) && job.extopts.gcutstr>0
    % (sum( abs( (Ysrc(:)==0) - (Yp0(:)<0.5) ) ) / sum(Ysrc(:)==0)) < 0.1  || ...
   % use gcut2
@@ -1344,6 +1346,12 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
+Vtemp = spm_vol(job.extopts.templates{1}); vx_volt = abs(Vtemp(1).mat(1)); 
+if do_dartel>1 && (job.extopts.vox~=1.5 || vx_volt~=1.5) && job.extopts.expertgui<2
+  cat_io_cprintf('warn',['  Shooting registration is still in development and work only \n' ...
+                         '  correctly for template and output resolution of 1.5 mm!/n'])
+end
+clear Vtemp vx_volt; 
 [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);;
     
 %%
@@ -1360,7 +1368,7 @@ stime = cat_io_cmd('Write result maps');
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
 
 % bias, noise and global corrected without masking for subject space and with masking for other spaces 
-cat_io_writenii(VT0,Ym,mrifolder,'m', ...
+cat_io_writenii(VT0,Ym,mrifolder,'m', ...Dartel
   'bias and noise corrected, global intensity normalized','uint16',[0,0.0001], ... 
   min([1 0 2],[job.output.bias.native job.output.bias.warped job.output.bias.dartel]),trans);
 cat_io_writenii(VT0,Ym.*(Yp0>0.1),mrifolder,'m', ... 
@@ -1383,7 +1391,7 @@ end
 cat_io_writenii(VT0,Yp0,mrifolder,'p0','Yp0b map','uint8',[0,4/255],job.output.label,trans);
 clear Yp0; 
 
-%% partitioning
+% partitioning
 cat_io_writenii(VT0,Yl1,mrifolder,'a0','brain atlas map for major structures and sides',...
   'uint8',[0,1],job.output.atlas,trans);
 
@@ -1400,7 +1408,7 @@ for clsi=1:3
     job.output.(fn{clsi}).mod job.output.(fn{clsi}).dartel]),trans);
 end
 
-%% write WMH class maps
+% write WMH class maps
 if job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting;
   cat_io_writenii(VT0,single(Ywmh)/255,mrifolder,'p7','WMH tissue map','uint8',[0,1/255],...
     min([1 1 0 2],[job.output.WMH.native job.output.WMH.warped ...
@@ -1474,13 +1482,13 @@ end
 % ----------------------------------------------------------------------
 
 
-%% classe maps 4-6 (for full TPM/template creation, e.g. for apes)
+% classe maps 4-6 (for full TPM/template creation, e.g. for apes)
 if any(cell2mat(struct2cell(job.output.TPMC)'))
   for clsi=4:6
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
       min([1 1 0 3],[job.output.TPMC.native job.output.TPMC.warped ...
-      job.output.TPMC.mod job.output.TPMC.dartel]),trans);
+      job.output.TPMC.mod job.output.TPMC.dartel]),trans);Dartel
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
       min([0 0 3 0],[job.output.TPMC.native job.output.TPMC.warped ...
@@ -1489,12 +1497,17 @@ if any(cell2mat(struct2cell(job.output.TPMC)'))
 end
 %clear cls clsi fn Ycls; % we need this maps later for the ROIs
 
-%% write jacobian determinant
+% write jacobian determinant
 if job.output.jacobian.warped
+  %%
   if do_dartel==2 % shooting
-    [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.jc.odim(1:3) 1 3]),[1 0], 6);
-    dt = 1/max(eps,dt); 
-    clear y0
+    %[y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.jc.odim(1:3) 1 3]),[1 0], 6);
+    dt = trans.jc.dt2; 
+    dx = 10; % smaller values are more accurate, but large look better; 
+    [D,I] = cat_vbdist(single(~(isnan(dt) | dt<0 | dt>100) )); D=min(1,D/min(dx,max(D(:)))); 
+    dt = dt(I); dt = dt .* (1-D) + D; dt(isnan(dt))=1; 
+    %dt = 1/max(eps,dt); 
+    clear y0 D I
   else %dartel
     [y0, dt] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
     clear y0
@@ -1502,8 +1515,8 @@ if job.output.jacobian.warped
   N      = nifti;
   N.dat  = file_array(fullfile(pth,mrifolder,['wj_', nam, '.nii']),trans.warped.odim(1:3),...
              [spm_type('float32') spm_platform('bigend')],0,1,0);
-  N.mat  = M1;
-  N.mat0 = M1;
+  N.mat  = trans.warped.M1;
+  N.mat0 = trans.warped.M1;
   N.descrip = ['Jacobian' VT0.descrip];
   create(N);
   N.dat(:,:,:) = dt;
@@ -1514,16 +1527,16 @@ if job.output.warps(1)
     Yy        = spm_diffeo('invdef',trans.warped.y,trans.warped.odim,eye(4),trans.warped.M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
-    N.mat     = M1;
-    N.mat0    = M1;
+    N.mat     = trans.warped.M1;
+    N.mat0    = trans.warped.M1;
     N.descrip = 'Deformation';
     create(N);
     N.dat(:,:,:,:,:) = reshape(Yy,[trans.warped.odim,1,3]);
 end
 
-clear Yy;
+if ~debug, clear Yy; end
 
-%% deformation iy - subject > dartel
+% deformation iy - subject > dartel
 if job.output.warps(2)
   % transformation from voxel to mm space
   yn = numel(trans.warped.y); 

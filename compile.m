@@ -475,7 +475,7 @@ function varargout = compile(comp,test,verb)
     
     % Display results
     if verb
-      fprintf('\n\nTest of compiled c-functions:\nThese are aimplified tests with RMS values as rough approximation!\n'); 
+      fprintf('\n\nTest of compiled c-functions:\nThese are amplified tests with RMS values as rough approximation!\n'); 
       for si=1:numel(s)
         if s(si) 
           cat_io_cprintf([0.0 0.6 0.0],sprintf('%4d)  RMS = % 05.2f;  Test of %20s successful!\n',...

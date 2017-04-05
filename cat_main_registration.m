@@ -309,9 +309,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       VT  = res.image(1);
       if isfield(res,'imagesc'); VT0 = res.imagec(1); else VT0 = res.image0(1); end
       idim = VT.dim(1:3);                                                     % (interpolated) input image resolution
-      %idim = res.image(1).dim(1:3);                                            % input image resolution
-      odim = floor(res.tpm(1).dim * tpmres/newres);                            % output image size
-      rdim = floor(res.tpm(1).dim * tpmres/regres);                            % registration image size
+      %idim = res.image(1).dim(1:3);                                          % input image resolution
+      odim = floor(res.tpm(1).dim * tpmres/newres/2)*2+1;                     % output image size
+      rdim = floor(res.tpm(1).dim * tpmres/newres/2)*2+1;                     % registration image size
       if job.extopts.regstr(regstri)==0, rdim = odim; end % Dartel only!
 
 
@@ -759,7 +759,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
 
           trans.warped = struct('y',yi,'yx',yx,'odim',odim,'M0',M0,'M1',M1,'M2',M1\R*M0,'dartel',2);
-          if job.output.jacobian.warped, trans.jc = struct('u',u,'odim',odim); end
+          if job.output.jacobian.warped, trans.jc = struct('u',u,'odim',odim,'dt2',dt2); end % u ist nicht auf vox angepasst!
 
           cat_io_cmd('','','',job.extopts.verb,itime); 
           cat_io_cmd(' ','',''); cat_io_cmd('','','',job.extopts.verb,stime); 
@@ -774,25 +774,25 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             fprintf('Registration power: \n'); 
             fprintf('%30s','Jacobian determinant: '); 
             QMC   = cat_io_colormaps('marks+',17);
-            reg(regstri).reldtc = reg(regstri).dtc/max(reg(regstri).dtc); 
+            reg(regstri).reldtc = reg(regstri).dtc / max(reg(regstri).dtc); 
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
             for dti=1:numel(reg(regstri).dtc)
-              cat_io_cprintf( color(QMC,reg(regstri).reldtc(dti)*6),sprintf('%0.3f ',reg(regstri).reldtc(dti))); 
+              cat_io_cprintf( color(QMC,( 1 - reg(regstri).reldtc(dti) ) *6),sprintf('%0.3f ',reg(regstri).reldtc(dti))); 
             end
             cat_io_cprintf( color(QMC,(reg(regstri).dt - 0.05)/0.25 * 6), sprintf(' | %0.6f ',reg(regstri).dt));
             fprintf('\n'); 
 
             fprintf('%30s','Jacobian determinant (RMS): '); 
             QMC   = cat_io_colormaps('marks+',17);
-            reg(regstri).relrmsdtc = reg(regstri).rmsdtc/max(reg(regstri).rmsdtc); 
+            reg(regstri).relrmsdtc = reg(regstri).rmsdtc; %/max(reg(regstri).rmsdtc); 
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
             for dti=1:numel(reg(regstri).relrmsdtc)
               cat_io_cprintf( color(QMC,reg(regstri).relrmsdtc(dti)*6),sprintf('%0.3f ',reg(regstri).relrmsdtc(dti))); 
             end
             cat_io_cprintf( color(QMC,(reg(regstri).rmsdt)/0.5 * 6), sprintf(' | %0.6f ',reg(regstri).rmsdt));
             fprintf('\n'); 
-
-
+            
+            % this work very well
             fprintf('%30s','Template Matching: '); 
             QMC   = cat_io_colormaps('marks+',17);
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
@@ -805,9 +805,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           end
 
 
-          %% write output
+          % write output
           stime = cat_io_cmd(sprintf('Write Output with %0.2f mm',job.extopts.vox(voxi)));
 
+          % preparte output directory
           if job.extopts.regstr(regstri)==0
             testfolder = sprintf('Dartel_rr%0.1f_default',newres);
           elseif job.extopts.regstr(regstri)==4
@@ -819,13 +820,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
               testfolder = sprintf('Shooting_tr%0.1f_rr%0.1f_or%0.1f_regstr%0.1f%s',tpmres,regres,newres,job.extopts.regstr(regstri));
             end
           end
+          if job.extopts.subfolders, mrifolder = 'mri'; else mrifolder = ''; end
 
-          if job.extopts.subfolders
-            mrifolder     = 'mri';
-          else
-            mrifolder     = '';
-          end
-
+          
+          % tissue ouptut
           fn = {'GM','WM','CSF'};
           for clsi=1:max(1,2*(export-1))
             if export>1
@@ -844,10 +842,11 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             %  sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],[0 0 2 0],trans);  
 
 
+          
           %% write jacobian determinant
           [pth,nam] = spm_fileparts(VT0.fname); 
           if job.extopts.regstr(regstri)>0 % shooting
-            %dt2o=dt2;
+            if debug, dt2o=dt2; end %#ok<NASGU>
             dx = 10; % smaller values are more accurate, but large look better; 
             [D,I] = cat_vbdist(single(~(isnan(dt2) | dt2<0 | dt2>100) )); D=min(1,D/min(dx,max(D(:)))); 
             dt2 = dt2(I); dt2 = dt2 .* (1-D) + D; dt2(isnan(dt2))=1; 
@@ -855,7 +854,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             [y0, dt2] = spm_dartel_integrate(reshape(trans.jc.u,[trans.warped.odim(1:3) 1 3]),[1 0], 6);
             clear y0
           end
-          %%
+          
+          % create nifti
           N         = nifti;
           N.dat     = file_array(fullfile(pth,mrifolder,testfolder,['wj_', nam, '.nii']),trans.warped.odim(1:3),...
                       [spm_type('float32') spm_platform('bigend')],0,10/256^2,0);
@@ -864,6 +864,8 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           N.descrip = ['Jacobian' VT0.descrip];
           create(N);
           N.dat(:,:,:) = dt2;
+
+          
           cat_io_cmd('','',''); cat_io_cmd('','','',job.extopts.verb,stime); 
         end
       end
