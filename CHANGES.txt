@@ -14375,6 +14375,7 @@ M       compile.m
                 determinant (thanks to Gabriel Ziegler and Felix Hoffstaedter). 
 
 ------------------------------------------------------------------------
+r1125 | gaser | 2017-04-21 16:45:00 +0200 (Fr, 21 Apr 2017) | 50 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14425,5 +14426,45 @@ M       html/cat.html
 
 Changed: Added 2nd run to genus0 approach with different parameters to obtain
 better topology correction.
+
 ------------------------------------------------------------------------
-r1125 | gaser | 2017-04-21 16:44:44
+
+Changed paths:
+M       CHANGES.txt
+!       cat_amap.mexglx
+M       cat_amap.mexw32
+!       cat_ornlm.mexglx
+M       cat_ornlm.mexw32
+!       cat_sanlm.mexglx
+M       cat_sanlm.mexw32
+!       cat_vbdist.mexglx
+M       cat_vbdist.mexw32
+!       cat_vol_downcut.mexglx
+M       cat_vol_downcut.mexw32
+!       cat_vol_eidist.mexglx
+M       cat_vol_eidist.mexw32
+!       cat_vol_eikonal3.mexglx
+!       cat_vol_genus0.mexglx
+M       cat_vol_genus0.mexw32
+!       cat_vol_gradient3.mexglx
+M       cat_vol_gradient3.mexw32
+!       cat_vol_interp3f.mexglx
+M       cat_vol_interp3f.mexw32
+!       cat_vol_laplace3.mexglx
+M       cat_vol_laplace3.mexw32
+!       cat_vol_laplace3R.mexglx
+M       cat_vol_laplace3R.mexw32
+!       cat_vol_localstat.mexglx
+M       cat_vol_localstat.mexw32
+!       cat_vol_median3.mexglx
+M       cat_vol_median3.mexw32
+!       cat_vol_median3c.mexglx
+M       cat_vol_median3c.mexw32
+!       cat_vol_pbtp.mexglx
+M       cat_vol_pbtp.mexw32
+!       cat_vol_simgrow.mexglx
+M       cat_vol_simgrow.mexw32
+
+Fixed: Compiled for 32bit Windows.
+------------------------------------------------------------------------
+r1126 | gaser | 2017-04-21 17:06:43
