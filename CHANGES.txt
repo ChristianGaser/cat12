@@ -14360,6 +14360,7 @@ M       kmeans3D.m
 (2) Changed: Changed path of compilation to pwd
 
 ------------------------------------------------------------------------
+r1124 | dahnke | 2017-04-05 16:35:35 +0200 (Mi, 05 Apr 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14372,5 +14373,57 @@ M       compile.m
                 this issue).
 (2) Fixed:      Corrected voxel dimension of the transformation and Jacobian 
                 determinant (thanks to Gabriel Ziegler and Felix Hoffstaedter). 
+
 ------------------------------------------------------------------------
-r1124 | dahnke | 2017-04-05 16:35:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexa64
+M       cat_amap.mexw64
+M       cat_ornlm.mexa64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexa64
+M       cat_sanlm.mexw64
+MM      cat_spm_affreg.m
+M       cat_vbdist.mexa64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.c
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexa64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexa64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexa64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexa64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexa64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexw64
+M       html/cat.html
+ M      html/images/cat_tst_seg_bwp_boxplot_para_CAT.png
+ M      html/images/cat_tst_seg_bwp_boxplot_para_SPM.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_CAT.png
+ M      html/images/cat_tst_seg_exp_boxplot_para_SPM.png
+ M      html/images/cat_tst_seg_ibsr_boxplot.png
+ M      html/images/cat_tst_seg_ibsr_detail.png
+ M      html/images/cat_tst_seg_sve_detail.png
+
+Changed: Added 2nd run to genus0 approach with different parameters to obtain
+better topology correction.
+------------------------------------------------------------------------
+r1125 | gaser | 2017-04-21 16:44:44

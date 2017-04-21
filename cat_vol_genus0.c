@@ -89,6 +89,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     return;
   }
 
+  g0->cut_loops = 1;
+  g0->connectivity = 18;
+  g0->value = 1;
+  g0->alt_value = 0;
+  g0->contour_value = 1;
+  g0->alt_contour_value = 0;
+
+  for (i = 0; i < sz; i++)
+    input[i] = (unsigned int)g0->output[i];
+
+  if (genus0(g0)) {
+    int dims[2];
+
+    dims[0] = 0; dims[1] = 0;
+    plhs[1] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
+
+    dims[0] = 0; dims[1] = 0;
+    plhs[2] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
+        
+    return;
+  }
+
   for (i=0; i<sz; i++) 
     M[i] = (float)g0->output[i];
 
