@@ -38,7 +38,7 @@ function [M,scal] = cat_spm_affreg(VG,VF,flags,M,scal)
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_affreg.m 5520 2013-05-24 10:35:18Z john $
+% $Id$
 
 
 if nargin<5, scal = ones(length(VG),1); end;
