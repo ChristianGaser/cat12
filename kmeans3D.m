@@ -25,6 +25,8 @@ last_i=ones(1,N);
 mu=x(seeds);
 su=zeros(size(mu));
 nu=zeros(size(mu));
+
+d = zeros(k,length(y));
 for loops=1:1000,  
  for j=1:k,
    d(j,:)=(y-mu(j)).^2;

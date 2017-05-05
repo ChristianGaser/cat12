@@ -14428,6 +14428,7 @@ Changed: Added 2nd run to genus0 approach with different parameters to obtain
 better topology correction.
 
 ------------------------------------------------------------------------
+r1126 | gaser | 2017-04-21 17:06:58 +0200 (Fr, 21 Apr 2017) | 38 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14466,5 +14467,15 @@ M       cat_vol_pbtp.mexw32
 M       cat_vol_simgrow.mexw32
 
 Fixed: Compiled for 32bit Windows.
+
 ------------------------------------------------------------------------
-r1126 | gaser | 2017-04-21 17:06:43
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+A       cat_stat_diff.m
+M       kmeans3D.m
+
+Added: Tool for calculating differences between multiple images or surfaces.
+------------------------------------------------------------------------
+r1127 | gaser | 2017-05-05 09:49:21
