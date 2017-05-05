@@ -322,7 +322,7 @@ function cat_run_job(job,tpm,subj)
           % - only on object (the masked regions)
           % - only on background (not in very case?)
           % - less variance of thissue intensity (only 3 brain classes)
-          Oth   = nanmean(YF(YF(:)~=0 & YF(:)>nanmean(YF(:)))); 
+          Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
           F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
           F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
           YFC = YF~=0; 
