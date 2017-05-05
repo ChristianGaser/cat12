@@ -56,9 +56,7 @@ function Y=cat_vol_ctype(Y,type)
           Y = round(min(single(intmax(type)),...
                     max(single(intmin(type)),Y)));
         otherwise
-          Y = int64(Y);
-          Y = round(min(int64(intmax(type)),...
-                    max(int64(intmin(type)),Y)));
+          Y = int64(round(min(intmax(type),max(intmin(type),Y))));
       end
     elseif ~isempty(strfind(type,'single'))
       Y = min(single(realmax(type)),max(single(realmin(type)),Y));
