@@ -53,10 +53,16 @@ function Y=cat_vol_ctype(Y,type)
         case {'single','double'}
           Y = single(Y);
           Y(isnan(Y)) = 0;
-          Y = round(min(single(intmax(type)),...
-                    max(single(intmin(type)),Y)));
+          Y = round(min(single(intmax(type)),max(single(intmin(type)),Y)));
         otherwise
-          Y = int64(round(min(intmax(type),max(intmin(type),Y))));
+          % this is not working for very old matlab versions
+          try
+            Y = int64(Y);
+            Y = round(min(int64(intmax(type)),max(int64(intmin(type)),Y)));
+          catch
+            Y = eval([type '(Y)']);
+            Y = int64(round(min(intmax(type),max(intmin(type),Y))));
+          end
       end
     elseif ~isempty(strfind(type,'single'))
       Y = min(single(realmax(type)),max(single(realmin(type)),Y));

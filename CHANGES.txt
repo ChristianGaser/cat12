@@ -14480,6 +14480,7 @@ M       kmeans3D.m
 Added: Tool for calculating differences between multiple images or surfaces.
 
 ------------------------------------------------------------------------
+r1128 | gaser | 2017-05-05 10:37:51 +0200 (Fr, 05 Mai 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14487,5 +14488,14 @@ M       cat_run_job.m
 M       cat_vol_ctype.m
 
 Fixed: Solved some compatibility issues with windows.
+
 ------------------------------------------------------------------------
-r1128 | gaser | 2017-05-05 10:37:38
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_stat_diff.m
+M       cat_vol_ctype.m
+
+Fixed: Issue with integers in cat_vol_ctype.m on older matlab versions.
+------------------------------------------------------------------------
+r1129 | gaser | 2017-05-09 14:58:17

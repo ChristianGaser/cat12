@@ -10,7 +10,7 @@ function cat_stat_diff(P,rel,glob)
 % glob  - normalize global mean of images
 %__________________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_diff.m 1102 2017-01-13 09:04:42Z gaser $
+% $Id$
 
 global SWD
 
