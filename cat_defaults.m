@@ -30,7 +30,7 @@ global cat
 % Options for inital SPM12 segmentation that is used as starting point for CAT12. 
 %=======================================================================
 cat.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-cat.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class (SPM12 default)
+cat.opts.ngaus     = [3 1 1 3 4 2];           % Gaussians per class (SPM12 default)
 cat.opts.affreg    = 'mni';                   % Affine regularisation (SPM12 default) - '';'mni';'eastern';'subj';'none';'rigid'
 cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation (SPM12 default) 
 cat.opts.biasstr   = 0.5;                     % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)
@@ -54,7 +54,7 @@ cat.opts.samp      = 3;                       % Sampling distance - just for ini
 %   dartel    0/1/2/3 (none/rigid/affine/both)
 
 % save surface and thickness
-cat.output.surface     = 0;     % surface and thickness creation (0 - no (default), 1 - lh+rh, 2 - lh+rh+ch, 3 - lh)
+cat.output.surface     = 0;     % surface and thickness creation (0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 3 - lh)
 
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))

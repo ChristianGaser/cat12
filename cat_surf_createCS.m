@@ -41,7 +41,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   if ~exist('opt','var'), opt=struct(); end
   def.verb      = 2; 
-  def.surf      = {'lh','rh'}; % {'lh','rh','ch'}
+  def.surf      = {'lh','rh'}; % {'lh','rh','lc','rc'}
   def.reduceCS  = 100000;  
   def.LAB       = cat_get_defaults('extopts.LAB');
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
@@ -158,23 +158,33 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % reduce for object area
     switch opt.surf{si}
-      case {'L','lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
-      case {'R','rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
-      case {'C','ch'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB); Yside = NS(Ya,opt.LAB.CB)>0;
+      case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
+      case {'rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
+      case {'lc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1);; Yside = mod(Ya,2)==1;
+      case {'rc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0);; Yside = mod(Ya,2)==0;
     end 
     
     % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
-    mask_parahipp = cat_vol_morph(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC),'d',6);
-
+    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+      mask_parahipp = cat_vol_morph(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC),'d',6);
+    end
+    
     %% thickness estimation
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
     
-    [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,6,Ymfs>0.2); % removing background
+    
+    switch opt.surf{si}
+      case {'lh','rh'},  [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,6,Ymfs>0.2); % removing background
+      case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,6,Ymfs>0.2); % removing background
+    end 
     [Ymfs,resI]     = cat_vol_resize(Ymfs,'interp',V,opt.interpV);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;               % interpolate volume (small dilatation)
-    mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;     % interpolate volume
+    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+      mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;     % interpolate volume
+    end 
+    
 
     %% pbt calculation
     [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyri
@@ -205,15 +215,15 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       Yar   = uint8(cat_vol_resize(Yar,'interp',V,opt.interpV,'nearest'));  % interpolate volume
       Ymr   = cat_vol_resize(Ymr,'interp',V,opt.interpV);                   % interpolate volume
       switch opt.surf{si}
-        case {'L','lh'}, 
+        case {'lh'}, 
           Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13)) .* (mod(Yar,2)==1);
           Ynw = smooth3(cat_vol_morph(NS(Yar,5) | NS(Yar,9) | NS(Yar,15) | NS(Yar,23),'d',2) | ...
                  (cat_vol_morph(Yppi==1,'e',2) & Ymr>1.7/3 & Ymr<2.5/3) & (mod(Yar,2)==1)); 
-        case {'R','rh'},
+        case {'rh'},
           Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13)) .* (mod(Yar,2)==0);    
           Ynw = smooth3(cat_vol_morph(NS(Yar,5) | NS(Yar,9) | NS(Yar,15) | NS(Yar,23),'d',2) | ...
                  (cat_vol_morph(Yppi==1,'e',2) & Ymr>1.7/3 & Ymr<2.5/3) & (mod(Yar,2)==0)); 
-        case {'C','ch'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
+        case {'lc','rc'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
       end 
      % clear Yar; 
       %%
@@ -282,20 +292,24 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:) = [];    
 
     % smooth mask to have smooth border
-    mask_parahipp_smoothed = zeros(size(mask_parahipp));
-    spm_smooth(double(mask_parahipp),mask_parahipp_smoothed,[8 8 8]);
+    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+      mask_parahipp_smoothed = zeros(size(mask_parahipp));
+      spm_smooth(double(mask_parahipp),mask_parahipp_smoothed,[8 8 8]);
+    end 
 
     % parameters for scaling of Yppi
     th_initial      = 0.5;
 
     ind0 = find(Yppi<=0);
     Yppi  = opt.scale_cortex*Yppi;
-    Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
+    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+      Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
+    end
     Yppi(ind0) = 0;
 
     % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large cuts in gyri
     % after topology correction
-    if opt.close_parahipp
+    if opt.close_parahipp && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       tmp = cat_vol_morph(Yppi,'labclose',1);
       Yppi(mask_parahipp) = tmp(mask_parahipp);
     end
@@ -311,7 +325,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
     
     % correct the number of vertices depending on the number of major objects
-    if opt.reduceCS>0, 
+    if opt.reduceCS>0 && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       switch opt.surf{si}
         case {'B','brain'}, CS = reducepatch(CS,opt.reduceCS*2); 
         otherwise,          CS = reducepatch(CS,opt.reduceCS);
@@ -323,7 +337,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
 
-    if opt.reduceCS>0, 
+    if opt.reduceCS>0 && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       % after reducepatch many triangles have very large area which causes isses for resampling
       % RefineMesh adds triangles in those areas
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2); 
@@ -373,9 +387,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % spherical registration to fsaverage template
-    stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
-    cmd = sprintf('CAT_WarpSurf -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
-    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+      stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
+      cmd = sprintf('CAT_WarpSurf -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+    end
     
     % read final surface and map thickness data
     stime = cat_io_cmd('  Thickness / Depth mapping','g5','',opt.verb,stime);

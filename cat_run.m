@@ -353,11 +353,23 @@ if job.output.surface,
     rhcentral = cell(n,1);
     lhthickness = cell(n,1);
     rhthickness = cell(n,1);
+    if job.output.surface == 2
+        lccentral = cell(n,1);
+        rccentral = cell(n,1);
+        lcthickness = cell(n,1);
+        rcthickness = cell(n,1);
+    end
     for j=1:n
         lhcentral{j} = fullfile(parts{j,1},surffolder,['lh.central.',parts{j,2},'.gii']);
         rhcentral{j} = fullfile(parts{j,1},surffolder,['rh.central.',parts{j,2},'.gii']);
         lhthickness{j} = fullfile(parts{j,1},surffolder,['lh.thickness.',parts{j,2}]);
         rhthickness{j} = fullfile(parts{j,1},surffolder,['rh.thickness.',parts{j,2}]);
+        if job.output.surface == 2
+            lhcentral{j} = fullfile(parts{j,1},surffolder,['lc.central.',parts{j,2},'.gii']);
+            rhcentral{j} = fullfile(parts{j,1},surffolder,['rc.central.',parts{j,2},'.gii']);
+            lhthickness{j} = fullfile(parts{j,1},surffolder,['lc.thickness.',parts{j,2}]);
+            rhthickness{j} = fullfile(parts{j,1},surffolder,['rc.thickness.',parts{j,2}]);
+        end
     end
 end
 
