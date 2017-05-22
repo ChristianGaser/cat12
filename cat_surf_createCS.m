@@ -147,8 +147,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Pdefects   = fullfile(pp,surffolder,sprintf('%s.defects.%s.gii',opt.surf{si},ff));          % defects
     Psphere    = fullfile(pp,surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
     Pspherereg = fullfile(pp,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
-    Pfsavg     = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',opt.surf{si}));      % fsaverage central
-    Pfsavgsph  = fullfile(opt.fsavgDir,sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));       % fsaverage sphere    
+    Pfsavg     = fullfile(opt.fsavgDir, sprintf('%s.central.freesurfer.gii',opt.surf{si}));     % fsaverage central
+    Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
 
     surffile = {'Praw','Psphere0','Pcentral','Pthick','Pgw','Pgww','Psw',...
       'Pdefects0','Pdefects','Psphere','Pspherereg','Pfsavg','Pfsavgsph'};
@@ -387,11 +387,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % spherical registration to fsaverage template
-    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
-      stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
-      cmd = sprintf('CAT_WarpSurf -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
-    end
+    stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime);
+    cmd = sprintf('CAT_WarpSurf -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"',Pcentral,Psphere,Pfsavg,Pfsavgsph,Pspherereg);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % read final surface and map thickness data
     stime = cat_io_cmd('  Thickness / Depth mapping','g5','',opt.verb,stime);
