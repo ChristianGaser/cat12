@@ -94,7 +94,7 @@ else
   surface        = cfg_menu;
   surface.tag    = 'surface';
   surface.name   = 'Surface and thickness estimation';
-  surface.labels = {'No','lh + rh','lh + rh + ch','lh'};
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh'};
   surface.values = {0 1 2 3};
   surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {

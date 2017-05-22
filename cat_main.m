@@ -1603,7 +1603,7 @@ if job.output.surface
   % specify surface
   switch job.output.surface
     case 1, surf = {'lh','rh'};
-    case 2, surf = {'lh','rh','ch'};
+    case 2, surf = {'lh','rh','lc','rc'};
     case 3, surf = {'lh'};
   end
   

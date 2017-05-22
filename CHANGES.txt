@@ -14490,6 +14490,7 @@ M       cat_vol_ctype.m
 Fixed: Solved some compatibility issues with windows.
 
 ------------------------------------------------------------------------
+r1129 | gaser | 2017-05-09 14:58:31 +0200 (Di, 09 Mai 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14497,5 +14498,20 @@ MM      cat_stat_diff.m
 M       cat_vol_ctype.m
 
 Fixed: Issue with integers in cat_vol_ctype.m on older matlab versions.
+
 ------------------------------------------------------------------------
-r1129 | gaser | 2017-05-09 14:58:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_main.m
+M       cat_run.m
+M       cat_surf_createCS.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Added preliminary surface processing of cerebellar hemispheres 
+    (experimental!).
+(2) Changed: Number of gaussian curves for initial SPM12 segmentation was 
+    changed. 
+------------------------------------------------------------------------
+r1130 | gaser | 2017-05-22 14:57:01
