@@ -14534,6 +14534,7 @@ A       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152
 (2) Changed: Added spherical registration to cerebellar template.
 
 ------------------------------------------------------------------------
+r1132 | gaser | 2017-05-23 10:29:27 +0200 (Di, 23 Mai 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14541,5 +14542,22 @@ M       templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152
 M       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152
 
 (1) Changed: Updated cerebellar thickness files. 
+
 ------------------------------------------------------------------------
-r1132 | gaser | 2017-05-23 10:29:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_install_atlases.m
+ M      templates_surfaces/lc.central.Template_T1_IXI555_MNI152.gii
+ M      templates_surfaces/lc.central.freesurfer.gii
+ M      templates_surfaces/lc.sphere.freesurfer.gii
+ M      templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152
+ M      templates_surfaces/rc.central.Template_T1_IXI555_MNI152.gii
+ M      templates_surfaces/rc.central.freesurfer.gii
+ M      templates_surfaces/rc.sphere.freesurfer.gii
+ M      templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152
+
+(1) Changed: Atlas installation function will now install all available
+    atlases and not only those that are set in cat_defaults.m.
+------------------------------------------------------------------------
+r1133 | gaser | 2017-05-23 10:55:43
