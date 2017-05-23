@@ -5,20 +5,20 @@ function cat_install_atlases
 % Christian Gaser
 % $Id$
 
-atlas = cat_get_defaults('extopts.atlas');
-
 spm_dir = spm('dir');
-[ST, RS] = mkdir(spm_dir,'atlas');
+atlas_dir = fullfile(spm_dir,'atlas');
+[ST, RS] = mkdir(atlas_dir);
+
 if ST
-  atlas_dir = fullfile(spm_dir,'atlas');
-  for i = 1:size(atlas,1)
-    atlas_file = atlas{i,1};
-    [pth,nam] = spm_fileparts(atlas_file);
-    xml_file = fullfile(pth,['labels_dartel_' nam '.xml']);
+  [xml_files, n] = cat_vol_findfiles(fullfile(spm_dir,'toolbox','cat12','templates_1.50mm'), 'labels_dartel_*');
+  for i = 1:n
+    xml_file = deblank(xml_files{i});
+    [pth,nam] = spm_fileparts(xml_file);
+    atlas_file = fullfile(pth,[nam(15:end) '.nii']);
     try
       copyfile(atlas_file,atlas_dir);
       copyfile(xml_file,atlas_dir);
-      fprintf('Copy %s\n',atlas_file);
+      fprintf('Install %s\n',atlas_file);
     catch
       disp('Writing error: Please check file permissions.');
     end
@@ -31,4 +31,4 @@ end
 % you may need to remove the old files and finish SPM, update and restart SPM 
 spm_atlas('list','installed','-refresh');
 
-fprintf('Use atlas function in SPM Results or context menu in orthogonal view (via right mouse button): Display|Labels\n');
+fprintf('\nUse atlas function in SPM Results or context menu in orthogonal view (via right mouse button): Display|Labels\n');
