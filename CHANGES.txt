@@ -14516,6 +14516,7 @@ M       tbx_cfg_cat.m
     changed. 
 
 ------------------------------------------------------------------------
+r1131 | gaser | 2017-05-22 17:06:39 +0200 (Mo, 22 Mai 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14531,5 +14532,14 @@ A       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152
 
 (1) Added: Added cerebellar template.
 (2) Changed: Added spherical registration to cerebellar template.
+
 ------------------------------------------------------------------------
-r1131 | gaser | 2017-05-22 17:06:02
+
+Changed paths:
+M       CHANGES.txt
+M       templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152
+M       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152
+
+(1) Changed: Updated cerebellar thickness files. 
+------------------------------------------------------------------------
+r1132 | gaser | 2017-05-23 10:29:12
