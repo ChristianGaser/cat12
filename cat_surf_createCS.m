@@ -223,7 +223,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
           Ymr = Ymr .* (Yar>0) .* ~(NS(Yar,3) | NS(Yar,7) | NS(Yar,11) | NS(Yar,13)) .* (mod(Yar,2)==0);    
           Ynw = smooth3(cat_vol_morph(NS(Yar,5) | NS(Yar,9) | NS(Yar,15) | NS(Yar,23),'d',2) | ...
                  (cat_vol_morph(Yppi==1,'e',2) & Ymr>1.7/3 & Ymr<2.5/3) & (mod(Yar,2)==0)); 
-        case {'lc','rc'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3);
+        case {'lc'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3) .* (mod(Yar,2)==1);
+        case {'rc'}, Ymr = Ymr .* (Yar>0) .* NS(Yar,3) .* (mod(Yar,2)==0);
       end 
      % clear Yar; 
       %%
@@ -260,6 +261,24 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
     clear Ymfs;
     
+    %% Replace isolated voxels and holes in Ypp by its median value
+    %
+    % indicate isolated holes
+    msk = Yppi<0.35;
+    ind_iso = (msk-cat_vol_morph(msk,'l',1,vx_vol)) == 1;
+    
+    % fill holes
+    Yppi(ind_iso) = 1;
+    Yppi_median = cat_vol_median3(single(Yppi),Yppi>0);
+    Yppi(ind_iso) = Yppi_median(ind_iso);
+    
+    % indicate isolated voxels
+    msk = Yppi>0.95;
+    ind_iso = (msk-cat_vol_morph(msk,'l',1,vx_vol)) == 1;
+    
+    % replace isolated voxels and holes by median 
+    Yppi(ind_iso) = Yppi_median(ind_iso);
+    clear Yppi_median ind_iso;
     
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
