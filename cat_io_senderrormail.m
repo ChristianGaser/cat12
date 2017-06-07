@@ -36,7 +36,7 @@ function cat_io_senderrormail(job)
   %% check errdirs
   %  -------------------------------------------------------------------
   if ~isempty(job.errdirs) && ~isempty(job.errdirs{1})
-    if job.verb, fprintf('\nSeach for subdirectories .. '); end
+    if job.verb, fprintf('\nSearch for subdirectories .. '); end
     % remove twice entries
     job.errdirs = unique(job.errdirs);
 
@@ -80,7 +80,7 @@ function cat_io_senderrormail(job)
   %  -------------------------------------------------------------------
   if ~isempty(job.errdirs) && ~isempty(job.errdirs{1})
     % get the xml-files of the error dirs
-    if job.verb, fprintf('\nSeach XML files .. '); end
+    if job.verb, fprintf('\nSearch XML files .. '); end
     files = cat_vol_findfiles(job.errdirs,'cat*.xml');
     
     % remove old error dirs 

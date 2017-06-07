@@ -1531,6 +1531,7 @@ switch H.cursor_mode
     set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
   case {3,4}
+    fprintf('The values are available at the MATLAB command line as variable ''y''\n');
     figure(H.figure(1))
     try
       delete(findall(gca,'Type','hggroup','HandleVisibility','off'));

@@ -23,6 +23,8 @@
 	
     <div id="content">
       <h2>Quick start guide:</h2>
+      <h4>Errors during preprocessing</h4>
+      <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You have to first select the "err" directory that can be found in the folder of the failed data set and finally the indicated zip-file in the mail should be attached manually.</p>
       <h4>VBM data</h4>
       <ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">longitudinal pipeline</a>)</li>

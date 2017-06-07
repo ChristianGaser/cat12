@@ -7,7 +7,7 @@
 
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 defaults_file=""
-LOGDIR=`PWD`
+LOGDIR=$PWD
 CPUINFO=/proc/cpuinfo
 ARCH=`uname`
 time=`date "+%Y%b%d_%H%M"`
@@ -288,7 +288,7 @@ run_vbm ()
         if [ ! "${ARG_LIST[$i]}" == "" ]; then
             j=$(($i+1))
             if [ -z "$matlabcommand" ]; then
-              COMMAND="cat_batch_vbm('${TMP}${i}','${defaults_file}')"
+              COMMAND="cat_batch_cat('${TMP}${i}','${defaults_file}')"
             else
               CFILES=""
               for F in ${ARG_LIST[$i]} ; do 
