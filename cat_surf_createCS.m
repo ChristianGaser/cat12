@@ -51,8 +51,14 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.close_parahipp  = cat_get_defaults('extopts.close_parahipp');
 
   opt           = cat_io_updateStruct(def,opt);
-  opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
-
+  opt.fast      = any(~cellfun('isempty',strfind(opt.surf,'fst'))); 
+  if opt.fast
+    opt.interpV   = 0.8;
+  else
+    opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
+  end
+  opt.surf      = cat_io_strrep(opt.surf,'fst',''); 
+  
   Psurf = struct(); 
 
   % correction for 'n' prefix for noise corrected and/or interpolated files
@@ -109,15 +115,15 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Ymfs  = cat_vol_median3(Ymf,Ysroi | Ybv,Ymf>eps & ~Ybv,0.1); % median filter
     Ymf   = mf * Ymfs  +  (1-mf) * Ymf;
 
-    % closing of small WMHs 
-    vols = [sum(round(Ymf(:))==1) sum(round(Ymf(:))==2)  sum(round(Ymf(:))==3)] / sum(round(Ymf(:))>0); 
-    volt = min(1,max(0,mean([ (vols(1)-0.20)*5  (1 - max(0,min(0.3,vols(3)-0.2))*10) ]))); 
-    Ywmh = cat_vol_morph(Ymf>max(2.2,2.5 - 0.3*volt),'lc',volt); 
-    Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
+    %% closing of small WMHs 
+    %vols = [sum(round(Ymf(:))==1 & Ya(:)>0) sum(round(Ymf(:))==2)  sum(round(Ymf(:))==3)] / sum(round(Ymf(:))>0); 
+    %volt = min(1,max(0,mean([ (vols(1)-0.20)*5  (1 - max(0,min(0.3,vols(3)-0.2))*10) ]))); 
+    %Ywmh = cat_vol_morph(Ymf>max(2.2,2.5 - 0.3*volt),'lc',volt); 
+    %Ymf  = max(Ymf,smooth3(Ywmh)*2.9); 
   
     % gaussian filter? ... only in tissue regions
-    Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
-    Ymf(Ymf>1) = Ymfs(Ymf>1);
+    %Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
+    %Ymf(Ymf>1) = Ymfs(Ymf>1);
   end
   clear Ysroi Ywmd Ymfs;
 
@@ -160,8 +166,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     switch opt.surf{si}
       case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
       case {'rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
-      case {'lc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1);; Yside = mod(Ya,2)==1;
-      case {'rc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0);; Yside = mod(Ya,2)==0;
+      case {'lc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
+      case {'rc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;
     end 
     
     % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
@@ -174,11 +180,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%s:\n',opt.surf{si});
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,char(179)));
     
-    
+    % removing background (smoothing to remove artifacts)
     switch opt.surf{si}
-      case {'lh','rh'},  [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,6,Ymfs>0.2); % removing background
-      case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,6,Ymfs>0.2); % removing background
-    end 
+      case {'lh','rh'},  [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+    end
+    
     [Ymfs,resI]     = cat_vol_resize(Ymfs,'interp',V,opt.interpV);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;               % interpolate volume (small dilatation)
     if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
@@ -187,7 +194,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
 
     %% pbt calculation
-    [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV)); % avoid underestimated thickness in gyri
+    [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
     if ~opt.experimental, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
@@ -198,7 +205,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
-    if opt.experimental > 1
+    if opt.experimental > 1 && ~opt.fast 
       %% gyrus width / WM depth
       %  For the WM depth estimation it is better to use the L4 boundary
       %  and correct later for thickness, because the WM is very thin in
@@ -353,9 +360,40 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
     
     % transform coordinates
+    if opt.fast
+      CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
+      save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);
+      
+      % deform initial surface to central surface
+      th = 0.5;
+      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
+                       'avg -0.1 0.1 .2 .1 5 0 "%g" "%g" n 0 0 0 150 0.01 0.0'], ...
+                       Vpp1.fname,Pcentral,Pcentral,th,th);
+      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+    
+      % load surf and project thickness
+      CS = gifti(Pcentral);
+      CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+      facevertexcdata = isocolors2(Yth1,CS.vertices); 
+      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
+      
+      % save datastructure
+      S.(opt.surf{si}).vertices = CS.vertices;
+      S.(opt.surf{si}).faces    = CS.faces;
+      S.(opt.surf{si}).vmat     = vmat;
+      S.(opt.surf{si}).vmati    = vmati;
+      S.(opt.surf{si}).th1      = facevertexcdata;
+      if opt.experimental > 1
+        S.(opt.surf{si}).th2    = nan(size(facevertexcdata));
+        S.(opt.surf{si}).th3    = nan(size(facevertexcdata));
+      end
+      fprintf('%4.0fs\n',etime(clock,stime)); 
+      clear CS; 
+      continue
+    end
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
-
+    
     if opt.reduceCS>0 && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       % after reducepatch many triangles have very large area which causes isses for resampling
       % RefineMesh adds triangles in those areas
