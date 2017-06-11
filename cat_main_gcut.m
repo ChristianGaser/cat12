@@ -55,7 +55,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   %% set different paremeters to modifiy the stength of the skull-stripping 
   %gc.n = max(0.05,min(0.1,noise));
   % intensity parameter
-  gc.h = 3.5 - 0.4*opt.gcutstr + 0.2*opt.LASstr; % 3.25; upper tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
+  gc.h = 3.5 - 0.2*opt.gcutstr + 0.2*opt.LASstr; % 3.25; upper tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
   gc.g = 1.9 + 0.1*opt.gcutstr; % 1.50; lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
   gc.l = 1.1 + 0.8*opt.gcutstr; % 1.50; lower tissue intensity (WM vs. blood vessels)     - higher > more "tissue" (blood vessels)
   gc.o = 0.2 + 0.8*opt.gcutstr; % 0.50; BG tissue intensity (for high contrast CSF=BG=0!) - lower value > more "tissue"
@@ -82,7 +82,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Ybo=Yb;
   %% initial WM+ region
   Yb=Ybo;
-  YHDr = cat_vol_morph(Yl1>20 | Yl1<=0,'e',vxd*2);
+  YHDr = cat_vol_morph(Yl1>20 | Yl1<=0,'e',vxd*1);
   YGD  = cat_vbdist(max(0,1-Yp0),true(size(Yb)),vx_vol);   % something like the GWM depth/thickness
   YBD  = cat_vbdist(max(0,1-Yp0*3),true(size(Yb)),vx_vol./mean(vx_vol)); % brain depth, (simple) sulcal depth
   Yb   = Yb>0.25 & Ym>2.5/3 & Ym<gc.h/3 & Yl1<21 & Yb & YGD>gc.gd & YBD>gc.bd;  % init WM 

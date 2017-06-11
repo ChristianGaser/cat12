@@ -87,7 +87,7 @@ end
 
 
 
-stime = cat_io_cmd('SPM preprocessing 2');
+stime = cat_io_cmd('SPM preprocessing 2 (write)');
 
 % remove noise/interpolation prefix
 VT  = res.image(1);  % denoised/interpolated n*.nii
@@ -396,7 +396,26 @@ if ~isfield(res,'spmpp')
   end
   
   %%
-  if (job.extopts.experimental || (job.extopts.INV && any(sign(diff(T3th))==-1))) && job.extopts.gcutstr>0
+  skullstripped=max(res.lkp)==4; 
+  if skullstripped % skull-stripped
+    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+    Yb   = Yp0>0.5/3; 
+    Ybb  = Yb; 
+
+    P(:,:,:,6) = P(:,:,:,4); 
+    P(:,:,:,4) = zeros(size(Yp0),'uint8');
+    P(:,:,:,5) = zeros(size(Yp0),'uint8'); 
+    res.lkp = [res.lkp 5 6];
+    res.mn  = [res.mn(1:end-1),0,0,0];
+    res.mg  = [res.mg(1:end-1);1;1;1];
+    res.vr(1,1,numel(res.lkp)-1:numel(res.lkp)) = 0;
+     
+    [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
+    Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
+    Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
+    Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
+    Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
+  elseif (job.extopts.experimental || (job.extopts.INV && any(sign(diff(T3th))==-1))) && job.extopts.gcutstr>0
    % (sum( abs( (Ysrc(:)==0) - (Yp0(:)<0.5) ) ) / sum(Ysrc(:)==0)) < 0.1  || ...
   % use gcut2
 
@@ -644,13 +663,17 @@ if ~isfield(res,'spmpp')
   %
   %  If you want to see intermediate steps of the processing use the "ds"
   %  function:
-  %    ds('l2','',vx_vol,Ym,Yb,Ym,Ym,80)
+  %    ds('l2','',vx_vol,Ym,Yb,Ym,Yp0,80)
   %  that display 4 images (unterlay, overlay, image1, image2) for one 
   %  slice. The images were scaled in a range of 0 to 1. The overlay 
   %  allows up to 20 colors
+  %  
   %  ---------------------------------------------------------------------
   stime = cat_io_cmd('Global intensity correction');
-
+  if debug
+    Ym   = Ysrc / T3th(3); % only WM scaling
+    Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255)/3; % label map
+  end
   if any( min(vx_vol*2,1.4)./vx_vol >= 2 )
     %%
     Ysrcr = cat_vol_resize(Ysrc,'reduceV',vx_vol,min(vx_vol*2,1.4),32,'meanm');
@@ -1596,24 +1619,44 @@ fprintf('%4.0fs\n',etime(clock,stime));
 %
 if job.output.surface
   stime = cat_io_cmd('Surface and thickness estimation');; 
-  % brain masking and correction of blood vessels 
-  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
-  Ymi = Ymi .* (Yp0>0.5); clear Yp0; 
   
   % specify surface
   switch job.output.surface
     case 1, surf = {'lh','rh'};
     case 2, surf = {'lh','rh','lc','rc'};
     case 3, surf = {'lh'};
+    case 4, surf = {'rh'};
+    case 5, surf = {'lhfst','rhfst'}; %job.extopts.pbtres = 1;
   end
+  
+  % brain masking and correction of blood vessels 
+  Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
   
   % surface creation and thickness estimation
   % Add a try-catch-block to handle special problems of surface
   % creation without interruption of standard cat processing.
 %  try
-    [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymi,Yl1,YMF,...
+  sx=1;
+  if sx==1
+    %% 
+    Ymix = Ymi .* (Yp0>0.5);
+    if ~debug, clear Yp0; end 
+    
+    [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymix,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
       'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
+  elseif sx==2
+    %%
+    Ymix = Yp0/2 + (Ymi/2 .* (Yp0>0.5)); 
+    [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymix,Yl1,YMF,...
+      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+      'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
+  else
+    %%
+    [Yth1,S,Psurf] = cat_surf_createCS(VT,Yp0/3,Yl1,YMF,...
+      struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
+      'verb',job.extopts.verb,'experimental',job.extopts.experimental)); % clear Ymim YMF  % VT0 - without interpolation
+  end
 %  catch
 %    surferr = lasterror; %#ok<LERR>
 %    message =  sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
@@ -1837,42 +1880,58 @@ fprintf('%4.0fs\n',etime(clock,stime));
   str = [str struct('name', 'Spatial Normalization Template:','value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
   str = [str struct('name', 'Spatial Normalization Method / vox:','value',sprintf('%s / %0.2f mm',SpaNormMeth{do_dartel+1},job.extopts.vox))];
   
-  % 1 line: Affine parameter
-  str = [str struct('name', 'Affine regularization:','value',sprintf('%s',job.opts.affreg))];
-  if job.extopts.APP
-    str(end).name = [str(end).name(1:end-1) ' / APP:'];  
-    APPstr = {'none','light','medium','strong','heavy','animal'};
-    if numel(job.extopts.APP)==1
-      str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
-    else    
-      str(end).value = [str(end).value sprintf(' / %d',job.extopts.APP)];
+  % 1 line 1: Affreg
+  str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
+  % 1 line 2: APP
+  APPstr = {'none','light','full','APPi','APPf','animal'};
+  str(end).name  = [str(end).name(1:end-1) ' / APP '];  
+  str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
+  % 1 line 3: biasstr / biasreg+biasfwhm
+  if job.opts.biasstr>0
+    biasstr = {'ultralight','light','medium','strong','heavy'};
+    str(end).name  = [str(end).name(1:end-1) ' / biasstr '];  
+    str(end).value = [str(end).value sprintf(' / %s',biasstr{round(job.opts.biasstr*4)+1})];
+    if job.extopts.expertgui % add the value
+      str(end).value = [str(end).value sprintf('(%0.2f;breg:%0.2f;bfwhm:%0.2f)',job.opts.biasstr,job.opts.biasreg,job.opts.biasfwhm)]; 
     end
-  end    
-  
-  % 1 line: SPM Bias parameter
-  if job.extopts.experimental && isfield(job.opts,'bias') 
-     str = [str struct('name', 'SPM parameter: bias / reg / fwhm / samp:','value',...
-       sprintf('~%0.2f / %0.0e / %0.2f / %0.2f',...
-        job.opts.bias,job.opts.biasreg,job.opts.biasfwhm,job.opts.samp))]; 
+  else
+    str(end).name  = [str(end).name(1:end-1) ' / biasreg / biasfwhm'];
+    str(end).value = [str(end).value sprintf(' / %0.2f / %0.2f',job.opts.biasreg,job.opts.biasfwhm)]; 
   end
-
-  % 1 line: Noise 
+  
+  
+  % 1 line: adaptive noise parameter ( MRFstr + SANLM + NCstr )
+  defstr  = {'none','ultralight','light','medium','strong','heavy'};
+  defstrm = @(x) defstr{ round(x*4) + 1 + (x>0)};
   if job.extopts.sanlm==0 || job.extopts.NCstr==0
-    str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
+    if ~job.extopts.expertgui
+      str = [str struct('name', 'Noise reduction:','value','MRF')];
+    else
+      str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
+    end
   elseif job.extopts.sanlm==1
+    if ~job.extopts.expertgui
+      str = [str struct('name', 'Noise reduction:','value',...
+             sprintf('%s%sMRF',sprintf('%s SANLM +',defstrm(job.extopts.NCstr),job.extopts.NCstr),job.extopts.mrf))];
+    else
+      str = [str struct('name', 'Noise reduction:','value',...
+             sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('%s SANLM(%0.2f) +',defstrm(job.extopts.NCstr),job.extopts.NCstr),....
+             sprintf('f%d',13*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
+    end
+  elseif job.extopts.sanlm==2 % only expert
     str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('SANLM(%0.2f) +',job.extopts.NCstr),....
-           sprintf('f%d',13*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
-  elseif job.extopts.sanlm==2
-    str = [str struct('name', 'Noise reduction:','value',...
-           sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('ISARNLM(%0.2f) +',job.extopts.NCstr),...
+           sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('%s ISARNLM(%0.2f) +',job.extopts.NCstr),...
            sprintf('f%d',15*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
   end
   
-  % 1-2 line(s): further parameter
-  str = [str struct('name', 'LASstr / GCUTstr / CLEANUPstr:','value',...
-         sprintf('%0.2f / %0.2f / %0.2f',...
-         job.extopts.LASstr,job.extopts.gcutstr,job.extopts.cleanupstr))]; 
+  % 1 line(s): LASstr / GCUTstr / CLEANUPstr
+  str(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
+  if ~job.extopts.expertgui
+    str(end).value = sprintf('%s / %s / %s',defstrm(job.extopts.LASstr),defstrm(job.extopts.gcutstr),defstrm(job.extopts.cleanupstr)); 
+  else
+    str(end).value = sprintf('%s(%0.2f) / %s(%0.2f) / %s(%0.2f)',defstrm(job.extopts.LASstr),job.extopts.LASstr,...
+      defstrm(job.extopts.gcutstr),job.extopts.gcutstr,defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+  end
   if job.extopts.expertgui 
     restype = char(fieldnames(job.extopts.restypes));
     str = [str struct('name', 'WMHC / WMHCstr / BVCstr / restype:','value',...
