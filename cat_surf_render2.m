@@ -103,7 +103,7 @@ switch lower(action)
             M = varargin{1};
         end
 
-        
+      
         %%
         %-Figure & Axis
         %------------------------------------------------------------------
@@ -121,7 +121,8 @@ switch lower(action)
         if isfield(O,'pcdata'), O.pcdata = cellstr(O.pcdata); end
         renderer = get(H.figure,'Renderer');
         set(H.figure,'Renderer','OpenGL');
-
+        
+      if ~isstruct(varargin{1})
         % surface info
         if nargin>=3
           sinfo = cat_surf_info(varargin{3}); % sp?ter eins
@@ -257,7 +258,52 @@ switch lower(action)
             clear S P; 
         end
         H.sinfo = sinfo; 
-
+      else
+        labelmap = jet; 
+        S = varargin{1}; S=gifti(S);
+        S = export(S,'patch'); 
+        curv = spm_mesh_curvature(S); %$ > 0;
+        
+        labelnam = cell(0); %labelmapclim = zeros(1,2); labeloid = zeros(0); labelid = zeros(0); nid=1;
+        P = struct('vertices',S.vertices, 'faces',double(S.faces));
+            H.patch(1) = patch(P,...
+              'FaceColor',        [0.6 0.6 0.6],...
+              'EdgeColor',        'none',...
+              'FaceLighting',     'gouraud',...
+              'SpecularStrength', 0.0,... 0.7
+              'AmbientStrength',  0.4,... 0.1
+              'DiffuseStrength',  0.6,... 0.7
+              'SpecularExponent', 10,...
+              'Clipping',         'off',...
+              'DeleteFcn',        {@myDeleteFcn, renderer},...
+              'Visible',          'off',...
+              'Tag',              'CATSurfRender',...
+              'Parent',           H.axis);
+            setappdata(H.patch(1),'patch',P);
+            C = spm_mesh_label(P);
+            setappdata(H.patch(1),'cclabel',C);
+            setappdata(H.patch(1),'curvature',curv);
+        
+            if isfield(varargin{1},'cdata')
+                T = gifti(varargin{1}.cdata);
+                T = T.cdata;
+            elseif isfield(varargin{1},'facevertexcdata')
+                T = gifti(varargin{1}.facevertexcdata);
+                T = T.cdata;
+            else
+                T = [];
+            end
+            try
+              updateTexture(H,T,1);
+            end
+            labelmapclim = [min(T) max(T)];
+            H.filename{1} = ''; 
+            H.cdata = T; 
+            sinfo   = cat_surf_info('');
+            H.sinfo = sinfo; 
+            
+              if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
+      end
 
 
 
@@ -268,7 +314,7 @@ switch lower(action)
         material(H.figure,'dull');
 
         % default lighting
-        if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
+        if 0 & ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
 
         H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
         switch H.catLighting
@@ -282,7 +328,7 @@ switch lower(action)
               set(H.patch(pi),'BackFaceLighting','unlit');
             end
         end
-
+       
         H.rotate3d = rotate3d(H.axis);
         set(H.rotate3d,'Enable','on');
         set(H.rotate3d,'ActionPostCallback',{@myPostCallback, H});
@@ -366,279 +412,280 @@ switch lower(action)
         
         
         %% -- Textures -- 
-        c = uimenu(cmenu, 'Label', 'Textures');
-        if sinfo1.resampled
-          tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
-          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
-          for i=1:numel(sfiles)
-            tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+        if ~isempty(sinfo1.fname)
+          c = uimenu(cmenu, 'Label', 'Textures');
+          if sinfo1.resampled
+            tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('*%s.*.resampled.%s*',sinfo1.side,sinfo1.name));
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
+            for i=1:numel(sfiles)
+              tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+            end
+          else
+            tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
+            sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
+            for i=1:numel(sfiles)
+              tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+            end
           end
-        else
-          tfiles = cat_vol_findfiles(sinfo1.pp,sprintf('%s.*.%s*',sinfo1.side,sinfo1.name));
-          sfiles = {'central.','sphere.','sphere.reg.','hull.','.annot','defects.'}; 
-          for i=1:numel(sfiles)
-            tfiles(cellfun('isempty',strfind(tfiles,sfiles{i}))==0) = [];  
+          H.textures = cell(numel(tfiles),2);
+          if numel(tfiles)
+            for i=1:numel(tfiles)
+              H.textures{i,2} = cat_surf_info(tfiles{i});
+              H.textures{i,1} = H.textures{i,2}.dataname; 
+            end
+            usetexture = cellfun('isempty',strfind(tfiles,H.filename{1}))==0;
+          else   
+            usetexture = 0; 
           end
-        end
-        H.textures = cell(numel(tfiles),2);
-        if numel(tfiles)
-          for i=1:numel(tfiles)
-            H.textures{i,2} = cat_surf_info(tfiles{i});
-            H.textures{i,1} = H.textures{i,2}.dataname; 
-          end
-          usetexture = cellfun('isempty',strfind(tfiles,H.filename{1}))==0;
-        else   
-          usetexture = 0; 
-        end
-        uimenu(c, 'Label','none', 'Interruptible','off','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
-        if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
-        if numel(tfiles)
-          uimenu(c, 'Label', H.textures{1,1},'Interruptible','off','Separator','on','Checked',checked{usetexture(1)+1},'Callback',{@myChangeTexture, H});
-          for i=2:numel(tfiles)
-            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{usetexture(i)+1},'Callback',{@myChangeTexture, H});
-          end
-        end
-        uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','on', 'Callback',{@myUnderlay, H});
-        
-        
-        
-        
-        %% -- Atlas textures ---
-        H.atlases = {
-          'Neuromorphometrics' 'neuromorphometrics';
-          'LPBA40'             'lpba40';
-          'Hammers'            'hammers';
-          'Mori'               'mori';
-          'AAL'                'aal';
-          ...
-          'DKT40JT'            'aparc_DKT40JT';
-          'Destrieux2005'      'aparc_a2005s';
-          'Destrieux'          'aparc_a2009s';
-          'FreeSurfer'         'aparc_freesurfer';
-          'Bordmann'           'PALS_B12_Brodmann';
-          'Lobes'              'PALS_B12_Lobes';
-        };
-        if expert>1
-          vatlas = {
-            'Neuromorphometrics' 'neuromorphometrics';
-            'LPBA40'             'lpba40';
-            'Hammers'            'hammers';
-            'Mori'               'mori';
-            'AAL'                'aal';
-            };
-          satlas = {
-            'DKT40JT'            'aparc_DKT40JT';
-            'Destrieux'          'aparc_a2009s';
-            'Destrieux2005'      'aparc_a2005s';
-            'Bordmann'           'PALS_B12_Brodmann';
-            'FreeSurfer'         'aparc_freesurfer';
-            'Lobes'              'PALS_B12_Lobes';
-            };
-        elseif expert==1
-          vatlas = {
-            'Neuromorphometrics' 'neuromorphometrics';
-            'LPBA40'             'lpba40';
-            'Hammers'            'hammers';
-            'Mori'               'mori';
-            'AAL'                'aal';
-            };
-          satlas = {
-            'DKT40JT'            'aparc_DKT40JT';
-            'Destrieux'          'aparc_a2009s';
-            'Bordmann'           'PALS_B12_Brodmann';
-            'Lobes'              'PALS_B12_Lobes';
-            };
-        else
-          vatlas = {
-            'Neuromorphometrics' 'neuromorphometrics';
-            'LPBA40'             'lpba40';
-            'Hammers'            'hammers';
-            };
-          satlas = {
-            'DKT40JT'            'aparc_DKT40JT';
-            'Destrieux'          'aparc_a2009s';
-            };
-        end
-        H.atlas.vatlas = vatlas; 
-        H.atlas.satlas = satlas;
-        % ... it would be better to use the cat_defaults ...
-        %catatlases = cat_get_defaults('extopts.atlas');
-        %for i=1:size(catatlases,1), 
-        %  [ppa,ffa] = spm_fileparts(catatlases{i,1}); 
-        %end
-          
-
-        vafiles = vatlas(:,1); safiles = satlas(:,1); 
-        for ai = 1:size(vatlas,1)
-          vafiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
-            sprintf('%s.%s.Template_T1_IXI555_MNI152',sinfo1.side,vatlas{ai,2}));
-        end
-        for ai = 1:size(satlas,1)
-          safiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
-            sprintf('%s.%s.freesurfer.annot',sinfo1.side,satlas{ai,2}));
-        end
-        ntextures = size(H.textures,1);
-        for i=1:size(satlas,1)
-          H.textures{ntextures + i,2} = cat_surf_info(safiles{i,1});
-          H.textures{ntextures + i,1} = satlas{i,1}; %H.textures{ntextures + i,2}.dataname; 
-        end
-        ntextures2 = size(H.textures,1);
-        for i = 1:size(vatlas,1)
-          H.textures{ntextures2 + i,2} = cat_surf_info(vafiles{i,1});
-          H.textures{ntextures2 + i,1} = H.textures{ntextures2 + i,2}.dataname; 
-        end
-
-        useatlas = [zeros(ntextures,1); cellfun('isempty',strfind(safiles,H.filename{1}))==0];
-        useatlas2 = [zeros(ntextures2,1); cellfun('isempty',strfind(vafiles,H.filename{1}))==0];
-
-        % atlas menu  
-        if sinfo1.resampled || strcmp(sinfo1.ee,'.annot')   
-          c = uimenu(cmenu, 'Label', 'Atlases');
+          uimenu(c, 'Label','none', 'Interruptible','off','Checked',checked{2-any(usetexture)}, 'Callback',{@myChangeTexture, H}); 
           if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
-          uimenu(c, 'Label','none', 'Interruptible','off','Checked','off','Callback',{@myChangeTexture, H});
-          uimenu(c, 'Label', H.textures{ntextures+1,1},'Interruptible','off',...
-            'Checked',checked{useatlas2(ntextures+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
-          for i=ntextures + 2 : numel(useatlas)
-            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas(i)+1},'Callback',{@myChangeTexture, H});
+          if numel(tfiles)
+            uimenu(c, 'Label', H.textures{1,1},'Interruptible','off','Separator','on','Checked',checked{usetexture(1)+1},'Callback',{@myChangeTexture, H});
+            for i=2:numel(tfiles)
+              uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{usetexture(i)+1},'Callback',{@myChangeTexture, H});
+            end
           end
-          uimenu(c, 'Label', H.textures{ntextures2+1,1},'Interruptible','off',...
-            'Checked',checked{useatlas2(ntextures2+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
-          for i=ntextures2+2:size(H.textures,1)
-            uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas2(i)+1},'Callback',{@myChangeTexture, H});
-          end
-          %uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','on', 'Callback',{@myUnderlay, H});
-        end
-       
+          uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','on', 'Callback',{@myUnderlay, H});
         
         
         
-        %% -- ROIs --
-        % ROI auswertung noch unklar 
-        % - bei vols w?re das xml einer person mit verschiedenen atlaten
-        %   (subject als auch subject template)
-        %   >> auswahl von xml-files aus dem label dir? 
-        %   >> Liste von Atlanten und labels, die den atlasnamen enthalten,
-        %      der aus dem atlasdir geladen werden (und gemappt werden)
-        %      muss
-        %   >> anschlie?end m?ssen die werte der rois auf den atlas
-        %      ?bertragen werden
-        % - bei csv h?tte man dann einen atlas f?r mehrere personen, was 
-        %   nur bei resampled sinnvoll w?re 
-        %   >> auwahl von csv-files 
-      try
-        % volume/surface-based atlas data
-        if cat_get_defaults('extopts.subfolders')
-          labeldir = strrep(sinfo1(1).pp,[filesep 'surf'],[filesep 'label']);
-        else
-          labeldir = sinfo1(1).pp;
-        end
-        % find xml-files
-        H.RBM.vlabelfile = cat_vol_findfiles(labeldir,sprintf('catROI_%s.xml',sinfo1(1).name));
-        H.RBM.slabelfile = cat_vol_findfiles(labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name));
         
-        % read xml-files ... this is realy slow for real XMLs >> MAT solution!
-        % atlas-names
-        % texture-names of volumen/surface ROIs
-
-        if ~isempty(H.RBM.vlabelfile)
-          H.RBM.vcatROI   = cat_io_xml( H.RBM.vlabelfile ); 
-          H.RBM.vatlas    = fieldnames( H.RBM.vcatROI ); 
-          for ai=1:numel( H.RBM.vatlas )
-            H.RBM.vmeasures{ai} = fieldnames( H.RBM.vcatROI.(H.RBM.vatlas{ai}).data ); 
-          end
-        else
-          H.RBM.vatlas    = []; 
-          H.RBM.vmeasures = {}; 
-        end
-        if ~isempty(H.RBM.slabelfile)
-          H.RBM.scatROI   = cat_io_xml( H.RBM.slabelfile );
-          H.RBM.satlas    = fieldnames( H.RBM.scatROI ); 
-          for ai=1:numel( H.RBM.satlas )
-            H.RBM.smeasures{ai} = fieldnames( H.RBM.scatROI.(H.RBM.satlas{ai}).data ); 
-          end
-        else 
-          H.RBM.satlas    = []; 
-          H.RBM.smeasures = {}; 
-        end        
-     
-      
-        % create ROI data menu
-        c = uimenu(cmenu, 'Label', 'ROIs');
-        % volume measures
-        uimenu(c, 'Label','none', 'Interruptible','off','Checked','off','Callback',{@myChangeTexture, H});
-        for i=1:numel(H.RBM.vatlas)'
-          if i==1
-            c1 = uimenu(c, 'Label', H.RBM.vatlas{i},'Checked','off','Separator','on');
-          else
-            c1 = uimenu(c, 'Label', H.RBM.vatlas{i},'Checked','off');
-          end
-          for j=1:numel(H.RBM.vmeasures{i})
-            uimenu(c1, 'Label', H.RBM.vmeasures{i}{j},'Checked','off','Callback',{@myChangeROI, H});
-          end
-        end
-        % surface measures
-        for i=1:numel(H.RBM.satlas)
-          if i==1
-            c1 = uimenu(c, 'Label', H.RBM.satlas{i},'Checked','off','Separator','on');
-          else
-            c1 = uimenu(c, 'Label', H.RBM.satlas{i},'Checked','off');
-          end
-          for j=1:numel(H.RBM.smeasures{i})
-            uimenu(c1, 'Label', H.RBM.smeasures{i}{j},'Checked','off','Callback',{@myChangeROI, H});
-          end
-        end
-        % custom ... 
-        %  * find further xml files of this subject in the label directory (easy) 
-        %    or load a custom ROI where you have to choose the atlas and measure or where you have to create a dynamic menu ... :/ 
-        %  * load them and get their atlas fields and for each atlas its measures
-        %  * create a 'other ROIs' menu with subfields for each measure
-        %uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','on', 'Callback',{@myChangeROI, H});
-        
-      end   
-        
-        %% -- Meshes --   
-        c = uimenu(cmenu, 'Label', 'Meshes');
-        if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
-        if sinfo1.resampled
-          H.meshs = { 
-              'Individual', H.patch(1).Vertices 
-              'Average'   , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.freesurfer.gii']);    
-              'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);   
-              'Sphere'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.sphere.freesurfer.gii']);  
-              'Dartel'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.Template_T1_IXI555_MNI152.gii']);  
-              ...'Hull'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.hull.freesurfer.gii']);  
-              ...'Pial'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);   
-              ...'WM'        , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  
-              'Custom'    ,'';    
-            };
-          
-          uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H});
-          uimenu(c, 'Label','Average',    'Checked','off', 'Callback',{@myChangeMesh, H});
-          uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H});
-          uimenu(c, 'Label','Dartel',     'Checked','off', 'Callback',{@myChangeMesh, H});
-          uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
-         %uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H});
-         %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H});
-         %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H});
-        else
-          H.meshs = { 
-              'Individual', H.patch(1).Vertices 
-              ...'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);  
-              ...'Pial'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);  
-              ...'WM '       , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  
-              'Hull'      , sinfo1.Phull;  
-              'Sphere'    , sinfo1.Psphere;  
+          %% -- Atlas textures ---
+          H.atlases = {
+            'Neuromorphometrics' 'neuromorphometrics';
+            'LPBA40'             'lpba40';
+            'Hammers'            'hammers';
+            'Mori'               'mori';
+            'AAL'                'aal';
+            ...
+            'DKT40JT'            'aparc_DKT40JT';
+            'Destrieux2005'      'aparc_a2005s';
+            'Destrieux'          'aparc_a2009s';
+            'FreeSurfer'         'aparc_freesurfer';
+            'Bordmann'           'PALS_B12_Brodmann';
+            'Lobes'              'PALS_B12_Lobes';
+          };
+          if expert>1
+            vatlas = {
+              'Neuromorphometrics' 'neuromorphometrics';
+              'LPBA40'             'lpba40';
+              'Hammers'            'hammers';
+              'Mori'               'mori';
+              'AAL'                'aal';
               };
-          uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});  
-         %uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});
-         %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Ppial,'file')>1)});
-         %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pwm,'file')>1)});
-          uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Phull,'file')>1)});  
-          uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Psphere,'file')>1)});  
-          H.meshs(end+1,:) = { 'Custom','';};
+            satlas = {
+              'DKT40JT'            'aparc_DKT40JT';
+              'Destrieux'          'aparc_a2009s';
+              'Destrieux2005'      'aparc_a2005s';
+              'Bordmann'           'PALS_B12_Brodmann';
+              'FreeSurfer'         'aparc_freesurfer';
+              'Lobes'              'PALS_B12_Lobes';
+              };
+          elseif expert==1
+            vatlas = {
+              'Neuromorphometrics' 'neuromorphometrics';
+              'LPBA40'             'lpba40';
+              'Hammers'            'hammers';
+              'Mori'               'mori';
+              'AAL'                'aal';
+              };
+            satlas = {
+              'DKT40JT'            'aparc_DKT40JT';
+              'Destrieux'          'aparc_a2009s';
+              'Bordmann'           'PALS_B12_Brodmann';
+              'Lobes'              'PALS_B12_Lobes';
+              };
+          else
+            vatlas = {
+              'Neuromorphometrics' 'neuromorphometrics';
+              'LPBA40'             'lpba40';
+              'Hammers'            'hammers';
+              };
+            satlas = {
+              'DKT40JT'            'aparc_DKT40JT';
+              'Destrieux'          'aparc_a2009s';
+              };
+          end
+          H.atlas.vatlas = vatlas; 
+          H.atlas.satlas = satlas;
+          % ... it would be better to use the cat_defaults ...
+          %catatlases = cat_get_defaults('extopts.atlas');
+          %for i=1:size(catatlases,1), 
+          %  [ppa,ffa] = spm_fileparts(catatlases{i,1}); 
+          %end
+
+
+          vafiles = vatlas(:,1); safiles = satlas(:,1); 
+          for ai = 1:size(vatlas,1)
+            vafiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
+              sprintf('%s.%s.Template_T1_IXI555_MNI152',sinfo1.side,vatlas{ai,2}));
+          end
+          for ai = 1:size(satlas,1)
+            safiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
+              sprintf('%s.%s.freesurfer.annot',sinfo1.side,satlas{ai,2}));
+          end
+          ntextures = size(H.textures,1);
+          for i=1:size(satlas,1)
+            H.textures{ntextures + i,2} = cat_surf_info(safiles{i,1});
+            H.textures{ntextures + i,1} = satlas{i,1}; %H.textures{ntextures + i,2}.dataname; 
+          end
+          ntextures2 = size(H.textures,1);
+          for i = 1:size(vatlas,1)
+            H.textures{ntextures2 + i,2} = cat_surf_info(vafiles{i,1});
+            H.textures{ntextures2 + i,1} = H.textures{ntextures2 + i,2}.dataname; 
+          end
+
+          useatlas = [zeros(ntextures,1); cellfun('isempty',strfind(safiles,H.filename{1}))==0];
+          useatlas2 = [zeros(ntextures2,1); cellfun('isempty',strfind(vafiles,H.filename{1}))==0];
+
+          % atlas menu  
+          if sinfo1.resampled || strcmp(sinfo1.ee,'.annot')   
+            c = uimenu(cmenu, 'Label', 'Atlases');
+            if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
+            uimenu(c, 'Label','none', 'Interruptible','off','Checked','off','Callback',{@myChangeTexture, H});
+            uimenu(c, 'Label', H.textures{ntextures+1,1},'Interruptible','off',...
+              'Checked',checked{useatlas2(ntextures+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
+            for i=ntextures + 2 : numel(useatlas)
+              uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas(i)+1},'Callback',{@myChangeTexture, H});
+            end
+            uimenu(c, 'Label', H.textures{ntextures2+1,1},'Interruptible','off',...
+              'Checked',checked{useatlas2(ntextures2+1)+1},'Separator','on','Callback',{@myChangeTexture, H});
+            for i=ntextures2+2:size(H.textures,1)
+              uimenu(c, 'Label', H.textures{i,1},'Interruptible','off','Checked',checked{useatlas2(i)+1},'Callback',{@myChangeTexture, H});
+            end
+            %uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','on', 'Callback',{@myUnderlay, H});
+          end
+
+
+
+
+          %% -- ROIs --
+          % ROI auswertung noch unklar 
+          % - bei vols w?re das xml einer person mit verschiedenen atlaten
+          %   (subject als auch subject template)
+          %   >> auswahl von xml-files aus dem label dir? 
+          %   >> Liste von Atlanten und labels, die den atlasnamen enthalten,
+          %      der aus dem atlasdir geladen werden (und gemappt werden)
+          %      muss
+          %   >> anschlie?end m?ssen die werte der rois auf den atlas
+          %      ?bertragen werden
+          % - bei csv h?tte man dann einen atlas f?r mehrere personen, was 
+          %   nur bei resampled sinnvoll w?re 
+          %   >> auwahl von csv-files 
+        try
+          % volume/surface-based atlas data
+          if cat_get_defaults('extopts.subfolders')
+            labeldir = strrep(sinfo1(1).pp,[filesep 'surf'],[filesep 'label']);
+          else
+            labeldir = sinfo1(1).pp;
+          end
+          % find xml-files
+          H.RBM.vlabelfile = cat_vol_findfiles(labeldir,sprintf('catROI_%s.xml',sinfo1(1).name));
+          H.RBM.slabelfile = cat_vol_findfiles(labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name));
+
+          % read xml-files ... this is realy slow for real XMLs >> MAT solution!
+          % atlas-names
+          % texture-names of volumen/surface ROIs
+
+          if ~isempty(H.RBM.vlabelfile)
+            H.RBM.vcatROI   = cat_io_xml( H.RBM.vlabelfile ); 
+            H.RBM.vatlas    = fieldnames( H.RBM.vcatROI ); 
+            for ai=1:numel( H.RBM.vatlas )
+              H.RBM.vmeasures{ai} = fieldnames( H.RBM.vcatROI.(H.RBM.vatlas{ai}).data ); 
+            end
+          else
+            H.RBM.vatlas    = []; 
+            H.RBM.vmeasures = {}; 
+          end
+          if ~isempty(H.RBM.slabelfile)
+            H.RBM.scatROI   = cat_io_xml( H.RBM.slabelfile );
+            H.RBM.satlas    = fieldnames( H.RBM.scatROI ); 
+            for ai=1:numel( H.RBM.satlas )
+              H.RBM.smeasures{ai} = fieldnames( H.RBM.scatROI.(H.RBM.satlas{ai}).data ); 
+            end
+          else 
+            H.RBM.satlas    = []; 
+            H.RBM.smeasures = {}; 
+          end        
+
+
+          % create ROI data menu
+          c = uimenu(cmenu, 'Label', 'ROIs');
+          % volume measures
+          uimenu(c, 'Label','none', 'Interruptible','off','Checked','off','Callback',{@myChangeTexture, H});
+          for i=1:numel(H.RBM.vatlas)'
+            if i==1
+              c1 = uimenu(c, 'Label', H.RBM.vatlas{i},'Checked','off','Separator','on');
+            else
+              c1 = uimenu(c, 'Label', H.RBM.vatlas{i},'Checked','off');
+            end
+            for j=1:numel(H.RBM.vmeasures{i})
+              uimenu(c1, 'Label', H.RBM.vmeasures{i}{j},'Checked','off','Callback',{@myChangeROI, H});
+            end
+          end
+          % surface measures
+          for i=1:numel(H.RBM.satlas)
+            if i==1
+              c1 = uimenu(c, 'Label', H.RBM.satlas{i},'Checked','off','Separator','on');
+            else
+              c1 = uimenu(c, 'Label', H.RBM.satlas{i},'Checked','off');
+            end
+            for j=1:numel(H.RBM.smeasures{i})
+              uimenu(c1, 'Label', H.RBM.smeasures{i}{j},'Checked','off','Callback',{@myChangeROI, H});
+            end
+          end
+          % custom ... 
+          %  * find further xml files of this subject in the label directory (easy) 
+          %    or load a custom ROI where you have to choose the atlas and measure or where you have to create a dynamic menu ... :/ 
+          %  * load them and get their atlas fields and for each atlas its measures
+          %  * create a 'other ROIs' menu with subfields for each measure
+          %uimenu(c, 'Label','Custom...', 'Interruptible','off','Separator','on', 'Callback',{@myChangeROI, H});
+
+        end   
+
+          %% -- Meshes --   
+          c = uimenu(cmenu, 'Label', 'Meshes');
+          if strcmp(H.sinfo(1).texture,'defects'), set(c,'Enable','off');  end
+          if sinfo1.resampled
+            H.meshs = { 
+                'Individual', H.patch(1).Vertices 
+                'Average'   , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.freesurfer.gii']);    
+                'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);   
+                'Sphere'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.sphere.freesurfer.gii']);  
+                'Dartel'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.Template_T1_IXI555_MNI152.gii']);  
+                ...'Hull'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.hull.freesurfer.gii']);  
+                ...'Pial'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);   
+                ...'WM'        , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  
+                'Custom'    ,'';    
+              };
+
+            uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H});
+            uimenu(c, 'Label','Average',    'Checked','off', 'Callback',{@myChangeMesh, H});
+            uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H});
+            uimenu(c, 'Label','Dartel',     'Checked','off', 'Callback',{@myChangeMesh, H});
+            uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H});
+           %uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H});
+           %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H});
+           %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H});
+          else
+            H.meshs = { 
+                'Individual', H.patch(1).Vertices 
+                ...'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);  
+                ...'Pial'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);  
+                ...'WM '       , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  
+                'Hull'      , sinfo1.Phull;  
+                'Sphere'    , sinfo1.Psphere;  
+                };
+            uimenu(c, 'Label','Individual', 'Checked','on',  'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});  
+           %uimenu(c, 'Label','Inflated',   'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pmesh,'file')>1)});
+           %uimenu(c, 'Label','Pial',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Ppial,'file')>1)});
+           %uimenu(c, 'Label','WM',         'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Pwm,'file')>1)});
+            uimenu(c, 'Label','Hull',       'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Phull,'file')>1)});  
+            uimenu(c, 'Label','Sphere',     'Checked','off', 'Callback',{@myChangeMesh, H},'Enable',checked{1+(exist(sinfo1.Psphere,'file')>1)});  
+            H.meshs(end+1,:) = { 'Custom','';};
+          end
+          uimenu(c, 'Label','Custom...', 'Interruptible','off', 'Separator','on', 'Callback',{@myChangeGeometry, H});
         end
-        uimenu(c, 'Label','Custom...', 'Interruptible','off', 'Separator','on', 'Callback',{@myChangeGeometry, H});
-        
        
         
         % -- Components --
@@ -653,7 +700,7 @@ switch lower(action)
         
         
         
-        
+     if ~isempty(sinfo1.fname)    
         % Volume menu
         % -----------------------------------------------------------------
         c = uimenu(cmenu, 'Label','Volume', 'Interruptible','off'); %, 'Callback',{@myImageSections, H});
@@ -708,7 +755,7 @@ switch lower(action)
         uimenu(c1, 'Label','Background' , 'Checked','off', 'Callback', {@myVolTransparency, H, 'background'});
         uimenu(c1, 'Label','Custom...'  , 'Checked','off', 'Callback', {@myVolTransparency, H, 'custom'},'Separator', 'on');
 %}          
-          
+           
         % -- Slice -- ... more than one slice per direction?
         c1 = uimenu(c, 'Label','Slices');
         uimenu(c1, 'Label','AC'        , 'Interruptible','off', 'Callback',{@mySlices, H, 'AC'},'Checked','on');
@@ -720,7 +767,7 @@ switch lower(action)
         uimenu(c1, 'Label','z-10'       , 'Interruptible','off', 'Callback',{@mySlices, H, 'z-10'});
         uimenu(c1, 'Label','Custom...'  , 'Interruptible','off', 'Callback',{@mySlices, H},'Separator', 'on');
         uimenu(c1, 'Label','Custom mm...' , 'Interruptible','off', 'Callback',{@mySlices, H, 'mm'});    
-        
+     end 
         
         % ???
         uimenu(cmenu, 'Label','Overlay...', 'Interruptible','off', 'Callback',{@myOverlay, H});

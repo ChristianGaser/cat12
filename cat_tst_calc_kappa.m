@@ -91,6 +91,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
   def.testcase    = 'auto';
   def.spaces      = 70; 
   def.finishsound = 0; 
+  def.allkappa    = 1; 
   opt = cat_io_checkinopt(opt,def);
   
   
@@ -99,7 +100,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
   switch opt.testcase
     case 'slices'
       h=hist(vol(:),0:255);
-      ncls = sum(h>0)-1;
+      ncls = min(3,sum(h>0)-1);
     case 'binary'
       ncls = 1; 
     case 'IBSR'
@@ -204,7 +205,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
           for xi=1:numel(xslices), mask(xslices(xi),:,:) = true; end
           for yi=1:numel(yslices), mask(:,yslices(yi),:) = true; end
           for zi=1:numel(zslices), mask(:,:,zslices(zi)) = true; end
-          
+          %%
           switch ncls
             case 1
               [kappa_all, kappa, accuracy_all, accuracy, sensit_all, sensit, specif, confusion, dice, jaccard] = ...
@@ -223,6 +224,30 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
                            'sensit_all',sensit_all,'sensit',sensit(1),'specif',specif(1),'dice',dice(1),'jaccard',jaccard(1),'rms',rms); 
               colori = mean(kappa_all);
             case 3
+              vol1o = vol1; vol1 = (vol1o==1) + (vol1o==3)*2 + (vol1o==6)*3 + (vol1o==5)*4;
+%%
+              if opt.allkappa
+                [kappa_all,kappa] = cg_confusion_matrix( uint8(round(vol1(mask(:))+1)) ,uint8(round(vol2(mask(:))+1)), 4); 
+                kappa_all = [kappa(2:4)' kappa_all kappa(1)]; 
+              else
+                for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(mask(:)))==c)+1),uint8((round(vol2(mask(:)))==c)+1), 2); end
+                c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(mask(:)))==c)+1),uint8((round(vol2(mask(:)))>=c)+1), 2); 
+                bth=0.5;   kappa_all(1,5) = cg_confusion_matrix(uint8((vol1(mask(:))>=bth)+1     ),uint8((vol2(mask(:))>=bth)+1     ), 2); 
+                kappa_all(1,4) = mean(kappa_all(1,1:3)); 
+              end
+              % rms 
+              rms = calcRMS(vol1(mask(:)),vol2(mask(:))); rms = [rms(1:3) mean(rms(1:3)) rms(4)];
+              k(i,:) = [kappa_all,rms];
+              txti   = sprintf(sprintf('%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n', ...
+                opt.spaces),fnamestr,k(i,:)); 
+
+              val(i).SEG = struct('kappa',kappa_all(1:3),'rms',rms(1:3),'kappaGW',kappa_all(4),'rmsGW',rms(4));
+             
+              %val(i).BE  = struct('kappa',kappa_all,'accuracy',accuracy_all, ...
+              %             'FP',FP,'FN',FN, ...
+              %             'sensit_all',sensit_all,'sensit',sensit(1),'specif',specif(1),'dice',dice(1),'jaccard',jaccard(1),'rms',rms); 
+              
+              colori = mean(kappa_all(1,2:3)); %  colori = kappa_all(4);
           end
         otherwise
           %%
@@ -286,11 +311,16 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
                 end
               end
 
-              for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
-              c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))>=c)+1), 2); 
-              bth=0.5;   kappa_all(1,5) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
-              kappa_all(1,4) = mean(kappa_all(1,1:3)); 
-
+              if opt.allkappa
+                [kappa_all,kappa] = cg_confusion_matrix( uint8(round(vol1(:)+1)) ,uint8(round(vol2(:)+1)), 4); 
+                kappa_all = [kappa(2:4)' kappa_all kappa(1)]; 
+              else
+                for c=1:2, kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))==c)+1), 2); end
+                c=3;       kappa_all(1,c) = cg_confusion_matrix(uint8((round(vol1(:))==c)+1),uint8((round(vol2(:))>=c)+1), 2); 
+                bth=0.5;   kappa_all(1,5) = cg_confusion_matrix(uint8((vol1(:)>=bth)+1     ),uint8((vol2(:)>=bth)+1     ), 2); 
+                kappa_all(1,4) = mean(kappa_all(1,1:3)); 
+              end
+              
               rms = calcRMS(vol1,vol2); rms = [rms(1:3) mean(rms(1:3)) rms(4)];
               k(i,:) = [kappa_all,rms];
               txti   = sprintf(sprintf('%%%ds:%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f |%%8.4f%%8.4f%%8.4f%%8.4f%%8.4f\\n', ...

@@ -14574,6 +14574,7 @@ with large files.
 
 
 ------------------------------------------------------------------------
+r1135 | gaser | 2017-06-07 11:04:11 +0200 (Mi, 07 Jun 2017) | 25 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -14599,5 +14600,32 @@ M       html/cat_starting.html
 (2) Fixed: Corrected estimate of currect directory in bash scripts (thanks to 
     Markus Mertens for pointing to that error).
 (3) Changed: renamed batch scripts for CAT.
+
 ------------------------------------------------------------------------
-r1135 | gaser | 2017-06-07 11:03:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_cgw2seg.m
+M       cat_plot_boxplot.m
+A       cat_run_job_APP_SPM.m
+A       cat_spm_preproc_run.m
+A       cat_spm_smoothto8bit.m
+M       cat_surf_info.m
+M       cat_surf_render2.m
+M       cat_tst_calc_kappa.m
+M       cat_tst_qa.m
+M       cat_vol_div.m
+M       cat_vol_grad.m
+M       cat_vol_resize.m
+M       ds.m
+M       internal/cat_vol_flipside.m
+ M      templates_1.50mm
+
+(1) New:        Added surface rendering for Matlab surface in cat_surf_render2.
+(2) New:        Added label map generation for FS input in cat_io_cgw2seg.
+(3) Changed :   Updated cat_tst_calc_kappa to process slice segments with more 
+                than one class and correct Kappa estimation in case of multiple
+                classes.
+(4) Changed:    Small independent corrections in other functions.
+------------------------------------------------------------------------
+r1136 | dahnke | 2017-06-11 16:04:38
