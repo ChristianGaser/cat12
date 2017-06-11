@@ -38,7 +38,7 @@ function varargout = cat_vol_flipside(job)
     Y = spm_read_vols(V(vi));
 
     % flip side
-    Y2 = flipud(Y);
+    Y2=Y; for z=1:size(Y,3), Y2(:,:,z) = flipud(Y(:,:,z)); end
 
     % flip side coding
     if job.labelmap

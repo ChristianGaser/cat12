@@ -26,7 +26,8 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
 
 %#ok<*RGXP1>
 
-  if isempty(P) && nargout>0, varargout{1} = {}; return; end
+  %if isempty(P) && nargout>0, varargout{1} = {}; return; end
+  if ~exist('P','var'), P=''; end
   if strcmp(P,'selftest')
     pps = {
       fullfile(spm('dir'),'toolbox','cat12','template_surfaces')
@@ -103,7 +104,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     'posside','' ...
   );
 
-  if isempty(P), return; end
+  if isempty(P), varargout{1}=sinfo; return; end
   
   for i=1:numel(P)
     [pp,ff,ee] = spm_fileparts(P{i});
