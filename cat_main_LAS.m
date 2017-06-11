@@ -70,7 +70,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);
   NS      = @(Ys,s) Ys==s | Ys==s+1;                                    % function to ignore brain hemisphere coding
-  LASstr  = max(eps,min(1,extopts.LASstr / 2));  % LAS strenght (for GM/WM threshold)3 - manual correction based on R1109 (2017/02)
+  LASstr  = max(eps,min(1,extopts.LASstr));  % LAS strenght (for GM/WM threshold)3 - manual correction based on R1109 (2017/02)
   LAB     = extopts.LAB;                         % atlas labels
   LABl1   = 1;                                                          % use atlas map
   cleanupstr  = min(1,max(0,extopts.gcutstr));   % required to avoid critical regions
@@ -144,15 +144,13 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ywtpm  = cat_vol_resize(Ywtpm,'reduceBrain',vx_vol,round(4/mean(vx_vol)),BB.BB);
     if ~debug, clear Yy; end
     
-    LASmod = min(2,max(0,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Ycls{1}>4)) - 2/3) * 8));
-  else
-    LASmod = 1; 
+    %LASmod = min(2,max(0,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Ycls{1}>4)) - 2/3) * 8));
   end
   
   
   %% adaption of the LASstr depending on average basal values 
-  LASstr  = min(1,max(0.05,LASstr * LASmod));                           % adaption by local BG variation
-  LASfs   = 1 / max(0.05,LASstr);                                       % smoothing filter strength 
+  LASstr  = min(1,max(0.01,LASstr));                                    % adaption by local BG variation
+  LASfs   = 1 / max(0.01,LASstr);                                       % smoothing filter strength 
   LASi    = min(8,round(LASfs));                                        % smoothing interation (limited)
    
   
@@ -314,16 +312,27 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ygw3 = Ycls{3}>128 & Yg<0.05 & ~Ywm & ~Ygm & Ywd<3; 
   Ygw3(smooth3(Ygw3)<0.5)=0;
   [Yi,resT2] = cat_vol_resize(Ysrcm,'reduceV',vx_vol,mres,32,'max'); % maximum reduction for the WM
-  %%
+  %
   if cat_stat_nanmean(Ym(Ygw3))>0.1, % not in images with to low CSF intensity (error in skull-stripped)
-    Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))) + Ysrc.*Ygw3*T3th(3)/mean(Ysrc(Ygw3(:))),'reduceV',vx_vol,mres,32,'meanm'); clear Ygw2; % mean for other tissues
+    Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))) + Ysrc.*Ygw3*T3th(3)/mean(Ysrc(Ygw3(:))),'reduceV',vx_vol,mres,32,'meanm');  % mean for other tissues
   else
-    Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))),'reduceV',vx_vol,mres,32,'meanm'); clear Ygw2; % mean for other tissues
+    Ygi = cat_vol_resize(Ysrc.*Ygw2*T3th(3)/mean(Ysrc(Ygw2(:))),'reduceV',vx_vol,mres,32,'meanm'); % mean for other tissues
   end
   for xi=1:2*LASi, Ygi = cat_vol_localstat(Ygi,Ygi>0,2,1); end; Ygi(smooth3(Ygi>0)<0.3)=0;
   Yi = cat_vol_localstat(Yi,Yi>0,1,3); % one maximum for stabilization of small WM structures
   Yi(Yi==0 & Ygi>0)=Ygi(Yi==0 & Ygi>0);
   for xi=1:2*LASi, Yi = cat_vol_localstat(Yi,Yi>0,2,1); end % no maximum here!
+ %
+  if cat_stat_nanmean(Ym(Ygw3))>0.1 && cat_stat_nanmean(Ysrc(Ycls{6}(:)>128))>T3th(1)
+    %%
+     Ygw4 = Ycls{6}>240 & ~Ygw3 & ~Ygw2 & Yg<0.5 & abs(Ydiv)<0.1 & ...
+        Ysrc>min(res.mn(res.lkp==6))*0.5 & Ysrc<max(res.mn(res.lkp==6))*1.5; 
+     [Ygi,resTB] = cat_vol_resize(Ysrc.*Ygw4*T3th(3)/mean(Ysrc(Ygw4(:))),'reduceV',vx_vol,mres*4,16,'meanm');
+     Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2); Ygi = cat_vol_smooth3X(Ygi,2*LASfs);
+     Ygi = Ygw4 .* max(eps,cat_vol_resize(Ygi,'dereduceV',resTB)); 
+  end
+  Yi(Yi==0) = Ygi(Yi==0); 
+  if debug==0; clear Ygw2; end
   Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = cat_vol_smooth3X(Yi,2*LASfs); 
   Ylab{2} = max(eps,cat_vol_resize(Yi,'dereduceV',resT2)); 
  % Ylab{2} = Ylab{2} .* mean( [median(Ysrc(Ysw(:))./Ylab{2}(Ysw(:))),1] ); 
@@ -379,10 +388,12 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ycmx = smooth3(Ycm & Ysrc<(T3th(1)*0.8+T3th(2)*0.2))>0.9; Tcmx = mean(Ysrc(Ycmx(:))./Ylab{2}(Ycmx(:)))*T3th(3);
   Yi(Ycmx) = Ysrc(Ycmx)./Ylab{2}(Ycmx)  .* T3th(2)/Tcmx; 
   %Yii =  Ysrc./Ylab{2} .* Ycm * T3th(2) / cat_stat_nanmedian(Ysrc(Ycm(:))); 
-  [Yi,Yii,resT2] = cat_vol_resize({Yi,Ylab{2}/T3th(3)},'reduceV',vx_vol,1,32,'meanm');
+  [Yi,Yii,Ybgx,resT2] = cat_vol_resize({Yi,Ylab{2}/T3th(3),Ycls{6}>240},'reduceV',vx_vol,1,32,'meanm');
   for xi=1:2*LASi, Yi = cat_vol_localstat(Yi,Yi>0,3,1); end
   Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); 
-  Yi = min(Yi,Yii*(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3));
+  Yi = min(Yi,Yii*(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3)); 
+  Yi(Ybgx) = Yii(Ybgx)*cat_stat_nanmean(Yi(~Ybgx(:))); 
+  %%
   Yi = cat_vol_smooth3X(Yi,LASfs); 
   Ylab{1} = cat_vol_resize(Yi,'dereduceV',resT2).*Ylab{2};   
   %Ylab{1}(Ygm) = Ysrc(Ygm); Ylab{1} = cat_vol_smooth3X(Ylab{1},LASfs); % can lead to overfitting
@@ -391,12 +402,21 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ycm(Yb & cat_vol_morph(Ysrc<mean(T3th(1:2)),'o'))=1;
   
   %% CSF & BG 
-  Ynb = cat_vol_morph(smooth3(Ycls{6})>128 | (~Yb & Yg<=0.001),'e',4*vxv); 
+  if exist('Ygw4','var')
+    Ynb = Ygw4 & cat_vol_morph(smooth3(Ycls{6})>128 | (~Yb & Yg<=0.001),'e',4*vxv); 
+  else
+    Ynb = cat_vol_morph(smooth3(Ycls{6})>128 | (~Yb & Yg<=0.001),'e',4*vxv); 
+  end  
   [Yx,Yc,resT2] = cat_vol_resize({round(Ysrc./Ylab{2} .* Ynb * rf(2))/rf(2),... .* ((Ysrc./Ylab{2})<T3th(1)/T3th(3))
     round(Ysrc./Ylab{2} .* (smooth3(Ycm | Ysc)>0.5) * rf(2))/rf(2)},'reduceV',vx_vol,8,16,'min');% only pure CSF !!!
   Yx(Yc>0)=0; Yc(Yx>0)=0;
-  meanYx = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
-  meanYc = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+  if cat_stat_nanmean(Yx(Yx~=0))<cat_stat_nanmean(Yc(Yc~=0))
+    meanYx = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+    meanYc = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+  else
+    meanYc = min(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+    meanYx = max(median(Yc(Yc(:)>0)),median(Yx(Yx(:)>0))); 
+  end  
   stdYbc = mean([std(Yc(Yc(:)>0)),std(Yx(Yx(:)>0))]);
   %Yx = min(max(meanYx/2,Yx),min(meanYx*4,meanYc/2));
   %Yc = min(max(meanYc/2,Yx),meanYc/2);
@@ -409,7 +429,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Yca = cat_vol_smooth3X(Yca,LASfs*2); 
   Ylab{3} = cat_vol_smooth3X(cat_vol_resize(Yca,'dereduceV',resT2).*Ylab{2},LASfs*2);  
   Ylab{6} = cat_vol_smooth3X(cat_vol_resize(Yxa,'dereduceV',resT2).*Ylab{2},LASfs*2);
-  clear Yxa Yca Yx Yc Y Ydiv
+  if ~debug, clear Yxa Yca Yx Yc Y Ydiv; end
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------

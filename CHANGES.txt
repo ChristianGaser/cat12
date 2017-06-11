@@ -14602,6 +14602,7 @@ M       html/cat_starting.html
 (3) Changed: renamed batch scripts for CAT.
 
 ------------------------------------------------------------------------
+r1136 | dahnke | 2017-06-11 16:04:58 +0200 (So, 11 Jun 2017) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14627,5 +14628,24 @@ M       internal/cat_vol_flipside.m
                 than one class and correct Kappa estimation in case of multiple
                 classes.
 (4) Changed:    Small independent corrections in other functions.
+
 ------------------------------------------------------------------------
-r1136 | dahnke | 2017-06-11 16:04:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gcut.m
+M       cat_main_gintnorm.m
+M       cat_surf_createCS.m
+
+(1) Changed:    Deactivated closing of small WMHs in cat_vol_createCS and
+                prepared fast surface generation to check segmentation.
+(2) Changed:    Updated SPM skull-stripping and fast surface output in cat_main.
+(3) Changed:    Increased upper WM threshold in cat_main_gcut.
+(4) Changed:    Corrected problems in cat_main_LAS for MP2RAGE protocols.
+
+
+
+------------------------------------------------------------------------
+r1137 | dahnke | 2017-06-11 20:00:27

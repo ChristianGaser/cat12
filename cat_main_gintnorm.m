@@ -70,7 +70,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
   end
     
   clsint  = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
-  clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*inf))']; 
+  clsints = @(x,y) [round( res.mn(res.lkp==x) * 10^5)/10^5; res.mg(res.lkp==x-((y==0)*8))']; 
  
   inv_weighting = 0;
   if nargout==7
@@ -280,6 +280,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
           
      
     %%      
+    if ~exist('Yy','var'), Yy = res.Twarp; end
     LAB = extopts.LAB;
     PA  = extopts.cat12atlas;
     VA  = spm_vol(PA{1});
@@ -509,8 +510,8 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
     CSFth  = cat_stat_nanmedian(Ysrcr(Ycm(:))); % kmeans3D(Ysrc(Ycls{3}(:)>64 & Yg(:)>gth & Yb(:)),2); % CSF CSF/GM
       %  0.05 <<<<< BMth + 4*cat_stat_nanstd(Ysrc(Ybm(:)))
     Ybg    = cat_vol_morph(Yg<0.10 & Yb & Ysrc<WMth*(1-0.03*cat_stat_nanmean(vx_vol)) & Ysrc>CSFth*1.5 & Ycls{3}<64,'o',2);
-    Ygm    = ~Ybg & Yg<0.4 & Ysrc<(WMth+0.9*diff([CSFth,WMth])) & Yg<gth*2 & ...
-      Ysrc>(CSFth+0.1*diff([CSFth,WMth])) & ~Ywm & ~Ycm & Yb & abs(Ydiv)<0.1; 
+    Ygm    = ~Ybg & Yg<0.4 & Ysrc<min(clsint(2)*0.8+clsint(1)*0.2,WMth+0.5*diff([CSFth,WMth])) & Yg<gth*2 & Ycls{1}>32 & ~Ywm & Ycls{2}<64 & ...
+      Ysrc>(CSFth+0.1*diff([CSFth,WMth])) & ~Ywm & ~Ycm & Yb & abs(Ydiv)<0.2; 
     %Ygm   = Ygm | (Ycls{1}>64 & Ybg & ~Ywm);
     GMth   = cat_stat_nanmedian(Ysrcr(Ygm(:))); %kmeans3D(Ysrc(Ygm(:)),3); % CSF/GM GM GM/WM
     T3th_cls  = round([CSFth(1) GMth(1) WMth(1)]*10^4)/10^4;
