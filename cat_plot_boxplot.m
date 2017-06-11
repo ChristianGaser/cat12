@@ -130,6 +130,8 @@ function [out,s] = cat_plot_boxplot(data,opt)
   def.showdata    = 0;  
   def.median      = 2;          % show median: 0 - no; 1 - line; 2 - with different fill colors 
   def.edgecolor   = 'none';     % edgecolor of boxes
+  def.changecolor = 0;          % use brighter values for double color entries, e.g. 
+                                % [red red blue blue] becomes [red light-red blue light-blue] 
   def.trans       = 0.25;       % transparency of boxes
   def.sat         = 0.50;       % saturation of boxes
   def.subsets     = false(1,numel(data)); 
@@ -185,6 +187,17 @@ function [out,s] = cat_plot_boxplot(data,opt)
     %  warning('WARNING:cat_plot_boxplot:groupcolor','WARNING: To short colortable.'); 
     %end
     opt.groupcolor = repmat(opt.groupcolor(1,:),numel(data),1);
+  end
+  % if the same color is used multiple times you may want to change it...
+  if opt.changecolor
+    tmpcolor = opt.groupcolor(1,:);
+    for ci = 2:size(opt.groupcolor,1)
+      if all(opt.groupcolor(ci,:)==tmpcolor)
+        opt.groupcolor(ci,:) = max(0,min(1,opt.groupcolor(ci-1,:) .* repmat(1 + 0.02 * opt.changecolor,1,3))); 
+      else
+        tmpcolor = opt.groupcolor(ci,:);
+      end
+    end
   end
   if numel(opt.sort)>1 && numel(opt.sort) ~= nc
     error('ERROR:cat_plot_boxplot:sort','ERROR: Too sort list.'); 

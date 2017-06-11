@@ -58,8 +58,13 @@ function varargout=ds(type,viewtype,DAR,varargin)
   % figure properties
   fhn = 'DisplaySlice';%  if nf, fh=figure; else fh=gcf; end
   fh  = findobj('type','figure','tag',fhn); %,'name',fhn); 
-  if ~isempty(fh)
-    figure(fh);
+  if ~isempty(strfind(type,'+'))
+    for fhi=1:numel(fh), set(fh(fhi),'tag',[get(fh(fhi),'tag') '0']); end
+    type = strrep(type,'+','');
+    fh = []; 
+  end    
+  if ~isempty(fh) 
+    figure(fh); 
   else
     mp   = get(0,'MonitorPositions');
     fpos = min(mp(end,3:4),[1600 900]);
