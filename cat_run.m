@@ -203,7 +203,7 @@ function job = update_job(job)
   if job.opts.biasstr>0 % update biasreg and biasfwhm only if biasreg>0
     % limits only describe the SPM standard range
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
-    job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*job.opts.biasstr ));  
+    job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   end
 
   % deselect ROI output and print warning if ROI output is true and dartel template was changed
@@ -629,8 +629,12 @@ function [lazy,FNok] = checklazy(job,subj,verb)
         end
       else
         if isnumeric(job.opts.(FNopts{fni}))
-          if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
-            FNok = 5; break
+          if strcmp(FNopts{fni},'ngaus') && numel(xml.parameter.opts.(FNopts{fni}))==4
+            % nothing to do (skull-stripped case)
+          else
+            if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
+              FNok = 5; break
+            end
           end
         elseif ischar(job.opts.(FNopts{fni}))
           if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})); 
