@@ -252,14 +252,14 @@ if ~expert
   cleanupstr.labels  = {'none','light','medium','strong'};
   cleanupstr.values  = {0 0.25 0.50 0.75};
   cleanupstr.help    = {
-    'Strength of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing than decrease the strength.  If to many meninges are vissible than increase the strength. '
+    'Strength of tissue cleanup after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing then decrease the strength.  If too many meninges are visible then increase the strength. '
     ''
   };
 else
   cleanupstr.labels  = {'none (0)','light (0.25)','medium (0.5)','strong (0.75)','heavy (1.00)'};
   cleanupstr.values  = {0 0.25 0.50 0.75 1.00};
   cleanupstr.help    = {
-    'Strength of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing than decrease the strength.  If to many meninges are vissible than increase the strength. '
+    'Strength of tissue cleanup after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing then decrease the strength.  If too many meninges are visible then increase the strength. '
     ''
     'The strength changes multiple internal parameters: '
     ' 1) Size of the correction area'
@@ -277,7 +277,7 @@ gcutstr.tag       = 'gcutstr';
 gcutstr.name      = 'Strength of Skull-Stripping';
 gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
-  'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain were missing in the brain mask than decrease the strength. If the brain mask of your images contains parts of the head, than increase the strength. '
+  'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain were missing in the brain mask then decrease the strength. If the brain mask of your images contains parts of the head, then increase the strength. '
   ''
 };
 if ~expert
@@ -346,7 +346,7 @@ BVCstr.help    = {
 
 
 %------------------------------------------------------------------------
-% Local Adapative Segmentation
+% Local Adaptive Segmentation
 %------------------------------------------------------------------------
 LASstr         = cfg_menu;
 LASstr.tag     = 'LASstr';
@@ -414,7 +414,7 @@ print.labels = {'No','Yes'};
 print.values = {0 1};
 print.def    = @(val)cat_get_defaults('extopts.print', val{:});
 print.help   = {
-'The result of the segmentation can be displayed and printed to a ps-file. This is often helpful to check whether registration and segmentation were successful. Furthermore, some additional information about the used versions and parameters are printed.'
+'The result of the segmentation can be displayed and printed to a pdf-file. This is often helpful to check whether registration and segmentation were successful. Furthermore, some additional information about the used versions and parameters are printed.'
 ''
 };
 
@@ -486,7 +486,7 @@ app.values = {0 1 2 3 4};
 if expert<2, app.labels(4:5) = []; app.values(4:5) = []; end % less options for default user 
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
 app.help   = { ...
-  'Affine alignment and SPM preprocessing can fail in subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
+  'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
   '' 
   ' none   - no additional bias correction.' 
   ' light  - iterative SPM bias correction on different resolutions' 
@@ -496,8 +496,8 @@ app.help   = { ...
 if expert==2
   app.help   = [app.help;{ 
     'Further options (still in development): ' 
-    ' rough APP - rought APP bias correction' 
-    ' fine  APP - rought and fine APP bias correction'    
+    ' rough APP - rough APP bias correction' 
+    ' fine  APP - rough and fine APP bias correction'    
     ''
   }];
 end

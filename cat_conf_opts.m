@@ -68,14 +68,14 @@ if ~expert
   %biasstr.labels  = {'ultralight','light','medium','strong','heavy'};
   %biasstr.values  = {0 0.25 0.50 0.75 1};
   biasstr.help    = {
-    'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modify this value only if you experience problems!  Use smaller values for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values for stronger corrections (e.g. in 3 or 7 Tesla data with strong visible bias).  Bias correction is further controlled by the Affine Preprocessing (APP). '
+    'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modify this value only if you experience any problems!  Use smaller values for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values for stronger corrections (e.g. in 3 or 7 Tesla data with strong visible bias).  Bias correction is further controlled by the Affine Preprocessing (APP). '
     ''
   };
 else
   biasstr.labels  = {'use SPM bias parameter','ultralight (0)','light (0.25)','medium (0.5)','strong (0.75)','heavy (1)'};
   biasstr.values  = {0 eps 0.25 0.50 0.75 1};
   biasstr.help = {
-    'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modify this value only if you experience problems!  Use smaller values (>0) for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values (<=1) for stronger corrections (e.g. in 7 Tesla data). The value 0 will use the original SPM biasreg and biasfwhm parameter of the cat_defaults file!  The value 0 will use the original SPM biasreg and biasfwhm parameter of the cat_defaults file.  Bias correction is further controlled by the Affine Preprocessing (APP). '
+    'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modify this value only if you experience any problems!  Use smaller values (>0) for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values (<=1) for stronger corrections (e.g. in 7 Tesla data). The value 0 will use the original SPM biasreg and biasfwhm parameter of the cat_defaults file!  The value 0 will use the original SPM biasreg and biasfwhm parameter of the cat_defaults file.  Bias correction is further controlled by the Affine Preprocessing (APP). '
     ''
     '  biasreg	  =  min(  10 , max(  0 , 10^-(biasstr*2 + 2) )) '
     '  biasfwhm	  =  min( inf , max( 30 , 30 + 60*biasstr )) '
