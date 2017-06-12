@@ -28,10 +28,10 @@ function varargout = spm_preproc_run(job,action)
 % Copyright (C) 2008-2015 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_preproc_run.m 6365 2015-03-06 18:59:55Z guillaume $
+% $Id$
 
 
-SVNid = '$Rev: 6365 $';
+SVNid = '$Rev$';
 
 if nargin == 1, action = 'run'; end
 if ~isfield(job,'Yclsout'), if nargout==0, job.Yclsout = [0 0 0 0 0 0]; else job.Yclsout = [1 1 1 1 1 1]; end; end
@@ -338,7 +338,7 @@ function [Ym,Ycls] = spm_preproc_write8f(res,tc,bf,df,mrf,cleanup,bb,vx,Yclsout)
 % Copyright (C) 2008-2016 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_preproc_write8.m 6881 2016-09-19 09:48:54Z john $
+% $Id$
 
 % Prior adjustment factor.
 % This is a fudge factor to weaken the effects of the tissue priors.  The

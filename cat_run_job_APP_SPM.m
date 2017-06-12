@@ -7,7 +7,7 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
 %  a wider mask with a complete brain is important.
 %  _____________________________________________________________________
 %  Robert Dahnke
-%  $Id: cat_run_job_APP_final.m 1118 2017-03-17 15:57:00Z gaser $
+%  $Id$
 
 
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 

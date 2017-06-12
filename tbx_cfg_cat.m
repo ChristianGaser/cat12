@@ -94,8 +94,16 @@ else
   surface        = cfg_menu;
   surface.tag    = 'surface';
   surface.name   = 'Surface and thickness estimation';
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh'};
-  surface.values = {0 1 2 3};
+  if expert>1
+    surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh','rh','lh + rh (no registration)'};
+    surface.values = {0 1 2 3 4 5};
+  elseif expert>0 
+    surface.labels = {'No','lh + rh','lh + rh + left cerebellum + right cerebellum'};
+    surface.values = {0 1 2};
+  else
+    surface.labels = {'No','lh + rh'};
+    surface.values = {0 1};
+  end
   surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {
     'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'

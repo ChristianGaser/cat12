@@ -20,7 +20,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   def.iproc  = 0; 
   opt = cat_io_checkinopt(opt,def); 
 
-  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_run_job_APP_init'); debug = 1; break; end; end
+  dbs = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
 %    ds('l2','',0.5,Yo/WMth,Yg<0.2,Yo/WMth,Ym,80)
   Ysrcmin = min(Ysrco(~isinf(Ysrco(:))));
