@@ -62,8 +62,8 @@ regstr.def    = @(val)cat_get_defaults('extopts.regstr', val{:});
 regstr.help   = {
   'WARNING: This parameter is in development and may change in future and only works for Shooting templates!'
   ''
-  '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates. '
-  'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stop criteria that allows faster processing. '
+  '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates and about 1 hour for 1.0 mm. '
+  'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stop criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
   ''
 };
 if expert > 1
@@ -227,68 +227,80 @@ restype.help   = {
 }; 
 
 %------------------------------------------------------------------------
-% AMAP MRF Filter
+% AMAP MRF Filter (expert)
 %------------------------------------------------------------------------
-
-mrf         = cfg_entry;
+mrf         = cfg_menu; %
 mrf.tag     = 'mrf';
 mrf.name    = 'Strength of MRF noise correction';
-mrf.strtype = 'r';
-mrf.num     = [1 1];
+mrf.labels  = {'none','light','medium','strong','auto'};
+mrf.values  = {0 0.1 0.2 0.3 1};
 mrf.def     = @(val)cat_get_defaults('extopts.mrf', val{:});
 mrf.help    = {
   'Strength of the MRF noise correction of the AMAP segmentation. '
   ''
 };
 
+
 %------------------------------------------------------------------------
 % Cleanup
 %------------------------------------------------------------------------
-
-cleanupstr         = cfg_entry;
+cleanupstr         = cfg_menu;
 cleanupstr.tag     = 'cleanupstr';
 cleanupstr.name    = 'Strength of Final Clean Up';
-cleanupstr.strtype = 'r';
-cleanupstr.num     = [1 1];
 cleanupstr.def     = @(val)cat_get_defaults('extopts.cleanupstr', val{:});
-cleanupstr.help    = {
-  'Strength of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. The default of 0.5 was successfully tested on a variety of scans. Use smaller values (>=0) for small changes and higher values (<=1) for stronger corrections. '
-  ''
-  'The strength changes multiple internal parameters: '
-  ' 1) Size of the correction area'
-  ' 2) Smoothing parameters to controll the opening processes to remove thin structures '
-  ''
-  'If parts of brain tissue were missing than decrease the strength.  If to many meninges are vissible than increase the strength. '
-''
-};
+if ~expert
+  cleanupstr.labels  = {'none','light','medium','strong'};
+  cleanupstr.values  = {0 0.25 0.50 0.75};
+  cleanupstr.help    = {
+    'Strength of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing than decrease the strength.  If to many meninges are vissible than increase the strength. '
+    ''
+  };
+else
+  cleanupstr.labels  = {'none (0)','light (0.25)','medium (0.5)','strong (0.75)','heavy (1.00)'};
+  cleanupstr.values  = {0 0.25 0.50 0.75 1.00};
+  cleanupstr.help    = {
+    'Strength of tissue clean up after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing than decrease the strength.  If to many meninges are vissible than increase the strength. '
+    ''
+    'The strength changes multiple internal parameters: '
+    ' 1) Size of the correction area'
+    ' 2) Smoothing parameters to control the opening processes to remove thin structures '
+    ''
+  };
+end
+
 
 %------------------------------------------------------------------------
 % Skull-stripping
 %------------------------------------------------------------------------
-
-gcutstr         = cfg_entry;
-gcutstr.tag     = 'gcutstr';
-gcutstr.name    = 'Strength of Skull-Stripping';
-gcutstr.strtype = 'r';
-gcutstr.num     = [1 1];
-gcutstr.def     = @(val)cat_get_defaults('extopts.gcutstr', val{:});
-gcutstr.help    = {
-  'Strength of skull-stripping before AMAP segmentation, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping.  The default of 0.5 was successfully tested on a variety of scans. '
-  'a^{3}'
+gcutstr           = cfg_menu;
+gcutstr.tag       = 'gcutstr';
+gcutstr.name      = 'Strength of Skull-Stripping';
+gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
+gcutstr.help      = {
+  'Strength of skull-stripping before AMAP segmentation, with "ultralight" for a more liberal and wider brain masks and "heavy" for a more aggressive skull-stripping. If parts of the brain were missing in the brain mask than decrease the strength. If the brain mask of your images contains parts of the head, than increase the strength. '
   ''
-  'The strength changes multiple internal parameters: '
-  ' 1) Intensity thresholds to deal with blood-vessels and meninges '
-  ' 2) Distance and growing parameters for the graph-cut/region-growing '
-  ' 3) Closing parameters that fill the sulci'
-  ' 4) Smoothing parameters that allow sharper or wider results '
-  ''
-  'If parts of the brain were missing in the brain mask than decrease the strength.  If the brain mask of your images contains parts of the head, than increase the strength. '
-''
 };
+if ~expert
+  gcutstr.labels  = {'SPM cleanup','light','medium','strong'};
+  gcutstr.values  = {0 0.25 0.50 0.75};
+else
+  gcutstr.labels  = {'SPM cleanup (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
+  gcutstr.values  = {0 eps 0.25 0.50 0.75 1.00};
+  gcutstr.help    = [gcutstr.help;{
+    'The strength changes multiple internal parameters: '
+    ' 1) Intensity thresholds to deal with blood-vessels and meninges '
+    ' 2) Distance and growing parameters for the graph-cut/region-growing '
+    ' 3) Closing parameters that fill the sulci'
+    ' 4) Smoothing parameters that allow sharper or wider results '
+    ''
+  }];
+end
+
 
 %------------------------------------------------------------------------
-% Noise correction
+% Noise correction (expert)
 %------------------------------------------------------------------------
+% expert 
 sanlm        = cfg_menu;
 sanlm.tag    = 'sanlm';
 sanlm.name   = 'Use SANLM de-noising filter';
@@ -303,14 +315,14 @@ sanlm.help   = {
     '  * ISARNLM ' 
 };
 
-NCstr         = cfg_entry;
-NCstr.tag     = 'NCstr';
-NCstr.name    = 'Strength of Noise Corrections';
-NCstr.strtype = 'r';
-NCstr.num     = [1 1];
-NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
-NCstr.help    = {
-  'Strength of the SANLM noise correction. The default "inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction! '
+NCstr        = cfg_menu;
+NCstr.tag    = 'NCstr';
+NCstr.name   = 'Strength of Noise Corrections';
+NCstr.labels = {'none (0)','light (0.25)','medium (0.50)','strong (0.75)','full (1.00)','auto (inf)'};
+NCstr.values = {0 0.25 0.50 0.75 1.00 inf};
+NCstr.def    = @(val)cat_get_defaults('extopts.NCstr', val{:});
+NCstr.help   = {
+  'Strength of the SANLM noise correction. The default "auto" uses an adaptive noise correction and was successfully tested on a variety of scans. '
   ''
   'Please note that our test showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
   ''
@@ -318,52 +330,44 @@ NCstr.help    = {
 
 
 %------------------------------------------------------------------------
-% Blood Vessel Correction
+% Blood Vessel Correction (expert)
 %------------------------------------------------------------------------
 
-BVCstr        = cfg_entry;
-BVCstr.tag    = 'BVCstr';
+BVCstr         = cfg_menu;
+BVCstr.tag     = 'BVCstr';
 BVCstr.name    = 'Strength of Blood Vessel Corrections';
-BVCstr.strtype = 'r';
-BVCstr.num     = [1 1];
+BVCstr.labels  = {'none (0)','light (eps)','medium (0.50)','strong (1.00)'};
+BVCstr.values  = {0 eps 0.50 1.00};
 BVCstr.def     = @(val)cat_get_defaults('extopts.BVCstr', val{:});
 BVCstr.help    = {
-  'Strength of the Blood Vessel Correction. The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+  'Strength of the Blood Vessel Correction (BVC).'
   ''
 };
+
 
 %------------------------------------------------------------------------
 % Local Adapative Segmentation
 %------------------------------------------------------------------------
-
-LAS        = cfg_menu;
-LAS.tag    = 'LAS';
-LAS.name   = 'Local Adaptive Segmentation';
-LAS.labels = {'No','Yes'};
-LAS.values = {0 1};
-LAS.def    = @(val)cat_get_defaults('extopts.LAS', val{:});
-LAS.help   = {
-  'Correction of local intensity changes with medium/low spatial frequencies. This will affect mostly subcortical GM areas. This function will also utilize the inhomogeneity correction. '
-  ''
-  'See also ...'
-  ''
-};
-
-LASstr         = cfg_entry;
+LASstr         = cfg_menu;
 LASstr.tag     = 'LASstr';
 LASstr.name    = 'Strength of Local Adaptive Segmentation';
-LASstr.strtype = 'r';
-LASstr.num     = [1 1];
+if ~expert 
+  LASstr.labels  = {'none','light','medium','strong'};
+  LASstr.values  = {0 0.25 0.50 0.75};
+else
+  LASstr.labels  = {'none (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
+  LASstr.values  = {0 eps 0.25 0.50 0.75 1.00};
+end
 LASstr.def     = @(val)cat_get_defaults('extopts.LASstr', val{:});
 LASstr.help    = {
-  'Strength of the modification by the Local Adaptive Segmentation (LAS). The default 0.5 was successfully tested on a large variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive LAS.'
+  'Strength of the modification by the Local Adaptive Segmentation (LAS).'
   ''
 };
 
-%------------------------------------------------------------------------
-% WM Hyperintensities:
-%------------------------------------------------------------------------
 
+%------------------------------------------------------------------------
+% WM Hyperintensities (expert)
+%------------------------------------------------------------------------
 wmhc        = cfg_menu;
 wmhc.tag    = 'WMHC';
 wmhc.name   = 'WM Hyperintensity Correction (WMHC)';
@@ -390,15 +394,15 @@ wmhc.help   = {
 ''
 };
 
-WMHCstr         = cfg_entry;
+WMHCstr         = cfg_menu;
 WMHCstr.tag     = 'WMHCstr';
 WMHCstr.name    = 'Strength of WMH Correction';
-WMHCstr.strtype = 'r';
-WMHCstr.num     = [1 1];
+WMHCstr.labels  = {'none (0)','light (eps)','medium (0.5)','strong (1.00)'};
+WMHCstr.values  = {0 eps 0.50 1.00};
 WMHCstr.def     = @(val)cat_get_defaults('extopts.WMHCstr', val{:});
 WMHCstr.help    = {
-  'Strength of the modification of the WM Hyperintensity Correction (WMHC). The default 0.5 was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger corrections. The value 0 will deactive WMHC.'
-''
+  'Strength of the modification of the WM Hyperintensity Correction (WMHC).'
+  ''
 };
 
 %------------------------------------------------------------------------
@@ -473,98 +477,30 @@ T1.help    = {
 };
 
 %------------------------------------------------------------------------
-appfull          = cfg_entry;
-appfull.tag      = 'APP';
-appfull.name     = 'Affine Preprocessing (APP) code';
-appfull.strtype  = 'w';
-appfull.num      = [1 1];
-appfull.def      = @(val)cat_get_defaults('extopts.APP', val{:});
-appfull.help     = { ...
-  'Affine alignment and SPM preprocessing can fail in subjects with deviating anatomy (other species/neonates) or in images with strong signal inhomogeneities or untypical intensities like in synthetic images). An initial bias correction, a head/brain masking/extraction can help to reduce such problems. ' ...
-  '' ... 
-  'Before changing this parameter please check image orientation.' ...
-  'Strong and heavy APP uses only fine affine registration that typically reqired a good intial orientation.' ...
-  '' ...
-  'Enter a number with 3 Digits with the first digit for biascorr, digit 2 for masking, and digit 3 for affreg with:' ...
-  '' ...
-  ' APPcode = [biascorr masking affreg]' ...  
-  '' ...
-  ' biascorr: ' ...
-  '  0 = none '...
-  '  1 = initial, only for affine registration (default) '...
-  '  2 = initial, full use '...
-  '  3 = fine, only for affine registration '...
-  '  4 = fine, full use '...
-  '' ...
-  ' masking: ' ...
-  '  0 = none '...
-  '  1 = head, msk only (default) '...
-  '  2 = head, apply mal use '...
-  '  3 = brain, msk only '...
-  '  4 = brain, apply mal use '...
-  '' ...
-  ' affreg:' ...
-  '  0 = none '...
-  '  1 = use affine preregistration (default) '...
-  '' ...
-  '' ...
-  'Standard APP values for default/expert user menu:' ...
-  '  none:      0 = 000 - old default' ...
-  '  light:     1 = 111' ...
-  '  medium:    2 = 211' ...
-  '  strong:    3 = 210' ...
-  '  heavy:     4 = 430' ...
-  '  nonhuman:  5 = 440' ...
-  '' ...
-};
-
-applight        = cfg_menu;
-applight.tag    = 'APP';
-applight.name   = 'Affine Preprocessing (APP)';
-applight.labels = { ...
-  'none'  ...
-  'light' ... 
-  'heavy' ... 
-};
-applight.values = {0 1 4};
-applight.def    = @(val)cat_get_defaults('extopts.APP', val{:});
-applight.help   = { ...
-  'Affine alignment and SPM preprocessing can fail in subjects with deviating anatomy (other species/neonates) or in images with strong signal inhomogeneities or untypical intensities like in synthetic images). An initial bias correction, a head/brain masking/extraction can help to reduce such problems. ' ...
-  '' ... 
-  'Before changing this paramter please check image orientation.' ...
-  'Strong and heavy APP uses only fine affine registration that typically reqired a good intial orientation.' ...
-  '' ...
-};
 
 app        = cfg_menu;
 app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
-app.labels = { ...
-  'none' ... 
-  'light' ... 
-  'medium' ... 
-  'strong' ... 
-  'heavy' ... 
-};
+app.labels = {'none','light','full','rough APP','fine  APP'};
 app.values = {0 1 2 3 4};
+if expert<2, app.labels(4:5) = []; app.values(4:5) = []; end % less options for default user 
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
 app.help   = { ...
-  'Affine alignment and SPM preprocessing can fail in subjects with deviating anatomy (other species/neonates) or in images with strong signal inhomogeneities or untypical intensities like in synthetic images). An initial bias correction, a head/brain masking/extraction can help to reduce such problems. ' ...
-  '' ... 
-  'Before changing this paramter please check image orientation.' ...
-  'Strong and heavy APP uses only fine affine registration that typically reqired a good intial orientation.' ...
-  '' ...
-  'APP is still in development and these options may change. ' ...
-  '' ...
-  '  APP: biascorr, masking, affreg' ...
-  '  -------------------------------' ...
-  '  none: none, none, yes' ...
-  '  light: just for affreg, head msk, yes' ...
-  '  medium: permanent (init), head msk, yes' ...
-  '  strong: permanent (fine), brain msk, no'  ...
-  '  heavy: permanent (fine), brain msk, no' ...
-  '' ...
+  'Affine alignment and SPM preprocessing can fail in subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
+  '' 
+  ' none   - no additional bias correction.' 
+  ' light  - iterative SPM bias correction on different resolutions' 
+  ' full   - iterative SPM bias correction on different resolutions and high resolution bias correction' 
+  ''
 };
+if expert==2
+  app.help   = [app.help;{ 
+    'Further options (still in development): ' 
+    ' rough APP - rought APP bias correction' 
+    ' fine  APP - rought and fine APP bias correction'    
+    ''
+  }];
+end
 
 
 %------------------------------------------------------------------------
@@ -633,14 +569,14 @@ extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if ~spm
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,experimental,appfull,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,regstr,WMHCstr,wmhc,mrf,...
+    extopts.val   = {lazy,experimental,app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,regstr,WMHCstr,wmhc,mrf,...
                      darteltpm,cat12atlas,brainmask,T1,...
                      restype,vox,pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors,verb}; 
   elseif expert==1 % working expert options
     extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,regstr,WMHCstr,wmhc,darteltpm,restype,vox,...
                      pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors}; 
   else
-    extopts.val   = {applight,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
+    extopts.val   = {app,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
   end
 else
   % SPM based surface processing and thickness estimation

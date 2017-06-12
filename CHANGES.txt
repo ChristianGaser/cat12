@@ -14630,6 +14630,7 @@ M       internal/cat_vol_flipside.m
 (4) Changed:    Small independent corrections in other functions.
 
 ------------------------------------------------------------------------
+r1137 | dahnke | 2017-06-11 20:00:39 +0200 (So, 11 Jun 2017) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14647,5 +14648,36 @@ M       cat_surf_createCS.m
 
 
 
+
 ------------------------------------------------------------------------
-r1137 | dahnke | 2017-06-11 20:00:27
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_run.m
+M       cat_run_job.m
+MM      cat_run_job_APP_SPM.m
+M       cat_run_job_APP_init.m
+MM      cat_spm_preproc_run.m
+MM      cat_spm_smoothto8bit.m
+M       html/images/cat_tst_seg_bwp_ana.png
+M       tbx_cfg_cat.m
+
+(1) Changed:   Large changes in cat_run_job to simplify APP cases 
+                * APP=0 - do nothing 
+                * APP=1 - use SPM bias correction
+                * APP=2 - use SPM + APPs bias correction
+                * APP=3 - APP init (old APP1)
+                * APP=4 - APP final 
+               and to improve behaviour in case of skull-stripped data:
+                * Added TPM update that combine head and background classes to
+                  one background class in cat_run_job.                 
+                * Added noise to the background to guarantee SPM requirements 
+                  of gaussian distributed data in cat_run_job.
+                * Added 
+(2) Changed:   Update GUI changing the *str parameters from real data input to
+               fix cases.
+------------------------------------------------------------------------
+r1138 | dahnke | 2017-06-12 16:26:06
