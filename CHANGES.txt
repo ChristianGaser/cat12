@@ -14650,6 +14650,7 @@ M       cat_surf_createCS.m
 
 
 ------------------------------------------------------------------------
+r1138 | dahnke | 2017-06-12 16:26:32 +0200 (Mo, 12 Jun 2017) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14679,5 +14680,16 @@ M       tbx_cfg_cat.m
                 * Added 
 (2) Changed:   Update GUI changing the *str parameters from real data input to
                fix cases.
+
 ------------------------------------------------------------------------
-r1138 | dahnke | 2017-06-12 16:26:06
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_io_cgw2seg.m
+M       cat_main.m
+
+Fixed: Typos...
+------------------------------------------------------------------------
+r1139 | gaser | 2017-06-12 21:54:39
