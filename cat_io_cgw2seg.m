@@ -1,6 +1,6 @@
 function varargout=cat_io_cgw2seg(c,g,w,opt)
 % ______________________________________________________________________
-% convert SPM or FSL posibility maps to PVE label files
+% convert SPM or FSL probability maps to PVE label files
 %
 %   varargout=cat_io_cgw2seg(c,g,w,mode,d)
 %

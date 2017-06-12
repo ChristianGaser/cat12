@@ -1446,7 +1446,7 @@ end
 % ----------------------------------------------------------------------
 % The strong normalization of the T1 data can directly be used as tissue
 % segmentation. The Ymi images is scaled to get similar maps for each 
-% tissue class, with good vissible differences in the sulci.
+% tissue class, with good visible differences in the sulci.
 job.output.intsegments = job.extopts.experimental;
 if job.output.intsegments
   if (any(tc(:)) || job.extopts.WMHC==3 && job.extopts.WMHCstr>0 && ~job.inv_weighting); 
