@@ -14682,6 +14682,7 @@ M       tbx_cfg_cat.m
                fix cases.
 
 ------------------------------------------------------------------------
+r1139 | gaser | 2017-06-12 21:54:51 +0200 (Mo, 12 Jun 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14691,5 +14692,20 @@ M       cat_io_cgw2seg.m
 M       cat_main.m
 
 Fixed: Typos...
+
 ------------------------------------------------------------------------
-r1139 | gaser | 2017-06-12 21:54:39
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_resamp.m
+M       templates_surfaces/lc.central.Template_T1_IXI555_MNI152.gii
+M       templates_surfaces/lc.central.freesurfer.gii
+M       templates_surfaces/lc.sphere.freesurfer.gii
+M       templates_surfaces/rc.central.Template_T1_IXI555_MNI152.gii
+M       templates_surfaces/rc.central.freesurfer.gii
+M       templates_surfaces/rc.sphere.freesurfer.gii
+
+Changed: Temporarily written files during resampling & Smoothing now have
+unique names.
+------------------------------------------------------------------------
+r1140 | gaser | 2017-06-13 11:20:57
