@@ -67,6 +67,10 @@ scp: zip
 	-@scp -r -P 2222 cat12-html ${STARGET_HTDOCS}/
 	-@bash -c "ssh ${STARGET_HOST} ln -Fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 	
+scp_manual:
+	-@echo scp CAT12-Manual.pdf to http://dbm.neuro.uni-jena.de/cat12
+	-@scp -P 2222 CAT12-Manual.pdf ${STARGET}
+
 cp_binaries: 
 	-@echo copy binaries
 	-@test ! -f ~/work/c/CAT/build-*/Progs/*.o || rm ~/work/c/CAT/build-*/Progs/*.o
