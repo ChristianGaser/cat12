@@ -14710,6 +14710,7 @@ Changed: Temporarily written files during resampling & Smoothing now have
 unique names.
 
 ------------------------------------------------------------------------
+r1141 | gaser | 2017-06-14 08:40:45 +0200 (Mi, 14 Jun 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14717,5 +14718,16 @@ A       cat_stat_polynomial.m
 
 Added: cat_stat_polynomial for polynomial expansion and orthogonalization
 of a function.
+
 ------------------------------------------------------------------------
-r1141 | gaser | 2017-06-14 08:40:31
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       html/cat_starting.html
+
+Changed: Updated CAT12 manual and added more information and images for 
+defining contrasts.
+------------------------------------------------------------------------
+r1142 | gaser | 2017-06-14 12:50:28
