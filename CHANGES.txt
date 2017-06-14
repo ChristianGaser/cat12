@@ -14694,6 +14694,7 @@ M       cat_main.m
 Fixed: Typos...
 
 ------------------------------------------------------------------------
+r1140 | gaser | 2017-06-13 11:21:16 +0200 (Di, 13 Jun 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14707,5 +14708,14 @@ M       templates_surfaces/rc.sphere.freesurfer.gii
 
 Changed: Temporarily written files during resampling & Smoothing now have
 unique names.
+
 ------------------------------------------------------------------------
-r1140 | gaser | 2017-06-13 11:20:57
+
+Changed paths:
+M       CHANGES.txt
+A       cat_stat_polynomial.m
+
+Added: cat_stat_polynomial for polynomial expansion and orthogonalization
+of a function.
+------------------------------------------------------------------------
+r1141 | gaser | 2017-06-14 08:40:31
