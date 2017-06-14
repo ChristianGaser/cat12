@@ -10,7 +10,7 @@ function y = cat_stat_polynomial(x,p)
 % cat_stat_polynomial orthogonalizes a polynomial function of order p
 %__________________________________________________________________________
 % Christian Gaser 
-% $Id: cat_stat_polynomial.m 1137 2017-06-11 18:00:39Z gaser $ 
+% $Id$ 
 
 if nargin < 2, p = 1; end
 

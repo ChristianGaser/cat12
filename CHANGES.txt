@@ -14720,6 +14720,7 @@ Added: cat_stat_polynomial for polynomial expansion and orthogonalization
 of a function.
 
 ------------------------------------------------------------------------
+r1142 | gaser | 2017-06-14 12:50:45 +0200 (Mi, 14 Jun 2017) | 9 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -14729,5 +14730,14 @@ M       html/cat_starting.html
 
 Changed: Updated CAT12 manual and added more information and images for 
 defining contrasts.
+
 ------------------------------------------------------------------------
-r1142 | gaser | 2017-06-14 12:50:28
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+MM      cat_stat_polynomial.m
+
+Changed: Added function to only scp CAT12-Manual to dbm.
+------------------------------------------------------------------------
+r1143 | gaser | 2017-06-14 12:55:44
