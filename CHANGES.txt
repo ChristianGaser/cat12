@@ -14732,6 +14732,7 @@ Changed: Updated CAT12 manual and added more information and images for
 defining contrasts.
 
 ------------------------------------------------------------------------
+r1143 | gaser | 2017-06-14 12:55:48 +0200 (Mi, 14 Jun 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14739,5 +14740,36 @@ M       Makefile
 MM      cat_stat_polynomial.m
 
 Changed: Added function to only scp CAT12-Manual to dbm.
+
 ------------------------------------------------------------------------
-r1143 | gaser | 2017-06-14 12:55:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_io_report.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job_APP_SPM.m
+M       cat_run_job_APP_init.m
+M       cat_spm_preproc_run.m
+M       cat_tst_qa.m
+M       cat_vol_approx.m
+M       cat_vol_div.m
+M       cat_vol_grad.m
+M       html/images/cat_tst_seg_bwp_ana.png
+
+(1) Changed:  Changed APP1 and APP2 SPM parameter for faster processing.
+(2) Changed:  Use lower resolution (1.0 mm) only in case of data with <0.8 mm
+              average voxel size.
+(3) Changed:  Added mark2rps equation to QA XML.
+(4) Changed:  Removed sanlm variable and added options to NCstr variable.
+(5) Changed:  Corrected small errors. 
+(6) Changed:  Used automatic LASstr modification parameter.
+(7) Changed:  Refined tissue handling in APP_SPM function.
+
+------------------------------------------------------------------------
+r1144 | dahnke | 2017-06-19 17:03:59

@@ -188,7 +188,7 @@ function job = update_job(job)
   end
   
   % check range of str variables
-  FN = {'NCstr','WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
+  FN = {'WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
   for fni=1:numel(FN)
     if ~isfield(job.extopts,FN{fni})  
       job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));

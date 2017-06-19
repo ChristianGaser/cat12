@@ -189,16 +189,16 @@ function cat_io_report(job,qa,subj,createerr)
 
 
     % 1 line: Noise 
-    if job.extopts.sanlm==0 || job.extopts.NCstr==0
+    if job.extopts.NCstr==0
       str = [str struct('name', 'Noise reduction:','value',sprintf('MRF(%0.2f)',job.extopts.mrf))];
-    elseif job.extopts.sanlm==1
-      str = [str struct('name', 'Noise reduction:','value',...
-             sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('SANLM(%0.2f) +',job.extopts.NCstr),....
-             sprintf('f%d',13*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
-    elseif job.extopts.sanlm==2
+    elseif job.extopts.NCstr==2 || job.extopts.NCstr==3
       str = [str struct('name', 'Noise reduction:','value',...
              sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('ISARNLM(%0.2f) +',job.extopts.NCstr),...
-             sprintf('f%d',15*(job.extopts.sanlm>0))),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
+             sprintf('f%d',15)),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
+    else
+      str = [str struct('name', 'Noise reduction:','value',...
+             sprintf('%s%sMRF(%0.2f)',spm_str_manip(sprintf('SANLM(%0.2f) +',job.extopts.NCstr),....
+             sprintf('f%d',13)),char(' '.*(job.extopts.sanlm>0)),job.extopts.mrf))];
     end
 
     % 1-2 line(s): further parameter
