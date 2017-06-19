@@ -41,23 +41,21 @@ pbtres.help    = {
 
 
 %---------------------------------------------------------------------
-
 if expert == 1
   regstr         = cfg_menu;
-  regstr.tag    = 'regstr';
-  regstr.name   = 'Optimized Shooting Registration';
   regstr.labels = {
+    'Default Dartel'
     'Default Shooting'
     'Optimized Shooting'
     };
-  regstr.values = {4 0.5};
+  regstr.values = {0 4 0.5};
 elseif expert > 1
   regstr         = cfg_entry;
-  regstr.tag     = 'regstr';
-  regstr.name    = 'Optimized Shooting Registration';
   regstr.strtype = 'r';
   regstr.num     = [1 inf];
 end
+regstr.tag    = 'regstr';
+regstr.name   = 'Spatial registration';
 regstr.def    = @(val)cat_get_defaults('extopts.regstr', val{:});
 regstr.help   = {
   'WARNING: This parameter is in development and may change in future and only works for Shooting templates!'
@@ -256,7 +254,7 @@ if ~expert
     ''
   };
 else
-  cleanupstr.labels  = {'none (0)','light (0.25)','medium (0.5)','strong (0.75)','heavy (1.00)'};
+  cleanupstr.labels  = {'none (0)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   cleanupstr.values  = {0 0.25 0.50 0.75 1.00};
   cleanupstr.help    = {
     'Strength of tissue cleanup after AMAP segmentation. The cleanup removes remaining meninges and corrects for partial volume effects in some regions. If parts of brain tissue were missing then decrease the strength.  If too many meninges are visible then increase the strength. '
@@ -318,11 +316,12 @@ sanlm.help   = {
 NCstr        = cfg_menu;
 NCstr.tag    = 'NCstr';
 NCstr.name   = 'Strength of Noise Corrections';
-NCstr.labels = {'none (0)','light (0.25)','medium (0.50)','strong (0.75)','full (1.00)','auto (inf)'};
-NCstr.values = {0 0.25 0.50 0.75 1.00 inf};
+NCstr.labels = {'none (0)','light (-inf)','full (1)','ISARNLM light (2)','ISARNLM full (3)'};
+NCstr.values = {0 -inf 1 2 3};
 NCstr.def    = @(val)cat_get_defaults('extopts.NCstr', val{:});
 NCstr.help   = {
-  'Strength of the SANLM noise correction. The default "auto" uses an adaptive noise correction and was successfully tested on a variety of scans. '
+  'Strength of the SANLM noise correction. The default "light" uses an adaptive version of the "full" SANLM filter. '
+  'The iterative spatial resolution adaptive non local means (ISARNLM) denoising filter can help to reduce noise in average, smoothed, resliced, or interpolated images. '
   ''
   'Please note that our test showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
   ''
@@ -372,10 +371,10 @@ wmhc        = cfg_menu;
 wmhc.tag    = 'WMHC';
 wmhc.name   = 'WM Hyperintensity Correction (WMHC)';
 wmhc.labels = { ...
-  'no correction' ...
-  'WMHC - correction of WM only for spatial normalization' ... 
-  'WMHC - correction of WM segmentations' ...
-  'WMHC - correction as separate class' ...
+  'no correction (0)' ...
+  'only for normalization (1)' ... 
+  'set WMH as WM (2)' ...
+  'set WMH as own class (3)' ...
 };
 wmhc.values = {0 1 2 3};
 wmhc.def    = @(val)cat_get_defaults('extopts.WMHC', val{:});
@@ -397,7 +396,7 @@ wmhc.help   = {
 WMHCstr         = cfg_menu;
 WMHCstr.tag     = 'WMHCstr';
 WMHCstr.name    = 'Strength of WMH Correction';
-WMHCstr.labels  = {'none (0)','light (eps)','medium (0.5)','strong (1.00)'};
+WMHCstr.labels  = {'none (0)','light (eps)','medium (0.50)','strong (1.00)'};
 WMHCstr.values  = {0 eps 0.50 1.00};
 WMHCstr.def     = @(val)cat_get_defaults('extopts.WMHCstr', val{:});
 WMHCstr.help    = {
@@ -569,11 +568,11 @@ extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 segmentation';
 if ~spm
   if expert>=2 % experimental expert options
-    extopts.val   = {lazy,experimental,app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,regstr,WMHCstr,wmhc,mrf,...
+    extopts.val   = {lazy,experimental,app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,regstr,...
                      darteltpm,cat12atlas,brainmask,T1,...
                      restype,vox,pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors,verb}; 
   elseif expert==1 % working expert options
-    extopts.val   = {app,sanlm,NCstr,LASstr,gcutstr,cleanupstr,regstr,WMHCstr,wmhc,darteltpm,restype,vox,...
+    extopts.val   = {app,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,regstr,darteltpm,restype,vox,...
                      pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors}; 
   else
     extopts.val   = {app,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
