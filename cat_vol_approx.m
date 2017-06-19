@@ -48,7 +48,13 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   maxT = max(T(T(:)<inf & ~isnan(T(:))));
   T = single(T/max(eps,maxT));
   
-  T(isnan(T))=0;
+  if 0 % T(isnan(T))=0;
+    % outlier removal ... not yet
+    meanT = mean(T(T(:)>0));
+    stdT  = std(T(T(:)>0));
+    T(T>meanT + 2*stdT | T<meanT - 2*stdT)=0; 
+  end
+
   [Tr,resTr]    = cat_vol_resize(T,'reduceV',vx_vol,res,16,'meanm');
   %strcmp(method,'linear') || 0 %
   if (opt.hull || strcmp(method,'linear')) && ~strcmp(method,'spm')
@@ -57,12 +63,20 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     BMr  = cat_vol_resize(BMrr,'dereduceV',resTrr); 
   
     % inside hull approximation ...
-    [MDr,MIr]  = cat_vbdist(single(Tr>0),Tr==0,double(resTr.vx_volr)); 
+    [MDr,MIr]  = cat_vbdist(single(Tr>0),Tr==0 | isnan(Tr),double(resTr.vx_volr)); 
     TAr=Tr(MIr); TAr(Tr>0) = Tr(Tr>0); 
-    TASr=cat_vol_smooth3X(TAr,2); TAr(~BMr)=TASr(~BMr); clear TASr; 
-    TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO); TAr = cat_vol_median3(TAr); %,Tr>0,Tr>0,0.05); 
-        %TAr = cat_vol_laplace3R(TAr,Tr>0,opt.lfI); 
-    TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO); 
+    if opt.lfO >= 0.4
+      meanTAr = cat_stat_nanmean(TAr(Tr(:)>0));
+      TAr     = TAr / meanTAr; 
+      Ygr     = cat_vol_grad(TAr); 
+      opt.lfO = min( 0.49 , max( 0.0001 , min(  mean(resTr.vx_volr)/10 , median(Ygr(Tr(:)>0)) /opt.lfO ))); 
+      TAr     = cat_vol_laplace3R(TAr,true(size(TAr)),double(opt.lfO)) * meanTAr; 
+    else
+      TASr=cat_vol_smooth3X(TAr,2); TAr(~BMr)=TASr(~BMr); clear TASr; 
+      TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO); TAr = cat_vol_median3(TAr); %,Tr>0,Tr>0,0.05); 
+      %TAr = cat_vol_laplace3R(TAr,Tr>0,opt.lfI); 
+      TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO);
+    end
   else
     TAr = Tr; 
     BMr = Tr>0; 

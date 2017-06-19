@@ -316,10 +316,11 @@ function varargout = cat_tst_qa(action,varargin)
 
       qamat   = nan(numel(Po),numel(QMAfn));
       qamatm  = nan(numel(Po),numel(QMAfn));
-      mqamatm = 9.9*ones(numel(Po),1);
+      mqamatm = 10.5*ones(numel(Po),1);
     
       
       QAS = struct(); QAR = struct(); 
+      QAR.mark2rps = @(mark) min(100,max(0,105 - mark*10));
       
       for fi=1:numel(Pp0)
         try
@@ -350,7 +351,7 @@ function varargout = cat_tst_qa(action,varargin)
             qamatm(fi,fni) = QAR(fi).qualityratings.(QMAfn{fni});
           end
           mqamatm(fi) = QAR(fi).qualityratings.IQR;
-          mqamatm(fi) = max(0,min(9.5, mqamatm(fi)));
+          mqamatm(fi) = max(0,min(10.5, mqamatm(fi)));
           
           
           % print the results for each scan 

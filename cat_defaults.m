@@ -109,8 +109,8 @@ cat.extopts.gcutstr      = 0.5; % Strength of skull-stripping:               0 t
 cat.extopts.cleanupstr   = 0.5; % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options
-cat.extopts.sanlm        = 1;   % use SANLM filter:                          0 - no SANLM; 1 - SANLM; 2 - ISARNLM
-cat.extopts.NCstr        = inf; % Strength of the noise correction:          0 to 1; INF - auto; default INF
+%cat.extopts.sanlm        = 1;   % use SANLM filter:                          0 - no SANLM; 1 - SANLM; 2 - ISARNLM
+cat.extopts.NCstr        =-inf; % Strength of the noise correction:          0 to 1; -INF - auto; 1 - full; 2 - ISARNLM (else SANLM), default INF
 cat.extopts.LASstr       = 0.5; % Strength of the local adaption:            0 to 1; default 3
 cat.extopts.BVCstr       = 0.5; % Strength of the Blood Vessel Correction:   0 to 1; default 3
 cat.extopts.regstr       = 0.5; % Strength of Shooting registration:         0 - Dartel, eps (fast) to 1 (accurate) optimized Shooting, 4 - default Shooting;

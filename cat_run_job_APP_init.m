@@ -99,7 +99,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   noise0  = cat_stat_nanmean( Yg( Ybg(:) ) ); 
   % smoothing parameter
   nsmooth = double(min( 1.6 , max( 0 , 2 - mean(vx_vol) ) * 0.8 ) *3*3*noise0 ); % noise reduction by resolution
-  bsmooth = 2 + min(2,max(0,2 - (bias0 * 25))) * 2*(1-opt.APPstr) .* mean(resT1.vx_volr); 
+  bsmooth = 6 + min(2,max(0,2 - (bias0 * 25))) * 2*(1-opt.APPstr) .* mean(resT1.vx_volr); 
   res     = cat_stat_nanmean(vx_vol) * max( 1 , min( opt.APPred , 0.1/max(0,bias0-0.05) )); 
   
   
@@ -186,7 +186,7 @@ function [Ym,Yt,Ybg,WMth,bias,Tth,pior] = cat_run_job_APP_init(Ysrco,vx_vol,opt)
   [Ywi2,resT2] = cat_vol_resize(Ywi2,'reduceV',resT3.vx_volr,cat_stat_nanmean(resT3.vx_volr)*2,32,'max'); 
   for i=1:1, Ywi2 = cat_vol_localstat(Ywi2,Ywi2>0,2,3); end % only one iteration!
   for i=1:4, Ywi2 = cat_vol_localstat(Ywi2,Ywi2>0,2,1); end
-  Ywi2  = cat_vol_approx(Ywi2,'nn',resT2.vx_volr,4);
+  Ywi2  = cat_vol_approx(Ywi2,'nn',resT2.vx_volr,2);
   Ywi2  = cat_vol_smooth3X(Ywi2,bsmooth); %.*mean(vx_vol)); % highres data have may stronger inhomogeneities 
   Ywi2  = cat_vol_resize(Ywi2,'dereduceV',resT2);    
   Ywi   = Ywi2 .* Ywi; % both bias fields

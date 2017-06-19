@@ -34,7 +34,7 @@ function varargout = spm_preproc_run(job,action)
 SVNid = '$Rev$';
 
 if nargin == 1, action = 'run'; end
-if ~isfield(job,'Yclsout'), if nargout==0, job.Yclsout = [0 0 0 0 0 0]; else job.Yclsout = [1 1 1 1 1 1]; end; end
+if ~isfield(job,'Yclsout'), if nargout==0, job.Yclsout = [0 0 0 0 0 0]; else job.Yclsout = [1 1 1 1 1 1]; end; end %% ADDED RD
 switch lower(action)
     case 'run'
         %spm('FnBanner',mfilename,SVNid);
@@ -97,7 +97,7 @@ for iter=1:nit
         obj.reg      = job.warp.reg;
         obj.samp     = job.warp.samp;
 
-        if iter==1
+        if iter==1 
             % Initial affine registration.
             Affine  = eye(4);
             if ~isempty(job.warp.affreg)
@@ -143,12 +143,12 @@ for iter=1:nit
             tmp1 = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];
             tmp2 =  cat(1,job.channel(:).write);
             tmp3 = job.warp.write;
-            if any(job.Yclsout)
+            if any(job.Yclsout) %% ADDED RD
               [vout.Ym,vout.Ycls] = spm_preproc_write8f(res,tmp1,tmp2,tmp3,job.warp.mrf,job.warp.cleanup,job.warp.bb,job.warp.vox,job.Yclsout);
             else
               vout.Ym = spm_preproc_write8f(res,tmp1,tmp2,tmp3,job.warp.mrf,job.warp.cleanup,job.warp.bb,job.warp.vox);
             end
-            vout.res = res; 
+            vout.res = res; %% ADDED RD
         else
             % Not the final iteration, so compute sufficient statistics for
             % re-estimating the template data.
@@ -346,7 +346,7 @@ function [Ym,Ycls] = spm_preproc_write8f(res,tc,bf,df,mrf,cleanup,bb,vx,Yclsout)
 % reduced because of the spatial smoothing typically used in VBM studies.
 % Having the optimal bias/variance tradeoff for each voxel is not the same
 % as having the optimal tradeoff for weighted averages over several voxels.
-if ~exist('Yclsout','var'), Yclsout=ones(1,6); end
+if ~exist('Yclsout','var'), Yclsout=ones(1,6); end %% ADDED RD
 if isfield(res,'mg')
     lkp = res.lkp;
     Kb  = max(lkp);

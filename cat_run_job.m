@@ -273,40 +273,38 @@ function cat_run_job(job,tpm,subj)
               %  * further interations on different resolution are usefull
               %    (the first run correct the worst problems and should 
               %     a correct registration of the next runs)
-              %  * best results for strong corrections (fwhm 30 to 40 mm)
+              %  * best results for strong corrections (fwhm 30 to 45 mm)
               %  * SPM preprocessing is very fast (and gives you results in 
               %    the template resolution?) but writing results in the 
               %    original resolution is very slow, so using 2 interations
               %    is maybe optimal
+              %  * much slower for biasfwhm<35 mm and samp<4.5 mm
               %  ----------------------------------------------------------
-              if 1
-                if job.opts.biasfwhm<37.5                                    % heavy  (5 iterations)
-                  sampx  = [2.00  1.50  1.50  1.50  1.00]; 
-                  fwhmx  = [45    45    30    30    30  ]/30; 
-                elseif job.opts.biasfwhm>=37.5 && job.opts.biasfwhm<52.5     % strong (4 iterations)
-                  sampx  = [2.00  1.50  1.50  1.00]; 
-                  fwhmx  = [45    45    30    30  ]/45; 
-                elseif job.opts.biasfwhm>=52.5 && job.opts.biasfwhm<67.5     % medium (3 iterations)
-                  sampx  = [2.00  1.50  1.00]; 
-                  fwhmx  = [45    45    30  ]/60; 
-                elseif job.opts.biasfwhm>=67.5 && job.opts.biasfwhm<82.5     % light  (2 iterations)
-                  sampx  = [2.00  1.50]; 
-                  fwhmx  = [75    60  ]/75;
-                elseif job.opts.biasfwhm>=82.5                               % ultralight (1 iteration)
-                  sampx  = 2.00; 
-                  fwhmx  = 1.00;
-                end
-              else % debug only
+              if job.opts.biasfwhm<37.5                                    % heavy  (5 iterations)
+                sampx  = [2.00  1.75  1.50  1.25  1.00]; 
+                fwhmx  = [45    45    35    35    30  ]/30; 
+              elseif job.opts.biasfwhm>=37.5 && job.opts.biasfwhm<52.5     % strong (4 iterations)
+                sampx  = [2.00  1.75  1.50  1.25]; 
+                fwhmx  = [45    45    35    35  ]/45; 
+              elseif job.opts.biasfwhm>=52.5 && job.opts.biasfwhm<67.5     % medium (3 iterations)
                 sampx  = [2.00  1.75  1.50]; 
-                fwhmx  = [0.75  0.75  0.50]; %1.50  1.00  0.50];
+                fwhmx  = [45    45    35  ]/60; 
+              elseif job.opts.biasfwhm>=67.5 && job.opts.biasfwhm<82.5     % light  (2 iterations)
+                sampx  = [2.00  1.75]; 
+                fwhmx  = [75    45  ]/75;
+              elseif job.opts.biasfwhm>=82.5                               % ultralight (1 iteration)
+                sampx  = 2.00; 
+                fwhmx  = 1.00;
               end
-              spmp0  = 0; %job.extopts.verb>1; 
+              
+              spmp0    = 0;  % job.extopts.verb>1; % for debugging: 0 - remove all APP data, 1 - save Ym, 2 - save Ym and Yp0
+              optimize = 0;  % use low resolution (in mm) input image to increase speed >> limited speed advante :/
+                             % deformation requires a lot of time ... maybe its enough to use it only in case of ultra highres data
+              if mean(vx_vol)<0.8, optimize = 1.0; end            
+              
               preproc.Yclsout = false(1,6); 
               if debug, copyfile(ofname,nfname); end
-              
-              optimize = 1.5; 
-              
-              if optimize 
+              if optimize>0 
                 Vi        = spm_vol(nfname); 
                 Vi        = rmfield(Vi,'private'); Vn = Vi; 
                 imat      = spm_imatrix(Vi.mat); 
@@ -315,11 +313,6 @@ function cat_run_job(job,tpm,subj)
                 Vi.mat    = spm_matrix(imat);
 
                 cat_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
-              end
-              if optimize
-                vx_vols = repmat(optimize,1,3);
-              else 
-                vx_vols = vx_vol;
               end
               
               for ix=1:numel(sampx)
@@ -335,10 +328,11 @@ function cat_run_job(job,tpm,subj)
                 end
 
                 try
+                  % SPM bias correction
                   warning off; 
-                  if ix==numel(sampx)
-                    if ix==numel(sampx), preproc.Yclsout = true(1,6); end
-                    vout = cat_spm_preproc_run(preproc,'run');
+                  if ix==numel(sampx) 
+                    if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,6); end % 
+                    vout   = cat_spm_preproc_run(preproc,'run');
                     spmmat = open(fullfile(pp,mrifolder,['n' ff '_seg8.mat'])); 
                     Affine = spmmat.Affine; 
                   else
@@ -346,67 +340,100 @@ function cat_run_job(job,tpm,subj)
                   end
                   warning on; 
 
-                  if spmp0>0 % backup the bias corrected image
-                    copyfile(fullfile(pp,mrifolder,['mn' ff ee]),fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix) ee])); 
+                  Pmn    = fullfile(pp,mrifolder,['mn' ff ee]); 
+                  Pmn_ri = fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix) ee]);
+                  Pmn_r0 = fullfile(pp,mrifolder,['mn' ff '_r0' ee]);
+                  
+                  % backup the bias corrected image
+                  if spmp0>0, copyfile(Pmn,Pmn_ri); end
+                  
+                  % backup for mixing
+                  if (ix==2 && numel(sampx)>2) || (ix==1 && numel(sampx)==2)
+                    copyfile(fullfile(pp,mrifolder,['mn' ff ee]),Pmn_r0); 
                   end
-                  if (ix==2 && numel(sampx)>2) || (ix==1 && numel(sampx)==2) % backup for mixing
-                    copyfile(fullfile(pp,mrifolder,['mn' ff ee]),fullfile(pp,mrifolder,['mn' ff '_r0' ee])); 
-                  end
-                  if spmp0>1  % write segmentation 
+                  % write segmentation 
+                  if spmp0>1 && exist('vout','var') && isfield(vout,'Ycls') 
                     VF  = spm_vol(nfname); VF.fname = fullfile(pp,mrifolder,['p0n' ff '.nii']); VF.dt(1) = 2; 
                     Yp0 = single(vout.Ycls{1})/255*2 + single(vout.Ycls{2})/255*3 + single(vout.Ycls{3})/255;
                     spm_write_vol(VF,Yp0);  
                   elseif spmp0==0 && ix==numel(sampx) % remove spm mat file
                     delete(fullfile(pp,mrifolder,['n' ff '_seg8.mat']));
                   end
+                  
+                  % combine low and high frequency filted images 
                   if numel(sampx)>1 && ix==numel(sampx)
                     %%
+                    stime2 = cat_io_cmd('  Postprocessing','g5','',job.extopts.verb-1,stime2);
                     if optimize
                       % update Ym
-                      stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
                       Vn  = spm_vol(nfname); Vn = rmfield(Vn,'private');
                       Vo  = spm_vol(ofname); Vo = rmfield(Vo,'private'); 
                       [Vmx,vout.Ym] = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
                       vout.Ym = single(vout.Ym); 
 
-                      %%
-                      Vn = spm_vol(fullfile(pp,mrifolder,['mn' ff '_r0' ee])); Vn = rmfield(Vn,'private');
+                      %% remap Ym0
+                      Vn = spm_vol(Pmn_r0); Vn = rmfield(Vn,'private');
                       Vo = spm_vol(ofname); Vo = rmfield(Vo,'private'); 
                       [Vmx,Ym0] = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
                       Ym0 = single(Ym0); 
 
                       %% update Ycls
-                      for i=1:6
-                        Vn  = spm_vol(nfname); Vn = rmfield(Vn,'private');
-                        Vo  = spm_vol(ofname); Vo = rmfield(Vo,'private'); 
-                        Vn.pinfo = repmat([1;0],1,size(vout.Ycls{i},3));
-                        Vo.pinfo = repmat([1;0],1,Vo.dim(3));
-                        Vn.dt    = [2 0];
-                        Vo.dt    = [2 0]; 
-                        Vo.dat   = zeros(Vo.dim(1:3),'uint8');
-                        if ~isempty(vout.Ycls{i})
-                          Vn.dat   = vout.Ycls{i}; 
-                          [Vmx,vout.Ycls{i}]  = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
-                          vout.Ycls{i} = cat_vol_ctype(vout.Ycls{i}); 
+                      if isfield(vout,'Ycls')
+                        for i=1:6
+                          Vn  = spm_vol(nfname); Vn = rmfield(Vn,'private');
+                          Vo  = spm_vol(ofname); Vo = rmfield(Vo,'private'); 
+                          Vn.pinfo = repmat([1;0],1,size(vout.Ycls{i},3));
+                          Vo.pinfo = repmat([1;0],1,Vo.dim(3));
+                          Vn.dt    = [2 0];
+                          Vo.dt    = [2 0]; 
+                          Vo.dat   = zeros(Vo.dim(1:3),'uint8');
+                          if ~isempty(vout.Ycls{i})
+                            Vn.dat   = vout.Ycls{i}; 
+                            [Vmx,vout.Ycls{i}]  = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
+                            vout.Ycls{i} = cat_vol_ctype(vout.Ycls{i}); 
+                          end
                         end
                       end
                     else
-                      Ym0 = spm_read_vols(spm_vol(fullfile(pp,mrifolder,['mn' ff '_r0' ee]))); 
+                      Ym0 = spm_read_vols(spm_vol(Pmn_r0)); 
                     end
-
+                    stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
+                    
+                    if ~debug && exist(Pmn_r0,'file'), delete(Pmn_r0); end
+                    if ~debug && exist(Pmn_r0,'file'), delete(Pmn_r0); end
+                    
                     %% mixing
-                    Yp0 = single(vout.Ycls{1})/255*2 + single(vout.Ycls{2})/255*3 + single(vout.Ycls{3})/255;
-                    YM2 = cat_vol_smooth3X(cat_vol_smooth3X(Yp0>0,16/mean(vx_vol))>0.95,10/mean(vx_vol)); if ~debug, clear Yp0; end
+                    %  creation of segmenation takes a lot of time because
+                    %  of the deformations. So it is much faster to load a
+                    %  rought brain mask. 
+                    if isfield(vout,'Ycls')
+                      Yp0 = single(vout.Ycls{1})/255*2 + single(vout.Ycls{2})/255*3 + single(vout.Ycls{3})/255;
+                      YM2 = cat_vol_smooth3X(cat_vol_smooth3X(Yp0>0,16/mean(vx_vol))>0.95,10/mean(vx_vol)); 
+                      if ~debug, clear Yp0; end
+                    else
+                      Pb  = char(job.extopts.brainmask);
+                      Pbt = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
+                      VF  = spm_vol(ofname); 
+                      VFa = VF; if job.extopts.APP~=5, VFa.mat = Affine * VF.mat; end
+                      [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); 
+                      Ybb = cat_vol_smooth3X(Yb>0.5,8/mean(vx_vol)); Ybb = Ybb./max(Ybb(:)); 
+                      YM2 = cat_vol_smooth3X(Ybb>0.95,8/mean(vx_vol)); YM2 = YM2./max(Ybb(:)); 
+                      if ~debug, clear Pb Pbt VFa Vmsk Yb Ybb; end
+                    end
                     Yo  = spm_read_vols(spm_vol(ofname)); 
                     Yw  = vout.Ym.*(1-YM2) + (YM2).*Ym0;
                     Yw  = Yo./Yw .* (Yo~=0 & Yw~=0); 
                     Yw  = cat_vol_approx(Yw,2); 
-                    %%
                     vout.Ym = Yo ./ Yw; 
-                    %%
+                    if ~debug, clear Yw Yo; end
                     Vm = spm_vol(ofname); Vm.fname = nfname; Vm.dt(1) = 16;  
                     spm_write_vol(Vm,vout.Ym); 
-                    copyfile(fullfile(pp,mrifolder,['n' ff ee]),fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+1 ee])); 
+                    
+                    % backup the bias corrected image
+                    if spmp0>0 
+                      copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+1 ee])); 
+                    end
+                    if exist(Pmn_r0,'file'), delete(Pmn_r0); end
                   else
                     movefile(fullfile(pp,mrifolder,['mn' ff ee]),nfname); 
                   end
@@ -416,10 +443,19 @@ function cat_run_job(job,tpm,subj)
                     delete(fullfile(pp,mrifolder,['mn' ff ee]));
                   end
                 end
+                if 0
+                  %% just debugging
+                  Yp0  = single(vout.Ycls{1})/255*2 + single(vout.Ycls{2})/255*3 + single(vout.Ycls{3})/255;
+                  Tthx = max( [ median( vout.Ym(vout.Ycls{1}(:)>128)) , median( vout.Ym(vout.Ycls{2}(:)>128)) ]);
+                  ds('d2','a',vx_vol,Ym0/Tthx,Yp0/3,vout.Ym/Tthx,vout.Ym/Tthx,120)
+                  %%
+                  Tthx = mean( vout.Ym( YM2(:)>0.2 & vout.Ym(:)>mean(vout.Ym(YM2(:)>0.2))) );
+                  ds('d2','',vx_vol,Ym0/Tthx,YM2,vout.Ym/Tthx,vout.Ym/Tthx,200)
+                end
               end
-              
-              
-              
+              if debug, cat_io_cmd('','g5','',job.extopts.verb-1,stime); end
+              Pmn = fullfile(pp,mrifolder,['mn' ff ee]); 
+              if exist(Pmn,'file'), delete(Pmn); end
               
               %% try APPs preprocessing
               %  ----------------------------------------------------------
@@ -437,18 +473,15 @@ function cat_run_job(job,tpm,subj)
                 if job.extopts.verb>1, fprintf('\n'); end
                 try
                   Ym = cat_run_job_APP_SPM(ofname,vout,vx_vol,job.extopts.verb-1,APPsv,job.opts.biasstr); 
-                  if exist('YM2','var')
-                    Ym = Ym.*(1-YM2) + (YM2).*vout.Ym; 
-                  end
-                  if ~debug, clear vout Ym0 YM2; end  
+                  %if exist('YM2','var'), Ym = Ym.*(1-YM2) + (YM2).*vout.Ym; end
                   spm_write_vol(spm_vol(nfname),Ym);  
+                  if ~debug, clear vout Ym0 YM2 Ym; end  
                   if spmp0
                     copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+2 ee])); 
                   end
                 catch
-                  fprintf('failed\n');  
-                end  
-                
+                  fprintf('failed\n');
+                end
               end
               fprintf('%4.0fs\n',etime(clock,stime));  
               
@@ -459,15 +492,16 @@ function cat_run_job(job,tpm,subj)
             
             %% noise correction
             %  ------------------------------------------------------------
-            if job.extopts.NCstr~=0 && job.extopts.sanlm>0
-              if job.extopts.sanlm==1
-                stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
-              elseif job.extopts.sanlm==2
-                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
+            if job.extopts.NCstr~=0
+              if job.extopts.NCstr==2 || job.extopts.NCstr==3
+                if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
+                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',NCstr));
                 if job.extopts.verb>1, fprintf('\n'); end
-                cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','')); 
+                cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','','NCstr',NCstr)); 
                 if job.extopts.verb>1, cat_io_cmd(' ','',''); end
+              else
+                stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
+                cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
               end
               fprintf('%4.0fs\n',etime(clock,stime));   
             end
@@ -646,8 +680,12 @@ function cat_run_job(job,tpm,subj)
             Ysrc = single(spm_read_vols(spm_vol(obj.image(1).fname)));
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
 
-            [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init2(...
-              Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr)); 
+            if 0
+              [Ym,Yt,Ybg,WMth,bias,Tth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb);
+            else
+              [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
+                Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr)); 
+            end
             bth = mean(single(Ysrc(Ybg(:)))) - std(single(Ysrc(Ybg(:))));
             if ~debug, clear Ysrc; end 
 
@@ -814,7 +852,7 @@ function cat_run_job(job,tpm,subj)
           %% APP for spm_maff8
           %  optimize intensity range
           %  we have to rewrite the image, because SPM reads it again 
-          if job.extopts.APP>2 %&& (app.aff>0 || app.bias>0 || app.msk>0)
+          if job.extopts.APP>3 %&& (app.aff>0 || app.bias>0 || app.msk>0)
               % add and write bias corrected (, skull-stripped) image
               Ymc2 = single(max(bth,min( max( WMth + max(3*diff([bth,WMth])) , ...
                 WMth / max(1/2 - 3/8*Tth.inverse,Tth.Tmax) ) ,Ymc * WMth))); % use the bias corrected image
@@ -947,6 +985,12 @@ function cat_run_job(job,tpm,subj)
         end
         
         
+        % set original non-bias corrected image in case of APP_init
+        if job.extopts.APP==3
+          obj.image = spm_vol(obj.image);
+        end
+
+        
         %% guarantee SPM image requirements of gaussian distributed data
         %  Add noise to regions with low intensity changes that are mosty 
         %  caused by skull-stripping, defacing, or simulated data and can
@@ -1024,7 +1068,7 @@ function cat_run_job(job,tpm,subj)
           end
           
           
-          if (job.extopts.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
+          if job.extopts.NCstr || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
             [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
             delete(fullfile(pp,[ff,ee]));
             error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
