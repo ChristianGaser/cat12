@@ -48,7 +48,7 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
     clear Ymr Ybr Yclsr; 
     Ymi = cat_main_gintnorm(Ym,Txth); 
   else
-    [Ymi,Yb,T3th,Tth,inv_weighting,noise] = cat_main_gintnorm(Ym,Ycls,Yb,vx_vol,res);
+    [Ymi,Yb,T3th,Txth,inv_weighting,noise] = cat_main_gintnorm(Ym,Ycls,Yb,vx_vol,res);
   end
 
   
@@ -57,7 +57,7 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   Yb2   = cat_vol_morph(cat_vol_morph(Ycls{2}>8 & Ycls{5}<192,'l'),'lc'); 
   Yg    = cat_vol_grad(Ymi,vx_vol*2); gth = mean(Yg(Yb(:)));
   Ydiv  = cat_vol_div(Ymi,vx_vol/2);
-  Ycsfd = cat_vbdist(single(Yp0<1.5 | Ycls{3}>128),true(size(Yp0)),vx_vol); % csf distance
+  Ycsfd = cat_vbdist(single((~Yb | Ymi<0.6) & (Yp0<1.5 | Ycls{3}>128)),true(size(Yp0)),vx_vol); % csf distance
 
   %% brain and head distances
   [Yp0r,Ymir,Ybr,resT1] = cat_vol_resize({Yp0,Ymi.*Yb,Yb},'reduceV',vx_vol,2,32,'meanm');
@@ -86,14 +86,16 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   Yss(smooth3(Yss)<0.6)=0; 
   if ~debug, clear Yssc; end 
   
-  % cortex close to head
-  Yct = Ycsfd>0 & Ycsfd<3 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.5 & Yg<2*gth & Ycls{2}<128;
+  %% cortex close to head
+  Yct = Ycsfd>0 & Ycsfd<3 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.5 & (Yg./Ymi)<4*gth & Ycls{2}<192 & Ycls{3}<192;
   Yct(smooth3(Yct)<0.5) = 0;
-
-  % WM
+  Ycw = Ycsfd>0 & Ycsfd<5 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.9 & Ycls{1}<128 & Ycls{3}<128 & ~Yct & Yb;
+  Ycw(smooth3(Ycw)<0.5) = 0;
+  
+  %% WM
   Ywm = Yb & (Yb2 | cat_vol_morph(Ymi>.95 & Ymi<1.2 & Yp0>2 & (Yp0<1.8 | Yp0>2.2) ,'lc')) &  ...
         Ycls{1}<240 & Ycls{3}<32 & Yg<0.5 & abs(Ydiv)<0.5 & Ycsfd>2 & ~Yss & ~Yct;
-  Ywm = Ywm | (Yb & Ymi-Ydiv+((Ycsfd-3)/10)>0.9 & Ydiv<-0.05 & Ycls{1}<240 & Ycls{3}<32 & ~Yss & ~Yct); 
+  Ywm = Ywm | Ycw | (Yb & Ymi-Ydiv+((Ycsfd-3)/10)>0.9 & Ydiv<-0.05 & Ycls{1}<240 & Ycls{3}<32 & ~Yss & ~Yct); 
   Ywm = cat_vol_morph(Ywm,'l',[3 0.1])>0; Ywm(smooth3(Ywm)<0.5)=0;
   
   % GM
@@ -149,7 +151,7 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   
   % bias field estimation 
   stime = cat_io_cmd('    Estimate bias field','g5','',verb,stime);
-  Ywi = cat_vol_approx(Ytmi,'',vx_vol,2,struct('lfO',8*fwhm));
+  Ywi = cat_vol_approx(Ytmi,'nn',vx_vol,2,struct('lfO',8*fwhm));
 
   if debug
     Ymc = Yo ./ Ywi; Ymc = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 
