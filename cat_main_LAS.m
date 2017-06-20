@@ -144,8 +144,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ywtpm  = cat_vol_resize(Ywtpm,'reduceBrain',vx_vol,round(4/mean(vx_vol)),BB.BB);
     if ~debug, clear Yy; end
     
-    LASmod = min(2,max(0,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Ycls{1}>4)) - 2/3) * 8)); 
-    fprintf(' (LASmod = %0.2f)',LASmod); 
+    LASmod = min(2,max(1,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Ycls{1}>4)) - 2/3) * 8)); % do not reduce LASstr 
   end
   
   
@@ -156,7 +155,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
    
   
   %% helping segments
-  stime = cat_io_cmd('  Prepare segments','g5','',verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd(sprintf('  Prepare segments (LASmod = %0.2f)',LASmod),'g5','',verb,stime); dispc=dispc+1;
   % Ybb = don't trust SPM to much by using Yp0 because it may miss some areas! Shood be better now with MRF.
   Ybb = cat_vol_morph((Yb & Ym>1.5/3 & Ydiv<0.05) | Yp0>1.5,'lo',vxv);
   % Ysw = save WM and blood vessels mpas
@@ -329,19 +328,19 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
      Ygw4 = Ycls{6}>240 & ~Ygw3 & ~Ygw2 & Yg<0.5 & abs(Ydiv)<0.1 & ...
         Ysrc>min(res.mn(res.lkp==6))*0.5 & Ysrc<max(res.mn(res.lkp==6))*1.5; 
      [Ygi,resTB] = cat_vol_resize(Ysrc.*Ygw4*T3th(3)/mean(Ysrc(Ygw4(:))),'reduceV',vx_vol,mres*4,16,'meanm');
-     Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2,struct('lfO',4)); %Ygi = cat_vol_smooth3X(Ygi,2*LASfs);
+     Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2); Ygi = cat_vol_smooth3X(Ygi,2*LASfs);
      Ygi = Ygw4 .* max(eps,cat_vol_resize(Ygi,'dereduceV',resTB)); 
   end
   Yi(Yi==0) = Ygi(Yi==0); 
   if debug==0; clear Ygw2; end
-  Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2,struct('lfO',4)); %Yi = cat_vol_smooth3X(Yi,2*LASfs); 
+  Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = cat_vol_smooth3X(Yi,2*LASfs); 
   Ylab{2} = max(eps,cat_vol_resize(Yi,'dereduceV',resT2)); 
  % Ylab{2} = Ylab{2} .* mean( [median(Ysrc(Ysw(:))./Ylab{2}(Ysw(:))),1] ); 
   if debug==0; clear Ysw; end
 
   %% update GM tissue map
   %Ybb = cat_vol_morph((Yb & Ysrc./Ylab{2}<(T3th(1) + 0.25*diff(T3th(1:2))) & Ydiv<0.05) | Yp0>1.5,'lo',1);
-  Ygm(Ysrc./Ylab{2}>(T3th(2) + 0.95*diff(T3th(2:3)))/T3th(3))=0; % correct GM mean(T3th([2:3,3]))/T3th(3) 
+  Ygm(Ysrc./Ylab{2}>(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3))=0; % correct GM mean(T3th([2:3,3]))/T3th(3) 
   Ygm(Ysrc./Ylab{2}<(T3th(2) + 0.75*diff(T3th(2:3)))/T3th(3) & ...
       Ysrc./Ylab{2}<(T3th(2) - 0.75*diff(T3th(2:3)))/T3th(3) & ...
       Ydiv<0.3 & Ydiv>-0.3 & Ybb & ~Ywm & ~Yvt & ~Ybv2 & Ycls{1}>48)=1;
@@ -388,15 +387,14 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Yi = cat_vol_median3(Yi,Yi>0.5,Yi>0.5); 
   Ycmx = smooth3(Ycm & Ysrc<(T3th(1)*0.8+T3th(2)*0.2))>0.9; Tcmx = mean(Ysrc(Ycmx(:))./Ylab{2}(Ycmx(:)))*T3th(3);
   Yi(Ycmx) = Ysrc(Ycmx)./Ylab{2}(Ycmx)  .* T3th(2)/Tcmx; 
-  %% Yii =  Ysrc./Ylab{2} .* Ycm * T3th(2) / cat_stat_nanmedian(Ysrc(Ycm(:))); 
+  %Yii =  Ysrc./Ylab{2} .* Ycm * T3th(2) / cat_stat_nanmedian(Ysrc(Ycm(:))); 
   [Yi,Yii,Ybgx,resT2] = cat_vol_resize({Yi,Ylab{2}/T3th(3),Ycls{6}>240},'reduceV',vx_vol,1,32,'meanm');
   for xi=1:2*LASi, Yi = cat_vol_localstat(Yi,Yi>0,3,1); end
-  %%
-  Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2,struct('lfO',2)); 
+  Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); 
   Yi = min(Yi,Yii*(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3)); 
   Yi(Ybgx) = Yii(Ybgx)*cat_stat_nanmean(Yi(~Ybgx(:))); 
   %%
-  Yi = cat_vol_smooth3X(Yi,LASfs/2); 
+  Yi = cat_vol_smooth3X(Yi,LASfs); 
   Ylab{1} = cat_vol_resize(Yi,'dereduceV',resT2).*Ylab{2};   
   %Ylab{1}(Ygm) = Ysrc(Ygm); Ylab{1} = cat_vol_smooth3X(Ylab{1},LASfs); % can lead to overfitting
   Ycm = (single(Ycls{3})/255 - Yg*4 + abs(Ydiv)*2)>0.5 &  Ysrc<(Ylab{1}*mean(T3th([1,1:2]))/T3th(2)); %Ycm & Ysrc<(Ylab{1}*mean(T3th(1:2))/T3th(2)) & Yg<0.1;
@@ -424,10 +422,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   stdYbc = mean([std(Yc(Yc(:)>0)),std(Yx(Yx(:)>0))]);
   %Yx = min(max(meanYx/2,Yx),min(meanYx*4,meanYc/2));
   %Yc = min(max(meanYc/2,Yx),meanYc/2);
-  %%
-  Yxa = cat_vol_approx(Yx ,'nh',resT2.vx_volr,16,struct('lfO',4)); %+(Yb>0).*stdYbc  + Yc.*meanYb/max(eps,meanYc)
+  Yxa = cat_vol_approx(Yx ,'nh',resT2.vx_volr,16); %+(Yb>0).*stdYbc  + Yc.*meanYb/max(eps,meanYc)
   Yca = cat_vol_approx(Yc + min(max( meanYx + stdYbc , meanYc - stdYbc ),...
-    Yx.*meanYc/max(eps,meanYx)),'nh',resT2.vx_volr,16,struct('lfO',4)); % + Yb.*meanYc/max(eps,meanYb)
+    Yx.*meanYc/max(eps,meanYx)),'nh',resT2.vx_volr,16); % + Yb.*meanYc/max(eps,meanYb)
   Yca = Yca*0.7 + 0.3*max(mean(Yca(:)),T3th(1)/T3th(3));
   %%
   Yxa = cat_vol_smooth3X(Yxa,LASfs*2); 
