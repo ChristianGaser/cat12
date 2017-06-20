@@ -10,7 +10,11 @@ function cat_run_newcatch(job,tpm,subj)
   global cat_err_res;
 
   try
-    cat_run_job(job,tpm,subj); 
+    if job.extopts.APP == 1070
+      cat_run_job1070(job,tpm,subj); 
+    else
+      cat_run_job(job,tpm,subj); 
+    end
   catch caterr 
     %% add further information for special errors
     if isempty(caterr.identifier)

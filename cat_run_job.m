@@ -420,10 +420,12 @@ function cat_run_job(job,tpm,subj)
                       YM2 = cat_vol_smooth3X(Ybb>0.95,8/mean(vx_vol)); YM2 = YM2./max(Ybb(:)); 
                       if ~debug, clear Pb Pbt VFa Vmsk Yb Ybb; end
                     end
+                    % combine the low (~60 mm, Ym0) and high frequency correction (~30 mm, vout.Ym) 
                     Yo  = spm_read_vols(spm_vol(ofname)); 
                     Yw  = vout.Ym.*(1-YM2) + (YM2).*Ym0;
                     Yw  = Yo./Yw .* (Yo~=0 & Yw~=0); 
-                    Yw  = cat_vol_approx(Yw,2); 
+                    % correct undefined voxel and assure smoothness of the bias field 
+                    Yw  = cat_vol_approx(Yw,'',vx_vol,2,struct('lfO',2));
                     vout.Ym = Yo ./ Yw; 
                     if ~debug, clear Yw Yo; end
                     Vm = spm_vol(ofname); Vm.fname = nfname; Vm.dt(1) = 16;  

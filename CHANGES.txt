@@ -14742,6 +14742,7 @@ MM      cat_stat_polynomial.m
 Changed: Added function to only scp CAT12-Manual to dbm.
 
 ------------------------------------------------------------------------
+r1144 | dahnke | 2017-06-19 17:04:18 +0200 (Mo, 19 Jun 2017) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14771,5 +14772,25 @@ M       html/images/cat_tst_seg_bwp_ana.png
 (6) Changed:  Used automatic LASstr modification parameter.
 (7) Changed:  Refined tissue handling in APP_SPM function.
 
+
 ------------------------------------------------------------------------
-r1144 | dahnke | 2017-06-19 17:03:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_run_job.m
+A       cat_run_job1070.m
+M       cat_run_job_APP_SPM.m
+A       cat_run_job_APP_init1070.m
+M       cat_run_newcatch.m
+M       cat_vol_approx.m
+
+(1) Changed:  Added "cat_run_job1070" and "cat_run_job_APP_init1070", update the
+              GUI and set it as default APP preprocessing.
+(2) Changed:  Removed last changes in "cat_main_LAS" of calling "cat_vol_approx"
+              with automatic smoothness constrain that did not work yet. 
+------------------------------------------------------------------------
+r1145 | dahnke | 2017-06-20 14:18:39

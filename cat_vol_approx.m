@@ -89,8 +89,8 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
       TAr  = TAr .* (BMr | Tr);
       [MDr,MIr]  = cat_vbdist(single(TAr>0),TAr==0,double(resTr.vx_volr)); 
       TAr=TAr(MIr); TASr=cat_vol_smooth3X(TAr,4); TAr(~BMr)=TASr(~BMr);  clear TASr; 
-      TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO); TAr = cat_vol_median3(TAr,~BMr);
-      TAr = cat_vol_laplace3R(TAr,~Tr,opt.lfO); 
+      TAr = cat_vol_laplace3R(TAr,~BMr,double(opt.lfO)); TAr = cat_vol_median3(TAr,~BMr);
+      TAr = cat_vol_laplace3R(TAr,~Tr,double(opt.lfO)); 
     case 'linear'
       TNr = TAr;
       Tr  = TAr .* BMr;

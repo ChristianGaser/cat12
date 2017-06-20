@@ -480,27 +480,33 @@ T1.help    = {
 app        = cfg_menu;
 app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
-app.labels = {'none','light','full','rough APP','fine  APP'};
-app.values = {0 1 2 3 4};
-if expert<2, app.labels(4:5) = []; app.values(4:5) = []; end % less options for default user 
-app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
-app.help   = { ...
-  'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
-  '' 
-  ' none   - no additional bias correction.' 
-  ' light  - iterative SPM bias correction on different resolutions' 
-  ' full   - iterative SPM bias correction on different resolutions and high resolution bias correction' 
-  ''
-};
-if expert==2
+  app.help   = { ...
+    'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
+    ''
+  };
+if expert==0
+  app.labels = {'none','APP'};
+  app.values = {0 1070};
+elseif expert==1
+  app.labels = {'none','light','full','APP'};
+  app.values = {0 1 2 1070};
   app.help   = [app.help;{ 
-    'Further options (still in development): ' 
+    ' none   - no additional bias correction.' 
+    ' light  -  iterative SPM bias correction on different resolutions' 
+    ' full   - iterative SPM bias correction on different resolutions and high resolution bias correction' 
+    ' APP    - rough APP bias correction (R1070)' 
+    ''
+  }];
+elseif expert==2
+  app.labels = {'none','light','full','APP','rough APP','fine APP'};
+  app.values = {0 1 2 1070 3 4};
+  app.help   = [app.help;{ 
     ' rough APP - rough APP bias correction' 
     ' fine  APP - rough and fine APP bias correction'    
     ''
   }];
-end
-
+end  
+app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
 
 %------------------------------------------------------------------------
 

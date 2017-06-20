@@ -1854,7 +1854,7 @@ if printCATreport
     % 1 line 1: Affreg
     str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
     % 1 line 2: APP
-    APPstr = {'none','light','full','APPi','APPf','animal'};
+    APPstr = {'none','light','full','APPi','APPf','animal'}; APPstr{1071} = 'APP'; 
     str(end).name  = [str(end).name(1:end-1) ' / APP '];  
     str(end).value = [str(end).value sprintf(' / %s',APPstr{job.extopts.APP+1})];
     % 1 line 3: biasstr / biasreg+biasfwhm
