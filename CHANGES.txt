@@ -14795,6 +14795,7 @@ M       cat_vol_approx.m
               with automatic smoothness constrain that did not work yet. 
 
 ------------------------------------------------------------------------
+r1146 | gaser | 2017-06-21 11:20:11 +0200 (Mi, 21 Jun 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14804,5 +14805,18 @@ M       html/cat.html
 M       tbx_cfg_cat.m
 
 Changed: Updated menus in GUI.
+
 ------------------------------------------------------------------------
-r1146 | gaser | 2017-06-21 11:19:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      cat_run_job1070.m
+MM      cat_run_job_APP_init1070.m
+M       html/cat.html
+M       html/cat_methods_validation.html
+M       html/cat_tools_SBM.html
+
+Changed: Updated html help.
+------------------------------------------------------------------------
+r1147 | gaser | 2017-06-21 11:31:49
