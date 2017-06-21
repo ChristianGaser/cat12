@@ -323,7 +323,7 @@ NCstr.help   = {
   'Strength of the SANLM noise correction. The default "light" uses an adaptive version of the "full" SANLM filter. '
   'The iterative spatial resolution adaptive non local means (ISARNLM) denoising filter can help to reduce noise in average, smoothed, resliced, or interpolated images. '
   ''
-  'Please note that our test showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
+  'Please note that our tests showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
   ''
 };
 
@@ -480,25 +480,21 @@ T1.help    = {
 app        = cfg_menu;
 app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
-  app.help   = { ...
+app.help   = { ...
     'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems. ' 
     ''
-  };
-if expert==0
-  app.labels = {'none','APP'};
-  app.values = {0 1070};
-elseif expert==1
-  app.labels = {'none','light','full','APP'};
-  app.values = {0 1 2 1070};
-  app.help   = [app.help;{ 
     ' none   - no additional bias correction.' 
-    ' light  -  iterative SPM bias correction on different resolutions' 
-    ' full   - iterative SPM bias correction on different resolutions and high resolution bias correction' 
-    ' APP    - rough APP bias correction (R1070)' 
+    ' rough  - rough APP bias correction (r1070)' 
+    ' light  - iterative SPM bias correction on different resolutions' 
+    ' full   - iterative SPM bias correction on different resolutions and final high resolution bias correction' 
     ''
-  }];
-elseif expert==2
-  app.labels = {'none','light','full','APP','rough APP','fine APP'};
+  };
+  
+app.labels = {'none','rough','light','full'};
+app.values = {0 1070 1 2};
+
+if expert==2
+  app.labels = {'none','light','full','rough','rough (new)','fine (new)'};
   app.values = {0 1 2 1070 3 4};
   app.help   = [app.help;{ 
     ' rough APP - rough APP bias correction' 
