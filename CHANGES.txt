@@ -14774,6 +14774,7 @@ M       html/images/cat_tst_seg_bwp_ana.png
 
 
 ------------------------------------------------------------------------
+r1145 | dahnke | 2017-06-20 14:18:59 +0200 (Di, 20 Jun 2017) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14792,5 +14793,16 @@ M       cat_vol_approx.m
               GUI and set it as default APP preprocessing.
 (2) Changed:  Removed last changes in "cat_main_LAS" of calling "cat_vol_approx"
               with automatic smoothness constrain that did not work yet. 
+
 ------------------------------------------------------------------------
-r1145 | dahnke | 2017-06-20 14:18:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+Changed: Updated menus in GUI.
+------------------------------------------------------------------------
+r1146 | gaser | 2017-06-21 11:19:56
