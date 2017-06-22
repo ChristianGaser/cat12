@@ -14,7 +14,11 @@ function cat_run_oldcatch(job,tpm,subj)
     
   if job.extopts.ignoreErrors
     try
-      cat_run_job(job,tpm,subj); 
+      if job.extopts.APP == 1070
+        cat_run_job1070(job,tpm,subj); 
+      else
+        cat_run_job(job,tpm,subj); 
+      end
     catch %#ok<CTCH>
     
       if job.extopts.subfolders
