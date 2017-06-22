@@ -14807,6 +14807,7 @@ M       tbx_cfg_cat.m
 Changed: Updated menus in GUI.
 
 ------------------------------------------------------------------------
+r1147 | gaser | 2017-06-21 11:31:53 +0200 (Mi, 21 Jun 2017) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14818,5 +14819,20 @@ M       html/cat_methods_validation.html
 M       html/cat_tools_SBM.html
 
 Changed: Updated html help.
+
 ------------------------------------------------------------------------
-r1147 | gaser | 2017-06-21 11:31:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_oldcatch.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Fixed: Repcaed nanmean by cat_stat_nanmean
+(2) Fixed: Correct call to cat_run_jobX for older matlab versions
+(3) Chnaged: Force running in foreground if only one processor is found
+------------------------------------------------------------------------
+r1148 | gaser | 2017-06-22 10:43:40

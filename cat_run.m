@@ -277,7 +277,11 @@ function vout = run_job(job)
       else
         % inactive because of unclear error messages
         %cat_run_oldcatch(job,tpm,subj);
-        cat_run_job(job,tpm,subj);
+        if job.extopts.APP == 1070
+          cat_run_job1070(job,tpm,subj); 
+        else
+          cat_run_job(job,tpm,subj); 
+        end
       end
     %else
     %  cat_run_job(job,tpm,subj);

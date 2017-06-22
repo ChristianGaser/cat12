@@ -189,7 +189,7 @@ function cat_run_job(job,tpm,subj)
             %  ------------------------------------------------------------
             VF    = spm_vol(nfname); 
             YF    = spm_read_vols(VF); 
-            Oth   = nanmean(YF(YF(:)~=0 & YF(:)>nanmean(YF(:)))); 
+            Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
             F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
             F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
             YFC = YF~=0; 

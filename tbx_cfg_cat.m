@@ -31,7 +31,8 @@ catch
   numcores = 0;
 end
 
-if isdeployed, numcores = 0; end
+% force running in the foreground if only one processor was found or for compiled version
+if numcores == 1 | isdeployed, numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
