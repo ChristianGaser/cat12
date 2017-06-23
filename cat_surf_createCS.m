@@ -36,6 +36,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
 % $Id$ 
 
 %#ok<*AGROW>
+  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
 
   % set defaults
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
@@ -186,7 +187,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     
-    [Ymfs,resI]     = cat_vol_resize(Ymfs,'interp',V,opt.interpV);                  % interpolate volume
+    [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;               % interpolate volume (small dilatation)
     if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;     % interpolate volume
@@ -194,8 +195,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
 
     %% pbt calculation
-    [Yth1i,Yppi] = cat_vol_pbt(max(1,Ymfs),struct('resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
-    if ~opt.experimental, clear Ymfs; end
+    [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+    if ~opt.experimental && ~debug, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
     Yth1t = cat_vol_resize(Yth1i,'deinterp',resI); clear Yth1i;         % back to original resolution
@@ -266,26 +267,20 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       fprintf('%4.0fs\n',etime(clock,stime));
       clear Ymr;
     end
-    clear Ymfs;
+    if ~debug, clear Ymfs; else Yppio=Yppi; end
     
     %% Replace isolated voxels and holes in Ypp by its median value
-    %
-    % indicate isolated holes
-    msk = Yppi<0.35;
-    ind_iso = (msk-cat_vol_morph(msk,'l',1,vx_vol)) == 1;
     
-    % fill holes
-    Yppi(ind_iso) = 1;
-    Yppi_median = cat_vol_median3(single(Yppi),Yppi>0);
-    Yppi(ind_iso) = Yppi_median(ind_iso);
+    % indicate isolated holes and replace by median of the neighbors
+    Yppi(Yppi<0.35 & ~cat_vol_morph(Yppi<1,'l'))=1;  % close major wholes in the WM 
+    Ymsk = Yppi==0 & cat_vol_morph(Yppi>0.9,'d',1); % filter small wholes close to the WM
+    Yppi = cat_vol_median3(single(Yppi),Ymsk,~Ymsk); 
     
-    % indicate isolated voxels
-    msk = Yppi>0.95;
-    ind_iso = (msk-cat_vol_morph(msk,'l',1,vx_vol)) == 1;
-    
-    % replace isolated voxels and holes by median 
-    Yppi(ind_iso) = Yppi_median(ind_iso);
-    clear Yppi_median ind_iso;
+    %% indicate isolated objects and replace by median of the neighbors
+    Yppi(Yppi>0.65 & cat_vol_morph(Yppi==0,'l'))=0;
+    Ymsk = Yppi>0.95 & cat_vol_morph(Yppi<0.1,'d',1); 
+    Yppi = cat_vol_median3(single(Yppi),Ymsk,~Ymsk);
+    if ~debug, clear Ymsk; end
     
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
@@ -389,6 +384,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       end
       fprintf('%4.0fs\n',etime(clock,stime)); 
       clear CS; 
+      
+      delete(Vpp.fname);
+      delete(Vpp1.fname);
+      
       continue
     end
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 

@@ -14821,6 +14821,7 @@ M       html/cat_tools_SBM.html
 Changed: Updated html help.
 
 ------------------------------------------------------------------------
+r1148 | gaser | 2017-06-22 10:43:56 +0200 (Do, 22 Jun 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14834,5 +14835,34 @@ M       tbx_cfg_cat.m
 (1) Fixed: Repcaed nanmean by cat_stat_nanmean
 (2) Fixed: Correct call to cat_run_jobX for older matlab versions
 (3) Chnaged: Force running in foreground if only one processor is found
+
 ------------------------------------------------------------------------
-r1148 | gaser | 2017-06-22 10:43:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job_APP_SPM.m
+M       cat_surf_createCS.m
+M       cat_vol_approx.m
+M       cat_vol_partvol.m
+M       html/images/cat_tst_seg_bwp_ana.png
+
+(1) Fixed:   Corrected error in cat_run_job_SPM head threshold estimation. 
+(2) New:     Added detection of high intensity background in cat_run_job_SPM
+             to improve correction of MP2Rage and R1 protocols.
+(3) New:     Added old cleanup option in Expert GUI. 
+(4) New:     Added enhanced skull-stripping/cleanup for SPM segmentation for R1 
+             and MP2Rage images.
+(5) Changed: Modified APP1 and APP2 SPM bias correction parameter in cat_run_job
+             and use the SPM affine registration for initial registration
+(6) Changed: Updated cat_run_job_APP_SPM to improve performance in case of 
+             R1, MT, and MP2Rage data.
+(7) Changed: Added background condition (at least CSF) before interpolation and 
+             optimised median filter for Yppi correction in cat_surf_createCS.
+(8) Fixed:   Corrected nan-error in cat_vol_approx.
+(9) Changed: Modify blood-vessel correction in cat_vol_partvol to reduce   
+             skull-stripping problems.
+------------------------------------------------------------------------
+r1149 | dahnke | 2017-06-23 12:31:22

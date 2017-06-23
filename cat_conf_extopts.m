@@ -265,6 +265,10 @@ else
     ''
   };
 end
+if expert==2
+  cleanupstr.labels = [cleanupstr.labels 'SPM (2.00)'];
+  cleanupstr.values = [cleanupstr.values 2.00]; 
+end
 
 
 %------------------------------------------------------------------------
@@ -313,6 +317,7 @@ sanlm.help   = {
     '  * ISARNLM ' 
 };
 
+% expert only
 NCstr        = cfg_menu;
 NCstr.tag    = 'NCstr';
 NCstr.name   = 'Strength of Noise Corrections';
@@ -497,6 +502,10 @@ if expert==2
   app.labels = {'none','light','full','rough','rough (new)','fine (new)'};
   app.values = {0 1 2 1070 3 4};
   app.help   = [app.help;{ 
+    ' none      - no additional bias correction.' 
+    ' light     -  iterative SPM bias correction on different resolutions' 
+    ' full      - iterative SPM bias correction on different resolutions and high resolution bias correction' 
+    ' APP       - rough APP bias correction (R1070)' 
     ' rough APP - rough APP bias correction' 
     ' fine  APP - rough and fine APP bias correction'    
     ''

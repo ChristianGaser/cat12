@@ -282,13 +282,13 @@ function cat_run_job(job,tpm,subj)
               %  ----------------------------------------------------------
               if job.opts.biasfwhm<37.5                                    % heavy  (5 iterations)
                 sampx  = [2.00  1.75  1.50  1.25  1.00]; 
-                fwhmx  = [45    45    35    35    30  ]/30; 
+                fwhmx  = [45    45    30    30    30  ]/30; 
               elseif job.opts.biasfwhm>=37.5 && job.opts.biasfwhm<52.5     % strong (4 iterations)
                 sampx  = [2.00  1.75  1.50  1.25]; 
-                fwhmx  = [45    45    35    35  ]/45; 
+                fwhmx  = [45    45    30    30  ]/45; 
               elseif job.opts.biasfwhm>=52.5 && job.opts.biasfwhm<67.5     % medium (3 iterations)
                 sampx  = [2.00  1.75  1.50]; 
-                fwhmx  = [45    45    35  ]/60; 
+                fwhmx  = [45    45    30  ]/60; 
               elseif job.opts.biasfwhm>=67.5 && job.opts.biasfwhm<82.5     % light  (2 iterations)
                 sampx  = [2.00  1.75]; 
                 fwhmx  = [75    45  ]/75;
@@ -297,9 +297,9 @@ function cat_run_job(job,tpm,subj)
                 fwhmx  = 1.00;
               end
               
-              spmp0    = 0;  % job.extopts.verb>1; % for debugging: 0 - remove all APP data, 1 - save Ym, 2 - save Ym and Yp0
-              optimize = 0;  % use low resolution (in mm) input image to increase speed >> limited speed advante :/
-                             % deformation requires a lot of time ... maybe its enough to use it only in case of ultra highres data
+              spmp0    = debug;  % job.extopts.verb>1; % for debugging: 0 - remove all APP data, 1 - save Ym, 2 - save Ym and Yp0
+              optimize = 0;      % use low resolution (in mm) input image to increase speed >> limited speed advante :/
+                                 % deformation requires a lot of time ... maybe its enough to use it only in case of ultra highres data
               if mean(vx_vol)<0.8, optimize = 1.0; end            
               
               preproc.Yclsout = false(1,6); 
@@ -334,7 +334,7 @@ function cat_run_job(job,tpm,subj)
                     if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,6); end % 
                     vout   = cat_spm_preproc_run(preproc,'run');
                     spmmat = open(fullfile(pp,mrifolder,['n' ff '_seg8.mat'])); 
-                    Affine = spmmat.Affine; 
+                    AffineSPM = spmmat.Affine; 
                   else
                     cat_spm_preproc_run(preproc,'run');
                   end
@@ -425,7 +425,7 @@ function cat_run_job(job,tpm,subj)
                     Yw  = vout.Ym.*(1-YM2) + (YM2).*Ym0;
                     Yw  = Yo./Yw .* (Yo~=0 & Yw~=0); 
                     % correct undefined voxel and assure smoothness of the bias field 
-                    Yw  = cat_vol_approx(Yw,'',vx_vol,2,struct('lfO',2));
+                    Yw  = cat_vol_approx(max(0.05,min(10,Yw)),'',vx_vol,2,struct('lfO',2));
                     vout.Ym = Yo ./ Yw; 
                     if ~debug, clear Yw Yo; end
                     Vm = spm_vol(ofname); Vm.fname = nfname; Vm.dt(1) = 16;  
@@ -452,7 +452,7 @@ function cat_run_job(job,tpm,subj)
                   ds('d2','a',vx_vol,Ym0/Tthx,Yp0/3,vout.Ym/Tthx,vout.Ym/Tthx,120)
                   %%
                   Tthx = mean( vout.Ym( YM2(:)>0.2 & vout.Ym(:)>mean(vout.Ym(YM2(:)>0.2))) );
-                  ds('d2','',vx_vol,Ym0/Tthx,YM2,vout.Ym/Tthx,vout.Ym/Tthx,200)
+                  ds('d2','',vx_vol,Ym0/Tthx,YM2,vout.Ym/Tthx,Ym/Tthx,80)
                 end
               end
               if debug, cat_io_cmd('','g5','',job.extopts.verb-1,stime); end
@@ -470,12 +470,10 @@ function cat_run_job(job,tpm,subj)
               %  especially in special protocols. 
               %  ----------------------------------------------------------
               if exist('vout','var') && job.extopts.APP==2
-                APPsv  = 1; % APPs version (1 - first simple full res, 2 - complex limited res)
                 stime2 = cat_io_cmd('  APP bias correction','g5','',job.extopts.verb-1,stime2); 
-                if job.extopts.verb>1, fprintf('\n'); end
+                
                 try
-                  Ym = cat_run_job_APP_SPM(ofname,vout,vx_vol,job.extopts.verb-1,APPsv,job.opts.biasstr); 
-                  %if exist('YM2','var'), Ym = Ym.*(1-YM2) + (YM2).*vout.Ym; end
+                  Ym = cat_run_job_APP_SPM(ofname,vout,vx_vol,job.extopts.verb-1,job.opts.biasstr); 
                   spm_write_vol(spm_vol(nfname),Ym);  
                   if ~debug, clear vout Ym0 YM2 Ym; end  
                   if spmp0
@@ -597,7 +595,7 @@ function cat_run_job(job,tpm,subj)
           %  Skull-stripping is helpful for correcting affine registration of neonates and other species. 
           %  Bias correction is important for the affine registration.
           %  However, the first registation can fail and further control is required   
-          Affine  = eye(4);
+          if exist('AffineSPM','var'), Affine = AffineSPM; else Affine  = eye(4); end
           [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
           Pbt     = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
           Pb      = char(job.extopts.brainmask);
@@ -649,7 +647,7 @@ function cat_run_job(job,tpm,subj)
             if job.extopts.verb>1
               cat_io_cprintf('warn',sprintf(...
                ['           %0.2f%%%% zeros, %d object(s), %d background region(s) \n' ...
-                '           %4.0f cm%s, normalized SD of all Tissues %0.2f \n'],...
+                '           %4.0f cm%s, normalized SD of all tissues %0.2f \n'],...
                 ppe.affreg.skullstrippedpara(1:4),char(179),ppe.affreg.skullstrippedpara(5))); 
             end
 
