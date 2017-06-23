@@ -296,7 +296,15 @@ end
 
 
 if ~isfield(res,'spmpp')
-
+  % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
+  YbA = single(spm_sample_vol(tpm.V(1),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1)) + ...
+        single(spm_sample_vol(tpm.V(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1)) + ...
+        single(spm_sample_vol(tpm.V(3),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),1));
+  YbA = reshape(YbA,VT.dim(1:3));   
+  YbA = cat_vol_smooth3X(cat_vol_smooth3X(YbA,2)>0.1,2); % dilate + smooth 
+  for i=1:3, Q(:,:,:,i) = Q(:,:,:,i) .* YbA; end
+  
+  % sum up classes 
   sQ = (sum(Q,4)+eps)/255; P = zeros([d(1:3),Kb],'uint8');
   for k1=1:size(Q,4)
     P(:,:,:,k1) = cat_vol_ctype(round(Q(:,:,:,k1)./sQ));
@@ -926,12 +934,10 @@ if ~isfield(res,'spmpp')
     stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
 
     Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
-      ( ...smooth3(Ycls{3}<10 & Ycls{2}<10) & ... correct for possible changes by bias corrections
-      (Yl1==7 | Yl1==8) ) .* ...
-      (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
+      NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
 
     % correct src images
-    Ymi   = max(0,Ymi - Ybv); 
+    Ymi   = max(0,Ymi - Ybv*2/3); 
     Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
     Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
 
@@ -1086,12 +1092,13 @@ if ~isfield(res,'spmpp')
     fprintf('    AMAP peaks: [CSF,GM,WM] = [%0.2f%s%0.2f,%0.2f%s%0.2f,%0.2f%s%0.2f]\n',...
       th{1}(1),char(177),th{1}(2),th{2}(1),char(177),th{2}(2),th{3}(1),char(177),th{3}(2));
   end
-  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.9 || th{3}(1)>1.1 
-    error('cat_main:amap','Error in AMAP tissue classification (or earlier)');
+  if th{1}(1)<0 || th{1}(1)>0.6 || th{2}(1)<0.5 || th{2}(1)>0.9 || th{3}(1)<0.95-th{3}(2) || th{3}(1)>1.1
+    error('cat_main:amap',['AMAP estimated untypical tissue peaks that point to an \n' ...
+                           'error in the preprocessing bevor the AMAP segmentation. ']);
   end
   % reorder probability maps according to spm order
   clear Yp0b Ymib; 
-  prob = prob(:,:,:,[2 3 1]); %#ok<NODEF>
+  prob = prob(:,:,:,[2 3 1]); 
   clear vol %Ymib
   %fprintf(sprintf('%s',repmat('\b',1,94+4)));
   

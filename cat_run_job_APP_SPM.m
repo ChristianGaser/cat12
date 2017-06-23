@@ -1,10 +1,6 @@
-function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
+function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
 %  _____________________________________________________________________
 %  The final bias correction is a subfunction of cat_run_job.
-% 
-%  The affine registration, especially spm_preproc8 requires a very good 
-%  masking! Because this is also required for the Unified Segmenation
-%  a wider mask with a complete brain is important.
 %  _____________________________________________________________________
 %  Robert Dahnke
 %  $Id$
@@ -16,10 +12,12 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   resMth  = 0.5; % general resolution limitation 
   resTth  = 1.0; % tissue intensity estimation resolution limitation 
   
-  if ~exist('verb','var'),     verb = 1; end
-  if ~exist('fwhm','var'),     fwhm = 0.5; end
+  if ~exist('verb','var'), verb = 1; end
+  if ~exist('fwhm','var'), fwhm = 0.5; end
     
-  stime = cat_io_cmd('    Initialize','g5','',verb);
+  if verb>0, fprintf('\n'); end
+  stime = cat_io_cmd('    Initialize','g5','',verb); 
+  
   Vo   = spm_vol(Po);
   Yo   = single(spm_read_vols(Vo));
   Ym   = vout.Ym; 
@@ -54,10 +52,9 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   
   % gradient & divergence maps
   stime = cat_io_cmd('    Prepare measures','g5','',verb,stime);
-  Yb2   = cat_vol_morph(cat_vol_morph(Ycls{2}>8 & Ycls{5}<192,'l'),'lc'); 
   Yg    = cat_vol_grad(Ymi,vx_vol*2); gth = mean(Yg(Yb(:)));
   Ydiv  = cat_vol_div(Ymi,vx_vol/2);
-  Ycsfd = cat_vbdist(single((~Yb | Ymi<0.6) & (Yp0<1.5 | Ycls{3}>128)),true(size(Yp0)),vx_vol); % csf distance
+  Ycsfd = cat_vbdist(single( ((~Yb | Ymi<0.5) & (Yp0<1.5 | Ycls{3}>128) &  Ymi<0.6 )| ~Yb),true(size(Yp0)),vx_vol); % csf distance
 
   %% brain and head distances
   [Yp0r,Ymir,Ybr,resT1] = cat_vol_resize({Yp0,Ymi.*Yb,Yb},'reduceV',vx_vol,2,32,'meanm');
@@ -68,8 +65,8 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   Ybd   = cat_vol_resize(Ybd,'dereduceV',resT1); % brain distance
   Yhd   = cat_vol_resize(Yhd,'dereduceV',resT1); % head distance
   Ydi   = cat_vol_resize(Ydi,'dereduceV',resT1); % head distance
-  %Ybs   = cat_vol_smooth3X(Yb,16/mean(vx_vol)); Ybs = Ybs/max(Ybs(:));
-
+  if ~debug, clear Yd; end
+ 
   %% == tissues ==
   
   % subcortical structures
@@ -87,19 +84,20 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   if ~debug, clear Yssc; end 
   
   %% cortex close to head
-  Yct = Ycsfd>0 & Ycsfd<3 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.5 & (Yg./Ymi)<4*gth & Ycls{2}<192 & Ycls{3}<192;
+  Yct = Yb & Ycsfd>0 & Ycsfd<2.5 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.5 & (Yg./Ymi)<4*gth & Ycls{2}<192 & Ycls{3}<192;
   Yct(smooth3(Yct)<0.5) = 0;
-  Ycw = Ycsfd>0 & Ycsfd<5 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.9 & Ycls{1}<128 & Ycls{3}<128 & ~Yct & Yb;
+  Ycw = Yb & Ycsfd>0 & Ycsfd<4 & Yhd<0.2 & cat_vol_smooth3X(Ycls{6}>128,16)>0.01 & Ymi>0.9 & Ycls{1}<128 & Ycls{3}<128 & ~Yct & Yb;
   Ycw(smooth3(Ycw)<0.5) = 0;
   
   %% WM
-  Ywm = Yb & (Yb2 | cat_vol_morph(Ymi>.95 & Ymi<1.2 & Yp0>2 & (Yp0<1.8 | Yp0>2.2) ,'lc')) &  ...
+  Ywm = cat_vol_morph(cat_vol_morph(Ycls{2}>8 & Ycls{5}<192,'l'),'lc'); 
+  Ywm = Yb & (Ywm | cat_vol_morph(Ymi>.95 & Ymi<1.2 & Yp0>2 & (Yp0<1.8 | Yp0>2.2) ,'lc')) &  ...
         Ycls{1}<240 & Ycls{3}<32 & Yg<0.5 & abs(Ydiv)<0.5 & Ycsfd>2 & ~Yss & ~Yct;
   Ywm = Ywm | Ycw | (Yb & Ymi-Ydiv+((Ycsfd-3)/10)>0.9 & Ydiv<-0.05 & Ycls{1}<240 & Ycls{3}<32 & ~Yss & ~Yct); 
   Ywm = cat_vol_morph(Ywm,'l',[3 0.1])>0; Ywm(smooth3(Ywm)<0.5)=0;
   
-  % GM
-  Ygm  = Yb & ~Ywm & Ycls{1}>64 & Ycls{2}<128 & Ycls{3}<128 & Yg./Ymi<gth & abs(Ydiv)<gth*3;  
+  %% GM
+  Ygm  = Yb & ~Ywm & Ycls{1}>64 & Ycls{2}<128 & Ycls{3}<128 & Yg./Ymi<gth*2 & abs(Ydiv)<gth*3 & Ycsfd<5;  
   Ygm  = Ygm | Yct | ...
          (Yss & abs(Ydiv)<gth & Yg./Ymi<gth*1 & Ymi<0.95 & Ycls{1}>4 & Ycls{2}<252 ); %  | ...
          %(Ycls{1}>64 & Ycls{2}<240 & Ycls{3}<128 & Ycsfd<3 & Yhd<3 & ~Ywm & abs(Ydiv)<gth*3); 
@@ -107,21 +105,41 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   Ygm(abs(((Ygm.*Ymi)./Ygmi)-Ygm)>gth*mean(vx_vol)*3 | abs(((Ygm.*Ymi)./Ygmi)-Ygm)==0)=0;
   Ygm(smooth3(Ygm)<0.4)=0; 
   
-  % CM (this did not work 
-  if 0
-    Ycm = Yb & ~Ywm & ~Ygm & Yg<gth*2 & Ymi>0.1 & (Ymi-Ydiv)<0.5 & Ycls{3}>128; 
+  
+  %% CM (this did not work yet) 
+  %  
+  if 1
+    Ycm = Yb & ~Ywm & ~Ygm & Yg<gth*2 & Ymi>0.01 & (Ymi-Ydiv)<0.5 & Ycls{3}>128; 
     Ycm(smooth3(Ycm)<0.6)=0;
   end
   
-  % HM 
-  % there is now way to use high intensity information from the scull, but
-  % it is possbile to use the large areas of mussels 
-  Yh2 = Ybd>2 & smooth3( Yg>gth*2 | Ymi>1.2 | Ydiv<-0.1)>0.5; 
-  Yhm = Yg<gth & ~Yb & abs(Ydiv)<0.1 & Ycls{6}<128 & Ym<T3th(3)*1.2 & Ybd>3 & ...
-    Ydiv>-0.1 & Ydiv<0.1 & ~Yh2 & cat_vol_smooth3X(Ycls{6}>128,4)<0.5;
+  
+  %% HM 
+  %  there is now way to use high intensity information from the scull, but
+  %  it is possbile to use the large areas of mussels 
+  Yhm = Ybd>2 & smooth3( Yg>gth*2 | Ymi>1.2 | Ydiv<-0.1)>0.5; 
+  Yhm = Yg<gth & ~Yb & abs(Ydiv)<0.1 & Ycls{6}<128 & Ym<T3th(3)*1.2 & Ybd>20 & ...
+    Ydiv>-0.1 & Ydiv<0.1 & ~Yhm & cat_vol_smooth3X(Ycls{6}>128,4)<0.5;
   Yhmi = cat_vol_localstat(Yhm.*Ymi,Yhm,1,2);
   Yhm(abs(((Yhm.*Ymi)./Yhmi)-Yhm)>0.5 | abs(((Yhm.*Ymi)./Yhmi)-Yhm)==0)=0;
-  Yhm(smooth3(Yhm)<0.4)=0; 
+  Yhm(smooth3(Yhm)<0.6)=0; 
+  
+  
+  %% HBG
+  %  In MR protocols with high intensity background (e.g., MP2Rage and R1)
+  %  we can use the intensity information for our bias field estiamtion
+  if mean(Yo(Ycls{6}(:)>192)) > T3th(2)
+    Yhbg = Ycls{6}>96 & Yo > mean(T3th(1)) & ~isnan(Yo) & ~isinf(Yo) & Ydiv>-0.1 & Yg<gth*2;
+    Yhbg = cat_vol_morph(Yhbg,'c',2); 
+    Yhm(Yhbg)=0; Ywm(Yhbg)=0; Ygm(Yhbg)=0; 
+    if exist('Ycm','var'), Ycm(Yhbg)=0; end
+    Yhbgi = cat_vol_approx(Yhbg .* Yo,'nn',vx_vol,4,struct('lfO',4*fwhm));
+    
+    %%
+    Ya = Ycls{2}<240 & Yp0>1.5 & Yo./(Yhbgi*T3th(3)/cat_stat_nanmean(Yhbgi(Ywm(:))))>1.05 & Yhd<0.2; Ya(smooth3(Ya)<0.5)=0;
+    Ya = cat_vol_smooth3X(Ya,2)>0.1 & (Yo-Yg)/T3th(3)>1.1 ;
+    Ywm(Ya)=0; Ygm(Ya)=1;
+  end
   
   %%
   stime = cat_io_cmd('    Smooth values','g5','',verb,stime);
@@ -134,25 +152,30 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,version,fwhm)
   Ygmi = cat_vol_median3(Ygm.*Yo,Ygm,Ygm); Ygmi = cat_vol_localstat(Ygmi,Ygm,1,1); 
   Yhmi = cat_vol_median3(Yhm.*Yo,Yhm,Yhm); Yhmi = cat_vol_localstat(Yhmi,Yhm,1,1);
   if exist('Ycm','var')
-    Ycmi = cat_vol_median3(Ycm.*Yo,Ycm,Ycm); Ycmi = cat_vol_localstat(Ycmi,Ycm,1,1);
+    %Ycmi = cat_vol_median3(Ycm.*Yo,Ycm,Ycm); Ycmi = cat_vol_localstat(Ycmi,Ycm,1,1);
+    Ycmi = cat_vol_approx(Ycm.* Yo,'nn',vx_vol,4,struct('lfO',4*fwhm));
   end
+  
+  % threshold of head tissues 
+  hdth = res.mn(res.lkp==5); hdth(hdth<T3th(2) | hdth>T3th(3)) = []; 
+  if isempty(hdth), hdth=T3th(2); else hdth = cat_stat_nanmedian(hdth); end
 
-  hdth = res.mn(res.lkp==5); hdth(hdth<T3th(2) | hdth>T3th(3)) = []; % threshold for head tissues 
-  if isempty(hdth), hdth=T3th(2); end
-  Ytmi = Ywmi + ...
-         Ygmi*(T3th(3)/T3th(2)) + ...
-         Yhmi*(T3th(3)/hdth); % + ... cat_stat_nanmedian(Yhmi(Yhmi(:)>0 & Yg(:)<0.1 & Ybd(:)<10)));
+  % add tissues intensity maps
+  Ytmi = Ywmi + Ygmi*(T3th(3)/T3th(2)) + Yhmi*(T3th(3)/hdth); 
   if exist('Ycm','var')
-    Ytmi = Ytmi + Ycmi*(cat_stat_nanmean(Ym(Ywm(:)))/cat_stat_nanmean(Ym(Ycm(:) & Yg(:)<gth/2 & Ycls{3}(:)>192)));
+    Ytmi = Ytmi + Ycm.*Ycmi*(T3th(3)/cat_stat_nanmean(Ym(Ycm(:) & Yg(:)<gth/2 & Ycls{3}(:)>192)));
+  end
+  % final smoothing of brain/head tissues
+  for i=1:4, Ytmi = cat_vol_localstat(Ytmi,Ytmi>0,2,1); end
+  if exist('Yhbg','var')
+    Ytmi = Ytmi + Yhbg.*Yhbgi*(cat_stat_nanmean(Ym(Ywm(:)))/cat_stat_nanmean(Ym(Yhbg(:) & Ybd(:)<50 & Yg(:)<0.5)));
   end
   
-  % final smoothing
-  for i=1:2, Ytmi = cat_vol_localstat(Ytmi,Ytmi>0,2,1); end
-  
-  % bias field estimation 
+  %% bias field estimation 
+  %    ds('l2','',vx_vol,Ymi,Ywm,Ymi,Ymc,80)
   stime = cat_io_cmd('    Estimate bias field','g5','',verb,stime);
-  Ywi = cat_vol_approx(Ytmi,'nn',vx_vol,2,struct('lfO',8*fwhm));
-
+  Ywi = cat_vol_approx(Ytmi,'nn',vx_vol,3,struct('lfO',4*fwhm));
+  %if exist('Ya','var'); Ywi(Ya) = Yo(Ya)*(T3th(3)/T3th(2)); Ywi = cat_vol_laplace3R(Ywi,cat_vol_smooth3X(Ya,2)>0.1,0.2); end
   if debug
     Ymc = Yo ./ Ywi; Ymc = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 
   end

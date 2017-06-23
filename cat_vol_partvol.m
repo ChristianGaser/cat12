@@ -215,6 +215,8 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
   if BVCstr
     stime = cat_io_cmd('  Blood vessel detection','g5','',verb,stime); dispc=dispc+1;
     Ywm = Yp0>2.5 & Ym>2.5 & Yp0<3.1 & Ym<4;                              % init WM 
+    Ywm = Ywm | (cat_vol_morph(Ywm,'d') & Ym<3.5); 
+    %%
     Ywm = single(cat_vol_morph(Ywm,'lc',2));                              % closing WM               
     Ywm(smooth3(single(Ywm))<0.5)=0;                                      % remove small dots
     Ywm(~Ywm & (Yp0<0.5 | Ym<1.2 | Ym>4))=nan;                            % set regions growing are
@@ -232,6 +234,8 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
       cat_vol_morph(Ya1==LAB.CT,'d',2) & ~cat_vol_morph(Ya1==LAB.HC,'d',2) & ...
       cat_vol_morph((Ya1==0 | Ya1==LAB.CT | Ya1==LAB.BV | Ym>1.5) & Ya1~=LAB.VT & Yp0<2.5,'e',1) & ... avoid subcortical regions
       ~Ywm;  clear Ywm 
+    Ybb = cat_vol_morph(Yp0>0.5,'lc',1); 
+    Ybv = (Ybv & Ybb) | smooth3(Yp0<0.5 & Ybb)>0.4; clear Ybb; 
     %% smoothing
     Ybvs = smooth3(Ybv);
     Ybv(Ybvs>0.3 & Ym>2.5 & Yp0<2.5)=1; Ybv(Ybvs>0.3 & Ym>3.5 & Yp0<2.9)=1;
