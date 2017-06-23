@@ -45,6 +45,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   def.hull = 1;
   opt = cat_io_checkinopt(opt,def);
   
+  T(isnan(T) | isinf(T))=0; 
   maxT = max(T(T(:)<inf & ~isnan(T(:))));
   T = single(T/max(eps,maxT));
   
@@ -65,8 +66,8 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     % inside hull approximation ...
     [MDr,MIr]  = cat_vbdist(single(Tr>0),Tr==0 | isnan(Tr),double(resTr.vx_volr)); 
     TAr=Tr(MIr); TAr(Tr>0) = Tr(Tr>0); 
-    if opt.lfO >= 0.4
-      meanTAr = cat_stat_nanmean(TAr(Tr(:)>0));
+    if opt.lfO >= 0.5
+      meanTAr = cat_stat_nanmedian(TAr(Tr(:)>0));
       TAr     = TAr / meanTAr; 
       Ygr     = cat_vol_grad(TAr); 
       opt.lfO = min( 0.49 , max( 0.0001 , min(  mean(resTr.vx_volr)/10 , median(Ygr(Tr(:)>0)) /opt.lfO ))); 
