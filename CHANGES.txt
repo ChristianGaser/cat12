@@ -14837,6 +14837,7 @@ M       tbx_cfg_cat.m
 (3) Chnaged: Force running in foreground if only one processor is found
 
 ------------------------------------------------------------------------
+r1149 | dahnke | 2017-06-23 12:31:47 +0200 (Fr, 23 Jun 2017) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14864,5 +14865,16 @@ M       html/images/cat_tst_seg_bwp_ana.png
 (8) Fixed:   Corrected nan-error in cat_vol_approx.
 (9) Changed: Modify blood-vessel correction in cat_vol_partvol to reduce   
              skull-stripping problems.
+
 ------------------------------------------------------------------------
-r1149 | dahnke | 2017-06-23 12:31:22
+
+Changed paths:
+M       CAT12-Manual.doc
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_vol_groupwise_ls.m
+
+Changed: Updated CAT12 manual w.r.t. longitudinal processing.
+------------------------------------------------------------------------
+r1150 | gaser | 2017-07-03 00:30:56

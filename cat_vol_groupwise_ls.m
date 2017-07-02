@@ -14,7 +14,7 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, b_settings, ord)
 %_______________________________________________________________________
 % Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
 %
-% modified version (added masked rergistration) of
+% modified version (added masked registration) of
 % John Ashburner
 % spm_groupwise_ls.m 6008 2014-05-22 12:08:01Z john
 %
