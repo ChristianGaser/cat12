@@ -14867,6 +14867,7 @@ M       html/images/cat_tst_seg_bwp_ana.png
              skull-stripping problems.
 
 ------------------------------------------------------------------------
+r1150 | gaser | 2017-07-03 00:31:14 +0200 (Mo, 03 Jul 2017) | 9 lines
 
 Changed paths:
 M       CAT12-Manual.doc
@@ -14876,5 +14877,14 @@ M       cat_conf_tools.m
 M       cat_vol_groupwise_ls.m
 
 Changed: Updated CAT12 manual w.r.t. longitudinal processing.
+
 ------------------------------------------------------------------------
-r1150 | gaser | 2017-07-03 00:30:56
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+
+Changed: Updated Makefile
+
+------------------------------------------------------------------------
+r1151 | gaser | 2017-07-03 00:32:14
