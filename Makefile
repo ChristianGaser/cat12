@@ -35,7 +35,7 @@ install2:
 
 help:
 	-@echo Available commands:
-	-@echo install zip scp update cp_binaries
+	-@echo install zip scp scp_manual update cp_binaries
 
 update:
 	-@svn update
