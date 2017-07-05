@@ -455,15 +455,17 @@ function cat_run_job1070(job,tpm,subj)
 
 
             %% fine affine registration 
-            try
-                spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
-            catch
-                spm_chi2_plot('Init','Affine registration','Mean squared difference','Iteration');
+            if app.aff 
+              try
+                  spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
+              catch
+                  spm_chi2_plot('Init','Affine registration','Mean squared difference','Iteration');
+              end
+              warning off
+              [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);  
+              warning on
+              if ~any(any(isnan(Affine1(1:3,:)))) && affscale>0.5 && affscale<3, Affine = Affine1; end
             end
-            warning off
-            [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);  
-            warning on
-            if ~any(any(isnan(Affine1(1:3,:)))) && affscale>0.5 && affscale<3, Affine = Affine1; end
             clear VG1 VF1
         end
 
@@ -483,10 +485,12 @@ function cat_run_job1070(job,tpm,subj)
             else % only initial bias correction
                 th = WMth;
             end
-            bth = mean(single(Ysrc(Ybg(:)))) - std(single(Ysrc(Ybg(:))));
+            bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
+                         mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
+                         min(single(Ysrc(~Ybg(:)))) ] );
 
             % add temporary skull-stripped images
-            if app.msk>2 % use brain mask
+            if 0 %app.msk>2 % use brain mask
                 obj.msk       = VF; 
                 obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
                 obj.msk.dt    = [spm_type('uint8') spm_platform('bigend')];
@@ -511,7 +515,7 @@ function cat_run_job1070(job,tpm,subj)
 
             % hard masking
             if app.msk==2, Ymc = Ymc .* (~Ybg); end
-            if app.msk==4, Ymc = Ymc .* cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); end
+            if app.msk==4, Ymc = Ymc .* cat_vol_morph(cat_vol_morph(Yb,'d',2),'lc',1); end
 
             % set variable and write image
             obj.image.dat(:,:,:)         = Ymc;  
@@ -581,12 +585,7 @@ function cat_run_job1070(job,tpm,subj)
         %  ds('l2','a',0.5,Ysrc/WMth,Yb,Ysrc/WMth,Yb,140);
         warning off 
         try 
-          try
-            res = spm_preproc8(obj);
-          catch
-            obj = rmfield(obj,'msk'); % try without mask ... there was an datatype error ... 
-            res = spm_preproc8(obj);
-          end
+            res = spm_preproc8(obj); % try without mask ... there was an datatype error ... 
         catch
             if (job.extopts.sanlm && job.extopts.NCstr) || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human') 
                 [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});

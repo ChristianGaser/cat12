@@ -1,4 +1,5 @@
 function S=cat_vol_smooth3X(S,s,filter) 
+% S=cat_vol_smooth3X(S,s,filter) 
 % _________________________________________________________________________
 % TODO - vx_vol!!!!!!!
 %      - filter strength is also influcenced by the downsampling!!!
@@ -8,9 +9,11 @@ function S=cat_vol_smooth3X(S,s,filter)
   S(isnan(S(:)) | isinf(-S(:)) | isinf(S(:)))=0;                                          % correct bad cases
   
   SO=S;
-  if ndims(S)==2
+  if ismatrix(S)
     slice = 1;
     S = repmat(S,1,1,2*s+1);
+  elseif isrow(S) || iscolumn(S)
+    error('ERROR: cat_vol_smooth3X: Input S has to be a matrix or volume!'); 
   else
     slice = 0;
   end
@@ -19,15 +22,15 @@ function S=cat_vol_smooth3X(S,s,filter)
     S  = smooth3(S,'gaussian',3,0.5)*s + S*(1-s);
   elseif s>=0.5 && s<=1.0
     S  = smooth3(S,'gaussian',3,s);
-  elseif s>1.0 && any(size(S)>[9,9,9])
+  elseif s>1.0 && all(size(S)>[6,6,6])
     SR = reduceRes(S);           
     SR = cat_vol_smooth3X(SR,s/2); 
     S  = dereduceRes(SR,size(S)); 
-  elseif s>=1.0 && any(size(S)<=[9,9,9])
-     S  = smooth3(S,'gaussian',9,s); 
+  elseif s>=1.0 && all(size(S)<=[6,6,6])
+    S  = smooth3(S,'gaussian',6,s); 
   else
+    S  = smooth3(S,'gaussian',1,s); 
 %    error('ERROR: smooth3: s has to be greater 0'); 
-    return
   end
   switch filter
     case {'min'}, S = min(S,SO);

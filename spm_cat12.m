@@ -85,14 +85,15 @@ switch lower(deffile)
     mycat.extopts.expertgui = 2;
     restartspm = 1;
     deffile = catdef; 
-  case {'greaterapes','lesserapes','oldworldmonkeys','newworldmonkeys','mammals',...
-        'greaterape' ,'lesserape' ,'oldworldmonkey' ,'newworldmonkey', 'mammal'}
+  case {'greaterapes','lesserapes','oldworldmonkeys','newworldmonkeys','mammals','dogs',...
+        'greaterape' ,'lesserape' ,'oldworldmonkey' ,'newworldmonkey', 'mammal', 'dog'}
     switch lower(deffile)
       case {'greaterapes','greaterape'},          species = 'ape_greater';     speciesdisp = ' (greater apes)';
       %case {'lesserapes','lesserape'},            species = 'ape_lesser';      speciesdisp = ' (lesser apes)';
       case {'oldworldmonkeys','oldworldmonkey'},  species = 'monkey_oldworld'; speciesdisp = ' (oldworld monkeys)';
       %case {'newworldmonkeys','newworldmonkey'},  species = 'monkey_newworld'; speciesdisp = ' (newworld monkeys)';
       %case {'mammals','mammal'},                  species = 'mammal';          speciesdisp = ' (mammal)';
+      case {'dogs','dog'},                        species = 'dog';             speciesdisp = ' (dogs)';
       otherwise
         error('CAT:unreadySpecies','Templates of species "%s" are not ready yet.\n',deffile);
     end  
@@ -100,9 +101,9 @@ switch lower(deffile)
     mycat                      = cat_get_defaults;
     % change TPM and user higher resolution and expect stronger bias
     mycat.opts.tpm             = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_TPM.nii'])};
-    mycat.opts.biasreg         = 0.001;                                 % less regularisation 
-    mycat.opts.biasfwhm        = 50;                                    % stronger fields 
-    mycat.opts.samp            = 2;                                     % smaller resampling
+    mycat.opts.biasreg         = 0.001;                                  % less regularisation 
+    mycat.opts.biasfwhm        = 50;                                     % stronger fields 
+    mycat.opts.samp            = 2;                                      % smaller resampling
     % use species specific templates, higher resolution, stronger corrections and less affine registration (by SPM) 
     mycat.extopts.species      = species;  
     mycat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)
@@ -112,8 +113,8 @@ switch lower(deffile)
     mycat.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_T1.nii'])};         % T1 for affine registration
     mycat.extopts.sanlm        = 2;                                     % ISARNLM for stronger corrections
     mycat.extopts.restype      = 'best';        
-    mycat.extopts.resval       = [0.70 0.30];                           % higher interal resolution 
-    mycat.extopts.APP          = 3;                                     % less affine registration, but full corrections (by SPM)
+    mycat.extopts.resval       = [0.50 0.30];                           % higher interal resolution 
+    mycat.extopts.APP          = 5;                                     % less affine registration, but full corrections (by SPM)
     mycat.extopts.vox          = 1.00;                                  % voxel size for normalized data 
     mycat.extopts.bb           = [[-inf -inf -inf];[inf inf inf]];      % template default
     mycat.extopts.expertgui    = 2;                                     % set to expert later ...
@@ -121,7 +122,7 @@ switch lower(deffile)
     switch species
       case 'monkey_oldworld'
         mycat.extopts.atlas = { ... 
-          fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_oldworld_atlas_inia19NeuroMaps.nii') 'none' {'csf','gm','wm'}; 
+          fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_oldworld_atlas_inia19NeuroMaps.nii') 1 {'csf','gm','wm'} 1; 
           };
       otherwise
         mycat.extopts.atlas = {}; 
