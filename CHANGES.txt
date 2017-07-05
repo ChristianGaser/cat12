@@ -14879,6 +14879,7 @@ M       cat_vol_groupwise_ls.m
 Changed: Updated CAT12 manual w.r.t. longitudinal processing.
 
 ------------------------------------------------------------------------
+r1151 | gaser | 2017-07-03 00:32:37 +0200 (Mo, 03 Jul 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14886,5 +14887,36 @@ M       Makefile
 
 Changed: Updated Makefile
 
+
 ------------------------------------------------------------------------
-r1151 | gaser | 2017-07-03 00:32:14
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_main.m
+M       cat_main_gcut.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_spm_preproc_run.m
+M       cat_vol_morph.m
+M       cat_vol_smooth3X.m
+M       spm_cat12.m
+A       templates_animals/dog_T1.nii
+A       templates_animals/dog_Template_0.nii
+A       templates_animals/dog_Template_1.nii
+A       templates_animals/dog_Template_2.nii
+A       templates_animals/dog_Template_3.nii
+A       templates_animals/dog_Template_4.nii
+A       templates_animals/dog_Template_5.nii
+A       templates_animals/dog_Template_6.nii
+A       templates_animals/dog_brainmask.nii
+
+(1) Fixed:   Corrected problems of the lower intensity boundary in images with 
+             high intensity background (R1, MP2Rage) in rough APP pipeline 
+             (r1070).  
+(2) New:     Prepared preprocessing of dogs. 
+(3) Fixed:   Corrected error in primate processing by removing the msk field.
+(4) Changed: Small changes in cat_vol_smooth3X.
+(5) Changed: Removed warning in cat_vol_morph that confuse the users.
+------------------------------------------------------------------------
+r1152 | dahnke | 2017-07-05 14:26:56
