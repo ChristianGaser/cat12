@@ -1879,8 +1879,9 @@ if printCATreport
 
 
     % 1 line: adaptive noise parameter ( MRFstr + SANLM + NCstr )
-    defstr  = {'none','ultralight','light','medium','strong','heavy'};
-    defstrm = @(x) defstr{ round(x*4) + 1 + (x>0)};
+    defstr  = {'none','ultralight','light','medium','strong','heavy',... sanlm vs. isarnlm
+               'ultralight+','ultralight+','light+','medium+','strong+','heavy+'};
+    defstrm = @(x) defstr{ round(max(0,min(2,x))*4) + 1 + (x>0) + (x>1)};
     str = [str struct('name', 'Noise reduction:','value','')]; 
     if job.extopts.NCstr==0 
       if job.extopts.mrf==0

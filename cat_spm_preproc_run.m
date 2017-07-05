@@ -1,4 +1,4 @@
-function varargout = spm_preproc_run(job,action)
+function varargout = cat_spm_preproc_run(job,action)
 % Segment a bunch of images
 % FORMAT spm_preproc_run(job)
 % job.channel(n).vols{m}

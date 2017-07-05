@@ -131,6 +131,8 @@ switch species
   case 'ape_lesser',      speciesdisp = ' (lesser apes)';
   case 'monkey_oldworld', speciesdisp = ' (oldworld monkeys)'; 
   case 'monkey_newworld', speciesdisp = ' (newworld monkeys)'; 
+  case 'dog',             speciesdisp = ' (dogs)'; 
+  otherwise               speciesdisp = ''; 
 end
 switch expert
   case 1, text(80,90,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',16,'Fontweight','bold'); 

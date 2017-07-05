@@ -588,6 +588,7 @@ function cat_run_job(job,tpm,subj)
 
 
 
+      
         if 1 || ~exist('Affine','var')
           %% Initial affine registration.
           %  -----------------------------------------------------------------
@@ -680,13 +681,11 @@ function cat_run_job(job,tpm,subj)
             Ysrc = single(spm_read_vols(spm_vol(obj.image(1).fname)));
             Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
 
-            if 0
-              [Ym,Yt,Ybg,WMth,bias,Tth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb);
-            else
-              [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
-                Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr)); 
-            end
-            bth = mean(single(Ysrc(Ybg(:)))) - std(single(Ysrc(Ybg(:))));
+            [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
+              Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr)); 
+            bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
+                         mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
+                         min(single(Ysrc(~Ybg(:)))) ] );
             if ~debug, clear Ysrc; end 
 
             % zero background is required for images with high intensity background
@@ -717,7 +716,7 @@ function cat_run_job(job,tpm,subj)
 
           %% affine registration
           spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
-          if job.extopts.APP~=5
+          if strcmp('human',job.extopts.species) 
             warning off 
             try 
               [Affine0, affscale] = cat_spm_affreg(VG1, VF1, aflags,Affine, 1); Affine = Affine0; 
@@ -789,7 +788,7 @@ function cat_run_job(job,tpm,subj)
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
           %% apply (first affine) registration on the default brain mask
-          VFa = VF; if job.extopts.APP~=5, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
+          VFa = VF; if strcmp(job.extopts.species,'human'), VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
           if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
           [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); 
           if exist('Ybg','var'), Yb = Yb>0.5 & ~Ybg; end
@@ -821,32 +820,33 @@ function cat_run_job(job,tpm,subj)
             VF.dat(:,:,:) = cat_vol_ctype(Ymc * max(1/2,Tth.Tmax) * 255); 
 
           end
-          stime = cat_io_cmd('Affine registration','','',1,stime); 
-          spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
+          if strcmp('human',job.extopts.species) 
+            stime = cat_io_cmd('Affine registration','','',1,stime); 
+            spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
 
-          % smooth data
-          VF1 = cat_spm_smoothto8bit(VF,aflags.sep);
-          VG1 = cat_spm_smoothto8bit(VG,0.5); 
+            % smooth data
+            VF1 = cat_spm_smoothto8bit(VF,aflags.sep);
+            VG1 = cat_spm_smoothto8bit(VG,0.5); 
 
-          % fine affine registration 
-          warning off
-          try
-            [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale); 
-          catch
-            Affine1 = eye(4,4); affscale1 = 1;
+            % fine affine registration 
+            warning off
+            try
+              [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale); 
+            catch
+              Affine1 = eye(4,4); affscale1 = 1;
+            end
+            warning on
+
+            % check results and reset affine matrix 
+            if any(any(isnan(Affine1(1:3,:)))) || affscale1<0.5 || affscale1>3,
+              Affine1 = eye(4,4); affscale1 = 1;
+            end
+            Affine = Affine1; 
+
+            if ~debug, clear VG VG1 VF1; end
+
+            ppe.affreg.Affine1 = Affine; ppe.affreg.mat1 = spm_imatrix(Affine); ppe.affreg.affscale1 = affscale1;
           end
-          warning on
-
-          % check results and reset affine matrix 
-          if any(any(isnan(Affine1(1:3,:)))) || affscale1<0.5 || affscale1>3,
-            Affine1 = eye(4,4); affscale1 = 1;
-          end
-          Affine = Affine1; 
-
-          if ~debug, clear VG VG1 VF1; end
-
-          ppe.affreg.Affine1 = Affine; ppe.affreg.mat1 = spm_imatrix(Affine); ppe.affreg.affscale1 = affscale1;
-        
 
 
           %% APP for spm_maff8
@@ -996,7 +996,9 @@ function cat_run_job(job,tpm,subj)
         %  caused by skull-stripping, defacing, or simulated data and can
         %  lead to problems in SPM tissue peak estimation. 
         if 1
+          %%
           Ysrc  = single(spm_read_vols(obj.image));
+          
           Yg    = cat_vol_grad(Ysrc,vx_vol);
           Ygnth = cat_stat_nanmean( min(0.3,Yg(:)./max(eps,Ysrc(:))) );
           gno   = Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:)) ); 
@@ -1006,18 +1008,26 @@ function cat_run_job(job,tpm,subj)
           Ysrcn = max( min(Ysrc(:)) , Ysrc + ( randn(size(Ysrc))*Tthn*0.005 + (rand(size(Ysrc))-0.5)*Tthn*0.01 ) .*  ...
             cat_vol_smooth3X( Ysrc/Tthn<0.01 | Yg/Tthn<0.01 | Yg./max(eps,Ysrc)<0.01 , 4 ));
 
-          [h,i] = hist(Ysrcn(:),1000); maxth = cumsum(h);
+          [h,i] = hist(Ysrcn(Ysrc~=0 & ~isnan(Ysrc)),1000); maxth = cumsum(h);
           idl = find(maxth/max(maxth)>0.02,1,'first'); 
           idh = find(maxth/max(maxth)>0.98,1,'first'); 
           iil = i(idl) - diff([idl idh])*0.5; 
           iih = i(idh) + diff([idl idh])*0.5; 
           Ysrcn = max( iil , min( iih , Ysrcn )); 
-
+        
+          % should be used above .. however SPM don't like it ... 
+          if ~strcmp(job.extopts.species,'human') && exist('Yb','var')
+            Ysrcn = Ysrcn .* cat_vol_morph(Yb,'d',3); 
+            ppe.affreg.skullstripped = 1;
+          end
+          
+          
+          %%
           spm_write_vol(obj.image,Ysrcn); 
-          clear Ysrc Yg Ysrcn;
+          if ~debug, clear Ysrc Yg Ysrcn; end
         end
        
-        
+        %%
         if ppe.affreg.skullstripped  
           %% update number of SPM gaussian classes 
           Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
