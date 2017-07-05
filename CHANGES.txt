@@ -14889,6 +14889,7 @@ Changed: Updated Makefile
 
 
 ------------------------------------------------------------------------
+r1152 | dahnke | 2017-07-05 14:28:08 +0200 (Mi, 05 Jul 2017) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14918,5 +14919,30 @@ A       templates_animals/dog_brainmask.nii
 (3) Fixed:   Corrected error in primate processing by removing the msk field.
 (4) Changed: Small changes in cat_vol_smooth3X.
 (5) Changed: Removed warning in cat_vol_morph that confuse the users.
+
 ------------------------------------------------------------------------
-r1152 | dahnke | 2017-07-05 14:26:56
+
+Changed paths:
+M       CHANGES.txt
+M       templates_1.50mm/Template_0_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_1_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_2_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_3_IXI555_MNI152_GS.nii
+M       templates_1.50mm/Template_4_IXI555_MNI152_GS.nii
+
+Changed:  Updated the Shooting template by a 1.5 mm version of the IXI template 
+          processed with 1.0 mm and modified Shooting parameter with reduced 
+          decay of coarse to fine schedule 
+              lam = 1/3;  % default 0.5
+          and adapted schedule parameter 
+              d.sched = (d.sched - d.sched(end)) / diff([d.sched(end), ...
+                         d.sched(1)])*(inter-1)+1;
+          rather than
+              d.sched = d.sched/d.sched(end);
+          to a similar spectrum of values with smoother changes to increase the 
+          amount of low frequency deformation and have smooth changes at all
+          template stages. Keep in mind that even this template show much more
+          anatomical details than the Dartel template, it requires less strong
+          deformations to achieve this!
+------------------------------------------------------------------------
+r1153 | dahnke | 2017-07-05 17:39:40
