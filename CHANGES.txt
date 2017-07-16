@@ -14921,6 +14921,7 @@ A       templates_animals/dog_brainmask.nii
 (5) Changed: Removed warning in cat_vol_morph that confuse the users.
 
 ------------------------------------------------------------------------
+r1153 | dahnke | 2017-07-05 17:40:07 +0200 (Mi, 05 Jul 2017) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14944,5 +14945,35 @@ Changed:  Updated the Shooting template by a 1.5 mm version of the IXI template
           template stages. Keep in mind that even this template show much more
           anatomical details than the Dartel template, it requires less strong
           deformations to achieve this!
+
 ------------------------------------------------------------------------
-r1153 | dahnke | 2017-07-05 17:39:40
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       cat_amap.mexmaci64
+M       cat_ornlm.mexmaci64
+M       cat_sanlm.mexmaci64
+M       cat_vbdist.mexmaci64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_simgrow.mexmaci64
+M       compile.m
+M       html/cat.html
+M       html/cat_tools_SBM.html
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+
+Fixed: Use old version r1113 for CAT_FixTopology for windows because
+of memory issues.
+------------------------------------------------------------------------
+r1154 | gaser | 2017-07-16 23:46:46

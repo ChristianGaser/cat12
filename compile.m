@@ -74,7 +74,6 @@ function varargout = compile(comp,test,verb)
     else
       mexflag='';
     end
-
     
     % main c-functions
     nc{1} = {
