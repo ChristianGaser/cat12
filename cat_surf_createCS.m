@@ -418,7 +418,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
    
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
-    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -laplace 0.01 -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % surface refinement by surface deformation based on the PP map
