@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 1152 (CAT12) 2017-07-05
+% Version 1154 (CAT12) 2017-07-16
 % __________________________________________________________________________
 % Copyright (C) Christian Gaser christian.gaser@uni-jena.de
 %
