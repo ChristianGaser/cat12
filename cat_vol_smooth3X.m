@@ -9,10 +9,10 @@ function S=cat_vol_smooth3X(S,s,filter)
   S(isnan(S(:)) | isinf(-S(:)) | isinf(S(:)))=0;                                          % correct bad cases
   
   SO=S;
-  if ismatrix(S)
+  if size(size(S),2) == 2
     slice = 1;
     S = repmat(S,1,1,2*s+1);
-  elseif isrow(S) || iscolumn(S)
+  elseif size(size(S),2) == 1
     error('ERROR: cat_vol_smooth3X: Input S has to be a matrix or volume!'); 
   else
     slice = 0;
