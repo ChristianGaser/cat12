@@ -15014,6 +15014,7 @@ M       html/cat.html
 
 
 ------------------------------------------------------------------------
+r1157 | gaser | 2017-08-01 14:06:13 +0200 (Di, 01 Aug 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15022,5 +15023,16 @@ M       cat_main.m
 M       html/cat.html
 
 Fixed: Corrected print error for cortical thickness in cat_main.m
+
 ------------------------------------------------------------------------
-r1157 | gaser | 2017-08-01 14:05:48
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_vol_div.m
+M       html/cat.html
+
+Changed: Divergence function in cat_vol_div.m was too memory demanding for 
+some systems.
+------------------------------------------------------------------------
+r1158 | gaser | 2017-08-01 17:21:15
