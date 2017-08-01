@@ -1766,7 +1766,8 @@ if job.output.ROI
     % in poor ROIs that contribute to GM
       csv    = cat_vol_ROIestimate(wYp0,wYa,wYth1.*wYmim,ai,'T',csv,tissue,job.extopts.atlas);
       csvth1 = cat_vol_ROIestimate(wYp0,wYa,wYcls{2}.*wYmim,ai,'V',[] ,{''},job.extopts.atlas);
-      corth1 = [csv{2:end,end}]; corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan;
+      corth1 = [csv{2:end,end}]; 
+      try, corth1(corth1<mean(vx_vol)/2 | [csvth1{2:end,end}]<0.5)=nan; end
       csv(2:end,end) = num2cell(corth1);
     end
 

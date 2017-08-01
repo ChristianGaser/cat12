@@ -14999,6 +14999,7 @@ Fixed: Forgot to correct flags for CAT_FixTopology in cat_surf_createCS.m
 
 
 ------------------------------------------------------------------------
+r1156 | gaser | 2017-07-31 18:24:26 +0200 (Mo, 31 Jul 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15011,5 +15012,15 @@ M       html/cat.html
 (2) Fixed: Corrected index error in CAT_ConvexHull.c that caused crashes in
     CAT_FixTopology under windows.
 
+
 ------------------------------------------------------------------------
-r1156 | gaser | 2017-07-31 18:24:11
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_main.m
+M       html/cat.html
+
+Fixed: Corrected print error for cortical thickness in cat_main.m
+------------------------------------------------------------------------
+r1157 | gaser | 2017-08-01 14:05:48
