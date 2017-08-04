@@ -32,7 +32,7 @@ catch
 end
 
 % force running in the foreground if only one processor was found or for compiled version
-if numcores == 1 | isdeployed, numcores = 0; end
+if numcores == 1 || isdeployed, numcores = 0; end
 
 %_______________________________________________________________________
 nproc         = cfg_entry;
@@ -84,17 +84,26 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
   surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {
     'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration.'
-  ''
+    ''
     'Please note, that surface reconstruction additionally requires about 20-60 min of computation time.'
-  ''
+    ''
   };
 
-if expert<2
+if expert==0
   surface.labels = {'No','Yes'};
   surface.values = {0 1};
+elseif expert==1
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration)'};
+  surface.values = {0 1 2 5};  
+  surface.help   = [surface.help; {
+    'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties and allow very careful analysis! '
+    ''
+    'The fast reconstruction allows _visual_ analysis the processing quality, by checking the shaping and thickness results of the neocortex. It takes only about 3 Minutes for both hemisheres by using only 0.8 mm resolution and avoiding full topology correction and surface registration. '
+    ''
+  }];    
 else
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh','rh','lh + rh (fast, no registration)'};
-  surface.values = {0 1 2 3 4 5};
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh','rh','lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)'};
+  surface.values = {0 1 2 3 4 5 6};
 end
 
 
@@ -148,7 +157,7 @@ ROI.help   = {
 
 if expert
   %%
-  atlas   = cat_get_defaults('extopts.atlas'); 
+  atlas  = cat_get_defaults('extopts.atlas'); 
   matlas = {}; mai = 1; 
   for ai = 1:size(atlas,1)
     if atlas{ai,2}<=expert && exist(atlas{ai,1},'file')
@@ -187,7 +196,7 @@ if expert
     end
   end
   
-  atlases        = cfg_branch;
+  atlases          = cfg_branch;
   atlases.tag      = 'atlases';
   atlases.name     = 'Atlases';
   atlases.val      = matlas;

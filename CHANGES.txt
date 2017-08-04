@@ -15025,6 +15025,7 @@ M       html/cat.html
 Fixed: Corrected print error for cortical thickness in cat_main.m
 
 ------------------------------------------------------------------------
+r1158 | gaser | 2017-08-01 17:21:31 +0200 (Di, 01 Aug 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15034,5 +15035,53 @@ M       html/cat.html
 
 Changed: Divergence function in cat_vol_div.m was too memory demanding for 
 some systems.
+
 ------------------------------------------------------------------------
-r1158 | gaser | 2017-08-01 17:21:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_conf_opts.m
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_main.m
+M       cat_main_cleanup.m
+M       cat_main_gintnorm.m
+M       cat_main_registration.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_run_job_APP_SPM.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_render2.m
+M       cat_vol_approx.m
+M       cat_vol_div.m
+M       cat_vol_smooth3X.m
+M       html/images/cat_tst_seg_bwp_ana.png
+A       internal/cat_vol_optimizeTemplate.m
+M       tbx_cfg_cat.m
+
+(1) Fixed:   Force one Gaussian per class in case of skull-stripped data to 
+             avoid segmentation errors. 
+(2) Fixed:   Corrected xy-flip error in cat_vol_div. 
+(3) Fixed:   Added cerebellum surface cases to cat_surf_info & cat_surf_display.
+(4) Fixed:   Reduce strength of WM cleanup in cat_main_cleanup to reduce 
+             skull-stripping problems with missed brain.
+(5) Fixed:   Corrected problems in case of different normalization and output 
+             resolution in cat_main_registration and cat_io_writenii.
+(6) Changed: Modify registration option in the GUI to improve the handling of 
+             Dartel and Shooting registration. Added a Shooting template entry
+             in the CAT_default file and moved the functions that find the 
+             Template images from cat_main to cat_run.
+(7) Changed: Updated the SPM ngaus parameter in cat_defaults and added further 
+             comments.            
+(8) New:     Added internal script cat_vol_optimizeTemplate to optimise Dartel 
+             and Shooting templates.
+(9) New:     Added developer GUI option for fast reconstruction of cerebrum and  
+             cerebellum that takes only seconds.
+             
+             
+             
+------------------------------------------------------------------------
+r1159 | dahnke | 2017-08-04 16:07:54

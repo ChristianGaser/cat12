@@ -14,10 +14,10 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
 %   desc    = description that is added to the origin description (default='')
 %   spmtype = spm image type (default given by the class of Y)
 %   write   = [native warped modulated dartel]
-%               native    0/1   (none/yes)
-%               warped    0/1   (none/yes)
-%               modulated 0/1/2 (none/affine+nonlinear/nonlinear only)
-%               dartel    0/1/2 (none/rigid/affine)
+%               native    0/1     (none/yes)
+%               warped    0/1     (none/yes)
+%               modulated 0/1/2/3 (none/affine+nonlinear/nonlinear only/both)
+%               dartel    0/1/2/3 (none/rigid/affine/both)
 %   transform = transformation data to write the image to warped, 
 %               modulated, or dartel space (see cat_main)
 %   YM      = mask for the final image (i.e. save thickness and ROIs)
@@ -330,7 +330,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       % thus we use the def2det function of the inverted deformations to obtain the old and 
       % in my view a more appropriate jacobian determinant 
       % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-      Yy = spm_diffeo('invdef',transform.warped.y,transform.warped.odim,eye(4),transform.warped.M0);
+      Yy = spm_diffeo('invdef',transform.warped.yx,transform.warped.odim,eye(4),transform.warped.M0);
       w  = spm_diffeo('def2det',Yy)/det(transform.warped.M0(1:3,1:3));
       clear Yy
 

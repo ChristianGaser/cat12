@@ -280,13 +280,17 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise,cat_warnings] = cat_main_gintnorm(
           
      
     %%      
-    if ~exist('Yy','var'), Yy = res.Twarp; end
+    if ~exist('Yy','var') && isfield(res,'Twarp'), Yy = res.Twarp; end
     LAB = extopts.LAB;
-    PA  = extopts.cat12atlas;
-    VA  = spm_vol(PA{1});
-    YA  = cat_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-    YA  = reshape(YA,size(Ym));
-    YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;  
+    if ~exist('Yy','var')
+      PA  = extopts.cat12atlas;
+      VA  = spm_vol(PA{1});
+      YA  = cat_vol_ctype(spm_sample_vol(VA,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+      YA  = reshape(YA,size(Ym));
+      YA(mod(YA,2)==0 & YA>0)=YA(mod(YA,2)==0 & YA>0)-1;  
+    else
+      YA = ones(size(Yg)); 
+    end
     if ~debug, clear Yy; end
           
           

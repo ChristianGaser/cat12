@@ -13,10 +13,9 @@ function Ydiv = cat_vol_div(Ym,vx_vol)
   [gx,gy,gz]  = cat_vol_gradient3(max(1/3,Ymr)); clear Ymr
   
   % divergence function was too memory demanding for some systems
-  [px junk junk] = gradient(gx./vx_vol(1)); clear gx
-  [junk qy junk] = gradient(gy./vx_vol(2)); clear gy
-  [junk junk rz] = gradient(gz./vx_vol(3)); clear gz junk
+  [px,junk,junk] = cat_vol_gradient3(gx./vx_vol(1)); clear gx junk
+  [junk,qy,junk] = cat_vol_gradient3(gy./vx_vol(2)); clear gy junk
+  [junk,junk,rz] = cat_vol_gradient3(gz./vx_vol(3)); clear gz junk
   Ydivr = single(px) + single(qy) + single(rz); clear px qy rz
-  
   Ydiv  = cat_vol_resize(smooth3(Ydivr),'dereduceV',resT2); 
 return
