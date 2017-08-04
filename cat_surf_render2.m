@@ -458,12 +458,12 @@ switch lower(action)
             'Mori'               'mori';
             'AAL'                'aal';
             ...
-            'DKT40JT'            'aparc_DKT40JT';
-            'Destrieux2005'      'aparc_a2005s';
+            'DK40'               'aparc_DK40';
+            ...'Destrieux2005'      'aparc_a2005s';
             'Destrieux'          'aparc_a2009s';
-            'FreeSurfer'         'aparc_freesurfer';
-            'Bordmann'           'PALS_B12_Brodmann';
-            'Lobes'              'PALS_B12_Lobes';
+            ...'FreeSurfer'         'aparc_freesurfer';
+            ...'Bordmann'           'PALS_B12_Brodmann';
+            ...'Lobes'              'PALS_B12_Lobes';
           };
           if expert>1
             vatlas = {
@@ -474,12 +474,12 @@ switch lower(action)
               'AAL'                'aal';
               };
             satlas = {
-              'DKT40JT'            'aparc_DKT40JT';
+              'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
-              'Destrieux2005'      'aparc_a2005s';
-              'Bordmann'           'PALS_B12_Brodmann';
-              'FreeSurfer'         'aparc_freesurfer';
-              'Lobes'              'PALS_B12_Lobes';
+              ...'Destrieux2005'      'aparc_a2005s';
+              ...'Bordmann'           'PALS_B12_Brodmann';
+              ...'FreeSurfer'         'aparc_freesurfer';
+              ...'Lobes'              'PALS_B12_Lobes';
               };
           elseif expert==1
             vatlas = {
@@ -490,10 +490,10 @@ switch lower(action)
               'AAL'                'aal';
               };
             satlas = {
-              'DKT40JT'            'aparc_DKT40JT';
+              'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
-              'Bordmann'           'PALS_B12_Brodmann';
-              'Lobes'              'PALS_B12_Lobes';
+              ...'Bordmann'           'PALS_B12_Brodmann';
+              ...'Lobes'              'PALS_B12_Lobes';
               };
           else
             vatlas = {
@@ -502,7 +502,7 @@ switch lower(action)
               'Hammers'            'hammers';
               };
             satlas = {
-              'DKT40JT'            'aparc_DKT40JT';
+              'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
               };
           end

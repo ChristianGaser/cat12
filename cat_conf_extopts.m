@@ -13,8 +13,10 @@ if ~exist('spm','var')
 end
 
 %_______________________________________________________________________
+
 % options for output
 %-----------------------------------------------------------------------
+
 vox         = cfg_entry;
 vox.tag     = 'vox';
 vox.name    = 'Voxel size for normalized images';
@@ -25,6 +27,205 @@ vox.help    = {
   'The (isotropic) voxel sizes of any spatially normalised written images. A non-finite value will be replaced by the average voxel size of the tissue probability maps used by the segmentation.'
   ''
 };
+if expert > 1
+  vox.num  = [1 inf];
+  vox.help = [vox.help; { 
+    'Developer option: '
+    '  For multiple values the first value is used for final output, whereas the other values were saved in separate sub directories. '
+    ''
+    }];
+end
+
+%------------------------------------------------------------------------
+% SPM, Dartel, Shooting Template Maps
+% e.g. for other species
+%------------------------------------------------------------------------
+
+darteltpm         = cfg_files;
+darteltpm.tag     = 'darteltpm';
+darteltpm.name    = 'Dartel Template';
+darteltpm.def     = @(val)cat_get_defaults('extopts.darteltpm', val{:});
+darteltpm.num     = [1 1];
+darteltpm.filter  = 'image';
+darteltpm.ufilter = 'Template_1'; 
+darteltpm.help    = {
+  'Selected the first of six images of a Dartel template.  The Dartel template must be in multi-volume nifti format and should contain GM and WM segmentations. '
+  ''
+  'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ.'
+  ''
+};
+
+%---------------------------------------------------------------------
+
+shootingtpm         = cfg_files;
+shootingtpm.tag     = 'shootingtpm';
+shootingtpm.name    = 'Shooting Template';
+shootingtpm.def     = @(val)cat_get_defaults('extopts.shootingtpm', val{:});
+shootingtpm.num     = [1 1];
+shootingtpm.filter  = 'image';
+shootingtpm.ufilter = 'Template_0'; 
+shootingtpm.help    = {
+  'Selected the first of six images of a Shooting template.  The Shooting template must be in multi-volume nifti format and should contain GM, WM, and background segmentations and have to saved with at least 16 bit. '
+  ''
+  'Please note that the use of an own Shooting template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ.'
+  ''
+};
+
+%------------------------------------------------------------------------
+
+cat12atlas         = cfg_files;
+cat12atlas.tag     = 'cat12atlas';
+cat12atlas.name    = 'CAT12 ROI atlas';
+cat12atlas.filter  = 'image';
+cat12atlas.ufilter = 'cat';
+cat12atlas.def     = @(val)cat_get_defaults('extopts.cat12atlas', val{:});
+cat12atlas.num     = [1 1];
+cat12atlas.help    = {
+  'CAT12 atlas file to handle major regions.'
+};
+
+%------------------------------------------------------------------------
+
+brainmask         = cfg_files;
+brainmask.tag     = 'brainmask';
+brainmask.name    = 'Brainmask';
+brainmask.filter  = 'image';
+brainmask.ufilter = 'brainmask';
+brainmask.def     = @(val)cat_get_defaults('extopts.brainmask', val{:});
+brainmask.num     = [1 1];
+brainmask.help    = {
+  'Initial brainmask.'
+};
+
+%------------------------------------------------------------------------
+
+T1         = cfg_files;
+T1.tag     = 'T1';
+T1.name    = 'T1';
+T1.filter  = 'image';
+T1.ufilter = 'T1';
+T1.def     = @(val)cat_get_defaults('extopts.T1', val{:});
+T1.num     = [1 1];
+T1.help    = {
+  'Affine registration template.'
+};
+
+%---------------------------------------------------------------------
+
+% removed 20161121 because it did not work and their was no reason to use it in the last 5 years
+% however it is maybe interesting to create own templates
+%{
+bb         = cfg_entry;
+bb.tag     = 'bb';
+bb.name    = 'Bounding box';
+bb.strtype = 'r';
+bb.num     = [2 3];
+bb.def     = @(val)cat_get_defaults('extopts.bb', val{:});
+bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
+''
+};
+%}
+
+%---------------------------------------------------------------------
+
+if expert==0
+  regstr        = cfg_menu;
+  regstr.labels = {
+    'Dartel'
+    'Default Shooting'
+    'Optimized Shooting'
+  };
+  regstr.values = {0 4 0.5};
+  regstr.help   = [regstr.help; { ...
+    'For spatial registration CAT offers to use the classical Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registrations to a existing template. Furthermore, an optimized shooting approach is available that use adaptive threshold and lower initial resolution to improve accuracy and calculation time at once.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
+    'The registration time is typically about 3, 10, and 5 Minutes for Dartel, Shooting, and optimized Shooting for the default registration resultion. '
+    ''
+  }];
+elseif expert==1
+  regstr        = cfg_menu;
+  regstr.labels = {
+    'Dartel (0)'
+    'Default Shooting (4)'
+    'Optimized Shooting - vox (5)'
+    'Optimized Shooting - fast (eps)'
+    'Optimized Shooting - standard (0.5)'
+    'Optimized Shooting - fine (1.0)'
+    'Optimized Shooting - strong (11)'
+    'Optimized Shooting - medium (12)'
+    'Optimized Shooting - soft (13)'
+  };
+  regstr.values = {0 4 5 eps 0.5 1.0 11 12 13};
+  regstr.help = [regstr.help; { ...
+    'The strength of the optimized Shooting registration depend on the stop criteria (controled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choise to allow an addaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resoultion allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" paramter. '
+    ''
+    '  0   .. "Dartel"'
+    '  4   .. "Default Shooting"'
+    '  5   .. "Optimized Shooting - vox"        .. vox/2:vox/4:vox'
+    ''
+    '  eps .. "Optimized Shooting - fast"       .. TR/2:TR/4:TR (avg. change rate)'
+    '  0.5 .. "Optimized Shooting - standard"   .. TR/2:TR/4:TR (avg. change rate)'
+    '  1.0 .. "Optimized Shooting - fine"       .. TR/2:TR/4:TR (small change reate)'
+    ''
+    '  11  .. "Optimized Shooting - stong"      .. max( 1.0 , [3.0:0.5:1.0] )'
+    '  22  .. "Optimized Shooting - medium"     .. max( 1.5 , [3.0:0.5:1.0] )'
+    '  23  .. "Optimized Shooting - soft"       .. max( 2.0 , [3.0:0.5:1.0] )'
+   }];
+else
+  % allow different registrations settings by using a matrix
+  regstr         = cfg_entry;
+  regstr.strtype = 'r';
+  regstr.num     = [1 inf];
+  regstr.help = [regstr.help; { ...
+    '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates and about 1 hour for 1.0 mm. '
+    'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stop criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
+    ''
+    'In the development modus the deformation levels are set by the following values (TR=template resolution) ...'
+    '  0         .. "Use Dartel" '                                     
+    '  eps - 1   .. "Optimized Shooting" with lower (eps; fast) to higher quality (1; slow; default 0.5)'
+    '  2         .. "Optimized Shooting"      .. 3:(3-TR)/4:TR'
+    '  3         .. "Optimized Shooting"      .. TR/2:TR/4:TR'
+    '  4         .. "Default   Shooting"      .. only TR'
+    '  5         .. "Optimized vox Shooting " .. vox/2:vox/4:vox'
+    ''
+    '  10        .. "Stronger Shooting"       .. max( 0.5 , [2.5:0.5:0.5] )'
+    '  11        .. "Strong Shooting"         .. max( 1.0 , [3.0:0.5:1.0] )'
+    '  12        .. "Medium Shooting"         .. max( 1.5 , [3.0:0.5:1.0] )'
+    '  13        .. "Soft   Shooting"         .. max( 2.0 , [3.0:0.5:1.0] )'
+    '  14        .. "Softer Shooting"         .. max( 2.5 , [3.0:0.5:1.0] )'
+    '  15        .. "Supersoft Shooting"      .. max( 3.0 , [3.0:0.5:1.0] )'
+    ''
+    '  10        .. "Stronger Shooting TR"    .. max( max( 0.5 , TR ) , [2.5:0.5:0.5] )'
+    '  21        .. "Strong Shooting TR"      .. max( max( 1.0 , TR ) , [3.0:0.5:1.0] )'
+    '  22        .. "Medium Shooting TR"      .. max( max( 1.5 , TR ) , [3.0:0.5:1.0] )'
+    '  23        .. "Soft   Shooting TR"      .. max( max( 2.0 , TR ) , [3.0:0.5:1.0] )'
+    '  24        .. "Softer Shooting TR"      .. max( max( 2.5 , TR ) , [3.0:0.5:1.0] )'
+    '  25        .. "Softer Shooting TR"      .. max( max( 3.0 , TR ) , [3.0:0.5:1.0] )'
+    ''
+    'Double digit variants runs only for a limited resolutions and produce softer maps.  The cases with TR are further limited by the template resolution and to avoid interpolation. '
+    ''
+    'For each given value a separate deformation process is run in inverse order and saved in subdirectories.  The first given value that runs last will be used in the following CAT processing. ' 
+    ''
+    }]; 
+end
+regstr.tag    = 'regstr';
+regstr.name   = 'Spatial registration';
+regstr.def    = @(val)cat_get_defaults('extopts.regstr', val{:});
+
+%---------------------------------------------------------------------
+
+registration        = cfg_branch;
+registration.tag    = 'registration';
+registration.name   = 'Spatial Registration';
+if expert<2
+  registration.val  = {darteltpm shootingtpm regstr};
+else
+  registration.val  = {T1 brainmask cat12atlas darteltpm shootingtpm regstr}; 
+end
+registration.help   = {
+  'For spatial registration CAT offers to use the classical Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registrations to a existing template. Furthermore, an optimized shooting approach is available that use adaptive threshold and lower initial resolution to improve accuracy and calculation time at once.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
+  'The registration time is typically about 3, 10, and 5 Minutes for Dartel, Shooting, and optimized Shooting for the default registration resultion. '
+  ''
+}; 
 
 %---------------------------------------------------------------------
 
@@ -40,81 +241,19 @@ pbtres.help    = {
 };
 
 
-%---------------------------------------------------------------------
-if expert == 1
-  regstr         = cfg_menu;
-  regstr.labels = {
-    'Default Dartel'
-    'Default Shooting'
-    'Optimized Shooting'
-    };
-  regstr.values = {0 4 0.5};
-elseif expert > 1
-  regstr         = cfg_entry;
-  regstr.strtype = 'r';
-  regstr.num     = [1 inf];
-end
-regstr.tag    = 'regstr';
-regstr.name   = 'Spatial registration';
-regstr.def    = @(val)cat_get_defaults('extopts.regstr', val{:});
-regstr.help   = {
-  'WARNING: This parameter is in development and may change in future and only works for Shooting templates!'
-  ''
-  '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates and about 1 hour for 1.0 mm. '
-  'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stop criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
-  ''
-};
-if expert > 1
-  % allow different registrations settings by using a matrix
-  regstr.help = [regstr.help; { ...
-    ''
-    'In the development modus the deformation levels are set by the following values (TR=template resolution) ...'
-    '  0         .. "Use Dartel" '                                     
-    '  eps - 1   .. "Optimized Shooting" with lower (eps; fast) to higher quality (1; slow; default 0.5)'
-    '  2         .. "Optimized Shooting"   .. 3:(3-TR)/4:TR'
-    '  3         .. "Optimized Shooting"   .. TR/2:TR/4:TR'
-    '  4         .. "Default Shooting"     .. only TR'
-    ''
-    ...'  10        .. "Stronger Shooting"       .. max( 0.5 , [2.5:0.5:0.5] )'
-    '  11        .. "Strong Shooting"       .. max( 1.0 , [3.0:0.5:1.0] )'
-    '  12        .. "Medium Shooting"       .. max( 1.5 , [3.0:0.5:1.0] )'
-    '  13        .. "Soft   Shooting"       .. max( 2.0 , [3.0:0.5:1.0] )'
-    ...'  14        .. "Softer Shooting"       .. max( 2.5 , [3.0:0.5:1.0] )'
-    ...'  15        .. "Supersoft Shooting"    .. max( 3.0 , [3.0:0.5:1.0] )'
-    ''
-    ...'  10        .. "Stronger Shooting TR"    .. max( max( 0.5 , TR ) , [2.5:0.5:0.5] )'
-    '  21        .. "Strong Shooting TR"     .. max( max( 1.0 , TR ) , [3.0:0.5:1.0] )'
-    '  22        .. "Medium Shooting TR"     .. max( max( 1.5 , TR ) , [3.0:0.5:1.0] )'
-    '  23        .. "Soft   Shooting TR"     .. max( max( 2.0 , TR ) , [3.0:0.5:1.0] )'
-    ...'  24        .. "Softer Shooting TR"     .. max( max( 2.5 , TR ) , [3.0:0.5:1.0] )'
-    ...'  25        .. "Softer Shooting TR"     .. max( max( 3.0 , TR ) , [3.0:0.5:1.0] )'
-    ''
-    'Double digit variants runs only for a limited resolutions and produce softer maps. '
-    'The cases with TR are further limited by the template resolution and to avoid interpolation. '
-    'For each given value a separate deformation process is run in inverse order and saved in subdirectories. '
-    'The first given value that runs last will be used in the following CAT processing. ' 
-    ''
-    }]; 
-end
-
-%---------------------------------------------------------------------
-
-% removed 20161121 because it did not work and their was no reason to use it in the last 5 years
-%{
-bb         = cfg_entry;
-bb.tag     = 'bb';
-bb.name    = 'Bounding box';
-bb.strtype = 'r';
-bb.num     = [2 3];
-bb.def     = @(val)cat_get_defaults('extopts.bb', val{:});
-bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure).'
-''
-};
-%}
-
 %------------------------------------------------------------------------
 % special expert and developer options 
 %------------------------------------------------------------------------
+
+lazy         = cfg_menu;
+lazy.tag     = 'lazy';
+lazy.name    = 'Lazy processing';
+lazy.labels  = {'yes','No'};
+lazy.values  = {1,0};
+lazy.val     = {0};
+lazy.help    = {
+  'Do not process data if the result exist. '
+};
 
 experimental        = cfg_menu;
 experimental.tag    = 'experimental';
@@ -149,6 +288,17 @@ verb.help    = {
   'Verbose processing.'
 };
 
+%{
+report         = cfg_menu;
+report.tag     = 'report';
+report.name    = 'Create CAT report';
+report.labels  = {'No','Yes'};
+report.values  = {0 1};
+report.def     = @(val)cat_get_defaults('extopts.export', val{:});
+report.help    = {
+  'Create final CAT report that requires java.'
+};
+%}
 
 
 %---------------------------------------------------------------------
@@ -223,6 +373,7 @@ restype.help   = {
     ''
     'We commend to use ''best'' option to ensure optimal quality for preprocessing. ' 
 }; 
+
 
 %------------------------------------------------------------------------
 % AMAP MRF Filter (expert)
@@ -422,65 +573,9 @@ print.help   = {
 ''
 };
 
-%------------------------------------------------------------------------
-
-darteltpm         = cfg_files;
-darteltpm.tag     = 'darteltpm';
-darteltpm.name    = 'Spatial normalization Template';
-darteltpm.filter  = 'image';
-darteltpm.ufilter = 'Template_1'; % the string Template_1 is SPM default
-darteltpm.def     = @(val)cat_get_defaults('extopts.darteltpm', val{:});
-darteltpm.num     = [1 1];
-darteltpm.help    = {
-  'Selected Dartel/Shooting template must be in multi-volume nifti format and should contain GM and WM segmentations. The template of the first iteration (indicated by "Template_1" for Dartel and "Template_0" for Shooting) must be selected, but the templates of all iterations must be existing.'
-  ''
-  'Please note that the use of an own DARTEL template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ.'
-  ''
-};
 
 %------------------------------------------------------------------------
 
-% for other species
-cat12atlas         = cfg_files;
-cat12atlas.tag     = 'cat12atlas';
-cat12atlas.name    = 'CAT12 ROI atlas';
-cat12atlas.filter  = 'image';
-cat12atlas.ufilter = '_1';
-cat12atlas.def     = @(val)cat_get_defaults('extopts.cat12atlas', val{:});
-cat12atlas.num     = [1 1];
-cat12atlas.help    = {
-  'CAT12 atlas file to handle major regions.'
-};
-
-%------------------------------------------------------------------------
-
-% for other species
-brainmask         = cfg_files;
-brainmask.tag     = 'brainmask';
-brainmask.name    = 'Brainmask';
-brainmask.filter  = 'image';
-brainmask.ufilter = '_1';
-brainmask.def     = @(val)cat_get_defaults('extopts.brainmask', val{:});
-brainmask.num     = [1 1];
-brainmask.help    = {
-  'Initial brainmask.'
-};
-
-%------------------------------------------------------------------------
-
-% for other species
-T1         = cfg_files;
-T1.tag     = 'T1';
-T1.name    = 'T1';
-T1.filter  = 'image';
-T1.ufilter = '_1';
-T1.def     = @(val)cat_get_defaults('extopts.T1', val{:});
-T1.num     = [1 1];
-T1.help    = {
-  'Affine registration template.'
-};
-
-%------------------------------------------------------------------------
 
 app        = cfg_menu;
 app.tag    = 'APP';
@@ -513,17 +608,6 @@ if expert==2
 end  
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
 
-%------------------------------------------------------------------------
-
-lazy         = cfg_menu;
-lazy.tag     = 'lazy';
-lazy.name    = 'Lazy processing';
-lazy.labels  = {'yes','No'};
-lazy.values  = {1,0};
-lazy.val     = {0};
-lazy.help    = {
-  'Do not process data if the result exist. '
-};
 
 %------------------------------------------------------------------------
 
@@ -549,20 +633,6 @@ add_parahipp.help    = {
   ''
 };
 
-experimental        = cfg_menu;
-experimental.tag    = 'experimental';
-experimental.name   = 'Use experimental code';
-experimental.labels = {'No','Yes'};
-experimental.values = {0 1};
-experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
-experimental.help   = {
-  'Use experimental code and functions.'
-  ''
-  'WARNING: This parameter is only for developer and will call functions that are not safe and may change strongly!'
-  ''
-};
-
-
 close_parahipp         = cfg_menu;
 close_parahipp.tag     = 'close_parahipp';
 close_parahipp.name    = 'Initial morphological closing of parahippocampus';
@@ -574,28 +644,59 @@ close_parahipp.help    = {
   ''
 };
 
+%------------------------------------------------------------------------
+% special subbranches for experts and developer to cleanup the GUI 
+%------------------------------------------------------------------------
+
+segmentation      = cfg_branch;
+segmentation.tag  = 'segmentation';
+segmentation.name = 'Segmenation Options';
+if expert==1
+  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,restype};
+else
+  segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,restype};
+end
+segmentation.help = {'CAT12 parameter to control the tissue classification.';''};
+
+
+admin      = cfg_branch;
+admin.tag  = 'admin';
+admin.name = 'Administration Options';
+if expert==1
+  admin.val  = {ignoreErrors verb};
+else
+  admin.val  = {experimental lazy ignoreErrors verb};
+end
+admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
+
+%------------------------------------------------------------------------
+
+surface       = cfg_branch;
+surface.tag   = 'surface';
+surface.name  = 'Surface Options';
+surface.val   = {pbtres scale_cortex add_parahipp close_parahipp};
+surface.help  = {'CAT12 parameter to control the surface processing.';''};
+
+
+%------------------------------------------------------------------------
+% main extopts branch .. in order of their call in cat_main
+%------------------------------------------------------------------------
+
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
-extopts.name  = 'Extended options for CAT12 segmentation';
+extopts.name  = 'Extended options for CAT12 preprocessing';
 if ~spm
-  if expert>=2 % experimental expert options
-    extopts.val   = {lazy,experimental,app,NCstr,LASstr,gcutstr,cleanupstr,BVCstr,WMHCstr,wmhc,mrf,regstr,...
-                     darteltpm,cat12atlas,brainmask,T1,...
-                     restype,vox,pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors,verb}; 
-  elseif expert==1 % working expert options
-    extopts.val   = {app,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,regstr,darteltpm,restype,vox,...
-                     pbtres,scale_cortex,add_parahipp,close_parahipp,ignoreErrors}; 
+  if expert>0 % experimental expert options
+    extopts.val   = {segmentation,registration,vox,surface,admin}; 
   else
-    extopts.val   = {app,LASstr,gcutstr,cleanupstr,darteltpm,vox}; 
+    extopts.val   = {app,LASstr,gcutstr,cleanupstr,registration,vox}; 
   end
 else
   % SPM based surface processing and thickness estimation
-  if expert>=2 % experimental expert options
-    extopts.val   = {lazy,darteltpm,cat12atlas,brainmask,T1,vox,pbtres,ignoreErrors,verb}; 
-  elseif expert==1 % working expert options
-    extopts.val   = {darteltpm,vox,ignoreErrors}; 
+  if expert>0 % experimental expert options
+    extopts.val   = {registration,vox,surface,admin}; 
   else
-    extopts.val   = {darteltpm,vox}; 
+    extopts.val   = {registration,vox}; 
   end 
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};

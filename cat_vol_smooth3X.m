@@ -28,6 +28,8 @@ function S=cat_vol_smooth3X(S,s,filter)
     S  = dereduceRes(SR,size(S)); 
   elseif s>=1.0 && all(size(S)<=[6,6,6])
     S  = smooth3(S,'gaussian',6,s); 
+  elseif s==0
+    % nothing to do
   else
     S  = smooth3(S,'gaussian',1,s); 
 %    error('ERROR: smooth3: s has to be greater 0'); 

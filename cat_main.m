@@ -49,7 +49,7 @@ M1   = tpm.M;
 % Sort out bounding box etc
 [bb1,vx1] = spm_get_bbox(tpm.V(1), 'old');
 bb = job.extopts.bb;
-vx = job.extopts.vox;
+vx = job.extopts.vox(1);
 bb(~isfinite(bb)) = bb1(~isfinite(bb));
 if ~isfinite(vx), vx = abs(prod(vx1))^(1/3); end; 
 bb(1,:) = vx.*round(bb(1,:)./vx);
@@ -70,7 +70,7 @@ if N > 1
     'CAT12 does not support multiple channels. Only the first channel will be used.');
 end
 
-do_dartel = 1;      % always use dartel/shooting normalization
+do_dartel = 1 + (job.extopts.regstr(1)~=0);      % always use dartel (do_dartel=1) or shooting (do_dartel=2) normalization
 if do_dartel
   need_dartel = any(job.output.warps) || ...
     job.output.bias.warped || job.output.bias.dartel || ...
@@ -84,7 +84,8 @@ if do_dartel
     do_dartel = 0;
   end
 end
-
+if do_dartel, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
+res.do_dartel = do_dartel;
 
 
 stime = cat_io_cmd('SPM preprocessing 2 (write)');
@@ -104,55 +105,7 @@ d = VT.dim(1:3);
 [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
 x3  = 1:d(3);
 
-% Find all templates and distinguish between Dartel and Shooting 
-% written to match for Template_1 or Template_0 as first template.  
-template = strrep(job.extopts.darteltpm{1},',1','');
-[templatep,templatef,templatee] = spm_fileparts(template);
-numpos = min([strfind(templatef,'Template_1'),strfind(templatef,'Template_0')]) + 8;
-if isempty(numpos)
-  error('CAT:cat_main:TemplateNameError', ...
-  ['Could not find the string "Template_1" (Dartel) or "Template_0" (Shooting) \n'...
-   'that indicates the first file of the Dartel/Shooting template. \n' ...
-   'The given filename is "%s" \n' ...
-   ],templatef);
-end
-job.extopts.templates = cat_vol_findfiles(templatep,[templatef(1:numpos) '*' templatef(numpos+2:end) templatee],struct('depth',1)); 
-job.extopts.templates(cellfun('length',job.extopts.templates)~=numel(template)) = []; % furhter condition maybe necessary
-[template1p,template1f] = spm_fileparts(job.extopts.templates{1});
-if do_dartel 
-  if (numel(job.extopts.templates)==6 || numel(job.extopts.templates)==7)
-    % Dartel template
-    if ~isempty(strfind(template1f,'Template_0')), job.extopts.templates(1) = []; end   
-    do_dartel=1;
-  elseif numel(job.extopts.templates)==5 
-    % Shooting template
-    do_dartel=2; 
-  else
-    templates = '';
-    for ti=1:numel(job.extopts.templates)
-      templates = sprintf('%s  %s\n',templates,job.extopts.templates{ti});
-    end
-    error('CAT:cat_main:TemplateFileError', ...
-     ['Could not find the expected number of template. Dartel requires 6 Files (Template 1 to 6),\n' ...
-      'whereas Shooting needs 5 files (Template 0 to 4). %d templates found: \n%s'],...
-      numel(job.extopts.templates),templates);
-  end
-end
-% run dartel registration to GM/WM dartel template
-if do_dartel || job.extopts.LASstr>0
-  run2 = struct();
-  tpm2 = cell(1,numel(job.extopts.templates));
-  for j=1:numel(job.extopts.templates)
-    for i=1:2
-      run2(i).tpm = fullfile(templatep,[templatef(1:numpos) num2str(j-(template1f(numpos+1)=='0')) ...
-        templatef(numpos+2:end) templatee ',' num2str(i)]);
-    end
-    tpm2{j} = spm_vol(char(cat(1,run2(:).tpm)));
-  end
-  res.tpm2 = tpm2; 
-end
-res.do_dartel = do_dartel;
-clear numpos run2 darteltpm
+
 
 chan(N) = struct('B1',[],'B2',[],'B3',[],'T',[],'Nc',[],'Nf',[],'ind',[]);
 for n=1:N,
@@ -1113,11 +1066,18 @@ if ~isfield(res,'spmpp')
   %     Yp0ox = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 
   %     Yp0   = zeros(d,'uint8'); Yp0(indx,indy,indz) = Yp0b; 
   %  -------------------------------------------------------------------
-  if job.extopts.cleanupstr>0 && job.extopts.cleanupstr<=1 %2.2; %1.6;
-    %prob = clean_gwc(prob,0); %round(job.extopts.cleanupstr*2)); % old cleanup
+  if job.extopts.cleanupstr>0 && job.extopts.cleanupstr<=1 
+    %%
+    prob = clean_gwc(prob,round(job.extopts.cleanupstr*2)); % old cleanup
+    
+    %for i=1:3
+    %   Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
+    %end
+    %Yp0b = Yb(indx,indy,indz); 
+    
     [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_volr,indx,indy,indz);
   else
-    if job.extopts.cleanupstr == 2 % old cleanup for tests
+    if 0% job.extopts.cleanupstr == 2 % old cleanup for tests
       stime = cat_io_cmd('Old cleanup');
       prob = clean_gwc(prob,1);
       fprintf('%4.0fs\n',etime(clock,stime));
@@ -1371,27 +1331,25 @@ else
 end
 
 
+
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-Vtemp = spm_vol(job.extopts.templates{1}); vx_volt = abs(Vtemp(1).mat(1)); 
-if do_dartel>1 && (job.extopts.vox~=1.5 || vx_volt~=1.5) && job.extopts.expertgui<2
-  cat_io_cprintf('warn',['  Shooting registration is still in development and work only \n' ...
-                         '  correctly for template and output resolution of 1.5 mm!/n'])
-end
-clear Vtemp vx_volt; 
-[trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);;
-    
-%%
-if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting && exist('Yclso','var')
-  Ycls = Yclso; clear Yclso;
-end
+[trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);; 
 
 
 
 %%  --------------------------------------------------------------------
 %  write results
 %  ---------------------------------------------------------------------
+
+% reset WMHC
+if (job.extopts.WMHC==1 || job.extopts.WMHC==3) && job.extopts.WMHCstr>0 && ~job.inv_weighting && exist('Yclso','var')
+  Ycls = Yclso; 
+end
+clear Yclso;
+
+
 stime = cat_io_cmd('Write result maps');
 Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*3/255; 
 
@@ -1516,7 +1474,7 @@ if any(cell2mat(struct2cell(job.output.TPMC)'))
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint8',[0,1/255],...
       min([1 1 0 3],[job.output.TPMC.native job.output.TPMC.warped ...
-      job.output.TPMC.mod job.output.TPMC.dartel]),trans);Dartel
+      job.output.TPMC.mod job.output.TPMC.dartel]),trans);
     cat_io_writenii(VT0,single(Ycls{clsi})/255,mrifolder,sprintf('p%d',clsi),...
       sprintf('%s tissue map',fn{clsi}),'uint16',[0,1/255],...
       min([0 0 3 0],[job.output.TPMC.native job.output.TPMC.warped ...
@@ -1552,7 +1510,7 @@ end
 
 % deformations y - dartel > subject
 if job.output.warps(1)
-    Yy        = spm_diffeo('invdef',trans.warped.y,trans.warped.odim,eye(4),trans.warped.M0);
+    Yy        = spm_diffeo('invdef',trans.warped.yx,trans.warped.odim,eye(4),trans.warped.M0);
     N         = nifti;
     N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = trans.warped.M1;
@@ -1567,11 +1525,11 @@ if ~debug, clear Yy; end
 % deformation iy - subject > dartel
 if job.output.warps(2)
   % transformation from voxel to mm space
-  yn = numel(trans.warped.y); 
+  yn = numel(trans.warped.yx); 
   p  = ones([4,yn/3],'single'); 
-  p(1,:) = trans.warped.y(1:yn/3);
-  p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
-  p(3,:) = trans.warped.y(yn/3*2+1:yn);
+  p(1,:) = trans.warped.yx(1:yn/3);
+  p(2,:) = trans.warped.yx(yn/3+1:yn/3*2);
+  p(3,:) = trans.warped.yx(yn/3*2+1:yn);
   p      = M1(1:3,:) * p;
   
   if any(trans.native.Vo.dim~=trans.native.Vi.dim)
@@ -1594,7 +1552,14 @@ if job.output.warps(2)
     end
     clear Vt Vdef Vyy
   else 
-    Yy2 = zeros([res.image0(1).dim(1:3),1,3],'single'); 
+    yn = numel(trans.warped.y); 
+    p  = ones([4,yn/3],'single'); 
+    p(1,:) = trans.warped.y(1:yn/3);
+    p(2,:) = trans.warped.y(yn/3+1:yn/3*2);
+    p(3,:) = trans.warped.y(yn/3*2+1:yn);
+    p      = M1(1:3,:) * p;
+
+    Yy2 = zeros([res.image(1).dim(1:3),1,3],'single'); 
     Yy2(1:yn/3)        = p(1,:);
     Yy2(yn/3+1:yn/3*2) = p(2,:);
     Yy2(yn/3*2+1:yn)   = p(3,:);
@@ -1630,6 +1595,7 @@ if job.output.surface
     case 3, surf = {'lh'};
     case 4, surf = {'rh'};
     case 5, surf = {'lhfst','rhfst'}; % fast surface reconstruction 
+    case 6, surf = {'lhfst','rhfst','lcfst','rcfst'}; % fast surface reconstruction 
   end
   
   % brain masking and correction of blood vessels 
@@ -1707,7 +1673,7 @@ if job.output.ROI
       end  
       transw      = trans.warped;                     % dartel/shooting deformation data 
       transw.odim = VA(ai).dim;                       % adaption for atlas image size
-      transw.ress = job.extopts.vox./VAvx_vol(ai,:);  % adaption for atlas sampling resolution 
+      transw.ress = job.extopts.vox(1)./VAvx_vol(ai,:);  % adaption for atlas sampling resolution 
       
       wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,job.extopts.atlas);
       wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,job.extopts.atlas);
@@ -1843,22 +1809,36 @@ if printCATreport
 
     % CAT GUI parameter:
     % --------------------------------------------------------------------
-    SpaNormMeth = {'None','Dartel','Shooting'}; 
     str = [];
 
     % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
     str = [str struct('name', 'Version: Matlab / SPM12 / CAT12:','value',...
       sprintf('%s / %s / %s',qa.software.version_matlab,qa.software.version_spm,qa.software.version_cat))];
-    if job.extopts.expertgui==1,     str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
+    if     job.extopts.expertgui==1, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}e']; 
     elseif job.extopts.expertgui==2, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}d'];
     end  
     if job.extopts.experimental, str(end).value = [str(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
 
-    % 3 lines: TPM, Template, Normalization method with voxel size
+    % 2 lines: TPM, Template, Normalization method with voxel size
     str = [str struct('name', 'Tissue Probability Map:','value',strrep(spm_str_manip(res.tpm(1).fname,'k40d'),'_','\_'))];
-    str = [str struct('name', 'Spatial Normalization Template:','value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
-    str = [str struct('name', 'Spatial Normalization Method / vox:','value',sprintf('%s / %0.2f mm',SpaNormMeth{do_dartel+1},job.extopts.vox))];
-
+    if do_dartel
+      if job.extopts.regstr==0 % Dartel
+        str = [str struct('name', 'Dartel Registration to: ',...
+                          'value',strrep(spm_str_manip(job.extopts.darteltpm{1},'k40d'),'_','\_'))];
+      elseif job.extopts.regstr==4 % Dartel
+        str = [str struct('name', 'Shooting Registration to: ',...
+                          'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
+      else
+        if job.extopts.expertgui==0
+          str = [str struct('name','Optimized Shooting Registration to:',...
+                            'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
+        else
+          str = [str struct('name', sprintf('Optimized Shooting Registration (regstr:%s) to :',sprintf('%g ',job.extopts.regstr)),...
+                            'value',strrep(spm_str_manip(job.extopts.shootingtpm{1},'k40d'),'_','\_'))];
+        end
+      end
+    end
+    
     % 1 line 1: Affreg
     str = [str struct('name', 'affreg:','value',sprintf('%s',job.opts.affreg))];
     % 1 line 2: APP
@@ -1932,13 +1912,13 @@ if printCATreport
 
     % line 8: surfae parameter
     if job.output.surface
-      str = [str struct('name', 'Voxel resolution (original > internal > PBT):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s ', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres))];
+      str = [str struct('name', 'Voxel resolution (original > internal > PBT; vox):',...
+             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s > %4.2f mm%s; %4.2f mm  ', ...
+             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.pbtres,char(179),job.extopts.vox(1)))];
     else
-      str = [str struct('name', 'Voxel resolution (original > intern):',...
-             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s', ...
-             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179)))];
+      str = [str struct('name', 'Voxel resolution (original > intern; vox):',...
+             'value',sprintf('%4.2fx%4.2fx%4.2f mm%s > %4.2fx%4.2fx%4.2f mm%s; %4.2f mm', ...
+             qa.qualitymeasures.res_vx_vol,char(179),qa.qualitymeasures.res_vx_voli,char(179),job.extopts.vox(1)))];
     end       
     % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
 
@@ -2242,8 +2222,9 @@ if printCATreport
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
     for hti = 1:numel(cc), set(cc{hti},'Fontsize',fontsize); end; 
     set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
-    fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
-
+    try
+      fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);% windows error?
+    end
 
     %% reset colormap to the simple SPM like gray60 colormap
     if exist('hSD','var')
@@ -2281,13 +2262,13 @@ if printCATreport
 
     % print subfolders
     if job.extopts.subfolders
-      fprintf('Segmentations are saved in %s\n',fullfile(pth,'mri'));
-      fprintf('Reports are saved in %s\n',fullfile(pth,'report'));
+      fprintf('Segmentations are saved in %s%s%s\n',pth,filesep,'mri');
+      fprintf('Reports are saved in %s%s%s\n',pth,filesep,'report');
       if job.output.ROI
-        fprintf('Labels are saved in %s\n',fullfile(pth,'label'));
+        fprintf('Labels are saved in %s%s%s\n',pth,filesep,'label');
       end
       if job.output.surface
-        fprintf('Surface measurements are saved in %s\n',fullfile(pth,'surf'));
+        fprintf('Surface measurements are saved in %s%s%s\n',pth,filesep,'surf');
       end
     end
 
