@@ -158,12 +158,33 @@ return
 %_______________________________________________________________________
 function job = update_job(job)
 
+  % set GUI specific parameter if available
+  FN = {
+    'registration',{'darteltpm','shootingtpm','regstr','cat12atlas','brainmask','T1'}; 
+    'segmentation',{'APP','NCstr','LASstr','gcutstr','cleanupstr','BVCstr','WMHCstr','WMHC','mrf','restypes'};
+    'admin',       {'experimental','lazy','ignoreErrors','verb'}; 
+    };
+  for fnj=1:size(FN,1)  
+    if isfield(job.extopts,FN{fnj,1})
+      for fni=1:numel(FN{fnj,2})
+        if isfield(job.extopts.(FN{fnj,1}),FN{fnj,2}{fni})
+          job.extopts.(FN{fnj,2}{fni}) = job.extopts.(FN{fnj,1}).(FN{fnj,2}{fni});
+        %$else
+        %  fprintf('err1: %s\n', FN{fnj,2}{fni});
+        end
+      end
+      job.extopts = rmfield(job.extopts,FN{fnj,1}); % this is just a GUI field! 
+    end 
+  end
+  
   % get defaults
   def = cat_get_defaults;
+  
   if isfield(job.extopts,'restypes')
     def.extopts.restype = (char(fieldnames(job.extopts.restypes))); 
     def.extopts.resval  = job.extopts.restypes.(def.extopts.restype);
   end
+  
   def.extopts.lazy   = 0;
   def.opts.fwhm      = 1;
   def.nproc          = 0; 
@@ -187,14 +208,18 @@ function job = update_job(job)
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
   end
   
-  % check range of str variables
-  FN = {'WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
-  for fni=1:numel(FN)
-    if ~isfield(job.extopts,FN{fni})  
-      job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));
-    end
-  end
   
+  % handling of SPM biasoptions for specific GUI entry
+  if isfield(job.opts,'bias')
+    if isfield(job.opts.bias,'biasfwhm')
+      job.opts.biasstr  = 0; 
+      job.opts.biasfwhm = job.opts.bias.biasfwhm; 
+      job.opts.biasreg  = job.opts.bias.biasreg; 
+    elseif isfield(job.opts.bias,'biasstr')
+      job.opts.biasstr  = job.opts.bias.biasstr; 
+    end
+    job.opts = rmfield(job.opts,'bias'); 
+  end
   % the extopts.biasstr controls and overwrites (biasstr>0) the SPM biasreg and biasfwhm parameter
   %   biasstr  = [0.01  0.25  0.50  0.75  1.00] ... result in ?
   %   biasreg  = [0.01  0.0032  0.0010  0.0003  0.0001] ? and ?
@@ -205,14 +230,70 @@ function job = update_job(job)
     job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
     job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
   end
+ 
+  
+  %% find and check the Dartel templates
+  [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
+  job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 
+  numpos = min([strfind(tff,'Template_1')]) + 8;
+  if isempty(numpos)
+    error('CAT:cat_main:TemplateNameError', ...
+    ['Could not find the string "Template_1" in Dartel template that \n'...
+     'indicates the first file of the Dartel template. \n' ...
+     'The given filename is "%s.%s" \n'],tff,tee);
+  end
+  job.extopts.darteltpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
+  job.extopts.darteltpms(cellfun('length',job.extopts.darteltpms)~=length(job.extopts.darteltpm{1}))=[]; % remove to short/long files
+  if numel(job.extopts.darteltpms)~=6
+    %%
+    files = ''; for di=1:numel(job.extopts.darteltpms), files=sprintf('%s\n  %s',files,job.extopts.darteltpms{di}); end
+    error('CAT:cat_main:TemplateFileError', ...
+     ['Could not find the expected 6 Dartel template files (Template_1 to Template_6). \n' ...
+      'Found %d templates: %s'],numel(job.extopts.darteltpms),files);
+  end
 
+  
+  % find and check the Shooting templates
+  [tpp,tff,tee] = spm_fileparts(job.extopts.shootingtpm{1});
+  job.extopts.shootingtpm{1} = fullfile(tpp,[tff,tee]); 
+  numpos = min([strfind(tff,'Template_0')]) + 8;
+  if isempty(numpos)
+    error('CAT:cat_main:TemplateNameError', ...
+    ['Could not find the string "Template_0" in Shooting template that \n'...
+     'indicates the first file of the Shooting template. \n' ...
+     'The given filename is "%s.%s" \n'],tff,tee);
+  end
+  job.extopts.shootingtpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
+  job.extopts.shootingtpms(cellfun('length',job.extopts.shootingtpms)~=length(job.extopts.shootingtpm{1}))=[]; % remove to short/long files
+  if numel(job.extopts.shootingtpms)~=5
+    %%
+    files = ''; for di=1:numel(job.extopts.shootingtpms), files=sprintf('%s\n  %s',files,job.extopts.shootingtpms{di}); end
+    error('CAT:cat_main:TemplateFileError', ...
+     ['Could not find the expected 5 Shooting template files (Template_0 to Template_4).\n' ...
+      'Found %d templates: %s'],numel(job.extopts.shootingtpms),files);
+  end
+  
+  
+  % check range of str variables
+  FN = {'WMHCstr','LASstr','BVCstr','gcutstr','cleanupstr','mrf'};
+  for fni=1:numel(FN)
+    if ~isfield(job.extopts,FN{fni})  
+      job.extopts.(FN{fni}) = max(0,min(1,job.extopts.(FN{fni})));
+    end
+  end
+
+
+  
   % deselect ROI output and print warning if ROI output is true and dartel template was changed
   [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
-  if ~strcmp(nam,'Template_1_IXI555_MNI152') && strcmp(job.extopts.species,'human') && cat_get_defaults('output.ROI') 
+  if isempty(strfind(nam,'MNI152')) && strcmp(job.extopts.species,'human') && cat_get_defaults('output.ROI')  %~strcmp(nam,'Template_1_IXI555_MNI152')
     warning('DARTEL:template:change',...
-      'Dartel template was changed: Please be aware that ROI analysis and other template-specific options cannot be used and ROI output has been deselected.');
+      ['Dartel template was changed: Please be aware that ROI analysis \n' ...
+       'and other template-specific options cannot be used and ROI \n ' ...
+       'output has been deselected.']);
     job.output.ROI = 0;
   end
+  
   
   % set boundary box by Template properties if box inf
   Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
@@ -225,10 +306,9 @@ function job = update_job(job)
   %job.extopts.bb  = [ min(bb(1,1:3) , job.extopts.bb(1,1:3) ) ; max(bb(2,1:3) , job.extopts.bb(2,1:3) ) ];
   job.extopts.bb = bb; 
   
-  if isinf(job.extopts.vox) || isnan(job.extopts.vox)
-    job.extopts.vox = abs(vox);
-  end
-  
+  job.extopts.vox( isinf(job.extopts.vox) | isnan(job.extopts.vox) ) = []; 
+  if isempty( job.extopts.vox ),  job.extopts.vox = cat_get_defaults('extopts.vox'); end 
+  job.extopts.vox = abs( job.extopts.vox );
   
   % prepare tissue priors and number of gaussians for all 6 classes
   [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});

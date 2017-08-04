@@ -55,9 +55,9 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 
   %% roi to change GM or WM to CSF or background
   stime = cat_io_cmd('  Level 1 cleanup (brain masking)','g5','',extopts.verb,stime); %dispc=dispc+1;
-  Yrw = Yp0>0 & Yroi & Ymb>0.9+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
-  Yrw = Yrw | smooth3(Yrw)>0.3-0.3*cleanupstr;                        % dilate region
-  Ygw = cat_vol_morph(Yp0>=2 & ~Yrw,'lo',1); 
+  Yrw = Yp0>0 & Yroi & Ymb>1.1+Ybd/20 & ~NS(Yl1b,LAB.CB);             % basic region with cerebellum
+  Yrw = Yrw | smooth3(Yrw)>0.4-0.3*cleanupstr;                        % dilate region
+  Ygw = cat_vol_morph(Yp0>=1.9 & ~Yrw,'lo',0); % even one is to much in adrophic brains :/ 
   Yrw = Yrw | (Yp0>1 & Yroi & ~Ygw);                                  % further dilation
   Yrw = Yrw & ~Yvt & ~cat_vol_morph(Ygw,'d',1); 
   Yrw(smooth3(Yrw)<0.5+0.2*cleanupstr)=0; 
@@ -65,9 +65,9 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   if ~debug, clear Ygw Yroi; end
 
   %% update brain masks and class maps
-  Ybb = cat_vol_morph((Yp0>0 & ~Yrw) | Ybd>2,'lo',3/vxv);          
+  Ybb = cat_vol_morph((Yp0>0 & ~Yrw) | Ybd>2,'lo',2/vxv);          
   Ybb(cat_vol_smooth3X(Ybb,2)>0.4 & ~Yrw)=1;
-  Ybb = cat_vol_morph(Ybb | Ybd>3,'lc',2/vxv); 
+  Ybb = cat_vol_morph(Ybb | Ybd>3,'lc',1/vxv); 
   Ybb = single(Ybb); spm_smooth(Ybb,Ybb,0.6./vx_vol); Ybb = Ybb>1/3;
 
   %% correct to background
@@ -101,7 +101,8 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 
   %% cleanup WM 
   % ------------------------------------------------------------------
-  % the idea was to close WMH ... but its not stable enough yes
+  % the idea was to close WMH ... but its not stable enough yet
+  %{
   Ywmh = false(size(Yp0)); 
   for p0thi=2.1:0.2:2.9
     Ywmh = Ywmh | ~cat_vol_morph(Yp0<p0thi,'l') & (Yp0<p0thi); 
@@ -109,6 +110,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   Ywmh = smooth3(Ywmh)>0.1 & NS(Yl1b,1) & Yp0>=2 & Yp0<3; 
   Yl1b(Ywmh) = LAB.HI + ~mod(Yl1b(Ywmh),2); 
   clear Ywmh;
+  %}
   % correction later depending on WMHC
 
 

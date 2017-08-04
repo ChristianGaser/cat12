@@ -44,6 +44,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   def.lfO  = 0.40;
   def.hull = 1;
   opt = cat_io_checkinopt(opt,def);
+  opt.lfO = min(10,max(0.0001,opt.lfO));
   
   T(isnan(T) | isinf(T))=0; 
   maxT = max(T(T(:)<inf & ~isnan(T(:))));
@@ -74,6 +75,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
       TAr     = cat_vol_laplace3R(TAr,true(size(TAr)),double(opt.lfO)) * meanTAr; 
     else
       TASr=cat_vol_smooth3X(TAr,2); TAr(~BMr)=TASr(~BMr); clear TASr; 
+      opt.lfO = min(0.49,max(0.0001,opt.lfO));
       TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO); TAr = cat_vol_median3(TAr); %,Tr>0,Tr>0,0.05); 
       %TAr = cat_vol_laplace3R(TAr,Tr>0,opt.lfI); 
       TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO);

@@ -16,18 +16,21 @@ global cat
 % Options for inital SPM12 segmentation that is used as starting point for CAT12. 
 %=======================================================================
 cat.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
-cat.opts.ngaus     = [3 1 1 3 4 2];           % Gaussians per class (SPM12 default)
-cat.opts.affreg    = 'mni';                   % Affine regularisation (SPM12 default) - '';'mni';'eastern';'subj';'none';'rigid'
-cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation (SPM12 default) 
+cat.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class (SPM12 default = [1 1 2 3 4 2]) - alternative: [3 3 2 3 4 2] 
+cat.opts.affreg    = 'mni';                   % Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
+cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation (SPM12 default) - no useful modification found
 cat.opts.biasstr   = 0.5;                     % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)
                                               %   0 - use SPM parameter; eps - ultralight, 0.25 - light, 0.5 - medium, 0.75 - strong, and 1 - heavy corrections
                                               %   job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
                                               %   job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*job.opts.biasstr ));  
 cat.opts.biasreg   = 0.001;                   % Bias regularisation (cat.opts.biasstr has to be 0!) - 10,1,0.1,...,0.00001
-                                              %   smaller values for stronger bias fields (cat.opts.biasstr has to be 0!)
+                                              %   smaller values for stronger bias fields
 cat.opts.biasfwhm  = 60;                      % Bias FWHM (cat.opts.biasstr has to be 0!) - 30:10:120,inf 
-                                              %   lower values for strong bias fields , but check for overfitting in subcortical GM (values <50 mm)
-cat.opts.samp      = 3;                       % Sampling distance - just for initial processing where higher resolution only increases processing time in most cases
+                                              %   lower values for strong bias fields, but check for overfitting of the thalamus (values <45 mm)
+cat.opts.samp      = 3;                       % Sampling distance - alternative: 1.5 
+                                              %   Initial SPM segmentation resolution, whereas the AMAP runs on the full or speciefied resolution
+                                              %   described by cat.extopts.restype and cat.extopts.resval. Higher resolution did not improve the
+                                              %   results in most results (but increase caluculation time were.  
 
                                               
 % Writing options
@@ -40,7 +43,8 @@ cat.opts.samp      = 3;                       % Sampling distance - just for ini
 %   dartel    0/1/2/3 (none/rigid/affine/both)
 
 % save surface and thickness
-cat.output.surface     = 0;     % surface and thickness creation (0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 3 - lh)
+cat.output.surface     = 0;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
+                                %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration), 6 - lh+rh+cerebellum (fast, no registration)
 
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))
@@ -174,7 +178,7 @@ cat.extopts.species      = 'human';
 cat.extopts.APP          = 1070;   % 0 - none; 1070 - default; [1 - light; 2 - full; 3 - strong; 4 - heavy, 5 - animal (no affreg)]
 cat.extopts.vox          = 1.5; % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
 cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_1_IXI555_MNI152.nii')};     % Indicate first Dartel template (Template_1)
-%cat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_NKI174_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
+cat.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','Template_0_IXI555_MNI152_GS.nii')};  % Indicate first Shooting template (Template 0) - not working
 cat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cat.nii')};                       % CAT atlas with major regions for VBM, SBM & ROIs
 cat.extopts.brainmask    = {fullfile(spm('Dir'),'toolbox','FieldMap','brainmask.nii')};                                 % Brainmask for affine registration
 cat.extopts.T1           = {fullfile(spm('Dir'),'toolbox','FieldMap','T1.nii')};                                        % T1 for affine registration

@@ -7,7 +7,10 @@ function varargout = cat_surf_display(varargin)
 % job.data      .. [rl]h.* surfaces 
 % job.colormap  .. colormap
 % job.caxis     .. range of the colormap
-% job.multisurf .. load both sides, if possible  
+% job.multisurf .. load both sides, if possible (default = 0)
+%                   1 - load other side of same structure
+%                   2 - load all structures of the same side 
+%                   3 - load all structures of both sides  
 % job.usefsaverage .. use average surface (for resampled data only)
 %                  (default = 0)
 % job.view      .. view 
@@ -40,7 +43,7 @@ function varargout = cat_surf_display(varargin)
       job = varargin{1};
       if ~isfield(job,'data') || isempty(job.data)
         if cat_get_defaults('extopts.expertgui')
-          job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr]h.*');
+          job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr][hc].*');
         else
           job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
         end
@@ -52,7 +55,7 @@ function varargout = cat_surf_display(varargin)
     end
   else
     if cat_get_defaults('extopts.expertgui')
-        job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr]h.*');
+        job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr][hc].*');
     else
         job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
     end
@@ -100,14 +103,26 @@ function varargout = cat_surf_display(varargin)
     end
     
     % load multiple surfaces
+    % 3 - load all structures of both sides  
+    % 2 - load all structures of the same side 
+    % 1 - load other side of same structure
     if job.multisurf
-      if strcmp(sinfo(i).side,'rh'), oside = 'lh'; else oside = 'rh'; end
-      if ~job.usefsaverage, 
+      if strcmp('r',sinfo(i).side(1)), oside = ['l' sinfo(i).side(2)]; else oside = ['r' sinfo(i).side(2)]; end
+      if job.multisurf==3
+        Pmesh = [ ...
+          cat_surf_rename(sinfo(i).Pmesh,'side','lh') cat_surf_rename(sinfo(i).Pmesh,'side','rh') ...
+          cat_surf_rename(sinfo(i).Pmesh,'side','lc') cat_surf_rename(sinfo(i).Pmesh,'side','rc')]; 
+        Pdata = [ ...
+          cat_surf_rename(sinfo(i).Pdata,'side','lh') cat_surf_rename(sinfo(i).Pdata,'side','rh') ...
+          cat_surf_rename(sinfo(i).Pdata,'side','lc') cat_surf_rename(sinfo(i).Pdata,'side','rc')];
+      elseif job.multisurf==2
+        if strcmp('h',sinfo(i).side(2)), oside = [sinfo(i).side(1) 'c']; else oside = [sinfo(i).side(1) 'h']; end
         Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
+        Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       else
         Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
+        Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       end
-      Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       for im=numel(Pmesh):-1:1
         if ~exist(Pmesh{im},'file'), Pmesh(im) = []; end
         if ~isempty(Pdata) && ~exist(Pdata{im},'file'), Pdata(im) = []; end

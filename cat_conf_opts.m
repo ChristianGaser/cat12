@@ -71,7 +71,7 @@ if ~expert
     'Strength of the SPM inhomogeneity (bias) correction that simultaneously controls the SPM biasreg and biasfwhm parameter.  Modify this value only if you experience any problems!  Use smaller values for slighter corrections (e.g. in synthetic contrasts without visible bias) and higher values for stronger corrections (e.g. in 3 or 7 Tesla data with strong visible bias).  Bias correction is further controlled by the Affine Preprocessing (APP). '
     ''
   };
-elseif expert==1
+elseif expert>=1
   biasstr.labels  = {'ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   biasstr.values  = {eps 0.25 0.50 0.75 1};
   biasstr.help = {
@@ -87,6 +87,7 @@ elseif expert==1
     '  strong:         0.75      45         0.0003 '
     '  heavy:          1.00      30         0.0001 '
   };
+%{
 elseif expert==2
   biasstr.labels  = {'use SPM bias parameter (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   biasstr.values  = {0 eps 0.25 0.50 0.75 1};
@@ -104,8 +105,9 @@ elseif expert==2
     '  strong:         0.75      45         0.0003 '
     '  heavy:          1.00      30         0.0001 '
   };
+%}
 end
-
+  
 
 % biasreg: 
 %------------------------------------------------------------------------
@@ -164,6 +166,32 @@ biasfwhm.help   = {
   'If your intensity non-uniformity is very smooth, then choose a large FWHM.  This will prevent the algorithm from trying to model out intensity variation due to different tissue types.  The model for intensity non-uniformity is one of i.i.d. Gaussian noise that has been smoothed by some amount, before taking the exponential.  Note also that smoother bias fields need fewer parameters to describe them.  This means that the algorithm is faster for smoother intensity non-uniformities.  '
   ''
 };
+
+biasspm        = cfg_branch;
+biasspm.tag    = 'biascat';
+biasspm.name   = 'Original SPM bias correction parameter';
+biasspm.val    = {biasfwhm biasreg};
+biasspm.help   = {
+  'SPM bias correction parameter biasfwhm and biasreg.' 
+}; 
+
+bias        = cfg_choice;
+bias.tag    = 'bias';
+bias.name   = 'Biascorrection parameter';
+if cat_get_defaults('opts.biasstr')>0
+  bias.val = {biasstr};
+else
+  bias.val = {biasspm};
+end
+bias.values = {biasstr biasspm};
+bias.help   = {
+  'Bias correction parameters.' 
+}; 
+
+
+
+
+
 
 
 % warpreg: 
@@ -238,13 +266,13 @@ samp.help   = {
 %------------------------------------------------------------------------
 opts      = cfg_branch;
 opts.tag  = 'opts';
-opts.name = 'Options for initial SPM12 affine registration';
+opts.name = 'Options for initial SPM12 preprocessing';
 opts.help = {
     'CAT uses the Unified Segmentation of SPM12 for initial registration, bias correction, and segmentation.  The parameters used here were optimized for a variety of protocols and anatomies.  Only in case of strong inhomogeneity of high-field MR scanners we recommend to increase the biasstr parameter.  For children data we recommend to use customized TPMs created by the Template-O-Matic toolbox. '  
     ''
   };
 if expert>1
-  opts.val  = {tpm,affreg,biasstr,biasreg,biasfwhm,ngaus,warpreg,samp};
+  opts.val  = {tpm,affreg,bias,ngaus,warpreg,samp};
   opts.help = [opts.help; {
     'Increasing the initial sampling resolution to 1.5 or 1.0 mm may help in some cases of strong inhomogeneity but in general it only increases processing time.'
     ''

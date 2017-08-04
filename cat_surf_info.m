@@ -46,7 +46,9 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
       'rh'
       'rh.'
       'rh.sphere.reg.sub1'
-      'ch.defects.038.37.477'
+      'rc.defects.038.37.477'
+      'lc.s33mmtexture.S01.native.mri'
+      'rc.texture.sub1.sub2'
       };
     ees = {
       ''
@@ -173,7 +175,8 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     % side
     if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
     elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
-    elseif strfind(noname,'ch'), sinfo(i).side='ch'; sidei = strfind(noname,'ch.');
+    elseif strfind(noname,'lc'), sinfo(i).side='lc'; sidei = strfind(noname,'lc.');
+    elseif strfind(noname,'rc'), sinfo(i).side='rc'; sidei = strfind(noname,'rc.');
     else
       % if SPM.mat exist use that for side information
       if exist(fullfile(pp,'SPM.mat'),'file')
@@ -181,12 +184,16 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         [pp2,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);
       
         % find lh|rh string
-        hemi_ind = [strfind(ff2,'lh') strfind(ff2,'rh') strfind(ff2,'ch')];
+        hemi_ind = [strfind(ff2,'lh') strfind(ff2,'rh') strfind(ff2,'lc') strfind(ff2,'rc')];
         sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
         sidei=[];
       else
         if gui
-          sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+          if cat_get_defaults('extopts.expertgui')
+            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|lc|rc');
+          else
+            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+          end
         else
           sinfo(i).side = ''; 
         end

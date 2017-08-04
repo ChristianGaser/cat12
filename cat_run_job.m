@@ -317,7 +317,7 @@ function cat_run_job(job,tpm,subj)
               
               for ix=1:numel(sampx)
                 % parameter update
-                preproc.warp.samp         = min(9 ,max(2 ,job.opts.samp     * sampx(ix))); 
+                preproc.warp.samp         = min(9 ,max(1 ,job.opts.samp     * sampx(ix))); 
                 preproc.channel.biasfwhm  = min(90,max(30,job.opts.biasfwhm * fwhmx(ix)));
       
                 if ix==1
@@ -425,7 +425,7 @@ function cat_run_job(job,tpm,subj)
                     Yw  = vout.Ym.*(1-YM2) + (YM2).*Ym0;
                     Yw  = Yo./Yw .* (Yo~=0 & Yw~=0); 
                     % correct undefined voxel and assure smoothness of the bias field 
-                    Yw  = cat_vol_approx(max(0.05,min(10,Yw)),'',vx_vol,2,struct('lfO',2));
+                    Yw  = cat_vol_approx(max(0,min(2,Yw)),'',vx_vol,2,struct('lfO',2));
                     vout.Ym = Yo ./ Yw; 
                     if ~debug, clear Yw Yo; end
                     Vm = spm_vol(ofname); Vm.fname = nfname; Vm.dt(1) = 16;  
@@ -473,7 +473,8 @@ function cat_run_job(job,tpm,subj)
                 stime2 = cat_io_cmd('  APP bias correction','g5','',job.extopts.verb-1,stime2); 
                 
                 try
-                  Ym = cat_run_job_APP_SPM(ofname,vout,vx_vol,job.extopts.verb-1,job.opts.biasstr); 
+                  Ym = cat_run_job_APP_SPM(ofname,vout,vx_vol * (2 - strcmp(job.extopts.species,'human')),...
+                    job.extopts.verb-1,job.opts.biasstr); 
                   spm_write_vol(spm_vol(nfname),Ym);  
                   if ~debug, clear vout Ym0 YM2 Ym; end  
                   if spmp0
@@ -534,9 +535,8 @@ function cat_run_job(job,tpm,subj)
               vx_voli  = max(vx_voli,job.extopts.restypes.(restype)(1) .* ...
                          ( vx_vol < (job.extopts.restypes.(restype)(1)-job.extopts.restypes.(restype)(2))));
             case 'best'
-              best_vx  = max( min( 1.0 , vx_vol) ,job.extopts.restypes.(restype)(1)); 
+              best_vx  = max( min(vx_vol) ,job.extopts.restypes.(restype)(1)); 
               vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
-              %vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
             otherwise 
               error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
           end
@@ -698,9 +698,13 @@ function cat_run_job(job,tpm,subj)
             VF.pinfo = repmat([1;0],1,size(Ymc,3));
             VF.dat   = cat_vol_ctype(Ymc * max(1/2,Tth.Tmax) * 255); 
 
-            stime = cat_io_cmd('Coarse affine registration:','','',1,stime); 
+            if strcmp('human',job.extopts.species) || 1
+              stime = cat_io_cmd('Coarse affine registration:','','',1,stime); 
+            end
           else
-            stime = cat_io_cmd('Coarse affine registration'); 
+            if strcmp('human',job.extopts.species) || 1 
+              stime = cat_io_cmd('Coarse affine registration'); 
+            end
           end
 
           % smoothing
@@ -715,8 +719,8 @@ function cat_run_job(job,tpm,subj)
 
 
           %% affine registration
-          spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
-          if strcmp('human',job.extopts.species) 
+          if strcmp('human',job.extopts.species)  || 1
+            spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
             warning off 
             try 
               [Affine0, affscale] = cat_spm_affreg(VG1, VF1, aflags,Affine, 1); Affine = Affine0; 
@@ -731,7 +735,8 @@ function cat_run_job(job,tpm,subj)
             %  Use the more successfull mapping
             mat0 = spm_imatrix(Affine0);
             ACvox  = round(inv(Affine * VF.mat) * [ 0; 0; 0; 1]); ACvox = ACvox(1:3)'; %#ok<MINV>
-            if any(any(isnan(Affine0(1:3,:)))) || affscale<0.5 || affscale>3 || (all(all(roundx(Affine0,6) == eye(4))) &&  affscale == 1) || ...
+            if 0 && ...
+              any(any(isnan(Affine0(1:3,:)))) || affscale<0.5 || affscale>3 || (all(all(roundx(Affine0,6) == eye(4))) &&  affscale == 1) || ...
               (max(mat0(7:9))/min(mat0(7:9)))>1.2 || any(ACvox<VF.dim/6) || any(ACvox>VF.dim - VF.dim/6)
 
               % do affreg
@@ -788,7 +793,7 @@ function cat_run_job(job,tpm,subj)
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
 
           %% apply (first affine) registration on the default brain mask
-          VFa = VF; if strcmp(job.extopts.species,'human'), VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
+          VFa = VF; if strcmp(job.extopts.species,'human') || 1, VFa.mat = Affine * VF.mat; else Affine = eye(4); affscale = 1; end
           if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
           [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0)); 
           if exist('Ybg','var'), Yb = Yb>0.5 & ~Ybg; end
@@ -820,7 +825,7 @@ function cat_run_job(job,tpm,subj)
             VF.dat(:,:,:) = cat_vol_ctype(Ymc * max(1/2,Tth.Tmax) * 255); 
 
           end
-          if strcmp('human',job.extopts.species) 
+          if strcmp('human',job.extopts.species) || 1
             stime = cat_io_cmd('Affine registration','','',1,stime); 
             spm_plot_convergence('Init','Affine registration','Mean squared difference','Iteration');
 
@@ -859,8 +864,8 @@ function cat_run_job(job,tpm,subj)
               if ~debug, clear Ymc; end
 
               % hard masking
-              if ~zeroBG, Ymc2 = Ymc2 .* (~Ybg); end % 20161229 - simple to do this than to change all things in cat_main
-              if job.extopts.APP==5, Ymc2 = Ymc2 .* cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); end
+              %if ~zeroBG, Ymc2 = Ymc2 .* (~Ybg); end % 20161229 - simple to do this than to change all things in cat_main
+%              if job.extopts.APP==5, Ymc2 = Ymc2 .* cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1); end
 
               % set variable and write image
               %obj.image.dat   = Ymc2;  
@@ -871,13 +876,71 @@ function cat_run_job(job,tpm,subj)
         
 
         
-       
+          %%
+          if ppe.affreg.skullstripped  
+            %% update number of SPM gaussian classes 
+            Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
+            obj.tpm.V(4).dat = Ybg; 
+            obj.tpm.dat{4}   = Ybg; 
+            obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
+            obj.tpm.dat(5:6) = []; 
+            obj.tpm.V(5:6)   = []; 
+            obj.tpm.bg1(4)   = obj.tpm.bg1(6);
+            obj.tpm.bg2(4)   = obj.tpm.bg1(6);
+            obj.tpm.bg1(5:6) = [];
+            obj.tpm.bg2(5:6) = [];
+
+            %job.opts.ngaus = [job.opts.ngaus(1:3) 1];
+            job.opts.ngaus = 3*ones(4,1); % this is more save
+            obj.lkp        = [];
+            for k=1:numel(job.opts.ngaus)
+              job.tissue(k).ngaus = job.opts.ngaus(k);
+              obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
+            end
+          end
+          %% guarantee SPM image requirements of gaussian distributed data
+          %  Add noise to regions with low intensity changes that are mosty 
+          %  caused by skull-stripping, defacing, or simulated data and can
+          %  lead to problems in SPM tissue peak estimation. 
+          if 1
+            %%
+
+            Ysrc  = single(spm_read_vols(obj.image));
+
+            Yg    = cat_vol_grad(Ysrc,vx_vol);
+            Ygnth = cat_stat_nanmean( min(0.3,Yg(:)./max(eps,Ysrc(:))) );
+            gno   = Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:)) ); 
+            Tthn  = mean( Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & ...
+                      Ysrc(:)>(cat_stat_nanmean(gno) - 1*cat_stat_nanstd(gno)) & ...
+                      Ysrc(:)<(cat_stat_nanmean(gno) + 4*cat_stat_nanstd(gno))) ); 
+            Ysrcn = max( min(Ysrc(:)) , Ysrc + ( randn(size(Ysrc))*Tthn*0.005 + (rand(size(Ysrc))-0.5)*Tthn*0.01 ) .*  ...
+              cat_vol_smooth3X( Ysrc/Tthn<0.01 | Yg/Tthn<0.01 | Yg./max(eps,Ysrc)<0.01 , 4 ));
+
+            [h,i] = hist(Ysrcn(Ysrc~=0 & ~isnan(Ysrc)),1000); maxth = cumsum(h);
+            idl = find(maxth/max(maxth)>0.02,1,'first'); 
+            idh = find(maxth/max(maxth)>0.98,1,'first'); 
+            iil = i(idl) - diff([idl idh])*0.5; 
+            iih = i(idh) + diff([idl idh])*0.5; 
+            Ysrcn = max( iil , min( iih , Ysrcn )); 
+
+            % should be used above .. however SPM don't like it ... 
+            if ~strcmp(job.extopts.species,'human') && exist('Yb','var')
+              %Ysrcn = Ysrcn .* cat_vol_morph(Yb,'d',3); 
+              %ppe.affreg.skullstripped = 1;
+            end
+
+
+            %%
+            spm_write_vol(obj.image,Ysrcn); 
+            if ~debug, clear Ysrc Yg Ysrcn; end
+          end
+
 
         
           %%  Fine Affine Registration with 3 mm sampling distance
           %  This does not work for non human (or very small brains)
           stime = cat_io_cmd('SPM preprocessing 1 (estimate):','','',1,stime); 
-          if strcmp('human',job.extopts.species) 
+          if strcmp('human',job.extopts.species) || 1
             % sampling >6 mm seams to fail in some cases, but higher sampling (<3 mm) did not improve the result 
             % also the variation of smoothing did not work well in all cases and lower smoothing (<=4 mm) lead to problems in some cases 
             fwhm = [0 24 12 8]; samp = [0 6 6 6]; % entry 1 is the initial affine registration 
@@ -990,64 +1053,12 @@ function cat_run_job(job,tpm,subj)
           obj.image = spm_vol(obj.image);
         end
 
+if job.extopts.APP==2 && ~strcmp(job.extopts.species,'human')        
+  obj.biasreg  = 0.001;
+  obj.biasfwhm = 50;
+end
         
-        %% guarantee SPM image requirements of gaussian distributed data
-        %  Add noise to regions with low intensity changes that are mosty 
-        %  caused by skull-stripping, defacing, or simulated data and can
-        %  lead to problems in SPM tissue peak estimation. 
-        if 1
-          %%
-          Ysrc  = single(spm_read_vols(obj.image));
-          
-          Yg    = cat_vol_grad(Ysrc,vx_vol);
-          Ygnth = cat_stat_nanmean( min(0.3,Yg(:)./max(eps,Ysrc(:))) );
-          gno   = Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & Ysrc(:)>cat_stat_nanmean(Ysrc(:)) ); 
-          Tthn  = mean( Ysrc( ( Yg(:)./max(eps,Ysrc(:)) )<Ygnth/2 & ...
-                    Ysrc(:)>(cat_stat_nanmean(gno) - 1*cat_stat_nanstd(gno)) & ...
-                    Ysrc(:)<(cat_stat_nanmean(gno) + 4*cat_stat_nanstd(gno))) ); 
-          Ysrcn = max( min(Ysrc(:)) , Ysrc + ( randn(size(Ysrc))*Tthn*0.005 + (rand(size(Ysrc))-0.5)*Tthn*0.01 ) .*  ...
-            cat_vol_smooth3X( Ysrc/Tthn<0.01 | Yg/Tthn<0.01 | Yg./max(eps,Ysrc)<0.01 , 4 ));
 
-          [h,i] = hist(Ysrcn(Ysrc~=0 & ~isnan(Ysrc)),1000); maxth = cumsum(h);
-          idl = find(maxth/max(maxth)>0.02,1,'first'); 
-          idh = find(maxth/max(maxth)>0.98,1,'first'); 
-          iil = i(idl) - diff([idl idh])*0.5; 
-          iih = i(idh) + diff([idl idh])*0.5; 
-          Ysrcn = max( iil , min( iih , Ysrcn )); 
-        
-          % should be used above .. however SPM don't like it ... 
-          if ~strcmp(job.extopts.species,'human') && exist('Yb','var')
-            Ysrcn = Ysrcn .* cat_vol_morph(Yb,'d',3); 
-            ppe.affreg.skullstripped = 1;
-          end
-          
-          
-          %%
-          spm_write_vol(obj.image,Ysrcn); 
-          if ~debug, clear Ysrc Yg Ysrcn; end
-        end
-       
-        %%
-        if ppe.affreg.skullstripped  
-          %% update number of SPM gaussian classes 
-          Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
-          obj.tpm.V(4).dat = Ybg; 
-          obj.tpm.dat{4}   = Ybg; 
-          obj.tpm.V(4).pinfo = repmat([1;0],1,size(Ybg,3));
-          obj.tpm.dat(5:6) = []; 
-          obj.tpm.V(5:6)   = []; 
-          obj.tpm.bg1(4)   = obj.tpm.bg1(6);
-          obj.tpm.bg2(4)   = obj.tpm.bg1(6);
-          obj.tpm.bg1(5:6) = [];
-          obj.tpm.bg2(5:6) = [];
-
-          job.opts.ngaus = [job.opts.ngaus(1:3) 1];
-          obj.lkp        = [];
-          for k=1:numel(job.opts.ngaus)
-            job.tissue(k).ngaus = job.opts.ngaus(k);
-            obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
-          end
-        end
 
         
         

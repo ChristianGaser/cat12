@@ -201,7 +201,7 @@ function cat_run_job1070(job,tpm,subj)
         %  resolution helps to reduce normalization artifacts of the
         %  deformations. Furthermore, even if artifacts can be reduced by the final smoothing
         %  it is much better to avoid them.  
-        vx_vold = min(job.extopts.vox,sqrt(sum(tpm.V(1).mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
+        vx_vold = min(job.extopts.vox(1),sqrt(sum(tpm.V(1).mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
         for n=1:numel(job.channel) 
 
           % prepare header of resampled volume

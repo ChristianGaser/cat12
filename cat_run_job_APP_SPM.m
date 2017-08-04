@@ -1,4 +1,4 @@
-function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
+function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
 %  _____________________________________________________________________
 %  The final bias correction is a subfunction of cat_run_job.
 %  _____________________________________________________________________
@@ -95,21 +95,26 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
         Ycls{1}<240 & Ycls{3}<32 & Yg<0.5 & abs(Ydiv)<0.5 & Ycsfd>2 & ~Yss & ~Yct;
   Ywm = Ywm | Ycw | (Yb & Ymi-Ydiv+((Ycsfd-3)/10)>0.9 & Ydiv<-0.05 & Ycls{1}<240 & Ycls{3}<32 & ~Yss & ~Yct); 
   Ywm = cat_vol_morph(Ywm,'l',[3 0.1])>0; Ywm(smooth3(Ywm)<0.5)=0;
+  Ywme1 = cat_vol_morph(Ywm,'e'); 
+  Ywme2 = cat_vol_morph(Ywme1,'e'); 
+  Ymiw = cat_vol_localstat(Ymi,Ywm & ~Ywme2,2,3);
+  Ygmb = (Ywm & ~Ywme2 & Ymi./max(eps,Ymiw)<0.9 & Ycsfd<3); 
+ 
   
   %% GM
-  Ygm  = Yb & ~Ywm & Ycls{1}>64 & Ycls{2}<128 & Ycls{3}<128 & Yg./Ymi<gth*2 & abs(Ydiv)<gth*3 & Ycsfd<5;  
-  Ygm  = Ygm | Yct | ...
+  Ygm  = Yb & ~Ywme1 & Ycls{1}>64 & Ycls{2}<192 & Ycls{3}<128 & Yg./Ymi<gth*3 & abs(Ydiv)<gth*3 & (Ycsfd<5);  
+  Ygm  = Ygm | Yct | Ygmb | (Ycls{1}>192 & Ycls{2}<8 & Yg./Ymi<gth*2 & ~Ywme1) | ...
          (Yss & abs(Ydiv)<gth & Yg./Ymi<gth*1 & Ymi<0.95 & Ycls{1}>4 & Ycls{2}<252 ); %  | ...
          %(Ycls{1}>64 & Ycls{2}<240 & Ycls{3}<128 & Ycsfd<3 & Yhd<3 & ~Ywm & abs(Ydiv)<gth*3); 
   Ygmi = cat_vol_localstat(Ygm.*Ymi,Ygm,2,1);
   Ygm(abs(((Ygm.*Ymi)./Ygmi)-Ygm)>gth*mean(vx_vol)*3 | abs(((Ygm.*Ymi)./Ygmi)-Ygm)==0)=0;
   Ygm(smooth3(Ygm)<0.4)=0; 
-  
+  Ywm  = Ywm & ~Ygm; 
   
   %% CM (this did not work yet) 
   %  
   if 1
-    Ycm = Yb & ~Ywm & ~Ygm & Yg<gth*2 & Ymi>0.01 & (Ymi-Ydiv)<0.5 & Ycls{3}>128; 
+    Ycm = Yb & ~Ywm & ~Ygm & Yg<gth*2 & Ymi>0.01 & (Ymi-Ydiv)<0.5 & Ycls{3}>128 & cat_vol_smooth3X(Yb,4)>0.95; 
     Ycm(smooth3(Ycm)<0.6)=0;
   end
   
@@ -118,8 +123,8 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
   %  there is now way to use high intensity information from the scull, but
   %  it is possbile to use the large areas of mussels 
   Yhm = Ybd>2 & smooth3( Yg>gth*2 | Ymi>1.2 | Ydiv<-0.1)>0.5; 
-  Yhm = Yg<gth & ~Yb & abs(Ydiv)<0.1 & Ycls{6}<128 & Ym<T3th(3)*1.2 & Ybd>20 & ...
-    Ydiv>-0.1 & Ydiv<0.1 & ~Yhm & cat_vol_smooth3X(Ycls{6}>128,4)<0.5;
+  Yhm = Yg./Ymi<gth & ~Yb & abs(Ydiv)<0.2 & Ycls{6}<128 & Ym<T3th(3)*1.5 & (Ybd>10 | Ycls{5}>128) & Ycls{4}<128 & ...
+    Ydiv>-0.2 & Ydiv<0.2 & ~Yhm & cat_vol_smooth3X(Ycls{6}>128,4)<0.5 & Ymi>gth;
   Yhmi = cat_vol_localstat(Yhm.*Ymi,Yhm,1,2);
   Yhm(abs(((Yhm.*Ymi)./Yhmi)-Yhm)>0.5 | abs(((Yhm.*Ymi)./Yhmi)-Yhm)==0)=0;
   Yhm(smooth3(Yhm)<0.6)=0; 
@@ -187,4 +192,7 @@ function  Ymc = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
   Ymc = Yo ./ Ywi; Ymc = Ymc * (mean(Ymo(Ywm(:)))/mean(Ymc(Ywm(:))));
   cat_io_cmd(' ','','',verb,stime); 
 
+  if nargout>1
+    Ymi = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 
+  end
 end
