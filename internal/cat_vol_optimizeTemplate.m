@@ -11,7 +11,7 @@ function cat_vol_optimizeTemplate(job)
 %                (quick and dirty solution that rewrite the original data!)
 %
 % _______________________________________________________________________
-% $Id: cat_vol_atlas.m 953 2016-06-18 12:52:36Z gaser $
+% $Id$
 
 
   %% prepare data structur

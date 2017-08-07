@@ -15105,6 +15105,7 @@ M       tbx_cfg_cat.m
 
 
 ------------------------------------------------------------------------
+r1161 | dahnke | 2017-08-07 14:07:32 +0200 (Mo, 07 Aug 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15120,5 +15121,16 @@ A       internal/PAIL/spm_ov_pale.m
 (1) New:      Added Point And Label setting Extension (PALE) orthview plugin   
               to internal directory. 
 (2) Fixed:    Corrected error in optimised SANLM filter (cat_vol_sanlm).  
+
 ------------------------------------------------------------------------
-r1161 | dahnke | 2017-08-07 14:07:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_sanlm.m
+M       ds.m
+MM      internal/cat_vol_optimizeTemplate.m
+
+(1) Fixed:    Corrected error in SANLM filter due to small values by adding an
+              simple intensity normalization in cat_vol_sanlm.  
+------------------------------------------------------------------------
+r1162 | dahnke | 2017-08-07 18:41:01
