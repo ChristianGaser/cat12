@@ -92,11 +92,16 @@ for i = 1:numel(job.data)
     if numel(job.NCstr)>1
       fprintf('SANLM filtering: ');  
     end
+    
+    % use intensity normalisation because cat_sanlm did not filter values below ~0.01 
+    th = max(mean(src(src(:)>0)),abs(mean(src(src(:)<0))));
+    src = (src / th) * 100; 
     cat_sanlm(src,3,1,job.rician);
+    src = (src / 100) * th; 
     
     % measures changes
     srco   = single(spm_read_vols(V(i)));
-    NCrate = cat_stat_nanmean(abs(src(:) - srco(:)) ./ max(eps,src(:))); 
+    NCrate = cat_stat_nanmean(abs(src(:)/th - srco(:)/th)); 
     
     % set actural filter rate - limit later!
     % the factor 15 was estimated on the BWP 
@@ -116,19 +121,14 @@ for i = 1:numel(job.data)
 
             %% prepare local map
             % use less filtering for lowres data to avoid anatomical blurring ???
-            NCs = max(eps,abs(src - srco)); % ./ mean(NCs(:)); %max(eps,src); 
-            if 1
-              %% preserve anatomical details
-              %  additional reduction of very strong correction
-              NC = cat_vol_smooth3X(NCs,1/mean(vx_vol));
-              M  = NCs>NC*0.5;
-              NCs(NCs>NC*1.5/mean(vx_vol)) = 0; clear NC   
-              % the median is slow
-              NCs = cat_vol_median3(NCs,M,true(size(NCs)));
-              clear M; 
-            end
-            % smoothing of the correction field
-            NCs = cat_vol_smooth3X(NCs,1/mean(vx_vol));
+            NCs = max(eps,abs(src - srco)/th); 
+            % preserve anatomical details by describing the average changes
+            % and not the strongest - this reduce the ability of artefact
+            % correction
+            [NCsr,resT2] = cat_vol_resize(NCs,'reduceV',vx_vol,2,32,'meanm');
+            NCsr = cat_vol_localstat(NCsr,true(size(NCs)),1,1);
+            NCsr = cat_vol_smooth3X(NCsr,2/mean(resT2.vx_volr));
+            NCs  = cat_vol_resize(NCsr,'dereduceV',resT2); 
             % weighting
             NCs = NCs ./ mean(NCs(:)); NCs = max(0,min(1,NCs * (15*NCrate) * abs(NCstr(NCstri)))); 
             % volume dependency (lower filtering in lower resolution)
