@@ -20,13 +20,16 @@ function varargout=ds(type,viewtype,DAR,varargin)
   % rotate data...
   if isempty(DAR), DAR=1; end
   if numel(DAR)<2, DAR=repmat(DAR,1,3); end
-  if viewtype==1 || ~isempty(strfind(viewtype,'m')) || ~isempty(strfind(viewtype,'medial'))
-    for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); end; DAR=DAR([2 3 1]);
-  elseif viewtype==2 || ~isempty(strfind(viewtype,'a')) || ~isempty(strfind(viewtype,'axial'))
-    for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); end; DAR=DAR([3 1 2]); 
-  end
-  if ~isempty(strfind(viewtype,'+')), myzoom = 1+numel(strfind(viewtype,'+')); else myzoom = 1; end
-  
+  if ~isempty(viewtype)
+    if viewtype==1 || ~isempty(strfind(viewtype,'m')) || ~isempty(strfind(viewtype,'medial'))
+      for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); end; DAR=DAR([2 3 1]);
+    elseif viewtype==2 || ~isempty(strfind(viewtype,'a')) || ~isempty(strfind(viewtype,'axial'))
+      for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); end; DAR=DAR([3 1 2]); 
+    end
+    if ~isempty(strfind(viewtype,'+')), myzoom = 1+numel(strfind(viewtype,'+')); else myzoom = 1; end
+  else
+    myzoom = 1;
+  end  
   
   if isstruct(varargin{1}) && isfield(varargin{1},'vertices') && isfield(varargin{1},'faces')
     figure
