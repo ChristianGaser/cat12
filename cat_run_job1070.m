@@ -333,7 +333,7 @@ function cat_run_job1070(job,tpm,subj)
                 [Ym,Yt,Ybg,WMth,bias] = cat_run_job_APP_init1070(single(obj.image.private.dat(:,:,:)),vx_vol,job.extopts.verb);
 
 
-                % update SPM parameter - only increasing of resolution paramter 
+                % update SPM parameter - only increasing of resolution parameter 
                 % experimental 20161021
                 if 0 % job.extopts.expertgui>1
                   bias = max(0,bias - 0.1);                                       % there will allways be some bias
