@@ -114,20 +114,29 @@ for i = 1:numel(job.data)
         if NCstr(NCstri)<0
         % adaptive local denoising 
 
-            % prepare local map
+            %% prepare local map
             % use less filtering for lowres data to avoid anatomical blurring ???
             NCs = max(eps,abs(src - srco)); % ./ mean(NCs(:)); %max(eps,src); 
-            NC  = cat_vol_smooth3X(NCs,2/mean(vx_vol)); % spm_smooth(NCs,NCs,2/mean(vx_vol)); % 
-            NCs(NCs>NC*1.5/mean(vx_vol)) = 0;                                           
-            src(NCs>NC*2)   = src(NCs>NC*2)*0.25 + srco(NCs>NC*2)*0.75;
-            NCs = cat_vol_smooth3X(NCs,2/mean(vx_vol));
-            NCs = NCs ./ mean(NCs(:)); 
-            NCs = max(0,min(1,NCs * (15*NCrate) * abs(NCstr(NCstri)))); 
+            if 1
+              %% preserve anatomical details
+              %  additional reduction of very strong correction
+              NC = cat_vol_smooth3X(NCs,1/mean(vx_vol));
+              M  = NCs>NC*0.5;
+              NCs(NCs>NC*1.5/mean(vx_vol)) = 0; clear NC   
+              % the median is slow
+              NCs = cat_vol_median3(NCs,M,true(size(NCs)));
+              clear M; 
+            end
+            % smoothing of the correction field
+            NCs = cat_vol_smooth3X(NCs,1/mean(vx_vol));
+            % weighting
+            NCs = NCs ./ mean(NCs(:)); NCs = max(0,min(1,NCs * (15*NCrate) * abs(NCstr(NCstri)))); 
+            % volume dependency (lower filtering in lower resolution)
             if job.ares(1), NCs = NCs .* max(0,min(1,1-(mean(vx_vol)-job.ares(2))/diff(job.ares(2:3)))); end
-            NCstr(NCstri) = -cat_stat_nanmean(NCs(:)); 
-
-            % mix original and noise corrected image
+           
+            %% mix original and noise corrected image
             srco = srco.*(1-NCs) + src.*NCs; 
+            NCstr(NCstri) = -cat_stat_nanmean(NCs(:)); 
             clear NCs;
 
         elseif NCstr(NCstri)==1
@@ -173,7 +182,7 @@ for i = 1:numel(job.data)
             % display result and link
             if job.verb
                 fprintf('NCstr = %- 5.2f > %4.2f,%5.0fs: Output %s\n',job.NCstr(NCstri),abs(NCstr(NCstri)),etime(clock,stime),...
-                  spm_file(Vo(i).fname,'link','spm_display(''%s'')'));
+                  spm_file(Vo(i).fname,'link','spm_orthviews(''Image'',''%s'')'));
             end
         end
         Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)));

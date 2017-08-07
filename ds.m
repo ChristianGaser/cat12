@@ -20,11 +20,13 @@ function varargout=ds(type,viewtype,DAR,varargin)
   % rotate data...
   if isempty(DAR), DAR=1; end
   if numel(DAR)<2, DAR=repmat(DAR,1,3); end
-  switch viewtype
-    case {1,'m','medial'}, for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); end; DAR=DAR([2 3 1]);
-    case {2,'a','axial'},  for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); end; DAR=DAR([3 1 2]); 
-    case {0,'c','coronal'}
+  if viewtype==1 || ~isempty(strfind(viewtype,'m')) || ~isempty(strfind(viewtype,'medial'))
+    for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},1); end; DAR=DAR([2 3 1]);
+  elseif viewtype==2 || ~isempty(strfind(viewtype,'a')) || ~isempty(strfind(viewtype,'axial'))
+    for vi=1:vols, varargin{vi}=shiftdim(varargin{vi},2); end; DAR=DAR([3 1 2]); 
   end
+  if ~isempty(strfind(viewtype,'+')), myzoom = 1+numel(strfind(viewtype,'+')); else myzoom = 1; end
+  
   
   if isstruct(varargin{1}) && isfield(varargin{1},'vertices') && isfield(varargin{1},'faces')
     figure
@@ -126,18 +128,18 @@ function varargout=ds(type,viewtype,DAR,varargin)
         subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); axis equal off; daspect(DAR); caxis 'auto';
       case {'d2','default2'}
         %set(fh,'WindowStyle','docked','Visible','on');
-        subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
-        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
-        subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
-        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); 
+        subplot('Position',[0 0.5 0.5 0.5]);   imagesc(varargin{1}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
+        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom);
+        subplot('Position',[0 0 0.5 0.5]);     imagesc(varargin{2}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom); 
+        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); colormap(jet); caxis([0 3]); axis equal off; daspect(DAR); caxis([0 2]); zoom(myzoom); 
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2','label2'}
         [X,Y] = meshgrid(0.125:0.125:LAB,1:3);
         %set(fh,'WindowStyle','docked','Visible','on');
-        subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR);
-        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); caxis([0 2]);                                                                       axis equal off; daspect(DAR);
-        subplot('Position',[0 0 0.5 0.5]);     image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)' ));               axis equal off; daspect(DAR);
-        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); caxis([0 2]);                                                       axis equal off;  daspect(DAR);
+        subplot('Position',[0 0.5 0.5 0.5]);   image(ind2rgb( uint16(7+8*(min(1,varargin{1}(:,:,s))*3 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)')); axis equal off; daspect(DAR); zoom(myzoom);
+        subplot('Position',[0.5 0.5 0.5 0.5]); imagesc(varargin{3}(:,:,s)); caxis([0 2]);                                                                       axis equal off; daspect(DAR); zoom(myzoom);
+        subplot('Position',[0 0 0.5 0.5]);     image(ind2rgb( uint16(7+8*(2.5 + 4*varargin{2}(:,:,s)) ) , interp2(1:LAB,1:3,labelmap16',X,Y)' ));               axis equal off; daspect(DAR); zoom(myzoom);
+        subplot('Position',[0.5 0.0 0.5 0.5]); imagesc(varargin{4}(:,:,s)); caxis([0 2]);                                                       axis equal off;  daspect(DAR); zoom(myzoom);
         cm=BCGWH; ss=2/(size(cm,1)+2); [X,Y] = meshgrid(1:ss:size(cm,1)+1,1:3); cm=interp2(1:size(cm,1),1:3,cm',X,Y)'; colormap(cm);
       case {'l2x','label2x'}
         [X,Y] = meshgrid(0.125:0.125:LAB,1:3);
