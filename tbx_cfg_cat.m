@@ -93,12 +93,12 @@ if expert==0
   surface.labels = {'No','Yes'};
   surface.values = {0 1};
 elseif expert==1
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration)'};
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration, only for quick quality check and not for analysis)'};
   surface.values = {0 1 2 5};  
   surface.help   = [surface.help; {
-    'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties and allow very careful analysis! '
+    'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
     ''
-    'The fast reconstruction allows _visual_ analysis the processing quality, by checking the shaping and thickness results of the neocortex. It takes only about 3 Minutes for both hemisheres by using only 0.8 mm resolution and avoiding full topology correction and surface registration. '
+    'The fast reconstruction allows a _visual_ check of the processing quality by providing a reconstructed cortical surface and thickness values with slightly lower accuracy. It takes only a few minutes for both hemisheres by internally using 0.8 mm (instead of 0.5mm) spatial resolution and by skipping topology correction and surface registration. Please note that neither the surface nor the measures on the surface (e.g. thickness) can be used for any further statistical analysis! '
     ''
   }];    
 else

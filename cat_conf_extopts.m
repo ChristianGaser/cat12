@@ -31,7 +31,7 @@ if expert > 1
   vox.num  = [1 inf];
   vox.help = [vox.help; { 
     'Developer option: '
-    '  For multiple values the first value is used for final output, whereas the other values were saved in separate sub directories. '
+    '  For multiple values the first value is used for the final output, whereas results for the other values are saved in separate sub directories. '
     ''
     }];
 end
@@ -49,9 +49,9 @@ darteltpm.num     = [1 1];
 darteltpm.filter  = 'image';
 darteltpm.ufilter = 'Template_1'; 
 darteltpm.help    = {
-  'Selected the first of six images of a Dartel template.  The Dartel template must be in multi-volume nifti format and should contain GM and WM segmentations. '
+  'Select the first of six images (iterations) of a Dartel template.  The Dartel template must be in multi-volume (5D) nifti format and should contain GM and WM segmentations. '
   ''
-  'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ.'
+  'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
   ''
 };
 
@@ -65,9 +65,9 @@ shootingtpm.num     = [1 1];
 shootingtpm.filter  = 'image';
 shootingtpm.ufilter = 'Template_0'; 
 shootingtpm.help    = {
-  'Selected the first of six images of a Shooting template.  The Shooting template must be in multi-volume nifti format and should contain GM, WM, and background segmentations and have to saved with at least 16 bit. '
+  'Select the first of five images (iterations) of a Shooting template.  The Shooting template must be in multi-volume (5D) nifti format and should contain GM, WM, and background segmentations and have to be saved with at least 16 bit. '
   ''
-  'Please note that the use of an own Shooting template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ.'
+  'Please note that the use of an own Shooting template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
   ''
 };
 
@@ -137,8 +137,8 @@ if expert==0
   };
   regstr.values = {0 4 0.5};
   regstr.help   = [regstr.help; { ...
-    'For spatial registration CAT offers to use the classical Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registrations to a existing template. Furthermore, an optimized shooting approach is available that use adaptive threshold and lower initial resolution to improve accuracy and calculation time at once.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
-    'The registration time is typically about 3, 10, and 5 Minutes for Dartel, Shooting, and optimized Shooting for the default registration resultion. '
+    'For spatial registration CAT offers the use of the Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registratios to an existing template. Furthermore, an optimized shooting approach is available that uses an adaptive threshold and lower initial resolutions to obtain a godd tradeoff between accuracy and calculation time.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
+    'The registration time is typically about 3, 10, and 5 minutes for Dartel, Shooting, and optimized Shooting for the default registration resolution. '
     ''
   }];
 elseif expert==1
@@ -156,7 +156,7 @@ elseif expert==1
   };
   regstr.values = {0 4 5 eps 0.5 1.0 11 12 13};
   regstr.help = [regstr.help; { ...
-    'The strength of the optimized Shooting registration depend on the stop criteria (controled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choise to allow an addaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resoultion allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" paramter. '
+    'The strength of the optimized Shooting registration depends on the stopping criteria (controlled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choice to allow an adaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resoultion allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" parameter. '
     ''
     '  0   .. "Dartel"'
     '  4   .. "Default Shooting"'
@@ -177,7 +177,7 @@ else
   regstr.num     = [1 inf];
   regstr.help = [regstr.help; { ...
     '"Default Shooting" runs the original Shooting approach for existing templates and takes about 10 minutes per subject for 1.5 mm templates and about 1 hour for 1.0 mm. '
-    'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stop criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
+    'The "Optimized Shooting" approach uses lower spatial resolutions in the first iterations and an adaptive stopping criteria that allows faster processing of about 6 minutes for 1.5 mm and 15 minutes for 1.0 mm. '
     ''
     'In the development modus the deformation levels are set by the following values (TR=template resolution) ...'
     '  0         .. "Use Dartel" '                                     
@@ -201,9 +201,9 @@ else
     '  24        .. "Softer Shooting TR"      .. max( max( 2.5 , TR ) , [3.0:0.5:1.0] )'
     '  25        .. "Softer Shooting TR"      .. max( max( 3.0 , TR ) , [3.0:0.5:1.0] )'
     ''
-    'Double digit variants runs only for a limited resolutions and produce softer maps.  The cases with TR are further limited by the template resolution and to avoid interpolation. '
+    'Double digit variants runs only for a limited resolutions and produce softer maps.  The cases with TR are further limited by the template resolution and to avoid additional interpolation. '
     ''
-    'For each given value a separate deformation process is run in inverse order and saved in subdirectories.  The first given value that runs last will be used in the following CAT processing. ' 
+    'For each given value a separate deformation process is started in inverse order and saved in subdirectories.  The first given value that runs last will be used in the following CAT processing. ' 
     ''
     }]; 
 end
@@ -223,7 +223,7 @@ else
 end
 registration.help   = {
   'For spatial registration CAT offers to use the classical Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registrations to a existing template. Furthermore, an optimized shooting approach is available that use adaptive threshold and lower initial resolution to improve accuracy and calculation time at once.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
-  'The registration time is typically about 3, 10, and 5 Minutes for Dartel, Shooting, and optimized Shooting for the default registration resultion. '
+  'The registration time is typically about 3, 10, and 5 minutes for Dartel, Shooting, and optimized Shooting for the default registration resolution. '
   ''
 }; 
 
@@ -252,7 +252,7 @@ lazy.labels  = {'yes','No'};
 lazy.values  = {1,0};
 lazy.val     = {0};
 lazy.help    = {
-  'Do not process data if the result exist. '
+  'Do not process data if result already exist. '
 };
 
 experimental        = cfg_menu;
@@ -264,7 +264,7 @@ experimental.def    = @(val)cat_get_defaults('extopts.experimental', val{:});
 experimental.help   = {
   'Use experimental code and functions.'
   ''
-  'WARNING: This parameter is only for developer and will call functions that are not safe and may change strongly!'
+  'WARNING: This parameter is only for developer and will call functions that are not safe and may change in future versions!'
   ''
 };
 
@@ -345,7 +345,7 @@ resfixed.name   = 'Fixed resolution';
 resfixed.def    = @(val)cat_get_defaults('extopts.resval', val{:});
 resfixed.num    = [1 2];
 resfixed.help   = {
-    'This options prefers an isotropic voxel size that is controled by the first parameters.  '
+    'This options prefers an isotropic voxel size that is controlled by the first parameters.  '
     'The second parameter is used to avoid tiny interpolations for almost correct resolutions. ' 
     'In order to avoid interpolation artifacts in the Dartel output the lowest spatial resolution is always limited to the voxel size of the normalized images (default 1.5mm). '
     ''
@@ -461,7 +461,7 @@ sanlm.labels = {'No denoising','SANLM denoising','ISARNLM denoising'};
 sanlm.values = {0 1 2};
 sanlm.def    = @(val)cat_get_defaults('extopts.sanlm', val{:});
 sanlm.help   = {
-    'This function applies an spatial adaptive non local means (SANLM) or the iterative spatial resolution adaptive non local means (ISARNLM) denoising filter to the data. Using the ISARNLM filter is only required for high resolution data with parallel image artifacts or strong noise. Both filter will remove noise while preserving edges. Further modification of the strength of the noise correction is possible by the NCstr parameter. '
+    'This function applies an spatial adaptive non local means (SANLM) or the iterative spatial resolution adaptive non local means (ISARNLM) denoising filter to the data. Use of the ISARNLM filter is only required and recommended for data with high spatial resolution with parallel image artifacts or strong noise. Both filters will remove noise while preserving edges. Further modification of the strength of the noise correction is possible by the NCstr parameter. '
     'The following options are available: '
     '  * No noise correction '
     '  * SANLM '
@@ -477,9 +477,9 @@ NCstr.values = {0 -inf 1 2 3};
 NCstr.def    = @(val)cat_get_defaults('extopts.NCstr', val{:});
 NCstr.help   = {
   'Strength of the SANLM noise correction. The default "light" uses an adaptive version of the "full" SANLM filter. '
-  'The iterative spatial resolution adaptive non local means (ISARNLM) denoising filter can help to reduce noise in average, smoothed, resliced, or interpolated images. '
+  'The iterative spatial resolution adaptive non local means (ISARNLM) denoising filter can help to reduce noise in average, smoothed, resliced, or interpolated images or data with high spatial resolution. '
   ''
-  'Please note that our tests showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
+  'Please note that the filter strength is automatically estimated using the default settings and our tests showed no case where less corrections improved the image segmentation! Change this parameter only for specific conditions. '
   ''
 };
 

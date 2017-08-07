@@ -447,7 +447,7 @@ NCstr.strtype = 'r';
 NCstr.num     = [1 1];
 NCstr.def     = @(val)cat_get_defaults('extopts.NCstr', val{:});
 NCstr.help    = {
-  'Strength of the SANLM noise correction. The default "inf" use an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for small changes and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction!'
+  'Strength of the SANLM noise correction. The default "-inf" uses an adaptive noise correction and was successfully tested on a variety of scans. Use smaller values (>0) for less denoising  and higher values (<=1) for stronger denoising. The value 0 will turn off any noise correction.'
 ''
 };
 

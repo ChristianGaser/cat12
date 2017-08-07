@@ -15037,6 +15037,7 @@ Changed: Divergence function in cat_vol_div.m was too memory demanding for
 some systems.
 
 ------------------------------------------------------------------------
+r1159 | dahnke | 2017-08-04 16:08:14 +0200 (Fr, 04 Aug 2017) | 46 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15083,5 +15084,23 @@ M       tbx_cfg_cat.m
              
              
              
+
 ------------------------------------------------------------------------
-r1159 | dahnke | 2017-08-04 16:07:54
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_extopts.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+M       html/cat.html
+M       tbx_cfg_cat.m
+
+(1) Changed: Parameters for final deformable surface are now resulting in 
+    a smoother surface in cat_surf_createCS.m
+(2) Changed: Updated help text.
+
+------------------------------------------------------------------------
+r1160 | gaser | 2017-08-07 11:15:22
