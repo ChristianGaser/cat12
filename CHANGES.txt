@@ -15123,6 +15123,7 @@ A       internal/PAIL/spm_ov_pale.m
 (2) Fixed:    Corrected error in optimised SANLM filter (cat_vol_sanlm).  
 
 ------------------------------------------------------------------------
+r1162 | dahnke | 2017-08-07 18:41:21 +0200 (Mo, 07 Aug 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15132,5 +15133,20 @@ MM      internal/cat_vol_optimizeTemplate.m
 
 (1) Fixed:    Corrected error in SANLM filter due to small values by adding an
               simple intensity normalization in cat_vol_sanlm.  
+
 ------------------------------------------------------------------------
-r1162 | dahnke | 2017-08-07 18:41:01
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_vol2surf.m
+ M      internal/PAIL/pale_ui.fig
+ M      internal/PAIL/pale_ui.m
+ M      internal/PAIL/pale_ui_help.fig
+ M      internal/PAIL/pale_ui_help.m
+ M      internal/PAIL/spm_ov_pale.m
+
+Changed: Added options for using offset and changed many options in
+cat_surf_vol2surf.m and cat_conf_stools.m
+------------------------------------------------------------------------
+r1163 | gaser | 2017-08-07 23:57:24

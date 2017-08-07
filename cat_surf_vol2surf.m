@@ -6,15 +6,17 @@ function out = cat_surf_vol2surf(varargin)
 % job.data_mesh_lh  .. lh mesh files
 % job.data_vol      .. volume for mapping
 % job.verb          .. verbose (default: 1)
-% job.gifti         .. output gifti (default: 1)
+% job.gifti         .. output gifti (default: 0)
 % job.interp        .. interpolation type (default 'linear')
 % job.mapping       .. mapping type 
 %   .abs_mapping    .. absolute mapping distance
-%     .length       .. length of the vector (
-%     .stepsize     .. stepsize in mm (default 0.5)
+%     .start        .. start point of the vector in mm
+%     .steps        .. number of grid steps
+%     .end          .. end point of the vector in mm
 %   .rel_mapping    .. relative mapping distance
-%     .length       .. length of the vector (default 
-%     .stepsize     .. stepsize in mm (default: 0.5)
+%     .start        .. start point of the vector
+%     .steps        .. number of grid steps
+%     .end          .. end point of the vector
 % job.datafieldname .. new fieldname
 % 
 % ______________________________________________________________________
@@ -44,7 +46,7 @@ function out = cat_surf_vol2surf(varargin)
   def.gifti = 0; 
   def.debug = 0; 
   def.interp{1} = 'linear'; 
-  def.sample{1} = 'avg'; 
+  def.sample{1} = 'maxabs'; 
   def.datafieldname = 'intensity';
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   job = cat_io_checkinopt(job,def);
@@ -61,33 +63,20 @@ function out = cat_surf_vol2surf(varargin)
   job.sinfo_rh = cat_surf_info(job.data_mesh_rh);
   template = job.sinfo_lh(1).template;
   
-  %% Mapping commando 
+  %% Mapping command 
   % --------------------------------------------------------------------
   if isfield(job.mapping,'abs_mapping'), mapping = 'abs_mapping'; else mapping = 'rel_mapping'; end
-
-  switch mapping
-    case 'abs_mapping'
-      job.mapping.(mapping).length = ...
-        round(diff([job.mapping.(mapping).startpoint,job.mapping.(mapping).endpoint]) / job.mapping.(mapping).stepsize);
-    case 'rel_mapping';
-      job.mapping.(mapping).length = diff([job.mapping.(mapping).startpoint,job.mapping.(mapping).endpoint]); 
-  end
-  
-  if job.mapping.(mapping).stepsize==0
-    job.mapping.(mapping).length   = 0.5;
-    job.mapping.(mapping).stepsize = 1;
-  end
   
   mapdef.class = 'GM';
   job.mapping.(mapping) = cat_io_checkinopt( job.mapping.(mapping),mapdef);
  
-  mappingstr = sprintf('-%s -%s -res "%0.4f" -origin "%0.4f" -length "%0.4f"',...
-       job.interp{1},job.sample{1}, job.mapping.(mapping).stepsize, job.mapping.(mapping).startpoint,...
-       job.mapping.(mapping).length);   
+  mappingstr = sprintf('-%s -%s -steps "%d" -start "%0.4f" -end "%0.4f"',...
+       job.interp{1},job.sample{1}, job.mapping.(mapping).steps, job.mapping.(mapping).startpoint,...
+       job.mapping.(mapping).endpoint);   
   
   %% display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.data_vol),'Extracted Volumes','Volumes Complete');
+  spm_progress_bar('Init',numel(job.data_vol),'Mapped Volumes','Volumes Complete');
   P.data = cell(numel(job.data_vol),2);
   P.relmap = cell(numel(job.data_vol),2);
   P.thick = cell(numel(job.data_vol),2);
@@ -111,9 +100,27 @@ function out = cat_surf_vol2surf(varargin)
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(1),...
           'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si}).name);
 
+        P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(1).Pmesh,...
+            'preside','','pp',job.fsavgDir,'dataname','thickness','ee','');
+
+        switch mapping
+          case 'abs_mapping'
+            switch job.mapping.(mapping).surface
+              case {1,'Central'},  addstr = ''; 
+              case {2,'WM'},   addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness
+              case {3,'Pial'}, addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness 
+            end
+          case 'rel_mapping'
+            switch job.mapping.(mapping).class
+              case {1,'GM'},  addstr = sprintf(' -thickness "%s" ',P.thickness{vi,si}); 
+              case {2,'WM'},  error('Not yet supported');
+              case {3,'CSF'}, error('Not yet supported'); 
+            end
+        end
+
         % map values
-        cmd = sprintf('CAT_3dVol2Surf %s "%s" "%s" "%s"',...
-          mappingstr, job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
+        cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
+          mappingstr, addstr,job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
         %if job.gifti==0
@@ -170,23 +177,21 @@ function out = cat_surf_vol2surf(varargin)
           
         switch mapping
           case 'abs_mapping'
-            switch job.mapping.(mapping).class
-              case {1,'GM'},  offset = ''; 
-              case {2,'WM'},  offset = sprintf(' -WMoffset  "%s"',P.thickness{vi,si}); % - half thickness
-              case {3,'CSF'}, offset = sprintf(' -CSFoffset "%s"',P.thickness{vi,si}); % + half thickness 
+            switch job.mapping.(mapping).surface
+              case {1,'Central'},  addstr = ''; 
+              case {2,'WM'},   addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness
+              case {3,'Pial'}, addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness 
             end
-            thickness = '';
           case 'rel_mapping'
             switch job.mapping.(mapping).class
-              case {1,'GM'},  thickness = sprintf(' -thickness "%s" ',P.thickness{vi,si}); 
-              case {2,'WM'},  thickness = sprintf(' -thickness "%s" ',P.thickness{vi,si});  % - half thickness
-              case {3,'CSF'}, thickness = sprintf(' -thickness "%s" ',P.thickness{vi,si}); % + half thickness 
+              case {1,'GM'},  addstr = sprintf(' -thickness "%s" ',P.thickness{vi,si}); 
+              case {2,'WM'},  error('Not yet supported');
+              case {3,'CSF'}, error('Not yet supported'); 
             end
-            offset = ''; 
         end
         
         cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
-          mappingstr,thickness, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
+          mappingstr, addstr, job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
         if job.gifti==1
@@ -197,12 +202,9 @@ function out = cat_surf_vol2surf(varargin)
           
           if job.debug 
             fprintf('\n%s\n',RS);
-          end
-          if job.debug 
             fprintf('\nMappingstring: %s\n',mappingstr);
           end
         end
-        
         
         if job.verb
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
