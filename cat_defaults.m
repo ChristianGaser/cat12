@@ -44,7 +44,8 @@ cat.opts.samp      = 3;                       % Sampling distance - alternative:
 
 % save surface and thickness
 cat.output.surface     = 0;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
-                                %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration), 6 - lh+rh+cerebellum (fast, no registration)
+                                %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
+                                %   6 - lh+rh+cerebellum (fast, no registration, only for quick quality check and not for analysis)
 
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))
@@ -114,7 +115,7 @@ cat.extopts.cleanupstr   = 0.5; % Strength of the cleanup process:           0 t
 
 % segmentation options
 %cat.extopts.sanlm        = 1;   % use SANLM filter:                          0 - no SANLM; 1 - SANLM; 2 - ISARNLM
-cat.extopts.NCstr        =-inf; % Strength of the noise correction:          0 to 1; -INF - auto; 1 - full; 2 - ISARNLM (else SANLM), default INF
+cat.extopts.NCstr        =-inf; % Strength of the noise correction:          0 to 1; 0 - no filter; -INF - auto; 1 - full; 2 - ISARNLM (else SANLM), default INF
 cat.extopts.LASstr       = 0.5; % Strength of the local adaption:            0 to 1; default 3
 cat.extopts.BVCstr       = 0.5; % Strength of the Blood Vessel Correction:   0 to 1; default 3
 cat.extopts.regstr       = 0.5; % Strength of Shooting registration:         0 - Dartel, eps (fast) to 1 (accurate) optimized Shooting, 4 - default Shooting;
