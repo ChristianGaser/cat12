@@ -15086,6 +15086,7 @@ M       tbx_cfg_cat.m
              
 
 ------------------------------------------------------------------------
+r1160 | gaser | 2017-08-07 11:15:37 +0200 (Mo, 07 Aug 2017) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15102,5 +15103,22 @@ M       tbx_cfg_cat.m
     a smoother surface in cat_surf_createCS.m
 (2) Changed: Updated help text.
 
+
 ------------------------------------------------------------------------
-r1160 | gaser | 2017-08-07 11:15:22
+
+Changed paths:
+M       CHANGES.txt
+M       cat_vol_sanlm.m
+M       ds.m
+A       internal/PAIL
+A       internal/PAIL/pale_ui.fig
+A       internal/PAIL/pale_ui.m
+A       internal/PAIL/pale_ui_help.fig
+A       internal/PAIL/pale_ui_help.m
+A       internal/PAIL/spm_ov_pale.m
+
+(1) New:      Added Point And Label setting Extension (PALE) orthview plugin   
+              to internal directory. 
+(2) Fixed:    Corrected error in optimised SANLM filter (cat_vol_sanlm).  
+------------------------------------------------------------------------
+r1161 | dahnke | 2017-08-07 14:07:15
