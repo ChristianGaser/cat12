@@ -319,74 +319,76 @@ function stools = cat_conf_stools(expert)
   v2s.abs_startpoint.val     = {-0.5};
   v2s.abs_startpoint.num     = [1 1];
   v2s.abs_startpoint.help    = {
-    'Absolut position of the startpoint of the grid along the surface normals in mm. Give negative value for a startpoint outside the surface (CSF direction). '
+    'Absolute position of the start point of the grid along the surface normals in mm according to the surface. Give negative value for a start point outside of the surface (CSF direction, outwards). '
   };
   v2s.rel_startpoint = v2s.abs_startpoint;
   v2s.rel_startpoint.val     = {0};
   v2s.rel_startpoint.help    = {
-    'Relative position of the startpoint of the grid along the surface normals from the center of a tissue class. Give negative value for a startpoint outside the surface (CSF direction). '
+    'Relative position of the start point of the grid along the surface normals according to a tissue class. A value of "0" begins at the GM/CSF border and negative values define a start point outside of the tissue class (CSF direction, outwards). '
   };
   
-  % stepsize
-  v2s.abs_stepsize         = cfg_entry;
-  v2s.abs_stepsize.tag     = 'stepsize';
-  v2s.abs_stepsize.name    = 'Stepsize';
-  v2s.abs_stepsize.strtype = 'r';
-  v2s.abs_stepsize.val     = {0.5};
-  v2s.abs_stepsize.num     = [1 1];
-  v2s.abs_stepsize.help    = {
-    'Absolute stepsize in mm of the grid along the surface beginning from the startpoint. '
+  % steps
+  v2s.abs_steps         = cfg_entry;
+  v2s.abs_steps.tag     = 'steps';
+  v2s.abs_steps.name    = 'Steps';
+  v2s.abs_steps.strtype = 'w';
+  v2s.abs_steps.val     = {11};
+  v2s.abs_steps.num     = [1 1];
+  v2s.abs_steps.help    = {
+    'Number of grid steps. '
   };
-  v2s.rel_stepsize = v2s.abs_stepsize; 
-  v2s.rel_stepsize.val     = {0.1};
-  v2s.rel_stepsize.help    = {
-    'Relative stepsize based on the thickness/depth of the tissue class of the grid along the surface beginning from the startpoint. '
-  };
+  v2s.rel_steps = v2s.abs_steps; 
 
   % endpoint
   v2s.abs_endpoint         = cfg_entry;
   v2s.abs_endpoint.tag     = 'endpoint';
   v2s.abs_endpoint.name    = 'Endpoint';
   v2s.abs_endpoint.strtype = 'r';
-  v2s.abs_endpoint.val     = {+0.5};
+  v2s.abs_endpoint.val     = {0.5};
   v2s.abs_endpoint.num     = [1 1];
   v2s.abs_endpoint.help    = {
-    'Absolut position of the endpoint of the grid along the surface normals in mm. Give negative value for a startpoint outside the surface (CSF direction). '
+    'Absolute position of the end point of the grid along the surface normals (pointing inwards) in mm according to the surface. '
   };
   v2s.rel_endpoint = v2s.abs_endpoint;
   v2s.rel_endpoint.val     = {1};
   v2s.rel_endpoint.help    = {
-    'Relative position of the endpoint of the grid along the surface normals from the center of a tissue class. Give negative value for a startpoint outside the surface (CSF direction). '
+    'Relative position of the end point of the grid along the surface normals (pointing inwards) according to a tissue class. A value of "1" ends at the GM/WM border and values > 1 define an end point outside of the tissue class (WM direction, inwards). '
+  };
+
+  % tissue class
+  v2s.rel_class         = cfg_menu;
+  v2s.rel_class.tag     = 'class';
+  v2s.rel_class.name    = 'Tissue Class';
+  v2s.rel_class.labels  = {'GM'};
+  v2s.rel_class.values  = {'GM'};
+  v2s.rel_class.val     = {'GM'};
+  v2s.rel_class.help    = {
+    'Tissue class for which the relative positions are estimated.'
   };
 
   % tissue class
   v2s.abs_class         = cfg_menu;
-  v2s.abs_class.tag     = 'class';
-  v2s.abs_class.name    = 'Tissue Class';
-  v2s.abs_class.labels  = {'GM'};
-  v2s.abs_class.values  = {'GM'};
-  v2s.abs_class.val     = {'GM'};
+  v2s.abs_class.tag     = 'surface';
+  v2s.abs_class.name    = 'Surface';
+  v2s.abs_class.labels  = {'WM Surface','Central Surface','Pial Surface'};
+  v2s.abs_class.values  = {'WM','Central','Pial'};
+  v2s.abs_class.val     = {'Central'};
   v2s.abs_class.help    = {
-    'Tissue class for which the relative positions are estimated.'
+    'Surface (or tissue boundary) for which the absolute positions are estimated.'
   };
-  v2s.rel_class = v2s.abs_class; 
-  if expert==2
-    v2s.abs_class.labels  = {'GM','WM','CSF'};
-    v2s.abs_class.values  = {'GM','WM','CSF'};
-  end
-  
+
   % absolute position
   v2s.abs_mapping         = cfg_branch;
   v2s.abs_mapping.tag     = 'abs_mapping';
-  v2s.abs_mapping.name    = 'Absolution Position From a Tissue Boundary';
+  v2s.abs_mapping.name    = 'Absolute Position From a Surface';
   v2s.abs_mapping.val   = {
     v2s.abs_class ...
     v2s.abs_startpoint ...
-    v2s.abs_stepsize ...
+    v2s.abs_steps ...
     v2s.abs_endpoint ...
   }; 
   v2s.tissue.help    = {
-    'Map volumetric data from abolute position(s) from a tissue boundary.'
+    'Map volumetric data from abolute position(s) from a surface (or tissue boundary).'
   };
   
   %% relative mapping
@@ -396,11 +398,11 @@ function stools = cat_conf_stools(expert)
   v2s.rel_mapping.val   = {
     v2s.rel_class ...
     v2s.rel_startpoint ...
-    v2s.rel_stepsize ...
+    v2s.rel_steps ...
     v2s.rel_endpoint ...
   };
   v2s.rel_mapping.help    = {
-    'Map volumetric data from relative positions from the center of a tissue class.'
+    'Map volumetric data from relative positions within a tissue class.'
   };
 
   %% -- Mapping function
@@ -414,11 +416,11 @@ function stools = cat_conf_stools(expert)
   }; 
   v2s.mapping.help    = {
     'Volume extration type. '
-    '  Absolution Position From a Tissue Boundary:'
-    '    Extract a set of values around a tissue boundary with a specified absolute sample '
+    '  Absolute Position From a Surface (or Tissue Boundary):'
+    '    Extract a set of values around a surface or tissue boundary with a specified absolute sample '
     '    distance and combine these values.'
     '  Relative Position Within a Tissue Class:' 
-    '    Extract a set of values around the center of a tissue class with a specified relative sample'
+    '    Extract a set of values within a tissue class with a specified relative sample'
     '    distance and combine these values.'
     '' 
   };
