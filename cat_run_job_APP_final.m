@@ -3,7 +3,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
 %  The final bias correction is a subfunction of cat_run_job.
 % 
 %  The affine registration, especially spm_preproc8 requires a very good 
-%  masking! Because this is also required for the Unified Segmenation
+%  masking! Because this is also required for the Unified Segmentation
 %  a wider mask with a complete brain is important.
 %  _____________________________________________________________________
 %  Robert Dahnke

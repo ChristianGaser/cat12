@@ -650,7 +650,7 @@ close_parahipp.help    = {
 
 segmentation      = cfg_branch;
 segmentation.tag  = 'segmentation';
-segmentation.name = 'Segmenation Options';
+segmentation.name = 'Segmentation Options';
 if expert==1
   segmentation.val  = {app,NCstr,LASstr,gcutstr,cleanupstr,WMHCstr,wmhc,restype};
 else
