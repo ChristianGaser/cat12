@@ -114,11 +114,10 @@ cat.extopts.gcutstr      = 0.5; % Strength of skull-stripping:               0 t
 cat.extopts.cleanupstr   = 0.5; % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options
-%cat.extopts.sanlm        = 1;   % use SANLM filter:                          0 - no SANLM; 1 - SANLM; 2 - ISARNLM
-cat.extopts.NCstr        =-inf; % Strength of the noise correction:          0 to 1; 0 - no filter; -INF - auto; 1 - full; 2 - ISARNLM (else SANLM), default INF
+cat.extopts.NCstr        =-Inf; % Strength of the noise correction:          0 to 1; 0 - no filter; -Inf - auto; 1 - full; 2 - ISARNLM (else SANLM), default -Inf
 cat.extopts.LASstr       = 0.5; % Strength of the local adaption:            0 to 1; default 3
 cat.extopts.BVCstr       = 0.5; % Strength of the Blood Vessel Correction:   0 to 1; default 3
-cat.extopts.regstr       = 0.5; % Strength of Shooting registration:         0 - Dartel, eps (fast) to 1 (accurate) optimized Shooting, 4 - default Shooting;
+cat.extopts.regstr       = 0;   % Strength of Shooting registration:         0 - Dartel, eps (fast) to 1 (accurate) optimized Shooting, 4 - default Shooting;
 cat.extopts.WMHC         = 1;   % Correction of WM hyperintensities:         0 - no correction; 1 - only for Dartel (default); 
                                 %                                            2 - also correct segmentation (to WM); 3 - handle as separate class
 cat.extopts.WMHCstr      = 0.5; % Strength of WM hyperintensity correction:  0 to 5; default 3
@@ -219,7 +218,7 @@ cat.extopts.atlas       = { ...
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','lpba40.nii')              0      {'gm'}              1; ... % atlas based on 40 subjects
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','cobra.nii')               1      {'gm','wm'}         0; ... % hippocampus-amygdala-cerebellum, 5 subjects, 0.6 mm voxel size 
   fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','ibsr.nii')                2      {'csf','gm'}        0; ... % less regions, 18 subjects, low T1 image quality
-  fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 2      {'gm'}              0; ... % many regions, but only labeled on one subject 
+  ... fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','aal.nii')                 2      {'gm'}              0; ... % many regions, but only labeled on one subject 
   ... fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','mori.nii')                2      {'gm','wm'}         0; ... % only one subject, but with WM regions
   ... fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm','anatomy.nii')             2      {'gm','wm'}         0; ... % ROIs requires further work >> use Anatomy toolbox
 }; 
