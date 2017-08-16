@@ -865,7 +865,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           
           
           % write xml
-          cat_io_xml(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),reg(regstri))
+          %cat_io_xml(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),reg(regstri))
         end
           
           
