@@ -461,6 +461,7 @@ switch lower(action)
             'DK40'               'aparc_DK40';
             ...'Destrieux2005'      'aparc_a2005s';
             'Destrieux'          'aparc_a2009s';
+            'HCP multi-modal parcellation' 'aparc_HCP-MMP1';
             ...'FreeSurfer'         'aparc_freesurfer';
             ...'Bordmann'           'PALS_B12_Brodmann';
             ...'Lobes'              'PALS_B12_Lobes';
@@ -476,6 +477,7 @@ switch lower(action)
             satlas = {
               'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
+              'HCP multi-modal parcellation' 'aparc_HCP-MMP1';
               ...'Destrieux2005'      'aparc_a2005s';
               ...'Bordmann'           'PALS_B12_Brodmann';
               ...'FreeSurfer'         'aparc_freesurfer';
@@ -492,6 +494,7 @@ switch lower(action)
             satlas = {
               'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
+              'HCP multi-modal parcellation' 'aparc_HCP-MMP1';
               ...'Bordmann'           'PALS_B12_Brodmann';
               ...'Lobes'              'PALS_B12_Lobes';
               };
@@ -504,6 +507,7 @@ switch lower(action)
             satlas = {
               'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
+             'HCP multi-modal parcellation' 'aparc_HCP-MMP1';
               };
           end
           H.atlas.vatlas = vatlas; 
