@@ -27,5 +27,5 @@ for i=1:n
   cr.table(i,:) = cl.table(i,:);
 end
 
-cat_io_FreeSurfer('write_annotation', 'atlases_surfaces/lh.aparc_HCP-MMP1.freesurfer.annot', vl, fl, cl);
-cat_io_FreeSurfer('write_annotation', 'atlases_surfaces/rh.aparc_HCP-MMP1.freesurfer.annot', vr, fr, cr);
+cat_io_FreeSurfer('write_annotation', 'atlases_surfaces/lh.aparc_HCP_MMP1.freesurfer.annot', vl, fl, cl);
+cat_io_FreeSurfer('write_annotation', 'atlases_surfaces/rh.aparc_HCP_MMP1.freesurfer.annot', vr, fr, cr);
