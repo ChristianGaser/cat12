@@ -3,7 +3,7 @@ function correct_HCP_annot
 % annot-files
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: correct_HCP_annot.m 1135 2017-06-07 09:04:11Z gaser $
+% $Id$
 
 [vl, fl, cl] = cat_io_FreeSurfer('read_annotation','lh.HCP-MMP1.annot');
 [vr, fr, cr] = cat_io_FreeSurfer('read_annotation','rh.HCP-MMP1.annot');
