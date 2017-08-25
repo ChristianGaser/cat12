@@ -30,6 +30,8 @@ H.data_sel = [0 0];
 H.data_n   = [1 3];
 H.bkg_col  = [0 0 0];
 H.show_inv = 0;
+H.hide_neg = 1;
+H.thresh_value = 0;
 H.transp   = 1;
 H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
 H.FS       = spm('FontSizes');
@@ -68,14 +70,14 @@ switch lower(action)
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.060],...
-          'surf',  [0.050 0.855 0.425 0.050],'mview', [0.525 0.855 0.425 0.050],... 
-          'cursor',[0.050 0.800 0.425 0.050],'thresh',[0.525 0.800 0.425 0.050],... 
-          'cmap',  [0.050 0.750 0.425 0.050],'atlas', [0.525 0.750 0.425 0.050],...
-          'info',  [0.050 0.700 0.425 0.050],'bkg',   [0.525 0.700 0.425 0.050],... 
-          'nocbar',[0.050 0.650 0.425 0.050],'transp',[0.525 0.650 0.425 0.050],... 
-          'inv',   [0.050 0.600 0.425 0.050],... 
-          'ovmin', [0.050 0.400 0.425 0.150],'ovmax', [0.525 0.400 0.425 0.150],... 
-          'save',  [0.050 0.050 0.425 0.050],'close', [0.525 0.050 0.425 0.050]);   
+          'surf',  [0.050 0.855 0.425 0.050],'mview',   [0.525 0.855 0.425 0.050],... 
+          'cursor',[0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
+          'cmap',  [0.050 0.750 0.425 0.050],'atlas',   [0.525 0.750 0.425 0.050],...
+          'info',  [0.050 0.700 0.425 0.050],'bkg',     [0.525 0.700 0.425 0.050],... 
+          'nocbar',[0.050 0.650 0.425 0.050],'transp',  [0.525 0.650 0.425 0.050],... 
+          'inv',   [0.050 0.600 0.425 0.050],'hide_neg',[0.525 0.600 0.425 0.050],...
+          'ovmin', [0.050 0.400 0.425 0.150],'ovmax',   [0.525 0.400 0.425 0.150],... 
+          'save',  [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);   
 
         % create figures 1+2
         for i=1:2
@@ -152,9 +154,10 @@ switch lower(action)
                 'ToolTipString','Threshold',...
                 'Interruptible','on','Visible','off');
 
-        str  = { 'Atlas Labeling...','Desikan-Killiany DK40','Destrieux 2009'};
+        str  = { 'Atlas Labeling...','Desikan-Killiany DK40','Destrieux 2009','HCP Multi-Modal Parcellation'};
         tmp  = { {@select_atlas, 1},...
-                 {@select_atlas, 2}};
+                 {@select_atlas, 2},...
+                 {@select_atlas, 3}};
         
         % atlas for labeling
         H.atlas = uicontrol(H.figure(2),...
@@ -166,13 +169,14 @@ switch lower(action)
                 'Interruptible','on','Visible','off');
 
         str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
-                 'Atlas regions: Destrieux 2009','Plot data at vertex','Plot mean data inside cluster','Enable/Disable rotate3d'};
+                 'Atlas regions: Destrieux 2009','Atlas region: HCP Multi-Modal Parcellation','Plot data at vertex','Plot mean data inside cluster','Enable/Disable rotate3d'};
         tmp  = { {@select_cursor, 0},...
                  {@select_cursor, 1},...
                  {@select_cursor, 2},...
                  {@select_cursor, 3},...
                  {@select_cursor, 4},...
-                 {@select_cursor, 5}};
+                 {@select_cursor, 5},...
+                 {@select_cursor, 6}};
         
         % data cursor for data plotting and atlas names
         H.cursor = uicontrol(H.figure(2),...
@@ -204,6 +208,15 @@ switch lower(action)
                 'style','CheckBox','HorizontalAlignment','center',...
                 'callback',{@checkbox_inv},...
                 'ToolTipString','Invert results',...
+                'Interruptible','on','Visible','off');
+
+        % show only results for pos. contrast
+        H.hide_neg = uicontrol(H.figure(2),...
+                'string','Hide neg. results','Units','normalized',...
+                'position',H.pos{2}.hide_neg,...
+                'style','CheckBox','HorizontalAlignment','center',...
+                'callback',{@checkbox_hide_neg},...
+                'ToolTipString','Hide neg. results',...
                 'Interruptible','on','Visible','off');
 
         % white background
@@ -252,7 +265,7 @@ switch lower(action)
         
           H.S{1}.name = varargin{1};
           H.S{2}.name = varargin{2};
-          
+
           [pth{1},nm1,ext1] = spm_fileparts(H.S{1}.name(1,:));
           [pth{2},nm2,ext2] = spm_fileparts(H.S{2}.name(1,:));
           
@@ -333,10 +346,11 @@ switch lower(action)
           % Don't allow plot functions for RGB maps
           if H.n_surf > 1
             str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
-                 'Atlas regions: Destrieux 2009','Enable/Disable rotate3d'};
+                 'Atlas regions: Destrieux 2009','Atlas region: HCP Multi-Modal Parcellation','Enable/Disable rotate3d'};
             tmp  = { {@select_cursor, 0},...
                  {@select_cursor, 1},...
                  {@select_cursor, 2},...
+                 {@select_cursor, 3},...
                  {@select_cursor, 5}};
                              
             H.cursor = uicontrol(H.figure(2),...
@@ -359,6 +373,7 @@ switch lower(action)
         
           if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
             set(H.inv,'Visible','on');
+            set(H.hide_neg,'Visible','on');
           end
           
           if H.n_surf == 1
@@ -367,6 +382,7 @@ switch lower(action)
         
           H.rdata{1} = [];
           H.rdata{2} = [];
+          H.rdata{3} = [];
           for ind = 1:2
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_DK40.freesurfer.annot']);
@@ -376,9 +392,14 @@ switch lower(action)
               '.aparc_a2009s.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{2} = [H.rdata{2} rdata0];
+            atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
+              '.aparc_HCP-MMP1.freesurfer.annot']);
+            [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation',atlas_name);
+            H.rdata{3} = [H.rdata{3} rdata0];
           end
           H.rcsv{1} = rcsv1;
           H.rcsv{2} = rcsv2;
+          H.rcsv{3} = rcsv3;
 
           H.dcm_obj = datacursormode(H.figure(1));
           set(H.dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
@@ -524,14 +545,25 @@ global H
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
 
+H.hide_neg = get(H.hide_neg,'Value');
+
+% get min value for both hemispheres
+min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
+clim = getappdata(H.patch(1), 'clim');
+
 % rather use NaN values for zero threshold
 if thresh == 0
   H.clip = [false NaN NaN];
 end
 
+if H.hide_neg
+  H.clip = [true -Inf thresh];
+  clim = [true 0 clim(3)];
+  set(H.slider_min,'Value',0);
+end
+
 % get min value for both hemispheres
 min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
-clim = getappdata(H.patch(1), 'clim');
 
 for ind=1:5
   % correct lower clim to "0" if no values are exceeding threshold
@@ -603,9 +635,11 @@ if atlas == 1
   atlas_name = 'Desikan-Killiany DK40 Atlas';
 elseif atlas == 2
   atlas_name = 'Destrieux 2009 Atlas';
+elseif atlas == 3
+  atlas_name = 'HCP Multi-Modal Parcellation';
 end
 
-% go trhough left and right hemisphere
+% go through left and right hemisphere
 for ind = [1 3]
 
   % atlas data
@@ -786,10 +820,7 @@ for ind = 1:5
   display_results(ind, H.viewpos{ind}(~H.view+1,:), vv(ind,:));
 end
 
-% add dataplot area which is used later
-H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
-H.figure(1) = ancestor(H.dataplot,'figure');
-figure(H.figure(1)); axes(H.dataplot);
+figure(H.figure(1));
 
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:)~=0);
@@ -1384,6 +1415,52 @@ if ~H.disable_cbar
   H = show_colorbar(H);
 end
 
+%-----------------------------------------------------------------------
+function H = checkbox_hide_neg(obj, event_obj)
+%-----------------------------------------------------------------------
+global H
+
+H.hide_neg = get(H.hide_neg,'Value');
+
+thresh = H.thresh_value;
+clip = getappdata(H.patch(1), 'clip');
+clim = getappdata(H.patch(1), 'clim');
+
+% get min value for both hemispheres
+min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
+
+if H.hide_neg
+  H.clip = [true -Inf thresh];
+  H.clim = [true 0 clim(3)];
+  set(H.slider_min,'Value',0);
+else
+  H.clip = [true -thresh thresh];
+  if min_d < -thresh
+    H.clim = [true -clim(3) clim(3)];
+    set(H.slider_min,'Value',-clim(3));
+  end
+end
+
+for ind=1:5
+  setappdata(H.patch(ind),'clip',H.clip);
+  setappdata(H.patch(ind),'clim',H.clim);
+  col = getappdata(H.patch(ind),'col');
+  d = getappdata(H.patch(ind),'data');
+  min_d = min(min_d, min(d(:)));
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+% correct value of slider if no values are exceeding threshold
+if min_d > -thresh && H.n_surf==1
+  set(H.slider_min,'Value',0);
+end
+
+set(H.atlas,'Visible','on');
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
 %==========================================================================
 function checkbox_transp(obj, event_obj)
 global H
@@ -1526,11 +1603,11 @@ switch H.cursor_mode
     rotate3d off;
     
     clearDataCursorPlot(H)
-  case {1,2}
+  case {1,2,3}
     clearDataCursorPlot(H)
     set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorAtlas,H});
-  case {3,4}
+  case {4,5}
     fprintf('The values are available at the MATLAB command line as variable ''y''\n');
     figure(H.figure(1))
     try
@@ -1559,7 +1636,7 @@ switch H.cursor_mode
       set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorCluster});
     end
-  case 5 % enable/disable rotate3d
+  case 6 % enable/disable rotate3d
     clearDataCursorPlot(H)
     rotate3d;
     disp('Use mouse to rotate views.');
@@ -1568,12 +1645,14 @@ end
 %==========================================================================
 function  clearDataCursorPlot(H)
 if isfield(H,'dataplot')
-  cla(H.dataplot)
+  cla(H.dataplot);
   
   % hide labels and scale
   set(H.dataplot,'XColor',H.bkg_col,'YColor',H.bkg_col);
   xlabel(H.dataplot,'                                ')
   ylabel(H.dataplot,'                                ')
+
+  rmfield(H,'dataplot');
 end
 
 figure(H.figure(1))
@@ -1687,6 +1766,13 @@ end
 
 if plot_mean && isempty(found_node)
   y(:) = 0;
+end
+
+% create dataplot if not already existent
+if ~isfield(H,'dataplot')
+  H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+  H.figure(1) = ancestor(H.dataplot,'figure');
+  axes(H.dataplot);
 end
 
 cla(H.dataplot)
@@ -1815,8 +1901,10 @@ pos = get(evt,'Position');
 
 if H.cursor_mode == 1
   txt = {'Desikan DK40'};
-else
+elseif H.cursor_mode == 2
   txt = {'Destrieux 2009'};
+elseif H.cursor_mode == 3
+  txt = {'HCP-MMP1'};
 end
 
 i = ismember(get(H.patch(1),'vertices'),pos,'rows');

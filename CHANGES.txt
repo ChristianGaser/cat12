@@ -15164,11 +15164,29 @@ M       cat_run_job_APP_final.m
 
 
 ------------------------------------------------------------------------
+r1165 | gaser | 2017-08-16 17:32:53 +0200 (Mi, 16 Aug 2017) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_main_registration.m
 
 Fixed: Prevent writing additional Dartel folder with xml-files if not necessary.
+
 ------------------------------------------------------------------------
-r1165 | gaser | 2017-08-16 17:32:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+A       atlases_surfaces/lh.aparc_HCP-MMP1.freesurfer.annot
+A       atlases_surfaces/rh.aparc_HCP-MMP1.freesurfer.annot
+M       cat_io_FreeSurfer.m
+M       cat_surf_results.m
+M       html/cat.html
+A       internal/correct_HCP_annot.m
+
+(1) Added: Human Connectome Project (HCP) Multi-Modal Parcellation for surfaces.
+(2) Changed: Added option to suppress neg. (inverse) results for displaying 
+    surface results.
+(3) Changed: Some cosmetic changes in cat_io_Freesurfer.m.
+------------------------------------------------------------------------
+r1166 | gaser | 2017-08-25 13:59:47
