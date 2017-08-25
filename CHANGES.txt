@@ -15173,6 +15173,7 @@ M       cat_main_registration.m
 Fixed: Prevent writing additional Dartel folder with xml-files if not necessary.
 
 ------------------------------------------------------------------------
+r1166 | gaser | 2017-08-25 14:00:03 +0200 (Fr, 25 Aug 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15188,5 +15189,17 @@ A       internal/correct_HCP_annot.m
 (2) Changed: Added option to suppress neg. (inverse) results for displaying 
     surface results.
 (3) Changed: Some cosmetic changes in cat_io_Freesurfer.m.
+
 ------------------------------------------------------------------------
-r1166 | gaser | 2017-08-25 13:59:47
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_render2.m
+M       cat_surf_surf2roi.m
+
+Changed: Added ROI support for Human Connectome Project (HCP) Multi-Modal 
+Parcellation for surfaces.
+
+------------------------------------------------------------------------
+r1167 | gaser | 2017-08-25 14:11:21
