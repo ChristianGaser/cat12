@@ -89,7 +89,7 @@ function varargout=cat_io_FreeSurfer(action,varargin)
       [varargout{1},varargout{2}] = read_curv(varargin{1});
     otherwise
       error(['cat_io_FreeSurfer:unknownAction','Unknown action ''%s''!\n' ...
-             'Use ''write_surf'',''read_surf'',''write_surf_data'',''read_surf_data'',''gii2fs'',''fs2gii.\n'],action);
+             'Use ''write_surf'',''read_surf'',''write_surf_data'',''read_surf_data'',''gii2fs'',''fs2gii'',''read_annotation'',''write_annotation''.\n'],action);
   end
 
 end
@@ -744,26 +744,13 @@ function write_annotation(filename, vertices, label, ct)
           error('write_annotation: Unable to write structure name!!');
       end
 
-      count = fwrite(fp, int32(ct.table(i, 1)), 'int');
-      if(count~=1)
-         error('write_annotation: Unable to write red color'); 
+      for j=1:4
+          count = fwrite(fp, int32(ct.table(i, j)), 'int');
+          if(count~=1)
+             error('write_annotation: Unable to write red color'); 
+          end
       end
-
-      count = fwrite(fp, int32(ct.table(i, 2)), 'int');
-      if(count~=1)
-         error('write_annotation: Unable to write blue color'); 
-      end
-
-      count = fwrite(fp, int32(ct.table(i, 3)), 'int');
-      if(count~=1)
-         error('write_annotation: Unable to write green color'); 
-      end
-
-      count = fwrite(fp, int32(ct.table(i, 4)), 'int');
-      if(count~=1)
-         error('write_annotation: Unable to write padded color'); 
-      end 
-
+      
   end
 
   fclose(fp);
