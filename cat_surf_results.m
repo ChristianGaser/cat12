@@ -393,7 +393,7 @@ switch lower(action)
             [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{2} = [H.rdata{2} rdata0];
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
-              '.aparc_HCP-MMP1.freesurfer.annot']);
+              '.aparc_HCP_MMP1.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{3} = [H.rdata{3} rdata0];
           end
@@ -1904,7 +1904,7 @@ if H.cursor_mode == 1
 elseif H.cursor_mode == 2
   txt = {'Destrieux 2009'};
 elseif H.cursor_mode == 3
-  txt = {'HCP-MMP1'};
+  txt = {'HCP_MMP1'};
 end
 
 i = ismember(get(H.patch(1),'vertices'),pos,'rows');

@@ -15191,6 +15191,7 @@ A       internal/correct_HCP_annot.m
 (3) Changed: Some cosmetic changes in cat_io_Freesurfer.m.
 
 ------------------------------------------------------------------------
+r1167 | gaser | 2017-08-25 14:11:25 +0200 (Fr, 25 Aug 2017) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15201,5 +15202,25 @@ M       cat_surf_surf2roi.m
 Changed: Added ROI support for Human Connectome Project (HCP) Multi-Modal 
 Parcellation for surfaces.
 
+
 ------------------------------------------------------------------------
-r1167 | gaser | 2017-08-25 14:11:21
+
+Changed paths:
+M       CHANGES.txt
+D       atlases_surfaces/lh.aparc_HCP-MMP1.freesurfer.annot
+        > moved to atlases_surfaces/lh.aparc_HCP_MMP1.freesurfer.annot
+A  +    atlases_surfaces/lh.aparc_HCP_MMP1.freesurfer.annot
+        > moved from atlases_surfaces/lh.aparc_HCP-MMP1.freesurfer.annot
+D       atlases_surfaces/rh.aparc_HCP-MMP1.freesurfer.annot
+        > moved to atlases_surfaces/rh.aparc_HCP_MMP1.freesurfer.annot
+A  +    atlases_surfaces/rh.aparc_HCP_MMP1.freesurfer.annot
+        > moved from atlases_surfaces/rh.aparc_HCP-MMP1.freesurfer.annot
+M       cat_conf_stools.m
+M       cat_surf_render2.m
+M       cat_surf_results.m
+MM      internal/correct_HCP_annot.m
+
+Fixed: Changed name for HCP-MMP1 atlas to HCP_MMP1 because "-" is not
+allowd for fieldnames.
+------------------------------------------------------------------------
+r1168 | gaser | 2017-08-25 14:39:38
