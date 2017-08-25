@@ -15204,6 +15204,7 @@ Parcellation for surfaces.
 
 
 ------------------------------------------------------------------------
+r1168 | gaser | 2017-08-25 14:39:42 +0200 (Fr, 25 Aug 2017) | 18 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15222,5 +15223,15 @@ MM      internal/correct_HCP_annot.m
 
 Fixed: Changed name for HCP-MMP1 atlas to HCP_MMP1 because "-" is not
 allowd for fieldnames.
+
 ------------------------------------------------------------------------
-r1168 | gaser | 2017-08-25 14:39:38
+
+Changed paths:
+M       CHANGES.txt
+M       internal/correct_HCP_annot.m
+
+Fixed: Changed name for HCP-MMP1 atlas to HCP_MMP1 because "-" is not
+allowd for fieldnames.
+
+------------------------------------------------------------------------
+r1169 | gaser | 2017-08-25 14:40:08
