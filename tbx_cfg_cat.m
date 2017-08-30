@@ -447,7 +447,7 @@ output.help = {
 
 
 %% ------------------------------------------------------------------------
-tools      = cat_conf_tools;             % volume tools
+tools      = cat_conf_tools(expert);     % volume tools
 stools     = cat_conf_stools(expert);    % surface tools
 if expert 
   stoolsexp  = cat_conf_stoolsexp;       % surface expert tools

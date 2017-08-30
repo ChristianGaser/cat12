@@ -1335,8 +1335,9 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-[trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);; 
-
+if do_dartel 
+  [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);; 
+end
 
 
 %%  --------------------------------------------------------------------
