@@ -50,14 +50,17 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex    = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp  = cat_get_defaults('extopts.close_parahipp');
+  def.sharpenCB = 0; % in development
 
   opt           = cat_io_updateStruct(def,opt);
   opt.fast      = any(~cellfun('isempty',strfind(opt.surf,'fst'))); 
   if opt.fast
     opt.interpV   = 0.8;
   else
-    opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
+    %opt.interpV   = max(0.1,min([min(vx_vol),opt.interpV,1]));
+    opt.interpV   = max(0.1,min([opt.interpV,1]));
   end
+  opt.interpVold = opt.interpV; 
   opt.surf      = cat_io_strrep(opt.surf,'fst',''); 
   
   Psurf = struct(); 
@@ -97,7 +100,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   Ymf  = max(Ym,min(0.95,YMF)); 
   Ymfs = cat_vol_smooth3X(Ymf,1); 
   Ytmp = cat_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
-  Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs YMF; 
+  Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs; 
   Ymf = Ymf*3;
   
     
@@ -114,9 +117,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Ybv   = cat_vol_morph(Ymf+Ydiv./max(1,Ymf)>3.5,'d') & Ymf>2; 
     Ymf(Ybv) = 1.4; 
     Ymfs  = cat_vol_median3(Ymf,Ysroi | Ybv,Ymf>eps & ~Ybv,0.1); % median filter
+    %%
     Ymf   = mf * Ymfs  +  (1-mf) * Ymf;
 
-    %% closing of small WMHs 
+    %% closing of small WMHs and blood vessels
     %vols = [sum(round(Ymf(:))==1 & Ya(:)>0) sum(round(Ymf(:))==2)  sum(round(Ymf(:))==3)] / sum(round(Ymf(:))>0); 
     %volt = min(1,max(0,mean([ (vols(1)-0.20)*5  (1 - max(0,min(0.3,vols(3)-0.2))*10) ]))); 
     %Ywmh = cat_vol_morph(Ymf>max(2.2,2.5 - 0.3*volt),'lc',volt); 
@@ -126,9 +130,51 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     %Ymfs = cat_vol_smooth3X(max(1,Ymf),0.5*min(1,max(0,1.5-mean(vx_vol)))); 
     %Ymf(Ymf>1) = Ymfs(Ymf>1);
   end
-  clear Ysroi Ywmd Ymfs;
-
+  if ~debug, clear Ysroi Ymfs Yctd Ybv Ymfs; end
   
+  % sharpening of thin strucktures (gyri and sulci)
+  % WARNING: this will change cortical thickness!
+  if ~opt.SPM && opt.sharpenCB
+    Ydiv = cat_vol_div(Ymf); Ydivl  = cat_vol_div(Ymf,vx_vol); 
+    Ywmd = cat_vbdist(single(Ymf>2.5),Ymf>1,vx_vol);
+    if 0
+      %% divergence based
+      %  this works in principle but gyral crones and sulcal values are
+      %  overestimated ... need limit
+      Ymsk = (NS(Ya,opt.LAB.CB) & ((Ymf<2.8 & Ymf>2.0          ) | (Ymf<1.9 & Ymf>1.2         )) ) | ... sulci and gyris in the cerebellum 
+             (NS(Ya,opt.LAB.CT) & ((Ymf<2.8 & Ymf>2.0 & Ycsfd>3) | (Ymf<1.9 & Ymf>1.2 & Ywmd>3)) ) | ... distant gyri and sulci in the cerebrum
+             (NS(Ya,opt.LAB.PH) & ((Ymf<2.8 & Ymf>2.0 & Ycsfd>3) | (Ymf<1.9 & Ymf>1.2 & Ywmd>3)) );
+      Ymf  = min(3,max( min(1,Ymf) , Ymf - (abs(Ydivl) .* Ydiv) .* Ymsk));
+    end
+    
+    if 1
+      %% biascorrection based
+      % WM 
+      Ymsk = ((NS(Ya,opt.LAB.CB) | YMF) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                     % sulci and gyris in the cerebellum 
+             (NS(Ya,opt.LAB.PH) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                             % hippocampal gyri
+             (NS(Ya,opt.LAB.CT) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01 & Ycsfd>cat_stat_nanmean(Ycsfd(Ycsfd(:)>0 & Ycsfd(:)<100)) )*1.0) ); % distant gyri and sulci in the cerebrum
+      Yi   = cat_vol_localstat(Ymf,Ymsk,1,3);
+      % GM
+      Ymsk = (NS(Ya,opt.LAB.CB) & ( Ymf>1.9 & Ymf<2.2 & Ycsfd>0 & Ydiv>-0.05) ) | ...                   % sulci and gyris in the cerebellum 
+             (NS(Ya,opt.LAB.PH) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 ) ) | ...                               % hippocampal gyri
+             (NS(Ya,opt.LAB.CT) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 & Ywmd>cat_stat_nanmean(Ywmd(Ywmd(:)>0 & Ywmd(:)<100))*0.2 ) );   % distant gyri and sulci in the cerebrum
+      Yi   = Yi + cat_vol_localstat(Ymf,Yi==0 & Ymsk,1,1)/2*3;
+      Yi   = cat_vol_localstat(Yi,Yi>0,1,3);
+      Yi   = cat_vol_localstat(Yi,Yi>0,1,1); 
+      if ~debug, clear Ywmd; end
+      %% CSF - instable and not required
+      %Ymsk = NS(Ya,opt.LAB.VT) & Ymf>=0.5 & Ymf<1.5;                               % sulci and gyris in the cerebellum 
+      %Yi  = Yi + cat_vol_localstat(Ymf,Yi==0 & Ymsk,1,3)*3;
+      %%
+      Ywi = cat_vol_approx(Yi,'nn',1,2,struct('lfO',2)); 
+      
+      %%
+      Ymf = Ymf./Ywi * 3; 
+      if ~debug, clear Ywi Yi; end
+    end
+    if ~debug, clear Ymsk; end
+  end
+  if ~debug, clear Ydiv Ycsfd; end
   
   Yth1 = zeros(size(Ymf),'single'); 
   if opt.experimental > 1
@@ -165,11 +211,18 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     % reduce for object area
     switch opt.surf{si}
-      case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
-      case {'rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;      
-      case {'lc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1); Yside = mod(Ya,2)==1;
-      case {'rc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;
+      case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1; 
+      case {'rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;  
+      case {'lc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==1); Yside = mod(Ya,2)==1; 
+      case {'rc'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB).* (mod(Ya,2)==0); Yside = mod(Ya,2)==0; 
     end 
+    
+    if 1 %opt.fast
+      switch opt.surf{si}
+        case {'lh','rh'}, opt.interpV = opt.interpVold; 
+        case {'lc','rc'}, opt.interpV = opt.interpVold / 2 ; 
+      end 
+    end
     
     % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
     if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
@@ -186,10 +239,11 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       case {'lh','rh'},  [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
       case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
+    iscerebellum = strcmp(opt.surf{si},'lc') || strcmp(opt.surf{si},'rc');
     
     [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV);                  % interpolate volume
     Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;               % interpolate volume (small dilatation)
-    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if ~iscerebellum
       mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;     % interpolate volume
     end 
     
@@ -293,13 +347,13 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Vpp1 = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
     vmat2         = spm_imatrix(Vpp1.mat);
-    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)));
-    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1];
+    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)*(1 + iscerebellum)));   % use dooble resolution in case of cerebellum
+    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1]/(1 + iscerebellum);            % use dooble resolution in case of cerebellum
     Vpp1.mat      = spm_matrix(vmat2);
 
     Vpp1 = spm_create_vol(Vpp1); 
     for x3 = 1:Vpp1.dim(3),
-      M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1])*inv(Vpp1.mat)*Vpp.mat); %#ok<MINV>
+      M    = inv(spm_matrix([0 0 -x3 0 0 0 1 1 1]) * inv(Vpp1.mat) * Vpp.mat); %#ok<MINV>
       v    = spm_slice_vol(Vpp,M,Vpp1.dim(1:2),1);       
       Vpp1 = spm_write_plane(Vpp1,v,x3);
     end;
@@ -313,7 +367,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     vmati = inv([vmat; 0 0 0 1]); vmati(4,:) = [];    
 
     % smooth mask to have smooth border
-    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if ~iscerebellum
       mask_parahipp_smoothed = zeros(size(mask_parahipp));
       spm_smooth(double(mask_parahipp),mask_parahipp_smoothed,[8 8 8]);
     end 
@@ -322,7 +376,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     th_initial      = 0.5;
 
     ind0 = find(Yppi<=0);
-    Yppi  = opt.scale_cortex*Yppi;
+    Yppi = opt.scale_cortex*Yppi;
+    
     if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
     end
@@ -346,10 +401,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
     
     % correct the number of vertices depending on the number of major objects
-    if opt.reduceCS>0 && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if opt.reduceCS>0 
       switch opt.surf{si}
-        case {'B','brain'}, CS = reducepatch(CS,opt.reduceCS*2); 
-        otherwise,          CS = reducepatch(CS,opt.reduceCS);
+        case {'B','brain'}, CS = reducepatch(CS,opt.reduceCS * 2); 
+        otherwise,          CS = reducepatch(CS,opt.reduceCS * (1 + 3*iscerebellum)); % adaption for cerebellum
       end
       stime = cat_io_cmd(sprintf('  Reduce surface to %d faces:',size(CS.faces,1)),'g5','',opt.verb); 
     end
@@ -390,13 +445,15 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       
       continue
     end
+    
+    %%
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
     
     if opt.reduceCS>0 && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
       % after reducepatch many triangles have very large area which causes isses for resampling
       % RefineMesh adds triangles in those areas
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2); 
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2/(1+3*iscerebellum)); % adaption for cerebellum
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
       % remove some unconnected meshes
@@ -429,7 +486,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     % need some more refinement because some vertices are distorted after CAT_DeformSurf
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5);
+    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5/(1+3*iscerebellum)); % adaption for cerebellum
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...

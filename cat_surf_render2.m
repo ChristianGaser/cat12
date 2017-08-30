@@ -285,10 +285,18 @@ switch lower(action)
             setappdata(H.patch(1),'curvature',curv);
         
             if isfield(varargin{1},'cdata')
-                T = gifti(varargin{1}.cdata);
+                try
+                  T = gifti(varargin{1}.cdata);
+                catch
+                  T = gifti(varargin{1});
+                end
                 T = T.cdata;
             elseif isfield(varargin{1},'facevertexcdata')
-                T = gifti(varargin{1}.facevertexcdata);
+                try
+                  T = gifti(varargin{1}.facevertexcdata);
+                catch
+                  T = gifti(varargin{1});
+                end
                 T = T.cdata;
             else
                 T = [];
@@ -304,7 +312,6 @@ switch lower(action)
             
               if strcmp(sinfo(1).texture,'defects'), S.faces = S.faces(:,[2,1,3]); end
       end
-
 
 
         %% -Set viewpoint, light and manipulation options
@@ -348,7 +355,7 @@ switch lower(action)
           setappdata(H.patch(pi),'colourmap',labelmap); 
         end
         cat_surf_render2('clim',H.axis,labelmapclim); 
-        colormap(labelmap); caxis(labelmapclim);
+        colormap(labelmap); try caxis(labelmapclim); end
 
         if numel(labelnam)>0
           %%
