@@ -1,5 +1,6 @@
 function clim = cat_vol_iscaling(cdata,plim)
 %%
+  cdata(isnan(cdata) | isinf(cdata))=[]; 
   ASD = min(0.02,max(eps,0.05*std(cdata))/max(abs(cdata))); 
   if ~exist('plim','var'), plim = [ASD 1-ASD]; end 
 

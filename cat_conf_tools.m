@@ -1,4 +1,4 @@
-function tools = cat_conf_tools
+function tools = cat_conf_tools(expert)
 % wrapper for calling CAT utilities
 %
 %_______________________________________________________________________
@@ -698,6 +698,189 @@ realign.help    = {'Longitudinal registration of series of anatomical MRI scans 
 realign.prog = @cat_vol_series_align;
 realign.vout = @vout_reslice;
 
+
+if expert
+  %------------------------------------------------------------------------
+  % Ultrahigh Resolution Quantitative Image Optimization
+  %------------------------------------------------------------------------
+
+  % -- Data ---
+  
+  r1         = cfg_files; 
+  r1.tag     = 'r1';
+  r1.name    = 'R1-Volumes';
+  r1.filter  = 'image';
+  r1.ufilter = '.*';
+  r1.num     = [1 Inf];
+  r1.help    = {'Select R1 weighted images.'};
+
+  pd         = cfg_files; 
+  pd.tag     = 'pd';
+  pd.name    = 'PD-Volumes';
+  pd.filter  = 'image';
+  pd.ufilter = '.*';
+  pd.num     = [1 Inf];
+  pd.help    = {'Select PD weighted images.'};
+
+  r2s         = cfg_files; 
+  r2s.tag     = 'r2s';
+  r2s.name    = 'R2s-Volumes';
+  r2s.filter  = 'image';
+  r2s.ufilter = '.*';
+  r2s.num     = [1 Inf];
+  r2s.help    = {'Select R2s weighted images.'};
+
+  data        = cfg_branch;
+  data.tag    = 'data';
+  data.name   = 'Input data';
+  data.val    = {r1 pd r2s}; 
+  data.help   = {
+    'Input Images.'
+  };
+
+  
+  % --- Parameter ---
+  
+  bc        = cfg_menu;
+  bc.tag    = 'bc';
+  bc.name   = 'Bias Correction';
+  bc.labels = {'No','light','medium','strong'};
+  bc.values = {0 0.5 1 2};
+  bc.val    = {1};
+  bc.help   = {
+    'Additional bias correction that is important for correct detection and correction of blood vessels.'
+    ''
+    'The correction use a simple tissue classification and local filter approaches to estimate the local signal intensity in the WM and GM segment, e.g. a minimum/maximum filter in the WM for PD/T1 images.  Next, unclassified voxels were approximated and smoothed depending on the defined strength.  '
+    ''
+  };
+
+  in        = cfg_menu;
+  in.tag    = 'in';
+  in.name   = 'Intensity Normalization';
+  in.labels = {'No','Yes'};
+  in.values = {0 1};
+  in.val    = {1};
+  in.help   = {
+    'Additional global intensity normalization that is also important for correct detection and correction of blood vessels.'
+    ''
+  };
+
+  bvc        = cfg_menu;
+  bvc.tag    = 'bvc';
+  bvc.name   = 'Blood Vessel Correction';
+  bvc.labels = {'No','Yes'};
+  bvc.values = {0 1};
+  bvc.val    = {1};
+  bvc.help   = {
+    'Correction of blood vessels with high intensity in T1/R1/R2s and low intensity in PD images by CSF like intensities. '
+    ''
+  };
+
+  nc        = cfg_menu;
+  nc.tag    = 'nc';
+  nc.name   = 'Noise Correction';
+  nc.labels = {'No','Yes'};
+  nc.values = {0 1};
+  nc.val    = {1};
+  nc.help   = {
+    'Noise corrections of the final images.'
+    ''
+  };
+
+  prefix         = cfg_entry;
+  prefix.tag     = 'prefix';
+  prefix.name    = 'Filename prefix';
+  prefix.strtype = 's';
+  prefix.num     = [0 Inf];
+  prefix.val     = {'catsyn_'};
+  prefix.help    = {
+    'Prefix of output files.'};
+
+
+  opts        = cfg_branch;
+  opts.tag    = 'opts';
+  opts.name   = 'Parameter';
+  opts.val    = {bc in bvc nc prefix}; 
+  opts.help   = {
+    'Parameter settings for image correction.'
+  };
+
+  % --- Output
+  
+  pdo        = cfg_menu;
+  pdo.tag    = 'pd';
+  pdo.name   = 'PD Output';
+  pdo.labels = {'No','Yes'};
+  pdo.values = {0 1};
+  pdo.val    = {1}; 
+  pdo.help   = {
+    'Write PD output images.'
+  };
+
+  t1o        = cfg_menu;
+  t1o.tag    = 't1';
+  t1o.name   = 'T1 Output';
+  t1o.labels = {'No','Yes'};
+  t1o.values = {0 1};
+  t1o.val    = {1}; 
+  t1o.help   = {
+    'Write synthesized T1 output images based on the PD image.'
+  };
+
+  r1o        = cfg_menu;
+  r1o.tag    = 'r1';
+  r1o.name   = 'R1 Output';
+  r1o.labels = {'No','Yes'};
+  r1o.values = {0 1};
+  r1o.val    = {1}; 
+  r1o.help   = {
+    'Write R1 output images.'
+  };
+
+  r2so        = cfg_menu;
+  r2so.tag    = 'r2s';
+  r2so.name   = 'R2s Output';
+  r2so.labels = {'No','Yes'};
+  r2so.values = {0 1};
+  r2so.val    = {1}; 
+  r2so.help   = {
+    'Write R2s output images.'
+  };
+
+  bvco        = cfg_menu;
+  bvco.tag    = 'bv';
+  bvco.name   = 'Blood Vessel Output';
+  bvco.labels = {'No','Yes'};
+  bvco.values = {0 1};
+  bvco.val    = {0}; 
+  bvco.help   = {
+    'Write map of blood vessels.'
+  };
+    
+  output        = cfg_branch;
+  output.tag    = 'output';
+  output.name   = 'Output';
+  output.val    = {r1o r2so pdo t1o bvco}; 
+  output.help   = {
+    'Output images.'
+  };
+
+  
+  % ---
+  
+  urqio         = cfg_exbranch;
+  urqio.tag     = 'urqio';
+  urqio.name    = 'Ultrahigh Resolution Quantitative Image Optimization';
+  urqio.val     = {data opts output};
+  urqio.prog    = @cat_vol_urqio;
+  %urqio.vout    = @vfiles_urqio;
+  urqio.help   = {
+    'Additional correction of high resolution PD, R1, and R2s weighed images that include another bias correction, an intensity normalization, and a blood vessel correction step. '
+    ''
+    'WARNING: This tool is in development and was just test on a small set of subjects!'
+  };
+end
+
 %------------------------------------------------------------------------
 long    = cat_conf_long;
 %------------------------------------------------------------------------
@@ -706,7 +889,9 @@ tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
 tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,defs,defs2}; %,qa
-
+if expert 
+  tools.values = [tools.values,{urqio}]; 
+end
 return
 
 %_______________________________________________________________________
@@ -760,7 +945,51 @@ end
 
 return;
 %_______________________________________________________________________
-
+function cdep = vfiles_urqio(job)
+%%
+cdep = cfg_dep;
+if job.output.r1
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = 'R1 Images';
+  cdep(end).src_output = substruct('.','data','()',{1},'.',[job.opts.prefix 'r1_'],'()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end
+if job.output.pd
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = 'PD Images';
+  cdep(end).src_output = substruct('.','data','()',{1},'.',[job.opts.prefix 'pd_'],'()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end
+if job.output.t1
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = 'T1 Images';
+  cdep(end).src_output = substruct('.','data','()',{1},'.',[job.opts.prefix 't1_'],'()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end
+if job.output.r2s==1 || job.output.r2s==3
+  cdep(end+1)           = cfg_dep;
+  cdep(end).sname      = 'R2s nobc Images';
+  cdep(end).src_output = substruct('.','data','()',{1},'.',[job.opts.prefix 'nobc_r2s_'],'()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end 
+if job.output.r2s==2 || job.output.r2s==3
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = 'R2s bc Images';
+  cdep(end).src_output = substruct('.','data','()',{1},'.',[job.opts.prefix 'bc_r2s_'],'()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end 
+if job.output.bv
+  cdep(end+1)          = cfg_dep;
+  cdep(end).sname      = 'Blood Vessel Images';
+  cdep(end).src_output = substruct('.','data','()',{1},'.',[job.opts.prefix 'bv_'],'()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+end
+if numel(cdep)>1
+  cdep(1)=[];
+end
+%%
+return;
+%_______________________________________________________________________
 function vf = vfiles_sanlm(job)
 s  = cellstr(char(job.data)); vf = s; 
 for i=1:numel(s),
