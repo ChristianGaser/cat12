@@ -15272,6 +15272,7 @@ M       cat_tst_CJV.m
 Fixed: Typos...
 
 ------------------------------------------------------------------------
+r1172 | gaser | 2017-08-31 15:19:22 +0200 (Do, 31 Aug 2017) | 57 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15329,5 +15330,28 @@ M       internal/cat_vol_cMRegularizarNLM3D.c
 M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
 
 Fixed: Updated and recompiled c-files that now also support Matlab R2017a for OSX.
+
 ------------------------------------------------------------------------
-r1172 | gaser | 2017-08-31 15:19:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_amap.mexw64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexw64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexw64
+
+Fixed: Updated and recompiled some c-files.
+------------------------------------------------------------------------
+r1173 | gaser | 2017-08-31 16:11:54
