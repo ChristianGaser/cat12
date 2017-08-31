@@ -35,7 +35,7 @@ function cat_vol_urqio(job)
 % Structural Brain Mapping Group
 % University Jena
 %
-% $Id: cat_io_writenii.m 1159 2017-08-04 14:08:14Z dahnke $
+% $Id$
 
 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end

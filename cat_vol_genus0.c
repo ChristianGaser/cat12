@@ -78,7 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   /* in case of error return empty variables */
   if (genus0(g0)) {
-    int dims[2];
+    mwSize dims[2];
 
     dims[0] = 0; dims[1] = 0;
     plhs[1] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
@@ -100,7 +100,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     input[i] = (unsigned int)g0->output[i];
 
   if (genus0(g0)) {
-    int dims[2];
+    mwSize dims[2];
 
     dims[0] = 0; dims[1] = 0;
     plhs[1] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
@@ -115,7 +115,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     M[i] = (float)g0->output[i];
 
   if (nlhs==3) {
-    int dims[2];
+    mwSize dims[2];
 
     dims[0] = g0->tri_count; dims[1] = 3;
     plhs[1] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);

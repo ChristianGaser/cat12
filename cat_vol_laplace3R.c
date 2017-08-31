@@ -48,15 +48,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const mwSize *sL = mxGetDimensions(prhs[0]);
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
-  const int     x  = sL[0];
-  const int     y  = sL[1];
+  const int     x  = (int)sL[0];
+  const int     y  = (int)sL[1];
   const int     xy = x*y;
   
   /* input data */
   float*SEG = (float *)mxGetPr(prhs[0]);
   bool *M   = (bool  *)mxGetPr(prhs[1]); 
   float TH  = (float) mxGetScalar(prhs[2]); if ( TH>=0.5 || TH<0.000001 ) mexErrMsgTxt("ERROR:laplace3R: threshhold must be >0.000001 and smaller than 0.5\n");
-  const int sS[] = {1,3}; 
+  const mwSize sS[] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
   double*S = mxGetPr(SS);
   if (nrhs<4) {S[0]=1; S[1]=1; S[2]=1;} else {S=mxGetPr(prhs[3]);}

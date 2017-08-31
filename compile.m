@@ -24,6 +24,12 @@ function varargout = compile(comp,test,verb)
 
 %#ok<*NASGU,*ASGLU,*LERR,*TRYNC>
 
+  fprintf('-----------------------------------------------------------------------------------\n');
+  fprintf('Please check that for new mex-files functions such as mxCreateNumericArray has the \n');
+  fprintf('right data type for the variable dims (const mwSize*). Otherwise compilation with \n');
+  fprintf('Matlab >= R2017a will be not successful!\n');
+  fprintf('-----------------------------------------------------------------------------------\n\n');
+  
   try % failed in older MATLABs
     rng('default'); rng(13); % fix random numbers
   end
@@ -263,7 +269,7 @@ function varargout = compile(comp,test,verb)
     %  - amap do not like nans etc...
     %    ds('d2','',1,t1,t1c,seg/3,d{ni}/3,10)
     ni    = ni + 1;
-    n{ni} = 'cat_amap';  
+    n{ni} = 'cat_amap';
     ip    = 0;   
     res   = [6,6,4];
     t1    = (1 + d5)/3 + (d0-0.5)/10;  t1(isnan(t1))   = 1/3; t1  = repmat(t1,res);   t1  = interp3(t1,ip);
