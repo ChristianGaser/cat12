@@ -17,8 +17,8 @@ static void **calloc_list=NULL;
 static unsigned char *zpic;
 static float voxelsize[3],*fzpic,fzpicmax;
 
-static size_t *g_axis_len, *g_stride;
-static size_t paddeddims0[3];
+static mwSize *g_axis_len, *g_stride;
+static mwSize paddeddims0[3];
 static float *g_deltax, *g_tmp, *g_tmp_row, **g_j, *g_x, **g_recip, **g_square;
  
 static void print_msg(char * msg)
@@ -26,7 +26,7 @@ static void print_msg(char * msg)
   printf("%s",msg); 
   }
 
-static void *basic_calloc(size_t nelem, size_t elsize)
+static void *basic_calloc(mwSize nelem, mwSize elsize)
   {
   return(calloc(nelem,elsize));
   }
@@ -82,7 +82,7 @@ static void error_msg(char * msg, int line)
   Gfree_all(0);
   }
 
-static void *Gcalloc(size_t nelem, size_t elsize, int make_persist)
+static void *Gcalloc(mwSize nelem, mwSize elsize, int make_persist)
   {
   void **cl;
   int *p,j;
@@ -224,7 +224,7 @@ static void calc_elist(void)
  
 static void process_row(int axis,float *start)
   {
-  register size_t len;
+  register mwSize len;
   register float *p, *p2, *p3, *p_end, pv, p2v, **jp, **j2p, **j_end, *x2p;
   register float x, x0, x2, *recip, *square, dx;
 
@@ -286,7 +286,7 @@ static void process_row(int axis,float *start)
 
 static void recursive_add_dist_squared(int axis,float *start)
   {
-  size_t len;
+  mwSize len;
   float *p, *p_end, *p2, *p2_end, *p3;
 
   if (axis == 0) {
@@ -327,14 +327,14 @@ static void recursive_add_dist_squared(int axis,float *start)
 
 static int dist_squared(
      int rank,
-     size_t *axis_len,
+     mwSize *axis_len,
      float *deltax,
      register char *inimage,
      register char inobject,
      float *outdist_squared)
   {
-  size_t max_axis_len, data_len;
-  register size_t len;
+  mwSize max_axis_len, data_len;
+  register mwSize len;
   register float *p, *p2, ftmp, ftmp2;
   int i;
 
@@ -345,7 +345,7 @@ static int dist_squared(
     return 0;
   }
 
-  g_stride = (size_t *)Gcalloc(rank,sizeof(size_t),0);
+  g_stride = (mwSize *)Gcalloc(rank,sizeof(mwSize),0);
   if (g_stride==NULL) {error_msg("Memory error.\n",__LINE__);return(1);}
 
   max_axis_len = 2;

@@ -99,7 +99,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
  
   
   // main informations about input data (size, dimensions, ...)
-  const mwSize *sL = mxGetDimensions(prhs[0]); int sSEG[] = {sL[0],sL[1],sL[2]}; 
+  const mwSize *sL = mxGetDimensions(prhs[0]); 
+  mwSize sSEG[] = {sL[0],sL[1],sL[2]}; 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
   const int     x  = sL[0];

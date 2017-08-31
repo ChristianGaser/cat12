@@ -15,8 +15,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 /* Declarations */
 float *ima;
-int v,f,ndim,rician;
-const int *dims;
+int   i, v,f, ndim, rician, dims2[3];
+const mwSize *dims;
 
 /* check inputs */
 if (nrhs<3)
@@ -44,7 +44,10 @@ if (nrhs==4)
   rician = (int)(mxGetScalar(prhs[3]));
 else  rician = 0;
 
-anlm(ima, v, f, rician, dims); 
+/* we need to convert dims to int */
+for(i = 0; i < 3; i++) dims2[i] = (int)dims[i]; 
+
+anlm(ima, v, f, rician, dims2); 
 
 return;
 
