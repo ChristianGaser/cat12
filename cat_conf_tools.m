@@ -701,7 +701,7 @@ realign.vout = @vout_reslice;
 
 if expert
   %------------------------------------------------------------------------
-  % Ultrahigh Resolution Quantitative Image Optimization
+  % Ultra-High Resolution Quantitative Image Optimization
   %------------------------------------------------------------------------
 
   % -- Data ---
@@ -748,9 +748,9 @@ if expert
   bc.values = {0 0.5 1 2};
   bc.val    = {1};
   bc.help   = {
-    'Additional bias correction that is important for correct detection and correction of blood vessels.'
+    'Additional bias correction that is important for detection and correction of blood vessels.'
     ''
-    'The correction use a simple tissue classification and local filter approaches to estimate the local signal intensity in the WM and GM segment, e.g. a minimum/maximum filter in the WM for PD/T1 images.  Next, unclassified voxels were approximated and smoothed depending on the defined strength.  '
+    'The correction uses a simple tissue classification and local filter approaches to estimate the local signal intensity in the WM and GM segment, e.g. a minimum/maximum filter in the WM for PD/T1 images.  Next, unclassified voxels were approximated and smoothed depending on the defined strength.  '
     ''
   };
 
@@ -761,7 +761,7 @@ if expert
   in.values = {0 1};
   in.val    = {1};
   in.help   = {
-    'Additional global intensity normalization that is also important for correct detection and correction of blood vessels.'
+    'Additional global intensity normalization that is also important for detection and correction of blood vessels.'
     ''
   };
 
@@ -772,7 +772,7 @@ if expert
   bvc.values = {0 1};
   bvc.val    = {1};
   bvc.help   = {
-    'Correction of blood vessels with high intensity in T1/R1/R2s and low intensity in PD images by CSF like intensities. '
+    'Correction of blood vessels with high intensity in T1/R1/R2s and low intensity in PD images by CSF-like intensities. '
     ''
   };
 
@@ -870,14 +870,14 @@ if expert
   
   urqio         = cfg_exbranch;
   urqio.tag     = 'urqio';
-  urqio.name    = 'Ultrahigh Resolution Quantitative Image Optimization';
+  urqio.name    = 'Ultra-High Resolution Quantitative Image Optimization';
   urqio.val     = {data opts output};
   urqio.prog    = @cat_vol_urqio;
   %urqio.vout    = @vfiles_urqio;
   urqio.help   = {
-    'Additional correction of high resolution PD, R1, and R2s weighed images that include another bias correction, an intensity normalization, and a blood vessel correction step. '
+    'Additional correction of high resolution PD, R1, and R2s weighted images that includes another bias correction, intensity normalization, and blood vessel correction step. '
     ''
-    'WARNING: This tool is in development and was just test on a small set of subjects!'
+    'WARNING: This tool is in development and was just tested on a small set of subjects!'
   };
 end
 
