@@ -17,8 +17,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 /* Declarations */
 float *ima, *fima;
 float h;
-int v,f,ndim;
-const int *dims;
+int   i, v, f, ndim, dims2[3];
+const mwSize *dims;
 
 /* check inputs */
 if (nrhs!=4)
@@ -28,7 +28,6 @@ else if (nlhs>2)
   
 if (!mxIsSingle(prhs[0]))
 	mexErrMsgTxt("First argument must be single.");
-
 
 /* get input image */
 ima = (float*)mxGetPr(prhs[0]);
@@ -45,12 +44,15 @@ f = (int)(mxGetScalar(prhs[2]));
 h = (float)(mxGetScalar(prhs[3]));
 
 /*Allocate memory and assign output pointer*/
-plhs[0] = mxCreateNumericArray(ndim,dims,mxSINGLE_CLASS, mxREAL);
+plhs[0] = mxCreateNumericArray(ndim, dims, mxSINGLE_CLASS, mxREAL);
 
 /*Get a pointer to the data space in our newly allocated memory*/
 fima = (float*)mxGetPr(plhs[0]);
 
-ornlm(ima, fima, v, f, h, dims); 
+/* we need to convert dims to int */
+for(i = 0; i < 3; i++) dims2[i] = (int)dims[i]; 
+
+ornlm(ima, fima, v, f, h, dims2); 
 
 return;
 

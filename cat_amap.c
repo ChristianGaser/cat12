@@ -15,7 +15,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   unsigned char *label, *prob, *mask;
   double *src, *mean, *voxelsize;
   double max_vol = -1e15, weight_MRF, bias_fwhm, offset;
-  const int *dims;
+  const mwSize *dims;
+  mwSize dims3[4];
   int dims2[4];
   int i, n_classes, pve, nvox, iters_icm;
   int niters, iters_nu, sub, init, thresh, thresh_kmeans_int;
@@ -66,14 +67,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexErrMsgTxt("Voxelsize should have 3 values.");
 
   dims = mxGetDimensions(prhs[0]);
-  dims2[0] = dims[0]; dims2[1] = dims[1]; dims2[2] = dims[2];
+  dims2[0] = (int)dims[0]; dims2[1] = (int)dims[1]; dims2[2] = (int)dims[2];
   dims2[3] = n_classes;
   
   /* for PVE we need more classes */
   if(pve == 6) dims2[3] += 3;
   if(pve == 5) dims2[3] += 2;
 
-  plhs[0] = mxCreateNumericArray(4, dims2, mxUINT8_CLASS, mxREAL);
+  /* mxCreateNumericArray expects mwSize data type */
+  for(i = 0; i < 4; i++) dims3[i] = (mwSize)dims2[i]; 
+
+  plhs[0] = mxCreateNumericArray(4, dims3, mxUINT8_CLASS, mxREAL);
   plhs[1] = mxCreateNumericMatrix(1, n_classes+3, mxDOUBLE_CLASS, mxREAL);
   prob  = (unsigned char *)mxGetPr(plhs[0]);
   mean  = (double *)mxGetPr(plhs[1]);

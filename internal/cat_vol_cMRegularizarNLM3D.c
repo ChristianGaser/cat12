@@ -163,14 +163,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     
 /*Declarations*/
-    mxArray *xData;
+    const mxArray *xData;
     double *ima, *fima,*pesos,*lf;
     mxArray *Mxmedias,*Mxpesos,*xtmp;
     double *medias,*tmp;
-    mxArray *pv;
+    const mxArray *pv;
     double off,h,media,th,hh;
     int ini,fin,i,j,k,ii,jj,kk,ni,nj,nk,v,ndim,indice,f,Nthreads,rc,ft;
-    const int  *dims;
+    const mwSize  *dims;
     int fac[3];
     bool salir;
     void *retval;
@@ -181,7 +181,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if(nrhs<5)
     {
         printf("Wrong number of arguments!!!\r");
-        exit;
+        return;
     }
     
 /*Copy input pointer x*/
