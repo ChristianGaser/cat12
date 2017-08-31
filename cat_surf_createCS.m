@@ -103,7 +103,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs; 
   Ymf = Ymf*3;
   
-    
   % reduction of artifact, blood vessel, and meninges next to the cortex
   % (are often visible as very thin structures that were added to the WM 
   % or removed from the brain)
@@ -132,7 +131,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   end
   if ~debug, clear Ysroi Ymfs Yctd Ybv Ymfs; end
   
-  % sharpening of thin strucktures (gyri and sulci)
+  % sharpening of thin structures (gyri and sulci)
   % WARNING: this will change cortical thickness!
   if ~opt.SPM && opt.sharpenCB
     Ydiv = cat_vol_div(Ymf); Ydivl  = cat_vol_div(Ymf,vx_vol); 
@@ -141,7 +140,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       %% divergence based
       %  this works in principle but gyral crones and sulcal values are
       %  overestimated ... need limit
-      Ymsk = (NS(Ya,opt.LAB.CB) & ((Ymf<2.8 & Ymf>2.0          ) | (Ymf<1.9 & Ymf>1.2         )) ) | ... sulci and gyris in the cerebellum 
+      Ymsk = (NS(Ya,opt.LAB.CB) & ((Ymf<2.8 & Ymf>2.0          ) | (Ymf<1.9 & Ymf>1.2         )) ) | ... sulci and gyri in the cerebellum 
              (NS(Ya,opt.LAB.CT) & ((Ymf<2.8 & Ymf>2.0 & Ycsfd>3) | (Ymf<1.9 & Ymf>1.2 & Ywmd>3)) ) | ... distant gyri and sulci in the cerebrum
              (NS(Ya,opt.LAB.PH) & ((Ymf<2.8 & Ymf>2.0 & Ycsfd>3) | (Ymf<1.9 & Ymf>1.2 & Ywmd>3)) );
       Ymf  = min(3,max( min(1,Ymf) , Ymf - (abs(Ydivl) .* Ydiv) .* Ymsk));
@@ -150,12 +149,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     if 1
       %% biascorrection based
       % WM 
-      Ymsk = ((NS(Ya,opt.LAB.CB) | YMF) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                     % sulci and gyris in the cerebellum 
+      Ymsk = ((NS(Ya,opt.LAB.CB) | YMF) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                     % sulci and gyri in the cerebellum 
              (NS(Ya,opt.LAB.PH) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                             % hippocampal gyri
              (NS(Ya,opt.LAB.CT) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01 & Ycsfd>cat_stat_nanmean(Ycsfd(Ycsfd(:)>0 & Ycsfd(:)<100)) )*1.0) ); % distant gyri and sulci in the cerebrum
       Yi   = cat_vol_localstat(Ymf,Ymsk,1,3);
       % GM
-      Ymsk = (NS(Ya,opt.LAB.CB) & ( Ymf>1.9 & Ymf<2.2 & Ycsfd>0 & Ydiv>-0.05) ) | ...                   % sulci and gyris in the cerebellum 
+      Ymsk = (NS(Ya,opt.LAB.CB) & ( Ymf>1.9 & Ymf<2.2 & Ycsfd>0 & Ydiv>-0.05) ) | ...                   % sulci and gyri in the cerebellum 
              (NS(Ya,opt.LAB.PH) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 ) ) | ...                               % hippocampal gyri
              (NS(Ya,opt.LAB.CT) & ( Ymf>1.3 & Ymf<2.2 & Ycsfd>0 & Ywmd>cat_stat_nanmean(Ywmd(Ywmd(:)>0 & Ywmd(:)<100))*0.2 ) );   % distant gyri and sulci in the cerebrum
       Yi   = Yi + cat_vol_localstat(Ymf,Yi==0 & Ymsk,1,1)/2*3;
@@ -163,7 +162,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       Yi   = cat_vol_localstat(Yi,Yi>0,1,1); 
       if ~debug, clear Ywmd; end
       %% CSF - instable and not required
-      %Ymsk = NS(Ya,opt.LAB.VT) & Ymf>=0.5 & Ymf<1.5;                               % sulci and gyris in the cerebellum 
+      %Ymsk = NS(Ya,opt.LAB.VT) & Ymf>=0.5 & Ymf<1.5;                               % sulci and gyri in the cerebellum 
       %Yi  = Yi + cat_vol_localstat(Ymf,Yi==0 & Ymsk,1,3)*3;
       %%
       Ywi = cat_vol_approx(Yi,'nn',1,2,struct('lfO',2)); 
@@ -347,8 +346,8 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Vpp1 = Vpp; 
     Vpp1.fname    = fullfile(pp,mrifolder,['pp1' ff '.nii']);
     vmat2         = spm_imatrix(Vpp1.mat);
-    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)*(1 + iscerebellum)));   % use dooble resolution in case of cerebellum
-    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1]/(1 + iscerebellum);            % use dooble resolution in case of cerebellum
+    Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)*(1 + iscerebellum)));   % use double resolution in case of cerebellum
+    vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1]/(1 + iscerebellum);            % use double resolution in case of cerebellum
     Vpp1.mat      = spm_matrix(vmat2);
 
     Vpp1 = spm_create_vol(Vpp1); 
