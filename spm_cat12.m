@@ -197,7 +197,7 @@ if isempty(strfind(RS,'Usage'));
   else
     [ST, RS] = system('uname -a');
   end
-  cat_io_cmd(sprintf('\nWARNING: Surface processing will not work because CAT-binaries are not compatible to your system:\n%s\n',RS),'warning');
+  cat_io_cmd(sprintf('\nWARNING: Surface processing will not work because\n(1) CAT binaries are not compatible to your system or\n(2) Antivirus software is blocking to execute binaries:\n%s\n',RS),'warning');
   fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');
 end
 
