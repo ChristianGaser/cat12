@@ -15332,6 +15332,7 @@ M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
 Fixed: Updated and recompiled c-files that now also support Matlab R2017a for OSX.
 
 ------------------------------------------------------------------------
+r1173 | gaser | 2017-08-31 16:12:04 +0200 (Do, 31 Aug 2017) | 21 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15353,5 +15354,14 @@ M       cat_vol_pbtp.mexw64
 M       cat_vol_simgrow.mexw64
 
 Fixed: Updated and recompiled some c-files.
+
 ------------------------------------------------------------------------
-r1173 | gaser | 2017-08-31 16:11:54
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       spm_cat12.m
+
+Changed: Updated warning when CAT binries are not working.
+------------------------------------------------------------------------
+r1174 | gaser | 2017-09-05 19:25:40

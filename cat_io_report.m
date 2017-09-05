@@ -226,7 +226,7 @@ function cat_io_report(job,qa,subj,createerr)
     end       
     % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
   catch
-    createerrtxt = [createerrtxt; {'Error:cat_io_report:CATgui','Error in cat_io_report GUI parameter report creation > incomple CAT parameters.'}]; 
+    createerrtxt = [createerrtxt; {'Error:cat_io_report:CATgui','Error in cat_io_report GUI parameter report creation > incomplete CAT parameters.'}]; 
     cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
   end
   
