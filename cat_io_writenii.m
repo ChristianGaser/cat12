@@ -189,7 +189,11 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     vx_volt  = sqrt(sum(transform.warped.M1(1:3,1:3).^2));  
     interpol = any(vx_vol>vx_volt) + any(vx_vol/2>vx_volt);
     if interpol
-      YI = interp3(Y,interpol,'linear'); %yI = repmat(single(YI),1,1,1,3); 
+      if all(Y*1000 == round(Y*1000)) % label maps
+        YI = interp3(Y,interpol,'nearest'); %yI = repmat(single(YI),1,1,1,3); 
+      else
+        YI = interp3(Y,interpol,'linear'); %yI = repmat(single(YI),1,1,1,3); 
+      end
       %for i=1:3, yI(:,:,:,i) = interp3(transform.warped.yx(:,:,:,i),1,'linear'); end
     else
       YI = Y;

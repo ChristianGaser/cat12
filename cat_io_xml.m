@@ -47,11 +47,11 @@ function varargout = cat_io_xml(file,varargin)
 
 
   verbose = 0;
-  if usejava('jvm')==0
+  if usejava('jvm')==0 || isdeployed
     warning('MATLAB:SPM:CAT:cat_io_xml:javaerror', ...
-      'CAT-ERROR: CAT XML-im/export requires JVM!\n');
-    varargout = {};
-    return;
+      'CAT-ERROR: CAT XML-im/export requires JVM! Read/Write only MAT file.\n');
+    %varargout = {};
+    %return;
   end
   if ~exist('file','var'),
     file = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^cat.*.xml');
@@ -142,7 +142,9 @@ function varargout = cat_io_xml(file,varargin)
     % ------------------------------------------------------------------  
       try
         S=orderfields(S);
-        xml_write(file,S);
+        if usejava('jvm') && ~isdeployed
+          xml_write(file,S);
+        end
         save(mfile,'S');
       catch %#ok<*NASGU> % can write xml file??
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
@@ -157,12 +159,14 @@ function varargout = cat_io_xml(file,varargin)
       
       if exist(mfile,'file')
         load(mfile,'S');
-      elseif exist(file,'file')
+      elseif exist(file,'file') && usejava('jvm') && ~isdeployed
         try
           S = xml_read(file);
         catch 
           error('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
+      else
+        S = struct(); 
       end
       
       if numel(S)>1 || numel(S)>1,
@@ -184,17 +188,19 @@ function varargout = cat_io_xml(file,varargin)
     % 
       if exist(mfile,'file')
         load(mfile,'S');
-      elseif exist(file,'file') 
+      elseif exist(file,'file') && usejava('jvm') && ~isdeployed
         try 
           warning off
           S = xml_read(file);
           warning on
         catch 
-          verror('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
+          verror('MATLAB:cat_io_xml:readErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
         if ~exist(mfile,'file')
           save(mfile,'S');
         end
+      elseif exist(file,'file') && ~(usejava('jvm') && ~isdeployed)
+        S = struct(); 
       else
         error('MATLAB:cat_io_xml','"%s" does not exist!\n',file);
       end

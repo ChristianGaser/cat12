@@ -15356,6 +15356,7 @@ M       cat_vol_simgrow.mexw64
 Fixed: Updated and recompiled some c-files.
 
 ------------------------------------------------------------------------
+r1174 | gaser | 2017-09-05 19:26:10 +0200 (Di, 05 Sep 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15363,5 +15364,22 @@ M       cat_io_report.m
 M       spm_cat12.m
 
 Changed: Updated warning when CAT binries are not working.
+
 ------------------------------------------------------------------------
-r1174 | gaser | 2017-09-05 19:25:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat_defaults.m
+M       cat_io_writenii.m
+M       cat_io_xml.m
+M       cat_run.m
+M       tbx_cfg_cat.m
+
+(1) Changed:   Updated ROI GUI option in tbx_cfg_cat and job interpretation in 
+               cat_run_job.
+(2) Changed:   Updated ROI structure in cat_defaults (same behaviour as before).
+(3) Fixed:     Do not write XMLs in case of no JVM or in deployed mode.
+
+
+------------------------------------------------------------------------
+r1175 | dahnke | 2017-09-06 16:44:32
