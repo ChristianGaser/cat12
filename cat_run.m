@@ -190,19 +190,29 @@ function job = update_job(job)
   def.nproc          = 0; 
   
   % ROI atlas maps
-  atlas   = cat_get_defaults('extopts.atlas'); 
-  for ai = 1:size(atlas,1)
-    if atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && exist(atlas{ai,1},'file')
-      [pp,ff,ee]  = spm_fileparts(atlas{ai,1}); 
-      try
-        cat_get_defaults(['output.atlases.' ff]);
-      catch
-        cat_get_defaults(['output.atlases.' ff], atlas{ai,4})
-      end
-      def.output.atlases.(ff) = cat_get_defaults(['output.atlases.' ff]);
+  if isfield(job.output,'ROImenu')
+    if isfield(job.output.ROImenu,'atlases')
+      def.output.atlases = job.output.ROImenu.atlases;
+      def.output.ROI     = any(cell2mat(struct2cell(def.output.atlases))); 
+    else
+      def.output.ROI     = 0; 
     end
   end
-  
+  job = cat_io_checkinopt(job,def);
+  if ~isfield(job.output,'atlases')
+    atlas   = cat_get_defaults('extopts.atlas'); 
+    for ai = 1:size(atlas,1)
+      if atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && exist(atlas{ai,1},'file')
+        [pp,ff,ee]  = spm_fileparts(atlas{ai,1}); 
+        try
+          cat_get_defaults(['output.atlases.' ff]);
+        catch
+          cat_get_defaults(['output.atlases.' ff], atlas{ai,4})
+        end
+        def.output.atlases.(ff) = cat_get_defaults(['output.atlases.' ff]);
+      end
+    end
+  end
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
