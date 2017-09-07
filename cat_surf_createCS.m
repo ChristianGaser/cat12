@@ -15,7 +15,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
 % YMF  = a logical map with the area that has to be filled
 %        (this is generated with cat_vol_partvol)
 %   
-% opt.surf       = {'lh','rh'[,'cerebellum','brain']} - side
+% opt.surf       = {'lh','rh'[,'lc','lh']} - side
 %    .reduceCS   = 100000 - number of faces
 %
 % Options set by cat_defaults.m
@@ -223,8 +223,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       end 
     end
     
+    iscerebellum = strcmp(opt.surf{si},'lc') || strcmp(opt.surf{si},'rc');
+
     % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
-    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if ~iscerebellum
       mask_parahipp = cat_vol_morph(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC),'d',6);
     end
     
@@ -238,12 +240,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       case {'lh','rh'},  [Ymfs,Yside,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
       case {'lc','rc'},  [Ymfs,Yside,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
-    iscerebellum = strcmp(opt.surf{si},'lc') || strcmp(opt.surf{si},'rc');
     
     [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV);                  % interpolate volume
-    Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;               % interpolate volume (small dilatation)
+    Yside           = cat_vol_resize(Yside,'interp',V,opt.interpV)>0;                      % interpolate volume (small dilatation)
+    
     if ~iscerebellum
-      mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;     % interpolate volume
+      mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;          % interpolate volume
     end 
     
 
@@ -377,14 +379,14 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     ind0 = find(Yppi<=0);
     Yppi = opt.scale_cortex*Yppi;
     
-    if ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if ~iscerebellum
       Yppi  = Yppi + opt.add_parahipp/opt.scale_cortex*mask_parahipp_smoothed;
     end
     Yppi(ind0) = 0;
 
     % optionally apply closing inside mask for parahippocampal gyrus to get rid of the holes that lead to large cuts in gyri
     % after topology correction
-    if opt.close_parahipp && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if opt.close_parahipp && ~iscerebellum
       tmp = cat_vol_morph(Yppi,'labclose',1);
       Yppi(mask_parahipp) = tmp(mask_parahipp);
     end
@@ -449,7 +451,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
     
-    if opt.reduceCS>0 && ~strcmp(opt.surf{si},'lc') && ~strcmp(opt.surf{si},'rc')
+    if opt.reduceCS>0 && ~iscerebellum
       % after reducepatch many triangles have very large area which causes isses for resampling
       % RefineMesh adds triangles in those areas
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2/(1+3*iscerebellum)); % adaption for cerebellum
