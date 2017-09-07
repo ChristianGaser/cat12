@@ -15366,6 +15366,7 @@ M       spm_cat12.m
 Changed: Updated warning when CAT binries are not working.
 
 ------------------------------------------------------------------------
+r1175 | dahnke | 2017-09-06 16:45:25 +0200 (Mi, 06 Sep 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15381,5 +15382,20 @@ M       tbx_cfg_cat.m
 (3) Fixed:     Do not write XMLs in case of no JVM or in deployed mode.
 
 
+
 ------------------------------------------------------------------------
-r1175 | dahnke | 2017-09-06 16:44:32
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_io_report.m
+M       cat_run_newcatch.m
+M       cat_surf_createCS.m
+M       compile.m
+M       html/cat.html
+
+(1) Fixed: Updated error output that was not correctly working for windows.
+(2) Changed: Added warning for compiling under Mac with Matlab version < 9.2.
+(3) Changed: Easier check for cerebellar preprocessing in cat_surf_createCS.m
+------------------------------------------------------------------------
+r1176 | gaser | 2017-09-07 15:00:40

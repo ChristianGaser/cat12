@@ -30,6 +30,10 @@ function varargout = compile(comp,test,verb)
   fprintf('Matlab >= R2017a will be not successful!\n');
   fprintf('-----------------------------------------------------------------------------------\n\n');
   
+  if strcmp(mexext,'mexmaci64') && verLessThan('matlab','9.2')
+    warning('WARNING: Matlab version should be at least R2017a for compilation under Mac.');
+  end
+
   try % failed in older MATLABs
     rng('default'); rng(13); % fix random numbers
   end
