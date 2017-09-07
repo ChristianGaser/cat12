@@ -119,12 +119,14 @@ switch expert
   case 2, set(handles.CAT,'color', [0.93 0.93 0.93]); 
 end
 
+FS = spm('FontSizes');
+
 % This creates the 'background' image
 handles.ha = axes('units','normalized','position',[0 0.87 1 0.13]);
 I = imread(fullfile(spm('dir'),'toolbox','cat12','html','images','contact.jpg'));
 imagesc(I);
 axis off; 
-text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',20,'Fontweight','bold');
+text(80,140,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS(14),'Fontweight','bold');
 switch species
   case 'human',           speciesdisp = ''; 
   case 'ape_greater',     speciesdisp = ' (greater apes)';
@@ -135,8 +137,8 @@ switch species
   otherwise               speciesdisp = ''; 
 end
 switch expert
-  case 1, text(80,90,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',16,'Fontweight','bold'); 
-  case 2, text(80,90,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',16,'Fontweight','bold');
+  case 1, text(80,90,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',FS(10),'Fontweight','bold'); 
+  case 2, text(80,90,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',FS(10),'Fontweight','bold');
 end
 guidata(hObject, handles);
 
