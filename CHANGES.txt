@@ -15384,6 +15384,7 @@ M       tbx_cfg_cat.m
 
 
 ------------------------------------------------------------------------
+r1176 | gaser | 2017-09-07 15:00:45 +0200 (Do, 07 Sep 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15397,5 +15398,14 @@ M       html/cat.html
 (1) Fixed: Updated error output that was not correctly working for windows.
 (2) Changed: Added warning for compiling under Mac with Matlab version < 9.2.
 (3) Changed: Easier check for cerebellar preprocessing in cat_surf_createCS.m
+
 ------------------------------------------------------------------------
-r1176 | gaser | 2017-09-07 15:00:40
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+
+Fixed: Corrected font size and CAT12 windows size for windows.
+------------------------------------------------------------------------
+r1177 | gaser | 2017-09-07 15:30:45
