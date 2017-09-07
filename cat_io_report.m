@@ -226,8 +226,8 @@ function cat_io_report(job,qa,subj,createerr)
     end       
     % str = [str struct('name', 'Norm. voxel size:','value',sprintf('%0.2f mm',job.extopts.vox))]; % does not work yet 
   catch
-    createerrtxt = [createerrtxt; {'Error:cat_io_report:CATgui','Error in cat_io_report GUI parameter report creation > incomplete CAT parameters.'}]; 
-    cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
+    createerrtxt = [createerrtxt; {'Warning:cat_io_report:CATgui','Incomplete report creation in cat_io_report because of incomplete CAT parameters.'}]; 
+    cat_io_cprintf('warn','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
   end
   
   
@@ -389,7 +389,8 @@ function cat_io_report(job,qa,subj,createerr)
     %  so we have to load the image and estimate the WM intensity 
     try
       %%
-      hho      = spm_orthviews('Image',VT0,pos(1,:)); 
+      % there appear too many annoying warning under windows for some reasons which I don't know
+      warning off; hho = spm_orthviews('Image',VT0,pos(1,:)); warning on
       spm_orthviews('Caption',hho,{'*.nii (Original)'},'FontSize',fontsize,'FontWeight','Bold');
       Ysrcs    = single(Ysrc+0); spm_smooth(Ysrcs,Ysrcs,repmat(0.2,1,3));
       haxis(1) = axes('Position',[pos(1,1:2) + [pos(1,3)*0.55 0],pos(1,3)*0.41,pos(1,4)*0.38] ); 

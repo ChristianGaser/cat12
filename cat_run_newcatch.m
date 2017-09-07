@@ -9,6 +9,8 @@ function cat_run_newcatch(job,tpm,subj)
 
   global cat_err_res;
 
+  [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
+
   try
     if job.extopts.APP == 1070
       cat_run_job1070(job,tpm,subj); 
@@ -33,10 +35,8 @@ function cat_run_newcatch(job,tpm,subj)
       mrifolder = '';
     end
 
-    cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error: %s: %s \n%s\n%s\n%s\n', ...
-      repmat('-',1,72),caterr.identifier,...
-      spm_str_manip(job.channel(1).vols{subj},'a60'),...
-      repmat('-',1,72),caterr.message,repmat('-',1,72)));  
+    cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
+      repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
 
     % write error report
     caterrtxt = cell(numel(caterr.stack)+2,1);
@@ -66,8 +66,6 @@ function cat_run_newcatch(job,tpm,subj)
     qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
     cat_io_report(job,qa,subj)
     
-    % delete template files 
-    [pth,nam,ext] = spm_fileparts(job.channel(1).vols{subj}); 
     % delete noise corrected image
     if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
       try %#ok<TRYNC>
