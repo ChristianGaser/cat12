@@ -50,6 +50,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex    = cat_get_defaults('extopts.scale_cortex');
   def.close_parahipp  = cat_get_defaults('extopts.close_parahipp');
+  def.WMT       = 0; % WM/CSF width/depth/thickness
   def.sharpenCB = 0; % in development
 
   opt           = cat_io_updateStruct(def,opt);
@@ -176,7 +177,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   if ~debug, clear Ydiv Ycsfd; end
   
   Yth1 = zeros(size(Ymf),'single'); 
-  if opt.experimental > 1
+  if opt.WMT > 1
     Ywd  = zeros(size(Ymf),'single'); 
     Ycd  = zeros(size(Ymf),'single'); 
   end
@@ -256,7 +257,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
 
     %% pbt calculation
     [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
-    if ~opt.experimental && ~debug, clear Ymfs; end
+    if ~opt.WMT && ~debug, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
     Yth1t = cat_vol_resize(Yth1i,'deinterp',resI); clear Yth1i;         % back to original resolution
@@ -266,7 +267,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     fprintf('%4.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
-    if opt.experimental > 1 && ~opt.fast 
+    if opt.WMT > 1 
       %% gyrus width / WM depth
       %  For the WM depth estimation it is better to use the L4 boundary
       %  and correct later for thickness, because the WM is very thin in
@@ -433,13 +434,43 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       facevertexcdata = isocolors2(Yth1,CS.vertices); 
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
       
+      % map WM and CSF width data (corrected by thickness)
+      if opt.WMT > 1
+        %%
+        facevertexcdata2  = isocolors2(Ywd,CS.vertices); 
+        facevertexcdata2c = max(eps,facevertexcdata2 - facevertexcdata/2);
+        cat_io_FreeSurfer('write_surf_data',Pgwo,facevertexcdata2c); % gyrus width WM only
+        facevertexcdata2c = correctWMdepth(CS,facevertexcdata2c,100,0.2);
+        cat_io_FreeSurfer('write_surf_data',Pgww,facevertexcdata2c); % gyrus width WM only
+        facevertexcdata3c = facevertexcdata2c + facevertexcdata; % );
+        cat_io_FreeSurfer('write_surf_data',Pgw,facevertexcdata3c); % gyrus width (WM and GM)
+        facevertexcdata4 = estimateWMdepthgradient(CS,facevertexcdata2c);
+        cat_io_FreeSurfer('write_surf_data',Pgwwg,facevertexcdata4); % gyrus width WM only > gradient
+        % smooth resampled values
+        try
+          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s"',Pcentral,Pgwwg,3,Pgwwg);
+          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
+        end
+        %%
+        %clear facevertexcdata2 facevertexcdata2c facevertexcdata3c facevertexcdata4; 
+        % just a test ... problem with other species ...
+        %norm = sum(Ymf(:)>0.5) / prod(vx_vol) / 1000 / 1400;
+        %norm = mean([2 1 1].*diff([min(CS.vertices);max(CS.vertices)])); 
+        %norm = mean([2 1 1].*std(CS.vertices)); % maybe the hull surface is better...
+
+        facevertexcdata3 = isocolors2(Ycd,CS.vertices); 
+        facevertexcdata3 = max(eps,facevertexcdata3 - facevertexcdata/2); 
+        cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
+      end
+      fprintf('%4.0fs\n',etime(clock,stime)); 
+      
       % save datastructure
       S.(opt.surf{si}).vertices = CS.vertices;
       S.(opt.surf{si}).faces    = CS.faces;
       S.(opt.surf{si}).vmat     = vmat;
       S.(opt.surf{si}).vmati    = vmati;
       S.(opt.surf{si}).th1      = facevertexcdata;
-      if opt.experimental > 1
+      if opt.WMT > 1
         S.(opt.surf{si}).th2    = nan(size(facevertexcdata));
         S.(opt.surf{si}).th3    = nan(size(facevertexcdata));
       end
@@ -518,7 +549,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
    
     % map WM and CSF width data (corrected by thickness)
-    if opt.experimental > 1
+    if opt.WMT > 1
       %%
       facevertexcdata2  = isocolors2(Ywd,CS.vertices); 
       facevertexcdata2c = max(eps,facevertexcdata2 - facevertexcdata/2);
@@ -556,7 +587,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     S.(opt.surf{si}).vmat     = vmat;
     S.(opt.surf{si}).vmati    = vmati;
     S.(opt.surf{si}).th1      = facevertexcdata;
-    if opt.experimental > 1
+    if opt.WMT > 1
       S.(opt.surf{si}).th2    = facevertexcdata2;
       S.(opt.surf{si}).th3    = facevertexcdata3;
     end

@@ -73,18 +73,19 @@ end
 do_dartel = 1 + (job.extopts.regstr(1)~=0);      % always use dartel (do_dartel=1) or shooting (do_dartel=2) normalization
 if do_dartel
   need_dartel = any(job.output.warps) || ...
-    job.output.bias.warped || job.output.bias.dartel || ...
-    job.output.label.warped || job.output.label.dartel || ...
+    job.output.bias.warped || ... job.output.bias.dartel || ...
+    job.output.label.warped || ... job.output.label.dartel || ...
     any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
     job.output.surface || job.output.ROI || ...
     any([job.output.atlas.warped]) || ...
-    numel(job.extopts.regstr)>1;
+    numel(job.extopts.regstr)>1 || ...
+    numel(job.extopts.vox)>1;
   if ~need_dartel
     %fprintf('Option for Dartel output was deselected because no normalized images need to be saved.\n');  
     do_dartel = 0;
   end
 end
-if do_dartel, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
+if do_dartel<2, job.extopts.templates = job.extopts.darteltpms; else job.extopts.templates = job.extopts.shootingtpms; end % for LAS
 res.do_dartel = do_dartel;
 
 
@@ -1335,9 +1336,7 @@ end
 %% ---------------------------------------------------------------------
 %  Spatial Registration with Dartel or Shooting
 %  ---------------------------------------------------------------------
-if do_dartel 
   [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,tpm.M);; 
-end
 
 
 %%  --------------------------------------------------------------------
@@ -1589,6 +1588,16 @@ fprintf('%4.0fs\n',etime(clock,stime));
 if job.output.surface
   stime = cat_io_cmd('Surface and thickness estimation');; 
   
+  % specify WM/CSF width/depth/thickness estimation
+  if job.output.surface>10
+    job.output.surface=job.output.surface-10;
+    WMT = 1; 
+  else
+    WMT = 0; 
+  end
+  if job.extopts.experimental || job.extopts.expertgui==2
+    WMT = 1; 
+  end
   % specify surface
   switch job.output.surface
     case 1, surf = {'lh','rh'};
@@ -1610,12 +1619,12 @@ if job.output.surface
     
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Ymix,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-      'verb',job.extopts.verb,'experimental',job.extopts.experimental)); 
+      'verb',job.extopts.verb,'WMT',WMT)); 
   else
     %% using the segmentation
     [Yth1,S,Psurf] = cat_surf_createCS(VT,Yp0/3,Yl1,YMF,...
       struct('interpV',job.extopts.pbtres,'Affine',res.Affine,'surf',{surf},'inv_weighting',job.inv_weighting,...
-      'verb',job.extopts.verb,'experimental',job.extopts.experimental));
+      'verb',job.extopts.verb,'WMT',WMT));
   end
 
   cat_io_cmd('Surface and thickness estimation');  
