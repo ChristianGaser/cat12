@@ -1,3 +1,23 @@
+Changed paths:
+ M      CAT12-Manual.docx
+M       CHANGES.txt
+M       svn_ci_log
+
+Changed: Updated svn log system
+------------------------------------------------------------------------
+r1181 | gaser | 2017-09-08 15:58:38
+
+------------------------------------------------------------------------
+r1180 | gaser | 2017-09-08 15:57:53 +0200 (Fr, 08 Sep 2017) | 8 lines
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       svn_ci_log
+
+Changed: Updated svn log system
+
 ------------------------------------------------------------------------
 r1179 | gaser | 2017-09-08 15:53:42 +0200 (Fr, 08 Sep 2017) | 16 lines
 
