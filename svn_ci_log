@@ -16,7 +16,7 @@ if [ -f log ]; then
   echo '------------------------------------------------------------------------' >> CHANGES.txt
   echo r$newrev '|' $USER '|' $date >> CHANGES.txt
   echo >> CHANGES.txt
-  svn log -r HEAD:440 > CHANGES.txt
+  svn log -r HEAD:440 >> CHANGES.txt
 
   echo "Changed paths:" > log2
   svn -q status >> log2
