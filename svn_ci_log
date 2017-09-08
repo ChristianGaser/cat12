@@ -7,16 +7,16 @@ date=`date "+%Y-%m-%d %H:%M:%S"`
 nano log
 
 if [ -f log ]; then
-  svn log -r HEAD:440 > CHANGES.txt
 
-  echo >> CHANGES.txt
-  echo "Changed paths:" >> CHANGES.txt
+  echo "Changed paths:" > CHANGES.txt
   svn -q status >> CHANGES.txt
   echo >> CHANGES.txt
   cat log >> CHANGES.txt
   echo  >> CHANGES.txt
   echo '------------------------------------------------------------------------' >> CHANGES.txt
   echo r$newrev '|' $USER '|' $date >> CHANGES.txt
+  echo >> CHANGES.txt
+  svn log -r HEAD:440 > CHANGES.txt
 
   echo "Changed paths:" > log2
   svn -q status >> log2
