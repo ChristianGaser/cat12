@@ -166,12 +166,12 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
 
   def.verb   = 1;     % display progess
   def.red    = 1;     % maximum number of resolution reduction
-  def.iter   = 1;     % maximum number of iterations
-  def.iter1  = 1;     % maximum number of iterations at full resolution
+  def.iter   = 2;     % maximum number of iterations
+  def.iter1  = 2;     % maximum number of iterations at full resolution
   def.rician = 0;     % noise type 
   def.cstr   = 0.5;   % correction strength 
   def.SANFM  = 1;     % spatial adaptive noise filter modification 
-  def.Nth    = 0.005;  % noise threshold (filter only  
+  def.Nth    = 0.01;  % noise threshold (filter only  
   def.fast   = 0;     % masking background?
   def.Sth    = 4;     % noise-signal threshold (lower values = less filtering of artifacts/anatomie)
   def.level  = 1;     % just for display
@@ -304,9 +304,72 @@ function [Ys,NCstr] = cat_vol_sanlmX(Y,YM,vx_vol,opt)
         YRs = Yi; YRs(2:end,2:end,2:end) = YRr; 
         Ys  = Ys + (Yi - YR) + YRs; 
         clear YR YRs Yr YRr YRs; 
-
-        % average both blocks
         Ys = Ys / 2;
+        
+        Yis=Ys; 
+        % second block
+        [Yr,YMr,resr] = cat_vol_resize({Yis(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
+          'reduceV',vx_vol.*[2 2 1],min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yis; YR(2:end,2:end,2:end) = YRr; 
+        Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr); %./[2 2 1]
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yis; YRs(2:end,2:end,2:end) = YRr; 
+        Ys  = (Yis - YR) + YRs; 
+         % second block
+        [Yr,YMr,resr] = cat_vol_resize({Yis,YM},...
+          'reduceV',vx_vol.*[2 2 1],min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yis; YR = YRr; 
+        Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yis; YRs = YRr; 
+        Ys  = Ys + ((Yis - YR) + YRs); 
+        Ys  = Ys / 2;
+        
+        Yis=Ys; 
+        % second block
+        [Yr,YMr,resr] = cat_vol_resize({Yis(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
+          'reduceV',vx_vol.*[2 1 2],min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yis; YR(2:end,2:end,2:end) = YRr; 
+        Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yis; YRs(2:end,2:end,2:end) = YRr; 
+        Ys  = (Yis - YR) + YRs; 
+        % second block
+        [Yr,YMr,resr] = cat_vol_resize({Yis(2:end,2:end,2:end),YM(2:end,2:end,2:end)},...
+          'reduceV',vx_vol.*[1 2 2],min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yis; YR(2:end,2:end,2:end) = YRr; 
+        Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yis; YRs(2:end,2:end,2:end) = YRr; 
+        Ys  = Ys + ((Yis - YR) + YRs); 
+        Ys = Ys / 2;
+        
+        Yis=Ys; 
+        % second block
+        [Yr,YMr,resr] = cat_vol_resize({Yis,YM},...
+          'reduceV',vx_vol.*[2 1 2],min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yis; YR = YRr; 
+        Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yis; YRs = YRr; 
+        Ys  = (Yis - YR) + YRs; 
+        % second block
+        [Yr,YMr,resr] = cat_vol_resize({Yis,YM},...
+          'reduceV',vx_vol.*[1 2 2],min(2.2,min(vx_vol)*2.6),32,'meanm'); YMr = YMr>0.5;  
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YR  = Yis; YR = YRr; 
+        Yr  = cat_vol_sanlmX(Yr,YMr,resr.vx_volr,optr);
+        YRr = cat_vol_resize(Yr,'dereduceV',resr,'nearest');
+        YRs = Yis; YRs = YRr; 
+        Ys  = Ys + ((Yis - YR) + YRs); 
+        clear YR YRs Yr YRr YRs; 
+        
+        Ys = Ys /2;
       end
     end
     

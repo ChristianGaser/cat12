@@ -46,6 +46,7 @@ cat.opts.samp      = 3;                       % Sampling distance - alternative:
 cat.output.surface     = 0;     % surface and thickness creation:   0 - no (default), 1 - lh+rh, 2 - lh+rh+cerebellum, 
                                 %   3 - lh, 4 - rh, 5 - lh+rh (fast, no registration, only for quick quality check and not for analysis),
                                 %   6 - lh+rh+cerebellum (fast, no registration, only for quick quality check and not for analysis)
+                                %   +10 to estimate WM and CSF width/depth/thickness
 
 % save ROI values
 cat.output.ROI         = 1;     % write xml-file with ROI data (0 - no, 1 - yes (default))

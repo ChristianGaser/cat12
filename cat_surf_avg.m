@@ -27,9 +27,10 @@ function varargout = cat_surf_avg(varargin)
   
   %%
   side  = {'lh','rh'}; 
-  fname = cell(numel(side),numel(job.meshsmooth)); FSavgfname = cell(1,2);
+  fname = cell(numel(side),numel(job.meshsmooth)); FSavgfname = cell(1,2); FSavgsphere = cell(1,2);
   for si = 1:numel(side)
     FSavgfname{si} = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',side{si})); 
+    FSavgsphere{si} = fullfile(opt.fsavgDir,sprintf('%s.sphere.freesurfer.gii',side{si})); 
     FSavg.(side{si}) = gifti(FSavgfname{si});
     Savg.(side{si})  = struct(...
       'vertices',zeros(size(FSavg.(side{si}).vertices),'single'),...
@@ -70,43 +71,53 @@ function varargout = cat_surf_avg(varargin)
   spm_progress_bar('Init',n,'Surface Averaging and Smoothing','Surfaces (and Smoothing Steps) Complete');
   for si=1:numel(side)
     if numel(job.(side{si}))>0
+      %%
       Savg.(side{si}).vertices = zeros(size(FSavg.(side{si}).vertices),'single');
-%%
-      sinfo = cat_surf_info(job.(side{si})); 
-      for di=1:numel(job.(side{si}))
+
+      sinfo = cat_surf_info(job.(side{si})); NS=numel(job.(side{si})); 
+      for di=1:NS
         %%
-        [pp1,ff1,ee1] = fileparts(job.(side{si}){di});
-        Pcentral   = job.(side{si}){di};
-        Presamp    = fullfile(pp1,[strrep(ff1,'central','resampled')  ee1]);
-        Pspherereg = fullfile(pp1,[strrep(ff1,'central','sphere.reg') ee1]);
+        try
+          [pp1,ff1,ee1] = fileparts(job.(side{si}){di});
+          Pcentral   = job.(side{si}){di};
+          Presamp    = fullfile(pp1,[strrep(ff1,'central','resampled')  ee1]);
+          Pspherereg = fullfile(pp1,[strrep(ff1,'central','sphere.reg') ee1]);
 
-        % resample values using warped sphere 
-        if 1 %~exist(Presamp,'file')
-          cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
-          [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+          % resample values using warped sphere 
+          if ~exist(Presamp,'file')
+            %try
+              cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgsphere{si},Presamp);
+              [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+            %catch
+            %  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
+            %  [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
+            %end
+          end
+
+          % read surfaces
+          S = gifti(Presamp);
+
+          if job.surfside==2 && strcmp(sinfo(di).side,'lh'); 
+            S.vertices(:,1) = -1 * S.vertices(:,1);
+          end
+
+
+          if opt.delete, delete(Presamp); end
+
+          % add
+          Savg.(side{si}).vertices = Savg.(side{si}).vertices + S.vertices;
+          nfi = nfi + 1; spm_progress_bar('Set',nfi);
+        catch
+          NS=NS-1;
         end
-
-        % read surfaces
-        S = gifti(Presamp);
-        
-        if job.surfside==2 && strcmp(sinfo(di).side,'lh'); 
-          S.vertices(:,1) = -1 * S.vertices(:,1);
-        end
-
-       
-        if opt.delete, delete(Presamp); end
-
-        % add
-        Savg.(side{si}).vertices = Savg.(side{si}).vertices + S.vertices;
-        nfi = nfi + 1; spm_progress_bar('Set',nfi);
       end
 
-      Savg.(side{si}).vertices = Savg.(side{si}).vertices / numel(job.(side{si}));
+      Savg.(side{si}).vertices = Savg.(side{si}).vertices / max(1,NS);
 
       % surface smoothing
       for smi=1:numel(job.meshsmooth);
         if job.surfside==1 
-          save(gifti(struct('faces',FSavg.(side{si}).faces,'vertices',...
+          save(gifti(struct('faces',S.faces,'vertices',...
             Savg.(side{si}).vertices)),fname{si,smi});
           cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si,smi},fname{si,smi},job.meshsmooth(smi));
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);

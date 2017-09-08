@@ -114,7 +114,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
   end
 
 
-  
+  do_req = res.do_dartel; 
   % this is the main loop for different parameter
   for regstri = numel(job.extopts.regstr):-1:1;
     for voxi = numel(job.extopts.vox):-1:1; 
@@ -143,7 +143,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       reg(regstri).opt.ll3th     = 0.02;                 % smaller better/slower 
       reg(regstri).opt.regstr    = job.extopts.regstr;   
 
-
+    
       if job.extopts.regstr(regstri)==0
       % Dartel
         res.do_dartel            = 1; 
@@ -341,7 +341,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
       
 
 
-      if res.do_dartel 
+      if res.do_dartel && do_req
       %  -------------------------------------------------------------------
       %  do Dartel / Shooting registration
       %  -------------------------------------------------------------------
