@@ -38,7 +38,7 @@ if isempty(CAT_VER)
         vfile = fullfile(spm('Dir'),'toolbox','cat12','CHANGES.txt');
         if exist(vfile,'file')
           fid = fopen(vfile,'rt'); ct = textscan(fid,'%s','delimiter','\n'); fclose(fid);
-          t  = textscan(ct{1}{end},'%s','delimiter',' '); t = t{1};
+          t  = textscan(ct{1}{2},'%s','delimiter',' '); t = t{1};
           v2.Date     = t{5};
           v2.Version  = t{1}(2:end); 
           %v2.User     = t{3};

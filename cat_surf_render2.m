@@ -119,6 +119,7 @@ switch lower(action)
             H.axis   = axes('Parent',H.figure,'Visible','off');
         end
         if isfield(O,'pcdata'), O.pcdata = cellstr(O.pcdata); end
+        if isfield(O,'pmesh'),  O.pmesh  = cellstr(O.pmesh); end
         renderer = get(H.figure,'Renderer');
         set(H.figure,'Renderer','OpenGL');
         
@@ -131,7 +132,9 @@ switch lower(action)
         else
           sinfo = cat_surf_info(M);
         end
-        
+        if ischar(varargin{1})
+          sinfo.Pmesh = varargin{1};
+        end
        
         %%
         labelmap = zeros(0); labelnam = cell(0); labelmapclim = zeros(1,2); labeloid = zeros(0); labelid = zeros(0); nid=1;
@@ -173,7 +176,19 @@ switch lower(action)
                         
                         end
                       end
-                      labelmapclim = [min(cdata) max(cdata)];
+                      if isnumeric(cdata) 
+                        labelmapclim = [min(cdata) max(cdata)];
+                      else
+                        if isfield(cdata,'cdata')
+                          labelmapclim = [min(cdata.cdata) max(cdata.cdata)];
+                        elseif  isfield(cdata,'vertices')
+                          labelmapclim = [0 0];
+                          cdata = zeros(size(cdata.vertices,1),1,'single');
+                        else
+                          labelmapclim = [];
+                          cdata = [];
+                        end
+                      end
                   case '.annot' 
                       %%
                       [fsv,cdatao,colortable] = cat_io_FreeSurfer('read_annotation',O.pcdata{pi}); clear fsv;
@@ -321,7 +336,7 @@ switch lower(action)
         material(H.figure,'dull');
 
         % default lighting
-        if 0 & ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
+        if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
 
         H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
         switch H.catLighting

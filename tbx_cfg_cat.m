@@ -93,8 +93,8 @@ if expert==0
   surface.labels = {'No','Yes'};
   surface.values = {0 1};
 elseif expert==1
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration, only for quick quality check and not for analysis)'};
-  surface.values = {0 1 2 5};  
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration, only for quick quality check and not for analysis)','Full'};
+  surface.values = {0 1 2 5 12};  
   surface.help   = [surface.help; {
     'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
     ''
@@ -102,8 +102,8 @@ elseif expert==1
     ''
   }];    
 else
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh','rh','lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)'};
-  surface.values = {0 1 2 3 4 5 6};
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)'};
+  surface.values = {0 1 2 5 6};
 end
 
 
