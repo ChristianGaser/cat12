@@ -1,7 +1,7 @@
 Cobra atlas:
 --------------------------------------------------------------------------------
 
-The Cobra atlas is build from 3 atlases that are provided by the Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab). The 3 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amyfdala, hippocampus and the cerebellum. Some of the hippocampus subfields were merged because of their small size (CA1/CA2/CA3/stratum radiatum/subiculum/stratum lacunosum/stratum moleculare). Please note that the original labels were changed in order to allow a combined atlas.
+The Cobra atlas is build from 3 atlases that are provided by the Computational Brain Anatomy Laboratory at the Douglas Institute (CoBra Lab). The 3 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amygdala, hippocampus and the cerebellum. Some of the hippocampus subfields were merged because of their small size (CA1/CA2/CA3/stratum radiatum/subiculum/stratum lacunosum/stratum moleculare). Please note that the original labels were changed in order to allow a combined atlas.
 
 High-resolution in vivo atlases of the amygdala
 =================================================
@@ -15,10 +15,7 @@ These atlases are described in:
 Please cite this paper when using these atlases. 
 
 These atlases are defined on the same subjects as the Cerebellar and
-Hippocampal subfield atlases. To obtain the subject T1 and T2 images for these
-labels, or for more information, please visit: 
-
-  http://cobralab.ca/Cerebellum
+Hippocampal subfield atlases. 
 
 The manual segmentation protocol used to produce these atlases is described in: 
 
@@ -44,7 +41,7 @@ These atlases, and the manual segmentation protocol used to produce them are des
 To obtain the subject T1 and T2 images for these labels, or for more
 information, please visit: 
 
-  http://cobralab.ca/Hippocampus
+  http://cobralab.ca/atlases/hippocampus-subfields
 
 
 Labels 
@@ -63,14 +60,13 @@ These atlases, and the manual segmentation protocol used to produce them are des
 
     Park, M.T., Pipitone, J., Baer, L., Winterburn, J.L., Shah, Y., Chavez, S.,
     Schira, M.M., Lobaugh, N.J., Lerch, J.P., Voineskos, A.N., Chakravarty, M.M.
-    High-resolution atlases of the cerebellum and cerebellar lobules at 3T:
-    Derivation and automated segmentation using multiple automatically generated
-    templates. NeuroImage (2014), in press.
+    Derivation of high-resolution MRI atlases of the human cerebellum at 3T and segmentation 
+    using multiple automatically generated templates. Neurimage. 2014; 95: 217-31.
 
 To obtain the subject T1 and T2 images for these labels, or for more
 information, please visit: 
 
-  http://cobralab.ca/Cerebellum
+  http://cobralab.ca/atlases/cerebellum
 
 Labels 
 ------

@@ -28,7 +28,7 @@ new SPM toolbox for combining probabilistic cytoarchitectonic maps and functiona
 imaging data. NeuroImage 25(4), 1325-1335, 2005
 
 2) Eickhoff SB, Heim S, Zilles K, Amunts K. Testing anatomically specified hypotheses 
-in functional imaging using cytoarchitectonic maps. NeuroImage 32(2), 570-582, 2006-
+in functional imaging using cytoarchitectonic maps. NeuroImage 32(2), 570-582, 2006
 
 3) Eickhoff SB, Paus T, Caspers S, Grosbras MH, Evans A, Zilles K, Amunts K Assignment 
 of functional activations to probabilistic cytoarchitectonic areas revisited. 

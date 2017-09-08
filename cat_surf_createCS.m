@@ -223,8 +223,13 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       end 
     end
     
+    % check for cerebellar hemis
     iscerebellum = strcmp(opt.surf{si},'lc') || strcmp(opt.surf{si},'rc');
-
+    
+    % scaling factor for reducing patches and refinement for cerebellar hemis 2..4 according to voxel size
+    % or 1 for cerebrum
+    scale_cerebellum  = 1 + (iscerebellum*max(1,min(3,1/mean(vx_vol,2))));
+    
     % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
     if ~iscerebellum
       mask_parahipp = cat_vol_morph(NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC),'d',6);
@@ -405,7 +410,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     if opt.reduceCS>0 
       switch opt.surf{si}
         case {'B','brain'}, CS = reducepatch(CS,opt.reduceCS * 2); 
-        otherwise,          CS = reducepatch(CS,opt.reduceCS * (1 + 3*iscerebellum)); % adaption for cerebellum
+        otherwise,          CS = reducepatch(CS,opt.reduceCS * scale_cerebellum); % adaption for cerebellum
       end
       stime = cat_io_cmd(sprintf('  Reduce surface to %d faces:',size(CS.faces,1)),'g5','',opt.verb); 
     end
@@ -451,10 +456,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
     save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Praw);
     
-    if opt.reduceCS>0 && ~iscerebellum
+    if opt.reduceCS>0 
       % after reducepatch many triangles have very large area which causes isses for resampling
       % RefineMesh adds triangles in those areas
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2/(1+3*iscerebellum)); % adaption for cerebellum
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Praw,Praw,2/scale_cerebellum); % adaption for cerebellum
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
       % remove some unconnected meshes
@@ -476,7 +481,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
    
     %% topology correction and surface refinement 
     stime = cat_io_cmd('  Topology correction and surface refinement','g5','',opt.verb,stime);
-    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -n 81920 -refine_length 2 "%s" "%s" "%s"',Praw,Psphere0,Pcentral);
+    cmd = sprintf('CAT_FixTopology -lim 128 -bw 512 -n 81920 -refine_length %g "%s" "%s" "%s"',2/scale_cerebellum,Praw,Psphere0,Pcentral);
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
     
     % surface refinement by surface deformation based on the PP map
@@ -487,7 +492,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     % need some more refinement because some vertices are distorted after CAT_DeformSurf
-    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5/(1+3*iscerebellum)); % adaption for cerebellum
+    cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5/scale_cerebellum); % adaption for cerebellum
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb);
 
     cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none 0 1 -1 .1 ' ...
