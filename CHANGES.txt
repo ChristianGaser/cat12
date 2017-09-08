@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r1179 | gaser | 2017-09-08 15:53:42 +0200 (Fr, 08 Sep 2017) | 16 lines
+
+Changed paths:
+D       CAT12-Manual.doc
+A       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       svn_ci_log
+M       templates_surfaces/lc.central.freesurfer.gii
+M       templates_surfaces/lc.sphere.freesurfer.gii
+M       templates_surfaces/rc.central.freesurfer.gii
+M       templates_surfaces/rc.sphere.freesurfer.gii
+M       templates_surfaces/templates_surfaces.man
+
+(1) Changed: Updated cerebellar templates
+(2) Changed: Updated help text for surface templates
+(3) Changed: Updated CAT12 manual 
+
+------------------------------------------------------------------------
 r1178 | gaser | 2017-09-08 12:48:13 +0200 (Fr, 08 Sep 2017) | 34 lines
 
 Changed paths:
@@ -15447,21 +15466,3 @@ M       CHANGES.txt
 Added HDW path to cg_vbm8_defs.m.
 
 ------------------------------------------------------------------------
-
-Changed paths:
-D       CAT12-Manual.doc
-A       CAT12-Manual.docx
-M       CAT12-Manual.pdf
-M       CHANGES.txt
-M       svn_ci_log
-M       templates_surfaces/lc.central.freesurfer.gii
-M       templates_surfaces/lc.sphere.freesurfer.gii
-M       templates_surfaces/rc.central.freesurfer.gii
-M       templates_surfaces/rc.sphere.freesurfer.gii
-M       templates_surfaces/templates_surfaces.man
-
-(1) Changed: Updated cerebellar templates
-(2) Changed: Updated help text for surface templates
-(3) Changed: Updated CAT12 manual 
-------------------------------------------------------------------------
-r1179 | gaser | 2017-09-08 15:53:18
