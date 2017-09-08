@@ -30,6 +30,29 @@
 % ignored if data during smoothing (masked smoothing) and in the statistical
 % analysis.
 %
+% ?c.central.Template_T1_IXI555_MNI152.gii
+% ?c.thickness.Template_T1_IXI555_MNI152
+% ---------------------------------
+% Surfaces and thickness values for the cerebellar hemisphere based on average 
+% of 550 subjects from IXI database
+% These data should be only used to map results from 3D space (e.g. VBM or
+% fMRI results of the statistical analysis) to the template space after 
+% spherical registration.
+%
+% ?c.central.freesurfer.gii 
+% ?c.sphere.freesurfer.gii
+% ---------------------------------
+% Cerebellar surface based on average of 5 subjects from CoBra Lab (http://cobralab.ca/)
+% The cerebellar surfaces of these 5 subjects were initially registered to the
+% cerebellar surface ?c.central.Template_T1_IXI555_MNI152.gii, then averaged and the
+% average was used as new template and the whole procedure was repeated. The final cerebellar
+% surfaces were then averaged.
+%
+% These surfaces are internally used for spherical registration, resampling
+% and can be used to overlay maps and results in template space (e.g. after
+% spherical registration and resampling).
+% The central surface is estimated by averaging the white and pial surface.
+%
 % fsavg.index2D_256x128.txt
 % ---------------------------------
 % Index file that contains the transformation from surface maps to 2D maps for 
