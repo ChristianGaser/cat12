@@ -15400,6 +15400,7 @@ M       html/cat.html
 (3) Changed: Easier check for cerebellar preprocessing in cat_surf_createCS.m
 
 ------------------------------------------------------------------------
+r1177 | gaser | 2017-09-07 15:30:49 +0200 (Do, 07 Sep 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15407,5 +15408,41 @@ M       cat12.fig
 M       cat12.m
 
 Fixed: Corrected font size and CAT12 windows size for windows.
+
 ------------------------------------------------------------------------
-r1177 | gaser | 2017-09-07 15:30:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       cat12.m
+M       cat_amap.mexw64
+M       cat_ornlm.mexw64
+M       cat_run_job1070.m
+M       cat_sanlm.mexw64
+M       cat_surf_createCS.m
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexw64
+M       html/cat.html
+M       tbx_cfg_cat.m
+M       templates_1.50mm/anatomy.txt
+M       templates_1.50mm/cobra.txt
+
+(1) Changed: For cerebellar hemisphere processing voxel size is now considered
+    for reducing patches and refinement and interanl resolution.
+(2) Changed: Updated some help text.
+(3) Changed: Added and updated help text for atlases. 
+ 
+------------------------------------------------------------------------
+r1178 | gaser | 2017-09-08 12:47:55
