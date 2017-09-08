@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1183 | dahnke | 2017-09-08 18:44:52
+r1184 | dahnke | 2017-09-08 19:02:35
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run_job_APP_final.m
+
+(1) Fixed:  Corrected bug in cat_run_job1070.
+------------------------------------------------------------------------
+r1183 | dahnke | 2017-09-08 18:45:08 +0200 (Fr, 08 Sep 2017) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +25,7 @@ M       tbx_cfg_cat.m
 (1) Changed:   Added option to use WM width/depth/thickness estimation.
 (2) Fixed:     Updated do_dartel variable. 
 (3) Fixed:     Version estimation error due to flipped order in CHANGES.txt
+
 ------------------------------------------------------------------------
 r1182 | gaser | 2017-09-08 16:00:55 +0200 (Fr, 08 Sep 2017) | 6 lines
 

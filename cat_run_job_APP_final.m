@@ -233,7 +233,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
   %% back to original size
   stime = cat_io_cmd('  Final scaling','g5','',verb,stime);
   Ywi   = cat_vol_resize(Ywi,'dereduceV',resT3); 
- % if zeroBG, Ybc = cat_vol_resize(Ybc,'dereduceV',resT2); end
+  %if zeroBG, Ybc = cat_vol_resize(Ybc,'dereduceV',resT2); end
   %Ybc2 = cat_vol_resize({Ybc2},'dereduceV',resT3); 
   [Yg,Ygs]  = cat_vol_resize({Yg,Ygs},'dereduceV',resT3); 
   Yb   = cat_vol_resize(Yb,'dereduceV',resT3)>0.5; 
@@ -245,7 +245,7 @@ function  [Ym,Yp0,Yb] = cat_run_job_APP_final(Ysrco,Ym,Yb,Ybg,vx_vol,gcutstr,ver
  % Ym   = (Ysrc - Ybc) ./ (Ywi - Ybc2 + Ybc); % correct for noise only in background
   Wth  = single(cat_stat_nanmedian(Ym(Ygs(:)<0.2 & Yb(:) & Ym(:)>0.95))); 
   [WIth,WMv] = hist(Ym(Ygs(:)<0.2 &  Yb(:) & Ym(:)>mean([GMth,Wth]) & Ym(:)<Wth*1.1),0:0.01:2);
-  WIth = min([mean(Ym(Ym(:)>0.5)),find(cumsum(WIth)/sum(WIth)>0.8,1,'first')]); WIth = round2(WMv(WIth),rf);  
+  WIth = find(cumsum(WIth)/sum(WIth)>0.8,1,'first'); WIth =  round2(min([mean(Ym(Ym(:)>0.5)),WMv(WIth)]),rf);  
   %[BIth,BMv] = hist(Ym(Ym(:)<mean([BGth,CMth]) & Yg(:)<0.2),-1:0.01:2);
   %BIth = find(cumsum(BIth)/sum(BIth)>0.02,1,'first'); BIth = round2(BMv(BIth),rf);  
   Ym   = Ym ./ WIth; 
