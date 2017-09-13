@@ -30,17 +30,17 @@ float max2(float a, float b) { if (a>b) return a; else return b; }
 /* MAINFUNCTION */
 /* ROI, F, 1 */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs<3)                                                      mexErrMsgTxt("ERROR:vbm_vol_simgrow: not enought input elements\n");
-  if (nrhs>5)                                                      mexErrMsgTxt("ERROR:vbm_vol_simgrow: to many input elements.\n");
-  if (nlhs>2)                                                      mexErrMsgTxt("ERROR:vbm_vol_simgrow: to many output elements.\n");
-  if (mxIsSingle(prhs[0])==0)                                      mexErrMsgTxt("ERROR:vbm_vol_simgrow: first  input must be an 3d single matrix\n");
-  if (mxIsSingle(prhs[1])==0)                                      mexErrMsgTxt("ERROR:vbm_vol_simgrow: second input must be an 3d single matrix\n");
-  if (mxIsDouble(prhs[2])==0 || mxGetNumberOfElements(prhs[2])!=1) mexErrMsgTxt("ERROR:vbm_vol_simgrow: third input must one double value\n");
+  if (nrhs<3)                                                      mexErrMsgTxt("ERROR:cat_vol_simgrow: not enought input elements\n");
+  if (nrhs>5)                                                      mexErrMsgTxt("ERROR:cat_vol_simgrow: to many input elements.\n");
+  if (nlhs>2)                                                      mexErrMsgTxt("ERROR:cat_vol_simgrow: to many output elements.\n");
+  if (mxIsSingle(prhs[0])==0)                                      mexErrMsgTxt("ERROR:cat_vol_simgrow: first  input must be an 3d single matrix\n");
+  if (mxIsSingle(prhs[1])==0)                                      mexErrMsgTxt("ERROR:cat_vol_simgrow: second input must be an 3d single matrix\n");
+  if (mxIsDouble(prhs[2])==0 || mxGetNumberOfElements(prhs[2])!=1) mexErrMsgTxt("ERROR:cat_vol_simgrow: third input must one double value\n");
   
-  if (nrhs==4 && mxIsDouble(prhs[3])==0)                           mexErrMsgTxt("ERROR:vbm_vol_simgrow: fourth  input must be an double matrix\n");
-  if (nrhs==4 && mxGetNumberOfElements(prhs[3])!=3)                mexErrMsgTxt("ERROR:vbm_vol_simgrow: fourth input must have 3 Elements");
-  if (nrhs==5 && mxIsDouble(prhs[4])==0)                           mexErrMsgTxt("ERROR:vbm_vol_simgrow: fifth input must be an double matrix\n");
-  if (nrhs==5 && mxGetNumberOfElements(prhs[4])!=2)                mexErrMsgTxt("ERROR:vbm_vol_simgrow: fifht input must have 2 Elements");
+  if (nrhs==4 && mxIsDouble(prhs[3])==0)                           mexErrMsgTxt("ERROR:cat_vol_simgrow: fourth  input must be an double matrix\n");
+  if (nrhs==4 && mxGetNumberOfElements(prhs[3])!=3)                mexErrMsgTxt("ERROR:cat_vol_simgrow: fourth input must have 3 Elements");
+  if (nrhs==5 && mxIsDouble(prhs[4])==0)                           mexErrMsgTxt("ERROR:cat_vol_simgrow: fifth input must be an double matrix\n");
+  if (nrhs==5 && mxGetNumberOfElements(prhs[4])!=2)                mexErrMsgTxt("ERROR:cat_vol_simgrow: fifht input must have 2 Elements");
     
   /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);

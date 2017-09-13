@@ -13,8 +13,8 @@
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs<2) mexErrMsgTxt("ERROR:vbm_vol_genus0: At least two input elements necessary.\n");
-  if (nlhs<1) mexErrMsgTxt("ERROR:vbm_vol_genus0: At least one output element necessary.\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_genus0: At least two input elements necessary.\n");
+  if (nlhs<1) mexErrMsgTxt("ERROR:cat_vol_genus0: At least one output element necessary.\n");
 
   /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL  = mxGetDimensions(prhs[0]);
@@ -22,7 +22,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
   unsigned short *input;
   
-  if ( dL  != 3 || mxIsSingle(prhs[0])==0)        mexErrMsgTxt("ERROR:vbm_vol_genus0: first input must be a single 3d matrix\n");
+  if ( dL  != 3 || mxIsSingle(prhs[0])==0)        mexErrMsgTxt("ERROR:cat_vol_genus0: first input must be a single 3d matrix\n");
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   int i, j, sz = sL[0]*sL[1]*sL[2];

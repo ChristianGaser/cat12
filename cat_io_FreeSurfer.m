@@ -3,7 +3,7 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 % 
 % Read/Write FreeSurfer Data. 
 %
-% Use FreeSurfer in/output functions created by Burce Fischl, Doug Greve,
+% Use FreeSurfer in/output functions created by Bruce Fischl, Doug Greve,
 % Thomas Yeo, and Mert Sabuncu.
 %
 %   varargout = cat_io_FreeSurfer(action,varargin)
