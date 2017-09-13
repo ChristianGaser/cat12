@@ -380,26 +380,27 @@ switch lower(action)
             set(H.cmap,'Visible','on');
           end
         
-          H.rdata{1} = [];
-          H.rdata{2} = [];
-          H.rdata{3} = [];
+          H.rdata{1}  = []; H.rdata{2}  = []; H.rdata{3}  = [];
+%          H.border{1} = []; H.border{2} = []; H.border{3} = [];
           for ind = 1:2
+%            M = getappdata(H.patch((ind-1)*2+1),'patch');
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_DK40.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{1} = [H.rdata{1} rdata0];
+%            H.border{1} = [H.border{1} get_label_border(M, rdata0)];
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_a2009s.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{2} = [H.rdata{2} rdata0];
+%            H.border{2} = [H.border{2} get_label_border(M, rdata0)];
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_HCP_MMP1.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{3} = [H.rdata{3} rdata0];
+%            H.border{3} = [H.border{3} get_label_border(M, rdata0)];
           end
-          H.rcsv{1} = rcsv1;
-          H.rcsv{2} = rcsv2;
-          H.rcsv{3} = rcsv3;
+          H.rcsv{1} = rcsv1; H.rcsv{2} = rcsv2; H.rcsv{3} = rcsv3;
 
           H.dcm_obj = datacursormode(H.figure(1));
           set(H.dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
@@ -1228,6 +1229,9 @@ end
 ind0 = repmat(~any(v,1),3,1)';
 C(ind0) = curv(ind0);
 
+%ind0 = repmat(any(H.border{3},2),3,1)';
+%C(ind0) = NaN;
+
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
 %-----------------------------------------------------------------------
@@ -1256,6 +1260,12 @@ for i=1:n
   elseif strcmp(info(i).side, 'rh')
     rh = [rh i];
   end
+end
+
+% check that hemisphere info was found
+if isempty(lh) & isempty(rh)
+  warning('Filenames should contain "lh" or "rh" to indicate hemispheres');
+  return
 end
 
 H.S{1}.name = P(lh,:);
@@ -1984,3 +1994,13 @@ C(T)    = CC;
 [N,ni]  = sort(N(:), 1, 'descend');
 [ni,ni] = sort(ni);
 C(T)    = ni(C(T));
+
+%==========================================================================
+function df = get_label_border(M, texture)
+% compute gradient of labels and indicate values ~=0 to estimate label border
+
+A = spm_mesh_adjacency(M);
+A = sparse(1:size(M.vertices,1),1:size(M.vertices,1),1./sum(A,2)) * A;
+
+df = (A-speye(size(A))) * double(texture);
+df = double(round(df)~=0);

@@ -1,4 +1,4 @@
-/* function [mn,std,min,max,sum,n,median?] = vbm_vol_ROIval(Ya,Yv)
+/* function [mn,std,min,max,sum,n,median?] = cat_vol_ROIval(Ya,Yv)
  * _____________________________________________________________________
  * Estimation of mean, standard deviation, minimum, maximum, sum, number
  * and median (not yet implemented) of Yv in a ROI described by Ya.
@@ -50,11 +50,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   /* main input handling */
   if (nrhs!=2)                  
-    mexErrMsgTxt("ERROR:vbm_vol_ROIval: requires 2 maps. A 3d uint8 atlas map and a single value map.\n");
+    mexErrMsgTxt("ERROR:cat_vol_ROIval: requires 2 maps. A 3d uint8 atlas map and a single value map.\n");
   if (mxIsUint8(prhs[0])==0 || mxGetNumberOfDimensions(prhs[0])!=3 )    
-    mexErrMsgTxt("ERROR:vbm_vol_ROIval: 1st input must be an 3d uint8 matrix.\n");
+    mexErrMsgTxt("ERROR:cat_vol_ROIval: 1st input must be an 3d uint8 matrix.\n");
   if (mxIsSingle(prhs[1])==0  || mxGetNumberOfDimensions(prhs[0])!=3 )   
-    mexErrMsgTxt("ERROR:vbm_vol_ROIval: 2nd input must be an 3d single matrix.\n");
+    mexErrMsgTxt("ERROR:cat_vol_ROIval: 2nd input must be an 3d single matrix.\n");
   
   /* main informations about input data (size, dimensions, ...) */
   const unsigned int n  = mxGetNumberOfElements(prhs[0]);
@@ -62,7 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const mwSize *sL0 = mxGetDimensions(prhs[0]); 
   const mwSize *sL1 = mxGetDimensions(prhs[0]);
   if (n!=n1 || sL0[0]!=sL1[0] || sL0[1]!=sL1[1] || sL0[2]!=sL1[2])
-    mexErrMsgTxt("ERROR:vbm_vol_ROIval: 1nd and 2nd input must have the same size.\n");
+    mexErrMsgTxt("ERROR:cat_vol_ROIval: 1nd and 2nd input must have the same size.\n");
 
   /* input data */
   const unsigned char *Ya = (unsigned char *) mxGetPr(prhs[0]);

@@ -14,7 +14,7 @@
  * where NaN is not available. With setnan=0, the result of NAN voxel in 
  * D is changed to INF.
  * 
- *  [D,I] = vbm_vol_eidist(B,L,[vx_vol,euclid,csf,setnan,verb])
+ *  [D,I] = cat_vol_eidist(B,L,[vx_vol,euclid,csf,setnan,verb])
  * 
  *  D         distance map   (3d-single-matrix)
  *  I         index map      (3d-uint32-matrix)
@@ -40,7 +40,7 @@
  *   A=zeros(10,20,10,'single'); A(:,1:5,:)=1; A(:,6,:)=0.2; A(:,15:end,:)=nan; F=ones(size(A),'single');
  *   A=zeros(10,20,10,'single'); A(:,1:5,:)=1; A(:,15:end,:)=nan; F=ones(size(A),'single');
  *
- *   [D,I]=vbm_vol_eidist(A,F,[1 1 1],1,1,0,1);
+ *   [D,I]=cat_vol_eidist(A,F,[1 1 1],1,1,0,1);
  *   ds('x2','',1,A,D,D,I,25)
  *
  * see also compile.m
@@ -166,32 +166,32 @@ float isoval(float SEG[], float x, float y, float z, int s[]){
 
 
 /* 
- * MAINFUNCTION [D,I] = vbm_vol_eidist(B,L,vx_vol,euclid,csf,setnan,verb])
+ * MAINFUNCTION [D,I] = cat_vol_eidist(B,L,vx_vol,euclid,csf,setnan,verb])
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
   /* 
    * Check input 
    */
-  if (nrhs<2) mexErrMsgTxt("ERROR:vbm_vol_eidist:  not enought input elements\n");
-  if (nrhs>7) mexErrMsgTxt("ERROR:vbm_vol_eidist: to many input elements.\n");
-  if (nlhs>3) mexErrMsgTxt("ERROR:vbm_vol_eidist: to many output elements.\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_eidist:  not enought input elements\n");
+  if (nrhs>7) mexErrMsgTxt("ERROR:cat_vol_eidist: to many input elements.\n");
+  if (nlhs>3) mexErrMsgTxt("ERROR:cat_vol_eidist: to many output elements.\n");
   if (mxIsSingle(prhs[0])==0)
-    mexErrMsgTxt("ERROR:vbm_vol_eidist: first  input must be an 3d single matrix\n");
+    mexErrMsgTxt("ERROR:cat_vol_eidist: first  input must be an 3d single matrix\n");
   if (mxIsSingle(prhs[1])==0)
-    mexErrMsgTxt("ERROR:vbm_vol_eidist: second input must be an 3d single matrix\n");
+    mexErrMsgTxt("ERROR:cat_vol_eidist: second input must be an 3d single matrix\n");
   if (nrhs==3 && mxIsDouble(prhs[2])==0)
-    mexErrMsgTxt("ERROR:vbm_vol_eidist: third  input must be an double matrix\n");
+    mexErrMsgTxt("ERROR:cat_vol_eidist: third  input must be an double matrix\n");
   if (nrhs==3 && mxGetNumberOfElements(prhs[2])!=3)
-    printf("ERROR:vbm_vol_eidist: third input must have 3 Elements");
+    printf("ERROR:cat_vol_eidist: third input must have 3 Elements");
   if (nrhs==4 && mxIsDouble(prhs[3])==0 &&  mxGetNumberOfElements(prhs[3])!=1) 
-    printf("ERROR:vbm_vol_eidist: fourth input must be one double value"); 
+    printf("ERROR:cat_vol_eidist: fourth input must be one double value"); 
   if (nrhs==5 && mxIsDouble(prhs[4])==0 &&  mxGetNumberOfElements(prhs[4])!=1)
-    printf("ERROR:vbm_vol_eidist: fifth input must be one double value");
+    printf("ERROR:cat_vol_eidist: fifth input must be one double value");
   if (nrhs==6 && mxIsDouble(prhs[5])==0 &&  mxGetNumberOfElements(prhs[5])!=1)
-    printf("ERROR:vbm_vol_eidist: sixth input must be one double value");
+    printf("ERROR:cat_vol_eidist: sixth input must be one double value");
   if (nrhs==7 && mxIsDouble(prhs[6])==0 &&  mxGetNumberOfElements(prhs[6])!=1)
-    printf("ERROR:vbm_vol_eidist: seventh input must be one double value");
+    printf("ERROR:cat_vol_eidist: seventh input must be one double value");
     
   /* 
    * set default variables 
@@ -224,7 +224,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int     xy = x*y;
   int           sizeL[] = {(int)sL[0],(int)sL[1],(int)sL[2]}; 
 
-  if (nL!=nD) mexErrMsgTxt("ERROR:vbm_vol_eidist: images must have the same number of elements.\n");
+  if (nL!=nD) mexErrMsgTxt("ERROR:cat_vol_eidist: images must have the same number of elements.\n");
   
   /* 
    * Voxel dimension and standard distance in the N26 neighborhood.
@@ -277,7 +277,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    * Display Initial Parameter
    */
   if ( verb ) {
-    printf("\nvbm_vol_eidist.c debuging mode:\n  Initialize Parameter: \n");
+    printf("\ncat_vol_eidist.c debuging mode:\n  Initialize Parameter: \n");
     printf("    size(B) = %d %d %d\n",sL[0],sL[1],sL[2]); 
     printf("    vx_vol  = %0.0f %0.0f %0.0f\n",s1,s2,s3); 
     printf("    euclid  = %d\n",(int) euclid); 
@@ -312,7 +312,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    */
   if ( vx==0 ) { 
     for (i=0;i<nL;i++) { D[i]=nanres; I[i]=(unsigned int)i+1; } 
-    printf("WARNING:vbm_vol_eidist: Found no object for distance estimation!\n");
+    printf("WARNING:cat_vol_eidist: Found no object for distance estimation!\n");
     return;
   }
     
