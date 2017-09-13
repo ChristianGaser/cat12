@@ -2,7 +2,7 @@
  * _____________________________________________________________________
  * Estimation of gradient of a volume L (within a ROI M). 
  * 
- * [gi,gj,gk] = vbm_vol_gradient3(L[,M])
+ * [gi,gj,gk] = cat_vol_gradient3(L[,M])
  *
  * L          = 3d single input matrix
  * M          = 3d logical input matrix
@@ -33,11 +33,11 @@ void ind2sub(int i,int *x,int *y, int *z, int sxy, int sy) {
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs<1)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: not enought input elements\n");
-  if (nrhs>2)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: to many input elements\n");
-  if (nlhs<3)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: to less output elements\n");
-  if (nlhs>3)                  mexErrMsgTxt("ERROR:vbm_vol_gradient3: to many output elements\n");
-  if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:vbm_vol_gradient3: input must be an 3d single matrix\n");
+  if (nrhs<1)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: not enought input elements\n");
+  if (nrhs>2)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to many input elements\n");
+  if (nlhs<3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to less output elements\n");
+  if (nlhs>3)                  mexErrMsgTxt("ERROR:cat_vol_gradient3: to many output elements\n");
+  if (mxIsSingle(prhs[0])==0)  mexErrMsgTxt("ERROR:cat_vol_gradient3: input must be an 3d single matrix\n");
  
   
   /* main informations about input data (size, dimensions, ...) */
@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const int     y  = (int) sL[1];
   const int     xy = x*y;
 
-  if ( dL != 3 ) mexErrMsgTxt("ERROR:vbm_vol_gradient3: input must be 3d\n");
+  if ( dL != 3 ) mexErrMsgTxt("ERROR:cat_vol_gradient3: input must be 3d\n");
 
   
   /* in- and output  */
@@ -58,11 +58,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     const int     nM = (int) mxGetNumberOfElements(prhs[1]);
     
     if ( mxGetNumberOfDimensions(prhs[1]) != 3 ) 
-      mexErrMsgTxt("ERROR:vbm_vol_gradient3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
+      mexErrMsgTxt("ERROR:cat_vol_gradient3: second input must be 3d - to use a later parameter use ''true(size( input1 ))''\n");
     if ( mxIsLogical(prhs[1])==0)                
-      mexErrMsgTxt("ERROR:vbm_vol_gradient3: second input must be a logical 3d matrix\n");
+      mexErrMsgTxt("ERROR:cat_vol_gradient3: second input must be a logical 3d matrix\n");
     if ( nL != nM)                               
-      mexErrMsgTxt("ERROR:vbm_vol_gradient3: second input must be a logical 3d matrix with equal size than input 1\n");
+      mexErrMsgTxt("ERROR:cat_vol_gradient3: second input must be a logical 3d matrix with equal size than input 1\n");
   
     M = (bool *)mxGetPr(prhs[1]);
   } 

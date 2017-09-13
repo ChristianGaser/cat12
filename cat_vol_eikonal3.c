@@ -3,7 +3,7 @@
  * Estimates eikonal distance to an object (negative values) with the speed given
  * by the positive values
  *
- *  D = vbm_vol_eidist(O,F) 
+ *  D = cat_vol_eidist(O,F) 
  *
  *  O      (single) object
  *  F      (single) speed map

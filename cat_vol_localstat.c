@@ -5,7 +5,7 @@
  * also belong to M were used. 
  * 
  *
- * S = vbm_vol_localstat(V,M,nb,stat)
+ * S = cat_vol_localstat(V,M,nb,stat)
  * 
  * V    (single)    input volume
  * M    (logical)   mask volume
@@ -70,10 +70,10 @@ float pow2(float n) { return n*n;}
 /* main function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  if (nrhs<2) mexErrMsgTxt("ERROR:vbm_vol_localstat: not enough input elements\n");
-  if (nrhs>5) mexErrMsgTxt("ERROR:vbm_vol_localstat: too many input elements\n");
-  if (nlhs<1) mexErrMsgTxt("ERROR:vbm_vol_localstat: not enough output elements\n");
-  if (nlhs>2) mexErrMsgTxt("ERROR:vbm_vol_localstat: too many output elements\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_localstat: not enough input elements\n");
+  if (nrhs>5) mexErrMsgTxt("ERROR:cat_vol_localstat: too many input elements\n");
+  if (nlhs<1) mexErrMsgTxt("ERROR:cat_vol_localstat: not enough output elements\n");
+  if (nlhs>2) mexErrMsgTxt("ERROR:cat_vol_localstat: too many output elements\n");
 
   /* main informations about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]);
@@ -85,12 +85,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   
   
-  if ( dL != 3 || mxIsSingle(prhs[0])==0)                mexErrMsgTxt("ERROR:vbm_vol_localstat: first input must be a single 3d matrix\n");
-  if ( dB != 3 || mxIsLogical(prhs[1])==0 || nL != nB )  mexErrMsgTxt("ERROR:vbm_vol_localstat: second input must be a logical 3d matrix with equal size than input 1\n");
+  if ( dL != 3 || mxIsSingle(prhs[0])==0)                mexErrMsgTxt("ERROR:cat_vol_localstat: first input must be a single 3d matrix\n");
+  if ( dB != 3 || mxIsLogical(prhs[1])==0 || nL != nB )  mexErrMsgTxt("ERROR:cat_vol_localstat: second input must be a logical 3d matrix with equal size than input 1\n");
   if (nrhs<3)  nh = 1; else  nh = (int) *mxGetPr(prhs[2]);
-  if ( nh > 10 )                                         mexErrMsgTxt("ERROR:vbm_vol_localstat: number of neighbors is limited to 10. (Use reduce resolution instead.) \n");
+  if ( nh > 10 )                                         mexErrMsgTxt("ERROR:cat_vol_localstat: number of neighbors is limited to 10. (Use reduce resolution instead.) \n");
   if (nrhs<4)  st = 1; else st = (int) *mxGetPr(prhs[3]);
-  if ( st<1 || st>8 )                                    mexErrMsgTxt("ERROR:vbm_vol_localstat: fourth input has to be 1=mean, 2=min, 3=max, 4=std. \n");
+  if ( st<1 || st>8 )                                    mexErrMsgTxt("ERROR:cat_vol_localstat: fourth input has to be 1=mean, 2=min, 3=max, 4=std. \n");
   int verb=0;   double*dverb;   if (nrhs>=5) {dverb=mxGetPr(prhs[4]);   verb   = (int) dverb[0]>0.5;};    
 
   
@@ -124,7 +124,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /*
    * Display Initial Parameter
    */
-  if ( verb ) printf("\nvbm_vol_localstat.c debuging mode:\n  Initialize Parameter: \n");
+  if ( verb ) printf("\ncat_vol_localstat.c debuging mode:\n  Initialize Parameter: \n");
   if ( verb ) printf("    size(B) = %d %d %d\n",sL[0],sL[1],sL[2]); 
   if ( verb ) printf("    nb      = %d\n",nh); 
   if ( verb ) printf("    stat    = %d\n",st); 
