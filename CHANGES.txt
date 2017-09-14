@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1185 | gaser | 2017-09-13 17:02:27
+r1186 | gaser | 2017-09-14 16:58:16
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.m
+M       cat_batch_long.m
+M       cat_defaults.m
+M       cat_system.m
+M       html/cat.html
+
+(1) Fixed: Batch mode is now correctly using defined default files.
+(2) Changed: Updated comments in cat_defaults.m
+------------------------------------------------------------------------
+r1185 | gaser | 2017-09-13 17:02:47 +0200 (Mi, 13 Sep 2017) | 20 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -20,6 +34,7 @@ M       html/cat.html
 (1) Changed: Updated interanl function names where vbm_ was still used.
 (2) Fixed: Added warning if no hemipshere information could be found for 
     cat_surf_results.m
+
 ------------------------------------------------------------------------
 r1184 | dahnke | 2017-09-08 19:02:40 +0200 (Fr, 08 Sep 2017) | 6 lines
 

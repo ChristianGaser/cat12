@@ -30,5 +30,7 @@ if ispc
   cd(olddir);
 else
   cmd = fullfile(CATDir,varargin{1});
+  warning off % this is to prevent warnings by calling cat12 from the shell script
   [ST, RS] = system(cmd);
+  warning on
 end
