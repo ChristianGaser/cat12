@@ -1,5 +1,5 @@
 function cat_batch_long(namefile)
-% wrapper for using spm8 batch mode (see cat_batch_cat12.sh)
+% wrapper for using spm8 batch mode (see cat_batch_long.sh)
 %
 % namefile      - array of file names
 %_______________________________________________________________________
@@ -22,7 +22,7 @@ if n == 0, error('No file found in %s.\n',namefile); end
 spm_get_defaults;
 cat_get_defaults;
 
-global defaults cat12 matlabbatch
+global defaults cat matlabbatch
 
 matlabbatch{1}.spm.tools.cat.tools.long.subj.mov = cell(n,1);
 for i=1:n

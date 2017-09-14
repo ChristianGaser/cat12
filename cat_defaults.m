@@ -86,7 +86,7 @@ cat.output.WMH.mod     = 0;
 cat.output.WMH.dartel  = 0;
 
 % label 
-% background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extropts.WMHC==3)
+% background=0, CSF=1, GM=2, WM=3, WMH=4 (if opt.extopts.WMHC==3)
 cat.output.label.native = 0; 
 cat.output.label.warped = 0;
 cat.output.label.dartel = 0;
@@ -115,15 +115,15 @@ cat.extopts.gcutstr      = 0.5; % Strength of skull-stripping:               0 t
 cat.extopts.cleanupstr   = 0.5; % Strength of the cleanup process:           0 to 1; default 0.5
 
 % segmentation options
-cat.extopts.NCstr        =-Inf; % Strength of the noise correction:          0 to 1; 0 - no filter; -Inf - auto; 1 - full; 2 - ISARNLM (else SANLM), default -Inf
-cat.extopts.LASstr       = 0.5; % Strength of the local adaption:            0 to 1; default 3
-cat.extopts.BVCstr       = 0.5; % Strength of the Blood Vessel Correction:   0 to 1; default 3
-cat.extopts.regstr       = 0;   % Strength of Shooting registration:         0 - Dartel, eps (fast) to 1 (accurate) optimized Shooting, 4 - default Shooting;
-cat.extopts.WMHC         = 1;   % Correction of WM hyperintensities:         0 - no correction; 1 - only for Dartel (default); 
-                                %                                            2 - also correct segmentation (to WM); 3 - handle as separate class
-cat.extopts.WMHCstr      = 0.5; % Strength of WM hyperintensity correction:  0 to 5; default 3
-cat.extopts.mrf          = 1;   % MRF weighting:                             0 to <1, 1 - auto; default = 1
-cat.extopts.INV          = 1;   % Invert PD/T2 images for preprocessing:     0 - no processing, 1 - try intensity inversion (default), 2 - synthesize T1 image
+cat.extopts.NCstr        =-Inf; % Strength of the noise correction:          0 to 1; 0 - no filter, -Inf - auto, 1 - full, 2 - ISARNLM (else SANLM), default -Inf
+cat.extopts.LASstr       = 0.5; % Strength of the local adaption:            0 to 1; default 0.5
+cat.extopts.BVCstr       = 0.5; % Strength of the Blood Vessel Correction:   0 to 1; default 0.5
+cat.extopts.regstr       = 0;   % Strength of Shooting registration:         0 - Dartel, eps (fast), 0.5 (default) to 1 (accurate) optimized Shooting, 4 - default Shooting; default 0
+cat.extopts.WMHC         = 1;   % Correction of WM hyperintensities:         0 - no correction, 1 - only for Dartel
+                                %                                            2 - also correct segmentation (to WM), 3 - handle as separate class; default 1
+cat.extopts.WMHCstr      = 0.5; % Strength of WM hyperintensity correction:  0 to 5; default 0.5
+cat.extopts.mrf          = 1;   % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
+cat.extopts.INV          = 1;   % Invert PD/T2 images for preprocessing:     0 - no processing, 1 - try intensity inversion, 2 - synthesize T1 image; default 1
 
 % resolution options
 cat.extopts.restype      = 'best';        % resolution handling: 'native','fixed','best'
