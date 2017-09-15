@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1186 | gaser | 2017-09-14 16:58:16
+r1187 | gaser | 2017-09-15 16:06:02
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_stat_polynomial.m
+M       html/cat_starting.html
+
+Changed: Updated CAT12 manual and some help text.
+------------------------------------------------------------------------
+r1186 | gaser | 2017-09-14 16:58:48 +0200 (Do, 14 Sep 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +23,7 @@ M       html/cat.html
 
 (1) Fixed: Batch mode is now correctly using defined default files.
 (2) Changed: Updated comments in cat_defaults.m
+
 ------------------------------------------------------------------------
 r1185 | gaser | 2017-09-13 17:02:47 +0200 (Mi, 13 Sep 2017) | 20 lines
 

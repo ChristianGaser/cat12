@@ -28,7 +28,7 @@
       <h4>VBM data</h4>
       <ul>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">longitudinal pipeline</a>)</li>
-        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">sample homogeneity</a> for VBM data</li>
+        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">sample homogeneity</a> for VBM data  (optionally consider TIV as nuisance variable)</li>
         <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (suggested starting value 8mm)</li>
         <li>Estimate <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> in order to correct for different brain size and volume</li>
         <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>:</li>
