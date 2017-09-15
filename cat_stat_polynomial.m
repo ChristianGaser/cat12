@@ -2,7 +2,7 @@ function y = cat_stat_polynomial(x,p)
 % Polynomial expansion and orthogonalization of function x
 % FORMAT y = cat_stat_polynomial(x,p)
 % x   - data matrix
-% p   - order of polynomial [default: 0]
+% p   - order of polynomial [default: 1]
 % 
 % y   - orthogonalized data matrix
 %__________________________________________________________________________
