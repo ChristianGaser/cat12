@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1187 | gaser | 2017-09-15 16:06:02
+r1188 | gaser | 2017-09-24 16:26:25
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+
+Changed: Updated CAT12 manual.
+
+------------------------------------------------------------------------
+r1187 | gaser | 2017-09-15 16:06:21 +0200 (Fr, 15 Sep 2017) | 9 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -9,6 +19,7 @@ M       cat_stat_polynomial.m
 M       html/cat_starting.html
 
 Changed: Updated CAT12 manual and some help text.
+
 ------------------------------------------------------------------------
 r1186 | gaser | 2017-09-14 16:58:48 +0200 (Do, 14 Sep 2017) | 12 lines
 
