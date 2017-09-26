@@ -1584,6 +1584,12 @@ if view ~= H.view
     set(Ha,'position',H.viewpos{ind}(~view+1,:),'View',vv(ind,:));
   end
   
+  if ~isfield(H,'dataplot')
+    H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+    H.figure(1) = ancestor(H.dataplot,'figure');
+    axes(H.dataplot);
+  end
+
   set(H.dataplot,'Position',H.viewpos{6}(~view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
   
   % save view
