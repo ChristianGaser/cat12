@@ -30,7 +30,7 @@ H.data_sel = [0 0];
 H.data_n   = [1 3];
 H.bkg_col  = [0 0 0];
 H.show_inv = 0;
-H.hide_neg = 1;
+H.no_neg   = 0;
 H.thresh_value = 0;
 H.transp   = 1;
 H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
@@ -374,33 +374,33 @@ switch lower(action)
           if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
             set(H.inv,'Visible','on');
             set(H.hide_neg,'Visible','on');
+            set(H.hide_neg,'Value',0);
           end
           
           if H.n_surf == 1
             set(H.cmap,'Visible','on');
           end
         
-          H.rdata{1}  = []; H.rdata{2}  = []; H.rdata{3}  = [];
-%          H.border{1} = []; H.border{2} = []; H.border{3} = [];
+          H.rdata{1} = [];
+          H.rdata{2} = [];
+          H.rdata{3} = [];
           for ind = 1:2
-%            M = getappdata(H.patch((ind-1)*2+1),'patch');
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_DK40.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{1} = [H.rdata{1} rdata0];
-%            H.border{1} = [H.border{1} get_label_border(M, rdata0)];
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_a2009s.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{2} = [H.rdata{2} rdata0];
-%            H.border{2} = [H.border{2} get_label_border(M, rdata0)];
             atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
               '.aparc_HCP_MMP1.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{3} = [H.rdata{3} rdata0];
-%            H.border{3} = [H.border{3} get_label_border(M, rdata0)];
           end
-          H.rcsv{1} = rcsv1; H.rcsv{2} = rcsv2; H.rcsv{3} = rcsv3;
+          H.rcsv{1} = rcsv1;
+          H.rcsv{2} = rcsv2;
+          H.rcsv{3} = rcsv3;
 
           H.dcm_obj = datacursormode(H.figure(1));
           set(H.dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
@@ -546,7 +546,7 @@ global H
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
 
-H.hide_neg = get(H.hide_neg,'Value');
+H.no_neg = get(H.hide_neg,'Value');
 
 % get min value for both hemispheres
 min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
@@ -557,7 +557,7 @@ if thresh == 0
   H.clip = [false NaN NaN];
 end
 
-if H.hide_neg
+if H.no_neg
   H.clip = [true -Inf thresh];
   clim = [true 0 clim(3)];
   set(H.slider_min,'Value',0);
@@ -1229,9 +1229,6 @@ end
 ind0 = repmat(~any(v,1),3,1)';
 C(ind0) = curv(ind0);
 
-%ind0 = repmat(any(H.border{3},2),3,1)';
-%C(ind0) = NaN;
-
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
 %-----------------------------------------------------------------------
@@ -1260,12 +1257,6 @@ for i=1:n
   elseif strcmp(info(i).side, 'rh')
     rh = [rh i];
   end
-end
-
-% check that hemisphere info was found
-if isempty(lh) & isempty(rh)
-  warning('Filenames should contain "lh" or "rh" to indicate hemispheres');
-  return
 end
 
 H.S{1}.name = P(lh,:);
@@ -1430,7 +1421,7 @@ function H = checkbox_hide_neg(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
-H.hide_neg = get(H.hide_neg,'Value');
+H.no_neg = get(H.hide_neg,'Value');
 
 thresh = H.thresh_value;
 clip = getappdata(H.patch(1), 'clip');
@@ -1439,7 +1430,7 @@ clim = getappdata(H.patch(1), 'clim');
 % get min value for both hemispheres
 min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
 
-if H.hide_neg
+if H.no_neg
   H.clip = [true -Inf thresh];
   H.clim = [true 0 clim(3)];
   set(H.slider_min,'Value',0);
@@ -1994,13 +1985,3 @@ C(T)    = CC;
 [N,ni]  = sort(N(:), 1, 'descend');
 [ni,ni] = sort(ni);
 C(T)    = ni(C(T));
-
-%==========================================================================
-function df = get_label_border(M, texture)
-% compute gradient of labels and indicate values ~=0 to estimate label border
-
-A = spm_mesh_adjacency(M);
-A = sparse(1:size(M.vertices,1),1:size(M.vertices,1),1./sum(A,2)) * A;
-
-df = (A-speye(size(A))) * double(texture);
-df = double(round(df)~=0);

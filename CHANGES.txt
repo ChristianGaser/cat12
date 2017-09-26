@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1188 | gaser | 2017-09-24 16:26:25
+r1189 | gaser | 2017-09-26 11:01:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Fixed: Function to hide neg. values in cat_surf_results.m was using wrong
+parameters.
+------------------------------------------------------------------------
+r1188 | gaser | 2017-09-24 16:41:12 +0200 (So, 24 Sep 2017) | 8 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -7,6 +16,7 @@ M       CAT12-Manual.pdf
 M       CHANGES.txt
 
 Changed: Updated CAT12 manual.
+
 
 ------------------------------------------------------------------------
 r1187 | gaser | 2017-09-15 16:06:21 +0200 (Fr, 15 Sep 2017) | 9 lines
