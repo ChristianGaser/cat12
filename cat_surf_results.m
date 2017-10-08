@@ -85,7 +85,7 @@ switch lower(action)
           clf(H.figure(i));
         
           set(H.figure(i),'MenuBar','none','Position',H.pos{i}.fig,...
-            'Name','Results','NumberTitle','off');
+            'Name','Results','NumberTitle','off','Renderer','OpenGL');
         end
         
         % define S structure that contains information for lh and rh
