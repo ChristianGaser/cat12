@@ -1,11 +1,31 @@
 ------------------------------------------------------------------------
-r1191 | gaser | 2017-10-09 00:07:53
+r1192 | gaser | 2017-10-09 17:54:27
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_render.m
+M       cat_surf_render2.m
+M       cat_surf_results.m
+M       html/cat.html
+A       templates_surfaces/lh.patch.freesurfer.gii
+A       templates_surfaces/lh.sqrtsulc.central.freesurfer.gii
+A       templates_surfaces/rh.patch.freesurfer.gii
+A       templates_surfaces/rh.sqrtsulc.central.freesurfer.gii
+M       templates_surfaces/templates_surfaces.man
+
+(1) Changed: Added option to change underlying texture in cat_surf_results.m
+(2) Fixed: Some small fixes for displaying annotations in cat_surf_render*.m
+(3) Added: Added surface patches and silcal depth maps for fsaverage.
+------------------------------------------------------------------------
+r1191 | gaser | 2017-10-09 00:08:12 +0200 (Mo, 09 Okt 2017) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_results.m
 
 Changed: Force to use OpenGL renderer in cat_surf_results.m
+
 ------------------------------------------------------------------------
 r1190 | gaser | 2017-09-26 11:19:08 +0200 (Di, 26 Sep 2017) | 7 lines
 

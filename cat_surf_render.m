@@ -376,8 +376,8 @@ switch lower(action)
           ss = max(1,round(diff(labelmapclim+1)/30)); 
           ytick = labelmapclim(1)-0.5:ss:labelmapclim(2)+0.5;
           set(H.colourbar,'ytick',ytick,'yticklabel',labelnam2(1:ss:end),...
-            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
-            'TickLabelInterpreter','none');
+            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9]);
+          try, set(H.colourbar,'TickLabelInterpreter','none'); end
           set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
           H.labelmap = struct('colormap',labelmap,'ytick',ytick,'labelnam2',{labelnam2});
           setappdata(H.axis,'handles',H);
@@ -665,8 +665,8 @@ switch lower(action)
           labellength = min(100,max(cellfun('length',H.labelmap.labelnam2))); 
           ss = diff(H.labelmap.ytick(1:2)); 
           set(H.colourbar,'ytick',H.labelmap.ytick,'yticklabel',H.labelmap.labelnam2(1:ss:end),...
-            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9],'ticklength',0.01,...
-            'TickLabelInterpreter','none');
+            'Position',[max(0.75,0.98-0.008*labellength) 0.05 0.02 0.9]);
+          try, set(H.colourbar,'TickLabelInterpreter','none'); end
           set(H.axis,'Position',[0.1 0.1 min(0.6,0.98-0.008*labellength - 0.2) 0.8])
         end
         setappdata(H.axis,'handles',H);

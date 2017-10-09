@@ -37,6 +37,7 @@ H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
 H.FS       = spm('FontSizes');
 H.n_surf   = 1;
 H.cursor_mode = 1;
+H.underlay = 1;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -71,11 +72,12 @@ switch lower(action)
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.060],...
           'surf',  [0.050 0.855 0.425 0.050],'mview',   [0.525 0.855 0.425 0.050],... 
-          'cursor',[0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
+          'tex',   [0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
           'cmap',  [0.050 0.750 0.425 0.050],'atlas',   [0.525 0.750 0.425 0.050],...
-          'info',  [0.050 0.700 0.425 0.050],'bkg',     [0.525 0.700 0.425 0.050],... 
-          'nocbar',[0.050 0.650 0.425 0.050],'transp',  [0.525 0.650 0.425 0.050],... 
-          'inv',   [0.050 0.600 0.425 0.050],'hide_neg',[0.525 0.600 0.425 0.050],...
+          'cursor',[0.050 0.700 0.425 0.050],...
+          'info',  [0.050 0.650 0.425 0.050],'bkg',     [0.525 0.650 0.425 0.050],... 
+          'nocbar',[0.050 0.600 0.425 0.050],'transp',  [0.525 0.600 0.425 0.050],... 
+          'inv',   [0.050 0.550 0.425 0.050],'hide_neg',[0.525 0.550 0.425 0.050],...
           'ovmin', [0.050 0.400 0.425 0.150],'ovmax',   [0.525 0.400 0.425 0.150],... 
           'save',  [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);   
 
@@ -121,7 +123,7 @@ switch lower(action)
                 'position',H.pos{2}.surf,'UserData',tmp,...
                 'style','PopUp','HorizontalAlignment','center',...
                 'callback','spm(''PopUpCB'',gcbo)',...
-                'ToolTipString','Underlying surface',...
+                'ToolTipString','Underlying Surface',...
                 'Interruptible','on','Visible','off');
 
         str  = { 'Threshold...','No threshold','P<0.05','P<0.01','P<0.001'};
@@ -199,6 +201,19 @@ switch lower(action)
                 'style','PopUp','HorizontalAlignment','center',...
                 'callback','spm(''PopUpCB'',gcbo)',...
                 'ToolTipString','Select View',...
+                'Interruptible','on','Visible','off');
+
+        str  = { 'Underlying Texture...','Mean curvature','Sulcal depth'};
+        tmp  = { {@select_texture, 1},...
+                 {@select_texture, 2}};
+
+        % underlying texture
+        H.text = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.text,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Select Underlying Texture',...
                 'Interruptible','on','Visible','off');
 
         % invert results
@@ -370,6 +385,7 @@ switch lower(action)
           set(H.transp,'Visible','on');
           set(H.info,'Visible','on');
           set(H.cursor,'Visible','on');
+          set(H.text,'Visible','on');
         
           if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
             set(H.inv,'Visible','on');
@@ -769,6 +785,7 @@ for ind=1:2
     H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
   case 3
     H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.patch.freesurfer.gii']);
   end
 end
 
@@ -804,12 +821,15 @@ cla(H.Ha);
 H.renderer = get(H.figure(1),'Renderer');
 set(H.figure(1),'Renderer','OpenGL');
 
-%-Compute mesh curvature
+%-Get mesh curvature and sulcal depth
 %------------------------------------------------------------------
-g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{1}.info(1).side '.mc.central.freesurfer.gii']));
-H.S{1}.curv = g.cdata;
-g = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{2}.info(1).side '.mc.central.freesurfer.gii']));
-H.S{2}.curv = g.cdata;
+for i=1:2
+  g1 = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{i}.info(1).side '.mc.central.freesurfer.gii']));
+  g2 = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{i}.info(1).side '.sqrtsulc.central.freesurfer.gii']));
+  H.S{i}.curv = cell(2,1);
+  H.S{i}.curv{1} = g1.cdata;
+  H.S{i}.curv{2} = g2.cdata;
+end
 
 if H.view == 1 % top view
   vv = [90 0; -90 0; -90 0; 90 0; 0 90];
@@ -1090,16 +1110,6 @@ H.patch(ind) = patch(P,...
 setappdata(H.patch(ind),'patch',P);
 setappdata(H.patch(ind),'axis',H.axis);
 
-%-Compute mesh curvature
-%------------------------------------------------------------------
-if ind < 5
-  curv = H.S{round(ind/2)}.curv;
-else
-  curv = [H.S{1}.curv; H.S{2}.curv];
-end
-
-setappdata(H.patch(ind),'curvature',curv);
-
 %-Apply texture to mesh
 %------------------------------------------------------------------
 if isfield(M,'facevertexcdata')
@@ -1168,15 +1178,31 @@ if ~exist('FaceColor','var') || isempty(FaceColor), FaceColor = 'interp'; end
 
 %-Get curvature
 %--------------------------------------------------------------------------
-curv = getappdata(H.patch(ind),'curvature');
+if ind < 5
+  curv = H.S{round(ind/2)}.curv{H.underlay};
+else
+  curv = [H.S{1}.curv{H.underlay}; H.S{2}.curv{H.underlay}];
+end
 
 if size(curv,2) == 1
-    th = 0.15;
-    curv((curv<-th)) = -2*th;
-    curv((curv>th))  =  0.1*th;
-    curv = 0.5*(curv + th)/(2*th);
-    curv = 0.5 + repmat(curv,1,3);
-    curv = curv/max(curv(:));
+
+
+  % emphasize pos. and neg. mean curvature values by using sqrt
+  if H.underlay==1 
+    indneg = find(curv<0);
+    curv(indneg) = -((-curv(indneg)).^0.5);
+    indpos = find(curv>0);
+    curv(indpos) =   (curv(indpos).^0.5);
+    curv = curv - min(curv);
+  end
+  
+  curv = 0.5 + repmat(curv,1,3);
+  curv = curv/max(curv(:));
+  
+  % for sulcal depth (with no neg. values) use inverted values
+  if H.underlay==2 
+    curv = 1 - curv;
+  end
 end
 
 %-Create RGB representation of data according to colourmap
@@ -1220,14 +1246,18 @@ end
 
 % add curvature pattern if transparency is defined
 if nargin > 4
-  if transp
+  if transp & size(C,1) == size(curv,1) 
     C = (0.5+0.5*curv) .* C;
   end
 end
 
 % replace regions below threshold by curvature
 ind0 = repmat(~any(v,1),3,1)';
-C(ind0) = curv(ind0);
+if size(C,1) == size(curv,1) 
+  C(ind0) = curv(ind0);
+else
+  C(ind0) = 0;
+end
 
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
 
@@ -1587,13 +1617,34 @@ if view ~= H.view
   if ~isfield(H,'dataplot')
     H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
     H.figure(1) = ancestor(H.dataplot,'figure');
-    axes(H.dataplot);
+    try, axes(H.dataplot); end
   end
 
-  set(H.dataplot,'Position',H.viewpos{6}(~view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+  try, set(H.dataplot,'Position',H.viewpos{6}(~view+1,:),'Parent',H.figure(1),'Color',H.bkg_col); end
   
   % save view
   H.view = view;
+end
+
+%==========================================================================
+function select_texture(underlay)
+global H
+
+% check that view changed
+if underlay ~= H.underlay
+
+  if underlay == 1 % mean curvature
+    H.underlay = 1;
+  else  % sulcal depth
+    H.underlay = 2;
+  end
+
+  for ind=1:5
+    col = getappdata(H.patch(ind),'col');
+    d = getappdata(H.patch(ind),'data');
+    H = updateTexture(H,ind,d,col,H.show_transp);
+  end
+
 end
 
 %==========================================================================
