@@ -10,20 +10,26 @@
 % ?h.central.freesurfer.gii 
 % ?h.sphere.freesurfer.gii
 % ?h.inflated.freesurfer.gii
+% ?h.patch.freesurfer.gii
 % ---------------------------------
-% Surfaces based on freesurfer fsaverage
+% Surfaces based on Freesurfer fsaverage
 % These surfaces are internally used for spherical registration, resampling
 % and can be used to overlay maps and results in template space (e.g. after
 % spherical registration and resampling).
 % The central surface is estimated by averaging the white and pial surface.
+% The cortex patch is based on ?h.cortex.patch.flat and rotated to fit to the
+% hemisphere views using:
+% lh: spm_mesh_transform(g,spm_matrix([0 0 0 pi -pi/2 0]));
+% rh: spm_mesh_transform(g,spm_matrix([0 0 0 0   pi/2 0]));
 %
 % ?h.mc.central.freesurfer.gii
+% ?h.sulc.central.freesurfer.gii
 % ---------------------------------
-% Mean curvature for display purposes (e.g. underlying texture)
+% Mean curvature and sulcal depth for display purposes (e.g. underlying texture)
 %
 % ?h.mask.txt
 % ---------------------------------
-% Mask based on the Destrieux Atlas of freesurfer
+% Mask based on the Destrieux Atlas of Freesurfer
 % The mask file was created by masking out
 % region 0 (Unkown) and region 67 (S_pericallosal). This mask file is 
 % internally used to set values to NaN in these regions. These NaN values are 
