@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1192 | gaser | 2017-10-09 17:54:27
+r1193 | gaser | 2017-10-11 00:45:02
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+M       templates_surfaces/templates_surfaces.man
+
+(1) Changed: Added flatmap view and atlas border overlay to
+    cat_surf_results.m
+(2) Changed: Upadted surface template description.
+------------------------------------------------------------------------
+r1192 | gaser | 2017-10-09 17:54:51 +0200 (Mo, 09 Okt 2017) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +28,7 @@ M       templates_surfaces/templates_surfaces.man
 (1) Changed: Added option to change underlying texture in cat_surf_results.m
 (2) Fixed: Some small fixes for displaying annotations in cat_surf_render*.m
 (3) Added: Added surface patches and silcal depth maps for fsaverage.
+
 ------------------------------------------------------------------------
 r1191 | gaser | 2017-10-09 00:08:12 +0200 (Mo, 09 Okt 2017) | 6 lines
 
