@@ -22,22 +22,23 @@ if ~ischar(action)
 end
 
 % set start values
-y          = [];
-H.clip     = [];
-H.clim     = [];
-H.XTick    = [];
-H.data_sel = [0 0];
-H.data_n   = [1 3];
-H.bkg_col  = [0 0 0];
-H.show_inv = 0;
-H.no_neg   = 0;
+y              = [];
+H.clip         = [];
+H.clim         = [];
+H.XTick        = [];
+H.data_sel     = [0 0];
+H.data_n       = [1 3];
+H.bkg_col      = [0 0 0];
+H.show_inv     = 0;
+H.no_neg       = 0;
+H.transp       = 1;
+H.Col          = [0 0 0; .8 .8 .8; 1 .5 .5];
+H.FS           = spm('FontSizes');
+H.n_surf       = 1;
 H.thresh_value = 0;
-H.transp   = 1;
-H.Col      = [0 0 0; .8 .8 .8; 1 .5 .5];
-H.FS       = spm('FontSizes');
-H.n_surf   = 1;
-H.cursor_mode = 1;
-H.underlay = 1;
+H.cursor_mode  = 1;
+H.text_mode    = 1;
+H.border_mode  = 0;
 
 %-Action
 %--------------------------------------------------------------------------
@@ -54,13 +55,13 @@ switch lower(action)
             ws(3) = ws(3)/(2.6*ws(3)/ss(3));  
         end
         
-        % result window with 5 surface views and alternative positions without top view                     
-        H.viewpos = {[0.025 0.450 0.375 0.375;  0.025 0.450 0.375 0.375],... % lh medial
-                     [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375],... % lh lateral
-                     [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375],... % rh medial
-                     [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375],... % rh lateral
-                     [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
-                     [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225]};   % data plot
+        % result window with 5 surface views and alternative positions without top view and  only with lateral views                  
+        H.viewpos = {[0.025 0.450 0.375 0.375;  0.025 0.450 0.375 0.375;  0.025 2.000 0.375 0.375],... % lh medial
+                     [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375;  0.150 0.350 0.200 0.375],... % lh lateral
+                     [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375;  0.600 2.000 0.375 0.375],... % rh medial
+                     [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375;  0.650 0.350 0.200 0.375],... % rh lateral
+                     [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
+                     [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
 
         % figure 1 with result window
         H.pos{1} = struct(...
@@ -72,9 +73,9 @@ switch lower(action)
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.060],...
           'surf',  [0.050 0.855 0.425 0.050],'mview',   [0.525 0.855 0.425 0.050],... 
-          'tex',   [0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
+          'text',  [0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
           'cmap',  [0.050 0.750 0.425 0.050],'atlas',   [0.525 0.750 0.425 0.050],...
-          'cursor',[0.050 0.700 0.425 0.050],...
+          'cursor',[0.050 0.700 0.425 0.050],'border',  [0.525 0.700 0.425 0.050],...
           'info',  [0.050 0.650 0.425 0.050],'bkg',     [0.525 0.650 0.425 0.050],... 
           'nocbar',[0.050 0.600 0.425 0.050],'transp',  [0.525 0.600 0.425 0.050],... 
           'inv',   [0.050 0.550 0.425 0.050],'hide_neg',[0.525 0.550 0.425 0.050],...
@@ -112,10 +113,11 @@ switch lower(action)
                 'ToolTipString','Select results (up to 3) for both hemispheres (e.g. log-p maps)',...
                 'Interruptible','on','Enable','on');
                 
-        str  = { 'Underlying Surface...','central','inflated','Dartel'};
+        str  = { 'Underlying Surface...','Central','Inflated','Dartel','Flatmap'};
         tmp  = { {@select_surf, 1},...
                  {@select_surf, 2},...
-                 {@select_surf, 3}};
+                 {@select_surf, 3},...
+                 {@select_surf, 4}};
         
         % underlying surface
         H.surf = uicontrol(H.figure(2),...
@@ -171,7 +173,8 @@ switch lower(action)
                 'Interruptible','on','Visible','off');
 
         str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
-                 'Atlas regions: Destrieux 2009','Atlas region: HCP Multi-Modal Parcellation','Plot data at vertex','Plot mean data inside cluster','Enable/Disable rotate3d'};
+                 'Atlas regions: Destrieux 2009','Atlas region: HCP Multi-Modal Parcellation','Plot data at vertex',...
+                 'Plot mean data inside cluster','Enable/Disable rotate3d'};
         tmp  = { {@select_cursor, 0},...
                  {@select_cursor, 1},...
                  {@select_cursor, 2},...
@@ -190,9 +193,9 @@ switch lower(action)
                 'Interruptible','on','Visible','off');
 
         str  = { 'View...','Show top view','Show bottom view','Show only lateral and medial views'};
-        tmp  = { {@select_view, 1},...
-                 {@select_view, 2},...
-                 {@select_view, 0}};
+        tmp  = { {@select_view,  1},...
+                 {@select_view, -1},...
+                 {@select_view,  2}};
         
         % colormap
         H.mview = uicontrol(H.figure(2),...
@@ -214,6 +217,21 @@ switch lower(action)
                 'style','PopUp','HorizontalAlignment','center',...
                 'callback','spm(''PopUpCB'',gcbo)',...
                 'ToolTipString','Select Underlying Texture',...
+                'Interruptible','on','Visible','off');
+
+        str  = { 'Atlas Border Overlay...','No Overlay','Desikan-Killiany DK40','Destrieux 2009','HCP Multi-Modal Parcellation'};
+        tmp  = { {@select_border, 0},...
+                 {@select_border, 1},...
+                 {@select_border, 2},...
+                 {@select_border, 3}};
+        
+        % atlas for border overlay
+        H.border = uicontrol(H.figure(2),...
+                'string',str,'Units','normalized',...
+                'position',H.pos{2}.border,'UserData',tmp,...
+                'style','PopUp','HorizontalAlignment','center',...
+                'callback','spm(''PopUpCB'',gcbo)',...
+                'ToolTipString','Atlas Border Overlay',...
                 'Interruptible','on','Visible','off');
 
         % invert results
@@ -300,10 +318,10 @@ switch lower(action)
             cd(swd1);
               
             dat = struct('XYZ', v.XYZ,...
-                             't', v.Z',...
-                           'mat', v.M,...
-                           'dim', v.DIM,...
-                           'dat', v.Z');
+                           't', v.Z',...
+                         'mat', v.M,...
+                         'dim', v.DIM,...
+                         'dat', v.Z');
               
             H.S{ind}.info = cat_surf_info(H.S{ind}.name,0); 
             g = gifti(H.S{ind}.info.Pmesh);
@@ -319,7 +337,13 @@ switch lower(action)
           
             for ind=1:2
 
-              H.S{ind}.info = cat_surf_info(H.S{ind}.name,1); 
+              % read meshes
+              H.S{ind}.info = cat_surf_info(H.S{ind}.name,1);
+              H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
+
+              % get adjacency information
+              H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
+
 
               % cdata found?
               try
@@ -377,15 +401,16 @@ switch lower(action)
                 'Interruptible','on','Visible','off');
           end
 
-          set(H.surf,'Visible','on');
-          set(H.save,'Visible','on');
-          set(H.mview,'Visible','on');
+          set(H.surf,  'Visible','on');
+          set(H.save,  'Visible','on');
+          set(H.mview, 'Visible','on');
           set(H.nocbar,'Visible','on');
-          set(H.bkg,'Visible','on');
+          set(H.bkg,   'Visible','on');
           set(H.transp,'Visible','on');
-          set(H.info,'Visible','on');
+          set(H.info,  'Visible','on');
           set(H.cursor,'Visible','on');
-          set(H.text,'Visible','on');
+          set(H.text,  'Visible','on');
+          set(H.border,'Visible','on');
         
           if min(min(H.S{1}.Y(:)),min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
             set(H.inv,'Visible','on');
@@ -663,9 +688,8 @@ for ind = [1 3]
   rcsv = H.rcsv{atlas};
   rdata = H.rdata{atlas}(:,round(ind/2));
 
-  M = getappdata(H.patch(ind),'patch');
-  A       = spm_mesh_adjacency(M.faces);
-  A       = A + speye(size(A));
+  A = H.S{round(ind/2)}.A;
+  A = A + speye(size(A));
   d0 = getappdata(H.patch(ind),'data');
 
   % go through all surfaces
@@ -785,24 +809,40 @@ for ind=1:2
     H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
   case 3
     H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152.gii']);
+  case 4
     H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.patch.freesurfer.gii']);
   end
+
+  H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
 end
 
-g{1} = gifti(H.S{1}.info(1).Pmesh);
-g{2} = gifti(H.S{2}.info(1).Pmesh);
 
 for ind = 1:5
-  if ind < 5
-    M  = g{round(ind/2)};
+  if ind < 5 % single hemisphere views
+    M  = H.S{round(ind/2)}.M;
   else
-    M.faces = [g{1}.faces; g{2}.faces + size(g{1}.vertices,1)];
-    M.vertices = [g{1}.vertices; g{2}.vertices];
-    M.mat = g{1}.mat;
+    M.faces = [H.S{1}.M.faces; H.S{2}.M.faces + size(H.S{1}.M.vertices,1)];
+    M.vertices = [H.S{1}.M.vertices; H.S{2}.M.vertices];
+    M.mat = H.S{1}.M.mat;
   end
 
   set(H.patch(ind),'Vertices',M.vertices);
   set(H.patch(ind),'Faces',M.faces);
+
+  % rescale axis except for flatmaps
+  if surf < 4
+    Ha = getappdata(H.patch(ind),'axis');
+
+    axis(Ha,'image');
+    axis(Ha,'off');
+  end
+end
+
+% only show lateral views for flatmaps
+if surf == 4
+  select_view(3)
+elseif H.view == 3
+  select_view(1)
 end
 
 %-----------------------------------------------------------------------
@@ -838,7 +878,7 @@ else % bottom view
 end
 
 for ind = 1:5
-  display_results(ind, H.viewpos{ind}(~H.view+1,:), vv(ind,:));
+  display_results(ind, H.viewpos{ind}(abs(H.view),:), vv(ind,:));
 end
 
 figure(H.figure(1));
@@ -1047,12 +1087,12 @@ catch
   col = [];
 end
 
-if ind < 5
-  M  = gifti(H.S{round(ind/2)}.info(1).Pmesh);
+if ind < 5 % single hemisphere views
+  M = H.S{round(ind/2)}.M;
   Mc.cdata = H.S{round(ind/2)}.Y;
 else
-  Ml = gifti(H.S{1}.info(1).Pmesh);
-  Mr = gifti(H.S{2}.info(1).Pmesh);
+  Ml = H.S{1}.M;
+  Mr = H.S{2}.M;
   Mcl.cdata = H.S{1}.Y;
   Mcr.cdata = H.S{2}.Y;
   
@@ -1178,17 +1218,16 @@ if ~exist('FaceColor','var') || isempty(FaceColor), FaceColor = 'interp'; end
 
 %-Get curvature
 %--------------------------------------------------------------------------
-if ind < 5
-  curv = H.S{round(ind/2)}.curv{H.underlay};
+if ind < 5 % single hemisphere views
+  curv = H.S{round(ind/2)}.curv{H.text_mode};
 else
-  curv = [H.S{1}.curv{H.underlay}; H.S{2}.curv{H.underlay}];
+  curv = [H.S{1}.curv{H.text_mode}; H.S{2}.curv{H.text_mode}];
 end
 
 if size(curv,2) == 1
 
-
-  % emphasize pos. and neg. mean curvature values by using sqrt
-  if H.underlay==1 
+  % emphasize mean curvature values by using sqrt
+  if H.text_mode==1 
     indneg = find(curv<0);
     curv(indneg) = -((-curv(indneg)).^0.5);
     indpos = find(curv>0);
@@ -1200,7 +1239,7 @@ if size(curv,2) == 1
   curv = curv/max(curv(:));
   
   % for sulcal depth (with no neg. values) use inverted values
-  if H.underlay==2 
+  if H.text_mode==2 
     curv = 1 - curv;
   end
 end
@@ -1257,6 +1296,27 @@ if size(C,1) == size(curv,1)
   C(ind0) = curv(ind0);
 else
   C(ind0) = 0;
+end
+
+%-Add atlas border 
+%--------------------------------------------------------------------------
+if H.border_mode
+  if ind < 5 % single hemisphere views
+    A = H.S{round(ind/2)}.A;
+    A = sparse(1:size(H.S{round(ind/2)}.M.vertices,1),1:size(H.S{round(ind/2)}.M.vertices,1),1./sum(A,2)) * A;
+    rdata = H.rdata{H.border_mode}(:,round(ind/2));
+    C0 = (A-speye(size(A))) * double(rdata);
+    C(find(round(C0)~=0),:) = 0;
+  else
+    C0 = [];
+    for i=1:2
+      A = H.S{i}.A;
+      A = sparse(1:size(H.S{i}.M.vertices,1),1:size(H.S{i}.M.vertices,1),1./sum(A,2)) * A;
+      rdata = H.rdata{H.border_mode}(:,i);
+      C0 = [C0; (A-speye(size(A))) * double(rdata)];
+    end    
+    C(find(round(C0)~=0),:) = 0;
+  end
 end
 
 set(H.patch(ind), 'FaceVertexCData',C, 'FaceColor',FaceColor);
@@ -1538,7 +1598,7 @@ if ~H.disable_cbar
 end
 
 if isfield(H,'dataplot')
-  set(H.dataplot,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col,'Color',H.bkg_col);
+  try, set(H.dataplot,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col,'Color',H.bkg_col); end
 end
 
 %==========================================================================
@@ -1546,7 +1606,7 @@ function checkbox_info(obj, event_obj)
 global H
   
 H.show_info = get(H.info,'Value');
-
+      
 if H.show_info
   set(get(getappdata(H.patch(1),'axis'),'Title'),'String',...
       spm_str_manip(H.S{1}.name,'k70d'),'Interpreter', 'none','Color',1-H.bkg_col)
@@ -1603,7 +1663,7 @@ global H
 % check that view changed
 if view ~= H.view
 
-  if view == 1 % top view
+  if view > 0 % top view
     vv = [90 0; -90 0; -90 0; 90 0; 0 90];
   else  % bottom view
     vv = [90 0; -90 0; -90 0; 90 0; 0 -90];
@@ -1611,32 +1671,32 @@ if view ~= H.view
 
   for ind = 1:5
     Ha = getappdata(H.patch(ind),'axis');
-    set(Ha,'position',H.viewpos{ind}(~view+1,:),'View',vv(ind,:));
+    set(Ha,'position',H.viewpos{ind}(abs(view),:),'View',vv(ind,:));
   end
   
   if ~isfield(H,'dataplot')
-    H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+    H.dataplot = axes('Position',H.viewpos{6}(abs(H.view),:),'Parent',H.figure(1),'Color',H.bkg_col);
     H.figure(1) = ancestor(H.dataplot,'figure');
     try, axes(H.dataplot); end
   end
 
-  try, set(H.dataplot,'Position',H.viewpos{6}(~view+1,:),'Parent',H.figure(1),'Color',H.bkg_col); end
+  try, set(H.dataplot,'Position',H.viewpos{6}(abs(view),:),'Parent',H.figure(1),'Color',H.bkg_col); end
   
   % save view
   H.view = view;
 end
 
 %==========================================================================
-function select_texture(underlay)
+function select_texture(text_mode)
 global H
 
 % check that view changed
-if underlay ~= H.underlay
+if text_mode ~= H.text_mode
 
-  if underlay == 1 % mean curvature
-    H.underlay = 1;
+  if text_mode == 1 % mean curvature
+    H.text_mode = 1;
   else  % sulcal depth
-    H.underlay = 2;
+    H.text_mode = 2;
   end
 
   for ind=1:5
@@ -1646,6 +1706,19 @@ if underlay ~= H.underlay
   end
 
 end
+
+%==========================================================================
+function select_border(border_mode)
+global H
+
+H.border_mode = border_mode;
+
+for ind=1:5
+  col = getappdata(H.patch(ind),'col');
+  d = getappdata(H.patch(ind),'data');
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
 
 %==========================================================================
 function select_cursor(cursor_mode)
@@ -1703,13 +1776,14 @@ end
 %==========================================================================
 function  clearDataCursorPlot(H)
 if isfield(H,'dataplot')
-  cla(H.dataplot);
+  try, cla(H.dataplot); end
   
   % hide labels and scale
-  set(H.dataplot,'XColor',H.bkg_col,'YColor',H.bkg_col);
-  xlabel(H.dataplot,'                                ')
-  ylabel(H.dataplot,'                                ')
-
+  try
+    set(H.dataplot,'XColor',H.bkg_col,'YColor',H.bkg_col);
+    xlabel(H.dataplot,'                                ')
+    ylabel(H.dataplot,'                                ')
+  end
   rmfield(H,'dataplot');
 end
 
@@ -1753,54 +1827,48 @@ if plot_mean
   cluster_number = 0;
   cluster_side = 0;
 
-if ~isfield(H,'A')
-    M = getappdata(H.patch(ind),'patch');
-    A       = spm_mesh_adjacency(M.faces);
-    A       = A + speye(size(A));
-    H.A = A;
-else
-    A = H.A;
-    d = getappdata(H.patch(ind),'data');
+  A = H.S{round(ind/2)}.A;
+  A = A + speye(size(A));
+  d = getappdata(H.patch(ind),'data');
 
-    % apply thresholds
-    dp = d > thresh(2); indp = find(dp);
-    dn = d < thresh(1); indn = find(dn);
-    
-    % go through pos. effects
-    if ~isempty(indp)
+  % apply thresholds
+  dp = d > thresh(2); indp = find(dp);
+  dn = d < thresh(1); indn = find(dn);
   
-      C = find_connected_component(A, dp);
-      C = C(indp);
-      node_list2 = node_list(indp);
-      
-      for i = 1:max(C)
-        N = find(C == i);          
-        XYZ = node_list2(N);
-        found_node = find(XYZ == node);
-        if ~isempty(found_node)
-          cluster_number = i;
-          cluster_side = ind;
-          break;
-        end
+  % go through pos. effects
+  if ~isempty(indp)
+
+    C = find_connected_component(A, dp);
+    C = C(indp);
+    node_list2 = node_list(indp);
+    
+    for i = 1:max(C)
+      N = find(C == i);          
+      XYZ = node_list2(N);
+      found_node = find(XYZ == node);
+      if ~isempty(found_node)
+        cluster_number = i;
+        cluster_side = ind;
+        break;
       end
     end
-  
-    % go through neg. effects if no node was found
-    if ~isempty(indn) && ~isempty(found_node)
+  end
 
-      C = find_connected_component(A, dn);
-      C = C(indn);
-      node_list2 = node_list(indp);
-  
-      for i = 1:max(C)
-        N = find(C == i);          
-        XYZ = node_list2(N);
-        found_node = find(XYZ == node);
-        if ~isempty(found_node)
-          cluster_number = i;
-          cluster_side = ind;
-          break;
-        end
+  % go through neg. effects if no node was found
+  if ~isempty(indn) && ~isempty(found_node)
+
+    C = find_connected_component(A, dn);
+    C = C(indn);
+    node_list2 = node_list(indp);
+
+    for i = 1:max(C)
+      N = find(C == i);          
+      XYZ = node_list2(N);
+      found_node = find(XYZ == node);
+      if ~isempty(found_node)
+        cluster_number = i;
+        cluster_side = ind;
+        break;
       end
     end
   end
@@ -1828,7 +1896,7 @@ end
 
 % create dataplot if not already existent
 if ~isfield(H,'dataplot')
-  H.dataplot = axes('Position',H.viewpos{6}(~H.view+1,:),'Parent',H.figure(1),'Color',H.bkg_col);
+  H.dataplot = axes('Position',H.viewpos{6}(abs(H.view),:),'Parent',H.figure(1),'Color',H.bkg_col);
   H.figure(1) = ancestor(H.dataplot,'figure');
   axes(H.dataplot);
 end

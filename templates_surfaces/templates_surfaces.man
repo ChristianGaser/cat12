@@ -23,9 +23,10 @@
 % rh: spm_mesh_transform(g,spm_matrix([0 0 0 0   pi/2 0]));
 %
 % ?h.mc.central.freesurfer.gii
-% ?h.sulc.central.freesurfer.gii
+% ?h.sqrtsulc.central.freesurfer.gii
 % ---------------------------------
-% Mean curvature and sulcal depth for display purposes (e.g. underlying texture)
+% Mean curvature and (sqrt) sulcal depth for display purposes (e.g. underlying 
+% texture)
 %
 % ?h.mask.txt
 % ---------------------------------
