@@ -302,11 +302,17 @@ function stools = cat_conf_stools(expert)
   v2s.sample         = cfg_menu;
   v2s.sample.tag     = 'sample';
   v2s.sample.name    = 'Sample Function';
-  v2s.sample.labels  = {'Mean','Maximum','Minimum','Absolute maximum'};
-  v2s.sample.values  = {{'avg'},{'max'},{'min'},{'maxabs'}};
+  v2s.sample.labels  = {'Mean','Weighted mean','Maximum','Minimum','Absolute maximum'};
+  v2s.sample.values  = {{'avg'},{'weighted_avg'},{'max'},{'min'},{'maxabs'}};
   v2s.sample.val     = {{'maxabs'}};
   v2s.sample.help    = {
     'Sample function to combine the values of the grid along the surface normals.'
+    ' Mean:             Use average for mapping along normals.'
+    ' Maximum:          Use maximum value for mapping along normals.'
+    ' Minimum:          Use minimum value for mapping along normals.'
+    ' Absolute maximum: Use absolute maximum value for mapping along normals (useful for mapping contrast images from 1st-level fMRI analysis).'
+    ' Weighted mean:    Use weighted average with gaussian kernel for mapping along normals. The kernel is so defined that values at the boundary are weighted with 50% while center is weighted with 100% (useful for fMRI or rfMRI data.'
+    ''
   };
 
   %% -- sampling points and average function
@@ -528,7 +534,7 @@ function stools = cat_conf_stools(expert)
     ''
     '  [1] Dahnke, R., Yotter, R. A., and Gaser, C. 2012.'
     '  Cortical thickness and central surface estimation.'
-    '  Neuroimage, 65C:336?348.'
+    '  Neuroimage, 65:336-348.'
     ''
     '  WARNING: This function is primarily thought in order to project statistical results '
     '           to the template surface. Do not use the output of this function'

@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1193 | gaser | 2017-10-11 00:45:02
+r1194 | gaser | 2017-10-11 17:05:48
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_results.m
+
+Changed: Added mapping function to use weighted average with gaussian kernel
+so that values at the border are weighted with 50% and center with 100% with
+a gaussian shape.
+------------------------------------------------------------------------
+r1193 | gaser | 2017-10-11 00:45:20 +0200 (Mi, 11 Okt 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +20,7 @@ M       templates_surfaces/templates_surfaces.man
 (1) Changed: Added flatmap view and atlas border overlay to
     cat_surf_results.m
 (2) Changed: Upadted surface template description.
+
 ------------------------------------------------------------------------
 r1192 | gaser | 2017-10-09 17:54:51 +0200 (Mo, 09 Okt 2017) | 17 lines
 
