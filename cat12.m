@@ -181,9 +181,37 @@ for i=1:size(P,1)
     fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
     
     % check that folder exist and number of vertices fits
-    if exist(fsavgDir,'dir') == 7 && SPM.xY.VY(1).dim(1) == 163842
+    if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).dim(1) == 327684 || SPM.xY.VY(1).dim(1) == 655368)
       [pp,ff]   = spm_fileparts(SPM.xY.VY(1).fname);
-      
+
+      % find mesh string      
+      hemi_ind = [];
+      hemi_ind = [hemi_ind strfind(ff,'mesh.')];
+      if ~isempty(hemi_ind)
+        
+        SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,'lh.central.freesurfer.gii'));
+        M0 = gifti({fullfile(fsavgDir, 'lh.central.freesurfer.gii'), fullfile(fsavgDir, 'rh.central.freesurfer.gii')});
+        G.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
+        G.vertices = [M0(1).vertices; M0(2).vertices];
+
+        % cerebellar lobes?
+        if SPM.xY.VY(1).dim(1) == 655368
+          M0 = gifti({fullfile(fsavgDir, 'lc.central.freesurfer.gii'), fullfile(fsavgDir, 'rc.central.freesurfer.gii')});
+          G.faces = [G.faces; M0(1).faces+2*size(M0(1).vertices,1); M0(2).faces+3*size(M0(1).vertices,1)];
+          G.vertices = [G.vertices; M0(1).vertices; M0(2).vertices];
+        end
+        
+        SPM.xVol.G = G;
+        
+        % remove memory demanding faces and vertices which are not necessary
+        for i=1:length(SPM.xY.VY)
+          SPM.xY.VY(i).private.faces = [];
+          SPM.xY.VY(i).private.vertices = [];
+        end
+        
+        save(fullfile(swd,'SPM.mat'),'SPM', '-v7.3');
+      end
+
       % find lh|rh string
       hemi_ind = [];
       hemi_ind = [hemi_ind strfind(ff,'lh.')];
