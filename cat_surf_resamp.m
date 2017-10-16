@@ -11,8 +11,6 @@ function varargout = cat_surf_resamp(varargin)
 % Christian Gaser
 % $Id$
 
-% further private jobions
-%   job.lazy .. does not do anything, if the result allready exist
 
   SVNid = '$Rev$';
 
@@ -29,7 +27,6 @@ function varargout = cat_surf_resamp(varargin)
   def.fwhm      = 0; 
   def.nproc     = 0; 
   def.verb      = cat_get_defaults('extopts.verb'); 
-  def.lazy      = 0; % overwrite existing results
   def.debug     = cat_get_defaults('extopts.verb')>2;
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
 
@@ -37,12 +34,12 @@ function varargout = cat_surf_resamp(varargin)
 
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
-     if nargout==1
-       varargout{1} = cat_parallelize(job,mfilename,'data_surf');
-     else
-       cat_parallelize(job,mfilename,'data_surf');
-     end
-     return
+    if nargout==1
+      varargout{1} = cat_parallelize(job,mfilename,'data_surf');
+    else
+      cat_parallelize(job,mfilename,'data_surf');
+    end
+    return
   end  
   
   % normal processing
@@ -58,82 +55,141 @@ function varargout = cat_surf_resamp(varargin)
   Psdata = cell(size(P,1),1);
   for i=1:size(P,1)
     
+    stime = clock; 
     [pp,ff,ex]   = spm_fileparts(deblank(P(i,:)));
     if any([strfind(ff,'.sphere.'),strfind(ff,'.central.')])
       if job.verb
-        fprintf('Can not process "%s"!\n',deblank(P(i,:)));
+        fprintf('Cannot process "%s"!\n',deblank(P(i,:)));
       end
       continue; 
     end
     
-    name = [ff ex];
-    name = strrep(name,'.gii',''); % remove .gii extension
+    name0 = [ff(3:end) ex];          % remove leading hemisphere information
+    name0 = strrep(name0,'.gii',''); % remove .gii extension
     hemi = ff(1:2);
+    hemistr = char('lh','rh','lc','rc');
+    exist_hemi = [];
+    
+    % go through left and right and potentialla cerebellar hemispheres
+    for j=1:length(hemistr)
+    
+      % add hemisphere name
+      hemi = hemistr(j,:);
+      name = [hemi name0];
+      
+      Pvalue0 = fullfile(pp,name);
+      
+      % check that file exists
+      if ~exist(Pvalue0,'file'), continue; end
+      
+      exist_hemi = [exist_hemi j];
 
-    k = strfind(name,'.');
-    pname = ff(k(1)+1:k(2)-1);
-    Pcentral   = [strrep(name,pname,'central') '.gii'];
-    Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
-    Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
-    Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
-    if job.fwhm > 0
-        Pfwhm      = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
-        Presamp      = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.tmp.resampled'])]);
-    else
-        Pfwhm      = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
-        Presamp    = fullfile(pp,strrep(Pcentral,'central',[pname 'tmp.resampled']));
-    end
-    Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
-    Pcentral   = fullfile(pp,Pcentral);
-    Pfsavg     = fullfile(job.fsavgDir,[hemi '.sphere.freesurfer.gii']);
-    Pmask      = fullfile(job.fsavgDir,[hemi '.mask']);
-
-    if job.lazy && exist([Pfwhm '.gii'],'file')
-      Psdata{i} = [Pfwhm '.gii']; 
-      if job.verb
-        fprintf('Display allready resampled %s\n',spm_file([Pfwhm '.gii'],'link','cat_surf_display(''%s'')'));
+      k = strfind(name,'.');
+      pname = ff(k(1)+1:k(2)-1);
+      Pcentral   = [strrep(name,pname,'central') '.gii'];
+      Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
+      Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
+      Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
+      
+      if job.fwhm > 0
+        Pfwhm    = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
+        Presamp  = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.tmp.resampled'])]);
+      else
+        Pfwhm    = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
+        Presamp  = fullfile(pp,strrep(Pcentral,'central',[pname 'tmp.resampled']));
       end
-    else
-        stime = clock; 
-        
-        % resample values using warped sphere 
-        cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,deblank(P(i,:)),Pvalue);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+      
+      Pfwhm      = strrep(Pfwhm,'.gii',''); % remove .gii extension
+      Pcentral   = fullfile(pp,Pcentral);
+      Pfsavg     = fullfile(job.fsavgDir,[hemi '.sphere.freesurfer.gii']);
+      Pmask      = fullfile(job.fsavgDir,[hemi '.mask']);
+      
+      % save fwhm name to merge meshes
+      Pfwhm_all{j} = [Pfwhm '.gii'];
+      
+      % resample values using warped sphere 
+      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-        % resample surface using warped sphere with better surface quality (using Spherical harmonics)
-        cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+      % resample surface using warped sphere with better surface quality (using Spherical harmonics)
+      cmd = sprintf('CAT_ResampleSphericalSurfSPH -n 327680 "%s" "%s" "%s"',Pcentral,Pspherereg,Presamp);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-        % resample surface according to freesurfer sphere
-        cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+      % resample surface according to freesurfer sphere
+      cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavg,Presamp);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-        % smooth resampled values
-        cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm,Pvalue,Pmask);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+      % smooth resampled values
+      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm,Pvalue,Pmask);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-        % add values to resampled surf and save as gifti
-        cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
-        [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
+      % add values to resampled surf and save as gifti
+      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
+      [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-        if exist([Pfwhm '.gii'],'file'), Psdata{i} = [Pfwhm '.gii']; end
-        
-        % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
-        [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
+      if exist([Pfwhm '.gii'],'file'), Psdata{i} = [Pfwhm '.gii']; end
+      
+      % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
+      [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
 
-        g = gifti(Psdata{i});
-        g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
-        save(g, Psdata{i}, 'Base64Binary');
+      g = gifti(Psdata{i});
+      g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
+      save(g, Psdata{i}, 'Base64Binary');
 
-        delete(Presamp);
-        delete(Pfwhm);
-        if job.fwhm > 0, delete(Pvalue); end
+      delete(Presamp);
+      delete(Pfwhm);
+      if job.fwhm > 0, delete(Pvalue); end
 
-        if job.verb
-          fprintf('(%3.0f s) Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
-        end
+      if job.verb
+        fprintf('Resampling %s\n',Psdata{i});
+      end
     end
 
+    % merge hemispheres
+    if job.merge_hemi
+      % name for combined hemispheres
+      k = strfind(name,'.');
+      pname = ff(k(1)+1:k(2)-1);
+      Pcentral   = strrep(['mesh' name0 '.gii'],pname,'central');
+      
+      if job.fwhm > 0
+        Pfwhm     = [sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.resampled'])];
+      else
+        Pfwhm     = strrep(Pcentral,'central',[pname '.resampled']);
+      end
+  
+      % combine left and right and optionally cerebellar meshes
+      switch numel(exist_hemi)
+      case{2,4}
+        M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}});
+        delete(Pfwhm_all{1}); delete(Pfwhm_all{2})
+        M.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
+        M.vertices = [M0(1).vertices; M0(2).vertices];
+        M.cdata = [M0(1).cdata; M0(2).cdata];
+      case 4
+        M0 = gifti({Pfwhm_all{3}, Pfwhm_all{4}});
+        delete(Pfwhm_all{3}); delete(Pfwhm_all{4})
+        M.faces = [M.faces; M0(1).faces+2*size(M0(1).vertices,1); M0(2).faces+3*size(M0(1).vertices,1)];
+        M.vertices = [M.vertices; M0(1).vertices; M0(2).vertices];
+        M.cdata = [M.cdata; M0(1).cdata; M0(2).cdata];
+      case 1
+        disp('No data for opposite hemisphere found!');
+      case 3
+        disp('No data for opposite cerebellar hemisphere found!');
+      end
+      
+      if numel(exist_hemi) > 1
+        M.mat = M0(1).mat;
+        M.private.metadata = struct('name','SurfaceID','value',Pfwhm);
+        save(gifti(M), fullfile(pp,Pfwhm), 'Base64Binary');
+        Psdata{i} = fullfile(pp,Pfwhm);
+      end
+          
+      if job.verb
+        fprintf('(%3.0f s) Display resampled %s\n',etime(clock,stime),spm_file(Psdata{i},'link','cat_surf_display(''%s'')'));
+      end
+    end
+    
     spm_progress_bar('Set',i);
   end
   

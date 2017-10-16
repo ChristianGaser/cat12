@@ -30,9 +30,7 @@ function stools = cat_conf_stools(expert)
   nproc.help    = {
     'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
       ''
-      'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.'
-      ''
-      'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
+      'Please note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
     };
  
   
@@ -862,7 +860,7 @@ end
   sc.cdata_sub.tag     = 'cdata';
   sc.cdata_sub.name    = 'Surface Data Files';
   sc.cdata_sub.filter  = 'gifti';
-  sc.cdata_sub.ufilter = '[rl]h.(?!cent|sphe|defe|hull).*gii';
+  sc.cdata_sub.ufilter = '(lh|rh|mesh).(?!cent|sphe|defe|hull).*gii';
   sc.cdata_sub.num     = [1 Inf];
   sc.cdata_sub.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
    
@@ -986,12 +984,12 @@ end
   data_surf.name    = 'Surfaces Data';
   data_surf.filter  = 'any';
   if expert > 1
-    data_surf.ufilter = '^[lr]h.';
+    data_surf.ufilter = '^lh.';
   else
-    data_surf.ufilter = '[lr]h.(?!cent|sphe|defe|hull).*';
+    data_surf.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
   end
   data_surf.num     = [1 Inf];
-  data_surf.help    = {'Select Surfaces Data Files for Resampling to Template Space.'};
+  data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
 
   fwhm         = cfg_entry;
   fwhm.tag     = 'fwhm';
@@ -1002,14 +1000,23 @@ end
   fwhm.help    = {
     'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm. For no filtering use a value of 0.'};
 
+  merge_hemi         = cfg_menu;
+  merge_hemi.tag     = 'merge_hemi';
+  merge_hemi.name    = 'Merge hemispheres';
+  merge_hemi.labels  = {
+    'No -   save resampled data for each hemisphere',...
+    'Yes -  merge hemispheres'
+  };
+  merge_hemi.values  = {0,1};
+  merge_hemi.val     = {1};
+  merge_hemi.help    = {
+    'Meshes for left and right hemisphere (and optionally left and right cerebellum) can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
+  };
+
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-  if expert > 1
-    surfresamp.val  = {data_surf,fwhm,nproc,lazy};
-  else
-    surfresamp.val  = {data_surf,fwhm,nproc};
-  end
+  surfresamp.val  = {data_surf,merge_hemi,fwhm,nproc};
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.help = {
   'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
@@ -1038,7 +1045,7 @@ end
   surfresamp_fs      = cfg_exbranch;
   surfresamp_fs.tag  = 'surfresamp_fs';
   surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Thickness Data';
-  surfresamp_fs.val  = {data_fs,fwhm,outdir};
+  surfresamp_fs.val  = {data_fs,merge_hemi,fwhm,outdir};
   surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
   surfresamp_fs.help = {
   'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
