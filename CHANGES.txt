@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1194 | gaser | 2017-10-11 17:05:48
+r1195 | gaser | 2017-10-17 00:31:23
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_stat_check_cov.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+ M      templates_surfaces/lh.patch.freesurfer.gii
+ M      templates_surfaces/lh.sqrtsulc.central.freesurfer.gii
+ M      templates_surfaces/rh.patch.freesurfer.gii
+ M      templates_surfaces/rh.sqrtsulc.central.freesurfer.gii
+
+Changed: Prepared some function for dealing with merged hemisphere meshes.
+------------------------------------------------------------------------
+r1194 | gaser | 2017-10-11 17:06:05 +0200 (Mi, 11 Okt 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +25,7 @@ M       cat_surf_results.m
 Changed: Added mapping function to use weighted average with gaussian kernel
 so that values at the border are weighted with 50% and center with 100% with
 a gaussian shape.
+
 ------------------------------------------------------------------------
 r1193 | gaser | 2017-10-11 00:45:20 +0200 (Mi, 11 Okt 2017) | 9 lines
 
