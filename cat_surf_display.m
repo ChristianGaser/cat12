@@ -43,7 +43,7 @@ function varargout = cat_surf_display(varargin)
       job = varargin{1};
       if ~isfield(job,'data') || isempty(job.data)
         if cat_get_defaults('extopts.expertgui')
-          job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr][hc].*');
+          job.data = spm_select([1 24],'any','Select surfaces or textures','','','(lh|rh|lc|rc|mesh).*');
         else
           job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
         end
@@ -104,9 +104,9 @@ function varargout = cat_surf_display(varargin)
     
     if strcmp(sinfo(i).side,'mesh')
       tmp = gifti(sinfo(i).fname);
-      if size(tmp.cdata,1) == 327684
+      if size(tmp.cdata,1) == 327684 % lh+rh
         job.multisurf = 2;
-      elseif size(tmp.cdata,1) == 655368
+      elseif size(tmp.cdata,1) == 655368 % lh+rh+lc+rc
         job.multisurf = 3;
       end
     end
@@ -229,7 +229,13 @@ function varargout = cat_surf_display(varargin)
         end
         
         sideids = ceil(max(h.cdata(:))/2)*2;  
-        rng('default'); rng(rngid);  
+        if exist('rng','builtin') == 5
+          rng('default')
+          rng(rngid)
+        else
+          rand('state',rngid);
+        end
+
         cmap = colorcube(ceil((sideids/2) * 8/7)); % greater to avoid grays
         cmap(ceil(sideids/2):end,:)=[]; % remove grays
         cmap(sum(cmap,2)<0.3,:) = min(1,max(0.1,cmap(sum(cmap,2)<0.3,:)+0.2)); % not to dark
