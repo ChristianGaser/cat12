@@ -12,7 +12,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
 %   ftype     .. filetype [0=no surface,1=gifti,2=freesurfer]
 % 
 %   statready .. ready for statistik (^s#mm.*.gii) [0|1]
-%   side      .. hemishphere [lh|rh] 
+%   side      .. hemisphere [lh|rh|lc|rc|mesh] 
 %   datatype  .. [0=nosurf/file|1=mesh|2=data|3=surf]
 %                only with readsurf==1 and with surf=mesh+data
 %   dataname  .. datafieldname [central|thickness|s3thickness|myclalc...]
@@ -177,6 +177,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
     elseif strfind(noname,'lc'), sinfo(i).side='lc'; sidei = strfind(noname,'lc.');
     elseif strfind(noname,'rc'), sinfo(i).side='rc'; sidei = strfind(noname,'rc.');
+    elseif strfind(noname,'mesh'), sinfo(i).side='mesh'; sidei = strfind(noname,'mesh.');
     else
       % if SPM.mat exist use that for side information
       if exist(fullfile(pp,'SPM.mat'),'file')
@@ -184,15 +185,21 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         [pp2,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);
       
         % find lh|rh string
-        hemi_ind = [strfind(ff2,'lh') strfind(ff2,'rh') strfind(ff2,'lc') strfind(ff2,'rc')];
-        sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
+        hemi_ind = [strfind(ff2,'lh.') strfind(ff2,'rh.') strfind(ff2,'lc.') strfind(ff2,'rc.')];
+        if ~isempty(hemi_ind)
+          sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
+        else
+          % find mesh string
+          hemi_ind = strfind(ff2,'mesh.');
+          sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+3);
+        end
         sidei=[];
       else
         if gui
           if cat_get_defaults('extopts.expertgui')
-            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|lc|rc');
+            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|lc|rc|mesh');
           else
-            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh');
+            sinfo(i).side = spm_input('Hemisphere',1,'lh|rh|mesh');
           end
         else
           sinfo(i).side = ''; 
@@ -328,8 +335,8 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     % if we got still no mesh than we can find an average mesh
     % ...
     if isempty(sinfo(i).Pmesh) %&& sinfo(i).ftype==1
-      sinfo(i).Pmesh = ...
-        fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[sinfo(i).side '.central.freesurfer.gii']);
+      sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',...
+          [sinfo(i).side '.central.freesurfer.gii']);
       sinfo(i).Pdata = sinfo(i).fname;
     end
     
