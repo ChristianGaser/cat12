@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1196 | gaser | 2017-10-17 08:30:31
+r1197 | gaser | 2017-10-17 09:20:16
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_display.m
+
+Changed: Check whether rng function exists in cat_surf_display.m
+------------------------------------------------------------------------
+r1196 | gaser | 2017-10-17 08:30:51 +0200 (Di, 17 Okt 2017) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +15,7 @@ M       cat_surf_display.m
 M       cat_surf_info.m
 
 Changed: Prepared display function for dealing with merged hemisphere meshes.
+
 ------------------------------------------------------------------------
 r1195 | gaser | 2017-10-17 00:31:44 +0200 (Di, 17 Okt 2017) | 14 lines
 
