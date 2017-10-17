@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1195 | gaser | 2017-10-17 00:31:23
+r1196 | gaser | 2017-10-17 08:30:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_display.m
+M       cat_surf_info.m
+
+Changed: Prepared display function for dealing with merged hemisphere meshes.
+------------------------------------------------------------------------
+r1195 | gaser | 2017-10-17 00:31:44 +0200 (Di, 17 Okt 2017) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +23,7 @@ M       cat_surf_resamp_freesurfer.m
  M      templates_surfaces/rh.sqrtsulc.central.freesurfer.gii
 
 Changed: Prepared some function for dealing with merged hemisphere meshes.
+
 ------------------------------------------------------------------------
 r1194 | gaser | 2017-10-11 17:06:05 +0200 (Mi, 11 Okt 2017) | 9 lines
 

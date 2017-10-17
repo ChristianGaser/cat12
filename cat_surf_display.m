@@ -55,7 +55,7 @@ function varargout = cat_surf_display(varargin)
     end
   else
     if cat_get_defaults('extopts.expertgui')
-        job.data = spm_select([1 24],'any','Select surfaces or textures','','','[lr][hc].*');
+        job.data = spm_select([1 24],'any','Select surfaces or textures','','','(lh|rh|lc|rc|mesh).*');
     else
         job.data = spm_select([1 24],'any','Select surfaces or textures','','','.*gii');
     end
@@ -102,12 +102,25 @@ function varargout = cat_surf_display(varargin)
       sinfo(i).Pmesh = cat_surf_rename(job.fsaverage{job.usefsaverage},'side',sinfo(i).side); 
     end
     
+    if strcmp(sinfo(i).side,'mesh')
+      tmp = gifti(sinfo(i).fname);
+      if size(tmp.cdata,1) == 327684
+        job.multisurf = 2;
+      elseif size(tmp.cdata,1) == 655368
+        job.multisurf = 3;
+      end
+    end
+    
     % load multiple surfaces
     % 3 - load all structures of both sides  
     % 2 - load all structures of the same side 
     % 1 - load other side of same structure
     if job.multisurf
-      if strcmp('r',sinfo(i).side(1)), oside = ['l' sinfo(i).side(2)]; else oside = ['r' sinfo(i).side(2)]; end
+      if strcmp(sinfo(i).side,'mesh')
+        oside = 'mesh';
+      elseif strcmp('r',sinfo(i).side(1))
+        oside = ['l' sinfo(i).side(2)];
+      else oside = ['r' sinfo(i).side(2)]; end
       if job.multisurf==3
         Pmesh = [ ...
           cat_surf_rename(sinfo(i).Pmesh,'side','lh') cat_surf_rename(sinfo(i).Pmesh,'side','rh') ...
@@ -116,11 +129,18 @@ function varargout = cat_surf_display(varargin)
           cat_surf_rename(sinfo(i).Pdata,'side','lh') cat_surf_rename(sinfo(i).Pdata,'side','rh') ...
           cat_surf_rename(sinfo(i).Pdata,'side','lc') cat_surf_rename(sinfo(i).Pdata,'side','rc')];
       elseif job.multisurf==2
-        if strcmp('h',sinfo(i).side(2)), oside = [sinfo(i).side(1) 'c']; else oside = [sinfo(i).side(1) 'h']; end
-        Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
-        Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
+        if strcmp(sinfo(i).side,'mesh')
+          Pmesh = [ ...
+            cat_surf_rename(sinfo(i).Pmesh,'side','lh') cat_surf_rename(sinfo(i).Pmesh,'side','rh')]; 
+          Pdata = [ ...
+            cat_surf_rename(sinfo(i).Pdata,'side','lh') cat_surf_rename(sinfo(i).Pdata,'side','rh')];
+        else        
+          if strcmp('h',sinfo(i).side(2)), oside = [sinfo(i).side(1) 'c']; else oside = [sinfo(i).side(1) 'h']; end
+          Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
+          Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
+        end
       else
-        Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)]; 
+        Pmesh = [sinfo(i).Pmesh cat_surf_rename(sinfo(i).Pmesh,'side',oside)];
         Pdata = [sinfo(i).Pdata cat_surf_rename(sinfo(i).Pdata,'side',oside)]; 
       end
       for im=numel(Pmesh):-1:1
@@ -134,7 +154,11 @@ function varargout = cat_surf_display(varargin)
       Pdata = sinfo(i).Pdata; 
     end
     
-
+    % for merged meshes use already merged cdata
+    if strcmp(sinfo(i).side,'mesh')
+      Pdata = sinfo(i).Pdata;
+    end
+    
     if job.verb
       fprintf('Display %s\n',spm_file(job.data{i},'link','cat_surf_display(''%s'')'));
     end
