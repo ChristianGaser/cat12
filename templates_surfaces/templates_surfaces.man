@@ -60,6 +60,10 @@
 % spherical registration and resampling).
 % The central surface is estimated by averaging the white and pial surface.
 %
+% mesh.central.freesurfer.gii 
+% ---------------------------------
+% Merged left and right hemisphere based on Freesurfer fsaverage
+%
 % fsavg.index2D_256x128.txt
 % ---------------------------------
 % Index file that contains the transformation from surface maps to 2D maps for 

@@ -30,7 +30,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
   if ~exist('P','var'), P=''; end
   if strcmp(P,'selftest')
     pps = {
-      fullfile(spm('dir'),'toolbox','cat12','template_surfaces')
+      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces')
       fullfile('User','08.15','T1 T2','subs','mri')
       };
     ffs = {

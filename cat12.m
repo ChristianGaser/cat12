@@ -189,7 +189,7 @@ for i=1:size(P,1)
       hemi_ind = [hemi_ind strfind(ff,'mesh.')];
       if ~isempty(hemi_ind)
         
-        SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,'lh.central.freesurfer.gii'));
+        SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir, 'mesh.central.freesurfer.gii'));
         M0 = gifti({fullfile(fsavgDir, 'lh.central.freesurfer.gii'), fullfile(fsavgDir, 'rh.central.freesurfer.gii')});
         G.faces = [M0(1).faces; M0(2).faces+size(M0(1).vertices,1)];
         G.vertices = [M0(1).vertices; M0(2).vertices];
@@ -210,25 +210,26 @@ for i=1:size(P,1)
         end
         
         save(fullfile(swd,'SPM.mat'),'SPM', '-v7.3');
-      end
+      else
 
-      % find lh|rh string
-      hemi_ind = [];
-      hemi_ind = [hemi_ind strfind(ff,'lh.')];
-      hemi_ind = [hemi_ind strfind(ff,'rh.')];
-      hemi = ff(hemi_ind:hemi_ind+1);
-      if ~isempty(hemi)
-        SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
-        G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii']);
-        SPM.xVol.G = gifti(G);
-        
-        % remove memory demanding faces and vertices which are not necessary
-        for i=1:length(SPM.xY.VY)
-          SPM.xY.VY(i).private.faces = [];
-          SPM.xY.VY(i).private.vertices = [];
+        % find lh|rh string
+        hemi_ind = [];
+        hemi_ind = [hemi_ind strfind(ff,'lh.')];
+        hemi_ind = [hemi_ind strfind(ff,'rh.')];
+        hemi = ff(hemi_ind:hemi_ind+1);
+        if ~isempty(hemi)
+          SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
+          G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii'])
+          SPM.xVol.G = gifti(G);
+          
+          % remove memory demanding faces and vertices which are not necessary
+          for i=1:length(SPM.xY.VY)
+            SPM.xY.VY(i).private.faces = [];
+            SPM.xY.VY(i).private.vertices = [];
+          end
+          
+          save(fullfile(swd,'SPM.mat'),'SPM', '-v7.3');
         end
-        
-        save(fullfile(swd,'SPM.mat'),'SPM', '-v7.3');
       end
     end
 
