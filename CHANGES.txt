@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1199 | gaser | 2017-10-19 00:22:21
+r1200 | gaser | 2017-10-19 00:24:20
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+ M      templates_surfaces/mesh.central.freesurfer.gii
+
+Changed: Updated cat_surf_results to now deal with multiple results that
+can be slected using ui.
+------------------------------------------------------------------------
+r1199 | gaser | 2017-10-19 00:22:40 +0200 (Do, 19 Okt 2017) | 8 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -8,6 +18,7 @@ M       CHANGES.txt
 !       cat_surf_results.m
 
 Changed: Updated manual w.r.t. re-use of customized DARTEL templates.
+
 ------------------------------------------------------------------------
 r1198 | gaser | 2017-10-17 14:55:29 +0200 (Di, 17 Okt 2017) | 17 lines
 
