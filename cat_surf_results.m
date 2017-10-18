@@ -26,8 +26,6 @@ y              = [];
 H.clip         = [];
 H.clim         = [];
 H.XTick        = [];
-H.data_sel     = [0 0];
-H.data_n       = [1 3];
 H.bkg_col      = [0 0 0];
 H.show_inv     = 0;
 H.no_neg       = 0;
@@ -71,7 +69,7 @@ switch lower(action)
         % figure 2 with GUI
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
-          'sel',   [0.290 0.930 0.425 0.060],...
+          'sel',   [0.290 0.930 0.425 0.050],...
           'surf',  [0.050 0.855 0.425 0.050],'mview',   [0.525 0.855 0.425 0.050],... 
           'text',  [0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
           'cmap',  [0.050 0.750 0.425 0.050],'atlas',   [0.525 0.750 0.425 0.050],...
@@ -110,10 +108,10 @@ switch lower(action)
                 'position',H.pos{2}.sel,...
                 'style','Pushbutton','HorizontalAlignment','center',...
                 'callback',@select_data,...
-                'ToolTipString','Select results (up to 3) for both hemispheres (e.g. log-p maps)',...
+                'ToolTipString','Select results (up to 24) for both hemispheres (e.g. log-p maps)',...
                 'Interruptible','on','Enable','on');
                 
-        str  = { 'Underlying Surface...','Central','Inflated','Dartel','Flatmap'};
+        str  = { 'Surface...','Central','Inflated','Dartel','Flatmap'};
         tmp  = { {@select_surf, 1},...
                  {@select_surf, 2},...
                  {@select_surf, 3},...
@@ -197,7 +195,7 @@ switch lower(action)
                  {@select_view, -1},...
                  {@select_view,  2}};
         
-        % colormap
+        % view
         H.mview = uicontrol(H.figure(2),...
                 'string',str,'Units','normalized',...
                 'position',H.pos{2}.mview,'UserData',tmp,...
@@ -206,7 +204,7 @@ switch lower(action)
                 'ToolTipString','Select View',...
                 'Interruptible','on','Visible','off');
 
-        str  = { 'Underlying Texture...','Mean curvature','Sulcal depth'};
+        str  = { 'Texture...','Mean curvature','Sulcal depth'};
         tmp  = { {@select_texture, 1},...
                  {@select_texture, 2}};
 
@@ -360,8 +358,8 @@ switch lower(action)
                 if meshes_merged
                   if ind == 1
                     Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-                    H.S{1}.Y = Y(1:163842);
-                    H.S{2}.Y = Y(163843:end);
+                    H.S{1}.Y = Y(1:163842,:);
+                    H.S{2}.Y = Y(163843:end,:);
                   end
                 else
                   H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
@@ -391,13 +389,57 @@ switch lower(action)
             end
           end
 
+          % rescue original name for later result selection
+          H.S1 = H.S{1};
+          H.S2 = H.S{2};
+
           H.n_surf        = max(numel(H.S{1}.info),numel(H.S{2}.info));
           H.view          = 1;
           H.show_transp   = 1;
           H.disable_cbar  = 0;
           H.white_bgk     = 0;
           H.show_info     = 0;
-          
+
+          % result selection or RGB overlay if more than one result was loaded
+          if H.n_surf > 1
+            % pre-select 1st mesh if we cannot use RGB overlay
+            %if H.n_surf > 3
+            if 1
+              sel = 1;
+              H.S{1}.name = H.S1.name(sel,:);
+              H.S{2}.name = H.S2.name(sel,:);
+              H.S{1}.Y = H.S1.Y(:,sel);
+              H.S{2}.Y = H.S2.Y(:,sel);
+            end
+
+            % delete old selection ui
+            delete(H.sel);
+            H = rmfield(H,'sel');
+            
+            str = cell(1,H.n_surf+2);
+            tmp = cell(1,H.n_surf+1);
+            str{1} = ('Select Result...');
+            for s=1:H.n_surf
+              str{s+1} = H.S1.name(s,:);
+              tmp{s} = {@select_results, s};
+            end
+            
+            % set # of surfaces back to "1" if we cannot use RGB overlay
+            if 1, H.n_surf = 1; end
+            %if H.n_surf > 3, H.n_surf = 1; end
+            
+            % new selection ui
+            str{s+2} = 'Select new data';
+            tmp{s+1} = {@select_data};
+            H.sel = uicontrol(H.figure(2),...
+                    'string',str,'Units','normalized',...
+                    'position',H.pos{2}.sel,'UserData',tmp,...
+                    'style','Popup','HorizontalAlignment','center',...
+                    'callback','spm(''PopUpCB'',gcbo)',...
+                    'ToolTipString','Select results',...
+                    'Interruptible','on','Visible','on');
+          end
+
           display_results_all;
           
           % Don't allow plot functions for RGB maps
@@ -511,10 +553,10 @@ switch lower(action)
                 c(1:size(col,1),1,1:size(col,2)) = col;
             end
         end
-        if numel(H.S{1}.info) > 1
-            set(ic,'CData',c(1:numel(H.S{1}.info),:,:));
-            set(ic,'YData',[1 numel(H.S{1}.info)]);
-            set(H.colourbar,'YLim',[1 numel(H.S{1}.info)]);
+        if H.n_surf > 1
+            set(ic,'CData',c(1:H.n_surf,:,:));
+            set(ic,'YData',[1 H.n_surf]);
+            set(H.colourbar,'YLim',[1 H.n_surf]);
             set(H.colourbar,'YTickLabel',[]);
         else
             set(ic,'CData',c);
@@ -622,9 +664,6 @@ if H.no_neg
   set(H.slider_min,'Value',0);
 end
 
-% get min value for both hemispheres
-min_d = min(min(min(getappdata(H.patch(1),'data'))),min(min(getappdata(H.patch(3),'data'))));
-
 for ind=1:5
   % correct lower clim to "0" if no values are exceeding threshold
   if min_d > -thresh
@@ -715,8 +754,8 @@ for ind = [1 3]
     d = d0(indsurf,:);
     
     % apply thresholds
-    dp = d > thresh(2); indp = find(dp);
-    dn = d < thresh(1); indn = find(dn);
+    dp = d >= thresh(2); indp = find(dp);
+    dn = d <= thresh(1); indn = find(dn);
   
     % go through pos. effects
     if ~isempty(indp)
@@ -815,6 +854,96 @@ for ind = [1 3]
 end
 
 %-----------------------------------------------------------------------
+function H = select_results(sel)
+%-----------------------------------------------------------------------
+global H
+
+H.S{1}.name = H.S1.name(sel,:);
+H.S{2}.name = H.S2.name(sel,:);
+H.S{1}.Y = H.S1.Y(:,sel);
+H.S{2}.Y = H.S2.Y(:,sel);
+
+% check whether data for left or right hemipshere are all non-zero
+ind1 = find(H.S{1}.Y(:)~=0);
+ind2 = find(H.S{2}.Y(:)~=0);
+
+% estimate min value > 0 and min/max values
+if ~isempty(ind1) && ~isempty(ind2)
+  H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))),min(H.S{2}.Y(~isinf(H.S{2}.Y))));
+  H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y))),max(H.S{2}.Y(~isinf(H.S{2}.Y))));
+elseif isempty(ind1)
+  H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y)));
+  H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y)));
+elseif isempty(ind2)
+  H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y)));
+  H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y)));
+end
+
+mn = H.S{1}.min;
+
+% deal with neg. values
+if H.S{1}.min < 0
+  mnx = max(abs([H.S{1}.min,H.S{1}.max]));
+  H.S{1}.min = -mnx;
+  H.S{1}.max =  mnx;
+end
+
+% add 10% to min/max values
+H.S{1}.max = round(1100*H.S{1}.max)/1000;
+if H.S{1}.min < 0
+  H.S{1}.min = round(1100*H.S{1}.min)/1000;
+else
+  H.S{1}.min = round(900*H.S{1}.min)/1000;
+end
+
+% correct lower clim to "0" if no values are exceeding threshold
+if mn > -H.thresh_value
+  H.clim = [true 0 H.S{1}.max];
+else
+  H.clim = [true H.S{1}.min H.S{1}.max];
+end
+
+H.clip = [true -H.thresh_value H.thresh_value];
+
+% rather use NaN values for zero threshold
+if H.thresh == 0
+  H.clip = [false NaN NaN];
+end
+
+if H.no_neg
+  H.clip = [true -Inf H.clip(3)];
+  set(H.slider_min,'Value',0);
+end
+
+H.n_surf = 1;
+
+for ind=1:5
+  setappdata(H.patch(ind),'clim',H.clim);
+  setappdata(H.patch(ind),'clip',H.clip);
+  col = getappdata(H.patch(ind),'col');
+  
+  if ind > 4
+    d = [H.S{1}.Y;H.S{1}.Y];
+  else
+    d = H.S{round(ind/2)}.Y;
+  end
+  
+  H = updateTexture(H,ind,d,col,H.show_transp);
+end
+
+% correct value of slider if no values are exceeding threshold
+if H.S{1}.min > -H.thresh_value
+  set(H.slider_min,'Value',0);
+end
+
+% update file information and colorbar
+checkbox_info;
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
+%-----------------------------------------------------------------------
 function H = select_surf(surf)
 %-----------------------------------------------------------------------
 global H
@@ -863,6 +992,16 @@ elseif H.view == 3
   select_view(1)
 end
 
+% don't show data cursor, view functions and data plot that will not work for flatmaps
+if surf == 4
+  set(H.cursor,'Visible','off');
+  set(H.mview,'Visible','off');
+  clearDataCursorPlot(H);
+else
+  set(H.cursor,'Visible','on');
+  set(H.mview,'Visible','on');
+end
+
 %-----------------------------------------------------------------------
 function display_results_all(obj, event_obj)
 %-----------------------------------------------------------------------
@@ -901,6 +1040,11 @@ end
 
 figure(H.figure(1));
 
+% prepare dataplot axes
+H.dataplot = axes('Position',H.viewpos{6}(abs(H.view),:),'Parent',H.figure(1),'Color',H.bkg_col);
+H.figure(1) = ancestor(H.dataplot,'figure');
+try, axes(H.dataplot); end
+
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:)~=0);
 ind2 = find(H.S{2}.Y(:)~=0);
@@ -929,11 +1073,11 @@ if H.S{1}.min < 0
 end
 
 % add 10% to min/max values
-H.S{1}.max = round(1.1*H.S{1}.max);
+H.S{1}.max = round(1100*H.S{1}.max)/1000;
 if H.S{1}.min < 0
-  H.S{1}.min = round(1.1*H.S{1}.min);
+  H.S{1}.min = round(1100*H.S{1}.min)/1000;
 else
-  H.S{1}.min = round(0.9*H.S{1}.min);
+  H.S{1}.min = round(900*H.S{1}.min)/1000;
 end
 
 H.clim = [true H.S{1}.min H.S{1}.max];
@@ -954,7 +1098,7 @@ for ind=1:5
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP & (H.S{1}.thresh < 1)
+if H.logP && (H.S{1}.thresh < 1)
   set(H.thresh,'Visible','on');
 end
 
@@ -973,7 +1117,7 @@ end
 if H.n_surf==1
 
   % allow slider a more extended range
-  mnx = 2*max(abs([H.S{1}.min H.S{1}.max]));
+  mnx = ceil(2*max(abs([H.S{1}.min H.S{1}.max])));
 
   H.slider_min = sliderPanel(...
         'Parent'  , H.figure(2), ...
@@ -1035,14 +1179,14 @@ if H.n_surf == 1
 
   if H.logP
     XTick = get(H.colourbar,'XTick');
-    
+
     % save original XTick values
     if isempty(H.XTick), H.XTick = XTick; end
 
     % if threshold is between 1.3..1.4 (p<0.05) change XTick accordingly and correct by 0.3
     if ~isempty(clip)
       if clip(3) >= 1.3 && clip(3) <= 1.4 
-        XTick_step = round((clim(3)-clim(2))/5);
+        XTick_step = ceil((clim(3)-clim(2))/5);
         if clip(2) <= -1.3 && clip(2) >= -1.4
           XTick = [(round(clim(2))-0.3):XTick_step:-1.3 0 1.3:XTick_step:(round(clim(3))+0.3)];
         else
@@ -1068,7 +1212,6 @@ if H.n_surf == 1
       end
     end
     set(H.colourbar,'XTickLabel',XTickLabel(2:end,:),'XTick',XTick);
-    
   end % end H.logP
   
   set(H.colourbar,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
@@ -1137,7 +1280,8 @@ end
 
 H.axis = axes('Position',win,'Parent',H.figure(1),'Visible','off');
 H.figure(1) = ancestor(H.axis,'figure');
-figure(H.figure(1)); axes(H.axis);
+figure(H.figure(1)); 
+axes(H.axis);
 
 if isfield(M,'facevertexcdata')
   H.cdata = M.facevertexcdata;
@@ -1268,6 +1412,7 @@ C = zeros(size(v,2),3);
 clim = getappdata(H.patch(ind), 'clim');
 if isempty(clim), clim = [false NaN NaN]; end
 mi = clim(2); ma = clim(3);
+
 if any(v(:))
     if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
     % don't allow negative values for multiple maps
@@ -1347,7 +1492,7 @@ global H
 H.logP = 1;
 lh = []; rh = []; lh_rh = [];
 
-P = spm_select([1 6],'mesh',['Select up to 3 (log P) maps for left and right hemisphere']);
+P = spm_select([1 24],'mesh',['Select up to 24 maps for left and right hemisphere']);
 info = cat_surf_info(P);
 
 n = size(P,1);
@@ -1376,14 +1521,19 @@ if ~isempty(lh_rh)
     error('Mixing of left and right with merged surface data is not supported.');
   end
   
-  H.S{1}.name = P([lh lh_rh],:);
-  H.S{2}.name = P([rh lh_rh],:);
+  H.merged = 1;
+  H.S{1}.name = P(lh_rh,:);
+  H.S{2}.name = P(lh_rh,:);
 else % lh or rh meshes
+  H.merged = 0;
   H.S{1}.name = P(lh,:);
   H.S{2}.name = P(rh,:);
+  if numel(lh) > 1 | numel(rh) > 1 
+    msg = 'Warning: Display of multiple left and right surface data will not work correctly. Please only use merged hemisphere data for multiple selected surface data.';
+    h = spm('alert*',msg,'',spm('CmdLine'),1);
+    select_data;
+  end
 end
-
-H.n_surf = max(numel(H.S{1}.info),numel(H.S{2}.info));
 
 if isempty(H.S{2}.name)
   H.S{2}.name = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
@@ -1489,7 +1639,7 @@ for ind = 1:5
 end
 
 % update colorbar 
-if numel(H.S{1}.info) == 1 && ~H.disable_cbar
+if H.n_surf == 1 && ~H.disable_cbar
   H = show_colorbar(H);
 end
 
@@ -1511,7 +1661,7 @@ for ind = 1:5
 end
 
 % update colorbar 
-if numel(H.S{1}.info) == 1 && ~H.disable_cbar
+if H.n_surf == 1 && ~H.disable_cbar
   H = show_colorbar(H);
 end
 
@@ -1594,7 +1744,7 @@ for ind=1:5
 end
 
 % update colorbar 
-if numel(H.S{1}.info) == 1 && ~H.disable_cbar
+if H.n_surf == 1 && ~H.disable_cbar
   H = show_colorbar(H);
 end
 
@@ -1618,7 +1768,7 @@ if H.show_info
   set(get(getappdata(H.patch(3),'axis'),'Title'),'Color',1-H.bkg_col);
 end
 
-if numel(H.S{1}.info) == 1
+if H.n_surf == 1
   set(H.colourbar,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
 end
 
@@ -1638,9 +1788,9 @@ H.show_info = get(H.info,'Value');
       
 if H.show_info
   set(get(getappdata(H.patch(1),'axis'),'Title'),'String',...
-      spm_str_manip(H.S{1}.name,'k70d'),'Interpreter', 'none','Color',1-H.bkg_col)
+      spm_str_manip(H.S{1}.name,'k50d'),'Interpreter', 'none','Color',1-H.bkg_col)
   set(get(getappdata(H.patch(3),'axis'),'Title'),'String',...
-      spm_str_manip(H.S{2}.name,'k70d'),'Interpreter', 'none','Color',1-H.bkg_col)
+      spm_str_manip(H.S{2}.name,'k50d'),'Interpreter', 'none','Color',1-H.bkg_col)
 else
   set(get(getappdata(H.patch(1),'axis'),'Title'),'String','')
   set(get(getappdata(H.patch(3),'axis'),'Title'),'String','')
@@ -1654,14 +1804,14 @@ H.disable_cbar = get(H.nocbar,'Value');
 
 if H.disable_cbar
   % delete colorbar and title
-  if numel(H.S{1}.info) == 1
+  if H.n_surf == 1
     set(H.colourbar,'Visible','off')  
     set(get(H.cbar,'Title'),'Visible','off')
   else % delete only axis
     cla(H.cbar);
   end
 else
-  if numel(H.S{1}.info) == 1
+  if H.n_surf == 1
     set(get(H.cbar,'Title'),'Visible','on')
     set(H.colourbar,'Visible','on')  
     H = show_colorbar(H);
@@ -1703,13 +1853,9 @@ if view ~= H.view
     set(Ha,'position',H.viewpos{ind}(abs(view),:),'View',vv(ind,:));
   end
   
-  if ~isfield(H,'dataplot')
-    H.dataplot = axes('Position',H.viewpos{6}(abs(H.view),:),'Parent',H.figure(1),'Color',H.bkg_col);
-    H.figure(1) = ancestor(H.dataplot,'figure');
-    try, axes(H.dataplot); end
+  if isfield(H,'dataplot')
+    set(H.dataplot,'Position',H.viewpos{6}(abs(view),:),'Parent',H.figure(1),'Color',H.bkg_col);
   end
-
-  try, set(H.dataplot,'Position',H.viewpos{6}(abs(view),:),'Parent',H.figure(1),'Color',H.bkg_col); end
   
   % save view
   H.view = view;
@@ -1792,6 +1938,7 @@ switch H.cursor_mode
         spm('alert!','No SPM.mat file found.\nPlease check that you have not moved your files or your result file was moved from the folder where the SPM.mat is stored.',1);
       end
     end
+    
     if SPM_found
       set(dcm_obj, 'Enable','on', 'SnapToDataVertex','on', ...
         'DisplayStyle','datatip', 'Updatefcn',{@myDataCursorCluster});
@@ -1804,16 +1951,10 @@ end
 
 %==========================================================================
 function  clearDataCursorPlot(H)
+
 if isfield(H,'dataplot')
-  try, cla(H.dataplot); end
-  
-  % hide labels and scale
-  try
-    set(H.dataplot,'XColor',H.bkg_col,'YColor',H.bkg_col);
-    xlabel(H.dataplot,'                                ')
-    ylabel(H.dataplot,'                                ')
-  end
-  rmfield(H,'dataplot');
+  cla(H.dataplot);
+  axis(H.dataplot,'off');
 end
 
 figure(H.figure(1))
@@ -1827,7 +1968,8 @@ end
 function txt = myDataCursorCluster(obj,evt)
 global H y
 
-plot_mean = H.cursor_mode-3;
+% first entries are atlases
+plot_mean = H.cursor_mode - 4;
 pos = get(evt,'Position');
 
 i = ismember(get(H.patch(1),'vertices'),pos,'rows');
@@ -1861,8 +2003,8 @@ if plot_mean
   d = getappdata(H.patch(ind),'data');
 
   % apply thresholds
-  dp = d > thresh(2); indp = find(dp);
-  dn = d < thresh(1); indn = find(dn);
+  dp = d >= thresh(2); indp = find(dp);
+  dn = d <= thresh(1); indn = find(dn);
   
   % go through pos. effects
   if ~isempty(indp)
@@ -1917,24 +2059,32 @@ else
   txt = {sprintf('Node %d',node)};
 end
 
-[y, cbeta, CI] = get_cluster_data(H,XYZ,ind);
+% for merged meshe we only have one SPM.mat with data from both hemispheres
+if H.merged
+  % add offset for right hemisphere
+  if round(ind/2) == 2
+    XYZ = XYZ + 163842;
+  end
 
-if plot_mean && isempty(found_node)
-  y(:) = 0;
+  % always one mesh
+  ind = 1;  
 end
 
-% create dataplot if not already existent
-if ~isfield(H,'dataplot')
-  H.dataplot = axes('Position',H.viewpos{6}(abs(H.view),:),'Parent',H.figure(1),'Color',H.bkg_col);
-  H.figure(1) = ancestor(H.dataplot,'figure');
-  axes(H.dataplot);
+[y, cbeta, CI] = get_cluster_data(H,XYZ,ind);
+
+% if no cluster was selected set data to zero
+if plot_mean && isempty(found_node)
+  y(:) = 0;
+  cbeta(:) = 0;
+  CI(:) = 0;
 end
 
 cla(H.dataplot)
 hold(H.dataplot,'on')
+
 set(H.dataplot,'XColor',1-H.bkg_col,'YColor',1-H.bkg_col);
 
-h     = bar(H.dataplot,cbeta);
+h = bar(H.dataplot,cbeta);
 set(h,'FaceColor',H.Col(2,:))
 
 % standard error
@@ -1955,6 +2105,7 @@ if length(nm) > 4
 end
 
 xlabel(H.dataplot,H.SPM{round(ind/2)}.xCon(Ic).name,'FontSize',H.FS(12),'Color',1-H.bkg_col)
+
 if plot_mean
   ylabel(H.dataplot,sprintf('contrast estimate\ninside cluster'),'FontSize',H.FS(12),'Color',1-H.bkg_col)
 else
@@ -1963,7 +2114,6 @@ end
 
 set(H.dataplot,'XLim',[0.4 (length(cbeta) + 0.6)],'XTicklabel','','XTick',[])
 hold(H.dataplot,'off')
-rmfield(H,'dataplot');
 
 assignin('base','y',y);
 
