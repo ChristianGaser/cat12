@@ -334,20 +334,38 @@ switch lower(action)
           else
           
             H.logP = 1;
-          
+            meshes_merged = 0;
+            
             for ind=1:2
 
               % read meshes
               H.S{ind}.info = cat_surf_info(H.S{ind}.name,1);
+              if strcmp(H.S{ind}.info(1).side,'mesh')
+                meshes_merged = 1;
+                if ind == 1
+                  H.S{ind}.info(1).side = 'lh';
+                  H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');
+                else
+                  H.S{ind}.info(1).side = 'rh';
+                  H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
+                end
+              end
               H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
 
               % get adjacency information
               H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
 
-
               % cdata found?
               try
-                H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+                if meshes_merged
+                  if ind == 1
+                    Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+                    H.S{1}.Y = Y(1:163842);
+                    H.S{2}.Y = Y(163843:end);
+                  end
+                else
+                  H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+                end
               catch
                 if ind == 1
                   try
@@ -372,7 +390,7 @@ switch lower(action)
               
             end
           end
-          
+
           H.n_surf        = max(numel(H.S{1}.info),numel(H.S{2}.info));
           H.view          = 1;
           H.show_transp   = 1;
@@ -1327,7 +1345,7 @@ function select_data(obj, event_obj)
 global H
 
 H.logP = 1;
-lh = []; rh = [];
+lh = []; rh = []; lh_rh = [];
 
 P = spm_select([1 6],'mesh',['Select up to 3 (log P) maps for left and right hemisphere']);
 info = cat_surf_info(P);
@@ -1346,13 +1364,24 @@ for i=1:n
     lh = [lh i];
   elseif strcmp(info(i).side, 'rh')
     rh = [rh i];
+  elseif strcmp(info(i).side, 'mesh')
+    lh_rh = [lh_rh i];
   end
 end
 
-H.S{1}.name = P(lh,:);
-H.S{2}.name = P(rh,:);
-H.S{1}.info = cat_surf_info(H.S{1}.name,1); 
-H.S{2}.info = cat_surf_info(H.S{2}.name,1); 
+% merged meshes?
+if ~isempty(lh_rh)
+  % don't mix mesh and lh+rh data
+  if ~isempty(lh) | ~isempty(rh)
+    error('Mixing of left and right with merged surface data is not supported.');
+  end
+  
+  H.S{1}.name = P([lh lh_rh],:);
+  H.S{2}.name = P([rh lh_rh],:);
+else % lh or rh meshes
+  H.S{1}.name = P(lh,:);
+  H.S{2}.name = P(rh,:);
+end
 
 H.n_surf = max(numel(H.S{1}.info),numel(H.S{2}.info));
 
