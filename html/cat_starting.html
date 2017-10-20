@@ -27,34 +27,36 @@
       <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You have to first select the "err" directory that can be found in the folder of the failed data set and finally the indicated zip-file in the mail should be attached manually.</p>
       <h4>VBM data</h4>
       <ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">longitudinal pipeline</a>)</li>
-        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">sample homogeneity</a> for VBM data  (optionally consider TIV as nuisance variable)</li>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (suggested starting value 8mm)</li>
-        <li>Estimate <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> in order to correct for different brain size and volume</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">longitudinal pipeline</a>).</li>
+        <li>Estimate <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">total intracranial volume (TIV)</a> in order to correct for different brain size and volume.</li>
+        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">sample homogeneity</a> for VBM data  (optionally consider TIV as nuisance variable).</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (suggested starting value 8mm).</li>
         <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a>:</li>
         <ul>
           <li>Use "Full factorial" for cross-sectional data</li>
           <li>Use "Flexible factorial" for longitudinal data</li>
-          <li>Use TIV as covariate (confound) to correct for different brain sizes and select centering with overall mean</li>
+          <li>Use TIV as covariate (confound) to correct for different brain sizes and select centering with overall mean.</li>
           <li>Select threshold masking with an absolute value of 0.1. This threshold can be increased in the final analysis to 0.2 or even 0.25.</li>
         </ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model</li>
-        <li>Check design orthogonality using the <a class="function" href="matlab:spm_DesRep;">Review </a>function in the SPM GUI. Please check <a href="cat_orthogonality.html">Orthogonality</a> for more information</li>
-        <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">transform and threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps</li>
-        <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">overlay selected slices</a></li>
-        <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the  SPM.mat file of an already estimated statistical design will be used. Please check <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a> for more information.</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> model.</li>
+        <li>Check design orthogonality using the <a class="function" href="matlab:spm_DesRep;">Review </a>function in the SPM GUI. Please check <a href="cat_orthogonality.html">Orthogonality</a> for more information.</li>
+        <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">transform and threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
+        <li>Optionally try <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.tfce_estimate');">Threshold-Free Cluster Enhancement</a>  (TFCE) using the SPM.mat file of the already estimated statistical design.</li>
+        <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">overlay selected slices</a>.</li>
+        <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. Please check <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a> for more information.</li>
       </ul>
 
       <h4>Additional surface data</h4>
       <ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and additionally select "Surface and thickness estimation" in "Writing options"</li>
-        <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">extract additional surface parameters</a> (e.g. suclus depth, gyrification index, cortical complexity)</li>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data (suggested starting value 15mm for cortical thickness and 20mm for folding measures)</li>
-        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">sample homogeneity</a> for surface data</li>
-        <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a> for both (merged) hemispheres: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data </li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and additionally select "Surface and thickness estimation" in "Writing options".</li>
+        <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">extract additional surface parameters</a> (e.g. suclus depth, gyrification index, cortical complexity).</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data (suggested starting value 15mm for cortical thickness and 20mm for folding measures, use the default merging of hemispheres).</li>
+        <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">sample homogeneity</a> for surface data.</li>
+        <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a> for both (merged) hemispheres: Use "Full factorial" for cross-sectional data and "Flexible factorial" for longitudinal data.</li>
         <li><a class="function" href="matlab:P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');for i=1:size(P,1),swd = spm_file(P(i,:),'fpath'); load(fullfile(swd,'SPM.mat')); SPM.swd  = swd; cat_stat_spm(SPM); end
-;">Estimate</a> surface model</li>
-        <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> for both hemispheres. Select results (preferably saved as log-p maps using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">transform and threshold SPM-maps</a>) for the merged hemispheres in order to show render views of your results</li>
+;">Estimate</a> surface model.</li>
+        <li>Optionally try <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.tfce_estimate');">Threshold-Free Cluster Enhancement</a>  (TFCE) using the SPM.mat file of the already estimated statistical design.</li>
+        <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> for both hemispheres. Select results (preferably saved as log-p maps using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">transform and threshold SPM-maps</a>) for the merged hemispheres in order to show render views of your results.</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> such as thickness, gyrification or fractal dimension to provide ROI analysis.</li>
         <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the  SPM.mat file of an already estimated statistical design will be used. Please check <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a> for more information.</li>
       </ul>
