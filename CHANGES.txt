@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1200 | gaser | 2017-10-19 00:24:20
+r1201 | gaser | 2017-10-20 09:28:52
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+A       cat_vol_slice_overlay_rgb_ui.m
+M       html/cat.html
+M       html/cat_starting.html
+
+Added: Added example to use RGB overlay of up to 3 files with slice_overlay.
+
+------------------------------------------------------------------------
+r1200 | gaser | 2017-10-19 00:24:24 +0200 (Do, 19 Okt 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +22,7 @@ M       cat_surf_results.m
 
 Changed: Updated cat_surf_results to now deal with multiple results that
 can be slected using ui.
+
 ------------------------------------------------------------------------
 r1199 | gaser | 2017-10-19 00:22:40 +0200 (Do, 19 Okt 2017) | 8 lines
 
