@@ -1503,13 +1503,7 @@ global H
 H.logP = 1;
 lh = []; rh = []; lh_rh = [];
 
-n_files = 24;
-
-if nargin > 1 &&  ~isempty(event_obj)
-  n_files = event_obj;
-end
-
-P = spm_select([1 n_files],'mesh',['Select up to 24 maps for left and right hemisphere']);
+P = spm_select([1 24],'mesh',['Select up to 24 maps for left and right hemisphere']);
 info = cat_surf_info(P);
 
 n = size(P,1);
@@ -1548,7 +1542,7 @@ else % lh or rh meshes
   if numel(lh) > 1 | numel(rh) > 1 
     msg = 'Warning: Display of multiple left and right surface data will not work correctly. Please only use merged hemisphere data for multiple selected surface data or just select one left and right data set.';
     h = spm('alert*',msg,'',spm('CmdLine'),1);
-    select_data(1,1);  % only allow to select one file
+    select_data;
   end
 end
 
