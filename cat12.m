@@ -219,7 +219,7 @@ for i=1:size(P,1)
         hemi = ff(hemi_ind:hemi_ind+1);
         if ~isempty(hemi)
           SPM.xY.VY(1).private.private.metadata = struct('name','SurfaceID','value',fullfile(fsavgDir,[hemi '.central.freesurfer.gii']));
-          G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii'])
+          G = fullfile(fsavgDir,[hemi '.central.freesurfer.gii']);
           SPM.xVol.G = gifti(G);
           
           % remove memory demanding faces and vertices which are not necessary

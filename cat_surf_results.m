@@ -869,12 +869,16 @@ ind2 = find(H.S{2}.Y(:)~=0);
 
 % estimate min value > 0 and min/max values
 if ~isempty(ind1) && ~isempty(ind2)
+  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
+  H.S{1}.thresh = min(H.S{1}.thresh,min(H.S{2}.Y(H.S{2}.Y(:)>0)));
   H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))),min(H.S{2}.Y(~isinf(H.S{2}.Y))));
   H.S{1}.max = max(max(H.S{1}.Y(~isinf(H.S{1}.Y))),max(H.S{2}.Y(~isinf(H.S{2}.Y))));
 elseif isempty(ind1)
+  H.S{1}.thresh = min(H.S{2}.Y(H.S{2}.Y(:)>0));
   H.S{1}.min = min(H.S{2}.Y(~isinf(H.S{2}.Y)));
   H.S{1}.max = max(H.S{2}.Y(~isinf(H.S{2}.Y)));
 elseif isempty(ind2)
+  H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:)>0));
   H.S{1}.min = min(H.S{1}.Y(~isinf(H.S{1}.Y)));
   H.S{1}.max = max(H.S{1}.Y(~isinf(H.S{1}.Y)));
 end
@@ -903,7 +907,12 @@ else
   H.clim = [true H.S{1}.min H.S{1}.max];
 end
 
-H.clip = [true -H.thresh_value H.thresh_value];
+% only apply thresholds that are slightly larger than zero
+if H.S{1}.thresh > 0.00015 && H.thresh_value == 0
+  H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
+else
+  H.clip = [true -H.thresh_value H.thresh_value];
+end
 
 % rather use NaN values for zero threshold
 if H.thresh == 0
@@ -918,12 +927,14 @@ end
 H.n_surf = 1;
 
 for ind=1:5
+  if H.S{1}.thresh > 0.00015
+    setappdata(H.patch(ind),'clip',H.clip);
+  end
   setappdata(H.patch(ind),'clim',H.clim);
-  setappdata(H.patch(ind),'clip',H.clip);
   col = getappdata(H.patch(ind),'col');
   
   if ind > 4
-    d = [H.S{1}.Y;H.S{1}.Y];
+    d = [H.S{1}.Y;H.S{2}.Y];
   else
     d = H.S{round(ind/2)}.Y;
   end
@@ -1492,7 +1503,13 @@ global H
 H.logP = 1;
 lh = []; rh = []; lh_rh = [];
 
-P = spm_select([1 24],'mesh',['Select up to 24 maps for left and right hemisphere']);
+n_files = 24;
+
+if nargin > 1 &&  ~isempty(event_obj)
+  n_files = event_obj;
+end
+
+P = spm_select([1 n_files],'mesh',['Select up to 24 maps for left and right hemisphere']);
 info = cat_surf_info(P);
 
 n = size(P,1);
@@ -1529,9 +1546,9 @@ else % lh or rh meshes
   H.S{1}.name = P(lh,:);
   H.S{2}.name = P(rh,:);
   if numel(lh) > 1 | numel(rh) > 1 
-    msg = 'Warning: Display of multiple left and right surface data will not work correctly. Please only use merged hemisphere data for multiple selected surface data.';
+    msg = 'Warning: Display of multiple left and right surface data will not work correctly. Please only use merged hemisphere data for multiple selected surface data or just select one left and right data set.';
     h = spm('alert*',msg,'',spm('CmdLine'),1);
-    select_data;
+    select_data(1,1);  % only allow to select one file
   end
 end
 
