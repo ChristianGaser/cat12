@@ -1,7 +1,7 @@
 function cat_vol_slice_overlay_rgb_ui
 %__________________________________________________________________________
 % Christian Gaser
-% $Id: cat_vol_slice_overlay_rgb_ui.m 785 2015-11-26 09:14:24Z gaser $
+% $Id$
 
 clear global SO
 global SO
