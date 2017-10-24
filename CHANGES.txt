@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1203 | gaser | 2017-10-23 17:47:20
+r1204 | gaser | 2017-10-24 16:54:27
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+A       cat_conf_nonlin_coreg.m
+M       cat_conf_tools.m
+M       cat_long_multi_run.m
+M       cat_surf_results.m
+A       cat_vol_nonlin_coreg.m
+A       cat_vol_nonlin_coreg_multi_run.m
+M       html/cat.html
+M       html/cat.txt
+
+(1) Added: Added batch for non-linear co-registration.
+(2) Fixed: Camlight and scaling issue with flatmaps in cat_surf_results.m
+(3) Fixed: Batchmode dependencies for longit. pipeline
+------------------------------------------------------------------------
+r1203 | gaser | 2017-10-23 17:47:38 +0200 (Mo, 23 Okt 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +28,7 @@ MM      cat_vol_slice_overlay_rgb_ui.m
 M       html/cat.html
 
 Fixed: File selection error in cat_surf_results.m
+
 ------------------------------------------------------------------------
 r1202 | gaser | 2017-10-23 13:15:20 +0200 (Mo, 23 Okt 2017) | 7 lines
 

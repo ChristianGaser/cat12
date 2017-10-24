@@ -61,6 +61,12 @@ switch lower(action)
                      [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
                      [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
 
+        % change size and position of flatmaps for >= R20014b
+        if spm_check_version('matlab','8.4') >= 0 % 
+            H.viewpos{2}(3,:) = [-0.125 0.150 0.700 0.700]; % lh lateral
+            H.viewpos{4}(3,:) = [ 0.425 0.150 0.700 0.700]; % rh lateral
+        end
+
         % figure 1 with result window
         H.pos{1} = struct(...
             'fig',   [10  10  2*ws(3) ws(3)],...   % figure
@@ -974,6 +980,7 @@ for ind=1:2
   H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
 end
 
+figure(H.figure(1)); 
 
 for ind = 1:5
   if ind < 5 % single hemisphere views
@@ -988,9 +995,10 @@ for ind = 1:5
   set(H.patch(ind),'Faces',M.faces);
 
   % rescale axis except for flatmaps
-  if surf < 4
-    Ha = getappdata(H.patch(ind),'axis');
+  Ha = getappdata(H.patch(ind),'axis');
+  axes(Ha);
 
+  if surf < 4
     axis(Ha,'image');
     axis(Ha,'off');
   end
@@ -1055,6 +1063,7 @@ figure(H.figure(1));
 H.dataplot = axes('Position',H.viewpos{6}(abs(H.view),:),'Parent',H.figure(1),'Color',H.bkg_col);
 H.figure(1) = ancestor(H.dataplot,'figure');
 try, axes(H.dataplot); end
+axis off
 
 % check whether data for left or right hemipshere are all non-zero
 ind1 = find(H.S{1}.Y(:)~=0);
@@ -1345,17 +1354,7 @@ view(H.axis,vw);
 material(H.figure(1),'dull');
 
 % default lighting
-H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
-if ismac
-  % switch off local light (camlight)
-  caml = findall(gcf,'Type','light','Style','local');     
-  set(caml,'visible','off');
-            
-  % set inner light
-  H.light(2) = light('Position',[0 0 0]); 
-  set(H.patch(ind),'BackFaceLighting','unlit');
-end
-        
+H.light(1) = camlight; set(H.light(1),'Parent',H.axis);         
 setappdata(H.axis,'handles',H);
 set(H.patch(ind),'Visible','on');
 camlight(H.light(1))
