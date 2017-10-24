@@ -882,13 +882,14 @@ if expert
 end
 
 %------------------------------------------------------------------------
-long    = cat_conf_long;
+long          = cat_conf_long;
+nonlin_coreg  = cat_conf_nonlin_coreg;
 %------------------------------------------------------------------------
 
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,nonlin_coreg,defs,defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
