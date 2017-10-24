@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1204 | gaser | 2017-10-24 16:54:27
+r1205 | gaser | 2017-10-24 23:01:55
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+
+Changed: Updated CAT12 manual regarding the forced use of "overall mean" 
+for centering covariates.
+------------------------------------------------------------------------
+r1204 | gaser | 2017-10-24 16:54:48 +0200 (Di, 24 Okt 2017) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +27,7 @@ M       html/cat.txt
 (1) Added: Added batch for non-linear co-registration.
 (2) Fixed: Camlight and scaling issue with flatmaps in cat_surf_results.m
 (3) Fixed: Batchmode dependencies for longit. pipeline
+
 ------------------------------------------------------------------------
 r1203 | gaser | 2017-10-23 17:47:38 +0200 (Mo, 23 Okt 2017) | 9 lines
 
