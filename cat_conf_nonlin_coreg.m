@@ -2,7 +2,7 @@ function nonlin_coreg = cat_conf_nonlin_coreg
 % Configuration file for non-linear co-registration
 %
 % Christian Gaser
-% $Id: cat_conf_nonlin_coreg.m 1114 2017-03-02 10:46:01Z gaser $
+% $Id$
 
 %--------------------------------------------------------------------------
 % Reference Image
@@ -40,27 +40,6 @@ other.help    = {'These are any images that need to remain in alignment with the
 other.preview = @(f) spm_image('Display',char(f));
 
 %--------------------------------------------------------------------------
-% Subject
-%--------------------------------------------------------------------------
-subj = cfg_branch;
-subj.name = 'Subject';
-subj.tag = 'subj';
-subj.val = {ref,source,other};
-subj.help = {...
-'Images of the same subject.'};
-
-%--------------------------------------------------------------------------
-% All subjects
-%--------------------------------------------------------------------------
-esubjs         = cfg_repeat;
-esubjs.tag     = 'esubjs';
-esubjs.name    = 'Data';
-esubjs.values  = {subj};
-esubjs.num     = [1 Inf];
-esubjs.help = {...
-'Specify data for each subject.'};
-
-%--------------------------------------------------------------------------
 % Warping regularisation
 %--------------------------------------------------------------------------
 reg         = cfg_entry;
@@ -84,7 +63,7 @@ vox.def     = @(val)spm_get_defaults('normalise.write.vox', val{:});
 nonlin_coreg = cfg_exbranch;
 nonlin_coreg.name = 'Non-linear co-registration';
 nonlin_coreg.tag  = 'nonlin_coreg';
-nonlin_coreg.val  = {esubjs,reg,vox};
+nonlin_coreg.val  = {ref,source,other,reg,vox};
 nonlin_coreg.prog = @cat_vol_nonlin_coreg_multi_run;
 nonlin_coreg.vout = @vout_nonlin_coreg;
 nonlin_coreg.help = {
@@ -103,15 +82,9 @@ return;
  
 %------------------------------------------------------------------------
 function dep = vout_nonlin_coreg(job)
-for k=1:numel(job.subj)
-    cdep(1)            = cfg_dep;
-    cdep(1).sname      = sprintf('Non-linear coregistered data (Subj %d)',k);
-    cdep(1).src_output = substruct('.','sess','()',{k},'.','ofiles');
-    cdep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-    if k == 1
-        dep = cdep;
-    else
-        dep = [dep cdep];
-    end
-end;
+
+dep(1)            = cfg_dep;
+dep(1).sname      = 'Non-linear coregistered data';
+dep(1).src_output = substruct('.','ofiles');
+dep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 %------------------------------------------------------------------------

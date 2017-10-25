@@ -432,8 +432,42 @@ function stools = cat_conf_stools(expert)
 
 
 
-% extract volumetric data in individual space
+% extract volumetric data in individual space and optionally co-register 
+% data before
 %-----------------------------------------------------------------------  
+  nonlin_coreg = cat_conf_nonlin_coreg;
+  
+  coreg         = cfg_branch;
+  coreg.tag     = 'coreg';
+  coreg.name    = 'Non-linear co-registration';
+  coreg.val     = {nonlin_coreg};
+  coreg.help    = {
+                    'text '
+                    ''
+                    'text.'
+}';
+
+  nocoreg      = cfg_const;
+  nocoreg.tag  = 'nocoreg';
+  nocoreg.name = 'No co-registration';
+  nocoreg.val  = {1};
+  nocoreg.help = {
+    'Expect that data are already co-registered and skip this step.'
+    ''
+    }';
+
+  v2s.coreg         = cfg_choice;
+  v2s.coreg.tag     = 'coreg';
+  v2s.coreg.name    = 'Co-registration';
+  v2s.coreg.val     = {coreg};
+  v2s.coreg.help    = {
+                  'Text. '
+                  ''
+                  'Text.'
+}';
+  v2s.coreg.values  = {coreg nocoreg};
+
+
   v2s.data_surf_sub_lh         = cfg_files;
   v2s.data_surf_sub_lh.tag     = 'data_mesh_lh';
   v2s.data_surf_sub_lh.name    = '(Left) Individual Surfaces';
@@ -461,6 +495,7 @@ function stools = cat_conf_stools(expert)
   v2s.vol2surf.name = 'Map Volume (Native Space) to Individual Surface';
   if expert
     v2s.vol2surf.val = {
+      v2s.coreg ...
       v2s.data_sub ...
       v2s.data_surf_sub_lh ...
       v2s.sample ...
@@ -470,11 +505,12 @@ function stools = cat_conf_stools(expert)
       };
   else
     v2s.vol2surf.val = {
-    v2s.data_sub ...
-    v2s.data_surf_sub_lh ...
-    v2s.sample ...
-    v2s.datafieldname ...
-    v2s.mapping ...
+%      v2s.coreg ...
+      v2s.data_sub ...
+      v2s.data_surf_sub_lh ...
+      v2s.sample ...
+      v2s.datafieldname ...
+      v2s.mapping ...
     };
   end
   v2s.vol2surf.prog = @cat_surf_vol2surf;
