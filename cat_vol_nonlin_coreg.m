@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------------
 % Job for non-linear coregistration batch
 % Christian Gaser
-% $Id: cat_vol_nonlin_coreg.m 1114 2017-03-02 10:46:01Z gaser $
+% $Id$
 %-----------------------------------------------------------------------
 
 global vox reg

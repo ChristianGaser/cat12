@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1205 | gaser | 2017-10-24 23:01:55
+r1206 | gaser | 2017-10-25 10:18:44
+
+Changed paths:
+M       CHANGES.txt
+MM      cat_conf_nonlin_coreg.m
+M       cat_conf_stools.m
+MM      cat_vol_nonlin_coreg.m
+MM      cat_vol_nonlin_coreg_multi_run.m
+
+Changed: Limited batch for non-linear co-registration to one subject
+which eases the combination with surface mapping and other batches.
+------------------------------------------------------------------------
+r1205 | gaser | 2017-10-24 23:02:09 +0200 (Di, 24 Okt 2017) | 8 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -8,6 +20,7 @@ M       CHANGES.txt
 
 Changed: Updated CAT12 manual regarding the forced use of "overall mean" 
 for centering covariates.
+
 ------------------------------------------------------------------------
 r1204 | gaser | 2017-10-24 16:54:48 +0200 (Di, 24 Okt 2017) | 17 lines
 
