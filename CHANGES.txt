@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1206 | gaser | 2017-10-25 10:18:44
+r1207 | gaser | 2017-10-27 10:00:13
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       cat_surf_display.m
+M       html/cat.html
+
+(1) Fixed: cat_surf_display now correctly works with merged meshes.
+(2) Changed: Size and proportions of cat12 windows are now better balanced
+    between different matlab versions and screen sizes.
+------------------------------------------------------------------------
+r1206 | gaser | 2017-10-25 10:19:06 +0200 (Mi, 25 Okt 2017) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +23,7 @@ MM      cat_vol_nonlin_coreg_multi_run.m
 
 Changed: Limited batch for non-linear co-registration to one subject
 which eases the combination with surface mapping and other batches.
+
 ------------------------------------------------------------------------
 r1205 | gaser | 2017-10-24 23:02:09 +0200 (Di, 24 Okt 2017) | 8 lines
 
