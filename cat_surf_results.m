@@ -62,14 +62,14 @@ switch lower(action)
                      [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
 
         % change size and position of flatmaps for >= R20014b
-        if spm_check_version('matlab','8.4') >= 0 % 
+        if spm_check_version('matlab','8.4') >= 0 
             H.viewpos{2}(3,:) = [-0.125 0.150 0.700 0.700]; % lh lateral
             H.viewpos{4}(3,:) = [ 0.425 0.150 0.700 0.700]; % rh lateral
         end
 
         % figure 1 with result window
         H.pos{1} = struct(...
-            'fig',   [10  10  2*ws(3) ws(3)],...   % figure
+            'fig',   [10  10  2*ws(3) ws(3)],...                             % figure
             'cbar',  [0.400 -0.180 0.200 0.300; 0.440 0.025 0.120 0.120]);   % colorbar   
 
         % figure 2 with GUI

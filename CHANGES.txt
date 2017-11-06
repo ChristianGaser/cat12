@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1207 | gaser | 2017-10-27 10:00:13
+r1208 | gaser | 2017-11-06 17:08:15
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_spm2x.m
+A       cat_surf_max.m
+M       cat_surf_results.m
+M       html/cat.html
+
+(1) Added: cat_surf_max.m as modified version of spm_mesh_max because for some 
+    rare data only one global maximum was returned.
+(2) Changed: Replaced spm_mesh_max by cat_surf_max in cat_stat_spm2x.m.
+------------------------------------------------------------------------
+r1207 | gaser | 2017-10-27 10:00:34 +0200 (Fr, 27 Okt 2017) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +25,7 @@ M       html/cat.html
 (1) Fixed: cat_surf_display now correctly works with merged meshes.
 (2) Changed: Size and proportions of cat12 windows are now better balanced
     between different matlab versions and screen sizes.
+
 ------------------------------------------------------------------------
 r1206 | gaser | 2017-10-25 10:19:06 +0200 (Mi, 25 Okt 2017) | 10 lines
 

@@ -365,7 +365,7 @@ for i=1:size(P,1)
 
             Q     = [];
             if isfield(SPM.xVol,'G') % mesh detected?
-                [N2,Z2,XYZ2,A2,L2]  = spm_mesh_max(abs(Z),XYZ,gifti(SPM.xVol.G));
+                [N2,Z2,XYZ2,A2,L2]  = cat_surf_max(abs(Z),XYZ,gifti(SPM.xVol.G));
             else
                 [N2,Z2,XYZ2,A2,L2]  = spm_max(abs(Z),XYZ);
             end
