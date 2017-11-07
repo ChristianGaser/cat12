@@ -1,5 +1,5 @@
-% ?h.central.Template_T1_IXI555_MNI152.gii
-% ?h.thickness.Template_T1_IXI555_MNI152
+% ?h.central.Template_T1_IXI555_MNI152_GS.gii
+% ?h.thickness.Template_T1_IXI555_MNI152_GS
 % ---------------------------------
 % Surfaces and thickness values based on average of 550 subjects from IXI 
 % database
@@ -37,8 +37,8 @@
 % ignored if data during smoothing (masked smoothing) and in the statistical
 % analysis.
 %
-% ?c.central.Template_T1_IXI555_MNI152.gii
-% ?c.thickness.Template_T1_IXI555_MNI152
+% ?c.central.Template_T1_IXI555_MNI152_GS.gii
+% ?c.thickness.Template_T1_IXI555_MNI152_GS
 % ---------------------------------
 % Surfaces and thickness values for the cerebellar hemisphere based on average 
 % of 550 subjects from IXI database
@@ -51,7 +51,7 @@
 % ---------------------------------
 % Cerebellar surface based on average of 5 subjects from CoBra Lab (http://cobralab.ca/)
 % The cerebellar surfaces of these 5 subjects were initially registered to the
-% cerebellar surface ?c.central.Template_T1_IXI555_MNI152.gii, then averaged and the
+% cerebellar surface ?c.central.Template_T1_IXI555_MNI152_GS.gii, then averaged and the
 % average was used as new template and the whole procedure was repeated. The final cerebellar
 % surfaces were then averaged.
 %
