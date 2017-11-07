@@ -19,7 +19,7 @@ function varargout = cat_roi_roi2surf(job)
     def.assuregifti   = 1;
     def.fsaverage     = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
     def.inflated      = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
-    def.dartelaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii');    
+    def.dartelaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii');    
     
     job = cat_io_checkinopt(job,def);
   else

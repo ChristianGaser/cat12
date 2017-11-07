@@ -544,7 +544,7 @@ switch lower(action)
           vafiles = vatlas(:,1); safiles = satlas(:,1); 
           for ai = 1:size(vatlas,1)
             vafiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
-              sprintf('%s.%s.Template_T1_IXI555_MNI152',sinfo1.side,vatlas{ai,2}));
+              sprintf('%s.%s.Template_T1_IXI555_MNI152_GS',sinfo1.side,vatlas{ai,2}));
           end
           for ai = 1:size(satlas,1)
             safiles{ai} = fullfile(spm('Dir'),'toolbox',lower(cat_version),'atlases_surfaces',...
@@ -678,7 +678,7 @@ switch lower(action)
                 'Average'   , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.freesurfer.gii']);    
                 'Inflated'  , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.inflated.freesurfer.gii']);   
                 'Sphere'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.sphere.freesurfer.gii']);  
-                'Dartel'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.Template_T1_IXI555_MNI152.gii']);  
+                'Dartel'    , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.central.Template_T1_IXI555_MNI152_GS.gii']);  
                 ...'Hull'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.hull.freesurfer.gii']);  
                 ...'Pial'      , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.pial.freesurfer.gii']);   
                 ...'WM'        , fullfile(spm('Dir'),'toolbox',cat_version,'templates_surfaces',[sinfo1.side '.wm.freesurfer.gii']);  

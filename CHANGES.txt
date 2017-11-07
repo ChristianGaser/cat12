@@ -1,5 +1,56 @@
 ------------------------------------------------------------------------
-r1208 | gaser | 2017-11-06 17:08:15
+r1209 | gaser | 2017-11-07 17:19:17
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Contents_info.txt
+M       batches/cattest/cat12_201_VBM_deformation.m
+M       batches/cattest/cat12_302_SBM_MapNormVol2AvgSurf.m
+M       cat_conf_stools.m
+M       cat_roi_roi2surf.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_display.m
+M       cat_surf_render2.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_rgb_ui.m
+M       cat_vol_slice_overlay_ui.m
+A       development/Template_0_IXI555_MNI152_GS1mm.nii
+A       development/Template_1_IXI555_MNI152_GS1mm.nii
+A       development/Template_2_IXI555_MNI152_GS1mm.nii
+A       development/Template_3_IXI555_MNI152_GS1mm.nii
+A       development/Template_4_IXI555_MNI152_GS1mm.nii
+M       html/cat.html
+M       html/cat.txt
+D       templates_1.50mm/Template_T1_IXI555_MNI152.nii
+A       templates_1.50mm/Template_T1_IXI555_MNI152_GS.nii
+D       templates_surfaces/lc.central.Template_T1_IXI555_MNI152.gii
+A       templates_surfaces/lc.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152
+A       templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152_GS
+D       templates_surfaces/lh.central.Template_T1_IXI555_MNI152.gii
+A       templates_surfaces/lh.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/lh.thickness.Template_T1_IXI555_MNI152
+A       templates_surfaces/lh.thickness.Template_T1_IXI555_MNI152_GS
+D       templates_surfaces/rc.central.Template_T1_IXI555_MNI152.gii
+A       templates_surfaces/rc.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152
+A       templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152_GS
+D       templates_surfaces/rh.central.Template_T1_IXI555_MNI152.gii
+A       templates_surfaces/rh.central.Template_T1_IXI555_MNI152_GS.gii
+D       templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152
+A       templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152_GS
+M       templates_surfaces/templates_surfaces.man
+
+(1) Changed: Replaced average T1 Template_T1_IXI555_MNI152.nii by a more detailed
+    average of normalized images using Geodesic Shooting (GS).
+(2) Changed: Replaced template surfaces of Template_T1_IXI555_MNI152.nii by a more 
+    detailed surface of normalized images using Geodesic Shooting (GS).
+(3) Changed: Recompiled CAT-code.
+
+------------------------------------------------------------------------
+r1208 | gaser | 2017-11-06 17:08:35 +0100 (Mo, 06 Nov 2017) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +63,7 @@ M       html/cat.html
 (1) Added: cat_surf_max.m as modified version of spm_mesh_max because for some 
     rare data only one global maximum was returned.
 (2) Changed: Replaced spm_mesh_max by cat_surf_max in cat_stat_spm2x.m.
+
 ------------------------------------------------------------------------
 r1207 | gaser | 2017-10-27 10:00:34 +0200 (Fr, 27 Okt 2017) | 11 lines
 

@@ -70,7 +70,7 @@ function varargout = cat_surf_display(varargin)
   def.fsaverage    = {
     fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
     fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
-    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii');  
+    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii');  
     };
   def.usefsaverage = 0; 
   def.caxis    = []; % default/auto, range
