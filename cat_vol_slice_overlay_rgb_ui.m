@@ -19,7 +19,7 @@ logP = 0;      % option to use log-scaled colorbars if the input is a log-transf
 % ---------------------------------------------------------------------------------------
 % underlying image
 % ---------------------------------------------------------------------------------------
-SO.img(1).vol = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/Template_T1_IXI555_MNI152.nii'));
+SO.img(1).vol = spm_vol(fullfile(spm('dir'),'toolbox','cat12','templates_1.50mm/Template_T1_IXI555_MNI152_GS.nii'));
 SO.img(1).prop = 1;
 SO.img(1).cmap = gray;
 SO.img(1).range = [0.2 1];  % image range have to be adapted

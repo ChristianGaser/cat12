@@ -18,7 +18,7 @@ else
   vols = {''};
   exp = cat_get_defaults('extopts.expertgui'); 
 end  
-surfs = { fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii') };
+surfs = { fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii') };
 
 % batch
 % ----------------------------------------------------------------------

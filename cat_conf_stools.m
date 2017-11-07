@@ -530,7 +530,7 @@ function stools = cat_conf_stools(expert)
   v2s.data_surf_avg_lh.filter  = 'gifti';
   v2s.data_surf_avg_lh.ufilter = '^lh.*';
   v2s.data_surf_avg_lh.num     = [1 1];
-  v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152.gii')};
+  v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii')};
   v2s.data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','cat12');
   v2s.data_surf_avg_lh.help    = {
     'Select left template surface file. '
@@ -546,7 +546,7 @@ function stools = cat_conf_stools(expert)
   v2s.data_norm.help    = {
     'Select spatially normalized volumes (in template space). The output file will be named according to the volume names'
     ''
-    '  [rh|lh].central.Template_T1_IXI555_MNI152.VOLUMENAME.gii' 
+    '  [rh|lh].central.Template_T1_IXI555_MNI152_GS.VOLUMENAME.gii' 
   };
 
   v2s.vol2tempsurf      = cfg_exbranch;
