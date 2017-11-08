@@ -1,5 +1,23 @@
 ------------------------------------------------------------------------
-r1209 | gaser | 2017-11-07 17:19:17
+r1210 | gaser | 2017-11-08 16:07:53
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+MM      cat_surf_max.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+
+(1) Fixed: Mapping of volumes to surfaces is now correctly working. The 
+    starting point is now always according to the central surface and positive
+    values point inwards (to the WM boundary) and negative values outwards
+    to the pial surface. 
+(2) Changed: Changed start and end values for volume mapping.
+(3) Changed: recompiled CAT code.
+
+------------------------------------------------------------------------
+r1209 | gaser | 2017-11-07 17:20:27 +0100 (Di, 07 Nov 2017) | 49 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -48,6 +66,7 @@ M       templates_surfaces/templates_surfaces.man
 (2) Changed: Replaced template surfaces of Template_T1_IXI555_MNI152.nii by a more 
     detailed surface of normalized images using Geodesic Shooting (GS).
 (3) Changed: Recompiled CAT-code.
+
 
 ------------------------------------------------------------------------
 r1208 | gaser | 2017-11-06 17:08:35 +0100 (Mo, 06 Nov 2017) | 12 lines

@@ -19,9 +19,9 @@ function [N,Z,M,A,XYZ] = cat_surf_max(X,L,G)
 % modified version of spm_mesh_max because for some rare data only one global 
 % maximum was returned
 % Guillaume Flandin
-% $Id: spm_mesh_max.m 6860 2016-08-25 12:00:10Z guillaume $
+% $Id$
 %
-% $Id: cat_surf_max.m 6860 2016-08-25 12:00:10Z guillaume $
+% $Id$
 
 %-Get connected components
 %--------------------------------------------------------------------------
