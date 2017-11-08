@@ -206,7 +206,7 @@ function stools = cat_conf_stools(expert)
   FD.values = {0,1};
   FD.val    = {0};
   FD.help   = {
-    'Extract Cortical complexity (fractal dimension) which is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
+    'Extract cortical complexity (fractal dimension) which is described in Yotter et al. Neuroimage, 56(3): 961-973, 2011.'
     ''
     'Warning: Estimation of cortical complexity is very slow!'
     ''
@@ -272,14 +272,13 @@ function stools = cat_conf_stools(expert)
 %-----------------------------------------------------------------------  
   v2s.datafieldname         = cfg_entry;
   v2s.datafieldname.tag     = 'datafieldname';
-  v2s.datafieldname.name    = 'Texture Name';
+  v2s.datafieldname.name    = 'Output Name';
   v2s.datafieldname.strtype = 's';
   v2s.datafieldname.num     = [1 Inf];
   v2s.datafieldname.val     = {'intensity'};
   v2s.datafieldname.help    = {
-    'Name of the texture as part of the filename.'
+    'Name that is prepended to the filename of the mapped volume.'
     ''
-    '  [rh|lh].TEXTURENAME[.resampled].subjectname[.gii]' 
     };
  
   v2s.interp         = cfg_menu;
@@ -309,7 +308,7 @@ function stools = cat_conf_stools(expert)
     ' Maximum:          Use maximum value for mapping along normals.'
     ' Minimum:          Use minimum value for mapping along normals.'
     ' Absolute maximum: Use absolute maximum value for mapping along normals (useful for mapping contrast images from 1st-level fMRI analysis).'
-    ' Weighted mean:    Use weighted average with gaussian kernel for mapping along normals. The kernel is so defined that values at the boundary are weighted with 50% while center is weighted with 100% (useful for fMRI or rfMRI data.'
+    ' Weighted mean:    Use weighted average with gaussian kernel for mapping along normals. The kernel is so defined that values at the boundary are weighted with 50% while center is weighted with 100% (useful for (r)fMRI data.'
     ''
   };
 
@@ -326,9 +325,9 @@ function stools = cat_conf_stools(expert)
     'Absolute position of the start point of the grid along the surface normals in mm according to the surface. Give negative value for a start point outside of the surface (CSF direction, outwards). '
   };
   v2s.rel_startpoint = v2s.abs_startpoint;
-  v2s.rel_startpoint.val     = {0};
+  v2s.rel_startpoint.val     = {-0.5};
   v2s.rel_startpoint.help    = {
-    'Relative position of the start point of the grid along the surface normals according to a tissue class. A value of "0" begins at the GM/CSF border and negative values define a start point outside of the tissue class (CSF direction, outwards). '
+    'Relative position of the start point of the grid along the surface normals according to a tissue class. A value of "-0.5" begins at the GM/CSF border and even lower values define a start point outside of the tissue class (CSF direction, outwards). A value of "0" means that the central surface is used as starting point and "0.5" is related to the GM/WM border.'
   };
   
   % steps
@@ -354,9 +353,9 @@ function stools = cat_conf_stools(expert)
     'Absolute position of the end point of the grid along the surface normals (pointing inwards) in mm according to the surface. '
   };
   v2s.rel_endpoint = v2s.abs_endpoint;
-  v2s.rel_endpoint.val     = {1};
+  v2s.rel_endpoint.val     = {0.5};
   v2s.rel_endpoint.help    = {
-    'Relative position of the end point of the grid along the surface normals (pointing inwards) according to a tissue class. A value of "1" ends at the GM/WM border and values > 1 define an end point outside of the tissue class (WM direction, inwards). '
+    'Relative position of the end point of the grid along the surface normals (pointing inwards) according to a tissue class. A value of "0.5" ends at the GM/WM border and values > 0.5 define an end point outside of the tissue class (WM direction, inwards). A value of "0" ends at the central surface.'
   };
 
   % tissue class
@@ -439,17 +438,16 @@ function stools = cat_conf_stools(expert)
   
   coreg         = cfg_branch;
   coreg.tag     = 'coreg';
-  coreg.name    = 'Non-linear co-registration';
+  coreg.name    = 'Yes';
   coreg.val     = {nonlin_coreg};
   coreg.help    = {
-                    'text '
-                    ''
-                    'text.'
+    'Additionally co-register your data to the T1 image.'
+    ''
 }';
 
   nocoreg      = cfg_const;
   nocoreg.tag  = 'nocoreg';
-  nocoreg.name = 'No co-registration';
+  nocoreg.name = 'No';
   nocoreg.val  = {1};
   nocoreg.help = {
     'Expect that data are already co-registered and skip this step.'
@@ -461,10 +459,9 @@ function stools = cat_conf_stools(expert)
   v2s.coreg.name    = 'Co-registration';
   v2s.coreg.val     = {coreg};
   v2s.coreg.help    = {
-                  'Text. '
-                  ''
-                  'Text.'
-}';
+    'This option allows to non-linearly co-register your (r)fMRI or DTI data to the corresponding T1 image. '
+    ''
+     }';
   v2s.coreg.values  = {coreg nocoreg};
 
 
@@ -516,7 +513,10 @@ function stools = cat_conf_stools(expert)
   v2s.vol2surf.prog = @cat_surf_vol2surf;
   v2s.vol2surf.vout = @vout_vol2surf;
   v2s.vol2surf.help = {
-    'Map volume (native space) to individual surface.'
+    'Map volume (native space) to individual surface. These mapped volumes have to be finally resampled and smoothed before any statistical analysis.'
+    ''
+    'The ouput will be named:' 
+    '  [rh|lh].OutputName_VolumeName' 
     ''
   };
 
@@ -544,9 +544,8 @@ function stools = cat_conf_stools(expert)
   v2s.data_norm.ufilter = '.*';
   v2s.data_norm.num     = [1 Inf];
   v2s.data_norm.help    = {
-    'Select spatially normalized volumes (in template space). The output file will be named according to the volume names'
+    'Select spatially normalized volumes (in template space).'
     ''
-    '  [rh|lh].central.Template_T1_IXI555_MNI152_GS.VOLUMENAME.gii' 
   };
 
   v2s.vol2tempsurf      = cfg_exbranch;
@@ -564,11 +563,10 @@ function stools = cat_conf_stools(expert)
   v2s.vol2tempsurf.vout = @vout_vol2surf;
   v2s.vol2tempsurf.help = {
     'Map spatially normalized data (in template space) to template surface.'
-    'The template surface was generated by CAT12 surface processing [1] of the average of 555 Dartel-normalized images of the IXI database that were also used to create the IXI Dartel template.   '
+    'The template surface was generated by CAT12 surface processing of the average of 555 Dartel-normalized images of the IXI database that were also used to create the IXI Dartel template.   '
     ''
-    '  [1] Dahnke, R., Yotter, R. A., and Gaser, C. 2012.'
-    '  Cortical thickness and central surface estimation.'
-    '  Neuroimage, 65:336-348.'
+    'The ouput will be named:' 
+    '  [rh|lh|mesh].OutputName_VolumeName.Template_T1_IXI555_MNI152_GS.gii' 
     ''
     '  WARNING: This function is primarily thought in order to project statistical results '
     '           to the template surface. Do not use the output of this function'

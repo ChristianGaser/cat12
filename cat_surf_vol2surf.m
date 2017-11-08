@@ -96,19 +96,20 @@ function out = cat_surf_vol2surf(varargin)
       ffv(strfind(ffv,'.')) = '_';
       
       for si=1:numel(side)
-        % also add volume name to differentiate between multiple volumes
-        P.data(vi,si) = cat_surf_rename(job.(sside{si})(1),...
-          'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si}).name);
 
-        P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(1).Pmesh,...
+        % also add volume name to differentiate between multiple volumes
+        P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),...
+          'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
+
+        P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',job.fsavgDir,'dataname','thickness','ee','');
 
         switch mapping
           case 'abs_mapping'
             switch job.mapping.(mapping).surface
               case {1,'Central'},  addstr = ''; 
-              case {2,'WM'},   addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness
-              case {3,'Pial'}, addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness 
+              case {2,'WM'},   addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness
+              case {3,'Pial'}, addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness 
             end
           case 'rel_mapping'
             switch job.mapping.(mapping).class
@@ -120,18 +121,14 @@ function out = cat_surf_vol2surf(varargin)
 
         % map values
         cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
-          mappingstr, addstr,job.(sside{si})(1).Pmesh, P.vol{vi}, P.data{vi,si});
+          mappingstr, addstr,job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
-        
-        %if job.gifti==0
-        %  cat_io_FreeSurfer('gii2fs',struct('data',P.data{vi,si},'delete',1)); 
-        %end
         
         if job.verb
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
         end
       end
-      
+            
       spm_progress_bar('Set',vi);
     end
    
@@ -179,8 +176,8 @@ function out = cat_surf_vol2surf(varargin)
           case 'abs_mapping'
             switch job.mapping.(mapping).surface
               case {1,'Central'},  addstr = ''; 
-              case {2,'WM'},   addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness
-              case {3,'Pial'}, addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness 
+              case {2,'WM'},   addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness
+              case {3,'Pial'}, addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness 
             end
           case 'rel_mapping'
             switch job.mapping.(mapping).class
