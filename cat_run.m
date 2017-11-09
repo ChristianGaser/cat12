@@ -253,6 +253,15 @@ function job = update_job(job)
      'The given filename is "%s.%s" \n'],tff,tee);
   end
   job.extopts.darteltpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
+  
+  % if we also have found Template_0 we have to remove it from the list
+  if numel(job.extopts.darteltpms)==7 
+    if ~isempty(strfind(job.extopts.darteltpms{1},'Template_0'))
+      for i=1:6, job.extopts.darteltpms{i} = job.extopts.darteltpms{i+1}; end
+      job.extopts.darteltpms(7) = [];
+    end
+  end
+  
   job.extopts.darteltpms(cellfun('length',job.extopts.darteltpms)~=length(job.extopts.darteltpm{1}))=[]; % remove to short/long files
   if numel(job.extopts.darteltpms)~=6
     %%
@@ -262,7 +271,6 @@ function job = update_job(job)
       'Found %d templates: %s'],numel(job.extopts.darteltpms),files);
   end
 
-  
   % find and check the Shooting templates
   [tpp,tff,tee] = spm_fileparts(job.extopts.shootingtpm{1});
   job.extopts.shootingtpm{1} = fullfile(tpp,[tff,tee]); 
