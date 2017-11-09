@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1210 | gaser | 2017-11-08 16:07:53
+r1211 | gaser | 2017-11-09 15:43:08
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_run.m
+ M      development/Template_0_IXI555_MNI152_GS1mm.nii
+ M      development/Template_1_IXI555_MNI152_GS1mm.nii
+ M      development/Template_2_IXI555_MNI152_GS1mm.nii
+ M      development/Template_3_IXI555_MNI152_GS1mm.nii
+ M      development/Template_4_IXI555_MNI152_GS1mm.nii
+M       html/cat.html
+ M      templates_1.50mm/Template_T1_IXI555_MNI152_GS.nii
+ M      templates_surfaces/lc.central.Template_T1_IXI555_MNI152_GS.gii
+ M      templates_surfaces/lc.thickness.Template_T1_IXI555_MNI152_GS
+ M      templates_surfaces/lh.central.Template_T1_IXI555_MNI152_GS.gii
+ M      templates_surfaces/lh.thickness.Template_T1_IXI555_MNI152_GS
+ M      templates_surfaces/rc.central.Template_T1_IXI555_MNI152_GS.gii
+ M      templates_surfaces/rc.thickness.Template_T1_IXI555_MNI152_GS
+ M      templates_surfaces/rh.central.Template_T1_IXI555_MNI152_GS.gii
+ M      templates_surfaces/rh.thickness.Template_T1_IXI555_MNI152_GS
+
+Fixed: Customized templates start with *Template_0* which was not considered
+in cat_run.m 
+------------------------------------------------------------------------
+r1210 | gaser | 2017-11-08 16:08:14 +0100 (Mi, 08 Nov 2017) | 16 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +40,7 @@ M       html/cat.html
     to the pial surface. 
 (2) Changed: Changed start and end values for volume mapping.
 (3) Changed: recompiled CAT code.
+
 
 ------------------------------------------------------------------------
 r1209 | gaser | 2017-11-07 17:20:27 +0100 (Di, 07 Nov 2017) | 49 lines
