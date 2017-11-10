@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1212 | dahnke | 2017-11-10 13:39:08
+r1213 | gaser | 2017-11-10 16:10:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main_registration.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_createCS.m
+
+(1) Fixed: Removed debugging code that caused crash.
+(2) Changed: Added faster option for CAT_Surf2Sphere in cat_surf_createCS.m
+------------------------------------------------------------------------
+r1212 | dahnke | 2017-11-10 13:39:37 +0100 (Fr, 10 Nov 2017) | 45 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -45,6 +56,7 @@ M       tbx_cfg_cat.m
               untypical scaled data.
 (13) Fixed:   Small error in cat_vol_smooth3X.
 (14) Fixed:   Typos in CHANGES.txt.
+
 ------------------------------------------------------------------------
 r1211 | gaser | 2017-11-09 15:43:30 +0100 (Do, 09 Nov 2017) | 23 lines
 

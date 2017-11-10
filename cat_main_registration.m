@@ -492,7 +492,7 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
         %% -----------------------------------------------------------------
         %  Geodesic Shooting with Template 0 to 4 
         %  -----------------------------------------------------------------
- rigidShooting = 0; % rigid vs. affine Shooting 
+          rigidShooting = 0; % rigid vs. affine Shooting 
  
           % multiresolution parameter
           % this part may require further work 
