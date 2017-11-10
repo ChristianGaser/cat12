@@ -578,7 +578,11 @@ end
 
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
-    cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 10',Pcentral,Psphere);
+    if opt.fast
+      cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 5',Pcentral,Psphere);
+    else
+      cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 10',Pcentral,Psphere);
+    end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     
     % spherical registration to fsaverage template
