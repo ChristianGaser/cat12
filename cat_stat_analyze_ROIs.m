@@ -384,13 +384,13 @@ function p = estimate_GLM(Y,X,SPM,Ic);
 % Ic  - selected contrast
 % p   - returned p-value
 
-df   = [SPM.xCon(Ic).eidf SPM.xX.erdf];
 c = SPM.xCon(Ic).c;
 n = size(Y,1);
 n_structures = size(Y,2);
 
 % estimate statistics for F- or T-test
 if strcmp(SPM.xCon(Ic).STAT,'F')
+  df   = [SPM.xCon(Ic).eidf SPM.xX.erdf];
   c0 = eye(size(X,2)) - c*pinv(c);
   Xc = X*c;
   X0 = X*c0;
@@ -416,6 +416,7 @@ if strcmp(SPM.xCon(Ic).STAT,'F')
   p = 1-spm_Fcdf(F,df);
 else
 
+  df   = SPM.xX.erdf;
   pKX = pinv(X);
   trRV = n - rank(X);
   Beta = pKX * Y;
@@ -430,7 +431,7 @@ else
   t = con./(eps+ResSD);
   t(find(isnan(t))) = 0;
 
-  p = 1-spm_Tcdf(t,df(2));
+  p = 1-spm_Tcdf(t,df);
 end
 
 %_______________________________________________________________________
