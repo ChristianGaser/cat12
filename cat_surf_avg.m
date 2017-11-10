@@ -108,7 +108,9 @@ function varargout = cat_surf_avg(varargin)
           Savg.(side{si}).vertices = Savg.(side{si}).vertices + S.vertices;
           nfi = nfi + 1; spm_progress_bar('Set',nfi);
         catch
-          NS=NS-1;
+          %NS=NS-1;
+          S =gifti(Pcentral);
+          if di==1, Savg.(side{si}).vertices = zeros(size(S.vertices),'single'); end
         end
       end
 

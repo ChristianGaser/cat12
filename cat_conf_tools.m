@@ -741,6 +741,16 @@ if expert
   
   % --- Parameter ---
   
+  spm        = cfg_menu;
+  spm.tag    = 'spm';
+  spm.name   = 'Use SPM Preprocessing';
+  spm.labels = {'No','Yes'};
+  spm.values = {0 1};
+  spm.val    = {1};
+  spm.help   = {
+    'Use SPM preprocessing if the data is not skull-stripped.'
+  };
+  
   bc        = cfg_menu;
   bc.tag    = 'bc';
   bc.name   = 'Bias Correction';
@@ -776,6 +786,17 @@ if expert
     ''
   };
 
+  ss        = cfg_menu;
+  ss.tag    = 'ss';
+  ss.name   = 'Apply Skull-Stripping';
+  ss.labels = {'No','Yes'};
+  ss.values = {0 1};
+  ss.val    = {1};
+  ss.help   = {
+    'Write skull-stripped images. '
+    ''
+  };
+
   nc        = cfg_menu;
   nc.tag    = 'nc';
   nc.name   = 'Noise Correction';
@@ -800,7 +821,7 @@ if expert
   opts        = cfg_branch;
   opts.tag    = 'opts';
   opts.name   = 'Parameter';
-  opts.val    = {bc in bvc nc prefix}; 
+  opts.val    = {spm bc in bvc ss nc prefix}; 
   opts.help   = {
     'Parameter settings for image correction.'
   };

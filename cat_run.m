@@ -33,8 +33,8 @@ function varargout = cat_run(job)
 %  The lazy processing will only process files, if one of the output
 %  is missed and if the same preprocessing options were used before.
 %  -----------------------------------------------------------------
-if isfield(job.extopts,'lazy') && job.extopts.lazy && (~isfield(job,'process_index')) && ...
-   isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
+if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ...
+  ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   jobl      = update_job(job);
   jobl.vout = vout_job(jobl);
   job.data  = remove_allready_processed(jobl); 
@@ -80,7 +80,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
-    def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
+    %def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
     global defaults cat12; %#ok<NUSED,TLEV>
     save(tmp_name,'job','defaults','cat12');
     clear defaults cat12;
@@ -104,6 +104,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
              '         please do not use any spaces in folder names!\n\n']);
          job.nproc = 0; 
          job = update_job(job);
+         
          varargout{1} = run_job(job);
          return; 
       end
@@ -150,6 +151,7 @@ end
 if isfield(job,'printPID') && job.printPID 
   cat_display_matlab_PID
 end
+
 job = update_job(job);
 
 varargout{1} = run_job(job);
@@ -189,36 +191,33 @@ function job = update_job(job)
   def.opts.fwhm      = 1;
   def.nproc          = 0; 
   
+   
   % ROI atlas maps
   if isfield(job.output,'ROImenu')
     if isfield(job.output.ROImenu,'atlases')
+      % image output
       def.output.atlases = job.output.ROImenu.atlases;
-      def.output.ROI     = any(cell2mat(struct2cell(def.output.atlases))); 
+      def.output.ROI     = any(cell2mat(struct2cell(job.output.ROImenu.atlases))); 
     else
+      def.output.atlases = struct();
       def.output.ROI     = 0; 
     end
+  else
+    job.output.atlases 
+    job.output.ROI 
   end
   job = cat_io_checkinopt(job,def);
-  if ~isfield(job.output,'atlases')
-    atlas   = cat_get_defaults('extopts.atlas'); 
-    for ai = 1:size(atlas,1)
-      if atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && exist(atlas{ai,1},'file')
-        [pp,ff,ee]  = spm_fileparts(atlas{ai,1}); 
-        try
-          cat_get_defaults(['output.atlases.' ff]);
-        catch
-          cat_get_defaults(['output.atlases.' ff], atlas{ai,4})
-        end
-        def.output.atlases.(ff) = cat_get_defaults(['output.atlases.' ff]);
-      end
-    end
+  % ROI export 
+  for ai = 1:size(job.extopts.atlas,1)
+    [pp,ff,ee]  = spm_fileparts(job.extopts.atlas{ai,1}); 
+    job.extopts.atlas{ai,4} = job.extopts.atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && ...
+      exist(job.extopts.atlas{ai,1},'file') && isfield(def.output,'atlases') && isfield(def.output.atlases,ff) && def.output.atlases.(ff);
   end
   job = cat_io_checkinopt(job,def);
   if ~isfield(job.extopts,'restypes')
     job.extopts.restypes.(def.extopts.restype) = job.extopts.resval;  
   end
-  
-  
+
   % handling of SPM biasoptions for specific GUI entry
   if isfield(job.opts,'bias')
     if isfield(job.opts.bias,'biasfwhm')
@@ -797,7 +796,8 @@ function [lazy,FNok] = checklazy(job,subj,verb)
           if FNok==12; break; end
         end
       else
-        if any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
+        % this did not work anymore due to the GUI subfields :/
+        if 0 %any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
           FNok = 13; break
         end
       end

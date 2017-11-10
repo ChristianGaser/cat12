@@ -59,6 +59,10 @@ function cat_vol_urqio(job)
   def.opts.in   = 1; 
   def.opts.bvc  = 1; 
   def.opts.nc   = 1; 
+  def.opts.spm  = 1;  % use SPM preprocessing
+  def.opts.spmres = 0.8;
+  def.opts.ss   = 0;  % apply skull-stripping
+  def.opts.SSbd = 20; % reduce the size of the image by removing parts with distance greater SSbd  
   % checkin
   job = cat_io_checkinopt(job,def); 
   
@@ -83,8 +87,7 @@ function cat_vol_urqio(job)
   %% main loop
   for si=1:numel(job.data.r1)
     stime2 = cat_io_cmd(sprintf('Preprocessing subject %d/%d:',si,numel(job.data.r1)),'','',job.opts.verb); fprintf('\n'); 
-    stime  = cat_io_cmd('  Load images:','g5','',job.opts.verb-1);
-
+   
     % get header
     Vd  = spm_vol(job.data.r1{si});
     Vr  = spm_vol(job.data.r2s{si}); 
@@ -93,19 +96,121 @@ function cat_vol_urqio(job)
     % voxel size
     vx_vol = sqrt(sum(Vd.mat(1:3,1:3).^2));
 
-    % load images
-    Yd = single(spm_read_vols(Vd));
-    Yr = single(spm_read_vols(Vr));
-    Yp = single(spm_read_vols(Vp));
-   
-    % some kind of brain masking
+    
+    % SPM unified segmentation 
+    if job.opts.spm
+      %%
+      stime = cat_io_cmd('  SPM preprocessing','g5');
+
+      % SPM segmentation parameter
+      ofname = spm_file(job.data.pd{si},'number',''); 
+      nfname = spm_file(ofname,'prefix','n'); 
+      preproc.channel.vols{1,1}   = nfname; 
+      preproc.channel.biasreg     = 0.001;
+      preproc.channel.biasfwhm    = 60;
+      preproc.channel.write       = [0 1];
+      for ti=1:6
+        preproc.tissue(ti).tpm    = {[char(cat_get_defaults('opts.tpm')) ',' num2str(ti)]};
+        preproc.tissue(ti).ngaus  = 3;
+        preproc.tissue(ti).native = [0 0];                           % native, dartel
+        preproc.tissue(ti).warped = [0 0];                           % unmod, mod
+      end
+      preproc.warp.mrf            = 1;                               % 
+      preproc.warp.cleanup        = 1;                               % this is faster and give better results!
+      preproc.warp.reg            = [0 0.001 0.5 0.05 0.2];
+      preproc.warp.affreg         = 'none'; 
+      preproc.warp.write          = [0 0];
+      preproc.warp.samp           = 3; 
+      preproc.Yclsout             = true(1,6); 
+      
+      %% lower resolution to improve SPM processing time and use smoothing for denoising
+      copyfile(ofname,nfname);
+      Vi        = spm_vol(nfname); 
+      Vi        = rmfield(Vi,'private'); Vn = Vi; 
+      imat      = spm_imatrix(Vi.mat); 
+      Vi.dim    = round(Vi.dim .* vx_vol./repmat(job.opts.spmres,1,3));
+      imat(7:9) = repmat(job.opts.spmres,1,3) .* sign(imat(7:9));
+      Vi.mat    = spm_matrix(imat);
+
+      spm_smooth(nfname,nfname,repmat(0.75,1,3)); % denoising
+      [Vi,Yi] = cat_vol_imcalc(Vn,Vi,'i1',struct('interp',1,'verb',0));
+      delete(nfname); spm_write_vol(Vi,Yi); 
+      
+      vout   = cat_spm_preproc_run(preproc,'run');
+      %spmmat = open(fullfile(pp,mrifolder,['n' ff '_seg8.mat'])); 
+      %AffineSPM = spmmat.Affine; 
+      
+      %% update Ycls
+      if isfield(vout,'Ycls')
+        for i=1:6
+          Vn  = spm_vol(nfname); Vn = rmfield(Vn,'private');
+          Vo  = spm_vol(ofname); Vo = rmfield(Vo,'private'); 
+          Vn.pinfo = repmat([1;0],1,size(vout.Ycls{i},3));
+          Vo.pinfo = repmat([1;0],1,Vo.dim(3));
+          Vn.dt    = [2 0];
+          Vo.dt    = [2 0]; 
+          Vo.dat   = zeros(Vo.dim(1:3),'uint8');
+          if ~isempty(vout.Ycls{i})
+            Vn.dat   = vout.Ycls{i}; 
+            [Vmx,vout.Ycls{i}]  = cat_vol_imcalc([Vo,Vn],Vo,'i2',struct('interp',1,'verb',0));
+            vout.Ycls{i} = cat_vol_ctype(vout.Ycls{i}); 
+          end
+        end
+      end
+      %%
+      Yp0 = (2*single(vout.Ycls{1})+3*single(vout.Ycls{2})+single(vout.Ycls{3}))/255;
+      Ybm = cat_vol_morph(Yp0>0.5,'lc');
+      Ybg = cat_vol_morph(~cat_vol_morph(vout.Ycls{6}<64,'lo',1),'lo',1);
+            
+      %if ~debug, clear vout; end
+
+      %% load images
+      Yd = single(spm_read_vols(Vd));
+      Yr = single(spm_read_vols(Vr));
+      Yp = single(spm_read_vols(Vp));
+      
+      %% correct errors in Yd 
+      YM = Yd>max(Yd(:)*0.99) & Yp<mean(Yp(:)) & vout.Ycls{6}>64; 
+      YM = cat_vol_morph(YM,'d',2); 
+      Yd(YM) = 0; 
+      
+      %% display segmentation V2
+      %ds('d2','a',vx_vol,Yd/dth,Yd/dth .* ~YM,Yr./rth,Yp/pth,120); colormap gray
+
+    else
+      stime  = cat_io_cmd('  Load images:','g5','',job.opts.verb-1);
+      % load images
+      Yd  = single(spm_read_vols(Vd));
+      Yr  = single(spm_read_vols(Vr));
+      Yp  = single(spm_read_vols(Vp));
+      Ybm = ~(Yd==0 & Yr==0 & Yp==0); 
+      Ybg = (Yd==0 & Yr==0 & Yp==0); 
+    end
+    
+    if 0 % gcut>0 && job.opts.spm
+      Yl1 = ones(size(Ybm)); 
+      
+      YMF = cat_vol_morph(Yp0==1 & cat_vol_smooth3X(Yp0,8)>1,'l',[0.4,2]); % ventricle
+      cat_main_gcut(Yr,Ybm,vout.Ycls,Yl1,YMF,vx_vol,opt)
+    end
+    
+    
+    
+    %% some kind of brain masking
     Ypg  = cat_vol_grad(Yp)./Yp;
     Ydg  = cat_vol_grad(Yd)./Yd;
-    pgth = max( mean(Ypg(Ypg(:)>0 & Ypg(:)<0.5)) , abs(mean(Ypg(Ypg(:)>0 & Ypg(:)<0.5))) );
-    Ytis = Ypg>0 & Ypg<pgth*2 & Ydg<pgth*2 & Ydg>0; 
-    Ytis = cat_vol_morph(cat_vol_morph(Ytis,'lo',1),'lc',10/mean(vx_vol)) & Ypg>0 & Ypg<pgth*4 & Ydg<pgth*4 & Ydg>0;
+    pgth = max( cat_stat_nanmean(Ypg(Ypg(:)>0.01 & Ypg(:)<0.7 & Ybm(:)) ) , ...
+            abs(cat_stat_nanmean(Ypg(Ypg(:)>0.01 & Ypg(:)<0.7 & Ybm(:)) )) );
+    pgth = min(0.5,max(0.25,pgth)); 
+    if job.opts.spm
+      Ytis = Ybm & Ypg>0 & Ypg<pgth*4 & Ydg<1 & Ydg>0;
+      Ytis = cat_vol_morph(Ytis,'lc',2/mean(vx_vol)) & Ybm & Ypg>0 & Ypg<pgth*4 & Ydg<pgth*4 & Ydg>0;
+    else
+      Ytis = Ybm & Ypg>0 & Ypg<pgth*4 & Ydg<pgth*4 & Ydg>0;
+      Ytis = cat_vol_morph(cat_vol_morph(Ytis,'lo',1),'lc',10/mean(vx_vol)) & Ypg>0 & Ypg<pgth*4 & Ydg<pgth*4 & Ydg>0;
+    end
     
-    % some simple thresholds 
+    %% some simple thresholds 
     dth = max( mean(Yd(Ytis(:))) , abs(mean(Yd(Ytis(:)))));
     rth = max( mean(Yr(Ytis(:))) , abs(mean(Yr(Ytis(:)))));
     pth = max( mean(Yp(Ytis(:))) , abs(mean(Yp(Ytis(:)))));
@@ -129,23 +234,43 @@ function cat_vol_urqio(job)
     stime  = cat_io_cmd('  Tissue classification:','g5','',job.opts.verb-1,stime);
     
     % WM
-    Yw = Yp<pth*1 & Yp>pth*0.6  & Yd>dth & Yd<dth*3.5  &  Yr>rth/2 & Yr<rth*2.5  & ...
+    Yw = Yp<pth*1 & Yp>pth*0.6  & Yd>dth & Yd<dth*3.5  &  Yr>rth/2 & Yr<rth*2.5  &  Ybm & ...
          Ypg<pgth*4 & Ypd>-pgth/2 & Ypd<pgth/2; 
+    if job.opts.spm
+      Yw = Yw | (Yp0>2.9  & Yp<pth*1 & Yp>pth*0.6 & Ypg<pgth*4 & Ypd>-pgth/4 & Ypd<pgth/4); 
+      Yw = Yw | (Yp0>=2 & Yp<pth*1 & Yp>pth*0.6 & Ypg>pgth/8 & Ypd>0.01); 
+    end 
     Yw = Yw & Yr<mean(Yr(Yw(:)))*1.5; % remove
     Yw(smooth3(Yw)<0.4)=0; % small open
     Yw = cat_vol_morph(Yw,'l');
     
     % GM
-    Yg = Yp>pth & Yp<pth*2  &  Yd<dth*1.6 & Yd>dth*0.5  &  Yr>rth/2 & Yr<rth*2.5  & ...
+    Yg = Yp>pth & Yp<pth*2  &  Yd<dth*1.6 & Yd>dth*0.5  &  Yr>rth/2 &  Ybm &  ...  
          Ypg<pgth*2 & Ypd>-pgth/2 & Ypd<pgth/2  & ~Yw; 
+    if job.opts.spm, Yg = Yg | (Yp>pth & Yp0>1.9 & Yp0<2.1 & Ypg<pgth*2 & Ypd>-pgth/2 & Ypd<pgth/2 & ~Yw); end        
     Yg(smooth3(Yg)<0.4)=0; % small open 
     
     % CSF ... have to use it ...
-    Yc = Yp>pth*1.5 & Yp<pth*3  &  Yd<dth*0.5 & Yd>dth*0.1  &  Yr<rth/2 & Yr<rth*2.5  & ...
+    Yc = Yp>pth*1.5 & Yp<pth*3  &  Yd<dth*0.5 & Yd>dth*0.01  &  Yr<rth/2 &  Ybm &  ...
          Ypg<pgth*8 & Ypd>-pgth*2  & ~Yw & ~Yg; 
+    if job.opts.spm
+      Yc = Yc | (Yp>pth*1.5 & Yp<pth*3  &  Yd<dth*0.5 & Yd>dth*0.01 & ...
+        Yr<rth/2 & Yr<rth*2.5 & ~Yw & ~Yg & ...
+        Yp0>0.9 & Yp0<1.1 & Ypg<pgth*4 & Ypd>-pgth/42 & Ypd<pgth/4);
+    end        
     Yc(smooth3(Yc)<0.4)=0; % small open 
     
-    % super WM (higher intensity in R1 and R2s) and the question if and how 
+    %
+    if job.opts.spm
+      Yh = Yp>pth/8 & Yp<pth*2  &  Yr>rth & Yr<rth*12  & ~Ybm & Ypg<pgth*4 & ...  
+          cat_vol_smooth3X(Ybm,4/mean(vx_vol))<0.1 & Ypd>-pgth & Ypd<pgth & vout.Ycls{5}>64; 
+      Yh(smooth3(Yh)<0.5)=0;
+      Yh = cat_vol_morph(Yh,'l',[0.02 50]); 
+    end
+    
+    
+    
+    %% super WM (higher intensity in R1 and R2s) and the question if and how 
     % we need to correction it for normal preprocessing, because actual it 
     % lead to GM like brainstem that get lost ...
     %if debug, Yx = Yp; end  
@@ -155,7 +280,7 @@ function cat_vol_urqio(job)
       %% display segmentation V1
       ds('l2','',vx_vol,Yp./mean(Yp(Yw(:))),(Yw*3 + Yg*2 + Yc)/3,Yp./mean(Yp(Yw(:))),(Yw*3 + Yg*2 + Yc)/3*2,40); colormap gray
       %% display segmentation V2
-      ds('l2','',vx_vol,Yd/dth,Yw,Yr./rth,Yd/dth,200); colormap gray
+      ds('d2','a',vx_vol,Yd/dth,Yh,Yr./rth,Yp/pth,120); colormap gray
     end
     
         
@@ -173,9 +298,9 @@ function cat_vol_urqio(job)
 
       % approx .. 2 is fast and smooth, 1 sh
       biasstr = { % name var WMfilter CSFfitler approxres approxsmooth
-        'PD' ,'Yp', 2, 3, 1.2, 2/job.opts.bc;
-        'R1' ,'Yd', 3, 2, 1.2, 2/job.opts.bc;
-        'R2s','Yr', 3, 2, 1.2, 1/job.opts.bc;
+        'PD' ,'Yp', 2, 3, 1.6, 2/job.opts.bc;
+        'R1' ,'Yd', 3, 2, 1.6, 2/job.opts.bc;
+        'R2s','Yr', 3, 2, 1.6, 1/job.opts.bc;
       };
       for bi=1:size(biasstr,1)
         stime  = cat_io_cmd(sprintf('  Bias correction (%s):',biasstr{bi,1}),'g5','',job.opts.verb-1,stime);
@@ -196,24 +321,36 @@ function cat_vol_urqio(job)
           % use additonal CSF
           Ybig = Ybi .* Yc; Ybig = cat_vol_localstat(Ybig,Ybig>0,1,2); 
           Ybig = Ybi .* (Yc & Ybig~=Ybi & abs(Ybig-Ybi)<bith*0.1); 
-          Ybiw = cat_vol_localstat(Ybiw,Ybiw>0,1,biasstr{bi,4}); 
-          for ii=1:round(8/mean(vx_vol)), Ybig = cat_vol_localstat(Ybig,Ybig>0,1,2); end
+          Ybig = cat_vol_localstat(Ybig,Ybig>0,1,biasstr{bi,4}); 
+          for ii=1:round(8/mean(vx_vol)), Ybig = cat_vol_localstat(Ybig,Ybig>0,1,1); end
           Ybiw = Ybiw + (Ybig / median(Ybig(Ybig(:)>0)) * median(Ybiw(Ybiw(:)>0)));
           clear Ybig; 
         end
+        %
+        if job.opts.spm
+          % use additonal CSF
+          Ybig = Ybi .* Yh; Ybig = cat_vol_localstat(Ybig,Ybig>0,1,2); 
+          Ybig = Ybi .* (Yh & Ybig~=Ybi & abs(Ybig-Ybi)<bith*0.1); 
+          Ybig = cat_vol_localstat(Ybig,Ybig>0,1,biasstr{bi,4}); 
+          for ii=1:round(4/mean(vx_vol)), Ybig = cat_vol_localstat(Ybig,Ybig>0,5,1); end
+          %%
+          Ybiw = Ybiw + (Ybig / mean(Ybiw(Ybiw(:)>0)) * mean(Ybi(Yw(:)>0)));
+          if ~debug, clear Ybig; end
+        end
+        %%
         Ybiws = cat_vol_approx(Ybiw,'nn',vx_vol,biasstr{bi,5},struct('lfO',biasstr{bi,6}));  %#ok<NASGU>
         eval([biasstr{bi,2} 'ws = Ybiws;']);
         if debug, eval([biasstr{bi,2} 'w = Ybiw;']); end
-        clear Ybiw Ybiws;    
+        if ~debug, clear Ybiw Ybiws; end  
       end
       if 0
         % this is just for manual development & debugging
         %% display PD
-        ds('d2','',vx_vol,Yp./mean(Yp(Yw(:))),Ypws./mean(Yp(Yw(:))),Yp./mean(Yp(Yw(:))),Yp./Ypws,100); colormap gray
+        ds('d2','a',vx_vol,Ybiw./mean(Yp(Yw(:))),Ypws./mean(Yp(Yw(:))),Yp./mean(Yp(Yw(:))),Yp./Ypws,120); colormap gray
         %% display R1
-        ds('d2','',vx_vol,Yd./mean(Yd(Yw(:))),Ydws./mean(Yd(Yw(:))),Yd./mean(Yd(Yw(:))),Yd./Ydws,200); colormap gray
+        ds('d2','a',vx_vol,Yd./mean(Yd(Yw(:))),Ydws./mean(Yd(Yw(:))),Yd./mean(Yd(Yw(:))),Yd./Ydws,120); colormap gray
         %% display R2s
-        ds('d2','',vx_vol,Yr./mean(Yr(Yw(:))),Yrws./mean(Yr(Yw(:))),Yr./mean(Yr(Yw(:))),Yr./Yrws,200); colormap gray
+        ds('d2','a',vx_vol,Yr./mean(Yr(Yw(:))),Yrws./mean(Yr(Yw(:))),Yr./mean(Yr(Yw(:))),Yr./Yrws,120); colormap gray
       end
     end
     
@@ -244,20 +381,24 @@ function cat_vol_urqio(job)
         Yrm = Yr ./ mean(Yr(Yw(:))); 
       end
       if ~debug, clear Yd Yp Yr; end
-
+      Ybs = cat_vol_smooth3X(Ybm,1); 
+      
       %% create synthetic T1 contrast based on the PD image
-      Ytm = 1.5 - Ypm/2; 
-      YM  = smooth3(~Yw & Ypm<0.8 & cat_vol_morph(cat_vol_morph(Ypm<0.5 | Yrm>1.5,'l'),'d',1.5))>0.6; 
-      YM  = YM | smooth3( ~Yw & (abs(Ydm-Yrm)>1.1 | Yrm>2.1) )>0.7;  
-      Ytm(YM)=0; 
+      %Ytm = 1.5 - Ypm/2; 
+      Ypmi = cat_stat_histth(Ypm,99);
+      %%
+      Ytm  = 1 - (Ypmi - min(Ypmi(:))) / ( max(Ypmi(:)) - min(Ypm(:)));
+      Ytm  = min( cat_stat_histth(Ypm .* (smooth3(Ybs)<0.01) -0.2,99)*0.8-0.1 + 1.2*smooth3(Ybs), Ytm + (1-Ybs)); % , ...
+%            ds('d2','a',vx_vol,Ypg/pgth,Ypmi,Ydm*2,Ytm*2,120); colormap gray
+                 %%
       if debug, clear YM; end 
 
       %%  the region maps are only used to estimate a the mean intensity of a tissue 
       Ywm = Yw & Yrm<mean(Yrm(Yw(:)))*1.5 & Ypg<pgth*0.5;
       Ygm = Yg & Yrm<mean(Yrm(Yw(:)))*1.5 & Ypg<pgth; 
       Ycm = Yc & Ypg<pgth;
-      Yhm = ~Yw & ~Yg & ~Yc & Ydm>1.2 & Ypm<0.5 & Yrm>1.2;
-      Ylm = ~Yw & ~Yg & ~Yc & Ydm>0 & Ypm>0 & Yrm>0 & Ydm<mean(Ydm(Ycm(:)))*1.5 & Ypm>mean(Ypm(Ycm(:)))/1.5 & Yrm<mean(Yrm(Ycm(:)))*1.5;
+      Yhm = ~Yw & ~Yg & ~Yc & ~Ybm & Ydm>1.2 & Ypm<0.5 & Yrm>1.2;
+      Ylm = ~Yw & ~Yg & ~Yc & ~Ybm & Ydm>0 & Ypm>0 & Yrm>0 & Ydm<mean(Ydm(Ycm(:)))*1.5 & Ypm>mean(Ypm(Ycm(:)))/1.5 & Yrm<mean(Yrm(Ycm(:)))*1.5;
       if sum(Ylm(:))<10
         Ylm = ~Yw & ~Yg & ~Yc & Ydm>min(Ydm(:)) & Ypm>min(Ypm(:)) & Yrm>min(Yrm(:)) & Ydm<mean(Ydm(Ycm(:)))*2 & Ypm>mean(Ypm(Ycm(:)))/2 & Yrm<mean(Yrm(Ycm(:)))*2;
       end  
@@ -268,16 +409,14 @@ function cat_vol_urqio(job)
       T3th{1,2} = [ 0 min(Ydm(Ylm(:))) mean(Ydm(Ycm(:))) mean(Ydm(Ygm(:))) mean(Ydm(Ywm(:))) mean(Ydm(Yhm(:))) max(Ydm(:))];
       T3th{2,2} = [ 0 mean(Ypm(Ycm(:))) mean(Ypm(Ygm(:))) mean(Ypm(Ywm(:))) mean(Ypm(Yhm(:))) max(Ypm(:))];
       T3th{3,2} = [ 0 min(Yrm(Ylm(:))) mean(Yrm(Ycm(:))) mean(Yrm(Ygm(:))) mean(Yrm(Ywm(:))) mean(Yrm(Yhm(:))) max(Yrm(:))];
-      T3th{4,2} = [ 0 min(Ytm(Ylm(:))) mean(Ytm(Ycm(:))) mean(Ytm(Ygm(:))) mean(Ytm(Ywm(:))) mean(Ytm(Yhm(:))) max(Ytm(:))];
+      T3th{4,2} = [ min(Ytm(:)) min(Ytm(Ylm(:))) mean(Ytm(Ycm(:))) mean(Ytm(Ygm(:))) mean(Ytm(Ywm(:))) max(Ytm(:))];
       if ~debug, clear Ylm Yhm Ycm Ygm Ywm; end
       
-      %% final thresholds
+      % final thresholds
       T3th{1,3} = [ 0 1/12 1/3 2/3 1   T3th{1,2}(5)+diff(T3th{1,2}(5:6)) T3th{1,2}(6)+diff(T3th{1,2}(6:7))]; 
       T3th{2,3} = [ 0 1 2/3 1/3 T3th{2,2}(5)/(1/T3th{2,2}(2)) T3th{2,2}(6)/(1/T3th{2,2}(2))]; 
       T3th{3,3} = [ 0 1/12 1/3 2/3 1   T3th{3,2}(5)+diff(T3th{3,2}(5:6)) T3th{3,2}(6)+diff(T3th{3,2}(6:7))]; 
-      T3th{4,3} = [ 0 1/12 1/3 2/3 1   T3th{4,2}(5)+diff(T3th{4,2}(5:6)) T3th{4,2}(6)+diff(T3th{4,2}(6:7))]; 
-
-    
+      T3th{4,3} = [ 0 0.02 1/3 2/3 1   T3th{4,2}(6)/T3th{4,2}(5)]; 
       
       % global intensity normalization 
       for bi=1:size(T3th,1)
@@ -302,6 +441,8 @@ function cat_vol_urqio(job)
       Ytmc = 1.5 - Ypmc/2; Ytmc(Ypmc<0.8 & cat_vol_morph(cat_vol_morph(Ypmc<0.5 | Yrmc>1.5,'l'),'d',1.5))=0;  
     end
     
+   
+      
     
     
     
@@ -309,6 +450,7 @@ function cat_vol_urqio(job)
     %  --------------------------------------------------------------------
     %  Yrd, Ydd, Ytd = divergence maps
     %  --------------------------------------------------------------------
+    Yb    = cat_vol_morph((Ybm | (Yp0>0.1)) & Ydmc>0 & Ydmc<1.1 & Yrmc>0 & Yrmc<1.1 & Ytmc>0 & Ytmc<1.1,'lc',max(1,min(2,1/mean(vx_vol))));   % brain mask for CSF minimum value
     if job.opts.bvc || job.output.bv 
       stime  = cat_io_cmd('  Blood Vessel Detection:','g5','',job.opts.verb-1,stime);
 
@@ -322,14 +464,13 @@ function cat_vol_urqio(job)
       %  in the save WM region only a mean filter should be used to create an
       %  corrected map, whereas in the other regions a larger and minimum
       %  based filter is applied
-      Yb    = cat_vol_morph(Ydmc>0 & Ydmc<1.1 & Yrmc>0 & Yrmc<1.1 & Ytmc>0 & Ytmc<1.1,'lc',2);  % brain mask for CSF minimum value
-      Ywc   = cat_vol_morph(Yw,'lc',1) | ~cat_vol_morph(~cat_vol_morph(Yw,'o',1),'lc',2);       % wm mask with close microstructures
-      Ywc   = Ywc | smooth3(Yrmc>0.8 & Yrmc<1.1)>0.5| cat_vol_morph(smooth3(Ydmc>0.7 & Ydmc<1.2)>0.6,'o',1);
+      Ywc   = cat_vol_morph(Yw,'lc',1) | ~cat_vol_morph(~cat_vol_morph(Yw,'o',1),'lc',max(1,min(2,1/mean(vx_vol))));       % wm mask with close microstructures
+      Ywc   = Ywc | smooth3(Yrmc>0.8 & Yrmc<1.1 & Yb)>0.5 | cat_vol_morph(smooth3(Ydmc>0.7 & Ydmc<1.2 & Yb)>0.6,'o',1);
       Ywc   = cat_vol_morph(Ywc,'lc',1);
      
       %% correction maps    
-      Ymin  = max(Yb.*3/12,min(Ydmc,min(Ytmc,Yrmc)));   % minimum intensity in all images (CSF)
-      Ymax  = max(Yb.*3/12,max(Ydmc,max(Ytmc,Yrmc)));   % maximum intensity in all images (BV)
+      Ymin  = max(Yb.*3/12,Yb.*min(Ydmc,min(Ytmc,Yrmc)));   % minimum intensity in all images (CSF)
+      Ymax  = max(Yb.*3/12,Yb.*max(Ydmc,max(Ytmc,Yrmc)));   % maximum intensity in all images (BV)
       Ymn1  = cat_vol_localstat(Ymin,Ymin>0,1,1);       % low    short  correction
       Ymin1 = cat_vol_localstat(Ymin,Ymin>0,1,2);       % storng short  correction
       Ymax1 = cat_vol_localstat(Ymax,Ymax>0,1,3);       % very close to vessel
@@ -357,8 +498,8 @@ function cat_vol_urqio(job)
       
 
       %% find blood vessels
-      Ybv1 = (Yrmc>2 | Ytmc>1.5 | Ydmc>1.5) & ~Ywc; 
-      Ybv  = max(0 , max(Yrmc.*Ydmc.*Ytmc,Ymax) - min(Yrmc.*Ydmc.*Ytmc,Ymin) - 2/3 + 2*max(Yrd.*Ydd.*Ytd,max(Yrd,max(Ydd,Ytd)))  - Ywc );
+      Ybv1 = (Yrmc>2 | Ytmc>1.5 | Ydmc>1.5) & ~Ywc & Yb; 
+      Ybv  = Yb .* max(0 , max(Yrmc.*Ydmc.*Ytmc,Ymax) - min(Yrmc.*Ydmc.*Ytmc,Ymin) - 2/3 + 2*max(Yrd.*Ydd.*Ytd,max(Yrd,max(Ydd,Ytd)))  - Ywc );
       
       if debug 
         %% display BV
@@ -385,38 +526,42 @@ function cat_vol_urqio(job)
       %% second correction
       % r1
       YminAm = cat_vol_median3(YminA,YminA>0,true(size(Ydc)),0.1); 
-      YM   = YminAm>0.2 & ~Ywc & ((Ydmc - YminAm)>0.2 | Ydmc>1.5 | Ybv>1); 
-      Ydc2 = Ydmc .* (YminA>0.05); Ydc2(YM) = YminAm(YM); Ydc2 = min(Ydc2,Ydmc); 
-      %% pd
+      YM   = YminAm>0.2 & ~Ywc & ((Ydmc - YminAm)>0.2 | Ydmc>1.5 | Ybv>1) & Yb; 
+      Ydc2 = Ydmc; Ydc2(YM) = YminAm(YM); %Ydc2 = min(Ydc2.*Yb,Ydmc);  %.* (YminA>0.05)
+      Ydc2 = cat_stat_histth(Ydc2); 
+      % pd
       YM   = Ypmc>0.01 & Yb & ~Ywc & smooth3((Ypmc - (1.25-YminAm))>0.1 | Ypmc<0.3 | Ybv>1)>0.1; 
       YH   = 1.1 - 0.05*rand(size(YM)); 
       Ypc2 = Ypmc; Ypc2(YM) = min(YH(YM),1.25-YminAm(YM).*Yb(YM)); 
-      % t1 = inverse pd
-      YM   = Ytmc>0.2 & ~Ywc & ((Ytmc - Ytcm)>0.1 | Ytmc>1.1 | Ybv>0.5); 
+      Ypc2 = cat_stat_histth(Ypc2); 
+      % t1 = inverse pd 
+      YM   = Ytmc>0.2 & ~Ywc & ((Ytmc - Ytcm)>0.1 | Ytmc>1.1 | Ybv>0.5) & Yb; 
       Ytc2 = Ytmc; Ytc2(YM) = Ytcm(YM); Ytc2 = min(Ytc2,Ytmc);
-      YM   = (Ydc2 - Ytc2)<-0.4 & Ydc2<0.5; 
-      Ytc2(YM) = min(Ytc2(YM) ,Ydc2(YM) );
+      YM   = (Ydc2 - Ytc2)<-0.4 & Ydc2<0.5 & Yb; 
+      Ytc2(YM) = min(Ytc2(YM) ,Ydc2(YM).*Yb(YM) );
+      Ytc2 = cat_stat_histth(Ytc2); 
       % r2s
-      YM   = Yrmc>0.2 & ~Ywc & ((Yrmc - Yrcm)>0.2 | Yrmc>1.1 | Ybv>0.5); 
+      YM   = Yrmc>0.2 & ~Ywc & ((Yrmc - Yrcm)>0.2 | Yrmc>1.1 | Ybv>0.5) & Yb; 
       Yrc2 = Yrmc; Yrc2(YM) = Yrcm(YM); Yrc2 = min(Yrc2,Yrmc);
-      YM   = smooth3(Ydc2 - Yrc2)<-0.2 & (Ydc2<0.8 | Yrc2>1.3) & (~Ywc | (Yrd<-0.1 & Yrc2>1.3 & Ypg>0.05))>0.5; 
-      Yrc2(YM) = min(Yrc2(YM) ,Ydc2(YM) );
+      YM   = smooth3(Ydc2 - Yrc2)<-0.2 & (Ydc2<0.8 | Yrc2>1.3) & (~Ywc | (Yrd<-0.1 & Yrc2>1.3 & Ypg>0.05))>0.5 & Yb; 
+      Yrc2(YM) = min(Yrc2(YM) ,Ydc2(YM).*Yb(YM) );
       Yrc2 = cat_vol_median3(Yrc2,YM | Yrc2>1.3 & Ypg>0.2); % remove small reminding WM vessels and artifacts
+      Yrc2 = cat_stat_histth(Yrc2); 
       if ~debug, clear Ypg; end
       
       %% this is just for manual development & debugging
       if 0
         
         %% display BV
-        ds('d2','',vx_vol,Ybv1,Ybv,Ydcm,abs(Ydc2-Yd),200); colormap gray
+        ds('d2','a',vx_vol,Ybv1,Ybv,Ydcm,abs(Ydc2-Yd),200); colormap gray
         %% display PD
-        ds('d2','',vx_vol,Ypm/2.5*1.5,Ypws./mean(Yp(Yw(:))),Ypmc*1.5,Ypc2*1.5,220); colormap gray
+        ds('d2','a',vx_vol,Ypmc/2.5*1.5,Ypws./mean(Ypmc(Yw(:))),Ypmc*1.5,Ypc2*1.5,120); colormap gray
         %% display PDi
-        ds('d2','',vx_vol,2 - Ypc2*1.5,Yp/mean(Yp(Yw(:))),Ydc2*1.5,Ytc2*1.5,220); colormap gray
+        ds('d2','a',vx_vol,2 - Ypc2*1.5,Yp/mean(Yp(Yw(:))),Ydmc*1.5,Ytc2*1.5,120); colormap gray
         %% display R1
-        ds('d2','',vx_vol,Yd./mean(Yd(Yw(:)))*1.5,Ydws./mean(Yd(Yw(:))),Yd./mean(Yd(Yw(:)))*1.5,Ydc2*1.5,220); colormap gray
+        ds('d2','a',vx_vol,Ydws./mean(Ydws(Yw(:)))*1.5,Ydws./mean(Ydws(Yw(:))),Ydc*1.5,Ydc2*1.5,120); colormap gray
         %% display R2s
-        ds('d2','',vx_vol,Yr./mean(Yr(Yw(:))),Yrws./mean(Yr(Yw(:))),Yr./mean(Yr(Yw(:))),Yrc2,220); colormap gray
+        ds('d2','a',vx_vol,Yr./mean(Yr(Yw(:))),Yrws./mean(Yr(Yw(:))),Yr./mean(Yr(Yw(:))),Yrc2,120); colormap gray
         
         
         %% create test WM surface with correct blood vessel system - Warning very slow! 
@@ -449,6 +594,12 @@ function cat_vol_urqio(job)
     if ~debug, clear Ypmc Ytmc Ydmc Yrmc; end
     
     
+     if job.opts.ss
+       Ypc2 = Ypc2 .* Yb; 
+       Ytc2 = Ytc2 .* Yb; 
+       Ydc2 = Ydc2 .* Yb; 
+       Yrc2 = Yrc2 .* Yb; 
+     end
     
     
     %% write data
