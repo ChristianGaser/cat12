@@ -76,7 +76,8 @@ if do_dartel
     job.output.bias.warped || ... job.output.bias.dartel || ...
     job.output.label.warped || ... job.output.label.dartel || ...
     any(any(tc(:,[4 5 6]))) || job.output.jacobian.warped || ...
-    job.output.surface || job.output.ROI || ...
+    ... job.output.surface || ...
+    job.output.ROI || ...
     any([job.output.atlas.warped]) || ...
     numel(job.extopts.regstr)>1 || ...
     numel(job.extopts.vox)>1;
@@ -1604,8 +1605,15 @@ if job.output.surface
     case 2, surf = {'lh','rh','lc','rc'};
     case 3, surf = {'lh'};
     case 4, surf = {'rh'};
-    case 5, surf = {'lhfst','rhfst'}; % fast surface reconstruction 
-    case 6, surf = {'lhfst','rhfst','lcfst','rcfst'}; % fast surface reconstruction 
+    % fast surface reconstruction without simple spherical mapping     
+    case 5, surf = {'lhfst','rhfst'};                   
+    case 6, surf = {'lhfst','rhfst','lcfst','rcfst'};    
+    % fast surface reconstruction with simple spherical mapping     
+    case 7, surf = {'lhsfst','rhsfst'};                    
+    case 8, surf = {'lhsfst','rhsfst','lcsfst','rcsfst'}; 
+  end
+  if job.output.surface>4 % fast 
+    job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
   end
   
   % brain masking and correction of blood vessels 
@@ -1762,46 +1770,46 @@ end
 clear wYp0 wYcls wYv trans
 
 
+
+%% ---------------------------------------------------------------------
+%  XML-report and Quality Assurance
+%  ---------------------------------------------------------------------
+stime = cat_io_cmd('Quality check'); job.stime = stime; 
+Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
+qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
+          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
+
+% WMH updates? ... has to be done within cat_tst_qa?!
+%qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
+%qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
+%qa.subjectmeasures.vol_rel_CGW    = qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
+if job.output.surface && exist('S','var')
+  % metadata
+  if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
+  if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
+  qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  if job.extopts.expertgui>1
+    if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
+    if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
+    qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+    if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
+    if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
+    qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
+  end
+
+  qam = cat_stat_marks('eval',job.cati,qa,'cat12');
+
+  cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
+    ... 'subjectratings',qam.subjectmeasures, ... not ready
+    'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
+
+end  
+clear Yo Yp0 qas;
+fprintf('%4.0fs\n',etime(clock,stime));
+
+
 printCATreport = 1; % if QA and/or print failed on servers
 if printCATreport
-  %% ---------------------------------------------------------------------
-  %  XML-report and Quality Assurance
-  %  ---------------------------------------------------------------------
-  stime = cat_io_cmd('Quality check'); job.stime = stime; 
-  Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
-  qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
-            struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
-
-  % WMH updates? ... has to be done within cat_tst_qa?!
-  %qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
-  %qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
-  %qa.subjectmeasures.vol_rel_CGW    = qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
-  if job.output.surface && exist('S','var')
-    % metadata
-    if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else th=[]; end;
-    if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
-    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-    if job.extopts.expertgui>1
-      if isfield(S,'lh') && isfield(S.lh,'th2'), th=S.lh.th2; else th=[]; end; 
-      if isfield(S,'rh') && isfield(S.lh,'th2'), th=[th; S.rh.th2]; end
-      qa.subjectmeasures.dist_gyruswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-      if isfield(S,'lh') && isfield(S.lh,'th3'), th=S.lh.th3; else th=[]; end; 
-      if isfield(S,'rh') && isfield(S.lh,'th3'), th=[th; S.rh.th3]; end
-      qa.subjectmeasures.dist_sulcuswidth{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; clear th; 
-    end
-
-    qam = cat_stat_marks('eval',job.cati,qa,'cat12');
-
-    cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
-      ... 'subjectratings',qam.subjectmeasures, ... not ready
-      'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
-
-  end  
-  clear Yo Yp0 qas;
-  fprintf('%4.0fs\n',etime(clock,stime));
-
-
-
   %% display and print result if possible
   %  ---------------------------------------------------------------------
     QMC   = cat_io_colormaps('marks+',17);

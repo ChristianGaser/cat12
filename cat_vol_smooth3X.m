@@ -22,12 +22,12 @@ function S=cat_vol_smooth3X(S,s,filter)
     S  = smooth3(S,'gaussian',3,0.5)*s + S*(1-s);
   elseif s>=0.5 && s<=1.0
     S  = smooth3(S,'gaussian',3,s);
-  elseif s>1.0 && all(size(S)>[6,6,6])
+  elseif s>1.0 && all(size(S)>6) 
     SR = reduceRes(S);           
     SR = cat_vol_smooth3X(SR,s/2); 
     S  = dereduceRes(SR,size(S)); 
-  elseif s>=1.0 && all(size(S)<=[6,6,6])
-    S  = smooth3(S,'gaussian',6,s); 
+  elseif s>=1.0 && any(size(S)<=6)
+    S  = smooth3(S,'gaussian',5,s); 
   elseif s==0
     % nothing to do
   else

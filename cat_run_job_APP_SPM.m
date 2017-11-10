@@ -1,6 +1,9 @@
-function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
+function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fstr)
 %  _____________________________________________________________________
 %  The final bias correction is a subfunction of cat_run_job.
+%  
+%  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
+%
 %  _____________________________________________________________________
 %  Robert Dahnke
 %  $Id$
@@ -9,12 +12,14 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
-  resMth  = 0.5; % general resolution limitation 
+  %resMth  = 0.5; % general resolution limitation 
   resTth  = 1.0; % tissue intensity estimation resolution limitation 
   
   if ~exist('verb','var'), verb = 1; end
-  if ~exist('fwhm','var'), fwhm = 0.5; end
-    
+  if ~exist('fstr','var'), fstr = 0.5; end
+  fwhm    = max(1.5,min(4.5,4.5 - 3*fstr)); 
+  resMth  = 1 - 0.75*fstr; 
+
   if verb>0, fprintf('\n'); end
   stime = cat_io_cmd('    Initialize','g5','',verb); 
   
@@ -113,7 +118,7 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
   
   %% CM (this did not work yet) 
   %  
-  if 1
+  if 0
     Ycm = Yb & ~Ywm & ~Ygm & Yg<gth*2 & Ymi>0.01 & (Ymi-Ydiv)<0.5 & Ycls{3}>128 & cat_vol_smooth3X(Yb,4)>0.95; 
     Ycm(smooth3(Ycm)<0.6)=0;
   end
@@ -138,7 +143,7 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
     Yhbg = cat_vol_morph(Yhbg,'c',2); 
     Yhm(Yhbg)=0; Ywm(Yhbg)=0; Ygm(Yhbg)=0; 
     if exist('Ycm','var'), Ycm(Yhbg)=0; end
-    Yhbgi = cat_vol_approx(Yhbg .* Yo,'nn',vx_vol,4,struct('lfO',4*fwhm));
+    Yhbgi = cat_vol_approx(Yhbg .* Yo,'nn',vx_vol,4,struct('lfO',fwhm));
     
     %%
     Ya = Ycls{2}<240 & Yp0>1.5 & Yo./(Yhbgi*T3th(3)/cat_stat_nanmean(Yhbgi(Ywm(:))))>1.05 & Yhd<0.2; Ya(smooth3(Ya)<0.5)=0;
@@ -158,7 +163,7 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
   Yhmi = cat_vol_median3(Yhm.*Yo,Yhm,Yhm); Yhmi = cat_vol_localstat(Yhmi,Yhm,1,1);
   if exist('Ycm','var')
     %Ycmi = cat_vol_median3(Ycm.*Yo,Ycm,Ycm); Ycmi = cat_vol_localstat(Ycmi,Ycm,1,1);
-    Ycmi = cat_vol_approx(Ycm.* Yo,'nn',vx_vol,4,struct('lfO',4*fwhm));
+    Ycmi = cat_vol_approx(Ycm.* Yo,'nn',vx_vol,4,struct('lfO',fwhm));
   end
   
   % threshold of head tissues 
@@ -179,7 +184,20 @@ function  [Ymc,Ymi] = cat_run_job_APP_SPM(Po,vout,vx_vol,verb,fwhm)
   %% bias field estimation 
   %    ds('l2','',vx_vol,Ymi,Ywm,Ymi,Ymc,80)
   stime = cat_io_cmd('    Estimate bias field','g5','',verb,stime);
-  Ywi = cat_vol_approx(Ytmi,'nn',vx_vol,3,struct('lfO',4*fwhm));
+  Ywi = cat_vol_approx(Ytmi,'nn',vx_vol,3,struct('lfO',fwhm));
+  if 0
+    %%
+    [Ywir,Ybr,resTr] = cat_vol_resize({Ywi,single(Yb)},'reduceV',vx_vol,3,16,'meanm');
+    meanY   = cat_stat_nanmedian(Ywir(Ybr(:)>0.5));
+    Ywir    = Ywir / meanY; 
+    Ygr     = cat_vol_grad(Ywir); 
+    lfO     = min( 0.49 , max( 0.0001 , min(  mean(resTr.vx_volr)/10 , median(Ygr(Ywir(:)>0)) / 4*fwhm ))); 
+    YM      = cat_vol_smooth3X(Ybr,24/mean(resTr.vx_volr(:))); YM = YM/max(YM(:));
+    Ywir    = cat_vol_laplace3R(Ywir,YM>0.8,double(lfO)); 
+    Ywir    = Ywir * meanY;
+    [Ywir,YM] = cat_vol_resize({Ywir,max(0,YM-0.8)/0.2},'dereduceV',resTr);
+    Ywir    = Ywir.*YM  +  Ywi.*(1-YM); 
+  end
   %if exist('Ya','var'); Ywi(Ya) = Yo(Ya)*(T3th(3)/T3th(2)); Ywi = cat_vol_laplace3R(Ywi,cat_vol_smooth3X(Ya,2)>0.1,0.2); end
   if debug
     Ymc = Yo ./ Ywi; Ymc = cat_main_gintnorm(Ymc * (mean(Ym(Ywm(:)))/mean(Ymc(Ywm(:)))) ,Txth); 

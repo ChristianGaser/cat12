@@ -1,5 +1,52 @@
 ------------------------------------------------------------------------
-r1211 | gaser | 2017-11-09 15:43:08
+r1212 | dahnke | 2017-11-10 13:39:08
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_tools.m
+M       cat_io_FreeSurfer.m
+M       cat_io_cmd.m
+M       cat_io_xml.m
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_run_job_APP_SPM.m
+M       cat_surf_avg.m
+M       cat_surf_createCS.m
+M       cat_surf_render2.m
+M       cat_vol_resize.m
+M       cat_vol_sanlm.m
+M       cat_vol_smooth3X.m
+M       cat_vol_urqio.m
+M       html/images/cat_tst_reg_boxplot.png
+M       html/images/cat_tst_seg_bwp_ana.png
+M       internal/cat_vol_nlmus.m
+M       tbx_cfg_cat.m
+
+(1)  Fixed:   Write MAT file before XML file in cat_io_xml to catch XML writing
+              errors, e.g. on server.
+(2)  Fixed:   Move "printCATreport" settings behind QA and XML report output.
+(3)  Fixed:   Corrections in internal NLM-interpolation "cat_vol_nlmus".
+(4)  Fixed:   Updated NLM filter options, resolution options, and intensity
+              limits in cat_run_job1070 based on changes of in cat_run_job.   
+(5)  Update:  Changed of ultra high resolution scripts (cat_conf_tools and 
+              cat_vol_urqio. 
+(6)  Fixed:   Small corrections/modifications in cat_io_cmd.
+(7)  Fixed:   Surface processing do not require Shooting/Dartel registration
+              Developer options for fast surface processing in cat_surf_createCS.
+(8)  Fixed:   Corrections (rigid vs. affine shooting) and cleanup in 
+              cat_main_registration. 
+(9)  Fixed:   Error with lazy processing developer option (cat_run).
+(10) Update:  Less options for APP1 and APP2 processing.
+(11) New:     Estimation of the standard deviation in cat_vol_resize.
+(12) Fixed:   Added histogram scaling in cat_vol_sanlm to avoid problems with
+              untypical scaled data.
+(13) Fixed:   Small error in cat_vol_smooth3X.
+(14) Fixed:   Typos in CHANGES.txt.
+------------------------------------------------------------------------
+r1211 | gaser | 2017-11-09 15:43:30 +0100 (Do, 09 Nov 2017) | 23 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +70,7 @@ M       html/cat.html
 
 Fixed: Customized templates start with *Template_0* which was not considered
 in cat_run.m 
+
 ------------------------------------------------------------------------
 r1210 | gaser | 2017-11-08 16:08:14 +0100 (Mi, 08 Nov 2017) | 16 lines
 

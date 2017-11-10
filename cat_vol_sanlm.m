@@ -93,6 +93,11 @@ for i = 1:numel(job.data)
       fprintf('SANLM filtering: ');  
     end
     
+    % histogram limit
+    [hsrc,hval] = hist(src(:),10000); hp = cumsum(hsrc)./sum(hsrc); tol = 0.002;
+    if min(src(:))~=0, src(src<hval(find(hp>tol,1,'first'))) = hval(find(hp>tol,1,'first')); end
+    src(src>hval(find(hp<(1-tol),1,'last')))  = hval(find(hp<(1-tol),1,'last')); 
+    
     % use intensity normalisation because cat_sanlm did not filter values below ~0.01 
     th = max(mean(src(src(:)>0)),abs(mean(src(src(:)<0))));
     src = (src / th) * 100; 
@@ -124,16 +129,28 @@ for i = 1:numel(job.data)
             NCs = max(eps,abs(src - srco)/th); 
             % preserve anatomical details by describing the average changes
             % and not the strongest - this reduce the ability of artefact
-            % correction
-            [NCsr,resT2] = cat_vol_resize(NCs,'reduceV',vx_vol,2,32,'meanm');
-            NCsr = cat_vol_localstat(NCsr,true(size(NCs)),1,1);
-            NCsr = cat_vol_smooth3X(NCsr,2/mean(resT2.vx_volr));
-            NCs  = cat_vol_resize(NCsr,'dereduceV',resT2); 
+            % correction!
+            stdNC = std(NCs(NCs(:)~=0)); 
+            NCsm  = cat_vol_median3(NCs,NCs>stdNC,true(size(NCs))); % replace outlier
+            [NCsr,resT2] = cat_vol_resize(NCsm,'reduceV',vx_vol,2,32,'meanm'); clear NCsm; 
+            NCsr  = cat_vol_localstat(NCsr,true(size(NCs)),1,1);
+            NCsr  = cat_vol_smooth3X(NCsr,2/mean(resT2.vx_volr));
+            NCsr  = cat_vol_resize(NCsr,'dereduceV',resT2); 
+            NCso  = NCs;  
+            
+            % no correction of local abnormal high values (anatomy)
+            NCs = NCsr + (NCso>stdNC & NCso<=stdNC*4 & NCso>NCsr*2 & NCso<NCsr*16) .* (-NCsr); 
+            NCs = cat_vol_smooth3X(NCs,2/mean(resT2.vx_vol));  
             % weighting
             NCs = NCs ./ mean(NCs(:)); NCs = max(0,min(1,NCs * (15*NCrate) * abs(NCstr(NCstri)))); 
             % volume dependency (lower filtering in lower resolution)
             if job.ares(1), NCs = NCs .* max(0,min(1,1-(mean(vx_vol)-job.ares(2))/diff(job.ares(2:3)))); end
-           
+
+            % heavy outlier / artefacts
+            NCs = max(NCs,(NCso>stdNC*6) | (NCso>NCsr*12)); clear NCso; 
+            
+            
+            %srco2 = srco.*(1-NCs) + src.*NCs;
             %% mix original and noise corrected image
             srco = srco.*(1-NCs) + src.*NCs; 
             NCstr(NCstri) = -cat_stat_nanmean(NCs(:)); 

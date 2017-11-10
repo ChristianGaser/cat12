@@ -336,7 +336,7 @@ switch lower(action)
         material(H.figure,'dull');
 
         % default lighting
-        if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
+        if 0 && ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
 
         H.light(1) = camlight; set(H.light(1),'Parent',H.axis); 
         switch H.catLighting

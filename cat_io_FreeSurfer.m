@@ -380,7 +380,7 @@ function [vertex_coords, faces] = read_surf(fname)
     faces = fread(fid, fnum*3, 'int32') ;
     faces = reshape(faces, 3, fnum)' ;
   end
-
+  if min(faces(:))==0, faces=faces+1; end
   vertex_coords = reshape(vertex_coords, 3, vnum)' ;
   fclose(fid) ;
 end
