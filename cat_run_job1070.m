@@ -177,13 +177,13 @@ function cat_run_job1070(job,tpm,subj)
 
 
             % noise correction
-            if job.extopts.NCstr>0
-              if job.extopts.sanlm==1
+            if job.extopts.NCstr~=0 
+              if job.extopts.NCstr==2 || job.extopts.NCstr==3
+                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%d)',job.extopts.NCstr));
+                cat_vol_isarnlm(struct('data',nfname,'verb',1,'prefix','')); 
+              else 
                 stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
                 cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
-              elseif job.extopts.sanlm==2
-                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_isarnlm(struct('data',nfname,'verb',1,'prefix','')); 
               end
               V = spm_vol(job.channel(n).vols{subj});
               fprintf('%4.0fs\n',etime(clock,stime));   
@@ -201,12 +201,12 @@ function cat_run_job1070(job,tpm,subj)
         %  resolution helps to reduce normalization artifacts of the
         %  deformations. Furthermore, even if artifacts can be reduced by the final smoothing
         %  it is much better to avoid them.  
-        vx_vold = min(job.extopts.vox(1),sqrt(sum(tpm.V(1).mat(1:3,1:3).^2))); clear Vt; % Dartel resolution 
         for n=1:numel(job.channel) 
 
           % prepare header of resampled volume
           Vi        = spm_vol(job.channel(n).vols{subj}); 
           vx_vol    = sqrt(sum(Vi.mat(1:3,1:3).^2));
+          vx_vol    = round(vx_vol*10^2)/10^2; % avoid small differences 
 
           % we have to look for the name of the field due to the GUI job struct generation! 
           restype   = char(fieldnames(job.extopts.restypes));
@@ -219,20 +219,17 @@ function cat_run_job1070(job,tpm,subj)
               vx_voli  = max(vx_voli,job.extopts.restypes.(restype)(1) .* ...
                          ( vx_vol < (job.extopts.restypes.(restype)(1)-job.extopts.restypes.(restype)(2))));
             case 'best'
-              best_vx  = max( min( 1.0 , vx_vol) ,job.extopts.restypes.(restype)(1)); 
+              best_vx  = max( min(vx_vol) ,job.extopts.restypes.(restype)(1)); 
               vx_voli  = min(vx_vol ,best_vx ./ ((vx_vol > (best_vx + job.extopts.restypes.(restype)(2)))+eps));
-              %vx_voli  = min(vx_vold,vx_voli); % guarantee Dartel resolution
             otherwise 
               error('cat_run_job:restype','Unknown resolution type ''%s''. Choose between ''fixed'',''native'', and ''best''.',restype)
           end
 
-
           % interpolation 
           if any( (vx_vol ~= vx_voli) )  
-
             stime = cat_io_cmd(sprintf('Internal resampling (%4.2fx%4.2fx%4.2fmm > %4.2fx%4.2fx%4.2fmm)',vx_vol,vx_voli));
-
-            Vi        = rmfield(Vi,'private'); 
+           
+            Vi        = rmfield(Vi,'private');
             imat      = spm_imatrix(Vi.mat); 
             Vi.dim    = round(Vi.dim .* vx_vol./vx_voli);
             imat(7:9) = vx_voli .* sign(imat(7:9));
@@ -240,15 +237,17 @@ function cat_run_job1070(job,tpm,subj)
 
             Vn = spm_vol(job.channel(n).vols{subj}); 
             Vn = rmfield(Vn,'private'); 
-            cat_vol_imcalc(Vn,Vi,'i1',struct('interp',6,'verb',0));
+            cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0));
             vx_vol = vx_voli;
-
-            fprintf('%4.0fs\n',etime(clock,stime));    
+          
+            fprintf('%4.0fs\n',etime(clock,stime));     
           else
             vx_vol = sqrt(sum(Vi.mat(1:3,1:3).^2));
           end
+
           clear Vi Vn;
         end
+
 
 
         %  prepare SPM preprocessing structure 
@@ -482,12 +481,13 @@ function cat_run_job1070(job,tpm,subj)
                 Yb = cat_vol_morph(cat_vol_morph(Yb,'d',1),'lc',1);
                 th = cat_stat_nanmean(Ysrc(Yb(:) & Ysrc(:)>cat_stat_nanmean(Ysrc(Yb(:))))) / ...
                      cat_stat_nanmean(Ym(Yb(:)   & Ym(:)>cat_stat_nanmean(Ym(Yb(:)))));
+                if exist('WMth','var'), th = max(th,WMth); end
             else % only initial bias correction
                 th = WMth;
             end
             bth = min( [ mean(single(Ysrc( Ybg(:)))) - 2*std(single(Ysrc( Ybg(:)))) , ...
                          mean(single(Ysrc(~Ybg(:)))) - 4*std(single(Ysrc(~Ybg(:)))) , ...
-                         min(single(Ysrc(~Ybg(:)))) ] );
+                         min(single(Ysrc(~Ybg(:))))]); 
 
             % add temporary skull-stripped images
             if 0 %app.msk>2 % use brain mask
@@ -508,14 +508,14 @@ function cat_run_job1070(job,tpm,subj)
 
             % add and write bias corrected (, skull-stripped) image
             if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and will cause errors in the BWP cerebellum, if used further! 
-                Ymc = single(max(bth,min(4*th,Ysrc))); % just limit the image intensities
+                Ymc = single(max(bth,min(4^sign(th)*th,Ysrc))); % just limit the image intensities
             else
-                Ymc = single(max(bth,min(4*th,Ym * th))); % use the bias corrected image
+                Ymc = single(max(bth,min(4^sign(th)*th,Ym * abs(diff([bth,th])) + bth))); % use the bias corrected image
             end
 
             % hard masking
-            if app.msk==2, Ymc = Ymc .* (~Ybg); end
-            if app.msk==4, Ymc = Ymc .* cat_vol_morph(cat_vol_morph(Yb,'d',2),'lc',1); end
+            %if app.msk==2, Ymc(Ybg) = bth; end
+            %if app.msk==4, Ymc(~cat_vol_morph(cat_vol_morph(Yb,'d',2),'lc',1)) = bth; end
 
             % set variable and write image
             obj.image.dat(:,:,:)         = Ymc;  

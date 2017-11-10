@@ -141,11 +141,16 @@ function varargout = cat_io_xml(file,varargin)
     case 'write'
     % ------------------------------------------------------------------  
       try
-        S=orderfields(S);
+        S=orderfields(S); 
+        if ~exist(fileparts(mfile),'dir'), try mkdir(fileparts(mfile)); end; end
+        save(mfile,'S');
+      catch %#ok<*NASGU> % can write xml file??
+        error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
+      end
+      try
         if usejava('jvm') && ~isdeployed
           xml_write(file,S);
         end
-        save(mfile,'S');
       catch %#ok<*NASGU> % can write xml file??
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end
@@ -176,8 +181,13 @@ function varargout = cat_io_xml(file,varargin)
       S=cat_io_updateStruct(S,SN);
       
       try
-        xml_write(file,S);
+        if ~exist(fileparts(mfile),'dir'), try mkdir(fileparts(mfile)); end; end
         save(mfile,'S');
+      catch 
+        error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
+      end 
+      try
+        xml_write(file,S);
       catch 
         error('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
       end 
@@ -187,17 +197,26 @@ function varargout = cat_io_xml(file,varargin)
     % ------------------------------------------------------------------
     % 
       if exist(mfile,'file')
-        load(mfile,'S');
+        try 
+          load(mfile,'S');
+        catch
+          error('MATLAB:cat_io_xml:readErr','Can''t read MAT-file ''%s'' for update!\n',mfile);
+        end
       elseif exist(file,'file') && usejava('jvm') && ~isdeployed
         try 
           warning off
           S = xml_read(file);
           warning on
         catch 
-          verror('MATLAB:cat_io_xml:readErr','Can''t read XML-file ''%s'' for update!\n',file);
+          error('MATLAB:cat_io_xml:readErr','Can''t read XML-file ''%s'' for update!\n',file);
         end
         if ~exist(mfile,'file')
-          save(mfile,'S');
+          try
+            if ~exist(fileparts(mfile),'dir'), try, mkdir(fileparts(mfile)); end; end
+            save(mfile,'S');
+          catch
+             error('MATLAB:cat_io_xml:writeErr','Can''t write MAT-file ''%s''!\n',mfile);
+          end
         end
       elseif exist(file,'file') && ~(usejava('jvm') && ~isdeployed)
         S = struct(); 

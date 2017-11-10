@@ -102,8 +102,10 @@ elseif expert==1
     ''
   }];    
 else
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)'};
-  surface.values = {0 1 2 5 6};
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
+    'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
+    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)'};
+  surface.values = {0 1 2 5 6 7 8};
 end
 
 

@@ -41,7 +41,7 @@ function varargout = cat_io_cmd(str,style,strlength,verb,stime)
   %#ok<*NASGU> 
 
   if ~exist('verb','var') || isempty(verb), verb=1; end
-  if ~exist('strlength','var') || isempty(strlength), strlength=66; end
+  if ~exist('strlength','var') || isempty(strlength), strlength=65; end
   strlength2 = strlength;
   if cat_io_matlabversion<20110, strlength2 = strlength2+1; end
   
@@ -73,12 +73,12 @@ function varargout = cat_io_cmd(str,style,strlength,verb,stime)
 % ---    
       case 'cleanup'
         if exist('stime','var') && ~isempty(stime)
-          fprintf('% 4.0fs\n',etime(clock,stime));
+          fprintf('% 5.0fs\n',etime(clock,stime));
         end        
 % ---        
       otherwise
         if exist('stime','var') && ~isempty(stime)
-          fprintf('% 4.0fs\n',etime(clock,stime));
+          fprintf('% 5.0fs\n',etime(clock,stime));
         end
 
         if ~isempty(str) 
