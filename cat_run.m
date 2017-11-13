@@ -193,7 +193,7 @@ function job = update_job(job)
   
    
   % ROI atlas maps
-  if isfield(job.output,'ROImenu')
+  if isfield(job.output,'ROImenu') % expert/developer GUI that allows control each atlas map 
     if isfield(job.output.ROImenu,'atlases')
       % image output
       def.output.atlases = job.output.ROImenu.atlases;
@@ -202,11 +202,24 @@ function job = update_job(job)
       def.output.atlases = struct();
       def.output.ROI     = 0; 
     end
-  else
-    job.output.atlases 
-    job.output.ROI 
+    job = cat_io_checkinopt(job,def);
   end
-  job = cat_io_checkinopt(job,def);
+  
+  if ~isfield(job.output,'atlases') 
+    % default GUI that only allow to switch on the settings defined in the default file 
+    if ~isfield(job.extopts,'atlas')
+      job.extopts.atlas  = def.extopts.atlas;
+    end
+    
+    job.output.atlases   = struct();
+    if job.output.ROI 
+      % if output, than use the parameter of the default file
+      job.output.atlases = cell2struct(job.extopts.atlas(:,4)',spm_str_manip(job.extopts.atlas(:,1),'tr')',2);
+      job.output.ROI     = any(cell2mat(struct2cell(job.output.atlases))); 
+    end
+  end
+ 
+  
   % ROI export 
   for ai = 1:size(job.extopts.atlas,1)
     [pp,ff,ee]  = spm_fileparts(job.extopts.atlas{ai,1}); 
