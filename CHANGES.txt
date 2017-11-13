@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1213 | gaser | 2017-11-10 16:10:44
+r1214 | dahnke | 2017-11-13 12:08:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_run.m
+M       html/images/cat_tst_seg_bwp_ana.png
+
+Fixed:    Corrected error data structure error of the atlas definition of the 
+          cat.extopts and cat.output variable.
+------------------------------------------------------------------------
+r1213 | gaser | 2017-11-10 16:10:52 +0100 (Fr, 10 Nov 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +19,7 @@ M       cat_surf_createCS.m
 
 (1) Fixed: Removed debugging code that caused crash.
 (2) Changed: Added faster option for CAT_Surf2Sphere in cat_surf_createCS.m
+
 ------------------------------------------------------------------------
 r1212 | dahnke | 2017-11-10 13:39:37 +0100 (Fr, 10 Nov 2017) | 45 lines
 
