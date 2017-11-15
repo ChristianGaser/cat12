@@ -1140,10 +1140,8 @@ end
 
         fprintf('%4.0fs\n',etime(clock,stime));   
 
-        %error('Affine Registration test error'); % uncomment this line to test error report 
 
-
-        %% check contrast
+        %% check contrast  
         clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
         Tgw = [cat_stat_nanmean(res.mn(res.lkp==1)) cat_stat_nanmean(res.mn(res.lkp==2))]; 
         Tth = [
@@ -1152,19 +1150,23 @@ end
           clsint(1) ... gm
           clsint(2) ... wm 
         ];
-        %if isfield(obj,'msk'), res.msk = obj.msk; end
         
-          
+        % save data for error report
+        %if isfield(obj,'msk'), res.msk = obj.msk; end
+        res.Tth = Tth; 
+        cat_err_res.res = res;   
+        
         % inactive preprocessing of inverse images (PD/T2) 
         if job.extopts.INV==0 && any(diff(Tth)<=0)
           error('CAT:cat_main:BadImageProperties', ...
           ['CAT12 is designed to work only on highres T1 images.\n' ...
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
            '"cat12.extopts.INV=1" in the cat default file. If this was a highres \n' ...
-           'T1 image than the initial segmentation seemed to be corrupded, maybe \n' ...
-           'by alignment problems (check image orientation).']);    
+           'T1 image then the initial segmentation might be failed, probably \n' ...
+           'because of alignment problems (please check image orientation).']);    
         end
-
+        
+        
     end
     
     

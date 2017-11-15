@@ -177,6 +177,7 @@ else
     if exatlas{ai,2}<=expert && exist(exatlas{ai,1},'file')
       [pp,ff,ee]  = spm_fileparts(exatlas{ai,1}); 
 
+      % if output.atlases.ff does not exist then set it by the default file value
       try
         cat_get_defaults(['output.atlases.' ff]);
       catch
