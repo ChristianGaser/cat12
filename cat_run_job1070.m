@@ -490,6 +490,7 @@ function cat_run_job1070(job,tpm,subj)
                          min(single(Ysrc(~Ybg(:))))]); 
 
             % add temporary skull-stripped images
+            %{
             if 0 %app.msk>2 % use brain mask
                 obj.msk       = VF; 
                 obj.msk.pinfo = repmat([255;0],1,size(Yb,3));
@@ -505,6 +506,7 @@ function cat_run_job1070(job,tpm,subj)
             else 
                 if isfield(obj,'msk'), obj = rmfield(obj,'msk'); end
             end
+            %}
 
             % add and write bias corrected (, skull-stripped) image
             if app.bias<=1 % app.bias=1 is just a simple bias correction for affreg and will cause errors in the BWP cerebellum, if used further! 
@@ -572,7 +574,8 @@ function cat_run_job1070(job,tpm,subj)
           iih = i(idh) + diff([idl idh])*0.5; 
           Ysrcn = max( iil , min( iih , Ysrcn )); 
 
-          spm_write_vol(obj.image,Ysrcn); 
+          spm_write_vol(spm_vol(obj.image.fname),Ysrcn); 
+          obj.image.dat = Ysrcn;
           clear Ysrc Yg Ysrcn;
         end
        
@@ -594,16 +597,11 @@ function cat_run_job1070(job,tpm,subj)
             error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
         end
         warning on 
-
-
-        cat_err_res.res = res;   
-
         fprintf('%4.0fs\n',etime(clock,stime));   
 
-        %error('Affine Registration test error')
-
-
-        %% check contrast
+     
+        
+        %% check contrast  
         clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
         Tgw = [cat_stat_nanmean(res.mn(res.lkp==1)) cat_stat_nanmean(res.mn(res.lkp==2))]; 
         Tth = [
@@ -612,9 +610,12 @@ function cat_run_job1070(job,tpm,subj)
           clsint(1) ... gm
           clsint(2) ... wm 
         ];
-
-        if isfield(obj,'msk'), res.msk = obj.msk; end
-
+        
+        % save data for error report
+        %if isfield(obj,'msk'), res.msk = obj.msk; end
+        res.Tth = Tth; 
+        cat_err_res.res = res;   
+        
         % inactive preprocessing of inverse images (PD/T2) 
         if job.extopts.INV==0 && any(diff(Tth)<=0)
           error('CAT:cat_main:BadImageProperties', ...
@@ -622,7 +623,7 @@ function cat_run_job1070(job,tpm,subj)
            'T2/PD preprocessing can be forced on your own risk by setting \n' ...
            '"cat12.extopts.INV=1" in the cat default file. If this was a highres \n' ...
            'T1 image then the initial segmentation might be failed, probably \n' ...
-           'because of alignment problems (check image orientation).']);    
+           'because of alignment problems (please check image orientation).']);    
         end
 
     end
