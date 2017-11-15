@@ -816,9 +816,9 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
           
           % display registration power profil 
           if job.extopts.expertgui==2
-            mdisplay = [1 1 1 1 1]; 
+            mdisplay = [2 2 2 2 2]; 
           elseif job.extopts.expertgui==1
-            mdisplay = [0 1 0 1 0]; 
+            mdisplay = [0 2 0 2 0]; 
           else
             mdisplay = [0 1 0 1 0]; 
           end  
@@ -829,10 +829,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             QMC   = cat_io_colormaps('marks+',17);
             reg(regstri).reldtc = reg(regstri).dtc / max(reg(regstri).dtc); 
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:numel(reg(regstri).dtc)-1
-              cat_io_cprintf( color(QMC,( 1 - reg(regstri).reldtc(dti)/dartelfac/0.25 ) *6),sprintf('%0.3f ',reg(regstri).reldtc(dti))); 
+            if mdisplay(1)>1
+              for dti=1:numel(reg(regstri).dtc)-1
+                cat_io_cprintf( color(QMC,( 1 - reg(regstri).reldtc(dti)/dartelfac/0.25 ) *6),sprintf('%0.3f ',reg(regstri).reldtc(dti))); 
+              end
+              fprintf('| ');
             end
-            cat_io_cprintf( color(QMC,(reg(regstri).dt - 0.05)/dartelfac/0.25 * 6), sprintf(' | %0.6f ',reg(regstri).dt));
+            cat_io_cprintf( color(QMC,(reg(regstri).dt - 0.05)/dartelfac/0.25 * 6), sprintf(' %0.6f ',reg(regstri).dt));
             fprintf('\n'); 
           end
           
@@ -841,10 +844,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             QMC   = cat_io_colormaps('marks+',17);
             reg(regstri).relrmsdtc = reg(regstri).rmsdtc; %/max(reg(regstri).rmsdtc); 
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:numel(reg(regstri).relrmsdtc)-1
-              cat_io_cprintf( color(QMC,reg(regstri).relrmsdtc(dti)/dartelfac/0.5*6),sprintf('%0.3f ',reg(regstri).relrmsdtc(dti))); 
+            if mdisplay(2)>1
+              for dti=1:numel(reg(regstri).relrmsdtc)-1
+                cat_io_cprintf( color(QMC,reg(regstri).relrmsdtc(dti)/dartelfac/0.5*6),sprintf('%0.3f ',reg(regstri).relrmsdtc(dti))); 
+              end
+              fprintf('| ');
             end
-            cat_io_cprintf( color(QMC,(reg(regstri).rmsdt)/dartelfac/0.5 * 6), sprintf(' | %0.6f ',reg(regstri).rmsdt));
+            cat_io_cprintf( color(QMC,(reg(regstri).rmsdt)/dartelfac/0.5 * 6), sprintf(' %0.6f ',reg(regstri).rmsdt));
             fprintf('\n'); 
           end
           
@@ -852,10 +858,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             fprintf('%30s','Jacobian determinant'' (RMS): '); 
             QMC   = cat_io_colormaps('marks+',17);
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:numel(reg(regstri).rmsgdt)-1
-              cat_io_cprintf( color(QMC,reg(regstri).rmsgdt(dti)/dartelfac/0.5*6),sprintf('%0.3f ',reg(regstri).rmsgdt(dti))); 
+            if mdisplay(3)>1
+              for dti=1:numel(reg(regstri).rmsgdt)-1
+                cat_io_cprintf( color(QMC,reg(regstri).rmsgdt(dti)/dartelfac/0.5*6),sprintf('%0.3f ',reg(regstri).rmsgdt(dti))); 
+              end
+              fprintf('| ');
             end
-            cat_io_cprintf( color(QMC,(reg(regstri).rmsgdt(end))/dartelfac/0.5 * 6), sprintf(' | %0.6f ',reg(regstri).rmsgdt(end)));
+            cat_io_cprintf( color(QMC,(reg(regstri).rmsgdt(end))/dartelfac/0.5 * 6), sprintf(' %0.6f ',reg(regstri).rmsgdt(end)));
             fprintf('\n'); 
           end
           
@@ -864,10 +873,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             fprintf('%30s','Template Matching: '); 
             QMC   = cat_io_colormaps('marks+',17);
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:size(reg(regstri).ll,1)-1, 
-              cat_io_cprintf( color(QMC, (reg(regstri).ll(dti,1) - 0.05) / 0.15 * 6),sprintf('%0.3f ',reg(regstri).ll(dti,1))); 
+            if mdisplay(4)>1
+              for dti=1:size(reg(regstri).ll,1)-1, 
+                cat_io_cprintf( color(QMC, (reg(regstri).ll(dti,1) - 0.05) / 0.15 * 6),sprintf('%0.3f ',reg(regstri).ll(dti,1))); 
+              end
+              fprintf('| ');
             end
-            cat_io_cprintf( color(QMC,(reg(regstri).ll(end,1) - 0.05)/0.15 * 6), sprintf(' | %0.6f ',reg(regstri).ll(end,1)));
+            cat_io_cprintf( color(QMC,(reg(regstri).ll(end,1) - 0.05)/0.15 * 6), sprintf(' %0.6f ',reg(regstri).ll(end,1)));
             fprintf('\n'); 
           end
           
@@ -879,10 +891,13 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             fprintf('%30s','Cost Benefit Ration (CBR): ');
             QMC   = cat_io_colormaps('marks+',17);
             color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-            for dti=1:size(reg(regstri).cbr,2), 
-              cat_io_cprintf( color(QMC, (reg(regstri).cbr(dti))/2),sprintf('%0.3f ',reg(regstri).cbr(dti))); 
+            if mdisplay(5)>1
+              for dti=1:size(reg(regstri).cbr,2), 
+                cat_io_cprintf( color(QMC, (reg(regstri).cbr(dti))/2),sprintf('%0.3f ',reg(regstri).cbr(dti))); 
+              end
+              fprintf('| ');
             end
-            cat_io_cprintf( color(QMC,( reg(regstri).mcbr)/2), sprintf(' | %0.6f ', reg(regstri).mcbr));
+            cat_io_cprintf( color(QMC,( reg(regstri).mcbr)/2), sprintf(' %0.6f ', reg(regstri).mcbr));
             fprintf('\n'); 
           end
           
