@@ -37,6 +37,9 @@ function cat_io_report(job,qa,subj,createerr)
   
 %#ok<*AGROW>
 
+  % close diagy 
+  diary off;
+
   dbs = dbstatus; debug = 0; 
   for dbsi=1:numel(dbs), 
     if any(strcmp(dbs(dbsi).name,{'cat_io_report','cat_run_newcatch'}));

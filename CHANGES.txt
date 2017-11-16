@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1215 | dahnke | 2017-11-15 15:29:11
+r1216 | dahnke | 2017-11-16 16:57:36
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_report.m
+M       cat_main.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+M       html/images/cat_tst_seg_bwp_ana.png
+
+New:    Added command line output for the main preprocessing of one subject that
+        writes a text file "cmdln_*.txt" into the report directory. 
+Fixed:  Corrected output format of processing time in the command line. 
+
+------------------------------------------------------------------------
+r1215 | dahnke | 2017-11-15 15:31:29 +0100 (Mi, 15 Nov 2017) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +27,7 @@ M       tbx_cfg_cat.m
 Deleted: Removed check of the relative volume of the initial SPM preprocessing  
          in "cat_run" and "cat_run_job1070" because the use parameter did not 
          describe the volume.
+
 ------------------------------------------------------------------------
 r1214 | dahnke | 2017-11-13 12:08:55 +0100 (Mo, 13 Nov 2017) | 8 lines
 

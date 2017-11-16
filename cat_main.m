@@ -596,7 +596,7 @@ if ~isfield(res,'spmpp')
   end
 
   clear Ybf
-  fprintf('%4.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));
 
 
 
@@ -668,7 +668,7 @@ if ~isfield(res,'spmpp')
     Ysrc = Ym; Tth.T3thx(3:5) = 1/3:1/3:1; Tth.T3th = Tth.T3thx; T3th = 1/3:1/3:1;
     
   end
-  fprintf('%4.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));
 
   if job.extopts.verb>2
     tpmci  = tpmci + 1;
@@ -719,7 +719,7 @@ if ~isfield(res,'spmpp')
           NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:))); clear NC;
           NCs  = max(0,min(1,NCs)); 
         end
-        fprintf('%4.0fs\n',etime(clock,stime));  
+        fprintf('%5.0fs\n',etime(clock,stime));  
 
         % mix original and noise corrected image and go back to original resolution
         if exist('NCs','var');
@@ -762,7 +762,7 @@ if ~isfield(res,'spmpp')
           NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
           NCs  = max(0,min(1,NCs));
         end
-        fprintf('%4.0fs\n',etime(clock,stime));  
+        fprintf('%5.0fs\n',etime(clock,stime));  
 
         % mix original and noise corrected image and go back to original resolution
         if exist('NCs','var');
@@ -829,7 +829,7 @@ if ~isfield(res,'spmpp')
         if job.extopts.verb>1
           cat_io_cmd(' ','','',job.extopts.verb,stime2); 
         end 
-        fprintf('%4.0fs\n',etime(clock,stime));
+        fprintf('%5.0fs\n',etime(clock,stime));
       end
       % mix original and noise corrected image and go back to original resolution
       Ybr = Yb(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6));
@@ -871,7 +871,7 @@ if ~isfield(res,'spmpp')
   stime = cat_io_cmd('ROI segmentation (partitioning)');
   [Yl1,Ycls,YBG,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise);
   if exist('Yclsi','var'), Ycls = Yclsi; clear Yclsi; end % new Ycls from LAS
-  fprintf('%4.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));
 
   if ~debug; clear YBG Ycr; end
 
@@ -901,7 +901,7 @@ if ~isfield(res,'spmpp')
     Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
     Ycls{3} = max(Ycls{3},cat_vol_ctype(127*Ybv)); 
 
-    fprintf('%4.0fs\n',etime(clock,stime));
+    fprintf('%5.0fs\n',etime(clock,stime));
     clear Ybv p0; 
   end
 
@@ -932,7 +932,7 @@ if ~isfield(res,'spmpp')
     try 
       stime = cat_io_cmd(sprintf('Skull-stripping using graph-cut (gcutstr=%0.2f)',job.extopts.gcutstr));
       [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
-      fprintf('%4.0fs\n',etime(clock,stime));
+      fprintf('%5.0fs\n',etime(clock,stime));
       if 0
         %% just for manual debuging / development of gcut and gcutstr > remove this in 201709?
         job.extopts.gcutstr=0.5; [Yb05,Yl105] = cat_main_gcut(Ym,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts); 
@@ -1034,7 +1034,7 @@ if ~isfield(res,'spmpp')
   % do segmentation  
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
     'job.extopts.mrf, vx_vol, iters_icm, bias_fwhm);']);
-  fprintf('%4.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));
   
   % analyse segmentation ... the input Ym is normalized an the tissue peaks should be around [1/3 2/3 3/3]
   amapres = textscan(amapres,'%s'); amapres = amapres{1}; 
@@ -1082,7 +1082,7 @@ if ~isfield(res,'spmpp')
     if 0% job.extopts.cleanupstr == 2 % old cleanup for tests
       stime = cat_io_cmd('Old cleanup');
       prob = clean_gwc(prob,1);
-      fprintf('%4.0fs\n',etime(clock,stime));
+      fprintf('%5.0fs\n',etime(clock,stime));
     end
     for i=1:3
        Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i);
@@ -1197,7 +1197,7 @@ if ~isfield(res,'spmpp')
         fprintf('\n'); cat_io_cmd(' ','','',1);
       end
     end
-    fprintf('%4.0fs\n',etime(clock,stime));
+    fprintf('%5.0fs\n',etime(clock,stime));
   else
     if qa.subjectmeasures.WMH_rel>3 || qa.subjectmeasures.WMH_WM_rel>5 % #% of the TIV or the WM are affected
       cat_warnings = cat_io_addwarning(cat_warnings,...
@@ -1329,7 +1329,7 @@ else
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG); 
   
-  fprintf('%4.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));
 end
 
 
@@ -1636,7 +1636,7 @@ if job.output.surface
   end
 
   cat_io_cmd('Surface and thickness estimation');  
-  fprintf('%4.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));
   if ~debug; clear YMF; end
 else
   if ~debug; clear Ymi; end
@@ -2291,6 +2291,7 @@ if printCATreport
     end
 
     fprintf('%s\n\n',repmat('-',1,72));
+    diagry off; 
 
     clear C c Ymi Ymf Ym
 

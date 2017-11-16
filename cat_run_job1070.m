@@ -32,18 +32,6 @@ function cat_run_job1070(job,tpm,subj)
     stime = clock;
 
 
-
-    
-    % print current CAT release number and subject file
-    [n,r] = cat_version;
-    str  = sprintf('CAT12 r%s: %d/%d',r,subj,numel(job.channel(1).vols));
-    str2 = spm_str_manip(job.channel(1).vols{subj}(1:end-2),['a' num2str(70 - length(str))]);
-    cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
-          repmat('-',1,72),str,...
-          repmat(' ',1,70 - length(str) - length(str2)),str2,...
-          repmat('-',1,72));
-    clear r str str2
-
     
     % create subfolders if not exist
     pth = spm_fileparts(job.channel(1).vols{subj}); 
@@ -67,6 +55,26 @@ function cat_run_job1070(job,tpm,subj)
       mrifolder    = '';
       reportfolder = '';
     end
+    
+    
+    % create subject-wise diagy file with the command-line output
+    [pp,ff,ee,ex] = spm_fileparts(job.data{subj}); 
+    diaryfile = fullfile(pth,reportfolder,['cmdln_' ff '.txt']);
+    diary(diaryfile); 
+    
+    
+    % print current CAT release number and subject file
+    [n,r] = cat_version;
+    str  = sprintf('CAT12 r%s: %d/%d',r,subj,numel(job.channel(1).vols));
+    str2 = spm_str_manip(job.channel(1).vols{subj}(1:end-2),['a' num2str(70 - length(str))]);
+    cat_io_cprintf([0.2 0.2 0.8],'\n%s\n%s: %s%s\n%s\n',...
+          repmat('-',1,72),str,...
+          repmat(' ',1,70 - length(str) - length(str2)),str2,...
+          repmat('-',1,72));
+    clear r str str2
+
+    
+    
   
     
     %  -----------------------------------------------------------------
@@ -186,7 +194,7 @@ function cat_run_job1070(job,tpm,subj)
                 cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','')); 
               end
               V = spm_vol(job.channel(n).vols{subj});
-              fprintf('%4.0fs\n',etime(clock,stime));   
+              fprintf('%5.0fs\n',etime(clock,stime));   
             end
         end
 
@@ -240,7 +248,7 @@ function cat_run_job1070(job,tpm,subj)
             cat_vol_imcalc(Vn,Vi,'i1',struct('interp',2,'verb',0));
             vx_vol = vx_voli;
           
-            fprintf('%4.0fs\n',etime(clock,stime));     
+            fprintf('%5.0fs\n',etime(clock,stime));     
           else
             vx_vol = sqrt(sum(Vi.mat(1:3,1:3).^2));
           end
@@ -597,7 +605,7 @@ function cat_run_job1070(job,tpm,subj)
             error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');
         end
         warning on 
-        fprintf('%4.0fs\n',etime(clock,stime));   
+        fprintf('%5.0fs\n',etime(clock,stime));   
 
      
         
@@ -638,6 +646,7 @@ function cat_run_job1070(job,tpm,subj)
     if exist(fullfile(pp,[ff,ee]),'file'); 
       delete(fullfile(pp,[ff,ee]));
     end
+
 %%
 return
 %=======================================================================
