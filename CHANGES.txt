@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1216 | dahnke | 2017-11-16 16:57:36
+r1217 | dahnke | 2017-11-16 18:13:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_run_job.m
+
+Update:  Add command-line output to XML report structure.
+
+------------------------------------------------------------------------
+r1216 | dahnke | 2017-11-16 16:58:12 +0100 (Do, 16 Nov 2017) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +23,7 @@ M       html/images/cat_tst_seg_bwp_ana.png
 New:    Added command line output for the main preprocessing of one subject that
         writes a text file "cmdln_*.txt" into the report directory. 
 Fixed:  Corrected output format of processing time in the command line. 
+
 
 ------------------------------------------------------------------------
 r1215 | dahnke | 2017-11-15 15:31:29 +0100 (Mi, 15 Nov 2017) | 11 lines
