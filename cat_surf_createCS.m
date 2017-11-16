@@ -270,7 +270,7 @@ end
     Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
     Yth1  = max(Yth1,Yth1t);                                            % save on main image
     clear Yth1t;
-    fprintf('%4.0fs\n',etime(clock,stime)); 
+    fprintf('%5.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
     if opt.WMT > 1 
@@ -318,7 +318,7 @@ end
       %  for the CSF depth we cannot use the origal data, because of
       %  sulcal blurring, but we got the PP map at half distance and
       %  correct later for half thickness
-      fprintf('%4.0fs\n',etime(clock,stime)); 
+      fprintf('%5.0fs\n',etime(clock,stime)); 
       stime = cat_io_cmd('  CSF depth estimation');
       YM    = single(smooth3(cat_vol_morph(Ymr<0.1,'o',4))<0.5); YM(YM==0)=nan;       % smooth CSF/background-skull boundary 
       Yppis = Yppi .* ((Ymr+0.25)>Yppi) + min(1,Ymr*3-1) .* ((Ymr+0.25)<=Yppi);       % we want also CSF within the ventricle (for tests)
@@ -331,7 +331,7 @@ end
       Ycdt  = cat_vol_resize(Ycdt,'dereduceBrain',BB);                                % adding background
       Ycd   = max(Ycd,Ycdt); 
       clear Ycdt;
-      fprintf('%4.0fs\n',etime(clock,stime));
+      fprintf('%5.0fs\n',etime(clock,stime));
       clear Ymr;
     end
     if ~debug, clear Ymfs; else Yppio=Yppi; end
@@ -491,7 +491,7 @@ end
       
       delete(Vpp.fname);
       delete(Vpp1.fname);
-      fprintf('%4.0fs\n',etime(clock,stime)); 
+      fprintf('%5.0fs\n',etime(clock,stime)); 
       
       continue
     end
@@ -632,7 +632,7 @@ end
       facevertexcdata3 = max(eps,facevertexcdata3 - facevertexcdata/2); 
       cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
     end
-    fprintf('%4.0fs\n',etime(clock,stime)); 
+    fprintf('%5.0fs\n',etime(clock,stime)); 
     
     % visualize a side
     % csp=patch(CS); view(3), camlight, lighting phong, axis equal off; set(csp,'facecolor','interp','edgecolor','none')
