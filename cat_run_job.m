@@ -1178,8 +1178,9 @@ end
     
     
     %% call main processing
-    res.stime  = stime;
-    res.image0 = spm_vol(job.channel(1).vols0{subj}); 
+    res.stime     = stime;
+    res.diaryfile = diaryfile; 
+    res.image0    = spm_vol(job.channel(1).vols0{subj}); 
     cat_main(res,obj.tpm,job);
     
     % delete denoised/interpolated image

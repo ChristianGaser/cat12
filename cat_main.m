@@ -2291,7 +2291,19 @@ if printCATreport
     end
 
     fprintf('%s\n\n',repmat('-',1,72));
-    diagry off; 
+    
+    % finish diary entry of "../report/cmdln_*.txt"
+    % read diagry and add the command-line output to the *.xml and *.mat file
+    diary off; 
+    try
+      fid=fopen(res.diaryfile);
+      txt=fread(fid,200000,'uint8=>char');
+      fclose(fid); 
+      txt2=textscan(txt,'%s','Delimiter',''); 
+      cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
+        'cmdln',txt2),'write+'); % here we have to use the write+!
+    end    
+    
 
     clear C c Ymi Ymf Ym
 
