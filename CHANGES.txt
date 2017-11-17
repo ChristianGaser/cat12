@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1217 | dahnke | 2017-11-16 18:13:17
+r1218 | dahnke | 2017-11-17 17:27:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_cleanup.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_surf_createCS.m
+M       cat_vol_pbt.m
+M       html/images/cat_tst_seg_bwp_ana.png
+
+Update:  Renamed command-lined output cmdln_*.txt into catlog_*.txt.
+
+------------------------------------------------------------------------
+r1217 | dahnke | 2017-11-16 18:13:37 +0100 (Do, 16 Nov 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +22,7 @@ M       cat_main.m
 M       cat_run_job.m
 
 Update:  Add command-line output to XML report structure.
+
 
 ------------------------------------------------------------------------
 r1216 | dahnke | 2017-11-16 16:58:12 +0100 (Do, 16 Nov 2017) | 14 lines

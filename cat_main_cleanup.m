@@ -142,4 +142,4 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   Yp0b = Yp0b(indx,indy,indz); 
 
   cat_io_cmd(' ','','',extopts.verb,stime);   
-  fprintf('%4.0fs\n',etime(clock,stimec));
+  fprintf('%5.0fs\n',etime(clock,stimec));
