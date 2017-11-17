@@ -58,7 +58,7 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   %  cat_vol_eidist used speed map to align voxel to the closer gyrus
   %  that is not required for the correction map.
   if opt.verb, fprintf('\n'); end
-  stime = cat_io_cmd('    WM distance: ','g5','',opt.verb);
+  stime = cat_io_cmd('    WM distance: ','g5','',opt.verb); stime2=stime;
   YMM = cat_vol_morph(Ymf<1.5,'e',1) | isnan(Ymf);
   switch opt.dmethod
     case 'eidist' 
@@ -180,5 +180,6 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   if exist('Ycsfdc','var'), Ycsfdc = Ycsfdc*opt.resV; end
   if exist('Ywmd','var'), Ywmd = Ywmd*opt.resV; end
   
-  if opt.debug, cat_io_cmd(' ','','',opt.debug,stime); end
+  cat_io_cmd(' ','g5','',opt.verb,stime);
+  if opt.debug, cat_io_cmd(' ','','',opt.debug,stime2); end
 end

@@ -59,8 +59,8 @@ function cat_run_job1070(job,tpm,subj)
     
     % create subject-wise diagy file with the command-line output
     [pp,ff,ee,ex] = spm_fileparts(job.data{subj}); 
-    diaryfile = fullfile(pth,reportfolder,['cmdln_' ff '.txt']);
-    diary(diaryfile); 
+    catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
+    diary(catlog); 
     
     
     % print current CAT release number and subject file
@@ -638,6 +638,7 @@ function cat_run_job1070(job,tpm,subj)
     
     %% call main processing
     res.stime  = stime;
+    res.catlog = catlog; 
     res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     cat_main(res,obj.tpm,job);
     

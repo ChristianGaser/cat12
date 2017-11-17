@@ -270,7 +270,7 @@ end
     Yth1t = cat_vol_resize(Yth1t,'dereduceBrain',BB);                   % adding background
     Yth1  = max(Yth1,Yth1t);                                            % save on main image
     clear Yth1t;
-    fprintf('%5.0fs\n',etime(clock,stime)); 
+    %fprintf('%5.0fs\n',etime(clock,stime)); 
     
     %% PBT estimation of the gyrus and sulcus width 
     if opt.WMT > 1 
@@ -331,10 +331,11 @@ end
       Ycdt  = cat_vol_resize(Ycdt,'dereduceBrain',BB);                                % adding background
       Ycd   = max(Ycd,Ycdt); 
       clear Ycdt;
-      fprintf('%5.0fs\n',etime(clock,stime));
+      %fprintf('%5.0fs\n',etime(clock,stime));
       clear Ymr;
     end
     if ~debug, clear Ymfs; else Yppio=Yppi; end
+    fprintf('%5.0fs\n',etime(clock,stime));
     
     %% Replace isolated voxels and holes in Ypp by its median value
     
