@@ -1805,7 +1805,7 @@ if job.output.surface && exist('S','var')
 
 end  
 clear Yo Yp0 qas;
-fprintf('%4.0fs\n',etime(clock,stime));
+fprintf('%5.0fs\n',etime(clock,stime));
 
 
 printCATreport = 1; % if QA and/or print failed on servers
@@ -2296,12 +2296,12 @@ if printCATreport
     % read diagry and add the command-line output to the *.xml and *.mat file
     diary off; 
     try
-      fid=fopen(res.diaryfile);
+      fid=fopen(res.catlog);
       txt=fread(fid,200000,'uint8=>char');
       fclose(fid); 
       txt2=textscan(txt,'%s','Delimiter',''); 
       cat_io_xml(fullfile(pth,reportfolder,['cat_' nam '.xml']),struct(...
-        'cmdln',txt2),'write+'); % here we have to use the write+!
+        'catlog',txt2),'write+'); % here we have to use the write+!
     end    
     
 

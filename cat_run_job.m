@@ -59,8 +59,8 @@ function cat_run_job(job,tpm,subj)
     
     % create subject-wise diagy file with the command-line output
     [pp,ff,ee,ex] = spm_fileparts(job.data{subj}); 
-    diaryfile = fullfile(pth,reportfolder,['cmdln_' ff '.txt']);
-    diary(diaryfile); 
+    catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
+    diary(catlog); 
     
     
     % print current CAT release number and subject file
@@ -1178,9 +1178,9 @@ end
     
     
     %% call main processing
-    res.stime     = stime;
-    res.diaryfile = diaryfile; 
-    res.image0    = spm_vol(job.channel(1).vols0{subj}); 
+    res.stime  = stime;
+    res.catlog = catlog; 
+    res.image0 = spm_vol(job.channel(1).vols0{subj}); 
     cat_main(res,obj.tpm,job);
     
     % delete denoised/interpolated image
