@@ -332,11 +332,26 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         end
       end
     end
-    % if we got still no mesh than we can find an average mesh
+    % if we got still no mesh than we can use SPM.mat information or average mesh
     % ...
     if isempty(sinfo(i).Pmesh) %&& sinfo(i).ftype==1
-      sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',...
+      try 
+        if ischar(SPM.xVol.G)
+          sinfo(i).Pmesh = SPM.xVol.G;
+        else
+          % 32k mesh?
+          if SPM.xY.VY(1).dim(1) == 32492
+            sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
+              [sinfo(i).side '.central.freesurfer.gii']);
+          else
+            sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',...
+              [sinfo(i).side '.central.freesurfer.gii']);
+          end
+        end
+      catch
+        sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',...
           [sinfo(i).side '.central.freesurfer.gii']);
+      end
       sinfo(i).Pdata = sinfo(i).fname;
     end
     

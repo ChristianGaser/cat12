@@ -44,8 +44,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   def.verb      = 2; 
   def.surf      = {'lh','rh'}; % {'lh','rh','lc','rc'}
   def.reduceCS  = 100000;  
-  def.LAB       = cat_get_defaults('extopts.LAB');
-  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.LAB       = cat_get_defaults('extopts.LAB');  
   def.SPM       = 0; 
   def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
   def.scale_cortex    = cat_get_defaults('extopts.scale_cortex');
@@ -60,6 +59,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
   opt.interpVold = opt.interpV; 
   opt.surf      = cat_io_strrep(opt.surf,{'sfst','fst'},'');
   
+  if opt.fast
+    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k'); 
+  else
+    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  end
+
   Psurf = struct(); 
 
   % correction for 'n' prefix for noise corrected and/or interpolated files
@@ -198,10 +203,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     Pspherereg = fullfile(pp,surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
     Pfsavg     = fullfile(opt.fsavgDir, sprintf('%s.central.freesurfer.gii',opt.surf{si}));     % fsaverage central
     Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
-if opt.fast
-    Pfsavg     = fullfile(opt.fsavgDir, sprintf('%s.central.freesurfer5.gii',opt.surf{si}));     % fsaverage central
-    Pfsavgsph  = fullfile(opt.fsavgDir, sprintf('%s.sphere.freesurfer5.gii',opt.surf{si}));      % fsaverage sphere    
-end
     
     surffile = {'Praw','Psphere0','Pcentral','Pthick','Pgw','Pgww','Psw',...
       'Pdefects0','Pdefects','Psphere','Pspherereg','Pfsavg','Pfsavgsph'};

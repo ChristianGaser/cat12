@@ -4,7 +4,7 @@ function varargout = cat_surf_display(varargin)
 %
 % [Psdata] = cat_surf_display(job)
 % 
-% job.data      .. [rl]h.* surfaces 
+% job.data      .. (lh|rh|mesh).* surfaces 
 % job.colormap  .. colormap
 % job.caxis     .. range of the colormap
 % job.multisurf .. load both sides, if possible (default = 0)
@@ -94,6 +94,15 @@ function varargout = cat_surf_display(varargin)
   
   %% ... need further development 
   sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage); 
+
+  if ~isempty(strfind(fileparts(sinfo.Pmesh),'_32k'))
+    job.fsaverage    = {
+      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.freesurfer.gii');  
+      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.inflated.freesurfer.gii');  
+      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.Template_T1_IXI555_MNI152_GS.gii');  
+      };
+  end
+
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
   end

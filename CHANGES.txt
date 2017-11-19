@@ -1,5 +1,70 @@
 ------------------------------------------------------------------------
-r1218 | dahnke | 2017-11-17 17:27:15
+r1219 | gaser | 2017-11-20 00:28:49
+
+Changed paths:
+M       CHANGES.txt
+M       Makefile
+A       atlases_surfaces_32k
+A       atlases_surfaces_32k/lh.aparc_DK40.freesurfer.annot
+A       atlases_surfaces_32k/lh.aparc_DKT40JT.freesurfer.annot
+A       atlases_surfaces_32k/lh.aparc_HCP_MMP1.freesurfer.annot
+A       atlases_surfaces_32k/lh.aparc_a2009s.freesurfer.annot
+A       atlases_surfaces_32k/rh.aparc_DK40.freesurfer.annot
+A       atlases_surfaces_32k/rh.aparc_DKT40JT.freesurfer.annot
+A       atlases_surfaces_32k/rh.aparc_HCP_MMP1.freesurfer.annot
+A       atlases_surfaces_32k/rh.aparc_a2009s.freesurfer.annot
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_stat_check_cov.m
+M       cat_stat_cva_ui.m
+M       cat_stat_spm2x.m
+M       cat_surf_calc.m
+M       cat_surf_createCS.m
+M       cat_surf_display.m
+M       cat_surf_fun.m
+M       cat_surf_info.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_surf_results.m
+M       cat_update.m
+D       templates_surfaces/lh.mc.central.freesurfer.gii
+A       templates_surfaces/lh.mc.freesurfer.gii
+D       templates_surfaces/lh.sqrtsulc.central.freesurfer.gii
+A       templates_surfaces/lh.sqrtsulc.freesurfer.gii
+D       templates_surfaces/rh.mc.central.freesurfer.gii
+A       templates_surfaces/rh.mc.freesurfer.gii
+D       templates_surfaces/rh.sqrtsulc.central.freesurfer.gii
+A       templates_surfaces/rh.sqrtsulc.freesurfer.gii
+M       templates_surfaces/templates_surfaces.man
+A       templates_surfaces_32k
+A       templates_surfaces_32k/fsavg.index2D_256x128.txt
+A       templates_surfaces_32k/lh.central.Template_T1_IXI555_MNI152_GS.gii
+A       templates_surfaces_32k/lh.central.freesurfer.gii
+A       templates_surfaces_32k/lh.inflated.freesurfer.gii
+A       templates_surfaces_32k/lh.mask
+A       templates_surfaces_32k/lh.mc.freesurfer.gii
+A       templates_surfaces_32k/lh.sphere.freesurfer.gii
+A       templates_surfaces_32k/lh.sqrtsulc.freesurfer.gii
+A       templates_surfaces_32k/mesh.central.freesurfer.gii
+A       templates_surfaces_32k/rh.central.Template_T1_IXI555_MNI152_GS.gii
+A       templates_surfaces_32k/rh.central.freesurfer.gii
+A       templates_surfaces_32k/rh.inflated.freesurfer.gii
+A       templates_surfaces_32k/rh.mask
+A       templates_surfaces_32k/rh.mc.freesurfer.gii
+A       templates_surfaces_32k/rh.sphere.freesurfer.gii
+A       templates_surfaces_32k/rh.sqrtsulc.freesurfer.gii
+
+(1) Changed: Added remsampling to 32k mesh from Human Connectome Project
+    (HCP). This allows faster and less memory demanding processing and 
+    provides compatibility to the HCP. Another advantage is that left and 
+    right hemispheres are aligned to optionally allow a direct comparison
+    between hemispheres.
+(2) Changed: Made all necessary functions compatible to 32k meshes.
+(3) Added: New folders templates_surfaces_32k and atlases_surfaces_32k
+(4) Fixed: Camlight and axes issue in cat_surf_results.m
+(5) Changed: Renamed some files in templates_surfaces.
+------------------------------------------------------------------------
+r1218 | dahnke | 2017-11-17 17:27:43 +0100 (Fr, 17 Nov 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +77,7 @@ M       cat_vol_pbt.m
 M       html/images/cat_tst_seg_bwp_ana.png
 
 Update:  Renamed command-lined output cmdln_*.txt into catlog_*.txt.
+
 
 ------------------------------------------------------------------------
 r1217 | dahnke | 2017-11-16 18:13:37 +0100 (Do, 16 Nov 2017) | 8 lines

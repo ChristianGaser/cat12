@@ -119,8 +119,14 @@ switch lower(action)
 
           % correct path for surface if analysis was made with different SPM installation
           if ~exist(SPM.xVol.G,'file')
+            % check for 32k meshes
+            if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
+              fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+            else
+              fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+            end
             [SPMpth,SPMname,SPMext] = spm_fileparts(SPM.xVol.G);
-            SPM.xVol.G = fullfile(spm('Dir'),'toolbox','cat12','templates_surfaces',[SPMname SPMext]);
+            SPM.xVol.G = fullfile(fsavgDir,[SPMname SPMext]);
           end
 
           %-Check the model has been estimated
