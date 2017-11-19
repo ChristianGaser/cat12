@@ -37,6 +37,8 @@ H.thresh_value = 0;
 H.cursor_mode  = 1;
 H.text_mode    = 1;
 H.border_mode  = 0;
+H.is32k        = 0;
+H.str32k       = '';
 
 %-Action
 %--------------------------------------------------------------------------
@@ -344,18 +346,24 @@ switch lower(action)
 
               % read meshes
               H.S{ind}.info = cat_surf_info(H.S{ind}.name,1);
+
+              if ~isempty(strfind(fileparts(H.S{ind}.info(1).Pmesh),'_32k'))
+                H.str32k = '_32k';
+                H.is32k = 1;
+              end
+
               if strcmp(H.S{ind}.info(1).side,'mesh')
                 meshes_merged = 1;
                 if ind == 1
                   H.S{ind}.info(1).side = 'lh';
-                  H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');
+                  H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],'lh.central.freesurfer.gii');
                 else
                   H.S{ind}.info(1).side = 'rh';
-                  H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
+                  H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],'rh.central.freesurfer.gii');
                 end
               end
               H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
-
+              
               % get adjacency information
               H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
 
@@ -364,8 +372,13 @@ switch lower(action)
                 if meshes_merged
                   if ind == 1
                     Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-                    H.S{1}.Y = Y(1:163842,:);
-                    H.S{2}.Y = Y(163843:end,:);
+                    if H.is32k
+                      H.S{1}.Y = Y(1:32492,:);
+                      H.S{2}.Y = Y(32493:end,:);
+                    else
+                      H.S{1}.Y = Y(1:163842,:);
+                      H.S{2}.Y = Y(163843:end,:);
+                    end
                   end
                 else
                   H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
@@ -448,6 +461,24 @@ switch lower(action)
 
           display_results_all;
           
+          % don't allow flatmaps for 32k meshes because they don't yet exists
+          if H.is32k
+            str  = { 'Surface...','Central','Inflated','Dartel'};
+            tmp  = { {@select_surf, 1},...
+                     {@select_surf, 2},...
+                     {@select_surf, 3}};
+            
+            % underlying surface
+            H.surf = uicontrol(H.figure(2),...
+                    'string',str,'Units','normalized',...
+                    'position',H.pos{2}.surf,'UserData',tmp,...
+                    'style','PopUp','HorizontalAlignment','center',...
+                    'callback','spm(''PopUpCB'',gcbo)',...
+                    'ToolTipString','Underlying Surface',...
+                    'Interruptible','on','Visible','off');
+          
+          end
+          
           % Don't allow plot functions for RGB maps
           if H.n_surf > 1
             str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
@@ -492,15 +523,15 @@ switch lower(action)
           H.rdata{2} = [];
           H.rdata{3} = [];
           for ind = 1:2
-            atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
+            atlas_name = fullfile(spm('dir'),'toolbox','cat12',['atlases_surfaces' H.str32k],[H.S{ind}.info(1).side ....
               '.aparc_DK40.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{1} = [H.rdata{1} rdata0];
-            atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
+            atlas_name = fullfile(spm('dir'),'toolbox','cat12',['atlases_surfaces' H.str32k],[H.S{ind}.info(1).side ....
               '.aparc_a2009s.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{2} = [H.rdata{2} rdata0];
-            atlas_name = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces',[H.S{ind}.info(1).side ....
+            atlas_name = fullfile(spm('dir'),'toolbox','cat12',['atlases_surfaces' H.str32k],[H.S{ind}.info(1).side ....
               '.aparc_HCP_MMP1.freesurfer.annot']);
             [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation',atlas_name);
             H.rdata{3} = [H.rdata{3} rdata0];
@@ -968,13 +999,13 @@ global H
 for ind=1:2
   switch surf
   case 1
-    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.central.freesurfer.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],[H.S{ind}.info(1).side '.central.freesurfer.gii']);
   case 2
-    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],[H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
   case 3
-    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],[H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
   case 4
-    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{ind}.info(1).side '.patch.freesurfer.gii']);
+    H.S{ind}.info(1).Pmesh = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],[H.S{ind}.info(1).side '.patch.freesurfer.gii']);
   end
 
   H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
@@ -1040,8 +1071,8 @@ set(H.figure(1),'Renderer','OpenGL');
 %-Get mesh curvature and sulcal depth
 %------------------------------------------------------------------
 for i=1:2
-  g1 = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{i}.info(1).side '.mc.central.freesurfer.gii']));
-  g2 = gifti(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces',[H.S{i}.info(1).side '.sqrtsulc.central.freesurfer.gii']));
+  g1 = gifti(fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],[H.S{i}.info(1).side '.mc.freesurfer.gii']));
+  g2 = gifti(fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],[H.S{i}.info(1).side '.sqrtsulc.freesurfer.gii']));
   H.S{i}.curv = cell(2,1);
   H.S{i}.curv{1} = g1.cdata;
   H.S{i}.curv{2} = g2.cdata;
@@ -1118,7 +1149,7 @@ for ind=1:5
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP && (H.S{1}.thresh < 1)
+if H.logP & (H.S{1}.thresh < 1)
   set(H.thresh,'Visible','on');
 end
 
@@ -1399,7 +1430,8 @@ end
 if size(curv,2) == 1
 
   % emphasize mean curvature values by using sqrt
-  if H.text_mode==1 
+%  if H.text_mode==1
+  if 1
     indneg = find(curv<0);
     curv(indneg) = -((-curv(indneg)).^0.5);
     indpos = find(curv>0);
@@ -1509,6 +1541,11 @@ n = size(P,1);
 
 for i=1:n
 
+  if ~isempty(strfind(fileparts(info(i).Pmesh),'_32k'))
+    H.str32k = '_32k';
+    H.is32k = 1;
+  end
+
   % check whether name contains 'log' that indicates a logP file
   if isempty(strfind(info(i).ff,'log'))
     H.logP = 0;
@@ -1546,9 +1583,9 @@ else % lh or rh meshes
 end
 
 if isempty(H.S{2}.name)
-  H.S{2}.name = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','rh.central.freesurfer.gii');
+  H.S{2}.name = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],'rh.central.freesurfer.gii');
 elseif isempty(H.S{1}.name)
-  H.S{1}.name = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');
+  H.S{1}.name = fullfile(spm('dir'),'toolbox','cat12',['templates_surfaces' H.str32k],'lh.central.freesurfer.gii');
 end
 
 cat_surf_results('disp',H.S{1}.name, H.S{2}.name);
@@ -1863,6 +1900,9 @@ if view ~= H.view
     set(Ha,'position',H.viewpos{ind}(abs(view),:),'View',vv(ind,:));
   end
   
+  axes(Ha);
+  camlight(H.light(1))
+
   if isfield(H,'dataplot')
     set(H.dataplot,'Position',H.viewpos{6}(abs(view),:),'Parent',H.figure(1),'Color',H.bkg_col);
   end
@@ -2073,7 +2113,11 @@ end
 if H.merged
   % add offset for right hemisphere
   if round(ind/2) == 2
-    XYZ = XYZ + 163842;
+    if H.is32k
+      XYZ = XYZ + 32492;
+    else
+      XYZ = XYZ + 163842;
+    end
   end
 
   % always one mesh

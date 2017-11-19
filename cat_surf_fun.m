@@ -6,7 +6,7 @@ function varargout = cat_surf_fun(action,S,varargin)
 %   D   = cat_surf_fun('dist',S);     % Estimate the distance between the 
 %                                       vertices of the faces of S.
 %   A   = cat_surf_fun('area',S);     % estimate surface area (faces)
-%   V   = cat_surf_F2V(S,F);          % map facedata to vertices
+%   V   = cat_surf_fun(S,F);          % map facedata to vertices
 %   HS  = cat_surf_fun('hull',S);     % estimate (optimized) hull surface
 %   V   = cat_surf_fun('surf2vol',S,varargin{1}); % render surface in a volume
 %   E   = cat_surf_fun('graph2edge',T); % get edges of a triangulation T
@@ -65,6 +65,7 @@ function varargout = cat_surf_fun(action,S,varargin)
   end
     
 end
+
 function varargout = cat_surf_GMboundarySurface(type,varargin)
   switch type
     case 'inner', direction = -0.5;
@@ -109,6 +110,7 @@ function varargout = cat_surf_GMboundarySurface(type,varargin)
     delete(Praw,Pthick,Ptype);
   end
 end
+
 function cat_surf_cdatamappingtst
 
 %% Testdata

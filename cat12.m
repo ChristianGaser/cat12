@@ -178,10 +178,16 @@ for i=1:size(P,1)
     load(fullfile(swd,'SPM.mat'));
     SPM.swd  = swd;
 
-    fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    % check for 32k meshes
+    if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
+      fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+    else
+      fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    end
     
     % check that folder exist and number of vertices fits
-    if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).dim(1) == 327684 || SPM.xY.VY(1).dim(1) == 655368)
+    if exist(fsavgDir,'dir') == 7 && (SPM.xY.VY(1).dim(1) == 163842 || SPM.xY.VY(1).dim(1) == 327684 || ...
+        SPM.xY.VY(1).dim(1) == 655368) || SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
       [pp,ff]   = spm_fileparts(SPM.xY.VY(1).fname);
 
       % find mesh string      

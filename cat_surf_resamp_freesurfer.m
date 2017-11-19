@@ -15,8 +15,13 @@ else
   error('Not enough parameters.');
 end
 
-opt.debug     = cat_get_defaults('extopts.verb')>2;
-opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+opt.debug     = cat_get_defaults('extopts.verb') > 2;
+
+if job.mesh32k
+  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k'); 
+else
+  opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+end
   
 hemi_str = char('lh','rh');
 

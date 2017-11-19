@@ -28,7 +28,6 @@ function varargout = cat_surf_calc(job)
     def.assuregifti     = 0; % write gii output
     def.dataname        = 'output'; 
     def.usetexturefield = 0;
-    def.fsaverage       = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
     job = cat_io_checkinopt(job,def);
   else
     error('Only batch mode'); 
@@ -41,6 +40,12 @@ function varargout = cat_surf_calc(job)
     sinfo = cat_surf_info(job.cdata{1}{1});
   end
      
+  if ~isempty(strfind(fileparts(sinfo.Pmesh),'_32k'))
+    job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.freesurfer.gii');  
+  else
+    job.fsaverage = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
+  end
+  
   if ~isempty(job.outdir{1}), outdir = job.outdir{1}; else outdir=sinfo.pp; end  
   ee = sinfo.ee; if job.assuregifti, ee = '.gii'; end
   

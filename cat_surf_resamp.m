@@ -29,8 +29,14 @@ function varargout = cat_surf_resamp(varargin)
   def.verb      = cat_get_defaults('extopts.verb'); 
   def.debug     = cat_get_defaults('extopts.verb')>2;
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-
+  
   job = cat_io_checkinopt(job,def);
+
+  if job.mesh32k
+    job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+  else
+    job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+  end
 
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
@@ -104,8 +110,16 @@ function varargout = cat_surf_resamp(varargin)
       Pfsavg     = fullfile(job.fsavgDir,[hemi '.sphere.freesurfer.gii']);
       Pmask      = fullfile(job.fsavgDir,[hemi '.mask']);
       
+      % we have to rename the final files for each hemisphere if we want to merge the hemispheres 
+      % to not interfere with existing files
+      if job.merge_hemi
+        Pfwhm_gii = [Pfwhm '_tmp.gii'];
+      else
+        Pfwhm_gii = [Pfwhm '.gii'];
+      end
+      
       % save fwhm name to merge meshes
-      Pfwhm_all{j} = [Pfwhm '.gii'];
+      Pfwhm_all{j} = Pfwhm_gii;
       
       % resample values using warped sphere 
       cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
@@ -124,10 +138,10 @@ function varargout = cat_surf_resamp(varargin)
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
       % add values to resampled surf and save as gifti
-      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,[Pfwhm '.gii']);
+      cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,Pfwhm_gii);
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-      if exist([Pfwhm '.gii'],'file'), Psdata{i} = [Pfwhm '.gii']; end
+      if exist(Pfwhm_gii,'file'), Psdata{i} = Pfwhm_gii; end
       
       % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
       [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
