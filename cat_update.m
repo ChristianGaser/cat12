@@ -93,6 +93,34 @@ if update
           spm_unlink(name);
         end
 
+        % delete old atlas files with 32k meshes
+        atlasfiles = dir(fullfile(d,'cat12','atlases_surfaces_32k','*.*'));
+        for i=1:length(atlasfiles)
+          name = fullfile(d,'cat12','atlases_surfaces_32k',atlasfiles(i).name);
+          spm_unlink(name);
+        end
+
+        % delete old surface template files
+        templatefiles = dir(fullfile(d,'cat12','templates_surfaces','*.*'));
+        for i=1:length(templatefiles)
+          name = fullfile(d,'cat12','templates_surfaces',templatefiles(i).name);
+          spm_unlink(name);
+        end
+
+        % delete old surface template files with 32k meshes
+        templatefiles = dir(fullfile(d,'cat12','templates_surfaces_32k','*.*'));
+        for i=1:length(templatefiles)
+          name = fullfile(d,'cat12','templates_surfaces_32k',templatefiles(i).name);
+          spm_unlink(name);
+        end
+
+        % delete old volume template files 
+        templatefiles = dir(fullfile(d,'cat12','templates_1.50mm','*.*'));
+        for i=1:length(templatefiles)
+          name = fullfile(d,'cat12','templates_1.50mm',templatefiles(i).name);
+          spm_unlink(name);
+        end
+
         lastwarn('');
         delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
         m = '          Download and install CAT12...\n';

@@ -886,7 +886,7 @@ end
   sc.cdata.tag     = 'cdata';
   sc.cdata.name    = 'Surface Data Files';
   sc.cdata.filter  = 'any';
-  sc.cdata.ufilter = '[rl]h.*';
+  sc.cdata.ufilter = '(lh|rh|mesh).*';
   sc.cdata.num     = [1 Inf];
   sc.cdata.help    = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
   
@@ -1044,13 +1044,27 @@ end
   merge_hemi.values  = {0,1};
   merge_hemi.val     = {1};
   merge_hemi.help    = {
-    'Meshes for left and right hemisphere (and optionally left and right cerebellum) can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
+    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
+  };
+
+  mesh32k         = cfg_menu;
+  mesh32k.tag     = 'mesh32k';
+  mesh32k.name    = 'Resample Size';
+  mesh32k.labels  = {
+    '32k  mesh (HCP)',...
+    '164k mesh (Freesurfer)'
+  };
+  mesh32k.values  = {1,0};
+  mesh32k.val     = {1};
+  mesh32k.help    = {
+    'Resampling can be done either to a higher resoluted 164k mesh that is compatible to Freesurfer data or to a lower resoluted 32k mesh (average vertex spacing of ~2 mm) that is compatible to the Human Connectome Project (HCP).'
+    'The HCP mesh has the advantage of being processed and handled much faster and with less memory demands. Another advantage is that left and right hemispheres are aligned to optionally allow a direct comparison between hemispheres.'
   };
 
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-  surfresamp.val  = {data_surf,merge_hemi,fwhm,nproc};
+  surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm,nproc};
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.help = {
   'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
@@ -1079,7 +1093,7 @@ end
   surfresamp_fs      = cfg_exbranch;
   surfresamp_fs.tag  = 'surfresamp_fs';
   surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Thickness Data';
-  surfresamp_fs.val  = {data_fs,merge_hemi,fwhm,outdir};
+  surfresamp_fs.val  = {data_fs,merge_hemi,mesh32k,fwhm,outdir};
   surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
   surfresamp_fs.help = {
   'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};

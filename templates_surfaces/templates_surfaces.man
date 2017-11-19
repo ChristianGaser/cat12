@@ -22,13 +22,13 @@
 % lh: spm_mesh_transform(g,spm_matrix([0 0 0 pi -pi/2 0]));
 % rh: spm_mesh_transform(g,spm_matrix([0 0 0 0   pi/2 0]));
 %
-% ?h.mc.central.freesurfer.gii
-% ?h.sqrtsulc.central.freesurfer.gii
+% ?h.mc.freesurfer.gii
+% ?h.sqrtsulc.freesurfer.gii
 % ---------------------------------
 % Mean curvature and (sqrt) sulcal depth for display purposes (e.g. underlying 
 % texture)
 %
-% ?h.mask.txt
+% ?h.mask
 % ---------------------------------
 % Mask based on the Destrieux Atlas of Freesurfer
 % The mask file was created by masking out
