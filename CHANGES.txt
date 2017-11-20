@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1219 | gaser | 2017-11-20 00:28:49
+r1220 | gaser | 2017-11-20 14:34:21
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_nonlin_coreg.m
+M       cat_conf_stools.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_resamp.m
+M       cat_surf_resamp_freesurfer.m
+M       cat_vol_nonlin_coreg.m
+M       cat_vol_nonlin_coreg_multi_run.m
+M       html/cat.html
+
+(1) Changed: Made code compatible with filenames with _32k that indicate 
+    lower resoluted 32k meshes.
+(2) Changed: Added bounding box option to non-linear co-registration.
+(3) Changed: Recompiled CAT-code.
+------------------------------------------------------------------------
+r1219 | gaser | 2017-11-20 00:28:59 +0100 (Mo, 20 Nov 2017) | 63 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -63,6 +83,7 @@ A       templates_surfaces_32k/rh.sqrtsulc.freesurfer.gii
 (3) Added: New folders templates_surfaces_32k and atlases_surfaces_32k
 (4) Fixed: Camlight and axes issue in cat_surf_results.m
 (5) Changed: Renamed some files in templates_surfaces.
+
 ------------------------------------------------------------------------
 r1218 | dahnke | 2017-11-17 17:27:43 +0100 (Fr, 17 Nov 2017) | 13 lines
 
