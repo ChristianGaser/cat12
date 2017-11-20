@@ -50,6 +50,20 @@ reg.strtype = 'r';
 reg.num     = [1 1];
 reg.val     = {1};
 
+%--------------------------------------------------------------------------
+% Bounding box
+%--------------------------------------------------------------------------
+bb         = cfg_entry;
+bb.tag     = 'bb';
+bb.name    = 'Bounding box';
+bb.help    = {'The bounding box (in mm) of the volume which is to be written (relative to the anterior commissure). NaN is using the bounding box of the reference image.'};
+bb.strtype = 'r';
+bb.num     = [2 3];
+bb.val     = {[NaN NaN NaN; NaN NaN NaN]};
+
+%--------------------------------------------------------------------------
+% Voxel sizes
+%--------------------------------------------------------------------------
 vox         = cfg_entry;
 vox.tag     = 'vox';
 vox.name    = 'Voxel sizes';
@@ -63,7 +77,7 @@ vox.def     = @(val)spm_get_defaults('normalise.write.vox', val{:});
 nonlin_coreg = cfg_exbranch;
 nonlin_coreg.name = 'Non-linear co-registration';
 nonlin_coreg.tag  = 'nonlin_coreg';
-nonlin_coreg.val  = {ref,source,other,reg,vox};
+nonlin_coreg.val  = {ref,source,other,reg,bb,vox};
 nonlin_coreg.prog = @cat_vol_nonlin_coreg_multi_run;
 nonlin_coreg.vout = @vout_nonlin_coreg;
 nonlin_coreg.help = {

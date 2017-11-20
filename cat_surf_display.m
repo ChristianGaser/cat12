@@ -67,11 +67,6 @@ function varargout = cat_surf_display(varargin)
   
   % scaling options for textures
   def.colormap = '';
-  def.fsaverage    = {
-    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.freesurfer.gii');  
-    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.inflated.freesurfer.gii');  
-    fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii');  
-    };
   def.usefsaverage = 0; 
   def.caxis    = []; % default/auto, range
   def.expert   = cat_get_defaults('extopts.expertgui'); 
@@ -95,19 +90,25 @@ function varargout = cat_surf_display(varargin)
   %% ... need further development 
   sinfo = cat_surf_info(job.data,job.readsurf,job.usefsaverage); 
 
-  if ~isempty(strfind(fileparts(sinfo.Pmesh),'_32k'))
-    job.fsaverage    = {
-      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.freesurfer.gii');  
-      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.inflated.freesurfer.gii');  
-      fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','lh.central.Template_T1_IXI555_MNI152_GS.gii');  
-      };
-  end
-
   if job.verb
     spm('FnBanner',mfilename,SVNid); 
   end
+
   for i=1:numel(job.data)
     if job.usefsaverage
+    
+      if ~isempty(strfind(fileparts(sinfo(i).Pmesh),'_32k'))
+        templates_surfaces = 'templates_surfaces_32k';
+      else
+        templates_surfaces = 'templates_surfaces';
+      end
+    
+      job.fsaverage    = {
+        fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.central.freesurfer.gii');  
+        fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.inflated.freesurfer.gii');  
+        fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.central.Template_T1_IXI555_MNI152_GS.gii');  
+        };
+    end
       sinfo(i).Pmesh = cat_surf_rename(job.fsaverage{job.usefsaverage},'side',sinfo(i).side); 
     end
         

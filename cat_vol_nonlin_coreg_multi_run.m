@@ -4,13 +4,14 @@ function out = cat_vol_nonlin_coreg_multi_run(job)
 % Christian Gaser
 % $Id$
 
-global vox reg
+global vox reg bb
 
 warning off;
 
 % use some options from GUI or default file
-vox    = job.vox;
-reg    = job.reg;
+vox  = job.vox;
+reg  = job.reg;
+bb   = job.bb;
 
 inputs = cell(3, 1);
 
