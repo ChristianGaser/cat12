@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1222 | gaser | 2017-11-20 17:17:17
+r1223 | gaser | 2017-11-20 22:39:45
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_results.m
+M       html/cat.html
+
+Fixed: Path is now also used while saving png file in cat_surf_results.m
+------------------------------------------------------------------------
+r1222 | gaser | 2017-11-20 17:17:23 +0100 (Mo, 20 Nov 2017) | 14 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -14,6 +24,7 @@ A       templates_surfaces_32k/templates_surfaces_32k.man
 (1) Added: Flat maps and desriptions added for 32k HCP meshes.
 (2) Fixed: Corrected views for flat maps.
 (3) Fixed: Coorected typo in cat_surf_display.m from last changes.
+
 ------------------------------------------------------------------------
 r1221 | gaser | 2017-11-20 14:47:20 +0100 (Mo, 20 Nov 2017) | 38 lines
 
