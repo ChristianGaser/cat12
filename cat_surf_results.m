@@ -1629,17 +1629,18 @@ global H
       end
     end
 
-    filename = uiputfile({...
+    [newpth filename] = uiputfile({...
       '*.png' 'PNG files (*.png)'}, 'Save as', filename);
   else
     [pth,nam,ext] = fileparts(filename);
     if isempty(pth), pth = cd; end
     if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
     if isempty(nam)
-      filename = uiputfile({...
+      [newpth filename] = uiputfile({...
         '*.png' 'PNG files (*.png)'}, 'Save as',nam);
     else
       filename = fullfile(pth,[nam '.png']);
+      newpth = pth;
     end
   end
     
@@ -1647,9 +1648,9 @@ global H
   set(H.figure(1),'InvertHardcopy','off','PaperPositionMode','auto');
   
   if isdeployed
-      deployprint(H.figure(1), '-dpng', '-opengl', filename);
+      deployprint(H.figure(1), '-dpng', '-opengl', fullfile(newpth,filename));
   else
-      print(H.figure(1), '-dpng', '-r300', '-opengl',filename);
+      print(H.figure(1), '-dpng', '-r300', '-opengl',fullfile(newpth,filename));
   end
 
 %==========================================================================
