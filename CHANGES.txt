@@ -1,5 +1,21 @@
 ------------------------------------------------------------------------
-r1221 | gaser | 2017-11-20 14:47:16
+r1222 | gaser | 2017-11-20 17:17:17
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_surf_display.m
+M       cat_surf_results.m
+M       html/cat.html
+A       templates_surfaces_32k/lh.patch.freesurfer.gii
+A       templates_surfaces_32k/rh.patch.freesurfer.gii
+A       templates_surfaces_32k/templates_surfaces_32k.man
+
+(1) Added: Flat maps and desriptions added for 32k HCP meshes.
+(2) Fixed: Corrected views for flat maps.
+(3) Fixed: Coorected typo in cat_surf_display.m from last changes.
+------------------------------------------------------------------------
+r1221 | gaser | 2017-11-20 14:47:20 +0100 (Mo, 20 Nov 2017) | 38 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -37,6 +53,7 @@ M       html/cat.html
 
 Changed: Made code compatible with filenames with _32k that indicate lower 
 resoluted 32k meshes.
+
 
 ------------------------------------------------------------------------
 r1220 | gaser | 2017-11-20 14:34:33 +0100 (Mo, 20 Nov 2017) | 18 lines

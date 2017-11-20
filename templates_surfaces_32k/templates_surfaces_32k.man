@@ -1,0 +1,8 @@
+% The names and descriptions are the same as in
+% templates_surfaces/template_surfaces.man. 
+% The 32k HCP meshes were used from:
+% https://github.com/Washington-University/Pipelines/tree/master/global/templates/standard_mesh_atlases
+% The cortex patch is based on colin.cerebral.?.flat.32k_fs_LR.surf.gii and 
+% rotated to fit to the hemisphere views using:
+% lh: spm_mesh_transform(g,spm_matrix([0 0 0 -pi/2 -pi/2 0]));
+% rh: spm_mesh_transform(g,spm_matrix([0 0 0 -pi/2 -pi/2 0 -1 1 1]));

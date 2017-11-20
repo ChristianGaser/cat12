@@ -108,7 +108,6 @@ function varargout = cat_surf_display(varargin)
         fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.inflated.freesurfer.gii');  
         fullfile(spm('dir'),'toolbox','cat12',templates_surfaces,'lh.central.Template_T1_IXI555_MNI152_GS.gii');  
         };
-    end
       sinfo(i).Pmesh = cat_surf_rename(job.fsaverage{job.usefsaverage},'side',sinfo(i).side); 
     end
         
