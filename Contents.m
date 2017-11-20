@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 1220 (CAT12) 2017-11-20
+% Version 1221 (CAT12) 2017-11-20
 % Computational Anatomy Toolbox
 % Version 1208 (CAT12) 2017-11-06
 % __________________________________________________________________________

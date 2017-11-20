@@ -57,16 +57,16 @@ switch lower(action)
         
         % result window with 5 surface views and alternative positions without top view and  only with lateral views                  
         H.viewpos = {[0.025 0.450 0.375 0.375;  0.025 0.450 0.375 0.375;  0.025 2.000 0.375 0.375],... % lh medial
-                     [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375;  0.150 0.350 0.200 0.375],... % lh lateral
+                     [0.025 0.025 0.375 0.375;  0.025 0.025 0.375 0.375;  0.175 0.350 0.175 0.350],... % lh lateral
                      [0.600 0.450 0.375 0.375;  0.600 0.450 0.375 0.375;  0.600 2.000 0.375 0.375],... % rh medial
-                     [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375;  0.650 0.350 0.200 0.375],... % rh lateral
+                     [0.600 0.025 0.375 0.375;  0.600 0.025 0.375 0.375;  0.675 0.350 0.175 0.350],... % rh lateral
                      [0.300 0.150 0.400 0.500;  0.300 2.000 0.400 0.500;  0.300 2.000 0.400 0.500],... % lh+rh top
                      [0.400 0.750 0.200 0.225;  0.400 0.300 0.200 0.225;  0.400 0.750 0.200 0.225]};   % data plot
 
         % change size and position of flatmaps for >= R20014b
         if spm_check_version('matlab','8.4') >= 0 
-            H.viewpos{2}(3,:) = [-0.125 0.150 0.700 0.700]; % lh lateral
-            H.viewpos{4}(3,:) = [ 0.425 0.150 0.700 0.700]; % rh lateral
+            H.viewpos{2}(3,:) = [-0.075 0.150 0.650 0.650]; % lh lateral
+            H.viewpos{4}(3,:) = [ 0.425 0.150 0.650 0.650]; % rh lateral
         end
 
         % figure 1 with result window
@@ -460,25 +460,7 @@ switch lower(action)
           end
 
           display_results_all;
-          
-          % don't allow flatmaps for 32k meshes because they don't yet exists
-          if H.is32k
-            str  = { 'Surface...','Central','Inflated','Dartel'};
-            tmp  = { {@select_surf, 1},...
-                     {@select_surf, 2},...
-                     {@select_surf, 3}};
-            
-            % underlying surface
-            H.surf = uicontrol(H.figure(2),...
-                    'string',str,'Units','normalized',...
-                    'position',H.pos{2}.surf,'UserData',tmp,...
-                    'style','PopUp','HorizontalAlignment','center',...
-                    'callback','spm(''PopUpCB'',gcbo)',...
-                    'ToolTipString','Underlying Surface',...
-                    'Interruptible','on','Visible','off');
-          
-          end
-          
+                    
           % Don't allow plot functions for RGB maps
           if H.n_surf > 1
             str  = { 'Data Cursor...','Disable data cursor','Atlas regions: Desikan-Killiany DK40',...
