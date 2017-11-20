@@ -4,7 +4,7 @@
 % $Id$
 %-----------------------------------------------------------------------
 
-global vox reg
+global vox reg bb
 warning('off','MATLAB:DELETE:FileNotFound');
 
 matlabbatch{1}.spm.spatial.preproc.channel.vols = '<UNDEFINED>';
@@ -65,8 +65,7 @@ matlabbatch{4}.spm.spatial.normalise.estwrite.eoptions.affreg = 'subj';
 matlabbatch{4}.spm.spatial.normalise.estwrite.eoptions.reg = reg*[0 1e-05 0.005 0.0005 0.002];
 matlabbatch{4}.spm.spatial.normalise.estwrite.eoptions.fwhm = 3;
 matlabbatch{4}.spm.spatial.normalise.estwrite.eoptions.samp = 3;
-matlabbatch{4}.spm.spatial.normalise.estwrite.woptions.bb = [NaN NaN NaN
-                                                             NaN NaN NaN];
+matlabbatch{4}.spm.spatial.normalise.estwrite.woptions.bb = bb;
 matlabbatch{4}.spm.spatial.normalise.estwrite.woptions.vox = vox;
 matlabbatch{4}.spm.spatial.normalise.estwrite.woptions.interp = 4;
 matlabbatch{4}.spm.spatial.normalise.estwrite.woptions.prefix = 'w';

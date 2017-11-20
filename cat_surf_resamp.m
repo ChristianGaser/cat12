@@ -34,8 +34,10 @@ function varargout = cat_surf_resamp(varargin)
 
   if job.mesh32k
     job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+    str_resamp = '.resampled_32k';
   else
     job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    str_resamp = '.resampled';
   end
 
   % split job and data into separate processes to save computation time
@@ -94,14 +96,14 @@ function varargout = cat_surf_resamp(varargin)
       pname = ff(k(1)+1:k(2)-1);
       Pcentral   = [strrep(name,pname,'central') '.gii'];
       Pspherereg = fullfile(pp,strrep(Pcentral,'central','sphere.reg'));
-      Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
+      Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname str_resamp]));
       Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
       
       if job.fwhm > 0
-        Pfwhm    = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.resampled'])]);
+        Pfwhm    = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname str_resamp])]);
         Presamp  = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.tmp.resampled'])]);
       else
-        Pfwhm    = fullfile(pp,strrep(Pcentral,'central',[pname '.resampled']));
+        Pfwhm    = fullfile(pp,strrep(Pcentral,'central',[pname str_resamp]));
         Presamp  = fullfile(pp,strrep(Pcentral,'central',[pname 'tmp.resampled']));
       end
       
@@ -167,9 +169,9 @@ function varargout = cat_surf_resamp(varargin)
       Pcentral   = strrep(['mesh' name0 '.gii'],pname,'central');
       
       if job.fwhm > 0
-        Pfwhm     = [sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.resampled'])];
+        Pfwhm     = [sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname str_resamp])];
       else
-        Pfwhm     = strrep(Pcentral,'central',[pname '.resampled']);
+        Pfwhm     = strrep(Pcentral,'central',[pname str_resamp]);
       end
   
       % combine left and right and optionally cerebellar meshes

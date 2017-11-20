@@ -436,11 +436,11 @@ function stools = cat_conf_stools(expert)
 %-----------------------------------------------------------------------  
   nonlin_coreg = cat_conf_nonlin_coreg;
   
-  coreg         = cfg_branch;
-  coreg.tag     = 'coreg';
-  coreg.name    = 'Yes';
-  coreg.val     = {nonlin_coreg};
-  coreg.help    = {
+  docoreg         = cfg_branch;
+  docoreg.tag     = 'docoreg';
+  docoreg.name    = 'Yes';
+  docoreg.val     = {nonlin_coreg};
+  docoreg.help    = {
     'Additionally co-register your data to the T1 image.'
     ''
 }';
@@ -457,12 +457,12 @@ function stools = cat_conf_stools(expert)
   v2s.coreg         = cfg_choice;
   v2s.coreg.tag     = 'coreg';
   v2s.coreg.name    = 'Co-registration';
-  v2s.coreg.val     = {coreg};
+  v2s.coreg.val     = {docoreg};
   v2s.coreg.help    = {
     'This option allows to non-linearly co-register your (r)fMRI or DTI data to the corresponding T1 image. '
     ''
      }';
-  v2s.coreg.values  = {coreg nocoreg};
+  v2s.coreg.values  = {docoreg nocoreg};
 
 
   v2s.data_surf_sub_lh         = cfg_files;
@@ -1045,6 +1045,7 @@ end
   merge_hemi.val     = {1};
   merge_hemi.help    = {
     'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
+    'Hoever, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
   };
 
   mesh32k         = cfg_menu;

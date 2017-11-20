@@ -340,7 +340,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
           sinfo(i).Pmesh = SPM.xVol.G;
         else
           % 32k mesh?
-          if SPM.xY.VY(1).dim(1) == 32492
+          if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
             sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
               [sinfo(i).side '.central.freesurfer.gii']);
           else
