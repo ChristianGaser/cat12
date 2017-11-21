@@ -78,6 +78,7 @@ switch lower(action)
         H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.050],...
+          'nam',   [0.050 0.895 0.900 0.050],...
           'surf',  [0.050 0.855 0.425 0.050],'mview',   [0.525 0.855 0.425 0.050],... 
           'text',  [0.050 0.800 0.425 0.050],'thresh',  [0.525 0.800 0.425 0.050],... 
           'cmap',  [0.050 0.750 0.425 0.050],'atlas',   [0.525 0.750 0.425 0.050],...
@@ -425,6 +426,9 @@ switch lower(action)
             %if H.n_surf > 3
             if 1
               sel = 1;
+              if isempty(H.S1.name)
+                error('Do not mix meshes with different resolutions (i.e. 164k vs. 32k)');
+              end
               H.S{1}.name = H.S1.name(sel,:);
               H.S{2}.name = H.S2.name(sel,:);
               H.S{1}.Y = H.S1.Y(:,sel);
@@ -443,6 +447,12 @@ switch lower(action)
               tmp{s} = {@select_results, s};
             end
             
+            % print selected filename
+            H.nam = axes('Parent',H.figure(2),'Position',H.pos{2}.nam);
+            cla(H.nam);
+            axis(H.nam, 'off')
+            text(0.5,1,spm_str_manip(H.S{1}.name,'k60d'),'Parent',H.nam,'Interpreter','none','FontSize',H.FS(7),'HorizontalAlignment','center')
+
             % set # of surfaces back to "1" if we cannot use RGB overlay
             if 1, H.n_surf = 1; end
             %if H.n_surf > 3, H.n_surf = 1; end
@@ -973,6 +983,11 @@ if ~H.disable_cbar
   H = show_colorbar(H);
 end
 
+% print selected filename
+cla(H.nam);
+axis(H.nam, 'off')
+text(0.5,1,spm_str_manip(H.S{1}.name,'k60d'),'Parent',H.nam,'Interpreter','none','FontSize',H.FS(7),'HorizontalAlignment','center')
+
 %-----------------------------------------------------------------------
 function H = select_surf(surf)
 %-----------------------------------------------------------------------
@@ -1193,7 +1208,12 @@ if H.n_surf == 1
   
   if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col); end
   clim = getappdata(H.patch(1), 'clim');
-  axis(H.cbar,'off'); caxis([clim(2) clim(3)]);
+  axis(H.cbar,'off'); 
+  
+  if clim(3) > clim(2)
+    caxis([clim(2) clim(3)]);
+  end
+  
   col = getappdata(H.patch(1), 'col');
   colormap(col);
   
