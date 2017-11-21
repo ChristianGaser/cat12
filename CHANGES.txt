@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1224 | gaser | 2017-11-21 12:03:09
+r1225 | gaser | 2017-11-21 13:05:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Changed: Added printout of selected filename in cat_surf_resulrs.m
+------------------------------------------------------------------------
+r1224 | gaser | 2017-11-21 12:03:41 +0100 (Di, 21 Nov 2017) | 29 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -29,6 +37,7 @@ M       templates_surfaces_32k/templates_surfaces_32k.man
 
 (1) Changed: Updated description of surface templates.
 (2) Changed: Updated 32k HCP meshes w.r.t. new sphere surfaces.
+
 ------------------------------------------------------------------------
 r1223 | gaser | 2017-11-20 22:39:49 +0100 (Mo, 20 Nov 2017) | 8 lines
 
