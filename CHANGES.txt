@@ -1,5 +1,36 @@
 ------------------------------------------------------------------------
-r1223 | gaser | 2017-11-20 22:39:45
+r1224 | gaser | 2017-11-21 12:03:09
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       atlases_surfaces_32k/lh.aparc_DK40.freesurfer.annot
+D       atlases_surfaces_32k/lh.aparc_DKT40JT.freesurfer.annot
+M       atlases_surfaces_32k/lh.aparc_HCP_MMP1.freesurfer.annot
+M       atlases_surfaces_32k/lh.aparc_a2009s.freesurfer.annot
+M       atlases_surfaces_32k/rh.aparc_DK40.freesurfer.annot
+D       atlases_surfaces_32k/rh.aparc_DKT40JT.freesurfer.annot
+M       atlases_surfaces_32k/rh.aparc_HCP_MMP1.freesurfer.annot
+M       atlases_surfaces_32k/rh.aparc_a2009s.freesurfer.annot
+A       development/Template_4_IXI555_MNI152_GS1mm_corr.nii
+M       html/cat.html
+M       templates_surfaces/lh.mask
+M       templates_surfaces/rh.mask
+M       templates_surfaces/templates_surfaces.man
+M       templates_surfaces_32k/lh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces_32k/lh.inflated.freesurfer.gii
+M       templates_surfaces_32k/lh.mask
+M       templates_surfaces_32k/lh.sphere.freesurfer.gii
+M       templates_surfaces_32k/rh.central.Template_T1_IXI555_MNI152_GS.gii
+M       templates_surfaces_32k/rh.inflated.freesurfer.gii
+M       templates_surfaces_32k/rh.mask
+M       templates_surfaces_32k/rh.sphere.freesurfer.gii
+M       templates_surfaces_32k/templates_surfaces_32k.man
+
+(1) Changed: Updated description of surface templates.
+(2) Changed: Updated 32k HCP meshes w.r.t. new sphere surfaces.
+------------------------------------------------------------------------
+r1223 | gaser | 2017-11-20 22:39:49 +0100 (Mo, 20 Nov 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +39,7 @@ M       cat_surf_results.m
 M       html/cat.html
 
 Fixed: Path is now also used while saving png file in cat_surf_results.m
+
 ------------------------------------------------------------------------
 r1222 | gaser | 2017-11-20 17:17:23 +0100 (Mo, 20 Nov 2017) | 14 lines
 

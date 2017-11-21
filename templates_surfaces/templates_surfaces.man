@@ -1,12 +1,3 @@
-% ?h.central.Template_T1_IXI555_MNI152_GS.gii
-% ?h.thickness.Template_T1_IXI555_MNI152_GS
-% ---------------------------------
-% Surfaces and thickness values based on average of 550 subjects from IXI 
-% database
-% These data should be only used to map results from 3D space (e.g. VBM or
-% fMRI results of the statistical analysis) to the template space after 
-% spherical registration.
-%
 % ?h.central.freesurfer.gii 
 % ?h.sphere.freesurfer.gii
 % ?h.inflated.freesurfer.gii
@@ -30,12 +21,20 @@
 %
 % ?h.mask
 % ---------------------------------
-% Mask based on the Destrieux Atlas of Freesurfer
-% The mask file was created by masking out
-% region 0 (Unkown) and region 67 (S_pericallosal). This mask file is 
+% Mask based on the DK40 Atlas of Freesurfer
+% The mask file was created by masking out region 0 (Unkown). This mask file is 
 % internally used to set values to NaN in these regions. These NaN values are 
 % ignored if data during smoothing (masked smoothing) and in the statistical
 % analysis.
+%
+% ?h.central.Template_T1_IXI555_MNI152_GS.gii
+% ?h.thickness.Template_T1_IXI555_MNI152_GS
+% ---------------------------------
+% Surfaces and thickness values based on average of 550 subjects from IXI 
+% database
+% These data should be only used to map results from 3D space (e.g. VBM or
+% fMRI results of the statistical analysis) to the template space after 
+% spherical registration.
 %
 % ?c.central.Template_T1_IXI555_MNI152_GS.gii
 % ?c.thickness.Template_T1_IXI555_MNI152_GS
