@@ -1,11 +1,41 @@
 ------------------------------------------------------------------------
-r1225 | gaser | 2017-11-21 13:05:17
+r1226 | gaser | 2017-11-28 15:24:44
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_amap.mexw64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexw64
+M       cat_vbdist.mexw64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexw64
+ M      development/Template_4_IXI555_MNI152_GS1mm_corr.nii
+M       html/cat.html
+ M      templates_surfaces_32k/lh.patch.freesurfer.gii
+ M      templates_surfaces_32k/rh.patch.freesurfer.gii
+ M      templates_surfaces_32k/templates_surfaces_32k.man
+
+Changed: Recompiled mex-files with Matlab 2017b under Windows.
+------------------------------------------------------------------------
+r1225 | gaser | 2017-11-21 13:05:25 +0100 (Di, 21 Nov 2017) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_surf_results.m
 
 Changed: Added printout of selected filename in cat_surf_resulrs.m
+
 ------------------------------------------------------------------------
 r1224 | gaser | 2017-11-21 12:03:41 +0100 (Di, 21 Nov 2017) | 29 lines
 
