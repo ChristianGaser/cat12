@@ -15,7 +15,6 @@ bb   = job.bb;
 
 inputs = cell(3, 1);
 
-
 m = numel(job.other);
 out.ofiles = cell(m,1);
 other = cell(m,1);
