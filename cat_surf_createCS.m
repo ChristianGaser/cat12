@@ -731,7 +731,7 @@ function V = isocolors2(R,V,opt)
   
   switch opt.interp
     case 'nearest'
-      V = max(1,min(round(V),repmat(ndim,nV,1))); 
+      V = max(1,min(round(V),repmat(size(R),nV,1))); 
       V = R(sub2ind(size(R),V(:,2),V(:,1),V(:,3)));
     case 'linear'
       nb  = repmat(shiftdim(double([0 0 0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1]'),-1),nV,1);  
@@ -739,7 +739,7 @@ function V = isocolors2(R,V,opt)
 
       % calculate the weight of a neigbor (volume of the other corner) and
       w8b = reshape(repmat(V,1,2^ndim),[nV,ndim,2^ndim]); clear V;
-      % if the streamline is near the boundery of the image you could be out of range if you add 1 
+      % if the streamline is near the boundary of the image you could be out of range if you add 1 
       n8b = min(floor(w8b) + nb,enb); clear enb
       n8b = max(n8b,1);
       w8b = flipdim(prod(abs(n8b - w8b),2),3);        
