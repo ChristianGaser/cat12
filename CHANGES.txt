@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1228 | gaser | 2017-11-29 19:20:45
+r1229 | gaser | 2017-11-29 22:03:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat12.m
+M       cat_conf_stools.m
+A       cat_surf_coregvol2surf.m
+M       cat_vol_nonlin_coreg_multi_run.m
+
+(1) Changed: Added new batch for combining non-linear co-registration and
+    mapping of (co-registered) volumes to surface in native space.
+(2) Changed: Removed experimental code for combining non-linear co-registration
+    and volume mapping that did not worked.
+------------------------------------------------------------------------
+r1228 | gaser | 2017-11-29 19:21:06 +0100 (Mi, 29 Nov 2017) | 10 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -10,6 +25,7 @@ M       cat_surf_vol2surf.m
 (1) Fixed: Nearest Neighbour interpolation for isocolors2.m was not correct.
 (2) Changed: Added functionality for 4d files for cat_surf_vol2surf.m
 (3) Fixed: Handling of 32k meshes in cat_surf_info.m
+
 ------------------------------------------------------------------------
 r1227 | gaser | 2017-11-29 09:20:32 +0100 (Mi, 29 Nov 2017) | 9 lines
 
