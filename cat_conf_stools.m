@@ -431,39 +431,8 @@ function stools = cat_conf_stools(expert)
 
 
 
-% extract volumetric data in individual space and optionally co-register 
-% data before
+% extract volumetric data in individual space 
 %-----------------------------------------------------------------------  
-  nonlin_coreg = cat_conf_nonlin_coreg;
-  
-  docoreg         = cfg_branch;
-  docoreg.tag     = 'docoreg';
-  docoreg.name    = 'Yes';
-  docoreg.val     = {nonlin_coreg};
-  docoreg.help    = {
-    'Additionally co-register your data to the T1 image.'
-    ''
-}';
-
-  nocoreg      = cfg_const;
-  nocoreg.tag  = 'nocoreg';
-  nocoreg.name = 'No';
-  nocoreg.val  = {1};
-  nocoreg.help = {
-    'Expect that data are already co-registered and skip this step.'
-    ''
-    }';
-
-  v2s.coreg         = cfg_choice;
-  v2s.coreg.tag     = 'coreg';
-  v2s.coreg.name    = 'Co-registration';
-  v2s.coreg.val     = {docoreg};
-  v2s.coreg.help    = {
-    'This option allows to non-linearly co-register your (r)fMRI or DTI data to the corresponding T1 image. '
-    ''
-     }';
-  v2s.coreg.values  = {docoreg nocoreg};
-
 
   v2s.data_surf_sub_lh         = cfg_files;
   v2s.data_surf_sub_lh.tag     = 'data_mesh_lh';
@@ -492,7 +461,6 @@ function stools = cat_conf_stools(expert)
   v2s.vol2surf.name = 'Map Volume (Native Space) to Individual Surface';
   if expert
     v2s.vol2surf.val = {
-      v2s.coreg ...
       v2s.data_sub ...
       v2s.data_surf_sub_lh ...
       v2s.sample ...
@@ -502,7 +470,6 @@ function stools = cat_conf_stools(expert)
       };
   else
     v2s.vol2surf.val = {
-%      v2s.coreg ...
       v2s.data_sub ...
       v2s.data_surf_sub_lh ...
       v2s.sample ...
