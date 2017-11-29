@@ -29,11 +29,51 @@ function out = cat_surf_vol2surf(varargin)
     job = varargin{1};
   else 
     help cat_surf_vol2surf; return
-  end
+  end  
   
   n_vol  = numel(job.data_vol);
   n_surf = numel(job.data_mesh_lh);
   
+  % 4D volume data have to be split into temp. 3D files
+  counter = 0;
+  istemp  = []; % delete temp. 3d files after mapping
+  
+  for vi = 1:n_vol
+    N = nifti(job.data_vol{vi});
+    
+    % 4D data?
+    if numel(N.dat.dim) > 3
+      n4d = N.dat.dim(4);
+      [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
+      N2 = N;
+      
+      for vj = 1:n4d
+        counter = counter + 1;
+        name3d = fullfile(ppv,sprintf('%s_%05d%s',ffv,vj,eev));
+        
+        % 3d file already exists?
+        if exist(name3d, 'file')
+          istemp(counter) = 0;
+        else
+          istemp(counter) = 1;
+          N2.dat  = file_array(name3d, N.dat.dim(1:3),...
+                    N.dat.dtype,0,N.dat.scl_slope,N.dat.scl_inter);
+          create(N2);
+          N2.dat(:,:,:) = N.dat(:,:,:,vj);
+        end
+        
+        data_vol{counter} = name3d;
+      end
+    else
+      counter = counter + 1;
+      data_vol{counter} = job.data_vol{vi};
+      istemp(counter) = 0;
+    end        
+  end
+    
+  % new volume number
+  n_vol  = counter;
+
   % if only 1 surface but multiple volumes are given then fill
   % up the missing surface names with the single surface name
   if (n_surf == 1) && (n_vol > 1)
@@ -76,14 +116,14 @@ function out = cat_surf_vol2surf(varargin)
   
   %% display something
   spm_clf('Interactive'); 
-  spm_progress_bar('Init',numel(job.data_vol),'Mapped Volumes','Volumes Complete');
-  P.data = cell(numel(job.data_vol),2);
-  P.relmap = cell(numel(job.data_vol),2);
-  P.thick = cell(numel(job.data_vol),2);
+  spm_progress_bar('Init',numel(data_vol),'Mapped Volumes','Volumes Complete');
+  P.data = cell(numel(data_vol),2);
+  P.relmap = cell(numel(data_vol),2);
+  P.thick = cell(numel(data_vol),2);
   
   if template
-    for vi=1:numel(job.data_vol)
-      [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
+    for vi=1:numel(data_vol)
+      [ppv,ffv,eev] = spm_fileparts(data_vol{vi});
       
       % replace '.img' extension by '.hdr' extension to work with CAT
       if strcmp(eev,'.img')
@@ -133,9 +173,9 @@ function out = cat_surf_vol2surf(varargin)
     end
    
   else
-    for vi=1:numel(job.data_vol)
+    for vi=1:numel(data_vol)
       
-      [ppv,ffv,eev] = spm_fileparts(job.data_vol{vi});
+      [ppv,ffv,eev] = spm_fileparts(data_vol{vi});
       
       % replace '.img' extension by '.hdr' extension to work with CAT
       if strcmp(eev,'.img')
@@ -213,6 +253,12 @@ function out = cat_surf_vol2surf(varargin)
     end
   end
   
+  for vi=1:numel(data_vol)
+    if istemp(vi)
+      delete(data_vol{vi});
+    end
+  end
+
   % prepare output
   out.lh = P.data(:,1);
   out.rh = P.data(:,2);
