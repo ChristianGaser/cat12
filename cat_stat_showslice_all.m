@@ -128,7 +128,7 @@ fprintf('Compressed filenames: %s\n',tmp);
 for i = 1:sizex
   for j = 1:sizey
     k = (sizex-i) + sizex*(j-1);
-    if k < n && k>0
+    if k < n && k >= 0
       text(round(sizex*dim_array(1)-((i-1)*dim_array(1)+(i)*dim_array(1))/2),(j-1)*dim_array(2)+fs+2,names.m{k+1},...
         'FontSize',fs,'Color','r','HorizontalAlignment','center');
     end

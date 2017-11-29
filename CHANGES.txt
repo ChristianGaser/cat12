@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1226 | gaser | 2017-11-28 15:24:44
+r1227 | gaser | 2017-11-29 09:20:09
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_showslice_all.m
+M       cat_surf_results.m
+
+(1) Fixed: First filename for cat_stat_showslice_all.m was not printed.
+(2) Changed: Location for GUI elements in cat_surf_results are now more
+    broader.
+------------------------------------------------------------------------
+r1226 | gaser | 2017-11-28 15:25:06 +0100 (Di, 28 Nov 2017) | 27 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -27,6 +38,7 @@ M       html/cat.html
  M      templates_surfaces_32k/templates_surfaces_32k.man
 
 Changed: Recompiled mex-files with Matlab 2017b under Windows.
+
 ------------------------------------------------------------------------
 r1225 | gaser | 2017-11-21 13:05:25 +0100 (Di, 21 Nov 2017) | 6 lines
 
