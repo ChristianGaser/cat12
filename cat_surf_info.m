@@ -349,8 +349,8 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
           end
         end
       catch
-        % 32k mesh?    
-        S = gifti(P);  
+        % 32k mesh? 
+        S = gifti(P{i}) ;
         if isfield(S,'cdata') && (length(S.cdata) == 32492 || length(S.cdata) == 64984)
           sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
             [sinfo(i).side '.central.freesurfer.gii']);
