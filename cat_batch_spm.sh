@@ -149,7 +149,7 @@ run_batch ()
 	echo $0 $file >> $spmlog
 	echo >> $spmlog
 	if [ $display == 0 ]; then
-		nohup ${matlab} -nodisplay -nosplash -r $X >> $spmlog 2>&1 &
+		nohup ${matlab} -nodisplay -nojvm -nosplash -r $X >> $spmlog 2>&1 &
 	else
 		nohup ${matlab} -nosplash -r $X >> $spmlog 2>&1 &
 	fi
