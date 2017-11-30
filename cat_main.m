@@ -1808,8 +1808,7 @@ clear Yo Yp0 qas;
 fprintf('%5.0fs\n',etime(clock,stime));
 
 
-printCATreport = 1; % if QA and/or print failed on servers
-if printCATreport
+if cat_get_defaults('extopts.print')
   %% display and print result if possible
   %  ---------------------------------------------------------------------
     QMC   = cat_io_colormaps('marks+',17);

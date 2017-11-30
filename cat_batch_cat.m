@@ -50,7 +50,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
 
 tmp_fields = char('NCstr','BVCstr','regstr','WMHC','WMHCstr','mrf','INV','restype','resval','species','darteltpm','shootingtpm',...
             'cat12atlas','brainmask','T1','pbtres','close_parahipp','scale_cortex','add_parahipp','colormap','verb','ignoreErrors',...
-            'expertgui','subfolders','experimental','atlas','LAB');
+            'expertgui','subfolders','experimental','atlas','LAB','print');
 for i=1:size(tmp_fields,1)
   try
     matlabbatch{1}.spm.tools.cat.estwrite.extopts = rmfield(matlabbatch{1}.spm.tools.cat.estwrite.extopts,deblank(tmp_fields(i,:)));
