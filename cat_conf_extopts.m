@@ -562,20 +562,6 @@ WMHCstr.help    = {
 
 %------------------------------------------------------------------------
 
-print        = cfg_menu;
-print.tag    = 'print';
-print.name   = 'Display and print results';
-print.labels = {'No','Yes'};
-print.values = {0 1};
-print.def    = @(val)cat_get_defaults('extopts.print', val{:});
-print.help   = {
-'The result of the segmentation can be displayed and printed to a pdf-file. This is often helpful to check whether registration and segmentation were successful. Furthermore, some additional information about the used versions and parameters are printed.'
-''
-};
-
-
-%------------------------------------------------------------------------
-
 
 app        = cfg_menu;
 app.tag    = 'APP';

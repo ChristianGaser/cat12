@@ -186,7 +186,7 @@ run_batch ()
 	echo >> $vbmlog
 
 	if [ $display == 0 ]; then
-		nohup ${matlab} -nodisplay -nosplash -r "$X" >> $vbmlog 2>&1 &
+		nohup ${matlab} -nojvm -nodisplay -nosplash -r "$X" >> $vbmlog 2>&1 &
 	else
 		nohup ${matlab} -nosplash -r $X >> $vbmlog 2>&1 &
 	fi

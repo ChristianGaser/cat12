@@ -1651,14 +1651,14 @@ global H
       end
     end
 
-    [newpth filename] = uiputfile({...
+    [filename newpth] = uiputfile({...
       '*.png' 'PNG files (*.png)'}, 'Save as', filename);
   else
     [pth,nam,ext] = fileparts(filename);
     if isempty(pth), pth = cd; end
     if ~strcmp({'.gii','.png'},ext), nam = [nam ext]; end
     if isempty(nam)
-      [newpth filename] = uiputfile({...
+      [filename newpth] = uiputfile({...
         '*.png' 'PNG files (*.png)'}, 'Save as',nam);
     else
       filename = fullfile(pth,[nam '.png']);

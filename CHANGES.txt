@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1230 | gaser | 2017-11-30 09:23:55
+r1231 | gaser | 2017-12-01 00:14:31
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.m
+M       cat_batch_cat.sh
+M       cat_batch_long.sh
+M       cat_batch_spm.sh
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+MM      cat_surf_coregvol2surf.m
+M       cat_surf_results.m
+
+(1) Fixed: Filename for saving png-files in cat_surf_results was mixed up.
+(2) Changed: Added print option to cat_defaults.m to suppress graphical
+    output on clusters.
+(3) Changed: Added "-jvm" flag to shell scripts that call matlab.
+------------------------------------------------------------------------
+r1230 | gaser | 2017-11-30 09:24:15 +0100 (Do, 30 Nov 2017) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +26,7 @@ M       cat_surf_createCS.m
 M       cat_surf_info.m
 
 Fixed: Handling with multiple 32k meshes in cat_surf_info.m
+
 
 ------------------------------------------------------------------------
 r1229 | gaser | 2017-11-29 22:03:22 +0100 (Mi, 29 Nov 2017) | 13 lines

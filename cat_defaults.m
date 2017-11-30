@@ -203,6 +203,7 @@ cat.extopts.ignoreErrors = 0;     % catch errors:          0 - stop with error (
 cat.extopts.expertgui    = 0;     % control of user GUI:   0 - common user modus with simple GUI; 1 - expert modus with extended GUI; 2 - development modus with full GUI
 cat.extopts.subfolders   = 1;     % use subfolders such as mri, surf, report, and label to organize your data
 cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - call experimental unsave functions
+cat.extopts.print        = 1;     % display and print out pdf-file of results
 
 
 % Expert options - ROIs
