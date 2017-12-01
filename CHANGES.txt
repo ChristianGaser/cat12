@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1231 | gaser | 2017-12-01 00:14:31
+r1232 | gaser | 2017-12-01 21:54:46
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       html/cat.html
+
+Fixed: cat12.fig was corrupt and parts of the GUI were not working.
+------------------------------------------------------------------------
+r1231 | gaser | 2017-12-01 00:14:37 +0100 (Fr, 01 Dez 2017) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +27,7 @@ M       cat_surf_results.m
 (2) Changed: Added print option to cat_defaults.m to suppress graphical
     output on clusters.
 (3) Changed: Added "-jvm" flag to shell scripts that call matlab.
+
 ------------------------------------------------------------------------
 r1230 | gaser | 2017-11-30 09:24:15 +0100 (Do, 30 Nov 2017) | 8 lines
 
