@@ -256,7 +256,7 @@ function varargout = cat_tst_qa_cleaner(data,opt)
   %  I start with several ideas that all based on a similar idea: to 
   %  find the first peak that is given by the subset of images without
   %  inferences and to use the variance of this peak for further scaling
-  %  of subsets for other grads. As far as IQR is allready scaled, we 
+  %  of subsets for other grads. As far as IQR is already scaled, we 
   %  can limit the variance value ... e.g. the rating has an error of 
   %  0-2 rps (0.0-0.2 mark points) that is very low for high-quality data
   %  and higher for low-quality data. Due to our the general subdivion 

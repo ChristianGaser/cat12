@@ -152,6 +152,7 @@ T2x.tag  = 'T2x';
 T2x.name = 'Threshold and transform spmT images';
 T2x.val  = {data_T2x,conversion,atlas};
 T2x.prog = @cat_stat_spm2x;
+T2x.vout = @vout_stat_spm2x;
 T2x.help = {
           'This function transforms t-maps to P, -log(P), r or d-maps.'
           'The following formulas are used:'
@@ -205,6 +206,7 @@ T2x_surf      = T2x;
 T2x_surf.val  = {data_T2x,conversion};
 T2x_surf.tag  = 'T2x_surf';
 T2x_surf.name = 'Threshold and transform spmT surfaces';
+T2x_surf.vout = @vout_stat_spm2x_surf;
 
 %------------------------------------------------------------------------
 
@@ -248,6 +250,7 @@ F2x.tag  = 'F2x';
 F2x.name = 'Threshold and transform spmF images';
 F2x.val  = {data_F2x,conversion,atlas};
 F2x.prog = @cat_stat_spm2x;
+F2x.vout = @vout_stat_spm2x;
 F2x.help = {
           'This function transforms F-maps to P, -log(P), or R2-maps.'
           'The following formulas are used:'
@@ -289,6 +292,7 @@ F2x_surf      = F2x;
 F2x_surf.val  = {data_F2x,conversion};
 F2x_surf.tag  = 'F2x_surf';
 F2x_surf.name = 'Threshold and transform spmF surfaces';
+F2x_surf.vout = @vout_stat_spm2x_surf;
 
 %------------------------------------------------------------------------
 
@@ -553,6 +557,7 @@ calcvol.tag   = 'calcvol';
 calcvol.name  = 'Estimate TIV and global tissue volumes';
 calcvol.val   = {data_xml,calcvol_TIV,calcvol_name};
 calcvol.prog  = @cat_stat_TIV;
+calcvol.vout  = @vout_stat_TIV;
 calcvol.help  = {
 'This function reads raw volumes for TIV/GM/WM/CSF/WM hyperintensities (WMH) and saves values in a txt-file. These values can be read with the matlab command: vol = spm_load. If you choode to save all values the entries for TIV/GM/WM/CSF/WMH are now saved in vol(:,1) vol(:,2) vol(:,3), vol(:,4), and vol(:,5) respectively.'
 ''
@@ -1027,7 +1032,14 @@ for i=1:numel(s),
     vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
 end;
 return;
-%_______________________________________________________________________
+
+%------------------------------------------------------------------------
+function dep = vout_stat_TIV(job)
+
+dep            = cfg_dep;
+dep.sname      = 'TIV';
+dep.src_output = substruct('.','calcvol_name');
+dep.tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
 
 %------------------------------------------------------------------------
 function cdep = vout_reslice(job)
@@ -1042,5 +1054,19 @@ cdep(2).src_output = substruct('.','rimg','()',{':'});
 cdep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
 return
-%------------------------------------------------------------------------
  
+%------------------------------------------------------------------------
+function dep = vout_stat_spm2x(job)
+
+dep            = cfg_dep;
+dep.sname      = 'Transform & Threshold spm volumes';
+dep.src_output = substruct('.','Pname');
+dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+%------------------------------------------------------------------------
+function dep = vout_stat_spm2x_surf(job)
+
+dep            = cfg_dep;
+dep.sname      = 'Transform & Threshold spm surfaces';
+dep.src_output = substruct('.','Pname');
+dep.tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});

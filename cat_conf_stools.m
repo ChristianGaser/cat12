@@ -34,7 +34,7 @@ function stools = cat_conf_stools(expert)
     };
  
   
-  % do not process, if result allready exist
+  % do not process, if result already exist
   % ____________________________________________________________________
   lazy         = cfg_menu;
   lazy.tag     = 'lazy';
@@ -109,9 +109,9 @@ function stools = cat_conf_stools(expert)
   data_surf_extract.tag     = 'data_surf';
   data_surf_extract.name    = 'Central Surfaces';
   data_surf_extract.filter  = 'gifti';
-  data_surf_extract.ufilter = '^[lr]h.central';
+  data_surf_extract.ufilter = '^lh.central';
   data_surf_extract.num     = [1 Inf];
-  data_surf_extract.help    = {'Select surfaces to extract values.'};
+  data_surf_extract.help    = {'Select left surfaces to extract values.'};
   
   GI        = cfg_menu;
   GI.name   = 'Gyrification index';
@@ -263,6 +263,7 @@ function stools = cat_conf_stools(expert)
     surfextract.val  = {data_surf_extract,GI,FD,SD,nproc};
   end
   surfextract.prog = @cat_surf_parameters;
+  surfextract.vout = @vout_surfextract;
   surfextract.help = {'Additional surface parameters can be extracted that can be used for statistical analysis.'};
 
 
@@ -780,6 +781,7 @@ end
     surf2roi.val  = {s2r.cdata_sample};
   end
   surf2roi.prog = @cat_surf_surf2roi;
+  surf2roi.vout = @vout_surf_surf2roi;
   surf2roi.help = {
     'While ROI-based values for VBM (volume) data are automatically saved in the label folder as XML file it is necessary to additionally extract these values for surface data. This has to be done after preprocessing the data and creating cortical surfaces. '
     ''
@@ -1034,6 +1036,7 @@ end
   surfresamp.name = 'Resample and Smooth Surface Data';
   surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm,nproc};
   surfresamp.prog = @cat_surf_resamp;
+  surfresamp.vout = @vout_surf_resamp;
   surfresamp.help = {
   'In order to analyze surface parameters all data have to be resampled into template space and the resampled data have to be finally smoothed. Resampling is done using the warped coordinates of the resp. sphere.'};
 
@@ -1141,9 +1144,74 @@ end
   end
 
 %==========================================================================
-function dep = vout_vol2surf(varargin)
+function dep = vout_surf_surf2roi(job)
 
-% Output file names will be saved in a struct with field .files
+dep(1)            = cfg_dep;
+dep(1).sname      = 'Extracted Surface ROIs';
+dep(1).src_output = substruct('()',{1}, '.','xmlname','()',{':'});
+dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
+
+%==========================================================================
+function dep = vout_surf_resamp(job)
+
+if job.merge_hemi
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Merged Resample & Smooth';
+  dep(1).src_output = substruct('()',{1}, '.','Psdata','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+else
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Left Resample & Smooth';
+  dep(1).src_output = substruct('()',{1}, '.','lPsdata','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+  dep(2)            = cfg_dep;
+  dep(2).sname      = 'Right Resample & Smooth';
+  dep(2).src_output = substruct('()',{1}, '.','rPsdata','()',{':'});
+  dep(2).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+end
+
+%==========================================================================
+function dep = vout_surfextract(job)
+
+if job.GI
+  if ~exist('dep','var'), dep = cfg_dep;
+  else, dep(end+1) = cfg_dep; end
+  dep(end).sname      = 'Left gyrification';
+  dep(end).src_output = substruct('()',{1}, '.','lPGI','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+  dep(end+1)            = cfg_dep;
+  dep(end).sname      = 'Right gyrification';
+  dep(end).src_output = substruct('()',{1}, '.','rPGI','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+end
+
+if job.SD
+  if ~exist('dep','var'), dep = cfg_dep;
+  else, dep(end+1) = cfg_dep; end
+  dep(end).sname      = 'Left sulcal depth';
+  dep(end).src_output = substruct('()',{1}, '.','lPSD','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+  dep(end+1)            = cfg_dep;
+  dep(end).sname      = 'Right sulcal depth';
+  dep(end).src_output = substruct('()',{1}, '.','rPSD','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+end
+
+if job.FD
+  if ~exist('dep','var'), dep = cfg_dep;
+  else, dep(end+1) = cfg_dep; end
+  dep(end).sname      = 'Left fractal dimension';
+  dep(end).src_output = substruct('()',{1}, '.','lPFD','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+  dep(end+1)            = cfg_dep;
+  dep(end).sname      = 'Right fractal dimension';
+  dep(end).src_output = substruct('()',{1}, '.','rPFD','()',{':'});
+  dep(end).tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+end
+
+%==========================================================================
+function dep = vout_vol2surf(job)
+
 dep(1)            = cfg_dep;
 dep(1).sname      = 'Left mapped values';
 dep(1).src_output = substruct('.','lh');

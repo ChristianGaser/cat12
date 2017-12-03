@@ -42,6 +42,14 @@ OV.transform = char('axial','sagittal','coronal');
 % define output format of slices
 OV.labels.format = '%3.1f';
 
+% define number of columns and rows
+% comment this out for interactive selection
+OV.xy = [3 5];
+
+% save result as png/jpg/pdf
+% comment this out for interactive selection
+OV.save = 'result.png';
+
 % Comment this out if you don't wish slice labels
 %OV.labels = [];
 
