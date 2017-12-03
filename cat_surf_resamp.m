@@ -60,7 +60,10 @@ function varargout = cat_surf_resamp(varargin)
   spm_clf('Interactive'); 
   spm_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed');
 
-  Psdata = cell(size(P,1),1);
+  Psdata  = cell(size(P,1),1);
+  lPsdata = cell(size(P,1),1);
+  rPsdata = cell(size(P,1),1);
+  
   for i=1:size(P,1)
     
     stime = clock; 
@@ -78,7 +81,7 @@ function varargout = cat_surf_resamp(varargin)
     hemistr = char('lh','rh','lc','rc');
     exist_hemi = [];
     
-    % go through left and right and potentialla cerebellar hemispheres
+    % go through left and right and potential cerebellar hemispheres
     for j=1:length(hemistr)
     
       % add hemisphere name
@@ -143,22 +146,25 @@ function varargout = cat_surf_resamp(varargin)
       cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,Pfwhm_gii);
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
-      if exist(Pfwhm_gii,'file'), Psdata{i} = Pfwhm_gii; end
+      if exist(Pfwhm_gii,'file'), Psname = Pfwhm_gii; end
       
       % remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
-      [pp2,ff2,ex2]   = spm_fileparts(Psdata{i});
+      [pp2,ff2,ex2]   = spm_fileparts(Psname);
 
-      g = gifti(Psdata{i});
+      g = gifti(Psname);
       g.private.metadata = struct('name','SurfaceID','value',[ff2 ex2]);
-      save(g, Psdata{i}, 'Base64Binary');
+      save(g, Psname, 'Base64Binary');
 
       delete(Presamp);
       delete(Pfwhm);
       if job.fwhm > 0, delete(Pvalue); end
 
       if job.verb
-        fprintf('Resampling %s\n',Psdata{i});
+        fprintf('Resampling %s\n',Psname);
       end
+      
+      if j==1, lPsdata{i} = Psname; end
+      if j==2, rPsdata{i} = Psname; end
     end
 
     % merge hemispheres
@@ -214,7 +220,12 @@ function varargout = cat_surf_resamp(varargin)
   end
       
   if nargout==1
-    varargout{1} = Psdata; 
+    if job.merge_hemi
+      varargout{1}.Psdata = Psdata; 
+    else
+      varargout{1}.lPsdata = lPsdata; 
+      varargout{1}.rPsdata = rPsdata; 
+    end
   end
   
   spm_progress_bar('Clear');

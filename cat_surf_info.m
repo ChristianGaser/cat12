@@ -350,8 +350,24 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         end
       catch
         % 32k mesh? 
-        S = gifti(P{i}) ;
+        switch sinfo(i).ee
+          case '.gii'
+            if sinfo(i).exist && ~read
+              S = gifti(P{i});
+            end
+          case '.annot'
+            if sinfo(i).exist && ~read
+              clear S; 
+              try
+                S = cat_io_FreeSurfer('read_annotation',P{1});
+              end
+            end
+        end
+        
         if isfield(S,'cdata') && (length(S.cdata) == 32492 || length(S.cdata) == 64984)
+          sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
+            [sinfo(i).side '.central.freesurfer.gii']);
+        elseif isfloat(S) && (length(S) == 32492 || length(S) == 64984)
           sinfo(i).Pmesh = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k',...
             [sinfo(i).side '.central.freesurfer.gii']);
         else

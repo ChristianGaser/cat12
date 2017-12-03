@@ -1,4 +1,4 @@
-function cat_stat_spm2x(vargin)
+function varargout = cat_stat_spm2x(vargin)
 %cat_stat_spm2x transformation of
 % t-maps to P, -log(P), r or d-maps
 % F-maps to P, -log(P), R2 maps
@@ -218,6 +218,8 @@ otherwise  %-NB: no threshold
     p_height_str = '';
 end
 
+Pname = cell(size(P,1),1);
+
 for i=1:size(P,1)
     [pth,nm,ext] = spm_fileparts(deblank(P(i,:)));
 
@@ -403,8 +405,8 @@ for i=1:size(P,1)
                 % find corresponding cluster in spm_clusters if cluster exceeds threshold
                 if k_noniso >= k
                     ind2 = find(A2==i2);
-                    for i = 1:min([max(A) max(A2)])
-                        j = find(A == i);
+                    for l = 1:min([max(A) max(A2)])
+                        j = find(A == l);
                         if length(j)==N2(ind2)
                             if any(ismember(XYZ2(:,ind2)',XYZ(:,j)','rows'))
                                 Q = [Q j];
@@ -524,7 +526,7 @@ for i=1:size(P,1)
         end
         fprintf('Save %s\n', name);
     
-        out = deblank(fullfile(pth,name));
+        Pname{i} = deblank(fullfile(pth,name));
 
         % print table for 3D data
         if isfield(vargin,'atlas') && ~strcmp(vargin.atlas,'None')
@@ -582,7 +584,7 @@ for i=1:size(P,1)
         Y(OFF) = t2x;
 
         VO = Vspm;
-        VO.fname = out;
+        VO.fname = Pname{i};
         VO.dt = [spm_type('float32') spm_platform('bigend')];
 
         VO = spm_data_hdr_write(VO);
@@ -590,4 +592,7 @@ for i=1:size(P,1)
     
     end
 end
+
+if nargout==1, varargout{1}.Pname = Pname; end  
+
 

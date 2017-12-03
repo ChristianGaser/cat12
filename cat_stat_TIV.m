@@ -1,4 +1,4 @@
-function cat_stat_TIV(p)
+function varargout = cat_stat_TIV(p)
 %cat_stat_TIV to read total intracranial volume (TIV) from xml-files
 %
 %_______________________________________________________________________
@@ -36,4 +36,7 @@ spm_progress_bar('Clear');
 
 if fclose(fid)==0
 	fprintf('\nValues saved in %s.\n',p.calcvol_name);
+    if nargout == 1
+	    varargout{1}.calcvol_name = p.calcvol_name;
+    end
 end

@@ -1,4 +1,4 @@
-function cat_surf_surf2roi(job)
+function varargout = cat_surf_surf2roi(job)
 % ______________________________________________________________________
 % Function to read surface data for atlas maps and create ROI files.
 % The function create CSV, as well as XML files.
@@ -73,6 +73,11 @@ function cat_surf_surf2roi(job)
     labelfolder = '';
   end 
   
+  %% ROI evaluation
+  FN = fieldnames(job.avg);
+  
+  xmlname = cell(numel(job.cdata{1}),1);
+
   % processing
   [CATrel, CATver] = cat_version; counter = 1; 
   for ri=1:numel(job.rdata)
@@ -151,8 +156,6 @@ function cat_surf_surf2roi(job)
           catROI{si}.(rinfo.dataname).comments = {'cat_surf_surf2roi'};
           catROI{si}.(rinfo.dataname).version  = CATver; 
 
-          %% ROI evaluation
-          FN = fieldnames(job.avg);
           for ai=1:numel(FN)
             if job.avg.(FN{ai})
               if sum(cell2mat(struct2cell(job.avg)))==1 && strcmp(FN{1},'mean')
@@ -178,8 +181,8 @@ function cat_surf_surf2roi(job)
               end
               
               % write xml data
-              cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
-                ['catROIs_' sinfo.name '.xml']),catROI{si},'write+'); 
+              xmlname{si} = fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,['catROIs_' sinfo.name '.xml']);
+              cat_io_xml(xmlname{si},catROI{si},'write+'); 
               
               % delete temporary resampled files
               if exist(char(cat_surf_rename(sinfo,'dataname',[sinfo.dataname '.resampledBySurf2roi'],'ee','')),'file')
@@ -196,18 +199,10 @@ function cat_surf_surf2roi(job)
       end
     end
   end
-  %%
-%   for si=1:numel(job.cdata{1})   
-%     % xml-export one file for all (this is a structure)
-%     try
-%       cat_io_xml(fullfile(strrep(sinfo.pp,[filesep surffolder],''),labelfolder,...
-%         ['catROIs_' sinfo.name '.xml']),catROI{si},'write+'); 
-%     catch
-%       disp(1)
-%     end
-%   end
-  %%
+
   spm_progress_bar('Clear');
+
+  if nargout==1, varargout{1}.xmlname = xmlname; end
   
 end
 

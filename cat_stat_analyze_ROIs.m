@@ -1,11 +1,13 @@
-function cat_stat_analyze_ROIs
+function cat_stat_analyze_ROIs(spmmat,alpha,show_results)
 % Statistical analysis of ROI data using an existing SPM design saved in a SPM.mat file
 %
 %__________________________________________________________________________
 % Christian Gaser
 % $Id$
 
-spmmat = spm_select(1,'SPM.mat','Select SPM.mat file to get design');
+if nargin < 1
+  spmmat = spm_select(1,'SPM.mat','Select SPM.mat file to get design');
+end
 load(spmmat);
 
 cwd = fileparts(spmmat);
@@ -38,7 +40,10 @@ end
 % not yet ready to use
 % threshold for p-values
 spm_clf('Interactive');
-alpha = spm_input('p-value',1,'r',0.05,1,[0,1]);
+
+if nargin < 2
+  alpha = spm_input('p-value',1,'r',0.05,1,[0,1]);
+end
 
 % mesh detected?
 if isfield(SPM.xVol,'G')
@@ -309,10 +314,12 @@ for c=1:n_corr
 end
 
 % display ROI results
-if ~isempty(ind_show)
-  show_results = spm_input('Display ROI results?','+1','m',corr([ind_show n_corr+1]),[ind_show 0]);
-else
-  show_results = 0;
+if nargin < 3
+  if ~isempty(ind_show)
+    show_results = spm_input('Display ROI results?','+1','m',corr([ind_show n_corr+1]),[ind_show 0]);
+  else
+    show_results = 0;
+  end
 end
 
 % write label volume with thresholded p-values

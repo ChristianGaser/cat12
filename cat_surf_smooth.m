@@ -14,7 +14,7 @@ function varargout = cat_surf_smooth(varargin)
 % $Id$
 
 % further private job options
-%   job.lazy .. does not do anything, if the result allready exist
+%   job.lazy .. does not do anything, if the result already exist
 
 %#ok<*ASGLU>
 
@@ -71,7 +71,7 @@ function varargout = cat_surf_smooth(varargin)
     Psdata(i) = cat_surf_rename(sinfo(i),'dataname',sprintf('s%d%s',round(fwhm),sinfo(i).dataname));
     
     if exist(Psdata{i},'file') && job.lazy  
-      fprintf('Display allready smoothed %s\n',Psdata{i},'link','cat_surf_display(''%s'')');
+      fprintf('Display already smoothed %s\n',Psdata{i},'link','cat_surf_display(''%s'')');
     else
       stime = clock; 
       

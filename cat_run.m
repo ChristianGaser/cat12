@@ -37,7 +37,7 @@ if isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.exto
   ~isfield(job,'process_index') && isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   jobl      = update_job(job);
   jobl.vout = vout_job(jobl);
-  job.data  = remove_allready_processed(jobl); 
+  job.data  = remove_already_processed(jobl); 
 end
 
 
@@ -674,7 +674,7 @@ vout  = struct('tiss',tiss,'label',{label},'wlabel',{wlabel},'rlabel',{rlabel},'
 return
 
 %=======================================================================
-function [data,err] = remove_allready_processed(job,verb)
+function [data,err] = remove_already_processed(job,verb)
   if ~exist('verb','var'), verb=0; end
   remove = []; err = zeros(size(job));
   cat_io_cprintf('warn','Lazy processing: \n');
