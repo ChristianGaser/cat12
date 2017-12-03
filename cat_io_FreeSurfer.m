@@ -22,7 +22,7 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 %   cat_io_FreeSurfer('write_annotation', ...
 %      fname, vertices, label, colortable);
 %
-% * GIFTI to FreeSurfer / FreeSurfer ot GIFTI: 
+% * GIFTI to FreeSurfer / FreeSurfer to GIFTI: 
 %   [P] = cat_io_FreeSurfer('gii2fs',fname);
 %   [P] = cat_io_FreeSurfer('gii2fs',...
 %           struct('data',{fnames},'delete',[0|1]));

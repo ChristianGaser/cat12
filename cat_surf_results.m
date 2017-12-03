@@ -1203,10 +1203,14 @@ function H = show_colorbar(H)
 % show colorbar
 figure(H.figure(1))
 if H.n_surf == 1
-  if ~isfield(H,'cbar') || ~ishandle(H.cbar)
-    H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(1,:),'Color',[0.5 0.5 0.5],'Visible','off');
-    H.colourbar = colorbar('peer',H.cbar,'Northoutside');
+
+  if isfield(H,'cbar')
+    try, delete(H.cbar); end
+    rmfield(H,'cbar');
   end
+
+  H.cbar = axes('Parent',H.figure(1),'Position',H.pos{1}.cbar(1,:),'Color',[0.5 0.5 0.5],'Visible','off');
+  H.colourbar = colorbar('peer',H.cbar,'Northoutside');
   
   if H.logP, title(H.cbar,'p-value','Color',1-H.bkg_col); end
   clim = getappdata(H.patch(1), 'clim');
@@ -1233,6 +1237,7 @@ if H.n_surf == 1
   end
 
   if H.logP
+  
     XTick = get(H.colourbar,'XTick');
 
     % save original XTick values
