@@ -29,12 +29,8 @@ matlabbatch{2}.spm.tools.cat.tools.check_cov.data_xml = {
   fullfile(pth,'report/cat_IXI019-Guys-0702-T1.xml')
                                                          };
 matlabbatch{2}.spm.tools.cat.tools.check_cov.gap = 3;
-matlabbatch{2}.spm.tools.cat.tools.check_cov.c = {
-  [1439.19
-  1483.14
-  1627.19
-  1621.57]
-                                                  }';
+matlabbatch{2}.spm.tools.cat.tools.check_cov.c{1}(1) = cfg_dep('Estimate TIV and global tissue volumes: TIV', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','calcvol'));
+
 %__________________________________________________________________________
 matlabbatch{3}.spm.tools.cat.tools.T2x.data_T2x = {fullfile(pth,'analysis/volume/spmT_0002.nii,1')};
 matlabbatch{3}.spm.tools.cat.tools.T2x.conversion.sel = 2;

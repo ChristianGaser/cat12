@@ -72,7 +72,7 @@ for i=1:numel(P)
   end
   
   if ~exist(pth_label,'dir')
-    spm('alert!',sprintf('Label folder %s was not found.\n',pth_label),0);
+    fprintf('Label folder %s was not found.\n',pth_label);
     roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
     break
   end
@@ -82,7 +82,7 @@ for i=1:numel(P)
     % check for catROI*-files
     files = cat_vol_findfiles(pth_label,[pattern '*']);
     if numel(files) == 0
-      spm('alert!',sprintf('No label files found in folder %s. Please check that you have not moved your data\n',pth_label),0);
+      fprintf('No label files found in folder %s. Please check that you have not moved your data\n',pth_label);
       roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
       break
     end
@@ -94,7 +94,7 @@ for i=1:numel(P)
     % check whether first filename in SPM.mat and xml-file are from the same subject
     ind = strfind(nam,tmp_name);
     if isempty(ind)
-      spm('alert!',sprintf('Label file %s does not fit to analyzed file %s. Please check that you have not moved your data',tmp_name,nam),0);
+      fprintf('Label file %s does not fit to analyzed file %s. Please check that you have not moved your data',tmp_name,nam);
       roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
       break
     end
@@ -586,10 +586,21 @@ for i=1:n_data
   measures = fieldnames(xml.(atlases{sel_atlas}).data);
   ROInames = xml.(atlases{sel_atlas}).names;
   ROIids = xml.(atlases{sel_atlas}).ids;
-  val = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
-  if i==1
-    ROIvalues = zeros(n_data, numel(val));
+
+  % check that all measures were found
+  try
+    tmp = measures{sel_measure};
+  catch
+    for j = 1:numel(measures)
+      fprintf('Available measures in %s:\n %s\n',roi_names{i},measures{j});
+    end
+    error('Please check your label files. Measure is not available in %s.\n',roi_names{i});
   end
+
+  val = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
+  
+  if i==1, ROIvalues = zeros(n_data, numel(val)); end
+  
   ROIvalues(i,:) = xml.(atlases{sel_atlas}).data.(measures{sel_measure});
 
   spm_progress_bar('Set',i);  
