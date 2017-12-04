@@ -333,7 +333,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
         F(:,i) = f;
         U(:,i) = u;
       catch
-        warning('Disable violin plot because Statistic Toolbox was not found.');
+        disp('Disable violin plot because Statistic Toolbox was not found.');
         opt.box = 1;
         opt.violin = 0;
       end

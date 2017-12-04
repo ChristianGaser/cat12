@@ -2,7 +2,6 @@ function batch_surface_pipeline
 
 pth=pwd;
 
-if 0
 spm_jobman('initcfg');
 
 matlabbatch{1}.spm.tools.cat.stools.surfextract.data_surf = {
@@ -72,8 +71,6 @@ matlabbatch{8}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
 %__________________________________________________________________________
 spm_jobman('run',matlabbatch);
 %__________________________________________________________________________
-
-end
 
 %__________________________________________________________________________
 cat_stat_analyze_ROIs(fullfile(pth,'analysis/surface/SPM.mat'), 0.05, 1);
