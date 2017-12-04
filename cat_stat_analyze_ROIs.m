@@ -327,6 +327,7 @@ if ~mesh_detected
 
   if isempty(ind_show)
     fprintf('No results found.\n');
+    show_results = 0;
   end
 
   % go through all corrections and save label image if sign. results were found
@@ -362,6 +363,7 @@ if mesh_detected
     fprintf('\nLabels for both hemispheres are saved, thus it is not necessary to also estimate labels from the SPM.mat file of the opposite hemisphere.\n');
   else
     fprintf('No results found.\n');
+    show_results = 0;
   end
   
   % remove both hemisphere results if no results were significant
