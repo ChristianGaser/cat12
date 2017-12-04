@@ -59,8 +59,7 @@
           <li>It is not necessary to use TIV as covariate (confound) because cortical thickness or other surface values are usually not dependent on TIV.</li>
           <li>It is not necessary to use any threshold masking.</li>
         </ul>
-        <li><a class="function" href="matlab:P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');for i=1:size(P,1),swd = spm_file(P(i,:),'fpath'); load(fullfile(swd,'SPM.mat')); SPM.swd  = swd; cat_stat_spm(SPM); end
-;">Estimate</a> surface model.</li>
+        <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> surface model.</li>
         <li>Optionally try <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.tfce_estimate');">Threshold-Free Cluster Enhancement</a>  (TFCE) using the SPM.mat file of the already estimated statistical design.</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
         <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> for both hemispheres. Select results (preferably saved as log-p maps using "Transform and threshold SPM-maps" for the merged hemispheres in order to show render views of your results.</li>

@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1235 | gaser | 2017-12-04 12:47:31
+r1236 | gaser | 2017-12-04 14:39:38
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+A       cat_stat_spm.m
+M       html/cat_starting.html
+
+Changed: Use workaround to deal with SPM.mat inisde cat12 now as external
+function cat_stat_spm.m.
+------------------------------------------------------------------------
+r1235 | gaser | 2017-12-04 12:47:48 +0100 (Mo, 04 Dez 2017) | 230 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -230,6 +241,7 @@ MM +    check_pipeline/label_orig/catROIs_IXI016-Guys-0697-T1.xml
 (1) Changed: if no results are found in cat_stat_analyze_ROIs.m then the
     option for displaying results is set to "0".
 (2) Changed: Renamed label folder in check_pipeline.
+
 ------------------------------------------------------------------------
 r1234 | gaser | 2017-12-04 11:52:18 +0100 (Mo, 04 Dez 2017) | 30 lines
 
