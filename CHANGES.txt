@@ -1,5 +1,37 @@
 ------------------------------------------------------------------------
-r1233 | gaser | 2017-12-04 00:23:37
+r1234 | gaser | 2017-12-04 11:51:55
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_tools.m
+M       cat_plot_boxplot.m
+M       cat_stat_TIV.m
+M       cat_stat_analyze_ROIs.m
+M       cat_surf_results.m
+M       cat_vol_slice_overlay.m
+M       cat_vol_slice_overlay_ui.m
+M       check_pipeline/batch_surface_pipeline.m
+M       check_pipeline/batch_volume_pipeline.m
+M       check_pipeline/label/catROIs_IXI002-Guys-0828-T1.mat
+M       check_pipeline/label/catROIs_IXI002-Guys-0828-T1.xml
+M       check_pipeline/label/catROIs_IXI016-Guys-0697-T1.mat
+M       check_pipeline/label/catROIs_IXI016-Guys-0697-T1.xml
+M       check_pipeline/mri/mwp1IXI002-Guys-0828-T1.nii
+!       check_pipeline/report/cat_IXI002-Guys-0828-T1.xml
+M       html/cat.html
+
+(1) Changed: cat_vol_slice_overlay now allows definition of xy-yorder and
+    saved image.
+(2) Changed: Size of slider in cat_surf_results was decreased.
+(3) Changed: In cat_stat_analyze_ROIs it is now checked whether all measures
+    can be consitently found for all subjects.
+(4) Fixed: Output fpr batch for calculating TIV was not correct.
+(5) Fixed: SPM alert windows blocked GUI in cat_stat_analyze_ROIs.m.
+(6) Changed: In batch for estimating TIV at least one xml-file has to be 
+    selected.  
+------------------------------------------------------------------------
+r1233 | gaser | 2017-12-04 00:26:25 +0100 (Mo, 04 Dez 2017) | 176 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -175,6 +207,7 @@ M       html/cat_starting.html
 (4) Fixed: Dependency output names for mayn functions.
 (5) Fixed: Missing colorbar handle in cat_surf_results.m.
 (6) Fixed: Some typos.
+
 
 ------------------------------------------------------------------------
 r1232 | gaser | 2017-12-01 21:54:50 +0100 (Fr, 01 Dez 2017) | 8 lines

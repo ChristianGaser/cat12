@@ -47,7 +47,8 @@ OV.labels.format = '%3.1f';
 OV.xy = [3 5];
 
 % save result as png/jpg/pdf
-% comment this out for interactive selection
+% comment this out for interactive selection or use 'none' for not 
+% saving any file
 OV.save = 'result.png';
 
 % Comment this out if you don't wish slice labels

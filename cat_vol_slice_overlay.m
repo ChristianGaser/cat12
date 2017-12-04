@@ -167,8 +167,13 @@ n = size(xy,1);
 xy_name = num2str(xy);
 str = deblank(xy_name(1,:));
 for i = 2:n, str = [str '|' deblank(xy_name(i,:))]; end
-indxy = spm_input('Select number of columns/rows','+1','m',str);
-xy = xy(indxy,:);
+
+if ~isfield(OV,'xy')
+  indxy = spm_input('Select number of columns/rows','+1','m',str);
+  xy = xy(indxy,:);
+else
+  xy = OV.xy;
+end
 
 % prepare overview of slices
 V = SO.img(1).vol;
@@ -296,16 +301,30 @@ end
 set(H,'FontSize',0.8*get(H,'FontSize'))
 
 % save image
-image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf|tif',char('none','png','jpeg','pdf','tiff'),2);
+if ~isfield(OV,'save')
+  image_ext = spm_input('Save image file?','+1','no|png|jpg|pdf|tif',char('none','png','jpeg','pdf','tiff'),2);
+else
+  if isempty(OV.save)
+    image_ext = 'none';
+  else
+    [pp,nn,ee] = spm_fileparts(OV.save);
+    image_ext = ee(2:end); 
+  end
+end
+
 if ~strcmp(image_ext,'none')
 
   [pt,nm] = spm_fileparts(img);
   
   % use shorter ext for jpeg
-  if strcmp(image_ext,'jpeg')
-    imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.jpg']);
+  if ~isfield(OV,'save')
+    if strcmp(image_ext,'jpeg')
+      imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.jpg']);
+    else
+      imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.' image_ext]);
+    end
   else
-    imaname = spm_input('Filename','+1','s',[nm '_' lower(OV.transform) '.' image_ext]);
+    imaname = OV.save;
   end
     
   % and print

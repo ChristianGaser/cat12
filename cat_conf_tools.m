@@ -549,9 +549,16 @@ calcvol_TIV.help    = {'You can save either the total intracranial volume (TIV) 
 ''
 };
 
+clear data_xml
+data_xml = cfg_files;
 data_xml.name = 'XML files';
+data_xml.tag  = 'data_xml';
+data_xml.filter = 'xml';
+data_xml.ufilter = '^cat_.*';
+data_xml.num  = [1 Inf];
 data_xml.help   = {...
 'Select xml-files that are saved during segmentation in the report folder.'};
+
 calcvol       = cfg_exbranch;
 calcvol.tag   = 'calcvol';
 calcvol.name  = 'Estimate TIV and global tissue volumes';
@@ -1038,8 +1045,8 @@ function dep = vout_stat_TIV(job)
 
 dep            = cfg_dep;
 dep.sname      = 'TIV';
-dep.src_output = substruct('.','calcvol_name');
-dep.tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
+dep.src_output = substruct('.','calcvol','()',{':'});
+dep.tgt_spec   = cfg_findspec({{'strtype','e','strtype','r'}});
 
 %------------------------------------------------------------------------
 function cdep = vout_reslice(job)
