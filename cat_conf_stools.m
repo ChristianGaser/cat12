@@ -239,21 +239,6 @@ function stools = cat_conf_stools(expert)
   };
 
 
-% surface ROI files
-  ROIs         = cfg_files;
-  ROIs.tag     = 'rdata';
-  ROIs.name    = '(Left) ROI atlas files';
-  ROIs.filter  = 'any';
-  if expert 
-    ROIs.ufilter = 'lh.aparc.*';
-  else
-    ROIs.ufilter = 'lh.aparc_[a2009s|DK40|HCP_MMP1].*'; % not yet working for all atlases
-  end
-  ROIs.dir     = fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces'); 
-  ROIs.num     = [1 Inf];
-  ROIs.help    = {'These are the ROI atlas files. Both sides will be processed.'};
-
-
   surfextract      = cfg_exbranch;
   surfextract.tag  = 'surfextract';
   surfextract.name = 'Extract additional surface parameters';
@@ -631,7 +616,7 @@ if expert>1
     end
     %estroi.prog = @cat_roi_parameters;
     estroi.help = {
-      'Surface-based ROI measures that required estimation on the original rather than the template surface mesh, such as the area or the gyrificatino index.'
+      'Surface-based ROI measures that required estimation on the original rather than the template surface mesh, such as the area or the gyrification index.'
     };
 end
 
@@ -773,11 +758,7 @@ end
       s2r.ROIs ...
       nproc ... 
       s2r.avg.main};
-  case 1
-    surf2roi.val  = {
-      s2r.cdata_sample ...
-      s2r.ROIs};
-  case 0
+  case {0, 1}
     surf2roi.val  = {s2r.cdata_sample};
   end
   surf2roi.prog = @cat_surf_surf2roi;
