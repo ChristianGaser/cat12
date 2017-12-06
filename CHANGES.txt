@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1236 | gaser | 2017-12-04 14:39:38
+r1237 | gaser | 2017-12-06 23:38:44
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+
+Changed: Cleaned up cat_conf_stool.m slightly.
+------------------------------------------------------------------------
+r1236 | gaser | 2017-12-04 14:39:54 +0100 (Mo, 04 Dez 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +17,7 @@ M       html/cat_starting.html
 
 Changed: Use workaround to deal with SPM.mat inisde cat12 now as external
 function cat_stat_spm.m.
+
 ------------------------------------------------------------------------
 r1235 | gaser | 2017-12-04 12:47:48 +0100 (Mo, 04 Dez 2017) | 230 lines
 
