@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1239 | gaser | 2017-12-07 15:04:05
+r1240 | dahnke | 2017-12-07 15:51:29
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_vol_urqio.m
+M       html/images/cat_tst_seg_bwp_ana.png
+
+Fixed:  Corrected bug in CAT processing of a given SPM segmentation in cat_main.  
+Fixed:  Corrected errors in high-resolution preprocessing pipeline cat_vol_urqio.
+------------------------------------------------------------------------
+r1239 | gaser | 2017-12-07 15:04:40 +0100 (Do, 07 Dez 2017) | 17 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -17,6 +28,7 @@ A       resources/settings/MBeautyConfigurationRules.xml
     editor.See MBeautify.txt for more information.
 (2) Changed: Tried MBeautify for cat_vol_slice_overlay and additionally
     changed interpolation to nearest neighbor.
+
 ------------------------------------------------------------------------
 r1238 | gaser | 2017-12-07 11:37:48 +0100 (Do, 07 Dez 2017) | 9 lines
 
