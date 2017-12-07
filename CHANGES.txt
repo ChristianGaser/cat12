@@ -1,11 +1,23 @@
 ------------------------------------------------------------------------
-r1237 | gaser | 2017-12-06 23:38:44
+r1238 | gaser | 2017-12-07 11:37:24
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_plot_boxplot.m
+M       html/cat.html
+
+Changed: Replaced ksdensity function which requires statistics toolbox with 
+kde in cat_plot_boxplot.m to allow violin plot without external toolbox.
+------------------------------------------------------------------------
+r1237 | gaser | 2017-12-06 23:39:20 +0100 (Mi, 06 Dez 2017) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_conf_stools.m
 
 Changed: Cleaned up cat_conf_stool.m slightly.
+
 ------------------------------------------------------------------------
 r1236 | gaser | 2017-12-04 14:39:54 +0100 (Mo, 04 Dez 2017) | 9 lines
 
