@@ -278,7 +278,7 @@ function cat_vol_urqio(job)
     
     if 0
       %% display segmentation V1
-      ds('l2','',vx_vol,Yp./mean(Yp(Yw(:))),(Yw*3 + Yg*2 + Yc)/3,Yp./mean(Yp(Yw(:))),(Yw*3 + Yg*2 + Yc)/3*2,40); colormap gray
+      ds('l2','',vx_vol,Yp./mean(Yp(Yw(:))),(Yw*3 + Yg*2 + Yc)/3,Yp./mean(Yp(Yw(:))),(Yw*3 + Yg*2 + Yc)/3*2,360); colormap gray
       %% display segmentation V2
       ds('d2','a',vx_vol,Yd/dth,Yh,Yr./rth,Yp/pth,120); colormap gray
     end
@@ -386,33 +386,37 @@ function cat_vol_urqio(job)
       %% create synthetic T1 contrast based on the PD image
       %Ytm = 1.5 - Ypm/2; 
       Ypmi = cat_stat_histth(Ypm,99);
-      %%
-      Ytm  = 1 - (Ypmi - min(Ypmi(:))) / ( max(Ypmi(:)) - min(Ypm(:)));
-      Ytm  = min( cat_stat_histth(Ypm .* (smooth3(Ybs)<0.01) -0.2,99)*0.8-0.1 + 1.2*smooth3(Ybs), Ytm + (1-Ybs)); % , ...
-%            ds('d2','a',vx_vol,Ypg/pgth,Ypmi,Ydm*2,Ytm*2,120); colormap gray
-                 %%
+      Ytm  = Ybs - (Ypmi - min(Ypmi(Ybs(:)>0))) / ( max(Ypmi(Ybs(:)>0)) - min(Ypm(Ybs(:)>0)));
+      Ytm  = min(cat_stat_histth( Ytm .* Ybs,99) *0.8-0.1 + 1.2*smooth3(Ybs), Ytm + (1-Ybs)); 
       if debug, clear YM; end 
 
       %%  the region maps are only used to estimate a the mean intensity of a tissue 
       Ywm = Yw & Yrm<mean(Yrm(Yw(:)))*1.5 & Ypg<pgth*0.5;
       Ygm = Yg & Yrm<mean(Yrm(Yw(:)))*1.5 & Ypg<pgth; 
       Ycm = Yc & Ypg<pgth;
-      Yhm = ~Yw & ~Yg & ~Yc & ~Ybm & Ydm>1.2 & Ypm<0.5 & Yrm>1.2;
-      Ylm = ~Yw & ~Yg & ~Yc & ~Ybm & Ydm>0 & Ypm>0 & Yrm>0 & Ydm<mean(Ydm(Ycm(:)))*1.5 & Ypm>mean(Ypm(Ycm(:)))/1.5 & Yrm<mean(Yrm(Ycm(:)))*1.5;
+      Yhm = ~Ybs & ~Yw & ~Yg & ~Yc & ~Ybm & Ydm>1.2 & Ypm<0.5 & Yrm>1.2;
+      Ylm = ~Ybs & ~Yw & ~Yg & ~Yc & ~Ybm & Ydm>0 & Ypm>0 & Yrm>0 & Ydm<mean(Ydm(Ycm(:)))*1.5 & Ypm>mean(Ypm(Ycm(:)))/1.5 & Yrm<mean(Yrm(Ycm(:)))*1.5;
       if sum(Ylm(:))<10
-        Ylm = ~Yw & ~Yg & ~Yc & Ydm>min(Ydm(:)) & Ypm>min(Ypm(:)) & Yrm>min(Yrm(:)) & Ydm<mean(Ydm(Ycm(:)))*2 & Ypm>mean(Ypm(Ycm(:)))/2 & Yrm<mean(Yrm(Ycm(:)))*2;
+        Ylm = ~Ybs & ~Yw & ~Yg & ~Yc & Ydm>min(Ydm(:)) & Ypm>min(Ypm(:)) & Yrm>min(Yrm(:)) & Ydm<mean(Ydm(Ycm(:)))*2 & Ypm>mean(Ypm(Ycm(:)))/2 & Yrm<mean(Yrm(Ycm(:)))*2;
       end  
-      if ~debug, clear Yg Yc; end
+      if ~debug, clear Yg Yc Ybs; end
 
-      % real thresholds [bg lm cm gm wm hm max] 
+      %% real thresholds [bg lm cm gm wm hm max] 
       T3th(1:4,1) = {'Ydm';'Ypm';'Yrm';'Ytm'};
-      T3th{1,2} = [ 0 min(Ydm(Ylm(:))) mean(Ydm(Ycm(:))) mean(Ydm(Ygm(:))) mean(Ydm(Ywm(:))) mean(Ydm(Yhm(:))) max(Ydm(:))];
-      T3th{2,2} = [ 0 mean(Ypm(Ycm(:))) mean(Ypm(Ygm(:))) mean(Ypm(Ywm(:))) mean(Ypm(Yhm(:))) max(Ypm(:))];
-      T3th{3,2} = [ 0 min(Yrm(Ylm(:))) mean(Yrm(Ycm(:))) mean(Yrm(Ygm(:))) mean(Yrm(Ywm(:))) mean(Yrm(Yhm(:))) max(Yrm(:))];
-      T3th{4,2} = [ min(Ytm(:)) min(Ytm(Ylm(:))) mean(Ytm(Ycm(:))) mean(Ytm(Ygm(:))) mean(Ytm(Ywm(:))) max(Ytm(:))];
+      T3th{1,2} = [ 0 min([nan,min(Ydm(Ylm(:)))]) mean(Ydm(Ycm(:))) mean(Ydm(Ygm(:))) mean(Ydm(Ywm(:))) cat_stat_nanmean([nan,mean(Ydm(Yhm(:)))]) max(Ydm(:))];
+      T3th{2,2} = [ 0 mean(Ypm(Ycm(:))) mean(Ypm(Ygm(:))) mean(Ypm(Ywm(:))) cat_stat_nanmean([nan,mean(Ypm(Ylm(:)))]) max(Ypm(:))];
+      T3th{3,2} = [ 0 min([nan,min(Yrm(Ylm(:)))]) mean(Yrm(Ycm(:))) mean(Yrm(Ygm(:))) mean(Yrm(Ywm(:))) cat_stat_nanmean([nan,mean(Yrm(Yhm(:)))]) max(Yrm(:))];
+      T3th{4,2} = [ min(Ytm(:)) min([nan,min(Ytm(Ylm(:)))]) mean(Ytm(Ycm(:))) mean(Ytm(Ygm(:))) mean(Ytm(Ywm(:))) max(Ytm(:))];
+      if sum(Yhm(:)>0)<1000 && sum(Ylm(:)>0)<1000
+        T3th{1,2}([2,6]) = [mean(T3th{1,2}(1:2:3)) mean(T3th{1,2}(5:2:7))];
+        T3th{2,2}(5)     = mean(T3th{2,2}(4:2:6));
+        T3th{3,2}([2,6]) = [mean(T3th{3,2}(1:2:3)) mean(T3th{3,2}(5:2:7))];
+        T3th{4,2}(2)     = 0.02;
+      end  
+      Yp0 = Ycm + 2*Ygm + 3*Ywm; 
       if ~debug, clear Ylm Yhm Ycm Ygm Ywm; end
       
-      % final thresholds
+      %% final thresholds
       T3th{1,3} = [ 0 1/12 1/3 2/3 1   T3th{1,2}(5)+diff(T3th{1,2}(5:6)) T3th{1,2}(6)+diff(T3th{1,2}(6:7))]; 
       T3th{2,3} = [ 0 1 2/3 1/3 T3th{2,2}(5)/(1/T3th{2,2}(2)) T3th{2,2}(6)/(1/T3th{2,2}(2))]; 
       T3th{3,3} = [ 0 1/12 1/3 2/3 1   T3th{3,2}(5)+diff(T3th{3,2}(5:6)) T3th{3,2}(6)+diff(T3th{3,2}(6:7))]; 
@@ -433,12 +437,22 @@ function cat_vol_urqio(job)
         eval([T3th{bi,1} 'c = Ym;']); 
         clear Ym Ysrc M;
       end
+      if 0 
+        %% just for debuging and display
+        ds('d2','',vx_vol,Ydmc,Ypmc,Yrmc,Ytmc,220); colormap gray
+        %% 
+        ds('d2','a',vx_vol,Ydm,Ydmc,Yrm,Yrmc,220); colormap gray
+        %%
+        ds('d2','a',vx_vol,Ypm,Ypmc*2,Ytm,Ytmc,220); colormap gray
+      end
+      
     else
       % no intensity normalization 
       Ydmc = Yd ./ mean(Yd(Yw(:))); 
       Ypmc = Yp ./ mean(Yp(Yw(:))); 
       Yrmc = Yr ./ mean(Yr(Yw(:))); 
-      Ytmc = 1.5 - Ypmc/2; Ytmc(Ypmc<0.8 & cat_vol_morph(cat_vol_morph(Ypmc<0.5 | Yrmc>1.5,'l'),'d',1.5))=0;  
+      Ytmc = 1.5 - Ypmc/2; Ytmc(Ypmc<0.8 & cat_vol_morph(cat_vol_morph(Ypmc<0.5 | Yrmc>1.5,'l'),'d',1.5))=0;
+      if ~debug, clear Ybs; end
     end
     
    
@@ -446,11 +460,12 @@ function cat_vol_urqio(job)
     
     
     
-    %% find and correct blood vessels
+    %% find blood vessels
     %  --------------------------------------------------------------------
     %  Yrd, Ydd, Ytd = divergence maps
     %  --------------------------------------------------------------------
     Yb    = cat_vol_morph((Ybm | (Yp0>0.1)) & Ydmc>0 & Ydmc<1.1 & Yrmc>0 & Yrmc<1.1 & Ytmc>0 & Ytmc<1.1,'lc',max(1,min(2,1/mean(vx_vol))));   % brain mask for CSF minimum value
+    Yb    = cat_vol_morph(Yb,'lo',0.5/mean(vx_vol));
     if job.opts.bvc || job.output.bv 
       stime  = cat_io_cmd('  Blood Vessel Detection:','g5','',job.opts.verb-1,stime);
 
@@ -506,6 +521,9 @@ function cat_vol_urqio(job)
         ds('d2','',vx_vol,Ydmc*1.5,Ytmc*1.5,Ybv,Ybv1,220); colormap gray
       end
     end
+    %% correct blood vessels
+    %  --------------------------------------------------------------------
+    %  --------------------------------------------------------------------
     if job.opts.bvc
       stime  = cat_io_cmd('  Blood Vessel Correction:','g5','',job.opts.verb-1,stime);
 

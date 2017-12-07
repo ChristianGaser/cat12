@@ -1285,6 +1285,12 @@ else
   cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
   NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
   
+  % QA WMH values required by cat_tst_qa later
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
+  
   % load SPM segments
   [pp,ff,ee] = spm_fileparts(res.image0(1).fname);
   Ycls{1} = uint8(spm_read_vols(spm_vol(fullfile(pp,['c1' ff ee])))*255); 
@@ -1329,7 +1335,7 @@ else
   Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG); 
   
-  fprintf('%5.0fs\n',etime(clock,stime));
+  fprintf('%5.0fs\n',etime(clock,stime));  
 end
 
 
@@ -1579,7 +1585,7 @@ if job.output.warps(2)
   Ndef.dat(:,:,:,:,:) = Yy2;
   clear Yy2;
 end
-fprintf('%4.0fs\n',etime(clock,stime));
+fprintf('%5.0fs\n',etime(clock,stime));
 
 
 
