@@ -5,7 +5,7 @@ function cat_stat_spm(SPM)
 % results.
 %__________________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_spm.m 1235 2017-12-04 11:47:48Z gaser $
+% $Id$
 
 if nargin == 0
   P = spm_select([1 Inf],'^SPM\.mat$','Select SPM.mat file(s)');
