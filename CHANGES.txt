@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1240 | dahnke | 2017-12-07 15:51:29
+r1241 | gaser | 2017-12-11 00:03:03
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Changed: Formatted cat_surf_results.m
+------------------------------------------------------------------------
+r1240 | dahnke | 2017-12-07 15:52:10 +0100 (Do, 07 Dez 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +17,7 @@ M       html/images/cat_tst_seg_bwp_ana.png
 
 Fixed:  Corrected bug in CAT processing of a given SPM segmentation in cat_main.  
 Fixed:  Corrected errors in high-resolution preprocessing pipeline cat_vol_urqio.
+
 ------------------------------------------------------------------------
 r1239 | gaser | 2017-12-07 15:04:40 +0100 (Do, 07 Dez 2017) | 17 lines
 
