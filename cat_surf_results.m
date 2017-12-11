@@ -12,6 +12,11 @@ function y = cat_surf_results(action, varargin)
 
 global H
 
+% remove any existing data
+if isfield(H,'S')
+    H = rmfield(H,'S');
+end
+
 %-Input parameters
 %--------------------------------------------------------------------------
 if ~nargin, action = 'Disp'; end
@@ -75,7 +80,7 @@ switch lower(action)
             'cbar', [0.400 -0.180 0.200 0.300; 0.440 0.025 0.120 0.120]);% colorbar
         
         % figure 2 with GUI
-           H.pos{2} = struct(...
+        H.pos{2} = struct(...
           'fig',   [2*ws(3)+10 10 0.6*ws(3) ws(3)],... 
           'sel',   [0.290 0.930 0.425 0.050],...
           'nam',   [0.050 0.875 0.900 0.050],...
@@ -180,7 +185,8 @@ switch lower(action)
             'Interruptible', 'on', 'Visible', 'off');
         
         str = {'Data Cursor...', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
-            'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', 'Plot data at vertex', ...
+            'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
+            'Plot data at vertex', ...
             'Plot mean data inside cluster', 'Enable/Disable rotate3d'};
         tmp = {{@select_cursor, 0}, ...
                {@select_cursor, 1}, ...
@@ -226,7 +232,8 @@ switch lower(action)
             'ToolTipString', 'Select Underlying Texture', ...
             'Interruptible', 'on', 'Visible', 'off');
         
-        str = {'Atlas Border Overlay...', 'No Overlay', 'Desikan-Killiany DK40', 'Destrieux 2009', 'HCP Multi-Modal Parcellation'};
+        str = {'Atlas Border Overlay...', 'No Overlay', 'Desikan-Killiany DK40', 'Destrieux 2009', ...
+               'HCP Multi-Modal Parcellation'};
         tmp = {{@select_border, 0}, ...
                {@select_border, 1}, ...
                {@select_border, 2}, ...
@@ -351,16 +358,21 @@ switch lower(action)
                     if ~isempty(strfind(fileparts(H.S{ind}.info(1).Pmesh), '_32k'))
                         H.str32k = '_32k';
                         H.is32k = 1;
+                    else
+                        H.str32k = '';
+                        H.is32k = 0;
                     end
                     
                     if strcmp(H.S{ind}.info(1).side, 'mesh')
                         meshes_merged = 1;
                         if ind == 1
                             H.S{ind}.info(1).side = 'lh';
-                            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
+                            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ...
+                                ['templates_surfaces' H.str32k], 'lh.central.freesurfer.gii');
                         else
                             H.S{ind}.info(1).side = 'rh';
-                            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
+                            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ....
+                                ['templates_surfaces' H.str32k], 'rh.central.freesurfer.gii');
                         end
                     end
                     H.S{ind}.M = gifti(H.S{ind}.info(1).Pmesh);
@@ -369,44 +381,61 @@ switch lower(action)
                     H.S{ind}.A = spm_mesh_adjacency(H.S{ind}.M);
                     
                     % cdata found?
-                    try
-                        if meshes_merged
-                            if ind == 1
-                                Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-                                if H.is32k
-                                    H.S{1}.Y = Y(1:32492, :);
-                                    H.S{2}.Y = Y(32493:end, :);
-                                else
-                                    H.S{1}.Y = Y(1:163842, :);
-                                    H.S{2}.Y = Y(163843:end, :);
-                                end
-                            end
-                        else
-                            H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
-                        end
-                    catch
+                    if meshes_merged
                         if ind == 1
                             try
-                                H.S{ind}.Y = zeros(size(H.S{2}.Y));
+                                Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
                             catch
                                 error('No data in surfaces found.');
                             end
-                        else
-                            H.S{ind}.Y = zeros(size(H.S{1}.Y));
+                            if H.is32k
+                                H.S{1}.Y = Y(1:32492, :);
+                                H.S{2}.Y = Y(32493:end, :);
+                            else
+                                H.S{1}.Y = Y(1:163842, :);
+                                H.S{2}.Y = Y(163843:end, :);
+                            end
                         end
-                        
-                        % reset name
-                        H.S{ind}.name = '';
+                    else
+                        gind = gifti(H.S{ind}.name);
+                        if isfield(gind,'cdata')
+                            H.S{ind}.Y = spm_data_read(spm_data_hdr_read(H.S{ind}.name));
+                        else
+                            if ind == 1
+                                gind = gifti(H.S{2}.name);
+                                if isfield(gind,'cdata')
+                                    if isnumeric(gind.cdata)
+                                        H.S{1}.Y = zeros(size(gind.cdata));
+                                    else
+                                        H.S{1}.Y = zeros(gind.cdata.dim);
+                                    end
+                                    H.S{1}.name = '';
+                                else
+                                    error('No data in surfaces found.');
+                                end
+                            else
+                                gind = gifti(H.S{1}.name);
+                                if isfield(gind,'cdata')
+                                    if isnumeric(gind.cdata)
+                                        H.S{2}.Y = zeros(size(gind.cdata));
+                                    else
+                                        H.S{2}.Y = zeros(gind.cdata.dim);
+                                    end
+                                    H.S{2}.name = '';
+                                else
+                                    error('No data in surfaces found.');
+                                end
+                            end
+                        end
                     end
-                    
+                                      
                     % check whether name contains 'log' that indicates a logP file
                     for i = 1:size(H.S{ind}.name, 1)
                         if isempty(strfind(H.S{ind}.info(i).ff, 'log'))
                             H.logP = 0;
                         end
                     end
-                    
-                end
+                end                    
             end
             
             % rescue original name for later result selection
@@ -475,7 +504,8 @@ switch lower(action)
             % Don't allow plot functions for RGB maps
             if H.n_surf > 1
                 str = {'Data Cursor...', 'Disable data cursor', 'Atlas regions: Desikan-Killiany DK40', ...
-                    'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', 'Enable/Disable rotate3d'};
+                    'Atlas regions: Destrieux 2009', 'Atlas region: HCP Multi-Modal Parcellation', ...
+                    'Enable/Disable rotate3d'};
                 tmp = {{@select_cursor, 0}, ...
                        {@select_cursor, 1}, ...
                        {@select_cursor, 2}, ...
@@ -516,16 +546,16 @@ switch lower(action)
             H.rdata{2} = [];
             H.rdata{3} = [];
             for ind = 1:2
-                atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], [H.S{ind}.info(1).side ... .
-                    '.aparc_DK40.freesurfer.annot']);
+                atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], ...
+                [H.S{ind}.info(1).side '.aparc_DK40.freesurfer.annot']);
                 [vertices, rdata0, colortable, rcsv1] = cat_io_FreeSurfer('read_annotation', atlas_name);
                 H.rdata{1} = [H.rdata{1} rdata0];
-                atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], [H.S{ind}.info(1).side ... .
-                    '.aparc_a2009s.freesurfer.annot']);
+                atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], ...
+                [H.S{ind}.info(1).side '.aparc_a2009s.freesurfer.annot']);
                 [vertices, rdata0, colortable, rcsv2] = cat_io_FreeSurfer('read_annotation', atlas_name);
                 H.rdata{2} = [H.rdata{2} rdata0];
-                atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], [H.S{ind}.info(1).side ... .
-                    '.aparc_HCP_MMP1.freesurfer.annot']);
+                atlas_name = fullfile(spm('dir'), 'toolbox', 'cat12', ['atlases_surfaces' H.str32k], ...
+                [H.S{ind}.info(1).side '.aparc_HCP_MMP1.freesurfer.annot']);
                 [vertices, rdata0, colortable, rcsv3] = cat_io_FreeSurfer('read_annotation', atlas_name);
                 H.rdata{3} = [H.rdata{3} rdata0];
             end
@@ -995,11 +1025,14 @@ global H
 for ind = 1:2
     switch surf
         case 1
-            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{ind}.info(1).side '.central.freesurfer.gii']);
+            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+            [H.S{ind}.info(1).side '.central.freesurfer.gii']);
         case 2
-            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
+            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+            [H.S{ind}.info(1).side '.inflated.freesurfer.gii']);
         case 3
-            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
+            H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], ...
+            [H.S{ind}.info(1).side '.central.Template_T1_IXI555_MNI152_GS.gii']);
         case 4
             H.S{ind}.info(1).Pmesh = fullfile(spm('dir'), 'toolbox', 'cat12', ['templates_surfaces' H.str32k], [H.S{ind}.info(1).side '.patch.freesurfer.gii']);
     end
@@ -1550,6 +1583,9 @@ for i = 1:n
     if ~isempty(strfind(fileparts(info(i).Pmesh), '_32k'))
         H.str32k = '_32k';
         H.is32k = 1;
+    else
+        H.str32k = '';
+        H.is32k = 0;
     end
     
     % check whether name contains 'log' that indicates a logP file
