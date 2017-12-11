@@ -1015,7 +1015,8 @@ end
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-  surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm,nproc};
+%  surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm,nproc};
+  surfresamp.val  = {data_surf,merge_hemi,fwhm,nproc};
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.vout = @vout_surf_resamp;
   surfresamp.help = {
@@ -1045,7 +1046,8 @@ end
   surfresamp_fs      = cfg_exbranch;
   surfresamp_fs.tag  = 'surfresamp_fs';
   surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Thickness Data';
-  surfresamp_fs.val  = {data_fs,merge_hemi,mesh32k,fwhm,outdir};
+%  surfresamp_fs.val  = {data_fs,merge_hemi,mesh32k,fwhm,outdir};
+  surfresamp_fs.val  = {data_fs,merge_hemi,fwhm,outdir};
   surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
   surfresamp_fs.help = {
   'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
