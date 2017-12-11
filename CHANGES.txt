@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1243 | gaser | 2017-12-11 14:02:16
+r1244 | gaser | 2017-12-12 00:33:12
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_results.m
+
+Fixed: Change between 32k and 164k meshes was not correct in cat_surf_results.m
+------------------------------------------------------------------------
+r1243 | gaser | 2017-12-11 14:02:20 +0100 (Mo, 11 Dez 2017) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +21,7 @@ M       cat_conf_stools.m
 (1) Changed: Temporarily removed option for 32k meshes because smoothing size
     is not correct for these meshes.
 (2) Fixed: Some incorrect && checks for non-logical variables.
+
 ------------------------------------------------------------------------
 r1242 | gaser | 2017-12-11 14:01:14 +0100 (Mo, 11 Dez 2017) | 9 lines
 
