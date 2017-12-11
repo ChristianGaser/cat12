@@ -26,6 +26,7 @@ function varargout = cat_surf_resamp(varargin)
   def.trerr     = 0; 
   def.fwhm      = 0; 
   def.nproc     = 0; 
+  def.mesh32k   = 0; 
   def.verb      = cat_get_defaults('extopts.verb'); 
   def.debug     = cat_get_defaults('extopts.verb')>2;
   def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 

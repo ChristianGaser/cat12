@@ -1053,7 +1053,7 @@ function display_results_all(obj, event_obj)
 %-----------------------------------------------------------------------
 global H
 
-if (size(H.S{1}.Y) > 1 || size(H.S{2}.Y) > 1) && min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0
+if (size(H.S{1}.Y) > 1 | size(H.S{2}.Y) > 1) & min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0
     disp('Warning: Only results with positive values are displayed!');
 end
 
@@ -2173,7 +2173,7 @@ else
     ylabel(H.dataplot, 'contrast estimate', 'FontSize', H.FS(12), 'Color', 1 - H.bkg_col)
 end
 
-set(H.dataplot, 'XLim', [0.4(length(cbeta) + 0.6)], 'XTicklabel', '', 'XTick', [])
+set(H.dataplot, 'XLim', [0.4 (length(cbeta) + 0.6)], 'XTicklabel', '', 'XTick', [])
 hold(H.dataplot, 'off')
 
 assignin('base', 'y', y);
