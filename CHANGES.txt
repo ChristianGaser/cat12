@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1242 | gaser | 2017-12-11 14:00:41
+r1243 | gaser | 2017-12-11 14:02:16
+
+Changed paths:
+M       CHANGES.txt
+ M      MBeautify.m
+ M      MBeautify.txt
+ M      MFormatter.m
+M       cat_conf_stools.m
+ M      resources/settings/MBeautyConfigurationRules.m
+ M      resources/settings/MBeautyConfigurationRules.xml
+
+(1) Changed: Temporarily removed option for 32k meshes because smoothing size
+    is not correct for these meshes.
+(2) Fixed: Some incorrect && checks for non-logical variables.
+------------------------------------------------------------------------
+r1242 | gaser | 2017-12-11 14:01:14 +0100 (Mo, 11 Dez 2017) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +24,7 @@ M       cat_surf_results.m
 (1) Changed: Temporarily removed option for 32k meshes because smoothing size
     is not correct for these meshes.
 (2) Fixed: Some incorrect && checks for non-logical variables.
+
 ------------------------------------------------------------------------
 r1241 | gaser | 2017-12-11 00:03:26 +0100 (Mo, 11 Dez 2017) | 6 lines
 
