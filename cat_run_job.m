@@ -60,6 +60,7 @@ function cat_run_job(job,tpm,subj)
     % create subject-wise diagy file with the command-line output
     [pp,ff,ee,ex] = spm_fileparts(job.data{subj}); 
     catlog = fullfile(pth,reportfolder,['catlog_' ff '.txt']);
+    if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this of to have an additional log file
     diary(catlog); 
     
     

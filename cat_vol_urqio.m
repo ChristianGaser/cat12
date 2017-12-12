@@ -443,7 +443,7 @@ function cat_vol_urqio(job)
         %% 
         ds('d2','a',vx_vol,Ydm,Ydmc,Yrm,Yrmc,220); colormap gray
         %%
-        ds('d2','a',vx_vol,Ypm,Ypmc*2,Ytm,Ytmc,220); colormap gray
+        ds('d2','a',vx_vol,Ypm,Ypmc*2,Ytm,Ytmc,140); colormap gray
       end
       
     else
@@ -518,7 +518,7 @@ function cat_vol_urqio(job)
       
       if debug 
         %% display BV
-        ds('d2','',vx_vol,Ydmc*1.5,Ytmc*1.5,Ybv,Ybv1,220); colormap gray
+        ds('d2','a',vx_vol,Ydmc*1.5,Ytmc*1.5,Ybv,Yp0/3*2,180); colormap gray
       end
     end
     %% correct blood vessels
