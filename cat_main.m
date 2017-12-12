@@ -1829,7 +1829,7 @@ clear Yo Yp0 qas;
 fprintf('%5.0fs\n',etime(clock,stime));
 
 
-if cat_get_defaults('extopts.print')
+if job.extopts.print
   %% display and print result if possible
   %  ---------------------------------------------------------------------
     QMC   = cat_io_colormaps('marks+',17);
@@ -2224,18 +2224,20 @@ if cat_get_defaults('extopts.print')
 
 
     % surface
-    if exist('Psurf','var')
-      try
-        hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
-        hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
-          'multisurf',job.output.surface,'view','s',...
-          'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
-        colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
-        cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
-        set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
-          'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
-      catch
-        cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
+    if job.extopts.print>1
+      if exist('Psurf','var')
+        try
+          hCS = subplot('Position',[0.50 0.05 0.55 0.30],'visible','off'); 
+          hSD = cat_surf_display(struct('data',Psurf(1).Pthick,'readsurf',0,'expert',2,...
+            'multisurf',job.output.surface,'view','s',...
+            'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
+          colormap(cmap);  set(hSD{1}.colourbar,'visible','off'); 
+          cc{3} = axes('Position',[0.63 0.02 0.3 0.01],'Parent',fg); image((121:1:120+surfcolors));
+          set(cc{3},'XTick',1:(surfcolors-1)/6:surfcolors,'XTickLabel',{'0','1','2','3','4','5','          6 mm'},...
+            'YTickLabel','','YTick',[],'TickLength',[0 0],'FontSize',fontsize,'FontWeight','Bold');
+        catch
+          cat_io_cprintf('warn','WARNING: Can''t display surface!\n',VT.fname);   
+        end
       end
     end
 

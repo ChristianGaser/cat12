@@ -288,17 +288,16 @@ verb.help    = {
   'Verbose processing.'
 };
 
-%{
-report         = cfg_menu;
-report.tag     = 'report';
-report.name    = 'Create CAT report';
-report.labels  = {'No','Yes'};
-report.values  = {0 1};
-report.def     = @(val)cat_get_defaults('extopts.export', val{:});
-report.help    = {
-  'Create final CAT report that requires java.'
+
+print         = cfg_menu;
+print.tag     = 'print';
+print.name    = 'Create CAT report';
+print.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
+print.values  = {0 1 2};
+print.def     = @(val)cat_get_defaults('extopts.print', val{:});
+print.help    = {
+  'Create final CAT report that requires Java.'
 };
-%}
 
 
 %---------------------------------------------------------------------
@@ -649,9 +648,9 @@ admin      = cfg_branch;
 admin.tag  = 'admin';
 admin.name = 'Administration Options';
 if expert==1
-  admin.val  = {ignoreErrors verb};
+  admin.val  = {ignoreErrors verb print};
 else
-  admin.val  = {experimental lazy ignoreErrors verb};
+  admin.val  = {experimental lazy ignoreErrors verb print};
 end
 admin.help = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
 
