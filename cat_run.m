@@ -81,12 +81,16 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
     %def = cat_get_defaults; job = cat_io_checkinopt(job,def); % further job update required here to get the latest cat defaults
-    global defaults cat12; %#ok<NUSED,TLEV>
-    save(tmp_name,'job','defaults','cat12');
-    clear defaults cat12;
+    spm12def = spm_get_defaults;    
+    cat12def = cat_get_defaults; 
+    save(tmp_name,'job','spm12def','cat12def');
+    clear spm12def cat12;
     
     % matlab command, cprintferror=1 for simple printing         
-    matlab_cmd = sprintf('"global cprintferror; cprintferror=1; addpath %s %s %s %s; load %s; cat_run(job); "',...
+    matlab_cmd = sprintf(...
+        ['"global cprintferror; cprintferror=1; addpath %s %s %s %s;load %s; ' ...
+         'global defaults; defaults=spm12def; clear defaults; '...
+         'global cat; cat=cat12def; clear cat; cat_run(job); "'],...
       spm('dir'),fullfile(spm('dir'),'toolbox','cat12'),...
         fullfile(spm('dir'),'toolbox','OldNorm'),fullfile(spm('dir'),'toolbox','DARTEL'), tmp_name);
 
@@ -161,11 +165,12 @@ return
 function job = update_job(job)
 
   % set GUI specific parameter if available
-  FN = {
-    'registration',{'darteltpm','shootingtpm','regstr','cat12atlas','brainmask','T1'}; 
-    'segmentation',{'APP','NCstr','LASstr','gcutstr','cleanupstr','BVCstr','WMHCstr','WMHC','mrf','restypes'};
-    'admin',       {'experimental','lazy','ignoreErrors','verb'}; 
-    };
+  FN = {}; GUIfields = {'registration','segmentation','admin','surface'}; 
+  for fnj=1:numel(GUIfields)
+    if isfield(job.extopts,GUIfields{fnj})
+       FN = [FN;{GUIfields{fnj} fieldnames(job.extopts.(GUIfields{fnj}) )'}];
+    end
+  end
   for fnj=1:size(FN,1)  
     if isfield(job.extopts,FN{fnj,1})
       for fni=1:numel(FN{fnj,2})
@@ -275,7 +280,7 @@ function job = update_job(job)
   end
   
   job.extopts.darteltpms(cellfun('length',job.extopts.darteltpms)~=length(job.extopts.darteltpm{1}))=[]; % remove to short/long files
-  if numel(job.extopts.darteltpms)~=6
+  if numel(job.extopts.darteltpms)~=6 && any(job.extopts.regstr==4)
     %%
     files = ''; for di=1:numel(job.extopts.darteltpms), files=sprintf('%s\n  %s',files,job.extopts.darteltpms{di}); end
     error('CAT:cat_main:TemplateFileError', ...
@@ -295,7 +300,7 @@ function job = update_job(job)
   end
   job.extopts.shootingtpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
   job.extopts.shootingtpms(cellfun('length',job.extopts.shootingtpms)~=length(job.extopts.shootingtpm{1}))=[]; % remove to short/long files
-  if numel(job.extopts.shootingtpms)~=5
+  if numel(job.extopts.shootingtpms)~=5 && any(job.extopts.regstr~=4)
     %%
     files = ''; for di=1:numel(job.extopts.shootingtpms), files=sprintf('%s\n  %s',files,job.extopts.shootingtpms{di}); end
     error('CAT:cat_main:TemplateFileError', ...
@@ -326,7 +331,11 @@ function job = update_job(job)
   
   
   % set boundary box by Template properties if box inf
-  Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
+  if job.extopts.regstr(1)==4
+    Vd       = spm_vol([job.extopts.darteltpm{1} ',1']);
+  else
+    Vd       = spm_vol([job.extopts.shootingtpm{1} ',1']);
+  end
   [bb,vox] = spm_get_bbox(Vd, 'old');  
   if bb(1)>bb(2), bbt=bb(1); bb(1)=bb(2); bb(2)=bbt; clear bbt; end
   % Removed BB defintion in GUI and default file in november 2011, because

@@ -85,14 +85,15 @@ switch lower(deffile)
     mycat.extopts.expertgui = 2;
     restartspm = 1;
     deffile = catdef; 
-  case {'greaterapes','lesserapes','oldworldmonkeys','newworldmonkeys','mammals','dogs',...
-        'greaterape' ,'lesserape' ,'oldworldmonkey' ,'newworldmonkey', 'mammal', 'dog'}
+  case {'greaterapes','lesserapes','oldworldmonkeys','newworldmonkeys','mammals','chimpanzees','dogs',...
+        'greaterape' ,'lesserape' ,'oldworldmonkey' ,'newworldmonkey', 'mammal', 'chimpanzee' ,'dog'}
     switch lower(deffile)
       case {'greaterapes','greaterape'},          species = 'ape_greater';     speciesdisp = ' (greater apes)';
       %case {'lesserapes','lesserape'},            species = 'ape_lesser';      speciesdisp = ' (lesser apes)';
       case {'oldworldmonkeys','oldworldmonkey'},  species = 'monkey_oldworld'; speciesdisp = ' (oldworld monkeys)';
       %case {'newworldmonkeys','newworldmonkey'},  species = 'monkey_newworld'; speciesdisp = ' (newworld monkeys)';
       %case {'mammals','mammal'},                  species = 'mammal';          speciesdisp = ' (mammal)';
+      case {'chimpanzees','chimpanzee'},          species = 'chimpanzee';      speciesdisp = ' (chimpanzee)';
       case {'dogs','dog'},                        species = 'dog';             speciesdisp = ' (dogs)';
       otherwise
         error('CAT:unreadySpecies','Templates of species "%s" are not ready yet.\n',deffile);
@@ -108,6 +109,7 @@ switch lower(deffile)
     mycat.extopts.species      = species;  
     mycat.extopts.brainscale   = 200; % non-human brain volume in cm3 (from literature) or scaling in mm (check your data)
     mycat.extopts.darteltpm    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_Template_1.nii'])}; % Indicate first Dartel template
+    mycat.extopts.shootingtpm  = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_Template_0_GS.nii'])}; % Indicate first Shooting template
     mycat.extopts.cat12atlas   = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_cat.nii'])};        % VBM atlas with major regions for VBM, SBM & ROIs
     mycat.extopts.brainmask    = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_brainmask.nii'])};  % brainmask for affine registration
     mycat.extopts.T1           = {fullfile(spm('dir'),'toolbox','cat12','templates_animals',[species '_T1.nii'])};         % T1 for affine registration
@@ -123,6 +125,10 @@ switch lower(deffile)
       case 'monkey_oldworld'
         mycat.extopts.atlas = { ... 
           fullfile(spm('dir'),'toolbox','cat12','templates_animals','monkey_oldworld_atlas_inia19NeuroMaps.nii') 1 {'csf','gm','wm'} 1; 
+          };
+      case 'chimpanzee'
+        mycat.extopts.atlas = { ... 
+          fullfile(spm('dir'),'toolbox','cat12','templates_animals','chimpanzee_atlas_davi.nii') 1 {'csf','gm','wm'} 1; 
           };
       otherwise
         mycat.extopts.atlas = {}; 
