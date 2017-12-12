@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1245 | dahnke | 2017-12-12 11:34:22
+r1246 | dahnke | 2017-12-12 12:11:41
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_extopts.m
+M       cat_defaults.m
+M       cat_main.m
+
+Update:   Added exptopts.print variable to expert and developer GUI and added
+          a separat mode to print only values and volume data and no surfaces
+          due to printing problems on server that hang-up without error.
+
+------------------------------------------------------------------------
+r1245 | dahnke | 2017-12-12 11:35:00 +0100 (Di, 12 Dez 2017) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -23,6 +36,7 @@ A       templates_animals/chimpanzee_brainmask.nii
 Update:   Added chimpanzee templates and adapted cat12 and cat_run.
 Fixed:    Removed focus on Dartel template to allow ROI analysis with Shooting.
 Fixed:    Corrected setting of SPM and CAT defaults in parallel processing. 
+
 
 ------------------------------------------------------------------------
 r1244 | gaser | 2017-12-12 00:33:37 +0100 (Di, 12 Dez 2017) | 6 lines
