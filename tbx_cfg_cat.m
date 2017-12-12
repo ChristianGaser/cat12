@@ -204,7 +204,7 @@ else
         matlas{mai}.help   = {
           'Processing flag of this atlas map.'
           ''
-          ['No atlas readme text file "' textfile '"!']
+          ['No atlas readme text file "' txtfile '"!']
         };
       end
       mai = mai+1; 
