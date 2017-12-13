@@ -291,6 +291,20 @@ outliers_y  = [];
 outliers2_x = [];
 outliers2_y = [];
 
+% get maximum data size for violin plot
+if opt.violin
+  n2 = 0;
+  for i=1:nc
+    % Get the next data set from the array or cell array
+    if iscell(data), col = data{i}(:);
+    else col = data(:,i); end
+    % estimate # of mesh points w.r.t. data size
+    n2 = max(n2,ceil(log2(numel(col)))); 
+  end
+  F = zeros(2^n2,nc);
+  U = zeros(2^n2,nc);
+end
+
 for i=1:nc
   % Get the next data set from the array or cell array
   if iscell(data), col = data{i}(:);
@@ -304,8 +318,6 @@ for i=1:nc
   
   % estimate kernel density for violin plot
   if opt.violin
-    % estimate # of mesh points w.r.t. data size
-    n2 = ceil(log2(numel(col))); 
     [tmp, f, u] = kde(col,2^n2);
     f = (f/max(f)*opt.boxwidth*0.3)'; % width of violin plot is more narrow
     F(:,i) = f;
