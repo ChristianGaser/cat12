@@ -9,7 +9,7 @@ function cat_surf_resamp_freesurfer(vargin)
   
   if nargin == 1
     Psubj = char(vargin.data_fs);
-    fwhm = vargin.fwhm;
+    fwhm = vargin.fwhm_surf;
     outdir = vargin.outdir{1};
   else
     error('Not enough parameters.');
@@ -57,8 +57,8 @@ function cat_surf_resamp_freesurfer(vargin)
       Presamp    = fullfile(dname,[hemi '.smoothwm' str_resamp]);
       Pvalue     = fullfile(dname,[hemi '.' pname str_resamp]);
       
-      if fwhm > 0
-          Pfwhm      = fullfile(outdir,[sprintf('s%gmm.',fwhm) hemi '.' pname str_resamp '.'  name]);
+      if fwhm_surf > 0
+          Pfwhm      = fullfile(outdir,[sprintf('s%g.',fwhm_surf) hemi '.' pname str_resamp '.'  name]);
       else
           Pfwhm      = fullfile(outdir,[hemi '.' pname str_resamp '.'  name]);
       end
@@ -76,7 +76,7 @@ function cat_surf_resamp_freesurfer(vargin)
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
     
       % smooth resampled values
-      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm,Pvalue,Pmask);
+      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,fwhm_surf,Pvalue,Pmask);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.debug);
   
       % add values to resampled surf and save as gifti
@@ -91,7 +91,7 @@ function cat_surf_resamp_freesurfer(vargin)
   
       delete(Presamp);
       delete(Pfwhm);
-      if fwhm > 0, delete(Pvalue); end
+      if fwhm_surf > 0, delete(Pvalue); end
    end
    
     % merge hemispheres

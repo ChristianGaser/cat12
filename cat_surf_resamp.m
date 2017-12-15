@@ -5,7 +5,7 @@ function varargout = cat_surf_resamp(varargin)
 % [Psdata] = cat_surf_resamp(job)
 % 
 % job.data_surf .. cellstr of files
-% job.fwhm      .. filter size in mm
+% job.fwhm_surf .. filter size in mm
 % job.verb      .. display command line progress
 % ______________________________________________________________________
 % Christian Gaser
@@ -23,8 +23,16 @@ function varargout = cat_surf_resamp(varargin)
     job = struct();
   end
 
+  if ~isfield(job,'fwhm_surf')
+    spm('alert!', ['Surface smoothing method has changed with release r1248 and the '...
+    'recommended FWHM is now slightly smaller. For cortical thickness a good starting value '...
+    'is 12-15mm, while other surface parameters based on cortex folding (e.g. gyrification, '...
+    'cortical complexity) need a larger filter size of about 20-25mm. Please update your scripts '...
+    'and replace the old field "fwhm" by "fwhm_surf" and adapt the values.'], 1);  
+  end
+  
   def.trerr     = 0; 
-  def.fwhm      = 0; 
+  def.fwhm_surf = 0; 
   def.nproc     = 0; 
   def.mesh32k   = 0; 
   def.verb      = cat_get_defaults('extopts.verb'); 
@@ -103,9 +111,9 @@ function varargout = cat_surf_resamp(varargin)
       Pvalue     = fullfile(pp,strrep(Pcentral,'central',[pname str_resamp]));
       Pvalue     = strrep(Pvalue,'.gii',''); % remove .gii extension
       
-      if job.fwhm > 0
-        Pfwhm    = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname str_resamp])]);
-        Presamp  = fullfile(pp,[sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname '.tmp.resampled'])]);
+      if job.fwhm_surf > 0
+        Pfwhm    = fullfile(pp,[sprintf('s%g.',job.fwhm_surf) strrep(Pcentral,'central',[pname str_resamp])]);
+        Presamp  = fullfile(pp,[sprintf('s%g.',job.fwhm_surf) strrep(Pcentral,'central',[pname '.tmp.resampled'])]);
       else
         Pfwhm    = fullfile(pp,strrep(Pcentral,'central',[pname str_resamp]));
         Presamp  = fullfile(pp,strrep(Pcentral,'central',[pname 'tmp.resampled']));
@@ -140,7 +148,7 @@ function varargout = cat_surf_resamp(varargin)
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
       % smooth resampled values
-      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm,Pvalue,Pmask);
+      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
       % add values to resampled surf and save as gifti
@@ -158,7 +166,7 @@ function varargout = cat_surf_resamp(varargin)
 
       delete(Presamp);
       delete(Pfwhm);
-      if job.fwhm > 0, delete(Pvalue); end
+      if job.fwhm_surf > 0, delete(Pvalue); end
 
       if job.verb
         fprintf('Resampling %s\n',Psname);
@@ -175,8 +183,8 @@ function varargout = cat_surf_resamp(varargin)
       pname = ff(k(1)+1:k(2)-1);
       Pcentral   = strrep(['mesh' name0 '.gii'],pname,'central');
       
-      if job.fwhm > 0
-        Pfwhm     = [sprintf('s%gmm.',job.fwhm) strrep(Pcentral,'central',[pname str_resamp])];
+      if job.fwhm_surf > 0
+        Pfwhm     = [sprintf('s%g.',job.fwhm_surf) strrep(Pcentral,'central',[pname str_resamp])];
       else
         Pfwhm     = strrep(Pcentral,'central',[pname str_resamp]);
       end
