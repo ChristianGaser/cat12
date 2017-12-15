@@ -978,9 +978,9 @@ end
   fwhm_surf.name    = 'Smoothing Filter Size in FWHM';
   fwhm_surf.strtype = 'r';
   fwhm_surf.num     = [1 1];
-  fwhm_surf.val     = {12};
+  fwhm_surf.val     = {15};
   fwhm_surf.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 12-15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
+    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
 
   merge_hemi         = cfg_menu;
   merge_hemi.tag     = 'merge_hemi';
