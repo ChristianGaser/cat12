@@ -22,7 +22,7 @@ matlabbatch{2}.spm.tools.cat.stools.surfresamp.data_surf = {
                                                             };
 matlabbatch{2}.spm.tools.cat.stools.surfresamp.merge_hemi = 1;
 matlabbatch{2}.spm.tools.cat.stools.surfresamp.mesh32k = 1;
-matlabbatch{2}.spm.tools.cat.stools.surfresamp.fwhm = 15;
+matlabbatch{2}.spm.tools.cat.stools.surfresamp.fwhm_surf = 15;
 matlabbatch{2}.spm.tools.cat.stools.surfresamp.nproc = 0;
 
 %__________________________________________________________________________
@@ -56,7 +56,7 @@ matlabbatch{6}.spm.tools.cat.tools.F2x_surf.conversion.cluster.En.noniso = 1;
 matlabbatch{7}.spm.tools.cat.stools.surfresamp.data_surf(1) = cfg_dep('Extract additional surface parameters: Left gyrification', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lPGI', '()',{':'}));
 matlabbatch{7}.spm.tools.cat.stools.surfresamp.merge_hemi = 1;
 matlabbatch{7}.spm.tools.cat.stools.surfresamp.mesh32k = 1;
-matlabbatch{7}.spm.tools.cat.stools.surfresamp.fwhm = 15;
+matlabbatch{7}.spm.tools.cat.stools.surfresamp.fwhm_surf = 15;
 matlabbatch{7}.spm.tools.cat.stools.surfresamp.nproc = 0;
 
 %__________________________________________________________________________
