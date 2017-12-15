@@ -959,8 +959,6 @@ end
   };
 
 
-
-
 %% Resample and smooth surfaces 
 %-----------------------------------------------------------------------
   data_surf         = cfg_files;
@@ -975,14 +973,14 @@ end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};
 
-  fwhm         = cfg_entry;
-  fwhm.tag     = 'fwhm';
-  fwhm.name    = 'Smoothing Filter Size in FWHM';
-  fwhm.strtype = 'r';
-  fwhm.num     = [1 1];
-  fwhm.val     = {15};
-  fwhm.help    = {
-    'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 25mm. For no filtering use a value of 0.'};
+  fwhm_surf         = cfg_entry;
+  fwhm_surf.tag     = 'fwhm_surf';
+  fwhm_surf.name    = 'Smoothing Filter Size in FWHM';
+  fwhm_surf.strtype = 'r';
+  fwhm_surf.num     = [1 1];
+  fwhm_surf.val     = {12};
+  fwhm_surf.help    = {
+    'Select filter size for smoothing. For cortical thickness a good starting value is 12-15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
 
   merge_hemi         = cfg_menu;
   merge_hemi.tag     = 'merge_hemi';
@@ -1015,8 +1013,7 @@ end
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
-%  surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm,nproc};
-  surfresamp.val  = {data_surf,merge_hemi,fwhm,nproc};
+  surfresamp.val  = {data_surf,merge_hemi,mesh32k,fwhm_surf,nproc};
   surfresamp.prog = @cat_surf_resamp;
   surfresamp.vout = @vout_surf_resamp;
   surfresamp.help = {
@@ -1046,8 +1043,7 @@ end
   surfresamp_fs      = cfg_exbranch;
   surfresamp_fs.tag  = 'surfresamp_fs';
   surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Thickness Data';
-%  surfresamp_fs.val  = {data_fs,merge_hemi,mesh32k,fwhm,outdir};
-  surfresamp_fs.val  = {data_fs,merge_hemi,fwhm,outdir};
+  surfresamp_fs.val  = {data_fs,merge_hemi,mesh32k,fwhm_surf,outdir};
   surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
   surfresamp_fs.help = {
   'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
