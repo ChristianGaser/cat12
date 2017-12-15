@@ -1,5 +1,28 @@
 ------------------------------------------------------------------------
-r1248 | gaser | 2017-12-15 13:05:08
+r1249 | gaser | 2017-12-15 14:53:06
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_surf_resamp.m
+M       html/cat.html
+M       html/cat_starting.html
+ M      templates_animals/chimpanzee_T1.nii
+ M      templates_animals/chimpanzee_TPM.nii
+ M      templates_animals/chimpanzee_Template_0_GS.nii
+ M      templates_animals/chimpanzee_Template_1_GS.nii
+ M      templates_animals/chimpanzee_Template_2_GS.nii
+ M      templates_animals/chimpanzee_Template_3_GS.nii
+ M      templates_animals/chimpanzee_Template_4_GS.nii
+ M      templates_animals/chimpanzee_brainmask.nii
+
+Changed: Recommendation for surface smoothing is again 15mm even for the new
+smoothing method. Changed all links to this new value.
+------------------------------------------------------------------------
+r1248 | gaser | 2017-12-15 13:06:59 +0100 (Fr, 15 Dez 2017) | 27 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -27,6 +50,7 @@ M       html/cat_starting.html
 (3) Changed: The new name for resampled and smoothed surface data is not 
     containing "mm" anymore to indicate the filter size. This is also thought 
     to not mix data smoothed with the old and new smoothing method. 
+
 ------------------------------------------------------------------------
 r1247 | gaser | 2017-12-13 20:48:18 +0100 (Mi, 13 Dez 2017) | 6 lines
 

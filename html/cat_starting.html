@@ -48,9 +48,9 @@
 
       <h4>Additional surface data</h4>
       <ul>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and additionally select "Surface and thickness estimation" in "Writing options".</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and additionally select "Surface and thickness estimation" in "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.long');">longitudinal pipeline</a>).</li>
         <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">extract additional surface parameters</a> (e.g. suclus depth, gyrification index, cortical complexity).</li>
-        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data (suggested starting value 12-15mm for cortical thickness and 20-25mm for folding measures, use the default merging of hemispheres).</li>
+        <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data (suggested starting value 15mm for cortical thickness and 20-25mm for folding measures, use the default merging of hemispheres).</li>
         <li>Check data quality using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.check_mesh_cov');">sample homogeneity</a> for surface data.</li>
         <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">2nd-level model</a> for both (merged) hemispheres.</li>
         <ul>
