@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1249 | gaser | 2017-12-15 14:53:06
+r1250 | gaser | 2017-12-20 17:17:06
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       Contents_info.txt
+M       Makefile
+M       cat_run_job1070.m
+M       cat_surf_render2.m
+M       cat_version.m
+M       html/cat.html
+M       html/cat.txt
+M       spm_cat12.m
+
+Changed: New stable CAT12 version is called CAT12.1. All following
+updates till version 12.2 should not affect preprocessing of the data.
+------------------------------------------------------------------------
+r1249 | gaser | 2017-12-15 14:54:56 +0100 (Fr, 15 Dez 2017) | 21 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -21,6 +38,7 @@ M       html/cat_starting.html
 
 Changed: Recommendation for surface smoothing is again 15mm even for the new
 smoothing method. Changed all links to this new value.
+
 ------------------------------------------------------------------------
 r1248 | gaser | 2017-12-15 13:06:59 +0100 (Fr, 15 Dez 2017) | 27 lines
 
