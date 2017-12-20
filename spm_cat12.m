@@ -190,7 +190,7 @@ end
 
 
 spm('FnBanner',mfilename,cat_version);
-[Finter,Fgraph] = spm('FnUIsetup','CAT12');
+[Finter,Fgraph] = spm('FnUIsetup','CAT12.1');
 url = fullfile(spm('Dir'),'toolbox','cat12','html','cat.html');
 spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 
@@ -223,7 +223,7 @@ cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
     '   _______  ___  _______    \n' ...
     '  |  ____/ / _ \\\\ \\\\_   _/   ' expertguitext '\n' ...
     '  | |___  / /_\\\\ \\\\  | |     Computational Anatomy Toolbox\n' ...
-    '  |____/ /_/   \\\\_\\\\ |_|     CAT12 - http://www.neuro.uni-jena.de\n\n']));
+    '  |____/ /_/   \\\\_\\\\ |_|     CAT12.1 - http://www.neuro.uni-jena.de\n\n']));
 cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile); 
 
 % call GUI

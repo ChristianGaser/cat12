@@ -2,7 +2,9 @@
 #
 # $Id$
 
-VERSION=`svn info |grep Revision|sed -e 's/Revision: //g'`
+OLDVERSION="CAT12.0"
+NEWVERSION="CAT12.1"
+REVISION=`svn info |grep Revision|sed -e 's/Revision: //g'`
 DATE=`svn info |grep 'Last Changed Date: '|sed -e 's/Last Changed Date: //g'|cut -f1 -d' '`
 
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
@@ -19,7 +21,7 @@ MISC_FILES=CAT12-Manual.pdf CHANGES.txt INSTALL.txt templates_1.50mm html templa
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=cat12_r$(VERSION).zip
+ZIPFILE=cat12_r$(REVISION).zip
 
 install: 
 	-@echo install
@@ -40,13 +42,14 @@ help:
 update:
 	-@svn update
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
-	-@echo '% Version' ${VERSION}' (CAT12)' ${DATE} >> Contents.m
+	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
 	-@cp Contents.m Contents.txt
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
-	-@echo '% Version ' ${VERSION} ' (CAT12) ' ${DATE} >> INSTALL.txt
+	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
-	-@cat html/cat.txt | sed -e 's/RELNUMBER/r'${VERSION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
+	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
+	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
 
 zip: update
 	-@echo zip
