@@ -6,13 +6,14 @@ function [CATrel, CATver]  = cat_version(varargin)
 % FORMAT cat_version('[ss]fnbanner'[,str,ver]) % display banner
 % 
 % This function will retrieve the CAT release and version and is a
-% modified version of spm_version.m
+% modified version of spm('version')
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
 
 persistent CAT_VER;
 v = CAT_VER;
+
 if isempty(CAT_VER)
     v = struct('Name','','Version','','Release','','Date','');
     % try Contents.txt and then Contents.m
@@ -50,6 +51,7 @@ if isempty(CAT_VER)
     end
     CAT_VER = v;
 end
+
 if nargin>0, Action = varargin{1}; else Action = ''; end
 switch Action
   case {'fnbanner','sfnbanner','ssfnbanner'}  %-Text banners for functions
@@ -90,5 +92,6 @@ switch Action
     fprintf('%s\n%s',time,tab)
     fprintf('%s',repmat(lch,1,wid)),fprintf('\n')
 end
+
 CATrel = v.Release;
 CATver = v.Version;
