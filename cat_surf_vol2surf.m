@@ -31,6 +31,28 @@ function out = cat_surf_vol2surf(varargin)
     help cat_surf_vol2surf; return
   end  
   
+  def.verb  = 1; 
+  def.gifti = 0; 
+  def.debug = 0; 
+  def.mesh32k   = 0; 
+  def.interp{1} = 'linear'; 
+  def.sample{1} = 'maxabs'; 
+  def.datafieldname = 'intensity';
+  job = cat_io_checkinopt(job,def);
+
+  % if no data_mesh_lh is given for normalized space use default
+  % Dartel template surface
+  if ~isfield(job,'data_mesh_lh')
+    if job.mesh32k
+      fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k'); 
+      str_resamp = '.resampled_32k';
+    else
+      fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+      str_resamp = '.resampled';
+    end
+    job.data_mesh_lh = {fullfile(fsavgDir, 'lh.central.Template_T1_IXI555_MNI152_GS.gii')};
+  end
+  
   n_vol  = numel(job.data_vol);
   n_surf = numel(job.data_mesh_lh);
   
@@ -81,16 +103,7 @@ function out = cat_surf_vol2surf(varargin)
       job.data_mesh_lh{i} = job.data_mesh_lh{1};
     end
   end
-  
-  def.verb  = 1; 
-  def.gifti = 0; 
-  def.debug = 0; 
-  def.interp{1} = 'linear'; 
-  def.sample{1} = 'maxabs'; 
-  def.datafieldname = 'intensity';
-  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
-  job = cat_io_checkinopt(job,def);
-  
+    
   %%
   side  = {'data_mesh_lh','data_mesh_rh'};
   sside = {'sinfo_lh','sinfo_rh'};
@@ -131,6 +144,7 @@ function out = cat_surf_vol2surf(varargin)
       end
       
       P.vol{vi} = fullfile(ppv,[ffv eev]);
+      Pout = cell(2,1);
 
       % replace dots in volume name with "_"
       ffv(strfind(ffv,'.')) = '_';
@@ -140,9 +154,18 @@ function out = cat_surf_vol2surf(varargin)
         % also add volume name to differentiate between multiple volumes
         P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),...
           'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
+          
+        % temporary name for merged hemispheres to prevent that previous single hemi-data are deleted
+        if job.merge_hemi
+          Pout(si) = cat_surf_rename(job.(sside{si})(vi),...
+            'preside','','pp',ppv,'dataname',[job.datafieldname '_tmp' ffv],'name',job.(sside{si})(vi).name);
+        else
+          Pout(si) = P.data(vi,si);
+        end
+
 
         P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
-            'preside','','pp',job.fsavgDir,'dataname','thickness','ee','');
+            'preside','','pp',fsavgDir,'dataname','thickness','ee','');
 
         switch mapping
           case 'abs_mapping'
@@ -159,16 +182,33 @@ function out = cat_surf_vol2surf(varargin)
             end
         end
 
-        % map values
         cmd = sprintf('CAT_3dVol2Surf %s %s "%s" "%s" "%s"',...
-          mappingstr, addstr,job.(sside{si})(vi).Pmesh, P.vol{vi}, P.data{vi,si});
+          mappingstr, addstr,job.(sside{si})(vi).Pmesh, P.vol{vi}, Pout{si});
         [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,job.debug);
         
-        if job.verb
+        if job.verb && ~job.merge_hemi
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
         end
       end
             
+      % merge hemispheres
+      if job.merge_hemi
+        % name for combined hemispheres
+        P.data(vi,1) = cat_surf_rename(P.data{vi,1},'side','mesh');
+    
+        % combine left and right
+        M0 = gifti(Pout(1:2));
+        delete(Pout{1}); delete(Pout{2})
+        M.cdata = [M0(1).cdata; M0(2).cdata];
+        
+        M.private.metadata = struct('name','SurfaceID','value',P.data(vi,1));
+        save(gifti(M), char(P.data(vi,1)), 'Base64Binary');
+            
+        if job.verb
+          fprintf('Display %s\n',spm_file(char(P.data(vi,1)),'link','cat_surf_display(''%s'')'));
+        end
+      end
+
       spm_progress_bar('Set',vi);
     end
    
@@ -260,8 +300,12 @@ function out = cat_surf_vol2surf(varargin)
   end
 
   % prepare output
-  out.lh = P.data(:,1);
-  out.rh = P.data(:,2);
+  if job.merge_hemi
+    out.mesh = P.data(:,1);
+  else
+    out.lh = P.data(:,1);
+    out.rh = P.data(:,2);
+  end
 
   spm_progress_bar('Clear');
 
