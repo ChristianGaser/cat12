@@ -256,24 +256,24 @@ function stools = cat_conf_stools(expert)
 
 %% map volumetric data
 %-----------------------------------------------------------------------  
-  v2s.datafieldname         = cfg_entry;
-  v2s.datafieldname.tag     = 'datafieldname';
-  v2s.datafieldname.name    = 'Output Name';
-  v2s.datafieldname.strtype = 's';
-  v2s.datafieldname.num     = [1 Inf];
-  v2s.datafieldname.val     = {'intensity'};
-  v2s.datafieldname.help    = {
+  datafieldname         = cfg_entry;
+  datafieldname.tag     = 'datafieldname';
+  datafieldname.name    = 'Output Name';
+  datafieldname.strtype = 's';
+  datafieldname.num     = [1 Inf];
+  datafieldname.val     = {'intensity'};
+  datafieldname.help    = {
     'Name that is prepended to the filename of the mapped volume.'
     ''
     };
  
-  v2s.interp         = cfg_menu;
-  v2s.interp.tag     = 'interp';
-  v2s.interp.name    = 'Interpolation Type';
-  v2s.interp.labels  = {'Nearest neighbour','Linear','Cubic'};
-  v2s.interp.values  = {{'nearest_neighbour'},{'linear'},{'cubic'}};
-  v2s.interp.val     = {{'linear'}};
-  v2s.interp.help    = {
+  interp         = cfg_menu;
+  interp.tag     = 'interp';
+  interp.name    = 'Interpolation Type';
+  interp.labels  = {'Nearest neighbour','Linear','Cubic'};
+  interp.values  = {{'nearest_neighbour'},{'linear'},{'cubic'}};
+  interp.val     = {{'linear'}};
+  interp.help    = {
     'Volume extraction interpolation type. '
     ' -linear:            Use linear interpolation (default).'
     ' -nearest_neighbour: Use nearest neighbour interpolation.'
@@ -282,13 +282,13 @@ function stools = cat_conf_stools(expert)
   };
   
   % sample function 
-  v2s.sample         = cfg_menu;
-  v2s.sample.tag     = 'sample';
-  v2s.sample.name    = 'Sample Function';
-  v2s.sample.labels  = {'Mean','Weighted mean','Maximum','Minimum','Absolute maximum'};
-  v2s.sample.values  = {{'avg'},{'weighted_avg'},{'max'},{'min'},{'maxabs'}};
-  v2s.sample.val     = {{'maxabs'}};
-  v2s.sample.help    = {
+  sample         = cfg_menu;
+  sample.tag     = 'sample';
+  sample.name    = 'Sample Function';
+  sample.labels  = {'Mean','Weighted mean','Maximum','Minimum','Absolute maximum'};
+  sample.values  = {{'avg'},{'weighted_avg'},{'max'},{'min'},{'maxabs'}};
+  sample.val     = {{'maxabs'}};
+  sample.help    = {
     'Sample function to combine the values of the grid along the surface normals.'
     ' Mean:             Use average for mapping along normals.'
     ' Maximum:          Use maximum value for mapping along normals.'
@@ -301,109 +301,109 @@ function stools = cat_conf_stools(expert)
   %% -- sampling points and average function
  
   % startpoint
-  v2s.abs_startpoint         = cfg_entry;
-  v2s.abs_startpoint.tag     = 'startpoint';
-  v2s.abs_startpoint.name    = 'Startpoint';
-  v2s.abs_startpoint.strtype = 'r';
-  v2s.abs_startpoint.val     = {-0.5};
-  v2s.abs_startpoint.num     = [1 1];
-  v2s.abs_startpoint.help    = {
+  abs_startpoint         = cfg_entry;
+  abs_startpoint.tag     = 'startpoint';
+  abs_startpoint.name    = 'Startpoint';
+  abs_startpoint.strtype = 'r';
+  abs_startpoint.val     = {-0.5};
+  abs_startpoint.num     = [1 1];
+  abs_startpoint.help    = {
     'Absolute position of the start point of the grid along the surface normals in mm according to the surface. Give negative value for a start point outside of the surface (CSF direction, outwards). '
   };
-  v2s.rel_startpoint = v2s.abs_startpoint;
-  v2s.rel_startpoint.val     = {-0.5};
-  v2s.rel_startpoint.help    = {
+  rel_startpoint = abs_startpoint;
+  rel_startpoint.val     = {-0.5};
+  rel_startpoint.help    = {
     'Relative position of the start point of the grid along the surface normals according to a tissue class. A value of "-0.5" begins at the GM/CSF border and even lower values define a start point outside of the tissue class (CSF direction, outwards). A value of "0" means that the central surface is used as starting point and "0.5" is related to the GM/WM border.'
   };
   
   % steps
-  v2s.abs_steps         = cfg_entry;
-  v2s.abs_steps.tag     = 'steps';
-  v2s.abs_steps.name    = 'Steps';
-  v2s.abs_steps.strtype = 'w';
-  v2s.abs_steps.val     = {11};
-  v2s.abs_steps.num     = [1 1];
-  v2s.abs_steps.help    = {
+  abs_steps         = cfg_entry;
+  abs_steps.tag     = 'steps';
+  abs_steps.name    = 'Steps';
+  abs_steps.strtype = 'w';
+  abs_steps.val     = {11};
+  abs_steps.num     = [1 1];
+  abs_steps.help    = {
     'Number of grid steps. '
   };
-  v2s.rel_steps = v2s.abs_steps; 
+  rel_steps = abs_steps; 
 
   % endpoint
-  v2s.abs_endpoint         = cfg_entry;
-  v2s.abs_endpoint.tag     = 'endpoint';
-  v2s.abs_endpoint.name    = 'Endpoint';
-  v2s.abs_endpoint.strtype = 'r';
-  v2s.abs_endpoint.val     = {0.5};
-  v2s.abs_endpoint.num     = [1 1];
-  v2s.abs_endpoint.help    = {
+  abs_endpoint         = cfg_entry;
+  abs_endpoint.tag     = 'endpoint';
+  abs_endpoint.name    = 'Endpoint';
+  abs_endpoint.strtype = 'r';
+  abs_endpoint.val     = {0.5};
+  abs_endpoint.num     = [1 1];
+  abs_endpoint.help    = {
     'Absolute position of the end point of the grid along the surface normals (pointing inwards) in mm according to the surface. '
   };
-  v2s.rel_endpoint = v2s.abs_endpoint;
-  v2s.rel_endpoint.val     = {0.5};
-  v2s.rel_endpoint.help    = {
+  rel_endpoint = abs_endpoint;
+  rel_endpoint.val     = {0.5};
+  rel_endpoint.help    = {
     'Relative position of the end point of the grid along the surface normals (pointing inwards) according to a tissue class. A value of "0.5" ends at the GM/WM border and values > 0.5 define an end point outside of the tissue class (WM direction, inwards). A value of "0" ends at the central surface.'
   };
 
   % tissue class
-  v2s.rel_class         = cfg_menu;
-  v2s.rel_class.tag     = 'class';
-  v2s.rel_class.name    = 'Tissue Class';
-  v2s.rel_class.labels  = {'GM'};
-  v2s.rel_class.values  = {'GM'};
-  v2s.rel_class.val     = {'GM'};
-  v2s.rel_class.help    = {
+  rel_class         = cfg_menu;
+  rel_class.tag     = 'class';
+  rel_class.name    = 'Tissue Class';
+  rel_class.labels  = {'GM'};
+  rel_class.values  = {'GM'};
+  rel_class.val     = {'GM'};
+  rel_class.help    = {
     'Tissue class for which the relative positions are estimated.'
   };
 
   % tissue class
-  v2s.abs_class         = cfg_menu;
-  v2s.abs_class.tag     = 'surface';
-  v2s.abs_class.name    = 'Surface';
-  v2s.abs_class.labels  = {'WM Surface','Central Surface','Pial Surface'};
-  v2s.abs_class.values  = {'WM','Central','Pial'};
-  v2s.abs_class.val     = {'Central'};
-  v2s.abs_class.help    = {
+  abs_class         = cfg_menu;
+  abs_class.tag     = 'surface';
+  abs_class.name    = 'Surface';
+  abs_class.labels  = {'WM Surface','Central Surface','Pial Surface'};
+  abs_class.values  = {'WM','Central','Pial'};
+  abs_class.val     = {'Central'};
+  abs_class.help    = {
     'Surface (or tissue boundary) for which the absolute positions are estimated.'
   };
 
   % absolute position
-  v2s.abs_mapping         = cfg_branch;
-  v2s.abs_mapping.tag     = 'abs_mapping';
-  v2s.abs_mapping.name    = 'Absolute Position From a Surface';
-  v2s.abs_mapping.val   = {
-    v2s.abs_class ...
-    v2s.abs_startpoint ...
-    v2s.abs_steps ...
-    v2s.abs_endpoint ...
+  abs_mapping         = cfg_branch;
+  abs_mapping.tag     = 'abs_mapping';
+  abs_mapping.name    = 'Absolute Position From a Surface';
+  abs_mapping.val   = {
+    abs_class ...
+    abs_startpoint ...
+    abs_steps ...
+    abs_endpoint ...
   }; 
-  v2s.tissue.help    = {
+  tissue.help    = {
     'Map volumetric data from abolute position(s) from a surface (or tissue boundary).'
   };
   
   %% relative mapping
-  v2s.rel_mapping         = cfg_branch;
-  v2s.rel_mapping.tag     = 'rel_mapping';
-  v2s.rel_mapping.name    = 'Relative Position Within a Tissue Class';
-  v2s.rel_mapping.val   = {
-    v2s.rel_class ...
-    v2s.rel_startpoint ...
-    v2s.rel_steps ...
-    v2s.rel_endpoint ...
+  rel_mapping         = cfg_branch;
+  rel_mapping.tag     = 'rel_mapping';
+  rel_mapping.name    = 'Relative Position Within a Tissue Class';
+  rel_mapping.val   = {
+    rel_class ...
+    rel_startpoint ...
+    rel_steps ...
+    rel_endpoint ...
   };
-  v2s.rel_mapping.help    = {
+  rel_mapping.help    = {
     'Map volumetric data from relative positions within a tissue class.'
   };
 
   %% -- Mapping function
 
-  v2s.mapping         = cfg_choice;
-  v2s.mapping.tag     = 'mapping';
-  v2s.mapping.name    = 'Mapping Function';
-  v2s.mapping.values  = {
-    v2s.abs_mapping ...
-    v2s.rel_mapping ...
+  mapping         = cfg_choice;
+  mapping.tag     = 'mapping';
+  mapping.name    = 'Mapping Function';
+  mapping.values  = {
+    abs_mapping ...
+    rel_mapping ...
   }; 
-  v2s.mapping.help    = {
+  mapping.help    = {
     'Volume extration type. '
     '  Absolute Position From a Surface (or Tissue Boundary):'
     '    Extract a set of values around a surface or tissue boundary with a specified absolute sample '
@@ -413,59 +413,59 @@ function stools = cat_conf_stools(expert)
     '    distance and combine these values.'
     '' 
   };
-  v2s.mapping.val = {v2s.rel_mapping};
+  mapping.val = {rel_mapping};
 
 
 
 % extract volumetric data in individual space 
 %-----------------------------------------------------------------------  
 
-  v2s.data_surf_sub_lh         = cfg_files;
-  v2s.data_surf_sub_lh.tag     = 'data_mesh_lh';
-  v2s.data_surf_sub_lh.name    = '(Left) Individual Surfaces';
-  v2s.data_surf_sub_lh.filter  = 'gifti';
-  v2s.data_surf_sub_lh.ufilter = '^lh.central.(?!nofix).*';
-  v2s.data_surf_sub_lh.num     = [1 Inf];
-  v2s.data_surf_sub_lh.help    = {
+  data_surf_sub_lh         = cfg_files;
+  data_surf_sub_lh.tag     = 'data_mesh_lh';
+  data_surf_sub_lh.name    = '(Left) Individual Surfaces';
+  data_surf_sub_lh.filter  = 'gifti';
+  data_surf_sub_lh.ufilter = '^lh.central.(?!nofix).*';
+  data_surf_sub_lh.num     = [1 Inf];
+  data_surf_sub_lh.help    = {
     'Select left subject surface files (do not select the *.nofix.* surface).'
     'Right side will be automatically processed.'
     };
    
-  v2s.data_sub         = cfg_files; 
-  v2s.data_sub.tag     = 'data_vol';
-  v2s.data_sub.name    = '(Co-registered) Volumes in Native Space';
-  v2s.data_sub.filter  = 'image';
-  v2s.data_sub.ufilter = '^(?!wm|wp|m0wp|mwp|wc).*'; % no normalized images
-  v2s.data_sub.num     = [1 Inf];
-  v2s.data_sub.help    = {
+  data_sub         = cfg_files; 
+  data_sub.tag     = 'data_vol';
+  data_sub.name    = '(Co-registered) Volumes in Native Space';
+  data_sub.filter  = 'image';
+  data_sub.ufilter = '^(?!wm|wp|m0wp|mwp|wc).*'; % no normalized images
+  data_sub.num     = [1 Inf];
+  data_sub.help    = {
     'Select volumes in native (subject) space.'
     'Please note that these images have to be in the same space as the T1-image that was used to extract the cortical surface. An optional co-registration might be necessary if you have functional or structual data that are not yet aligned to the T1-image.'
   };
 
-  v2s.vol2surf      = cfg_exbranch;
-  v2s.vol2surf.tag  = 'vol2surf';
-  v2s.vol2surf.name = 'Map Volume (Native Space) to Individual Surface';
+  vol2surf      = cfg_exbranch;
+  vol2surf.tag  = 'vol2surf';
+  vol2surf.name = 'Map Volume (Native Space) to Individual Surface';
   if expert
-    v2s.vol2surf.val = {
-      v2s.data_sub ...
-      v2s.data_surf_sub_lh ...
-      v2s.sample ...
-      v2s.interp ...
-      v2s.datafieldname ...
-      v2s.mapping ...
+    vol2surf.val = {
+      data_sub ...
+      data_surf_sub_lh ...
+      sample ...
+      interp ...
+      datafieldname ...
+      mapping ...
       };
   else
-    v2s.vol2surf.val = {
-      v2s.data_sub ...
-      v2s.data_surf_sub_lh ...
-      v2s.sample ...
-      v2s.datafieldname ...
-      v2s.mapping ...
+    vol2surf.val = {
+      data_sub ...
+      data_surf_sub_lh ...
+      sample ...
+      datafieldname ...
+      mapping ...
     };
   end
-  v2s.vol2surf.prog = @cat_surf_vol2surf;
-  v2s.vol2surf.vout = @vout_vol2surf;
-  v2s.vol2surf.help = {
+  vol2surf.prog = @cat_surf_vol2surf;
+  vol2surf.vout = @vout_vol2surf;
+  vol2surf.help = {
     'Map volume (native space) to individual surface. These mapped volumes have to be finally resampled and smoothed before any statistical analysis.'
     ''
     'The ouput will be named:' 
@@ -477,44 +477,74 @@ function stools = cat_conf_stools(expert)
 
 %% extract volumetric data in template space
 %-----------------------------------------------------------------------  
-  v2s.data_surf_avg_lh         = cfg_files; 
-  v2s.data_surf_avg_lh.tag     = 'data_mesh_lh';
-  v2s.data_surf_avg_lh.name    = '(Left) Template Hemisphere';
-  v2s.data_surf_avg_lh.filter  = 'gifti';
-  v2s.data_surf_avg_lh.ufilter = '^lh.*';
-  v2s.data_surf_avg_lh.num     = [1 1];
-  v2s.data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii')};
-  v2s.data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','cat12');
-  v2s.data_surf_avg_lh.help    = {
+  merge_hemi         = cfg_menu;
+  merge_hemi.tag     = 'merge_hemi';
+  merge_hemi.name    = 'Merge hemispheres';
+  merge_hemi.labels  = {
+    'No -   save resampled data for each hemisphere',...
+    'Yes -  merge hemispheres'
+  };
+  merge_hemi.values  = {0,1};
+  merge_hemi.val     = {1};
+  merge_hemi.help    = {
+    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
+    'Hoever, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
+  };
+
+  mesh32k         = cfg_menu;
+  mesh32k.tag     = 'mesh32k';
+  mesh32k.name    = 'Resample Size';
+  mesh32k.labels  = {
+    '32k  mesh (HCP)',...
+    '164k mesh (Freesurfer)'
+  };
+  mesh32k.values  = {1,0};
+  mesh32k.val     = {1};
+  mesh32k.help    = {
+    'Resampling can be done either to a higher resoluted 164k mesh that is compatible to Freesurfer data or to a lower resoluted 32k mesh (average vertex spacing of ~2 mm) that is compatible to the Human Connectome Project (HCP).'
+    'The HCP mesh has the advantage of being processed and handled much faster and with less memory demands. Another advantage is that left and right hemispheres are aligned to optionally allow a direct comparison between hemispheres.'
+  };
+
+
+  data_surf_avg_lh         = cfg_files; 
+  data_surf_avg_lh.tag     = 'data_mesh_lh';
+  data_surf_avg_lh.name    = '(Left) Template Hemisphere';
+  data_surf_avg_lh.filter  = 'gifti';
+  data_surf_avg_lh.ufilter = '^lh.*';
+  data_surf_avg_lh.num     = [1 1];
+  data_surf_avg_lh.val{1}  = {fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','lh.central.Template_T1_IXI555_MNI152_GS.gii')};
+  data_surf_avg_lh.dir     = fullfile(spm('dir'),'toolbox','cat12');
+  data_surf_avg_lh.help    = {
     'Select left template surface file. '
     'Right hemisphere will be automatically processed.'
     };
     
-  v2s.data_norm         = cfg_files; 
-  v2s.data_norm.tag     = 'data_vol';
-  v2s.data_norm.name    = 'Spatially Normalized Volumes';
-  v2s.data_norm.filter  = 'image';
-  v2s.data_norm.ufilter = '.*';
-  v2s.data_norm.num     = [1 Inf];
-  v2s.data_norm.help    = {
+  data_norm         = cfg_files; 
+  data_norm.tag     = 'data_vol';
+  data_norm.name    = 'Spatially Normalized Volumes';
+  data_norm.filter  = 'image';
+  data_norm.ufilter = '.*';
+  data_norm.num     = [1 Inf];
+  data_norm.help    = {
     'Select spatially normalized volumes (in template space).'
     ''
   };
 
-  v2s.vol2tempsurf      = cfg_exbranch;
-  v2s.vol2tempsurf.tag  = 'vol2surftemp';
-  v2s.vol2tempsurf.name = 'Map Normalized Volume to Template Surface';
-  v2s.vol2tempsurf.val  = {
-    v2s.data_norm ...
-    v2s.data_surf_avg_lh ...
-    v2s.sample ...
-    v2s.interp ...
-    v2s.datafieldname ...
-    v2s.mapping ...
+  vol2tempsurf      = cfg_exbranch;
+  vol2tempsurf.tag  = 'vol2surftemp';
+  vol2tempsurf.name = 'Map Normalized Volume to Template Surface';
+  vol2tempsurf.val  = {
+    data_norm ...
+    merge_hemi ...
+    mesh32k ...
+    sample ...
+    interp ...
+    datafieldname ...
+    mapping ...
   };
-  v2s.vol2tempsurf.prog = @cat_surf_vol2surf;
-  v2s.vol2tempsurf.vout = @vout_vol2surf;
-  v2s.vol2tempsurf.help = {
+  vol2tempsurf.prog = @cat_surf_vol2surf;
+  vol2tempsurf.vout = @vout_vol2surf;
+  vol2tempsurf.help = {
     'Map spatially normalized data (in template space) to template surface.'
     'The template surface was generated by CAT12 surface processing of the average of 555 Dartel-normalized images of the IXI database that were also used to create the IXI Dartel template.   '
     ''
@@ -982,34 +1012,6 @@ end
   fwhm_surf.help    = {
     'Select filter size for smoothing. For cortical thickness a good starting value is 15mm, while other surface parameters based on cortex folding (e.g. gyrification, cortical complexity) need a larger filter size of about 20-25mm. For no filtering use a value of 0.'};
 
-  merge_hemi         = cfg_menu;
-  merge_hemi.tag     = 'merge_hemi';
-  merge_hemi.name    = 'Merge hemispheres';
-  merge_hemi.labels  = {
-    'No -   save resampled data for each hemisphere',...
-    'Yes -  merge hemispheres'
-  };
-  merge_hemi.values  = {0,1};
-  merge_hemi.val     = {1};
-  merge_hemi.help    = {
-    'Meshes for left and right hemisphere can be merged to one single mesh. This simplifies the analysis because only one analysis has to be made for both hemispheres.'
-    'Hoever, this also means that data size is double for one single analysis which might be too memory demanding for studies with several hundreds or even more files. If your model cannot be estimated due to memory issues you should not merge the resampled data.'
-  };
-
-  mesh32k         = cfg_menu;
-  mesh32k.tag     = 'mesh32k';
-  mesh32k.name    = 'Resample Size';
-  mesh32k.labels  = {
-    '32k  mesh (HCP)',...
-    '164k mesh (Freesurfer)'
-  };
-  mesh32k.values  = {1,0};
-  mesh32k.val     = {1};
-  mesh32k.help    = {
-    'Resampling can be done either to a higher resoluted 164k mesh that is compatible to Freesurfer data or to a lower resoluted 32k mesh (average vertex spacing of ~2 mm) that is compatible to the Human Connectome Project (HCP).'
-    'The HCP mesh has the advantage of being processed and handled much faster and with less memory demands. Another advantage is that left and right hemispheres are aligned to optionally allow a direct comparison between hemispheres.'
-  };
-
   surfresamp      = cfg_exbranch;
   surfresamp.tag  = 'surfresamp';
   surfresamp.name = 'Resample and Smooth Surface Data';
@@ -1082,8 +1084,8 @@ end
       surfextract, ...
       surfresamp, ...
       surfresamp_fs,...
-      v2s.vol2surf, ...
-      v2s.vol2tempsurf, ...
+      vol2surf, ...
+      vol2tempsurf, ...
       surfcalc, ...
       surfcalcsub, ...
       surf2roi, ...
@@ -1098,8 +1100,8 @@ end
       surfextract, ...
       surfresamp, ...
       surfresamp_fs,...
-      v2s.vol2surf, ...
-      v2s.vol2tempsurf, ...
+      vol2surf, ...
+      vol2tempsurf, ...
       surfcalc, ...
       surfcalcsub, ...
       surf2roi, ...
@@ -1115,8 +1117,8 @@ end
       surfresamp, ...
       surfresamp_fs,...
       surf2roi, ...
-      v2s.vol2surf, ...
-      v2s.vol2tempsurf, ...
+      vol2surf, ...
+      vol2tempsurf, ...
       surfcalc, ...
       surfcalcsub, ...
       };
@@ -1191,11 +1193,18 @@ end
 %==========================================================================
 function dep = vout_vol2surf(job)
 
-dep(1)            = cfg_dep;
-dep(1).sname      = 'Left mapped values';
-dep(1).src_output = substruct('.','lh');
-dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
-dep(2)            = cfg_dep;
-dep(2).sname      = 'Right mapped values';
-dep(2).src_output = substruct('.','rh');
-dep(2).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+if job.merge_hemi
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Mapped values';
+  dep(1).src_output = substruct('.','mesh');
+  dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+else
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Left mapped values';
+  dep(1).src_output = substruct('.','lh');
+  dep(1).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+  dep(2)            = cfg_dep;
+  dep(2).sname      = 'Right mapped values';
+  dep(2).src_output = substruct('.','rh');
+  dep(2).tgt_spec   = cfg_findspec({{'filter','mesh','strtype','e'}});
+end
