@@ -31,13 +31,14 @@ function varargout = cat_surf_resamp(varargin)
     'and replace the old field "fwhm" by "fwhm_surf" and adapt the values.'], 1);  
   end
   
-  def.trerr     = 0; 
-  def.fwhm_surf = 0; 
-  def.nproc     = 0; 
-  def.mesh32k   = 0; 
-  def.verb      = cat_get_defaults('extopts.verb'); 
-  def.debug     = cat_get_defaults('extopts.verb')>2;
-  def.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
+  def.trerr      = 0; 
+  def.fwhm_surf  = 0; 
+  def.nproc      = 0; 
+  def.mesh32k    = 1; 
+  def.merge_hemi = 1;
+  def.verb       = cat_get_defaults('extopts.verb'); 
+  def.debug      = cat_get_defaults('extopts.verb')>2;
+  def.fsavgDir   = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces'); 
   
   job = cat_io_checkinopt(job,def);
 

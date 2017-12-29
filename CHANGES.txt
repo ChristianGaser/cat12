@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1250 | gaser | 2017-12-20 17:17:06
+r1251 | gaser | 2017-12-29 10:20:42
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_surf_resamp.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+M       html/cat_starting.html
+A       templates_surfaces_32k/lh.thickness.Template_T1_IXI555_MNI152_GS
+A       templates_surfaces_32k/rh.thickness.Template_T1_IXI555_MNI152_GS
+
+(1) Fixed: Added options for 32k meshes and merging hemispheres to mapping
+function for normalized volumes to template surface.
+(2) Changed: Cleaning field names in cat_conf_stools.m
+------------------------------------------------------------------------
+r1250 | gaser | 2017-12-20 17:17:28 +0100 (Mi, 20 Dez 2017) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +34,7 @@ M       spm_cat12.m
 
 Changed: New stable CAT12 version is called CAT12.1. All following
 updates till version 12.2 should not affect preprocessing of the data.
+
 ------------------------------------------------------------------------
 r1249 | gaser | 2017-12-15 14:54:56 +0100 (Fr, 15 Dez 2017) | 21 lines
 
