@@ -322,9 +322,9 @@ function varargout = cat_surf_display(varargin)
             else
               clim = cat_vol_iscaling(h.cdata);  
               if job.expert<2
-                cat_surf_render('clim',h.axis,round(clim));
+                cat_surf_render('clim',h.axis,clim);
               else
-                cat_surf_render2('clim',h.axis,round(clim));
+                cat_surf_render2('clim',h.axis,clim);
               end
             end
         end    

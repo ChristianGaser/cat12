@@ -4,13 +4,16 @@ function [PO,sinfo] = cat_surf_rename(P,varargin)
 %
 %   [PO,sinfo] = cat_surf_rename(P,varargin)
 % 
-%   P   = 's2435mm.lh.central.resampled.mimamu.gii';
+%   P   = 'lh.central.test.gii';
 %   Pth = cat_surf_rename(P,'dataname','s3tickness');
+%
+%   Check the help for cat_surf_info for information about fields that 
+%   can be renamed.
 % ______________________________________________________________________
 % Robert Dahnke
 % $Id$
 
-% Todo: updata sinfo! also for other fields!
+% Todo: update sinfo! also for other fields!
 
 
   PN = struct();
