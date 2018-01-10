@@ -298,7 +298,7 @@ function out = cat_surf_vol2surf(varargin)
   end
 
   % prepare output
-  if job.merge_hemi
+  if isfield(job,'merge_hemi') && job.merge_hemi
     out.mesh = P.data(:,1);
   else
     out.lh = P.data(:,1);

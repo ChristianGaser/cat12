@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1253 | gaser | 2018-01-10 12:21:43
+r1254 | gaser | 2018-01-10 16:41:20
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_main.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+
+(1) Fixed: Issue with missing hemi_merge flag for native volume to surface
+    mapping.
+(2) Fixed: Native written atlases used wrong deformation fields.
+------------------------------------------------------------------------
+r1253 | gaser | 2018-01-10 12:23:35 +0100 (Mi, 10 Jan 2018) | 17 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -17,6 +31,7 @@ M       html/style.css
  M      templates_surfaces_32k/rh.thickness.Template_T1_IXI555_MNI152_GS
 
 Changed: Updated interactive help and manual.
+
 ------------------------------------------------------------------------
 r1252 | gaser | 2018-01-10 10:29:11 +0100 (Mi, 10 Jan 2018) | 15 lines
 

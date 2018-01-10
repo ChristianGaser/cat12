@@ -1751,8 +1751,8 @@ if job.output.ROI
     if any(cell2mat(struct2cell(job.output.atlas)'))
       % map atlas in native space
       Vlai = spm_vol(FA{ai,1});
-      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.atlas.Yy(:,:,:,1)),...
-        double(trans.atlas.Yy(:,:,:,2)),double(trans.atlas.Yy(:,:,:,3)),0));
+      Ylai = cat_vol_ctype(spm_sample_vol(Vlai,double(trans.warped.yx(:,:,:,1)),...
+        double(trans.warped.yx(:,:,:,2)),double(trans.warped.yx(:,:,:,3)),0));
       Ylai = reshape(Ylai,size(Yp0)); 
 
       % write map (mri as tissue subforder and mri_atals as ROI subfolder)
