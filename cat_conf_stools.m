@@ -993,12 +993,12 @@ end
 %-----------------------------------------------------------------------
   data_surf         = cfg_files;
   data_surf.tag     = 'data_surf';
-  data_surf.name    = 'Surfaces Data';
+  data_surf.name    = '(Left) Surfaces Data';
   data_surf.filter  = 'any';
   if expert > 1
     data_surf.ufilter = '^lh.';
   else
-    data_surf.ufilter = 'lh.(?!cent|sphe|defe|hull).*';
+    data_surf.ufilter = '^lh.(?!cent|sphe|defe|hull).*';
   end
   data_surf.num     = [1 Inf];
   data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.'};

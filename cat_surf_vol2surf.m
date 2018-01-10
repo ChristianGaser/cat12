@@ -151,18 +151,18 @@ function out = cat_surf_vol2surf(varargin)
       
       for si=1:numel(side)
 
-        % also add volume name to differentiate between multiple volumes
-        P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),...
-          'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
-          
-        % temporary name for merged hemispheres to prevent that previous single hemi-data are deleted
         if job.merge_hemi
+          P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),'side','mesh',...
+            'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
+  
+          % temporary name for merged hemispheres to prevent that previous single hemi-data are deleted
           Pout(si) = cat_surf_rename(job.(sside{si})(vi),...
             'preside','','pp',ppv,'dataname',[job.datafieldname '_tmp' ffv],'name',job.(sside{si})(vi).name);
         else
+          P.data(vi,si) = cat_surf_rename(job.(sside{si})(vi),...
+            'preside','','pp',ppv,'dataname',[job.datafieldname '_' ffv],'name',job.(sside{si})(vi).name);
           Pout(si) = P.data(vi,si);
         end
-
 
         P.thickness(vi,si) = cat_surf_rename(job.(sside{si})(vi).Pmesh,...
             'preside','','pp',fsavgDir,'dataname','thickness','ee','');
@@ -193,8 +193,6 @@ function out = cat_surf_vol2surf(varargin)
             
       % merge hemispheres
       if job.merge_hemi
-        % name for combined hemispheres
-        P.data(vi,1) = cat_surf_rename(P.data{vi,1},'side','mesh');
     
         % combine left and right
         M0 = gifti(Pout(1:2));

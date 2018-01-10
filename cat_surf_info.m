@@ -1,32 +1,51 @@
-function [varargout] = cat_surf_info(P,read,gui,verb)
+function [varargout] = cat_surf_info(P,readsurf,gui,verb)
 % ______________________________________________________________________
 % Extact surface information from filename.
 %
-% sinfo = cat_surf_info(P,readsurf)
+% sinfo = cat_surf_info(P,readsurf,gui,verb)
+%
+%   P         .. surface filename
+%   readsurf  .. read gifti or Freesurfer file to get more information
+%   gui       .. interactive hemisphere selection
+%   verb      .. verbose
 %
 % sinfo(i). 
+%   fname     .. full filename
 %   pp        .. filepath
 %   ff        .. filename
 %   ee        .. filetype
 %   exist     .. exist file?
+%   fdata     .. structure from dir command
 %   ftype     .. filetype [0=no surface,1=gifti,2=freesurfer]
-% 
-%   statready .. ready for statistik (^s#mm.*.gii) [0|1]
+%   statready .. ready for statistic (^s#.*.gii) [0|1]
 %   side      .. hemisphere [lh|rh|lc|rc|mesh] 
-%   datatype  .. [0=nosurf/file|1=mesh|2=data|3=surf]
-%                only with readsurf==1 and with surf=mesh+data
-%   dataname  .. datafieldname [central|thickness|s3thickness|myclalc...]
+%   name      .. subject/template name
+%   datatype  .. [-1=unknown|0=nosurf|1=mesh|2=data|3=surf]
+%                only defined for readsurf==1 and surf=mesh+sidata
+%   dataname  .. datafieldname [central|thickness|intensity...]
 %   texture   .. textureclass [central|sphere|thickness|...]
-%   resampled .. meshspace [0|1] 
+%   label     .. labelmap
+%   resampled .. resampled data [0|1] 
 %   template  .. template or individual mesh [0|1] 
 %   name      .. name of the dataset
+%   roi       .. roi data
+%   nvertices .. number vertices
+%   nfaces    .. number faces
+%   Pmesh     .. underlying meshfile
+%   Psphere   .. sphere mesh
+%   Pspherereg.. registered sphere mesh
+%   Pdefects  .. topology defects mesh
+%   Pdata     .. datafile
+%   preside   .. prefix before hemi info (i.e. after smoothing)
+%   posside   .. string after hemi info
+%   smoothed  .. smoothing size
+%   Phull     .. convex hull mesh
 % ______________________________________________________________________
 % Robert Dahnke
 % $Id$
 
 %#ok<*RGXP1>
 
-  %if isempty(P) && nargout>0, varargout{1} = {}; return; end
   if ~exist('P','var'), P=''; end
   if strcmp(P,'selftest')
     pps = {
@@ -68,7 +87,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
   
   
   
-  if nargin<2, read = 0; end
+  if nargin<2, readsurf = 0; end
   if nargin<3, gui  = 0; end
   if nargin<4, verb = 0; end
 
@@ -82,8 +101,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     'exist','',...      % exist
     'fdata','',...      % datainfo (filesize)
     'ftype','',...      % filetype [0=no surface,1=gifti,2=freesurfer]
-    ...
-    'statready',0,...   % ready for statistic (^s#mm.*.gii)
+    'statready',0,...   % ready for statistic (^s#.*.gii)
     'side','',...       % hemishphere
     'name','',...       % subject/template name
     'datatype','',...   % datatype [0=nosurf/file|1=mesh|2=data|3=surf] with surf=mesh+data
@@ -95,13 +113,11 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     'roi','',...        % roi data
     'nvertices',[],...  % number vertices
     'nfaces',[],...     % number faces
-    ...
     'Pmesh','',...      % meshfile
     'Psphere','',...    % meshfile
     'Pspherereg','',... % meshfile
     'Pdefects','',...   % meshfile
     'Pdata','',...      % datafile
-    ...
     'preside','', ...
     'posside','' ...
   );
@@ -113,7 +129,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     sinfo(i).fdata = dir(P{i});
     
     sinfo(i).fname = P{i};
-    sinfo(i).exist = exist(P{i},'file'); 
+    sinfo(i).exist = exist(P{i},'file') > 0; 
     sinfo(i).pp = pp;
     switch ee
       case {'.xml','.txt','.html','.csv'}
@@ -125,7 +141,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         sinfo(i).ff = ff;
         sinfo(i).ee = ee;
         sinfo(i).ftype = 1;
-        if sinfo(i).exist && read
+        if sinfo(i).exist && readsurf
           S = gifti(P{i});
         end
       case '.annot'
@@ -133,7 +149,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         sinfo(i).ee = ee;
         sinfo(i).ftype = 1;
         sinfo(i).label = 1; 
-        if sinfo(i).exist && read
+        if sinfo(i).exist && readsurf
           clear S; 
           try
             S = cat_io_FreeSurfer('read_annotation',P{1}); 
@@ -146,7 +162,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         sinfo(i).ff = [ff ee];
         sinfo(i).ee = '';
         sinfo(i).ftype = 0;
-        if sinfo(i).exist && read
+        if sinfo(i).exist && readsurf
           clear S; 
           try
             S = cat_io_FreeSurfer('read_surf',P{1}); 
@@ -170,7 +186,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     noname = sinfo(i).ff; 
     
     % smoothed data
-    sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)mm\..*')); 
+    sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)\..*')); 
     
     % side
     if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
@@ -223,7 +239,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     end
 
     % datatype
-    if sinfo(i).exist && read
+    if sinfo(i).exist && readsurf
       switch num2str([isfield(S,'vertices'),isfield(S,'cdata')],'%d%d')
         case '00',  sinfo(i).datatype  = 0;
         case '01',  sinfo(i).datatype  = 1;
@@ -296,10 +312,10 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
       sinfo(i).Pdata = sinfo(i).fname;
     end
     % if we have read the gifti than we can check for the fields
-    if isempty(sinfo(i).Pmesh) && sinfo(i).exist && read && isfield(S,'vertices')
+    if isempty(sinfo(i).Pmesh) && sinfo(i).exist && readsurf && isfield(S,'vertices')
       sinfo(i).Pmesh = sinfo(i).fname; 
     end
-    if isempty(sinfo(i).Pdata) && sinfo(i).exist && read && isfield(S,'cdata')
+    if isempty(sinfo(i).Pdata) && sinfo(i).exist && readsurf && isfield(S,'cdata')
       sinfo(i).Pdata = sinfo(i).fname;
     end
     % if the dataname is central we got a mesh or surf datafile
@@ -352,11 +368,11 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
         % 32k mesh? 
         switch sinfo(i).ee
           case '.gii'
-            if sinfo(i).exist && ~read
+            if sinfo(i).exist && ~readsurf
               S = gifti(P{i});
             end
           case '.annot'
-            if sinfo(i).exist && ~read
+            if sinfo(i).exist && ~readsurf
               clear S; 
               try
                 S = cat_io_FreeSurfer('read_annotation',P{1});
@@ -387,7 +403,7 @@ function [varargout] = cat_surf_info(P,read,gui,verb)
     if ~exist(sinfo(i).Pdefects,'file'), sinfo(i).Pdefects = ''; end
 
     
-    if sinfo(i).exist && read
+    if sinfo(i).exist && readsurf
       if isfield(S,'vertices'), 
         sinfo(i).nvertices = size(S.vertices,1);
       else
