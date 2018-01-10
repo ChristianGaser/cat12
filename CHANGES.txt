@@ -1,5 +1,22 @@
 ------------------------------------------------------------------------
-r1251 | gaser | 2017-12-29 10:20:42
+r1252 | gaser | 2018-01-10 10:28:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_conf_stools.m
+M       cat_surf_display.m
+M       cat_surf_info.m
+M       cat_surf_rename.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+
+(1) Fixed: Mapping of normalized volumes to template surface had issues with 
+    file renaming.
+(2) Changed: Updated some help texts.
+(3) Fixed: Rendering issues for data with small values in cat_surf_display.
+------------------------------------------------------------------------
+r1251 | gaser | 2017-12-29 10:22:44 +0100 (Fr, 29 Dez 2017) | 17 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -17,6 +34,7 @@ A       templates_surfaces_32k/rh.thickness.Template_T1_IXI555_MNI152_GS
 (1) Fixed: Added options for 32k meshes and merging hemispheres to mapping
 function for normalized volumes to template surface.
 (2) Changed: Cleaning field names in cat_conf_stools.m
+
 ------------------------------------------------------------------------
 r1250 | gaser | 2017-12-20 17:17:28 +0100 (Mi, 20 Dez 2017) | 15 lines
 
