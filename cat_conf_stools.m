@@ -1193,7 +1193,7 @@ end
 %==========================================================================
 function dep = vout_vol2surf(job)
 
-if job.merge_hemi
+if isfield(job,'merge_hemi') && job.merge_hemi
   dep(1)            = cfg_dep;
   dep(1).sname      = 'Mapped values';
   dep(1).src_output = substruct('.','mesh');
