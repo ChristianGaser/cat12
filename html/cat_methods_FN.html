@@ -125,7 +125,7 @@
       <table border="0">
          <tr>
           <td width="70">SURF</td>
-          <td width="400">left, right hemisphere [ lh | rh ] </td>
+          <td width="400">left, right both hemisphere [ lh | rh ] </td>
         </tr>
         <tr>
           <td>TYPE</td>
@@ -151,7 +151,7 @@
         </tr>
         <tr>
           <td></td>
-          <td>sqrtsulc - sqrt-transformed values of sulcul depth based on the euclidian distance between the central surface and its convex hull</td>
+          <td>sqrtsulc - sqrt-transformed values of sulcul depth based on the euclidean distance between the central surface and its convex hull</td>
         </tr>
         <tr>
           <td></td>
@@ -164,20 +164,20 @@
         </tr>
       </table>
       
-      <h3>Surfaces in (normalized) template space (after resampling and smoothing; saved in subfolder "surf")</h3>
-      <p>FWHM.SURF.TYPE.resampled.*.gii</p>
+      <h3>Surfaces in (normalized) template space (after resampling and smoothing; saved in subfolder "surf" by default)</h3>
+      <p>FWHM.SURF.TYPE.RESAMP.*.gii</p>
       <table border="0">
          <tr>
           <td width="70">FWHM</td>
-          <td width="400">filtersize in FWHM after smoothing</td>
+          <td width="400">filtersize in FWHM after smoothing (e.g. s15)</td>
         </tr>
          <tr>
           <td width="70">SURF</td>
-          <td width="400">left, right hemisphere [ lh | rh ] </td>
+          <td width="400">left, right, or both hemispheres [ lh | rh | mesh] </td>
         </tr>
         <tr>
-          <td>TYPE</td>
-          <td>surface data file [ thickness | gyrification | fractaldimension | ... ]</td>
+          <td width="70">TYPE</td>
+          <td width="400">surface data file [ thickness | gyrification | fractaldimension | ... ]</td>
         </tr>
         <tr>
           <td></td>
@@ -185,7 +185,7 @@
         </tr>
         <tr>
           <td></td>
-          <td>sqrtsulc - sqrt-transformed values of sulcul depth based on the euclidian distance between the central surface and its convex hull</td>
+          <td>sqrtsulc - sqrt-transformed values of sulcul depth based on the euclidean distance between the central surface and its convex hull</td>
         </tr>
         <tr>
           <td></td>
@@ -195,6 +195,10 @@
         <tr>
           <td></td>
           <td>fractaldimension - fractal dimension values (cortical complexity)</td>
+        </tr>
+         <tr>
+          <td width="70">RESAMP</td>
+          <td width="400">resampling to 164k or 32k mesh [ resampled | resampled_32k ]</td>
         </tr>
       </table>
 

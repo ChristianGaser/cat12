@@ -1,6 +1,6 @@
 img {
 	border: 0;
-	}
+}
 
 body {
     font: 16px 'Lucida Grande', Verdana, Arial, Sans-Serif; 
@@ -10,7 +10,7 @@ body {
 	margin: 0px;
 	padding: 0px;
 	background: #F5F5F5;
-	}
+}
 
 /* --- Header */
 #header {
@@ -21,7 +21,8 @@ body {
 	height: 115px; /* in MATLAB 2016a high without padding */
 	padding: 85px 0px 0px 20px;
 	margin: 0px 0px 0px 0px; 
-	}
+}
+
 #header h1, #header h1 a, #header h1 a:hover, #header h1 a:visited { /* H1 is the title in the header */
 	text-align: left;
 	font-size: 1.5em;	
@@ -31,6 +32,7 @@ body {
 	padding: 0px 0px 0px 0px;
 	color: white;
 }
+
 #header p, #header p a, #header p a:hover, #header p a:visited { /* H1 is the title in the header */
 	text-decoration: none;
 	color: white;
@@ -39,26 +41,29 @@ body {
 	padding: 0px 0px 0px 0px;
 	font-size: 0.9em;
 }
+
 #breadcrumbs { 
 	width: 100%;
 	Color: FFFFFF;
 	margin: 35px 0px 0px 20px;
 	padding: 0px 0px 0px  0px;
-	}
+
+}
 	
 #breadcrumbs a, #breadcrumbs a:hover, #breadcrumbs a:visited {
 	padding: 0px 0px 5px 0px;
 	color: #FFFFFF;
 	text-decoration: none;
-	}
+
+}
 	
 #breadcrumbs a:hover {
 	padding: 0px 0px 5px 0px;
 	text-decoration: none;
 	background: #F5F5F5;
 	color: #000000;
-	}
 
+}
 
 /* --- Footer --- */ 
 #footer {
@@ -71,15 +76,14 @@ body {
     padding: 5px 20px 20px 20px;
 	font-size:0.85em;
 	font-weight: normal;
-	}
+}
 
 /* Content */
 #content {
 	padding: 5px 20px 20px 20px;
 	font-size: 100%;
-	}
+}
 	
-
 #center {
   text-align: center;
   width: 95%;
@@ -93,20 +97,21 @@ body {
 		
 #content p {
 	text-align:justify;
-	}
+}
 
 
 /*- Headings */
 h1, h2, h3, h4, h5 {
 	color: #222;
 	font-family: 'Trebuchet MS', Verdana, Sans-Serif;
-	}
+}
 	
 h2 {
 	color: #444;
 	margin-top: 2.5em;
 	font-size: 1.3em;
 }
+
 h3 {
 	color: #555;
 	margin-top: 2.5em;
@@ -115,11 +120,13 @@ h3 {
 	border-bottom-color: #666;
 	font-size: 1.2em;
 }
+
 h4 {
 	color: #444;
 	margin-top: 2.0em;
 	font-size:  1.1em;
-	}
+}
+
 h5 {
 	color: #666;
 	margin-top: 1.5em;
@@ -129,38 +136,39 @@ h5 {
 li h4, li h5 {
 	margin-top: 0em;
 	margin-bottom: 0em;
-	}	
+}	
 
 li p {
 	margin-top: 0em;
 	margin-bottom: 0.5em;
-	}
-
-
+}
 	
 a {
 	font-weight: 500;
 	text-decoration: none;
 	color:#133f7a;
 }
+
 a.function {
 	color: #008800; 
-	}
+}
+
 a.function:hover {
 	color: #00BB00; 
-	}
+}
 
 li {
 	margin-bottom: 0.2em;
-	}
+}
 
 table {
   /*
     background-color: #ffeda0;
   */
-  barder-collapse: collapse;
+  border-collapse: collapse;
   border: none;
 }
+
 thead {
   background-color: #f3c600;
   /*
@@ -168,6 +176,7 @@ thead {
   border-bottom: 1px solid #999;
   */
 }
+
 tfood {
   background-color: #F7F1D4;
   font-size: 80%;
@@ -177,10 +186,13 @@ td, th {
   text-align: left; 
   padding: 0.2em 1em;
 }
+
 em, tt, strong {
-  font-style: normal;
-  font-weight: 500;
+  font-style: italic;
+  font-weight: bold;
+/*  font-weight: 500;
   color: #886666; 
+*/
 }
 
 img.center {
@@ -192,5 +204,5 @@ img.center {
 	margin-bottom: 20px;
 	margin-left: auto;
 	margin-right: auto;
-	}
+}
 

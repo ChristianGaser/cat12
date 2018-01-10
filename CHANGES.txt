@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1252 | gaser | 2018-01-10 10:28:49
+r1253 | gaser | 2018-01-10 12:21:43
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat12.fig
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_methods.html
+M       html/cat_methods_FN.html
+M       html/cat_methods_MS.html
+M       html/style.css
+ M      templates_surfaces_32k/lh.thickness.Template_T1_IXI555_MNI152_GS
+ M      templates_surfaces_32k/rh.thickness.Template_T1_IXI555_MNI152_GS
+
+Changed: Updated interactive help and manual.
+------------------------------------------------------------------------
+r1252 | gaser | 2018-01-10 10:29:11 +0100 (Mi, 10 Jan 2018) | 15 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -15,6 +34,7 @@ M       html/cat.html
     file renaming.
 (2) Changed: Updated some help texts.
 (3) Fixed: Rendering issues for data with small values in cat_surf_display.
+
 ------------------------------------------------------------------------
 r1251 | gaser | 2017-12-29 10:22:44 +0100 (Fr, 29 Dez 2017) | 17 lines
 
