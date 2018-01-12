@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1254 | gaser | 2018-01-10 16:41:20
+r1255 | gaser | 2018-01-12 09:07:56
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+
+(1) Fixed: Mapping of native volumes with very high resolution (<0.6mm) to
+    native surfaces was not working on some computers.
+------------------------------------------------------------------------
+r1254 | gaser | 2018-01-10 16:41:43 +0100 (Mi, 10 Jan 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +22,7 @@ M       html/cat.html
 (1) Fixed: Issue with missing hemi_merge flag for native volume to surface
     mapping.
 (2) Fixed: Native written atlases used wrong deformation fields.
+
 ------------------------------------------------------------------------
 r1253 | gaser | 2018-01-10 12:23:35 +0100 (Mi, 10 Jan 2018) | 17 lines
 
