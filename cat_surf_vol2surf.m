@@ -107,13 +107,20 @@ function out = cat_surf_vol2surf(varargin)
   %%
   side  = {'data_mesh_lh','data_mesh_rh'};
   sside = {'sinfo_lh','sinfo_rh'};
-  
+
   if ~isfield(job,'data_mesh_rh')
     job.data_mesh_rh = cat_surf_rename(job.data_mesh_lh,'side','rh');
+    for i=1:numel(job.data_mesh_rh)
+      if ~exist(job.data_mesh_rh{i},'file')
+        side = {'data_mesh_lh'};
+      end
+    end
   end
-  
+
   job.sinfo_lh = cat_surf_info(job.data_mesh_lh);
-  job.sinfo_rh = cat_surf_info(job.data_mesh_rh);
+  if numel(side) > 1
+    job.sinfo_rh = cat_surf_info(job.data_mesh_rh);
+  end
   template = job.sinfo_lh(1).template;
   
   %% Mapping command 
