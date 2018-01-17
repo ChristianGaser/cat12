@@ -1,5 +1,17 @@
 ------------------------------------------------------------------------
-r1255 | gaser | 2018-01-12 09:07:56
+r1256 | gaser | 2018-01-17 23:17:45
+
+Changed paths:
+M       CHANGES.txt
+M       cat_surf_vol2surf.m
+M       check_pipeline/mri/mwp1IXI002-Guys-0828-T1.nii
+M       check_pipeline/report/cat_IXI002-Guys-0828-T1.mat
+M       check_pipeline/report/cat_IXI002-Guys-0828-T1.xml
+
+Fixed: cat_surf_vol2surf.m is now also working if only the left hemisphere 
+files exist.
+------------------------------------------------------------------------
+r1255 | gaser | 2018-01-12 09:08:18 +0100 (Fr, 12 Jan 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +20,7 @@ M       html/cat.html
 
 (1) Fixed: Mapping of native volumes with very high resolution (<0.6mm) to
     native surfaces was not working on some computers.
+
 ------------------------------------------------------------------------
 r1254 | gaser | 2018-01-10 16:41:43 +0100 (Mi, 10 Jan 2018) | 12 lines
 
