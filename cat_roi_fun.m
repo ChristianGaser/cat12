@@ -37,8 +37,6 @@ function varargout = cat_roi_fun(action,varargin)
   switch action
     case 'exportSample'
       cat_roi_exportSample(varargin{1});
-    %case 'importSample'
-    %  varargout{1} = cat_roi_importSample(varargin{1}); 
     case 'xmlroi2csvtab'
       varargout{1} = cat_roi_xmlroi2csvtab(varargin{1});
     case 'csvtab2xmlroi'
@@ -79,6 +77,7 @@ function [catTAB,catROI] = cat_roi_xmlroi2csvtabtest
   
 end
 
+%_______________________________________________________________________
 function mcsvtab = cat_roi_exportSample(job)
 %% 
 
@@ -123,7 +122,7 @@ function mcsvtab = cat_roi_exportSample(job)
       
         % call old function 
         if ~isfield(catROI(1).(atlases{ai}),'names')
-          cat_stat_ROI(job);
+          cat_stat_ROI_old(job);
           if fni == 1 
             if ~strcmp(job.point,'.');
               disp('Option for decimal point is not supported for old xml-files. Files are saved using ''.'' as decimal point.');
@@ -137,6 +136,7 @@ function mcsvtab = cat_roi_exportSample(job)
         
         roinames = catROI(1).(atlases{ai}).names(:);
         measures = fieldnames(catROI(1).(atlases{ai}).data);
+        
       
         %%
         for mi=1:numel(measures)
@@ -166,10 +166,14 @@ function mcsvtab = cat_roi_exportSample(job)
             mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}) = mcsvtab.(FN{fni}).(atlases{ai})';
           end
 
-          %% write result
-          cat_io_csv(fullfile(job.outdir,...
-            sprintf('%s_%s_%s_%s.csv',job.calcroi_name,FN{fni},atlases{ai},measures{mi})),...
-            mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}),'','',struct('delimiter',job.delimiter,'komma',job.point));
+          %% write result if measures are not beginning with "I" (intensity) or "T" (volume thickness)
+          if ~strcmp(measures{mi}(1),'T') && ~strcmp(measures{mi}(1),'I')
+            cat_io_csv(fullfile(job.outdir,...
+              sprintf('%s_%s_%s_%s.csv',job.calcroi_name,FN{fni},atlases{ai},measures{mi})),...
+              mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}),'','',struct('delimiter',job.delimiter,'komma',job.point));
+          else
+          measures{mi}
+          end
 
         end
  
@@ -179,12 +183,10 @@ function mcsvtab = cat_roi_exportSample(job)
   end
 end
 
-function cat_stat_ROI(p)
-%cat_stat_ROI to save mean values inside ROI for many subjects
-%
 %_______________________________________________________________________
-% Christian Gaser
-% $Id$
+function cat_stat_ROI_old(p)
+%cat_stat_ROI_old to save mean values inside ROI for many subjects (old xml-files)
+%
 
   n_data = length(p.roi_xml);
 
@@ -200,13 +202,13 @@ function cat_stat_ROI(p)
     end
   end
 
-  save_ROI(p,roi_vol);
-  save_ROI(p,roi_surf);
+  save_ROI_old(p,roi_vol);
+  save_ROI_old(p,roi_surf);
 end
 
 %_______________________________________________________________________
-function save_ROI(p,roi)
-% save mean values inside ROI
+function save_ROI_old(p,roi)
+% save mean values inside ROI (old xml-files)
 
   % ROI measures to search for
   ROI_measures = char('Vgm','Vwm','Vcsf','mean_thickness');
@@ -280,10 +282,7 @@ function save_ROI(p,roi)
   end
 end
 
-function varargout = cat_roi_importSample(varargin)
-
-end
-
+%_______________________________________________________________________
 function csvtab = cat_roi_xmlroi2csvtab(varargin)
 % This function convertes the CAT XML ROI structure to the CAT CSV tables.
 
@@ -360,6 +359,7 @@ function csvtab = cat_roi_xmlroi2csvtab(varargin)
   end
 end
 
+%_______________________________________________________________________
 function xmlroi = cat_roi_csvtab2xmlroi(varargin)
 % This function converts the CAT CSV tables to the CAT XML ROI structure.
   [CATrel, CATver] = cat_version;

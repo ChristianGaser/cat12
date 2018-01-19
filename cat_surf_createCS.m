@@ -353,7 +353,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     
     %% Write Ypp for final deformation
     %  Write Yppi file with 1 mm resolution for the final deformation, 
-    %  because CAT_DeformSurf_ui cannot handle higher resolutions.
+    %  because CAT_DeformSurf achieved better results using that resolution
     Yppt = cat_vol_resize(Yppi,'deinterp',resI);                        % back to original resolution
     Yppt = cat_vol_resize(Yppt,'dereduceBrain',BB);                     % adding of background
     Vpp  = cat_io_writenii(V,Yppt,'','pp','percentage position map','uint8',[0,1/255],[1 0 0 0]);
@@ -545,7 +545,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     end
     
-    
     % surface refinement by surface deformation based on the PP map
     th = 0.5;
     if opt.fast
@@ -578,6 +577,19 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 
+    % read final surface and map thickness data
+    stime = cat_io_cmd('  Thickness / Depth mapping','g5','',opt.verb,stime);
+    CS = gifti(Pcentral);
+    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
+    facevertexcdata = isocolors2(Yth1,CS.vertices); 
+    cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
+   
+    % final correction of central surface in highly folded areas with high mean curvature
+    stime = cat_io_cmd('  Final correction of central surface in highly folded areas','g5','',opt.verb,stime);
+    cmd = sprintf(['CAT_Central2Pial -equivolume -weight 0.2 "%s" "%s" "%s" 0'], ...
+                     Pcentral,Pthick,Pcentral);
+    [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+
     %% spherical surface mapping 2 of corrected surface
     stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
     if opt.fast
@@ -599,13 +611,6 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,Ym,Ya,YMF,opt)
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     
-    % read final surface and map thickness data
-    stime = cat_io_cmd('  Thickness / Depth mapping','g5','',opt.verb,stime);
-    CS = gifti(Pcentral);
-    CS.vertices = (vmati*[CS.vertices' ; ones(1,size(CS.vertices,1))])';
-    facevertexcdata = isocolors2(Yth1,CS.vertices); 
-    cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);
-   
     % map WM and CSF width data (corrected by thickness)
     if opt.WMT > 1
       %%
