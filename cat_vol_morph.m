@@ -3,7 +3,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % Morphological operations for a volume vol based on a 26-neighborhood 
 % (erode, dilate, open, close) or a distance transformation (disterode,
 % distdilate, distopen, distclose). Furthermore, 3 labeling operation
-% (lab, labopen, labclose) that mask the largest clusert (after an 
+% (lab, labopen, labclose) that mask the largest cluster (after an 
 % distopen/disterode) are available. The voxel dimensions vx_vol are 
 % only available for distancebased transformations, where n depend on 
 % the distance. 

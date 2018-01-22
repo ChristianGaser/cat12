@@ -1,5 +1,14 @@
 ------------------------------------------------------------------------
-r1257 | gaser | 2018-01-19 17:02:37
+r1258 | gaser | 2018-01-22 17:57:28
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.fig
+M       cat_vol_morph.m
+
+Fixed: cat12.fig could not be loaded with older matlab versions.
+------------------------------------------------------------------------
+r1257 | gaser | 2018-01-19 17:03:11 +0100 (Fr, 19 Jan 2018) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +20,7 @@ M       html/cat.html
 (1) Changed: Estimation of mean ROI values now skips some of unnecessary values.
 (2) Changed: Added final correction of central surface in highly folded areas 
     with high mean curvature.
+
 ------------------------------------------------------------------------
 r1256 | gaser | 2018-01-17 23:18:05 +0100 (Mi, 17 Jan 2018) | 10 lines
 
