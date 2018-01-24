@@ -1,5 +1,20 @@
 ------------------------------------------------------------------------
-r1258 | gaser | 2018-01-22 17:57:28
+r1259 | gaser | 2018-01-24 08:52:59
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+D       cat12.fig
+M       cat12.m
+M       cat_surf_display.m
+M       html/cat.html
+
+(1) Fixed: Issues with missing colordata in cat_surf_display.m
+(2) Changed: cat12 figure is now only based on cat12.m and no cat12.fig is
+    needed anymore. This helps to get rid of issues with different Matlab
+    versions and Guide. 
+------------------------------------------------------------------------
+r1258 | gaser | 2018-01-22 17:58:03 +0100 (Mo, 22 Jan 2018) | 7 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +22,7 @@ M       cat12.fig
 M       cat_vol_morph.m
 
 Fixed: cat12.fig could not be loaded with older matlab versions.
+
 ------------------------------------------------------------------------
 r1257 | gaser | 2018-01-19 17:03:11 +0100 (Fr, 19 Jan 2018) | 11 lines
 
