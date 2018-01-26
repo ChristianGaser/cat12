@@ -3,21 +3,25 @@ function out = cat_surf_vol2surf(varargin)
 % ______________________________________________________________________
 % P = cat_surf_vol2surf(job)
 % 
-% job.data_mesh_lh  .. lh mesh files
-% job.data_vol      .. volume for mapping
-% job.verb          .. verbose (default: 1)
-% job.gifti         .. output gifti (default: 0)
-% job.interp        .. interpolation type (default 'linear')
-% job.mapping       .. mapping type 
-%   .abs_mapping    .. absolute mapping distance
-%     .start        .. start point of the vector in mm
-%     .steps        .. number of grid steps
-%     .end          .. end point of the vector in mm
-%   .rel_mapping    .. relative mapping distance
-%     .start        .. start point of the vector
-%     .steps        .. number of grid steps
-%     .end          .. end point of the vector
-% job.datafieldname .. new fieldname
+% job.data_mesh_lh      .. lh mesh files
+% job.data_vol          .. volume for mapping
+% job.verb              .. verbose (default: 1)
+% job.gifti             .. output gifti (default: 0)
+% job.interp            .. interpolation type (default 'linear')
+% job.mapping           .. mapping type 
+%  .abs_mapping         .. absolute mapping distance
+%     .start            .. start point of the vector in mm
+%     .steps            .. number of grid steps
+%     .end              .. end point of the vector in mm
+%  .rel_mapping         .. relative mapping distance
+%     .start            .. start point of the vector
+%     .steps            .. number of grid steps
+%     .end              .. end point of the vector
+%  .rel_equivol_mapping .. relative mapping distance (equi-volume approach)
+%     .start            .. start point of the vector
+%     .steps            .. number of grid steps
+%     .end              .. end point of the vector
+% job.datafieldname     .. new fieldname
 % 
 % ______________________________________________________________________
 % Robert Dahnke
@@ -125,7 +129,13 @@ function out = cat_surf_vol2surf(varargin)
   
   %% Mapping command 
   % --------------------------------------------------------------------
-  if isfield(job.mapping,'abs_mapping'), mapping = 'abs_mapping'; else mapping = 'rel_mapping'; end
+  if isfield(job.mapping,'abs_mapping')
+    mapping = 'abs_mapping';
+  elseif isfield(job.mapping,'rel_mapping')
+    mapping = 'rel_mapping';
+  elseif isfield(job.mapping,'rel_equivol_mapping')
+    mapping = 'rel_equivol_mapping';
+  end
   
   mapdef.class = 'GM';
   job.mapping.(mapping) = cat_io_checkinopt( job.mapping.(mapping),mapdef);
@@ -264,9 +274,15 @@ function out = cat_surf_vol2surf(varargin)
               case {2,'WM'},   addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness
               case {3,'Pial'}, addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness 
             end
-          case 'rel_mapping'
+          case 'rel_mapping' % equi-distance approach
             switch job.mapping.(mapping).class
               case {1,'GM'},  addstr = sprintf(' -thickness "%s" ',P.thickness{vi,si}); 
+              case {2,'WM'},  error('Not yet supported');
+              case {3,'CSF'}, error('Not yet supported'); 
+            end
+          case 'rel_equivol_mapping' % equi-volume approach
+            switch job.mapping.(mapping).class
+              case {1,'GM'},  addstr = sprintf(' -equivolume -thickness "%s" ',P.thickness{vi,si}); 
               case {2,'WM'},  error('Not yet supported');
               case {3,'CSF'}, error('Not yet supported'); 
             end

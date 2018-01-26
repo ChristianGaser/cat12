@@ -353,7 +353,7 @@ function varargout = compile(comp,test,verb)
     
     
     %% test interpolation invariance 
-    %  - less difference in simple sturtures
+    %  - less difference in simple structures
     %  - the mean rather than median is used because the median not stable
     %  ds('d2','',1,d5/2,(Ygmti)/5,(Ygmt)/5,Yppi,5)
     %  ds('d2','',1,d5/2,Ycsfdi/3,Ywmdi/3,Yppi,5)

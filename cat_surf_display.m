@@ -182,20 +182,19 @@ function varargout = cat_surf_display(varargin)
         end
       end
     end
-    if sinfo(i).label, continue; end
 
-      
+    set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
+
+    if sinfo(i).label, continue; end      
       
    % try   
-      %% textur handling
-      set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
-%      if ~strcmp(h.sinfo(1).texture,'defects')
-        if job.expert<2 
-          cat_surf_render('ColourBar',h.axis,'on');
-        else
-          cat_surf_render2('ColourBar',h.axis,'on');
-        end
-%      end
+    %% textur handling
+      if job.expert<2 
+        cat_surf_render('ColourBar',h.axis,'on');
+      else
+        cat_surf_render2('ColourBar',h.axis,'on');
+      end
+      
       if ~job.multisurf && strcmp(sinfo(i).side,'rh'), view(h.axis,[90 0]); end
       
       

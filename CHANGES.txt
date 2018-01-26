@@ -1,5 +1,54 @@
 ------------------------------------------------------------------------
-r1259 | gaser | 2018-01-24 08:52:59
+r1260 | gaser | 2018-01-26 20:13:03
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+D       atlases_surfaces/a2005s.txt
+D       atlases_surfaces/a2009s.txt
+A       atlases_surfaces/atlases_surfaces.man
+A       atlases_surfaces_32k/atlases_surfaces_32k.man
+A       atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_100Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_100Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_200Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_200Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_400Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_400Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_600Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_600Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_800Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/lh.Schaefer2018_800Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_100Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_100Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_200Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_200Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_400Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_400Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_600Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_600Parcels_7Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_800Parcels_17Networks_order.annot
+A       atlases_surfaces_32k/rh.Schaefer2018_800Parcels_7Networks_order.annot
+M       cat_conf_stools.m
+M       cat_roi_fun.m
+M       cat_stat_check_cov.m
+M       cat_surf_display.m
+M       cat_surf_vol2surf.m
+M       compile.m
+M       html/cat_starting.html
+A       templates_1.50mm/templates.man
+
+(1) Changed: Updated CAT12 manual and online help.
+(2) Changed: Added equi-volume model by Bok and multi-save option to
+    cat_surf_vol2surf.m.
+(3) Fixed: Bug with label files where filenames were not used in the title.
+(4) Added: New description of templates.
+------------------------------------------------------------------------
+r1259 | gaser | 2018-01-24 08:53:21 +0100 (Mi, 24 Jan 2018) | 13 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -13,6 +62,7 @@ M       html/cat.html
 (2) Changed: cat12 figure is now only based on cat12.m and no cat12.fig is
     needed anymore. This helps to get rid of issues with different Matlab
     versions and Guide. 
+
 ------------------------------------------------------------------------
 r1258 | gaser | 2018-01-22 17:58:03 +0100 (Mo, 22 Jan 2018) | 7 lines
 
