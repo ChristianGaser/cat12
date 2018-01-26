@@ -232,7 +232,7 @@ function stools = cat_conf_stools(expert)
   SA.values = {0,1};
   SA.val    = {1};
   SA.help   = {
-    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-????1443, 2012.'
+    'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
     ''
     'Log-transformation is used to render the data more normally distributed.'
     ''
@@ -285,16 +285,17 @@ function stools = cat_conf_stools(expert)
   sample         = cfg_menu;
   sample.tag     = 'sample';
   sample.name    = 'Sample Function';
-  sample.labels  = {'Mean','Weighted mean','Maximum','Minimum','Absolute maximum'};
-  sample.values  = {{'avg'},{'weighted_avg'},{'max'},{'min'},{'maxabs'}};
+  sample.labels  = {'Mean','Weighted mean','Maximum','Minimum','Absolute maximum','Multi'};
+  sample.values  = {{'avg'},{'weighted_avg'},{'max'},{'min'},{'maxabs'},{'multi'}};
   sample.val     = {{'maxabs'}};
   sample.help    = {
     'Sample function to combine the values of the grid along the surface normals.'
     ' Mean:             Use average for mapping along normals.'
+    ' Weighted mean:    Use weighted average with gaussian kernel for mapping along normals. The kernel is so defined that values at the boundary are weighted with 50% while center is weighted with 100% (useful for (r)fMRI data.'
     ' Maximum:          Use maximum value for mapping along normals.'
     ' Minimum:          Use minimum value for mapping along normals.'
     ' Absolute maximum: Use absolute maximum value for mapping along normals (useful for mapping contrast images from 1st-level fMRI analysis).'
-    ' Weighted mean:    Use weighted average with gaussian kernel for mapping along normals. The kernel is so defined that values at the boundary are weighted with 50% while center is weighted with 100% (useful for (r)fMRI data.'
+    ' Multi:            Map data for each grid step separately and save file with indicated grid value. Please note that this option is intended for high-resolution (f)MRI data only.'
     ''
   };
 
@@ -321,7 +322,7 @@ function stools = cat_conf_stools(expert)
   abs_steps.tag     = 'steps';
   abs_steps.name    = 'Steps';
   abs_steps.strtype = 'w';
-  abs_steps.val     = {11};
+  abs_steps.val     = {7};
   abs_steps.num     = [1 1];
   abs_steps.help    = {
     'Number of grid steps. '
@@ -369,7 +370,7 @@ function stools = cat_conf_stools(expert)
   % absolute position
   abs_mapping         = cfg_branch;
   abs_mapping.tag     = 'abs_mapping';
-  abs_mapping.name    = 'Absolute Position From a Surface';
+  abs_mapping.name    = 'Absolute Grid Position From a Surface';
   abs_mapping.val   = {
     abs_class ...
     abs_startpoint ...
@@ -377,13 +378,13 @@ function stools = cat_conf_stools(expert)
     abs_endpoint ...
   }; 
   tissue.help    = {
-    'Map volumetric data from abolute position(s) from a surface (or tissue boundary).'
+    'Map volumetric data from abolute grid positions from a surface (or tissue boundary).'
   };
   
-  %% relative mapping
+  %% relative mapping with equi-distance approach
   rel_mapping         = cfg_branch;
   rel_mapping.tag     = 'rel_mapping';
-  rel_mapping.name    = 'Relative Position Within a Tissue Class';
+  rel_mapping.name    = 'Relative Grid Position Within a Tissue Class (Equi-distance Model)';
   rel_mapping.val   = {
     rel_class ...
     rel_startpoint ...
@@ -391,7 +392,25 @@ function stools = cat_conf_stools(expert)
     rel_endpoint ...
   };
   rel_mapping.help    = {
-    'Map volumetric data from relative positions within a tissue class.'
+    'Map volumetric data from relative grid positions within a tissue class using equi-distance approach. Here, the grid lines have equal distances in between the tissue.'
+  };
+
+  %% relative mapping with equi-volume approach
+  rel_equivol_mapping         = cfg_branch;
+  rel_equivol_mapping.tag     = 'rel_equivol_mapping';
+  rel_equivol_mapping.name    = 'Relative Grid Position Within a Tissue Class (Equi-volume Model)';
+  rel_equivol_mapping.val   = {
+    rel_class ...
+    rel_startpoint ...
+    rel_steps ...
+    rel_endpoint ...
+  };
+  rel_equivol_mapping.help    = {
+    'Map volumetric data from relative positions within a tissue class using equi-volume approach. '
+    'This option is using the approach by Bok (Z. Gesamte Neurol. Psychiatr. 12, 682–750, 1929). '
+    'Here, the volume between the grids is constant. The correction is based on Waehnert et al. (NeuroImage, 93: 210-220, 2014).'
+    'Please note that this option is intended for high-resolution (f)MRI data only'
+    '' 
   };
 
   %% -- Mapping function
@@ -403,17 +422,33 @@ function stools = cat_conf_stools(expert)
     abs_mapping ...
     rel_mapping ...
   }; 
+  mapping.val = {rel_mapping};
   mapping.help    = {
     'Volume extration type. '
-    '  Absolute Position From a Surface (or Tissue Boundary):'
-    '    Extract a set of values around a surface or tissue boundary with a specified absolute sample '
-    '    distance and combine these values.'
-    '  Relative Position Within a Tissue Class:' 
-    '    Extract a set of values within a tissue class with a specified relative sample'
-    '    distance and combine these values.'
+    '  Absolute Grid Position From a Surface (or Tissue Boundary):'
+    '    Extract values around a surface or tissue boundary with a specified absolute sample '
+    '    distance and either combine these values or save values separetely.'
+    '  Relative Grid Position Within a Tissue Class (Equi-distance approach):' 
+    '    Extract values within a tissue class with a specified relative sample distance'
+    '    with equally distributed distances and either combine these values or save values separetely.'
     '' 
   };
-  mapping.val = {rel_mapping};
+
+  mapping_native = mapping;
+  mapping_native.values{3} = rel_equivol_mapping;
+  mapping_native.help    = {
+    'Volume extration type. '
+    '  Absolute Grid Position From a Surface (or Tissue Boundary):'
+    '    Extract values around a surface or tissue boundary with a specified absolute sample '
+    '    distance and either combine these values or save values separetely.'
+    '  Relative Grid Position Within a Tissue Class (Equi-distance approach):' 
+    '    Extract values within a tissue class with a specified relative sample distance'
+    '    with equally distributed distances and either combine these values or save values separetely.'
+    '  Relative Grid Position Within a Tissue Class (Equi-volume approach):' 
+    '    Extract values within a tissue class with a specified relative sample distance'
+    '    that is corrected for constant volume between the grids and either combine these values or save values separetely.'
+    '' 
+  };
 
 
 
@@ -452,7 +487,7 @@ function stools = cat_conf_stools(expert)
       sample ...
       interp ...
       datafieldname ...
-      mapping ...
+      mapping_native ...
       };
   else
     vol2surf.val = {
@@ -460,7 +495,7 @@ function stools = cat_conf_stools(expert)
       data_surf_sub_lh ...
       sample ...
       datafieldname ...
-      mapping ...
+      mapping_native ...
     };
   end
   vol2surf.prog = @cat_surf_vol2surf;

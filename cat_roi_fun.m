@@ -171,8 +171,6 @@ function mcsvtab = cat_roi_exportSample(job)
             cat_io_csv(fullfile(job.outdir,...
               sprintf('%s_%s_%s_%s.csv',job.calcroi_name,FN{fni},atlases{ai},measures{mi})),...
               mcsvtab.(FN{fni}).(atlases{ai}).(measures{mi}),'','',struct('delimiter',job.delimiter,'komma',job.point));
-          else
-          measures{mi}
           end
 
         end
