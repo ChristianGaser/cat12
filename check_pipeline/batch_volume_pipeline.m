@@ -67,3 +67,13 @@ cat_vol_slice_overlay(OV)
 
 %__________________________________________________________________________
 cat_stat_analyze_ROIs(fullfile(pth,'analysis/volume/SPM.mat'), 0.05, 1);
+
+%__________________________________________________________________________
+clear matlabbatch
+matlabbatch{1}.cfg_basicio.file_dir.file_ops.file_fplist.dir = {pth};
+matlabbatch{1}.cfg_basicio.file_dir.file_ops.file_fplist.filter = 'logP|png|gyrification';
+matlabbatch{1}.cfg_basicio.file_dir.file_ops.file_fplist.rec = 'FPListRec';
+matlabbatch{2}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('File Selector (Batch Mode): Selected Files', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
+matlabbatch{2}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
+spm_jobman('run',matlabbatch);
+

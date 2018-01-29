@@ -29,4 +29,3 @@
 % Shooting approach and is also based on 555 subjects from the IXI
 % data base and was finally transformed to MNI space.
 %
-%
