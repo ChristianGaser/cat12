@@ -29,15 +29,14 @@
       </p>
       <ol>
         <li><a href="#Interp">Internal Interpolation</a></li>
-        <li><a href="#APP">Affine Preprocessing (APP)</a></li>
-        <li><a href="#MM">Mixed Model</a></li>
         <li><a href="#NC">Denoising</a></li>
-        <li><a href="#AMAP">AMAP Segmentation</a></li>
-        <li><a href="#Dartel">Dartel Normalization</a></li>
-         <!--li><a href="#Dartel">Dartel/Shooting Normalization</a></li-->
+        <li><a href="#APP">Affine Preprocessing (APP)</a></li>
         <li><a href="#LAS">Local Adaptive Segmentation (LAS)</a></li>
+        <li><a href="#AMAP">AMAP Segmentation</a></li>
+        <li><a href="#PVE">Partial Volume Segmentation</a></li>
         <li><a href="#SS">Skull-Stripping</a></li>
         <li><a href="#Cleanup">Cleanup</a></li>
+        <li><a href="#Dartel">Spatial Normalization</a></li>
       </ol>
       
       
@@ -46,98 +45,43 @@
         <li>
           <h4 id="Interp">Interpolation</h4>
           <p>
-            CAT12 uses an internal interpolation in order to allow more reliable results also for low resolution images and anisotropic spatial resolutions. 
-            Although an interpolation cannot add further details to the images, some of the used functions benefit from the higher number of voxels and the common striped artifacts in modulated images are strongly diminished. 
+            CAT12 uses an internal interpolation to provide more reliable results even with low resolution images and anisotropic spatial resolutions.
+            Although interpolation cannot add more details to the images, some of the functions used benefit from the higher number of voxels and the usual strip artefacts in modulated images are greatly reduced. 
           </p>       
         </li>
-        
-        
-        <li>
-          <h4 id="APP">Affine Preprocessing (APP)</h4>
-          <p>
-            To improve the initial SPM segmentation an initial affine registration on a bias-corrected image is applied and the intensity range is limited to avoid problems in special protocols. 
-            If preprocessing fails a more aggressive version is available that applies a rough bias correction and removes non-brain parts the brain before the initial affine registration.
-            For further information see <a href="cat_methods_VBM_APP.html">APP</a>.
-          </p>
-        </li>
-        
-        
-        <li> 
-          <h4 id="MM">Partial Volume Segmentation</h4>
-          <p>
-            Additionally, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of at most two tissue types <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2004.05.007','-browser');">(Tohka et al. 2004)</a>.  
-            We start with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the above described AMAP estimation.  
-            The initial segmentation is followed by a PVE of two additional mixed classes: GM-WM and GM-CSF.  
-            This results in an estimation of the amount (or fraction) of each pure tissue type present in every voxel (as single voxels - given by their size - probably contain more than one tissue type) and thus provides a more accurate segmentation.
-          </p>
-        </li>
-        
         
         <li>
           <h4 id="NC">Denoising</h4>
           <p>
-            Furthermore, we apply two denoising methods. 
-            The first method is a spatial-adaptive adaptive Non-Local Means (SANLM) denoising filter that is applied after the intensity normalization. 
+            We also use two noise reduction methods. The first method is a spatial-adaptive Non-Local Means (SANLM) denoising filter and is applied after the intensity normalization. 
             <a href="matlab:web('http://dx.doi.org/10.1002/jmri.22003','-browser');">(Manjón et al. 2010)</a>.  
             <!--After global intensity correction a 2nd SANLM filter or optionally a block-wise optimized non-local means (ORNLM) denoising filter is applied <a href="matlab:web('http://dx.doi.org/10.1109/TMI.2007.906087','-browser');">(Coupe et al. 2008)</a>.  
             These filters remove noise while preserving edges and are implemented as preprocessing step.  
             -->
-            The second method is a classical Markov Random Field (MRF) approach, which incorporates spatial prior information of adjacent voxels into the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation and controlled by reminding image noise. 
-            The strength of the denoising can be controlled by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults), with 0 for no noise correction at all, small values (0.01-0.5) for small denoising, 0.5 for average denoising (default), and higher values (0.5-1) for strong denoising.
-            Default setting is 0.75 to avoid over-filtering that may reduce statistical power.
+            This filter removes noise while maintaining edges and is implemented as pre-processing step. 
+            The second method is a classical Markov Random Field (MRF) approach, which includes spatial information from adjacent voxels in the segmentation estimation <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a> and is part of the AMAP segmentation. 
+            The strength of the filters is automatically determined by estimating the residual noise in the image or can be set manually by the <em>"Strength of Noise Correction"</em> parameter (<em>cat.extopts.NCstr</em> in cat_defaults).
           </p>
         </li>
         
-        
+                
         <li>
-          <h4 id="Dartel">Dartel Normalization</h4> 
+          <h4 id="APP">Affine Preprocessing (APP)</h4>
           <p>
-            Another important extension to the SPM12 segmentation is the integration of the Dartel normalization <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2007.07.007','-browser');">(Ashburner 2007)</a> into the toolbox by an already existing Dartel template in MNI space.  
-            This template was derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and provides the six Dartel iterations.  
-            Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.
-          </p> 
+            To improve the initial SPM segmentation, an initial affine registration is applied to a bias-corrected image and the intensity range is limited to avoid problems in special protocols.
+            If the preprocessing fails a more aggressive version is available that applies a rough bias correction and removes non-brain parts the brain before the initial affine registration.
+            See <a href="cat_methods_VBM_APP.html">APP</a> for more information.
+          </p>
         </li>
-        
-        
-        <!--
-        <li>
-          <h4 id="Shooting">Shooting Normalisation</h4> 
-          <p>
-            Another important extension to the SPM12 segmentation is the integration of the Shooting normalisation <a href="matlab:web('','-browser');">(Ashburner 20XX)</a> into the toolbox by an already existing Shooting template in MNI space.  
-            This template was derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and provides the four Shooting iterations.  
-            Thus, for the majority of studies the creation of sample-specific Shooting templates is not necessary anymore.
-          </p> 
-        </li>
-        -->
         
         
         <li>
           <h4 id="LAS">Local Adaptive Segmentation (LAS)</h4>
           <p>
-            Beside WM-inhomogeneities, also the GM intensity can vary for different regions like the motor cortex, the basal ganglia, or the occipital lobe.  
-            Although, these changes have an anatomical background (e.g. iron content, myelination), they depend on the MR-protocol and often lead to GM-underestimations for higher intensities and CSF-overestimations for lower intensities.  
-            Therefore, a local intensity transformation of all tissue classes is used to reduce this effects in the <em>m*-image</em> before the final AMAP segmentation. 
-            The strength of the changes is controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter (<em>cat.extopts.LASstr</em> in cat_defaults), with 0 for no LAS, small values (0.01-0.5) for small adaptations, 0.5 for average adaptation (default), and higher values (0.5-1) for strong adaptations.
-          </p>
-        </li>
-        
-        
-        <li> 
-          <h4 id="SS">Skull-Stripping</h4>
-          <p>
-            CAT12 contains a revised graph-cut based skull-stripping with a <em>"Strength of Skull-Stripping"</em> parameter (<em>cat.extopts.gcutstr</em> in cat_defaults), with 0 for a more liberal and wider brain masks and 1 for a more
-          aggressive skull-stripping. The default is 0.5 and was successfully tested on a variety of different images.
-          </p> 
-          <p>The strength parameter affects multiple internal parameters:</p>
-          <ul>
-            <li>Intensity thresholds to deal with blood-vessels and meninges</li>
-            <li>Distance and growing parameters for the graph-cut/region-growing</li>
-            <li>Closing parameters that fill the sulci</li>
-            <li>Smoothing parameters that allow sharper or wider results</li>
-          </ul>
-          <p>
-            If your segmentations still contain skull and other non-brain tissue (e.g. dura) you can try to increase the strength.
-            If parts of the brain are missing in the segmentations the strength can be decreased.
+            In addition WM-inhomogeneities, GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. 
+            These changes have an anatomical background (e.g. iron content, myelenization), but are dependend on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. 
+            Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. 
+            The strength of the changes is controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter (<em>cat.extopts.LASstr</em> in cat_defaults), with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments. 
           </p>
         </li>
         
@@ -145,21 +89,59 @@
         <li>
           <h4 id="AMAP">AMAP Segmentation</h4>
           <p>
-            The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for <i>a priori</i> information about tissue probabilities.  
-            That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization and the initial skull-stripping.  
-            The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
-            This not only accounts for intensity inhomogeneities but also for other local variations of intensity.
+            The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. 
+            This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach  <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2005.02.018','-browser');">(Ashburner et al. 2005)</a>, but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions  <a href="matlab:web('http://dx.doi.org/10.1109/42.563663','-browser');">(Rajapakse et al. 1997)</a>.  
+            This accounts not only for intensity inhomogeneities, but also to other local intensity variations.
           </p>
         </li>
         
+        <li> 
+          <h4 id="PVE">Partial Volume Segmentation</h4>
+          <p>
+            In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types <a href="matlab:web('http://dx.doi.org/10.1016/j.neuroimage.2004.05.007','-browser');">(Tohka et al. 2004)</a>.  
+            We begin with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. 
+            The initial segmentation is followed by a PVE consisting of two additional mixed classes: GM-WM and GM-CSF. 
+            This results in an estimate of the amount (or fraction) of each pure tissue type that is present in each voxel (since single voxels - given their size - probably contain more than one tissue type) and thus allows for more precise segmentation.
+          </p>
+        </li>
+        
+                
+        <li> 
+          <h4 id="SS">Skull-Stripping</h4>
+          <p>
+            CAT12 contains a revised graph-cut based skull-stripping, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. 
+            The default setting is 0.5 and has been successfully tested on a variety of different images. 
+
+          </p> 
+          <p>The strength parameter affects multiple internal parameters:</p>
+          <ul>
+            <li>Intensity thresholds for the treatment of blood-vessels and meninges</li>
+            <li>Distance and growth parameters for the graph-cut/region-growing</li>
+            <li>Closing parameters that fill the sulci</li>
+            <li>Smoothing parameters that allow sharper or wider results</li>
+          </ul>
+          <p>
+            If your segmentations still contain skull and other non-brain tissue (e.g. dura) you can try to increase the strength.
+            If parts of the brain are missing in the segmentations, the strength can be decreased.
+          </p>
+        </li>
         
         <li>
           <h4 id="Cleanup">Cleanup</h4>
           <p>
-            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove remaining meninges from the final segmentation. The strength of the cleanup is controlled by the <em>"Strength of Final Clean Up"</em> parameter (<em>gcutstr</em> in cat_defaults), with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for average cleanup (default), and 1 for strong cleanup.
+            CAT12 includes a new cleanup routine that uses morphological, distance and smoothing operations to remove the remaining meninges after the final segmentation. 
+            The strength of the cleanup is controlled by the <em>"Strength of Final Clean Up"</em> parameter (<em>gcutstr</em> in cat_defaults), with 0 for no cleanup, low values <0.5 for light cleanup, 0.5 for medium cleanup (default), and 1 for strong cleanup.
           </p>
         </li>
         
+        <li>
+          <h4 id="Dartel">Spatial Normalization</h4> 
+          <p>
+            Another important extension to the SPM12 segmentation is the integration of the Dartel <a href="matlab:web('https://dx.doi.org/10.1016/j.neuroimage.2007.07.007','-browser');">(Ashburner 2007)</a> and Geodesic Shooting <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.12.049','-browser');">(Ashburner 2011)</a> normalization into the toolbox by already existing Dartel and Geodesic Shooting templates in MNI space.  
+            These templates were derived from 555 healthy control subjects of the IXI-database <a href="matlab:web('http://www.brain-development.org','-browser');">(http://www.brain-development.org)</a> and are available in the MNI space for six different iteration steps of the Dartel and Geodesic Shooting normalization. 
+            Therefore, the creation of sample-specific Dartel and Geodesic Shooting templates is no longer necessary for most studies.
+            For studies investigating children data, I still recommend creating a customized Dartel or Geodesic Shooting template. However, it should be noted that this option requires a representative sample with a sufficient number of subjects.
+        </li>
         
       </ol>
     </div>

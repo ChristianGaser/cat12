@@ -151,7 +151,24 @@ function out = cat_surf_vol2surf(varargin)
   P.relmap = cell(numel(data_vol),2);
   P.thick = cell(numel(data_vol),2);
   
+  % display mapping parameters
+  fprintf('\n');
+  if template, space_str='normalized'; else space_str='native'; end
+  switch mapping
+  case 'abs_mapping'
+    mapping_str = ['to ' job.mapping.(mapping).surface ' surface at absolute'];
+  case 'rel_mapping'
+    mapping_str = ['within ' job.mapping.(mapping).class ' at thickness-related'];
+  case 'rel_equivol_mapping'
+    mapping_str = ['within ' job.mapping.(mapping).class ' using equi-volume approach at thickness-related'];
+  end
+  fprintf('Mapping %s volume(s) %s grid positions: ',space_str, mapping_str);
+  for i=1:job.mapping.(mapping).steps, fprintf(' %g', job.mapping.(mapping).startpoint + (i-1)*(job.mapping.(mapping).endpoint-job.mapping.(mapping).startpoint)/(job.mapping.(mapping).steps-1)); end
+  fprintf('.\n\n');
+  
   if template
+  % normalized volume to Template surface
+    
     for vi=1:numel(data_vol)
       [ppv,ffv,eev] = spm_fileparts(data_vol{vi});
       
@@ -228,6 +245,8 @@ function out = cat_surf_vol2surf(varargin)
     end
    
   else
+  % native volume to individual surface
+  
     for vi=1:numel(data_vol)
       
       [ppv,ffv,eev] = spm_fileparts(data_vol{vi});
