@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1260 | gaser | 2018-01-26 20:13:03
+r1261 | gaser | 2018-01-29 15:31:10
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_vol2surf.m
+M       check_pipeline/batch_surface_pipeline.m
+M       check_pipeline/batch_volume_pipeline.m
+M       html/cat_FAQ.html
+M       html/cat_instruction_templates.html
+M       html/cat_methods_VBM.html
+M       templates_1.50mm/templates.man
+
+(1) Changed: Updated pipeline check.
+(2) Changed: Added output of mapping parameters in cat_surf_vol2surf.m.
+(3) Chnaged: Updated CAT12 manual and online help.
+------------------------------------------------------------------------
+r1260 | gaser | 2018-01-26 20:15:00 +0100 (Fr, 26 Jan 2018) | 47 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -47,6 +66,7 @@ A       templates_1.50mm/templates.man
     cat_surf_vol2surf.m.
 (3) Fixed: Bug with label files where filenames were not used in the title.
 (4) Added: New description of templates.
+
 ------------------------------------------------------------------------
 r1259 | gaser | 2018-01-24 08:53:21 +0100 (Mi, 24 Jan 2018) | 13 lines
 
