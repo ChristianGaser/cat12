@@ -323,7 +323,7 @@ function out = cat_surf_vol2surf(varargin)
           end
         end
         
-        if job.verb
+        if job.verb &  (~mapping=='rel_equivol_mapping')
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
         end
       
