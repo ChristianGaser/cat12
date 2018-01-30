@@ -295,7 +295,7 @@ function stools = cat_conf_stools(expert)
     ' Maximum:       Use maximum value for mapping along normals.'
     ' Minimum:       Use minimum value for mapping along normals.'
     ' Absolute maximum: Use absolute maximum value for mapping along normals (useful for mapping contrast images from 1st-level fMRI analysis).'
-    ' Multi-values:  Map data for each grid step separately and save files with indicated grid value. Please note that this option is intended for high-resolution (f)MRI data only (e.g. 0.5mm voxel size).'
+    ' Multi-values:  Map data for each grid step separately and save files with indicated grid value. Please note that this option is only intended for high-resolution (f)MRI data (e.g. 0.5mm voxel size).'
     ''
   };
 
@@ -409,7 +409,7 @@ function stools = cat_conf_stools(expert)
     'Map volumetric data from relative positions within a tissue class using equi-volume approach. '
     'This option is using the approach by Bok (Z. Gesamte Neurol. Psychiatr. 12, 682–750, 1929). '
     'Here, the volume between the grids is constant. The correction is based on Waehnert et al. (NeuroImage, 93: 210-220, 2014).'
-    'Please note that this option is intended for high-resolution (f)MRI data only'
+    'Please note that this option is only intended for high-resolution (f)MRI data (e.g. 0.5mm voxel size).'
     '' 
   };
 
@@ -447,6 +447,7 @@ function stools = cat_conf_stools(expert)
     '  Relative Grid Position Within a Tissue Class (Equi-volume approach):' 
     '    Extract values within a tissue class with a specified relative sample distance'
     '    that is corrected for constant volume between the grids and either combine these values or save values separetely.'
+    '    Please note that this option is only intended for high-resolution (f)MRI data (e.g. 0.5mm voxel size).'
     '' 
   };
 
