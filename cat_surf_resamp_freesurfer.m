@@ -44,9 +44,6 @@ function cat_surf_resamp_freesurfer(vargin)
       continue
     end
     
-    % parameter name
-    pname = 'thickness';
-    
     for j=1:2
     
       hemi = hemi_str(j,:);
