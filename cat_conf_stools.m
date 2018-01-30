@@ -295,7 +295,7 @@ function stools = cat_conf_stools(expert)
     ' Maximum:       Use maximum value for mapping along normals.'
     ' Minimum:       Use minimum value for mapping along normals.'
     ' Absolute maximum: Use absolute maximum value for mapping along normals (useful for mapping contrast images from 1st-level fMRI analysis).'
-    ' Multi-values:  Map data for each grid step separately and save files with indicated grid value. Please note that this option is only intended for high-resolution (f)MRI data (e.g. 0.5mm voxel size).'
+    ' Multi-values:  Map data for each grid step separately and save files with indicated grid value. Please note that this option is intended for high-resolution (f)MRI data only (e.g. 0.5mm voxel size).'
     ''
   };
 
@@ -409,7 +409,7 @@ function stools = cat_conf_stools(expert)
     'Map volumetric data from relative positions within a tissue class using equi-volume approach. '
     'This option is using the approach by Bok (Z. Gesamte Neurol. Psychiatr. 12, 682–750, 1929). '
     'Here, the volume between the grids is constant. The correction is based on Waehnert et al. (NeuroImage, 93: 210-220, 2014).'
-    'Please note that this option is only intended for high-resolution (f)MRI data (e.g. 0.5mm voxel size).'
+    'Please note that this option is intended for high-resolution (f)MRI data only'
     '' 
   };
 
@@ -447,7 +447,6 @@ function stools = cat_conf_stools(expert)
     '  Relative Grid Position Within a Tissue Class (Equi-volume approach):' 
     '    Extract values within a tissue class with a specified relative sample distance'
     '    that is corrected for constant volume between the grids and either combine these values or save values separetely.'
-    '    Please note that this option is only intended for high-resolution (f)MRI data (e.g. 0.5mm voxel size).'
     '' 
   };
 
@@ -1068,7 +1067,18 @@ end
   data_fs.filter  = 'dir';
   data_fs.ufilter = '.*';
   data_fs.num     = [1 Inf];
-  data_fs.help    = {'Select subject folders of freesurfer data to resample thickness data.'};
+  data_fs.help    = {'Select subject folders of freesurfer data to resample data (e.g. thickness).'};
+
+  measure_fs         = cfg_entry;
+  measure_fs.tag     = 'measure_fs';
+  measure_fs.name    = 'Freesurfer Measure';
+  measure_fs.strtype = 's';
+  measure_fs.num     = [1 Inf];
+  measure_fs.val     = {'thickness'};
+  measure_fs.help    = {
+    'Name of surface measure that should be resampled and smoothed.'
+    ''
+    };
 
   outdir         = cfg_files;
   outdir.tag     = 'outdir';
@@ -1080,11 +1090,11 @@ end
 
   surfresamp_fs      = cfg_exbranch;
   surfresamp_fs.tag  = 'surfresamp_fs';
-  surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Thickness Data';
-  surfresamp_fs.val  = {data_fs,merge_hemi,mesh32k,fwhm_surf,outdir};
+  surfresamp_fs.name = 'Resample and Smooth Existing FreeSurfer Surface Data';
+  surfresamp_fs.val  = {data_fs,measure_fs,merge_hemi,mesh32k,fwhm_surf,outdir};
   surfresamp_fs.prog = @cat_surf_resamp_freesurfer;
   surfresamp_fs.help = {
-  'If you have existing freesurfer thickness data this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
+  'If you have existing freesurfer data (e.g. thickness) this function can be used to resample these data, smooth the resampled data, and convert freesurfer data to gifti format.'};
 
 %% Flipsides
 %-----------------------------------------------------------------------
