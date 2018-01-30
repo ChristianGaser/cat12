@@ -1,5 +1,49 @@
 ------------------------------------------------------------------------
-r1261 | gaser | 2018-01-29 15:31:10
+r1262 | gaser | 2018-01-30 11:25:44
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+ M      atlases_surfaces/atlases_surfaces.man
+ M      atlases_surfaces_32k/atlases_surfaces_32k.man
+ M      atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_1000Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_100Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_100Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_200Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_200Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_400Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_400Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_600Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_600Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_800Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/lh.Schaefer2018_800Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_1000Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_100Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_100Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_200Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_200Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_400Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_400Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_600Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_600Parcels_7Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_800Parcels_17Networks_order.annot
+ M      atlases_surfaces_32k/rh.Schaefer2018_800Parcels_7Networks_order.annot
+M       cat_conf_stools.m
+M       cat_surf_info.m
+M       cat_surf_vol2surf.m
+M       html/cat.html
+ M      templates_1.50mm/templates.man
+
+(1) Fixed: cat_surf_info had difficulties with sqrtsulc data.
+(2) Changed: Added output of mapping parameters in cat_surf_vol2surf.m.
+(3) Changed: Updated CAT12 manual and online help.
+
+------------------------------------------------------------------------
+r1261 | gaser | 2018-01-29 15:33:03 +0100 (Mo, 29 Jan 2018) | 17 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -17,6 +61,7 @@ M       templates_1.50mm/templates.man
 (1) Changed: Updated pipeline check.
 (2) Changed: Added output of mapping parameters in cat_surf_vol2surf.m.
 (3) Chnaged: Updated CAT12 manual and online help.
+
 ------------------------------------------------------------------------
 r1260 | gaser | 2018-01-26 20:15:00 +0100 (Fr, 26 Jan 2018) | 47 lines
 

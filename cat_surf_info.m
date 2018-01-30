@@ -189,26 +189,27 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb)
     sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)\..*')); 
     
     % side
-    if     strfind(noname,'lh'), sinfo(i).side='lh'; sidei = strfind(noname,'lh.');
-    elseif strfind(noname,'rh'), sinfo(i).side='rh'; sidei = strfind(noname,'rh.');
-    elseif strfind(noname,'lc'), sinfo(i).side='lc'; sidei = strfind(noname,'lc.');
-    elseif strfind(noname,'rc'), sinfo(i).side='rc'; sidei = strfind(noname,'rc.');
-    elseif strfind(noname,'mesh'), sinfo(i).side='mesh'; sidei = strfind(noname,'mesh.');
+    if     strfind(noname,'lh.'),   sinfo(i).side='lh';   sidei = strfind(noname,'lh.');
+    elseif strfind(noname,'rh.'),   sinfo(i).side='rh';   sidei = strfind(noname,'rh.');
+    elseif strfind(noname,'mesh.'), sinfo(i).side='mesh'; sidei = strfind(noname,'mesh.');
+    elseif strfind(noname,'lc.'),   sinfo(i).side='lc';   sidei = strfind(noname,'lc.');
+    elseif strfind(noname,'rc.'),   sinfo(i).side='rc';   sidei = strfind(noname,'rc.');
     else
       % if SPM.mat exist use that for side information
       if exist(fullfile(pp,'SPM.mat'),'file')
         load(fullfile(pp,'SPM.mat'));
         [pp2,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);
       
-        % find lh|rh string
-        hemi_ind = [strfind(ff2,'lh.') strfind(ff2,'rh.') strfind(ff2,'lc.') strfind(ff2,'rc.')];
+        % find mesh string
+        hemi_ind = strfind(ff2,'mesh.');
         if ~isempty(hemi_ind)
-          sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
-        else
-          % find mesh string
-          hemi_ind = strfind(ff2,'mesh.');
           sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+3);
+        else
+          % find lh|rh string
+          hemi_ind = [strfind(ff2,'lh.') strfind(ff2,'rh.') strfind(ff2,'lc.') strfind(ff2,'rc.')];
+          sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
         end
+
         sidei=[];
       else
         if gui
