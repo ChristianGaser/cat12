@@ -9,19 +9,21 @@ function cat_surf_resamp_freesurfer(vargin)
   
   if nargin == 1
     Psubj = char(vargin.data_fs);
-    fwhm = vargin.fwhm_surf;
+    fwhm_surf = vargin.fwhm_surf;
     outdir = vargin.outdir{1};
+    mesh32k = vargin.mesh32k;
+    pname = vargin.measure_fs;
   else
     error('Not enough parameters.');
   end
   
   opt.debug     = cat_get_defaults('extopts.verb') > 2;
       
-  if job.mesh32k
-    job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
+  if mesh32k
+    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
     str_resamp = '.resampled_32k';
   else
-    job.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
+    opt.fsavgDir  = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces');
     str_resamp = '.resampled';
   end
 
@@ -97,7 +99,7 @@ function cat_surf_resamp_freesurfer(vargin)
     % merge hemispheres
     if vargin.merge_hemi
       % replace hemi info with "mesh"    
-      Pfwhm   = strrep(Pfwhm_all{1},'lh.thickness','mesh.thickness');
+      Pfwhm   = strrep(Pfwhm_all{1},['lh.' pname],['mesh.' pname]);
       [pp,ff,ex]   = spm_fileparts(Pfwhm);
   
       % combine left and right and optionally cerebellar meshes

@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1262 | gaser | 2018-01-30 11:25:44
+r1263 | gaser | 2018-01-30 11:56:16
+
+Changed paths:
+M       CHANGES.txt
+M       cat_conf_stools.m
+M       cat_surf_resamp_freesurfer.m
+
+(1) Fixed: Resampling of Freesurfer data was not working with new 32k mesh 
+    option.
+(2) Changed: Added option to also resample other Freesurfer measures.
+------------------------------------------------------------------------
+r1262 | gaser | 2018-01-30 11:27:34 +0100 (Di, 30 Jan 2018) | 42 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -41,6 +52,7 @@ M       html/cat.html
 (1) Fixed: cat_surf_info had difficulties with sqrtsulc data.
 (2) Changed: Added output of mapping parameters in cat_surf_vol2surf.m.
 (3) Changed: Updated CAT12 manual and online help.
+
 
 ------------------------------------------------------------------------
 r1261 | gaser | 2018-01-29 15:33:03 +0100 (Mo, 29 Jan 2018) | 17 lines
