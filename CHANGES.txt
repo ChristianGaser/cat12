@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1265 | gaser | 2018-02-01 11:10:33
+r1266 | gaser | 2018-02-01 11:58:07
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_analyze_ROIs.m
+M       html/cat.html
+M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
+
+Fixed: Typo in cat_stat_analyze_ROIs.m that caused crash.
+------------------------------------------------------------------------
+r1265 | gaser | 2018-02-01 11:10:55 +0100 (Do, 01 Feb 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +22,7 @@ M       cat_vol_sanlm.m
 (1) Changed: Replaced spm_con_vol by convn in cat_vol_morph which is faster and
     less memory demanding.
 (2) Changed: Updated some help texts.
+
 
 ------------------------------------------------------------------------
 r1264 | gaser | 2018-01-30 12:02:00 +0100 (Di, 30 Jan 2018) | 8 lines
