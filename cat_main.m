@@ -259,6 +259,8 @@ if ~isfield(res,'spmpp')
   YbA = cat_vol_smooth3X(cat_vol_smooth3X(YbA,2)>0.1,2); % dilate + smooth 
   for i=1:3, Q(:,:,:,i) = Q(:,:,:,i) .* YbA; end
   
+  clear YbA
+  
   % sum up classes 
   sQ = (sum(Q,4)+eps)/255; P = zeros([d(1:3),Kb],'uint8');
   for k1=1:size(Q,4)
@@ -1716,6 +1718,7 @@ if job.output.ROI
       
       wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,job.extopts.atlas);
       wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,job.extopts.atlas);
+      clear Ycls
       if exist('Ywmh','var')
         wYcls{7} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),transw,1,0,job.extopts.atlas));
       end
