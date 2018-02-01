@@ -120,9 +120,9 @@ for i=1:numel(P)
   if ~exist(roi_names{i},'file')
       % mesh found
       if isfield(SPM.xVol,'G')
-        fprintf('Label file %s not found. Please check whether you have extracted ROI-based surface values or have moved your data.\n',roi_names{i}));
+        fprintf('Label file %s not found. Please check whether you have extracted ROI-based surface values or have moved your data.\n',roi_names{i});
       else
-        fprintf('Label file %s not found. Please check that you have not moved your data.\n',roi_names{i}));
+        fprintf('Label file %s not found. Please check that you have not moved your data.\n',roi_names{i});
       end
       break
   end
