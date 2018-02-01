@@ -62,15 +62,19 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   if nargin < 1, error('MATLAB:cat_vol_morph:NoAction','No volume given.\n'); end
 
   classVol = class(vol); 
+  
   if iscell(vol) || ndims(vol)~=3 || isempty(vol)
     error('MATLAB:cat_vol_morph:Empty','Only nonempty 3D volumes!\n'); 
   end
-  vol = vol>0.5; vol(isnan(vol))=0;
+  
+  vol = vol>0.5; vol(isnan(vol)) = 0;
+  
   if numel(vx_vol)==1, vx_vol=repmat(vx_vol,1,3); end
   if any(size(vx_vol)~=[1,3]), 
     error('MATLAB:cat_vol_morph:vx_vol', ...
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
   end
+  
   no=n; n=double(n); n(1)=round(n(1)); 
   switch lower(action)
     case {'l' 'lc' 'lo' 'labclose' 'labopen'}
@@ -81,13 +85,11 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   
   switch lower(action)
     case {'dilate' 'd'}
-      vol = double(vol); 
-      k   = ones(1,2*n+1);
-      spm_conv_vol(vol,vol,k,k,k,-[n n n]);
-      vol = vol>0;   
+      % use of single input for convn is faster and less memory demanding
+      vol = convn(single(vol),ones(2*n+1,2*n+1,2*n+1),'same') > 0; 
 
     case {'erode' 'e'}
-      vol=~cat_vol_morph(~vol,'dilate',n,vx_vol); 
+      vol = ~cat_vol_morph(~vol,'dilate',n,vx_vol); 
 
     case {'close' 'c'}
       sz = size(vol);
@@ -112,13 +114,16 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     case {'lab' 'l'}
     % try to catch errors, if there is no object
       try  
-        [ROI,num]  = spm_bwlabel(double(vol),6);
+        [ROI,num]  = spm_bwlabel(uint8(vol),6);
+        
         if numel(num)>0
           num        = hist( ROI( ROI(:)>0 ) , 1:num);
           [num,numi] = sort(num,'descend');
           vol        = ROI==numi(1);	
+          
           if exist('n','var') && n(1)>1
             vol = single(vol); classVol = 'single'; 
+            
             if numel(n)==1, n(2)=0; end
             for ni=2:min(numel(num),n(1))
               if (n(2)<0 && num(ni)>(-n(2))) || ... % absolute vs. 
@@ -126,6 +131,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
                 vol(ROI==numi(ni)) = numi(ni);	
               end
             end
+            
           end
         end
       catch %#ok<CTCH>
