@@ -82,7 +82,12 @@ for i=1:numel(P)
     % check for catROI*-files
     files = cat_vol_findfiles(pth_label,[pattern '*']);
     if numel(files) == 0
-      fprintf('No label files found in folder %s. Please check that you have not moved your data\n',pth_label);
+      % mesh found
+      if isfield(SPM.xVol,'G')
+        fprintf('No label files found in folder %s. Please check whether you have extracted ROI-based surface values or have moved your data.\n',pth_label);
+      else
+        fprintf('No label files found in folder %s. Please check that you have not moved your data.\n',pth_label);
+      end
       roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
       break
     end
@@ -94,7 +99,7 @@ for i=1:numel(P)
     % check whether first filename in SPM.mat and xml-file are from the same subject
     ind = strfind(nam,tmp_name);
     if isempty(ind)
-      fprintf('Label file %s does not fit to analyzed file %s. Please check that you have not moved your data',tmp_name,nam);
+      fprintf('Label file %s does not fit to analyzed file %s. Please check that you have not moved your data.\n',tmp_name,nam);
       roi_names = cellstr(spm_select(numel(P) ,'xml','Select xml files',{},'',pattern));
       break
     end
@@ -113,7 +118,13 @@ for i=1:numel(P)
   % get ROI name for all files and check whether the files are found
   roi_names{i} = fullfile(pth_label,[pattern nam(ind:end) '.xml']);
   if ~exist(roi_names{i},'file')
-      error(sprintf('Label file %s not found. Please check that you have not moved your data.\n',roi_names{i}));
+      % mesh found
+      if isfield(SPM.xVol,'G')
+        fprintf('Label file %s not found. Please check whether you have extracted ROI-based surface values or have moved your data.\n',roi_names{i}));
+      else
+        fprintf('Label file %s not found. Please check that you have not moved your data.\n',roi_names{i}));
+      end
+      break
   end
 end
 

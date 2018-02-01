@@ -108,7 +108,7 @@ for i = 1:numel(job.data)
     srco   = single(spm_read_vols(V(i)));
     NCrate = cat_stat_nanmean(abs(src(:)/th - srco(:)/th)); 
     
-    % set actural filter rate - limit later!
+    % set actual filter rate - limit later!
     % the factor 15 was estimated on the BWP 
     NCstr                         = job.NCstr; 
     NCstr(isinf(NCstr) & NCstr>0) = 15 * NCrate;   

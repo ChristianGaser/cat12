@@ -1,5 +1,19 @@
 ------------------------------------------------------------------------
-r1264 | gaser | 2018-01-30 12:01:56
+r1265 | gaser | 2018-02-01 11:10:33
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_stat_analyze_ROIs.m
+M       cat_vol_morph.m
+M       cat_vol_sanlm.m
+
+(1) Changed: Replaced spm_con_vol by convn in cat_vol_morph which is faster and
+    less memory demanding.
+(2) Changed: Updated some help texts.
+
+------------------------------------------------------------------------
+r1264 | gaser | 2018-01-30 12:02:00 +0100 (Di, 30 Jan 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -7,6 +21,7 @@ M       cat_surf_resamp_freesurfer.m
 
 Fixed: Error in last change of cat_surf_resamp_freesurfer.m with other
 parameters than thickness.
+
 
 ------------------------------------------------------------------------
 r1263 | gaser | 2018-01-30 11:56:31 +0100 (Di, 30 Jan 2018) | 9 lines
