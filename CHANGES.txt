@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1266 | gaser | 2018-02-01 11:58:07
+r1267 | gaser | 2018-02-02 15:46:39
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_check_cov.m
+M       html/cat.html
+
+Fixed: Surface maps for Mahalanobis plot were shifted.
+------------------------------------------------------------------------
+r1266 | gaser | 2018-02-01 11:58:29 +0100 (Do, 01 Feb 2018) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +19,7 @@ M       html/cat.html
 M       internal/cat_vol_cMRegularizarNLM3D.mexmaci64
 
 Fixed: Typo in cat_stat_analyze_ROIs.m that caused crash.
+
 ------------------------------------------------------------------------
 r1265 | gaser | 2018-02-01 11:10:55 +0100 (Do, 01 Feb 2018) | 12 lines
 

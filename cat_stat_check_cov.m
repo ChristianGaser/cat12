@@ -812,29 +812,40 @@ if isscatter
   set(H.text,'String',txt2);
   axes('Position',pos.slice);
 
+  x = pos.x;
+  y = pos.y;
+  
   if issurf 
     % use indexed 2D-sheet to display surface data as image
     % check surface size to use indexed 2D map
-    if (length(data_array(:,pos.x)) == 163842)
+    if (length(data_array(:,x)) == 163842)
       ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-      img = [reshape(data_array(ind,pos.x),[256,128])];
+      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
       img = circshift(img,128);
-    elseif (length(data_array(:,pos.x)) == 327684)
+    elseif (length(data_array(:,x)) == 327684)
       ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-      data_array_lh = data_array(1:163842,pos.x);
-      data_array_rh = data_array(163843:end,pos.x);
-      img = [circshift(reshape(data_array_lh(ind),[256,128]),128); reshape(data_array_rh(ind),[256,128])];
-    elseif (length(data_array(:,pos.x)) == 32492)
+      data_array_x_lh = data_array(1:163842,x);
+      data_array_x_rh = data_array(163843:end,x);
+      data_array_y_lh = data_array(1:163842,y);
+      data_array_y_rh = data_array(163843:end,y);
+      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
+      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
+      img = [circshift(img_lh,128); img_rh];
+    elseif (length(data_array(:,x)) == 32492)
       ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-      img = [reshape(data_array(ind,pos.x),[256,128])];
+      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
       img = circshift(img,128);
-    elseif (length(data_array(:,pos.x)) == 64984)
+    elseif (length(data_array(:,x)) == 64984)
       ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-      data_array_lh = data_array(1:32492,pos.x);
-      data_array_rh = data_array(32493:end,pos.x);
-      img = [circshift(reshape(data_array_lh(ind),[256,128]),128); reshape(data_array_rh(ind),[256,128])];
+      data_array_x_lh = data_array(1:32492,x);
+      data_array_x_rh = data_array(32493:end,x);
+      data_array_y_lh = data_array(1:32492,y);
+      data_array_y_rh = data_array(32493:end,y);
+      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
+      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
+      img = [circshift(img_lh,96); circshift(img_rh,96)];
     else
-      img = [data_array(:,x)]';
+      img = [data_array(:,y) data_array(:,x)]';
     end
   
     % scale img to 0..64
