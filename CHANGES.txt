@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1267 | gaser | 2018-02-02 15:46:39
+r1268 | gaser | 2018-02-02 17:25:59
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.sh
+
+Fixed: used wrong flag in cat_batch_cat.sh.
+------------------------------------------------------------------------
+r1267 | gaser | 2018-02-02 15:47:02 +0100 (Fr, 02 Feb 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +16,7 @@ M       cat_stat_check_cov.m
 M       html/cat.html
 
 Fixed: Surface maps for Mahalanobis plot were shifted.
+
 ------------------------------------------------------------------------
 r1266 | gaser | 2018-02-01 11:58:29 +0100 (Do, 01 Feb 2018) | 9 lines
 
