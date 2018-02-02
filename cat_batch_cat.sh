@@ -325,9 +325,9 @@ run_vbm ()
               if [ -z "$shellcommand" ]; then
                 # do nohup in background or not
                 if [ -z "$fg" ]; then
-                  nohup nice -n $nicelevel ${matlab} -nodisplay -jvm -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
+                  nohup nice -n $nicelevel ${matlab} -nodisplay -nojvm -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
                 else
-                  nohup nice -n $nicelevel ${matlab} -nodisplay -jvm -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
+                  nohup nice -n $nicelevel ${matlab} -nodisplay -nojvm -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
                 fi
               else
                 # do nohup in background or not
