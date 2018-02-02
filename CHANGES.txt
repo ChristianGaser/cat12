@@ -1,11 +1,20 @@
 ------------------------------------------------------------------------
-r1268 | gaser | 2018-02-02 17:25:59
+r1269 | gaser | 2018-02-02 17:46:07
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.sh
+
+Changed: Added optional nojvm flag to cat_batch_cat.sh.
+------------------------------------------------------------------------
+r1268 | gaser | 2018-02-02 17:26:17 +0100 (Fr, 02 Feb 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_batch_cat.sh
 
 Fixed: used wrong flag in cat_batch_cat.sh.
+
 ------------------------------------------------------------------------
 r1267 | gaser | 2018-02-02 15:47:02 +0100 (Fr, 02 Feb 2018) | 8 lines
 

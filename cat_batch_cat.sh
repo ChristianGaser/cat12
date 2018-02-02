@@ -16,6 +16,7 @@ nicelevel=0
 shellcommand=
 matlabcommand=
 fg=
+nojvm=""
 
 ########################################################
 # run main
@@ -89,6 +90,10 @@ parse_args ()
         --fg* | -fg*)
             exit_if_empty "$optname" "$optarg"
             fg=1
+            ;;
+        --nojvm | -nojvm)
+            exit_if_empty "$optname" "$optarg"
+            nojvm=" -nojvm "
             ;;
         --f* | -f*)
             exit_if_empty "$optname" "$optarg"
@@ -325,9 +330,9 @@ run_vbm ()
               if [ -z "$shellcommand" ]; then
                 # do nohup in background or not
                 if [ -z "$fg" ]; then
-                  nohup nice -n $nicelevel ${matlab} -nodisplay -nojvm -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
+                  nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
                 else
-                  nohup nice -n $nicelevel ${matlab} -nodisplay -nojvm -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
+                  nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
                 fi
               else
                 # do nohup in background or not
@@ -374,17 +379,18 @@ cat <<__EOM__
 USAGE:
    cat_batch_cat.sh filename|filepattern [-m matlab_command] [-w] [-p number_of_processes] [-d default_file] [-l log_folder]
    
-   -n   nice level
-   -m   matlab command (matlab version)
-   -s   shell command to call other shell scripts (like FSL)
-   -f   file with files to process
-   -fg  do not run matlab process in background
-   -p   number of parallel jobs (=number of processors)
-   -np  set number of jobs by number_of_processors - number_of_processes
-        (=number of free processors)
-   -d   optional default file
-   -l   directory for log-file
-   -c   alternative matlab function that can be called such as the SANLM-filter
+   -n      nice level
+   -m      matlab command (matlab version)
+   -s      shell command to call other shell scripts (like FSL)
+   -f      file with files to process
+   -fg     do not run matlab process in background
+   -p      number of parallel jobs (=number of processors)
+   -np     set number of jobs by number_of_processors - number_of_processes
+           (=number of free processors)
+   -d      optional default file
+   -l      directory for log-file
+   -c      alternative matlab function that can be called such as the SANLM-filter
+   -nojvm  supress call of jvm using the -nojvm flag
    
    Only one filename or pattern is allowed. This can be either a single file or a pattern
    with wildcards to process multiple files. Optionally you can set the matlab command 
