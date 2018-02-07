@@ -103,7 +103,6 @@ parse_args ()
             for F in $list; do
               ARRAY[$count]=$F
               ((count++))
-              #echo $count
             done
             ;;
         --s* | -s* | --shell* | -shell*)
@@ -253,11 +252,12 @@ run_vbm ()
         if [ ! -f ${defaults_file} -a -f ${pwd}/${defaults_file} ]; then
             defaults_file=${pwd}/${defaults_file}
         fi
-    
+
         # check whether defaults file exist
-        #if [ ! -f ${defaults_file} ];  then
-        #    echo $defaults_file not found.
-        #fi
+        if [ ! -f ${defaults_file} ];  then
+            echo Default file $defaults_file not found.
+            exit
+        fi
     fi
 
     # split files and prepare tmp-file with filenames
@@ -325,29 +325,23 @@ run_vbm ()
             echo "  $SHCOMMAND"                     >> ${vbmlog}_${j}.log
             echo                                    >> ${vbmlog}_${j}.log
             
-            # check whether defaults exist
-            if [ -f ${defaults_file} ];  then
-              if [ -z "$shellcommand" ]; then
-                # do nohup in background or not
-                if [ -z "$fg" ]; then
-                  nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
-                else
-                  nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
-                fi
+            if [ -z "$shellcommand" ]; then
+              # do nohup in background or not
+              if [ -z "$fg" ]; then
+                nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1 &
               else
-                # do nohup in background or not
-                if [ -z "$fg" ]; then
-                  nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
-                else
-                  nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1
-                fi
+                nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> ${vbmlog}_${j}.log 2>&1
               fi
-              echo Check ${vbmlog}_${j}.log for logging information
-              echo
             else
-              echo Stop processing, because of missing default file: >> ${vbmlog}_${j}.log
-              echo   ${defaults_file}  >> ${vbmlog}_${j}.log
+              # do nohup in background or not
+              if [ -z "$fg" ]; then
+                nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1 &
+              else
+                nohup nice -n $nicelevel $SHCOMMAND >> ${vbmlog}_${j}.log 2>&1
+              fi
             fi
+            echo Check ${vbmlog}_${j}.log for logging information
+            echo
         fi
         ((i++))
     done
@@ -382,7 +376,7 @@ USAGE:
    -n      nice level
    -m      matlab command (matlab version)
    -s      shell command to call other shell scripts (like FSL)
-   -f      file with files to process
+   -f      files to process with shell command
    -fg     do not run matlab process in background
    -p      number of parallel jobs (=number of processors)
    -np     set number of jobs by number_of_processors - number_of_processes

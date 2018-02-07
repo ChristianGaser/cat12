@@ -1,11 +1,39 @@
 ------------------------------------------------------------------------
-r1269 | gaser | 2018-02-02 17:46:07
+r1270 | gaser | 2018-02-07 14:31:51
+
+Changed paths:
+M       CHANGES.txt
+M       cat_batch_cat.m
+M       cat_batch_cat.sh
+M       cat_batch_long.m
+M       cat_batch_long.sh
+M       cat_batch_spm.sh
+M       cat_conf_tools.m
+M       cat_main.m
+M       cat_run_newcatch.m
+M       cat_run_oldcatch.m
+M       cat_surf_info.m
+D       cat_tst_qa.m
+        > moved to cat_vol_qa.m
+A  +    cat_vol_qa.m
+        > moved from cat_tst_qa.m
+
+(1) Fixed: cat_surf_info now also gives correct Pmesh if data are called
+    on a different computer and SPM12 folder changed.
+(2) Changed: TIV is now estimated straightforward using sum of (native) 
+    tissue class.
+(3) Changed: Renamed cat_tst_qa.m to cat_vol_qa.m
+(4) Changed: Updated batch functions to be more consistent and added many 
+    new flags.
+------------------------------------------------------------------------
+r1269 | gaser | 2018-02-02 17:46:12 +0100 (Fr, 02 Feb 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       cat_batch_cat.sh
 
 Changed: Added optional nojvm flag to cat_batch_cat.sh.
+
 ------------------------------------------------------------------------
 r1268 | gaser | 2018-02-02 17:26:17 +0100 (Fr, 02 Feb 2018) | 6 lines
 

@@ -1,4 +1,4 @@
-function varargout = cat_tst_qa(action,varargin)
+function varargout = cat_vol_qa(action,varargin)
 % CAT Preprocessing T1 Quality Assurance
 % ______________________________________________________________________
 % 
@@ -327,18 +327,18 @@ function varargout = cat_tst_qa(action,varargin)
           if exist(Po{fi},'file')
             Vo  = spm_vol(Po{fi});
           else
-            error('cat_tst_qa:noYo','No original image.');
+            error('cat_vol_qa:noYo','No original image.');
           end
   
           Yp0 = single(spm_read_vols(spm_vol(Pp0{fi})));
           if ~isempty(Pm{fi}) && exist(Pm{fi},'file')
             Ym  = single(spm_read_vols(spm_vol(Pm{fi})));
           else
-            error('cat_tst_qa:noYm','No corrected image.');
+            error('cat_vol_qa:noYm','No corrected image.');
           end
   
           res.image = spm_vol(Pp0{fi}); 
-          [QASfi,QAMfi,cat_qa_warnings{fi}] = cat_tst_qa('cat12',Yp0,Vo,Ym,res,cat_warnings,species,opt);
+          [QASfi,QAMfi,cat_qa_warnings{fi}] = cat_vol_qa('cat12',Yp0,Vo,Ym,res,cat_warnings,species,opt);
 
      
           QAS = cat_io_updateStruct(QAS,QASfi,0,fi);
@@ -373,7 +373,7 @@ function varargout = cat_tst_qa(action,varargin)
             e = lasterror; %#ok<LERR> ... normal "catch err" does not work for MATLAB 2007a
          
             switch e.identifier
-              case {'cat_tst_qa:noYo','cat_tst_qa:noYm','cat_tst_qa:badSegmentation'}
+              case {'cat_vol_qa:noYo','cat_vol_qa:noYm','cat_vol_qa:badSegmentation'}
                 em = e.identifier;
               otherwise
                 em = ['ERROR:\n' repmat(' ',1,10) e.message '\n'];
@@ -578,9 +578,6 @@ function varargout = cat_tst_qa(action,varargin)
       warning on
       QAS.software.cat_warnings = cat_warnings;
  
-      % @Christian: Do we only want the cat parameter or is it important to have further information? 
-      %             I think cat defaults would be enought for the beginning.  
-      %             Furhter data will only be excess baggage for the cat*.xml file. 
       %QAS.parameter             = opt.job; 
       if isfield(opt,'job')
         QAS.parameter.opts        = opt.job.opts;
@@ -594,21 +591,12 @@ function varargout = cat_tst_qa(action,varargin)
         end
       end
      
-      %% inti, volumina, resolution, boundary box
+      %% resolution, boundary box
       %  ---------------------------------------------------------------
       QAS.software.cat_qa_warnings = struct('identifier',{},'message',{});
       vx_vol  = sqrt(sum(Vo.mat(1:3,1:3).^2));
       vx_voli = sqrt(sum(V.mat(1:3,1:3).^2));
       Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
-      
-      %  volumina 
-      QAS.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
-                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ... GM 
-                            prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),3)), ... WM
-                            QAS.subjectmeasures.WMH_abs]; 
-                            %prod(vx_vol)/1000 .* ]; %sum(Yp0toC(Yp0(:),4))];  % WMH
-      QAS.subjectmeasures.vol_TIV     =  sum(QAS.subjectmeasures.vol_abs_CGW); 
-      QAS.subjectmeasures.vol_rel_CGW =  QAS.subjectmeasures.vol_abs_CGW ./ QAS.subjectmeasures.vol_TIV;
       
       %  resolution 
       QAS.qualitymeasures.res_vx_vol    = vx_vol;
@@ -616,7 +604,7 @@ function varargout = cat_tst_qa(action,varargin)
         QAS.qualitymeasures.res_vx_voli = vx_voli;
       end
       QAS.qualitymeasures.res_RMS       = cat_stat_nanmean(vx_vol.^2).^0.5;
-      % futher unused measure (just for test/comparison)
+      % further unused measure (just for test/comparison)
       %QAS.qualitymeasures.res_isotropy  = max(vx_vol)./min(vx_vol);
       %QAS.qualitymeasures.res_vol       = prod(abs(vx_vol));
       %QAS.qualitymeasures.res_MVR       = mean(vx_vol);
@@ -639,12 +627,12 @@ function varargout = cat_tst_qa(action,varargin)
           case 'human'
             bvol = 1400; 
           otherwise
-            warning('cat_tst_qa:species',...
+            warning('cat_vol_qa:species',...
               sprintf('Unknown species %s (C=%0.0f,G=%0.0f,W=%0.0f).',species,subvol)); %#ok<SPWRN>
         end
       end
       if  sum(subvol)<bvol/3 || sum(subvol)>bvol*3
-        warning('cat_tst_qa:badSegmentation',...
+        warning('cat_vol_qa:badSegmentation',...
           sprintf('Bad %s segmentation (C=%0.0f,G=%0.0f,W=%0.0f).',species,subvol)) %#ok<SPWRN>
       end
       
@@ -685,8 +673,8 @@ function varargout = cat_tst_qa(action,varargin)
       if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end     
       Ygm  = Ygm & Yms>(T2th(2)-2*noise*diff(T1th(2:3))) & Yms<(T2th(2)+2*noise*diff(T1th(2:3)));
       Ygm(smooth3(Ygm)<0.2) = 0;
-      Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid wholes
-      Ywm  = cat_vol_morph(Ywm,'lc'); % to avoid wholes
+      Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid holes
+      Ywm  = cat_vol_morph(Ywm,'lc'); % to avoid holes
       Ywe  = cat_vol_morph(Ywm,'e');  
       
       

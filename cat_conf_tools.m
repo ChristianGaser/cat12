@@ -395,7 +395,7 @@ qa        = cfg_exbranch;
 qa.tag    = 'qa';
 qa.name   = 'CAT quality assurance';
 qa.val    = {data};
-qa.prog   = @cat_tst_qa;
+qa.prog   = @cat_vol_qa;
 qa.vfiles = @vfiles_qa;
 qa.help   = {'CAT Quality Assurance of T1 images. '};
 

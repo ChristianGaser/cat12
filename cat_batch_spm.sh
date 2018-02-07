@@ -8,6 +8,7 @@
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
 LOGDIR=$PWD
+nojvm=""
 
 ########################################################
 # run main
@@ -49,6 +50,10 @@ parse_args ()
 		--display* | -d*)
 			display=1
 			;;
+        --nojvm | -nojvm)
+            exit_if_empty "$optname" "$optarg"
+            nojvm=" -nojvm "
+            ;;
         --logdir* | -l*)
             exit_if_empty "$optname" "$optarg"
             LOGDIR=$optarg
@@ -149,7 +154,7 @@ run_batch ()
 	echo $0 $file >> $spmlog
 	echo >> $spmlog
 	if [ $display == 0 ]; then
-		nohup ${matlab} -nodisplay -nojvm -nosplash -r $X >> $spmlog 2>&1 &
+		nohup ${matlab} -nodisplay "$nojvm" -nosplash -r $X >> $spmlog 2>&1 &
 	else
 		nohup ${matlab} -nosplash -r $X >> $spmlog 2>&1 &
 	fi
@@ -180,8 +185,9 @@ cat <<__EOM__
 USAGE:
    cat_batch_spm.sh batchfile.m [-d] [-m matlabcommand]
    
-   -d   use display option in matlab in case that batch file needs graphical output
-   -m   matlab command
+   -d      use display option in matlab in case that batch file needs graphical output
+   -m      matlab command
+   -nojvm  supress call of jvm using the -nojvm flag
 
    Only one batch filename is allowed. Optionally you can set the matlab command 
    with the "-m" option. As default no display is used (via the -nodisplay option 
