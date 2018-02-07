@@ -1,13 +1,18 @@
-function cat_batch_long(namefile)
-% wrapper for using spm8 batch mode (see cat_batch_long.sh)
+function cat_batch_long(namefile,output_surface,cat_defaults)
+% wrapper for using batch mode (see cat_batch_long.sh)
 %
 % namefile      - array of file names
+% cat_defaults  - use this default file instead of cat_defaults.m
 %_______________________________________________________________________
 % $Id$
 
 if nargin < 1
 	fprintf('Syntax: cat_batch_long(namefile)\n');
 	exit
+end
+
+if nargin < 2
+  output_surface = 1;
 end
 
 fid = fopen(namefile,'r');
@@ -19,10 +24,26 @@ n = length(names);
 
 if n == 0, error('No file found in %s.\n',namefile); end
 
-spm_get_defaults;
-cat_get_defaults;
-
 global defaults cat matlabbatch
+
+spm_get_defaults;
+
+if nargin < 3
+    cat_get_defaults;
+else
+    if isempty(cat_defaults)
+        cat_get_defaults;
+    else
+        fprintf('Use defaults in %s.\n',cat_defaults);
+        [pp, name] = spm_fileparts(cat_defaults);
+        clear cat_defaults
+        oldpath = pwd;
+        cd(pp)
+        eval(name);
+        cd(oldpath)
+    end
+end
+
 
 matlabbatch{1}.spm.tools.cat.tools.long.subj.mov = cell(n,1);
 for i=1:n
@@ -31,6 +52,10 @@ end
 
 matlabbatch{1}.spm.tools.cat.tools.long.modulate = 1;
 matlabbatch{1}.spm.tools.cat.tools.long.warps = 0;
+
+if output_surface
+  matlabbatch{1}.spm.tools.cat.tools.long.output.surface = 1;
+end
 
 % always deselect print option
 matlabbatch{1}.spm.tools.cat.tools.long.extopts.print = 0;

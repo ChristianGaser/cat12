@@ -61,7 +61,7 @@ function cat_run_oldcatch(job,tpm,subj)
         caterrstruct(si).name = caterr.stack(si).name;  
         caterrstruct(si).file = caterr.stack(si).file;  
       end
-      qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
+      qa = cat_vol_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',caterrtxt,'caterr',caterrstruct,'job',job));
       cat_io_report(job,qa,subj)
       
       
