@@ -63,7 +63,7 @@ function cat_run_newcatch(job,tpm,subj)
       job.SPM.opt = cat_err_res.obj;
     end
     
-    qa = cat_tst_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
+    qa = cat_vol_qa('cat12err',struct('write_csv',0,'write_xml',1,'caterrtxt',{caterrtxt},'caterr',caterrstruct,'job',job,'subj',subj));
     cat_io_report(job,qa,subj)
     
     % delete noise corrected image

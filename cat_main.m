@@ -351,7 +351,7 @@ if ~isfield(res,'spmpp')
   Yp0     = Yp0 .* cat_vol_morph(Yp0 & (Ysrc>WMth*0.05),'lc',2);
   Yp0toC  = @(Yp0,c) 1-min(1,abs(Yp0-c));
 
-  % some error management
+  % values are only used if errors occur
   cat_err_res.init.T3th = T3th; 
   cat_err_res.init.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),1)), ... CSF
                                                   prod(vx_vol)/1000 .* sum(Yp0toC(Yp0(:),2)), ... GM 
@@ -1302,7 +1302,7 @@ else
   cat_warnings        = struct('identifier',{},'message',{});   % warning structure from cat_main_gintnorm 
   NS                  = @(Ys,s) Ys==s | Ys==s+1;                % for side independent atlas labels
   
-  % QA WMH values required by cat_tst_qa later
+  % QA WMH values required by cat_vol_qa later
   qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
   qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
   qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
@@ -1718,7 +1718,7 @@ if job.output.ROI
       
       wYp0     = cat_vol_ROInorm(Yp0,transw,1,0,job.extopts.atlas);
       wYcls    = cat_vol_ROInorm(Ycls,transw,1,1,job.extopts.atlas);
-      clear Ycls
+
       if exist('Ywmh','var')
         wYcls{7} = cat_vol_ctype(cat_vol_ROInorm(single(Ywmh),transw,1,0,job.extopts.atlas));
       end
@@ -1795,15 +1795,24 @@ clear wYp0 wYcls wYv trans
 
 
 
+%  estimate volumes and TIV
+qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Ycls{1}(:)), ... CSF
+                    prod(vx_vol)/1000 .* sum(Ycls{2}(:)), ... GM 
+                    prod(vx_vol)/1000 .* sum(Ycls{3}(:)), ... WM
+                    qa.subjectmeasures.WMH_abs]; 
+qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
+qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
+clear Ycls
+
 %% ---------------------------------------------------------------------
 %  XML-report and Quality Assurance
 %  ---------------------------------------------------------------------
 stime = cat_io_cmd('Quality check'); job.stime = stime; 
 Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*3; %qa2=qa;
-qa    = cat_tst_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
+qa    = cat_vol_qa('cat12',Yp0,fname0,Ym,res,cat_warnings,job.extopts.species, ...
           struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa));
 
-% WMH updates? ... has to be done within cat_tst_qa?!
+% WMH updates? ... has to be done within cat_vol_qa?!
 %qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) - qa2.subjectmeasures.WMH_abs;
 %qa.subjectmeasures.vol_abs_CGW(4) = qa2.subjectmeasures.WMH_abs;
 %qa.subjectmeasures.vol_rel_CGW    = qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;

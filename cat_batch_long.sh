@@ -6,8 +6,11 @@
 # $Id$
 
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
-display=0         # use nodisplay option for matlab or not
+defaults_file=""
 LOGDIR=$PWD
+nojvm=""
+output_surface=0
+fg=
 
 ########################################################
 # run main
@@ -48,9 +51,23 @@ parse_args ()
 			matlab=$optarg
 			shift
 			;;
-		--display* | -d*)
-			display=1
-			;;
+        --defaults_file* | -d*)
+            exit_if_empty "$optname" "$optarg"
+            defaults_file=$optarg
+            shift
+            ;;
+        --surface* | -s*)
+            exit_if_empty "$optname" "$optarg"
+            output_surface=1
+            ;;
+        --nojvm | -n*)
+            exit_if_empty "$optname" "$optarg"
+            nojvm=" -nojvm "
+            ;;
+        --fg* | -fg*)
+            exit_if_empty "$optname" "$optarg"
+            fg=1
+            ;;
         --logdir* | -l*)
             exit_if_empty "$optname" "$optarg"
             LOGDIR=$optarg
@@ -149,6 +166,20 @@ run_batch ()
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
 	
+    # argument empty?
+    if [ ! "${defaults_file}" == "" ]; then
+        # check wether absolute or relative names were given
+        if [ ! -f ${defaults_file} -a -f ${pwd}/${defaults_file} ]; then
+            defaults_file=${pwd}/${defaults_file}
+        fi
+    
+        # check whether defaults file exist
+        if [ ! -f ${defaults_file} ];  then
+            echo $defaults_file not found.
+            exit
+        fi
+    fi
+
     TMP=/tmp/cat_$$
     i=0
     ARG_LIST=""
@@ -174,22 +205,23 @@ run_batch ()
     vbmlog=${LOGDIR}/cat_${HOSTNAME}_${time}.log
 	echo Check $vbmlog for logging information
 	echo
-		
-	X="cat_batch_long('${TMP}')"
-	echo Running $file
+
+    COMMAND="cat_batch_long('${TMP}','${output_surface}','${defaults_file}')"
+	echo Running ${ARG_LIST}
 	echo > $vbmlog
 	echo ---------------------------------- >> $vbmlog
 	date >> $vbmlog
 	echo ---------------------------------- >> $vbmlog
 	echo >> $vbmlog
-	echo $0 $file >> $vbmlog
+	echo $0 $ARG_LIST >> $vbmlog
 	echo >> $vbmlog
 
-	if [ $display == 0 ]; then
-		nohup ${matlab} -nojvm -nodisplay -nosplash -r "$X" >> $vbmlog 2>&1 &
-	else
-		nohup ${matlab} -nosplash -r $X >> $vbmlog 2>&1 &
-	fi
+    if [ -z "$fg" ]; then
+      nohup ${matlab} "$nojvm" -nodisplay -nosplash -r "$COMMAND" >> $vbmlog 2>&1 &
+    else
+      nohup ${matlab} "$nojvm" -nodisplay -nosplash -r "$COMMAND" >> $vbmlog 2>&1
+    fi
+    
 	exit 0
 }
 
@@ -217,8 +249,11 @@ cat <<__EOM__
 USAGE:
    cat_batch_long.sh file1.nii file2.nii ... filex.nii [-d] [-m matlabcommand]
    
-   -d   use display option in matlab in case that batch file needs graphical output
-   -m   matlab command
+   -m       matlab command
+   -d       optional default file
+   -fg      do not run matlab process in background
+   -surface enable surface and thickness estimation
+   -nojvm   supress call of jvm using the -nojvm flag
 
    Only one batch filename is allowed. Optionally you can set the matlab command 
    with the "-m" option. As default no display is used (via the -nodisplay option 
