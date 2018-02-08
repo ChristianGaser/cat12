@@ -1,5 +1,5 @@
 function varargout = cat_stat_check_cov(vargin)
-%cat_stat_check_cov to check covriance across sample
+%cat_stat_check_cov to check covariance across sample
 %
 % Images have to be in the same orientation with same voxel size
 % and dimension (e.g. spatially registered images)
@@ -11,7 +11,6 @@ function varargout = cat_stat_check_cov(vargin)
 
 global fname H YpY YpYsorted data_array pos ind_sorted ind_sorted_display mean_cov FS X issurf mn_data mx_data V Vchanged ...
        sample isxml sorted isscatter MD show_name bplot names_changed
-rev = '$Rev$';
 
 % show data by fileorder
 sorted = 0;
@@ -112,8 +111,6 @@ end
 
 if issurf
   % load surface texture data
-  spm_progress_bar('Init',n_subjects,'Load surfaces','subjects completed')
-
   Y = spm_data_read(V)';
   Y(isnan(Y)) = 0;
   
@@ -536,7 +533,6 @@ C = zeros(length(MD),3);
 for i=1:length(MD)
   C(i,:) = cmap(round(MD2(i))+1,:);
 end
-%scatter(X(:,1),X(:,2),30,C,'*','Linewidth',2);
 scatter(X(:,1),X(:,2),30,C,'o','Linewidth',2);
 
 xlabel('<----- Worst ---      Mean correlation      --- Best ------>  ','FontSize',FS(8),'FontWeight','Bold');
@@ -632,10 +628,16 @@ n_samples = max(sample);
 xpos = cell(1,n_samples);
 data = cell(1,n_samples);
 
+allow_violin = 2;
+
 hold on
 for i=1:n_samples
   ind = find(sample == i);
   data{i} = data_boxp(ind);
+  
+  if length(ind) < 8
+    allow_violin = 0;
+  end
   
   if n_samples == 1
     xpos{i} = (i-1)+2*(0:length(ind)-1)/(length(ind)-1);
@@ -647,12 +649,12 @@ for i=1:n_samples
     if show_name
       text(xpos{i}(j),data{i}(j),fname.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
     else
-      plot(xpos{i}(j),data{i}(j),'.');
+      plot(xpos{i}(j),data{i}(j),'k.');
     end
   end
 end
 
-opt = struct('groupnum',0,'ygrid',0,'violin',2,'median',2,'groupcolor',jet(n_samples));
+opt = struct('groupnum',0,'ygrid',0,'violin',allow_violin,'median',2,'groupcolor',jet(n_samples));
 ylim_add = 0.075;
 
 cat_plot_boxplot(data,opt);
@@ -813,7 +815,6 @@ if isscatter
   axes('Position',pos.slice);
 
   x = pos.x;
-  y = pos.y;
   
   if issurf 
     % use indexed 2D-sheet to display surface data as image

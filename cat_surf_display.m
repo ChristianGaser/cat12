@@ -185,6 +185,14 @@ function varargout = cat_surf_display(varargin)
 
     set(h.figure,'MenuBar','none','Toolbar','none','Name',spm_file(job.data{i},'short60'),'NumberTitle','off');
 
+    % shift each figure slightly
+    if i==1
+        pos = get(h.figure,'Position');
+    else
+        pos = pos - [20 20 0 0];
+        set(h.figure,'Position',pos);
+    end
+
     if sinfo(i).label, continue; end      
       
    % try   

@@ -80,7 +80,7 @@ function stools = cat_conf_stools(expert)
   c.name    = 'Vector';
   c.help    = {'Vector of nuisance values'};
   c.strtype = 'r';
-  c.num     = [Inf 1];
+  c.num     = [Inf Inf];
 
   nuisance         = cfg_repeat;
   nuisance.tag     = 'nuisance';
