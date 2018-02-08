@@ -1642,19 +1642,22 @@ dcm_obj = datacursormode(H.figure(1));
 
 set(dcm_obj, 'Enable', 'off');
 figure(H.figure(1))
+
 try
     delete(findall(gca, 'Type', 'hggroup', 'HandleVisibility', 'off'));
 end
+
 if ~exist('filename', 'var')
     
     nm = H.S{1}.info(1).ff;
+    [pp, nm] = spm_fileparts(H.S{1}.name);
     filename = [nm '.png'];
     
     % end with _0???.ext?
     if length(nm) > 4
         if strcmp(nm(length(nm) - 4:length(nm) - 3), '_0')
             
-            SPM_name = fullfile(H.S{1}.info(1).pp, 'SPM.mat');
+            SPM_name = fullfile(pp, 'SPM.mat');
             
             % SPM.mat exist?
             if exist(SPM_name, 'file')
