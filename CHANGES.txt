@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r1270 | gaser | 2018-02-07 14:31:51
+r1271 | gaser | 2018-02-08 15:28:17
+
+Changed paths:
+M       CHANGES.txt
+M       cat12.m
+M       cat_conf_stools.m
+M       cat_stat_check_cov.m
+A       cat_stat_check_cov_SPM.m
+M       cat_surf_display.m
+M       cat_surf_render.m
+M       cat_surf_results.m
+
+(1) Fixed: Selected filename was not used for suggesting name for saving
+    image file in cat_surf_results.
+(2) Fixed: Colorrange couldn't be defined if NaN#s were found in the 
+    colordata in cat_surf_render.m.
+(3) Changed: Added function to check sample homogeneity defined in an
+    existing SPM.mat design.
+    
+------------------------------------------------------------------------
+r1270 | gaser | 2018-02-07 14:32:14 +0100 (Mi, 07 Feb 2018) | 25 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -25,6 +45,7 @@ A  +    cat_vol_qa.m
 (3) Changed: Renamed cat_tst_qa.m to cat_vol_qa.m
 (4) Changed: Updated batch functions to be more consistent and added many 
     new flags.
+
 ------------------------------------------------------------------------
 r1269 | gaser | 2018-02-02 17:46:12 +0100 (Fr, 02 Feb 2018) | 6 lines
 

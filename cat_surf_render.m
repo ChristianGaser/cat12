@@ -1220,7 +1220,7 @@ set(obj,'Checked','on');
 %==========================================================================
 function myCaxis(obj,evt,H,rangetype)
 d = getappdata(H.patch,'data');
-if mean(d(:))>0 && std(d(:),1)>0
+if cat_stat_nanmean(d(:))>0 && cat_stat_nanstd(d(:),1)>0
   switch rangetype
       case 'min-max', 
           range = [min(d) max(d)]; 
