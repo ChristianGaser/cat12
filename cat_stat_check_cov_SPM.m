@@ -21,37 +21,9 @@ end
 
 % get some parameters from SPM
 xX     = SPM.xX;
-VY     = SPM.xY.VY;
+VY     = SPM.xY.VY;    
 
-if spm_mesh_detect(VY)
-  mesh_detected = 1;
-else
-  mesh_detected = 0;
-end
-
-% if first image was not found you have to select all files again
-if ~exist(VY(1).fname);
-
-  fprintf('Data not found. Please select data in the order defined in the design matrix.\n');
-  n = size(VY,1);
-  if mesh_detected
-    P = spm_select(n,'mesh','select surfaces');
-  else
-    P = spm_select(n,'image','select images');
-  end
-  
-  VY = spm_data_hdr_read(P);
-  
-  %-Apply gSF to memory-mapped scalefactors to implement scaling
-  %--------------------------------------------------------------------------
-  for i = 1:n
-    VY(i).pinfo(1:2,:) = VY(i).pinfo(1:2,:)*SPM.xGX.gSF(i); % FIXME % for meshes
-  end
-  
-end
-
-
-% check wheter for the first file unsmoothed data exists
+% check whether for the first file unsmoothed data exists
 % and find begin of (unsmoothed) filename
 [pth,nam,ext] = spm_fileparts(VY(1).fname);
 unsmoothed_found = 0;
@@ -94,6 +66,12 @@ if unsmoothed_found
   end
 end
 
+if spm_mesh_detect(VY)
+  mesh_detected = 1;
+else
+  mesh_detected = 0;
+end
+
 % sometimes xX.iB and xX.iH are not correct and cannot be used to reliably recognize the design
 xX = correct_xX(xX);
 
@@ -114,6 +92,13 @@ end
 
 % always use last found column
 cl = max(cl);
+
+for i=1:numel(VY)
+  if ~exist(char(VY(i).fname),'file')
+    fprintf('Error: File %s could not be found.\nPlease check that data or analysis have not moved.\n',char(VY(i).fname));
+    return
+  end
+end
 
 % select data for each sample
 if mesh_detected
@@ -136,12 +121,16 @@ job.data_xml = '';
 
 % exclude columns with parameters of interest based on given contrast
 Ic = spm_input('Select contrast for adjusting data','+1','m',...
-                {SPM.xCon.name,'Do not adjust data'});
+                {SPM.xCon.name,'Adjust with whole design matrix','Do not adjust data'});
 
-% Don't adjust data
-if Ic > numel(SPM.xCon)
+
+switch Ic
+case numel(SPM.xCon) + 2 % Don't adjust data
   job.c = [];
-else
+case numel(SPM.xCon) + 1 % Duse whole design matrix
+  job.c{1} = xX.X;
+  fprintf('Data are adjusted with whole design matrix.\n');
+otherwise
   % initially use whole design matrix as counfound
   job.c{1} = xX.X;
   c = SPM.xCon(Ic).c;
