@@ -12,7 +12,7 @@ function cat_stat_check_cov_SPM(SPM)
 %
 %_______________________________________________________________________
 % Christian Gaser
-% $Id: cat_stat_check_cov_SPM.m 1267 2018-02-02 14:47:02Z gaser $
+% $Id$
 
 if nargin == 0
   P = spm_select(1,'SPM.mat','Select SPM.mat');
