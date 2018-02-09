@@ -115,6 +115,7 @@ function out = cat_surf_vol2surf(varargin)
   if ~isfield(job,'data_mesh_rh')
     job.data_mesh_rh = cat_surf_rename(job.data_mesh_lh,'side','rh');
     for i=1:numel(job.data_mesh_rh)
+      % check whether we have rather merged hemispheres
       if ~exist(job.data_mesh_rh{i},'file')
         side = {'data_mesh_lh'};
       end
@@ -163,7 +164,9 @@ function out = cat_surf_vol2surf(varargin)
     mapping_str = ['within ' job.mapping.(mapping).class ' using equi-volume approach at thickness-related'];
   end
   fprintf('Mapping %s volume(s) %s grid positions: ',space_str, mapping_str);
-  for i=1:job.mapping.(mapping).steps, fprintf(' %g', job.mapping.(mapping).startpoint + (i-1)*(job.mapping.(mapping).endpoint-job.mapping.(mapping).startpoint)/(job.mapping.(mapping).steps-1)); end
+  for i=1:job.mapping.(mapping).steps
+    fprintf(' %g', job.mapping.(mapping).startpoint + (i-1)*(job.mapping.(mapping).endpoint-job.mapping.(mapping).startpoint)/(job.mapping.(mapping).steps-1));
+  end
   fprintf('.\n\n');
   
   if template
@@ -323,7 +326,8 @@ function out = cat_surf_vol2surf(varargin)
           end
         end
         
-        if job.verb &  (~mapping=='rel_equivol_mapping')
+        % don't print it for multi-value sampling
+        if job.verb &  ~strcmp(job.sample{1},'multi')
           fprintf('Display %s\n',spm_file(P.data{vi,si},'link','cat_surf_display(''%s'')'));
         end
       
