@@ -9,8 +9,8 @@ function varargout = cat_stat_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global fname H YpY YpYsorted data_array pos ind_sorted ind_sorted_display mean_cov FS X issurf mn_data mx_data V Vchanged ...
-       sample isxml sorted isscatter MD show_name bplot names_changed
+global alphaval fname H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X issurf mn_data mx_data V Vchanged ...
+       sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha max_diff
 
 % show data by fileorder
 sorted = 0;
@@ -23,7 +23,8 @@ sample = [];
 G      = [];
 n_subjects = 0;
 names_changed = 0;
-  
+alphaval = 0.5;
+
 % read filenames for each sample and indicate sample parameter
 if isfield(vargin,'data_vol')
   issurf = 0;
@@ -35,6 +36,7 @@ if isfield(vargin,'data_vol')
       % remove ",1" at the end
       vargin.data_vol{i} = fullfile(pth,[nam ext]);
     end
+    
     V0 = spm_data_hdr_read(char(vargin.data_vol{i}));
     n_subjects = n_subjects + length(V0);
       
@@ -140,18 +142,19 @@ ws = spm('Winsize','Graphics');
 FS = spm('FontSizes');
 
 pos = struct(...
-    'fig',   [10  10  1.2*ws(3) ws(3)],... % figure
-    'cbar',  [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
-    'corr',  [-0.02 0.050 0.825 0.825],... % correlation matrix
-    'scat',  [0.050 0.050 0.700 0.825],... % scatter plot
-    'close', [0.775 0.925 0.200 0.050],... % close button
-    'show',  [0.775 0.875 0.200 0.050],... % button to show worst cases
-    'boxp',  [0.775 0.820 0.200 0.050],... % button to display boxplot
-    'sort',  [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
-    'chbox', [0.775 0.750 0.200 0.050],... % show filenames?
-    'text',  [0.775 0.550 0.200 0.200],... % textbox
-    'slice', [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
-    'slider',[0.775 0.000 0.200 0.030]);   % slider for z-slice   
+    'fig',    [10  10  1.2*ws(3) ws(3)],... % figure
+    'cbar',   [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
+    'corr',   [-0.02 0.050 0.825 0.825],... % correlation matrix
+    'scat',   [0.050 0.050 0.700 0.825],... % scatter plot
+    'close',  [0.775 0.925 0.200 0.050],... % close button
+    'show',   [0.775 0.875 0.200 0.050],... % button to show worst cases
+    'boxp',   [0.775 0.820 0.200 0.050],... % button to display boxplot
+    'sort',   [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
+    'chbox',  [0.775 0.750 0.200 0.050],... % show filenames?
+    'text',   [0.775 0.600 0.200 0.150],... % textbox
+    'aslider',[0.775 0.555 0.200 0.030],... % slider for alpha overlay
+    'slice',  [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
+    'sslider',[0.775 0.010 0.200 0.030]);   % slider for z-slice   
 
 if issurf
   % rescue unscaled data min/max
@@ -170,6 +173,12 @@ if issurf
 
   % calculate residual mean square of mean adjusted Y
   Y = Y - repmat(mean(Y,1), [n_subjects 1]);
+  data_array_diff = Y';
+  
+  % scale difference image using maximum for all subjects
+  max_diff = max(abs(data_array_diff(:)));
+  data_array_diff = 2*data_array_diff/max_diff;
+
   MSE = sum(Y.*Y,2);
 
   clear Y
@@ -190,6 +199,7 @@ else
   %-----------------------------------------------------------------------
   spm_progress_bar('Init',V(1).dim(3),'Check correlation','planes completed')
 
+  max_diff = 0;
   for j=slices
 
     M  = spm_matrix([0 0 j 0 0 0 sep sep sep]);
@@ -212,6 +222,9 @@ else
 
     % calculate residual mean square of mean adjusted Y
     Y = Y - repmat(mean(Y,1), [n_subjects 1]);
+    
+    % get abs. maximum of residuals
+    max_diff = max(max_diff,max(abs(Y(:))));
     MSE = MSE + sum(Y.*Y,2);
 
     spm_progress_bar('Set',j);  
@@ -228,6 +241,7 @@ else
     end
   end
   
+  clear Y
   spm_progress_bar('Clear');
 end
 
@@ -316,9 +330,14 @@ end
 H.figure = figure(2);
 clf(H.figure);
 
-set(H.figure,'MenuBar','none','Position',pos.fig,...
-    'Name','Click in image to display slices','NumberTitle','off');
+set(H.figure,'MenuBar','none','Position',pos.fig,'NumberTitle','off');
     
+if issurf
+  set(H.figure,'Name','Click in image to display surfaces');
+else
+  set(H.figure,'Name','Click in image to display slices');
+end
+
 cm = datacursormode(H.figure);
 set(cm,'UpdateFcn',@myupdatefcn,'SnapToDataVertex','on','Enable','on');
 try set(cm,'NewDataCursorOnClick',false); end
@@ -342,7 +361,7 @@ set(H.cbar,'YTickLabel','','XTickLabel','','XTick',linspace(1,64,5), 'XTickLabel
 H.close = uicontrol(H.figure,...
         'string','Close','Units','normalized',...
         'position',pos.close,...
-        'style','Pushbutton','HorizontalAlignment','center',...
+        'Style','Pushbutton','HorizontalAlignment','center',...
         'callback','for i=2:26, try close(i); end; end;',...
         'ToolTipString','Close windows',...
         'Interruptible','on','Enable','on');
@@ -351,12 +370,13 @@ H.close = uicontrol(H.figure,...
 H.show = uicontrol(H.figure,...
         'string','Check most deviating data','Units','normalized',...
         'position',pos.show,...
-        'style','Pushbutton','HorizontalAlignment','center',...
+        'Style','Pushbutton','HorizontalAlignment','center',...
         'callback',@check_worst_data,...
         'ToolTipString','Display most deviating files',...
         'Interruptible','on','Enable','on');
 
 show_name = 0;
+
 % create popoup menu 
 if isxml
 
@@ -381,7 +401,7 @@ end
 H.boxp = uicontrol(H.figure,...
         'string',str,'Units','normalized',...
         'position',pos.boxp,'UserData',tmp,...
-        'style','PopUp','HorizontalAlignment','center',...
+        'Style','PopUp','HorizontalAlignment','center',...
         'callback','spm(''PopUpCB'',gcbo)',...
         'ToolTipString','Display boxplot',...
         'Interruptible','on','Visible','on');
@@ -400,7 +420,7 @@ end
 H.sort = uicontrol(H.figure,...
         'string',str,'Units','normalized',...
         'position',pos.sort,'UserData',tmp,...
-        'style','PopUp','HorizontalAlignment','center',...
+        'Style','PopUp','HorizontalAlignment','center',...
         'callback','spm(''PopUpCB'',gcbo)',...
         'ToolTipString','Sort matrix',...
         'Interruptible','on','Visible','on');
@@ -408,27 +428,48 @@ H.sort = uicontrol(H.figure,...
 H.chbox = uicontrol(H.figure,...
         'string','Show filenames in boxplot','Units','normalized',...
         'position',pos.chbox,...
-        'style','CheckBox','HorizontalAlignment','center',...
+        'Style','CheckBox','HorizontalAlignment','center',...
         'callback',{@checkbox_names},...
-        'ToolTipString','Sort matrix',...
-        'Interruptible','on','Visible','on');
+        'ToolTipString','Show filenames in boxplot',...
+        'Interruptible','on','Visible','on',...
+        'BackgroundColor',[0.8 0.8 0.8]);
 
 H.text = uicontrol(H.figure,...
         'Units','normalized','position',pos.text,...
         'String','Click in image to display slices',...
-        'style','text','HorizontalAlignment','center',...
+        'Style','text','HorizontalAlignment','center',...
         'ToolTipString','Select slice for display');
+
+H.alpha = uicontrol(H.figure,...
+        'Units','normalized','position',pos.aslider,...
+        'Min',0,'Max',1,...
+        'Style','slider','HorizontalAlignment','center',...
+        'callback',@update_alpha,'Value',0.5,...
+        'ToolTipString','Change Opacity of pos. (green colors) and neg. (red colors) differences to sample mean',...
+        'SliderStep',[0.01 0.1],'Visible','off');
+
+H.alpha_txt = uicontrol(H.figure,...
+        'Units','normalized','HorizontalAlignment','center',...
+        'Style','text','BackgroundColor',[0.8 0.8 0.8],...
+        'Position',[pos.aslider(1) pos.aslider(2)-0.005 0.2 0.02],...
+        'String','Overlay Opacity of Differences to Sample Mean','Visible','off');
 
 % add slider only for volume data
 if ~issurf
   H.mm = uicontrol(H.figure,...
-        'Units','normalized','position',pos.slider,...
+        'Units','normalized','position',pos.sslider,...
         'Min',(1 - Orig(3))*vx(3),'Max',(V(1).dim(3) - Orig(3))*vx(3),...
-        'style','slider','HorizontalAlignment','center',...
+        'Style','slider','HorizontalAlignment','center',...
         'callback',@update_slices_array,...
         'ToolTipString','Select slice for display',...
         'SliderStep',[0.005 0.05],'Visible','off');
 
+  H.mm_txt = uicontrol(H.figure,...
+        'Units','normalized','HorizontalAlignment','center',...
+        'Style','text','BackgroundColor',[0.8 0.8 0.8],...
+        'Position',[pos.sslider(1) pos.sslider(2)-0.005 0.2 0.02],...
+        'String','Slice [mm]','Visible','off');
+        
   update_slices_array;
 end
    
@@ -460,7 +501,7 @@ end
 %-----------------------------------------------------------------------
 function check_worst_data(obj, event_obj)
 %-----------------------------------------------------------------------
-global V ind_sorted_display issurf mn_data mx_data data_array H
+global V ind_sorted_display issurf mn_data mx_data H
 
 n = length(V);
 number = min([n 24]);
@@ -559,7 +600,7 @@ return
 %-----------------------------------------------------------------------
 function show_matrix(data, order)
 %-----------------------------------------------------------------------
-global H FS pos sorted YpY isscatter
+global H FS pos sorted YpY isscatter issurf
 
 % get sorting order
 sorted = order;
@@ -605,6 +646,16 @@ cmap = [hot(64); gray(64)];
 colormap(cmap)
 
 isscatter = 0;
+
+% remove sliders and text
+try
+  if ~issurf
+    set(H.mm,'Visible','off'); 
+    set(H.mm_txt,'Visible','off');
+  end
+  set(H.alpha,'Visible','off');
+  set(H.alpha_txt,'Visible','off');
+end
 
 return
 
@@ -712,9 +763,37 @@ bp = struct('data',data_boxp,'name',name_boxp,'order',quality_order);
 return
 
 %-----------------------------------------------------------------------
+function update_alpha(obj, event_obj)
+%-----------------------------------------------------------------------
+global alphaval H issurf img img_alpha
+
+if isfield(H,'alpha')
+  alphaval = get(H.alpha,'Value');
+else
+  alphaval = 0.5;
+end
+
+% display image with 2nd colorbar (gray)
+image(65 + img);
+if ~issurf, axis image; end
+set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+hold on
+
+% prepare alpha overlays for red and green colors
+alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
+alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
+hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
+if ~issurf, axis image; end
+hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
+if ~issurf, axis image; end
+hold off
+
+return
+
+%-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global V Vchanged fname data_array H YpY pos sorted ind_sorted isscatter names_changed
+global alphaval V Vchanged fname data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed max_diff
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -738,19 +817,30 @@ if (sl>P(1).dim(3)) || (sl<1)
 end
 
 M  = spm_matrix([0 0 sl]);
+data_array_diff = data_array;
 
 for i = 1:length(V)
   img = spm_slice_vol(P(i),M,P(1).dim(1:2),[1 0]);
   img(isnan(img)) = 0;
   
+  % rescue unscaled data
+  data_array_diff(:,:,i) = img;
+
   % scale image according to mean
   data_array(:,:,i) = img/mean(img(img ~= 0));
 end
+
+% calculate individual difference to mean image
+data_array_diff = data_array_diff - mean(data_array_diff,3);
 
 % enhance contrast and scale image to 0..64
 mn = min(data_array(:));
 mx = max(data_array(:));
 data_array = 64*((data_array - mn)/(mx-mn));
+
+% scale difference image using maximum for all subjects
+mx = max(abs(data_array_diff(:)));
+data_array_diff = 4*data_array_diff/max_diff;
 
 if sorted
   if isfield(pos,'x')
@@ -771,15 +861,32 @@ end
 % check whether mouse position is defined
 if isfield(pos,'x')
   if isscatter
-    img = [data_array(:,:,x) zeros(size(data_array,1), size(data_array,2))]';
+    img       = data_array(:,:,x)';
+    img_alpha = data_array_diff(:,:,x)';
   else
-    img = [data_array(:,:,y) data_array(:,:,x)]';
+    img       = [data_array(:,:,y) data_array(:,:,x)]';
+    img_alpha = [data_array_diff(:,:,y) data_array_diff(:,:,x)]';
   end
+  
+  % correct orientation
+  img = rot90(img,2);
+  img_alpha = rot90(img_alpha,2);
   
   % use gray scale colormap for values > 64
   axes('Position',pos.slice);
-  image(65 + flipud(img))
+  image(65 + img);
+  axis image
   set(gca,'XTickLabel','','YTickLabel','');
+  hold on
+  
+  % prepare alpha overlays for red and green colors
+  alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
+  alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
+  hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
+  axis image
+  hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
+  axis image
+  hold off
 
   if isscatter
     txt = {sprintf('%s',spm_file(fname.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
@@ -788,6 +895,7 @@ if isfield(pos,'x')
       ['Bottom: ',spm_file(fname.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   end
   set(H.text,'String',txt);
+  set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm']);
 end
 
 return
@@ -795,7 +903,10 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global fname sample H X YpY data_array pos issurf ind_sorted sorted isscatter
+global alphaval fname sample H X YpY data_array data_array_diff pos issurf ind_sorted sorted isscatter img img_alpha
+
+set(H.alpha,'Visible','on');
+set(H.alpha_txt,'Visible','on');
 
 pos_mouse = get(event_obj, 'Position');
 
@@ -815,58 +926,6 @@ if isscatter
   axes('Position',pos.slice);
 
   x = pos.x;
-  
-  if issurf 
-    % use indexed 2D-sheet to display surface data as image
-    % check surface size to use indexed 2D map
-    if (length(data_array(:,x)) == 163842)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-      img = circshift(img,128);
-    elseif (length(data_array(:,x)) == 327684)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-      data_array_x_lh = data_array(1:163842,x);
-      data_array_x_rh = data_array(163843:end,x);
-      data_array_y_lh = data_array(1:163842,y);
-      data_array_y_rh = data_array(163843:end,y);
-      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-      img = [circshift(img_lh,128); img_rh];
-    elseif (length(data_array(:,x)) == 32492)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-      img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-      img = circshift(img,128);
-    elseif (length(data_array(:,x)) == 64984)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-      data_array_x_lh = data_array(1:32492,x);
-      data_array_x_rh = data_array(32493:end,x);
-      data_array_y_lh = data_array(1:32492,y);
-      data_array_y_rh = data_array(32493:end,y);
-      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
-      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-      img = [circshift(img_lh,96); circshift(img_rh,96)];
-    else
-      img = [data_array(:,y) data_array(:,x)]';
-    end
-  
-    % scale img to 0..64
-    mn = min(data_array(:));
-    mx = max(data_array(:));
-    img = 64*((img - mn)/(mx-mn));
-  else
-    % add slider for colume data
-    set(H.mm,'Visible','on');
-    img = [data_array(:,:,pos.x) zeros(size(data_array,1), size(data_array,2))]';
-  end
-
-  % display image with 2nd colorbar (gray)
-  image(65+flipud(img));
-  set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
-
-  if issurf
-    xlabel('2D surface maps');
-  end
-
 else
   % check for valid mouse position
   if pos_mouse(1) > pos_mouse(2) || pos_mouse(1)>length(sample) || pos_mouse(2)>length(sample)
@@ -901,67 +960,160 @@ else
 
   % text info for textbox
   if issurf
-    txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Left: ',...
-      spm_file(fname.m{x},'short25')],['Right: ',spm_file(fname.m{y},'short25')]};
+    txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
+      spm_file(fname.m{x},'short25') '     Right: ',spm_file(fname.m{y},'short25')],...
+      [],'Differences to Sample Mean (red: - green: +)'};
   else
     txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
       spm_file(fname.m{x},'short25')],['Bottom: ',spm_file(fname.m{y},'short25')],...
-      [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+      [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm'],...
+      [],'Differences to Sample Mean (red: - green: +)'};
   end      
 
   set(H.text,'String',txt2);
   axes('Position',pos.slice);
-
-  if issurf 
-    % use indexed 2D-sheet to display surface data as image
-    % check surface size to use indexed 2D map
-    if (length(data_array(:,x)) == 163842)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+  x = pos.x;
+end
+  
+if issurf 
+  % use indexed 2D-sheet to display surface data as image
+  % check surface size to use indexed 2D map
+  if (length(data_array(:,x)) == 163842)
+    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+    if isscatter
+      img = reshape(data_array(ind,x),[256,128]);
+    else
       img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-      img = circshift(img,128);
-    elseif (length(data_array(:,x)) == 327684)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
-      data_array_x_lh = data_array(1:163842,x);
-      data_array_x_rh = data_array(163843:end,x);
+    end
+    img = circshift(img,128);
+    % alpha overlay
+    if isscatter
+      img_alpha = reshape(data_array_diff(ind,x),[256,128]);
+    else
+      img_alpha = [reshape(data_array_diff(ind,x),[256,128]) reshape(data_array_diff(ind,y),[256,128])];
+    end
+    img_alpha = circshift(img_alpha,128);
+  elseif (length(data_array(:,x)) == 327684)
+    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces','fsavg.index2D_256x128.txt'));
+    data_array_x_lh = data_array(1:163842,x);
+    data_array_x_rh = data_array(163843:end,x);
+    if isscatter
+      img_lh = reshape(data_array_x_lh(ind),[256,128]);
+      img_rh = reshape(data_array_x_rh(ind),[256,128]);
+    else
       data_array_y_lh = data_array(1:163842,y);
       data_array_y_rh = data_array(163843:end,y);
       img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
       img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-      img = [circshift(img_lh,128); img_rh];
-    elseif (length(data_array(:,x)) == 32492)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
+    end
+    img = [circshift(img_lh,128); img_rh];
+    % alpha overlay
+    data_array_x_lh = data_array_diff(1:163842,x);
+    data_array_x_rh = data_array_diff(163843:end,x);
+    if isscatter
+      img_lh = reshape(data_array_x_lh(ind),[256,128]);
+      img_rh = reshape(data_array_x_rh(ind),[256,128]);
+    else
+      data_array_y_lh = data_array_diff(1:163842,y);
+      data_array_y_rh = data_array_diff(163843:end,y);
+      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
+      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
+    end
+    img_alpha = [circshift(img_lh,128); img_rh];
+  elseif (length(data_array(:,x)) == 32492)
+    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
+    if isscatter
+      img = reshape(data_array(ind,x),[256,128]);
+    else
       img = [reshape(data_array(ind,x),[256,128]) reshape(data_array(ind,y),[256,128])];
-      img = circshift(img,128);
-    elseif (length(data_array(:,x)) == 64984)
-      ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
-      data_array_x_lh = data_array(1:32492,x);
-      data_array_x_rh = data_array(32493:end,x);
+    end
+    img = circshift(img,128);
+    % alpha overlay
+    if isscatter
+      img_alpha = reshape(data_array_diff(ind,x),[256,128]);
+    else
+      img_alpha = [reshape(data_array_diff(ind,x),[256,128]) reshape(data_array_diff(ind,y),[256,128])];
+    end
+    img_alpha = circshift(img_alpha,128);
+  elseif (length(data_array(:,x)) == 64984)
+    ind = spm_load(fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k','fsavg.index2D_256x128.txt'));
+    data_array_x_lh = data_array(1:32492,x);
+    data_array_x_rh = data_array(32493:end,x);
+    if isscatter
+      img_lh = reshape(data_array_x_lh(ind),[256,128]);
+      img_rh = reshape(data_array_x_rh(ind),[256,128]);
+    else
       data_array_y_lh = data_array(1:32492,y);
       data_array_y_rh = data_array(32493:end,y);
       img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
       img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
-      img = [circshift(img_lh,96); circshift(img_rh,96)];
+    end
+    img = [circshift(img_lh,96); circshift(img_rh,96)];
+    % alpha overlay
+    data_array_x_lh = data_array_diff(1:32492,x);
+    data_array_x_rh = data_array_diff(32493:end,x);
+    if isscatter
+      img_lh = reshape(data_array_x_lh(ind),[256,128]);
+      img_rh = reshape(data_array_x_rh(ind),[256,128]);
+    else
+      data_array_y_lh = data_array_diff(1:32492,y);
+      data_array_y_rh = data_array_diff(32493:end,y);
+      img_lh = [reshape(data_array_x_lh(ind),[256,128]) reshape(data_array_y_lh(ind),[256,128])];
+      img_rh = [reshape(data_array_x_rh(ind),[256,128]) reshape(data_array_y_rh(ind),[256,128])];
+    end
+    img_alpha = [circshift(img_lh,96); circshift(img_rh,96)];
+  else
+    if isscatter
+      img = data_array(:,x)';
+      % alpha overlay
+      img_alpha = data_array_diff(:,x)';
     else
       img = [data_array(:,y) data_array(:,x)]';
+      % alpha overlay
+      img_alpha = [data_array_diff(:,y) data_array_diff(:,x)]';
     end
-  
-    % scale img to 0..64
-    mn = min(data_array(:));
-    mx = max(data_array(:));
-    img = 64*((img - mn)/(mx-mn));
+  end
+
+  % scale img to 0..64
+  mn = min(data_array(:));
+  mx = max(data_array(:));
+  img = 64*((img - mn)/(mx-mn));
+else
+  % add slider for colume data
+  set(H.mm,'Visible','on');
+  set(H.mm_txt,'Visible','on');
+  if isscatter
+    img = data_array(:,:,x)';
+    % alpha overlay
+    img_alpha = data_array_diff(:,:,x)';
   else
-    % add slider for colume data
-    set(H.mm,'Visible','on');
     img = [data_array(:,:,y) data_array(:,:,x)]';
+    % alpha overlay
+    img_alpha = [data_array_diff(:,:,y) data_array_diff(:,:,x)]';
   end
-
-  % display image with 2nd colorbar (gray)
-  image(65 + flipud(img));
-  set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
-
-  if issurf
-    xlabel('2D surface maps');
-  end
-
 end
+
+% correct orientation
+img = rot90(img,2);
+img_alpha = rot90(img_alpha,2);
+
+% display image with 2nd colorbar (gray)
+image(65 + img);
+if ~issurf, axis image; end
+set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
+hold on
+
+% prepare alpha overlays for red and green colors
+alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
+alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
+hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
+if ~issurf, axis image; end
+hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
+if ~issurf, axis image; end
+hold off
+
+if issurf
+  xlabel('2D surface maps');
+end
+
 return
