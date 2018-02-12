@@ -1,4 +1,4 @@
-function varargout = cat_stat_check_cov(vargin)
+function varargout = cat_stat_check_cov(job)
 %cat_stat_check_cov to check covariance across sample
 %
 % Images have to be in the same orientation with same voxel size
@@ -9,8 +9,8 @@ function varargout = cat_stat_check_cov(vargin)
 % Christian Gaser
 % $Id$
 
-global alphaval fname H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X issurf mn_data mx_data V Vchanged ...
-       sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha max_diff
+global alphaval fname H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
+mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha max_diff
 
 % show data by fileorder
 sorted = 0;
@@ -25,19 +25,27 @@ n_subjects = 0;
 names_changed = 0;
 alphaval = 0.5;
 
+% check for global scaling
+if isfield(job,'gSF')
+  is_gSF = 1;
+  gSF = job.gSF;
+else
+  is_gSF = 0;
+end
+
 % read filenames for each sample and indicate sample parameter
-if isfield(vargin,'data_vol')
-  issurf = 0;
-  n_samples = numel(vargin.data_vol);
+if isfield(job,'data_vol')
+  mesh_detected = 0;
+  n_samples = numel(job.data_vol);
   for i=1:n_samples
     
-    if size(vargin.data_vol{i},1) == 1 % 4D data
-      [pth,nam,ext] = spm_fileparts(char(vargin.data_vol{i}));
+    if size(job.data_vol{i},1) == 1 % 4D data
+      [pth,nam,ext] = spm_fileparts(char(job.data_vol{i}));
       % remove ",1" at the end
-      vargin.data_vol{i} = fullfile(pth,[nam ext]);
+      job.data_vol{i} = fullfile(pth,[nam ext]);
     end
     
-    V0 = spm_data_hdr_read(char(vargin.data_vol{i}));
+    V0 = spm_data_hdr_read(char(job.data_vol{i}));
     n_subjects = n_subjects + length(V0);
       
     if i==1, V = V0;
@@ -45,32 +53,32 @@ if isfield(vargin,'data_vol')
 
     sample = [sample, i*ones(1,length(V0))];
   end
-  sep = vargin.gap;
+  sep = job.gap;
 else
-  issurf = 1;
-  n_samples = numel(vargin.data_surf);
+  mesh_detected = 1;
+  n_samples = numel(job.data_surf);
   for i=1:n_samples
-    V0 = spm_data_hdr_read(char(vargin.data_surf{i}));
+    V0 = spm_data_hdr_read(char(job.data_surf{i}));
     n_subjects = n_subjects + length(V0);
       
     if i==1, V = V0;
     else,    V = [V; V0]; end
-    sample = [sample, i*ones(1,size(vargin.data_surf{i},1))];
+    sample = [sample, i*ones(1,size(job.data_surf{i},1))];
   end
 end
     
-if ~isempty(vargin.c)
-  for i=1:numel(vargin.c)
-    G = [G vargin.c{i}];
+if ~isempty(job.c)
+  for i=1:numel(job.c)
+    G = [G job.c{i}];
   end
 end
 
-if isempty(char(vargin.data_xml))
+if isempty(char(job.data_xml))
   isxml = 0;
   QM_names = '';
   xml_files = [];
 else
-  xml_files = char(vargin.data_xml);
+  xml_files = char(job.data_xml);
 end
 
 if ~isempty(xml_files)
@@ -111,9 +119,17 @@ end
 
 [pth,nam] = spm_fileparts(V(1).fname);
 
-if issurf
+if mesh_detected
   % load surface texture data
   Y = spm_data_read(V)';
+  
+  % optional global scaling
+  if is_gSF
+    for i=1:numel(V)
+      Y(:,2) = Y(:,2)*gSF(i);
+    end
+  end
+  
   Y(isnan(Y)) = 0;
   
 else
@@ -142,7 +158,7 @@ ws = spm('Winsize','Graphics');
 FS = spm('FontSizes');
 
 pos = struct(...
-    'fig',    [10  10  1.2*ws(3) ws(3)],... % figure
+    'fig',    [10  10  1.3*ws(3) 1.1*ws(3)],... % figure
     'cbar',   [0.240 0.950 0.300 0.020],... % colorbar for correlation matrix
     'corr',   [-0.02 0.050 0.825 0.825],... % correlation matrix
     'scat',   [0.050 0.050 0.700 0.825],... % scatter plot
@@ -152,11 +168,11 @@ pos = struct(...
     'sort',   [0.775 0.775 0.200 0.050],... % button to enable ordered matrix
     'chbox',  [0.775 0.750 0.200 0.050],... % show filenames?
     'text',   [0.775 0.600 0.200 0.150],... % textbox
-    'aslider',[0.775 0.555 0.200 0.030],... % slider for alpha overlay
+    'aslider',[0.775 0.555 0.200 0.040],... % slider for alpha overlay
     'slice',  [0.775 0.050 0.200 0.400],... % two single images according to position of mouse pointer
-    'sslider',[0.775 0.010 0.200 0.030]);   % slider for z-slice   
+    'sslider',[0.775 0.010 0.200 0.040]);   % slider for z-slice   
 
-if issurf
+if mesh_detected
   % rescue unscaled data min/max
   mn_data = min(Y(:));
   mx_data = max(Y(:));
@@ -208,6 +224,9 @@ else
       img = spm_slice_vol(V(i),M,[dimx dimy],[1 0]);
       img(isnan(img)) = 0;
       Y(i,:) = img(:);
+      if is_gSF
+        Y(i,:) = Y(i,:)*gSF(i);
+      end
     end
 
     % make sure data is zero mean
@@ -332,7 +351,7 @@ clf(H.figure);
 
 set(H.figure,'MenuBar','none','Position',pos.fig,'NumberTitle','off');
     
-if issurf
+if mesh_detected
   set(H.figure,'Name','Click in image to display surfaces');
 else
   set(H.figure,'Name','Click in image to display slices');
@@ -364,7 +383,8 @@ H.close = uicontrol(H.figure,...
         'Style','Pushbutton','HorizontalAlignment','center',...
         'callback','for i=2:26, try close(i); end; end;',...
         'ToolTipString','Close windows',...
-        'Interruptible','on','Enable','on');
+        'Interruptible','on','Enable','on',...
+        'FontSize',FS(7));
 
 % check button
 H.show = uicontrol(H.figure,...
@@ -373,7 +393,8 @@ H.show = uicontrol(H.figure,...
         'Style','Pushbutton','HorizontalAlignment','center',...
         'callback',@check_worst_data,...
         'ToolTipString','Display most deviating files',...
-        'Interruptible','on','Enable','on');
+        'Interruptible','on','Enable','on',...
+        'FontSize',FS(7));
 
 show_name = 0;
 
@@ -388,14 +409,14 @@ if isxml
   MD = diag(MD);
   
   str  = { 'Boxplot...','Mean correlation',QM_names,'Mahalanobis distance'};
-  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1},...
+  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1},...
            {@show_mean_boxplot, QM(:,1), QM_names(1,:), -1},...
            {@show_mean_boxplot, QM(:,2), QM_names(2,:), -1},...
            {@show_mean_boxplot, QM(:,3), QM_names(3,:), -1},...
-           {@show_mean_boxplot, MD, 'Mahalanobis distance', -1} };
+           {@show_mean_boxplot, MD, 'Mahalanobis distance  ', -1} };
 else
   str  = { 'Boxplot...','Mean correlation'};
-  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation', 1} };
+  tmp  = { {@show_mean_boxplot, mean_cov, 'Mean correlation  ', 1} };
 end
 
 H.boxp = uicontrol(H.figure,...
@@ -404,7 +425,8 @@ H.boxp = uicontrol(H.figure,...
         'Style','PopUp','HorizontalAlignment','center',...
         'callback','spm(''PopUpCB'',gcbo)',...
         'ToolTipString','Display boxplot',...
-        'Interruptible','on','Visible','on');
+        'Interruptible','on','Visible','on',...
+        'FontSize',FS(7));
 
 if isxml
   str  = { 'Image...','Mean Correlation: Order by selected filenames','Mean Correlation: Sorted by mean correlation','Mahalanobis distance'};
@@ -423,7 +445,8 @@ H.sort = uicontrol(H.figure,...
         'Style','PopUp','HorizontalAlignment','center',...
         'callback','spm(''PopUpCB'',gcbo)',...
         'ToolTipString','Sort matrix',...
-        'Interruptible','on','Visible','on');
+        'Interruptible','on','Visible','on',...
+        'FontSize',FS(7));
 
 H.chbox = uicontrol(H.figure,...
         'string','Show filenames in boxplot','Units','normalized',...
@@ -432,13 +455,14 @@ H.chbox = uicontrol(H.figure,...
         'callback',{@checkbox_names},...
         'ToolTipString','Show filenames in boxplot',...
         'Interruptible','on','Visible','on',...
-        'BackgroundColor',[0.8 0.8 0.8]);
+        'BackgroundColor',[0.8 0.8 0.8],'FontSize',FS(6));
 
 H.text = uicontrol(H.figure,...
         'Units','normalized','position',pos.text,...
         'String','Click in image to display slices',...
         'Style','text','HorizontalAlignment','center',...
-        'ToolTipString','Select slice for display');
+        'ToolTipString','Select slice for display',...
+        'FontSize',FS(6));
 
 H.alpha = uicontrol(H.figure,...
         'Units','normalized','position',pos.aslider,...
@@ -452,10 +476,11 @@ H.alpha_txt = uicontrol(H.figure,...
         'Units','normalized','HorizontalAlignment','center',...
         'Style','text','BackgroundColor',[0.8 0.8 0.8],...
         'Position',[pos.aslider(1) pos.aslider(2)-0.005 0.2 0.02],...
-        'String','Overlay Opacity of Differences to Sample Mean','Visible','off');
+        'String','Overlay Opacity of Differences to Sample Mean',...
+        'FontSize',FS(6),'Visible','off');
 
 % add slider only for volume data
-if ~issurf
+if ~mesh_detected
   H.mm = uicontrol(H.figure,...
         'Units','normalized','position',pos.sslider,...
         'Min',(1 - Orig(3))*vx(3),'Max',(V(1).dim(3) - Orig(3))*vx(3),...
@@ -468,12 +493,12 @@ if ~issurf
         'Units','normalized','HorizontalAlignment','center',...
         'Style','text','BackgroundColor',[0.8 0.8 0.8],...
         'Position',[pos.sslider(1) pos.sslider(2)-0.005 0.2 0.02],...
-        'String','Slice [mm]','Visible','off');
+        'String','Slice [mm]','Visible','off','FontSize',FS(6));
         
   update_slices_array;
 end
    
-show_mean_boxplot(mean_cov,'Mean correlation',1);
+show_mean_boxplot(mean_cov,'Mean correlation  ',1);
 
 % check for replicates
 for i=1:n_subjects
@@ -501,7 +526,7 @@ end
 %-----------------------------------------------------------------------
 function check_worst_data(obj, event_obj)
 %-----------------------------------------------------------------------
-global V ind_sorted_display issurf mn_data mx_data H
+global V ind_sorted_display mesh_detected mn_data mx_data H
 
 n = length(V);
 number = min([n 24]);
@@ -512,7 +537,7 @@ number = min([number length(V)]);
 list = char(V(ind_sorted_display(n:-1:1)).fname);
 list2 = list(1:number,:);
 
-if issurf
+if mesh_detected
   % display single meshes and correct colorscale of colorbar
   for i=1:number
     h = cat_surf_render('Disp',deblank(list2(i,:)));
@@ -600,7 +625,7 @@ return
 %-----------------------------------------------------------------------
 function show_matrix(data, order)
 %-----------------------------------------------------------------------
-global H FS pos sorted YpY isscatter issurf
+global H FS pos sorted YpY isscatter mesh_detected
 
 % get sorting order
 sorted = order;
@@ -628,11 +653,11 @@ axis image
 if sorted
   xlabel('<----- Best ---      File Order      --- Worst ------>  ','FontSize',FS(8),'FontWeight','Bold');
   ylabel('<----- Worst ---      File Order      --- Best ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  title('Sorted Sample Correlation Matrix','FontSize',FS(10),'FontWeight','Bold');
+  title('Sorted Sample Correlation Matrix  ','FontSize',FS(10),'FontWeight','Bold');
 else
   xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(8),'FontWeight','Bold');
   ylabel('<----- Last ---      File Order      --- First ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  title('Sample Correlation Matrix','FontSize',FS(10),'FontWeight','Bold');
+  title('Sample Correlation Matrixv  ','FontSize',FS(10),'FontWeight','Bold');
 end
 
 H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
@@ -649,7 +674,7 @@ isscatter = 0;
 
 % remove sliders and text
 try
-  if ~issurf
+  if ~mesh_detected
     set(H.mm,'Visible','off'); 
     set(H.mm_txt,'Visible','off');
   end
@@ -730,22 +755,22 @@ title(title_str,'FontSize',FS(8),'FontWeight','Bold');
 xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),...
     'FontWeight','Bold');
 
-xpos = -0.35 - n_samples*0.1;
+xpos = -0.40 - n_samples*0.1;
 
 if (length(data_boxp) > 2)
   if quality_order > 0
-    text(xpos, ylim_min,'<----- Low rating (poor quality)','Color','red','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
-    text(xpos, ylim_max,'High rating (good quality) ------>','Color','green','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
+    text(xpos, ylim_min,'<----- Low rating (poor quality)  ','Color','red','Rotation',...
+        90,'HorizontalAlignment','left','FontSize',FS(9),'FontWeight','Bold')
+    text(xpos, ylim_max,'High rating (good quality) ------>  ','Color','green','Rotation',...
+        90,'HorizontalAlignment','right','FontSize',FS(9),'FontWeight','Bold')
   else
-    text(xpos, ylim_max,'Low rating (poor quality) ------>','Color','red','Rotation',...
-        90,'HorizontalAlignment','right','FontSize',FS(10),'FontWeight','Bold')
-    text(xpos, ylim_min,'<----- High rating (good quality)','Color','green','Rotation',...
-        90,'HorizontalAlignment','left','FontSize',FS(10),'FontWeight','Bold')
+    text(xpos, ylim_max,'Low rating (poor quality) ------>  ','Color','red','Rotation',...
+        90,'HorizontalAlignment','right','FontSize',FS(9),'FontWeight','Bold')
+    text(xpos, ylim_min,'<----- High rating (good quality)  ','Color','green','Rotation',...
+        90,'HorizontalAlignment','left','FontSize',FS(9),'FontWeight','Bold')
   end
   text(xpos, (ylim_max+ylim_min)/2,sprintf('%s',name_boxp),'Color','black','Rotation',...
-        90,'HorizontalAlignment','center','FontSize',FS(10),'FontWeight','Bold')
+        90,'HorizontalAlignment','center','FontSize',FS(9),'FontWeight','Bold')
 end
 
 hold off
@@ -765,7 +790,7 @@ return
 %-----------------------------------------------------------------------
 function update_alpha(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval H issurf img img_alpha
+global alphaval H mesh_detected img img_alpha
 
 if isfield(H,'alpha')
   alphaval = get(H.alpha,'Value');
@@ -775,7 +800,7 @@ end
 
 % display image with 2nd colorbar (gray)
 image(65 + img);
-if ~issurf, axis image; end
+if ~mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
 hold on
 
@@ -783,9 +808,9 @@ hold on
 alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
 alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
 hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
-if ~issurf, axis image; end
+if ~mesh_detected, axis image; end
 hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
-if ~issurf, axis image; end
+if ~mesh_detected, axis image; end
 hold off
 
 return
@@ -793,7 +818,7 @@ return
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval V Vchanged fname data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed max_diff
+global alphaval V Vchanged fname data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed max_diff FS
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -831,7 +856,9 @@ for i = 1:length(V)
 end
 
 % calculate individual difference to mean image
-data_array_diff = data_array_diff - mean(data_array_diff,3);
+for i=1:size(data_array_diff,3)
+  data_array_diff(:,:,i) = data_array_diff(:,:,i) - mean(data_array_diff,3);
+end
 
 % enhance contrast and scale image to 0..64
 mn = min(data_array(:));
@@ -894,8 +921,9 @@ if isfield(pos,'x')
     txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(fname.m{x},'short25')],...
       ['Bottom: ',spm_file(fname.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   end
-  set(H.text,'String',txt);
-  set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm']);
+  set(H.text,'String',txt,'FontSize',FS(6));
+  set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm'],...
+      'FontSize',FS(6));
 end
 
 return
@@ -903,7 +931,7 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval fname sample H X YpY data_array data_array_diff pos issurf ind_sorted sorted isscatter img img_alpha
+global alphaval fname sample H X YpY data_array data_array_diff pos mesh_detected ind_sorted sorted isscatter img img_alpha FS
 
 set(H.alpha,'Visible','on');
 set(H.alpha_txt,'Visible','on');
@@ -922,7 +950,7 @@ if isscatter
   % text info for textbox
   txt2 = {sprintf('%s',spm_file(fname.m{pos.x},'short25'))};
 
-  set(H.text,'String',txt2);
+  set(H.text,'String',txt2,'FontSize',FS(6));
   axes('Position',pos.slice);
 
   x = pos.x;
@@ -950,7 +978,7 @@ else
   end
 
   % text info for data cursor window
-  if issurf
+  if mesh_detected
     txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',fname.m{x}],...
       ['Right: ',fname.m{y}]};
   else
@@ -959,23 +987,23 @@ else
   end
 
   % text info for textbox
-  if issurf
+  if mesh_detected
     txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
       spm_file(fname.m{x},'short25') '     Right: ',spm_file(fname.m{y},'short25')],...
-      [],'Differences to Sample Mean (red: - green: +)'};
+      [],'Difference to Sample Mean (red: - green: +)'};
   else
     txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
       spm_file(fname.m{x},'short25')],['Bottom: ',spm_file(fname.m{y},'short25')],...
       [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm'],...
-      [],'Differences to Sample Mean (red: - green: +)'};
+      'Difference to Sample Mean (red: - green: +)'};
   end      
 
-  set(H.text,'String',txt2);
+  set(H.text,'String',txt2,'FontSize',FS(6));
   axes('Position',pos.slice);
   x = pos.x;
 end
   
-if issurf 
+if mesh_detected 
   % use indexed 2D-sheet to display surface data as image
   % check surface size to use indexed 2D map
   if (length(data_array(:,x)) == 163842)
@@ -1099,7 +1127,7 @@ img_alpha = rot90(img_alpha,2);
 
 % display image with 2nd colorbar (gray)
 image(65 + img);
-if ~issurf, axis image; end
+if ~mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
 hold on
 
@@ -1107,12 +1135,12 @@ hold on
 alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
 alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
 hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
-if ~issurf, axis image; end
+if ~mesh_detected, axis image; end
 hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
-if ~issurf, axis image; end
+if ~mesh_detected, axis image; end
 hold off
 
-if issurf
+if mesh_detected
   xlabel('2D surface maps');
 end
 
