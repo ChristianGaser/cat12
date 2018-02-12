@@ -3,7 +3,7 @@ img {
 }
 
 body {
-    font: 16px 'Lucida Grande', Verdana, Arial, Sans-Serif; 
+    font: 13px 'Lucida Grande', Verdana, Arial, Sans-Serif; 
     /* we need to set the pixel size for different MATLAB versions */
 	 /* font: 100% 'Lucida Grande', Verdana, Arial, Sans-Serif; /* Resets 1em to 10px 'Lucida Grande', Verdana, Arial, Sans-Serif;  */ 
 	color: #444;
