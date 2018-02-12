@@ -1794,11 +1794,10 @@ end
 clear wYp0 wYcls wYv trans
 
 
-
 %  estimate volumes and TIV
-qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000 .* sum(Ycls{1}(:)), ... CSF
-                    prod(vx_vol)/1000 .* sum(Ycls{2}(:)), ... GM 
-                    prod(vx_vol)/1000 .* sum(Ycls{3}(:)), ... WM
+qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... CSF
+                    prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)), ... GM 
+                    prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... WM
                     qa.subjectmeasures.WMH_abs]; 
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
