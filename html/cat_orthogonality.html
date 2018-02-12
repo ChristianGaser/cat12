@@ -22,41 +22,52 @@
     </div>
   
     
+    <!-- 
+        Synchronize this with CAT12 manual "Checking for design orthogonality"
+    -->
+
     <div id="content">
       <h2>Orthogonality of total intracranial volume (TIV) to other parameters</h2>
       
       <p>
-        If you have modeled TIV as confounding parameter it is necessary to check that TIV will be orthogonal (in other words independent) to any other
-        parameter of interest in your analysis (e.g. parameters you are testing for). That means that TIV should not correlate with any other parameter 
-        of interest, otherwise not only the variance explained by TIV will be removed from your data, but also parts of the variance of your
+        If you have modeled TIV as confounding parameter, you must check whether TIV is orthogonal (in other words independent) to any other
+        parameter of interest in your analysis (e.g. parameters you are testing for). This means that TIV should not correlate with any other parameter 
+        of interest, otherwise not only the variance explained by TIV is removed from your data, but also parts of the variance of your
         parameter of interest. 
       </p>
       <p>
-        <i>Please keep in mind that you have to use ''Overall mean'' as ''Centering'' for the TIV covariate. Otherwise, the orthogonality check sometimes even indicates a meaningful orthogonality only due to scaling issues.</i>
+        <i>Please use ''Overall mean'' as ''Centering'' for the TIV covariate. Otherwise, the orthogonality check sometimes even indicates a meaningful co-linearity only because of scaling problems.</i>
       </p>
       <p>
-        In order to check for design orthogonality you can use the <a class="function" href="matlab:spm_DesRep;">Review </a> 
+        To check for design orthogonality, you can use the <a class="function" href="matlab:spm_DesRep;">Review </a> 
         function in the SPM GUI. Select the SPM.mat file and choose Design -> Design orthogonality from the menu to display
-        the design orthogonality. Gray boxes between the parameters point to a correlation: the darker the box the larger the correlation
+        the design orthogonality. Gray boxes between the parameters point to a colinearity (correlation): the darker the box the larger the correlation
         (which also holds for inverse correlations). If you click in the box the colinearity between the parameters will be displayed.
       <img src="images/non_orthogonal.png" class="center" alt="non_orthogonal.png" />
       </p>
       <p>
-        The larger the correlation between TIV and any parameter of interest the more the need to not use TIV as confound. In that case an alternative
+        The larger the correlation between TIV and any parameter of interest the more the need to not use TIV as nuisance parameter. In this case an alternative
         approach is to use global scaling with TIV. Apply the following settings for this approach: 
         <ul>
-          <li>Global calculation -> User -> Global values <- Define here the TIV values</li>
-          <li>Global normalisation -> Overall grand mean scaling -> Yes</li>
-          <li>Normalisation -> User -> Proportional</li>
+          <li>Global calculation -> User -> Global values <- Define the TIV values here</li>
+          <li>Global normalisation -> Overall grand mean scaling -> Yes -> Grand mean scaled value -> Define here the mean TIV of your sample or (or as approximation a value of 1500 which might fit for the majority of data from adults)</li>
+        <ul>
+          <li>Approach 1 (for all models): Normalization -> Proportional</li>
+          <li>Approach 2 (for all models with more than one group): Normalization -> ANCOVA</li>
+        </ul>
         </ul>
       </p>
       <p>
-        Please note that the global normalisation will also affect the absolute threshold for the masking because your images will be now scaled to a global 
-        value of 50. While usually an absolute threshold of 0.1..0.25 is recommended, the scaled values will be now smaller by a factor of around 30:
-        <ul>
-          <li>If the mean TIV is 1500 all images are globally scaled to a value of 50. Thus, the overall scaling is 50/1500 = 1/30</li>
-          <li>To get the (old) absolute threshold of 0.1 (0.2) now use 0.1/30 (0.2/30)</li>
-        </ul>
+        Approach 1 is (proportionally) scaling the data according to the individual TIV values. Instead of removing variance explained by TIV all data are scaled by their TIV values. This is also similar to the approach that was used in VBM8 (''modulate for non-linear effects only''), where global scaling was internally used with an approximation of TIV (e.g. inverse of affine scaling factor). This approach can be used for all models including multiple regressions with one group.
+      </p>
+      <p>
+        Approach 2 is using TIV as nuisance parameter with separate columns for each group. The values for the nuisance parameters are here mean-centered for each group. As the mean values for TIV are corrected separately for each group, it is prevented that group differences in TIV have a negative impact on the group comparison of the image data in the GLM. Variance explained by TIV is here removed separately for each group. Please note that this approach is also equivalent to the use of TIV as nuisance parameter with interaction and mean centering with factor “group”. The design also results in separate columns for TIV, which are mean-corrected for each group.
+      </p>
+      <p>
+        Unfortunately, a no clear advice for either of these two approaches can be given and the use of these approaches will also affect interpretation of your findings.
+      </p>
+      <p>
+        Please note that global normalization also affects the absolute masking threshold as your images are now scaled to the ''Grand mean scaled value'' of the Global Normalization option. If you have defined the mean TIV of your sample (or an approximate value of 1500) here, no change of the absolute threshold is required. Otherwise, you will have to correct the absolute threshold because your values are now globally scaled to the ''Grand mean scaled value'' of the Global Normalization option.
       </p>
     </div>
 

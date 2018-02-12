@@ -351,7 +351,7 @@ data_vol.tag  = 'data_vol';
 data_vol.filter = 'image';
 data_vol.num  = [1 Inf];
 data_vol.help   = {...
-'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to check unsmoothed files.'};
+'These are the (spatially registered) data. They must all have the same image dimensions, orientation, voxel size etc. Furthermore, it is recommended to use unsmoothed files.'};
 
 sample         = cfg_repeat;
 sample.tag     = 'sample';
@@ -359,7 +359,7 @@ sample.name    = 'Data';
 sample.values  = {data_vol };
 sample.num     = [1 Inf];
 sample.help = {...
-'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.'};
+'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots (or violin plots) for each sample.'};
 
  
 check_cov      = cfg_exbranch;
@@ -370,7 +370,73 @@ check_cov.prog = @cat_stat_check_cov;
 check_cov.help  = {
 'In order to identify images with poor image quality or even artefacts you can use this function. Images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing). The idea of this tool is to check the correlation of all files across the sample.'
 ''
-'The correlation is calculated between all images and the mean for each image is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order.'};
+'The correlation is calculated between all images and the mean for each image is plotted using a spmmat and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order.'};
+
+%------------------------------------------------------------------------
+
+spmmat         = cfg_files;
+spmmat.tag     = 'spmmat';
+spmmat.name    = 'Select SPM.mat';
+spmmat.filter  = {'mat'};
+spmmat.ufilter = '^SPM\.mat$';
+spmmat.num     = [1 1];
+spmmat.help    = {'Select the SPM.mat file that contains the design specification.'};
+
+use_unsmoothed_data        = cfg_menu;
+use_unsmoothed_data.name   = 'Use unsmoothed data if found';
+use_unsmoothed_data.tag    = 'use_unsmoothed_data';
+use_unsmoothed_data.labels = {'Yes','No'};
+use_unsmoothed_data.values = {1,0};
+use_unsmoothed_data.val    = {1};
+use_unsmoothed_data.help  = {'Check for sample homogeneity results in more reliable values if unsmoothed data are used. Unsmoothed data contain more detailed information about differences and similarities between the data.'};
+
+adjust_data        = cfg_menu;
+adjust_data.name   = 'Adjust data using design matrix';
+adjust_data.tag    = 'adjust_data';
+adjust_data.labels = {'Yes','No'};
+adjust_data.values = {1,0};
+adjust_data.val    = {1};
+adjust_data.help  = {'This option allows to use nuisance and group parameters from the design matrix to obtain adjusted data. In this case the variance explained by these parameters will be removed prior to the calculation of the correlation. Furthermore, global scaling (if defined) is also applied to the data.'};
+
+none         = cfg_const;
+none.tag     = 'none';
+none.name    = 'No';
+none.val     = {1};
+none.help    = {''};
+
+do_check_cov         = cfg_branch;
+do_check_cov.tag     = 'do_check_cov';
+do_check_cov.name    = 'Yes';
+do_check_cov.val     = {use_unsmoothed_data adjust_data};
+do_check_cov.help    = {''};
+
+check_SPM_cov        = cfg_choice;
+check_SPM_cov.name   = 'Check for sample homogeneity';
+check_SPM_cov.tag    = 'check_SPM_cov';
+check_SPM_cov.values = {none do_check_cov};
+check_SPM_cov.val    = {do_check_cov};
+check_SPM_cov.help   = {'In order to identify images with poor image quality or even artefacts you can use this function. The idea of this tool is to check the correlation of all files across the sample using the files that are already defined in SPM.mat.'
+''
+'The correlation is calculated between all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The smaller the mean correlation the more deviant is this image from the sample mean. In the plot outliers from the sample are usually isolated from the majority of images which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the image order'};
+
+check_SPM_ortho        = cfg_menu;
+check_SPM_ortho.name   = 'Check for design orthogonality';
+check_SPM_ortho.tag    = 'check_SPM_ortho';
+check_SPM_ortho.labels = {'Yes','No'};
+check_SPM_ortho.values = {1,0};
+check_SPM_ortho.val    = {1};
+check_SPM_ortho.help   = {'Review Design Orthogonality.'};
+ 
+check_SPM      = cfg_exbranch;
+check_SPM.tag  = 'check_SPM';
+check_SPM.name = 'Check design orthogonality and homogeneity';
+check_SPM.val  = {spmmat,check_SPM_cov,check_SPM_ortho};
+check_SPM.prog = @cat_stat_check_SPM;
+check_cov.help  = {
+'Use design matrix saved in SPM.mat to check for sample homogeneity of the used data and for orthogonality of parameters.'
+};
+
+%------------------------------------------------------------------------
 
 outdir         = cfg_files;
 outdir.tag     = 'outdir';
@@ -380,7 +446,6 @@ outdir.ufilter = '.*';
 outdir.num     = [0 1];
 outdir.help    = {'Select a directory where files are written.'};
 
-%------------------------------------------------------------------------
 
 data         = cfg_files; 
 data.tag     = 'data';
@@ -922,7 +987,7 @@ nonlin_coreg  = cat_conf_nonlin_coreg;
 tools = cfg_choice;
 tools.name   = 'Tools';
 tools.tag    = 'tools';
-tools.values = {showslice,check_cov,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,nonlin_coreg,defs,defs2}; %,qa
+tools.values = {showslice,check_cov,check_SPM,calcvol,calcroi,iqr,T2x,F2x,T2x_surf,F2x_surf,sanlm,realign,long,nonlin_coreg,defs,defs2}; %,qa
 if expert 
   tools.values = [tools.values,{urqio}]; 
 end
