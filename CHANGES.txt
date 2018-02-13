@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1276 | gaser | 2018-02-13 10:56:32
+r1277 | gaser | 2018-02-13 13:35:31
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+MM      cat_stat_factorial_design.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_starting.html
+M       html/style.css
+
+Changed: Corrected css-code for "Quick Start Guide" button in CAT12 winodw.
+------------------------------------------------------------------------
+r1276 | gaser | 2018-02-13 10:56:53 +0100 (Di, 13 Feb 2018) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +22,7 @@ M       html/cat.txt
 M       html/style.css
 
 Changed: Added button to open external "Quick Start Guide" to CAT12 winodw.
+
 ------------------------------------------------------------------------
 r1275 | gaser | 2018-02-12 23:00:05 +0100 (Mo, 12 Feb 2018) | 28 lines
 

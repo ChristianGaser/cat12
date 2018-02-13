@@ -29,7 +29,9 @@
 
       <hr />
     
-      <p><button class="w3-button"><a href="matlab:web(fullfile(spm('dir'),'toolbox','cat12','html','cat_starting.html'))">Open ''Quick Start Guide'' in external window</a></button></p>      
+    <div id="button">
+      <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(spm('dir'),'toolbox','cat12','html','cat_starting.html'))">Open ''Quick Start Guide'' in external window</a></p>      
+    </div>
 
       <h2>Description</h2>
       <p>This toolbox is a an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12/','-browser');">SPM12</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry (SBM), deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html','-browser')">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version.</p>
