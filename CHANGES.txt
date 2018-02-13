@@ -1,5 +1,16 @@
 ------------------------------------------------------------------------
-r1275 | gaser | 2018-02-12 22:50:22
+r1276 | gaser | 2018-02-13 10:56:32
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat.txt
+M       html/style.css
+
+Changed: Added button to open external "Quick Start Guide" to CAT12 winodw.
+------------------------------------------------------------------------
+r1275 | gaser | 2018-02-12 23:00:05 +0100 (Mo, 12 Feb 2018) | 28 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -28,6 +39,7 @@ M       html/style.css
 (5) Changed: Added check for SPM design to basic models.
 (6) Changed: Many changes to cat_stat_check_SPM.m and cat_stat_check_cov.m.
 (7) Changed: Added global scaling to cat_stat_check_cov.m
+
 ------------------------------------------------------------------------
 r1274 | gaser | 2018-02-12 09:36:30 +0100 (Mo, 12 Feb 2018) | 10 lines
 

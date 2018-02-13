@@ -44,7 +44,7 @@ body {
 
 #breadcrumbs { 
 	width: 100%;
-	Color: FFFFFF;
+	color: #FFFFFF;
 	margin: 35px 0px 0px 20px;
 	padding: 0px 0px 0px  0px;
 
@@ -149,12 +149,18 @@ a {
 	color:#133f7a;
 }
 
+a:hover {
+	background:#133f7a;
+	color: #FFFFFF;
+}
+
 a.function {
 	color: #008800; 
 }
 
 a.function:hover {
-	color: #00BB00; 
+	background:#00BB00;
+	color: #FFFFFF; 
 }
 
 li {
