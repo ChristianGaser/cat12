@@ -10,7 +10,7 @@ function varargout = cat_stat_check_cov(job)
 % $Id$
 
 global alphaval fname H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
-mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha max_diff
+mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha
 
 % show data by fileorder
 sorted = 0;
@@ -191,10 +191,6 @@ if mesh_detected
   Y = Y - repmat(mean(Y,1), [n_subjects 1]);
   data_array_diff = Y';
   
-  % scale difference image using maximum for all subjects
-  max_diff = max(abs(data_array_diff(:)));
-  data_array_diff = 2*data_array_diff/max_diff;
-
   MSE = sum(Y.*Y,2);
 
   clear Y
@@ -215,7 +211,6 @@ else
   %-----------------------------------------------------------------------
   spm_progress_bar('Init',V(1).dim(3),'Check correlation','planes completed')
 
-  max_diff = 0;
   for j=slices
 
     M  = spm_matrix([0 0 j 0 0 0 sep sep sep]);
@@ -242,8 +237,6 @@ else
     % calculate residual mean square of mean adjusted Y
     Y = Y - repmat(mean(Y,1), [n_subjects 1]);
     
-    % get abs. maximum of residuals
-    max_diff = max(max_diff,max(abs(Y(:))));
     MSE = MSE + sum(Y.*Y,2);
 
     spm_progress_bar('Set',j);  
@@ -657,7 +650,7 @@ if sorted
 else
   xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(8),'FontWeight','Bold');
   ylabel('<----- Last ---      File Order      --- First ------>  ','FontSize',FS(8),'FontWeight','Bold');
-  title('Sample Correlation Matrixv  ','FontSize',FS(10),'FontWeight','Bold');
+  title('Sample Correlation Matrix  ','FontSize',FS(10),'FontWeight','Bold');
 end
 
 H.cbar = axes('Position',pos.cbar,'Parent',H.figure);
@@ -802,23 +795,28 @@ end
 image(65 + img);
 if ~mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
-hold on
 
 % prepare alpha overlays for red and green colors
-alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
-alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
-hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
-if ~mesh_detected, axis image; end
-hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
-if ~mesh_detected, axis image; end
-hold off
+if alphaval > 0
+  % get 2%/98% ranges of difference image
+  range = cat_vol_iscaling(img_alpha(:),[0.02 0.98]);
+
+  hold on
+  alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
+  alpha_r = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
+  hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>range(2)),'AlphaDataMapping','scaled')
+  if ~mesh_detected, axis image; end
+  hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<range(1)),'AlphaDataMapping','scaled')
+  if ~mesh_detected, axis image; end
+  hold off
+end
 
 return
 
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval V Vchanged fname data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed max_diff FS
+global alphaval V Vchanged fname data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed FS img_alpha img
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -865,10 +863,6 @@ mn = min(data_array(:));
 mx = max(data_array(:));
 data_array = 64*((data_array - mn)/(mx-mn));
 
-% scale difference image using maximum for all subjects
-mx = max(abs(data_array_diff(:)));
-data_array_diff = 4*data_array_diff/max_diff;
-
 if sorted
   if isfield(pos,'x')
     x = ind_sorted(pos.x);
@@ -904,17 +898,22 @@ if isfield(pos,'x')
   image(65 + img);
   axis image
   set(gca,'XTickLabel','','YTickLabel','');
-  hold on
   
   % prepare alpha overlays for red and green colors
-  alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
-  alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
-  hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
-  axis image
-  hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
-  axis image
-  hold off
+  if alphaval > 0
+    % get 2%/98% ranges of difference image
+    range = cat_vol_iscaling(img_alpha(:),[0.02 0.98]);
 
+    hold on
+    alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
+    alpha_r = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
+    hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>range(2)),'AlphaDataMapping','scaled')
+    axis image
+    hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<range(1)),'AlphaDataMapping','scaled')
+    axis image
+    hold off
+  end
+  
   if isscatter
     txt = {sprintf('%s',spm_file(fname.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   else
@@ -948,7 +947,7 @@ if isscatter
   txt = {sprintf('%s',fname.m{pos.x})};
 
   % text info for textbox
-  txt2 = {sprintf('%s',spm_file(fname.m{pos.x},'short25'))};
+  txt2 = {sprintf('%s',spm_file(fname.m{pos.x},'short25')),[],'Difference to Sample Mean (red: - green: +)'};
 
   set(H.text,'String',txt2,'FontSize',FS(6));
   axes('Position',pos.slice);
@@ -1129,16 +1128,21 @@ img_alpha = rot90(img_alpha,2);
 image(65 + img);
 if ~mesh_detected, axis image; end
 set(gca,'XTickLabel','','YTickLabel','','TickLength',[0 0]);
-hold on
 
 % prepare alpha overlays for red and green colors
-alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
-alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
-hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>0))
-if ~mesh_detected, axis image; end
-hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<0))
-if ~mesh_detected, axis image; end
-hold off
+if alphaval > 0
+  % get 2%/98% ranges of difference image
+  range = cat_vol_iscaling(img_alpha(:),[0.02 0.98]);
+
+  hold on
+  alpha_g = cat(3, zeros(size(img_alpha)), alphaval*ones(size(img_alpha)), zeros(size(img_alpha)));
+  alpha_r   = cat(3, alphaval*ones(size(img_alpha)), zeros(size(img_alpha)), zeros(size(img_alpha)));
+  hg = image(alpha_g); set(hg, 'AlphaData', img_alpha.*(img_alpha>range(2)),'AlphaDataMapping','scaled')
+  if ~mesh_detected, axis image; end
+  hr = image(alpha_r); set(hr, 'AlphaData',-img_alpha.*(img_alpha<range(1)),'AlphaDataMapping','scaled')
+  if ~mesh_detected, axis image; end
+  hold off
+end
 
 if mesh_detected
   xlabel('2D surface maps');
