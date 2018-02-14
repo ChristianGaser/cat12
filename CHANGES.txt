@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1277 | gaser | 2018-02-13 13:35:31
+r1278 | gaser | 2018-02-14 17:43:18
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_check_cov.m
+M       html/cat.html
+
+Changed: Updated code for opaque overlay in cat_stat_check_cov.m
+------------------------------------------------------------------------
+r1277 | gaser | 2018-02-13 13:35:52 +0100 (Di, 13 Feb 2018) | 11 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -11,6 +21,7 @@ M       html/cat_starting.html
 M       html/style.css
 
 Changed: Corrected css-code for "Quick Start Guide" button in CAT12 winodw.
+
 ------------------------------------------------------------------------
 r1276 | gaser | 2018-02-13 10:56:53 +0100 (Di, 13 Feb 2018) | 9 lines
 
