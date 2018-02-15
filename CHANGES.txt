@@ -1,5 +1,15 @@
 ------------------------------------------------------------------------
-r1278 | gaser | 2018-02-14 17:43:18
+r1279 | gaser | 2018-02-15 09:46:16
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat_stat_cva_ui.m
+M       html/cat.html
+
+Fixed: cat_stat_cva_ui.m was not correctly working for surfaces.
+------------------------------------------------------------------------
+r1278 | gaser | 2018-02-14 17:43:39 +0100 (Mi, 14 Feb 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +18,7 @@ M       cat_stat_check_cov.m
 M       html/cat.html
 
 Changed: Updated code for opaque overlay in cat_stat_check_cov.m
+
 ------------------------------------------------------------------------
 r1277 | gaser | 2018-02-13 13:35:52 +0100 (Di, 13 Feb 2018) | 11 lines
 

@@ -98,7 +98,7 @@ spm_input('!DeleteInputObj');
 %-Review old analysis or proceed with a new one
 %--------------------------------------------------------------------------
 if ~nargin || isempty(action)
-    action = spm_input('Canonical Variates Analysis','!+1','b', ...
+    action = spm_input('Canonical Variates Analysis',1,'b', ...
         {'New Analysis','Results'}, char({'specify','results'}), 1);
     if strcmpi(action,'results'), varargin = {}; end
 end
@@ -118,7 +118,7 @@ switch lower(action)
           cd(SPM.swd);
 
           % correct path for surface if analysis was made with different SPM installation
-          if ~exist(SPM.xVol.G,'file')
+          if isfield(SPM.xVol,'G') & ~exist(SPM.xVol.G,'file')
             % check for 32k meshes
             if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984
               fsavgDir = fullfile(spm('dir'),'toolbox','cat12','templates_surfaces_32k');
@@ -262,6 +262,9 @@ switch lower(action)
               F     = spm_file(F,'CPath');
               fprintf('Canonical image %s will be saved (significance: P<%g)\n',F,CVA.p(j));
               M     = gifti(SPM.xVol.G);
+              if ~isfield(SPM.xVol.G,'vertices')
+                SPM.xVol.G = M;
+              end
               C     = zeros(1,size(SPM.xVol.G.vertices,1));
               C(SPM.xVol.XYZ(1,:)) = CVA.V(:,j); % or use NODE_INDEX
               M.cdata = C;
