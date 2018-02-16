@@ -1,5 +1,29 @@
 ------------------------------------------------------------------------
-r1279 | gaser | 2018-02-15 09:46:16
+r1280 | gaser | 2018-02-16 17:19:48
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       Makefile
+M       cat_defaults.m
+M       cat_surf_results.m
+M       html/cat.html
+M       html/cat.txt
+M       html/cat_orthogonality.html
+A       html/cat_versions.html
+M       html/style.css
+M       spm_cat12.m
+
+(1) Updated: New version CAT12.2 (r1280)
+(2) Changed: Added version information to CAT12 manual and interactive
+    help
+(3) Changed: Default skull-stripping is now using SPM12 cleanup which 
+    is more conservative and keeps more extracranial CSF. This results
+    in more reliable TIV values, especially for atrophied brains.
+------------------------------------------------------------------------
+r1279 | gaser | 2018-02-15 09:46:37 +0100 (Do, 15 Feb 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +32,7 @@ M       cat_stat_cva_ui.m
 M       html/cat.html
 
 Fixed: cat_stat_cva_ui.m was not correctly working for surfaces.
+
 ------------------------------------------------------------------------
 r1278 | gaser | 2018-02-14 17:43:39 +0100 (Mi, 14 Feb 2018) | 8 lines
 

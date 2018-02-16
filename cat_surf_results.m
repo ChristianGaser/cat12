@@ -532,7 +532,7 @@ switch lower(action)
             set(H.text, 'Visible', 'on');
             set(H.border, 'Visible', 'on');
             
-            if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
+            if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
                 set(H.inv, 'Visible', 'on');
                 set(H.hide_neg, 'Visible', 'on');
                 set(H.hide_neg, 'Value', 0);
@@ -579,7 +579,7 @@ switch lower(action)
         d = getappdata(H.patch(1), 'data');
         col = getappdata(H.patch(1), 'colourmap');
         if strcmpi(varargin{2}, 'off')
-            if isfield(H, 'colourbar') && ishandle(H.colourbar)
+            if isfield(H, 'colourbar') & ishandle(H.colourbar)
                 delete(H.colourbar);
                 H = rmfield(H, 'colourbar');
                 setappdata(H.axis, 'handles', H);
@@ -604,7 +604,7 @@ switch lower(action)
         % Update colorbar colors if clipping is used
         H.clip = getappdata(H.patch(1), 'clip');
         if ~isempty(H.clip)
-            if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+            if ~isnan(H.clip(2)) & ~isnan(H.clip(3))
                 ncol = length(col);
                 col_step = (clim(3) - clim(2)) / ncol;
                 cmin = max([1, ceil((H.clip(2) - clim(2)) / col_step)]);
@@ -665,7 +665,7 @@ switch lower(action)
             
         end
         
-        if nargin > 1 && isnumeric(varargin{2}) && numel(varargin{2}) == 2
+        if nargin > 1 & isnumeric(varargin{2}) & numel(varargin{2}) == 2
             caxis(H.axis, varargin{2});
         else
             caxis(H.axis, [min(d), max(d)])
@@ -739,7 +739,7 @@ for ind = 1:5
 end
 
 % correct value of slider if no values are exceeding threshold
-if min_d > -thresh && H.n_surf == 1
+if min_d > -thresh & H.n_surf == 1
     set(H.slider_min, 'Value', 0);
 end
 
@@ -783,7 +783,7 @@ global H
 % get threshold from clipping
 thresh = [0 0];
 if ~isempty(H.clip)
-    if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+    if ~isnan(H.clip(2)) & ~isnan(H.clip(3))
         thresh = [H.clip(2:3)];
     end
 end
@@ -925,7 +925,7 @@ ind1 = find(H.S{1}.Y(:) ~= 0);
 ind2 = find(H.S{2}.Y(:) ~= 0);
 
 % estimate min value > 0 and min/max values
-if ~isempty(ind1) && ~isempty(ind2)
+if ~isempty(ind1) & ~isempty(ind2)
     H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
     H.S{1}.thresh = min(H.S{1}.thresh, min(H.S{2}.Y(H.S{2}.Y(:) > 0)));
     H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))), min(H.S{2}.Y(~isinf(H.S{2}.Y))));
@@ -965,7 +965,7 @@ else
 end
 
 % only apply thresholds that are slightly larger than zero
-if H.S{1}.thresh > 0.00015 && H.thresh_value == 0
+if H.S{1}.thresh > 0.00015 & H.thresh_value == 0
     H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
 else
     H.clip = [true -H.thresh_value H.thresh_value];
@@ -1130,7 +1130,7 @@ ind1 = find(H.S{1}.Y(:) ~= 0);
 ind2 = find(H.S{2}.Y(:) ~= 0);
 
 % estimate min value > 0 and min/max values
-if ~isempty(ind1) && ~isempty(ind2)
+if ~isempty(ind1) & ~isempty(ind2)
     H.S{1}.thresh = min(H.S{1}.Y(H.S{1}.Y(:) > 0));
     H.S{1}.thresh = min(H.S{1}.thresh, min(H.S{2}.Y(H.S{2}.Y(:) > 0)));
     H.S{1}.min = min(min(H.S{1}.Y(~isinf(H.S{1}.Y))), min(H.S{2}.Y(~isinf(H.S{2}.Y))));
@@ -1178,7 +1178,7 @@ for ind = 1:5
 end
 
 % only show threshold popup if log-name was found and minimal value > 0 is < 1
-if H.logP && (H.S{1}.thresh < 1)
+if H.logP & (H.S{1}.thresh < 1)
     set(H.thresh, 'Visible', 'on');
 end
 
@@ -1256,7 +1256,7 @@ if H.n_surf == 1
     % Update colorbar colors if clipping is used
     clip = getappdata(H.patch(1), 'clip');
     if ~isempty(clip)
-        if ~isnan(clip(2)) && ~isnan(clip(3))
+        if ~isnan(clip(2)) & ~isnan(clip(3))
             ncol = length(col);
             col_step = (clim(3) - clim(2)) / ncol;
             cmin = max([1, ceil((clip(2) - clim(2)) / col_step)]);
@@ -1275,9 +1275,9 @@ if H.n_surf == 1
         
         % if threshold is between 1.3..1.4 (p<0.05) change XTick accordingly and correct by 0.3
         if ~isempty(clip)
-            if clip(3) >= 1.3 && clip(3) <= 1.4
+            if clip(3) >= 1.3 & clip(3) <= 1.4
                 XTick_step = ceil((clim(3) - clim(2)) / 5);
-                if clip(2) <= - 1.3 && clip(2) >= - 1.4
+                if clip(2) <= - 1.3 & clip(2) >= - 1.4
                     XTick = [(round(clim(2)) - 0.3):XTick_step: - 1.3 0 1.3:XTick_step:(round(clim(3)) + 0.3)];
                 else
                     XTick = [0 1.3:XTick_step:(round(clim(3)) + 0.3)];
@@ -1497,7 +1497,7 @@ mi = clim(2); ma = clim(3);
 if any(v(:))
     if ~clim(1), mi = min(v(:)); ma = max(v(:)); end
     % don't allow negative values for multiple maps
-    if size(v, 1) > 1 && mi < 0
+    if size(v, 1) > 1 & mi < 0
         if ~isempty(H.clip)
             H.clip(2) = - Inf;
         else
@@ -1529,7 +1529,7 @@ end
 
 % add curvature pattern if transparency is defined
 if nargin > 4
-    if transp && size(C, 1) == size(curv, 1)
+    if transp & size(C, 1) == size(curv, 1)
         C = (0.5 + 0.5 * curv) .* C;
     end
 end
@@ -1732,7 +1732,7 @@ for ind = 1:5
 end
 
 % update colorbar
-if H.n_surf == 1 && ~H.disable_cbar
+if H.n_surf == 1 & ~H.disable_cbar
     H = show_colorbar(H);
 end
 
@@ -1754,7 +1754,7 @@ for ind = 1:5
 end
 
 % update colorbar
-if H.n_surf == 1 && ~H.disable_cbar
+if H.n_surf == 1 & ~H.disable_cbar
     H = show_colorbar(H);
 end
 
@@ -1814,7 +1814,7 @@ for ind = 1:5
 end
 
 % correct value of slider if no values are exceeding threshold
-if min_d > -thresh && H.n_surf == 1
+if min_d > -thresh & H.n_surf == 1
     set(H.slider_min, 'Value', 0);
 end
 
@@ -1837,7 +1837,7 @@ for ind = 1:5
 end
 
 % update colorbar
-if H.n_surf == 1 && ~H.disable_cbar
+if H.n_surf == 1 & ~H.disable_cbar
     H = show_colorbar(H);
 end
 
@@ -2083,7 +2083,7 @@ end
 % get threshold from clipping
 thresh = [0 0];
 if ~isempty(H.clip)
-    if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+    if ~isnan(H.clip(2)) & ~isnan(H.clip(3))
         thresh = [H.clip(2:3)];
     end
 end
@@ -2122,7 +2122,7 @@ if plot_mean
     end
     
     % go through neg. effects if no node was found
-    if ~isempty(indn) && ~isempty(found_node)
+    if ~isempty(indn) & ~isempty(found_node)
         
         C = find_connected_component(A, dn);
         C = C(indn);
@@ -2173,7 +2173,7 @@ end
 [y, cbeta, CI] = get_cluster_data(H, XYZ, ind);
 
 % if no cluster was selected set data to zero
-if plot_mean && isempty(found_node)
+if plot_mean & isempty(found_node)
     y(:) = 0;
     cbeta(:) = 0;
     CI(:) = 0;
