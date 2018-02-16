@@ -44,6 +44,7 @@
       </p>
       <ol>
         <li><a href=cat_starting.html>Quick start guide</a></li>         
+        <li><a href=cat_versions.html>Version information</a></li>              
         <li><a href=cat_introduction.html>Introduction</a></li>              
         <!-- Why we do all this 
              This should be a CAT unspecific overview with general aspects, 
