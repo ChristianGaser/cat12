@@ -27,31 +27,43 @@ function [N,Z,M,A,XYZ] = cat_surf_max(X,L,G)
 %--------------------------------------------------------------------------
 LL     = NaN(size(G.vertices,1),1);
 LL(L(1,:)) = X;
-[C, N] = spm_mesh_clusters(G,LL);
+[C, N0] = spm_mesh_clusters(G,LL);
 
 %-Get local maxima
 %--------------------------------------------------------------------------
-A = spm_mesh_adjacency(G);
-M = spm_mesh_get_lm(A,LL);
+M0 = spm_mesh_get_lm(G,LL);
 
-% if less maxima are found using spm_mesh_get_lm rather use an alternative approach
-% that gives all maxima (but without local maxima)
-if size(N,1) > size(M,2)
-    A = A + speye(size(A));
-    M = find_connected_component(A,LL);
+Z = LL(M0);
+A = C(M0);
+M = [M0;ones(2,size(M0,2))];
+N = N0(A);
+
+% In rare cases where local maxima are not correctly found the number of clusters 
+% differs from cluster indices in A. Then, we have to add non-unique entries 
+% using function find_connected_component
+if numel(unique(N0)) ~= max(A)
+  A2 = spm_mesh_adjacency(G);
+  A2 = A2 + speye(size(A2));
+  M2 = find_connected_component(A2,LL);
+  
+  % find uniqe entries in both methods
+  M = [M0 M2];
+  [tmp, ind] = unique(M);
+  M0 = M(sort(ind));
+  
+  % and create new variables using corrected M0
+  Z = LL(M0);
+  A = C(M0);
+  M = [M0;ones(2,size(M0,2))];
+  N = N0(A);
 end
 
-Z = LL(M);
-A = C(M);
-M = [M;ones(2,size(M,2))];
-N = N(A);
-
 if nargout > 4
-    XYZ = cell(1,max(A));
-    for i=1:numel(XYZ)
-        XYZ{i} = find(C==i)';
-        XYZ{i} = [XYZ{i};ones(2,size(XYZ{i},2))];
-    end
+  XYZ = cell(1,max(A));
+  for i=1:numel(XYZ)
+    XYZ{i} = find(C==i)';
+    XYZ{i} = [XYZ{i};ones(2,size(XYZ{i},2))];
+  end
 end
 
 %==========================================================================
