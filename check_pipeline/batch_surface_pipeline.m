@@ -81,8 +81,6 @@ matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(6) = cfg_dep('Thre
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(7) = cfg_dep('Resample and Smooth Surface Data: Merged Resample & Smooth', substruct('.','val', '{}',{7}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','Psdata', '()',{':'}));
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(8) = cfg_dep('Map Volume (Native Space) to Individual Surface: Left mapped values', substruct('.','val', '{}',{9}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','lh'));
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(9) = cfg_dep('Map Volume (Native Space) to Individual Surface: Right mapped values', substruct('.','val', '{}',{9}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rh'));
-matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('File Selector (Batch Mode): Selected Files (lh.log|rh.log)', substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','files'));
-
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
 
 %__________________________________________________________________________
