@@ -1,5 +1,13 @@
 ------------------------------------------------------------------------
-r1281 | gaser | 2018-02-18 23:04:35
+r1282 | gaser | 2018-02-19 08:14:28
+
+Changed paths:
+M       CHANGES.txt
+M       check_pipeline/batch_surface_pipeline.m
+
+Fixed: Pipeline check for surfaces was not correctly working.
+------------------------------------------------------------------------
+r1281 | gaser | 2018-02-18 23:05:09 +0100 (So, 18 Feb 2018) | 9 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -9,6 +17,7 @@ Fixed: In rare cases where local maxima are not correctly found the
 number of clusters differs from cluster indices in A. Then, we have 
 to add non-unique entries using function find_connected_component
 in cat_surf_max.m.
+
 ------------------------------------------------------------------------
 r1280 | gaser | 2018-02-16 17:20:12 +0100 (Fr, 16 Feb 2018) | 22 lines
 
