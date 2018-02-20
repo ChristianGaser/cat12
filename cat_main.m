@@ -445,11 +445,11 @@ if ~isfield(res,'spmpp')
     Ydiv = cat_vol_resize(Ydiv ,'dereduceBrain',BB);
   elseif job.extopts.gcutstr==0
     % brain mask
-    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    Yb   = Yp0>0.5/3; 
+    Ym  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
+    Yb   = (Ym > 0.1) | (single(P(:,:,:,3))/255 > 0.1) & (single(P(:,:,:,1))/255 < 0.25); 
     Ybb  = cat_vol_smooth3X(Yb,2); 
     
-    [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
+    [Ysrcb,BB] = cat_vol_resize({Ysrc},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yb);
     Yg   = cat_vol_grad(Ysrcb/T3th(3),vx_vol);
     Ydiv = cat_vol_div(Ysrcb/T3th(3),vx_vol);
     Yg   = cat_vol_resize(Yg ,'dereduceBrain',BB);
@@ -479,7 +479,7 @@ if ~isfield(res,'spmpp')
     Yb(~Yb & (~Ybo | Ysrcb<mean([BGth,T3th(1)]) | Ysrcb>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth))=nan;
     [Yb1,YD] = cat_vol_downcut(Yb,Ysrcb/T3th(3),RGth/10); Yb(isnan(Yb))=0; Yb(YD<400/mean(vx_vol))=1; clear Yb1; 
     Yb(smooth3(Yb)<0.5)=0; Yb(Yp0toC(Yp0*3,1)>0.9 & Yg<0.3 & Ysrcb>BGth & Ysrcb<T3th(2)) = 1; 
-    %% ventrile closing
+    %% ventricle closing
     [Ybr,Ymr,resT2] = cat_vol_resize({Yb>0,Ysrcb/T3th(3)},'reduceV',vx_vol,2,32); clear Ysrcb
     Ybr = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',6)); % large ventricle closing
     Ybr = cat_vol_morph(Ybr,'lc',2);                 % standard closing
@@ -1079,7 +1079,7 @@ if ~isfield(res,'spmpp')
 
   %% -------------------------------------------------------------------
   %  final cleanup
-  %  There is one major parameter to controll the strength of the cleanup.
+  %  There is one major parameter to control the strength of the cleanup.
   %  As far as the cleanup has a strong relation to the skull-stripping, 
   %  cleanupstr is controlled by the gcutstr. 
   %     Yp0ox = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255; Yp0o = zeros(d,'single'); Yp0o(indx,indy,indz) = Yp0ox; 

@@ -999,7 +999,6 @@ else
 
   set(H.text,'String',txt2,'FontSize',FS(6));
   axes('Position',pos.slice);
-  x = pos.x;
 end
   
 if mesh_detected 

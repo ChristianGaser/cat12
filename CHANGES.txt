@@ -1,11 +1,26 @@
 ------------------------------------------------------------------------
-r1282 | gaser | 2018-02-19 08:14:28
+r1283 | gaser | 2018-02-20 11:39:37
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_gcut.m
+M       cat_stat_check_cov.m
+ M      html/cat_versions.html
+
+(1) Fixed: Displayed Slices for sorted variance-covariance matrix were mixed
+    up in cat_stat_check_cov.m
+(2) Changed: Added more CSF segmentation to brainmask in cat_main.m and 
+    cat_main_gcut.m
+------------------------------------------------------------------------
+r1282 | gaser | 2018-02-19 08:14:50 +0100 (Mo, 19 Feb 2018) | 6 lines
 
 Changed paths:
 M       CHANGES.txt
 M       check_pipeline/batch_surface_pipeline.m
 
 Fixed: Pipeline check for surfaces was not correctly working.
+
 ------------------------------------------------------------------------
 r1281 | gaser | 2018-02-18 23:05:09 +0100 (So, 18 Feb 2018) | 9 lines
 
