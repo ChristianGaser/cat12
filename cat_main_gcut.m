@@ -72,7 +72,6 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   stime = cat_io_cmd('  WM initialisation','g5','',opt.verb); dispc=1;
   %% init: go to reduces resolution 
   [Ym,Yl1,YMF,BB] = cat_vol_resize({Ysrc,Yl1,YMF},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb);
-  Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
   [Yp0,Ywm,Ygm,Ycsf,Ymg,Yb] = cat_vol_resize({Yp0,single(Ycls{2})/255,single(Ycls{1})/255,...
     single(Ycls{3})/255,single(Ycls{5})/255,Yb},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb);
   vxd  = max(1,1/mean(vx_vol)); 
@@ -99,12 +98,11 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   end
   Yb   = cat_vol_morph(Yb & mod(Yl1,2)==0,'l') | ...
          cat_vol_morph(Yb & mod(Yl1,2)==1,'l') | ...
-         (Ybr & Yp0>1.9 & Ym<3.5 & (NS(Yl1,LAB.CB))) | ... 
-         (Ybr & Yp0<1.5 & Ym<1.5); 
+         (Ybr & Yp0>1.9/3 & Ym<3.5 & (NS(Yl1,LAB.CB))) | ... 
+         (Ybr & Yp0<1.5/3 & Ym<1.5); 
   Yb  = smooth3(Yb)>gc.s;
   Yb(smooth3(single(Yb))<0.5)=0;                           % remove small dots
   Yb  = single(cat_vol_morph(Yb,'labclose',gc.f));         % one WM object to remove vbs
-  
   
   %% region growing GM/WM (here we have to get all WM gyris!)
   stime = cat_io_cmd('  GM region growing','g5','',opt.verb,stime); dispc=dispc+1;
@@ -114,7 +112,6 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb(smooth3(single(Yb))<gc.s)=0;
   Yb = single(Yb | (cat_vol_morph(Yb,'labclose',vxd) & Ym<1.1));
 
-  
   %% region growing CSF/GM 
   stime = cat_io_cmd('  GM-CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Yb(~Yb & (YHDr | Ym<gc.l/3 | Ym>gc.h/3) | Ymg)=nan; % | YBD<1
@@ -132,10 +129,11 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb  = single(cat_vol_morph(Yb,'o',1));
   Yb  = single(Yb | (cat_vol_morph(Yb ,'labclose',1) & Ym<1.1));
   Ybox = Yb; 
+  
   %% region growing - add CSF regions   
   stime = cat_io_cmd('  CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Ygr = cat_vol_grad(Ym,vx_vol); CSFth = mean(Ym(Ycsf(:)>0.8 & Ygr(:)<0.1));
-  Ybb = smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.5; 
+  Ybb = smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.15; 
   if std(Ybb(:))>0  % no ROI in low res images 
     if sum(Ybb(:)>0.5)>0 % Ybb is maybe empty 
       Ybb = cat_vol_morph( Ybb>0.5 ,'lc',vxd);
