@@ -64,6 +64,12 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 % ______________________________________________________________________
 % $Id$
 
+
+  def.uhrlim = 0.7; 
+  extopts = cat_io_checkinopt(extopts,def); 
+
+  
+  
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
   verb    = extopts.verb-1;
@@ -101,19 +107,30 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   fprintf('\n');
   stime = cat_io_cmd('  Prepare maps','g5','',verb); dispc=1;
 
+  if any( vx_vol < extopts.uhrlim/2 )
+    Yclso2 = Ycls; Ysrco2 = Ysrc;
+    [Ysrc,resT0] = cat_vol_resize( Ysrc , 'reduceV' , vx_vol , extopts.uhrlim , 64 ); 
+    for ci=1:6
+      Ycls{ci} = cat_vol_resize( Ycls{ci}, 'reduceV' , vx_vol , extopts.uhrlim , 64 ); 
+    end
+    Ym  = cat_vol_resize( Ym          , 'reduceV' , vx_vol , extopts.uhrlim , 64 ); 
+    Yb0 = cat_vol_resize( single(Yb0) , 'reduceV' , vx_vol , extopts.uhrlim , 64 )>0.5; 
+  end
+  
+  
   
   % brain segmentation can be restricted to the brain to save time 
-  
-  Yclso=Ycls; Ysrco=Ysrc;
-  [Ysrc,Ym,Yb,BB] = cat_vol_resize({Ysrc,Ym,Yb0},'reduceBrain',vx_vol,round(10/mean(vx_vol)),Yb0);
-  for i=1:6, Ycls{i} = cat_vol_resize(Ycls{i},'reduceBrain',vx_vol,BB.BB); end
+  Yclso   = Ycls; 
+  [Ym,BB] = cat_vol_resize( Ym   , 'reduceBrain' , vx_vol , round(10/mean(vx_vol)) , Yb0 );
+  Yb      = cat_vol_resize( Yb0  , 'reduceBrain' , vx_vol , round(10/mean(vx_vol)) , Yb0 ); clear Yb0; 
+  for i=1:6, Ycls{i} = cat_vol_resize(Ycls{i} , 'reduceBrain' , vx_vol , BB.BB); end
   
   
   % helping maps (Yg = mean gradient = edge) and divergence 
-  Yg    = cat_vol_grad(Ym,vx_vol);
-  Ydiv  = cat_vol_div(max(0.33,Ym),vx_vol);
-  Yp0   = single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255;
-  Yb    = smooth3(Yb | cat_vol_morph(Yb,'d',2*vxv) & Ym<0.8 & Yg<0.3 & Ym>0)>0.5; % increase brain mask, for missing GM 
+  Yg    = cat_vol_grad( Ym , vx_vol );
+  Ydiv  = cat_vol_div( max(0.33,Ym) , vx_vol );
+  Yp0   = single( Ycls{1} )/255*2 + single( Ycls{2} )/255*3 + single( Ycls{3} )/255;
+  Yb    = smooth3( Yb | cat_vol_morph(Yb,'d',2*vxv) & Ym<0.8 & Yg<0.3 & Ym>0 )>0.5; % increase brain mask, for missing GM 
   
   
   %% adding of atlas information (for subcortical structures)
@@ -134,15 +151,13 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Yl1  = cat_vol_ctype(round(spm_sample_vol(Vl1A,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)));
     Yl1  = reshape(Yl1,dsize);
     
-    % load WM of the TPM or Dartel/Shooting Template for WMHs
-    %Ywtpm = cat_vol_ctype(spm_sample_vol(res.tpm(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
+    % load WM of the Dartel/Shooting Template for WMHs - use uint8 to save memory 
     Vtemplate = spm_vol(extopts.templates{end}); 
     Ywtpm = cat_vol_ctype(spm_sample_vol(Vtemplate(2),double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0)*255,'uint8');
-    Ywtpm = reshape(Ywtpm,dsize); spm_smooth(Ywtpm,Ywtpm,2*vxv);
-    Ywtpm = single(Ywtpm)/255;
+    if ~debug, clear Yy; end
+    Ywtpm  = single(reshape(Ywtpm,dsize)); spm_smooth(Ywtpm,Ywtpm,2*vxv); Ywtpm = cat_vol_ctype(Ywtpm); 
     Yl1    = cat_vol_resize(Yl1  ,'reduceBrain',vx_vol,round(4/mean(vx_vol)),BB.BB);
     Ywtpm  = cat_vol_resize(Ywtpm,'reduceBrain',vx_vol,round(4/mean(vx_vol)),BB.BB);
-    if ~debug, clear Yy; end
     
     LASmod = min(2,max(1,mean((Ym( NS(Yl1,LAB.BG) & Yg<0.1 & Ydiv>-0.05  & Ycls{1}>4)) - 2/3) * 8)); % do not reduce LASstr 
   end
@@ -191,14 +206,17 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   %% final tissue maps:  Ycm = CSF, Ygm = GM, Ywm = WM 
   Ysc = Ycp & Yb & Ycls{3}>192 & ~Ybv & Ym<0.45 & Yg<0.1;
   Ycm = Ycp & Yb & Ycls{3}>192 & ~Ybv & (Yb | Ym>1/6) & Ym<0.45 & Yg<0.25 & Ym>0; % & Ydiv>-0.05;
+  if ~debug, clear Ycp; end 
   %Ycm = Ycm | (Yb & (Ym-max(0,Ydiv))<0.5); 
   Ywm = (Ysw | Ycls{2}>252 | ((Ycd-Ydiv)>2 & Ydiv<0 & Ym>0.9+LASstr*0.05 & Yb) | ... % save WM 
         ((Ycd-Ydiv.*Ycd)>4 & (Ydiv<-0.01) & Yb & Ym>0.5 & Ybd<20 & Ycd>2) ) & ...
         ... ((Ycd-Ydiv*5)>3 & (Ydiv<-0.01 & (Yg + max(0,0.05-Ycd/100))<0.1) & Yb & Ym>0.4 & Ybd<20 & Ycd>2.5) ) & ... % further WM
         ~Ybv & Yb & Ybd>1 & (Ycd>1.0 | (Yvt & Yp0>2.9)) & (Yg+Ydiv<(Ybd/50) | (Ydiv-Ym)<-1); % Ybd/800 + Ycd/50
+  if ~debug, clear Ysw; end 
   Ygm = ~Yvt & Ybb & ~Ybv & ~Ywm & ~Ycm & Ycd>0.5 & (Ym-Ydiv-max(0,2-Ycd)/10)<0.9 & ... (Ym+Ydiv)>0.5 & ... ~Ysk & 
         (Ycls{1}>4 | (Ym>0.7 & Ycls{3}>64) | Ycd<(Ym+Ydiv)*3 ) & ...
         smooth3(Yg>(Ybd/800) & Ycls{2}<240 )>0.6; % avoid GM next to hard boundies in the middle of the brain
+  if ~debug, clear Ybv Yvt; end 
   Ygx = Ybb & ~Ycm & ~Ywm & Ym>1/3 & Ym<2.8/3 & Yg<0.4 & (Ym-Ydiv)>1/3 & (Ym-Ydiv)<1; Ygx(smooth3(Ygx)<0.5) = 0;
   Ygm = Ygm | Ygx; clear Ygx;
   Ygm = Ygm | (Ym>1.5/3 & Ym<2.8/3 & ~Ywm & ~Ycm & Ybb);
@@ -229,8 +247,10 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ybv2 = Ycls{5}>2 & Ym<0.7 & Ym>0.3 & Yb & (... 
            ((Ylhp+Ybd/2)<cleanupdist*6 & (Yrhp+Ybd/2)<cleanupdist*6) | ... % between the hemispheres next to skull                 
            ((Ycbp+Ybd/2)<cleanupdist*8 & (Ycbn+Ybd/2)<cleanupdist*8));     % between cerebrum and cerebellum next to hull
+    if ~debug, clear Ycbn Ylhp Yrhp; end 
     Ybv2 = smooth3(Ybv2)>0.5;
     Ybvv = (Ym-max(0,6-abs(Ycbp-6))/50)<0.6 & Ym>0.4 & Yb & Ycbp<8 & Ycbp>1;
+    if ~debug, clear Ycbp; end 
     
     %% subcortical map refinements
     THth = 0.8 - LASstr*0.6; %0.5; % lower more thalamus
@@ -256,7 +276,8 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ybwm = (Ym-Ydiv*4)>0.9 & Ycd>3 & Yg>0.05; %Ydiv<-0.04 & Ym>0.75 & Ycd>3;
     Ybcm = Ydiv>0.04 & Ym<0.55 & Yg>0.05;
     %% correction 1 of tissue maps
-    Ywmtpm = (Ywtpm.*Ym.*(1-Yg-Ydiv).*cat_vol_morph(NS(Yl1,1).*Ybd/5,'e',1))>0.6; % no WM hyperintensities in GM!
+    Ywmtpm = ( single( Ywtpm )/255 .*Ym.*(1-Yg-Ydiv).*cat_vol_morph(NS(Yl1,1).*Ybd/5,'e',1))>0.6; % no WM hyperintensities in GM!
+    if ~debug, clear Ywtpm; end
     %
     Ygm = Ygm | (Yss & ~Yvt & ~Ycx & ~Ybv2 & ~Ycwm & ~(Yccm | Ybcm));
     Ygm = Ygm & ~Ywmtpm & ~Ybvv; % no WMH area
@@ -264,7 +285,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
     Ywmtpm(smooth3(Ywmtpm & Ym<11/12)<0.5)=0;
     Ywm = Ywm & ~Ywmtpm & ~Ybvv & ~Yss; % no WM area
     Ycm = Ycm | ( (Ycx | Yccm | Ybcm) & Yg<0.2 & Ym>0 & Ydiv>-0.05 & Ym<0.3 & Yb ) | Ybvv;
-    if ~debug, clear Ycwm Yccm Ycd; end
+    if ~debug, clear Ycwm Yccm Ycd Ybvv; end
     % mapping of the brainstem to the WM (well there were some small GM
     % structures, but the should not effect the local segmentation to much.
     Ybs = cat_vol_morph(NS(Yl1,LAB.BS) & Ym<1.2 & Ym>0.9 & Yp0>2.5,'c',2*vxv) & Ym<1.2 & Ym>0.9 & Yp0>1.5;
@@ -275,14 +296,26 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   
   % back to original resolution for full bias field estimation
-  [Ycm,Ygm,Ywm]      = cat_vol_resize({Ycm,Ygm,Ywm},'dereduceBrain',BB); % ,Ygw
-  [Yvt,Yb,Yss,Ybb,Ysc,Ybs,Ybv2] = cat_vol_resize({Yvt,Yb,Yss,Ybb,Ysc,Ybs,Ybv2},'dereduceBrain',BB);
-  [Ym,Yp0,Yl1] = cat_vol_resize({Ym,Yp0,Yl1},'dereduceBrain',BB);
-  [Ybd,Ybvv] = cat_vol_resize({Ybd,Ybvv},'dereduceBrain',BB);
-  [Yg,Ydiv] = cat_vol_resize({Yg,Ydiv},'dereduceBrain',BB);
-  [Ywd] = cat_vol_resize(Ywd,'dereduceBrain',BB); % Ysk
-  Ycls=Yclso; Ysrc=Ysrco; 
-  clear Yclso Ysrco Ybv;
+  Ycls = Yclso; clear Yclso;
+  Ycm  = cat_vol_resize(Ycm  , 'dereduceBrain' , BB); 
+  Ygm  = cat_vol_resize(Ygm  , 'dereduceBrain' , BB); 
+  Ywm  = cat_vol_resize(Ywm  , 'dereduceBrain' , BB); 
+  
+  Yvt  = cat_vol_resize(Yvt  , 'dereduceBrain' , BB); 
+  Yb   = cat_vol_resize(Yb   , 'dereduceBrain' , BB); 
+  Yss  = cat_vol_resize(Yss  , 'dereduceBrain' , BB); 
+  Ybb  = cat_vol_resize(Ybb  , 'dereduceBrain' , BB); 
+  Ysc  = cat_vol_resize(Ysc  , 'dereduceBrain' , BB); 
+  Ybs  = cat_vol_resize(Ybs  , 'dereduceBrain' , BB); 
+  Ybv2 = cat_vol_resize(Ybv2 , 'dereduceBrain' , BB); 
+  
+  Ym   = cat_vol_resize(Ym   , 'dereduceBrain' , BB); 
+  Yp0  = cat_vol_resize(Yp0  , 'dereduceBrain' , BB); 
+  Yl1  = cat_vol_resize(Yl1  , 'dereduceBrain' , BB); 
+  Ybd  = cat_vol_resize(Ybd  , 'dereduceBrain' , BB);
+  Yg   = cat_vol_resize(Yg   , 'dereduceBrain' , BB);
+  Ydiv = cat_vol_resize(Ydiv , 'dereduceBrain' , BB);
+  Ywd  = cat_vol_resize(Ywd  , 'dereduceBrain' , BB); 
   
   if debug>1
     try %#ok<TRYNC> % windows requires this... i don't know why ... maybe the file size
@@ -302,7 +335,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   % CSF is problematic in high contrast or skull-stripped image should 
   % not be used here, or in GM peak estimation
   mres = 1.1; 
-  stime = cat_io_cmd('  Estimate local tissue thresholds','g5','',verb,stime); dispc=dispc+1;
+  stime = cat_io_cmd('  Estimate local tissue thresholds (WM)','g5','',verb,stime); dispc=dispc+1;
   Ysrcm = cat_vol_median3(Ysrc.*Ywm,Ywm,Ywm); 
   rf    = [10^5 10^4];
   T3th3 = max(1,min(10^6,rf(2) / (round(T3th(3)*rf(1))/rf(1))));
@@ -331,14 +364,17 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
      Ygi = cat_vol_approx(Ygi,'nh',resTB.vx_volr,2); Ygi = cat_vol_smooth3X(Ygi,2*LASfs);
      Ygi = Ygw4 .* max(eps,cat_vol_resize(Ygi,'dereduceV',resTB)); 
   end
+  if debug==0; clear Ygw2 Ygw3 Ygw4; end
   Yi(Yi==0) = Ygi(Yi==0); 
-  if debug==0; clear Ygw2; end
   Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); Yi = cat_vol_smooth3X(Yi,2*LASfs); 
   Ylab{2} = max(eps,cat_vol_resize(Yi,'dereduceV',resT2)); 
  % Ylab{2} = Ylab{2} .* mean( [median(Ysrc(Ysw(:))./Ylab{2}(Ysw(:))),1] ); 
-  if debug==0; clear Ysw; end
+  if debug==0; clear Ysw Yi; end
 
+  
+  
   %% update GM tissue map
+  %stime = cat_io_cmd('  Update tissues maps','g5','',verb,stime); dispc=dispc+1;
   %Ybb = cat_vol_morph((Yb & Ysrc./Ylab{2}<(T3th(1) + 0.25*diff(T3th(1:2))) & Ydiv<0.05) | Yp0>1.5,'lo',1);
   Ygm(Ysrc./Ylab{2}>(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3))=0; % correct GM mean(T3th([2:3,3]))/T3th(3) 
   Ygm(Ysrc./Ylab{2}<(T3th(2) + 0.75*diff(T3th(2:3)))/T3th(3) & ...
@@ -347,11 +383,14 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ywmd2 = cat_vbdist(single(Ywm),Yb);
   Ygx = Ywmd2-Ym+Ydiv>0.5 & Ym+0.5-Ydiv-Yg-Ywmd2/10>1/3 & ~Ybv2 & ... low intensity tissue
     ~(Ym-min(0.2,Yg+Ywmd2/10-Ydiv)<1/4) & Yg<Ylab{2}/T3th(3)*0.3 & Ysrc<Ylab{2}*0.9; % no real csf
+  if debug==0; clear Ywmd2; end
   Ygx(smooth3(Ygx)<0.5)=0; 
   Ygm = ~Ywm & (Ygm | Ygx); % correct gm (intensity based)
   Ygx = (single(Ycls{1})/255 - abs(Ydiv) + min(0,Ydiv) - Yg)>0.5 & ~Ywm;
   Ygx(smooth3(Ygx)<0.5)=0; 
   Ygm = Ygm | Ygx; % correct gm (spm based)
+  if debug==0; clear Ygx; end
+  
   %%
   Ycm = ~Ygm & ~Ywm & ~Ybv2 & Yg<0.6 & (Ycm | (Yb & (Ysrc./Ylab{2})<((T3th(1)*0.5 + 0.5*T3th(2))/T3th(3)))); 
   %
@@ -362,21 +401,24 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
         Ysrc./Ylab{2}<T3th(1)/T3th(3);                                                          % but do not trust the brain mask!
   Ycp(smooth3(Ycp)>0.4)=1;                                                                      % remove some meninges
   Ycd = cat_vbdist(single(Ycp),~Ycp,vx_vol);  
+  if debug==0; clear Ycp; end
   %%
   Ygm = Ygm & ~Ycm & ~Ywm & Ywd<5; %  & ~Ybvv  & ~Ysk
-  
   Ygm = Ygm | (NS(Yl1,1) & Ybd<20 & (Ycd-Ydiv)<2 & Ycls{1}>0 & ~Ycm & Ybb & Ym>0.6 & Yg<max(0.5,1-Ybd/30)); 
+  if debug==0; clear Ybd Ycd; end
   Ygm = Ygm & (Yg<0.1 | Ysrc./Ylab{2}<(T3th(2)*1/3+2/3*T3th(3))/T3th(3)); % outer high intensity GM
   %
   if LABl1
     Ygm = (Ygm | Yss) & ~Ycm & cat_vol_morph(~Ybs | ~Yvt,'e');
   end
+  if debug==0; clear Yvt Yss; end
   Ybb = cat_vol_morph(smooth3(Ygm | Ywm | Yp0>1.5 | (Ym>1.2/3 & Ym<3.1/3 & Yb))>0.6,'lo',min(1,vxv)); % clear Yp0 Yvt
   Ygm(~Ybb)=0; Ygm(smooth3(Ygm)<0.3)=0;
   Ygm(smooth3(Ygm)>0.4 & Ysrc./Ylab{2}>mean(T3th(1)/T3th(2)) & Ysrc./Ylab{2}<(T3th(2)*0.2+0.8*T3th(3)))=1;
-  if debug==0; clear Ybb Ybd Yvt Ybvv Ycp Ycd Yl1 Yss; end %Ydiv Yg
+  if debug==0; clear Ybb Yl1; end %Ydiv Yg
 
   
+  stime = cat_io_cmd('  Estimate local tissue thresholds (GM)','g5','',verb,stime); dispc=dispc+1;
   %% GM
 %  Yi = (Ysrc./Ylab{2} .* Ygm , Ysrc./Ylab{2}.*Ywm.*Ybs.*(T3th(2)+0.8*diff(T3th(2:3)))/T3th(3));
 %  Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); 
@@ -384,24 +426,32 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Yi = round(Yi*rf(2))/rf(2);
  % Yi(Ybv2) = Ysrc(Ybv2)./Ylab{2}(Ybv2) .* T3th(2)/mean(T3th(1:2)); % ????
   Yi(Ybs)  = Ysrc(Ybs)./Ylab{2}(Ybs)   .* T3th(2)/T3th(3); 
+  if debug==0; clear Ybs; end
   Yi = cat_vol_median3(Yi,Yi>0.5,Yi>0.5); 
   Ycmx = smooth3(Ycm & Ysrc<(T3th(1)*0.8+T3th(2)*0.2))>0.9; Tcmx = mean(Ysrc(Ycmx(:))./Ylab{2}(Ycmx(:)))*T3th(3);
   Yi(Ycmx) = Ysrc(Ycmx)./Ylab{2}(Ycmx)  .* T3th(2)/Tcmx; 
+  if debug==0; clear Ycm Ycmx; end
   %Yii =  Ysrc./Ylab{2} .* Ycm * T3th(2) / cat_stat_nanmedian(Ysrc(Ycm(:))); 
   [Yi,Yii,Ybgx,resT2] = cat_vol_resize({Yi,Ylab{2}/T3th(3),Ycls{6}>240},'reduceV',vx_vol,1,32,'meanm');
   for xi=1:2*LASi, Yi = cat_vol_localstat(Yi,Yi>0,3,1); end
   Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,2); 
   Yi = min(Yi,Yii*(T3th(2) + 0.90*diff(T3th(2:3)))/T3th(3)); 
   Yi(Ybgx) = Yii(Ybgx)*cat_stat_nanmean(Yi(~Ybgx(:))); 
+  if debug==0; clear Yii Ybgx; end
   %%
   Yi = cat_vol_smooth3X(Yi,LASfs); 
-  Ylab{1} = cat_vol_resize(Yi,'dereduceV',resT2).*Ylab{2};   
+  Ylab{1} = cat_vol_resize(Yi,'dereduceV',resT2).*Ylab{2}; 
+  if debug==0; clear Yi; end
   %Ylab{1}(Ygm) = Ysrc(Ygm); Ylab{1} = cat_vol_smooth3X(Ylab{1},LASfs); % can lead to overfitting
   Ycm = (single(Ycls{3})/255 - Yg*4 + abs(Ydiv)*2)>0.5 &  Ysrc<(Ylab{1}*mean(T3th([1,1:2]))/T3th(2)); %Ycm & Ysrc<(Ylab{1}*mean(T3th(1:2))/T3th(2)) & Yg<0.1;
+  if debug==0; clear Ydiv; end
   Ycm(smooth3(Ycm)<0.5)=0;
   Ycm(Yb & cat_vol_morph(Ysrc<mean(T3th(1:2)),'o'))=1;
   
+  
+  
   %% CSF & BG 
+  stime = cat_io_cmd('  Estimate local tissue thresholds (CSF/BG)','g5','',verb,stime); dispc=dispc+1;
   if exist('Ygw4','var')
     Ynb = Ygw4 & cat_vol_morph(smooth3(Ycls{6})>128 | (~Yb & Yg<=0.001),'e',4*vxv); 
   else
@@ -425,16 +475,29 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Yxa = cat_vol_approx(Yx ,'nh',resT2.vx_volr,16); %+(Yb>0).*stdYbc  + Yc.*meanYb/max(eps,meanYc)
   Yca = cat_vol_approx(Yc + min(max( meanYx + stdYbc , meanYc - stdYbc ),...
     Yx.*meanYc/max(eps,meanYx)),'nh',resT2.vx_volr,16); % + Yb.*meanYc/max(eps,meanYb)
+  if ~debug, clear Yc Yx; end
   Yca = Yca*0.7 + 0.3*max(mean(Yca(:)),T3th(1)/T3th(3));
   %%
   Yxa = cat_vol_smooth3X(Yxa,LASfs*2); 
   Yca = cat_vol_smooth3X(Yca,LASfs*2); 
   Ylab{3} = cat_vol_smooth3X(cat_vol_resize(Yca,'dereduceV',resT2).*Ylab{2},LASfs*2);  
   Ylab{6} = cat_vol_smooth3X(cat_vol_resize(Yxa,'dereduceV',resT2).*Ylab{2},LASfs*2);
-  if ~debug, clear Yxa Yca Yx Yc Y Ydiv; end
+  if ~debug, clear Yxa Yca; end
+  
+  
+  if exist('resT0','var')
+    Ycls = Yclso2; clear Yclso2; 
+    Ysrc = Ysrco2; clear Ysrco2; 
+    for i=[1 2 3 6], Ylab{i}  = cat_vol_resize (Ylab{i} , 'dereduceV' , resT0 ); end
+    for i=1:6, Ycls{i}  = cat_vol_resize( Ycls{i} , 'dereduceV' , resT0 ); end
+    Yb = cat_vol_resize( single(Yb) , 'dereduceV' , resT0 )>0.5;
+  end
+  
+  
   
   %% local intensity modification of the original image
   % --------------------------------------------------------------------
+  stime = cat_io_cmd('  Intensity transformation','g5','',verb,stime); dispc=dispc+1;
   Yml = zeros(size(Ysrc)); 
   Yml = Yml + ( (Ysrc>=Ylab{2}                ) .* (3 + (Ysrc-Ylab{2}) ./ max(eps,Ylab{2}-Ylab{3})) );
   Yml = Yml + ( (Ysrc>=Ylab{1} & Ysrc<Ylab{2} ) .* (2 + (Ysrc-Ylab{1}) ./ max(eps,Ylab{2}-Ylab{1})) );
@@ -470,10 +533,16 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   
   
   %% class correction and second logical class map Ycls2
+  if exist('resT0','var')
+    Ywm = cat_vol_resize( single(Ywm) , 'dereduceV' , resT0 )>0.5;
+    Ygm = cat_vol_resize( single(Ygm) , 'dereduceV' , resT0 )>0.5;
+    Yp0 = cat_vol_resize( Yp0 , 'dereduceV' , resT0 );
+  end
   Ynwm = Ywm & ~Ygm & Yml/3>0.95 & Yml/3<1.3;
   Ynwm = Ynwm | (smooth3(Ywm)>0.6 & Yml/3>5/6); Ynwm(smooth3(Ynwm)<0.5)=0;
   Yngm = Ygm & ~Ywm & Yml/3<0.95; Yngm(smooth3(Yngm)<0.5)=0;
   Yncm = ~Ygm & ~Ywm & ((Yml/3)>1/6 | Ycls{3}>128) & (Yml/3)<0.5 & Yb;
+  clear Ywm Ygm; 
   Ycls{2} = cat_vol_ctype(single(Ycls{2}) + (Ynwm & ~Yngm & Yp0>=1.5)*256 - (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
   Ycls{1} = cat_vol_ctype(single(Ycls{1}) - (Ynwm & ~Yngm & Yp0>=1.5)*256 + (Yngm & ~Ynwm & Yp0>=2)*256,'uint8');
   %Ycls{3} = cat_vol_ctype(single(Ycls{3}) - ((Ynwm | Yngm) & Yp0>=2)*256,'uint8');
@@ -481,7 +550,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ycls{1} = cat_vol_ctype(single(Ycls{1}) - (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls{2} = cat_vol_ctype(single(Ycls{2}) - (Yb & Yml<1.1 & ~Ynwm & ~Yngm)*256,'uint8');
   Ycls2 = {Yngm,Ynwm,Yncm};
-  clear Yngm Ynwm Yncm;
+  clear Yngm Ynwm Yncm Yb;
   
   %%
   Yml = Yml/3;

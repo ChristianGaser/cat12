@@ -14,17 +14,21 @@
  * where NaN is not available. With setnan=0, the result of NAN voxel in 
  * D is changed to INF.
  * 
- *  [D,I] = cat_vol_eidist(B,L,[vx_vol,euclid,csf,setnan,verb])
+ *  [D,I,Dw] = cat_vol_eidist(B,L,[vx_vol,euclid,csf,setnan,verb])
  * 
- *  D         distance map   (3d-single-matrix)
+ *  D         Euclidean distance map to the nearest Boundary point in the
+ *            Eikonal field (3d-single-matrix)
+ *            (air distance)
+ *  D         Euclidean distance map in the Eikonal field (3d-single-matrix)
+ *            (way length) 
  *  I         index map      (3d-uint32-matrix)
  *  B         boundary map   (3d-single-matrix)
  *  L         speed map      (3d-single-matrix)
  *  vx_vol    voxel size     (1x3-double-matrix): default=[1 1 1]
  *            ... not tested yet
  *  csf       option         (1x1-double-value): 0-no; 1-yes; default=1
- *  euclid    option         (1x1-double-value): 0-no; 1-yes; default=1
- *            output euclidean or speed map 
+ *      euclid    option         (1x1-double-value): 0-no; 1-yes; default=1
+ *                output euclidean or speed map 
  *  setnan    option         (1x1-double-value): 0-no; 1-yes; default=1
  *  verb      option         (1x1-double-value): 0-no, 1-yes; default=0
  * 
@@ -107,11 +111,11 @@ int sub2ind(int x, int y, int z, int s[]) {
   
   return (z)*s[0]*s[1] + (y)*s[0] + (x);
 }
-
+/*
 float min(float a, float b) {
   if (a<b) return a; else return b; 
 }
-
+*/
 float fpow(float x, float y) {
   return (float) pow((double) x,(double) y); 
 }
@@ -173,7 +177,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /* 
    * Check input 
    */
-  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_eidist:  not enought input elements\n");
+  if (nrhs<2) mexErrMsgTxt("ERROR:cat_vol_eidist: not enought input elements\n");
   if (nrhs>7) mexErrMsgTxt("ERROR:cat_vol_eidist: to many input elements.\n");
   if (nlhs>3) mexErrMsgTxt("ERROR:cat_vol_eidist: to many output elements.\n");
   if (mxIsSingle(prhs[0])==0)
@@ -271,7 +275,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   plhs[1] = mxCreateNumericArray(dL,sL,mxUINT32_CLASS,mxREAL); 
   float *D         = (float *)mxGetPr(plhs[0]);        
   unsigned int *I  = (unsigned int *)mxGetPr(plhs[1]);  
-  
+  if ( nlhs>2 ) {
+    plhs[2]   = mxCreateNumericArray(dL,sL,mxUINT32_CLASS,mxREAL); 
+    float *Dw = (float *)mxGetPr(plhs[2]);        
+  }
  
   /*
    * Display Initial Parameter
@@ -382,13 +389,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                ( csf==0 || L[ni]<=(L[i]+0.1) ) ) { 
 
             /* new distance */
-            DIN = fabs(D[i]) + ND[n] / (FLT_MIN + L[ni]);
+            DIN  = fabs(D[i]) + ND[n] / (FLT_MIN + L[ni]);
+            DINe = fabs(D[i]) + ND[n];
 
             /* use DIN, if the actual value is larger */
             if ( fabs(D[ni])>DIN ) {
               if (D[ni]>0.0) nC++;
-              D[ni] = -DIN; 
-              I[ni] = I[i];
+              D[ni]  = -DIN; 
+              I[ni]  = I[i];
+              Dw[ni] = DINe;
             }
           }
         }

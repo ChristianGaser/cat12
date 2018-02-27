@@ -113,10 +113,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     %===================================================================
     case {'lab' 'l'}
     % try to catch errors, if there is no object
-      try  
-        [ROI,num]  = spm_bwlabel(uint8(vol),6);
+      %try  
+        [ROI,num]  = spm_bwlabel(real(vol),6);
         
-        if numel(num)>0
+        if num>0
           num        = hist( ROI( ROI(:)>0 ) , 1:num);
           [num,numi] = sort(num,'descend');
           vol        = ROI==numi(1);	
@@ -134,10 +134,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
             
           end
         end
-      catch %#ok<CTCH>
+     % catch %#ok<CTCH>
         %vol = [];
         %warning('MATLAB:cat_vol_morph:NoObject','WARNING: cat_vol_morph - lab - no object!');
-      end 
+     % end 
 
       
     
