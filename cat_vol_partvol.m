@@ -96,13 +96,16 @@ function [Ya1,Ycls,YBG,YMF] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,
 %   LAB.HI = 23; % WM hyperintensities
 %   LAB.PH = 25; % Gyrus parahippocampalis
 
+  def.uhrlim = 0.7; 
+  extopts = cat_io_checkinopt(extopts,def); 
+
   LAB     = extopts.LAB;
   BVCstr  = extopts.BVCstr; 
   WMHCstr = extopts.WMHCstr; 
   verb    = extopts.verb-1;
   debug   = extopts.verb>2;
   PA      = extopts.cat12atlas;
-  vx_res  = mean([max(vx_vol) min(vx_vol)]); % cat_get_defaults('extopts.vx_res'); 
+  vx_res  = max( extopts.uhrlim , max( [ max(vx_vol) min(vx_vol) ] )); 
   
 
   %% map atlas to RAW space
