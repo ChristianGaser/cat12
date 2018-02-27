@@ -53,6 +53,12 @@ function varargout=cat_io_FreeSurfer(action,varargin)
   switch action
     %case 'FSatlas2cat'
     %  varargout{1} = cat_surf_FSannotation2CAT(varargin{1});
+    case 'fs2cat'
+      if isdir(varargin{1})
+        covertFS2CAT(varargin)
+      else
+        covertFS2CAT
+      end
     case 'gii2fs'
       if nargout==1
         varargout{1} = gii2fs(varargin{1}); 
@@ -82,7 +88,7 @@ function varargout=cat_io_FreeSurfer(action,varargin)
       write_surf(varargin{1}, varargin{2}.vertices, varargin{2}.faces);
     case 'read_surf'
       [varargout{1}.vertices,varargout{1}.faces] = read_surf(varargin{1}); 
-      varargout{1}.faces = varargout{1}.faces+1;   
+      % varargout{1}.faces = varargout{1}.faces+1;   
     case 'write_surf_data'
       write_curv(varargin{1},varargin{2});
     case 'read_surf_data'
@@ -94,38 +100,102 @@ function varargout=cat_io_FreeSurfer(action,varargin)
 
 end
 
-function job = getjob(job0,sel)
-  if isstruct(job0)
-    job = job0; 
-  else 
-    job.data = job0;
+function covertFS2CAT(varargin)
+%% convert surface data of one subject ... 
+  % start with the CS my add some other maps?
+  if ~exist('varargin','var') || isempty(varargin{1})
+    job.sdirs = spm_select(inf,'dir','Choose FreeSurfer subject directories!'); 
+  else
+    job.sdirs = varargin{1}.sdirs; 
   end
-  if ~isfield(job,'data') || isempty(job.data)
-    job.data = spm_select(inf,'any','Select surface','','',sel);
-  end
-  if isempty(job.data), return; end
-  
-  job.data  = cellstr(job.data);
-  if isfield(job,'cdata'), job.cdata = cellstr(job.cdata); end
-  if isfield(job,'cdata') && isfield(job,'data') && ...
-      numel(job.cdata) ~= numel(job.data)
-    error('cat_io_FreeSurfer:getjob:data','Number of surface meshes and textures have to be equivalent'); 
-  end
-  
-  for si=1:numel(job.data)
-    if isfield(job,'cdata')
-      [pp,ff,ee] = spm_fileparts(job.cdata{si});
+  job.sdirs = cellstr(job.sdirs); 
+
+  % default options
+  def.sides  = {'lh','rh'};           % developer: hemisspheres
+  def.offset = [-3.25 38.25 -20.5];   % developer: tranlation ... > affine transformation?
+  def.limit  = 300000;                % developer: reduce surfaces ... not realy
+  def.resdir = '';                    % ... prepare this somewere else ...
+  def.mri    = {};                    % ... convert these files to nifti (nu? & seg & atlas?)
+  def.surf   = {'thickness';'area';'curvature'}; % copy these surface datasets
+  job = checkinopt(job,def); 
+
+  for si=1:numel(sdirs)
+    %% get subject directory
+    if strcmp(job.sdirs{si}(end-4:end),'surf')
+      sdir = spm_fileparts(sdir{si}); 
+    elseif strcmp(job.sdirs{si}(end-7:end),'subjects')
+      sdir = cat_vol_findfiles(job.sdirs{si},'*',struct('depth',1)); 
     else
-      [pp,ff,ee] = spm_fileparts(job.data{si});
+      sdir = job.sdirs{si};
     end
-    def.fname{si} = strrep(fullfile(pp,[ff ee]),'.gii',''); 
+
+    %% get subject name
+    [FS_sujects,subname1,subname2] = spm_fileparts(sdir);
+    subname = [subname1,subname2]; 
+
+    for hi=1:numel(job.sides)
+      %%
+      Pwhite    = fullfile(sdir,'surf',sprintf('%s.white',job.sides{hi})); 
+      Ppial     = fullfile(sdir,'surf',sprintf('%s.pial',job.sides{hi})); 
+      PCcentral = fullfile(sdir,'surf',sprintf('%s.central.%s',job.sides{hi},subname)); 
+      PCwhite   = fullfile(sdir,'surf',sprintf('%s.white.%s',job.sides{hi},subname)); 
+      PCpial    = fullfile(sdir,'surf',sprintf('%s.pial.%s',job.sides{hi},subname)); 
+      PCpial    = fullfile(sdir,'surf',sprintf('%s.sphere.%s',job.sides{hi},subname)); 
+      PCpial    = fullfile(sdir,'surf',sprintf('%s.pial.%s',job.sides{hi},subname)); 
+
+      Swhite   = cat_io_FreeSurfer('read_surf',Pwhite);
+      Spial    = cat_io_FreeSurfer('read_surf',Ppial);
+      Scentral.vertices = Swhite.vertices/2 + Spial.vertices/2;
+      Scentral.faces    = Swhite.faces;
+      if 0 %job.limit
+        Scentral = reducepatch(patch(Scentral),job.limit); 
+      end
+      if ~isempty(job.offset)
+        Scentral.vertices = Scentral.vertices + repmat(job.offset,size(Scentral.vertices,1),1);
+        Swhite.vertices   = Swhite.vertices   + repmat(job.offset,size(Swhite.vertices,1),1);
+        Spial.vertices    = Spial.vertices    + repmat(job.offset,size(Spial.vertices,1),1);
+      end
+      save(gifti(Scentral),[PCcentral '.gii']); 
+      save(gifti(Swhite),[PCwhite '.gii']);
+      save(gifti(Spial),[PCpial '.gii']);
+
+      %clear Sinner Souter Scentral;
+    end
   end
-  
-  def.verb    = 0; 
-  def.delete  = 0; 
-  def.merge   = 0;
-  
-  job = cat_io_checkinopt(job,def);
+end
+
+function job = getjob(job0,sel)
+if isstruct(job0)
+job = job0; 
+else 
+job.data = job0;
+end
+if ~isfield(job,'data') || isempty(job.data)
+job.data = spm_select(inf,'any','Select surface','','',sel);
+end
+if isempty(job.data), return; end
+
+job.data  = cellstr(job.data);
+if isfield(job,'cdata'), job.cdata = cellstr(job.cdata); end
+if isfield(job,'cdata') && isfield(job,'data') && ...
+numel(job.cdata) ~= numel(job.data)
+error('cat_io_FreeSurfer:getjob:data','Number of surface meshes and textures have to be equivalent'); 
+end
+
+for si=1:numel(job.data)
+if isfield(job,'cdata')
+[pp,ff,ee] = spm_fileparts(job.cdata{si});
+else
+[pp,ff,ee] = spm_fileparts(job.data{si});
+end
+def.fname{si} = strrep(fullfile(pp,[ff ee]),'.gii',''); 
+end
+
+def.verb    = 0; 
+def.delete  = 0; 
+def.merge   = 0;
+
+job = cat_io_checkinopt(job,def);
 end
 function varargout = gii2fs(varargin)
 % convert gifti surfaces to FreeSurfer 
@@ -380,7 +450,9 @@ function [vertex_coords, faces] = read_surf(fname)
     faces = fread(fid, fnum*3, 'int32') ;
     faces = reshape(faces, 3, fnum)' ;
   end
-  if min(faces(:))==0, faces=faces+1; end
+  %if min(faces(:))==0, 
+  faces=faces+1; %end
+  %faces = min(faces,numel(vertex_coords)/3); 
   vertex_coords = reshape(vertex_coords, 3, vnum)' ;
   fclose(fid) ;
 end

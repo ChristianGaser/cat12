@@ -44,13 +44,36 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
 % $Id$
 
 
-  NS   = @(Ys,s) Ys==s | Ys==s+1;
-  LAB  = opt.LAB; 
+  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
+
+  
+  def.uhrlim = 0.7; 
+  opt = cat_io_checkinopt(opt,def); 
+  
+  
+  % general resolution limition 
+  if nargout>1, Yl1o = Yl1; end
+  if any( vx_vol < opt.uhrlim/2 )
+    [Ysrc,resT0] = cat_vol_resize( Ysrc , 'reduceV' , vx_vol , opt.uhrlim , 64 ); 
+    for ci=[1,2,3,5]
+      Ycls{ci} = cat_vol_resize( Ycls{ci}, 'reduceV' , vx_vol , opt.uhrlim , 64 ); 
+    end
+    YMF = cat_vol_resize( single(YMF) , 'reduceV' , vx_vol , opt.uhrlim , 64 )>0.5; 
+    Yb  = cat_vol_resize( single(Yb)  , 'reduceV' , vx_vol , opt.uhrlim , 64 )>0.5; 
+    Yl1 = cat_vol_resize( Yl1         , 'reduceV' , vx_vol , opt.uhrlim , 64 , 'median' ); 
+  end
+    
+  
+  NS   = @(Ys,s) Ys==s | Ys==s+1;                  % side alignment function
+  LAB  = opt.LAB;                                  % cat atlas regions
   voli = @(v) (v ./ (pi * 4./3)).^(1/3);           % volume > radius
   brad = double(voli(sum(Yb(:)>0).*prod(vx_vol))); % distance and volume based brain radius (brad)
-  Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255;
+  Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255; 
+  Ycsf = single(Ycls{3})/255/3;
+  Ymg  = single(Ycls{5})/255; clear Ycls; 
   rvol = [sum(round(Yp0(:)*3)==1), sum(round(Yp0(:)*3)==2), sum(round(Yp0(:)*3)==3)]/sum(round(Yp0(:)*3)>0);
   %noise   = cat_stat_nanstd(Ym(cat_vol_morph(cat_vol_morph(Ym>0.95 & Ym<1.05,'lc',1),'e')));
+  
   
   %% set different paremeters to modifiy the stength of the skull-stripping 
   %gc.n = max(0.05,min(0.1,noise));
@@ -68,27 +91,43 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   % smoothing parameter
   gc.s = 0.2  + 0.30*min(0.6,opt.gcutstr);                   % 0.5;    smoothing parameter   - higher > less tissue
   
+  
   if opt.verb, fprintf('\n'); end
   stime = cat_io_cmd('  WM initialisation','g5','',opt.verb); dispc=1;
-  %% init: go to reduces resolution 
-  [Ym,Yl1,YMF,BB] = cat_vol_resize({Ysrc,Yl1,YMF},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb);
-  [Yp0,Ywm,Ygm,Ycsf,Ymg,Yb] = cat_vol_resize({Yp0,single(Ycls{2})/255,single(Ycls{1})/255,...
-    single(Ycls{3})/255,single(Ycls{5})/255,Yb},'reduceBrain',vx_vol,round(4/mean(vx_vol)),Yb);
-  vxd  = max(1,1/mean(vx_vol)); 
-  Ymg = Ymg>0.05 & Ym<0.45; 
   
-  clear Ycls
-  Ybo=Yb;
+  
+  %% init: remove empty space for speedup
+  [Ym,BB] = cat_vol_resize({Ysrc} , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb); 
+  if ~debug, clear Ysrc; end 
+  Yl1     = cat_vol_resize({Yl1}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  YMF     = cat_vol_resize({YMF}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  Yp0     = cat_vol_resize({Yp0}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  Ycsf    = cat_vol_resize({Ycsf} , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  Ymg     = cat_vol_resize({Ymg}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  Yb      = cat_vol_resize({Yb}   , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  vxd     = max(1,1/mean(vx_vol)); 
+  Ymg     = Ymg>0.05 & Ym<0.45; 
+  if debug, Ybo=Yb; end
+
+  
   %% initial WM+ region
-  Yb=Ybo;
+  if debug, Yb=Ybo; end
   YHDr = cat_vol_morph(Yl1>20 | Yl1<=0,'e',vxd*1);
-  YGD  = cat_vbdist(max(0,1-Yp0),true(size(Yb)),vx_vol);   % something like the GWM depth/thickness
-  YBD  = cat_vbdist(max(0,1-Yp0*3),true(size(Yb)),vx_vol./mean(vx_vol)); % brain depth, (simple) sulcal depth
+  
+  % YGD .. something like the GWM depth/thickness
+  % YBD .. brain depth, (simple) sulcal depth
+  [Yp0r,resT1] = cat_vol_resize(Yp0,'reduceV',vx_vol,1,32); 
+  YGD  = cat_vbdist(max(0,1-Yp0r)   , true(size(Yp0r)) , resT1.vx_volr); 
+  YBD  = cat_vbdist(max(0,1-Yp0r*3) , true(size(Yp0r)) , resT1.vx_volr./mean(resT1.vx_volr)); 
+  YGD  = cat_vol_resize(YGD,'dereduceV',resT1); 
+  YBD  = cat_vol_resize(YBD,'dereduceV',resT1); 
+  clear resT1; 
+  
   Yb   = Yb>0.25 & Ym>2.5/3 & Ym<gc.h/3 & Yl1<21 & Yb & YGD>gc.gd & YBD>gc.bd;  % init WM 
   Yb   = Yb | (Ym>2/3 & Ym<gc.h/3 & (YBD>10 | (YBD>2 & (NS(Yl1,LAB.CB) | NS(Yl1,LAB.HI)))));
   [Ybr,Ymr,resT2] = cat_vol_resize({single(Yb),Ym},'reduceV',1,4./vx_vol,32); 
-  Ybr  = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',2)); % large ventricle closing
-  Ybr  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.9; 
+  Ybr  = Ybr | (Ymr<0.8 & cat_vol_morph(Ybr,'lc',2)); clear Ymr; % large ventricle closing
+  Ybr  = cat_vol_resize(cat_vol_smooth3X(Ybr,2),'dereduceV',resT2)>0.9;
   
   % if no largest object could be find it is very likeli that initial normalization failed
   if sum(Yb(:) & mod(Yl1(:),2)==0)==0 || sum(Yb(:) & mod(Yl1(:),2)==1)==0
@@ -100,9 +139,11 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
          cat_vol_morph(Yb & mod(Yl1,2)==1,'l') | ...
          (Ybr & Yp0>1.9/3 & Ym<3.5 & (NS(Yl1,LAB.CB))) | ... 
          (Ybr & Yp0<1.5/3 & Ym<1.5); 
+  if ~debug, clear Ybr Yl1 Yp0; end
   Yb  = smooth3(Yb)>gc.s;
   Yb(smooth3(single(Yb))<0.5)=0;                           % remove small dots
   Yb  = single(cat_vol_morph(Yb,'labclose',gc.f));         % one WM object to remove vbs
+  
   
   %% region growing GM/WM (here we have to get all WM gyris!)
   stime = cat_io_cmd('  GM region growing','g5','',opt.verb,stime); dispc=dispc+1;
@@ -112,6 +153,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb(smooth3(single(Yb))<gc.s)=0;
   Yb = single(Yb | (cat_vol_morph(Yb,'labclose',vxd) & Ym<1.1));
 
+  
   %% region growing CSF/GM 
   stime = cat_io_cmd('  GM-CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Yb(~Yb & (YHDr | Ym<gc.l/3 | Ym>gc.h/3) | Ymg)=nan; % | YBD<1
@@ -122,18 +164,18 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb  = single(Yb | (cat_vol_morph(Yb ,'labclose',1) & Ym<1.1));
   
   %% region growing - add CSF
-  Yb(~Yb & (YHDr | Ym<1/3 | Ym>gc.h/3) | Ymg)=nan; 
+  Yb(~Yb & (YHDr | Ym<1/3 | Ym>gc.h/3) | Ymg)=nan; if ~debug, clear Ymg; end
   [Yb1,YD] = cat_vol_downcut(Yb,Ym,-0.00+gc.c);
   Yb(isnan(Yb) | YD>gc.d/2)=0; Yb(Yb1>0 & YD<gc.d)=1; 
   for i=1:2, Yb(smooth3(single(Yb))<gc.s)=0; end
   Yb  = single(cat_vol_morph(Yb,'o',1));
   Yb  = single(Yb | (cat_vol_morph(Yb ,'labclose',1) & Ym<1.1));
-  Ybox = Yb; 
   
   %% region growing - add CSF regions   
   stime = cat_io_cmd('  CSF region growing','g5','',opt.verb,stime); dispc=dispc+1;
   Ygr = cat_vol_grad(Ym,vx_vol); CSFth = mean(Ym(Ycsf(:)>0.8 & Ygr(:)<0.1));
   Ybb = smooth3( Ym<CSFth*0.9 | (Ym>1.5/3 & ~Yb) | (Ygr>0.15 & ~Yb))>0.5 | smooth3(Ycsf)<0.15; 
+  if ~debug, clear Yp0; end
   if std(Ybb(:))>0  % no ROI in low res images 
     if sum(Ybb(:)>0.5)>0 % Ybb is maybe empty 
       Ybb = cat_vol_morph( Ybb>0.5 ,'lc',vxd);
@@ -161,15 +203,21 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   Yb  = cat_vol_morph(Yb ,'labclose');
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,3./vx_vol); Yb = Yb>0.5 | (max(Yb,Ybs)>0.3 & Ym<0.4); % how wide
   Ybs = single(Yb)+0; spm_smooth(Ybs,Ybs,2./vx_vol); Yb = max(Yb,Ybs)>0.4; % final smoothing
+  clear Ybs; 
  
-  %%
-  Yb   = cat_vol_resize(Yb  ,'dereduceBrain',BB)>0.5;
-  Yl1  = cat_vol_resize(Yl1 ,'dereduceBrain',BB);
-    
+  %% go back to original resolution
+  Yb  = cat_vol_resize(Yb , 'dereduceBrain' , BB);
+  if exist('resT0','var')
+    Yb  = cat_vol_resize( single(Yb) , 'dereduceV' , resT0 )>0.5; 
+  end
+  
   %% update Yl1 with Yb
-  Yl1(~Yb)  = 0;
-  [tmp0,tmp1,Yl1] = cat_vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
-
+  if nargout>1
+    Yl1 = Yl1o; 
+    Yl1(~Yb) = 0;
+    [tmp0,tmp1,Yl1] = cat_vbdist(single(Yl1),Yl1==0 & Yb); clear tmp0 tmp1;
+  end
+  
   cat_io_cmd(' ','','',opt.verb,stime); 
 %    cat_io_cmd('cleanup',dispc,'',opt.verb);
 

@@ -1,5 +1,47 @@
 ------------------------------------------------------------------------
-r1283 | gaser | 2018-02-20 11:39:37
+r1284 | dahnke | 2018-02-27 16:34:30
+
+Changed paths:
+M       CHANGES.txt
+M       cat_io_FreeSurfer.m
+M       cat_main.m
+M       cat_main_LAS.m
+M       cat_main_gcut.m
+A       cat_stat_histth.m
+M       cat_surf_createCS.m
+M       cat_vol_eidist.c
+M       cat_vol_morph.m
+M       cat_vol_partvol.m
+M       cat_vol_pbt.m
+M       cat_vol_pbtp.cpp
+M       cat_vol_pbtp.mexmaci64
+A       cat_vol_pbtv.cpp
+A       cat_vol_pbtv.mexmaci64
+
+Fixed:    Corrected bug in "cat_morph_vol".
+New:      Added "fs2cat" function in "cat_io_FreeSurfer" to import 
+          FreeSurfer subjects partially.
+New:      Added equi-volume PBT routine "cat_vol_pbtv.cpp".
+Changed:  Updated equi-distance PBT routine "cat_vol_pbtp.cpp".
+Changed:  Memory optimization in "cat_main". 
+          Added detailed command line output of SPM preprocessing steps.
+Changed:  Added general resolution limit "job.extopts.uhrlim" for 
+          ultrahigh-resolution data in "cat_vol_gcut", "cat_vol_partvol" 
+          and "cat_vol_LAS".
+Changed:  Tiny changes in command line output in "cat_vol_nlmus". 
+Changed:  Added cleanup in "cat_vol_pbt" that is at least required for 
+          high-resolution data.
+Changed:  Added resolution adaption depending on the resolution of 
+          the input image, ie high-resolution volumes will create  
+          high resolution surfaces.  
+
+
+ 
+
+
+
+------------------------------------------------------------------------
+r1283 | gaser | 2018-02-20 11:40:00 +0100 (Di, 20 Feb 2018) | 12 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -12,6 +54,7 @@ M       cat_stat_check_cov.m
     up in cat_stat_check_cov.m
 (2) Changed: Added more CSF segmentation to brainmask in cat_main.m and 
     cat_main_gcut.m
+
 ------------------------------------------------------------------------
 r1282 | gaser | 2018-02-19 08:14:50 +0100 (Mo, 19 Feb 2018) | 6 lines
 
