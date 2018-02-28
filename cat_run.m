@@ -385,26 +385,18 @@ function vout = run_job(job)
 
   for subj=1:numel(job.channel(1).vols),
     % __________________________________________________________________
-    % Separation for old and new try-catch blocks of matlab. The new
-    % try-catch block has to be in a separate file to avoid an error.
-    % Both functions finally call cat_run_job.
-    % See also cat_run_newcatch and cat_run_newcatch.
+    % Error management with try-catch blocks
+    % See also cat_run_newcatch.
     % __________________________________________________________________
-    %if job.extopts.ignoreErrors
-      if cat_io_matlabversion>20072 
-        cat_run_newcatch(job,tpm,subj); 
+    if cat_io_matlabversion>20072 
+      cat_run_newcatch(job,tpm,subj); 
+    else
+      if job.extopts.APP == 1070
+        cat_run_job1070(job,tpm,subj); 
       else
-        % inactive because of unclear error messages
-        %cat_run_oldcatch(job,tpm,subj);
-        if job.extopts.APP == 1070
-          cat_run_job1070(job,tpm,subj); 
-        else
-          cat_run_job(job,tpm,subj); 
-        end
+        cat_run_job(job,tpm,subj); 
       end
-    %else
-    %  cat_run_job(job,tpm,subj);
-    %end
+    end
   end
 
   colormap(gray)

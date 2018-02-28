@@ -5,10 +5,10 @@ function varargout=cat_vol_resize(T,operation,varargin)
 %
 % Examples:
 %
-% - Resizing to the half resolution 
+% - Resizing to half image resolution 
 %
 %
-% - Resizing of the image resolution to an lower and more isotropic resolution:
+% - Resizing of image resolution to a lower and more isotropic resolution:
 %   [TIr,TIGr,Br,Gr,resTr] = cat_vol_resize({TI,TIG,single(B),G./TI},'reduceV',vx_vol,2,64); 
 %   TV = cat_vol_resize(TV,'dereduceV',resT);
 %
@@ -29,7 +29,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
   if nargin==0, help cat_vol_resize; return; end
   if isempty(T), varargout{1} = T; return; end
   if ndims(T)>2, TI=T; clear T; T{1}=TI; end %else varargout{1}=T; end 
-  if nargin<2, error('ERROR: cat_vol_resolution: not enought input!\n'); end
+  if nargin<2, error('ERROR: cat_vol_resolution: not enough input!\n'); end
 
   
   switch lower(operation)

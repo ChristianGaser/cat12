@@ -1,5 +1,31 @@
 ------------------------------------------------------------------------
-r1284 | dahnke | 2018-02-27 16:34:30
+r1285 | gaser | 2018-02-28 08:19:00
+
+Changed paths:
+M       CHANGES.txt
+M       cat_main.m
+M       cat_main_registration.m
+M       cat_run.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+D       cat_run_oldcatch.m
+M       cat_spm_preproc_run.m
+A       cat_spm_preproc_write8.m
+M       cat_vol_morph.m
+M       cat_vol_resize.m
+
+(1) Deleted: Removed cat_run_oldcatch.m
+(2) New: cat_spm_preproc_write8.m to obtain and write SPM12 segmentations.
+(3) Changed: Removed initial SANLM filtering in cat_run_job* because SPM12
+    segmentation approach is more stable with noisier data esp. in CSF.
+(4) Changed: Added detection of already skull-stripped data in 
+    cat_run_job1070.m.
+(5) Changed: Default skull-stripping with gcutstr=0 now uses mask with 
+    threshold of 0.5.
+(6) Changed: SANLM filtering in cat_main is now using whole brain.
+(7) Fixed: Order of GM/WM/CSF volume estimates is now correct.
+------------------------------------------------------------------------
+r1284 | dahnke | 2018-02-27 16:35:12 +0100 (Di, 27 Feb 2018) | 40 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -37,6 +63,7 @@ Changed:  Added resolution adaption depending on the resolution of
 
 
  
+
 
 
 
