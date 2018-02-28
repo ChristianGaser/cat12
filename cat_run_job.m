@@ -164,7 +164,7 @@ function cat_run_job(job,tpm,subj)
           job.channel(n).vols0{subj} = job.channel(n).vols{subj};
         end
 
-        % allways create the n*.nii image because of the real masking of the
+        % always create the n*.nii image because of the real masking of the
         % T1 data for spm_preproc8 that include rewriting the image!
         for n=1:numel(job.channel) 
             [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
@@ -186,7 +186,7 @@ function cat_run_job(job,tpm,subj)
             %% skull-stripping detection
             %  ------------------------------------------------------------
             %  Detect skull-stripping or defaceing because it strongly 
-            %  affects SPM segmenation that expect gaussian distribution! 
+            %  affects SPM segmentation that expects gaussian distribution! 
             %  If a brain mask was used than we expect 
             %   - many zeros (50% for small background - 80-90% for large backgrounds)
             %   - a brain like volume (below 2500 cm3)
@@ -194,8 +194,8 @@ function cat_run_job(job,tpm,subj)
             %   - only on background (not in very case?)
             %   - less variance of thissue intensity (only 3 brain classes)
             %  ------------------------------------------------------------
-            VF    = spm_vol(nfname); 
-            YF    = spm_read_vols(VF); 
+            VFn   = spm_vol(nfname); 
+            YF    = spm_read_vols(VFn); 
             Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
             F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
             F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
@@ -439,7 +439,7 @@ function cat_run_job(job,tpm,subj)
                     if ~debug && exist(Pmn_r0,'file'), delete(Pmn_r0); end
                     
                     %% mixing
-                    %  creation of segmenation takes a lot of time because
+                    %  creation of segmentation takes a lot of time because
                     %  of the deformations. So it is much faster to load a
                     %  rought brain mask. 
                     if isfield(vout,'Ycls')
@@ -530,23 +530,6 @@ function cat_run_job(job,tpm,subj)
               %if spmp0, return; else if ~debug, clear spmp0; end; end
             end
             
-            
-            
-            %% noise correction
-            %  ------------------------------------------------------------
-            if job.extopts.NCstr~=0
-              if job.extopts.NCstr==2 || job.extopts.NCstr==3
-                if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-                stime = cat_io_cmd(sprintf('ISARNLM denoising (NCstr=%0.2f)',NCstr));
-                if job.extopts.verb>1, fprintf('\n'); end
-                cat_vol_isarnlm(struct('data',nfname,'verb',(job.extopts.verb>1)*2,'prefix','','NCstr',NCstr)); 
-                if job.extopts.verb>1, cat_io_cmd(' ','',''); end
-              else
-                stime = cat_io_cmd(sprintf('SANLM denoising (NCstr=%0.2f)',job.extopts.NCstr));
-                cat_vol_sanlm(struct('data',nfname,'verb',0,'prefix','','NCstr',job.extopts.NCstr)); 
-              end
-              fprintf('%5.0fs\n',etime(clock,stime));   
-            end
         end
 
 
@@ -660,7 +643,7 @@ function cat_run_job(job,tpm,subj)
 
 
 
-          % load template and remove the sull if the image is skull-stripped
+          % load template and remove the skull if the image is skull-stripped
           try 
             VG = spm_vol(Pt1);
           catch
@@ -1128,7 +1111,7 @@ end
           end
           
           
-          if job.extopts.NCstr || any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
+          if any( (vx_vol ~= vx_voli) ) || ~strcmp(job.extopts.species,'human')
             [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
             delete(fullfile(pp,[ff,ee]));
             error('CAT:cat_run_job:spm_preproc8','Error in spm_preproc8. Check image and orientation. \n');

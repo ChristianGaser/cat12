@@ -1023,10 +1023,10 @@ function [trans,reg] = cat_main_registration(job,res,Ycls,Yy,tpmM)
             % f2 = spm_diffeo('resize', f1, dim)
             %% write new output
             Ndef      = nifti;
-            Ndef.dat  = file_array(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),[res.image0(1).dim(1:3),1,3],...
+            Ndef.dat  = file_array(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),[res.image(1).dim(1:3),1,3],...
                         [spm_type('float32') spm_platform('bigend')],0,1,0);
-            Ndef.mat  = res.image0(1).mat;
-            Ndef.mat0 = res.image0(1).mat;
+            Ndef.mat  = res.image(1).mat;
+            Ndef.mat0 = res.image(1).mat;
             Ndef.descrip = 'Inverse Deformation';
             create(Ndef);
             Ndef.dat(:,:,:,:,:) = Yy2;
