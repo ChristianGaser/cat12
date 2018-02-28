@@ -123,9 +123,7 @@ for n=1:N,
 
     [pth1,nam1] = spm_fileparts(res.image(n).fname);
     
-    %[pth2,mri2] = spm_fileparts(pth1); if strcmp(mri2,'mri'), pth1=pth2; end; clear pth2 mri2; % mri subdir
-    
-    if job.extopts.NCstr~=0
+    if (job.extopts.NCstr~=0)
       nam1 = nam1(2:end);
     end
     chan(n).ind      = res.image(n).n;
@@ -386,7 +384,8 @@ if ~isfield(res,'spmpp')
   
   %%
   if numel(prod(d))>(2^9)^3, stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); end
-  skullstripped=max(res.lkp)==4; 
+  skullstripped = max(res.lkp) == 4; 
+
   if skullstripped % skull-stripped
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     Yb   = Yp0>0.5/3; 
@@ -456,7 +455,8 @@ if ~isfield(res,'spmpp')
   elseif job.extopts.gcutstr==0
     % brain mask
     Ym  = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
-    Yb   = (Ym > 0.1) | (single(P(:,:,:,3))/255 > 0.1) & (single(P(:,:,:,1))/255 < 0.25); 
+    Yb   = (Ym > 0.5);
+    Yb = cat_vol_morph(cat_vol_morph(Yb,'lo'),'c');
     %bth  = cat_vol_ctype([0.5 0.5 0.5] * 255); % GM WM CSF!
     %Yb   = P(:,:,:,1)>bth(1) | P(:,:,:,2)>bth(2) | P(:,:,:,3)>bth(3); clear bth; 
     %Yb   = ~cat_vol_morph(~cat_vol_morph(Yb,'l',0),'l',0);
@@ -716,94 +716,38 @@ if ~isfield(res,'spmpp')
 
   if job.extopts.NCstr~=0  
 
-    % use a boundary box (BB) of the brain to speed up denoising
-    useBB = 1; %job.extopts.output.bias.native; 
-
-    if useBB
-      [Yms,Ybr,BB] = cat_vol_resize({Ym,Yb},'reduceBrain',vx_vol,round(2/cat_stat_nanmean(vx_vol)),Yb); Ybr = Ybr>0.5; 
-
-
-      % apply NLM filter
-      if job.extopts.NCstr==2 || job.extopts.NCstr==3
-        cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%d)',job.extopts.NCstr));
-        if job.extopts.verb>1, fprintf('\n'); end
-        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-        Yms = cat_vol_isarnlm(Yms,res.image,job.extopts.verb>1,NCstr); 
-
-        Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-          Yms .* Ybr;
-      else
-        %%
-        Ymo = Yms + 0;
-        if isinf(job.extopts.NCstr) 
-          stime = cat_io_cmd(sprintf('SANLM noise correction'));
-        else
-          stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-        end
-
-        % filter
-        cat_sanlm(Yms,3,1,0);
-
-        % merging
-        if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-          job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Yms(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-          NC     = min(2,abs(Yms - Ymo) ./ max(eps,Yms) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
-          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:))); clear NC;
-          NCs  = max(0,min(1,NCs)); 
-        end
-        fprintf('%5.0fs\n',etime(clock,stime));  
-
-        % mix original and noise corrected image and go back to original resolution
-        if exist('NCs','var');
-          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-            Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-            (1-NCs) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-            NCs .* Yms .* Ybr;
-        else
-          Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) = ...
-            Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* (1-Ybr) + ...
-            (1-job.extopts.NCstr) .* Ym(BB.BB(1):BB.BB(2),BB.BB(3):BB.BB(4),BB.BB(5):BB.BB(6)) .* Ybr + ...
-            job.extopts.NCstr .* Yms .* Ybr;
-        end    
-        clear NCs; 
-
-      end
-      clear Yms Ybr BB;
+    if job.extopts.NCstr==2 || job.extopts.NCstr==3
+      cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
+      if job.extopts.verb>1, fprintf('\n'); end
+      if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
+      Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,NCstr); 
     else
-      if job.extopts.NCstr==2 || job.extopts.NCstr==3
-        cat_io_cmd(sprintf('ISARNLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-        if job.extopts.verb>1, fprintf('\n'); end
-        if job.extopts.NCstr==2, NCstr=-inf; else NCstr=1; end 
-        Ym = cat_vol_isarnlm(Ym,res.image,job.extopts.verb>1,NCstr); 
+      Ymo = Ym + 0;
+
+      if isinf(job.extopts.NCstr) 
+        stime = cat_io_cmd(sprintf('SANLM noise correction'));
       else
-        Ymo = Ym + 0;
-
-        if isinf(job.extopts.NCstr) 
-          stime = cat_io_cmd(sprintf('SANLM noise correction'));
-        else
-          stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
-        end
-
-        % filter
-        cat_sanlm(Ym,3,1,0);
-
-        % merging
-        if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
-          NCstr2 = min(1,max(0,cat_stat_nanmean(abs(Ym(Ybr(:)) - Ymo(Ybr(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
-          NC     = min(2,abs(Ym - Ymo) ./ max(eps,Ym) * 15 * 2 * min(1,max(0,abs(NCstr2)))); 
-          NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Ybr(:))) / cat_stat_nanmean(NC(Ybr(:)));
-          NCs  = max(0,min(1,NCs));
-        end
-        fprintf('%5.0fs\n',etime(clock,stime));  
-
-        % mix original and noise corrected image and go back to original resolution
-        if exist('NCs','var');
-          Ym = (1-NCs) .* Ymo  +  NCs .* Ym ;
-        else
-          Ym = (1-NCstr2) .* Ymo + NCstr2 .* Ym;
-        end    
+        stime = cat_io_cmd(sprintf('SANLM noise correction (NCstr=%0.2f)',job.extopts.NCstr));
       end
+
+      % filter
+      cat_sanlm(Ym,3,1,0);
+
+      % merging
+      if isinf(job.extopts.NCstr) || sign(job.extopts.NCstr)==-1
+        job.extopts.NCstr = min(1,max(0,cat_stat_nanmean(abs(Ym(Yb(:)) - Ymo(Yb(:)))) * 15 * min(1,max(0,abs(job.extopts.NCstr))) )); 
+        NC     = min(2,abs(Ym - Ymo) ./ max(eps,Ym) * 15 * 2 * min(1,max(0,abs(job.extopts.NCstr)))); 
+        NCs    = NC + 0; spm_smooth(NCs,NCs,2); NCs = NCs .* cat_stat_nanmean(NCs(Yb(:))) / cat_stat_nanmean(NC(Yb(:)));
+        NCs  = max(0,min(1,NCs));
+      end
+      fprintf('%5.0fs\n',etime(clock,stime));  
+
+      % mix original and noise corrected image and go back to original resolution
+      if exist('NCs','var');
+        Ym = (1-NCs) .* Ymo  +  NCs .* Ym ;
+      else
+        Ym = (1-job.extopts.NCstr) .* Ymo + job.extopts.NCstr .* Ym;
+      end    
     end
 
     if job.inv_weighting
@@ -980,8 +924,10 @@ if ~isfield(res,'spmpp')
   end
   %if ~debug; clear Ymo; end
 
-
-
+  % correct mask for skull-stripped images
+  if skullstripped
+    Yb = Yb.*(spm_read_vols(res.image0(1)) > 0);
+  end
 
   %% -------------------------------------------------------------------
   %  AMAP segmentation
@@ -1609,10 +1555,10 @@ if job.output.warps(2)
   % f2 = spm_diffeo('resize', f1, dim)
   % write new output
   Ndef      = nifti;
-  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam1, '.nii']),[res.image0(1).dim(1:3),1,3],...
+  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam1, '.nii']),[res.image(1).dim(1:3),1,3],...
               [spm_type('float32') spm_platform('bigend')],0,1,0);
-  Ndef.mat  = res.image0(1).mat;
-  Ndef.mat0 = res.image0(1).mat;
+  Ndef.mat  = res.image(1).mat;
+  Ndef.mat0 = res.image(1).mat;
   Ndef.descrip = 'Inverse Deformation';
   create(Ndef);
   Ndef.dat(:,:,:,:,:) = Yy2;
@@ -1812,9 +1758,9 @@ clear wYp0 wYcls wYv trans
 
 
 %  estimate volumes and TIV
-qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... CSF
-                    prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)), ... GM 
-                    prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... WM
+qa.subjectmeasures.vol_abs_CGW = [prod(vx_vol)/1000/255 .* sum(Ycls{3}(:)), ... CSF
+                    prod(vx_vol)/1000/255 .* sum(Ycls{1}(:)), ... GM 
+                    prod(vx_vol)/1000/255 .* sum(Ycls{2}(:)), ... WM
                     qa.subjectmeasures.WMH_abs]; 
 qa.subjectmeasures.vol_TIV     =  sum(qa.subjectmeasures.vol_abs_CGW); 
 qa.subjectmeasures.vol_rel_CGW =  qa.subjectmeasures.vol_abs_CGW ./ qa.subjectmeasures.vol_TIV;
