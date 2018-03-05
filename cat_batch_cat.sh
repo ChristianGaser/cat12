@@ -82,6 +82,10 @@ parse_args ()
             fi
             shift
             ;;
+        --nojvm | -nojvm)
+            exit_if_empty "$optname" "$optarg"
+            nojvm=" -nojvm "
+            ;;
         --n* | -n* | --nice* | -nice*)
             exit_if_empty "$optname" "$optarg"
             nicelevel=$optarg
@@ -90,10 +94,6 @@ parse_args ()
         --fg* | -fg*)
             exit_if_empty "$optname" "$optarg"
             fg=1
-            ;;
-        --nojvm | -nojvm)
-            exit_if_empty "$optname" "$optarg"
-            nojvm=" -nojvm "
             ;;
         --f* | -f*)
             exit_if_empty "$optname" "$optarg"

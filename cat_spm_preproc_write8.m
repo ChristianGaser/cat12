@@ -6,9 +6,9 @@ function [Ym,Ycls,y] = cat_spm_preproc_write8(res,tc,bf,df,mrf,cleanup,bb,vx,Ycl
 %
 % modified version of
 % John Ashburner
-% $Id: spm_preproc_write8.m 7202 2017-11-08 12:30:01Z john $
+% $Id$
 %
-% $Id: cat_spm_preproc_run.m 1152 2017-07-05 12:28:08Z dahnke $
+% $Id$
 
 % Prior adjustment factor.
 % This is a fudge factor to weaken the effects of the tissue priors.  The
