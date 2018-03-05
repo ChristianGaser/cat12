@@ -87,7 +87,6 @@ function varargout = cat_surf_resamp(varargin)
     
     name0 = [ff(3:end) ex];          % remove leading hemisphere information
     name0 = strrep(name0,'.gii',''); % remove .gii extension
-    hemi = ff(1:2);
     hemistr = char('lh','rh','lc','rc');
     exist_hemi = [];
     
@@ -149,7 +148,12 @@ function varargout = cat_surf_resamp(varargin)
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
       % smooth resampled values
-      cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
+      % don't use mask for cerebellum
+      if strcmp(hemistr,'lc') | strcmp(hemistr,'rc')
+        cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue);
+      else
+        cmd = sprintf('CAT_BlurSurfHK "%s" "%s" "%g" "%s" "%s"',Presamp,Pfwhm,job.fwhm_surf,Pvalue,Pmask);
+      end
       [ST, RS] = cat_system(cmd); err = cat_check_system_output(ST,RS,job.debug,def.trerr); if err, continue; end
 
       % add values to resampled surf and save as gifti

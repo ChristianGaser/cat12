@@ -1,10 +1,10 @@
-function PO = cat_vol_average(P,fname,PT,dt,nr,mask)
+function PO = cat_vol_average(P,filename,PT,dt,nr,mask)
 % ______________________________________________________________________
 % Creates median images of a set of files P or volumes V with the same
 % image properties.
 %
-%   VO = cat_vol_average(V[,fname,PT,dt,nr])
-%   VO = cat_vol_average(P[,fname,PT,dt,nr])
+%   VO = cat_vol_average(V[,filename,PT,dt,nr])
+%   VO = cat_vol_average(P[,filename,PT,dt,nr])
 %
 %   P     = char or cell array with filenames
 %   PT    = template image with another resolution (for interpolation)
@@ -12,8 +12,8 @@ function PO = cat_vol_average(P,fname,PT,dt,nr,mask)
 %   VO    = output volume
 %   dt    = for [median,mean,std] images with spm nii datatype
 %           (0=no image, 2=uint8, 4=int16, 16=single, ...)
-%   nr    = use number in fname
-%   fname = name of the outputfile, add median/mean/std automaticly
+%   nr    = use number in filename
+%   filename = name of the outputfile, add median/mean/std automaticly
 %            mypath/myname.nii > mypath/median003_myname.nii ...
 %   mask  = value for masking
 % ______________________________________________________________________
@@ -40,19 +40,19 @@ function PO = cat_vol_average(P,fname,PT,dt,nr,mask)
     nstr=num2str(size(P,1),'%3.0f');
   end
   
-  if ~exist('fname','var') || isempty(fname)
+  if ~exist('filename','var') || isempty(filename)
     [pp,ff,ee] = spm_fileparts(P(1,:));
-    fname2{1} = fullfile(pp,['median' nstr '_'  ff ee]);
-    fname2{2} = fullfile(pp,['mean'   nstr '_'  ff ee]);
-    fname2{3} = fullfile(pp,['std'    nstr '_'  ff ee]);
+    filename2{1} = fullfile(pp,['median' nstr '_'  ff ee]);
+    filename2{2} = fullfile(pp,['mean'   nstr '_'  ff ee]);
+    filename2{3} = fullfile(pp,['std'    nstr '_'  ff ee]);
   else
-    if iscell(fname)
-      fname2 = fname; 
+    if iscell(filename)
+      filename2 = filename; 
     else
-      [pp,ff,ee] = spm_fileparts(fname);
-      fname2{1} = fullfile(pp,['median' nstr '_' ff ee]);
-      fname2{2} = fullfile(pp,['mean'   nstr '_' ff ee]);
-      fname2{3} = fullfile(pp,['std'    nstr '_' ff ee]);      
+      [pp,ff,ee] = spm_fileparts(filename);
+      filename2{1} = fullfile(pp,['median' nstr '_' ff ee]);
+      filename2{2} = fullfile(pp,['mean'   nstr '_' ff ee]);
+      filename2{3} = fullfile(pp,['std'    nstr '_' ff ee]);      
     end
   end
 
@@ -106,8 +106,8 @@ function PO = cat_vol_average(P,fname,PT,dt,nr,mask)
       % median
 
       
-      V  = spm_vol(P); if exist(fname2{i},'file'), delete(fname2{i}); end
-      VO1 = V(1); VO1.fname = fname2{i}; VO1.dt(1) = 16;
+      V  = spm_vol(P); if exist(filename2{i},'file'), delete(filename2{i}); end
+      VO1 = V(1); VO1.fname = filename2{i}; VO1.dt(1) = 16;
       switch i
         case 1, VO1.descript = sprintf('median image of %s scans',size(P,1));
         case 2, VO2.descript = sprintf('mean image of %s scans',size(P,1));
@@ -139,11 +139,11 @@ function PO = cat_vol_average(P,fname,PT,dt,nr,mask)
           VO1.pinfo(1) = round(max(Y(:))/(16^dt(i)-1));
         end
         VO1 = rmfield(VO1,'private');
-        if exist(fname2{i},'file'), delete(fname2{i}); end
+        if exist(filename2{i},'file'), delete(filename2{i}); end
         
         spm_write_vol(VO1,Y);
       end  
-      PO{i}=fname2{i};
+      PO{i}=filename2{i};
     end
   end
  

@@ -89,23 +89,20 @@ data_spm.preview  = @(f) spm_check_registration(char(f));
     ''
   };
 
-if expert==0
+if expert < 2
   surface.labels = {'No','Yes'};
   surface.values = {0 1};
-elseif expert==1
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum','lh + rh (fast, no registration, only for quick quality check and not for analysis)','Full'};
-  surface.values = {0 1 2 5 12};  
+else
+  surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
+    'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
+    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)','Full'};
+  surface.values = {0 1 2 5 6 7 8 12};
   surface.help   = [surface.help; {
     'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
     ''
     'The fast reconstruction allows a _visual_ check of the processing quality by providing a reconstructed cortical surface and thickness values with slightly lower accuracy. It takes only a few minutes for both hemisheres by internally using 0.8 mm (instead of 0.5mm) spatial resolution and by skipping topology correction and surface registration. Please note that neither the surface nor the measures on the surface (e.g. thickness) can be used for any further statistical analysis! '
     ''
   }];    
-else
-  surface.labels = {'No','lh + rh','lh + rh + cerebellum',...
-    'lh + rh (fast, no registration)','lh + rh + cerebellum (fast, no registration)', ...
-    'lh + rh (fast registration)','lh + rh + cerebellum (fast registration)'};
-  surface.values = {0 1 2 5 6 7 8};
 end
 
 

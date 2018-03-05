@@ -645,11 +645,11 @@ for i = 1:length(SO.img)
 end  
 return
 
-function tf = is_there(a, fname)
-% returns true if field fname is present in struct a, and not empty
-tf = isfield(a, fname);
+function tf = is_there(a, filename)
+% returns true if field filename is present in struct a, and not empty
+tf = isfield(a, filename);
 if tf
-  tf = ~isempty(getfield(a, fname));
+  tf = ~isempty(getfield(a, filename));
 end
 return
 

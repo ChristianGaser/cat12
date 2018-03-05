@@ -37,16 +37,18 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
+  
+  pbt_r1284 = 0;
 
   % set defaults
-  vx_vol  = sqrt(sum(V.mat(1:3,1:3).^2));   % further interpolation based on the internal resolution 
-  vx_vol0 = sqrt(sum(V0.mat(1:3,1:3).^2));  % final surface resolution based on the orignial image resolution
+  vx_vol  = sqrt(sum(V.mat(1:3,1:3).^2));   % further interpolation based on internal resolution 
+  vx_vol0 = sqrt(sum(V0.mat(1:3,1:3).^2));  % final surface resolution based on original image resolution
   if ~exist('opt','var'), opt=struct(); end
   def.verb      = 2; 
   def.surf      = {'lh','rh'}; % {'lh','rh','lc','rc'}
-  reduceCS      = 300000; % default for 1 mm data
-  def.reduceCS  = max( reduceCS/2 , min( reduceCS*4 , reduceCS .* 1/(mean(vx_vol0).^2)));  
-  def.vdist     = mean(vx_vol0)/2;
+  reduceCS      = 100000; % default for 1 mm data
+  def.reduceCS  = max( reduceCS , min( reduceCS*4 , reduceCS .* 1/(mean(vx_vol0).^2)));  
+  def.vdist     = min(1,mean(vx_vol0));
   def.LAB       = cat_get_defaults('extopts.LAB');  
   def.SPM       = 0; 
   def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
@@ -266,9 +268,14 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       mask_parahipp   = cat_vol_resize(mask_parahipp,'interp',V,opt.interpV)>0.5;          % interpolate volume
     end 
     
-Ymfs = min(3,max(1,Ymfs));
+    Ymfs = min(3,max(1,Ymfs));
+
     %% pbt calculation
-    [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+    if pbt_r1284
+      [Yth1i,Yppi] = cat_vol_pbt_1284(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+    else
+      [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+    end
     if ~opt.WMT && ~debug, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
@@ -435,7 +442,7 @@ Ymfs = min(3,max(1,Ymfs));
     end
     
     % transform coordinates 
-    if opt.fast==1
+  if opt.fast==1
       %
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
       if V.mat(13)>0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
@@ -445,16 +452,7 @@ Ymfs = min(3,max(1,Ymfs));
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Pcentral,Pcentral); % CAT_SeparatePolygon works here
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       
-      % deform initial surface to central surface
-      % CAT_DeformSurf "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh" "originalposition|none" maxdist n_modls  
-      %'CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
-      %              'none 0 1 -1 .1 ' ...                  "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
-      %               'avg -0.1 0.1 ' ...                    "model_file...|avg|none"  mincurv  maxcurv 
-      %               '.2 .1 5 0 ' ...                       fract_step  max_step  max_search_istance  degrees_continuity  
-      %               '"%g" "%g" n ' ...                     min_isovalue  max_isovalue  +/-/n 
-      %               '0 0 0 ' ...                           gradient_threshold  angle tolerance  max_iterations
-      %               '150 0.01 0.0'], ...                   movement_threshold  stop_treshold  
-                     
+      % deform initial surface to central surface                     
       th = 0.5;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
                      'none  0  1  -1  .1 ' ...               "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
@@ -462,7 +460,7 @@ Ymfs = min(3,max(1,Ymfs));
                      '.2  .1  5  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
                      '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
                      '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
-                     '150  0.01  0.0'], ...                  max_iterations movement_threshold  stop_treshold  
+                     '150  0.01  0.0'], ...                  max_iterations movement_threshold  stop_threshold  
                       Vpp1.fname,Pcentral,Pcentral,th,th);
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
     
@@ -514,8 +512,8 @@ Ymfs = min(3,max(1,Ymfs));
       end
       clear CS; 
       
-    %  delete(Vpp.fname);
-    %  delete(Vpp1.fname);
+      delete(Vpp.fname);
+      delete(Vpp1.fname);
       fprintf('%5.0fs\n',etime(clock,stime)); 
       
       continue
@@ -585,7 +583,7 @@ Ymfs = min(3,max(1,Ymfs));
     if opt.fast
       cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,4 * opt.vdist / scale_cerebellum); % adaption for cerebellum
     else
-      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1 * opt.vdist / scale_cerebellum); % adaption for cerebellum
+      cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f',Pcentral,Pcentral,1.5 * opt.vdist / scale_cerebellum); % adaption for cerebellum
     end
     [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
 

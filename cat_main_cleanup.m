@@ -14,8 +14,8 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   vxv  = 1/max(vx_vol);           % use original voxel size!!!
   NS   = @(Ys,s) Ys==s | Ys==s+1; % remove side alignment from atlas maps
 
-  cleanupstr  = min(1,max(0,extopts.cleanupstr * 1/(inv_weighting+1) / max(1,mean(vx_vol)) ));
-  cleanupdist = min(2,max(0,1 + 2*extopts.cleanupstr));
+  cleanupstr  = min(1,max(0,extopts.cleanupstr * 0.5/(inv_weighting+1) / max(1,mean(vx_vol)) ));
+  cleanupdist = min(2,max(0,1 + extopts.cleanupstr));
 
   stimec = cat_io_cmd(sprintf('Final cleanup (gcutstr=%0.2f)',cleanupstr));
   fprintf('\n');

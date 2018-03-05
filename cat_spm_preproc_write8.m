@@ -1,4 +1,4 @@
-function [Ym,Ycls] = cat_spm_preproc_write8(res,tc,bf,df,mrf,cleanup,bb,vx,Yclsout)
+function [Ym,Ycls,y] = cat_spm_preproc_write8(res,tc,bf,df,mrf,cleanup,bb,vx,Yclsout)
 % Write out VBM preprocessed data
 % FORMAT [Ym,Ycls] = cat_spm_preproc_write8(res,tc,bf,df,mrf,cleanup,bb,vx,Yclsout)
 %__________________________________________________________________________
@@ -17,13 +17,14 @@ function [Ym,Ycls] = cat_spm_preproc_write8(res,tc,bf,df,mrf,cleanup,bb,vx,Yclso
 % Having the optimal bias/variance tradeoff for each voxel is not the same
 % as having the optimal tradeoff for weighted averages over several voxels.
 
-if ~exist('Yclsout','var'), Yclsout=ones(1,6); end %% ADDED RD
 if isfield(res,'mg')
     lkp = res.lkp;
     Kb  = max(lkp);
 else
     Kb  = size(res.intensity(1).lik,2);
 end
+
+if ~exist('Yclsout','var'), Yclsout=ones(1,Kb); end %% ADDED RD
 N   = numel(res.image);
 
 if nargin<2, tc = true(Kb,4); end % native, import, warped, warped-mod
@@ -33,6 +34,10 @@ if nargin<5, mrf = 1;         end % MRF parameter
 if nargin<6, cleanup = 1;     end % Run the ad hoc cleanup
     if nargin<7, bb = NaN(2,3);   end % Default to TPM bounding box
     if nargin<8, vx = NaN;        end % Default to TPM voxel size
+
+if (any(tc(:,3)) || any(tc(:,4)) || df(2)) && nargout > 2
+  error('Deformations cannot be returned if writing of deformations or warped segmentations is enabled.');
+end
 
 % Read essentials from tpm (it will be cleared later)
 tpm = res.tpm;

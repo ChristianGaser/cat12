@@ -315,13 +315,13 @@ function annots = cat_surf_FSannotation2CAT(job)
   
 end
 
-function write_surf(fname, vert, face)
+function write_surf(filename, vert, face)
 % write_surf - FreeSurfer I/O function to write a surface file
 % 
-% write_surf(fname, vert, face)
+% write_surf(filename, vert, face)
 % 
 % writes a surface triangulation into a binary file
-% fname - name of file to write
+% filename - name of file to write
 % vert  - Nx3 matrix of vertex coordinates
 % face  - Mx3 matrix of face triangulation indices
 % 
@@ -332,7 +332,7 @@ function write_surf(fname, vert, face)
 % See also freesurfer_read_surf, freesurfer_write_curv, freesurfer_write_wfile
 
   if(nargin ~= 3)
-    fprintf('USAGE: freesurfer_write_surf(fname, vert, face)\n');
+    fprintf('USAGE: freesurfer_write_surf(filename, vert, face)\n');
     return;
   end
 
@@ -348,7 +348,7 @@ function write_surf(fname, vert, face)
   face = face - 1;
 
   % open it as a big-endian file
-  fid = fopen(fname, 'wb', 'b') ;
+  fid = fopen(filename, 'wb', 'b') ;
 
   TRIANGLE_FILE_MAGIC_NUMBER = 16777214 ;
   fwrite3(fid, TRIANGLE_FILE_MAGIC_NUMBER);
@@ -374,9 +374,9 @@ function write_surf(fname, vert, face)
 
 end
 
-function [vertex_coords, faces] = read_surf(fname)
+function [vertex_coords, faces] = read_surf(filename)
   %
-  % [vertex_coords, faces] = read_surf(fname)
+  % [vertex_coords, faces] = read_surf(filename)
   % reads a the vertex coordinates and face lists from a surface file
   % note that reading the faces from a quad file can take a very long
   % time due to the goofy format that they are stored in. If the faces
@@ -406,7 +406,7 @@ function [vertex_coords, faces] = read_surf(fname)
   %
 
 
-  %fid = fopen(fname, 'r') ;
+  %fid = fopen(filename, 'r') ;
   %nvertices = fscanf(fid, '%d', 1);
   %all = fscanf(fid, '%d %f %f %f %f\n', [5, nvertices]) ;
   %curv = all(5, :)' ;
@@ -420,12 +420,12 @@ function [vertex_coords, faces] = read_surf(fname)
   TRIANGLE_FILE_MAGIC_NUMBER  =  16777214 ;
   QUAD_FILE_MAGIC_NUMBER      =  16777215 ;
 
-  if ~exist(fname,'file')
-    error('MATLAB:cat_io_FreeSurfer:read_surf','mesh file %s does not exist.', fname) ;
+  if ~exist(filename,'file')
+    error('MATLAB:cat_io_FreeSurfer:read_surf','mesh file %s does not exist.', filename) ;
   end
-  fid = fopen(fname, 'rb', 'b') ;
+  fid = fopen(filename, 'rb', 'b') ;
   if (fid < 0)
-    error('MATLAB:cat_io_FreeSurfer:read_surf','could not open mesh file %s.', fname) ;
+    error('MATLAB:cat_io_FreeSurfer:read_surf','could not open mesh file %s.', filename) ;
   end
   magic = fread3(fid) ;
 
@@ -521,11 +521,11 @@ function [retval] = fread3(fid)
 
 end
 
-function err = write_wfile(fname, w, v)
-% err = write_wfile(fname, w, <v>)
+function err = write_wfile(filename, w, v)
+% err = write_wfile(filename, w, <v>)
 % 
 % writes a vector into a binary 'w' file
-%  fname - name of file to write to
+%  filename - name of file to write to
 %  w     - vector of values to be written
 %  v     - 0-based vertex numbers 
 %          (assumes 0 to N-1 if not present or empty).
@@ -558,7 +558,7 @@ function err = write_wfile(fname, w, v)
   err = 1;
 
   if(nargin ~= 2 && nargin ~= 3)
-    fprintf('USAGE: err = write_wfile(fname, w, <v>) \n');
+    fprintf('USAGE: err = write_wfile(filename, w, <v>) \n');
     return;
   end
 
@@ -569,9 +569,9 @@ function err = write_wfile(fname, w, v)
   if (isempty(v)), v = 0:vnum-1; end
 
   % open it as a big-endian file
-  fid = fopen(fname, 'wb', 'b') ;
+  fid = fopen(filename, 'wb', 'b') ;
   if(fid == -1)
-    fprintf('ERROR: could not open %s\n',fname);
+    fprintf('ERROR: could not open %s\n',filename);
     return;
   end
 
@@ -587,11 +587,11 @@ function err = write_wfile(fname, w, v)
   err = 0;
 end
 
-function [curv] = write_curv(fname, curv, fnum)
-% [curv] = write_curv(fname, curv, fnum)
+function [curv] = write_curv(filename, curv, fnum)
+% [curv] = write_curv(filename, curv, fnum)
 %
 % writes a curvature vector into a binary file
-%				fname - name of file to write to
+%				filename - name of file to write to
 %				curv  - vector of curvatures
 %				fnum  - # of faces in surface.
 %
@@ -625,7 +625,7 @@ if nargin == 2
 end
 
 % open it as a big-endian file
-fid = fopen(fname, 'w', 'b') ;
+fid = fopen(filename, 'w', 'b') ;
 vnum = length(curv) ;
 NEW_VERSION_MAGIC_NUMBER = 16777215;
 fwrite3(fid, NEW_VERSION_MAGIC_NUMBER ) ;
@@ -637,9 +637,9 @@ fclose(fid) ;
 
 end
 
-function [curv, fnum] = read_curv(fname)
+function [curv, fnum] = read_curv(filename)
 %
-% [curv, fnum] = read_curv(fname)
+% [curv, fnum] = read_curv(filename)
 % reads a binary curvature file into a vector
 %
 %
@@ -663,18 +663,18 @@ function [curv, fnum] = read_curv(fname)
 %
 
 
-%fid = fopen(fname, 'r') ;
+%fid = fopen(filename, 'r') ;
 %nvertices = fscanf(fid, '%d', 1);
 %all = fscanf(fid, '%d %f %f %f %f\n', [5, nvertices]) ;
 %curv = all(5, :)' ;
 
 % open it as a big-endian file
-if ~exist(fname,'file')
-  error('cat_io_FreeSurfer:read_curv','Curvature file "%s" does not exist!\n', fname);
+if ~exist(filename,'file')
+  error('cat_io_FreeSurfer:read_curv','Curvature file "%s" does not exist!\n', filename);
 end
-fid = fopen(fname, 'r', 'b') ;
+fid = fopen(filename, 'r', 'b') ;
 if (fid < 0)
-	 error('cat_io_FreeSurfer:read_curv','Could not open curvature file "%s"!\n', fname);
+	 error('cat_io_FreeSurfer:read_curv','Could not open curvature file "%s"!\n', filename);
 end
 vnum = fread3(fid) ;
 NEW_VERSION_MAGIC_NUMBER = 16777215;

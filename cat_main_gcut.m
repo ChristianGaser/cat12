@@ -51,7 +51,7 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   opt = cat_io_checkinopt(opt,def); 
   
   
-  % general resolution limition 
+  % general resolution limitation 
   if nargout>1, Yl1o = Yl1; end
   if any( vx_vol < opt.uhrlim/2 )
     [Ysrc,resT0] = cat_vol_resize( Ysrc , 'reduceV' , vx_vol , opt.uhrlim , 64 ); 
@@ -69,7 +69,9 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   voli = @(v) (v ./ (pi * 4./3)).^(1/3);           % volume > radius
   brad = double(voli(sum(Yb(:)>0).*prod(vx_vol))); % distance and volume based brain radius (brad)
   Yp0  = single(Ycls{3})/255/3 + single(Ycls{1})/255*2/3 + single(Ycls{2})/255; 
-  Ycsf = single(Ycls{3})/255/3;
+  Ygm  = single(Ycls{1})/255;
+  Ywm  = single(Ycls{2})/255;
+  Ycsf = single(Ycls{3})/255;
   Ymg  = single(Ycls{5})/255; clear Ycls; 
   rvol = [sum(round(Yp0(:)*3)==1), sum(round(Yp0(:)*3)==2), sum(round(Yp0(:)*3)==3)]/sum(round(Yp0(:)*3)>0);
   %noise   = cat_stat_nanstd(Ym(cat_vol_morph(cat_vol_morph(Ym>0.95 & Ym<1.05,'lc',1),'e')));
@@ -103,6 +105,8 @@ function [Yb,Yl1] = cat_main_gcut(Ysrc,Yb,Ycls,Yl1,YMF,vx_vol,opt)
   YMF     = cat_vol_resize({YMF}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
   Yp0     = cat_vol_resize({Yp0}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
   Ycsf    = cat_vol_resize({Ycsf} , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  Ywm     = cat_vol_resize({Ywm}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
+  Ygm     = cat_vol_resize({Ygm}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
   Ymg     = cat_vol_resize({Ymg}  , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
   Yb      = cat_vol_resize({Yb}   , 'reduceBrain' , vx_vol , round(4/mean(vx_vol)) , Yb);
   vxd     = max(1,1/mean(vx_vol)); 

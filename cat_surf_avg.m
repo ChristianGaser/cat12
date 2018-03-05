@@ -27,7 +27,7 @@ function varargout = cat_surf_avg(varargin)
   
   %%
   side  = {'lh','rh'}; 
-  fname = cell(numel(side),numel(job.meshsmooth)); FSavgfname = cell(1,2); FSavgsphere = cell(1,2);
+  filename = cell(numel(side),numel(job.meshsmooth)); FSavgfname = cell(1,2); FSavgsphere = cell(1,2);
   for si = 1:numel(side)
     FSavgfname{si} = fullfile(opt.fsavgDir,sprintf('%s.central.freesurfer.gii',side{si})); 
     FSavgsphere{si} = fullfile(opt.fsavgDir,sprintf('%s.sphere.freesurfer.gii',side{si})); 
@@ -38,9 +38,9 @@ function varargout = cat_surf_avg(varargin)
     
     for smi=1:numel(job.meshsmooth)
       if job.meshsmooth(smi)>0
-        fname{si,smi} = fullfile(outdir,sprintf('%s.%s_%dmm.gii',side{si},job.surfname,job.meshsmooth(smi)));
+        filename{si,smi} = fullfile(outdir,sprintf('%s.%s_%dmm.gii',side{si},job.surfname,job.meshsmooth(smi)));
       else
-        fname{si,smi} = fullfile(outdir,sprintf('%s.%s.gii',side{si},job.surfname));
+        filename{si,smi} = fullfile(outdir,sprintf('%s.%s.gii',side{si},job.surfname));
       end   
     end
   end
@@ -120,18 +120,18 @@ function varargout = cat_surf_avg(varargin)
       for smi=1:numel(job.meshsmooth);
         if job.surfside==1 
           save(gifti(struct('faces',S.faces,'vertices',...
-            Savg.(side{si}).vertices)),fname{si,smi});
-          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si,smi},fname{si,smi},job.meshsmooth(smi));
+            Savg.(side{si}).vertices)),filename{si,smi});
+          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si,smi},filename{si,smi},job.meshsmooth(smi));
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
         else
           save(gifti(struct('faces',FSavg.(side{si}).faces,'vertices',...
-            [-Savg.(side{si}).vertices(:,1),FSavg.(side{si}).vertices(:,2:3)])),fname{si,smi});
-          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si,smi},fname{si,smi},job.meshsmooth(smi));
+            [-Savg.(side{si}).vertices(:,1),FSavg.(side{si}).vertices(:,2:3)])),filename{si,smi});
+          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si,smi},filename{si,smi},job.meshsmooth(smi));
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
           
           save(gifti(struct('vertices',Savg.(side{si}).vertices,'faces',...
-            [FSavg.(side{si}).faces(:,2),FSavg.(side{si}).faces(:,1),FSavg.(side{si}).faces(:,3)])),fname{si+1,smi});
-          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',fname{si+1,smi},fname{si+1,smi},job.meshsmooth(smi));
+            [FSavg.(side{si}).faces(:,2),FSavg.(side{si}).faces(:,1),FSavg.(side{si}).faces(:,3)])),filename{si+1,smi});
+          cmd = sprintf('CAT_BlurSurfHK "%s" "%s" %d',filename{si+1,smi},filename{si+1,smi},job.meshsmooth(smi));
           [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,0);
         end
         nfi = nfi + 1; spm_progress_bar('Set',nfi);
@@ -140,7 +140,7 @@ function varargout = cat_surf_avg(varargin)
   end
    
   if nargout>0
-    varargout{1} = fname{si,smi};
+    varargout{1} = filename{si,smi};
   end
   
   spm_progress_bar('Clear');

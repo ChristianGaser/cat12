@@ -1,5 +1,54 @@
 ------------------------------------------------------------------------
-r1285 | gaser | 2018-02-28 08:19:00
+r1286 | gaser | 2018-03-05 12:43:49
+
+Changed paths:
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_conf_tools.m
+M       cat_defaults.m
+M       cat_io_3Dto4D.m
+M       cat_io_FreeSurfer.m
+M       cat_io_writenii.m
+M       cat_io_xml2csv.m
+M       cat_main.m
+M       cat_main_cleanup.m
+M       cat_main_gcut.m
+M       cat_run_job.m
+M       cat_run_job1070.m
+M       cat_spm_preproc_run.m
+M       cat_spm_preproc_write8.m
+M       cat_stat_analyze_ROIs.m
+M       cat_stat_check_cov.m
+M       cat_surf_avg.m
+M       cat_surf_createCS.m
+M       cat_surf_resamp.m
+M       cat_vol_approx.m
+M       cat_vol_average.m
+M       cat_vol_defs.m
+M       cat_vol_pbt.m
+M       cat_vol_pbtp.cpp
+M       cat_vol_pbtp.mexmaci64
+M       html/cat.html
+M       slice_overlay.m
+M       tbx_cfg_cat.m
+
+(1) Changed: Moved options for cerebellar surface extraction to developer
+    mode.
+(2) Fixed: Disabled use of mask for resampling cerebellar surfaces in 
+    cat_surf_resample.m.
+(3) Changed: Canceled Roberts changes from r1285 in cat_vol_pbt* because these
+    functions have to be tested more carefully and are not yet working.
+(4) Fixed: Ygm and Ywm were not defined in cat_main_gcut.m.
+(5) Changed: Decreased weighting of final cleanup because it sometimes removed
+    parts of the brain.
+(6) Changed: Default skull-stripping is again medium gcut that is now modified 
+    and also uses skulltripping based on SPM12 segmentations.
+(7) Fixed: Variable fname is reserved function and caused issues on deployed 
+    versions.
+(8) Changed: Added
+------------------------------------------------------------------------
+r1285 | gaser | 2018-02-28 08:19:05 +0100 (Mi, 28 Feb 2018) | 24 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -24,6 +73,7 @@ M       cat_vol_resize.m
     threshold of 0.5.
 (6) Changed: SANLM filtering in cat_main is now using whole brain.
 (7) Fixed: Order of GM/WM/CSF volume estimates is now correct.
+
 ------------------------------------------------------------------------
 r1284 | dahnke | 2018-02-27 16:35:12 +0100 (Di, 27 Feb 2018) | 40 lines
 
