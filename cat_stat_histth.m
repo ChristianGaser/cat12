@@ -11,7 +11,7 @@ function varargout = cat_stat_histth(src,percent,verb)
 %   percent .. included values (default) = 0.998; 
 %   verb    .. verbose (default = 0); 
 % ______________________________________________________________________
-% $Id: cat_run_job1070.m 1245 2017-12-12 10:35:00Z dahnke $
+% $Id$
 
   %% check input
   if nargin==0, help cat_stat_histth; return; end

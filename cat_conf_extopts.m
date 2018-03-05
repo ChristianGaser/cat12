@@ -137,7 +137,7 @@ if expert==0
   };
   regstr.values = {0 4 0.5};
   regstr.help   = [regstr.help; { ...
-    'For spatial registration CAT offers the use of the Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registratios to an existing template. Furthermore, an optimized shooting approach is available that uses an adaptive threshold and lower initial resolutions to obtain a godd tradeoff between accuracy and calculation time.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
+    'For spatial registration CAT offers the use of the Dartel (Ashburner, 2008) and Shooting (Ashburner, 2011) registrations to an existing template. Furthermore, an optimized shooting approach is available that uses an adaptive threshold and lower initial resolutions to obtain a good tradeoff between accuracy and calculation time.  The CAT default templates were obtained by standard Dartel/Shooting registration of 555 IXI subjects between 20 and 80 years. '
     'The registration time is typically about 3, 10, and 5 minutes for Dartel, Shooting, and optimized Shooting for the default registration resolution. '
     ''
   }];
@@ -156,7 +156,7 @@ elseif expert==1
   };
   regstr.values = {0 4 5 eps 0.5 1.0 11 12 13};
   regstr.help = [regstr.help; { ...
-    'The strength of the optimized Shooting registration depends on the stopping criteria (controlled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choice to allow an adaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resoultion allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" parameter. '
+    'The strength of the optimized Shooting registration depends on the stopping criteria (controlled by the "extopts.regstr" parameter) and by the final registration resolution that can be given by the template (fast,standard,fine), as fixed value (hard,medium,soft), or (iii) by the output resolution (vox).   In general the template resolution is the best choice to allow an adaptive normalization depending on the individual anatomy with some control of the calculation time. Fixed resolution allows to roughly define the degree of normalization for all images with 2.0 mm for smoother and 1.0 mm for stronger deformations.  For special cases the registration resolution can also be set by the output resolution controlled by the "extopts.vox" parameter. '
     ''
     '  0   .. "Dartel"'
     '  4   .. "Default Shooting"'
@@ -164,7 +164,7 @@ elseif expert==1
     ''
     '  eps .. "Optimized Shooting - fast"       .. TR/2:TR/4:TR (avg. change rate)'
     '  0.5 .. "Optimized Shooting - standard"   .. TR/2:TR/4:TR (avg. change rate)'
-    '  1.0 .. "Optimized Shooting - fine"       .. TR/2:TR/4:TR (small change reate)'
+    '  1.0 .. "Optimized Shooting - fine"       .. TR/2:TR/4:TR (small change rate)'
     ''
     '  11  .. "Optimized Shooting - stong"      .. max( 1.0 , [3.0:0.5:1.0] )'
     '  22  .. "Optimized Shooting - medium"     .. max( 1.5 , [3.0:0.5:1.0] )'

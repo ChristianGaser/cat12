@@ -30,21 +30,21 @@
       <p>
         </br>Preprocessing should remain unaffected until the next minor version number. A new processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
       </p>
-      <h2>Changes in version CAT12.2 (1280)</h2>      
+      <h2>Changes in version CAT12.2 (1287)</h2>      
       <p>
         <ul>
           <li>Changes in preprocessing pipeline (which affects your results compared to CAT12.1)</li>
           <ul>
-            <li>Skull-stripping now uses SPM12 cleanup by default: The default gcut approach in CAT12.1 removed of the surrounding (extracranial) CSF, which led to a slight underestimation of TIV for atrophied brains. The SPM12 cleanup approach prevents this through a more conservative approach. However, sometimes parts of the dura or other non-brain parts still remain in the GM segmentation.</li>
+            <li>Skull-stripping now additionally uses SPM12 segmentations by default: The default gcut approach in CAT12.1 removed too much of the surrounding (extracranial) CSF, which led to a slight underestimation of TIV for atrophied brains. The skull-stripping approach based on the SPM12 segmentations prevents this through a more conservative approach. However, sometimes parts of the meninges (i.e. dura mater) or other non-brain parts still remain in the GM segmentation. By combining both approaches a more reliable skull-stripping is achieved.</li>
             <li>More reliable estimation of TIV: The changed skull-stripping also affects estimation of TIV, which is now more reliable, especially for atrophied brains.</li>
           </ul>
         </ul>
         <ul>
           <li>Important new features</li>
           <ul>
-            <li>Automatical check for design orthogonality and sample homogeneity using SPM.mat in <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a></li>
+            <li>Automatic check for design orthogonality and sample homogeneity using SPM.mat in <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a></li>
             <li>Added equi-volume model by Bok and multi-save option for <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.vol2surf');">mapping native volumes to individual surfaces</a></li>
-            <li>Added <a href="matlab:web('https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal','-browser');">Local-Global Intrinsic Functional Connectivity Parcellation</a> by Schaefer et al. for resting-state fMRI data</li>
+            <li>Added <a href="matlab:web('https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal','-browser');">Local-Global Intrinsic Functional Connectivity parcellation</a> by Schaefer et al. for resting-state fMRI data</li>
           </ul>
         </ul> 
       </p>
