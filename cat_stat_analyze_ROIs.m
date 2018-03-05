@@ -305,9 +305,9 @@ for i = order
     % write label surface with thresholded p-values
     if mesh_detected
       % save P-alues as float32
-      fname = [hemi '.logP' corr_short{c} output_name '.gii'];
-      save(gifti(struct('cdata',data{c})),fname);
-      fprintf('\nLabel file with thresholded logP values (%s) saved as %s.',corr{c},fname);
+      filename = [hemi '.logP' corr_short{c} output_name '.gii'];
+      save(gifti(struct('cdata',data{c})),filename);
+      fprintf('\nLabel file with thresholded logP values (%s) saved as %s.',corr{c},filename);
     end
 
   end

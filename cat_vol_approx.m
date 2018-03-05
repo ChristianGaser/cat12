@@ -109,26 +109,26 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
       TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO); TAr = cat_vol_median3(TAr,~BMr); 
       TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO); 
     case 'spm'
-      fname     = fullfile(tempdir,'approxtst.nii');
+      filename  = fullfile(tempdir,'approxtst.nii');
       N         = nifti;
-      N.dat     = file_array(fname,size(Tr),[spm_type('float32') spm_platform('bigend')],0,1,0);
+      N.dat     = file_array(filename,size(Tr),[spm_type('float32') spm_platform('bigend')],0,1,0);
       N.mat     = [eye(4,3), [size(Tr)'/2;1]]; N.mat([1,6,11])=resTr.vx_volr;
       N.mat0    = N.mat;
       N.descrip = 'approx test';
       create(N);
       N.dat(:,:,:) = double(Tr);
 
-      fnameB    = fullfile(tempdir,'approxtstB.nii');
+      filenameB = fullfile(tempdir,'approxtstB.nii');
       B         = nifti;
-      B.dat     = file_array(fnameB,size(Tr),[spm_type('float32') spm_platform('bigend')],0,1,0);
+      B.dat     = file_array(filenameB,size(Tr),[spm_type('float32') spm_platform('bigend')],0,1,0);
       B.mat     = [eye(4,3), [size(Tr)'/2;1]]; N.mat([1,6,11])=resTr.vx_volr;
       B.mat0    = B.mat;
       B.descrip = 'approx test B';
       create(B);
       B.dat(:,:,:) = ones(size(Tr));
 
-      V  = spm_vol(fname); 
-      VB = spm_vol(fnameB); 
+      V  = spm_vol(filename); 
+      VB = spm_vol(filenameB); 
     
     
       % SPM bias correction
@@ -137,7 +137,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
       VAr = spm_bias_apply(VB,bT); TAr = 1/max(eps,single(spm_read_vols(VAr)) * mean(TA(Tr(:)>0)));
 %      ds('d2','',[1 1 1],PT{1},PT{2}/max(PT{2}(:)),TA,TAr,20)
       
-      delete(fname,fnameB);
+      delete(filename,filenameB);
       
   end
   %{
@@ -196,18 +196,18 @@ function cat_tst_pre_approx
   %%
     T = PT{1}.*PM{1}; %T(T==0)=nan;
   
-    fname     = fullfile(tempdir,'approxtst.nii');
+    filename  = fullfile(tempdir,'approxtst.nii');
     N         = nifti;
-    N.dat     = file_array(fname,PTsize,[spm_type('float32') spm_platform('bigend')],0,1,0);
+    N.dat     = file_array(filename,PTsize,[spm_type('float32') spm_platform('bigend')],0,1,0);
     N.mat     = [eye(4,3)*vx_vol(1), [PTsize'/2;1]];
     N.mat0    = N.mat;
     N.descrip = 'approx test';
     create(N);
     N.dat(:,:,:) = double(T);
 
-    fnameB    = fullfile(tempdir,'approxtstB.nii');
+    filenameB = fullfile(tempdir,'approxtstB.nii');
     B         = nifti;
-    B.dat     = file_array(fnameB,PTsize,[spm_type('float32') spm_platform('bigend')],0,1,0);
+    B.dat     = file_array(filenameB,PTsize,[spm_type('float32') spm_platform('bigend')],0,1,0);
     B.mat     = [eye(4,3)*vx_vol(1), [PTsize'/2;1]];
     B.mat0    = B.mat;
     B.descrip = 'approx test B';
@@ -215,8 +215,8 @@ function cat_tst_pre_approx
     B.dat(:,:,:) = ones(PTsize);
 
     
-    V  = spm_vol(fname); 
-    VB = spm_vol(fnameB); 
+    V  = spm_vol(filename); 
+    VB = spm_vol(filenameB); 
     
  %% SPM spline interpolation  
     intp = 1; warp = 0;

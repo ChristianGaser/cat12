@@ -37,9 +37,7 @@ if nargin == 1, action = 'run'; end
 if ~isfield(job,'Yclsout'), if nargout==0, job.Yclsout = [0 0 0 0 0 0]; else job.Yclsout = [1 1 1 1 1 1]; end; end %% ADDED RD
 switch lower(action)
     case 'run'
-        %spm('FnBanner',mfilename,SVNid);
         varargout{1} = run_job(job);
-        %fprintf('%-40s: %30s\n','Completed',spm('time'))                %-#
     case 'check'
         varargout{1} = check_job(job);
     case 'vfiles'

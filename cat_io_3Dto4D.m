@@ -1,4 +1,4 @@
-function cat_io_3Dto4D(P,fname,avg)
+function cat_io_3Dto4D(P,filename,avg)
 
 %#ok<*ASGLU>
 
@@ -7,8 +7,8 @@ function cat_io_3Dto4D(P,fname,avg)
   end
   if isempty(P), return; end
 
-  if ~exist('fname','var')
-    fname = '4D';
+  if ~exist('filename','var')
+    filename = '4D';
   end
   
   if ~exist('avg','var')
@@ -28,13 +28,13 @@ function cat_io_3Dto4D(P,fname,avg)
     csv = [csv; {i,ff}]; %#ok<AGROW>
   end
   desc(end)='';
-  cat_io_csv(fullfile(spm_fileparts(P{1}),[fname '.csv']),csv);
+  cat_io_csv(fullfile(spm_fileparts(P{1}),[filename '.csv']),csv);
   
   if 1
     % real 4D-image
     N         = nifti;
     N.dat     = V(1).private.dat;
-    N.dat.fname  = fullfile(spm_fileparts(P{1}),[fname '.nii']);
+    N.dat.fname  = fullfile(spm_fileparts(P{1}),[filename '.nii']);
     N.dat.dim(4) = numel(P);
     N.mat     = V(1).mat;
     N.mat0    = V(1).private.mat0;
@@ -55,7 +55,7 @@ function cat_io_3Dto4D(P,fname,avg)
     N.mat0    = V(1).private.mat0;
     N.descrip = desc;
     create(N);       
-    Y = spm_read_vols(spm_vol(fullfile(spm_fileparts(P{1}),[fname '.nii']))); 
+    Y = spm_read_vols(spm_vol(fullfile(spm_fileparts(P{1}),[filename '.nii']))); 
     [maxx,N.dat(:,:,:)] = nanmax(Y,[],4);
   end
 end

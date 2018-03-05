@@ -9,7 +9,7 @@ function varargout = cat_stat_check_cov(job)
 % Christian Gaser
 % $Id$
 
-global alphaval fname H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
+global alphaval filename H YpY YpYsorted  data_array data_array_diff pos ind_sorted ind_sorted_display mean_cov FS X mesh_detected ...
 mn_data mx_data V Vchanged sample isxml sorted isscatter MD show_name bplot names_changed img img_alpha
 
 % show data by fileorder
@@ -289,7 +289,7 @@ for i=1:n_samples
   fprintf('Compressed filenames sample %d: %s  \n',i,tmp);
 end
 
-fname = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
+filename = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
 
 % print suspecious files with cov>0.925
 YpY_tmp = YpY - tril(YpY);
@@ -304,9 +304,9 @@ if ~isempty(indx) && (sqrt(length(indx)) < 0.25*n_subjects)
     if indx(i) ~= indy(i)
       % report file with lower mean correlation first
       if mean_cov(indx(i)) < mean_cov(indy(i))
-        fprintf('%s and %s: %3.3f\n',fname.m{indx(i)},fname.m{indy(i)},YpY(indx(i),indy(i)));
+        fprintf('%s and %s: %3.3f\n',filename.m{indx(i)},filename.m{indy(i)},YpY(indx(i),indy(i)));
       else
-        fprintf('%s and %s: %3.3f\n',fname.m{indy(i)},fname.m{indx(i)},YpY(indy(i),indx(i)));
+        fprintf('%s and %s: %3.3f\n',filename.m{indy(i)},filename.m{indx(i)},YpY(indy(i),indx(i)));
       end
     end
   end
@@ -680,7 +680,7 @@ return
 %-----------------------------------------------------------------------
 function show_mean_boxplot(data_boxp, name_boxp, quality_order)
 %-----------------------------------------------------------------------
-global fname FS sample ind_sorted_display show_name bp
+global filename FS sample ind_sorted_display show_name bp
 
 if nargin == 0
   data_boxp = bp.data;
@@ -716,7 +716,7 @@ for i=1:n_samples
 
   for j=1:length(ind)
     if show_name
-      text(xpos{i}(j),data{i}(j),fname.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
+      text(xpos{i}(j),data{i}(j),filename.m{ind(j)},'FontSize',FS(7),'HorizontalAlignment','center')
     else
       plot(xpos{i}(j),data{i}(j),'k.');
     end
@@ -738,11 +738,11 @@ end
 
 % add colored labels and title
 if n_samples > 1
-  [tmp,  tmp2] = spm_str_manip(char(fname.s),'C');
+  [tmp,  tmp2] = spm_str_manip(char(filename.s),'C');
   title_str = sprintf('Boxplot: %s  \n%s ',name_boxp, strrep(tmp,tmp2.s,''));
   fprintf('\nCommon filename: %s\n',tmp);
 else
-  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name_boxp,spm_file(char(fname.s),'short25'));
+  title_str = sprintf('Boxplot: %s  \nCommon filename: %s*',name_boxp,spm_file(char(filename.s),'short25'));
 end
 title(title_str,'FontSize',FS(8),'FontWeight','Bold');
 xlabel('<----- First ---      File Order      --- Last ------>  ','FontSize',FS(10),...
@@ -816,7 +816,7 @@ return
 %-----------------------------------------------------------------------
 function update_slices_array(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval V Vchanged fname data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed FS img_alpha img
+global alphaval V Vchanged filename data_array data_array_diff H YpY pos sorted ind_sorted isscatter names_changed FS img_alpha img
 
 if isfield(H,'mm')
   slice_mm = get(H.mm,'Value');
@@ -915,10 +915,10 @@ if isfield(pos,'x')
   end
   
   if isscatter
-    txt = {sprintf('%s',spm_file(fname.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+    txt = {sprintf('%s',spm_file(filename.m{x},'short25')),[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   else
-    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(fname.m{x},'short25')],...
-      ['Bottom: ',spm_file(fname.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
+    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',spm_file(filename.m{x},'short25')],...
+      ['Bottom: ',spm_file(filename.m{y},'short25')],[],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm']};
   end
   set(H.text,'String',txt,'FontSize',FS(6));
   set(H.mm_txt,'String',[num2str(round(get(H.mm,'Value'))),' mm'],...
@@ -930,7 +930,7 @@ return
 %-----------------------------------------------------------------------
 function txt = myupdatefcn(obj, event_obj)
 %-----------------------------------------------------------------------
-global alphaval fname sample H X YpY data_array data_array_diff pos mesh_detected ind_sorted sorted isscatter img img_alpha FS
+global alphaval filename sample H X YpY data_array data_array_diff pos mesh_detected ind_sorted sorted isscatter img img_alpha FS
 
 set(H.alpha,'Visible','on');
 set(H.alpha_txt,'Visible','on');
@@ -944,10 +944,10 @@ if isscatter
   end
 
   % text info for data cursor window
-  txt = {sprintf('%s',fname.m{pos.x})};
+  txt = {sprintf('%s',filename.m{pos.x})};
 
   % text info for textbox
-  txt2 = {sprintf('%s',spm_file(fname.m{pos.x},'short25')),[],'Difference to Sample Mean (red: - green: +)'};
+  txt2 = {sprintf('%s',spm_file(filename.m{pos.x},'short25')),[],'Difference to Sample Mean (red: - green: +)'};
 
   set(H.text,'String',txt2,'FontSize',FS(6));
   axes('Position',pos.slice);
@@ -978,21 +978,21 @@ else
 
   % text info for data cursor window
   if mesh_detected
-    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',fname.m{x}],...
-      ['Right: ',fname.m{y}]};
+    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Left: ',filename.m{x}],...
+      ['Right: ',filename.m{y}]};
   else
-    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',fname.m{x}],...
-      ['Bottom: ',fname.m{y}]};
+    txt = {sprintf('Correlation: %3.3f',YpY(x,y)),['Top: ',filename.m{x}],...
+      ['Bottom: ',filename.m{y}]};
   end
 
   % text info for textbox
   if mesh_detected
     txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],'right (1st row) and left (2nd row) hemisphere',['Left: ',...
-      spm_file(fname.m{x},'short25') '     Right: ',spm_file(fname.m{y},'short25')],...
+      spm_file(filename.m{x},'short25') '     Right: ',spm_file(filename.m{y},'short25')],...
       [],'Difference to Sample Mean (red: - green: +)'};
   else
     txt2 = {sprintf('Correlation: %3.3f',YpY(x,y)),[],['Top: ',...
-      spm_file(fname.m{x},'short25')],['Bottom: ',spm_file(fname.m{y},'short25')],...
+      spm_file(filename.m{x},'short25')],['Bottom: ',spm_file(filename.m{y},'short25')],...
       [],['Displayed slice: ',num2str(round(get(H.mm,'Value'))),' mm'],...
       'Difference to Sample Mean (red: - green: +)'};
   end      
