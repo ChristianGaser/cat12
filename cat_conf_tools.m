@@ -1007,13 +1007,13 @@ for i=1:numel(PU),
         
         switch job.modulate
         case 2
-            fname = fullfile(pth,['m0w' nam ext num]);
+            filename = fullfile(pth,['m0w' nam ext num]);
         case 1
-            fname = fullfile(pth,['mw' nam ext num]);
+            filename = fullfile(pth,['mw' nam ext num]);
         case 0
-            fname = fullfile(pth,['w' nam ext num]);
+            filename = fullfile(pth,['w' nam ext num]);
         end;
-        vf{m} = fname;
+        vf{m} = filename;
     end
 end
 
@@ -1032,13 +1032,13 @@ for i=1:numel(PU),
         
         switch job.modulate
         case 2
-            fname = fullfile(pth,['m0w' nam ext num]);
+            filename = fullfile(pth,['m0w' nam ext num]);
         case 1
-            fname = fullfile(pth,['mw' nam ext num]);
+            filename = fullfile(pth,['mw' nam ext num]);
         case 0
-            fname = fullfile(pth,['w' nam ext num]);
+            filename = fullfile(pth,['w' nam ext num]);
         end;
-        vf{i,m} = fname;
+        vf{i,m} = filename;
     end
 end
 

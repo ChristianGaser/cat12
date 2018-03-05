@@ -56,16 +56,16 @@ Def = reshape(Def,[d(1:3) d(5)]);
 mat = Nii.mat;
 
 %_______________________________________________________________________
-function fname = apply_def(Def,mat,fnames,intrp,modulate)
+function filename = apply_def(Def,mat,filenames,intrp,modulate)
 % Warp an image or series of images according to a deformation field
 
 intrp = [intrp*[1 1 1], 0 0 0];
 
-for i=1:size(fnames,1),
+for i=1:size(filenames,1),
 
     % Generate headers etc for output images
     %----------------------------------------------------------------------
-    [pth,nam,ext,num] = spm_fileparts(deblank(fnames(i,:))); ext = '.nii';  %#ok<ASGLU>
+    [pth,nam,ext,num] = spm_fileparts(deblank(filenames(i,:))); ext = '.nii';  %#ok<ASGLU>
     NI = nifti(fullfile(pth,[nam ext]));
     j_range = 1:size(NI.dat,4);
     k_range = 1:size(NI.dat,5);
@@ -107,7 +107,7 @@ for i=1:size(fnames,1),
         NO.dat.fname = fullfile(pth,['m0w',nam,ext]);
         NO.descrip   = sprintf('Warped & Jac scaled (nonlinear only)');
     end
-    fname = NO.dat.fname; 
+    filename = NO.dat.fname; 
     
     NO.extras      = [];
     create(NO);

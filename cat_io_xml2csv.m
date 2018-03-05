@@ -1,4 +1,4 @@
-function cat_io_xml2csv(PD,FN,fname)
+function cat_io_xml2csv(PD,FN,filename)
 % ______________________________________________________________________
 %
 % Function to convert a set of cat*.xml-files to a common csv-file.
@@ -96,8 +96,8 @@ function cat_io_xml2csv(PD,FN,fname)
   
   
   % filename
-  if ~exist('fname','var') || isempty(fname)
-    fname = fullfile(pwd,'cat12.csv');
+  if ~exist('filename','var') || isempty(filename)
+    filename = fullfile(pwd,'cat12.csv');
   end
   
   
@@ -111,8 +111,8 @@ function cat_io_xml2csv(PD,FN,fname)
   
   
   % save as csv-file
-  %cat_io_csv(fname,['xml-file' xmlH; Pff' xmlT]);
-  cat_io_csv(fname,[xmlH;xmlT]);
+  %cat_io_csv(filename,['xml-file' xmlH; Pff' xmlT]);
+  cat_io_csv(filename,[xmlH;xmlT]);
 
 end
 function [FNqa,FNqm,FNdb] = cat_io_xml2csv_defaultsfields

@@ -82,7 +82,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   % write native file
   % ____________________________________________________________________
   if write(1)==1
-    fname = io_handle_pre(V.fname,pre,'',folder);
+    filename = io_handle_pre(V.fname,pre,'',folder);
     if exist('transform','var') && isfield(transform,'native')
       if any(size(Y)~=transform.native.Vo.dim)
         nV = transform.native.Vi;
@@ -92,10 +92,10 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     else
       nV = V;
     end
-    if exist(fname,'file'), delete(fname); end
+    if exist(filename,'file'), delete(filename); end
 
     N         = nifti;
-    N.dat     = file_array(fname,nV.dim(1:3),[spm_type(spmtype) ...
+    N.dat     = file_array(filename,nV.dim(1:3),[spm_type(spmtype) ...
                   spm_platform('bigend')],range(1),range(2),0);
     N.mat     = nV.mat;
 
@@ -121,12 +121,12 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       end
     end
 
-    Vn = spm_vol(fname); 
+    Vn = spm_vol(filename); 
     % reduce to original native space if it was interpolated
     if exist('transform','var') && isfield(transform,'native') && any(size(Y)~=transform.native.Vo.dim)
-      [pp,ff] = spm_fileparts(fname); 
+      [pp,ff] = spm_fileparts(filename); 
       Vo = transform.native.Vo; 
-      Vo.fname = fname; 
+      Vo.fname = filename; 
       Vo.dt    = Vn.dt; 
       Vo.pinfo = Vn.pinfo;
       if strcmp(ff(1:2),'p0')
@@ -204,8 +204,8 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   if write(2)
     pre2 = ['w'  pre]; desc2 = [desc '(warped)'];
     
-    fname = io_handle_pre(V.fname,pre2,'',folder);
-    if exist(fname,'file'), delete(fname); end
+    filename = io_handle_pre(V.fname,pre2,'',folder);
+    if exist(filename,'file'), delete(filename); end
     if labelmap==0
       [wT,w]  = spm_diffeo('push',YI ,transform.warped.yx,transform.warped.odim(1:3));
       % divide by jacdet to get unmodulated data
@@ -234,7 +234,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     end
     
     N      = nifti;
-    N.dat  = file_array(fname,transform.warped.odim, ...
+    N.dat  = file_array(filename,transform.warped.odim, ...
               [spm_type(spmtype) spm_platform('bigend')], ...
               range(1),range(2),0);
     N.mat  = transform.warped.M1;
@@ -244,7 +244,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     N.dat(:,:,:) = double(wT);
     clear N; 
     
-    if nargout>0, varargout{1}(2) = spm_vol(fname); end
+    if nargout>0, varargout{1}(2) = spm_vol(filename); end
     if nargout>1, varargout{2}{2} = wT; end
   end
 
@@ -271,8 +271,8 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     end
 
     
-    fname = io_handle_pre(V.fname,pre3,'',folder);
-    if exist(fname,'file'), delete(fname); end
+    filename = io_handle_pre(V.fname,pre3,'',folder);
+    if exist(filename,'file'), delete(filename); end
     
     [wT,wr] = spm_diffeo('push',YI,transform.warped.yx,transform.warped.odim(1:3)); 
 
@@ -290,7 +290,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   
     % create image
     N         = nifti;
-    N.dat     = file_array(fname,transform.warped.odim,...
+    N.dat     = file_array(filename,transform.warped.odim,...
                   [spm_type(spmtype) spm_platform('bigend')], ...
                   range(1),range(2),0);
     N.mat     = transform.warped.M1;
@@ -305,7 +305,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     end
     clear N;
     
-    if nargout>0, varargout{1}(3) = spm_vol(fname); end
+    if nargout>0, varargout{1}(3) = spm_vol(filename); end
     if nargout>1, varargout{2}{3} = wT*abs(det(transform.warped.M2(1:3,1:3))); end
   end
   %}
@@ -322,8 +322,8 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         continue
       end
 
-      fname = io_handle_pre(V.fname,pre3,'',folder);
-      if exist(fname,'file'), delete(fname); end
+      filename = io_handle_pre(V.fname,pre3,'',folder);
+      if exist(filename,'file'), delete(filename); end
 
       [wT,w]  = spm_diffeo('push',YI,transform.warped.yx,transform.warped.odim(1:3));
 
@@ -369,7 +369,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       end
 
       N         = nifti;
-      N.dat     = file_array(fname,transform.warped.odim, ...
+      N.dat     = file_array(filename,transform.warped.odim, ...
                       [spm_type(spmtype) spm_platform('bigend')], ...
                       range(1),range(2),0);
       N.mat     = transform.warped.M1;
@@ -380,7 +380,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       N.dat(:,:,:) = double(wT) ; % / 8^interpol; %
       clear N;
 
-      if nargout>0, varargout{1}(3) = spm_vol(fname); end
+      if nargout>0, varargout{1}(3) = spm_vol(filename); end
       if nargout>1, varargout{2}{3} = wT; end
       clear wT
     end
@@ -403,9 +403,9 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
       end
 
      
-      fname = io_handle_pre(V.fname,pre4,post,folder);
-      if exist(fname,'file'), delete(fname); end
-      VraT = struct('fname',fname,'dim',transf.odim,...
+      filename = io_handle_pre(V.fname,pre4,post,folder);
+      if exist(filename,'file'), delete(filename); end
+      VraT = struct('fname',filename,'dim',transf.odim,...
            'dt',   [spm_type(spmtype) spm_platform('bigend')],...
            'pinfo',[range(2) range(1)]','mat',transf.mat);%[1.0 0]'
       VraT = spm_create_vol(VraT);
@@ -443,7 +443,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
         VraT = spm_write_plane(VraT,tmp,i);
       end
 
-      if nargout>0, varargout{1}(4) = spm_vol(fname); end
+      if nargout>0, varargout{1}(4) = spm_vol(filename); end
       if nargout>1, varargout{2}{4} = []; end
 
       

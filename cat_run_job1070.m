@@ -666,6 +666,13 @@ function cat_run_job1070(job,tpm,subj)
 
     end
     
+    % updated tpm information for skull-stripped data should be available for cat_main
+    if isfield(obj.tpm,'bg1')
+      fname = res.tpm(1).fname;
+      res.tpm       = obj.tpm;
+      res.tpm(1).fname = fname;
+    end
+            
     %% call main processing
     res.stime  = stime;
     res.catlog = catlog; 

@@ -250,7 +250,7 @@ function cat_run_job(job,tpm,subj)
               %preproc.warp.fwhm           = 0;
               %preproc.warp.samp           = min(9,max(2,job.opts.samp*2));
               
-              % add noise in zerosed regions (skull-stripping / defacing)
+              % add noise in zero regions (skull-stripping / defacing)
               VF = spm_vol(nfname);
               YF = single(spm_read_vols(VF));
               % some average object intensity 
