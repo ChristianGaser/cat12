@@ -1,5 +1,24 @@
 ------------------------------------------------------------------------
-r1286 | gaser | 2018-03-05 12:43:49
+r1287 | gaser | 2018-03-05 16:17:18
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       cat_batch_cat.sh
+M       cat_conf_extopts.m
+MM      cat_spm_preproc_write8.m
+MM      cat_stat_histth.m
+ M      cat_vol_pbtv.cpp
+ M      cat_vol_pbtv.mexmaci64
+M       html/cat.html
+M       html/cat_versions.html
+
+(1) Fixed: Option "-nojvm" in cat_batch_cat.sh was not correctly working.
+(2) Fixed: Corrected typos in help text.
+------------------------------------------------------------------------
+r1286 | gaser | 2018-03-05 12:44:37 +0100 (Mo, 05 Mär 2018) | 47 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -47,6 +66,7 @@ M       tbx_cfg_cat.m
 (7) Fixed: Variable fname is reserved function and caused issues on deployed 
     versions.
 (8) Changed: Added
+
 ------------------------------------------------------------------------
 r1285 | gaser | 2018-02-28 08:19:05 +0100 (Mi, 28 Feb 2018) | 24 lines
 
