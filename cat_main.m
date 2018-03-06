@@ -747,7 +747,7 @@ if ~isfield(res,'spmpp')
       [Yb,Yl1] = cat_main_gcut(Ymo,Yb,Ycls,Yl1,YMF,vx_vol,job.extopts);
       
       % extend gcut brainmask by brainmask derived from SPM12 segmentations if necessary
-      Yb = Yb | Yb0;
+      if ~job.inv_weighting, Yb = Yb | Yb0; end
       
       fprintf('%5.0fs\n',etime(clock,stime));
     catch %#ok<CTCH>
@@ -869,7 +869,7 @@ if ~isfield(res,'spmpp')
   % finally use brainmask before cleanup that was derived from SPM12 segmentations and additionally include
   % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
   % hopefully are all included and not cut 
-  if job.extopts.gcutstr >= 0.5 
+  if job.extopts.gcutstr >= 0.5 & ~job.inv_weighting
     Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & ~Ycls{1}(indx,indy,indz));
     for i=1:3
       prob(:,:,:,i) = prob(:,:,:,i).*uint8(Yb0(indx,indy,indz));
@@ -1440,7 +1440,7 @@ if job.output.surface
   if 1
     %% using the Ymi map
     Ymix = Ymi .* (Yp0>0.5); 
-    if 0; pbtmethod = 'pbt2x'; else pbtmethod = 'pbtv'; end
+    if 1; pbtmethod = 'pbt2x'; else pbtmethod = 'pbtv'; end
     if ~debug, clear Yp0; end 
     
     [Yth1,S,Psurf] = cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,...
