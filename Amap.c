@@ -382,22 +382,32 @@ void ICM(unsigned char *prob, unsigned char *label, int n_classes, int *dims, do
   printf("\n");
 } 
 
-void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int n_classes, int niters, int sub, int *dims, double *thresh, double *beta, double offset)
+void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob, struct point *r, double *mean, double *var, int n_classes, int niters, int sub, int *dims, double *thresh, double *beta, double offset, double *voxelsize, double bias_fwhm)
 {
-  int i;
+  int i,j;
   int area, narea, nvol, vol, z_area, y_dims, index, ind;
-  double sub_1, dmin, val;
-  double d[MAX_NC], alpha[MAX_NC], log_alpha[MAX_NC], log_var[MAX_NC];
+  double *bias, sub_1, dmin, val, fwhm[3];
+  double d[MAX_NC], alpha[MAX_NC], log_alpha[MAX_NC], log_var[MAX_NC], sum[MAX_NC], var_global[MAX_NC], mean_global[MAX_NC];
   double pvalue[MAX_NC], psum;
-  int nix, niy, niz, iters, count_change;
+  int nix, niy, niz, iters, count_change, n_all[MAX_NC];
   int x, y, z, label_value, xBG;
-  int ix, iy, iz, ind2;
+  int ix, iy, iz, ind2, masked_smoothing, subsample;
   double ll, ll_old, change_ll;
 
   MrfPrior(label, n_classes, alpha, beta, 0, dims);    
 
   area = dims[0]*dims[1];
   vol = area*dims[2];
+
+  if(bias_fwhm > 0.0) {
+    bias = (double*)malloc(sizeof(double*)*vol);
+    if(bias == NULL) {
+      printf("Memory allocation error\n");
+      exit(EXIT_FAILURE);
+    }
+    for(i = 0; i < 3; i++) 
+      fwhm[i] = bias_fwhm;
+  }
 
   /* find grid point conversion factor */
   sub_1 = 1.0/((double) sub);
@@ -411,7 +421,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
   nvol = nix*niy*niz;
 
   for(i = 0; i < n_classes; i++) log_alpha[i] = log(alpha[i]);
-    
+  
   ll_old = HUGE;
   count_change = 0;
       
@@ -421,6 +431,21 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
     
     /* get means for grid points */
     GetMeansVariances(src, label, n_classes, r, sub, dims, thresh);    
+
+    for(i = 0; i < n_classes; i++) {
+      sum[i] = 0.0;
+      var_global[i] = 0.0;
+      n_all[i] = 0;
+    }
+  
+    /* use slightly larger values than 0 for initialization outside of mask to
+       to allow masked smoothing */
+    if(bias_fwhm > 0.0) {
+      for(j = 0; j < vol; j++) {
+        if(label[index] == 0.0) bias[j] = 0.0;
+        else bias[j] = 0.001;
+      }
+    }
 
     /* loop over image points */
     for(z = 1; z < dims[2]-1; z++) {
@@ -445,9 +470,16 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
             if (r[ind2].mean > TINY) {
               mean[i] = r[ind2].mean;
               var[i]  = r[ind2].var;
-              log_var[i] = log(var[i]);
-            }
+              log_var[i]  = log(var[i]);
+              sum[i]     += mean[i];
+              var_global[i] += var[i];
+              n_all[i]++;
+            } else mean[i] = 0.0;
           }
+
+          /* estimate bias using difference between local and global mean values*/
+          if((iters > 0) && (mean[2] > 0.0) && (bias_fwhm > 0.0))
+              bias[index] = (mean[2]-mean_global[2]);
           
           /* compute energy at each point */
           dmin = HUGE; xBG = 1; 
@@ -476,11 +508,24 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
          
           /* if the class has changed modify the label */
           if (xBG + 1 != label_value) label[index] = (unsigned char) (xBG + 1); 
-         
+                   
         }
       }
     }
 
+    /* use subsampling for faster processing */
+    if((iters > 0) && (bias_fwhm > 0.0)){
+      masked_smoothing = 1;
+      subsample = 3;
+      smooth_subsample_double(bias, dims, voxelsize, fwhm, masked_smoothing, subsample);
+      for(j = 0; j < vol; j++) {
+        if(label[j] > 0)
+          src[j] -= bias[j];
+      }
+      /* decrease fwhm until a minimum of 50mm */
+      if(fwhm[0] > 50.0) for(i = 0; i < 3; i++) fwhm[i] /= 1.1;
+    }
+    
     ll /= (double)vol;
     change_ll = (ll_old - ll)/fabs(ll);
 #if !defined(_WIN32)
@@ -490,20 +535,27 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
 #endif
     ll_old = ll;
     
+    for(i = 0; i < n_classes; i++) {
+      var_global[i]  /= (double)n_all[i];
+      mean_global[i] = sum[i]/(double)n_all[i];
+    }
+    
     /* break if log-likelihood has not changed significantly two iterations */
     if (change_ll < TH_CHANGE) count_change++;
-    if (count_change > 1) break;    
+    if (count_change > 1) break;
   }
 
+  if(bias_fwhm > 0.0) free(bias);
+
   printf("\nFinal Mean*Std: "); 
-  for(i = 0; i < n_classes; i++) printf("%.3f*%.3f  ",mean[i]-offset,sqrt(var[i])); 
+  for(i = 0; i < n_classes; i++) printf("%.3f*%.3f  ",mean_global[i]-offset,sqrt(var_global[i])); 
   printf("\n"); 
 
 }
 
 
 /* perform adaptive MAP on given src and initial segmentation label */
-void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM, double offset)
+void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int n_classes, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM, double offset, double bias_fwhm)
 {
   int i, nix, niy, niz;
   int area, nvol, vol;
@@ -552,7 +604,7 @@ void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, 
   }
     
   /* estimate 3 classes before PVE */
-  EstimateSegmentation(src, label, prob, r, mean, var, n_classes, niters, sub, dims, thresh, beta, offset);
+  EstimateSegmentation(src, label, prob, r, mean, var, n_classes, niters, sub, dims, thresh, beta, offset, voxelsize, bias_fwhm);
   
   /* Use marginalized likelihood to estimate initial 5 or 6 classes */
   if (pve) {

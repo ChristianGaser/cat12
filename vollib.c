@@ -687,11 +687,11 @@ subsample_float(float *in, float *out, int dim_in[3], int dim_out[3])
 }
 
 void
-smooth_double(double *vol, int dims[3], double separations[3], double s[3], int use_mask)
+smooth_double(double *vol, int dims[3], double separations[3], double s0[3], int use_mask)
 {
   int i;
   double xsum, ysum, zsum;
-  double *x, *y, *z;
+  double *x, *y, *z, s[3];
   int xyz[3], nvol, sum_mask;
   double *mask;
   unsigned char *mask2;
@@ -699,7 +699,7 @@ smooth_double(double *vol, int dims[3], double separations[3], double s[3], int 
   nvol = dims[0]*dims[1]*dims[2];
 
   for(i=0; i<3; i++) {
-    s[i] /= separations[i];
+    s[i] = s0[i]/separations[i];
     if(s[i] < 1.0) s[i] = 1.0;
     s[i] /= sqrt(8.0*log(2.0));
     xyz[i] = (int) RINT(6.0*s[i]);
@@ -715,13 +715,13 @@ smooth_double(double *vol, int dims[3], double separations[3], double s[3], int 
     mask2 = (unsigned char *) malloc(sizeof(unsigned char)*nvol);
     sum_mask = 0;
     for(i=0; i<nvol; i++) {
-      if(vol[i] > 0.0) {
+      if(vol[i] == 0.0) {
+        mask[i]  = 0.0;
+        mask2[i] = 0;
+      } else {
         mask[i]  = 1.0;
         mask2[i] = 1;
         sum_mask++;
-      } else {
-        mask[i]  = 0.0;
-        mask2[i] = 0;
       }
     }
   }
@@ -765,15 +765,15 @@ smooth_double(double *vol, int dims[3], double separations[3], double s[3], int 
   free(x);
   free(y);
   free(z);
-
+  
 }
 
 void
-smooth_float(float *vol, int dims[3], float separations[3], float s[3], int use_mask)
+smooth_float(float *vol, int dims[3], float separations[3], float s0[3], int use_mask)
 {
   int i;
   float xsum, ysum, zsum;
-  float *x, *y, *z;
+  float *x, *y, *z, s[3];
   int xyz[3], nvol, sum_mask;
   float *mask;
   unsigned char *mask2;
@@ -781,7 +781,7 @@ smooth_float(float *vol, int dims[3], float separations[3], float s[3], int use_
   nvol = dims[0]*dims[1]*dims[2];
 
   for(i=0; i<3; i++) {
-    s[i] /= separations[i];
+    s[i] = s0[i]/separations[i];
     if(s[i] < 1.0) s[i] = 1.0;
     s[i] /= sqrt(8.0*log(2.0));
     xyz[i] = (int) RINT(6.0*s[i]);
@@ -797,13 +797,13 @@ smooth_float(float *vol, int dims[3], float separations[3], float s[3], int use_
     mask2 = (unsigned char *) malloc(sizeof(unsigned char)*nvol);
     sum_mask = 0;
     for(i=0; i<nvol; i++) {
-      if(vol[i] > 0.0) {
+      if(vol[i] == 0.0) {
+        mask[i]  = 0.0;
+        mask2[i] = 0;
+      } else {
         mask[i]  = 1.0;
         mask2[i] = 1;
         sum_mask++;
-      } else {
-        mask[i]  = 0.0;
-        mask2[i] = 0;
       }
     }
   }

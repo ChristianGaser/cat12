@@ -107,7 +107,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     thresh = 0;
     thresh_kmeans_int = 128;
-    iters_nu = 40;
+    iters_nu = 0; /* bias correction works better inside Amap */
 
     /* initial Kmeans estimation with 6 classes */
     max_vol = Kmeans( src, label, mask, 25, n_classes, voxelsize, dims2, thresh, thresh_kmeans_int, iters_nu, KMEANS, bias_fwhm);
@@ -117,7 +117,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mxFree(mask);
   }
     
-  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize, iters_icm, offset);
+  Amap(src, label, prob, mean, n_classes, niters, sub, dims2, pve, weight_MRF, voxelsize, iters_icm, offset, bias_fwhm);
   if(pve==6) Pve6(src, prob, label, mean, dims2);
   if(pve==5) Pve5(src, prob, label, mean, dims2);
 
