@@ -1,5 +1,18 @@
 ------------------------------------------------------------------------
-r1289 | gaser | 2018-03-08 12:11:49
+r1290 | gaser | 2018-03-08 15:18:02
+
+Changed paths:
+M       CAT12-Manual.docx
+M       CAT12-Manual.pdf
+M       CHANGES.txt
+M       Contents.m
+M       html/cat.html
+M       html/cat_starting.html
+M       html/cat_versions.html
+
+Changed: Updated CAT12 manual and online help
+------------------------------------------------------------------------
+r1289 | gaser | 2018-03-08 12:12:16 +0100 (Do, 08 Mär 2018) | 60 lines
 
 Changed paths:
 M       Amap.c
@@ -60,6 +73,7 @@ M       vollib.c
 (3) Changed: Updated internal bias correction in Amapc.c which is still
     experimental.
 (4) Changed: Canceled Roberts last changes in cat_vol_eidist.c.  
+
 ------------------------------------------------------------------------
 r1288 | gaser | 2018-03-06 16:28:35 +0100 (Di, 06 Mär 2018) | 8 lines
 
