@@ -1,5 +1,67 @@
 ------------------------------------------------------------------------
-r1288 | gaser | 2018-03-06 16:28:12
+r1289 | gaser | 2018-03-08 12:11:49
+
+Changed paths:
+M       Amap.c
+M       Amap.h
+M       CHANGES.txt
+M       Contents.m
+M       cat12.m
+M       cat_amap.c
+M       cat_amap.mexa64
+M       cat_amap.mexmaci64
+M       cat_amap.mexw64
+M       cat_main.m
+M       cat_ornlm.mexmaci64
+M       cat_ornlm.mexw64
+M       cat_sanlm.mexmaci64
+M       cat_sanlm.mexw64
+M       cat_vbdist.mexmaci64
+M       cat_vbdist.mexw64
+M       cat_vol_defs.m
+M       cat_vol_downcut.mexa64
+M       cat_vol_downcut.mexmaci64
+M       cat_vol_downcut.mexw64
+M       cat_vol_eidist.c
+M       cat_vol_eidist.mexa64
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_eidist.mexw64
+M       cat_vol_genus0.mexa64
+M       cat_vol_genus0.mexmaci64
+M       cat_vol_genus0.mexw64
+M       cat_vol_gradient3.mexa64
+M       cat_vol_gradient3.mexmaci64
+M       cat_vol_gradient3.mexw64
+M       cat_vol_interp3f.mexmaci64
+M       cat_vol_interp3f.mexw64
+M       cat_vol_laplace3.mexmaci64
+M       cat_vol_laplace3.mexw64
+M       cat_vol_laplace3R.mexmaci64
+M       cat_vol_laplace3R.mexw64
+M       cat_vol_localstat.mexa64
+M       cat_vol_localstat.mexmaci64
+M       cat_vol_localstat.mexw64
+M       cat_vol_median3.mexa64
+M       cat_vol_median3.mexmaci64
+M       cat_vol_median3.mexw64
+M       cat_vol_median3c.mexmaci64
+M       cat_vol_median3c.mexw64
+M       cat_vol_pbtp.mexmaci64
+M       cat_vol_pbtp.mexw64
+M       cat_vol_simgrow.mexa64
+M       cat_vol_simgrow.mexmaci64
+M       cat_vol_simgrow.mexw64
+M       html/cat.html
+M       vollib.c
+
+(1) Fixed: Applying deformations to img/hdr data was not working (thanks to
+    David Berro for pointing to this error).
+(2) Changed: Updated size of window, fonts and buttons in cat12.m.
+(3) Changed: Updated internal bias correction in Amapc.c which is still
+    experimental.
+(4) Changed: Canceled Roberts last changes in cat_vol_eidist.c.  
+------------------------------------------------------------------------
+r1288 | gaser | 2018-03-06 16:28:35 +0100 (Di, 06 Mär 2018) | 8 lines
 
 Changed paths:
 M       CHANGES.txt
@@ -8,6 +70,7 @@ M       cat_main.m
 M       html/cat.html
 
 Changed: Modified skull-stripping for inverted data (i.e. T2/PD).
+
 ------------------------------------------------------------------------
 r1287 | gaser | 2018-03-05 16:17:42 +0100 (Mo, 05 Mär 2018) | 17 lines
 

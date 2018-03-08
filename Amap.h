@@ -13,7 +13,7 @@
 
 #define MAX_NC 6
 #define TH_COLOR 1
-#define TH_CHANGE 0.001
+#define TH_CHANGE 0.0001
 #ifndef TINY
 #define TINY 1e-15 
 #endif
@@ -55,7 +55,7 @@
 #endif
 
 extern double Kmeans(double *src, unsigned char *label, unsigned char *mask, int NI, int n_clusters, double *voxelsize, int *dims, int thresh_mask, int thresh_kmeans, int iters_nu, int pve, double bias_fwhm);
-extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM, double offset);
+extern void Amap(double *src, unsigned char *label, unsigned char *prob, double *mean, int nc, int niters, int sub, int *dims, int pve, double weight_MRF, double *voxelsize, int niters_ICM, double offset, double bias_fwhm);
 extern void Pve5(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims);
 extern void Pve6(double *src, unsigned char *prob, unsigned char *label, double *mean, int *dims);
 extern void MrfPrior(unsigned char *label, int nc, double *alpha, double *beta, int init, int *dims);
