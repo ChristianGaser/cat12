@@ -825,21 +825,23 @@ if ~isfield(res,'spmpp')
   %     if ~job.output.surface, clear Yb; end
   end
   
-  % Amap parameters  - default sub=16 caused errors with highres data!
-  Ymib = double(Ymib); n_iters = 16; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; bias_fwhm = 60; init_kmeans = 0;  %#ok<NASGU>
-  if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
-
   % adaptive mrf noise 
   if job.extopts.mrf>=1 || job.extopts.mrf<0; 
     % estimate noise
     [Yw,Yg] = cat_vol_resize({Ymi.*(Ycls{1}>240),Ymi.*(Ycls{2}>240)},'reduceV',vx_vol,3,32,'meanm');
     Yn = max(cat(4,cat_vol_localstat(Yw,Yw>0,2,4),cat_vol_localstat(Yg,Yg>0,2,4)),[],4);
     job.extopts.mrf = double(min(0.15,3*cat_stat_nanmean(Yn(Yn(:)>0)))) * 0.5; 
-    %clear Yn Ycls1 Ycls2 Yg;
+    clear Yn Yg
   end
 
   % display something
   stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
+
+  % Amap parameters  - default sub=16 caused errors with highres data!
+  % don't use bias_fwhm, because the Amap bias correction is not that efficient and also changes
+  % intensity values
+  Ymib = double(Ymib); n_iters = 50; sub = round(32/min(vx_vol)); n_classes = 3; pve = 5; bias_fwhm = 0; init_kmeans = 0;  %#ok<NASGU>
+  if job.extopts.mrf~=0, iters_icm = 50; else iters_icm = 0; end %#ok<NASGU>
 
   % do segmentation  
   amapres = evalc(['prob = cat_amap(Ymib, Yp0b, n_classes, n_iters, sub, pve, init_kmeans, ' ...
@@ -1330,7 +1332,7 @@ end
 if job.output.warps(1)
     Yy        = spm_diffeo('invdef',trans.warped.yx,trans.warped.odim,eye(4),trans.warped.M0);
     N         = nifti;
-    N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam1, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
+    N.dat     = file_array(fullfile(pth,mrifolder,['y_', nam, '.nii']),[trans.warped.odim(1:3),1,3],'float32',0,1,0);
     N.mat     = trans.warped.M1;
     N.mat0    = trans.warped.M1;
     N.descrip = 'Deformation';
@@ -1357,7 +1359,7 @@ if job.output.warps(2)
     Vdef = rmfield(Vdef,'private');
     Vdef.dat = zeros(size(Vdef.dim),'single');
     Vdef.pinfo(3) = 0; 
-    Vdef.fname = fullfile(pth,mrifolder,['iy2_r', nam1, '.nii']);
+    Vdef.fname = fullfile(pth,mrifolder,['iy2_r', nam, '.nii']);
     Yy2 = zeros([trans.native.Vo.dim(1:3) 1 3],'double');
     Vyy = VT; Vyy.pinfo(3)=0; Vyy.dt=[16 0]; Vyy = rmfield(Vyy,'private');  
     Yy1 = zeros([res.image(1).dim(1:3),3],'single'); 
@@ -1387,7 +1389,7 @@ if job.output.warps(2)
   % f2 = spm_diffeo('resize', f1, dim)
   % write new output
   Ndef      = nifti;
-  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam1, '.nii']),[res.image(1).dim(1:3),1,3],...
+  Ndef.dat  = file_array(fullfile(pth,mrifolder,['iy_', nam, '.nii']),[res.image(1).dim(1:3),1,3],...
               [spm_type('float32') spm_platform('bigend')],0,1,0);
   Ndef.mat  = res.image(1).mat;
   Ndef.mat0 = res.image(1).mat;
