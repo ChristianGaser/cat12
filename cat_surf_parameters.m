@@ -3,6 +3,27 @@ function varargout = cat_surf_parameters(job)
 %
 % cat_surf_parameters to extract surface parameters such as
 % gyrification and cortical complexity.
+%
+%   varargout = cat_surf_parameters(job)
+%
+%   job.
+%    .data_surf .. input data
+%    .nproc   .. parallel processing (default 0)
+%    .verb    .. verbose output (default cat_get_defaults('extopts.verb'))
+%    .lazy    .. avoid reprocess of exist results (default 0)
+%    .debug   .. (default cat_get_defaults('extopts.verb')>2)
+%    measures 
+%    .IS      .. create inner surface (default 0)
+%    .OS      .. create outer surface (default 0)
+%    .GI      .. estimate absolute mean curvature (default 0)
+%    .FD      .. estimate fractal dimension (Yotter:2012; default 0)
+%    .SD      .. estimate sulcal depth (default 0)
+%    experimental measures (only cat_get_defaults('extopts.expertgui')>1)
+%    .GII     .. estimate inflating-based gyrification index (default 0)
+%    .GIA     .. estimate average-based gyrification index (default 0)
+%    .GIS     .. estimate mapping-based gyrification index (default 0)
+%    .GIL     .. estimate Laplacian-based gyrification index (default 0)
+%    .SA      .. estimate area (not implemented; default 0)
 %_______________________________________________________________________
 % Christian Gaser
 % $Id$
@@ -15,12 +36,25 @@ function varargout = cat_surf_parameters(job)
     error('Not enough parameters.');
   end
   
-  def.trerr       = 0; 
-  def.nproc       = 0; 
+  def.process_index = 0; % spm job variable
+  def.trerr       = 0; % display errors
+  def.nproc       = 0; % parallel processing
   def.verb        = cat_get_defaults('extopts.verb'); 
   def.lazy        = 0; % reprocess exist results
   def.debug       = cat_get_defaults('extopts.verb')>2;
-  
+  % output parameter
+  def.IS          = 0; % create inner surface 
+  def.OS          = 0; % create outer surface
+  def.GI          = 0; % estimate absolute mean curvature
+  def.FD          = 0; % estimate fractal dimension (Yotter:2012)
+  def.SD          = 0; % estimate sulcal depth
+  % experimental measures (cat_get_defaults('extopts.expertgui'))
+  def.GII         = 0; % estimate inflating-based gyrification index
+  def.GIA         = 0; % estimate average-based gyrification index 
+  def.GIS         = 0; % estimate mapping-based gyrification index
+  def.GIL         = 0; % estimate Laplacian-based gyrification index
+  def.SA          = 0; % estimate area (not implemented)
+   
   job = cat_io_checkinopt(job,def);
 
   % split job and data into separate processes to save computation time
@@ -34,7 +68,7 @@ function varargout = cat_surf_parameters(job)
   end
 
   % new banner
-  if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
+  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename,SVNid); end
   
   % display something
   spm_clf('Interactive'); 
@@ -45,6 +79,8 @@ function varargout = cat_surf_parameters(job)
     % go through left and right hemisphere
     for j=1:2
     
+      
+      %% file names
       if j == 1 % lh
         Pname = deblank(P(i,:));
       else % rh
@@ -54,7 +90,7 @@ function varargout = cat_surf_parameters(job)
       
       [pp,ff,ex]   = spm_fileparts(Pname);
   
-      name = [ff ex];
+      name    = [ff ex];
   
       PGI     = fullfile(pp,strrep(ff,'central','gyrification'));         
       PGII    = fullfile(pp,strrep(ff,'central','IGI'));         
@@ -68,7 +104,10 @@ function varargout = cat_surf_parameters(job)
       POS     = fullfile(pp,strrep(ff,'central','outer'));         
       Psphere = fullfile(pp,strrep(name,'central','sphere'));
    
-      fprintf('Extract parameters for %s\n',Pname);
+      
+      if job.verb, fprintf('Extract parameters for %s\n',Pname); end
+      
+      
       if job.GI 
         %% gyrification index based on absolute mean curvature
         if exist(PGI,'file') && job.lazy  
@@ -83,13 +122,6 @@ function varargout = cat_surf_parameters(job)
       end
       
       
-      roijob.cdata  = P; 
-  %    roijob.rdata  = job.rdata; % works only for developer mode
-      roijob.verb   = job.verb;
-      roijob.avg    = struct('mean',1,'std',0,'min',0,'max',0,'median',0);  
-      roijob.area   = 0; % separate function 
-      roijob.vernum = 0; 
-      
       
       % expert folding measures
       % ---------------------------------------------------------------------
@@ -99,7 +131,7 @@ function varargout = cat_surf_parameters(job)
       if cat_get_defaults('extopts.expertgui') > 1
         if job.GIA
           %% gyrification index based on average surface
-          %  basic idea is to find local increase/decreasment of surface area
+          %  basic idea is to find local increase/decrease of surface area
           %  (and compare it to thickness) or estimate the local volume etc.
           %  > I like this idea, but it required more work ... 
           if exist(PGIA,'file') && job.lazy  
@@ -116,7 +148,7 @@ function varargout = cat_surf_parameters(job)
   
         if job.GII
           %% gyrification index based on inflating
-          %  simple GI approach with differnt smoothing options
+          %  simple GI approach with different smoothing options
           if exist(PGII,'file') && job.lazy  
             if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGII,'link','cat_surf_display(''%s'')')); end
           else
@@ -143,9 +175,8 @@ function varargout = cat_surf_parameters(job)
         end
   
         if job.GIS
-          %% gyrification index based on spericial mapping with hull
-          %  similar to GII, but with stronger normalization by the sphereical
-          %  mapping
+          %% gyrification index based on shpericial mapping with hull
+          %  similar to GII, but with stronger normalization by the spherical mapping
           if exist(PGIS,'file') && job.lazy  
             if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PGIS,'link','cat_surf_display(''%s'')')); end
           else
@@ -156,6 +187,8 @@ function varargout = cat_surf_parameters(job)
             if job.verb>=1, fprintf('  %4.0fs. Display %s\n',etime(clock,stime),spm_file(PGIL,'link','cat_surf_display(''%s'')')); end
           end
         end
+        
+        
   
       %  if job.SA
       %    %% local surface area
@@ -171,9 +204,7 @@ function varargout = cat_surf_parameters(job)
       %  end
   
       end
-    % ----------------------------------------------------------------------
-    % ----------------------------------------------------------------------
-      
+      % ----------------------------------------------------------------------
       
         
       
@@ -209,7 +240,7 @@ function varargout = cat_surf_parameters(job)
       %% ----------------------------------------------------------------------
       %  No measures, but I do not want another script
       %  ----------------------------------------------------------------------
-      if isfield('IS',job) && job.IS
+      if job.IS
         if exist(PIS,'file') && job.lazy  
           if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(PIS,'link','cat_surf_display(''%s'')')); end
         else
@@ -221,7 +252,7 @@ function varargout = cat_surf_parameters(job)
         end
       end
       
-      if isfield('OS',job) && job.OS
+      if job.OS
         if exist(POS,'file') && job.lazy  
           if job.verb>=1, fprintf('  Display already processed %s\n',spm_file(POS,'link','cat_surf_display(''%s'')')); end
         else
@@ -236,7 +267,8 @@ function varargout = cat_surf_parameters(job)
       spm_progress_bar('Set',i);
     end
     
-    if isfield(job,'process_index')
+    
+    if isfield(job,'process_index') && job.verb
       fprintf('Done\n');
     end  
     

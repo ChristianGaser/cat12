@@ -52,25 +52,25 @@ bool issuccessor(float SEGi, float SEGI, float WMDi, float WMDI, float NDi,
   return  ( ( SEGi >  1.5 && SEGi <= 2.5 ) &&                         /* projection range - from  (1.2 - 2.75) */
             ( SEGI >  1.5 && SEGI <= 2.5 ) &&                         /* projection range - to    (1.5 - 2.75) */
             ( ( ( WMDi - NDi * a2 ) <= WMDI ) ) &&                    /* upper boundary - maximum distance */
-            ( ( ( WMDi - NDi * a1 ) >  WMDI ) ) ); /* &&                    // lower boundary - minimum distance - corrected values outside 
-            ( ( ( SEGI - SEGi ) > (-a3 - (SEGi-1.5)/3 ) &&            // SEGi should be not to much higher than SEGI 
-                ( SEGI - SEGi ) < 1 ) || SEGI>2.0 ) );     */             
+            ( ( ( WMDi - NDi * a1 ) >  WMDI ) ) &&                    /* lower boundary - minimum distance - corrected values outside */
+            ( ( ( SEGI - SEGi ) < a3 ) || SEGI>1.8 ) );               /* SEGi should be not to much higher than SEGI */                  
+            //( ( ( SEGI - SEGi ) > (-a3 - (SEGi-1.5)/3 ) &&            // SEGi should be not to much higher than SEGI 
 }  
 bool isprecessor(float SEGi, float SEGI, float WMDi, float WMDI, float NDi, 
                  float a1, float a2, float a3) {
   return  ( ( SEGi >  1.5 && SEGi <= 2.5 ) &&                         /* projection range - from  (1.2 - 2.75) */
             ( SEGI >  1.5 && SEGI <= 2.5 ) &&                         /* projection range - to    (1.5 - 2.75) */
             ( ( ( WMDI - NDi * a2 ) <= WMDi ) ) &&                    /* upper boundary - maximum distance */
-            ( ( ( WMDI - NDi * a1 ) >  WMDi ) ) ); /* &&                    // lower boundary - minimum distance - corrected values outside 
-            ( ( ( SEGi - SEGI ) > (-a3 - (SEGI-1.5)/3 ) &&            // SEGi should be not to much higher than SEGI 
-                ( SEGi - SEGI ) < 1 ) || SEGi>2.0 ) );  */                
-}  
-bool isneighbor(float GMTi, float SEGi, float SEGI, float WMDi, float NDi, float WMDI,
+            ( ( ( WMDI - NDi * a1 ) >  WMDi ) ) );                    /* lower boundary - minimum distance - corrected values outside */
+  //          ( ( ( SEGi - SEGI ) < a3 ) || SEGi>1.8 ) );               /* SEGi should be not to much higher than SEGI */ 
+  //( ( ( SEGi - SEGI ) > (-a3 - (SEGI-1.5)/3 ) &&     
+}
+bool isneighbor(float SEGi, float SEGI, float WMDi, float WMDI, float NDi, 
                 float a1, float a2, float a3) {
   return  ( ( SEGi >  1.5 && SEGi <= 2.5 ) &&                         /* projection range - from  (1.2 - 2.75) */
             ( SEGI >  1.5 && SEGI <= 2.5 ) &&                         /* projection range - to    (1.5 - 2.75) */
             ( fabs( WMDi - WMDI ) <= a1  ) &&                         /* upper boundary - maximum distance */
-            ( fabs( SEGi - SEGI ) <= a3  ) );                         // SEGi should be not to much higher than SEGI 
+            ( fabs( SEGi - SEGI ) <= a3  ) );                         /* SEGi should be not to much higher than SEGI */
 }  
 
    
@@ -78,22 +78,68 @@ bool isneighbor(float GMTi, float SEGi, float SEGI, float WMDi, float NDi, float
 /* Find all successor voxels *i of a voxel *I to map the average thickness 
  * of the successors to *I.
  */
-float pmax(const float GMT[], const float WMD[], const float SEG[], const float ND[], 
+bool issuccessormax(float GMTi, float SEGi, float SEGI, 
+                 float WMDi, float NDi, float WMDI,
+                 float a1, float a2, float a3, float maximum) {
+  return  ( ( GMTi < 1e15 ) && //( maximum < GMTi ) &&                /* thickness/WMD of neighbors should be larger */
+            ( SEGi >  1.5 && SEGi <= 2.5 ) &&                         /* projection range - from  (1.2 - 2.75) */
+            ( SEGI >  1.5 && SEGI <= 2.5 ) &&                         /* projection range - to    (1.5 - 2.75) */
+            ( ( ( WMDi - NDi * a2 ) <= WMDI ) ) &&                    /* upper boundary - maximum distance */
+            ( ( ( WMDi - NDi * a1 ) >  WMDI ) ) &&                    /* lower boundary - minimum distance - corrected values outside */
+            ( ( ( SEGI - SEGi ) < a3 ) || SEGI>1.8 )  );              /* SEGi should be not to much higher than SEGI */
+            //( ( ( SEGI - SEGi ) > (-a3 - (SEGi-1.5)/3 ) &&            /* SEGi should be not to much higher than SEGI */
+}  
+ 
+
+float pmax2(const float GMT[], const float WMD[], const float SEG[], const float ND[], 
           const float WMDI,  const float CSFD,  const float SEGI, const int sA) {
   
   float a1 =  0.5;   // lower boundary (lower values with include more voxels as successor) 0.6
   float a2 =  1.5;   // upper boundary (higher values with include more voxels as successor) 1.3
-  float a3 =  0.5;  // minimum intensitiy difference between voxels (higher more successor)
+  float a3 =  0.1;  // minimum intensitiy difference between voxels (higher more successor)
   
   float m2n=1.0, maximum = WMDI; 
   for (int i=0;i<=sA;i++) {
-    if ( issuccessor(SEG[i], SEGI, WMD[i], WMDI, ND[i], a1, a2, a3) ) {
+    if ( (SEGI>SEG[i]+0.05) && issuccessor(SEG[i], SEGI, WMD[i], WMDI, ND[i], a1, a2, a3) ) {
       maximum = maximum + GMT[i]; m2n++; 
     }
   }
   return maximum / m2n;
 }
 
+/* Find all successor voxels *i of a voxel *I to map the average thickness 
+ * of the successors to *I.
+ */
+float pmax(const float GMT[], const float WMD[], const float SEG[], const float ND[], 
+          const float WMDI,  const float CSFD,  const float SEGI, const int sA) { //, float & maximum) {
+  
+  float T[27]; for (int i=0;i<27;i++) T[i]=-1; float n=0.0;
+  float maximum = WMDI; 
+  
+  float a1 =  0.5;   // lower boundary (lower values with include more voxels as successor) 0.6
+  float a2 =  1.5;   // upper boundary (higher values with include more voxels as successor) 1.3
+  float a3 =  0.2;   // minimum intensitiy difference between voxels (higher more successor)
+  
+  /* estiamte the maximum of sibblings */
+  /* project volume values and count the siblings */
+  for (int i=0;i<=sA;i++) {
+    if ( issuccessormax(GMT[i], SEG[i], SEGI, WMD[i], ND[i], WMDI, a1, a2, a3, maximum) ) {
+      maximum = GMT[i];
+    }
+  }
+  /* use the shortest distance between WM and CSF */
+  maximum = fmin( maximum , WMDI + CSFD);
+  
+  /* the mean of the highest values of the siblings */
+  float maximum2=maximum; float m2n=0.0; 
+  for (int i=0;i<=sA;i++) {
+    if ( issuccessormax(GMT[i], SEG[i], SEGI, WMD[i], ND[i], WMDI, a1, a2, a3, maximum) ) {
+      maximum2 = maximum2 + GMT[i]; m2n++; 
+    }
+  }
+  if ( m2n > 0 )  maximum = (maximum2 - maximum) / m2n;
+  return maximum;
+}
 
 
 
@@ -193,11 +239,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	if (CSFC==0) opt.CSFD = 0;
   
   
-
+  
   /* estimate successor and precessor weighting */
   float a1 =  0.1;   // lower boundary (lower values with include more voxels as successor) 0.6
-  float a2 =  1.9;   // upper boundary (higher values with include more voxels as successor) 1.3
-  float a3 =  0.1;   // minimum intensitiy difference between voxels (higher more successor)
+  float a2 =  2.5;   // upper boundary (higher values with include more voxels as successor) 1.3
+  float a3 =  0.5;   // minimum intensitiy difference between voxels (higher more successor)
   for (int i=0;i<nL;i++) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
       ind2sub(i,&u,&v,&w,nL,xy,x);
@@ -216,9 +262,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
           
 
-  
+   
   /* volume mapping - CSF to WM */
-  float ip; 
+  int ip; 
   for (int di=0;di<2;di++) {
     if (di==0) ip = 1; else ip = -1;
     for (int i=di*(nL-1);i>=0 && i<nL;i=i+ip) {
@@ -233,6 +279,44 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             LV[i] = LV[i] + LV[ni] / fmax(1,UVc[ni]); 
           if ( isprecessor(SEG[ni], SEG[i], WMD[ni], WMD[i], ND[n], a1, a2, a3) )
             UV[i] = UV[i] + UV[ni] / fmax(1,LVc[ni]);
+        }
+      }
+    }
+  }
+  /* smoothing */
+  float nlc, nuc, rpd;  
+  for (int dic=0;dic<2;dic++) {
+    for (int di=0;di<2;di++) {
+      if (di==0) ip = 1; else ip = -1;
+      for (int i=di*(nL-1);i>=0 && i<nL;i=i+ip) {
+        if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
+          ind2sub(i,&u,&v,&w,nL,xy,x);
+          nlc=1.0; nuc=1.0;  
+          for (int n=0;n<sN;n++) {
+            if ( di==0 ) ni = i + NI[n]; else ni = i - NI[n]; 
+            ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
+            if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
+
+            if ( isneighbor(SEG[ni], SEG[i], WMD[ni], WMD[i], ND[n], 0.4, a2, 0.2) && 
+                 (LV[i]/(LV[i] + UV[i]))>0.1 && (UV[i]/(LV[i] + UV[i]))>0.1  ) {
+            
+              rpd  = fmax(0,1 - fabs( LV[i]/(LV[i] + UV[i]) - LV[ni]/(LV[ni] + UV[ni]) * 4))*0.5; 
+              rpd += fmax(0,1 - fabs( SEG[i] - SEG[ni] ) * 10)*0.5; 
+              
+              if (rpd>0) {
+                LV[i] = LV[i] + LV[ni]*rpd; 
+                nlc += rpd;
+              }
+              rpd  = fmax(0,1 - fabs( UV[i]/(LV[i] + UV[i]) - UV[ni]/(LV[ni] + UV[ni]) * 4))*0.5;
+              rpd += fmax(0,1 - fabs( SEG[i] - SEG[ni] ) * 10)*0.5; 
+              if ( rpd>0 ) {
+                UV[i] = UV[i] + UV[ni]*rpd; 
+                nuc += rpd;
+              }
+            }
+          }
+          LV[i] = LV[i] / nlc;
+          UV[i] = UV[i] / nuc;
         }
       }
     }
@@ -276,6 +360,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // printf("Thickness mapping\n");
   /* Thickness mapping */
   /* ============================================================================= */
+if ( 0 ) {
+  /* new shorter version that did not run correctly*/
   for (int di=0;di<2;di++) {
     if (di==0) ip = 1; else ip = -1;
     for (int i=di*(nL-1);i>=0 && i<nL;i=i+ip) {
@@ -295,18 +381,60 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           GMTN[n] = GMT[ni]; WMDN[n] = RPM[ni]; SEGN[n] = SEG[ni]; 
         }
 
-        /* find minimum distance within the neighborhood - forward */
+        // find minimum distance within the neighborhood - forward 
         if ( di == 0)
-          GMT[i] = pmax(GMTN,WMDN,SEGN,ND,WMD[i],CSFD[i],SEG[i],sN);
+          GMT[i] = pmax2(GMTN,WMDN,SEGN,ND,WMD[i],CSFD[i],SEG[i],sN);
         else {
-          DNm = pmax(GMTN,WMDN,SEGN,ND,WMD[i],CSFD[i],SEG[i],sN);
+          DNm = pmax2(GMTN,WMDN,SEGN,ND,WMD[i],CSFD[i],SEG[i],sN);
           if ( GMT[i] < DNm && DNm>0 ) GMT[i] = DNm; 
          }
       }
     }
   }
-  
-  
+}
+else {
+  /* old long code version that works */
+  for (int i=0;i<nL;i++) {
+    if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
+      ind2sub(i,&u,&v,&w,nL,xy,x);
+
+      /* read neighbor values 
+       * - why didn't you used pointers? 
+       * - why not adding the neighbor loop to the subfunction?
+       * > create an addition function 
+       * > prepare convertation to C
+       */
+      for (int n=0;n<sN;n++) {
+        ni = i + NI[n];
+        ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
+        if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
+        GMTN[n] = GMT[ni]; WMDN[n] = RPM[ni]; SEGN[n] = SEG[ni]; 
+      }
+
+      /* find minimum distance within the neighborhood - forward */
+      
+      GMT[i] = pmax(GMTN,WMDN,SEGN,ND,WMD[i],CSFD[i],SEG[i],sN);
+    }
+  }
+
+  for (int i=nL-1;i>=0;i--) {
+    if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
+      ind2sub(i,&u,&v,&w,nL,xy,x);
+
+      /* read neighbor values */
+      for (int n=0;n<sN;n++) {
+        ni = i - NI[n];
+        ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
+        if ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1)) ni=i;
+        GMTN[n] = GMT[ni]; WMDN[n] = RPM[ni]; SEGN[n] = SEG[ni]; 
+      }
+
+      /* find minimum distance within the neighborhood - backward */
+      DNm = pmax(GMTN,WMDN,SEGN,ND,WMD[i],CSFD[i],SEG[i],sN);
+      if ( GMT[i] < DNm && DNm>0 ) GMT[i] = DNm; 
+    }
+  }
+}
   
   /* final GMT settings */
 	for (int i=0;i<nL;i++) { 

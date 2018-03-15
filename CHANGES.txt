@@ -1,5 +1,30 @@
 ------------------------------------------------------------------------
-r1290 | gaser | 2018-03-08 15:18:02
+r1291 | dahnke | 2018-03-15 13:34:15
+
+Changed paths:
+M       CHANGES.txt
+M       cat_stat_histth.m
+M       cat_surf_createCS.m
+M       cat_surf_parameters.m
+M       cat_vol_eidist.c
+M       cat_vol_eidist.mexmaci64
+M       cat_vol_pbt.m
+M       cat_vol_pbtv.cpp
+M       cat_vol_pbtv.mexmaci64
+
+Changed:    Added defaults parameter in "cat_surf_parameters".
+Changed:    Updated parameter structure in "cat_stat_histth" and
+            added box and violin plots. 
+Changed:    Updated "cat_vol_eidist.c".
+Changed:    Updated pbtv-case in "cat_vol_pbt" and added comments. 
+Changed:    Added smoothing step in "cat_vol_pbtv.m".
+
+ 
+
+
+
+------------------------------------------------------------------------
+r1290 | gaser | 2018-03-08 15:18:27 +0100 (Do, 08 Mär 2018) | 11 lines
 
 Changed paths:
 M       CAT12-Manual.docx
@@ -11,6 +36,7 @@ M       html/cat_starting.html
 M       html/cat_versions.html
 
 Changed: Updated CAT12 manual and online help
+
 ------------------------------------------------------------------------
 r1289 | gaser | 2018-03-08 12:12:16 +0100 (Do, 08 Mär 2018) | 60 lines
 

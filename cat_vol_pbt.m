@@ -45,6 +45,15 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   
   minfdist = 0; 
   
+  if 0
+    % RD 201803: 
+    % Remove blood vessels & meninges
+    % This block is to aggressive and remove gyral peaks (thickness overestimation).
+    % However, some correction is required ...
+    Ymx = cat_vol_morph(Ymf>2.5,'l');  Ymf(Ymf>2.5 & ~Ymx)=2;   clear Ymx
+    Ymx = cat_vol_morph(Ymf>2.2,'lo'); Ymf(Ymf>2.2 & ~Ymx)=2.1; clear Ymx
+    Ymx = cat_vol_morph(Ymf>1.5,'lo'); Ymf(Ymf>1.5 & ~Ymx)=1.2; clear Ymx
+  end
 
 
   %% Distance maps
@@ -57,14 +66,39 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   %  The increasement of this area allow a more accurate and robust projection. 
   %  cat_vol_eidist used speed map to align voxel to the closer gyrus
   %  that is not required for the correction map.
+  %
+  %  RD 201803:
+  %  The speed map weighting "max(0.5,min(1,Ymf/2))" is not strong enough to  
+  %  support asymmetric structures. The map "max(eps,min(1,((Ymf-1)/1.1).^4))"  
+  %  works much better but it lead to much higher thickness results (eg. in 
+  %  the Insula).
+  
+  newspeedmapF = 1; 
+
+
   if opt.verb, fprintf('\n'); end
   stime = cat_io_cmd('    WM distance: ','g5','',opt.verb); stime2=stime;
   YMM = cat_vol_morph(Ymf<1.5,'e',1) | isnan(Ymf);
   switch opt.dmethod
     case 'eidist' 
       % [D,I] = vbm_vol_eidist(B,L,[vx_vol,euclid,csf,setnan,verb])
-      YM  = max(0,min(1,(Ymf-2))); YM(YMM) = nan; Ywmd   = cat_vol_eidist(YM,max(0.5,min(1,Ymf/2)),[1 1 1],1,1,0,opt.debug); 
-      YM  = max(0,min(1,(Ymf-1))); YM(YMM) = nan; Ycsfdc = cat_vol_eidist(YM,max(1.0,min(1,Ymf/2)),[1 1 1],1,1,0,opt.debug); 
+      
+      if newspeedmapF
+        F = max(eps,min(1,((Ymf-1)/1.1).^4)); 
+      else 
+        F = max(0.5,min(1,Ymf/2)); % R1218
+      end
+      YM  = max(0,min(1,(Ymf-2))); YM(YMM) = nan; Ywmd   = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
+      
+      if newspeedmapF
+        F = max(eps,min(1,((Ymf-1)/1.1).^4)); 
+      else 
+        F = max(1.0,min(1,Ymf/2)); % R1218 - no speed difference!
+      end
+      YM  = max(0,min(1,(Ymf-1))); YM(YMM) = nan; Ycsfdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
+      
+      clear F;
+      
     case 'vbdist'
       YM  = max(0,min(1,(Ymf-2))); Ywmd   = max(0,cat_vbdist(single(YM>0.5),~YMM)-0.5); 
       YM  = max(0,min(1,(Ymf-1))); Ycsfdc = max(0,cat_vbdist(single(YM>0.5),~YMM)-0.5); 
@@ -89,9 +123,20 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   YMM = cat_vol_morph(Ymf<1.5,'e',1) | cat_vol_morph(Ymf>2.5,'e',1) | isnan(Ymf); % this was dilate???
   switch opt.dmethod
     case 'eidist'
-      YM  = max(0,min(1,(2-Ymf)));   YM(YMM) = nan; Ycsfd = cat_vol_eidist(YM,max(0.5,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug); 
-      YM  = max(0,min(1,(3-Ymf)));   YM(YMM) = nan; Ywmdc = cat_vol_eidist(YM,max(1.0,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug); 
-      YM  = max(0,min(1,(2.7-Ymf))); YM(YMM) = nan; Ywmdx = cat_vol_eidist(YM,max(1.0,min(1,(4-Ymf)/2)),[1 1 1],1,1,0,opt.debug)+0.3;
+      if newspeedmapF
+        F = max(eps,min(1,(4-Ymf)/2).^2);
+      else
+        F = max(0.5,min(1,(4-Ymf)/2)); % R1218
+      end
+      YM  = max(0,min(1,(2-Ymf)));   YM(YMM) = nan; Ycsfd = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
+      if newspeedmapF
+        F = max(eps,min(1,(4-Ymf)/2).^2);
+      else
+        F = max(1,min(1,(4-Ymf)/2)); % R1218
+      end
+      YM  = max(0,min(1,(3-Ymf)));   YM(YMM) = nan; Ywmdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
+      YM  = max(0,min(1,(2.7-Ymf))); YM(YMM) = nan; Ywmdx = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug)+0.3;
+      clear F; 
     case 'vbdist'
       YM  = max(0,min(1,(2-Ymf)));   Ycsfd = max(0,cat_vbdist(single(YM>0.5),~YMM)-0.5); 
       YM  = max(0,min(1,(3-Ymf)));   Ywmdc = max(0,cat_vbdist(single(YM>0.5),~YMM)-0.5); 
@@ -109,11 +154,26 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
 
   %% PBT thickness mapping 
   %  PBT is the default thickness estimation, but PBT2x is the optimized
-  %  version that use both sulci and gyris refinements, because not only 
-  %  thin sulci can blurred. PBT2x is furthermore the methode that is
+  %  version that use both sulci and gyri refinements, because not only 
+  %  thin sulci can blurred. PBT2x is furthermore the method that is
   %  described in the paper.
+  %  PBTv is new version that used the volume rather than the distance. 
+  %  Although this works in principle, this is biased by interpolation 
+  %  artifacts and in-optimal WMD mapping.  
   iter = 1/mean(opt.resV);
-  if strcmp(opt.method,'pbt2x')  
+  if strcmp(opt.method,'pbtv')  
+    Ywmdo = Ywmd+0; 
+    
+    %% estimate cortical thickness and map the local volumes
+    stime = cat_io_cmd('    PBTV thickness: ','g5','',opt.verb,stime);
+    [Ygmt,Yv1,Yv2,Ypp] = cat_vol_pbtv(Ymf,Ywmd,Ycsfd);
+    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0); 
+  
+    % volume-based PP map
+    Ypp = ((Ygmt - Ywmd)./(Ygmt + eps) + (Ymf>2.5))*0.5 + 0.5*min( 1, Yv1./(Yv1 + Yv2 + eps) + (Ymf>2.5)); 
+    
+    
+  elseif strcmp(opt.method,'pbt2x')  
     % Estimation of the cortical thickness with sulcus (Ygmt1) and gyri 
     % correction (Ygmt2) to create the final thickness as the minimum map
     % of both.
@@ -159,12 +219,16 @@ function [Ygmt,Ypp,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   
   
   %% Estimation of a mixed percentual possion map Ypp.
-  stime = cat_io_cmd('    Final Corrections: ','g5','',opt.verb,stime);
-  YM  = Ymf>=1.5 & Ymf<2.5 & Ygmt>eps;
-  Ycsfdc = Ycsfd; Ycsfdc(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)); 
-  Ypp = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5)=1;
-  Ypp(YM) = Ycsfdc(YM) ./ (Ygmt(YM) + eps); 
-  Ypp(Ypp>2) = 0;
+  if nargout>3 || ~strcmp(opt.method,'pbtv')  
+    YM  = Ymf>=1.5 & Ymf<2.5 & Ygmt>eps;
+    Ycsfdc = Ycsfd; Ycsfdc(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)); 
+  end
+  if ~strcmp(opt.method,'pbtv')  
+    Ypp = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5)=1;
+    Ypp(YM) = Ycsfdc(YM) ./ (Ygmt(YM) + eps); 
+    Ypp(Ypp>2) = 0;
+  end
+
   YM  = (Ygmt<=opt.resV & Ywmd<=opt.resV & Ygmt>0); Ypp(YM) = (Ymf(YM)-1)/2 - 0.2; % correction of voxel with thickness below voxel resolution
   Ypp(isnan(Ypp)) = 0; 
   Ypp(Ypp<0) = 0; 
