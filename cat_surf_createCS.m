@@ -37,9 +37,7 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
 
 %#ok<*AGROW>
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
-  
-  pbt_r1284 = 0;
-
+ 
   % set defaults
   vx_vol  = sqrt(sum(V.mat(1:3,1:3).^2));   % further interpolation based on internal resolution 
   vx_vol0 = sqrt(sum(V0.mat(1:3,1:3).^2));  % final surface resolution based on original image resolution
@@ -47,8 +45,10 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
   def.verb      = 2; 
   def.surf      = {'lh','rh'}; % {'lh','rh','lc','rc'}
   reduceCS      = 100000; % default for 1 mm data
-  def.reduceCS  = max( reduceCS , min( reduceCS*4 , reduceCS .* 1/(mean(vx_vol0).^2)));  
-  def.vdist     = min(1,mean(vx_vol0));
+  def.reduceCS  = 1 * max( max(100000,reduceCS/2) , ... % minimum number
+                           min( reduceCS*4 , ...        % maximum number
+                           reduceCS .* 1/(mean(vx_vol0).^2)));  
+  def.vdist     = max(1,mean(vx_vol0)); % distance between vertices ... at least 1 mm ?
   def.LAB       = cat_get_defaults('extopts.LAB');  
   def.SPM       = 0; 
   def.add_parahipp    = cat_get_defaults('extopts.add_parahipp');
@@ -271,11 +271,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
     Ymfs = min(3,max(1,Ymfs));
 
     %% pbt calculation
-    if pbt_r1284
-      [Yth1i,Yppi] = cat_vol_pbt_1284(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
-    else
-      [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
-    end
+    [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
+  
+    %%
     if ~opt.WMT && ~debug, clear Ymfs; end
     Yth1i(Yth1i>10)=0; Yppi(isnan(Yppi))=0;  
     [D,I] = cat_vbdist(Yth1i,Yside); Yth1i = Yth1i(I); clear D I;       % add further values around the cortex
@@ -441,9 +439,9 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       end
     end
     
-    % transform coordinates 
-  if opt.fast==1
-      %
+    %% transform coordinates 
+    if opt.fast==1
+      %%
       CS.vertices = (vmat*[CS.vertices' ; ones(1,size(CS.vertices,1))])'; 
       if V.mat(13)>0, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
       save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),Pcentral);
@@ -452,17 +450,26 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       cmd = sprintf('CAT_SeparatePolygon "%s" "%s" -1',Pcentral,Pcentral); % CAT_SeparatePolygon works here
       [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
       
-      % deform initial surface to central surface                     
+      % deform initial surface to central surface
+      % CAT_DeformSurf "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh" "originalposition|none" maxdist n_modls  
+      %'CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
+      %              'none 0 1 -1 .1 ' ...                  "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
+      %               'avg -0.1 0.1 ' ...                    "model_file...|avg|none"  mincurv  maxcurv 
+      %               '.2 .1 5 0 ' ...                       fract_step  max_step  max_search_istance  degrees_continuity  
+      %               '"%g" "%g" n ' ...                     min_isovalue  max_isovalue  +/-/n 
+      %               '0 0 0 ' ...                           gradient_threshold  angle tolerance  max_iterations
+      %               '150 0.01 0.0'], ...                   movement_threshold  stop_treshold  
+                     
       th = 0.5;
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
+      cmds = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
                      'none  0  1  -1  .1 ' ...               "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
-                     'avg  -0.2  0.2 ' ...                   "model_file...|avg|none"  mincurv  maxcurv 
-                     '.2  .1  5  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
+                     'avg  -0.1  0.1 ' ...                   "model_file...|avg|none"  mincurv  maxcurv 
+                     '.2  .1  2  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
                      '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
                      '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
                      '150  0.01  0.0'], ...                  max_iterations movement_threshold  stop_threshold  
                       Vpp1.fname,Pcentral,Pcentral,th,th);
-      [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+      [ST, RS] = cat_system(cmds); cat_check_system_output(ST,RS,opt.verb-2);
     
       % load surf and project thickness
       CS = gifti(Pcentral);
@@ -500,6 +507,113 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
         cat_io_FreeSurfer('write_surf_data',Psw,facevertexcdata3);
       end
       
+      % distance between linked surfaces 
+      Tlink = @(S1,S2) sum( [ sum( abs( S1.vertices(:,1:2) - S2.vertices(:,1:2) ).^2 , 2 ).^0.5  abs(S1.vertices(:,3) - S2.vertices(:,3)) ].^2 , 2 ).^0.5;
+        
+      
+      % create inner and outer surfaces
+      if 0
+        fprintf('Opt\n');
+        Ypp = spm_read_vols(Vpp); Yg = cat_vol_grad(Ymf/3);
+        %% optimize by inner surface
+        cat_io_FreeSurfer('write_surf_data',Pthick, ...
+          max( cat_stat_histth(facevertexcdata,95), facevertexcdata +  ...
+          1.25 .* (facevertexcdata>0.5) .* max(0,median(facevertexcdata) - facevertexcdata))); % should be 1.5
+        Pinner = cat_surf_fun('inner',Pcentral);
+        mode = 1; 
+        if mode == 1
+          Ygb = Yg./(Ymf/3) .* smooth3(Ymf .* cat_vol_morph(Ymf>1.5,'e',2));
+          Ygb = cat_vol_smooth3X(max(Ygb,cos(min(1,max(0,(3-Ymf))/2)*pi)),0.5);
+          Vpi = Vpp1; Vpi.fname = strrep(Vpi.fname,'pp','gi');  
+          Vpi = cat_io_writenii(Vpi,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+          th  = 0.95;
+        elseif mode == 2
+          Ygb = Yg./(Ymf/3) .* smooth3(Ymf .* cat_vol_morph(Ymf>1.5,'e',2));
+          Vpi = Vpp1; Vpi.fname = strrep(Vpi.fname,'pp','gi');  
+          Vpi = cat_io_writenii(Vpi,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+          th  = 0.3;
+        else
+          Vpi = Vpp1; th = 0.9;
+        end
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
+                     'none  0  1  -1  .1 ' ...               "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
+                     'avg  -0.1  0.1 ' ...                   "model_file...|avg|none"  mincurv  maxcurv 
+                     '.2  .1  2  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
+                     '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
+                     '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
+                     '50  0.01  0.0'], ...                  max_iterations movement_threshold  stop_treshold  
+                      Vpi.fname,Pinner,Pinner,th,th);
+       % [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+        
+        
+        %% optimize by outer surface
+        IS     = gifti(Pinner);
+        CS2    = gifti(Pcentral);
+        TISCS2 = Tlink(IS,CS2);
+        %
+        mox=0;
+        if mox==1,
+          cat_io_FreeSurfer('write_surf_data',Pthick,...
+            max( -0.2 * cat_stat_histth(TISCS2,95), 0.0 * facevertexcdata -  ...
+            (1.5 .* (facevertexcdata>0.5) .* max(0,facevertexcdata - median(facevertexcdata)) + ....
+             1.5 .* (TISCS2>0.5)          .* max(0,TISCS2          - median(TISCS2)))  ....
+            + 0.3 .* cat_stat_histth(TISCS2,95) ...
+            )); % should be 1.5
+        elseif mox==2
+          cat_io_FreeSurfer('write_surf_data',Pthick,...
+            -max( 0.5 * cat_stat_histth(facevertexcdata,95), 0.8 * facevertexcdata +  ...
+            1.25 .* (facevertexcdata>0.5) .* max(0,facevertexcdata - median(facevertexcdata)))); % should be 1.5
+        elseif mox==3
+          cat_io_FreeSurfer('write_surf_data',Pthick,...
+            max( cat_stat_histth(facevertexcdata,95), facevertexcdata -  ...
+            0.25 .* (facevertexcdata>0.5) .* max(0,facevertexcdata - median(facevertexcdata)))); % should be 1.5
+        else
+          cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata); % should be 1.5
+        end
+        Pouter = cat_surf_fun('outer',Pcentral);   
+        %
+        mode = 3; 
+        if mode==1
+          Ygb = Yg./(Ymf/3) .* cat_vol_morph(Ymf<2.5,'e',1);
+          Ygb = min(1,max(Ygb,cos(Ypp*pi))); 
+          Ygb = cat_vol_smooth3X(max(Ygb,cos(min(1,max(0,(Ymf-1.5))/2)*pi)),0.5);
+          Vpo = Vpp1; Vpo.fname = strrep(Vpo.fname,'pp','go');    
+          Vpo = cat_io_writenii(Vpo,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+          th  = 0.9;
+        elseif mode==2
+          Ygb = Yg./(Ymf/3) .* cat_vol_morph(Ymf<2.5,'e',1);
+          Vpo = Vpp1; Vpo.fname = strrep(Vpo.fname,'pp','go'); 
+          Vpo = cat_io_writenii(Vpo,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+          th  = 0.5;
+        else
+          Ygb = Yg./(Ymf/3) .* cat_vol_morph(Ymf<2.5,'e',1);
+          Ygb = min(1,max(Ygb,1-Ypp)); 
+          Vpo = Vpp1; Vpo.fname = strrep(Vpo.fname,'pp','go'); 
+          Vpo = cat_io_writenii(Vpo,Ygb,'','','percentage position map','uint8',[0,1/255],[1 0 0 0]);
+          th  = 0.95;
+        end
+
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" ' ... "vol" "activity_file?|none" nx ny nz "inputmesh" "outputmesh"
+                     'none  0  1  -1  .1 ' ...               "originalposition|none"   maxdist  n_modls  up_to_n_points  model_weight
+                     'avg  -0.1  0.1 ' ...                   "model_file...|avg|none"  mincurv  maxcurv 
+                     '.2  .1  3  0 ' ...                     fract_step  max_step  max_search_istance  degrees_continuity  
+                     '"%g"  "%g"  n ' ...                    min_isovalue  max_isovalue  +/-/n 
+                     '0  0  0 ' ...                          gradient_threshold  angle  tolerance  
+                     '50  0.01  0.0'], ...                  max_iterations movement_threshold  stop_treshold  
+                      Vpo.fname,Pouter,Pouter,th,th);
+        [ST, RS] = cat_system(cmd); cat_check_system_output(ST,RS,opt.verb-2);
+
+        %% estimate new thickness as T_link
+        IS = gifti(Pinner);
+        OS = gifti(Pouter);
+        CS = IS; CS.vertices = IS.vertices/2 + OS.vertices/2; 
+        cat_io_FreeSurfer('write_surf_data',Pthick,Tlink(IS,OS));
+        save(gifti(CS),cat_io_strrep(Pcentral,'.central.','.centralc.'));
+      else
+        Pinner = cat_surf_fun('inner',Pcentral);
+        Pouter = cat_surf_fun('outer',Pcentral);
+      end
+      
       % save datastructure
       S.(opt.surf{si}).vertices = CS.vertices;
       S.(opt.surf{si}).faces    = CS.faces;
@@ -512,10 +626,12 @@ function [Yth1,S,Psurf] = cat_surf_createCS(V,V0,Ym,Ya,YMF,opt)
       end
       clear CS; 
       
-      delete(Vpp.fname);
-      delete(Vpp1.fname);
+      if ~debug
+        delete(Vpp.fname);
+        delete(Vpp1.fname);
+      end
       fprintf('%5.0fs\n',etime(clock,stime)); 
-      
+      %%
       continue
     end
     
